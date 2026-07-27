@@ -1,7 +1,6 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -17,7 +16,6 @@ import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.core.enums.DataScopeType;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
-import com.njydsz.common.jdbc.config.TenantIsolationProperties;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.util.string.StringUtils;
@@ -49,13 +47,15 @@ import net.sf.jsqlparser.statement.update.Update;
  *
  * <p>支持以下权限维度：
  * <ul>
- *   <li>TENANT：租户隔离（tenantColumn）</li>
  *   <li>USER：用户级隔离（userColumn）</li>
  *   <li>GROUP：公司级隔离（companyColumn）</li>
  *   <li>COMPANY/DEPT：部门级隔离（deptColumn）</li>
  *   <li>PROJECT：项目级隔离（projectColumn）</li>
  *   <li>REGION：区域级隔离（regionColumn）</li>
  * </ul>
+ *
+ * <p><b>注意：</b>租户隔离（TENANT 维度）已由独立的 {@code TenantIsolationInterceptor}
+ * （common-tenant 模块）处理，本拦截器不再负责 tenant_id 条件注入。
  *
  * <p>技术要点：
  * <ul>
@@ -74,8 +74,6 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
     private final DataPermissionConfiguration config;
     /** 数据权限上下文解析器 */
     private final DataPermissionContextResolver contextResolver;
-    /** 租户隔离配置 */
-    private final TenantIsolationProperties tenantIsolationProperties;
     /** 标准化后的表名集合（小写），与拦截策略配合使用 */
     private final Set<String> normalizedTables;
 
@@ -88,16 +86,13 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
     /**
      * 构造行级数据权限拦截器
      *
-     * @param config                     数据权限配置
-     * @param contextResolver            数据权限上下文解析器
-     * @param tenantIsolationProperties  租户隔离配置
+     * @param config          数据权限配置
+     * @param contextResolver 数据权限上下文解析器
      */
     public RowPermissionInnerInterceptor(DataPermissionConfiguration config,
-                                         DataPermissionContextResolver contextResolver,
-                                         TenantIsolationProperties tenantIsolationProperties) {
+                                         DataPermissionContextResolver contextResolver) {
         this.config = config;
         this.contextResolver = contextResolver;
-        this.tenantIsolationProperties = tenantIsolationProperties;
         this.normalizedTables = normalizeTableSet(config);
     }
 
@@ -334,9 +329,6 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
         Expression out = null;
         DataScopeType scope = context.getDataScope();
         if (scope == null) {
-            if (shouldApplyTenantIsolation(table)) {
-                out = and(out, equals(table, config.getTenantColumn(), context.getTenantId()));
-            }
             out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
             out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
             out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
@@ -346,11 +338,6 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
         }
 
         switch (scope) {
-            case TENANT:
-                if (shouldApplyTenantIsolation(table)) {
-                    return equals(table, config.getTenantColumn(), context.getTenantId());
-                }
-                return null;
             case USER:
                 return equals(table, config.getUserColumn(), context.getUserId());
             case PROJECT:
@@ -363,9 +350,6 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
             case DEPT:
                 return in(table, config.getDeptColumn(), context.getDeptIds());
             default:
-                if (shouldApplyTenantIsolation(table)) {
-                    out = and(out, equals(table, config.getTenantColumn(), context.getTenantId()));
-                }
                 out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
                 out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
                 out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
@@ -492,36 +476,4 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
         return DataPermissionHelper.shouldApply(table, config, normalizedTables);
     }
 
-    /**
-     * 判断是否应对指定表应用租户隔离，检查租户隔离是否启用且表不在忽略列表中
-     *
-     * @param table 目标表
-     * @return 需要应用租户隔离时返回 true，否则返回 false
-     */
-    private boolean shouldApplyTenantIsolation(Table table) {
-        if (tenantIsolationProperties == null || !tenantIsolationProperties.isEnabled()) {
-            return false;
-        }
-        if (table == null) {
-            return false;
-        }
-        String name = normalizeTableName(table);
-        if (StringUtils.isBlank(name)) {
-            return false;
-        }
-        Set<String> ignoreTables = tenantIsolationProperties != null
-                ? tenantIsolationProperties.getNormalizedIgnoreTables()
-                : Collections.emptySet();
-        return !ignoreTables.contains(name);
-    }
-
-    /**
-     * 标准化表名，去除模式前缀（如 schema.tableName 中的 schema.）并转为小写
-     *
-     * @param table 目标表
-     * @return 标准化后的表名，表名为空时返回空字符串
-     */
-    private String normalizeTableName(Table table) {
-        return DataPermissionHelper.normalizeTableName(table);
-    }
 }

@@ -41,9 +41,10 @@ public class DataPermissionConfiguration {
 
     /**
      * 行级权限字段映射：Header -> 列名。
+     *
+     * <p><b>注意：</b>租户隔离（TENANT 维度）已由独立的 {@code common-tenant} 模块
+     * 通过 {@code TenantIsolationInterceptor} 处理，不再在此配置。
      */
-    /** 租户列名，对应数据权限维度 TENANT */
-    private String tenantColumn = "tenant_id";
     /** 公司列名，对应数据权限维度 GROUP */
     private String companyColumn = "company_id";
     /** 部门列名，对应数据权限维度 COMPANY/DEPT */

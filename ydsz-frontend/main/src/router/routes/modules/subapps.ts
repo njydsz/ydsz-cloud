@@ -2,177 +2,221 @@ import type { RouteRecordRaw } from 'vue-router';
 
 const SubAppContainer = () => import('#/views/_core/subapp/index.vue');
 
+/**
+ * PMIS 子应用路由配置
+ * 每个微应用通过路径前缀匹配激活，catch-all 路由确保子应用内部路由正常工作
+ */
 const routes: RouteRecordRaw[] = [
-  // Ant Design Vue 子应用路由
+  // 用户中心 → ydsz-userinfo:9001
   {
     meta: {
-      icon: 'ant-design:appstore-outlined',
+      icon: 'lucide:users',
       order: 100,
-      title: 'ydsz-antd-web',
+      title: '用户中心',
     },
-    name: 'AntdApp',
-    path: '/ydsz-antd-web',
-    redirect: '/ydsz-antd-web/dashboard/analytics',
+    name: 'UserCenterApp',
+    path: '/ydsz-user',
+    redirect: '/ydsz-user/users',
     children: [
       {
-        name: 'AntdAnalytics',
-        path: '/ydsz-antd-web/dashboard/analytics',
-        component: () => import('#/views/_core/subapp/index.vue'),
-        meta: {
-          activePath: '/ydsz-antd-web/dashboard/analytics',
-          icon: 'lucide:area-chart',
-          title: '子应用分析页',
-        },
-      },
-      {
-        name: 'AntdWorkspace',
-        path: '/ydsz-antd-web/dashboard/workspace',
-        component: () => import('#/views/_core/subapp/index.vue'),
-        meta: {
-          activePath: '/ydsz-antd-web/dashboard/workspace',
-          icon: 'carbon:workspace',
-          title: '子应用工作台',
-        },
-      },
-      {
-        name: 'AntdSubAppCatch',
+        name: 'UserCenterCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
-          activePath: '/ydsz-antd-web',
-          title: 'Antd Web',
+          activePath: '/ydsz-user',
+          title: '用户中心',
           hideInMenu: true,
           hideInTab: true,
         },
       },
     ],
   },
-  // Element Plus 子应用路由
+  // 系统管理 → ydsz-system:9002
   {
     meta: {
-      icon: 'ant-design:appstore-outlined',
+      icon: 'lucide:settings',
       order: 101,
-      title: 'ydsz-elem-web',
+      title: '系统管理',
     },
-    name: 'ElemApp',
-    path: '/ydsz-elem-web',
-    redirect: '/ydsz-elem-web/dashboard/analytics',
+    name: 'SystemAdminApp',
+    path: '/ydsz-sys',
+    redirect: '/ydsz-sys/configs',
     children: [
       {
-        name: 'ElemAnalytics',
-        path: '/ydsz-elem-web/dashboard/analytics',
-        component: () => import('#/views/_core/subapp/index.vue'),
-        meta: {
-          activePath: '/ydsz-elem-web/dashboard/analytics',
-          icon: 'lucide:area-chart',
-          title: '子应用分析页',
-        },
-      },
-      {
-        name: 'ElemWorkspace',
-        path: '/ydsz-elem-web/dashboard/workspace',
-        component: () => import('#/views/_core/subapp/index.vue'),
-        meta: {
-          activePath: '/ydsz-elem-web/dashboard/workspace',
-          icon: 'carbon:workspace',
-          title: '子应用工作台',
-        },
-      },
-      {
-        name: 'ElemSubAppCatch',
+        name: 'SystemAdminCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
-          activePath: '/ydsz-elem-web',
-          title: 'Elem Web',
+          activePath: '/ydsz-sys',
+          title: '系统管理',
           hideInMenu: true,
           hideInTab: true,
         },
       },
     ],
   },
-  // Naive UI 子应用路由
+  // 项目管理 → ydsz-project:9003
   {
     meta: {
-      icon: 'ant-design:appstore-outlined',
+      icon: 'lucide:folder-kanban',
       order: 102,
-      title: 'ydsz-naive-web',
+      title: '项目管理',
     },
-    name: 'NaiveApp',
-    path: '/ydsz-naive-web',
-    redirect: '/ydsz-naive-web/dashboard/analytics',
+    name: 'ProjectMgmtApp',
+    path: '/ydsz-proj',
+    redirect: '/ydsz-proj/opportunities',
     children: [
       {
-        name: 'NaiveAnalytics',
-        path: '/ydsz-naive-web/dashboard/analytics',
-        component: () => import('#/views/_core/subapp/index.vue'),
-        meta: {
-          activePath: '/ydsz-naive-web/dashboard/analytics',
-          icon: 'lucide:area-chart',
-          title: '子应用分析页',
-        },
-      },
-      {
-        name: 'NaiveWorkspace',
-        path: '/ydsz-naive-web/dashboard/workspace',
-        component: () => import('#/views/_core/subapp/index.vue'),
-        meta: {
-          activePath: '/ydsz-naive-web/dashboard/workspace',
-          icon: 'carbon:workspace',
-          title: '子应用工作台',
-        },
-      },
-      {
-        name: 'NaiveSubAppCatch',
+        name: 'ProjectMgmtCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
-          activePath: '/ydsz-naive-web',
-          title: 'Naive Web',
+          activePath: '/ydsz-proj',
+          title: '项目管理',
           hideInMenu: true,
           hideInTab: true,
         },
       },
     ],
   },
-  // Play 子应用路由
+  // 消息中心 → ydsz-message:9004
   {
     meta: {
-      icon: 'ant-design:appstore-outlined',
+      icon: 'lucide:message-square',
       order: 103,
-      title: 'ydsz-play-web',
+      title: '消息中心',
     },
-    name: 'PlayApp',
-    path: '/ydsz-play-web',
-    redirect: '/ydsz-play-web/dashboard/analytics',
+    name: 'MessageCenterApp',
+    path: '/ydsz-msg',
+    redirect: '/ydsz-msg/messages',
     children: [
       {
-        name: 'PlayAnalytics',
-        path: '/ydsz-play-web/dashboard/analytics',
-        component: () => import('#/views/_core/subapp/index.vue'),
-        meta: {
-          activePath: '/ydsz-play-web/dashboard/analytics',
-          icon: 'lucide:area-chart',
-          title: '子应用分析页',
-        },
-      },
-      {
-        name: 'PlayWorkspace',
-        path: '/ydsz-play-web/dashboard/workspace',
-        component: () => import('#/views/_core/subapp/index.vue'),
-        meta: {
-          activePath: '/ydsz-play-web/dashboard/workspace',
-          icon: 'carbon:workspace',
-          title: '子应用工作台',
-        },
-      },
-      {
-        name: 'PlaySubAppCatch',
+        name: 'MessageCenterCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
-          activePath: '/ydsz-play-web',
-          title: 'Play Web',
+          activePath: '/ydsz-msg',
+          title: '消息中心',
+          hideInMenu: true,
+          hideInTab: true,
+        },
+      },
+    ],
+  },
+  // 定时任务 → ydsz-cronjob:9005
+  {
+    meta: {
+      icon: 'lucide:clock',
+      order: 104,
+      title: '定时任务',
+    },
+    name: 'CronjobAdminApp',
+    path: '/ydsz-cron',
+    redirect: '/ydsz-cron/jobs',
+    children: [
+      {
+        name: 'CronjobAdminCatch',
+        path: ':path(.*)*',
+        component: SubAppContainer,
+        meta: {
+          activePath: '/ydsz-cron',
+          title: '定时任务',
+          hideInMenu: true,
+          hideInTab: true,
+        },
+      },
+    ],
+  },
+  // 工作流引擎 → ydsz-workflow:9006
+  {
+    meta: {
+      icon: 'lucide:workflow',
+      order: 105,
+      title: '工作流引擎',
+    },
+    name: 'WorkflowDesignerApp',
+    path: '/ydsz-flow',
+    redirect: '/ydsz-flow/templates',
+    children: [
+      {
+        name: 'WorkflowDesignerCatch',
+        path: ':path(.*)*',
+        component: SubAppContainer,
+        meta: {
+          activePath: '/ydsz-flow',
+          title: '工作流引擎',
+          hideInMenu: true,
+          hideInTab: true,
+        },
+      },
+    ],
+  },
+  // 网盘知识库 → ydsz-nextwiki:9007
+  {
+    meta: {
+      icon: 'lucide:folder-open',
+      order: 106,
+      title: '网盘知识库',
+    },
+    name: 'WikiDriveApp',
+    path: '/ydsz-wiki',
+    redirect: '/ydsz-wiki/files',
+    children: [
+      {
+        name: 'WikiDriveCatch',
+        path: ':path(.*)*',
+        component: SubAppContainer,
+        meta: {
+          activePath: '/ydsz-wiki',
+          title: '网盘知识库',
+          hideInMenu: true,
+          hideInTab: true,
+        },
+      },
+    ],
+  },
+  // 规则引擎 → ydsz-literule:9008
+  {
+    meta: {
+      icon: 'lucide:git-branch',
+      order: 107,
+      title: '规则引擎',
+    },
+    name: 'RuleEngineApp',
+    path: '/ydsz-rule',
+    redirect: '/ydsz-rule/rules',
+    children: [
+      {
+        name: 'RuleEngineCatch',
+        path: ':path(.*)*',
+        component: SubAppContainer,
+        meta: {
+          activePath: '/ydsz-rule',
+          title: '规则引擎',
+          hideInMenu: true,
+          hideInTab: true,
+        },
+      },
+    ],
+  },
+  // AI 助手 → ydsz-agent:9010
+  {
+    meta: {
+      icon: 'lucide:bot',
+      order: 108,
+      title: 'AI 助手',
+    },
+    name: 'AiAssistantApp',
+    path: '/ydsz-ai',
+    redirect: '/ydsz-ai/chat',
+    children: [
+      {
+        name: 'AiAssistantCatch',
+        path: ':path(.*)*',
+        component: SubAppContainer,
+        meta: {
+          activePath: '/ydsz-ai',
+          title: 'AI 助手',
           hideInMenu: true,
           hideInTab: true,
         },

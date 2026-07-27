@@ -2,6 +2,8 @@ package com.njydsz.common.jdbc.config;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -39,9 +41,9 @@ import com.njydsz.common.jdbc.interceptor.LogicalDeleteInterceptor;
 import com.njydsz.common.jdbc.interceptor.OptimisticLockInterceptor;
 import com.njydsz.common.jdbc.interceptor.RowPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
-import com.njydsz.common.jdbc.interceptor.TenantIsolationInterceptor;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.jdbc.permission.DataScopeIdExpander;
+import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>乐观锁拦截器：二选一——自定义实现（BaseEntity + revision 列）或内置 OptimisticLockerInnerInterceptor（@Version 注解）</li>
  *   <li>逻辑删除拦截器（自定义实现）：自动追加 deleted 过滤条件，替代 @TableLogic 注解</li>
  *   <li>字段填充拦截器：自动填充 createdBy、createdAt、updatedBy、updatedAt</li>
+ *   <li>SPI 拦截器：外部模块通过 {@link InnerInterceptorProvider} 注入（如 common-tenant 的租户隔离）</li>
  *   <li>数据权限拦截器：实现行级和列级数据权限控制</li>
  *   <li>分页拦截器：支持多数据库类型的分页查询</li>
  * </ul>
@@ -62,25 +65,21 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>OptimisticLocker - 乐观锁（自定义 或 内置，二选一）</li>
  *   <li>LogicalDeleteInterceptor - 逻辑删除（SELECT/DELETE）</li>
  *   <li>FieldFillInterceptor - 字段填充</li>
- *   <li>TenantIsolationInterceptor - 租户隔离（自动注入 tenant_id 条件）</li>
+ *   <li>SPI Interceptors - 外部模块通过 {@link InnerInterceptorProvider} SPI 注入（按 order 排序）</li>
  *   <li>DataPermissionInnerInterceptor - 数据权限（行级+列级）</li>
  *   <li>PaginationInnerInterceptor - 分页</li>
  * </ol>
  *
- * <p><b>优化建议：</b>
- * <ul>
- *   <li>分页拦截器建议指定数据库类型，避免自动检测性能开销</li>
- *   <li>字段填充建议统一使用实体类注解方式，减少拦截器开销</li>
- *   <li>数据权限拦截器建议在复杂场景下添加缓存</li>
- *   <li>自定义乐观锁拦截器（ydsz.jdbc.optimistic-lock.enable=true）与 @Version 注解互斥；默认使用内置 OptimisticLockerInnerInterceptor 处理 @Version 实体</li>
- * </ul>
+ * <p><b>SPI 扩展机制：</b>外部公共模块（如 common-tenant）通过实现
+ * {@link InnerInterceptorProvider} 接口并注册为 Spring Bean，
+ * 即可自动将拦截器插入链中，common-jdbc 无需硬依赖外部模块。
  *
  * @author ydsz-team
  * @since 1.0.0
  * @see MybatisPlusInterceptor
  * @see OptimisticLockInterceptor
  * @see LogicalDeleteInterceptor
- * @see TenantIsolationInterceptor
+ * @see InnerInterceptorProvider
  */
 @Slf4j
 @AutoConfiguration
@@ -89,7 +88,6 @@ import lombok.extern.slf4j.Slf4j;
     DataPermissionConfiguration.class,
     OptimisticLockConfiguration.class,
     LogicalDeleteConfiguration.class,
-    TenantIsolationProperties.class,
     PaginationProperties.class,
     SqlFirewallProperties.class,
     ReadWriteSplittingProperties.class,
@@ -103,32 +101,32 @@ public class MybatisPlusConfiguration {
     private final ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider;
     private final OptimisticLockConfiguration optimisticLockConfiguration;
     private final LogicalDeleteConfiguration logicalDeleteConfiguration;
-    private final TenantIsolationProperties tenantIsolationProperties;
     private final PaginationProperties paginationProperties;
     private final SqlFirewallProperties sqlFirewallProperties;
     private final ReadWriteSplittingProperties readWriteSplittingProperties;
     private final CircuitBreakerProperties circuitBreakerProperties;
+    private final ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders;
 
     public MybatisPlusConfiguration(FieldFillConfiguration fieldFillConfiguration,
                                      DataPermissionConfiguration dataPermissionConfiguration,
                                      ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider,
                                      OptimisticLockConfiguration optimisticLockConfiguration,
                                      LogicalDeleteConfiguration logicalDeleteConfiguration,
-                                     TenantIsolationProperties tenantIsolationProperties,
                                      PaginationProperties paginationProperties,
                                      SqlFirewallProperties sqlFirewallProperties,
                                      ReadWriteSplittingProperties readWriteSplittingProperties,
-                                     CircuitBreakerProperties circuitBreakerProperties) {
+                                     CircuitBreakerProperties circuitBreakerProperties,
+                                     ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders) {
         this.fieldFillConfiguration = fieldFillConfiguration;
         this.dataPermissionConfiguration = dataPermissionConfiguration;
         this.dataScopeIdExpanderProvider = dataScopeIdExpanderProvider;
         this.optimisticLockConfiguration = optimisticLockConfiguration;
         this.logicalDeleteConfiguration = logicalDeleteConfiguration;
-        this.tenantIsolationProperties = tenantIsolationProperties;
         this.paginationProperties = paginationProperties;
         this.sqlFirewallProperties = sqlFirewallProperties;
         this.readWriteSplittingProperties = readWriteSplittingProperties;
         this.circuitBreakerProperties = circuitBreakerProperties;
+        this.spiInterceptorProviders = spiInterceptorProviders;
     }
 
     /**
@@ -139,7 +137,7 @@ public class MybatisPlusConfiguration {
      *   <li>乐观锁拦截器（自定义实现，替代@Version）</li>
      *   <li>逻辑删除拦截器（自定义实现，替代@TableLogic）</li>
      *   <li>字段填充拦截器（针对非实体类的更新操作）</li>
-     *   <li>租户隔离拦截器（自动注入 tenant_id 条件）</li>
+     *   <li>SPI 拦截器（外部模块通过 {@link InnerInterceptorProvider} 注入，按 order 排序）</li>
      *   <li>数据权限拦截器（行级+列级）</li>
      *   <li>分页拦截器（动态适配数据库类型）</li>
      * </ol>
@@ -147,7 +145,7 @@ public class MybatisPlusConfiguration {
      * @return MybatisPlusInterceptor 实例
      * @see OptimisticLockInterceptor
      * @see LogicalDeleteInterceptor
-     * @see TenantIsolationInterceptor
+     * @see InnerInterceptorProvider
      * @see PaginationInnerInterceptor
      */
     @Bean
@@ -156,9 +154,6 @@ public class MybatisPlusConfiguration {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
 
         // 1. 乐观锁拦截器
-        //    自定义实现（OptimisticLockInterceptor，基于 BaseEntity + revision 列）与
-        //    MyBatis-Plus 内置实现（OptimisticLockerInnerInterceptor，基于 @Version 注解）互斥。
-        //    优先使用自定义实现（若启用）；否则使用内置实现（覆盖 @Version 注解的实体）。
         if (Boolean.TRUE.equals(optimisticLockConfiguration.isEnable())) {
             OptimisticLockInterceptor optimisticLockInterceptor = new OptimisticLockInterceptor();
             optimisticLockInterceptor.setRevisionColumn(optimisticLockConfiguration.getRevisionColumn());
@@ -167,7 +162,6 @@ public class MybatisPlusConfiguration {
             log.debug("MyBatis Plus: OptimisticLock interceptor (custom) enabled (revisionColumn={})",
                     optimisticLockConfiguration.getRevisionColumn());
         } else {
-            // 内置乐观锁拦截器：处理 @Version 注解的实体（如 RuleDefinitionDO / RevenueDO / ContractDO 等）
             interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
             log.debug("MyBatis Plus: OptimisticLockerInnerInterceptor (built-in) enabled for @Version entities");
         }
@@ -188,14 +182,19 @@ public class MybatisPlusConfiguration {
         // 3. 字段填充拦截器（合并多 Handler，单次 SQL 解析完成所有字段填充）
         configureFieldFillInterceptors(interceptor);
 
-        // 4. 租户隔离拦截器（在数据权限之前，确保 tenant_id 条件优先注入）
-        if (tenantIsolationProperties != null && tenantIsolationProperties.isEnabled()) {
-            interceptor.addInnerInterceptor(new TenantIsolationInterceptor(tenantIsolationProperties));
-            log.debug("MyBatis Plus: TenantIsolation interceptor enabled (mode={}, activeFields={}, ignoreTables={}, anonUrls={})",
-                    tenantIsolationProperties.getMode(),
-                    tenantIsolationProperties.getActiveTenantFields(),
-                    tenantIsolationProperties.getNormalizedIgnoreTables(),
-                    tenantIsolationProperties.getNormalizedAnonUrls());
+        // 4. SPI 拦截器（外部模块通过 InnerInterceptorProvider 注入，按 order 排序）
+        //    常见用途：common-tenant 的 TenantIsolationInterceptor（order=400）
+        //    在数据权限之前注入，确保 tenant_id 条件优先追加
+        List<InnerInterceptorProvider> providers = spiInterceptorProviders.getIfAvailable(Collections::emptyList);
+        if (providers != null && !providers.isEmpty()) {
+            providers.stream()
+                .sorted(Comparator.comparingInt(InnerInterceptorProvider::getOrder))
+                .forEach(provider -> {
+                    interceptor.addInnerInterceptor(provider.createInterceptor());
+                    log.info("MyBatis Plus: SPI interceptor loaded [{}] order={}",
+                        provider.createInterceptor().getClass().getSimpleName(),
+                        provider.getOrder());
+                });
         }
 
         // 5. 数据权限拦截器（行级+列级）
@@ -256,33 +255,6 @@ public class MybatisPlusConfiguration {
 
     /**
      * 配置字段填充拦截器
-     *
-     * <p>根据配置决定是否启用以下字段填充拦截器：
-     * <ul>
-     *   <li>CreatedByHandler: 插入时填充创建人ID</li>
-     *   <li>UpdatedByHandler: 更新时填充更新人ID</li>
-     *   <li>CreatedAtHandler: 插入时填充创建时间</li>
-     *   <li>UpdatedAtHandler: 更新时填充更新时间</li>
-     * </ul>
-     *
-     * <p>每个填充处理器都需要在配置文件中设置 enable=true 才会生效：
-     * <pre>
-     * ydsz:
-     *   jdbc:
-     *     field-fill:
-     *       created-by-intercept:
-     *         enabled: true
-     *       update-by-intercept:
-     *         enabled: true
-     *       create-at-intercept:
-     *         enabled: true
-     *       update-at-intercept:
-     *         enabled: true
-     * </pre>
-     *
-     * @param interceptor MyBatis Plus 拦截器链
-     * @see CombinedFieldFillInterceptor
-     * @see FieldFillHandler
      */
     private void configureFieldFillInterceptors(MybatisPlusInterceptor interceptor) {
         List<FieldFillHandler> enabledHandlers = new ArrayList<>(4);
@@ -313,38 +285,21 @@ public class MybatisPlusConfiguration {
      * 数据权限拦截器会根据当前用户的权限范围自动改写 SQL，
      * 实现行级和列级的数据访问控制。
      *
-     * <p>数据权限配置示例：
-     * <pre>
-     * ydsz:
-     *   jdbc:
-     *     data-permission:
-     *       enabled: true
-     * </pre>
-     *
      * @param interceptor MyBatis Plus 拦截器链
-     * @see DataPermissionInnerInterceptor
-     * @see RowPermissionInnerInterceptor
-     * @see ColPermissionInnerInterceptor
-     * @see DataPermissionConfiguration
      */
     private void configureDataPermissionInterceptor(MybatisPlusInterceptor interceptor) {
         if (Boolean.TRUE.equals(dataPermissionConfiguration.getEnabled())) {
             DataScopeIdExpander expander = dataScopeIdExpanderProvider == null ? null : dataScopeIdExpanderProvider.getIfAvailable();
             DataPermissionContextResolver resolver = new DataPermissionContextResolver(expander);
 
-            // 注册行级权限拦截器和列级权限拦截器
-            interceptor.addInnerInterceptor(new RowPermissionInnerInterceptor(dataPermissionConfiguration, resolver, tenantIsolationProperties));
+            interceptor.addInnerInterceptor(new RowPermissionInnerInterceptor(dataPermissionConfiguration, resolver));
             interceptor.addInnerInterceptor(new ColPermissionInnerInterceptor(dataPermissionConfiguration, resolver));
-            log.debug("MyBatis Plus: RowPermission + ColPermission interceptors enabled (tenantIsolation={}).",
-                    tenantIsolationProperties != null ? tenantIsolationProperties.isEnabled() : true);
+            log.debug("MyBatis Plus: RowPermission + ColPermission interceptors enabled.");
         }
     }
 
     /**
      * 启动期校验：检查 OptimisticLockInterceptor 与 @Version 注解冲突
-     *
-     * <p>当 OptimisticLockInterceptor 启用时，扫描所有实体类，若发现实体使用了 @Version 注解，
-     * 输出 WARN 日志提醒用户移除 @Version 注解，避免与自定义拦截器冲突。
      *
      * @param event 应用就绪事件
      */
@@ -354,29 +309,24 @@ public class MybatisPlusConfiguration {
             return;
         }
 
-        // 仅扫描实体包路径下的 .class 文件，避免全量 classpath 扫描导致启动缓慢
         List<String> entitiesWithVersion = new ArrayList<>();
-        
+
         try {
             ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
             MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(resourcePatternResolver);
-            
-            // 仅扫描配置的 Mapper 包路径的上一级目录（通常是 entity 包）
-            // 默认为 com.njydsz.* 下的 class 文件
+
             String scanPattern = "classpath*:com/njydsz/**/*.class";
             Resource[] resources = resourcePatternResolver.getResources(scanPattern);
-            
+
             for (Resource resource : resources) {
                 if (resource.isReadable()) {
                     MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
                     String className = metadataReader.getClassMetadata().getClassName();
-                    
+
                     try {
                         Class<?> entityClass = ClassUtils.forName(className, getClass().getClassLoader());
-                        
-                        // 检查是否有 @TableName 注解
+
                         if (entityClass.isAnnotationPresent(TableName.class)) {
-                            // 检查是否有 @Version 注解的字段
                             if (hasVersionAnnotation(entityClass)) {
                                 entitiesWithVersion.add(entityClass.getName());
                             }
@@ -396,9 +346,6 @@ public class MybatisPlusConfiguration {
         }
     }
 
-    /**
-     * 检查实体类是否使用了 @Version 注解
-     */
     private boolean hasVersionAnnotation(Class<?> entityClass) {
         for (Field field : entityClass.getDeclaredFields()) {
             if (AnnotationUtils.findAnnotation(field, Version.class) != null) {

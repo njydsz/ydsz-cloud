@@ -1,39 +1,17 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { useElementPlusDesignTokens } from '@ydsz/hooks';
 
-import { useAntdDesignTokens } from '@ydsz/hooks';
-import { preferences, usePreferences } from '@ydsz/preferences';
+import { ElConfigProvider } from 'element-plus';
 
-import { App, ConfigProvider, theme } from 'ant-design-vue';
-
-import { antdLocale } from '#/locales';
+import { elementLocale } from '#/locales';
 
 defineOptions({ name: 'App' });
 
-const { isDark } = usePreferences();
-const { tokens } = useAntdDesignTokens();
-
-const tokenTheme = computed(() => {
-  const algorithm = isDark.value
-    ? [theme.darkAlgorithm]
-    : [theme.defaultAlgorithm];
-
-  // antd 紧凑模式算法
-  if (preferences.app.compact) {
-    algorithm.push(theme.compactAlgorithm);
-  }
-
-  return {
-    algorithm,
-    token: tokens,
-  };
-});
+useElementPlusDesignTokens();
 </script>
 
 <template>
-  <ConfigProvider :locale="antdLocale" :theme="tokenTheme">
-    <App>
-      <RouterView />
-    </App>
-  </ConfigProvider>
+  <ElConfigProvider :locale="elementLocale">
+    <RouterView />
+  </ElConfigProvider>
 </template>

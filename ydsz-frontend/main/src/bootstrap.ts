@@ -5,8 +5,9 @@ import { registerLoadingDirective } from '@ydsz/common-ui/es/loading';
 import { preferences } from '@ydsz/preferences';
 import { initStores } from '@ydsz/stores';
 import '@ydsz/styles';
-import '@ydsz/styles/antd';
+import '@ydsz/styles/ele';
 
+import { ElLoading } from 'element-plus';
 import { useTitle } from '@vueuse/core';
 import { registerMicroApps, start } from 'qiankun';
 
@@ -24,6 +25,8 @@ async function bootstrap(namespace: string) {
 
   const app = createApp(App);
 
+  app.directive('loading', ElLoading.directive);
+
   registerLoadingDirective(app, {
     loading: 'loading',
     spinning: 'spinning',
@@ -31,10 +34,10 @@ async function bootstrap(namespace: string) {
 
   await setupI18n(app);
   await initStores(app, { namespace });
-  
+
   // 在 Pinia 初始化之后才创建路由守卫
   initRouterGuard();
-  
+
   registerAccessDirective(app);
 
   const { initTippy } = await import('@ydsz/common-ui/es/tippy');

@@ -1,4 +1,4 @@
-import type { Locale } from 'ant-design-vue/es/locale';
+import type { Language } from 'element-plus/es/locale';
 
 import type { App } from 'vue';
 
@@ -13,11 +13,11 @@ import {
 } from '@ydsz/locales';
 import { preferences } from '@ydsz/preferences';
 
-import antdEnLocale from 'ant-design-vue/es/locale/en_US';
-import antdDefaultLocale from 'ant-design-vue/es/locale/zh_CN';
 import dayjs from 'dayjs';
+import enLocale from 'element-plus/es/locale/lang/en';
+import defaultLocale from 'element-plus/es/locale/lang/zh-cn';
 
-const antdLocale = ref<Locale>(antdDefaultLocale);
+const elementLocale = ref<Language>(defaultLocale);
 
 const modules = import.meta.glob('./langs/**/*.json');
 
@@ -25,11 +25,7 @@ const localesMap = loadLocalesMapFromDir(
   /\.\/langs\/([^/]+)\/(.*)\.json$/,
   modules,
 );
-/**
- * 加载应用特有的语言包
- * 这里也可以改造为从服务端获取翻译数据
- * @param lang
- */
+
 async function loadMessages(lang: SupportedLanguagesType) {
   const [appLocaleMessages] = await Promise.all([
     localesMap[lang]?.(),
@@ -38,18 +34,10 @@ async function loadMessages(lang: SupportedLanguagesType) {
   return appLocaleMessages?.default;
 }
 
-/**
- * 加载第三方组件库的语言包
- * @param lang
- */
 async function loadThirdPartyMessage(lang: SupportedLanguagesType) {
-  await Promise.all([loadAntdLocale(lang), loadDayjsLocale(lang)]);
+  await Promise.all([loadElementLocale(lang), loadDayjsLocale(lang)]);
 }
 
-/**
- * 加载dayjs的语言包
- * @param lang
- */
 async function loadDayjsLocale(lang: SupportedLanguagesType) {
   let locale;
   switch (lang) {
@@ -61,7 +49,6 @@ async function loadDayjsLocale(lang: SupportedLanguagesType) {
       locale = await import('dayjs/locale/zh-cn');
       break;
     }
-    // 默认使用英语
     default: {
       locale = await import('dayjs/locale/en');
     }
@@ -73,18 +60,14 @@ async function loadDayjsLocale(lang: SupportedLanguagesType) {
   }
 }
 
-/**
- * 加载antd的语言包
- * @param lang
- */
-async function loadAntdLocale(lang: SupportedLanguagesType) {
+async function loadElementLocale(lang: SupportedLanguagesType) {
   switch (lang) {
     case 'en-US': {
-      antdLocale.value = antdEnLocale;
+      elementLocale.value = enLocale;
       break;
     }
     case 'zh-CN': {
-      antdLocale.value = antdDefaultLocale;
+      elementLocale.value = defaultLocale;
       break;
     }
   }
@@ -99,4 +82,4 @@ async function setupI18n(app: App, options: LocaleSetupOptions = {}) {
   });
 }
 
-export { $t, antdLocale, setupI18n };
+export { $t, elementLocale, setupI18n };
