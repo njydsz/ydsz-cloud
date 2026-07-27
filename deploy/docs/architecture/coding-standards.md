@@ -94,72 +94,250 @@ YDSZ 项目全局禁用 JaCoCo 单元测试覆盖率采集和阈值检查。项�
 
 ---
 
-## Section 6: Controller 层 VO/DTO 返回规范
+## Section 6: Domain 分层架构与 MapStruct 转换规范
 
 ### 6.1 核心原则
 
-Controller 层（Web 层）**禁止直接返回数据库实体类（Entity）**，必须通过 VO（View Object）或 DTO 对外暴露数据。
+**参考架构**：`D:\Code\ydsz\scm-tm\sdt-mps`（sdt-mps 模块）的 domain + web 分层架构设计。
 
-**参考架构**：`D:\Code\ydsz\scm-tm`（sdt-app 模块）的 domain 分层架构设计。
+- Controller 层（Web 层）**禁止直接返回数据库实体类（Entity）**，必须通过 VO（View Object）对外暴露数据
+- Entity ↔ VO / DTO ↔ Entity 之间的转换**统一使用 MapStruct**，禁止使用 `BeanUtils.copyProperties` 反射方式
+- 每个业务实体必须有对应的 **VO + DTO + Query + Converter** 四件套
 
-### 6.2 分层职责
+### 6.2 Domain 层目录结构规范
+
+每个业务模块的 `domain` 包必须按以下结构组织：
+
+```
+com.njydsz.{module}.domain/
+├── entity/              # 数据库实体（继承 MpBaseEntity，@TableName）
+│   └── Xxx.java
+├── vo/                  # 视图对象（Controller 返回）
+│   └── XxxVO.java
+├── dto/                 # 数据传输对象（Controller 入参）
+│   ├── post/            # 新增 DTO（XxxPostDTO / XxxCreateDTO）
+│   │   └── XxxPostDTO.java
+│   └── put/             # 修改 DTO（XxxPutDTO / XxxUpdateDTO）
+│       └── XxxPutDTO.java
+├── query/               # 查询参数对象
+│   └── XxxQuery.java
+├── converter/           # MapStruct 转换器接口
+│   └── XxxConverter.java
+└── enums/               # 业务枚举
+    └── XxxEnum.java
+```
 
 | 层次 | 包路径 | 职责 | 示例 |
 |------|--------|------|------|
 | Entity | `domain/entity/` | 数据库实体，仅用于持久层 | `MsgLog`、`Job`、`FlowDefinition` |
-| VO | `domain/vo/` | 视图对象，Controller 返回 | `MsgLogVO`、`JobVO`、`FlowDefinitionVO` |
-| DTO | `domain/dto/` | 数据传输对象，Controller 入参 | `TemplateCreateDTO`、`JobSaveDTO` |
-| Query | `domain/query/` | 查询参数对象 | `PageQuery`、`TemplateQueryDTO` |
+| VO | `domain/vo/` | 视图对象，Controller 返回 | `MsgLogVO`、`JobVO` |
+| DTO(post) | `domain/dto/post/` | 新增请求体 | `MsgTemplatePostDTO` |
+| DTO(put) | `domain/dto/put/` | 修改请求体 | `MsgTemplatePutDTO` |
+| Query | `domain/query/` | 查询参数对象 | `MsgTemplateQuery` |
+| Converter | `domain/converter/` | MapStruct 转换器 | `MsgTemplateConverter` |
 
 ### 6.3 VO 编写规范
 
 1. **命名**：`XxxVO`，与对应 Entity 同名加 `VO` 后缀
 2. **位置**：`domain/vo/` 包下
-3. **继承**：VO **不继承** `MpBaseEntity`，为独立 POJO
-4. **字段**：
+3. **继承**：VO **不继承** `MpBaseEntity`，为独立 POJO，`implements Serializable`
+4. **注解**：`@Data` + `@Schema`（Swagger），不使用 `@TableName`、`@TableField` 等 MyBatis-Plus 注解
+5. **字段规则**：
    - 包含 Entity 中的业务字段
    - 包含 `id`、`createdBy`、`createdAt`、`updatedBy`、`updatedAt`、`status`（按需）
    - **不包含** `revision`（乐观锁）、`deleted`（逻辑删除标识）、`tenantId`（租户ID）
-5. **注解**：仅 `@Data`，不使用 `@TableName`、`@TableField` 等 MyBatis-Plus 注解
 6. **敏感字段**：如需脱敏，使用 `@SensitiveData` 注解
 
-### 6.4 Controller 返回类型规范
-
 ```java
-// 正确：返回 VO
-@GetMapping("{id}")
-public BaseResponse<MsgLogVO> getById(@PathVariable String id) { ... }
+@Data
+@Schema(description = "消息模板视图对象")
+public class MsgTemplateVO implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-@GetMapping("/page")
-public BaseResponse<Page<MsgLogVO>> page(PageQuery query) { ... }
-
-@GetMapping("/list")
-public BaseResponse<List<MsgLogVO>> list() { ... }
-
-// 错误：直接返回 Entity
-@GetMapping("{id}")
-public BaseResponse<MsgLog> getById(@PathVariable String id) { ... }  // 禁止
-
-@GetMapping("/page")
-public BaseResponse<Page<MsgLog>> page(PageQuery query) { ... }  // 禁止
+    private String id;
+    private String templateCode;
+    private String channel;
+    // ... 业务字段
+    private String status;
+    private String createdBy;
+    private LocalDateTime createdAt;
+    private String updatedBy;
+    private LocalDateTime updatedAt;
+}
 ```
 
-### 6.5 Entity → VO 转换
+### 6.4 MapStruct Converter 编写规范
 
-在 Service 层或 Controller 层完成 Entity → VO 转换，推荐方式：
+每个业务实体必须有对应的 Converter 接口，位于 `domain/converter/` 包下。
 
-1. **BeanUtil.copyProperties**（简单场景）：`BeanUtil.copyProperties(entity, MsgLogVO.class)`
-2. **手动构建**（复杂场景）：在 Service 中手动构建 VO，可添加额外字段或格式化
-3. **MapStruct**（大量字段映射）：定义 Converter 接口，编译期生成转换代码
+**命名**：`XxxConverter`，与 Entity 同名加 `Converter` 后缀。
+
+**四要素**：`postDtoToEntity` + `putDtoToEntity` + `queryToEntity` + `entityToVO`
+
+```java
+package com.njydsz.message.domain.converter;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
+import com.njydsz.message.domain.dto.post.MsgTemplatePostDTO;
+import com.njydsz.message.domain.dto.put.MsgTemplatePutDTO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
+import com.njydsz.message.domain.query.MsgTemplateQuery;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
+
+/**
+ * 消息模板 MapStruct 转换器。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Mapper
+public interface MsgTemplateConverter {
+
+    MsgTemplateConverter INSTANT = Mappers.getMapper(MsgTemplateConverter.class);
+
+    /** PostDTO → Entity（忽略自动填充字段） */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    MsgTemplate postDtoToEntity(MsgTemplatePostDTO dto);
+
+    /** PutDTO → Entity（忽略自动填充字段，保留 id） */
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    MsgTemplate putDtoToEntity(MsgTemplatePutDTO dto);
+
+    /** Query → Entity（忽略自动填充字段） */
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    MsgTemplate queryToEntity(MsgTemplateQuery query);
+
+    /** Entity → VO */
+    MsgTemplateVO entityToVO(MsgTemplate entity);
+}
+```
+
+**`@Mapping(target = "xxx", ignore = true)` 必须忽略的字段清单**（对应 `MpBaseEntity` 的自动填充字段）：
+
+| 字段 | 说明 | postDtoToEntity | putDtoToEntity | queryToEntity |
+|------|------|:---:|:---:|:---:|
+| `id` | 主键（雪花算法生成） | ✅ ignore | ❌ 保留 | ✅ ignore |
+| `deleted` | 逻辑删除标识 | ✅ ignore | ✅ ignore | ✅ ignore |
+| `revision` | 乐观锁版本号 | ✅ ignore | ✅ ignore | ✅ ignore |
+| `tenantId` | 租户 ID | ✅ ignore | ✅ ignore | ✅ ignore |
+| `createdBy` | 创建人 | ✅ ignore | ✅ ignore | ✅ ignore |
+| `createdAt` | 创建时间 | ✅ ignore | ✅ ignore | ✅ ignore |
+| `updatedBy` | 更新人 | ✅ ignore | ✅ ignore | ✅ ignore |
+| `updatedAt` | 更新时间 | ✅ ignore | ✅ ignore | ✅ ignore |
+
+### 6.5 Controller 层使用规范
+
+Controller 层通过 `Converter.INSTANT` 调用 MapStruct 生成的转换方法：
+
+```java
+@RestController
+@RequestMapping("/message/template")
+public class TemplateController {
+
+    private final TemplateService templateService;
+
+    // 查询详情 → 返回 VO
+    @GetMapping("/{id}")
+    public BaseResponse<MsgTemplateVO> getById(@PathVariable String id) {
+        MsgTemplate entity = templateService.getById(id);
+        return BaseResponse.success(MsgTemplateConverter.INSTANT.entityToVO(entity));
+    }
+
+    // 分页查询 → 返回 Page<VO>
+    @GetMapping("/page")
+    public BaseResponse<Page<MsgTemplateVO>> page(MsgTemplateQuery query) {
+        Page<MsgTemplate> page = templateService.page(query);
+        // 列表转换
+        List<MsgTemplateVO> voList = page.getRecords().stream()
+                .map(MsgTemplateConverter.INSTANT::entityToVO)
+                .collect(Collectors.toList());
+        Page<MsgTemplateVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(voList);
+        return BaseResponse.success(voPage);
+    }
+
+    // 新增 → DTO 转 Entity 后调用 Service
+    @PostMapping
+    public BaseResponse<String> create(@Valid @RequestBody MsgTemplatePostDTO dto) {
+        MsgTemplate entity = MsgTemplateConverter.INSTANT.postDtoToEntity(dto);
+        return BaseResponse.success(templateService.save(entity));
+    }
+
+    // 修改 → DTO 转 Entity 后调用 Service
+    @PutMapping("/{id}")
+    public BaseResponse<Boolean> update(@PathVariable String id, @Valid @RequestBody MsgTemplatePutDTO dto) {
+        MsgTemplate entity = MsgTemplateConverter.INSTANT.putDtoToEntity(dto);
+        entity.setId(id);
+        return BaseResponse.success(templateService.updateById(entity));
+    }
+}
+```
 
 ### 6.6 已遵循规范的模块（参考标杆）
 
-- `ydsz-userinfo`：`domain/vo/` 下 10 个 VO，所有 Controller 返回 VO
-- `ydsz-system`：`domain/vo/` 下 6 个 VO，所有 Controller 返回 VO
+- `ydsz-userinfo`：`domain/vo/` 下 10 个 VO，所有 Controller 返回 VO（待补 MapStruct Converter）
+- `ydsz-system`：`domain/vo/` 下 6 个 VO，所有 Controller 返回 VO（待补 MapStruct Converter）
+- `scm-tm/sdt-mps`：完整的 MapStruct Converter 模式（`RoleConverter`、`MenuConverter` 等）
 
-### 6.7 检测方式
+### 6.7 POM 依赖配置
+
+项目已在根 POM 全局配置 MapStruct 注解处理器（`ydsz-backend/pom.xml`）：
+
+```xml
+<!-- dependencyManagement -->
+<mapstruct.version>1.6.3</mapstruct.version>
+
+<!-- annotationProcessorPaths -->
+<path>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>${lombok.version}</version>
+</path>
+<path>
+    <groupId>org.mapstruct</groupId>
+    <artifactId>mapstruct-processor</artifactId>
+    <version>${mapstruct.version}</version>
+</path>
+```
+
+业务模块的 `domain` POM 需添加 MapStruct 依赖（`provided` scope）：
+
+```xml
+<dependency>
+    <groupId>org.mapstruct</groupId>
+    <artifactId>mapstruct</artifactId>
+    <scope>provided</scope>
+</dependency>
+```
+
+### 6.8 检测方式
 
 ```bash
-# 检测 Controller 中直接返回 Entity 的方法
+# 1. 检测 Controller 中直接返回 Entity 的方法
 grep -rn "BaseResponse<.*>" --include="*Controller.java" | grep -v "VO\|DTO\|Map\|String\|Integer\|Boolean\|List\|Page<.*VO\|void"
+
+# 2. 检测 BeanUtils.copyProperties 残留（应迁移到 MapStruct）
+grep -rn "BeanUtils.copyProperties\|BeanUtil.copyProperties" --include="*.java"
 ```

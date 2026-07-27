@@ -7,7 +7,7 @@ import { LOGIN_PATH } from '@ydsz/constants';
 import { preferences } from '@ydsz/preferences';
 import { resetAllStores, useAccessStore, useUserStore } from '@ydsz/stores';
 
-import { notification } from 'ant-design-vue';
+import { ElNotification } from 'element-plus';
 import { defineStore } from 'pinia';
 
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
@@ -22,34 +22,40 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * 异步处理登录操作
-   * Asynchronously handle the login process
-   * @param params 登录表单数据
    */
   async function authLogin(
     params: Recordable<any>,
     onSuccess?: () => Promise<void> | void,
   ) {
-    // 异步处理用户登录操作并获取 accessToken
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
       const loginResult = await loginApi(params);
-      const { accessToken } = loginResult;
+      const { accessToken, refreshToken, userInfo: loginUserInfo } = loginResult;
 
-      // 如果成功获取到 accessToken
       if (accessToken) {
         accessStore.setAccessToken(accessToken);
+        // 存储 refreshToken 用于后续刷新
+        if (refreshToken) {
+          (accessStore as any).refreshToken = refreshToken;
+        }
 
-        // 获取用户信息并存储到 accessStore 中
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
-          getAccessCodesApi(),
-        ]);
+        // 如果登录接口已返回用户信息，直接使用；否则调接口获取
+        if (loginUserInfo) {
+          userInfo = loginUserInfo as unknown as UserInfo;
+          userStore.setUserInfo(userInfo);
+        } else {
+          userInfo = await fetchUserInfo();
+        }
 
-        userInfo = fetchUserInfoResult;
-
-        userStore.setUserInfo(userInfo);
-        accessStore.setAccessCodes(accessCodes);
+        // 获取权限码
+        try {
+          const accessCodes = await getAccessCodesApi();
+          accessStore.setAccessCodes(accessCodes);
+        } catch {
+          // 权限码获取失败不阻塞登录
+          accessStore.setAccessCodes([]);
+        }
 
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);
@@ -62,10 +68,10 @@ export const useAuthStore = defineStore('auth', () => {
         }
 
         if (userInfo?.realName) {
-          notification.success({
-            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
-            duration: 3,
-            message: $t('authentication.loginSuccess'),
+          ElNotification.success({
+            title: $t('authentication.loginSuccess'),
+            message: `${$t('authentication.loginSuccessDesc')}: ${userInfo.realName}`,
+            duration: 3000,
           });
         }
       }
@@ -87,7 +93,6 @@ export const useAuthStore = defineStore('auth', () => {
     resetAllStores();
     accessStore.setLoginExpired(false);
 
-    // 回登录页带上当前路由地址
     await router.replace({
       path: LOGIN_PATH,
       query: redirect
@@ -99,8 +104,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchUserInfo() {
-    let userInfo: null | UserInfo = null;
-    userInfo = await getUserInfoApi();
+    const userInfo = await getUserInfoApi();
     userStore.setUserInfo(userInfo);
     return userInfo;
   }

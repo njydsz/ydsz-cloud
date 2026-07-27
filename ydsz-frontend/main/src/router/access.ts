@@ -6,7 +6,7 @@ import type {
 import { generateAccessible } from '@ydsz/access';
 import { preferences } from '@ydsz/preferences';
 
-import { message } from 'ant-design-vue';
+import { ElMessage } from 'element-plus';
 
 import { getAllMenusApi } from '#/api';
 import { BasicLayout, IFrameView } from '#/layouts';
@@ -25,15 +25,10 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
   return await generateAccessible(preferences.app.accessMode, {
     ...options,
     fetchMenuListAsync: async () => {
-      message.loading({
-        content: `${$t('common.loadingMenu')}...`,
-        duration: 1.5,
-      });
+      ElMessage.info(`${$t('common.loadingMenu')}...`);
       return await getAllMenusApi();
     },
-    // 可以指定没有权限跳转403页面
     forbiddenComponent,
-    // 如果 route.meta.menuVisibleWithForbidden = true
     layoutMap,
     pageMap,
   });

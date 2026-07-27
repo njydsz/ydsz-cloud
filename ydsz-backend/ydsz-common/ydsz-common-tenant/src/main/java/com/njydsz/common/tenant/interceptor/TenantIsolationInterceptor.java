@@ -16,6 +16,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.JSqlParserHelper;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.tenant.TenantDimension;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.config.TenantProperties.TenantSource;
@@ -322,9 +323,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
             case TENANT:
                 return context.getTenantId();
             case GROUP:
-                return context.getDimension(com.njydsz.common.tenant.TenantDimension.GROUP);
+                return context.getDimension(TenantDimension.GROUP);
             case COMPANY:
-                return context.getDimension(com.njydsz.common.tenant.TenantDimension.COMPANY);
+                return context.getDimension(TenantDimension.COMPANY);
             case USER:
                 // USER source 需要从认证上下文获取（暂时回退到 tenantId）
                 return context.getTenantId();

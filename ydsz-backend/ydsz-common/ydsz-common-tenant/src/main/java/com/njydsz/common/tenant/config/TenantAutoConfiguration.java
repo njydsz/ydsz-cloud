@@ -6,10 +6,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
 
+import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.tenant.SystemTenantContextRunner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
+import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
+import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
 import com.njydsz.common.tenant.web.TenantContextWebFilter;
@@ -24,9 +29,11 @@ import lombok.extern.slf4j.Slf4j;
  * <p>装配内容：
  * <ul>
  *   <li>{@link TenantInterceptorProvider} — SPI 注册 SQL 拦截器到 MybatisPlusInterceptor 链</li>
- *   <li>{@link TenantContextWebFilter} — Web 入口上下文设置（web 应用时）</li>
+ *   <li>{@link TenantContextWebFilter} — Web 入口上下文设置 + MDC 日志注入（FilterRegistrationBean order=HIGHEST+100）</li>
  *   <li>{@link TenantContextFeignInterceptor} — Feign 跨服务透传（common-feign 在 classpath 时）</li>
  *   <li>{@link TenantContextTaskDecorator} — 异步传播（common-thread 在 classpath 时）</li>
+ *   <li>{@link TenantDataSourceRouter} — ISOLATE_DB 数据源路由（mode=ISOLATE_DB 时）</li>
+ *   <li>{@link TenantDataSourceFilter} — ISOLATE_DB Web 过滤器（mode=ISOLATE_DB 时）</li>
  * </ul>
  *
  * <p>不引入 {@code common-tenant} 依赖或设为 false 时，
@@ -55,23 +62,32 @@ public class TenantAutoConfiguration {
                 properties.getTenantColumn(),
                 properties.getSuperTenantId(),
                 properties.getSystemTenantId());
-        // 初始化系统租户 ID
         SystemTenantContextRunner.init(properties.getSystemTenantId());
         return new TenantInterceptorProvider(properties);
     }
 
     /**
-     * Web 入口过滤器：从 JWT 解析租户上下文。
+     * Web 入口过滤器：从 JWT 解析租户上下文 + MDC 日志注入。
+     *
+     * <p>使用 {@link FilterRegistrationBean} 包装，显式指定 order 为
+     * {@code Ordered.HIGHEST_PRECEDENCE + 100}，确保在认证 Filter 之后、
+     * 业务 Filter 之前执行。
      *
      * @param properties 租户配置
-     * @return Web 过滤器
+     * @return Filter 注册 Bean
      */
     @Bean
     @ConditionalOnClass(name = "jakarta.servlet.Filter")
     @ConditionalOnWebApplication
     @ConditionalOnMissingBean
-    public TenantContextWebFilter tenantContextWebFilter(TenantProperties properties) {
-        return new TenantContextWebFilter(properties);
+    public FilterRegistrationBean<TenantContextWebFilter> tenantContextWebFilterRegistration(
+            TenantProperties properties) {
+        FilterRegistrationBean<TenantContextWebFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new TenantContextWebFilter(properties));
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 100);
+        registration.addUrlPatterns("/*");
+        registration.setName("tenantContextWebFilter");
+        return registration;
     }
 
     /**
@@ -113,11 +129,11 @@ public class TenantAutoConfiguration {
                           havingValue = "ISOLATE_DB")
     @ConditionalOnClass(name = "com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource")
     @ConditionalOnMissingBean
-    public com.njydsz.common.tenant.datasource.TenantDataSourceRouter tenantDataSourceRouter(
-            com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource routingDataSource,
+    public TenantDataSourceRouter tenantDataSourceRouter(
+            DynamicRoutingDataSource routingDataSource,
             TenantProperties properties) {
         log.info("多租户 ISOLATE_DB 模式已启用，数据源路由器已注册");
-        return new com.njydsz.common.tenant.datasource.TenantDataSourceRouter(routingDataSource, properties);
+        return new TenantDataSourceRouter(routingDataSource, properties);
     }
 
     /**
@@ -125,7 +141,7 @@ public class TenantAutoConfiguration {
      *
      * @param router     数据源路由器
      * @param properties 租户配置
-     * @return Web 过滤器
+     * @return Filter 注册 Bean
      */
     @Bean
     @ConditionalOnProperty(prefix = "ydsz.tenant", name = "mode",
@@ -133,9 +149,14 @@ public class TenantAutoConfiguration {
     @ConditionalOnClass(name = "jakarta.servlet.Filter")
     @ConditionalOnWebApplication
     @ConditionalOnMissingBean
-    public com.njydsz.common.tenant.datasource.TenantDataSourceFilter tenantDataSourceFilter(
-            com.njydsz.common.tenant.datasource.TenantDataSourceRouter router,
+    public FilterRegistrationBean<TenantDataSourceFilter> tenantDataSourceFilterRegistration(
+            TenantDataSourceRouter router,
             TenantProperties properties) {
-        return new com.njydsz.common.tenant.datasource.TenantDataSourceFilter(router, properties);
+        FilterRegistrationBean<TenantDataSourceFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new TenantDataSourceFilter(router, properties));
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 90);
+        registration.addUrlPatterns("/*");
+        registration.setName("tenantDataSourceFilter");
+        return registration;
     }
 }

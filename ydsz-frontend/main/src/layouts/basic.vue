@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { NotificationItem } from '@ydsz/layouts';
 
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, watch } from 'vue';
 
 import { AuthenticationLoginExpiredModal } from '@ydsz/common-ui';
 import { useWatermark } from '@ydsz/hooks';
@@ -15,62 +15,59 @@ import { preferences } from '@ydsz/preferences';
 import { useAccessStore, useUserStore } from '@ydsz/stores';
 
 import { useAuthStore } from '#/store';
+import { notificationStore } from '#/store/notification';
 import LoginForm from '#/views/_core/authentication/login.vue';
-
-const notifications = ref<NotificationItem[]>([
-  {
-    avatar: 'https://avatar.vercel.sh/vercel.svg?text=VB',
-    date: '3小时前',
-    isRead: true,
-    message: '描述信息描述信息描述信息',
-    title: '收到了 14 份新周报',
-  },
-  {
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '刚刚',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '朱偏右 回复了你',
-  },
-  {
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '2024-01-01',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '曲丽丽 评论了你',
-  },
-  {
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '代办提醒',
-  },
-]);
 
 const userStore = useUserStore();
 const authStore = useAuthStore();
 const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
-const showDot = computed(() =>
-  notifications.value.some((item) => !item.isRead),
-);
 
 const avatar = computed(() => {
   return userStore.userInfo?.avatar ?? preferences.app.defaultAvatar;
 });
 
+// 将后端通知格式转为 UI 组件需要的格式
+const notifications = computed<NotificationItem[]>(() =>
+  notificationStore.notifications.value.map((n) => ({
+    avatar: n.avatar || 'https://avatar.vercel.sh/1',
+    date: n.createdAt,
+    isRead: n.isRead,
+    message: n.message,
+    title: n.title,
+  })),
+);
+
+const showDot = computed(() => notificationStore.unreadCount.value > 0);
+
 async function handleLogout() {
+  notificationStore.disconnect();
   await authStore.logout(false);
 }
 
 function handleNoticeClear() {
-  notifications.value = [];
+  notificationStore.notifications.value = [];
 }
 
-function handleMakeAll() {
-  notifications.value.forEach((item) => (item.isRead = true));
+async function handleMakeAll() {
+  await notificationStore.markAllRead();
 }
+
+// 登录后连接 WebSocket 并加载通知
+watch(
+  () => accessStore.accessToken,
+  (token) => {
+    if (token) {
+      notificationStore.loadNotifications();
+      notificationStore.refreshUnreadCount();
+      notificationStore.connectWebSocket();
+    } else {
+      notificationStore.disconnect();
+    }
+  },
+  { immediate: true },
+);
+
 watch(
   () => preferences.app.watermark,
   async (enable) => {
@@ -86,6 +83,18 @@ watch(
     immediate: true,
   },
 );
+
+onMounted(() => {
+  if (accessStore.accessToken) {
+    notificationStore.loadNotifications();
+    notificationStore.refreshUnreadCount();
+    notificationStore.connectWebSocket();
+  }
+});
+
+onUnmounted(() => {
+  notificationStore.disconnect();
+});
 </script>
 
 <template>
