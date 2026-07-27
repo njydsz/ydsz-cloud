@@ -1,27 +1,25 @@
 package com.njydsz.common.search.service;
 
-
 import java.util.List;
+import java.util.Optional;
 
-import com.njydsz.common.search.core.SearchEngine;
+import com.njydsz.common.search.core.IndexStrategy;
+import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 索引重建服务
- * <p>
- * 支持全量重建索引，适用于首次部署、索引损坏修复、搜索引擎切换等场景。
- * 支持 P1-9 蓝绿重建：重建期间搜索服务不中断。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.3.0
  */
 @Slf4j
 public class IndexRebuildService {
 
     private final IndexSyncService indexSyncService;
-    private final SearchEngine searchEngine;
+    private final SearchEngineRegistry engineRegistry;
     private final SearchProviderRegistry providerRegistry;
 
     private volatile boolean rebuilding = false;
@@ -29,160 +27,84 @@ public class IndexRebuildService {
     private volatile int total = 0;
 
     public IndexRebuildService(IndexSyncService indexSyncService,
-                                SearchEngine searchEngine,
+                                SearchEngineRegistry engineRegistry,
                                 SearchProviderRegistry providerRegistry) {
         this.indexSyncService = indexSyncService;
-        this.searchEngine = searchEngine;
+        this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
     }
 
-    /**
-     * 全量重建索引
-     *
-     * @param type     实体类型（为空表示全部）
-     * @param tenantId 租户 ID（为空表示全部）
-     * @return 重建的文档总数
-     */
     public int rebuildAll(String type, String tenantId) {
         if (rebuilding) {
-            log.warn("[IndexRebuild] 重建任务正在执行中，请稍后再试");
+            log.warn("[IndexRebuild] 重建任务正在执行中");
             return -1;
         }
-
         rebuilding = true;
         progress = 0;
         total = 0;
-
         try {
-            // 先清空旧索引
-            if (type == null || type.isBlank()) {
-                searchEngine.deleteAllIndices(null);
-            } else {
-                searchEngine.deleteAllIndices(type);
+            Optional<IndexStrategy> idx = engineRegistry.getIndexStrategy();
+            if (idx.isEmpty()) {
+                log.warn("[IndexRebuild] 主引擎不支持索引操作，无法重建");
+                return -1;
             }
-
-            // 执行全量重建
+            if (type == null || type.isBlank()) {
+                idx.get().deleteAllIndices(null);
+            } else {
+                idx.get().deleteAllIndices(type);
+            }
             int count = indexSyncService.rebuildAll(type, tenantId);
             total = count;
             progress = count;
-
-            log.info("[IndexRebuild] 全量重建完成: type={}, tenantId={}, total={}",
-                    type, tenantId, count);
+            log.info("[IndexRebuild] 全量重建完成: type={}, total={}", type, count);
             return count;
-
         } catch (Exception e) {
-            log.error("[IndexRebuild] 全量重建失败: type={}", type, e);
+            log.error("[IndexRebuild] 全量重建失败", e);
             return -1;
         } finally {
             rebuilding = false;
         }
     }
 
-    /**
-     * 异步全量重建索引
-     *
-     * @param type     实体类型（为空表示全部）
-     * @param tenantId 租户 ID（为空表示全部）
-     */
     public void rebuildAllAsync(String type, String tenantId) {
         Thread t = new Thread(() -> {
             try {
                 rebuildAll(type, tenantId);
             } catch (Exception e) {
-                log.error("[IndexRebuild] async rebuild failed: {}", e.getMessage(), e);
+                log.error("[IndexRebuild] async rebuild failed", e);
             }
         }, "index-rebuild");
         t.setDaemon(true);
         t.start();
     }
 
-    /**
-     * P1-8: 蓝绿重建索引
-     * <p>
-     * 重建期间搜索服务继续使用旧索引数据，重建通过 upsert 写入新数据。
-     * 重建完成后清理未更新的过期条目（已从数据源删除的文档）。
-     * 适用于不允许搜索中断的生产环境。
-     *
-     * <p><b>流程：</b>
-     * <ol>
-     *   <li>记录重建开始时间</li>
-     *   <li>通过 Provider 重新加载全量数据，使用 upsert 写入索引（旧数据仍在）</li>
-     *   <li>重建完成后，删除 updated_at_ts 早于开始时间的条目（过期数据）</li>
-     * </ol>
-     *
-     * @param type     实体类型（为空表示全部）
-     * @param tenantId 租户 ID（为空表示全部）
-     * @return 重建的文档总数
-     */
     public int rebuildWithBlueGreen(String type, String tenantId) {
-        if (rebuilding) {
-            log.warn("[IndexRebuild] 重建任务正在执行中，请稍后再试");
-            return -1;
-        }
-
+        if (rebuilding) return -1;
         rebuilding = true;
         progress = 0;
         total = 0;
-
         try {
-            log.info("[IndexRebuild] 蓝绿重建开始: type={}, tenantId={}", type, tenantId);
-
-            // 蓝色阶段：upsert 新数据（不清空旧索引，搜索继续使用旧数据）
-            // ON CONFLICT DO UPDATE 会更新已有条目，新条目会被插入
             int count = indexSyncService.rebuildAll(type, tenantId);
             total = count;
             progress = count;
-
-            // 绿色阶段：新数据已通过 upsert 写入，旧数据被覆盖
-            // 注意：数据源中已删除的文档仍可能残留在索引中
-            // 建议定期执行全量重建（rebuildAll）或手动清理过期条目
-            log.info("[IndexRebuild] 蓝绿重建完成: type={}, total={}", type, count);
             return count;
-
         } catch (Exception e) {
-            log.error("[IndexRebuild] 蓝绿重建失败: type={}", type, e);
+            log.error("[IndexRebuild] 蓝绿重建失败", e);
             return -1;
         } finally {
             rebuilding = false;
         }
     }
 
-    /**
-     * 检查是否正在重建
-     */
-    public boolean isRebuilding() {
-        return rebuilding;
-    }
+    public boolean isRebuilding() { return rebuilding; }
+    public int getProgress() { return progress; }
+    public int getTotal() { return total; }
 
-    /**
-     * 获取重建进度
-     */
-    public int getProgress() {
-        return progress;
-    }
-
-    /**
-     * 获取重建总数
-     */
-    public int getTotal() {
-        return total;
-    }
-
-    /**
-     * P2-8: 获取重建进度百分比
-     *
-     * @return 进度百分比（0-100），未在重建中返回 -1
-     */
     public int getProgressPercent() {
-        if (!rebuilding || total == 0) {
-            return rebuilding ? 0 : -1;
-        }
+        if (!rebuilding || total == 0) return rebuilding ? 0 : -1;
         return Math.min(100, (progress * 100) / total);
     }
 
-    /**
-     * 获取已注册的实体类型列表
-     */
     public List<String> getRegisteredTypes() {
         return providerRegistry.getAllTypes();
     }

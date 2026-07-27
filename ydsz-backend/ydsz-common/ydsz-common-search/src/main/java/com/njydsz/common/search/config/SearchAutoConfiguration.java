@@ -17,11 +17,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
-import com.njydsz.common.search.core.SearchEngine;
-import com.njydsz.common.search.indexer.ContentExtractor;
-import com.njydsz.common.search.indexer.ContentIndexer;
-import com.njydsz.common.search.engine.memory.InMemorySearchEngine;
-import com.njydsz.common.search.engine.pg.PgSearchEngine;
+import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.core.SearchStrategy;
+import com.njydsz.common.search.engine.es.ElasticsearchSearchStrategy;
+import com.njydsz.common.search.engine.memory.InMemorySearchStrategy;
+import com.njydsz.common.search.engine.opensearch.OpenSearchStrategy;
+import com.njydsz.common.search.engine.pg.PgSearchStrategy;
+import com.njydsz.common.search.engine.redis.RediSearchStrategy;
+import com.njydsz.common.search.engine.solr.SolrSearchStrategy;
 import com.njydsz.common.search.health.SearchHealthIndicator;
 import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
@@ -38,197 +41,198 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 搜索服务 Spring Boot 自动配置
- *
- * <p>配置前缀：{@code ydsz.search}
+ * 搜索服务自动配置
+ * <p>
+ * 按引擎类型分区装配，通过 {@code @ConditionalOnClass} 门控确保 classpath
+ * 中有对应客户端依赖时才激活引擎策略。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.3.0
  */
 @Slf4j
 @AutoConfiguration
-@ConditionalOnClass(SearchEngine.class)
-@EnableConfigurationProperties(SearchProperties.class)
+@ConditionalOnClass(SearchStrategy.class)
 @ConditionalOnProperty(prefix = "ydsz.search", name = "enabled", havingValue = "true", matchIfMissing = true)
+@EnableConfigurationProperties(SearchProperties.class)
 public class SearchAutoConfiguration {
 
-    private PgSearchEngine pgSearchEngineInstance;
     private UnifiedSearchService unifiedSearchServiceInstance;
     private IndexSyncService indexSyncServiceInstance;
+    private PgSearchStrategy pgSearchStrategyInstance;
+
+    // ==================== 引擎策略装配 ====================
 
     /**
-     * PG 搜索引擎（默认引擎）
+     * PG 引擎 — classpath 有 DataSource + JdbcTemplate 时激活
      */
     @Configuration
     @ConditionalOnClass({DataSource.class, JdbcTemplate.class})
-    @ConditionalOnProperty(prefix = "ydsz.search", name = "engine", havingValue = "pg", matchIfMissing = true)
-    static class PgSearchEngineConfiguration {
-
+    static class PgEngineConfiguration {
         @Bean
-        @ConditionalOnMissingBean(SearchEngine.class)
-        public SearchEngine pgSearchEngine(DataSource dataSource, SearchProperties properties) {
-            log.info("[SearchAutoConfiguration] 初始化 PgSearchEngine: highlight={}, fuzzy={}",
-                    properties.isHighlight(), properties.isFuzzy());
-            return new PgSearchEngine(dataSource, properties);
+        @ConditionalOnMissingBean(name = "pgSearchStrategy")
+        @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "pg", matchIfMissing = true)
+        public SearchStrategy pgSearchStrategy(ObjectProvider<DataSource> dataSourceProvider,
+                                                 SearchProperties properties) {
+            DataSource ds = dataSourceProvider.getIfAvailable();
+            if (ds == null) {
+                log.warn("[SearchAutoConfig] DataSource 不可用，PG 引擎降级");
+                return new InMemorySearchStrategy();
+            }
+            return new PgSearchStrategy(ds, properties.getPg());
         }
     }
 
     /**
-     * 内存搜索引擎（测试/降级用）
-     */
-    @Configuration
-    @ConditionalOnProperty(prefix = "ydsz.search", name = "engine", havingValue = "memory")
-    static class InMemorySearchEngineConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean(SearchEngine.class)
-        public SearchEngine inMemorySearchEngine() {
-            log.info("[SearchAutoConfiguration] 初始化 InMemorySearchEngine");
-            return new InMemorySearchEngine();
-        }
-    }
-
-    /**
-     * 搜索提供者注册中心 — 自动收集所有 SearchProvider Bean
+     * Elasticsearch 引擎 — 需手动配置 ydsz.search.primary=es
      */
     @Bean
+    @ConditionalOnMissingBean(name = "esSearchStrategy")
+    @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "es")
+    public SearchStrategy esSearchStrategy(SearchProperties properties) {
+        return new ElasticsearchSearchStrategy(properties.getEs());
+    }
+
+    /**
+     * RediSearch 引擎
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "rediSearchStrategy")
+    @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "redis")
+    public SearchStrategy rediSearchStrategy(SearchProperties properties) {
+        return new RediSearchStrategy(properties.getRedis());
+    }
+
+    /**
+     * Solr 引擎
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "solrSearchStrategy")
+    @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "solr")
+    public SearchStrategy solrSearchStrategy(SearchProperties properties) {
+        return new SolrSearchStrategy(properties.getSolr());
+    }
+
+    /**
+     * OpenSearch 引擎
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "openSearchStrategy")
+    @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "opensearch")
+    public SearchStrategy openSearchStrategy(SearchProperties properties) {
+        return new OpenSearchStrategy(properties.getOpensearch());
+    }
+
+    /**
+     * Memory 引擎 — 始终可用（降级兜底）
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "memorySearchStrategy")
+    public SearchStrategy memorySearchStrategy() {
+        return new InMemorySearchStrategy();
+    }
+
+    // ==================== 核心服务装配 ====================
+
+    @Bean
     @ConditionalOnMissingBean
-    public SearchProviderRegistry searchProviderRegistry(
-            List<SearchProvider<?>> providers) {
+    public SearchProviderRegistry searchProviderRegistry(ObjectProvider<List<SearchProvider<?>>> providersProvider) {
+        List<SearchProvider<?>> providers = providersProvider.getIfAvailable();
         return new SearchProviderRegistry(providers);
     }
 
-    /**
-     * 搜索缓存服务
-     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SearchEngineRegistry searchEngineRegistry(List<SearchStrategy> strategies,
+                                                      SearchProperties properties) {
+        return new SearchEngineRegistry(strategies, properties);
+    }
+
     @Bean
     @ConditionalOnMissingBean
     public SearchCacheService searchCacheService(SearchProperties properties) {
         return new SearchCacheService(properties);
     }
 
-    /**
-     * P1-12: 搜索文本处理器（同义词/停用词/拼音）
-     */
     @Bean
     @ConditionalOnMissingBean
     public SearchTextProcessor searchTextProcessor(SearchProperties properties) {
         return new SearchTextProcessor(properties);
     }
 
-    /**
-     * 统一搜索服务
-     */
     @Bean
     @ConditionalOnMissingBean
-    public UnifiedSearchService unifiedSearchService(SearchEngine searchEngine,
-                                                      SearchProviderRegistry providerRegistry,
-                                                      SearchProperties properties,
-                                                      SearchMetrics searchMetrics,
-                                                      SearchAnalyticsService searchAnalyticsService,
-                                                      SearchTextProcessor searchTextProcessor) {
-        unifiedSearchServiceInstance = new UnifiedSearchService(searchEngine, providerRegistry, properties,
-                searchMetrics, searchAnalyticsService, searchTextProcessor);
-        return unifiedSearchServiceInstance;
+    public SearchMetrics searchMetrics(ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        return new SearchMetrics(meterRegistryProvider.getIfAvailable());
     }
 
-    /**
-     * 索引同步服务
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public IndexSyncService indexSyncService(SearchEngine searchEngine,
-                                              SearchProviderRegistry providerRegistry,
-                                              SearchProperties properties,
-                                              SearchMetrics searchMetrics) {
-        indexSyncServiceInstance = new IndexSyncService(searchEngine, providerRegistry, properties, searchMetrics);
-        return indexSyncServiceInstance;
-    }
-
-    /**
-     * 索引同步事件监听器
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public IndexSyncListener indexSyncListener(IndexSyncService indexSyncService) {
-        return new IndexSyncListener(indexSyncService);
-    }
-
-    /**
-     * 索引重建服务
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public IndexRebuildService indexRebuildService(IndexSyncService indexSyncService,
-                                                    SearchEngine searchEngine,
-                                                    SearchProviderRegistry providerRegistry) {
-        return new IndexRebuildService(indexSyncService, searchEngine, providerRegistry);
-    }
-
-    /**
-     * 搜索建议服务
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public SuggestionService suggestionService(SearchEngine searchEngine,
-                                                SearchProperties properties) {
-        return new SuggestionService(searchEngine, properties);
-    }
-
-    /**
-     * 搜索分析服务
-     */
     @Bean
     @ConditionalOnMissingBean
     public SearchAnalyticsService searchAnalyticsService() {
         return new SearchAnalyticsService();
     }
 
-    /**
-     * 搜索指标（Micrometer 可用时自动注册）
-     */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(MeterRegistry.class)
-    public SearchMetrics searchMetrics(MeterRegistry meterRegistry) {
-        return new SearchMetrics(meterRegistry);
+    public UnifiedSearchService unifiedSearchService(SearchEngineRegistry engineRegistry,
+                                                      SearchProviderRegistry providerRegistry,
+                                                      SearchProperties properties,
+                                                      SearchMetrics searchMetrics,
+                                                      SearchAnalyticsService searchAnalyticsService,
+                                                      SearchTextProcessor searchTextProcessor) {
+        unifiedSearchServiceInstance = new UnifiedSearchService(engineRegistry, providerRegistry, properties,
+                searchMetrics, searchAnalyticsService, searchTextProcessor);
+        return unifiedSearchServiceInstance;
     }
 
-    /**
-     * P1-6: 内容索引器（ContentExtractor 可用时自动注册）
-     */
     @Bean
     @ConditionalOnMissingBean
-    public ContentIndexer contentIndexer(
-            ObjectProvider<ContentExtractor> extractorProvider) {
-        return new ContentIndexer(extractorProvider.getIfAvailable());
+    public IndexSyncService indexSyncService(SearchEngineRegistry engineRegistry,
+                                              SearchProviderRegistry providerRegistry,
+                                              SearchProperties properties,
+                                              SearchMetrics searchMetrics) {
+        indexSyncServiceInstance = new IndexSyncService(engineRegistry, providerRegistry, properties, searchMetrics);
+        return indexSyncServiceInstance;
     }
 
-    /**
-     * 搜索健康检查（Spring Boot Actuator 可用时自动注册）
-     */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-    public SearchHealthIndicator searchHealthIndicator(SearchEngine searchEngine) {
-        return new SearchHealthIndicator(searchEngine);
+    public IndexRebuildService indexRebuildService(IndexSyncService indexSyncService,
+                                                    SearchEngineRegistry engineRegistry,
+                                                    SearchProviderRegistry providerRegistry) {
+        return new IndexRebuildService(indexSyncService, engineRegistry, providerRegistry);
     }
 
-    /**
-     * P1-10: 线程池生命周期管理 — 关闭所有线程池
-     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SuggestionService suggestionService(SearchEngineRegistry engineRegistry,
+                                                SearchProperties properties) {
+        return new SuggestionService(engineRegistry, properties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public IndexSyncListener indexSyncListener(IndexSyncService indexSyncService) {
+        return new IndexSyncListener(indexSyncService);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SearchHealthIndicator searchHealthIndicator(SearchEngineRegistry engineRegistry,
+                                                        SearchCacheService cacheService,
+                                                        SearchMetrics searchMetrics) {
+        return new SearchHealthIndicator(engineRegistry, cacheService, searchMetrics);
+    }
+
     @PreDestroy
-    public void shutdown() {
-        log.info("[SearchAutoConfiguration] 开始关闭搜索服务资源...");
+    public void destroy() {
         if (unifiedSearchServiceInstance != null) {
             unifiedSearchServiceInstance.shutdown();
         }
         if (indexSyncServiceInstance != null) {
             indexSyncServiceInstance.shutdown();
         }
-        if (pgSearchEngineInstance != null) {
-            pgSearchEngineInstance.shutdown();
+        if (pgSearchStrategyInstance != null) {
+            pgSearchStrategyInstance.shutdown();
         }
-        log.info("[SearchAutoConfiguration] 搜索服务资源已关闭");
     }
 }

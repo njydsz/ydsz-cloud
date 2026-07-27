@@ -1,0 +1,43 @@
+{
+  "name": "@ydsz/layouts",
+  "version": "5.5.9",
+  "homepage": "https://github.com/njydsz/vue-ydsz-admin",
+  "bugs": "https://github.com/njydsz/vue-ydsz-admin/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/njydsz/vue-ydsz-admin.git",
+    "directory": "comm/effects/layouts"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@ydsz-core/composables": "workspace:*",
+    "@ydsz-core/form-ui": "workspace:*",
+    "@ydsz-core/layout-ui": "workspace:*",
+    "@ydsz-core/menu-ui": "workspace:*",
+    "@ydsz-core/popup-ui": "workspace:*",
+    "@ydsz-core/shadcn-ui": "workspace:*",
+    "@ydsz-core/shared": "workspace:*",
+    "@ydsz-core/tabs-ui": "workspace:*",
+    "@ydsz/constants": "workspace:*",
+    "@ydsz/hooks": "workspace:*",
+    "@ydsz/icons": "workspace:*",
+    "@ydsz/locales": "workspace:*",
+    "@ydsz/preferences": "workspace:*",
+    "@ydsz/stores": "workspace:*",
+    "@ydsz/types": "workspace:*",
+    "@ydsz/utils": "workspace:*",
+    "@vueuse/core": "catalog:",
+    "vue": "catalog:",
+    "vue-router": "catalog:"
+  }
+}

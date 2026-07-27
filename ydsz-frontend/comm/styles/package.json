@@ -1,0 +1,34 @@
+{
+  "name": "@ydsz/styles",
+  "version": "5.5.9",
+  "homepage": "https://github.com/njydsz/vue-ydsz-admin",
+  "bugs": "https://github.com/njydsz/vue-ydsz-admin/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/njydsz/vue-ydsz-admin.git",
+    "directory": "comm/styles"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./antd": {
+      "default": "./src/antd/index.css"
+    },
+    "./ele": {
+      "default": "./src/ele/index.css"
+    },
+    "./naive": {
+      "default": "./src/naive/index.css"
+    },
+    "./global": {
+      "default": "./src/global/index.scss"
+    }
+  },
+  "dependencies": {
+    "@ydsz-core/design": "workspace:*"
+  }
+}

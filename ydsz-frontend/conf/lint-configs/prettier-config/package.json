@@ -1,0 +1,28 @@
+{
+  "name": "@ydsz/prettier-config",
+  "version": "5.0.0",
+  "private": true,
+  "homepage": "https://github.com/njydsz/vue-ydsz-admin",
+  "bugs": "https://github.com/njydsz/vue-ydsz-admin/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/njydsz/vue-ydsz-admin.git",
+    "directory": "conf/lint-configs/prettier-config"
+  },
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./index.mjs",
+  "module": "./index.mjs",
+  "exports": {
+    ".": {
+      "default": "./index.mjs"
+    }
+  },
+  "dependencies": {
+    "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:"
+  }
+}

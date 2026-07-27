@@ -1,0 +1,32 @@
+{
+  "name": "@ydsz/request",
+  "version": "5.5.9",
+  "homepage": "https://github.com/njydsz/vue-ydsz-admin",
+  "bugs": "https://github.com/njydsz/vue-ydsz-admin/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/njydsz/vue-ydsz-admin.git",
+    "directory": "comm/effects/request"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@ydsz/locales": "workspace:*",
+    "@ydsz/utils": "workspace:*",
+    "axios": "catalog:",
+    "qs": "catalog:"
+  },
+  "devDependencies": {
+    "@types/qs": "catalog:",
+    "axios-mock-adapter": "catalog:"
+  }
+}

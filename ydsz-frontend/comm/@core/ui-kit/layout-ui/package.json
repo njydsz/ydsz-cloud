@@ -1,0 +1,48 @@
+{
+  "name": "@ydsz-core/layout-ui",
+  "version": "5.5.9",
+  "homepage": "https://github.com/njydsz/vue-ydsz-admin",
+  "bugs": "https://github.com/njydsz/vue-ydsz-admin/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/njydsz/vue-ydsz-admin.git",
+    "directory": "comm/@ydsz-core/uikit/layout-ui"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm unbuild",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "default": "./dist/index.mjs"
+      }
+    }
+  },
+  "dependencies": {
+    "@ydsz-core/composables": "workspace:*",
+    "@ydsz-core/icons": "workspace:*",
+    "@ydsz-core/shadcn-ui": "workspace:*",
+    "@ydsz-core/shared": "workspace:*",
+    "@ydsz-core/typings": "workspace:*",
+    "@vueuse/core": "catalog:",
+    "vue": "catalog:"
+  }
+}

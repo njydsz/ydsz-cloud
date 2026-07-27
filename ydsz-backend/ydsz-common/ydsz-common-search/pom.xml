@@ -71,10 +71,31 @@
             <artifactId>spring-context</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- Spring Web（SearchController，可选） -->
+        <!-- Spring Web（可选） -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- Elasticsearch 客户端（可选） -->
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- Solr 客户端（可选） -->
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- OpenSearch 客户端（可选） -->
+        <dependency>
+            <groupId>org.opensearch.client</groupId>
+            <artifactId>opensearch-java</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>

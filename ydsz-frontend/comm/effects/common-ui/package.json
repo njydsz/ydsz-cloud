@@ -1,0 +1,54 @@
+{
+  "name": "@ydsz/common-ui",
+  "version": "5.5.9",
+  "homepage": "https://github.com/njydsz/vue-ydsz-admin",
+  "bugs": "https://github.com/njydsz/vue-ydsz-admin/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/njydsz/vue-ydsz-admin.git",
+    "directory": "comm/effects/common-ui"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./es/tippy": {
+      "types": "./src/components/tippy/index.ts",
+      "default": "./src/components/tippy/index.ts"
+    },
+    "./es/loading": {
+      "types": "./src/components/loading/index.ts",
+      "default": "./src/components/loading/index.ts"
+    }
+  },
+  "dependencies": {
+    "@ydsz-core/form-ui": "workspace:*",
+    "@ydsz-core/popup-ui": "workspace:*",
+    "@ydsz-core/preferences": "workspace:*",
+    "@ydsz-core/shadcn-ui": "workspace:*",
+    "@ydsz-core/shared": "workspace:*",
+    "@ydsz/constants": "workspace:*",
+    "@ydsz/hooks": "workspace:*",
+    "@ydsz/icons": "workspace:*",
+    "@ydsz/locales": "workspace:*",
+    "@ydsz/types": "workspace:*",
+    "@vueuse/core": "catalog:",
+    "@vueuse/integrations": "catalog:",
+    "json-bigint": "catalog:",
+    "qrcode": "catalog:",
+    "tippy.js": "catalog:",
+    "vue": "catalog:",
+    "vue-json-viewer": "catalog:",
+    "vue-router": "catalog:",
+    "vue-tippy": "catalog:"
+  },
+  "devDependencies": {
+    "@types/qrcode": "catalog:"
+  }
+}

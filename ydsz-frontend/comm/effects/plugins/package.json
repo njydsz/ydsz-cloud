@@ -1,0 +1,47 @@
+{
+  "name": "@ydsz/plugins",
+  "version": "5.5.9",
+  "homepage": "https://github.com/njydsz/vue-ydsz-admin",
+  "bugs": "https://github.com/njydsz/vue-ydsz-admin/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/njydsz/vue-ydsz-admin.git",
+    "directory": "comm/effects/plugins"
+  },
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    "./echarts": {
+      "types": "./src/echarts/index.ts",
+      "default": "./src/echarts/index.ts"
+    },
+    "./vxe-table": {
+      "types": "./src/vxe-table/index.ts",
+      "default": "./src/vxe-table/index.ts"
+    },
+    "./motion": {
+      "types": "./src/motion/index.ts",
+      "default": "./src/motion/index.ts"
+    }
+  },
+  "dependencies": {
+    "@ydsz-core/form-ui": "workspace:*",
+    "@ydsz-core/shadcn-ui": "workspace:*",
+    "@ydsz-core/shared": "workspace:*",
+    "@ydsz/hooks": "workspace:*",
+    "@ydsz/icons": "workspace:*",
+    "@ydsz/locales": "workspace:*",
+    "@ydsz/preferences": "workspace:*",
+    "@ydsz/types": "workspace:*",
+    "@ydsz/utils": "workspace:*",
+    "@vueuse/core": "catalog:",
+    "@vueuse/motion": "catalog:",
+    "echarts": "catalog:",
+    "vue": "catalog:",
+    "vxe-pc-ui": "catalog:",
+    "vxe-table": "catalog:"
+  }
+}

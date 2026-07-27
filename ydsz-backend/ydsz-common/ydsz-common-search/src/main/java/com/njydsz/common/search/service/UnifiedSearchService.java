@@ -3,13 +3,14 @@ package com.njydsz.common.search.service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.api.SearchFilter;
@@ -18,7 +19,8 @@ import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.api.SearchSuggestion;
 import com.njydsz.common.search.config.SearchProperties;
-import com.njydsz.common.search.core.SearchEngine;
+import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.core.SuggestStrategy;
 import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
@@ -30,65 +32,60 @@ import lombok.extern.slf4j.Slf4j;
  * 统一搜索服务
  * <p>
  * 聚合多个 {@link SearchProvider} 的搜索结果，提供跨实体统一搜索能力。
- * 支持按类型搜索、结果合并排序、权限过滤、结果缓存、超时保护。
+ * 通过 {@link SearchEngineRegistry} 委托搜索引擎策略，支持主引擎 + 降级链。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.3.0
  */
 @Slf4j
 public class UnifiedSearchService {
 
-    private final SearchEngine searchEngine;
+    private final SearchEngineRegistry engineRegistry;
     private final SearchProviderRegistry providerRegistry;
     private final SearchProperties properties;
     private final SearchCacheService cacheService;
     private final SearchMetrics metrics;
     private final SearchAnalyticsService analyticsService;
     private final SearchTextProcessor textProcessor;
-    private final ExecutorService searchExecutor;
-    // P1-3: 使用 AtomicReference<CircuitState> 替代 AtomicBoolean，CAS 确保线程安全
+    private final ThreadPoolTaskExecutor searchExecutor;
+
     private enum CircuitState { CLOSED, OPEN, HALF_OPEN }
     private final AtomicReference<CircuitState> circuitState = new AtomicReference<>(CircuitState.CLOSED);
     private volatile long circuitOpenTime = 0;
     private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
     private final AtomicInteger halfOpenProbeCount = new AtomicInteger(0);
-    // P1-10: 并发搜索限流 — Semaphore 限制最大并发搜索数
     private final Semaphore searchConcurrencyLimit;
-    public UnifiedSearchService(SearchEngine searchEngine,
-                                 SearchProviderRegistry providerRegistry,
-                                 SearchProperties properties,
-                                 SearchMetrics metrics,
-                                 SearchAnalyticsService analyticsService,
-                                 SearchTextProcessor textProcessor) {
-        this.searchEngine = searchEngine;
+
+    public UnifiedSearchService(SearchEngineRegistry engineRegistry,
+                                SearchProviderRegistry providerRegistry,
+                                SearchProperties properties,
+                                SearchMetrics metrics,
+                                SearchAnalyticsService analyticsService,
+                                SearchTextProcessor textProcessor) {
+        this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
         this.properties = properties;
         this.metrics = metrics;
         this.analyticsService = analyticsService;
         this.textProcessor = textProcessor;
         this.cacheService = new SearchCacheService(properties);
-        this.searchExecutor = Executors.newFixedThreadPool(
-                Math.max(2, properties.getIndex().getThreadPoolSize()));
-        // P1-10: 限制最大并发搜索数，防止过载
+
+        this.searchExecutor = new ThreadPoolTaskExecutor();
+        this.searchExecutor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
+        this.searchExecutor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
+        this.searchExecutor.setQueueCapacity(256);
+        this.searchExecutor.setThreadNamePrefix("search-");
+        this.searchExecutor.setWaitForTasksToCompleteOnShutdown(true);
+        this.searchExecutor.setAwaitTerminationSeconds(5);
+        this.searchExecutor.initialize();
+
         this.searchConcurrencyLimit = new Semaphore(properties.getMaxPageSize(), true);
     }
 
-    /**
-     * 统一搜索（跨实体）
-     * <p>
-     * 当 {@code request.types} 为空时，搜索所有已注册的实体类型。
-     * 各类型的搜索并行执行，结果合并后按相关性排序。
-     *
-     * @param request 搜索请求
-     * @return 搜索响应
-     */
     public SearchResponse search(SearchRequest request) {
-        long start = System.currentTimeMillis();
-
-        // P1-10: 并发搜索限流
         try {
             if (!searchConcurrencyLimit.tryAcquire(properties.getSearchTimeout(), TimeUnit.SECONDS)) {
-                log.warn("[UnifiedSearch] 搜索并发数超限，拒绝请求: keyword={}", request.getKeyword());
+                log.warn("[UnifiedSearch] 搜索并发数超限: keyword={}", request.getKeyword());
                 return SearchResponse.empty(request.getPage(), request.getPageSize());
             }
         } catch (InterruptedException e) {
@@ -98,168 +95,115 @@ public class UnifiedSearchService {
 
         try {
             applyDefaults(request);
-        validateRequest(request);
+            validateRequest(request);
 
-        if (request.getKeyword() == null || request.getKeyword().isBlank()) {
-            return SearchResponse.empty(request.getPage(), request.getPageSize());
-        }
-
-        // P0-3: process keyword (synonyms/stopwords/pinyin) before search
-        if (textProcessor != null) {
-            String processed = textProcessor.process(request.getKeyword());
-            if (processed != null && !processed.isBlank()) {
-                request.setKeyword(processed);
-            }
-        }
-
-        // P1-7: 熔断检查
-        if (isCircuitOpen()) {
-            log.warn("[UnifiedSearch] 熔断器开启，拒绝搜索请求");
-            return SearchResponse.empty(request.getPage(), request.getPageSize());
-        }
-        // P0-4: 权限过滤 — 注入 Provider 级别的过滤条件
-        applyProviderFilters(request);
-
-
-        // P0-2: 缓存命中检查
-        SearchResponse cached = cacheService.get(request);
-        if (cached != null) {
-            log.debug("[UnifiedSearch] 缓存命中: keyword={}", request.getKeyword());
-            return cached;
-        }
-
-        SearchResponse response;
-        try {
-            List<SearchProvider<?>> providers = providerRegistry.getProviders(request.getTypes());
-            if (providers.isEmpty()) {
-                response = searchWithTimeout(request);
-            } else if (providers.size() == 1) {
-                response = searchWithTimeout(request);
-            } else {
-                response = searchMultiType(request, providers, start);
+            if (request.getKeyword() == null || request.getKeyword().isBlank()) {
+                return SearchResponse.empty(request.getPage(), request.getPageSize());
             }
 
-            // 记录指标和分析
-            long took = System.currentTimeMillis() - start;
-            metrics.recordSearch(took, response.getTotal());
-            analyticsService.recordSearch(request.getKeyword(), response.getTotal());
-
-            // P1-3: 搜索成功时关闭半开熔断器
-            closeCircuitIfHalfOpen();
-
-            // 缓存结果
-            cacheService.put(request, response);
-
-            // 重置失败计数
-            consecutiveFailures.set(0);
-
-        } catch (Exception e) {
-            log.error("[UnifiedSearch] 搜索失败: keyword={}", request.getKeyword(), e);
-            consecutiveFailures.incrementAndGet();
-            if (consecutiveFailures.get() >= properties.getCircuitBreaker().getFailureThreshold()) {
-                openCircuit();
+            if (textProcessor != null) {
+                String processed = textProcessor.process(request.getKeyword());
+                if (processed != null && !processed.isBlank()) {
+                    request.setKeyword(processed);
+                }
             }
-            response = SearchResponse.empty(request.getPage(), request.getPageSize());
-        }
 
-        return response;
+            if (isCircuitOpen()) {
+                log.warn("[UnifiedSearch] 熔断器开启，拒绝搜索");
+                return SearchResponse.empty(request.getPage(), request.getPageSize());
+            }
+            applyProviderFilters(request);
+
+            SearchResponse cached = cacheService.get(request);
+            if (cached != null) {
+                return cached;
+            }
+
+            SearchResponse response;
+            try {
+                List<SearchProvider<?>> providers = providerRegistry.getProviders(request.getTypes());
+                if (providers.isEmpty() || providers.size() == 1) {
+                    response = searchWithTimeout(request);
+                } else {
+                    response = searchMultiType(request, providers);
+                }
+
+                long took = response.getTookMs();
+                metrics.recordSearch(took, response.getTotal());
+                analyticsService.recordSearch(request.getKeyword(), response.getTotal());
+                closeCircuitIfHalfOpen();
+                cacheService.put(request, response);
+                consecutiveFailures.set(0);
+
+            } catch (Exception e) {
+                log.error("[UnifiedSearch] 搜索失败: keyword={}", request.getKeyword(), e);
+                consecutiveFailures.incrementAndGet();
+                if (consecutiveFailures.get() >= properties.getCircuitBreaker().getFailureThreshold()) {
+                    openCircuit();
+                }
+                response = SearchResponse.empty(request.getPage(), request.getPageSize());
+            }
+
+            return response;
         } finally {
-            // P1-10: 释放并发搜索许可
             searchConcurrencyLimit.release();
         }
     }
 
-    /**
-     * 搜索建议
-     */
     public SearchSuggestion suggest(String prefix) {
-        return searchEngine.suggest(prefix, properties.getSuggestLimit());
+        Optional<SuggestStrategy> suggestStrategy = engineRegistry.getSuggestStrategy();
+        if (suggestStrategy.isPresent()) {
+            return suggestStrategy.get().suggest(prefix, properties.getSuggestLimit());
+        }
+        return SearchSuggestion.builder()
+                .type(SearchSuggestion.SuggestionType.AUTOCOMPLETE)
+                .suggestions(List.of())
+                .originalInput(prefix)
+                .build();
     }
 
-    /**
-     * 搜索建议（零结果纠错）
-     */
     public SearchSuggestion didYouMean(String keyword) {
-        SearchSuggestion suggestion = searchEngine.suggest(keyword, properties.getSuggestLimit());
+        SearchSuggestion suggestion = suggest(keyword);
         if (suggestion != null) {
             suggestion.setType(SearchSuggestion.SuggestionType.DID_YOU_MEAN);
         }
         return suggestion;
     }
 
-    /**
-     * 清空搜索缓存
-     */
     public void clearCache() {
         cacheService.clear();
     }
 
-    /**
-     * P2-7: 获取缓存大小（健康检查用）
-     */
     public int getCacheSize() {
         return cacheService.size();
     }
 
-    /**
-     * 关闭线程池（Spring 生命周期回调）
-     */
     public void shutdown() {
         searchExecutor.shutdown();
-        try {
-            if (!searchExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                searchExecutor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            searchExecutor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
         log.info("[UnifiedSearch] 线程池已关闭");
     }
 
     // ==================== 私有方法 ====================
 
     private void applyDefaults(SearchRequest request) {
-        if (request.getPage() <= 0) {
-            request.setPage(1);
-        }
-        if (request.getPageSize() <= 0) {
-            request.setPageSize(properties.getPageSize());
-        }
-        // P2-18: 深分页保护 — 限制每页最大大小
-        if (request.getPageSize() > properties.getMaxPageSize()) {
-            request.setPageSize(properties.getMaxPageSize());
-        }
-        if (request.getHighlightPreTag() == null) {
-            request.setHighlightPreTag(properties.getHighlightPreTag());
-        }
-        if (request.getHighlightPostTag() == null) {
-            request.setHighlightPostTag(properties.getHighlightPostTag());
-        }
-        if (request.getHighlightFragmentSize() <= 0) {
-            request.setHighlightFragmentSize(properties.getHighlightFragmentSize());
-        }
+        if (request.getPage() <= 0) request.setPage(1);
+        if (request.getPageSize() <= 0) request.setPageSize(properties.getPageSize());
+        if (request.getPageSize() > properties.getMaxPageSize()) request.setPageSize(properties.getMaxPageSize());
+        if (request.getHighlightPreTag() == null) request.setHighlightPreTag(properties.getHighlightPreTag());
+        if (request.getHighlightPostTag() == null) request.setHighlightPostTag(properties.getHighlightPostTag());
+        if (request.getHighlightFragmentSize() <= 0) request.setHighlightFragmentSize(properties.getHighlightFragmentSize());
     }
 
-    /**
-     * P2-18: 深分页保护 — 限制翻页深度
-     */
     private void validateRequest(SearchRequest request) {
-        int offset = request.getOffset();
-        if (offset > properties.getMaxPageDepth()) {
+        if (request.getOffset() > properties.getMaxPageDepth()) {
             throw new IllegalArgumentException(
-                    "翻页深度超过上限: offset=" + offset + ", max=" + properties.getMaxPageDepth());
+                    "翻页深度超过上限: offset=" + request.getOffset() + ", max=" + properties.getMaxPageDepth());
         }
     }
 
-    /**
-     * P0-4: 权限过滤 — 调用 Provider 的 getFilters 注入权限条件
-     */
     private void applyProviderFilters(SearchRequest request) {
         List<SearchProvider<?>> providers = providerRegistry.getProviders(request.getTypes());
-        if (providers.isEmpty()) {
-            return;
-        }
+        if (providers.isEmpty()) return;
 
         SearchProviderContext context = SearchProviderContext.builder()
                 .userId(request.getUserId())
@@ -274,32 +218,25 @@ public class UnifiedSearchService {
                     allFilters.addAll(providerFilters);
                 }
             } catch (Exception e) {
-                log.warn("[UnifiedSearch] Provider {} 权限过滤获取失败: {}",
-                        provider.getType(), e.getMessage());
+                log.warn("[UnifiedSearch] Provider {} 权限过滤获取失败: {}", provider.getType(), e.getMessage());
             }
         }
         request.setFilters(allFilters);
     }
 
-    /**
-     * P1-7: 搜索超时保护
-     */
     private SearchResponse searchWithTimeout(SearchRequest request) {
         CompletableFuture<SearchResponse> future = CompletableFuture.supplyAsync(
-                () -> searchEngine.search(request), searchExecutor);
-
+                () -> engineRegistry.search(request), searchExecutor);
         try {
             return future.get(properties.getSearchTimeout(), TimeUnit.SECONDS);
         } catch (Exception e) {
             future.cancel(true);
-            log.warn("[UnifiedSearch] 搜索超时: keyword={}, timeout={}s",
-                    request.getKeyword(), properties.getSearchTimeout());
+            log.warn("[UnifiedSearch] 搜索超时: keyword={}, timeout={}s", request.getKeyword(), properties.getSearchTimeout());
             return SearchResponse.empty(request.getPage(), request.getPageSize());
         }
     }
 
-    private SearchResponse searchMultiType(SearchRequest request, List<SearchProvider<?>> providers, long start) {
-        // P1-2: 每个类型获取 offset + pageSize 条结果，确保翻页正确
+    private SearchResponse searchMultiType(SearchRequest request, List<SearchProvider<?>> providers) {
         int perTypeLimit = request.getOffset() + request.getPageSize();
 
         List<CompletableFuture<SearchResponse>> futures = providers.stream()
@@ -309,10 +246,9 @@ public class UnifiedSearchService {
                         typeRequest.setTypes(List.of(provider.getType()));
                         typeRequest.setPage(1);
                         typeRequest.setPageSize(perTypeLimit);
-                        return searchEngine.search(typeRequest);
+                        return engineRegistry.search(typeRequest);
                     } catch (Exception e) {
-                        log.warn("[UnifiedSearch] 类型 {} 搜索失败: {}",
-                                provider.getType(), e.getMessage());
+                        log.warn("[UnifiedSearch] 类型 {} 搜索失败: {}", provider.getType(), e.getMessage());
                         return SearchResponse.empty(1, perTypeLimit);
                     }
                 }, searchExecutor))
@@ -329,12 +265,8 @@ public class UnifiedSearchService {
         }
 
         allHits.sort(Comparator.comparingDouble((SearchHit h) -> -h.getScore()));
-
         int fromIndex = Math.min(request.getOffset(), allHits.size());
         int toIndex = Math.min(fromIndex + request.getPageSize(), allHits.size());
-        List<SearchHit> pageHits = allHits.subList(fromIndex, toIndex);
-
-        long took = System.currentTimeMillis() - start;
 
         SearchSuggestion suggestion = null;
         if (allHits.isEmpty() && request.getKeyword() != null) {
@@ -342,61 +274,44 @@ public class UnifiedSearchService {
         }
 
         return SearchResponse.builder()
-                .hits(pageHits)
+                .hits(allHits.subList(fromIndex, toIndex))
                 .total(total)
                 .page(request.getPage())
                 .pageSize(request.getPageSize())
-                .tookMs(took)
+                .tookMs(0)
                 .suggestion(suggestion)
-                .engine(searchEngine.getName())
+                .engine(engineRegistry.getPrimary() != null ? engineRegistry.getPrimary().getEngineName() : "unknown")
                 .build();
     }
 
-    /**
-     * P1-3: 熔断器状态检查 — CAS 确保半开状态仅限定数量的探测请求通过
-     */
     private boolean isCircuitOpen() {
         CircuitState state = circuitState.get();
-        if (state == CircuitState.CLOSED) {
-            return false;
-        }
+        if (state == CircuitState.CLOSED) return false;
         if (state == CircuitState.OPEN) {
-            // 检查是否过了熔断等待时间
             long waitMs = properties.getCircuitBreaker().getWaitDuration() * 1000L;
             if (System.currentTimeMillis() - circuitOpenTime > waitMs) {
-                // CAS: OPEN → HALF_OPEN，确保仅一个线程成功转换
                 if (circuitState.compareAndSet(CircuitState.OPEN, CircuitState.HALF_OPEN)) {
                     halfOpenProbeCount.set(0);
-                    log.info("[UnifiedSearch] 熔断器半开，尝试恢复");
                     return false;
                 }
-                // CAS 失败说明其他线程已转换，检查是否仍在 OPEN 状态
                 return circuitState.get() == CircuitState.OPEN;
             }
             return true;
         }
-        // HALF_OPEN 状态：限制探测请求数
-        if (halfOpenProbeCount.incrementAndGet() > properties.getCircuitBreaker().getHalfOpenRequests()) {
-            return true;
-        }
-        return false;
+        return halfOpenProbeCount.incrementAndGet() > properties.getCircuitBreaker().getHalfOpenRequests();
     }
 
     private void openCircuit() {
         circuitState.set(CircuitState.OPEN);
         circuitOpenTime = System.currentTimeMillis();
-        log.warn("[UnifiedSearch] 熔断器开启: failures={}, wait={}s",
-                consecutiveFailures.get(), properties.getCircuitBreaker().getWaitDuration());
+        log.warn("[UnifiedSearch] 熔断器开启: failures={}", consecutiveFailures.get());
     }
 
-    /**
-     * P1-3: 搜索成功时关闭熔断器
-     */
     private void closeCircuitIfHalfOpen() {
         if (circuitState.get() == CircuitState.HALF_OPEN) {
             circuitState.set(CircuitState.CLOSED);
             halfOpenProbeCount.set(0);
-            log.info("[UnifiedSearch] 熔断器恢复，已关闭");
+            log.info("[UnifiedSearch] 熔断器恢复");
         }
     }
 
