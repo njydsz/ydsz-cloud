@@ -199,9 +199,10 @@ public class TenantAutoConfiguration {
     @ConditionalOnMissingBean
     public TenantDataSourceRouter tenantDataSourceRouter(
             DynamicRoutingDataSource routingDataSource,
-            TenantProperties properties) {
+            TenantProperties properties,
+            ObjectProvider<TenantMetrics> metricsProvider) {
         log.info("多租户 ISOLATE_DB 模式已启用，数据源路由器已注册");
-        return new TenantDataSourceRouter(routingDataSource, properties);
+        return new TenantDataSourceRouter(routingDataSource, properties, metricsProvider.getIfAvailable());
     }
 
     /**

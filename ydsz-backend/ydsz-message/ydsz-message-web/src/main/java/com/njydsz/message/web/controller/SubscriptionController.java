@@ -17,8 +17,10 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.config.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
+import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 import com.njydsz.message.server.service.config.SubscriptionService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,8 +57,8 @@ public class SubscriptionController {
     @Audit(module = "订阅管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
     @RateLimit(resource = "message.subscription.upsert", threshold = 50)
     @PostMapping
-    public BaseResponse<MsgSubscription> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
-        return BaseResponse.success(subscriptionService.upsert(dto));
+    public BaseResponse<MsgSubscriptionVO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
+        return BaseResponse.success(MessageConverter.INSTANT.entityToVO(subscriptionService.upsert(dto)));
     }
 
     /**
@@ -68,8 +70,8 @@ public class SubscriptionController {
     @Operation(summary = "查询用户所有订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/user/{userId}")
-    public BaseResponse<List<MsgSubscription>> listByUser(@PathVariable String userId) {
-        return BaseResponse.success(subscriptionService.listByUser(userId));
+    public BaseResponse<List<MsgSubscriptionVO>> listByUser(@PathVariable String userId) {
+        return BaseResponse.success(MessageConverter.INSTANT.subscriptionListToVO(subscriptionService.listByUser(userId)));
     }
 
     /**
@@ -82,9 +84,9 @@ public class SubscriptionController {
     @Operation(summary = "按主题+通道查询订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/topic/{topicCode}/{channel}")
-    public BaseResponse<List<MsgSubscription>> listByTopic(@PathVariable String topicCode,
+    public BaseResponse<List<MsgSubscriptionVO>> listByTopic(@PathVariable String topicCode,
                                                        @PathVariable String channel) {
-        return BaseResponse.success(subscriptionService.listByTopic(topicCode, channel));
+        return BaseResponse.success(MessageConverter.INSTANT.subscriptionListToVO(subscriptionService.listByTopic(topicCode, channel)));
     }
 
     /**

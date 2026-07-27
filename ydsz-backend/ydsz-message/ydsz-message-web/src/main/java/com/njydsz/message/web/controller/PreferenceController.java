@@ -17,8 +17,10 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgPreference;
+import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.server.service.config.PreferenceService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,8 +57,8 @@ public class PreferenceController {
     @Audit(module = "偏好设置", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
     @RateLimit(resource = "message.preference.upsert", threshold = 50)
     @PostMapping
-    public BaseResponse<MsgPreference> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
-        return BaseResponse.success(preferenceService.upsert(dto));
+    public BaseResponse<MsgPreferenceVO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
+        return BaseResponse.success(MessageConverter.INSTANT.entityToVO(preferenceService.upsert(dto)));
     }
 
     /**
@@ -68,8 +70,8 @@ public class PreferenceController {
     @Operation(summary = "查询用户所有偏好")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}")
-    public BaseResponse<List<MsgPreference>> listByUser(@PathVariable String userId) {
-        return BaseResponse.success(preferenceService.listByUser(userId));
+    public BaseResponse<List<MsgPreferenceVO>> listByUser(@PathVariable String userId) {
+        return BaseResponse.success(MessageConverter.INSTANT.preferenceListToVO(preferenceService.listByUser(userId)));
     }
 
     /**
@@ -83,10 +85,10 @@ public class PreferenceController {
     @Operation(summary = "按用户+通道+业务类型查询偏好")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}/{channel}/{bizType}")
-    public BaseResponse<MsgPreference> getByUser(@PathVariable String userId,
+    public BaseResponse<MsgPreferenceVO> getByUser(@PathVariable String userId,
                                              @PathVariable String channel,
                                              @PathVariable String bizType) {
-        return BaseResponse.success(preferenceService.getByUser(userId, channel, bizType));
+        return BaseResponse.success(MessageConverter.INSTANT.entityToVO(preferenceService.getByUser(userId, channel, bizType)));
     }
 
     /**

@@ -60,6 +60,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "ydsz.tenant")
 public class TenantProperties {
 
@@ -73,6 +74,7 @@ public class TenantProperties {
     /**
      * 租户隔离模式（默认 SINGLE）。
      */
+    @NotNull
     private TenantMode mode = TenantMode.SINGLE;
 
     /**
@@ -81,6 +83,7 @@ public class TenantProperties {
      * <p>当 {@link #tenantFields} 为空时使用此字段。
      * 配置了 {@link #tenantFields} 后此字段被忽略。
      */
+    @NotBlank
     private String tenantColumn = "tenant_id";
 
     /**
@@ -88,6 +91,7 @@ public class TenantProperties {
      *
      * <p>此租户 ID 的用户可跨租户操作，SQL 拦截器不注入租户条件。
      */
+    @NotBlank
     private String superTenantId = "0";
 
     /**
@@ -95,6 +99,7 @@ public class TenantProperties {
      *
      * <p>定时任务、MQ Consumer、@Async 等无用户上下文的场景使用此租户 ID。
      */
+    @NotBlank
     private String systemTenantId = "0";
 
     /**

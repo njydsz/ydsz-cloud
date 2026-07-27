@@ -17,8 +17,10 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.config.UserChannelBindingDTO;
 import com.njydsz.message.domain.entity.config.MsgUserChannel;
+import com.njydsz.message.domain.vo.MsgUserChannelVO;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,22 +51,22 @@ public class UserChannelBindingController {
     @RateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
     @Idempotent(key = "ydsz:message:UserChannelBindingController:upsert:lock", ttlSeconds = 5)
     @PostMapping
-    public BaseResponse<MsgUserChannel> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
-        return BaseResponse.success(userChannelBindingService.upsert(dto));
+    public BaseResponse<MsgUserChannelVO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
+        return BaseResponse.success(MessageConverter.INSTANT.entityToVO(userChannelBindingService.upsert(dto)));
     }
 
     @Operation(summary = "查询当前用户所有通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/mine")
-    public BaseResponse<List<MsgUserChannel>> listMine() {
-        return BaseResponse.success(userChannelBindingService.listByUser(AuthContext.getUserId()));
+    public BaseResponse<List<MsgUserChannelVO>> listMine() {
+        return BaseResponse.success(MessageConverter.INSTANT.userChannelListToVO(userChannelBindingService.listByUser(AuthContext.getUserId())));
     }
 
     @Operation(summary = "按用户ID查询通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/user/{userId}")
-    public BaseResponse<List<MsgUserChannel>> listByUser(@PathVariable String userId) {
-        return BaseResponse.success(userChannelBindingService.listByUser(userId));
+    public BaseResponse<List<MsgUserChannelVO>> listByUser(@PathVariable String userId) {
+        return BaseResponse.success(MessageConverter.INSTANT.userChannelListToVO(userChannelBindingService.listByUser(userId)));
     }
 
     @Operation(summary = "删除通道绑定")
