@@ -26,12 +26,19 @@ public class IndexRebuildService {
     private volatile int progress = 0;
     private volatile int total = 0;
 
+    private final ExecutorService rebuildExecutor;
+
     public IndexRebuildService(IndexSyncService indexSyncService,
                                 SearchEngineRegistry engineRegistry,
                                 SearchProviderRegistry providerRegistry) {
         this.indexSyncService = indexSyncService;
         this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
+        this.rebuildExecutor = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "index-rebuild");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     public int rebuildAll(String type, String tenantId) {

@@ -9,8 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -18,6 +16,7 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchAggregation;
@@ -72,7 +71,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     private final String indexTable;
     private volatile boolean available;
     private final Map<String, IndexDocument> memoryIndex;
-    private final ScheduledExecutorService probeExecutor;
+    private final ThreadPoolTaskScheduler probeScheduler;
 
     public PgSearchStrategy(DataSource dataSource, SearchProperties.PgConfig pgConfig) {
         this(new JdbcTemplate(dataSource), pgConfig);
@@ -90,11 +89,12 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                 return size() > MAX_MEMORY_INDEX_SIZE;
             }
         });
-        this.probeExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "pg-search-probe");
-            t.setDaemon(true);
-            return t;
-        });
+        this.probeScheduler = new ThreadPoolTaskScheduler();
+        this.probeScheduler.setPoolSize(1);
+        this.probeScheduler.setThreadNamePrefix("pg-search-probe-");
+        this.probeScheduler.setDaemon(true);
+        this.probeScheduler.setWaitForTasksToCompleteOnShutdown(false);
+        this.probeScheduler.initialize();
         startRecoveryProbe();
     }
 
@@ -409,13 +409,13 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     }
 
     public void shutdown() {
-        probeExecutor.shutdown();
+        probeScheduler.shutdown();
         try {
-            if (!probeExecutor.awaitTermination(3, TimeUnit.SECONDS)) {
-                probeExecutor.shutdownNow();
+            if (!probeScheduler.getScheduledThreadPoolExecutor().awaitTermination(3, TimeUnit.SECONDS)) {
+                probeScheduler.getScheduledThreadPoolExecutor().shutdownNow();
             }
         } catch (InterruptedException e) {
-            probeExecutor.shutdownNow();
+            probeScheduler.getScheduledThreadPoolExecutor().shutdownNow();
             Thread.currentThread().interrupt();
         }
         log.info("[PgSearchStrategy] 探测线程池已关闭");
@@ -437,7 +437,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     }
 
     private void startRecoveryProbe() {
-        probeExecutor.scheduleAtFixedRate(() -> {
+        probeScheduler.scheduleAtFixedRate(() -> {
             if (!available) {
                 try {
                     jdbcTemplate.queryForObject("SELECT 1 FROM " + indexTable + " LIMIT 1", Integer.class);
