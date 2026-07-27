@@ -7,9 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.common.util.BeanUpdateUtil;
 
 import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
 import com.njydsz.userinfo.domain.entity.Department;
@@ -114,7 +115,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
         }
-        BeanUtils.copyProperties(dto, entity, "id");
+        BeanUpdateUtil.copyNonNull(dto, entity, "id");
         return departmentMapper.updateById(entity) > 0;
     }
 

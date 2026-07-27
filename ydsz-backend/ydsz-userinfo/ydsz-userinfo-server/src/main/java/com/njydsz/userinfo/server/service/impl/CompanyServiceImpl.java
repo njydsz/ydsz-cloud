@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -15,6 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.service.AbstractMpCrudService;
+import com.njydsz.common.util.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
@@ -110,7 +110,7 @@ public class CompanyServiceImpl
         if (entity == null) {
             throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
         }
-        BeanUtils.copyProperties(dto, entity, "id");
+        BeanUpdateUtil.copyNonNull(dto, entity, "id");
         return companyMapper.updateById(entity) > 0;
     }
 

@@ -1,7 +1,5 @@
 package com.njydsz.userinfo.server.service.impl;
 
-import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -9,13 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.util.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
@@ -188,7 +185,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     /**
      * {@inheritDoc}
-     * <p>使用 MapStruct 转换（更新操作暂保留 BeanUtils）
+     * <p>使用 MapStruct 转换（更新操作使用 BeanUpdateUtil 动态复制非 null 字段）
      * status 字段从 Integer 转为 String 存储。
      *
      * @throws BusinessException 当用户不存在或已删除时抛出
@@ -200,8 +197,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
-        // 仅复制非 null 属性，避免覆盖已有值
-        BeanUtils.copyProperties(dto, entity, getNullPropertyNames(dto));
+        // 仅复制非 null 属性，避免覆盖已有值；额外忽略 id（主键不可变）
+        BeanUpdateUtil.copyNonNull(dto, entity, "id");
         if (dto.getStatus() != null) {
             entity.setStatus(String.valueOf(dto.getStatus()));
         }

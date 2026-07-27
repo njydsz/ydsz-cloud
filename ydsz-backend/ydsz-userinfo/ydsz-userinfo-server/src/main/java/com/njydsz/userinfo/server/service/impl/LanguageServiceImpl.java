@@ -3,7 +3,6 @@ package com.njydsz.userinfo.server.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +12,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
 import com.njydsz.userinfo.domain.entity.Language;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
@@ -76,7 +76,7 @@ public class LanguageServiceImpl implements LanguageService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
         }
-        BeanUtils.copyProperties(dto, entity, "id");
+        BeanUpdateUtil.copyNonNull(dto, entity, "id");
         return mapper.updateById(entity) > 0;
     }
 

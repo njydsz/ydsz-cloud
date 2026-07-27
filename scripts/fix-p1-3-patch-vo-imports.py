@@ -11,9 +11,14 @@ from __future__ import annotations
 import pathlib
 import re
 
-VO_DIR = pathlib.Path(
-    "ydsz-backend/ydsz-project/ydsz-project-domain/src/main/java/com/njydsz/project/domain/vo"
-)
+VO_DIRS = [
+    pathlib.Path(
+        "ydsz-backend/ydsz-project/ydsz-project-domain/src/main/java/com/njydsz/project/domain/vo"
+    ),
+    pathlib.Path(
+        "ydsz-backend/ydsz-workflow/ydsz-workflow-domain/src/main/java/com/njydsz/workflow/domain/vo"
+    ),
+]
 
 # 类型 → import 行
 TYPE_IMPORT_MAP = {
@@ -92,13 +97,15 @@ def fix_file(path: pathlib.Path) -> bool:
 
 
 def main() -> None:
-    if not VO_DIR.exists():
-        print(f"ERROR: directory not found: {VO_DIR}")
-        return
     fixed_count = 0
-    for java_file in VO_DIR.glob("*.java"):
-        if fix_file(java_file):
-            fixed_count += 1
+    for vo_dir in VO_DIRS:
+        if not vo_dir.exists():
+            print(f"WARNING: directory not found: {vo_dir}")
+            continue
+        print(f"\n=== Processing: {vo_dir} ===")
+        for java_file in vo_dir.glob("*.java"):
+            if fix_file(java_file):
+                fixed_count += 1
     print(f"\nTotal files patched: {fixed_count}")
 
 
