@@ -29,23 +29,26 @@ import com.njydsz.common.util.string.StringUtils;
  *   <li>X-Company-Ids (7) - 公司ID集合（GROUP 范围）</li>
  *   <li>X-Dept-Ids (8) - 部门ID集合（COMPANY/DEPT 范围）</li>
  *   <li>X-Unique-Id (9) - 用户ID（USER 范围）</li>
- *   <li>X-Tenant-Id (10) - 租户ID（TENANT 范围）</li>
  *   <li>X-Project-Ids (11) - 项目ID集合（PROJECT 范围）</li>
  *   <li>X-Region-Ids (12) - 区域ID集合（REGION 范围）</li>
  *   <li>X-Visible-Columns (14) - 列可见规则（SELECT 过滤）</li>
  *   <li>X-Editable-Columns (15) - 列可编辑规则（INSERT/UPDATE 过滤）</li>
  * </ul>
  *
+ * <p><b>注意：</b>租户ID（X-Tenant-Id）已由独立的 {@code common-tenant} 模块
+ * 通过 {@code TenantContextHolder} + {@code TenantIsolationInterceptor} 处理，
+ * 本解析器不再负责租户上下文。
+ *
  * <h2>读取优先级（安全增强）</h2>
  * <ol>
- *   <li>认证上下文 {@link AuthInfoUtils}（JWT 解析，可信）— 用于 tenantId / userId</li>
+ *   <li>认证上下文 {@link AuthInfoUtils}（JWT 解析，可信）— 用于 userId</li>
  *   <li>真实 HttpServletRequest Header（常规 Web 请求 / Feign 透传）— 用于 ID 集合、列权限</li>
  *   <li>{@link RequestHolder} extra headers（{@code @AuthRowPermission}/{@code @AuthColPermission} 写入的虚拟请求头）</li>
  * </ol>
  *
- * <p><b>安全说明：</b> tenantId 和 userId 优先从 JWT 认证上下文获取（不可伪造），
+ * <p><b>安全说明：</b> userId 优先从 JWT 认证上下文获取（不可伪造），
  * HTTP Header 中的值仅在认证上下文不可用时作为兼容回退。生产环境应确保 API 网关
- * 清洗外部请求中的 X-Tenant-Id / X-Unique-Id 等敏感 Header，仅允许网关写入。
+ * 清洗外部请求中的 X-Unique-Id 等敏感 Header，仅允许网关写入。
  *
  * <h2>ID 扩展</h2>
  * <p>支持可选的 {@link DataScopeIdExpander}，在已知 ID 集合基础上自动扩展下级子节点：
@@ -94,10 +97,8 @@ public class DataPermissionContextResolver {
         }
         DataPermissionContext context = new DataPermissionContext();
         context.setDataScope(resolveDataScope(resolveHeader(request, HeaderConstants.X_DATA_SCOPE)));
-        // 安全增强：tenantId 和 userId 优先从认证上下文（JWT）获取，不可伪造
-        String authTenantId = AuthInfoUtils.getTenantId();
+        // 安全增强：userId 优先从认证上下文（JWT）获取，不可伪造
         String authUserId = AuthInfoUtils.getUniqueId();
-        context.setTenantId(trimToNull(authTenantId != null ? authTenantId : resolveHeader(request, HeaderConstants.X_TENANT_ID)));
         context.setUserId(trimToNull(authUserId != null ? authUserId : resolveHeader(request, HeaderConstants.X_UNIQUE_ID)));
         context.setCompanyIds(splitCsv(resolveHeader(request, HeaderConstants.X_COMPANY_IDS)));
         context.setDeptIds(splitCsv(resolveHeader(request, HeaderConstants.X_DEPT_IDS)));
@@ -118,7 +119,7 @@ public class DataPermissionContextResolver {
      *   <li>COMPANY / DEPT：扩展 deptIds</li>
      *   <li>PROJECT：扩展 projectIds</li>
      *   <li>REGION：扩展 regionIds</li>
-     *   <li>其他（TENANT/USER）或 idExpander 为 null：不做扩展</li>
+     * <li>其他（USER）或 idExpander 为 null：不做扩展</li>
      * </ul>
      *
      * @param context 数据权限上下文（会被直接修改）

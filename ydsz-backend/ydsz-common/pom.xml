@@ -76,6 +76,7 @@
         <module>ydsz-common-cache</module>
         <module>ydsz-common-lock</module>
         <module>ydsz-common-thread</module>
+        <module>ydsz-common-tenant</module>
         <!-- L5 业务服务层 -->
         <module>ydsz-common-auth</module>
         <module>ydsz-common-safe</module>
@@ -144,6 +145,11 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-thread</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-tenant</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

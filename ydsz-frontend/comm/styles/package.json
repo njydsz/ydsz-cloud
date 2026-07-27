@@ -1,11 +1,11 @@
 {
   "name": "@ydsz/styles",
-  "version": "5.5.9",
-  "homepage": "https://github.com/njydsz/vue-ydsz-admin",
-  "bugs": "https://github.com/njydsz/vue-ydsz-admin/issues",
+  "version": "1.0.0",
+  "homepage": "https://github.com/njydsz/ydsz-pmis",
+  "bugs": "https://github.com/njydsz/ydsz-pmis/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/njydsz/vue-ydsz-admin.git",
+    "url": "git+https://github.com/njydsz/ydsz-pmis.git",
     "directory": "comm/styles"
   },
   "license": "MIT",
@@ -15,14 +15,8 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./antd": {
-      "default": "./src/antd/index.css"
-    },
     "./ele": {
       "default": "./src/ele/index.css"
-    },
-    "./naive": {
-      "default": "./src/naive/index.css"
     },
     "./global": {
       "default": "./src/global/index.scss"

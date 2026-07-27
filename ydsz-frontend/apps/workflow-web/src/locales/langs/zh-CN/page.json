@@ -1,0 +1,14 @@
+{
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "codeLogin": "验证码登录",
+    "qrcodeLogin": "二维码登录",
+    "forgetPassword": "忘记密码"
+  },
+  "dashboard": {
+    "title": "瑞米软件全域管控平台",
+    "analytics": "子应用分析页",
+    "workspace": "子应用工作台"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "@ydsz/nextwiki-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm vite build --mode production",
+    "build:analyze": "pnpm vite build --mode analyze",
+    "dev": "pnpm vite --mode development",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit --skipLibCheck"
+  },
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "dependencies": {
+    "@ydsz/access": "workspace:*",
+    "@ydsz/common-ui": "workspace:*",
+    "@ydsz/constants": "workspace:*",
+    "@ydsz/hooks": "workspace:*",
+    "@ydsz/icons": "workspace:*",
+    "@ydsz/layouts": "workspace:*",
+    "@ydsz/locales": "workspace:*",
+    "@ydsz/plugins": "workspace:*",
+    "@ydsz/preferences": "workspace:*",
+    "@ydsz/request": "workspace:*",
+    "@ydsz/stores": "workspace:*",
+    "@ydsz/styles": "workspace:*",
+    "@ydsz/types": "workspace:*",
+    "@ydsz/utils": "workspace:*",
+    "@vueuse/core": "catalog:",
+    "dayjs": "catalog:",
+    "element-plus": "catalog:",
+    "pinia": "catalog:",
+    "vue": "catalog:",
+    "vue-router": "catalog:"
+  },
+  "devDependencies": {
+    "unplugin-element-plus": "catalog:",
+    "vite-plugin-qiankun": "^1.0.15"
+  }
+}

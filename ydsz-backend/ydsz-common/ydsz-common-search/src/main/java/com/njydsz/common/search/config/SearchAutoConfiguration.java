@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 import jakarta.annotation.PreDestroy;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -58,7 +59,8 @@ public class SearchAutoConfiguration {
 
     private UnifiedSearchService unifiedSearchServiceInstance;
     private IndexSyncService indexSyncServiceInstance;
-    private PgSearchStrategy pgSearchStrategyInstance;
+    @Autowired
+    private ObjectProvider<PgSearchStrategy> pgSearchStrategyProvider;
 
     // ==================== 引擎策略装配 ====================
 
@@ -231,8 +233,11 @@ public class SearchAutoConfiguration {
         if (indexSyncServiceInstance != null) {
             indexSyncServiceInstance.shutdown();
         }
-        if (pgSearchStrategyInstance != null) {
-            pgSearchStrategyInstance.shutdown();
+        if (pgSearchStrategyProvider != null) {
+            PgSearchStrategy pgStrategy = pgSearchStrategyProvider.getIfAvailable();
+            if (pgStrategy != null) {
+                pgStrategy.shutdown();
+            }
         }
     }
 }

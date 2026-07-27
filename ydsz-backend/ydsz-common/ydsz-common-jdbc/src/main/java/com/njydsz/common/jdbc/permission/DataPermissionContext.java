@@ -3,13 +3,15 @@ package com.njydsz.common.jdbc.permission;
 /**
  * 数据权限上下文。
  *
- * <p>封装当前请求的数据权限信息，包括租户ID、用户ID、
+ * <p>封装当前请求的数据权限信息，包括用户ID、
  * 公司ID列表、部门ID列表、项目ID列表、区域ID列表等，
  * 用于 SQL 拦截器自动拼接数据权限过滤条件。
  *
+ * <p><b>注意：</b>租户隔离（TENANT 维度）已由独立的 {@code common-tenant} 模块
+ * 通过 {@code TenantIsolationInterceptor} 处理，本上下文不再包含租户相关字段。
+ *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
 
 import java.util.Collections;
@@ -27,8 +29,6 @@ public class DataPermissionContext {
      * 行级权限维度（从请求头或 RequestHolder 解析）。
      */
     private DataScopeType dataScope;
-    /** 租户ID */
-    private String tenantId;
     /** 用户ID */
     private String userId;
     /** 公司ID集合 */
@@ -50,11 +50,6 @@ public class DataPermissionContext {
     private Map<String, Set<String>> editableColumnsByTable = Collections.emptyMap();
 
     /**
-     * 租户隔离是否启用（由配置类构造时注入）。
-     */
-    private boolean tenantIsolationEnabled = true;
-
-    /**
      * 返回一个空的 DataPermissionContext 实例。
      *
      * @return 所有字段为默认空值的上下文
@@ -68,29 +63,10 @@ public class DataPermissionContext {
      */
     public boolean isEmptyRowScope() {
         return dataScope == null
-                && tenantId == null
                 && userId == null
                 && companyIds.isEmpty()
                 && deptIds.isEmpty()
                 && projectIds.isEmpty()
                 && regionIds.isEmpty();
-    }
-
-    /**
-     * 判断租户隔离是否启用。
-     *
-     * @return true 表示启用租户隔离，false 表示关闭
-     */
-    public boolean isTenantIsolationEnabled() {
-        return tenantIsolationEnabled;
-    }
-
-    /**
-     * 设置租户隔离是否启用。
-     *
-     * @param tenantIsolationEnabled 租户隔离是否启用
-     */
-    public void setTenantIsolationEnabled(boolean tenantIsolationEnabled) {
-        this.tenantIsolationEnabled = tenantIsolationEnabled;
     }
 }
