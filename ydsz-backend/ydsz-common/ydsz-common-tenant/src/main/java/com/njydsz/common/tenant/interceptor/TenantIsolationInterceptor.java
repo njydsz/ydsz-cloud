@@ -19,7 +19,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.config.TenantProperties.TenantSource;
-import com.njydsz.common.tenant.exception.TenantIsolationException;
+import com.njydsz.common.jdbc.exception.TenantIsolationException;
 
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
