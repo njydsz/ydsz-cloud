@@ -36,7 +36,9 @@ public class DagController {
 
     private static final Logger log = LoggerFactory.getLogger(DagController.class);
 
+    /** DAG DSL 解析器 */
     private final DagDslParser dslParser;
+    /** DAG 编排执行器 */
     private final DagOrchestrationExecutor dagExecutor;
 
     public DagController(DagDslParser dslParser, DagOrchestrationExecutor dagExecutor) {

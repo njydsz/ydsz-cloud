@@ -47,6 +47,7 @@ public class DebugController {
 
     private static final Logger log = LoggerFactory.getLogger(DebugController.class);
 
+    /** Agent 调试服务 */
     private final AgentDebuggerService agentDebuggerService;
 
     public DebugController(AgentDebuggerService agentDebuggerService) {

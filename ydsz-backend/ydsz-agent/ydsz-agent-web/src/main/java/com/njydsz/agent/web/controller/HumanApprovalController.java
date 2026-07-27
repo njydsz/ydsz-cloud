@@ -42,6 +42,7 @@ import com.njydsz.agent.domain.vo.ApprovalRequestVO;
 @RequiredArgsConstructor
 public class HumanApprovalController {
 
+    /** 人工审批服务 */
     private final HumanApprovalService approvalService;
 
     @GetMapping("/pending")

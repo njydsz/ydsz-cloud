@@ -75,7 +75,7 @@ public interface JobHistoryService {
     List<Map<String, Object>> compareVersions(String jobId, Integer version1, Integer version2);
 
     /**
-     * 记录版本变更快照（合并自原 JobVersionService.recordVersionChange）。
+     * 记录版本变更快照。
      *
      * <p>统一版本管理入口，同时保存变更前/变更后快照，支持 CREATE / UPDATE / DELETE 三种变更类型。
      * 内部将 before/after 序列化为 JSON 存入 {@code before_snapshot} 和 {@code snapshot} 字段。

@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <h3>清理范围</h3>
  * <ul>
- *   <li>ydsz_job_log：任务执行日志（含 is_slow 慢任务标记, P2-1-merge 合并了原 slow_log）</li>
+ *   <li>ydsz_job_log：任务执行日志（含 is_slow 慢任务标记）</li>
  *   <li>ydsz_job_log_content：任务日志内容（在线日志白屏化）</li>
  *   <li>ydsz_job_alert_log：告警日志</li>
  *   <li>ydsz_job_task：MapReduce 子任务记录</li>

@@ -116,7 +116,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 任务历史版本服务（P1-6 可选注入）。
      *
      * <p>用于在任务配置更新前自动保存历史快照，支持版本对比和一键回滚。
-     * 同时合并了原 JobVersionService 的版本变更记录能力（recordVersionChange），
+     * 同时记录版本变更快照，
      * 统一版本管理入口。
      * 通过 ObjectProvider 可选注入，避免循环依赖且便于测试。
      */

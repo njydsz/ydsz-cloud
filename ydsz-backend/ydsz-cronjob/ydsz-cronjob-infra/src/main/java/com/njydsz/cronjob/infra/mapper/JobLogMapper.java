@@ -70,7 +70,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
                     @Param("errorMessage") String errorMessage);
 
     /**
-     * 查询慢任务执行日志（P6-3, P2-1-merge 重构）。
+     * 查询慢任务执行日志。
      *
      * <p>筛选条件：
      * <ul>
@@ -82,7 +82,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
      *   <li>{@code log.is_slow = 0}（尚未标记为慢任务，保证幂等）</li>
      * </ul>
      *
-     * <p>P2-1-merge: 原通过 LEFT JOIN ydsz_job_slow_log 过滤已记录的 log_id,
+     * <p>原通过 LEFT JOIN 慢日志表过滤已记录 log_id，
      * 现改为直接检查 ydsz_job_log.is_slow 字段, 消除独立表关联。
      *
      * @param since 时间窗口起点（仅扫描此时间之后的日志）
@@ -110,9 +110,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
                                     @Param("limit") int limit);
 
     /**
-     * P2-1-merge: 标记指定日志为慢任务（is_slow=1, 快照 slow_threshold_ms）。
-     *
-     * <p>替代原 SlowTaskDetector 向 ydsz_job_slow_log 插入记录的逻辑。
+     * 标记指定日志为慢任务（is_slow=1, 快照 slow_threshold_ms）。
      *
      * @param logId            任务日志 ID
      * @param slowThresholdMs  慢任务阈值快照（毫秒）

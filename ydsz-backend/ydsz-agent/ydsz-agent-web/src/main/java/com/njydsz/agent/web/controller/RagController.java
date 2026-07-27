@@ -47,7 +47,9 @@ public class RagController {
 
     private static final Logger log = LoggerFactory.getLogger(RagController.class);
 
+    /** RAG 检索服务 */
     private final RagService ragService;
+    /** 文档摄入服务 */
     private final DocumentIngestionService ingestionService;
 
     public RagController(RagService ragService, DocumentIngestionService ingestionService) {

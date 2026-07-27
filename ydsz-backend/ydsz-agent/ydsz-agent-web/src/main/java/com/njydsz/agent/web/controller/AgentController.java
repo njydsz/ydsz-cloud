@@ -60,13 +60,20 @@ import com.njydsz.agent.domain.vo.ChatResponseDTOVO;
 public class AgentController {
 
     private static final Logger log = LoggerFactory.getLogger(AgentController.class);
+    /** SSE 超时时间（毫秒） */
     private static final long SSE_TIMEOUT = 120_000L;
+    /** 心跳间隔（秒） */
     private static final long HEARTBEAT_INTERVAL_SECONDS = 15L;
 
+    /** Agent 工厂 */
     private final AgentFactory agentFactory;
+    /** 工具注册中心 */
     private final ToolRegistry toolRegistry;
+    /** 请求守卫 */
     private final AgentRequestGuard requestGuard;
+    /** LLM 客户端 */
     private final LlmClient llmClient;
+    /** 心跳调度器 */
     private final ScheduledExecutorService heartbeatScheduler =
             Executors.newScheduledThreadPool(2, Thread.ofVirtual().name("agent-exec-heartbeat-", 0).factory());
 

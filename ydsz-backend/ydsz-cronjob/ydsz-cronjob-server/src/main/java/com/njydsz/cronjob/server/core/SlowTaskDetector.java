@@ -25,16 +25,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 慢任务诊断扫描器（P6-3, P2-1-merge 重构）。
+ * 慢任务诊断扫描器。
  *
  * <p>仅当 {@code ydsz.cronjob.leader.enabled=true} 且当前节点是 Leader 时启用。
  * 定时（默认 30s）扫描 {@code ydsz_job_log} 中已结束（SUCCESS/FAILED/TIMEOUT）
  * 且耗时超过 {@code ydsz_job.slow_threshold_ms} 的记录，标记 {@code is_slow=1}。
- *
- * <h3>P2-1-merge 变更说明</h3>
- * <p>原实现将慢任务记录写入独立的 {@code ydsz_job_slow_log} 表。
- * 现已合并到 {@code ydsz_job_log.is_slow} 字段（0/1）和 {@code slow_threshold_ms} 快照，
- * 消除了独立表及 LEFT JOIN 幂等检查。查询慢任务直接通过部分索引 {@code idx_pjl_slow} 完成。
  *
  * <h3>设计要点</h3>
  * <ul>

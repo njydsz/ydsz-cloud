@@ -1463,7 +1463,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job(
     -- [P0-4] 任务级锁 TTL（毫秒, NULL 使用全局默认值）和任务超时（毫秒, NULL 不限）
     lock_ttl_ms     BIGINT,
     timeout_ms      BIGINT,
-    -- [P6-3] 慢任务阈值（毫秒, NULL 不检测慢任务; 超过此值记入 ydsz_job_slow_log）
+    -- 慢任务阈值（毫秒, NULL 不检测慢任务; 超过此值由 SlowTaskDetector 标记 is_slow=1）
     slow_threshold_ms BIGINT,
     -- [P2-1] Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行并标记 MISFIRED
     misfire_policy  VARCHAR(32)    NOT NULL DEFAULT 'FIRE_NOW',
@@ -1542,7 +1542,7 @@ COMMENT ON COLUMN ydsz_job.success_count IS '成功执行次数';
 COMMENT ON COLUMN ydsz_job.fail_count IS '失败次数(超过阈值告警)';
 COMMENT ON COLUMN ydsz_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 ydsz.cronjob.job-lock-ttl)';
 COMMENT ON COLUMN ydsz_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示不限超时; 超时后 Leader 标记 FAILED 并重派)';
-COMMENT ON COLUMN ydsz_job.slow_threshold_ms IS '慢任务阈值(毫秒, NULL 不检测慢任务; 执行耗时超过此值记入 ydsz_job_slow_log)';
+COMMENT ON COLUMN ydsz_job.slow_threshold_ms IS '慢任务阈值(毫秒, NULL 不检测慢任务; 执行耗时超过此值由 SlowTaskDetector 标记 is_slow=1)';
 COMMENT ON COLUMN ydsz_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
 COMMENT ON COLUMN ydsz_job.shard_total IS '分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行';
 COMMENT ON COLUMN ydsz_job.job_type IS '任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码) / MAP(Map 动态子任务) / MAP_REDUCE(MapReduce 动态子任务+汇总)';
@@ -1856,60 +1856,6 @@ COMMENT ON COLUMN ydsz_job_history.deleted IS '逻辑删除标记: 0 未删除 /
 CREATE INDEX IF NOT EXISTS idx_pjh_job_id
     ON ydsz_job_history (job_id, version DESC) WHERE deleted = 0;
 
--- ============================================================================
--- [P6-3] 慢任务诊断日志表 ydsz_job_slow_log
--- ----------------------------------------------------------------------------
--- 当任务执行耗时超过 ydsz_job.slow_threshold_ms 时，自动记录到本表。
--- 与 ydsz_job_log 的区别：
---   - job_log 记录全部执行（RUNNING/SUCCESS/FAILED/TIMEOUT），用于审计
---   - slow_log 仅记录慢执行，用于性能趋势分析与优化决策
--- 由 SlowTaskDetector 定期扫描 job_log 并写入，不影响任务执行主流程。
--- ============================================================================
-CREATE TABLE IF NOT EXISTS ydsz_job_slow_log(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    job_id            VARCHAR(20)         NOT NULL,
-    job_key           VARCHAR(128)   NOT NULL,
-    log_id            VARCHAR(20)         NOT NULL,
-    duration_ms       BIGINT         NOT NULL,
-    slow_threshold_ms BIGINT         NOT NULL,
-    params_json       TEXT,
-    error_message     TEXT,
-    trace_id          VARCHAR(20),
-    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
-    created_by        VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT       NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT ck_pjsl_duration_pos    CHECK (duration_ms > 0),
-    CONSTRAINT ck_pjsl_threshold_pos   CHECK (slow_threshold_ms > 0),
-    CONSTRAINT ck_pjsl_deleted_enum   CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE ydsz_job_slow_log IS '慢任务诊断日志（P6-3）: 仅记录执行耗时超过 slow_threshold_ms 的任务，用于性能分析';
-COMMENT ON COLUMN ydsz_job_slow_log.id IS '主键 ID';
-COMMENT ON COLUMN ydsz_job_slow_log.job_id IS '任务 ID（关联 ydsz_job.id）';
-COMMENT ON COLUMN ydsz_job_slow_log.job_key IS '任务 KEY（冗余,避免连表）';
-COMMENT ON COLUMN ydsz_job_slow_log.log_id IS '关联 ydsz_job_log.id（原始终端执行日志）';
-COMMENT ON COLUMN ydsz_job_slow_log.duration_ms IS '本次执行耗时（毫秒）';
-COMMENT ON COLUMN ydsz_job_slow_log.slow_threshold_ms IS '慢任务阈值（毫秒，来自 ydsz_job.slow_threshold_ms）';
-COMMENT ON COLUMN ydsz_job_slow_log.params_json IS '执行参数 JSON（冗余自 job_log,便于独立分析）';
-COMMENT ON COLUMN ydsz_job_slow_log.error_message IS '异常信息（如慢且有异常,冗余自 job_log）';
-COMMENT ON COLUMN ydsz_job_slow_log.trace_id IS '链路追踪 ID（关联分布式链路）';
-COMMENT ON COLUMN ydsz_job_slow_log.tenant_id IS '租户 ID（单租户部署默认 1）';
-COMMENT ON COLUMN ydsz_job_slow_log.created_by IS '创建人 ID';
-COMMENT ON COLUMN ydsz_job_slow_log.created_at IS '记录时间';
-COMMENT ON COLUMN ydsz_job_slow_log.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN ydsz_job_slow_log.updated_at IS '最后修改时间';
-COMMENT ON COLUMN ydsz_job_slow_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
--- [INLINE-OPT] job_id 索引（按任务查慢日志）
-CREATE INDEX IF NOT EXISTS idx_pjsl_job_id
-    ON ydsz_job_slow_log (job_id) WHERE deleted = 0;
--- [INLINE-OPT] 创建时间索引（按时间范围查慢日志趋势）
-CREATE INDEX IF NOT EXISTS idx_pjsl_created
-    ON ydsz_job_slow_log (created_at DESC) WHERE deleted = 0;
 
 -- ============================================================================
 -- [P4-1] 任务依赖关系表 ydsz_job_relation
@@ -2444,59 +2390,7 @@ COMMENT ON COLUMN ydsz_job_daily_stats.deleted IS '逻辑删除标记: 0 未删�
 CREATE INDEX IF NOT EXISTS idx_pjds_job_date
     ON ydsz_job_daily_stats (job_id, stats_date DESC) WHERE deleted = 0;
 
--- ============================================================================
 
-COMMENT ON TABLE ydsz_job_sla IS '任务 SLA 管理表: 定义最大执行时长/失败率/成功率约束, 违约时告警';
-COMMENT ON COLUMN ydsz_job_sla.id IS '主键 ID';
-COMMENT ON COLUMN ydsz_job_sla.job_id IS '任务 ID';
-COMMENT ON COLUMN ydsz_job_sla.job_key IS '任务 KEY(冗余)';
-COMMENT ON COLUMN ydsz_job_sla.max_duration_ms IS '最大执行时长(毫秒), 超过则违约';
-COMMENT ON COLUMN ydsz_job_sla.max_fail_rate IS '最大失败率(%), 超过则违约';
-COMMENT ON COLUMN ydsz_job_sla.min_success_rate IS '最小成功率(%), 低于则违约';
-COMMENT ON COLUMN ydsz_job_sla.alert_level IS '告警级别: INFO / WARNING / CRITICAL';
-COMMENT ON COLUMN ydsz_job_sla.enabled IS '是否启用: 0 禁用 / 1 启用';
-COMMENT ON COLUMN ydsz_job_sla.created_by IS '创建人 ID';
-COMMENT ON COLUMN ydsz_job_sla.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_job_sla.updated_by IS '修改人 ID';
-COMMENT ON COLUMN ydsz_job_sla.updated_at IS '修改时间';
-COMMENT ON COLUMN ydsz_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
--- ============================================================================
-
--- ============================================================================
--- [P2-7] 任务版本历史表 ydsz_job_version_history
--- ----------------------------------------------------------------------------
--- 每次任务定义变更时记录一条版本快照，支持版本回溯和差异对比。
--- ============================================================================
-CREATE TABLE IF NOT EXISTS ydsz_job_version_history(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    job_id            VARCHAR(20)         NOT NULL,
-    job_key           VARCHAR(128)   NOT NULL,
-    version           INTEGER        NOT NULL,
-    change_type       VARCHAR(32)    NOT NULL,
-    before_snapshot   TEXT,
-    after_snapshot    TEXT,
-    change_remark     VARCHAR(512),
-    changed_by        VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    changed_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT ck_pjvh_change_type_enum CHECK (change_type IN ('CREATE', 'UPDATE', 'DELETE')),
-    CONSTRAINT ck_pjvh_version_pos CHECK (version >= 1)
-);
-
-COMMENT ON TABLE ydsz_job_version_history IS '任务版本历史表: 每次任务定义变更时记录版本快照, 支持回溯和差异对比';
-COMMENT ON COLUMN ydsz_job_version_history.id IS '主键 ID';
-COMMENT ON COLUMN ydsz_job_version_history.job_id IS '任务 ID';
-COMMENT ON COLUMN ydsz_job_version_history.job_key IS '任务 KEY(冗余)';
-COMMENT ON COLUMN ydsz_job_version_history.version IS '版本号';
-COMMENT ON COLUMN ydsz_job_version_history.change_type IS '变更类型: CREATE / UPDATE / DELETE';
-COMMENT ON COLUMN ydsz_job_version_history.before_snapshot IS '变更前快照 JSON';
-COMMENT ON COLUMN ydsz_job_version_history.after_snapshot IS '变更后快照 JSON';
-COMMENT ON COLUMN ydsz_job_version_history.change_remark IS '变更说明';
-COMMENT ON COLUMN ydsz_job_version_history.changed_by IS '变更人 ID';
-COMMENT ON COLUMN ydsz_job_version_history.changed_at IS '变更时间';
-
-CREATE INDEX IF NOT EXISTS idx_pjvh_job_id
-    ON ydsz_job_version_history (job_id, version DESC);
 
 -- ============================================================================
 -- [P2-8] 执行产物管理表 ydsz_job_artifact
@@ -7987,7 +7881,7 @@ CREATE INDEX IF NOT EXISTS idx_prs_tenant_type_freq
     WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
--- P0-3 合并：原 ydsz_report_export_record 已并入 ydsz_export_record，
+-- 异步导出记录表
 --           通过 source='SUBSCRIPTION' 区分订阅触发的导出记录。
 -- --------------------------------------------------------------------
 

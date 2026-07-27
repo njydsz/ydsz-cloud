@@ -8,8 +8,8 @@ import org.mapstruct.factory.Mappers;
 
 import com.njydsz.agent.domain.entity.AgentDefinitionDO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
-import com.njydsz.agent.domain.dto.post.AgentDefinitionDOPostDTO;
-import com.njydsz.agent.domain.dto.put.AgentDefinitionDOPutDTO;
+import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
+import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
 
 /**
  * agent 模块统一 MapStruct 转换器。
@@ -46,7 +46,7 @@ public interface AgentConverter {
     List<AgentDefinitionVO> agentDefinitionDOListToVO(List<AgentDefinitionDO> entities);
 
 
-    // ===== AgentDefinitionDO PostDTO → Entity =====
+    // ===== AgentDefinition PostDTO → Entity =====
 
     /**
      * PostDTO → Entity 转换（创建场景，系统字段自动忽略）
@@ -62,9 +62,9 @@ public interface AgentConverter {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    AgentDefinitionDO postDtoToEntity(AgentDefinitionDOPostDTO dto);
+    AgentDefinitionDO postDtoToEntity(AgentDefinitionPostDTO dto);
 
-    // ===== AgentDefinitionDO PutDTO → Entity =====
+    // ===== AgentDefinition PutDTO → Entity =====
 
     /**
      * PutDTO → Entity 转换（更新场景，系统字段自动忽略）
@@ -79,6 +79,6 @@ public interface AgentConverter {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    AgentDefinitionDO putDtoToEntity(AgentDefinitionDOPutDTO dto);
+    AgentDefinitionDO putDtoToEntity(AgentDefinitionPutDTO dto);
 
 }

@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务配置历史版本服务实现（P1-6 任务版本管理，合并原 JobVersionService）。
+ * 任务配置历史版本服务实现（P1-6 任务版本管理）。
  *
  * <p>实现要点：
  * <ul>

@@ -8,13 +8,13 @@ import java.util.Map;
 import lombok.Data;
 
 /**
- * RuleTestCaseDO 新增请求 DTO。
+ * RuleTestCase 新增请求 DTO。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class RuleTestCaseDOPostDTO implements Serializable {
+public class RuleTestCasePostDTO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

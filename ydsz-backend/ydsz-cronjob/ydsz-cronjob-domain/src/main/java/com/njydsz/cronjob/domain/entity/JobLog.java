@@ -84,14 +84,13 @@ public class JobLog extends MpBaseEntity<String> {
      */
     private Integer shardTotal;
     /**
-     * 慢任务标记（P2-1-merge：合并自 ydsz_job_slow_log）。
+     * 慢任务标记（0=非慢 / 1=慢）。
      *
-     * <p>0=非慢 / 1=慢。由 {@code SlowTaskDetector} 在任务执行完成后
-     * 根据 {@code slow_threshold_ms} 判定并标记，替代原独立 slow_log 表。
+     * <p>由 {@code SlowTaskDetector} 在任务执行完成后根据 {@code slow_threshold_ms} 判定并标记。
      */
     private Integer isSlow;
     /**
-     * 慢任务阈值快照（毫秒，P2-1-merge）。
+     * 慢任务阈值快照（毫秒）。
      *
      * <p>执行时从 {@code ydsz_job.slow_threshold_ms} 快照到日志记录，
      * NULL=未配置慢任务检测。快照保留执行时的阈值，避免后续修改 job 配置影响历史判定。

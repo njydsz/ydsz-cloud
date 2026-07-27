@@ -1,25 +1,23 @@
-package com.njydsz.agent.domain.dto.put;
+package com.njydsz.agent.domain.dto.post;
 
 import java.io.Serial;
 import java.io.Serializable;
 import lombok.Data;
 
 /**
- * AgentDefinitionDO 修改请求 DTO。
+ * AgentDefinition 新增请求 DTO。
  *
- * <p>用于 Controller PUT 接口接收 Agent 定义更新请求。
+ * <p>用于 Controller POST 接口接收 Agent 定义创建请求。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class AgentDefinitionDOPutDTO implements Serializable {
+public class AgentDefinitionPostDTO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 主键 ID */
-    private String id;
     /** Agent 编码 */
     private String agentCode;
     /** Agent 名称 */

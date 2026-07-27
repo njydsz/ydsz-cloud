@@ -38,7 +38,7 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVariableDefVO;
 import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
-import com.njydsz.literule.domain.dto.post.RuleTestCaseDOPostDTO;
+import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 
@@ -118,7 +118,7 @@ public interface LiteruleConverter {
     List<RuleVersionHistoryVO> ruleVersionHistoryListToVO(List<RuleVersionHistory> entities);
 
 
-    // ===== RuleTestCaseDO PostDTO → Entity =====
+    // ===== RuleTestCase PostDTO → Entity =====
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
@@ -127,7 +127,7 @@ public interface LiteruleConverter {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    RuleTestCaseDO postDtoToEntity(RuleTestCaseDOPostDTO dto);
+    RuleTestCaseDO postDtoToEntity(RuleTestCasePostDTO dto);
 
     // ===== DecisionTable PostDTO → Entity =====
     @Mapping(target = "id", ignore = true)

@@ -68,10 +68,9 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRule> {
     List<JobAlertRule> selectByAlertType(@Param("alertType") String alertType);
 
     /**
-     * P2-2-merge: 查询指定任务的 SLA 来源告警规则（source_type='SLA'）。
+     * 查询指定任务的 SLA 来源告警规则（source_type='SLA'）。
      *
-     * <p>用于 SLA CRUD 代理查询：通过 alert_rule 表管理 SLA 规则，
-     * 替代原 ydsz_job_sla 独立表查询。
+     * <p>用于 SLA CRUD 代理查询：通过 alert_rule 表管理 SLA 规则。
      *
      * @param jobId 任务 ID
      * @return SLA 来源的告警规则列表

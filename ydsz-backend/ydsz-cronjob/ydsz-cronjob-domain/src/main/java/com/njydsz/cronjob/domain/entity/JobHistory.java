@@ -43,7 +43,7 @@ public class JobHistory extends MpBaseEntity<String> {
     /** 完整 Job JSON 快照（变更后状态; DELETE 时为 NULL） */
     private String snapshot;
 
-    /** 变更类型: CREATE / UPDATE / DELETE（合并自原 ydsz_job_version_history） */
+    /** 变更类型: CREATE / UPDATE / DELETE */
     private String changeType;
 
     /** 变更前快照 JSON（CREATE 时为 NULL; UPDATE/DELETE 时记录变更前状态） */

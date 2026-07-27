@@ -61,14 +61,13 @@
 
 ## 数据库表设计
 
-本模块在 `deploy/sql/V1.0.0.sql` 中持有 **20 张表**，覆盖任务定义/调度/执行/日志/告警/告警规则/版本历史/SLA/节点/分片关系/统计/产物/胶水代码/租户配额/DAG。
+本模块在 `deploy/sql/V1.0.0.sql` 中持有 **18 张表**，覆盖任务定义/调度/执行/日志/告警/告警规则/历史/节点/分片关系/统计/产物/胶水代码/租户配额/DAG。
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
 | **任务定义** | `ydsz_job` | 任务主表（cron/频率/分片/隔离策略） |
 | | `ydsz_job_glue` | 胶水代码（Groovy/Java/Python/Shell） |
 | | `ydsz_job_relation` | 父子任务依赖 |
-| | `ydsz_job_version_history` | 任务版本历史（回滚） |
 | **调度** | `ydsz_job_task` | 调度任务（待派发/运行中） |
 | | `ydsz_job_history` | 历史任务（已完成） |
 | **DAG** | `ydsz_job_dag` | DAG 定义 |
@@ -76,7 +75,6 @@
 | | `ydsz_job_dag_node_instance` | DAG 节点实例 |
 | **执行日志** | `ydsz_job_log` | 执行日志（分页） |
 | | `ydsz_job_log_content` | 日志详情（TOAST 大字段） |
-| | `ydsz_job_slow_log` | 慢执行记录 |
 | **告警** | `ydsz_job_alert_log` | 告警日志 |
 | | `ydsz_job_alert_rule` | 告警规则（失败/超时/阻塞） |
 | **执行器** | `ydsz_job_node` | 执行器节点（注册/心跳） |

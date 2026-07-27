@@ -142,6 +142,12 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
 
     /**
      * 阻塞等待直到下一毫秒
+     *
+     * <p>当同一毫秒内的序列号耗尽（超过 4096 个）时调用，
+     * 自旋直到时间戳推进到下一毫秒再继续生成。
+     *
+     * @param lastTimestamp 上次生成的时间戳
+     * @return 推进后的新时间戳
      */
     private long tilNextMillis(long lastTimestamp) {
         long timestamp = timeGen();
@@ -152,14 +158,21 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
     }
 
     /**
-     * 获取当前时间戳
+     * 获取当前时间戳（毫秒）
+     *
+     * @return 当前时间戳
      */
     private long timeGen() {
         return System.currentTimeMillis();
     }
 
     /**
-     * 从 PID 推导 workerId（0 ~ 31）
+     * 从进程 PID 推导 workerId（0 ~ 31）
+     *
+     * <p>相同 PID 多次调用结果一致，进程重启后 PID 变化不冲突。
+     * 解析失败时降级返回 0。
+     *
+     * @return workerId
      */
     private static long deriveWorkerId() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
@@ -173,6 +186,11 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
 
     /**
      * 从本机 IP 推导 datacenterId（0 ~ 31）
+     *
+     * <p>取本机非回环 IPv4 地址的最后一字节的低 5 位。
+     * 解析失败时降级返回 0。
+     *
+     * @return datacenterId
      */
     private static long deriveDatacenterId() {
         try {
@@ -189,6 +207,11 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
 
     /**
      * 获取本机非回环 IP 地址
+     *
+     * <p>优先返回 site-local 地址（如 192.168.x.x），其次任意非回环地址，
+     * 最后降级为 {@link InetAddress#getLocalHost()}。
+     *
+     * @return 本机 IP 地址；解析失败时返回 null
      */
     private static InetAddress getLocalAddress() {
         try {

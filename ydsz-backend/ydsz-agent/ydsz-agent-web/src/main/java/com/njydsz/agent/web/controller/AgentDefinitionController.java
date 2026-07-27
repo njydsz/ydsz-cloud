@@ -53,6 +53,7 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 @RequiredArgsConstructor
 public class AgentDefinitionController {
 
+    /** Agent 定义服务 */
     private final AgentDefinitionService agentDefinitionService;
 
     @GetMapping
