@@ -5,8 +5,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.njydsz.common.tenant.TenantDimension;
-
 /**
  * 租户列名覆盖注解。
  *
@@ -20,11 +18,11 @@ import com.njydsz.common.tenant.TenantDimension;
  * public class FileNodeDO extends MpBaseEntity&lt;String&gt; { ... }
  * </pre>
  *
- * <p>多级租户维度指定：
+ * <p>多级租户维度指定（用 claim 名字符串）：
  * <pre>
  * &#64;TenantColumn(
  *     value = "tenant_id",
- *     dimensions = {TenantDimension.GROUP, TenantDimension.COMPANY}
+ *     dimensions = {"groupId", "companyId"}  // 对应 JWT claim 名
  * )
  * </pre>
  *
@@ -43,9 +41,12 @@ public @interface TenantColumn {
     String value() default "tenant_id";
 
     /**
-     * 多级租户维度（默认空 = 使用全局配置）。
+     * 多级租户维度 claim 名列表（默认空 = 使用全局配置）。
      *
-     * @return 维度数组
+     * <p>每个元素是 JWT claim 名（如 "tenantId"、"companyId"、"deptId"），
+     * 拦截器会从 {@code TenantContext} 中按 claim 名取值。
+     *
+     * @return claim 名数组
      */
-    TenantDimension[] dimensions() default {};
+    String[] dimensions() default {};
 }

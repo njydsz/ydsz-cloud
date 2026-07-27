@@ -3,12 +3,16 @@ package com.njydsz.common.search.engine.pg;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -71,6 +75,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     private final String indexTable;
     private volatile boolean available;
     private final Map<String, IndexDocument> memoryIndex;
+    private final Map<String, Set<String>> invertedIndex;
     private final ThreadPoolTaskScheduler probeScheduler;
 
     public PgSearchStrategy(DataSource dataSource, SearchProperties.PgConfig pgConfig) {
@@ -86,9 +91,14 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         this.memoryIndex = Collections.synchronizedMap(new LinkedHashMap<>(256, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, IndexDocument> eldest) {
-                return size() > MAX_MEMORY_INDEX_SIZE;
+                if (size() > MAX_MEMORY_INDEX_SIZE) {
+                    removeFromInvertedIndex(eldest.getKey(), eldest.getValue());
+                    return true;
+                }
+                return false;
             }
         });
+        this.invertedIndex = new ConcurrentHashMap<>();
         this.probeScheduler = new ThreadPoolTaskScheduler();
         this.probeScheduler.setPoolSize(1);
         this.probeScheduler.setThreadNamePrefix("pg-search-probe-");
@@ -233,6 +243,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         }
         String key = document.getType() + ":" + document.getId();
         memoryIndex.put(key, document);
+        addToInvertedIndex(key, document);
         if (!available) {
             return;
         }
@@ -276,6 +287,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         for (IndexDocument doc : documents) {
             if (doc != null && doc.getId() != null) {
                 memoryIndex.put(doc.getType() + ":" + doc.getId(), doc);
+        addToInvertedIndex(doc.getType() + ":" + doc.getId(), doc);
             }
         }
         if (!available) {
@@ -322,6 +334,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     @Override
     public void deleteIndex(String type, String documentId) {
         memoryIndex.remove(type + ":" + documentId);
+        removeFromInvertedIndex(type + ":" + documentId, null);
         if (!available) {
             return;
         }
@@ -437,7 +450,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     }
 
     private void startRecoveryProbe() {
-        probeScheduler.scheduleAtFixedRate(() -> {
+        probeScheduler.scheduleWithFixedDelay(() -> {
             if (!available) {
                 try {
                     jdbcTemplate.queryForObject("SELECT 1 FROM " + indexTable + " LIMIT 1", Integer.class);
@@ -447,7 +460,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                     log.debug("[PgSearchStrategy] 降级恢复探测失败: {}", e.getMessage());
                 }
             }
-        }, 30, 30, TimeUnit.SECONDS);
+        }, Duration.ofSeconds(30));
     }
 
     private String detectSearchConfig() {
@@ -476,6 +489,34 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         }
     }
 
+    private void addToInvertedIndex(String docKey, IndexDocument doc) {
+        String text = buildSearchableText(doc);
+        if (text == null) return;
+        for (String token : text.toLowerCase().split("\\s+")) {
+            if (token.isBlank()) continue;
+            invertedIndex.computeIfAbsent(token, k -> ConcurrentHashMap.newKeySet()).add(docKey);
+        }
+    }
+
+    private void removeFromInvertedIndex(String docKey, IndexDocument doc) {
+        if (doc != null) {
+            String text = buildSearchableText(doc);
+            if (text != null) {
+                for (String token : text.toLowerCase().split("\\s+")) {
+                    Set<String> keys = invertedIndex.get(token);
+                    if (keys != null) {
+                        keys.remove(docKey);
+                        if (keys.isEmpty()) invertedIndex.remove(token);
+                    }
+                }
+            }
+        } else {
+            for (Set<String> keys : invertedIndex.values()) {
+                keys.remove(docKey);
+            }
+        }
+    }
+
     private SearchResponse searchInMemory(SearchRequest request) {
         long start = System.currentTimeMillis();
         String keyword = request.getKeyword();
@@ -483,34 +524,85 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             return SearchResponse.empty(request.getPage(), request.getPageSize());
         }
         String lowerKeyword = keyword.toLowerCase();
-        List<SearchHit> allHits = memoryIndex.values().stream()
-                .filter(doc -> {
-                    if (request.getTypes() != null && !request.getTypes().isEmpty()
-                            && !request.getTypes().contains(doc.getType())) {
-                        return false;
-                    }
-                    if (request.getTenantId() != null && !request.getTenantId().isBlank()
-                            && !request.getTenantId().equals(doc.getTenantId())) {
-                        return false;
-                    }
-                    String text = buildSearchableText(doc);
-                    return text != null && text.toLowerCase().contains(lowerKeyword);
-                })
-                .map(doc -> {
-                    SearchHit hit = SearchHit.builder()
-                            .id(doc.getId()).type(doc.getType()).title(doc.getTitle())
-                            .subtitle(doc.getSubtitle()).snippet(doc.getSnippet())
-                            .path(doc.getPath()).status(doc.getStatus()).tags(doc.getTags())
-                            .score(1.0f)
-                            .createdAt(doc.getCreatedAt() != null ? doc.getCreatedAt().toString() : null)
-                            .updatedAt(doc.getUpdatedAt() != null ? doc.getUpdatedAt().toString() : null)
-                            .build();
-                    if (request.isHighlight() && doc.getTitle() != null) {
-                        hit.setHighlight(simpleHighlight(doc.getTitle(), keyword,
-                                request.getHighlightPreTag(), request.getHighlightPostTag()));
-                    }
-                    return hit;
-                }).toList();
+        String[] queryTokens = lowerKeyword.split("\\s+");
+
+        Set<String> candidateKeys = null;
+        for (String token : queryTokens) {
+            Set<String> tokenKeys = new HashSet<>();
+            for (Map.Entry<String, Set<String>> entry : invertedIndex.entrySet()) {
+                if (entry.getKey().contains(token)) {
+                    tokenKeys.addAll(entry.getValue());
+                }
+            }
+            if (candidateKeys == null) {
+                candidateKeys = tokenKeys;
+            } else {
+                candidateKeys.retainAll(tokenKeys);
+            }
+        }
+
+        final Set<String> finalCandidates = candidateKeys;
+        List<SearchHit> allHits;
+        if (finalCandidates != null && !finalCandidates.isEmpty()) {
+            allHits = finalCandidates.stream()
+                    .map(memoryIndex::get)
+                    .filter(Objects::nonNull)
+                    .filter(doc -> {
+                        if (request.getTypes() != null && !request.getTypes().isEmpty()
+                                && !request.getTypes().contains(doc.getType())) {
+                            return false;
+                        }
+                        if (request.getTenantId() != null && !request.getTenantId().isBlank()
+                                && !request.getTenantId().equals(doc.getTenantId())) {
+                            return false;
+                        }
+                        return true;
+                    })
+                    .map(doc -> {
+                        SearchHit hit = SearchHit.builder()
+                                .id(doc.getId()).type(doc.getType()).title(doc.getTitle())
+                                .subtitle(doc.getSubtitle()).snippet(doc.getSnippet())
+                                .path(doc.getPath()).status(doc.getStatus()).tags(doc.getTags())
+                                .score(1.0f)
+                                .createdAt(doc.getCreatedAt() != null ? doc.getCreatedAt().toString() : null)
+                                .updatedAt(doc.getUpdatedAt() != null ? doc.getUpdatedAt().toString() : null)
+                                .build();
+                        if (request.isHighlight() && doc.getTitle() != null) {
+                            hit.setHighlight(simpleHighlight(doc.getTitle(), keyword,
+                                    request.getHighlightPreTag(), request.getHighlightPostTag()));
+                        }
+                        return hit;
+                    }).toList();
+        } else {
+            allHits = memoryIndex.values().stream()
+                    .filter(doc -> {
+                        if (request.getTypes() != null && !request.getTypes().isEmpty()
+                                && !request.getTypes().contains(doc.getType())) {
+                            return false;
+                        }
+                        if (request.getTenantId() != null && !request.getTenantId().isBlank()
+                                && !request.getTenantId().equals(doc.getTenantId())) {
+                            return false;
+                        }
+                        String text = buildSearchableText(doc);
+                        return text != null && text.toLowerCase().contains(lowerKeyword);
+                    })
+                    .map(doc -> {
+                        SearchHit hit = SearchHit.builder()
+                                .id(doc.getId()).type(doc.getType()).title(doc.getTitle())
+                                .subtitle(doc.getSubtitle()).snippet(doc.getSnippet())
+                                .path(doc.getPath()).status(doc.getStatus()).tags(doc.getTags())
+                                .score(1.0f)
+                                .createdAt(doc.getCreatedAt() != null ? doc.getCreatedAt().toString() : null)
+                                .updatedAt(doc.getUpdatedAt() != null ? doc.getUpdatedAt().toString() : null)
+                                .build();
+                        if (request.isHighlight() && doc.getTitle() != null) {
+                            hit.setHighlight(simpleHighlight(doc.getTitle(), keyword,
+                                    request.getHighlightPreTag(), request.getHighlightPostTag()));
+                        }
+                        return hit;
+                    }).toList();
+        }
 
         long total = allHits.size();
         int fromIndex = Math.min(request.getOffset(), allHits.size());

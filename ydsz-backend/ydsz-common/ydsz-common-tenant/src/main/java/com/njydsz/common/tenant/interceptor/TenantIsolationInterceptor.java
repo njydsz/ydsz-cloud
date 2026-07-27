@@ -16,10 +16,8 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.JSqlParserHelper;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.TenantDimension;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
-import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.jdbc.exception.TenantIsolationException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +25,6 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
@@ -235,14 +232,19 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
             Column column = buildAliasedColumn(table, columnName);
             Expression condition;
             if (tfv.value instanceof List<?> list) {
-                List<Expression> inValues = new ArrayList<>();
-                for (Object v : list) {
-                    inValues.add(new StringValue(String.valueOf(v)));
+                // 多值 → IN (?, ?, ...)
+                StringBuilder inClause = new StringBuilder();
+                inClause.append(column.toString()).append(" IN (");
+                for (int i = 0; i < list.size(); i++) {
+                    if (i > 0) inClause.append(", ");
+                    inClause.append("'").append(list.get(i)).append("'");
                 }
-                InExpression inExpr = new InExpression();
-                inExpr.setLeftExpression(column);
-                inExpr.setRightItemsList(new net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList<>(inValues));
-                condition = inExpr;
+                inClause.append(")");
+                try {
+                    condition = net.sf.jsqlparser.parser.CCJSqlParserUtil.parseCondExpression(inClause.toString());
+                } catch (net.sf.jsqlparser.JSQLParserException e) {
+                    throw new RuntimeException("解析 IN 表达式失败: " + inClause, e);
+                }
             } else {
                 condition = new EqualsTo(column, new StringValue(String.valueOf(tfv.value)));
             }

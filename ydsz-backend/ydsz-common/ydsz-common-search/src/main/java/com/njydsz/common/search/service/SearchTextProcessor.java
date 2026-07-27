@@ -35,6 +35,7 @@ public class SearchTextProcessor {
     private final SearchProperties properties;
     private final Map<String, List<String>> synonymMap = new HashMap<>();
     private final Set<String> stopWords = new HashSet<>();
+    private SynonymTrie synonymTrie = new SynonymTrie();
 
     /** 常用停用词 */
     private static final Set<String> DEFAULT_STOP_WORDS = Set.of(
@@ -134,6 +135,10 @@ public class SearchTextProcessor {
                 }
             }
             log.info("[SearchTextProcessor] 同义词词典加载完成: {} 组", synonymMap.size());
+            synonymTrie = new SynonymTrie();
+            for (String key : synonymMap.keySet()) {
+                synonymTrie.insert(key);
+            }
         } catch (IOException e) {
             log.warn("[SearchTextProcessor] 同义词词典加载失败: {}", e.getMessage());
         } catch (NullPointerException e) {
@@ -219,6 +224,44 @@ public class SearchTextProcessor {
      * 如果词典未加载，返回原始文本（拼音功能降级）。
      */
     private final Map<String, String> pinyinMap = new HashMap<>();
+
+    /**
+     * 同义词 Trie 树，用于高效多模式匹配。
+     */
+    private static final class SynonymTrie {
+        private final TrieNode root = new TrieNode();
+
+        void insert(String word) {
+            if (word == null || word.isBlank()) return;
+            TrieNode node = root;
+            for (char c : word.toCharArray()) {
+                node = node.children.computeIfAbsent(c, k -> new TrieNode());
+            }
+            node.word = word;
+        }
+
+        Set<String> matchAll(String text) {
+            Set<String> matches = new HashSet<>();
+            if (text == null || text.isBlank()) return matches;
+            for (int i = 0; i < text.length(); i++) {
+                TrieNode node = root;
+                for (int j = i; j < text.length(); j++) {
+                    TrieNode child = node.children.get(text.charAt(j));
+                    if (child == null) break;
+                    node = child;
+                    if (node.word != null) {
+                        matches.add(node.word);
+                    }
+                }
+            }
+            return matches;
+        }
+
+        private static final class TrieNode {
+            final Map<Character, TrieNode> children = new HashMap<>();
+            String word = null;
+        }
+    }
 
     private String toPinyin(String text) {
         if (text == null || pinyinMap.isEmpty()) {
