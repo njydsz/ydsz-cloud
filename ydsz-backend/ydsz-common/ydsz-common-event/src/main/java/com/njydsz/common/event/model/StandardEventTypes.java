@@ -75,4 +75,24 @@ public final class StandardEventTypes {
     public static final String CONVERSATION_CREATED = "CONVERSATION_CREATED";
     /** Agent 审批请求 */
     public static final String AGENT_APPROVAL_REQUESTED = "AGENT_APPROVAL_REQUESTED";
+
+    // ========== Project 事件 ==========
+    /** 项目立项创建 */
+    public static final String PROJECT_INITIATION_CREATED = "PROJECT_INITIATION_CREATED";
+    /** 项目立项审批通过 */
+    public static final String PROJECT_INITIATION_APPROVED = "PROJECT_INITIATION_APPROVED";
+    /** 项目阶段变更 */
+    public static final String PROJECT_STAGE_CHANGED = "PROJECT_STAGE_CHANGED";
+    /** 项目关闭 */
+    public static final String PROJECT_CLOSED = "PROJECT_CLOSED";
+    /** 项目合同签订 */
+    public static final String PROJECT_CONTRACT_SIGNED = "PROJECT_CONTRACT_SIGNED";
+
+    // ========== Userinfo 扩展事件 ==========
+    /** 用户启用 */
+    public static final String USER_ENABLED = "USER_ENABLED";
+    /** 用户禁用 */
+    public static final String USER_DISABLED = "USER_DISABLED";
+    /** 组织架构变更 */
+    public static final String ORG_STRUCTURE_CHANGED = "ORG_STRUCTURE_CHANGED";
 }

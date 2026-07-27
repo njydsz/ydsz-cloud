@@ -1,17 +1,23 @@
 package com.njydsz.system.server.service.impl;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.RedisService;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.json.YdszJson;
+
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.entity.ConfigDO;
 import com.njydsz.system.domain.enums.ConfigValueType;
@@ -57,6 +63,8 @@ public class ConfigServiceImpl implements ConfigService {
     private final SystemMetrics metrics;
     /** 系统配置属性 */
     private final SystemProperties properties;
+    /** Outbox 服务（可选依赖，用于发布配置变更事件） */
+    private final ObjectProvider<OutboxService> outboxServiceProvider;
 
     /**
      * {@inheritDoc}
@@ -259,7 +267,8 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     /**
-     * 清除指定配置相关的所有缓存（单值缓存 + 组缓存 + 公开配置缓存）。
+     * 清除指定配置相关的所有缓存（单值缓存 + 组缓存 + 公开配置缓存），
+     * 并发布 CONFIG_CHANGED 事件通知其他模块刷新本地缓存。
      *
      * @param configKey   配置键（可为 null）
      * @param configGroup 配置组名（可为 null）
@@ -272,10 +281,29 @@ public class ConfigServiceImpl implements ConfigService {
             redisService.delete(CACHE_GROUP_PREFIX + configGroup);
         }
         redisService.delete(CACHE_PUBLIC_KEY);
+
+        // 发布配置变更事件（OutboxService 可选依赖，不存在时安全降级）
+        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        if (outboxService != null) {
+            try {
+                Map<String, String> payload = new HashMap<>();
+                if (configKey != null) {
+                    payload.put("configKey", configKey);
+                }
+                if (configGroup != null) {
+                    payload.put("configGroup", configGroup);
+                }
+                outboxService.appendToOutbox(
+                        "Config", null, StandardEventTypes.CONFIG_CHANGED,
+                        YdszJson.toJson(payload));
+            } catch (Exception e) {
+                log.warn("Failed to publish CONFIG_CHANGED event: error={}", e.getMessage());
+            }
+        }
     }
 
     /**
-     * 获取配置缓存 TTL，从 {@link SystemProperties.Config#getCacheTtlMinutes()} 读取，
+     * 获取配置缓存 TTL，从 {@link SystemProperties.Config#getCacheTtlMinutes()}读取，
      * 默认 5 分钟。
      *
      * @return 缓存 TTL

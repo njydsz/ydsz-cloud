@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.notify.annotation.EnableYdszNotify;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
@@ -25,6 +26,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszAudit
 @EnableYdszSafe
+@EnableYdszNotify
 @EnableYdszFeign(basePackages = {"com.njydsz.project.api", "com.njydsz.common.feign", "com.njydsz.userinfo.api", "com.njydsz.system.api"})
 @MapperScan("com.njydsz.project.infra.mapper")
 @EnableScheduling

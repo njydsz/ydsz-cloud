@@ -1,7 +1,10 @@
 package com.njydsz.common.domain.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.njydsz.common.domain.event.DomainEvent;
 import com.njydsz.common.json.annotation.YdszJsonField;
 
 import lombok.AccessLevel;
@@ -84,9 +87,17 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> implements RootEntity<T> {
+public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> implements RootEntity<T>, AggregateRoot<T> {
 
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 领域事件列表（瞬态，不参与序列化与持久化）
+     *
+     * <p>聚合根在业务操作中可注册领域事件，由仓储层在持久化后统一发布。
+     * 默认实现为空列表；无事件时避免空指针。
+     */
+    private transient List<DomainEvent> domainEvents;
 
     /**
      * 乐观锁版本

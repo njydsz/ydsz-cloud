@@ -50,8 +50,8 @@ public class ProjectSearchProvider implements SearchProvider<ProjectInitiationDO
         return IndexDocument.builder()
                 .id(entity.getId())
                 .type("project")
-                .title(entity.getId())
-                .subtitle(entity.getTenantId())
+                .title(entity.getProjectName())
+                .subtitle(entity.getProjectCode())
                 .content(buildSearchableText(entity))
                 .path("/project/initiation/" + entity.getId())
                 .tenantId(entity.getTenantId())
@@ -68,7 +68,7 @@ public class ProjectSearchProvider implements SearchProvider<ProjectInitiationDO
     public List<SearchField> getSearchableFields() {
         return List.of(
                 SearchField.builder().name("title").label("项目名称").weight(3.0f).highlightable(true).build(),
-                SearchField.builder().name("subtitle").label("租户").weight(1.0f).aggregatable(true).build(),
+                SearchField.builder().name("subtitle").label("项目编号").weight(2.0f).highlightable(true).build(),
                 SearchField.builder().name("content").label("全文").weight(1.0f).highlightable(true).build()
         );
     }
@@ -93,14 +93,26 @@ public class ProjectSearchProvider implements SearchProvider<ProjectInitiationDO
 
     private String buildSearchableText(ProjectInitiationDO entity) {
         StringBuilder sb = new StringBuilder();
-        if (entity.getId() != null) {
-            sb.append(entity.getId());
+        if (entity.getProjectName() != null) {
+            sb.append(entity.getProjectName());
         }
-        if (entity.getTenantId() != null) {
-            sb.append(' ').append(entity.getTenantId());
+        if (entity.getProjectCode() != null) {
+            sb.append(' ').append(entity.getProjectCode());
         }
-        if (entity.getCreatedBy() != null) {
-            sb.append(' ').append(entity.getCreatedBy());
+        if (entity.getCustomerName() != null) {
+            sb.append(' ').append(entity.getCustomerName());
+        }
+        if (entity.getPmName() != null) {
+            sb.append(' ').append(entity.getPmName());
+        }
+        if (entity.getProjectType() != null) {
+            sb.append(' ').append(entity.getProjectType());
+        }
+        if (entity.getStage() != null) {
+            sb.append(' ').append(entity.getStage());
+        }
+        if (entity.getDescription() != null) {
+            sb.append(' ').append(entity.getDescription());
         }
         return sb.toString();
     }

@@ -20,6 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
+import com.njydsz.common.lock.annotation.LockType;
+import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.entity.FileNode;
@@ -63,8 +66,12 @@ public class FileApplicationService {
     private final FileNodeRepository fileNodeRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final FilePermissionService permissionService;
-    private final DistributedLockService lockService;
+    private final LockStrategy lockStrategy;
     private final VirusScanApplicationService virusScanApplicationService;
+
+    private static final String LOCK_PREFIX = "nextwiki:lock:folder:";
+    private static final long LOCK_LEASE_MS = 30_000L;
+    private static final long LOCK_WAIT_MS = 3_000L;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -262,14 +269,14 @@ public class FileApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO move(String nodeId, String targetParentId, String userId) {
         permissionService.checkWrite(nodeId, userId);
-        String lockOwner = userId + ":" + System.nanoTime();
-        String lockKey = DistributedLockService.folderLockKey(nodeId);
-        lockService.acquireLock(lockKey, lockOwner);
+        String lockKey = LOCK_PREFIX + nodeId;
+        DistributedLocker locker = lockStrategy.getLock(LockType.REENTRANT);
+        String lockValue = acquireLock(locker, lockKey);
         try {
             FileNode node = folderDomainService.move(nodeId, targetParentId, userId);
             return toVO(node);
         } finally {
-            lockService.unlock(lockKey, lockOwner);
+            locker.unlock(lockKey, lockValue);
         }
     }
 
@@ -279,14 +286,14 @@ public class FileApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO rename(String nodeId, String newName, String userId) {
         permissionService.checkWrite(nodeId, userId);
-        String lockOwner = userId + ":" + System.nanoTime();
-        String lockKey = DistributedLockService.folderLockKey(nodeId);
-        lockService.acquireLock(lockKey, lockOwner);
+        String lockKey = LOCK_PREFIX + nodeId;
+        DistributedLocker locker = lockStrategy.getLock(LockType.REENTRANT);
+        String lockValue = acquireLock(locker, lockKey);
         try {
             FileNode node = folderDomainService.rename(nodeId, newName, userId);
             return toVO(node);
         } finally {
-            lockService.unlock(lockKey, lockOwner);
+            locker.unlock(lockKey, lockValue);
         }
     }
 
@@ -301,9 +308,9 @@ public class FileApplicationService {
             throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
-        String lockOwner = userId + ":" + System.nanoTime();
-        String lockKey = DistributedLockService.folderLockKey(nodeId);
-        lockService.acquireLock(lockKey, lockOwner);
+        String lockKey = LOCK_PREFIX + nodeId;
+        DistributedLocker locker = lockStrategy.getLock(LockType.REENTRANT);
+        String lockValue = acquireLock(locker, lockKey);
         try {
             folderDomainService.softDelete(nodeId, userId);
             trashDomainService.moveToTrash(node, userId);
@@ -312,7 +319,7 @@ public class FileApplicationService {
                 quotaDomainService.subtractUsage("user", userId, node.getSize(), 1);
             }
         } finally {
-            lockService.unlock(lockKey, lockOwner);
+            locker.unlock(lockKey, lockValue);
         }
 
         log.info("[FileApplicationService] 删除文件: nodeId={}, name={}", nodeId, node.getName());
