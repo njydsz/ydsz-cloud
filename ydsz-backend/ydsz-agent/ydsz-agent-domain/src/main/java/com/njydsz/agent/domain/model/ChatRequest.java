@@ -16,14 +16,23 @@ public final class ChatRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 模型名称 */
     private final String model;
+    /** 消息列表（按角色排序） */
     private final List<ChatMessage> messages;
+    /** 温度参数（0-2） */
     private final double temperature;
+    /** 最大生成 Token 数 */
     private final int maxTokens;
+    /** Top-P 采样参数 */
     private final double topP;
+    /** 停止序列列表 */
     private final List<String> stop;
+    /** 是否流式输出 */
     private final boolean stream;
+    /** 可用工具定义列表 */
     private final List<ToolDefinition> tools;
+    /** 工具选择策略（auto/none/指定工具名） */
     private final String toolChoice;
 
     public ChatRequest(String model, List<ChatMessage> messages, double temperature,

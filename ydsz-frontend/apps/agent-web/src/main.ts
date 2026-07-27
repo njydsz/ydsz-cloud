@@ -5,8 +5,10 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 import { registerAccessDirective } from '@ydsz/access';
 import { registerLoadingDirective } from '@ydsz/common-ui';
+import { initSharedRequest } from '@ydsz/shared-auth';
+import { setupMonitor } from '@ydsz/monitor';
 import { initPreferences } from '@ydsz/preferences';
-import { initStores } from '@ydsz/stores';
+import { resetAllStores, useAccessStore, initStores } from '@ydsz/stores';
 import '@ydsz/styles';
 import '@ydsz/styles/ele';
 
@@ -29,6 +31,49 @@ const appVersion = import.meta.env.VITE_APP_VERSION;
 const namespace = `${import.meta.env.VITE_APP_NAMESPACE}-${appVersion}-${env}`;
 
 let app: null | VueApp = null;
+
+/**
+ * 初始化共享请求客户端（注入 reAuthenticate / refreshToken 回调）
+ */
+async function initSharedAuth() {
+  const { preferences } = await import('@ydsz/preferences');
+  const { refreshTokenApi } = await import('@ydsz/shared-auth');
+
+  initSharedRequest(
+    // doReAuthenticate: token 失效时退出登录
+    async () => {
+      console.warn('[agent-web] Access token expired, re-authenticating...');
+      const accessStore = useAccessStore();
+      accessStore.setAccessToken(null);
+      if (
+        preferences.app.loginExpiredMode === 'modal' &&
+        accessStore.isAccessChecked
+      ) {
+        accessStore.setLoginExpired(true);
+      } else {
+        resetAllStores();
+        accessStore.setLoginExpired(false);
+        window.location.href = '/';
+      }
+    },
+    // doRefreshToken: 刷新 accessToken
+    async () => {
+      const accessStore = useAccessStore();
+      const refreshToken = (accessStore as any).refreshToken;
+      if (!refreshToken) return null;
+      try {
+        const resp = await refreshTokenApi(refreshToken);
+        const newToken = resp.data?.accessToken || (resp.data as unknown as string);
+        if (typeof newToken === 'string') {
+          accessStore.setAccessToken(newToken);
+        }
+        return newToken;
+      } catch {
+        return null;
+      }
+    },
+  );
+}
 
 async function setupApp(vueApp: VueApp) {
   await initComponentAdapter();
@@ -79,9 +124,13 @@ async function mount(props: Record<string, unknown>) {
     overrides: overridesPreferences,
   });
 
-  await import('./api/request');
+  // 初始化共享请求客户端（必须在 app.mount 之前）
+  await initSharedAuth();
 
   app = createApp(RootApp);
+
+  // 安装前端监控（错误捕获 + Web Vitals）
+  setupMonitor(app);
 
   const router = createAppRouter('/ydsz-ai');
   initRoutes(router);
@@ -121,9 +170,13 @@ if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
       overrides: overridesPreferences,
     });
 
+    // 独立运行时也初始化共享请求客户端
+    await initSharedAuth();
+
     app = createApp(RootApp);
 
-    await import('./api/request');
+    // 独立运行时也安装监控
+    setupMonitor(app);
 
     const router = createAppRouter(import.meta.env.VITE_BASE);
     initRoutes(router);

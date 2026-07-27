@@ -1,3 +1,23 @@
+#!/usr/bin/env python3
+"""Fix all 9 sub-app main.ts files: integrate initSharedRequest + setupMonitor."""
+import os
+
+BASE = r"d:\Code\ydsz\ydsz-pmis\ydsz-frontend\apps"
+
+# Map: app_name -> (app_label, router_basename)
+APPS = {
+    "userinfo-web": ("userinfo-web", "/ydsz-user"),
+    "system-web":   ("system-web",   "/ydsz-sys"),
+    "project-web":  ("project-web",  "/ydsz-proj"),
+    "message-web":  ("message-web",  "/ydsz-msg"),
+    "cronjob-web":  ("cronjob-web",  "/ydsz-cron"),
+    "workflow-web": ("workflow-web", "/ydsz-flow"),
+    "nextwiki-web": ("nextwiki-web", "/ydsz-wiki"),
+    "literule-web": ("literule-web", "/ydsz-rule"),
+    "agent-web":    ("agent-web",    "/ydsz-ai"),
+}
+
+MAIN_TS_TEMPLATE = """\
 import type { App as VueApp } from 'vue';
 
 import { createApp } from 'vue';
@@ -42,7 +62,7 @@ async function initSharedAuth() {
   initSharedRequest(
     // doReAuthenticate: token 失效时退出登录
     async () => {
-      console.warn('[literule-web] Access token expired, re-authenticating...');
+      console.warn('[{APP_LABEL}] Access token expired, re-authenticating...');
       const accessStore = useAccessStore();
       accessStore.setAccessToken(null);
       if (
@@ -99,7 +119,7 @@ async function setupApp(vueApp: VueApp) {
 
 function createAppRouter(basename?: string) {
   return createRouter({
-    history: createWebHistory(basename || '/ydsz-rule'),
+    history: createWebHistory(basename || '{ROUTER_BASE}'),
     routes,
     scrollBehavior: (to, _from, savedPosition) => {
       if (savedPosition) return savedPosition;
@@ -111,11 +131,11 @@ function createAppRouter(basename?: string) {
 }
 
 async function bootstrap() {
-  console.warn('[literule-web] bootstrap');
+  console.warn('[{APP_LABEL}] bootstrap');
 }
 
 async function mount(props: Record<string, unknown>) {
-  console.warn('[literule-web] mount', props);
+  console.warn('[{APP_LABEL}] mount', props);
 
   const { container } = props;
 
@@ -132,7 +152,7 @@ async function mount(props: Record<string, unknown>) {
   // 安装前端监控（错误捕获 + Web Vitals）
   setupMonitor(app);
 
-  const router = createAppRouter('/ydsz-rule');
+  const router = createAppRouter('{ROUTER_BASE}');
   initRoutes(router);
   app.use(router);
 
@@ -147,13 +167,13 @@ async function mount(props: Record<string, unknown>) {
 }
 
 async function unmount() {
-  console.warn('[literule-web] unmount');
+  console.warn('[{APP_LABEL}] unmount');
   app?.unmount();
   app = null;
 }
 
 async function update(props: Record<string, unknown>) {
-  console.warn('[literule-web] update', props);
+  console.warn('[{APP_LABEL}] update', props);
 }
 
 renderWithQiankun({
@@ -192,3 +212,15 @@ if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
     unmountGlobalLoading();
   })();
 }
+"""
+
+count = 0
+for app_name, (app_label, router_base) in APPS.items():
+    content = MAIN_TS_TEMPLATE.replace("{APP_LABEL}", app_label).replace("{ROUTER_BASE}", router_base)
+    fpath = os.path.join(BASE, app_name, "src", "main.ts")
+    with open(fpath, 'w', encoding='utf-8') as f:
+        f.write(content)
+    count += 1
+    print(f"  {app_name}: main.ts updated (initSharedRequest + setupMonitor)")
+
+print(f"\nTotal: {count} files updated")

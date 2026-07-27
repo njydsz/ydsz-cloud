@@ -27,6 +27,8 @@ import com.njydsz.common.tenant.web.TenantContextWebFilter;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.ratelimit.TenantRateLimiter;
 import io.micrometer.core.instrument.MeterRegistry;
 /**
@@ -137,10 +139,10 @@ public class TenantAutoConfiguration {
     @Bean
     @ConditionalOnClass(name = "org.springframework.data.redis.serializer.RedisSerializer")
     @ConditionalOnMissingBean
-    public com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
+    public TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
         log.info("多租户 Redis Key 隔离已启用");
-        return new com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer(
-                com.njydsz.common.tenant.TenantContextHolder::getTenantId, true);
+        return new TenantRedisKeyPrefixer(
+                TenantContextHolder::getTenantId, true);
     }
 
     /**

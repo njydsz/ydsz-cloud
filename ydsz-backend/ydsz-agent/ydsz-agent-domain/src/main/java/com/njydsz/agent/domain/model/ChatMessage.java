@@ -20,13 +20,21 @@ public final class ChatMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 消息唯一标识 */
     private final String id;
+    /** 消息角色（System/User/Assistant/Tool） */
     private final MessageRole role;
+    /** 消息内容 */
     private final String content;
+    /** 所属对话 ID */
     private final String conversationId;
+    /** 创建时间 */
     private final LocalDateTime createdAt;
+    /** 工具调用列表（Assistant 角色可选） */
     private final List<ToolCall> toolCalls;
+    /** 工具调用 ID（Tool 角色使用，关联对应的工具调用） */
     private final String toolCallId;
+    /** 本次消息的 Token 用量 */
     private final TokenUsage tokenUsage;
 
     public ChatMessage(String id, MessageRole role, String content, String conversationId,
