@@ -9,7 +9,7 @@
     {
       "name": "ydsz.tenant.mode",
       "type": "com.njydsz.common.tenant.config.TenantProperties$TenantMode",
-      "description": "租户隔离模式：SINGLE(单租户) / MULTI(多级租户) / ISOLATE_DB(独立数据库)",
+      "description": "租户隔离模式：SINGLE(单字段) / MULTI(多字段组合) / ISOLATE_DB(独立数据库)",
       "defaultValue": "SINGLE"
     },
     {
@@ -19,9 +19,21 @@
       "defaultValue": "tenant_id"
     },
     {
+      "name": "ydsz.tenant.default-claim",
+      "type": "java.lang.String",
+      "description": "默认 JWT claim 名（当 tenant-fields 为空时使用，从 JWT Token 取此 claim 的值）",
+      "defaultValue": "tenantId"
+    },
+    {
+      "name": "ydsz.tenant.default-header",
+      "type": "java.lang.String",
+      "description": "默认 HTTP header 名（当 tenant-fields 为空时使用，Feign 跨服务恢复用）",
+      "defaultValue": "X-Tenant-Id"
+    },
+    {
       "name": "ydsz.tenant.super-tenant-id",
       "type": "java.lang.String",
-      "description": "超级管理员租户 ID，此租户可跨租户操作",
+      "description": "超级管理员租户 ID，此租户可跨租户操作，SQL 拦截器不注入租户条件",
       "defaultValue": "0"
     },
     {
@@ -33,7 +45,28 @@
     {
       "name": "ydsz.tenant.tenant-fields",
       "type": "java.util.List<com.njydsz.common.tenant.config.TenantProperties$TenantField>",
-      "description": "租户字段配置列表，一次性配好所有字段，切换模式只需改 mode 值"
+      "description": "租户字段配置列表（动态组合，任意字段任意组合）。每个字段定义 column(数据库列名) + claim(JWT claim名) + header(HTTP header名) + multiValue(多值IN查询)"
+    },
+    {
+      "name": "ydsz.tenant.tenant-fields[*].column",
+      "type": "java.lang.String",
+      "description": "数据库列名（必填），如 tenant_id / company_id / dept_id / project_id / 任意自定义列名"
+    },
+    {
+      "name": "ydsz.tenant.tenant-fields[*].claim",
+      "type": "java.lang.String",
+      "description": "JWT claim 名（可选），从 JWT Token 中获取此 claim 的值。如 tenantId / companyId / deptIds / projectIds / regionIds"
+    },
+    {
+      "name": "ydsz.tenant.tenant-fields[*].header",
+      "type": "java.lang.String",
+      "description": "HTTP header 名（可选，Feign 跨服务恢复用）。如 X-Tenant-Id / X-Company-Ids / X-Dept-Ids / X-Project-Ids"
+    },
+    {
+      "name": "ydsz.tenant.tenant-fields[*].multi-value",
+      "type": "java.lang.Boolean",
+      "description": "是否多值（默认 false）。false → WHERE column = ?；true → WHERE column IN (?, ?, ...)。多值时 header/claim 的值用逗号分隔",
+      "defaultValue": false
     },
     {
       "name": "ydsz.tenant.table-column-mapping",

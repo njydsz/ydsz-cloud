@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@ydsz/shared-auth": "workspace:*",
+    "@ydsz/monitor": "workspace:*",
     "@ydsz/access": "workspace:*",
     "@ydsz/common-ui": "workspace:*",
     "@ydsz/constants": "workspace:*",
