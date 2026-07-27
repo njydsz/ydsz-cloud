@@ -1,14 +1,12 @@
 {
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "codeLogin": "Code Login",
-    "qrcodeLogin": "Qr Code Login",
-    "forgetPassword": "Forget Password"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
-  }
+  "template": "Template",
+  "templateList": "Template List",
+  "category": "Category",
+  "runtime": "Runtime",
+  "instance": "Instance",
+  "task": "Task",
+  "approval": "Approval",
+  "delegate": "Delegate",
+  "sla": "SLA",
+  "quickComment": "Quick Comment"
 }

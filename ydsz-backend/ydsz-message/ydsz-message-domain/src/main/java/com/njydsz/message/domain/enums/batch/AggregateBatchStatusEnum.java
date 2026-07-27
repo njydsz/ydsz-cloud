@@ -1,5 +1,6 @@
 package com.njydsz.message.domain.enums.batch;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 聚合批次状态枚举。
@@ -7,7 +8,7 @@ package com.njydsz.message.domain.enums.batch;
  * @author ydsz-team
  * @since 1.0.0
  */
-public enum AggregateBatchStatusEnum {
+public enum AggregateBatchStatusEnum implements BaseStatusEnum<AggregateBatchStatusEnum> {
 
     /** 攒批中 */
     PENDING,
@@ -26,6 +27,7 @@ public enum AggregateBatchStatusEnum {
      * @param target 目标状态
      * @return true 表示允许流转
      */
+    @Override
     public boolean canTransitTo(AggregateBatchStatusEnum target) {
         if (this == target) {
             return true;
@@ -36,5 +38,10 @@ public enum AggregateBatchStatusEnum {
             case SENDING -> target == SENT || target == READY || target == CANCELLED;
             case SENT, CANCELLED -> false;
         };
+    }
+
+    @Override
+    public boolean isTerminal() {
+        return this == SENT || this == CANCELLED;
     }
 }

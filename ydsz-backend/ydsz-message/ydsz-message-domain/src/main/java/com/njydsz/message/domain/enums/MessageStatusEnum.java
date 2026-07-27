@@ -1,5 +1,6 @@
 package com.njydsz.message.domain.enums.core;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 消息发送状态枚举。
@@ -10,7 +11,7 @@ package com.njydsz.message.domain.enums.core;
  * @author ydsz-team
  * @since 1.0.0
  */
-public enum MessageStatusEnum {
+public enum MessageStatusEnum implements BaseStatusEnum<MessageStatusEnum> {
 
     /** 待发送 */
     PENDING,
@@ -35,8 +36,9 @@ public enum MessageStatusEnum {
      * 校验状态流转是否合法。
      *
      * @param target 目标状态
-     * @return true 表示允许流转
+     * @return true 表示允许从当前状态流转到目标状态
      */
+    @Override
     public boolean canTransitTo(MessageStatusEnum target) {
         if (this == target) {
             return true;
@@ -49,5 +51,10 @@ public enum MessageStatusEnum {
             case SUCCESS -> target == RECALLED;
             case FAILED, DEAD, RECALLED, SKIPPED -> false;
         };
+    }
+
+    @Override
+    public boolean isTerminal() {
+        return this == FAILED || this == DEAD || this == RECALLED || this == SKIPPED;
     }
 }

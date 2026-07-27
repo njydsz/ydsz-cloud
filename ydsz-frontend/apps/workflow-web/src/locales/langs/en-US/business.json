@@ -1,0 +1,23 @@
+{
+  "templateName": "Template Name",
+  "templateKey": "Template Key",
+  "templateVersion": "Version",
+  "categoryName": "Category",
+  "instanceId": "Instance ID",
+  "instanceStatus": "Status",
+  "currentNode": "Current Node",
+  "assignee": "Assignee",
+  "taskName": "Task Name",
+  "taskStatus": "Status",
+  "createTime": "Created At",
+  "delegateUser": "Delegate",
+  "slaName": "SLA Name",
+  "slaDuration": "SLA Duration",
+  "slaExpired": "Expired",
+  "commentContent": "Comment",
+  "create": "Create",
+  "edit": "Edit",
+  "delete": "Delete",
+  "confirmDelete": "Confirm delete?",
+  "operationSuccess": "Success"
+}

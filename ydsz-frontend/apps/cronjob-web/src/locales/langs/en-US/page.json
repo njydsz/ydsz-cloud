@@ -1,14 +1,13 @@
 {
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "codeLogin": "Code Login",
-    "qrcodeLogin": "Qr Code Login",
-    "forgetPassword": "Forget Password"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
-  }
+  "task": "Task",
+  "taskList": "Task List",
+  "taskGroup": "Task Group",
+  "dag": "DAG",
+  "dagList": "DAG List",
+  "log": "Log",
+  "executionLog": "Execution Log",
+  "alert": "Alert",
+  "alertRule": "Alert Rule",
+  "connector": "Connector",
+  "connectorList": "Connector List"
 }

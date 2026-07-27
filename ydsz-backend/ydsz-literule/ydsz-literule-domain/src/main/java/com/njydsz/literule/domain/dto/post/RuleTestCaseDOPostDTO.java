@@ -2,6 +2,9 @@ package com.njydsz.literule.domain.dto.post;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 import lombok.Data;
 
 /**
@@ -18,6 +21,7 @@ public class RuleTestCaseDOPostDTO implements Serializable {
 
     private String name;
     private String ruleCode;
+    private Map<String, Object> factsData;
     private List<String> expectedTriggered;
     private String description;
 }

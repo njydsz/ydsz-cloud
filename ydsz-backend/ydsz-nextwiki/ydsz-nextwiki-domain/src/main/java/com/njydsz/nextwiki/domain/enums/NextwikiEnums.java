@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
+
 /**
  * 网盘知识库枚举集合
  *
@@ -25,7 +27,7 @@ public final class NextwikiEnums {
     }
 
     /** 分享状态 */
-    public enum ShareStatus {
+    public enum ShareStatus implements BaseStatusEnum<ShareStatus> {
         ACTIVE("active"),
         EXPIRED("expired"),
         REVOKED("revoked");
@@ -45,6 +47,7 @@ public final class NextwikiEnums {
          *
          * @return true 表示当前状态为终态（已过期/已撤销），不可再迁移
          */
+        @Override
         public boolean isTerminal() {
             return this == EXPIRED || this == REVOKED;
         }
@@ -55,6 +58,7 @@ public final class NextwikiEnums {
          * @param target 目标状态
          * @return true 表示允许从当前状态迁移到目标状态
          */
+        @Override
         public boolean canTransitTo(ShareStatus target) {
             if (target == null) return false;
             if (this == target) return true;
@@ -96,7 +100,7 @@ public final class NextwikiEnums {
     }
 
     /** 回收站状态 */
-    public enum TrashStatus {
+    public enum TrashStatus implements BaseStatusEnum<TrashStatus> {
         IN_TRASH("in_trash"),
         RESTORED("restored"),
         PURGED("purged");
@@ -116,6 +120,7 @@ public final class NextwikiEnums {
          *
          * @return true 表示当前状态为终态（已恢复/已清理），不可再迁移
          */
+        @Override
         public boolean isTerminal() {
             return this == RESTORED || this == PURGED;
         }
@@ -126,6 +131,7 @@ public final class NextwikiEnums {
          * @param target 目标状态
          * @return true 表示允许从当前状态迁移到目标状态
          */
+        @Override
         public boolean canTransitTo(TrashStatus target) {
             if (target == null) return false;
             if (this == target) return true;

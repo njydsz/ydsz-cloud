@@ -139,9 +139,16 @@ public class TenantAutoConfiguration {
     @Bean
     @ConditionalOnClass(name = "org.springframework.data.redis.serializer.RedisSerializer")
     @ConditionalOnMissingBean
-    public TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
+    public com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
         log.info("多租户 Redis Key 隔离已启用");
-        return new TenantRedisKeyPrefixer(true);
+        // 使用非废弃构造器，传入 TenantContextHolder
+        return new com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer(
+                new com.njydsz.common.redis.tenant.TenantContextHolder() {
+                    @Override
+                    public String getTenantId() {
+                        return com.njydsz.common.tenant.TenantContextHolder.getTenantId();
+                    }
+                }, true);
     }
 
     /**
@@ -226,7 +233,7 @@ public class TenantAutoConfiguration {
             public Object postProcessAfterInitialization(Object bean, String beanName) {
                 if (bean instanceof ThreadPoolTaskExecutor executor) {
                     TenantContextTaskDecorator decorator = taskDecoratorProvider.getIfAvailable();
-                    if (decorator != null && executor.getTaskDecorator() == null) {
+                    if (decorator != null) {
                         executor.setTaskDecorator(decorator);
                         log.info("多租户 TaskDecorator 自动注入到线程池: {}", beanName);
                     }

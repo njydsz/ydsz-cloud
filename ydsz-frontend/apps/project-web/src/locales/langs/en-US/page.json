@@ -1,14 +1,21 @@
 {
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "codeLogin": "Code Login",
-    "qrcodeLogin": "Qr Code Login",
-    "forgetPassword": "Forget Password"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
-  }
+  "opportunity": "Opportunity",
+  "opportunityList": "Opportunity List",
+  "contract": "Contract",
+  "contractList": "Contract List",
+  "initiation": "Initiation",
+  "initiationList": "Initiation List",
+  "execution": "Execution",
+  "wbs": "WBS Tasks",
+  "risk": "Risk",
+  "finance": "Finance",
+  "budget": "Budget",
+  "expense": "Expense",
+  "income": "Income",
+  "invoice": "Invoice",
+  "payment": "Payment",
+  "evm": "EVM Analysis",
+  "evmMeasure": "EVM Measure",
+  "hr": "HR",
+  "rateCard": "Rate Card"
 }

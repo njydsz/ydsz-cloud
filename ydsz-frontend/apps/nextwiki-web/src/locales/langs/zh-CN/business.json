@@ -1,0 +1,23 @@
+{
+  "fileName": "文件名称",
+  "fileSize": "文件大小",
+  "fileType": "文件类型",
+  "filePath": "文件路径",
+  "uploadTime": "上传时间",
+  "owner": "所有者",
+  "shareLink": "分享链接",
+  "sharePassword": "提取密码",
+  "expireTime": "过期时间",
+  "tagName": "标签名称",
+  "tagColor": "标签颜色",
+  "commentContent": "评论内容",
+  "commentAuthor": "评论人",
+  "commentTime": "评论时间",
+  "totalQuota": "总配额",
+  "usedQuota": "已用配额",
+  "create": "新增",
+  "edit": "编辑",
+  "delete": "删除",
+  "confirmDelete": "确定删除吗？",
+  "operationSuccess": "操作成功"
+}

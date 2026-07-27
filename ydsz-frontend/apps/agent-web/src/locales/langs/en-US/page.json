@@ -1,14 +1,11 @@
 {
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "codeLogin": "Code Login",
-    "qrcodeLogin": "Qr Code Login",
-    "forgetPassword": "Forget Password"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
-  }
+  "agent": "Agent",
+  "agentList": "Agent List",
+  "agentDefinition": "Agent Definition",
+  "rag": "RAG",
+  "knowledgeBase": "Knowledge Base",
+  "dag": "DAG",
+  "dagList": "DAG List",
+  "approval": "Approval",
+  "humanApproval": "Human Approval"
 }

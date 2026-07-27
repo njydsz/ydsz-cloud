@@ -7,8 +7,8 @@
     "forgetPassword": "忘记密码"
   },
   "dashboard": {
-    "title": "瑞米软件全域管控平台",
-    "analytics": "主应用分析页",
-    "workspace": "主应用工作台"
+    "title": "YDSZ PMIS 项目管理平台",
+    "analytics": "数据分析",
+    "workspace": "工作台"
   }
 }

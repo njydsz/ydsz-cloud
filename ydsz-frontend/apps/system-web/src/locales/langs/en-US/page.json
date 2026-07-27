@@ -1,14 +1,8 @@
 {
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "codeLogin": "Code Login",
-    "qrcodeLogin": "Qr Code Login",
-    "forgetPassword": "Forget Password"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
-  }
+  "system": "System",
+  "config": "Config",
+  "dictType": "Dict Type",
+  "dictItem": "Dict Item",
+  "variable": "Variable",
+  "appInfo": "App Info"
 }

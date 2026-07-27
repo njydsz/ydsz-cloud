@@ -1,14 +1,11 @@
 {
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "codeLogin": "Code Login",
-    "qrcodeLogin": "Qr Code Login",
-    "forgetPassword": "Forget Password"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
-  }
+  "file": "File",
+  "fileList": "File List",
+  "fileComment": "Comments",
+  "share": "Share",
+  "shareList": "Share List",
+  "tag": "Tag",
+  "tagList": "Tag List",
+  "storage": "Storage",
+  "quota": "Quota"
 }

@@ -1,12 +1,3 @@
 {
-  "title": "演示",
-  "antd": "Ant Design Vue",
-  "ydsz": {
-    "title": "项目",
-    "about": "关于",
-    "document": "文档",
-    "antdv": "Ant Design Vue 版本",
-    "naive-ui": "Naive UI 版本",
-    "element-plus": "Element Plus 版本"
-  }
+  "title": "演示"
 }

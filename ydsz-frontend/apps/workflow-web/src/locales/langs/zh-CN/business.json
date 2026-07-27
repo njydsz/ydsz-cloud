@@ -1,0 +1,23 @@
+{
+  "templateName": "模板名称",
+  "templateKey": "模板标识",
+  "templateVersion": "版本",
+  "categoryName": "分类名称",
+  "instanceId": "实例ID",
+  "instanceStatus": "实例状态",
+  "currentNode": "当前节点",
+  "assignee": "审批人",
+  "taskName": "任务名称",
+  "taskStatus": "任务状态",
+  "createTime": "创建时间",
+  "delegateUser": "委派用户",
+  "slaName": "SLA名称",
+  "slaDuration": "SLA时长",
+  "slaExpired": "是否超时",
+  "commentContent": "评语内容",
+  "create": "新增",
+  "edit": "编辑",
+  "delete": "删除",
+  "confirmDelete": "确定删除吗？",
+  "operationSuccess": "操作成功"
+}

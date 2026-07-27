@@ -1,14 +1,11 @@
 {
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "codeLogin": "Code Login",
-    "qrcodeLogin": "Qr Code Login",
-    "forgetPassword": "Forget Password"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
-  }
+  "organization": "Organization",
+  "user": "User Management",
+  "dept": "Department",
+  "role": "Role",
+  "post": "Position",
+  "company": "Company",
+  "systemConfig": "System Config",
+  "menu": "Menu",
+  "language": "Language"
 }

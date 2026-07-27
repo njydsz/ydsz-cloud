@@ -1,14 +1,11 @@
 {
-  "auth": {
-    "login": "登录",
-    "register": "注册",
-    "codeLogin": "验证码登录",
-    "qrcodeLogin": "二维码登录",
-    "forgetPassword": "忘记密码"
-  },
-  "dashboard": {
-    "title": "瑞米软件全域管控平台",
-    "analytics": "子应用分析页",
-    "workspace": "子应用工作台"
-  }
+  "file": "文件管理",
+  "fileList": "文件列表",
+  "fileComment": "文件评论",
+  "share": "分享管理",
+  "shareList": "分享列表",
+  "tag": "标签管理",
+  "tagList": "标签列表",
+  "storage": "存储管理",
+  "quota": "存储配额"
 }
