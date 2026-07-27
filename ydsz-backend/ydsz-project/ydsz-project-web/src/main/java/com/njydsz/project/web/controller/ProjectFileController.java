@@ -34,7 +34,7 @@ import com.njydsz.project.domain.vo.FileStorageVO;
  * <p>存储路径规范：{@code project/{projectId}/{category}/{uuid}.{suffix}}
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

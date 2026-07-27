@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * 负责将业务实体的变更同步到搜索引擎索引。支持单文档索引、批量索引和全量重建。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class IndexSyncService {

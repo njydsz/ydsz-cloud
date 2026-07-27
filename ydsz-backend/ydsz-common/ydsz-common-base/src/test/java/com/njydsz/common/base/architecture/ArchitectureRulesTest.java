@@ -33,7 +33,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @AnalyzeClasses(packages = {"com.njydsz"})
 public class ArchitectureRulesTest {

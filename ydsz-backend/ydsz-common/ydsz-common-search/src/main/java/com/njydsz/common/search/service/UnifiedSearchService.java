@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * 通过 {@link SearchEngineRegistry} 委托搜索引擎策略，支持主引擎 + 降级链。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class UnifiedSearchService {

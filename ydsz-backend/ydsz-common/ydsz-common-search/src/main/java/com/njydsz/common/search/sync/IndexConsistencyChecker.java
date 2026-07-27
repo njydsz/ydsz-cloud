@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * 巡检结果通过日志输出，严重不一致时触发告警。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

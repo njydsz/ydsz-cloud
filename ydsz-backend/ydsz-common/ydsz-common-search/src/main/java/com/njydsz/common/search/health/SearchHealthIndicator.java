@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * 搜索引擎健康检查
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SearchHealthIndicator implements HealthIndicator {

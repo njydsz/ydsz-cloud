@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>基于统一搜索服务，提供项目立项数据的全文检索能力。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

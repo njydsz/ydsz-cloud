@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>本实现维护一个内存索引作为降级，当 ES 不可用时自动降级到内存搜索。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ElasticsearchSearchStrategy implements SearchStrategy, IndexStrategy, SuggestStrategy {

@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>基于 {@link LinkedHashMap} LRU 缓存实现的轻量级搜索引擎，无需外部依赖。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class InMemorySearchStrategy implements SearchStrategy, IndexStrategy, SuggestStrategy {

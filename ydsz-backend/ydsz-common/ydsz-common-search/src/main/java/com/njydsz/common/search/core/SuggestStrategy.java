@@ -8,7 +8,7 @@ import com.njydsz.common.search.api.SearchSuggestion;
  * 支持搜索建议（自动补全）的引擎实现此接口。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  * @see SearchStrategy
  */
 public interface SuggestStrategy {

@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 返回 Optional 以支持引擎不实现对应能力的场景。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SearchEngineRegistry {

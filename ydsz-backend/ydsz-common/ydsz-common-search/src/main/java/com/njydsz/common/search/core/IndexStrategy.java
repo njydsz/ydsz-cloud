@@ -9,7 +9,7 @@ import java.util.List;
  * RediSearch 等直接索引数据源的引擎可不实现此接口。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  * @see SearchStrategy
  */
 public interface IndexStrategy {

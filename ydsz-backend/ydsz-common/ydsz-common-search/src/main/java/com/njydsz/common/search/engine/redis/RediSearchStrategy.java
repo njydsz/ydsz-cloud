@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 本实现维护内存降级索引，RediSearch 不可用时降级。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class RediSearchStrategy implements SearchStrategy, SuggestStrategy {

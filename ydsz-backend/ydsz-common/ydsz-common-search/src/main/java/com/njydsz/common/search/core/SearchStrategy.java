@@ -13,7 +13,7 @@ import com.njydsz.common.search.api.SearchResponse;
  * 通过 {@link #getCapability()} 声明自身能力。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface SearchStrategy {
 

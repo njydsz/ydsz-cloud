@@ -15,7 +15,7 @@ package com.njydsz.common.search.core;
  * @param supportsIndexing    是否支持显式索引操作（false = 无需显式索引，如 RediSearch）
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public record EngineCapability(
         boolean supportsFullText,

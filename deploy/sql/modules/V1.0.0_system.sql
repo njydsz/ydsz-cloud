@@ -1854,3 +1854,75 @@ COMMENT ON COLUMN ydsz_variable.deleted IS '逻辑删除';
 COMMENT ON COLUMN ydsz_variable.tenant_id IS '租户 ID';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_var_status ON ydsz_variable(status) WHERE deleted = 0;
+
+-- ============================================================
+-- 七、ydsz_search_index 全文检索索引表（合并自 V1.4.0_search.sql）
+--   通用搜索模块（ydsz-common-search）使用的全文检索表，
+--   支持 PostgreSQL 全文搜索 + pg_trgm 模糊匹配 + JSONB 元数据。
+--   由 DBA 在系统初始化时手动执行，搜索引擎构造器不自动建表。
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ydsz_search_index (
+    id              VARCHAR(128)   NOT NULL,
+    doc_type        VARCHAR(64)    NOT NULL,
+    title           TEXT           NOT NULL DEFAULT '',
+    subtitle        TEXT           NOT NULL DEFAULT '',
+    content         TEXT           NOT NULL DEFAULT '',
+    snippet         TEXT,
+    tags            JSONB          NOT NULL DEFAULT '[]',
+    status          VARCHAR(32)    NOT NULL DEFAULT '',
+    path            TEXT,
+    tenant_id       VARCHAR(64)    NOT NULL DEFAULT '',
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    searchable_text TEXT           NOT NULL DEFAULT '',
+    metadata        JSONB          NOT NULL DEFAULT '{}',
+    created_at_ts   TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated_at_ts   TIMESTAMP      NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_ydsz_search_index PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE ydsz_search_index IS '通用全文检索索引表（ydsz-common-search 使用）';
+COMMENT ON COLUMN ydsz_search_index.id IS '文档 ID（业务系统提供）';
+COMMENT ON COLUMN ydsz_search_index.doc_type IS '文档类型（user/project/wiki 等）';
+COMMENT ON COLUMN ydsz_search_index.title IS '标题';
+COMMENT ON COLUMN ydsz_search_index.subtitle IS '副标题';
+COMMENT ON COLUMN ydsz_search_index.content IS '正文内容';
+COMMENT ON COLUMN ydsz_search_index.snippet IS '摘要片段';
+COMMENT ON COLUMN ydsz_search_index.tags IS '标签（JSON 数组）';
+COMMENT ON COLUMN ydsz_search_index.status IS '文档状态';
+COMMENT ON COLUMN ydsz_search_index.path IS '资源路径（如 URL）';
+COMMENT ON COLUMN ydsz_search_index.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_search_index.searchable_text IS '用于全文搜索的拼接文本';
+COMMENT ON COLUMN ydsz_search_index.metadata IS '元数据（JSON）';
+
+-- GIN 全文索引（中文分词需要 zhparser，未安装时改用 simple）
+CREATE INDEX IF NOT EXISTS idx_search_index_tsvector
+    ON ydsz_search_index
+    USING gin (to_tsvector('simple', searchable_text));
+
+-- 类型索引（按 doc_type 过滤）
+CREATE INDEX IF NOT EXISTS idx_search_index_doc_type
+    ON ydsz_search_index (doc_type);
+
+-- 租户索引
+CREATE INDEX IF NOT EXISTS idx_search_index_tenant
+    ON ydsz_search_index (tenant_id);
+
+-- 复合索引（类型+租户）
+CREATE INDEX IF NOT EXISTS idx_search_index_type_tenant
+    ON ydsz_search_index (doc_type, tenant_id);
+
+-- trigram 索引（模糊匹配 %keyword%）
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_search_index_text_trgm
+    ON ydsz_search_index USING gin (searchable_text gin_trgm_ops);
+
+-- 标题索引（搜索建议）
+CREATE INDEX IF NOT EXISTS idx_search_index_title
+    ON ydsz_search_index (title);
+
+-- 更新时间索引（排序）
+CREATE INDEX IF NOT EXISTS idx_search_index_updated
+    ON ydsz_search_index (updated_at_ts);

@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  * 中有对应客户端依赖时才激活引擎策略。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @AutoConfiguration

@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 提供跨模块统一搜索入口，聚合 project/user/config/wiki 全部类型的搜索结果。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController
