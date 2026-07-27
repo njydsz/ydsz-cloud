@@ -28,10 +28,15 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiEmbeddingClient.class);
 
+    /** API 基础地址 */
     private final String baseUrl;
+    /** API Key */
     private final String apiKey;
+    /** 模型名称 */
     private final String model;
+    /** 向量维度 */
     private final int dimension;
+    /** HTTP 客户端 */
     private final RestClient restClient;
 
     public OpenAiEmbeddingClient(String baseUrl, String apiKey, String model, int dimension) {

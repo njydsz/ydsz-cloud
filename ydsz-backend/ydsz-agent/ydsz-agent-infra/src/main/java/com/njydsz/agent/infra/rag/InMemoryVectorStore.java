@@ -24,7 +24,9 @@ import com.njydsz.agent.domain.rag.VectorStore;
 public class InMemoryVectorStore implements VectorStore {
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryVectorStore.class);
+    /** 内存存储（线程安全） */
     private final List<TextChunk> store = new CopyOnWriteArrayList<>();
+    /** Embedding 客户端 */
     private final EmbeddingClient embeddingClient;
 
     public InMemoryVectorStore(EmbeddingClient embeddingClient) {

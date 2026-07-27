@@ -94,7 +94,7 @@ ydsz-frontend/
 │   ├── agent-web/                   # AI 助手 → ydsz-agent:9010
 ├── comm/                              # 公共共享包
 │   ├── @core/                        # 核心 SDK（base/composables/preferences/ui-kit）
-│   ├── effects/                      # 副作用（access/common-ui/hooks/layouts/plugins/request）
+│   ├── effects/                      # 副作用（access/common-ui/hooks/layouts/plugins/request/shared-auth/monitor）
 │   ├── constants/                    # 常量定义
 │   ├── icons/                        # 图标配置
 │   ├── locales/                      # 国际化基础包
@@ -131,7 +131,7 @@ npm i -g corepack
 # 安装依赖
 pnpm install
 
-# 启动所有应用（主应用 + 所有子应用 + Mock API）
+# 启动所有应用（主应用 + 所有子应用）
 pnpm dev
 
 # 启动单个应用
@@ -145,7 +145,6 @@ pnpm dev:workflow   # 工作流引擎（端口 5606）
 pnpm dev:nextwiki   # 网盘知识库（端口 5607）
 pnpm dev:literule   # 规则引擎（端口 5608）
 pnpm dev:agent      # AI 助手（端口 5610）
-pnpm dev:mock       # Mock API（端口 5320）
 
 # 打包
 pnpm build                   # 打包所有应用
@@ -204,6 +203,19 @@ server: {
   },
 }
 ```
+
+## 关键特性
+
+| 特性 | 说明 |
+|------|------|
+| **微前端架构** | Qiankun 主子应用隔离 + 按需预加载（hover 触发）+ 全局状态通信（initGlobalState） |
+| **公共认证包** | `@ydsz/shared-auth` 统一 RequestClient + Auth API + Auth Store，消除 9 份重复代码 |
+| **前端监控** | `@ydsz/monitor` 错误捕获（Vue/window/Promise/资源）+ Web Vitals（LCP/FID/CLS/INP/FCP/TTFB） |
+| **主题切换** | auto/light/dark 暗黑模式 + Element Plus 主题适配 + 系统偏好跟随 |
+| **API 对齐** | 全部 API 路径 `/api/v1/*` + successCode=200 + LoginVO 类型 + refreshToken 自动刷新 |
+| **构建优化** | Vite manualChunks 分割（vue-vendor/element-vendor/vxe-vendor）+ chunk hash 缓存 |
+| **国际化** | 9 子应用 × zh-CN/en-US 双语 + 业务字段翻译 + Element Plus/dayjs 语言包 |
+| **工程规范** | ESLint + Prettier + Stylelint + Commitlint + Turbo 并行构建 + Docker 多阶段构建 |
 
 ## 浏览器支持
 

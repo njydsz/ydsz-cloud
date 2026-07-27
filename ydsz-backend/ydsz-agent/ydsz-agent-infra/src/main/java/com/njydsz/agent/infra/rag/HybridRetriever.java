@@ -29,11 +29,16 @@ import com.njydsz.agent.domain.rag.VectorStore;
 public class HybridRetriever {
 
     private static final Logger log = LoggerFactory.getLogger(HybridRetriever.class);
+    /** RRF 平滑常数 */
     private static final int RRF_K = 60;
+    /** 文本块表名 */
     private static final String TABLE_NAME = "ydsz_agent_document_chunk";
 
+    /** 向量存储 */
     private final VectorStore vectorStore;
+    /** JDBC 模板 */
     private final JdbcTemplate jdbcTemplate;
+    /** 全文检索是否可用 */
     private final boolean fullTextAvailable;
 
     public HybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate) {

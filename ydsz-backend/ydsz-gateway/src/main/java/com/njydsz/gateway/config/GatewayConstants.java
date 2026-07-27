@@ -6,12 +6,22 @@ package com.njydsz.gateway.config;
  * <p>网关与下游服务之间约定的内部请求头常量。
  * 网关负责注入这些头，下游服务通过 {@code BaseAuthFilter} 解析。
  *
+ * <h3>使用约束</h3>
+ * <ul>
+ *   <li>所有 X-User-* / X-Internal-* 头在 {@link com.njydsz.gateway.filter.AuthGlobalFilter}
+ *       中统一注入，{@link com.njydsz.gateway.config.PathGuard#internalHeaders()}
+ *       中定义需剥离的客户端伪造头集合</li>
+ *   <li>新增内部头时必须同步更新 PathGuard 列表 + 下游 BaseAuthFilter 解析逻辑</li>
+ *   <li>下游服务信任网关的前提是 {@link com.njydsz.gateway.config.InternalHeaderSigner}
+ *       签名校验通过</li>
+ * </ul>
+ *
  * @since 1.0.0
  */
 public final class GatewayConstants {
 
     private GatewayConstants() {
-        throw new UnsupportedOperationException("Utility class");
+        throw new UnsupportedOperationException("Utility class - do not instantiate");
     }
 
     /** 链路追踪 ID 请求头 */

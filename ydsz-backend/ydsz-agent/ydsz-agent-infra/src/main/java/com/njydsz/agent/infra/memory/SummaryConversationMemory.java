@@ -40,13 +40,20 @@ import com.njydsz.agent.domain.model.ChatResponse;
 public class SummaryConversationMemory implements ConversationMemory {
 
     private static final Logger log = LoggerFactory.getLogger(SummaryConversationMemory.class);
+    /** 摘要前缀 */
     private static final String SUMMARY_PREFIX = "[对话摘要] ";
 
+    /** 委托的记忆实现 */
     private final ConversationMemory delegate;
+    /** LLM 客户端（用于生成摘要） */
     private final LlmClient llmClient;
+    /** 模型名称 */
     private final String model;
+    /** 触发摘要的消息阈值 */
     private final int summaryThreshold;
+    /** 保留最近消息数 */
     private final int keepRecentCount;
+    /** 对话摘要缓存（conversationId → summary） */
     private final ConcurrentMap<String, String> conversationSummaries = new ConcurrentHashMap<>();
 
     public SummaryConversationMemory(ConversationMemory delegate, LlmClient llmClient,

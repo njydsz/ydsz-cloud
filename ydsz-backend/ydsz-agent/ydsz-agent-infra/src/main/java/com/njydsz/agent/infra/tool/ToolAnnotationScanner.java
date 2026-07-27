@@ -50,6 +50,7 @@ public class ToolAnnotationScanner implements BeanPostProcessor, ApplicationCont
 
     private static final Logger log = LoggerFactory.getLogger(ToolAnnotationScanner.class);
 
+    /** 工具注册中心 */
     private final ToolRegistry toolRegistry;
 
     public ToolAnnotationScanner(ToolRegistry toolRegistry) {

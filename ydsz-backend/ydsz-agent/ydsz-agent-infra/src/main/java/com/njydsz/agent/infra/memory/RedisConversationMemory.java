@@ -34,12 +34,18 @@ import com.njydsz.agent.domain.model.TokenUsage;
 public class RedisConversationMemory implements ConversationMemory {
 
     private static final Logger log = LoggerFactory.getLogger(RedisConversationMemory.class);
+    /** Redis key 前缀 */
     private static final String KEY_PREFIX = "ydsz:agent:memory:";
+    /** 默认 TTL（小时） */
     private static final int DEFAULT_TTL_HOURS = 24;
+    /** 默认最大列表大小 */
     private static final int DEFAULT_MAX_LIST_SIZE = 50;
 
+    /** Redis 服务 */
     private final RedisService redisService;
+    /** TTL（小时） */
     private final int ttlHours;
+    /** 最大列表大小 */
     private final int maxListSize;
 
     public RedisConversationMemory(RedisService redisService) {
@@ -143,13 +149,21 @@ public class RedisConversationMemory implements ConversationMemory {
         }
     }
 
+    /** 消息序列化内部结构 */
     private static class SerializedMessage {
+        /** 消息 ID */
         public String id;
+        /** 消息角色 */
         public String role;
+        /** 消息内容 */
         public String content;
+        /** 对话 ID */
         public String conversationId;
+        /** 创建时间 */
         public String createdAt;
+        /** 输入 Token 数量 */
         public int promptTokens;
+        /** 输出 Token 数量 */
         public int completionTokens;
     }
 }

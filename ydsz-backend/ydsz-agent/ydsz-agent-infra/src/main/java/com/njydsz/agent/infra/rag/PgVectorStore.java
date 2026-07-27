@@ -45,8 +45,11 @@ public class PgVectorStore implements VectorStore {
 
     private static final Logger log = LoggerFactory.getLogger(PgVectorStore.class);
 
+    /** JDBC 模板 */
     private final JdbcTemplate jdbcTemplate;
+    /** Embedding 客户端 */
     private final EmbeddingClient embeddingClient;
+    /** 向量维度 */
     private final int dimension;
 
     public PgVectorStore(JdbcTemplate jdbcTemplate,

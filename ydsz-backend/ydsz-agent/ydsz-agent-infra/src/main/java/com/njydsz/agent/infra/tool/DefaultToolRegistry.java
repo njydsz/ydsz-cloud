@@ -28,6 +28,7 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
 public class DefaultToolRegistry implements ToolRegistry {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultToolRegistry.class);
+    /** 工具注册表（key=工具名） */
     private final Map<String, ToolRegistration> registry = new ConcurrentHashMap<>();
 
     @Override
