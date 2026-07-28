@@ -59,3 +59,39 @@ spring:
           - data-id: ydsz-common.yaml
             group: ${spring.profiles.active}
             refresh: true
+
+# P0-2: 统一线程池配置（ydsz-common-thread）
+# LiteRuleAutoConfiguration 通过 lookupExecutor() 查找以下命名线程池，
+# 找到则注入管理，找不到则降级为 Executors.new*（测试环境可用）
+ydsz:
+  thread:
+    enabled: true
+    pools:
+      ruleTimeoutExecutor:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 256
+        thread-name-prefix: literule-timeout-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
+      ruleParallelExecutor:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 512
+        thread-name-prefix: literule-parallel-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
+      modelInputExecutor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 128
+        thread-name-prefix: literule-model-input-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 10
+      factProviderExecutor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 128
+        thread-name-prefix: literule-fact-provider-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 10

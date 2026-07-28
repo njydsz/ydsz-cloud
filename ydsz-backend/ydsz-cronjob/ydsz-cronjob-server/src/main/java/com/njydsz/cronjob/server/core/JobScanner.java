@@ -146,17 +146,7 @@ public class JobScanner {
 
     @PreDestroy
     public void destroy() {
-        if (!useExternalDispatchPool && dispatchPool != null) {
-            dispatchPool.shutdown();
-            try {
-                if (!dispatchPool.awaitTermination(10, TimeUnit.SECONDS)) {
-                    dispatchPool.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                dispatchPool.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
+        // P0-3: dispatchPool 由 common-thread 管理生命周期，无需手动关闭
     }
 
     /**

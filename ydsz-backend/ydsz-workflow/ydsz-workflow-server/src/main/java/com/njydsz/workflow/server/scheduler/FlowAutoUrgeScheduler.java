@@ -152,7 +152,7 @@ public class FlowAutoUrgeScheduler {
         String title = "【审批催办】" + (instance.getTitle() != null ? instance.getTitle() : instance.getFlowName());
         long pendingHours = tasks.get(0).getCreatedAt() != null
                 ? Duration.between(tasks.get(0).getCreatedAt(), LocalDateTime.now()).toHours()
-                : thresholdHours;
+                : flowProperties.getAutoUrge().getThresholdHours();
         String content = String.format(
                 "您有 %d 个审批任务已等待 %d 小时，请尽快处理。\n流程：%s\n标题：%s",
                 tasks.size(), pendingHours,

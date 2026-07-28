@@ -105,7 +105,8 @@ ENV TZ=Asia/Shanghai \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     # JVM 容器化参数（对齐 JDK 21 + Spring Boot 4 推荐）
-    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom" \
+    # P3-2: 增加 HeapDumpOnOutOfMemoryError 用于 OOM 后分析
+    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom" \
     MODULE_NAME=${MODULE_NAME} \
     APP_PORT=${APP_PORT}
 

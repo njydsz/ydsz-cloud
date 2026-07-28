@@ -130,14 +130,14 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         }
         // 读取现有 ext JSON
         Map<String, Object> extJson = StringUtils.hasText(node.getExt())
-                ? YdszJson.parseMap(node.getExt()) : new JSONObject();
+                ? YdszJson.parseMap(node.getExt()) : new LinkedHashMap<>();
         // 写入 customButtons
         if (buttons == null || buttons.isEmpty()) {
             extJson.remove("customButtons");
         } else {
             extJson.put("customButtons", buttons);
         }
-        node.setExt(extJson.toJSONString());
+        node.setExt(YdszJson.toJson(extJson));
         nodeMapper.updateById(node);
         // 失效缓存
         definitionCacheService.evict(definitionId);

@@ -19,6 +19,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.annotation.PreDestroy;
+
 /**
  * Nacos 动态路由仓库（P1-6 + P2-12 增强）
  *

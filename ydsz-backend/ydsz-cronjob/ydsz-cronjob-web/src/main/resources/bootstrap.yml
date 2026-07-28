@@ -56,3 +56,30 @@ spring:
           - data-id: ydsz-common.yaml
             group: ${spring.profiles.active}
             refresh: true
+
+# P0-2: 统一线程池配置（ydsz-common-thread）
+ydsz:
+  thread:
+    enabled: true
+    pools:
+      jobDispatchExecutor:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 512
+        thread-name-prefix: cronjob-dispatch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      mapTaskExecutor:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 256
+        thread-name-prefix: cronjob-map-task-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      retrySchedulerExecutor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 128
+        thread-name-prefix: cronjob-retry-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15

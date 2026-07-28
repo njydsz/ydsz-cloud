@@ -99,49 +99,19 @@ public class MapTaskExecutor {
     private final RemoteTaskClient remoteTaskClient;
 
     /**
-     * P1-2: 子任务并行执行线程池。
+     * P0-3: 子任务并行执行线程池（统一由 common-thread 管理）。
      *
-     * <p>优先使用 common-thread 统一管理的 {@code cronjobMapReduceExecutor} 线程池；
-     * 未配置时 fallback 到手动创建的固定线程池。
+     * <p>强制使用 common-thread 统一管理的 {@code cronjobMapReduceExecutor} 线程池，
+     * 不再 fallback 到手动创建。若未配置则启动失败。
      */
     private volatile ExecutorService subTaskExecutor;
 
-    /** P1-2: 是否使用外部线程池（true=common-thread 管理，不负责关闭） */
-    private volatile boolean useExternalExecutor = false;
-
     @PostConstruct
     private void initExecutor() {
-        try {
-            ThreadPoolTaskExecutor threadPool = applicationContext.getBean(
-                    "cronjobMapReduceExecutor", ThreadPoolTaskExecutor.class);
-            this.subTaskExecutor = threadPool.getThreadPoolExecutor();
-            this.useExternalExecutor = true;
-            log.info("[MapTaskExecutor] 使用 common-thread 线程池: cronjobMapReduceExecutor");
-        } catch (Exception e) {
-            int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors() * 2);
-            this.subTaskExecutor = Executors.newFixedThreadPool(poolSize, r -> {
-                Thread t = new Thread(r, "mapreduce-subtask");
-                t.setDaemon(true);
-                return t;
-            });
-            this.useExternalExecutor = false;
-            log.info("[MapTaskExecutor] 使用手动线程池: poolSize={}", poolSize);
-        }
-    }
-
-    @PreDestroy
-    private void shutdownExecutor() {
-        if (!useExternalExecutor && subTaskExecutor != null) {
-            subTaskExecutor.shutdown();
-            try {
-                if (!subTaskExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
-                    subTaskExecutor.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                subTaskExecutor.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
+        ThreadPoolTaskExecutor threadPool = applicationContext.getBean(
+                "cronjobMapReduceExecutor", ThreadPoolTaskExecutor.class);
+        this.subTaskExecutor = threadPool.getThreadPoolExecutor();
+        log.info("[MapTaskExecutor] 使用 common-thread 线程池: cronjobMapReduceExecutor");
     }
 
     /**

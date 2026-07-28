@@ -16,9 +16,19 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 
 /**
- * NextWiki 文件工具类（P1-R1 + P1-R2）
- * <p>
- * 消除跨 5 个 Service 重复的工具方法和 MultipartFile 适配器实现。
+ * NextWiki 文件工具类 — 跨 Service 共享的文件操作工具方法集合
+ *
+ * <p>消除跨 5 个 Service（FileApplicationService / ChunkUploadApplicationService /
+ * PreviewApplicationService / ContentExtractionApplicationService / DownloadApplicationService）
+ * 重复的工具方法和 MultipartFile 适配器实现。
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li>文件后缀分类：{@code IMAGE_SUFFIXES} / {@code TEXT_SUFFIXES} / {@code OFFICE_SUFFIXES} 统一定义</li>
+ *   <li>存储路径解析：根据文件名生成存储 key（UUID + 后缀），避免冲突</li>
+ *   <li>文件名清洗：移除非法字符、路径穿越（{@code ../}）等安全风险</li>
+ *   <li>MultipartFile 适配器：{@code PathMultipartFileImpl} 将本地 Path 包装为 MultipartFile 接口</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -11,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -53,24 +52,21 @@ public class DagOrchestrationExecutor {
     private final AgentProperties properties;
     private final AgentFactory agentFactory;
     private final ExecutorService executor;
-    private final boolean ownsExecutor;
 
-    public DagOrchestrationExecutor(LlmClient llmClient, AgentProperties properties,
-                                     AgentFactory agentFactory) {
-        this.llmClient = llmClient;
-        this.properties = properties;
-        this.agentFactory = agentFactory;
-        this.executor = Executors.newVirtualThreadPerTaskExecutor();
-        this.ownsExecutor = true;
-    }
-
+    /**
+     * 构造 DAG 执行器（强制使用外部线程池）
+     *
+     * @param llmClient    LLM 客户端
+     * @param properties   Agent 配置
+     * @param agentFactory Agent 工厂
+     * @param executor     外部线程池（由 common-thread 管理）
+     */
     public DagOrchestrationExecutor(LlmClient llmClient, AgentProperties properties,
                                      AgentFactory agentFactory, ExecutorService executor) {
         this.llmClient = llmClient;
         this.properties = properties;
         this.agentFactory = agentFactory;
         this.executor = executor;
-        this.ownsExecutor = false;
     }
 
     /**

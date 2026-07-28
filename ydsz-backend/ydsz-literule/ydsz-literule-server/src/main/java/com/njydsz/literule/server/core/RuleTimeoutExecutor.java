@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -30,38 +28,18 @@ public class RuleTimeoutExecutor {
     /** 默认单规则超时（毫秒） */
     private final long defaultTimeoutMs;
 
-    /** 独立的执行器线程池（避免拖垮主线程池） */
+    /** 独立的执行器线程池（由 common-thread 管理，本实例不负责关闭） */
     private final Executor executor;
 
-    /** 是否由本实例管理线程池生命周期（外部传入时不负责关闭） */
-    private final boolean ownsExecutor;
-
     /**
-     * 构造超时执行器
+     * 构造超时执行器（强制使用外部线程池）
      *
      * @param defaultTimeoutMs 默认超时（毫秒）；0 表示不限制
-     * @param threadPoolSize   线程池大小
-     */
-    public RuleTimeoutExecutor(long defaultTimeoutMs, int threadPoolSize) {
-        this.defaultTimeoutMs = defaultTimeoutMs;
-        this.executor = Executors.newFixedThreadPool(Math.max(2, threadPoolSize), r -> {
-            Thread t = new Thread(r, "literule-timeout-exec");
-            t.setDaemon(true);
-            return t;
-        });
-        this.ownsExecutor = true;
-    }
-
-    /**
-     * 使用外部线程池构造超时执行器（common-thread 注入入口）
-     *
-     * @param defaultTimeoutMs 默认超时（毫秒）；0 表示不限制
-     * @param executor        外部线程池（由调用方管理生命周期）
+     * @param executor        外部线程池（由 common-thread 管理，调用方不负责关闭）
      */
     public RuleTimeoutExecutor(long defaultTimeoutMs, Executor executor) {
         this.defaultTimeoutMs = defaultTimeoutMs;
         this.executor = Objects.requireNonNull(executor, "executor 不能为 null");
-        this.ownsExecutor = false;
     }
 
     /**
@@ -114,23 +92,10 @@ public class RuleTimeoutExecutor {
     }
 
     /**
-     * 关闭线程池
+     * 关闭线程池（P0-3: 外部线程池由 common-thread 管理生命周期，此方法为 no-op）
      */
     public void shutdown() {
-        if (!ownsExecutor) {
-            return;
-        }
-        if (executor instanceof ExecutorService es) {
-            es.shutdown();
-            try {
-                if (!es.awaitTermination(5, TimeUnit.SECONDS)) {
-                    es.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                es.shutdownNow();
-            }
-        }
-        log.info("[LiteRule-Timeout] 超时执行器已关闭");
+        // P0-3: ownsExecutor 始终为 false，无需手动关闭
+        log.info("[LiteRule-Timeout] 超时执行器已关闭（委托 common-thread）");
     }
 }

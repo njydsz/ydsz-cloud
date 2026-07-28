@@ -34,7 +34,6 @@ import com.njydsz.common.json.tree.*;
 import com.njydsz.common.json.type.YdszJsonType;
 import com.njydsz.common.json.writer.JSONWriter;
 
-import java.util.Set;
 /**
  * YdszJson - 超高性能 JSON 工具类（深度优化版）
  *
@@ -1005,14 +1004,17 @@ public class YdszJson {
      * 不修改全局 {@link YdszJsonConfig} 单例，保证线程安全。
      * 适用于需要为单次序列化指定不同配置的场景。</p>
      *
+     * <p><b>返回值约定：</b>与 {@link #toJson(Object)} 保持一致，{@code null} 对象返回
+     * JSON 字符串 {@code "null"}，而非 Java {@code null} 引用。</p>
+     *
      * @param obj 要序列化的对象
-     * @param config 单次配置
-     * @return JSON 字符串
+     * @param config 单次配置，{@code null} 时退化为 {@link #toJson(Object)}
+     * @return JSON 字符串（{@code null} 对象返回 {@code "null"}）
      * @since 1.0.0
      */
     public static String toJson(Object obj, YdszJsonConfig config) {
         if (obj == null) {
-            return null;
+            return "null";
         }
         if (config == null) {
             return toJson(obj);

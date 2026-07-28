@@ -1,0 +1,31 @@
+# YDSZ API 契约测试配置
+#
+# P1-3: 从后端 OpenAPI 规范自动生成前端 TypeScript SDK
+#       CI 中验证生成结果与现有前端代码一致（接口变更自动检测）
+#
+# 使用方式:
+#   npx openapi-generator-cli generate -i http://localhost:9001/v3/api-docs -g typescript-axios -o src/api/sdk/userinfo
+#   npx openapi-generator-cli generate -i http://localhost:9002/v3/api-docs -g typescript-axios -o src/api/sdk/system
+#
+# CI 集成:
+#   1. 启动后端服务
+#   2. 运行 openapi-generator-cli generate
+#   3. git diff 检查是否有变更（有变更说明接口已修改，需同步前端）
+#   4. 有变更则 CI 阻断，提示开发者更新前端 SDK
+
+generatorName: typescript-axios
+outputDir: src/api/sdk
+inputSpec: http://localhost:9000/v3/api-docs
+additionalProperties:
+  npmName: "@ydsz/api-sdk"
+  npmVersion: "1.0.0"
+  supportsES6: true
+  withSeparateModelsAndApi: true
+  modelPackage: models
+  apiPackage: api
+  useSingleRequestParameter: true
+  stringEnums: true
+  enumPropertyNaming: PascalCase
+globalProperties:
+  apiTests: false
+  modelTests: false

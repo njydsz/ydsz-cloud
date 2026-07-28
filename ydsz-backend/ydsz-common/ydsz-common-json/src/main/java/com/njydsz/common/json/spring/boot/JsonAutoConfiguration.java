@@ -2,6 +2,8 @@ package com.njydsz.common.json.spring.boot;
 
 import java.util.List;
 
+import jakarta.annotation.PostConstruct;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -100,7 +102,10 @@ return converter;
     }
 
     /**
-     * YdszJson 配置 Bean（替代 @PostConstruct 初始化逻辑）。
+     * YdszJson 配置 Bean。
+     *
+     * <p>使用 {@code @PostConstruct} 在依赖注入完成后初始化全局配置，
+     * 确保所有 {@code YdszJsonModule} Bean 已就绪后再注册到 {@link JsonModuleRegistrar}。</p>
      */
     public static class JsonConfigBean {
 
@@ -111,10 +116,20 @@ return converter;
                                    List<YdszJsonModule> springModules) {
             this.properties = properties;
             this.springModules = springModules;
-            init();
         }
 
-        private void init() {
+        /**
+         * 在 Bean 依赖注入完成后初始化全局 YdszJson 配置。
+         *
+         * <p>使用 {@code @PostConstruct} 而非构造函数初始化的优势：
+         * <ul>
+         *   <li>确保 {@code springModules} 依赖注入完成后再注册模块</li>
+         *   <li>避免构造函数中调用可被重写的方法（构造函数陷阱）</li>
+         *   <li>更好的可测试性：可在测试中构造 Bean 而不触发初始化</li>
+         * </ul>
+         */
+        @PostConstruct
+        public void init() {
             YdszJsonConfig config = YdszJsonConfig.getInstance();
             config.setDateFormat(properties.getDateFormat());
             config.setNamingStrategy(properties.getNamingStrategy());
