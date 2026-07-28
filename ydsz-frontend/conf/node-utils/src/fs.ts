@@ -1,3 +1,10 @@
+/**
+ * fs 配置模块
+ *
+ * @path conf\node-utils\src\fs.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { promises as fs } from 'node:fs';
 import { dirname } from 'node:path';
 

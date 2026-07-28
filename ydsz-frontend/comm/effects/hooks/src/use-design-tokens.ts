@@ -1,3 +1,10 @@
+/**
+ * use-design-tokens 组合式函数
+ *
+ * @path comm\effects\hooks\src\use-design-tokens.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { reactive, watch } from 'vue';
 
 import { preferences, usePreferences } from '@ydsz/preferences';

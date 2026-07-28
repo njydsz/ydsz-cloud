@@ -1,3 +1,10 @@
+<!--
+ * modal Vue 组件
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\modal\modal.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { ExtendedModalApi, ModalProps } from './modal';
 

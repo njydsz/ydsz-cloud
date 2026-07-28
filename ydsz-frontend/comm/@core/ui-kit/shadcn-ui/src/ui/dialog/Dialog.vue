@@ -1,3 +1,10 @@
+<!--
+ * Dialog Vue 组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\dialog\Dialog.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { DialogRootEmits, DialogRootProps } from 'radix-vue';
 

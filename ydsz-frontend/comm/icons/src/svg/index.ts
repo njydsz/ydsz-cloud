@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path comm\icons\src\svg\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { createIconifyIcon } from '@ydsz-core/icons';
 
 import './load.js';

@@ -1,3 +1,10 @@
+<!--
+ * color-toggle 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\color-toggle.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { BuiltinThemeType } from '@ydsz/types';
 

@@ -1,3 +1,10 @@
+/**
+ * index 配置模块
+ *
+ * @path conf\lint-configs\eslint-config\src\configs\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export * from './command';
 export * from './comments';
 export * from './disableds';

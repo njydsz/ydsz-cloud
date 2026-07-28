@@ -49,6 +49,7 @@ import com.njydsz.common.cache.support.CacheLoader;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class SwrCacheDecorator<K, V> implements Cache<K, V> {
 

@@ -9,6 +9,7 @@ import java.util.List;
  * 确保向后兼容：{@link ExpressionValidationService} 仍可工作，但不会触发 UNDEFINED_VARIABLE 校验。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class EmptyVariableRegistry implements VariableRegistry {
 

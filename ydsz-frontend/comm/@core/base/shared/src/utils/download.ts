@@ -1,3 +1,10 @@
+/**
+ * download 工具函数模块
+ *
+ * @path comm\@core\base\shared\src\utils\download.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { openWindow } from './window';
 
 interface DownloadOptions<T = string> {

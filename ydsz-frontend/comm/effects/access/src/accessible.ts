@@ -1,3 +1,10 @@
+/**
+ * accessible 模块
+ *
+ * @path comm\effects\access\src\accessible.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Component, DefineComponent } from 'vue';
 
 import type {

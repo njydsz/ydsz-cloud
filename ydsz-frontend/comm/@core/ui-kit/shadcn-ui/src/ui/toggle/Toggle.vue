@@ -1,3 +1,10 @@
+<!--
+ * Toggle Vue 组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\toggle\Toggle.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { ToggleEmits, ToggleProps } from 'radix-vue';
 

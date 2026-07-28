@@ -1,3 +1,10 @@
+/**
+ * extends 模块
+ *
+ * @path comm\effects\plugins\src\vxe-table\extends.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps, VxeUIExport } from 'vxe-table';
 
 import type { Recordable } from '@ydsz/types';

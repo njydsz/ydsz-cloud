@@ -53,6 +53,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * 无需手动重启网关即可实时生效。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class NacosRouteDefinitionRepository implements RouteDefinitionRepository {

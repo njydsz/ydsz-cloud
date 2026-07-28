@@ -11,6 +11,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * <p>继承 {@link BusinessException}，纳入 common-exception 统一异常体系。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class LiteExprException extends BusinessException {
 

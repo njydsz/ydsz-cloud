@@ -1,3 +1,10 @@
+<!--
+ * notification 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\notification\notification.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { NotificationItem } from './types';
 

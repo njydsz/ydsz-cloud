@@ -1,3 +1,10 @@
+<!--
+ * collapse-transition 通用组件
+ *
+ * @path comm\@core\ui-kit\menu-ui\src\components\collapse-transition.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { RendererElement } from 'vue';
 

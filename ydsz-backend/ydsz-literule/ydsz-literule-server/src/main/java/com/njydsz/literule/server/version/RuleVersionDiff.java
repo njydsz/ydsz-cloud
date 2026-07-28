@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
  * 的字段语义进行结构化对比，前端可据此高亮具体变更字段。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Builder

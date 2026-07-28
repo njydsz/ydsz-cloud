@@ -26,6 +26,7 @@ import com.njydsz.literule.api.RuleResult;
  * </ol>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface BreakpointHook {
 

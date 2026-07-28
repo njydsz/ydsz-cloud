@@ -20,6 +20,7 @@ import java.util.Set;
  * </ul>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class PathGuard {
 

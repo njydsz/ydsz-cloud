@@ -12,6 +12,7 @@ import com.njydsz.literule.api.RuleEnvironment;
  * literule 模块本身不依赖任何持久层实现，通过此接口反转依赖。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface RuleConfigProvider {
 

@@ -64,6 +64,7 @@ import reactor.core.publisher.Mono;
  * JWT 解析次数从 2000/s 降至 ~200/s，CPU 开销减少 90%。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

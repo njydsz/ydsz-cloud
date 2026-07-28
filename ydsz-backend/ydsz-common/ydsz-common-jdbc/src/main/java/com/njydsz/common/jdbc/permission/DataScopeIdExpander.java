@@ -19,6 +19,14 @@ package com.njydsz.common.jdbc.permission;
 
 import java.util.Set;
 
+/**
+ * DataScopeIdExpander 接口，定义模块契约。
+ *
+ * <p>所属包：{@code com.njydsz.common.jdbc.permission}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public interface DataScopeIdExpander {
     /**
      * 将公司ID集合扩展为下级维度ID集合

@@ -1,3 +1,10 @@
+<!--
+ * workbench-project Vue 组件
+ *
+ * @path comm\effects\common-ui\src\ui\dashboard\workbench\workbench-project.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { WorkbenchProjectItem } from '../typing';
 

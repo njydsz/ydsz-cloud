@@ -48,6 +48,7 @@ import java.util.function.BiFunction;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class AsyncLoadingCacheImpl<K, V> implements AsyncCache<K, V> {
 

@@ -1,3 +1,10 @@
+<!--
+ * tool-more 通用组件
+ *
+ * @path comm\@core\ui-kit\tabs-ui\src\components\widgets\tool-more.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { DropdownMenuProps } from '@ydsz-core/shadcn-ui';
 

@@ -9,6 +9,14 @@ package com.njydsz.common.excel.annotation;
  */
 import java.lang.annotation.*;
 
+/**
+ * ContentStyle 注解类型，提供声明式标记能力。
+ *
+ * <p>所属包：{@code com.njydsz.common.excel.annotation}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

@@ -1,3 +1,10 @@
+<!--
+ * app-form 表单页面组件
+ *
+ * @path apps\system-web\src\views\app\app-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 应用（表单组件）

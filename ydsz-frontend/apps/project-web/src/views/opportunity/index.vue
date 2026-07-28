@@ -1,3 +1,10 @@
+<!--
+ * apps 列表/管理页面组件
+ *
+ * @path apps\project-web\src\views\opportunity\index.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 销售商机（列表页）

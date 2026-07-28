@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\effects\plugins\src\motion\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export const MotionPresets = [
   'fade',
   'fadeVisible',

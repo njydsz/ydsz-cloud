@@ -37,6 +37,7 @@ import reactor.core.publisher.Mono;
  * {@link IpBlacklistFilter}(+3) 之前，确保所有下游请求都携带 trace context。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Component
 public class W3CTraceContextFilter implements GlobalFilter, Ordered {

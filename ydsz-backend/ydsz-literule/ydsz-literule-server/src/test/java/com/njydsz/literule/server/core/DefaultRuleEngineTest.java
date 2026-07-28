@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
  * 租户/环境隔离、异常隔离、严重度排序、dry-run、topResult、统计计数与 MDC traceId 传播。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @DisplayName("默认规则引擎 DefaultRuleEngine 测试")
 class DefaultRuleEngineTest {

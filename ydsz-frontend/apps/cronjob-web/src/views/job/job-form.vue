@@ -1,3 +1,10 @@
+<!--
+ * job-form 表单页面组件
+ *
+ * @path apps\cronjob-web\src\views\job\job-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 定时任务（表单组件）

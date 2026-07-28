@@ -12,6 +12,7 @@ import com.njydsz.literule.api.RuleResult;
  * 将原有 {@code GraphExecutionService} 的能力抽象为 SPI，避免 literule 模块直接依赖 project 模块。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface GraphExecutionProvider {
 

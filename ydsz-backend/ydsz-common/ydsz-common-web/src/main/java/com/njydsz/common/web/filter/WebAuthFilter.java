@@ -49,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see AuthenticationProvider
  * @see RequestHolder
  * @see WebMetrics
+ * @since 1.0.0
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE + 3)

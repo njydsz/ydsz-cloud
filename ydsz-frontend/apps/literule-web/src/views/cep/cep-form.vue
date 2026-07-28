@@ -1,3 +1,10 @@
+<!--
+ * cep-form 表单页面组件
+ *
+ * @path apps\literule-web\src\views\cep\cep-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 规则 CEP（表单组件）

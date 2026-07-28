@@ -1,3 +1,10 @@
+<!--
+ * approval-form 表单页面组件
+ *
+ * @path apps\agent-web\src\views\approval\approval-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * Agent 审批（表单组件）

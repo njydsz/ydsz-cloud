@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\select\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export { default as Select } from './Select.vue';
 export { default as SelectContent } from './SelectContent.vue';
 export { default as SelectGroup } from './SelectGroup.vue';

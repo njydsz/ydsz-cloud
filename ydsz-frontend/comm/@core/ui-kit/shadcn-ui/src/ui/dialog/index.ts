@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\dialog\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export { default as Dialog } from './Dialog.vue';
 export { default as DialogClose } from './DialogClose.vue';
 export { default as DialogContent } from './DialogContent.vue';

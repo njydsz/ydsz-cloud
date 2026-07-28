@@ -1,3 +1,10 @@
+/**
+ * directive 模块
+ *
+ * @path comm\effects\common-ui\src\components\loading\directive.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { App, Directive, DirectiveBinding } from 'vue';
 
 import { h, render } from 'vue';

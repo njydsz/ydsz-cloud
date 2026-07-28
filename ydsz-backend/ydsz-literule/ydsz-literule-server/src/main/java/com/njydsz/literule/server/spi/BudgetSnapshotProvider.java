@@ -11,6 +11,7 @@ import java.util.List;
  * literule 模块通过此接口反转依赖，无需直接依赖 Feign/Mapper。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface BudgetSnapshotProvider {
 

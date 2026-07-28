@@ -1,3 +1,10 @@
+<!--
+ * apps 列表/管理页面组件
+ *
+ * @path apps\system-web\src\views\app\index.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 应用（列表页）

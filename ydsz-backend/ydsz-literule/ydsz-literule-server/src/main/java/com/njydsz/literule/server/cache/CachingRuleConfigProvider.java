@@ -56,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
  * 其余线程阻塞等待结果，天然防止缓存击穿。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class CachingRuleConfigProvider implements RuleConfigProvider {

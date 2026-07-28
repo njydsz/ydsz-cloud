@@ -1,3 +1,10 @@
+/**
+ * load 模块
+ *
+ * @path comm\icons\src\svg\load.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { IconifyIconStructure } from '@ydsz-core/icons';
 
 import { addIcon } from '@ydsz-core/icons';

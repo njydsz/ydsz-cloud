@@ -1,3 +1,10 @@
+<!--
+ * code-login 页面组件
+ *
+ * @path main\src\views\_core\authentication\code-login.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { YDSZFormSchema } from '@ydsz/common-ui';
 import type { Recordable } from '@ydsz/types';

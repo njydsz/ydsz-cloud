@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\@core\base\shared\src\cache\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 type StorageType = 'localStorage' | 'sessionStorage';
 
 interface StorageValue<T> {

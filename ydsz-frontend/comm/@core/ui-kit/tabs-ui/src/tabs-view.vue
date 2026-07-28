@@ -1,3 +1,10 @@
+<!--
+ * tabs-view Vue 组件
+ *
+ * @path comm\@core\ui-kit\tabs-ui\src\tabs-view.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { TabsEmits, TabsProps } from './types';
 

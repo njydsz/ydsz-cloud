@@ -1,3 +1,10 @@
+/**
+ * print 配置模块
+ *
+ * @path conf\vite-config\src\plugins\print.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { PluginOption } from 'vite';
 
 import type { PrintPluginOptions } from '../typing';

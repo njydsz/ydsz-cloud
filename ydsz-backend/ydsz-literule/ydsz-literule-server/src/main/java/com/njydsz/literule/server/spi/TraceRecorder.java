@@ -19,6 +19,7 @@ import com.njydsz.literule.api.RuleExecutionTrace;
  * </ul>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface TraceRecorder {
 

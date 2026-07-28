@@ -1,3 +1,10 @@
+/**
+ * convert.test 模块
+ *
+ * @path comm\@core\base\shared\src\color\__tests__\convert.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { describe, expect, it } from 'vitest';
 
 import {

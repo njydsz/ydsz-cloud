@@ -76,6 +76,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
  * @see SensitiveData
  * @see SensitiveDataProcessor
  * @see SensitiveDataProperties
+ * @author ydsz-team
  */
 @RestControllerAdvice
 public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {

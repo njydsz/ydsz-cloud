@@ -28,6 +28,7 @@ import com.njydsz.literule.api.RuleDefinition;
  * <p>参考 LiteFlow 的多数据源设计，支持 7 种数据源无缝切换。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface RuleSource {
 

@@ -16,6 +16,7 @@ import lombok.Data;
  * LiteRule 配置属性
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Validated

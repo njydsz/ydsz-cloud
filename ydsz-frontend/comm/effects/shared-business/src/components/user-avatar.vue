@@ -1,3 +1,10 @@
+<!--
+ * user-avatar 通用组件
+ *
+ * @path comm\effects\shared-business\src\components\user-avatar.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 用户头像组件 — 含在线状态指示

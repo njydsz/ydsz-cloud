@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 依赖 {@code ydsz-workflow-api} 模块提供的 {@link WorkflowServiceClient}。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class WorkflowTriggerActionHandler implements RuleActionHandler {

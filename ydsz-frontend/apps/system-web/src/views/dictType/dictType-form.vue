@@ -1,3 +1,10 @@
+<!--
+ * dictType-form 表单页面组件
+ *
+ * @path apps\system-web\src\views\dictType\dictType-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 字典类型（表单组件）

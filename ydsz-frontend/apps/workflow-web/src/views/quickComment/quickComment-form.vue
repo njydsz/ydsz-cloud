@@ -1,3 +1,10 @@
+<!--
+ * quickComment-form 表单页面组件
+ *
+ * @path apps\workflow-web\src\views\quickComment\quickComment-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 快捷回复（表单组件）

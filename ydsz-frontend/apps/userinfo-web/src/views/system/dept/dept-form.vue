@@ -1,3 +1,10 @@
+<!--
+ * dept-form 表单页面组件
+ *
+ * @path apps\userinfo-web\src\views\system\dept\dept-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 部门（表单组件）

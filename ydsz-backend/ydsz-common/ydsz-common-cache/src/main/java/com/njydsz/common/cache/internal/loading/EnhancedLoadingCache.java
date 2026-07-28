@@ -48,6 +48,7 @@ import com.njydsz.common.cache.support.CacheLoader;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     implements LoadingCache<K, V>, AutoCloseable {

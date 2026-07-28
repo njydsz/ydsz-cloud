@@ -1,3 +1,10 @@
+<!--
+ * header-mixed-nav 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\icons\header-mixed-nav.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <template>
   <svg
     class="custom-radio-image"

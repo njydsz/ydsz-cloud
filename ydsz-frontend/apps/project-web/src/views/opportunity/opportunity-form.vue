@@ -1,3 +1,10 @@
+<!--
+ * opportunity-form 表单页面组件
+ *
+ * @path apps\project-web\src\views\opportunity\opportunity-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 销售商机（表单组件）

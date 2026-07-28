@@ -1,3 +1,10 @@
+/**
+ * use-extra-menu 模块
+ *
+ * @path comm\effects\layouts\src\basic\menu\use-extra-menu.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ComputedRef } from 'vue';
 
 import type { MenuRecordRaw } from '@ydsz/types';

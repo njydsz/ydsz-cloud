@@ -1,3 +1,10 @@
+<!--
+ * definition-form 表单页面组件
+ *
+ * @path apps\agent-web\src\views\definition\definition-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * Agent 工具定义（表单组件）

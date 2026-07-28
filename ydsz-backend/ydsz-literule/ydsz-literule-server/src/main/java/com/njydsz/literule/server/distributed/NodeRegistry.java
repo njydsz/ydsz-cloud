@@ -13,6 +13,7 @@ import java.util.List;
  * </ul>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface NodeRegistry {
 

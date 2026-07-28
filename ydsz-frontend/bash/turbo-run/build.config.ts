@@ -1,3 +1,10 @@
+/**
+ * build.config 模块
+ *
+ * @path bash\turbo-run\build.config.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { defineBuildConfig } from 'unbuild';
 
 export default defineBuildConfig({

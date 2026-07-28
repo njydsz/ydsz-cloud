@@ -1,3 +1,10 @@
+/**
+ * use-navigation 模块
+ *
+ * @path comm\effects\layouts\src\basic\menu\use-navigation.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteRecordNormalized } from 'vue-router';
 
 import { useRouter } from 'vue-router';

@@ -12,6 +12,7 @@ import com.njydsz.literule.api.RuleResult;
  * 实现类通过 {@link RuleActionDispatcher} 注册，由 {@code DefaultRuleEngine} 在评估完成后调用。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @FunctionalInterface
 public interface RuleActionHandler {

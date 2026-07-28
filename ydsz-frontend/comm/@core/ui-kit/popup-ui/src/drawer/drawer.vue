@@ -1,3 +1,10 @@
+<!--
+ * drawer Vue 组件
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\drawer\drawer.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { DrawerProps, ExtendedDrawerApi } from './drawer';
 

@@ -43,6 +43,7 @@ import reactor.core.publisher.Mono;
  * <p>所有响应均为 {@code application/json;charset=UTF-8}，包含 traceId，不暴露内部堆栈。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Configuration

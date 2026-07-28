@@ -1,3 +1,10 @@
+/**
+ * 应用偏好配置
+ *
+ * @path comm\preferences\src\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Preferences } from '@ydsz-core/preferences';
 import type { DeepPartial } from '@ydsz-core/typings';
 

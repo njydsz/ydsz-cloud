@@ -1,3 +1,10 @@
+<!--
+ * status-badge 通用组件
+ *
+ * @path comm\effects\shared-business\src\components\status-badge.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 状态徽章组件 — 统一的状态展示组件

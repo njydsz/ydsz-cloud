@@ -17,6 +17,7 @@ import java.util.Optional;
  * ValueWriter 值写入器测试（类型代码 / 字符串转义 / 小整数缓存 / Optional / UUID）。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 class ValueWriterTest {
 

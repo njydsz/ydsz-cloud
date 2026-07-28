@@ -1,3 +1,10 @@
+/**
+ * index 工具函数模块
+ *
+ * @path comm\@core\base\shared\src\utils\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export * from './cn';
 export * from './date';
 export * from './diff';

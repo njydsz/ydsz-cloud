@@ -1,3 +1,10 @@
+/**
+ * access 路由模块
+ *
+ * @path main\src\router\access.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type {
   ComponentRecordType,
   GenerateMenuAndRoutesOptions,

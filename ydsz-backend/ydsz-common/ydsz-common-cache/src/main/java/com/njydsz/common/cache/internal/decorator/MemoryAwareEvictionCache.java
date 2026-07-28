@@ -41,6 +41,7 @@ import com.njydsz.common.cache.support.CacheThreadPoolManager;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class MemoryAwareEvictionCache<K, V> implements Cache<K, V>, AutoCloseable {
 

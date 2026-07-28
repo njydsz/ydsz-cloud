@@ -1,3 +1,10 @@
+/**
+ * generate-routes-backend 工具函数模块
+ *
+ * @path comm\utils\src\helpers\generate-routes-backend.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteRecordRaw } from 'vue-router';
 
 import type {

@@ -1,3 +1,10 @@
+<!--
+ * render-content 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\render-content\render-content.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts">
 import type { Component, PropType } from 'vue';
 

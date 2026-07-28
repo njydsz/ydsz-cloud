@@ -1,3 +1,10 @@
+/**
+ * drawer-api.test 模块
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\drawer\__tests__\drawer-api.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DrawerState } from '../drawer';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';

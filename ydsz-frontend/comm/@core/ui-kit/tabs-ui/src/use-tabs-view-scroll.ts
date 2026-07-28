@@ -1,3 +1,10 @@
+/**
+ * use-tabs-view-scroll 模块
+ *
+ * @path comm\@core\ui-kit\tabs-ui\src\use-tabs-view-scroll.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { TabsProps } from './types';
 
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';

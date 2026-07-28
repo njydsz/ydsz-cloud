@@ -47,6 +47,15 @@ import lombok.extern.slf4j.Slf4j;
         selectorExpression = "*",
         maxReconsumeTimes = 1
 )
+
+/**
+ * MessageDlqConsumer 类。
+ *
+ * <p>所属包：{@code com.njydsz.message.server.consumer}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
 
     /** DLQ 幂等锁前缀 */

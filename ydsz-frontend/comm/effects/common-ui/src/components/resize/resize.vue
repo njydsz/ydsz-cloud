@@ -1,3 +1,10 @@
+<!--
+ * resize 通用组件
+ *
+ * @path comm\effects\common-ui\src\components\resize\resize.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * This components is refactored from vue-drag-resize: https://github.com/kirillmurashov/vue-drag-resize

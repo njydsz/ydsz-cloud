@@ -1,3 +1,10 @@
+<!--
+ * AlertDialogDescription Vue 组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\alert-dialog\AlertDialogDescription.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { AlertDialogDescriptionProps } from 'radix-vue';
 

@@ -1,3 +1,10 @@
+<!--
+ * input-password 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\input-password\input-password.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import { ref, useSlots } from 'vue';
 

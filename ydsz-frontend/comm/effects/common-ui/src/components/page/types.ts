@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\effects\common-ui\src\components\page\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export interface PageProps {
   title?: string;
   description?: string;

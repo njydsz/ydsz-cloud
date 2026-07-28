@@ -1,3 +1,10 @@
+<!--
+ * layout-content 通用组件
+ *
+ * @path comm\@core\ui-kit\layout-ui\src\components\layout-content.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { CSSProperties } from 'vue';
 

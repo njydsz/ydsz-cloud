@@ -1,3 +1,10 @@
+<!--
+ * revenue-form 表单页面组件
+ *
+ * @path apps\project-web\src\views\revenue\revenue-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 项目回款（表单组件）

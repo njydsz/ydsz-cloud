@@ -1,3 +1,10 @@
+<!--
+ * icon-coming-soon Vue 组件
+ *
+ * @path comm\effects\common-ui\src\ui\fallback\icons\icon-coming-soon.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <template>
   <svg
     data-name="Layer 1"

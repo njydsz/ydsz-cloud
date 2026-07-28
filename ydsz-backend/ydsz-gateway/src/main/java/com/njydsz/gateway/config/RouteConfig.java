@@ -42,6 +42,7 @@ import org.springframework.context.annotation.Profile;
  * </pre>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Configuration
 public class RouteConfig {

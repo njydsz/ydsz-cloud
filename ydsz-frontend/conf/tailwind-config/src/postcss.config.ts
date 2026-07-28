@@ -1,3 +1,10 @@
+/**
+ * postcss.config 配置模块
+ *
+ * @path conf\tailwind-config\src\postcss.config.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import config from '.';
 
 export default {

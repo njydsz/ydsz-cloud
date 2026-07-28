@@ -1,3 +1,10 @@
+/**
+ * api 模块
+ *
+ * @path comm\effects\plugins\src\vxe-table\api.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridInstance } from 'vxe-table';
 
 import type { ExtendedFormApi } from '@ydsz-core/form-ui';

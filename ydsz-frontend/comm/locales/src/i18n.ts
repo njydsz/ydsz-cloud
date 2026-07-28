@@ -1,3 +1,10 @@
+/**
+ * i18n 国际化语言包
+ *
+ * @path comm\locales\src\i18n.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { App } from 'vue';
 import type { Locale } from 'vue-i18n';
 

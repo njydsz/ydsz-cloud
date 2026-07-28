@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  * @see BaseRequestLogInterceptor
  * @see WebMetrics
+ * @since 1.0.0
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)

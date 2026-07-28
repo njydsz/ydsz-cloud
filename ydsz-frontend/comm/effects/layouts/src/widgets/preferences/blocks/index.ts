@@ -1,3 +1,10 @@
+/**
+ * 应用偏好配置
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\blocks\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export { default as Block } from './block.vue';
 export { default as Animation } from './general/animation.vue';
 export { default as General } from './general/general.vue';

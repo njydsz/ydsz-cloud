@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\@core\ui-kit\tabs-ui\src\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { IContextMenuItem } from '@ydsz-core/shadcn-ui';
 import type { TabDefinition, TabsStyleType } from '@ydsz-core/typings';
 

@@ -7,6 +7,7 @@ package com.njydsz.literule.server.expr.liteexpr;
  * {@link Token} 序列，每个 Token 携带一个 {@link TokenType}。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public enum TokenType {
 

@@ -1,3 +1,10 @@
+<!--
+ * menu 布局组件
+ *
+ * @path comm\effects\layouts\src\basic\menu\menu.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { MenuRecordRaw } from '@ydsz/types';
 

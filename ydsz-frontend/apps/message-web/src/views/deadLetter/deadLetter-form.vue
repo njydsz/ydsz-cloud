@@ -1,3 +1,10 @@
+<!--
+ * deadLetter-form 表单页面组件
+ *
+ * @path apps\message-web\src\views\deadLetter\deadLetter-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 死信队列（详情组件）

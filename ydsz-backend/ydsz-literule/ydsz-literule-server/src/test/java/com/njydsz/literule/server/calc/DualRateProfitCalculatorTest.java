@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@link DualRateProfitCalculator} 单元测试：覆盖单一职级计算、混合费率计算与利润率达成判断。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @DisplayName("双费率利润计算引擎 DualRateProfitCalculator 测试")
 class DualRateProfitCalculatorTest {

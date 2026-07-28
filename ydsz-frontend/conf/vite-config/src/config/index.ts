@@ -1,3 +1,10 @@
+/**
+ * index 配置模块
+ *
+ * @path conf\vite-config\src\config\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DefineConfig } from '../typing';
 
 import { existsSync } from 'node:fs';

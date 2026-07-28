@@ -1,3 +1,10 @@
+<!--
+ * apps 列表/管理页面组件
+ *
+ * @path apps\nextwiki-web\src\views\file\index.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 文件节点（列表页）

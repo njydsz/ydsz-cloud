@@ -1,3 +1,10 @@
+<!--
+ * share-form 表单页面组件
+ *
+ * @path apps\nextwiki-web\src\views\share\share-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 文件分享（表单组件）

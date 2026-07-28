@@ -1,3 +1,10 @@
+<!--
+ * dictItem-form 表单页面组件
+ *
+ * @path apps\system-web\src\views\dictItem\dictItem-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 字典项（表单组件）

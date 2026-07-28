@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * WeComSignatureUtil 企业微信回调签名验证工具单元测试
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @DisplayName("WeComSignatureUtil 企业微信签名验证工具测试")
 class WeComSignatureUtilTest {

@@ -1,3 +1,10 @@
+<!--
+ * task-form 表单页面组件
+ *
+ * @path apps\workflow-web\src\views\task\task-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 流程任务（详情组件）

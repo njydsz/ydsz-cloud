@@ -1,3 +1,10 @@
+<!--
+ * not-found 页面组件
+ *
+ * @path apps\project-web\src\views\fallback\not-found.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 404 兜底页

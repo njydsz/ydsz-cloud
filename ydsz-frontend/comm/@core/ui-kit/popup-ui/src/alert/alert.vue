@@ -1,3 +1,10 @@
+<!--
+ * alert Vue 组件
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\alert\alert.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { Component } from 'vue';
 

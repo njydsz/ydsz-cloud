@@ -1,3 +1,10 @@
+<!--
+ * sidebar 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\blocks\layout\sidebar.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { LayoutType } from '@ydsz/types';
 

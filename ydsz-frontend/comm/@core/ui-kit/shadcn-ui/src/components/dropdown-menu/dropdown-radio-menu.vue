@@ -1,3 +1,10 @@
+<!--
+ * dropdown-radio-menu 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\dropdown-menu\dropdown-radio-menu.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { DropdownMenuProps } from './interface';
 

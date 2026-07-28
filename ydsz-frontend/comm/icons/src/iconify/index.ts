@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path comm\icons\src\iconify\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { createIconifyIcon } from '@ydsz-core/icons';
 
 export * from '@ydsz-core/icons';

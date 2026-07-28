@@ -1,3 +1,10 @@
+/**
+ * tree 工具函数模块
+ *
+ * @path comm\@core\base\shared\src\utils\tree.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 interface TreeConfigOptions {
   // 子属性的名称，默认为'children'
   childProps: string;

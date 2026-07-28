@@ -33,6 +33,15 @@ import com.njydsz.common.json.provider.SerializationProvider;
  * @author ydsz-team
  * @since 1.0.0
  */
+
+/**
+ * JsonHttpMessageConverter 对象转换器，提供 Entity ↔ DTO ↔ VO 转换方法。
+ *
+ * <p>所属包：{@code com.njydsz.common.json.spring}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Object> {
 
     /** 默认最大请求体大小（10MB），超过此值的请求将被拒绝 */

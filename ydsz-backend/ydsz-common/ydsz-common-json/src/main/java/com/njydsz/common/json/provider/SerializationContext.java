@@ -18,6 +18,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * </code></pre>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class SerializationContext {
 

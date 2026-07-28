@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
  * AggregateBatchStatusEnum 聚合批次状态机单元测试。
  *
  * <p>P1-2: 验证 SENDING 中间态的状态流转规则。
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @DisplayName("AggregateBatchStatusEnum 聚合批次状态机测试")
 class AggregateBatchStatusEnumTest {

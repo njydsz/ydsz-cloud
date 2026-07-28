@@ -1,3 +1,10 @@
+/**
+ * form 适配器模块
+ *
+ * @path apps\nextwiki-web\src\adapter\form.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type {
   YDSZFormSchema as FormSchema,
   YDSZFormProps,

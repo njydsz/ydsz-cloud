@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * GetuiPushSigner 个推推送签名工具单元测试
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @DisplayName("GetuiPushSigner 个推推送签名工具测试")
 class GetuiPushSignerTest {

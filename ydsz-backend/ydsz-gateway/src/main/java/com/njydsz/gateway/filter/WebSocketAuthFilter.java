@@ -61,6 +61,7 @@ import reactor.core.publisher.Mono;
  * WebSocket 请求由本过滤器处理并标记为已认证，{@link AuthGlobalFilter} 检测到标记后跳过。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

@@ -1,3 +1,10 @@
+/**
+ * use-hover-toggle 组合式函数
+ *
+ * @path comm\effects\hooks\src\use-hover-toggle.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Arrayable, MaybeElementRef } from '@vueuse/core';
 
 import type { Ref } from 'vue';

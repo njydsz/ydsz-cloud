@@ -1,3 +1,10 @@
+/**
+ * hash 配置模块
+ *
+ * @path conf\node-utils\src\hash.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { createHash } from 'node:crypto';
 
 /**

@@ -1,3 +1,10 @@
+/**
+ * extra-app-config 配置模块
+ *
+ * @path conf\vite-config\src\plugins\extra-app-config.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { PluginOption } from 'vite';
 
 import {

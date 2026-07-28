@@ -1,3 +1,10 @@
+/**
+ * drawer 模块
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\drawer\drawer.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Component, Ref } from 'vue';
 
 import type { ClassType, MaybePromise } from '@ydsz-core/typings';

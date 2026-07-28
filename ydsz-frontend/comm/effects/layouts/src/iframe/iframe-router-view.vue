@@ -1,3 +1,10 @@
+<!--
+ * iframe-router-view 布局组件
+ *
+ * @path comm\effects\layouts\src\iframe\iframe-router-view.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { RouteLocationNormalized } from 'vue-router';
 

@@ -1,3 +1,10 @@
+<!--
+ * basic 布局组件
+ *
+ * @path main\src\layouts\basic.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { NotificationItem } from '@ydsz/layouts';
 

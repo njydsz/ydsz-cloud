@@ -1,3 +1,10 @@
+<!--
+ * icon-picker 通用组件
+ *
+ * @path comm\effects\common-ui\src\components\icon-picker\icon-picker.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { VNode } from 'vue';
 

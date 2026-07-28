@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\tree\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Arrayable } from '@vueuse/core';
 import type { FlattenedItem } from 'radix-vue';
 

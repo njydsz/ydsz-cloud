@@ -1,3 +1,10 @@
+/**
+ * use-namespace 组合式函数
+ *
+ * @path comm\@core\composables\src\use-namespace.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { DEFAULT_NAMESPACE } from '@ydsz-core/shared/constants';
 
 /**

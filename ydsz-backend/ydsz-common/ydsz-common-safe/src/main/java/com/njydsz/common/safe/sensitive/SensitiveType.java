@@ -19,6 +19,7 @@ package com.njydsz.common.safe.sensitive;
  * }</pre>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public enum SensitiveType {
 

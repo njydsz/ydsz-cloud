@@ -1,3 +1,10 @@
+/**
+ * modal-api.test 模块
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\modal\__tests__\modal-api.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ModalState } from '../modal';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';

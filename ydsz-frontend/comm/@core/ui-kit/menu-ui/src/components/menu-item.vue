@@ -1,3 +1,10 @@
+<!--
+ * menu-item 通用组件
+ *
+ * @path comm\@core\ui-kit\menu-ui\src\components\menu-item.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { MenuItemProps, MenuItemRegistered } from '../types';
 

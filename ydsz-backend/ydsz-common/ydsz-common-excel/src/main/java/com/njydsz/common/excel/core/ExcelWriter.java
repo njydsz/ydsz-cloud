@@ -64,6 +64,8 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  * @see ExcelFacade
  * @see WriteMetadata
  * @see WriteHandler
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class ExcelWriter {
 

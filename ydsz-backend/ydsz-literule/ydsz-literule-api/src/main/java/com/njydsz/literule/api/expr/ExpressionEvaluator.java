@@ -10,6 +10,7 @@ import com.njydsz.literule.api.RuleContext;
  * <p>抽象表达式引擎，默认提供 {@link com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator}。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface ExpressionEvaluator {
 

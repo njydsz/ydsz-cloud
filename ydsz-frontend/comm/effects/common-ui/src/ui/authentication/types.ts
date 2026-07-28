@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\effects\common-ui\src\ui\authentication\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 interface AuthenticationProps {
   /**
    * @zh_CN 验证码登录路径

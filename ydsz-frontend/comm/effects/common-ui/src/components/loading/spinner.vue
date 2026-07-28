@@ -1,3 +1,10 @@
+<!--
+ * spinner 通用组件
+ *
+ * @path comm\effects\common-ui\src\components\loading\spinner.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { YDSZSpinner } from '@ydsz-core/shadcn-ui';
 import { cn } from '@ydsz-core/shared/utils';

@@ -1,3 +1,10 @@
+<!--
+ * user-form 表单页面组件
+ *
+ * @path apps\userinfo-web\src\views\system\user\user-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 用户（表单组件）

@@ -1,3 +1,10 @@
+/**
+ * prettier 配置模块
+ *
+ * @path conf\node-utils\src\prettier.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import fs from 'node:fs/promises';
 
 import { format, getFileInfo, resolveConfig } from 'prettier';

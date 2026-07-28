@@ -1,3 +1,10 @@
+<!--
+ * dict-select 通用组件
+ *
+ * @path comm\effects\shared-business\src\components\dict-select.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 字典选择器组件 — 从 system 模块获取字典数据

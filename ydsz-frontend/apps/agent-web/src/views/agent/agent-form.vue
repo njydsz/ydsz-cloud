@@ -1,3 +1,10 @@
+<!--
+ * agent-form 表单页面组件
+ *
+ * @path apps\agent-web\src\views\agent\agent-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * Agent 管理（表单组件）

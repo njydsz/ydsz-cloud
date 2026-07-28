@@ -1,3 +1,10 @@
+/**
+ * request-client 模块
+ *
+ * @path comm\effects\request\src\request-client\request-client.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { AxiosInstance, AxiosResponse } from 'axios';
 
 import type { RequestClientConfig, RequestClientOptions } from './types';

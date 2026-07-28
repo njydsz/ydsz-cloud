@@ -46,6 +46,7 @@ import reactor.core.publisher.Mono;
  * 避免无效请求消耗 JWT 解析与 Redis 查询资源。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Component
 @RequiredArgsConstructor

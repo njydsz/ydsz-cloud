@@ -63,6 +63,7 @@ import com.njydsz.common.cache.support.Expiry;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
 

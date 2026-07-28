@@ -1,3 +1,10 @@
+<!--
+ * TooltipContent Vue 组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\tooltip\TooltipContent.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { TooltipContentEmits, TooltipContentProps } from 'radix-vue';
 

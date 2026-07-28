@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\context-menu\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export { default as ContextMenu } from './ContextMenu.vue';
 export { default as ContextMenuCheckboxItem } from './ContextMenuCheckboxItem.vue';
 export { default as ContextMenuContent } from './ContextMenuContent.vue';

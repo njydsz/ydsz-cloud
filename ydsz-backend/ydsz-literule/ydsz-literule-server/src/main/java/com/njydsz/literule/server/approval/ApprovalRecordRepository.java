@@ -10,6 +10,7 @@ package com.njydsz.literule.server.approval;
  * <p>所有方法允许返回 null 或空操作（ noop ），由调用方处理。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface ApprovalRecordRepository {
 

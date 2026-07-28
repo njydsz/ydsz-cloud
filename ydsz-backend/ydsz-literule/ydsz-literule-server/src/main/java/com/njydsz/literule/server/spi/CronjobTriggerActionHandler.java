@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * 依赖 {@code ydsz-cronjob-api} 模块提供的 {@link CronjobServiceClient}。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class CronjobTriggerActionHandler implements RuleActionHandler {

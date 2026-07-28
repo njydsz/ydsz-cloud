@@ -23,6 +23,7 @@ import com.njydsz.workflow.domain.enums.FlowNodeType;
  * {@code IllegalArgumentException} 进行。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @DisplayName("FlowGraphValidator 流程图校验器测试")
 class FlowGraphValidatorTest {

@@ -23,6 +23,14 @@ import com.njydsz.common.core.enums.DataScopeType;
 
 import lombok.Data;
 
+/**
+ * DataPermissionContext 类。
+ *
+ * <p>所属包：{@code com.njydsz.common.jdbc.permission}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @Data
 public class DataPermissionContext {
     /**

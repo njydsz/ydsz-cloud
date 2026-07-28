@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  * 
  * @author ydsz-team
+ * @since 1.0.0
  */
 public final class ObjectReader<T> {
     

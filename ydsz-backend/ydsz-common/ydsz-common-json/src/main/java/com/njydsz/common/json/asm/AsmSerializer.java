@@ -15,6 +15,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * </ul>
  *
  * @author ydsz-team
+ * @since 1.0.0
  */
 public interface AsmSerializer<T> {
 

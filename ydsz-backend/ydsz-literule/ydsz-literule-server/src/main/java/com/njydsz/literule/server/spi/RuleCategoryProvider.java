@@ -17,6 +17,7 @@ import lombok.Data;
  * 避免 literule 模块直接依赖 project 模块。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface RuleCategoryProvider {
 

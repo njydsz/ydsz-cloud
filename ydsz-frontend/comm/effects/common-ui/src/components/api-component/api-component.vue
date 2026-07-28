@@ -1,3 +1,10 @@
+<!--
+ * api-component 通用组件
+ *
+ * @path comm\effects\common-ui\src\components\api-component\api-component.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { Component } from 'vue';
 

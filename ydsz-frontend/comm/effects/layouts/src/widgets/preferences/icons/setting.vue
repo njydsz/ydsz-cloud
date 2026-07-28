@@ -1,3 +1,10 @@
+<!--
+ * setting 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\icons\setting.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <template>
   <svg
     height="1em"

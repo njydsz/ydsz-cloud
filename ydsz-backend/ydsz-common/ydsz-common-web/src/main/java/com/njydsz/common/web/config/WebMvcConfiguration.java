@@ -52,6 +52,15 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
 @AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})
 @EnableConfigurationProperties({
         WebCorsProperties.class, WebTraceProperties.class, WebContentCacheProperties.class
+
+/**
+ * WebMvcConfiguration 自动配置类，注册模块 Bean 并管理装配条件。
+ *
+ * <p>所属包：{@code com.njydsz.common.web.config}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 })
 public class WebMvcConfiguration extends BaseMvcConfiguration {
 

@@ -1,3 +1,10 @@
+<!--
+ * remi-use-form Vue 组件
+ *
+ * @path comm\@core\ui-kit\form-ui\src\remi-use-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { Recordable } from '@ydsz-core/typings';
 

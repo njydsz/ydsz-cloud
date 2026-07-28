@@ -1,3 +1,10 @@
+<!--
+ * switch-item 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\blocks\switch-item.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import { useSlots } from 'vue';
 

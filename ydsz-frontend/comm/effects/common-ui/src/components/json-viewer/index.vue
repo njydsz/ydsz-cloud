@@ -1,3 +1,10 @@
+<!--
+ * index 通用组件
+ *
+ * @path comm\effects\common-ui\src\components\json-viewer\index.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { SetupContext } from 'vue';
 

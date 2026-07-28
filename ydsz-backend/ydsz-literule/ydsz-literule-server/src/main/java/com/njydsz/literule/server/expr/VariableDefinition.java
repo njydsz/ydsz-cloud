@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
  * 由 {@link VariableRegistry} 提供，供 {@link ExpressionValidationService} 做 UNDEFINED_VARIABLE 校验。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Builder

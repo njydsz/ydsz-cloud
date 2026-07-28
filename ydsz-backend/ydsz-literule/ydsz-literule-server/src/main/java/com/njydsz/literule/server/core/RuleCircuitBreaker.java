@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * 对标 Resilience4j {@code BitSet} 滑动窗口实现。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class RuleCircuitBreaker {

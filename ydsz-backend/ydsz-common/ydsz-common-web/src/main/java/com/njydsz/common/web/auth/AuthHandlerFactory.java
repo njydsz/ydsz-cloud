@@ -25,6 +25,7 @@ import com.njydsz.common.core.enums.ServiceType;
  * @author ydsz-team
  * @see AuthHandler
  * @see ServiceType
+ * @since 1.0.0
  */
 @Component
 public class AuthHandlerFactory {

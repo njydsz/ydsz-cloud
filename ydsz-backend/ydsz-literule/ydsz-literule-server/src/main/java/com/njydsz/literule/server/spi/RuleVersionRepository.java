@@ -11,6 +11,7 @@ import com.njydsz.literule.api.RuleDefinition;
  * 采用"主表+历史表"设计，支持变更追踪、一键回滚。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface RuleVersionRepository {
 

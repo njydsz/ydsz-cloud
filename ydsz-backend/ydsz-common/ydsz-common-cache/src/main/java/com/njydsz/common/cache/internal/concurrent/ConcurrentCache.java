@@ -24,6 +24,7 @@ import com.njydsz.common.cache.support.AsyncFunction;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class ConcurrentCache<K, V> extends AbstractCache<K, V> {
 

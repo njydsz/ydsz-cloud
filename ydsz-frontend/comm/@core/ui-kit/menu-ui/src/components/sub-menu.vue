@@ -1,3 +1,10 @@
+<!--
+ * sub-menu 通用组件
+ *
+ * @path comm\@core\ui-kit\menu-ui\src\components\sub-menu.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { HoverCardContentProps } from '@ydsz-core/shadcn-ui';
 

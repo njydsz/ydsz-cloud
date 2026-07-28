@@ -1,3 +1,10 @@
+<!--
+ * main 列表/管理页面组件
+ *
+ * @path main\src\views\_core\subapp\index.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 defineOptions({
   name: 'SubAppContainer',

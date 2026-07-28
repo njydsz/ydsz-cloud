@@ -1,3 +1,10 @@
+/**
+ * notification API 接口定义
+ *
+ * @path main\src\api\core\notification.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace NotificationApi {

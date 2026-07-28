@@ -11,6 +11,7 @@ import com.njydsz.literule.api.DecisionTableDefinition;
  * literule 模块本身不依赖持久层。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface DecisionTableConfigProvider {
 

@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path comm\effects\layouts\src\widgets\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export { default as Breadcrumb } from './breadcrumb.vue';
 export * from './check-updates';
 export { default as AuthenticationColorToggle } from './color-toggle.vue';

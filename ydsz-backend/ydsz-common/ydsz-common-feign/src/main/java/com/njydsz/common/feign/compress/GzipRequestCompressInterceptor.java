@@ -45,6 +45,15 @@ import feign.RequestTemplate;
  * @since 1.0.0
  * 
  */
+
+/**
+ * GzipRequestCompressInterceptor 类。
+ *
+ * <p>所属包：{@code com.njydsz.common.feign.compress}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class GzipRequestCompressInterceptor implements RequestInterceptor {
 
     /** Content-Encoding 请求头名称 */

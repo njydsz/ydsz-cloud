@@ -236,4 +236,46 @@ public class ArchitectureRulesTest {
             .that().areAnnotatedWith("org.springframework.cloud.openfeign.FeignClient")
             .should().resideInAnyPackage("..api..client..", "..api..feign..", "..common.feign..")
             .because("@FeignClient 接口应位于 api 层，作为跨服务调用契约集中管理");
+
+    /**
+     * R17: 统一返回结果封装 — Controller 不允许直接依赖 Entity 包。
+     *
+     * <p>Controller 层不应直接 import 数据库实体（DO/Entity），
+     * 必须通过 VO/DTO + BaseResponse/PageResponse 返回结果。
+     * 这确保前后端交互的响应格式统一，避免泄露数据库结构。
+     *
+     * <p>由 GlobalResponseAdvice 运行时自动封装非 BaseResponse 返回值。
+     */
+    @ArchTest
+    static final ArchRule controllerShouldNotDependOnEntity = noClasses()
+            .that().resideInAPackage("..web.controller..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("..entity..", "..do..")
+            .because("Controller 不应直接依赖 Entity/DO，应返回 BaseResponse/PageResponse 包裹的 VO");
+
+    /**
+     * R18: PostDTO 类必须在 dto.post 包中。
+     *
+     * <p>新增请求 DTO（PostDTO）应位于 domain 层的 dto.post 子包中，
+     * 与 PutDTO 分离，符合 DTO 拆分规范。
+     */
+    @ArchTest
+    static final ArchRule postDtoClassesShouldBeInDtoPostPackage = classes()
+            .that().haveSimpleNameEndingWith("PostDTO")
+            .and().resideInAPackage("..domain..")
+            .should().resideInAPackage("..dto.post..")
+            .because("PostDTO 类应位于 dto.post 包中，与 PutDTO 分离");
+
+    /**
+     * R19: PutDTO 类必须在 dto.put 包中。
+     *
+     * <p>更新请求 DTO（PutDTO）应位于 domain 层的 dto.put 子包中，
+     * 与 PostDTO 分离，符合 DTO 拆分规范。
+     */
+    @ArchTest
+    static final ArchRule putDtoClassesShouldBeInDtoPutPackage = classes()
+            .that().haveSimpleNameEndingWith("PutDTO")
+            .and().resideInAPackage("..domain..")
+            .should().resideInAPackage("..dto.put..")
+            .because("PutDTO 类应位于 dto.put 包中，与 PostDTO 分离");
 }

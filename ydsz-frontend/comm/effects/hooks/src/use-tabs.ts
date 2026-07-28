@@ -1,3 +1,10 @@
+/**
+ * use-tabs 组合式函数
+ *
+ * @path comm\effects\hooks\src\use-tabs.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ComputedRef } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
 

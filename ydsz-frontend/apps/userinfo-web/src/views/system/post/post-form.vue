@@ -1,3 +1,10 @@
+<!--
+ * post-form 表单页面组件
+ *
+ * @path apps\userinfo-web\src\views\system\post\post-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 岗位（表单组件）

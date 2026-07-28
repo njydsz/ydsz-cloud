@@ -40,6 +40,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class Resilience4jCacheDecorator<K, V> implements Cache<K, V> {
 

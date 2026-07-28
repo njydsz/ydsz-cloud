@@ -36,6 +36,15 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  */
 @FeignClient(name = FeignClientConstants.USERINFO, contextId = "orgQueryClient",
         fallback = OrgQueryClientFallback.class)
+
+/**
+ * OrgQueryClient Feign 客户端接口，声明跨服务远程调用。
+ *
+ * <p>所属包：{@code com.njydsz.userinfo.api.client}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public interface OrgQueryClient {
 
     @GetMapping("/api/internal/user/info")

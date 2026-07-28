@@ -1,3 +1,10 @@
+<!--
+ * header 布局组件
+ *
+ * @path comm\effects\layouts\src\basic\header\header.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { computed, useSlots } from 'vue';
 

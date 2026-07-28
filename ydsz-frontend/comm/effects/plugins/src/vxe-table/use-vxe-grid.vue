@@ -1,3 +1,10 @@
+<!--
+ * use-vxe-grid Vue 组件
+ *
+ * @path comm\effects\plugins\src\vxe-table\use-vxe-grid.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type {
   VxeGridDefines,

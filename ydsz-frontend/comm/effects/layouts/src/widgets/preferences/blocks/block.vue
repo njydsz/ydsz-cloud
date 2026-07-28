@@ -1,3 +1,10 @@
+<!--
+ * block 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\blocks\block.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 interface Props {
   title?: string;

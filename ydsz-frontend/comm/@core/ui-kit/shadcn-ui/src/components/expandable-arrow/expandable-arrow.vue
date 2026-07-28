@@ -1,3 +1,10 @@
+<!--
+ * expandable-arrow 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\expandable-arrow\expandable-arrow.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { ChevronDown } from '@ydsz-core/icons';
 import { cn } from '@ydsz-core/shared/utils';

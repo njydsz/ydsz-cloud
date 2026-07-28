@@ -1,3 +1,10 @@
+<!--
+ * full-screen 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\full-screen\full-screen.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { Maximize, Minimize } from '@ydsz-core/icons';
 

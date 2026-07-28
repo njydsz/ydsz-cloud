@@ -1,3 +1,10 @@
+/**
+ * application 配置模块
+ *
+ * @path conf\vite-config\src\config\application.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { CSSOptions, UserConfig } from 'vite';
 
 import type { DefineApplicationOptions } from '../typing';

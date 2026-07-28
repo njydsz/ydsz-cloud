@@ -19,6 +19,7 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
  * 兼容 BPMN 2.0 标准流程文件（通过 BpmnXmlParser 解析 startEvent / userTask / gateway / endEvent / sequenceFlow）。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface WorkflowFacade {
 

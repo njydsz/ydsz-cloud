@@ -1,3 +1,10 @@
+/**
+ * use-pagination 组合式函数
+ *
+ * @path comm\effects\hooks\src\use-pagination.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Ref } from 'vue';
 
 import { computed, ref, unref } from 'vue';

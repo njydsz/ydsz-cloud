@@ -1,3 +1,10 @@
+<!--
+ * dag-form 表单页面组件
+ *
+ * @path apps\agent-web\src\views\dag\dag-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * Agent DAG 编排（表单组件）

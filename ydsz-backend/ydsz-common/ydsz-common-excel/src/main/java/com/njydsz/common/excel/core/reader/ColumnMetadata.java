@@ -31,6 +31,8 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.FieldSetter;
  * <h3>性能收益</h3>
  * <p>在100K行场景下，可减少约20-30%的CPU开销，
  * 读取性能提升约15-25%。</p>
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class ColumnMetadata {
 

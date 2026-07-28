@@ -1,3 +1,10 @@
+/**
+ * preferences 模块
+ *
+ * @path apps\cronjob-web\src\preferences.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { defineOverridesPreferences } from '@ydsz/preferences';
 
 export const overridesPreferences = defineOverridesPreferences({

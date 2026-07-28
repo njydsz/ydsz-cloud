@@ -48,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>租户隔离：仅在同一 tenantId 内检测冲突（单租户部署下 tenantId 恒为 1）。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -1,3 +1,10 @@
+/**
+ * hash.test 配置模块
+ *
+ * @path conf\node-utils\src\__tests__\hash.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { createHash } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';

@@ -1,3 +1,10 @@
+/**
+ * 应用偏好配置
+ *
+ * @path comm\@core\preferences\__tests__\preferences.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { defaultPreferences } from '../src/config';

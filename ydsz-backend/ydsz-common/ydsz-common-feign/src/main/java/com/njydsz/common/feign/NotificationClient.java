@@ -23,6 +23,15 @@ import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
  */
 @FeignClient(name = FeignClientConstants.MESSAGE, contextId = "notificationClient",
         fallbackFactory = NotificationClientFallbackFactory.class)
+
+/**
+ * NotificationClient Feign 客户端接口，声明跨服务远程调用。
+ *
+ * <p>所属包：{@code com.njydsz.common.feign}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public interface NotificationClient {
 
     /**

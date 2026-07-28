@@ -1,3 +1,10 @@
+<!--
+ * BreadcrumbEllipsis Vue 组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\breadcrumb\BreadcrumbEllipsis.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { cn } from '@ydsz-core/shared/utils';
 

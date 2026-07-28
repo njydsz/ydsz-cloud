@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * AliyunSmsSigner 阿里云短信签名工具单元测试
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @DisplayName("AliyunSmsSigner 阿里云短信签名工具测试")
 class AliyunSmsSignerTest {

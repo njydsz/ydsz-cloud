@@ -38,6 +38,7 @@ import com.njydsz.common.cache.metrics.CacheMeterBinder;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class TimedCacheDecorator<K, V> implements Cache<K, V> {
 

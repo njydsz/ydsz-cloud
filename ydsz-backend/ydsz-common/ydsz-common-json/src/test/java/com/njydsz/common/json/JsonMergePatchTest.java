@@ -10,6 +10,7 @@ import com.njydsz.common.json.merge.JsonMergePatch;
  * JSON Merge Patch (RFC 7396) 测试。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 class JsonMergePatchTest {
 

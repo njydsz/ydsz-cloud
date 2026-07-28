@@ -1,3 +1,10 @@
+<!--
+ * layout 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\blocks\layout\layout.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { Component } from 'vue';
 

@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
  * 规则版本快照
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Builder

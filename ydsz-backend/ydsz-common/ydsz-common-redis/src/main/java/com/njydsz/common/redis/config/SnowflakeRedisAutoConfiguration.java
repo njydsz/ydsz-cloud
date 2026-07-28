@@ -41,6 +41,15 @@ import com.njydsz.common.util.id.WorkerIdRegistry;
 @ConditionalOnClass({RedisTemplate.class, WorkerIdRegistry.class})
 @ConditionalOnProperty(prefix = "ydsz.snowflake.redis-registry", name = "enabled", havingValue = "true",
         matchIfMissing = true)
+
+/**
+ * SnowflakeRedisAutoConfiguration 自动配置类，注册模块 Bean 并管理装配条件。
+ *
+ * <p>所属包：{@code com.njydsz.common.redis.config}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class SnowflakeRedisAutoConfiguration {
 
     @Bean

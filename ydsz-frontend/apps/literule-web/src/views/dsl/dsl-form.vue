@@ -1,3 +1,10 @@
+<!--
+ * dsl-form 表单页面组件
+ *
+ * @path apps\literule-web\src\views\dsl\dsl-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 规则 DSL（编辑器组件）

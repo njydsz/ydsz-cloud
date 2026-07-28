@@ -1,3 +1,10 @@
+<!--
+ * alert-form 表单页面组件
+ *
+ * @path apps\cronjob-web\src\views\alert\alert-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 任务告警（表单组件）

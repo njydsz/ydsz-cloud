@@ -29,6 +29,15 @@ import com.njydsz.cronjob.api.fallback.JobQueryClientFallback;
         name = FeignClientConstants.CRONJOB,
         contextId = "jobQueryClient",
         fallbackFactory = JobQueryClientFallback.class)
+
+/**
+ * JobQueryClient Feign 客户端接口，声明跨服务远程调用。
+ *
+ * <p>所属包：{@code com.njydsz.cronjob.api.client}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public interface JobQueryClient {
 
     /**
@@ -37,15 +46,18 @@ public interface JobQueryClient {
      * @param jobId 任务 ID
      * @return 任务基本信息 JSON（jobName/jobKey/handler/cronExpression/status）
      */
-    @GetMapping("/api/internal/job/{id}")
+    @GetMapping("/api/v1/cronjob/{id}")
     BaseResponse<String> getById(@PathVariable("id") String jobId);
 
     /**
      * 按 jobKey 查询任务是否存在
      *
+     * <p>P3-3 TODO: 对应的 /api/v1/cronjob/key/{jobKey} 端点尚未在 JobController 中实现，
+     * 当前调用将触发 fallback 降级。
+     *
      * @param jobKey 任务唯一标识
      * @return 任务 ID；不存在时返回 null
      */
-    @GetMapping("/api/internal/job/key/{jobKey}")
+    @GetMapping("/api/v1/cronjob/key/{jobKey}")
     BaseResponse<String> getIdByKey(@PathVariable("jobKey") String jobKey);
 }

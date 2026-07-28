@@ -1,3 +1,10 @@
+/**
+ * use-echarts 模块
+ *
+ * @path comm\effects\plugins\src\echarts\use-echarts.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { EChartsOption } from 'echarts';
 
 import type { Ref } from 'vue';

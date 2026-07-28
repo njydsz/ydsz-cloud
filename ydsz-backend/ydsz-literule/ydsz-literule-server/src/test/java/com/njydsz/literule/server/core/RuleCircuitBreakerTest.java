@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * 包括错误率触发熔断、恢复时间触发半开、探测成功/失败的状态转换。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @DisplayName("规则熔断器 RuleCircuitBreaker 测试")
 class RuleCircuitBreakerTest {

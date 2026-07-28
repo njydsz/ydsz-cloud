@@ -1,3 +1,10 @@
+<!--
+ * notification-form 表单页面组件
+ *
+ * @path apps\message-web\src\views\notification\notification-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 站内通知（详情组件）

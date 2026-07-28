@@ -18,6 +18,7 @@ import com.njydsz.literule.api.expr.ExpressionEvaluator;
  * 若有多个触发结果，其余通过 {@link RuleResult#getCollectedResults()} 收集。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class ChainAsRule implements Rule {
 

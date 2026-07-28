@@ -1,3 +1,10 @@
+/**
+ * index 配置模块
+ *
+ * @path conf\tailwind-config\src\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Config } from 'tailwindcss';
 
 import path from 'node:path';

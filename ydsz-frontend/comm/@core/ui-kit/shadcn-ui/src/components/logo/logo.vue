@@ -1,3 +1,10 @@
+<!--
+ * logo 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\logo\logo.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import { YDSZAvatar } from '../avatar';
 

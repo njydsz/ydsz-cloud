@@ -1,3 +1,10 @@
+/**
+ * 应用入口文件，创建并挂载 Vue 实例
+ *
+ * @path apps\agent-web\src\main.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { App as VueApp } from 'vue';
 
 import { createApp } from 'vue';

@@ -1,3 +1,10 @@
+/**
+ * 核心路由配置（根路由 + 404 兜底）
+ *
+ * @path apps\literule-web\src\router\routes\core.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteRecordRaw } from 'vue-router';
 
 import { preferences } from '@ydsz/preferences';

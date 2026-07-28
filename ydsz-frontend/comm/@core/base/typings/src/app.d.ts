@@ -1,3 +1,10 @@
+/**
+ * app.d 模块
+ *
+ * @path comm\@core\base\typings\src\app.d.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 type LayoutType =
   | 'full-content'
   | 'header-mixed-nav'

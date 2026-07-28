@@ -1,3 +1,10 @@
+/**
+ * uploader 模块
+ *
+ * @path comm\effects\request\src\request-client\modules\uploader.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RequestClient } from '../request-client';
 import type { RequestClientConfig } from '../types';
 

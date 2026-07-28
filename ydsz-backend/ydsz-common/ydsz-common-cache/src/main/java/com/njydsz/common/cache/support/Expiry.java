@@ -23,6 +23,7 @@ package com.njydsz.common.cache.support;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 @FunctionalInterface
 public interface Expiry<K, V> {

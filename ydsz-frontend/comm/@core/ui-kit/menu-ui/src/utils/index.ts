@@ -1,3 +1,10 @@
+/**
+ * index 工具函数模块
+ *
+ * @path comm\@core\ui-kit\menu-ui\src\utils\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type {
   ComponentInternalInstance,
   VNode,

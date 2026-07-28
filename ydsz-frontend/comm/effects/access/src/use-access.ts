@@ -1,3 +1,10 @@
+/**
+ * use-access 模块
+ *
+ * @path comm\effects\access\src\use-access.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { computed } from 'vue';
 
 import { preferences, updatePreferences } from '@ydsz/preferences';

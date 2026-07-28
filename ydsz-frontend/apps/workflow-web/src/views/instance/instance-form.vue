@@ -1,3 +1,10 @@
+<!--
+ * instance-form 表单页面组件
+ *
+ * @path apps\workflow-web\src\views\instance\instance-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 流程实例（详情组件）

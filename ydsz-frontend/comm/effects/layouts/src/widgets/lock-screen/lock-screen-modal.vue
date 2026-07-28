@@ -1,3 +1,10 @@
+<!--
+ * lock-screen-modal 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\lock-screen\lock-screen-modal.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { Recordable } from '@ydsz/types';
 

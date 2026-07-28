@@ -1,3 +1,10 @@
+<!--
+ * slogan 布局组件
+ *
+ * @path comm\effects\layouts\src\authentication\icons\slogan.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <template>
   <svg
     enable-background="new 0 0 800 800"

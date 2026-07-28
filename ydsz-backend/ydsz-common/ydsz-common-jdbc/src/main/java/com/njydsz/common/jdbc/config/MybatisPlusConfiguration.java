@@ -92,6 +92,15 @@ import lombok.extern.slf4j.Slf4j;
     SqlFirewallProperties.class,
     ReadWriteSplittingProperties.class,
     CircuitBreakerProperties.class
+
+/**
+ * MybatisPlusConfiguration 自动配置类，注册模块 Bean 并管理装配条件。
+ *
+ * <p>所属包：{@code com.njydsz.common.jdbc.config}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 })
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
 public class MybatisPlusConfiguration {

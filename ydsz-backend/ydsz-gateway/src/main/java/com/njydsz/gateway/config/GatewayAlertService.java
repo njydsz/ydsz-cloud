@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>使用 ObjectProvider 实现可选依赖，当 NotifyService 不可用时不影响网关正常运行。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class GatewayAlertService {

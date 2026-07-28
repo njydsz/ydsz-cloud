@@ -1,12 +1,15 @@
 package com.njydsz.system.web.controller;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -85,6 +88,28 @@ public class InternalApiController {
     @PostMapping("/dict/item")
     public DictItemVO getDictItem(@RequestBody Map<String, String> request) {
         return dictItemService.getByTypeAndCode(request.get("typeCode"), request.get("itemCode"));
+    }
+
+    /**
+     * 按字典类型编码查询全部启用字典项的值列表（走缓存）
+     *
+     * <p>走 Redis 缓存，高频调用安全。
+     * <p>典型场景：跨服务 Feign 调用获取字典项值列表（如工作流模块获取所有审批状态）。
+     *
+     * @param typeCode 字典类型编码
+     * @return 字典项值列表（itemValue 字段）；类型不存在时返回空列表
+     */
+    @RateLimit(resource = "system.internalapi.listDictItems", threshold = 50)
+    @Idempotent(key = "ydsz:system:InternalApiController:listDictItems:lock", ttlSeconds = 5)
+    @PostMapping("/dict/list")
+    public List<String> listDictItems(@RequestParam("typeCode") String typeCode) {
+        List<DictItemVO> items = dictItemService.listEnabledByTypeCode(typeCode);
+        if (items == null || items.isEmpty()) {
+            return List.of();
+        }
+        return items.stream()
+                .map(DictItemVO::getItemValue)
+                .collect(Collectors.toList());
     }
 
     /**

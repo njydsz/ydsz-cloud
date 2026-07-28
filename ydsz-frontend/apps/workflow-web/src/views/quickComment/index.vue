@@ -1,3 +1,10 @@
+<!--
+ * apps 列表/管理页面组件
+ *
+ * @path apps\workflow-web\src\views\quickComment\index.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 快捷回复（列表页）

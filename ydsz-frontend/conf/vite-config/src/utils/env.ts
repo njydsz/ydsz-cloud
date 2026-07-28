@@ -1,3 +1,10 @@
+/**
+ * env 工具函数模块
+ *
+ * @path conf\vite-config\src\utils\env.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ApplicationPluginOptions } from '../typing';
 
 import { existsSync } from 'node:fs';

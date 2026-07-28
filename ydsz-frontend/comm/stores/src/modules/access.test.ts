@@ -1,3 +1,10 @@
+/**
+ * access.test Pinia 状态管理
+ *
+ * @path comm\stores\src\modules\access.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it } from 'vitest';
 

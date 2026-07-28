@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * {@link #tryRun(String, long, Supplier)} 直接执行任务不做加锁，保证功能可用。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

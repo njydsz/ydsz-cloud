@@ -10,6 +10,7 @@ import com.njydsz.literule.api.ScriptDefinition;
  * <p>由消费方提供实现，从数据库加载脚本规则定义。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface ScriptConfigProvider {
 

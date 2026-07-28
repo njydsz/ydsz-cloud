@@ -1,3 +1,10 @@
+<!--
+ * form-actions 通用组件
+ *
+ * @path comm\@core\ui-kit\form-ui\src\components\form-actions.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import { computed, toRaw, unref, watch } from 'vue';
 

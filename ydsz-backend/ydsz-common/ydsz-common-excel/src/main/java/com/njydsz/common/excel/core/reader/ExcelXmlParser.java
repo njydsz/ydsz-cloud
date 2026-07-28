@@ -41,6 +41,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ExcelXmlParser 类。
+ *
+ * <p>所属包：{@code com.njydsz.common.excel.core.reader}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class ExcelXmlParser {
 
     /** XML 标签前缀：<row */

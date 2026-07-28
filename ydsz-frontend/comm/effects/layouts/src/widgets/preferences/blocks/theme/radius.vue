@@ -1,3 +1,10 @@
+<!--
+ * radius 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\blocks\theme\radius.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import { ToggleGroup, ToggleGroupItem } from '@ydsz-core/shadcn-ui';
 

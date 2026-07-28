@@ -38,6 +38,8 @@ import java.lang.annotation.*;
  * }</pre>
  *
  * @see ExcelProperty
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

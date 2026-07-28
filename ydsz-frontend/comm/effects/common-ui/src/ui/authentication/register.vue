@@ -1,3 +1,10 @@
+<!--
+ * register Vue 组件
+ *
+ * @path comm\effects\common-ui\src\ui\authentication\register.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { Recordable } from '@ydsz/types';
 

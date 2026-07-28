@@ -1,3 +1,10 @@
+/**
+ * entry 配置模块
+ *
+ * @path conf\tailwind-config\src\plugins\entry.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import plugin from 'tailwindcss/plugin.js';
 
 const enterAnimationPlugin = plugin(({ addUtilities }) => {

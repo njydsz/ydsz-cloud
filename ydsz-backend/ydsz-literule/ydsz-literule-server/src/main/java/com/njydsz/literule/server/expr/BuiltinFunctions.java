@@ -23,6 +23,7 @@ import java.util.UUID;
  * 业务侧可通过 {@code registry.register(name, fn)} 追加自定义函数。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class BuiltinFunctions {
 

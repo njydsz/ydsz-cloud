@@ -1,3 +1,10 @@
+<!--
+ * theme-button 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\theme-toggle\theme-button.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { computed, nextTick } from 'vue';
 

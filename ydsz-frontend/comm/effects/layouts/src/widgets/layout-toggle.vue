@@ -1,3 +1,10 @@
+<!--
+ * layout-toggle 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\layout-toggle.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { AuthPageLayoutType } from '@ydsz/types';
 

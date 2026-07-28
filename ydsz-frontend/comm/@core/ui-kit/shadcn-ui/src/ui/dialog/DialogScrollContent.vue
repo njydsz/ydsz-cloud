@@ -1,3 +1,10 @@
+<!--
+ * DialogScrollContent Vue 组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\dialog\DialogScrollContent.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { DialogContentEmits, DialogContentProps } from 'radix-vue';
 

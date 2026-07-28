@@ -1,3 +1,10 @@
+/**
+ * icons 模块
+ *
+ * @path comm\effects\common-ui\src\components\icon-picker\icons.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Recordable } from '@ydsz/types';
 
 /**

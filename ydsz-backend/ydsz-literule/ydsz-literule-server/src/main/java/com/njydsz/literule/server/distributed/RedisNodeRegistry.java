@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
  * 不依赖后台定时任务，降低系统复杂度。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class RedisNodeRegistry implements NodeRegistry {
 

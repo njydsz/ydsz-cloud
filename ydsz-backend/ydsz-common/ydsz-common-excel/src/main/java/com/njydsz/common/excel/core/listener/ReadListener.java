@@ -75,6 +75,8 @@ import com.njydsz.common.excel.core.context.AnalysisContext;
  * @param <T> 泛型参数,表示映射的数据类型
  * @see ExcelReader
  * @see AnalysisContext
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public interface ReadListener<T> {
 

@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * 当 Nacos 客户端不在 classpath 中时，{@link #isAvailable()} 返回 false，不参与数据源选择。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class NacosRuleSource implements RuleSource {

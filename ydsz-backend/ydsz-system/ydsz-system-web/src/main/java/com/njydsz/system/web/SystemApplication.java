@@ -18,6 +18,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * 复用 common-config（热加载）、common-audit、common-cache 等公共模块。
  *
  * @author ydsz-team
+ * @since 1.0.0
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.system", "com.njydsz.common"})
 @EnableDiscoveryClient

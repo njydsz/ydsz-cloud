@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
  * <p>适用于单节点部署或开发/测试环境。生产环境应使用 Redis 等分布式注册表。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class InMemoryNodeRegistry implements NodeRegistry {
 

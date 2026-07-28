@@ -1,3 +1,10 @@
+<!--
+ * tool-screen 通用组件
+ *
+ * @path comm\@core\ui-kit\tabs-ui\src\components\widgets\tool-screen.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { Fullscreen, Minimize2 } from '@ydsz-core/icons';
 

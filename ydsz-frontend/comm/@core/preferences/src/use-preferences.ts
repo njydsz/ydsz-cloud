@@ -1,3 +1,10 @@
+/**
+ * 应用偏好配置
+ *
+ * @path comm\@core\preferences\src\use-preferences.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { computed } from 'vue';
 
 import { diff } from '@ydsz-core/shared/utils';

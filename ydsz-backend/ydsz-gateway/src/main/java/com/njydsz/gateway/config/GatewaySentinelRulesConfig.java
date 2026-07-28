@@ -60,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
  * 配置不存在时使用代码内默认规则，确保网关启动即有保护。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Configuration

@@ -10,6 +10,7 @@ import com.njydsz.common.json.patch.JsonPatch;
  * JSON Patch (RFC 6902) 测试。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 class JsonPatchTest {
 

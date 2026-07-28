@@ -1,3 +1,10 @@
+/**
+ * basic.d 模块
+ *
+ * @path comm\@core\base\typings\src\basic.d.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 interface BasicOption {
   label: string;
   value: string;

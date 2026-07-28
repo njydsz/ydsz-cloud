@@ -24,6 +24,15 @@ import java.util.List;
  *
  * @since 1.0.0
  */
+
+/**
+ * ExprLexer 类。
+ *
+ * <p>所属包：{@code com.njydsz.literule.server.expr.liteexpr}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class ExprLexer {
 
     private final String source;

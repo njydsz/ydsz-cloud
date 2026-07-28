@@ -1,3 +1,10 @@
+/**
+ * 应用偏好配置
+ *
+ * @path comm\@core\preferences\src\config.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Preferences } from './types';
 
 const defaultPreferences: Preferences = {

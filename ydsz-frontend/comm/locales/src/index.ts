@@ -1,3 +1,10 @@
+/**
+ * 国际化配置入口
+ *
+ * @path comm\locales\src\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import {
   i18n,
   loadLocaleMessages,

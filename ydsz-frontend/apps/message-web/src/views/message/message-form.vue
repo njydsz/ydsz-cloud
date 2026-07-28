@@ -1,3 +1,10 @@
+<!--
+ * message-form 表单页面组件
+ *
+ * @path apps\message-web\src\views\message\message-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 消息（详情组件）

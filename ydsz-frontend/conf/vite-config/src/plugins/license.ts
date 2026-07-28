@@ -1,3 +1,10 @@
+/**
+ * license 配置模块
+ *
+ * @path conf\vite-config\src\plugins\license.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type {
   NormalizedOutputOptions,
   OutputBundle,

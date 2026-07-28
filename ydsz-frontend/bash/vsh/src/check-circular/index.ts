@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path bash\vsh\src\check-circular\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { CAC } from 'cac';
 
 import { extname } from 'node:path';

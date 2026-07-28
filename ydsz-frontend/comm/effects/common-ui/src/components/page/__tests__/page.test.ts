@@ -1,3 +1,10 @@
+/**
+ * page.test 模块
+ *
+ * @path comm\effects\common-ui\src\components\page\__tests__\page.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { mount } from '@vue/test-utils';
 
 import { describe, expect, it } from 'vitest';

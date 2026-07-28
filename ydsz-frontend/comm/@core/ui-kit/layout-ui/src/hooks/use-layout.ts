@@ -1,3 +1,10 @@
+/**
+ * use-layout 组合式函数
+ *
+ * @path comm\@core\ui-kit\layout-ui\src\hooks\use-layout.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { LayoutType } from '@ydsz-core/typings';
 
 import type { YDSZLayoutProps } from '../ydsz-layout';

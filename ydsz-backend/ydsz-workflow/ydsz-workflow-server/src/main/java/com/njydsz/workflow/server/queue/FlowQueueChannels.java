@@ -14,6 +14,7 @@ package com.njydsz.workflow.server.queue;
  * </ul>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class FlowQueueChannels {
 

@@ -1,3 +1,10 @@
+/**
+ * use-backtop 模块
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\back-top\use-backtop.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { BacktopProps } from './backtop';
 
 import { onMounted, ref, shallowRef } from 'vue';

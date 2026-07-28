@@ -1,3 +1,10 @@
+/**
+ * setup Pinia 状态管理
+ *
+ * @path comm\stores\src\setup.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Pinia } from 'pinia';
 
 import type { App } from 'vue';

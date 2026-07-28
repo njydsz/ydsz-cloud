@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
  * 可用于 CI/CD 流水线门禁：当 {@link #passRate} < 100% 时阻断发布。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Builder

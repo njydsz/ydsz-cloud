@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * 注入，避免监控指标对核心数据源造成循环依赖。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class FlowMetrics extends AbstractModuleMetrics {

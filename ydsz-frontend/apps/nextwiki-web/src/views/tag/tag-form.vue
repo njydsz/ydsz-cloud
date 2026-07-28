@@ -1,3 +1,10 @@
+<!--
+ * tag-form 表单页面组件
+ *
+ * @path apps\nextwiki-web\src\views\tag\tag-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 文件标签（表单组件）

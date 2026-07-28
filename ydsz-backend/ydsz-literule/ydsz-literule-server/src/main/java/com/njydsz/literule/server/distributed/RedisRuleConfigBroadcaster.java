@@ -33,6 +33,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  * </pre>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
 

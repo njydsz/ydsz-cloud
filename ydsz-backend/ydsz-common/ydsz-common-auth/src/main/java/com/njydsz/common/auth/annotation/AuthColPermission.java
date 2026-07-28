@@ -56,6 +56,7 @@ import com.njydsz.common.auth.model.ColumnScopeInfo;
  * @since 1.0.0
  * @see ColumnScopeInfo
  * @see ColumnScopeAware
+ * @author ydsz-team
  */
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})

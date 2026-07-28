@@ -17,6 +17,7 @@ import com.njydsz.common.excel.core.metadata.ReadMetadata;
  * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  * @see ExcelReader
+ * @since 1.0.0
  */
 public class InputSourceDetector {
 

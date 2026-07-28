@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path comm\effects\common-ui\src\components\tippy\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DefaultProps, Props } from 'tippy.js';
 
 import type { App, SetupContext } from 'vue';

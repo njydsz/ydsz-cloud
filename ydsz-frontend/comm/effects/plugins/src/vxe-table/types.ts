@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\effects\plugins\src\vxe-table\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type {
   VxeGridListeners,
   VxeGridPropTypes,

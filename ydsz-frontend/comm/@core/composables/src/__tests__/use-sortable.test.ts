@@ -1,3 +1,10 @@
+/**
+ * use-sortable.test 组合式函数
+ *
+ * @path comm\@core\composables\src\__tests__\use-sortable.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { SortableOptions } from 'sortablejs';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';

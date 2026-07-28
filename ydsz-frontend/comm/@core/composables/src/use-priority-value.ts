@@ -1,3 +1,10 @@
+/**
+ * use-priority-value 组合式函数
+ *
+ * @path comm\@core\composables\src\use-priority-value.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ComputedRef, Ref } from 'vue';
 
 import { computed, getCurrentInstance, unref, useAttrs, useSlots } from 'vue';

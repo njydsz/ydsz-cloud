@@ -1,3 +1,10 @@
+/**
+ * context 模块
+ *
+ * @path comm\@core\ui-kit\form-ui\src\form-render\context.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { FormRenderProps } from '../types';
 
 import { computed } from 'vue';

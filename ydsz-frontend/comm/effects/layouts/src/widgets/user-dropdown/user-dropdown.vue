@@ -1,3 +1,10 @@
+<!--
+ * user-dropdown 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\user-dropdown\user-dropdown.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { Component } from 'vue';
 

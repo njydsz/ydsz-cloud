@@ -36,6 +36,7 @@ package com.njydsz.common.excel.converter;
  * @version 1.0.0
  * @see ConverterChain
  * @see ConverterRegistry
+ * @since 1.0.0
  */
 public interface CellValueConverter {
 

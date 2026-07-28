@@ -13,6 +13,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  * YdszJsonParser 核心功能测试。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 class JsonParserTest {
 

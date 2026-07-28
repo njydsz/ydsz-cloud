@@ -1,3 +1,10 @@
+/**
+ * index 配置模块
+ *
+ * @path conf\node-utils\src\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export * from './constants';
 export * from './date';
 export * from './fs';

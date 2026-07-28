@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
  * </pre>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class ConsistentHashSharder {
 

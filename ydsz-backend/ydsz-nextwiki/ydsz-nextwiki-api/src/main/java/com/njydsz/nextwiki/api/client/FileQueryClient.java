@@ -19,6 +19,15 @@ import com.njydsz.nextwiki.api.fallback.FileQueryClientFallback;
  */
 @FeignClient(name = FeignClientConstants.NEXTWIKI, contextId = "fileQueryClient",
         fallbackFactory = FileQueryClientFallback.class)
+
+/**
+ * FileQueryClient Feign 客户端接口，声明跨服务远程调用。
+ *
+ * <p>所属包：{@code com.njydsz.nextwiki.api.client}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public interface FileQueryClient {
 
     /**

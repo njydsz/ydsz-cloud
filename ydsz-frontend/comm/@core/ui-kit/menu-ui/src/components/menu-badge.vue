@@ -1,3 +1,10 @@
+<!--
+ * menu-badge 通用组件
+ *
+ * @path comm\@core\ui-kit\menu-ui\src\components\menu-badge.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { MenuRecordBadgeRaw } from '@ydsz-core/typings';
 

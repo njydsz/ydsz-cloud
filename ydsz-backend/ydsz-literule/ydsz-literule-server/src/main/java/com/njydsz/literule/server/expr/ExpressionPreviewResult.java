@@ -11,6 +11,7 @@ import lombok.Data;
  * 供前端表达式编辑器实时展示求值结果与类型信息。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 public class ExpressionPreviewResult implements Serializable {

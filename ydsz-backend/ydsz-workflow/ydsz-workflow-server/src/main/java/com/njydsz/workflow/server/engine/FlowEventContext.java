@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
  * 供监听器获取完整的事件元数据，对标用友 BPM / 钉钉审批的事件通知能力。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @AllArgsConstructor

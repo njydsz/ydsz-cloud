@@ -1,3 +1,10 @@
+/**
+ * popup-api 模块
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\popup-api.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { MaybePromise } from '@ydsz-core/typings';
 
 import { Store } from '@ydsz-core/shared/store';

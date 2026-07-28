@@ -1,3 +1,10 @@
+/**
+ * cronjob 路由模块
+ *
+ * @path apps\cronjob-web\src\router\routes\modules\cronjob.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [

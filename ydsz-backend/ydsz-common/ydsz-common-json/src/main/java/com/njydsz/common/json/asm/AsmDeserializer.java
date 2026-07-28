@@ -15,6 +15,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * </ul>
  * 
  * @author ydsz-team
+ * @since 1.0.0
  */
 public interface AsmDeserializer<T> {
     

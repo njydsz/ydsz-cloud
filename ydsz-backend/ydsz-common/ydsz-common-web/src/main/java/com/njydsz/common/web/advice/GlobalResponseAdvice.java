@@ -25,6 +25,7 @@ import com.njydsz.common.core.response.BaseResponse;
  * @author ydsz-team
  * @see BaseGlobalResponseAdvice
  * @see BaseResponse
+ * @since 1.0.0
  */
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)

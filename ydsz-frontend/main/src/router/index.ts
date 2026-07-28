@@ -1,3 +1,10 @@
+/**
+ * 路由配置入口，聚合所有路由模块
+ *
+ * @path main\src\router\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import {
   createRouter,
   createWebHashHistory,

@@ -1,3 +1,10 @@
+/**
+ * util.test 工具函数模块
+ *
+ * @path comm\@core\base\shared\src\utils\__tests__\util.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { describe, expect, it } from 'vitest';
 
 import { bindMethods, getNestedValue } from '../util';

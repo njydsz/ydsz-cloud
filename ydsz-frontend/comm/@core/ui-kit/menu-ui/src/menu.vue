@@ -1,3 +1,10 @@
+<!--
+ * menu Vue 组件
+ *
+ * @path comm\@core\ui-kit\menu-ui\src\menu.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { MenuRecordRaw } from '@ydsz-core/typings';
 

@@ -36,6 +36,8 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  *   <li>单例模式 - 全局缓存管理</li>
  *   <li>策略模式 - 不同类的元数据解析策略</li>
  * </ul>
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class MetadataCache {
 

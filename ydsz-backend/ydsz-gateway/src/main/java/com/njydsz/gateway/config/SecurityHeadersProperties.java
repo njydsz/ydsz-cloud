@@ -36,6 +36,7 @@ import lombok.Data;
  * </pre>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @RefreshScope

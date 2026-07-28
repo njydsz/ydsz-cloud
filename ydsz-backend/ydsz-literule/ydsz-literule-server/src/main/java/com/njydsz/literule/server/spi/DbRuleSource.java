@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * 不支持 Watch 推送（需配合 {@link RuleConfigBroadcaster} 实现分布式热刷新）。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @RequiredArgsConstructor

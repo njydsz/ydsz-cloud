@@ -23,6 +23,8 @@ import com.njydsz.common.excel.annotation.ExcelProperty;
  *
  * @see ClassMetadata
  * @see FieldInfo
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class ClassMetadataCache {
 

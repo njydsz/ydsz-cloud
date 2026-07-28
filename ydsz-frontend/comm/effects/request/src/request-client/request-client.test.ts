@@ -1,3 +1,10 @@
+/**
+ * request-client.test 模块
+ *
+ * @path comm\effects\request\src\request-client\request-client.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

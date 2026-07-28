@@ -1,3 +1,10 @@
+/**
+ * use-tabs-drag 模块
+ *
+ * @path comm\@core\ui-kit\tabs-ui\src\use-tabs-drag.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Sortable } from '@ydsz-core/composables';
 import type { EmitType } from '@ydsz-core/typings';
 

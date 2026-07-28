@@ -1,3 +1,10 @@
+<!--
+ * form 布局组件
+ *
+ * @path comm\effects\layouts\src\authentication\form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 defineOptions({
   name: 'AuthenticationFormView',

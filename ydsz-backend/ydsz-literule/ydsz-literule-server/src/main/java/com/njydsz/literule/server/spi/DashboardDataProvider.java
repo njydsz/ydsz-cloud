@@ -17,6 +17,7 @@ import com.njydsz.literule.api.dto.RuleDashboardTrendVO;
  * 避免直接依赖 project 模块的服务实现。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface DashboardDataProvider {
 

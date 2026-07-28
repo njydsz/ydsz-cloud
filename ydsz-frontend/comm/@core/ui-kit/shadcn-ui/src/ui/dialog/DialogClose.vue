@@ -1,3 +1,10 @@
+<!--
+ * DialogClose Vue 组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\ui\dialog\DialogClose.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { DialogCloseProps } from 'radix-vue';
 

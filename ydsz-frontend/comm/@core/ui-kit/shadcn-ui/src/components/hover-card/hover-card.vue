@@ -1,3 +1,10 @@
+<!--
+ * hover-card 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\hover-card\hover-card.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type {
   HoverCardContentProps,

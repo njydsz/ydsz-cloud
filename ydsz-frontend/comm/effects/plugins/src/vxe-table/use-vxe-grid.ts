@@ -1,3 +1,10 @@
+/**
+ * use-vxe-grid 模块
+ *
+ * @path comm\effects\plugins\src\vxe-table\use-vxe-grid.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridSlots, VxeGridSlotTypes } from 'vxe-table';
 
 import type { SlotsType } from 'vue';

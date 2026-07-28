@@ -1,3 +1,10 @@
+<!--
+ * qrcode-login Vue 组件
+ *
+ * @path comm\effects\common-ui\src\ui\authentication\qrcode-login.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';

@@ -1,3 +1,10 @@
+<!--
+ * file-icon 通用组件
+ *
+ * @path comm\effects\shared-business\src\components\file-icon.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 文件类型图标组件 — 根据文件扩展名显示对应图标

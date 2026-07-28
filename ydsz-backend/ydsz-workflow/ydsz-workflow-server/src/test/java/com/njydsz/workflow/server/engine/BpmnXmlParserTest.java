@@ -17,6 +17,8 @@ import com.njydsz.workflow.domain.enums.FlowNodeType;
  * <p>纯单元测试，不依赖 Spring 上下文。覆盖 BPMN 2.0 XML 解析为 BpmnModel 的各种场景，
  * 包括异常输入、线性流程、网关、办理人、会签、条件表达式、BPMNDI 坐标、事件定义、
  * 服务节点、子流程以及 XXE 防护等。
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @DisplayName("BpmnXmlParser BPMN XML 解析器测试")
 class BpmnXmlParserTest {

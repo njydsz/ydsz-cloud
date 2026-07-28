@@ -11,6 +11,7 @@ package com.njydsz.literule.server.approval;
  * </ul>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public enum ApprovalType {
 

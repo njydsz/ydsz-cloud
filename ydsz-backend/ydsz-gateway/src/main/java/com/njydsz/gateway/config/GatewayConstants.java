@@ -24,6 +24,7 @@ import com.njydsz.common.core.constant.TraceConstants;
  * 消除跨模块重复声明。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class GatewayConstants {
 

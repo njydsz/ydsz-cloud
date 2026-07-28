@@ -12,6 +12,7 @@ import com.njydsz.common.core.enums.ServiceType;
  * @author ydsz-team
  * @see BaseAuthInfo
  * @see ServiceType#WEB_SERVICE
+ * @since 1.0.0
  */
 public class WebAuthInfo extends BaseAuthInfo {
 

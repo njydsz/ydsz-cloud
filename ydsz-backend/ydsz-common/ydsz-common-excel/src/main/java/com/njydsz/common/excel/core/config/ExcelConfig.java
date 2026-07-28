@@ -20,6 +20,8 @@ import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
  * </ul>
  *
  * @see ExcelFacade#setConfiguration
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class ExcelConfig {
 

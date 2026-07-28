@@ -40,6 +40,7 @@ import com.njydsz.common.cache.api.CachePolicy;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class ConditionalCacheDecorator<K, V> implements Cache<K, V> {
 

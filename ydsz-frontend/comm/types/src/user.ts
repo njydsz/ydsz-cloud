@@ -1,3 +1,10 @@
+/**
+ * user 类型定义模块
+ *
+ * @path comm\types\src\user.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { BasicUserInfo } from '@ydsz-core/typings';
 
 /** 用户信息 */

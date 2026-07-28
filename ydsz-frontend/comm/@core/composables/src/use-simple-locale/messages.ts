@@ -1,3 +1,10 @@
+/**
+ * messages 组合式函数
+ *
+ * @path comm\@core\composables\src\use-simple-locale\messages.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export type Locale = 'en-US' | 'zh-CN';
 
 export const messages: Record<Locale, Record<string, string>> = {

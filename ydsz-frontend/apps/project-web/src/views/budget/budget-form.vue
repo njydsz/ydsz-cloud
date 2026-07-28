@@ -1,3 +1,10 @@
+<!--
+ * budget-form 表单页面组件
+ *
+ * @path apps\project-web\src\views\budget\budget-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 项目预算（表单组件）

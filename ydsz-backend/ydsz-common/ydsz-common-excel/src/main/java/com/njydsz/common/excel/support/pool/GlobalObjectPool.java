@@ -50,6 +50,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @see ObjectPool
  * @see StylePool
  * @see ReflectCache
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class GlobalObjectPool {
 

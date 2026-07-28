@@ -62,6 +62,7 @@ import reactor.core.publisher.Mono;
  * 校验 nonce 是否重复，形成"一次性签名"。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

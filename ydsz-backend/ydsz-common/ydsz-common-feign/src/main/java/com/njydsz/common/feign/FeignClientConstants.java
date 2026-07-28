@@ -78,16 +78,16 @@ public final class FeignClientConstants {
     // ==================== 消息中心 URL 路径常量 ====================
 
     /** 发送通知 API 路径 */
-    public static final String MESSAGE_PATH_NOTIFICATION_SEND = "/api/message/notification/send";
+    public static final String MESSAGE_PATH_NOTIFICATION_SEND = "/api/v1/message/notifications/send";
 
     /** 推送实时消息 API 路径 */
-    public static final String MESSAGE_PATH_NOTIFICATION_PUSH_REALTIME = "/api/message/notification/push-realtime";
+    public static final String MESSAGE_PATH_NOTIFICATION_PUSH_REALTIME = "/api/v1/message/notifications/push";
 
     /** 广播实时消息 API 路径 */
-    public static final String MESSAGE_PATH_NOTIFICATION_BROADCAST = "/api/message/notification/broadcast";
+    public static final String MESSAGE_PATH_NOTIFICATION_BROADCAST = "/api/v1/message/notifications/broadcast";
 
     /** 发送消息 API 路径 */
-    public static final String MESSAGE_PATH_SEND = "/api/message/send";
+    public static final String MESSAGE_PATH_SEND = "/api/v1/message/send";
 
     // ==================== 系统管理 URL 路径常量 ====================
 
@@ -101,6 +101,8 @@ public final class FeignClientConstants {
     public static final String SYSTEM_PATH_DICT_LIST = "/api/internal/dict/list";
 
     // ==================== 项目管理 URL 路径常量 ====================
+    // P3-3 TODO: ydsz-project 模块尚未创建 InternalApiController，
+    // 以下端点需在 project-web 中实现后才能正常调用
 
     /** 按项目 ID 查询项目基本信息 API 路径 */
     public static final String PROJECT_PATH_GET_BY_ID = "/api/internal/project/get";
@@ -109,11 +111,15 @@ public final class FeignClientConstants {
     public static final String PROJECT_PATH_GET_STATUS = "/api/internal/project/status";
 
     // ==================== AI Agent URL 路径常量 ====================
+    // P3-3 TODO: ydsz-agent 模块尚未创建 InternalApiController，
+    // 以下端点需在 agent-web 中实现后才能正常调用
 
-    /** 执行 Agent API 路径 */
-    public static final String AGENT_PATH_EXECUTE = "/api/internal/agent/execute";
+    /** 执行 Agent API 路径（对应 AgentController POST /api/v1/agent/execute） */
+    public static final String AGENT_PATH_EXECUTE = "/api/v1/agent/execute";
 
     // ==================== 网盘知识库 URL 路径常量 ====================
+    // P3-3 TODO: ydsz-nextwiki 模块尚未创建 InternalApiController，
+    // 以下端点需在 nextwiki-web 中实现后才能正常调用
 
     /** 按文件 ID 查询文件信息 API 路径 */
     public static final String NEXTWIKI_PATH_FILE_GET = "/api/internal/file/get";

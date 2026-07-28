@@ -1,3 +1,10 @@
+<!--
+ * company-form 表单页面组件
+ *
+ * @path apps\userinfo-web\src\views\system\company\company-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 公司（表单组件）

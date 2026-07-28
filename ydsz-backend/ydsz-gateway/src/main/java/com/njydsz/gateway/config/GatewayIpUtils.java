@@ -24,6 +24,7 @@ import com.njydsz.common.safe.util.ClientIpResolver;
  * 保持单一来源一致。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class GatewayIpUtils {
 

@@ -61,6 +61,15 @@ import lombok.extern.slf4j.Slf4j;
         maxReconsumeTimes = 3,
         consumeMode = ConsumeMode.ORDERLY
 )
+
+/**
+ * MessageConsumer 类。
+ *
+ * <p>所属包：{@code com.njydsz.message.server.consumer}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class MessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;

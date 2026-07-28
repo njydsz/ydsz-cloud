@@ -1,3 +1,10 @@
+/**
+ * guard 路由模块
+ *
+ * @path main\src\router\guard.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Router } from 'vue-router';
 
 import { LOGIN_PATH } from '@ydsz/constants';

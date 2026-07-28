@@ -1,3 +1,10 @@
+/**
+ * interceptor 模块
+ *
+ * @path comm\effects\request\src\request-client\modules\interceptor.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { AxiosInstance, AxiosResponse } from 'axios';
 
 import type {

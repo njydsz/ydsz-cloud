@@ -1,3 +1,10 @@
+<!--
+ * preferences-button 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\preferences-button.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { Settings } from '@ydsz/icons';
 

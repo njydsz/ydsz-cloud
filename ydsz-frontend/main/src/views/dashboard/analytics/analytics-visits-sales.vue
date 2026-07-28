@@ -1,3 +1,10 @@
+<!--
+ * analytics-visits-sales 页面组件
+ *
+ * @path main\src\views\dashboard\analytics\analytics-visits-sales.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { EchartsUIType } from '@ydsz/plugins/echarts';
 

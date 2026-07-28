@@ -1,3 +1,10 @@
+/**
+ * options 配置模块
+ *
+ * @path conf\vite-config\src\options.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Options as PwaPluginOptions } from 'vite-plugin-pwa';
 
 import type { ImportmapPluginOptions } from './typing';

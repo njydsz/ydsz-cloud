@@ -1,3 +1,10 @@
+<!--
+ * check-updates 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\check-updates\check-updates.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 

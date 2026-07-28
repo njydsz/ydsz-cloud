@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
  * 当 {@link #valid} 为 true 时，{@link #errorType} 为 {@link ErrorType#OK}。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Builder

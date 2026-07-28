@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * 消费方可通过 {@code @EventListener} 监听此事件，转换为统一告警通知。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class DefaultAlertActionHandler implements RuleActionHandler {

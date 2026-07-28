@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>依赖：需在 classpath 中引入 {@code com.ctrip.framework.apollo:apollo-client}。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class ApolloRuleSource implements RuleSource {

@@ -9,6 +9,7 @@ package com.njydsz.agent.api.dto;
  * @param agentType Agent 类型（CHAT/REACT/PLAN_EXECUTE/ROUTER）
  * @param plan      执行计划（JSON 格式，包含步骤列表）
  * @since 1.0.0
+ * @author ydsz-team
  */
 public record AgentTraceDetailDTO(
     String traceId,

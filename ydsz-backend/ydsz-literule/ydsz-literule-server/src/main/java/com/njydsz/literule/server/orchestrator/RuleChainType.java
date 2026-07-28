@@ -18,6 +18,7 @@ package com.njydsz.literule.server.orchestrator;
  * </ul>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public enum RuleChainType {
 

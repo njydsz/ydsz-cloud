@@ -33,17 +33,26 @@ import com.njydsz.cronjob.api.fallback.CronjobServiceClientFallback;
         name = FeignClientConstants.CRONJOB,
         contextId = "cronjobServiceClient",
         fallbackFactory = CronjobServiceClientFallback.class)
+
+/**
+ * CronjobClient Service 接口，定义业务逻辑契约。
+ *
+ * <p>所属包：{@code com.njydsz.cronjob.api.client}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public interface CronjobServiceClient {
 
     /**
      * 立即触发执行一次定时任务（不抢占分布式锁）
      *
-     * <p>对应 cronjob 模块: POST /cronjob/{id}/trigger?holdLock=false
+     * <p>对应 cronjob 模块: POST /api/v1/cronjob/{id}/trigger?holdLock=false
      *
      * @param jobId 任务 ID
      * @return 执行日志 ID（触发失败时为 null）
      */
-    @PostMapping("/cronjob/{id}/trigger")
+    @PostMapping("/api/v1/cronjob/{id}/trigger")
     BaseResponse<String> trigger(@PathVariable("id") String jobId);
 
     /**
@@ -53,7 +62,7 @@ public interface CronjobServiceClient {
      * @param holdLock 是否抢占分布式锁
      * @return 执行日志 ID
      */
-    @PostMapping("/cronjob/{id}/trigger")
+    @PostMapping("/api/v1/cronjob/{id}/trigger")
     BaseResponse<String> trigger(@PathVariable("id") String jobId,
                            @RequestParam("holdLock") boolean holdLock);
 }

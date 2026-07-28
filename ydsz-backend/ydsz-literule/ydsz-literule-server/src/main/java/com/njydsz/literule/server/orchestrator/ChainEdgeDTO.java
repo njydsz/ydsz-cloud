@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
  * 仅作为可视化布局元数据，便于前端画布渲染和后端持久化。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Builder

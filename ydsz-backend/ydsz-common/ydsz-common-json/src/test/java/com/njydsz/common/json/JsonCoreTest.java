@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
  * YdszJson 序列化/反序列化核心功能测试。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 class JsonCoreTest {
 

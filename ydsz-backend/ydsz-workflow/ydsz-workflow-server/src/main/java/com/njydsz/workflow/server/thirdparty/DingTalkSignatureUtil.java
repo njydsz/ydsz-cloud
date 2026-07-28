@@ -13,6 +13,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * 消除重复的 HmacSHA256 实现。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class DingTalkSignatureUtil {
 

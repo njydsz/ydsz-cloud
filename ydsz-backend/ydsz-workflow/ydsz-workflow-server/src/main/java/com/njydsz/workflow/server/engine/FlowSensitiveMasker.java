@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>所有方法均为无状态纯函数，线程安全。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

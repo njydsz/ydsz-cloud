@@ -1,3 +1,10 @@
+/**
+ * tabbar Pinia 状态管理
+ *
+ * @path comm\stores\src\modules\tabbar.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ComputedRef } from 'vue';
 import type {
   RouteLocationNormalized,

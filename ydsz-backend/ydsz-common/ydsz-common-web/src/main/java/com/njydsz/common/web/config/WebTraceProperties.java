@@ -28,6 +28,7 @@ import lombok.EqualsAndHashCode;
  * @author ydsz-team
  * @see BaseTraceProperties
  * @see TraceIdResponseFilter
+ * @since 1.0.0
  */
 @Data
 @Validated

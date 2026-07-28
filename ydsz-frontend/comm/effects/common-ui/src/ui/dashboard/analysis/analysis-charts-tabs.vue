@@ -1,3 +1,10 @@
+<!--
+ * analysis-charts-tabs Vue 组件
+ *
+ * @path comm\effects\common-ui\src\ui\dashboard\analysis\analysis-charts-tabs.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { TabOption } from '@ydsz/types';
 

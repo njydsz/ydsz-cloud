@@ -22,6 +22,7 @@ import com.njydsz.literule.api.Rule;
  * 保证节点形态与字段填充的一致性。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class RuleNode {
 

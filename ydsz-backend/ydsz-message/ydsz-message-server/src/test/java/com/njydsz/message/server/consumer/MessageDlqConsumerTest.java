@@ -32,6 +32,8 @@ import com.njydsz.message.server.metric.MessageMetrics;
  * MessageDlqConsumer 死信消费者单元测试。
  *
  * <p>P0-5: 验证 Redis SET NX EX 幂等去重 + update-then-insert 落库逻辑。
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @DisplayName("MessageDlqConsumer 死信消费者测试")
 @ExtendWith(MockitoExtension.class)

@@ -1,3 +1,10 @@
+<!--
+ * template-form 表单页面组件
+ *
+ * @path apps\message-web\src\views\template\template-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 流程模板（表单组件）

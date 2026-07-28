@@ -1,3 +1,10 @@
+/**
+ * auth Pinia 状态管理
+ *
+ * @path main\src\store\auth.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Recordable, UserInfo } from '@ydsz/types';
 
 import { ref } from 'vue';

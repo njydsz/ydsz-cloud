@@ -1,3 +1,10 @@
+/**
+ * 应用偏好配置
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\icons\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import HeaderNav from './header-nav.vue';
 
 export { default as ContentCompact } from './content-compact.vue';

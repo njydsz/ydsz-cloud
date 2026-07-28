@@ -1,3 +1,10 @@
+/**
+ * 路由配置入口，聚合所有路由模块
+ *
+ * @path main\src\router\routes\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteRecordRaw } from 'vue-router';
 
 import { mergeRouteModules, traverseTreeValues } from '@ydsz/utils';

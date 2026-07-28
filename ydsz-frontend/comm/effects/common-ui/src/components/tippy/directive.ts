@@ -1,3 +1,10 @@
+/**
+ * directive 模块
+ *
+ * @path comm\effects\common-ui\src\components\tippy\directive.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ComputedRef, Directive } from 'vue';
 
 import { useTippy } from 'vue-tippy';

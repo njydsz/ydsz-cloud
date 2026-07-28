@@ -1,3 +1,10 @@
+<!--
+ * contract-form 表单页面组件
+ *
+ * @path apps\project-web\src\views\contract\contract-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 项目合同（表单组件）

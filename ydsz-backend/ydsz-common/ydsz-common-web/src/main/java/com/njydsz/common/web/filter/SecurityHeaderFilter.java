@@ -20,6 +20,7 @@ import com.njydsz.common.safe.filter.BaseSecurityHeaderFilter;
  * @author ydsz-team
  * @see BaseSecurityHeaderFilter
  * @see SecurityHeaderProperties
+ * @since 1.0.0
  */
 public class SecurityHeaderFilter extends BaseSecurityHeaderFilter {
 

@@ -31,6 +31,8 @@ import com.njydsz.common.excel.core.style.WriteStyleHandler;
  * <h3>性能收益</h3>
  * <p>在写入循环中可减少约50-60%的计算开销，
  * 特别是样式转换和格式解析部分。</p>
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class PrecomputedColumnProperties {
 

@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
  * 通过/失败判定、详细差异信息等。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Builder

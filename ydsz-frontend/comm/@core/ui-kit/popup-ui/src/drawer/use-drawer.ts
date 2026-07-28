@@ -1,3 +1,10 @@
+/**
+ * use-drawer 模块
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\drawer\use-drawer.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type {
   DrawerApiOptions,
   DrawerProps,

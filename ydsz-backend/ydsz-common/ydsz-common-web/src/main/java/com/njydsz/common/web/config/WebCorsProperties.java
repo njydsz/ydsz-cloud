@@ -24,6 +24,7 @@ import com.njydsz.common.base.config.BaseCorsProperties;
  *
  * @author ydsz-team
  * @see BaseCorsProperties
+ * @since 1.0.0
  */
 @Validated
 @ConfigurationProperties(prefix = "ydsz.web.cors")

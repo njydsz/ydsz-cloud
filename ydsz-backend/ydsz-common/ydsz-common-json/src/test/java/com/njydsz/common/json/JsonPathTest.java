@@ -12,6 +12,7 @@ import com.njydsz.common.json.jsonpath.YdszJsonPath;
  * JSONPath 查询测试。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 class JsonPathTest {
 

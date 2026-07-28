@@ -1,3 +1,10 @@
+<!--
+ * connector-form 表单页面组件
+ *
+ * @path apps\cronjob-web\src\views\connector\connector-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 任务连接器（表单组件）

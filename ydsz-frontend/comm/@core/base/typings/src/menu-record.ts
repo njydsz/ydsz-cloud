@@ -1,3 +1,10 @@
+/**
+ * menu-record 模块
+ *
+ * @path comm\@core\base\typings\src\menu-record.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Component } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 

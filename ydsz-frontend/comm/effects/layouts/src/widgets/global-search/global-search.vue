@@ -1,3 +1,10 @@
+<!--
+ * global-search 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\global-search\global-search.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { MenuRecordRaw } from '@ydsz/types';
 

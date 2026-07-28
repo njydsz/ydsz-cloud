@@ -1,3 +1,10 @@
+/**
+ * resources.test 工具函数模块
+ *
+ * @path comm\@core\base\shared\src\utils\__tests__\resources.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { loadScript } from '../resources';

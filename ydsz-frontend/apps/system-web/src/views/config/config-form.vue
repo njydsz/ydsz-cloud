@@ -1,3 +1,10 @@
+<!--
+ * config-form 表单页面组件
+ *
+ * @path apps\system-web\src\views\config\config-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 系统配置（表单组件）

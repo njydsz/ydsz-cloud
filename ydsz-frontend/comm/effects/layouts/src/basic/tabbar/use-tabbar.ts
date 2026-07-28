@@ -1,3 +1,10 @@
+/**
+ * use-tabbar 模块
+ *
+ * @path comm\effects\layouts\src\basic\tabbar\use-tabbar.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteLocationNormalizedGeneric } from 'vue-router';
 
 import type { TabDefinition } from '@ydsz/types';

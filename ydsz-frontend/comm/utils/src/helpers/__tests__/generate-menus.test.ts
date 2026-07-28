@@ -1,3 +1,10 @@
+/**
+ * generate-menus.test 工具函数模块
+ *
+ * @path comm\utils\src\helpers\__tests__\generate-menus.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Router, RouteRecordRaw } from 'vue-router';
 
 import { createRouter, createWebHistory } from 'vue-router';

@@ -1,3 +1,10 @@
+/**
+ * modal-api 模块
+ *
+ * @path comm\@core\ui-kit\popup-ui\src\modal\modal-api.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ModalApiOptions, ModalState } from './modal';
 
 import { PopupApi } from '../popup-api';

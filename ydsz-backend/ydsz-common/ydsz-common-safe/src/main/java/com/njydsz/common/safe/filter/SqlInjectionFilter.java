@@ -76,6 +76,15 @@ import com.njydsz.common.util.url.UrlPathUtils;
  * @author ydsz-team
  * @since 1.0.0
  */
+
+/**
+ * SqlInjectionFilter 网关过滤器，在请求转发前 / 响应返回后执行横切逻辑。
+ *
+ * <p>所属包：{@code com.njydsz.common.safe.filter}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class SqlInjectionFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(SqlInjectionFilter.class);

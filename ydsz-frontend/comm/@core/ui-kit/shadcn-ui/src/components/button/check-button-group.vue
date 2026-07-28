@@ -1,3 +1,10 @@
+<!--
+ * check-button-group 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\button\check-button-group.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { Arrayable } from '@vueuse/core';
 

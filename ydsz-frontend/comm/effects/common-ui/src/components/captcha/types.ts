@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\effects\common-ui\src\components\captcha\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { CSSProperties } from 'vue';
 
 import type { ClassType } from '@ydsz/types';

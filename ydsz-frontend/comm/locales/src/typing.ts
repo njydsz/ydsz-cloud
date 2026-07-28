@@ -1,3 +1,10 @@
+/**
+ * typing 国际化语言包
+ *
+ * @path comm\locales\src\typing.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export type SupportedLanguagesType = 'en-US' | 'zh-CN';
 
 export type ImportLocaleFn = () => Promise<{ default: Record<string, string> }>;

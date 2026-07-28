@@ -1,3 +1,10 @@
+/**
+ * use-layout-style 组合式函数
+ *
+ * @path comm\@core\composables\src\use-layout-style.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { CSSProperties } from 'vue';
 
 import type { VisibleDomRect } from '@ydsz-core/shared/utils';

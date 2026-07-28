@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path bash\vsh\src\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { colors, consola } from '@ydsz/node-utils';
 
 import { cac } from 'cac';

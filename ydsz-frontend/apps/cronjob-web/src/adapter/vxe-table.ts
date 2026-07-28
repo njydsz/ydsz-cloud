@@ -1,3 +1,10 @@
+/**
+ * vxe-table 适配器模块
+ *
+ * @path apps\cronjob-web\src\adapter\vxe-table.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeTableGridOptions } from '@ydsz/plugins/vxe-table';
 
 import { h } from 'vue';

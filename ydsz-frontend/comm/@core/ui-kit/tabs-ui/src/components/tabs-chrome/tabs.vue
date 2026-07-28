@@ -1,3 +1,10 @@
+<!--
+ * tabs 通用组件
+ *
+ * @path comm\@core\ui-kit\tabs-ui\src\components\tabs-chrome\tabs.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { TabDefinition } from '@ydsz-core/typings';
 

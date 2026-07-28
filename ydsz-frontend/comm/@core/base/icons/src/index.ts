@@ -1,3 +1,10 @@
+/**
+ * index 模块
+ *
+ * @path comm\@core\base\icons\src\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export * from './create-icon';
 
 export * from './lucide';

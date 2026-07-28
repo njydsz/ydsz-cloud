@@ -1,3 +1,10 @@
+/**
+ * spinner 配置模块
+ *
+ * @path conf\node-utils\src\spinner.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Ora } from 'ora';
 
 import ora from 'ora';

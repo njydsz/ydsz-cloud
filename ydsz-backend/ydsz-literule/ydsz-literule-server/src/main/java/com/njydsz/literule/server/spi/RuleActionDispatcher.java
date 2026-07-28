@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * 由 {@code LiteRuleAutoConfiguration} 自动装配并注入到 {@code DefaultRuleEngine}。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class RuleActionDispatcher {

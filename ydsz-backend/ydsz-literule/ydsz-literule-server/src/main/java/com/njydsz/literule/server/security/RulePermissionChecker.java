@@ -48,6 +48,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  * 未注入时跳过校验（向后兼容）。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class RulePermissionChecker {
 

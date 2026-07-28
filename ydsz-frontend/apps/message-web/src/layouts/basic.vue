@@ -1,3 +1,10 @@
+<!--
+ * basic 布局组件
+ *
+ * @path apps\message-web\src\layouts\basic.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { watch } from 'vue';
 

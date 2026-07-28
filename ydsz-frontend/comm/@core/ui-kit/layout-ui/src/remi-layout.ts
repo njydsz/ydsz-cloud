@@ -1,3 +1,10 @@
+/**
+ * remi-layout 模块
+ *
+ * @path comm\@core\ui-kit\layout-ui\src\remi-layout.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type {
   ContentCompactType,
   LayoutHeaderModeType,

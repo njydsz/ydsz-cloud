@@ -15,6 +15,8 @@ import lombok.experimental.SuperBuilder;
  *
  * <p>对应 ydsz_rule_canary_bucket 表，按日聚合每条规则在 PRIMARY/CANARY 桶中的执行次数。
  * 用于 AB Test 自动回滚判断（比较两桶错误率/触发率）。
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

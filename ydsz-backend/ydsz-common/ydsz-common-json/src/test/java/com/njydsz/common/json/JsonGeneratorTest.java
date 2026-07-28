@@ -14,6 +14,7 @@ import com.njydsz.common.json.stream.JsonGenerator;
  * JsonGenerator 流式生成器测试。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 class JsonGeneratorTest {
 

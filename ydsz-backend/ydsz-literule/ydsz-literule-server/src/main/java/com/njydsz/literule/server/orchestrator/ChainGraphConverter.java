@@ -26,6 +26,7 @@ import com.njydsz.literule.api.Rule;
  * （因为 Graph 只携带 ruleCode，不携带表达式），由 {@link RuleResolver} 接口回调获取。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class ChainGraphConverter {
 

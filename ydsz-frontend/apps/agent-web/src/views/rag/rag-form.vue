@@ -1,3 +1,10 @@
+<!--
+ * rag-form 表单页面组件
+ *
+ * @path apps\agent-web\src\views\rag\rag-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * Agent RAG 知识库（表单组件）

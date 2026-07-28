@@ -12,6 +12,8 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  * <p>防护方式：在危险值前添加单引号前缀({@code '})，使Excel将其识别为文本而非公式。</p>
  *
  * @see ExcelConfig#isFormulaInjectionProtection()
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class FormulaInjectionGuard {
 

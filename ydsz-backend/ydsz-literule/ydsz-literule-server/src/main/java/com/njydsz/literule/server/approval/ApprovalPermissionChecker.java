@@ -10,6 +10,7 @@ package com.njydsz.literule.server.approval;
  * （仅校验审批人是否在指定审批人列表中），便于单元测试与开发环境调试。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface ApprovalPermissionChecker {
 

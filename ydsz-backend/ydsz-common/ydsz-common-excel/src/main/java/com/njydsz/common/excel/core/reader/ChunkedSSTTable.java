@@ -33,6 +33,14 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.support.cache.LRUCache;
 
+/**
+ * ChunkedSSTTable 类。
+ *
+ * <p>所属包：{@code com.njydsz.common.excel.core.reader}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class ChunkedSSTTable {
 
     private static final Logger log = LoggerFactory.getLogger(ChunkedSSTTable.class);

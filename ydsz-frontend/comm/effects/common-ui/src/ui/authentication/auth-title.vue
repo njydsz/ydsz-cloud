@@ -1,3 +1,10 @@
+<!--
+ * auth-title Vue 组件
+ *
+ * @path comm\effects\common-ui\src\ui\authentication\auth-title.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <template>
   <div class="mb-7 sm:mx-auto sm:w-full sm:max-w-md">
     <h2

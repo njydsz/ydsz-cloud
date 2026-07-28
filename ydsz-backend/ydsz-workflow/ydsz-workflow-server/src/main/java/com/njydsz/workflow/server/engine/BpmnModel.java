@@ -16,6 +16,7 @@ import com.njydsz.workflow.domain.entity.FlowSkip;
  * （{@code <BPMNDiagram><BPMNPlane><BPMNShape>}/{@code <BPMNEdge>}）。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public class BpmnModel {
 

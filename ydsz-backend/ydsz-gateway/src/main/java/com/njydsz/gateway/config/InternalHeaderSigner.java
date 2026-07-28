@@ -31,6 +31,7 @@ import javax.crypto.spec.SecretKeySpec;
  * </ul>
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class InternalHeaderSigner {
 

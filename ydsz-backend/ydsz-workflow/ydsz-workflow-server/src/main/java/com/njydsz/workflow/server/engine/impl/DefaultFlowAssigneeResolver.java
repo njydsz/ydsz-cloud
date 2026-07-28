@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * 不展开 ROLE/DEPT/LEADER/POSITION，assigneeId 原样保留。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

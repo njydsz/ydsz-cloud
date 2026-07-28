@@ -1,3 +1,10 @@
+<!--
+ * global-search 通用组件
+ *
+ * @path main\src\components\global-search.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { SearchApi } from '#/api/core/search';
 

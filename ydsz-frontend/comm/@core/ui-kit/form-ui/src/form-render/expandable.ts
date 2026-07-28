@@ -1,3 +1,10 @@
+/**
+ * expandable 模块
+ *
+ * @path comm\@core\ui-kit\form-ui\src\form-render\expandable.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { FormRenderProps } from '../types';
 
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';

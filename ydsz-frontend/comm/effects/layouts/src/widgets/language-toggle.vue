@@ -1,3 +1,10 @@
+<!--
+ * language-toggle 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\language-toggle.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { SupportedLanguagesType } from '@ydsz/locales';
 

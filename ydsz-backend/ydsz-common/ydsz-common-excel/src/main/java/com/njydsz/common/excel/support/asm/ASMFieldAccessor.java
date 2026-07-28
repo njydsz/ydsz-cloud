@@ -60,6 +60,8 @@ import org.slf4j.LoggerFactory;
  * @see FieldSetter
  * @see ObjectInstantiator
  * @see ReflectCache
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class ASMFieldAccessor {
 

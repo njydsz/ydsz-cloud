@@ -1,3 +1,10 @@
+/**
+ * types 模块
+ *
+ * @path comm\@core\ui-kit\menu-ui\src\types.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Component, Ref } from 'vue';
 
 import type { MenuRecordBadgeRaw, ThemeModeType } from '@ydsz-core/typings';

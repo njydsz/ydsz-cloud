@@ -37,6 +37,7 @@ import com.njydsz.workflow.domain.enums.ThirdPartyPlatform;
  * 飞书抄送事件等），由调用方决定是否忽略。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class ThirdPartyApprovalActionResolver {
 

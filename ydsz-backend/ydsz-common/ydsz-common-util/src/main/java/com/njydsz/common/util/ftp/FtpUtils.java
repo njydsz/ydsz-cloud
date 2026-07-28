@@ -35,6 +35,14 @@ import org.apache.commons.net.ftp.FTPReply;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * FtpUtils 工具类，提供静态工具方法。
+ *
+ * <p>所属包：{@code com.njydsz.common.util.ftp}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @Slf4j
 public class FtpUtils {
 

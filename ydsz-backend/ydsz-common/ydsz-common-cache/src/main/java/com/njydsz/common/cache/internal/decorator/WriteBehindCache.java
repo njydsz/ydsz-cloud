@@ -53,6 +53,7 @@ import com.njydsz.common.cache.support.CacheWriter;
  * @param <V> 值类型
  * @author ydsz-team
  * 
+ * @since 1.0.0
  */
 public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
 

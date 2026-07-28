@@ -1,3 +1,10 @@
+/**
+ * system 路由模块
+ *
+ * @path apps\userinfo-web\src\router\routes\modules\system.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [

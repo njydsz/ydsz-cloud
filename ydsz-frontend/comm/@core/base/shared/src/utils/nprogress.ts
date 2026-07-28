@@ -1,3 +1,10 @@
+/**
+ * nprogress 工具函数模块
+ *
+ * @path comm\@core\base\shared\src\utils\nprogress.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type NProgress from 'nprogress';
 
 // 创建一个NProgress实例的变量，初始值为null

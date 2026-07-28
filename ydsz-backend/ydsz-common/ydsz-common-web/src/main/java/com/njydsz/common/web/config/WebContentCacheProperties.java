@@ -20,6 +20,7 @@ import com.njydsz.common.web.filter.ContentCachingFilter;
  *
  * @author ydsz-team
  * @see ContentCachingFilter
+ * @since 1.0.0
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.web.content-cache")

@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P0 修复：排他网关互斥（CONDITION 只取第一条匹配）、并行网关 join 聚合。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

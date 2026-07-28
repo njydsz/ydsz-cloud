@@ -1,3 +1,10 @@
+<!--
+ * jobGroup-form 表单页面组件
+ *
+ * @path apps\cronjob-web\src\views\jobGroup\jobGroup-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 任务分组（表单组件）

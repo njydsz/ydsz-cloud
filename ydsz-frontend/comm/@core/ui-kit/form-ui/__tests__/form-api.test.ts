@@ -1,3 +1,10 @@
+/**
+ * form-api.test 模块
+ *
+ * @path comm\@core\ui-kit\form-ui\__tests__\form-api.test.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FormApi } from '../src/form-api';

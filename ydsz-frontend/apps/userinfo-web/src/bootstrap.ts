@@ -1,3 +1,10 @@
+/**
+ * 应用引导程序，初始化全局插件和配置
+ *
+ * @path apps\userinfo-web\src\bootstrap.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { createApp, watchEffect } from 'vue';
 
 import { registerAccessDirective } from '@ydsz/access';

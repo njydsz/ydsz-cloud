@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
  * <p>封装 DictTypeMapper，提供字典类型数据访问能力。
  *
  * @author ydsz-team
+ * @since 1.0.0
  */
 @Repository
 @RequiredArgsConstructor

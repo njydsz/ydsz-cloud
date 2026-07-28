@@ -28,6 +28,7 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
  *
  * @author ydsz-team
  * @see HealthIndicator
+ * @since 1.0.0
  */
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
 @ConditionalOnProperty(prefix = "ydsz.web.health-indicator", name = "enabled", havingValue = "true", matchIfMissing = true)

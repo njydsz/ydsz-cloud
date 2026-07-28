@@ -24,6 +24,8 @@ import com.njydsz.common.excel.core.metadata.ReadMetadata;
  *
  * @see ReadListener
  * @see ExcelReader
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public interface ReadHandler {
 

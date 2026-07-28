@@ -1,3 +1,10 @@
+<!--
+ * layout 布局组件
+ *
+ * @path comm\effects\layouts\src\basic\layout.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { SetupContext } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';

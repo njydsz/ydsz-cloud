@@ -1,3 +1,10 @@
+/**
+ * 国际化配置入口
+ *
+ * @path apps\nextwiki-web\src\locales\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Language } from 'element-plus/es/locale';
 
 import type { App } from 'vue';

@@ -16,6 +16,8 @@ import lombok.experimental.SuperBuilder;
  *
  * <p>对应 ydsz_rule_ab_policy 表。每条启用了 canary 的规则可以配置自动回滚策略，
  * 定时任务会按监控窗口检查错误率，超过阈值则按 rollback_action 执行 AUTO 回滚或 NOTIFY 通知。
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

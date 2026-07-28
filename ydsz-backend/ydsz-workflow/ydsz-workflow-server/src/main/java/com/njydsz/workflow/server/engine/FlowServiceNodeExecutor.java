@@ -51,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>RestTemplate 由 ydsz-common-notify 统一提供，通过构造器注入。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

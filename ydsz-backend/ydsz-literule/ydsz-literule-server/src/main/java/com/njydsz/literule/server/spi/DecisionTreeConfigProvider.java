@@ -10,6 +10,7 @@ import com.njydsz.literule.api.DecisionTreeDefinition;
  * <p>由消费方提供实现，从数据库加载决策树定义。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface DecisionTreeConfigProvider {
 

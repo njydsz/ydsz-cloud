@@ -1,3 +1,10 @@
+<!--
+ * category-form 表单页面组件
+ *
+ * @path apps\workflow-web\src\views\category\category-form.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 /**
  * 流程分类（表单组件）

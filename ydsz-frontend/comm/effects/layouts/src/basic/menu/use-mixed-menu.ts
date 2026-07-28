@@ -1,3 +1,10 @@
+/**
+ * use-mixed-menu 模块
+ *
+ * @path comm\effects\layouts\src\basic\menu\use-mixed-menu.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { MenuRecordRaw } from '@ydsz/types';
 
 import { computed, onBeforeMount, ref, watch } from 'vue';

@@ -14,6 +14,8 @@ import java.util.*;
  *   <li>使用LRU缓存最近访问的字符串，减少重复解码开销</li>
  * </ul>
  * 对于包含百万级共享字符串的大文件，可显著降低内存占用。</p>
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class SharedStringsReader {
     /** LRU缓存容量 */

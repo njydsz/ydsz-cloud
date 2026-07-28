@@ -57,6 +57,17 @@ jobs:
         # 仅做编译，跳过 test/verify 阶段（项目已移除全部单元测试，2026-07）
         run: mvn -B -ntp -DskipTests compile
 
+      - name: Spotless 格式检查
+        # Google Java Format 强制代码格式统一
+        # 规则：deploy/docs/architecture/coding-standards.md Section 2
+        run: mvn -B -ntp spotless:check -DskipTests
+
+      - name: ArchUnit 架构规则测试
+        # P3-1: ArchUnit 编译期架构约束（R1-R19）
+        # 规则类：ydsz-common-base/src/test/.../ArchitectureRulesTest.java
+        # 仅执行 common-base 模块的 ArchUnit 测试（不触发全量 test）
+        run: mvn -B -ntp test -pl ydsz-common/ydsz-common-base -Dtest=ArchitectureRulesTest -DfailIfNoTests=false
+
       - name: 行内 FQN 违规检测
         # 公司代码规范（强制）：禁止行内全限定类名（FQN）用法
         # 规则文件：.trae/rules/no-inline-fqn.md

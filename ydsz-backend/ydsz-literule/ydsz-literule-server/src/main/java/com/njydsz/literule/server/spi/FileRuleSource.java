@@ -53,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
  * 文件变更时回调已注册的 {@link Consumer} 监听器。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 public class FileRuleSource implements RuleSource {

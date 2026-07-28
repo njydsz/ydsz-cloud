@@ -33,6 +33,8 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  *
  * @see ExcelWriter
  * @see ReadMetadata
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class WriteMetadata {
 

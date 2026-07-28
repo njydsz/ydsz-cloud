@@ -1,3 +1,10 @@
+<!--
+ * form-field Vue 组件
+ *
+ * @path comm\@core\ui-kit\form-ui\src\form-render\form-field.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { ZodType } from 'zod';
 

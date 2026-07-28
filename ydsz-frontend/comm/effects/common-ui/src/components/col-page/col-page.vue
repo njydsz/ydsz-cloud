@@ -1,3 +1,10 @@
+<!--
+ * col-page 通用组件
+ *
+ * @path comm\effects\common-ui\src\components\col-page\col-page.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { ColPageProps } from './types';
 

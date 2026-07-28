@@ -1,3 +1,10 @@
+/**
+ * use-app-config 组合式函数
+ *
+ * @path comm\effects\hooks\src\use-app-config.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type {
   ApplicationConfig,
   YDSZAdminProAppConfigRaw,

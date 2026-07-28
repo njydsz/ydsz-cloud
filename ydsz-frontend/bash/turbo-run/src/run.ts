@@ -1,3 +1,10 @@
+/**
+ * run 模块
+ *
+ * @path bash\turbo-run\src\run.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { execaCommand, getPackages } from '@ydsz/node-utils';
 
 import { cancel, isCancel, select } from '@clack/prompts';

@@ -1,3 +1,10 @@
+<!--
+ * icon-403 Vue 组件
+ *
+ * @path comm\effects\common-ui\src\ui\fallback\icons\icon-403.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <template>
   <svg
     height="659.29778"

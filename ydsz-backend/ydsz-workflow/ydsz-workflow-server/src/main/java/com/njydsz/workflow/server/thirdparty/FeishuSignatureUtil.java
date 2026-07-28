@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
  * <p>算法：SHA256(timestamp + nonce + encrypt + appSecret)，结果以十六进制小写编码后与回调签名比对。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public final class FeishuSignatureUtil {
 

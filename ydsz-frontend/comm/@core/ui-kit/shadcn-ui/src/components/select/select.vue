@@ -1,3 +1,10 @@
+<!--
+ * select 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\select\select.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import { CircleX } from '@ydsz-core/icons';
 

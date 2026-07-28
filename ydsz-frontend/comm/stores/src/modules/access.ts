@@ -1,3 +1,10 @@
+/**
+ * access Pinia 状态管理
+ *
+ * @path comm\stores\src\modules\access.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteRecordRaw } from 'vue-router';
 
 import type { MenuRecordRaw } from '@ydsz-core/typings';

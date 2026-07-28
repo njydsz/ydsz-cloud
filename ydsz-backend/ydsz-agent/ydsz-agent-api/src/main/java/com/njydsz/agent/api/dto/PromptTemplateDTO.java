@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
  * @param description  模板描述
  * @param createdAt    创建时间
  * @since 1.0.0
+ * @author ydsz-team
  */
 public record PromptTemplateDTO(
     Long id,

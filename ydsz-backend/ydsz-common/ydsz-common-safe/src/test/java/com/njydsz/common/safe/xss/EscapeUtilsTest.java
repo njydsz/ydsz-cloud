@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link EscapeUtils} 单元测试
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 class EscapeUtilsTest {
 

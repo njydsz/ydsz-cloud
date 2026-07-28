@@ -32,6 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @see ExcelReader
  * @see WriteMetadata
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class ReadMetadata {
 

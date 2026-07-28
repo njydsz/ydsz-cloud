@@ -52,6 +52,7 @@ import reactor.core.publisher.Mono;
  * 两者互补：内部用户用 JWT，外部系统用 API Key。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Slf4j
 @Component

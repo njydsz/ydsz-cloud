@@ -23,6 +23,7 @@ import com.njydsz.common.web.config.WebTraceProperties;
  * @author ydsz-team
  * @see BaseRequestIdResponseFilter
  * @see TracerUtils
+ * @since 1.0.0
  */
 public class TraceIdResponseFilter extends BaseRequestIdResponseFilter {
 

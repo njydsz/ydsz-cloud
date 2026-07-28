@@ -1,3 +1,10 @@
+/**
+ * index 组合式函数
+ *
+ * @path comm\@core\composables\src\use-simple-locale\index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Locale } from './messages';
 
 import { computed, ref } from 'vue';

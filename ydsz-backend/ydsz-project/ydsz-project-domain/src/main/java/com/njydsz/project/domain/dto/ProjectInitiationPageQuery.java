@@ -1,6 +1,6 @@
 package com.njydsz.project.domain.dto;
 
-import com.njydsz.common.core.request.PageRequest;
+import com.njydsz.common.domain.query.PageQuery;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ProjectInitiationPageQuery extends PageRequest {
+public class ProjectInitiationPageQuery extends PageQuery {
 
     private String projectCode;
     private String projectName;

@@ -1,3 +1,10 @@
+<!--
+ * popover 通用组件
+ *
+ * @path comm\@core\ui-kit\shadcn-ui\src\components\popover\popover.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type {
   PopoverContentProps,

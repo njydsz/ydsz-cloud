@@ -1,3 +1,10 @@
+<!--
+ * count-to 通用组件
+ *
+ * @path comm\effects\common-ui\src\components\count-to\count-to.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script lang="ts" setup>
 import type { CountToProps } from './types';
 

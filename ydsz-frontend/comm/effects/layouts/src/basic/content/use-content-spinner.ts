@@ -1,3 +1,10 @@
+/**
+ * use-content-spinner 模块
+ *
+ * @path comm\effects\layouts\src\basic\content\use-content-spinner.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 

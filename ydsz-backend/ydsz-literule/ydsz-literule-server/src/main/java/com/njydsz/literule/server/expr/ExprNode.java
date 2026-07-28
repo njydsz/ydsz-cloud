@@ -31,6 +31,14 @@ import java.util.Map;
 
 // ===== AST 节点接口 =====
 
+/**
+ * ExprNode 接口，定义模块契约。
+ *
+ * <p>所属包：{@code com.njydsz.literule.server.expr.liteexpr}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 sealed interface ExprNode permits
         LiteralNode, VariableNode, BinaryOpNode, UnaryOpNode,
         TernaryNode, FunctionCallNode, MemberAccessNode,

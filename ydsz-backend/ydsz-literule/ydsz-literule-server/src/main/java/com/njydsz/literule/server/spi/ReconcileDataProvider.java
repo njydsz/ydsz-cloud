@@ -11,6 +11,7 @@ import java.util.List;
  * literule 模块通过此接口反转 Mapper 依赖。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 public interface ReconcileDataProvider {
 

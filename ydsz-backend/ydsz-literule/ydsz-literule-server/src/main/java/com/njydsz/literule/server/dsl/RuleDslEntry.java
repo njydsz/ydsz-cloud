@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
  * <p>字段命名采用 snake_case（YAML 惯例），解析器会自动映射到 Definition 的 camelCase 字段。
  *
  * @since 1.0.0
+ * @author ydsz-team
  */
 @Data
 @Builder

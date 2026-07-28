@@ -1,3 +1,10 @@
+<!--
+ * preferences-drawer 布局组件
+ *
+ * @path comm\effects\layouts\src\widgets\preferences\preferences-drawer.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { SupportedLanguagesType } from '@ydsz/locales';
 import type {

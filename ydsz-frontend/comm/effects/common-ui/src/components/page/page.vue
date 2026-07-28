@@ -1,3 +1,10 @@
+<!--
+ * page 通用组件
+ *
+ * @path comm\effects\common-ui\src\components\page\page.vue
+ * @author ydsz-team
+ * @since 1.0.0
+-->
 <script setup lang="ts">
 import type { StyleValue } from 'vue';
 

@@ -1,3 +1,10 @@
+/**
+ * subapps 路由模块
+ *
+ * @path main\src\router\routes\modules\subapps.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RouteRecordRaw } from 'vue-router';
 
 const SubAppContainer = () => import('#/views/_core/subapp/index.vue');

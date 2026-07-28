@@ -57,6 +57,14 @@ import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 
+/**
+ * SuperFastExcelWriter 类。
+ *
+ * <p>所属包：{@code com.njydsz.common.excel.core.writer}
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class SuperFastExcelWriter {
 
     private static final Logger log = LoggerFactory.getLogger(SuperFastExcelWriter.class);
