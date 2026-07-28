@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.njydsz.literule.domain.vo.CEPHitVO;
+import com.njydsz.literule.domain.vo.CEPPatternVO;
 import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -131,7 +133,7 @@ public class CEPController {
         if (engine == null) {
             return BaseResponse.error("CEP 引擎未启用");
         }
-        return BaseResponse.success(engine.listPatterns());
+        return BaseResponse.success(LiteruleConverter.INSTANT.cepPatternListToVO(engine.listPatterns()));
     }
 
     /**
