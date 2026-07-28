@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.RateInternalVO;
 import com.njydsz.project.domain.dto.post.RateInternalPostDTO;
 import com.njydsz.project.domain.dto.put.RateInternalPutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 内部费率（Internal Rate）Controller
@@ -101,6 +102,7 @@ public class RateInternalController {
      * @param dto 费率创建入参（dimension / dimensionValue / costRate / effectiveFrom 等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:RateInternalController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create RateInternal")
     public BaseResponse<Boolean> save(@RequestBody RateInternalPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -113,6 +115,7 @@ public class RateInternalController {
      * @param dto 费率更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:RateInternalController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update RateInternal")
     public BaseResponse<Boolean> update(@RequestBody RateInternalPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -126,6 +129,7 @@ public class RateInternalController {
      * @param id 费率主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:RateInternalController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete RateInternal")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

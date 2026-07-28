@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectProfitSnapshotVO;
 import com.njydsz.project.domain.dto.put.ProjectProfitSnapshotPutDTO;
 import com.njydsz.project.domain.dto.post.ProjectProfitSnapshotPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目利润快照 Controller。
@@ -127,6 +128,7 @@ public class ProjectProfitSnapshotController {
      * @param dto 利润快照创建入参（项目 ID、快照日期、收入、成本等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectProfitSnapshotController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectProfitSnapshot")
     public BaseResponse<Boolean> save(@RequestBody ProjectProfitSnapshotPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -140,6 +142,7 @@ public class ProjectProfitSnapshotController {
      * @param dto 利润快照更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectProfitSnapshotController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectProfitSnapshot")
     public BaseResponse<Boolean> update(@RequestBody ProjectProfitSnapshotPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -152,6 +155,7 @@ public class ProjectProfitSnapshotController {
      * @param id 利润快照主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectProfitSnapshotController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectProfitSnapshot")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

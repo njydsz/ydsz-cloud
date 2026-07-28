@@ -22,6 +22,9 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 任务配置历史版本 Controller（P1-6 任务版本管理）。
@@ -96,6 +99,7 @@ public class JobHistoryController {
     @Idempotent(key = "ydsz:cronjob:JobHistoryController:rollback:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.jobhistory.rollback", threshold = 50)
     @PostMapping("/rollback")
+    @Audit(module = "任务历史", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'rollback'")
     public BaseResponse<JobVO> rollback(@RequestParam String jobId,
                                    @RequestParam Integer version) {
         return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobHistoryService.rollback(jobId, version)));

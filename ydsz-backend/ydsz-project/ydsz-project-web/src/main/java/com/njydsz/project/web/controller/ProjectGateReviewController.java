@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectGateReviewVO;
 import com.njydsz.project.domain.dto.put.ProjectGateReviewPutDTO;
 import com.njydsz.project.domain.dto.post.ProjectGateReviewPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 门径评审（Gate Review）Controller
@@ -93,6 +94,7 @@ public class ProjectGateReviewController {
      * @param dto 评审记录创建入参（项目 ID、阶段、评审人清单、材料文件 ID 列表等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectGateReviewController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectGateReview")
     public BaseResponse<Boolean> save(@RequestBody ProjectGateReviewPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -105,6 +107,7 @@ public class ProjectGateReviewController {
      * @param dto 评审记录更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectGateReviewController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectGateReview")
     public BaseResponse<Boolean> update(@RequestBody ProjectGateReviewPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -117,6 +120,7 @@ public class ProjectGateReviewController {
      * @param id 评审记录主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectGateReviewController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectGateReview")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

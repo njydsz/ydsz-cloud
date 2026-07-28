@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectBudgetItemVO;
 import com.njydsz.project.domain.dto.put.ProjectBudgetItemPutDTO;
 import com.njydsz.project.domain.dto.post.ProjectBudgetItemPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 立项预算明细 Controller。
@@ -132,6 +133,7 @@ public class ProjectBudgetItemController {
      * @param dto 预算明细创建入参（项目 ID、预算类别、金额、责任人等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectBudgetItemController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectBudgetItem")
     public BaseResponse<Boolean> save(@RequestBody ProjectBudgetItemPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -145,6 +147,7 @@ public class ProjectBudgetItemController {
      * @param dto 预算明细更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectBudgetItemController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectBudgetItem")
     public BaseResponse<Boolean> update(@RequestBody ProjectBudgetItemPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -157,6 +160,7 @@ public class ProjectBudgetItemController {
      * @param id 预算明细主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectBudgetItemController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectBudgetItem")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

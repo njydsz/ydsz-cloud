@@ -17,6 +17,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * DAG 工作流实例运行时控制 Controller（P1-4）。
@@ -89,6 +92,7 @@ public class DagInstanceControlController {
     @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:pause:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.daginstancecontrol.pause", threshold = 50)
     @PostMapping("/{instanceId}/pause")
+    @Audit(module = "DAG实例控制", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'pause'")
     public BaseResponse<Boolean> pause(@PathVariable String instanceId) {
         log.info("[DagInstanceControl] 暂停 DAG 实例: instanceId={}", instanceId);
         boolean success = dagInstanceControlService.pause(instanceId);
@@ -109,6 +113,7 @@ public class DagInstanceControlController {
     @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:resume:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.daginstancecontrol.resume", threshold = 50)
     @PostMapping("/{instanceId}/resume")
+    @Audit(module = "DAG实例控制", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'resume'")
     public BaseResponse<Boolean> resume(@PathVariable String instanceId) {
         log.info("[DagInstanceControl] 恢复 DAG 实例: instanceId={}", instanceId);
         boolean success = dagInstanceControlService.resume(instanceId);
@@ -130,6 +135,7 @@ public class DagInstanceControlController {
     @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:cancel:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.daginstancecontrol.cancel", threshold = 50)
     @PostMapping("/{instanceId}/cancel")
+    @Audit(module = "DAG实例控制", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'cancel'")
     public BaseResponse<Boolean> cancel(@PathVariable String instanceId) {
         log.info("[DagInstanceControl] 取消 DAG 实例: instanceId={}", instanceId);
         boolean success = dagInstanceControlService.cancel(instanceId);
@@ -151,6 +157,7 @@ public class DagInstanceControlController {
     @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:retryNode:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.daginstancecontrol.retryNode", threshold = 50)
     @PostMapping("/{instanceId}/retryNode")
+    @Audit(module = "DAG实例控制", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'retryNode'")
     public BaseResponse<Boolean> retryNode(@PathVariable String instanceId,
                                       @RequestParam String jobKey) {
         log.info("[DagInstanceControl] 重试节点: instanceId={} jobKey={}", instanceId, jobKey);

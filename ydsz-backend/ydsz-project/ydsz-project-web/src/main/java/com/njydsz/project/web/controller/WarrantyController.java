@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.WarrantyVO;
 import com.njydsz.project.domain.dto.post.WarrantyPostDTO;
 import com.njydsz.project.domain.dto.put.WarrantyPutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 质保（Warranty）Controller
@@ -103,6 +104,7 @@ public class WarrantyController {
      * @param dto 质保记录创建入参（项目 ID / 合同 ID / 质保期起止日期 / 响应 SLA）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:WarrantyController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create Warranty")
     public BaseResponse<Boolean> save(@RequestBody WarrantyPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -115,6 +117,7 @@ public class WarrantyController {
      * @param dto 质保记录更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:WarrantyController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update Warranty")
     public BaseResponse<Boolean> update(@RequestBody WarrantyPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -128,6 +131,7 @@ public class WarrantyController {
      * @param id 质保记录主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:WarrantyController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete Warranty")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

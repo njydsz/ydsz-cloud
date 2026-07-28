@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ExecutionDeliveryItemVO;
 import com.njydsz.project.domain.dto.put.ExecutionDeliveryItemPutDTO;
 import com.njydsz.project.domain.dto.post.ExecutionDeliveryItemPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 交付项 Controller
@@ -81,6 +82,7 @@ public class ExecutionDeliveryItemController {
      * @param dto 交付项创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionDeliveryItemController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionDeliveryItem")
     public BaseResponse<Boolean> save(@RequestBody ExecutionDeliveryItemPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -91,6 +93,7 @@ public class ExecutionDeliveryItemController {
      * @param dto 交付项更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionDeliveryItemController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionDeliveryItem")
     public BaseResponse<Boolean> update(@RequestBody ExecutionDeliveryItemPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -101,6 +104,7 @@ public class ExecutionDeliveryItemController {
      * @param id 交付项主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionDeliveryItemController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionDeliveryItem")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

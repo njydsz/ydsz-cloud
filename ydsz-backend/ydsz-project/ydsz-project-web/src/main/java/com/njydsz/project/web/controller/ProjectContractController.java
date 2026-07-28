@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectContractVO;
 import com.njydsz.project.domain.dto.post.ProjectContractPostDTO;
 import com.njydsz.project.domain.dto.put.ProjectContractPutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目合同 Controller。
@@ -131,6 +132,7 @@ public class ProjectContractController {
      * @param dto 合同创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectContractController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectContract")
     public BaseResponse<Boolean> save(@RequestBody ProjectContractPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -144,6 +146,7 @@ public class ProjectContractController {
      * @param dto 合同更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectContractController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectContract")
     public BaseResponse<Boolean> update(@RequestBody ProjectContractPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -157,6 +160,7 @@ public class ProjectContractController {
      * @param id 合同主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectContractController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectContract")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

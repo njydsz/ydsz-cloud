@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectRevenueVO;
 import com.njydsz.project.domain.dto.post.ProjectRevenuePostDTO;
 import com.njydsz.project.domain.dto.put.ProjectRevenuePutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目收入 Controller
@@ -59,6 +60,7 @@ public class ProjectRevenueController {
      * @param dto 收入创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectRevenueController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectRevenue")
     public BaseResponse<Boolean> save(@RequestBody ProjectRevenuePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -69,6 +71,7 @@ public class ProjectRevenueController {
      * @param dto 收入更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectRevenueController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectRevenue")
     public BaseResponse<Boolean> update(@RequestBody ProjectRevenuePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -79,6 +82,7 @@ public class ProjectRevenueController {
      * @param id 收入主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectRevenueController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectRevenue")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

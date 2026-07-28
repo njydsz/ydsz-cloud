@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.CostAllocationVO;
 import com.njydsz.project.domain.dto.post.CostAllocationPostDTO;
 import com.njydsz.project.domain.dto.put.CostAllocationPutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 成本分摊 Controller。
@@ -137,6 +138,7 @@ public class CostAllocationController {
      * @param dto 分摊记录创建入参（项目 ID、期间、成本类别、金额等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:CostAllocationController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create CostAllocation")
     public BaseResponse<Boolean> save(@RequestBody CostAllocationPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -149,6 +151,7 @@ public class CostAllocationController {
      * @param dto 分摊记录更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:CostAllocationController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update CostAllocation")
     public BaseResponse<Boolean> update(@RequestBody CostAllocationPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -161,6 +164,7 @@ public class CostAllocationController {
      * @param id 分摊记录主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:CostAllocationController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete CostAllocation")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectCustomerCreditVO;
 import com.njydsz.project.domain.dto.put.ProjectCustomerCreditPutDTO;
 import com.njydsz.project.domain.dto.post.ProjectCustomerCreditPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 客户授信 Controller
@@ -82,6 +83,7 @@ public class ProjectCustomerCreditController {
      * @param dto 授信创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectCustomerCreditController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectCustomerCredit")
     public BaseResponse<Boolean> save(@RequestBody ProjectCustomerCreditPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -92,6 +94,7 @@ public class ProjectCustomerCreditController {
      * @param dto 授信更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectCustomerCreditController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectCustomerCredit")
     public BaseResponse<Boolean> update(@RequestBody ProjectCustomerCreditPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -102,6 +105,7 @@ public class ProjectCustomerCreditController {
      * @param id 授信主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectCustomerCreditController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectCustomerCredit")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.EvmMeasureVO;
 import com.njydsz.project.domain.dto.post.EvmMeasurePostDTO;
 import com.njydsz.project.domain.dto.put.EvmMeasurePutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * EVM 挣值测量 Controller。
@@ -140,6 +141,7 @@ public class EvmMeasureController {
      * @param dto 测量记录创建入参（项目 ID、测量周期、BAC 预算等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:EvmMeasureController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create EvmMeasure")
     public BaseResponse<Boolean> save(@RequestBody EvmMeasurePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -152,6 +154,7 @@ public class EvmMeasureController {
      * @param dto 测量记录更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:EvmMeasureController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update EvmMeasure")
     public BaseResponse<Boolean> update(@RequestBody EvmMeasurePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -164,6 +167,7 @@ public class EvmMeasureController {
      * @param id 测量记录主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:EvmMeasureController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete EvmMeasure")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

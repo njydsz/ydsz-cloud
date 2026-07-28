@@ -44,3 +44,7 @@ export {
 export {
   createSharedAuthStore,
 } from './auth-store';
+
+export {
+  setupSharedAuth,
+} from './setup-shared-auth';

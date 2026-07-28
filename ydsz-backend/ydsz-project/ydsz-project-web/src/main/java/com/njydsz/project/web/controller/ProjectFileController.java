@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.FileStorageVO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目附件文件管理 Controller
@@ -87,6 +88,7 @@ public class ProjectFileController {
      * @return 文件存储信息（含对象名、ETag、大小等元数据）
      */
     @Operation(summary = "上传项目附件")
+    @Idempotent(key = "ydsz:project:ProjectFileController:upload:lock", ttlSeconds = 5)
     @PostMapping("/upload")
     public BaseResponse<FileStorageVO> upload(
             @RequestParam String projectId,
@@ -146,6 +148,7 @@ public class ProjectFileController {
      * @return 操作结果
      */
     @Operation(summary = "删除项目附件")
+    @Idempotent(key = "ydsz:project:ProjectFileController:delete:lock", ttlSeconds = 5)
     @DeleteMapping("/{objectName}")
     public BaseResponse<String> delete(@PathVariable String objectName) {
         IFileStorage storage = getStorage();

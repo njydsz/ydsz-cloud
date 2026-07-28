@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ExecutionRiskVO;
 import com.njydsz.project.domain.dto.put.ExecutionRiskPutDTO;
 import com.njydsz.project.domain.dto.post.ExecutionRiskPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 执行风险 Controller
@@ -80,6 +81,7 @@ public class ExecutionRiskController {
      * @param dto 风险记录创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionRiskController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionRisk")
     public BaseResponse<Boolean> save(@RequestBody ExecutionRiskPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -90,6 +92,7 @@ public class ExecutionRiskController {
      * @param dto 风险记录更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionRiskController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionRisk")
     public BaseResponse<Boolean> update(@RequestBody ExecutionRiskPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -100,6 +103,7 @@ public class ExecutionRiskController {
      * @param id 风险记录主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionRiskController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionRisk")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

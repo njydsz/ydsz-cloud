@@ -22,6 +22,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 内部任务执行接口 Controller（P1-4 远程派发接收端）。
@@ -95,6 +98,7 @@ public class InternalJobController {
     @RateLimit(resource = "cronjob.internaljob.execute", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:InternalJobController:execute:lock", ttlSeconds = 5)
     @PostMapping("/execute")
+    @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'execute'")
     public BaseResponse<String> execute(@RequestBody RemoteTaskRequest request) {
         if (request == null || request.getJob() == null) {
             log.warn("[InternalJob] 远程派发请求参数为空");
@@ -152,6 +156,7 @@ public class InternalJobController {
     @RateLimit(resource = "cronjob.internaljob.executeSubTask", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:InternalJobController:executeSubTask:lock", ttlSeconds = 5)
     @PostMapping("/executeSubTask")
+    @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'executeSubTask'")
     public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {
             log.warn("[InternalJob] 子任务请求参数为空");

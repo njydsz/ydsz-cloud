@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ExecutionWbsTaskVO;
 import com.njydsz.project.domain.dto.put.ExecutionWbsTaskPutDTO;
 import com.njydsz.project.domain.dto.post.ExecutionWbsTaskPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * WBS 任务 Controller。
@@ -137,6 +138,7 @@ public class ExecutionWbsTaskController {
      * @param dto 任务创建入参（项目 ID、父任务 ID、负责人、起止日期、依赖任务等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionWbsTaskController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionWbsTask")
     public BaseResponse<Boolean> save(@RequestBody ExecutionWbsTaskPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -150,6 +152,7 @@ public class ExecutionWbsTaskController {
      * @param dto 任务更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionWbsTaskController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionWbsTask")
     public BaseResponse<Boolean> update(@RequestBody ExecutionWbsTaskPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -163,6 +166,7 @@ public class ExecutionWbsTaskController {
      * @param id 任务主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionWbsTaskController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionWbsTask")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

@@ -29,6 +29,9 @@ import com.njydsz.cronjob.domain.dto.post.ConnectorConfigPostDTO;
 import com.njydsz.cronjob.domain.vo.ConnectorExportResultVO;
 import com.njydsz.cronjob.domain.vo.ConnectorTaskInfoVO;
 import com.njydsz.cronjob.domain.vo.StringVO;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 生态连接器 Controller（P2-3）。
@@ -88,6 +91,7 @@ public class ConnectorController {
     @RateLimit(resource = "cronjob.connector.testConnection", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:testConnection:lock", ttlSeconds = 5)
     @PostMapping("/test")
+    @Audit(module = "连接器管理", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'testConnection'")
     public BaseResponse<Boolean> testConnection(@RequestBody ConnectorConfigPostDTO dto,
                                            @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
@@ -161,6 +165,7 @@ public class ConnectorController {
     @RateLimit(resource = "cronjob.connector.exportTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:exportTasks:lock", ttlSeconds = 5)
     @PostMapping("/export")
+    @Audit(module = "连接器管理", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'exportTasks'")
     public BaseResponse<ConnectorExportResultVO> exportTasks(@RequestBody ExportRequest request) {
         JobConnector connector = connectorManager.getConnector(request.getType());
         if (connector == null) {

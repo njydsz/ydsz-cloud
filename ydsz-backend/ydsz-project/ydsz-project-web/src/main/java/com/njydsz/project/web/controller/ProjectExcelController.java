@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目立项 Excel 导入导出 Controller。
@@ -84,6 +85,7 @@ public class ProjectExcelController {
      * @return 导入结果
      */
     @Operation(summary = "导入项目立项数据")
+    @Idempotent(key = "ydsz:project:ProjectExcelController:onData:lock", ttlSeconds = 5)
     @PostMapping("/import")
     public BaseResponse<String> importExcel(@RequestParam("file") MultipartFile file) {
         if (file == null || file.isEmpty()) {

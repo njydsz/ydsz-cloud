@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.SatisfactionVO;
 import com.njydsz.project.domain.dto.put.SatisfactionPutDTO;
 import com.njydsz.project.domain.dto.post.SatisfactionPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 客户满意度评价 Controller
@@ -109,6 +110,7 @@ public class SatisfactionController {
      * @param dto 评价创建入参（项目 ID / 评价时机 / 各维度评分 / 评语 / 是否匿名）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:SatisfactionController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create Satisfaction")
     public BaseResponse<Boolean> save(@RequestBody SatisfactionPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -121,6 +123,7 @@ public class SatisfactionController {
      * @param dto 评价更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:SatisfactionController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update Satisfaction")
     public BaseResponse<Boolean> update(@RequestBody SatisfactionPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -133,6 +136,7 @@ public class SatisfactionController {
      * @param id 评价主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:SatisfactionController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete Satisfaction")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

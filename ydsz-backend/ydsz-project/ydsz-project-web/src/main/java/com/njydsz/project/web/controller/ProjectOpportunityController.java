@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectOpportunityVO;
 import com.njydsz.project.domain.dto.put.ProjectOpportunityPutDTO;
 import com.njydsz.project.domain.dto.post.ProjectOpportunityPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目商机（销售机会）Controller
@@ -103,6 +104,7 @@ public class ProjectOpportunityController {
      * @param dto 商机创建入参（客户 ID、预计金额、预计签约日期、阶段等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectOpportunityController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectOpportunity")
     public BaseResponse<Boolean> save(@RequestBody ProjectOpportunityPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -115,6 +117,7 @@ public class ProjectOpportunityController {
      * @param dto 商机更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectOpportunityController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectOpportunity")
     public BaseResponse<Boolean> update(@RequestBody ProjectOpportunityPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -127,6 +130,7 @@ public class ProjectOpportunityController {
      * @param id 商机主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectOpportunityController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectOpportunity")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

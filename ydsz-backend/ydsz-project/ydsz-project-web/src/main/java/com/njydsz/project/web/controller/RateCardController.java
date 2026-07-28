@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.RateCardVO;
 import com.njydsz.project.domain.dto.put.RateCardPutDTO;
 import com.njydsz.project.domain.dto.post.RateCardPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 费率卡（Rate Card）Controller
@@ -108,6 +109,7 @@ public class RateCardController {
      * @param dto 费率卡创建入参（role / level / dailyRate / hourlyRate / effectiveFrom 等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:RateCardController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create RateCard")
     public BaseResponse<Boolean> save(@RequestBody RateCardPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -121,6 +123,7 @@ public class RateCardController {
      * @param dto 费率卡更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:RateCardController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update RateCard")
     public BaseResponse<Boolean> update(@RequestBody RateCardPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -134,6 +137,7 @@ public class RateCardController {
      * @param id 费率卡主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:RateCardController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete RateCard")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

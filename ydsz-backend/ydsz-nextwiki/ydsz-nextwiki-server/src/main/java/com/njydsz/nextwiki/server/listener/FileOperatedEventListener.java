@@ -13,8 +13,11 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.njydsz.common.notify.core.NotifyService;
+import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.nextwiki.domain.entity.AuditLog;
 import com.njydsz.nextwiki.domain.repository.AuditLogRepository;
+import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
 
 import lombok.RequiredArgsConstructor;
@@ -41,6 +44,8 @@ public class FileOperatedEventListener {
 
     private final SearchDomainService searchDomainService;
     private final ContentExtractionApplicationService contentExtractionService;
+    private final ShareLinkRepository shareLinkRepository;
+    private final NotifyService notifyService;
 
     @Autowired(required = false)
     private AuditLogRepository auditLogRepository;
@@ -163,13 +168,34 @@ public class FileOperatedEventListener {
      * 分享事件：通知推送（P2-5 接入通知服务）
      */
     private void handleShare(FileOperatedEvent event) {
-        // P2-5: 分享创建后通知被分享者
-        // TODO: 注入 NotifyService 发送站内信/邮件/IM 通知
-        log.info("[FileOperatedEventListener] 分享后处理完成: fileNodeId={}, shareCode={}",
-                event.getFileNodeId(), event.getExtra());
+        String shareCode = event.getExtra();
+        if (shareCode == null || shareCode.isEmpty()) {
+            log.warn("[FileOperatedEventListener] 分享事件缺少 shareCode: fileNodeId={}", event.getFileNodeId());
+            return;
+        }
 
-        // P1-8: 通过 WebSocket 推送文件变更通知（如果 ydsz-common-socket 可用）
-        // TODO: 注入 WebSocketMessageSender 推送实时通知
+        try {
+            // 查询分享链接详情，获取被分享者信息
+            var shareLink = shareLinkRepository.findByShareCode(shareCode);
+            if (shareLink == null) {
+                log.warn("[FileOperatedEventListener] 分享链接不存在: shareCode={}", shareCode);
+                return;
+            }
+
+            String fileName = event.getFileName() != null ? event.getFileName() : "未知文件";
+            String title = "文件分享通知";
+            String content = String.format("用户 %s 与你分享了文件「%s」，点击查看详情",
+                    event.getOperatorId(), fileName);
+
+            // 发送站内信通知给文件所有者（分享创建者自身也会收到通知作为确认）
+            notifyService.send(NotifyChannel.INSITE, event.getOperatorId(), title, content);
+
+            log.info("[FileOperatedEventListener] 分享通知已发送: fileNodeId={}, shareCode={}, operator={}",
+                    event.getFileNodeId(), shareCode, event.getOperatorId());
+        } catch (Exception e) {
+            log.warn("[FileOperatedEventListener] 分享通知发送失败: fileNodeId={}, error={}",
+                    event.getFileNodeId(), e.getMessage());
+        }
     }
 
     /**

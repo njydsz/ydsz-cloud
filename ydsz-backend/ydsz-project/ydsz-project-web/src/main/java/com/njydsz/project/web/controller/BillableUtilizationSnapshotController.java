@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.BillableUtilizationSnapshotVO;
 import com.njydsz.project.domain.dto.post.BillableUtilizationSnapshotPostDTO;
 import com.njydsz.project.domain.dto.put.BillableUtilizationSnapshotPutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 可计费利用率快照 Controller
@@ -81,6 +82,7 @@ public class BillableUtilizationSnapshotController {
      * @param dto 快照创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:BillableUtilizationSnapshotController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create BillableUtilizationSnapshot")
     public BaseResponse<Boolean> save(@RequestBody BillableUtilizationSnapshotPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -91,6 +93,7 @@ public class BillableUtilizationSnapshotController {
      * @param dto 快照更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:BillableUtilizationSnapshotController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update BillableUtilizationSnapshot")
     public BaseResponse<Boolean> update(@RequestBody BillableUtilizationSnapshotPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -101,6 +104,7 @@ public class BillableUtilizationSnapshotController {
      * @param id 快照主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:BillableUtilizationSnapshotController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete BillableUtilizationSnapshot")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

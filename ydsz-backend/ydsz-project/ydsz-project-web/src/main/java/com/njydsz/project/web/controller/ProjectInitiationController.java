@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectInitiationVO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目立项 Controller
@@ -121,6 +122,7 @@ public class ProjectInitiationController {
      * @param dto 项目立项创建入参
      * @return 创建后的项目 ID
      */
+    @Idempotent(key = "ydsz:project:ProjectInitiationController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action = AuditAction.CREATE, module = "PROJECT", content= "创建项目立项")
     public BaseResponse<String> save(@Valid @RequestBody ProjectInitiationPostDTO dto) {
@@ -133,6 +135,7 @@ public class ProjectInitiationController {
      * @param dto 项目立项更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectInitiationController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action = AuditAction.UPDATE, module = "PROJECT", content= "更新项目立项")
     public BaseResponse<Boolean> update(@Valid @RequestBody ProjectInitiationPutDTO dto) {
@@ -145,6 +148,7 @@ public class ProjectInitiationController {
      * @param id 项目主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectInitiationController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action = AuditAction.DELETE, module = "PROJECT", content= "删除项目立项")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
@@ -159,6 +163,7 @@ public class ProjectInitiationController {
      * @param gate  门径评审阶段（可选）
      * @return 是否推进成功
      */
+    @Idempotent(key = "ydsz:project:ProjectInitiationController:advanceStage:lock", ttlSeconds = 5)
     @PutMapping("/{id}/stage")
     @Audit(action = AuditAction.UPDATE, module = "PROJECT", content= "推进项目阶段")
     public BaseResponse<Boolean> advanceStage(@PathVariable String id,

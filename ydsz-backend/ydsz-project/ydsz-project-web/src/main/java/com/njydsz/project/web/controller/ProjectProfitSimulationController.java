@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectProfitSimulationVO;
 import com.njydsz.project.domain.dto.post.ProjectProfitSimulationPostDTO;
 import com.njydsz.project.domain.dto.put.ProjectProfitSimulationPutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 利润模拟 Controller
@@ -59,6 +60,7 @@ public class ProjectProfitSimulationController {
      * @param dto 利润模拟创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectProfitSimulationController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectProfitSimulation")
     public BaseResponse<Boolean> save(@RequestBody ProjectProfitSimulationPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -69,6 +71,7 @@ public class ProjectProfitSimulationController {
      * @param dto 利润模拟更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectProfitSimulationController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectProfitSimulation")
     public BaseResponse<Boolean> update(@RequestBody ProjectProfitSimulationPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -79,6 +82,7 @@ public class ProjectProfitSimulationController {
      * @param id 利润模拟主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectProfitSimulationController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectProfitSimulation")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.OpsTicketVO;
 import com.njydsz.project.domain.dto.post.OpsTicketPostDTO;
 import com.njydsz.project.domain.dto.put.OpsTicketPutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 运维工单 Controller
@@ -81,6 +82,7 @@ public class OpsTicketController {
      * @param dto 工单创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:OpsTicketController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create OpsTicket")
     public BaseResponse<Boolean> save(@RequestBody OpsTicketPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -91,6 +93,7 @@ public class OpsTicketController {
      * @param dto 工单更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:OpsTicketController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update OpsTicket")
     public BaseResponse<Boolean> update(@RequestBody OpsTicketPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -101,6 +104,7 @@ public class OpsTicketController {
      * @param id 工单主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:OpsTicketController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete OpsTicket")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

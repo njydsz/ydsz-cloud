@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectPaymentVO;
 import com.njydsz.project.domain.dto.post.ProjectPaymentPostDTO;
 import com.njydsz.project.domain.dto.put.ProjectPaymentPutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目回款 Controller
@@ -103,6 +104,7 @@ public class ProjectPaymentController {
      * @param dto 回款创建入参（项目 ID、合同 ID、金额、到账日期、银行流水号等）
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ProjectPaymentController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectPayment")
     public BaseResponse<Boolean> save(@RequestBody ProjectPaymentPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -116,6 +118,7 @@ public class ProjectPaymentController {
      * @param dto 回款更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ProjectPaymentController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectPayment")
     public BaseResponse<Boolean> update(@RequestBody ProjectPaymentPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -129,6 +132,7 @@ public class ProjectPaymentController {
      * @param id 回款主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ProjectPaymentController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectPayment")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

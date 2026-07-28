@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ExecutionClosureVO;
 import com.njydsz.project.domain.dto.post.ExecutionClosurePostDTO;
 import com.njydsz.project.domain.dto.put.ExecutionClosurePutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 项目结项 Controller
@@ -82,6 +83,7 @@ public class ExecutionClosureController {
      * @param dto 结项记录创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionClosureController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionClosure")
     public BaseResponse<Boolean> save(@RequestBody ExecutionClosurePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -92,6 +94,7 @@ public class ExecutionClosureController {
      * @param dto 结项记录更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionClosureController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionClosure")
     public BaseResponse<Boolean> update(@RequestBody ExecutionClosurePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -102,6 +105,7 @@ public class ExecutionClosureController {
      * @param id 结项记录主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:ExecutionClosureController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionClosure")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

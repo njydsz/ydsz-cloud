@@ -18,6 +18,9 @@ import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 认证 Controller
@@ -65,6 +68,8 @@ public class AuthController {
      * @param request 登录请求（含 username / password / captchaKey / captchaCode / tenantId）
      * @return 登录结果（accessToken / refreshToken / expiresIn / userInfo）
      */
+    @Audit(module = "认证管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'用户登录: ' + #request.username")
     @RateLimit(resource = "userinfo.auth.login", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:AuthController:login:lock", ttlSeconds = 5)
     @PostMapping("/login")
@@ -84,6 +89,8 @@ public class AuthController {
      * @param token Authorization 请求头（Bearer xxx 或裸 token）
      * @return 成功响应（无业务数据）
      */
+    @Audit(module = "认证管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'用户登出'")
     @PostMapping("/logout")
     @Operation(summary = "用户登出", description = "将 access_token 加入黑名单")
     public BaseResponse<Void> logout(@RequestHeader("Authorization") String token) {
@@ -104,6 +111,8 @@ public class AuthController {
      * @param request 刷新请求（含 refreshToken 字段）
      * @return 新的登录结果（accessToken / refreshToken / expiresIn / userInfo）
      */
+    @Audit(module = "认证管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'刷新Token'")
     @RateLimit(resource = "userinfo.auth.refresh", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:AuthController:refresh:lock", ttlSeconds = 5)
     @PostMapping("/refresh")

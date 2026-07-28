@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.AlertDispatchVO;
 import com.njydsz.project.domain.dto.put.AlertDispatchPutDTO;
 import com.njydsz.project.domain.dto.post.AlertDispatchPostDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 告警派发 Controller
@@ -84,6 +85,7 @@ public class AlertDispatchController {
      * @param dto 派发记录创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:AlertDispatchController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create AlertDispatch")
     public BaseResponse<Boolean> save(@RequestBody AlertDispatchPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -94,6 +96,7 @@ public class AlertDispatchController {
      * @param dto 派发记录更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:AlertDispatchController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update AlertDispatch")
     public BaseResponse<Boolean> update(@RequestBody AlertDispatchPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -104,6 +107,7 @@ public class AlertDispatchController {
      * @param id 派发记录主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:AlertDispatchController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete AlertDispatch")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

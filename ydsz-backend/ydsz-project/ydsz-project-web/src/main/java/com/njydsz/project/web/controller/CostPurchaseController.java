@@ -15,6 +15,7 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.CostPurchaseVO;
 import com.njydsz.project.domain.dto.post.CostPurchasePostDTO;
 import com.njydsz.project.domain.dto.put.CostPurchasePutDTO;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 采购成本 Controller
@@ -79,6 +80,7 @@ public class CostPurchaseController {
      * @param dto 采购成本创建入参
      * @return 是否创建成功
      */
+    @Idempotent(key = "ydsz:project:CostPurchaseController:save:lock", ttlSeconds = 5)
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create CostPurchase")
     public BaseResponse<Boolean> save(@RequestBody CostPurchasePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
@@ -89,6 +91,7 @@ public class CostPurchaseController {
      * @param dto 采购成本更新入参
      * @return 是否更新成功
      */
+    @Idempotent(key = "ydsz:project:CostPurchaseController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update CostPurchase")
     public BaseResponse<Boolean> update(@RequestBody CostPurchasePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
@@ -99,6 +102,7 @@ public class CostPurchaseController {
      * @param id 采购成本主键 ID
      * @return 是否删除成功
      */
+    @Idempotent(key = "ydsz:project:CostPurchaseController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete CostPurchase")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

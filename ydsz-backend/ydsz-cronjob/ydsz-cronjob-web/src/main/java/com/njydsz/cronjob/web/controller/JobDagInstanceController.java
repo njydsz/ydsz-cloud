@@ -21,6 +21,9 @@ import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.DagInstanceVisualizationVOVO;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * DAG 工作流实例 Controller（P2 DAG 增强）。
@@ -150,6 +153,7 @@ public class JobDagInstanceController {
     @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:pauseInstance:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.jobdaginstance.pauseInstance", threshold = 50)
     @PutMapping("/{instanceId}/pause")
+    @Audit(module = "DAG实例控制", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'pauseInstance'")
     public BaseResponse<Void> pauseInstance(@PathVariable String instanceId) {
         jobDagInstanceService.pauseInstance(instanceId);
         return BaseResponse.success();
@@ -169,6 +173,7 @@ public class JobDagInstanceController {
     @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:resumeInstance:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.jobdaginstance.resumeInstance", threshold = 50)
     @PutMapping("/{instanceId}/resume")
+    @Audit(module = "DAG实例控制", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'resumeInstance'")
     public BaseResponse<Void> resumeInstance(@PathVariable String instanceId) {
         jobDagInstanceService.resumeInstance(instanceId);
         return BaseResponse.success();
@@ -188,6 +193,7 @@ public class JobDagInstanceController {
     @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:cancelInstance:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.jobdaginstance.cancelInstance", threshold = 50)
     @PutMapping("/{instanceId}/cancel")
+    @Audit(module = "DAG实例控制", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'cancelInstance'")
     public BaseResponse<Void> cancelInstance(@PathVariable String instanceId) {
         jobDagInstanceService.cancelInstance(instanceId);
         return BaseResponse.success();
@@ -208,6 +214,7 @@ public class JobDagInstanceController {
     @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:updateContext:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.jobdaginstance.updateContext", threshold = 50)
     @PutMapping("/{instanceId}/context")
+    @Audit(module = "DAG实例控制", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'updateContext'")
     public BaseResponse<Void> updateContext(@PathVariable String instanceId, @RequestBody String contextJson) {
         jobDagInstanceService.updateContext(instanceId, contextJson);
         return BaseResponse.success();
