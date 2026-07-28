@@ -1,5 +1,6 @@
 /**
- * preferences 模块
+ * 应用偏好配置覆盖
+ * <p>覆盖 @ydsz/preferences 框架默认值，设置 ydsz-literule 子应用的默认首页路径、侧边栏等配置。
  *
  * @path apps\literule-web\src\preferences.ts
  * @author ydsz-team

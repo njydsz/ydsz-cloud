@@ -1,5 +1,5 @@
 <!--
- * rule-form 表单页面组件
+ * 规则定义编辑表单组件
  *
  * @path apps\literule-web\src\views\rule\rule-form.vue
  * @author ydsz-team

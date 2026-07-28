@@ -1,5 +1,5 @@
 <!--
- * preference-form 表单页面组件
+ * 消息偏好设置表单组件
  *
  * @path apps\message-web\src\views\preference\preference-form.vue
  * @author ydsz-team

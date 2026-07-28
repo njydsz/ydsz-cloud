@@ -1,5 +1,7 @@
 /**
- * form 适配器模块
+ * Element Plus 表单适配器
+ * <p>将 ydsz-common-ui 的表单 Schema 适配为 Element Plus ElForm 组件格式。
+ * <p>供 ydsz-form / ydsz-modal / ydsz-drawer 内嵌表单使用。
  *
  * @path apps\workflow-web\src\adapter\form.ts
  * @author ydsz-team

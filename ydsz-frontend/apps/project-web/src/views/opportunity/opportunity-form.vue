@@ -1,5 +1,5 @@
 <!--
- * opportunity-form 表单页面组件
+ * 销售商机（表单组件）
  *
  * @path apps\project-web\src\views\opportunity\opportunity-form.vue
  * @author ydsz-team

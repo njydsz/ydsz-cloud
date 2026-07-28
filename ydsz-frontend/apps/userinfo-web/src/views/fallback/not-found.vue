@@ -1,5 +1,5 @@
 <!--
- * not-found 页面组件
+ * 404 兜底页面 — 路由未匹配时展示的默认错误页
  *
  * @path apps\userinfo-web\src\views\fallback\not-found.vue
  * @author ydsz-team

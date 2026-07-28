@@ -1,5 +1,5 @@
 <!--
- * revenue-form 表单页面组件
+ * 项目回款（表单组件）
  *
  * @path apps\project-web\src\views\revenue\revenue-form.vue
  * @author ydsz-team

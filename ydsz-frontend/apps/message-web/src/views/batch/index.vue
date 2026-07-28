@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 消息批量发送列表页组件
  *
  * @path apps\message-web\src\views\batch\index.vue
  * @author ydsz-team

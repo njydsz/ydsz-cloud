@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 流程委托（列表页）
  *
  * @path apps\workflow-web\src\views\delegate\index.vue
  * @author ydsz-team

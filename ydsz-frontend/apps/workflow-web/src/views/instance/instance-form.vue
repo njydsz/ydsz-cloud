@@ -1,5 +1,5 @@
 <!--
- * instance-form 表单页面组件
+ * 流程实例（表单组件）
  *
  * @path apps\workflow-web\src\views\instance\instance-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 项目费用（列表页）
  *
  * @path apps\project-web\src\views\expense\index.vue
  * @author ydsz-team

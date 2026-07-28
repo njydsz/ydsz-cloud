@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 站内通知列表页组件
  *
  * @path apps\message-web\src\views\notification\index.vue
  * @author ydsz-team

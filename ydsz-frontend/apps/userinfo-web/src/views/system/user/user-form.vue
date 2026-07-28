@@ -1,5 +1,5 @@
 <!--
- * user-form 表单页面组件
+ * 用户账号表单组件 — 支持新增/编辑用户信息（账号、姓名、部门、手机号）
  *
  * @path apps\userinfo-web\src\views\system\user\user-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * not-found 页面组件
+ * 404 兜底页面
  *
  * @path apps\literule-web\src\views\fallback\not-found.vue
  * @author ydsz-team

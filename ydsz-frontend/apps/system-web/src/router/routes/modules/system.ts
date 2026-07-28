@@ -1,5 +1,5 @@
 /**
- * system 路由模块
+ * 系统管理路由模块 — 定义系统配置、字典管理、变量管理、应用注册等子路由
  *
  * @path apps\system-web\src\router\routes\modules\system.ts
  * @author ydsz-team

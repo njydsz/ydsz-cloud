@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 规则审计日志查询列表页面
  *
  * @path apps\literule-web\src\views\auditLog\index.vue
  * @author ydsz-team

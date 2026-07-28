@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 应用管理页面 — 应用注册的分页列表、搜索、新增、编辑、删除
  *
  * @path apps\system-web\src\views\app\index.vue
  * @author ydsz-team

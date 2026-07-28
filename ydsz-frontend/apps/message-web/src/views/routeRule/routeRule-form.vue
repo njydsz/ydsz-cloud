@@ -1,5 +1,5 @@
 <!--
- * routeRule-form 表单页面组件
+ * 消息路由规则表单组件
  *
  * @path apps\message-web\src\views\routeRule\routeRule-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * post-form 表单页面组件
+ * 岗位表单组件 — 支持新增/编辑岗位信息（岗位编码、名称、排序）
  *
  * @path apps\userinfo-web\src\views\system\post\post-form.vue
  * @author ydsz-team

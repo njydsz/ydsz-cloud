@@ -1,8 +1,8 @@
 /**
- * 流程模板 API 模块（前端）
- * <p>封装流程模板（{@code ydsz_flow_definition}）CRUD 接口，对应后端 {@code /api/v1/workflow/template/*} 端点。
- * <p>支持 BPMN 2.0 标准、可视化设计、版本管理、灰度发布。
- * <p>供「工作流 → 流程模板」使用。
+ * 消息模板 API 模块（前端）
+ * <p>封装消息模板（{@code ydsz_message_template}）CRUD 接口，对应后端 {@code /api/v1/message/template/*} 端点。
+ * <p>支持多渠道（站内/邮件/短信/企微/钉钉/飞书）模板管理、变量替换、状态控制。
+ * <p>供「消息中心 → 模板管理」使用。
  *
  * @author ydsz-team
  * @since 1.0.0

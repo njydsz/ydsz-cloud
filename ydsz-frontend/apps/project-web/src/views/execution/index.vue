@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 项目执行跟踪（列表页）
  *
  * @path apps\project-web\src\views\execution\index.vue
  * @author ydsz-team

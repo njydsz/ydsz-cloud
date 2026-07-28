@@ -1,5 +1,6 @@
 /**
- * workflow 路由模块
+ * 工作流业务路由模块
+ * <p>定义流程模板、流程任务、流程实例、流程委托、快捷回复、流程分类的路由配置。
  *
  * @path apps\workflow-web\src\router\routes\modules\workflow.ts
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * dsl-form 表单页面组件
+ * 规则 DSL 脚本编辑表单组件
  *
  * @path apps\literule-web\src\views\dsl\dsl-form.vue
  * @author ydsz-team

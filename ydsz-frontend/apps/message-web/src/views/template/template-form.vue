@@ -1,5 +1,5 @@
 <!--
- * template-form 表单页面组件
+ * 消息模板表单组件
  *
  * @path apps\message-web\src\views\template\template-form.vue
  * @author ydsz-team
@@ -7,8 +7,8 @@
 -->
 <script lang="ts" setup>
 /**
- * 流程模板（表单组件）
- * <p>流程模板的创建/编辑表单，支持 BPMN 2.0 可视化设计。
+ * 消息模板（表单组件）
+ * <p>消息模板的创建/编辑表单，支持多渠道模板内容配置。
  *
  * @author ydsz-team
  * @since 1.0.0

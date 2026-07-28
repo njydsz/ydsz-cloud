@@ -1,5 +1,5 @@
 <!--
- * connector-form 表单页面组件
+ * 任务连接器（表单组件）
  *
  * @path apps\cronjob-web\src\views\connector\connector-form.vue
  * @author ydsz-team

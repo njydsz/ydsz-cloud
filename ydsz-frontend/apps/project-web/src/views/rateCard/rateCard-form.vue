@@ -1,5 +1,5 @@
 <!--
- * rateCard-form 表单页面组件
+ * 项目计费卡（表单组件）
  *
  * @path apps\project-web\src\views\rateCard\rateCard-form.vue
  * @author ydsz-team

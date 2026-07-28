@@ -1,5 +1,5 @@
 <!--
- * deadLetter-form 表单页面组件
+ * 死信队列详情组件
  *
  * @path apps\message-web\src\views\deadLetter\deadLetter-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * cep-form 表单页面组件
+ * 复杂事件处理规则编辑表单组件
  *
  * @path apps\literule-web\src\views\cep\cep-form.vue
  * @author ydsz-team

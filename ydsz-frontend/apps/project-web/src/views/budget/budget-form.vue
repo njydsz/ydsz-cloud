@@ -1,5 +1,5 @@
 <!--
- * budget-form 表单页面组件
+ * 项目预算（表单组件）
  *
  * @path apps\project-web\src\views\budget\budget-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 快捷回复（列表页）
  *
  * @path apps\workflow-web\src\views\quickComment\index.vue
  * @author ydsz-team

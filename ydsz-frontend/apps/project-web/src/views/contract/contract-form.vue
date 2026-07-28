@@ -1,5 +1,5 @@
 <!--
- * contract-form 表单页面组件
+ * 项目合同（表单组件）
  *
  * @path apps\project-web\src\views\contract\contract-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 国际化语言包管理页面 — 展示语言条目列表，支持新增/编辑/删除翻译
  *
  * @path apps\userinfo-web\src\views\system\language\index.vue
  * @author ydsz-team

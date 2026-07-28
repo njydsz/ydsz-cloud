@@ -1,5 +1,6 @@
 /**
- * preferences 模块
+ * 工作流子应用偏好设置
+ * <p>定义当前子应用的 preferences 覆盖项，包括布局、菜单、水印等。
  *
  * @path apps\workflow-web\src\preferences.ts
  * @author ydsz-team

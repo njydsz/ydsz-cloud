@@ -1,5 +1,5 @@
 /**
- * vxe-table 适配器模块
+ * YDSZ vxe-table 适配器 — 封装 vxe-table 插件的注册与全局渲染配置
  *
  * @path apps\userinfo-web\src\adapter\vxe-table.ts
  * @author ydsz-team

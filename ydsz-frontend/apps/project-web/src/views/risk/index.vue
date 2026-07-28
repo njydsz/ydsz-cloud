@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 项目风险（列表页）
  *
  * @path apps\project-web\src\views\risk\index.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 文件分享（列表页）
  *
  * @path apps\nextwiki-web\src\views\share\index.vue
  * @author ydsz-team

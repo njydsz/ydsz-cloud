@@ -1,5 +1,7 @@
 /**
- * vxe-table 适配器模块
+ * VXE-Table 表格适配器
+ * <p>封装工作流子应用的 VXE-Table 配置与通用列定义，提供 {@code useYDSZVxeGrid} 钩子。
+ * <p>供流程模板/任务/实例/委托等列表页统一使用。
  *
  * @path apps\workflow-web\src\adapter\vxe-table.ts
  * @author ydsz-team

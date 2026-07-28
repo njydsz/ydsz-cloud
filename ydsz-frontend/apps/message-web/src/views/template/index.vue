@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 消息模板列表页组件
  *
  * @path apps\message-web\src\views\template\index.vue
  * @author ydsz-team
@@ -7,8 +7,8 @@
 -->
 <script lang="ts" setup>
 /**
- * 流程模板（列表页）
- * <p>流程模板（{@code ydsz_flow_definition}）的列表页。
+ * 消息模板（列表页）
+ * <p>消息模板（{@code ydsz_message_template}）的列表页。
  *
  * @author ydsz-team
  * @since 1.0.0

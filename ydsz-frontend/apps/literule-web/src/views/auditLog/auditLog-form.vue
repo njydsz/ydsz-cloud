@@ -1,5 +1,5 @@
 <!--
- * auditLog-form 表单页面组件
+ * 规则审计日志详情查看组件
  *
  * @path apps\literule-web\src\views\auditLog\auditLog-form.vue
  * @author ydsz-team

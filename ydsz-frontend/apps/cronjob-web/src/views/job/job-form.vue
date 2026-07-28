@@ -1,5 +1,5 @@
 <!--
- * job-form 表单页面组件
+ * 定时任务（表单组件）
  *
  * @path apps\cronjob-web\src\views\job\job-form.vue
  * @author ydsz-team

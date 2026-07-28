@@ -1,6 +1,10 @@
 /**
- * 通用组件共同的使用的基础组件，原先放在 adapter/form 内部，限制了使用范围，这里提取出来，方便其他地方使用
- * 可用于 ydsz-form、ydsz-modal、ydsz-drawer 等组件使用,
+ * 通用组件适配器模块
+ * <p>提供 ydsz-form、ydsz-modal、ydsz-drawer 等组件共用的基础组件注册。
+ * <p>从 adapter/form 内部提取，解耦后可独立引用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 
 import type { Component } from 'vue';

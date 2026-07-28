@@ -1,5 +1,5 @@
 <!--
- * invoice-form 表单页面组件
+ * 项目发票（表单组件）
  *
  * @path apps\project-web\src\views\invoice\invoice-form.vue
  * @author ydsz-team

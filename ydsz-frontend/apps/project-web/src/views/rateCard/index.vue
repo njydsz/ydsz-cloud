@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 项目计费卡（列表页）
  *
  * @path apps\project-web\src\views\rateCard\index.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 销售商机（列表页）
  *
  * @path apps\project-web\src\views\opportunity\index.vue
  * @author ydsz-team

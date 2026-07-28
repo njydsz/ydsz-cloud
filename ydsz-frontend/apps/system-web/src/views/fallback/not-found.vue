@@ -1,5 +1,5 @@
 <!--
- * not-found 页面组件
+ * 404 兜底页面 — Vue Router 未匹配路由时显示
  *
  * @path apps\system-web\src\views\fallback\not-found.vue
  * @author ydsz-team

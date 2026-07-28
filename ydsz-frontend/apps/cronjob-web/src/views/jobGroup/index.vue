@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 任务分组（列表页）
  *
  * @path apps\cronjob-web\src\views\jobGroup\index.vue
  * @author ydsz-team

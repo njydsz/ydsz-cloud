@@ -1,5 +1,6 @@
 /**
- * literule 路由模块
+ * 规则引擎业务路由配置
+ * <p>定义规则管理、CEP、DSL、断点调试、审计日志等业务页面的路由表。
  *
  * @path apps\literule-web\src\router\routes\modules\literule.ts
  * @author ydsz-team

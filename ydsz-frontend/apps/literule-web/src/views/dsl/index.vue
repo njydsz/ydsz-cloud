@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 规则 DSL 脚本管理列表页面
  *
  * @path apps\literule-web\src\views\dsl\index.vue
  * @author ydsz-team

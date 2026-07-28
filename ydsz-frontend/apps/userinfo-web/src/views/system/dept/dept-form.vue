@@ -1,5 +1,5 @@
 <!--
- * dept-form 表单页面组件
+ * 部门表单组件 — 支持新增/编辑部门信息（部门名称、负责人、上级部门）
  *
  * @path apps\userinfo-web\src\views\system\dept\dept-form.vue
  * @author ydsz-team

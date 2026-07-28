@@ -1,5 +1,5 @@
 <!--
- * expense-form 表单页面组件
+ * 项目费用（表单组件）
  *
  * @path apps\project-web\src\views\expense\expense-form.vue
  * @author ydsz-team

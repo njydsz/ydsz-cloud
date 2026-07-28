@@ -1,5 +1,5 @@
 <!--
- * risk-form 表单页面组件
+ * 项目风险（表单组件）
  *
  * @path apps\project-web\src\views\risk\risk-form.vue
  * @author ydsz-team

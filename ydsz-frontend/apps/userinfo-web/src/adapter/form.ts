@@ -1,5 +1,5 @@
 /**
- * form 适配器模块
+ * YDSZ 表单适配器 — 封装 @ydsz/common-ui 表单组件的注册与配置
  *
  * @path apps\userinfo-web\src\adapter\form.ts
  * @author ydsz-team

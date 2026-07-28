@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * EVM 挣值管理（列表页）
  *
  * @path apps\project-web\src\views\evm\index.vue
  * @author ydsz-team

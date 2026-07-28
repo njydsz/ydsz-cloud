@@ -1,5 +1,5 @@
 <!--
- * tag-form 表单页面组件
+ * 文件标签（表单组件）
  *
  * @path apps\nextwiki-web\src\views\tag\tag-form.vue
  * @author ydsz-team

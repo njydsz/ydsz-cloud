@@ -1,5 +1,5 @@
 <!--
- * role-assign 页面组件
+ * 用户角色分配弹窗 — 为用户分配或取消分配角色
  *
  * @path apps\userinfo-web\src\views\system\user\role-assign.vue
  * @author ydsz-team

@@ -1,5 +1,6 @@
 /**
- * vxe-table 适配器模块
+ * vxe-table 表格组件适配器
+ * <p>封装 ydsz-literule 子应用的 vxe-table 全局配置，包括列渲染器（状态标签、图片预览等）和统一表格选项。
  *
  * @path apps\literule-web\src\adapter\vxe-table.ts
  * @author ydsz-team

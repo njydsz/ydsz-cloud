@@ -1,5 +1,5 @@
 <!--
- * notification-form 表单页面组件
+ * 站内通知详情组件
  *
  * @path apps\message-web\src\views\notification\notification-form.vue
  * @author ydsz-team

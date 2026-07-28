@@ -1,5 +1,5 @@
 <!--
- * evm-form 表单页面组件
+ * EVM 挣值管理（表单组件）
  *
  * @path apps\project-web\src\views\evm\evm-form.vue
  * @author ydsz-team

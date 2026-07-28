@@ -1,5 +1,5 @@
 <!--
- * variable-form 表单页面组件
+ * 系统变量编辑表单组件
  *
  * @path apps\literule-web\src\views\variable\variable-form.vue
  * @author ydsz-team

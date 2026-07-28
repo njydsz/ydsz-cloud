@@ -1,5 +1,5 @@
 <!--
- * jobGroup-form 表单页面组件
+ * 任务分组（表单组件）
  *
  * @path apps\cronjob-web\src\views\jobGroup\jobGroup-form.vue
  * @author ydsz-team

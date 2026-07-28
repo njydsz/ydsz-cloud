@@ -1,5 +1,5 @@
 <!--
- * template-form 表单页面组件
+ * 流程模板（表单组件）
  *
  * @path apps\workflow-web\src\views\template\template-form.vue
  * @author ydsz-team

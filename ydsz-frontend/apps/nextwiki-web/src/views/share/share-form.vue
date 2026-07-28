@@ -1,5 +1,5 @@
 <!--
- * share-form 表单页面组件
+ * 文件分享（表单组件）
  *
  * @path apps\nextwiki-web\src\views\share\share-form.vue
  * @author ydsz-team

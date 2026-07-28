@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 菜单管理页面 — 展示菜单树结构，支持新增/编辑/删除菜单项
  *
  * @path apps\userinfo-web\src\views\system\menu\index.vue
  * @author ydsz-team

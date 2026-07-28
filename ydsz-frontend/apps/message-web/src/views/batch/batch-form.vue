@@ -1,5 +1,5 @@
 <!--
- * batch-form 表单页面组件
+ * 消息批量发送表单组件
  *
  * @path apps\message-web\src\views\batch\batch-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * basic 布局组件
+ * 基础布局组件（顶部导航 + 侧边栏 + 内容区）
  *
  * @path apps\nextwiki-web\src\layouts\basic.vue
  * @author ydsz-team

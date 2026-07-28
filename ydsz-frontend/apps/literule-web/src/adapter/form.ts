@@ -1,5 +1,6 @@
 /**
- * form 适配器模块
+ * 表单组件适配器
+ * <p>封装 ydsz-literule 子应用的表单全局配置，统一表单 Schema 类型、校验规则和组件映射。
  *
  * @path apps\literule-web\src\adapter\form.ts
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * delegate-form 表单页面组件
+ * 流程委托（表单组件）
  *
  * @path apps\workflow-web\src\views\delegate\delegate-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * role-form 表单页面组件
+ * 角色表单组件 — 支持新增/编辑角色信息及权限分配
  *
  * @path apps\userinfo-web\src\views\system\role\role-form.vue
  * @author ydsz-team

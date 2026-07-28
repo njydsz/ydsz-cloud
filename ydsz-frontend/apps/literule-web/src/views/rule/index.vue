@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 规则定义管理列表页面
  *
  * @path apps\literule-web\src\views\rule\index.vue
  * @author ydsz-team

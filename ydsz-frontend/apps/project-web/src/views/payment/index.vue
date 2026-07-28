@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 项目付款（列表页）
  *
  * @path apps\project-web\src\views\payment\index.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 /**
- * preferences 模块
+ * 用户中心应用偏好配置 — 定义侧边栏、主题、水印等默认设置
  *
  * @path apps\userinfo-web\src\preferences.ts
  * @author ydsz-team

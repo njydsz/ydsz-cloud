@@ -1,6 +1,7 @@
 /**
- * 通用组件共同的使用的基础组件，原先放在 adapter/form 内部，限制了使用范围，这里提取出来，方便其他地方使用
- * 可用于 ydsz-form、ydsz-modal、ydsz-drawer 等组件使用,
+ * 通用基础组件注册表
+ * <p>注册工作流子应用共用的基础组件映射（Select、DatePicker、Upload 等）。
+ * <p>供 ydsz-form、ydsz-modal、ydsz-drawer 等组件解析 Schema 时使用。
  */
 
 import type { Component } from 'vue';

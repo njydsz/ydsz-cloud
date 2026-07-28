@@ -4,14 +4,18 @@
 # 用于自动化检查项目架构规范的执行情况
 #
 # 检查项：
-# 1. 重复工具类检查（禁止业务模块自定义 Helper/Utils/Util）
-# 2. 常量管理检查（禁止业务模块自定义常量类）
-# 3. NameAssembler 使用规范检查
-# 4. 事件驱动架构规范检查
-# 5. Excel 导出标准化检查
-# 6. 前端通用组件使用检查
-# 7. 缓存名称一致性检查（禁止硬编码缓存名，必须使用 CacheConstants）
-# 8. Feign Client 熔断规范检查（禁止缺少 FallbackFactory）
+# 1.  重复工具类检查（禁止业务模块自定义 Helper/Utils/Util）
+# 2.  常量管理检查（禁止业务模块自定义常量类）
+# 3.  NameAssembler 使用规范检查
+# 4.  事件驱动架构规范检查
+# 5.  Excel 导出标准化检查
+# 6.  前端通用组件使用检查
+# 7.  缓存名称一致性检查（禁止硬编码缓存名，必须使用 CacheConstants）
+# 8.  Feign Client 熔断规范检查（禁止缺少 FallbackFactory）
+# 9.  公共 JSON 工具复用检查（禁止业务模块直接 new ObjectMapper/Gson）
+# 10. 业务模块自定义异常处理器检查（禁止业务模块自定义 @RestControllerAdvice）
+# 11. 跨模块数据库访问检查（禁止业务模块 Mapper 引用其他模块的表）
+# 12. 公共能力绕过检查（检测业务模块直接使用 RedisTemplate）
 #
 # 使用方式：
 #   ./check-architecture-compliance.sh [--strict]
@@ -300,6 +304,158 @@ if [[ -n "$FEIGN_WITHOUT_FALLBACK" ]]; then
   log_warning "建议：为每个 @FeignClient 添加 fallbackFactory 参数，指向对应的 FallbackFactory 实现类"
 else
   log_success "所有 Feign Client 均已配置 fallbackFactory"
+fi
+
+# ==========================================
+# 9. 公共 JSON 工具复用检查（禁止业务模块直接 new ObjectMapper/Gson）
+# ==========================================
+log_info "检查项 9/12: 公共 JSON 工具复用检查"
+
+DIRECT_JSON_INIT=$(grep -rn 'new ObjectMapper()\|new Gson()\|new FastJson' \
+  "$BACKEND_ROOT/ydsz-"*/src/main/java \
+  --include="*.java" \
+  | grep -v "ydsz-common-json" \
+  | grep -v "/target/" \
+  | grep -v "/test/" || true)
+
+if [[ -n "$DIRECT_JSON_INIT" ]]; then
+  log_error "发现业务模块直接实例化 ObjectMapper/Gson/FastJson（应使用 YdszJson）："
+  echo "$DIRECT_JSON_INIT" | while read -r line; do
+    echo "  - $line"
+  done
+  log_warning "建议：使用 com.njydsz.common.json.YdszJson.toJson() / fromJson()"
+else
+  log_success "未发现直接实例化 JSON 工具的代码"
+fi
+
+# ==========================================
+# 10. 业务模块自定义 @RestControllerAdvice 检查
+# ==========================================
+log_info "检查项 10/12: 业务模块自定义异常处理器检查"
+
+CUSTOM_ADVICE=$(grep -rn '@RestControllerAdvice\|@ControllerAdvice' \
+  "$BACKEND_ROOT/ydsz-"*/src/main/java \
+  --include="*.java" \
+  | grep -v "ydsz-common-web" \
+  | grep -v "ydsz-common-exception" \
+  | grep -v "ydsz-common-app" \
+  | grep -v "ydsz-common-safe" \
+  | grep -v "ydsz-common-jdbc" \
+  | grep -v "/target/" \
+  | grep -v "/test/" || true)
+
+if [[ -n "$CUSTOM_ADVICE" ]]; then
+  log_error "发现业务模块自定义 @RestControllerAdvice/@ControllerAdvice（应使用 common-web 的 GlobalResponseAdvice）："
+  echo "$CUSTOM_ADVICE" | while read -r line; do
+    echo "  - $line"
+  done
+  log_warning "建议：删除业务模块的自定义异常处理器，统一使用 ydsz-common-web 的 GlobalResponseAdvice"
+else
+  log_success "业务模块未自定义异常处理器"
+fi
+
+# ==========================================
+# 11. 跨模块数据库访问检查（禁止业务模块 Mapper 引用其他模块的表）
+# ==========================================
+log_info "检查项 11/12: 跨模块数据库访问检查"
+
+# 检查业务模块的 Mapper XML 或注解中是否引用了其他模块的表前缀
+# 各模块合法表前缀映射
+declare -A MODULE_TABLES
+MODULE_TABLES["ydsz-workflow"]="ydsz_flow_"
+MODULE_TABLES["ydsz-project"]="ydsz_execution_|ydsz_cost_|ydsz_profit_|ydsz_finance_|ydsz_evm_|ydsz_ops_|ydsz_satisfaction_|ydsz_billable_|ydsz_rule_execution_|ydsz_rule_decision_|ydsz_rule_canary_|ydsz_rule_scorecard_|ydsz_rule_decision_tree|ydsz_rule_script|ydsz_rule_ab_"
+MODULE_TABLES["ydsz-userinfo"]="ydsz_user_|ydsz_role_|ydsz_menu_|ydsz_dept_|ydsz_post_|ydsz_job_level|ydsz_dict_"
+MODULE_TABLES["ydsz-system"]="ydsz_operation_log|ydsz_login_audit|ydsz_data_export|ydsz_sensitive_op|ydsz_file|ydsz_config|ydsz_tenant|ydsz_report_sub|ydsz_export_record|ydsz_meta_schema|ydsz_dict_version"
+MODULE_TABLES["ydsz-message"]="ydsz_msg_|ydsz_notify_|ydsz_template_|ydsz_channel_"
+MODULE_TABLES["ydsz-cronjob"]="ydsz_job_|ydsz_job_log|ydsz_job_level|ydsz_job_level_rate"
+MODULE_TABLES["ydsz-literule"]="ydsz_rule_def|ydsz_rule_version|ydsz_rule_template|ydsz_rule_test|ydsz_rule_var|ydsz_rule_chain|ydsz_rule_dep|ydsz_rule_pack|ydsz_rule_node|ydsz_rule_event|ydsz_rule_log"
+MODULE_TABLES["ydsz-agent"]="ydsz_agent_"
+MODULE_TABLES["ydsz-nextwiki"]="ydsz_wiki_"
+
+# 简化检测：扫描各业务模块 Mapper 中的 @Select/@Update/@Insert/@Delete SQL 语句
+# 如果发现引用了不属于本模块的表前缀，则报告违规
+CROSS_MODULE_DB=""
+for module in "${!MODULE_TABLES[@]}"; do
+  module_path="$BACKEND_ROOT/$module"
+  if [[ ! -d "$module_path" ]]; then
+    continue
+  fi
+  allowed_prefixes="${MODULE_TABLES[$module]}"
+  # 查找该模块中所有 Mapper SQL 语句中引用的表名
+  MAPPER_SQLS=$(grep -rnE '@(Select|Update|Insert|Delete)\s*\(' \
+    "$module_path"/src/main/java \
+    --include="*.java" \
+    | grep -v "/target/" \
+    | grep -v "/test/" || true)
+  if [[ -n "$MAPPER_SQLS" ]]; then
+    # 检查是否引用了 ydsz_ 开头的表但不属于本模块
+    for other_module in "${!MODULE_TABLES[@]}"; do
+      if [[ "$other_module" == "$module" ]]; then
+        continue
+      fi
+      other_prefixes="${MODULE_TABLES[$other_module]}"
+      # 将允许的前缀转为 grep -E 模式
+      allowed_pattern=$(echo "$other_prefixes" | tr '|' '\n' | head -1)
+      # 简化：只检测明显跨模块引用（如 workflow 引用 ydsz_msg_ 表）
+      while IFS= read -r other_prefix; do
+        # 跳过自身模块允许的前缀
+        if echo "$allowed_prefixes" | grep -q "$other_prefix"; then
+          continue
+        fi
+        CROSS_REF=$(echo "$MAPPER_SQLS" | grep -i "from\s\+${other_prefix}\|into\s\+${other_prefix}\|update\s\+${other_prefix}\|join\s\+${other_prefix}" || true)
+        if [[ -n "$CROSS_REF" ]]; then
+          CROSS_MODULE_DB="${CROSS_MODULE_DB}\n${CROSS_REF}"
+        fi
+      done <<< "$(echo "$other_prefixes" | tr '|' '\n')"
+    done
+  fi
+done
+
+if [[ -n "$CROSS_MODULE_DB" ]]; then
+  log_error "发现跨模块数据库表访问（应通过 Feign Client 调用对方服务 API）："
+  echo -e "$CROSS_MODULE_DB" | head -10 | while read -r line; do
+    [[ -n "$line" ]] && echo "  - $line"
+  done
+  log_warning "建议：跨模块数据访问应通过 @FeignClient 接口调用，禁止直连其他模块的数据库表"
+else
+  log_success "未发现跨模块数据库表访问"
+fi
+
+# ==========================================
+# 12. 公共能力绕过检查（RedisTemplate/RedissonClient 直接注入业务模块）
+# ==========================================
+log_info "检查项 12/12: 公共能力绕过检查"
+
+# 检查业务模块是否直接注入 RedisTemplate（应使用 RedisService 或 Cache 接口）
+# 白名单：gateway 模块（网关层基础设施，合理使用）、literule（分布式数据结构，有特殊需求）
+DIRECT_REDISTEMPLATE=$(grep -rn 'RedisTemplate\|StringRedisTemplate' \
+  "$BACKEND_ROOT/ydsz-"*/src/main/java \
+  --include="*.java" \
+  | grep -v "ydsz-common-redis" \
+  | grep -v "ydsz-common-cache" \
+  | grep -v "ydsz-common-queue" \
+  | grep -v "ydsz-common-socket" \
+  | grep -v "ydsz-common-seata" \
+  | grep -v "ydsz-common-search" \
+  | grep -v "ydsz-common-safe" \
+  | grep -v "ydsz-common-notify" \
+  | grep -v "ydsz-common-auth" \
+  | grep -v "ydsz-common-file" \
+  | grep -v "ydsz-common-lock" \
+  | grep -v "ydsz-gateway" \
+  | grep -v "/target/" \
+  | grep -v "/test/" \
+  | grep -v "import " \
+  | grep -v "\* " || true)
+
+if [[ -n "$DIRECT_REDISTEMPLATE" ]]; then
+  log_warning "发现业务模块直接使用 RedisTemplate/StringRedisTemplate（建议使用 RedisService 或 Cache 接口）："
+  echo "$DIRECT_REDISTEMPLATE" | head -10 | while read -r line; do
+    echo "  - $line"
+  done
+  log_warning "建议：使用 ydsz-common-redis 的 RedisService 或 ydsz-common-cache 的 Cache 接口"
+else
+  log_success "业务模块未直接使用 RedisTemplate"
 fi
 
 # ==========================================

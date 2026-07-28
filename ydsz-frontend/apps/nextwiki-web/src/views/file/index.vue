@@ -1,5 +1,5 @@
 <!--
- * apps 列表/管理页面组件
+ * 文件节点（列表页）
  *
  * @path apps\nextwiki-web\src\views\file\index.vue
  * @author ydsz-team

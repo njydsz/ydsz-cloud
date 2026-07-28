@@ -1,5 +1,5 @@
 <!--
- * initiation-form 表单页面组件
+ * 项目立项（表单组件）
  *
  * @path apps\project-web\src\views\initiation\initiation-form.vue
  * @author ydsz-team
