@@ -52,6 +52,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-file</artifactId>
         </dependency>
+        <!-- P1-5: 统一文档处理（消息附件解析/PII检测） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-docs</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-notify</artifactId>

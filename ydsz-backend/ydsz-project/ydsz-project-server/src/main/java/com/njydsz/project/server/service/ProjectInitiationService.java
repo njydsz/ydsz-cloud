@@ -8,12 +8,26 @@ import com.njydsz.project.domain.dto.ProjectInitiationPageQuery;
 import com.njydsz.project.domain.vo.ProjectInitiationVO;
 
 /**
- * 项目立项 Application Service。
+ * 项目立项 Application Service
  *
- * <p>提供项目立项全生命周期管理能力，包括 CRUD、阶段推进、门审等。
+ * <p>提供项目立项全生命周期管理能力：CRUD、阶段推进、门审、项目编号生成等。
+ * 项目立项是项目运营管理（ydsz-project）模块的"入口业务"，立项完成后才能进入合同/执行/结算等后续阶段。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #getByCode} / {@link #page} / {@link #save} / {@link #update} / {@link #removeById}</li>
+ *   <li><b>阶段推进</b>：从立项申请 → 门审 → 立项完成</li>
+ *   <li><b>门审联动</b>：门审通过后自动流转项目状态</li>
+ *   <li><b>跨服务集成</b>：合同/计划/预算模块通过 {@code projectId} 关联</li>
+ * </ul>
+ *
+ * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.domain.entity.project.ProjectInitiation 立项实体
+ * @see ProjectContractService 合同 Service(立项后才能签合同)
  */
 public interface ProjectInitiationService {
 

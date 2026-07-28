@@ -98,6 +98,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-file</artifactId>
         </dependency>
+        <!-- P1-5: 统一文档处理（项目文档解析/转换/PII检测） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-docs</artifactId>
+        </dependency>
         <!-- P0-2: 跨模块 Feign 客户端（用户/部门名称解析、系统字典/配置查询） -->
         <dependency>
             <groupId>com.njydsz</groupId>
