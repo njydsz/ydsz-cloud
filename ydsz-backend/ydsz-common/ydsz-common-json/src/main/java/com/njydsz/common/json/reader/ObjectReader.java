@@ -22,10 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p><b>性能优化：</b></p>
  * <ul>
  *   <li>构造函数缓存+ 直接 MethodHandle 调用</li>
- *   <li>字段 setter 预计算，避免运行时查。</li>
+ *   <li>字段 setter 预计算，避免运行时查找</li>
  *   <li>类型代码分类，快速分发解析逻辑</li>
- *   <li>嵌套对象递归解析，支持任意深。</li>
- *   <li>集合/Map 完整支持，自动类型转。</li>
+ *   <li>嵌套对象递归解析，支持任意深度</li>
+ *   <li>集合/Map 完整支持，自动类型转换</li>
  * </ul>
  * 
  * @author ydsz-team
@@ -67,7 +67,7 @@ public final class ObjectReader<T> {
     }
     
     /**
-     * 获取可序列化字段（排。static/transient。
+     * 获取可序列化字段（排除 static/transient）
      */
     private Field[] getSerializableFields(Class<?> clazz) {
         Field[] allFields = clazz.getDeclaredFields();
@@ -122,7 +122,7 @@ public final class ObjectReader<T> {
                 reader.pos++;
             }
             
-            // 检查对象结。
+            // 检查对象结构
             if (reader.pos >= len) break;
             if (buf[reader.pos] == '}') {
                 reader.pos++;
@@ -171,7 +171,7 @@ public final class ObjectReader<T> {
     }
     
     /**
-     * 字段读取。
+     * 字段读取器
      */
     public static final class FieldReader {
         public final String fieldName;
@@ -297,7 +297,7 @@ public final class ObjectReader<T> {
                             ObjectReader<?> nestedReader = getOrCreateForType(targetType);
                             setter.invoke(target, nestedReader.readObject(reader));
                         } else {
-                            // 未知类型，跳。
+                            // 未知类型，跳过
                             reader.skipValue();
                         }
                         break;

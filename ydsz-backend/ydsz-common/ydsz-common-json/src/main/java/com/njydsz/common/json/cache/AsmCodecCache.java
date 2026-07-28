@@ -13,11 +13,11 @@ import com.njydsz.common.json.writer.JSONWriter;
 /**
  * ASM 序列化器/反序列化器缓存
  * 
- * <p>缓存 ASM 生成的专用序列化器和反序列化器，避免重复生成字节点/p>
+ * <p>缓存 ASM 生成的专用序列化器和反序列化器，避免重复生成字节码。</p>
  * 
  * <p><b>工作原理：</b></p>
  * <ul>
- *   <li>首次使用时为 Bean 类生成专用序列化。反序列化。</li>
+ *   <li>首次使用时为 Bean 类生成专用序列化器、反序列化器。</li>
  *   <li>生成后的类缓存在 ConcurrentHashMap 。</li>
  *   <li>后续使用直接从缓存获取，零开销</li>
  * </ul>
@@ -208,9 +208,9 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 获取或创。ASM 序列化器
+     * 获取或创建 ASM 序列化器
      *
-     * <p>优化：使用单。ConcurrentHashMap.get() 替代 containsKey() + get() 双次查找</p>
+     * <p>优化：使用单独的 ConcurrentHashMap.get() 替代 containsKey() + get() 双次查找</p>
      */
     
     public static <T> AsmSerializer<T> getOrCreateSerializer(Class<T> beanType) {
@@ -239,7 +239,7 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 获取或创。ASM 序列化器（非类型参数版本，接。Class<?>。
+     * 获取或创建 ASM 序列化器（非类型参数版本，接受 Class<?>）
      *
      * @param beanType Bean 类型
      * @return 序列化器实例，获取失败返回null
@@ -293,7 +293,7 @@ public final class AsmCodecCache {
      * <p>适用于集合元素同类型场景，避免重复查找序列化器，
      * 内部通过泛型辅助方法捕获通配符类型，避免调用。unchecked cast</p>
      *
-     * @param serializer 预解析的序列化器（可。AsmSerializer<?>。
+     * @param serializer 预解析的序列化器（可为 AsmSerializer<?>）
      * @param obj 要序列化的对。
      * @param writer JSON 写入。
      * @return 是否成功完成序列。
@@ -305,7 +305,7 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 泛型辅助方法：捕。AsmSerializer 的通配符类型，实现类型安全的序列化调用
+     * 泛型辅助方法：捕获 AsmSerializer 的通配符类型，实现类型安全的序列化调用
      *
      * <p>调用方通过此方法间接调用serializer.serialize()。
      * 。unchecked cast 隔离在此方法内部，避免在各调用点重复出现</p>
@@ -320,9 +320,9 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 获取或创。ASM 反序列化。
+     * 获取或创建 ASM 反序列化器。
      *
-     * <p>优化：使用单。ConcurrentHashMap.get() 替代 containsKey() + get() 双次查找</p>
+     * <p>优化：使用单独的 ConcurrentHashMap.get() 替代 containsKey() + get() 双次查找</p>
      */
     
     public static <T> AsmDeserializer<T> getOrCreateDeserializer(Class<T> beanType) {
@@ -386,7 +386,7 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 检查是否启。ASM 优化
+     * 检查是否启用 ASM 优化
      */
     public static boolean isEnabled() {
         return true;

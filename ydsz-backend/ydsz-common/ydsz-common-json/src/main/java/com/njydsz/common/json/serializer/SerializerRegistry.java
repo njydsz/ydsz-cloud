@@ -6,13 +6,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 
 /**
- * 自定义序列化器注册中。
+ * 自定义序列化器注册中心。
  *
- * <p>支持用户注册和管理自定义序列化器，实现类型Jackson Module 的扩展机制。/p>
+ * <p>支持用户注册和管理自定义序列化器，实现类似 Jackson Module 的扩展机制。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * // 注册自定义序列化。
+ * // 注册自定义序列化器
  * SerializerRegistry.getInstance().register(User.class, new CustomUserSerializer());
  *
  * // 获取序列化器
@@ -123,7 +123,7 @@ public final class SerializerRegistry {
      * 是否已注册序列化。
      *
      * @param type 目标类型
-     * @return 如果已注册返。true
+     * @return 如果已注册返回 true
      */
     public boolean hasSerializer(Class<?> type) {
         return serializers.containsKey(type);
@@ -133,7 +133,7 @@ public final class SerializerRegistry {
      * 是否已注册反序列化器
      *
      * @param type 目标类型
-     * @return 如果已注册返。true
+     * @return 如果已注册返回 true
      */
     public boolean hasDeserializer(Class<?> type) {
         return deserializers.containsKey(type);

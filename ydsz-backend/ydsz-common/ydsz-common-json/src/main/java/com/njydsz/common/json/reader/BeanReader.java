@@ -13,16 +13,16 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Bean 反序列化读取器（FastJSON2 BeanDeserializer 移植版）
  * 
- * <p>预计算字段读取路径，直接 char[] 解析，消。Map 中转，完整支持嵌套对象和集合</p>
+ * <p>预计算字段读取路径，直接 char[] 解析，消除 Map 中转，完整支持嵌套对象和集合</p>
  * 
  * <p><b>性能优化：</b></p>
  * <ul>
- *   <li>字段哈希缓存，O(1) 快速字段匹。</li>
+ *   <li>字段哈希缓存，O(1) 快速字段匹配</li>
  *   <li>数值直接解析，避免 Double.parseDouble</li>
  *   <li>构造函数缓存，避免重复反射</li>
  *   <li>消除不必要的 skipWhitespace 调用</li>
- *   <li>嵌套对象递归解析，支持任意深。</li>
- *   <li>集合/Map 完整支持，自动类型推。</li>
+ *   <li>嵌套对象递归解析，支持任意深度</li>
+ *   <li>集合/Map 完整支持，自动类型推断</li>
  * </ul>
  * 
  * @author ydsz-team
@@ -33,7 +33,7 @@ public final class BeanReader<T> {
     /** Bean 类型 */
     public final Class<T> beanType;
     
-    /** 字段读取器数。*/
+    /** 字段读取器数组*/
     public final FieldReader[] fieldReaders;
     
     /** 字段名哈希缓存*/
@@ -220,7 +220,7 @@ public final class BeanReader<T> {
                         }
                         break;
                     default:
-                        // 复杂类型（嵌套对象、集合等。
+                        // 复杂类型（嵌套对象、集合等）
                         if (reader.isNull()) {
                             reader.readNull();
                             field.set(obj, null);

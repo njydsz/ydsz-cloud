@@ -80,7 +80,7 @@ public final class ZeroCopyDeserializer {
     private static final ThreadLocal<LinkedHashMap<String, Object>> LINKED_HASH_MAP_POOL = ThreadLocal.withInitial(() -> new LinkedHashMap<>(64));
 
     /**
-     * 从池中获。ArrayList
+     * 从池中获取 ArrayList
      */
     private static ArrayList<Object> borrowArrayList() {
         ArrayList<Object> list = ARRAY_LIST_POOL.get();
@@ -96,7 +96,7 @@ public final class ZeroCopyDeserializer {
     }
 
     /**
-     * 从池中获。LinkedHashMap
+     * 从池中获取 LinkedHashMap
      */
     private static LinkedHashMap<String, Object> borrowLinkedHashMap() {
         LinkedHashMap<String, Object> map = LINKED_HASH_MAP_POOL.get();
