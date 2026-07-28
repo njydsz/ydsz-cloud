@@ -5,17 +5,30 @@ import com.njydsz.message.domain.dto.core.MessageFeedbackDTO;
 import com.njydsz.message.domain.entity.config.MsgFeedback;
 
 /**
- * P1-4: 消息质量反馈服务。
+ * 消息质量反馈 Service
  *
- * <p>用户可以对收到的消息进行评分和反馈，用于：
+ * <p>用户对收到的消息进行评分(1-5 星)和文字反馈,用于:
  * <ul>
- *   <li>评估消息推送质量（用户满意度）</li>
- *   <li>优化消息内容（基于反馈调整模板）</li>
- *   <li>智能防骚扰（用户多次差评后降低推送频率）</li>
+ *   <li><b>评估消息推送质量</b>：用户满意度分析</li>
+ *   <li><b>优化消息内容</b>：基于反馈调整模板</li>
+ *   <li><b>智能防骚扰</b>：用户多次差评后自动降频</li>
  * </ul>
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>提交反馈</b>：{@link #submitFeedback}</li>
+ *   <li><b>评分统计</b>：{@link #getAverageRating} / {@link #getAverageRatingByChannel}</li>
+ *   <li><b>分页查询</b>：{@link #pageFeedback}</li>
+ *   <li><b>降频判断</b>：{@link #shouldReduceFrequency} — 基于最近反馈评分判断是否需要降频</li>
+ * </ul>
+ *
+ * <p><b>降频阈值：</b>由 {@code ydsz.message.feedback.reduce-threshold} 配置,默认 3.0。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.entity.config.MsgFeedback 反馈实体
+ * @see RateLimitService 限流服务(降频会调整 rate-limit 阈值)
  */
 public interface MessageFeedbackService {
 

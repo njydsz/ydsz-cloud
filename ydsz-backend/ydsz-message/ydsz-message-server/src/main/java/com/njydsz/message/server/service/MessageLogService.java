@@ -7,10 +7,28 @@ import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.entity.core.MsgLog;
 
 /**
- * 消息发送日志服务
+ * 消息发送日志 Service
+ *
+ * <p>管理 {@code ydsz_msg_log}（消息发送日志）的查询、状态流转、重试、死信、重发。
+ * 是消息中心运维和可观测的"事实表"——所有发送最终都沉淀为日志,可按任意维度筛选分析。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>查询</b>：{@link #getById} / {@link #page} — 详情 + 分页</li>
+ *   <li><b>状态流转</b>：{@link #markRetry} / {@link #markDead} / {@link #updateReceipt} / {@link #markRecalled}</li>
+ *   <li><b>死信重发</b>：{@link #resendDead} — 手动将 DEAD 状态的日志重置并重新投递</li>
+ * </ul>
+ *
+ * <p><b>日志状态机：</b>{@code PENDING → SENDING → SUCCESS / FAILED → RETRY → SENDING → ... → DEAD}。
+ *
+ * <p><b>事务：</b>{@link #resendDead} 开启 {@code @Transactional(rollbackFor = Exception.class)},
+ * 重置后立即通过 {@code ChannelRouter} 重新投递。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.entity.core.MsgLog 消息日志实体
+ * @see MessageStatsService 消息统计服务
  */
 public interface MessageLogService {
 

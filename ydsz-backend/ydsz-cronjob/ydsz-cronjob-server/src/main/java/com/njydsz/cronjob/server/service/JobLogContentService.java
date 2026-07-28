@@ -5,10 +5,31 @@ import java.util.List;
 import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 
 /**
- * 任务日志内容 Service（P0-2 在线日志白屏化）。
+ * 任务执行日志内容 Service
+ *
+ * <p>实现"在线日志白屏化"——任务执行的每一行 stdout/stderr 单独存储,支持
+ * 实时推送(SSE)、分页查询、关键字搜索。前端无需登录服务器即可在线查看任务执行细节。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>写入</b>：{@link #batchSave} — 异步批量落库,避免频繁 IO</li>
+ *   <li><b>分页查询</b>：{@link #pageByLogId} — 详情页滚动加载</li>
+ *   <li><b>增量查询</b>：{@link #listAfterLine} — SSE 实时推送,只取新行</li>
+ *   <li><b>总行数</b>：{@link #countByLogId} — 详情页总条数</li>
+ *   <li><b>搜索</b>：{@link #searchByKeyword} — 大小写不敏感的关键字搜索</li>
+ * </ul>
+ *
+ * <p><b>存储：</b>日志行写入 {@code ydsz_job_log_content} 表,每行含
+ * {@code logId / lineNo / content / logTime} 字段。
+ *
+ * <p><b>SSE 协议：</b>前端订阅 {@code /cronjob/log/{logId}/stream},服务端每 1s 推送
+ * {@code listAfterLine(logId, lastLineNo)} 的新行,实现"实时滚动"效果。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.log.JobLogContent 日志行实体
+ * @see JobService 任务 Service(执行时调用 batchSave 记录输出)
  */
 public interface JobLogContentService {
 

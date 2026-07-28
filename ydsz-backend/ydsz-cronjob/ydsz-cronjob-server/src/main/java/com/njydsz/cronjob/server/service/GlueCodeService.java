@@ -6,14 +6,31 @@ import java.util.Map;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 
 /**
- * GLUE 在线编码服务（P1-2 GLUE 在线编码）。
+ * GLUE 在线编码 Service
  *
- * <p>提供 GLUE 代码的版本管理能力：保存新版本、查询最新版本、查询版本列表、
- * 按版本回滚。回滚操作本身会创建一个新版本（内容为目标版本代码），
- * 保留完整版本历史便于审计与再次回滚。
+ * <p>提供任务"在线写代码"能力——用户可在任务配置页面编写 GROOVY/PYTHON/SHELL/JAVASCRIPT 脚本
+ * 作为任务执行体,无需预编译发布。完整能力包括版本管理、在线测试、模板生成、版本对比与回滚。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>版本管理</b>：{@link #save} / {@link #listVersions} / {@link #getLatest} — 自动递增版本号</li>
+ *   <li><b>回滚</b>：{@link #rollback} — 创建新版本(内容=目标版本)而非物理回写,保留完整历史</li>
+ *   <li><b>在线测试</b>：{@link #testCode} — 内存中编译执行,带超时控制和异常捕获</li>
+ *   <li><b>代码模板</b>：{@link #getCodeTemplate} — 提供各语言的基础模板</li>
+ *   <li><b>版本对比</b>：{@link #diffVersions} — 返回两版本源代码和行级差异</li>
+ * </ul>
+ *
+ * <p><b>安全约束：</b>{@link #testCode} 通过 {@link com.njydsz.cronjob.server.glue.GlueExecutor}
+ * 在沙箱中执行,禁止访问文件系统/网络/危险类,超时强制中断(默认 10s)。
+ *
+ * <p><b>事务：</b>{@link #save} / {@link #rollback} 开启
+ * {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.schedule.GlueCode GLUE 代码实体
+ * @see JobService 任务主 Service(创建 GLUE 任务时调用 save)
  */
 public interface GlueCodeService {
 

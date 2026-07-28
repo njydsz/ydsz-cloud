@@ -8,12 +8,33 @@ import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
 
 /**
- * DAG 工作流定义服务接口（P2 DAG 增强）。
+ * DAG 工作流定义 Service
  *
- * <p>负责 DAG 定义的增删改查、状态流转（启用/禁用）以及手动触发。
+ * <p>负责 DAG(有向无环图)工作流定义的完整生命周期：CRUD、状态流转、版本管理、手动触发。
+ * DAG 用于表达"多个任务按依赖关系编排执行"的需求(任务 A 完成后才能执行任务 B,C 失败时跳过 D),
+ * 比单任务更适合复杂的业务编排场景。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #createDag} / {@link #updateDag} / {@link #deleteDag}</li>
+ *   <li><b>状态流转</b>：{@link #enableDag} / {@link #disableDag} — {@code DRAFT/DISABLED ↔ ENABLED}</li>
+ *   <li><b>查询</b>：{@link #getDagById} / {@link #getDagByKey} / {@link #listEnabledDags} / {@link #listCronEnabledDags}</li>
+ *   <li><b>手动触发</b>：{@link #triggerDag} — 立即执行并返回实例 ID</li>
+ *   <li><b>版本管理(P1-8)</b>：{@link #listDagVersions} / {@link #getDagVersion} / {@link #rollbackDagVersion}</li>
+ * </ul>
+ *
+ * <p><b>DAG 状态机：</b>{@code DRAFT → ENABLED ↔ DISABLED →(删除)→ DELETED(逻辑删除)}。
+ *
+ * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
+ *
+ * <p><b>关联模块：</b>DAG 节点引用 {@link JobService} 管理的任务,通过 {@code dagDefinition.nodes[].jobId} 关联。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.dag.JobDag DAG 定义实体
+ * @see com.njydsz.cronjob.domain.entity.dag.JobDagVersion DAG 版本实体
+ * @see JobDagInstanceService DAG 实例 Service
  */
 public interface JobDagService {
 

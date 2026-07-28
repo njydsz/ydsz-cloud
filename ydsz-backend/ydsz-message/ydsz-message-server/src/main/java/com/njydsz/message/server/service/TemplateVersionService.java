@@ -8,12 +8,27 @@ import com.njydsz.message.domain.dto.template.TemplateTestSendDTO;
 import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
 
 /**
- * 模板版本管理与可视化服务。
+ * 消息模板版本管理 Service
  *
- * <p>P1-6: 提供模板版本历史查询、版本回滚、模板预览（渲染参数）和模板试发功能。
+ * <p>提供模板的版本快照、回滚、可视化预览、试发能力。模板每次审核通过时记录一份版本快照
+ * 写入 {@code ydsz_msg_template_version},可随时回滚到任意历史版本。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>版本历史</b>：{@link #listVersions} — 按模板编码查询版本列表(降序)</li>
+ *   <li><b>版本快照</b>：{@link #recordVersion} — 审核通过/拒绝时记录当前快照</li>
+ *   <li><b>版本回滚</b>：{@link #rollbackToVersion} — 回滚到指定版本号的内容</li>
+ *   <li><b>预览</b>：{@link #preview} — 渲染模板(不实际发送)</li>
+ *   <li><b>试发</b>：{@link #testSend} — 真实发送一条给测试接收人</li>
+ * </ul>
+ *
+ * <p><b>对标钉钉/飞书开放平台：</b>提供与「消息模板预览 / 试发」相同的能力,方便模板编辑后即时验证效果。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.entity.template.MsgTemplateVersion 模板版本实体
+ * @see TemplateService 模板主 Service
  */
 public interface TemplateVersionService {
 

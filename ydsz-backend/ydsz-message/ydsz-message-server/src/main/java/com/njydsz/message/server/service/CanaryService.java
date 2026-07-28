@@ -7,10 +7,30 @@ import com.njydsz.message.domain.dto.canary.CanaryUpsertDTO;
 import com.njydsz.message.domain.entity.canary.MsgCanary;
 
 /**
- * 灰度桶服务
+ * 灰度桶 Service
+ *
+ * <p>实现"按灰度键+桶值 hash"将流量按比例分配到实验组的能力,常用于:
+ * <ul>
+ *   <li><b>新模板灰度</b>：同一 (canaryKey) 的少量用户先走新模板</li>
+ *   <li><b>新通道灰度</b>：少量用户先尝试新通道(如 PUSH)</li>
+ *   <li><b>AB 实验</b>：按 percentage 配置比例</li>
+ * </ul>
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #upsert} / {@link #page} / {@link #getByKey}</li>
+ *   <li><b>命中判断</b>：{@link #hit} — {@code hash(bucketValue) % 100 < percentage}</li>
+ *   <li><b>配置匹配</b>：{@link #matchConfig} — 一次 DB 查询返回命中配置(避免 hit + getByKey 双查)</li>
+ * </ul>
+ *
+ * <p><b>hash 算法：</b>使用 {@code String.hashCode()} 截断为正整数后取模,保证同一 (canaryKey, bucketValue) 组合
+ * 始终落到相同的桶,避免用户在不同请求间被反复切换。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.entity.canary.MsgCanary 灰度桶实体
+ * @see CanaryReportService 灰度 A/B 报表服务
  */
 public interface CanaryService {
 

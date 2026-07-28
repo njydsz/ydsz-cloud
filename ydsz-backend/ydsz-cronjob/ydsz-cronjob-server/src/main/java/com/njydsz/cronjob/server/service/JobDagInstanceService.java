@@ -8,12 +8,30 @@ import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 
 /**
- * DAG 工作流实例服务接口（P2 DAG 增强）。
+ * DAG 工作流实例 Service
  *
- * <p>负责 DAG 实例的查询、状态流转（暂停/恢复/取消）及上下文管理。
+ * <p>管理 DAG 实例(每次 DAG 触发生成一个实例)和节点实例(每个 DAG 节点的一次执行记录)的
+ * 查询、状态流转、上下文管理。是 DAG 监控和可观测的数据源。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>实例查询</b>：{@link #getInstanceById} / {@link #listByDagId} / {@link #listByStatus} / {@link #listNodes}</li>
+ *   <li><b>状态控制</b>：{@link #pauseInstance} / {@link #resumeInstance} / {@link #cancelInstance}</li>
+ *   <li><b>上下文</b>：{@link #updateContext} — 跨节点传参(JSON 格式)</li>
+ *   <li><b>可视化(P4-1)</b>：{@link #getVisualization} — 返回 DAG 图 + 节点执行状态</li>
+ * </ul>
+ *
+ * <p><b>实例状态机：</b>{@code PENDING → RUNNING → COMPLETED / FAILED / CANCELED},或 {@code RUNNING → PAUSED → RUNNING}。
+ *
+ * <p><b>可视化数据：</b>{@link #getVisualization} 返回包含 DAG 拓扑结构、各节点实时状态、
+ * 耗时、错误信息的 VO,前端可直接渲染为甘特图/流程图。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.dag.JobDagInstance DAG 实例实体
+ * @see com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance DAG 节点实例实体
+ * @see JobDagService DAG 定义 Service
  */
 public interface JobDagInstanceService {
 

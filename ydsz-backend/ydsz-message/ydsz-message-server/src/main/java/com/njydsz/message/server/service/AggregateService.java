@@ -5,10 +5,26 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
 
 /**
- * 聚合批次服务
+ * 消息聚合批次 Service
+ *
+ * <p>按"聚合组 + 接收人"维度将短时间内的多条消息聚合为单条摘要发送,避免用户被同一主题的
+ * 消息轰炸。例如：1 分钟内 10 条"工单创建"通知,合并为"您有 10 个新工单,点击查看"一条摘要。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>追加消息</b>：{@link #appendOrStart} — 消息到达时追加到当前聚合批次;批次不存在则新建</li>
+ *   <li><b>刷新</b>：{@link #flushDue} / {@link #flushByGroup} — 定时任务或主动调用触发,生成摘要并发送</li>
+ *   <li><b>分页</b>：{@link #page} — 管理后台查询</li>
+ * </ul>
+ *
+ * <p><b>刷新策略：</b>由 {@code ydsz.message.aggregate.flush-interval-seconds} 配置(默认 60s),
+ * 定时任务每分钟扫描到期批次。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.entity.batch.MsgAggregate 聚合批次实体
+ * @see BatchService 普通批次服务(无聚合)
  */
 public interface AggregateService {
 

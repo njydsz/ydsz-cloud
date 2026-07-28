@@ -5,22 +5,33 @@ import java.util.List;
 import com.njydsz.message.domain.dto.core.UserReachProfileDTO;
 
 /**
- * 智能触达策略服务。
+ * 智能触达策略 Service
  *
- * <p>P1-8: 基于用户画像（通道活跃度、历史打开率/点击率、免打扰偏好、时区等）
- * 动态选择最优通道和发送时机，提升触达率和用户体验。
+ * <p>基于用户画像(通道活跃度、历史打开率/点击率、免打扰偏好、时区等)动态选择最优通道和
+ * 发送时机,提升触达率和用户体验,降低无效推送对用户的打扰。
  *
- * <p>评分维度：
+ * <p><b>评分维度：</b>
  * <ul>
- *   <li>通道活跃度（用户在该通道的历史活跃程度）</li>
+ *   <li>通道活跃度(用户在该通道的历史活跃程度)</li>
  *   <li>历史打开率/点击率</li>
  *   <li>免打扰时段过滤</li>
- *   <li>时区感知（确保在用户活跃时段发送）</li>
- *   <li>通道成本（优先使用低成本高触达通道）</li>
+ *   <li>时区感知(确保在用户活跃时段发送)</li>
+ *   <li>通道成本(优先使用低成本高触达通道)</li>
+ * </ul>
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>画像</b>：{@link #getProfile} — 获取/构建用户触达画像</li>
+ *   <li><b>通道选择</b>：{@link #selectOptimalChannels} — 排序后的通道列表(最优在前)</li>
+ *   <li><b>免打扰</b>：{@link #isInDndPeriod} — 是否在用户免打扰时段</li>
+ *   <li><b>发送时间</b>：{@link #getOptimalTimeWindow} — 用户最优活跃时段</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.dto.core.UserReachProfileDTO 用户触达画像 DTO
+ * @see ReachStrategyService 智能触达主服务
  */
 public interface ReachStrategyService {
 
