@@ -26,19 +26,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 模板版本管理与可视化服务实现。
+ * 消息模板版本服务实现。
  *
- * <p>P1-6: 实现：
- * <ul>
- *   <li>版本历史记录：每次审核通过/拒绝时插入版本快照</li>
- *   <li>版本回滚：将模板内容回滚到指定历史版本</li>
- *   <li>模板预览：使用 TemplateEngine 渲染，不实际发送</li>
- *   <li>模板试发：通过 MessageService 向测试接收人发送真实消息</li>
- * </ul>
+ * <p>管理模板的历史版本 ({@code ydsz_msg_template_version})：每次发布/回滚生成版本快照，
+ *
+ * <p>支持版本对比、回滚到任意历史版本、灰度发布时引用指定版本。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

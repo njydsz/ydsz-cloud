@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 系统配置（表单组件）
+ * <p>系统参数的编辑表单，支持热更新。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ConfigApi } from '#/api/config';
 
 import { useVbenModal } from '@ydsz/common-ui';

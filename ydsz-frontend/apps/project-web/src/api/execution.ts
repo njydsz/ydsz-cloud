@@ -1,3 +1,12 @@
+/**
+ * 项目执行 API 模块（前端）
+ * <p>封装项目执行（{@code ydsz_project_execution}）接口，对应后端 {@code /api/v1/project/execution/*} 端点。
+ * <p>记录项目实施工时、里程碑完成情况、风险与问题。
+ * <p>供「项目管理 → 执行跟踪」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace ExecutionApi {

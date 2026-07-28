@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 项目风险（表单组件）
+ * <p>风险的登记表单，支持概率/影响矩阵。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RiskApi } from '#/api/risk';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 菜单（表单组件）
+ * <p>菜单的创建/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { MenuApi } from '#/api/menu';
 
 import { useVbenModal } from '@ydsz/common-ui';

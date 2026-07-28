@@ -3,14 +3,14 @@ package com.njydsz.workflow.server.service;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 
 /**
- * 三方审批回调日志服务
+ * 第三方审批日志服务。
+ * <p>记录与 IM 审批系统交互。
  *
- * <p>P0-2: 三方审批回调日志落库与状态流转。
- * <p>回调入口先以 PENDING 状态写入原始数据，处理完成后更新为 SUCCESS/FAIL，
- * 由独立重试任务保证最终一致（重试任务暂未实现）。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowThirdPartyLogService {
 
     /** 处理状态：待处理 */

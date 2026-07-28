@@ -1,3 +1,12 @@
+/**
+ * 消息路由规则 API 模块（前端）
+ * <p>封装消息路由规则接口，对应后端 {@code /api/v1/message/routeRule/*} 端点。
+ * <p>支持按租户/部门/用户/优先级动态路由到不同渠道。
+ * <p>供「消息中心 → 路由配置」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace RouteRuleApi {

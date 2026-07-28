@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 项目费用（表单组件）
+ * <p>费用报销的录入表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ExpenseApi } from '#/api/expense';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

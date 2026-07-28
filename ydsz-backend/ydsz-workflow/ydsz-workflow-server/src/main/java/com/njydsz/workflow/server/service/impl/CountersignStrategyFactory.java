@@ -14,21 +14,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 会签推进策略工厂
+ * 会签策略工厂。
  *
- * <p>Spring 启动时扫描所有 {@link CountersignStrategy} Bean，按
- * {@link CountersignStrategy#supportedType()} 注册到 {@link EnumMap}。
- * 运行时按 {@link FlowPerformType} 选取策略，未注册时回退到 OR 策略。
+ * <p>封装会签/或签/票决/顺序会签/加权票决等策略的创建与查找，
  *
- * <p>新增会签类型时：
- * <ol>
- *   <li>在 {@code FlowPerformType} 枚举中添加新值</li>
- *   <li>实现 {@link CountersignStrategy} 接口并标注 {@code @Component}</li>
- *   <li>无需修改本类（自动注册）</li>
- * </ol>
+ * <p>对外暴露 {@code getStrategy(String type)} 接口，根据节点配置返回对应策略实例。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

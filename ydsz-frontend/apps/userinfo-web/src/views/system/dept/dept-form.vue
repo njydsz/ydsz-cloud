@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 部门（表单组件）
+ * <p>部门的创建/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DeptApi } from '#/api/dept';
 import type { CompanyApi } from '#/api/company';
 

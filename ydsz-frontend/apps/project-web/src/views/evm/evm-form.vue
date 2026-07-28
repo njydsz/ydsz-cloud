@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * EVM 挣值管理（详情组件）
+ * <p>EVM 指标的详情展示，支持趋势图、健康度评分。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { EvmApi } from '#/api/evm';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

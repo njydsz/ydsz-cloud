@@ -6,15 +6,14 @@ import com.njydsz.message.domain.dto.config.UserChannelBindingDTO;
 import com.njydsz.message.domain.entity.config.MsgUserChannel;
 
 /**
- * 用户通道绑定服务。
- *
- * <p>P0-1: 建立 userId → 各通道联系方式(phone/email/dingtalkUserId 等)的映射,
- * 发送管道在通道校验后自动解析 receiver(userId) → channelUserId,
- * 避免业务方在调用消息中心时自行查询各通道联系方式。
+ * 用户渠道绑定服务接口。
+ * <p>维护用户在各渠道的地址/账号绑定。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface UserChannelBindingService {
 
     /**

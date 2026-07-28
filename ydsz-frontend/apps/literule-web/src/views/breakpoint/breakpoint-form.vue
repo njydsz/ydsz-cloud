@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 规则断点（调试器组件）
+ * <p>规则断点调试器组件，支持单步执行、变量查看、表达式求值。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { BreakpointApi } from '#/api/breakpoint';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

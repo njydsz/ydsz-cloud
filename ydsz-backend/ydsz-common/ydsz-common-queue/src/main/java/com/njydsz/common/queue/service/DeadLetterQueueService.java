@@ -3,12 +3,15 @@ package com.njydsz.common.queue.service;
 import java.util.List;
 
 /**
- * 死信队列服务接口
- * <p>处理消费失败的消息，提供重试和转储能力
+ * 死信队列服务接口。
+ * <p>消息多次重试失败后入队。
+ * <p>供后台告警/人工干预/归档。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface DeadLetterQueueService {
 
     /**

@@ -34,13 +34,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 站内通知服务实现。
+ * 通知服务实现。
  *
- * <p>send 支持批量接收人(receiverIds 优先),逐人入库 + 实时推送;撤回委托 {@link RecallService}。
+ * <p>面向业务系统的统一通知 API：支持即时通知、定时通知、聚合通知、撤回、状态查询。
+ *
+ * <p>本服务是 {@code ydsz-message} 对外的「门面」，内部委托给具体业务服务（Template/Batch/Receipt 等）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

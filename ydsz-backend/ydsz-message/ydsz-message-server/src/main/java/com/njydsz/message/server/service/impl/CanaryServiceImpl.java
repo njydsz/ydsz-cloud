@@ -23,14 +23,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 灰度桶服务实现。
+ * 消息灰度服务实现。
  *
- * <p>按 canaryKey upsert；命中判定按 {@code Math.floorMod(canaryKey.hashCode() ^ bucketValue.hashCode(), 100) < percentage}。
- * upsert 时重算 bucketSelected（前 percentage 个桶号）。
+ * <p>实现新模板/新渠道的灰度放量：基于用户 ID Hash 分桶、租户白名单、渠道权重逐步提升。
+ *
+ * <p>灰度失败自动回滚（{@code ydsz_msg_canary_bucket} + {@code ydsz_msg_canary_report}）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

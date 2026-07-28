@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 项目计费卡（表单组件）
+ * <p>计费标准的编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RateCardApi } from '#/api/rateCard';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

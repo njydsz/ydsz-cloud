@@ -26,21 +26,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务配置历史版本服务实现（P1-6 任务版本管理）。
+ * 任务历史记录服务实现。
  *
- * <p>实现要点：
- * <ul>
- *   <li>{@code saveHistory}: 将 Job 序列化为 JSON 快照存入 ydsz_job_history，版本号取自 job.version</li>
- *   <li>{@code recordVersionChange}: 统一版本变更入口，支持 CREATE/UPDATE/DELETE 三种类型，同时保存 before/after 快照</li>
- *   <li>{@code listVersions}: 透传 mapper 按版本号降序查询</li>
- *   <li>{@code getVersion}: 透传 mapper 查询指定版本</li>
- *   <li>{@code rollback}: 从快照恢复配置字段，保留当前统计字段，version=max+1</li>
- *   <li>{@code compareVersions}: 逐字段对比两个快照，返回差异列表</li>
- * </ul>
+ * <p>维护任务的执行历史归档 ({@code ydsz_job_history})：触发时间、结束时间、耗时、状态、调度节点、
+ *
+ * <p>触发方式（手动/自动/重试）、关联调度计划。
+ *
+ * <p>支持按时间窗/状态/调度计划/执行人等多维度查询与清理（保留 N 个月后归档至 OSS）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

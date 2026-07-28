@@ -39,25 +39,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务通过服务
+ * 流程任务通过服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"任务通过"职责。
- * 核心流程：
- * <ol>
- *   <li>校验任务状态（未结束）</li>
- *   <li>合并流程变量 + 表单字段权限校验</li>
- *   <li>处理委派回归（DELEGATED 状态）</li>
- *   <li>标记当前用户已处理</li>
- *   <li>保存审批附件</li>
- *   <li>按 {@link FlowPerformType} 选择 {@link CountersignStrategy} 执行会签</li>
- *   <li>策略返回 true 时推进到下一节点</li>
- *   <li>推送 WebSocket 待办数 + 累计 Prometheus 指标</li>
- * </ol>
+ * <p>封装任务「同意/通过」操作：状态机校验、会签策略评估（顺序/或签/票决）、
  *
- * <p>新增会签类型时：实现 {@link CountersignStrategy} + 在 {@code FlowPerformType} 枚举中加值，无需修改本类。
+ * <p>下一节点路由、自动跳过规则、并行网关合流。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

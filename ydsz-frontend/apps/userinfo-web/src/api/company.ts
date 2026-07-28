@@ -1,3 +1,12 @@
+/**
+ * 公司 API 模块（前端）
+ * <p>封装公司（{@code ydsz_company}）CRUD 接口，对应后端 {@code /api/v1/userinfo/company/*} 端点。
+ * <p>支持多公司主体、统一社会信用代码、法人、注册地址。
+ * <p>供「组织架构 → 公司管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace CompanyApi {

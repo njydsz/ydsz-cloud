@@ -13,13 +13,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 分享应用服务
- * <p>
- * 编排文件分享相关操作，协调领域服务。
+ * 分享应用服务。
+ * <p>创建/校验/撤销分享链接。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

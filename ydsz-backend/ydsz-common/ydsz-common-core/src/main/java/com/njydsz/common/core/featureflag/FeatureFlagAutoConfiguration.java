@@ -16,22 +16,16 @@ import jakarta.annotation.PreDestroy;
 
 import org.springframework.beans.factory.annotation.Autowired;
 /**
- * 特性开关自动配置
+ * 功能开关自动配置。
  *
- * <p>注册顺序与优先级：
- * <ul>
- *   <li>当 {@code ydsz.feature-flag.nacos.enabled=true} 且 classpath 上存在
- *       {@code com.alibaba.nacos.api.config.ConfigService} 时，注册
- *       {@link NacosFeatureFlagService}（具备 Nacos 动态推送能力）</li>
- *   <li>否则回退注册 {@link DefaultFeatureFlagService}（仅内存 + Spring 配置文件）</li>
- *   <li>模块总开关 {@code ydsz.feature-flag.enabled=false} 时不注册任何 Bean
- *       （调用方需自行处理 {@link FeatureFlagService} 缺失情况，或使用
- *       {@code @ConditionalOnBean(FeatureFlagService.class)} 守卫）</li>
- * </ul>
+ * <p>注册功能开关（Feature Flag）相关 Bean：开关注册表、灰度评估器、A/B 分桶器。
+ *
+ * <p>支持基于 Nacos 配置中心的远程开关实时生效，无需重启服务。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.feature-flag", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(FeatureFlagProperties.class)

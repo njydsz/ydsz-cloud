@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 销售商机（列表页）
+ * <p>销售商机（{@code ydsz_project_opportunity}）的列表页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

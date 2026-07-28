@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * Agent 工具定义（列表页）
+ * <p>Agent 工具（Tool）注册的列表页，管理可被 Agent 调用的工具。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

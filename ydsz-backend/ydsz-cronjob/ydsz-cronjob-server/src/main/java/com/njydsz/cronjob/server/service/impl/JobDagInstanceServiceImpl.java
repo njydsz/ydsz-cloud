@@ -24,14 +24,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * DAG 工作流实例服务实现（P2 DAG 增强）。
+ * DAG 任务实例服务实现。
  *
- * <p>负责 DAG 实例的查询、状态流转（暂停/恢复/取消）及上下文管理。
- * 状态流转使用 CAS 更新（{@code casUpdateStatus}）避免并发覆盖。
+ * <p>管理 DAG 任务实例 ({@code ydsz_job_dag_instance} / {@code ydsz_job_dag_node_instance})：
+ *
+ * <p>DAG 版本快照加载、节点入度计算、并行执行调度、失败重试、状态回滚。
+ *
+ * <p>支持分布式锁 + 抢占式调度（Leader / Leaderless 双模式）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

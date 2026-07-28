@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 系统变量（列表页）
+ * <p>系统变量（{@code ydsz_system_variable}）的列表页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 
 import { Page, useVbenModal } from '@ydsz/common-ui';

@@ -20,12 +20,16 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 加权票签策略：按办理人 weight 累加，权重达到阈值才推进。
+ * 加权票决会签策略。
  *
- * <p>对标用友/金蝶"加权会签"。每个办理人有 weight 属性，累计通过权重达到阈值推进。
+ * <p>在普通票决基础上引入权重（候选人权重、岗位权重、角色权重），
  *
+ * <p>加权通过率超过阈值则通过，适用于多层级评审场景。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Component
 @RequiredArgsConstructor
 public class WeightedVoteCountersignStrategy implements CountersignStrategy {

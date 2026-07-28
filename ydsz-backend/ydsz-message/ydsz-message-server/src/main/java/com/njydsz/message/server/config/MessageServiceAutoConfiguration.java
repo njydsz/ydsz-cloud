@@ -9,12 +9,16 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 /**
  * 消息服务自动配置。
  *
- * <p>注册路由规则求值所需的 SpEL {@link ExpressionParser} Bean。
- * 独立于通道 agent 的 {@code MessageAutoConfiguration}，避免修改已存在配置类。
+ * <p>封装 ydsz-message 服务的 Bean 注册：通知桥接、消息去重、聚合、批处理、灰度、撤回、订阅、
+ *
+ * <p>回执、指标、渠道桥接、用户渠道绑定、退订等。
+ *
+ * <p>通过 {@code ydsz.message.*} 控制各功能模块的开关。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Configuration
 public class MessageServiceAutoConfiguration {
 

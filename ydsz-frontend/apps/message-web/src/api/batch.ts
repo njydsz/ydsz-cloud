@@ -1,3 +1,12 @@
+/**
+ * 消息批量发送 API 模块（前端）
+ * <p>封装消息批量发送接口，对应后端 {@code /api/v1/message/batch/*} 端点。
+ * <p>支持大批量收件人列表（10w+）、分片、限流、失败重试。
+ * <p>供「消息中心 → 批量推送」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace BatchApi {

@@ -4,13 +4,14 @@ import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
 
 /**
- * P2-2 嵌入式审批服务
+ * 内嵌审批服务。
+ * <p>在业务系统以 iframe/WebComponent 嵌入审批。
  *
- * <p>业务页（项目立项/合同/工时/采购等）通过本服务拉取嵌入式审批面板数据，
- * 一次性获得流程实例/流程图/当前待办/历史轨迹，并支持快捷操作。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowEmbeddedApprovalService {
 
     /**

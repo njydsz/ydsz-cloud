@@ -7,13 +7,14 @@ import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 
 /**
- * 流程实例迁移 Service
+ * 流程实例迁移服务。
+ * <p>旧版本实例迁移到新版本流程。
  *
- * <p>当流程定义更新（新版本部署）后，运行中的实例可能需要迁移到新版本。
- * 本服务负责实例的迁移、预览（试运行）、查询及节点自动映射。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowInstanceMigrationService {
 
     /**

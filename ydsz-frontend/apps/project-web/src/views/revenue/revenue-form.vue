@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 项目回款（表单组件）
+ * <p>回款记录的录入表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RevenueApi } from '#/api/revenue';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

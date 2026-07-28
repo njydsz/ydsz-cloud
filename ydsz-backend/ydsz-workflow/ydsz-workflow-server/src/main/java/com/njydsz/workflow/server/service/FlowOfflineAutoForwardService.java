@@ -1,19 +1,14 @@
 package com.njydsz.workflow.server.service;
 
 /**
- * 离线代理自动转发服务（P2-5）。
+ * 离线自动转办服务。
+ * <p>审批人离线时自动转办。
  *
- * <p>对标钉钉/飞书审批的"离线代理"能力：当用户设置代理人或标记离线后，
- * 自动将其名下在途待办任务转发给代理人处理。
- *
- * <p>与 {@link FlowDelegateAuthService} 的区别：
- * <ul>
- *   <li>DelegateAuthService.matchAuth — 在任务**创建时**拦截，新任务直接分配给代理人</li>
- *   <li>OfflineAutoForwardService — 处理代理人设置时**已存在的待办**，批量转发</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowOfflineAutoForwardService {
 
     /**

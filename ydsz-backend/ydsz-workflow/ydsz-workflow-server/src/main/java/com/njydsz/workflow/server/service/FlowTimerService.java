@@ -6,14 +6,14 @@ import java.util.List;
 import com.njydsz.workflow.domain.entity.FlowTimer;
 
 /**
- * 工作流定时器服务
+ * 流程定时器服务。
+ * <p>节点上设置的定时器（延时/边界）。
  *
- * <p>P1-2: 中间定时器 + 边界定时器。
- * <p>中间定时器：流程到达 intermediateTimer 节点后等待 N 时间再继续
- * <p>边界定时器：挂在 userTask 上，到时间未完成则触发超时分支
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowTimerService {
 
     /**

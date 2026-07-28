@@ -7,14 +7,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import io.micrometer.core.instrument.MeterRegistry;
 
 /**
- * 分布式锁 Micrometer 指标自动配置
+ * 分布式锁指标采集配置。
  *
- * <p>当 classpath 中存在 MeterRegistry 时，自动绑定到 LockMetrics，
- * 启用 Prometheus 指标采集。
+ * <p>采集 Redisson 分布式锁的获取/释放/等待/超时指标，输出到 Micrometer，
+ *
+ * <p>便于在 Grafana 中监控锁竞争热点与潜在的死锁风险。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)
 @ConditionalOnBean(MeterRegistry.class)

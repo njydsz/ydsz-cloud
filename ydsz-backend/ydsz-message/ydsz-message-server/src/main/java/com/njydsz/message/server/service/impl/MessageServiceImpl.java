@@ -75,15 +75,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 消息发送核心编排服务实现。
+ * 消息服务实现（核心）。
  *
- * <p>发送流程：通道校验 → 路由 → 灰度(P0-7 差异化) → 订阅校验(P0-5) → 偏好(DND/locale/digest, P0-6) →
- * 去重(P2-1 SET NX EX) → 限流 → 模板加载(偏好 locale) → 渲染 → 落库 PENDING → 通道分发 →
- * 成功 SUCCESS / 失败降级 fallback(P0-4) / 失败重试 RETRY(P0-3) → 频率计数。
+ * <p>统一的消息发送入口：根据 {@code ydsz_message_service} 配置选择渠道策略 → 渲染模板 → 解析变量 → 
+ *
+ * <p>发送前幂等校验 → 调用渠道 Sender → 异步落库 → 触发回执。
+ *
+ * <p>支持单发、批量、聚合、定时、灰度、A/B 等多种发送模式。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

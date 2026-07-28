@@ -1,3 +1,12 @@
+/**
+ * 消息偏好 API 模块（前端）
+ * <p>封装用户消息偏好设置接口，对应后端 {@code /api/v1/message/preference/*} 端点。
+ * <p>支持按渠道订阅/退订、免打扰时段、消息类型过滤。
+ * <p>供「个人中心 → 通知设置」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace PreferenceApi {

@@ -1,3 +1,12 @@
+/**
+ * 规则 CEP 复杂事件 API 模块（前端）
+ * <p>封装复杂事件处理（Complex Event Processing）规则接口，对应后端 {@code /api/v1/literule/cep/*} 端点。
+ * <p>支持事件流模式匹配、滑动时间窗、事件序列检测。
+ * <p>供「规则引擎 → CEP 规则」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace CepApi {

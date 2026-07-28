@@ -3,20 +3,14 @@ package com.njydsz.workflow.server.service;
 import java.util.Map;
 
 /**
- * 流程历史数据归档 Service
+ * 流程历史归档服务。
+ * <p>归档已完成实例到历史表。
  *
- * <p>P2-8：将原本耦合在 {@code FlowHistoryArchiveJobHandler} 中的归档逻辑抽象为独立 Service，
- * 供 JobHandler（定时调度）与 Controller（手动触发）共用，避免业务逻辑重复。
- *
- * <p>核心能力：
- * <ul>
- *   <li>{@link #archive(Integer, Integer, Long)} — 按阈值归档已结束实例到冷存储表</li>
- *   <li>{@link #purge(Integer)} — 清理归档表中超过阈值的冷数据</li>
- *   <li>{@link #getArchiveConfig()} — 查询当前归档配置（供运维查看）</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowHistoryArchiveService {
 
     /**

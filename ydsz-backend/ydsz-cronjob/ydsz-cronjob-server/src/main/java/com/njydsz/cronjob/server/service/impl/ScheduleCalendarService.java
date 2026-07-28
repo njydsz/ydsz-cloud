@@ -14,13 +14,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 调度日历服务（P2-10）。
+ * 调度日历服务实现。
  *
- * <p>预计算任务在未来时间段内的触发时间点，用于可视化调度日历。
+ * <p>维护任务调度日历（节假日、工作日、自定义例外日），
+ *
+ * <p>用于定时任务的「跳过节假日」「仅工作日执行」策略，
+ *
+ * <p>支持租户级自定义。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

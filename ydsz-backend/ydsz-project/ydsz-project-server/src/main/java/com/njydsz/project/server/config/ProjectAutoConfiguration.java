@@ -12,11 +12,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 /**
- * 项目模块自动配置。
+ * 项目管理模块自动配置。
+ *
+ * <p>封装 ydsz-project 服务的核心 Bean：EVM 测量、成本归集、利润快照、计费利用率快照、
+ *
+ * <p>项目变更、合同/补充/变更、阶段评审、满意度、告警分发等。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.project", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ProjectAutoConfiguration {

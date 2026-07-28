@@ -1,3 +1,12 @@
+/**
+ * 系统配置 API 模块（前端）
+ * <p>封装系统参数（{@code ydsz_config}）CRUD 接口，对应后端 {@code /api/v1/system/config/*} 端点。
+ * <p>支持按租户/应用/分组配置运行时参数，热更新无需重启。
+ * <p>供「系统管理 → 参数配置」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace ConfigApi {

@@ -52,28 +52,18 @@ import io.micrometer.core.instrument.MeterRegistry;
 import com.njydsz.agent.server.health.AgentHealthIndicator;
 import org.springframework.beans.factory.ObjectProvider;
 /**
- * Agent 自动配置
+ * Agent 模块自动配置。
  *
- * <p>当 {@code ydsz.agent.enabled=true}（默认）时自动装配以下 Bean：
- * <ul>
- *   <li>{@link OpenAiCompatibleClient} — LLM 客户端实现</li>
- *   <li>{@link LlmClientRouter} — LLM 路由器（暴露为 {@link LlmClient} 接口）</li>
- *   <li>{@link RedisConversationMemory} — Redis 对话记忆</li>
- *   <li>{@link DefaultToolRegistry} — 工具注册中心</li>
- *   <li>{@link InMemoryTraceRecorder} — 执行链路记录器</li>
- *   <li>{@link PromptInjectionGuardrail} — Prompt 注入检测护栏</li>
- *   <li>{@link PiiMaskingGuardrail} — PII 脱敏护栏</li>
- *   <li>{@link OpenAiEmbeddingClient} — Embedding 客户端</li>
- *   <li>{@link SimpleTextChunker} — 文本分块器</li>
- *   <li>{@link PgVectorStore} / {@link InMemoryVectorStore} — 向量存储</li>
- *   <li>{@link AgentMetrics} — Micrometer 指标采集</li>
- *   <li>{@link CostAnalysisService} — Token 用量成本核算</li>
- *   <li>{@link AgentFactory} — Agent 工厂</li>
- * </ul>
+ * <p>承担 ydsz-agent 微服务的核心 Bean 注册职责，包括 LLM 客户端、对话记忆、工具注册、
+ *
+ * <p>RAG（向量存储+Embedding）、护栏（输入/输出）、指标采集、Agent 工厂、Token 成本核算、
+ *
+ * <p>DAG 编排执行器、健康检查等。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Configuration
 @EnableConfigurationProperties(AgentProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.agent", name = "enabled", havingValue = "true", matchIfMissing = true)

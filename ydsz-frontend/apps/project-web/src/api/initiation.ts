@@ -1,3 +1,12 @@
+/**
+ * 项目立项 API 模块（前端）
+ * <p>封装项目立项（{@code ydsz_project_initiation}）CRUD 接口，对应后端 {@code /api/v1/project/initiation/*} 端点。
+ * <p>支持立项申请、审批、变更、作废全流程。
+ * <p>供「项目管理 → 立项管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace InitiationApi {

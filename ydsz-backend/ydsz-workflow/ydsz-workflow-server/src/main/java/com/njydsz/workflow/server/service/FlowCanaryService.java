@@ -6,21 +6,14 @@ import java.util.Map;
 import com.njydsz.workflow.domain.entity.FlowDefinition;
 
 /**
- * 灰度发布服务
+ * 流程灰度服务。
+ * <p>按部门/角色/租户灰度发布新版本流程。
  *
- * <p>支持流程定义的 canary release（灰度发布）能力。
- *
- * <p>核心能力：
- * <ul>
- *   <li>{@link #publishCanary} — 将指定定义标记为灰度版，按初始比例切流</li>
- *   <li>{@link #adjustCanaryPercent} — 调整灰度比例（逐步放量）</li>
- *   <li>{@link #promoteCanary} — 全量发布：灰度版晋升为稳定版</li>
- *   <li>{@link #rollbackCanary} — 回滚：灰度版失效，强制回退到稳定版</li>
- *   <li>{@link #resolveEffectiveDefinition} — 启动流程时根据 canary 配置解析实际生效的版本</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowCanaryService {
 
     /**

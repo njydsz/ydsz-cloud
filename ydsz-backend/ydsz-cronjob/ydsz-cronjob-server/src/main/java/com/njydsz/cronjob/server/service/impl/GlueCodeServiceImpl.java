@@ -23,19 +23,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * GLUE 在线编码服务实现（P1-2 GLUE 在线编码）。
+ * GLUE 脚本服务实现。
  *
- * <p>实现要点：
- * <ul>
- *   <li>{@code save}: 查询当前最大版本号，version+1 后插入新记录</li>
- *   <li>{@code getLatest}: 透传 mapper.selectLatestByJobId</li>
- *   <li>{@code listVersions}: LambdaQueryWrapper 按 version 降序查询</li>
- *   <li>{@code rollback}: 查询目标版本代码，创建新版本（version=max+1）</li>
- * </ul>
+ * <p>维护任务运行时的 GLUE 脚本（Java/Shell/Python/JS）源码，对应 {@code ydsz_glue_code} 表。
+ *
+ * <p>支持脚本版本管理、在线编辑、灰度发布、SourceCode 编译为 Class 缓存到本地磁盘，
+ *
+ * <p>对标 XXL-JOB 的 GLUE 模式，支持 Source / Online 两种加载方式。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

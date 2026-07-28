@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 任务连接器（表单组件）
+ * <p>执行器的注册/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ConnectorApi } from '#/api/connector';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

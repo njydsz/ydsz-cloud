@@ -1,3 +1,12 @@
+/**
+ * 路由守卫
+ * <p>注册路由全局守卫：进度条控制、认证检查（未登录跳转登录页）、权限校验（动态加载路由）。
+ * <p>守卫采用 {@code createRouterGuard} 工厂函数模式，可在各子应用复用。
+ * <p>白名单（{@code WHITE_LIST}）内路径无需登录即可访问。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { Router } from 'vue-router';
 
 import { LOGIN_PATH } from '@ydsz/constants';
@@ -7,9 +16,6 @@ import { startProgress, stopProgress } from '@ydsz/utils';
 
 import { accessRoutes } from '#/router/routes';
 
-/**
- * 不需要登录即可访问的白名单路径
- */
 const WHITE_LIST = ['/auth', LOGIN_PATH];
 
 /**

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 任务告警（表单组件）
+ * <p>告警规则的编辑表单，支持邮件/短信/企微/钉钉多渠道。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { AlertApi } from '#/api/alert';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

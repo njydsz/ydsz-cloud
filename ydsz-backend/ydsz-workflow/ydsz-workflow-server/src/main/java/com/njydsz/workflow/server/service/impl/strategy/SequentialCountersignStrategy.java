@@ -19,12 +19,16 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 顺序会签策略：按序逐一处理，全部通过才推进。
+ * 顺序会签策略。
  *
- * <p>对标钉钉/飞书"顺序会签"。当前人通过后切换到下一个人，乐观锁防并发。
+ * <p>按候选人顺序串行审批，前一人通过后才进入下一人，
  *
+ * <p>任一拒绝则整体拒绝。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Component
 @RequiredArgsConstructor
 public class SequentialCountersignStrategy implements CountersignStrategy {

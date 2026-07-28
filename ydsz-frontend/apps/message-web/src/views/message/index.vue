@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 消息（列表页）
+ * <p>消息发送记录的查询页，支持站内/邮件/短信/企微/钉钉/飞书多渠道。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

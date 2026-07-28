@@ -1,3 +1,12 @@
+/**
+ * 应用 API 模块（前端）
+ * <p>封装应用（{@code ydsz_app}）CRUD 接口，对应后端 {@code /api/v1/system/app/*} 端点。
+ * <p>系统中的应用是权限/菜单/路由的归属主体，支持多应用隔离。
+ * <p>供「系统管理 → 应用管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace AppApi {

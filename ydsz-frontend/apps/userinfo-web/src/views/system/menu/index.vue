@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 菜单（列表页）
+ * <p>菜单（{@code ydsz_menu}）的列表页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { Page, useVbenModal } from '@ydsz/common-ui';
 
 import { ElButton, ElMessage, ElMessageBox, ElTable, ElTableColumn, ElTag, ElInput } from 'element-plus';

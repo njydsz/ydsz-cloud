@@ -5,23 +5,14 @@ import java.util.Map;
 import com.njydsz.common.exception.custom.SysException;
 
 /**
- * 表单字段权限服务（P0-2 落地）。
+ * 流程表单字段权限服务。
+ * <p>按节点/角色控制字段可见/可编辑。
  *
- * <p>对标钉钉/飞书审批的"表单字段权限"能力，按节点控制表单字段的可编辑/只读/隐藏。
- *
- * <p>权限类型：
- * <ul>
- *   <li>{@code EDIT} — 可编辑（默认）</li>
- *   <li>{@code READONLY} — 只读（展示但不可修改）</li>
- *   <li>{@code HIDDEN} — 隐藏（不展示）</li>
- *   <li>{@code REQUIRED} — 必填（必须填写）</li>
- * </ul>
- *
- * <p>权限数据来源：{@code FlowNode.formFieldsConfig} JSON 字段，
- * 格式为 {@code {"fieldKey":"EDIT|READONLY|HIDDEN|REQUIRED",...}}。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowFormFieldPermService {
 
     /**

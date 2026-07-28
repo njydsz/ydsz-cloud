@@ -1,3 +1,12 @@
+/**
+ * 项目预算 API 模块（前端）
+ * <p>封装项目预算（{@code ydsz_project_budget}）CRUD 接口，对应后端 {@code /api/v1/project/budget/*} 端点。
+ * <p>支持科目维度（人力/材料/差旅/外采）预算编制、调整、执行分析。
+ * <p>供「项目管理 → 预算管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace BudgetApi {

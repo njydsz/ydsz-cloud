@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 规则定义（表单组件）
+ * <p>规则定义的创建/编辑表单，包含规则类型选择、版本管理。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RuleApi } from '#/api/rule';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

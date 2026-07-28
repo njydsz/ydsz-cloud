@@ -17,20 +17,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务归档服务
+ * 流程任务归档服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"任务完成 + 归档"职责。
- * 统一处理：
- * <ul>
- *   <li>将 run_task 表状态置为终态（COMPLETED/REJECTED/SKIPPED/CANCELLED）</li>
- *   <li>将任务记录写入 his_task 表（历史归档）</li>
- *   <li>触发关联的边界事件订阅取消（P0-1）</li>
- * </ul>
+ * <p>将已结束的流程任务（{@code ydsz_flow_run_task}）批量归档到历史表，
  *
- * <p>被 {@code FlowTaskPassService} / {@code FlowTaskRejectService} / 会签策略等复用。
+ * <p>降低在线表数据量、提升查询性能。归档后通过专门的历史查询接口访问。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

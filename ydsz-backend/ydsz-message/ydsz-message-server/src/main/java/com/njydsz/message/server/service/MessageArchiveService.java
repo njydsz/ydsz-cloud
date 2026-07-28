@@ -7,21 +7,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.message.domain.entity.core.MsgLog;
 
 /**
- * 消息归档全文搜索服务（P0-5）。
- *
- * <p>将发送日志归档到 Elasticsearch，支持：
- * <ul>
- *   <li>全文搜索：按 content/receiver/templateCode 等字段模糊查询</li>
- *   <li>时间范围查询：按 created_at 范围过滤</li>
- *   <li>多条件组合：channel + status + bizType + 时间范围</li>
- *   <li>高亮显示匹配关键词</li>
- * </ul>
- *
- * <p>降级策略：ES 不可用时降级为数据库 LIKE 查询（性能较差但功能可用）。
+ * 消息归档服务接口。
+ * <p>归档已过期消息到冷存储。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface MessageArchiveService {
 
     /**

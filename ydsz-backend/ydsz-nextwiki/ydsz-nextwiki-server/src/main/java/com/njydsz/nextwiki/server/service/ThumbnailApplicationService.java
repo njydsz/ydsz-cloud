@@ -29,14 +29,15 @@ import java.io.IOException;
 import java.util.Set;
 import org.springframework.web.multipart.MultipartFile;
 /**
- * 缩略图异步生成服务
- * <p>
- * 支持图片文件缩略图、PDF 首页缩略图、Office 转换后缩略图。
- * 多尺寸支持：small(64x64), medium(128x128), large(256x256)。
+ * 缩略图服务。
+ * <p>生成图片/PDF/Office 缩略图。
+ * <p>多尺寸输出。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

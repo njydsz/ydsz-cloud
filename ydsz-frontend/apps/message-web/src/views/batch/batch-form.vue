@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 消息批量发送（表单组件）
+ * <p>批量发送的创建表单，支持收件人 CSV 上传、发送策略。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { BatchApi } from '#/api/batch';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

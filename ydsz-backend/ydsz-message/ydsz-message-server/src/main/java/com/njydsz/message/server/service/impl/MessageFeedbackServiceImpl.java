@@ -19,11 +19,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P1-4: 消息质量反馈服务实现。
+ * 消息反馈服务实现。
+ *
+ * <p>收集用户对消息的反馈：已读/未读/点击/有用/无用/投诉。
+ *
+ * <p>基于反馈数据训练送达最佳时机、内容优化模型（与 {@code DeliveryTimeOptimizer} 配合）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

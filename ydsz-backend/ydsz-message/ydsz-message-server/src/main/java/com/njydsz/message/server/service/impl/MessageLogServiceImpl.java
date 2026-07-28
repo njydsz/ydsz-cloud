@@ -29,14 +29,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 消息发送日志服务实现。
+ * 消息日志服务实现。
  *
- * <p>状态流转必须经 {@link MessageStatusEnum#canTransitTo} 校验，非法流转抛 SysException。
- * 手动重发死信 ({@link #resendDead}) 为显式运维操作,绕过 canTransitTo 但仅限 DEAD 状态。
+ * <p>管理消息发送全链路日志 ({@code ydsz_msg_log})：发送、送达、读取、点击、退订、失败、批量 ID。
+ *
+ * <p>支持分页查询、按渠道/状态/时间/接收人筛选，是消息中心的「对账单」。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

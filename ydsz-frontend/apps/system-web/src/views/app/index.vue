@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 应用（列表页）
+ * <p>应用（{@code ydsz_app}）的列表页，管理多应用隔离。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 
 import { Page, useVbenModal } from '@ydsz/common-ui';

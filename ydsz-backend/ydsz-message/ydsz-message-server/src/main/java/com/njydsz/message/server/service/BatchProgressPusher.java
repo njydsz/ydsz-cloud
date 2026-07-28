@@ -12,14 +12,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 批量发送实时进度推送器（P1-10）。
- *
- * <p>批量发送过程中，按进度阈值（每 10% 或每 100 条）通过 WebSocket 推送实时进度,
- * 发起人可在前端看到批量发送的实时状态。
+ * 批量发送进度推送服务。
+ * <p>将批量消息发送进度推送到 WebSocket 客户端。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

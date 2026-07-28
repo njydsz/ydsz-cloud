@@ -1,3 +1,12 @@
+/**
+ * Agent RAG 检索增强 API 模块（前端）
+ * <p>封装 RAG（Retrieval-Augmented Generation）向量检索接口，对应后端 {@code /api/v1/agent/rag/*} 端点。
+ * <p>支持文档切片、向量化存储、相似度检索、Top-K 召回。
+ * <p>供「Agent 知识库」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace RagApi {

@@ -17,15 +17,16 @@ import com.njydsz.common.queue.service.IMessageSubscriber;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 基于 Redis List 的消息订阅者
+ * Redis List 模式订阅者。
  *
- * <p>使用 Redis BRPOPLPUSH 原子操作从主队列弹出消息并推入备份队列，
- * 处理完成后再从备份队列删除，确保消息处理失败时不会丢失。
- * 通过 {@link RedisTemplate} 复用 ydsz-common-redis 的连接。
+ * <p>Redis List 队列的消费端，使用 {@code BRPOP} 阻塞拉取，
+ *
+ * <p>支持自动 ACK、失败重试、死信投递。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 public class RedisListSubscriber implements IMessageSubscriber {
 

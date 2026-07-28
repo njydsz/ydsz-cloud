@@ -1,3 +1,12 @@
+/**
+ * 文件配额 API 模块（前端）
+ * <p>封装租户文件配额（{@code ydsz_wiki_quota}）接口，对应后端 {@code /api/v1/nextwiki/quota/*} 端点。
+ * <p>支持总容量/单文件大小/文件数/带宽限制，超额阻断。
+ * <p>供「系统管理 → 存储配额」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace QuotaApi {

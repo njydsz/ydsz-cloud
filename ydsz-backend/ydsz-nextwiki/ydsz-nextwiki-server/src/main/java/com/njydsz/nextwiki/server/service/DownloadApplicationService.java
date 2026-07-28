@@ -16,14 +16,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 文件下载应用服务
- * <p>
- * 编排文件下载相关操作：文件查找、限流校验、存储解析。
- * Controller 通过本服务获取下载上下文后处理 HTTP 响应。
+ * 文件下载服务。
+ * <p>处理单文件/批量/断点续传下载。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

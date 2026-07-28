@@ -19,13 +19,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 用户消息偏好服务实现。
+ * 通知偏好服务实现。
  *
- * <p>按 (userId, channel, bizType) upsert；查询优先精确 bizType，回退 {@code __DEFAULT__}。
+ * <p>管理用户/租户的通知偏好设置：免打扰时段、渠道白/黑名单、模板订阅/退订、频次上限。
+ *
+ * <p>偏好检查在消息发送前触发，未通过则跳过发送并打上 SKIPPED 状态。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

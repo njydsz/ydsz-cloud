@@ -5,14 +5,16 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import com.njydsz.common.base.config.BaseOpenApiConfiguration;
 
 /**
- * App 端 OpenAPI 文档配置
+ * App 子模块 OpenAPI 配置。
  *
- * <p>继承 {@link BaseOpenApiConfiguration}，针对 App 端定制文档标题与描述。
+ * <p>继承 {@link BaseOpenApiConfiguration}，为 ydsz-app 子模块（移动端 API）提供独立的 OpenAPI 分组配置。
+ *
+ * <p>支持与 base 不同的标题/描述/版本，覆盖移动端的 Swagger/Knife4j 展示。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see BaseOpenApiConfiguration
  */
+
 @AutoConfiguration
 public class AppOpenApiConfiguration extends BaseOpenApiConfiguration {
 

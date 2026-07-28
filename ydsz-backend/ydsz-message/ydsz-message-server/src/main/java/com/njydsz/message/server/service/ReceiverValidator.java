@@ -8,20 +8,14 @@ import org.springframework.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 收件人预校验器（P1-8）。
- *
- * <p>发送前按通道类型校验 receiver 格式：
- * <ul>
- *   <li>SMS: 11 位手机号</li>
- *   <li>EMAIL: 标准邮箱格式</li>
- *   <li>DINGTALK/DINGTALK_WORK/WECOM/WECOM_APP: 非空 userId</li>
- *   <li>PUSH: 非空设备 token</li>
- *   <li>INAPP: 非空用户 ID</li>
- * </ul>
+ * 消息接收人校验器。
+ * <p>校验收件人地址合法性、租户白名单等。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 public class ReceiverValidator {

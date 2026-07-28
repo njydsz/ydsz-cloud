@@ -32,20 +32,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 消息编排引擎实现。
+ * 消息编排服务实现。
  *
- * <p>P1-9: 基于 DAG 拓扑排序执行消息编排流程：
- * <ol>
- *   <li>验证 DAG 合法性（无环检测）</li>
- *   <li>按拓扑序逐个执行节点</li>
- *   <li>节点依赖全部成功后才执行</li>
- *   <li>支持 SpEL 条件表达式</li>
- *   <li>节点失败按策略处理：CONTINUE / ABORT / RETRY（最多 3 次）</li>
- * </ol>
+ * <p>复杂消息场景的编排引擎：多渠道组合发送（A 渠道失败回退 B）、分支判断（用户标签 → 渠道）、
+ *
+ * <p>定时/重试/补偿策略。对应实体 {@code ydsz_msg_orchestration}。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

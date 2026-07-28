@@ -13,19 +13,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 搜索结果业务权重 Re-Ranking
- * <p>
- * 在搜索引擎返回结果后，按业务规则进行二次排序：
- * <ul>
- *   <li>标题精确匹配加权</li>
- *   <li>时效性加权（最近 7 天创建/更新的文档优先）</li>
- *   <li>类型优先级（可配置，如 project > wiki > config）</li>
- *   <li>标签匹配加权</li>
- * </ul>
+ * 业务排序器接口。
+ * <p>结合业务因子（热度、新鲜度、个性化）调整 ES 检索结果排序。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @RequiredArgsConstructor
 public class BusinessRanker {

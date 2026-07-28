@@ -1,3 +1,12 @@
+/**
+ * 任务连接器 API 模块（前端）
+ * <p>封装任务执行器（{@code ydsz_job_connector}）接口，对应后端 {@code /api/v1/cronjob/connector/*} 端点。
+ * <p>支持 HTTP、Shell、SQL、Java、Kettle、Python 等多种任务类型的执行器注册。
+ * <p>供「任务调度 → 执行器管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace ConnectorApi {

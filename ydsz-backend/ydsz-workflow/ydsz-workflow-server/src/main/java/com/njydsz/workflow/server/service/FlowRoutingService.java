@@ -4,16 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 智能路由与异常检测服务
+ * 流程路由服务。
+ * <p>根据条件选择下一节点/分支。
  *
- * <p>基于项目自研模块 ydsz-literule 的 RuleEngine 和 ExpressionEvaluator，
- * 提供路由条件评估、流程异常检测等能力。
- *
- * <p>路由评估：使用 Aviator 表达式引擎解析复杂条件表达式，替代简单的 SpEL 占位符替换。
- * 异常检测：覆盖超时、卡单、循环审批三种典型异常场景。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowRoutingService {
 
     /**

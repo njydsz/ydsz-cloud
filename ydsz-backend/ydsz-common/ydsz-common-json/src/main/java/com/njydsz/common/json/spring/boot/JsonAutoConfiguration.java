@@ -24,18 +24,16 @@ import com.njydsz.common.json.spring.YdszJsonProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 
 /**
- * YdszJson Spring Boot 自动配置入口。
+ * Ydsz JSON 自动配置。
  *
- * <p>当 classpath 存在 {@link YdszJsonConfig} 且 {@code ydsz.json.enabled=true} 时自动生效。
- * 自动注册以下组件：
- * <ul>
- *   <li>{@link JsonHttpMessageConverter} — HTTP 消息转换器</li>
- *   <li>{@link JsonModuleRegistrar} — 模块注册器（自动发现 YdszJsonModule Bean）</li>
- * </ul>
+ * <p>注册全局 {@code YdszJson} Bean（基于 Jackson 二次封装），支持 Long 转 String、日期格式化、
+ *
+ * <p>脱敏字段、未知字段忽略、BigDecimal 精度等统一序列化策略。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @EnableConfigurationProperties(YdszJsonProperties.class)
 @ConditionalOnClass(YdszJsonConfig.class)

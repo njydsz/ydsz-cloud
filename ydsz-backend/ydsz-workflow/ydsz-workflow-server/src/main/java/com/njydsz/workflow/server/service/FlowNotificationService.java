@@ -4,19 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * GAP-P1: 工作流消息通知服务
+ * 流程通知服务。
+ * <p>向审批人发送任务通知。
  *
- * <p>对接站内信/邮件/企业微信等通知通道，统一管理工作流关键事件的消息推送。
- * 与 {@link com.njydsz.workflow.server.engine.FlowNotificationHelper} 的区别：
- * <ul>
- *   <li>FlowNotificationHelper — 通过 Feign 调用通知中心微服务（跨服务）</li>
- *   <li>FlowNotificationService — 本地通知服务，支持多通道（INAPP/EMAIL/WEBHOOK），可独立扩展</li>
- * </ul>
- *
- * <p>所有方法均为"尽力而为"语义：内部 try-catch 吞异常，不拖垮主流程事务。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowNotificationService {
 
     /**

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 用户（表单组件）
+ * <p>用户的创建/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { UserApi } from '#/api/user';
 import type { CompanyApi } from '#/api/company';
 import type { PostApi } from '#/api/post';

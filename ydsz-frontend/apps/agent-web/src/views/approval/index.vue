@@ -1,4 +1,12 @@
 <script lang="ts" setup>
+/**
+ * Agent 审批（列表页）
+ * <p>Agent 工具调用的人工审批列表页，展示待我审批的工单。
+ * <p>支持通过、驳回、转办等操作。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

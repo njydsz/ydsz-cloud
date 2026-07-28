@@ -18,14 +18,16 @@ import com.njydsz.common.excel.spring.ExcelTemplate;
 import io.micrometer.core.instrument.MeterRegistry;
 
 /**
- * Excel 模块 Spring Boot 自动配置
+ * Excel 导入导出自动配置。
  *
- * <p>自动注册 {@link ExcelConfig} 单例和 {@link ExcelTemplate} 模板类。
- * 通过 {@link ExcelProperties}（前缀 {@code ydsz.excel}）覆盖默认配置。</p>
+ * <p>基于 EasyExcel 注册 Excel 读写相关 Bean：模板工厂、错误收集器、异步导出执行器、监听器注册中心。
+ *
+ * <p>支持大数据量分页导出、流式读取、错误行收集、模板下拉框等高级特性。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @ConditionalOnClass(ExcelTemplate.class)
 @ConditionalOnProperty(prefix = "ydsz.excel", name = "enabled", havingValue = "true", matchIfMissing = true)

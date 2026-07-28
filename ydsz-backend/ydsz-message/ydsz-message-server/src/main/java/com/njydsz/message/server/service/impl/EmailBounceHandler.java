@@ -9,24 +9,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P2-16: 邮件退信处理闭环。
- *
- * <p>当邮件服务商回调退信通知时，将退信邮箱加入黑名单，
- * 后续发送时自动跳过，避免持续向无效地址发送影响发送方信誉。
- *
- * <p>处理流程：
- * <ol>
- *   <li>接收退信回调（webhook/回调接口）</li>
- *   <li>将退信邮箱加入 Redis 黑名单（TTL 90 天）</li>
- *   <li>记录退信日志到 DB（便于分析退信趋势）</li>
- *   <li>发送前检查黑名单，自动跳过</li>
- * </ol>
- *
- * <p>Redis Key 格式：{@code email:bounce:{email}} → bounceReason
+ * 邮件退信处理器。
+ * <p>处理 SMTP 退信事件。
+ * <p>标记邮箱失效。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

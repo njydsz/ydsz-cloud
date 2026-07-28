@@ -5,7 +5,6 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
-import static com.tngtech.archunit.library.dependencies.DependencyRules;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
@@ -17,14 +16,22 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  *
  * <h3>规则分类</h3>
  * <ul>
- *   <li>DDD 分层约束：domain → infra → server → web，不可逆向依赖</li>
- *   <li>公共模块隔离：common-* 不可依赖业务模块</li>
- *   <li>无循环依赖：各业务模块 slice 之间不可循环依赖</li>
- *   <li>Service 包规范：ServiceImpl 必须在 service 包中</li>
- *   <li>Controller 包规范：Controller 必须在 controller 包中</li>
- *   <li>DO 基类约束：DO 类必须继承 MpBaseEntity</li>
- *   <li>@SuppressWarnings 禁令：禁止使用 @SuppressWarnings 注解</li>
- *   <li>Mapper 包规范：Mapper 接口必须在 mapper 包中</li>
+ *   <li>R1:  DDD 分层约束 — domain 层不可依赖 infra/server/web 层</li>
+ *   <li>R2:  公共模块隔离 — common-* 不可依赖业务模块</li>
+ *   <li>R3:  Web 层不可直达 infra 层</li>
+ *   <li>R4:  无循环依赖 — 各业务模块 slice 之间不可循环依赖</li>
+ *   <li>R5:  ServiceImpl 必须在 service 包中</li>
+ *   <li>R6:  Controller 必须在 controller 包中</li>
+ *   <li>R7:  Mapper 接口必须在 mapper 包中</li>
+ *   <li>R8:  DO 类必须在 entity 包中</li>
+ *   <li>R9:  Service 层不允许出现 toVO 方法</li>
+ *   <li>R10: 禁止在 Service 层使用 BeanUtils.copyProperties</li>
+ *   <li>R11: Controller 必须标注 @RestController</li>
+ *   <li>R12: Converter 类必须在 converter 包中</li>
+ *   <li>R13: VO 类必须在 vo 包中</li>
+ *   <li>R14: Properties 类必须在 config 包中</li>
+ *   <li>R15: 禁止使用 @SuppressWarnings 注解</li>
+ *   <li>R16: @FeignClient 接口必须在 api 包中</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -163,4 +170,70 @@ public class ArchitectureRulesTest {
             .that().haveSimpleNameEndingWith("Controller")
             .and().resideInAPackage("..web..")
             .should().beAnnotatedWith("org.springframework.web.bind.annotation.RestController");
+
+    /**
+     * R12: Converter 类必须在 converter 包中。
+     *
+     * <p>MapStruct Converter 集中管理，确保 VO/Entity 转换逻辑不会散落到其他包中。
+     * Converter 类以 {@code Converter} 结尾命名，通常位于 domain 层的 converter 子包中。
+     */
+    @ArchTest
+    static final ArchRule converterClassesShouldBeInConverterPackage = classes()
+            .that().haveSimpleNameEndingWith("Converter")
+            .and().resideInAPackage("..domain..")
+            .should().resideInAPackage("..converter..")
+            .because("Converter 类应集中在 converter 包中，便于统一管理和维护");
+
+    /**
+     * R13: VO 类必须在 vo 包中。
+     *
+     * <p>视图对象（View Object）集中管理，确保 DDD 分层清晰。
+     * VO 类以 {@code VO} 结尾命名，位于 domain 层的 vo 子包中。
+     */
+    @ArchTest
+    static final ArchRule voClassesShouldBeInVoPackage = classes()
+            .that().haveSimpleNameEndingWith("VO")
+            .and().resideInAPackage("..domain..")
+            .should().resideInAPackage("..vo..")
+            .because("VO 类应集中在 vo 包中，与 entity/dto 分离");
+
+    /**
+     * R14: Properties 类必须在 config 包中。
+     *
+     * <p>{@code @ConfigurationProperties} 注解的配置类以 {@code Properties} 结尾命名，
+     * 应位于各模块的 config 包中，便于统一管理和自动配置扫描。
+     */
+    @ArchTest
+    static final ArchRule propertiesClassesShouldBeInConfigPackage = classes()
+            .that().haveSimpleNameEndingWith("Properties")
+            .and().resideInAnyPackage("..server..", "..infra..", "..common..")
+            .should().resideInAPackage("..config..")
+            .because("@ConfigurationProperties 类应集中在 config 包中");
+
+    /**
+     * R15: 禁止使用 @SuppressWarnings 注解。
+     *
+     * <p>所有警告必须从根源修复而非压制。常见修复方式：
+     * <ul>
+     *   <li>unchecked → 使用 TypeReference/泛型方法签名</li>
+     *   <li>unused → 删除死代码</li>
+     *   <li>rawtypes → 指定泛型参数</li>
+     * </ul>
+     */
+    @ArchTest
+    static final ArchRule noSuppressWarningsAnnotation = noClasses()
+            .should().beAnnotatedWith("java.lang.SuppressWarnings")
+            .because("禁止使用 @SuppressWarnings 注解，所有警告必须从根源修复");
+
+    /**
+     * R16: @FeignClient 注解的接口必须在 api 包中。
+     *
+     * <p>Feign 客户端接口是跨服务调用的契约，应位于各模块的 api 层
+     * （api/client 或 api/feign 子包），不应散落到 server/web 层。
+     */
+    @ArchTest
+    static final ArchRule feignClientShouldBeInApiPackage = classes()
+            .that().areAnnotatedWith("org.springframework.cloud.openfeign.FeignClient")
+            .should().resideInAnyPackage("..api..client..", "..api..feign..", "..common.feign..")
+            .because("@FeignClient 接口应位于 api 层，作为跨服务调用契约集中管理");
 }

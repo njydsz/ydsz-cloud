@@ -10,17 +10,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 跨通道去重服务（P2-5）。
+ * 跨渠道去重服务。
+ * <p>同一用户同一内容多渠道发送时去重。
  *
- * <p>当同一消息（相同 bizId+bizType）在短时间内已通过其他通道发送,
- * 则跳过后续通道的发送,避免用户被多通道重复轰炸。
- *
- * <p>去重 key: {@code ydsz:msg:cross-dedup:{bizType}:{bizId}}
- * TTL: 默认 5 分钟（300s）,可通过配置调整。
- *
- * @author ydsydsz-team
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

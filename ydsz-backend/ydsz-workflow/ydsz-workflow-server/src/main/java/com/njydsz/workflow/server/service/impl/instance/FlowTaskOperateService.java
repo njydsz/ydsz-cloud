@@ -31,23 +31,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务操作服务（转办/委派/跳转/撤回）
+ * 流程任务操作服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"任务流转操作"职责。
- * 集中处理以下场景：
- * <ul>
- *   <li>{@link #transfer} — 转办：将任务办理人换为他人，原办理人变 assignor</li>
- *   <li>{@link #delegate} — 委派：被委派人处理后任务回到原办理人（DELEGATED 状态）</li>
- *   <li>{@link #jump} — 自由跳转：完成当前任务，强制跳转到任意节点（白名单校验）</li>
- *   <li>{@link #retract} — 取回：审批人已通过后，下一节点未处理前取回自己的审批</li>
- * </ul>
+ * <p>提供任务级别的转办/委派/加签/减签/沟通/传阅等运营操作，
  *
- * <p>本服务依赖 {@link FlowTaskArchiveService} 完成"完成+归档"，依赖
- * {@link FlowTaskSupport} 完成审计日志，依赖 {@link FlowTaskCreateService} 完成
- * "在目标节点创建新任务"。
+ * <p>每种操作均产生审计记录与流程轨迹。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

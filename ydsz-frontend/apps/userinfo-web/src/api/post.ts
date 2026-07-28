@@ -1,3 +1,12 @@
+/**
+ * 岗位 API 模块（前端）
+ * <p>封装岗位（{@code ydsz_post}）CRUD 接口，对应后端 {@code /api/v1/userinfo/post/*} 端点。
+ * <p>岗位是组织内的职位定义，与职级/计费卡关联。
+ * <p>供「组织架构 → 岗位管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace PostApi {

@@ -15,12 +15,16 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 票签策略：通过率达到阈值才推进（默认 50% + 1，可配置）。
+ * 票决会签策略。
  *
- * <p>对标钉钉/飞书"票签"。达到阈值后 skipByNode 跳过剩余 PENDING task。
+ * <p>候选人按多数通过决定（默认 50%+1），
  *
+ * <p>支持自定义通过比例与平票处理规则。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Component
 @RequiredArgsConstructor
 public class VoteCountersignStrategy implements CountersignStrategy {

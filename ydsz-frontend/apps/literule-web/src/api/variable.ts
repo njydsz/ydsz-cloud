@@ -1,3 +1,12 @@
+/**
+ * 系统变量 API 模块（前端）
+ * <p>封装系统变量（{@code ydsz_system_variable}）CRUD 接口，对应后端 {@code /api/v1/system/variable/*} 端点。
+ * <p>系统变量是供业务代码读取的命名常量，支持加密存储。
+ * <p>供「系统管理 → 变量管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace VariableApi {

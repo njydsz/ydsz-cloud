@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * Agent 审批（表单组件）
+ * <p>审批单的查看/审批表单，展示工具调用详情、参数、风险等级。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ApprovalApi } from '#/api/approval';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

@@ -14,22 +14,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 三方审批回调日志服务实现
+ * 第三方审批日志服务实现。
  *
- * <p>核心能力：
- * <ul>
- *   <li>{@link #savePending} — 回调入口先落库（PENDING）</li>
- *   <li>{@link #updateSuccess} / {@link #updateFailed} — 处理完成后更新状态</li>
- * </ul>
+ * <p>记录与第三方审批系统（钉钉/飞书/企微）交互的完整日志 ({@code ydsz_flow_thirdparty_log})：
  *
- * <p>容错策略：
- * <ul>
- *   <li>落库与状态更新均使用 REQUIRES_NEW 事务，避免回调主流程事务回滚导致日志丢失</li>
- *   <li>所有方法均 try-catch，保证日志异常不拖垮回调主流程</li>
- * </ul>
+ * <p>请求体、响应体、耗时、状态、重试次数。供问题排查与合规审计。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

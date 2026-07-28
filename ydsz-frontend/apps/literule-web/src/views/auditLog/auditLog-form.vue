@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 规则审计日志（详情组件）
+ * <p>规则审计日志的详情展示。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { AuditLogApi } from '#/api/auditLog';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

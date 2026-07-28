@@ -7,13 +7,14 @@ import com.njydsz.workflow.domain.entity.FlowDmnDecision;
 import com.njydsz.workflow.domain.entity.FlowDmnRule;
 
 /**
- * P0-1: DMN 决策表 Service
+ * DMN 决策服务。
+ * <p>DMN 决策表评估。
  *
- * <p>提供决策表的 CRUD、发布、评估能力。
- * 对标钉钉/飞书的"规则引擎"路由配置能力。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowDmnDecisionService {
 
     /**

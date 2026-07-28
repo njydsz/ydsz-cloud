@@ -26,12 +26,18 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 消息模板服务实现。
  *
- * <p>模板按 (templateCode, channel, locale, tenantId) 唯一；locale 加载支持精确回退默认 zh-CN；
- * 审核状态流转 DRAFT → AUDITING → APPROVED/REJECTED。
+ * <p>维护消息模板 ({@code ydsz_msg_template} / {@code ydsz_msg_template_version})：
+ *
+ * <p>按 (templateCode, channel, locale, tenantId) 唯一；
+ *
+ * <p>支持审核流转 DRAFT → AUDITING → APPROVED/REJECTED，发布后版本化；
+ *
+ * <p>变量支持 ${var} 嵌套替换与缺省值回退；locale 加载支持精确 + 默认 zh-CN 回退。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

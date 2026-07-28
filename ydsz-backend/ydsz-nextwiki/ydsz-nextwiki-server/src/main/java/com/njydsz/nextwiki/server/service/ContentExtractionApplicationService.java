@@ -19,15 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 /**
- * 文档内容提取应用服务（P1-2）
- * <p>
- * 从上传的文件中提取文本内容，写入搜索索引。
- * 支持纯文本、Markdown、HTML、JSON、CSV 等格式的文本提取。
- * PDF/Office 文档需要集成 Apache Tika 或 PDFBox（可选依赖）。
+ * 内容提取服务。
+ * <p>从 Office/PDF 中提取纯文本用于全文检索。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

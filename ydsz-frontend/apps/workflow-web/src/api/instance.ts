@@ -1,3 +1,12 @@
+/**
+ * 流程实例 API 模块（前端）
+ * <p>封装流程实例（{@code ydsz_flow_instance}）CRUD 接口，对应后端 {@code /api/v1/workflow/instance/*} 端点。
+ * <p>支持流程启动、挂起、终止、转办、抄送、加签、减签。
+ * <p>供「工作流 → 我的发起」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace InstanceApi {

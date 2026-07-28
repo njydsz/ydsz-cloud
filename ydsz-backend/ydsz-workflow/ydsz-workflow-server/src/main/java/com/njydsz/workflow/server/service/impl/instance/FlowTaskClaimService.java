@@ -16,13 +16,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务签收服务
+ * 流程任务认领服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"任务签收"职责。
- * 签收将 PENDING 任务标记为 CLAIMED，记录签收时间和办理人。
+ * <p>实现任务的「认领」模式：候选人都能看见，认领后由认领人处理，
  *
+ * <p>其他人不再可见。认领基于乐观锁防止并发冲突，
+ *
+ * <p>未认领任务超时自动释放回候选人池。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 任务执行日志（列表页）
+ * <p>任务执行日志的查询页，记录每次调度的开始/结束时间、状态、返回值、异常堆栈。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

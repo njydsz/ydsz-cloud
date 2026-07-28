@@ -10,13 +10,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 存储配额应用服务
- * <p>
- * 编排配额查询与设置操作，协调领域服务。
+ * 配额应用服务。
+ * <p>对外暴露配额查询/扣减/退还 API。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

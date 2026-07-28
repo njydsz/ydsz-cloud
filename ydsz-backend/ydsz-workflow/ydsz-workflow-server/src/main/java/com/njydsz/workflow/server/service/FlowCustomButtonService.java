@@ -4,30 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 节点自定义按钮服务（P2-4）。
+ * 流程自定义按钮服务。
+ * <p>在审批面板注入业务按钮。
  *
- * <p>对标钉钉/飞书审批的"自定义按钮"能力，允许流程设计者为特定节点配置
- * 额外的操作按钮（如"退回修改"、"补充资料"、"发起沟通"），
- * 前端按节点渲染按钮，点击后回调后端执行对应操作。
- *
- * <p>按钮配置存储在 {@code FlowNode.ext} JSON 的 {@code customButtons} 字段，
- * 格式为：
- * <pre>
- * "customButtons": [
- *   {
- *     "code": "RETURN_MODIFY",
- *     "label": "退回修改",
- *     "action": "REJECT",
- *     "targetNodeCode": "fill_form",
- *     "confirmText": "确定退回修改吗？",
- *     "icon": "rollback",
- *     "sortNum": 1
- *   }
- * ]
- * </pre>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowCustomButtonService {
 
     /**

@@ -21,13 +21,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 消息回执服务实现。
+ * 回执服务实现。
  *
- * <p>回调落库 {@code MsgReceipt}，并联动 {@link MessageLogService#updateReceipt} 更新日志回执状态。
+ * <p>管理消息送达/已读/点击回执 ({@code ydsz_msg_receipt})，包括 IM 渠道 Webhook 接收、
+ *
+ * <p>Email 追踪像素/链接跳转、App Push 回调。
+ *
+ * <p>回执更新触发 {@code OperationLog} 异步落库与前端实时通知。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

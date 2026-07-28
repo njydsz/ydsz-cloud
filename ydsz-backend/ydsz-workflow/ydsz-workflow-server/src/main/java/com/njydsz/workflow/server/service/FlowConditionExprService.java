@@ -4,35 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 条件表达式可视化编辑器服务（P2-1）。
+ * 流程条件表达式服务。
+ * <p>求值 Groovy/JS/QLExpress 条件。
  *
- * <p>对标钉钉/飞书审批的"条件规则可视化编辑"能力，
- * 将前端结构化的条件组 JSON 转换为表达式引擎可执行的字符串（Aviator/SpEL），
- * 并提供反向解析和校验能力。
- *
- * <p>结构化条件 JSON 格式：
- * <pre>
- * {
- *   "logic": "AND",  // AND | OR
- *   "groups": [
- *     {
- *       "field": "amount",
- *       "operator": "GT",
- *       "value": 10000,
- *       "valueType": "NUMBER"
- *     },
- *     {
- *       "field": "deptCode",
- *       "operator": "EQ",
- *       "value": "SALES",
- *       "valueType": "STRING"
- *     }
- *   ]
- * }
- * </pre>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowConditionExprService {
 
     /**

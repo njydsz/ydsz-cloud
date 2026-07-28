@@ -1,3 +1,12 @@
+/**
+ * Agent DAG 编排 API 模块（前端）
+ * <p>封装 Agent 任务的 DAG（有向无环图）编排与执行接口，对应后端 {@code /api/v1/agent/dag/*} 端点。
+ * <p>支持多步工具调用、条件分支、并行子任务、失败重试等复杂流程编排。
+ * <p>供「Agent 编排 → DAG 设计器」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace DagApi {

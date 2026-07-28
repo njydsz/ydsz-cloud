@@ -17,14 +17,15 @@ import com.njydsz.common.search.config.SearchProperties;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 搜索结果缓存服务
- * <p>
- * 基于 ConcurrentHashMap + TTL 的线程安全缓存，用于缓存搜索结果。
- * 支持空结果缓存（防穿透），短 TTL 缓存（防雪崩）。
+ * 搜索缓存服务接口。
+ * <p>缓存热门查询结果。
+ * <p>降低 ES 压力。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 public class SearchCacheService {
 

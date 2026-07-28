@@ -20,13 +20,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 订阅关系服务实现。
+ * 消息订阅服务实现。
  *
- * <p>按 (userId, topicCode, channel) upsert；退订更新状态为 UNSUBSCRIBED。
+ * <p>用户/角色/部门维度的消息订阅管理 ({@code ydsz_msg_subscription})：
+ *
+ * <p>订阅模板、订阅租户、订阅频率、订阅标签。
+ *
+ * <p>发布时根据订阅关系生成接收人列表。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

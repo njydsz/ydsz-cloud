@@ -5,14 +5,14 @@ import java.util.List;
 import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
 
 /**
- * 流程自动触发服务
+ * 流程自动触发服务。
+ * <p>按条件（数据变更/定时/事件）自动发起流程。
  *
- * <p>当一个流程实例完成时，自动检查是否需要触发下一个流程的启动。
- * 通过注册触发规则（sourceFlowCode -> targetFlowCode + 条件表达式），
- * 实现流程间的自动化串联。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowAutoTriggerService {
 
     /**

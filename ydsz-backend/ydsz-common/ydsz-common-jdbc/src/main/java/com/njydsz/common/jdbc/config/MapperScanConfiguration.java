@@ -8,14 +8,16 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 /**
- * MyBatis Mapper 扫描配置类
+ * MyBatis Mapper 扫描配置。
  *
- * <p>根据 {@link JdbcProperties} 中的 mapperScanPackages 配置，
- * 动态注册 MapperScannerConfigurer，默认为 {@code com.njydsz.**.mapper}。
+ * <p>根据 {@link JdbcProperties} 中的 {@code mapperScanPackages} 配置（默认 {@code com.njydsz.**.mapper}），
+ *
+ * <p>动态注册 {@code MapperScannerConfigurer}，支持多模块独立配置包路径。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @EnableConfigurationProperties(JdbcProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)

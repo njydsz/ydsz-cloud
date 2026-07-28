@@ -14,13 +14,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 用户自定义字段 Service 实现。
+ * 用户扩展字段服务实现。
  *
- * <p>内部关联表服务，供其他 Service 内部调用。
+ * <p>维护用户信息扩展字段配置 ({@code ydsz_user_field})：支持文本、数字、日期、下拉、文件等多种类型，
+ *
+ * <p>用于租户自定义员工档案（工号、职级、入职日期、紧急联系人等）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

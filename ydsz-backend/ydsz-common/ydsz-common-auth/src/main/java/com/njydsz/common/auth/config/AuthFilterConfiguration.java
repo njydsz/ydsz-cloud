@@ -11,13 +11,16 @@ import com.njydsz.common.core.constant.FilterIgnoreConstant;
 import com.njydsz.common.util.url.UrlPathUtils;
 
 /**
- * 认证过滤器配置类
- * 用于配置不同层级的 URL 忽略规则
+ * 认证过滤器配置。
+ *
+ * <p>管理 WebAuthFilter 的核心配置：跳过路径白名单、Token 解析器、Header 名称、用户上下文写入策略。
+ *
+ * <p>WebAuthFilter 通过该配置决定哪些请求放行、哪些需要校验 Token。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
+
 @AutoConfiguration
 @EnableConfigurationProperties(AuthFilterProperties.class)
 public class AuthFilterConfiguration {

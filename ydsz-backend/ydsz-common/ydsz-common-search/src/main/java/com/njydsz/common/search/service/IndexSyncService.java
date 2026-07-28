@@ -22,13 +22,14 @@ import com.njydsz.common.search.provider.SearchProviderRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 索引同步服务
- * <p>
- * 负责将业务实体的变更同步到搜索引擎索引。支持单文档索引、批量索引和全量重建。
+ * 索引同步服务接口。
+ * <p>业务数据变更同步到 ES。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 public class IndexSyncService {
 

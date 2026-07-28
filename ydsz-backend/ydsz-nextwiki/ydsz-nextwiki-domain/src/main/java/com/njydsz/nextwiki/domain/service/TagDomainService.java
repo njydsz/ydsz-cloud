@@ -21,14 +21,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 标签领域服务
- * <p>
- * 管理标签的创建、绑定、解绑、推荐。
- * 标签用于知识库文件的分类和检索，支持手动创建和基于文件名的自动推荐。
+ * NextWiki 标签领域服务。
+ * <p>标签 CRUD、文件打标、标签搜索。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

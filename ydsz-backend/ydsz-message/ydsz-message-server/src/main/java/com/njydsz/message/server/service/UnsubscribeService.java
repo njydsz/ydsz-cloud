@@ -6,15 +6,14 @@ import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.server.token.UnsubscribeTokenPayload;
 
 /**
- * 退订中心服务（P1-5）。
- *
- * <p>提供基于 HMAC 签名 token 的一键退订能力，以及管理后台的退订记录查询与恢复订阅。
- * 与 {@link SubscriptionService} 协作：本接口负责 token 解析与编排，
- * 实际订阅状态变更委托给 {@link SubscriptionService#unsubscribe(String, String, String)}。
+ * 退订服务接口。
+ * <p>管理用户对模板/渠道/标签的退订关系。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface UnsubscribeService {
 
     /**

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 项目合同（表单组件）
+ * <p>合同的创建/编辑表单，记录金额、税率、收款条件。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ContractApi } from '#/api/contract';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

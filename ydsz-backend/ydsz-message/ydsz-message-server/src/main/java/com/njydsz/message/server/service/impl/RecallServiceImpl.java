@@ -29,12 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 消息撤回服务实现。
  *
- * <p>撤回通知校验归属后更新 recall_status=RECALLED 并推送前端;撤回消息委托 {@link MessageLogService#markRecalled};
- * 批量撤回按 bizType+bizId 统计受影响条数。
+ * <p>实现已发送消息的撤回/作废：短信可联系运营商撤回（窗口期内）、IM 渠道调用回撤 API、
+ *
+ * <p>邮件/站内信标记为 RECALLED。撤回记录写入 {@code ydsz_msg_log} 状态变更轨迹。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

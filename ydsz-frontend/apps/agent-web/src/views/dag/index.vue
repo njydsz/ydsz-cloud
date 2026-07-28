@@ -1,4 +1,12 @@
 <script lang="ts" setup>
+/**
+ * Agent DAG 编排（列表页）
+ * <p>Agent 任务 DAG 编排的列表页，支持查看/编辑 DAG 图。
+ * <p>DAG 节点包括 LLM 调用、工具调用、条件分支、并行子任务等。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

@@ -1,3 +1,12 @@
+/**
+ * 文件分享 API 模块（前端）
+ * <p>封装文件分享链接接口，对应后端 {@code /api/v1/nextwiki/share/*} 端点。
+ * <p>支持公开分享、密码保护、有效期、访问次数限制。
+ * <p>供「知识库 → 分享管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace ShareApi {

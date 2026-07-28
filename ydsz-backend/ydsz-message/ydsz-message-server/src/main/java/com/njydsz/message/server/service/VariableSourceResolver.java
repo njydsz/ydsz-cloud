@@ -23,20 +23,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 消息变量数据源解析器（P0-4）。
- *
- * <p>在模板渲染前，根据 {@link MsgVariableSource} 配置自动从数据源拉取变量值：
- * <ul>
- *   <li>BEAN: 调用 Spring Bean 方法，表达式 {@code beanName.method(#bizId)}</li>
- *   <li>SQL: 执行 SQL 查询，表达式 {@code SELECT name FROM xxx WHERE id = :bizId}</li>
- *   <li>HTTP: 调用远程接口（简化实现，仅 GET）</li>
- *   <li>STATIC: 直接返回表达式值</li>
- * </ul>
- * 支持 Redis 缓存（cacheTtl > 0 时）。
+ * 变量数据源解析器。
+ * <p>模板渲染前自动从 BEAN/SQL/HTTP 数据源拉取变量值。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 岗位（表单组件）
+ * <p>岗位的创建/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { PostApi } from '#/api/post';
 
 import { useVbenModal } from '@ydsz/common-ui';

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 公司（表单组件）
+ * <p>公司的创建/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { CompanyApi } from '#/api/company';
 
 import { useVbenModal } from '@ydsz/common-ui';

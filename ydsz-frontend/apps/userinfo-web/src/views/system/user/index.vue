@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 用户（列表页）
+ * <p>用户（{@code ydsz_user}）的列表/分页查询页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 
 import { Page, useVbenModal } from '@ydsz/common-ui';

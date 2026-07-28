@@ -28,13 +28,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 分享与 ACL 领域服务
- * <p>
- * 管理文件分享链接的创建、访问验证、撤销，以及文件级 ACL 权限的授予和校验。
+ * NextWiki 分享领域服务。
+ * <p>分享链接生成、权限校验。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

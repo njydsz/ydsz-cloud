@@ -11,11 +11,14 @@ import com.njydsz.message.domain.dto.core.MessageStatsVO;
 import com.njydsz.message.domain.dto.receipt.ReceiptStatsVO;
 
 /**
- * 消息统计服务（P1-2 可观测看板）。
+ * 消息统计服务接口。
+ * <p>多维度统计消息发送数据。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface MessageStatsService {
 
     /**

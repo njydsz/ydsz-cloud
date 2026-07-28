@@ -21,11 +21,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 告警规则服务实现（P5 告警 + 监控）。
+ * 任务告警服务实现。
+ *
+ * <p>基于告警规则 ({@code ydsz_job_alert_rule}) 与告警日志 ({@code ydsz_job_alert_log}) 提供任务告警的订阅、
+ *
+ * <p>触发、抑制、发送全流程。
+ *
+ * <p>支持邮件/短信/企业微信/钉钉多渠道告警分发，告警风暴抑制（同一规则 5 分钟内仅告警 1 次）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

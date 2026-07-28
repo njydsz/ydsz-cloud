@@ -1,3 +1,12 @@
+/**
+ * 规则审计日志 API 模块（前端）
+ * <p>封装规则审计日志接口，对应后端 {@code /api/v1/literule/auditLog/*} 端点。
+ * <p>记录规则的发布、版本变更、A/B 分流、灰度发布、回滚等关键事件。
+ * <p>供「规则引擎 → 审计中心」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace AuditLogApi {

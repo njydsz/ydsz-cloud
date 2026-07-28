@@ -9,14 +9,16 @@ import com.njydsz.common.redis.config.RedisProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 
 /**
- * Redis 指标自动配置
+ * Redis 指标采集配置。
  *
- * <p>当 classpath 中存在 Micrometer 时，自动创建 Redis 指标收集器。
- * 指标采集是可选的，仅在实际使用时产生开销。
+ * <p>注册 Redis 连接池、命令执行、慢查询、键空间等 Micrometer 指标。
+ *
+ * <p>通过 Lettuce Client Resources 注入 MeterRegistry 采集。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)
 public class RedisMetricsConfiguration {

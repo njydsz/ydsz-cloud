@@ -6,12 +6,14 @@ import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.entity.FlowQuickComment;
 
 /**
- * 审批常用语服务接口
+ * 快捷审批意见服务。
+ * <p>保存常用审批意见。
  *
- * <p>P1-2: 对标钉钉/飞书审批的"常用语"能力。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowQuickCommentService {
 
     /**

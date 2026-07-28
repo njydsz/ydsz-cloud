@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 流程任务（详情组件）
+ * <p>流程任务的详情展示，支持审批、转办、驳回。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { TaskApi } from '#/api/task';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

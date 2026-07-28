@@ -20,12 +20,16 @@ import com.njydsz.common.safe.captcha.store.LocalCaptchaStore;
 import com.njydsz.common.safe.captcha.validator.CaptchaValidator;
 
 /**
- * 验证码自动配置类
- * 根据配置自动注册验证码生成器、存储器和验证器
+ * 图形验证码自动配置。
+ *
+ * <p>注册图形验证码（Captcha）生成器与校验器 Bean，支持字母数字混合、算术运算、滑动拼图三种类型。
+ *
+ * <p>通过 {@code ydsz.safe.captcha.*} 配置类型、长度、有效期、Redis 存储 Key 前缀。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @EnableConfigurationProperties(CaptchaProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.safe.captcha", name = "enabled", havingValue = "true", matchIfMissing = true)

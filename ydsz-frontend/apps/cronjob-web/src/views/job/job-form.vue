@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 定时任务（表单组件）
+ * <p>定时任务的创建/编辑表单，包含 Cron 表达式、负责人、告警通道、超时配置、并发策略。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { JobApi } from '#/api/job';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

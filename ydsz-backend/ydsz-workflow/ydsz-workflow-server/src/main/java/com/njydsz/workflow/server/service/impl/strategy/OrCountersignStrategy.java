@@ -11,12 +11,16 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * OR 或签策略：任一办理人通过即推进。
+ * 或签策略。
  *
- * <p>对标钉钉/飞书"或签"语义。一人通过 → 立即完成+推进。
+ * <p>候选人中任一人审批即视为通过，未通过的候选人自动跳过，
  *
+ * <p>任一拒绝则整体拒绝。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Component
 @RequiredArgsConstructor
 public class OrCountersignStrategy implements CountersignStrategy {

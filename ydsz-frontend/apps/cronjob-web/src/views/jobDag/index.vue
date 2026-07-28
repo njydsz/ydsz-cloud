@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 任务 DAG（列表页）
+ * <p>任务 DAG 编排的列表页，支持多任务依赖、串并行执行。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

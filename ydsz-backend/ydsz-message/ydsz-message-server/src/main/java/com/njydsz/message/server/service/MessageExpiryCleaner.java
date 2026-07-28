@@ -13,14 +13,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 消息过期自动清理器（P1-7）。
- *
- * <p>定时扫描 expired_at 已过期的站内通知，将其标记为已删除（逻辑删除），
- * 避免收件箱累积大量过期消息影响查询性能。
+ * 消息过期清理器。
+ * <p>定时清理过期/已读 N 个月的消息。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

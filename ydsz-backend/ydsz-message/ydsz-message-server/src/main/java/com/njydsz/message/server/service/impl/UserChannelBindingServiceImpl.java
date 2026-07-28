@@ -18,11 +18,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 用户通道绑定服务实现。
+ * 用户渠道绑定服务实现。
+ *
+ * <p>管理用户在各渠道的地址/账号绑定 ({@code ydsz_msg_user_channel})：
+ *
+ * <p>手机号、邮箱、企业微信 UserID、钉钉 UserID、飞书 UserID、WebSocket SessionId。
+ *
+ * <p>发送前根据用户 ID 解析实际地址，支持多渠道优先级。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

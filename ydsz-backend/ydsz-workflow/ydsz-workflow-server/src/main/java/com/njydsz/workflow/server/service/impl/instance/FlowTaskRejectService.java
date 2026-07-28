@@ -39,21 +39,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务驳回服务
+ * 流程任务驳回服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"驳回"职责。
- * 支持以下场景：
- * <ul>
- *   <li>单节点退回（{@code dto.targetNodeCode}）</li>
- *   <li>多节点同退（{@code dto.targetNodeCodes.size() > 1}，GAP-P0-2）</li>
- *   <li>退回到发起人（{@code dto.rejectToInitiator=true}，P1-2）</li>
- * </ul>
+ * <p>实现驳回操作：驳回到上一节点、驳回到发起人、驳回到指定节点，
  *
- * <p>驳回完成后会推进到目标节点重新生成待办，并触发 onInstanceRejected 事件、
- * 累计指标、推送 WebSocket 待办数。
+ * <p>驳回后清理未来节点的待办与未触发的定时器，保留完整轨迹。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

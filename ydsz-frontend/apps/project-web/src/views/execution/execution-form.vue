@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 项目执行（表单组件）
+ * <p>项目执行的录入表单，包含工时、里程碑、风险。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { ExecutionApi } from '#/api/execution';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

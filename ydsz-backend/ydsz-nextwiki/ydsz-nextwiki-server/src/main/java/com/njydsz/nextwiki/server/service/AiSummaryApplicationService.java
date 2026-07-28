@@ -28,17 +28,14 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * AI 摘要应用服务
- * <p>
- * 提供文档摘要生成和关键词提取，支持两种模式：
- * <ul>
- *   <li>本地模式（默认）：基于 TextRank 算法的自动摘要</li>
- *   <li>LLM 模式（可选）：调用外部大模型 API 生成智能摘要</li>
- * </ul>
+ * AI 文档摘要服务。
+ * <p>基于 LLM 生成文件内容摘要。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 public class AiSummaryApplicationService {

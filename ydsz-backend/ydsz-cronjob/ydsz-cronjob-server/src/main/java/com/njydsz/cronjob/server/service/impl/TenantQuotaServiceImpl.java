@@ -21,25 +21,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 租户级配额服务实现（P7-2 / P7-3）。
+ * 租户配额服务实现。
  *
- * <p>实现要点：
- * <ul>
- *   <li><b>任务数配额（P7-2）</b>：通过 {@code COUNT(*) FROM ydsz_job WHERE tenant_id = ?} 统计当前任务数，
- *       与 {@link TenantQuota#getMaxJobs()} 或全局默认比较。注意：MyBatis-Plus 的
- *       {@code TenantLineInnerInterceptor} 会自动追加 {@code WHERE tenant_id = ?}，
- *       因此 {@code selectCount} 无需显式指定租户条件。</li>
- *   <li><b>并发配额（P7-3）</b>：通过 Redis 实时计数器 {@code ydsz:quota:concurrent:{tenantId}} 实现，
- *       任务执行开始时 INCR，结束时 DECR。首次 INCR 设置 24 小时 TTL 防止节点宕机导致计数泄漏。</li>
- *   <li><b>日执行配额（P7-3）</b>：通过 Redis 日计数器 {@code ydsz:quota:daily:{tenantId}:{yyyyMMdd}} 实现，
- *       任务派发时 INCR，不释放。TTL 25 小时（跨天自动过期，留 1 小时余量应对时区差异）。</li>
- *   <li><b>容错</b>：配额查询/Redis 操作失败时降级放行（避免配额服务故障导致全局不可用），
- *       仅记录 WARN 日志</li>
- * </ul>
+ * <p>管理租户的任务配额 ({@code ydsz_tenant_quota})：并发任务数上限、日调度次数上限、
+ *
+ * <p>单租户 Worker 数量、跨租户任务隔离。
+ *
+ * <p>配额耗尽时拒绝任务提交并返回 429 Too Many Requests。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

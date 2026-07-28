@@ -1,3 +1,12 @@
+/**
+ * 文件标签 API 模块（前端）
+ * <p>封装文件标签接口，对应后端 {@code /api/v1/nextwiki/tag/*} 端点。
+ * <p>支持按业务域/项目/部门给文档打标签，便于检索归类。
+ * <p>供「知识库 → 标签管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace TagApi {

@@ -7,12 +7,14 @@ import com.njydsz.workflow.domain.entity.FlowEventSubscription;
 import com.njydsz.workflow.domain.entity.FlowNode;
 
 /**
- * 工作流事件订阅服务
+ * 流程事件订阅服务。
+ * <p>外部系统订阅流程实例/任务事件。
  *
- * <p>P0-1: BPMN 错误事件 / 消息事件运行时支持。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowEventSubscriptionService {
 
     /**

@@ -1,3 +1,12 @@
+/**
+ * 任务 DAG 编排 API 模块（前端）
+ * <p>封装任务 DAG（{@code ydsz_job_dag}）编排接口，对应后端 {@code /api/v1/cronjob/jobDag/*} 端点。
+ * <p>支持多任务依赖编排、串并行执行、失败补偿、人工干预节点。
+ * <p>供「任务调度 → DAG 编排」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace JobDagApi {

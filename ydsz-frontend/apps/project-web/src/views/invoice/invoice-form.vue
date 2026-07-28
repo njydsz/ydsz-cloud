@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 项目发票（表单组件）
+ * <p>开票申请的录入表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { InvoiceApi } from '#/api/invoice';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

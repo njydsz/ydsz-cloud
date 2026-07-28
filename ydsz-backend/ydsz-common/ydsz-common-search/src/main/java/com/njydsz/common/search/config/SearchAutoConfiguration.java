@@ -48,14 +48,16 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 搜索服务自动配置
- * <p>
- * 按引擎类型分区装配，通过 {@code @ConditionalOnClass} 门控确保 classpath
- * 中有对应客户端依赖时才激活引擎策略。
+ * 全文检索自动配置。
+ *
+ * <p>封装 Elasticsearch 客户端与索引模板管理：连接池、查询构造器、聚合分析、高亮。
+ *
+ * <p>通过 {@code ydsz.search.*} 配置 ES 集群地址、用户名/密码、连接超时等。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @AutoConfiguration
 @ConditionalOnClass(SearchStrategy.class)

@@ -1,3 +1,12 @@
+/**
+ * Agent 定义 API 模块（前端）
+ * <p>封装 Agent 工具（Tool）注册与元数据维护接口，对应后端 {@code /api/v1/agent/definition/*} 端点。
+ * <p>包含工具名称/描述/参数 Schema/调用方式等。
+ * <p>供「Agent 工具市场」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace DefinitionApi {

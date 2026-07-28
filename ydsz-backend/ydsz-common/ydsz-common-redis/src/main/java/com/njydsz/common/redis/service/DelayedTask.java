@@ -4,15 +4,14 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * 分布式延时队列任务
- *
- * <p>存储在 ZSET 中，score 为到期时间戳（毫秒），member 为任务实例。
- * 通过 {@link Object#equals} 和 {@link Object#hashCode} 区分不同任务，
- * 避免反序列化时不同实例的 member 重复。
+ * 延迟任务实体接口。
+ * <p>表示一个可被延迟队列调度的任务项。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public class DelayedTask implements Serializable {
 
     private static final long serialVersionUID = 1L;

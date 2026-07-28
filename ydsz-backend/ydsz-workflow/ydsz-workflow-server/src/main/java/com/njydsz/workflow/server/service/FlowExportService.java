@@ -3,13 +3,14 @@ package com.njydsz.workflow.server.service;
 import java.util.Map;
 
 /**
- * P1-1/P1-2: 审批单导出 Service
+ * 流程导出服务。
+ * <p>导出流程定义为 BPMN/JSON 文件。
  *
- * <p>对标钉钉/飞书"审批单导出/打印"能力。
- * 提供带水印的审批单 PDF/HTML 导出，包含审批流程轨迹、表单数据、审批意见等。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowExportService {
 
     /**

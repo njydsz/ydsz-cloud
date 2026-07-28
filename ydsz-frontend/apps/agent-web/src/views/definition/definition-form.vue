@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * Agent 工具定义（表单组件）
+ * <p>工具的元数据编辑表单，包含工具名称/描述/参数 Schema/调用方式。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DefinitionApi } from '#/api/definition';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

@@ -13,14 +13,14 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * OCR 文字识别应用服务
- * <p>
- * 支持多种 OCR 引擎：本地 Tesseract、阿里云 OCR、腾讯云 OCR。
- * 用于从扫描件、图片 PDF 中提取文本内容，供全文搜索索引。
+ * OCR 识别服务。
+ * <p>从图片中提取文字。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 public class OcrApplicationService {

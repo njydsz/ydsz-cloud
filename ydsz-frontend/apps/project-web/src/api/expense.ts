@@ -1,3 +1,12 @@
+/**
+ * 项目费用 API 模块（前端）
+ * <p>封装项目费用（{@code ydsz_project_expense}）CRUD 接口，对应后端 {@code /api/v1/project/expense/*} 端点。
+ * <p>记录差旅/招待/材料采购等费用报销，关联预算科目。
+ * <p>供「项目管理 → 费用管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace ExpenseApi {

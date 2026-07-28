@@ -22,26 +22,16 @@ import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 
 /**
- * 分布式执行自动配置（P2-16）
+ * LiteFlow 分布式模式自动配置。
  *
- * <p>当 {@code ydsz.literule.distributed.enabled=true} 时自动装配：
- * <ul>
- *   <li>{@link RedisNodeRegistry} - 基于 Redis 的节点注册表（Redisson 可用时优先）</li>
- *   <li>{@link InMemoryNodeRegistry} - 内存注册表（Redisson 不可用时的降级方案）</li>
- *   <li>{@link RedisRuleConfigBroadcaster} - 基于 Redis Pub/Sub 的配置广播（Redisson 可用时优先）</li>
- *   <li>{@link ConsistentHashSharder} - 一致性 hash 分片器</li>
- *   <li>{@link ShardAwareRuleEngine} - 分片感知的规则引擎装饰器</li>
- *   <li>定时心跳 + 节点刷新任务</li>
- * </ul>
+ * <p>LiteFlow 在集群模式下的自动装配：基于 ZooKeeper/Redis 的规则分发、节点注册、心跳维护。
  *
- * <p>装配优先级：
- * <ol>
- *   <li>classpath 存在 {@code RedissonClient} 且 {@code ydsz.literule.distributed.enabled=true}：使用 Redis 实现</li>
- *   <li>仅 {@code ydsz.literule.distributed.enabled=true}：降级为内存实现（单节点/开发环境）</li>
- * </ol>
+ * <p>保证多个节点之间规则一致性与故障节点自动剔除。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Configuration
 @ConditionalOnProperty(prefix = "ydsz.literule.distributed", name = "enabled", havingValue = "true")
 public class DistributedAutoConfiguration {

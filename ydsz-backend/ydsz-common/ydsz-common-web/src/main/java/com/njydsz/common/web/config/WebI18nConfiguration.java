@@ -5,14 +5,16 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import com.njydsz.common.base.config.BaseI18nConfiguration;
 
 /**
- * Web 端国际化配置
+ * Web 端国际化配置（ydsz-web）。
  *
- * <p>继承 {@link BaseI18nConfiguration}，为 Web 端配置国际化消息文件路径。
- * 默认加载 {@code i18n.messages} 基础消息文件。
+ * <p>提供 ydsz-web 模块的 Locale 解析策略与 {@code LocaleResolver} Bean。
+ *
+ * <p>优先级：{@code X-Lang} Header > {@code Accept-Language} > Cookie > Session。
  *
  * @author ydsz-team
- * @see BaseI18nConfiguration
+ * @since 1.0.0
  */
+
 @AutoConfiguration
 public class WebI18nConfiguration extends BaseI18nConfiguration {
 

@@ -12,20 +12,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.slf4j.MDC;
 /**
- * 任务事件通知服务
+ * 流程任务通知服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分出的"事件触发"职责。
- * 集中处理：
- * <ul>
- *   <li>{@link #fireTaskCompleted} — 任务完成事件（含上下文重载）</li>
- *   <li>{@link #fireInstanceRejected} — 流程被驳回事件</li>
- * </ul>
+ * <p>向当前审批人发送任务到达通知（站内信、IM、邮件、短信），
  *
- * <p>事件分发委托给 {@link FlowTaskSupport}（其内部吞异常、遍历监听器）。
- * 本类只做事件语义封装，避免在主流程中嵌入事件发布样板代码。
+ * <p>支持免打扰时段、用户偏好、租户级模板覆盖。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

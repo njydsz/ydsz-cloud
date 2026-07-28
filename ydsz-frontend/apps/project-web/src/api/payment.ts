@@ -1,3 +1,12 @@
+/**
+ * 项目付款 API 模块（前端）
+ * <p>封装项目付款（{@code ydsz_project_payment}）CRUD 接口，对应后端 {@code /api/v1/project/payment/*} 端点。
+ * <p>记录对供应商/员工的付款申请、审批、实际付款。
+ * <p>供「项目管理 → 付款管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace PaymentApi {

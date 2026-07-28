@@ -17,21 +17,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 三方审批账号映射服务实现
+ * 第三方审批账号服务实现。
  *
- * <p>P0-2: 三方审批 SDK（钉钉/飞书/企微）账号映射服务实现。
+ * <p>管理钉钉/飞书/企业微信审批账号的绑定关系 ({@code ydsz_flow_thirdparty_account})：
  *
- * <p>核心能力：
- * <ul>
- *   <li>{@link #getByUserIdAndPlatform} / {@link #getByOpenId} — 映射查询（回调反查系统用户）</li>
- *   <li>{@link #saveOrUpdate} — 保存或更新令牌（含按 userId+platform 自动去重）</li>
- *   <li>{@link #bindAccount} — 绑定三方账号（新建或更新 openId/unionId）</li>
- * </ul>
+ * <p>用户在 IM 端发起审批后，通过此服务映射到本系统用户。
  *
- * <p>所有方法均防御性编码：空值检查 + try-catch，保证不拖垮回调主流程。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P2-5: 多实例合并审批服务
+ * 流程实例合并服务。
+ * <p>多个同模板实例合并处理。
  *
- * <p>对标钉钉"合并审批"能力。将多个相似的流程实例合并为一笔审批，
- * 审批人一次性审批多个申请，提高审批效率。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowInstanceMergeService {
 
     /**

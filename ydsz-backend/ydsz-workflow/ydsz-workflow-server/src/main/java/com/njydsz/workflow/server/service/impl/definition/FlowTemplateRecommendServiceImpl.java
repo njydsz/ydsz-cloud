@@ -16,17 +16,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P2-2: 审批模板智能推荐服务实现
+ * 流程模板推荐服务实现。
  *
- * <p>推荐算法：
- * <ol>
- *   <li>用户历史频率（权重 0.5）：统计用户历史发起的流程类型频次</li>
- *   <li>模板热度（权重 0.3）：模板 use_count 全局排序</li>
- *   <li>业务类型匹配（权重 0.2）：根据 businessType 过滤相关分类</li>
- * </ol>
+ * <p>基于用户历史发起记录 + 模板使用频次 + 业务标签，向用户推荐最相关的流程模板。
  *
+ * <p>推荐结果综合考虑模板相似度、最近使用频次、租户/部门匹配度，支持个性化排序。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -22,14 +22,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 回收站领域服务
- * <p>
- * 管理回收站条目的恢复、永久删除、自动清理。
- * 默认保留 30 天，超期自动永久删除。
+ * NextWiki 回收站领域服务。
+ * <p>删除/恢复/彻底删除文件。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

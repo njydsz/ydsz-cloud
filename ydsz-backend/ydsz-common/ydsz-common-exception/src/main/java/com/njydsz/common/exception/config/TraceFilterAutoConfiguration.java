@@ -10,14 +10,16 @@ import org.springframework.core.Ordered;
 import com.njydsz.common.exception.observability.TraceContextFilter;
 
 /**
- * TraceId 过滤器自动配置
+ * Trace 过滤器配置。
  *
- * <p>通过 {@code ydsz.exception.trace-enabled=true}（默认启用）控制是否注册。
- * 过滤器顺序设为最高优先级，确保 traceId 在所有业务过滤器之前注入。
+ * <p>注册 {@code TraceFilter}：从请求头读取或生成 TraceId / SpanId，写入 MDC 与响应头。
+ *
+ * <p>与 Logback 的 {@code %X{traceId}} 模式配合，实现全链路日志串联。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @ConditionalOnClass(name = "jakarta.servlet.Filter")
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "trace-enabled", havingValue = "true", matchIfMissing = true)

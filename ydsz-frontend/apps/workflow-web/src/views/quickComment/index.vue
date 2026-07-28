@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 快捷回复（列表页）
+ * <p>审批快捷回复模板的列表页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

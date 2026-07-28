@@ -13,19 +13,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 /**
- * 任务日志内容 Service 实现（P0-2 在线日志白屏化）。
+ * 任务日志内容服务实现。
  *
- * <p>实现要点：
- * <ul>
- *   <li>{@code batchSave}: 循环 insert 批量写入；空列表直接返回，避免无意义 DB 调用</li>
- *   <li>{@code pageByLogId}: 计算 offset = (page-1)*size，调用 mapper.selectByLogId</li>
- *   <li>{@code listAfterLine}: 透传 mapper.selectAfterLine，供 SSE 增量推送</li>
- *   <li>{@code countByLogId}: 透传 mapper.countByLogId</li>
- * </ul>
+ * <p>拆分存储任务执行日志的内容（{code ydsz_job_log_content}），与 {@code ydsz_job_log} 1:1 关联。
+ *
+ * <p>解决大字段（TEXT/GZIP）导致的 IO 性能问题：日志列表只查询主表，大字段按需懒加载。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

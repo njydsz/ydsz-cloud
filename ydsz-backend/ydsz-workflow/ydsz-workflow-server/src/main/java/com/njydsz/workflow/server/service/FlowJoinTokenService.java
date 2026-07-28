@@ -1,16 +1,14 @@
 package com.njydsz.workflow.server.service;
 
 /**
- * GAP-P2: 并行网关 join 令牌服务
+ * 加签 Token 服务。
+ * <p>通过 Token 链接邀请会签人。
  *
- * <p>跟踪并行分支完成状态，确保 join 聚合精确性。
- *
- * <p>当流程遇到并行网关（parallel gateway）时，会拆分出多个分支并行执行。
- * 每个分支到达 join 节点时调用 {@link #arriveToken} 标记完成，
- * 仅当所有分支都到达后（{@link #allArrived} 为 true）才允许聚合通过，避免提前或遗漏聚合。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowJoinTokenService {
 
     /**

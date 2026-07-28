@@ -1,4 +1,13 @@
 <script lang="ts" setup>
+/**
+ * Agent 管理（表单组件）
+ * <p>Agent 智能体的创建/编辑表单，作为 {@code useVbenModal} 的子组件使用。
+ * <p>支持 Agent 名称、类型、模型提供商/名称、系统提示词、温度等字段。
+ * <p>通过 {@code emit('success')} 通知父组件刷新列表。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { AgentApi } from '#/api/agent';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

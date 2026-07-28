@@ -18,15 +18,16 @@ import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 
 /**
- * Util 模块自动配置类
+ * 通用工具类自动配置。
  *
- * <p>通过 Spring Boot AutoConfiguration 机制，自动装配工具类所需的 Bean，
- * 包括 SpringContextHolder、OkHttpClient 等。
+ * <p>注册项目级工具 Bean：雪花 ID 生成器、Tracer、加密工具、Bean 拷贝器、断言工具。
+ *
+ * <p>所有工具 Bean 均为无状态、线程安全，可直接注入使用。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
+
 @AutoConfiguration
 @EnableConfigurationProperties({OkHttpProperties.class, SnowflakeProperties.class})
 public class UtilAutoConfiguration {

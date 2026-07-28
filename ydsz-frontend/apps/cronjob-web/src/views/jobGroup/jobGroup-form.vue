@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 任务分组（表单组件）
+ * <p>任务分组的创建/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { JobGroupApi } from '#/api/jobGroup';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

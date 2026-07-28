@@ -33,12 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 消息路由规则服务实现。
  *
- * <p>使用 SpEL 求值 {@code conditionExpr}，上下文变量 {@code #request} 绑定 {@link MessageRequest}。
- * match 按 priority 升序遍历 enabled 规则，命中即返回；SpEL 求值失败跳过该规则。
+ * <p>维护消息路由规则 ({@code ydsz_msg_route_rule})：根据租户/业务/优先级/模板类型选择渠道、
+ *
+ * <p>降级链、回执回调。规则支持 Groovy/Aviator 表达式动态求值。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 任务连接器（列表页）
+ * <p>任务执行器的列表页，注册 HTTP/Shell/SQL/Java/Python 等执行器。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

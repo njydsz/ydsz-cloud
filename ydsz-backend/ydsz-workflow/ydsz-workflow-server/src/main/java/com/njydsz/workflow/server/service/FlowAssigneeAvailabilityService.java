@@ -17,19 +17,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P1-6: 审批人忙碌状态/日历服务
+ * 审批人可用性服务。
+ * <p>判断审批人是否在岗/请假/离职。
  *
- * <p>对标钉钉/飞书"审批人忙碌状态"能力。通过 Redis 统计每位审批人当前
- * 待办数量和最近完成时间，判断忙碌程度（IDLE / NORMAL / BUSY / OVERLOADED）。
- *
- * <p>Key 设计：
- * <ul>
- *   <li>{@code flow:assignee:todo_count:{userId}} — 当前待办数</li>
- *   <li>{@code flow:assignee:last_active:{userId}} — 最近活跃时间</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

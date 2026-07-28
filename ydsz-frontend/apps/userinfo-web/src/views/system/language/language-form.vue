@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 国际化（表单组件）
+ * <p>语言条目的编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { LanguageApi } from '#/api/language';
 
 import { useVbenModal } from '@ydsz/common-ui';

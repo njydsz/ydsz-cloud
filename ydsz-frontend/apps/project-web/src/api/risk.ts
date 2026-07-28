@@ -1,3 +1,12 @@
+/**
+ * 项目风险 API 模块（前端）
+ * <p>封装项目风险（{@code ydsz_project_risk}）CRUD 接口，对应后端 {@code /api/v1/project/risk/*} 端点。
+ * <p>支持风险登记、概率/影响矩阵、应对措施、跟踪闭环。
+ * <p>供「项目管理 → 风险管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace RiskApi {

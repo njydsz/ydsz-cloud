@@ -18,20 +18,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务催办服务
+ * 流程任务催办服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"催办"职责。
- * 集中处理：
- * <ul>
- *   <li>{@link #urge} — 实例级催办（按 30 分钟 Redis Lua 冷却）</li>
- *   <li>{@link #urgeByNode} — 节点级催办（同样限流）</li>
- * </ul>
+ * <p>向当前审批人发送催办通知（站内信/IM），支持催办次数限制、
  *
- * <p>催办对每个待办任务写入审计日志、触发 onTaskUrged 事件、累计 Prometheus 指标。
- * 限流通过 {@link FlowUrgeLimiter} 实现，限流命中时抛 RATE_LIMIT 异常。
+ * <p>催办升级（催办 N 次后自动转办给上级）、催办抑制（防骚扰）。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

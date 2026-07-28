@@ -5,14 +5,16 @@ import java.util.List;
 import com.njydsz.common.queue.service.DeadLetterQueueService;
 
 /**
- * No-Op 死信队列服务实现
+ * 空操作死信队列（默认降级）。
  *
- * <p>当 RedisService 不可用时使用的空实现，避免返回 null Bean。
- * 所有方法均为空操作，确保依赖注入不会失败。
+ * <p>当 Redis 不可用或死信队列被显式禁用时，注入此空实现，
+ *
+ * <p>所有调用方法均为 no-op，避免业务路径 NPE，保留日志埋点。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 public class NoOpDeadLetterQueueService implements DeadLetterQueueService {
 
     @Override

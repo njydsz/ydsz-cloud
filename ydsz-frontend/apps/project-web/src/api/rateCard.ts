@@ -1,3 +1,12 @@
+/**
+ * 项目计费卡 API 模块（前端）
+ * <p>封装计费卡（{@code ydsz_project_rate_card}）CRUD 接口，对应后端 {@code /api/v1/project/rateCard/*} 端点。
+ * <p>按角色/职级/技术栈定义计费标准，是计费/收入分摊的基础。
+ * <p>供「项目管理 → 计费管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace RateCardApi {

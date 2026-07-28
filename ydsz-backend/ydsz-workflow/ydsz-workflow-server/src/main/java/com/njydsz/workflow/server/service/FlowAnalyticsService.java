@@ -4,13 +4,14 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * 审批数据分析服务接口（P2-2）。
+ * 流程分析服务。
+ * <p>多维度统计流程实例、任务、SLA 数据。
  *
- * <p>对标钉钉/飞书审批的"数据分析"仪表盘，聚合审批效率、驳回率、
- * 办理人排行、流程效率对比等核心指标。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowAnalyticsService {
 
     /**

@@ -3,12 +3,14 @@ package com.njydsz.workflow.server.service;
 import java.util.Map;
 
 /**
- * P2-4: 审批数据周报/月报服务
+ * 流程报表服务。
+ * <p>生成流程运行报表。
  *
- * <p>对标钉钉"审批周报"能力。定时聚合审批数据，生成周报/月报并推送给管理者。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowReportService {
 
     /**

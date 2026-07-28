@@ -1,3 +1,12 @@
+/**
+ * 定时任务 API 模块（前端）
+ * <p>封装定时任务（{@code ydsz_job}）的 CRUD 接口调用，对应后端 {@code /api/v1/cronjob/job/*} 端点。
+ * <p>支持 Cron 表达式、负责人、告警通道、超时配置、并发策略等。
+ * <p>供「任务调度 → 任务列表」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace JobApi {

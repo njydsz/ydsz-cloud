@@ -1,3 +1,12 @@
+/**
+ * 规则断点调试 API 模块（前端）
+ * <p>封装规则断点调试接口，对应后端 {@code /api/v1/literule/breakpoint/*} 端点。
+ * <p>支持规则执行时单步中断、变量查看、表达式求值、跳过/继续。
+ * <p>供「规则引擎 → 调试器」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace BreakpointApi {

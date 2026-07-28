@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 字典项（表单组件）
+ * <p>字典项的创建/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DictitemApi } from '#/api/dictItem';
 
 import { useVbenModal } from '@ydsz/common-ui';

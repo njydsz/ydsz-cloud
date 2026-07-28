@@ -12,13 +12,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 回收站应用服务
- * <p>
- * 编排回收站列表、恢复、永久删除、清空操作，协调领域服务。
+ * 回收站应用服务。
+ * <p>文件删除/恢复/彻底删除。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

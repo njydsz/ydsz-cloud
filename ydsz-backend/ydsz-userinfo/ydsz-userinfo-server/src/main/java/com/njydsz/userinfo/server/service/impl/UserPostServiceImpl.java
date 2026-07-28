@@ -14,13 +14,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 用户岗位关联 Service 实现。
+ * 用户-岗位关联服务实现。
  *
- * <p>内部关联表服务，供其他 Service 内部调用。
+ * <p>维护用户-岗位的多对多关联 ({@code ydsz_user_post})：支持一人多岗（主岗/兼职），
+ *
+ * <p>用于工作流审批人解析（按岗位找人）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

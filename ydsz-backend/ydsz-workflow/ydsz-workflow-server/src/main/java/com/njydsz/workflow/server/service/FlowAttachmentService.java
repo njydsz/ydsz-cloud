@@ -8,12 +8,14 @@ import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.entity.FlowAttachment;
 
 /**
- * 自建工作流引擎 - 审批附件 Service
+ * 流程附件服务。
+ * <p>附件上传/下载/关联到任务/字段。
  *
- * <p>P1-6 (GAP-51): 审批时由前端提交的附件统一落库，支持按任务/实例维度查询与删除。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowAttachmentService {
 
     /**

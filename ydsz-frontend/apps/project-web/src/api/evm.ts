@@ -1,3 +1,12 @@
+/**
+ * EVM 挣值管理 API 模块（前端）
+ * <p>封装 EVM（Earned Value Management）指标接口，对应后端 {@code /api/v1/project/evm/*} 端点。
+ * <p>提供 PV/EV/AC/CPI/SPI 等挣值分析指标，支持项目健康度评分。
+ * <p>供「项目管理 → EVM 分析」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace EvmApi {

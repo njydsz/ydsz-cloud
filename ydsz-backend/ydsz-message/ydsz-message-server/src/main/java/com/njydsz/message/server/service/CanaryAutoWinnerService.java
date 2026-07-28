@@ -16,14 +16,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * A/B 实验自动胜出服务（P2-2）。
- *
- * <p>当 A/B 实验运行达到足够样本量后，自动计算各实验组的转化率,
- * 将胜出方案（送达率/已读率最高）设为正式版本,关闭灰度实验。
+ * 灰度自动胜出服务。
+ * <p>基于统计数据自动选出灰度胜出版本并放量。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

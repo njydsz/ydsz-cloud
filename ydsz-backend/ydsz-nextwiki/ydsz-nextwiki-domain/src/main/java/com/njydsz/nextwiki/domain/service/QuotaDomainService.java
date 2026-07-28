@@ -17,14 +17,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 存储配额领域服务
- * <p>
- * 管理用户/租户级存储配额的校验和更新。
- * 上传时校验配额，删除时释放配额。
+ * NextWiki 配额领域服务。
+ * <p>租户/用户的存储配额管理。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

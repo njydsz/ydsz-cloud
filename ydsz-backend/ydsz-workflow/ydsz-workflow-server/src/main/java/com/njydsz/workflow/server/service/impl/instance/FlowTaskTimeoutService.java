@@ -17,22 +17,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务超时/挂起/激活服务
+ * 流程任务超时服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"任务生命周期状态切换"职责。
- * 集中处理：
- * <ul>
- *   <li>{@link #timeoutTask} — 超时标记（P2-36 引入 onTaskTimeout 事件）</li>
- *   <li>{@link #suspendTask} — 任务级挂起（P2-1）</li>
- *   <li>{@link #activateTask} — 任务级激活（P2-1）</li>
- *   <li>{@link #cancelByInstance} — 取消某实例全部 PENDING 任务（终止/驳回终态使用）</li>
- * </ul>
+ * <p>扫描超时未办任务，根据 SLA 配置自动触发：跳过、转办、催办、终止，
  *
- * <p>这四个方法都不推进流程，仅做任务状态切换；超时和挂起触发对应事件，挂起期
- * 间 JobScanner 应跳过 SUSPENDED 状态任务。
+ * <p>由独立 Scheduler 周期调度（{@code @Scheduled}，默认 1 分钟）。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

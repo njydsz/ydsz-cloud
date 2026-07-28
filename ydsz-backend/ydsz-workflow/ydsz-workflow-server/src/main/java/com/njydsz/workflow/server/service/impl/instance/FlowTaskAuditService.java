@@ -16,23 +16,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务审计/委派代理日志服务
+ * 流程任务审计服务实现。
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"代理操作审计"职责。
- * 委派代理日志已合并到 {@code ydsz_flow_audit_log}（businessType=DELEGATE_PROXY），
- * 不再使用独立的 {@code ydsz_flow_delegate_log} 表。
+ * <p>记录流程任务的所有操作审计日志：审批、转办、加签、撤回、催办、SLA 超时，
  *
- * <p>审计日志字段映射：
- * <ul>
- *   <li>businessType = "DELEGATE_PROXY" — 标识委派代理操作</li>
- *   <li>action = PASS/REJECT/CLAIM/... — 实际办理动作</li>
- *   <li>operatorId = 代理人 ID</li>
- *   <li>targetId = 授权人 ID</li>
- *   <li>comment = 办理意见</li>
- * </ul>
+ * <p>用于合规审计与事后追溯。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

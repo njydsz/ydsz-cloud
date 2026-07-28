@@ -1,3 +1,12 @@
+/**
+ * 国际化 API 模块（前端）
+ * <p>封装国际化语言包接口，对应后端 {@code /api/v1/userinfo/language/*} 端点。
+ * <p>支持多语言文本、占位符、租户自定义。
+ * <p>供「系统管理 → 国际化」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace LanguageApi {

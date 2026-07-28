@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 角色（列表页）
+ * <p>角色（{@code ydsz_role}）的列表页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 
 import { Page, useVbenModal } from '@ydsz/common-ui';

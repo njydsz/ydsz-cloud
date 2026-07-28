@@ -23,14 +23,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 退订中心服务实现（P1-5）。
+ * 退订服务实现。
  *
- * <p>编排 {@link UnsubscribeTokenUtil}（token 签名/校验）与 {@link SubscriptionService}
- * （订阅状态变更）。token 校验失败 / 过期 / 中心关闭均抛 {@link SysException}。
+ * <p>管理用户对模板/渠道/标签的退订关系：URL 退订（一键退订链接）、
+ *
+ * <p>回复关键字退订（短信）、IM 退订。
+ *
+ * <p>退订记录作为通知偏好的「强约束」覆盖，发送前自动过滤。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

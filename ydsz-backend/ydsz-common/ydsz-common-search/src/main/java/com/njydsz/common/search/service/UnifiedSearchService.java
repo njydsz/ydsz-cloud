@@ -29,14 +29,14 @@ import com.njydsz.common.search.provider.SearchProviderRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 统一搜索服务
- * <p>
- * 聚合多个 {@link SearchProvider} 的搜索结果，提供跨实体统一搜索能力。
- * 通过 {@link SearchEngineRegistry} 委托搜索引擎策略，支持主引擎 + 降级链。
+ * 统一搜索服务接口。
+ * <p>跨多业务实体（项目/合同/任务/文档）联合检索。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 public class UnifiedSearchService {
 

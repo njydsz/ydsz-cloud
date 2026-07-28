@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * EVM 挣值管理（列表页）
+ * <p>EVM 挣值分析的列表页，展示 PV/EV/AC/CPI/SPI 等指标。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

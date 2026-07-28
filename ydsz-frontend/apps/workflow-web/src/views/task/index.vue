@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 流程任务（列表页）
+ * <p>流程任务（{@code ydsz_flow_run_task}）的列表页，展示待办/已办。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

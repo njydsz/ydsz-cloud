@@ -1,3 +1,12 @@
+/**
+ * 项目回款 API 模块（前端）
+ * <p>封装项目回款（{@code ydsz_project_revenue}）CRUD 接口，对应后端 {@code /api/v1/project/revenue/*} 端点。
+ * <p>记录合同回款节点、发票号、到账金额、到账日期。
+ * <p>供「项目管理 → 回款管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace RevenueApi {

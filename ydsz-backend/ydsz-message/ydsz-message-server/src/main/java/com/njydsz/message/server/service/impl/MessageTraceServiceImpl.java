@@ -21,14 +21,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P0-2: 消息端到端追踪服务实现。
+ * 消息全链路追踪服务实现。
  *
- * <p>异步写入轨迹记录，不影响消息发送主流程性能。
- * 轨迹记录失败时仅记日志，不抛异常。
+ * <p>记录消息从创建 → 模板渲染 → 渠道发送 → 送达回执 → 用户点击的全链路事件 ({@code ydsz_msg_trace})。
+ *
+ * <p>每条事件携带 TraceId 与 ProviderTraceId，可与 SkyWalking/OpenTelemetry 关联。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

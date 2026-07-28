@@ -3,20 +3,14 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 /**
- * 流程管理员权限服务（P1-6）
+ * 流程管理员权限服务。
+ * <p>授予/撤销用户流程管理权限。
  *
- * <p>对标钉钉/飞书审批的"管理员权限体系"能力，支持：
- * <ul>
- *   <li>角色体系：FLOW_ADMIN（流程管理员）/ FLOW_DESIGNER（流程设计者）/ FLOW_AUDITOR（流程审计员）</li>
- *   <li>数据权限：管理员可管理所有流程；设计者只能编辑自己创建的流程；审计员只读</li>
- *   <li>操作权限：部署/下线/迁移/终止/管理员转交 等敏感操作需要 ADMIN 角色</li>
- *   <li>委托授权：ADMIN 可将权限临时委托给其他用户</li>
- * </ul>
- *
- * <p>权限数据来源：{@code ydsz_flow_admin_role} 表（用户-角色映射）。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowAdminPermissionService {
 
     /**

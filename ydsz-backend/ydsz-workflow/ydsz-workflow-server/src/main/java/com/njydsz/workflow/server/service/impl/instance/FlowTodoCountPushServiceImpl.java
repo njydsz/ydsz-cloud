@@ -15,21 +15,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 待办数实时推送服务
+ * 待办计数推送服务实现。
  *
- * <p>P1-7: WebSocket 待办数推送
- * <p>对标钉钉/飞书审批的"待办红点"实时刷新能力：任务创建/通过/驳回/转办时，
- * 主动推送当前用户的待办数到前端，避免轮询。
+ * <p>实时推送用户待办数给 WebSocket 客户端（{@code ydsz.flow.todo-count}）：
  *
- * <p>实现要点：
- * <ul>
- *   <li>复用 {@link NotificationClient#pushRealtime} Feign 接口（降级安全）</li>
- *   <li>所有 Feign 调用都被 try-catch 吞掉，不影响主流程</li>
- *   <li>推送频率控制：单次任务事件最多推送 1 次（避免重复）</li>
- * </ul>
+ * <p>任务创建/完成/转交时触发增量推送，客户端展示顶栏红点。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

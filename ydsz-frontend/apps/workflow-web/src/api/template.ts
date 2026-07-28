@@ -1,3 +1,12 @@
+/**
+ * 流程模板 API 模块（前端）
+ * <p>封装流程模板（{@code ydsz_flow_definition}）CRUD 接口，对应后端 {@code /api/v1/workflow/template/*} 端点。
+ * <p>支持 BPMN 2.0 标准、可视化设计、版本管理、灰度发布。
+ * <p>供「工作流 → 流程模板」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace TemplateApi {

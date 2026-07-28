@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 系统配置（列表页）
+ * <p>系统参数（{@code ydsz_config}）的列表页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 
 import { Page, useVbenModal } from '@ydsz/common-ui';

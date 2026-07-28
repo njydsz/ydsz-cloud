@@ -4,21 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * GAP-P1: 审批效率分析服务
+ * 流程效率分析服务。
+ * <p>平均耗时、瓶颈节点、异常率。
  *
- * <p>提供审批运营数据看板所需的统计能力，对标钉钉/飞书审批的"效率分析"模块。
- * 数据来源为 {@code ydsz_flow_his_task} 历史任务归档表。
- *
- * <p>核心指标：
- * <ul>
- *   <li>审批单量 — 时间段内完成的审批任务总数</li>
- *   <li>平均耗时 — 每个审批任务的平均处理时长（毫秒）</li>
- *   <li>代批率 — 非本人处理（委派/转办后由他人完成）的占比</li>
- *   <li>超期率 — 超过 SLA 配置时限的占比</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowEfficiencyService {
 
     /**

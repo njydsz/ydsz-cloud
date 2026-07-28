@@ -16,14 +16,16 @@ import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 线程池监控自动配置
+ * 线程池监控自动配置。
  *
- * <p>当 Micrometer 可用时，自动注册线程池监控指标。
- * 当 Micrometer 不可用时，降级为日志输出。
+ * <p>注册线程池运行时指标采集器：核心线程数、活跃线程数、队列大小、拒绝次数、任务耗时。
+ *
+ * <p>所有 {@code ExecutorService} Bean 自动注册指标（基于 Micrometer Timer/Gauge）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @AutoConfiguration
 public class ThreadPoolMonitorAutoConfiguration {

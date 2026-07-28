@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 角色（表单组件）
+ * <p>角色的创建/编辑表单，包含权限分配。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RoleApi } from '#/api/role';
 
 import { useVbenModal } from '@ydsz/common-ui';

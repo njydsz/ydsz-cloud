@@ -13,14 +13,16 @@ import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
 
 /**
- * RocketMQ 事件投递网关自动配置
+ * RocketMQ 网关配置。
  *
- * <p>仅当 classpath 存在 {@code RocketMQTemplate} 且容器中有该 Bean 时装配。
- * 使用单独配置类隔离 RocketMQ 依赖，避免 NoClassDefFoundError。
+ * <p>封装 RocketMQ 生产者/消费者 Bean 注册逻辑，支持事务消息、顺序消息、延迟消息。
+ *
+ * <p>通过 {@code ydsz.event.rocketmq.*} 配置 NameServer 地址、Topic、生产组、消费组等。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Configuration
 @ConditionalOnClass(name = "org.apache.rocketmq.spring.core.RocketMQTemplate")
 @ConditionalOnBean(type = "org.apache.rocketmq.spring.core.RocketMQTemplate")

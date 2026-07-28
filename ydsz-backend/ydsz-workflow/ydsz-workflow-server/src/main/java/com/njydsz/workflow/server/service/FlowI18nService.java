@@ -4,19 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P2-3: 工作流国际化(i18n)服务
+ * 流程国际化服务。
+ * <p>多语言标题/意见/通知。
  *
- * <p>对标飞书多语言审批能力。提供工作流枚举值的国际化消息 key 和多语言描述。
- *
- * <p>设计原则：
- * <ul>
- *   <li>枚举类不内嵌中文描述，改为提供 message key</li>
- *   <li>后端提供 i18n 消息查询 API，前端按 locale 渲染</li>
- *   <li>支持 zh_CN / en_US 两种语言，默认 zh_CN</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowI18nService {
 
     /**

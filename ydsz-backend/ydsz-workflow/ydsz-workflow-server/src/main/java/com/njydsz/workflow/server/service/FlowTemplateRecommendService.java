@@ -4,21 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P2-2: 审批模板智能推荐服务
+ * 流程模板推荐服务。
+ * <p>向用户推荐相关模板。
  *
- * <p>对标钉钉"推荐模板"能力。基于用户历史发起记录 + 业务类型匹配 + 热度排序，
- * 为用户推荐最可能需要的审批模板。
- *
- * <p>推荐策略：
- * <ol>
- *   <li>用户历史发起频率：统计用户过去 30 天发起的流程类型，按频次降序</li>
- *   <li>同部门热门模板：同部门其他用户常用的模板</li>
- *   <li>全局热门模板：按 use_count 降序的兜底推荐</li>
- *   <li>业务类型匹配：根据当前上下文（如项目管理模块）推荐相关分类模板</li>
- * </ol>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowTemplateRecommendService {
 
     /**

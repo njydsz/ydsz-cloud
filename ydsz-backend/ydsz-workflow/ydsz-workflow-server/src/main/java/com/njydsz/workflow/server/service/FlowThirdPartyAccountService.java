@@ -3,14 +3,14 @@ package com.njydsz.workflow.server.service;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 
 /**
- * 三方审批账号映射服务
+ * 第三方审批账号服务。
+ * <p>IM 账号与本系统用户映射。
  *
- * <p>P0-2: 三方审批 SDK（钉钉/飞书/企微）账号映射服务。
- * <p>对外暴露：按系统用户/三方 openId 查询映射、保存或更新令牌、绑定账号。
- * 三方审批回调时通过 {@link #getByOpenId} 反查系统用户，驱动工作流通过/驳回等操作。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowThirdPartyAccountService {
 
     /**

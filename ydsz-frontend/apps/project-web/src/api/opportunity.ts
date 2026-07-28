@@ -1,3 +1,12 @@
+/**
+ * 商机 API 模块（前端）
+ * <p>封装销售商机（{@code ydsz_project_opportunity}）CRUD 接口，对应后端 {@code /api/v1/project/opportunity/*} 端点。
+ * <p>支持客户/产品/预计金额/阶段/胜率/负责人等销售漏斗管理。
+ * <p>供「销售管理 → 商机管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace OpportunityApi {

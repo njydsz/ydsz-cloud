@@ -13,26 +13,14 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P1-5: 待办智能优先级排序服务
+ * 待办智能排序服务。
+ * <p>按 SLA/优先级/催办次数等智能排序。
  *
- * <p>对标钉钉/飞书"智能待办排序"能力。综合以下维度计算排序分：
- * <ul>
- *   <li>基础优先级（node.ext.priority，1-100，默认 50）</li>
- *   <li>SLA 紧急度（距 dueAt 的时间越短，加分越高；已超期直接置顶）</li>
- *   <li>等待时长（创建时间越久，适当加分）</li>
- *   <li>催办次数（被催办过的任务适当提前）</li>
- * </ul>
- *
- * <p>排序公式：
- * <pre>
- *   score = priority * 100
- *         + slaBonus（max 3000）
- *         + waitHours * 10（max 500）
- *         + reminderCount * 100（max 500）
- * </pre>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 public class FlowTodoSmartSortService {

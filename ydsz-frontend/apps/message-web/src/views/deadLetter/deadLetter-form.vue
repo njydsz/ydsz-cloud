@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 死信队列（详情组件）
+ * <p>死信消息的详情展示，支持重投/丢弃操作。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DeadLetterApi } from '#/api/deadLetter';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

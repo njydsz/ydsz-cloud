@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 流程实例（详情组件）
+ * <p>流程实例的详情展示，包含流程图、流转历史。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { InstanceApi } from '#/api/instance';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

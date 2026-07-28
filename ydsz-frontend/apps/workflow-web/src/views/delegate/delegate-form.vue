@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 流程委托（表单组件）
+ * <p>委托规则的创建/编辑表单，临时委托审批权限。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DelegateApi } from '#/api/delegate';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

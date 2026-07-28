@@ -2,11 +2,14 @@ package com.njydsz.message.server.service.receipt;
 
 
 /**
- * 消息撤回服务
+ * 消息撤回服务接口。
+ * <p>撤回已发送的消息。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface RecallService {
 
     /**

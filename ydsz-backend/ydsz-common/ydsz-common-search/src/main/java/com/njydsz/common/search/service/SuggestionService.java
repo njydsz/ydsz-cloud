@@ -14,11 +14,14 @@ import com.njydsz.common.search.core.SuggestStrategy;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 搜索建议服务
+ * 搜索建议服务接口。
+ * <p>输入前缀返回候选词/热门词。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 public class SuggestionService {
 

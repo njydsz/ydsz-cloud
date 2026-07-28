@@ -10,19 +10,14 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.domain.dto.core.CardMessageDTO;
 
 /**
- * 交互式卡片消息渲染器（P1-1）。
- *
- * <p>将 {@link CardMessageDTO} 转换为各通道的消息请求：
- * <ul>
- *   <li>DINGTALK/DINGTALK_WORK: msgType=action_card</li>
- *   <li>WECOM/WECOM_APP: msgType=textcard</li>
- *   <li>INAPP: extra 字段携带卡片 JSON,前端渲染</li>
- *   <li>其他通道: 降级为纯文本</li>
- * </ul>
+ * 卡片消息渲染器。
+ * <p>渲染 IM 卡片/Adaptive Card/Markdown Card 消息。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Component
 public class CardMessageRenderer {
 

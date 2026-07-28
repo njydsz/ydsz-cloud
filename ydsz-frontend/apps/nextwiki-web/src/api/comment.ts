@@ -1,3 +1,12 @@
+/**
+ * 文件评论 API 模块（前端）
+ * <p>封装文件评论接口，对应后端 {@code /api/v1/nextwiki/comment/*} 端点。
+ * <p>支持楼中楼回复、@提及、Markdown 格式、表情点赞。
+ * <p>供「知识库 → 文档评论」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace CommentApi {

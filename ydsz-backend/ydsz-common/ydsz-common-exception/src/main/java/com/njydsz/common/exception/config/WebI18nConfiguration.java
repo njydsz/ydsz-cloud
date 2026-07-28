@@ -16,15 +16,16 @@ import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Web MVC 场景下的 i18n 配置
+ * Web 端国际化配置（ydsz-web）。
  *
- * <p>本类通过 {@link ConditionalOnClass} 条件装配，
- * 仅在类路径存在 {@code org.springframework.web.servlet.LocaleResolver} 时生效。
- * 这样 exception 模块可不依赖 spring-webmvc 编译期强引用。</p>
+ * <p>提供 ydsz-web 模块的 Locale 解析策略与 {@code LocaleResolver} Bean。
+ *
+ * <p>优先级：{@code X-Lang} Header > {@code Accept-Language} > Cookie > Session。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties(I18nProperties.class)

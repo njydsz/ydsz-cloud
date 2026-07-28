@@ -18,13 +18,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 执行产物管理服务（P2-8）。
+ * 任务产物服务实现。
  *
- * <p>提供执行产物的存储、查询、下载和清理能力。
+ * <p>管理任务运行产出的文件（{@code ydsz_job_artifact}）：报表、导出、
+ *
+ * <p>临时下载链接。产物支持 OSS / 本地存储双后端。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

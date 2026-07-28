@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 规则 CEP（表单组件）
+ * <p>复杂事件处理规则的编辑表单，支持事件模式、时间窗配置。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { CepApi } from '#/api/cep';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

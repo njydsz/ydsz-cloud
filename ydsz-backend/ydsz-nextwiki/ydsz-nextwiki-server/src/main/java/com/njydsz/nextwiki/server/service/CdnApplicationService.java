@@ -9,14 +9,14 @@ import cn.hutool.crypto.digest.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * CDN 集成应用服务
- * <p>
- * 提供 CDN 缓存预热、URL 刷新、回源策略管理。
- * 支持阿里云 CDN、腾讯云 CDN、Cloudflare 等主流 CDN 服务商。
+ * CDN 加速服务。
+ * <p>文件下载/预览走 CDN 边缘节点。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 public class CdnApplicationService {

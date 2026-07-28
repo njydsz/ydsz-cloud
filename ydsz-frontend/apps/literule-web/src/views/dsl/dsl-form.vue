@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 规则 DSL（编辑器组件）
+ * <p>规则 DSL 的编辑器组件，支持 JSON/YAML 格式的脚本编写、校验。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DslApi } from '#/api/dsl';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

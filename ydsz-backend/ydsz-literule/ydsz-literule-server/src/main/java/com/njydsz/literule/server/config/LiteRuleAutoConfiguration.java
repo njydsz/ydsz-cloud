@@ -86,13 +86,16 @@ import com.njydsz.workflow.api.client.WorkflowServiceClient;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * LiteRule 自动配置
+ * LiteFlow 规则引擎自动配置。
  *
- * <p>自动注册核心组件：表达式求值器、规则引擎、规则管理服务。
- * 当 classpath 中存在 RuleConfigProvider 实现时，自动启用动态规则加载和热刷新。
+ * <p>封装 LiteFlow 规则引擎的 Bean 注册：执行器、规则加载器、监控指标、回放服务、A/B 测试分流器。
  *
+ * <p>通过 {@code ydsz.literule.*} 配置规则文件路径、组件扫描包、监控启用等。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Configuration
 @EnableConfigurationProperties(LiteRuleProperties.class)

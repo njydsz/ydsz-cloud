@@ -23,20 +23,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 灰度 A/B 报表服务实现（P1-6）。
+ * 灰度报告服务实现。
  *
- * <p>基于 {@code ydsz_msg_log} 的 selectCount 聚合,分别统计：
- * <ul>
- *   <li>实验组（treatment）：{@code canary_key = canaryKey},即命中灰度并切换实验模板/通道的消息</li>
- *   <li>对照组（control）：{@code template_code = canaryKey AND canary = 0 AND canary_key IS NULL},
- *       即未命中灰度、使用基线模板的消息</li>
- * </ul>
- * 每组统计 total/success/failed/retry/dead/delivered/read/clicked 及 successRate/deliveryRate/readRate。
- * 时间范围通过 created_at 区间过滤,null 时默认最近 7 天（灰度实验通常以天/周为单位观察）。
+ * <p>生成消息灰度发布报告：渠道成功率、用户反馈分布、A/B 桶效果对比、核心指标（送达/点击/转化）。
+ *
+ * <p>支持导出 CSV / 推送至 Dashboard，供产品/运营评估灰度放量策略。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

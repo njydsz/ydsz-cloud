@@ -1,13 +1,14 @@
 package com.njydsz.workflow.server.service;
 
 /**
- * 三方审批双向同步服务
+ * 第三方审批同步服务。
+ * <p>IM 审批状态同步到本系统。
  *
- * <p>P2-6 (GAP-40): 本地→三方主动同步。
- * 当本地流程被终止/撤回时，主动调用三方平台"取消审批单"接口，保证三方侧审批单状态一致。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowThirdPartySyncService {
 
     /**

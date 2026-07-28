@@ -17,17 +17,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 跨通道转化归因服务（P2-1）。
- *
- * <p>追踪同一 bizId 在多通道的发送/回执链路,计算每个通道的转化率：
- * <ul>
- *   <li>发送数 → 送达率 → 已读率 → 点击率</li>
- *   <li>按通道维度汇总,识别最优触达通道</li>
- * </ul>
+ * 渠道归因服务。
+ * <p>统计每条消息最终通过哪个渠道触达用户。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 国际化（列表页）
+ * <p>国际化语言包的列表页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 
 import { Page, useVbenModal } from '@ydsz/common-ui';

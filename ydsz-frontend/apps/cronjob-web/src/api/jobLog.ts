@@ -1,3 +1,12 @@
+/**
+ * 任务执行日志 API 模块（前端）
+ * <p>封装任务执行日志（{@code ydsz_job_log}）查询接口，对应后端 {@code /api/v1/cronjob/jobLog/*} 端点。
+ * <p>记录每次调度的开始时间、结束时间、状态、返回值、异常堆栈。
+ * <p>供「任务调度 → 执行历史」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace JobLogApi {

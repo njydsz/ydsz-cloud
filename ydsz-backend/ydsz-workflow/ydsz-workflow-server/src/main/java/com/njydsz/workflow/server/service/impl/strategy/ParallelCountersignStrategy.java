@@ -14,13 +14,16 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 并行会签策略：所有办理人全部通过才推进。
+ * 并行会签策略。
  *
- * <p>对标钉钉/飞书"会签"。N 个办理人共享 1 条 task + N 条 FlowUser，
- * approveFinished 计数聚合在单 task 上。乐观锁防并发。
+ * <p>所有候选人会签任务并行创建，
  *
+ * <p>按策略规则（全部通过/任一通过/票决）决定整体结果。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Component
 @RequiredArgsConstructor
 public class ParallelCountersignStrategy implements CountersignStrategy {

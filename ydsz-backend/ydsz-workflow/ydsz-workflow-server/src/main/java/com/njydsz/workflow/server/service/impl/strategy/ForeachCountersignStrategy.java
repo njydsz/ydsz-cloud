@@ -12,14 +12,16 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * FOREACH 循环策略：每条 task 独立完成，全部完成才推进。
+ * 迭代会签策略。
  *
- * <p>对标 BPMN 2.0 multiInstance + 钉钉/飞书动态审批人集合。
- * 与 PARALLEL 会签的区别：会签是 1 task + N user 共享审批意见；
- * FOREACH 是 N 条独立 task，每条独立完成，全部完成才推进。
+ * <p>逐个遍历会签候选人，每人都需审批，所有人通过则通过，
  *
+ * <p>任一拒绝则整体拒绝。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Component
 @RequiredArgsConstructor
 public class ForeachCountersignStrategy implements CountersignStrategy {

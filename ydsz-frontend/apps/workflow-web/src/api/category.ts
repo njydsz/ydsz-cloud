@@ -1,3 +1,12 @@
+/**
+ * 流程分类 API 模块（前端）
+ * <p>封装流程分类（{@code ydsz_flow_category}）CRUD 接口，对应后端 {@code /api/v1/workflow/category/*} 端点。
+ * <p>按业务域/部门对流程模板进行分类管理。
+ * <p>供「工作流 → 流程分类」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace CategoryApi {

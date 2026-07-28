@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 项目预算（表单组件）
+ * <p>预算的编制/调整表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { BudgetApi } from '#/api/budget';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

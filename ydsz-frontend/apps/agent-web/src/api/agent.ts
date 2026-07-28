@@ -1,3 +1,12 @@
+/**
+ * Agent 智能体 API 模块（前端）
+ * <p>封装 Agent 智能体定义的 CRUD 接口调用，对应后端 {@code /api/v1/agent/*} 端点。
+ * <p>包含模型供应商/模型名称/系统提示词/温度等配置。
+ * <p>供「Agent 管理 → 智能体列表」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace AgentApi {

@@ -6,14 +6,14 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 
 /**
- * 流程委派代理（长期授权）服务
+ * 流程委托授权服务。
+ * <p>A 委托 B 代为审批。
  *
- * <p>P1-4: 长期授权委派。
- * <p>对标钉钉/飞书的"代理人"功能：用户预先设置规则，
- * 在生效区间内到达的匹配任务自动转给被代理人。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowDelegateAuthService {
 
     /**

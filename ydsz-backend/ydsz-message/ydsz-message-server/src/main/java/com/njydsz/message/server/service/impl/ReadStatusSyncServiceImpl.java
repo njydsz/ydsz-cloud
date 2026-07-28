@@ -25,19 +25,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P1-3: 全通道消息已读/未读状态同步服务实现。
+ * 已读状态同步服务实现。
  *
- * <p>统一管理消息已读状态的更新和实时同步：
- * <ul>
- *   <li>更新消息日志的 receipt_status 为 READ</li>
- *   <li>更新站内通知的 read_status 为 1</li>
- *   <li>通过 WebSocket 推送已读状态变更事件</li>
- *   <li>记录用户活跃行为（供智能推送时间优化使用）</li>
- * </ul>
+ * <p>将 IM 渠道（企业微信/钉钉/飞书）的已读回执同步至消息中心状态，
+ *
+ * <p>供 {@code MsgLog.receiptStatus} 字段实时更新。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

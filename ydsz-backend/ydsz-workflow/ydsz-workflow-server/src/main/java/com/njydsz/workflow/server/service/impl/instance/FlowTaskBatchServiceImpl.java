@@ -13,20 +13,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 待办任务 — 批量操作 Service 实现
+ * 流程任务批量操作服务实现。
  *
- * <p>从原 {@code FlowTaskServiceImpl} 拆分，专注批量审批职责：
- * <ul>
- *   <li>{@link #batchPass} — 批量审批，逐一委托 {@link FlowTaskCompleteServiceImpl#pass}
- *       执行，{@code @Transactional} 保证原子性</li>
- * </ul>
+ * <p>提供任务级别的批量操作：批量同意、批量拒绝、批量转办、批量加签。
  *
- * <p>批量操作通过注入完成类子 Service 调用单条 {@code pass}，相比原 {@code FlowTaskServiceImpl}
- * 内部自调用（{@code this.pass}），跨 Bean 调用可正确触发 Spring 事务代理，事务传播
- * （默认 REQUIRED）将每条 {@code pass} 加入批量事务，保证整批原子提交/回滚。
+ * <p>所有操作在一个事务中执行（{@code Transactional}），失败全部回滚。
  *
+ * <p>支持最大 500 条/批，避免大事务。
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -3,13 +3,15 @@ package com.njydsz.common.redis.service;
 import java.util.Collection;
 
 /**
- * 布隆过滤器服务接口。
- *
- * <p>基于 Redis BloomFilter 实现，用于高效判断元素是否存在。
+ * Redis 布隆过滤器服务接口。
+ * <p>用于海量 ID 存在性判断。
+ * <p>误判率 < 1%。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface BloomFilterService {
 
     /**

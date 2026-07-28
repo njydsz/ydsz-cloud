@@ -5,14 +5,16 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import com.njydsz.common.base.config.BaseOpenApiConfiguration;
 
 /**
- * Web 端 OpenAPI 文档配置
+ * Web 端 OpenAPI 配置。
  *
- * <p>继承 {@link BaseOpenApiConfiguration}，为 Web 端配置 Knife4j/Swagger 文档信息。
- * 包括文档标题、描述、分组等。
+ * <p>继承 {@link BaseOpenApiConfiguration}，为 Web 端 Controller 提供 OpenAPI 分组、
+ *
+ * <p>安全 Scheme、Tag 描述、JWT 鉴权头。
  *
  * @author ydsz-team
- * @see BaseOpenApiConfiguration
+ * @since 1.0.0
  */
+
 @AutoConfiguration
 public class WebOpenApiConfiguration extends BaseOpenApiConfiguration {
 

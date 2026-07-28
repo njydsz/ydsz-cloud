@@ -37,34 +37,16 @@ import io.micrometer.core.instrument.MeterRegistry;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 /**
- * Web 端 MVC 核心配置
+ * Web 端 MVC 核心配置。
  *
- * <p>继承 {@link BaseMvcConfiguration}，注册 Web 端专属的拦截器和过滤器链。
+ * <p>继承 {@link BaseMvcConfiguration}，注册 Web 端专属的拦截器和过滤器链：
  *
- * <p><b>过滤器链（按 order 从小到大执行）：</b>
- * <ol>
- *   <li>{@link ContentCachingFilter}（order=MIN_VALUE）- 请求体缓存，支持多次读取</li>
- *   <li>{@link WebAuthFilter}（order=3）- 认证鉴权，解析 Token 并构建上下文</li>
- *   <li>{@link SecurityHeaderFilter}（order=可配置）- 安全响应头注入</li>
- *   <li>{@link TraceIdResponseFilter}（order=5）- TraceId 写入响应头</li>
- * </ol>
- *
- * <p><b>拦截器链：</b>
- * <ul>
- *   <li>{@link RequestLogInterceptor}（order=MIN_VALUE）- 请求日志记录 + HTTP 请求指标埋点</li>
- *   <li>{@link BaseHttpInterceptor}（order=MAX_VALUE）- 请求结束清理（RequestContext）</li>
- * </ul>
- *
- * <p><b>异常处理：</b>由 {@code common-exception} 模块的 {@code MvcExceptionHandler} 统一处理，
- * 本模块不再注册独立的异常处理器，避免重复设计。
+ * <p>ContentCachingFilter、WebAuthFilter、SecurityHeaderFilter、TraceIdResponseFilter、RequestLogInterceptor。
  *
  * @author ydsz-team
- * @see BaseMvcConfiguration
- * @see WebAuthFilter
- * @see RequestLogInterceptor
- * @see WebMetrics
- * @see WebHealthIndicator
+ * @since 1.0.0
  */
+
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})

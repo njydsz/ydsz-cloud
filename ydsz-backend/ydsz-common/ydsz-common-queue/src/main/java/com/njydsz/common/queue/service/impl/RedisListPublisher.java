@@ -5,14 +5,18 @@ import org.springframework.data.redis.core.RedisTemplate;
 import com.njydsz.common.queue.service.IMessagePublisher;
 
 /**
- * 基于 Redis List 的消息发布者
+ * Redis List 模式发布者。
  *
- * <p>使用 Redis RPUSH 命令将消息写入 List，实现先进先出（FIFO）的消息发布。
- * 通过 {@link RedisTemplate} 复用 ydsz-common-redis 的连接。
+ * <p>基于 Redis List（{@code LPUSH} / {@code BRPOP}）实现轻量级消息队列。
+ *
+ * <p>适用场景：可靠性要求不高、单消费者、不需要广播，
+ *
+ * <p>如：日志收集、指标异步聚合。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 public class RedisListPublisher implements IMessagePublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;

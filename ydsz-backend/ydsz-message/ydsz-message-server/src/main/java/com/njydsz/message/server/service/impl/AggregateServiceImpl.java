@@ -34,14 +34,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 聚合批次服务实现。
+ * 消息聚合服务实现。
  *
- * <p>appendOrStart 在分布式锁内执行:存在 PENDING 批次则追加,否则新建 PENDING 批次并设定计划发送时间;
- * flushDue 发送到期的 READY 批次;flushByGroup 强制刷新指定组+接收人。
+ * <p>按 (bizKey, channel, user) 维度对短时间内高频触发的同一类消息进行合并去重，
+ *
+ * <p>对应实体 {@code ydsz_msg_aggregate}。窗口期内同一业务键仅发送 1 条聚合消息，
+ *
+ * <p>避免对用户造成骚扰。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

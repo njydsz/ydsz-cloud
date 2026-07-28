@@ -1,3 +1,12 @@
+/**
+ * 快捷回复 API 模块（前端）
+ * <p>封装审批快捷回复模板接口，对应后端 {@code /api/v1/workflow/quickComment/*} 端点。
+ * <p>支持预设常用审批意见，按分类管理。
+ * <p>供「工作流 → 审批面板」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace QuickCommentApi {

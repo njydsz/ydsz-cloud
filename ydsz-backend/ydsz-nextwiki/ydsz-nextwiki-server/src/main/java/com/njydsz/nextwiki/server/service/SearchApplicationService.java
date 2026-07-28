@@ -9,13 +9,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 搜索应用服务
- * <p>
- * 编排文件搜索与索引重建操作，协调领域服务。
+ * NextWiki 搜索应用服务。
+ * <p>整合 ES 提供全文检索能力。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

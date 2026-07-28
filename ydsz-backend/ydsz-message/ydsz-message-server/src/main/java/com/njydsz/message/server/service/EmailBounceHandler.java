@@ -13,14 +13,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 邮件退信处理器（P1-5）。
- *
- * <p>接收邮件服务商的退信回调，将对应消息日志标记为失败,
- * 并记录退信原因（硬退信/软退信），后续可用于清理无效邮箱。
+ * 邮件退信处理器。
+ * <p>处理 SMTP 退信事件。
+ * <p>标记邮箱失效。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

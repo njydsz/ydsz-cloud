@@ -9,19 +9,14 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 文档转换应用服务
- * <p>
- * 提供多种文档格式转换能力：
- * <ul>
- *   <li>Office → PDF（基于 LibreOffice headless）</li>
- *   <li>Markdown → HTML（基于 flexmark-java）</li>
- *   <li>HTML → PDF（基于 OpenPDF）</li>
- *   <li>文本编码转换</li>
- * </ul>
+ * 文档转换服务。
+ * <p>Office → PDF、PDF → 图片等格式互转。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Service
 public class DocumentConversionApplicationService {

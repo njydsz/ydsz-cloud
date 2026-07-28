@@ -8,24 +8,14 @@ import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowNode;
 
 /**
- * 工作流子流程（CallActivity / SubProcess）服务
+ * 子流程服务。
+ * <p>调用/等待子流程完成。
  *
- * <p>P1-3: 子流程运行时。
- *
- * <p>CallActivity 节点触发时调用 {@link #startSubProcess} 创建子实例，
- * 子实例完成后通过 onInstanceCompleted 事件回调 {@link #onSubProcessCompleted}
- * 推进父流程。
- *
- * <p>设计原则：
- * <ul>
- *   <li>父流程停在 callActivity 节点（不生成新待办）</li>
- *   <li>子流程独立运行，与父流程业务关联（businessType/businessId 可不同）</li>
- *   <li>子流程完成后自动推进父流程到下一节点</li>
- *   <li>子流程驳回/终止：父流程同步驳回/终止</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowSubProcessService {
 
     /**

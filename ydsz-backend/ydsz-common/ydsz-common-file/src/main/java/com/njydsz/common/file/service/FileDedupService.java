@@ -12,16 +12,14 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 文件去重服务（秒传）
- *
- * 基于文件 SHA-256 和文件大小实现秒传功能。上传前先计算 SHA-256，
- * 如果相同大小且相同 SHA-256 的文件已存在，直接返回已有文件信息。
- * 采用文件大小 + SHA-256 双重校验，避免单一哈希碰撞导致的内容替换风险。
+ * 文件去重服务接口。
+ * <p>基于文件内容 Hash（SHA-256）实现秒传/重删。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
+
+
 @Slf4j
 public class FileDedupService {
     private static final String DEDUP_KEY_PREFIX = "file:dedup:hash:";

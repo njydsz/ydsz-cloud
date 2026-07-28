@@ -1,3 +1,12 @@
+/**
+ * 任务告警 API 模块（前端）
+ * <p>封装任务告警规则与告警日志接口，对应后端 {@code /api/v1/cronjob/alert/*} 端点。
+ * <p>支持告警通道（邮件/短信/企微/钉钉）、告警抑制、告警风暴收敛。
+ * <p>供「任务调度 → 告警配置」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace AlertApi {

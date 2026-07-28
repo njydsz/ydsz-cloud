@@ -14,13 +14,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 用户部门关联 Service 实现。
+ * 用户-部门关联服务实现。
  *
- * <p>内部关联表服务，供其他 Service 内部调用。
+ * <p>维护用户-部门的多对多关联 ({@code ydsz_user_dept})：
+ *
+ * <p>支持主部门（{@code isPrimary}）标识，辅助部门（兼任）多选。
+ *
+ * <p>用户权限合并时按主部门优先 + 辅助部门叠加。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

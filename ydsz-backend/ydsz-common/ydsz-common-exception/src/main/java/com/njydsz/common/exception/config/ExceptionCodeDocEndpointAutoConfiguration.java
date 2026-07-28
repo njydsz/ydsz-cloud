@@ -10,15 +10,16 @@ import org.springframework.context.annotation.Bean;
 import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
 
 /**
- * 异常错误码文档端点自动配置
+ * 异常码文档端点配置。
  *
- * <p>仅在 Spring Boot Actuator 存在时注册 {@link ExceptionCodeDocEndpoint}，
- * 通过 {@code /actuator/exception-codes} 暴露所有已注册的异常错误码。
+ * <p>暴露 {@code /ydsz/error-codes} 端点，输出全量异常码与文档说明（HTTP code + 业务码 + 描述）。
+ *
+ * <p>便于前端/测试同学检索错误码、运维同学做异常字典管理。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see ExceptionCodeDocEndpoint
  */
+
 @AutoConfiguration
 @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "doc-endpoint-enabled", havingValue = "true", matchIfMissing = true)

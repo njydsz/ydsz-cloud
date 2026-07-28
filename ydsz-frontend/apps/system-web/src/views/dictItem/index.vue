@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 字典项（列表页）
+ * <p>字典项（{@code ydsz_dict_item}）的列表页。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 
 import { Page, useVbenModal } from '@ydsz/common-ui';

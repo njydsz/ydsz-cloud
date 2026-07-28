@@ -1,11 +1,14 @@
 package com.njydsz.message.server.service.core;
 
 /**
- * 限流与频率控制服务
+ * 消息发送限流服务。
+ * <p>限制单租户/单用户/单模板的发送频次。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface RateLimitService {
 
     /**

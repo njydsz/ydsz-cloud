@@ -14,33 +14,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * GAP-P2: 并行网关 join 令牌服务实现（Redis）
+ * 流程加签 Token 服务实现。
  *
- * <p>使用 Redis 原子 Lua 脚本维护 join 节点的已到达分支计数，
- * 配合独立的分支总数 key 实现精确聚合判断。
+ * <p>管理加签/减签/转签的短期 Token ({@code ydsz_flow_join_token})：
  *
- * <p>Key 设计：
- * <ul>
- *   <li>到达计数：{@code flow:join:{instanceId}:{joinNodeCode}} —— INCR 原子自增</li>
- *   <li>分支总数：{@code flow:join:{instanceId}:{joinNodeCode}:total} —— 初始化时写入</li>
- * </ul>
- * 两个 key 均设置 7 天 TTL，防止异常流程导致计数器永久残留。
+ * <p>加签发起人生成 Token → 受邀人通过 Token 链接加入审批 → Token 一次性使用后失效。
  *
- * <p>P1-7（GAP-47）原子化改造：
- * <ul>
- *   <li>{@code arriveToken} 的 INCR + 比较 total + 补设 TTL 改为单条 Lua 脚本原子执行，
- *     避免原实现中 INCR 与 readTotal 分两步导致的并发竞态（多分支同时到达时可能重复聚合）</li>
- *   <li>{@code initTokens} 的 total + arrived 写入改为单条 Lua 脚本原子执行并带 TTL</li>
- * </ul>
+ * <p>支持过期时间、租户隔离、操作审计。
  *
- * <p>容错策略：所有方法对 Redis 异常做降级处理。
- * <ul>
- *   <li>{@link #allArrived} 在 Redis 不可用或未初始化时返回 false（fail-safe：不提前聚合）</li>
- *   <li>{@link #arriveToken} 在 Redis 不可用时返回 false，调用方可重试或走兜底逻辑</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

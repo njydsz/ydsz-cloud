@@ -3,12 +3,14 @@ package com.njydsz.workflow.server.service;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 
 /**
- * 待办数实时推送服务接口
+ * 待办计数推送服务。
+ * <p>实时推送待办数。
  *
- * <p>P1-7: WebSocket 待办数推送
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowTodoCountPushService {
 
     /**

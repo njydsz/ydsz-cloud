@@ -1,3 +1,12 @@
+/**
+ * 字典项 API 模块（前端）
+ * <p>封装字典项（{@code ydsz_dict_item}）CRUD 接口，对应后端 {@code /api/v1/system/dictItem/*} 端点。
+ * <p>字典项是字典类型的具体枚举值，支持状态/排序/扩展 JSON。
+ * <p>供「系统管理 → 字典管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace DictitemApi {

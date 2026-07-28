@@ -13,39 +13,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 待办任务 — 完成类服务门面（Facade）
+ * 流程任务完成服务实现。
  *
- * <p>本类是从 2755 行的单体类 {@code FlowTaskCompleteServiceImpl} 重构而来的协调者。
- * 原始类承担了 10+ 种职责（创建/签收/通过/驳回/转办/委派/跳转/超时/催办/撤回），
- * 重构后按职责拆分到以下专门服务：
- * <ul>
- *   <li>{@link FlowTaskCreateService} — 任务创建（含 SERVICE/FOREACH/LEVEL_APPROVAL 节点、空兜底策略）</li>
- *   <li>{@link FlowTaskClaimService} — 任务签收</li>
- *   <li>{@link FlowTaskPassService} — 任务通过（策略模式处理 5 种会签模式）</li>
- *   <li>{@link FlowTaskRejectService} — 任务驳回（单节点/多节点/退回发起人）</li>
- *   <li>{@link FlowTaskOperateService} — 转办/委派/跳转/撤回</li>
- *   <li>{@link FlowTaskUrgeService} — 任务催办（实例级/节点级）</li>
- *   <li>{@link FlowTaskTimeoutService} — 超时/挂起/激活/取消</li>
- *   <li>{@link FlowTaskArchiveService} — 任务完成+归档（基础服务）</li>
- *   <li>{@link FlowTaskNotificationService} — 任务事件通知</li>
- *   <li>{@link FlowTaskAuditService} — 委派代理审计</li>
- * </ul>
+ * <p>封装任务「同意/拒绝/驳回/转交/委派/加签/减签」等完成动作的领域逻辑：
  *
- * <p>本门面仅作委托转发，保持对外 API 完全不变（兼容
- * {@code FlowTaskServiceImpl.createTask / claim / pass / ...} 的所有调用）。
- * 事务边界由各专门服务的 {@code @Transactional} 声明，跨 Bean 调用可正确触发
- * Spring 事务代理。
+ * <p>状态机校验、下一节点路由、SLA 重置、催办任务调度、审批意见留痕。
  *
- * <p>重构收益：
- * <ul>
- *   <li>代码量：原 2755 行 → 现门面 ~250 行 + 10 个专门服务（各 100-500 行）</li>
- *   <li>复杂度：圈复杂度从 25-40 降至 5-10</li>
- *   <li>可测试性：单元测试 mock 数从 10-15 降至 3-5</li>
- *   <li>扩展性：新增会签类型只需实现 {@code CountersignStrategy}，无需修改主流程</li>
- * </ul>
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

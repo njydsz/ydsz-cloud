@@ -10,14 +10,14 @@ import org.springframework.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 多语言回退链（P1-6）。
- *
- * <p>模板加载时按 locale 回退链查找：用户偏好 locale → 租户默认 locale → 系统默认 zh-CN。
- * 例如用户偏好 en-US 时回退链为: en-US → zh-CN。
+ * 国际化回退链。
+ * <p>按 用户 > 租户 > 默认 zh-CN 顺序回退。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @Component
 public class LocaleFallbackChain {

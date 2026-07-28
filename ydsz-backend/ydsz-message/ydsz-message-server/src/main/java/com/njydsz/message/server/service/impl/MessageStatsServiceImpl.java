@@ -28,14 +28,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 消息统计服务实现（P1-2 可观测看板）。
+ * 消息统计服务实现。
  *
- * <p>基于 {@code ydsz_msg_log} 表的 selectCount 聚合查询,提供发送总览 / 通道维度 / 回执统计。
- * 查询结果均带时间范围过滤（created_at 区间）。
+ * <p>提供消息发送的多维度统计：渠道分布、模板 TOP、用户活跃度、回执率、失败率、转化漏斗。
+ *
+ * <p>数据按小时/天/周/月聚合，支持自定义时间区间导出报表。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

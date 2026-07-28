@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 消息批量发送（列表页）
+ * <p>批量发送任务的列表页，支持大批量收件人列表（10w+）、分片、限流。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

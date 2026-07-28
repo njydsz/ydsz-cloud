@@ -1,3 +1,12 @@
+/**
+ * 消息 API 模块（前端）
+ * <p>封装消息（{@code ydsz_message_log}）查询接口，对应后端 {@code /api/v1/message/*} 端点。
+ * <p>支持站内/邮件/短信/企微/钉钉/飞书多渠道消息的发送记录查询。
+ * <p>供「消息中心 → 发送历史」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace MessageApi {

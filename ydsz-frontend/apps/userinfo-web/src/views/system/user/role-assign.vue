@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 用户角色分配
+ * <p>用户角色分配的弹窗组件，分配/取消分配角色。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { RoleApi } from '#/api/role';
 
 import { useVbenModal } from '@ydsz/common-ui';

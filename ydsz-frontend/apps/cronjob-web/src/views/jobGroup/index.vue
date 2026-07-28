@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 任务分组（列表页）
+ * <p>任务分组的列表页，按业务域/部门/优先级对任务分组。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 import { Page, useVbenModal } from '@ydsz/common-ui';
 import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';

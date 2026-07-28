@@ -1,3 +1,12 @@
+/**
+ * 流程委托 API 模块（前端）
+ * <p>封装流程委托（{@code ydsz_flow_delegate}）CRUD 接口，对应后端 {@code /api/v1/workflow/delegate/*} 端点。
+ * <p>支持审批权限临时委托给同事（出差/请假场景）。
+ * <p>供「工作流 → 我的委托」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace DelegateApi {

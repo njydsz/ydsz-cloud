@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 应用（表单组件）
+ * <p>应用的创建/编辑表单。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { AppApi } from '#/api/app';
 
 import { useVbenModal } from '@ydsz/common-ui';

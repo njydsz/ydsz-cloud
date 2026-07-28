@@ -12,13 +12,16 @@ import com.njydsz.common.exception.handler.JdbcExceptionHandler;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 /**
- * JDBC 异常处理器自动配置
+ * JDBC 异常处理器配置。
  *
- * <p>仅在 spring-jdbc 存在时注册 JdbcExceptionHandler。
+ * <p>捕获 JDBC 层的 {@link org.springframework.dao.DataAccessException}，转换为标准 {@code Result} 错误响应。
+ *
+ * <p>识别唯一索引冲突、外键约束、连接超时、死锁等典型数据库异常，给出语义化错误信息。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 @AutoConfiguration
 @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")
 public class JdbcExceptionHandlerAutoConfiguration {

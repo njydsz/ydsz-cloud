@@ -12,11 +12,14 @@ import com.njydsz.common.search.provider.SearchProviderRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 索引重建服务
+ * 索引重建服务接口。
+ * <p>全量/增量重建 ES 索引。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 public class IndexRebuildService {
 

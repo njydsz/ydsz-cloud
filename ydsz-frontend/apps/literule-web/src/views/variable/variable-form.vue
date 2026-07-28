@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * 系统变量（表单组件）
+ * <p>系统变量的编辑表单，支持加密存储。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { VariableApi } from '#/api/variable';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

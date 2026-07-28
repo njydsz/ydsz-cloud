@@ -5,14 +5,16 @@ import org.springframework.data.redis.core.RedisTemplate;
 import com.njydsz.common.queue.service.IMessagePublisher;
 
 /**
- * 基于 Redis PubSub 的消息发布者
+ * Redis Pub/Sub 模式发布者。
  *
- * <p>使用 Redis PUBLISH 命令将消息广播到指定频道。
- * 通过 {@link RedisTemplate} 复用 ydsz-common-redis 的连接。
+ * <p>基于 Redis Pub/Sub 的发布-订阅模式，适用场景：广播、实时通知、
+ *
+ * <p>无需持久化。消息不落盘，订阅者必须在线，否则消息丢失。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
 public class RedisPubSubPublisher implements IMessagePublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;

@@ -3,19 +3,14 @@ package com.njydsz.message.server.service.receipt;
 import java.util.List;
 
 /**
- * P1-3: 全通道消息已读/未读状态同步服务。
- *
- * <p>统一管理消息已读状态的更新和实时同步：
- * <ul>
- *   <li>更新消息日志的 receipt_status 为 READ</li>
- *   <li>更新站内通知的 read_status 为 1</li>
- *   <li>通过 WebSocket 推送已读状态变更事件</li>
- *   <li>记录用户活跃行为（供 P1-1 智能推送时间优化使用）</li>
- * </ul>
+ * 已读状态同步服务接口。
+ * <p>IM 渠道已读回执同步至消息中心。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface ReadStatusSyncService {
 
     /**

@@ -1,4 +1,11 @@
 <script lang="ts" setup>
+/**
+ * Agent DAG 编排（表单组件）
+ * <p>DAG 编排的可视化编辑器表单，支持拖拽节点、配置连线。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import type { DagApi } from '#/api/dag';
 import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';

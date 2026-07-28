@@ -4,25 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 流程模板市场服务
+ * 流程模板服务。
+ * <p>模板分类/标签/搜索。
  *
- * <p>基于 ydsz_flow_template 数据库表，提供流程模板的查询、导入、导出能力。
- * 预置 15 套行业审批流程模板（人事/财务/行政/项目），每个模板包含 BPMN 2.0 XML，
- * 支持一键导入为草稿流程定义，也可将已发布流程导出为模板。
- *
- * <p>P2-9: 模板继承与版本化能力
- * <ul>
- *   <li>{@link #listTemplateVersions} / {@link #getTemplateVersion} 查询历史版本</li>
- *   <li>{@link #createNewVersion} 在同一 template_code 下创建新版本，旧版本自动降级</li>
- *   <li>{@link #cloneTemplate} 克隆模板为独立新模板（独立编码、独立演进）</li>
- *   <li>{@link #inheritFromParent} 从父模板继承创建子模板（保留 parent_template_id 关联）</li>
- *   <li>{@link #listInheritedTemplates} 反查继承自指定父模板的子模板列表</li>
- * </ul>
- *
- * <p>对标钉钉/飞书的"模板中心"能力。
- *
+ * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface FlowTemplateService {
 
     /**

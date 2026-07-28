@@ -9,28 +9,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Spring 限流服务门面
+ * 消息发送限流服务。
+ * <p>限制单租户/单用户/单模板的发送频次。
  *
- * <p>提供编程式调用限流的入口，业务代码可以直接注入使用，无需依赖 AOP 注解。
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * @Autowired
- * private RateLimitService rateLimitService;
- *
- * public void businessMethod() {
- *     RateLimitDecision decision = rateLimitService.check("user.login");
- *     if (decision.isBlocked()) {
- *         throw new BusinessException("RATE_LIMITED");
- *     }
- *     // 执行业务
- * }
- * }</pre>
- *
- * @author ydsz-team
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 @Slf4j
 @RequiredArgsConstructor
 public class RateLimitService {

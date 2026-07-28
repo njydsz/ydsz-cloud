@@ -6,14 +6,14 @@ import java.time.LocalDateTime;
 import com.njydsz.message.domain.dto.canary.CanaryReportVO;
 
 /**
- * 灰度 A/B 报表服务（P1-6）。
- *
- * <p>基于 {@code ydsz_msg_log} 表的 {@code canary_key} / {@code template_code} / {@code canary} 字段
- * 聚合统计对照组与实验组的发送/回执指标,供运营对比实验效果。
+ * 灰度报告服务接口。
+ * <p>生成消息灰度发布报告。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface CanaryReportService {
 
     /**

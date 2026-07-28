@@ -1,3 +1,12 @@
+/**
+ * 项目合同 API 模块（前端）
+ * <p>封装项目合同（{@code ydsz_project_contract}）CRUD 接口，对应后端 {@code /api/v1/project/contract/*} 端点。
+ * <p>支持主合同/补充协议/变更单，记录金额、税率、收款条件、履约期限。
+ * <p>供「项目管理 → 合同管理」使用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace ContractApi {

@@ -3,14 +3,14 @@ package com.njydsz.message.server.service.core;
 import java.time.LocalDateTime;
 
 /**
- * P1-1: 智能推送时间优化器。
- *
- * <p>基于用户历史活跃数据（消息已读/点击行为），学习每个用户的最佳推送时间窗口。
- * 对于非紧急消息，推荐在用户最活跃的时段推送，提升消息打开率和用户体验。
+ * 送达时间优化器。
+ * <p>基于用户活跃时段推荐最佳发送时机。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+
+
 public interface DeliveryTimeOptimizer {
 
     /**
