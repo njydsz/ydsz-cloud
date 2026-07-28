@@ -10,6 +10,8 @@
 # 4. 事件驱动架构规范检查
 # 5. Excel 导出标准化检查
 # 6. 前端通用组件使用检查
+# 7. 缓存名称一致性检查（禁止硬编码缓存名，必须使用 CacheConstants）
+# 8. Feign Client 熔断规范检查（禁止缺少 FallbackFactory）
 #
 # 使用方式：
 #   ./check-architecture-compliance.sh [--strict]
@@ -60,7 +62,7 @@ log_warning() {
 
 log_error() {
   echo -e "${RED}[FAIL]${NC} $1"
-  ((VIOLATIONS++))
+  VIOLATIONS=$((VIOLATIONS + 1))
 }
 
 # 分隔线
@@ -238,6 +240,66 @@ if [[ -n "$DUPLICATE_USER_SELECTORS" ]]; then
   done
 else
   log_success "未发现重复实现用户选择器的代码"
+fi
+
+# ==========================================
+# 7. 缓存名称一致性检查
+# ==========================================
+log_info "检查项 7/8: 缓存名称一致性检查"
+
+# 检查 Java 代码中是否存在硬编码的 cacheNames 字符串（"xxx" 形式），
+# 而非使用 CacheConstants 中定义的常量。排除 common-cache 自身和测试代码。
+HARDCODED_CACHE_NAMES=$(grep -rnE '@Cacheable\(cacheNames\s*=\s*".*"' \
+  "$BACKEND_ROOT/ydsz-"*/src/main/java \
+  --include="*.java" \
+  | grep -v "ydsz-common-cache" \
+  | grep -v "/target/" \
+  | grep -v "/test/" || true)
+
+if [[ -z "$HARDCODED_CACHE_NAMES" ]]; then
+  # 同时也检查 @CacheEvict
+  HARDCODED_CACHE_NAMES=$(grep -rnE '@CacheEvict\(cacheNames\s*=\s*".*"' \
+    "$BACKEND_ROOT/ydsz-"*/src/main/java \
+    --include="*.java" \
+    | grep -v "ydsz-common-cache" \
+    | grep -v "/target/" \
+    | grep -v "/test/" || true)
+fi
+
+if [[ -n "$HARDCODED_CACHE_NAMES" ]]; then
+  log_error "发现硬编码缓存名称（应使用 CacheConstants 中定义的常量）："
+  echo "$HARDCODED_CACHE_NAMES" | head -10 | while read -r line; do
+    echo "  - $line"
+  done
+  log_warning "建议：将缓存名称定义到 ydsz-common-core/CacheConstants.java，代码中引用常量"
+else
+  log_success "未发现硬编码缓存名称"
+fi
+
+# ==========================================
+# 8. Feign Client 熔断规范检查
+# ==========================================
+log_info "检查项 8/8: Feign Client 熔断规范检查"
+
+# 检查 @FeignClient 注解是否缺少 fallbackFactory 参数
+# 排除 common-feign 自身和测试代码
+FEIGN_WITHOUT_FALLBACK=$(grep -rn '@FeignClient' \
+  "$BACKEND_ROOT/ydsz-"*/src/main/java \
+  --include="*.java" \
+  | grep -v "ydsz-common-feign" \
+  | grep -v "/target/" \
+  | grep -v "/test/" \
+  | grep -v "fallbackFactory" \
+  | grep -v "fallback\s*=" || true)
+
+if [[ -n "$FEIGN_WITHOUT_FALLBACK" ]]; then
+  log_error "发现缺少 fallbackFactory 的 Feign Client（必须配对 FallbackFactory 避免级联故障）："
+  echo "$FEIGN_WITHOUT_FALLBACK" | head -10 | while read -r line; do
+    echo "  - $line"
+  done
+  log_warning "建议：为每个 @FeignClient 添加 fallbackFactory 参数，指向对应的 FallbackFactory 实现类"
+else
+  log_success "所有 Feign Client 均已配置 fallbackFactory"
 fi
 
 # ==========================================

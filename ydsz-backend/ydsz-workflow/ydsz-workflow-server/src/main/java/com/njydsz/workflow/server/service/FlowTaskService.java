@@ -52,7 +52,16 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
 public interface FlowTaskService {
 
     /**
-     * 创建任务
+     * 创建任务（流程推进到审批节点时由路由引擎调用）
+     *
+     * <p>根据流程节点 {@code node} 解析审批人（角色/部门/岗位/直属上级/Spec 表达式），
+     * 写入 {@link FlowRunTask} 表。会签节点（{@code performType=ALL/PARALLEL}）按 {@code approvers} 数量
+     * 生成多条子任务，单人节点生成单条任务。
+     *
+     * @param instanceId 流程实例 ID
+     * @param node       流程节点（{@code nodeCode} / {@code nodeName} / {@code approverSpec} / {@code performType}）
+     * @param variables  流程变量（用于解析审批人 Spec 表达式，如 ${starter}）
+     * @return 新创建的任务 ID（单人节点）或首个任务 ID（会签节点）
      */
     String createTask(String instanceId, FlowNode node, Map<String, Object> variables);
 
@@ -65,42 +74,85 @@ public interface FlowTaskService {
     FlowRunTask getById(String taskId);
 
     /**
-     * 签收
+     * 签收任务（多人任务转单人办理）
+     *
+     * <p>仅对 PENDING 状态任务有效；签收后任务状态变为 CLAIMED，
+     * 签收人记入 {@code claimer} 字段。会签任务签收后不影响其它子任务状态。
+     *
+     * @param taskId 任务 ID
+     * @param userId 签收人 ID（必须为任务的 assignee 之一）
      */
     void claim(String taskId, String userId);
 
     /**
-     * 通过
+     * 通过任务（审批人执行审批动作）
+     *
+     * <p>会签节点会累加 approveCount，达到阈值后推进流程实例。
+     * 单一任务直接推进到下一节点。事务内会写审计日志、触发任务通过事件。
+     *
+     * @param dto 任务操作参数（taskId / userId / comment / variables）
      */
     void pass(FlowTaskOperateDTO dto);
 
     /**
-     * 驳回
+     * 驳回任务（审批人执行驳回动作）
+     *
+     * <p>支持两种驳回策略（由 {@code rejectStrategy} 决定）：
+     * <ul>
+     *   <li>驳回到上一节点（{@code TO_PREVIOUS}）</li>
+     *   <li>驳回到发起人（{@code TO_START}）</li>
+     * </ul>
+     * 驳回后实例状态变为 REJECTED 或退回到指定节点重新审批。
+     *
+     * @param dto 任务操作参数（taskId / userId / comment / targetNodeCode）
      */
     void reject(FlowTaskOperateDTO dto);
 
     /**
-     * 转办
+     * 转办任务（审批人把任务转交给其他人办理，自己退出审批人列表）
+     *
+     * <p>对标钉钉/飞书"转办"。原 assignee 解除，转给新 assignee 继续办理。
+     * 转办后流程审计日志会记录 {@code TRANSFER} 动作。
+     *
+     * @param dto 任务操作参数（taskId / userId / targetUserId / comment）
      */
     void transfer(FlowTaskOperateDTO dto);
 
     /**
-     * 委派
+     * 委派任务（审批人把任务委派给其他人办理，但自己仍是责任人）
+     *
+     * <p>对标钉钉/飞书"委派"。被委派人完成后，任务仍由委派人确认。
+     * 区别于转办：委派不改变任务 assignee，委派人仍为最终责任人。
+     *
+     * @param dto 任务操作参数（taskId / userId / targetUserId / comment）
      */
     void delegate(FlowTaskOperateDTO dto);
 
     /**
      * 取消某实例的全部 PENDING 任务（终止/驳回终态时使用）
+     *
+     * <p>调用场景：流程实例被驳回到发起人、流程被管理员强制终止、流程被发起人撤回。
+     * 取消后任务状态变为 CANCELED，保留审计轨迹。
+     *
+     * @param instanceId 流程实例 ID
+     * @param reason     取消原因（写入每条任务的 comment 字段）
      */
     void cancelByInstance(String instanceId, String reason);
 
     /**
      * 查实例的当前 PENDING 任务
+     *
+     * @param instanceId 流程实例 ID
+     * @return 当前所有 PENDING 状态的任务列表（含 CLAIMED）
      */
     List<FlowRunTask> listPendingByInstance(String instanceId);
 
     /**
-     * 查用户的待办
+     * 查用户的待办（不分页）
+     *
+     * @param assigneeId 办理人 ID
+     * @param tenantId   租户 ID
+     * @return 用户的待办任务列表
      */
     List<FlowRunTask> listTodoByAssignee(String assigneeId, String tenantId);
 
@@ -117,7 +169,11 @@ public interface FlowTaskService {
                                                    int page, int size);
 
     /**
-     * 查用户的已办
+     * 查用户的已办（不分页）
+     *
+     * @param assigneeId 办理人 ID
+     * @param tenantId   租户 ID
+     * @return 用户的已办任务列表（按完成时间倒序）
      */
     List<FlowRunTask> listDoneByAssignee(String assigneeId, String tenantId);
 
@@ -146,11 +202,21 @@ public interface FlowTaskService {
 
     /**
      * P1-7: 前加签 — 在当前节点前插入临时审批人
+     *
+     * <p>对标钉钉/飞书"前加签"。在当前审批节点前插入临时审批人，
+     * 加签人先审批，全部通过后由原审批人继续。会签模式切换为 SEQUENTIAL。
+     *
+     * @param dto 任务操作参数（taskId / userId / targetUserId / targetUserName）
      */
     void countersignBefore(FlowTaskOperateDTO dto);
 
     /**
      * P1-7: 后加签 — 在当前节点通过后、下一节点前插入临时审批人
+     *
+     * <p>对标钉钉/飞书"后加签"。原审批人通过后，加签人先于下一节点审批。
+     * 加签人通过后流程才推进到下一节点。会签模式切换为 SEQUENTIAL。
+     *
+     * @param dto 任务操作参数（taskId / userId / targetUserId / targetUserName）
      */
     void countersignAfter(FlowTaskOperateDTO dto);
 
@@ -265,7 +331,13 @@ public interface FlowTaskService {
     int batchUrge(List<String> instanceIds, String operatorId, String comment);
 
     /**
-     * 转视图
+     * 将任务实体转换为视图对象
+     *
+     * <p>用于「我的待办」列表渲染，组装 assigneeName / claimerName / flowName 等富化字段，
+     * 由 {@code NameAssembler} 跨服务查询用户/流程名称后填入。
+     *
+     * @param task 任务 DO
+     * @return 任务视图 VO（含基础字段 + 富化字段）
      */
     FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTask task);
 

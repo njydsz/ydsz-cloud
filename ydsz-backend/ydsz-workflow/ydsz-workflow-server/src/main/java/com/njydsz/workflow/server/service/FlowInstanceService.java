@@ -49,6 +49,15 @@ public interface FlowInstanceService {
 
     /**
      * 启动流程
+     *
+     * <p>幂等性保证：基于 {@code (businessType, businessId)} 唯一索引，同一业务单据
+     * 重复调用时返回原实例 ID，不会产生新实例。
+     *
+     * <p>启动过程：① 解析流程定义 + 起始节点；② 创建实例（{@link FlowInstance}）；
+     * ③ 在起始节点创建待办；④ 发布 {@code FlowStartedEvent} 事件。
+     *
+     * @param dto 启动参数（flowCode / businessType / businessId / variables / starterId）
+     * @return 实例 ID（已存在则返回原 ID）
      */
     String start(FlowStartProcessDTO dto);
 
@@ -79,17 +88,32 @@ public interface FlowInstanceService {
     Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos);
 
     /**
-     * 按 ID 查
+     * 按 ID 查询流程实例
+     *
+     * @param id 实例 ID
+     * @return 流程实例 DO，不存在返回 null
      */
     FlowInstance getById(String id);
 
     /**
-     * 业务关联查询
+     * 业务关联查询（通过业务类型 + 业务 ID 查实例）
+     *
+     * <p>幂等启动的核心反查接口：重复发起前先调用此方法判断是否已存在实例。
+     *
+     * @param businessType 业务类型（如 {@code project_initiation}）
+     * @param businessId   业务 ID
+     * @return 流程实例 DO，未发起时返回 null
      */
     FlowInstance getByBusiness(String businessType, String businessId);
 
     /**
-     * 终止流程
+     * 终止流程（管理员强制终止）
+     *
+     * <p>终止时级联取消所有 PENDING 任务、关闭实例、记录审计日志。
+     * 子流程实例会被自动级联终止。终止后实例状态变为 TERMINATED。
+     *
+     * @param instanceId 实例 ID
+     * @param reason     终止原因（写入审计日志）
      */
     void terminate(String instanceId, String reason);
 
@@ -105,27 +129,52 @@ public interface FlowInstanceService {
     int batchTerminate(List<String> instanceIds, String reason);
 
     /**
-     * 挂起
+     * 挂起流程实例
+     *
+     * <p>实例挂起后所有 PENDING/CLAIMED 任务变为 FROZEN 状态，
+     * 不会推进、不计超时。激活后任务回到原状态继续处理。
+     *
+     * @param instanceId 实例 ID
      */
     void suspend(String instanceId);
 
     /**
-     * 激活
+     * 激活流程实例
+     *
+     * <p>将已挂起实例的 FROZEN 任务恢复为 PENDING，流程恢复正常推进。
+     *
+     * @param instanceId 实例 ID
      */
     void activate(String instanceId);
 
     /**
      * 强制完成（驳回到终态时由调用方使用）
+     *
+     * <p>主要用于驳回到「结束节点」的终态处理：实例状态变为 COMPLETED，
+     * 所有 PENDING 任务被取消。
+     *
+     * @param instanceId  实例 ID
+     * @param endNodeCode 终止节点编码
      */
     void complete(String instanceId, String endNodeCode);
 
     /**
-     * 转化为视图对象
+     * 转化为视图对象（含当前节点任务列表）
+     *
+     * <p>用于「流程详情」页组装，拼接富化字段（发起人姓名、当前节点名称、审批人姓名）。
+     *
+     * @param instance     流程实例 DO
+     * @param currentTasks 当前节点的待办任务列表
+     * @return 流程实例视图 VO
      */
     FlowInstanceViewDTO toView(FlowInstance instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks);
 
     /**
-     * 发起人维度查询
+     * 发起人维度查询（我的发起）
+     *
+     * @param initiatorId 发起人 ID
+     * @param flowStatus  流程状态过滤（RUNNING / COMPLETED / REJECTED / TERMINATED，null 表示全部）
+     * @return 该发起人指定状态的实例列表
      */
     List<FlowInstance> listByInitiator(String initiatorId, String flowStatus);
 

@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.core.constant.CacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.entity.FileNode;
@@ -195,7 +196,7 @@ public class ShareDomainService {
      * 避免校验逻辑继续读到旧的 ACL 列表。{@code allEntries = true} 是因为 ACL 变更可能
      * 影响多个用户对该节点的有效权限（例如继承传播），简单全量清除最稳妥。
      */
-    @CacheEvict(cacheNames = "nextwiki:file:acl", allEntries = true)
+    @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
     public FileAcl grantPermission(String fileNodeId, String granteeType, String granteeId,
                                     int permissionMask, String userId) {
         FileAcl acl = FileAcl.builder()

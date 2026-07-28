@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -24,6 +25,9 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 对话服务
@@ -67,13 +71,16 @@ public class ChatService {
     private final CostAnalysisService costAnalysisService;
     /** 链路记录器 */
     private final TraceRecorder traceRecorder;
+    /** Outbox 事件服务（可选依赖） */
+    private final ObjectProvider<OutboxService> outboxServiceProvider;
 
     public ChatService(LlmClient llmClient, ConversationMemory memory, AgentProperties properties,
                        List<InputGuardrail> inputGuardrails,
                        List<OutputGuardrail> outputGuardrails,
                        AgentMetrics metrics,
                        CostAnalysisService costAnalysisService,
-                       TraceRecorder traceRecorder) {
+                       TraceRecorder traceRecorder,
+                       ObjectProvider<OutboxService> outboxServiceProvider) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
@@ -86,6 +93,7 @@ public class ChatService {
         this.metrics = metrics;
         this.costAnalysisService = costAnalysisService;
         this.traceRecorder = traceRecorder;
+        this.outboxServiceProvider = outboxServiceProvider;
     }
 
     /**
@@ -163,6 +171,7 @@ public class ChatService {
         log.info("[Chat] 对话完成: convId={}, tokens={}", convId,
                 response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
         traceRecorder.endTrace(traceId, "SUCCESS");
+        publishEvent(StandardEventTypes.CONVERSATION_CREATED, convId, response);
         return new ChatResponse(response.getId(), response.getModel(),
                 assistantMsg, response.getUsage(), response.getFinishReason(), List.of());
     }
@@ -323,5 +332,23 @@ public class ChatService {
             }
         }
         return sanitized;
+    }
+
+    /**
+     * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
+     */
+    private void publishEvent(String eventType, String aggregateId, Object payload) {
+        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        if (outboxService == null) {
+            log.debug("[Chat] OutboxService not available, skipping event: type={}, id={}", eventType, aggregateId);
+            return;
+        }
+        try {
+            outboxService.appendToOutbox("Conversation", aggregateId, eventType,
+                    YdszJson.toJson(payload));
+        } catch (Exception e) {
+            log.warn("[Chat] Failed to publish outbox event: type={}, id={}, error={}",
+                    eventType, aggregateId, e.getMessage());
+        }
     }
 }

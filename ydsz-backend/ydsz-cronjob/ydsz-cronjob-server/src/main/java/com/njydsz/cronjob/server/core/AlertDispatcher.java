@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.object.YdszJsonArray;
 
@@ -79,6 +81,8 @@ public class AlertDispatcher {
     private final ObjectProvider<AlertDedupManager> alertDedupManagerProvider;
     /** P2-10: common-notify 通知助手（可选注入，IM 渠道直推） */
     private final ObjectProvider<CronjobNotifyHelper> cronjobNotifyHelperProvider;
+    /** Outbox 事件服务（可选依赖，发布任务告警/执行结果领域事件） */
+    private final ObjectProvider<OutboxService> outboxServiceProvider;
 
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -93,6 +97,12 @@ public class AlertDispatcher {
     public void onAlertEvent(AlertEvent event) {
         try {
             dispatch(event.context(), event.rule());
+            // 发布任务告警领域事件到 Outbox
+            publishOutboxEvent(
+                    event.recovery() ? StandardEventTypes.JOB_EXECUTION_SUCCESS : StandardEventTypes.JOB_EXECUTION_FAILED,
+                    event.context().jobId(),
+                    Map.of("ruleId", event.rule().getId(), "jobKey", event.context().jobKey(),
+                            "recovery", event.recovery()));
         } catch (Exception e) {
             log.error("[AlertDispatcher] 告警派发异常: ruleId={} jobId={} recovery={} reason={}",
                     event.rule().getId(), event.context().jobId(), event.recovery(), e.getMessage(), e);
@@ -549,5 +559,22 @@ public class AlertDispatcher {
             }
         }
         return YdszJson.toJson(array);
+    }
+
+    /**
+     * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
+     */
+    private void publishOutboxEvent(String eventType, String aggregateId, Object payload) {
+        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        if (outboxService == null) {
+            return;
+        }
+        try {
+            outboxService.appendToOutbox("Job", aggregateId, eventType,
+                    YdszJson.toJson(payload));
+        } catch (Exception e) {
+            log.warn("[AlertDispatcher] Failed to publish outbox event: type={}, id={}, error={}",
+                    eventType, aggregateId, e.getMessage());
+        }
     }
 }

@@ -20,7 +20,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.file.domain.FileStorage;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
@@ -72,6 +75,8 @@ public class FileApplicationService {
     private final LockStrategy lockStrategy;
     private final VirusScanApplicationService virusScanApplicationService;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
+    /** Outbox 事件服务（可选依赖，发布文件上传/删除领域事件） */
+    private final ObjectProvider<OutboxService> outboxServiceProvider;
 
     private static final String LOCK_PREFIX = "nextwiki:lock:folder:";
     private static final long LOCK_LEASE_MS = 30_000L;
@@ -542,6 +547,25 @@ public class FileApplicationService {
                 .operatorId(userId)
                 .operatedAt(LocalDateTime.now())
                 .build());
+        // 同步发布到 Outbox（跨模块事件驱动）
+        publishOutboxEvent(StandardEventTypes.FILE_UPLOADED, saved.getId(), saved);
+    }
+
+    /**
+     * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
+     */
+    private void publishOutboxEvent(String eventType, String aggregateId, Object payload) {
+        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        if (outboxService == null) {
+            return;
+        }
+        try {
+            outboxService.appendToOutbox("FileNode", aggregateId, eventType,
+                    YdszJson.toJson(payload));
+        } catch (Exception e) {
+            log.warn("Failed to publish outbox event: type={}, id={}, error={}",
+                    eventType, aggregateId, e.getMessage());
+        }
     }
 
     /**
@@ -736,28 +760,6 @@ public class FileApplicationService {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
-    }
-
-    private FileNodeVO NextwikiConverter.INSTANT.entityToVO(FileNode node) {
-        return FileNodeVO.builder()
-                .id(node.getId())
-                .parentId(node.getParentId())
-                .name(node.getName())
-                .nodeType(node.getNodeType())
-                .suffix(node.getSuffix())
-                .size(node.getSize())
-                .mimeType(node.getMimeType())
-                .level(node.getLevel())
-                .sort(node.getSort())
-                .currentVersion(node.getCurrentVersion())
-                .starred(node.getStarred())
-                .shareStatus(node.getShareStatus())
-                .previewReady(node.getPreviewReady())
-                .thumbnailUrl(node.getThumbnailKey())
-                .createdBy(node.getCreatedBy())
-                .createdAt(node.getCreatedAt())
-                .updatedAt(node.getUpdatedAt())
-                .build();
     }
 
     /**

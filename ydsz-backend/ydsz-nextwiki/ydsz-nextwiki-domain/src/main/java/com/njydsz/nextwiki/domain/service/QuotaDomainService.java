@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.core.constant.CacheConstants;
 import com.njydsz.common.constant.SystemConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.entity.StorageQuota;
@@ -90,7 +91,7 @@ public class QuotaDomainService {
      * {@code nextwiki:file:acl} 全部缓存条目，强制下一次校验重新走数据库。
      */
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(cacheNames = "nextwiki:file:acl", allEntries = true)
+    @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
     public StorageQuota setQuota(String scopeType, String scopeId, Long limit, Integer fileCountLimit, String userId) {
         StorageQuota quota = quotaRepository.findByScope(scopeType, scopeId);
         if (quota == null) {

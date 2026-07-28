@@ -90,7 +90,7 @@ class ChatServiceTest {
 
     private ChatService buildService(List<InputGuardrail> inputs, List<OutputGuardrail> outputs) {
         return new ChatService(llmClient, memory, properties, inputs, outputs, metrics,
-                costAnalysisService, traceRecorder);
+                costAnalysisService, traceRecorder, null);
     }
 
     private ChatResponse mockResponse(String content, int prompt, int completion) {

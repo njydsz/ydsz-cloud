@@ -1,6 +1,25 @@
+/**
+ * 站内通知 API 模块（前端）
+ *
+ * <p>封装站内消息（{@code ydsz_message_notification}）的 CRUD 接口调用，对应后端
+ * {@code /api/v1/message/notifications/*} 端点。供「消息中心 → 通知收件箱」使用。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li>{@link getNotificationPageApi} — 分页查询通知</li>
+ *   <li>{@link getNotificationListApi} — 全量查询通知</li>
+ *   <li>{@link markReadApi} — 标记单条已读</li>
+ *   <li>{@link markAllReadApi} — 全部已读</li>
+ *   <li>{@link countUnreadApi} — 未读数</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace NotificationApi {
+  /** 通知视图对象 */
   export interface NotificationVO {
     id: string;
     userId: string;
@@ -11,6 +30,7 @@ export namespace NotificationApi {
     createTime: string;
   }
 
+  /** 通知分页查询条件 */
   export interface NotificationPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -18,6 +38,7 @@ export namespace NotificationApi {
     type?: string;
   }
 
+  /** 通知传输对象（创建/更新） */
   export interface NotificationDTO {
     userId?: string;
     title?: string;
@@ -26,7 +47,7 @@ export namespace NotificationApi {
   }
 }
 
-/** 分页查询 */
+/** 分页查询通知 */
 export function getNotificationPageApi(params: NotificationApi.NotificationPageQuery) {
   return requestClient.get<{
     total: number;
@@ -36,7 +57,7 @@ export function getNotificationPageApi(params: NotificationApi.NotificationPageQ
   }>(`/api/v1/message/notifications/page`, { params });
 }
 
-/** 查询全部列表 */
+/** 查询全部通知列表 */
 export function getNotificationListApi() {
   return requestClient.get<NotificationApi.NotificationVO[]>(`/api/v1/message/notifications/list`);
 }

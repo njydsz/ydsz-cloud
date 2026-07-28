@@ -1,6 +1,28 @@
+/**
+ * 用户账号 API 模块（前端）
+ *
+ * <p>封装用户账号（{@code ydsz_user_account}）的 CRUD 接口调用，对应后端
+ * {@code /api/v1/user/*} 端点。供「用户管理 → 用户列表/详情/编辑」使用。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li>{@link getUserPageApi} — 分页查询用户</li>
+ *   <li>{@link getUserListApi} — 全量查询用户（按部门下拉）</li>
+ *   <li>{@link createUserApi} — 创建用户</li>
+ *   <li>{@link updateUserApi} — 更新用户</li>
+ *   <li>{@link deleteUserApi} — 删除用户</li>
+ *   <li>{@link changePasswordApi} — 修改密码（用户自助）</li>
+ *   <li>{@link resetPasswordApi} — 重置密码（管理员）</li>
+ *   <li>{@link assignRolesApi} — 分配角色</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace UserApi {
+  /** 用户账号视图对象（已脱敏：手机号/邮箱） */
   export interface UserAccountVO {
     id: string;
     username: string;

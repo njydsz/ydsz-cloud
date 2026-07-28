@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.core.constant.CacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.entity.FileNode;
@@ -118,7 +119,7 @@ public class FilePermissionService {
      * @param userId     用户ID
      * @return 有效 ACL 列表，可能为空
      */
-    @Cacheable(cacheNames = "nextwiki:file:acl",
+    @Cacheable(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE,
             key = "#fileNodeId + ':' + #userId",
             condition = "#userId != null")
     public List<FileAcl> getEffectiveAcls(String fileNodeId, String userId) {

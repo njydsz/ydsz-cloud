@@ -39,6 +39,10 @@ public interface FlowDefinitionService {
     /**
      * 部署流程（基于 JSON 模型）
      *
+     * <p>设计器保存草稿或导入流程时调用。流程定义状态为「草稿」（未发布），
+     * 不会立刻被流程引擎加载使用。发布后变为「激活」状态。
+     *
+     * @param dto 部署参数（flowCode / flowName / category / model JSON / nodes / skips）
      * @return 流程定义 ID
      */
     String deploy(FlowDeployProcessDTO dto);
@@ -73,22 +77,42 @@ public interface FlowDefinitionService {
     void publish(String definitionId, boolean force);
 
     /**
-     * 停用（失效）流程
+     * 停用（失效）流程定义
+     *
+     * <p>停用后流程定义无法再发起新流程，但<b>已发起的实例不受影响</b>（仍可继续推进）。
+     * 如需彻底下线，请使用 {@link #disable} 关闭定义。
+     *
+     * @param definitionId 流程定义 ID
      */
     void deprecate(String definitionId);
 
     /**
-     * 查最新已发布版本
+     * 查指定版本的已发布流程定义
+     *
+     * @param flowCode 流程编码
+     * @param version  版本号（{@code null} 时取最新激活版本）
+     * @param tenantId 租户 ID
+     * @return 已发布的流程定义 DO，未发布或不存在时返回 null
      */
     FlowDefinition getPublished(String flowCode, String version, String tenantId);
 
     /**
-     * 按编码查最新
+     * 按编码查询最新版本流程定义（不区分发布状态）
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID
+     * @return 最新版本流程定义 DO
      */
     FlowDefinition getLatestByCode(String flowCode, String tenantId);
 
     /**
-     * 分页查询
+     * 分页查询流程定义列表
+     *
+     * @param pageNo   页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @param category 分类过滤（可空）
+     * @param flowCode 流程编码模糊过滤（可空）
+     * @return 流程定义列表（按更新时间倒序）
      */
     List<FlowDefinition> page(int pageNo, int pageSize, String category, String flowCode);
 

@@ -1,6 +1,26 @@
+/**
+ * 角色 API 模块（前端）
+ *
+ * <p>封装角色（{@code ydsz_role}）的 CRUD + 权限分配接口调用，对应后端
+ * {@code /api/v1/role/*} 端点。供「用户管理 → 角色管理」使用。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li>{@link getRolePageApi} — 分页查询角色</li>
+ *   <li>{@link getRoleListApi} — 全量查询角色（用户分配角色下拉）</li>
+ *   <li>{@link createRoleApi} — 创建角色</li>
+ *   <li>{@link updateRoleApi} — 更新角色</li>
+ *   <li>{@link deleteRoleApi} — 删除角色</li>
+ *   <li>{@link assignPermissionsApi} — 分配权限</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { requestClient } from '#/api/request';
 
 export namespace RoleApi {
+  /** 角色视图对象 */
   export interface RoleVO {
     id: string;
     roleCode: string;
@@ -12,6 +32,7 @@ export namespace RoleApi {
     createTime?: string;
   }
 
+  /** 角色分页查询条件 */
   export interface RolePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -20,6 +41,7 @@ export namespace RoleApi {
     status?: number;
   }
 
+  /** 角色保存 DTO（创建/更新） */
   export interface RoleSaveDTO {
     id?: string;
     roleCode: string;

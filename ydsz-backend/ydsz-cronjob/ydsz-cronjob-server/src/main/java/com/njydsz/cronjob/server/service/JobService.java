@@ -8,17 +8,39 @@ import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 
 /**
- * 任务调度服务
+ * 任务调度 Service 接口
  *
- * <p>提供任务的 CRUD、暂停/恢复、立即触发、调度器注册/取消、分页查询及启动加载等能力。
+ * <p>提供任务（{@code ydsz_job}）的完整管理能力：CRUD、暂停/恢复、立即触发、
+ * 调度器注册/取消、应用启动加载等。是定时任务（ydsz-cronjob）模块的核心入口。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #create} / {@link #update} / {@link #delete} / {@link #getById}</li>
+ *   <li><b>调度</b>：{@link #pause} / {@link #resume} / {@link #trigger} — 暂停/恢复/立即触发</li>
+ *   <li><b>批量</b>：{@link #batchPause} / {@link #batchResume} / {@link #batchTrigger} / {@link #batchDelete}</li>
+ *   <li><b>调度器集成</b>：{@link #register} / {@link #unregister} / {@link #reschedule} — 与 Quartz 调度器集成</li>
+ *   <li><b>查询</b>：{@link #page} / {@link #pageLog} — 任务列表 + 执行日志</li>
+ *   <li><b>生命周期</b>：{@link #loadOnStartup} — 应用启动时加载所有 NORMAL 任务到调度器</li>
+ * </ul>
+ *
+ * <p><b>并发控制：</b>立即触发支持 {@code holdLock=true} 选项抢占分布式锁，
+ * 避免与定时触发并发执行导致重复任务。
+ *
+ * <p><b>事务：</b>所有写操作（{@code create/update/delete/pause/resume}）开启
+ * {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.job.Job 任务实体
+ * @see com.njydsz.cronjob.server.service.JobHistoryService 任务历史 Service
  */
 public interface JobService {
 
     /**
      * 新增任务
+     *
+     * <p>创建任务时同时注册到调度器（{@code NORMAL} 状态）。
      *
      * @param job 任务定义
      * @return 新增任务 ID
@@ -29,6 +51,8 @@ public interface JobService {
     /**
      * 更新任务
      *
+     * <p>更新后需重新注册到调度器（{@link #reschedule}）。
+     *
      * @param job 任务定义
      * @throws SysException 当任务不存在或 cron 表达式非法时抛出
      */
@@ -36,6 +60,8 @@ public interface JobService {
 
     /**
      * 删除任务
+     *
+     * <p>同时取消调度器注册 + 清理历史日志。
      *
      * @param id 任务 ID
      * @throws SysException 当任务不存在时抛出
@@ -45,6 +71,8 @@ public interface JobService {
     /**
      * 暂停任务
      *
+     * <p>从调度器中移除触发器，但保留任务定义。
+     *
      * @param id 任务 ID
      * @throws SysException 当任务不存在时抛出
      */
@@ -53,13 +81,15 @@ public interface JobService {
     /**
      * 恢复任务
      *
+     * <p>重新注册到调度器，从下次触发时间开始按 cron 表达式执行。
+     *
      * @param id 任务 ID
      * @throws SysException 当任务不存在时抛出
      */
     void resume(String id);
 
     /**
-     * 立即执行一次
+     * 立即执行一次（默认不抢占分布式锁）
      *
      * <p>默认不抢占分布式锁（与历史行为兼容）。如需测试真实分布式路径，
      * 使用 {@link #trigger(String, boolean)} 并传 {@code holdLock=true}。
@@ -71,7 +101,7 @@ public interface JobService {
     String trigger(String id);
 
     /**
-     * 立即执行一次（可选是否抢占分布式锁）。
+     * 立即执行一次（可选是否抢占分布式锁）
      *
      * <p>P0-5: 修复手动触发绕过锁的问题。在多实例部署场景下，建议传入
      * {@code holdLock=true} 走锁路径，避免与定时触发并发执行。
@@ -126,6 +156,8 @@ public interface JobService {
     /**
      * 注册到调度器（从 DB 加载/动态新增）
      *
+     * <p>由 {@link #loadOnStartup} 或 {@link #create} 调用。
+     *
      * @param job 任务定义
      * @return 注册成功返回 true，否则返回 false
      */
@@ -133,6 +165,8 @@ public interface JobService {
 
     /**
      * 取消注册
+     *
+     * <p>从 Quartz 调度器中移除触发器，任务定义保留在 DB。
      *
      * @param jobKey 任务 KEY
      * @return 取消成功返回 true，任务未注册返回 false
@@ -142,13 +176,15 @@ public interface JobService {
     /**
      * 重新注册（用于更新 Cron）
      *
+     * <p>先取消旧触发器，再注册新触发器（实现 cron 表达式热更新）。
+     *
      * @param job 任务定义
      * @return 重新注册成功返回 true，否则返回 false
      */
     boolean reschedule(Job job);
 
     /**
-     * 详情
+     * 任务详情查询
      *
      * @param id 任务 ID
      * @return 任务定义
@@ -158,6 +194,8 @@ public interface JobService {
 
     /**
      * 分页查询任务
+     *
+     * <p>支持关键字（任务名/KEY/处理器）、状态、分组多条件过滤。
      *
      * @param page    页码
      * @param size    每页条数
@@ -171,6 +209,8 @@ public interface JobService {
     /**
      * 分页查询执行日志
      *
+     * <p>支持按 {@code jobKey / status} 过滤，按触发时间倒序排列。
+     *
      * @param page   页码
      * @param size   每页条数
      * @param jobKey 任务 KEY 过滤（可选）
@@ -181,6 +221,9 @@ public interface JobService {
 
     /**
      * 应用启动时加载所有 NORMAL 任务
+     *
+     * <p>由 {@code CommandLineRunner} 或 {@code ApplicationReadyEvent} 监听器调用，
+     * 将 DB 中所有状态为 NORMAL 的任务注册到调度器。
      */
     void loadOnStartup();
 }

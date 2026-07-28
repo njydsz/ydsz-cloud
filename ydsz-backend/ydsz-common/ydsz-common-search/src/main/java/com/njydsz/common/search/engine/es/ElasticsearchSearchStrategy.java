@@ -1,6 +1,7 @@
 package com.njydsz.common.search.engine.es;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,19 +144,19 @@ public class ElasticsearchSearchStrategy implements SearchStrategy, IndexStrateg
     }
 
     private String buildEsDocument(IndexDocument doc) {
-        return YdszJson.toJson(Map.of(
-                "doc_type", doc.getType(),
-                "title", doc.getTitle() != null ? doc.getTitle() : "",
-                "subtitle", doc.getSubtitle() != null ? doc.getSubtitle() : "",
-                "content", doc.getContent() != null ? doc.getContent() : "",
-                "snippet", doc.getSnippet() != null ? doc.getSnippet() : "",
-                "tags", doc.getTags() != null ? doc.getTags() : Collections.emptyList(),
-                "status", doc.getStatus() != null ? doc.getStatus() : "",
-                "path", doc.getPath() != null ? doc.getPath() : "",
-                "tenant_id", doc.getTenantId() != null ? doc.getTenantId() : "",
-                "created_by", doc.getCreatedBy() != null ? doc.getCreatedBy() : "",
-                "updated_by", doc.getUpdatedBy() != null ? doc.getUpdatedBy() : ""
-        ));
+        Map<String, Object> map = new HashMap<>(16);
+        map.put("doc_type", doc.getType());
+        map.put("title", doc.getTitle() != null ? doc.getTitle() : "");
+        map.put("subtitle", doc.getSubtitle() != null ? doc.getSubtitle() : "");
+        map.put("content", doc.getContent() != null ? doc.getContent() : "");
+        map.put("snippet", doc.getSnippet() != null ? doc.getSnippet() : "");
+        map.put("tags", doc.getTags() != null ? doc.getTags() : Collections.emptyList());
+        map.put("status", doc.getStatus() != null ? doc.getStatus() : "");
+        map.put("path", doc.getPath() != null ? doc.getPath() : "");
+        map.put("tenant_id", doc.getTenantId() != null ? doc.getTenantId() : "");
+        map.put("created_by", doc.getCreatedBy() != null ? doc.getCreatedBy() : "");
+        map.put("updated_by", doc.getUpdatedBy() != null ? doc.getUpdatedBy() : "");
+        return YdszJson.toJson(map);
     }
 
     private SearchResponse searchInMemory(SearchRequest request) {
