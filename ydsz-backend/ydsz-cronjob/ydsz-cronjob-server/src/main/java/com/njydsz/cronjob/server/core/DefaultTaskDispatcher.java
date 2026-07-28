@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 
 import jakarta.annotation.PostConstruct;
@@ -153,6 +155,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<LogStreamManager> logStreamManagerProvider;
     /** P0-8: 优先级抢占式调度器（可选注入，线程池满时抢占低优先级任务） */
     private final ObjectProvider<PreemptiveScheduler> preemptiveSchedulerProvider;
+    /** P0-2: 事务性 Outbox 事件服务（可选，未配置时为 null，用于跨模块可靠投递任务失败事件） */
+    private final ObjectProvider<OutboxService> outboxServiceProvider;
 
     /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
     private static final String INSTANCE_ID = initInstanceId();
@@ -1031,6 +1035,10 @@ try {
         triggerAlerts(job, success, log0);
         // P3-13: 推送 WebHook 事件通知
         dispatchWebhookEvent(success ? "TASK_SUCCESS" : "TASK_FAILED", job, log0);
+        // P0-2: 发布 Outbox 事件（跨模块可靠投递，消息中心据此发送告警通知）
+        if (!success) {
+            publishJobFailureOutboxEvent(job, log0);
+        }
         // P1-1: 失败重试（非 RETRY 触发且 maxRetries > 0 且 retryCount < maxRetries）
         if (!success) {
             scheduleRetryIfNeeded(job, holdLock, triggerType, retryCount);
@@ -1136,6 +1144,43 @@ try {
             eventPublisher.publishEvent(event);
         } catch (Exception e) {
             log.warn("[Dispatcher] 发布任务完成事件失败(不影响主流程): key={} reason={}",
+                    job.getJobKey(), e.getMessage());
+        }
+    }
+
+    /**
+     * P0-2: 发布任务执行失败 Outbox 事件（跨模块可靠投递）。
+     *
+     * <p>消息中心订阅 {@link StandardEventTypes#JOB_EXECUTION_FAILED} 后据此发送告警通知。
+     * OutboxService 为可选依赖，未配置时安全降级（仅 DEBUG 日志）。
+     * 异常不影响主流程：投递失败仅记录 WARN。
+     *
+     * @param job  任务定义
+     * @param log0 任务执行日志（携带 errorMessage / durationMs 等）
+     */
+    private void publishJobFailureOutboxEvent(Job job, JobLog log0) {
+        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        if (outboxService == null) {
+            log.debug("[Dispatcher] OutboxService 未配置，跳过 JOB_EXECUTION_FAILED 事件: jobKey={}",
+                    job.getJobKey());
+            return;
+        }
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("jobId", job.getId());
+            payload.put("jobKey", job.getJobKey());
+            payload.put("jobName", job.getJobName() != null ? job.getJobName() : "");
+            payload.put("logId", log0.getId());
+            payload.put("errorMessage", log0.getErrorMessage() != null ? log0.getErrorMessage() : "");
+            payload.put("triggerType", log0.getTriggerType() != null ? log0.getTriggerType() : "");
+            payload.put("durationMs", log0.getDurationMs());
+            payload.put("tenantId", job.getTenantId() != null ? job.getTenantId() : "");
+            outboxService.appendToOutbox(
+                    "JobLog", log0.getId(),
+                    StandardEventTypes.JOB_EXECUTION_FAILED,
+                    YdszJson.toJson(payload));
+        } catch (Exception e) {
+            log.warn("[Dispatcher] 发布 JOB_EXECUTION_FAILED Outbox 事件失败: jobKey={} reason={}",
                     job.getJobKey(), e.getMessage());
         }
     }

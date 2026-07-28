@@ -25,7 +25,7 @@ import com.njydsz.literule.server.dsl.RuleDslConverter;
 import com.njydsz.literule.server.dsl.RuleDslEntry;
 import com.njydsz.literule.server.dsl.RuleDslExporter;
 import com.njydsz.literule.server.dsl.RuleDslParser;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

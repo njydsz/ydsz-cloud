@@ -17,11 +17,13 @@ public final class StandardEventTypes {
     }
 
     // ========== Workflow 事件 ==========
-    /** 流程实例审批通过 */
+    /** 流程实例启动（发起人提交申请，进入审批流） */
+    public static final String FLOW_INSTANCE_STARTED = "FLOW_INSTANCE_STARTED";
+    /** 流程实例审批通过（走完所有审批节点，到达结束节点） */
     public static final String FLOW_INSTANCE_APPROVED = "FLOW_INSTANCE_APPROVED";
-    /** 流程实例被驳回 */
+    /** 流程实例被驳回（被驳回至终止状态） */
     public static final String FLOW_INSTANCE_REJECTED = "FLOW_INSTANCE_REJECTED";
-    /** 流程实例被终止 */
+    /** 流程实例被终止（管理员强制终止） */
     public static final String FLOW_INSTANCE_TERMINATED = "FLOW_INSTANCE_TERMINATED";
     /** 流程任务被完成 */
     public static final String FLOW_TASK_COMPLETED = "FLOW_TASK_COMPLETED";

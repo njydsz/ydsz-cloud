@@ -326,16 +326,19 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 dto.getFlowCode(), dto.getBusinessId(), instanceId);
 
         // P0-2: 发布 Outbox 事件（跨模块可靠投递）
+        // 语义修正：start() 发布 FLOW_INSTANCE_STARTED（流程启动），
+        // 审批通过事件 FLOW_INSTANCE_APPROVED 由 complete() 发布，避免消息中心误发"审批通过通知"
         OutboxService outboxService = outboxServiceProvider.getIfAvailable();
         if (outboxService != null) {
             outboxService.appendToOutbox(
                     "FlowInstance", instanceId,
-                    StandardEventTypes.FLOW_INSTANCE_APPROVED,
+                    StandardEventTypes.FLOW_INSTANCE_STARTED,
                     YdszJson.toJson(Map.of(
                             "instanceId", instanceId,
                             "flowCode", dto.getFlowCode(),
-                            "businessType", dto.getBusinessType(),
-                            "businessId", dto.getBusinessId(),
+                            "flowName", def.getFlowName() != null ? def.getFlowName() : "",
+                            "businessType", dto.getBusinessType() != null ? dto.getBusinessType() : "",
+                            "businessId", dto.getBusinessId() != null ? dto.getBusinessId() : "",
                             "initiatorId", dto.getInitiatorId() != null ? dto.getInitiatorId() : "",
                             "tenantId", tenantId
                     ))
@@ -416,6 +419,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         fireEvent(l -> l.onInstanceTerminated(instanceId, reason, ctx));
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("INSTANCE_TERMINATED", instanceId, null);
+        // P0-2: 发布 Outbox 事件 FLOW_INSTANCE_TERMINATED（跨模块可靠投递）
+        publishOutboxEvent(StandardEventTypes.FLOW_INSTANCE_TERMINATED, instanceId, instance,
+                "flowTitle", instance.getTitle() != null ? instance.getTitle() : instance.getFlowName(),
+                "reason", reason != null ? reason : "管理员终止",
+                "initiatorId", instance.getInitiatorId() != null ? instance.getInitiatorId() : ""
+        );
         // P2-6: 双向同步 — 本地→三方取消审批单
         try {
             thirdPartySyncService.syncBackOnTerminate(instanceId, reason);
@@ -533,6 +542,16 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         fireEvent(l -> l.onInstanceCompleted(instanceId));
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("INSTANCE_COMPLETED", instanceId, null);
+        // P0-2: 发布 Outbox 事件 FLOW_INSTANCE_APPROVED（跨模块可靠投递）
+        // 流程走完所有审批节点到达结束节点 = 审批通过，消息中心据此通知发起人
+        publishOutboxEvent(StandardEventTypes.FLOW_INSTANCE_APPROVED, instanceId, instance,
+                "flowTitle", instance.getTitle() != null ? instance.getTitle() : instance.getFlowName(),
+                "flowCode", instance.getFlowCode(),
+                "businessType", instance.getBusinessType() != null ? instance.getBusinessType() : "",
+                "businessId", instance.getBusinessId() != null ? instance.getBusinessId() : "",
+                "initiatorId", instance.getInitiatorId() != null ? instance.getInitiatorId() : "",
+                "endNodeCode", endNodeCode != null ? endNodeCode : ""
+        );
         // 自动触发：检查是否需要自动发起下一流程
         try {
             autoTriggerService.onInstanceCompleted(instanceId);
@@ -1409,6 +1428,49 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             eventPublisher.publishEvent(new FlowWorkflowEvent(eventType, instanceId, taskId, null));
         } catch (Exception e) {
             log.warn("[Flow] 发布 Spring 事件失败: type={} err={}", eventType, e.getMessage());
+        }
+    }
+
+    /**
+     * P0-2: 发布 Outbox 跨模块事件（可选依赖，未配置时安全降级）
+     *
+     * <p>统一封装 FlowInstance 相关的 Outbox 事件发布，避免在 complete/terminate/reject
+     * 等多个方法中重复编写 OutboxService 获取与异常处理代码。
+     *
+     * <p>异常不影响主流程：Outbox 投递失败仅记录 WARN 日志，不回滚业务事务
+     * （Outbox 表未写入时，后台轮询器自然不会投递，下游模块不感知，符合"最终一致"语义）。
+     *
+     * @param eventType   事件类型（{@link StandardEventTypes#FLOW_INSTANCE_APPROVED} 等）
+     * @param instanceId  实例 ID（作为 aggregateId）
+     * @param instance    流程实例（可空，用于提取 tenantId）
+     * @param kvPairs     payload 键值对（交替排列：k1, v1, k2, v2, ...）
+     */
+    private void publishOutboxEvent(String eventType, String instanceId,
+                                     FlowInstance instance, Object... kvPairs) {
+        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        if (outboxService == null) {
+            log.debug("[Flow] OutboxService 未配置，跳过事件发布: type={} id={}", eventType, instanceId);
+            return;
+        }
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("instanceId", instanceId);
+            if (instance != null) {
+                payload.put("flowCode", instance.getFlowCode() != null ? instance.getFlowCode() : "");
+                payload.put("tenantId", instance.getTenantId() != null ? instance.getTenantId() : "");
+            }
+            // 追加调用方提供的键值对
+            if (kvPairs != null) {
+                for (int i = 0; i + 1 < kvPairs.length; i += 2) {
+                    payload.put(String.valueOf(kvPairs[i]), kvPairs[i + 1]);
+                }
+            }
+            outboxService.appendToOutbox(
+                    "FlowInstance", instanceId, eventType,
+                    YdszJson.toJson(payload));
+        } catch (Exception e) {
+            log.warn("[Flow] 发布 Outbox 事件失败: type={} id={} err={}",
+                    eventType, instanceId, e.getMessage());
         }
     }
 
