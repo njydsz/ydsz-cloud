@@ -14,7 +14,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +25,7 @@ import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,15 +54,10 @@ import lombok.extern.slf4j.Slf4j;
 public class PreviewApplicationService {
 
     private final FileNodeRepository fileNodeRepository;
+    private final NextwikiProperties properties;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
-
-    @Value("${nextwiki.preview.libreoffice-path:soffice}")
-    private String libreofficePath;
-
-    @Value("${nextwiki.preview.temp-dir:/tmp/nextwiki-preview}")
-    private String tempDir;
 
     /** 支持 Office 预览的文件后缀 */
     private static final Set<String> OFFICE_SUFFIXES = Set.of(
@@ -160,7 +155,7 @@ public class PreviewApplicationService {
             throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
         }
 
-        Path tempDirPath = Path.of(tempDir);
+        Path tempDirPath = Path.of(properties.getPreview().getTempDir());
         Files.createDirectories(tempDirPath);
 
         String tempFileId = UUID.randomUUID().toString().replace("-", "");
@@ -187,6 +182,8 @@ public class PreviewApplicationService {
             inputFile = downloadToTemp(fileNode);
 
             String tempFileId = UUID.randomUUID().toString().replace("-", "");
+            String tempDir = properties.getPreview().getTempDir();
+            String libreofficePath = properties.getPreview().getLibreofficePath();
             outputDir = Path.of(tempDir).resolve("output-" + tempFileId);
             Files.createDirectories(outputDir);
 

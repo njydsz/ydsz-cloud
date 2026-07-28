@@ -5,11 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -23,28 +25,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OcrApplicationService {
 
-    @Value("${nextwiki.ocr.enabled:false}")
-    private boolean enabled;
-
-    @Value("${nextwiki.ocr.provider:tesseract}")
-    private String provider;
-
-    @Value("${nextwiki.ocr.tesseract-path:tesseract}")
-    private String tesseractPath;
-
-    @Value("${nextwiki.ocr.language:chi_sim+eng}")
-    private String language;
+    private final NextwikiProperties properties;
 
     /**
      * 识别图片中的文字
      */
     public OcrResult recognize(InputStream imageStream, String fileName) {
-        if (!enabled) {
+        if (!properties.getOcr().isEnabled()) {
             return OcrResult.skipped("OCR 未启用");
         }
 
+        String provider = properties.getOcr().getProvider();
         log.info("[OcrApplicationService] 开始 OCR 识别: provider={}, file={}", provider, fileName);
 
         try {
@@ -67,6 +61,8 @@ public class OcrApplicationService {
      * 流程：将输入流写入临时文件 -> 调用 tesseract 命令 -> 读取标准输出 -> 清理临时文件。
      */
     private OcrResult recognizeByTesseract(InputStream imageStream) throws Exception {
+        String language = properties.getOcr().getLanguage();
+        String tesseractPath = properties.getOcr().getTesseractPath();
         log.info("[OcrApplicationService] Tesseract OCR（语言: {}）", language);
 
         Path tempFile = Files.createTempFile("nextwiki-ocr-", ".tmp");

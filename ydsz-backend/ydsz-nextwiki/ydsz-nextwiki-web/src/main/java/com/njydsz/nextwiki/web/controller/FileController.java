@@ -1,8 +1,5 @@
 package com.njydsz.nextwiki.web.controller;
 
-import java.util.List;
-
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.validation.annotation.Validated;
@@ -18,12 +15,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.nextwiki.domain.entity.FileVersion;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
 import com.njydsz.nextwiki.server.service.FileApplicationService;
@@ -32,31 +32,25 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.lock.annotation.Idempotent;
 
-import com.njydsz.nextwiki.server.service.ChunkUploadApplicationService;
-import java.util.Set;
 /**
- * 文件管理 REST API Controller。
+ * 文件管理核心 REST API Controller（核心单文件操作）。
  *
- * <p>网盘文件（NextWiki）模块的核心 REST 接口，提供文件的完整生命周期管理能力：
+ * <p>网盘文件（NextWiki）模块的核心 REST 接口，承担文件最基础的生命周期管理能力：
+ * 上传、目录创建、列目录、移动、重命名、删除（移入回收站）、复制。
+ *
+ * <p>本类已从原 533 行的胖 Controller 拆分为 3 个职责清晰的 Controller：
  * <ul>
- *   <li>基础操作：上传 / 下载 / 移动 / 重命名 / 复制 / 删除（移入回收站）</li>
- *   <li>目录管理：创建目录、列出目录内容（支持排序/过滤/分页）</li>
- *   <li>批量操作：批量删除 / 批量移动</li>
- *   <li>版本管理：版本历史查询、回滚到指定版本</li>
- *   <li>分片上传：大文件分片上传（支持断点续传 + 取消 + 查询已上传分片）</li>
- *   <li>个性化：切换星标</li>
+ *   <li>本类 {@code FileController} —— 核心单文件操作</li>
+ *   <li>{@link FileBatchController} —— 批量操作、版本管理、星标切换</li>
+ *   <li>{@link FileChunkController} —— 大文件分片上传（断点续传）</li>
  * </ul>
  *
  * <h3>核心能力</h3>
  * <ul>
  *   <li>单文件上传：基于 {@code MultipartFile} 的标准上传，自动创建首版本</li>
- *   <li>分片上传：基于 {@link ChunkUploadApplicationService} 的断点续传方案，支持大文件秒传</li>
- *   <li>版本管理：每次上传同名文件会创建新版本，支持回滚到任意历史版本</li>
+ *   <li>目录管理：创建目录、列出目录内容（支持排序/过滤/分页）</li>
+ *   <li>节点操作：移动 / 重命名 / 复制 / 删除（软删除，移入回收站）</li>
  *   <li>回收站：删除操作实际为"软删除"，文件移入回收站，可由 {@code TrashController} 恢复</li>
  *   <li>目录树：基于 parentId 自引用构建无限层级目录树</li>
  * </ul>
@@ -66,7 +60,6 @@ import java.util.Set;
  *   <li>所有写操作均加 {@link Idempotent} 防重（5s TTL）</li>
  *   <li>所有写操作均加 {@link Audit} 异步落库审计日志（FILE 类型）</li>
  *   <li>所有写操作均加 {@link AuthApiPermission} 权限码校验（NEXTWIKI_FILE_*）</li>
- *   <li>高频写操作（取消分片）加 {@link RateLimit} 限流（50 QPS）</li>
  *   <li>用户身份通过 {@code X-User-Id} 请求头传递（由网关层注入）</li>
  * </ul>
  *
@@ -78,17 +71,7 @@ import java.util.Set;
  *   PUT    /api/v1/nextwiki/files/{nodeId}/move          - 移动文件/文件夹
  *   PUT    /api/v1/nextwiki/files/{nodeId}/rename        - 重命名
  *   DELETE /api/v1/nextwiki/files/{nodeId}               - 删除（移入回收站）
- *   POST   /api/v1/nextwiki/files/batch/delete           - 批量删除
- *   POST   /api/v1/nextwiki/files/batch/move             - 批量移动
  *   POST   /api/v1/nextwiki/files/{nodeId}/copy          - 复制
- *   GET    /api/v1/nextwiki/files/{nodeId}/versions      - 版本历史
- *   POST   /api/v1/nextwiki/files/{nodeId}/versions/{ver}/rollback - 版本回滚
- *   PUT    /api/v1/nextwiki/files/{nodeId}/star          - 切换星标
- *   POST   /api/v1/nextwiki/files/chunk/init             - 初始化分片上传
- *   POST   /api/v1/nextwiki/files/chunk/{id}/{num}       - 上传分片
- *   POST   /api/v1/nextwiki/files/chunk/{id}/complete    - 合并分片
- *   DELETE /api/v1/nextwiki/files/chunk/{id}             - 取消分片上传
- *   GET    /api/v1/nextwiki/files/chunk/{id}/uploaded-chunks - 已上传分片
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -96,12 +79,11 @@ import java.util.Set;
  *   前端 (PC Web) → ydsz-gateway → ydsz-nextwiki-web (本 Controller)
  *                                            ↓
  *                                    ydsz-nextwiki-server.FileApplicationService
- *                                       ├── ChunkUploadApplicationService (分片)
  *                                       └── NextwikiHealthIndicator (指标)
  *                                            ↓
  *                                    ydsz-nextwiki-infra Mapper
  *                                            ↓
- *                                    ydsz_file_node / ydsz_file_version / ydsz_file_chunk
+ *                                    ydsz_file_node / ydsz_file_version
  * </pre>
  *
  * @author ydsz-team
@@ -112,15 +94,13 @@ import java.util.Set;
 @RequestMapping("/api/v1/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "网盘文件管理", description = "文件上传、下载、移动、重命名、删除、分片上传、版本管理")
+@Tag(name = "网盘文件管理", description = "文件上传、目录、移动、重命名、删除、复制")
 public class FileController {
 
-    /** 文件应用服务（封装上传/移动/重命名/复制/删除/版本等业务编排） */
+    /** 文件应用服务（封装上传/移动/重命名/复制/删除等业务编排） */
     private final FileApplicationService fileApplicationService;
     /** 健康指标采集器（记录上传/删除次数等关键指标） */
     private final NextwikiHealthIndicator healthIndicator;
-    /** 分片上传服务（封装大文件分片上传 + 断点续传） */
-    private final ChunkUploadApplicationService chunkUploadService;
 
     /**
      * 上传文件（单文件模式）。
@@ -280,51 +260,6 @@ public class FileController {
     }
 
     /**
-     * 批量删除文件/文件夹（移入回收站）。
-     *
-     * <p>返回每条的处理结果（成功/失败原因），由前端根据 {@link FileApplicationService.BatchResult} 展示。
-     *
-     * @param nodeIds 节点 ID 列表
-     * @param userId  当前用户 ID
-     * @return 统一响应结果，data 为批量处理结果（successCount / failCount / failures）
-     */
-    @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'batchDelete'")
-    @Idempotent(key = "ydsz:nextwiki:FileController:batchDelete:lock", ttlSeconds = 5)
-    @PostMapping("/batch/delete")
-    @Operation(summary = "批量删除")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
-    public BaseResponse<FileApplicationService.BatchResult> batchDelete(
-            @RequestBody List<String> nodeIds,
-            @RequestHeader("X-User-Id") String userId) {
-
-        FileApplicationService.BatchResult result = fileApplicationService.batchDelete(nodeIds, userId);
-        return BaseResponse.success(result);
-    }
-
-    /**
-     * 批量移动文件/文件夹到指定目录。
-     *
-     * <p>所有节点必须属于同一用户；目标位置不能是任一节点的子孙。
-     *
-     * @param request 批量移动请求（nodeIds / targetParentId）
-     * @param userId  当前用户 ID
-     * @return 统一响应结果，data 为批量处理结果
-     */
-    @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'batchMove'")
-    @Idempotent(key = "ydsz:nextwiki:FileController:batchMove:lock", ttlSeconds = 5)
-    @PostMapping("/batch/move")
-    @Operation(summary = "批量移动")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
-    public BaseResponse<FileApplicationService.BatchResult> batchMove(
-            @Valid @RequestBody NextwikiDTOs.BatchMoveRequest request,
-            @RequestHeader("X-User-Id") String userId) {
-
-        FileApplicationService.BatchResult result = fileApplicationService.batchMove(
-                request.getNodeIds(), request.getTargetParentId(), userId);
-        return BaseResponse.success(result);
-    }
-
-    /**
      * 复制文件到指定目录。
      *
      * <p>复制会生成全新的文件节点和首版本，原文件不受影响。目标位置如有同名文件，
@@ -348,186 +283,5 @@ public class FileController {
 
         FileNodeVO result = fileApplicationService.copy(nodeId, targetParentId, userId);
         return BaseResponse.success(result);
-    }
-
-    /**
-     * 获取文件的版本历史。
-     *
-     * <p>按版本号倒序返回全部历史版本，每条记录包含版本号、大小、上传人、上传时间、备注等。
-     * 当前最新版本固定在列表首位。
-     *
-     * @param nodeId 文件节点 ID
-     * @return 统一响应结果，data 为 {@link FileVersion} 列表
-     */
-    @GetMapping("/{nodeId}/versions")
-    @Operation(summary = "获取版本历史")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
-    public BaseResponse<List<FileVersion>> getVersionHistory(@PathVariable String nodeId) {
-        return BaseResponse.success(fileApplicationService.getVersionHistory(nodeId));
-    }
-
-    /**
-     * 回滚文件到指定版本。
-     *
-     * <p>将当前版本替换为指定历史版本的内容，同时在版本历史中新增一条"回滚"记录。
-     * 不会删除任何历史版本，可在版本历史中再次切回。
-     *
-     * @param nodeId   文件节点 ID
-     * @param version  目标版本号
-     * @param userId   当前用户 ID
-     * @return 统一响应结果，data 为回滚后的文件节点信息（含新版本号）
-     */
-    @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'rollbackVersion'")
-    @Idempotent(key = "ydsz:nextwiki:FileController:rollbackVersion:lock", ttlSeconds = 5)
-    @PostMapping("/{nodeId}/versions/{version}/rollback")
-    @Operation(summary = "回滚到指定版本")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_ROLLBACK)
-    public BaseResponse<FileNodeVO> rollbackVersion(
-            @PathVariable String nodeId,
-            @PathVariable Integer version,
-            @RequestHeader("X-User-Id") String userId) {
-
-        FileNodeVO result = fileApplicationService.rollbackVersion(nodeId, version, userId);
-        return BaseResponse.success(result);
-    }
-
-    /**
-     * 切换文件星标状态。
-     *
-     * <p>星标文件会在前端"我的星标"视图中聚合显示，便于快速访问。
-     *
-     * @param nodeId 节点 ID
-     * @param userId 当前用户 ID
-     * @return 统一响应结果
-     */
-    @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.UPDATE, content = "'toggleStar'")
-    @Idempotent(key = "ydsz:nextwiki:FileController:toggleStar:lock", ttlSeconds = 5)
-    @PutMapping("/{nodeId}/star")
-    @Operation(summary = "切换星标状态")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_STAR)
-    public BaseResponse<Void> toggleStar(
-            @PathVariable String nodeId,
-            @RequestHeader("X-User-Id") String userId) {
-
-        fileApplicationService.toggleStar(nodeId, userId);
-        return BaseResponse.success();
-    }
-
-    // ==================== P1-1: 分片上传 ====================
-
-    /**
-     * 初始化分片上传。
-     *
-     * <p>为待上传的大文件分配一个全局唯一的 uploadId，并返回分片大小、已上传分片等元数据。
-     * 客户端基于该 uploadId 后续可调用 {@link #uploadChunk} 上传分片，
-     * 调用 {@link #getUploadedChunks} 实现断点续传。
-     *
-     * <p>典型使用流程：
-     * <pre>
-     *   1. 调用本接口拿到 uploadId
-     *   2. 调用 getUploadedChunks 检查已上传分片（断点续传关键）
-     *   3. 仅上传缺失的分片到 uploadChunk
-     *   4. 全部上传完成后调用 completeChunkUpload 合并
-     * </pre>
-     *
-     * @param fileName    文件名（含扩展名）
-     * @param fileSize    文件总大小（字节）
-     * @param totalChunks 总分片数
-     * @param parentId    父目录 ID（可空表示根目录）
-     * @param userId      当前用户 ID
-     * @return 统一响应结果，data 为 {@link ChunkUploadApplicationService.ChunkUploadInit}（含 uploadId / chunkSize 等）
-     */
-    @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'initChunkUpload'")
-    @Idempotent(key = "ydsz:nextwiki:FileController:initChunkUpload:lock", ttlSeconds = 5)
-    @PostMapping("/chunk/init")
-    @Operation(summary = "初始化分片上传", description = "大文件分片上传，支持断点续传")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-    public BaseResponse<ChunkUploadApplicationService.ChunkUploadInit> initChunkUpload(
-            @RequestParam("fileName") String fileName,
-            @RequestParam("fileSize") long fileSize,
-            @RequestParam("totalChunks") int totalChunks,
-            @RequestParam(value = "parentId", required = false) String parentId,
-            @RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.success(chunkUploadService.initChunkUpload(
-                fileName, fileSize, totalChunks, parentId, userId));
-    }
-
-    /**
-     * 上传单个分片。
-     *
-     * <p>将第 {@code chunkNumber} 个分片上传到临时存储区。已上传的分片可重复上传（覆盖式），
-     * 由 {@code ChunkUploadApplicationService} 内部做幂等校验。
-     *
-     * @param uploadId    上传任务 ID
-     * @param chunkNumber 分片序号（从 0 开始）
-     * @param chunk       分片文件
-     * @return 统一响应结果
-     */
-    @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'uploadChunk'")
-    @Idempotent(key = "ydsz:nextwiki:FileController:uploadChunk:lock", ttlSeconds = 5)
-    @PostMapping("/chunk/{uploadId}/{chunkNumber}")
-    @Operation(summary = "上传单个分片")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-    public BaseResponse<Void> uploadChunk(
-            @PathVariable String uploadId,
-            @PathVariable int chunkNumber,
-            @RequestParam("chunk") MultipartFile chunk) {
-        chunkUploadService.uploadChunk(uploadId, chunkNumber, chunk);
-        return BaseResponse.success();
-    }
-
-    /**
-     * 完成分片上传（合并并落库）。
-     *
-     * <p>校验所有分片已上传完成 → 合并为完整文件 → 写入对象存储 → 在文件节点表创建记录。
-     * 合并完成后会清理临时分片数据。
-     *
-     * @param uploadId 上传任务 ID
-     * @param userId   当前用户 ID
-     * @return 统一响应结果，data 为合并后的文件节点信息
-     */
-    @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'completeChunkUpload'")
-    @Idempotent(key = "ydsz:nextwiki:FileController:completeChunkUpload:lock", ttlSeconds = 5)
-    @PostMapping("/chunk/{uploadId}/complete")
-    @Operation(summary = "完成分片上传", description = "合并分片并上传到存储")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-    public BaseResponse<FileNodeVO> completeChunkUpload(
-            @PathVariable String uploadId,
-            @RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.success(chunkUploadService.completeChunkUpload(uploadId, userId));
-    }
-
-    /**
-     * 取消分片上传。
-     *
-     * <p>删除已上传的分片和临时状态，用于客户端主动放弃上传或服务端超时清理。
-     * 取消后该 uploadId 即失效，不能再继续上传。
-     *
-     * @param uploadId 上传任务 ID
-     * @return 统一响应结果
-     */
-    @RateLimit(resource = "nextwiki.file.abortChunkUpload", threshold = 50)
-    @Idempotent(key = "ydsz:nextwiki:FileController:abortChunkUpload:lock", ttlSeconds = 5)
-    @DeleteMapping("/chunk/{uploadId}")
-    @Operation(summary = "取消分片上传")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-    public BaseResponse<Void> abortChunkUpload(@PathVariable String uploadId) {
-        chunkUploadService.abortChunkUpload(uploadId);
-        return BaseResponse.success();
-    }
-
-    /**
-     * 查询已上传的分片列表。
-     *
-     * <p>返回指定 uploadId 下已成功上传的分片序号集合，客户端据此可跳过已上传分片实现断点续传。
-     *
-     * @param uploadId 上传任务 ID
-     * @return 统一响应结果，data 为已上传分片序号集合
-     */
-    @GetMapping("/chunk/{uploadId}/uploaded-chunks")
-    @Operation(summary = "查询已上传分片列表", description = "用于断点续传")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-    public BaseResponse<Set<Integer>> getUploadedChunks(@PathVariable String uploadId) {
-        return BaseResponse.success(chunkUploadService.getUploadedChunks(uploadId));
     }
 }

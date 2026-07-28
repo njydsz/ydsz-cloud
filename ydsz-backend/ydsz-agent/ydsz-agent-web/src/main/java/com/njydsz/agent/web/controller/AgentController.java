@@ -3,8 +3,6 @@ package com.njydsz.agent.web.controller;
 import java.io.IOException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -17,7 +15,6 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,10 +24,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.njydsz.agent.api.dto.AgentExecutionRequestDTO;
 import com.njydsz.agent.api.dto.ChatResponseDTO;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
-import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatResponse;
-import com.njydsz.agent.domain.tool.ToolRegistry;
-import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.common.core.response.BaseResponse;
@@ -41,22 +35,27 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.agent.domain.converter.AgentConverter;
 import com.njydsz.agent.domain.vo.ChatResponseDTOVO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * Agent REST API Controller。
+ * Agent 执行 Controller（同步 / SSE 流式执行）
  *
- * <p>提供 Agent 执行、工具查询、可用模型等核心 REST 接口，对外暴露智能体（Agent）的执行能力：
+ * <p>提供 Agent 的核心执行能力，对外暴露智能体（Agent）的同步与流式调用入口：
  * <ul>
- *   <li>{@code POST /agent/execute} - 同步执行 Agent，等待完整响应后返回</li>
- *   <li>{@code POST /agent/execute/stream} - SSE 流式执行 Agent，逐 chunk 推送 LLM 响应</li>
- *   <li>{@code GET /agent/models} - 获取可用模型/Provider 列表</li>
- *   <li>{@code GET /agent/tools} - 获取已注册工具列表</li>
+ *   <li>{@code POST /api/v1/agent/execute} - 同步执行 Agent，等待完整响应后返回</li>
+ *   <li>{@code POST /api/v1/agent/execute/stream} - SSE 流式执行 Agent，逐 chunk 推送 LLM 响应</li>
  * </ul>
+ *
+ * <p><b>拆分说明：</b>本类从原 {@code AgentController} 拆分而来，仅保留 Agent 执行相关接口。
+ * 可用模型 / 已注册工具等元数据查询接口见 {@link AgentMetadataController}。
  *
  * <h3>核心能力</h3>
  * <ul>
- *   <li>同步/流式双模式执行（流式支持心跳保活和客户端断连检测）</li>
- *   <li>多 LLM Provider 路由（通过 {@link LlmClientRouter} 统一抽象）</li>
- *   <li>工具注册中心暴露（通过 {@link ToolRegistry} 查询可用工具）</li>
+ *   <li>同步 / 流式双模式执行（流式支持心跳保活和客户端断连检测）</li>
+ *   <li>多 LLM Provider 路由（通过 {@link AgentFactory} 统一抽象）</li>
  *   <li>幂等防重（5s TTL）+ 限流（50 QPS）+ 审计日志</li>
  * </ul>
  *
@@ -87,9 +86,16 @@ import com.njydsz.agent.domain.vo.ChatResponseDTOVO;
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see AgentMetadataController 元数据查询接口（可用模型 / 已注册工具）
+ * @see AgentFactory Agent 工厂
+ * @see AgentRequestGuard 请求守卫（幂等 + 限流 + 业务校验）
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/agent")
+@RequiredArgsConstructor
+@Tag(name = "Agent 执行", description = "Agent 同步 / SSE 流式执行")
 public class AgentController {
 
     private static final Logger log = LoggerFactory.getLogger(AgentController.class);
@@ -100,44 +106,11 @@ public class AgentController {
 
     /** Agent 工厂（根据 agentCode 创建/缓存执行器） */
     private final AgentFactory agentFactory;
-    /** 工具注册中心（查询已注册工具元数据） */
-    private final ToolRegistry toolRegistry;
     /** 请求守卫（幂等 + 限流 + 业务校验） */
     private final AgentRequestGuard requestGuard;
-    /** LLM 客户端（统一抽象 OpenAI / Claude / 通义千问 等） */
-    private final LlmClient llmClient;
     /** 心跳调度器（虚拟线程工厂创建，JVM 关闭时自动停止） */
     private final ScheduledExecutorService heartbeatScheduler =
             Executors.newScheduledThreadPool(2, Thread.ofVirtual().name("agent-exec-heartbeat-", 0).factory());
-
-    public AgentController(AgentFactory agentFactory, ToolRegistry toolRegistry,
-                           AgentRequestGuard requestGuard, LlmClient llmClient) {
-        this.agentFactory = agentFactory;
-        this.toolRegistry = toolRegistry;
-        this.requestGuard = requestGuard;
-        this.llmClient = llmClient;
-    }
-
-    /**
-     * 获取可用模型/Provider 列表。
-     *
-     * <p>当注入的 {@link LlmClient} 是 {@link LlmClientRouter} 时，返回其注册的所有可用 Provider；
-     * 否则返回单一 Provider。
-     *
-     * @return 统一响应结果，data 为 {@code [{provider, available}, ...]} 格式的列表
-     */
-    @GetMapping("/models")
-    public BaseResponse<List<Map<String, Object>>> models() {
-        List<Map<String, Object>> result = new ArrayList<>();
-        if (llmClient instanceof LlmClientRouter router) {
-            for (String provider : router.getAvailableProviders()) {
-                result.add(Map.of("provider", provider, "available", true));
-            }
-        } else {
-            result.add(Map.of("provider", llmClient.getProvider(), "available", true));
-        }
-        return BaseResponse.success(result);
-    }
 
     /**
      * 容器关闭时停止心跳调度器。
@@ -161,6 +134,7 @@ public class AgentController {
     @Idempotent(key = "ydsz:agent:AgentController:execute:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agent.execute", threshold = 50)
     @PostMapping("/execute")
+    @Operation(summary = "同步执行 Agent", description = "等待完整响应后返回，适用于非实时对话场景")
     public BaseResponse<ChatResponseDTOVO> execute(
             @Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 执行请求: agentCode={}, stream={}",
@@ -197,6 +171,7 @@ public class AgentController {
     @Idempotent(key = "ydsz:agent:AgentController:executeStream:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agent.executeStream", threshold = 50)
     @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "流式执行 Agent（SSE）", description = "逐 chunk 推送 LLM 响应，支持心跳保活和断连检测")
     public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
         requestGuard.check(request.getRequestId(), null);
@@ -262,25 +237,6 @@ public class AgentController {
         emitter.onCompletion(cleanup);
 
         return emitter;
-    }
-
-    /**
-     * 获取已注册工具列表。
-     *
-     * <p>从 {@link ToolRegistry} 查询所有已注册工具的元数据（名称 + 描述），供前端 Agent 编辑器
-     * 渲染"可用工具"下拉选择器。注意：本接口仅返回工具元数据，工具的实际调用由 Agent 内部完成。
-     *
-     * @return 统一响应结果，data 为 {@code [{name, description}, ...]} 格式的列表
-     */
-    @GetMapping("/tools")
-    public BaseResponse<List<Map<String, Object>>> tools() {
-        var defs = toolRegistry.getToolDefinitions();
-        List<Map<String, Object>> result = defs.stream()
-                .map(td -> Map.<String, Object>of(
-                        "name", td.getName(),
-                        "description", td.getDescription() != null ? td.getDescription() : ""))
-                .toList();
-        return BaseResponse.success(result);
     }
 
     /**

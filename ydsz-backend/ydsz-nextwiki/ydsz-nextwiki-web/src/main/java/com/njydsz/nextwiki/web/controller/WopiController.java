@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +18,7 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import com.njydsz.nextwiki.server.util.NextwikiFileUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -94,17 +94,12 @@ public class WopiController {
     /** 文件节点仓储（用于查询/更新文件） */
     private final FileNodeRepository fileNodeRepository;
 
+    /** NextWiki 全局配置 */
+    private final NextwikiProperties properties;
+
     /** 文件存储提供者（optional，可能不存在于所有部署环境） */
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
-
-    /** WOPI 编辑器 URL（来自配置 {@code nextwiki.wopi.editor-url}） */
-    @Value("${nextwiki.wopi.editor-url:}")
-    private String editorUrl;
-
-    /** WOPI 访问令牌（来自配置 {@code nextwiki.wopi.access-token}） */
-    @Value("${nextwiki.wopi.access-token:}")
-    private String expectedAccessToken;
 
     /**
      * CheckFileInfo — 获取文件元信息
@@ -280,6 +275,7 @@ public class WopiController {
      * P1-R5: WOPI Token 验证
      */
     private void validateWopiToken(String authToken) {
+        String expectedAccessToken = properties.getWopi().getAccessToken();
         if (expectedAccessToken != null && !expectedAccessToken.isEmpty()) {
             if (authToken == null || !authToken.equals(expectedAccessToken)) {
                 throw new BusinessException(

@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +39,7 @@ import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,19 +85,8 @@ public class FileApplicationService {
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
 
-    @Value("${nextwiki.upload.max-file-size:524288000}")
-    private long maxFileSize;
-
-    @Value("${nextwiki.upload.allowed-types:}")
-    private String allowedTypes;
-
-    /** 同名冲突策略：OVERWRITE(覆盖) / KEEP_BOTH(保留两者) / SKIP(跳过) */
-    @Value("${nextwiki.upload.conflict-strategy:KEEP_BOTH}")
-    private String conflictStrategy;
-
-    /** 是否启用病毒扫描 */
-    @Value("${nextwiki.virus-scan.enabled:false}")
-    private boolean virusScanEnabled;
+    /** NextWiki 全局配置 */
+    private final NextwikiProperties properties;
 
     /** 禁止上传的文件扩展名（安全黑名单） */
     private static final Set<String> BLOCKED_EXTENSIONS = Set.of(
@@ -130,6 +119,7 @@ public class FileApplicationService {
         List<FileNode> existingNodes = fileNodeRepository.findByNameAndParent(
                 fileName, resolvedParentId, userId);
         if (existingNodes != null && !existingNodes.isEmpty()) {
+            String conflictStrategy = properties.getUpload().getConflictStrategy();
             String strategy = conflictStrategy != null ? conflictStrategy.toUpperCase() : "KEEP_BOTH";
             switch (strategy) {
                 case "SKIP" -> {
@@ -197,7 +187,7 @@ public class FileApplicationService {
         FileStorage uploaded = storage.upload(null, storageKey, file);
 
         // 病毒扫描（如果启用）—— try-with-resources 确保 InputStream 关闭
-        if (virusScanEnabled) {
+        if (properties.getVirusScan().isEnabled()) {
             try (InputStream scanStream = file.getInputStream()) {
                 var scanResult = virusScanApplicationService.scan(
                         scanStream, file.getSize());
@@ -496,6 +486,7 @@ public class FileApplicationService {
         if (file == null || file.isEmpty()) {
             throw new BusinessException(NextwikiExceptionCode.FILE_UPLOAD_EMPTY);
         }
+        long maxFileSize = properties.getUpload().getMaxFileSize();
         if (file.getSize() > maxFileSize) {
             throw BusinessException.of(NextwikiExceptionCode.FILE_TOO_LARGE)
                     .data("maxSize", maxFileSize / 1024 / 1024 + "MB");
@@ -510,6 +501,7 @@ public class FileApplicationService {
                     .data("suffix", suffix);
         }
         // 白名单校验（如果配置了）
+        String allowedTypes = properties.getUpload().getAllowedTypes();
         if (allowedTypes != null && !allowedTypes.isEmpty()) {
             Set<String> allowed = Set.of(allowedTypes.toLowerCase().split(","));
             if (!allowed.contains(suffix)) {

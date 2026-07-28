@@ -5,11 +5,13 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -29,16 +31,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class VirusScanApplicationService {
 
-    @Value("${nextwiki.virus-scan.enabled:false}")
-    private boolean enabled;
-
-    @Value("${nextwiki.virus-scan.host:localhost}")
-    private String host;
-
-    @Value("${nextwiki.virus-scan.port:3310}")
-    private int port;
+    private final NextwikiProperties properties;
 
     /** 最大文件大小限制（100MB） */
     private static final long MAX_FILE_SIZE = 100L * 1024 * 1024;
@@ -55,7 +51,7 @@ public class VirusScanApplicationService {
      * @return 扫描结果
      */
     public ScanResult scan(InputStream inputStream, long fileSize) {
-        if (!enabled) {
+        if (!properties.getVirusScan().isEnabled()) {
             return ScanResult.skipped("病毒扫描未启用");
         }
 
@@ -76,6 +72,8 @@ public class VirusScanApplicationService {
      * 执行 ClamAV INSTREAM 扫描
      */
     private ScanResult doScan(InputStream inputStream) throws Exception {
+        String host = properties.getVirusScan().getHost();
+        int port = properties.getVirusScan().getPort();
         try (Socket socket = new Socket(host, port)) {
             var out = socket.getOutputStream();
             var in = socket.getInputStream();

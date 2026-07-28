@@ -11,7 +11,6 @@ import java.nio.file.StandardCopyOption;
 import javax.imageio.ImageIO;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +19,7 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,12 +44,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class ThumbnailApplicationService {
 
     private final FileNodeRepository fileNodeRepository;
+    private final NextwikiProperties properties;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
-
-    @Value("${nextwiki.thumbnail.temp-dir:/tmp/nextwiki-thumbnail}")
-    private String tempDir;
 
     /** 缩略图尺寸定义 */
     public static final int SIZE_SMALL = 64;
@@ -109,7 +107,7 @@ public class ThumbnailApplicationService {
                 BufferedImage thumbnail = generateThumbnailImage(Files.newInputStream(tempFile), SIZE_MEDIUM);
 
                 // 写入临时文件并上传到存储
-                Path thumbFile = Path.of(tempDir, fileNodeId + "_thumb.png");
+                Path thumbFile = Path.of(properties.getThumbnail().getTempDir(), fileNodeId + "_thumb.png");
                 ImageIO.write(thumbnail, "png", thumbFile.toFile());
 
                 // 上传到存储

@@ -13,7 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 import lombok.Builder;
 import lombok.Data;
@@ -41,21 +42,11 @@ import lombok.extern.slf4j.Slf4j;
 public class AiSummaryApplicationService {
 
     private final RestTemplate nextwikiRestTemplate;
+    private final NextwikiProperties properties;
 
-    @Value("${nextwiki.ai.llm-enabled:false}")
-    private boolean llmEnabled;
-
-    @Value("${nextwiki.ai.llm-api-url:}")
-    private String llmApiUrl;
-
-    @Value("${nextwiki.ai.llm-api-key:}")
-    private String llmApiKey;
-
-    @Value("${nextwiki.ai.llm-model:gpt-3.5-turbo}")
-    private String llmModel;
-
-    public AiSummaryApplicationService(RestTemplate restTemplate) {
+    public AiSummaryApplicationService(RestTemplate restTemplate, NextwikiProperties properties) {
         this.nextwikiRestTemplate = restTemplate;
+        this.properties = properties;
     }
 
     /** 摘要最大句子数 */
@@ -75,7 +66,7 @@ public class AiSummaryApplicationService {
             return "";
         }
 
-        if (llmEnabled) {
+        if (properties.getAi().isLlmEnabled()) {
             return generateSummaryByLlm(content);
         }
         return generateSummaryByTextRank(content);
@@ -89,7 +80,7 @@ public class AiSummaryApplicationService {
             return List.of();
         }
 
-        if (llmEnabled) {
+        if (properties.getAi().isLlmEnabled()) {
             return extractKeywordsByLlm(content);
         }
         return extractKeywordsByTextRank(content);
@@ -266,7 +257,7 @@ public class AiSummaryApplicationService {
      * 调用 OpenAI 兼容接口（/v1/chat/completions），失败时降级到 TextRank。
      */
     private String generateSummaryByLlm(String content) {
-        log.info("[AiSummaryApplicationService] LLM 摘要生成（API URL: {}）", llmApiUrl);
+        log.info("[AiSummaryApplicationService] LLM 摘要生成（API URL: {}）", properties.getAi().getLlmApiUrl());
         try {
             String prompt = "请总结以下文档的关键要点（不超过500字）：\n"
                     + content.substring(0, Math.min(content.length(), 10000));
@@ -316,13 +307,14 @@ public class AiSummaryApplicationService {
      * @return 模型回复文本，失败返回 null
      */
     private String callLlm(String prompt) {
+        String llmApiUrl = properties.getAi().getLlmApiUrl();
         if (llmApiUrl == null || llmApiUrl.isEmpty()) {
             log.warn("[AiSummaryApplicationService] LLM API URL 未配置");
             return null;
         }
 
         Map<String, Object> request = Map.of(
-                "model", llmModel,
+                "model", properties.getAi().getLlmModel(),
                 "messages", List.of(
                         Map.of("role", "user", "content", prompt)
                 )
@@ -330,6 +322,7 @@ public class AiSummaryApplicationService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        String llmApiKey = properties.getAi().getLlmApiKey();
         if (llmApiKey != null && !llmApiKey.isEmpty()) {
             headers.setBearerAuth(llmApiKey);
         }

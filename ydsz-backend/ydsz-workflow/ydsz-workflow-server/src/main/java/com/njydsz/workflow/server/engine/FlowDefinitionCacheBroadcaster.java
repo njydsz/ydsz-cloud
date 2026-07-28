@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P0-3: 解决 Caffeine 本地缓存在集群部署下的不一致问题。
  *
  * <p>当某个节点执行流程定义发布/停用/迁移/编辑等操作时，通过 Redis Pub/Sub 广播
- * 缓存失效消息到集群所有节点，各节点收到后清除本地 Caffeine 缓存。
+ * 缓存失效消息到集群所有节点，各节点收到后清除本地缓存。
  *
  * <p>消息格式：{@code definitionId|sourceNodeId}
  * <ul>

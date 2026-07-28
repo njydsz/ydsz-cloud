@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.listener.ReadListener;
-import com.njydsz.common.excel.core.metadata.AnalysisContext;
+import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.spring.web.ExcelWebSupport;
 import com.njydsz.project.domain.dto.ProjectInitiationExcelDTO;
 
@@ -105,18 +105,28 @@ public class ProjectExcelController {
                     .sheet("项目立项")
                     .doRead(new ReadListener<ProjectInitiationExcelDTO>() {
                         @Override
+                        public void onStart(AnalysisContext context) {
+                            log.info("Excel 导入开始: sheet={}", context.getCurrentSheetName());
+                        }
+
+                        @Override
                         public void onData(AnalysisContext context, ProjectInitiationExcelDTO data) {
                             if (data.getProjectCode() == null || data.getProjectCode().isBlank()) {
-                                errorList.add("第" + (context.getCurrentRowIndex() + 1) + "行：项目编号不能为空");
+                                errorList.add("第" + (context.getCurrentRow() + 1) + "行：项目编号不能为空");
                                 return;
                             }
                             successList.add(data);
                         }
 
                         @Override
-                        public void onException(AnalysisContext context, Exception exception) {
-                            log.warn("Excel 导入解析异常: row={}", context.getCurrentRowIndex(), exception);
-                            errorList.add("第" + (context.getCurrentRowIndex() + 1) + "行：" + exception.getMessage());
+                        public void onEnd(AnalysisContext context) {
+                            log.info("Excel 导入解析完成: totalRows={}", context.getTotalRows());
+                        }
+
+                        @Override
+                        public void onError(AnalysisContext context, Exception e) {
+                            log.warn("Excel 导入解析异常: row={}", context.getCurrentRow(), e);
+                            errorList.add("第" + (context.getCurrentRow() + 1) + "行：" + e.getMessage());
                         }
                     });
         } catch (IOException e) {

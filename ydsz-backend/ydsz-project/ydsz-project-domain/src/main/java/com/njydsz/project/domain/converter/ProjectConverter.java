@@ -40,6 +40,7 @@ import com.njydsz.project.domain.entity.rate.RateCard;
 import com.njydsz.project.domain.entity.rate.RateInternal;
 import com.njydsz.project.domain.entity.satisfaction.Satisfaction;
 import com.njydsz.project.domain.entity.warranty.Warranty;
+import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.project.domain.vo.AlertDispatchVO;
 import com.njydsz.project.domain.vo.BillableUtilizationSnapshotVO;
 import com.njydsz.project.domain.vo.CostAllocationVO;
@@ -74,6 +75,7 @@ import com.njydsz.project.domain.vo.RateCardVO;
 import com.njydsz.project.domain.vo.RateInternalVO;
 import com.njydsz.project.domain.vo.SatisfactionVO;
 import com.njydsz.project.domain.vo.WarrantyVO;
+import com.njydsz.project.domain.vo.FileStorageVO;
 import com.njydsz.project.domain.dto.post.AlertDispatchPostDTO;
 import com.njydsz.project.domain.dto.post.BillableUtilizationSnapshotPostDTO;
 import com.njydsz.project.domain.dto.post.CostAllocationPostDTO;
@@ -290,6 +292,9 @@ public interface ProjectConverter {
     // ===== Warranty =====
     WarrantyVO entityToVO(Warranty entity);
     List<WarrantyVO> warrantyListToVO(List<Warranty> entities);
+
+    // ===== FileStorage =====
+    FileStorageVO entityToVO(FileStorage entity);
 
 
     // ===== AlertDispatch PostDTO → Entity =====

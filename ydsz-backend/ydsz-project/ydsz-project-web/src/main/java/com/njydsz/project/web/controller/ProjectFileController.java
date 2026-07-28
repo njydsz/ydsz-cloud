@@ -117,7 +117,7 @@ public class ProjectFileController {
         log.info("[ProjectFileController] 文件上传成功: projectId={}, category={}, objectName={}, size={}",
                 projectId, category, objectName, file.getSize());
 
-        return BaseResponse.success(result);
+        return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(result));
     }
 
     /**

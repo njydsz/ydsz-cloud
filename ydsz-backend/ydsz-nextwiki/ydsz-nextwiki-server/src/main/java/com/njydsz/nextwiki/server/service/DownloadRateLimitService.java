@@ -2,11 +2,11 @@ package com.njydsz.nextwiki.server.service;
 
 import java.time.Duration;
 
-import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 import cn.hutool.crypto.digest.DigestUtil;
 import lombok.Builder;
@@ -47,15 +47,7 @@ public class DownloadRateLimitService {
 
     private final RedisService redisService;
     private final RedisRateLimiter redisRateLimiter;
-
-    @Value("${nextwiki.download.rate-limit-per-minute:30}")
-    private int rateLimitPerMinute;
-
-    @Value("${nextwiki.download.ip-rate-limit-per-minute:100}")
-    private int ipRateLimitPerMinute;
-
-    @Value("${nextwiki.download.signed-url-expire-seconds:3600}")
-    private long signedUrlExpireSeconds;
+    private final NextwikiProperties properties;
 
     /** Redis Key 前缀 */
     private static final String KEY_USER_RATE = "nextwiki:rate:user:";
@@ -72,6 +64,8 @@ public class DownloadRateLimitService {
      * 故障时按 FAIL_CLOSED 策略拒绝请求，保证安全性。
      */
     public RateLimitResult checkRateLimit(String userId, String ip, String fileNodeId) {
+        int rateLimitPerMinute = properties.getDownload().getRateLimitPerMinute();
+        int ipRateLimitPerMinute = properties.getDownload().getIpRateLimitPerMinute();
         // 用户级限流
         if (!redisRateLimiter.tryAcquireFixedWindow(KEY_USER_RATE + userId, rateLimitPerMinute, RATE_WINDOW)) {
             log.warn("[DownloadRateLimitService] 用户下载限流: userId={}, limit={}/分钟", userId, rateLimitPerMinute);
@@ -101,6 +95,7 @@ public class DownloadRateLimitService {
      * 生成签名下载 URL
      */
     public String generateSignedDownloadUrl(String storageKey, String userId, String ip) {
+        long signedUrlExpireSeconds = properties.getDownload().getSignedUrlExpireSeconds();
         long expireTime = System.currentTimeMillis() / 1000 + signedUrlExpireSeconds;
         String rawData = storageKey + "|" + userId + "|" + ip + "|" + expireTime;
         String sign = DigestUtil.md5Hex(rawData);

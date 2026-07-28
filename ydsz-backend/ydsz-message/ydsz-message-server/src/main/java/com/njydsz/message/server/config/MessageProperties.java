@@ -474,4 +474,88 @@ public class MessageProperties {
             return new LinkedHashSet<>(disruptiveChannels);
         }
     }
+
+    /** 敏感词过滤配置 */
+    private SensitiveFilterConfig sensitiveFilter = new SensitiveFilterConfig();
+
+    /** AI 内容优化配置 */
+    private AiConfig ai = new AiConfig();
+
+    /** 消息归档配置 */
+    private ArchiveConfig archive = new ArchiveConfig();
+
+    /** 通道抑制窗口（秒），默认 300s */
+    private long suppressWindowSeconds = 300L;
+
+    /** 追踪像素配置 */
+    private TrackingConfig tracking = new TrackingConfig();
+
+    /** 短链配置 */
+    private ShortlinkConfig shortlink = new ShortlinkConfig();
+
+    /** 单发送人每日发送上限（0 表示不限） */
+    private long senderDailyLimit = 10000L;
+
+    /** 单发送人每小时发送上限（0 表示不限） */
+    private long senderHourlyLimit = 1000L;
+
+    /**
+     * 敏感词过滤配置。
+     *
+     * <p>控制消息内容中的敏感词过滤行为，关闭后所有消息直接放行。
+     */
+    @Data
+    public static class SensitiveFilterConfig {
+        /** 敏感词过滤开关 */
+        private boolean enabled = true;
+        /** 敏感词列表（逗号分隔） */
+        private String words = "";
+    }
+
+    /**
+     * AI 内容优化配置。
+     *
+     * <p>通过 LLM 对消息内容进行智能优化（如语气调整、摘要生成），
+     * 未配置时降级为跳过 AI 优化。
+     */
+    @Data
+    public static class AiConfig {
+        /** AI 内容优化开关 */
+        private boolean enabled = false;
+    }
+
+    /**
+     * 消息归档配置。
+     *
+     * <p>控制消息是否同步归档到 Elasticsearch 以支持全文搜索，
+     * 未启用时仅落库 PostgreSQL。
+     */
+    @Data
+    public static class ArchiveConfig {
+        /** Elasticsearch 归档开关 */
+        private boolean esEnabled = false;
+    }
+
+    /**
+     * 追踪像素配置。
+     *
+     * <p>用于邮件已读回执：在邮件中嵌入 1x1 透明图片，
+     * 收件人打开邮件时触发 HTTP 请求回传已读状态。
+     */
+    @Data
+    public static class TrackingConfig {
+        /** 追踪像素 base URL */
+        private String baseUrl = "https://ydsz.example.com";
+    }
+
+    /**
+     * 短链配置。
+     *
+     * <p>将长 URL 转换为短链，节省短信 / 推送字符数。
+     */
+    @Data
+    public static class ShortlinkConfig {
+        /** 短链 base URL */
+        private String baseUrl = "https://s.ydsz.example.com";
+    }
 }

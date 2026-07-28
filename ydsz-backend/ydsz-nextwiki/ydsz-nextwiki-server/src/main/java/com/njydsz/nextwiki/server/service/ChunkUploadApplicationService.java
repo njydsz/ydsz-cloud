@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +35,7 @@ import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 import lombok.Builder;
 import lombok.Data;
@@ -69,12 +69,10 @@ public class ChunkUploadApplicationService {
     private final FileVersionDomainService versionDomainService;
     private final FolderDomainService folderDomainService;
     private final ApplicationEventPublisher eventPublisher;
+    private final NextwikiProperties properties;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
-
-    @Value("${nextwiki.upload.chunk-temp-dir:#{T(java.lang.System).getProperty('java.io.tmpdir') + '/nextwiki-chunk'}}")
-    private String chunkTempDir;
 
     /** 单个分片最大大小（默认 10MB） */
     private static final long MAX_CHUNK_SIZE = 10L * 1024 * 1024;
@@ -92,13 +90,15 @@ public class ChunkUploadApplicationService {
                                           QuotaDomainService quotaDomainService,
                                           FileVersionDomainService versionDomainService,
                                           FolderDomainService folderDomainService,
-                                          ApplicationEventPublisher eventPublisher) {
+                                          ApplicationEventPublisher eventPublisher,
+                                          NextwikiProperties properties) {
         this.redisService = redisService;
         this.fileNodeRepository = fileNodeRepository;
         this.quotaDomainService = quotaDomainService;
         this.versionDomainService = versionDomainService;
         this.folderDomainService = folderDomainService;
         this.eventPublisher = eventPublisher;
+        this.properties = properties;
     }
 
     /**
@@ -336,11 +336,11 @@ public class ChunkUploadApplicationService {
     }
 
     private Path getChunkPath(String uploadId, int chunkNumber) {
-        return Path.of(chunkTempDir, uploadId, "chunk-" + chunkNumber + ".tmp");
+        return Path.of(properties.getUpload().getChunkTempDir(), uploadId, "chunk-" + chunkNumber + ".tmp");
     }
 
     private Path getMergedPath(String uploadId, String fileName) {
-        return Path.of(chunkTempDir, uploadId, "merged-" + sanitizeFileName(fileName));
+        return Path.of(properties.getUpload().getChunkTempDir(), uploadId, "merged-" + sanitizeFileName(fileName));
     }
 
     private void cleanupChunks(String uploadId, int totalChunks, String fileName) {
@@ -360,7 +360,7 @@ public class ChunkUploadApplicationService {
             }
         }
         try {
-            Path sessionDir = Path.of(chunkTempDir, uploadId);
+            Path sessionDir = Path.of(properties.getUpload().getChunkTempDir(), uploadId);
             if (Files.exists(sessionDir)) {
                 Files.list(sessionDir).forEach(p -> {
                     try {

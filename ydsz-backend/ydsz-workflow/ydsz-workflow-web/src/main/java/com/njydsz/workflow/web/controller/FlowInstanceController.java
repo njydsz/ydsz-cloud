@@ -1,13 +1,9 @@
 package com.njydsz.workflow.web.controller.instance;
 
-import java.time.LocalDateTime;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,48 +14,35 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
-import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.workflow.domain.converter.WorkflowConverter;
-import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.domain.vo.FlowInstanceViewDTOVO;
-import com.njydsz.workflow.domain.vo.StringVO;
 
 /**
- * 流程实例 Controller
+ * 流程实例 Controller — 启动与控制操作
  *
- * <p>流程实例的 HTTP 入口，承担工作流引擎「运行时」全部用户交互：
- * 启动 / 查询 / 控制（终止 / 挂起 / 激活 / 撤回） / 变量读写 / 表单渲染 / 批量操作 / 进度跟踪。
+ * <p>流程实例的 HTTP 入口，承担工作流引擎「运行时」的启动与生命周期控制：
+ * 启动 / 批量启动 / 业务查询 / 终止 / 挂起 / 激活 / 撤回 / 回滚 / 重审提交。
  *
  * <p><b>接口分组：</b>
  * <ul>
  *   <li><b>启动</b>：{@code POST /instance/start}（单条） /
- *       {@code /instance/batch/start}（批量） — 幂等保护 + 审计日志 + 50 QPS 限流</li>
- *   <li><b>查询</b>：{@code GET /instance/{id}}（详情） /
- *       {@code /instance/{id}/view}（流程图视图） /
- *       {@code /instance/{id}/timeline}（时间轴） /
- *       {@code /instance/page}（分页）</li>
+ *       {@code POST /instance/batchStart}（批量） — 幂等保护 + 审计日志 + 50 QPS 限流</li>
+ *   <li><b>业务查询</b>：{@code GET /instance/byBusiness}（按业务类型 + 业务 ID 查询实例视图）</li>
  *   <li><b>控制</b>：{@code POST /instance/{id}/terminate}（终止） /
  *       {@code /suspend}（挂起） / {@code /activate}（激活） /
- *       {@code /recall}（撤回） / {@code /reissue}（重派）</li>
- *   <li><b>变量</b>：{@code GET /instance/{id}/variables}（读） /
- *       {@code PUT /instance/{id}/variables}（写） — 流程变量持久化</li>
- *   <li><b>表单</b>：{@code GET /instance/{id}/form}（表单 Schema）</li>
- *   <li><b>批量</b>：{@code /instance/batch/terminate}（批量终止）</li>
- *   <li><b>子流程</b>：{@code GET /instance/{id}/children}（子实例） /
- *       {@code GET /instance/{id}/parent}（父实例）</li>
+ *       {@code /recall}（撤回） / {@code /rollback}（回滚） /
+ *       {@code /resubmit}（驳回后快速重审）</li>
+ *   <li><b>撤回节点</b>：{@code GET /instance/{id}/recallableNodes}（可撤回历史节点列表）</li>
  * </ul>
  *
  * <p><b>权限模型：</b>所有写接口通过 {@link AuthApiPermission} 校验
@@ -69,8 +52,12 @@ import com.njydsz.workflow.domain.vo.StringVO;
  * <p><b>限流：</b>启动类接口通过 {@link RateLimit} 限流（{@code 50 QPS}），
  * 终止 / 撤回等高危操作通过 {@link Idempotent} 5s 防重。
  *
- * <p><b>设计原则：</b>Controller 仅做参数透传、权限校验、VO 转换；所有业务逻辑下沉到
+ * <p><b>设计原则：</b>Controller 仅做参数透传、权限校验；所有业务逻辑下沉到
  * {@link FlowInstanceService} 与 {@link WorkflowFacade}。
+ *
+ * <p><b>拆分说明：</b>本类从原 {@code FlowInstanceController} 拆分而来，仅保留启动与控制操作。
+ * 查询与视图类接口见 {@link FlowInstanceQueryController}；
+ * 变量 / 表单 / 催办类接口见 {@link FlowInstanceVariableController}。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -78,7 +65,8 @@ import com.njydsz.workflow.domain.vo.StringVO;
  * @see FlowInstanceService 流程实例服务
  * @see WorkflowFacade 工作流门面
  * @see FlowStartProcessDTO 启动参数 DTO
- * @see FlowInstance 流程实例实体
+ * @see FlowInstanceQueryController 查询与视图接口
+ * @see FlowInstanceVariableController 变量 / 表单 / 催办接口
  */
 @Slf4j
 @RestController
@@ -105,8 +93,8 @@ public class FlowInstanceController {
     @RateLimit(resource = "workflow.flowinstance.startProcess", threshold = 50)
     @PostMapping("/instance/start")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-    public BaseResponse<StringVO> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
-        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(workflowFacade.startProcess(dto)));
+    public BaseResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
+        return BaseResponse.success(workflowFacade.startProcess(dto));
     }
 
     /**
@@ -143,9 +131,9 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含流程实例视图
      */
     @GetMapping("/instance/byBusiness")
-    public BaseResponse<FlowInstanceViewDTOVO> getByBusiness(@RequestParam String businessType,
+    public BaseResponse<FlowInstanceViewDTO> getByBusiness(@RequestParam String businessType,
                                                  @RequestParam String businessId) {
-        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(workflowFacade.getByBusiness(businessType, businessId)));
+        return BaseResponse.success(workflowFacade.getByBusiness(businessType, businessId));
     }
 
     /**
@@ -263,225 +251,11 @@ public class FlowInstanceController {
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:resubmit:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/resubmit")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
-    public BaseResponse<StringVO> resubmit(@PathVariable String id,
+    public BaseResponse<String> resubmit(@PathVariable String id,
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false, defaultValue = "RESTART") String redoMode,
                                     @RequestBody(required = false) Map<String, Object> variables) {
         return BaseResponse.success(workflowFacade.resubmitProcess(id, AuthContext.getUserId(),
                 variables, comment, redoMode));
-    }
-
-    /**
-     * 审计轨迹查询
-     *
-     * @param id 流程实例 ID
-     * @return 统一响应结果，包含审计轨迹列表
-     */
-    @GetMapping("/instance/{id}/auditTrail")
-    public BaseResponse<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
-        return BaseResponse.success(workflowFacade.listAuditTrail(id));
-    }
-
-    /**
-     * P2-30: 审批轨迹时间线查询 — 合并历史任务 + 审计日志 + 当前待办为统一时间线
-     *
-     * @param id 流程实例 ID
-     * @return 统一响应结果，包含时间线列表
-     */
-    @GetMapping("/instance/{id}/timeline")
-    public BaseResponse<List<Map<String, Object>>> timeline(@PathVariable String id) {
-        return BaseResponse.success(workflowFacade.getTimeline(id));
-    }
-
-    /**
-     * P2-22: 流程图查询（高亮当前节点）
-     *
-     * @param id 流程实例 ID
-     * @return 统一响应结果，包含 definition / nodes / skips，nodes 中每个节点带 active 标记
-     */
-    @GetMapping("/instance/{id}/diagram")
-    public BaseResponse<Map<String, Object>> diagram(@PathVariable String id) {
-        return BaseResponse.success(workflowFacade.getDiagram(id));
-    }
-
-    /**
-     * P2-4: 流程回放步骤序列
-     *
-     * <p>按时间顺序合并历史任务 + 审计日志 + 当前待办为统一步骤序列，驱动前端
-     * {@code FlowDiagramReplay} 组件依次高亮节点。
-     *
-     * @param id 流程实例 ID
-     * @return 步骤列表（按 timestamp 升序）
-     */
-    @GetMapping("/instance/{id}/replay")
-    public BaseResponse<List<Map<String, Object>>> replay(@PathVariable String id) {
-        return BaseResponse.success(workflowFacade.getReplaySteps(id));
-    }
-
-    /**
-     * P2-23: 实例多维分页查询
-     *
-     * @param pageNo       页码
-     * @param pageSize     每页大小
-     * @param businessType 业务类型（可选）
-     * @param initiatorId  发起人 ID（可选）
-     * @param flowStatus   流程状态（可选）
-     * @param startTime    开始时间下界（可选）
-     * @param endTime      开始时间上界（可选）
-     * @param tenantId     租户 ID（可选）
-     * @return 统一响应结果，包含分页实例列表
-     */
-    @GetMapping("/instance/page")
-    public BaseResponse<PageResponse<FlowInstanceVO>> instancePage(
-            @RequestParam(defaultValue = "1") @Min(1) int pageNo,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
-            @RequestParam(required = false) String businessType,
-            @RequestParam(required = false) String initiatorId,
-            @RequestParam(required = false) String flowStatus,
-            @RequestParam(required = false) LocalDateTime startTime,
-            @RequestParam(required = false) LocalDateTime endTime,
-            @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(instanceService.page(businessType, initiatorId, flowStatus,
-                startTime, endTime, tid, pageNo, pageSize));
-    }
-
-    /**
-     * P0-1: 我发起的流程实例分页查询（登录用户视图）
-     *
-     * <p>对标钉钉/飞书/企微审批中心"我发起的"Tab。按当前登录用户 ID 过滤，
-     * 仅返回当前用户发起的流程实例。
-     *
-     * <p>前端传入的 flowCode / flowName 参数与 {@link FlowInstanceService#page}
-     * 的入参无直接对应（flowCode 不等于 businessType），本端点忽略这两个参数，
-     * 仅使用 status / startTime / endTime / pageNum / pageSize。
-     *
-     * @param flowCode  流程编码（可选，当前不参与过滤，保留以兼容前端入参）
-     * @param flowName  流程名称（可选，当前不参与过滤，保留以兼容前端入参）
-     * @param status    流程状态（可选，对应 flowStatus）
-     * @param startTime 开始时间下界（可选）
-     * @param endTime   开始时间上界（可选）
-     * @param pageNum   页码（默认 1）
-     * @param pageSize  每页大小（默认 20，最大 100）
-     * @return 统一响应结果，包含分页实例列表
-     */
-    @GetMapping("/instance/my")
-    public BaseResponse<PageResponse<FlowInstanceVO>> instanceMy(
-            @RequestParam(required = false) String flowCode,
-            @RequestParam(required = false) String flowName,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) LocalDateTime startTime,
-            @RequestParam(required = false) LocalDateTime endTime,
-            @RequestParam(defaultValue = "1") @Min(1) int pageNum,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        return BaseResponse.success(instanceService.page(null, AuthContext.getUserId(), status,
-                startTime, endTime, AuthContext.getTenantIdOrDefault("1"),
-                pageNum, pageSize));
-    }
-
-    /**
-     * GAP-P0-1: 全部流程实例查询（管理员视图）
-     *
-     * <p>对标钉钉/飞书/企微审批中心"全部"Tab。需要 {@code workflow:monitor:view} 权限。
-     * 与 {@code /instance/page} 的区别：本端点语义为"管理员看全部"，强制不按 initiatorId 过滤，
-     * 返回精简 Map 结构（避免泄露定义内部字段）。
-     *
-     * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code PageResponse<Map>}，
-     * 保留 total / page / size，避免前端假分页。
-     *
-     * @param page         页码
-     * @param size         每页大小
-     * @param businessType 业务类型（可选）
-     * @param flowStatus   流程状态（可选）
-     * @param startTime    开始时间下界（可选）
-     * @param endTime      开始时间上界（可选）
-     * @return 统一响应结果，包含分页实例 Map 列表
-     */
-    @GetMapping("/instance/all")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-    public BaseResponse<PageResponse<Map<String, Object>>> instanceAll(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) String businessType,
-            @RequestParam(required = false) String flowStatus,
-            @RequestParam(required = false) LocalDateTime startTime,
-            @RequestParam(required = false) LocalDateTime endTime) {
-        return BaseResponse.success(workflowFacade.listAllInstances(businessType, flowStatus,
-                startTime, endTime, page, size));
-    }
-
-    /**
-     * P2-24: 读取流程变量
-     *
-     * @param id 流程实例 ID
-     * @return 统一响应结果，包含变量 Map
-     */
-    @GetMapping("/instance/{id}/variables")
-    public BaseResponse<Map<String, Object>> getVariables(@PathVariable String id) {
-        return BaseResponse.success(instanceService.getVariables(id));
-    }
-
-    /**
-     * P2-24: 批量写入流程变量
-     *
-     * <p>P1-10: 由原 Map body 改造为 {@link FlowInstanceVariablesDTO} 强类型 DTO。
-     *
-     * @param id  流程实例 ID
-     * @param dto 变量 DTO
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowInstanceController:setVariables:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowinstance.setVariables", threshold = 50)
-    @PostMapping("/instance/{id}/variables")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-    public BaseResponse<Void> setVariables(@PathVariable String id,
-                                     @Valid @RequestBody FlowInstanceVariablesDTO dto) {
-        instanceService.setVariables(id, dto.getVariables());
-        return BaseResponse.success();
-    }
-
-    /**
-     * 催办
-     *
-     * <p>P0-1 修复：操作人 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
-     *
-     * @param id      流程实例 ID
-     * @param comment 催办备注（可选）
-     * @return 统一响应结果，包含被催办人列表
-     */
-    @Idempotent(key = "ydsz:workflow:FlowInstanceController:urge:lock", ttlSeconds = 5)
-    @PostMapping("/instance/{id}/urge")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-    public BaseResponse<List<StringVO>> urge(@PathVariable String id,
-                                 @RequestParam(required = false) String comment) {
-        return BaseResponse.success(WorkflowConverter.INSTANT.stringListToVO(workflowFacade.urgeTask(id, AuthContext.getUserId(), comment)));
-    }
-
-    /**
-     * P2-3 (GAP-13): 节点级催办 — 仅催办指定节点（nodeCode）的待办任务
-     *
-     * <p>nodeCode 不传时退化为实例级催办。
-     */
-    @Idempotent(key = "ydsz:workflow:FlowInstanceController:urgeByNode:lock", ttlSeconds = 5)
-    @PostMapping("/instance/{id}/urge/node")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-    public BaseResponse<List<StringVO>> urgeByNode(@PathVariable String id,
-                                           @RequestParam(required = false) String nodeCode,
-                                           @RequestParam(required = false) String comment) {
-        return BaseResponse.success(WorkflowConverter.INSTANT.stringListToVO(workflowFacade.urgeNodeTask(id, nodeCode, AuthContext.getUserId(), comment)));
-    }
-
-    /**
-     * GAP-V2-02: 获取表单渲染数据 — 审批人打开待办时获取字段权限
-     *
-     * @param instanceId 流程实例 ID
-     * @param taskId     任务 ID（可选，为空取当前节点）
-     * @return 渲染数据（nodeCode / formFieldsConfig / variables）
-     */
-    @GetMapping("/instance/{instanceId}/formRender")
-    public BaseResponse<Map<String, Object>> getFormRenderData(
-            @PathVariable String instanceId,
-            @RequestParam(required = false) String taskId) {
-        return BaseResponse.success(instanceService.getFormRenderData(instanceId, taskId));
     }
 }

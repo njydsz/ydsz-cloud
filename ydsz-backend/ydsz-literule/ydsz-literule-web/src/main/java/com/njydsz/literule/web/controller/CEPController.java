@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import com.njydsz.literule.domain.vo.CEPHitVO;
 import com.njydsz.literule.domain.vo.CEPPatternVO;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.literule.api.RuleContext;
@@ -30,35 +28,52 @@ import com.njydsz.literule.server.cep.CEPEngine;
 import com.njydsz.literule.server.cep.CEPEvent;
 import com.njydsz.literule.server.cep.CEPHit;
 import com.njydsz.literule.server.cep.CEPPattern;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * CEP 复杂事件处理 Controller（P0-2）
+ * CEP 复杂事件处理 Controller（P0-2）— 模式管理 / 事件投递 / 命中查询 / 引擎状态
  *
- * <p>暴露 CEP 引擎的 REST API，支持：
+ * <p>暴露 CEP 引擎的核心 REST API，支持：
  * <ul>
- *   <li>模式管理：注册 / 注销 / 列出模式</li>
- *   <li>事件投递：单条 / 批量投递事件，触发模式匹配</li>
- *   <li>命中查询：返回最近命中的模式记录（内存暂存，最多 200 条）</li>
+ *   <li><b>模式管理</b>：列出 / 注册 / 注销 CEP 模式</li>
+ *   <li><b>事件投递</b>：单条 / 批量投递事件，触发模式匹配</li>
+ *   <li><b>命中查询</b>：返回最近命中的模式记录（内存暂存，最多 200 条）</li>
+ *   <li><b>引擎状态</b>：返回当前模式数、累计命中数</li>
  * </ul>
  *
  * <p>CEP 引擎通过 {@code ydsz.literule.cep.enabled} 控制装配，
- * 未启用时所有接口返回 503（通过 ObjectProvider 判空）。
+ * 未启用时所有接口返回 503（通过 {@link ObjectProvider} 判空）。
+ *
+ * <p><b>拆分说明：</b>本类从原 {@code CEPController} 拆分而来，保留模式管理 / 事件投递 / 命中查询 / 引擎状态。
+ * CEP 模式测试（注册临时模式 → 投递测试事件 → 收集命中 → 注销）见 {@link CEPTestController}。
+ *
+ * <h3>命中闭环</h3>
+ * <p>启动时通过 {@link #init()} 注册 CEP 命中监听器：
+ * <ol>
+ *   <li>命中模式后存入 {@code recentHits} 供运维查询（最多 200 条）</li>
+ *   <li>将命中事件作为事实投递给规则引擎，触发与 {@code pattern.ruleCode} 关联的规则评估</li>
+ * </ol>
+ * 形成 "CEP 命中 → 规则评估 → 预警" 的完整闭环。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see CEPTestController CEP 模式测试接口
+ * @see CEPEngine CEP 引擎
+ * @see CEPPattern CEP 模式定义
  */
 @Slf4j
 @RestController
 @RequestMapping("/ruleEngine/cep")
 @RequiredArgsConstructor
-@Tag(name = "CEP 复杂事件处理", description = "时间窗口/序列/聚合/缺失模式匹配")
+@Tag(name = "CEP 复杂事件处理", description = "模式管理 / 事件投递 / 命中查询 / 引擎状态")
 public class CEPController {
 
     /** CEP 引擎（条件装配，未启用时为空） */
@@ -70,10 +85,8 @@ public class CEPController {
     private static final int MAX_RECENT_HITS = 200;
     private final List<CEPHit> recentHits = new ArrayList<>();
 
-    /** P0-2: 迁移到 YdszJson，移除 Jackson ObjectMapper 依赖 */
-
     /**
-     * 启动时注册 CEP 命中监听器
+     * 启动时注册 CEP 命中监听器。
      *
      * <p>命中模式后：① 存入 recentHits 供运维查询；② 将命中事件作为事实
      * 投递给规则引擎，触发与 pattern.ruleCode 关联的规则评估，形成
@@ -122,11 +135,12 @@ public class CEPController {
     }
 
     /**
-     * 列出已注册的 CEP 模式
+     * 列出已注册的 CEP 模式。
      *
      * @return 模式列表
      */
     @GetMapping("/patterns")
+    @Operation(summary = "列出已注册的 CEP 模式")
     public BaseResponse<List<CEPPatternVO>> listPatterns() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
@@ -136,7 +150,7 @@ public class CEPController {
     }
 
     /**
-     * 注册 CEP 模式
+     * 注册 CEP 模式。
      *
      * @param pattern 模式定义
      * @return 注册结果
@@ -144,6 +158,7 @@ public class CEPController {
     @Idempotent(key = "cep:registerPattern", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'registerPattern'")
     @PostMapping("/patterns")
+    @Operation(summary = "注册 CEP 模式")
     public BaseResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
@@ -158,7 +173,7 @@ public class CEPController {
     }
 
     /**
-     * 注销 CEP 模式
+     * 注销 CEP 模式。
      *
      * @param patternId 模式 ID
      * @return 注销结果
@@ -166,6 +181,7 @@ public class CEPController {
     @Idempotent(key = "cep:unregisterPattern", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'unregisterPattern'")
     @DeleteMapping("/patterns/{patternId}")
+    @Operation(summary = "注销 CEP 模式")
     public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
@@ -176,7 +192,7 @@ public class CEPController {
     }
 
     /**
-     * 投递单条事件
+     * 投递单条事件。
      *
      * <p>请求体格式：
      * <pre>
@@ -192,8 +208,9 @@ public class CEPController {
      * @return 投递结果（含本次事件触发的命中数）
      */
     @Idempotent(key = "cep:feedEvent", ttlSeconds = 5, message = "请勿重复提交")
-    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'feedEvent'")
     @PostMapping("/events")
+    @Operation(summary = "投递单条事件", description = "投递单条事件到 CEP 引擎，返回触发的命中数")
     public BaseResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
@@ -210,14 +227,15 @@ public class CEPController {
     }
 
     /**
-     * 批量投递事件
+     * 批量投递事件。
      *
      * @param events 事件列表
      * @return 投递结果（含触发的命中数）
      */
     @Idempotent(key = "cep:feedEvents", ttlSeconds = 5, message = "请勿重复提交")
-    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'feedEvents'")
     @PostMapping("/events/batch")
+    @Operation(summary = "批量投递事件", description = "批量投递事件到 CEP 引擎，返回触发的命中数")
     public BaseResponse<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
@@ -235,11 +253,12 @@ public class CEPController {
     }
 
     /**
-     * 查询最近命中记录
+     * 查询最近命中记录。
      *
      * @return 命中记录列表（最多 200 条）
      */
     @GetMapping("/hits")
+    @Operation(summary = "查询最近命中记录", description = "返回最近 200 条 CEP 命中记录（内存暂存）")
     public BaseResponse<List<CEPHitVO>> recentHits() {
         synchronized (recentHits) {
             return BaseResponse.success(new ArrayList<>(recentHits).stream().map(this::toHitVO).toList());
@@ -247,11 +266,12 @@ public class CEPController {
     }
 
     /**
-     * CEP 引擎状态
+     * CEP 引擎状态。
      *
      * @return 状态信息（模式数、命中数）
      */
     @GetMapping("/stats")
+    @Operation(summary = "CEP 引擎状态", description = "返回当前模式数和累计命中数")
     public BaseResponse<Map<String, Object>> stats() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
@@ -325,84 +345,5 @@ public class CEPController {
             b.attributes(typed);
         }
         return b.build();
-    }
-
-    /**
-     * 测试 CEP 模式（P2-7）
-     *
-     * <p>注册一个临时模式，按顺序投递测试事件，收集命中结果后立即注销该模式。
-     * 用于可视化编辑器中的"测试"按钮：用户配置好模式后投递模拟事件流，
-     * 即时查看是否命中及命中详情，无需持久化模式定义。
-     *
-     * <p>请求体示例：
-     * <pre>
-     * POST /execution/rules/cep/patterns/test
-     * {
-     *   "pattern": { "id": "TEST_TMP", "type": "TIME_WINDOW", ... },
-     *   "events": [
-     *     { "type": "LOGIN_FAILED", "partitionKey": "u1" },
-     *     { "type": "LOGIN_FAILED", "partitionKey": "u1" }
-     *   ]
-     * }
-     * </pre>
-     *
-     * @param body 包含 pattern 和 events 的请求体
-     * @return 测试结果（含命中列表、命中数、投递事件数）
-     */
-    @Idempotent(key = "cep:testPattern", ttlSeconds = 5, message = "请勿重复提交")
-    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
-    @PostMapping("/patterns/test")
-    public BaseResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
-        if (engine == null) {
-            return BaseResponse.error("CEP 引擎未启用");
-        }
-        try {
-            Object patternObj = body.get("pattern");
-            if (patternObj == null) {
-                return BaseResponse.error("pattern 不能为空");
-            }
-            CEPPattern pattern = YdszJson.fromJson(YdszJson.toJson(patternObj), CEPPattern.class);
-            if (pattern.getId() == null || pattern.getId().isBlank()) {
-                pattern.setId("TEST_TMP_" + System.nanoTime());
-            }
-            String patternId = pattern.getId();
-            Object eventsObj = body.get("events");
-            if (!(eventsObj instanceof List<?> eventsList)) {
-                return BaseResponse.error("events 必须为数组");
-            }
-
-            // 注册临时模式
-            engine.registerPattern(pattern);
-            // 注册监听器收集命中
-            List<CEPHit> testHits = new ArrayList<>();
-            Consumer<CEPHit> listener = testHits::add;
-            engine.addListener(listener);
-            long hitsBefore = engine.totalHits();
-            try {
-                // 投递测试事件
-                for (Object item : eventsList) {
-                    if (item instanceof Map<?, ?> mp) {
-                        Map<String, Object> eventBody = new HashMap<>();
-                        mp.forEach((k, v) -> eventBody.put(String.valueOf(k), v));
-                        engine.feed(toEvent(eventBody));
-                    }
-                }
-            } finally {
-                engine.removeListener(listener);
-                engine.unregisterPattern(patternId);
-            }
-            long hitsAfter = engine.totalHits();
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("patternId", patternId);
-            result.put("fedEvents", eventsList.size());
-            result.put("triggeredHits", hitsAfter - hitsBefore);
-            result.put("hits", testHits);
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            log.warn("[CEP] 测试模式失败: {}", e.getMessage());
-            return BaseResponse.error("测试失败: " + e.getMessage());
-        }
     }
 }

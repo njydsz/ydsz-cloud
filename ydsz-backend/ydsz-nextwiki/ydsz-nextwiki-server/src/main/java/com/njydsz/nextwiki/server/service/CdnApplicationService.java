@@ -2,10 +2,12 @@ package com.njydsz.nextwiki.server.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
+
 import cn.hutool.crypto.digest.DigestUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,56 +21,44 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CdnApplicationService {
 
-    @Value("${nextwiki.cdn.enabled:false}")
-    private boolean cdnEnabled;
-
-    @Value("${nextwiki.cdn.provider:aliyun}")
-    private String provider;
-
-    @Value("${nextwiki.cdn.domain:}")
-    private String cdnDomain;
-
-    @Value("${nextwiki.cdn.access-key:}")
-    private String accessKey;
-
-    @Value("${nextwiki.cdn.secret-key:}")
-    private String secretKey;
+    private final NextwikiProperties properties;
 
     /**
      * 预热 URL（主动推送内容到 CDN 节点）
      */
     public void prefetchUrls(List<String> urls) {
-        if (!cdnEnabled) {
+        if (!properties.getCdn().isEnabled()) {
             log.debug("[CdnApplicationService] CDN 未启用，跳过预热");
             return;
         }
         log.info("{\"cdn\":\"prefetch\",\"provider\":\"{}\",\"count\":{},\"urls\":{}}",
-                provider, urls.size(), urls);
+                properties.getCdn().getProvider(), urls.size(), urls);
     }
 
     /**
      * 刷新 URL 缓存
      */
     public void refreshUrls(List<String> urls) {
-        if (!cdnEnabled) {
+        if (!properties.getCdn().isEnabled()) {
             log.debug("[CdnApplicationService] CDN 未启用，跳过刷新");
             return;
         }
         log.info("{\"cdn\":\"refresh\",\"provider\":\"{}\",\"count\":{},\"urls\":{}}",
-                provider, urls.size(), urls);
+                properties.getCdn().getProvider(), urls.size(), urls);
     }
 
     /**
      * 刷新目录缓存
      */
     public void refreshDirectory(String directoryPath) {
-        if (!cdnEnabled) {
+        if (!properties.getCdn().isEnabled()) {
             return;
         }
         log.info("{\"cdn\":\"refreshDir\",\"provider\":\"{}\",\"directory\":\"{}\"}",
-                provider, directoryPath);
+                properties.getCdn().getProvider(), directoryPath);
     }
 
     /**
@@ -77,12 +67,12 @@ public class CdnApplicationService {
      * @param storageKey 存储对象键
      */
     public void purgeCache(String storageKey) {
-        if (!cdnEnabled) {
+        if (!properties.getCdn().isEnabled()) {
             return;
         }
         String cdnUrl = generateCdnUrl(storageKey);
         log.info("{\"cdn\":\"purge\",\"provider\":\"{}\",\"storageKey\":\"{}\",\"cdnUrl\":\"{}\"}",
-                provider, storageKey, cdnUrl);
+                properties.getCdn().getProvider(), storageKey, cdnUrl);
     }
 
     /**
@@ -92,10 +82,10 @@ public class CdnApplicationService {
      * 否则返回 null（由调用方回退到源站 URL）。
      */
     public String generateCdnUrl(String storageKey) {
-        if (!cdnEnabled || cdnDomain.isEmpty()) {
+        if (!properties.getCdn().isEnabled() || properties.getCdn().getDomain().isEmpty()) {
             return null;
         }
-        return "https://" + cdnDomain + "/" + storageKey;
+        return "https://" + properties.getCdn().getDomain() + "/" + storageKey;
     }
 
     /**
@@ -104,12 +94,12 @@ public class CdnApplicationService {
      * 使用 HMAC-SHA256 签名算法替代不安全的 MD5（P2-8 修复）
      */
     public String generateSignedUrl(String storageKey, long expireSeconds) {
-        if (!cdnEnabled || cdnDomain.isEmpty()) {
+        if (!properties.getCdn().isEnabled() || properties.getCdn().getDomain().isEmpty()) {
             return null;
         }
         long expireTime = System.currentTimeMillis() / 1000 + expireSeconds;
-        String signedValue = storageKey + "-" + expireTime + "-" + secretKey;
+        String signedValue = storageKey + "-" + expireTime + "-" + properties.getCdn().getSecretKey();
         String sign = DigestUtil.sha256Hex(signedValue);
-        return "https://" + cdnDomain + "/" + storageKey + "?expires=" + expireTime + "&sign=" + sign;
+        return "https://" + properties.getCdn().getDomain() + "/" + storageKey + "?expires=" + expireTime + "&sign=" + sign;
     }
 }

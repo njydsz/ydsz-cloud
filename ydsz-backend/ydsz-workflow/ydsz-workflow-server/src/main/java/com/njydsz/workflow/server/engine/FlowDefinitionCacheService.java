@@ -119,7 +119,7 @@ public class FlowDefinitionCacheService {
     }
 
     /**
-     * P0-3: 仅清除本地 Caffeine 缓存（不广播）
+     * P0-3: 仅清除本地缓存（不广播）
      *
      * <p>供 {@link FlowDefinitionCacheBroadcaster} 收到集群广播后调用，
      * 避免收到远端消息后再次广播形成环路。
