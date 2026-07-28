@@ -85,4 +85,36 @@ public final class FeignClientConstants {
 
     /** 发送消息 API 路径 */
     public static final String MESSAGE_PATH_SEND = "/api/message/send";
+
+    // ==================== 系统管理 URL 路径常量 ====================
+
+    /** 按配置键查询配置值 API 路径 */
+    public static final String SYSTEM_PATH_CONFIG_GET = "/api/internal/config/get";
+
+    /** 按类型和编码查询字典项 API 路径 */
+    public static final String SYSTEM_PATH_DICT_ITEM = "/api/internal/dict/item";
+
+    /** 按字典类型查询字典项列表 API 路径 */
+    public static final String SYSTEM_PATH_DICT_LIST = "/api/internal/dict/list";
+
+    // ==================== 项目管理 URL 路径常量 ====================
+
+    /** 按项目 ID 查询项目基本信息 API 路径 */
+    public static final String PROJECT_PATH_GET_BY_ID = "/api/internal/project/get";
+
+    /** 查询项目状态 API 路径 */
+    public static final String PROJECT_PATH_GET_STATUS = "/api/internal/project/status";
+
+    // ==================== AI Agent URL 路径常量 ====================
+
+    /** 执行 Agent API 路径 */
+    public static final String AGENT_PATH_EXECUTE = "/api/internal/agent/execute";
+
+    // ==================== 网盘知识库 URL 路径常量 ====================
+
+    /** 按文件 ID 查询文件信息 API 路径 */
+    public static final String NEXTWIKI_PATH_FILE_GET = "/api/internal/file/get";
+
+    /** 获取文件下载 URL API 路径 */
+    public static final String NEXTWIKI_PATH_FILE_URL = "/api/internal/file/url";
 }

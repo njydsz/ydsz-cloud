@@ -19,10 +19,32 @@ import com.njydsz.project.domain.dto.put.OpsTicketPutDTO;
 /**
  * 运维工单 Controller
  *
- * <p>提供运维工单的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供运维工单的 REST API，是「项目管理 / 运维服务」业务域的 Controller。
+ * 对标大厂 PMIS / 运维服务台系统中的「运维工单 / 客户服务工单 / 故障处理」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>工单类型：</b>INCIDENT 故障 / SERVICE_REQUEST 服务请求 / PROBLEM 问题。
+ *
+ * <p><b>SLA 跟踪：</b>首次响应 / 解决时间由 {@code ydsz_warranty} 质保期 SLA 约束。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>客户仅可创建 / 查看自己的工单，工程师仅可查看分派给自己的工单</li>
+ *   <li>SLA 临近超时会自动触发告警派发</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.OpsTicketService 工单 Service
+ * @see com.njydsz.project.domain.entity.ops.OpsTicket 工单实体
  */
 @RestController
 @RequestMapping("/api/v1/project/ops/ticket")

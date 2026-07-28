@@ -19,10 +19,35 @@ import com.njydsz.project.domain.dto.post.ProjectContractChangePostDTO;
 /**
  * 合同变更记录 Controller
  *
- * <p>提供合同变更记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目合同变更的 REST API，是「项目管理 / 合同变更」业务域的 Controller。
+ * 对标大厂 PMIS / 法务系统中的「合同变更 / 合同修改」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>变更范围：</b>已签订合同的关键字段（金额 / 范围 / 工期）变更必须走变更流程。
+ *
+ * <p><b>审批集成：</b>每条变更记录对应一个 {@code ydsz-workflow} 流程实例，
+ * 审批通过后自动同步到原合同。
+ *
+ * <p><b>审计链：</b>保留完整变更历史（变更前 / 变更后 / 变更原因 / 变更人 / 变更时间）。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>合同变更审批需法务 / 业务 / 财务联签</li>
+ *   <li>变更记录是合同审计的法定依据，禁止越权篡改</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ProjectContractChangeService 合同变更 Service
+ * @see com.njydsz.project.domain.entity.project.ProjectContractChange 合同变更实体
+ * @see ProjectContractController 主合同 Controller
  */
 @RestController
 @RequestMapping("/api/v1/project/project/contract/change")

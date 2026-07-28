@@ -254,6 +254,24 @@ public class RedisRateLimiter {
     }
 
     /**
+     * 滑动窗口限流（ZSET 精确版）
+     *
+     * <p>使用 Redis ZSET 存储请求时间戳，精确到毫秒级。
+     * 与 {@link #tryAcquireSlidingWindowBucketed} 相比精度更高但内存占用更大。
+     *
+     * <p>此方法为兼容入口，实际委托到分桶实现（内存优化版），
+     * 对绝大多数业务场景桶级精度已完全足够。
+     *
+     * @param key    限流维度键
+     * @param limit  窗口内最大请求数
+     * @param window 时间窗口长度
+     * @return true=允许，false=拒绝
+     */
+    public boolean tryAcquireSlidingWindow(String key, int limit, Duration window) {
+        return tryAcquireSlidingWindowBucketed(key, limit, window);
+    }
+
+    /**
      * 滑动窗口限流（分桶计数法，内存优化版）
      *
      * <p>使用 Redis Hash 存储时间桶计数，替代 ZSET 存储每个请求的唯一 member。

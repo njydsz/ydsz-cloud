@@ -19,10 +19,32 @@ import com.njydsz.project.domain.dto.put.ExecutionDeliveryStandardPutDTO;
 /**
  * 交付标准 Controller
  *
- * <p>提供项目交付标准的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目交付物标准 / 模板的 REST API，是「项目管理 / 交付物标准管理」业务域的 Controller。
+ * 对标大厂 PMIS / 项目管理系统中的「交付物标准 / 交付物模板 / 交付物规范」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>模板分类：</b>按项目类型 / 级别 / 行业分类的标准交付物清单。
+ *
+ * <p><b>必交付控制：</b>{@code required} 字段控制每个交付物是否必交付；
+ * {@code triggerTr} 字段控制交付物是否触发技术评审（TR）。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>新模板上线前需经法务 / 业务部门审批，由 {@code ydsz-workflow} 流程引擎驱动</li>
+ *   <li>模板是组织级知识资产，禁止越权篡改</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ExecutionDeliveryStandardService 交付标准 Service
+ * @see com.njydsz.project.domain.entity.execution.ExecutionDeliveryStandard 交付标准实体
  */
 @RestController
 @RequestMapping("/api/v1/project/execution/delivery/standard")

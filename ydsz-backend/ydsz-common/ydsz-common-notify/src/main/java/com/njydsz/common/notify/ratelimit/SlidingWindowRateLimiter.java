@@ -21,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
  *       确保所有实例共享同一限流计数</li>
  * </ul>
  *
+ * @deprecated P0-4: 限流器统一治理 — 请使用 {@code RedisRateLimiter.tryAcquireSlidingWindow()}
+ *             作为统一分布式限流入口，本类仅保留向后兼容。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * // 创建一个每分钟最多 100 次请求的限流器
@@ -36,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated(since = "1.0.0", forRemoval = true)
 @Slf4j
 public class SlidingWindowRateLimiter {
 

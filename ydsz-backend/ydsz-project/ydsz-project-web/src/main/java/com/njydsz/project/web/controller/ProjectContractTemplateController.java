@@ -19,10 +19,33 @@ import com.njydsz.project.domain.dto.put.ProjectContractTemplatePutDTO;
 /**
  * 合同模板 Controller
  *
- * <p>提供合同模板的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目合同模板的 REST API，是「项目管理 / 合同模板管理」业务域的 Controller。
+ * 对标大厂 PMIS / 法务系统中的「合同模板 / 合同范本 / 标准合同」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>模板分类：</b>按行业 / 客户类型 / 业务场景分类的标准合同模板。
+ *
+ * <p><b>模板版本：</b>同一类合同模板支持多版本（如 V1.0 / V1.1 / V2.0）。
+ *
+ * <p><b>模板审批：</b>新模板上线前需经法务 / 业务部门审批。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>模板审批通过后才可启用，由 {@code ydsz-workflow} 流程引擎驱动</li>
+ *   <li>已签合同使用的模板<b>严禁</b>删除</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ProjectContractTemplateService 合同模板 Service
+ * @see com.njydsz.project.domain.entity.project.ProjectContractTemplate 合同模板实体
  */
 @RestController
 @RequestMapping("/api/v1/project/project/contract/template")

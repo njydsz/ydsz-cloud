@@ -19,10 +19,33 @@ import com.njydsz.project.domain.dto.put.ExecutionClosurePutDTO;
 /**
  * 项目结项 Controller
  *
- * <p>提供项目结项记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目结项记录的 REST API，是「项目管理 / 项目收尾」业务域的 Controller。
+ * 对标大厂 PMIS / 项目管理系统中的「项目收尾 / 项目关闭 / 项目验收 / 经验教训总结」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>结项清单：</b>项目关闭前必须完成客户验收 / 内部验收 / 经验教训 /
+ * 文档归档 / 资源释放 / 合同尾款。
+ *
+ * <p><b>联动链路：</b>结项完成后触发 {@code ProjectClosureCompletedEvent} 领域事件，
+ * 联动立项状态推进（{@code EXECUTION → CLOSURE}）、客户满意度采集、售后保期启动。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>结项审批需走 {@code ydsz-workflow} 流程引擎，结项状态变更由审批结果驱动</li>
+ *   <li>结项数据是组织过程资产（经验教训库）的关键输入，禁止越权篡改</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ExecutionClosureService 结项 Service
+ * @see com.njydsz.project.domain.entity.execution.ExecutionClosure 结项实体
  */
 @RestController
 @RequestMapping("/api/v1/project/execution/closure")

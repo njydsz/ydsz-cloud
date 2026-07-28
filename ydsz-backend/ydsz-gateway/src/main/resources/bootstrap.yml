@@ -56,3 +56,7 @@ spring:
           - data-id: ydsz-common.yaml
             group: ${spring.profiles.active}
             refresh: true
+          # P0-3: 网关路由动态配置（Nacos 刷新后自动生效）
+          - data-id: ydsz-gateway-routes.yaml
+            group: ${spring.profiles.active}
+            refresh: true

@@ -27,10 +27,31 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 项目搜索 Controller
  *
- * <p>基于统一搜索服务，提供项目立项数据的全文检索能力。
+ * <p>基于 {@link UnifiedSearchService} 提供项目立项数据的全文检索能力。
+ * 与 {@code GlobalSearchController} 的区别：本 Controller 仅检索 {@code project} 域，
+ * 适合项目管理后台的精细化搜索；{@code GlobalSearchController} 跨所有模块聚合。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/project/search}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li>项目立项（{@code ydsz_project_initiation}）的全文搜索</li>
+ *   <li>支持高亮、模糊匹配、过滤、分页、排序</li>
+ *   <li>权限过滤：按当前用户角色 / 部门 / 租户下推权限</li>
+ * </ul>
+ *
+ * <p><b>权限要求：</b>
+ * <ul>
+ *   <li>查询：{@link PermissionCodes#PROJECT_SEARCH}</li>
+ *   <li>重建索引：{@link PermissionCodes#PROJECT_SEARCH_REBUILD}</li>
+ * </ul>
+ *
+ * <p><b>安全特性：</b>所有搜索操作记入审计日志（{@link Audit} QUERY 类型），便于合规追溯。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see UnifiedSearchService 统一搜索服务
+ * @see com.njydsz.common.search.spi.SearchProvider 搜索 Provider SPI
  */
 @Slf4j
 @RestController

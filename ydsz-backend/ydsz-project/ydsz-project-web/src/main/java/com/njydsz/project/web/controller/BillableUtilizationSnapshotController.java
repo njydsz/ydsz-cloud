@@ -19,10 +19,32 @@ import com.njydsz.project.domain.dto.put.BillableUtilizationSnapshotPutDTO;
 /**
  * 可计费利用率快照 Controller
  *
- * <p>提供可计费利用率快照的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供可计费利用率快照的 REST API，是「项目管理 / 资源管理」业务域的 Controller。
+ * 对标大厂 PMIS / 资源管理系统中的「人员计费率 / 资源利用率 / 资源台账」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>快照维度：</b>按 {@code period (YYYY-MM) × employeeId} 滚动生成，
+ * 记录当月工时构成（可计费 / 不可计费 / 休假 / 培训）。
+ *
+ * <p><b>典型调用方：</b>定时任务（每月 1 号凌晨滚动生成上月快照）。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>快照数据为资源管理「计费率仪表盘」提供数据源</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.BillableUtilizationSnapshotService 利用率 Service
+ * @see com.njydsz.project.domain.entity.billable.BillableUtilizationSnapshot 快照实体
  */
 @RestController
 @RequestMapping("/api/v1/project/billable/utilization/snapshot")

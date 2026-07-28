@@ -19,10 +19,33 @@ import com.njydsz.project.domain.dto.post.ExecutionWbsTaskPostDTO;
 /**
  * WBS 任务 Controller
  *
- * <p>提供工作分解结构（WBS）任务的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供工作分解结构（WBS）任务的 REST API，是「项目管理 / 项目执行」业务域的 Controller。
+ * 对标大厂 PMIS / 项目管理系统中的「WBS（Work Breakdown Structure）/ 工作分解结构 / 项目任务」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>WBS 任务分解：</b>将项目交付物分解为层级化的工作包（{@code parentId} 形成树形结构）。
+ *
+ * <p><b>任务依赖：</b>通过 {@code predecessorIds} 字段记录任务前置依赖（FS / SS / FF 关系）。
+ *
+ * <p><b>进度跟踪：</b>通过 {@code progressPct}（完成百分比）跟踪任务进度。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>WBS 变更需走项目变更流程，任务负责人仅可修改自己负责的任务</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ExecutionWbsTaskService WBS Service
+ * @see com.njydsz.project.domain.entity.execution.ExecutionWbsTask WBS 任务实体
  */
 @RestController
 @RequestMapping("/api/v1/project/execution/wbs/task")

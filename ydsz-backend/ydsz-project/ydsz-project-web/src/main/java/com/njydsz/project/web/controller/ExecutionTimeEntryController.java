@@ -19,10 +19,32 @@ import com.njydsz.project.domain.dto.put.ExecutionTimeEntryPutDTO;
 /**
  * 工时录入 Controller
  *
- * <p>提供工时录入记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供工时录入记录的 REST API，是「项目管理 / 工时管理」业务域的 Controller。
+ * 对标大厂 PMIS / 工时管理系统的「项目工时 / 工时填报 / 工时审批 / 工时成本核算」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>工时类型：</b>可计费工时 / 不可计费工时 / 休假 / 培训 / 行政。
+ *
+ * <p><b>工时审批：</b>工时由 PM 审批后生效，审批通过后联动
+ * {@code ydsz_cost_allocation} 成本归集，基于 {@code ydsz_rate_internal} 内部费率计算人力成本。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>员工只能查看 / 修改自己的工时（{@code applicantId} 限制）</li>
+ *   <li>已审批的工时禁止修改，错误需通过工时调整单纠正</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ExecutionTimeEntryService 工时 Service
+ * @see com.njydsz.project.domain.entity.execution.ExecutionTimeEntry 工时实体
  */
 @RestController
 @RequestMapping("/api/v1/project/execution/time/entry")

@@ -19,10 +19,33 @@ import com.njydsz.project.domain.dto.put.CostAllocationPutDTO;
 /**
  * 成本分摊 Controller
  *
- * <p>提供成本分摊记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供成本分摊记录的 REST API，是「项目管理 / 财务成本归集」业务域的 Controller。
+ * 对标大厂 PMIS / ERP 系统中的「项目成本归集 / 成本中心核算 / 期间成本结转」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>分摊维度：</b>按 {@code period × initiationId × costCategory} 维度归集项目成本。
+ *
+ * <p><b>成本类别：</b>LABOR 人力 / PURCHASE 采购 / EXPENSE 费用 / OUTSOURCE 外包 / OTHER 其他。
+ *
+ * <p><b>典型调用方：</b>定时任务（每月 1 号凌晨滚动归集上月成本）。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>作为 {@code ydsz_project_profit_snapshot} 利润快照的输入数据，禁止越权篡改</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.CostAllocationService 成本归集 Service
+ * @see com.njydsz.project.domain.entity.cost.CostAllocation 成本归集体
  */
 @RestController
 @RequestMapping("/api/v1/project/cost/allocation")

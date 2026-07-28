@@ -19,10 +19,33 @@ import com.njydsz.project.domain.dto.post.ProjectCustomerCreditPostDTO;
 /**
  * 客户授信 Controller
  *
- * <p>提供客户授信的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供客户信用评级的 REST API，是「项目管理 / 客户信用管理」业务域的 Controller。
+ * 对标大厂 PMIS / CRM 系统的「客户信用 / 客户评级 / 客户授信 / 客户风险」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>客户评级：</b>AAA / AA / A / BBB / BB / B / C 共 7 级。
+ *
+ * <p><b>授信维度：</b>基于客户评级授予不同的账期 / 信用额度 / 付款方式。
+ *
+ * <p><b>典型调用方：</b>定时任务（每月 1 号凌晨滚动重算客户评级）。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>客户信用等级变化时联动 {@code AlertDispatch} 告警</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ProjectCustomerCreditService 客户信用 Service
+ * @see com.njydsz.project.domain.entity.project.ProjectCustomerCredit 客户信用实体
  */
 @RestController
 @RequestMapping("/api/v1/project/project/customer/credit")

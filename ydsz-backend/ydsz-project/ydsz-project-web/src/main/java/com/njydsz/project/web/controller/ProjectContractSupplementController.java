@@ -19,10 +19,34 @@ import com.njydsz.project.domain.dto.put.ProjectContractSupplementPutDTO;
 /**
  * 合同补充协议 Controller
  *
- * <p>提供合同补充协议的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目合同附件 / 补充协议的 REST API，是「项目管理 / 合同附件管理」业务域的 Controller。
+ * 对标大厂 PMIS / 法务系统中的「合同附件 / 补充协议 / 备忘录」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>附件类型：</b>合同正本扫描件 / 附件 / 补充协议 / 备忘录 / 技术规格书。
+ *
+ * <p><b>文件存储：</b>附件文件统一上传到 {@code ydsz-common-file}，本表只存储元数据。
+ *
+ * <p><b>版本追踪：</b>同一类附件可上传多个版本，通过 {@code version} 字段管理。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>附件是合同的法律文件，下载 / 查看需权限控制</li>
+ *   <li>附件版本变更不可删除历史版本</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ProjectContractSupplementService 合同附件 Service
+ * @see com.njydsz.project.domain.entity.project.ProjectContractSupplement 合同附件实体
+ * @see ProjectContractController 主合同 Controller
  */
 @RestController
 @RequestMapping("/api/v1/project/project/contract/supplement")

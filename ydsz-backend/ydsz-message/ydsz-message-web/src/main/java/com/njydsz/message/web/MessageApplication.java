@@ -43,7 +43,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszAudit
-@EnableYdszFeign(basePackages = {"com.njydsz.message.api", "com.njydsz.common.feign"})
+@EnableYdszFeign(basePackages = {"com.njydsz.message.api", "com.njydsz.common.feign", "com.njydsz.agent.api"})
 @MapperScan("com.njydsz.message.infra.mapper")
 @EnableAsync
 @EnableScheduling

@@ -19,10 +19,30 @@ import com.njydsz.project.domain.dto.put.CostPurchasePutDTO;
 /**
  * 采购成本 Controller
  *
- * <p>提供采购成本记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目采购成本记录的 REST API，是「项目管理 / 采购成本」业务域的 Controller。
+ * 对标大厂 PMIS / ERP 系统中的「项目采购 / 采购申请 / 采购成本归集」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>三单匹配：</b>采购申请（PR）/ 采购订单（PO）/ 采购入库（GR）三单匹配校验，
+ * 支撑「采购 - 入库 - 付款」端到端流程。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>采购审批时联动预算明细校验占用率，触发 80% 黄灯 / 95% 红灯预警</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.CostPurchaseService 采购 Service
+ * @see com.njydsz.project.domain.entity.cost.CostPurchase 采购实体
  */
 @RestController
 @RequestMapping("/api/v1/project/cost/purchase")

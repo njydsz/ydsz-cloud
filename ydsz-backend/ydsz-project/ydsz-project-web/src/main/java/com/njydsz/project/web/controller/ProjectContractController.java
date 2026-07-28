@@ -19,10 +19,35 @@ import com.njydsz.project.domain.dto.put.ProjectContractPutDTO;
 /**
  * 项目合同 Controller
  *
- * <p>提供项目合同的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目合同的 REST API，是「项目管理 / 合同环节」的核心 Controller。
+ * 对标大厂 PMIS / 法务系统中的「销售合同 / 服务合同 / 采购合同」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>合同多版本：</b>通过 {@link ProjectContractChangeController} 维护合同变更，
+ * 保留完整审计链。
+ *
+ * <p><b>合同附件：</b>通过 {@link ProjectContractSupplementController} 维护合同附件和补充协议。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>已签订合同（{@code status=SIGNED}）的关键字段（金额 / 工期 / 范围）<b>严禁</b>直接修改，
+ *       必须通过 {@link ProjectContractChangeController} 走「合同变更」流程</li>
+ *   <li>采用<b>逻辑删除</b>，合同一旦签订<b>严禁</b>物理删除</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ProjectContractService 合同 Service
+ * @see com.njydsz.project.domain.entity.project.ProjectContract 合同实体
+ * @see ProjectContractChangeController 合同变更 Controller
+ * @see ProjectContractSupplementController 合同附件 Controller
  */
 @RestController
 @RequestMapping("/api/v1/project/project/contract")

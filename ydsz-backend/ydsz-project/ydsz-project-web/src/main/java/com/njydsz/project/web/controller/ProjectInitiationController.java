@@ -30,10 +30,48 @@ import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectInitiationVO;
 
 /**
- * 项目立项 Controller。
+ * 项目立项 Controller
+ *
+ * <p>提供项目立项环节的 REST API，是「项目管理」业务域的<b>入口</b> Controller。
+ * 对标大厂 PMIS / 经营管理系统中的「项目立项 / 项目立项申请 / 项目台账」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ *   <li><b>业务专用</b>：{@link #getByCode}（按项目编号查）/
+ *       {@link #advanceStage}（推进项目阶段）/
+ *       {@link #listByPmId}（按 PM 查项目）</li>
+ * </ul>
+ *
+ * <p><b>项目状态机：</b>
+ * <pre>
+ *  PRE_INITIATION → INITIATION → CONTRACT → EXECUTION → CLOSURE
+ *       (预立项)       (立项)     (合同)     (执行)     (收尾)
+ * </pre>
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计，写操作落 {@code ydsz_operation_log}</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制，PM 仅可见自己负责的项目</li>
+ *   <li>{@code @Valid} 触发 JSR-303 校验，错误由 {@code GlobalExceptionHandler} 统一处理</li>
+ * </ul>
+ *
+ * <p><b>典型链路：</b>
+ * <ol>
+ *   <li>销售创建商机 → 商机赢单后调用 {@link #save} 创建预立项</li>
+ *   <li>PM 在「立项申请」页面调用 {@link #update} 完善立项信息</li>
+ *   <li>PM 调用 {@link #advanceStage} 推进项目阶段（PRE_INITIATION → INITIATION）</li>
+ *   <li>PM 工作台调用 {@link #listByPmId} 加载自己的项目列表</li>
+ * </ol>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ProjectInitiationService 立项 Service
+ * @see com.njydsz.project.domain.dto.post.ProjectInitiationPostDTO 立项创建 DTO
+ * @see com.njydsz.project.domain.dto.put.ProjectInitiationPutDTO 立项更新 DTO
+ * @see com.njydsz.project.domain.dto.ProjectInitiationPageQuery 立项分页查询 DTO
  */
 @RestController
 @RequestMapping("/api/v1/project/initiation")

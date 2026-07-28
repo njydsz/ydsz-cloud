@@ -43,7 +43,8 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
         "com.njydsz.literule.api",
         "com.njydsz.common.feign",
         "com.njydsz.cronjob.api",
-        "com.njydsz.workflow.api"
+        "com.njydsz.workflow.api",
+        "com.njydsz.system.api"
 })
 @EnableScheduling
 @MapperScan("com.njydsz.literule.infra.mapper")

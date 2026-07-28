@@ -19,10 +19,31 @@ import com.njydsz.project.domain.dto.post.ExecutionRiskPostDTO;
 /**
  * 执行风险 Controller
  *
- * <p>提供项目执行风险记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目执行风险记录的 REST API，是「项目管理 / 项目风险管理」业务域的 Controller。
+ * 对标大厂 PMIS / 项目管理系统中的「项目风险 / 风险登记 / 风险跟踪 / 风险闭环」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>风险评估：</b>按 {@code probability}（概率）× {@code impact}（影响）矩阵评估风险等级。
+ *
+ * <p><b>风险状态：</b>OPEN 开放 / MITIGATING 处理中 / CLOSED 已关闭。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>高风险（{@code level=HIGH}）会自动触发告警派发</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ExecutionRiskService 风险 Service
+ * @see com.njydsz.project.domain.entity.execution.ExecutionRisk 风险实体
  */
 @RestController
 @RequestMapping("/api/v1/project/execution/risk")

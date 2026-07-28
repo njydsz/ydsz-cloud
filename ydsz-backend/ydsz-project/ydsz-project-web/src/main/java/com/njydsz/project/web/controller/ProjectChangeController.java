@@ -19,10 +19,32 @@ import com.njydsz.project.domain.dto.post.ProjectChangePostDTO;
 /**
  * 项目变更记录 Controller
  *
- * <p>提供项目变更记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目变更申请的 REST API，是「项目管理 / 项目变更管理」业务域的 Controller。
+ * 对标大厂 PMIS / 项目管理系统中的「项目变更 / 项目调整 / 项目变更申请」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>变更类型：</b>SCOPE 范围 / SCHEDULE 工期 / BUDGET 预算 / RESOURCE 资源 / OTHER 其他。
+ *
+ * <p><b>审批集成：</b>每条变更申请对应一个 {@code ydsz-workflow} 流程实例，
+ * 由 {@code ydsz-workflow} 流程引擎驱动审批流。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>变更审批通过后联动 WBS 任务 / 预算明细 / 项目阶段自动调整</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ProjectChangeService 变更 Service
+ * @see com.njydsz.project.domain.entity.project.ProjectChange 变更实体
  */
 @RestController
 @RequestMapping("/api/v1/project/project/change")

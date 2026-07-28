@@ -19,10 +19,35 @@ import com.njydsz.project.domain.dto.put.EvmMeasurePutDTO;
 /**
  * EVM 挣值测量 Controller
  *
- * <p>提供挣值管理（EVM）测量记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供挣值管理（EVM）测量记录的 REST API，是「项目管理 / 挣值管理」业务域的 Controller。
+ * 对标大厂 PMIS / 项目管理系统的「EVM（Earned Value Management）/ 挣值分析 / 绩效度量」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>EVM 三大基础值：</b>PV（计划值 Planned Value）/ EV（挣值 Earned Value）/
+ * AC（实际成本 Actual Cost）。
+ *
+ * <p><b>绩效指标：</b>SV = EV - PV（进度偏差）/ CV = EV - AC（成本偏差）/
+ * SPI = EV / PV（进度绩效指数）/ CPI = EV / AC（成本绩效指数）。
+ *
+ * <p><b>典型调用方：</b>定时任务（每周一凌晨滚动计算上周 EVM）。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>EVM 数据是项目绩效评估和趋势预测的依据，禁止越权篡改</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.EvmMeasureService EVM Service
+ * @see com.njydsz.project.domain.entity.evm.EvmMeasure EVM 测量实体
  */
 @RestController
 @RequestMapping("/api/v1/project/evm/measure")

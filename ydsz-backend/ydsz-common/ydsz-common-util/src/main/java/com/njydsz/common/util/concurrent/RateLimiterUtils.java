@@ -41,9 +41,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * }
  * }</pre>
  *
+ * @deprecated P0-4: 限流器统一治理 — 请使用 {@code RedisRateLimiter} 作为统一分布式限流入口。
+ *             本类为纯 JDK 内存实现，不支持分布式限流，仅保留向后兼容。
+ *             新代码请直接注入 {@code RedisRateLimiter} Bean 使用。
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated(since = "1.0.0", forRemoval = true)
 public class RateLimiterUtils {
 
     /** 注册表最大容量，超过后触发空闲清理 */

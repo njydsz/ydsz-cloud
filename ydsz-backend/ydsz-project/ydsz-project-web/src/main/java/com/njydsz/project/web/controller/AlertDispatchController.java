@@ -19,10 +19,35 @@ import com.njydsz.project.domain.dto.post.AlertDispatchPostDTO;
 /**
  * 告警派发 Controller
  *
- * <p>提供告警派发记录的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供告警派发记录的 REST API，是「项目管理 / 告警中心」业务域的 Controller。
+ * 对标大厂 PMIS / 监控告警系统中的「告警分发 / 告警路由 / 告警推送」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>告警等级：</b>P0 紧急 / P1 重要 / P2 次要 / P3 提示。
+ *
+ * <p><b>推送通道：</b>通过 {@code pushChannels} 字段配置（INAPP 应用内 / EMAIL 邮件 /
+ * SMS 短信 / IM 企微 / WEBHOOK Webhook）。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>告警派发通常由系统内部触发，外部调用方需具备 {@code project:alert:dispatch} 权限码</li>
+ * </ul>
+ *
+ * <p><b>典型链路：</b>业务异常 / 定时任务失败 / 预算超阈值 → 调用 {@link #save} 创建告警
+ * → {@code ydsz-message} 通知中心异步推送到目标通道。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.AlertDispatchService 告警 Service
+ * @see com.njydsz.project.domain.entity.alert.AlertDispatch 告警实体
  */
 @RestController
 @RequestMapping("/api/v1/project/alert/dispatch")

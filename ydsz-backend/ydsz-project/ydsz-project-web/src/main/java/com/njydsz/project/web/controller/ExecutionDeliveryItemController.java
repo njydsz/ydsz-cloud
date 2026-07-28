@@ -19,10 +19,32 @@ import com.njydsz.project.domain.dto.post.ExecutionDeliveryItemPostDTO;
 /**
  * 交付项 Controller
  *
- * <p>提供项目交付项的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ * <p>提供项目交付物实例的 REST API，是「项目管理 / 交付物管理」业务域的 Controller。
+ * 对标大厂 PMIS / 项目管理系统中的「项目交付物 / 交付物清单 / 交付物验收」管理界面。
+ *
+ * <p><b>核心接口：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #page} / {@link #save} / {@link #update} /
+ *       {@link #remove}</li>
+ * </ul>
+ *
+ * <p><b>交付物实例化：</b>从 {@code ydsz_execution_delivery_standard} 标准模板生成交付物清单，
+ * 跟踪计划提交日期 / 实际提交日期 / 验收日期。
+ *
+ * <p><b>典型调用方：</b>立项初始化（从标准模板批量生成）。
+ *
+ * <p><b>安全控制：</b>
+ * <ul>
+ *   <li>所有写接口 {@code @Audit} 审计</li>
+ *   <li>分页查询受 {@code DataScopeInterceptor} 数据权限控制</li>
+ *   <li>交付物是合同履约的依据，状态变更需走审批</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.project.server.service.ExecutionDeliveryItemService 交付物 Service
+ * @see com.njydsz.project.domain.entity.execution.ExecutionDeliveryItem 交付物实体
  */
 @RestController
 @RequestMapping("/api/v1/project/execution/delivery/item")

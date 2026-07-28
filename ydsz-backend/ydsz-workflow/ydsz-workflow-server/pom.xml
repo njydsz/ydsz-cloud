@@ -126,5 +126,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
+        <!-- P0-2: 多租户隔离 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
 </dependencies>
 </project>
