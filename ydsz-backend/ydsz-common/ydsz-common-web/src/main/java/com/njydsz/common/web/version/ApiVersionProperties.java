@@ -1,5 +1,7 @@
 package com.njydsz.common.web.version;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Data;
@@ -14,6 +16,10 @@ import lombok.Data;
  * ydsz:
  *   api:
  *     version:
+ *       enabled: true
+ *       strategy: URL
+ *       default-version: "1"
+ *       header-name: X-API-Version
  *       current-version: v1
  *       deprecated-versions:
  *         - v0
@@ -29,6 +35,27 @@ import lombok.Data;
 public class ApiVersionProperties {
 
     /**
+     * 是否启用 API 版本路由。
+     * <p>禁用后所有请求不进行版本匹配，直接放行。
+     */
+    private boolean enabled = true;
+
+    /**
+     * 版本提取策略（URL / HEADER / ACCEPT）。
+     */
+    private VersionStrategy strategy = VersionStrategy.URL;
+
+    /**
+     * 默认版本号（请求未携带版本信息时使用）。
+     */
+    private String defaultVersion = "1";
+
+    /**
+     * 请求头名称（strategy=HEADER 时生效）。
+     */
+    private String headerName = "X-API-Version";
+
+    /**
      * 当前 API 版本（如 "v1"）。
      */
     private String currentVersion = "v1";
@@ -36,7 +63,7 @@ public class ApiVersionProperties {
     /**
      * 已废弃的版本列表（这些版本的请求将返回 410 Gone）。
      */
-    private java.util.List<String> deprecatedVersions = java.util.List.of();
+    private List<String> deprecatedVersions = List.of();
 
     /**
      * 是否在响应头中添加 Deprecation/Sunset 头（RFC 8594）。

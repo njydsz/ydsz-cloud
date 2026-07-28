@@ -1,16 +1,15 @@
 package com.njydsz.common.base.actuator;
 
-import java.util.Map;
-import java.util.TreeMap;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
-import org.springframework.context.ConfigurableEnvironment;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * 配置注册端点 — 暴露运行时配置信息。
