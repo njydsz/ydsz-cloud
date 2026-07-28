@@ -72,6 +72,9 @@ public final class FeignClientConstants {
     /** 规则引擎服务名（规则定义/编排/评估/灰度/回放/审批） */
     public static final String LITERULE = "ydsz-literule";
 
+    /** 网盘知识库服务名 */
+    public static final String NEXTWIKI = "ydsz-nextwiki";
+
     // ==================== 消息中心 URL 路径常量 ====================
 
     /** 发送通知 API 路径 */

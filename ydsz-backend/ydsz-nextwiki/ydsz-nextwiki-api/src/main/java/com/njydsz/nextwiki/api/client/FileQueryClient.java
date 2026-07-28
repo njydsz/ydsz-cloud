@@ -17,7 +17,7 @@ import com.njydsz.nextwiki.api.fallback.FileQueryClientFallback;
  * @author ydsz-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-nextwiki", contextId = "fileQueryClient",
+@FeignClient(name = FeignClientConstants.NEXTWIKI, contextId = "fileQueryClient",
         fallbackFactory = FileQueryClientFallback.class)
 public interface FileQueryClient {
 
