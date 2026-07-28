@@ -13,10 +13,26 @@ import com.njydsz.workflow.domain.entity.FlowHisTask;
 /**
  * 历史任务 Mapper
  *
- * <p>对应 ydsz_flow_his_task 表，归档已完成的流程任务，供已办查询与审计追溯。
+ * <p>对应数据表 <code>ydsz_flow_his_task</code>，归档已完成的流程任务，供已办查询与审计追溯。</p>
+ * <p>任务结束（同意/驳回/转办/加签完成）后从 {@code ydsz_flow_run_task} 迁移到本表，保留完整审批轨迹。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_task_id — 任务 ID 唯一索引（1:1 关联运行任务）</li>
+ *   <li>idx_user_done — 用户维度已办查询索引</li>
+ *   <li>idx_end_at — 完成时间排序索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.server.service.FlowTaskHistoryService 已办 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {

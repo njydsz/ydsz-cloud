@@ -13,10 +13,28 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 
 /**
- * 调度节点心跳 Mapper。
+ * 任务执行节点 Mapper
+ *
+ * <p>对应数据表 <code>ydsz_job_node</code>。
+ * <p>节点注册到中心用于 Leader 选举、任务分片、健康检查，是分布式调度的核心基础设施。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_node_id — 节点 ID 唯一索引</li>
+ *   <li>idx_status — 状态过滤索引（ONLINE/OFFLINE）</li>
+ *   <li>idx_heartbeat_at — 心跳时间排序索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.job.JobNode 节点实体
+ * @see com.njydsz.cronjob.server.service.JobNodeService 节点 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobNodeMapper extends BaseMapper<JobNode> {

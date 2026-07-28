@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -33,7 +34,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * @author ydsz-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-userinfo", contextId = "orgQueryClient",
+@FeignClient(name = FeignClientConstants.USERINFO, contextId = "orgQueryClient",
         fallback = OrgQueryClientFallback.class)
 public interface OrgQueryClient {
 

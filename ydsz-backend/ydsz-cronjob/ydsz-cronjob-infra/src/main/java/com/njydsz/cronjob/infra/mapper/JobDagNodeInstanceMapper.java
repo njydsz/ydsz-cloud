@@ -12,10 +12,27 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 
 /**
- * DAG 节点实例 Mapper（P2 DAG 增强）。
+ * 任务 DAG 节点实例 Mapper
+ *
+ * <p>对应数据表 <code>ydsz_job_dag_node_instance</code>。
+ * <p>节点实例是 DAG 执行的最小单元，记录每个节点的状态、输入、输出、耗时。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>idx_instance_id — DAG 实例维度查询索引</li>
+ *   <li>idx_status — 状态过滤索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance 节点实例实体
+ * @see com.njydsz.cronjob.server.service.JobDagService DAG Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance> {

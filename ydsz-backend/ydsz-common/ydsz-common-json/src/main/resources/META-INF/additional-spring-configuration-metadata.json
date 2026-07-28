@@ -1,0 +1,64 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.json.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 YdszJson（默认 true）。"
+    },
+    {
+      "name": "ydsz.json.date-format",
+      "type": "java.lang.String",
+      "description": "全局日期格式（默认 yyyy-MM-dd HH:mm:ss）。"
+    },
+    {
+      "name": "ydsz.json.naming-strategy",
+      "type": "java.lang.String",
+      "description": "命名策略（LOWER_CAMEL_CASE、UPPER_CAMEL_CASE、SNAKE_CASE、UPPER_SNAKE_CASE）。默认 LOWER_CAMEL_CASE。"
+    },
+    {
+      "name": "ydsz.json.write-nulls",
+      "type": "java.lang.Boolean",
+      "description": "是否输出 null 值（默认 false）。"
+    },
+    {
+      "name": "ydsz.json.pretty-print",
+      "type": "java.lang.Boolean",
+      "description": "是否格式化输出（默认 false）。"
+    },
+    {
+      "name": "ydsz.json.circular-reference-strategy",
+      "type": "java.lang.String",
+      "description": "循环引用处理策略（REF、IGNORE、ERROR）。默认 REF。"
+    },
+    {
+      "name": "ydsz.json.serialize-enum-using-ordinal",
+      "type": "java.lang.Boolean",
+      "description": "枚举是否使用序号序列化（默认 false）。"
+    },
+    {
+      "name": "ydsz.json.max-json-size",
+      "type": "java.lang.Long",
+      "description": "最大 JSON 大小（字节，默认 10MB）。"
+    },
+    {
+      "name": "ydsz.json.max-depth",
+      "type": "java.lang.Integer",
+      "description": "最大序列化深度（默认 256）。"
+    },
+    {
+      "name": "ydsz.json.fast-path-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用快速路径（默认 true）。"
+    },
+    {
+      "name": "ydsz.json.safe-mode",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全模式（默认 true）。"
+    },
+    {
+      "name": "ydsz.json.monitoring-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用监控（默认 false）。"
+    }
+  ]
+}

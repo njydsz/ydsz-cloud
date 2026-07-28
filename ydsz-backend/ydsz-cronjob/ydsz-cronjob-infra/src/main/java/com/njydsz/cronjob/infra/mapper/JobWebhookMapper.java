@@ -10,10 +10,26 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 
 /**
- * WebHook 订阅 Mapper（P3-13）。
+ * 任务 Webhook Mapper
+ *
+ * <p>对应数据表 <code>ydsz_job_webhook</code>。
+ * <p>Webhook 在任务成功/失败/完成时回调外部系统（OA/IM 群/工单系统），用于任务执行结果同步。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_job_event — (任务+事件类型) 唯一索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.job.JobWebhook Webhook 实体
+ * @see com.njydsz.cronjob.server.service.JobWebhookService Webhook Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobWebhookMapper extends BaseMapper<JobWebhook> {

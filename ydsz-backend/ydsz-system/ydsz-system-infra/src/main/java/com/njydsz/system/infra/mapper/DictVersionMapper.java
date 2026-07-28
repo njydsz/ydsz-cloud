@@ -10,28 +10,26 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.system.domain.entity.DictVersion;
 
 /**
- * 字典版本 Mapper 接口
+ * 字典版本管理 Mapper
  *
- * <p>提供对 {@code ydsz_dict_version} 表的 CRUD 操作 + 版本历史查询自定义 SQL。
- * 继承 MyBatis-Plus {@link BaseMapper} 获得基础 CRUD 能力；
- * 通过 {@link Select} 注解声明按 {@code typeCode} 查询版本历史的方法。
+ * <p>对应数据表 <code>ydsz_dict_version</code>。
+ * <p>字典变更（增删改项）生成新版本，支持回滚、对比、灰度发布，避免脏数据扩散。
  *
- * <p><b>自定义 SQL：</b>
+ * <p><b>主要索引：</b>
  * <ul>
- *   <li>{@link #listByTypeCode} — 按 {@code typeCode} 查询版本历史（按 {@code effective_date} 倒序）</li>
+ *   <li>uk_type_version — (字典类型+版本号) 唯一索引</li>
  * </ul>
  *
- * <p><b>租户隔离：</b>所有查询自动由 MyBatis 拦截器注入 {@code tenant_id} 过滤条件。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
  *
- * <p><b>逻辑删除：</b>实体配置了 {@code @TableLogic} 字段 {@code deleted}，删除为逻辑删除。
- *
- * <p><b>索引利用：</b>{@code (type_code, effective_date)} 命中 {@code idx_type_code_version} 复合索引。
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
  *
  * @see com.njydsz.system.domain.entity.DictVersion 字典版本实体
  * @see com.njydsz.system.server.service.DictVersionService 字典版本 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface DictVersionMapper extends BaseMapper<DictVersion> {

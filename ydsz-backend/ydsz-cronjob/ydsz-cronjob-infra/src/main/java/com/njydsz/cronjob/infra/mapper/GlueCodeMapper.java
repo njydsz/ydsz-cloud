@@ -8,12 +8,26 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 
 /**
- * GLUE 在线编码 Mapper（P1-2 GLUE 在线编码）。
+ * GLUE 脚本代码 Mapper
  *
- * <p>提供按 jobId 查询最新版本、查询全部版本等操作。
+ * <p>对应数据表 <code>ydsz_glue_code</code>。
+ * <p>GLUE 模式允许任务以脚本方式实现（Shell/Python/SQL/JS），脚本内容存于本表，与 Job 解耦。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_job_glue — (任务+GLUE 类型) 唯一索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.schedule.GlueCode GLUE 实体
+ * @see com.njydsz.cronjob.server.service.GlueCodeService GLUE Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface GlueCodeMapper extends BaseMapper<GlueCode> {

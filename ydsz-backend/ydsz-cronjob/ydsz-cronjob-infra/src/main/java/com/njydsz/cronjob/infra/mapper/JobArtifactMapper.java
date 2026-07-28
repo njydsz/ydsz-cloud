@@ -12,10 +12,27 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.job.JobArtifact;
 
 /**
- * 执行产物 Mapper（P2-8）。
+ * 任务产物 Mapper
+ *
+ * <p>对应数据表 <code>ydsz_job_artifact</code>。
+ * <p>产物是任务执行输出的可下载/可消费资产，按执行日志 ID 关联，存放在文件存储服务。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_artifact_id — 产物 ID 唯一索引</li>
+ *   <li>idx_log_id — 执行日志维度查询索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.job.JobArtifact 产物实体
+ * @see com.njydsz.cronjob.server.service.JobArtifactService 产物 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobArtifactMapper extends BaseMapper<JobArtifact> {

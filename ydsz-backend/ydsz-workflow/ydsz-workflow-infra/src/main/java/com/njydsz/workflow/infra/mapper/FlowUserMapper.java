@@ -12,10 +12,25 @@ import com.njydsz.workflow.domain.entity.FlowUser;
 /**
  * 流程用户 Mapper
  *
- * <p>对应 ydsz_flow_user 表，记录会签/或签场景下每个任务的处理人与处理状态。
+ * <p>对应数据表 <code>ydsz_flow_user</code>，记录会签/或签场景下每个任务的处理人与处理状态。</p>
+ * <p>会签模式下多个 FlowUser 关联同一任务；或签模式下任何一个人处理完即视为任务完成。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_user_task — (taskId+userId) 唯一索引</li>
+ *   <li>idx_user_status — 用户+处理状态过滤索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowUser 流程用户实体
+ * @see com.njydsz.workflow.server.service.FlowTaskService 待办 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowUserMapper extends BaseMapper<FlowUser> {

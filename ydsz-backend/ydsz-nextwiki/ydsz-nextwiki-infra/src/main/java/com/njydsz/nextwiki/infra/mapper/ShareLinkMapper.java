@@ -10,10 +10,27 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.nextwiki.domain.entity.ShareLink;
 
 /**
- * 分享链接 MyBatis Mapper
+ * 分享链接 Mapper
+ *
+ * <p>对应数据表 <code>ydsz_share_link</code>。
+ * <p>分享链接是文件的对外可访问入口（含 token/过期时间/访问次数/密码），支持匿名访问与审计。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_link_token — 分享 token 唯一索引</li>
+ *   <li>idx_file_id — 文件维度查询索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.nextwiki.domain.entity.ShareLink 分享链接实体
+ * @see com.njydsz.nextwiki.server.service.ShareLinkService 分享 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface ShareLinkMapper extends BaseMapper<ShareLink> {

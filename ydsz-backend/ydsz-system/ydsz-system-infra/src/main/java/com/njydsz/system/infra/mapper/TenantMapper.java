@@ -5,21 +5,26 @@ import com.njydsz.system.domain.entity.Tenant;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 租户主表 Mapper 接口
+ * 租户 Mapper
  *
- * <p>提供对 {@code ydsz_tenant} 表的 CRUD 操作，
- * 继承 MyBatis-Plus {@link BaseMapper} 获得基础 CRUD 能力。
+ * <p>对应数据表 <code>ydsz_tenant</code>。
+ * <p>租户是系统多租户隔离的最高层（每条业务数据都通过 {@code tenant_id} 关联），租户状态/计划/到期时间集中管理。
  *
- * <p><b>租户隔离例外：</b>租户主表本身<b>不参与</b>租户过滤（自身即为租户元数据），
- * 由 MyBatis 拦截器通过白名单机制跳过。
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_tenant_code — 租户编码唯一索引</li>
+ * </ul>
  *
- * <p><b>索引利用：</b>{@code tenant_code} 命中 {@code uk_tenant_code} 唯一索引。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
  *
  * @see com.njydsz.system.domain.entity.Tenant 租户实体
- * @see com.njydsz.common.tenant.TenantContextHolder 租户上下文
+ * @see com.njydsz.system.server.service.TenantService 租户 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface TenantMapper extends BaseMapper<Tenant> {

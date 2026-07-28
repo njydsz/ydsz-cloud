@@ -12,10 +12,25 @@ import com.njydsz.workflow.domain.entity.FlowAttachment;
 /**
  * 自建工作流引擎 - 审批附件 Mapper
  *
- * <p>P1-6 (GAP-51)
+ * <p>对应数据表 <code>ydsz_flow_attachment</code>（P1-6 GAP-51），存储审批节点上传的附件。</p>
+ * <p>附件走文件存储服务，DB 仅保存元数据（文件 ID/名称/大小/上传人），由 {@code FileStorageService} 负责上传/下载。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>idx_instance_id — 流程实例维度查询索引</li>
+ *   <li>idx_task_id — 任务维度查询索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowAttachment 审批附件实体
+ * @see com.njydsz.workflow.server.service.FlowAttachmentService 审批附件 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowAttachmentMapper extends BaseMapper<FlowAttachment> {

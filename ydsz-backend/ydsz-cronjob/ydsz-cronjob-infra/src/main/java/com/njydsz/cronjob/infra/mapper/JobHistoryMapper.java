@@ -12,12 +12,27 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.job.JobHistory;
 
 /**
- * 任务配置历史版本 Mapper（P1-6 任务版本管理）。
+ * 任务变更历史 Mapper
  *
- * <p>提供按 jobId 查询全部历史版本（降序）和查询指定版本等操作。
+ * <p>对应数据表 <code>ydsz_job_history</code>。
+ * <p>变更历史追踪任务配置的修改（CRON/参数/重试策略），用于审计与回滚。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>idx_job_id — 任务维度查询索引</li>
+ *   <li>idx_changed_at — 变更时间排序索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.job.JobHistory 变更历史实体
+ * @see com.njydsz.cronjob.server.service.JobHistoryService 变更历史 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobHistoryMapper extends BaseMapper<JobHistory> {

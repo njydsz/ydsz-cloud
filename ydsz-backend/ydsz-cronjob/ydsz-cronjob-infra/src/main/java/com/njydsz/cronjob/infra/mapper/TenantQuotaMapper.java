@@ -8,16 +8,26 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.job.TenantQuota;
 
 /**
- * 租户级配额 Mapper（P7-2）。
+ * 租户任务配额 Mapper
  *
- * <p>对应 ydsz_tenant_quota 表，存储每个租户的任务数/并发数/日执行量上限。
+ * <p>对应数据表 <code>ydsz_tenant_quota</code>。
+ * <p>配额限制租户可创建的任务数/并发数/触发频率，是多租户隔离的资源管控。
  *
- * <p><b>注意</b>：本表有 tenant_id 列，{@code TenantLineInnerInterceptor} 会自动追加
- * {@code WHERE tenant_id = ?}。由于本表按 tenant_id 唯一索引查询，自动过滤是正确行为
- * （租户只能看到自己的配额记录）。
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_tenant_id — 租户 ID 唯一索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.job.TenantQuota 配额实体
+ * @see com.njydsz.cronjob.server.service.TenantQuotaService 配额 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface TenantQuotaMapper extends BaseMapper<TenantQuota> {

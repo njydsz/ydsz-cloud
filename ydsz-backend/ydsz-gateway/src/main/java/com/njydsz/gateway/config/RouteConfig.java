@@ -22,6 +22,10 @@ import org.springframework.context.annotation.Profile;
  *   <li>Gateway 直接转发完整路径，后端 Controller 原样匹配</li>
  *   <li>前端统一在 baseURL 中添加 {@code /api/v1} 前缀</li>
  *   <li>新增/修改路由时编辑 Nacos 配置文件 ydsz-gateway-routes.yaml</li>
+ *   <li><b>P2-5:</b> 路由 ID 和 URI 中的服务名须与
+ *       {@code FeignClientConstants}（ydsz-common-feign 模块）保持一致。
+ *       Gateway 为 WebFlux 响应式栈，不依赖 common-feign 模块，
+ *       因此无法直接引用常量，修改时需手动同步。</li>
  * </ul>
  *
  * <h3>Nacos 配置方式</h3>

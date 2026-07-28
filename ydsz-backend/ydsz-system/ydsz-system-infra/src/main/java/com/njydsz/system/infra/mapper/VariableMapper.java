@@ -5,23 +5,26 @@ import com.njydsz.system.domain.entity.Variable;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 系统变量 Mapper 接口
+ * 系统变量 Mapper
  *
- * <p>提供对 {@code ydsz_variable} 表的 CRUD 操作，
- * 继承 MyBatis-Plus {@link BaseMapper} 获得基础 CRUD 能力（{@code selectById / insert / updateById / deleteById} 等）。
+ * <p>对应数据表 <code>ydsz_variable</code>。
+ * <p>系统变量是平台配置的 KV（开关/限流阈值/全局配置），由 {@code ConfigService} 提供热加载。
  *
- * <p><b>自定义 SQL：</b>当前未声明自定义 SQL 方法；高频按 key 查询走 Redis 缓存，
- * 缓存未命中时回源到 Service 层 {@code variableService.getVariableValue}。
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_var_key — 变量 KEY 唯一索引</li>
+ * </ul>
  *
- * <p><b>租户隔离：</b>所有查询自动由 MyBatis 拦截器注入 {@code tenant_id} 过滤条件。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
  *
- * <p><b>逻辑删除：</b>实体配置了 {@code @TableLogic} 字段 {@code deleted}，删除为逻辑删除。
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
  *
- * @see com.njydsz.system.domain.entity.Variable 系统变量实体
- * @see com.njydsz.system.server.service.VariableService 系统变量 Service
+ * @see com.njydsz.system.domain.entity.Variable 变量实体
+ * @see com.njydsz.system.server.service.VariableService 变量 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface VariableMapper extends BaseMapper<Variable> {

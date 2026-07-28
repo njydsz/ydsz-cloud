@@ -14,17 +14,26 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
 
 /**
- * 任务每日统计 Mapper（P2-3 执行历史趋势可视化）。
+ * 任务日统计 Mapper
  *
- * <p>对应 {@code ydsz_job_daily_stats} 表，提供：
+ * <p>对应数据表 <code>ydsz_job_daily_stats</code>。
+ * <p>按任务×日维度固化统计结果，用于任务大盘、告警阈值、绩效考核。
+ *
+ * <p><b>主要索引：</b>
  * <ul>
- *   <li>按任务/日期范围查询每日统计（趋势图数据源）</li>
- *   <li>聚合 {@code ydsz_job_log} 按日统计（供 Aggregator 调用）</li>
- *   <li>UPSERT 写入（PostgreSQL ON CONFLICT 语义，同一任务同一天仅保留一条）</li>
+ *   <li>uk_job_date — (任务+日期) 唯一索引</li>
  * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.log.JobDailyStats 日统计实体
+ * @see com.njydsz.cronjob.server.service.JobStatsService 任务统计 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobDailyStatsMapper extends BaseMapper<JobDailyStats> {

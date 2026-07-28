@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供决策表 CRUD、启停、dry-run、热刷新等管理操作。
  * 与 {@link RuleAdminService} 解耦，可独立启用。
  *
+ * @author ydsz-team
+ *
  * @since 1.0.0
  */
 @Slf4j

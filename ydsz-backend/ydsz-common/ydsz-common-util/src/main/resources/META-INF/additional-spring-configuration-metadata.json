@@ -1,0 +1,49 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.util.okhttp.max-idle-connections",
+      "type": "java.lang.Integer",
+      "description": "最大空闲连接数（默认 50）。"
+    },
+    {
+      "name": "ydsz.util.okhttp.keep-alive-duration",
+      "type": "java.lang.Long",
+      "description": "连接保持时间（分钟，默认 5）。"
+    },
+    {
+      "name": "ydsz.util.okhttp.connect-timeout",
+      "type": "java.lang.Long",
+      "description": "连接超时时间（秒，默认 5）。"
+    },
+    {
+      "name": "ydsz.util.okhttp.read-timeout",
+      "type": "java.lang.Long",
+      "description": "读取超时时间（秒，默认 30）。"
+    },
+    {
+      "name": "ydsz.util.okhttp.write-timeout",
+      "type": "java.lang.Long",
+      "description": "写入超时时间（秒，默认 30）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.worker-id",
+      "type": "java.lang.Long",
+      "description": "工作节点ID（范围 0-31，仅 workerIdSource 为 CONFIG 时生效）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.datacenter-id",
+      "type": "java.lang.Long",
+      "description": "数据中心ID（范围 0-31）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.worker-id-source",
+      "type": "java.lang.String",
+      "description": "workerId 来源策略（ENVIRONMENT_VARIABLE、CONFIG、INSTANCE_INDEX）。默认 ENVIRONMENT_VARIABLE。"
+    },
+    {
+      "name": "ydsz.util.snowflake.environment-variable-name",
+      "type": "java.lang.String",
+      "description": "环境变量名（默认 YDSZ_SNOWFLAKE_WORKER_ID）。"
+    }
+  ]
+}

@@ -13,11 +13,26 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
 /**
  * 待办任务运行态 Mapper
  *
- * <p>对应 {@code ydsz_flow_run_task} 表（原 {@code ydsz_flow_task}，2026-07-06 重命名），
- * 提供待办/已办查询、任务完成、会签计数、批量取消等能力。
+ * <p>对应数据表 <code>ydsz_flow_run_task</code>（原 {@code ydsz_flow_task}，2026-07-06 重命名），存储进行中的待办任务。</p>
+ * <p>待办任务是「某个节点 + 某个处理人 + 某种状态」的实例，运行态任务结束后迁移到 {@code ydsz_flow_his_task} 归档表。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_task_id — 任务 ID 唯一索引</li>
+ *   <li>idx_assignee — 处理人维度待办查询索引</li>
+ *   <li>idx_instance_id — 流程实例维度查询索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowRunTask 待办任务实体
+ * @see com.njydsz.workflow.server.service.FlowTaskService 待办 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {

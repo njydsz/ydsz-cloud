@@ -60,6 +60,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>使用 {@link ConcurrentHashMap} + {@link AtomicLong} 保证并发安全，
  * 适用于多线程环境下的反馈记录和指标查询。
  *
+ * @author ydsz-team
+ *
  * @since 1.0.0
  */
 @Slf4j

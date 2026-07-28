@@ -12,10 +12,26 @@ import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 /**
  * 流程委派代理 Mapper
  *
- * <p>P1-4: 长期授权委派。
+ * <p>对应数据表 <code>ydsz_flow_delegate_auth</code>（P1-4），存储长期授权委派。</p>
+ * <p>委派代理用于请假/出差场景，授权人 A 将自己的待办授权给代理人 B 处理（含时间范围/可委派范围/转交/不转交策略）。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_auth_id — 授权 ID 唯一索引</li>
+ *   <li>idx_authorizer — 授权人维度查询索引</li>
+ *   <li>idx_effective_time — 生效时间范围索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowDelegateAuth 委派代理实体
+ * @see com.njydsz.workflow.server.service.FlowDelegateService 委派 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuth> {

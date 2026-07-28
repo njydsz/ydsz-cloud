@@ -11,19 +11,26 @@ import com.njydsz.workflow.domain.entity.FlowTemplate;
 /**
  * 流程模板 Mapper
  *
- * <p>对应 ydsz_flow_template 表，提供按分类与编码查询模板。
+ * <p>对应数据表 <code>ydsz_flow_template</code>，存储可复用的流程模板（带版本化与继承关系）。</p>
+ * <p>模板是「流程定义的母版」，按分类与编码组织，支持版本升级与父子继承。
  *
- * <p>P2-9: 增加版本化与继承关系查询：
+ * <p><b>主要索引：</b>
  * <ul>
- *   <li>{@link #selectByCategory} / {@link #selectByTemplateCode} 默认只返回
- *       {@code is_latest=1} 的最新版本，保持向后兼容</li>
- *   <li>{@link #selectVersionsByTemplateCode} 查询某 template_code 的全部历史版本</li>
- *   <li>{@link #selectByParentTemplateId} 反查继承关系</li>
- *   <li>{@link #markAsNotLatest} + {@link #selectMaxVersion} 用于创建新版本时维护版本状态</li>
+ *   <li>uk_template_code — 模板编码唯一索引</li>
+ *   <li>idx_category_id — 分类过滤索引</li>
+ *   <li>idx_is_latest — 最新版本过滤索引（默认仅返回 is_latest=1）</li>
  * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowTemplate 流程模板实体
+ * @see com.njydsz.workflow.server.service.FlowTemplateService 流程模板 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowTemplateMapper extends BaseMapper<FlowTemplate> {

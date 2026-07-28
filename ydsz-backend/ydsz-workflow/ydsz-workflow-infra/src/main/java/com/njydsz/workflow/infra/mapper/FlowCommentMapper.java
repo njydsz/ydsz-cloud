@@ -10,13 +10,27 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.workflow.domain.entity.FlowComment;
 
 /**
- * P2-2: 流程评论 Mapper
+ * P2-2 流程评论 Mapper
  *
- * <p>审批评论多级回复查询。一级评论（parent_comment_id IS NULL）与
- * 回复（parent_comment_id 非空）通过不同索引高效查询。
+ * <p>对应数据表 <code>ydsz_flow_comment</code>，存储审批评论与多级回复。</p>
+ * <p>一级评论（{@code parent_comment_id IS NULL}）与回复通过不同索引高效查询；评论支持 @ 提醒（{@code mentioned_user_ids}）与表情。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>idx_instance_id — 流程实例维度查询索引</li>
+ *   <li>idx_parent_id — 父子层级索引（多级回复）</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowComment 评论实体
+ * @see com.njydsz.workflow.server.service.FlowCommentService 评论 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowCommentMapper extends BaseMapper<FlowComment> {

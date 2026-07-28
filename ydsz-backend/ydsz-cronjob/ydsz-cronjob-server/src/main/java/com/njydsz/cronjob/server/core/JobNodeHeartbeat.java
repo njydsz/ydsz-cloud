@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -190,7 +191,7 @@ public class JobNodeHeartbeat {
     private JobNode buildNodeRecord() {
         JobNode node = new JobNode();
         node.setNodeId(nodeId);
-        node.setAppName("ydsz-cronjob");
+        node.setAppName(FeignClientConstants.CRONJOB);
         node.setHost(getHostName());
         node.setPort(getServerPort());
         node.setLastHeartbeat(LocalDateTime.now());

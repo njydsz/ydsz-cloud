@@ -14,10 +14,26 @@ import com.njydsz.nextwiki.domain.entity.FileTag;
 import com.njydsz.nextwiki.domain.entity.Tag;
 
 /**
- * 标签 MyBatis Mapper
+ * 标签 Mapper
+ *
+ * <p>对应数据表 <code>ydsz_tag</code>。
+ * <p>标签是文件分类/检索的辅助手段，与文件是多对多关系（{@code ydsz_file_tag}）。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_tag_name — (租户+标签名) 唯一索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.nextwiki.domain.entity.Tag 标签实体
+ * @see com.njydsz.nextwiki.server.service.TagService 标签 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface TagMapper extends BaseMapper<Tag> {

@@ -14,12 +14,28 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 
 /**
- * 任务日志 Mapper
+ * 任务执行日志 Mapper
  *
- * <p>对应 ydsz_job_log 表，归档每次任务执行的开始/结束/耗时/状态/结果，供执行历史查询。
+ * <p>对应数据表 <code>ydsz_job_log</code>。
+ * <p>执行日志记录任务触发时间、参数、结果、耗时、错误，是任务运维的事实表。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_log_id — 日志 ID 唯一索引</li>
+ *   <li>idx_job_id — 任务维度查询索引</li>
+ *   <li>idx_trigger_at — 触发时间排序索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.log.JobLog 执行日志实体
+ * @see com.njydsz.cronjob.server.service.JobLogService 日志 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobLogMapper extends BaseMapper<JobLog> {

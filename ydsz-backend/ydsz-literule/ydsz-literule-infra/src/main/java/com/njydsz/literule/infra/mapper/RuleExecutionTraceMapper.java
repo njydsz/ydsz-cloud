@@ -12,13 +12,28 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.literule.domain.entity.RuleExecutionTraceDO;
 
 /**
- * 规则执行链路追踪 Mapper
+ * 规则执行轨迹 Mapper
  *
- * <p>P1-6 监控大盘：扩展聚合查询方法（按时间窗口 / 按规则 / 按时间桶 / 按字段分组），
- * 用于大盘指标与趋势分析。
+ * <p>对应数据表 <code>ydsz_rule_execution_trace</code>。
+ * <p>执行轨迹记录规则入参、命中节点/分支、输出、耗时，是规则调优、问题排查、决策审计的依据。
  *
- * @author ydsz
- * @since 2026-07-02
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_trace_id — 轨迹 ID 唯一索引</li>
+ *   <li>idx_rule_exec_at — (规则+执行时间) 复合索引</li>
+ *   <li>idx_provider_trace — provider_trace_id 索引（与上游业务调用链关联）</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ *
+ * @see com.njydsz.literule.domain.entity.RuleExecutionTraceDO 执行轨迹实体
+ * @see com.njydsz.literule.server.service.RuleExecutionTraceService 轨迹 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTraceDO> {

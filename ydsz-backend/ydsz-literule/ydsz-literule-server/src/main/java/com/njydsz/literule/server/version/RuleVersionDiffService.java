@@ -24,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>表达式类字段的 Diff 后续可结合 AST 级语义对比（P3-4 规则冲突检测增强）。
  *
+ * @author ydsz-team
+ *
  * @since 1.0.0
  */
 @Slf4j

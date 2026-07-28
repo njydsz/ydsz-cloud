@@ -5,21 +5,26 @@ import com.njydsz.system.domain.entity.TenantPlan;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 租户套餐 Mapper 接口
+ * 租户套餐 Mapper
  *
- * <p>提供对 {@code ydsz_tenant_plan} 表的 CRUD 操作，
- * 继承 MyBatis-Plus {@link BaseMapper} 获得基础 CRUD 能力。
+ * <p>对应数据表 <code>ydsz_tenant_plan</code>。
+ * <p>套餐定义租户的功能/容量/价格（基础版/企业版/旗舰版），由 {@code TenantPlanMenu} 关联可访问菜单。
  *
- * <p><b>租户隔离例外：</b>租户套餐表本身<b>不参与</b>租户过滤（全局共享的套餐定义），
- * 由 MyBatis 拦截器通过白名单机制跳过。
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_plan_code — 套餐编码唯一索引</li>
+ * </ul>
  *
- * <p><b>索引利用：</b>{@code plan_code} 命中 {@code uk_plan_code} 唯一索引。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
  *
- * @see com.njydsz.system.domain.entity.TenantPlan 租户套餐实体
- * @see com.njydsz.system.domain.entity.Tenant 租户实体（通过 {@code planId} 关联）
+ * @see com.njydsz.system.domain.entity.TenantPlan 套餐实体
+ * @see com.njydsz.system.server.service.TenantPlanService 套餐 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface TenantPlanMapper extends BaseMapper<TenantPlan> {

@@ -9,13 +9,27 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.literule.domain.entity.RulePackDO;
 
 /**
- * 规则集 Mapper（P2-14）。
+ * 规则包 Mapper
  *
- * <p>对应 {@code ydsz_rule_pack} 表，提供按编码/版本/行业查询及下载量递增等操作。
- * 继承 {@link BaseMapper} 获得基础 CRUD 能力，扩展方法定义在 XML 中。
+ * <p>对应数据表 <code>ydsz_rule_pack</code>。
+ * <p>规则包支持批量发布/回滚/导入导出，是规则运维的核心单位。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_pack_code — 包编码唯一索引</li>
+ *   <li>idx_status — 状态过滤索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 1.0.0 (P2-14)
+ * @since 1.0.0
+ *
+ * @see com.njydsz.literule.domain.entity.RulePackDO 规则包实体
+ * @see com.njydsz.literule.server.service.RulePackService 规则包 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface RulePackMapper extends BaseMapper<RulePackDO> {

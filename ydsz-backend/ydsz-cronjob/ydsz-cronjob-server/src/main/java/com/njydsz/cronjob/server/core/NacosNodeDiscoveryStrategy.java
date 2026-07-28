@@ -13,6 +13,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(name = "ydsz.cronjob.node-discovery.type", havingValue = "nacos", matchIfMissing = true)
 public class NacosNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
 
-    /** Nacos 注册的服务名（对应 spring.application.name） */
-    private static final String SERVICE_ID = "ydsz-cronjob";
+    /** Nacos 注册的服务名（对应 spring.application.name，委托 {@link FeignClientConstants#CRONJOB}） */
+    private static final String SERVICE_ID = FeignClientConstants.CRONJOB;
 
     private final DiscoveryClient discoveryClient;
 

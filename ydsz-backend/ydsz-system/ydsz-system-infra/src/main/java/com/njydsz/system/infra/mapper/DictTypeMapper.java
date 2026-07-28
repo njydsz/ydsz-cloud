@@ -5,24 +5,26 @@ import com.njydsz.system.domain.entity.DictType;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 字典类型 Mapper 接口
+ * 字典类型 Mapper
  *
- * <p>提供对 {@code ydsz_dict_type} 表的 CRUD 操作，
- * 继承 MyBatis-Plus {@link BaseMapper} 获得基础 CRUD 能力（{@code selectById / insert / updateById / deleteById} 等）。
+ * <p>对应数据表 <code>ydsz_dict_type</code>。
+ * <p>字典类型是字典项的分类（如 gender/job_level/industry），是下拉框/单选/多选等枚举型字段的元数据。
  *
- * <p><b>自定义 SQL：</b>当前未声明自定义 SQL 方法；如需复杂查询（如多表 JOIN、聚合统计），
- * 在此接口添加 {@code @Select} 注解方法或新建 {@code DictTypeMapper.xml} 映射文件。
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_type_code — 字典类型编码唯一索引</li>
+ * </ul>
  *
- * <p><b>租户隔离：</b>所有查询自动由 MyBatis 拦截器注入 {@code tenant_id} 过滤条件，
- * 无需手动处理。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
  *
- * <p><b>逻辑删除：</b>实体未配置 {@code @TableLogic}，删除为物理删除。
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
  *
  * @see com.njydsz.system.domain.entity.DictType 字典类型实体
- * @see com.njydsz.system.server.service.DictService 字典类型 Service
+ * @see com.njydsz.system.server.service.DictTypeService 字典类型 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface DictTypeMapper extends BaseMapper<DictType> {

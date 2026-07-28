@@ -12,10 +12,26 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 
 /**
- * 任务告警规则 Mapper（P5 告警 + 监控）。
+ * 任务告警规则 Mapper
+ *
+ * <p>对应数据表 <code>ydsz_job_alert_rule</code>。
+ * <p>告警规则定义任务失败/超时/连续失败等条件触发告警（IM/短信/邮件），按租户/任务维度配置。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_job_rule — (任务+规则名) 唯一索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.job.JobAlertRule 告警规则实体
+ * @see com.njydsz.cronjob.server.service.JobAlertRuleService 告警规则 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobAlertRuleMapper extends BaseMapper<JobAlertRule> {

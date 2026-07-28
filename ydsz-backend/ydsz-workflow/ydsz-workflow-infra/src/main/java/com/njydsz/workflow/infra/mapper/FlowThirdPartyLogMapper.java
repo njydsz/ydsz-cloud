@@ -12,10 +12,25 @@ import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 /**
  * 三方审批回调日志 Mapper
  *
- * <p>P0-2: 三方审批回调日志落库与状态更新。
+ * <p>对应数据表 <code>ydsz_flow_third_party_log</code>（P0-2），存储三方审批回调日志与状态更新。</p>
+ * <p>钉钉/飞书/企微审批完成后通过 webhook 回调到本表，再由同步任务拉取状态变更（同意/驳回/转办）。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>idx_platform_event — (platform+eventId) 索引（幂等去重）</li>
+ *   <li>idx_instance_id — 流程实例维度查询索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowThirdPartyLog 三方回调日志实体
+ * @see com.njydsz.workflow.server.service.FlowThirdPartySyncService 三方同步 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowThirdPartyLogMapper extends BaseMapper<FlowThirdPartyLog> {

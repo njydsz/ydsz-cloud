@@ -10,10 +10,25 @@ import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 /**
  * 三方审批账号映射 Mapper
  *
- * <p>P0-2: 三方审批账号映射（钉钉/飞书/企微）。
+ * <p>对应数据表 <code>ydsz_flow_third_party_account</code>（P0-2），存储 ydsz 用户与三方平台账号的映射。</p>
+ * <p>用于审批消息推送/回调（钉钉/飞书/企微），按三方平台类型 + 三方用户 ID 唯一，反向通过 ydsz 用户 ID 查找。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_platform_user — (platform+thirdUserId) 唯一索引</li>
+ *   <li>idx_user_id — ydsz 用户 ID 索引（反向查询）</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowThirdPartyAccount 三方账号映射实体
+ * @see com.njydsz.workflow.server.service.FlowThirdPartyService 三方 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAccount> {

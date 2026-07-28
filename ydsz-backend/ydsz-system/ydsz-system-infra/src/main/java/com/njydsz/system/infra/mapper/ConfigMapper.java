@@ -8,28 +8,27 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.system.domain.entity.Config;
 
 /**
- * 系统配置 Mapper 接口
+ * 系统配置 Mapper
  *
- * <p>提供对 {@code ydsz_config} 表的 CRUD 操作 + 高频查询自定义 SQL。
- * 继承 MyBatis-Plus {@link BaseMapper} 获得基础 CRUD 能力；
- * 通过 {@link Select} 注解声明按 {@code configKey} 单条查询方法。
+ * <p>对应数据表 <code>ydsz_config</code>。
+ * <p>配置项是平台级/租户级配置（功能开关/三方密钥/超时时间），支持热更新。
  *
- * <p><b>自定义 SQL：</b>
+ * <p><b>主要索引：</b>
  * <ul>
- *   <li>{@link #selectByConfigKey} — 按 {@code configKey} 单条查询（已过滤启用 + 未删除）</li>
+ *   <li>uk_config_key — 配置 KEY 唯一索引</li>
+ *   <li>idx_tenant_id — 租户隔离索引</li>
  * </ul>
  *
- * <p><b>租户隔离：</b>所有查询自动由 MyBatis 拦截器注入 {@code tenant_id} 过滤条件。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
  *
- * <p><b>逻辑删除：</b>实体配置了 {@code @TableLogic} 字段 {@code deleted}，删除为逻辑删除。
- *
- * <p><b>索引利用：</b>{@code config_key} 命中 {@code uk_tenant_group_key} 唯一索引的「不指定 group」前缀扫描。
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
  *
- * @see com.njydsz.system.domain.entity.Config 系统配置实体
- * @see com.njydsz.system.server.service.ConfigService 系统配置 Service
+ * @see com.njydsz.system.domain.entity.Config 配置实体
+ * @see com.njydsz.system.server.service.ConfigService 配置 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface ConfigMapper extends BaseMapper<Config> {

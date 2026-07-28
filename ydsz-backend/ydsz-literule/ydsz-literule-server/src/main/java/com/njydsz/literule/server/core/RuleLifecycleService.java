@@ -64,6 +64,8 @@ import lombok.extern.slf4j.Slf4j;
  * lifecycleService.retireRule("R002", "admin", "休眠规则，长期零触发");
  * </pre>
  *
+ * @author ydsz-team
+ *
  * @since 1.0.0
  */
 @Slf4j

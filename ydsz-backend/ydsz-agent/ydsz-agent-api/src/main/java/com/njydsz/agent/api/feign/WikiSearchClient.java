@@ -7,6 +7,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import org.springframework.web.bind.annotation.PathVariable;
+
+import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.core.response.BaseResponse;
 
 /**
@@ -18,7 +21,7 @@ import com.njydsz.common.core.response.BaseResponse;
  * @author ydsz-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-nextwiki", contextId = "wikiSearchClient")
+@FeignClient(name = FeignClientConstants.NEXTWIKI, contextId = "wikiSearchClient")
 public interface WikiSearchClient {
 
     /**
@@ -40,5 +43,5 @@ public interface WikiSearchClient {
      * @return 文件元数据（含 fileName, fileSize, contentType 等）
      */
     @GetMapping("/api/v1/nextwiki/files/{fileId}")
-    BaseResponse<Map<String, Object>> getFileMeta(@org.springframework.web.bind.annotation.PathVariable("fileId") String fileId);
+    BaseResponse<Map<String, Object>> getFileMeta(@PathVariable("fileId") String fileId);
 }

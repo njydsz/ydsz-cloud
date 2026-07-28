@@ -13,10 +13,26 @@ import com.njydsz.workflow.domain.entity.FlowInstance;
 /**
  * 流程实例 Mapper
  *
- * <p>对应 ydsz_flow_instance 表，提供按业务关联查询、状态推进、发起人维度查询。
+ * <p>对应数据表 <code>ydsz_flow_instance</code>，存储每次流程发起生成的运行实例。</p>
+ * <p>流程实例是「流程定义的一次具体执行」（含发起人/业务关联/当前节点/状态/变量），按 RUNNING/APPROVED/REJECTED 状态推进，结束态归档到 {@code ydsz_flow_his_instance}。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_business — (tenantId+businessType+businessId) 唯一索引（一业务一实例）</li>
+ *   <li>idx_initiator — 发起人维度索引</li>
+ *   <li>idx_flow_status — 流程状态过滤索引（待办/已办查询）</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowInstance 流程实例实体
+ * @see com.njydsz.workflow.server.service.FlowInstanceService 流程实例 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {

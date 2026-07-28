@@ -13,10 +13,28 @@ import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 
 /**
- * 文件节点 MyBatis Mapper
+ * 文件节点 Mapper
+ *
+ * <p>对应数据表 <code>ydsz_file_node</code>。
+ * <p>文件树节点是知识库的核心数据（文件夹/文件/文档），按父子层级组织，支持版本/分享/ACL。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_node_id — 节点 ID 唯一索引</li>
+ *   <li>idx_parent_id — 父子层级索引</li>
+ *   <li>idx_tenant_id — 租户隔离索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.nextwiki.domain.entity.FileNode 文件节点实体
+ * @see com.njydsz.nextwiki.server.service.FileNodeService 文件节点 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FileNodeMapper extends BaseMapper<FileNode> {

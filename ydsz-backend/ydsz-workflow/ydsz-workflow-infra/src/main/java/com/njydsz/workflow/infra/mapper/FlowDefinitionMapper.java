@@ -12,10 +12,26 @@ import com.njydsz.workflow.domain.entity.FlowDefinition;
 /**
  * 流程定义 Mapper
  *
- * <p>对应 ydsz_flow_definition 表，提供按 flowCode/version 查询及发布状态维护。
+ * <p>对应数据表 <code>ydsz_flow_definition</code>，存储流程定义主表。</p>
+ * <p>流程定义是「流程模板的某个具体版本」（含 BPMN 2.0 XML / JSON DSL / 节点配置），按 version 管理，支持发布/灰度/版本回滚。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_flow_code_version — (flowCode+version+tenantId) 唯一索引</li>
+ *   <li>idx_is_publish — 发布状态过滤索引</li>
+ *   <li>idx_activity_status — 激活状态过滤索引（0 挂起 / 1 激活）</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowDefinition 流程定义实体
+ * @see com.njydsz.workflow.server.service.FlowDefinitionService 流程定义 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {

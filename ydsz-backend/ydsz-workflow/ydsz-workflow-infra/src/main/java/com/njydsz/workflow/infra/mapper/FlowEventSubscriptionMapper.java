@@ -12,8 +12,25 @@ import com.njydsz.workflow.domain.entity.FlowEventSubscription;
 /**
  * 工作流事件订阅 Mapper
  *
+ * <p>对应数据表 <code>ydsz_flow_event_subscription</code>，存储流程事件的外部订阅。</p>
+ * <p>事件订阅支持「流程开始/结束/节点完成」等事件推送到 IM/OA/三方系统（基于 Spring Event / Redis Stream）。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_subscription_id — 订阅 ID 唯一索引</li>
+ *   <li>idx_event_type — 事件类型过滤索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.domain.entity.FlowEventSubscription 事件订阅实体
+ * @see com.njydsz.workflow.server.service.FlowEventService 事件 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface FlowEventSubscriptionMapper extends BaseMapper<FlowEventSubscription> {

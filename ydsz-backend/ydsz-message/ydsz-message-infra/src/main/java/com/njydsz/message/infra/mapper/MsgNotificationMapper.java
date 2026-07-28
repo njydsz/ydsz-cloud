@@ -11,11 +11,26 @@ import com.njydsz.message.domain.entity.core.MsgNotification;
 /**
  * 站内通知 Mapper
  *
- * <p>P2-3: markRead/markAllRead/countUnread 的 SQL 统一由 XML 定义,
- * 移除注解冗余 SQL 避免与 XML 冲突。
+ * <p>对应数据表 <code>ydsz_msg_notification</code>。
+ * <p>站内通知是消息的「最后一道兜底」渠道，无论用户是否绑定 IM/邮件，都会同步写入通知中心，登录后可见。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_notification_id — 主键唯一索引</li>
+ *   <li>idx_user_unread — (用户+已读状态) 复合索引（未读列表）</li>
+ *   <li>idx_created_at — 创建时间排序索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.entity.core.MsgNotification 通知实体
+ * @see com.njydsz.message.server.service.MsgNotificationService 通知 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface MsgNotificationMapper extends BaseMapper<MsgNotification> {

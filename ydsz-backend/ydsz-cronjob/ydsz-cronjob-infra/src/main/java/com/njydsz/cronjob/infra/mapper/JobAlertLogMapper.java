@@ -12,13 +12,27 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 
 /**
- * 任务告警日志 Mapper（P5 告警 + 监控, P3-1-merge 重构）。
+ * 任务告警日志 Mapper
  *
- * <p>P3-1-merge: 原查询 {@code ydsz_job_alert_log} 表，现查询 {@code ydsz_alert_dispatch}
- * 表（过滤 source_type='CRONJOB'）。字段映射通过 MyBatis-Plus 的驼峰转下划线自动完成。
+ * <p>对应数据表 <code>ydsz_job_alert_log</code>。
+ * <p>告警日志记录每次触发的告警（任务、规则、触发时间、推送渠道、推送结果），用于告警审计与统计。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>idx_job_id — 任务维度查询索引</li>
+ *   <li>idx_alert_at — 告警时间排序索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.cronjob.domain.entity.job.JobAlertLog 告警日志实体
+ * @see com.njydsz.cronjob.server.service.JobAlertLogService 告警日志 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
 public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
