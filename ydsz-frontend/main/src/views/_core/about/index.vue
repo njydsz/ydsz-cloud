@@ -1,5 +1,5 @@
 <!--
- * main 列表/管理页面组件
+ * 关于页面组件 — 展示系统版本、技术栈等信息
  *
  * @path main\src\views\_core\about\index.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * main 列表/管理页面组件
+ * 数据分析仪表盘页面 — 展示概览指标、流量趋势、月访问量、访问来源等统计图表
  *
  * @path main\src\views\dashboard\analytics\index.vue
  * @author ydsz-team

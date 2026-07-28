@@ -1,5 +1,5 @@
 <!--
- * dictItem-form 表单页面组件
+ * 字典项表单组件 — 支持新增/编辑字典项枚举值
  *
  * @path apps\system-web\src\views\dictItem\dictItem-form.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * main 列表/管理页面组件
+ * 工作台页面 — 展示用户问候、项目列表、快捷导航、待办事项、最新动态
  *
  * @path main\src\views\dashboard\workspace\index.vue
  * @author ydsz-team

@@ -1,5 +1,5 @@
 <!--
- * main 列表/管理页面组件
+ * Qiankun 子应用挂载容器组件 — 作为微前端子应用的 DOM 挂载点
  *
  * @path main\src\views\_core\subapp\index.vue
  * @author ydsz-team
