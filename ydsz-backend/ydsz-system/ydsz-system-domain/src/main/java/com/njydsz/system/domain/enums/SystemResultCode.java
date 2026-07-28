@@ -1,12 +1,11 @@
 package com.njydsz.system.domain.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
-
 import lombok.Getter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 系统管理模块异常码枚举。
@@ -46,7 +45,7 @@ public enum SystemResultCode implements ExceptionCode {
 
     // ==================== B93001-B93099 应用信息 ====================
     APP_INFO_NOT_FOUND("B93001", "system.app.info.not.found", 404),
-    APP_KEY_DUPLICATE("B93002", "system.app.key.duplicate")
+    APP_KEY_DUPLICATE("B93002", "system.app.key.duplicate");
 
     /** 错误码 */
     private final String code;

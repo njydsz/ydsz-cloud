@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +22,7 @@ import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
@@ -101,13 +101,12 @@ import lombok.extern.slf4j.Slf4j;
 public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
     /**
-     * P2-8: 最大子流程嵌套深度（可配置）。
+     * P2-8 / P3-3.4: 最大子流程嵌套深度（可配置）。
      *
-     * <p>通过 {@code workflow.subprocess.max-nesting-depth} 属性配置，默认 3 层。
+     * <p>通过 {@code ydsz.flow.subprocess.max-nesting-depth} 属性配置，默认 3 层。
      * 生产环境可根据业务复杂度调整，建议不超过 10 层（过深嵌套难以维护且影响性能）。
      */
-    @Value("${workflow.subprocess.max-nesting-depth:3}")
-    private int maxNestingDepth;
+    private final FlowProperties flowProperties;
 
     /** 流程实例 Mapper，查询/更新父实例和子流程实例 */
     private final FlowInstanceMapper instanceMapper;
@@ -146,6 +145,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
                     "子流程定义未发布或不存在: flowCode=" + subFlowCode);
         }
         // 3. 检查嵌套深度（P2-8: 可配置，默认 3 层）
+        int maxNestingDepth = flowProperties.getSubProcess().getMaxNestingDepth();
         int nestingDepth = getNestingDepth(parentInstance.getId());
         if (nestingDepth >= maxNestingDepth) {
             throw new SysException(BaseResultCode.BAD_REQUEST,
@@ -419,7 +419,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     /**
      * 递归计算嵌套深度（从 parentInstanceId 向上追溯）
      *
-     * <p>P2-8: 迭代上限基于可配置的 {@link #maxNestingDepth}，额外加 10 作为安全余量，
+     * <p>P2-8: 迭代上限基于可配置的 maxNestingDepth，额外加 10 作为安全余量，
      * 防止数据异常（如循环引用）导致无限递归。
      *
      * @param parentInstanceId 当前父流程实例 ID
@@ -429,7 +429,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
         int depth = 0;
         String currentId = parentInstanceId;
         // 防止无限循环：上限 = 配置最大深度 + 10 安全余量
-        int maxIterations = maxNestingDepth + 10;
+        int maxIterations = flowProperties.getSubProcess().getMaxNestingDepth() + 10;
         while (currentId != null && depth < maxIterations) {
             FlowInstance instance = instanceMapper.selectById(currentId);
             if (instance == null) {

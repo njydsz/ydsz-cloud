@@ -56,7 +56,7 @@ public enum MessageResultCode implements ExceptionCode {
     // ==================== B91401-B91499 退订/偏好/反馈 ====================
     UNSUBSCRIBE_TOKEN_INVALID("B91401", "message.unsubscribe.token.invalid"),
     PREFERENCE_NOT_FOUND("B91402", "message.preference.not.found", 404),
-    FEEDBACK_NOT_FOUND("B91403", "message.feedback.not.found", 404)
+    FEEDBACK_NOT_FOUND("B91403", "message.feedback.not.found", 404);
 
     /** 错误码 */
     private final String code;

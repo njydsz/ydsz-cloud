@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -17,6 +16,7 @@ import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.entity.FlowAttachment;
 import com.njydsz.workflow.infra.mapper.FlowAttachmentMapper;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 
 import lombok.RequiredArgsConstructor;
@@ -101,10 +101,8 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
     /** 审批附件 Mapper，管理 ydsz_flow_attachment 表 */
     private final FlowAttachmentMapper attachmentMapper;
-
-    /** P2-3: 外部预览服务地址（kkFileView/Office Online），如 http://preview.example.com/onlinePreview?url={url} */
-    @Value("${workflow.attachment.preview-server-url:}")
-    private String previewServerUrl;
+    /** P3-3.4: 附件预览配置统一从 FlowProperties 读取 */
+    private final FlowProperties flowProperties;
 
     /** 支持在线预览的图片扩展名 */
     private static final Set<String> IMAGE_EXTS = Set.of(
@@ -253,6 +251,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
             return null;
         }
         if ("OFFICE".equals(previewType)) {
+            String previewServerUrl = flowProperties.getAttachment().getPreviewServerUrl();
             if (!StringUtils.hasText(previewServerUrl)) {
                 return null;
             }

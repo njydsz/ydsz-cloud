@@ -1,12 +1,11 @@
 package com.njydsz.literule.domain.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
-
 import lombok.Getter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 轻量规则引擎模块异常码枚举。
@@ -47,7 +46,7 @@ public enum LiteruleResultCode implements ExceptionCode {
     // ==================== B93301-B93399 测试用例/DSL ====================
     TEST_CASE_NOT_FOUND("B93301", "literule.test.case.not.found", 404),
     DSL_PARSE_ERROR("B93302", "literule.dsl.parse.error"),
-    VARIABLE_DEF_NOT_FOUND("B93303", "literule.variable.def.not.found", 404)
+    VARIABLE_DEF_NOT_FOUND("B93303", "literule.variable.def.not.found", 404);
 
     /** 错误码 */
     private final String code;

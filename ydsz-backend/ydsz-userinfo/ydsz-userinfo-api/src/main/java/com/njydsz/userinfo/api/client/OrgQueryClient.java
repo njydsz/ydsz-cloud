@@ -29,6 +29,9 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  *   <li>部门编码 → 部门负责人（{@link #getDeptLeaderByDeptCode}）</li>
  * </ul>
  *
+ * <p>另外提供 5 个 batch-names 批量名称富化接口，供 {@code UserInfoNameAssembler}
+ * 在跨模块 VO 富化场景下一次 Feign 往返解析 ID → 名称映射，避免 N+1 调用。
+ *
  * <p>所有 ID 均为 String 类型（雪花算法字符串），与项目 ID 约定一致。
  *
  * @author ydsz-team
@@ -36,23 +39,30 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  */
 @FeignClient(name = FeignClientConstants.USERINFO, contextId = "orgQueryClient",
         fallback = OrgQueryClientFallback.class)
-
-/**
- * OrgQueryClient Feign 客户端接口，声明跨服务远程调用。
- *
- * <p>所属包：{@code com.njydsz.userinfo.api.client}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public interface OrgQueryClient {
 
+    /**
+     * 根据 ID 查询用户信息（跨服务远程调用）。
+     *
+     * @param userId 用户 ID
+     * @return 用户账号 VO（已脱敏，不含密码等敏感字段）
+     */
     @GetMapping("/api/internal/user/info")
     BaseResponse<UserAccountVO> queryUserById(@RequestParam String userId);
 
+    /**
+     * 获取部门树形结构（全量递归树）。
+     *
+     * @return 部门树形 VO 列表（根节点列表，各节点含 children 子树）
+     */
     @GetMapping("/api/internal/dept/tree")
     BaseResponse<List<DepartmentTreeVO>> getDeptTree();
 
+    /**
+     * 获取部门扁平列表（不分层）。
+     *
+     * @return 部门 VO 列表
+     */
     @GetMapping("/api/internal/dept/list")
     BaseResponse<List<DepartmentVO>> getDeptList();
 

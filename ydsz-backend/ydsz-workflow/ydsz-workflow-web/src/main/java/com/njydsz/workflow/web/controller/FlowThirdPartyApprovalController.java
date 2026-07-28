@@ -147,7 +147,8 @@ public class FlowThirdPartyApprovalController {
             @RequestBody Map<String, Object> body) {
         String platform = ThirdPartyPlatform.FEISHU.name();
         String encrypt = extractEncrypt(body);
-        if (!FeishuSignatureUtil.verifySignature(timestamp, nonce, encrypt, signature, feishuAppSecret)) {
+        if (!FeishuSignatureUtil.verifySignature(timestamp, nonce, encrypt, signature,
+                flowProperties.getThirdParty().getFeishu().getAppSecret())) {
             log.warn("[ThirdPartyCallback] 飞书签名校验失败: timestamp={} nonce={}", timestamp, nonce);
             return fail("signature verify failed");
         }
@@ -173,7 +174,9 @@ public class FlowThirdPartyApprovalController {
             @RequestBody Map<String, Object> body) {
         String platform = ThirdPartyPlatform.WECOM.name();
         String encrypt = extractEncrypt(body);
-        if (!WeComSignatureUtil.verifySignature(weComToken, timestamp, nonce, encrypt, msgSignature)) {
+        if (!WeComSignatureUtil.verifySignature(
+                flowProperties.getThirdParty().getWecom().getToken(),
+                timestamp, nonce, encrypt, msgSignature)) {
             log.warn("[ThirdPartyCallback] 企微签名校验失败: timestamp={} nonce={}", timestamp, nonce);
             return fail("signature verify failed");
         }

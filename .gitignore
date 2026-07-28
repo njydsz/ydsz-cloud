@@ -62,7 +62,10 @@ coverage/
 # IDE
 # ========================
 .idea/
+.codebuddy/
+.github/
 .vscode/
+.trae/
 *.iml
 *.iws
 *.ipr

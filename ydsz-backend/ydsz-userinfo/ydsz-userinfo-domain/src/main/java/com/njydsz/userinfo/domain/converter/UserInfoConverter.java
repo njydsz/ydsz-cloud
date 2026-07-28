@@ -52,9 +52,32 @@ public interface UserInfoConverter {
     UserInfoConverter INSTANT = Mappers.getMapper(UserInfoConverter.class);
 
     // ===== Company =====
+
+    /**
+     * 公司实体 → 公司 VO
+     *
+     * @param entity 公司实体
+     * @return 公司 VO（不含 deleted/createdBy 等内部字段）
+     */
     CompanyVO entityToVO(Company entity);
+
+    /**
+     * 公司实体列表 → 公司 VO 列表
+     *
+     * @param entities 公司实体列表
+     * @return 公司 VO 列表
+     */
     List<CompanyVO> companyListToVO(List<Company> entities);
 
+    /**
+     * 公司新增 DTO → 公司实体
+     *
+     * <p> MpBaseEntity 的自动填充字段（id/deleted/revision/tenantId/createdBy/createdAt/updatedBy/updatedAt）
+     * 通过 @Mapping(ignore = true) 忽略，由框架自动填充。
+     *
+     * @param dto 公司新增 DTO
+     * @return 公司实体（未持久化）
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
@@ -65,6 +88,14 @@ public interface UserInfoConverter {
     @Mapping(target = "updatedAt", ignore = true)
     Company postDtoToEntity(CompanyPostDTO dto);
 
+    /**
+     * 公司修改 DTO → 公司实体
+     *
+     * <p>保留 id 字段用于定位更新记录，自动填充字段中 updatedBy/updatedAt 由框架更新。
+     *
+     * @param dto 公司修改 DTO
+     * @return 公司实体（含 id，用于条件更新）
+     */
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
@@ -73,11 +104,45 @@ public interface UserInfoConverter {
     Company putDtoToEntity(CompanyPutDTO dto);
 
     // ===== Department =====
+
+    /**
+     * 部门实体 → 部门 VO（扁平结构）
+     *
+     * @param entity 部门实体
+     * @return 部门 VO
+     */
     DepartmentVO entityToVO(Department entity);
+
+    /**
+     * 部门实体列表 → 部门 VO 列表
+     *
+     * @param entities 部门实体列表
+     * @return 部门 VO 列表
+     */
     List<DepartmentVO> departmentListToVO(List<Department> entities);
+
+    /**
+     * 部门实体 → 部门树形 VO（含 children 字段）
+     *
+     * @param entity 部门实体
+     * @return 部门树形 VO
+     */
     DepartmentTreeVO entityToTreeVO(Department entity);
+
+    /**
+     * 部门实体列表 → 部门树形 VO 列表
+     *
+     * @param entities 部门实体列表
+     * @return 部门树形 VO 列表
+     */
     List<DepartmentTreeVO> departmentTreeListToVO(List<Department> entities);
 
+    /**
+     * 部门新增 DTO → 部门实体
+     *
+     * @param dto 部门新增 DTO
+     * @return 部门实体（未持久化）
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
@@ -88,6 +153,12 @@ public interface UserInfoConverter {
     @Mapping(target = "updatedAt", ignore = true)
     Department postDtoToEntity(DepartmentPostDTO dto);
 
+    /**
+     * 部门修改 DTO → 部门实体
+     *
+     * @param dto 部门修改 DTO
+     * @return 部门实体（含 id）
+     */
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
@@ -96,9 +167,29 @@ public interface UserInfoConverter {
     Department putDtoToEntity(DepartmentPutDTO dto);
 
     // ===== Language =====
+
+    /**
+     * 语言实体 → 语言 VO
+     *
+     * @param entity 语言实体
+     * @return 语言 VO
+     */
     LanguageVO entityToVO(Language entity);
+
+    /**
+     * 语言实体列表 → 语言 VO 列表
+     *
+     * @param entities 语言实体列表
+     * @return 语言 VO 列表
+     */
     List<LanguageVO> languageListToVO(List<Language> entities);
 
+    /**
+     * 语言新增 DTO → 语言实体
+     *
+     * @param dto 语言新增 DTO
+     * @return 语言实体（未持久化）
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
@@ -109,6 +200,12 @@ public interface UserInfoConverter {
     @Mapping(target = "updatedAt", ignore = true)
     Language postDtoToEntity(LanguagePostDTO dto);
 
+    /**
+     * 语言修改 DTO → 语言实体
+     *
+     * @param dto 语言修改 DTO
+     * @return 语言实体（含 id）
+     */
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
@@ -117,11 +214,45 @@ public interface UserInfoConverter {
     Language putDtoToEntity(LanguagePutDTO dto);
 
     // ===== Menu =====
+
+    /**
+     * 菜单实体 → 菜单 VO（扁平结构）
+     *
+     * @param entity 菜单实体
+     * @return 菜单 VO
+     */
     MenuVO entityToVO(Menu entity);
+
+    /**
+     * 菜单实体列表 → 菜单 VO 列表
+     *
+     * @param entities 菜单实体列表
+     * @return 菜单 VO 列表
+     */
     List<MenuVO> menuListToVO(List<Menu> entities);
+
+    /**
+     * 菜单实体 → 菜单树形 VO（含 children 字段）
+     *
+     * @param entity 菜单实体
+     * @return 菜单树形 VO
+     */
     MenuTreeVO entityToMenuTreeVO(Menu entity);
+
+    /**
+     * 菜单实体列表 → 菜单树形 VO 列表
+     *
+     * @param entities 菜单实体列表
+     * @return 菜单树形 VO 列表
+     */
     List<MenuTreeVO> menuTreeListToVO(List<Menu> entities);
 
+    /**
+     * 菜单新增 DTO → 菜单实体
+     *
+     * @param dto 菜单新增 DTO
+     * @return 菜单实体（未持久化）
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
@@ -132,6 +263,12 @@ public interface UserInfoConverter {
     @Mapping(target = "updatedAt", ignore = true)
     Menu postDtoToEntity(MenuPostDTO dto);
 
+    /**
+     * 菜单修改 DTO → 菜单实体
+     *
+     * @param dto 菜单修改 DTO
+     * @return 菜单实体（含 id）
+     */
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
@@ -140,9 +277,29 @@ public interface UserInfoConverter {
     Menu putDtoToEntity(MenuPutDTO dto);
 
     // ===== Post =====
+
+    /**
+     * 岗位实体 → 岗位 VO
+     *
+     * @param entity 岗位实体
+     * @return 岗位 VO
+     */
     PostVO entityToVO(Post entity);
+
+    /**
+     * 岗位实体列表 → 岗位 VO 列表
+     *
+     * @param entities 岗位实体列表
+     * @return 岗位 VO 列表
+     */
     List<PostVO> postListToVO(List<Post> entities);
 
+    /**
+     * 岗位新增 DTO → 岗位实体
+     *
+     * @param dto 岗位新增 DTO
+     * @return 岗位实体（未持久化）
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
@@ -153,6 +310,12 @@ public interface UserInfoConverter {
     @Mapping(target = "updatedAt", ignore = true)
     Post postDtoToEntity(PostPostDTO dto);
 
+    /**
+     * 岗位修改 DTO → 岗位实体
+     *
+     * @param dto 岗位修改 DTO
+     * @return 岗位实体（含 id）
+     */
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
@@ -161,9 +324,29 @@ public interface UserInfoConverter {
     Post putDtoToEntity(PostPutDTO dto);
 
     // ===== Role =====
+
+    /**
+     * 角色实体 → 角色 VO
+     *
+     * @param entity 角色实体
+     * @return 角色 VO
+     */
     RoleVO entityToVO(Role entity);
+
+    /**
+     * 角色实体列表 → 角色 VO 列表
+     *
+     * @param entities 角色实体列表
+     * @return 角色 VO 列表
+     */
     List<RoleVO> roleListToVO(List<Role> entities);
 
+    /**
+     * 角色新增 DTO → 角色实体
+     *
+     * @param dto 角色新增 DTO
+     * @return 角色实体（未持久化）
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
@@ -174,6 +357,12 @@ public interface UserInfoConverter {
     @Mapping(target = "updatedAt", ignore = true)
     Role postDtoToEntity(RolePostDTO dto);
 
+    /**
+     * 角色修改 DTO → 角色实体
+     *
+     * @param dto 角色修改 DTO
+     * @return 角色实体（含 id）
+     */
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
@@ -182,9 +371,33 @@ public interface UserInfoConverter {
     Role putDtoToEntity(RolePutDTO dto);
 
     // ===== UserAccount =====
+
+    /**
+     * 用户账号实体 → 用户账号 VO
+     *
+     * <p>自动排除 password、loginFailCount、lockedUntil 等敏感字段。
+     *
+     * @param entity 用户账号实体
+     * @return 用户账号 VO（已脱敏）
+     */
     UserAccountVO entityToVO(UserAccount entity);
+
+    /**
+     * 用户账号实体列表 → 用户账号 VO 列表
+     *
+     * @param entities 用户账号实体列表
+     * @return 用户账号 VO 列表（已脱敏）
+     */
     List<UserAccountVO> userAccountListToVO(List<UserAccount> entities);
 
+    /**
+     * 用户创建 DTO → 用户账号实体
+     *
+     * <p>用于创建用户场景，password 字段由 Service 层加密后设置。
+     *
+     * @param dto 用户创建 DTO
+     * @return 用户账号实体（未持久化，password 为 null 需 Service 层填充）
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "revision", ignore = true)
