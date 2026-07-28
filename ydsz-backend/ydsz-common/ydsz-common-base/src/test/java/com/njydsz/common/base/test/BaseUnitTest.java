@@ -1,10 +1,8 @@
 package com.njydsz.common.base.test;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.quality.Strictness;
 
 /**
  * 后端单元测试基类。

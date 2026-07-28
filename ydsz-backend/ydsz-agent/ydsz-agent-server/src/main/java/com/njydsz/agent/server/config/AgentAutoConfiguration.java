@@ -225,16 +225,11 @@ public class AgentAutoConfiguration {
     public DagOrchestrationExecutor dagOrchestrationExecutor(
             LlmClient llmClient, AgentProperties properties, AgentFactory agentFactory,
             ApplicationContext applicationContext) {
-        // P0-1: 优先使用 common-thread 统一线程池（agentDagExecutor, type=VIRTUAL）
-        try {
-            ExecutorService dagExecutor =
-                    applicationContext.getBean("agentDagExecutor", ExecutorService.class);
-            log.info("[Agent] DagOrchestrationExecutor 使用统一线程池 agentDagExecutor");
-            return new DagOrchestrationExecutor(llmClient, properties, agentFactory, dagExecutor);
-        } catch (Exception e) {
-            log.warn("[Agent] agentDagExecutor 未注入, DagOrchestrationExecutor 使用本地虚拟线程池");
-            return new DagOrchestrationExecutor(llmClient, properties, agentFactory);
-        }
+        // P0-3: 强制使用 common-thread 统一线程池（agentDagExecutor, type=VIRTUAL）
+        ExecutorService dagExecutor =
+                applicationContext.getBean("agentDagExecutor", ExecutorService.class);
+        log.info("[Agent] DagOrchestrationExecutor 使用统一线程池 agentDagExecutor");
+        return new DagOrchestrationExecutor(llmClient, properties, agentFactory, dagExecutor);
     }
 
     @Bean

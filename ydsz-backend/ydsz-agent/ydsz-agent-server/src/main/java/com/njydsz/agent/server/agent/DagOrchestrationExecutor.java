@@ -361,19 +361,7 @@ public class DagOrchestrationExecutor {
 
     @PreDestroy
     public void shutdown() {
-        // P0-1: 仅当 ownsExecutor=true 时关闭（外部线程池由 common-thread 管理生命周期）
-        if (!ownsExecutor) {
-            return;
-        }
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            executor.shutdownNow();
-        }
+        // P0-3: executor 由 common-thread 管理生命周期，无需手动关闭
     }
 
     public record DagExecutionResult(

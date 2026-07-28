@@ -929,7 +929,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 1. 提取 definition 元数据
-        Map<String, Object> defJson = MapUtils.getMap(root, "definition");
+        Map<String, Object> defJson = MapUtils.safeCastMap(MapUtils.getMap(root, "definition"));
         if (defJson == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "JSON 缺少 definition 字段");
         }
@@ -951,7 +951,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         dto.setProviderTraceId(MapUtils.getString(defJson, "providerTraceId"));
 
         // 3. 提取 nodes
-        List<Object> nodesJson = MapUtils.getList(root, "nodes");
+        List<?> nodesJson = MapUtils.getList(root, "nodes");
         if (nodesJson != null && !nodesJson.isEmpty()) {
             List<FlowDeployProcessDTO.FlowNodeDTO> nodes = new ArrayList<>();
             for (int i = 0; i < nodesJson.size(); i++) {
@@ -968,7 +968,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 4. 提取 skips（从 ext.sourceRef 还原 fromNodeCode）
-        List<Object> skipsJson = MapUtils.getList(root, "skips");
+        List<?> skipsJson = MapUtils.getList(root, "skips");
         if (skipsJson != null && !skipsJson.isEmpty()) {
             List<FlowDeployProcessDTO.FlowSkipDTO> skips = new ArrayList<>();
             for (int i = 0; i < skipsJson.size(); i++) {

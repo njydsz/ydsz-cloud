@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -113,15 +114,15 @@ public class AliyunSmsProvider implements SmsProvider {
                     + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
             Map<String, Object> json = YdszJson.parseMap(resp.getBody());
-            String code = json.getString("Code");
+            String code = MapUtils.getString(json, "Code");
             if ("OK".equals(code)) {
-                String bizId = json.getString("BizId");
+                String bizId = MapUtils.getString(json, "BizId");
                 log.info("[AliyunSms] 发送成功: phone={} bizId={}", phone, bizId);
                 return MessageResult.ok("SMS", "ALIYUN-" + bizId);
             }
             log.warn("[AliyunSms] 发送失败: phone={} code={} msg={}",
-                    phone, code, json.getString("Message"));
-            return MessageResult.fail("SMS", code + ": " + json.getString("Message"));
+                    phone, code, MapUtils.getString(json, "Message"));
+            return MessageResult.fail("SMS", code + ": " + MapUtils.getString(json, "Message"));
         } catch (Exception e) {
             log.error("[AliyunSms] 发送异常: phone={} err={}", phone, e.getMessage(), e);
             return MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage());
@@ -209,17 +210,17 @@ public class AliyunSmsProvider implements SmsProvider {
             String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
             Map<String, Object> json = YdszJson.parseMap(resp.getBody());
-            String code = json.getString("Code");
+            String code = MapUtils.getString(json, "Code");
             if ("OK".equals(code)) {
-                String bizId = json.getString("BizId");
+                String bizId = MapUtils.getString(json, "BizId");
                 log.info("[AliyunSms] 批量发送成功: count={} bizId={}", requests.size(), bizId);
                 for (int i = 0; i < requests.size(); i++) {
                     results.add(MessageResult.ok("SMS", "ALIYUN-" + bizId + "-" + i));
                 }
             } else {
-                log.warn("[AliyunSms] 批量发送失败: code={} msg={}", code, json.getString("Message"));
+                log.warn("[AliyunSms] 批量发送失败: code={} msg={}", code, MapUtils.getString(json, "Message"));
                 for (int i = 0; i < requests.size(); i++) {
-                    results.add(MessageResult.fail("SMS", code + ": " + json.getString("Message")));
+                    results.add(MessageResult.fail("SMS", code + ": " + MapUtils.getString(json, "Message")));
                 }
             }
         } catch (Exception e) {
@@ -262,15 +263,15 @@ public class AliyunSmsProvider implements SmsProvider {
             String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
             Map<String, Object> json = YdszJson.parseMap(resp.getBody());
-            String code = json.getString("Code");
+            String code = MapUtils.getString(json, "Code");
             if ("OK".equals(code)) {
-                Map<String, Object> detail = json.getJSONObject("SmsSendDetailDTOs");
+                Map<String, Object> detail = MapUtils.safeCastMap(json.get("SmsSendDetailDTOs"));
                 if (detail != null) {
-                    var arr = detail.getJSONArray("SmsSendDetailDTO");
+                    List<Map<String, Object>> arr = MapUtils.getListOfMaps(detail, "SmsSendDetailDTO");
                     if (arr != null && !arr.isEmpty()) {
-                        Map<String, Object> first = arr.getJSONObject(0);
-                        String sendStatus = first.getString("SendStatus");
-                        String errMsg = first.getString("ErrCode");
+                        Map<String, Object> first = arr.get(0);
+                        String sendStatus = MapUtils.getString(first, "SendStatus");
+                        String errMsg = MapUtils.getString(first, "ErrCode");
                         if ("DELIVERED".equals(sendStatus)) {
                             return MessageResult.ok("SMS", providerTraceId);
                         } else if ("FAILED".equals(sendStatus)) {
@@ -284,7 +285,7 @@ public class AliyunSmsProvider implements SmsProvider {
                 MessageResult r = new MessageResult("SMS", "UNKNOWN", providerTraceId, null);
                 return r;
             }
-            return MessageResult.fail("SMS", code + ": " + json.getString("Message"));
+            return MessageResult.fail("SMS", code + ": " + MapUtils.getString(json, "Message"));
         } catch (Exception e) {
             log.error("[AliyunSms] 回执查询异常: bizId={} err={}", bizId, e.getMessage(), e);
             return MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage());

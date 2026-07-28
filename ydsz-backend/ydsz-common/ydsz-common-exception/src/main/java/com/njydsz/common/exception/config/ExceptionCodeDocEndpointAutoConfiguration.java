@@ -8,6 +8,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
+import com.njydsz.common.exception.registry.ResultCodeRegistry;
+import com.njydsz.common.exception.registry.ResultCodeScanner;
 
 /**
  * 异常码文档端点配置。
@@ -35,5 +37,28 @@ public class ExceptionCodeDocEndpointAutoConfiguration {
     @ConditionalOnMissingBean(ExceptionCodeDocEndpoint.class)
     public ExceptionCodeDocEndpoint exceptionCodeDocEndpoint(MessageSource messageSource) {
         return new ExceptionCodeDocEndpoint(messageSource);
+    }
+
+    /**
+     * 创建全局错误码注册表 Bean
+     *
+     * @return ResultCodeRegistry 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ResultCodeRegistry resultCodeRegistry() {
+        return new ResultCodeRegistry();
+    }
+
+    /**
+     * 创建错误码自动扫描注册器 Bean
+     *
+     * @param registry 全局错误码注册表
+     * @return ResultCodeScanner 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ResultCodeScanner resultCodeScanner(ResultCodeRegistry registry) {
+        return new ResultCodeScanner(registry);
     }
 }

@@ -151,7 +151,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addAttachments(MimeMessageHelper helper, String attachmentsJson) {
         try {
-            var attachments = YdszJson.parseArray(attachmentsJson);
+            var attachments = YdszJson.parseArrayToJsonArray(attachmentsJson);
             for (int i = 0; i < attachments.size(); i++) {
                 var item = attachments.getJSONObject(i);
                 String name = item.getString("name");
@@ -176,7 +176,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addInlineImages(MimeMessageHelper helper, String inlineJson) {
         try {
-            var images = YdszJson.parseArray(inlineJson);
+            var images = YdszJson.parseArrayToJsonArray(inlineJson);
             for (int i = 0; i < images.size(); i++) {
                 var item = images.getJSONObject(i);
                 String cid = item.getString("cid");

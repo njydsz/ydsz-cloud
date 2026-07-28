@@ -217,4 +217,15 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
             log.warn("[NacosRoutes] 注册配置变更监听器失败: {}", e.getMessage());
         }
     }
+
+    /**
+     * P0-2: 优雅关闭线程池，避免线程泄漏
+     */
+    @PreDestroy
+    public void shutdown() {
+        if (!sharedExecutor.isShutdown()) {
+            sharedExecutor.shutdown();
+            log.info("[NacosRoutes] 共享线程池已关闭");
+        }
+    }
 }

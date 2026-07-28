@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -103,14 +104,14 @@ public class GetuiPushProvider implements PushProvider {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
             ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
             Map<String, Object> json = YdszJson.parseMap(resp.getBody());
-            String code = json.getString("code");
+            String code = MapUtils.getString(json, "code");
             if ("10000".equals(code)) {
-                String taskId = json.getString("data");
+                String taskId = MapUtils.getString(json, "data");
                 log.info("[GetuiPush] 推送成功: cid={} taskId={}", cid, taskId);
                 return MessageResult.ok("PUSH", "GETUI-" + taskId);
             }
-            log.warn("[GetuiPush] 推送失败: cid={} code={} msg={}", cid, code, json.getString("msg"));
-            return MessageResult.fail("PUSH", code + ": " + json.getString("msg"));
+            log.warn("[GetuiPush] 推送失败: cid={} code={} msg={}", cid, code, MapUtils.getString(json, "msg"));
+            return MessageResult.fail("PUSH", code + ": " + MapUtils.getString(json, "msg"));
         } catch (Exception e) {
             log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage(), e);
             return MessageResult.fail("PUSH", e.getClass().getSimpleName() + ": " + e.getMessage());

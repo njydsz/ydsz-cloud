@@ -212,13 +212,15 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if (roleCode == null || roleCode.isBlank()) {
             return Collections.emptyList();
         }
-        BaseResponse<List<Long>> resp = orgQueryClient.listUserIdsByRoleCode(roleCode);
+        BaseResponse<List<String>> resp = orgQueryClient.listUserIdsByRoleCode(roleCode);
         if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
             log.debug("[Flow] 角色展开返回空: roleCode={} resp={}", roleCode,
                     resp == null ? "null" : resp.getCode());
             return Collections.emptyList();
         }
         return resp.getData().stream()
+                .filter(Objects::nonNull)
+                .map(this::parseLong)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -270,13 +272,15 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if (positionCode == null || positionCode.isBlank()) {
             return Collections.emptyList();
         }
-        BaseResponse<List<Long>> resp = orgQueryClient.listUserIdsByPositionCode(positionCode);
+        BaseResponse<List<String>> resp = orgQueryClient.listUserIdsByPositionCode(positionCode);
         if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
             log.debug("[Flow] 岗位展开返回空: positionCode={} resp={}", positionCode,
                     resp == null ? "null" : resp.getCode());
             return Collections.emptyList();
         }
         return resp.getData().stream()
+                .filter(Objects::nonNull)
+                .map(this::parseLong)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -298,7 +302,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         Long leaderId;
         if (deptToken.matches("\\d+")) {
             // 纯数字：按 deptId 查
-            BaseResponse<String> resp = orgQueryClient.getDeptLeaderByDeptId(Long.parseLong(deptToken));
+            BaseResponse<String> resp = orgQueryClient.getDeptLeaderByDeptId(deptToken);
             leaderId = extractLong(resp);
         } else {
             // 非数字：按 deptCode 查
@@ -354,7 +358,20 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if (resp == null || resp.getCode() != BaseResponse.SUCCESS) {
             return null;
         }
-        String data = resp.getData();
+        return parseLong(resp.getData());
+    }
+
+    /**
+     * 将字符串 ID 安全解析为 Long
+     *
+     * <p>OrgQueryClient 返回的用户/部门 ID 均为 String 形式（雪花算法字符串），
+     * 此方法将其解析为 Long 以匹配 {@link FlowAssigneeResolver} 接口的 {@code List<Long>} 返回类型。
+     * 解析失败时返回 null（不抛异常），由调用方过滤。
+     *
+     * @param data 字符串 ID
+     * @return Long 值，入参为空或解析失败时返回 null
+     */
+    private Long parseLong(String data) {
         if (data == null || data.isBlank()) {
             return null;
         }

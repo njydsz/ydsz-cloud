@@ -1223,4 +1223,25 @@ public class MapUtils {
         }
         return toStringObjectMap(raw);
     }
+
+    /**
+     * 从 List 中按下标取出元素并转换为 {@code Map<String, Object>}。
+     *
+     * <p>典型场景：JSON 反序列化后得到 {@code List<?>}（如 BPMN 节点列表），
+     * 需要按下标取出每个元素并归一化为 {@code Map<String, Object>} 以便业务读取字段。
+     *
+     * <p>入参为 null / 下标越界 / 元素非 Map 时返回 null（不抛异常）。
+     *
+     * @param list  原始 List
+     * @param index 元素下标
+     * @return 强转后的 Map；取不到时返回 null
+     * @since 1.0.0
+     */
+    public static Map<String, Object> getMapFromList(List<?> list, int index) {
+        if (list == null || index < 0 || index >= list.size()) {
+            return null;
+        }
+        Object item = list.get(index);
+        return safeCastMap(item);
+    }
 }

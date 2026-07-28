@@ -7,6 +7,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
+import com.njydsz.common.exception.registry.YdszResultCode;
 
 /**
  * AI 智能体模块异常码枚举。
@@ -26,6 +27,7 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
+@YdszResultCode(module = "agent", description = "AI Agent")
 public enum AgentResultCode implements ExceptionCode {
 
     // ==================== B94001-B94099 Agent 定义/执行 ====================

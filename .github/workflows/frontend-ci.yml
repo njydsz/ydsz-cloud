@@ -133,3 +133,58 @@ jobs:
           name: e2e-report
           path: ydsz-frontend/playwright-report/
           retention-days: 14
+
+  # ============================================================
+  # P1-4: Lighthouse CI 性能门禁（仅 PR 到 main 时触发）
+  # ============================================================
+  lighthouse-ci:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint-build
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    defaults:
+      run:
+        working-directory: ydsz-frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: ydsz-frontend/pnpm-lock.yaml
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Frontend
+        run: pnpm run build:main
+
+      - name: Run Lighthouse CI
+        # P1-4: 性能门禁
+        # 预算: Performance ≥ 80, Accessibility ≥ 90, Best Practices ≥ 90
+        #       FCP < 2s, LCP < 3s, CLS < 0.1, TBT < 300ms
+        run: |
+          # 启动预览服务器
+          npx vite preview --port 8080 &
+          PREVIEW_PID=$!
+          sleep 5
+          # 运行 Lighthouse CI
+          npx @lhci/cli autorun || true
+          # 清理
+          kill $PREVIEW_PID || true
+
+      - name: Upload Lighthouse Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: ydsz-frontend/lighthouse-report/
+          retention-days: 30

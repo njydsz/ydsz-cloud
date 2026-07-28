@@ -475,7 +475,6 @@ public class LiteRuleAutoConfiguration {
      * @param ruleEngine     规则引擎
      * @param evaluator      表达式求值器
      * @param configProvider 规则配置提供者
-     * @param versionRepo    版本仓库（可选）
      * @param eventPublisher 事件发布器
      * @return RuleAdminService 实例
      */

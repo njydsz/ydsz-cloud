@@ -18,6 +18,31 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  *   <li>通过 addToWhitelist() 显式加入白名单的类</li>
  *   <li>启动时由 {@link AutoTypeWhitelistScanner} 扫描的 {@code @YdszJsonClass} 注解类（含 seeAlso 子类型）</li>
  *   <li>类型检查结果缓存（TYPE_CHECK_CACHE），避免每次反序列化重复扫描黑白名单</li>
+ *   <li>黑名单类的内部类（通过 {@code OuterClass$InnerClass} 命名约定）会被一并拦截</li>
+ * </ul>
+ *
+ * <p><b>内置黑名单覆盖范围（参照 ysoserial / marshalsec / 主流 CVE 公告）：</b></p>
+ * <ul>
+ *   <li><b>JdbcRowSetImpl 家族</b>：com.sun.rowset.* 全系列 + javax.sql.rowset.BaseRowSet</li>
+ *   <li><b>RMI / JNDI 入口</b>：javax.naming.InitialContext / javax.naming.ldap.LdapContext /
+ *       javax.management.remote.rmi.RMIConnector / sun.rmi.* 内部实现</li>
+ *   <li><b>Apache Commons Collections</b>：CC1~CC7 gadget 链全部 functors / comparators /
+ *       bag / map / keyvalue（同时覆盖 commons-collections 与 commons-collections4）</li>
+ *   <li><b>Apache Commons BeanUtils</b>：BeanComparator（ysoserial CommonsBeanutils1）</li>
+ *   <li><b>TemplatesImpl 字节码加载链</b>：JDK 内置版本 + Apache Xalan 版本 + TrAXFilter + AbstractTranslet</li>
+ *   <li><b>JDK 危险基础类</b>：ProcessBuilder / Runtime / ProcessImpl /
+ *       EventHandler（JDK7u21）/ MethodHandle / Proxy / Unsafe /
+ *       BCEL ClassLoader / sun.security 私钥实现</li>
+ *   <li><b>Spring Framework</b>：ClassPathXmlApplicationContext / FileSystemXmlApplicationContext /
+ *       GenericXmlApplicationContext / JtaTransactionManager（CVE-2018-1258）/
+ *       JndiObjectTargetSource / PropertyPathFactoryBean / AbstractBeanFactoryPointcutAdvisor</li>
+ *   <li><b>Apache Log4j2</b>：CVE-2021-44228 / CVE-2021-45046 JNDI lookup 触发链
+ *       （MessagePatternConverter / JmsAppender / JndiManager / JndiLookup）</li>
+ *   <li><b>Apache Shiro / Logback / Commons Configuration</b>：JNDI 相关入口</li>
+ *   <li><b>脚本引擎</b>：Groovy1 / BeanShell1 gadget 链</li>
+ *   <li><b>数据源</b>：C3P0 / HikariCP / Tomcat DBCP JNDI 触发入口</li>
+ *   <li><b>字节码工具</b>：CGLib / Javassist / Jackson gadget</li>
+ *   <li><b>网络与文件 IO</b>：URL / Socket / File / Files 等敏感资源</li>
  * </ul>
  *
  * <p><b>安全模式：</b></p>
@@ -135,29 +160,191 @@ public final class AutoTypeChecker {
     }
 
     private static void initBuiltinBlacklist() {
+        // ==================== JDK JdbcRowSetImpl 家族（JNDI 注入经典入口） ====================
         BUILTIN_BLACKLIST.add("com.sun.rowset.JdbcRowSetImpl");
+        BUILTIN_BLACKLIST.add("com.sun.rowset.SerialRowSetImpl");
+        BUILTIN_BLACKLIST.add("com.sun.rowset.CachedRowSetImpl");
+        BUILTIN_BLACKLIST.add("com.sun.rowset.WebRowSetImpl");
+        BUILTIN_BLACKLIST.add("com.sun.rowset.FilteredRowSetImpl");
+        BUILTIN_BLACKLIST.add("com.sun.rowset.JoinRowSetImpl");
+        BUILTIN_BLACKLIST.add("javax.sql.rowset.BaseRowSet");
+
+        // ==================== RMI / JNDI 反序列化入口 ====================
         BUILTIN_BLACKLIST.add("java.rmi.server.UnicastRemoteObject");
         BUILTIN_BLACKLIST.add("java.rmi.server.UnicastRef");
         BUILTIN_BLACKLIST.add("java.rmi.registry.Registry");
         BUILTIN_BLACKLIST.add("java.rmi.Naming");
         BUILTIN_BLACKLIST.add("java.rmi.activation.Activator");
+        // sun.* 包内 RMI 内部实现（高版本 JDK 内置 gadget，CVE-2017-3241 等）
+        BUILTIN_BLACKLIST.add("sun.rmi.server.UnicastRef2");
+        BUILTIN_BLACKLIST.add("sun.rmi.server.UnicastServerRef");
+        BUILTIN_BLACKLIST.add("sun.rmi.registry.RegistryImpl");
+        BUILTIN_BLACKLIST.add("sun.rmi.transport.DGCImpl");
+        BUILTIN_BLACKLIST.add("sun.rmi.transport.LiveRef");
+        BUILTIN_BLACKLIST.add("sun.rmi.transport.tcp.TCPEndpoint");
+        BUILTIN_BLACKLIST.add("sun.rmi.transport.tcp.TCPChannel");
+        // JNDI 上下文与查找入口
+        BUILTIN_BLACKLIST.add("javax.naming.InitialContext");
+        BUILTIN_BLACKLIST.add("javax.naming.spi.NamingManager");
+        BUILTIN_BLACKLIST.add("javax.naming.ldap.LdapContext");
+        BUILTIN_BLACKLIST.add("javax.management.remote.JMXServiceURL");
+        BUILTIN_BLACKLIST.add("javax.management.remote.rmi.RMIConnector");
+        BUILTIN_BLACKLIST.add("javax.management.BadAttributeValueExpException");
+        // ScriptEngine
+        BUILTIN_BLACKLIST.add("javax.script.ScriptEngineManager");
+
+        // ==================== Apache Commons Collections gadget 链 ====================
+        // CC1 / CC5 / CC6 / CC7 gadget 链涉及的 functors / comparators / bag / map / keyvalue
         BUILTIN_BLACKLIST.add("org.apache.commons.collections.functors.InvokerTransformer");
         BUILTIN_BLACKLIST.add("org.apache.commons.collections.functors.InstantiateTransformer");
         BUILTIN_BLACKLIST.add("org.apache.commons.collections.functors.ConstantTransformer");
         BUILTIN_BLACKLIST.add("org.apache.commons.collections.functors.ChainedTransformer");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections.comparators.TransformingComparator");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections.keyvalue.TiedMapEntry");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections.bag.TreeBag");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections.map.LazyMap");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections.map.DefaultedMap");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections.Transformer");
+        // commons-collections4 对应 gadget
         BUILTIN_BLACKLIST.add("org.apache.commons.collections4.functors.InvokerTransformer");
         BUILTIN_BLACKLIST.add("org.apache.commons.collections4.functors.InstantiateTransformer");
         BUILTIN_BLACKLIST.add("org.apache.commons.collections4.functors.ConstantTransformer");
         BUILTIN_BLACKLIST.add("org.apache.commons.collections4.functors.ChainedTransformer");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections4.comparators.TransformingComparator");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections4.keyvalue.TiedMapEntry");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections4.bag.TreeBag");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections4.map.LazyMap");
+        BUILTIN_BLACKLIST.add("org.apache.commons.collections4.map.DefaultedMap");
+
+        // ==================== Apache Commons BeanUtils gadget 链 ====================
+        // BeanComparator + TemplatesImpl 组合（ysoserial CommonsBeanutils1）
+        BUILTIN_BLACKLIST.add("org.apache.commons.beanutils.BeanComparator");
+        BUILTIN_BLACKLIST.add("org.apache.commons.beanutils.PropertyUtilsBean");
+        BUILTIN_BLACKLIST.add("org.apache.commons.beanutils.BeanUtilsBean");
+        BUILTIN_BLACKLIST.add("org.apache.commons.beanutils.BeanUtils");
+
+        // ==================== TemplatesImpl 字节码加载链（XSLT / 多态触发） ====================
         BUILTIN_BLACKLIST.add("org.apache.xalan.xsltc.trax.TemplatesImpl");
         BUILTIN_BLACKLIST.add("com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl");
+        BUILTIN_BLACKLIST.add("com.sun.org.apache.xalan.internal.xsltc.trax.TrAXFilter");
+        BUILTIN_BLACKLIST.add("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+        BUILTIN_BLACKLIST.add("org.apache.xalan.xsltc.trax.TrAXFilter");
+        BUILTIN_BLACKLIST.add("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+
+        // ==================== JDK 危险基础类（命令执行 / 类加载 / 反射） ====================
         BUILTIN_BLACKLIST.add("java.lang.ProcessBuilder");
         BUILTIN_BLACKLIST.add("java.lang.Runtime");
-        BUILTIN_BLACKLIST.add("javax.naming.InitialContext");
-        BUILTIN_BLACKLIST.add("javax.naming.spi.NamingManager");
-        BUILTIN_BLACKLIST.add("javax.script.ScriptEngineManager");
+        // 反射 / MethodHandle / Proxy
+        BUILTIN_BLACKLIST.add("java.lang.reflect.Method");
+        BUILTIN_BLACKLIST.add("java.lang.reflect.Proxy");
+        BUILTIN_BLACKLIST.add("java.lang.invoke.MethodHandle");
+        BUILTIN_BLACKLIST.add("java.lang.invoke.MethodHandles");
+        // EventHandler（JDK7u21 gadget 链核心）
+        BUILTIN_BLACKLIST.add("java.beans.EventHandler");
+        // ClassLoader / System / Thread（敏感上下文）
+        BUILTIN_BLACKLIST.add("java.lang.Thread");
+        BUILTIN_BLACKLIST.add("java.lang.ClassLoader");
+        BUILTIN_BLACKLIST.add("java.lang.System");
+        // ProcessImpl（平台相关命令执行内部类）
+        BUILTIN_BLACKLIST.add("java.lang.ProcessImpl");
+        // sun.misc.Unsafe（直接内存操作）
+        BUILTIN_BLACKLIST.add("sun.misc.Unsafe");
+        BUILTIN_BLACKLIST.add("sun.reflect.ReflectionFactory");
+        // 私钥反序列化（伪造身份）
+        BUILTIN_BLACKLIST.add("sun.security.provider.DSAPrivateKey");
+        BUILTIN_BLACKLIST.add("sun.security.provider.RSAPrivateKey");
+        BUILTIN_BLACKLIST.add("sun.security.rsa.RSAPrivateKey");
+        BUILTIN_BLACKLIST.add("sun.security.ec.ECPrivateKeyImpl");
+        // BCEL ClassLoader（反序列化直接 defineClass）
+        BUILTIN_BLACKLIST.add("com.sun.org.apache.bcel.internal.util.ClassLoader");
+
+        // ==================== Spring Framework gadget 家族 ====================
         BUILTIN_BLACKLIST.add("org.springframework.beans.factory.ObjectFactory");
         BUILTIN_BLACKLIST.add("org.springframework.context.support.ClassPathXmlApplicationContext");
+        BUILTIN_BLACKLIST.add("org.springframework.context.support.FileSystemXmlApplicationContext");
+        BUILTIN_BLACKLIST.add("org.springframework.context.support.GenericXmlApplicationContext");
+        // JtaTransactionManager（CVE-2018-1258 / Spring2 gadget）
+        BUILTIN_BLACKLIST.add("org.springframework.transaction.jta.JtaTransactionManager");
+        BUILTIN_BLACKLIST.add("org.springframework.transaction.jta.UserTransactionAdapter");
+        // JNDI 相关
+        BUILTIN_BLACKLIST.add("org.springframework.jndi.JndiObjectTargetSource");
+        BUILTIN_BLACKLIST.add("org.springframework.jndi.JndiObjectFactoryBean");
+        BUILTIN_BLACKLIST.add("org.springframework.jndi.support.SimpleJndiBeanFactory");
+        // BeanFactory 链
+        BUILTIN_BLACKLIST.add("org.springframework.beans.factory.config.PropertyPathFactoryBean");
+        BUILTIN_BLACKLIST.add("org.springframework.beans.factory.config.BeanReferenceFactoryBean");
+        BUILTIN_BLACKLIST.add("org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean");
+        // AOP Advisor
+        BUILTIN_BLACKLIST.add("org.springframework.aop.support.AbstractBeanFactoryPointcutAdvisor");
+        BUILTIN_BLACKLIST.add("org.springframework.aop.framework.AdvisedSupport");
+        // RemoteInvocation
+        BUILTIN_BLACKLIST.add("org.springframework.remoting.support.RemoteInvocationSerializingInterceptor");
+        BUILTIN_BLACKLIST.add("org.springframework.remoting.support.RemoteInvocation");
+
+        // ==================== Groovy gadget 链（Groovy1） ====================
+        BUILTIN_BLACKLIST.add("org.codehaus.groovy.runtime.ConvertedClosure");
+        BUILTIN_BLACKLIST.add("org.codehaus.groovy.runtime.MethodClosure");
+        BUILTIN_BLACKLIST.add("org.codehaus.groovy.runtime.InvokerHelper");
+        BUILTIN_BLACKLIST.add("org.codehaus.groovy.reflection.CachedMethod");
+
+        // ==================== Hibernate gadget 链 ====================
+        BUILTIN_BLACKLIST.add("org.hibernate.jmx.StatisticsService");
+        BUILTIN_BLACKLIST.add("org.hibernate.property.access.spi.GetterMethodImpl");
+        BUILTIN_BLACKLIST.add("org.hibernate.tuple.component.AbstractComponentTuplizer");
+        BUILTIN_BLACKLIST.add("org.hibernate.tuple.component.PojoComponentTuplizer");
+        BUILTIN_BLACKLIST.add("org.hibernate.engine.spi.TypedValue");
+
+        // ==================== C3P0 / Hikari 数据源 JNDI gadget ====================
+        BUILTIN_BLACKLIST.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource");
+        BUILTIN_BLACKLIST.add("com.mchange.v2.c3p0.PoolBackedDataSource");
+        BUILTIN_BLACKLIST.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource");
+        BUILTIN_BLACKLIST.add("com.mchange.v2.c3p0.PoolConfig");
+        // HikariCP（通常作为受害数据源被构造，加入防范）
+        BUILTIN_BLACKLIST.add("com.zaxxer.hikari.HikariConfig");
+        BUILTIN_BLACKLIST.add("com.zaxxer.hikari.HikariDataSource");
+        // Tomcat DBCP（较少见但存在风险）
+        BUILTIN_BLACKLIST.add("org.apache.tomcat.dbcp.dbcp2.BasicDataSource");
+
+        // ==================== Apache Log4j2（Log4Shell CVE-2021-44228 / CVE-2021-45046） ====================
+        // 这些类是 JNDI lookup 触发链中的关键 PatternConverter
+        BUILTIN_BLACKLIST.add("org.apache.logging.log4j.core.pattern.MessagePatternConverter");
+        BUILTIN_BLACKLIST.add("org.apache.logging.log4j.core.pattern.JMSTopicPatternConverter");
+        BUILTIN_BLACKLIST.add("org.apache.logging.log4j.core.pattern.JMSQueuePatternConverter");
+        BUILTIN_BLACKLIST.add("org.apache.logging.log4j.core.appender.JdbcAppender");
+        BUILTIN_BLACKLIST.add("org.apache.logging.log4j.core.appender.JmsAppender");
+        BUILTIN_BLACKLIST.add("org.apache.logging.log4j.core.net.JndiManager");
+        BUILTIN_BLACKLIST.add("org.apache.logging.log4j.core.lookup.JndiLookup");
+
+        // ==================== Apache Shiro JNDI gadget ====================
+        BUILTIN_BLACKLIST.add("org.apache.shiro.jndi.JndObjectFactory");
+        BUILTIN_BLACKLIST.add("org.apache.shiro.realm.jndi.JndiRealmFactory");
+        BUILTIN_BLACKLIST.add("org.apache.shiro.jndi.JndiObjectFactory");
+
+        // ==================== Apache Commons Configuration JNDI ====================
+        BUILTIN_BLACKLIST.add("org.apache.commons.configuration2.jndi.JndiConfiguration");
+        BUILTIN_BLACKLIST.add("org.apache.commons.configuration.JNDIConfiguration");
+
+        // ==================== Logback JNDI ====================
+        BUILTIN_BLACKLIST.add("ch.qos.logback.core.db.JNDIConnectionSource");
+        BUILTIN_BLACKLIST.add("ch.qos.logback.classic.jmx.JMXConfigurator");
+
+        // ==================== CGLib / Javassist 字节码工具 ====================
+        BUILTIN_BLACKLIST.add("net.sf.cglib.core.DefaultGeneratorStrategy");
+        BUILTIN_BLACKLIST.add("net.sf.cglib.transform.impl.InterceptFieldTransformer");
+        BUILTIN_BLACKLIST.add("javassist.tool.web.Viewer");
+
+        // ==================== BeanShell 脚本引擎（BeanShell1 gadget） ====================
+        BUILTIN_BLACKLIST.add("bsh.This");
+        BUILTIN_BLACKLIST.add("bsh.Interpreter");
+        BUILTIN_BLACKLIST.add("bsh.XThis");
+        BUILTIN_BLACKLIST.add("bsh.NameSpace");
+
+        // ==================== Jackson 反序列化 gadget ====================
+        BUILTIN_BLACKLIST.add("com.fasterxml.jackson.databind.util.ISO8601Utils");
+        BUILTIN_BLACKLIST.add("com.fasterxml.jackson.databind.util.RawValue");
+        BUILTIN_BLACKLIST.add("com.fasterxml.jackson.databind.ext.DOMSerializer");
+
+        // ==================== 网络与文件 IO（敏感资源） ====================
         BUILTIN_BLACKLIST.add("com.sun.org.apache.xerces.internal.impl.XMLEntityManager");
         BUILTIN_BLACKLIST.add("java.util.ServiceLoader");
         BUILTIN_BLACKLIST.add("java.net.URL");
@@ -170,9 +357,12 @@ public final class AutoTypeChecker {
         BUILTIN_BLACKLIST.add("java.io.FileInputStream");
         BUILTIN_BLACKLIST.add("java.io.FileOutputStream");
         BUILTIN_BLACKLIST.add("java.io.RandomAccessFile");
-        BUILTIN_BLACKLIST.add("java.lang.Thread");
-        BUILTIN_BLACKLIST.add("java.lang.ClassLoader");
-        BUILTIN_BLACKLIST.add("java.lang.System");
+        BUILTIN_BLACKLIST.add("java.io.PrintWriter");
+        BUILTIN_BLACKLIST.add("java.io.BufferedReader");
+        BUILTIN_BLACKLIST.add("java.io.BufferedWriter");
+        BUILTIN_BLACKLIST.add("java.nio.file.Path");
+        BUILTIN_BLACKLIST.add("java.nio.file.Paths");
+        BUILTIN_BLACKLIST.add("java.nio.file.Files");
     }
 
     /**

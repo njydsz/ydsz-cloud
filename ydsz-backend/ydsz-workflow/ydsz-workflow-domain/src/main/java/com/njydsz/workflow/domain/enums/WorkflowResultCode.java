@@ -7,6 +7,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
+import com.njydsz.common.exception.registry.YdszResultCode;
 
 /**
  * 工作流模块异常码枚举。
@@ -28,6 +29,7 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
+@YdszResultCode(module = "workflow", description = "工作流")
 public enum WorkflowResultCode implements ExceptionCode {
 
     // ==================== B70001-B70099 流程模板/定义 ====================

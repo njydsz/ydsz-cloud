@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.njydsz.common.exception.registry.YdszResultCode;
 
 /**
  * 系统管理模块异常码枚举。
@@ -25,6 +26,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Getter
+@YdszResultCode(module = "system", description = "系统管理")
 public enum SystemResultCode implements ExceptionCode {
 
     // ==================== B90001-B90099 系统配置 ====================

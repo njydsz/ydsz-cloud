@@ -1,13 +1,14 @@
 /**
  * 应用 API 模块（前端）
- * <p>封装应用（{@code ydsz_app}）CRUD 接口，对应后端 {@code /api/v1/system/app/*} 端点。
- * <p>系统中的应用是权限/菜单/路由的归属主体，支持多应用隔离。
- * <p>供「系统管理 → 应用管理」使用。
+ *
+ * 封装应用（{@code ydsz_app}）CRUD 接口，对应后端 {@code /api/v1/app/*} 端点。
+ * 使用 @ydsz/shared-api 的 createCrudApi 工厂消除重复 CRUD 代码。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 import { requestClient } from '#/api/request';
+import { createCrudApi } from '@ydsz/shared-api';
 
 export namespace AppApi {
   export interface AppVO {
@@ -30,6 +31,7 @@ export namespace AppApi {
   }
 
   export interface AppDTO {
+    id?: string;
     appCode?: string;
     appName?: string;
     appSecret?: string;
@@ -40,37 +42,57 @@ export namespace AppApi {
   }
 }
 
-/** 分页查询app列表 */
+/** 应用 CRUD API（由 createCrudApi 工厂创建） */
+export const appApi = createCrudApi<
+  AppApi.AppVO,
+  AppApi.AppPageQuery,
+  AppApi.AppDTO
+>(requestClient, '/api/v1/app');
+
+/**
+ * 分页查询应用
+ * @deprecated 使用 appApi.page() 替代
+ */
 export function getAppPageApi(params: AppApi.AppPageQuery) {
-  return requestClient.get<{
-    total: number;
-    current: number;
-    size: number;
-    items: AppApi.AppVO[];
-  }>(`/api/v1/app/page`, { params });
+  return appApi.page(params as any);
 }
 
-/** 查询全部app列表 */
+/**
+ * 查询全部应用
+ * @deprecated 使用 appApi.list() 替代
+ */
 export function getAppListApi() {
-  return requestClient.get<AppApi.AppVO[]>(`/api/v1/app/list`);
+  return appApi.list();
 }
 
-/** 根据 ID 查询app */
+/**
+ * 根据 ID 查询应用
+ * @deprecated 使用 appApi.getById() 替代
+ */
 export function getAppByIdApi(id: string) {
-  return requestClient.get<AppApi.AppVO>(`/api/v1/app/${id}`);
+  return appApi.getById(id);
 }
 
-/** 创建app */
+/**
+ * 创建应用
+ * @deprecated 使用 appApi.create() 替代
+ */
 export function createAppApi(data: AppApi.AppDTO) {
-  return requestClient.post<string>(`/api/v1/app`, data);
+  return appApi.create(data);
 }
 
-/** 更新app */
+/**
+ * 更新应用
+ * @deprecated 使用 appApi.update() 替代
+ */
 export function updateAppApi(data: AppApi.AppDTO) {
-  return requestClient.put<boolean>(`/api/v1/app`, data);
+  return appApi.update(data.id ?? '', data);
 }
 
-/** 删除app */
+/**
+ * 删除应用
+ * @deprecated 使用 appApi.remove() 替代
+ */
 export function deleteAppApi(id: string) {
-  return requestClient.delete<boolean>(`/api/v1/app/${id}`);
+  return appApi.remove(id);
 }

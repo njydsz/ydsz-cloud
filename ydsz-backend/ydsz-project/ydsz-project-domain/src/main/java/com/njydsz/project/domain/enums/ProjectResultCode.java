@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.njydsz.common.exception.registry.YdszResultCode;
 
 /**
  * 项目管理模块异常码枚举。
@@ -29,6 +30,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Getter
+@YdszResultCode(module = "project", description = "项目管理")
 public enum ProjectResultCode implements ExceptionCode {
 
     // ==================== B40001-B40099 项目立项 ====================
