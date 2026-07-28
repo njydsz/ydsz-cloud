@@ -22,7 +22,6 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  *     serialize-enum-using-ordinal: false
  *     max-json-size: 10485760
  *     max-depth: 256
- *     fast-path-enabled: true
  *     safe-mode: true
  *     monitoring-enabled: false
  * }</pre>
@@ -59,9 +58,6 @@ public class YdszJsonProperties {
 
     /** 最大序列化深度 */
     private int maxDepth = 256;
-
-    /** 是否启用快速路径优化 */
-    private boolean fastPathEnabled = true;
 
     /** 是否启用安全模式（AutoType 白名单检查，默认开启） */
     private boolean safeMode = true;
@@ -160,16 +156,6 @@ public class YdszJsonProperties {
 
     public void setMaxDepth(int maxDepth) {
         this.maxDepth = maxDepth;
-    }
-
-    // --- fastPathEnabled ---
-
-    public boolean isFastPathEnabled() {
-        return fastPathEnabled;
-    }
-
-    public void setFastPathEnabled(boolean fastPathEnabled) {
-        this.fastPathEnabled = fastPathEnabled;
     }
 
     // --- safeMode ---

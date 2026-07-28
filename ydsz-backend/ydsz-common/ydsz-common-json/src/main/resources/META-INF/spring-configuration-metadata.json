@@ -62,12 +62,6 @@
       "defaultValue": 256
     },
     {
-      "name": "ydsz.json.fast-path-enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用快速路径优化（直接写入 JSONWriter，跳过 StringBuilder 中转；默认 true）",
-      "defaultValue": true
-    },
-    {
       "name": "ydsz.json.safe-mode",
       "type": "java.lang.Boolean",
       "description": "是否启用安全模式（AutoType 白名单检查防反序列化漏洞，默认 true）",
