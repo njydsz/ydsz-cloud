@@ -46,7 +46,6 @@ import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.producer.MessageQueueOperations;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.server.service.canary.CanaryService;
@@ -147,8 +146,6 @@ public class MessageServiceImpl implements MessageService {
     private final EmailBounceHandler emailBounceHandler;
     /** P2-20: Sender 配额管理 */
     private final SenderQuotaService senderQuotaService;
-    /** P3-22~25: 消息服务可观测性指标 */
-    private final MessageMetrics messageMetrics;
     /** P2-15: 并行批量发送器 */
     private final ParallelBatchSender parallelBatchSender;
     /** P2-14: 时区感知 DND 服务 */

@@ -7,6 +7,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.boot.health.contributor.HealthIndicator;
+
+import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.server.channel.ChannelRouter;
+import com.njydsz.message.server.health.MessageHealthIndicator;
 import com.njydsz.message.server.metric.MessageMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -52,5 +58,17 @@ public class MessageAutoConfiguration {
             registry = new SimpleMeterRegistry();
         }
         return new MessageMetrics(registry);
+    }
+
+    /**
+     * P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component）
+     */
+    @Bean
+    @ConditionalOnClass(HealthIndicator.class)
+    @ConditionalOnMissingBean(MessageHealthIndicator.class)
+    public MessageHealthIndicator messageHealthIndicator(RedisService redisService,
+                                                          MsgLogMapper msgLogMapper,
+                                                          ChannelRouter channelRouter) {
+        return new MessageHealthIndicator(redisService, msgLogMapper, channelRouter);
     }
 }

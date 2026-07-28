@@ -5,8 +5,17 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.userinfo.infra.mapper.RoleMapper;
+import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
 
 /**
  * 用户信息中心模块配置
@@ -58,5 +67,18 @@ public class UserInfoConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder(UserInfoProperties properties) {
         return new BCryptPasswordEncoder(properties.getBcryptStrength());
+    }
+
+    /**
+     * P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component）
+     */
+    @Bean
+    @ConditionalOnClass(HealthIndicator.class)
+    @ConditionalOnMissingBean(UserInfoHealthIndicator.class)
+    public UserInfoHealthIndicator userInfoHealthIndicator(RedisService redisService,
+                                                            TokenService tokenService,
+                                                            UserAccountMapper userAccountMapper,
+                                                            RoleMapper roleMapper) {
+        return new UserInfoHealthIndicator(redisService, tokenService, userAccountMapper, roleMapper);
     }
 }

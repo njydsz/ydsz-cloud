@@ -3,7 +3,6 @@ package com.njydsz.userinfo.server.health;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.token.TokenService;
@@ -27,7 +26,6 @@ import org.springframework.boot.health.contributor.Health;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(prefix = "ydsz.userinfo", name = "health-enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor

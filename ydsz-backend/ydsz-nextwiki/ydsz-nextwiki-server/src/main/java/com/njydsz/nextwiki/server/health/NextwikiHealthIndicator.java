@@ -3,7 +3,6 @@ package com.njydsz.nextwiki.server.health;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.common.file.storage.IFileStorageProvider;
@@ -22,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class NextwikiHealthIndicator extends AbstractModuleHealthIndicator {
 
@@ -31,6 +29,13 @@ public class NextwikiHealthIndicator extends AbstractModuleHealthIndicator {
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
+
+    /**
+     * 设置文件存储提供者（由 @Bean 注册时注入）
+     */
+    public void setFileStorageProvider(IFileStorageProvider fileStorageProvider) {
+        this.fileStorageProvider = fileStorageProvider;
+    }
 
     public void recordUpload() {
         nextwikiMetrics.recordUpload();

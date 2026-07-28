@@ -4,7 +4,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.common.redis.service.RedisService;
@@ -56,7 +55,6 @@ import org.springframework.boot.health.contributor.Health;
  * @see com.njydsz.common.redis.service.RedisService Redis 服务封装
  */
 @Slf4j
-@Component
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(prefix = "ydsz.system", name = "health-enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor

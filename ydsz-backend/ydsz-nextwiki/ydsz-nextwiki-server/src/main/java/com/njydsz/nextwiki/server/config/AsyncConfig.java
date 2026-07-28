@@ -1,9 +1,19 @@
 package com.njydsz.nextwiki.server.config;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
+
+import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
+import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 
 /**
  * NextWiki 基础设施配置
@@ -22,4 +32,22 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 @EnableConfigurationProperties(NextwikiProperties.class)
 public class AsyncConfig {
+
+    /**
+     * P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component）
+     */
+    @Bean
+    @ConditionalOnClass(HealthIndicator.class)
+    @ConditionalOnMissingBean(NextwikiHealthIndicator.class)
+    public NextwikiHealthIndicator nextwikiHealthIndicator(
+            FileNodeRepository fileNodeRepository,
+            NextwikiMetrics nextwikiMetrics,
+            ObjectProvider<IFileStorageProvider> fileStorageProvider) {
+        NextwikiHealthIndicator indicator = new NextwikiHealthIndicator(fileNodeRepository, nextwikiMetrics);
+        IFileStorageProvider provider = fileStorageProvider.getIfAvailable();
+        if (provider != null) {
+            indicator.setFileStorageProvider(provider);
+        }
+        return indicator;
+    }
 }

@@ -3,7 +3,15 @@ package com.njydsz.system.server.config;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.system.infra.mapper.ConfigMapper;
+import com.njydsz.system.infra.mapper.DictItemMapper;
+import com.njydsz.system.server.health.SystemHealthIndicator;
 
 /**
  * 系统模块 Spring 配置
@@ -52,5 +60,17 @@ public class SystemConfiguration {
             strength = 10;
         }
         return new BCryptPasswordEncoder(strength);
+    }
+
+    /**
+     * P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component）
+     */
+    @Bean
+    @ConditionalOnClass(HealthIndicator.class)
+    @ConditionalOnMissingBean(SystemHealthIndicator.class)
+    public SystemHealthIndicator systemHealthIndicator(RedisService redisService,
+                                                       ConfigMapper configMapper,
+                                                       DictItemMapper dictItemMapper) {
+        return new SystemHealthIndicator(redisService, configMapper, dictItemMapper);
     }
 }

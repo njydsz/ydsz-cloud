@@ -8,7 +8,7 @@ import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.core.NotifyService;
-import com.njydsz.common.notify.model.NotifyRequest;
+import com.njydsz.common.notify.core.NotifyRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

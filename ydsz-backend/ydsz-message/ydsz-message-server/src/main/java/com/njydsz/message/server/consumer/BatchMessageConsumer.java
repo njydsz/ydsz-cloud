@@ -52,15 +52,6 @@ import lombok.extern.slf4j.Slf4j;
         maxReconsumeTimes = 3,
         consumeMode = ConsumeMode.CONCURRENTLY
 )
-
-/**
- * BatchMessageConsumer 类。
- *
- * <p>所属包：{@code com.njydsz.message.server.consumer}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public class BatchMessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;

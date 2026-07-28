@@ -33,7 +33,6 @@ import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.tracing.MessageTraceContext;
 import com.njydsz.message.server.util.MessageCompressor;
@@ -62,15 +61,6 @@ import lombok.extern.slf4j.Slf4j;
         maxReconsumeTimes = 3,
         consumeMode = ConsumeMode.ORDERLY
 )
-
-/**
- * MessageConsumer 类。
- *
- * <p>所属包：{@code com.njydsz.message.server.consumer}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public class MessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;
@@ -79,7 +69,6 @@ public class MessageConsumer implements RocketMQListener<String> {
     private final MsgLogMapper msgLogMapper;
     private final MessageMetrics messageMetrics;
     private final MessageProperties messageProperties;
-    private final MessageMetrics messageMetrics;
 
     /** 当前实例标识(hostname:pid),用于锁值与安全释放 */
     private static final String INSTANCE_ID = initInstanceId();

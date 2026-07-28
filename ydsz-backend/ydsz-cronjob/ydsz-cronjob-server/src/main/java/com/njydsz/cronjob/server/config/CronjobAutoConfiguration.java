@@ -1,8 +1,20 @@
 package com.njydsz.cronjob.server.config;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import com.njydsz.cronjob.domain.leader.LeaderElector;
+import com.njydsz.cronjob.infra.mapper.JobLogMapper;
+import com.njydsz.cronjob.infra.mapper.JobMapper;
+import com.njydsz.cronjob.server.health.CronjobHealthIndicator;
+import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
  * 定时任务调度引擎自动配置类。
@@ -21,4 +33,21 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @ConditionalOnProperty(prefix = "ydsz.cronjob", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class CronjobAutoConfiguration {
+
+    /**
+     * P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component）
+     */
+    @Bean
+    @ConditionalOnClass(HealthIndicator.class)
+    @ConditionalOnMissingBean(CronjobHealthIndicator.class)
+    public CronjobHealthIndicator cronjobHealthIndicator(
+            ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
+            ObjectProvider<LeaderElector> leaderElectorProvider,
+            ObjectProvider<JobMapper> jobMapperProvider,
+            ObjectProvider<JobLogMapper> jobLogMapperProvider,
+            ObjectProvider<CronjobMetrics> cronjobMetricsProvider,
+            CronjobProperties cronjobProperties) {
+        return new CronjobHealthIndicator(redisConnectionFactoryProvider, leaderElectorProvider,
+                jobMapperProvider, jobLogMapperProvider, cronjobMetricsProvider, cronjobProperties);
+    }
 }
