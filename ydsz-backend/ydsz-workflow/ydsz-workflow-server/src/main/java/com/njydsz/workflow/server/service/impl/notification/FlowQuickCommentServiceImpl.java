@@ -23,9 +23,58 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 审批常用语服务实现
  *
- * <p>P1-2: 对标钉钉/飞书审批的"常用语"能力。
+ * <p>P1-2: 对标钉钉/飞书审批的"常用语"能力，对 {@link FlowQuickCommentService} 接口的完整实现。
+ * 提供审批评论常用语（快捷回复模板）的 CRUD、用户隔离、使用统计等完整业务能力。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>查询能力</b>：{@link #listByUser} — 返回「用户自定义 + 系统预设」两类常用语，
+ *       按 {@code sortNum} 升序、{@code useCount} 降序排列</li>
+ *   <li><b>CRUD</b>：{@link #create}（创建用户自定义）/ {@link #update}（仅创建者本人）/
+ *       {@link #delete}（仅创建者本人，<b>系统预设不可删</b>）</li>
+ *   <li><b>使用统计</b>：{@link #incrementUseCount} — 用户使用常用语后 +1，
+ *       <b>按使用频次智能排序</b></li>
+ *   <li><b>用户隔离</b>：用户仅可管理自己创建的常用语，系统预设为全局共享</li>
+ *   <li><b>多租户</b>：所有数据按 {@code tenantId} 隔离</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写方法开启 {@code @Transactional(rollbackFor = Exception.class)}，确保数据一致性</li>
+ *   <li>删除采用<b>逻辑删除</b>（{@code deleted=1}），保留审计轨迹</li>
+ * </ul>
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>常用语数据量小（用户级百级别），无需分页</li>
+ *   <li>查询走 {@code ydsz_flow_quick_comment} 复合索引（{@code idx_user} + {@code idx_tenant}）</li>
+ *   <li>{@link #incrementUseCount} 使用先查后更，<b>并发场景下 useCount 可能丢失更新</b>，
+ *       生产环境建议改用 {@code UPDATE ... SET use_count = use_count + 1} 原子操作</li>
+ * </ul>
+ *
+ * <p><b>防御性编程：</b>
+ * <ul>
+ *   <li>{@link #listByUser} 当 userId 为空时返回空列表（前端 bug 兜底）</li>
+ *   <li>{@link #delete} 当常用语不存在时直接返回（幂等性）</li>
+ *   <li>{@link #incrementUseCount} 异常被 try-catch 吞掉，<b>不抛异常</b>，
+ *       避免使用统计失败影响主流程评论发布</li>
+ *   <li>{@link #update} / {@link #delete} 校验<b>创建者本人</b>才能操作，
+ *       防止越权修改他人常用语</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 场景：审批人选择"同意"常用语后，自动增加使用次数
+ * List<FlowQuickComment> comments = quickCommentService.listByUser(userId, tenantId);
+ * // 用户点击 "同意" → quickCommentService.incrementUseCount("xxx");
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowQuickCommentService 接口定义
+ * @see FlowQuickComment 常用语实体
+ * @see FlowQuickCommentDTO 常用语 DTO
  */
 @Slf4j
 @Service
@@ -36,13 +85,14 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     private final FlowQuickCommentMapper quickCommentMapper;
 
     /**
-     * {@inheritDoc}
-     * <p>查询用户自定义常用语 + 系统预设常用语（isSystem=1），
-     * 结果按 sortNum 升序、useCount 降序排列。
+     * 查询用户的常用语列表（用户自定义 + 系统预设合并）
      *
-     * @param userId   用户 ID
-     * @param tenantId 租户 ID（为空时从 TenantContext 获取）
-     * @return 常用语列表
+     * <p>合并查询：先查 {@code userId=userId} 的自定义常用语，再追加 {@code isSystem=1} 的系统预设，
+     * 最终按 {@code sortNum} 升序、{@code useCount} 降序两级排序。
+     *
+     * @param userId   用户 ID（不可空，为空返回空列表）
+     * @param tenantId 租户 ID（可空，回退 {@link TenantContext}）
+     * @return 常用语列表（已合并 + 已排序），无数据返回空列表
      */
     @Override
     public List<FlowQuickComment> listByUser(String userId, String tenantId) {
@@ -73,10 +123,16 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     }
 
     /**
-     * {@inheritDoc}
-     * <p>创建用户自定义常用语（isSystem=0），useCount 初始为 0。
+     * 创建用户自定义常用语
      *
-     * @throws SysException 当 userId 为空时抛出
+     * <p>仅创建用户自定义常用语（{@code isSystem=0}），{@code useCount} 初始为 {@code 0}。
+     * 创建时强制覆盖 {@code userId/tenantId/isSystem=0}，<b>不可通过 DTO 伪造为系统预设</b>。
+     *
+     * @param dto      常用语 DTO（含 {@code content/commentType/sortNum}）
+     * @param userId   创建人 ID（不可空）
+     * @param tenantId 租户 ID（可空，回退 {@link TenantContext}）
+     * @return 新常用语 ID
+     * @throws SysException {@code BAD_REQUEST} — userId 为空
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -98,10 +154,15 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     }
 
     /**
-     * {@inheritDoc}
-     * <p>仅允许创建者本人更新，系统预设不可更新。
+     * 更新常用语
      *
-     * @throws SysException 当 id 为空、常用语不存在或无权限时抛出
+     * <p>仅允许<b>创建者本人</b>更新；<b>系统预设不可更新</b>（实际接口层就不应该走到这里，
+     * 因为系统预设不暴露 update 接口给前端）。仅更新 DTO 中非空字段。
+     *
+     * @param dto    常用语 DTO（{@code id} 必传）
+     * @param userId 操作人 ID（必须与创建者一致）
+     * @throws SysException {@code BAD_REQUEST} — id 为空；{@code NOT_FOUND} — 常用语不存在；
+     *                     {@code FORBIDDEN} — 操作人非创建者
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -127,10 +188,17 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     }
 
     /**
-     * {@inheritDoc}
-     * <p>仅允许创建者本人删除，系统预设不可删除（抛 BAD_REQUEST）。
+     * 删除常用语（软删除）
      *
-     * @throws SysException 当系统预设常用语不可删除或无权限时抛出
+     * <p><b>权限校验：</b>
+     * <ul>
+     *   <li>系统预设（{@code isSystem=1}）<b>不可删除</b>，抛 {@code BAD_REQUEST}</li>
+     *   <li>仅创建者本人可删除，<b>非创建者</b>抛 {@code FORBIDDEN}</li>
+     * </ul>
+     *
+     * @param id     常用语 ID
+     * @param userId 操作人 ID
+     * @throws SysException {@code BAD_REQUEST} — 系统预设不可删；{@code FORBIDDEN} — 无权限
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -151,8 +219,13 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     }
 
     /**
-     * {@inheritDoc}
-     * <p>异步调用，异常不传播（try-catch 吞异常记 WARN）。
+     * 增加常用语使用次数
+     *
+     * <p>用户在前端选择常用语时调用，{@code useCount} 自增 1。
+     * 异常被 try-catch 吞掉记 WARN，<b>不传播异常</b>——使用统计失败不应阻塞评论发布主流程。
+     *
+     * <p><b>已知风险：</b>采用「先查后更」非原子操作，<b>高并发场景下 useCount 可能丢失更新</b>。
+     * 生产环境建议改用 SQL 原子更新 {@code UPDATE ... SET use_count = use_count + 1 WHERE id = ?}。
      *
      * @param id 常用语 ID
      */

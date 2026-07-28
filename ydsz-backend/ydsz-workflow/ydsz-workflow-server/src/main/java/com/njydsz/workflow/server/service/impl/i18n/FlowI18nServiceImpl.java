@@ -139,6 +139,7 @@ public class FlowI18nServiceImpl implements FlowI18nService {
         register("FlowSlaAction", "NOTIFY_ADMIN", "通知管理员", "Notify Admin");
     }
 
+    /** 静态注册工具：在类加载时注册翻译项到 {@link #MESSAGE_RESOURCE} */
     private static void register(String enumType, String enumName,
                                    String zhCN, String enUS) {
         MESSAGE_RESOURCE
@@ -148,6 +149,18 @@ public class FlowI18nServiceImpl implements FlowI18nService {
         MESSAGE_RESOURCE.get(enumType).get(enumName).put("en_US", enUS);
     }
 
+    /**
+     * 获取指定枚举类型在指定 locale 下的全部枚举描述
+     *
+     * <p>返回列表每项含 {@code {name, description, messageKey}}，{@code messageKey} 形如
+     * {@code FlowTaskStatus.PENDING}，供前端按需查询。
+     *
+     * <p><b>回退策略：</b>指定 locale 翻译缺失时回退到 {@code zh_CN} 描述。
+     *
+     * @param enumType 枚举类型名（{@code FlowTaskStatus} / {@code FlowInstanceStatus} 等）
+     * @param locale   语言（{@code zh_CN} / {@code en_US}，大小写 / 连字符不敏感）
+     * @return 枚举描述列表，无数据返回空列表
+     */
     @Override
     public List<Map<String, String>> getEnumDescriptions(String enumType, String locale) {
         if (enumType == null) {
@@ -169,6 +182,16 @@ public class FlowI18nServiceImpl implements FlowI18nService {
         return result;
     }
 
+    /**
+     * 获取单个枚举值在指定 locale 下的翻译
+     *
+     * <p>翻译项不存在时回退到 {@code enumName} 本身（避免前端展示为空）。
+     *
+     * @param enumType 枚举类型名
+     * @param enumName 枚举值名
+     * @param locale   语言
+     * @return 翻译后的描述（回退时为 {@code enumName}）
+     */
     @Override
     public String getEnumDescription(String enumType, String enumName, String locale) {
         if (enumType == null || enumName == null) {
@@ -186,6 +209,14 @@ public class FlowI18nServiceImpl implements FlowI18nService {
         return localeMap.getOrDefault(loc, localeMap.get("zh_CN"));
     }
 
+    /**
+     * 获取系统支持的语言列表
+     *
+     * <p>当前支持 {@code zh_CN}（简体中文，默认）和 {@code en_US}（英语）。
+     * 列表中 {@code default=true} 的语言用于前端未指定 locale 时的兜底。
+     *
+     * @return 语言列表，每项含 {@code {code, name, default}}
+     */
     @Override
     public List<Map<String, String>> getSupportedLocales() {
         List<Map<String, String>> locales = new ArrayList<>();
@@ -204,6 +235,15 @@ public class FlowI18nServiceImpl implements FlowI18nService {
         return locales;
     }
 
+    /**
+     * 标准化 locale 字符串
+     *
+     * <p>支持 {@code zh_CN / zh-CN / zh} → {@code zh_CN}，{@code en_US / en-US / en} → {@code en_US}。
+     * 大小写、连字符 / 下划线不敏感。未识别的 locale 兜底返回 {@code zh_CN}。
+     *
+     * @param locale 原始 locale 字符串
+     * @return 标准化后的 locale（{@code zh_CN} / {@code en_US}）
+     */
     private String normalizeLocale(String locale) {
         if (locale == null || locale.isBlank()) {
             return "zh_CN";

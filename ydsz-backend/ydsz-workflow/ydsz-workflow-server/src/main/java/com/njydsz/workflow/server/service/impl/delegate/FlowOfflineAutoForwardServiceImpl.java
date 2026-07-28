@@ -110,6 +110,19 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
     /** 流程任务服务，调用 transfer 接口执行批量转办 */
     private final FlowTaskService taskService;
 
+    /**
+     * 根据授权 ID 自动转交待办
+     *
+     * <p>查询 {@link FlowDelegateAuth} 授权配置，校验：
+     * <ul>
+     *   <li>授权状态为 {@code ACTIVE}</li>
+     *   <li>当前时间在 {@code startTime / endTime} 区间内</li>
+     * </ul>
+     * 校验通过后调用 {@link #forwardTasks} 批量转交原办理人名下的待办（按 flowCode 范围过滤）。
+     *
+     * @param authId 授权 ID
+     * @return 成功转发的任务数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int autoForwardByAuth(String authId) {
@@ -142,6 +155,17 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
                 "AUTO_FORWARD", auth.getOwnerUserId());
     }
 
+    /**
+     * 管理员手动触发的批量转交
+     *
+     * <p>不同于 {@link #autoForwardByAuth} 的授权驱动，本方法由管理员直接指定原办理人和目标代理人，
+     * 不依赖授权配置存在。适用于「用户紧急离职 / 账号冻结」等需立即处理的场景。
+     *
+     * @param userId         原办理人 ID
+     * @param delegateUserId 目标代理人 ID（不可与 userId 相同）
+     * @param operatorId     操作人 ID（管理员）
+     * @return 成功转发的任务数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int manualForward(String userId, String delegateUserId, String operatorId) {

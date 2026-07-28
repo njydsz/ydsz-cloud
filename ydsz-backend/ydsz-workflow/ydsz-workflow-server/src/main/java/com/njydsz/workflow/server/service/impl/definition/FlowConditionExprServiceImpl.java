@@ -133,6 +133,24 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         OPERATOR_MAP.put("NOT_EMPTY", new String[]{"!string.isEmpty", "!empty"});
     }
 
+    /**
+     * 将结构化条件 JSON 转换为 Aviator / SpEL 表达式字符串
+     *
+     * <p>完整转换链路：
+     * <ol>
+     *   <li>解析条件 JSON，提取 {@code logic}（AND/OR）与 {@code groups}（条件项列表）</li>
+     *   <li>按 engine 选择 Aviator 符号表（{@code engineIdx=0}）或 SpEL 符号表（{@code engineIdx=1}）</li>
+     *   <li>逐个条件组构建原子表达式（{@link #buildGroupExpr}），值按 {@code valueType} 格式化</li>
+     *   <li>多组条件下用 {@code &&} / {@code ||} 拼接，单组条件不加括号</li>
+     * </ol>
+     *
+     * <p><b>降级语义：</b>JSON 为空 / 解析失败 / 无条件项时返回空字符串，<b>不抛异常</b>，
+     * 由调用方决定空表达式语义。
+     *
+     * @param conditionJson 结构化条件 JSON
+     * @param engine        表达式引擎：{@code AVIATOR}（默认） / {@code SPEL}
+     * @return 表达式字符串（如 {@code amount > 10000 && deptCode == 'SALES'}），无输入返回空字符串
+     */
     @Override
     public String buildExpression(String conditionJson, String engine) {
         if (conditionJson == null || conditionJson.isBlank()) {
@@ -172,6 +190,18 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         }
     }
 
+    /**
+     * 反向解析：表达式字符串 → 结构化条件 JSON
+     *
+     * <p><b>实现限制：</b>仅支持由 {@link #buildExpression} 生成的简单表达式，
+     * 解析策略为「按 {@code &&} / {@code ||} 拆分 → 逐项按操作符拆分」，
+     * 不支持嵌套括号、复杂函数调用、字符串字面量内嵌逻辑运算符。
+     *
+     * @param expression 表达式字符串
+     * @param engine     表达式引擎（当前实现未使用，保留参数兼容）
+     * @return 结构化条件 JSON（{@code {logic, groups}}），空输入返回 {@code "{}"}，
+     *         解析失败返回 {@code "{}"}
+     */
     @Override
     public String parseExpression(String expression, String engine) {
         // 反向解析：简单实现，仅支持 AND/OR 连接的基本比较表达式
@@ -210,6 +240,21 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         }
     }
 
+    /**
+     * 表达式语法校验
+     *
+     * <p>当前实现仅做<b>轻量语法检查</b>：括号匹配、单引号 / 双引号偶数匹配。
+     * 完整语法校验需调用 Aviator {@code compile} / SpEL {@code SpelExpressionParser}，
+     * 此处保留轻量校验作为「实时反馈」场景的快速响应。
+     *
+     * @param expression 表达式字符串
+     * @param engine     表达式引擎（当前实现未使用）
+     * @return 校验结果 Map：
+     *   <ul>
+     *     <li>{@code valid} (boolean) — 是否通过</li>
+     *     <li>{@code error} (String) — 错误信息（通过时为 {@code null}）</li>
+     *   </ul>
+     */
     @Override
     public Map<String, Object> validateExpression(String expression, String engine) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -252,6 +297,14 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         }
     }
 
+    /**
+     * 获取全部可用操作符列表
+     *
+     * <p>遍历 {@link #OPERATOR_MAP}，每项返回 {@code {code, aviator, spel}} 三个字段，
+     * 供前端下拉框渲染。修改 {@link #OPERATOR_MAP} 即自动同步到前端。
+     *
+     * @return 操作符列表（保持 {@code OPERATOR_MAP} 的插入顺序）
+     */
     @Override
     public List<Map<String, String>> getOperators() {
         List<Map<String, String>> result = new ArrayList<>();
@@ -265,6 +318,13 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         return result;
     }
 
+    /**
+     * 获取全部可用值类型列表
+     *
+     * <p>值类型用于前端条件编辑器选择「值输入框」的渲染方式：字符串、数字、布尔、日期、列表等。
+     *
+     * @return 值类型列表，每项包含 {@code {code, name}} 字段，{@code name} 为中文标签
+     */
     @Override
     public List<Map<String, String>> getValueTypes() {
         return List.of(
@@ -281,7 +341,19 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     // ============================== 内部辅助 ==============================
 
     /**
-     * 构建单个条件组的表达式
+     * 构建单个条件组的原子表达式
+     *
+     * <p>根据 {@code operator} 选择操作符符号，特殊处理：
+     * <ul>
+     *   <li>NULL / EMPTY 类操作符不需要值，仅 {@code field symbol}</li>
+     *   <li>IN / NOT_IN：Aviator 用 {@code seq.in(list, value)}，SpEL 用 {@code field in {list}}</li>
+     *   <li>CONTAINS / STARTS_WITH / ENDS_WITH：Aviator 用 {@code string.xxx(field, value)}，SpEL 用 {@code field.xxx(value)}</li>
+     *   <li>其他操作符：{@code field symbol value}</li>
+     * </ul>
+     *
+     * @param group     单个条件组（含 field/operator/value/valueType）
+     * @param engineIdx 引擎索引（{@code 0}=Aviator，{@code 1}=SpEL）
+     * @return 原子表达式字符串，未知操作符返回 {@code null}
      */
     private String buildGroupExpr(Map<String, Object> group, int engineIdx) {
         String field = String.valueOf(group.get("field"));
@@ -330,7 +402,21 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     }
 
     /**
-     * 格式化值
+     * 按值类型格式化值
+     *
+     * <p>不同 {@code valueType} 对应不同格式化策略：
+     * <ul>
+     *   <li>NUMBER — 原样输出</li>
+     *   <li>BOOLEAN — 转小写</li>
+     *   <li>STRING / DATE / DATETIME — 用单引号包裹</li>
+     *   <li>LIST — Aviator 用 {@code seq.list(a, b, c)}，SpEL 用 {@code {a, b, c}}</li>
+     *   <li>NULL — 引擎对应 {@code nil} / {@code null}</li>
+     * </ul>
+     *
+     * @param value     原始值
+     * @param valueType 值类型字符串
+     * @param engineIdx 引擎索引
+     * @return 格式化后的值字符串
      */
     private String formatValue(Object value, String valueType, int engineIdx) {
         if (value == null) {
@@ -372,7 +458,13 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     }
 
     /**
-     * 解析单个表达式为条件组
+     * 解析单个原子表达式为条件组
+     *
+     * <p>先剥离外层成对括号，再按 {@link #OPERATOR_MAP} 中的 Aviator 符号定位操作符位置，
+     * 左侧为 field，右侧为 value。匹配到第一个操作符即返回。
+     *
+     * @param expr 原子表达式（已去除 AND/OR 连接符）
+     * @return 条件组 {@code {field, operator, value, valueType}}，无法解析返回 {@code null}
      */
     private Map<String, Object> parseSingleExpr(String expr) {
         // 去掉外层括号
@@ -399,6 +491,11 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
     /**
      * 去除字符串两端的引号
+     *
+     * <p>同时支持单引号和双引号，仅当两端是相同引号时才剥离。
+     *
+     * @param s 原始字符串
+     * @return 去引号后的字符串，输入为 {@code null} 时返回 {@code null}
      */
     private String unquote(String s) {
         if (s == null) return null;
@@ -410,7 +507,12 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     }
 
     /**
-     * 猜测值类型
+     * 按值的字面量特征猜测其值类型
+     *
+     * <p>判断顺序：{@code NULL → NUMBER → BOOLEAN → STRING}，无法识别时默认 {@code STRING}。
+     *
+     * @param value 原始字符串值
+     * @return 值类型字符串（{@code NULL/NUMBER/BOOLEAN/STRING}）
      */
     private String guessValueType(String value) {
         if (value == null || value.isBlank()) return "NULL";
@@ -422,6 +524,22 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
     // ==================== P1-4: 可视化编辑增强实现 ====================
 
+    /**
+     * 获取指定流程定义的可用变量列表（P1-4 可视化编辑增强）
+     *
+     * <p>合并两类变量：
+     * <ol>
+     *   <li><b>系统内置变量</b>：{@code initiatorId}、{@code initiatorName}、{@code currentTime}、
+     *       {@code currentUserId}、{@code currentUserName}</li>
+     *   <li><b>表单字段变量</b>：从所有节点的 {@code ext.formSchema.fields} 中提取，
+     *       子表单字段以 {@code parentKey.subKey} 形式拼接</li>
+     * </ol>
+     *
+     * <p>用于表达式编辑器的「变量提示」下拉框，业务方配置条件时无需手写变量名。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 变量列表，每项含 {@code fieldKey/label/fieldType/description/nodeCode/nodeName}
+     */
     @Override
     public List<Map<String, String>> getVariablesByDefinition(String definitionId) {
         if (definitionId == null || definitionId.isBlank()) {
@@ -451,6 +569,23 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         return result;
     }
 
+    /**
+     * 表达式预览执行（P1-4 可视化编辑增强）
+     *
+     * <p>使用测试变量驱动表达式执行，返回布尔结果。供前端表达式编辑器「实时预览」使用，
+     * 业务方输入变量值后立即看到条件匹配结果。
+     *
+     * <p><b>当前限制：</b>仅 Aviator 引擎已实现，SpEL 引擎返回错误信息（SpEL 预览待补齐）。
+     *
+     * @param expression 表达式字符串
+     * @param variables  测试变量（{@code null} 时按空 Map 处理）
+     * @param engine     表达式引擎（默认 {@code AVIATOR}）
+     * @return 执行结果 Map：
+     *   <ul>
+     *     <li>{@code result} (Boolean) — 表达式执行结果（执行异常时为 {@code null}）</li>
+     *     <li>{@code error} (String) — 错误信息（成功时为 {@code null}）</li>
+     *   </ul>
+     */
     @Override
     public Map<String, Object> previewExpression(String expression, Map<String, Object> variables, String engine) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -481,6 +616,17 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         return result;
     }
 
+    /**
+     * 获取常用条件模板列表（P1-4 可视化编辑增强）
+     *
+     * <p>内置 10 个常用模板，覆盖金额判断、区间判断、部门匹配、职级判断、日期判断、
+     * 申请人匹配、多条件组合（AND/OR）、文本包含等典型场景。
+     * 业务方选择模板后可在设计器中微调参数，无需从零配置条件。
+     *
+     * <p>每个模板 {@code templateJson} 字段为结构化条件 JSON，可直接传入 {@link #buildExpression} 转换为表达式。
+     *
+     * @return 模板列表，每项含 {@code id/name/description/templateJson}
+     */
     @Override
     public List<Map<String, String>> getConditionTemplates() {
         List<Map<String, String>> templates = new ArrayList<>();
@@ -530,6 +676,16 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
     // ==================== 内部辅助方法 ====================
 
+    /**
+     * 从节点 {@code ext} 字段中提取表单变量
+     *
+     * <p>遍历 {@code ext.formSchema.fields}，提取 {@code fieldKey/label/fieldType/placeholder/description}，
+     * 同时处理嵌套的 {@code subFields}（子表单字段以 {@code parentKey.subKey} 形式拼接）。
+     * 异常被 try-catch 吞掉记 WARN，不影响其他节点变量提取。
+     *
+     * @param node   流程节点
+     * @param result 累加结果列表（输出参数）
+     */
     private void extractVariablesFromNode(FlowNode node, List<Map<String, String>> result) {
         if (node == null) {
             return;
@@ -596,6 +752,15 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         }
     }
 
+    /**
+     * 构建单个条件模板的 Map
+     *
+     * @param id            模板 ID
+     * @param name          模板名称（中文）
+     * @param description   模板描述
+     * @param templateJson  结构化条件 JSON 字符串
+     * @return 模板 Map（含 4 个字段）
+     */
     private Map<String, String> buildTemplate(String id, String name, String description, String templateJson) {
         Map<String, String> template = new LinkedHashMap<>();
         template.put("id", id);

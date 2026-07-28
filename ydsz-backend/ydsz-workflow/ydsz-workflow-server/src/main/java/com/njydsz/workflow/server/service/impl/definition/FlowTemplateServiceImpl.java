@@ -30,11 +30,77 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程模板市场服务实现
  *
- * <p>基于 ydsz_flow_template 数据库表，提供流程模板的查询、导入、导出能力。
- * 导入时通过 {@link FlowDefinitionService#deploy} 将模板的 BPMN XML 部署为草稿流程定义。
- * 导出时将已发布流程定义转换为 BPMN XML 并存入模板表。
+ * <p>对 {@link FlowTemplateService} 接口的完整实现，基于 {@code ydsz_flow_template} 数据库表，
+ * 提供流程模板的<b>查询 / 详情 / 导入 / 导出 / 版本化 / 克隆 / 继承 / 同步</b>完整业务能力。
+ * 是工作流引擎「模板复用 + 标准化」能力的服务端支撑。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>模板市场</b>：{@link #listTemplates} / {@link #getTemplate} — 模板列表 / 详情查询，
+ *       支持分类筛选</li>
+ *   <li><b>导入导出</b>：
+ *       <ul>
+ *         <li>{@link #importTemplate} — 将模板部署为草稿流程定义（调用 {@link FlowDefinitionService#deploy}）</li>
+ *         <li>{@link #exportAsTemplate} — 将已发布流程定义转换为 BPMN XML 并保存为模板</li>
+ *       </ul>
+ *   </li>
+ *   <li><b>版本管理（P2-9）</b>：{@link #listTemplateVersions} / {@link #getTemplateVersion} /
+ *       {@link #createNewVersion} — 模板支持多版本并存，每次导出自动递增版本号，旧版本降级为 {@code isLatest=0}</li>
+ *   <li><b>克隆与继承（P2-9）</b>：
+ *       <ul>
+ *         <li>{@link #cloneTemplate} — 克隆为独立模板（{@code inheritType=CLONE}）</li>
+ *         <li>{@link #inheritFromParent} — 继承父模板（{@code inheritType=INHERIT}），
+ *             保留父子关联</li>
+ *         <li>{@link #syncFromParent} — 子模板同步父模板最新内容，生成 {@code -synced} 版本</li>
+ *       </ul>
+ *   </li>
+ *   <li><b>BPMN 2.0 转换</b>：{@link #generateBpmnXml} — 将内部 {@code FlowNode/FlowSkip} 模型
+ *       序列化为标准 BPMN 2.0 XML（兼容 Flowable 命名空间）</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>查询方法（{@code listTemplates / getTemplate / listTemplateVersions}）开启
+ *       {@code @Transactional(readOnly = true)}，走只读副本</li>
+ *   <li>写方法（{@code import / export / createNewVersion / clone / inherit / sync}）开启
+ *       {@code @Transactional(rollbackFor = Exception.class)}，
+ *       确保「版本降级 + 新版本写入」原子性</li>
+ *   <li>{@link #importTemplate} 调用 {@link FlowDefinitionService#deploy} 内部为独立事务，
+ *       部署失败不影响使用次数递增（try-catch 隔离）</li>
+ * </ul>
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>列表查询走 {@code ydsz_flow_template} 复合索引（{@code idx_category} + {@code idx_is_latest}）</li>
+ *   <li>详情查询仅查单条（主键索引）</li>
+ *   <li>导入时增加 {@code use_count} 字段（{@code incrementUseCount}），模板市场按热度排序</li>
+ * </ul>
+ *
+ * <p><b>防御性编程：</b>
+ * <ul>
+ *   <li>所有方法均 try-catch 兜底，业务异常 {@code SysException} 直接抛出，
+ *       其它异常统一包装为 {@code INTERNAL_ERROR}（避免暴露内部错误细节）</li>
+ *   <li>导入校验 {@code bpmnXml} 非空；导出校验 {@code definitionId / templateName} 非空</li>
+ *   <li>克隆 / 继承校验新模板编码未被占用</li>
+ *   <li>同步父模板时仅 {@code INHERIT} 类型可同步，{@code CLONE} / {@code STANDALONE} 抛异常</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 场景：从模板市场导入"费用报销"流程
+ * String definitionId = templateService.importTemplate("expense_reimbursement", "费用报销流程");
+ * // → 部署为草稿流程定义，业务方可继续编辑 → 发布
+ * }</pre>
+ *
+ * <p><b>版本模型：</b>模板与流程定义均支持多版本并存，模板版本独立于流程定义版本——
+ * 同一模板可在多次导出后累积多个版本，业务方按需选择部署任一版本。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowTemplateService 接口定义
+ * @see FlowTemplate 模板实体（含版本与继承字段）
+ * @see FlowDefinitionService 流程定义服务（模板导入时调用 deploy）
  */
 @Slf4j
 @Service
@@ -46,6 +112,15 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     /** 流程定义服务，模板导入时调用 deploy 部署为草稿定义 */
     private final FlowDefinitionService definitionService;
 
+    /**
+     * 按分类查询模板列表
+     *
+     * <p>支持按 {@code category} 过滤（{@code null/空} 时查全部分类），仅返回最新版本（{@code isLatest=1}），
+     * 异常时返回空列表（不抛异常）。
+     *
+     * @param category 模板分类（可空，{@code null/空} 时查全部分类）
+     * @return 模板摘要列表（不含 BPMN XML 详细字段），无数据返回空列表
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listTemplates(String category) {
@@ -58,6 +133,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    /**
+     * 获取模板详情（含 BPMN XML）
+     *
+     * @param templateCode 模板编码
+     * @return 模板详情 Map（含 {@code bpmnXml / formPath / version / inheritType} 等全部字段）
+     * @throws SysException {@code BAD_REQUEST} — 模板编码为空；{@code NOT_FOUND} — 模板不存在；
+     *                     {@code INTERNAL_ERROR} — 内部异常
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> getTemplate(String templateCode) {
@@ -78,6 +161,25 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    /**
+     * 导入模板 — 将模板的 BPMN XML 部署为草稿流程定义
+     *
+     * <p>执行链路：
+     * <ol>
+     *   <li>查询模板最新版本，校验 {@code bpmnXml} 非空</li>
+     *   <li>构建 {@link FlowDeployProcessDTO}（使用 {@code bpmnXml} 模式，{@code version=1.0}）</li>
+     *   <li>调用 {@link FlowDefinitionService#deploy} 部署为草稿定义</li>
+     *   <li>递增 {@code use_count}（模板市场热度）</li>
+     * </ol>
+     *
+     * <p>租户隔离：默认从 {@link AuthContext} 获取当前租户，回退到 {@code "1"}。
+     *
+     * @param templateCode 模板编码
+     * @param flowName     自定义流程名称（可空，为空时使用模板名称）
+     * @return 新部署的流程定义 ID（草稿状态）
+     * @throws SysException {@code BAD_REQUEST} — 模板编码或 {@code bpmnXml} 为空；
+     *                     {@code NOT_FOUND} — 模板不存在；{@code INTERNAL_ERROR} — 部署失败
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String importTemplate(String templateCode, String flowName) {
@@ -122,6 +224,24 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    /**
+     * 导出流程定义为模板
+     *
+     * <p>执行链路：
+     * <ol>
+     *   <li>查询流程定义详情（节点 + 跳转）</li>
+     *   <li>生成模板编码（{@code {category}_{templateName}}，去空格 / 标点）</li>
+     *   <li>生成 BPMN 2.0 XML（{@link #generateBpmnXml}）</li>
+     *   <li>若模板已存在：旧版本降级为 {@code isLatest=0}，新版本递增并保留继承关系</li>
+     *   <li>若模板不存在：新建 {@code version=1 / isLatest=1 / inheritType=STANDALONE}</li>
+     * </ol>
+     *
+     * @param definitionId 流程定义 ID
+     * @param templateName 模板名称（必填）
+     * @param category     模板分类（可空，默认 {@code GENERAL}）
+     * @throws SysException {@code BAD_REQUEST} — definitionId / templateName 为空；
+     *                     {@code NOT_FOUND} — 流程定义不存在；{@code INTERNAL_ERROR} — 序列化失败
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void exportAsTemplate(String definitionId, String templateName, String category) {
@@ -206,6 +326,13 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     // ============================== P2-9: 模板继承与版本化 ==============================
 
+    /**
+     * 列出模板的全部历史版本
+     *
+     * @param templateCode 模板编码
+     * @return 版本摘要列表（按版本号降序），无数据返回空列表
+     * @throws SysException {@code BAD_REQUEST} — 模板编码为空
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listTemplateVersions(String templateCode) {
@@ -223,6 +350,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    /**
+     * 获取指定版本模板的详情
+     *
+     * @param templateCode 模板编码
+     * @param version      版本号（{@code null} 时返回最新版本）
+     * @return 模板详情 Map
+     * @throws SysException {@code BAD_REQUEST} — version &lt; 1；{@code NOT_FOUND} — 模板或指定版本不存在
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> getTemplateVersion(String templateCode, Integer version) {
@@ -261,6 +396,19 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    /**
+     * 基于当前最新版本创建新版本
+     *
+     * <p>执行链路：旧版本降级 → 读取源版本 BPMN → 写入新版本（{@code version=maxVersion+1}，
+     * {@code inheritType / parentTemplateId} 沿用源版本）。<b>注意：</b>BPMN XML 一并复制，
+     * 调用方需自行编辑新版本。
+     *
+     * @param templateCode 模板编码
+     * @param versionLabel 自定义版本标签（可空，默认 {@code v{newVersion}.0}）
+     * @return 新版本号
+     * @throws SysException {@code BAD_REQUEST} — 模板编码或 {@code bpmnXml} 为空；
+     *                     {@code NOT_FOUND} — 模板不存在
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Integer createNewVersion(String templateCode, String versionLabel) {
@@ -311,6 +459,17 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    /**
+     * 克隆模板为独立模板
+     *
+     * <p>复制源模板内容到新编码（{@code inheritType=CLONE}），新模板与源模板独立演进，互不影响。
+     *
+     * @param sourceTemplateCode 源模板编码
+     * @param newTemplateCode    新模板编码（必须不存在）
+     * @param newTemplateName    新模板名称
+     * @param newCategory        新模板分类（可空，沿用源模板分类）
+     * @return 新模板编码
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String cloneTemplate(String sourceTemplateCode, String newTemplateCode,
@@ -318,6 +477,18 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         return doCloneOrInherit(sourceTemplateCode, newTemplateCode, newTemplateName, newCategory, "CLONE");
     }
 
+    /**
+     * 从父模板继承为子模板
+     *
+     * <p>复制父模板内容到新编码（{@code inheritType=INHERIT}），<b>保留父子关联</b>。
+     * 子模板可通过 {@link #syncFromParent} 同步父模板最新内容。
+     *
+     * @param parentTemplateCode 父模板编码
+     * @param newTemplateCode    新模板编码（必须不存在）
+     * @param newTemplateName    新模板名称
+     * @param newCategory        新模板分类（可空，沿用父模板分类）
+     * @return 新模板编码
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String inheritFromParent(String parentTemplateCode, String newTemplateCode,
@@ -393,6 +564,13 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    /**
+     * 列出指定父模板的全部子模板
+     *
+     * @param parentTemplateCode 父模板编码
+     * @return 子模板摘要列表（仅最新版本），无子模板返回空列表
+     * @throws SysException {@code BAD_REQUEST} — 父模板编码为空；{@code NOT_FOUND} — 父模板不存在
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listInheritedTemplates(String parentTemplateCode) {
@@ -417,6 +595,18 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    /**
+     * 子模板同步父模板最新内容
+     *
+     * <p>仅 {@code inheritType=INHERIT} 类型可同步。同步时以父模板最新版本的 BPMN/description/icon/formPath
+     * 覆盖子模板对应字段，<b>保留子模板自身的编码 / 名称 / 分类 / 排序</b>。
+     * 同步后版本号 +1，{@code versionLabel} 自动添加 {@code -synced} 后缀。
+     *
+     * @param childTemplateCode 子模板编码
+     * @return 新版本号
+     * @throws SysException {@code BAD_REQUEST} — 子模板非 INHERIT 类型或无父模板 ID；
+     *                     {@code NOT_FOUND} — 子模板或父模板不存在
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Integer syncFromParent(String childTemplateCode) {
@@ -637,6 +827,23 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     /**
      * 节点类型码映射为 BPMN 元素名
+     *
+     * <p>映射表：
+     * <table>
+     *   <caption>节点类型映射</caption>
+     *   <tr><th>内部类型</th><th>BPMN 元素</th><th>说明</th></tr>
+     *   <tr><td>0</td><td>startEvent</td><td>开始事件</td></tr>
+     *   <tr><td>1</td><td>userTask</td><td>用户任务</td></tr>
+     *   <tr><td>2</td><td>userTask</td><td>抄送节点（也用 userTask 表示）</td></tr>
+     *   <tr><td>3</td><td>exclusiveGateway</td><td>排他网关</td></tr>
+     *   <tr><td>4</td><td>parallelGateway</td><td>并行网关</td></tr>
+     *   <tr><td>5</td><td>inclusiveGateway</td><td>包容网关</td></tr>
+     *   <tr><td>6</td><td>endEvent</td><td>结束事件</td></tr>
+     *   <tr><td>7</td><td>callActivity</td><td>子流程调用</td></tr>
+     * </table>
+     *
+     * @param nodeType 节点类型码
+     * @return BPMN 元素名（{@code null} / 未知类型时默认 {@code userTask}）
      */
     private String mapNodeTypeToElement(Integer nodeType) {
         if (nodeType == null) {
@@ -657,6 +864,12 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     /**
      * 从 skip 的 ext JSON 中提取 sourceRef（源节点编码）
+     *
+     * <p>{@code FlowSkip} 表中 {@code ext} 字段以 JSON 存储 BPMN 序列流属性，
+     * 解析失败时返回 {@code null}，由上层使用空字符串兜底（BPMN 工具可识别）。
+     *
+     * @param ext skip 的 ext JSON 字符串
+     * @return 源节点编码，无法解析返回 {@code null}
      */
     private String extractSourceRef(String ext) {
         if (ext == null || ext.isBlank()) {
