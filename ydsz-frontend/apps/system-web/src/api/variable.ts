@@ -1,13 +1,14 @@
 /**
  * 系统变量 API 模块（前端）
- * <p>封装系统变量（{@code ydsz_system_variable}）CRUD 接口，对应后端 {@code /api/v1/system/variable/*} 端点。
- * <p>系统变量是供业务代码读取的命名常量，支持加密存储。
- * <p>供「系统管理 → 变量管理」使用。
+ *
+ * 封装系统变量（{@code ydsz_system_variable}）CRUD 接口，对应后端 {@code /api/v1/variable/*} 端点。
+ * 使用 @ydsz/shared-api 的 createCrudApi 工厂消除重复 CRUD 代码。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 import { requestClient } from '#/api/request';
+import { createCrudApi } from '@ydsz/shared-api';
 
 export namespace VariableApi {
   export interface VariableVO {
@@ -28,6 +29,7 @@ export namespace VariableApi {
   }
 
   export interface VariableDTO {
+    id?: string;
     variableKey?: string;
     variableValue?: string;
     variableType?: string;
@@ -36,37 +38,39 @@ export namespace VariableApi {
   }
 }
 
-/** 分页查询variable列表 */
+/** 系统变量 CRUD API（由 createCrudApi 工厂创建） */
+export const variableApi = createCrudApi<
+  VariableApi.VariableVO,
+  VariableApi.VariablePageQuery,
+  VariableApi.VariableDTO
+>(requestClient, '/api/v1/variable');
+
+/** @deprecated 使用 variableApi.page() 替代 */
 export function getVariablePageApi(params: VariableApi.VariablePageQuery) {
-  return requestClient.get<{
-    total: number;
-    current: number;
-    size: number;
-    items: VariableApi.VariableVO[];
-  }>(`/api/v1/variable/page`, { params });
+  return variableApi.page(params as any);
 }
 
-/** 查询全部variable列表 */
+/** @deprecated 使用 variableApi.list() 替代 */
 export function getVariableListApi() {
-  return requestClient.get<VariableApi.VariableVO[]>(`/api/v1/variable/list`);
+  return variableApi.list();
 }
 
-/** 根据 ID 查询variable */
+/** @deprecated 使用 variableApi.getById() 替代 */
 export function getVariableByIdApi(id: string) {
-  return requestClient.get<VariableApi.VariableVO>(`/api/v1/variable/${id}`);
+  return variableApi.getById(id);
 }
 
-/** 创建variable */
+/** @deprecated 使用 variableApi.create() 替代 */
 export function createVariableApi(data: VariableApi.VariableDTO) {
-  return requestClient.post<string>(`/api/v1/variable`, data);
+  return variableApi.create(data);
 }
 
-/** 更新variable */
+/** @deprecated 使用 variableApi.update() 替代 */
 export function updateVariableApi(data: VariableApi.VariableDTO) {
-  return requestClient.put<boolean>(`/api/v1/variable`, data);
+  return variableApi.update(data.id ?? '', data);
 }
 
-/** 删除variable */
+/** @deprecated 使用 variableApi.remove() 替代 */
 export function deleteVariableApi(id: string) {
-  return requestClient.delete<boolean>(`/api/v1/variable/${id}`);
+  return variableApi.remove(id);
 }

@@ -183,6 +183,9 @@ public class MessageProperties {
      *
      * <p>通过 {@code ydsz.message.sms.provider} 选择服务商（aliyun/mock），
      * 无凭证或选 mock 时降级为日志输出，保证开发环境可运行。
+     *
+     * <p>P2-15: 多服务商选择策略由 {@code strategy} + {@code weights} 控制，
+     * 由 {@link com.njydsz.message.server.service.impl.SmsProviderStrategyServiceImpl} 消费。
      */
     @Data
     public static class SmsConfig {
@@ -190,6 +193,19 @@ public class MessageProperties {
         private String provider = "mock";
         /** 阿里云 SMS 配置 */
         private AliyunSmsConfig aliyun = new AliyunSmsConfig();
+        /**
+         * P2-15: 多服务商选择策略。
+         *
+         * <p>可选值：ROUND_ROBIN（轮询）/ WEIGHTED（权重）/ COST_FIRST（成本优先）/ AVAILABILITY_FIRST（可用性优先）。
+         * 默认 ROUND_ROBIN。
+         */
+        private String strategy = "ROUND_ROBIN";
+        /**
+         * P2-15: 权重配置（provider:weight,provider:weight）。
+         *
+         * <p>仅当 {@code strategy=WEIGHTED} 时生效。默认 {@code aliyun:5,tencent:3}。
+         */
+        private String weights = "aliyun:5,tencent:3";
     }
 
     /**

@@ -3,11 +3,13 @@ package com.njydsz.message.server.service.ai;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.message.server.config.MessageProperties;
+
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -28,10 +30,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ContentOptimizationService {
 
-    @Value("${ydsz.message.ai.enabled:false}")
-    private boolean aiEnabled;
+    /** P3-3.2: AI 优化开关统一从 MessageProperties 读取 */
+    private final MessageProperties messageProperties;
 
     /**
      * 分析消息内容并给出优化建议。
@@ -42,6 +45,9 @@ public class ContentOptimizationService {
      * @return 优化建议列表
      */
     public List<OptimizationSuggestion> analyze(String content, String channel, String subject) {
+        if (!messageProperties.getAi().isEnabled()) {
+            return new ArrayList<>();
+        }
         List<OptimizationSuggestion> suggestions = new ArrayList<>();
         if (!StringUtils.hasText(content)) {
             suggestions.add(warn("内容为空", "消息内容不能为空"));

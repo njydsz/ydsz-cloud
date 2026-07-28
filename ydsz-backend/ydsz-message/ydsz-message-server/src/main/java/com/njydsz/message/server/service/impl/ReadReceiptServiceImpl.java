@@ -3,12 +3,12 @@ package com.njydsz.message.server.service.impl.receipt;
 import java.time.Duration;
 import java.util.Base64;
 
-import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.util.id.SnowflakeUtils;
+import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.receipt.ReadReceiptService;
 
 import lombok.RequiredArgsConstructor;
@@ -41,14 +41,8 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
 
     /** Redis 模板（短链映射 / 已读状态） */
     private final RedisService redisService;
-
-    /** 追踪像素基础 URL */
-    @Value("${ydsz.message.tracking.base-url:https://ydsz.example.com}")
-    private String trackingBaseUrl;
-
-    /** 短链基础 URL */
-    @Value("${ydsz.message.shortlink.base-url:https://s.ydsz.example.com}")
-    private String shortlinkBaseUrl;
+    /** P3-3.2: tracking / shortlink base-url 统一从 MessageProperties 读取 */
+    private final MessageProperties messageProperties;
 
     /** 短链映射 Redis key 前缀 */
     private static final String SHORTLINK_PREFIX = "ydsz:shortlink:";
@@ -71,6 +65,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
         }
         String encodedMsgId = Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(msgId.getBytes());
+        String trackingBaseUrl = messageProperties.getTracking().getBaseUrl();
         String pixelUrl = trackingBaseUrl + "/api/read-receipt/pixel/" + encodedMsgId;
         String pixel = "<img src=\"" + pixelUrl + "\" width=\"1\" height=\"1\" "
                 + "style=\"display:none;border:0;outline:none;\" alt=\"\" />";
@@ -89,6 +84,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
             return originalUrl;
         }
         String code = SnowflakeUtils.nextIdStr();
+        String shortlinkBaseUrl = messageProperties.getShortlink().getBaseUrl();
         String shortUrl = shortlinkBaseUrl + "/s/" + code;
         try {
             redisService.set(SHORTLINK_PREFIX + code, originalUrl, Duration.ofSeconds(SHORTLINK_TTL));

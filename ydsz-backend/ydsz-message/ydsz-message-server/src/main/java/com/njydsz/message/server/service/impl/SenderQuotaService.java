@@ -4,9 +4,10 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.message.server.config.MessageProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,16 +40,11 @@ import lombok.extern.slf4j.Slf4j;
 public class SenderQuotaService {
 
     private final RedisService redisService;
+    /** OD-8 / P3-3.2: 配额配置统一从 MessageProperties 读取 */
+    private final MessageProperties messageProperties;
 
     private static final String DAILY_KEY_PREFIX = "quota:daily:";
     private static final String HOURLY_KEY_PREFIX = "quota:hourly:";
-
-    /** OD-8: 配额配置化 */
-    @Value("${ydsz.message.sender-daily-limit:10000}")
-    private long dailyLimit;
-
-    @Value("${ydsz.message.sender-hourly-limit:1000}")
-    private long hourlyLimit;
 
     /**
      * 检查发送方配额是否允许发送。
@@ -61,6 +57,8 @@ public class SenderQuotaService {
         if (senderId == null || senderId.isBlank()) {
             return true;
         }
+        long dailyLimit = messageProperties.getSenderDailyLimit();
+        long hourlyLimit = messageProperties.getSenderHourlyLimit();
         String today = LocalDate.now().toString();
         String dailyKey = DAILY_KEY_PREFIX + senderId + ":" + channel + ":" + today;
         String dailyCountStr = redisService.get(dailyKey, String.class);

@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.archive.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -11,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,13 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageArchiveServiceImpl implements MessageArchiveService {
 
     private final MsgLogMapper msgLogMapper;
-
-    @Value("${ydsz.message.archive.es-enabled:false}")
-    private boolean esEnabled;
+    /** P3-3.2: ES 归档开关统一从 MessageProperties 读取 */
+    private final MessageProperties messageProperties;
 
     @Override
     public void index(MsgLog logDO) {
-        if (!esEnabled || logDO == null) {
+        if (!messageProperties.getArchive().isEsEnabled() || logDO == null) {
             return;
         }
         // ES 索引逻辑（当 ES 可用时通过 ElasticsearchRestTemplate 索引）
@@ -48,7 +47,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 
     @Override
     public void batchIndex(List<MsgLog> logList) {
-        if (!esEnabled || logList == null || logList.isEmpty()) {
+        if (!messageProperties.getArchive().isEsEnabled() || logList == null || logList.isEmpty()) {
             return;
         }
         log.debug("[Archive] 批量索引: count={}", logList.size());
@@ -61,7 +60,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     public Page<MsgLog> search(String keyword, String channel, String status, String bizType,
                                  LocalDateTime startTime, LocalDateTime endTime,
                                  String tenantId, int pageNum, int pageSize) {
-        if (esEnabled) {
+        if (messageProperties.getArchive().isEsEnabled()) {
             // ES 全文搜索（ES 可用时实现）
             log.info("[Archive] ES 搜索: keyword={} channel={} status={}", keyword, channel, status);
         }
@@ -72,7 +71,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
 
     @Override
     public void delete(String id) {
-        if (!esEnabled || !StringUtils.hasText(id)) {
+        if (!messageProperties.getArchive().isEsEnabled() || !StringUtils.hasText(id)) {
             return;
         }
         log.debug("[Archive] 删除索引: id={}", id);

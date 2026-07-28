@@ -1,13 +1,14 @@
 /**
  * 系统配置 API 模块（前端）
- * <p>封装系统参数（{@code ydsz_config}）CRUD 接口，对应后端 {@code /api/v1/system/config/*} 端点。
- * <p>支持按租户/应用/分组配置运行时参数，热更新无需重启。
- * <p>供「系统管理 → 参数配置」使用。
+ *
+ * 封装系统参数（{@code ydsz_config}）CRUD 接口，对应后端 {@code /api/v1/config/*} 端点。
+ * 使用 @ydsz/shared-api 的 createCrudApi 工厂消除重复 CRUD 代码。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 import { requestClient } from '#/api/request';
+import { createCrudApi } from '@ydsz/shared-api';
 
 export namespace ConfigApi {
   export interface ConfigVO {
@@ -30,6 +31,7 @@ export namespace ConfigApi {
   }
 
   export interface ConfigDTO {
+    id?: string;
     configKey?: string;
     configValue?: string;
     configGroup?: string;
@@ -40,37 +42,57 @@ export namespace ConfigApi {
   }
 }
 
-/** 分页查询config列表 */
+/** 系统配置 CRUD API（由 createCrudApi 工厂创建） */
+export const configApi = createCrudApi<
+  ConfigApi.ConfigVO,
+  ConfigApi.ConfigPageQuery,
+  ConfigApi.ConfigDTO
+>(requestClient, '/api/v1/config');
+
+/**
+ * 分页查询 config 列表
+ * @deprecated 使用 configApi.page() 替代
+ */
 export function getConfigPageApi(params: ConfigApi.ConfigPageQuery) {
-  return requestClient.get<{
-    total: number;
-    current: number;
-    size: number;
-    items: ConfigApi.ConfigVO[];
-  }>(`/api/v1/config/page`, { params });
+  return configApi.page(params as any);
 }
 
-/** 查询全部config列表 */
+/**
+ * 查询全部 config 列表
+ * @deprecated 使用 configApi.list() 替代
+ */
 export function getConfigListApi() {
-  return requestClient.get<ConfigApi.ConfigVO[]>(`/api/v1/config/list`);
+  return configApi.list();
 }
 
-/** 根据 ID 查询config */
+/**
+ * 根据 ID 查询 config
+ * @deprecated 使用 configApi.getById() 替代
+ */
 export function getConfigByIdApi(id: string) {
-  return requestClient.get<ConfigApi.ConfigVO>(`/api/v1/config/${id}`);
+  return configApi.getById(id);
 }
 
-/** 创建config */
+/**
+ * 创建 config
+ * @deprecated 使用 configApi.create() 替代
+ */
 export function createConfigApi(data: ConfigApi.ConfigDTO) {
-  return requestClient.post<string>(`/api/v1/config`, data);
+  return configApi.create(data);
 }
 
-/** 更新config */
+/**
+ * 更新 config
+ * @deprecated 使用 configApi.update() 替代
+ */
 export function updateConfigApi(data: ConfigApi.ConfigDTO) {
-  return requestClient.put<boolean>(`/api/v1/config`, data);
+  return configApi.update(data.id ?? '', data);
 }
 
-/** 删除config */
+/**
+ * 删除 config
+ * @deprecated 使用 configApi.remove() 替代
+ */
 export function deleteConfigApi(id: string) {
-  return requestClient.delete<boolean>(`/api/v1/config/${id}`);
+  return configApi.remove(id);
 }

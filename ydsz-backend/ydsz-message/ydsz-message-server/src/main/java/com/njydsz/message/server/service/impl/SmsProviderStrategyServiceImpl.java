@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
@@ -43,16 +42,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
 
     /** Redis 模板（服务商日发送量 / 失败量统计） */
     private final RedisService redisService;
-    /** OD-4: 成本配置注入 */
+    /** OD-4: 成本配置 + P3-3.2: 策略 / 权重配置统一从 MessageProperties 读取 */
     private final MessageProperties messageProperties;
-
-    /** 策略类型 */
-    @Value("${ydsz.message.sms.strategy:ROUND_ROBIN}")
-    private String strategyStr;
-
-    /** 权重配置（provider:weight,provider:weight） */
-    @Value("${ydsz.message.sms.weights:aliyun:5,tencent:3}")
-    private String weightsConfig;
 
     /** 轮询游标 */
     private final AtomicInteger roundRobinIndex = new AtomicInteger(0);
@@ -73,7 +64,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
         }
         Strategy strategy;
         try {
-            strategy = Strategy.valueOf(strategyStr.toUpperCase());
+            strategy = Strategy.valueOf(messageProperties.getSms().getStrategy().toUpperCase());
         } catch (IllegalArgumentException e) {
             strategy = Strategy.ROUND_ROBIN;
         }
@@ -183,10 +174,11 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     }
 
     /**
-     * 解析权重配置。
+     * 解析权重配置（从 {@link MessageProperties.SmsConfig#getWeights()} 读取）。
      */
     private Map<String, Integer> parseWeights() {
         Map<String, Integer> weights = new HashMap<>();
+        String weightsConfig = messageProperties.getSms().getWeights();
         if (weightsConfig != null && !weightsConfig.isBlank()) {
             for (String pair : weightsConfig.split(",")) {
                 String[] kv = pair.split(":");

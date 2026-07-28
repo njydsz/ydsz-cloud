@@ -2,9 +2,10 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
 
-import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.message.server.config.MessageProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ChannelSuppressionEngine {
 
     private final RedisService redisService;
-
-    /** OD-7: 抑制窗口配置化 */
-    @Value("${ydsz.message.suppress-window-seconds:300}")
-    private long suppressWindowSeconds;
+    /** OD-7 / P3-3.2: 抑制窗口配置统一从 MessageProperties 读取 */
+    private final MessageProperties messageProperties;
 
     /** OD-7: 抑制 Key 前缀 */
     private static final String SUPPRESS_KEY_PREFIX = "suppress:";
@@ -57,6 +56,7 @@ public class ChannelSuppressionEngine {
         if (bizType == null || bizId == null || receiver == null || channel == null) {
             return false;
         }
+        long suppressWindowSeconds = messageProperties.getSuppressWindowSeconds();
         String key = buildKey(bizType, bizId, receiver);
         Boolean acquired = redisService.opsForValue()
                 .setIfAbsent(key, channel, Duration.ofSeconds(suppressWindowSeconds));
