@@ -1,7 +1,5 @@
 package com.njydsz.common.notify.helper;
 
-import java.util.Collections;
-
 import com.njydsz.common.notify.core.NotifyRequest;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.core.NotifyService;

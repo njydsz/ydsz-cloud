@@ -34,11 +34,52 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 /**
- * WOPI 协议接口（P1-4 + P1-R5 + P2-R4）
- * <p>
- * 集成 OnlyOffice / Collabora Online 在线协同编辑。
- * P1-R5: 增加 WOPI Token 验证 + 锁定状态检查。
- * P2-R4: 返回 DTO 替代 Map<String, Object>。
+ * WOPI 协议接口 Controller（P1-4 + P1-R5 + P2-R4）。
+ *
+ * <p>实现 WOPI（Web Application Open Platform Interface）协议，对接 OnlyOffice / Collabora Online
+ * 等在线协同编辑器，是网盘"在线编辑 Word/Excel/PPT"能力的核心接口：
+ * <ul>
+ *   <li>{@code GET /wopi/files/{fileId}} - CheckFileInfo：返回文件元信息</li>
+ *   <li>{@code GET /wopi/files/{fileId}/contents} - GetFile：返回文件原始内容</li>
+ *   <li>{@code POST /wopi/files/{fileId}/contents} - PutFile：保存编辑器内容</li>
+ *   <li>{@code POST /wopi/files/{fileId}/lock} - Lock：锁定文件防并发</li>
+ *   <li>{@code POST /wopi/files/{fileId}/unlock} - Unlock：解锁文件</li>
+ * </ul>
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>P1-R5 修复：增加 WOPI Token 验证（{@code X-WOPI-Authorization}）+ 锁定状态校验</li>
+ *   <li>P2-R4 修复：使用 DTO（{@link WopiCheckFileInfoResponse} / {@link WopiPutFileResponse}）替代 Map</li>
+ *   <li>支持 OnlyOffice Document Server / Collabora Online 等 WOPI 兼容编辑器</li>
+ *   <li>PUT 请求支持锁定持有者校验，防并发编辑冲突</li>
+ * </ul>
+ *
+ * <h3>安全与稳定性</h3>
+ * <ul>
+ *   <li>所有写操作加 {@link Idempotent} 防重（5s TTL）</li>
+ *   <li>所有写操作加 WOPI Token 验证（{@code expectedAccessToken} 配置）</li>
+ *   <li>PutFile 增加锁定持有者校验，非锁持有者保存会被拒绝</li>
+ *   <li>异常处理：内部异常转 WOPI 错误响应，不泄露堆栈</li>
+ * </ul>
+ *
+ * <h3>接口路径</h3>
+ * <pre>
+ *   GET  /api/v1/nextwiki/wopi/files/{fileId}                - CheckFileInfo
+ *   GET  /api/v1/nextwiki/wopi/files/{fileId}/contents      - GetFile
+ *   POST /api/v1/nextwiki/wopi/files/{fileId}/contents      - PutFile
+ *   POST /api/v1/nextwiki/wopi/files/{fileId}/lock          - Lock
+ *   POST /api/v1/nextwiki/wopi/files/{fileId}/unlock        - Unlock
+ * </pre>
+ *
+ * <h3>架构位置</h3>
+ * <pre>
+ *   OnlyOffice/Collabora 编辑器
+ *     → ydsz-gateway
+ *       → ydsz-nextwiki-web (本 Controller)
+ *         → ydsz-nextwiki-domain.FileNodeRepository
+ *         → ydsz-common-file (IFileStorage 抽象)
+ *         → ydsz-nextwiki-server.NextwikiFileUtils
+ * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -47,17 +88,21 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 @RestController
 @RequestMapping("/api/v1/nextwiki/wopi")
 @RequiredArgsConstructor
-@Tag(name = "WOPI 协议", description = "在线协同编辑 WOPI 接口（OnlyOffice/Collabora 集成）")
+@Tag(name = "WOPI 协议", description = "在线协同编辑 WOPI 接口（OnlyOffice / Collabora 集成）")
 public class WopiController {
 
+    /** 文件节点仓储（用于查询/更新文件） */
     private final FileNodeRepository fileNodeRepository;
 
+    /** 文件存储提供者（optional，可能不存在于所有部署环境） */
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
 
+    /** WOPI 编辑器 URL（来自配置 {@code nextwiki.wopi.editor-url}） */
     @Value("${nextwiki.wopi.editor-url:}")
     private String editorUrl;
 
+    /** WOPI 访问令牌（来自配置 {@code nextwiki.wopi.access-token}） */
     @Value("${nextwiki.wopi.access-token:}")
     private String expectedAccessToken;
 

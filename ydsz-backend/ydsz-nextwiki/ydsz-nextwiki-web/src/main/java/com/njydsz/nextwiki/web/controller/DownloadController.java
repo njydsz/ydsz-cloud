@@ -314,7 +314,19 @@ public class DownloadController {
     }
 
     /**
-     * 生成签名下载 URL
+     * 生成带时效和 IP 绑定的签名下载 URL。
+     *
+     * <p>URL 包含 HMAC 签名，访问时校验：
+     * <ul>
+     *   <li>签名是否合法（防篡改）</li>
+     *   <li>是否在有效期内（{@code expires}）</li>
+     *   <li>客户端 IP 是否匹配（防链接外传）</li>
+     * </ul>
+     *
+     * @param nodeId  文件节点 ID
+     * @param userId  当前用户 ID
+     * @param request HTTP 请求（用于获取客户端 IP）
+     * @return 统一响应结果，data 为签名 URL 字符串
      */
     @Idempotent(key = "ydsz:nextwiki:DownloadController:generateSignedUrl:lock", ttlSeconds = 5)
     @PostMapping("/{nodeId}/signed-url")
@@ -333,7 +345,15 @@ public class DownloadController {
     }
 
     /**
-     * 通过签名 URL 下载文件
+     * 通过签名 URL 下载文件（公开接口，无需登录）。
+     *
+     * <p>校验签名的合法性、有效期、IP 绑定后，将文件流式写入 HTTP 响应。
+     * 用于对接外部系统（IM 机器人、邮件附件链接等）安全分发文件。
+     *
+     * @param sign       签名片段（URL 路径段）
+     * @param expireTime 过期时间戳（毫秒）
+     * @param request    HTTP 请求
+     * @param response   HTTP 响应
      */
     @GetMapping("/signed/{sign}")
     @Operation(summary = "通过签名URL下载文件")
@@ -369,7 +389,13 @@ public class DownloadController {
     // ==================== 私有方法（HTTP 层处理） ====================
 
     /**
-     * P2-R3: 委托 ClientIpResolver 解析客户端 IP（可用时委托，不可用降级）
+     * 解析客户端真实 IP（多级降级）。
+     *
+     * <p>优先使用 common-safe 模块的 {@link ClientIpResolver}，若不可用则降级为本地解析：
+     * 1) {@code X-Forwarded-For} 头第一项；2) {@code X-Real-IP} 头；3) {@code request.getRemoteAddr()}。
+     *
+     * @param request HTTP 请求
+     * @return 客户端 IP
      */
     private String getClientIp(HttpServletRequest request) {
         // 优先使用 common-safe ClientIpResolver（如果 Bean 可用）
@@ -388,7 +414,13 @@ public class DownloadController {
     }
 
     /**
-     * 设置下载响应头（Content-Disposition + Content-Type）
+     * 设置下载响应头（{@code Content-Disposition} + {@code Content-Type}）。
+     *
+     * <p>采用双形式文件名（普通 + RFC 5987 {@code filename*}）以兼容主流浏览器。
+     *
+     * @param response HTTP 响应
+     * @param fileName 文件名（用于 {@code Content-Disposition}，可包含中文）
+     * @param mimeType MIME 类型（可空，空时使用 {@code application/octet-stream}）
      */
     private void setDownloadHeaders(HttpServletResponse response, String fileName, String mimeType) {
         String encodedName = URLEncoder.encode(fileName != null ? fileName : "download",
@@ -399,7 +431,12 @@ public class DownloadController {
     }
 
     /**
-     * 从 storageKey 中提取文件名
+     * 从 storageKey 中提取文件名。
+     *
+     * <p>取路径最后一段；空字符串或 null 时返回默认 {@code download}。
+     *
+     * @param storageKey 对象存储的 key 路径
+     * @return 文件名
      */
     private String extractFileNameFromStorageKey(String storageKey) {
         if (storageKey == null || storageKey.isEmpty()) {
