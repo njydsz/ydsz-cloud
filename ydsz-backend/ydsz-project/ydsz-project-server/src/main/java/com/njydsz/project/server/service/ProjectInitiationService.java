@@ -82,4 +82,24 @@ public interface ProjectInitiationService {
      * @return 项目立项 VO 列表
      */
     List<ProjectInitiationVO> listByPmId(String pmId);
+
+    /**
+     * 同步工作流审批状态到立项状态。
+     *
+     * <p>由 {@code FlowEventQueueSubscriber} 消费 workflow 模块发布的
+     * {@code INITIATION_STATUS_SYNC} 事件后调用，实现 project↔workflow 联动闭环。
+     *
+     * <p><b>状态映射：</b>
+     * <ul>
+     *   <li>{@code markProcessing} → status = "PROCESSING"（审批中）</li>
+     *   <li>{@code markApproved} → status = "APPROVED", stage = "INITIATION"（审批通过，推进到立项阶段）</li>
+     *   <li>{@code markRejected} → status = "REJECTED"（审批驳回）</li>
+     * </ul>
+     *
+     * @param id     立项主键
+     * @param action 工作流动作（markProcessing / markApproved / markRejected）
+     * @return true=同步成功，false=立项不存在
+     * @since 1.0.0
+     */
+    boolean syncWorkflowStatus(String id, String action);
 }

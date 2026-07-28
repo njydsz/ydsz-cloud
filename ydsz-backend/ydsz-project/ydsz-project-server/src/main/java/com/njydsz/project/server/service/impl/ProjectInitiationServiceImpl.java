@@ -354,6 +354,67 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     }
 
     /**
+     * 同步工作流审批状态到立项状态
+     *
+     * <p>由 {@code FlowEventQueueSubscriber} 消费 workflow 模块 MQ 事件后调用，
+     * 实现 project↔workflow 跨服务联动闭环。
+     *
+     * <p><b>状态映射：</b>
+     * <ul>
+     *   <li>{@code markProcessing} → status = "PROCESSING"（审批中）</li>
+     *   <li>{@code markApproved} → status = "APPROVED", stage = "INITIATION"（审批通过，推进到立项阶段）</li>
+     *   <li>{@code markRejected} → status = "REJECTED"（审批驳回）</li>
+     * </ul>
+     *
+     * <p>执行链路：
+     * <ol>
+     *   <li>查询原实体</li>
+     *   <li>根据 action 更新 status 和 stage</li>
+     *   <li>更新成功触发 {@code PROJECT_STAGE_CHANGED} 领域事件（Outbox）</li>
+     *   <li>同步到 ES 搜索索引</li>
+     *   <li>埋点 Prometheus 指标</li>
+     * </ol>
+     *
+     * @param id     立项主键
+     * @param action 工作流动作（markProcessing / markApproved / markRejected）
+     * @return true=同步成功，false=立项不存在
+     * @since 1.0.0
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean syncWorkflowStatus(String id, String action) {
+        ProjectInitiation entity = repository.getById(id);
+        if (entity == null) {
+            log.warn("[ProjectInitiation] 同步工作流状态失败：立项不存在 id={}", id);
+            return false;
+        }
+        switch (action) {
+            case "markProcessing":
+                entity.setStatus("PROCESSING");
+                break;
+            case "markApproved":
+                entity.setStatus("APPROVED");
+                entity.setStage("INITIATION");
+                break;
+            case "markRejected":
+                entity.setStatus("REJECTED");
+                break;
+            default:
+                log.warn("[ProjectInitiation] 未知的工作流同步动作: action={} id={}", action, id);
+                return false;
+        }
+        boolean result = repository.updateById(entity);
+        if (result) {
+            projectMetrics.incInitiationUpdated();
+            publishEvent(StandardEventTypes.PROJECT_STAGE_CHANGED, entity.getId(), entity);
+            indexUpsert(entity);
+            log.info("[ProjectInitiation] 工作流状态同步成功: id={} action={} status={} stage={}",
+                    id, action, entity.getStatus(), entity.getStage());
+        }
+        return result;
+    }
+
+    /**
      * 实体 → VO 转换（私有）
      *
      * @param entity 数据库实体

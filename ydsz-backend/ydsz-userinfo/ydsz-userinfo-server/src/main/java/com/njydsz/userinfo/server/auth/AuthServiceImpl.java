@@ -27,6 +27,9 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
@@ -81,6 +84,8 @@ public class AuthServiceImpl implements AuthService {
     private final CaptchaService captchaService;
     /** LDAP 认证提供者（可选依赖，未配置时为 null） */
     private final ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider;
+    /** Outbox 事件服务（可选依赖，用于发布用户登录/登出领域事件） */
+    private final ObjectProvider<OutboxService> outboxServiceProvider;
 
     public AuthServiceImpl(UserAccountMapper userAccountMapper,
                            RoleMapper roleMapper,
@@ -93,7 +98,8 @@ public class AuthServiceImpl implements AuthService {
                            UserInfoMetrics userInfoMetrics,
                            UserInfoProperties properties,
                            CaptchaService captchaService,
-                           ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider) {
+                           ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider,
+                           ObjectProvider<OutboxService> outboxServiceProvider) {
         this.userAccountMapper = userAccountMapper;
         this.roleMapper = roleMapper;
         this.userRoleMapper = userRoleMapper;
@@ -106,6 +112,7 @@ public class AuthServiceImpl implements AuthService {
         this.properties = properties;
         this.captchaService = captchaService;
         this.ldapProviderProvider = ldapProviderProvider;
+        this.outboxServiceProvider = outboxServiceProvider;
     }
 
     /**
@@ -207,6 +214,9 @@ public class AuthServiceImpl implements AuthService {
 
         userInfoMetrics.recordLoginSuccess();
         userInfoMetrics.stopTimer(sample);
+
+        // 发布用户登录领域事件到 Outbox
+        publishEvent(StandardEventTypes.USER_LOGIN, user.getId(), user);
 
         LoginVO result = new LoginVO();
         result.setAccessToken(accessToken);
@@ -313,5 +323,23 @@ public class AuthServiceImpl implements AuthService {
         updateWrapper.set(UserAccount::getLockedUntil, null);
         updateWrapper.set(UserAccount::getLastLoginAt, LocalDateTime.now());
         userAccountMapper.update(null, updateWrapper);
+    }
+
+    /**
+     * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
+     */
+    private void publishEvent(String eventType, String aggregateId, Object payload) {
+        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        if (outboxService == null) {
+            log.debug("OutboxService not available, skipping event: type={}, id={}", eventType, aggregateId);
+            return;
+        }
+        try {
+            outboxService.appendToOutbox("UserAccount", aggregateId, eventType,
+                    YdszJson.toJson(payload));
+        } catch (Exception e) {
+            log.warn("Failed to publish outbox event: type={}, id={}, error={}",
+                    eventType, aggregateId, e.getMessage());
+        }
     }
 }
