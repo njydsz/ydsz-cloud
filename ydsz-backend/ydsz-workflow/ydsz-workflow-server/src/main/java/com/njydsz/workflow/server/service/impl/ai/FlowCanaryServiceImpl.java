@@ -93,6 +93,25 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     /** 流程定义 Mapper，用于读取/更新灰度发布状态、灰度比例及切流日志 */
     private final FlowDefinitionMapper definitionMapper;
 
+    /**
+     * 启动灰度发布
+     *
+     * <p>将已发布（{@code isPublish=1}）的流程定义切换为灰度态（{@code CanaryStatus.CANARYING}），
+     * 设置初始引流比例（如 5%）。启动后该定义会与同 {@code flowCode} 的稳定版并存，
+     * 按 {@code strategy} 切流规则决定每个新启动实例走哪个版本。
+     *
+     * <p><b>限制：</b>已全量发布（{@code PROMOTED}）的定义不能再启动灰度。
+     *
+     * @param definitionId    流程定义 ID
+     * @param initialPercent  初始灰度比例（0-100），建议起步 ≤ 10%
+     * @param strategy        切流策略：{@code USER_HASH / TENANT / RANDOM / TAG}，
+     *                        为空时默认 {@code USER_HASH}
+     * @param operatorId      操作人 ID（用于审计）
+     * @param operatorName    操作人姓名
+     * @param note            灰度原因 / 备注（写入 rollout log）
+     * @throws SysException {@code BAD_REQUEST} — 定义未发布 / 已全量 / percent 非法
+     * @throws SysException {@code NOT_FOUND}   — 定义不存在
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishCanary(String definitionId, int initialPercent, String strategy,
@@ -119,6 +138,22 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
                 def.getCanaryStrategy(), operatorName);
     }
 
+    /**
+     * 动态调整灰度比例
+     *
+     * <p>灰度运行中动态提升（如 5% → 30% → 60%）或回退（如 30% → 5%）引流比例。
+     * 比例相同时跳过（幂等）。<b>仅</b>{@code CANARYING} 状态可调整。
+     *
+     * <p><b>建议阶梯：</b>5% → 20% → 50% → 100%，每档观察 5-10 分钟异常指标
+     * （错误率 / 审批耗时 / SLA 超时率）后再提升。
+     *
+     * @param definitionId  流程定义 ID
+     * @param newPercent    新灰度比例（0-100）
+     * @param operatorId    操作人 ID
+     * @param operatorName  操作人姓名
+     * @param note          调整原因 / 备注
+     * @throws SysException {@code BAD_REQUEST} — 定义非灰度中状态 / percent 非法
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void adjustCanaryPercent(String definitionId, int newPercent,
@@ -143,6 +178,20 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
                 definitionId, def.getFlowCode(), oldPercent, newPercent, operatorName);
     }
 
+    /**
+     * 灰度全量发布（晋升为稳定版）
+     *
+     * <p>灰度稳定后将当前灰度版晋升为正式版（{@code canaryStatus=PROMOTED}，
+     * {@code canaryPercent=100}），同时<b>失效同 {@code flowCode} 的其他已发布版本</b>（{@code isPublish=0}）。
+     * 已生效的实例仍跑原版本，新启动的实例会 100% 路由到新版本。
+     *
+     * <p>幂等性：已 {@code PROMOTED} 状态直接返回。
+     *
+     * @param definitionId  流程定义 ID
+     * @param operatorId    操作人 ID
+     * @param operatorName  操作人姓名
+     * @param note          备注（默认「全量发布」）
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void promoteCanary(String definitionId, String operatorId, String operatorName, String note) {
@@ -170,6 +219,18 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
                 definitionId, def.getFlowCode(), def.getFlowVersion(), operatorName);
     }
 
+    /**
+     * 灰度回滚（一键回到稳定版）
+     *
+     * <p>灰度期间发现线上 BUG 时，<b>立即</b>将当前灰度版失效（{@code isPublish=9}，{@code canaryPercent=0}，
+     * {@code canaryStatus=ROLLED_BACK}），新启动的实例全部走原稳定版。
+     * <b>已生效的灰度实例不会自动迁移</b>（避免状态错乱），需手动处置。
+     *
+     * @param definitionId  流程定义 ID
+     * @param operatorId    操作人 ID
+     * @param operatorName  操作人姓名
+     * @param note          回滚原因（默认「灰度回滚」）
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rollbackCanary(String definitionId, String operatorId, String operatorName, String note) {
@@ -187,6 +248,27 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
                 definitionId, def.getFlowCode(), def.getFlowVersion(), operatorName, note);
     }
 
+    /**
+     * 解析用户实际应走的流程定义（启动实例时调用）
+     *
+     * <p>根据 {@code flowCode + version} 查到稳定版，再查同 {@code flowCode} 的灰度中版本，
+     * 按切流策略（{@code USER_HASH / RANDOM / WHITELIST}）决定返回稳定版或灰度版。
+     *
+     * <p><b>短路规则：</b>
+     * <ul>
+     *   <li>稳定版不存在 → 返回 {@code null}（让调用方报错）</li>
+     *   <li>无灰度版 → 返回稳定版</li>
+     *   <li>灰度版 {@code percent=0} / {@code percent=100} → 返回稳定版（极端值无意义）</li>
+     *   <li>切流判定为「稳定版」→ 返回稳定版</li>
+     *   <li>切流判定为「灰度版」→ 返回灰度版</li>
+     * </ul>
+     *
+     * @param flowCode    流程编码
+     * @param version     版本号（默认 {@code "1.0"}）
+     * @param tenantId    租户 ID（默认从 {@link AuthContext} 取）
+     * @param initiatorId 发起人 ID（用于 USER_HASH 切流）
+     * @return 实际应走的流程定义（无稳定版时返回 null）
+     */
     @Override
     @Transactional(readOnly = true)
     public FlowDefinition resolveEffectiveDefinition(String flowCode, String version,
@@ -222,6 +304,16 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         return stable;
     }
 
+    /**
+     * 查询指定流程的灰度发布操作日志
+     *
+     * <p>汇总同 {@code flowCode} 下所有定义的 {@code canary_rollout_log} JSON 数组，
+     * 反序列化为「操作人 / 比例变更 / 时间 / 备注」列表，按操作时间正序返回。
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID（默认从 {@link AuthContext} 取）
+     * @return 灰度操作日志列表，{@code flowCode} 为空或无数据时返回空列表
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listCanaryRolloutLog(String flowCode, String tenantId) {

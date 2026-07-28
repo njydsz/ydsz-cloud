@@ -100,6 +100,22 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     private static final int DEFAULT_TIMEOUT_MINUTES = 24 * 60;
     private static final String DEFAULT_ADMIN_USER_ID = "1";
 
+    /**
+     * 解析节点的 SLA 配置 JSON 字符串
+     *
+     * <p>配置项：
+     * <ul>
+     *   <li>{@code timeoutMinutes} — 任务超时时间（必填）</li>
+     *   <li>{@code action} — 超时动作（{@code REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT}，默认 {@code REMIND}）</li>
+     *   <li>{@code reminderIntervalMinutes} — 提醒间隔（默认 60min）</li>
+     *   <li>{@code maxReminders} — 最大提醒次数（默认 3）</li>
+     *   <li>{@code escalateUserId} — 升级目标用户 ID（{@code action=ESCALATE} 时必填）</li>
+     *   <li>{@code autoComment} — 自动动作的审批意见</li>
+     * </ul>
+     *
+     * @param slaConfigJson 配置 JSON 字符串
+     * @return 解析后的 Map（解析失败或为空时返回空 Map）
+     */
     @Override
     public Map<String, Object> parseSlaConfig(String slaConfigJson) {
         if (!StringUtils.hasText(slaConfigJson)) {
@@ -114,6 +130,15 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         }
     }
 
+    /**
+     * 应用 SLA 配置到任务（任务创建时调用）
+     *
+     * <p>根据节点的 {@code slaConfig} 计算任务的 {@code dueAt}（= {@code createdAt} + {@code timeoutMinutes}），
+     * 并记录 {@code slaAction} 预期动作。未配置 {@code timeoutMinutes} 时<b>不</b>应用 SLA。
+     *
+     * @param task 当前任务
+     * @param node 当前节点（含 {@code slaConfig}）
+     */
     @Override
     public void applySlaConfig(FlowRunTask task, FlowNode node) {
         if (task == null || node == null) {
@@ -147,6 +172,22 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                 config.get("action"), dueAt);
     }
 
+    /**
+     * 扫描并处理超期 SLA 任务（手动触发 / 定时任务入口）
+     *
+     * <p>执行链路：
+     * <ol>
+     *   <li>游标分页查询超期候选任务（{@code PENDING/CLAIMED} 且 {@code dueAt <= now}），
+     *       单批最多 {@link #SCAN_BATCH_SIZE} 条</li>
+     *   <li>逐条处理（{@link #processOverdue}），单条失败不影响整体</li>
+     *   <li>批次未满或本批无处理时结束循环（<b>避免大表全表扫描</b>）</li>
+     * </ol>
+     *
+     * <p>集群幂等：本方法由 {@code @Scheduled} 定时任务调用，<b>调用方</b>需通过
+     * {@link FlowClusterLockHelper} 加分布式锁。
+     *
+     * @return 本轮处理的任务数（含 REMIND 提醒 + 最终动作）
+     */
     @Override
     public int scanAndProcess() {
         try {
@@ -187,6 +228,15 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         }
     }
 
+    /**
+     * 处理单条超期任务（{@code REQUIRES_NEW} 子事务）
+     *
+     * <p>使用 {@code @Transactional(propagation = Propagation.REQUIRES_NEW)} 隔离单条任务的失败，
+     * 即便单条处理抛异常回滚，也不影响其他任务的处理。
+     *
+     * @param task 超期任务
+     * @return true=已处理（REMIND / 最终动作），false=跳过（未到期 / 已完成 / 状态不符）
+     */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public boolean processOverdue(FlowRunTask task) {

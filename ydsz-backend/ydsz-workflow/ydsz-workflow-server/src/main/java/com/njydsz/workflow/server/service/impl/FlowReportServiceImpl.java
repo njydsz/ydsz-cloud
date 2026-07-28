@@ -145,6 +145,18 @@ public class FlowReportServiceImpl implements FlowReportService {
         });
     }
 
+    /**
+     * 生成本周审批数据报告
+     *
+     * <p>默认统计时间范围：<b>上周一 00:00 ~ 本周一 00:00</b>（即「上一完整自然周」）。
+     * 报告内容包含：核心指标（发起量 / 通过量 / 驳回量 / 超时量 / 平均耗时）、
+     * 审批趋势（按天）、审批人效率 Top 5、流程效率对比。
+     *
+     * <p>数据来源：{@link FlowAnalyticsService}，内部已优化查询走只读副本路由。
+     *
+     * @param tenantId 租户 ID（默认 {@code "1"}）
+     * @return 报告数据 Map（含 {@code reportType / period / overview / trend / topApprovers / flowComparison}）
+     */
     @Override
     public Map<String, Object> generateWeeklyReport(String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
@@ -179,6 +191,15 @@ public class FlowReportServiceImpl implements FlowReportService {
         return report;
     }
 
+    /**
+     * 生成本月审批数据报告
+     *
+     * <p>默认统计时间范围：<b>上月 1 号 00:00 ~ 上月最后一天 23:59:59</b>（即「上一完整自然月」）。
+     * 报告内容与周报类似，但审批人效率 Top 10、趋势按周聚合，更适合月度管理决策。
+     *
+     * @param tenantId 租户 ID（默认 {@code "1"}）
+     * @return 报告数据 Map
+     */
     @Override
     public Map<String, Object> generateMonthlyReport(String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
@@ -215,6 +236,16 @@ public class FlowReportServiceImpl implements FlowReportService {
         return report;
     }
 
+    /**
+     * 推送周报到管理员（手动触发）
+     *
+     * <p>由 {@link #scheduledWeeklyReport} 定时任务调用，也可由外部手动触发。
+     * 推送通道：{@link FlowNotificationService#send}（默认「admin」用户，
+     * 实际应通过租户配置获取收件人列表）。
+     *
+     * @param tenantId 租户 ID
+     * @return 推送成功返回 {@code true}，失败返回 {@code false}（异常被吞，不影响调用方）
+     */
     @Override
     public boolean sendWeeklyReport(String tenantId) {
         try {
@@ -232,6 +263,15 @@ public class FlowReportServiceImpl implements FlowReportService {
         }
     }
 
+    /**
+     * 推送月报到管理员（手动触发）
+     *
+     * <p>由 {@link #scheduledMonthlyReport} 定时任务调用，也可由外部手动触发。
+     * 推送通道：{@link FlowNotificationService#send}。
+     *
+     * @param tenantId 租户 ID
+     * @return 推送成功返回 {@code true}，失败返回 {@code false}
+     */
     @Override
     public boolean sendMonthlyReport(String tenantId) {
         try {

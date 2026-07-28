@@ -22,22 +22,53 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 待办任务 — 加签减签类 Service 实现
+ * 待办任务 — 加签减签 / 已阅 / 沟通 / 追加处理人 / 暂存待审 子服务实现
  *
- * <p>从原 {@code FlowTaskServiceImpl} 拆分，专注审批人动态调整与轻量记录职责：
+ * <p>从原 {@code FlowTaskServiceImpl} 拆分出来的子服务，专注审批人<b>动态调整</b>与<b>轻量交互</b>职责，
+ * 是工作流引擎「<b>灵活扩展</b>」能力的标准实现，对标钉钉 / 飞书 / FlowLong 等大厂 B 端工作流的加签减签方案。
+ *
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>前加签：{@link #countersignBefore}</li>
- *   <li>后加签：{@link #countersignAfter}（切换为顺序会签）</li>
- *   <li>减签：{@link #countersignRemove}</li>
- *   <li>追加处理人：{@link #addApprover}</li>
- *   <li>已阅：{@link #markRead}</li>
- *   <li>沟通：{@link #communicate}</li>
- *   <li>暂存待审：{@link #saveDraft}</li>
+ *   <li><b>前加签（{@link #countersignBefore}）</b>：在当前节点前插入临时审批人，需先签后流</li>
+ *   <li><b>后加签（{@link #countersignAfter}）</b>：当前审批人通过后切换到加签人，加签人通过后才推进（顺序会签）</li>
+ *   <li><b>并加签（{@link #countersignParallel}）</b>：加签人与原审批人并行审批，全部通过才推进（并行会签）</li>
+ *   <li><b>减签（{@link #countersignRemove}）</b>：从会签任务中移除指定审批人，{@code approveCount} 减 1</li>
+ *   <li><b>追加处理人（{@link #addApprover}）</b>：在已有会签任务中追加一个审批人，<b>不改变</b>{@code performType}</li>
+ *   <li><b>已阅（{@link #markRead}）</b>：标记任务已阅，<b>不</b>改变任务状态，仅记录审计日志</li>
+ *   <li><b>沟通（{@link #communicate}）</b>：在任务下添加沟通评论，<b>不</b>改变任务状态</li>
+ *   <li><b>暂存待审（{@link #saveDraft}）</b>：审批人保存审批意见草稿到 {@code comment} 字段，<b>不</b>改变任务状态</li>
  * </ul>
  *
- * <p>跨子 Service 共享的任务校验/审计/事件能力委托给 {@link FlowTaskSupport}。
+ * <p><b>加签类型对比：</b>
+ * <table>
+ *   <caption>加签类型差异</caption>
+ *   <tr><th>类型</th><th>加签人位置</th><th>会签模式</th><th>典型场景</th></tr>
+ *   <tr><td>前加签（{@code BEFORE}）</td><td>当前节点前</td><td>顺序（当前人前）</td><td>需要专家先审</td></tr>
+ *   <tr><td>后加签（{@code AFTER}）</td><td>当前节点后</td><td>顺序（切换为 {@code SEQUENTIAL}）</td><td>需要当前主管复核</td></tr>
+ *   <tr><td>并加签（{@code PARALLEL}）</td><td>当前节点并行</td><td>并行（切换为 {@code PARALLEL}）</td><td>需要多部门会审</td></tr>
+ *   <tr><td>追加处理人（{@code ADD}）</td><td>当前节点并行</td><td>保持原 {@code performType}</td><td>会签中临时增加审批人</td></tr>
+ * </table>
  *
+ * <p><b>事务边界：</b>所有写方法开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ * 「审批人写入 + 任务更新 + 审计日志 + 事件发布」原子性。
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>审计追溯</b>：所有加签减签操作写入 {@code ydsz_flow_audit_log}，标注 {@code COUNTERSIGN_*} 类型</li>
+ *   <li><b>事件发布</b>：加签完成后触发 {@code onTaskCountersigned} 回调 + Spring 异步事件 {@code TASK_COUNTERSIGNED}</li>
+ *   <li><b>PC Web only</b>：依赖审批中心 UI（Element Plus 组件），根据项目硬约束仅支持 PC Web</li>
+ *   <li><b>状态校验</b>：所有加签减签操作要求任务处于<b>未完成</b>状态，已完成任务不可加签减签</li>
+ * </ul>
+ *
+ * <p><b>跨子服务共享：</b>任务校验 / 审计 / 事件能力委托给 {@link FlowTaskSupport}，避免代码重复。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowTaskSupport 跨子服务共享辅助
+ * @see FlowTaskOperateDTO 任务操作参数 DTO
+ * @see FlowSignType 加签类型枚举
+ * @see FlowPerformType 会签模式枚举
  */
 @Slf4j
 @Service
@@ -54,7 +85,21 @@ public class FlowTaskSignServiceImpl {
     // ============================== 加签（P1-7） ==============================
 
     /**
-     * P1-7: 前加签 — 在当前节点前插入临时审批人
+     * 前加签：在当前节点前插入临时审批人
+     *
+     * <p>对标钉钉 / 飞书「前加签」功能。执行链路：
+     * <ol>
+     *   <li>查询任务并校验状态（<b>未完成</b>）</li>
+     *   <li>向 {@code ydsz_flow_user} 插入新审批人（{@code signType=BEFORE}）</li>
+     *   <li>{@code approveCount +1}（总应到人数 +1）</li>
+     *   <li>写审计日志 + 触发 {@code onTaskCountersigned} 回调 + Spring 异步事件</li>
+     * </ol>
+     *
+     * <p><b>注意：</b>前加签的实现当前仅插入新审批人记录，<b>未自动切换会签模式</b>，
+     * 适用于「单签场景下临时加签」。如需「多签场景下加签」，建议改用 {@link #countersignParallel}。
+     *
+     * @param dto 操作参数（{@code taskId} / {@code userId} / {@code targetUserId} / {@code targetUserName} / {@code comment}）
+     * @throws SysException {@code BAD_REQUEST} — 任务已完成 / 任务 ID 无效
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignBefore(FlowTaskOperateDTO dto) {
@@ -93,7 +138,20 @@ public class FlowTaskSignServiceImpl {
     }
 
     /**
-     * P1-7: 后加签 — 在当前节点通过后、下一节点前插入临时审批人
+     * 后加签：在当前审批人通过后、下一节点前插入临时审批人
+     *
+     * <p>对标钉钉 / 飞书「后加签」功能。<b>关键实现：</b>
+     * <ol>
+     *   <li>向 {@code ydsz_flow_user} 插入新审批人（{@code signType=AFTER}）</li>
+     *   <li><b>强制切换任务会签模式为 {@code SEQUENTIAL}（顺序会签）</b>，{@code approveCount +1}</li>
+     *   <li>当当前审批人 pass 时，{@code doSequentialPass} 检测到 {@code approveFinished < approveCount}，
+     *       切换到加签人而非推进；加签人 pass 后才真正推进到下一节点</li>
+     * </ol>
+     *
+     * <p><b>适用场景：</b>需要「主管先审 → 专家再审 → 下一节点」的两段式审批。
+     *
+     * @param dto 操作参数（{@code taskId} / {@code userId} / {@code targetUserId} / {@code targetUserName} / {@code comment}）
+     * @throws SysException {@code BAD_REQUEST} — 任务已完成 / 任务 ID 无效
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignAfter(FlowTaskOperateDTO dto) {
@@ -186,12 +244,22 @@ public class FlowTaskSignServiceImpl {
     // ============================== GAP-P1: 减签 ==============================
 
     /**
-     * GAP-P1: 减签 — 从会签任务中移除指定审批人
+     * 减签：从会签任务中移除指定审批人
      *
-     * <p>对标钉钉/飞书的"减签"功能。从 ydsz_flow_user 中删除指定用户，
-     * 并更新任务的 approveCount（应到人数）。
+     * <p>对标钉钉 / 飞书「减签」功能。执行链路：
+     * <ol>
+     *   <li>校验任务状态（<b>未完成</b>）</li>
+     *   <li>从 {@code ydsz_flow_user} 中按 {@code (instanceId, nodeCode, userId)} 复合键删除</li>
+     *   <li>{@code approveCount -1}（不低于 1，避免除零）</li>
+     *   <li>写审计日志 + 触发事件</li>
+     * </ol>
      *
-     * @param dto 任务操作参数（需含 taskId + userId 为被减签人）
+     * <p><b>幂等性：</b>被减签人不存在时抛 {@code NOT_FOUND} 异常，<b>不</b>做静默处理，
+     * 由调用方决定是否忽略。
+     *
+     * @param dto 操作参数（{@code taskId} / {@code userId} 为操作人 / {@code targetUserId} 为被减签人）
+     * @throws SysException {@code BAD_REQUEST} — 任务已完成 / 缺少被减签人 ID；
+     *                     {@code NOT_FOUND} — 被减签人不存在
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignRemove(FlowTaskOperateDTO dto) {
@@ -227,10 +295,14 @@ public class FlowTaskSignServiceImpl {
     // ============================== GAP-P2: 已阅/沟通 ==============================
 
     /**
-     * GAP-P2: 已阅 — 标记任务已阅（不改变任务状态，仅记录审计日志）
+     * 已阅：标记任务已阅（<b>不改变</b>任务状态，仅记录审计日志）
+     *
+     * <p>对标钉钉 / 飞书「已阅」功能。适用于「审批人收到待办后先查看详情，但暂不操作」的场景。
+     * 区别于「标记已读」（消息中心），这里是「任务已阅」（审批中心）。
      *
      * @param taskId 任务 ID
      * @param userId 操作人 ID
+     * @throws SysException {@code NOT_FOUND} — 任务 ID 无效
      */
     @Transactional(rollbackFor = Exception.class)
     public void markRead(String taskId, String userId) {
@@ -240,9 +312,13 @@ public class FlowTaskSignServiceImpl {
     }
 
     /**
-     * GAP-P2: 沟通 — 在任务下添加沟通评论（不改变任务状态）
+     * 沟通：在任务下添加沟通评论（<b>不改变</b>任务状态）
      *
-     * @param dto 任务操作参数（需含 taskId + userId + comment）
+     * <p>区别于「审批意见」（{@code comment} 用于 pass/reject 操作），沟通是审批过程中的<b>非正式</b>交流，
+     * 写入审计日志的 {@code COMMENT} 字段，类型由 {@code commentType} 区分（如 {@code @mention}）。
+     *
+     * @param dto 操作参数（{@code taskId} / {@code userId} / {@code comment} / {@code commentType}）
+     * @throws SysException {@code NOT_FOUND} — 任务 ID 无效
      */
     @Transactional(rollbackFor = Exception.class)
     public void communicate(FlowTaskOperateDTO dto) {
@@ -255,12 +331,16 @@ public class FlowTaskSignServiceImpl {
     // ======================== P0-03: 暂存待审 / 追加处理人 ========================
 
     /**
-     * GAP-P0: 暂存待审 — 审批人保存审批意见草稿（不改变任务主状态）
+     * 暂存待审：审批人保存审批意见草稿（<b>不改变</b>任务主状态）
      *
-     * <p>将审批意见保存到任务 comment 字段，任务状态保持 PENDING/CLAIMED 不变，
-     * 写审计日志记录 SAVE_DRAFT 操作。对标飞书/钉钉审批的"暂存"功能。
+     * <p>对标飞书 / 钉钉审批的「暂存」功能。审批人可以在不确定是否通过 / 驳回时，
+     * 先填写意见保存为草稿，事后再次打开任务时自动回填意见，避免重复填写。
      *
-     * @param dto 任务操作参数（需含 taskId + userId + comment）
+     * <p>任务状态保持 {@code PENDING/CLAIMED} 不变，写审计日志记录 {@code SAVE_DRAFT} 操作。
+     *
+     * @param dto 操作参数（{@code taskId} / {@code userId} / {@code comment} / {@code commentType}）
+     * @throws SysException {@code BAD_REQUEST} — 任务已完成；
+     *                     {@code NOT_FOUND}   — 任务 ID 无效
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveDraft(FlowTaskOperateDTO dto) {
@@ -276,12 +356,24 @@ public class FlowTaskSignServiceImpl {
     }
 
     /**
-     * GAP-P0: 追加处理人 — 在已有会签任务中追加一个审批人
+     * 追加处理人：在已有会签任务中追加一个审批人
      *
-     * <p>对标 FlowLong 的"追加处理人"功能。向 ydsz_flow_user 插入新审批人，
-     * approveCount +1，保持当前会签模式不变。比加签更轻量，不改变 performType。
+     * <p>对标 FlowLong 「追加处理人」功能。区别于「并加签」：
+     * <ul>
+     *   <li>追加处理人：<b>不改变</b>{@code performType}，适用于「原会签模式追加」</li>
+     *   <li>并加签：<b>强制切换为</b>{@code PARALLEL}，无论原模式是什么</li>
+     * </ul>
      *
-     * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
+     * <p>执行链路：
+     * <ol>
+     *   <li>校验任务状态（<b>未完成</b>）</li>
+     *   <li>向 {@code ydsz_flow_user} 插入新审批人（{@code signType=ADD}，{@code weight=1}）</li>
+     *   <li>{@code approveCount +1}</li>
+     *   <li>写审计日志 + 触发事件</li>
+     * </ol>
+     *
+     * @param dto 操作参数（{@code taskId} / {@code userId} 为操作人 / {@code targetUserId} / {@code targetUserName}）
+     * @throws SysException {@code BAD_REQUEST} — 任务已完成 / 缺少目标用户 ID
      */
     @Transactional(rollbackFor = Exception.class)
     public void addApprover(FlowTaskOperateDTO dto) {

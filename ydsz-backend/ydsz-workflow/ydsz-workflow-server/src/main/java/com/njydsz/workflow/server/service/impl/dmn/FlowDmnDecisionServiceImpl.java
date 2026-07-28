@@ -117,6 +117,27 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     private final FlowDmnDecisionMapper decisionMapper;
     private final FlowDmnRuleMapper ruleMapper;
 
+    /**
+     * 创建决策表（草稿态）
+     *
+     * <p>执行链路：
+     * <ol>
+     *   <li>校验决策表基础信息（编码 / 名称非空）</li>
+     *   <li>默认值填充：{@code hitPolicy=FIRST} / {@code status=DRAFT} / {@code decisionVersion=1} /
+     *       {@code tenantId="1"}（多租户兜底）</li>
+     *   <li>持久化决策表主表</li>
+     *   <li>遍历规则列表，按顺序写入 {@code ruleOrder}（从 1 开始递增），
+     *       默认 {@code enabled=1}</li>
+     * </ol>
+     *
+     * <p>新创建的决策表初始为 <b>草稿态（DRAFT）</b>，<b>不会</b>被 {@link #evaluate} 查到，
+     * 必须调用 {@link #publish} 后才生效。
+     *
+     * @param decision 决策表实体（不需携带 ID）
+     * @param rules    规则列表（可为 null，但建议至少 1 条规则）
+     * @return 新创建的决策表 ID
+     * @throws SysException {@code BAD_REQUEST} — 决策表编码 / 名称为空
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String createDecision(FlowDmnDecision decision, List<FlowDmnRule> rules) {
@@ -148,6 +169,22 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         return decision.getId();
     }
 
+    /**
+     * 更新决策表（仅草稿 / 已停用状态可编辑）
+     *
+     * <p><b>限制：</b>仅 {@code DRAFT} 状态可编辑，{@code PUBLISHED} 状态决策表 <b>不可直接修改</b>，
+     * 需先调用 {@link #deprecate} 停用。版本号保持不变（仍归 1 个版本号下），
+     * <b>不会</b>自动递增版本号（区别于 {@link #publish}）。
+     *
+     * <p>更新策略：<b>全量替换</b>规则（先 {@code deleteByDecisionId} 再 {@code insert}），
+     * 规则 {@code ruleOrder} 重新从 1 开始分配。
+     *
+     * @param decisionId 决策表 ID
+     * @param decision   决策表实体（{@code ID} 字段会被覆盖）
+     * @param rules      新规则列表（替换原规则）
+     * @throws SysException {@code NOT_FOUND} — 决策表不存在；
+     *                     {@code BAD_REQUEST} — 决策表非草稿状态，不可编辑
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateDecision(String decisionId, FlowDmnDecision decision, List<FlowDmnRule> rules) {
@@ -181,6 +218,19 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
                 rules == null ? 0 : rules.size());
     }
 
+    /**
+     * 发布决策表
+     *
+     * <p>将决策表从 {@code DRAFT} / {@code DEPRECATED} 状态切换为 {@code PUBLISHED}，
+     * 并 <b>递增版本号</b>。发布后决策表可被 {@link #evaluate} / {@link #evaluateByNode} 查询。
+     *
+     * <p>发布规则：发布前可任意编辑；<b>已发布状态</b>的决策表不能再发布（防止版本污染），
+     * 如需变更规则，请先 {@link #deprecate} 停用。
+     *
+     * @param decisionId 决策表 ID
+     * @throws SysException {@code NOT_FOUND} — 决策表不存在；
+     *                     {@code BAD_REQUEST} — 决策表非草稿 / 非停用状态
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publish(String decisionId) {
@@ -199,6 +249,18 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         log.info("[DMN] 发布决策表: id={} version={}", decisionId, existing.getDecisionVersion());
     }
 
+    /**
+     * 停用决策表
+     *
+     * <p>将 {@code PUBLISHED} 状态决策表切换为 {@code DEPRECATED}，<b>不再</b>被 {@link #evaluate} 查到。
+     * 停用后可重新 {@link #publish}，会再次递增版本号。
+     *
+     * <p>区别于「删除」：停用保留决策表与规则数据，用于审计追溯。
+     *
+     * @param decisionId 决策表 ID
+     * @throws SysException {@code NOT_FOUND} — 决策表不存在；
+     *                     {@code BAD_REQUEST} — 决策表非已发布状态
+     */
     @Override
     public void deprecate(String decisionId) {
         FlowDmnDecision existing = decisionMapper.selectById(decisionId);
@@ -214,6 +276,16 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         log.info("[DMN] 停用决策表: id={}", decisionId);
     }
 
+    /**
+     * 查询决策表详情（含启用规则列表）
+     *
+     * <p>返回 {@code {decision, rules}} 形式的结果，{@code rules} 仅包含 {@code enabled=1} 的规则。
+     * 用于设计器加载 / 详情展示。
+     *
+     * @param decisionId 决策表 ID
+     * @return 详情 Map（{@code decision} — 决策表实体，{@code rules} — 启用规则列表）
+     * @throws SysException {@code NOT_FOUND} — 决策表不存在
+     */
     @Override
     public Map<String, Object> getDetail(String decisionId) {
         FlowDmnDecision decision = decisionMapper.selectById(decisionId);
@@ -227,12 +299,43 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         return result;
     }
 
+    /**
+     * 查询已发布决策表列表
+     *
+     * <p>仅返回 {@code PUBLISHED} 状态的决策表，按版本号倒序排列。
+     * 多租户隔离：仅返回当前租户（{@code tenantId} 兜底为 {@code "1"}）的决策表。
+     *
+     * @param decisionCode 决策表编码（可为 null，null 表示全部）
+     * @param tenantId     租户 ID（可为 null，null 时兜底为 {@code "1"}）
+     * @return 决策表列表（仅 PUBLISHED 状态）
+     */
     @Override
     public List<FlowDmnDecision> listDecisions(String decisionCode, String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
         return decisionMapper.selectPublishedList(tid, decisionCode);
     }
 
+    /**
+     * 评估决策表（按编码）
+     *
+     * <p>根据 {@code decisionCode} + {@code tenantId} 查询已发布决策表，
+     * 然后按 {@code hitPolicy} 评估规则，返回输出 Map。
+     *
+     * <p><b>命中策略差异：</b>
+     * <ul>
+     *   <li>{@code UNIQUE} / {@code FIRST} — 返回首条命中规则的输出 Map</li>
+     *   <li>{@code COLLECT} — 返回 {@code {outputName: [matchedValue1, matchedValue2, ...]}}</li>
+     *   <li>{@code ANY} — 多条命中时校验输出是否一致，不一致抛异常</li>
+     *   <li>{@code PRIORITY} / {@code RULE ORDER} — 返回首条命中（按 ruleOrder 升序）</li>
+     * </ul>
+     *
+     * @param decisionCode 决策表编码
+     * @param variables    输入变量（{@code Map<变量名, 变量值>}）
+     * @param tenantId     租户 ID（可为 null）
+     * @return 评估结果（{@code COLLECT} 策略下输出列表，无命中返回空 Map）
+     * @throws SysException {@code NOT_FOUND} — 决策表未发布或不存在；
+     *                     {@code INTERNAL_ERROR} — {@code ANY} 策略下输出不一致
+     */
     @Override
     public Map<String, Object> evaluate(String decisionCode, Map<String, Object> variables, String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
@@ -244,6 +347,18 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         return doEvaluate(decision, variables);
     }
 
+    /**
+     * 按流程节点评估决策表
+     *
+     * <p>某些流程节点（{@code decisionKey}）直接绑定到 {@code (flowCode, nodeCode)}，流程引擎
+     * 在执行节点时通过本方法自动获取决策结果（如「风控节点 → 调风控规则」）。
+     *
+     * @param flowCode  流程编码
+     * @param nodeCode  节点编码
+     * @param variables 输入变量
+     * @param tenantId  租户 ID
+     * @return 评估结果，未绑定决策表时返回 {@code null}（不抛异常）
+     */
     @Override
     public Map<String, Object> evaluateByNode(String flowCode, String nodeCode,
                                                 Map<String, Object> variables, String tenantId) {
@@ -257,6 +372,19 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     // ============================== 核心评估逻辑 ==============================
 
+    /**
+     * 决策表评估核心逻辑
+     *
+     * <p>遍历启用规则，按 {@code inputDefinitions} 与 {@code inputEntries} 逐一匹配变量；
+     * 根据 {@code hitPolicy} 返回单条 / 全部命中规则的输出。
+     *
+     * <p><b>性能说明：</b>当前为<b>线性扫描</b>实现，规则数在百级别时性能可接受；
+     * 千级以上建议改造为 <b>Rete 算法</b> 或预编译为 Java 代码。
+     *
+     * @param decision 决策表（含 inputDefinitions / outputDefinitions / hitPolicy）
+     * @param variables 输入变量
+     * @return 评估结果（{@code COLLECT} 策略下输出按字段聚合为列表）
+     */
     private Map<String, Object> doEvaluate(FlowDmnDecision decision, Map<String, Object> variables) {
         List<FlowDmnRule> rules = ruleMapper.selectEnabledByDecisionId(decision.getId());
         if (rules == null || rules.isEmpty()) {

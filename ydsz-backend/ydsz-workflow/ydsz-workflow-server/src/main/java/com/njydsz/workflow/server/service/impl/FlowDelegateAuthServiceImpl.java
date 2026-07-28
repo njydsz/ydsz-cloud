@@ -111,6 +111,22 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Lazy
     private final FlowOfflineAutoForwardService offlineAutoForwardService;
 
+    /**
+     * 创建委派授权
+     *
+     * <p>执行链路：
+     * <ol>
+     *   <li>参数校验（ownerUserId / delegateUserId / startTime / endTime / scopeType）</li>
+     *   <li>授权范围校验（{@code ALL/FLOW/FLOW_NODE/ROLE} 必填字段）</li>
+     *   <li>默认值填充（{@code tenantId} / {@code authStatus=ENABLED} / {@code providerTraceId}）</li>
+     *   <li>插入 {@code ydsz_flow_delegate_auth} 记录</li>
+     *   <li>P2-5：触发 <b>离线自动转发</b>，将 owner 名下在途待办按授权规则自动转给 delegate</li>
+     * </ol>
+     *
+     * @param auth 委派授权实体（不需携带 ID）
+     * @return 新创建的授权 ID
+     * @throws SysException {@code BAD_REQUEST} — 参数缺失 / scope 非法 / 时间不合法
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(FlowDelegateAuth auth) {
@@ -188,6 +204,18 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         return auth.getId();
     }
 
+    /**
+     * 撤销授权（提前结束授权）
+     *
+     * <p>将授权状态从 {@code ENABLED} / {@code DISABLED} 切换为 {@code REVOKED}，
+     * 撤销后该授权<b>立即失效</b>，后续任务不再路由到代理人。
+     * 已路由到代理人的在途任务<b>不</b>自动回收，由代理人在「我的待办」中继续处理。
+     *
+     * @param authId      授权 ID
+     * @param ownerUserId 授权人 ID（用于权限校验；为 null 时跳过校验，<b>不建议</b>）
+     * @throws SysException {@code NOT_FOUND} — 授权不存在；
+     *                     {@code FORBIDDEN} — {@code ownerUserId} 与授权人不匹配
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void revoke(String authId, String ownerUserId) {
@@ -205,6 +233,19 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         log.info("[FlowDelegate] 撤回授权: authId={} owner={} affected={}", authId, auth.getOwnerUserId(), n);
     }
 
+    /**
+     * 启用 / 禁用授权
+     *
+     * <p>区别于 {@link #revoke}（撤销不可恢复），本方法仅临时禁用（{@code DISABLED}），
+     * 可通过再次 {@code ENABLED} 恢复。{@code REVOKED} 状态不可恢复。
+     *
+     * @param authId     授权 ID
+     * @param status     目标状态（{@code ENABLED} / {@code DISABLED}）
+     * @param operatorId 操作人 ID（用于权限校验；为 null 时跳过校验）
+     * @throws SysException {@code BAD_REQUEST} — 参数缺失 / status 非法；
+     *                     {@code NOT_FOUND} — 授权不存在；
+     *                     {@code FORBIDDEN} — operatorId 与 owner 不匹配
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(String authId, String status, String operatorId) {
@@ -227,6 +268,14 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                 authId, status, operatorId, n);
     }
 
+    /**
+     * 查询「我作为授权人」的授权列表
+     *
+     * @param ownerUserId 授权人 ID
+     * @param tenantId    租户 ID（默认从 {@link AuthContext} 取）
+     * @param status      状态过滤（{@code ENABLED/DISABLED/REVOKED/EXPIRED}，可为 null）
+     * @return 授权列表
+     */
     @Override
     @Transactional(readOnly = true)
     public List<FlowDelegateAuth> listMine(String ownerUserId, String tenantId, String status) {
@@ -237,6 +286,14 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         return authMapper.selectByOwner(tid, ownerUserId, status);
     }
 
+    /**
+     * 查询「我作为代理人」的授权列表
+     *
+     * @param delegateUserId 代理人 ID
+     * @param tenantId       租户 ID
+     * @param status         状态过滤
+     * @return 授权列表
+     */
     @Override
     @Transactional(readOnly = true)
     public List<FlowDelegateAuth> listAsDelegate(String delegateUserId, String tenantId, String status) {
@@ -247,6 +304,19 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         return authMapper.selectByDelegate(tid, delegateUserId, status);
     }
 
+    /**
+     * 匹配某审批任务应走的代理人（按 scope 优先级）
+     *
+     * <p>匹配规则：{@code FLOW_NODE > FLOW > ROLE > ALL}，匹配时校验当前时间在
+     * {@code [startTime, endTime]} 区间内且状态为 {@code ENABLED}。
+     * 用于任务创建时确定实际处理人（{@link #resolveDelegateChain} 的单层匹配）。
+     *
+     * @param tenantId   租户 ID
+     * @param ownerUserId 原审批人 ID
+     * @param flowCode   流程编码（可为 null）
+     * @param nodeCode   节点编码（可为 null）
+     * @return 匹配的授权（无匹配返回 {@code null}，<b>不抛异常</b>）
+     */
     @Override
     @Transactional(readOnly = true)
     public FlowDelegateAuth matchAuth(String tenantId, String ownerUserId,
@@ -283,6 +353,14 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         });
     }
 
+    /**
+     * 扫描并标记过期授权（手动触发）
+     *
+     * <p>将 {@code endTime < now} 且状态为 {@code ENABLED} 的授权标记为 {@code EXPIRED}。
+     * 本方法由 {@link #scheduledScanExpired} 定时任务调用，也可由外部手动触发。
+     *
+     * @return 标记过期的授权数
+     */
     @Override
     public int scanAndMarkExpired() {
         try {
@@ -293,6 +371,17 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         }
     }
 
+    /**
+     * 查询代理人操作日志（代理人作为操作人执行的代批任务）
+     *
+     * <p>从 {@code ydsz_flow_audit_log} 中按 {@code BIZ_TYPE_DELEGATE_PROXY} 业务类型 +
+     * {@code operatorId=delegateUserId} 查询，按时间倒序分页。
+     *
+     * @param delegateUserId 代理人 ID
+     * @param page           页码（从 1 开始）
+     * @param size           每页大小
+     * @return 操作日志分页结果
+     */
     @Override
     @Transactional(readOnly = true)
     public PageResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
@@ -310,6 +399,17 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         return (PageResponse) PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
+    /**
+     * 查询授权人被代理的操作日志（被代批任务）
+     *
+     * <p>从 {@code ydsz_flow_audit_log} 中按 {@code BIZ_TYPE_DELEGATE_PROXY} 业务类型 +
+     * {@code targetId=ownerUserId} 查询，按时间倒序分页。
+     *
+     * @param ownerUserId 授权人 ID
+     * @param page        页码（从 1 开始）
+     * @param size        每页大小
+     * @return 操作日志分页结果
+     */
     @Override
     @Transactional(readOnly = true)
     public PageResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
@@ -329,9 +429,27 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     // ==================== P1-7: 链式解析代理人 ====================
 
-    /** 最大委派链深度，防止无限递归 */
+    /** 最大委派链深度，防止无限递归（A→B→C→D→E→A 循环保护） */
     private static final int MAX_CHAIN_DEPTH = 5;
 
+    /**
+     * 链式解析代理人（A 委派 B → B 又委派 C → 最终代理人）
+     *
+     * <p>P1-7 增强能力：支持<b>多级委派链</b>解析，处理「A 出差 → 授权 B → B 也不在 → 授权 C」场景。
+     *
+     * <p>解析规则：
+     * <ol>
+     *   <li>从 {@code ownerUserId} 出发，循环匹配授权</li>
+     *   <li>每跳到下一个人，更新 {@code currentUserId} 并记录到 {@code visited} 集合</li>
+     *   <li>遇到循环（A→B→A）或超过 {@link #MAX_CHAIN_DEPTH} 时停止</li>
+     * </ol>
+     *
+     * @param tenantId    租户 ID
+     * @param ownerUserId 原始审批人 ID
+     * @param flowCode    流程编码
+     * @param nodeCode    节点编码
+     * @return 最终代理人 ID（无匹配或循环时返回 {@code ownerUserId} 本身）
+     */
     @Override
     @Transactional(readOnly = true)
     public String resolveDelegateChain(String tenantId, String ownerUserId,

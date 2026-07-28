@@ -77,6 +77,26 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     // ============================== 抄送节点处理 ==============================
 
+    /**
+     * 处理 CC 节点（流程引擎触发 CC 节点时调用）
+     *
+     * <p>执行链路：
+     * <ol>
+     *   <li>校验实例与节点非空</li>
+     *   <li>查询流程实例获取冗余字段（{@code flowCode/flowName/businessKey/title}）</li>
+     *   <li>解析节点的 {@code permissionFlag}，支持 SpEL 变量（如 {@code ${initiator}}）</li>
+     *   <li>按逗号拆分 token，展开为具体用户 ID 列表
+     *       （{@code user:/role:/dept:/position:/leader:}）</li>
+     *   <li>逐用户写入 {@code ydsz_flow_cc} 记录</li>
+     * </ol>
+     *
+     * <p><b>降级语义：</b>整个方法在 {@code try-catch} 中，任意异常仅写日志，<b>不抛异常</b>，
+     * 避免 CC 节点失败影响主流程推进。
+     *
+     * @param instanceId 流程实例 ID
+     * @param node       CC 节点（{@code nodeType=5}）
+     * @param variables  流程变量（用于解析 SpEL 表达式）
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void handleCcNode(String instanceId, FlowNode node, Map<String, Object> variables) {
@@ -143,6 +163,17 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     // ============================== 分页查询 ==============================
 
+    /**
+     * 分页查询「抄送我的」列表
+     *
+     * <p>支持按 {@code readStatus}（{@code UNREAD/READ}）、{@code flowCode} 过滤，
+     * 返回按时间倒序的抄送记录。结果不封装为 {@link PageResponse}，由调用方组装分页信息。
+     *
+     * @param tenantId 租户 ID
+     * @param userId   当前用户 ID
+     * @param query    查询条件（{@code pageNum/pageSize/readStatus/flowCode}）
+     * @return 抄送列表（异常或参数为空时返回空列表，<b>不抛异常</b>）
+     */
     @Override
     @Transactional(readOnly = true)
     public List<FlowCc> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
@@ -161,6 +192,14 @@ public class FlowCcServiceImpl implements FlowCcService {
         }
     }
 
+    /**
+     * 统计「抄送我的」总条数
+     *
+     * @param tenantId 租户 ID
+     * @param userId   当前用户 ID
+     * @param query    查询条件（{@code readStatus/flowCode}）
+     * @return 总条数（异常或参数为空时返回 0L）
+     */
     @Override
     @Transactional(readOnly = true)
     public long countMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
@@ -175,6 +214,21 @@ public class FlowCcServiceImpl implements FlowCcService {
         }
     }
 
+    /**
+     * 分页查询「抄送我的」（封装为 {@link PageResponse}）
+     *
+     * <p>与 {@link #pageMyCc} + {@link #countMyCc} 组合等价，本方法在服务层一次性完成
+     * 「分页查询 + 总数统计 + 异常兜底 + PageResponse 封装」，
+     * 减少 Controller 层胶水代码。
+     *
+     * @param userId     当前用户 ID
+     * @param readStatus 已读状态过滤（{@code UNREAD/READ}，可为 null）
+     * @param flowCode   流程编码过滤（可为 null）
+     * @param tenantId   租户 ID
+     * @param pageNo     页码（从 1 开始）
+     * @param pageSize   每页大小（最大 {@link PageConstants#MAX_PAGE_SIZE}）
+     * @return 抄送分页结果
+     */
     @Override
     @Transactional(readOnly = true)
     public PageResponse<List<FlowCc>> listCcByUser(String userId, String readStatus, String flowCode,
@@ -199,6 +253,16 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     // ============================== 已读标记 ==============================
 
+    /**
+     * 标记单条抄送为已读
+     *
+     * <p>将 {@code ydsz_flow_cc} 中指定 {@code ccId} 的 {@code read_status} 改为 {@code READ}，
+     * 并记录 {@code read_at} 时间戳。异常时仅写日志，<b>不抛异常</b>（避免影响前端操作）。
+     *
+     * @param tenantId 租户 ID（当前实现未使用，保留参数用于后续按租户校验）
+     * @param userId   当前用户 ID
+     * @param ccId     抄送 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markRead(String tenantId, String userId, String ccId) {
@@ -213,6 +277,13 @@ public class FlowCcServiceImpl implements FlowCcService {
         }
     }
 
+    /**
+     * 标记某用户当前租户下所有未读抄送为已读
+     *
+     * @param tenantId 租户 ID
+     * @param userId   用户 ID
+     * @return 受影响行数（异常或参数为空时返回 0）
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int markAllRead(String tenantId, String userId) {
@@ -232,6 +303,16 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     // ============================== 未读数 ==============================
 
+    /**
+     * 统计用户当前租户下未读抄送数
+     *
+     * <p>通常作为前端「抄送」Tab 角标 / 导航栏红点的数据源。
+     * 当前实现直接走 DB，<b>未走 Redis 缓存</b>（参考类注释中的缓存优化建议）。
+     *
+     * @param userId   用户 ID
+     * @param tenantId 租户 ID
+     * @return 未读抄送数
+     */
     @Override
     @Transactional(readOnly = true)
     public long countUnread(String userId, String tenantId) {
@@ -249,6 +330,15 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     // ============================== 实例抄送列表 ==============================
 
+    /**
+     * 查询某流程实例的所有抄送记录
+     *
+     * <p>用于审批详情页「抄送人」Tab 展示，列出该实例触发的所有 CC 节点接收人。
+     *
+     * @param instanceId 流程实例 ID
+     * @param tenantId   租户 ID
+     * @return 抄送记录列表（无数据或参数为空时返回空列表）
+     */
     @Override
     @Transactional(readOnly = true)
     public List<FlowCc> listByInstance(String instanceId, String tenantId) {
