@@ -4,6 +4,8 @@ import java.util.List;
 
 import lombok.Data;
 
+import java.time.Duration;
+
 /**
  * CEPPattern 视图对象（VO）。
  *
@@ -17,7 +19,7 @@ public class CEPPatternVO {
     private String id;
 
     /** type */
-    private PatternType type;
+    private String type;
 
     /** ruleCode */
     private String ruleCode;
@@ -32,7 +34,7 @@ public class CEPPatternVO {
     private Duration slide;
 
     /** windowType */
-    private WindowType windowType;
+    private String windowType;
 
     /** sessionGap */
     private Duration sessionGap;
@@ -43,20 +45,18 @@ public class CEPPatternVO {
     /** eventType */
     private String eventType;
 
-    /** eventTypes */
-    private List<String> eventTypes;
 
     /** filter */
     private String filter;
 
     /** aggregateFunction */
-    private AggregateFunction aggregateFunction;
+    private String aggregateFunction;
 
     /** aggregateField */
     private String aggregateField;
 
     /** sequence */
-    private List<SequenceStep> sequence;
+    private List<Object> sequence;
 
     /** description */
     private String description;
@@ -64,11 +64,7 @@ public class CEPPatternVO {
     /** order */
     private int order;
 
-    /** eventType */
-    private String eventType;
 
-    /** filter */
-    private String filter;
 
     /** minGap */
     private Duration minGap;

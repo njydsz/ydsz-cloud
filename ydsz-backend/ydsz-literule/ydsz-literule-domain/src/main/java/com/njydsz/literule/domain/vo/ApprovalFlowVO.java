@@ -20,7 +20,7 @@ public class ApprovalFlowVO {
     private String name;
 
     /** steps */
-    private List<ApprovalStep> steps;
+    private List<Object> steps;
 
     /** enabled */
     private boolean enabled;

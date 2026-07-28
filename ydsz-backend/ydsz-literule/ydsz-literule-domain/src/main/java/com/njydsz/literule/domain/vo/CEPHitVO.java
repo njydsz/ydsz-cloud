@@ -22,7 +22,7 @@ public class CEPHitVO {
     private String ruleCode;
 
     /** matchedEvents */
-    private List<CEPEvent> matchedEvents;
+    private List<Object> matchedEvents;
 
     /** hitAt */
     private Instant hitAt;

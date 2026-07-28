@@ -27,13 +27,13 @@ public class DecisionTableDefinitionVO {
     private String category;
 
     /** conditionColumns */
-    private List<Column> conditionColumns;
+    private List<Object> conditionColumns;
 
     /** actionColumns */
-    private List<Column> actionColumns;
+    private List<Object> actionColumns;
 
     /** rows */
-    private List<Row> rows;
+    private List<Object> rows;
 
     /** defaultActions */
     private Map<String, Object> defaultActions;

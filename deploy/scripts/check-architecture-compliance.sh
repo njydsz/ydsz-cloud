@@ -16,6 +16,7 @@
 # 10. 业务模块自定义异常处理器检查（禁止业务模块自定义 @RestControllerAdvice）
 # 11. 跨模块数据库访问检查（禁止业务模块 Mapper 引用其他模块的表）
 # 12. 公共能力绕过检查（检测业务模块直接使用 RedisTemplate）
+# 13. 跨模块 Mapper/Entity 直接注入检查（禁止业务模块 server 层 import 其他模块的 Mapper/Entity）
 #
 # 使用方式：
 #   ./check-architecture-compliance.sh [--strict]
@@ -81,7 +82,7 @@ separator
 # ==========================================
 # 1. 重复工具类检查
 # ==========================================
-log_info "检查项 1/6: 重复工具类检查"
+log_info "检查项 1/13: 重复工具类检查"
 
 # 检查业务模块中是否存在自定义的 Helper/Utils/Util 类（排除 common 模块）
 DUPLICATE_UTILS=$(find "$BACKEND_ROOT/ydsz-"* -type f -name "*Helper.java" -o -name "*Utils.java" -o -name "*Util.java" \
@@ -103,7 +104,7 @@ fi
 # ==========================================
 # 2. 常量管理检查
 # ==========================================
-log_info "检查项 2/6: 常量管理检查"
+log_info "检查项 2/13: 常量管理检查"
 
 # 检查业务模块中是否存在自定义常量类（排除 common 模块和特定业务常量）
 DUPLICATE_CONSTANTS=$(find "$BACKEND_ROOT/ydsz-"* -type f -name "*Constants.java" -o -name "*Constant.java" \
@@ -126,7 +127,7 @@ fi
 # ==========================================
 # 3. NameAssembler 使用规范检查
 # ==========================================
-log_info "检查项 3/6: NameAssembler 使用规范检查"
+log_info "检查项 3/13: NameAssembler 使用规范检查"
 
 # 检查是否直接调用 Feign Client 而不是使用 NameAssembler
 DIRECT_FEIGN_CALLS=$(grep -r "UserInfoClient\|DeptClient\|RoleClient" \
@@ -152,7 +153,7 @@ fi
 # ==========================================
 # 4. 事件驱动架构规范检查
 # ==========================================
-log_info "检查项 4/6: 事件驱动架构规范检查"
+log_info "检查项 4/13: 事件驱动架构规范检查"
 
 # 检查是否使用 OutboxService 发布事件
 OUTBOX_USAGE=$(grep -r "OutboxService" \
@@ -190,7 +191,7 @@ fi
 # ==========================================
 # 5. Excel 导出标准化检查
 # ==========================================
-log_info "检查项 5/6: Excel 导出标准化检查"
+log_info "检查项 5/13: Excel 导出标准化检查"
 
 # 检查是否直接使用 EasyExcel 而不是使用 ExcelFacade
 DIRECT_EASYEXCEL=$(grep -r "EasyExcel.write\|new ExcelWriter" \
@@ -212,7 +213,7 @@ fi
 # ==========================================
 # 6. 前端通用组件使用检查
 # ==========================================
-log_info "检查项 6/6: 前端通用组件使用检查"
+log_info "检查项 6/13: 前端通用组件使用检查"
 
 # 检查是否使用 UserPicker 组件
 USER_PICKER_EXISTS=$(find "$FRONTEND_ROOT/src/components/common" -name "UserPicker.vue" | wc -l)
@@ -249,7 +250,7 @@ fi
 # ==========================================
 # 7. 缓存名称一致性检查
 # ==========================================
-log_info "检查项 7/8: 缓存名称一致性检查"
+log_info "检查项 7/13: 缓存名称一致性检查"
 
 # 检查 Java 代码中是否存在硬编码的 cacheNames 字符串（"xxx" 形式），
 # 而非使用 CacheConstants 中定义的常量。排除 common-cache 自身和测试代码。
@@ -283,7 +284,7 @@ fi
 # ==========================================
 # 8. Feign Client 熔断规范检查
 # ==========================================
-log_info "检查项 8/8: Feign Client 熔断规范检查"
+log_info "检查项 8/13: Feign Client 熔断规范检查"
 
 # 检查 @FeignClient 注解是否缺少 fallbackFactory 参数
 # 排除 common-feign 自身和测试代码
@@ -309,7 +310,7 @@ fi
 # ==========================================
 # 9. 公共 JSON 工具复用检查（禁止业务模块直接 new ObjectMapper/Gson）
 # ==========================================
-log_info "检查项 9/12: 公共 JSON 工具复用检查"
+log_info "检查项 9/13: 公共 JSON 工具复用检查"
 
 DIRECT_JSON_INIT=$(grep -rn 'new ObjectMapper()\|new Gson()\|new FastJson' \
   "$BACKEND_ROOT/ydsz-"*/src/main/java \
@@ -331,7 +332,7 @@ fi
 # ==========================================
 # 10. 业务模块自定义 @RestControllerAdvice 检查
 # ==========================================
-log_info "检查项 10/12: 业务模块自定义异常处理器检查"
+log_info "检查项 10/13: 业务模块自定义异常处理器检查"
 
 CUSTOM_ADVICE=$(grep -rn '@RestControllerAdvice\|@ControllerAdvice' \
   "$BACKEND_ROOT/ydsz-"*/src/main/java \
@@ -357,7 +358,7 @@ fi
 # ==========================================
 # 11. 跨模块数据库访问检查（禁止业务模块 Mapper 引用其他模块的表）
 # ==========================================
-log_info "检查项 11/12: 跨模块数据库访问检查"
+log_info "检查项 11/13: 跨模块数据库访问检查"
 
 # 检查业务模块的 Mapper XML 或注解中是否引用了其他模块的表前缀
 # 各模块合法表前缀映射
@@ -424,7 +425,7 @@ fi
 # ==========================================
 # 12. 公共能力绕过检查（RedisTemplate/RedissonClient 直接注入业务模块）
 # ==========================================
-log_info "检查项 12/12: 公共能力绕过检查"
+log_info "检查项 12/13: 公共能力绕过检查"
 
 # 检查业务模块是否直接注入 RedisTemplate（应使用 RedisService 或 Cache 接口）
 # 白名单：gateway 模块（网关层基础设施，合理使用）、literule（分布式数据结构，有特殊需求）
@@ -456,6 +457,54 @@ if [[ -n "$DIRECT_REDISTEMPLATE" ]]; then
   log_warning "建议：使用 ydsz-common-redis 的 RedisService 或 ydsz-common-cache 的 Cache 接口"
 else
   log_success "业务模块未直接使用 RedisTemplate"
+fi
+
+# ==========================================
+# 13. 跨模块 Mapper/Entity 直接注入检查
+# ==========================================
+log_info "检查项 13/13: 跨模块 Mapper/Entity 直接注入检查"
+
+# 检测业务模块 server 层是否直接 import 其他业务模块的 Mapper 或 Entity
+# 这是跨模块直连数据库的最常见违规模式：
+#   - import com.njydsz.{other}.infra.mapper.SomeMapper  → 直接注入对方 Mapper
+#   - import com.njydsz.{other}.domain.entity.SomeEntity  → 直接引用对方实体（用于 LambdaQueryWrapper 等）
+# 合法做法：通过 @FeignClient 调用对方服务 API，或通过 Outbox 事件驱动通信
+
+BUSINESS_MODULES="workflow project userinfo system message cronjob literule agent nextwiki"
+CROSS_MODULE_MAPPER=""
+
+for module in $BUSINESS_MODULES; do
+  module_server_path="$BACKEND_ROOT/ydsz-${module}/ydsz-${module}-server/src/main/java"
+  if [[ ! -d "$module_server_path" ]]; then
+    continue
+  fi
+  for other_module in $BUSINESS_MODULES; do
+    # 跳过自身模块
+    if [[ "$other_module" == "$module" ]]; then
+      continue
+    fi
+    # 检测 import com.njydsz.{other_module}.infra.mapper.* 或 .domain.entity.*
+    VIOLATIONS_FOUND=$(grep -rn \
+      "import com\.njydsz\.${other_module}\.infra\.mapper\.\|import com\.njydsz\.${other_module}\.domain\.entity\." \
+      "$module_server_path" \
+      --include="*.java" 2>/dev/null || true)
+    if [[ -n "$VIOLATIONS_FOUND" ]]; then
+      CROSS_MODULE_MAPPER="${CROSS_MODULE_MAPPER}\n${VIOLATIONS_FOUND}"
+    fi
+  done
+done
+
+if [[ -n "$CROSS_MODULE_MAPPER" ]]; then
+  log_error "发现跨模块 Mapper/Entity 直接注入（应通过 @FeignClient 调用对方服务 API）："
+  echo -e "$CROSS_MODULE_MAPPER" | head -15 | while read -r line; do
+    [[ -n "$line" ]] && echo "  - $line"
+  done
+  if [[ $(echo -e "$CROSS_MODULE_MAPPER" | grep -c .) -gt 15 ]]; then
+    echo "  ... 还有更多"
+  fi
+  log_warning "建议：跨模块数据访问必须通过 @FeignClient 接口调用，禁止直连其他模块的 Mapper/Entity"
+else
+  log_success "未发现跨模块 Mapper/Entity 直接注入"
 fi
 
 # ==========================================

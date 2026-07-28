@@ -32,6 +32,12 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  *   <li>R14: Properties 类必须在 config 包中</li>
  *   <li>R15: 禁止使用 @SuppressWarnings 注解</li>
  *   <li>R16: @FeignClient 接口必须在 api 包中</li>
+ *   <li>R17: Controller 不允许直接依赖 Entity 包</li>
+ *   <li>R18: PostDTO 类必须在 dto.post 包中</li>
+ *   <li>R19: PutDTO 类必须在 dto.put 包中</li>
+ *   <li>R20: Server 层不可依赖 Web 层</li>
+ *   <li>R21: Infra 层不可依赖 Server/Web 层</li>
+ *   <li>R22: 跨模块 Mapper/Entity 直接注入禁止</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -278,4 +284,56 @@ public class ArchitectureRulesTest {
             .and().resideInAPackage("..domain..")
             .should().resideInAPackage("..dto.put..")
             .because("PutDTO 类应位于 dto.put 包中，与 PostDTO 分离");
+
+    /**
+     * R20: Server 层不可依赖 Web 层。
+     *
+     * <p>Server 层（service/facade/listener 等）是业务逻辑层，不应感知 Web 层
+     * （Controller/VO 等）的实现细节。Web 层是外层，依赖方向应为 web → server → domain。
+     */
+    @ArchTest
+    static final ArchRule serverShouldNotDependOnWeb = noClasses()
+            .that().resideInAPackage("..server..")
+            .should().dependOnClassesThat()
+            .resideInAPackage("..web..")
+            .because("Server 层不可依赖 Web 层，依赖方向应为 web → server → domain");
+
+    /**
+     * R21: Infra 层不可依赖 Server/Web 层。
+     *
+     * <p>Infra 层（Mapper/Repository 等）是数据访问层，只应被 Server 层调用，
+     * 不应反向依赖 Server 或 Web 层。依赖方向应为 web → server → infra → domain。
+     */
+    @ArchTest
+    static final ArchRule infraShouldNotDependOnServerOrWeb = noClasses()
+            .that().resideInAPackage("..infra..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage("..server..", "..web..")
+            .because("Infra 层不可依赖 Server/Web 层，依赖方向应为 web → server → infra → domain");
+
+    /**
+     * R22: 跨模块 Mapper/Entity 直接注入禁止。
+     *
+     * <p>业务模块的 Server 层不可直接 import 其他业务模块的 Mapper 或 Entity，
+     * 跨模块数据访问必须通过 @FeignClient 调用对方服务 API，或通过 Outbox 事件驱动通信。
+     *
+     * <p>例如：ydsz-project-server 不可 import com.njydsz.workflow.infra.mapper.*，
+     * 应通过 WorkflowServiceClient Feign 接口调用 workflow 服务。
+     */
+    @ArchTest
+    static final ArchRule noCrossModuleMapperOrEntityInjection = noClasses()
+            .that().resideInAPackage("..server..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "..workflow.infra.mapper..", "..workflow.domain.entity..",
+                    "..project.infra.mapper..", "..project.domain.entity..",
+                    "..userinfo.infra.mapper..", "..userinfo.domain.entity..",
+                    "..system.infra.mapper..", "..system.domain.entity..",
+                    "..message.infra.mapper..", "..message.domain.entity..",
+                    "..cronjob.infra.mapper..", "..cronjob.domain.entity..",
+                    "..literule.infra.mapper..", "..literule.domain.entity..",
+                    "..agent.infra.mapper..", "..agent.domain.entity..",
+                    "..nextwiki.infra.mapper..", "..nextwiki.domain.entity..")
+            .because("跨模块数据访问必须通过 @FeignClient 调用对方服务 API，"
+                    + "禁止直连其他业务模块的 Mapper/Entity");
 }

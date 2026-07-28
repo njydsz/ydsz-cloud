@@ -24,7 +24,7 @@ public class AuditLogEntryVO {
     private String ruleName;
 
     /** action */
-    private AuditAction action;
+    private String action;
 
     /** operator */
     private String operator;
@@ -42,10 +42,10 @@ public class AuditLogEntryVO {
     private Map<String, Object> afterSnapshot;
 
     /** fieldDiffs */
-    private Map<String, FieldDiff> fieldDiffs;
+    private Map<String, Object> fieldDiffs;
 
     /** result */
-    private AuditResult result;
+    private String result;
 
     /** errorMessage */
     private String errorMessage;

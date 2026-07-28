@@ -15,7 +15,7 @@ public class ExpressionValidationResultVO {
     private boolean valid;
 
     /** errorType */
-    private ErrorType errorType;
+    private String errorType;
 
     /** errorMessage */
     private String errorMessage;

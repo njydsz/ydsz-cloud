@@ -23,12 +23,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
-import com.njydsz.literule.domain.vo.RuleDashboardDistributionVOVO;
-import com.njydsz.literule.domain.vo.RuleDashboardOverviewVOVO;
-import com.njydsz.literule.domain.vo.RuleDashboardRealtimeVOVO;
-import com.njydsz.literule.domain.vo.RuleDashboardTopRuleVOVO;
-import com.njydsz.literule.domain.vo.RuleDashboardTrendVOVO;
 
 /**
  * 规则引擎监控大盘 Controller
@@ -61,8 +55,8 @@ public class RuleDashboardController {
      */
     @GetMapping("/overview")
     @Operation(summary = "概览指标", description = "规则数量、触发率、P99 耗时、错误率等首屏卡片指标")
-    public BaseResponse<RuleDashboardOverviewVOVO> overview() {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(dashboardService.getOverview()));
+    public BaseResponse<RuleDashboardOverviewVO> overview() {
+        return BaseResponse.success(dashboardService.getOverview());
     }
 
     /**
@@ -73,9 +67,9 @@ public class RuleDashboardController {
      */
     @GetMapping("/trends")
     @Operation(summary = "趋势指标", description = "按时间维度（小时/天）展示触发次数、P99 耗时、错误率趋势")
-    public BaseResponse<RuleDashboardTrendVOVO> trends(
+    public BaseResponse<RuleDashboardTrendVO> trends(
             @RequestParam(value = "timeRange", defaultValue = "24h") String timeRange) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(dashboardService.getTrends(timeRange)));
+        return BaseResponse.success(dashboardService.getTrends(timeRange));
     }
 
     /**
@@ -85,8 +79,8 @@ public class RuleDashboardController {
      */
     @GetMapping("/distribution")
     @Operation(summary = "分布指标", description = "按状态/类别/严重度/场景/租户/责任人分组的规则分布")
-    public BaseResponse<RuleDashboardDistributionVOVO> distribution() {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(dashboardService.getDistribution()));
+    public BaseResponse<RuleDashboardDistributionVO> distribution() {
+        return BaseResponse.success(dashboardService.getDistribution());
     }
 
     /**
@@ -98,10 +92,10 @@ public class RuleDashboardController {
      */
     @GetMapping("/topRules")
     @Operation(summary = "Top 规则列表", description = "按触发次数/平均耗时/错误率排序的 Top 规则")
-    public BaseResponse<List<RuleDashboardTopRuleVOVO>> topRules(
+    public BaseResponse<List<RuleDashboardTopRuleVO>> topRules(
             @RequestParam(value = "type", defaultValue = "triggered") String type,
             @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.ruleDashboardTopRuleListToVO(dashboardService.getTopRules(type, limit)));
+        return BaseResponse.success(dashboardService.getTopRules(type, limit));
     }
 
     /**
@@ -111,7 +105,7 @@ public class RuleDashboardController {
      */
     @GetMapping("/realtime")
     @Operation(summary = "实时指标", description = "当前 QPS、活跃规则数、注册规则数等秒级实时指标")
-    public BaseResponse<RuleDashboardRealtimeVOVO> realtime() {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(dashboardService.getRealtime()));
+    public BaseResponse<RuleDashboardRealtimeVO> realtime() {
+        return BaseResponse.success(dashboardService.getRealtime());
     }
 }

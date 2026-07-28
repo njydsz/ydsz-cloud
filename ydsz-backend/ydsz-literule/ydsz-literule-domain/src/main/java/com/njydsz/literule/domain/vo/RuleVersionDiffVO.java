@@ -23,13 +23,13 @@ public class RuleVersionDiffVO {
     private String ruleCode;
 
     /** entries */
-    private List<DiffEntry> entries;
+    private List<Object> entries;
 
     /** summary */
     private String summary;
 
     /** type */
-    private DiffType type;
+    private String type;
 
     /** field */
     private String field;

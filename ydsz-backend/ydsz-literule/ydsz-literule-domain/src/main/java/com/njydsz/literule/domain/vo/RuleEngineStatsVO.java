@@ -32,7 +32,7 @@ public class RuleEngineStatsVO {
     private int lastEvaluatedRules;
 
     /** perRuleStats */
-    private Map<String, RuleStat> perRuleStats;
+    private Map<String, Object> perRuleStats;
 
     /** executions */
     private long executions;
@@ -43,7 +43,5 @@ public class RuleEngineStatsVO {
     /** errors */
     private long errors;
 
-    /** totalElapsedMs */
-    private long totalElapsedMs;
 
 }

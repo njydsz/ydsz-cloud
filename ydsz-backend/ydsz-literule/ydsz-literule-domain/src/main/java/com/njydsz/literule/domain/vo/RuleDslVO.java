@@ -15,10 +15,10 @@ import lombok.Data;
 public class RuleDslVO {
 
     /** rules */
-    private List<RuleDslEntry> rules;
+    private List<Object> rules;
 
     /** chains */
-    private List<ChainDslEntry> chains;
+    private List<Object> chains;
 
     /** meta */
     private Map<String, Object> meta;

@@ -26,7 +26,7 @@ public class RuleResultVO {
     private boolean triggered;
 
     /** severity */
-    private RuleSeverity severity;
+    private String severity;
 
     /** title */
     private String title;
