@@ -113,11 +113,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-search</artifactId>
         </dependency>
-        <!-- P2-5: 统一 Excel 导入导出 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-excel</artifactId>
-        </dependency>
+        <!-- P2-5: 统一 Excel 导入导出（已在上方引入，去重） -->
         <!-- P0-2: 多租户隔离 -->
         <dependency>
             <groupId>com.njydsz</groupId>

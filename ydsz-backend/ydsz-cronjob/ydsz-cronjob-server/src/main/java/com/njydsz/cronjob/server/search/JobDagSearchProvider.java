@@ -9,14 +9,14 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.JobMapper;
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.infra.mapper.JobDagMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 定时任务搜索提供者 — 将任务定义注册到统一搜索体系。
+ * DAG 工作流搜索提供者 — 将 DAG 定义注册到统一搜索体系。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,34 +24,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JobSearchProvider implements SearchProvider<Job> {
+public class JobDagSearchProvider implements SearchProvider<JobDag> {
 
-    private final JobMapper jobMapper;
+    private final JobDagMapper jobDagMapper;
 
     @Override
     public String getType() {
-        return "job";
+        return "job_dag";
     }
 
     @Override
     public String getTypeLabel() {
-        return "定时任务";
+        return "DAG工作流";
     }
 
     @Override
-    public IndexDocument toIndexDocument(Job entity) {
+    public IndexDocument toIndexDocument(JobDag entity) {
         if (entity == null || entity.getId() == null) {
             return null;
         }
         return IndexDocument.builder()
                 .id(entity.getId())
-                .type("job")
-                .title(entity.getJobName())
-                .subtitle(entity.getJobKey())
-                .content(entity.getJobRemark())
-                .snippet(entity.getCronExpression())
-                .status(entity.getScheduleType() != null ? entity.getScheduleType() : "CRON")
-                .path("/cronjob/job/" + entity.getId())
+                .type("job_dag")
+                .title(entity.getDagName())
+                .subtitle(entity.getDagKey())
+                .content(entity.getDescription())
+                .snippet(entity.getTriggerType())
+                .status(entity.getDagStatus())
+                .path("/cronjob/dag/" + entity.getId())
                 .tenantId(entity.getTenantId())
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt() != null
@@ -66,26 +66,26 @@ public class JobSearchProvider implements SearchProvider<Job> {
     public List<SearchField> getSearchableFields() {
         return List.of(
                 SearchField.builder()
-                        .name("title").label("任务名称").type(FieldType.TEXT)
+                        .name("title").label("DAG名称").type(FieldType.TEXT)
                         .weight(3.0f).searchable(true).highlightable(true).sortable(true)
                         .build(),
                 SearchField.builder()
-                        .name("subtitle").label("任务Key").type(FieldType.TEXT)
+                        .name("subtitle").label("DAG Key").type(FieldType.TEXT)
                         .weight(2.0f).searchable(true).highlightable(true)
                         .build(),
                 SearchField.builder()
-                        .name("content").label("任务备注").type(FieldType.TEXT)
+                        .name("content").label("描述").type(FieldType.TEXT)
                         .weight(1.0f).searchable(true)
                         .build(),
                 SearchField.builder()
-                        .name("status").label("调度类型").type(FieldType.KEYWORD)
+                        .name("status").label("DAG状态").type(FieldType.KEYWORD)
                         .weight(0.5f).searchable(false).aggregatable(true)
                         .build()
         );
     }
 
     @Override
-    public Job loadById(String id) {
-        return jobMapper.selectById(id);
+    public JobDag loadById(String id) {
+        return jobDagMapper.selectById(id);
     }
 }
