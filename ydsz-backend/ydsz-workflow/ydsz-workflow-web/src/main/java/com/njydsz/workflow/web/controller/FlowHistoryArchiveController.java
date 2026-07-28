@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
@@ -89,6 +92,7 @@ public class FlowHistoryArchiveController {
      * @param maxProcessMs  单次最大耗时毫秒（可选）
      * @return 执行结果摘要
      */
+    @Audit(module = "历史归档", type = AuditType.OPERATION, action = AuditAction.BACKUP, content = "'archive'")
     @Operation(summary = "手动触发归档")
     @Idempotent(key = "ydsz:workflow:FlowHistoryArchiveController:archive:lock", ttlSeconds = 5)
     @PostMapping("/archive")
@@ -109,6 +113,7 @@ public class FlowHistoryArchiveController {
      * @param purgeDays 清理阈值天数（可选，默认使用配置值）
      * @return 执行结果摘要
      */
+    @Audit(module = "历史归档", type = AuditType.OPERATION, action = AuditAction.CLEAN, content = "'purge'")
     @Operation(summary = "手动触发清理（purge）")
     @Idempotent(key = "ydsz:workflow:FlowHistoryArchiveController:purge:lock", ttlSeconds = 5)
     @PostMapping("/purge")

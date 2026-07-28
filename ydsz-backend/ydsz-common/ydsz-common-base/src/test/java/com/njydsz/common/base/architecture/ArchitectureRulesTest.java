@@ -41,6 +41,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  *   <li>R23: Converter 禁止使用 saveDtoToEntity 方法名（必须用 postDtoToEntity/putDtoToEntity）</li>
  *   <li>R24: 业务模块 HealthIndicator 必须继承 AbstractModuleHealthIndicator</li>
  *   <li>R25: 业务模块 Metrics 必须继承 AbstractModuleMetrics</li>
+ *   <li>R26: @Scheduled 定时任务必须使用 @DistributedScheduled 注解（集群安全）</li>
+ *   <li>R27: HealthIndicator 不允许使用 @Component 注解（应通过 @Bean 注册）</li>
+ *   <li>R28: 禁止使用 Executors.new* 方法创建线程池（应通过 common-thread 统一管理）</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -385,4 +388,73 @@ public class ArchitectureRulesTest {
             .and().resideInAPackage("..server..")
             .should().beAssignableTo("com.njydsz.common.core.metrics.AbstractModuleMetrics")
             .because("业务模块 Metrics 必须继承 AbstractModuleMetrics");
+
+    /**
+     * R26: @Scheduled 定时任务必须使用 @DistributedScheduled 注解。
+     *
+     * <p>在集群环境下，使用 {@code @Scheduled} 注解的定时任务会在每个节点上重复执行，
+     * 造成数据重复处理或竞争冲突。必须使用 {@code @DistributedScheduled} 注解替代，
+     * 该注解通过 AOP 切面在执行前获取分布式锁，确保同一时刻仅一个节点执行。
+     *
+     * <p>例外：common-base 模块自身的调度任务（如 RetryFlushTask）不受此约束，
+     * 因为它们是基础设施层调度，不涉及业务数据。
+     */
+    @ArchTest
+    static final ArchRule scheduledTasksShouldUseDistributedLock = noMethods()
+            .that().areAnnotatedWith("org.springframework.scheduling.annotation.Scheduled")
+            .and().areNotAnnotatedWith("com.njydsz.common.lock.annotation.DistributedScheduled")
+            .and().areDeclaredInClassesThat().resideInAnyPackage(
+                    "..workflow..", "..cronjob..", "..message..",
+                    "..nextwiki..", "..literule..", "..agent..",
+                    "..userinfo..", "..system..", "..project..")
+            .should().beAnnotatedWith("org.springframework.scheduling.annotation.Scheduled")
+            .because("集群环境下 @Scheduled 任务必须使用 @DistributedScheduled 注解确保分布式安全");
+
+    /**
+     * R27: HealthIndicator 不允许使用 @Component 注解。
+     *
+     * <p>各模块的 HealthIndicator 应通过 AutoConfiguration 中的 {@code @Bean} 方法注册，
+     * 而非直接标注 {@code @Component}。这样可以：
+     * <ul>
+     *   <li>统一通过 {@code @ConditionalOnMissingBean} 实现可替换性</li>
+     *   <li>通过 {@code @ConditionalOnProperty} 实现按需启用</li>
+     *   <li>避免组件扫描范围不一致导致的 Bean 注册遗漏</li>
+     * </ul>
+     */
+    @ArchTest
+    static final ArchRule healthIndicatorShouldNotUseComponent = noClasses()
+            .that().haveSimpleNameEndingWith("HealthIndicator")
+            .and().resideInAnyPackage(
+                    "..workflow..", "..cronjob..", "..message..",
+                    "..nextwiki..", "..literule..", "..agent..",
+                    "..userinfo..", "..system..", "..project..")
+            .should().beAnnotatedWith("org.springframework.stereotype.Component")
+            .because("HealthIndicator 应通过 AutoConfiguration @Bean 注册，不应使用 @Component");
+
+    /**
+     * R28: 禁止使用 Executors.new* 方法创建线程池。
+     *
+     * <p>{@code Executors.newFixedThreadPool}、{@code Executors.newCachedThreadPool} 等方法
+     * 创建的线程池缺乏命名、监控和生命周期管理能力。必须通过 {@code common-thread} 模块
+     * 的 {@code ThreadPoolAutoConfiguration} 统一创建命名线程池，支持：
+     * <ul>
+     *   <li>线程命名（便于线程 dump 排查）</li>
+     *   <li>Micrometer 指标暴露（活跃线程数/队列大小/完成任务数）</li>
+     *   <li>YAML 动态配置（核心/最大线程数/队列容量/拒绝策略）</li>
+     *   <li>优雅关闭（@PreDestroy 钩子）</li>
+     * </ul>
+     */
+    @ArchTest
+    static final ArchRule noExecutorsNewMethods = noClasses()
+            .that().resideInAnyPackage(
+                    "..workflow..", "..cronjob..", "..message..",
+                    "..nextwiki..", "..literule..", "..agent..",
+                    "..userinfo..", "..system..", "..project..")
+            .should().callMethod(java.util.concurrent.Executors.class, "newFixedThreadPool", int.class)
+            .orShould().callMethod(java.util.concurrent.Executors.class, "newCachedThreadPool")
+            .orShould().callMethod(java.util.concurrent.Executors.class, "newSingleThreadExecutor")
+            .orShould().callMethod(java.util.concurrent.Executors.class, "newScheduledThreadPool", int.class)
+            .orShould().callMethod(java.util.concurrent.Executors.class, "newSingleThreadScheduledExecutor")
+            .orShould().callMethod(java.util.concurrent.Executors.class, "newWorkStealingPool")
+            .because("禁止使用 Executors.new* 创建线程池，应通过 common-thread 的 ThreadPoolAutoConfiguration 统一管理");
 }

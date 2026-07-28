@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -110,6 +113,7 @@ public class FlowThirdPartyApprovalController {
      * @param body      回调 JSON
      * @return 处理结果
      */
+    @Audit(module = "第三方审批", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'dingTalkCallback'")
     @Operation(summary = "钉钉审批回调")
     @Idempotent(key = "ydsz:workflow:FlowThirdPartyApprovalController:dingTalkCallback:lock", ttlSeconds = 5)
     @PostMapping("/dingtalk/callback")
@@ -137,6 +141,7 @@ public class FlowThirdPartyApprovalController {
      * @param body      回调 JSON
      * @return 处理结果
      */
+    @Audit(module = "第三方审批", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'feishuCallback'")
     @Operation(summary = "飞书审批回调")
     @Idempotent(key = "ydsz:workflow:FlowThirdPartyApprovalController:feishuCallback:lock", ttlSeconds = 5)
     @PostMapping("/feishu/callback")
@@ -164,6 +169,7 @@ public class FlowThirdPartyApprovalController {
      * @param body         回调 JSON
      * @return 处理结果
      */
+    @Audit(module = "第三方审批", type = AuditType.OPERATION, action = AuditAction.OTHER, content = "'weComCallback'")
     @Operation(summary = "企业微信审批回调")
     @Idempotent(key = "ydsz:workflow:FlowThirdPartyApprovalController:weComCallback:lock", ttlSeconds = 5)
     @PostMapping("/wecom/callback")

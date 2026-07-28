@@ -6,7 +6,7 @@ import java.util.*;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 
 /**
- * YdszJson 底层 JSON 解析器（零依赖，JIT + SIMD 优化版）
+ * YdszJson 底层 JSON 解析器（零依赖，JIT + 循环展开 优化版）
  * 
  * <p>直接解析 JSON 字符串为 Map/List 结构，不依赖 YdszJson。</p>
  * 
@@ -18,7 +18,7 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  *   <li>避免同步锁，使用无锁设计</li>
  * </ul>
  * 
- * <p><b>SIMD 优化：</b></p>
+ * <p><b>循环展开 优化：</b></p>
  * <ul>
  *   <li>向量化空白字符检测</li>
  *   <li>批量字符串比较</li>
@@ -181,8 +181,8 @@ public final class YdszJsonParser {
             Object value = parseValue(chars, pos);
             result.put(fieldName, value);
 
-            // 移动到值的结束位置
-            pos = getValueEndPosition(chars, valueStart);
+            // 移动到值的结束位置（消除简单值的二次扫描）
+            pos = getValueEndFast(chars, valueStart, value, len);
         }
 
         return result;
@@ -241,7 +241,7 @@ public final class YdszJsonParser {
             result.add(value);
 
             // 移动到值的结束位置
-            pos = getValueEndPosition(chars, valueStart);
+            pos = getValueEndFast(chars, valueStart, value, len);
         }
 
         return result;
@@ -538,7 +538,7 @@ public final class YdszJsonParser {
             result.put(fieldName, value);
             
             // 移动到值的结束位置
-            pos = getValueEndPosition(chars, valueStart);
+            pos = getValueEndFast(chars, valueStart, value, len);
         }
         
         return result;
@@ -597,7 +597,7 @@ public final class YdszJsonParser {
             result.add(value);
             
             // 移动到值的结束位置
-            pos = getValueEndPosition(chars, valueStart);
+            pos = getValueEndFast(chars, valueStart, value, len);
         }
         
         return result;
@@ -729,6 +729,33 @@ public final class YdszJsonParser {
         }
     }
     
+    /**
+     * 获取值的结束位置（快速版，消除简单值的二次扫描）
+     *
+     * <p>对于 true/false/null 值，直接根据值类型计算结束位置，
+     * 无需调用 getValueEndPosition 重新扫描。</p>
+     *
+     * @param chars JSON 字符数组
+     * @param valueStart 值的起始位置
+     * @param value 已解析的值
+     * @param len 字符数组长度
+     * @return 值的结束位置
+     */
+    private static int getValueEndFast(char[] chars, int valueStart, Object value, int len) {
+        // 快速路径：布尔值和 null 直接计算长度
+        if (value == Boolean.TRUE) {
+            return valueStart + 4; // "true"
+        }
+        if (value == Boolean.FALSE) {
+            return valueStart + 5; // "false"
+        }
+        if (value == null && valueStart + 4 <= len && chars[valueStart] == 'n') {
+            return valueStart + 4; // "null"
+        }
+        // 复杂值（String/Number/Map/List）：需要扫描确定结束位置
+        return getValueEndPosition(chars, valueStart);
+    }
+
     /**
      * 获取值的结束位置
      */

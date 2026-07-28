@@ -123,7 +123,7 @@ public class RagController {
      * @param request RAG 检索请求（query / topK / minScore / includeContext）
      * @return 统一响应结果，data 为 {@code {query, resultCount, citations, context}} Map
      */
-    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'search'")
+    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'search'")
     @PostMapping("/search")
     public BaseResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
         // 参数默认值兜底：topK=5 / minScore=0.7 / includeContext=true
@@ -172,6 +172,7 @@ public class RagController {
      *
      * @return 统一响应结果，data 为 {@link DocumentIngestionService.VectorStoreStats}
      */
+    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'stats'")
     @GetMapping("/stats")
     public BaseResponse<DocumentIngestionService.VectorStoreStats> stats() {
         return BaseResponse.success(ingestionService.getStats());

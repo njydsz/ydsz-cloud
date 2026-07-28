@@ -25,6 +25,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 可视化流程设计器 / 表单 / SLA 配置 / 模板 Controller
  *
@@ -104,6 +107,7 @@ public class FlowDesignerController {
     @Idempotent(key = "ydsz:workflow:FlowDesignerController:saveDesignerData:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdesigner.saveDesignerData", threshold = 50)
     @PostMapping("/definition/{id}/designer")
+    @Audit(module = "流程设计器", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveDesignerData'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> saveDesignerData(@PathVariable String id,
                                           @Valid @RequestBody FlowDesignerDataDTO dto) {
@@ -134,6 +138,7 @@ public class FlowDesignerController {
     @Idempotent(key = "ydsz:workflow:FlowDesignerController:lockDefinition:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdesigner.lockDefinition", threshold = 50)
     @PostMapping("/definition/{id}/lock")
+    @Audit(module = "流程设计器", type = AuditType.OPERATION, action = AuditAction.LOCK, content = "'lockDefinition'")
     @Operation(summary = "加锁流程定义（设计器协同编辑）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Boolean> lockDefinition(@PathVariable String id) {
@@ -152,6 +157,7 @@ public class FlowDesignerController {
     @Idempotent(key = "ydsz:workflow:FlowDesignerController:unlockDefinition:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdesigner.unlockDefinition", threshold = 50)
     @PostMapping("/definition/{id}/unlock")
+    @Audit(module = "流程设计器", type = AuditType.OPERATION, action = AuditAction.LOCK, content = "'unlockDefinition'")
     @Operation(summary = "解锁流程定义（设计器协同编辑）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Boolean> unlockDefinition(@PathVariable String id) {
@@ -207,6 +213,7 @@ public class FlowDesignerController {
     @Idempotent(key = "ydsz:workflow:FlowDesignerController:saveFormConfig:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdesigner.saveFormConfig", threshold = 50)
     @PostMapping("/definition/{id}/formConfig/{nodeCode}")
+    @Audit(module = "流程设计器", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveFormConfig'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> saveFormConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
@@ -242,6 +249,7 @@ public class FlowDesignerController {
     @Idempotent(key = "ydsz:workflow:FlowDesignerController:saveSlaConfig:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdesigner.saveSlaConfig", threshold = 50)
     @PostMapping("/definition/{id}/slaConfig/{nodeCode}")
+    @Audit(module = "流程设计器", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveSlaConfig'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Void> saveSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
@@ -274,6 +282,7 @@ public class FlowDesignerController {
      */
     @Idempotent(key = "ydsz:workflow:FlowDesignerController:importTemplate:lock", ttlSeconds = 5)
     @PostMapping("/template/{templateCode}/import")
+    @Audit(module = "流程设计器", type = AuditType.OPERATION, action = AuditAction.IMPORT, content = "'importTemplate'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
     public BaseResponse<String> importTemplate(@PathVariable String templateCode,
                                           @RequestParam(required = false) String flowName) {

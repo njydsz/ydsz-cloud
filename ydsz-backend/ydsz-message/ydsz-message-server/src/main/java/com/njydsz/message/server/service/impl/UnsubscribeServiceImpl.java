@@ -1,5 +1,7 @@
 package com.njydsz.message.server.service.impl.config;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -100,7 +102,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
      * @return 分页结果
      */
     @Override
-    public PageResponse<MsgSubscription> pageUnsubscribed(UnsubscribeQueryDTO query) {
+    public PageResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query) {
         if (query == null) {
             query = new UnsubscribeQueryDTO();
         }
@@ -115,7 +117,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
                 .eq(StringUtils.hasText(query.getTenantId()), MsgSubscription::getTenantId, query.getTenantId())
                 .orderByDesc(MsgSubscription::getUnsubscribedAt);
         Page<MsgSubscription> result = msgSubscriptionMapper.selectPage(page, w);
-        return PageResponse.ofPage(result);
+        return PageResponse.success(result.getTotal(), result.getCurrent(), result.getSize(), result.getRecords());
     }
 
     /**

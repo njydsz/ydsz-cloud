@@ -24,6 +24,8 @@ import com.njydsz.common.core.job.MapProcessor;
 import com.njydsz.common.core.job.MapReduceProcessor;
 import com.njydsz.common.core.job.MapTask;
 import com.njydsz.common.core.job.ProcessResult;
+import com.njydsz.common.json.object.YdszJsonObject;
+import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
@@ -194,7 +196,26 @@ public class MapTaskExecutor {
         // 7. 若 processor 是 MapReduceProcessor 且有子任务，调用 reduce 汇总
         if (processor instanceof MapReduceProcessor reduceProcessor) {
             try {
-                ProcessResult reduceResult = reduceProcessor.reduce(rootContext, subTaskResults);
+                // 构造子任务上下文列表（从 ProcessResult 恢复 results 数据，供 reduce 读取）
+                List<MapContext> subTaskContexts = new ArrayList<>(subTasks.size());
+                for (int i = 0; i < subTasks.size(); i++) {
+                    MapTask subTask = subTasks.get(i);
+                    MapContext subContext = new MapContext(jobId, logId, jobKey,
+                            subTask.getTaskName(), subTask.getTaskParams(), false);
+                    ProcessResult r = subTaskResults.get(i);
+                    if (r != null && r.getResult() != null) {
+                        try {
+                            YdszJsonObject resultMap = YdszJson.parseObjectToJsonObject(r.getResult());
+                            if (resultMap != null) {
+                                subContext.getResults().putAll(resultMap);
+                            }
+                        } catch (Exception ignored) {
+                            subContext.getResults().put("result", r.getResult());
+                        }
+                    }
+                    subTaskContexts.add(subContext);
+                }
+                ProcessResult reduceResult = reduceProcessor.reduce(subTaskContexts, rootContext);
                 log.info("[MapTaskExecutor] reduce 完成: key={} logId={} success={}",
                         jobKey, logId, reduceResult.isSuccess());
                 return reduceResult;
@@ -246,7 +267,7 @@ public class MapTaskExecutor {
 
         int maxParallel = cronjobProperties.getMapReduce().getMaxParallelSubTasks();
         Semaphore semaphore = new Semaphore(maxParallel);
-        String traceId = TracerUtils.get();
+        String traceId = TracerUtils.getTraceId();
 
         // 为每个子任务创建 TaskDO 并提交并行执行
         List<CompletableFuture<ProcessResult>> futures = new ArrayList<>(subTasks.size());

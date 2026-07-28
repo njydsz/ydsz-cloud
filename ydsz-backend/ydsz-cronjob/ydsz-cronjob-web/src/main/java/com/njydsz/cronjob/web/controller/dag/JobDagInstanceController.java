@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
-import com.njydsz.cronjob.domain.vo.DagInstanceVisualizationVOVO;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.common.audit.annotation.Audit;
@@ -135,7 +134,7 @@ public class JobDagInstanceController {
     @Operation(summary = "获取 DAG 实例可视化数据（P4-1）")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/visualization")
-    public BaseResponse<DagInstanceVisualizationVOVO> getVisualization(@PathVariable String instanceId) {
+    public BaseResponse<DagInstanceVisualizationVO> getVisualization(@PathVariable String instanceId) {
         return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagInstanceService.getVisualization(instanceId)));
     }
 

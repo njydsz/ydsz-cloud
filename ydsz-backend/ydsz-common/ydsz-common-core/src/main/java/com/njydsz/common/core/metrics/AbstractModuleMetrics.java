@@ -1,5 +1,7 @@
 package com.njydsz.common.core.metrics;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
@@ -44,6 +46,26 @@ public abstract class AbstractModuleMetrics {
     /** 模块指标前缀（如 "ydsz_flow_" / "ydsz_msg_"） */
     protected final String prefix;
 
+    /** Counter 实例缓存，避免重复构建 Builder */
+    private final Map<String, Counter> counterCache = new ConcurrentHashMap<>();
+
+    /** Timer 实例缓存，避免重复构建 Builder */
+    private final Map<String, Timer> timerCache = new ConcurrentHashMap<>();
+
+    /**
+     * 生成带标签的缓存 key
+     */
+    private static String cacheKey(String name, String... tags) {
+        if (tags == null || tags.length == 0) {
+            return name;
+        }
+        StringBuilder sb = new StringBuilder(name);
+        for (int i = 0; i < tags.length; i++) {
+            sb.append(':').append(tags[i]);
+        }
+        return sb.toString();
+    }
+
     /**
      * 构造模块指标基类。
      *
@@ -66,9 +88,11 @@ public abstract class AbstractModuleMetrics {
      * @return Counter 实例
      */
     protected Counter counter(String name, String... tags) {
-        return Counter.builder(prefix + name)
-                .tags(Tags.of(tags))
-                .register(registry);
+        String key = cacheKey(prefix + name, tags);
+        return counterCache.computeIfAbsent(key, k ->
+                Counter.builder(prefix + name)
+                        .tags(Tags.of(tags))
+                        .register(registry));
     }
 
     /**
@@ -102,9 +126,11 @@ public abstract class AbstractModuleMetrics {
      * @return Timer 实例
      */
     protected Timer timer(String name, String... tags) {
-        return Timer.builder(prefix + name)
-                .tags(Tags.of(tags))
-                .register(registry);
+        String key = cacheKey(prefix + name, tags);
+        return timerCache.computeIfAbsent(key, k ->
+                Timer.builder(prefix + name)
+                        .tags(Tags.of(tags))
+                        .register(registry));
     }
 
     /**

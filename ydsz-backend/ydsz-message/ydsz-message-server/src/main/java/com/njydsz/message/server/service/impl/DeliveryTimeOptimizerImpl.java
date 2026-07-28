@@ -82,7 +82,7 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
         }
         try {
             String hourlyKey = ACTIVITY_HOURLY_PREFIX + userId;
-            Map<Object, Object> hourlyCounts = redisService.hGetAll(hourlyKey, String.class);
+            Map<String, String> hourlyCounts = redisService.hGetAll(hourlyKey, String.class);
             if (hourlyCounts == null || hourlyCounts.isEmpty()) {
                 return null; // 无活跃数据
             }
@@ -91,7 +91,7 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
             Map<Integer, Long> hourCounts = new HashMap<>();
             int bestHour = -1;
             long bestCount = 0;
-            for (Map.Entry<Object, Object> entry : hourlyCounts.entrySet()) {
+            for (Map.Entry<String, String> entry : hourlyCounts.entrySet()) {
                 try {
                     int hour = Integer.parseInt(String.valueOf(entry.getKey()));
                     long count = Long.parseLong(String.valueOf(entry.getValue()));

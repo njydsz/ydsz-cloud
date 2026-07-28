@@ -40,6 +40,7 @@ import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
+import com.njydsz.nextwiki.server.converter.NextwikiConverter;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -261,7 +262,7 @@ public class FileApplicationService {
                 page, pageSize);
 
         // DO → VO 转换
-        return pageResult.convert(this::toVO);
+        return pageResult.convert(node -> NextwikiConverter.INSTANT.entityToVO(node));
     }
 
     /**

@@ -38,15 +38,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @SpringBootApplication(scanBasePackages = {
         "com.njydsz.message",
         "com.njydsz.common"
-
-/**
- * MessageApplication Spring Boot 启动类，模块入口。
- *
- * <p>所属包：{@code com.njydsz.message.web}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 })
 @EnableDiscoveryClient
 @EnableYdszAuth

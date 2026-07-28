@@ -76,7 +76,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         history.setHandler(job.getHandler());
         history.setCronExpression(job.getCronExpression());
         history.setParamsJson(job.getParamsJson());
-        history.setRemark(job.getRemark());
+        history.setRemark(job.getJobRemark());
         history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
         history.setChangedAt(LocalDateTime.now());
         history.setDeleted(0);
@@ -107,7 +107,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             history.setHandler(displayJob.getHandler());
             history.setCronExpression(displayJob.getCronExpression());
             history.setParamsJson(displayJob.getParamsJson());
-            history.setRemark(displayJob.getRemark());
+            history.setRemark(displayJob.getJobRemark());
             history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
             history.setChangedAt(LocalDateTime.now());
             history.setDeleted(0);

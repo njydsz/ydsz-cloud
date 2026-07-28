@@ -17,6 +17,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 灰度发布 Controller
  *
@@ -80,6 +83,7 @@ public class FlowCanaryController {
      */
     @Idempotent(key = "ydsz:workflow:FlowCanaryController:publishCanary:lock", ttlSeconds = 5)
     @PostMapping("/canary/{definitionId}/publish")
+    @Audit(module = "灰度发布", type = AuditType.OPERATION, action = AuditAction.ENABLE, content = "'publishCanary'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> publishCanary(
             @PathVariable String definitionId,
@@ -104,6 +108,7 @@ public class FlowCanaryController {
      */
     @Idempotent(key = "ydsz:workflow:FlowCanaryController:adjustCanary:lock", ttlSeconds = 5)
     @PostMapping("/canary/{definitionId}/adjust")
+    @Audit(module = "灰度发布", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'adjustCanary'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> adjustCanary(
             @PathVariable String definitionId,
@@ -127,6 +132,7 @@ public class FlowCanaryController {
      */
     @Idempotent(key = "ydsz:workflow:FlowCanaryController:promoteCanary:lock", ttlSeconds = 5)
     @PostMapping("/canary/{definitionId}/promote")
+    @Audit(module = "灰度发布", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'promoteCanary'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> promoteCanary(
             @PathVariable String definitionId,
@@ -149,6 +155,7 @@ public class FlowCanaryController {
      */
     @Idempotent(key = "ydsz:workflow:FlowCanaryController:rollbackCanary:lock", ttlSeconds = 5)
     @PostMapping("/canary/{definitionId}/rollback")
+    @Audit(module = "灰度发布", type = AuditType.OPERATION, action = AuditAction.RESTORE, content = "'rollbackCanary'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> rollbackCanary(
             @PathVariable String definitionId,

@@ -10,7 +10,7 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
-import com.njydsz.message.infra.mapper.MsgTemplateMapper;
+import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

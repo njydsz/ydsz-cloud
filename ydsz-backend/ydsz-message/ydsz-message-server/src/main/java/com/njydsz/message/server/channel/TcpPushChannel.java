@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.type.YdszJsonType;
 import com.njydsz.common.netty.codec.LengthFieldFrameDecoder;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.server.AbstractNettyServer;
@@ -207,7 +206,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
             }
             String json = buf.toString(CharsetUtil.UTF_8);
             try {
-                Map<String, Object> data = OBJECT_MAPPER.readValue(json, new YdszJsonType<Map<String, Object>>() {});
+                Map<String, Object> data = YdszJson.parseMap(json);
                 String type = (String) data.get("type");
                 if ("AUTH".equals(type)) {
                     // 认证消息：注册 userId

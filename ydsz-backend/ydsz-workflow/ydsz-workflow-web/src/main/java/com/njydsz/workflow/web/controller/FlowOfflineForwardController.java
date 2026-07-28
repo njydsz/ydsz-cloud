@@ -13,6 +13,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 离线代理自动转发 Controller（P2-5）
  *
@@ -83,6 +86,7 @@ public class FlowOfflineForwardController {
     @Idempotent(key = "ydsz:workflow:FlowOfflineForwardController:autoForward:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowofflineforward.autoForward", threshold = 50)
     @PostMapping("/auto")
+    @Audit(module = "离线转发", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'autoForward'")
     @Operation(summary = "按代理授权规则自动转发已有待办")
     public BaseResponse<Integer> autoForward(@RequestParam String authId) {
         return BaseResponse.success(offlineAutoForwardService.autoForwardByAuth(authId));
@@ -102,6 +106,7 @@ public class FlowOfflineForwardController {
     @Idempotent(key = "ydsz:workflow:FlowOfflineForwardController:manualForward:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowofflineforward.manualForward", threshold = 50)
     @PostMapping("/manual")
+    @Audit(module = "离线转发", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'manualForward'")
     @Operation(summary = "手动触发离线转发")
     public BaseResponse<Integer> manualForward(
             @RequestParam String userId,

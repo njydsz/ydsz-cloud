@@ -96,7 +96,7 @@ public class ThumbnailApplicationService {
             }
 
             // 下载原图到临时文件
-            Path tempFile = Path.of(tempDir, fileNodeId + "_orig." + suffix);
+            Path tempFile = Path.of(properties.getThumbnail().getTempDir(), fileNodeId + "_orig." + suffix);
             Files.createDirectories(tempFile.getParent());
             try (InputStream is = storage.downloadAsStream(fileNode.getBucketName(), fileNode.getStorageKey())) {
                 Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);

@@ -45,8 +45,9 @@ public class DefaultFeatureFlagService implements FeatureFlagService {
     /** 模块总开关，关闭后所有非强制开关返回 false */
     protected volatile boolean moduleEnabled = true;
 
-    /** 各开关的当前状态（线程安全） */
-    private final Map<FeatureFlag, AtomicReference<FlagState>> states = new EnumMap<>(FeatureFlag.class);
+    /** 各开关的当前状态（线程安全，使用 ConcurrentHashMap 包装 EnumMap） */
+    private final Map<FeatureFlag, AtomicReference<FlagState>> states = new ConcurrentHashMap<>(
+            Collections.synchronizedMap(new EnumMap<>(FeatureFlag.class)));
 
     /** 配置属性（用于 refresh 时重新加载） */
     protected final FeatureFlagProperties properties;

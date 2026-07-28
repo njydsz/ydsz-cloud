@@ -37,8 +37,6 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.agent.domain.converter.AgentConverter;
-import com.njydsz.agent.domain.vo.ChatResponseDTOVO;
 
 /**
  * 对话 REST API Controller。
@@ -117,13 +115,13 @@ public class ChatController {
      * 避免请求失败后 5 秒内重试被误判为重复。
      *
      * @param request 对话请求体（含 conversationId / message / systemPrompt / requestId）
-     * @return 统一响应结果，data 为 {@link ChatResponseDTOVO}（含 content/model/usage）
+     * @return 统一响应结果，data 为 {@link ChatResponseDTO}（含 content/model/usage）
      */
     @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'chat'")
     @Idempotent(key = "ydsz:agent:ChatController:chat:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.chat.chat", threshold = 50)
     @PostMapping("/chat")
-    public BaseResponse<ChatResponseDTOVO> chat(@Valid @RequestBody ChatRequestDTO request) {
+    public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 同步对话请求: convId={}, msgLen={}",
                 request.getConversationId(), request.getMessage().length());
         requestGuard.check(request.getRequestId(), null);
@@ -133,7 +131,7 @@ public class ChatController {
                     request.getMessage(),
                     request.getSystemPrompt());
             ChatResponseDTO dto = toDTO(response);
-            return BaseResponse.success(AgentConverter.INSTANT.entityToVO(dto));
+            return BaseResponse.success(dto);
         } catch (Exception e) {
             requestGuard.releaseIdempotent(request.getRequestId());
             throw e;
@@ -241,6 +239,7 @@ public class ChatController {
      * @param conversationId 会话 ID（{@code ydsz_chat_message.conversation_id}）
      * @return 统一响应结果，data 为 {@code [{id, role, content, createdAt}, ...]} 格式的列表
      */
+    @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'history: ' + #conversationId")
     @GetMapping("/history")
     public BaseResponse<List<Map<String, Object>>> history(
             @RequestParam String conversationId) {

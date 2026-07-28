@@ -13,6 +13,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
+import com.njydsz.common.json.annotation.JsonAlias;
+import com.njydsz.common.json.annotation.YdszJsonFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -607,7 +610,16 @@ public final class AsmBeanCodecGenerator {
                 String dateInternalName = (typeCode == 10) ? "java/time/LocalDateTime" : "java/time/LocalDate";
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 5);
-                mv.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
+                // @YdszJsonFormat 支持：检查是否有格式化模式
+                YdszJsonFormat formatAnnotation = field.getAnnotation(YdszJsonFormat.class);
+                String datePattern = (formatAnnotation != null && !formatAnnotation.value().isEmpty()) ? formatAnnotation.value() : null;
+                if (datePattern != null) {
+                    mv.visitLdcInsn(datePattern);
+                    mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
+                        "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
+                } else {
+                    mv.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
+                }
                 mv.visitVarInsn(ILOAD, 4);
                 mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
@@ -627,8 +639,17 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLabel(notNullLabel);
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 5);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
+                // @YdszJsonFormat 支持：检查是否有格式化模式
+                YdszJsonFormat dateFmtAnn = field.getAnnotation(YdszJsonFormat.class);
+                String datePattern2 = (dateFmtAnn != null && !dateFmtAnn.value().isEmpty()) ? dateFmtAnn.value() : null;
+                if (datePattern2 != null) {
+                    mv.visitLdcInsn(datePattern2);
+                    mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
+                        "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
+                } else {
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
+                }
                 mv.visitVarInsn(ILOAD, 4);
                 mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
@@ -1310,6 +1331,17 @@ public final class AsmBeanCodecGenerator {
             mv.visitLdcInsn(fieldHash);
             mv.visitInsn(LCMP);
             mv.visitJumpInsn(IFEQ, fieldMatched);
+            // @JsonAlias support: check alias hashes
+            JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
+            if (aliasAnnotation != null) {
+                for (String alias : aliasAnnotation.value()) {
+                    long aliasHash = JSONReader.fnv1aHash(alias);
+                    mv.visitVarInsn(LLOAD, 3);
+                    mv.visitLdcInsn(aliasHash);
+                    mv.visitInsn(LCMP);
+                    mv.visitJumpInsn(IFEQ, fieldMatched);
+                }
+            }
             mv.visitJumpInsn(GOTO, nextField);
             
             mv.visitLabel(fieldMatched);
@@ -1489,6 +1521,36 @@ public final class AsmBeanCodecGenerator {
 
         byte[] bytecode = cw.toByteArray();
         return defineDeserializerClass(className, bytecode, beanType);
+    }
+
+    /**
+     * 使用指定格式模式格式化日期对象（供 ASM 生成的字节码调用）
+     *
+     * @param dateValue 日期对象（LocalDateTime/LocalDate/Date）
+     * @param pattern 格式模式（如 "yyyy-MM-dd HH:mm:ss"），null 或空时使用 toString()
+     * @return 格式化后的字符串
+     */
+    public static String formatDate(Object dateValue, String pattern) {
+        if (dateValue == null) {
+            return null;
+        }
+        if (pattern == null || pattern.isEmpty()) {
+            return dateValue.toString();
+        }
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+            if (dateValue instanceof LocalDateTime ldt) {
+                return ldt.format(formatter);
+            } else if (dateValue instanceof LocalDate ld) {
+                return ld.format(formatter);
+            } else if (dateValue instanceof Date d) {
+                return d.toInstant().atZone(ZoneId.systemDefault())
+                    .toLocalDateTime().format(formatter);
+            }
+        } catch (Exception e) {
+            log.warn("日期格式化失败, pattern: {}, 错误: {}", pattern, e.getMessage());
+        }
+        return dateValue.toString();
     }
 
     /**

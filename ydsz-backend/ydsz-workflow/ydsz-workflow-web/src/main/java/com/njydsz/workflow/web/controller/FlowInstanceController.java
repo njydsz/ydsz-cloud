@@ -145,6 +145,7 @@ public class FlowInstanceController {
      */
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:terminate:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/terminate")
+    @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'terminate'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
         workflowFacade.terminateProcess(id, reason);
@@ -160,6 +161,7 @@ public class FlowInstanceController {
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:suspend:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowinstance.suspend", threshold = 50)
     @PostMapping("/instance/{id}/suspend")
+    @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.DISABLE, content = "'suspend'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> suspend(@PathVariable String id) {
         workflowFacade.suspendProcess(id);
@@ -175,6 +177,7 @@ public class FlowInstanceController {
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:activate:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowinstance.activate", threshold = 50)
     @PostMapping("/instance/{id}/activate")
+    @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.ENABLE, content = "'activate'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> activate(@PathVariable String id) {
         workflowFacade.activateProcess(id);
@@ -194,6 +197,7 @@ public class FlowInstanceController {
      */
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:recall:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/recall")
+    @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recall'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<Boolean> recall(@PathVariable String id,
                                   @RequestParam(required = false) String targetNodeCode) {
@@ -229,6 +233,7 @@ public class FlowInstanceController {
      */
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:rollback:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/rollback")
+    @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.RESTORE, content = "'rollback'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_ROLLBACK)
     public BaseResponse<Boolean> rollback(@PathVariable String id,
                                     @RequestParam String reason,
@@ -250,6 +255,7 @@ public class FlowInstanceController {
      */
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:resubmit:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/resubmit")
+    @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resubmit'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
     public BaseResponse<String> resubmit(@PathVariable String id,
                                     @RequestParam(required = false) String comment,

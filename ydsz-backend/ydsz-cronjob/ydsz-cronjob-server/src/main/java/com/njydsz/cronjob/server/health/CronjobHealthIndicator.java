@@ -12,9 +12,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
@@ -39,8 +37,6 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
     private final ObjectProvider<LeaderElector> leaderElectorProvider;
     /** 任务 Mapper（可选依赖，未配置时跳过任务数探针） */
     private final ObjectProvider<JobMapper> jobMapperProvider;
-    /** 任务日志 Mapper（可选依赖，未配置时跳过运行中日志探针） */
-    private final ObjectProvider<JobLogMapper> jobLogMapperProvider;
     /** Micrometer 指标采集器（可选依赖） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
     /** 调度引擎配置属性 */
@@ -53,7 +49,6 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
      * @param redisConnectionFactoryProvider Redis 连接工厂提供者
      * @param leaderElectorProvider          Leader 选举器提供者
      * @param jobMapperProvider              任务 Mapper 提供者
-     * @param jobLogMapperProvider           任务日志 Mapper 提供者
      * @param cronjobMetricsProvider         指标采集器提供者
      * @param cronjobProperties              调度引擎配置属性
      */
@@ -61,19 +56,17 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
             ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
             ObjectProvider<LeaderElector> leaderElectorProvider,
             ObjectProvider<JobMapper> jobMapperProvider,
-            ObjectProvider<JobLogMapper> jobLogMapperProvider,
             ObjectProvider<CronjobMetrics> cronjobMetricsProvider,
             CronjobProperties cronjobProperties) {
         this.redisConnectionFactoryProvider = redisConnectionFactoryProvider;
         this.leaderElectorProvider = leaderElectorProvider;
         this.jobMapperProvider = jobMapperProvider;
-        this.jobLogMapperProvider = jobLogMapperProvider;
         this.cronjobMetricsProvider = cronjobMetricsProvider;
         this.cronjobProperties = cronjobProperties;
     }
 
     /**
-     * 执行健康检查，依次检测 Redis 连通性、Leader 选举状态、DB 探针（任务数/运行中日志数）、
+     * 执行健康检查，依次检测 Redis 连通性、Leader 选举状态、DB 探针（任务数）、
      * 调度器配置摘要、Metrics 可用性。
      *
      * @param builder Spring Boot Health 构建器
@@ -120,16 +113,7 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
                             .eq(Job::getDeleted, 0)));
         }
 
-        // 4. DB 探针 — 运行中日志数
-        JobLogMapper jobLogMapper = jobLogMapperProvider.getIfAvailable();
-        if (jobLogMapper != null) {
-            checkTableProbeWithValue(builder, "runningJobCount", () ->
-                    jobLogMapper.selectCount(new LambdaQueryWrapper<JobLog>()
-                            .eq(JobLog::getStatus, "RUNNING")
-                            .eq(JobLog::getDeleted, 0)));
-        }
-
-        // 5. 调度器配置摘要
+        // 4. 调度器配置摘要
         Map<String, Object> schedulerInfo = new LinkedHashMap<>();
         schedulerInfo.put("scanIntervalMs", cronjobProperties.getScanner().getIntervalMs());
         schedulerInfo.put("maxBatchSize", cronjobProperties.getScanner().getBatchSize());
@@ -140,7 +124,7 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
                 && cronjobProperties.getSelfHealing().isEnabled());
         builder.withDetail("scheduler", schedulerInfo);
 
-        // 6. Metrics 可用性
+        // 5. Metrics 可用性
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
         builder.withDetail("metricsEnabled", metrics != null);
     }

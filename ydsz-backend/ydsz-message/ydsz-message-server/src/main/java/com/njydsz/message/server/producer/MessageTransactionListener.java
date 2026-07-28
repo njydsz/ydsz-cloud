@@ -48,7 +48,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     private final ChannelRouter channelRouter;
 
     @Override
-    public RocketMQLocalTransactionState executeLocalTransaction(Message<?> message, Object arg) {
+    public RocketMQLocalTransactionState executeLocalTransaction(Message message, Object arg) {
         MessageRequest req = resolveRequest(message, arg);
         if (req == null) {
             log.warn("[TxListener] executeLocalTransaction: 请求为 null,ROLLBACK");
@@ -72,7 +72,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     }
 
     @Override
-    public RocketMQLocalTransactionState checkLocalTransaction(Message<?> message) {
+    public RocketMQLocalTransactionState checkLocalTransaction(Message message) {
         MessageRequest req = resolveRequest(message, null);
         if (req == null) {
             log.warn("[TxListener] checkLocalTransaction: 无法解析请求,ROLLBACK");
@@ -100,7 +100,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
      * <p>优先从 arg（sendMessageInTransaction 的第三个参数）解析,
      * arg 为 null 时从 message payload 解析。
      */
-    private MessageRequest resolveRequest(Message<?> message, Object arg) {
+    private MessageRequest resolveRequest(Message message, Object arg) {
         if (arg instanceof MessageRequest req) {
             return req;
         }

@@ -3,7 +3,7 @@
  *
  * P2-3: 消除主应用与 shared-auth 的重复代码。
  * 主应用只需提供 doReAuthenticate 和 doRefreshToken 回调，
- * 其余拦截器配置（successCode=200 + Bearer Token + refreshToken）由 shared-auth 统一管理。
+ * 其余拦截器配置（successCode="A00000" + Bearer Token + refreshToken）由 shared-auth 统一管理。
  */
 import type { RequestClientOptions } from '@ydsz/request';
 

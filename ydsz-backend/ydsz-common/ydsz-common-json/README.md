@@ -81,16 +81,20 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 ### 注解
 
+> **命名约定**：`@YdszJson*` 前缀注解为 YdszJson 专有功能（字段映射、格式化、视图过滤等）；
+> `@Json*` 前缀注解（不带 Ydsz）为 Jackson 兼容注解，设计目标是从 Jackson 迁移时
+> 注解名无需修改即可使用，降低迁移成本。两套注解命名并行是有意为之的设计决策。
+
 | 注解 | 说明 |
 |---|---|
 | `@YdszJsonField` | 字段映射（名称 / 格式 / 序列化控制） |
-| `@JsonAlias` | 反序列化别名 |
+| `@JsonAlias` | 反序列化别名（Jackson 兼容） |
 | `@YdszJsonFormat` | 格式化（日期 / 数字） |
-| `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT） |
-| `@JsonIgnoreProperties` | 忽略指定属性（类级别，支持 ignoreUnknown） |
-| `@JsonValue` | 枚举值序列化方式（方法级别） |
-| `@JsonAnyGetter` / `@JsonAnySetter` | 动态属性 Getter / Setter |
-| `@JsonUnwrapped` | 嵌套属性展开（支持 prefix / suffix） |
+| `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT，Jackson 兼容） |
+| `@JsonIgnoreProperties` | 忽略指定属性（类级别，支持 ignoreUnknown，Jackson 兼容） |
+| `@JsonValue` | 枚举值序列化方式（方法级别，Jackson 兼容） |
+| `@JsonAnyGetter` / `@JsonAnySetter` | 动态属性 Getter / Setter（Jackson 兼容） |
+| `@JsonUnwrapped` | 嵌套属性展开（支持 prefix / suffix，Jackson 兼容） |
 | `@YdszJsonView` | 视图过滤 |
 | `@YdszJsonPropertyOrder` | 字段排序 |
 | `@YdszJsonCreator` / `@YdszJsonBuilder` | 构造器 / Builder |
@@ -99,6 +103,11 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | `@YdszJsonClass` | 类型标记 |
 
 ### 高级功能
+
+> **范围说明**：以下高级功能为扩展能力，非核心序列化/反序列化路径。
+> 核心场景（toJson/toObject/parseMap/parseArray）不依赖这些功能。
+> JSON Schema 校验、JSON Patch (RFC 6902)、JSON Merge Patch (RFC 7396)
+> 为独立工具类，可按需使用，不影响核心性能。
 
 | 类 | 说明 |
 |---|---|
@@ -308,4 +317,11 @@ YdszJson (Facade, 用户接口)
 5. **JIT 友好**：类型代码系统替代 instanceof 链，提高分支预测准确率。
 6. **类型安全**：AutoTypeChecker 防反序列化漏洞。
 7. **金融级精度**：`useBigDecimal` 配置支持 BigDecimal 解析路径，避免浮点精度丢失。
+
+## Roadmap（后续规划）
+
+| 优先级 | 特性 | 描述 |
+|---|---|---|
+| P2 | byte[] 直接解析路径 | 当前解析链基于 char[]，网络场景存在 byte[]→String→char[] 双重转换。计划新增 byte[] 直接解析路径，ASCII JSON 直接在 byte[] 上操作，非 ASCII 才转码。对标 FastJSON2 的 JSONReader byte[] 模式。 |
+| P3 | 流式增量解析（Streaming Parser） | 当前 YdszJsonParser 需全量加载 JSON 到 char[]，无法处理超大 JSON 流式解析。计划基于 InputStream 实现 token-by-token 增量解析器，对标 Jackson JsonParser。 |
 8. **Optional / UUID 原生支持**：序列化时自动展开 Optional、UUID 转字符串。

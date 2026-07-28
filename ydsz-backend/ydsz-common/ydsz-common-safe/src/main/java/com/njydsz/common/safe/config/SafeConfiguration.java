@@ -89,15 +89,6 @@ import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
         IpAccessProperties.class,
         AutoBlockProperties.class,
         SqlInjectionProperties.class
-
-/**
- * SafeConfiguration 自动配置类，注册模块 Bean 并管理装配条件。
- *
- * <p>所属包：{@code com.njydsz.common.safe.config}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 })
 public class SafeConfiguration {
 

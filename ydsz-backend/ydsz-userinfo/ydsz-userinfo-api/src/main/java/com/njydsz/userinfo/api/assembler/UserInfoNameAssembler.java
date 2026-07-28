@@ -5,18 +5,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameAssemblerProperties;
 import com.njydsz.common.feign.assembler.NameType;
 import com.njydsz.userinfo.api.client.OrgQueryClient;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -45,29 +45,32 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@RequiredArgsConstructor
 public class UserInfoNameAssembler implements NameAssembler {
 
     private final OrgQueryClient orgQueryClient;
     private final NameAssemblerProperties properties;
 
-    /** 缓存条目：name + 过期时间戳（毫秒） */
-    private static final class CacheEntry {
-        final String name;
-        final long expireAt;
+    /**
+     * P2-2: 接入 common-cache 替代手动 ConcurrentHashMap + TTL。
+     * <p>使用 Window-TinyLFU 算法 + expireAfterWrite 自动过期，
+     * 统一缓存治理，支持命中率监控和自动驱逐。
+     */
+    private final Cache<String, String> cache;
 
-        CacheEntry(String name, long expireAt) {
-            this.name = name;
-            this.expireAt = expireAt;
-        }
-
-        boolean isExpired(long now) {
-            return now >= expireAt;
-        }
+    /**
+     * 构造 UserInfoNameAssembler。
+     *
+     * @param orgQueryClient Feign 客户端
+     * @param properties     配置属性
+     */
+    public UserInfoNameAssembler(OrgQueryClient orgQueryClient, NameAssemblerProperties properties) {
+        this.orgQueryClient = orgQueryClient;
+        this.properties = properties;
+        this.cache = CacheBuilder.<String, String>newBuilder()
+                .maximumSize(10_000)
+                .expireAfterWrite(properties.getCacheTtl().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+                .build();
     }
-
-    /** 缓存 key = type.name() + ":" + id；value = CacheEntry */
-    private final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
     @Override
     public Map<String, String> batchResolveNames(NameType type, Collection<String> ids) {
@@ -101,11 +104,9 @@ public class UserInfoNameAssembler implements NameAssembler {
         }
 
         // 回填缓存
-        long now = System.currentTimeMillis();
-        long expireAt = now + properties.getCacheTtl().toMillis();
         for (Map.Entry<String, String> entry : result.entrySet()) {
             if (entry.getValue() != null && !entry.getValue().isBlank()) {
-                cache.put(cacheKey(type, entry.getKey()), new CacheEntry(entry.getValue(), expireAt));
+                cache.put(cacheKey(type, entry.getKey()), entry.getValue());
             }
         }
         return result;
@@ -117,20 +118,15 @@ public class UserInfoNameAssembler implements NameAssembler {
             return null;
         }
         String key = cacheKey(type, id);
-        long now = System.currentTimeMillis();
-
-        CacheEntry cached = cache.get(key);
-        if (cached != null && !cached.isExpired(now)) {
-            return cached.name;
+        String cached = cache.getIfPresent(key);
+        if (cached != null) {
+            return cached;
         }
-
-        // 缓存未命中或已过期：单次 Feign 调用（仅查询单个 ID）
         Map<String, String> result = batchResolveNames(type, List.of(id));
         String name = result.get(id);
         if (name != null && !name.isBlank()) {
             return name;
         }
-        // 调用失败或未命中：从缓存中删除可能过期的条目
         cache.remove(key);
         return null;
     }

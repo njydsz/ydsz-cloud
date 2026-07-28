@@ -1,6 +1,7 @@
 package com.njydsz.common.core.dag;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.EvaluationContext;
@@ -8,7 +9,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,10 +37,12 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 public class SpELConditionEvaluator {
 
     private static final ExpressionParser PARSER = new SpelExpressionParser();
+
+    /** 表达式解析缓存，避免重复解析相同表达式 */
+    private static final ConcurrentHashMap<String, Expression> EXPR_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 评估条件表达式。
@@ -62,7 +64,7 @@ public class SpELConditionEvaluator {
 
         try {
             EvaluationContext evalContext = buildEvaluationContext(context);
-            Expression parsed = PARSER.parseExpression(spel);
+            Expression parsed = EXPR_CACHE.computeIfAbsent(spel, PARSER::parseExpression);
             Boolean result = parsed.getValue(evalContext, Boolean.class);
             return result != null && result;
         } catch (Exception e) {

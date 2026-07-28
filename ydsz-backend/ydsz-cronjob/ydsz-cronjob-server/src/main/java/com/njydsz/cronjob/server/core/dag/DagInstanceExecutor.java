@@ -131,7 +131,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             if (elapsedMs > dag.getTimeoutMs()) {
                 log.warn("[DagInstance] DAG 已超时, 标记为 TIMEOUT: instanceId={} elapsedMs={} timeoutMs={}",
                         dagInstanceId, elapsedMs, dag.getTimeoutMs());
-                dagInstanceMapper.markFailed(dagInstanceId,
+                markInstanceFailed(dagInstanceId,
                         "DAG 超时: elapsed=" + elapsedMs + "ms, timeout=" + dag.getTimeoutMs() + "ms");
                 return;
             }

@@ -72,6 +72,13 @@ public final class PolymorphicTypeResolver {
     /**
      * 获取或创建类型映射
      *
+     * <p>支持两种多态发现机制：</p>
+     * <ol>
+     *   <li>注解驱动：通过 @YdszJsonTypeInfo + @YdszJsonSubTypes 显式声明子类型</li>
+     *   <li>密封类自动发现：Java 17+ sealed class 通过 getPermittedSubclasses() 自动注册子类型
+     *       （使用简单类名作为类型判别值）</li>
+     * </ol>
+     *
      * @param clazz 基类
      * @return 类型映射，如果不支持多态返回 null
      */
@@ -82,23 +89,39 @@ public final class PolymorphicTypeResolver {
         }
 
         YdszJsonTypeInfo typeInfo = clazz.getAnnotation(YdszJsonTypeInfo.class);
-        if (typeInfo == null) {
-            return null;
+
+        // 路径 1：注解驱动多态
+        if (typeInfo != null) {
+            YdszJsonSubTypes subTypes = clazz.getAnnotation(YdszJsonSubTypes.class);
+            if (subTypes != null) {
+                Map<String, Class<?>> nameToType = new HashMap<>(subTypes.value().length * 2);
+                for (YdszJsonSubType subType : subTypes.value()) {
+                    nameToType.put(subType.name(), subType.value());
+                }
+                TypeMapping mapping = new TypeMapping(typeInfo.property(), typeInfo.visible(), nameToType);
+                TYPE_MAPPING_CACHE.put(clazz, mapping);
+                return mapping;
+            }
         }
 
-        YdszJsonSubTypes subTypes = clazz.getAnnotation(YdszJsonSubTypes.class);
-        if (subTypes == null) {
-            return null;
+        // 路径 2：密封类自动发现（Java 17+）
+        if (clazz.isSealed()) {
+            Class<?>[] permitted = clazz.getPermittedSubclasses();
+            if (permitted != null && permitted.length > 0) {
+                Map<String, Class<?>> nameToType = new HashMap<>(permitted.length * 2);
+                for (Class<?> subType : permitted) {
+                    // 使用简单类名作为类型判别值
+                    nameToType.put(subType.getSimpleName(), subType);
+                }
+                String property = typeInfo != null ? typeInfo.property() : DEFAULT_TYPE_PROPERTY;
+                boolean visible = typeInfo != null && typeInfo.visible();
+                TypeMapping mapping = new TypeMapping(property, visible, nameToType);
+                TYPE_MAPPING_CACHE.put(clazz, mapping);
+                return mapping;
+            }
         }
 
-        Map<String, Class<?>> nameToType = new HashMap<>(subTypes.value().length * 2);
-        for (YdszJsonSubType subType : subTypes.value()) {
-            nameToType.put(subType.name(), subType.value());
-        }
-
-        TypeMapping mapping = new TypeMapping(typeInfo.property(), typeInfo.visible(), nameToType);
-        TYPE_MAPPING_CACHE.put(clazz, mapping);
-        return mapping;
+        return null;
     }
 
     /**

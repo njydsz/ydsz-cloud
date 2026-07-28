@@ -27,6 +27,9 @@ import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 长期授权委派 Controller（P1-4）
  *
@@ -121,6 +124,7 @@ public class FlowDelegateController {
     @Idempotent(key = "ydsz:workflow:FlowDelegateController:createDelegateAuth:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdelegate.createDelegateAuth", threshold = 50)
     @PostMapping("/delegateAuth/create")
+    @Audit(module = "流程委派", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'createDelegateAuth'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthPostDTO dto) {
         FlowDelegateAuth auth = WorkflowConverter.INSTANT.postDtoToEntity(dto);
@@ -141,6 +145,7 @@ public class FlowDelegateController {
     @Idempotent(key = "ydsz:workflow:FlowDelegateController:revokeDelegateAuth:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdelegate.revokeDelegateAuth", threshold = 50)
     @PostMapping("/delegateAuth/{id}/revoke")
+    @Audit(module = "流程委派", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'revokeDelegateAuth'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<Void> revokeDelegateAuth(@PathVariable String id) {
         String ownerId = AuthContext.getUserId();
@@ -158,6 +163,7 @@ public class FlowDelegateController {
     @Idempotent(key = "ydsz:workflow:FlowDelegateController:updateDelegateAuthStatus:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdelegate.updateDelegateAuthStatus", threshold = 50)
     @PostMapping("/delegateAuth/{id}/status")
+    @Audit(module = "流程委派", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'updateDelegateAuthStatus'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<Void> updateDelegateAuthStatus(@PathVariable String id,
                                                  @RequestParam String status) {

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.springframework.stereotype.Component;
 
@@ -76,8 +77,8 @@ public class CrossClusterDispatcher {
                     .build();
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                Map<String, Object> json = YdszJson.parseMap(response.body());
-                int code = json.getIntValue("code", -1);
+                YdszJsonObject json = YdszJson.parseObjectToJsonObject(response.body());
+                int code = json.getIntegerOrDefault("code", -1);
                 if (code == 0) {
                     String logId = json.getString("data");
                     log.info("[CrossCluster] 跨集群派发成功: cluster={} key={} logId={}",

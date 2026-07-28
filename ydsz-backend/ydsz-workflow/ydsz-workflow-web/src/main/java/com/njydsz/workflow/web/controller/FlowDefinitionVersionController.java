@@ -24,6 +24,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 流程定义版本生命周期管理 Controller
  *
@@ -82,6 +85,7 @@ public class FlowDefinitionVersionController {
      */
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:switchVersion:lock", ttlSeconds = 5)
     @PostMapping("/definition/{code}/switchVersion")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'switchVersion'")
     @Operation(summary = "切换流程定义的激活版本")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> switchVersion(@PathVariable String code,
@@ -100,6 +104,7 @@ public class FlowDefinitionVersionController {
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:enable:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdefinition.enable", threshold = 50)
     @PostMapping("/definition/{id}/enable")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.ENABLE, content = "'enable'")
     @Operation(summary = "启用流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> enable(@PathVariable String id) {
@@ -116,6 +121,7 @@ public class FlowDefinitionVersionController {
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:disable:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdefinition.disable", threshold = 50)
     @PostMapping("/definition/{id}/disable")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.DISABLE, content = "'disable'")
     @Operation(summary = "停用流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> disable(@PathVariable String id) {

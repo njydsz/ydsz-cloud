@@ -28,6 +28,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 任务查询与统计 Controller（从原 FlowTaskController 拆分而来）
  *
@@ -124,6 +127,7 @@ public class FlowTaskQueryController {
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:timeoutTask:lock", ttlSeconds = 5)
     @PostMapping("/task/{taskId}/timeout")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'timeoutTask'")
     public BaseResponse<Void> timeoutTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
         taskService.timeoutTask(taskId, reason);

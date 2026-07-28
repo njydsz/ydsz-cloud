@@ -661,8 +661,6 @@ public class MessageServiceImpl implements MessageService {
             // P2-20: 发送成功后记录配额计数
             senderQuotaService.recordSend(logDO.getSenderId(), channel);
             messageMetrics.recordSend(channel, "SUCCESS", cost);
-            // P3-22: 记录发送耗时（Micrometer Timer P50/P90/P99）
-            messageMetrics.recordSendDuration(channel, Duration.ofMillis(cost));
             // P3-24: 记录发送成功（Counter）
             messageMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());
             // P0-2: 记录分发成功轨迹
@@ -694,40 +692,24 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P1-8: 解析有序降级通道列表。
+     * P1-8: 解析降级通道列表。
      *
-     * <p>优先使用 {@link MsgRouteRule#getFallbackChain()}（逗号分隔多通道），
-     * 为空时回退到 {@link MsgRouteRule#getFallbackChannel()}（单通道）。
-     * 自动过滤空白项与当前通道(避免循环降级)。
+     * <p>使用 {@link MsgRouteRule#getFallbackChannel()}（单通道），
+     * 自动过滤当前通道(避免循环降级)。
      *
      * @param matchedRule    命中的路由规则
      * @param currentChannel 当前发送通道(排除自身)
-     * @return 有序降级通道列表（大写），可能为空
+     * @return 降级通道列表（大写），可能为空
      */
     private List<String> resolveFallbackChannels(MsgRouteRule matchedRule, String currentChannel) {
         if (matchedRule == null) {
             return Collections.emptyList();
         }
-        String chain = matchedRule.getFallbackChain();
         List<String> result = new ArrayList<>();
-        if (StringUtils.hasText(chain)) {
-            for (String ch : chain.split(",")) {
-                String trimmed = ch == null ? "" : ch.trim();
-                if (trimmed.isEmpty()) {
-                    continue;
-                }
-                String upper = trimmed.toUpperCase();
-                if (!upper.equalsIgnoreCase(currentChannel) && !result.contains(upper)) {
-                    result.add(upper);
-                }
-            }
-        }
-        if (result.isEmpty()) {
-            String single = matchedRule.getFallbackChannel();
-            if (StringUtils.hasText(single)
-                    && !single.equalsIgnoreCase(currentChannel)) {
-                result.add(single.trim().toUpperCase());
-            }
+        String single = matchedRule.getFallbackChannel();
+        if (StringUtils.hasText(single)
+                && !single.equalsIgnoreCase(currentChannel)) {
+            result.add(single.trim().toUpperCase());
         }
         return result;
     }

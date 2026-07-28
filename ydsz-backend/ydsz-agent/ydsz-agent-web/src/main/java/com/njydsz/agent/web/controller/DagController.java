@@ -114,7 +114,7 @@ public class DagController {
      * @param request DAG 请求体（仅 dsl 字段被使用）
      * @return 统一响应结果，data 为 {@code {valid, dagName, nodeCount, error?}} Map
      */
-    @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'validate'")
+    @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'validate'")
     @Idempotent(key = "ydsz:agent:DagController:write:lock", ttlSeconds = 5)
     @PostMapping("/validate")
     public BaseResponse<Map<String, Object>> validate(@RequestBody DagExecutionDTO request) {

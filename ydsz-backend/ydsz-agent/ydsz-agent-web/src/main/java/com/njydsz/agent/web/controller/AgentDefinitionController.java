@@ -77,6 +77,7 @@ public class AgentDefinitionController {
      *
      * @return 统一响应结果，data 为 Agent 定义 VO 列表
      */
+    @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'list'")
     @GetMapping
     public BaseResponse<List<AgentDefinitionVO>> list() {
         return BaseResponse.success(AgentConverter.INSTANT.agentDefinitionListToVO(agentDefinitionService.listActive()));
@@ -88,6 +89,7 @@ public class AgentDefinitionController {
      * @param id Agent 定义主键（雪花算法字符串）
      * @return 统一响应结果，data 为 Agent 定义 VO；不存在时返回 error 响应
      */
+    @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'getById: ' + #id")
     @GetMapping("/{id}")
     public BaseResponse<AgentDefinitionVO> getById(@PathVariable String id) {
         AgentDefinitionDO entity = agentDefinitionService.getById(id);
@@ -106,6 +108,7 @@ public class AgentDefinitionController {
      * @param code Agent 业务编码（全局唯一）
      * @return 统一响应结果，data 为 Agent 定义 VO；不存在时返回 error 响应
      */
+    @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'getByCode: ' + #code")
     @GetMapping("/code/{code}")
     public BaseResponse<AgentDefinitionVO> getByCode(@PathVariable String code) {
         AgentDefinitionDO entity = agentDefinitionService.getByCode(code);

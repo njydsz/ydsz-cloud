@@ -28,6 +28,9 @@ public class JsonDeserializationException extends YdszJsonException {
     /** 上下文片段（错误位置前后的 JSON 文本） */
     private String contextSnippet;
 
+    /** 当前字段名（发生错误的字段，可为 null） */
+    private String fieldName;
+
     /**
      * 构造函数（仅消息）
      *
@@ -120,6 +123,24 @@ public class JsonDeserializationException extends YdszJsonException {
     }
 
     /**
+     * 获取当前字段名
+     *
+     * @return 发生错误的字段名，未设置时返回 null
+     */
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    /**
+     * 设置当前字段名（用于反序列化过程中追踪当前字段）
+     *
+     * @param fieldName 字段名
+     */
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
+
+    /**
      * 从 JSON 字符串和位置计算行列号和上下文片段。
      */
     private void computeLineColumn(String json, int position) {
@@ -167,6 +188,21 @@ public class JsonDeserializationException extends YdszJsonException {
             }
         }
         return message + " (line " + lineNum + ", column " + colNum + ")";
+    }
+
+    @Override
+    public String getMessage() {
+        StringBuilder sb = new StringBuilder(super.getMessage());
+        if (fieldName != null) {
+            sb.append(" [field: ").append(fieldName).append("]");
+        }
+        if (line > 0 && column > 0) {
+            sb.append(" (line ").append(line).append(", column ").append(column).append(")");
+        }
+        if (contextSnippet != null) {
+            sb.append("\n  context: ...").append(contextSnippet).append("...");
+        }
+        return sb.toString();
     }
 
     /**

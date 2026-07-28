@@ -4,10 +4,10 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Map;
-import java.util.List;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonArray;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.springframework.stereotype.Component;
 
@@ -109,8 +109,8 @@ public class CalendarScheduleFilter {
             return Set.of();
         }
         try {
-            Map<String, Object> params = YdszJson.parseMap(paramsJson);
-            List<Object> holidaysArr = params.getJSONArray("holidays");
+            YdszJsonObject params = YdszJson.parseObjectToJsonObject(paramsJson);
+            YdszJsonArray holidaysArr = params.getJSONArray("holidays");
             if (holidaysArr == null || holidaysArr.isEmpty()) {
                 return Set.of();
             }
@@ -140,7 +140,7 @@ public class CalendarScheduleFilter {
             return DEFAULT_CALENDAR_TYPE;
         }
         try {
-            Map<String, Object> params = YdszJson.parseMap(paramsJson);
+            YdszJsonObject params = YdszJson.parseObjectToJsonObject(paramsJson);
             String type = params.getString("calendarType");
             return type != null ? type.toUpperCase() : DEFAULT_CALENDAR_TYPE;
         } catch (Exception e) {

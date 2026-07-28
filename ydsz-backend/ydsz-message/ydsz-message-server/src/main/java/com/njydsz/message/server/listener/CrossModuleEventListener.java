@@ -9,6 +9,8 @@ import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.core.NotifyRequest;
+import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.enums.NotifyPriority;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,10 +51,11 @@ public class CrossModuleEventListener {
         log.warn("[CrossModuleEventListener] 接收定时任务执行失败事件: aggregateId={}, payload={}",
                 message.getAggregateId(), message.getPayload());
         try {
-            NotifyRequest request = NotifyRequest.builder()
-                    .subject("定时任务执行失败告警")
-                    .content(String.format("定时任务执行失败，请及时处理。任务ID: %s", message.getAggregateId()))
-                    .priority("P0_CRITICAL")
+            NotifyRequest request = NotifyRequest.of(
+                    NotifyChannel.INSITE, null,
+                    "定时任务执行失败告警",
+                    String.format("定时任务执行失败，请及时处理。任务ID: %s", message.getAggregateId()))
+                    .priority(NotifyPriority.P0_CRITICAL)
                     .build();
             notifyService.send(request);
         } catch (Exception e) {
@@ -71,11 +74,12 @@ public class CrossModuleEventListener {
         log.info("[CrossModuleEventListener] 接收 Agent 审批请求事件: aggregateId={}",
                 message.getAggregateId());
         try {
-            NotifyRequest request = NotifyRequest.builder()
-                    .subject("AI Agent 审批请求")
-                    .content(String.format("您有一个 AI Agent 审批请求待处理，请求ID: %s",
+            NotifyRequest request = NotifyRequest.of(
+                    NotifyChannel.INSITE, null,
+                    "AI Agent 审批请求",
+                    String.format("您有一个 AI Agent 审批请求待处理，请求ID: %s",
                             message.getAggregateId()))
-                    .priority("P1_HIGH")
+                    .priority(NotifyPriority.P1_HIGH)
                     .build();
             notifyService.send(request);
         } catch (Exception e) {
@@ -100,12 +104,12 @@ public class CrossModuleEventListener {
             var payload = YdszJson.parseMap(message.getPayload());
             String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
             String initiatorId = payload.getOrDefault("initiatorId", "").toString();
-            NotifyRequest request = NotifyRequest.builder()
-                    .subject("审批通过通知：" + flowTitle)
-                    .content(String.format("您的审批申请「%s」已通过。流程实例ID: %s",
+            NotifyRequest request = NotifyRequest.of(
+                    NotifyChannel.INSITE, initiatorId,
+                    "审批通过通知：" + flowTitle,
+                    String.format("您的审批申请「%s」已通过。流程实例ID: %s",
                             flowTitle, message.getAggregateId()))
-                    .recipient(initiatorId)
-                    .priority("P2_NORMAL")
+                    .priority(NotifyPriority.P2_NORMAL)
                     .build();
             notifyService.send(request);
         } catch (Exception e) {
@@ -132,12 +136,12 @@ public class CrossModuleEventListener {
             String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
             String initiatorId = payload.getOrDefault("initiatorId", "").toString();
             String rejectReason = payload.getOrDefault("rejectReason", "未提供原因").toString();
-            NotifyRequest request = NotifyRequest.builder()
-                    .subject("审批驳回通知：" + flowTitle)
-                    .content(String.format("您的审批申请「%s」已被驳回。驳回原因: %s。流程实例ID: %s",
+            NotifyRequest request = NotifyRequest.of(
+                    NotifyChannel.INSITE, initiatorId,
+                    "审批驳回通知：" + flowTitle,
+                    String.format("您的审批申请「%s」已被驳回。驳回原因: %s。流程实例ID: %s",
                             flowTitle, rejectReason, message.getAggregateId()))
-                    .recipient(initiatorId)
-                    .priority("P1_HIGH")
+                    .priority(NotifyPriority.P1_HIGH)
                     .build();
             notifyService.send(request);
         } catch (Exception e) {
@@ -162,11 +166,12 @@ public class CrossModuleEventListener {
             var payload = YdszJson.parseMap(message.getPayload());
             String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
             String reason = payload.getOrDefault("reason", "管理员终止").toString();
-            NotifyRequest request = NotifyRequest.builder()
-                    .subject("流程终止通知：" + flowTitle)
-                    .content(String.format("流程「%s」已被终止。终止原因: %s。流程实例ID: %s",
+            NotifyRequest request = NotifyRequest.of(
+                    NotifyChannel.INSITE, null,
+                    "流程终止通知：" + flowTitle,
+                    String.format("流程「%s」已被终止。终止原因: %s。流程实例ID: %s",
                             flowTitle, reason, message.getAggregateId()))
-                    .priority("P1_HIGH")
+                    .priority(NotifyPriority.P1_HIGH)
                     .build();
             notifyService.send(request);
         } catch (Exception e) {
@@ -189,12 +194,12 @@ public class CrossModuleEventListener {
             var payload = YdszJson.parseMap(message.getPayload());
             String projectName = payload.getOrDefault("projectName", "未命名项目").toString();
             String managerId = payload.getOrDefault("managerId", "").toString();
-            NotifyRequest request = NotifyRequest.builder()
-                    .subject("项目立项通过：" + projectName)
-                    .content(String.format("项目「%s」立项审批已通过，请尽快启动项目。项目编号: %s",
+            NotifyRequest request = NotifyRequest.of(
+                    NotifyChannel.INSITE, managerId,
+                    "项目立项通过：" + projectName,
+                    String.format("项目「%s」立项审批已通过，请尽快启动项目。项目编号: %s",
                             projectName, message.getAggregateId()))
-                    .recipient(managerId)
-                    .priority("P2_NORMAL")
+                    .priority(NotifyPriority.P2_NORMAL)
                     .build();
             notifyService.send(request);
         } catch (Exception e) {
@@ -216,11 +221,12 @@ public class CrossModuleEventListener {
         try {
             var payload = YdszJson.parseMap(message.getPayload());
             String contractName = payload.getOrDefault("contractName", "未命名合同").toString();
-            NotifyRequest request = NotifyRequest.builder()
-                    .subject("合同签订通知：" + contractName)
-                    .content(String.format("合同「%s」已签订。合同编号: %s",
+            NotifyRequest request = NotifyRequest.of(
+                    NotifyChannel.INSITE, null,
+                    "合同签订通知：" + contractName,
+                    String.format("合同「%s」已签订。合同编号: %s",
                             contractName, message.getAggregateId()))
-                    .priority("P2_NORMAL")
+                    .priority(NotifyPriority.P2_NORMAL)
                     .build();
             notifyService.send(request);
         } catch (Exception e) {
@@ -240,11 +246,12 @@ public class CrossModuleEventListener {
         log.warn("[CrossModuleEventListener] 接收定时任务超时事件: aggregateId={}",
                 message.getAggregateId());
         try {
-            NotifyRequest request = NotifyRequest.builder()
-                    .subject("定时任务超时告警")
-                    .content(String.format("定时任务执行超时，请检查任务配置。任务ID: %s",
+            NotifyRequest request = NotifyRequest.of(
+                    NotifyChannel.INSITE, null,
+                    "定时任务超时告警",
+                    String.format("定时任务执行超时，请检查任务配置。任务ID: %s",
                             message.getAggregateId()))
-                    .priority("P1_HIGH")
+                    .priority(NotifyPriority.P1_HIGH)
                     .build();
             notifyService.send(request);
         } catch (Exception e) {

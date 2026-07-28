@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.SysException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.server.service.impl.schedule.ScheduleCalendarService;
 

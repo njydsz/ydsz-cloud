@@ -59,29 +59,11 @@ public final class GatewayIpUtils {
         if (request == null) {
             return DEFAULT_IP;
         }
-
-        // 1. 获取直连 IP（不可伪造）
         String directIp = resolveDirectIp(request);
-
-        // 2. 如果直连 IP 是可信代理，才信任 X-Forwarded-For / X-Real-IP
-        if (directIp != null && ClientIpResolver.isTrustedProxy(directIp)) {
-            String ip = request.getHeaders().getFirst(HEADER_X_FORWARDED_FOR);
-            if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip)) {
-                // X-Forwarded-For 可能包含多段，取最左边的客户端 IP
-                int index = ip.indexOf(',');
-                if (index != -1) {
-                    return ip.substring(0, index).trim();
-                }
-                return ip.trim();
-            }
-            ip = request.getHeaders().getFirst(HEADER_X_REAL_IP);
-            if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip)) {
-                return ip.trim();
-            }
-        }
-
-        // 3. 否则直接使用直连 IP
-        return directIp != null && !directIp.isEmpty() ? directIp : DEFAULT_IP;
+        return ClientIpResolver.resolveFromHeaders(
+                directIp,
+                request.getHeaders().getFirst(HEADER_X_FORWARDED_FOR),
+                request.getHeaders().getFirst(HEADER_X_REAL_IP));
     }
 
     /**

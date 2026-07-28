@@ -32,6 +32,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 流程定义设计与模拟 Controller
  *
@@ -97,6 +100,7 @@ public class FlowDefinitionDesignController {
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:updateNodeCoordinate:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdefinition.updateNodeCoordinate", threshold = 50)
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'updateNodeCoordinate'")
     @Operation(summary = "更新流程节点坐标")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> updateNodeCoordinate(@PathVariable String definitionId,
@@ -116,6 +120,7 @@ public class FlowDefinitionDesignController {
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:updateDefinition:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdefinition.updateDefinition", threshold = 50)
     @PutMapping("/definition/{id}")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateDefinition'")
     @Operation(summary = "编辑未发布的流程定义草稿")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> updateDefinition(@PathVariable String id,
@@ -145,6 +150,7 @@ public class FlowDefinitionDesignController {
      */
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:importDefinition:lock", ttlSeconds = 5)
     @PostMapping("/definition/import")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.IMPORT, content = "'importDefinition'")
     @Operation(summary = "从 JSON 导入流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
     public BaseResponse<String> importDefinition(@RequestBody String json,

@@ -33,6 +33,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 流程定义部署与查询 Controller
  *
@@ -93,6 +96,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:deploy:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdefinition.deploy", threshold = 50)
     @PostMapping("/definition/deploy")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.ENABLE, content = "'deploy'")
     @Operation(summary = "部署流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public BaseResponse<String> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
@@ -138,6 +142,7 @@ public class FlowDefinitionController {
      */
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:publish:lock", ttlSeconds = 5)
     @PostMapping("/definition/{id}/publish")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.ENABLE, content = "'publish'")
     @Operation(summary = "发布流程定义（带版本兼容性校验）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> publish(@PathVariable String id,
@@ -155,6 +160,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "ydsz:workflow:FlowDefinitionController:deprecate:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowdefinition.deprecate", threshold = 50)
     @PostMapping("/definition/{id}/deprecate")
+    @Audit(module = "流程定义", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'deprecate'")
     @Operation(summary = "废弃流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> deprecate(@PathVariable String id) {

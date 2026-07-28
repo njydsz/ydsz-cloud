@@ -16,6 +16,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 节点自定义按钮 Controller（P2-4）
  *
@@ -95,6 +98,7 @@ public class FlowCustomButtonController {
     @Idempotent(key = "ydsz:workflow:FlowCustomButtonController:save:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowcustombutton.save", threshold = 50)
     @PostMapping
+    @Audit(module = "自定义按钮", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
     @Operation(summary = "保存节点的自定义按钮配置")
     public BaseResponse<Void> save(
             @RequestParam String definitionId,

@@ -20,6 +20,9 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowDmnDecisionVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * DMN 决策表 Controller（P0-1）
  *
@@ -85,6 +88,7 @@ public class FlowDmnDecisionController {
     @RateLimit(resource = "workflow.flowdmndecision.createDecision", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:createDecision:lock", ttlSeconds = 5)
     @PostMapping("/decision")
+    @Audit(module = "DMN决策", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createDecision'")
     @Operation(summary = "创建决策表")
     public BaseResponse<String> createDecision(@RequestBody CreateDecisionRequest request) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
@@ -107,6 +111,7 @@ public class FlowDmnDecisionController {
     @RateLimit(resource = "workflow.flowdmndecision.updateDecision", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:updateDecision:lock", ttlSeconds = 5)
     @PutMapping("/decision/{decisionId}")
+    @Audit(module = "DMN决策", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateDecision'")
     @Operation(summary = "更新决策表（仅草稿状态）")
     public BaseResponse<Void> updateDecision(@PathVariable String decisionId,
                                         @RequestBody CreateDecisionRequest request) {
@@ -128,6 +133,7 @@ public class FlowDmnDecisionController {
     @RateLimit(resource = "workflow.flowdmndecision.publish", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:publish:lock", ttlSeconds = 5)
     @PostMapping("/decision/{decisionId}/publish")
+    @Audit(module = "DMN决策", type = AuditType.OPERATION, action = AuditAction.ENABLE, content = "'publish'")
     @Operation(summary = "发布决策表")
     public BaseResponse<Void> publish(@PathVariable String decisionId) {
         dmnDecisionService.publish(decisionId);
@@ -147,6 +153,7 @@ public class FlowDmnDecisionController {
     @RateLimit(resource = "workflow.flowdmndecision.deprecate", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:deprecate:lock", ttlSeconds = 5)
     @PostMapping("/decision/{decisionId}/deprecate")
+    @Audit(module = "DMN决策", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'deprecate'")
     @Operation(summary = "停用决策表")
     public BaseResponse<Void> deprecate(@PathVariable String decisionId) {
         dmnDecisionService.deprecate(decisionId);

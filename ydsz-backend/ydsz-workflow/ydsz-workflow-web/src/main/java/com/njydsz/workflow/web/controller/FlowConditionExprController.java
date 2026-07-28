@@ -16,6 +16,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 条件表达式可视化编辑器 Controller（P2-1 / P1-4）
  *
@@ -70,6 +73,7 @@ public class FlowConditionExprController {
     @Idempotent(key = "ydsz:workflow:FlowConditionExprController:build:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowconditionexpr.build", threshold = 50)
     @PostMapping("/build")
+    @Audit(module = "条件表达式", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'build'")
     @Operation(summary = "结构化条件 JSON → 表达式字符串")
     public BaseResponse<String> build(@RequestBody Map<String, String> body) {
         String conditionJson = body.get("conditionJson");
@@ -86,6 +90,7 @@ public class FlowConditionExprController {
     @Idempotent(key = "ydsz:workflow:FlowConditionExprController:parse:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowconditionexpr.parse", threshold = 50)
     @PostMapping("/parse")
+    @Audit(module = "条件表达式", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'parse'")
     @Operation(summary = "表达式字符串 → 结构化条件 JSON")
     public BaseResponse<String> parse(@RequestBody Map<String, String> body) {
         String expression = body.get("expression");

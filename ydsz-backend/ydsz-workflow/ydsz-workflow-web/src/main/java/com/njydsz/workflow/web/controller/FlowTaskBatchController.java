@@ -20,6 +20,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 任务批量操作 Controller（从原 FlowTaskController 拆分而来）
  *
@@ -75,6 +78,7 @@ public class FlowTaskBatchController {
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:batchPass:lock", ttlSeconds = 5)
     @PostMapping("/task/batchPass")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'batchPass'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
                                   @RequestParam(required = false) String comment) {
@@ -92,6 +96,7 @@ public class FlowTaskBatchController {
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:batchReject:lock", ttlSeconds = 5)
     @PostMapping("/task/batchReject")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.REJECT, content = "'batchReject'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> batchReject(@RequestParam List<String> taskIds,
                                     @RequestParam(required = false) String comment,
@@ -111,6 +116,7 @@ public class FlowTaskBatchController {
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:batchTransfer:lock", ttlSeconds = 5)
     @PostMapping("/task/batchTransfer")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'batchTransfer'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> batchTransfer(@RequestParam List<String> taskIds,
                                       @RequestParam(required = false) String comment,
@@ -130,6 +136,7 @@ public class FlowTaskBatchController {
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:batchUrge:lock", ttlSeconds = 5)
     @PostMapping("/instance/batchUrge")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchUrge'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> batchUrge(@RequestParam List<String> instanceIds,
                                      @RequestParam(required = false) String comment) {
@@ -146,6 +153,7 @@ public class FlowTaskBatchController {
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:passAll:lock", ttlSeconds = 5)
     @PostMapping("/task/passAll")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'passAll'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> passAll(@RequestParam(required = false) String comment) {
         return BaseResponse.success(workflowFacade.passAllTodoTasks(AuthContext.getUserId(), comment));

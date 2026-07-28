@@ -1,7 +1,10 @@
 package com.njydsz.literule.server.core;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+import com.njydsz.common.core.metrics.AbstractModuleMetrics;
 import com.njydsz.literule.api.RuleSeverity;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -11,13 +14,8 @@ import io.micrometer.core.instrument.Timer;
 /**
  * 基于 Micrometer 的规则监控指标实现。
  *
- * <p>P0-2 架构优化：统一指标前缀 {@code ydsz_literule_}（与 AbstractModuleMetrics 约定一致），
- * 新增 {@link #safe(String)} null 安全方法消除重复三元表达式。
- *
- * <p><b>双轨制设计说明</b>：本类继承 {@link RuleMetrics}（内存计数器基类），
- * 无法同时继承 {@code AbstractModuleMetrics}（Java 单继承限制）。
- * 因此采用约定一致方式：指标前缀 {@code ydsz_literule_} + safe() 方法，
- * 与 FlowMetrics / CronjobMetrics 等模块保持命名和风格统一。
+ * <p>P1-5: 继承 {@link AbstractModuleMetrics} 统一指标基类，满足 ArchUnit R25 架构规则。
+ * 同时实现 {@link RuleMetrics} 接口，保持与规则引擎的依赖契约不变。
  *
  * <p>当 classpath 中存在 {@link MeterRegistry} 时，由 {@code LiteRuleAutoConfiguration}
  * 自动装配，将所有规则指标暴露到 Prometheus。
@@ -35,94 +33,102 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code ydsz_literule_slow_rule_total{rule_code}} — 慢规则计数</li>
  * </ul>
  *
- * <p><b>命名变更说明</b>：原 {@code literule_*} 指标名统一加 {@code ydsz_} 前缀，
- * 与其他业务模块保持一致。Grafana 看板需同步更新指标名。
- *
- * @since 1.0.0
+ * @since 1.1.0
  * @author ydsz-team
  */
-public class MicrometerRuleMetrics extends RuleMetrics {
+public class MicrometerRuleMetrics extends AbstractModuleMetrics implements RuleMetrics {
 
-    private static final String PREFIX = "ydsz_literule_";
+    private final AtomicInteger lastTraceQueueSize = new AtomicInteger(0);
+    private final AtomicInteger lastRegisteredRules = new AtomicInteger(0);
+    private final AtomicInteger lastEvaluatedRules = new AtomicInteger(0);
 
-    private final MeterRegistry registry;
-    private volatile int lastTraceQueueSize = 0;
-    private volatile int lastRegisteredRules = 0;
-    private volatile int lastEvaluatedRules = 0;
+    /** 累计评估/触发/异常计数（健康检查读取入口，与 Prometheus Counter 双写） */
+    private final AtomicLong totalEvaluations = new AtomicLong(0);
+    private final AtomicLong totalTriggered = new AtomicLong(0);
+    private final AtomicLong totalErrors = new AtomicLong(0);
 
     public MicrometerRuleMetrics(MeterRegistry registry) {
-        this.registry = registry;
+        super(registry, "ydsz_literule_");
+        gaugeRef("trace_queue_size", lastTraceQueueSize, AtomicInteger::doubleValue);
+        gaugeRef("registered_rules", lastRegisteredRules, AtomicInteger::doubleValue);
+        gaugeRef("evaluated_rules", lastEvaluatedRules, AtomicInteger::doubleValue);
     }
 
     @Override
     public void recordEvaluation(String ruleCode, String scenario, boolean triggered,
                                   RuleSeverity severity, boolean error, long elapsedMs) {
-        super.recordEvaluation(ruleCode, scenario, triggered, severity, error, elapsedMs);
-
-        Tags tags = Tags.of("rule_code", safe(ruleCode))
-                .and("scenario", safe(scenario));
-
-        registry.counter(PREFIX + "rule_evaluations_total", tags).increment();
+        incrementCounter("rule_evaluations_total",
+                "rule_code", safe(ruleCode), "scenario", safe(scenario));
+        totalEvaluations.incrementAndGet();
 
         if (triggered) {
-            Tags triggeredTags = Tags.of("rule_code", safe(ruleCode))
-                    .and("severity", severity == null ? "INFO" : severity.getCode());
-            registry.counter(PREFIX + "rule_triggered_total", triggeredTags).increment();
+            incrementCounter("rule_triggered_total",
+                    "rule_code", safe(ruleCode),
+                    "severity", severity == null ? "INFO" : severity.getCode());
+            totalTriggered.incrementAndGet();
         }
 
         if (error) {
-            registry.counter(PREFIX + "rule_errors_total",
-                    Tags.of("rule_code", safe(ruleCode))).increment();
+            incrementCounter("rule_errors_total", "rule_code", safe(ruleCode));
+            totalErrors.incrementAndGet();
         }
 
-        Timer.builder(PREFIX + "rule_eval_duration")
-                .tag("rule_code", safe(ruleCode))
-                .register(registry)
-                .record(elapsedMs, TimeUnit.MILLISECONDS);
+        recordTimer("rule_eval_duration", elapsedMs, "rule_code", safe(ruleCode));
     }
 
     @Override
     public void recordBreakerState(String ruleCode, String state) {
-        super.recordBreakerState(ruleCode, state);
         int value = switch (state) {
             case "OPEN" -> 1;
             case "HALF_OPEN" -> 2;
             default -> 0;
         };
-        registry.gauge(PREFIX + "breaker_state",
-                Tags.of("rule_code", safe(ruleCode)),
-                value);
+        gaugeRef("breaker_state", new AtomicInteger(value), AtomicInteger::doubleValue,
+                "rule_code", safe(ruleCode));
     }
 
     @Override
     public void recordTraceQueueSize(int queueSize) {
-        super.recordTraceQueueSize(queueSize);
-        lastTraceQueueSize = queueSize;
-        registry.gauge(PREFIX + "trace_queue_size", Tags.empty(), lastTraceQueueSize);
+        lastTraceQueueSize.set(queueSize);
     }
 
     @Override
     public void recordRegisteredRules(int count) {
-        super.recordRegisteredRules(count);
-        lastRegisteredRules = count;
-        registry.gauge(PREFIX + "registered_rules", Tags.empty(), lastRegisteredRules);
+        lastRegisteredRules.set(count);
     }
 
     @Override
     public void recordEvaluatedRules(int count) {
-        super.recordEvaluatedRules(count);
-        lastEvaluatedRules = count;
-        registry.gauge(PREFIX + "evaluated_rules", Tags.empty(), lastEvaluatedRules);
+        lastEvaluatedRules.set(count);
     }
 
     @Override
     public void recordSlowRule(String ruleCode, long elapsedMs, long thresholdMs) {
-        super.recordSlowRule(ruleCode, elapsedMs, thresholdMs);
-        registry.counter(PREFIX + "slow_rule_total",
-                Tags.of("rule_code", safe(ruleCode))).increment();
+        incrementCounter("slow_rule_total", "rule_code", safe(ruleCode));
     }
 
-    private static String safe(String value) {
-        return (value == null || value.isEmpty()) ? "unknown" : value;
+    @Override
+    public long getTotalEvaluations() {
+        return totalEvaluations.get();
+    }
+
+    @Override
+    public long getTotalTriggered() {
+        return totalTriggered.get();
+    }
+
+    @Override
+    public long getTotalErrors() {
+        return totalErrors.get();
+    }
+
+    @Override
+    public int getRegisteredRules() {
+        return lastRegisteredRules.get();
+    }
+
+    @Override
+    public int getLastEvaluatedRules() {
+        return lastEvaluatedRules.get();
     }
 }

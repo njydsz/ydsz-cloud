@@ -17,6 +17,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * SLA 超时自动策略 Controller
  *
@@ -72,6 +75,7 @@ public class FlowSlaController {
     @Idempotent(key = "ydsz:workflow:FlowSlaController:slaScan:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowsla.slaScan", threshold = 50)
     @PostMapping("/sla/scan")
+    @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'slaScan'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Integer> slaScan() {
         int processed = slaService.scanAndProcess();
@@ -87,6 +91,7 @@ public class FlowSlaController {
     @Idempotent(key = "ydsz:workflow:FlowSlaController:slaProcess:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowsla.slaProcess", threshold = 50)
     @PostMapping("/sla/process/{taskId}")
+    @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'slaProcess'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
         FlowRunTask task = taskService.getById(taskId);

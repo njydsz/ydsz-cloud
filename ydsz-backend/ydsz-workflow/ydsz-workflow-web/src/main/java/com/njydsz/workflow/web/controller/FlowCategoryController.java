@@ -22,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 流程分类管理 Controller
  *
@@ -91,6 +94,7 @@ public class FlowCategoryController {
     @Idempotent(key = "ydsz:workflow:FlowCategoryController:create:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowcategory.create", threshold = 50)
     @PostMapping
+    @Audit(module = "流程分类", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @Operation(summary = "新增分类")
     public BaseResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
         return BaseResponse.success(categoryService.create(dto, TenantContext.getTenantId()));
@@ -109,6 +113,7 @@ public class FlowCategoryController {
     @Idempotent(key = "ydsz:workflow:FlowCategoryController:update:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowcategory.update", threshold = 50)
     @PutMapping
+    @Audit(module = "流程分类", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @Operation(summary = "编辑分类")
     public BaseResponse<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
         categoryService.update(dto);
@@ -132,6 +137,7 @@ public class FlowCategoryController {
     @Idempotent(key = "ydsz:workflow:FlowCategoryController:delete:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowcategory.delete", threshold = 50)
     @DeleteMapping("/{id}")
+    @Audit(module = "流程分类", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     @Operation(summary = "删除分类")
     public BaseResponse<Void> delete(@PathVariable String id) {
         categoryService.delete(id);

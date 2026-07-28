@@ -3,6 +3,7 @@ package com.njydsz.common.core.lifecycle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -43,8 +44,8 @@ public class GracefulShutdownCoordinator implements SmartLifecycle, Ordered {
     /** 默认停机超时时间（秒） */
     private static final int DEFAULT_SHUTDOWN_TIMEOUT_SECONDS = 30;
 
-    /** 注册的停机回调列表 */
-    private final List<ShutdownCallback> callbacks = new ArrayList<>();
+    /** 注册的停机回调列表（线程安全，支持并发注册） */
+    private final List<ShutdownCallback> callbacks = new CopyOnWriteArrayList<>();
 
     /** 运行状态标志 */
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -108,7 +109,7 @@ public class GracefulShutdownCoordinator implements SmartLifecycle, Ordered {
         log.info("开始优雅停机流程...");
         long startTime = System.currentTimeMillis();
 
-        // 按 phase 降序排序（phase 越大越先停机）
+        // 按 phase 降序排序（phase 越大越先停机）— 复制后排序避免修改原列表
         List<ShutdownCallback> sortedCallbacks = new ArrayList<>(callbacks);
         sortedCallbacks.sort(Comparator.comparingInt(ShutdownCallback::getPhase).reversed());
 

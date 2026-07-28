@@ -23,6 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 审批常用语 Controller
  *
@@ -90,6 +93,7 @@ public class FlowQuickCommentController {
     @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:create:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowquickcomment.create", threshold = 50)
     @PostMapping
+    @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @Operation(summary = "新增常用语")
     public BaseResponse<String> create(@Valid @RequestBody FlowQuickCommentDTO dto) {
         String userId = AuthContext.getUserId();
@@ -106,6 +110,7 @@ public class FlowQuickCommentController {
     @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:update:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowquickcomment.update", threshold = 50)
     @PutMapping
+    @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @Operation(summary = "编辑常用语")
     public BaseResponse<Void> update(@Valid @RequestBody FlowQuickCommentDTO dto) {
         String userId = AuthContext.getUserId();
@@ -122,6 +127,7 @@ public class FlowQuickCommentController {
     @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:delete:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowquickcomment.delete", threshold = 50)
     @DeleteMapping("/{id}")
+    @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     @Operation(summary = "删除常用语")
     public BaseResponse<Void> delete(@PathVariable String id) {
         String userId = AuthContext.getUserId();
@@ -138,6 +144,7 @@ public class FlowQuickCommentController {
     @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:incrementUseCount:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowquickcomment.incrementUseCount", threshold = 50)
     @PostMapping("/{id}/use")
+    @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'incrementUseCount'")
     @Operation(summary = "增加使用次数（审批时调用）")
     public BaseResponse<Void> incrementUseCount(@PathVariable String id) {
         quickCommentService.incrementUseCount(id);

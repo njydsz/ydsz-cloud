@@ -31,6 +31,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 核心任务操作 Controller（单任务办理入口）
  *
@@ -119,6 +122,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:claim:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.claim", threshold = 50)
     @PostMapping("/task/claim")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'claim'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> claim(@RequestParam String taskId) {
         workflowFacade.claimTask(taskId, AuthContext.getUserId());
@@ -134,6 +138,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:pass:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.pass", threshold = 50)
     @PostMapping("/task/pass")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'pass'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -151,6 +156,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:reject:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.reject", threshold = 50)
     @PostMapping("/task/reject")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.REJECT, content = "'reject'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -186,6 +192,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:transfer:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.transfer", threshold = 50)
     @PostMapping("/task/transfer")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'transfer'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -203,6 +210,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:delegate:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.delegate", threshold = 50)
     @PostMapping("/task/delegate")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'delegate'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -220,6 +228,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignBefore:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.countersignBefore", threshold = 50)
     @PostMapping("/task/countersignBefore")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'countersignBefore'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -237,6 +246,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignAfter:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.countersignAfter", threshold = 50)
     @PostMapping("/task/countersignAfter")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'countersignAfter'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -254,6 +264,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignParallel:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.countersignParallel", threshold = 50)
     @PostMapping("/task/countersignParallel")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'countersignParallel'")
     @Operation(summary = "并加签（与原审批人并行审批）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignParallel(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -272,6 +283,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:jump:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.jump", threshold = 50)
     @PostMapping("/task/jump")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'jump'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -296,6 +308,7 @@ public class FlowTaskController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:freeJump:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.freeJump", threshold = 50)
     @PostMapping("/task/freeJump")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'freeJump'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
     public BaseResponse<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());

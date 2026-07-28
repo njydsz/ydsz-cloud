@@ -25,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.StringVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 工作流高级功能 Controller（P2-4 / P2-5 / P2-6 / P2-7 / P2-8）
  *
@@ -125,6 +128,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "ydsz:workflow:FlowAdvancedController:sendWeekly:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowadvanced.sendWeekly", threshold = 50)
     @PostMapping("/report/weekly/send")
+    @Audit(module = "高级功能", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendWeekly'")
     @Operation(summary = "P2-4: 推送周报")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendWeekly() {
@@ -144,6 +148,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "ydsz:workflow:FlowAdvancedController:sendMonthly:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowadvanced.sendMonthly", threshold = 50)
     @PostMapping("/report/monthly/send")
+    @Audit(module = "高级功能", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendMonthly'")
     @Operation(summary = "P2-4: 推送月报")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendMonthly() {
@@ -167,6 +172,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "ydsz:workflow:FlowAdvancedController:merge:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowadvanced.merge", threshold = 50)
     @PostMapping("/merge")
+    @Audit(module = "高级功能", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'merge'")
     @Operation(summary = "P2-5: 合并多个流程实例")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<StringVO> merge(@RequestParam List<String> instanceIds) {
@@ -202,6 +208,7 @@ public class FlowAdvancedController {
      */
     @Idempotent(key = "ydsz:workflow:FlowAdvancedController:mergePass:lock", ttlSeconds = 5)
     @PostMapping("/merge/{mergeGroupId}/pass")
+    @Audit(module = "高级功能", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'mergePass'")
     @Operation(summary = "P2-5: 批量通过合并组")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> mergePass(@PathVariable String mergeGroupId,
@@ -223,6 +230,7 @@ public class FlowAdvancedController {
      */
     @Idempotent(key = "ydsz:workflow:FlowAdvancedController:mergeReject:lock", ttlSeconds = 5)
     @PostMapping("/merge/{mergeGroupId}/reject")
+    @Audit(module = "高级功能", type = AuditType.OPERATION, action = AuditAction.REJECT, content = "'mergeReject'")
     @Operation(summary = "P2-5: 批量驳回合并组")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> mergeReject(@PathVariable String mergeGroupId,
@@ -265,6 +273,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "ydsz:workflow:FlowAdvancedController:updateCondition:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowadvanced.updateVotePassRate", threshold = 50)
     @PostMapping("/countersign/{taskId}/votePassRate")
+    @Audit(module = "高级功能", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'updateVotePassRate'")
     @Operation(summary = "P2-6: 动态修改会签通过率阈值")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> updateVotePassRate(@PathVariable String taskId,
@@ -289,6 +298,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "ydsz:workflow:FlowAdvancedController:updateApproveCount:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowadvanced.updateApproveCount", threshold = 50)
     @PostMapping("/countersign/{taskId}/approveCount")
+    @Audit(module = "高级功能", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'updateApproveCount'")
     @Operation(summary = "P2-6: 动态修改会签所需通过人数")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> updateApproveCount(@PathVariable String taskId,

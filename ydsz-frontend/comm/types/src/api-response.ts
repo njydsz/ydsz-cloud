@@ -6,8 +6,8 @@
 
 /** 统一 API 返回结果 */
 export interface BaseResponse<T = unknown> {
-  /** 响应码，200 表示成功 */
-  code: number;
+  /** 业务响应码，"A00000" 表示成功（与后端 BaseResponse.SUCCESS 对齐）。注意：这是业务响应码，不是 HTTP 状态码。 */
+  code: string;
   /** 响应消息 */
   msg: string;
   /** 响应数据 */
@@ -50,14 +50,14 @@ export interface PageQuery {
   orderDirection?: 'asc' | 'desc';
 }
 
-/** 成功响应快捷判断 */
+/** 成功响应快捷判断（业务响应码 "A00000" 表示成功，非 HTTP 状态码 200） */
 export function isSuccess<T>(resp: BaseResponse<T>): resp is BaseResponse<T> & { data: T } {
-  return resp.code === 200;
+  return resp.code === 'A00000';
 }
 
-/** 提取响应数据的快捷方法 */
+/** 提取响应数据的快捷方法（业务响应码 "A00000" 表示成功） */
 export function unwrapResponse<T>(resp: BaseResponse<T>): T {
-  if (resp.code !== 200) {
+  if (resp.code !== 'A00000') {
     throw new Error(resp.msg || 'Unknown error');
   }
   return resp.data;

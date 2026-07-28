@@ -24,6 +24,9 @@ import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowAttachmentPreviewVOVO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 审批附件 Controller
  *
@@ -110,6 +113,7 @@ public class FlowAttachmentController {
     @Idempotent(key = "ydsz:workflow:FlowAttachmentController:delete:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowattachment.delete", threshold = 50)
     @DeleteMapping("/attachment/{attachmentId}")
+    @Audit(module = "流程附件", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     public BaseResponse<Void> delete(@PathVariable String attachmentId,
                                @RequestParam String operatorId) {
         attachmentService.delete(attachmentId, operatorId);

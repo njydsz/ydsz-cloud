@@ -1,11 +1,14 @@
 package com.njydsz.common.core.response;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-
-import java.util.List;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 
 /**
  * 分页响应结果封装类
@@ -45,7 +48,12 @@ import com.njydsz.common.core.constant.PageConstants;
  * @see BaseResponse
  */
 @Getter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@YdszJsonField(notWriteNullValue = true)
+@YdszJsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "total", "pageNum", "pageSize", "pages"})
 public class PageResponse<T> extends BaseResponse<T> {
 
     private static final long serialVersionUID = 1L;
@@ -73,12 +81,6 @@ public class PageResponse<T> extends BaseResponse<T> {
      * <p>根据total和pageSize计算得出
      */
     private Long pages;
-
-    /**
-     * 默认构造函数
-     */
-    public PageResponse() {
-    }
 
     /**
      * 全参数构造函数
@@ -129,6 +131,24 @@ public class PageResponse<T> extends BaseResponse<T> {
     public static <T> PageResponse<T> success(Long total, Long pageNum, Long pageSize, T data) {
         return of(BaseResponse.SUCCESS, resolveMessage(BaseResponse.MSG_OPERATION_SUCCESS, "操作成功"), total, pageNum, pageSize, data);
     }
+
+    /**
+     * 创建成功分页响应（便捷重载，数据在前）
+     *
+     * <p>兼容 Controller 层 {@code PageResponse.success(data, total, current, size)} 调用模式，
+     * 接受基本类型 long/int 自动装箱。
+     *
+     * @param data     分页数据
+     * @param total    总记录数
+     * @param pageNum  当前页码
+     * @param pageSize 每页记录数
+     * @param <T>      数据类型
+     * @return 成功分页响应
+     */
+    public static <T> PageResponse<T> success(T data, long total, int pageNum, int pageSize) {
+        return success(total, (long) pageNum, (long) pageSize, data);
+    }
+
     /**
      * 创建失败分页响应
      *

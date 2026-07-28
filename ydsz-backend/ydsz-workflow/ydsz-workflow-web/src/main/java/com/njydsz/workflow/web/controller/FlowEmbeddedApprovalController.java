@@ -26,6 +26,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.vo.EmbeddedApprovalViewDTOVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 嵌入式审批 Controller（P2-2）
  *
@@ -124,6 +127,7 @@ public class FlowEmbeddedApprovalController {
     @Idempotent(key = "ydsz:workflow:FlowEmbeddedApprovalController:quickAction:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowembeddedapproval.quickAction", threshold = 50)
     @PostMapping("/action")
+    @Audit(module = "嵌入式审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'quickAction'")
     public BaseResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
         LoginUser u = AuthContext.getCurrentOrNull();
         if (dto.getUserId() == null && u != null) {
@@ -150,6 +154,7 @@ public class FlowEmbeddedApprovalController {
     @Idempotent(key = "ydsz:workflow:FlowEmbeddedApprovalController:quickActionByPath:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowembeddedapproval.quickActionByPath", threshold = 50)
     @PostMapping("/{businessType}/{businessId}/action")
+    @Audit(module = "嵌入式审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'quickActionByPath'")
     public BaseResponse<Void> quickActionByPath(@PathVariable String businessType,
                                           @PathVariable String businessId,
                                           @RequestBody @Valid EmbeddedApprovalActionDTO dto) {

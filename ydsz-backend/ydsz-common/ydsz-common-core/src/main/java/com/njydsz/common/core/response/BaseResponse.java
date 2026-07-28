@@ -11,6 +11,8 @@ import org.slf4j.MDC;
 
 import java.io.Serializable;
 import java.time.Clock;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * 统一API返回结果封装类
@@ -379,9 +381,72 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * 获取消息（getMessage 别名，兼容旧代码调用）
      *
      * @return 响应消息
+     * @deprecated 使用 {@link #getMsg()} 替代，此方法将在未来版本移除
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public String getMessage() {
         return msg;
+    }
+
+    // ============================== 函数式 API ==============================
+
+    /**
+     * 返回数据，如果响应失败则返回默认值
+     *
+     * @param defaultValue 默认值
+     * @return 成功时返回 data，失败时返回 defaultValue
+     */
+    public T orElse(T defaultValue) {
+        return isSuccess() ? data : defaultValue;
+    }
+
+    /**
+     * 返回数据，如果响应失败则抛出异常
+     *
+     * @return 成功时的 data
+     * @throws IllegalStateException 如果响应失败
+     */
+    public T orElseThrow() {
+        if (!isSuccess()) {
+            throw new IllegalStateException("Response failed: code=" + code + ", msg=" + msg);
+        }
+        return data;
+    }
+
+    /**
+     * 对成功的数据执行映射转换
+     *
+     * @param mapper 映射函数
+     * @param <R>    目标类型
+     * @return 包含映射后数据的新响应（失败时保持原样）
+     */
+    public <R> BaseResponse<R> map(Function<T, R> mapper) {
+        if (isSuccess() && data != null) {
+            return of(code, msg, mapper.apply(data));
+        }
+        return of(code, msg, null);
+    }
+
+    /**
+     * 如果响应成功且数据非空，执行操作
+     *
+     * @param action 要执行的操作
+     */
+    public void ifSuccess(Consumer<T> action) {
+        if (isSuccess() && data != null) {
+            action.accept(data);
+        }
+    }
+
+    /**
+     * 如果响应失败，执行操作
+     *
+     * @param action 要执行的操作
+     */
+    public void ifFailed(Consumer<BaseResponse<T>> action) {
+        if (!isSuccess()) {
+            action.accept(this);
+        }
     }
 
 }

@@ -58,7 +58,10 @@ public class MessageHealthIndicator extends AbstractModuleHealthIndicator {
         }
 
         // ② Redis 连通性
-        checkRedis(builder, () -> redisService.execute(conn -> conn.ping(), true));
+        checkRedis(builder, () -> {
+            redisService.hasKey("__message_health_check__");
+            return "PONG";
+        });
 
         // ③ 死信队列积压探针（DEAD 状态，命中即标记 DOWN）
         boolean hasDead = probeStatus(MessageStatusEnum.DEAD.name());

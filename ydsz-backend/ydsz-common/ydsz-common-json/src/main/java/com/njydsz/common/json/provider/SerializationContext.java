@@ -132,30 +132,6 @@ public final class SerializationContext {
     }
 
     /**
-     * 从当前 SerializationProvider 的 ThreadLocal 值同步到本上下文。
-     *
-     * @deprecated 迁移到 SerializationContext 后，captureFromProvider 已无实际意义，
-     *             仅为兼容性保留。后续版本将删除。
-     */
-    @Deprecated(since = "1.0.0")
-    public void captureFromProvider() {
-        // 迁移完成后，SerializationProvider 已经委托给 SerializationContext
-        // 此方法不再有实际作用，仅为兼容性保留空实现
-    }
-
-    /**
-     * 将本上下文的值应用到 SerializationProvider 的 ThreadLocal。
-     *
-     * @deprecated 迁移到 SerializationContext 后，applyToProvider 已无实际意义，
-     *             仅为兼容性保留。后续版本将删除。
-     */
-    @Deprecated(since = "1.0.0")
-    public void applyToProvider() {
-        // 迁移完成后，SerializationProvider 已经委托给 SerializationContext
-        // 此方法不再有实际作用，仅为兼容性保留空实现
-    }
-
-    /**
      * 估算当前线程的 ThreadLocal 内存占用（字节）。
      *
      * <p>合并后只需估算 SerializationContext 单实例 + 内部缓冲区的开销。</p>

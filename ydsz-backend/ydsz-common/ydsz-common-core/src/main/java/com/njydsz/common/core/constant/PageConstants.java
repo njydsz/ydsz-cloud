@@ -45,7 +45,7 @@ public final class PageConstants {
     public static final int DEFAULT_PAGE_NUM = 1;
 
     /** 默认每页记录数，与 CoreProperties.defaultPageSize 保持一致 */
-    public static final int DEFAULT_PAGE_SIZE = 20;
+    public static final int DEFAULT_PAGE_SIZE = 10;
 
     /** 最大每页记录数，与 CoreProperties.maxPageSize 保持一致 */
     public static final int MAX_PAGE_SIZE = 1000;

@@ -19,8 +19,6 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.agent.domain.converter.AgentConverter;
-import com.njydsz.agent.domain.vo.ApprovalRequestVO;
 
 /**
  * Human-in-the-Loop 人工审批 REST API Controller。
@@ -72,11 +70,12 @@ public class HumanApprovalController {
      * <p>返回状态为 PENDING 的所有审批请求（按创建时间倒序），供审批人工作台展示。
      * 已审批/已拒绝的请求不在此接口返回。
      *
-     * @return 统一响应结果，data 为 {@link ApprovalRequestVO} 列表
+     * @return 统一响应结果，data 为 {@link ApprovalRequest} 列表
      */
+    @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'listPending'")
     @GetMapping("/pending")
-    public BaseResponse<List<ApprovalRequestVO>> listPending() {
-        return BaseResponse.success(AgentConverter.INSTANT.approvalRequestListToVO(approvalService.listPending()));
+    public BaseResponse<List<ApprovalRequest>> listPending() {
+        return BaseResponse.success(approvalService.listPending());
     }
 
     /**
@@ -85,8 +84,9 @@ public class HumanApprovalController {
      * @param id 审批请求 ID
      * @return 统一响应结果，data 为审批请求详情；不存在时返回 error 响应
      */
+    @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'getApproval: ' + #id")
     @GetMapping("/{id}")
-    public BaseResponse<ApprovalRequestVO> getApproval(@PathVariable String id) {
+    public BaseResponse<ApprovalRequest> getApproval(@PathVariable String id) {
         ApprovalRequest request = approvalService.getApproval(id);
         if (request == null) {
             return BaseResponse.error("Approval not found: " + id);
@@ -105,7 +105,7 @@ public class HumanApprovalController {
      * @param comment  审批意见（可选）
      * @return 统一响应结果，data 为 true 表示审批成功；false 表示请求不存在或已处理
      */
-    @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'approve'")
+    @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'approve'")
     @Idempotent(key = "ydsz:agent:HumanApprovalController:approve:lock", ttlSeconds = 5)
     @PostMapping("/{id}/approve")
     public BaseResponse<Boolean> approve(@PathVariable String id,
@@ -130,7 +130,7 @@ public class HumanApprovalController {
      * @param comment  拒绝原因/意见（可选，建议必填便于审计追溯）
      * @return 统一响应结果，data 为 true 表示拒绝成功；false 表示请求不存在或已处理
      */
-    @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'reject'")
+    @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.REJECT, content = "'reject'")
     @Idempotent(key = "ydsz:agent:HumanApprovalController:reject:lock", ttlSeconds = 5)
     @PostMapping("/{id}/reject")
     public BaseResponse<Boolean> reject(@PathVariable String id,

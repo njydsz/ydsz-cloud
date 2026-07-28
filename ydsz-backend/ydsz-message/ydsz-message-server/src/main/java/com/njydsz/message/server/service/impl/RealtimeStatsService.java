@@ -54,12 +54,12 @@ public class RealtimeStatsService {
             if ("SUCCESS".equals(status) && costMs > 0) {
                 String latencyKey = "ydsz:stats:latency:" + channel;
                 String member = channel + ":" + System.nanoTime();
-                redisService.opsForZSet().add(latencyKey, member, costMs);
+                redisService.zAdd(latencyKey, member, costMs);
                 redisService.expire(latencyKey, Duration.ofMinutes(30));
                 // 限制 Sorted Set 大小
-                Long size = redisService.opsForZSet().size(latencyKey);
-                if (size != null && size > 10000) {
-                    redisService.opsForZSet().removeRange(latencyKey, 0, (int) (size - 10000) - 1);
+                long size = redisService.zSize(latencyKey);
+                if (size > 10000) {
+                    redisService.zRemoveRange(latencyKey, 0, (int) (size - 10000) - 1);
                 }
             }
             // 错误计数
@@ -80,7 +80,7 @@ public class RealtimeStatsService {
      */
     public Map<String, String> getRealtimeStats() {
         String minuteKey = "ydsz:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
-        Map<Object, Object> raw = redisService.hGetAll(minuteKey, String.class);
+        Map<String, String> raw = redisService.hGetAll(minuteKey, String.class);
         Map<String, String> result = new HashMap<>();
         raw.forEach((k, v) -> result.put(String.valueOf(k), String.valueOf(v)));
         return result;
@@ -95,8 +95,8 @@ public class RealtimeStatsService {
     public double[] getLatencyPercentiles(String channel) {
         String latencyKey = "ydsz:stats:latency:" + channel;
         try {
-            Long size = redisService.opsForZSet().size(latencyKey);
-            if (size == null || size == 0) {
+            long size = redisService.zSize(latencyKey);
+            if (size == 0) {
                 return new double[]{0, 0, 0};
             }
             double p50 = getPercentile(latencyKey, size, 0.50);
@@ -115,7 +115,7 @@ public class RealtimeStatsService {
     private double getPercentile(String key, long size, double percentile) {
         long index = (long) Math.ceil(size * percentile) - 1;
         if (index < 0) index = 0;
-        var range = redisService.opsForZSet().rangeWithScores(key, index, index);
+        var range = redisService.getRedisTemplate().opsForZSet().rangeWithScores(key, index, index);
         if (range != null && !range.isEmpty()) {
             return range.iterator().next().getScore();
         }

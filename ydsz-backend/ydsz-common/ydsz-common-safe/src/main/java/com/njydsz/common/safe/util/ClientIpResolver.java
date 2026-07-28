@@ -54,25 +54,37 @@ public final class ClientIpResolver {
         if (request == null) {
             return UNKNOWN;
         }
+        return resolveFromHeaders(
+                request.getRemoteAddr(),
+                request.getHeader("X-Forwarded-For"),
+                request.getHeader("X-Real-IP"));
+    }
 
-        String directIp = request.getRemoteAddr();
-
-        // 如果直连 IP 是可信代理（本地回环或内网私有地址），才信任 X-Forwarded-For
+    /**
+     * 从直连 IP 和代理头中解析客户端真实 IP（框架无关版本）。
+     *
+     * <p>本方法供 Servlet 和 WebFlux 两种栈共用，消除重复的 X-Forwarded-For 解析逻辑。
+     * 判断逻辑与 {@link #getClientIp(HttpServletRequest)} 完全一致。
+     *
+     * @param directIp       直连 IP（不可伪造，由 TCP 连接获得）
+     * @param xForwardedFor  X-Forwarded-For 头值（可为 null）
+     * @param xRealIp        X-Real-IP 头值（可为 null）
+     * @return 客户端真实 IP
+     * @since 1.1.0
+     */
+    public static String resolveFromHeaders(String directIp, String xForwardedFor, String xRealIp) {
         if (directIp != null && isTrustedProxy(directIp)) {
-            String ip = request.getHeader("X-Forwarded-For");
-            if (StringUtils.hasText(ip) && !UNKNOWN.equalsIgnoreCase(ip)) {
-                int index = ip.indexOf(',');
+            if (StringUtils.hasText(xForwardedFor) && !UNKNOWN.equalsIgnoreCase(xForwardedFor)) {
+                int index = xForwardedFor.indexOf(',');
                 if (index != -1) {
-                    return ip.substring(0, index).trim();
+                    return xForwardedFor.substring(0, index).trim();
                 }
-                return ip.trim();
+                return xForwardedFor.trim();
             }
-            ip = request.getHeader("X-Real-IP");
-            if (StringUtils.hasText(ip) && !UNKNOWN.equalsIgnoreCase(ip)) {
-                return ip.trim();
+            if (StringUtils.hasText(xRealIp) && !UNKNOWN.equalsIgnoreCase(xRealIp)) {
+                return xRealIp.trim();
             }
         }
-
         return directIp != null && !directIp.isEmpty() ? directIp : DEFAULT_IP;
     }
 

@@ -10,7 +10,7 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
-import com.njydsz.cronjob.infra.mapper.JobDagMapper;
+import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

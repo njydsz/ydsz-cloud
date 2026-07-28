@@ -52,6 +52,7 @@ import com.njydsz.common.core.job.ProcessResult;
 import com.njydsz.common.core.job.ShardingContext;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
@@ -531,7 +532,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
         }
         RemoteTaskRequest request = new RemoteTaskRequest(
-                job, triggerType, assignment.shardIndex(), shardTotal, TracerUtils.get());
+                job, triggerType, assignment.shardIndex(), shardTotal, TracerUtils.getTraceId());
         String logId = client.dispatch(node, request);
         if (logId == null && remoteConfig.isFallbackToLocal()) {
             log.info("[Dispatcher] 远程派发失败, 降级本地执行: key={} shard={} nodeId={}",
@@ -578,7 +579,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         log0.setStartTime(LocalDateTime.now());
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
-        log0.setTraceId(TracerUtils.get());
+        log0.setTraceId(TracerUtils.getTraceId());
         log0.setTriggerType(triggerType);
         // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
         if (lockKey != null) {
@@ -782,7 +783,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (client == null) {
             return null;
         }
-        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.get());
+        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.getTraceId());
         String logId = client.dispatch(worker, request);
         if (logId != null) {
             log.debug("[Dispatcher] 调度器-执行器分离: 任务已派发到 Worker: key={} worker={} logId={}",
@@ -917,7 +918,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         log0.setStartTime(LocalDateTime.now());
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
-        log0.setTraceId(TracerUtils.get());
+        log0.setTraceId(TracerUtils.getTraceId());
         log0.setTriggerType(triggerType);
         // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
         if (lockKey != null) {
@@ -1071,7 +1072,7 @@ try {
                     job.getJobKey(), job.getCluster());
             return dispatchLocalFallback(job, triggerType);
         }
-        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.get());
+        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.getTraceId());
         String logId = clusterDispatcher.dispatchToCluster(job.getCluster(), request);
         if (logId == null) {
             log.warn("[Dispatcher] 跨集群派发失败, 降级本地执行: key={} cluster={}",

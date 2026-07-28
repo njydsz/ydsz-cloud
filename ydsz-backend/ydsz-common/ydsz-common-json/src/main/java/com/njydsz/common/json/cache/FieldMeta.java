@@ -2,6 +2,7 @@ package com.njydsz.common.json.cache;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -140,6 +141,9 @@ public final class FieldMeta {
     /** MethodHandle Getter（优化字段获取） */
     public final MethodHandle getter;
 
+    /** VarHandle Getter（JDK 9+ 直接内存访问，避免装箱） */
+    private final VarHandle varHandle;
+
     /** MethodHandle 自定义序列化方法 */
     private final MethodHandle customSerializer;
 
@@ -215,11 +219,21 @@ public final class FieldMeta {
 
         MethodHandle s = null;
         MethodHandle g = null;
+        VarHandle vh = null;
         MethodHandle cs = null;
         MethodHandle cd = null;
         try {
             s = MethodHandles.lookup().unreflectSetter(field);
             g = MethodHandles.lookup().unreflectGetter(field);
+
+            // 尝试使用 VarHandle（JDK 9+，避免原始类型装箱）
+            try {
+                vh = MethodHandles.privateLookupIn(
+                    field.getDeclaringClass(), MethodHandles.lookup())
+                    .unreflectVarHandle(field);
+            } catch (Exception ignored) {
+                // VarHandle 不可用（如 GraalVM Native Image），回退到 MethodHandle
+            }
 
             if (!serializeUsing.isEmpty()) {
                 try {
@@ -239,6 +253,7 @@ public final class FieldMeta {
         }
         this.setter = s;
         this.getter = g;
+        this.varHandle = vh;
         this.customSerializer = cs;
         this.customDeserializer = cd;
         this.serializeTypeCode = computeSerializeTypeCode(type);
@@ -282,6 +297,13 @@ public final class FieldMeta {
      * @return 字段值
      */
     public Object getValue(Object obj) {
+        // 优先使用 VarHandle（避免装箱）
+        if (varHandle != null) {
+            try {
+                return varHandle.get(obj);
+            } catch (Exception ignored) {
+            }
+        }
         if (getter != null) {
             try {
                 return getter.invoke(obj);
@@ -469,6 +491,14 @@ public final class FieldMeta {
      * 设置字段值（MethodHandle 优化）
      */
     public void setValue(Object obj, Object value) {
+        // 优先使用 VarHandle（避免装箱）
+        if (varHandle != null) {
+            try {
+                varHandle.set(obj, value);
+                return;
+            } catch (Exception ignored) {
+            }
+        }
         if (setter != null) {
             try {
                 setter.invoke(obj, value);

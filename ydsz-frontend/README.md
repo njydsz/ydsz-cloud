@@ -212,7 +212,7 @@ server: {
 | **公共认证包** | `@ydsz/shared-auth` 统一 RequestClient + Auth API + Auth Store，消除 9 份重复代码 |
 | **前端监控** | `@ydsz/monitor` 错误捕获（Vue/window/Promise/资源）+ Web Vitals（LCP/FID/CLS/INP/FCP/TTFB） |
 | **主题切换** | auto/light/dark 暗黑模式 + Element Plus 主题适配 + 系统偏好跟随 |
-| **API 对齐** | 全部 API 路径 `/api/v1/*` + successCode=200 + LoginVO 类型 + refreshToken 自动刷新 |
+| **API 对齐** | 全部 API 路径 `/api/v1/*` + successCode="A00000" + LoginVO 类型 + refreshToken 自动刷新 |
 | **构建优化** | Vite manualChunks 分割（vue-vendor/element-vendor/vxe-vendor）+ chunk hash 缓存 |
 | **国际化** | 9 子应用 × zh-CN/en-US 双语 + 业务字段翻译 + Element Plus/dayjs 语言包 |
 | **工程规范** | ESLint + Prettier + Stylelint + Commitlint + Turbo 并行构建 + Docker 多阶段构建 |

@@ -66,12 +66,12 @@ public class OfflineMessageService implements OfflineMessageStore {
                     "payload", payload,
                     "timestamp", System.currentTimeMillis());
             String json = YdszJson.toJson(envelope);
-            redisService.opsForList().leftPush(key, json);
-            redisService.opsForList().trim(key, 0, WebSocketConstants.WS_OFFLINE_MAX_CACHE - 1);
+            redisService.lPush(key, json);
+            redisService.lTrim(key, 0, WebSocketConstants.WS_OFFLINE_MAX_CACHE - 1);
             redisService.expire(key, Duration.ofSeconds(WebSocketConstants.WS_OFFLINE_TTL_SECONDS));
 
-            Long size = redisService.opsForList().size(key);
-            if (size != null && size > WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD) {
+            long size = redisService.lSize(key);
+            if (size > WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD) {
                 persistOverflowToDb(userId, key, size);
             }
 
@@ -110,7 +110,7 @@ public class OfflineMessageService implements OfflineMessageStore {
 
         // 再从 Redis 拉取缓存消息
         String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
-        List<String> raw = redisService.opsForList().range(key, 0, -1);
+        List<String> raw = redisService.lRange(key, 0, -1, String.class);
         if (raw != null && !raw.isEmpty()) {
             redisService.delete(key);
             List<String> redisResult = new ArrayList<>(raw);
@@ -131,8 +131,8 @@ public class OfflineMessageService implements OfflineMessageStore {
         long dbCount = 0;
         try {
             String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
-            Long size = redisService.opsForList().size(key);
-            redisCount = size == null ? 0L : size;
+            long size = redisService.lSize(key);
+            redisCount = size;
         } catch (Exception e) {
             log.debug("[WS-Offline] Redis 计数失败: {}", e.getMessage());
         }
@@ -167,8 +167,8 @@ public class OfflineMessageService implements OfflineMessageStore {
             if (overflowCount <= 0) {
                 return;
             }
-            List<String> overflowMessages = redisService.opsForList()
-                    .range(redisKey, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD, -1);
+            List<String> overflowMessages = redisService.lRange(
+                    redisKey, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD, -1, String.class);
             if (overflowMessages == null || overflowMessages.isEmpty()) {
                 return;
             }
@@ -193,7 +193,7 @@ public class OfflineMessageService implements OfflineMessageStore {
                 int to = Math.min(i + INSERT_BATCH_SIZE, entities.size());
                 msgOfflineMapper.insertBatch(entities.subList(i, to));
             }
-            redisService.opsForList().trim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
+            redisService.lTrim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
             log.info("[WS-Offline] 溢出消息持久化到数据库: userId={}, count={}", userId, overflowMessages.size());
         } catch (Exception e) {
             log.warn("[WS-Offline] 溢出消息持久化失败: userId={}, err={}", userId, e.getMessage(), e);

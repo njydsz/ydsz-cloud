@@ -696,6 +696,18 @@
                 <version>1.8.9</version>
             </dependency>
 
+            <!-- fastjson2: 统一版本管理（rocketmq-acl 5.3.0 传递依赖 2.0.43，需提升到项目版本） -->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2-extension</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+
             <!-- Resilience4j: 重试/熔断/隔离舱（与 Sentinel 互补，Feign 重试统一由此接管） -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>

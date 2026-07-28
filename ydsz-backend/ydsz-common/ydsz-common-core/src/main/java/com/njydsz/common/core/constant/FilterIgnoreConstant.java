@@ -61,14 +61,15 @@ public final class FilterIgnoreConstant {
     /** 认证过滤器忽略的服务名称 */
     private static final Set<String> AUTH_FILTER_IGNORE_SERVICE_NAME = Collections.unmodifiableSet(Set.of(
             "ydsz-gateway",
-            "ydsz-sys-web",
-            "ydsz-iam-web",
-            "ydsz-idm-web",
-            "ydsz-pms-web",
-            "ydsz-sso-web",
-            "ydsz-wfe-web",
-            "ydsz-bie-web",
-            "ydsz-lce-web"
+            "ydsz-system-web",
+            "ydsz-userinfo-web",
+            "ydsz-message-web",
+            "ydsz-cronjob-web",
+            "ydsz-agent-web",
+            "ydsz-nextwiki-web",
+            "ydsz-literule-web",
+            "ydsz-workflow-web",
+            "ydsz-project-web"
     ));
 
     /** 安全相关的排除URL模式（登录、认证、验证码等） */

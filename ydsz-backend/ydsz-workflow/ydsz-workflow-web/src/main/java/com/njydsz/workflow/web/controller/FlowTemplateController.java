@@ -229,6 +229,7 @@ public class FlowTemplateController {
     @Operation(summary = "P2-9: 从父模板继承创建子模板")
     @Idempotent(key = "ydsz:workflow:FlowTemplateController:inheritFromParent:lock", ttlSeconds = 5)
     @PostMapping("/{parentTemplateCode}/inherit")
+    @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'inheritFromParent'")
     public BaseResponse<String> inheritFromParent(@PathVariable String parentTemplateCode,
                                             @RequestParam String newTemplateCode,
                                             @RequestParam String newTemplateName,
@@ -263,6 +264,7 @@ public class FlowTemplateController {
     @Idempotent(key = "ydsz:workflow:FlowTemplateController:syncFromParent:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtemplate.syncFromParent", threshold = 50)
     @PostMapping("/{childTemplateCode}/sync")
+    @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.SYNC, content = "'syncFromParent'")
     public BaseResponse<Integer> syncFromParent(@PathVariable String childTemplateCode) {
         return BaseResponse.success(templateService.syncFromParent(childTemplateCode));
     }

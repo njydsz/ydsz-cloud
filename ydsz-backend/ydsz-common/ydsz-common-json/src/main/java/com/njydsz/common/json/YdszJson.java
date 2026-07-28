@@ -11,7 +11,6 @@ import java.util.*;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
-import com.njydsz.common.json.engine.DeserializerEngine;
 import com.njydsz.common.json.engine.SerializerEngine;
 import com.njydsz.common.json.exception.YdszJsonException;
 import com.njydsz.common.json.jsonpath.YdszJsonPath;
@@ -23,6 +22,7 @@ import com.njydsz.common.json.object.YdszJsonObject;
 import com.njydsz.common.json.parser.YdszJsonParser;
 import com.njydsz.common.json.pointer.JsonPointer;
 import com.njydsz.common.json.provider.SerializationProvider;
+import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.reader.JSONReader;
 import com.njydsz.common.json.schema.SchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
@@ -169,7 +169,7 @@ public class YdszJson {
         if (obj == null) {
             return "null";
         }
-        return recordSerialize(() -> SerializerEngine.serialize(obj));
+        return recordSerialize(() -> SerializationProvider.serialize(obj));
     }
     
     /**
@@ -186,7 +186,7 @@ public class YdszJson {
         if (pretty) {
             return format(obj);
         }
-        return recordSerialize(() -> SerializerEngine.serialize(obj));
+        return recordSerialize(() -> SerializationProvider.serialize(obj));
     }
     
     /**
@@ -202,7 +202,7 @@ public class YdszJson {
         if (obj == null) {
             return "null";
         }
-        return recordSerialize(() -> SerializerEngine.serialize(obj, viewClass));
+        return recordSerialize(() -> SerializationProvider.serializeWithView(obj, viewClass));
     }
     
     /**
@@ -217,7 +217,7 @@ public class YdszJson {
         if (obj == null) {
             return "null";
         }
-        return recordSerialize(() -> SerializerEngine.serialize(obj, viewClass, pretty));
+        return recordSerialize(() -> SerializationProvider.serializeWithView(obj, viewClass, pretty));
     }
     
     /**
@@ -230,7 +230,7 @@ public class YdszJson {
         if (obj == null) {
             return "null";
         }
-        return recordSerialize(() -> SerializerEngine.format(obj));
+        return recordSerialize(() -> SerializationProvider.format(obj));
     }
     
     /**
@@ -263,7 +263,7 @@ public class YdszJson {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializerEngine.deserialize(json, clazz));
+        return recordDeserialize(() -> DeserializationProvider.deserialize(json, clazz));
     }
     
     /**
@@ -279,7 +279,7 @@ public class YdszJson {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializerEngine.deserialize(json, type));
+        return recordDeserialize(() -> DeserializationProvider.deserialize(json, type));
     }
     
     /**
@@ -295,7 +295,7 @@ public class YdszJson {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializerEngine.deserialize(json, typeRef));
+        return recordDeserialize(() -> DeserializationProvider.deserialize(json, typeRef.getType()));
     }
     
     /**
@@ -311,7 +311,7 @@ public class YdszJson {
      */
     public static <T> T toObject(String json, Class<T> clazz, T defaultValue) {
         try {
-            T result = DeserializerEngine.deserialize(json, clazz);
+            T result = DeserializationProvider.deserialize(json, clazz);
             return result != null ? result : defaultValue;
         } catch (Exception e) {
             return defaultValue;
@@ -331,7 +331,7 @@ public class YdszJson {
         }
         validateJsonSize(json);
         return recordDeserialize(() -> {
-            Object result = DeserializerEngine.deserialize(json, Map.class);
+            Object result = DeserializationProvider.deserialize(json, Map.class);
             return toStringObjectMap(result);
         });
     }
@@ -394,7 +394,7 @@ public class YdszJson {
                 return null;
             }
         };
-        Object result = DeserializerEngine.deserialize(json, type);
+        Object result = DeserializationProvider.deserialize(json, type);
         if (result instanceof List<?> list) {
             List<T> typedList = new ArrayList<>(list.size());
             for (Object item : list) {
@@ -419,7 +419,7 @@ public class YdszJson {
         }
         validateJsonSize(json);
         return recordDeserialize(() -> {
-            Object result = DeserializerEngine.deserialize(json, List.class);
+            Object result = DeserializationProvider.deserialize(json, List.class);
             return toObjectList(result);
         });
     }
@@ -432,7 +432,7 @@ public class YdszJson {
      */
     
     public static YdszJsonObject parseObjectToJsonObject(String json) {
-        Object result = DeserializerEngine.deserialize(json, Map.class);
+        Object result = DeserializationProvider.deserialize(json, Map.class);
         if (result instanceof Map<?, ?> map) {
             return new YdszJsonObject(map);
         }
@@ -447,7 +447,7 @@ public class YdszJson {
      */
     
     public static YdszJsonArray parseArrayToJsonArray(String json) {
-        Object result = DeserializerEngine.deserialize(json, List.class);
+        Object result = DeserializationProvider.deserialize(json, List.class);
         if (result instanceof List<?> list) {
             return new YdszJsonArray(list);
         }
@@ -487,7 +487,7 @@ public class YdszJson {
         if (clazz.isInstance(value)) {
             return clazz.cast(value);
         }
-        return DeserializerEngine.deserialize(toJson(value), clazz);
+        return DeserializationProvider.deserialize(toJson(value), clazz);
     }
     
     // ==================== Builder 入口方法 ====================
@@ -595,7 +595,7 @@ public class YdszJson {
      * @return JSON 字符串
      */
     public static String toJson(Object obj, JSONWriter.Feature... features) {
-        return SerializerEngine.serialize(obj, JSONWriter.of(features));
+        return SerializationProvider.serialize(obj, JSONWriter.of(features));
     }
 
     /**
@@ -612,7 +612,7 @@ public class YdszJson {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializerEngine.deserialize(json, clazz, JSONReader.of(features)));
+        return recordDeserialize(() -> DeserializationProvider.deserialize(json, clazz, JSONReader.of(features)));
     }
 
     // ==================== JSON Pointer API (RFC 6901) ====================
@@ -753,7 +753,7 @@ public class YdszJson {
      */
     public static ValidationResult validate(String json, YdszJsonSchema schema) {
         try {
-            Object data = DeserializerEngine.deserialize(json, Map.class);
+            Object data = DeserializationProvider.deserialize(json, Map.class);
             return SchemaValidator.validate(schema, data);
         } catch (Exception e) {
             ValidationResult result = new ValidationResult(false);
@@ -852,7 +852,7 @@ public class YdszJson {
                     return null;
                 }
             };
-            Object result = DeserializerEngine.deserialize(json, mapType);
+            Object result = DeserializationProvider.deserialize(json, mapType);
             if (result instanceof Map<?, ?> map) {
                 Map<K, V> typedMap = new LinkedHashMap<>(map.size());
                 for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -1067,7 +1067,7 @@ public class YdszJson {
         Set<String> previous = SerializationProvider.getExcludedFields();
         try {
             SerializationProvider.setExcludedFields(excludedFieldNames);
-            return recordSerialize(() -> SerializerEngine.serialize(obj));
+            return recordSerialize(() -> SerializationProvider.serialize(obj));
         } finally {
             SerializationProvider.setExcludedFields(previous);
         }

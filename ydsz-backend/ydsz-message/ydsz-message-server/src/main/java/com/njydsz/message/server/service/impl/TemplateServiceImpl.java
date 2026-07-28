@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.template;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -19,6 +20,7 @@ import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
 import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
 import com.njydsz.message.server.service.template.TemplateService;
+import com.njydsz.message.server.template.TemplateEngine;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +47,9 @@ public class TemplateServiceImpl implements TemplateService {
 
     /** 消息模板 Mapper（CRUD / locale 回退查询） */
     private final MsgTemplateMapper msgTemplateMapper;
+
+    /** 模板引擎（变量渲染） */
+    private final TemplateEngine templateEngine;
 
     @Override
     public MsgTemplate create(TemplateCreateDTO dto) {
@@ -223,6 +228,18 @@ public class TemplateServiceImpl implements TemplateService {
         entity.setAuditAt(LocalDateTime.now());
         msgTemplateMapper.updateById(entity);
         log.info("[Template] 审核模板: id={} {} -> {}", id, current, target);
+    }
+
+    @Override
+    public String preview(String templateCode, String channel, Map<String, Object> params, String locale, String tenantId) {
+        if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
+            throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码与通道不能为空");
+        }
+        MsgTemplate template = loadByCodeAndChannel(templateCode, channel, locale, tenantId);
+        if (template == null) {
+            throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + templateCode + "/" + channel);
+        }
+        return templateEngine.render(template.getContent(), params);
     }
 
     /**

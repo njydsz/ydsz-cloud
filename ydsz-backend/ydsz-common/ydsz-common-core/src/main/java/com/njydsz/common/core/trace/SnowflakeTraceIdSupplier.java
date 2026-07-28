@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 基于 Snowflake 算法的有序 TraceId 生成器。
@@ -19,10 +20,11 @@ import java.util.Enumeration;
  * <p>相比 {@link TraceIdGenerator} 的 UUID 方案，本实现生成的 TraceId
  * <b>按时间有序</b>，可直接按 traceId 排序还原请求时序，便于日志排查。</p>
  *
- * <p><b>线程安全性：</b>序列号分配使用 synchronized 保证线程安全。</p>
+ * <p><b>线程安全性：</b>使用 {@link AtomicLong} + CAS 自旋替代 synchronized，
+ * 在高并发场景下无锁竞争，性能显著优于同步块方案。</p>
  *
- * <p><b>时钟回拨处理：</b>检测到时钟回拨时，等待回拨时间结束再继续生成，
- * 避免产生重复 ID。回拨超过 5 秒时抛出异常。</p>
+ * <p><b>时钟回拨处理：</b>检测到时钟回拨时，使用 {@link Thread#sleep(long)} 等待回拨时间
+ * 结束再继续生成，避免产生重复 ID。回拨超过 5 秒时抛出异常。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -65,8 +67,12 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
 
     private final long workerId;
     private final long datacenterId;
-    private long sequence = 0L;
-    private long lastTimestamp = -1L;
+
+    /**
+     * 复合状态：高 52 bit 为时间戳（毫秒），低 12 bit 为序列号。
+     * 使用 AtomicLong + CAS 替代 synchronized，实现无锁并发安全。
+     */
+    private final AtomicLong state = new AtomicLong(0L);
 
     /**
      * 使用自动推导的 workerId 和 datacenterId 创建实例。
@@ -98,39 +104,58 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
     }
 
     @Override
-    public synchronized String generate() {
+    public String generate() {
         long currentTimestamp = timeGen();
+        long prev;
+        long next = 0L;
+        long sequence;
 
-        if (currentTimestamp < lastTimestamp) {
-            long offset = lastTimestamp - currentTimestamp;
-            if (offset <= MAX_BACKWARD_MS) {
-                try {
-                    wait(offset);
+        while (true) {
+            prev = state.get();
+            long lastTimestamp = prev >>> SEQUENCE_BITS;
+            sequence = prev & SEQUENCE_MASK;
+
+            if (currentTimestamp < lastTimestamp) {
+                // 时钟回拨处理
+                long offset = lastTimestamp - currentTimestamp;
+                if (offset <= MAX_BACKWARD_MS) {
+                    try {
+                        Thread.sleep(offset);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new IllegalStateException("Interrupted while waiting for clock", e);
+                    }
                     currentTimestamp = timeGen();
                     if (currentTimestamp < lastTimestamp) {
                         throw new IllegalStateException(
                                 "Clock moved backwards after waiting: offset=" + offset);
                     }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new IllegalStateException("Interrupted while waiting for clock", e);
+                    // 时间已恢复，重新进入 CAS 循环
+                    continue;
+                } else {
+                    throw new IllegalStateException(
+                            "Clock moved backwards beyond tolerance: offset=" + offset + "ms");
+                }
+            }
+
+            if (currentTimestamp == lastTimestamp) {
+                // 同一毫秒内序列号递增
+                sequence = (sequence + 1) & SEQUENCE_MASK;
+                if (sequence == 0) {
+                    // 序列号耗尽，等待下一毫秒
+                    currentTimestamp = tilNextMillis(lastTimestamp);
                 }
             } else {
-                throw new IllegalStateException(
-                        "Clock moved backwards beyond tolerance: offset=" + offset + "ms");
+                // 新的毫秒，序列号归零
+                sequence = 0L;
+            }
+
+            // 打包时间戳和序列号为复合状态
+            next = (currentTimestamp << SEQUENCE_BITS) | sequence;
+            if (state.compareAndSet(prev, next)) {
+                break;
             }
         }
-
-        if (currentTimestamp == lastTimestamp) {
-            sequence = (sequence + 1) & SEQUENCE_MASK;
-            if (sequence == 0) {
-                currentTimestamp = tilNextMillis(lastTimestamp);
-            }
-        } else {
-            sequence = 0L;
-        }
-
-        lastTimestamp = currentTimestamp;
 
         long id = ((currentTimestamp - TWEPOCH) << TIMESTAMP_LEFT_SHIFT)
                 | (datacenterId << DATACENTER_ID_SHIFT)

@@ -23,6 +23,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 抄送中心 Controller
  *
@@ -76,6 +79,7 @@ public class FlowCcController {
     @RateLimit(resource = "workflow.flowcc.pageCc", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowCcController:pageCc:lock", ttlSeconds = 5)
     @PostMapping("/cc/page")
+    @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pageCc'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
     public BaseResponse<PageResponse<List<FlowCc>>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
@@ -107,6 +111,7 @@ public class FlowCcController {
     @Idempotent(key = "ydsz:workflow:FlowCcController:ccMarkRead:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowcc.ccMarkRead", threshold = 50)
     @PostMapping("/cc/{id}/read")
+    @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'ccMarkRead'")
     public BaseResponse<Boolean> ccMarkRead(@PathVariable String id) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();
@@ -122,6 +127,7 @@ public class FlowCcController {
     @Idempotent(key = "ydsz:workflow:FlowCcController:ccMarkAllRead:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowcc.ccMarkAllRead", threshold = 50)
     @PostMapping("/cc/readAll")
+    @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'ccMarkAllRead'")
     public BaseResponse<Integer> ccMarkAllRead() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();

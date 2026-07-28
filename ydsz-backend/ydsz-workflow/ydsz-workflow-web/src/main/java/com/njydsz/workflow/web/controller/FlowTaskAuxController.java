@@ -28,6 +28,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 任务辅助操作与待办推送 Controller（从原 FlowTaskController 拆分而来）
  *
@@ -92,6 +95,7 @@ public class FlowTaskAuxController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignRemove:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.countersignRemove", threshold = 50)
     @PostMapping("/task/countersignRemove")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'countersignRemove'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -109,6 +113,7 @@ public class FlowTaskAuxController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:markRead:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.markRead", threshold = 50)
     @PostMapping("/task/{taskId}/read")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'markRead'")
     public BaseResponse<Void> markRead(@PathVariable String taskId) {
         String userId = AuthContext.getUserId();
         taskService.markRead(taskId, userId);
@@ -124,6 +129,7 @@ public class FlowTaskAuxController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:communicate:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.communicate", threshold = 50)
     @PostMapping("/task/communicate")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'communicate'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -141,6 +147,7 @@ public class FlowTaskAuxController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:saveDraft:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.saveDraft", threshold = 50)
     @PostMapping("/task/saveDraft")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveDraft'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -158,6 +165,7 @@ public class FlowTaskAuxController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:addApprover:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.addApprover", threshold = 50)
     @PostMapping("/task/addApprover")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'addApprover'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
@@ -177,6 +185,7 @@ public class FlowTaskAuxController {
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:retract:lock", ttlSeconds = 5)
     @PostMapping("/task/{hisTaskId}/retract")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'retract'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<String> retract(@PathVariable String hisTaskId,
                                   @RequestParam(required = false) String comment) {
@@ -195,6 +204,7 @@ public class FlowTaskAuxController {
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:suspendTask:lock", ttlSeconds = 5)
     @PostMapping("/task/{taskId}/suspend")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.DISABLE, content = "'suspendTask'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> suspendTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
@@ -211,6 +221,7 @@ public class FlowTaskAuxController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:activateTask:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.activateTask", threshold = 50)
     @PostMapping("/task/{taskId}/activate")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.ENABLE, content = "'activateTask'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> activateTask(@PathVariable String taskId) {
         workflowFacade.activateTask(taskId, AuthContext.getUserId());
@@ -249,6 +260,7 @@ public class FlowTaskAuxController {
     @Idempotent(key = "ydsz:workflow:FlowTaskController:pushMyTodoCount:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowtask.pushMyTodoCount", threshold = 50)
     @PostMapping("/todo/pushMine")
+    @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pushMyTodoCount'")
     public BaseResponse<Boolean> pushMyTodoCount() {
         String userId = AuthContext.getUserId();
         if (userId == null) {

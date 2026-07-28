@@ -3,6 +3,7 @@ package com.njydsz.common.core.context;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
@@ -295,6 +296,67 @@ public final class RequestContext {
      */
     public static Map<String, Object> snapshot() {
         return new HashMap<>(CONTEXT_HOLDER.get());
+    }
+
+    /**
+     * 从快照恢复上下文（覆盖当前线程的上下文）
+     *
+     * @param snapshot 之前通过 {@link #snapshot()} 获取的上下文快照
+     */
+    public static void restore(Map<String, Object> snapshot) {
+        if (snapshot != null) {
+            CONTEXT_HOLDER.set(new HashMap<>(snapshot));
+        }
+    }
+
+    /**
+     * 包装 Callable，自动传播当前上下文到异步线程
+     *
+     * <p>在 Callable 执行前恢复上下文快照，执行后清除，防止内存泄漏。
+     * 适用于手动提交到线程池的场景。</p>
+     *
+     * @param callable 原始 Callable
+     * @param <T>      返回类型
+     * @return 包装后的 Callable
+     */
+    public static <T> Callable<T> wrapCallable(Callable<T> callable) {
+        Map<String, Object> snapshot = snapshot();
+        return () -> {
+            Map<String, Object> previous = snapshot();
+            try {
+                restore(snapshot);
+                return callable.call();
+            } finally {
+                if (previous.isEmpty()) {
+                    clear();
+                } else {
+                    restore(previous);
+                }
+            }
+        };
+    }
+
+    /**
+     * 包装 Runnable，自动传播当前上下文到异步线程
+     *
+     * @param runnable 原始 Runnable
+     * @return 包装后的 Runnable
+     */
+    public static Runnable wrapRunnable(Runnable runnable) {
+        Map<String, Object> snapshot = snapshot();
+        return () -> {
+            Map<String, Object> previous = snapshot();
+            try {
+                restore(snapshot);
+                runnable.run();
+            } finally {
+                if (previous.isEmpty()) {
+                    clear();
+                } else {
+                    restore(previous);
+                }
+            }
+        };
     }
 
     /**

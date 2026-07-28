@@ -1,5 +1,6 @@
 package com.njydsz.common.core.request;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import jakarta.validation.constraints.Max;
@@ -188,6 +189,31 @@ public class PageRequest extends BaseRequest {
     public void validateSort() {
         if (orderBy != null && !orderBy.isBlank() && !SAFE_SORT_PATTERN.matcher(orderBy).matches()) {
             throw new IllegalArgumentException("Invalid sort field: " + orderBy);
+        }
+    }
+
+    /**
+     * 校验排序字段是否在白名单内（防止通过排序字段探测敏感列）
+     *
+     * <p>在 Controller 层调用，传入允许排序的列名集合（全小写）。
+     * 排序表达式中每个列名（不含 ASC/DESC）必须存在于白名单中。
+     *
+     * @param allowedColumns 允许排序的列名集合（建议全小写）
+     * @throws IllegalArgumentException 当排序字段不在白名单内时抛出
+     */
+    public void validateSortColumns(Set<String> allowedColumns) {
+        if (orderBy == null || orderBy.isBlank()) {
+            return;
+        }
+        if (!SAFE_SORT_PATTERN.matcher(orderBy).matches()) {
+            throw new IllegalArgumentException("Invalid sort field format: " + orderBy);
+        }
+        // 逐个校验列名
+        for (String part : orderBy.split(",")) {
+            String columnName = part.trim().replaceAll("\\s+(ASC|DESC)$", "").trim().toLowerCase();
+            if (!allowedColumns.contains(columnName)) {
+                throw new IllegalArgumentException("Sort column not allowed: " + columnName);
+            }
         }
     }
 }

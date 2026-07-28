@@ -1,5 +1,5 @@
 /**
- * 共享 RequestClient 工厂 — 统一拦截器配置（successCode=200 + Bearer Token + refreshToken）
+ * 共享 RequestClient 工厂 — 统一拦截器配置（successCode="A00000" + Bearer Token + refreshToken）
  *
  * 子应用调用 createSharedRequestClient() 即可获得与主应用一致的请求客户端。
  */
@@ -75,12 +75,12 @@ export function createSharedRequestClient(
     },
   });
 
-  // 处理返回的响应数据格式（对齐后端 BaseResponse: code=200 为成功）
+  // 处理返回的响应数据格式（对齐后端 BaseResponse: 业务响应码 code="A00000" 为成功，注意区分 HTTP 状态码 200）
   client.addResponseInterceptor(
     defaultResponseInterceptor({
       codeField: 'code',
       dataField: 'data',
-      successCode: 200,
+      successCode: 'A00000',
     }),
   );
 

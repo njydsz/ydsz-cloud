@@ -22,6 +22,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 流程实例变量 Controller — 变量 / 表单 / 催办
  *
@@ -96,6 +99,7 @@ public class FlowInstanceVariableController {
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:setVariables:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowinstance.setVariables", threshold = 50)
     @PostMapping("/instance/{id}/variables")
+    @Audit(module = "流程变量", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'setVariables'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> setVariables(@PathVariable String id,
                                      @Valid @RequestBody FlowInstanceVariablesDTO dto) {
@@ -114,6 +118,7 @@ public class FlowInstanceVariableController {
      */
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:urge:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/urge")
+    @Audit(module = "流程变量", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'urge'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public BaseResponse<List<String>> urge(@PathVariable String id,
                                  @RequestParam(required = false) String comment) {
@@ -127,6 +132,7 @@ public class FlowInstanceVariableController {
      */
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:urgeByNode:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/urge/node")
+    @Audit(module = "流程变量", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'urgeByNode'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public BaseResponse<List<String>> urgeByNode(@PathVariable String id,
                                            @RequestParam(required = false) String nodeCode,

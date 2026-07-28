@@ -20,6 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 事件 Controller
  *
@@ -76,6 +79,7 @@ public class FlowEventController {
      */
     @Idempotent(key = "ydsz:workflow:FlowEventController:correlateMessage:lock", ttlSeconds = 5)
     @PostMapping("/event/correlateMessage")
+    @Audit(module = "流程事件", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'correlateMessage'")
     public BaseResponse<Integer> correlateMessage(
             @RequestParam String messageName,
             @RequestParam(required = false) String correlationKey,
@@ -99,6 +103,7 @@ public class FlowEventController {
      */
     @Idempotent(key = "ydsz:workflow:FlowEventController:throwError:lock", ttlSeconds = 5)
     @PostMapping("/event/throwError")
+    @Audit(module = "流程事件", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'throwError'")
     public BaseResponse<Integer> throwError(
             @RequestParam String errorCode,
             @RequestParam(required = false) String instanceId,

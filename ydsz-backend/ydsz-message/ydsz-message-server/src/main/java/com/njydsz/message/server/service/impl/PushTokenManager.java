@@ -62,7 +62,7 @@ public class PushTokenManager {
         tokenInfo.put("platform", platform != null ? platform : "UNKNOWN");
         redisService.hSet(key, deviceId, YdszJson.toJson(tokenInfo));
         redisService.expire(key, Duration.ofDays(TOKEN_TTL_DAYS));
-        redisService.opsForSet().remove(INVALID_KEY_PREFIX + userId, token);
+        redisService.sRem(INVALID_KEY_PREFIX + userId, token);
         log.info("[PushToken] Token 注册: userId={} deviceId={} platform={}", userId, deviceId, platform);
     }
 
@@ -74,7 +74,7 @@ public class PushTokenManager {
      */
     public Map<String, String> getValidTokens(String userId) {
         String key = TOKENS_KEY_PREFIX + userId;
-        Map<Object, Object> raw = redisService.hGetAll(key, String.class);
+        Map<String, String> raw = redisService.hGetAll(key, String.class);
         if (raw == null || raw.isEmpty()) {
             return Map.of();
         }

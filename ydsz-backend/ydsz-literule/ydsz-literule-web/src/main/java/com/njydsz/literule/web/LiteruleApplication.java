@@ -45,15 +45,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
         "com.njydsz.cronjob.api",
         "com.njydsz.workflow.api",
         "com.njydsz.system.api"
-
-/**
- * LiteruleApplication Spring Boot 启动类，模块入口。
- *
- * <p>所属包：{@code com.njydsz.literule.web}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 })
 @EnableScheduling
 @MapperScan("com.njydsz.literule.infra.mapper")

@@ -2,6 +2,10 @@ package com.njydsz.literule.server.config;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
@@ -35,6 +39,7 @@ import com.njydsz.literule.server.core.BreakpointHook;
 import com.njydsz.literule.server.core.DefaultBreakpointHook;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
 import com.njydsz.literule.server.core.EvaluationResultCache;
+import com.njydsz.literule.server.core.InMemoryRuleMetrics;
 import com.njydsz.literule.server.core.MicrometerRuleMetrics;
 import com.njydsz.literule.server.core.ParallelRuleEvaluator;
 import com.njydsz.literule.server.core.RuleCanaryRouter;
@@ -271,11 +276,34 @@ public class LiteRuleAutoConfiguration {
                     properties.getRuleTimeoutMs());
         } else {
             int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
-            timeoutExecutor = new RuleTimeoutExecutor(properties.getRuleTimeoutMs(), poolSize);
+            timeoutExecutor = new RuleTimeoutExecutor(properties.getRuleTimeoutMs(),
+                    createManualTimeoutExecutor(poolSize));
             log.info("[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={}, executor=manual)",
                     properties.getRuleTimeoutMs(), poolSize);
         }
         engine.setTimeoutExecutor(timeoutExecutor);
+    }
+
+    /**
+     * 创建手动管理的守护线程池（common-thread 不可用时的降级方案）
+     *
+     * <p>线程设置为守护线程，避免阻止 JVM 退出；线程名带 {@code literule-timeout-} 前缀便于排查。
+     *
+     * @param poolSize 线程池大小
+     * @return 守护线程池
+     * @since 1.0.0
+     */
+    private static ExecutorService createManualTimeoutExecutor(int poolSize) {
+        ThreadFactory factory = new ThreadFactory() {
+            private final AtomicInteger counter = new AtomicInteger(0);
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "literule-timeout-" + counter.getAndIncrement());
+                t.setDaemon(true);
+                return t;
+            }
+        };
+        return Executors.newFixedThreadPool(poolSize, factory);
     }
 
     /**
@@ -335,7 +363,8 @@ public class LiteRuleAutoConfiguration {
                                              ObjectProvider<MeterRegistry> meterRegistryProvider) {
         MeterRegistry registry = meterRegistryProvider.getIfAvailable();
         if (registry == null) {
-            log.debug("[LiteRule] MeterRegistry 未注入，跳过 Prometheus 指标桥接");
+            log.debug("[LiteRule] MeterRegistry 未注入，使用内存计数器降级");
+            engine.setMetrics(new InMemoryRuleMetrics());
             return;
         }
         try {

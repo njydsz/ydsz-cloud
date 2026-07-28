@@ -29,6 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * P2-2: 流程评论 Controller
  *
@@ -87,6 +90,7 @@ public class FlowCommentController {
     @Idempotent(key = "ydsz:workflow:FlowCommentController:addComment:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowcomment.addComment", threshold = 50)
     @PostMapping
+    @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'addComment'")
     @Operation(summary = "发表评论/回复")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
@@ -143,6 +147,7 @@ public class FlowCommentController {
     @Idempotent(key = "ydsz:workflow:FlowCommentController:deleteComment:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowcomment.deleteComment", threshold = 50)
     @DeleteMapping("/{commentId}")
+    @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteComment'")
     @Operation(summary = "删除评论（仅本人）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Boolean> deleteComment(@PathVariable String commentId) {

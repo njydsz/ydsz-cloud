@@ -16,7 +16,8 @@ import com.njydsz.common.core.response.BaseResponse;
  * <p>错误码段位规划：
  * <ul>
  *   <li>A00000 - 成功</li>
- *   <li>A1xxxx - 通用错误</li>
+ *   <li>A1xxxx - 通用错误（参数校验、资源不存在、限流等）</li>
+ *   <li>B1xxxx - 系统级业务异常（内部错误、服务不可用等）</li>
  *   <li>A2xxxx - 认证授权</li>
  *   <li>B3xxxx - 用户/组织/人员</li>
  *   <li>B4xxxx - 项目/合同/商机</li>
@@ -37,7 +38,7 @@ public enum BaseResultCode implements ResultCode {
     // ==================== 成功 ====================
     SUCCESS("A00000", "ok"),
 
-    // ==================== A1xxxx 通用 ====================
+    // ==================== A1xxxx 通用 / B1xxxx 系统级 ====================
     BAD_REQUEST("A10001", "请求参数错误"),
     VALIDATION_FAILED("A10002", "参数校验失败"),
     MISSING_PARAMETER("A10003", "缺少参数"),

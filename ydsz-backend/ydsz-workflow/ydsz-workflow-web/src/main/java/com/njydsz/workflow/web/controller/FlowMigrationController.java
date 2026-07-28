@@ -19,6 +19,9 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.InstanceMigrationResultDTOVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 流程实例迁移 Controller（GAP-V2-09 / P1-10）
  *
@@ -92,6 +95,7 @@ public class FlowMigrationController {
     @RateLimit(resource = "workflow.flowmigration.migrateInstances", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:migrateInstances:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate")
+    @Audit(module = "流程迁移", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'migrateInstances'")
     public BaseResponse<InstanceMigrationResultDTOVO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
         return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(instanceMigrationService.migrate(dto)));
     }
@@ -110,6 +114,7 @@ public class FlowMigrationController {
     @RateLimit(resource = "workflow.flowmigration.previewMigration", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:previewMigration:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate/preview")
+    @Audit(module = "流程迁移", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'previewMigration'")
     public BaseResponse<InstanceMigrationResultDTOVO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
         return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(instanceMigrationService.previewMigration(dto)));
     }

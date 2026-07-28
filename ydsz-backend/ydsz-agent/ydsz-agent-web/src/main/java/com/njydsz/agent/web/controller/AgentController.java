@@ -32,8 +32,6 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.agent.domain.converter.AgentConverter;
-import com.njydsz.agent.domain.vo.ChatResponseDTOVO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -128,14 +126,14 @@ public class AgentController {
      * 避免请求失败后 5 秒内重试被误判为重复。
      *
      * @param request Agent 执行请求体（含 agentCode / userInput / systemPrompt / maxIterations / enabledTools）
-     * @return 统一响应结果，data 为 {@link ChatResponseDTOVO}（含 content/model/usage）
+     * @return 统一响应结果，data 为 {@link ChatResponseDTO}（含 content/model/usage）
      */
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
     @Idempotent(key = "ydsz:agent:AgentController:execute:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agent.execute", threshold = 50)
     @PostMapping("/execute")
     @Operation(summary = "同步执行 Agent", description = "等待完整响应后返回，适用于非实时对话场景")
-    public BaseResponse<ChatResponseDTOVO> execute(
+    public BaseResponse<ChatResponseDTO> execute(
             @Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 执行请求: agentCode={}, stream={}",
                 request.getAgentCode(), request.isStream());
@@ -143,7 +141,7 @@ public class AgentController {
         AgentExecutionRequest execReq = toExecutionRequest(request);
         try {
             ChatResponse response = agentFactory.getDefaultExecutor().execute(execReq);
-            return BaseResponse.success(AgentConverter.INSTANT.entityToVO(toDTO(response)));
+            return BaseResponse.success(toDTO(response));
         } catch (Exception e) {
             requestGuard.releaseIdempotent(request.getRequestId());
             throw e;

@@ -21,18 +21,24 @@ import java.lang.annotation.Target;
  *
  * <p>使用示例：
  * <pre>{@code
- * @FeatureToggle("new-dashboard")
+ * @FeatureToggle("NEW_DASHBOARD")
  * @GetMapping("/dashboard/v2")
  * public BaseResponse<DashboardVO> getDashboardV2() {
  *     return BaseResponse.success(dashboardService.getDashboardV2());
  * }
  * }</pre>
  *
- * <p>Nacos 配置：
+ * <p>Nacos 配置示例：
  * <pre>{@code
- * feature-flags:
- *   new-dashboard: true
- *   experimental-api: false
+ * ydsz:
+ *   feature-flag:
+ *     nacos:
+ *       enabled: true
+ *     flags:
+ *       NEW_DASHBOARD:
+ *         enabled: true
+ *       BATCH_EXPORT:
+ *         enabled: false
  * }</pre>
  */
 @Target({ElementType.METHOD, ElementType.TYPE})

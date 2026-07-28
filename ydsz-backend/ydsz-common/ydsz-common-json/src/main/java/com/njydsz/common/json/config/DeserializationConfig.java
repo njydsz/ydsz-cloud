@@ -17,9 +17,13 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
  *   <li>解析深度限制: 委托至 {@link YdszJsonConfig#getMaxDepth()}，默认 256</li>
  * </ul>
  *
+ * @deprecated 此类为冗余适配器，所有功能均委托至 {@link AutoTypeChecker} 和 {@link YdszJsonConfig}。
+ *             请直接使用 {@link AutoTypeChecker} 管理白/黑名单，使用 {@link YdszJsonConfig} 管理深度限制。
+ *             后续版本将删除此类。
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated(since = "1.0.0", forRemoval = true)
 public class DeserializationConfig {
     
     private static final DeserializationConfig INSTANCE = new DeserializationConfig();

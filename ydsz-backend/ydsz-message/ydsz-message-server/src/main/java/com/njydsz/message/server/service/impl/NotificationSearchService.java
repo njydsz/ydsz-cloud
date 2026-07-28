@@ -85,7 +85,7 @@ public class NotificationSearchService {
             return List.of();
         }
         // 取所有关键词的并集
-        Set<String> ids = redisService.opsForSet().union(keys);
+        Set<String> ids = redisService.sUnion(String.class, keys.toArray(new String[0]));
         if (ids == null) {
             return List.of();
         }
@@ -108,7 +108,7 @@ public class NotificationSearchService {
                 continue;
             }
             String key = INDEX_KEY_PREFIX + userId + ":" + keyword.toLowerCase();
-            redisService.opsForSet().remove(key, notificationId);
+            redisService.sRem(key, notificationId);
         }
     }
 

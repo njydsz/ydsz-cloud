@@ -10,9 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.njydsz.cronjob.domain.leader.LeaderElector;
-import com.njydsz.cronjob.infra.mapper.JobLogMapper;
-import com.njydsz.cronjob.infra.mapper.JobMapper;
+import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.health.CronjobHealthIndicator;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
@@ -44,10 +43,9 @@ public class CronjobAutoConfiguration {
             ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
             ObjectProvider<LeaderElector> leaderElectorProvider,
             ObjectProvider<JobMapper> jobMapperProvider,
-            ObjectProvider<JobLogMapper> jobLogMapperProvider,
             ObjectProvider<CronjobMetrics> cronjobMetricsProvider,
             CronjobProperties cronjobProperties) {
         return new CronjobHealthIndicator(redisConnectionFactoryProvider, leaderElectorProvider,
-                jobMapperProvider, jobLogMapperProvider, cronjobMetricsProvider, cronjobProperties);
+                jobMapperProvider, cronjobMetricsProvider, cronjobProperties);
     }
 }

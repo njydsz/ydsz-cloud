@@ -22,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 /**
  * 流程自动触发规则 HTTP API
  *
@@ -97,6 +100,7 @@ public class FlowAutoTriggerController {
     @Idempotent(key = "ydsz:workflow:FlowAutoTriggerController:create:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowautotrigger.create", threshold = 50)
     @PostMapping
+    @Audit(module = "自动触发", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     public BaseResponse<Void> create(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
         String sourceFlowCode = dto.getSourceFlowCode();
         String targetFlowCode = dto.getTargetFlowCode();
@@ -118,6 +122,7 @@ public class FlowAutoTriggerController {
     @Idempotent(key = "ydsz:workflow:FlowAutoTriggerController:delete:lock", ttlSeconds = 5)
     @RateLimit(resource = "workflow.flowautotrigger.delete", threshold = 50)
     @DeleteMapping("/{id}")
+    @Audit(module = "自动触发", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     public BaseResponse<Void> delete(@PathVariable String id) {
         autoTriggerService.deleteById(id);
         return BaseResponse.success();

@@ -59,15 +59,6 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
         RateLimitProperties.class,
         SecurityHeadersProperties.class,
         IpWhitelistProperties.class
-
-/**
- * GatewayApplication Spring Boot 启动类，模块入口。
- *
- * <p>所属包：{@code com.njydsz.gateway}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 })
 public class GatewayApplication {
 
