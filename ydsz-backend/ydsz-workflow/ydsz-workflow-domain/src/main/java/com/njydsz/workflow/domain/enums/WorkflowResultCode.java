@@ -61,7 +61,7 @@ public enum WorkflowResultCode implements ExceptionCode {
     // ==================== B75001-B75099 SLA/催办 ====================
     SLA_NOT_FOUND("B75001", "workflow.sla.not.found", 404),
     SLA_OVERDUE("B75002", "workflow.sla.overdue"),
-    URGE_TOO_FREQUENT("B75003", "workflow.urge.too.frequent", 429)
+    URGE_TOO_FREQUENT("B75003", "workflow.urge.too.frequent", 429);
 
     /** 错误码 */
     private final String code;

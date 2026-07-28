@@ -51,7 +51,7 @@ public enum AgentResultCode implements ExceptionCode {
     TOOL_EXECUTION_FAILED("B94303", "agent.tool.execution.failed", 500),
     PROMPT_TEMPLATE_NOT_FOUND("B94304", "agent.prompt.template.not.found", 404),
     PROMPT_TEMPLATE_DUPLICATE("B94305", "agent.prompt.template.duplicate"),
-    GUARDRAIL_REJECTED("B94306", "agent.guardrail.rejected", 403)
+    GUARDRAIL_REJECTED("B94306", "agent.guardrail.rejected", 403);
 
     /** 错误码 */
     private final String code;

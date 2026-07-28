@@ -1,12 +1,11 @@
 package com.njydsz.project.domain.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
-
 import lombok.Getter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 项目管理模块异常码枚举。
@@ -76,7 +75,7 @@ public enum ProjectResultCode implements ExceptionCode {
     // ==================== B44001-B44099 满意度/质保/运维 ====================
     SATISFACTION_NOT_FOUND("B44001", "project.satisfaction.not.found", 404),
     WARRANTY_NOT_FOUND("B44002", "project.warranty.not.found", 404),
-    OPS_TICKET_NOT_FOUND("B44003", "project.ops.ticket.not.found", 404)
+    OPS_TICKET_NOT_FOUND("B44003", "project.ops.ticket.not.found", 404);
 
     /** 错误码 */
     private final String code;

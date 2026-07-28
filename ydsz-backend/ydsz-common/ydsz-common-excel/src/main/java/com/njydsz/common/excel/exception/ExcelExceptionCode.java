@@ -51,8 +51,7 @@ public enum ExcelExceptionCode implements ExceptionCode {
 
     // ==================== 配置异常 H04xxx ====================
     CONFIG_INVALID_PARAMETER("H04001", "excel.config.invalidParameter"),
-    CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping"),
-    ;
+    CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping");
 
     private final String code;
     private final String key;

@@ -64,26 +64,112 @@ public interface SystemConverter {
     SystemConverter INSTANT = Mappers.getMapper(SystemConverter.class);
 
     // ===== AppInfo =====
+
+    /**
+     * 应用信息实体 → 应用信息 VO
+     *
+     * <p>自动排除 appSecret 等敏感字段。
+     *
+     * @param entity 应用信息实体
+     * @return 应用信息 VO
+     */
     AppInfoVO entityToVO(AppInfo entity);
+
+    /**
+     * 应用信息实体列表 → 应用信息 VO 列表
+     *
+     * @param entities 应用信息实体列表
+     * @return 应用信息 VO 列表
+     */
     List<AppInfoVO> appInfoListToVO(List<AppInfo> entities);
 
     // ===== Config =====
+
+    /**
+     * 系统配置实体 → 系统配置 VO
+     *
+     * @param entity 系统配置实体
+     * @return 系统配置 VO
+     */
     ConfigVO entityToVO(Config entity);
+
+    /**
+     * 系统配置实体列表 → 系统配置 VO 列表
+     *
+     * @param entities 系统配置实体列表
+     * @return 系统配置 VO 列表
+     */
     List<ConfigVO> configListToVO(List<Config> entities);
 
     // ===== DictItem =====
+
+    /**
+     * 字典项实体 → 字典项 VO
+     *
+     * @param entity 字典项实体
+     * @return 字典项 VO
+     */
     DictItemVO entityToVO(DictItem entity);
+
+    /**
+     * 字典项实体列表 → 字典项 VO 列表
+     *
+     * @param entities 字典项实体列表
+     * @return 字典项 VO 列表
+     */
     List<DictItemVO> dictItemListToVO(List<DictItem> entities);
 
     // ===== DictType =====
+
+    /**
+     * 字典类型实体 → 字典类型 VO
+     *
+     * @param entity 字典类型实体
+     * @return 字典类型 VO
+     */
     DictTypeVO entityToVO(DictType entity);
+
+    /**
+     * 字典类型实体列表 → 字典类型 VO 列表
+     *
+     * @param entities 字典类型实体列表
+     * @return 字典类型 VO 列表
+     */
     List<DictTypeVO> dictTypeListToVO(List<DictType> entities);
 
     // ===== DictVersion =====
+
+    /**
+     * 字典版本实体 → 字典版本 VO
+     *
+     * @param entity 字典版本实体
+     * @return 字典版本 VO
+     */
     DictVersionVO entityToVO(DictVersion entity);
+
+    /**
+     * 字典版本实体列表 → 字典版本 VO 列表
+     *
+     * @param entities 字典版本实体列表
+     * @return 字典版本 VO 列表
+     */
     List<DictVersionVO> dictVersionListToVO(List<DictVersion> entities);
 
     // ===== Variable =====
+
+    /**
+     * 系统变量实体 → 系统变量 VO
+     *
+     * @param entity 系统变量实体
+     * @return 系统变量 VO
+     */
     VariableVO entityToVO(Variable entity);
+
+    /**
+     * 系统变量实体列表 → 系统变量 VO 列表
+     *
+     * @param entities 系统变量实体列表
+     * @return 系统变量 VO 列表
+     */
     List<VariableVO> variableListToVO(List<Variable> entities);
 }
