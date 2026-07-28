@@ -1,31 +1,23 @@
 package com.njydsz.userinfo.server.service.impl;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.service.AbstractMpCrudService;
 import com.njydsz.common.util.BeanUpdateUtil;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
 import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 import com.njydsz.userinfo.server.service.CompanyService;
-
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.userinfo.domain.converter.UserInfoConverter;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 公司 Service 实现
@@ -40,86 +32,62 @@ import com.njydsz.userinfo.domain.converter.UserInfoConverter;
  *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）</li>
  * </ul>
  *
- * <p><b>设计：</b>基于 {@link AbstractMpCrudService} 复用通用 CRUD 能力，
- * 通过生命周期钩子（如 {@code beforeCreate}/{@code beforeUpdate}）集成公司编码唯一性校验，
- * 避免重复样板代码。
- *
- * <p><b>事务：</b>所有写操作由基类开启 {@code @Transactional(rollbackFor = Exception.class)}。
- *
- * <p><b>性能：</b>{@link #batchNamesByIds} 仅 SELECT id 与 company_name 字段，单次往返。
+ * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
  * @since 1.0.0
  *
  * @see CompanyService Service 接口
  * @see Company 公司实体
- * @see com.njydsz.userinfo.web.controller.CompanyController 公司 Controller
  */
 @Slf4j
 @Service
-public class CompanyServiceImpl
-        extends AbstractMpCrudService<Company, CompanySaveDTO, CompanyVO, CompanyPageQuery, String>
-        implements CompanyService {
+@RequiredArgsConstructor
+public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyMapper companyMapper;
 
-    public CompanyServiceImpl(CompanyMapper companyMapper) {
-        this.companyMapper = companyMapper;
-    }
-
     @Override
-    protected BaseMapper<Company> getMapper() {
-        return companyMapper;
-    }
-
-    @Override
-    protected Company toEntity(CompanySaveDTO dto) {
-        if (dto == null) {
-            return null;
+    public CompanyVO getById(String id) {
+        Company entity = companyMapper.selectById(id);
+        if (entity == null || entity.getDeleted() == 1) {
+            throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
         }
-        Company entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
-        return entity;
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 
     @Override
-    protected String getId(CompanySaveDTO dto) {
-        return dto != null ? dto.getId() : null;
-    }
-
-    @Override
-    protected QueryWrapper<Company> buildQueryWrapper(CompanyPageQuery query) {
-        QueryWrapper<Company> wrapper = new QueryWrapper<>();
-        if (query.getCompanyCode() != null && !query.getCompanyCode().isBlank()) {
-            wrapper.like("company_code", query.getCompanyCode());
-        }
-        if (query.getCompanyName() != null && !query.getCompanyName().isBlank()) {
-            wrapper.like("company_name", query.getCompanyName());
-        }
-        if (query.getStatus() != null && !query.getStatus().isBlank()) {
-            wrapper.like("status", query.getStatus());
-        }
-        wrapper.orderByDesc("created_at");
-        return wrapper;
-    }
-
-    @Override
-    protected void doBeforeSave(CompanySaveDTO dto, Company entity) {
-        // 编码唯一性校验
+    public List<CompanyVO> list() {
         LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Company::getCompanyCode, entity.getCompanyCode());
+        wrapper.orderByDesc(Company::getCreatedAt);
+        return companyMapper.selectList(wrapper).stream()
+                .map(UserInfoConverter.INSTANT::entityToVO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String create(CompanyPostDTO dto) {
+        LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Company::getCompanyCode, dto.getCompanyCode());
         if (companyMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.COMPANY_CODE_DUPLICATE);
         }
-        // 默认状态
+
+        Company entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
+        companyMapper.insert(entity);
+        log.info("Company created: code={}, id={}", entity.getCompanyCode(), entity.getId());
+        return entity.getId();
     }
 
     @Override
-    public boolean updateById(CompanySaveDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public boolean update(CompanyPutDTO dto) {
         Company entity = companyMapper.selectById(dto.getId());
-        if (entity == null) {
+        if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id");
@@ -127,11 +95,34 @@ public class CompanyServiceImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
         Company entity = companyMapper.selectById(id);
-        if (entity == null) {
+        if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
         }
         return companyMapper.deleteById(id) > 0;
+    }
+
+    @Override
+    public Map<String, String> batchNamesByIds(Collection<String> companyIds) {
+        if (companyIds == null || companyIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<String> distinctIds = companyIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
+        if (distinctIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Company> companies = companyMapper.selectBatchIds(distinctIds);
+        Map<String, String> result = new LinkedHashMap<>(companies.size());
+        for (Company company : companies) {
+            if (company.getCompanyName() != null && !company.getCompanyName().isBlank()) {
+                result.put(company.getId(), company.getCompanyName());
+            }
+        }
+        return result;
     }
 }

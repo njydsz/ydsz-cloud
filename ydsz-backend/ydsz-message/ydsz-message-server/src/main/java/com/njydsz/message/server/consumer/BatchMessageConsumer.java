@@ -8,6 +8,7 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
@@ -64,6 +65,7 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;
     private final RedisService redisService;
+    private final IdempotentStrategy idempotentStrategy;
 
     /** 批量消费幂等前缀 */
     private static final String BATCH_IDEMPOTENT_PREFIX = "msg:batch:";
@@ -104,10 +106,10 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
         for (MessageRequest request : requests) {
             // 批量内逐条幂等检查
             String idempotentKey = BATCH_IDEMPOTENT_PREFIX + request.getMessageId();
+            String batchToken = null;
             if (request.getMessageId() != null) {
-                Boolean acquired = redisService.opsForValue()
-                        .setIfAbsent(idempotentKey, "1", Duration.ofSeconds(IDEMPOTENT_TTL_SECONDS));
-                if (!Boolean.TRUE.equals(acquired)) {
+                batchToken = idempotentStrategy.acquire(idempotentKey, IDEMPOTENT_TTL_SECONDS * 1000L);
+                if (batchToken == null) {
                     log.debug("[BatchConsumer] 批量内消息已处理,跳过: msgId={}", request.getMessageId());
                     continue;
                 }
@@ -120,8 +122,8 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
                 log.error("[BatchConsumer] 批量内消息发送失败: msgId={} err={}",
                         request.getMessageId(), e.getMessage());
                 // 释放幂等锁，允许重试
-                if (request.getMessageId() != null) {
-                    redisService.delete(idempotentKey);
+                if (batchToken != null) {
+                    idempotentStrategy.release(idempotentKey, batchToken);
                 }
             }
         }

@@ -43,6 +43,7 @@ public class UserPostServiceImpl implements UserPostService {
     @Override
     public List<UserPost> list() {
         LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserPost::getDeleted, 0);
         return mapper.selectList(wrapper);
     }
 

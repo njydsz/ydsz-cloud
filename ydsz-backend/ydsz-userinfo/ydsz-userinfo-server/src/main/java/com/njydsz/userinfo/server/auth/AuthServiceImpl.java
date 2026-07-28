@@ -37,6 +37,7 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.micrometer.core.instrument.Timer;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -58,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     /** 用户账号 Mapper */
@@ -86,34 +88,6 @@ public class AuthServiceImpl implements AuthService {
     private final ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider;
     /** Outbox 事件服务（可选依赖，用于发布用户登录/登出领域事件） */
     private final ObjectProvider<OutboxService> outboxServiceProvider;
-
-    public AuthServiceImpl(UserAccountMapper userAccountMapper,
-                           RoleMapper roleMapper,
-                           UserRoleMapper userRoleMapper,
-                           TokenService tokenService,
-                           TokenBlacklistService tokenBlacklistService,
-                           RedisHashOps redisHashOps,
-                           RedisService redisService,
-                           PasswordEncoder passwordEncoder,
-                           UserInfoMetrics userInfoMetrics,
-                           UserInfoProperties properties,
-                           CaptchaService captchaService,
-                           ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider,
-                           ObjectProvider<OutboxService> outboxServiceProvider) {
-        this.userAccountMapper = userAccountMapper;
-        this.roleMapper = roleMapper;
-        this.userRoleMapper = userRoleMapper;
-        this.tokenService = tokenService;
-        this.tokenBlacklistService = tokenBlacklistService;
-        this.redisHashOps = redisHashOps;
-        this.redisService = redisService;
-        this.passwordEncoder = passwordEncoder;
-        this.userInfoMetrics = userInfoMetrics;
-        this.properties = properties;
-        this.captchaService = captchaService;
-        this.ldapProviderProvider = ldapProviderProvider;
-        this.outboxServiceProvider = outboxServiceProvider;
-    }
 
     /**
      * {@inheritDoc}

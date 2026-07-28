@@ -21,7 +21,7 @@
     <modules>
         <module>ydsz-common</module>
         <module>ydsz-gateway</module>
-<!--        <module>ydsz-literule</module>-->
+        <module>ydsz-literule</module>
         <module>ydsz-userinfo</module>
         <module>ydsz-system</module>
         <module>ydsz-project</module>

@@ -43,6 +43,7 @@ public class UserFieldServiceImpl implements UserFieldService {
     @Override
     public List<UserField> list() {
         LambdaQueryWrapper<UserField> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserField::getDeleted, 0);
         return mapper.selectList(wrapper);
     }
 

@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -7,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -130,7 +130,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @DataScope(deptColumn = "dept_id", userColumn = "id")
     public Page<UserAccountVO> page(UserAccountPageQueryDTO query) {
         Page<UserAccount> page = new Page<>(
-                query.getSafePageNum(), query.getSafePageSize());
+                query.getEffectivePageNum(), query.getEffectivePageSize());
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
 
         if (query.getUsername() != null && !query.getUsername().isBlank()) {
@@ -507,38 +507,4 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
     }
 
-    /**
-     * 将 DO 转换为 VO，status 字段从 String 转换为 Integer。
-     *
-     * @param entity 数据库实体
-     * @return 视图对象（不含密码等敏感字段）
-     */
-    private UserAccountVO UserInfoConverter.INSTANT.entityToVO(UserAccount entity) {
-        UserAccountVO vo = UserInfoConverter.INSTANT.entityToVO(entity);
-        if (entity.getStatus() != null) {
-            try {
-                vo.setStatus(Integer.valueOf(entity.getStatus()));
-            } catch (NumberFormatException e) {
-                vo.setStatus(null);
-            }
-        }
-        return vo;
-    }
-
-    /**
-     * 获取对象中值为 null 的属性名数组（用于动态更新忽略 null 值）
-     */
-    private String[] getNullPropertyNames(Object source) {
-        final BeanWrapper wrapper = new BeanWrapperImpl(source);
-        PropertyDescriptor[] pds = wrapper.getPropertyDescriptors();
-        List<String> nullNames = new ArrayList<>();
-        for (PropertyDescriptor pd : pds) {
-            if (wrapper.isReadableProperty(pd.getName())
-                    && wrapper.getPropertyValue(pd.getName()) == null) {
-                nullNames.add(pd.getName());
-            }
-        }
-        nullNames.add("id");
-        return nullNames.toArray(new String[0]);
-    }
 }

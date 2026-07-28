@@ -14,6 +14,7 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -74,6 +75,7 @@ public class MessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;
     private final RedisService redisService;
+    private final IdempotentStrategy idempotentStrategy;
     private final MsgLogMapper msgLogMapper;
     private final MessageMetrics messageMetrics;
     private final MessageProperties messageProperties;
@@ -146,11 +148,11 @@ public class MessageConsumer implements RocketMQListener<String> {
 
         // 构造幂等键
         String idempotentKey = buildIdempotentKey(request);
+        String idempotentToken = null;
         boolean locked = false;
         if (idempotentKey != null) {
-            Boolean acquired = redisService.opsForValue()
-                    .setIfAbsent(idempotentKey, INSTANCE_ID, Duration.ofSeconds(MessageConstants.IDEMPOTENT_TTL_SECONDS));
-            locked = Boolean.TRUE.equals(acquired);
+            idempotentToken = idempotentStrategy.acquire(idempotentKey, MessageConstants.IDEMPOTENT_TTL_SECONDS * 1000L);
+            locked = idempotentToken != null;
             if (!locked) {
                 log.info("[MessageConsumer] 重复消息已跳过: key={} messageId={}", idempotentKey, request.getMessageId());
                 return;
@@ -188,7 +190,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         } catch (Exception e) {
             // 系统异常:释放锁(允许重投),抛出触发重试
             log.error("[MessageConsumer] 系统异常: messageId={}", request.getMessageId(), e);
-            releaseLock(idempotentKey);
+            releaseLock(idempotentKey, idempotentToken);
             throw new RuntimeException("MessageConsumer failed, will retry", e);
         } finally {
             inFlight.decrementAndGet();
@@ -256,12 +258,12 @@ public class MessageConsumer implements RocketMQListener<String> {
         return MessageConstants.IDEMPOTENT_KEY_PREFIX + bizType + ":" + bizId + ":" + templateCode + ":" + receiver;
     }
 
-    private void releaseLock(String lockKey) {
-        if (lockKey == null) {
+    private void releaseLock(String lockKey, String token) {
+        if (lockKey == null || token == null) {
             return;
         }
         try {
-            redisService.execute(RELEASE_SCRIPT, Collections.singletonList(lockKey), INSTANCE_ID);
+            idempotentStrategy.release(lockKey, token);
         } catch (Exception e) {
             log.warn("[MessageConsumer] 释放幂等锁失败(等待 TTL 过期): key={} err={}", lockKey, e.getMessage(), e);
         }

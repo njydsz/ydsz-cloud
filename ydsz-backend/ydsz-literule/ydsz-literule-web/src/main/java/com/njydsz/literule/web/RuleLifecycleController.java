@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+package com.njydsz.literule.web;
 
 import java.time.LocalDateTime;
 import java.util.List;

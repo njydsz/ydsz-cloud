@@ -137,8 +137,8 @@ public class LanguageController {
     @RateLimit(resource = "userinfo.language.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建语言")
-    public BaseResponse<String> save(@Valid @RequestBody LanguagePostDTO dto) {
-        return BaseResponse.success(service.save(dto));
+    public BaseResponse<String> create(@Valid @RequestBody LanguagePostDTO dto) {
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -158,7 +158,7 @@ public class LanguageController {
     @PutMapping
     @Operation(summary = "更新语言")
     public BaseResponse<Boolean> update(@Valid @RequestBody LanguagePutDTO dto) {
-        return BaseResponse.success(service.updateById(dto));
+        return BaseResponse.success(service.update(dto));
     }
 
     /**

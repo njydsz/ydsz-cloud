@@ -3,6 +3,7 @@ package com.njydsz.message.server.service.impl.core;
 import java.time.Duration;
 import java.util.Map;
 
+import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageAlertService {
 
     private final RedisService redisService;
+    private final IdempotentStrategy idempotentStrategy;
     private final RealtimeStatsService realtimeStatsService;
     private final MessageService messageService;
     /** OD-2: 延迟分位数统一到 MessageMetrics (Micrometer Timer) */
@@ -122,9 +124,8 @@ public class MessageAlertService {
     private void sendAlert(String alertKey, String message) {
         try {
             // 去重检查
-            Boolean isNew = redisService.opsForValue()
-                    .setIfAbsent(ALERT_DEDUP_PREFIX + alertKey, "1", Duration.ofSeconds(ALERT_DEDUP_TTL));
-            if (!Boolean.TRUE.equals(isNew)) {
+            String alertToken = idempotentStrategy.acquire(ALERT_DEDUP_PREFIX + alertKey, ALERT_DEDUP_TTL * 1000L);
+            if (alertToken == null) {
                 log.debug("[Alert] 告警去重跳过: {}", alertKey);
                 return;
             }

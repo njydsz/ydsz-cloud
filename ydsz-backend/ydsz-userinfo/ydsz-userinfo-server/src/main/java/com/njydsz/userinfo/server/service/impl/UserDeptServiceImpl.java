@@ -45,6 +45,7 @@ public class UserDeptServiceImpl implements UserDeptService {
     @Override
     public List<UserDept> list() {
         LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserDept::getDeleted, 0);
         return mapper.selectList(wrapper);
     }
 

@@ -1,10 +1,8 @@
 package com.njydsz.message.server.service.impl.core;
 
-import java.time.Duration;
-
-import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.core.DedupService;
@@ -15,8 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 智能去重服务实现（P2-1）。
  *
- * <p>使用 Redis {@code SET NX EX}（{@link RedisService#opsForValue()
- * #setIfAbsent(key, value, Duration)}）实现原子去重：
+ * <p>使用 {@link IdempotentStrategy#acquire} 实现原子去重：
  * <ul>
  *   <li>首次写入成功 → 返回 true（允许发送）</li>
  *   <li>窗口内重复写入失败 → 返回 false（跳过发送）</li>
@@ -33,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DedupServiceImpl implements DedupService {
 
-    /** Redis 模板（SET NX EX 原子去重） */
-    private final RedisService redisService;
+    /** 幂等策略（SET NX EX 原子去重） */
+    private final IdempotentStrategy idempotentStrategy;
     /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
@@ -49,18 +46,12 @@ public class DedupServiceImpl implements DedupService {
         }
         int ttl = cfg.getTtlSeconds() <= 0 ? 60 : cfg.getTtlSeconds();
         String redisKey = MessageConstants.DEDUP_KEY_PREFIX + dedupKey;
-        try {
-            Boolean acquired = redisService.opsForValue()
-                    .setIfAbsent(redisKey, "1", Duration.ofSeconds(ttl));
-            if (Boolean.TRUE.equals(acquired)) {
-                log.debug("[Dedup] 首次到达,放行: key={} ttl={}s", dedupKey, ttl);
-                return true;
-            }
-            log.info("[Dedup] 检测到重复消息,跳过发送: key={} ttl={}s", dedupKey, ttl);
-            return false;
-        } catch (Exception e) {
-            log.warn("[Dedup] Redis 异常,fail-open 放行: key={} err={}", dedupKey, e.getMessage(), e);
+        String token = idempotentStrategy.acquire(redisKey, ttl * 1000L);
+        if (token != null) {
+            log.debug("[Dedup] 首次到达,放行: key={} ttl={}s", dedupKey, ttl);
             return true;
         }
+        log.info("[Dedup] 检测到重复消息,跳过发送: key={} ttl={}s", dedupKey, ttl);
+        return false;
     }
 }

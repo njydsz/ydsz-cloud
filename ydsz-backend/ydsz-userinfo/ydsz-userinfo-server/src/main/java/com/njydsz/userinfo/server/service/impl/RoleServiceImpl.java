@@ -101,7 +101,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public Page<RoleVO> page(RolePageQueryDTO query) {
-        Page<Role> page = new Page<>(query.getSafePageNum(), query.getSafePageSize());
+        Page<Role> page = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
         if (query.getRoleCode() != null && !query.getRoleCode().isBlank()) {
             wrapper.like(Role::getRoleCode, query.getRoleCode());
@@ -288,15 +288,5 @@ public class RoleServiceImpl implements RoleService {
             }
         }
         return result;
-    }
-
-    /**
-     * 将 DO 转换为 VO，使用 MapStruct 转换器
-     *
-     * @param entity 数据库实体
-     * @return 视图对象
-     */
-    private RoleVO UserInfoConverter.INSTANT.entityToVO(Role entity) {
-        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 }

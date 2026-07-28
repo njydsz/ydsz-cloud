@@ -7,6 +7,7 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
@@ -66,6 +67,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
     private final MsgLogMapper msgLogMapper;
     private final MessageMetrics messageMetrics;
     private final RedisService redisService;
+    private final IdempotentStrategy idempotentStrategy;
 
     @Override
     public void onMessage(MessageExt messageExt) {
@@ -80,9 +82,8 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
 
         // Redis SET NX EX 幂等去重:防止 rebalance 重投导致重复处理
         String idempotentKey = DLQ_IDEMPOTENT_PREFIX + msgId;
-        Boolean acquired = redisService.opsForValue()
-                .setIfAbsent(idempotentKey, "1", Duration.ofSeconds(DLQ_IDEMPOTENT_TTL_SECONDS));
-        if (!Boolean.TRUE.equals(acquired)) {
+        String dlqToken = idempotentStrategy.acquire(idempotentKey, DLQ_IDEMPOTENT_TTL_SECONDS * 1000L);
+        if (dlqToken == null) {
             log.info("[MessageDlqConsumer] 重复死信已跳过: msgId={}", msgId);
             return;
         }

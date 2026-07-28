@@ -167,14 +167,4 @@ public class PostServiceImpl implements PostService {
                         LinkedHashMap::new
                 ));
     }
-
-    /**
-     * 将 DO 转换为 VO，使用 MapStruct 转换器
-     *
-     * @param entity 数据库实体
-     * @return 视图对象
-     */
-    private PostVO UserInfoConverter.INSTANT.entityToVO(Post entity) {
-        return UserInfoConverter.INSTANT.entityToVO(entity);
-    }
 }

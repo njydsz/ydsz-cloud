@@ -177,14 +177,4 @@ public class MenuServiceImpl implements MenuService {
                 MenuTreeVO::setChildren,
                 MenuTreeVO::getSortOrder);
     }
-
-    /**
-     * 将 DO 转换为 VO，使用 MapStruct 转换器
-     *
-     * @param entity 数据库实体
-     * @return 视图对象
-     */
-    private MenuVO UserInfoConverter.INSTANT.entityToVO(Menu entity) {
-        return UserInfoConverter.INSTANT.entityToVO(entity);
-    }
 }

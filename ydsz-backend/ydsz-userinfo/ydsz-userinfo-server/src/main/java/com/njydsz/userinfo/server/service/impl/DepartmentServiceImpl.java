@@ -61,7 +61,6 @@ import com.njydsz.userinfo.domain.converter.UserInfoConverter;
  *
  * @see DepartmentService Service 接口
  * @see Department 部门实体
- * @see com.njydsz.userinfo.web.controller.DepartmentController 部门 Controller
  */
 @Slf4j
 @Service
@@ -261,15 +260,5 @@ public class DepartmentServiceImpl implements DepartmentService {
             }
         }
         return result;
-    }
-
-    /**
-     * 将 DO 转换为 VO，使用 MapStruct 转换器
-     *
-     * @param entity 数据库实体
-     * @return 视图对象
-     */
-    private DepartmentVO UserInfoConverter.INSTANT.entityToVO(Department entity) {
-        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 }
