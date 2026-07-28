@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.domain.vo;
 
+import java.time.LocalDateTime;
 import java.io.Serial;
 import java.io.Serializable;
 import lombok.Data;

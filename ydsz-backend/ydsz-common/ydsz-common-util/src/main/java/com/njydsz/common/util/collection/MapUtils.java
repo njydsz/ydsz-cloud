@@ -1123,4 +1123,104 @@ public class MapUtils {
         }
         return true;
     }
+
+    // ==================== JSON Map 安全转换 ====================
+
+    /**
+     * 将 {@code Map<?,?>} 安全转换为 {@code Map<String, Object>}。
+     *
+     * <p>用于 JSON 反序列化后 Map 的类型归一化：当 JSON 解析器返回
+     * {@code Map<?, ?>}（如 FastJSON / Jackson 的默认行为）时，
+     * 调用本方法将其强转为 {@code Map<String, Object>} 以便业务使用。
+     *
+     * <p>本方法仅做 unchecked cast，不复制 Map（性能优先）；
+     * 若需要深拷贝请使用 {@link #deepCopy(Map)}。
+     *
+     * @param map 原始 Map（可为 null）
+     * @return 强转后的 Map；入参为 null 时返回空 Map
+     */
+    public static Map<String, Object> toStringObjectMap(Map<?, ?> map) {
+        if (map == null) {
+            return newHashMap();
+        }
+        Map<String, Object> result = new LinkedHashMap<>(map.size());
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            result.put(String.valueOf(entry.getKey()), entry.getValue());
+        }
+        return result;
+    }
+
+    /**
+     * 安全将 {@code Object} 强转为 {@code List<T>}。
+     *
+     * <p>典型场景：从 JSON Map 中按 key 取出一个 List 字段（值为
+     * {@code List<?>} 或 {@code List<Map<String,Object>>}），
+     * 需要按元素类型逐个 cast。
+     *
+     * <p>入参为 null / 非 List 时返回空 List（不抛异常）。
+     * 元素类型不匹配时跳过该元素（不抛 ClassCastException）。
+     *
+     * @param obj     原始对象
+     * @param element 元素类型
+     * @param <T>     元素泛型
+     * @return 类型安全的 List
+     */
+    public static <T> List<T> safeCastList(Object obj, Class<T> element) {
+        if (!(obj instanceof List<?> raw)) {
+            return List.of();
+        }
+        List<T> result = new java.util.ArrayList<>(raw.size());
+        for (Object item : raw) {
+            if (element.isInstance(item)) {
+                result.add(element.cast(item));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 从 Map 中按 key 获取 {@code List<Map<String, Object>>} 值。
+     *
+     * <p>用于解析嵌套 JSON Map：取出某个 key 对应的 List，
+     * 其中每个元素强制为 {@code Map<String, Object>}。
+     * 入参为 null / 非 List / 元素非 Map 时返回空 List。
+     *
+     * @param map 原始 Map
+     * @param key 键
+     * @return List of Map；不可变空 List 表示取不到
+     */
+    public static List<Map<String, Object>> getListOfMaps(Map<String, Object> map, String key) {
+        if (isEmpty(map) || key == null) {
+            return List.of();
+        }
+        Object val = map.get(key);
+        if (!(val instanceof List<?> raw)) {
+            return List.of();
+        }
+        List<Map<String, Object>> result = new java.util.ArrayList<>(raw.size());
+        for (Object item : raw) {
+            if (item instanceof Map<?, ?> m) {
+                result.add(toStringObjectMap(m));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 安全将 {@code Object} 强转为 {@code Map<String, Object>}。
+     *
+     * <p>典型场景：从 JSON Map 中按 key 取出一个 Object 字段（值为
+     * {@code Map<?, ?>}），需要将其归一化为 {@code Map<String, Object>}。
+     *
+     * <p>入参为 null / 非 Map 时返回 null（不抛异常）。
+     *
+     * @param obj 原始对象
+     * @return 强转后的 Map；入参为 null 或非 Map 时返回 null
+     */
+    public static Map<String, Object> safeCastMap(Object obj) {
+        if (!(obj instanceof Map<?, ?> raw)) {
+            return null;
+        }
+        return toStringObjectMap(raw);
+    }
 }

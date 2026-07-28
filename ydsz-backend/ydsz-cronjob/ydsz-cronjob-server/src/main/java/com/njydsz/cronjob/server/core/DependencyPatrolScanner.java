@@ -20,6 +20,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * P2-10: 依赖巡检与自愈机制。
@@ -61,6 +62,7 @@ public class DependencyPatrolScanner {
      *
      * <p>默认每 10 分钟执行一次，仅 Leader 节点运行。
      */
+    @DistributedScheduled(lockKey = "cronjob:dependency-patrol")
     @Scheduled(fixedDelayString = "${ydsz.cronjob.dependency-patrol.interval-ms:600000}")
     public void patrol() {
         if (!leaderElector.isLeader(leaderRole)) {

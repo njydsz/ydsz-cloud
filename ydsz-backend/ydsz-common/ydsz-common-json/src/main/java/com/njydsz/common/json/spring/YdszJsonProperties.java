@@ -1,5 +1,8 @@
 package com.njydsz.common.json.spring;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
@@ -24,6 +27,8 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  *     max-depth: 256
  *     safe-mode: true
  *     monitoring-enabled: false
+ *     whitelist-packages:
+ *       - com.njydsz
  * }</pre>
  *
  * @author ydsz-team
@@ -67,6 +72,14 @@ public class YdszJsonProperties {
 
     /** 是否使用 BigDecimal 解析浮点数（金融场景精度保护） */
     private boolean useBigDecimal = false;
+
+    /**
+     * 启动时扫描 @YdszJsonClass 注解类的基础包列表。
+     *
+     * <p>扫描结果会注册到 {@code AutoTypeChecker} 白名单，避免运行时反射加载类的副作用。
+     * 默认扫描 {@code com.njydsz} 包，覆盖所有项目业务代码。</p>
+     */
+    private List<String> whitelistPackages = Arrays.asList("com.njydsz");
 
     // --- enabled ---
 
@@ -186,5 +199,15 @@ public class YdszJsonProperties {
 
     public void setUseBigDecimal(boolean useBigDecimal) {
         this.useBigDecimal = useBigDecimal;
+    }
+
+    // --- whitelistPackages ---
+
+    public List<String> getWhitelistPackages() {
+        return whitelistPackages;
+    }
+
+    public void setWhitelistPackages(List<String> whitelistPackages) {
+        this.whitelistPackages = whitelistPackages;
     }
 }

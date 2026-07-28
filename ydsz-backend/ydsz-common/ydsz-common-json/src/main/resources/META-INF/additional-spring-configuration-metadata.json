@@ -54,6 +54,11 @@
       "name": "ydsz.json.monitoring-enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用监控（默认 false）。"
+    },
+    {
+      "name": "ydsz.json.whitelist-packages",
+      "type": "java.util.List<java.lang.String>",
+      "description": "启动时扫描 @YdszJsonClass 注解类的基础包列表，扫描结果注册到 AutoTypeChecker 白名单，避免运行时反射加载类的副作用。默认 [com.njydsz]。"
     }
   ]
 }

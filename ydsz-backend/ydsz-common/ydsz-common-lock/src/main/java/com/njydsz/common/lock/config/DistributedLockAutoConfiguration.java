@@ -20,6 +20,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
 import com.njydsz.common.lock.aspect.IdempotentAspect;
 import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
@@ -210,6 +211,25 @@ public class DistributedLockAutoConfiguration {
     @ConditionalOnMissingBean
     public RepeatSubmitAspect repeatSubmitAspect(RepeatSubmitTokenService repeatSubmitTokenService) {
         return new RepeatSubmitAspect(repeatSubmitTokenService);
+    }
+
+    /**
+     * 创建分布式定时任务 AOP 切面 Bean
+     *
+     * <p>拦截 {@link com.njydsz.common.lock.annotation.DistributedScheduled} 注解方法，
+     * 确保多节点部署时同一 @Scheduled 任务同一时刻只有一个节点执行。
+     * 获取不到锁的节点直接跳过本次执行（非阻塞）。
+     *
+     * <p>降级策略：LockStrategy 不存在时直接执行任务不加锁。
+     *
+     * @param lockStrategy 锁策略（可选）
+     * @return DistributedScheduledAspect 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public DistributedScheduledAspect distributedScheduledAspect(ObjectProvider<LockStrategy> lockStrategyProvider) {
+        LockStrategy lockStrategy = lockStrategyProvider.getIfAvailable();
+        return new DistributedScheduledAspect(lockStrategy);
     }
 
     /**

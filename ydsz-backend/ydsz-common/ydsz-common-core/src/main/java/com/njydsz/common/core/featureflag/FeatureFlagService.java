@@ -23,6 +23,23 @@ public interface FeatureFlagService {
     boolean isEnabled(FeatureFlag flag, String userId);
 
     /**
+     * P2-5: 按名称判断特性开关是否启用（便捷方法，支持 @FeatureToggle 注解的动态名称）
+     *
+     * <p>此方法尝试按名称匹配 {@link FeatureFlag} 枚举，匹配失败时返回 false。
+     *
+     * @param featureName 特性开关名称
+     * @return true 表示特性已启用
+     */
+    default boolean isEnabled(String featureName) {
+        try {
+            FeatureFlag flag = FeatureFlag.valueOf(featureName.toUpperCase().replace('-', '_'));
+            return isEnabled(flag, null);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
      * 获取全部特性开关的当前快照
      *
      * @return 特性开关快照列表

@@ -1,0 +1,79 @@
+# ============================================================
+# YDSZ Falco 运行时安全规则
+# ------------------------------------------------------------
+# 对标: 阿里云容器服务 ACS / 腾讯 TKE 运行时安全
+#
+# 检测规则:
+#   1. 容器内执行 shell（非预期的交互式 shell）
+#   2. 容器内安装新软件包
+#   3. 敏感文件读取（/etc/shadow, /etc/passwd）
+#   4. 异常网络连接（非业务端口的出站连接）
+#   5. 进程提权（setuid/setgid）
+#
+# 使用方式:
+#   kubectl apply -f deploy/k8s/security/falco-rules.yaml
+#   kubectl logs -f -n falco daemonset/falco
+# ============================================================
+---
+apiVersion: falcoadapters.falcosecurity.dev/v1alpha1
+kind: FalcoSandbox
+metadata:
+  name: ydsz-runtime-security
+  namespace: falco
+spec:
+  rules: |
+    # YDSZ 自定义运行时安全规则
+    - rule: YDSZ Shell in Container
+      desc: 检测在 YDSZ 业务容器内执行的交互式 shell
+      condition: >
+        spawned_process and container and
+        proc.name in (bash, sh, zsh, ash, ksh) and
+        k8s.ns.name = "ydsz"
+      output: >
+        YDSZ 安全告警: 容器内执行 shell
+        (user=%user.name container=%container.name
+        namespace=%k8s.ns.name pod=%k8s.pod.name
+        cmd=%proc.cmdline)
+      priority: WARNING
+      tags: [container, shell, ydsz]
+
+    - rule: YDSZ Package Install in Container
+      desc: 检测在 YDSZ 容器内安装新软件包
+      condition: >
+        spawned_process and container and
+        k8s.ns.name = "ydsz" and
+        (proc.name in (apt, apt-get, yum, dnf, apk, pip, npm) or
+         proc.cmdline contains "install")
+      output: >
+        YDSZ 安全告警: 容器内安装软件包
+        (user=%user.name container=%container.name
+        pod=%k8s.pod.name cmd=%proc.cmdline)
+      priority: ERROR
+      tags: [container, package, ydsz]
+
+    - rule: YDSZ Sensitive File Access
+      desc: 检测容器内读取敏感文件
+      condition: >
+        open_read and container and
+        k8s.ns.name = "ydsz" and
+        (fd.name in (/etc/shadow, /etc/gshadow, /root/.ssh/id_rsa) or
+         fd.name startswith /etc/kubernetes)
+      output: >
+        YDSZ 安全告警: 容器内读取敏感文件
+        (user=%user.name file=%fd.name
+        pod=%k8s.pod.name container=%container.name)
+      priority: CRITICAL
+      tags: [filesystem, sensitive, ydsz]
+
+    - rule: YDSZ Unauthorized Network Connection
+      desc: 检测容器向非业务端口发起的出站连接
+      condition: >
+        outbound and container and
+        k8s.ns.name = "ydsz" and
+        not fd.sport in (80, 443, 8848, 9848, 5432, 6379, 9876, 9000, 8091)
+      output: >
+        YDSZ 安全告警: 非授权出站连接
+        (container=%container.name pod=%k8s.pod.name
+        dest=%fd.rip:%fd.rport proc=%proc.name)
+      priority: WARNING
+      tags: [network, ydsz]

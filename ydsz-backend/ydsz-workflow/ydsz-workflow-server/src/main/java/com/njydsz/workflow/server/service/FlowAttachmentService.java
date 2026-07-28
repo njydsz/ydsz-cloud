@@ -8,8 +8,20 @@ import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.workflow.domain.entity.FlowAttachment;
 
 /**
- * 流程附件服务。
- * <p>附件上传/下载/关联到任务/字段。
+ * 流程附件服务 — 审批过程中的文件上传、下载与关联管理
+ *
+ * <p>对标钉钉/飞书审批中心「附件」能力。审批人在办理任务时可上传图片、文档等附件，
+ * 附件与流程实例和任务节点关联存储，支持按任务/实例维度查询。
+ *
+ * <p><b>关联维度：</b>
+ * <ul>
+ *   <li>{@code TASK} — 任务级附件，仅关联到具体待办任务</li>
+ *   <li>{@code INSTANCE} — 实例级附件，关联到整个流程实例</li>
+ *   <li>{@code COMMENT} — 评论级附件，关联到审批意见评论</li>
+ * </ul>
+ *
+ * <p><b>存储策略：</b>附件文件存储在 common-file 模块提供的对象存储（MinIO/S3/Local）中，
+ * 数据库仅记录元数据（文件名、大小、存储路径、上传人等）。删除为逻辑删除（deleted=1）。
  *
  * @author ydsz-team
  * @since 1.0.0

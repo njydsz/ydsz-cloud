@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
+import com.njydsz.common.json.autotype.AutoTypeWhitelistScanner;
 import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.health.JsonHealthIndicator;
 import com.njydsz.common.json.metric.JsonCacheMetrics;
@@ -134,6 +135,14 @@ return converter;
 
             // 安全模式设置
             AutoTypeChecker.setSafeMode(properties.isSafeMode());
+
+            // 启动时扫描 @YdszJsonClass 注解类，注册到 AutoTypeChecker 白名单
+            // 替代原运行时反射加载方式，避免 Class.forName 的副作用
+            if (properties.getWhitelistPackages() != null
+                    && !properties.getWhitelistPackages().isEmpty()) {
+                AutoTypeWhitelistScanner.scanAndRegister(
+                        properties.getWhitelistPackages().toArray(new String[0]));
+            }
 
             // 监控设置
             if (properties.isMonitoringEnabled()) {

@@ -20,6 +20,7 @@ import com.njydsz.cronjob.server.core.scheduler.SecondLevelScheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * 熔断自动恢复扫描器（P1-5）。
@@ -69,6 +70,7 @@ public class AutoResumeScanner {
      *
      * <p>每 60 秒执行一次，仅 Leader 节点执行。
      */
+    @DistributedScheduled(lockKey = "cronjob:auto-resume")
     @Scheduled(fixedDelayString = "${ydsz.cronjob.auto-resume.interval-ms:60000}")
     public void scan() {
         if (!cronjobProperties.getLeader().isEnabled()) {

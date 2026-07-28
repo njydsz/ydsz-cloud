@@ -58,56 +58,11 @@ public final class SerializationProvider {
     private static final int LARGE_SB_CAPACITY = 16384;
 
     /**
-     * StringBuilder 池（ThreadLocal 复用，大小分级策略）
-     *
-     * <p>优化策略：</p>
-     * <ul>
-     *   <li>默认使用 MEDIUM_SB_CAPACITY（4096），适合大多数场景</li>
-     *   <li>序列化完成后，如果容量超过 MAX_SB_CAPACITY（65536），缩容到 MEDIUM_SB_CAPACITY</li>
-     *   <li>避免偶尔序列化大对象后，线程池中长期持有大缓冲区导致内存浪费</li>
-     * </ul>
+     * 所有序列化上下文状态（含 StringBuilder 池、JSONWriter 池、循环引用检测集、
+     * 视图类、列表序列化器缓存、排除字段集合、writeNulls、prettyPrint、
+     * circularRefStrategy、serializeEnumUsingOrdinal 等 11 个原 ThreadLocal 字段）
+     * 已合并到 {@link SerializationContext#CONTEXT} 单一 ThreadLocal 中。
      */
-    private static final ThreadLocal<StringBuilder> SB_POOL =
-        ThreadLocal.withInitial(() -> new StringBuilder(MEDIUM_SB_CAPACITY));
-
-    /** JSONWriter 池（ThreadLocal 复用）*/
-    static final ThreadLocal<JSONWriter> FAST_WRITER_POOL =
-        ThreadLocal.withInitial(() -> new JSONWriter(4096));
-
-    /** 循环引用检测 - 已序列化对象集合（使用 IdentityHashMap 保证引用比较）*/
-    static final ThreadLocal<Set<Object>> SERIALIZING_OBJECTS =
-        ThreadLocal.withInitial(() -> Collections.newSetFromMap(new IdentityHashMap<>(64)));
-
-    /** 当前视图类（用于字段过滤，ThreadLocal 传递上下文）*/
-    static final ThreadLocal<Class<?>> CURRENT_VIEW_CLASS = ThreadLocal.withInitial(() -> null);
-
-    /** 最近使用的列表元素序列化器缓存（ThreadLocal，避免每次列表序列化都查找 ConcurrentHashMap）*/
-    private static final ThreadLocal<AsmSerializer<Object>> CACHED_LIST_SERIALIZER =
-        ThreadLocal.withInitial(() -> null);
-
-    /** 最近使用的列表元素类型缓存（配合 CACHED_LIST_SERIALIZER 使用）*/
-    private static final ThreadLocal<Class<?>> CACHED_LIST_ELEMENT_CLASS =
-        ThreadLocal.withInitial(() -> null);
-
-    /** 是否输出 null 值（ThreadLocal）*/
-    private static final ThreadLocal<Boolean> WRITE_NULLS =
-        ThreadLocal.withInitial(() -> false);
-
-    /** 是否格式化输出（ThreadLocal）*/
-    private static final ThreadLocal<Boolean> PRETTY_PRINT =
-        ThreadLocal.withInitial(() -> false);
-
-    /** 循环引用处理策略名称（ThreadLocal）：REF / IGNORE / ERROR */
-    private static final ThreadLocal<String> CIRCULAR_REFERENCE_STRATEGY =
-        ThreadLocal.withInitial(() -> "REF");
-
-    /** 枚举是否使用序号序列化（ThreadLocal）*/
-    private static final ThreadLocal<Boolean> SERIALIZE_ENUM_USING_ORDINAL =
-        ThreadLocal.withInitial(() -> false);
-
-    /** 需要排除的字段名集合（ThreadLocal，用于列权限等场景的字段级过滤）*/
-    static final ThreadLocal<Set<String>> EXCLUDED_FIELDS =
-        ThreadLocal.withInitial(() -> null);
 
     /** Bean 序列化信息缓存*/
     private static final ConcurrentMap<Class<?>, BeanSerializerInfo> BEAN_SERIALIZER_INFO_CACHE = new ConcurrentHashMap<>(1024);
@@ -125,54 +80,48 @@ public final class SerializationProvider {
     }
 
     public static void setWriteNulls(boolean writeNulls) {
-        WRITE_NULLS.set(writeNulls);
+        SerializationContext.CONTEXT.get().writeNulls = writeNulls;
     }
 
     public static boolean isWriteNulls() {
-        return WRITE_NULLS.get();
+        return SerializationContext.CONTEXT.get().writeNulls;
     }
 
     public static void setPrettyPrint(boolean prettyPrint) {
-        PRETTY_PRINT.set(prettyPrint);
+        SerializationContext.CONTEXT.get().prettyPrint = prettyPrint;
     }
 
     public static boolean isPrettyPrint() {
-        return PRETTY_PRINT.get();
+        return SerializationContext.CONTEXT.get().prettyPrint;
     }
 
     public static void setCircularReferenceStrategy(String strategyName) {
-        CIRCULAR_REFERENCE_STRATEGY.set(strategyName);
+        SerializationContext.CONTEXT.get().circularRefStrategy = strategyName;
     }
 
     public static String getCircularReferenceStrategy() {
-        return CIRCULAR_REFERENCE_STRATEGY.get();
+        return SerializationContext.CONTEXT.get().circularRefStrategy;
     }
 
     public static void setSerializeEnumUsingOrdinal(boolean ordinal) {
-        SERIALIZE_ENUM_USING_ORDINAL.set(ordinal);
+        SerializationContext.CONTEXT.get().serializeEnumUsingOrdinal = ordinal;
     }
 
     public static boolean isSerializeEnumUsingOrdinal() {
-        return SERIALIZE_ENUM_USING_ORDINAL.get();
+        return SerializationContext.CONTEXT.get().serializeEnumUsingOrdinal;
     }
 
     /**
      * 清理当前线程的 ThreadLocal 对象
      *
      * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法</p>
+     *
+     * <p>注：11 个原 ThreadLocal 已合并到 {@link SerializationContext#CONTEXT}，
+     * 调用 {@link SerializationContext#clear()} 一次即可全部清理。
+     * {@code FieldMetadataLoader.NAMING_STRATEGY} 属于另一类，不在合并范围内，仍需单独清理。</p>
      */
     public static void clearThreadLocals() {
-        SB_POOL.remove();
-        FAST_WRITER_POOL.remove();
-        SERIALIZING_OBJECTS.remove();
-        CURRENT_VIEW_CLASS.remove();
-        CACHED_LIST_SERIALIZER.remove();
-        CACHED_LIST_ELEMENT_CLASS.remove();
-        WRITE_NULLS.remove();
-        PRETTY_PRINT.remove();
-        CIRCULAR_REFERENCE_STRATEGY.remove();
-        SERIALIZE_ENUM_USING_ORDINAL.remove();
-        EXCLUDED_FIELDS.remove();
+        SerializationContext.clear();
         FieldMetadataLoader.NAMING_STRATEGY.remove();
     }
 
@@ -185,7 +134,7 @@ public final class SerializationProvider {
      * @param fieldNames 需要排除的字段名集合，null 表示清除排除
      */
     public static void setExcludedFields(Set<String> fieldNames) {
-        EXCLUDED_FIELDS.set(fieldNames);
+        SerializationContext.CONTEXT.get().excludedFields = fieldNames;
     }
 
     /**
@@ -194,7 +143,7 @@ public final class SerializationProvider {
      * @return 排除集合，null 表示不排除任何字段
      */
     public static Set<String> getExcludedFields() {
-        return EXCLUDED_FIELDS.get();
+        return SerializationContext.CONTEXT.get().excludedFields;
     }
 
     /**
@@ -210,7 +159,7 @@ public final class SerializationProvider {
      * @return true 表示该字段应被排除
      */
     public static boolean isFieldExcluded(String keyOrName) {
-        Set<String> excluded = EXCLUDED_FIELDS.get();
+        Set<String> excluded = SerializationContext.CONTEXT.get().excludedFields;
         if (excluded == null || keyOrName == null) {
             return false;
         }
@@ -227,6 +176,68 @@ public final class SerializationProvider {
             }
         }
         return false;
+    }
+
+    // ==================== 向后兼容的静态访问器（原 ThreadLocal 字段的替代） ====================
+
+    /**
+     * 获取当前线程的 JSONWriter 池实例（替代原 {@code FAST_WRITER_POOL.get()}）。
+     *
+     * @return 当前线程的 JSONWriter
+     * @since 1.0.0
+     */
+    public static JSONWriter getFastWriterPool() {
+        return SerializationContext.CONTEXT.get().fastWriterPool;
+    }
+
+    /**
+     * 获取当前线程的视图类（替代原 {@code CURRENT_VIEW_CLASS.get()}）。
+     *
+     * @return 当前线程的视图类，null 表示无视图过滤
+     * @since 1.0.0
+     */
+    public static Class<?> getCurrentViewClass() {
+        return SerializationContext.CONTEXT.get().currentViewClass;
+    }
+
+    /**
+     * 设置当前线程的视图类（替代原 {@code CURRENT_VIEW_CLASS.set(viewClass)}）。
+     *
+     * @param viewClass 视图类，null 表示清除视图过滤
+     * @since 1.0.0
+     */
+    public static void setCurrentViewClass(Class<?> viewClass) {
+        SerializationContext.CONTEXT.get().currentViewClass = viewClass;
+    }
+
+    /**
+     * 获取当前线程的循环引用检测集合（替代原 {@code SERIALIZING_OBJECTS.get()}）。
+     *
+     * @return 当前线程的已序列化对象集合
+     * @since 1.0.0
+     */
+    public static Set<Object> getSerializingObjects() {
+        return SerializationContext.CONTEXT.get().serializingObjects;
+    }
+
+    /**
+     * 获取当前线程的 StringBuilder 池实例（替代原 {@code SB_POOL.get()}）。
+     *
+     * @return 当前线程的 StringBuilder
+     * @since 1.0.0
+     */
+    public static StringBuilder getSbPool() {
+        return SerializationContext.CONTEXT.get().sbPool;
+    }
+
+    /**
+     * 设置当前线程的 StringBuilder 池实例（替代原 {@code SB_POOL.set(sb)}）。
+     *
+     * @param sb 新的 StringBuilder 实例
+     * @since 1.0.0
+     */
+    public static void setSbPool(StringBuilder sb) {
+        SerializationContext.CONTEXT.get().sbPool = sb;
     }
 
     /**
@@ -260,7 +271,8 @@ public final class SerializationProvider {
      * @return 适合大小的 StringBuilder
      */
     private static StringBuilder getSizedStringBuilder(int estimatedSize) {
-        StringBuilder sb = SB_POOL.get();
+        SerializationContext ctx = SerializationContext.CONTEXT.get();
+        StringBuilder sb = ctx.sbPool;
 
         // 缩容保护：如果池中 StringBuilder 过大，根据预估大小缩容到合适的级别
         if (sb.capacity() > MAX_SB_CAPACITY) {
@@ -275,7 +287,7 @@ public final class SerializationProvider {
                 targetCapacity = MEDIUM_SB_CAPACITY; // 超大 JSON 缩容到中等，下次按需扩容
             }
             sb = new StringBuilder(targetCapacity);
-            SB_POOL.set(sb);
+            ctx.sbPool = sb;
         }
 
         // 扩容保护：如果预估大小超过当前容量，预分配
@@ -296,11 +308,12 @@ public final class SerializationProvider {
         }
 
         Class<?> clazz = obj.getClass();
+        SerializationContext ctx = SerializationContext.CONTEXT.get();
 
         // 快速路径：Bean 类型直接使用 ASM 序列化器，跳过 StringBuilder 中转
         if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
             try {
-                JSONWriter writer = FAST_WRITER_POOL.get();
+                JSONWriter writer = ctx.fastWriterPool;
                 writer.reset();
                 if (AsmCodecCache.trySerialize(obj, writer)) {
                     return writer.toString();
@@ -318,13 +331,13 @@ public final class SerializationProvider {
 
         // 快速路径：Collection 类型直接使用 JSONWriter，跳过 StringBuilder 中转
         if (obj instanceof Collection) {
-            JSONWriter writer = FAST_WRITER_POOL.get();
+            JSONWriter writer = ctx.fastWriterPool;
             writer.reset();
             Collection<?> coll = (Collection<?>) obj;
             if (!coll.isEmpty()) {
                 writer.preAllocate(coll.size() * 64);
                 // 优化：使用 ThreadLocal 缓存的序列化器，避免每次查找 ConcurrentHashMap
-                AsmSerializer<Object> serializer = CACHED_LIST_SERIALIZER.get();
+                AsmSerializer<Object> serializer = ctx.cachedListSerializer;
                 if (serializer == null) {
                     Object first = null;
                     if (coll instanceof List) {
@@ -337,8 +350,8 @@ public final class SerializationProvider {
                             AsmSerializer<?> rawSerializer = AsmCodecCache.getOrCreateSerializerForType(first.getClass());
                             if (rawSerializer != null) {
                                 serializer = captureSerializer(rawSerializer);
-                                CACHED_LIST_SERIALIZER.set(serializer);
-                                CACHED_LIST_ELEMENT_CLASS.set(first.getClass());
+                                ctx.cachedListSerializer = serializer;
+                                ctx.cachedListElementClass = first.getClass();
                             }
                         } catch (Exception e) {
                         }
@@ -355,7 +368,7 @@ public final class SerializationProvider {
 
         // 快速路径：Map 类型直接使用 JSONWriter
         if (obj instanceof Map) {
-            JSONWriter writer = FAST_WRITER_POOL.get();
+            JSONWriter writer = ctx.fastWriterPool;
             writer.reset();
             writer.writeMap((Map<?, ?>) obj);
             return writer.toString();
@@ -364,7 +377,7 @@ public final class SerializationProvider {
         // 使用大小分级策略获取 StringBuilder
         StringBuilder sb = getSizedStringBuilder(256);
 
-        Set<Object> objects = SERIALIZING_OBJECTS.get();
+        Set<Object> objects = ctx.serializingObjects;
         objects.clear();
 
         try {
@@ -401,7 +414,7 @@ public final class SerializationProvider {
         // 使用大小分级策略获取 StringBuilder
         StringBuilder sb = getSizedStringBuilder(256);
 
-        Set<Object> objects = SERIALIZING_OBJECTS.get();
+        Set<Object> objects = SerializationContext.CONTEXT.get().serializingObjects;
         objects.clear();
 
         try {
@@ -436,7 +449,7 @@ public final class SerializationProvider {
         // 格式化输出通常更大，使用较大的预估大小
         StringBuilder sb = getSizedStringBuilder(LARGE_SB_CAPACITY);
 
-        Set<Object> objects = SERIALIZING_OBJECTS.get();
+        Set<Object> objects = SerializationContext.CONTEXT.get().serializingObjects;
         objects.clear();
 
         try {
@@ -462,11 +475,12 @@ public final class SerializationProvider {
 
         StringBuilder sb = getSizedStringBuilder(256);
 
-        Set<Object> objects = SERIALIZING_OBJECTS.get();
+        SerializationContext ctx = SerializationContext.CONTEXT.get();
+        Set<Object> objects = ctx.serializingObjects;
         objects.clear();
 
-        Class<?> previousView = CURRENT_VIEW_CLASS.get();
-        CURRENT_VIEW_CLASS.set(viewClass);
+        Class<?> previousView = ctx.currentViewClass;
+        ctx.currentViewClass = viewClass;
         try {
             ValueWriter.writeValue(obj, sb);
         } catch (JsonSerializationException e) {
@@ -476,7 +490,7 @@ public final class SerializationProvider {
                 "Failed to serialize object with view: " + obj.getClass().getName(), e
             );
         } finally {
-            CURRENT_VIEW_CLASS.set(previousView);
+            ctx.currentViewClass = previousView;
             objects.clear();
         }
 
@@ -499,11 +513,12 @@ public final class SerializationProvider {
         // 格式化输出使用较大预估大小
         StringBuilder sb = getSizedStringBuilder(pretty ? LARGE_SB_CAPACITY : 256);
 
-        Set<Object> objects = SERIALIZING_OBJECTS.get();
+        SerializationContext ctx = SerializationContext.CONTEXT.get();
+        Set<Object> objects = ctx.serializingObjects;
         objects.clear();
 
-        Class<?> previousView = CURRENT_VIEW_CLASS.get();
-        CURRENT_VIEW_CLASS.set(viewClass);
+        Class<?> previousView = ctx.currentViewClass;
+        ctx.currentViewClass = viewClass;
         try {
             if (pretty) {
                 ValueFormatter.formatValue(obj, sb, 0);
@@ -517,7 +532,7 @@ public final class SerializationProvider {
                 "Failed to serialize object with view: " + obj.getClass().getName(), e
             );
         } finally {
-            CURRENT_VIEW_CLASS.set(previousView);
+            ctx.currentViewClass = previousView;
             objects.clear();
         }
 
@@ -557,13 +572,13 @@ public final class SerializationProvider {
         }
 
         // 检查是否有视图过滤
-        if (CURRENT_VIEW_CLASS.get() != null) {
+        if (SerializationContext.CONTEXT.get().currentViewClass != null) {
             return false;
         }
 
         // 优先使用 ASM 序列化器（直接 getter 调用，无反射开销）
         try {
-            JSONWriter writer = FAST_WRITER_POOL.get();
+            JSONWriter writer = SerializationContext.CONTEXT.get().fastWriterPool;
             writer.reset();
             if (AsmCodecCache.trySerialize(obj, writer)) {
                 sb.append(writer.toString());
@@ -591,7 +606,7 @@ public final class SerializationProvider {
         }
 
         // 使用 FastJSON2 JSONWriter 进行快速序列化（复用ThreadLocal 池）
-        JSONWriter writer = FAST_WRITER_POOL.get();
+        JSONWriter writer = SerializationContext.CONTEXT.get().fastWriterPool;
         writer.reset();
 
         BeanSerializer beanSerializer =
@@ -658,27 +673,46 @@ public final class SerializationProvider {
      * ThreadLocal 快照（用于单次配置序列化的线程安全保存/恢复）。
      *
      * <p>使用 {@link SerializationContext} 合并多个 ThreadLocal 为单一实例，
-     * 构造时捕获当前线程的 SerializationContext 快照，
+     * 构造时捕获当前线程的 SerializationContext 配置字段快照，
      * 调用 {@link #restore()} 恢复原始值。避免修改全局单例。</p>
+     *
+     * <p>注意：仅保存/恢复配置类字段（writeNulls、prettyPrint、circularRefStrategy、
+     * serializeEnumUsingOrdinal、excludedFields），不保存运行时状态字段
+     * （sbPool、fastWriterPool、serializingObjects、currentViewClass、
+     * cachedListSerializer、cachedListElementClass），因为运行时状态仅在单次
+     * 序列化调用内有意义。</p>
      *
      * @since 1.0.0
      */
     public static final class ThreadLocalSnapshot {
-        private final SerializationContext snapshot;
+        private final boolean savedWriteNulls;
+        private final boolean savedPrettyPrint;
+        private final String savedCircularRefStrategy;
+        private final boolean savedSerializeEnumUsingOrdinal;
+        private final Set<String> savedExcludedFields;
 
         /**
          * 捕获当前线程的 ThreadLocal 序列化参数快照。
          */
         public ThreadLocalSnapshot() {
-            this.snapshot = new SerializationContext();
-            this.snapshot.captureFromProvider();
+            SerializationContext ctx = SerializationContext.CONTEXT.get();
+            this.savedWriteNulls = ctx.writeNulls;
+            this.savedPrettyPrint = ctx.prettyPrint;
+            this.savedCircularRefStrategy = ctx.circularRefStrategy;
+            this.savedSerializeEnumUsingOrdinal = ctx.serializeEnumUsingOrdinal;
+            this.savedExcludedFields = ctx.excludedFields;
         }
 
         /**
          * 恢复快照中保存的 ThreadLocal 序列化参数。
          */
         public void restore() {
-            this.snapshot.applyToProvider();
+            SerializationContext ctx = SerializationContext.CONTEXT.get();
+            ctx.writeNulls = savedWriteNulls;
+            ctx.prettyPrint = savedPrettyPrint;
+            ctx.circularRefStrategy = savedCircularRefStrategy;
+            ctx.serializeEnumUsingOrdinal = savedSerializeEnumUsingOrdinal;
+            ctx.excludedFields = savedExcludedFields;
         }
     }
 }

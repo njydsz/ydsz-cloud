@@ -70,7 +70,7 @@
     {
       "name": "ydsz.json.monitoring-enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用性能监控（serializeCount / serializeTotalNanos 计数；默认 false 消除热路径开销）",
+      "description": "是否启用性能监控（通过 JsonMetricsCallback 上报 Micrometer；默认 false 消除热路径开销）",
       "defaultValue": false
     }
   ],

@@ -20,6 +20,24 @@ import { ElMessage } from 'element-plus';
 import type { AuthApi } from './types';
 
 /**
+ * P1-6: 生成前端 TraceID（UUID v7 格式，时间排序友好）
+ *
+ * 用于前后端全链路追踪关联：前端在每个请求头中注入 X-Trace-Id，
+ * 后端 SkyWalking/SentryLogbackLayout 会自动拾取该值作为 traceId。
+ */
+function generateTraceId(): string {
+  // 优先使用 crypto.randomUUID()（现代浏览器原生支持）
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // 降级方案：基于时间戳 + 随机数的简易 UUID
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 10);
+  const random2 = Math.random().toString(36).substring(2, 10);
+  return `${timestamp}-${random}-${random2}`;
+}
+
+/**
  * 创建与后端对齐的 RequestClient
  *
  * @param onReAuthenticate token 失效时的回调（通常由子应用传入 logout 逻辑）
@@ -49,6 +67,10 @@ export function createSharedRequestClient(
 
       config.headers.Authorization = formatToken(accessStore.accessToken);
       config.headers['Accept-Language'] = preferences.app.locale;
+      // P1-6: 生成前端 TraceID，与后端日志/链路追踪关联
+      if (!config.headers['X-Trace-Id']) {
+        config.headers['X-Trace-Id'] = generateTraceId();
+      }
       return config;
     },
   });

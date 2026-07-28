@@ -19,6 +19,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * 周期性告警扫描器（P3-2）。
@@ -80,6 +81,7 @@ public class AlertScanner {
      * <p>使用 {@code fixedDelayString} 而非 {@code fixedRateString}，
      * 避免上次扫描耗时较长时任务堆积。
      */
+    @DistributedScheduled(lockKey = "cronjob:alert-scan")
     @Scheduled(fixedDelayString = "${ydsz.cronjob.alert.scan-interval-ms:300000}")
     public void scan() {
         if (!cronjobProperties.getLeader().isEnabled()) {

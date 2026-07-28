@@ -19,6 +19,7 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * 每日统计聚合器（P2-3 执行历史趋势可视化）。
@@ -65,6 +66,7 @@ public class DailyStatsAggregator {
      *
      * <p>使用 cron 表达式 {@code 0 0 1 * * ?}（秒 分 时 日 月 周）。
      */
+    @DistributedScheduled(lockKey = "cronjob:daily-stats")
     @Scheduled(cron = "0 0 1 * * ?")
     public void aggregate() {
         if (!cronjobProperties.getLeader().isEnabled()) {

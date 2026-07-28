@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
+
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
@@ -32,6 +34,7 @@ public class MessageExpiryCleaner {
      * 每天凌晨 3 点执行过期清理。
      */
     @Scheduled(cron = "0 0 3 * * ?")
+    @DistributedScheduled(lockKey = "message:expiry-clean")
     public void cleanExpiredNotifications() {
         LocalDateTime now = LocalDateTime.now();
         try {

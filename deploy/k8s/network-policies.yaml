@@ -1,0 +1,284 @@
+# ============================================================
+# YDSZ K8s NetworkPolicy — 零信任网络隔离
+# ------------------------------------------------------------
+# 对标: 阿里云容器服务 ACS / 腾讯 TKE 零信任网络规范
+#
+# 策略:
+#   1. 默认拒绝所有入站/出站流量（namespace 级别）
+#   2. 分层放行: Gateway → 业务服务 → 基础设施
+#   3. 数据库/Redis Pod 仅允许业务服务访问
+#   4. Prometheus/Loki 可采集所有服务指标/日志
+#
+# 前提条件:
+#   - K8s 集群 CNI 支持 NetworkPolicy（Calico/Cilium/Antrea）
+#   - 基础设施 Pod 运行在 ydsz-infra namespace
+#
+# 使用方式:
+#   kubectl apply -f deploy/k8s/network-policies.yaml
+# ============================================================
+---
+# ============================================================
+# 1. 默认拒绝策略 — ydsz namespace 所有 Pod 入站/出站流量
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: ydsz
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# ============================================================
+# 2. Gateway 放行规则
+#    入站: 允许来自 nginx-ingress namespace 的流量
+#    出站: 允许访问所有后端微服务
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-allow-ingress
+  namespace: ydsz
+spec:
+  podSelector:
+    matchLabels:
+      app: ydsz-gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # 允许来自 Nginx Ingress Controller 的流量
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 9000
+    # 允许同 namespace 内 Prometheus 抓取 metrics
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9000
+  egress:
+    # 允许访问所有后端微服务
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: tier
+                operator: In
+                values: [backend]
+      ports:
+        - protocol: TCP
+          port: 9001
+        - protocol: TCP
+          port: 9002
+        - protocol: TCP
+          port: 9003
+        - protocol: TCP
+          port: 9004
+        - protocol: TCP
+          port: 9005
+        - protocol: TCP
+          port: 9006
+        - protocol: TCP
+          port: 9007
+        - protocol: TCP
+          port: 8800
+    # 允许 DNS 解析
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+---
+# ============================================================
+# 3. 后端微服务放行规则
+#    入站: 仅允许 Gateway + 同 namespace 内服务间调用
+#    出站: 允许访问 PostgreSQL / Redis / RocketMQ / MinIO / Nacos
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-services-allow
+  namespace: ydsz
+spec:
+  podSelector:
+    matchExpressions:
+      - key: tier
+        operator: In
+        values: [backend]
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # 允许 Gateway 访问
+    - from:
+        - podSelector:
+            matchLabels:
+              app: ydsz-gateway
+      ports:
+        - protocol: TCP
+          port: 9000
+    # 允许同 namespace 内服务间 Feign 调用
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: tier
+                operator: In
+                values: [backend]
+    # 允许 Prometheus 抓取 metrics
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9000
+  egress:
+    # 允许访问 PostgreSQL（假设在 ydsz-infra namespace）
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ydsz-infra
+          podSelector:
+            matchLabels:
+              app: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432
+    # 允许访问 Redis
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ydsz-infra
+          podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    # 允许访问 RocketMQ NameServer
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ydsz-infra
+          podSelector:
+            matchLabels:
+              app: rocketmq-nameserver
+      ports:
+        - protocol: TCP
+          port: 9876
+    # 允许访问 MinIO
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ydsz-infra
+          podSelector:
+            matchLabels:
+              app: minio
+      ports:
+        - protocol: TCP
+          port: 9000
+    # 允许访问 Nacos
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ydsz-infra
+          podSelector:
+            matchLabels:
+              app: nacos
+      ports:
+        - protocol: TCP
+          port: 8848
+        - protocol: TCP
+          port: 9848
+    # 允许访问 Seata
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ydsz-infra
+          podSelector:
+            matchLabels:
+              app: seata-server
+      ports:
+        - protocol: TCP
+          port: 8091
+    # 允许同 namespace 内服务间 Feign 调用
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: tier
+                operator: In
+                values: [backend, gateway]
+    # 允许 DNS 解析
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    # 允许访问外部 API（LLM Provider / SMS / 钉钉 / 飞书等）
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+---
+# ============================================================
+# 4. 前端放行规则
+#    入站: 允许来自 nginx-ingress 的流量
+#    出站: 仅允许访问 Gateway
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-allow
+  namespace: ydsz
+spec:
+  podSelector:
+    matchLabels:
+      app: ydsz-frontend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    # 前端仅允许访问 Gateway
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ydsz-gateway
+      ports:
+        - protocol: TCP
+          port: 9000
+    # 允许 DNS 解析
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53

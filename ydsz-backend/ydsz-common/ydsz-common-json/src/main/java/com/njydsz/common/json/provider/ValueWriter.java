@@ -424,7 +424,7 @@ public final class ValueWriter {
      * 优化列表序列化（使用 JSONWriter 直接写入，避免创建中间 String）
      */
     public static void writeListOptimized(List<?> list, StringBuilder sb) {
-        JSONWriter writer = SerializationProvider.FAST_WRITER_POOL.get();
+        JSONWriter writer = SerializationProvider.getFastWriterPool();
         writer.reset();
         writer.writeCollection(list);
         sb.append(writer.toString());
@@ -504,7 +504,7 @@ public final class ValueWriter {
                 continue;
             }
 
-            Class<?> currentView = SerializationProvider.CURRENT_VIEW_CLASS.get();
+            Class<?> currentView = SerializationProvider.getCurrentViewClass();
             if (currentView != null) {
                 YdszJsonView viewAnnotation = field.field.getAnnotation(YdszJsonView.class);
                 if (viewAnnotation == null) {
@@ -580,7 +580,7 @@ public final class ValueWriter {
      */
     public static void writeBeanNoAnnotationOptimized(Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {
         try {
-            JSONWriter writer = SerializationProvider.FAST_WRITER_POOL.get();
+            JSONWriter writer = SerializationProvider.getFastWriterPool();
             writer.reset();
             if (AsmCodecCache.trySerialize(obj, writer)) {
                 sb.append(writer.toString());
@@ -923,7 +923,7 @@ public final class ValueWriter {
      * 写入 Bean 对象（带循环引用检测）
      */
     public static void writeBeanWithCycleDetection(Object obj, StringBuilder sb) {
-        Set<Object> current = SerializationProvider.SERIALIZING_OBJECTS.get();
+        Set<Object> current = SerializationProvider.getSerializingObjects();
 
         if (current.contains(obj)) {
             sb.append("{\"$ref\":\"cycle\"}");

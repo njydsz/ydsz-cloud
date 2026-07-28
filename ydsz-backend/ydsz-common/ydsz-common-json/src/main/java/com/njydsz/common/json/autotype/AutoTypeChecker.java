@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.json.annotation.YdszJsonClass;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 
 /**
@@ -16,9 +15,9 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  * <ul>
  *   <li>黑名单检查（始终生效）：拒绝已知的危险类，即使 SafeMode=false 也生效</li>
  *   <li>内置基础类型白名单（Java 基础类型、集合、日期等）</li>
- *   <li>标注了 @YdszJsonClass 注解的类自动允许反序列化</li>
  *   <li>通过 addToWhitelist() 显式加入白名单的类</li>
- *   <li>标注了 @YdszJsonClass(autoType=true) 的类及其 seeAlso 子类型</li>
+ *   <li>启动时由 {@link AutoTypeWhitelistScanner} 扫描的 {@code @YdszJsonClass} 注解类（含 seeAlso 子类型）</li>
+ *   <li>类型检查结果缓存（TYPE_CHECK_CACHE），避免每次反序列化重复扫描黑白名单</li>
  * </ul>
  *
  * <p><b>安全模式：</b></p>
@@ -26,6 +25,14 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  *   <li>SafeMode=true（默认）：只有白名单内的类型才能反序列化</li>
  *   <li>SafeMode=false：允许任意类型反序列化（不推荐，存在 RCE 风险），但黑名单仍然生效</li>
  * </ul>
+ *
+ * <p><b>注解扫描方式：</b></p>
+ * <p>原实现通过 {@code Class.forName(name, false, ...)} 在反序列化首次遇到类型时反射加载类
+ * 检查 {@code @YdszJsonClass} 注解，存在 ServiceLoader 加载、JDBC 驱动注册等副作用风险。
+ * 现已改为由 {@link AutoTypeWhitelistScanner} 在 Spring 上下文启动时一次性扫描注册，
+ * 运行时仅做 O(1) 哈希查找，既安全又高效。</p>
+ *
+ * <p>非 Spring 场景下，请通过 {@link #addToWhitelist(String)} 显式注册所有可反序列化类型。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
@@ -55,11 +62,17 @@ public final class AutoTypeChecker {
 
     private static final Set<String> ANNOTATION_WHITELIST = ConcurrentHashMap.newKeySet();
 
-    private static final Set<String> AUTOTYPE_CLASS_CACHE = ConcurrentHashMap.newKeySet();
-
     private static final Set<String> BUILTIN_BLACKLIST = ConcurrentHashMap.newKeySet();
 
     private static final Set<String> EXPLICIT_BLACKLIST = ConcurrentHashMap.newKeySet();
+
+    /**
+     * 类型检查结果缓存（className -> 是否允许反序列化）
+     *
+     * <p>避免每次反序列化都重复扫描黑白名单集合。每个类型的检查结果只计算一次并缓存，
+     * 后续直接查缓存。当白名单/黑名单动态变更时，需调用 {@link #clearCache()} 清除缓存。</p>
+     */
+    private static final ConcurrentHashMap<String, Boolean> TYPE_CHECK_CACHE = new ConcurrentHashMap<>(256);
 
     static {
         initBuiltinWhitelist();
@@ -218,6 +231,9 @@ public final class AutoTypeChecker {
     /**
      * 判断类型是否允许反序列化
      *
+     * <p>使用 {@link #TYPE_CHECK_CACHE} 缓存检查结果，避免每次反序列化都重复扫描
+     * 黑白名单集合。当白名单/黑名单动态变更时，相关 mutator 方法会自动清除缓存。</p>
+     *
      * @param className 待检查的类全限定名
      * @return 是否允许
      */
@@ -225,6 +241,13 @@ public final class AutoTypeChecker {
         if (className == null || className.isEmpty()) {
             return true;
         }
+        return TYPE_CHECK_CACHE.computeIfAbsent(className, AutoTypeChecker::computeTypeAllowed);
+    }
+
+    /**
+     * 实际计算类型是否允许反序列化（仅首次遇到某 className 时调用，结果会被缓存）
+     */
+    private static boolean computeTypeAllowed(String className) {
         if (isBlacklisted(className)) {
             return false;
         }
@@ -246,32 +269,28 @@ public final class AutoTypeChecker {
         if (ANNOTATION_WHITELIST.contains(className)) {
             return true;
         }
-        if (AUTOTYPE_CLASS_CACHE.contains(className)) {
-            return true;
-        }
-        if (isAutoTypeClass(className)) {
-            AUTOTYPE_CLASS_CACHE.add(className);
-            return true;
-        }
+        // 注：原运行时反射检查 isAutoTypeClass 已删除
+        // @YdszJsonClass 注解扫描由 AutoTypeWhitelistScanner 在启动时完成，
+        // 启动时已将注解类（含 seeAlso 子类型）注册到 EXPLICIT_WHITELIST
         return false;
     }
 
+    /**
+     * 检查类型是否在黑名单中
+     *
+     * <p>同时阻止黑名单类的内部类（通过 {@code OuterClass$InnerClass} 命名约定）。
+     * 优化点：原实现遍历整个黑名单集合做 {@code startsWith(prefix + "$")} 匹配，
+     * 现改为先提取 {@code $} 前的外部类名再做 O(1) 哈希查找，复杂度从 O(n) 降到 O(1)。</p>
+     */
     private static boolean isBlacklisted(String className) {
-        if (BUILTIN_BLACKLIST.contains(className)) {
+        if (BUILTIN_BLACKLIST.contains(className) || EXPLICIT_BLACKLIST.contains(className)) {
             return true;
         }
-        if (EXPLICIT_BLACKLIST.contains(className)) {
-            return true;
-        }
-        for (String prefix : BUILTIN_BLACKLIST) {
-            if (className.startsWith(prefix + "$")) {
-                return true;
-            }
-        }
-        for (String prefix : EXPLICIT_BLACKLIST) {
-            if (className.startsWith(prefix + "$")) {
-                return true;
-            }
+        // 内部类检查：提取外部类名后做 O(1) 哈希查找
+        int dollarIdx = className.indexOf('$');
+        if (dollarIdx > 0) {
+            String outer = className.substring(0, dollarIdx);
+            return BUILTIN_BLACKLIST.contains(outer) || EXPLICIT_BLACKLIST.contains(outer);
         }
         return false;
     }
@@ -284,27 +303,10 @@ public final class AutoTypeChecker {
             || className.equals("void") || className.equals("java.lang.Object");
     }
 
-    private static boolean isAutoTypeClass(String className) {
-        try {
-            Class<?> clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
-            YdszJsonClass annotation = clazz.getAnnotation(YdszJsonClass.class);
-            if (annotation != null) {
-                ANNOTATION_WHITELIST.add(className);
-                Class<?>[] seeAlso = annotation.seeAlso();
-                if (seeAlso != null) {
-                    for (Class<?> sub : seeAlso) {
-                        AUTOTYPE_CLASS_CACHE.add(sub.getName());
-                    }
-                }
-                return true;
-            }
-        } catch (ClassNotFoundException | NoClassDefFoundError ignored) {
-        }
-        return false;
-    }
-
     /**
      * 显式将类型加入白名单
+     *
+     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 重新计算</p>
      *
      * @param className 类全限定名
      */
@@ -313,19 +315,25 @@ public final class AutoTypeChecker {
             throw new IllegalArgumentException("className must not be null or empty");
         }
         EXPLICIT_WHITELIST.add(className);
+        TYPE_CHECK_CACHE.clear();
     }
 
     /**
      * 从白名单中移除类型
      *
+     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 重新计算</p>
+     *
      * @param className 类全限定名
      */
     public static void removeFromWhitelist(String className) {
         EXPLICIT_WHITELIST.remove(className);
+        TYPE_CHECK_CACHE.clear();
     }
 
     /**
      * 将类型加入黑名单（即使 SafeMode=false 也会拒绝）
+     *
+     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 重新计算</p>
      *
      * @param className 类全限定名
      */
@@ -334,15 +342,19 @@ public final class AutoTypeChecker {
             throw new IllegalArgumentException("className must not be null or empty");
         }
         EXPLICIT_BLACKLIST.add(className);
+        TYPE_CHECK_CACHE.clear();
     }
 
     /**
      * 从黑名单中移除类型
      *
+     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 重新计算</p>
+     *
      * @param className 类全限定名
      */
     public static void removeFromBlacklist(String className) {
         EXPLICIT_BLACKLIST.remove(className);
+        TYPE_CHECK_CACHE.clear();
     }
 
     /**
@@ -374,10 +386,13 @@ public final class AutoTypeChecker {
     /**
      * 设置安全模式
      *
+     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 按新模式重新计算</p>
+     *
      * @param enabled true=启用安全模式（推荐），false=关闭安全模式
      */
     public static void setSafeMode(boolean enabled) {
         safeMode = enabled;
+        TYPE_CHECK_CACHE.clear();
     }
 
     /**
@@ -426,10 +441,12 @@ public final class AutoTypeChecker {
 
     /**
      * 清除所有缓存（用于测试）
+     *
+     * <p>清除注解白名单缓存以及类型检查结果缓存</p>
      */
     public static void clearCache() {
         ANNOTATION_WHITELIST.clear();
-        AUTOTYPE_CLASS_CACHE.clear();
+        TYPE_CHECK_CACHE.clear();
     }
 
     /**
@@ -438,7 +455,7 @@ public final class AutoTypeChecker {
     public static void reset() {
         EXPLICIT_WHITELIST.clear();
         ANNOTATION_WHITELIST.clear();
-        AUTOTYPE_CLASS_CACHE.clear();
+        TYPE_CHECK_CACHE.clear();
         EXPLICIT_BLACKLIST.clear();
         safeMode = true;
     }

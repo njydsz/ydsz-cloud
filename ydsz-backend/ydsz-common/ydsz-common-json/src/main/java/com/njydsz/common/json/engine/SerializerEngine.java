@@ -16,23 +16,16 @@ import com.njydsz.common.json.provider.SerializationProvider;
  * </ul>
  *
  * <p><b>性能监控说明：</b></p>
- * <p>默认关闭内置性能监控（消除 System.nanoTime + volatile 写入开销，约 60-120ns/次）。
- * 可通过 {@code -Dydsz.json.monitoring=true} 系统属性启用。</p>
+ * <p>Engine 层不再内置独立的监控计数器（避免与 {@code YdszJson.metricsCallback}
+ * 重复计数）。性能监控统一由 {@code YdszJson.recordSerialize()} 通过
+ * {@link com.njydsz.common.json.metric.JsonMetricsCallback} 回调上报，
+ * 默认 callback 为 null（短路返回，零开销）。如需对接 Micrometer 等监控系统，
+ * 通过 {@code YdszJson.setMetricsCallback(...)} 注入实现即可。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 public final class SerializerEngine {
-
-    /** 性能监控开关（默认关闭，消除热路径中 System.nanoTime + volatile 写入开销） */
-    private static final boolean MONITORING_ENABLED =
-        Boolean.getBoolean("ydsz.json.monitoring");
-
-    /** 序列化次数（仅监控开启时使用） */
-    private static volatile long serializeCount = 0;
-
-    /** 序列化总耗时纳秒（仅监控开启时使用） */
-    private static volatile long serializeTotalNanos = 0;
 
     private SerializerEngine() {
         throw new UnsupportedOperationException();
@@ -40,18 +33,11 @@ public final class SerializerEngine {
 
     /**
      * 序列化对象
+     *
+     * @param obj 对象
+     * @return JSON 字符串
      */
     public static String serialize(Object obj) {
-        if (MONITORING_ENABLED) {
-            long start = System.nanoTime();
-            try {
-                return SerializationProvider.serialize(obj);
-            } finally {
-                long elapsed = System.nanoTime() - start;
-                serializeCount++;
-                serializeTotalNanos += elapsed;
-            }
-        }
         return SerializationProvider.serialize(obj);
     }
 
@@ -63,82 +49,40 @@ public final class SerializerEngine {
      * @return JSON 字符串
      */
     public static String serialize(Object obj, long features) {
-        if (MONITORING_ENABLED) {
-            long start = System.nanoTime();
-            try {
-                return SerializationProvider.serialize(obj, features);
-            } finally {
-                long elapsed = System.nanoTime() - start;
-                serializeCount++;
-                serializeTotalNanos += elapsed;
-            }
-        }
         return SerializationProvider.serialize(obj, features);
     }
 
     /**
      * 格式化序列化（带缩进）
+     *
+     * @param obj 对象
+     * @return 格式化的 JSON 字符串
      */
     public static String format(Object obj) {
-        if (MONITORING_ENABLED) {
-            long start = System.nanoTime();
-            try {
-                return SerializationProvider.format(obj);
-            } finally {
-                long elapsed = System.nanoTime() - start;
-                serializeCount++;
-                serializeTotalNanos += elapsed;
-            }
-        }
         return SerializationProvider.format(obj);
     }
 
     /**
      * 序列化对象（带视图过滤）
+     *
+     * @param obj 对象
+     * @param viewClass 视图类
+     * @return JSON 字符串
      */
     public static String serialize(Object obj, Class<?> viewClass) {
-        if (MONITORING_ENABLED) {
-            long start = System.nanoTime();
-            try {
-                return SerializationProvider.serializeWithView(obj, viewClass);
-            } finally {
-                long elapsed = System.nanoTime() - start;
-                serializeCount++;
-                serializeTotalNanos += elapsed;
-            }
-        }
         return SerializationProvider.serializeWithView(obj, viewClass);
     }
 
     /**
      * 序列化对象（带视图过滤和配置）
+     *
+     * @param obj 对象
+     * @param viewClass 视图类
+     * @param pretty 是否格式化输出
+     * @return JSON 字符串
      */
     public static String serialize(Object obj, Class<?> viewClass, boolean pretty) {
-        if (MONITORING_ENABLED) {
-            long start = System.nanoTime();
-            try {
-                return SerializationProvider.serializeWithView(obj, viewClass, pretty);
-            } finally {
-                long elapsed = System.nanoTime() - start;
-                serializeCount++;
-                serializeTotalNanos += elapsed;
-            }
-        }
         return SerializationProvider.serializeWithView(obj, viewClass, pretty);
-    }
-
-    /**
-     * 获取序列化次数（需开启监控）
-     */
-    public static long getSerializeCount() {
-        return serializeCount;
-    }
-
-    /**
-     * 获取序列化平均耗时（纳秒，需开启监控）
-     */
-    public static double getAvgSerializeNanos() {
-        return serializeCount == 0 ? 0.0 : (double) serializeTotalNanos / serializeCount;
     }
 
     /**
@@ -149,14 +93,6 @@ public final class SerializerEngine {
     public static void clearAllCaches() {
         SerializerCache.clear();
         SerializationProvider.clearThreadLocals();
-    }
-
-    /**
-     * 重置性能统计
-     */
-    public static void resetStats() {
-        serializeCount = 0;
-        serializeTotalNanos = 0;
     }
 
     /**

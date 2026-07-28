@@ -3,7 +3,18 @@ package com.njydsz.message.domain.constant;
 import com.njydsz.common.constant.SystemConstants;
 
 /**
- * 消息通知引擎常量集中定义。
+ * 消息通知引擎常量集中定义
+ *
+ * <p>集中管理消息模块的全局常量，包括默认值、Redis Key 前缀、幂等控制参数、
+ * 限流配置、回执超时等。避免在业务代码中硬编码魔法值。
+ *
+ * <p><b>常量分组：</b>
+ * <ul>
+ *   <li><b>默认值</b>：DEFAULT_TENANT_ID / DEFAULT_LOCALE / DEFAULT_BIZ_TYPE</li>
+ *   <li><b>幂等控制</b>：IDEMPOTENT_KEY_PREFIX / IDEMPOTENT_TTL_SECONDS</li>
+ *   <li><b>Redis Key 前缀</b>：消息计数 / 已读状态 / 离线缓存 / 实时推送</li>
+ *   <li><b>限流与重试</b>：默认重试次数 / 退避基数 / 最大退避时间</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0

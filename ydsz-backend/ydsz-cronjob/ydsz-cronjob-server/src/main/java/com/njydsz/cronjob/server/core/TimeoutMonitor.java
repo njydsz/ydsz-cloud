@@ -28,6 +28,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * 任务执行超时监控器（P2-4）。
@@ -104,6 +105,7 @@ public class TimeoutMonitor {
     /**
      * 定时扫描超时日志（默认 10s 一次）。
      */
+    @DistributedScheduled(lockKey = "cronjob:timeout-monitor")
     @Scheduled(fixedDelayString = "${ydsz.cronjob.timeout-monitor.interval-ms:10000}")
     public void scan() {
         if (!cronjobProperties.getLeader().isEnabled()) {

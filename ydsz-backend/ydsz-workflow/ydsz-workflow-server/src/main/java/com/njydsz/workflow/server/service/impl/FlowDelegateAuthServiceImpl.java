@@ -21,6 +21,7 @@ import com.njydsz.workflow.domain.entity.FlowAuditLog;
 import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
+import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -110,6 +111,8 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     /** P2-5: 离线代理自动转发（@Lazy 避免循环依赖） */
     @Lazy
     private final FlowOfflineAutoForwardService offlineAutoForwardService;
+    /** 集群锁助手（定时任务幂等：多节点部署时仅一个节点执行扫描） */
+    private final FlowClusterLockHelper clusterLockHelper;
 
     /**
      * 创建委派授权

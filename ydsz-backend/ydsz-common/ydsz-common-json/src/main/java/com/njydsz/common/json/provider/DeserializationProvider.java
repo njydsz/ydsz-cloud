@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
-import com.njydsz.common.json.config.DeserializationConfig;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.parser.YdszJsonParser;
 import com.njydsz.common.json.reader.JSONReader;
@@ -19,21 +18,21 @@ import com.njydsz.common.json.reader.JSONReader;
  *
  * <p><b>核心优化：</b></p>
  * <ul>
- *   <li>零拷贝反序列。- 直接解析 JSON 到对象字段，消除 Map 中转</li>
+ *   <li>零拷贝反序列化 - 直接解析 JSON 到对象字段，消除 Map 中转</li>
  *   <li>Constructor 缓存 - 避免每次反射获取</li>
  *   <li>HashMap 字段查找 - O(1) 替代 O(n)</li>
  *   <li>快速路径 - 简单对象（基本类型字段）直接内联解析</li>
  *   <li>YdszJsonType 支持 - 泛型类型推断</li>
  *   <li>Builder 模式支持 - 链式构建对象</li>
  *   <li>Creator 模式支持 - 自定义构造函数反序列化</li>
- *   <li>多态类型支。- @YdszJsonTypeInfo 自动识别子类型</li>
+ *   <li>多态类型支持 - @YdszJsonTypeInfo 自动识别子类型</li>
  * </ul>
  *
  * <p><b>反序列化流程：</b></p>
  * <ol>
  *   <li>检查缓存 - 查找已编译的反序列化器</li>
  *   <li>选择策略 - 根据类型选择合适的反序列化方式</li>
- *   <li>执行解析 - 调用 ZeroCopyDeserializer 。YdszJsonParser</li>
+ *   <li>执行解析 - 调用 ZeroCopyDeserializer + YdszJsonParser</li>
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
  * </ol>
  *
@@ -47,14 +46,14 @@ public final class DeserializationProvider {
      *
      * <p>缓存 Class -> DeserializationStrategy 的映射，类似于序列化端的 ASM 序列化器缓存。
      * 首次反序列化某类型时，会遍历策略链（ASM -> BeanReader -> Creator -> Builder -> ZeroCopy），
-     * 找到可用策略后缓存，后续直接使用缓存策略，跳过策略选择开销。/p>
+     * 找到可用策略后缓存，后续直接使用缓存策略，跳过策略选择开销。</p>
      */
     private static final ConcurrentHashMap<Class<?>, DeserializationStrategy> STRATEGY_CACHE =
         new ConcurrentHashMap<>(256);
 
     /** 反序列化策略枚举 */
     private enum DeserializationStrategy {
-        /** 基本类型（String/Integer/Long/Double/Float/Boolean。*/
+        /** 基本类型（String/Integer/Long/Double/Float/Boolean） */
         PRIMITIVE,
         /** Object 类型 */
         OBJECT,
@@ -62,7 +61,7 @@ public final class DeserializationProvider {
         MAP,
         /** List 类型 */
         LIST,
-        /** Bean 类型 - 。BeanDeserializerEngine */
+        /** Bean 类型 - BeanDeserializerEngine */
         BEAN
     }
 
@@ -73,7 +72,6 @@ public final class DeserializationProvider {
     /**
      * 反序列化 JSON 字符串（零拷贝优化版）
      */
-    
     public static <T> T deserialize(String json, Class<T> clazz) {
         if (json == null || json.isEmpty()) {
             return null;
@@ -87,10 +85,9 @@ public final class DeserializationProvider {
             AutoTypeChecker.checkType(actualType);
         }
 
-        // 深度检查（使用全局配置）
-        DeserializationConfig config = DeserializationConfig.getInstance();
-        validateDepth(json, config.getMaxDepth());
-
+        // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护，
+        // 超阈值即抛 JsonDeserializationException，无需在此预扫描（原实现存在 O(n) 双重扫描
+        // 且不区分字符串字面量中的 { } 的逻辑缺陷）
         Object result = deserializeValue(json, actualType);
         return result != null ? clazz.cast(result) : null;
     }
@@ -134,45 +131,21 @@ public final class DeserializationProvider {
             );
         }
 
-        if (JSONReader.Feature.LimitDepth.isEnabled(features)) {
-            validateDepth(json, JSONReader.DEFAULT_MAX_DEPTH);
-        }
-
+        // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护，
+        // 无需在此预扫描（原 validateDepth 存在 O(n) 双重扫描且不区分字符串字面量的逻辑缺陷）
         return deserialize(json, clazz);
-    }
-
-    /**
-     * 验证 JSON 深度（防止栈溢出攻击）
-     */
-    private static void validateDepth(String json, int maxDepth) {
-        int depth = 0;
-        for (int i = 0; i < json.length(); i++) {
-            char c = json.charAt(i);
-            if (c == '{' || c == '[') {
-                depth++;
-                if (depth > maxDepth) {
-                    throw new JsonDeserializationException(
-                        JsonDeserializationException.PARSE_ERROR,
-                        "JSON depth limit exceeded: " + depth + " > " + maxDepth
-                    );
-                }
-            } else if (c == '}' || c == ']') {
-                depth--;
-            }
-        }
     }
 
     /**
      * 解析多态类型
      *
      * <p>如果目标类有 @YdszJsonTypeInfo 注解，则根据 JSON 中的类型属性值
-     * 识别具体子类型并返回。/p>
+     * 识别具体子类型并返回。</p>
      *
      * @param json JSON 字符串
      * @param baseType 基类
      * @return 解析后的具体类型，如果不支持多态返回基类
      */
-    
     private static Class<?> resolvePolymorphicType(String json, Class<?> baseType) {
         return PolymorphicTypeResolver.resolveType(json, baseType);
     }
@@ -208,9 +181,8 @@ public final class DeserializationProvider {
     }
 
     /**
-     * 反序列化 JSON 字符串（支持 Type。
+     * 反序列化 JSON 字符串（支持 Type）
      */
-    
     public static <T> T deserialize(String json, Type type) {
         if (json == null || json.isEmpty()) {
             return null;

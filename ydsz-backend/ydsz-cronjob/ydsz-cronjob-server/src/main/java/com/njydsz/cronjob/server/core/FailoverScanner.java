@@ -28,6 +28,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * 失败自动转移扫描器（P1-4）。
@@ -126,6 +127,7 @@ public class FailoverScanner {
      * 避免上次扫描耗时较长时任务堆积。
      * 配置项 {@code ydsz.cronjob.failover.scan-interval-ms} 为毫秒值（默认 30000）。
      */
+    @DistributedScheduled(lockKey = "cronjob:failover-scan")
     @Scheduled(fixedDelayString = "${ydsz.cronjob.failover.scan-interval-ms:30000}")
     public void scan() {
         if (!cronjobProperties.getFailover().isEnabled()) {

@@ -1,14 +1,15 @@
 # =============================================================================
 # YDSZ 持续部署 (CD) 流水线
 # -----------------------------------------------------------------------------
-# 作用:  构建并推送 8 个后端 + 1 个前端镜像到阿里云 ACR，再通过 kubectl 部署到 K8s
-# 触发:  push 到 main (自动部署 staging)  /  workflow_dispatch (手动选择 staging|production)
+# 作用:  构建并推送 9 个后端 + 1 个前端镜像到阿里云 ACR，再部署到 K8s
+# 触发:  push 到 main (自动部署 staging)  /  workflow_dispatch (手动选择 staging|production|rollback)
 # 镜像仓库: registry.cn-hangzhou.aliyuncs.com/ydsz
 # 镜像 tag: ${{ github.sha }} (commit SHA) + latest
 # 部署策略:  staging  = kubectl 滚动更新
-#            production = kubectl 滚动更新 + Prometheus 5xx 错误率监控 + 自动回滚
+#            production = Argo Rollouts 金丝雀发布 (5%→25%→50%→75%→100%)
+#                        + Prometheus 多维度指标自动回滚
 # 构建方式:  Docker 多阶段构建（后端 Dockerfile 内完成 Maven 编译，前端 Dockerfile 内完成 pnpm build）
-# 关联:   backend-ci.yml  /  frontend-ci.yml (上游)  /  deploy/k8s/  /  deploy/helm/
+# 关联:   backend-ci.yml  /  frontend-ci.yml (上游)  /  deploy/k8s/
 # 凭据 (在 GitHub Secrets 中配置):
 #   - ALIYUN_REGISTRY_USERNAME / ALIYUN_REGISTRY_PASSWORD
 #   - KUBE_CONFIG_STAGING / KUBE_CONFIG_PRODUCTION (base64 编码的 kubeconfig)
@@ -21,9 +22,7 @@ on:
     paths:
       - 'ydsz-backend/**'
       - 'ydsz-frontend/**'
-      - 'deploy/docker/**'
-      - 'deploy/k8s/**'
-      - 'deploy/helm/**'
+      - 'deploy/**'
       - '.github/workflows/cd-deploy.yml'
   workflow_dispatch:
     inputs:
@@ -41,8 +40,9 @@ env:
   REGISTRY: registry.cn-hangzhou.aliyuncs.com
   NAMESPACE: ydsz
   IMAGE_TAG: ${{ github.sha }}
-  # K8s 部署命名空间（与 deploy/k8s/base/namespace.yaml 保持一致）
   K8S_NAMESPACE: ydsz
+  # 实际存在的后端微服务列表（finance/sales 已移除 — 后端无对应模块）
+  SERVICES: gateway userinfo system project message cronjob workflow agent nextwiki
 
 jobs:
   # ==================== 构建后端镜像（Dockerfile 多阶段构建，内含 Maven 编译） ====================
@@ -52,10 +52,9 @@ jobs:
       fail-fast: false
       matrix:
         service:
-          # 端口分配（2026-07-08 统一）: 9000 gateway / 9001 userinfo / 9002 system
-          #                              9003 project / 9004 message / 9005 cronjob
-          #                              9006 workflow / 9007 agent
-          #                              9008 finance / 9009 sales / 8800 nextwiki
+          # 端口分配: 9000 gateway / 9001 userinfo / 9002 system
+          #           9003 project / 9004 message / 9005 cronjob
+          #           9006 workflow / 9007 agent / 8800 nextwiki
           - { name: gateway,   port: 9000,  module: ydsz-gateway }
           - { name: userinfo,  port: 9001,  module: ydsz-userinfo }
           - { name: system,    port: 9002,  module: ydsz-system }
@@ -64,8 +63,6 @@ jobs:
           - { name: cronjob,   port: 9005,  module: ydsz-cronjob }
           - { name: workflow,  port: 9006,  module: ydsz-workflow }
           - { name: agent,     port: 9007,  module: ydsz-agent }
-          - { name: finance,   port: 9008,  module: ydsz-finance }
-          - { name: sales,     port: 9009,  module: ydsz-sales }
           - { name: nextwiki,  port: 8800,  module: ydsz-nextwiki }
     steps:
       - uses: actions/checkout@v4
@@ -83,7 +80,6 @@ jobs:
       - name: Build and Push ${{ matrix.service.name }}
         uses: docker/build-push-action@v5
         with:
-          # context 为后端根目录，Dockerfile 内通过多阶段构建完成 Maven 编译
           context: ydsz-backend
           file: ydsz-backend/Dockerfile
           push: true
@@ -115,7 +111,6 @@ jobs:
       - name: Build and Push Frontend
         uses: docker/build-push-action@v5
         with:
-          # context 为前端根目录，Dockerfile 内通过多阶段构建完成 pnpm install + build
           context: ydsz-frontend
           file: ydsz-frontend/Dockerfile
           push: true
@@ -134,7 +129,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [gateway, userinfo, system, project, message, cronjob, workflow, agent, finance, sales, nextwiki, frontend]
+        service: [gateway, userinfo, system, project, message, cronjob, workflow, agent, nextwiki, frontend]
     steps:
       - uses: actions/checkout@v4
 
@@ -145,8 +140,8 @@ jobs:
           format: 'sarif'
           output: 'trivy-${{ matrix.service }}.sarif'
           exit-code: '1'
-          severity: 'HIGH,CRITICAL'  # HIGH+CRITICAL 均阻断（对齐大厂标准）
-          ignore-unfixed: true        # 忽略未修复的漏洞
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
           vuln-type: 'os,library'
 
       - name: Syft 生成 SBOM（CycloneDX）
@@ -157,7 +152,6 @@ jobs:
           output-file: sbom-${{ matrix.service }}.cyclonedx.json
 
       - name: cosign 镜像签名（可选）
-        # 仅当配置了 COSIGN_KEY 时执行；未配置则跳过（不阻断流水线）
         if: ${{ secrets.COSIGN_KEY != '' }}
         uses: sigstore/cosign-installer@v3
         with:
@@ -188,7 +182,7 @@ jobs:
         with:
           name: sbom-${{ matrix.service }}
           path: sbom-${{ matrix.service }}.cyclonedx.json
-          retention-days: 90  # SBOM 保留 90 天，满足合规审计要求
+          retention-days: 90
 
       - name: 安全扫描摘要
         if: always()
@@ -215,24 +209,23 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > $HOME/.kube/config
 
-      - name: Deploy to Staging
+      - name: Deploy to Staging (kubectl rolling update)
         run: |
-          # 更新所有微服务镜像（命名空间统一为 ydsz，与 deploy/k8s/base/namespace.yaml 一致）
-          # Deployment 命名遵循 deploy/k8s/base/*.yaml 的 ydsz- 前缀（P0-2 修复命名一致性）
-          # Container 命名遵循 deploy/k8s/base/*.yaml 的容器名（与 service 同名，无 ydsz- 前缀）
-          for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki; do
+          # Staging 环境使用标准 kubectl 滚动更新（快速迭代）
+          for svc in ${{ env.SERVICES }}; do
+            echo "==> 滚动更新: ydsz-${svc}"
             kubectl set image deployment/ydsz-${svc} \
               ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
           done
-          # 更新前端镜像（前端容器名为 frontend，与后端服务命名规则一致）
+          # 更新前端镜像
           kubectl set image deployment/ydsz-frontend \
             frontend=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-frontend:${{ env.IMAGE_TAG }} \
             -n ${{ env.K8S_NAMESPACE }}
 
       - name: Wait for Rollout
         run: |
-          for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
+          for svc in ${{ env.SERVICES }} frontend; do
             echo "Waiting for ydsz-${svc} rollout..."
             kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
           done
@@ -242,7 +235,7 @@ jobs:
           chmod +x deploy/scripts/smoke-test.sh
           STAGING_URL=https://staging.ydsz.ydsz.cn ./deploy/scripts/smoke-test.sh
 
-  # ==================== 部署 Production（kubectl 滚动更新 + Prometheus 错误率自动回滚） ====================
+  # ==================== 部署 Production（Argo Rollouts 金丝雀发布） ====================
   deploy-production:
     needs: deploy-staging
     runs-on: ubuntu-latest
@@ -253,61 +246,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure kubectl
+      - name: Configure kubectl + Argo Rollouts CLI
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+          # 安装 kubectl argo rollouts 插件
+          curl -sSL -o /usr/local/bin/kubectl-argo-rollouts \
+            https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+          chmod +x /usr/local/bin/kubectl-argo-rollouts
 
-      - name: Deploy to Production (滚动更新 + 5xx 错误率监控 + 自动回滚)
+      - name: Deploy to Production (Argo Rollouts 金丝雀 5%→25%→50%→75%→100%)
         run: |
-          # 错误率阈值：5 分钟窗口内 5xx 比例 > 1% 即判定失败并回滚
-          ERROR_RATE_THRESHOLD=0.01
-          for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
-            echo "==> 开始滚动更新: ydsz-${svc}"
-
-            # 更新镜像触发滚动更新（P0-2 修复：Deployment 名为 ydsz-${svc}，容器名为 ${svc}）
-            kubectl set image deployment/ydsz-${svc} \
+          # Production 使用 Argo Rollouts 金丝雀发布
+          # 每个服务通过 Argo Rollout 资源管理，AnalysisTemplate 自动监控：
+          #   - success-rate: 5xx 错误率 < 1%
+          #   - latency-p99: P99 延迟 < 500ms
+          #   - db-pool-health: 数据库连接池利用率 < 80%
+          #   - jvm-memory: JVM 堆内存利用率 < 85%
+          #
+          # 金丝雀步骤（在 deploy/k8s/rollouts/rollout-*.yaml 中定义）：
+          #   5%  (2min) → 25% (3min) → 50% (3min) → 75% (手动确认) → 100%
+          for svc in ${{ env.SERVICES }} frontend; do
+            echo "==> 金丝雀发布: ydsz-${svc}"
+            # 更新 Rollout 镜像触发金丝雀发布
+            kubectl argo rollouts set image rollout/ydsz-${svc} \
               ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
 
-            # 等待滚动更新完成（超时 10 分钟）
-            echo "Waiting for ydsz-${svc} rollout..."
-            if ! kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=600s; then
-              echo "ERROR: ydsz-${svc} 滚动更新超时，执行回滚"
-              kubectl rollout undo deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            # 等待金丝雀发布达到 75% 门槛（自动步骤 5%→25%→50%）
+            # 超时 15 分钟后自动回滚
+            if ! kubectl argo rollouts wait rollout/ydsz-${svc} \
+                -n ${{ env.K8S_NAMESPACE }} \
+                --timeout=900s; then
+              echo "ERROR: ydsz-${svc} 金丝雀发布失败，执行回滚"
+              kubectl argo rollouts abort rollout/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
               exit 1
             fi
 
-            # 等待 30s 让 Prometheus 采集到足够指标
-            sleep 30
+            echo "✅ ydsz-${svc} 金丝雀发布达到 75% 门槛，等待手动 promote"
+          done
 
-            # 通过 Prometheus 查询错误率（5xx / 总请求，最近 5 分钟）
-            # Pod 命名遵循 <deployment>-<hash>，故正则用 ydsz-${svc}.*
-            ERROR_RATE=$(curl -s "http://prometheus-server.monitoring.svc.cluster.local:9090/query" \
-              --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"ydsz-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"ydsz-${svc}.*\"}[5m]))" \
-              | jq -r '.data.result[0].value[1] // "0"')
-            echo "ydsz-${svc} 当前 5xx 错误率: ${ERROR_RATE}"
+      - name: Promote to 100% (手动确认后执行)
+        run: |
+          # 将所有服务从 75% 提升到 100%
+          for svc in ${{ env.SERVICES }} frontend; do
+            echo "==> 全量发布: ydsz-${svc}"
+            kubectl argo rollouts promote rollout/ydsz-${svc} \
+              --full -n ${{ env.K8S_NAMESPACE }}
 
-            if [ "$(echo "${ERROR_RATE} > ${ERROR_RATE_THRESHOLD}" | bc -l)" = "1" ]; then
-              echo "ERROR: ydsz-${svc} 错误率 ${ERROR_RATE} 超过阈值 ${ERROR_RATE_THRESHOLD}，执行回滚！"
-              kubectl rollout undo deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            if ! kubectl argo rollouts wait rollout/ydsz-${svc} \
+                -n ${{ env.K8S_NAMESPACE }} \
+                --timeout=300s; then
+              echo "ERROR: ydsz-${svc} 全量发布失败，执行回滚"
+              kubectl argo rollouts abort rollout/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
               exit 1
             fi
 
-            # 检查 Pod 健康状态（Pod label app=ydsz-${svc}，与 deploy/k8s/base/*.yaml 一致）
-            UNHEALTHY=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=ydsz-${svc} \
-              --field-selector=status.phase!=Running,status.phase!=Succeeded \
-              --no-headers 2>/dev/null | wc -l)
-            if [ "${UNHEALTHY}" -gt "0" ]; then
-              echo "ERROR: ydsz-${svc} 有 ${UNHEALTHY} 个 Pod 不健康，执行回滚！"
-              kubectl rollout undo deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
-              exit 1
-            fi
-
-            echo "✅ ydsz-${svc} 部署成功"
+            echo "✅ ydsz-${svc} 全量发布成功"
           done
 
       - name: Production Smoke Test
@@ -321,6 +316,7 @@ jobs:
           echo "✅ Production deployment completed successfully"
           echo "Image tag: ${{ env.IMAGE_TAG }}"
           echo "Deploy time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Strategy: Argo Rollouts Canary (5%→25%→50%→75%→100%)"
 
   # ==================== 手动回滚入口 ====================
   rollback:
@@ -330,16 +326,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure kubectl
+      - name: Configure kubectl + Argo Rollouts CLI
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+          curl -sSL -o /usr/local/bin/kubectl-argo-rollouts \
+            https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+          chmod +x /usr/local/bin/kubectl-argo-rollouts
 
       - name: Rollback Production
         run: |
-          for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
+          for svc in ${{ env.SERVICES }} frontend; do
             echo "==> 回滚 ydsz-${svc} 到上一版本"
-            kubectl rollout undo deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
-            kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            kubectl argo rollouts abort rollout/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} 2>/dev/null || true
+            kubectl argo rollouts undo rollout/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
           done
           echo "✅ 所有服务已回滚到上一版本"

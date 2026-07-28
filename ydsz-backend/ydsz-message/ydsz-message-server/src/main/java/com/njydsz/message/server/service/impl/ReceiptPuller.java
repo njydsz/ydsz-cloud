@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.impl.receipt;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -11,7 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.receipt.ReceiptResult;
 import com.njydsz.message.domain.entity.core.MsgLog;
@@ -48,8 +47,8 @@ import lombok.extern.slf4j.Slf4j;
  *       超时判定优先于拉取（说明此前已尝试拉取但仍无结果）。</li>
  * </ol>
  *
- * <p>多实例部署通过 Redisson 分布式锁保证只有一个实例执行扫描，锁等待 0s（不阻塞），
- * TTL 60s，获取失败直接跳过本次扫描。
+ * <p>多实例部署通过 {@link DistributedScheduled} 注解保证只有一个实例执行扫描，
+ * 锁等待 0s（非阻塞），TTL 60s，获取失败直接跳过本次扫描。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -65,33 +64,20 @@ public class ReceiptPuller {
     private final ChannelRouter channelRouter;
     private final MessageLogService messageLogService;
     private final MessageProperties messageProperties;
-    private final DistributedLocker distributedLocker;
 
     /**
      * 定时扫描回执缺失的消息。
      *
      * <p>默认 120s 扫描一次，通过 {@code ydsz.message.receipt-pull-scan-interval-ms} 配置。
-     * 分布式锁 TTL 60s，等待 0s（不阻塞），获取失败直接跳过。
+     * 分布式锁通过 {@link DistributedScheduled} 注解自动管理，TTL 60s，获取失败直接跳过。
      */
     @Scheduled(fixedDelayString = "${ydsz.message.receipt-pull-scan-interval-ms:120000}")
+    @DistributedScheduled(lockKey = "message:receipt-pull", leaseTime = 60)
     public void scan() {
-        String lockValue = null;
         try {
-            lockValue = distributedLocker.tryLock(MessageConstants.RECEIPT_PULL_LOCK_KEY, 0, 60, TimeUnit.SECONDS);
-            if (lockValue == null) {
-                log.debug("[ReceiptPuller] 未获取锁,跳过本次扫描");
-                return;
-            }
             doScan();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("[ReceiptPuller] 扫描被中断");
         } catch (Exception e) {
             log.error("[ReceiptPuller] 扫描异常: {}", e.getMessage(), e);
-        } finally {
-            if (lockValue != null) {
-                distributedLocker.unlock(MessageConstants.RECEIPT_PULL_LOCK_KEY, lockValue);
-            }
         }
     }
 

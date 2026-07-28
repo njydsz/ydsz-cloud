@@ -8,7 +8,7 @@
 # 关联:   与 cd-deploy.yml 串行 (CI 通过 → CD 构建镜像)
 #
 # Job 编排:
-#   1. build              编译全部 9 后端模块（不执行单元测试）
+#   1. build              编译 + 单元测试全部 9 后端模块（P0-1: 测试体系接入）
 #   2. quality            Checkstyle + SpotBugs + SonarQube（SONAR_TOKEN 可选）
 #   3. security-scan      OWASP dependency-check（CVSS ≥ 7 直接失败）
 #
@@ -53,9 +53,10 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Maven Compile
-        # 仅做编译，跳过 test/verify 阶段（项目已移除全部单元测试，2026-07）
-        run: mvn -B -ntp -DskipTests compile
+      - name: Maven Compile + Unit Tests
+        # P0-1: 编译并执行单元测试（公共模块 + 业务模块）
+        # 测试失败的模块将阻断 CI
+        run: mvn -B -ntp test
 
       - name: Spotless 格式检查
         # Google Java Format 强制代码格式统一
@@ -63,9 +64,9 @@ jobs:
         run: mvn -B -ntp spotless:check -DskipTests
 
       - name: ArchUnit 架构规则测试
-        # P3-1: ArchUnit 编译期架构约束（R1-R19）
+        # P3-1: ArchUnit 编译期架构约束（R1-R23）
         # 规则类：ydsz-common-base/src/test/.../ArchitectureRulesTest.java
-        # 仅执行 common-base 模块的 ArchUnit 测试（不触发全量 test）
+        # ArchUnit 测试已在上方 mvn test 中自动执行，此处为独立确认步骤
         run: mvn -B -ntp test -pl ydsz-common/ydsz-common-base -Dtest=ArchitectureRulesTest -DfailIfNoTests=false
 
       - name: 行内 FQN 违规检测

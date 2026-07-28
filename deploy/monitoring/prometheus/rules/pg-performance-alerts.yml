@@ -1,0 +1,57 @@
+# YDSZ PostgreSQL 性能告警规则
+# P2-4: 慢 SQL / 连接池 / 缓存命中率 / 死锁 告警
+groups:
+  - name: ydsz-postgresql-performance
+    interval: 30s
+    rules:
+      # 慢查询（执行时间 > 1s）
+      - alert: PgSlowQuery
+        expr: pg_stat_statements_mean_time_seconds > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL 慢查询: {{ $labels.query }}"
+          description: "平均执行时间 {{ $value }}s 超过 1s 阈值"
+
+      # 连接数过高
+      - alert: PgTooManyConnections
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL 连接数过高"
+          description: "当前活跃连接数 {{ $value }}，超过 80 阈值"
+
+      # 缓存命中率低
+      - alert: PgLowCacheHitRatio
+        expr: |
+          1 - (pg_stat_database_blks_hit / (pg_stat_database_blks_hit + pg_stat_database_blks_read)) < 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL 缓存命中率低于 90%"
+          description: "数据库 {{ $labels.datname }} 缓存命中率为 {{ $value | humanizePercentage }}"
+
+      # 死锁检测
+      - alert: PgDeadlock
+        expr: increase(pg_stat_database_deadlocks[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL 检测到死锁"
+          description: "数据库 {{ $labels.datname }} 在过去 5 分钟内发生 {{ $value }} 次死锁"
+
+      # 数据库大小增长异常
+      - alert: PgDatabaseSizeGrowth
+        expr: |
+          rate(pg_database_size_bytes[1h]) > 104857600
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "PostgreSQL 数据库大小增长异常"
+          description: "数据库 {{ $labels.datname }} 每小时增长超过 100MB"

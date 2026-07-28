@@ -33,6 +33,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * 自愈扫描器（P3-2）。
@@ -106,6 +107,7 @@ public class SelfHealingScanner {
     /**
      * 定时扫描异常任务。
      */
+    @DistributedScheduled(lockKey = "cronjob:self-healing")
     @Scheduled(fixedDelayString = "${ydsz.cronjob.self-healing.scan-interval-ms:60000}")
     public void scan() {
         if (!cronjobProperties.getLeader().isEnabled()) {

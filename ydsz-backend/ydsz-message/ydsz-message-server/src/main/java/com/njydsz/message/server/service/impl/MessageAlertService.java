@@ -3,6 +3,7 @@ package com.njydsz.message.server.service.impl.core;
 import java.time.Duration;
 import java.util.Map;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -57,6 +58,7 @@ public class MessageAlertService {
      * 每 5 分钟检查一次告警指标。
      */
     @Scheduled(fixedDelay = 300_000)
+    @DistributedScheduled(lockKey = "message:alert-check")
     public void checkAlerts() {
         try {
             checkErrorRate();

@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.server.job;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.lock.annotation.YdszDistributedLock;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 
@@ -31,9 +31,7 @@ public class NextwikiScheduledJobs {
      * 每天凌晨 2 点清理过期回收站条目
      */
     @Scheduled(cron = "0 0 2 * * ?")
-    @YdszDistributedLock(key = "nextwiki:schedule:cleanup-trash",
-            waitTime = 0, leaseTime = 300,
-            message = "定时任务执行中", throwException = false)
+    @DistributedScheduled(lockKey = "nextwiki:cleanup-trash")
     public void cleanupExpiredTrash() {
         log.info("[NextwikiScheduledJobs] 开始清理过期回收站条目");
         int cleaned = trashDomainService.cleanupExpiredItems();
@@ -44,9 +42,7 @@ public class NextwikiScheduledJobs {
      * 每周日凌晨 3 点重建搜索索引
      */
     @Scheduled(cron = "0 0 3 * * SUN")
-    @YdszDistributedLock(key = "nextwiki:schedule:rebuild-index",
-            waitTime = 0, leaseTime = 300,
-            message = "定时任务执行中", throwException = false)
+    @DistributedScheduled(lockKey = "nextwiki:rebuild-index")
     public void rebuildSearchIndex() {
         log.info("[NextwikiScheduledJobs] 开始重建搜索索引");
         searchDomainService.rebuildAllIndices();

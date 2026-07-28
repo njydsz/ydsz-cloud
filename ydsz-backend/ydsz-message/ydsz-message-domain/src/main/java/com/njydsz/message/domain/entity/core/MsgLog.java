@@ -15,10 +15,42 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度
+ * 消息发送日志实体 — 全通道发送全量记录的事实表
+ *
+ * <p>对应数据库表 {@code ydsz_msg_log}，是消息中心的核心事实表。每条消息从创建到最终送达
+ * （或失败/死信）的完整生命周期记录均存储在此表中，支持优先级排队、消息聚合、撤回、
+ * 回执追踪、渠道路由、灰度发布、重试调度等高级能力。
+ *
+ * <p><b>核心字段分组：</b>
+ * <ul>
+ *   <li><b>标识</b>：{@code msgId}（雪花算法全局唯一）、{@code traceId}（链路追踪）</li>
+ *   <li><b>接收人</b>：{@code receiverUserId} / {@code receiverPhone} / {@code receiverEmail}（脱敏存储）</li>
+ *   <li><b>渠道与模板</b>：{@code channel}（8 通道枚举）、{@code templateCode}、{@code templateVersion}</li>
+ *   <li><b>状态</b>：{@code status}（{@link com.njydsz.message.domain.enums.core.MessageStatusEnum}）、
+ *       {@code receiptStatus}（{@link com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum}）、
+ *       {@code recallStatus}（{@link com.njydsz.message.domain.enums.receipt.RecallStatusEnum}）</li>
+ *   <li><b>重试</b>：{@code retryCount}（已重试次数）、{@code maxRetryCount}（最大重试次数）、
+ *       {@code nextRetryAt}（下次重试时间，指数退避 + 随机抖动）</li>
+ *   <li><b>优先级</b>：{@code priority}（{@link com.njydsz.message.domain.enums.core.MessagePriorityEnum}）</li>
+ *   <li><b>灰度</b>：{@code canaryBucket}（灰度桶标识，命中灰度规则时填充）</li>
+ * </ul>
+ *
+ * <p><b>索引设计：</b>
+ * <ul>
+ *   <li>唯一索引 {@code uk_msg_id}（{@code msg_id}）— 幂等去重</li>
+ *   <li>普通索引 {@code idx_user_status}（{@code receiver_user_id}, {@code status}）— 用户消息列表</li>
+ *   <li>普通索引 {@code idx_send_at}（{@code send_at}）— 时间范围查询</li>
+ *   <li>普通索引 {@code idx_retry}（{@code status}, {@code next_retry_at}）— 重试扫描</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>继承 {@link MpBaseEntity} 的 {@code tenantId} 字段，由 MyBatis 拦截器自动注入。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.enums.core.MessageStatusEnum 消息状态枚举
+ * @see com.njydsz.message.domain.enums.core.MessageChannelEnum 消息通道枚举
+ * @see com.njydsz.message.domain.enums.core.MessagePriorityEnum 消息优先级枚举
  */
 @Data
 @SuperBuilder

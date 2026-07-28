@@ -6,10 +6,20 @@ import java.util.Map;
 import lombok.Data;
 
 /**
- * 消息直接发送 DTO
+ * 消息直接发送 DTO — 业务方调用消息中心的单条发送入口
+ *
+ * <p>支持两种发送模式：
+ * <ul>
+ *   <li><b>模板发送</b>：指定 {@code templateCode} + {@code params}，由模板引擎渲染最终内容</li>
+ *   <li><b>直接发送</b>：指定 {@code content} 直接发送原始内容（不走模板，适合动态内容场景）</li>
+ * </ul>
+ *
+ * <p>发送后由 {@code MessageService.send()} 统一走渠道路由 → 限流 → 发送 → 回执 → 重试 全链路。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.message.domain.enums.core.MessageChannelEnum 消息通道枚举
  */
 @Data
 public class MessageSendDTO {

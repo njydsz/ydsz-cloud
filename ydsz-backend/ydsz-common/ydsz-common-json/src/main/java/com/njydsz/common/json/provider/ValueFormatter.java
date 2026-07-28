@@ -138,7 +138,7 @@ public final class ValueFormatter {
             return;
         }
 
-        Class<?> currentView = SerializationProvider.CURRENT_VIEW_CLASS.get();
+        Class<?> currentView = SerializationProvider.getCurrentViewClass();
         if (currentView != null) {
             List<FieldMeta> filteredFields = new ArrayList<>(fields.length);
             for (FieldMeta field : fields) {

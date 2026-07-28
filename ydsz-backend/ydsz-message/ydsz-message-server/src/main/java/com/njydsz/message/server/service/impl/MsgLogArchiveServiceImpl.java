@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.server.service.core.MsgLogArchiveService;
 
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,7 @@ public class MsgLogArchiveServiceImpl implements MsgLogArchiveService {
      * <p>cron: 秒 分 时 日 月 周。{@code 0 30 2 1 * *} = 每月 1 号 02:30:00。
      */
     @Scheduled(cron = "${ydsz.message.archive-cron:0 30 2 1 * *}")
+    @DistributedScheduled(lockKey = "message:log-archive", leaseTime = 600)
     public void scheduledArchive() {
         LocalDate today = LocalDate.now();
         log.info("[MsgLogArchive] 月度归档任务触发: {}", today);

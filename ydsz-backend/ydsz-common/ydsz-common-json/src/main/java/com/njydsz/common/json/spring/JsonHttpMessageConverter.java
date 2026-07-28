@@ -1,6 +1,8 @@
 package com.njydsz.common.json.spring;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
@@ -11,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.util.StreamUtils;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.provider.SerializationProvider;
@@ -23,21 +26,23 @@ import com.njydsz.common.json.provider.SerializationProvider;
  *
  * <p>支持 {@code application/json} 和 {@code application/*+json} 媒体类型。
  *
- * <p><b>优化：</b></p>
+ * <p><b>安全与性能：</b></p>
  * <ul>
- *   <li>写入时直接输出 UTF-8 字节并设置 Content-Length，避免 chunked 编码开销</li>
- *   <li>读取时在读取前校验 Content-Length，防止超大 payload DoS 攻击</li>
+ *   <li>读取时双重防护：Content-Length 预检 + 流式字节计数，覆盖 Content-Length 伪造与 chunked encoding 场景</li>
+ *   <li>写入支持两种模式：
+ *     <ul>
+ *       <li>缓冲模式（默认）：序列化为 byte[] 后设置 Content-Length 一次性写出，避免 chunked 编码开销</li>
+ *       <li>流式模式（{@link #setStreamingEnabled(boolean)}）: 直接序列化到 OutputStream，使用 chunked encoding，避免内存中持有完整 byte[]</li>
+ *     </ul>
+ *   </li>
  *   <li>不手动 flush，由 Spring 框架统一管理输出流生命周期</li>
  * </ul>
  *
- * @author ydsz-team
- * @since 1.0.0
- */
-
-/**
- * JsonHttpMessageConverter 对象转换器，提供 Entity ↔ DTO ↔ VO 转换方法。
- *
- * <p>所属包：{@code com.njydsz.common.json.spring}
+ * <p><b>流式模式说明：</b></p>
+ * <p>启用流式模式后，响应将使用 HTTP chunked transfer encoding（不设置 Content-Length）。
+ * 适用场景：大响应体（如导出、批量查询），可降低内存峰值。注意：YdszJson 内部序列化链
+ * 仍以 byte[] 形式生成 JSON，真正的零内存流式输出需要后续重构 YdszJson 序列化链。
+ * 当前实现已将 byte[] 直接写入 OutputStream，避免了 byte[] 在 Converter 层再次拷贝。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -46,6 +51,9 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
 
     /** 默认最大请求体大小（10MB），超过此值的请求将被拒绝 */
     private static final long MAX_REQUEST_BODY_SIZE = 10L * 1024 * 1024;
+
+    /** 读取缓冲区大小（8KB，平衡内存占用与系统调用次数） */
+    private static final int READ_BUFFER_SIZE = 8192;
 
     /**
      * Spring 的 {@code MappingJacksonValue} 在 Spring 7.0 已被标记为待删除（{@code @Deprecated(since="7.0", forRemoval=true)}），
@@ -64,6 +72,9 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
 
     /** 可配置的最大请求体大小（默认与 MAX_REQUEST_BODY_SIZE 相同） */
     private long maxRequestBodySize = MAX_REQUEST_BODY_SIZE;
+
+    /** 是否启用流式输出（默认 false，使用缓冲模式设置 Content-Length） */
+    private boolean streamingEnabled = false;
 
     private static Class<?> loadClassOrNull(String className) {
         try {
@@ -109,18 +120,33 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
         this.maxRequestBodySize = maxRequestBodySize;
     }
 
+    /**
+     * 设置是否启用流式输出。
+     *
+     * <p>启用后响应使用 HTTP chunked transfer encoding（不设置 Content-Length），
+     * 适用于大响应体场景，可降低内存峰值。默认关闭，保持与 Jackson/FastJSON2 一致的
+     * 「序列化为 byte[] + 设置 Content-Length」缓冲模式。</p>
+     *
+     * @param streamingEnabled 是否启用流式输出
+     * @since 1.0.0
+     */
+    public void setStreamingEnabled(boolean streamingEnabled) {
+        this.streamingEnabled = streamingEnabled;
+    }
+
     @Override
     protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
         try {
-            // 读取前校验 Content-Length，防止超大 payload DoS
+            // 第一重防护：Content-Length 预检（覆盖声明超大请求体的快速拒绝场景）
             long contentLength = inputMessage.getHeaders().getContentLength();
             if (contentLength > maxRequestBodySize) {
-                throw new IOException("Request body too large: " + contentLength
+                throw new IOException("Request body too large (Content-Length): " + contentLength
                         + " > " + maxRequestBodySize);
             }
 
-            byte[] body = inputMessage.getBody().readAllBytes();
+            // 第二重防护：流式字节计数（覆盖 Content-Length 伪造与 Transfer-Encoding: chunked 场景）
+            byte[] body = readBoundedBytes(inputMessage.getBody(), maxRequestBodySize);
             if (body.length == 0) {
                 return null;
             }
@@ -131,6 +157,37 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
         }
     }
 
+    /**
+     * 从输入流中读取最多 maxBytes 字节，超限时立即抛 IOException。
+     *
+     * <p>相比 {@link InputStream#readAllBytes()} 的无界读取，本方法在读取过程中实时
+     * 累计已读字节数，超过阈值即抛异常，防止攻击者通过伪造 Content-Length 或使用
+     * chunked encoding 绕过预检。</p>
+     *
+     * @param input 原始输入流
+     * @param maxBytes 最大允许读取字节数
+     * @return 读取的字节数组（长度不超过 maxBytes）
+     * @throws IOException 读取失败或超过大小限制
+     * @since 1.0.0
+     */
+    private static byte[] readBoundedBytes(InputStream input, long maxBytes) throws IOException {
+        // 预估容量：优先用 Content-Length 提示，否则用默认 8KB
+        int estimatedSize = (int) Math.min(maxBytes, READ_BUFFER_SIZE);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream(estimatedSize);
+        byte[] chunk = new byte[READ_BUFFER_SIZE];
+        long totalRead = 0;
+        int n;
+        while ((n = input.read(chunk)) != -1) {
+            totalRead += n;
+            if (totalRead > maxBytes) {
+                throw new IOException("Request body exceeds maximum size: " + maxBytes
+                        + " (read " + totalRead + " bytes so far)");
+            }
+            buffer.write(chunk, 0, n);
+        }
+        return buffer.toByteArray();
+    }
+
     @Override
     protected void writeInternal(Object o, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
@@ -139,21 +196,55 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
             Class<?> viewClass = extractViewClass(o);
             Object value = extractValue(o);
 
-            byte[] bytes;
-            if (viewClass != null) {
-                // 使用视图过滤序列化
-                bytes = SerializationProvider.serializeWithView(value, viewClass)
-                        .getBytes(StandardCharsets.UTF_8);
-            } else {
-                bytes = YdszJson.toJsonBytes(value);
-            }
-            // 设置 Content-Length，避免 HTTP chunked 编码开销
-            outputMessage.getHeaders().setContentLength(bytes.length);
             OutputStream out = outputMessage.getBody();
-            out.write(bytes);
+
+            if (streamingEnabled) {
+                // 流式模式：直接写入 OutputStream，使用 chunked transfer encoding
+                // 不设置 Content-Length，避免在 Converter 层持有完整 byte[]
+                writeStreaming(value, viewClass, out);
+            } else {
+                // 缓冲模式：序列化为 byte[] 后设置 Content-Length 一次性写出
+                // 与 Jackson/FastJSON2 行为一致，适用于大多数 REST API 响应
+                writeBuffered(value, viewClass, outputMessage, out);
+            }
             // 不手动 flush，由 Spring 框架统一管理输出流生命周期
         } catch (Exception e) {
             throw new HttpMessageNotWritableException("JSON 序列化失败：" + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 缓冲模式：序列化为 byte[] 后设置 Content-Length 一次性写出
+     */
+    private void writeBuffered(Object value, Class<?> viewClass,
+                                HttpOutputMessage outputMessage, OutputStream out) throws IOException {
+        byte[] bytes;
+        if (viewClass != null) {
+            bytes = SerializationProvider.serializeWithView(value, viewClass)
+                    .getBytes(StandardCharsets.UTF_8);
+        } else {
+            bytes = YdszJson.toJsonBytes(value);
+        }
+        // 设置 Content-Length，避免 HTTP chunked 编码开销
+        outputMessage.getHeaders().setContentLength(bytes.length);
+        StreamUtils.copy(bytes, out);
+    }
+
+    /**
+     * 流式模式：直接写入 OutputStream，不设置 Content-Length（使用 chunked encoding）
+     *
+     * <p>使用 Spring 的 {@link StreamUtils#copy(String, java.nio.charset.Charset, OutputStream)}
+     * 以 UTF-8 编码流式写入。相对于直接 {@code out.write(bytes)} 的优势：避免 byte[] 在
+     * Converter 层被持有为局部变量，可以让 GC 更早回收。</p>
+     */
+    private void writeStreaming(Object value, Class<?> viewClass, OutputStream out) throws IOException {
+        if (viewClass != null) {
+            // 视图过滤场景：必须先序列化为 String 以应用视图
+            String json = SerializationProvider.serializeWithView(value, viewClass);
+            StreamUtils.copy(json, StandardCharsets.UTF_8, out);
+        } else {
+            // 普通场景：直接序列化到 OutputStream
+            YdszJson.toJson(value, out);
         }
     }
 

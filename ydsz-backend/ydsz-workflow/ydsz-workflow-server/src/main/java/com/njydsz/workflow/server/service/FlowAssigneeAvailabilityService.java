@@ -17,8 +17,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 审批人可用性服务。
- * <p>判断审批人是否在岗/请假/离职。
+ * 审批人可用性服务 — 基于待办计数和活跃时间的智能负载感知
+ *
+ * <p>对标钉钉/飞书「审批人忙碌状态」能力。通过 Redis 统计每个审批人的当前待办数量和最后活跃时间，
+ * 为会签/或签场景提供「最空闲优先」的审批人推荐策略，避免将任务分配给已过载的用户。
+ *
+ * <p><b>状态分级：</b>
+ * <ul>
+ *   <li>{@code IDLE}（待办数 = 0）— 空闲，推荐优先分配</li>
+ *   <li>{@code NORMAL}（待办数 < 10）— 正常</li>
+ *   <li>{@code BUSY}（待办数 10~19）— 繁忙，建议降级分配</li>
+ *   <li>{@code OVERLOADED}（待办数 ≥ 20）— 过载，不建议分配</li>
+ * </ul>
+ *
+ * <p><b>Redis Key 设计：</b>
+ * <ul>
+ *   <li>{@code flow:assignee:todo_count:{userId}} — 待办计数（INCR/DECR 原子操作，TTL 7 天）</li>
+ *   <li>{@code flow:assignee:last_active:{userId}} — 最后活跃时间（ISO LocalDateTime 格式）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
