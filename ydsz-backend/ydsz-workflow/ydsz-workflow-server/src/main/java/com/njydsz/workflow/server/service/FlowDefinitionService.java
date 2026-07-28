@@ -10,9 +10,29 @@ import com.njydsz.workflow.domain.entity.FlowDefinition;
 /**
  * 流程定义 Service
  *
- * <p>提供流程部署、发布、停用、查询等能力，是工作流引擎的入口服务。
+ * <p>提供流程部署、发布、停用、查询、设计器协同编辑、版本对比与回滚等能力，是工作流引擎的入口服务。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>定义管理</b>：部署（{@link #deploy}）、发布（{@link #publish}）、停用（{@link #deprecate}）、启用/停用切换</li>
+ *   <li><b>版本管理</b>：多版本并存、灰度发布、版本对比、版本切换（{@link #switchActiveVersion}）、一键回滚（{@link #rollbackDefinition}）</li>
+ *   <li><b>设计器集成</b>：设计器数据加载/保存、节点坐标更新、协同编辑锁（{@link #lockDefinition}）</li>
+ *   <li><b>配置管理</b>：节点表单字段权限（{@link #saveFormConfig}）、节点 SLA 配置（{@link #saveSlaConfig}）</li>
+ *   <li><b>变更分析</b>：迁移影响分析（{@link #analyzeMigrationImpact}）、版本差异对比（{@link #diffVersions}）</li>
+ *   <li><b>导入导出</b>：BPMN 2.0 zip 批量导入、JSON 单个导入/导出</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>所有写操作（{@code deploy/publish/deprecate/...}）在 Service 层开启
+ * {@code @Transactional(rollbackFor = Exception.class)}，{@link #batchDeployFromZip} 内每个文件独立事务。
+ *
+ * <p><b>权限模型：</b>{@link #publish}/{@link #deprecate}/{@link #rollbackDefinition} 等高危操作要求
+ * {@code FLOW_ADMIN} 角色，由 Service 层 {@code FlowAdminGuard} 显式校验。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.server.service.impl.FlowDefinitionServiceImpl 实现类
+ * @see com.njydsz.workflow.server.guard.FlowAdminGuard 流程管理员权限校验
  */
 public interface FlowDefinitionService {
 

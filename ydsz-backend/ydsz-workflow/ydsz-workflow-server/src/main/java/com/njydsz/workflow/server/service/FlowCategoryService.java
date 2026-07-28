@@ -8,9 +8,28 @@ import com.njydsz.workflow.domain.entity.FlowCategory;
 /**
  * 流程分类服务接口
  *
- * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力。
+ * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力，
+ * 提供流程分类的 CRUD 与树形结构查询，是设计器左侧导航与发起审批时分类筛选的数据源。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>查询能力</b>：全部分类（{@link #listAll}，按 {@code sortNum} 升序）</li>
+ *   <li><b>CRUD</b>：新增（{@link #create}）/ 编辑（{@link #update}）/ 删除（{@link #delete}）</li>
+ *   <li><b>引用校验</b>：删除前校验是否有子分类或关联的流程定义，有则阻断</li>
+ *   <li><b>树形结构</b>：{@code parentId} 字段支持多级嵌套，由前端基于 {@link #listAll} 的扁平结果自行构建树</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ * 分类编码唯一性校验在 {@code @UniqueCheck} 拦截器中完成。
+ *
+ * <p><b>性能优化：</b>「查询全部分类」使用 {@code ydsz_flow_category} 索引（{@code idx_parent} + {@code idx_sort}），
+ * 全表一次性返回（分类数据量小，无分页必要）。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.server.service.impl.FlowCategoryServiceImpl 实现类
+ * @see FlowDefinition 流程定义（{@code category} 字段引用本表分类编码）
  */
 public interface FlowCategoryService {
 

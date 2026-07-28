@@ -29,6 +29,11 @@ import com.njydsz.common.lock.annotation.Idempotent;
 /**
  * 回收站 REST API
  *
+ * <p>提供回收站列表查询、文件恢复、永久删除、清空等操作。
+ * 默认保留 30 天，超期自动永久删除。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/nextwiki/trash}
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

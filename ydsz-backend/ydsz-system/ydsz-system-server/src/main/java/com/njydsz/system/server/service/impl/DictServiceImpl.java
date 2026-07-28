@@ -23,11 +23,32 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
- * 字典类型 Service 实现。
+ * 字典类型 Service 实现
  *
- * <p>集成 typeCode 唯一性校验。
+ * <p>对 {@link DictService} 接口的完整实现，是「字典中心」的核心业务逻辑层。
+ * 集成 {@code (tenantId, typeCode)} 唯一性校验、Redis 缓存失效、字典版本快照。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@code page} / {@code getById} / {@code save} / {@code updateById} / {@code removeById}，
+ *       全部走 {@code @Transactional} 事务保证</li>
+ *   <li><b>唯一性校验</b>：保存前校验 {@code (tenantId, typeCode)} 唯一性，冲突时抛 {@code BizException}</li>
+ *   <li><b>缓存联动</b>：写操作触发 {@code @CacheEvict} 失效 Redis 字典缓存
+ *       （{@code ydsz:dict:type:{typeCode}} / {@code ydsz:dict:full:{typeCode}}）</li>
+ *   <li><b>全量查询</b>：{@code listAll()} 走本地 Caffeine 缓存（5min TTL），避免下拉框渲染触发 DB</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}；
+ * 读方法不开启事务，依赖 MyBatis 自动提交。
+ *
+ * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离，租户过滤由 MyBatis 拦截器注入。
  *
  * @author ydsz-team
+ * @since 1.0.0
+ *
+ * @see DictService 字典类型 Service 接口
+ * @see com.njydsz.system.domain.entity.DictType 字典类型实体
+ * @see DictItemServiceImpl 字典项 Service 实现（依赖本类创建类型后再挂载字典项）
  */
 @Slf4j
 @Service

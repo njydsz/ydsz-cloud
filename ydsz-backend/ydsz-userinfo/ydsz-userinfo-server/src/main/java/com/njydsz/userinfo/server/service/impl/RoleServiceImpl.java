@@ -35,12 +35,37 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
- * 角色 Service 实现。
+ * 角色 Service 实现
  *
- * <p>核心能力：角色 CRUD、唯一性校验、内置角色保护、角色-权限批量分配。
+ * <p>实现 {@link RoleService} 接口，封装角色的完整业务逻辑：CRUD、roleCode 唯一性校验、
+ * 内置角色保护、角色-权限批量分配、跨服务名称富化。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li>角色 CRUD（含 roleCode 唯一性校验）</li>
+ *   <li>内置角色保护（{@code builtIn=true} 禁止删除，{@code roleCode} 不可修改）</li>
+ *   <li>删除前置校验（仍有用户关联时禁止删除，避免悬挂引用）</li>
+ *   <li>角色-权限分配（覆盖式：清空旧关联 + 批量插入新关联）</li>
+ *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）</li>
+ *   <li>数据权限隔离（{@code @DataScope} 自动追加创建人部门过滤）</li>
+ * </ul>
+ *
+ * <p><b>事务：</b>所有写操作（{@code create/update/removeById/assignPermissions}）
+ * 开启 {@code @Transactional(rollbackFor = Exception.class)}，确保任一异常触发完整回滚。
+ *
+ * <p><b>性能：</b>
+ * <ul>
+ *   <li>{@link #assignPermissions} 使用批量插入（{@code rolePermissionMapper.batchInsert}）避免 N+1</li>
+ *   <li>{@link #batchNamesByIds} 使用单条 {@code IN} 查询，单次往返</li>
+ *   <li>分页与列表查询均按 {@code sortOrder} 升序，匹配前端展示顺序</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see RoleService Service 接口
+ * @see Role 角色实体
+ * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller
  */
 @Slf4j
 @Service

@@ -26,6 +26,10 @@ import com.njydsz.common.lock.annotation.Idempotent;
 /**
  * 存储配额 REST API
  *
+ * <p>提供按用户/租户/项目维度的存储配额查询、设置和校验。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/nextwiki/quota}
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

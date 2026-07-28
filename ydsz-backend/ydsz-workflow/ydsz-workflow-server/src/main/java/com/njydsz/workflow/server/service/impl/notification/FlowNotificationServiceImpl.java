@@ -22,19 +22,86 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 工作流消息通知服务实现 — 轻量适配器
  *
- * <p>通知基础设施（outbox/template/channel/preference）已移除，通知能力由独立的
- * 消息通知引擎 {@code ydsz-message} 承载。本类仅作为 Feign 适配器，将工作流
- * 关键事件转发到 {@link NotificationClient}，遵循"尽力而为"语义（异常 try-catch
- * 吞掉，不拖垮主流程事务）。
+ * <p>对 {@link FlowNotificationService} 接口的完整实现，作为工作流引擎与
+ * 消息通知引擎（{@code ydsz-message}）之间的<b>轻量适配器</b>。
  *
- * <p>通道说明：
+ * <p><b>架构演进：</b>
  * <ul>
- *   <li>INAPP  — 通过 NotificationClient Feign 调用 notification 服务写入站内信（channel=PUSH）</li>
- *   <li>EMAIL   — 同样通过 NotificationClient 投递（channel=EMAIL），由 notification 服务负责实际邮件发送</li>
- *   <li>WEBHOOK — 通过 NotificationClient.sendMessage 委托消息中心发送到 extra.webhookUrl 指定的企业微信/钉钉机器人</li>
+ *   <li>早期版本：通知基础设施（{@code outbox / template / channel / preference}）耦合在
+ *       {@code ydsz-workflow} 模块内部，<b>已移除</b></li>
+ *   <li>当前架构：通知能力由独立的<b>消息通知引擎</b> {@code ydsz-message} 承载，
+ *       本类仅作为 Feign 适配器，将工作流关键事件转发到 {@link NotificationClient}</li>
+ *   <li>这种解耦符合大厂 B 端架构原则：<b>单一职责 + 服务化</b>，避免模块职责膨胀</li>
  * </ul>
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>通知发送（{@link #notify}）</b>：将工作流事件（待办 / 抄送 / 超时 / 终止等）转发到
+ *       消息通知引擎，由通知引擎负责实际投递</li>
+ *   <li><b>多通道支持</b>：INAPP（站内信） / EMAIL（邮件） / WEBHOOK（企业微信/钉钉机器人）</li>
+ *   <li><b>敏感数据脱敏</b>：通过 {@link FlowSensitiveMasker} 对通知内容脱敏，
+ *       避免敏感信息（手机号 / 身份证 / 银行卡）通过 IM 泄露</li>
+ *   <li><b>幂等性</b>：通过 {@code providerTraceId} 实现通知幂等，
+ *       同一事件多次通知只会发送一次</li>
+ *   <li><b>尽力而为语义</b>：所有异常 {@code try-catch} 吞掉，<b>不拖垮主流程事务</b>
+ *       —— 通知失败不应回滚审批操作</li>
+ * </ul>
+ *
+ * <p><b>通道说明：</b>
+ * <table>
+ *   <caption>通知通道映射</caption>
+ *   <tr><th>本服务入参</th><th>通知引擎处理</th><th>实际投递</th></tr>
+ *   <tr><td>{@code INAPP}</td><td>{@link NotificationClient} 写入站内信（{@code channel=PUSH}）</td>
+ *       <td>前端 WebSocket 推送 / 待办中心</td></tr>
+ *   <tr><td>{@code EMAIL}</td><td>{@link NotificationClient} 投递（{@code channel=EMAIL}）</td>
+ *       <td>SMTP / 企业邮箱</td></tr>
+ *   <tr><td>{@code WEBHOOK}</td><td>{@link NotificationClient#sendMessage} 委托消息中心</td>
+ *       <td>发送到 {@code extra.webhookUrl} 指定的企业微信 / 钉钉机器人</td></tr>
+ * </table>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>本类<b>不开启事务</b>（{@code @Transactional} 缺失），通知发送是<b>非事务性</b>操作</li>
+ *   <li>Feign 调用失败时仅记录日志，<b>不抛异常</b>，避免主流程事务回滚</li>
+ *   <li>消息可靠性由 {@code ydsz-message} 模块的 Outbox 模式保证</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>轻量适配器</b>：本类只做「事件 → 通知请求」转换 + Feign 调用，
+ *       <b>不负责</b>通知模板渲染 / 通道选择 / 用户偏好（均由 {@code ydsz-message} 处理）</li>
+ *   <li><b>敏感数据脱敏</b>：通过 {@link FlowSensitiveMasker} 对 {@code content} 字段脱敏，
+ *       避免手机号 / 身份证 / 银行卡等敏感信息通过 IM 泄露</li>
+ *   <li><b>幂等性</b>：通过 {@code providerTraceId} 实现通知幂等，
+ *       同一事件多次通知只会发送一次（由 {@code ydsz-message} 侧保证）</li>
+ *   <li><b>异常降级</b>：所有 Feign 异常 / 网络异常 {@code try-catch} 吞掉，
+ *       <b>不抛异常</b>，避免主流程事务回滚</li>
+ *   <li><b>异步非阻塞</b>：通过 Feign 的非阻塞调用实现，不阻塞主流程</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 发送待办通知（INAPP）
+ * notificationService.notify("INAPP", assigneeId, "新待办", "您有一条新待办",
+ *     "WORKFLOW_TODO", "INFO");
+ *
+ * // 发送超时告警（EMAIL）
+ * notificationService.notify("EMAIL", approverId, "审批超时",
+ *     "您的审批任务已超时 4 小时", "WORKFLOW_TIMEOUT", "WARN");
+ * }</pre>
+ *
+ * <p><b>扩展能力：</b>如需新增通知类型（如「流程完成通知」「抄送通知」），
+ * 在 {@code ydsz-message} 侧新增模板，本类无需修改即可支持。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowNotificationService 接口定义
+ * @see NotificationClient 通知中心 Feign 客户端
+ * @see MessageRequest 消息请求 DTO
+ * @see NotificationFeignDTO 通知 Feign DTO
+ * @see FlowSensitiveMasker 敏感数据脱敏器
+ * @see MessageResult 消息发送结果
  */
 @Slf4j
 @Service

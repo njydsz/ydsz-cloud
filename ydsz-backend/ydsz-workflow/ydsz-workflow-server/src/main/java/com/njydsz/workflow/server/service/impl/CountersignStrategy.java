@@ -5,27 +5,61 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 
 /**
- * 会签推进策略接口
+ * 会签推进策略接口（Strategy Pattern）
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分出的策略模式抽象。
- * 不同的会签类型（OR/PARALLEL/SEQUENTIAL/VOTE/WEIGHTED_VOTE/FOREACH_PARALLEL）有
- * 不同的通过逻辑，本接口将"完成条件判断"和"完成后的清理动作"下沉到具体策略类，
- * 主流程 {@code FlowTaskPassService} 通过工厂按 {@link FlowPerformType} 选策略。
+ * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分出的<b>策略模式</b>抽象。
+ * 不同的会签类型（{@code OR / PARALLEL / SEQUENTIAL / VOTE / WEIGHTED_VOTE / FOREACH_PARALLEL}）
+ * 有不同的「完成条件」和「完成后的清理动作」，本接口将二者下沉到具体策略类，
+ * 主流程 {@code FlowTaskPassService} 通过 {@link CountersignStrategyFactory} 工厂
+ * 按 {@link FlowPerformType} 选择策略。
+ * 是大厂 B 端工作流「灵活会签模式扩展」的关键设计。
  *
- * <p>策略实现位于同包，命名规则 {@code <Type>CountersignStrategy}。
- * 新增会签类型只需：1) 添加枚举值；2) 实现本接口并标注 {@code @Component}；
- * 3) 在工厂注册。无需修改主流程。
+ * <p><b>架构动机：</b>
+ * <ul>
+ *   <li>原单体实现 {@code FlowTaskCompleteServiceImpl} 中会签逻辑超过 600 行
+ *       （if-else 链覆盖 6+ 种会签模式）</li>
+ *   <li>使用策略模式后：每种会签模式独立成类，<b>单一职责</b>；新增模式仅需新增策略类，
+ *       <b>开闭原则</b>（对扩展开放、对修改关闭）</li>
+ *   <li>主流程 {@code FlowTaskPassService} 仅依赖本接口和工厂类，
+ *       <b>解耦</b>具体会签模式</li>
+ * </ul>
  *
- * <p>调用契约（顺序）：
+ * <p><b>策略实现清单：</b>
+ * <ul>
+ *   <li>{@link OrCountersignStrategy} — OR（依次 / 任一通过）</li>
+ *   <li>{@link ParallelCountersignStrategy} — PARALLEL（并行 / 全部通过）</li>
+ *   <li>{@link SequentialCountersignStrategy} — SEQUENTIAL（依次 / 顺序审批）</li>
+ *   <li>{@link VoteCountersignStrategy} — VOTE（投票 / 按比例）</li>
+ *   <li>{@link WeightedVoteCountersignStrategy} — WEIGHTED_VOTE（加权投票）</li>
+ *   <li>{@link ForeachCountersignStrategy} — FOREACH_PARALLEL（多元素并行）</li>
+ * </ul>
+ *
+ * <p><b>调用契约（顺序）：</b>
  * <ol>
- *   <li>{@link #preCheck(FlowRunTask, FlowTaskOperateDTO)} — 预检查（可选重写）</li>
- *   <li>{@link #onUserPassed(FlowRunTask, FlowTaskOperateDTO)} — 累加计数/标记用户已处理</li>
- *   <li>{@link #shouldAdvance(FlowRunTask)} — 决定是否满足推进条件</li>
- *   <li>{@link #onAdvance(FlowRunTask, FlowTaskOperateDTO)} — 推进前的清理（skipByNode 等）</li>
- *   <li>主流程推进 → 触发 onAdvanceAfter（事件/审计已在主流程统一处理）</li>
+ *   <li>{@link #preCheck} — 预检查（可选重写，默认 no-op）</li>
+ *   <li>{@link #onUserPassed} — 累加计数 / 标记用户已处理（必实现）</li>
+ *   <li>{@link #shouldAdvance} — 决定是否满足推进条件（必实现）</li>
+ *   <li>{@link #onAdvance} — 推进前的清理（skipByNode 等，可选重写）</li>
+ *   <li>主流程推进 → 触发 onAdvanceAfter（事件 / 审计已在主流程统一处理）</li>
  * </ol>
  *
+ * <p><b>扩展指引：</b>
+ * <p>新增会签类型只需三步：
+ * <ol>
+ *   <li>在 {@link FlowPerformType} 枚举中添加新值</li>
+ *   <li>实现本接口 + 标注 {@code @Component}</li>
+ *   <li>在 {@link CountersignStrategyFactory} 中注册新类型 → 策略映射</li>
+ * </ol>
+ * <b>无需修改主流程</b> {@code FlowTaskPassService}。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowPerformType 会签类型枚举
+ * @see CountersignStrategyFactory 策略工厂
+ * @see FlowTaskPassService 主流程（策略调用方）
+ * @see FlowRunTask 运行时任务实体
+ * @see FlowTaskOperateDTO 任务操作 DTO
  */
 public interface CountersignStrategy {
 

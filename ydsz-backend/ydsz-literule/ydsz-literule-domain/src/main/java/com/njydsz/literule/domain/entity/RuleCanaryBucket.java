@@ -23,12 +23,15 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_rule_canary_bucket")
 public class RuleCanaryBucket extends MpBaseEntity<String> {
 
+    /** 规则编码 */
     private String ruleCode;
 
     /** 桶类型：PRIMARY / CANARY */
     private String bucketType;
 
+    /** 桶命中次数 */
     private Long bucketCount;
 
+    /** 统计日期 */
     private LocalDate statDate;
 }

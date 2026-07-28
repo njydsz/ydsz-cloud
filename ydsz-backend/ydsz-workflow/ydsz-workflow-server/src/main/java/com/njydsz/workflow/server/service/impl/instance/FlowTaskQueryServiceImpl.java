@@ -30,18 +30,39 @@ import com.njydsz.common.auth.annotation.DataScope;
 /**
  * 待办任务 — 查询类 Service 实现
  *
- * <p>从原 {@code FlowTaskServiceImpl} 拆分，专注只读查询职责：
+ * <p>从原 {@code FlowTaskServiceImpl} 单体（1847 行）按职责拆分的<b>只读查询子服务</b>。
+ * 通过 {@code @DS(DataSourceConstants.SLAVE)} 强制走从库（只读副本），减轻主库压力。
+ *
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>任务详情：{@link #getById(Long)}</li>
- *   <li>待办列表：{@link #listTodoByAssignee} / {@link #listTodoByAssigneePage} / {@link #listTodoByUser}</li>
- *   <li>已办列表：{@link #listDoneByAssignee} / {@link #listDoneByAssigneePage} / {@link #listDoneByAssigneePageMulti}</li>
- *   <li>实例待办：{@link #listPendingByInstance(Long)}</li>
- *   <li>超期统计：{@link #listOverdue} / {@link #countOverdue}</li>
- *   <li>耗时统计：{@link #nodeDurationStats}</li>
- *   <li>视图转换：{@link #toView(FlowRunTask)}</li>
+ *   <li><b>任务详情</b>：{@link #getById} — 单任务查询（主键索引）</li>
+ *   <li><b>待办列表</b>：{@code listTodoByAssignee} / {@code listTodoByAssigneePage} / {@code listTodoByUser} —
+ *       分别覆盖「我的待办」「真分页」「多维匹配（直接分配 + ROLE/DEPT 展开）」</li>
+ *   <li><b>已办列表</b>：{@code listDoneByAssignee} / {@code listDoneByAssigneePage} /
+ *       {@code listDoneByAssigneePageMulti} — 真分页 + 多维筛选</li>
+ *   <li><b>实例待办</b>：{@code listPendingByInstance} — 推进器内部使用</li>
+ *   <li><b>超期统计</b>：{@code listOverdue} / {@code countOverdue} — P2-32 SLA 监控</li>
+ *   <li><b>耗时统计</b>：{@code nodeDurationStats} — P2-31 节点级效率分析</li>
+ *   <li><b>视图转换</b>：{@link #toView} — 实体转 VO</li>
  * </ul>
  *
+ * <p><b>事务边界：</b>类级别 {@code @Transactional(readOnly = true)}，所有方法走只读事务，
+ * 配合 {@code @DS(SLAVE)} 实现读写分离。
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>「我的待办」走 {@code ydsz_flow_run_task} 复合索引 {@code idx_assignee}</li>
+ *   <li>「已办分页」走 {@code idx_assignee_completed_at} 复合索引，避免大 OFFSET</li>
+ *   <li>{@code listTodoByUser} 走 {@code ydsz_flow_user} 关联表，避免 IN 子查询超过 PG 1000 上限</li>
+ *   <li>从库路由由 {@code DynamicDataSource} 切面自动完成，调用方无感知</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowTaskServiceImpl 任务服务门面
+ * @see FlowRunTask 运行时任务实体
+ * @see FlowHisTask 历史任务实体
  */
 @Slf4j
 @Service

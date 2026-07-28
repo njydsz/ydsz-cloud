@@ -11,18 +11,37 @@ import com.njydsz.workflow.domain.entity.FlowNode;
 /**
  * GAP-P1: 流程抄送服务
  *
- * <p>对标钉钉/飞书的"抄送我的"独立 Tab。
- * 对外暴露：抄送节点处理 / 分页查询 / 未读数 / 已读标记 / 实例抄送列表；
- * 对内由 {@code DefaultFlowAdvancer} 在 CC 节点触发时调用 {@link #handleCcNode} 写入。
+ * <p>对标钉钉/飞书的"抄送我的"独立 Tab，提供流程抄送的完整业务能力。
  *
- * <p>GAP-P1 优化点：
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>新增 {@link #handleCcNode} — 统一入口，展开 role:/dept: 权限标识为具体用户列表</li>
- *   <li>新增 {@link #listByInstance} — 查实例维度的抄送记录</li>
- *   <li>分页查询返回 {@link PageResult}，统一分页响应结构</li>
+ *   <li><b>自动抄送</b>：CC 节点（{@code nodeType=5}）触发时由 {@code DefaultFlowAdvancer} 调用
+ *       {@link #handleCcNode} 写入</li>
+ *   <li><b>查询能力</b>：抄送我的分页（{@link #pageMyCc}）/ 未读数（{@code countMyUnread}）/ 实例抄送列表（{@link #listByInstance}）</li>
+ *   <li><b>已读机制</b>：标记已读（{@code markAsRead}）/ 全部标记已读（{@code markAllAsRead}）</li>
+ *   <li><b>规则解析</b>：支持 {@code role:xxx} / {@code dept:xxx} / {@code user:xxx} / SpEL 表达式展开</li>
  * </ul>
  *
+ * <p><b>GAP-P1 优化点：</b>
+ * <ul>
+ *   <li>新增 {@link #handleCcNode} — 统一入口，展开 {@code role:/dept:} 权限标识为具体用户列表</li>
+ *   <li>新增 {@link #listByInstance} — 查实例维度的抄送记录</li>
+ *   <li>分页查询返回 {@code PageResult}，统一分页响应结构</li>
+ * </ul>
+ *
+ * <p><b>与待办的区别：</b>抄送不阻塞流程推进，仅作通知；本 Service 独立于 {@link FlowTaskService}，由 {@code FlowCcRuleResolver} 解析规则后批量写入。
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>「抄送我的」使用 {@code ydsz_flow_cc} 索引（{@code idx_cc_user}）</li>
+ *   <li>未读数查询走 Redis 缓存（{@code ydsz:flow:cc:unread:{userId}}），{@code @CacheEvict} 在 {@code markAsRead} 时失效</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.server.service.impl.FlowCcServiceImpl 实现类
+ * @see com.njydsz.workflow.server.resolver.FlowCcRuleResolver 抄送规则解析器
  */
 public interface FlowCcService {
 

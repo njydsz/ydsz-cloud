@@ -24,6 +24,11 @@ import com.njydsz.common.lock.annotation.Idempotent;
 /**
  * 搜索 REST API
  *
+ * <p>提供文件名/路径/标签/内容多维度搜索。
+ * 当 Elasticsearch 可用时自动切换为全文搜索，否则走数据库 LIKE 搜索。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/nextwiki/search}
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

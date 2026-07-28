@@ -36,17 +36,81 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程实例迁移 Service 实现
  *
- * <p>当流程定义更新（新版本部署）后，将运行中实例迁移到新版本：
- * 更新 definitionId / flowVersion，并按节点映射调整 currentNodeCode。
+ * <p>对 {@link FlowInstanceMigrationService} 接口的完整实现，承担工作流引擎的<b>流程版本迁移</b>能力。
+ * 当流程定义更新（新版本部署）后，将运行中的流程实例从旧版本迁移到新版本，
+ * 是工作流「无中断发布」的关键支撑。
  *
- * <p>P3-3 增强：实例迁移成功后同步更新该实例下未完成的待办任务（ydsz_flow_run_task）的
- * definitionId / nodeCode / nodeName，避免迁移后待办任务仍指向旧定义导致办理异常。
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>实例级迁移（{@link #migrate}）</b>：单个实例迁移，
+ *       更新 {@code definitionId / flowVersion}，并按节点映射调整 {@code currentNodeCode}</li>
+ *   <li><b>批量迁移（{@link #migrateBatch}）</b>：批量迁移指定旧版本的所有运行中实例，
+ *       单个失败不影响其它实例</li>
+ *   <li><b>变更影响分析（{@link #analyzeMigrationImpact}）</b>：评估「旧版本 → 新版本」迁移兼容性，
+ *       包括「节点新增 / 删除 / 重命名 / 配置变更」等</li>
+ *   <li><b>待办任务联动（P3-3）</b>：实例迁移成功后同步更新该实例下未完成的待办任务
+ *       （{@code ydsz_flow_run_task}）的 {@code definitionId / nodeCode / nodeName}，
+ *       避免迁移后待办任务仍指向旧定义导致办理异常</li>
+ *   <li><b>迁移报告（{@link #migrateBatch}）</b>：批量迁移结果返回 {@code InstanceMigrationResultDTO}，
+ *       包含「成功 / 失败明细 / 失败原因」，便于人工重试</li>
+ * </ul>
  *
- * <p>注意：{@link #migrate(InstanceMigrationDTO)} 不加 {@code @Transactional}，
- * 以支持"逐实例防御式迁移"——单个实例失败不影响其他实例的已成功写入，
- * 失败明细记录在结果报告中，便于人工重试。
+ * <p><b>迁移流程：</b>
+ * <ol>
+ *   <li>校验源定义（旧版本）与目标定义（新版本）归属同一 {@code flowCode}</li>
+ *   <li>构建「旧版本节点 → 新版本节点」映射（按 {@code nodeCode} 匹配）</li>
+ *   <li>检查实例的 {@code currentNodeCode} 在新版本中是否存在：
+ *       <ul>
+ *         <li>存在：直接更新实例与待办</li>
+ *         <li>不存在：尝试「最近祖先节点」匹配，标记「节点已删除需人工介入」</li>
+ *         <li>都失败：标记为迁移失败</li>
+ *       </ul></li>
+ *   <li>更新实例的 {@code definitionId / flowVersion / currentNodeCode}</li>
+ *   <li>同步更新未完成待办任务的 {@code definitionId / nodeCode / nodeName}</li>
+ *   <li>写入审计日志</li>
+ * </ol>
  *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>{@link #migrate} 方法<b>不加</b> {@code @Transactional}，以支持「逐实例防御式迁移」——
+ *       单个实例失败不影响其他实例的已成功写入，失败明细记录在结果报告中，便于人工重试</li>
+ *   <li>实例内部使用 {@code @Transactional(REQUIRES_NEW)} 子事务隔离每个实例的迁移</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>兼容性评估前置</b>：批量迁移前应先调用 {@link #analyzeMigrationImpact}，
+ *       评估「哪些实例可以自动迁移 / 哪些需要人工介入」</li>
+ *   <li><b>节点映射策略</b>：优先按 {@code nodeCode} 精确匹配，
+ *       失败时按 {@code nodeName} 模糊匹配，最后兜底「待人工确认」</li>
+ *   <li><b>变量兼容</b>：迁移时检查新版本定义的「入参 schema」，
+ *       不兼容的变量标记为「需人工补充」</li>
+ *   <li><b>审计追溯</b>：所有迁移动作记录到 {@code ydsz_flow_audit_log}，
+ *       包括「旧版本 / 新版本 / 节点映射 / 操作人」</li>
+ *   <li><b>回滚支持</b>：迁移后 24h 内支持「回滚到旧版本」，
+ *       避免新版本 BUG 影响线上流程</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 评估影响
+ * MigrationImpact impact = migrationService.analyzeMigrationImpact(
+ *     oldDefinitionId, newDefinitionId);
+ * // impact.autoMigratableCount = 50, impact.manualHandleCount = 2
+ *
+ * // 2. 批量迁移
+ * InstanceMigrationResultDTO result = migrationService.migrateBatch(
+ *     oldDefinitionId, newDefinitionId, currentUserId);
+ * // result.successDetails / result.failedDetails
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowInstanceMigrationService 接口定义
+ * @see com.njydsz.workflow.domain.dto.InstanceMigrationDTO 迁移请求 DTO
+ * @see com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO 迁移结果 DTO
+ * @see FlowDefinitionServiceImpl 流程定义服务（部署新版本时触发迁移）
  */
 @Slf4j
 @Service

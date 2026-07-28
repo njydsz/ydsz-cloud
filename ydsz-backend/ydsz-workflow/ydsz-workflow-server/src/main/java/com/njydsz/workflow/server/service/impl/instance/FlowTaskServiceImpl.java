@@ -20,23 +20,44 @@ import com.njydsz.common.auth.annotation.DataScope;
 /**
  * 待办任务 Service 门面（Facade）
  *
- * <p>原 {@code FlowTaskServiceImpl} 单体实现已按职责拆分为 4 个子 Service + 1 个共享辅助：
+ * <p>对 {@link FlowTaskService} 接口的<b>委托门面实现</b>，原单体实现（1847 行 / 87KB）
+ * 已按职责拆分为 4 个子 Service + 1 个共享辅助，本类仅作透明委托。
+ *
+ * <p><b>子 Service 拆分：</b>
  * <ul>
- *   <li>{@link FlowTaskQueryServiceImpl} — 查询类（待办/已办/详情/统计/视图）</li>
- *   <li>{@link FlowTaskCompleteServiceImpl} — 完成类（创建/签收/通过/驳回/转办/委派/跳转/超时/取消/催办）</li>
- *   <li>{@link FlowTaskSignServiceImpl} — 加签减签类（前/后加签、减签、追加处理人、已阅、沟通、暂存）</li>
+ *   <li>{@link FlowTaskQueryServiceImpl} — 查询类（待办 / 已办 / 详情 / 统计 / 视图）</li>
+ *   <li>{@link FlowTaskCompleteServiceImpl} — 完成类（创建 / 签收 / 通过 / 驳回 / 转办 / 委派 / 跳转 / 超时 / 取消 / 催办）</li>
+ *   <li>{@link FlowTaskSignServiceImpl} — 加签减签类（前 / 后加签、减签、追加处理人、已阅、沟通、暂存）</li>
  *   <li>{@link FlowTaskBatchServiceImpl} — 批量操作（批量审批）</li>
- *   <li>{@link com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport} — 跨子 Service 共享的任务校验/审计/事件辅助</li>
+ *   <li>{@link com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport} — 跨子 Service 共享的校验 / 审计 / 事件辅助</li>
  * </ul>
  *
- * <p>本类仅作委托门面：实现 {@link FlowTaskService} 接口，所有方法转发到对应子 Service，
- * 保持对外接口与行为完全不变。事务边界由各子 Service 的 {@code @Transactional} 声明，
- * 跨 Bean 调用可正确触发 Spring 事务代理（相比原内部自调用语义更明确）。
+ * <p><b>设计动机：</b>
+ * <ul>
+ *   <li>原文件超过 Checkstyle 2000 行限制，需拆分</li>
+ *   <li>原构造函数注入 18 个依赖，违反单一职责原则</li>
+ *   <li>拆分子 Service 后各 Service 自行注入所需依赖，构造参数清晰可读</li>
+ *   <li>跨 Bean 调用可正确触发 Spring 事务代理（相比原内部自调用语义更明确）</li>
+ * </ul>
  *
- * <p>拆分背景：原文件 1847 行 / 87KB，远超 Checkstyle 2000 行限制，且构造函数注入 18 个依赖。
- * 拆分后本门面仅持有 4 个子 Service 引用，各子 Service 各自注入所需依赖。
+ * <p><b>事务边界：</b>本门面本身<b>不开启事务</b>，事务由各子 Service 的 {@code @Transactional} 声明。
+ * 仅 {@link #claim} / {@link #pass} / {@link #reject} 等关键方法通过 {@link YdszDistributedLock}
+ * 注解加分布式锁（{@code ydsz:flow:task:claim:{taskId}} / {@code ydsz:flow:task:operate:{taskId}}），
+ * 防止并发审批导致状态不一致。
  *
+ * <p><b>性能优化：</b>门面本身不直接访问 DB，所有数据库操作下沉到子 Service 各自的
+ * {@code @Transactional(readOnly = true)} / {@code @Transactional(rollbackFor = Exception.class)}
+ * 上下文，便于只读副本路由和事务粒度控制。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowTaskService 接口定义
+ * @see FlowRunTask 待办任务实体
+ * @see FlowTaskQueryServiceImpl 查询子服务
+ * @see FlowTaskCompleteServiceImpl 完成子服务
+ * @see FlowTaskSignServiceImpl 加签减签子服务
+ * @see FlowTaskBatchServiceImpl 批量操作子服务
  */
 @Service
 @RequiredArgsConstructor

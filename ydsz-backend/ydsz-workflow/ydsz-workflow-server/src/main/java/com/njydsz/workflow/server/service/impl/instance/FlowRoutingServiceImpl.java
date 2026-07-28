@@ -32,20 +32,65 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 智能路由与异常检测服务实现
  *
- * <p>基于 ydsz-literule 的 RuleEngine 和 ExpressionEvaluator（Aviator 引擎），
- * 提供智能路由条件评估和流程异常检测能力。
+ * <p>对 {@link FlowRoutingService} 接口的完整实现，是工作流引擎的「智能化」扩展点。
+ * 基于 {@code ydsz-literule} 的 {@link RuleEngine} 和 {@link ExpressionEvaluator}（Aviator 引擎），
+ * 提供<b>智能路由条件评估</b>和<b>流程异常检测</b>能力。
  *
- * <p><b>条件注入</b>：仅当 Spring 容器中存在 RuleEngine 和 ExpressionEvaluator Bean 时，
- * 本实现才会被注册。如果 literule 模块未引入，则回退到 DefaultFlowVariableStrategy。
- *
- * <h3>异常检测</h3>
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>超时检测：任务超过 dueAt 截止时间仍未完成</li>
- *   <li>卡单检测：任务在同一节点停留超过 24 小时</li>
- *   <li>循环审批：审计日志中同一节点被反复驳回（REJECT）超过 3 次</li>
+ *   <li><b>条件评估</b>：复杂条件下解析流程分支条件（支持 Aviator 表达式、规则引擎、决策表）</li>
+ *   <li><b>异常检测</b>：识别「卡单」「超时」「循环审批」等异常状态，触发告警 / 自动动作</li>
+ *   <li><b>智能路由</b>：根据运行时变量（金额、申请人、紧急度）动态选择审批路径，
+ *       实现「金额 &gt; 100 万需 CEO 审批」等业务规则</li>
+ *   <li><b>规则联动</b>：与规则引擎（{@code ydsz-literule}）联动，规则变更无需重启即可生效</li>
  * </ul>
  *
+ * <p><b>条件注入：</b>
+ * <ul>
+ *   <li>本实现启用 {@link ConditionalOnBean}，<b>仅当</b> Spring 容器中存在 {@link RuleEngine}
+ *       和 {@link ExpressionEvaluator} Bean 时才会被注册</li>
+ *   <li>如果 {@code literule} 模块未引入，则回退到 {@code DefaultFlowVariableStrategy}，
+ *       仅支持基础 SpEL 表达式（不依赖规则引擎）</li>
+ *   <li>这种「能力探测」机制保证核心工作流在 literule 缺失时仍可运行</li>
+ * </ul>
+ *
+ * <p><b>异常检测（{@link #detectAnomalies}）：</b>
+ * <ul>
+ *   <li><b>超时检测</b>：任务超过 {@code dueAt} 截止时间仍未完成（P0 级异常）</li>
+ *   <li><b>卡单检测</b>：任务在同一节点停留超过 24 小时（无任何审批动作）</li>
+ *   <li><b>循环审批</b>：审计日志中同一节点被反复驳回（{@code REJECT}）超过 3 次
+ *       （疑似无限循环，需人工介入）</li>
+ * </ul>
+ *
+ * <p><b>智能路由（{@link #evaluateRoute}）：</b>
+ * <ul>
+ *   <li>支持「金额路由」：{@code amount > 1000000 → 需 CEO 审批}</li>
+ *   <li>支持「申请人路由」：{@code initiator.dept == 'FINANCE' → 财务总监审批}</li>
+ *   <li>支持「紧急度路由」：{@code priority == 'URGENT' → 跳过非关键审批人}</li>
+ *   <li>支持「规则路由」：通过决策表（DMN）批量配置路由规则</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>异常检测启用 {@code @Transactional(readOnly = true)}，支持只读副本路由</li>
+ *   <li>异常处理动作（如自动催办 / 升级）单独开启写事务</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>规则热更新</b>：通过 Nacos 监听规则变更，无需重启即可应用新规则</li>
+ *   <li><b>规则审计</b>：所有规则评估结果写入审计日志，支持「为什么这个流程走了 A 分支」回溯</li>
+ *   <li><b>规则降级</b>：规则引擎异常时自动回退到 SpEL 表达式，保证流程不卡死</li>
+ *   <li><b>规则沙箱</b>：Aviator 表达式禁止调用 Java 方法，防止恶意规则影响系统</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowRoutingService 接口定义
+ * @see com.njydsz.literule.api.RuleEngine 规则引擎
+ * @see com.njydsz.literule.api.expr.ExpressionEvaluator Aviator 表达式评估器
+ * @see com.njydsz.literule.api.spi.DecisionTableEvalProvider 决策表评估提供者
  */
 @Slf4j
 @Service

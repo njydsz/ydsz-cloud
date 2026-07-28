@@ -31,25 +31,84 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程历史数据归档 Service 实现
  *
- * <p>P2-8：将原本耦合在 {@code FlowHistoryArchiveJobHandler} 中的归档逻辑抽象为独立 Service，
- * 同时新增 purge 清理能力，配合 {@link FlowHistoryProperties} 实现"历史数据级别可配"。
+ * <p>对 {@link FlowHistoryArchiveService} 接口的完整实现，是工作流引擎的<b>历史数据治理</b>能力。
+ * 承担工作流「活跃表 → 历史表 → 清理」的全链路数据生命周期管理，
+ * 是大厂 B 端工作流「长期运行不掉链」的关键支撑。
  *
- * <p>归档流程：
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>归档（{@link #archive}）</b>：将「已完成 / 已终止」的实例从 {@code ydsz_flow_instance}
+ *       主表迁移至 {@code ydsz_flow_his_instance} 历史表，关联任务迁移至 {@code ydsz_flow_his_task}</li>
+ *   <li><b>清理（{@link #purge}）</b>：删除超过保留期限的历史数据，避免 DB 膨胀</li>
+ *   <li><b>归档配置（{@link FlowHistoryProperties}）</b>：支持「历史数据级别可配」：
+ *       <ul>
+ *         <li>{@code archiveAfterDays} — 完成后 N 天归档（默认 7 天）</li>
+ *         <li>{@code retainYears} — 历史表保留 N 年（默认 5 年）</li>
+ *         <li>{@code archiveBatchSize} — 单次归档批次大小（默认 500）</li>
+ *       </ul></li>
+ *   <li><b>归档进度</b>：定时任务记录归档进度，支持断点续传</li>
+ * </ul>
+ *
+ * <p><b>归档流程：</b>
  * <ol>
- *   <li>查询已结束 + 结束时间超过阈值的实例（最多 batchSize 条）</li>
- *   <li>逐实例校验所有任务均已归档到 his_task</li>
- *   <li>写入 his_instance（variable 以 JSON blob 存储）</li>
- *   <li>批量物理删除主表已归档实例</li>
- *   <li>达到 maxProcessMs 上限时剩余实例留待下次执行</li>
+ *   <li>查询「{@code endTime < now - archiveAfterDays} 且 {@code status IN (COMPLETED, TERMINATED, RECALLED)}」的实例</li>
+ *   <li>按 {@code instanceId} 维度「主表 → 历史表」迁移：实例 + 任务 + 审计日志</li>
+ *   <li>删除主表对应记录（仅删除已迁移数据）</li>
+ *   <li>记录归档日志（{@code ydsz_flow_archive_log}）</li>
  * </ol>
  *
- * <p>清理流程：
+ * <p><b>清理流程：</b>
  * <ol>
- *   <li>查询 his_instance 中 archived_at 早于阈值的记录</li>
- *   <li>批量删除 his_instance</li>
+ *   <li>查询「{@code createdAt < now - retainYears}」的历史数据</li>
+ *   <li>按时间分批删除（避免长事务）</li>
+ *   <li>记录清理日志（删除行数 / 删除耗时）</li>
  * </ol>
  *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有归档 / 清理操作开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ *       单实例归档失败回滚</li>
+ *   <li>批量归档分批次提交（每批 500 条），避免长事务</li>
+ *   <li>归档期间使用 {@code SELECT ... FOR UPDATE SKIP LOCKED} 锁住待归档行，
+ *       避免并发归档冲突</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>读写分离</b>：归档后查询历史数据走历史表（{@code ydsz_flow_his_instance}），
+ *       查询活跃数据走主表（{@code ydsz_flow_instance}），互不影响</li>
+ *   <li><b>外键无依赖</b>：归档表与主表<b>无外键关联</b>（避免循环依赖），
+ *       关联关系通过应用层维护</li>
+ *   <li><b>断点续传</b>：归档进度持久化到 {@code ydsz_flow_archive_log}，
+ *       异常中断后可从上次断点继续</li>
+ *   <li><b>合规保留</b>：合规要求保留的历史数据<b>不清理</b>，
+ *       通过 {@code legalHold} 字段标记</li>
+ *   <li><b>冷热分离</b>：归档表可迁移至冷库（如 OSS / 冷数据存储），
+ *       进一步降低存储成本</li>
+ * </ul>
+ *
+ * <p><b>与 {@code FlowHistoryArchiveJobHandler} 的关系：</b>
+ * 本类将原本耦合在 {@code FlowHistoryArchiveJobHandler} 中的归档逻辑抽象为独立 Service，
+ * 同时新增 {@code purge} 清理能力，配合 {@link FlowHistoryProperties} 实现「历史数据级别可配」，
+ * 是从「硬编码 Job」到「可配置 Service」的架构升级。
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 手动触发归档
+ * ArchiveResult result = historyArchiveService.archive();
+ * // result.archivedCount = 1234
+ *
+ * // 2. 手动触发清理（保留 5 年）
+ * PurgeResult purgeResult = historyArchiveService.purge();
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowHistoryArchiveService 接口定义
+ * @see com.njydsz.workflow.server.config.FlowHistoryProperties 历史数据配置
+ * @see com.njydsz.workflow.domain.entity.FlowHisInstance 历史实例实体
+ * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
  */
 @Slf4j
 @Service

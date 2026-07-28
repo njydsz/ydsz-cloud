@@ -58,9 +58,60 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程定义 Service 实现
  *
- * <p>支持 BPMN 2.0 XML 与轻量 JSON 两种部署模式。
+ * <p>对 {@link FlowDefinitionService} 接口的完整实现，承担工作流引擎<b>「定义侧」</b>的全部职责：
+ * 部署、发布、停用、查询、设计器协同编辑、版本对比、灰度发布、一键回滚等。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>双模式部署</b>：支持 BPMN 2.0 标准 XML（{@code bpmnXml}）与轻量 JSON（{@code nodes+skips}）两种模型，
+ *       通过 {@link BpmnXmlParser} 解析后统一转写为 {@link FlowNode} / {@link FlowSkip} 实体</li>
+ *   <li><b>拓扑校验</b>：部署前调用 {@link FlowGraphValidator} 校验<b>连通性</b>、<b>死节点</b>、<b>环路口</b>等结构规则，
+ *       校验失败立即阻断写入</li>
+ *   <li><b>版本管理</b>：同 {@code flowCode+version+tenantId} 唯一约束；多版本并存；灰度发布；
+ *       一键回滚时联动 {@link FlowInstanceMigrationService} 迁移在途实例</li>
+ *   <li><b>缓存治理</b>：发布/停用时通过 {@link CacheEvict} + {@link FlowDefinitionCacheService} 双层失效
+ *       本地与 Redis 集群缓存，{@link Cacheable} 注解缓存已发布 / 最新版本元数据</li>
+ *   <li><b>设计器集成</b>：提供节点坐标同步、协同编辑锁、表单字段权限、节点 SLA 配置等设计器侧能力</li>
+ *   <li><b>变更分析</b>：{@link #analyzeMigrationImpact} 评估在途实例兼容性，{@link #diffVersions} 输出版本节点差异</li>
+ *   <li><b>导入导出</b>：BPMN 2.0 zip 包批量部署（{@link #batchDeployFromZip}），单定义 JSON 导入导出</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作（{@code deploy / publish / deprecate / switchActiveVersion / rollbackDefinition}）开启
+ *       {@code @Transactional(rollbackFor = Exception.class)}，确保「定义 + 节点 + 跳转」三方写入原子性</li>
+ *   <li>{@code @CacheEvict} 标注在方法级别，事务提交后再清除缓存，避免脏读</li>
+ *   <li>批量部署（{@link #batchDeployFromZip}）通过 {@code self} 代理引用调用 {@link #deploy}，触发 Spring 事务代理</li>
+ * </ul>
+ *
+ * <p><b>并发控制：</b>
+ * <ul>
+ *   <li>协同编辑锁（{@link #lockDefinition}）：{@code Redisson} 分布式锁 {@code ydsz:flow:def:lock:{defId}}，
+ *       默认 30 分钟自动释放，防设计器多 Tab 冲突</li>
+ *   <li>乐观锁：{@link FlowDefinition} 继承 {@code revision} 字段，发布/停用版本切换自动重试</li>
+ * </ul>
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>{@link #loadPublished} / {@link #loadLatestVersion} 命中 {@code ydsz_flow_definition} 主键索引</li>
+ *   <li>批量加载节点（{@link #listNodesByDefinition}）走 {@code idx_definition} 索引</li>
+ *   <li>缓存策略：{@code flow:def:published:{code}} TTL 10min（高频读取）；
+ *       {@code flow:def:latest:{code}} TTL 5min（更新频率较高）</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>所有查询与写入均按 {@code tenantId} 隔离，DTO 显式传入优先，回退 {@code SecurityContext}，
+ * 最后兜底 {@code "1"}（默认租户）。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowDefinitionService 接口定义
+ * @see FlowDefinition 流程定义实体
+ * @see FlowNode 流程节点实体
+ * @see FlowSkip 流程跳转实体
+ * @see BpmnXmlParser BPMN 2.0 解析器
+ * @see FlowGraphValidator 流程图结构校验器
+ * @see FlowInstanceMigrationService 实例迁移服务（回滚时联动）
  */
 @Slf4j
 @Service
@@ -115,6 +166,32 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         this.self = self;
     }
 
+    /**
+     * 部署流程定义（双模式：BPMN XML / 轻量 JSON）
+     *
+     * <p>完整执行链路：
+     * <ol>
+     *   <li><b>参数校验</b>：必填 {@code flowCode / flowName}，至少二选一传 {@code bpmnXml / nodes}</li>
+     *   <li><b>租户解析</b>：{@code dto.tenantId} → {@code SecurityContext} → 默认 {@code "1"}</li>
+     *   <li><b>重名校验</b>：同 {@code flowCode+version+tenantId} 已存在时抛 {@code DUPLICATE_KEY}</li>
+     *   <li><b>模型解析</b>：
+     *     <ul>
+     *       <li>XML 模式：{@link BpmnXmlParser#parse} 解析为节点/跳转模型，自动注入 BPMNDI 坐标</li>
+     *       <li>JSON 模式：直接构造节点/跳转，要求必须含开始节点（{@code nodeType=0}）</li>
+     *     </ul>
+     *   </li>
+     *   <li><b>结构校验</b>：{@link FlowGraphValidator#validate} 校验连通性、死节点、环路口</li>
+     *   <li><b>三方写入</b>：{@code ydsz_flow_definition + ydsz_flow_node + ydsz_flow_skip} 事务原子性</li>
+     *   <li><b>缓存清理</b>：{@code @CacheEvict} + {@link FlowDefinitionCacheService#evict} 主动清除</li>
+     * </ol>
+     *
+     * <p>新部署的 {@link FlowDefinition} 状态为 {@code isPublish=0 / activityStatus=1}，
+     * 需调用 {@link #publish} 后才能被流程实例引用。
+     *
+     * @param dto 部署 DTO（含 {@code flowCode/flowName/version/bpmnXml/nodes/skips/tenantId}）
+     * @return 新流程定义的 ID
+     * @throws SysException {@code BAD_REQUEST} — 参数缺失或结构校验失败；{@code DUPLICATE_KEY} — 版本冲突
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
@@ -268,6 +345,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return definitionId;
     }
 
+    /**
+     * 发布流程定义（不带强制标志）
+     *
+     * <p>默认调用 {@link #publish(String, boolean)} 并传 {@code force=false}，
+     * 当变更影响分析为 HIGH 风险时会被 {@link #checkPublishCompatibility} 阻断。
+     *
+     * @param definitionId 流程定义 ID
+     * @see #publish(String, boolean)
+     */
     @Override
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
@@ -275,6 +361,20 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         publish(definitionId, false);
     }
 
+    /**
+     * 发布流程定义（带强制标志）
+     *
+     * <p>将 {@code ydsz_flow_definition.isPublish=0 → 1}，并清理本地 + Redis 集群缓存。
+     * 发布前通过 {@link #checkPublishCompatibility} 评估与同 {@code flowCode} 激活版本的差异，
+     * 当存在「在途实例卡在已删除节点」的 HIGH 风险时，仅当 {@code force=true} 才放行。
+     *
+     * <p>注意：本方法<b>不开启事务</b>（单条 UPDATE），但 {@code @CacheEvict} 标注确保
+     * 缓存清理晚于 DB 写入生效，避免发布后读到旧缓存。
+     *
+     * @param definitionId 流程定义 ID
+     * @param force        是否强制发布（跳过 HIGH 风险阻断）
+     * @throws SysException {@code NOT_FOUND} — 流程定义不存在；{@code BAD_REQUEST} — HIGH 风险未强制发布
+     */
     @Override
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
@@ -413,6 +513,20 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return Collections.emptyList();
     }
 
+    /**
+     * 停用流程定义
+     *
+     * <p>将 {@code isPublish} 置为 {@code 9}（已废弃），并清理本地 + 集群缓存。
+     * 停用后流程定义将无法被新实例引用，但已有实例不受影响。
+     *
+     * <p>与 {@link #disable}（{@code activityStatus=0}）的区别：
+     * <ul>
+     *   <li>{@code deprecate}：版本维度停用，{@code isPublish=9}，流程列表不可见</li>
+     *   <li>{@code disable}：流程维度停用，{@code activityStatus=0}，仍可被查询</li>
+     * </ul>
+     *
+     * @param definitionId 流程定义 ID
+     */
     @Override
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
@@ -423,6 +537,18 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         log.info("[Flow] 停用流程: defId={}", definitionId);
     }
 
+    /**
+     * 查询已发布的流程定义（带缓存）
+     *
+     * <p>按 {@code flowCode + version + tenantId} 三元组唯一定位，缓存至
+     * {@code ydsz:flow:def:published:{code}:{version}:{tenantId}}，TTL 10min。
+     * 当 {@code version} 为空时回退为 {@code "1.0"}。
+     *
+     * @param flowCode 流程编码
+     * @param version  版本号（为空时取 {@code "1.0"}）
+     * @param tenantId 租户 ID（为空时取 {@code SecurityContext}，默认 {@code "1"}）
+     * @return 流程定义；不存在返回 {@code null}（不进缓存，由 {@code unless="#result == null"} 保证）
+     */
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
@@ -436,6 +562,17 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return definitionMapper.selectPublished(flowCode, version, tid);
     }
 
+    /**
+     * 查询指定流程编码的最新版本定义（带缓存）
+     *
+     * <p>按 {@code flowCode + tenantId} 唯一定位，缓存至
+     * {@code ydsz:flow:def:latest:{code}:{tenantId}}，TTL 5min（更新频率较高）。
+     * 用于设计器列表、流程发起页等需要「最新版」语义的地方。
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID（为空时取 {@code SecurityContext}，默认 {@code "1"}）
+     * @return 最新版本定义；不存在返回 {@code null}
+     */
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_DEF_LATEST_CACHE,
@@ -446,6 +583,20 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return definitionMapper.selectLatestByCode(flowCode, tid);
     }
 
+    /**
+     * 分页查询流程定义列表
+     *
+     * <p>仅返回 {@code activityStatus=1}（启用）且未逻辑删除的记录，
+     * 按 {@code created_at} 倒序排列。支持按 {@code category}（精确）和 {@code flowCode}（模糊）过滤。
+     *
+     * <p>分页使用 MyBatis-Plus {@link Page}，启用 {@code @Transactional(readOnly = true)} 提升只读性能。
+     *
+     * @param pageNo   页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @param category 分类编码过滤（可选）
+     * @param flowCode 流程编码模糊过滤（可选）
+     * @return 流程定义列表
+     */
     @Override
     @Transactional(readOnly = true)
     public List<FlowDefinition> page(int pageNo, int pageSize, String category, String flowCode) {
@@ -459,6 +610,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return definitionMapper.selectPage(page, w).getRecords();
     }
 
+    /**
+     * 查询流程定义详情（含节点 + 跳转）
+     *
+     * <p>组装 {@code definition + nodes + skips} 三元组供设计器回显用。
+     * 不存在时返回 {@code null}。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 详情 Map（{@code definition/nodes/skips}）；不存在返回 {@code null}
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> getDetail(String definitionId) {
@@ -478,6 +638,27 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== P2-27: 版本切换 ==============================
 
+    /**
+     * 切换激活版本（P2-27）
+     *
+     * <p>将同 {@code flowCode} 的其他已发布版本置为 {@code isPublish=0}，目标版本置为 {@code isPublish=1}。
+     * 典型场景：灰度发布后全量切换、A/B 测试版本择优。
+     *
+     * <p>校验链：
+     * <ul>
+     *   <li>{@code flowCode} 必填</li>
+     *   <li>目标定义存在</li>
+     *   <li>目标定义的 {@code flowCode} 与入参一致</li>
+     * </ul>
+     *
+     * <p>事务保证「失效旧版本 + 激活新版本」原子性，事务提交后通过
+     * {@code @CacheEvict} + {@link FlowDefinitionCacheService#evict} 清理缓存。
+     *
+     * @param flowCode     流程编码
+     * @param definitionId 目标定义 ID
+     * @param tenantId     租户 ID
+     * @throws SysException {@code BAD_REQUEST} / {@code NOT_FOUND} — 参数缺失或定义不存在
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
@@ -508,6 +689,14 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== P2-28: 启用/停用 ==============================
 
+    /**
+     * 启用流程定义
+     *
+     * <p>将 {@code activityStatus=0 → 1}，恢复流程定义在设计器与发起页可见。
+     * 启用后清理本地 + 集群缓存，避免旧缓存屏蔽新状态。
+     *
+     * @param definitionId 流程定义 ID
+     */
     @Override
     public void enable(String definitionId) {
         definitionMapper.updateActivityStatus(definitionId, 1);
@@ -516,6 +705,14 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         log.info("[Flow] 启用流程定义: defId={}", definitionId);
     }
 
+    /**
+     * 停用流程定义（activityStatus 维度）
+     *
+     * <p>将 {@code activityStatus=1 → 0}，流程定义仍在数据库但设计器与发起页不可见。
+     * 与 {@link #deprecate}（{@code isPublish=9}，版本维度）配合使用可实现双重停用。
+     *
+     * @param definitionId 流程定义 ID
+     */
     @Override
     public void disable(String definitionId) {
         definitionMapper.updateActivityStatus(definitionId, 0);
@@ -526,6 +723,18 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== P2-40: 节点坐标更新 ==============================
 
+    /**
+     * 更新节点坐标（P2-40）
+     *
+     * <p>设计器拖拽节点后调用，{@code coordinate} 字段为 JSON 字符串（{@code {x,y,width,height}}）。
+     * 节点存在性校验：先通过 {@code (definitionId, nodeCode)} 复合索引查询，
+     * 节点不存在抛 {@code NOT_FOUND}。
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @param coordinate   坐标 JSON 字符串
+     * @throws SysException {@code BAD_REQUEST} / {@code NOT_FOUND}
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateNodeCoordinate(String definitionId, String nodeCode, String coordinate) {
@@ -547,6 +756,23 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== P2-41: 流程定义草稿编辑 ==============================
 
+    /**
+     * 更新流程定义（草稿编辑，P2-41）
+     *
+     * <p>仅允许编辑<b>未发布</b>（{@code isPublish=0}）的定义，已发布定义需走「创建新版本」流程。
+     * 支持两种编辑模式：
+     * <ul>
+     *   <li><b>元数据更新</b>：{@code flowName / category / description / formPath}</li>
+     *   <li><b>节点/跳转全量替换</b>：传 {@code bpmnXml} 或 {@code nodes/skips} 时，
+     *       先删除旧节点/跳转，再插入新模型（事务保证原子性）</li>
+     * </ul>
+     *
+     * <p>不可变字段：{@code flowCode / flowVersion}（流程核心标识）。
+     *
+     * @param definitionId 流程定义 ID（必须未发布）
+     * @param dto          更新参数 DTO
+     * @throws SysException {@code BAD_REQUEST} — 定义已发布；{@code NOT_FOUND} — 定义不存在
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
@@ -648,6 +874,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== GAP-V2-06: 导入/导出 ==============================
 
+    /**
+     * 导出流程定义（GAP-V2-06）
+     *
+     * <p>将定义 + 节点 + 跳转序列化为 JSON 字符串。输出格式与 {@link #importDefinition} 输入完全对应。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 流程定义 JSON 字符串（含 {@code definition/nodes/skips} 三元组）
+     * @throws SysException {@code NOT_FOUND} — 流程定义不存在
+     */
     @Override
     @Transactional(readOnly = true)
     public String exportDefinition(String definitionId) {
@@ -658,6 +893,24 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return YdszJson.toJson(detail);
     }
 
+    /**
+     * 导入流程定义（GAP-V2-06）
+     *
+     * <p>解析 {@link #exportDefinition} 产出的 JSON 字符串，构造 {@link FlowDeployProcessDTO} 后
+     * 调用 {@link #deploy} 创建为草稿（{@code isPublish=0}）。需手动调用 {@link #publish} 才能上线。
+     *
+     * <p>解析链：
+     * <ol>
+     *   <li>校验 JSON 合法性与 {@code definition/nodes/skips} 三元组</li>
+     *   <li>从 {@code skip.ext} JSON 中还原 {@code fromNodeCode}（BPMN 序列流语义）</li>
+     *   <li>委托 {@link #deploy} 走完整部署流程（含结构校验、租户注入、缓存清理）</li>
+     * </ol>
+     *
+     * @param json     流程定义 JSON 字符串
+     * @param tenantId 目标租户 ID
+     * @return 新创建的草稿定义 ID
+     * @throws SysException {@code BAD_REQUEST} — JSON 缺失/解析失败/必要字段为空
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String importDefinition(String json, String tenantId) {
@@ -751,6 +1004,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== GAP-V2-01: 设计器数据 API ==============================
 
+    /**
+     * 获取设计器数据（GAP-V2-01）
+     *
+     * <p>在 {@link #getDetail} 基础上额外组装 {@code edges} 字段（{@code source/target/label/condition/skipType}），
+     * 供前端 VueFlow / LogicFlow 直接消费。{@code source} 字段从 {@code skip.ext.sourceRef} JSON 中还原。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 设计器数据 Map（含 {@code definition/nodes/skips/edges}）；不存在返回 {@code null}
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> getDesignerData(String definitionId) {
@@ -786,6 +1048,24 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return result;
     }
 
+    /**
+     * 保存设计器数据（GAP-V2-01）
+     *
+     * <p>设计器拖拽 / 修改节点后保存。仅允许编辑<b>未发布</b>定义（{@code isPublish=0}），
+     * 已发布定义需走「创建新版本」流程。
+     *
+     * <p>当前支持：
+     * <ul>
+     *   <li>批量更新节点坐标（{@code coordinate}）</li>
+     *   <li>批量更新节点名称 / 权限标识 / 扩展字段</li>
+     * </ul>
+     *
+     * <p>边（{@code skips}）的增删不在本方法处理范围，需通过 {@link #updateDefinition} 端点。
+     *
+     * @param definitionId 流程定义 ID
+     * @param designerData 设计器数据 Map（含 {@code nodes} 数组）
+     * @throws SysException {@code NOT_FOUND} — 流程定义不存在；{@code BAD_REQUEST} — 已发布
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveDesignerData(String definitionId, Map<String, Object> designerData) {
@@ -846,6 +1126,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== GAP-V2-02: 表单字段配置 ==============================
 
+    /**
+     * 获取节点表单字段配置（GAP-V2-02）
+     *
+     * <p>读取 {@code ydsz_flow_node.form_fields_config} 字段，返回 JSON 字符串（含字段权限/必填/可见性配置）。
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @return 表单字段配置 JSON 字符串；节点未配置时返回 {@code null}
+     * @throws SysException {@code NOT_FOUND} — 节点不存在
+     */
     @Override
     @Transactional(readOnly = true)
     public String getFormConfig(String definitionId, String nodeCode) {
@@ -857,6 +1147,17 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return node.getFormFieldsConfig();
     }
 
+    /**
+     * 保存节点表单字段配置（GAP-V2-02）
+     *
+     * <p>更新 {@code ydsz_flow_node.form_fields_config} 字段并清理本地 + 集群缓存。
+     * 节点不存在时抛 {@code NOT_FOUND}。
+     *
+     * @param definitionId     流程定义 ID
+     * @param nodeCode         节点编码
+     * @param formFieldsConfig 表单字段配置 JSON 字符串
+     * @throws SysException {@code NOT_FOUND} — 节点不存在
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveFormConfig(String definitionId, String nodeCode, String formFieldsConfig) {
@@ -875,6 +1176,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== P1-2: SLA 节点级配置 ==============================
 
+    /**
+     * 获取节点 SLA 配置
+     *
+     * <p>读取 {@code ydsz_flow_node.sla_config} 字段，返回 JSON 字符串（含超时时长、提醒策略、超时处理动作）。
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @return SLA 配置 JSON 字符串；未配置返回 {@code null}
+     * @throws SysException {@code NOT_FOUND} — 节点不存在
+     */
     @Override
     @Transactional(readOnly = true)
     public String getSlaConfig(String definitionId, String nodeCode) {
@@ -886,6 +1197,17 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return node.getSlaConfig();
     }
 
+    /**
+     * 保存节点 SLA 配置
+     *
+     * <p>更新 {@code ydsz_flow_node.sla_config} 字段并清理缓存。SLA 配置在 {@link FlowTaskTimeoutService}
+     * 中读取并用于任务超时检测与处理。
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @param slaConfig    SLA 配置 JSON 字符串
+     * @throws SysException {@code NOT_FOUND} — 节点不存在
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveSlaConfig(String definitionId, String nodeCode, String slaConfig) {
@@ -904,6 +1226,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     // ============================== 版本历史与差异对比 ==============================
 
+    /**
+     * 查询流程版本历史
+     *
+     * <p>按 {@code flowCode+tenantId} 维度查询该流程的全部历史版本，组装为扁平 Map 列表供设计器版本时间线展示。
+     *
+     * @param definitionId 当前版本定义 ID（用于回溯 {@code flowCode/tenantId}）
+     * @return 版本列表（按定义顺序）
+     * @throws SysException {@code NOT_FOUND} — 流程定义不存在
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listVersions(String definitionId) {
@@ -932,6 +1263,24 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         return result;
     }
 
+    /**
+     * 对比两个版本的差异
+     *
+     * <p>输出结构（{@code Map}）包含：
+     * <ul>
+     *   <li>{@code addedNodes} / {@code removedNodes} / {@code modifiedNodes}：节点级差异</li>
+     *   <li>{@code addedSkips} / {@code removedSkips} / {@code modifiedSkips}：跳转级差异</li>
+     *   <li>{@code addedNodeCodes} / {@code removedNodeCodes}：便于判断在途实例是否卡在已删除节点</li>
+     * </ul>
+     *
+     * <p>典型用法：版本回滚前评估影响、灰度切换前预览变更。
+     *
+     * @param definitionId 流程定义 ID（用于回溯 {@code flowCode}）
+     * @param version1     版本号 1（{@code Integer} 版本号，将转为 {@code String} 与 {@code flow_version} 比对）
+     * @param version2     版本号 2
+     * @return 差异 Map
+     * @throws SysException {@code NOT_FOUND} — 定义或版本不存在
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> diffVersions(String definitionId, Integer version1, Integer version2) {

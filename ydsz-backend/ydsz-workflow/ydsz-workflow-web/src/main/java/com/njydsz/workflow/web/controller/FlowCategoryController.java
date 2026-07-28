@@ -25,10 +25,32 @@ import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 /**
  * 流程分类管理 Controller
  *
- * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力。
+ * <p>对标钉钉 / 飞书审批的「流程分类管理」能力，提供流程分类的 CRUD HTTP 接口。
+ * 分类数据是设计器左侧导航树、发起审批时分类筛选的数据源。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>查询</b>：{@code GET /categories}（查询全部分类，按 sortNum 升序）</li>
+ *   <li><b>新增</b>：{@code POST /categories}（创建分类）</li>
+ *   <li><b>编辑</b>：{@code PUT /categories/{id}}（修改分类）</li>
+ *   <li><b>删除</b>：{@code DELETE /categories/{id}}（删除分类，校验是否有子分类或关联定义）</li>
+ * </ul>
+ *
+ * <p><b>权限模型：</b>所有写接口通过 {@link Idempotent} 5s 防重；分类编码唯一性
+ * 由 {@code @UniqueCheck} 拦截器在 Service 层校验。
+ *
+ * <p><b>多租户：</b>所有操作按 {@link TenantContext} 当前租户隔离，
+ * 跨租户分类不可见。
+ *
+ * <p><b>设计原则：</b>Controller 仅做参数透传与租户注入；分类业务逻辑下沉到
+ * {@link FlowCategoryService}。树形结构由前端基于 {@code GET /categories} 扁平结果自行组装。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowCategoryService 分类服务
+ * @see FlowCategory 分类实体
+ * @see FlowCategoryDTO 分类 DTO
  */
 @Slf4j
 @Validated

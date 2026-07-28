@@ -32,19 +32,41 @@ import com.njydsz.workflow.domain.vo.FlowCommentVO;
 /**
  * P2-2: 流程评论 Controller
  *
- * <p>审批评论多级回复接口。对标钉钉/飞书审批评论区。
+ * <p>审批评论多级回复 HTTP 接口，对标钉钉 / 飞书审批评论区。
+ * 评论数据独立于审计日志（{@code FlowAuditLog}）：用户视角可修改 / 删除，
+ * 系统视角只读不可改。
  *
- * <p>端点：
+ * <p><b>接口分组：</b>
  * <ul>
- *   <li>POST /workflow/comment — 发表评论/回复</li>
- *   <li>GET /workflow/comment/instance/{instanceId} — 查询实例全部评论（树结构）</li>
- *   <li>GET /workflow/comment/root/{instanceId} — 查询实例一级评论</li>
- *   <li>GET /workflow/comment/replies/{parentCommentId} — 查询父评论下的回复</li>
- *   <li>DELETE /workflow/comment/{commentId} — 删除评论（仅本人）</li>
+ *   <li><b>发表</b>：{@code POST /workflow/comment} — 发表评论 / 回复（{@code parentCommentId} 非空时为回复）</li>
+ *   <li><b>查询</b>：
+ *     <ul>
+ *       <li>{@code GET /workflow/comment/instance/{instanceId}} — 实例全部评论（树结构）</li>
+ *       <li>{@code GET /workflow/comment/root/{instanceId}} — 实例一级评论</li>
+ *       <li>{@code GET /workflow/comment/replies/{parentCommentId}} — 父评论下的回复</li>
+ *     </ul>
+ *   </li>
+ *   <li><b>删除</b>：{@code DELETE /workflow/comment/{commentId}} — 软删除（仅本人）</li>
  * </ul>
+ *
+ * <p><b>权限模型：</b>所有写接口通过 {@link AuthApiPermission} 校验
+ * {@link PermissionCodes#WORKFLOW_COMMENT_OPERATE} 权限码；删除操作额外校验
+ * 「操作用户 == 评论人」防越权。
+ *
+ * <p><b>限流：</b>发表 / 回复通过 {@link Idempotent} 5s 防重；删除通过 {@link Idempotent} 防重。
+ *
+ * <p><b>性能优化：</b>实例全量评论一次性拉取后由前端本地组装树，避免 N+1 查询；
+ * 评论分页采用 {@code (created_at, parent_comment_id)} 复合索引。
+ *
+ * <p><b>通知触发：</b>评论 / 回复时由 {@link FlowCommentService} 调用
+ * {@code FlowNotificationService} 通知被回复人；提及人（{@code @xxx}）索引便于 @ 检索。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowCommentService 评论服务
+ * @see FlowComment 评论实体
+ * @see FlowCommentCreateDTO 评论创建 DTO
  */
 @Slf4j
 @RestController

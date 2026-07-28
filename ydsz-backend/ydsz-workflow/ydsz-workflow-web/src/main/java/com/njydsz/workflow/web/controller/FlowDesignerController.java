@@ -28,11 +28,41 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 可视化流程设计器 / 表单 / SLA 配置 / 模板 Controller
  *
- * <p>GAP-V2-01/V2-02/P1-2/GAP-P2: 设计器数据、表单字段配置、节点 SLA 配置、流程模板库
- * （P1-10 从 FlowEngineController 拆分）。
+ * <p>负责 BPMN 设计器、表单设计器、SLA 配置、模板库的 HTTP 入口，是工作流「定义侧」UI 后端。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>设计器</b>：{@code GET /definition/{id}/designer}（加载设计器数据） /
+ *       {@code POST /definition/{id}/designer}（保存设计器数据） /
+ *       {@code PUT /definition/{id}/node/coordinate}（更新节点坐标） /
+ *       {@code POST /definition/{id}/lock}（协同编辑锁） /
+ *       {@code DELETE /definition/{id}/lock}（解锁）</li>
+ *   <li><b>表单配置</b>：{@code GET /definition/{id}/node/{code}/form}（读取字段权限） /
+ *       {@code POST .../form}（保存字段权限）</li>
+ *   <li><b>SLA 配置</b>：{@code GET /definition/{id}/node/{code}/sla} /
+ *       {@code POST .../sla}（节点级 SLA）</li>
+ *   <li><b>模板库</b>：{@code GET /templates}（模板列表） /
+ *       {@code GET /templates/recommend}（智能推荐） /
+ *       {@code POST /templates/{id}/apply}（应用模板）</li>
+ *   <li><b>版本管理</b>：{@code GET /definition/{id}/versions} /
+ *       {@code GET /definition/{id}/diff}（版本对比） /
+ *       {@code POST /definition/{id}/impact}（变更影响分析）</li>
+ * </ul>
+ *
+ * <p><b>权限模型：</b>所有接口通过 {@link AuthApiPermission} 校验
+ * {@link PermissionCodes#WORKFLOW_DEFINITION_DESIGN} 等权限码；
+ * 协同编辑锁由 {@link Idempotent} 注解保护，避免多人同时编辑冲突。
+ *
+ * <p><b>设计原则：</b>Controller 仅做参数透传、权限校验、VO 转换；
+ * 设计器数据组装、表单 / SLA 配置、模板推荐下沉到
+ * {@link FlowDefinitionService} / {@link FlowTemplateService}。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowDefinitionService 流程定义服务
+ * @see FlowTemplateService 流程模板服务
+ * @see FlowDesignerDataDTO 设计器数据传输对象
  */
 @Slf4j
 @RestController

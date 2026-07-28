@@ -27,13 +27,32 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
- * 公司 Service 实现。
+ * 公司 Service 实现
  *
- * <p>基于 {@link AbstractMpCrudService} 复用通用 CRUD 能力，
- * 通过生命周期钩子集成 companyCode 唯一性校验。
+ * <p>实现 {@link CompanyService} 接口，封装公司的完整业务逻辑：CRUD、{@code companyCode} 唯一性校验、
+ * 跨服务名称富化。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li>公司 CRUD（含 {@code companyCode} 唯一性校验）</li>
+ *   <li>公司全量列表查询（按创建时间降序）</li>
+ *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）</li>
+ * </ul>
+ *
+ * <p><b>设计：</b>基于 {@link AbstractMpCrudService} 复用通用 CRUD 能力，
+ * 通过生命周期钩子（如 {@code beforeCreate}/{@code beforeUpdate}）集成公司编码唯一性校验，
+ * 避免重复样板代码。
+ *
+ * <p><b>事务：</b>所有写操作由基类开启 {@code @Transactional(rollbackFor = Exception.class)}。
+ *
+ * <p><b>性能：</b>{@link #batchNamesByIds} 仅 SELECT id 与 company_name 字段，单次往返。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see CompanyService Service 接口
+ * @see Company 公司实体
+ * @see com.njydsz.userinfo.web.controller.CompanyController 公司 Controller
  */
 @Slf4j
 @Service

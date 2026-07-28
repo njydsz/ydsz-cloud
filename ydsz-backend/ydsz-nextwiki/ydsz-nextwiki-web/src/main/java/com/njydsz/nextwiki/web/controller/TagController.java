@@ -28,6 +28,11 @@ import com.njydsz.common.lock.annotation.Idempotent;
 /**
  * 标签管理 REST API
  *
+ * <p>提供标签创建、绑定到文件、自动推荐等操作。
+ * 标签可由用户手动创建或由系统基于文档内容自动推荐。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/nextwiki/tags}
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

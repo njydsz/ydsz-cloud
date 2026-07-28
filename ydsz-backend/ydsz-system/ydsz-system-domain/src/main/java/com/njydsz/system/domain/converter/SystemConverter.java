@@ -19,12 +19,44 @@ import com.njydsz.system.domain.vo.DictVersionVO;
 import com.njydsz.system.domain.vo.VariableVO;
 
 /**
- * 系统配置模块统一 MapStruct 转换器。
+ * 系统配置模块统一 MapStruct 转换器
  *
- * <p>提供所有系统模块 Entity → VO 的转换方法。
+ * <p>承担「系统模块」所有 Entity ↔ VO 的双向转换，遵循大厂标准的<b>单一转换器</b>模式：
+ * 同一业务域的转换规则集中维护，避免散落在各 Service 的 {@code BeanUtils.copyProperties} 调用。
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li>使用 MapStruct 注解处理器，<b>编译期</b>生成实现类（{@code SystemConverterImpl.java}），
+ *       性能优于反射（{@code BeanUtils}）</li>
+ *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入，开箱即用</li>
+ *   <li>同名字段自动映射；不同名字段通过 {@code @Mapping} 显式标注</li>
+ *   <li><b>不暴露敏感字段</b>：{@code AppInfo.appSecret} 永远不会被转换到 VO</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b>
+ * <pre>{@code
+ * // 单个转换
+ * AppInfoVO vo = SystemConverter.INSTANT.entityToVO(entity);
+ *
+ * // 批量转换
+ * List<ConfigVO> vos = SystemConverter.INSTANT.configListToVO(entities);
+ * }</pre>
+ *
+ * <p><b>覆盖范围（6 大实体 / 12 个方法）：</b>
+ * <ul>
+ *   <li>{@link AppInfo} → {@link AppInfoVO}</li>
+ *   <li>{@link Config} → {@link ConfigVO}</li>
+ *   <li>{@link DictItem} → {@link DictItemVO}</li>
+ *   <li>{@link DictType} → {@link DictTypeVO}</li>
+ *   <li>{@link DictVersion} → {@link DictVersionVO}</li>
+ *   <li>{@link Variable} → {@link VariableVO}</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.system.domain.entity AppInfo / Config / DictItem / DictType / DictVersion / Variable
+ * @see com.njydsz.system.domain.vo AppInfoVO / ConfigVO / DictItemVO / DictTypeVO / DictVersionVO / VariableVO
  */
 @Mapper
 public interface SystemConverter {

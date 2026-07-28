@@ -31,9 +31,72 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程委派代理（长期授权）服务实现
  *
- * <p>P1-4: 长期授权委派实现。
+ * <p>对 {@link FlowDelegateAuthService} 接口的完整实现，是工作流引擎的<b>长期授权</b>能力。
+ * 与「转办 / 委派」等单次操作不同，<b>长期授权</b>允许审批人将审批权限在一段时间内
+ * （如出差期间）整体委托给代理人，代理人代为处理所有审批任务，
+ * 是大厂 B 端工作流「灵活办公」的标准能力。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>授权创建（{@link #createAuth}）</b>：审批人设置授权规则
+ *       （授权人 / 被授权人 / 授权范围 / 生效起止时间）</li>
+ *   <li><b>授权查询（{@link #page / #getActiveAuths}）</b>：分页查询授权列表 / 查询当前生效的授权</li>
+ *   <li><b>授权撤销（{@link #revokeAuth}）</b>：审批人主动撤销授权（提前结束授权）</li>
+ *   <li><b>授权解析（{@link #resolveDelegatee}）</b>：审批任务创建时解析「实际审批人」
+ *       （原审批人 vs 被授权人）</li>
+ *   <li><b>授权到期清理（{@link #scanExpired}）</b>：定时任务清理过期授权</li>
+ * </ul>
+ *
+ * <p><b>授权范围：</b>
+ * <ul>
+ *   <li>{@code ALL} — 全部流程（最常用，审批人整体授权）</li>
+ *   <li>{@code SPECIFIC_FLOW} — 指定流程（精确授权，避免敏感流程外泄）</li>
+ *   <li>{@code SPECIFIC_NODE} — 指定节点（更细粒度，仅特定节点的审批权）</li>
+ *   <li>{@code BY_DEPT} — 按部门（适合部门负责人授权给副手）</li>
+ * </ul>
+ *
+ * <p><b>与转办 / 委派的区别：</b>
+ * <table>
+ *   <caption>授权 / 转办 / 委派对比</caption>
+ *   <tr><th>维度</th><th>长期授权</th><th>转办</th><th>委派</th></tr>
+ *   <tr><td>时效</td><td>长期（天 / 周）</td><td>单次</td><td>单次</td></tr>
+ *   <tr><td>影响范围</td><td>所有后续任务</td><td>当前任务</td><td>当前任务</td></tr>
+ *   <tr><td>审计标注</td><td>「XX 授权给 YY 处理」</td><td>「XX 转办给 YY」</td><td>「XX 委派给 YY」</td></tr>
+ *   <tr><td>权限归属</td><td>代理人代为行使</td><td>受让人接收</td><td>受让人处理后返回</td></tr>
+ *   <tr><td>典型场景</td><td>出差期间</td><td>当前任务不方便处理</td><td>需要专业判断</td></tr>
+ * </table>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}</li>
+ *   <li>{@link #scanExpired} 定时清理任务通过 {@code @Scheduled} + 集群锁保证单点执行</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>授权互斥</b>：同一审批人同一时间段只能存在一个「全量授权」，
+ *       创建新授权时自动撤销旧的「全量授权」</li>
+ *   <li><b>授权叠加</b>：审批人可同时存在多个「指定流程 / 指定节点」的授权（互不冲突）</li>
+ *   <li><b>授权可追溯</b>：代理人代为处理的任务，审计日志记录「由 ZZ 代批（原审批人 XX）」</li>
+ *   <li><b>授权自动失效</b>：到 {@code expireAt} 时间后授权自动失效，
+ *       后续任务不再路由到代理人</li>
+ *   <li><b>授权通知</b>：授权创建 / 撤销时通过 {@link FlowOfflineAutoForwardService}
+ *       通知被授权人</li>
+ *   <li><b>授权防滥用</b>：被授权人代批时，审计记录双签名（审批人 + 代理人），
+ *       避免代理人越权</li>
+ * </ul>
+ *
+ * <p><b>审计追溯：</b>所有授权动作记录到 {@code ydsz_flow_audit_log}，
+ * 包括「授权人 / 被授权人 / 授权范围 / 起止时间 / 撤销时间」。
+ * 代批任务的审计日志同时记录「原审批人 / 代理人」便于合规追溯。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowDelegateAuthService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowDelegateAuth 委派代理实体
+ * @see FlowOfflineAutoForwardService 离线自动转交服务（与委派不同：离线是自动转交，委派是主动授权）
+ * @see FlowTaskAuditService 任务审计服务
  */
 @Slf4j
 @Service

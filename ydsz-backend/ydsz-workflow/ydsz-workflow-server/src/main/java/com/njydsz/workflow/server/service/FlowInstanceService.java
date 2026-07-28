@@ -13,7 +13,37 @@ import com.njydsz.workflow.domain.entity.FlowNode;
 /**
  * 流程实例 Service
  *
+ * <p>流程实例是工作流引擎的<b>运行时核心</b>，本 Service 负责实例的整个生命周期：
+ * 启动、查询、终止、挂起/激活、归档、子流程级联等。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>实例生命周期</b>：启动（{@link #start}）/ 终止（{@link #terminate}）/ 挂起（{@link #suspend}）/ 激活（{@link #activate}）/ 完成（{@link #complete}）</li>
+ *   <li><b>批量能力</b>：批量启动（{@link #batchStartInstances}）/ 批量终止（{@link #batchTerminate}）</li>
+ *   <li><b>查询能力</b>：按 ID / 按业务关联 / 按发起人 / 按状态 / 待办聚合查询</li>
+ *   <li><b>子流程</b>：父-子流程级联（终止时自动终止所有子实例）</li>
+ *   <li><b>幂等性</b>：{@link #start} 基于 {@code (businessType, businessId)} 唯一索引保证幂等</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>{@link #start} 整体事务（含初始化任务、抄送、审计日志）</li>
+ *   <li>{@link #batchStartInstances} 每个 {@link FlowStartProcessDTO} 独立事务</li>
+ *   <li>跨服务调用（如业务侧）使用 {@code Spring Event} 解耦，避免大事务</li>
+ * </ul>
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>「我的发起」「我的待办」使用 {@code ydsz_flow_instance} 复合索引（{@code idx_initiator}）</li>
+ *   <li>待办列表使用 {@link FlowRunTask} 索引（{@code idx_assignee}）避免 JOIN</li>
+ *   <li>实例详情通过冗余字段（{@code initiatorName/currentNodeName}）减少 JOIN</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.server.service.impl.FlowInstanceServiceImpl 实现类
+ * @see FlowTaskService 任务服务（实例推进的核心执行器）
  */
 public interface FlowInstanceService {
 

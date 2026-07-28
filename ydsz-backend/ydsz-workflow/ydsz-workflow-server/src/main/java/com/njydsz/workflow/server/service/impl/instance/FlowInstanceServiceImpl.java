@@ -76,9 +76,56 @@ import org.slf4j.MDC;
 /**
  * 流程实例 Service 实现
  *
- * <p>P0 修复：补全 onInstanceStart / onError 事件触发、挂起冻结任务、撤回功能。
+ * <p>对 {@link FlowInstanceService} 接口的完整实现，是工作流引擎<b>运行时核心</b>。
+ * 承担流程实例的整个生命周期：启动、查询、终止、挂起/激活、撤回、子流程级联、批量操作。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>实例生命周期</b>：{@link #start} / {@link #terminate} / {@link #suspend} /
+ *       {@link #activate} / {@link #complete} / {@link #recall}</li>
+ *   <li><b>批量操作</b>：{@link #batchStartInstances}（{@code self} 代理触发事务）/
+ *       {@link #batchTerminate}（单失败不影响其它）</li>
+ *   <li><b>查询能力</b>：按 ID / 按业务关联 / 按发起人 / 按状态 / 按租户 / 待办聚合 / 分页</li>
+ *   <li><b>子流程级联</b>：父流程终止时自动终止全部子流程（{@link FlowSubProcessService}）</li>
+ *   <li><b>灰度发布</b>：{@link #start} 通过 {@link FlowCanaryService#resolveEffectiveDefinition} 切流</li>
+ *   <li><b>三方同步</b>：终止 / 撤回时通过 {@link FlowThirdPartySyncService} 通知钉钉 / 飞书 / 企微</li>
+ *   <li><b>事件总线</b>：{@link ApplicationEventPublisher} 异步广播 {@code onInstanceStart / onError} 等</li>
+ *   <li><b>幂等性</b>：{@link #start} 基于 {@code (businessType, businessId, tenantId)} 复合唯一索引</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写方法开启 {@code @Transactional(rollbackFor = Exception.class)}，确保「实例 + 任务 + 审计日志 + 事件」原子性</li>
+ *   <li>{@link #batchStartInstances} 通过 {@code self} 代理引用调用 {@link #start}，触发 Spring 事务代理</li>
+ *   <li>事件发送使用 {@code TransactionalEventListener} 在事务提交后异步处理，避免回滚与事件不一致</li>
+ * </ul>
+ *
+ * <p><b>并发控制：</b>
+ * <ul>
+ *   <li>悲观锁：{@link #start} 通过 {@code SELECT ... FOR UPDATE} 锁住业务行，避免同 business 并发启动</li>
+ *   <li>分布式锁：{@link YdszDistributedLock} 注解保护关键操作（如「同发起人同时只能有一个流程」）</li>
+ *   <li>乐观锁：{@link FlowInstance} 继承 {@code revision} 字段，并发更新自动重试</li>
+ * </ul>
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>「我的发起」使用 {@code ydsz_flow_instance} 复合索引（{@code idx_tenant_initiator}）</li>
+ *   <li>读路径通过 {@link NameAssembler} 兜底富化 {@code initiatorName}，避免 N+1</li>
+ *   <li>实例完成 → 异步归档至 {@code ydsz_flow_his_instance}，主表保留活跃实例</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>所有查询与写入均按 {@code tenantId} 隔离，DTO 显式传入优先，回退
+ * {@code SecurityContext}，最后兜底 {@code "1"}（默认租户）。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowInstanceService 接口定义
+ * @see FlowInstance 流程实例实体
+ * @see FlowAdvancer 流程推进引擎
+ * @see FlowCanaryService 灰度发布服务
+ * @see FlowSubProcessService 子流程服务
+ * @see FlowThirdPartySyncService 三方审批同步服务
  */
 @Slf4j
 @Service
@@ -158,6 +205,27 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     /** P0-2: 事务性 Outbox 事件服务（可选，未配置时为 null） */
     private final ObjectProvider<OutboxService> outboxServiceProvider;
 
+    /**
+     * 启动流程实例
+     *
+     * <p>完整执行链路：
+     * <ol>
+     *   <li><b>参数校验</b>：{@code flowCode / businessType / businessId} 必填</li>
+     *   <li><b>幂等检查</b>：按 {@code (tenantId, businessType, businessId)} 查已存在活跃实例，存在则直接返回其 ID（防重）</li>
+     *   <li><b>灰度解析</b>：{@link FlowCanaryService#resolveEffectiveDefinition} 按灰度规则选择稳定版或灰度版定义</li>
+     *   <li><b>变量策略</b>：通过 {@link FlowVariableStrategy} 注入发起人、业务变量、审批人解析参数</li>
+     *   <li><b>实例落库</b>：{@code ydsz_flow_instance} 写入，{@code flowStatus=RUNNING}</li>
+     *   <li><b>推进到开始节点</b>：通过 {@link FlowAdvancer} 计算下一节点并创建首个待办任务</li>
+     *   <li><b>事件触发</b>：发布 {@code onInstanceStart} 事件，由监听器异步处理通知 / 审计 / 埋点</li>
+     * </ol>
+     *
+     * <p><b>并发安全：</b>幂等检查使用「业务表 SELECT FOR UPDATE」悲观锁，
+     * 确保同 {@code business} 在毫秒级并发时仅创建一条实例。
+     *
+     * @param dto 启动参数 DTO（含 {@code flowCode/businessType/businessId/variables/initiatorId}）
+     * @return 流程实例 ID（新建或已存在）
+     * @throws SysException {@code BAD_REQUEST} — 参数缺失；{@code NOT_FOUND} — 流程定义未找到
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String start(FlowStartProcessDTO dto) {

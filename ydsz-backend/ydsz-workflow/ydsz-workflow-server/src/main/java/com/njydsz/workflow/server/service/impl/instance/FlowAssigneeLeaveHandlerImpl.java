@@ -23,38 +23,118 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 审批人离职/调岗自动处理服务实现（P1-1）
  *
- * <p>当审批人离职或调岗时，自动将其名下待办任务转交给替代人。
- * 替代人解析优先级：
+ * <p>对 {@link FlowAssigneeLeaveHandler} 接口的完整实现，是工作流引擎的<b>人事变更联动</b>能力。
+ * 当审批人发生<b>离职 / 调岗</b>等人事变更加，自动将其名下的待办任务转交给替代人，
+ * 避免「待办无人处理」导致的流程卡死。
+ * 是大厂 B 端工作流「业务连续性」的关键保障。
+ *
+ * <p><b>替代人解析优先级：</b>
  * <ol>
- *   <li>显式指定的替代人（replacementUserId 参数）</li>
- *   <li>有效的长期授权委派（FlowDelegateAuth）</li>
- *   <li>直属上级（通过 FeignFlowAssigneeResolver 查询 leader）</li>
- *   <li>流程管理员兜底（configurable，默认 userId=1）</li>
+ *   <li><b>显式指定</b>：调用方传入的 {@code replacementUserId} 参数（最高优先级）</li>
+ *   <li><b>长期授权委派</b>：从 {@code ydsz_flow_delegate_auth} 表查询用户当前生效的委派</li>
+ *   <li><b>直属上级</b>：通过 {@code FlowAssigneeResolver} 查询（避免循环依赖，当前<b>未启用</b>）</li>
+ *   <li><b>管理员兜底</b>：{@code ADMIN_FALLBACK_USER_ID}（默认 {@code 1}，可通过配置覆盖）</li>
  * </ol>
  *
- * <p>支持的离职类型：
+ * <p><b>支持的离职类型：</b>
  * <ul>
- *   <li>{@code RESIGN} — 离职：所有待办转交给替代人</li>
- *   <li>{@code TRANSFER} — 调岗：仅转交当前部门相关流程的待办（简化实现中与 RESIGN 一致）</li>
+ *   <li>{@code RESIGN} — <b>离职</b>：所有待办（PENDING / CLAIMED）转交给替代人</li>
+ *   <li>{@code TRANSFER} — <b>调岗</b>：当前实现与 RESIGN 一致（仅转交当前部门相关流程）</li>
  * </ul>
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>替代人解析</b>：{@link #resolveReplacement} — 按优先级解析替代人</li>
+ *   <li><b>授权委派查询</b>：{@link #findActiveDelegate} — 查询用户当前有效的委派记录</li>
+ *   <li><b>批量转交</b>：{@link #handleLeave} — 遍历用户名下所有待办任务，调用
+ *       {@link FlowTaskService#transfer} 执行转交</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>{@code handleLeave} 开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ * 「替代人解析 + 任务查询 + 批量转交」原子性。
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>去重防护</b>：替代人与原审批人相同时直接跳过（避免自转交）</li>
+ *   <li><b>单条容错</b>：单条任务转交失败仅记录 warn 日志，<b>不影响其他任务</b></li>
+ *   <li><b>审计完整</b>：转交通知中带「[RESIGN] / [TRANSFER]」前缀，便于审计追溯</li>
+ *   <li><b>去重周期</b>：仅处理 {@code PENDING} / {@code CLAIMED} 状态任务，已完成任务不再处理</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 场景：张三离职，李四接管其所有审批待办
+ * int count = leaveHandler.handleLeave(
+ *     "1001",  // 张三
+ *     "RESIGN", // 离职类型
+ *     "1002",   // 李四（显式指定替代人）
+ *     "admin"   // 操作人（系统）
+ * );
+ * }</pre>
+ *
+ * <p><b>调用入口：</b>
+ * <ul>
+ *   <li>{@code ydsz-system} 用户管理模块在「用户离职 / 调岗」时通过 Feign / Event 触发本服务</li>
+ *   <li>支持<b>手动触发</b>（管理员主动调整）和<b>系统触发</b>（HR 系统推送）</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowAssigneeLeaveHandler 接口定义
+ * @see FlowRunTask 运行时任务实体
+ * @see FlowDelegateAuth 长期授权委派实体
+ * @see FlowTaskService 流程任务服务（转交通道）
+ * @see FlowDelegateAuthService 委派代理服务
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
 
-    /** 运行时任务 Mapper，查询离职人名下的待办任务 */
+    // ============================== 依赖注入 ==============================
+
+    /** 运行时任务 Mapper，负责 {@code ydsz_flow_run_task} 表的查询（待办任务来源） */
     private final FlowRunTaskMapper taskMapper;
-    /** 委派授权 Mapper，查询用户的有效长期授权委派记录 */
+
+    /** 委派授权 Mapper，负责 {@code ydsz_flow_delegate_auth} 表的查询（长期授权委派来源） */
     private final FlowDelegateAuthMapper delegateAuthMapper;
-    /** 流程任务服务，调用 transfer 接口执行任务转交 */
+
+    /** 流程任务服务，调用 {@code transfer} 接口执行任务转交（注入 {@code FlowTaskService} 门面） */
     private final FlowTaskService taskService;
 
-    /** 管理员兜底用户 ID（可通过配置覆盖） */
+    // ============================== 常量 ==============================
+
+    /**
+     * 管理员兜底用户 ID
+     *
+     * <p>当所有替代人解析均失败时使用。可通过外部配置覆盖（{@code workflow.leave.admin-fallback-user-id}），
+     * 当前实现为静态常量，默认 {@code "1"}（系统超级管理员）。
+     */
     private static final String ADMIN_FALLBACK_USER_ID = "1";
 
+    // ============================== 公共方法 ==============================
+
+    /**
+     * 处理审批人离职 / 调岗 — 批量转交名下待办
+     *
+     * <p><b>处理流程：</b>
+     * <ol>
+     *   <li>解析替代人（按优先级）</li>
+     *   <li>查询用户名下所有 {@code PENDING} / {@code CLAIMED} 状态任务</li>
+     *   <li>遍历调用 {@link FlowTaskService#transfer} 逐个转交</li>
+     *   <li>统计成功数并返回</li>
+     * </ol>
+     *
+     * <p><b>事务边界：</b>开启 {@code @Transactional(rollbackFor = Exception.class)}，
+     * 整个方法作为一个事务。单条转交失败仅记录 warn 日志<b>不回滚整体事务</b>。
+     *
+     * @param userId            离职 / 调岗人 ID
+     * @param leaveType         离职类型（{@code RESIGN} / {@code TRANSFER}，可空默认 {@code RESIGN}）
+     * @param replacementUserId 显式指定的替代人 ID（可空，将走委派 / 兜底逻辑）
+     * @param operatorId        操作人 ID（可空；为空时使用 {@code userId} 作为操作人）
+     * @return 成功转交的任务数（失败的任务不计入）
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int handleLeave(String userId, String leaveType, String replacementUserId, String operatorId) {
@@ -115,12 +195,21 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
         return successCount;
     }
 
+    // ============================== 私有方法 ==============================
+
     /**
-     * 解析替代审批人。
+     * 解析替代审批人（按优先级）
      *
-     * <p>优先级：显式指定 > 长期授权委派 > 管理员兜底。
-     * （直属上级由 FeignFlowAssigneeResolver 提供，此处暂不直接依赖以避免循环引用，
-     * 实际使用时可通过 Spring Event 异步查询 leader 后补充处理。）
+     * <p><b>解析优先级：</b>显式指定 &gt; 长期授权委派 &gt; 管理员兜底。
+     *
+     * <p><b>设计说明：</b>「直属上级」理论上应通过 {@code FlowAssigneeResolver} 查询，
+     * 但 {@code FlowAssigneeLeaveHandler} 已被 {@code FlowTaskService} 依赖，
+     * 若再依赖 {@code FlowAssigneeResolver}（{@code FlowTaskService} 也依赖）会形成循环。
+     * 实际使用中可通过 Spring Event 异步查询 leader 后补充处理。
+     *
+     * @param userId            原审批人 ID
+     * @param explicitReplacement 显式指定的替代人 ID（可空）
+     * @return 解析后的替代人 ID（非空）
      */
     private String resolveReplacement(String userId, String explicitReplacement) {
         // 1. 显式指定
@@ -142,7 +231,18 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
     }
 
     /**
-     * 查询用户当前有效的授权委派。
+     * 查询用户当前有效的授权委派
+     *
+     * <p>查询条件：
+     * <ul>
+     *   <li>{@code ownerUserId = userId} — 用户是授权人</li>
+     *   <li>{@code authStatus = 'ACTIVE'} — 授权状态为生效中</li>
+     *   <li>{@code startTime <= now} — 授权已生效</li>
+     *   <li>{@code endTime IS NULL OR endTime >= now} — 授权未过期</li>
+     * </ul>
+     *
+     * @param userId 授权人 ID
+     * @return 代理人 ID（{@link FlowDelegateAuth#getDelegateUserId()}）；无有效授权时返回 {@code null}
      */
     private String findActiveDelegate(String userId) {
         LocalDateTime now = LocalDateTime.now();

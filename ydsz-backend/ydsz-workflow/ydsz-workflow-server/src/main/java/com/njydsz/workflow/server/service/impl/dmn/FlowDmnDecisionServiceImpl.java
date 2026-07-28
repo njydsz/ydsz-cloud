@@ -26,20 +26,88 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P0-1: DMN 决策表 Service 实现
+ * DMN 决策表 Service 实现
  *
- * <p>核心评估逻辑：
- * <ol>
- *   <li>加载已发布决策表 + 启用规则（按 ruleOrder 正序）</li>
- *   <li>解析 inputDefinitions 获取输入列定义（name + expression）</li>
- *   <li>对每条规则，将其 inputEntries 与输入变量逐一比较</li>
- *   <li>根据 hitPolicy 返回结果（UNIQUE/FIRST 取首条，COLLECT 收集全部）</li>
- * </ol>
+ * <p>对 {@link FlowDmnDecisionService} 接口的完整实现，是工作流引擎的<b>规则决策</b>扩展。
+ * 实现 OMG <b>DMN（Decision Model and Notation）1.3</b> 规范中的<b>决策表（Decision Table）</b>运行时，
+ * 允许业务方通过表格化配置实现复杂业务规则（如「金额 + 客户等级 → 折扣率」），
+ * 是大厂 B 端工作流「规则化审批」的核心能力。
  *
- * <p>条件比较支持的操作符：{@code >=}, {@code <=}, {@code >}, {@code <}, {@code ==}, {@code !=},
- * {@code in:}（逗号分隔枚举）。"-"表示通配（不做限制）。
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>决策表加载</b>：根据 {@code decisionKey} 加载已发布的决策表 + 启用规则（按 {@code ruleOrder} 正序）</li>
+ *   <li><b>条件解析</b>：解析 {@code inputDefinitions} 获取输入列定义（{@code name + expression}）</li>
+ *   <li><b>规则评估</b>：对每条规则，将其 {@code inputEntries} 与输入变量逐一比较</li>
+ *   <li><b>命中策略</b>：根据 {@code hitPolicy} 返回结果
+ *       （{@code UNIQUE/FIRST} 取首条，{@code COLLECT} 收集全部）</li>
+ *   <li><b>规则 CRUD</b>：决策表 / 规则的增删改查、版本管理、灰度发布</li>
+ * </ul>
  *
+ * <p><b>DMN 核心概念：</b>
+ * <table>
+ *   <caption>DMN 决策表核心字段</caption>
+ *   <tr><th>字段</th><th>说明</th></tr>
+ *   <tr><td>{@code decisionKey}</td><td>决策表唯一编码（业务方引用）</td></tr>
+ *   <tr><td>{@code hitPolicy}</td><td>命中策略：UNIQUE / FIRST / COLLECT / PRIORITY / RULE ORDER</td></tr>
+ *   <tr><td>{@code inputDefinitions}</td><td>输入列定义（JSON）：name / expression / type</td></tr>
+ *   <tr><td>{@code outputDefinitions}</td><td>输出列定义（JSON）：name / type</td></tr>
+ *   <tr><td>{@code rules}</td><td>规则集合（每条规则 = inputEntries + outputEntries）</td></tr>
+ *   <tr><td>{@code inputEntries}</td><td>规则输入条件</td></tr>
+ *   <tr><td>{@code outputEntries}</td><td>规则输出（命中时返回）</td></tr>
+ * </table>
+ *
+ * <p><b>条件比较支持的操作符：</b>
+ * <ul>
+ *   <li>{@code >=} / {@code <=} / {@code >} / {@code <} — 数值比较</li>
+ *   <li>{@code ==} / {@code !=} — 相等 / 不等</li>
+ *   <li>{@code in: 1,2,3} — 枚举匹配（逗号分隔）</li>
+ *   <li>{@code -} — 通配符（不做限制，总成立）</li>
+ * </ul>
+ *
+ * <p><b>命中策略（{@code hitPolicy}）：</b>
+ * <ul>
+ *   <li>{@code UNIQUE} — 只允许一条规则命中，多条命中报错</li>
+ *   <li>{@code FIRST} — 命中第一条符合的规则（按 {@code ruleOrder} 顺序）</li>
+ *   <li>{@code COLLECT} — 收集所有命中规则（用于「推荐列表」场景）</li>
+ *   <li>{@code PRIORITY} — 命中优先级最高的规则（按 {@code priority} 字段）</li>
+ *   <li>{@code RULE ORDER} — 按规则顺序返回所有命中</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}</li>
+ *   <li>决策表评估为<b>纯读</b>操作，启用 {@code @Transactional(readOnly = true)} 支持只读副本路由</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>规则热更新</b>：决策表变更通过 Nacos 配置中心热发布，<b>无需重启</b></li>
+ *   <li><b>规则版本</b>：每次「发布」生成新版本，支持回滚</li>
+ *   <li><b>规则审计</b>：所有评估记录到 {@code ydsz_flow_dmn_eval_log}，
+ *       包含「输入变量 + 命中规则 + 输出结果」</li>
+ *   <li><b>规则优先级</b>：同 {@code decisionKey} 多个版本时，优先使用最新已发布版本，
+ *       灰度中版本可按用户 / 租户路由</li>
+ *   <li><b>规则导入导出</b>：支持 Excel / DMN XML 格式批量导入导出</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 业务方在管理后台配置决策表
+ * decisionService.publish(decisionKey, inputDefs, outputDefs, rules);
+ *
+ * // 2. 流程节点调用决策表
+ * Map<String, Object> result = decisionService.evaluate(
+ *     "discount_rate", Map.of("amount", 100000, "vipLevel", "GOLD"));
+ * // result = { "discount": 0.15, "reason": "GOLD会员大额订单" }
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowDmnDecisionService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowDmnDecision 决策表实体
+ * @see com.njydsz.workflow.domain.entity.FlowDmnRule 决策规则实体
+ * @see com.njydsz.literule.api.spi.DecisionTableEvalProvider 决策表评估提供者（literule 模块）
  */
 @Slf4j
 @Service

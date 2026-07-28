@@ -31,18 +31,42 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
- * 字典项 Service 实现。
+ * 字典项 Service 实现
  *
- * <p>集成 Redis 缓存（TTL 可配置）、Micrometer 指标、缓存穿透防护（空值哨兵）、
+ * <p>对 {@link DictItemService} 接口的完整实现，是「字典中心」字典项管理的核心业务逻辑层。
+ * 集成 Redis 缓存（TTL 可配置）、Micrometer 指标、缓存穿透防护（空值哨兵）、
  * 字典版本快照（写操作自动记录变更历史，含完整快照支持回滚）。
  *
- * <p>缓存键：
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>{@code system:dict:item:{typeCode}:{itemCode}} — 单个字典项</li>
- *   <li>{@code system:dict:list:{typeCode}} — 字典项列表</li>
+ *   <li><b>CRUD</b>：{@code page} / {@code getById} / {@code save} / {@code updateById} / {@code removeById}，
+ *       全部走 {@code @Transactional} 事务保证</li>
+ *   <li><b>缓存读</b>：{@code getByTypeAndCode} / {@code listEnabledByTypeCode} — 走 Redis 缓存，
+ *       是前端下拉框的核心数据源</li>
+ *   <li><b>树形结构</b>：{@code listChildren} — 支持「省 / 市 / 区县」三级级联</li>
+ *   <li><b>版本快照</b>：写操作成功后异步调用 {@link DictVersionService#createVersion} 记录变更</li>
+ *   <li><b>唯一性校验</b>：保存前校验 {@code (tenantId, typeCode, itemCode)} 唯一性</li>
  * </ul>
  *
+ * <p><b>缓存设计：</b>
+ * <ul>
+ *   <li>单 key 缓存：{@code system:dict:item:{typeCode}:{itemCode}}，TTL 取自配置（默认 5min）</li>
+ *   <li>列表缓存：{@code system:dict:list:{typeCode}}，TTL 5min</li>
+ *   <li>空值哨兵：{@code __NULL__}，TTL 1min（防恶意刷不存在 typeCode）</li>
+ *   <li>写操作触发 {@code @CacheEvict} 主动失效</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}；
+ * 读方法不开启事务，依赖 MyBatis 自动提交。
+ *
+ * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离。
+ *
  * @author ydsz-team
+ * @since 1.0.0
+ *
+ * @see DictItemService 字典项 Service 接口
+ * @see DictServiceImpl 字典类型 Service 实现
+ * @see DictVersionService 字典版本 Service（写操作触发版本快照）
  */
 @Slf4j
 @Service
@@ -309,12 +333,9 @@ public class DictItemServiceImpl implements DictItemService {
     }
 
     /**
-     * 将 DO 转换为 VO。
+     * DTO 转换为 DO。
      *
-     * @param entity 数据库实体
-     * @return 视图对象，entity 为 null 时返回 null
-    /**
-     * 将 DTO 转换为 DO，status 为空时默认 ENABLED。
+     * <p>缺省 status = {@code "ENABLED"}，保证新建的字典项默认可用。
      *
      * @param dto 数据传输对象
      * @return 数据库实体

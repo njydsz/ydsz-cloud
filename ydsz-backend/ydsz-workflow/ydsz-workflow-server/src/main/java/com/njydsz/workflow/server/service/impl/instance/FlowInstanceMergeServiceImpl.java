@@ -23,11 +23,72 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P2-5: 多实例合并审批服务实现
+ * 多实例合并审批服务实现
  *
- * <p>使用 Redis 存储合并组关系，合并组内实例保持独立但共享审批操作。
+ * <p>对 {@link FlowInstanceMergeService} 接口的完整实现，是工作流引擎的<b>合并审批</b>扩展。
+ * 支持将多个流程实例合并为一个「审批批次」，由同一人一次性审批通过，
+ * 减少审批人在「重复业务场景」（如批量报销、批量请假）下的重复操作。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>合并组创建（{@link #createMergeGroup}）</b>：将多个流程实例合并到一个「合并组」，
+ *       共享审批动作（任一实例通过 / 驳回 → 全部通过 / 驳回）</li>
+ *   <li><b>合并组查询（{@link #getMergeGroupDetail}）</b>：查询合并组的实例列表与状态汇总</li>
+ *   <li><b>批量审批</b>：对合并组内所有实例执行「通过 / 驳回」操作，
+ *       操作记录同时写入每个实例的审计日志</li>
+ *   <li><b>合并组解散</b>：合并组内全部完成后自动解散（或手动解散）</li>
+ * </ul>
+ *
+ * <p><b>合并组设计：</b>
+ * <ul>
+ *   <li>使用 Redis Hash 存储「合并组 ID → 实例 ID 列表」映射，
+ *       支持快速查询合并组内全部实例</li>
+ *   <li>合并组 TTL 默认 7 天，过期后自动清理</li>
+ *   <li>每个实例可独立取消合并（{@code removeFromMergeGroup}），
+ *       取消后该实例独立审批</li>
+ * </ul>
+ *
+ * <p><b>典型场景：</b>
+ * <ul>
+ *   <li>「批量报销」：员工提交 10 张报销单，财务合并审批，一次性通过</li>
+ *   <li>「批量请假」：部门统一提交 20 个请假申请，主管合并审批</li>
+ *   <li>「批量入职」：HR 一次性发起 5 个入职流程，IT 主管合并审批电脑分配</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>合并组创建开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ *       确保「合并组记录 + 各实例关联」原子性</li>
+ *   <li>批量审批委托给 {@link FlowTaskService#pass} / {@link #reject}，每个实例独立事务，
+ *       单实例失败不影响合并组其它实例</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>合并组 vs 会签</b>：合并审批是「<b>合并提交</b>」（多个实例 → 一个审批动作），
+ *       区别于「会签」（一个节点 → 多人审批）。前者减少审批量，后者增加审批粒度</li>
+ *   <li><b>独立 vs 共享</b>：合并组内各实例保持独立（独立 {@code instanceId} / 待办 / 历史），
+ *       仅共享「审批动作」</li>
+ *   <li><b>审计追溯</b>：合并组审批记录每个实例的审计日志，
+ *       标注「由合并组 X 触发」，便于问题排查</li>
+ *   <li><b>部分驳回</b>：合并组支持「部分驳回」语义，
+ *       驳回一个实例不影响其它实例的审批进度</li>
+ * </ul>
+ *
+ * <p><b>Redis Key 设计：</b>
+ * <ul>
+ *   <li>{@code flow:merge:group:{groupId}} — Hash，字段为 {@code instanceId}，值为业务字段</li>
+ *   <li>{@code flow:merge:instance:{instanceId}} — String，记录实例所属合并组</li>
+ *   <li>所有 Key TTL = 7 天</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowInstanceMergeService 接口定义
+ * @see com.njydsz.common.redis.service.RedisService Redis 服务
+ * @see FlowTaskService 流程任务服务
+ * @see FlowInstanceService 流程实例服务
  */
 @Slf4j
 @Service

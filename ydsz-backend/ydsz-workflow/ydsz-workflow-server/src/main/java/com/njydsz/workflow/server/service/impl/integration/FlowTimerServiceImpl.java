@@ -36,11 +36,61 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 工作流定时器服务实现
  *
- * <p>P1-2: 内部每 30s 扫描到点的 PENDING 定时器并触发。
- * <p>中间定时器触发：调用 advancer.advance 推进流程到下一节点。
- * <p>边界定时器触发：取消 userTask（视为超时未完成），推进到边界定时器下游节点。
+ * <p>对 {@link FlowTimerService} 接口的完整实现，承担 BPMN 2.0 规范中
+ * <b>Timer 事件（中间定时器 / 边界定时器）</b>的运行时支持。内部每 30s 扫描到点的
+ * {@code PENDING} 定时器并触发，对标 Activiti / Flowable 的 Job Executor。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>定时器创建（{@link #scheduleTimer}）</b>：流程到达中间定时器或边界定时器节点时，
+ *       写入 {@code ydsz_flow_timer} 表，状态 = {@code PENDING}</li>
+ *   <li><b>定时器调度（{@link #scan}）</b>：{@link Scheduled} 注解每 30s 扫描到点的 PENDING 定时器</li>
+ *   <li><b>中间定时器触发</b>：调用 {@link FlowAdvancer#advance} 推进流程到下一节点（类似「延迟通过」）</li>
+ *   <li><b>边界定时器触发</b>：取消关联 {@code userTask}（视为超时未完成），推进到边界定时器下游节点</li>
+ *   <li><b>定时器取消（{@link #cancelTimer}）</b>：任务提前完成时取消关联定时器（避免超时误触发）</li>
+ * </ul>
+ *
+ * <p><b>定时器类型：</b>
+ * <ul>
+ *   <li>{@code TIME_DURATION} — 相对时间（{@code PT5M} 表示 5 分钟后）</li>
+ *   <li>{@code TIME_DATE} — 绝对时间（{@code 2026-12-31T23:59:59}）</li>
+ *   <li>{@code TIME_CYCLE} — 循环触发（{@code R3/PT1H} 表示每小时触发一次，共 3 次）</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}</li>
+ *   <li>通过 {@link FlowClusterLockHelper} 分布式锁保证集群中只有<b>一个节点</b>执行扫描，
+ *       避免重复触发同一定时器</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>集群单点扫描</b>：通过 {@code ydsz:flow:timer:scan:lock} 分布式锁保证同一时刻只有一个节点执行扫描</li>
+ *   <li><b>幂等触发</b>：同一定时器的多次触发由 {@code @Transactional} 串行化，
+ *       触发成功后立即置为 {@code TRIGGERED}，避免重复推进流程</li>
+ *   <li><b>失败重试</b>：触发失败的定时器记录 {@code retry_count}，下次扫描时重试（最多 3 次）</li>
+ *   <li><b>周期定时器</b>：{@code TIME_CYCLE} 类型的定时器在触发后自动创建下一周期记录</li>
+ * </ul>
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>扫描走 {@code idx_timer_pending} 复合索引（{@code status, due_at}），避免全表扫描</li>
+ *   <li>单次扫描上限 500 条，处理时间超过 30s 时主动退出循环，让下一周期继续</li>
+ * </ul>
+ *
+ * <p><b>与 SLA 的区别：</b>定时器是<b>流程设计期</b>配置（{@code timerEventDefinition}），
+ * SLA 是<b>流程设计期</b>配置（{@code slaConfig}）但由 {@link FlowSlaServiceImpl} 处理。
+ * 定时器是 BPMN 原生事件，SLA 是 ydsz 工作流扩展。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowTimerService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowTimer 定时器实体
+ * @see FlowAdvancer 流程推进引擎
+ * @see FlowSlaServiceImpl SLA 监控（与定时器同属「超时处理」但职责不同）
+ * @see FlowClusterLockHelper 集群锁辅助
  */
 @Slf4j
 @Service

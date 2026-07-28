@@ -58,9 +58,11 @@ public class AuthController {
      * 用户登录（账号密码模式）
      *
      * <p>认证流程：账号密码校验 → 滑块验证码校验（可选）→ 签发 access_token / refresh_token。
-     * 失败次数超限后账号会被自动锁定 {@code ydsz.auth.lock-duration-minutes} 分钟。
+     * <p>限流 50 QPS；5 秒幂等保护（防重放）；失败次数超限后账号会被自动锁定
+     * {@code ydsz.auth.lock-duration-minutes} 分钟（默认 30 分钟）。
+     * <p>成功登录会重置失败计数；失败累加计数到 {@code ydsz.auth.login-fail-threshold}（默认 5 次）触发锁定。
      *
-     * @param request 登录请求（含 username/password/captchaKey/captchaCode/tenantId 等）
+     * @param request 登录请求（含 username / password / captchaKey / captchaCode / tenantId）
      * @return 登录结果（accessToken / refreshToken / expiresIn / userInfo）
      */
     @RateLimit(resource = "userinfo.auth.login", threshold = 50)
@@ -76,10 +78,11 @@ public class AuthController {
      * 用户登出
      *
      * <p>将 access_token 加入 Redis 黑名单（TTL 与 token 剩余有效期对齐），
-     * 同时清理服务端会话状态。refresh_token 仍可使用一次以兼容客户端清理逻辑。
+     * 同时清理服务端会话状态（缓存的用户权限 / 角色）。
+     * <p>refresh_token 仍可使用一次以兼容客户端清理逻辑，业务方应在登出后主动丢弃 refresh_token。
      *
      * @param token Authorization 请求头（Bearer xxx 或裸 token）
-     * @return 成功响应
+     * @return 成功响应（无业务数据）
      */
     @PostMapping("/logout")
     @Operation(summary = "用户登出", description = "将 access_token 加入黑名单")
@@ -93,11 +96,13 @@ public class AuthController {
     /**
      * 刷新 access_token
      *
-     * <p>使用 refresh_token 换发新的 access_token（同时返回新的 refresh_token 实现轮换）。
-     * 旧 refresh_token 立即失效（一次性）。启用分布式锁防止并发重放。
+     * <p>使用 refresh_token 换发新的 access_token（同时返回<b>新的</b> refresh_token 实现 token 轮换），
+     * 旧 refresh_token 立即失效（一次性），防止 token 泄露后的长期滥用。
+     * <p>启用分布式锁（{@code ydsz:userinfo:AuthController:refresh:lock}）防止并发重放。
+     * <p>限流 50 QPS；5 秒幂等保护。
      *
-     * @param request 刷新请求（含 refreshToken）
-     * @return 新的登录结果
+     * @param request 刷新请求（含 refreshToken 字段）
+     * @return 新的登录结果（accessToken / refreshToken / expiresIn / userInfo）
      */
     @RateLimit(resource = "userinfo.auth.refresh", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:AuthController:refresh:lock", ttlSeconds = 5)
@@ -110,9 +115,13 @@ public class AuthController {
 
     /**
      * 刷新 Token 请求体
+     *
+     * <p>封装 refreshToken 字段，避免与 {@link LoginDTO} 耦合。
+     * 内部类，使用 Lombok {@code @Data} 自动生成 getter / setter / toString 等。
      */
     @Data
     public static class RefreshRequest {
+        /** 刷新令牌（来自上一次登录或上一次 refresh 响应） */
         private String refreshToken;
     }
 }

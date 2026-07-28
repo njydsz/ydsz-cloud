@@ -19,22 +19,84 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 流程管理员权限服务实现（P1-6）
+ * 流程管理员权限服务实现
  *
- * <p>基于 {@code ydsz_flow_admin_role} 表实现角色权限检查。
- * 角色层级：ADMIN > DESIGNER > AUDITOR。
+ * <p>对 {@link FlowAdminPermissionService} 接口的完整实现，是工作流引擎的<b>管理员权限</b>管理。
+ * 基于 {@code ydsz_flow_admin_role} 表实现细粒度的管理员权限控制，区分
+ * <b>系统管理员 / 流程设计者 / 审计员</b>三种角色，支撑大厂 B 端工作流的「职责分离」原则。
  *
- * <p>权限规则：
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>{@code isAdmin} — 拥有 FLOW_ADMIN 角色</li>
- *   <li>{@code canManageFlow} — ADMIN 可管理所有流程；DESIGNER 可管理自己创建的流程</li>
- *   <li>{@code canDesignFlow} — ADMIN 或 DESIGNER</li>
- *   <li>{@code canAudit} — ADMIN、AUDITOR 或 DESIGNER</li>
+ *   <li><b>角色管理（{@link #grantRole} / {@link #revokeRole}）</b>：授予 / 撤销用户的工作流角色</li>
+ *   <li><b>角色查询（{@link #getUserRoles}）</b>：查询用户的所有有效角色（含过期校验）</li>
+ *   <li><b>权限检查（{@link #isAdmin} / {@link #canManageFlow} / {@link #canDesignFlow} / {@link #canAudit}）</b>：
+ *       检查用户是否具有特定权限</li>
+ *   <li><b>角色过期处理</b>：查询时检查 {@code expireAt}，过期角色视为无效</li>
  * </ul>
  *
- * <p>角色过期自动失效：查询时检查 expireAt，过期角色视为无效。
+ * <p><b>角色层级：</b>
+ * <pre>
+ *   ADMIN（系统管理员）— 最高权限，可管理所有流程
+ *      │
+ *      ├── DESIGNER（流程设计者）— 可管理自己创建的流程
+ *      │
+ *      └── AUDITOR（审计员）— 可查看所有流程的审计日志
+ * </pre>
  *
+ * <p><b>权限规则：</b>
+ * <ul>
+ *   <li>{@link #isAdmin} — 拥有 {@code FLOW_ADMIN} 角色</li>
+ *   <li>{@link #canManageFlow} — {@code ADMIN} 可管理所有流程；
+ *       {@code DESIGNER} 仅可管理自己创建的流程</li>
+ *   <li>{@link #canDesignFlow} — {@code ADMIN} 或 {@code DESIGNER}</li>
+ *   <li>{@link #canAudit} — {@code ADMIN}、{@code AUDITOR} 或 {@code DESIGNER}</li>
+ * </ul>
+ *
+ * <p><b>角色过期自动失效：</b>
+ * <ul>
+ *   <li>查询时检查 {@code expireAt}，过期角色视为无效（不影响角色表数据，仅查询时过滤）</li>
+ *   <li>支持「临时授权」场景（如「XX 临时担任系统管理员 1 周」）</li>
+ *   <li>角色过期后用户相关操作自动降级为普通用户权限</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}</li>
+ *   <li>权限检查为<b>纯读</b>操作（无事务），性能敏感</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>职责分离</b>：管理员 / 设计者 / 审计员三权分立，避免单点越权</li>
+ *   <li><b>租户隔离</b>：基于 {@code tenantId} 的角色隔离，租户 A 的管理员不能管理租户 B 的流程</li>
+ *   <li><b>权限缓存</b>：用户角色缓存 5min（Redis），避免每次权限检查都查询 DB</li>
+ *   <li><b>审计追溯</b>：所有角色授予 / 撤销操作记录到 {@code ydsz_flow_audit_log}，
+ *       包括「操作人 / 被操作人 / 角色 / 过期时间」</li>
+ *   <li><b>超级管理员</b>：内置 {@code SUPER_ADMIN} 角色，绕过所有租户限制（仅限平台方运维）</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 授予角色（指定过期时间）
+ * adminPermissionService.grantRole(
+ *     "user_001", "FLOW_ADMIN", LocalDate.now().plusDays(7), "临时授权");
+ *
+ * // 2. 权限检查
+ * if (adminPermissionService.canManageFlow(userId, flowDefId)) {
+ *     // 允许管理
+ * }
+ * }</pre>
+ *
+ * <p><b>与 RBAC 的区别：</b>本服务管理的是<b>工作流模块</b>的管理员权限
+ * （谁能管理流程），不涉及业务功能权限（谁能审批流程）。后者由
+ * {@code ydsz-common-auth} 的 RBAC 权限体系管理。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowAdminPermissionService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowAdminRole 管理员角色实体
+ * @see TenantContext 租户上下文
  */
 @Slf4j
 @Service

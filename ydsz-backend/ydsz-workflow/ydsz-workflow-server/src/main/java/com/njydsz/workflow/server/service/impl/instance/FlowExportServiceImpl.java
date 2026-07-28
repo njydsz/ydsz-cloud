@@ -23,12 +23,71 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P1-1/P1-2: 审批单导出 Service 实现
+ * 审批单导出 Service 实现
  *
- * <p>生成带水印的 HTML 审批单，支持浏览器直接打印（window.print()）。
- * 水印为全页面覆盖的重复文字（操作人 + 时间），防止截图泄露。
+ * <p>对 {@link FlowExportService} 接口的完整实现，承担工作流引擎的<b>审批单导出</b>能力。
+ * 生成带<b>水印</b>的 HTML 审批单，支持浏览器直接打印（{@code window.print()}），
+ * 是大厂「审批留痕 / 打印存档」的标准做法。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>HTML 审批单生成</b>：基于流程实例 + 历史轨迹，生成结构化的 HTML 审批单，
+ *       包含「申请单 / 审批流程图 / 审批意见 / 审批结果 / 操作审计」五大区块</li>
+ *   <li><b>水印覆盖（核心安全特性）</b>：全页面覆盖重复文字水印
+ *       （格式：{@code 操作人姓名 + 操作时间 + 工号}），防止截图泄露</li>
+ *   <li><b>打印优化</b>：CSS {@code @media print} 适配 A4 纸，
+ *       自动隐藏「打印按钮 / 顶部导航」等非必要元素</li>
+ *   <li><b>电子签章（合规约束）</b>：本服务<b>不集成</b>电子签章能力，
+ *       审批单的「签署生效」诉求由独立「电子签章服务」承担</li>
+ * </ul>
+ *
+ * <p><b>水印设计：</b>
+ * <ul>
+ *   <li><b>覆盖范围</b>：全页面 fixed 定位，z-index 设为最高（9999），覆盖所有内容</li>
+ *   <li><b>重复密度</b>：水印在 200px × 200px 网格内重复，避免局部裁剪绕过</li>
+ *   <li><b>旋转角度</b>：-30° 旋转，文字斜向排布，增加裁剪难度</li>
+ *   <li><b>透明度</b>：0.15 透明度，不影响正常内容阅读</li>
+ *   <li><b>追溯能力</b>：水印文字包含「操作人 + 时间 + 工号」，截图外泄可追溯到具体操作人</li>
+ * </ul>
+ *
+ * <p><b>合规约束（重要）：</b>
+ * <ul>
+ *   <li>本服务<b>不集成</b>任何电子签章 / CA 证书 / 司法存证能力
+ *       （详见 {@code .trae/rules/workflow-pc-only.md} 与项目记忆硬约束）</li>
+ *   <li>本服务仅在 PC 浏览器中运行（{@code window.print()} API 仅 PC 支持）</li>
+ *   <li>审批单的「合法签署」诉求由业务方对接独立电子签章服务（e签宝 / 法大大 / DocuSign），
+ *       工作流引擎仅作为审批节点触发方</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>导出操作为<b>纯读</b>操作，无需事务</li>
+ *   <li>导出操作通过 {@code @Audit} 注解记录审计日志（异步持久化），
+ *       防止大规模导出被滥用为「数据窃取」</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>水印不可关闭</b>：水印通过 JavaScript / CSS 控制，导出 HTML 中<b>不含</b>「关闭水印」按钮</li>
+ *   <li><b>HTML 内嵌资源</b>：CSS / 图片内联到 HTML，使用 {@code data:} URI 避免外链依赖</li>
+ *   <li><b>审计追溯</b>：每次导出记录到 {@code ydsz_flow_audit_log}，
+ *       包括「操作人 / 操作时间 / 流程实例 ID」</li>
+ *   <li><b>打印友好</b>：避免使用 {@code position: fixed} 打印失效的元素，
+ *       改用 {@code transform: rotate} 模拟水印</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * String html = flowExportService.exportApprovalHtml(instanceId, currentUserId);
+ * // 返回 HTML 字符串，前端 window.open() 打开后调用 window.print()
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowExportService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowInstance 流程实例实体
+ * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
  */
 @Slf4j
 @Service

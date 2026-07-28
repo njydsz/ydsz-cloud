@@ -18,20 +18,101 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 条件表达式可视化编辑器服务实现（P2-1）。
+ * 条件表达式可视化编辑器服务实现（P2-1）
  *
- * <p>将前端结构化条件 JSON ↔ 表达式字符串双向转换。
+ * <p>对 {@link FlowConditionExprService} 接口的完整实现，是工作流设计器
+ * 「<b>可视化条件配置</b>」能力的服务端支撑。
+ * 负责将前端<b>结构化条件 JSON</b> ↔ <b>表达式字符串</b>双向转换，
+ * 是大厂 B 端工作流「业务方零代码配置条件」的关键能力。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>JSON → 表达式</b>：{@link #buildExpression} —
+ *       将结构化条件 JSON（{@code {logic, groups, rules}}）转换为 Aviator / SpEL 表达式字符串</li>
+ *   <li><b>表达式 → JSON</b>：{@link #parseExpression} —
+ *       将表达式字符串解析为结构化条件 JSON（用于设计器展示 / 编辑）</li>
+ *   <li><b>表达式校验</b>：{@link #validateExpression} —
+ *       校验表达式语法正确性，校验失败返回错误信息</li>
+ *   <li><b>测试执行</b>：{@link #testExecute} —
+ *       使用测试变量执行表达式，返回 true / false 验证条件语义</li>
+ * </ul>
+ *
+ * <p><b>支持的表达式引擎：</b>
+ * <ul>
+ *   <li><b>Aviator</b>（默认）：轻量、高性能 Java 表达式引擎，
+ *       支持数学运算 / 字符串操作 / 集合操作 / 自定义函数（{@code seq.contains / string.contains}）</li>
+ *   <li><b>SpEL</b>：Spring Expression Language，与 Spring 生态无缝集成，
+ *       支持 {@code #variable} 语法访问变量</li>
+ * </ul>
+ *
+ * <p><b>操作符映射：</b>
+ * <p>前端下拉选择的<b>结构化操作符</b>（如 {@code EQ / GT / IN / CONTAINS}）在转换时
+ * 映射为不同引擎的<b>原生操作符</b>，映射关系见 {@link #OPERATOR_MAP}：
+ * <pre>
+ *   EQ       → ==        / ==
+ *   NE       → !=        / !=
+ *   GT       → &gt;         / &gt;
+ *   GTE      → &gt;=        / &gt;=
+ *   LT       → &lt;         / &lt;
+ *   LTE      → &lt;=        / &lt;=
+ *   IN       → seq.in    / T(String).valueOf(#field).matches
+ *   NOT_IN   → !seq.in   / !
+ *   CONTAINS → string.contains / contains
+ *   IS_NULL  → ==nil     / == null
+ *   IS_EMPTY → string.isEmpty / empty
+ *   ...
+ * </pre>
+ *
+ * <p><b>事务边界：</b>本类不开启事务（{@code @Transactional} 缺失），所有方法为<b>纯函数式</b>操作，
+ * 不涉及数据库写入。{@code nodeMapper} 仅用于条件变更时的关联更新，由调用方决定事务边界。
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>操作符抽象</b>：通过 {@link #OPERATOR_MAP} 统一管理<b>结构化操作符</b>与<b>引擎原生符号</b>
+ *       的映射关系，新增操作符只需修改此 Map，无需修改业务逻辑</li>
+ *   <li><b>空安全</b>：{@code conditionJson} / {@code engine} 为 null 时直接返回空字符串</li>
+ *   <li><b>解析失败降级</b>：JSON 解析失败时返回空字符串，不抛异常（业务方可重新输入）</li>
+ *   <li><b>Aviator 5.x 兼容</b>：使用 {@link AviatorEvaluator#compile} 编译表达式，
+ *       支持 {@code seq.contains} 等内置函数</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 场景：业务方在设计器配置「金额 > 10000 且 部门 = 财务部」
+ * String conditionJson = """
+ *     {
+ *       "logic": "AND",
+ *       "groups": [
+ *         {"field": "amount", "op": "GT", "value": 10000},
+ *         {"field": "dept", "op": "EQ", "value": "finance"}
+ *       ]
+ *     }
+ *     """;
+ * String expr = exprService.buildExpression(conditionJson, "AVIATOR");
+ * // expr = "amount > 10000 && dept == 'finance'"
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowConditionExprService 接口定义
+ * @see AviatorEvaluator Aviator 表达式引擎
+ * @see FlowNode 流程节点（关联条件表达式的实体）
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
+    /** 流程节点 Mapper，用于条件变更时关联更新节点 ext 字段 */
     private final FlowNodeMapper nodeMapper;
 
-    /** 操作符映射：枚举 → Aviator / SpEL 符号 */
+    /**
+     * 操作符映射：枚举 → Aviator / SpEL 符号
+     *
+     * <p>Key 为前端下拉选择的<b>结构化操作符</b>，Value 为 {@code [Aviator符号, SpEL符号]} 数组。
+     * 新增操作符只需在此 Map 中新增一行即可，无需修改业务逻辑。
+     */
     private static final Map<String, String[]> OPERATOR_MAP = new LinkedHashMap<>();
 
     static {

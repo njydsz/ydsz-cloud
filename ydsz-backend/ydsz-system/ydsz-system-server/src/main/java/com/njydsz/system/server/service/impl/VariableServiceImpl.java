@@ -25,11 +25,32 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
- * 系统变量 Service 实现。
+ * 系统变量 Service 实现
  *
- * <p>集成 Redis 缓存（TTL 可配置）、Micrometer 指标、缓存穿透防护，与 ConfigService 能力对齐。
+ * <p>实现 {@link VariableService} 接口，封装系统变量的 CRUD、按 key 查询值、分页查询等能力。
+ * 集成 Redis 缓存（TTL 可配置）、Micrometer 指标、缓存穿透防护，与 {@link ConfigServiceImpl} 能力对齐。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li>封装变量表增删改查（事务保证）</li>
+ *   <li>按变量键快速查询（Redis 缓存）</li>
+ *   <li>缓存穿透防护（空值哨兵）</li>
+ *   <li>行级数据权限过滤（{@code @DataScope}）</li>
+ * </ul>
+ *
+ * <p><b>缓存设计：</b>
+ * <ul>
+ *   <li>缓存键：{@code system:variable:value:{variableKey}}</li>
+ *   <li>TTL 取自配置 {@code ydsz.system.variable.cache-ttl-minutes}，默认 5 分钟</li>
+ *   <li>空值哨兵（{@link #NULL_SENTINEL}）防缓存穿透，1 分钟 TTL</li>
+ *   <li>写操作触发缓存失效（{@link #evictCache}）</li>
+ * </ul>
+ *
+ * <p><b>与 ConfigService 的区别：</b>Variable 用于业务侧动态参数（如当前生效的会计年度、最近结算月份等），
+ * 业务方可通过 {@code VariableClient}（Feign）远程查询；Config 用于系统级配置，由后端模块消费。
  *
  * @author ydsz-team
+ * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -197,12 +218,9 @@ public class VariableServiceImpl implements VariableService {
     }
 
     /**
-     * 将 DO 转换为 VO。
+     * DTO 转换为 DO。
      *
-     * @param entity 数据库实体
-     * @return 视图对象，entity 为 null 时返回 null
-    /**
-     * 将 DTO 转换为 DO，status 为空时默认 ENABLED。
+     * <p>缺省 status = {@code "ENABLED"}，保证新建的变量默认可用。
      *
      * @param dto 数据传输对象
      * @return 数据库实体

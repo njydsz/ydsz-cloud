@@ -32,21 +32,81 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * GAP-P1: 审批效率分析服务实现
+ * 审批效率分析服务实现
  *
- * <p>数据来源为 {@code ydsz_flow_his_task} 历史任务归档表。
- * 当前版本为简化实现：通过 MyBatis-Plus 查询后在 Java 层聚合。
- * 后续数据量增大后可改为 SQL GROUP BY 聚合查询优化性能。
+ * <p>对 {@link FlowEfficiencyService} 接口的完整实现，是工作流引擎的<b>效率分析</b>能力。
+ * 通过分析历史任务数据，提供「平均耗时 / 代批率 / 超期率 / 节点效率」等核心效率指标，
+ * 是大厂 B 端工作流「数据驱动管理」的关键支撑。
  *
- * <p>核心指标：
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>totalCount — 审批单量</li>
- *   <li>avgDurationMs — 平均耗时（毫秒）</li>
- *   <li>proxyRate — 代批率（委派代理人完成 PASS/REJECT 的任务占比，数据来源 ydsz_flow_audit_log）</li>
- *   <li>overdueRate — 超期率（taskStatus=TIMEOUT 的占比）</li>
+ *   <li><b>效率指标计算（{@link #calculateEfficiency}）</b>：按维度（流程 / 部门 / 审批人 / 时间范围）
+ *       计算「平均耗时 / 通过率 / 驳回率 / 代批率 / 超期率」</li>
+ *   <li><b>效率排行榜（{@link #getEfficiencyRanking}）</b>：TOP 10 高效 / 低效审批人 / 部门</li>
+ *   <li><b>节点效率分析（{@link #analyzeNodeEfficiency}）</b>：识别「卡单节点 / 高耗时节点」</li>
+ *   <li><b>趋势分析（{@link #analyzeEfficiencyTrend}）</b>：效率指标的环比 / 同比趋势</li>
+ *   <li><b>个人效率报告（{@link #getUserEfficiencyReport}）</b>：单个审批人的效率报告</li>
  * </ul>
  *
+ * <p><b>核心指标：</b>
+ * <ul>
+ *   <li>{@code totalCount} — 审批单量（指定时间范围内的审批任务总数）</li>
+ *   <li>{@code avgDurationMs} — 平均耗时（毫秒，从任务创建到完成的时间）</li>
+ *   <li>{@code proxyRate} — 代批率（委派代理人完成 PASS/REJECT 的任务占比，
+ *       数据来源 {@code ydsz_flow_audit_log}）</li>
+ *   <li>{@code overdueRate} — 超期率（{@code taskStatus=TIMEOUT} 的占比）</li>
+ *   <li>{@code passRate} — 通过率（通过的审批任务占比）</li>
+ *   <li>{@code rejectRate} — 驳回率（驳回的审批任务占比）</li>
+ *   <li>{@code p50DurationMs / p90DurationMs / p99DurationMs} — 耗时分位数</li>
+ * </ul>
+ *
+ * <p><b>数据来源：</b>
+ * <ul>
+ *   <li>{@code ydsz_flow_his_task} — 历史任务表（已完成任务的归档数据，主要数据源）</li>
+ *   <li>{@code ydsz_flow_audit_log} — 审计日志表（代批率等需要审计信息的指标）</li>
+ *   <li>{@code ydsz_flow_run_task} — 运行时任务表（卡单检测、活跃任务统计）</li>
+ *   <li>{@code ydsz_flow_instance} — 流程实例表（实例维度统计）</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>全类启用 {@code @Transactional(readOnly = true)}，支持只读副本路由（效率分析对实时性要求低）</li>
+ *   <li>多表 JOIN 查询走 {@code idx_his_task_completed} 复合索引</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>聚合策略</b>：当前版本为简化实现，通过 MyBatis-Plus 查询后在 Java 层聚合；
+ *       后续数据量增大后可改为 SQL {@code GROUP BY} 聚合查询优化性能</li>
+ *   <li><b>缓存策略</b>：效率指标缓存 1h（效率数据时效性要求低），避免重复聚合</li>
+ *   <li><b>权限隔离</b>：基于 {@code @DataScope} 的数据权限，普通用户仅能查看自己部门的效率数据</li>
+ *   <li><b>趋势对比</b>：支持「环比上月 / 同比去年」对比，识别效率提升 / 下降趋势</li>
+ *   <li><b>异常检测</b>：识别「单节点耗时激增」「某部门驳回率飙升」等异常</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 计算某部门近 30 天的审批效率
+ * EfficiencyMetrics metrics = efficiencyService.calculateEfficiency(
+ *     EfficiencyQuery.builder()
+ *         .deptId("FINANCE")
+ *         .startDate(LocalDate.now().minusDays(30))
+ *         .endDate(LocalDate.now())
+ *         .build());
+ *
+ * // 2. 获取 TOP 10 高效审批人
+ * List<EfficiencyRanking> ranking = efficiencyService.getEfficiencyRanking(
+ *     "FINANCE", LocalDate.now().minusDays(30), LocalDate.now(), 10);
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowEfficiencyService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
+ * @see com.njydsz.workflow.domain.entity.FlowAuditLog 审计日志实体
+ * @see com.njydsz.workflow.domain.entity.FlowRunTask 运行时任务实体
+ * @see FlowTaskAuditService 任务审计服务（提供「委派」「代批」审计数据）
  */
 @Slf4j
 @Service

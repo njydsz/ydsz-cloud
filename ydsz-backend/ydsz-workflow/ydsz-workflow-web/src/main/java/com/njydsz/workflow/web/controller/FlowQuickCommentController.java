@@ -26,10 +26,36 @@ import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 /**
  * 审批常用语 Controller
  *
- * <p>P1-2: 对标钉钉/飞书审批的"常用语"能力。
+ * <p>对标钉钉 / 飞书审批的「常用语」能力，提供审批人常用审批意见的 HTTP 接口。
+ * 系统预设 + 用户自定义双轨制，使用次数智能排序。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>查询</b>：{@code GET /quickComments}（当前用户常用语，按 sortNum + useCount 排序）</li>
+ *   <li><b>新增</b>：{@code POST /quickComments}（新增用户自定义常用语）</li>
+ *   <li><b>编辑</b>：{@code PUT /quickComments/{id}}（仅编辑本人创建的）</li>
+ *   <li><b>删除</b>：{@code DELETE /quickComments/{id}}（系统预设不可删）</li>
+ *   <li><b>计数</b>：{@code POST /quickComments/{id}/use}（审批时调用 +1）</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>所有操作按 {@link TenantContext} 当前租户隔离；
+ * 跨租户常用语不可见。
+ *
+ * <p><b>权限模型：</b>所有写接口通过 {@link Idempotent} 5s 防重；
+ * 删除操作额外校验「操作用户 == 创建人」防越权。
+ *
+ * <p><b>性能优化：</b>查询按 {@code (user_id, tenant_id, is_system, sort_num)} 复合索引；
+ * 使用次数走 {@code use_count} 字段，前端按 sortNum + useCount 排序展示。
+ *
+ * <p><b>设计原则：</b>Controller 仅做参数透传与租户注入；常用语业务逻辑下沉到
+ * {@link FlowQuickCommentService}，使用次数自增由 Service 通过单条 UPDATE SQL 完成。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowQuickCommentService 常用语服务
+ * @see FlowQuickComment 常用语实体
+ * @see FlowQuickCommentDTO 常用语 DTO
  */
 @Slf4j
 @Validated

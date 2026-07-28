@@ -23,9 +23,14 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_rule_version_history")
 public class RuleVersionHistory extends MpBaseEntity<String> {
 
+    /** 规则编码 */
     private String ruleCode;
+    /** 版本号 */
     private Integer version;
+    /** 该版本的规则定义 JSON 快照 */
     private String definitionJson;
+    /** 变更说明 */
     private String changeDesc;
+    /** 操作人 */
     private String operator;
 }

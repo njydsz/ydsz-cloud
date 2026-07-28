@@ -45,6 +45,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  * 文件下载 REST API
  * <p>
  * 提供文件下载接口，集成下载限流与防盗链验证。
+ * 支持单文件下载、批量下载（ZIP 打包）、签名下载。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/nextwiki/download}
  *
  * @author ydsz-team
  * @since 1.0.0

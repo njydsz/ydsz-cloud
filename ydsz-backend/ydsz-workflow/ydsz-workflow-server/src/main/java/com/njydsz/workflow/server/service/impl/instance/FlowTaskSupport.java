@@ -21,45 +21,131 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * FlowTask 跨子 Service 共享的辅助方法（任务校验、审计、事件）
+ * FlowTask 跨子 Service 共享的辅助组件（任务校验、审计、事件）
  *
- * <p>从原 {@code FlowTaskServiceImpl} 拆分而来，提供各子 Service 共用的工具方法，
- * 避免代码重复。仅包含被多个子 Service 共享的方法；单一子 Service 专用的私有
- * 方法仍保留在对应子 Service 内部。
+ * <p>从原 {@code FlowTaskServiceImpl}（单体实现 1847 行）拆分而来，承担所有 FlowTask 子 Service
+ * （{@link FlowTaskQueryServiceImpl} / {@link FlowTaskCompleteServiceImpl} /
+ * {@link FlowTaskSignServiceImpl} / {@link FlowTaskBatchServiceImpl}）<b>共享</b>的工具方法，
+ * 避免跨子 Service 代码重复，提升复用性。
  *
- * <p>包含的能力：
+ * <p><b>拆分原则：</b>
  * <ul>
- *   <li>{@link #getTaskOrThrow(Long)} — 按主键查任务，不存在抛 NOT_FOUND</li>
- *   <li>{@link #audit} — 审计日志写入（带/不带意见分类两个重载）</li>
- *   <li>{@link #fireEvent} — 触发事件监听器（吞异常，避免单监听器失败影响主流程）</li>
- *   <li>{@link #publishWorkflowEvent} — 发布 Spring 异步事件</li>
+ *   <li>仅纳入被 <b>2 个及以上</b> 子 Service 引用的方法；单一子 Service 专用的私有方法
+ *       仍保留在对应子 Service 内部</li>
+ *   <li>本类<b>不依赖任何业务子 Service</b>，避免循环依赖</li>
+ *   <li>本类<b>不开启事务</b>（{@code @Transactional} 缺失），所有方法由调用方决定事务边界</li>
  * </ul>
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>任务校验</b>：{@link #getTaskOrThrow} — 按主键查任务，缺失时抛 {@link SysException}（{@code NOT_FOUND}）</li>
+ *   <li><b>审计日志写入</b>：{@link #audit} — 提供无意见分类 / 带意见分类（{@code AGREE/DISAGREE/SUGGEST/INQUIRE}）
+ *       两个重载，统一审计日志格式与脱敏处理</li>
+ *   <li><b>事件触发</b>：{@link #fireEvent} — 遍历执行所有 {@link FlowEventListener}，
+ *       <b>单监听器失败不影响整体</b>（try-catch 吞掉）</li>
+ *   <li><b>Spring 事件发布</b>：{@link #publishWorkflowEvent} — 通过 {@link ApplicationEventPublisher}
+ *       异步发布 {@link FlowWorkflowEvent}，支持跨模块解耦</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>异常降级</b>：所有方法均 try-catch 兜底（除 {@link #getTaskOrThrow}），
+ *       单点失败不影响主流程事务</li>
+ *   <li><b>敏感数据脱敏</b>：审计日志写入前通过 {@link FlowSensitiveMasker#mask} 对 {@code comment}
+ *       脱敏，避免手机号 / 身份证 / 银行卡等敏感信息写入审计日志</li>
+ *   <li><b>ApplicationEventPublisher 可空</b>：测试环境可能未注入，
+ *       {@link #publishWorkflowEvent} 内做空检查避免 NPE</li>
+ *   <li><b>事件监听器空安全</b>：{@link #fireEvent} 对 {@code eventListeners} 列表做空检查，
+ *       避免 NPE</li>
+ * </ul>
+ *
+ * <p><b>调用方：</b>
+ * <pre>
+ *   FlowTaskCompleteServiceImpl ─┐
+ *   FlowTaskSignServiceImpl     ─┼─→ FlowTaskSupport (本类)
+ *   FlowTaskBatchServiceImpl    ─┤
+ *   FlowTaskQueryServiceImpl    ─┘
+ * </pre>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 任务校验（子 Service 内）
+ * FlowRunTask task = flowTaskSupport.getTaskOrThrow(taskId);
+ *
+ * // 2. 审计日志（PASS 操作）
+ * flowTaskSupport.audit(task, "PASS", operatorId, task.getAssigneeId(),
+ *         "同意，原因：符合规范", "AGREE");
+ *
+ * // 3. 触发监听器
+ * flowTaskSupport.fireEvent(listener -> listener.onTaskPass(task, operator), taskId);
+ *
+ * // 4. 发布 Spring 事件
+ * flowTaskSupport.publishWorkflowEvent("TASK_PASS", task.getInstanceId(), taskId);
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowTaskServiceImpl FlowTask 门面（拆分入口）
+ * @see FlowRunTask 运行时任务实体
+ * @see FlowAuditLog 审计日志实体
+ * @see FlowEventListener 事件监听器 SPI
+ * @see FlowWorkflowEvent Spring 异步事件
+ * @see FlowSensitiveMasker 敏感数据脱敏器
+ * @see SysException 业务异常
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class FlowTaskSupport {
 
-    /** 运行时任务 Mapper，查询/更新任务状态 */
+    // ============================== 依赖注入 ==============================
+
+    /** 运行时任务 Mapper，负责 {@code ydsz_flow_run_task} 表的查询 / 更新 / 状态扭转 */
     private final FlowRunTaskMapper taskMapper;
-    /** 审计日志 Mapper，写入任务操作审计轨迹 */
+
+    /** 审计日志 Mapper，负责 {@code ydsz_flow_audit_log} 表的写入，承载任务操作审计轨迹 */
     private final FlowAuditLogMapper auditLogMapper;
-    /** 事件监听器列表（Spring 自动注入所有实现），处理流程生命周期事件 */
+
+    /**
+     * 事件监听器列表（Spring 自动注入所有 {@link FlowEventListener} 实现）
+     *
+     * <p>工作流引擎的 SPI 扩展点：业务方实现 {@link FlowEventListener} 即可订阅
+     * 任务生命周期事件（创建 / 通过 / 驳回 / 转办 / 委派 / 加签 / 撤回等）。
+     */
     private final List<FlowEventListener> eventListeners;
-    /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
+
+    /**
+     * P2-35: Spring 事件发布器
+     *
+     * <p>用于异步发布 {@link FlowWorkflowEvent} 给跨模块监听器（{@code ydsz-message} 通知模块、
+     * {@code ydsz-audit} 审计模块等），通过 {@code @EventListener} 或
+     * {@code @TransactionalEventListener} 订阅。
+     *
+     * <p><b>可空</b>：测试环境可能未注入，本类内做空检查避免 NPE。
+     */
     private final ApplicationEventPublisher eventPublisher;
-    /** P0-1: 敏感字段脱敏器 */
+
+    /**
+     * P0-1: 敏感字段脱敏器
+     *
+     * <p>对审计日志的 {@code comment} 字段进行脱敏，避免手机号 / 身份证 / 银行卡等
+     * 敏感信息通过审计日志泄露。
+     */
     private final FlowSensitiveMasker sensitiveMasker;
 
     // ============================== 任务校验 ==============================
 
     /**
-     * 按主键查任务，不存在抛 NOT_FOUND。
+     * 按主键查询任务，任务不存在时抛出业务异常
      *
-     * @param id 任务 ID
-     * @return 任务 DO
+     * <p>子 Service 在执行任何写操作前必须先调用本方法获取任务，避免在「任务不存在」
+     * 的情况下误更新其他数据。本方法是子 Service 的「准入校验」入口。
+     *
+     * @param id 任务主键 ID（雪花算法生成的字符串）
+     * @return 任务实体（{@link FlowRunTask}），一定非空
+     * @throws SysException 当任务不存在时抛出，错误码 {@code NOT_FOUND}，
+     *                      错误信息 key 为 {@code error.workflow.msg_6541ab08}（i18n 资源键）
      */
     public FlowRunTask getTaskOrThrow(String id) {
         FlowRunTask task = taskMapper.selectById(id);
@@ -72,7 +158,16 @@ public class FlowTaskSupport {
     // ============================== 审计日志 ==============================
 
     /**
-     * 写审计日志（无意见分类）。
+     * 写审计日志（无意见分类）
+     *
+     * <p>适用于无需区分意见类型的操作（如「转办 / 委派 / 加签 / 撤回 / 催办」等
+     * 流程性操作），内部委托 {@link #audit(FlowRunTask, String, String, String, String, String)}。
+     *
+     * @param task       任务实体（用于提取 instanceId / nodeCode / tenantId 等上下文）
+     * @param action     操作类型（如 {@code PASS/REJECT/TRANSFER/DELEGATE/URGE/CANCEL}）
+     * @param operatorId 操作人 ID（执行当前操作的用户）
+     * @param targetId   目标人 ID（如转办的目标人 / 委派的代理人，PASS 时为任务 assignee）
+     * @param comment    审批意见 / 操作备注（自动脱敏）
      */
     public void audit(FlowRunTask task, String action, String operatorId,
                       String targetId, String comment) {
@@ -82,12 +177,28 @@ public class FlowTaskSupport {
     /**
      * P2-42: 审计日志写入（带意见分类）
      *
-     * @param task        任务
+     * <p>适用于「通过 / 驳回」类需要明确意见分类的操作，便于后续做审批行为分析。
+     * 本方法<b>不抛异常</b>，写入失败仅记录 warn 日志，避免审计失败影响主流程。
+     *
+     * <p><b>审计字段：</b>
+     * <ul>
+     *   <li>instanceId / taskId / flowCode / businessType / businessId — 从 {@code task} 提取</li>
+     *   <li>nodeCode / nodeName — 任务所属节点</li>
+     *   <li>action — 操作类型（PASS/REJECT/TRANSFER/DELEGATE/URGE/CANCEL 等）</li>
+     *   <li>operatorId / targetId — 操作人 / 目标人</li>
+     *   <li>comment — 审批意见（<b>经脱敏处理</b>）</li>
+     *   <li>commentType — 意见分类（{@code AGREE/DISAGREE/SUGGEST/INQUIRE}）</li>
+     *   <li>operatedAt — 操作时间</li>
+     *   <li>tenantId / providerTraceId — 租户 / 链路追踪 ID</li>
+     * </ul>
+     *
+     * @param task        任务实体
      * @param action      操作类型
      * @param operatorId  操作人 ID
      * @param targetId    目标人 ID
-     * @param comment     审批意见
-     * @param commentType 意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE
+     * @param comment     审批意见（自动脱敏）
+     * @param commentType 意见分类：{@code AGREE}（同意）/ {@code DISAGREE}（不同意）/
+     *                    {@code SUGGEST}（建议）/ {@code INQUIRE}（询问），可空
      */
     public void audit(FlowRunTask task, String action, String operatorId,
                       String targetId, String comment, String commentType) {
@@ -117,9 +228,19 @@ public class FlowTaskSupport {
     // ============================== 事件 ==============================
 
     /**
-     * 触发事件监听器（吞异常，避免单监听器失败影响主流程）。
+     * 触发所有事件监听器（吞异常，避免单监听器失败影响主流程）
      *
-     * @param action 监听器动作
+     * <p>遍历 {@link #eventListeners} 列表，依次调用 {@code action} 回调执行业务逻辑。
+     * 单个监听器抛出异常时<b>仅记录 warn 日志</b>，<b>不影响其他监听器执行</b>，
+     * 也不影响主流程事务。
+     *
+     * <p><b>典型用法：</b>
+     * <pre>{@code
+     * // 通知所有监听器「任务通过」
+     * flowTaskSupport.fireEvent(listener -> listener.onTaskPass(task, operatorId), taskId);
+     * }</pre>
+     *
+     * @param action 监听器动作（{@link Consumer} 形式，执行业务逻辑）
      * @param taskId 任务 ID（仅用于日志，可空）
      */
     public void fireEvent(Consumer<FlowEventListener> action, String taskId) {
@@ -135,9 +256,19 @@ public class FlowTaskSupport {
     }
 
     /**
-     * P2-35: 发布 Spring 异步事件（ApplicationEventPublisher 可能为 null，需检查）
+     * P2-35: 发布 Spring 异步事件
      *
-     * @param eventType  事件类型
+     * <p>通过 {@link ApplicationEventPublisher} 发布 {@link FlowWorkflowEvent} 事件，
+     * 供跨模块监听器订阅（如 {@code ydsz-message} 通知模块的站内信 / 邮件推送、
+     * {@code ydsz-audit} 审计模块的额外审计字段写入等）。
+     *
+     * <p><b>事务边界：</b>事件发布不抛异常，发布失败仅记录 warn 日志，
+     * 不影响主流程事务（事务回滚不影响事件订阅者）。
+     *
+     * <p><b>空安全：</b>{@link ApplicationEventPublisher} 在测试环境可能为 null，
+     * 本方法内做空检查避免 NPE。
+     *
+     * @param eventType  事件类型（如 {@code TASK_PASS/TASK_REJECT/INSTANCE_COMPLETE}）
      * @param instanceId 实例 ID（可空）
      * @param taskId     任务 ID（可空）
      */

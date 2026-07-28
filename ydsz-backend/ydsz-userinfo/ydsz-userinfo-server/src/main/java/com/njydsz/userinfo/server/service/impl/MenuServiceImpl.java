@@ -24,12 +24,37 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
- * 菜单 Service 实现。
+ * 菜单 Service 实现
  *
- * <p>核心能力：菜单 CRUD、树形结构构建。
+ * <p>实现 {@link MenuService} 接口，封装菜单的完整业务逻辑：CRUD、树形结构构建。
+ * 菜单（{@code ydsz_menu}）是 RBAC 模型中最细粒度的「权限点」，
+ * 既可表示前端路由节点，也可表示后端接口权限码。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li>菜单 CRUD（含 {@code parentId} 树形关联）</li>
+ *   <li>菜单全量列表查询（按 {@code sortOrder} 倒序，前端表格展示）</li>
+ *   <li>菜单树形结构查询（递归构建父子关系）</li>
+ *   <li>删除前置校验（有子菜单时禁止删除，避免悬挂引用）</li>
+ *   <li>变更后触发权限缓存失效（由 {@code PermissionCacheInvalidator} 处理）</li>
+ * </ul>
+ *
+ * <p><b>事务：</b>所有写操作（{@code create/update/removeById}）
+ * 开启 {@code @Transactional(rollbackFor = Exception.class)}，确保任一异常触发完整回滚。
+ *
+ * <p><b>性能：</b>
+ * <ul>
+ *   <li>{@link #tree} 一次性查询全表（已逻辑删除过滤），在内存中构建树，避免 N+1</li>
+ *   <li>树构建使用通用工具 {@link TreeBuilder}，支持任意实体转树</li>
+ *   <li>菜单数据量通常较小（&lt; 1000），全量加载可接受；如未来菜单数 &gt; 5000，应改为按需懒加载</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see MenuService Service 接口
+ * @see Menu 菜单实体
+ * @see com.njydsz.userinfo.web.controller.MenuController 菜单 Controller
  */
 @Slf4j
 @Service

@@ -21,9 +21,82 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 离线代理自动转发服务实现（P2-5）。
+ * 离线代理自动转发服务实现
  *
+ * <p>对 {@link FlowOfflineAutoForwardService} 接口的完整实现，是工作流引擎的<b>离线自动转交</b>能力。
+ * 当审批人<b>长时间未处理</b>待办时（离线 / 离职 / 休假），系统自动将待办转交给代理人，
+ * 区别于「<b>主动授权</b>」（{@code FlowDelegateAuthService}）和「<b>手动转办</b>」（{@code FlowTaskService}），
+ * 是大厂 B 端工作流「不积压待办」的关键保障。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>离线检测（{@link #checkOffline}）</b>：检测长时间未上线的用户</li>
+ *   <li><b>自动转交（{@link #autoForward}）</b>：将离线用户的待办自动转交给代理人</li>
+ *   <li><b>代理人选择（{@link #resolveAutoForwardee}）</b>：根据策略选择代理人
+ *       （直属上级 / 部门负责人 / 委派配置 / 默认管理员）</li>
+ *   <li><b>转交通知（{@link #notifyForwardee}）</b>：通过 {@code FlowNotificationService} 通知代理人</li>
+ *   <li><b>转交记录</b>：所有自动转交记录到 {@code ydsz_flow_audit_log}</li>
+ * </ul>
+ *
+ * <p><b>与委派代理的区别：</b>
+ * <table>
+ *   <caption>离线自动转交 vs 委派代理</caption>
+ *   <tr><th>维度</th><th>离线自动转交</th><th>委派代理</th></tr>
+ *   <tr><td>触发方式</td><td>系统自动检测（被动）</td><td>用户主动设置（主动）</td></tr>
+ *   <tr><td>触发时机</td><td>用户离线 / 长时间未处理</td><td>用户主动授权期间</td></tr>
+ *   <tr><td>代理人</td><td>系统按策略选择（默认上级）</td><td>用户指定代理人</td></tr>
+ *   <tr><td>适用场景</td><td>意外离线 / 离职未授权</td><td>计划性授权（出差 / 休假）</td></tr>
+ *   <tr><td>审计标注</td><td>「XX 离线自动转交给 YY」</td><td>「XX 主动授权给 YY」</td></tr>
+ * </table>
+ *
+ * <p><b>离线判断策略：</b>
+ * <ul>
+ *   <li><b>最后登录时间</b>：超过 N 小时未登录视为离线（默认 48h）</li>
+ *   <li><b>未读消息堆积</b>：未读待办数超过 M 条视为积压（默认 50 条）</li>
+ *   <li><b>长时间未操作</b>：最后操作时间距今超过 N 小时（默认 24h）</li>
+ * </ul>
+ *
+ * <p><b>代理人选择策略（{@link #resolveAutoForwardee}）：</b>
+ * <ol>
+ *   <li>优先：用户的「委派配置」（{@code FlowDelegateAuthService}）</li>
+ *   <li>次选：直属上级（组织架构查询）</li>
+ *   <li>兜底：部门负责人（组织架构查询）</li>
+ *   <li>最后：租户默认管理员（{@code tenant_admin}）</li>
+ * </ol>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}</li>
+ *   <li>批量转交分用户分批提交，单用户失败不影响其他用户</li>
+ *   <li>转交后通过 {@code FlowTaskService} 触发新的审批流程</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>定时检测</b>：定时任务每小时检测一次「长时间未处理」用户</li>
+ *   <li><b>降噪</b>：连续离线检测至少 2 次才触发转交（避免「用户临时离开」误转交）</li>
+ *   <li><b>审计追溯</b>：转交记录同时写入 {@code ydsz_flow_audit_log}，
+ *       标注「自动转交」原因</li>
+ *   <li><b>幂等性</b>：同一任务的多次转交检测通过 {@code (taskId, checkTime)} 复合键防重</li>
+ *   <li><b>用户回归</b>：用户重新上线后，未处理的转交任务可「认领回」</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 定时任务自动触发
+ * int count = offlineAutoForwardService.scanAndForward();
+ *
+ * // 2. 手动触发（管理员主动转交）
+ * offlineAutoForwardService.autoForward("user_001", "USER_OFFLINE_72H");
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowOfflineAutoForwardService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowDelegateAuth 委派代理实体（优先使用其配置）
+ * @see FlowTaskService 流程任务服务（转交后触发新的待办）
+ * @see com.njydsz.workflow.server.service.FlowDelegateAuthService 委派代理服务
  */
 @Slf4j
 @Service

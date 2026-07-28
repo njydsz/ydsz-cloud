@@ -29,10 +29,40 @@ import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
 import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
 
 /**
- * 公司 Controller。
+ * 公司 Controller
+ *
+ * <p>提供公司的完整管理能力（CRUD）。
+ * 支持集团-子公司多级架构（{@code parentId="0"} = 顶级公司），
+ * 一个公司可包含多个部门（通过 {@code CompanyDept} 维护）。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/company}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li>公司全量列表查询（不翻页）</li>
+ *   <li>公司 CRUD（含 {@code companyCode} 唯一性校验）</li>
+ *   <li>支持多级父子关系（{@code parentId}）</li>
+ *   <li>删除校验（有子公司或部门时禁止删除）</li>
+ * </ul>
+ *
+ * <p><b>与其它模块的关联：</b>
+ * <ul>
+ *   <li>用户多租户隔离：公司是租户的物理边界</li>
+ *   <li>财务结算：{@code ydsz_finance} 跨公司利润分摊按公司维度</li>
+ * </ul>
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 防重复提交</li>
+ *   <li>写接口启用 {@link RateLimit} 接口级限流</li>
+ *   <li>写接口启用 {@link Audit} 审计日志</li>
+ *   <li>删除会校验子公司和部门引用</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.userinfo.server.service.CompanyService 公司业务逻辑
+ * @see com.njydsz.userinfo.domain.entity.Company 公司实体
  */
 @RestController
 @RequestMapping("/api/v1/company")
@@ -42,18 +72,42 @@ public class CompanyController {
 
     private final CompanyService service;
 
+    /**
+     * 查询全部公司列表（不翻页）
+     *
+     * <p>典型场景：公司下拉选择器、组织架构选择器。
+     * <p>建议业务方客户端缓存（变更频率极低）。
+     *
+     * @return 全部未删除公司列表
+     */
     @GetMapping("/list")
     @Operation(summary = "查询全部公司列表")
     public BaseResponse<List<CompanyVO>> list() {
         return BaseResponse.success(service.list());
     }
 
+    /**
+     * 根据 ID 查询公司
+     *
+     * @param id 公司 ID
+     * @return 公司详情；不存在或已删除时返回 null
+     */
     @GetMapping("/{id}")
     @Operation(summary = "根据 ID 查询公司")
     public BaseResponse<CompanyVO> getById(@PathVariable String id) {
         return BaseResponse.success(service.getById(id));
     }
 
+    /**
+     * 创建公司
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
+     * <p>业务流程：companyCode 唯一性校验 → 写入 DB。
+     * <p>创建顶级公司时 {@code parentId} 应传 {@code "0"}（约定值）。
+     *
+     * @param dto 公司创建 DTO（companyCode / companyName / parentId / contactPhone / address）
+     * @return 新创建的公司 ID
+     */
     @RateLimit(resource = "userinfo.company.create", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:CompanyController:create:lock", ttlSeconds = 5)
     @PostMapping
@@ -62,6 +116,15 @@ public class CompanyController {
         return BaseResponse.success(service.create(toSaveDTO(dto)));
     }
 
+    /**
+     * 更新公司
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
+     * <p>业务流程：使用 {@code BeanUpdateUtil.copyNonNull} 动态复制非 null 字段。
+     *
+     * @param dto 公司更新 DTO（必须包含 ID）
+     * @return 是否成功
+     */
     @Audit(module = "公司管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新公司: ' + #dto.id")
     @Idempotent(key = "ydsz:userinfo:CompanyController:update:lock", ttlSeconds = 5)
@@ -72,6 +135,21 @@ public class CompanyController {
         return BaseResponse.success(service.update(toSaveDTO(dto)));
     }
 
+    /**
+     * 按 ID 删除公司
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
+     * <p>删除前置校验：
+     * <ul>
+     *   <li>有<b>子公司</b>的公司<b>禁止删除</b>（避免悬挂引用）</li>
+     *   <li>有<b>部门关联</b>的公司<b>禁止删除</b></li>
+     *   <li>有<b>用户关联</b>的公司<b>禁止删除</b></li>
+     * </ul>
+     * <p>如需删除带子公司的公司，<b>必须先</b>递归删除/迁移子公司和部门。
+     *
+     * @param id 公司 ID
+     * @return 是否成功
+     */
     @Audit(module = "公司管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除公司: ' + #id")
     @RateLimit(resource = "userinfo.company.remove", threshold = 50)
@@ -81,8 +159,15 @@ public class CompanyController {
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
     }
+
     /**
-     * 将 PostDTO 转换为 SaveDTO。
+     * 将 PostDTO 转换为 SaveDTO
+     *
+     * <p>PostDTO 用于 HTTP 创建接口，转换为内部统一的 {@link CompanySaveDTO} 后传递给 Service 层。
+     * 转换过程隔离 HTTP 层 DTO 与业务层 DTO，便于 Service 层复用。
+     *
+     * @param dto Post DTO
+     * @return 内部 Save DTO（不含 ID，由 Service 自动生成）
      */
     private CompanySaveDTO toSaveDTO(CompanyPostDTO dto) {
         CompanySaveDTO saveDTO = new CompanySaveDTO();
@@ -97,7 +182,13 @@ public class CompanyController {
     }
 
     /**
-     * 将 PutDTO 转换为 SaveDTO。
+     * 将 PutDTO 转换为 SaveDTO
+     *
+     * <p>PutDTO 用于 HTTP 更新接口，包含必填的 ID 字段。
+     * 转换后 ID 一并透传，Service 层据此定位要更新的实体。
+     *
+     * @param dto Put DTO
+     * @return 内部 Save DTO（含 ID）
      */
     private CompanySaveDTO toSaveDTO(CompanyPutDTO dto) {
         CompanySaveDTO saveDTO = new CompanySaveDTO();

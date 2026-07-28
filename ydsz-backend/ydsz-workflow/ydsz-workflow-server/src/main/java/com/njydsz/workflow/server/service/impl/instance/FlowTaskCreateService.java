@@ -52,25 +52,80 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 任务创建服务
+ * 任务创建服务（拆分自 FlowTaskCompleteServiceImpl）
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"任务创建"职责。
- * 是任务生命周期中最复杂的服务，承担以下创建场景：
+ * <p>工作流引擎中<b>任务创建场景最复杂</b>的服务，承担 BPMN 2.0 中几乎所有节点类型的「创建运行时任务」
+ * 职责。是从原 {@code FlowTaskCompleteServiceImpl}（单体实现）拆分的产物，
+ * 是大厂 B 端工作流「灵活节点类型 + 智能审批人解析」的关键实现层。
+ *
+ * <p><b>支持的任务创建场景：</b>
  * <ul>
- *   <li>普通审批节点（resolveAssignee 解析）</li>
- *   <li>SERVICE 服务节点（HTTP/SCRIPT/AUTO_PASS 自动执行）</li>
- *   <li>FOREACH 循环节点（每个集合元素独立 task）</li>
- *   <li>LEVEL_APPROVAL 逐级审批节点（动态展开多级上级）</li>
- *   <li>审批人为空兜底（AUTO_PASS/TRANSFER_ADMIN/ASSIGN_SPECIFIED/FALLBACK）</li>
- *   <li>跨节点办理人去重（P1-5）</li>
- *   <li>自动审批节点（P2-4 GAP-14）</li>
- *   <li>长期授权委派改写（P1-4）</li>
+ *   <li><b>普通审批节点（{@code APPROVAL}）</b>：{@link #createTask} 走标准审批人解析路径</li>
+ *   <li><b>SERVICE 服务节点（{@code SERVICE}）</b>：{@link #executeServiceNode} —
+ *       HTTP / SCRIPT / AUTO_PASS 自动执行，无需人工介入</li>
+ *   <li><b>FOREACH 循环节点（{@code FOREACH}）</b>：{@link #createForeachTasks} —
+ *       对集合中每个元素创建独立 task（每个元素独立审批）</li>
+ *   <li><b>LEVEL_APPROVAL 逐级审批节点（{@code LEVEL_APPROVAL}）</b>：{@link #createLevelApprovalTask} —
+ *       动态展开多级上级（直属 → 二级 → 三级），依次审批</li>
+ *   <li><b>审批人为空兜底</b>：{@link #handleEmptyAssignee} —
+ *       AUTO_PASS / TRANSFER_ADMIN / ASSIGN_SPECIFIED / FALLBACK 四种策略</li>
+ *   <li><b>跨节点办理人去重（P1-5）</b>：{@link #applyCrossNodeDedup} —
+ *       过滤已在当前实例审批过的用户，对标钉钉「同人不重复审批」</li>
+ *   <li><b>自动审批节点（P2-4 / GAP-14）</b>：{@link #tryAutoApprove} —
+ *       配置化规则引擎（{@code INITIATOR_IS_APPROVER / AMOUNT_BELOW / EXPR / ALWAYS}）</li>
+ *   <li><b>长期授权委派改写（P1-4）</b>：{@link #applyDelegateRedirect} —
+ *       链式解析 A→B→C 委派链路，最终将任务分配给链路末端的代理人</li>
  * </ul>
  *
- * <p>被 {@code FlowTaskPassService} / {@code FlowTaskRejectService} / {@code FlowTaskOperateService} /
- * {@code FlowInstanceService} 等多个调用方复用。
+ * <p><b>被调用方（依赖注入关系）：</b>
+ * <ul>
+ *   <li>{@link FlowTaskPassService} / {@link FlowTaskRejectService} —
+ *       自动审批执行后调用 pass / reject 子服务</li>
+ *   <li>{@link FlowTaskOperateService} — 创建任务后应用转办 / 委派 / 加签等操作</li>
+ *   <li>{@link FlowInstanceService} — 创建子任务时调用本服务</li>
+ *   <li>{@link FlowAdvancer} — 流程推进引擎，AUTO_PASS 递归推进到下一节点</li>
+ *   <li>{@link FlowSlaService} — 任务创建时应用 SLA 配置</li>
+ *   <li>{@link FlowDelegateAuthService} — 长期授权委派查询</li>
+ *   <li>{@link FlowTodoCountPushService} — WebSocket 待办数推送</li>
+ * </ul>
  *
+ * <p><b>事务边界：</b>所有公共方法开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ * 「参数解析 + 任务构建 + 业务字段设置 + 事件发布」原子性。
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>递归保护</b>：AUTO_PASS 通过 {@link ThreadLocal} 维护递归深度，超过
+ *       {@link #MAX_AUTO_PASS_DEPTH}（20）立即抛异常，防止流程定义环路导致栈溢出</li>
+ *   <li><b>循环依赖处理</b>：与 {@link FlowTaskPassService} / {@link FlowTaskRejectService} /
+ *       {@link FlowSlaService} / {@link FlowTodoCountPushService} 等服务存在循环依赖，
+ *       通过 {@code @Lazy} 注解打破</li>
+ *   <li><b>空安全</b>：所有集合 / 字符串参数均做空检查，避免 NPE</li>
+ *   <li><b>指标埋点</b>：通过 {@link FlowMetrics} 暴露任务创建数等 Prometheus 指标</li>
+ *   <li><b>事件发布</b>：任务创建后通过 {@link FlowTaskSupport#fireEvent} 触发监听器，
+ *       通过 {@link FlowTaskSupport#publishWorkflowEvent} 发布 Spring 事件</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 场景：流程推进到「财务审批」节点
+ * String taskId = flowTaskCreateService.createTask(
+ *     instanceId,                  // 流程实例 ID
+ *     financeApprovalNode,         // 节点配置
+ *     flowVariables                // 流程变量
+ * );
+ * // 返回新创建的任务 ID
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowTaskServiceImpl 任务门面（拆分入口）
+ * @see FlowRunTask 运行时任务实体
+ * @see FlowNode 流程节点实体
+ * @see FlowAdvancer 流程推进引擎
+ * @see FlowSlaService SLA 服务
+ * @see FlowDelegateAuthService 委派代理服务
+ * @see FlowAssigneeResolver 审批人解析器
  */
 @Slf4j
 @Service

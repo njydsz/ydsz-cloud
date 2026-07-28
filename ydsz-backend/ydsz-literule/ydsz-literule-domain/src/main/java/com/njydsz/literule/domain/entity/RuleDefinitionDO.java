@@ -26,8 +26,11 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_rule_def")
 public class RuleDefinitionDO extends MpBaseEntity<String> {
 
+    /** 规则编码，业务唯一 */
     private String ruleCode;
+    /** 规则名称 */
     private String ruleName;
+    /** 规则分类编码 */
     private String category;
 
     /**
@@ -51,14 +54,23 @@ public class RuleDefinitionDO extends MpBaseEntity<String> {
      */
     private String owner;
 
+    /** 规则描述 */
     private String description;
+    /** 条件表达式（LiteExpr 语法） */
     private String conditionExpression;
+    /** 严重度表达式，可选 */
     private String severityExpression;
+    /** 默认严重级别 */
     private String defaultSeverity;
+    /** 告警标题模板 */
     private String titleTemplate;
+    /** 告警描述模板 */
     private String descriptionTemplate;
+    /** 优先级，数值越小优先级越高 */
     private Integer priority;
+    /** 是否启用 */
     private Boolean enabled;
+    /** 适用范围 */
     private String scope;
 
     /**
@@ -68,6 +80,7 @@ public class RuleDefinitionDO extends MpBaseEntity<String> {
      */
     private String mutexGroup;
 
+    /** 是否支持下钻查看详情 */
     private Boolean drilldownAvailable;
 
     /**

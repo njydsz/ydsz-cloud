@@ -37,19 +37,63 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 工作流子流程服务实现
  *
- * <p>P1-3: 通过 WorkflowFacade 启动子流程实例，
- * 通过事件回调推进父流程。
+ * <p>对 {@link FlowSubProcessService} 接口的完整实现，承担 BPMN 2.0 规范中
+ * <b>CallActivity（子流程调用）</b>节点的运行时支持。当父流程到达 {@code callActivity} 节点时，
+ * 通过本服务启动子流程实例；子流程完成后，通过事件回调推进父流程。
  *
- * <p>增强功能（子流程增强）：
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>子流程独立超时处理：从 ext JSON 读取 subProcessTimeout 设置 dueAt</li>
- *   <li>父子流程数据上下文传递：合并父流程变量传递给子流程，子流程完成时回写</li>
- *   <li>子流程实例追踪：递归查询子流程树</li>
- *   <li>子流程嵌套层级限制：最大深度可配置（workflow.subprocess.max-nesting-depth，默认 3 层）</li>
- *   <li>子流程事件通知：触发 onInstanceStart 和发布 FlowWorkflowEvent</li>
+ *   <li><b>子流程启动（{@link #startSubProcess}）</b>：父流程到达 {@code callActivity} 时调用，
+ *       独立启动子流程实例，并通过 {@code parentInstanceId} 字段建立父子关联</li>
+ *   <li><b>子流程完成回调（{@link #onSubProcessComplete}）</b>：子流程完成 / 终止时触发，
+ *       通过 {@code FlowWorkflowEvent} 通知父流程推进到下一节点</li>
+ *   <li><b>子流程独立超时处理</b>：从 {@code node.ext} JSON 读取 {@code subProcessTimeout} 设置 dueAt，
+ *       子流程超时由 {@link FlowSlaServiceImpl} 单独监控</li>
+ *   <li><b>父子流程数据上下文传递</b>：合并父流程变量传递给子流程，子流程完成时回写
+ *       「子流程输出变量」到父流程 {@code flow_variables}</li>
+ *   <li><b>子流程实例追踪</b>：{@link #getSubProcessTree} 递归查询子流程树，支持 UI 展示「父子链路」</li>
+ *   <li><b>子流程嵌套层级限制</b>：最大深度可配置（{@code workflow.subprocess.max-nesting-depth}，默认 3 层），
+ *       防止「无限递归」导致资源耗尽</li>
+ *   <li><b>子流程事件通知</b>：触发 {@code onInstanceStart} 和发布 {@link FlowWorkflowEvent}，
+ *       监听器可订阅父子流程的生命周期</li>
  * </ul>
  *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>子流程启动通过 {@link WorkflowFacade#startProcess} 开启新事务（{@code REQUIRES_NEW}），
+ *       父流程事务失败不影响已启动的子流程（子流程可独立完成）</li>
+ *   <li>子流程完成回调开启新事务，避免子流程状态变更与父流程推进耦合</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>独立 vs 嵌入式</b>：本实现采用「独立子流程」（子流程有独立 {@code instanceId} / 待办 / 历史），
+ *       区别于 Camunda 的「嵌入式子流程」（子节点共用父实例），更易于审批粒度控制和跨租户分析</li>
+ *   <li><b>父子变量传递</b>：通过 {@code inVariables / outVariables} JSON 字段声明输入输出变量，
+ *       子流程只能看到白名单内的父变量，避免父流程敏感数据泄露</li>
+ *   <li><b>嵌套深度保护</b>：超过 {@code maxNestingDepth} 抛 {@code SysException} 阻断启动，
+ *       防止循环调用（如 A → B → A）</li>
+ *   <li><b>子流程 SLA</b>：子流程节点可独立配置 SLA，父流程的 SLA 监控不影响子流程</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 父流程到达 callActivity 节点
+ * String subInstanceId = subProcessService.startSubProcess(
+ *     parentInstanceId, callActivityNode, parentVariables, currentUserId);
+ *
+ * // 子流程完成后，父流程自动推进
+ * // (由子流程完成事件触发 onSubProcessComplete → 父流程 advancer.advance)
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowSubProcessService 接口定义
+ * @see WorkflowFacade 工作流门面
+ * @see FlowAdvancer 流程推进引擎
+ * @see FlowSlaServiceImpl SLA 监控
+ * @see com.njydsz.workflow.domain.enums.FlowNodeType#CALL_ACTIVITY CallActivity 节点类型
  */
 @Slf4j
 @Service

@@ -48,6 +48,8 @@ public class RuleABPolicy extends MpBaseEntity<String> {
     /** 描述 */
     private String description;
 
+    /** 最近一次评估时间 */
     private LocalDateTime lastEvaluatedAt;
+    /** 最近一次回滚时间 */
     private LocalDateTime lastRollbackAt;
 }

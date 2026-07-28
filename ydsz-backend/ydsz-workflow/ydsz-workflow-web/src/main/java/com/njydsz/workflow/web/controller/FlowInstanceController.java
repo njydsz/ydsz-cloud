@@ -40,11 +40,45 @@ import com.njydsz.workflow.domain.vo.StringVO;
 /**
  * 流程实例 Controller
  *
- * <p>流程实例的启动 / 查询 / 控制 / 变量读写 / 表单渲染
- * （P1-10 从 FlowEngineController 拆分）。
+ * <p>流程实例的 HTTP 入口，承担工作流引擎「运行时」全部用户交互：
+ * 启动 / 查询 / 控制（终止 / 挂起 / 激活 / 撤回） / 变量读写 / 表单渲染 / 批量操作 / 进度跟踪。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>启动</b>：{@code POST /instance/start}（单条） /
+ *       {@code /instance/batch/start}（批量） — 幂等保护 + 审计日志 + 50 QPS 限流</li>
+ *   <li><b>查询</b>：{@code GET /instance/{id}}（详情） /
+ *       {@code /instance/{id}/view}（流程图视图） /
+ *       {@code /instance/{id}/timeline}（时间轴） /
+ *       {@code /instance/page}（分页）</li>
+ *   <li><b>控制</b>：{@code POST /instance/{id}/terminate}（终止） /
+ *       {@code /suspend}（挂起） / {@code /activate}（激活） /
+ *       {@code /recall}（撤回） / {@code /reissue}（重派）</li>
+ *   <li><b>变量</b>：{@code GET /instance/{id}/variables}（读） /
+ *       {@code PUT /instance/{id}/variables}（写） — 流程变量持久化</li>
+ *   <li><b>表单</b>：{@code GET /instance/{id}/form}（表单 Schema）</li>
+ *   <li><b>批量</b>：{@code /instance/batch/terminate}（批量终止）</li>
+ *   <li><b>子流程</b>：{@code GET /instance/{id}/children}（子实例） /
+ *       {@code GET /instance/{id}/parent}（父实例）</li>
+ * </ul>
+ *
+ * <p><b>权限模型：</b>所有写接口通过 {@link AuthApiPermission} 校验
+ * {@link PermissionCodes#WORKFLOW_INSTANCE_START} 等权限码；
+ * 启动类接口通过 {@link Audit} 注解写入审计日志（{@link AuditType#OPERATION} + {@link AuditAction#CREATE}）。
+ *
+ * <p><b>限流：</b>启动类接口通过 {@link RateLimit} 限流（{@code 50 QPS}），
+ * 终止 / 撤回等高危操作通过 {@link Idempotent} 5s 防重。
+ *
+ * <p><b>设计原则：</b>Controller 仅做参数透传、权限校验、VO 转换；所有业务逻辑下沉到
+ * {@link FlowInstanceService} 与 {@link WorkflowFacade}。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowInstanceService 流程实例服务
+ * @see WorkflowFacade 工作流门面
+ * @see FlowStartProcessDTO 启动参数 DTO
+ * @see FlowInstance 流程实例实体
  */
 @Slf4j
 @RestController

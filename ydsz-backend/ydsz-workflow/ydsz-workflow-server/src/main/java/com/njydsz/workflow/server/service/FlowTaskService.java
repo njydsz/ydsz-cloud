@@ -13,7 +13,41 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
 /**
  * 待办任务 Service
  *
+ * <p>流程任务（{@link FlowRunTask}）是工作流引擎的<b>调度核心</b>，本 Service 负责任务的整个生命周期：
+ * 创建、查询、签收、通过、驳回、转办、委派、加签/减签等。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>任务创建</b>：流程推进到审批节点时创建任务（{@link #createTask}）</li>
+ *   <li><b>办理动作</b>：签收（{@link #claim}）/ 通过（{@link #pass}）/ 驳回（{@link #reject}）</li>
+ *   <li><b>任务流转</b>：转办（{@link #transfer}）/ 委派（{@link #delegate}）/ 加签减签</li>
+ *   <li><b>任务查询</b>：按实例 / 按办理人 / 分页 / 待办智能排序</li>
+ *   <li><b>催办与超时</b>：催办、加签、SLA 超时处理</li>
+ *   <li><b>会签策略</b>：单人/会签/或签/票签/加权票签（{@code CountersignStrategy}）</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>所有办理动作（{@code pass/reject/transfer/delegate/claim}）开启
+ * {@code @Transactional(rollbackFor = Exception.class)}，确保「会签计数 + 任务状态 + 流程实例推进 + 审计日志」原子性。
+ *
+ * <p><b>并发控制：</b>
+ * <ul>
+ *   <li>悲观锁：{@code pass/reject} 时 {@code SELECT ... FOR UPDATE} 锁任务行，避免并发办理</li>
+ *   <li>分布式锁：跨实例的全局锁（如「同发起人同时只能有一个流程」场景）由 {@code Redisson} 实现</li>
+ *   <li>乐观锁：{@link FlowRunTask} 继承 {@code MpBaseEntity.revision}，并发更新自动重试</li>
+ * </ul>
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>「我的待办」使用 {@code ydsz_flow_run_task} 复合索引（{@code idx_assignee}）</li>
+ *   <li>任务完成 → 归档调度器异步迁移至 {@code ydsz_flow_his_task}，避免主表膨胀</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see com.njydsz.workflow.server.service.impl.FlowTaskServiceImpl 实现类（编排器，委派给具体的子服务）
+ * @see FlowInstanceService 流程实例 Service
+ * @see CountersignStrategy 会签策略接口
  */
 public interface FlowTaskService {
 

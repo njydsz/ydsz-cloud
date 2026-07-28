@@ -7,42 +7,73 @@ import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.vo.DictItemVO;
 
 /**
- * 字典项 Service。
+ * 字典项 Service 接口
  *
- * <p>提供字典项 CRUD、按类型+编码查询、按类型查询列表、树形查询、分页查询等能力，
+ * <p>提供字典项（{@code ydsz_dict_item}）的 CRUD、按类型查询、树形查询、分页查询等能力。
  * 集成 Redis 缓存、Micrometer 指标、缓存穿透防护和字典版本快照。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #save} / {@link #updateById} / {@link #removeById}</li>
+ *   <li><b>按类型查询</b>：{@link #getByTypeAndCode} / {@link #listEnabledByTypeCode} — 走 Redis 缓存，
+ *       是前端下拉框的核心数据源</li>
+ *   <li><b>树形结构</b>：{@link #listChildren} — 支持「省 / 市 / 区县」三级级联</li>
+ *   <li><b>分页查询</b>：{@link #page} — 管理后台「字典项管理」列表</li>
+ *   <li><b>版本快照</b>：所有写操作触发 {@link DictVersionService#createVersion} 记录变更</li>
+ * </ul>
+ *
+ * <p><b>缓存策略：</b>
+ * <ul>
+ *   <li>Redis 缓存（{@code ydsz:dict:item:{typeCode}}），TTL 30min</li>
+ *   <li><b>缓存穿透防护</b>：DB 不存在的 typeCode 缓存「null 哨兵」1min</li>
+ *   <li><b>缓存击穿防护</b>：高并发 key 使用 {@code @Cacheable(sync = true)} 单线程回源</li>
+ *   <li>写操作通过 {@code @CacheEvict} 主动失效</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离。
+ *
  * @author ydsz-team
+ * @since 1.0.0
+ *
+ * @see DictService 字典类型 Service
+ * @see DictVersionService 字典版本 Service
+ * @see com.njydsz.system.domain.entity.DictItem 字典项实体
  */
 public interface DictItemService {
 
     /**
-     * 按 ID 查询字典项。
+     * 按 ID 查询字典项
      *
      * @param id 主键 ID
-     * @return 字典项 VO
+     * @return 字典项 VO；不存在返回 {@code null}
      */
     DictItemVO getById(String id);
 
     /**
-     * 按类型编码和字典项编码查询启用的字典项（走缓存）。
+     * 按类型编码和字典项编码查询启用的字典项（走缓存）
+     *
+     * <p>典型用法：业务代码中通过 {@code (typeCode, itemCode)} 反查字典项的展示值。
      *
      * @param typeCode 字典类型编码
      * @param itemCode 字典项编码
-     * @return 字典项 VO
+     * @return 字典项 VO；不存在或已禁用返回 {@code null}
      */
     DictItemVO getByTypeAndCode(String typeCode, String itemCode);
 
     /**
-     * 按类型编码查询所有启用的字典项（走缓存）。
+     * 按类型编码查询所有启用的字典项（走缓存）
+     *
+     * <p>典型用法：前端下拉框 / 单选框数据源。命中 Redis 缓存时延迟 < 1ms。
      *
      * @param typeCode 字典类型编码
-     * @return 字典项列表
+     * @return 字典项列表（按 {@code sortOrder} 升序）
      */
     List<DictItemVO> listEnabledByTypeCode(String typeCode);
 
     /**
-     * 按父级 ID 查询子字典项列表（树形字典）。
+     * 按父级 ID 查询子字典项列表（树形字典）
+     *
+     * <p>用于「省 / 市 / 区县」等树形结构字典的级联查询；{@code parentId=0} 时返回所有根节点。
      *
      * @param parentId 父级字典项 ID
      * @return 子字典项列表
@@ -50,7 +81,9 @@ public interface DictItemService {
     List<DictItemVO> listChildren(String parentId);
 
     /**
-     * 分页查询字典项（支持搜索过滤）。
+     * 分页查询字典项（支持搜索过滤）
+     *
+     * <p>管理后台「字典项管理」列表数据源；不走缓存（数据量可控）。
      *
      * @param pageNum  当前页码
      * @param pageSize 每页记录数
@@ -62,30 +95,35 @@ public interface DictItemService {
     IPage<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status);
 
     /**
-     * 查询全部字典项（仅内部使用）。
+     * 查询全部字典项（仅内部使用）
+     *
+     * <p>仅供字典版本快照、批量同步等内部场景使用，<b>不对前端暴露</b>。
      *
      * @return 字典项列表（VO）
      */
     List<DictItemVO> list();
 
     /**
-     * 创建字典项（自动记录版本快照）。
+     * 创建字典项（自动记录版本快照）
+     *
+     * <p>写入前校验 {@code (tenantId, typeCode, itemCode)} 唯一性；
+     * 写入成功后异步调用 {@link DictVersionService#createVersion} 记录变更。
      *
      * @param dto 字典项 DTO
-     * @return 主键 ID
+     * @return 新建字典项主键 ID
      */
     String save(DictItemDTO dto);
 
     /**
-     * 更新字典项（自动记录版本快照）。
+     * 更新字典项（自动记录版本快照）
      *
-     * @param dto 字典项 DTO
+     * @param dto 字典项 DTO（{@code id} 必填）
      * @return 是否成功
      */
     boolean updateById(DictItemDTO dto);
 
     /**
-     * 删除字典项（自动记录版本快照）。
+     * 删除字典项（自动记录版本快照）
      *
      * @param id 主键 ID
      * @return 是否成功

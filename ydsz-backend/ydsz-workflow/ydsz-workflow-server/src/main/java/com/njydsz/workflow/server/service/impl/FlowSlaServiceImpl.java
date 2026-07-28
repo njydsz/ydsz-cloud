@@ -33,16 +33,43 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程 SLA 超时自动策略实现
  *
- * <p>P1-6 实现：
+ * <p>对 {@link FlowSlaService} 接口的完整实现，是工作流引擎 SLA 监控的核心业务逻辑层。
+ * 通过定时任务扫描超期任务并执行自动策略（升级 / 自动通过 / 自动驳回），对标 Activiti / Flowable 的 Job Executor。
+ *
+ * <p><b>核心职责：</b>
  * <ol>
- *   <li>cronjob 每 60s 扫描所有 PENDING/CLAIMED 且 dueAt 不为空的 task</li>
- *   <li>解析 node.slaConfig 配置：timeoutMinutes / action / reminderIntervalMinutes / maxReminders / escalateUserId</li>
- *   <li>未到 dueAt：跳过；超过 dueAt 但未到最终动作：根据 maxReminders 重复 REMIND</li>
- *   <li>超过 dueAt 且已超出 reminder 容忍窗口：执行最终动作（ESCALATE / AUTO_PASS / AUTO_REJECT）</li>
- *   <li>所有写操作都在 REQUIRES_NEW 子事务中，单条失败不影响扫描主循环</li>
+ *   <li>cronjob 每 60s 扫描所有 {@code PENDING/CLAIMED} 且 {@code dueAt} 不为空的 task</li>
+ *   <li>解析 {@code node.slaConfig} 配置：{@code timeoutMinutes} / {@code action} /
+ *       {@code reminderIntervalMinutes} / {@code maxReminders} / {@code escalateUserId}</li>
+ *   <li>未到 {@code dueAt}：跳过；超过 {@code dueAt} 但未到最终动作：根据 {@code maxReminders} 重复 REMIND</li>
+ *   <li>超过 {@code dueAt} 且已超出 reminder 容忍窗口：执行最终动作（{@code ESCALATE / AUTO_PASS / AUTO_REJECT}）</li>
+ *   <li>所有写操作都在 {@code REQUIRES_NEW} 子事务中，<b>单条失败不影响扫描主循环</b></li>
  * </ol>
  *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>分布式锁</b>：通过 {@link FlowClusterLockHelper} 保证集群中只有一个节点执行扫描</li>
+ *   <li><b>子事务隔离</b>：{@code @Transactional(propagation = REQUIRES_NEW)} 隔离单条任务的失败</li>
+ *   <li><b>指标埋点</b>：通过 {@link FlowMetrics} 暴露 SLA 触发次数 / 升级次数等 Prometheus 指标</li>
+ *   <li><b>多租户</b>：扫描时按租户分批处理，避免单租户数据倾斜</li>
+ *   <li><b>幂等性</b>：同一任务的同一动作（如升级）通过分布式锁 + 状态机保证只执行一次</li>
+ * </ul>
+ *
+ * <p><b>SLA 动作类型（{@link FlowSlaAction}）：</b>
+ * <ul>
+ *   <li>{@code NONE} — 仅记录，不执行任何操作</li>
+ *   <li>{@code REMIND} — 发送催办通知（IM / 站内信）</li>
+ *   <li>{@code ESCALATE} — 升级审批人（如转给上级 / 指定接管人）</li>
+ *   <li>{@code AUTO_PASS} — 自动通过（高风险，需审计）</li>
+ *   <li>{@code AUTO_REJECT} — 自动驳回（高风险，需审计）</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowSlaService SLA Service 接口
+ * @see FlowSlaAction SLA 动作枚举
+ * @see com.njydsz.workflow.domain.entity.FlowRunTask 运行时任务实体
  */
 @Slf4j
 @Service

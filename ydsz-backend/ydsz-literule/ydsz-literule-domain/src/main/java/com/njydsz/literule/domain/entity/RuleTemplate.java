@@ -24,17 +24,30 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_rule_template")
 public class RuleTemplate extends MpBaseEntity<String> {
 
+    /** 模板编码，业务唯一 */
     private String templateCode;
+    /** 模板名称 */
     private String templateName;
+    /** 分类编码 */
     private String category;
+    /** 模板描述 */
     private String description;
+    /** 预置条件表达式 */
     private String conditionExpression;
+    /** 预置严重度表达式 */
     private String severityExpression;
+    /** 默认严重级别 */
     private String defaultSeverity;
+    /** 告警标题模板 */
     private String titleTemplate;
+    /** 告警描述模板 */
     private String descriptionTemplate;
+    /** 优先级，数值越小优先级越高 */
     private Integer priority;
+    /** 适用范围 */
     private String scope;
+    /** 所属行业 */
     private String industry;
+    /** 标签，逗号分隔 */
     private String tags;
 }

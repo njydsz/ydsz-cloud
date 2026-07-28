@@ -30,10 +30,18 @@ import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
 import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
 
 /**
- * 部门 Controller。
+ * 部门 Controller
+ *
+ * <p>提供部门的完整管理能力（CRUD）、部门树形结构查询。
+ * 部门是组织架构的核心节点，支持无限级树形结构（{@code parentId="0"} = 根部门）。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/dept}
+ *
+ * <p><b>安全特性：</b>写接口启用 {@link Idempotent} 防重复、{@link RateLimit} 限流、{@link Audit} 审计日志。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.userinfo.server.service.DepartmentService 部门业务逻辑
  */
 @RestController
 @RequestMapping("/api/v1/dept")
@@ -43,24 +51,57 @@ public class DepartmentController {
 
     private final DepartmentService service;
 
+    /**
+     * 查询全部部门列表（扁平结构）
+     *
+     * <p>返回全量部门 VO（不构建树形结构），适用于需要扁平数据 + 客户端自行构建树的场景。
+     * <p>按 {@code sort_order} 升序、{@code id} 升序排列。
+     *
+     * @return 全部未删除部门列表
+     */
     @GetMapping("/list")
     @Operation(summary = "查询全部部门列表")
     public BaseResponse<List<DepartmentVO>> list() {
         return BaseResponse.success(service.list());
     }
 
+    /**
+     * 查询部门树形结构
+     *
+     * <p>返回根部门（{@code parentId="0"} 或 {@code null}）开始的多级嵌套树。
+     * <p>典型场景：组织架构选择器、用户管理中的部门选择树。
+     * <p>由 Service 层在内存中构建树（递归遍历全量列表），<b>不推荐</b>前端自行构建。
+     *
+     * @return 部门树形结构列表（每个节点含 children）
+     */
     @GetMapping("/tree")
     @Operation(summary = "查询部门树形结构")
     public BaseResponse<List<DepartmentTreeVO>> tree() {
         return BaseResponse.success(service.tree());
     }
 
+    /**
+     * 根据 ID 查询部门
+     *
+     * @param id 部门 ID
+     * @return 部门详情；不存在或已删除时返回 null
+     */
     @GetMapping("/{id}")
     @Operation(summary = "根据 ID 查询部门")
     public BaseResponse<DepartmentVO> getById(@PathVariable String id) {
         return BaseResponse.success(service.getById(id));
     }
 
+    /**
+     * 创建部门
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
+     * <p>业务流程：deptCode 唯一性校验 → 写入 DB → 触发树形缓存失效。
+     * <p>创建根部门时 {@code parentId} 应传 {@code "0"}（约定值）。
+     *
+     * @param dto 部门创建 DTO（deptCode / deptName / parentId / sortOrder / status）
+     * @return 新创建的部门 ID
+     */
     @RateLimit(resource = "userinfo.department.create", threshold = 50)
     @Audit(module = "部门管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建部门: ' + #dto.deptName")
@@ -71,6 +112,16 @@ public class DepartmentController {
         return BaseResponse.success(service.create(toSaveDTO(dto)));
     }
 
+    /**
+     * 更新部门
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
+     * <p>业务流程：使用 {@code BeanUpdateUtil.copyNonNull} 动态复制非 null 字段。
+     * <p>修改 {@code parentId} 会触发整棵子树路径重算（由 Service 层处理）。
+     *
+     * @param dto 部门更新 DTO（必须包含 ID）
+     * @return 是否成功
+     */
     @RateLimit(resource = "userinfo.department.update", threshold = 50)
     @Audit(module = "部门管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新部门: ' + #dto.id")
@@ -81,6 +132,20 @@ public class DepartmentController {
         return BaseResponse.success(service.update(toSaveDTO(dto)));
     }
 
+    /**
+     * 按 ID 删除部门
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS。
+     * <p>删除前置校验：
+     * <ul>
+     *   <li>有<b>子部门</b>的部门<b>禁止删除</b>（避免悬挂引用）</li>
+     *   <li>有<b>用户关联</b>的部门<b>禁止删除</b></li>
+     * </ul>
+     * <p>如需删除带子部门的部门，<b>必须先</b>递归删除/迁移子部门和用户。
+     *
+     * @param id 部门 ID
+     * @return 是否成功
+     */
     @RateLimit(resource = "userinfo.department.remove", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:DepartmentController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
@@ -88,8 +153,15 @@ public class DepartmentController {
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
     }
+
     /**
-     * 将 PostDTO 转换为 SaveDTO。
+     * 将 PostDTO 转换为 SaveDTO
+     *
+     * <p>PostDTO 用于 HTTP 创建接口，转换为内部统一的 {@link DepartmentSaveDTO} 后传递给 Service 层。
+     * 转换过程隔离 HTTP 层 DTO 与业务层 DTO，便于 Service 层复用。
+     *
+     * @param dto Post DTO
+     * @return 内部 Save DTO（不含 ID，由 Service 自动生成）
      */
     private DepartmentSaveDTO toSaveDTO(DepartmentPostDTO dto) {
         DepartmentSaveDTO saveDTO = new DepartmentSaveDTO();
@@ -104,7 +176,13 @@ public class DepartmentController {
     }
 
     /**
-     * 将 PutDTO 转换为 SaveDTO。
+     * 将 PutDTO 转换为 SaveDTO
+     *
+     * <p>PutDTO 用于 HTTP 更新接口，包含必填的 ID 字段。
+     * 转换后 ID 一并透传，Service 层据此定位要更新的实体。
+     *
+     * @param dto Put DTO
+     * @return 内部 Save DTO（含 ID）
      */
     private DepartmentSaveDTO toSaveDTO(DepartmentPutDTO dto) {
         DepartmentSaveDTO saveDTO = new DepartmentSaveDTO();

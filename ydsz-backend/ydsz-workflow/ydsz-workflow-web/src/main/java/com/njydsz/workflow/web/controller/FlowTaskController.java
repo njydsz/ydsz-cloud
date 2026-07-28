@@ -35,13 +35,43 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 /**
  * 任务操作 Controller
  *
- * <p>任务详情 / 签收 / 通过 / 驳回 / 转办 / 委派 / 加签 / 跳转 / 批量审批 /
- * 待办已办查询 / 减签 / 已阅 / 沟通 / 暂存 / 追加处理人 / 待办数推送 /
- * 节点耗时与超期统计
- * （P1-10 从 FlowEngineController 拆分）。
+ * <p>流程任务的 HTTP 入口，对标钉钉 / 飞书审批中心接口。承担审批人全部日常操作：
+ * 查看 / 签收 / 通过 / 驳回 / 转办 / 委派 / 加签 / 跳转 / 批量审批 / 催办 / 已阅 / 沟通 / 暂存 / 撤回。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>任务详情</b>：{@code GET /task/{taskId}}（含历史轨迹 / 表单权限）</li>
+ *   <li><b>办理动作</b>：{@code POST /task/claim}（签收） / {@code pass}（通过） /
+ *       {@code reject}（驳回） / {@code transfer}（转办） / {@code delegate}（委派）</li>
+ *   <li><b>会签</b>：{@code POST /task/countersign-before} / {@code countersign-after} /
+ *       {@code countersign-parallel} / {@code countersign-remove} / {@code add-approver}</li>
+ *   <li><b>查询</b>：{@code /task/todo/page} / {@code /task/done/page} /
+ *       {@code /task/overdue} / {@code /task/node-stats}</li>
+ *   <li><b>批量</b>：{@code /task/batch/pass} / {@code batch/reject} /
+ *       {@code batch/transfer} / {@code batch/urge}</li>
+ *   <li><b>辅助</b>：{@code /task/save-draft}（暂存） / {@code communicate}（沟通） /
+ *       {@code mark-read}（已阅） / {@code jump}（跳转） / {@code suspend} / {@code activate}</li>
+ *   <li><b>撤回</b>：{@code POST /task/retract} — 审批人已审后撤回</li>
+ *   <li><b>推送</b>：{@code /task/todo-count/ws}（WebSocket 待办数推送）</li>
+ * </ul>
+ *
+ * <p><b>权限模型：</b>所有写接口通过 {@link AuthApiPermission} 校验
+ * {@link PermissionCodes#WORKFLOW_TASK_VIEW} / {@code WORKFLOW_TASK_OPERATE} 等权限码；
+ * 办理动作额外校验「操作人 == 任务办理人」防越权。
+ *
+ * <p><b>限流：</b>通过 / 驳回 / 转办 / 加签 / 撤回等高频操作通过 {@link RateLimit} 限流，
+ * 防止恶意刷接口；幂等操作（撤回 / 暂存）通过 {@link Idempotent} 注解 5s 防重。
+ *
+ * <p><b>设计原则：</b>本 Controller 仅做参数透传、权限校验、VO 转换，所有业务逻辑下沉到
+ * {@link FlowTaskService}（门面模式），底层由 4 个子 Service（Query/Complete/Sign/Batch）协作。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowTaskService 任务服务门面
+ * @see WorkflowFacade 工作流门面（业务编排）
+ * @see FlowTaskOperateDTO 任务操作 DTO
+ * @see FlowRunTask 运行时任务实体
  */
 @Slf4j
 @RestController

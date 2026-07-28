@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.vo.AppInfoVO;
@@ -19,16 +21,25 @@ import com.njydsz.system.server.service.AppInfoService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.auth.annotation.DataScope;
-import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
- * 应用注册 Service 实现。
+ * 应用注册 Service 实现
  *
- * <p>集成 BCrypt 密钥校验（强度可配置）、Micrometer 指标。
- * appSecret 字段在保存时自动 BCrypt 加密，VO 不暴露密钥哈希。
+ * <p>实现 {@link AppInfoService} 接口，封装应用注册的 CRUD、密钥校验、分页查询等能力。
+ * 集成 BCrypt 密钥加密（强度可配置）、Micrometer 指标和行级数据权限过滤。
+ *
+ * <p><b>安全设计：</b>
+ * <ul>
+ *   <li>{@code appSecret} 字段在保存时自动 BCrypt 加密后存储，VO 不暴露密钥哈希</li>
+ *   <li>{@code appKey} 字段保存明文，用于客户端身份标识（必须唯一）</li>
+ *   <li>密钥校验结果同时上报 Micrometer 指标（成功/失败计数）</li>
+ *   <li>更新时密钥非空才更新；为空时设为 null，MyBatis-Plus NOT_NULL 策略会跳过该字段，保持原密钥不变</li>
+ * </ul>
+ *
+ * <p><b>数据权限：</b>读接口（{@code page / list}）启用 {@code @DataScope} 限制部门+创建人可见。
  *
  * @author ydsz-team
+ * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -42,9 +53,6 @@ public class AppInfoServiceImpl implements AppInfoService {
     /** BCrypt 密码编码器，用于 appSecret 加密存储 */
     private final BCryptPasswordEncoder passwordEncoder;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public AppInfoVO getById(String id) {
         AppInfo entity = mapper.selectById(id);
@@ -52,13 +60,14 @@ public class AppInfoServiceImpl implements AppInfoService {
     }
 
     /**
-     * {@inheritDoc}
-     * <p>通过 BCrypt 校验 appSecret 与数据库存储的密钥哈希是否匹配。
+     * 校验应用密钥。
+     *
+     * <p>通过 BCrypt 校验 {@code appSecret} 与数据库存储的密钥哈希是否匹配。
      * 校验结果同时上报 Micrometer 指标（成功/失败计数）。
      *
-     * @param appKey   应用 Key
+     * @param appKey    应用 Key（明文，对应 appKey 列）
      * @param appSecret 应用密钥明文
-     * @return true 表示校验通过
+     * @return true-校验通过；false-应用不存在/未启用/密钥不匹配
      */
     @Override
     public boolean validateClient(String appKey, String appSecret) {
@@ -95,7 +104,9 @@ public class AppInfoServiceImpl implements AppInfoService {
         }
         wrapper.orderByDesc("created_at");
         IPage<AppInfo> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        List<AppInfoVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
+        List<AppInfoVO> vos = page.getRecords().stream()
+                .map(SystemConverter.INSTANT::entityToVO)
+                .collect(Collectors.toList());
         Page<AppInfoVO> result = new Page<>(pageNum, pageSize, page.getTotal());
         result.setRecords(vos);
         return result;
@@ -104,15 +115,11 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<AppInfoVO> list() {
-        return mapper.selectList(null).stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
+        return mapper.selectList(null).stream()
+                .map(SystemConverter.INSTANT::entityToVO)
+                .collect(Collectors.toList());
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>执行 appKey 唯一性校验，appSecret 非空时自动 BCrypt 加密后存储。
-     *
-     * @throws IllegalArgumentException 当 appKey 已存在时抛出
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(AppInfoDTO dto) {
@@ -130,11 +137,6 @@ public class AppInfoServiceImpl implements AppInfoService {
         return entity.getId();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>appSecret 非空时 BCrypt 加密后更新；为空时跳过密钥字段（设为 null，
-     * MyBatis-Plus NOT_NULL 策略自动跳过），保持原密钥不变。
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(AppInfoDTO dto) {
@@ -154,6 +156,15 @@ public class AppInfoServiceImpl implements AppInfoService {
         return mapper.deleteById(id) > 0;
     }
 
+    /**
+     * DTO 转 Entity。
+     *
+     * <p>缺省 status = {@code "ENABLED"}，保证新创建的应用默认可用。
+     * 注意：本方法不处理密钥加密，由调用方在 save / updateById 中按需加密。
+     *
+     * @param dto 应用 DTO
+     * @return 应用 Entity
+     */
     private AppInfo toEntity(AppInfoDTO dto) {
         AppInfo entity = new AppInfo();
         entity.setId(dto.getId());

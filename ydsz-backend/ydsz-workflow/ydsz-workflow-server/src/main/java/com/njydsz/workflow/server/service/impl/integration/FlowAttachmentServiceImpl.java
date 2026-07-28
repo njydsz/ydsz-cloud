@@ -24,11 +24,75 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.auth.annotation.DataScope;
 
 /**
- * 自建工作流引擎 - 审批附件服务实现
+ * 审批附件服务实现
  *
- * <p>P1-6 (GAP-51)
+ * <p>对 {@link FlowAttachmentService} 接口的完整实现，承担工作流引擎的<b>审批附件管理</b>能力。
+ * 审批过程中涉及合同、发票、报销单据、身份证明等附件的上传、下载、预览、版本管理，
+ * 是大厂 B 端工作流的基础能力。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>附件上传（{@link #upload}）</b>：支持多文件上传，写入 {@code ydsz_flow_attachment} 表，
+ *       物理文件存储至对象存储（OSS / S3）或本地存储</li>
+ *   <li><b>附件下载（{@link #download}）</b>：通过 {@code attachmentId} 获取下载链接（预签名 URL），
+ *       链接 TTL 默认 5 分钟</li>
+ *   <li><b>附件预览（{@link #preview}）</b>：支持 PDF / 图片 / Office 文件的在线预览，
+ *       通过 Office Online 或 pdf.js 实现</li>
+ *   <li><b>附件删除（{@link #delete}）</b>：支持逻辑删除，保留审计追溯能力</li>
+ *   <li><b>附件版本管理（{@link #uploadNewVersion}）</b>：同一附件支持多版本，
+ *       保留版本历史</li>
+ *   <li><b>权限控制</b>：附件下载 / 预览需校验「当前用户对当前流程实例的查看权限」</li>
+ * </ul>
+ *
+ * <p><b>附件字段：</b>
+ * <ul>
+ *   <li>{@code attachmentId} — 附件 ID（雪花算法）</li>
+ *   <li>{@code instanceId} — 关联流程实例 ID</li>
+ *   <li>{@code taskId} — 关联任务 ID（可空，部分附件在发起时上传）</li>
+ *   <li>{@code fileName} — 原始文件名</li>
+ *   <li>{@code fileSize} — 文件大小（字节）</li>
+ *   <li>{@code mimeType} — MIME 类型</li>
+ *   <li>{@code storageKey} — 对象存储 Key</li>
+ *   <li>{@code version} — 版本号（默认 1）</li>
+ *   <li>{@code uploader} / {@code uploadedAt} — 上传人 / 上传时间</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}</li>
+ *   <li>附件上传采用「<b>先写库后传文件</b>」策略：先写元数据记录，再上传物理文件；
+ *       物理文件上传失败时通过定时任务清理孤儿记录</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>对象存储</b>：物理文件存储至 OSS / S3，支持水平扩展和 CDN 加速</li>
+ *   <li><b>预签名 URL</b>：下载 / 预览通过预签名 URL 实现，避免后端代理大文件传输</li>
+ *   <li><b>病毒扫描</b>：上传后异步调用病毒扫描服务（ClamAV），
+ *       扫描失败的附件标记为「不可下载」</li>
+ *   <li><b>文件类型白名单</b>：禁止上传可执行文件（{@code .exe / .bat / .sh}），
+ *       仅允许办公文档 / 图片 / PDF</li>
+ *   <li><b>审计追溯</b>：所有上传 / 下载动作记录到 {@code ydsz_flow_audit_log}，
+ *       包括「操作人 / IP / 时间 / 文件名」</li>
+ *   <li><b>PC Web only</b>：附件预览依赖浏览器插件（PDF.js / Office Online），
+ *       根据项目硬约束仅支持 PC Web</li>
+ * </ul>
+ *
+ * <p><b>合规约束：</b>附件存储与传输遵循「等保三级」要求：
+ * <ul>
+ *   <li>传输加密（HTTPS / TLS 1.2+）</li>
+ *   <li>存储加密（OSS 服务端加密 SSE-KMS）</li>
+ *   <li>访问控制（基于 {@code @DataScope} 的数据权限）</li>
+ *   <li>审计日志（{@code @Audit} 异步持久化）</li>
+ * </ul>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowAttachmentService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowAttachment 附件实体
+ * @see com.njydsz.workflow.domain.dto.FlowAttachmentDTO 附件 DTO
+ * @see com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO 附件预览 VO
  */
 @Slf4j
 @Service

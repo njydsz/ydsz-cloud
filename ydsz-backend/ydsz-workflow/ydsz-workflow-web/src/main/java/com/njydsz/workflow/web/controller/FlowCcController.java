@@ -26,10 +26,34 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 抄送中心 Controller
  *
- * <p>P0-3: 抄送中心相关接口（P1-10 从 FlowEngineController 拆分）。
+ * <p>对标钉钉 / 飞书审批中心的「抄送我的」独立 Tab。提供抄送记录的分页查询、
+ * 已读 / 全部已读标记、未读数统计、实例维度查询等 HTTP 接口。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>分页查询</b>：{@code GET /cc/page}（我的抄送，支持已读 / 未读 / 流程编码过滤）</li>
+ *   <li><b>已读机制</b>：{@code POST /cc/{id}/read}（标记单条已读） /
+ *       {@code POST /cc/read-all}（全部已读）</li>
+ *   <li><b>未读统计</b>：{@code GET /cc/unread-count}（导航栏徽标数据源）</li>
+ *   <li><b>实例维度</b>：{@code GET /cc/instance/{id}}（流程详情页抄送列表）</li>
+ * </ul>
+ *
+ * <p><b>权限模型：</b>所有接口通过 {@link AuthApiPermission} 校验
+ * {@link PermissionCodes#WORKFLOW_CC_VIEW} 权限码；写操作额外校验「操作用户 == 抄送接收人」。
+ *
+ * <p><b>限流：</b>已读 / 全部已读通过 {@link Idempotent} 5s 防重；高 QPS 场景
+ * （如 WebSocket 推送触发）通过 {@link IdempotentExempt} 豁免。
+ *
+ * <p><b>性能优化：</b>分页查询走 {@code ydsz_flow_cc} 复合索引
+ * {@code (cc_user_id, read_status, tenant_id)}；未读数走 Redis 缓存
+ * {@code ydsz:flow:cc:unread:{userId}}，TTL 5min。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowCcService 抄送服务
+ * @see FlowCc 抄送实体
+ * @see FlowCcQueryDTO 抄送查询 DTO
  */
 @Slf4j
 @RestController

@@ -12,10 +12,29 @@ import java.time.LocalDateTime;
 /**
  * 租户主表实体
  *
- * <p>SaaS 多租户核心元数据管理
+ * <p>对应数据库表 {@code ydsz_tenant}，SaaS 多租户核心元数据。
+ * 租户是平台上的最小业务隔离单位，每个租户拥有独立的用户、角色、权限和数据隔离边界。
+ *
+ * <p><b>多租户隔离策略：</b>
+ * <ul>
+ *   <li><b>SHARED_DB（默认）</b>：共享数据库，通过 {@code tenant_id} 字段在 WHERE 条件中过滤
+ *       （参见 {@link com.njydsz.common.tenant.TenantContextHolder}）</li>
+ *   <li><b>ISOLATE_DB：</b>独立数据库，通过 {@link #datasourceKey} 字段路由到独立 DataSource，
+ *       适用于金融/医疗等高隔离要求的客户</li>
+ * </ul>
+ *
+ * <p><b>套餐与配额：</b>{@link #planId} 关联 {@link TenantPlan}，定义该租户的功能权限和资源配额
+ * （如最大用户数、最大项目数、最大存储空间）。
+ *
+ * <p><b>生命周期：</b>租户创建 → 套餐订阅（{@code planId} + {@code expireAt}）→ 续费 / 到期降级 / 释放。
+ *
+ * <p><b>索引设计：</b>唯一索引 {@code uk_tenant_code}（{@code tenant_code}），普通索引 {@code idx_plan_id}（{@code plan_id}）。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see TenantPlan 租户套餐
+ * @see com.njydsz.common.tenant.TenantContextHolder 租户上下文
  */
 @Data
 @SuperBuilder
@@ -24,28 +43,28 @@ import java.time.LocalDateTime;
 @TableName("ydsz_tenant")
 public class Tenant extends MpBaseEntity<String> {
 
-    /** 租户编码（唯一业务标识） */
+    /** 租户编码（唯一业务标识，租户登录/调用使用） */
     private String tenantCode;
 
-    /** 租户名称 */
+    /** 租户名称（展示用） */
     private String tenantName;
 
     /** 联系人姓名 */
     private String contactName;
 
-    /** 联系电话 */
+    /** 联系电话（脱敏返回） */
     private String contactPhone;
 
-    /** 联系邮箱 */
+    /** 联系邮箱（脱敏返回） */
     private String contactEmail;
 
-    /** 关联套餐 ID */
+    /** 关联套餐 ID（{@link TenantPlan#getId()}） */
     private String planId;
 
-    /** 订阅到期时间 */
+    /** 订阅到期时间（到期后租户被自动锁定/降级） */
     private LocalDateTime expireAt;
 
-    /** 独立数据源标识（ISOLATE_DB 模式下使用） */
+    /** 独立数据源标识（ISOLATE_DB 模式下使用，路由到独立 DataSource） */
     private String datasourceKey;
 
     /** 备注 */

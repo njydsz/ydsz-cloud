@@ -41,6 +41,21 @@ public class ProjectSearchController {
 
     private final UnifiedSearchService unifiedSearchService;
 
+    /**
+     * 搜索项目
+     *
+     * <p>基于统一搜索服务进行全文检索，支持关键词模糊匹配、高亮显示、权限过滤。
+     *
+     * @param keyword      搜索关键词
+     * @param page         当前页码（默认 1）
+     * @param pageSize     每页条数（默认 20）
+     * @param userId       用户 ID（从 Header 解析）
+     * @param tenantId     租户 ID（从 Header 解析）
+     * @param rolesHeader  用户角色列表（逗号分隔，从 Header 解析）
+     * @param deptId       部门 ID（从 Header 解析）
+     * @param adminHeader  是否管理员（从 Header 解析）
+     * @return 搜索结果
+     */
     @GetMapping
     @Operation(summary = "搜索项目")
     @Audit(action = AuditAction.QUERY, module = "PROJECT", content = "搜索项目")
@@ -72,6 +87,14 @@ public class ProjectSearchController {
         return BaseResponse.success(unifiedSearchService.search(request));
     }
 
+    /**
+     * 重建项目搜索索引
+     *
+     * <p>清除搜索缓存，触发索引重建。
+     *
+     * @param userId 用户 ID（从 Header 解析）
+     * @return 操作结果
+     */
     @PostMapping("/rebuild")
     @Operation(summary = "重建项目索引")
     @Audit(action = AuditAction.UPDATE, module = "PROJECT", content = "重建项目搜索索引")

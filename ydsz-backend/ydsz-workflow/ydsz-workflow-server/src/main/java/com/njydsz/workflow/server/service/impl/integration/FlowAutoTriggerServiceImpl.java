@@ -26,11 +26,63 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程自动触发服务实现
  *
- * <p>当一个流程实例完成时，自动检查 sourceFlowCode 对应的所有 enabled 触发规则，
- * 使用 literule 的 ExpressionEvaluator 评估 conditionExpression，
- * 满足条件则自动启动 targetFlowCode 对应的目标流程。
+ * <p>对 {@link FlowAutoTriggerService} 接口的完整实现，是工作流引擎的<b>流程联动</b>扩展点。
+ * 当一个流程实例完成时，自动检查 {@code sourceFlowCode} 对应的所有 {@code enabled=1} 触发规则，
+ * 使用 {@code ydsz-literule} 的 {@link com.njydsz.literule.api.expr.ExpressionEvaluator}
+ * 评估 {@code conditionExpression}，满足条件则自动启动 {@code targetFlowCode} 对应的目标流程。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>触发规则配置</b>：维护 {@code ydsz_flow_auto_trigger} 表，
+ *       定义「源流程 + 条件表达式 + 目标流程」三元组</li>
+ *   <li><b>条件评估</b>：流程完成时，遍历源流程的所有 {@code enabled=1} 规则，
+ *       注入「源流程变量 + 目标流程变量映射」评估 Aviator 表达式</li>
+ *   <li><b>目标流程启动</b>：条件满足时通过 {@link WorkflowFacade#startProcess} 启动目标流程，
+ *       并透传源流程的上下文变量</li>
+ *   <li><b>审计与回溯</b>：所有触发动作写入 {@code ydsz_flow_audit_log}，
+ *       标注「由 XX 流程自动触发」，便于问题排查</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <ul>
+ *   <li>「合同审批完成」→ 自动触发「财务结算流程」</li>
+ *   <li>「项目立项完成」→ 自动触发「资源分配流程」</li>
+ *   <li>「采购订单完成」→ 自动触发「入库流程」</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ *       确保「触发规则评估 + 目标流程启动」原子性</li>
+ *   <li>目标流程启动通过 {@link WorkflowFacade} 独立事务（{@code REQUIRES_NEW}），
+ *       源流程回滚不影响已触发的目标流程</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>声明式配置</b>：触发规则通过数据库表配置，<b>无需硬编码</b>，
+ *       业务方可自行在管理后台配置「源流程 → 目标流程」联动</li>
+ *   <li><b>条件表达式</b>：支持 Aviator 表达式引用源流程变量，
+ *       如 {@code source.amount > 100000 && source.type == 'PURCHASE'}</li>
+ *   <li><b>避免循环触发</b>：每次自动触发记录 {@code trigger_chain} 字段，
+ *       检测到循环（A → B → A）时阻断</li>
+ *   <li><b>幂等性</b>：同一源流程实例对同一目标流程的多次触发由
+ *       {@code (sourceInstanceId, targetFlowCode)} 复合键防重</li>
+ *   <li><b>失败降级</b>：目标流程启动失败时记录错误日志，不影响源流程的正常完成</li>
+ * </ul>
+ *
+ * <p><b>规则降级：</b>如果 {@code ydsz-literule} 模块未引入，{@code conditionExpression} 降级为
+ * 「<b>永远成立</b>」（即不评估条件），所有 enabled 规则都会触发。
+ * 生产环境应保证 {@code ydsz-literule} 已正确引入。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowAutoTriggerService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowAutoTrigger 自动触发规则实体
+ * @see WorkflowFacade 工作流门面
+ * @see com.njydsz.literule.api.expr.ExpressionEvaluator Aviator 表达式评估器
+ * @see FlowRoutingServiceImpl 智能路由（与之联动：路由+触发形成完整决策链）
  */
 @Slf4j
 @Service

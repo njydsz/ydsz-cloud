@@ -35,18 +35,60 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 工作流事件订阅服务实现
  *
- * <p>P0-1: BPMN 错误事件 / 消息事件运行时支持。
+ * <p>对 {@link FlowEventSubscriptionService} 接口的完整实现，承担工作流引擎的
+ * <b>事件驱动节点</b>运行时支持，是 BPMN 2.0 规范中<b>消息中间事件（Message Intermediate Event）</b>、
+ * <b>错误边界事件（Error Boundary Event）</b>、<b>信号事件（Signal Event）</b>的运行时承接层。
  *
- * <p>事件触发后推进流程的核心逻辑：
+ * <p><b>事件模型：</b>
+ * <ul>
+ *   <li><b>订阅（Subscription）</b>：流程到达「事件捕获节点」（{@code intermediateCatchEvent} / {@code boundaryEvent}）
+ *       时，调用 {@link #createSubscription} 写入 {@code ydsz_flow_event_subscription} 表，状态 = {@code WAITING}</li>
+ *   <li><b>触发（Trigger）</b>：外部通过 {@link #triggerEvent} 投递事件，
+ *       系统按 {@code (eventType, eventKey, instanceId)} 匹配 WAITING 订阅并执行动作</li>
+ *   <li><b>完成（Completed）</b>：触发成功后订阅置为 {@code COMPLETED}，合并 payload 到流程变量后推进流程</li>
+ * </ul>
+ *
+ * <p><b>核心职责：</b>
  * <ol>
  *   <li>匹配 WAITING 订阅 → 标记 COMPLETED</li>
- *   <li>边界事件：取消关联的 userTask</li>
- *   <li>合并 payload 到流程变量</li>
- *   <li>调用 advancer.advance() 从事件捕获节点推进到下游</li>
- *   <li>调用 instanceService.generateTasksForNodes() 创建下游任务</li>
+ *   <li>边界事件：取消关联的 userTask（{@code boundaryTaskId}）</li>
+ *   <li>合并 payload 到流程变量（{@code flow_variables}）</li>
+ *   <li>调用 {@link FlowAdvancer#advance} 从事件捕获节点推进到下游</li>
+ *   <li>调用 {@link FlowInstanceService#generateTasksForNodes} 创建下游任务</li>
  * </ol>
  *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>{@link #createSubscription} 与 {@link #triggerEvent} 开启
+ *       {@code @Transactional(rollbackFor = Exception.class)}，确保「订阅状态 + 任务取消 + 流程变量 + 流程推进」原子性</li>
+ *   <li>同一订阅的多次触发由 {@code @Transactional} 串行化（SELECT ... FOR UPDATE 锁住订阅行）</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li>支持多种事件类型：{@code message / error / signal / timer / compensation}</li>
+ *   <li>事件 payload 支持嵌套 JSON，最终合并到 {@code flow_variables} 后可在表达式中引用</li>
+ *   <li>边界事件（{@code boundaryEvent}）触发时主动取消关联任务，避免「事件触发后原任务仍 PENDING」</li>
+ *   <li>支持「事件延迟消费」：订阅记录带 {@code expireAt} 字段，到期后系统自动清理</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 流程到达事件节点时创建订阅
+ * String subscriptionId = eventSubscriptionService.createSubscription(
+ *     instanceId, eventNode, variables, boundaryTaskId);
+ *
+ * // 2. 外部触发事件
+ * eventSubscriptionService.triggerEvent("message", "order_created", "tenant1", payload);
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowEventSubscriptionService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowEventSubscription 事件订阅实体
+ * @see FlowAdvancer 流程推进引擎
+ * @see FlowInstanceService 流程实例服务
  */
 @Slf4j
 @Service

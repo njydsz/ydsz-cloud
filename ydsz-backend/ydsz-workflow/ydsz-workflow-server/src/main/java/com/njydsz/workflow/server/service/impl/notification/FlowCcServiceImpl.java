@@ -29,18 +29,37 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * GAP-P1: 流程抄送服务实现
  *
- * <p>核心能力：
+ * <p>对 {@link FlowCcService} 接口的完整实现，对标钉钉 / 飞书审批的「抄送我的」独立 Tab。
+ *
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>{@link #handleCcNode} — CC 节点触发时展开接收人（user:/role:/dept:）并批量写入 ydsz_flow_cc</li>
- *   <li>{@link #listCcByUser} — "抄送我的"分页查询，返回统一 {@link PageResult}</li>
- *   <li>{@link #markRead} / {@link #markAllRead} — 已读标记</li>
- *   <li>{@link #countUnread} — 未读数（前端导航栏徽标）</li>
- *   <li>{@link #listByInstance} — 实例维度抄送列表</li>
+ *   <li><b>CC 节点处理</b>：{@link #handleCcNode} — CC 节点（{@code nodeType=5}）触发时
+ *       展开 {@code user:/role:/dept:} 权限标识为具体用户列表，并写入 {@code ydsz_flow_cc}</li>
+ *   <li><b>分页查询</b>：{@link #listCcByUser} / {@link #listByInstance} — 抄送我的 / 实例维度</li>
+ *   <li><b>已读机制</b>：{@link #markRead} / {@link #markAllRead} — 标记已读 / 全部已读</li>
+ *   <li><b>未读统计</b>：{@link #countUnread} — 前端导航栏徽标数据源</li>
  * </ul>
  *
- * <p>所有方法均防御性编码：空值检查 + try-catch，保证不拖垮主流程。
+ * <p><b>事务边界：</b>所有写方法开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ * 「展开用户 + 批量写入 + 失效缓存」原子性。
  *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>「抄送我的」走 {@code ydsz_flow_cc} 索引 {@code idx_cc_user}</li>
+ *   <li>未读数走 Redis 缓存（{@code ydsz:flow:cc:unread:{userId}}），{@code @CacheEvict} 在 {@code markRead} 时失效</li>
+ *   <li>CC 节点展开走「单条 SQL 查询 + 应用层 dedup」，避免在 N 次循环中重复查询</li>
+ * </ul>
+ *
+ * <p><b>防御性编码：</b>所有方法均空值检查 + try-catch 兜底，CC 节点失败不影响主流程推进，
+ * 异常仅写日志，由 {@code DefaultFlowAdvancer} 继续推进。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowCcService 接口定义
+ * @see FlowCc 抄送实体
+ * @see FlowAssigneeResolver 审批人解析器（{@code role:/dept:} 展开）
+ * @see FlowVariableStrategy 变量解析策略（SpEL 表达式）
  */
 @Slf4j
 @Service

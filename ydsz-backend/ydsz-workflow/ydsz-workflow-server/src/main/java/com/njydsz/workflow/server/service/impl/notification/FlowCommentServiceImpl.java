@@ -28,10 +28,68 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * P2-2: 流程评论 Service 实现
  *
- * <p>审批评论多级回复实现。独立于审计日志（{@code FlowTaskSupport.audit}），
- * 评论是讨论（可回复、可删除），审计日志是操作轨迹（不可变）。
+ * <p>对 {@link FlowCommentService} 接口的完整实现，是工作流引擎的<b>评论协作</b>能力。
+ * 支撑审批评论的<b>多级回复</b>、<b>@提及通知</b>、<b>敏感数据脱敏</b>、<b>可删除语义</b>。
+ * 是大厂 B 端工作流「审批沟通协作」的标准能力。
  *
+ * <p><b>与审计日志的区别：</b>
+ * <ul>
+ *   <li><b>评论（{@link FlowComment}）</b>：业务方的<b>讨论</b>，<b>可回复</b>（{@code parentCommentId}）、
+ *       <b>可删除</b>（{@code deleted} 软删）、<b>支持 @提及</b>（{@code @\{userId\}}）</li>
+ *   <li><b>审计日志（{@code FlowAuditLog}）</b>：系统的<b>操作轨迹</b>，<b>不可变</b>、
+ *       不可回复、不可删除，用于合规审计</li>
+ * </ul>
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>新增评论</b>：{@link #addComment} — 新增顶级评论 / 回复评论，支持 @提及解析</li>
+ *   <li><b>删除评论</b>：{@link #deleteComment} — 软删除（{@code deleted=1}），保留审计</li>
+ *   <li><b>多级回复树</b>：{@link #listCommentTree} / {@link #listByInstance} —
+ *       一次性查询评论 + 构建树形结构</li>
+ *   <li><b>@提及通知</b>：通过正则 {@link #MENTION_PATTERN} 解析 @userId，
+ *       调用 {@link FlowNotificationService} 发送通知</li>
+ *   <li><b>敏感数据脱敏</b>：通过 {@link FlowSensitiveMasker#mask} 对评论内容脱敏</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>所有写方法开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ * 「参数校验 + 父评论校验 + 评论写入 + @提及通知」原子性。
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>软删除</b>：评论使用软删除（{@code deleted=1}），保留完整历史便于审计追溯</li>
+ *   <li><b>多租户隔离</b>：所有查询均带 {@code tenantId} 条件，<b>严禁跨租户访问</b></li>
+ *   <li><b>回复场景校验</b>：父评论必须存在、未删除、且属于同一实例，
+ *       防止「跨实例回复」导致的数据混乱</li>
+ *   <li><b>循环依赖处理</b>：{@link FlowNotificationService} 使用 {@code @Lazy} 注入，
+ *       避免与 {@link FlowCommentService} 的循环依赖</li>
+ *   <li><b>@提及正则</b>：{@link #MENTION_PATTERN} 同时支持 {@code @\{userId\}} 和
+ *       {@code @userId} 两种格式，兼容前端不同输入习惯</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 场景：审批人在通过审批时，添加评论并 @ 财务人员
+ * FlowCommentCreateDTO dto = new FlowCommentCreateDTO();
+ * dto.setInstanceId(instanceId);
+ * dto.setTaskId(taskId);
+ * dto.setContent("已通过，请 @{2001} 关注后续付款");
+ * commentService.addComment(dto, "1001", "张三", "tenant-1");
+ * // → 写入评论 + 自动给用户 2001 发送通知
+ * }</pre>
+ *
+ * <p><b>与审计日志的关系：</b>
+ * <p>评论 <b>不会</b> 写入审计日志（{@code ydsz_flow_audit_log}），
+ * 因为评论是<b>讨论</b>而非<b>操作</b>。如需审计评论内容，应通过 {@code @EventListener}
+ * 监听 {@code COMMENT_CREATED} 事件，由审计模块自行持久化。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowCommentService 接口定义
+ * @see FlowComment 评论实体
+ * @see FlowAuditLog 审计日志实体（操作轨迹，与评论分离）
+ * @see FlowSensitiveMasker 敏感数据脱敏器
+ * @see FlowNotificationService 通知服务（@提及通知）
  */
 @Slf4j
 @Service

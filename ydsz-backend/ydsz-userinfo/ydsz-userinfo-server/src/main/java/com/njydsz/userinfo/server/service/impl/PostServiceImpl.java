@@ -26,10 +26,29 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
- * 岗位 Service 实现。
+ * 岗位 Service 实现
+ *
+ * <p>实现 {@link PostService} 接口，封装岗位的完整业务逻辑：CRUD、{@code postCode} 唯一性校验、
+ * 跨服务名称富化。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li>岗位 CRUD（含 {@code postCode} 唯一性校验）</li>
+ *   <li>岗位全量列表查询（按 {@code sortOrder} 倒序）</li>
+ *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）</li>
+ * </ul>
+ *
+ * <p><b>事务：</b>所有写操作（{@code create/update/removeById}）
+ * 开启 {@code @Transactional(rollbackFor = Exception.class)}，确保任一异常触发完整回滚。
+ *
+ * <p><b>性能：</b>{@link #batchNamesByIds} 仅 SELECT id 与 post_name 字段，单次往返。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see PostService Service 接口
+ * @see Post 岗位实体
+ * @see com.njydsz.userinfo.web.controller.PostController 岗位 Controller
  */
 @Slf4j
 @Service

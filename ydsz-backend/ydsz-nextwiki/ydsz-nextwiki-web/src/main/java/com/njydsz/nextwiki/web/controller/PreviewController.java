@@ -22,6 +22,10 @@ import com.njydsz.common.lock.annotation.Idempotent;
 /**
  * 文档预览 REST API
  *
+ * <p>提供在线预览生成、缩略图获取、文档格式转换等能力。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/nextwiki/preview}
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

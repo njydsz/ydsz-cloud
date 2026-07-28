@@ -19,9 +19,83 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 审批数据分析服务实现（P2-2）。
+ * 审批数据分析服务实现
  *
+ * <p>对 {@link FlowAnalyticsService} 接口的完整实现，是工作流引擎的<b>数据分析</b>能力。
+ * 为工作流管理后台的「数据看板」提供核心指标数据，
+ * 是大厂 B 端工作流「数据驱动决策」的关键支撑。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>总览数据（{@link #getOverview}）</b>：总览指标
+ *       （今日发起 / 本周发起 / 累计发起 / 在途任务 / 平均耗时）</li>
+ *   <li><b>趋势分析（{@link #getTrend}）</b>：按时间维度（天 / 周 / 月）的趋势数据</li>
+ *   <li><b>流程排行（{@link #getFlowRanking}）</b>：TOP 10 流程
+ *       （按发起量 / 通过量 / 驳回量）</li>
+ *   <li><b>用户排行（{@link #getUserRanking}）</b>：TOP 10 审批人 / 发起人
+ *       （按审批量 / 发起量）</li>
+ *   <li><b>部门统计（{@link #getDeptStatistics}）</b>：按部门维度的审批数据统计</li>
+ *   <li><b>状态分布（{@link #getStatusDistribution}）</b>：流程状态分布
+ *       （PENDING / COMPLETED / TERMINATED / RECALLED）</li>
+ * </ul>
+ *
+ * <p><b>核心指标：</b>
+ * <ul>
+ *   <li><b>数量指标</b>：发起量、通过量、驳回量、超时量、终止量</li>
+ *   <li><b>效率指标</b>：平均耗时（avgDurationMs）、P50 / P90 / P99 耗时</li>
+ *   <li><b>质量指标</b>：通过率、驳回率、超时率、一次性通过率</li>
+ *   <li><b>活跃指标</b>：在途任务数、当前活跃用户数、当前活跃流程数</li>
+ * </ul>
+ *
+ * <p><b>数据来源：</b>
+ * <ul>
+ *   <li>{@code ydsz_flow_instance} — 流程实例表（活跃实例，实时数据）</li>
+ *   <li>{@code ydsz_flow_his_instance} — 历史实例表（已完成实例，趋势数据）</li>
+ *   <li>{@code ydsz_flow_his_task} — 历史任务表（审批操作，效率数据）</li>
+ *   <li>{@code ydsz_flow_run_task} — 运行时任务表（在途任务，活跃数据）</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>本类为<b>纯读</b>操作，<b>不开启事务</b>，性能敏感</li>
+ *   <li>多表 JOIN 查询走 {@code idx_his_task_completed} / {@code idx_instance_tenant} 等索引</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>租户隔离</b>：基于 {@link TenantContext} 的多租户数据隔离，
+ *       不同租户数据完全隔离</li>
+ *   <li><b>缓存策略</b>：总览数据缓存 5min（Redis），趋势数据缓存 1h，避免重复查询</li>
+ *   <li><b>数据权限</b>：基于 {@code @DataScope} 的数据权限，
+ *       普通管理员仅能查看自己部门的数据</li>
+ *   <li><b>实时性权衡</b>：活跃数据实时查询（{@code ydsz_flow_instance}），
+ *       历史数据离线分析（{@code ydsz_flow_his_instance}）</li>
+ *   <li><b>导出能力</b>：支持将分析数据导出为 Excel / CSV / PDF</li>
+ * </ul>
+ *
+ * <p><b>与 {@code FlowEfficiencyService} 的区别：</b>
+ * 本服务提供<b>全量数据分析</b>（看板级），{@code FlowEfficiencyService} 提供<b>效率分析</b>（指标级），
+ * 两者数据有重叠但视角不同。前者面向「管理决策」，后者面向「效率优化」。
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 1. 获取总览数据
+ * AnalyticsOverview overview = analyticsService.getOverview(tenantId);
+ * // overview.todayStartedCount = 23
+ *
+ * // 2. 获取趋势数据（最近 30 天）
+ * List<TrendPoint> trend = analyticsService.getTrend(
+ *     tenantId, LocalDate.now().minusDays(30), LocalDate.now());
+ * }</pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowAnalyticsService 接口定义
+ * @see FlowEfficiencyService 效率分析服务（与本服务数据有重叠但视角不同）
+ * @see TenantContext 租户上下文
+ * @see com.njydsz.workflow.domain.entity.FlowRunTask 运行时任务实体
+ * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
  */
 @Slf4j
 @Service

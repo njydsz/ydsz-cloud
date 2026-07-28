@@ -34,10 +34,37 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 用户账号 Controller。
+ * 用户账号 Controller
+ *
+ * <p>提供用户账号的完整管理能力（CRUD）、密码自助管理（修改/重置）、角色分配/撤销、用户启用/禁用等。
+ * 是用户中心服务（ydsz-userinfo）最核心的 Controller，被各业务模块通过 Feign
+ * （{@code UserAccountClient}）远程调用获取用户基础信息。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/user}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li>用户分页查询（多条件过滤：用户名/手机号/邮箱/部门/状态）</li>
+ *   <li>用户 CRUD（含密码 BCrypt 加密存储）</li>
+ *   <li>密码管理（用户自助修改 / 管理员重置）</li>
+ *   <li>角色分配（{@code /assign-roles}）</li>
+ *   <li>用户启用/禁用（{@code /enable} / {@code /disable}）</li>
+ *   <li>用户导入/导出（批量）</li>
+ * </ul>
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 防重复提交（Redis SET NX EX）</li>
+ *   <li>写接口启用 {@link RateLimit} 接口级限流（30-50 QPS）</li>
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>读接口无防护，业务方可高频调用</li>
+ *   <li>密码字段禁止出现在响应中（{@code @Sensitive(PASSWORD)} 脱敏）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.userinfo.server.service.UserAccountService 用户业务逻辑
+ * @see com.njydsz.userinfo.domain.entity.UserAccount 用户实体
  */
 @RestController
 @RequestMapping("/api/v1/user")
@@ -47,6 +74,16 @@ public class UserAccountController {
 
     private final UserAccountService service;
 
+    /**
+     * 分页查询用户列表
+     *
+     * <p>支持按 username / realName / phone / email 模糊匹配 + status / userType / companyId 精确匹配，
+     * 默认按 {@code created_at} 降序排列。
+     * <p>结果集启用 {@code @DataScope} 自动追加部门过滤（创建人所在部门 + 子部门）。
+     *
+     * @param query 分页查询条件（pageNum / pageSize / username / realName / phone / email / status）
+     * @return 分页结果（含总记录数、当前页、每页大小、数据列表）
+     */
     @GetMapping("/page")
     @Operation(summary = "分页查询用户列表")
     public BaseResponse<PageResponse<List<UserAccountVO>>> page(@Valid UserAccountPageQueryDTO query) {
@@ -56,18 +93,41 @@ public class UserAccountController {
         return BaseResponse.success(response);
     }
 
+    /**
+     * 查询全部用户列表（不翻页）
+     *
+     * <p>适用于前端下拉框、单选按钮组等场景。
+     * <p><b>注意：</b>数据量较大（&gt; 500）时建议业务方缓存，避免高频调用。
+     *
+     * @return 全部未删除用户列表（按 created_at 降序）
+     */
     @GetMapping("/list")
     @Operation(summary = "查询全部用户列表")
     public BaseResponse<List<UserAccountVO>> list() {
         return BaseResponse.success(service.list());
     }
 
+    /**
+     * 根据 ID 查询用户
+     *
+     * @param id 用户 ID（雪花算法字符串）
+     * @return 用户详情；不存在或已删除时返回 null
+     */
     @GetMapping("/{id}")
     @Operation(summary = "根据 ID 查询用户")
     public BaseResponse<UserAccountVO> getById(@PathVariable String id) {
         return BaseResponse.success(service.getById(id));
     }
 
+    /**
+     * 创建用户
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志（{@code password} 字段已排除）。
+     * <p>业务流程：username 唯一性校验 → 密码策略校验 → BCrypt 加密 → 写入 DB → 触发 ES 索引同步。
+     *
+     * @param dto 用户创建 DTO（含 username / password / realName / phone / email / deptIds 等）
+     * @return 新创建的用户 ID
+     */
     @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建用户: ' + #dto.username", excludeParams = {"password"})
     @Idempotent(key = "ydsz:userinfo:UserAccountController:create:lock", ttlSeconds = 5)
@@ -78,6 +138,16 @@ public class UserAccountController {
         return BaseResponse.success(service.create(dto));
     }
 
+    /**
+     * 更新用户信息
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
+     * <p>使用 {@code BeanUpdateUtil.copyNonNull} 动态复制非 null 字段，<b>避免覆盖已有值</b>。
+     * <p>更新不会改变 {@code password}，如需重置密码请调用 {@link #resetPassword}。
+     *
+     * @param dto 用户更新 DTO（必须包含 ID）
+     * @return 是否成功
+     */
     @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新用户: ' + #dto.id")
     @Idempotent(key = "ydsz:userinfo:UserAccountController:update:lock", ttlSeconds = 5)
@@ -88,6 +158,16 @@ public class UserAccountController {
         return BaseResponse.success(service.update(dto));
     }
 
+    /**
+     * 按 ID 删除用户
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
+     * <p>删除为<b>软删除</b>（{@code deleted=1}），保留历史数据便于审计追溯，
+     * 同步触发 ES 索引删除。
+     *
+     * @param id 用户 ID
+     * @return 是否成功
+     */
     @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除用户: ' + #id")
     @RateLimit(resource = "userinfo.useraccount.remove", threshold = 50)
@@ -98,6 +178,15 @@ public class UserAccountController {
         return BaseResponse.success(service.removeById(id));
     }
 
+    /**
+     * 修改密码（用户自助）
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志（{@code oldPassword / newPassword} 已排除）。
+     * <p>业务流程：旧密码校验 → 新旧密码不能相同 → 密码策略校验 → BCrypt 加密 → 写入 DB。
+     *
+     * @param dto 修改密码 DTO（userId / oldPassword / newPassword）
+     * @return 是否成功
+     */
     @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'修改密码'", excludeParams = {"oldPassword", "newPassword"})
     @Idempotent(key = "ydsz:userinfo:UserAccountController:changePassword:lock", ttlSeconds = 5)
@@ -108,6 +197,16 @@ public class UserAccountController {
         return BaseResponse.success(service.changePassword(dto));
     }
 
+    /**
+     * 重置密码（管理员）
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS。
+     * <p>业务流程：密码策略校验 → BCrypt 加密 → 写入 DB → 重置失败计数和锁定状态。
+     * <p>本接口<b>无需旧密码</b>，仅供管理员使用；用户自助修改请用 {@link #changePassword}。
+     *
+     * @param dto 重置密码 DTO（userId / newPassword）
+     * @return 是否成功
+     */
     @RateLimit(resource = "userinfo.useraccount.resetPassword", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:UserAccountController:resetPassword:lock", ttlSeconds = 5)
     @PostMapping("/reset-password")
@@ -116,6 +215,17 @@ public class UserAccountController {
         return BaseResponse.success(service.resetPassword(dto));
     }
 
+    /**
+     * 分配用户角色
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS。
+     * <p><b>覆盖式</b>分配：先清空旧的角色关联，再批量插入新关联（避免 N+1 循环）。
+     * 业务方传入<b>完整</b>的角色 ID 列表，而非增量。
+     *
+     * @param userId 用户 ID
+     * @param dto    分配角色 DTO（roleIds 列表）
+     * @return 是否成功
+     */
     @RateLimit(resource = "userinfo.useraccount.assignRoles", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:UserAccountController:assignRoles:lock", ttlSeconds = 5)
     @PostMapping("/{userId}/roles")
@@ -126,6 +236,14 @@ public class UserAccountController {
         return BaseResponse.success(service.assignRoles(userId, dto.getRoleIds()));
     }
 
+    /**
+     * 查询用户的角色 ID 列表
+     *
+     * <p>返回该用户拥有的全部角色 ID；常用于工作流审批人解析（{@code OrgQueryClient.listUserIdsByRoleCode} 的逆向查询）。
+     *
+     * @param userId 用户 ID
+     * @return 角色 ID 列表
+     */
     @GetMapping("/{userId}/roles")
     @Operation(summary = "查询用户角色 ID 列表")
     public BaseResponse<List<String>> getUserRoles(@PathVariable String userId) {

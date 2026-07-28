@@ -30,12 +30,37 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
- * 部门 Service 实现。
+ * 部门 Service 实现
  *
- * <p>核心能力：部门 CRUD、编码唯一性校验、子部门检查、人员检查、树形结构构建。
+ * <p>实现 {@link DepartmentService} 接口，封装部门的完整业务逻辑：CRUD、deptCode 唯一性校验、
+ * 子部门/人员引用检查、树形结构构建、审批人展开查询、跨服务名称富化。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li>部门 CRUD（含 {@code deptCode} 唯一性校验）</li>
+ *   <li>删除前置校验（有子部门 / 仍有人员关联时禁止删除）</li>
+ *   <li>部门树形结构查询（递归构建父子关系）</li>
+ *   <li>部门负责人查询（{@code getDeptLeaderByDeptId} / {@code getDeptLeaderByDeptCode}，
+ *       供工作流 {@code dept:xxx} 审批人展开调用）</li>
+ *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）</li>
+ * </ul>
+ *
+ * <p><b>事务：</b>所有写操作（{@code create/update/removeById}）
+ * 开启 {@code @Transactional(rollbackFor = Exception.class)}，确保任一异常触发完整回滚。
+ *
+ * <p><b>性能：</b>
+ * <ul>
+ *   <li>{@link #tree} 一次性查询全表（已逻辑删除过滤），在内存中构建树，避免 N+1</li>
+ *   <li>{@link #batchNamesByIds} 使用单条 {@code IN} 查询，单次往返</li>
+ *   <li>{@link #getDeptLeaderByDeptCode} 使用 {@code LIMIT 1} 兜底（避免极端重复编码）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see DepartmentService Service 接口
+ * @see Department 部门实体
+ * @see com.njydsz.userinfo.web.controller.DepartmentController 部门 Controller
  */
 @Slf4j
 @Service

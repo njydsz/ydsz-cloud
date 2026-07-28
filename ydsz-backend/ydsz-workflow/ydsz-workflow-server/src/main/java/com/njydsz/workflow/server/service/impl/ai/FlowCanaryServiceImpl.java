@@ -30,9 +30,60 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 灰度发布服务实现
  *
- * <p>P3-1 落地。
+ * <p>对 {@link FlowCanaryService} 接口的完整实现，承担工作流引擎的<b>灰度发布</b>能力。
+ * 借鉴大厂「无中断发布」理念，支持同一 {@code flowCode} 下多版本并存，按「比例 / 用户 / 租户 / 标签」
+ * 等多种策略切流，避免新版本 BUG 直接影响全量用户。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>灰度发布</b>：{@link #publishCanary} 启动灰度，按 {@code initialPercent}（如 5%）引流到新版本</li>
+ *   <li><b>动态调比</b>：{@link #adjustCanaryPercent} 提升或回退灰度比例（10% → 30% → 60% → 100%）</li>
+ *   <li><b>一键回滚</b>：{@link #rollbackCanary} 立即回滚到稳定版本，规避新版本线上故障</li>
+ *   <li><b>全量发布</b>：{@link #promoteToFull} 灰度完成提升为正式版本，停用旧版本</li>
+ *   <li><b>效果分析</b>：{@link #resolveEffectiveDefinition} 启动实例时解析「当前用户应走哪个版本」</li>
+ *   <li><b>发布日志</b>：所有切流动作写入 {@code canary_rollout_log} JSON 字段，支持回溯审计</li>
+ * </ul>
+ *
+ * <p><b>灰度策略（{@link CanaryStrategy}）：</b>
+ * <ul>
+ *   <li>{@code USER_HASH} — 按 {@code userId} 哈希分桶，相同用户稳定路由到同一版本（最常用）</li>
+ *   <li>{@code TENANT} — 按 {@code tenantId} 整租户切流（适合 B 端多租户）</li>
+ *   <li>{@code PERCENT} — 纯随机比例分桶（最简单但不稳定）</li>
+ *   <li>{@code TAG} — 按用户标签切流（如「内部员工」→ 新版本，「外部客户」→ 旧版本）</li>
+ * </ul>
+ *
+ * <p><b>状态机（{@link CanaryStatus}）：</b>
+ * <pre>
+ *   NONE → CANARYING → PROMOTED（成功路径）
+ *                    → ROLLED_BACK（回滚路径）
+ * </pre>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}，
+ *       确保「定义状态 + canary 字段 + rollout log」原子性</li>
+ *   <li>同一 {@code flowCode} 的并发灰度由 {@code ydsz:flow:canary:lock:{flowCode}} 分布式锁串行化</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li>支持<b>渐进式发布</b>：建议发布比例按 5% → 20% → 50% → 100% 阶梯提升，
+ *       每档观察 5-10 分钟异常指标（错误率 / 审批耗时）后再提</li>
+ *   <li>支持<b>快速回滚</b>：灰度出现异常时 {@link #rollbackCanary} 一键回滚，
+ *       已生效的实例保留在原版本，不再切流到新版本</li>
+ *   <li>支持<b>流量染色</b>：实例启动时记录 {@code canary_flag}，便于查询「走新版本的所有实例」</li>
+ * </ul>
+ *
+ * <p><b>指标埋点：</b>通过 {@code ydsz_workflow_canary_*} 指标暴露灰度发布次数、调整次数、回滚次数，
+ * 供 Prometheus / Grafana 监控大盘使用。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowCanaryService 接口定义
+ * @see com.njydsz.workflow.domain.entity.FlowDefinition 流程定义实体（持有 canary 状态字段）
+ * @see CanaryStrategy 灰度策略枚举
+ * @see CanaryStatus 灰度状态枚举
  */
 @Slf4j
 @Service

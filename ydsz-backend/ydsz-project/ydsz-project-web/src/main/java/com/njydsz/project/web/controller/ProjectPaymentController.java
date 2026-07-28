@@ -16,29 +16,69 @@ import com.njydsz.project.domain.vo.ProjectPaymentVO;
 import com.njydsz.project.domain.dto.post.ProjectPaymentPostDTO;
 import com.njydsz.project.domain.dto.put.ProjectPaymentPutDTO;
 
+/**
+ * 项目回款 Controller
+ *
+ * <p>提供项目回款的 CRUD 接口，包括分页查询、按 ID 查询、创建、更新和删除。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @RestController
 @RequestMapping("/api/v1/project/project/payment")
 @RequiredArgsConstructor
 public class ProjectPaymentController {
+
     private final ProjectPaymentService service;
 
+    /**
+     * 按 ID 查询回款详情
+     *
+     * @param id 回款主键 ID
+     * @return 回款视图对象
+     */
     @GetMapping("/{id}")
     public BaseResponse<ProjectPaymentVO> getById(@PathVariable String id) { return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(service.getById(id))); }
 
+    /**
+     * 分页查询回款列表
+     *
+     * @param p 当前页码（默认 1）
+     * @param s 每页条数（默认 10）
+     * @return 分页回款视图对象
+     */
     @GetMapping("/page")
     public PageResponse<ProjectPaymentVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectPayment> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.projectPaymentListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }
 
+    /**
+     * 创建回款
+     *
+     * @param dto 回款创建入参
+     * @return 是否创建成功
+     */
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectPayment")
     public BaseResponse<Boolean> save(@RequestBody ProjectPaymentPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
+    /**
+     * 更新回款
+     *
+     * @param dto 回款更新入参
+     * @return 是否更新成功
+     */
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectPayment")
     public BaseResponse<Boolean> update(@RequestBody ProjectPaymentPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
+    /**
+     * 按 ID 删除回款
+     *
+     * @param id 回款主键 ID
+     * @return 是否删除成功
+     */
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectPayment")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }

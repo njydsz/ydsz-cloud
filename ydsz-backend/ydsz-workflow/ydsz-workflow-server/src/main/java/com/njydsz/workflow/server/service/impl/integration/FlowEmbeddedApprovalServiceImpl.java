@@ -29,12 +29,72 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * P2-2 嵌入式审批服务实现
+ * 嵌入式审批服务实现
  *
- * <p>业务页内嵌场景：单次接口拉齐"实例+图+待办+历史"，并通过快捷操作
- * 免去业务方感知 taskId。
+ * <p>对 {@link FlowEmbeddedApprovalService} 接口的完整实现，承担工作流引擎的<b>嵌入式审批</b>能力。
+ * 业务系统在自己的页面（PC Web）内嵌审批面板时，<b>单次接口拉齐</b>「实例 + 流程图 + 待办 + 历史」，
+ * 并提供「快捷操作」免去业务方感知 {@code taskId} / {@code instanceId}，是大厂 B 端工作流集成的标准形态。
  *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>面板加载（{@link #loadPanel}）</b>：通过 {@code businessType + businessId} 唯一定位流程实例，
+ *       一次返回「实例元数据 + 流程图 JSON + 当前待办 + 历史轨迹 + 操作权限位」</li>
+ *   <li><b>快捷通过（{@link #quickPass}）</b>：业务页面直接点「通过」，无需关心 taskId 解析</li>
+ *   <li><b>快捷驳回（{@link #quickReject}）</b>：业务页面直接点「驳回」，支持驳回到任意节点</li>
+ *   <li><b>操作人角色判断</b>：根据 userId 判定其是「发起人 / 当前审批人 / 观察者」，不同角色展示不同操作按钮</li>
+ *   <li><b>权限校验</b>：业务方仅能操作自己发起的流程或被指派的待办，避免越权</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 业务系统（采购 / OA / CRM）在自己的详情页内嵌审批面板
+ * EmbeddedApprovalViewDTO view = embeddedApprovalService.loadPanel(
+ *     "purchase_order", "PO-2026-0001", currentUserId);
+ *
+ * if (view.canPass()) {
+ *     embeddedApprovalService.quickPass(
+ *         "purchase_order", "PO-2026-0001", currentUserId, "同意");
+ * }
+ * }</pre>
+ *
+ * <p><b>嵌入式 vs 标准 API：</b>
+ * <table>
+ *   <caption>接口形态对比</caption>
+ *   <tr><th>维度</th><th>嵌入式（{@code EmbeddedApprovalService}）</th><th>标准 API（{@code FlowInstanceService}）</th></tr>
+ *   <tr><td>入参</td><td>{@code businessType + businessId}（业务语义）</td><td>{@code instanceId}（工作流语义）</td></tr>
+ *   <tr><td>出参</td><td>实例 + 图 + 待办 + 历史 + 操作权限</td><td>单一对象（按接口）</td></tr>
+ *   <tr><td>调用次数</td><td>1 次拉齐（前端无 N+1）</td><td>4-5 次组合</td></tr>
+ *   <tr><td>适用场景</td><td>业务系统集成工作流</td><td>工作流管理后台</td></tr>
+ * </table>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>{@link #loadPanel} 启用 {@code @Transactional(readOnly = true)}，支持只读副本路由</li>
+ *   <li>{@link #quickPass} / {@link #quickReject} 启用 {@code @Transactional(rollbackFor = Exception.class)}，
+ *       委托给 {@link FlowTaskService} 在子事务中处理</li>
+ * </ul>
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>单次拉齐</b>：避免前端发起 4-5 个 HTTP 请求，减少网络往返，提升首屏渲染速度</li>
+ *   <li><b>业务语义</b>：以 {@code businessType + businessId} 而非 {@code instanceId} 定位，
+ *       业务方无需感知工作流的存在</li>
+ *   <li><b>权限分离</b>：所有快捷操作均校验「当前用户对当前 instance 的操作权限」，
+ *       避免业务方绕过工作流权限控制</li>
+ *   <li><b>PC Web only</b>：根据项目硬约束，<b>工作流永远不适配移动端</b>，
+ *       本服务仅服务于 PC 浏览器内嵌场景</li>
+ * </ul>
+ *
+ * <p><b>合规约束：</b>本类不涉及电子签章（CA 证书 / 司法存证 / 合同防篡改等）能力，
+ * 嵌入式审批面板的「签署生效」诉求由独立「电子签章服务」承担，本服务仅作为审批流转的承接方。
+ *
+ * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowEmbeddedApprovalService 接口定义
+ * @see com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO 嵌入式审批面板视图
+ * @see FlowInstanceService 流程实例服务
+ * @see FlowTaskService 流程任务服务
  */
 @Slf4j
 @Service

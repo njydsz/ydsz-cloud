@@ -62,6 +62,15 @@ public class ConfigController {
 
     // ============================== CRUD 端点 ==============================
 
+    /**
+     * 分页查询系统配置
+     *
+     * <p>支持按 configKey / configName 模糊匹配、configGroup / status 精确匹配过滤，
+     * 默认按 {@code updated_at} 降序排列。
+     *
+     * @param query 分页查询条件（pageNum / pageSize / configKey / configGroup / status）
+     * @return 分页结果（总记录数、当前页、每页大小、数据列表）
+     */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
@@ -73,12 +82,28 @@ public class ConfigController {
                 result.getRecords());
     }
 
+    /**
+     * 按 ID 查询系统配置
+     *
+     * @param id 配置 ID（雪花算法字符串）
+     * @return 配置详情；不存在时返回 null
+     */
     @Operation(summary = "按 ID 查询")
     @GetMapping("/{id}")
     public BaseResponse<ConfigVO> getById(@PathVariable String id) {
         return BaseResponse.success(configService.getById(id));
     }
 
+    /**
+     * 创建系统配置
+     *
+     * <p>幂等保护：5 秒内同一请求只能成功一次（Redis SET NX EX）；限流 50 QPS；写审计日志。
+     * <p>创建后会自动失效 Redis 缓存（{@code ydsz:system:ConfigController:save:lock}），
+     * 并通过 {@code ConfigChangeEvent} 广播变更。
+     *
+     * @param dto 配置 DTO（含 configKey / configValue / configGroup / valueType / isPublic）
+     * @return 新创建的配置 ID
+     */
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建配置: ' + #dto.configKey")
     @Operation(summary = "创建配置")
@@ -89,6 +114,16 @@ public class ConfigController {
         return BaseResponse.success(configService.save(dto));
     }
 
+    /**
+     * 更新系统配置
+     *
+     * <p>幂等保护：5 秒内同一请求只能成功一次；限流 50 QPS；写审计日志。
+     * <p>更新后会自动失效 Redis 缓存，并通过 {@code ConfigChangeEvent} 广播变更，
+     * 业务方可通过订阅事件感知配置变更。
+     *
+     * @param dto 配置 DTO（必须包含 ID）
+     * @return 是否成功
+     */
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新配置: ' + #dto.configKey")
     @Operation(summary = "更新配置")
@@ -99,6 +134,16 @@ public class ConfigController {
         return BaseResponse.success(configService.updateById(dto));
     }
 
+    /**
+     * 按 ID 删除系统配置
+     *
+     * <p>幂等保护：5 秒内同一请求只能成功一次；限流 50 QPS；写审计日志。
+     * <p>删除前会校验是否存在依赖关系（其他模块通过 configKey 引用此配置），
+     * 存在引用时拒绝删除（由 Service 层抛业务异常）。
+     *
+     * @param id 配置 ID
+     * @return 是否成功
+     */
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除配置: ' + #id")
     @Operation(summary = "删除配置")
@@ -111,18 +156,46 @@ public class ConfigController {
 
     // ============================== 业务扩展端点 ==============================
 
+    /**
+     * 按配置键查询配置值
+     *
+     * <p>走 Redis 二级缓存（{@code ydsz:config:value:{configKey}}），未命中时回源 DB 并回写缓存。
+     * <p>常用于业务方高频读取同一配置（如 {@code ydsz.workflow.sla-default-hours}），
+     * 比 {@link #getById} 更高效（无反序列化 VO 开销）。
+     *
+     * @param configKey 配置键（如 {@code ydsz.workflow.sla-default-hours}）
+     * @return 配置值字符串；不存在时返回 null
+     */
     @Operation(summary = "按配置键查询配置值")
     @GetMapping("/key/{configKey}")
     public BaseResponse<String> getByKey(@PathVariable String configKey) {
         return BaseResponse.success(configService.getConfigValue(configKey));
     }
 
+    /**
+     * 按配置分组批量查询
+     *
+     * <p>走 Redis 缓存（{@code ydsz:config:group:{configGroup}}，TTL 5min）。
+     * <p>常用于业务方按功能模块批量加载配置（如 {@code rate-limit} 分组包含所有限流参数）。
+     *
+     * @param configGroup 配置分组（如 {@code rate-limit} / {@code third-party}）
+     * @return 该分组下全部配置项列表
+     */
     @Operation(summary = "按配置分组批量查询")
     @GetMapping("/group/{configGroup}")
     public BaseResponse<List<ConfigVO>> getConfigsByGroup(@PathVariable String configGroup) {
         return BaseResponse.success(configService.getConfigsByGroup(configGroup));
     }
 
+    /**
+     * 查询所有公开配置
+     *
+     * <p>返回 {@code isPublic=true} 的全部配置项，<b>无需鉴权</b>，用于前端「公开配置」接口。
+     * <p>公开配置仅包含前端可读、客户端可见的运行参数（如功能开关、UI 主题、登录页配置等），
+     * 严禁将密钥、连接地址等敏感配置标记为公开。
+     *
+     * @return 全部公开配置列表
+     */
     @Operation(summary = "查询所有公开配置")
     @GetMapping("/public")
     public BaseResponse<List<ConfigVO>> listPublicConfigs() {

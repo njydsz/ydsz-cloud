@@ -35,12 +35,41 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 监控看板 / 审批效率分析 Controller
  *
- * <p>P0-3 / P2-4 / GAP-P2: 监控概览、异常流程、实例趋势、审批人效率、
- * 流程类型分布、审批效率统计、节点瓶颈、审批趋势、健康度评分
- * （P1-10 从 FlowEngineController 拆分）。
+ * <p>工作流「运营管理」HTTP 入口，对标钉钉 / 飞书审批后台的「监控中心」与「效率分析」面板。
+ * 为运维人员提供流程实例的实时状态监控、异常流程识别、效率统计、健康度评分等能力。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>概览</b>：{@code GET /monitor/overview}（运行中 / 超期 / 今日新增 / 完成数）</li>
+ *   <li><b>异常流程</b>：{@code GET /monitor/abnormal}（超期 / 挂起超 24h / 失败流程）</li>
+ *   <li><b>实例趋势</b>：{@code GET /monitor/instance-trend}（N 天内每日新增 / 完成）</li>
+ *   <li><b>审批人效率</b>：{@code GET /monitor/assignee-efficiency}（人均审批耗时 / 排名）</li>
+ *   <li><b>类型分布</b>：{@code GET /monitor/flow-type-distribution}（按流程类型聚合占比）</li>
+ *   <li><b>审批效率</b>：{@code GET /monitor/approval-efficiency}（按部门 / 流程 / 时间段聚合）</li>
+ *   <li><b>节点瓶颈</b>：{@code GET /monitor/node-bottleneck}（平均耗时 Top 10 节点）</li>
+ *   <li><b>健康度</b>：{@code GET /monitor/health-score}（综合健康度评分）</li>
+ * </ul>
+ *
+ * <p><b>权限模型：</b>所有接口通过 {@link AuthApiPermission} 校验
+ * {@link PermissionCodes#WORKFLOW_MONITOR_VIEW} 权限码；只读、不写。
+ *
+ * <p><b>性能优化：</b>
+ * <ul>
+ *   <li>趋势 / 分布类查询走 OLAP 聚合（{@code ydsz_flow_instance} 复合索引）</li>
+ *   <li>效率分析走 {@link FlowEfficiencyService}，单 SQL 聚合减少 DB 压力</li>
+ *   <li>健康度评分走 Redis 缓存，TTL 5min</li>
+ * </ul>
+ *
+ * <p><b>设计原则：</b>Controller 仅做参数透传、日期范围解析、VO 转换；
+ * 监控指标计算下沉到 {@link FlowEfficiencyService} / {@link FlowInstanceService} / {@link FlowTaskService}。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowEfficiencyService 效率分析服务
+ * @see FlowInstanceService 流程实例服务
+ * @see FlowTaskService 任务服务
+ * @see FlowInstance 流程实例实体
  */
 @Slf4j
 @RestController

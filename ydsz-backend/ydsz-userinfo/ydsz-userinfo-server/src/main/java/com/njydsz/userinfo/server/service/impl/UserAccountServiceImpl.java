@@ -43,20 +43,48 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
- * 用户账号 Service 实现。
+ * 用户账号 Service 实现
  *
- * <p>核心能力：
+ * <p>实现 {@link UserAccountService} 接口，封装用户账号的完整业务逻辑：CRUD、密码管理、角色分配、
+ * 审批人展开查询、跨服务名称富化。集成密码 BCrypt 加密、密码策略校验、用户名唯一性校验、
+ * 数据权限（{@link DataScope}）、搜索索引同步等横切关注点。
+ *
+ * <p><b>核心职责：</b>
  * <ul>
- *   <li>密码加密（BCrypt）+ 密码策略校验</li>
- *   <li>用户名唯一性校验</li>
- *   <li>DTO→DO 转换，VO 隔离敏感字段</li>
- *   <li>分页查询</li>
- *   <li>修改密码/重置密码（含密码策略校验）</li>
- *   <li>用户角色批量分配</li>
+ *   <li>用户 CRUD（含密码 BCrypt 加密存储）</li>
+ *   <li>密码管理（用户自助修改 / 管理员重置，含 {@link PasswordPolicyValidator} 策略校验）</li>
+ *   <li>角色分配（覆盖式：清空旧关联 + 批量插入新关联）</li>
+ *   <li>审批人展开查询（{@code listUserIdsByRoleCode} / {@code listUserIdsByPositionCode} /
+ *       {@code getLeaderByUserId} / {@code listDeptIdsByUserId}，供工作流 Feign 调用）</li>
+ *   <li>跨服务名称富化（{@code batchUserNames}，供 NameAssembler 调用）</li>
+ *   <li>数据权限隔离（{@code @DataScope} 自动追加部门过滤）</li>
+ *   <li>搜索索引同步（{@link SearchIndexEventBridge} 异步 upsert/delete）</li>
+ * </ul>
+ *
+ * <p><b>安全设计：</b>
+ * <ul>
+ *   <li>密码字段全程不进入 VO/响应（{@code UserInfoConverter} 自动脱敏）</li>
+ *   <li>BCrypt cost 由 {@code ydsz.system.app.bcrypt-strength} 配置（默认 10）</li>
+ *   <li>密码策略：长度、复杂度、历史密码去重由 {@link PasswordPolicyValidator} 校验</li>
+ *   <li>登录失败保护：{@code loginFailCount} 达到阈值时设置 {@code lockedUntil}，定时解锁</li>
+ * </ul>
+ *
+ * <p><b>事务：</b>所有写操作（{@code create/update/removeById/changePassword/resetPassword/assignRoles}）
+ * 开启 {@code @Transactional(rollbackFor = Exception.class)}，确保任一异常触发完整回滚。
+ *
+ * <p><b>性能：</b>
+ * <ul>
+ *   <li>{@link #page} 与 {@link #list} 均启用 {@link DataScope}，数据权限自动追加 WHERE 条件</li>
+ *   <li>{@link #assignRoles} 使用批量插入（{@code userRoleMapper.batchInsert}）避免 N+1</li>
+ *   <li>{@link #batchUserNames} 使用单条 {@code IN} 查询，单次往返</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see UserAccountService Service 接口
+ * @see UserAccount 用户实体
+ * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller
  */
 @Slf4j
 @Service

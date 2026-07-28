@@ -20,10 +20,36 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * SLA 超时自动策略 Controller
  *
- * <p>P1-6: SLA 扫描与处理接口（P1-10 从 FlowEngineController 拆分）。
+ * <p>工作流 SLA（Service Level Agreement）监控与超时处理的 HTTP 入口。
+ * 通过 {@code @XxlJob} 定时调度 + 管理后台手动触发双通道运行。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>扫描</b>：{@code POST /sla/scan} — 手动触发 SLA 扫描（管理后台调试用，
+ *       cronjob 默认每 60s 自动扫描）</li>
+ *   <li><b>处理</b>：{@code POST /sla/process} — 单个任务 SLA 处理（按节点策略自动通过 / 驳回 / 仅提醒）</li>
+ *   <li><b>配置</b>：{@code GET /sla/config/{nodeId}} / {@code POST /sla/config} — 节点级 SLA 配置</li>
+ *   <li><b>统计</b>：{@code GET /sla/stats} — SLA 达成率 / 超时分布（报表）</li>
+ * </ul>
+ *
+ * <p><b>权限模型：</b>扫描 / 处理通过 {@link AuthApiPermission} 校验
+ * {@link PermissionCodes#WORKFLOW_SLA_CONFIG} 权限码；幂等保护由 {@link Idempotent} 注解 5s 防重，
+ * 防止并发扫描同一批任务。
+ *
+ * <p><b>限流：</b>扫描接口通过 {@link RateLimit} 50 QPS 限流，防止管理后台高频调用拖垮扫描器。
+ *
+ * <p><b>性能优化：</b>扫描器使用<b>游标分页</b>（{@code id > lastId} + {@code LIMIT 200}），
+ * 避免 OFFSET 大值性能问题；处理动作单批 200 条事务，失败回滚不影响其它批次。
+ *
+ * <p><b>设计原则：</b>Controller 仅做参数透传与权限校验；扫描 / 处理逻辑下沉到
+ * {@link FlowSlaService}，任务查询委托 {@link FlowTaskService}。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowSlaService SLA 服务
+ * @see FlowTaskService 任务服务
+ * @see FlowRunTask 任务实体
  */
 @Slf4j
 @RestController

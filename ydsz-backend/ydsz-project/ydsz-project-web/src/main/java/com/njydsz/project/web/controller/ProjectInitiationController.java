@@ -42,16 +42,34 @@ public class ProjectInitiationController {
 
     private final ProjectInitiationService projectInitiationService;
 
+    /**
+     * 按 ID 查询项目立项详情
+     *
+     * @param id 项目主键 ID
+     * @return 项目立项视图对象
+     */
     @GetMapping("/{id}")
     public BaseResponse<ProjectInitiationVO> getById(@PathVariable String id) {
         return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(projectInitiationService.getById(id)));
     }
 
+    /**
+     * 按项目编号查询
+     *
+     * @param projectCode 项目编号
+     * @return 项目立项视图对象
+     */
     @GetMapping("/code/{projectCode}")
     public BaseResponse<ProjectInitiationVO> getByCode(@PathVariable String projectCode) {
         return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(projectInitiationService.getByCode(projectCode)));
     }
 
+    /**
+     * 分页查询项目立项列表
+     *
+     * @param query 分页查询条件
+     * @return 分页项目立项视图对象
+     */
     @GetMapping("/page")
     public PageResponse<ProjectInitiationVO> page(@Valid ProjectInitiationPageQuery query) {
         IPage<ProjectInitiationVO> result = projectInitiationService.page(query);
@@ -59,24 +77,50 @@ public class ProjectInitiationController {
                 (int) result.getCurrent(), (int) result.getSize());
     }
 
+    /**
+     * 创建项目立项
+     *
+     * @param dto 项目立项创建入参
+     * @return 创建后的项目 ID
+     */
     @PostMapping
     @Audit(action = AuditAction.CREATE, module = "PROJECT", content= "创建项目立项")
     public BaseResponse<String> save(@Valid @RequestBody ProjectInitiationPostDTO dto) {
         return BaseResponse.success(projectInitiationService.save(ProjectConverter.INSTANT.postDtoToEntity(dto)));
     }
 
+    /**
+     * 更新项目立项
+     *
+     * @param dto 项目立项更新入参
+     * @return 是否更新成功
+     */
     @PutMapping
     @Audit(action = AuditAction.UPDATE, module = "PROJECT", content= "更新项目立项")
     public BaseResponse<Boolean> update(@Valid @RequestBody ProjectInitiationPutDTO dto) {
         return BaseResponse.success(projectInitiationService.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto)));
     }
 
+    /**
+     * 按 ID 删除项目立项
+     *
+     * @param id 项目主键 ID
+     * @return 是否删除成功
+     */
     @DeleteMapping("/{id}")
     @Audit(action = AuditAction.DELETE, module = "PROJECT", content= "删除项目立项")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(projectInitiationService.removeById(id));
     }
 
+    /**
+     * 推进项目阶段
+     *
+     * @param id    项目主键 ID
+     * @param stage 目标阶段
+     * @param gate  门径评审阶段（可选）
+     * @return 是否推进成功
+     */
     @PutMapping("/{id}/stage")
     @Audit(action = AuditAction.UPDATE, module = "PROJECT", content= "推进项目阶段")
     public BaseResponse<Boolean> advanceStage(@PathVariable String id,
@@ -85,6 +129,12 @@ public class ProjectInitiationController {
         return BaseResponse.success(projectInitiationService.advanceStage(id, stage, gate));
     }
 
+    /**
+     * 按项目经理 ID 查询项目列表
+     *
+     * @param pmId 项目经理用户 ID
+     * @return 项目立项视图对象列表
+     */
     @GetMapping("/pm/{pmId}")
     public BaseResponse<List<ProjectInitiationVO>> listByPmId(@PathVariable String pmId) {
         return BaseResponse.success(ProjectConverter.INSTANT.projectInitiationListToVO(projectInitiationService.listByPmId(pmId)));

@@ -35,11 +35,43 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 /**
  * 流程定义管理 Controller
  *
- * <p>流程定义的部署 / 发布 / 查询 / 切换版本 / 导入导出 / 模拟运行
- * （P1-10 从 FlowEngineController 拆分）。
+ * <p>提供流程定义的部署 / 发布 / 查询 / 切换版本 / 导入导出 / 模拟运行等 REST 接口，
+ * 是设计器、流程中心、运维控制台的数据入口。所有接口对标 Activiti / Flowable API 风格。
+ *
+ * <p><b>接口分组：</b>
+ * <ul>
+ *   <li><b>定义管理</b>：{@code POST /definition/deploy}（部署）、
+ *       {@code POST /definition/{id}/publish}（发布）、
+ *       {@code GET /definition/page}（分页查询）</li>
+ *   <li><b>版本管理</b>：{@code POST /definition/switchActiveVersion}（版本切换）、
+ *       {@code POST /definition/rollback}（回滚到上一版本）、
+ *       {@code GET /definition/{id}/versions}（版本历史）</li>
+ *   <li><b>设计器</b>：{@code GET /definition/{id}/designer}（设计器数据）、
+ *       {@code POST /definition/{id}/designer}（保存设计器数据）、
+ *       {@code PUT /definition/{id}/node/coordinate}（更新节点坐标）</li>
+ *   <li><b>导入导出</b>：{@code POST /definition/import}（JSON 导入）、
+ *       {@code POST /definition/zip/import}（BPMN zip 批量导入）、
+ *       {@code GET /definition/{id}/export}（JSON 导出）</li>
+ *   <li><b>灰度</b>：{@code POST /definition/{id}/canary}（灰度发布策略）</li>
+ *   <li><b>模拟</b>：{@code POST /definition/simulate}（节点级模拟执行）</li>
+ * </ul>
+ *
+ * <p><b>权限模型：</b>所有接口通过 {@link AuthApiPermission} 注解配置
+ * {@link PermissionCodes#WORKFLOW_DEFINITION_DEPLOY} 等权限码，与 RBAC 权限中心对接。
+ *
+ * <p><b>限流：</b>部署类接口通过 {@link RateLimit} 限流（{@code 50 QPS}），
+ * 防止批量部署拖垮后端；幂等操作通过 {@link Idempotent} 注解保证
+ * 「同一请求 5s 内只执行一次」。
+ *
+ * <p><b>设计原则：</b>本 Controller 仅做参数透传与权限校验，所有业务逻辑下沉到
+ * {@link FlowDefinitionService}，符合「瘦 Controller / 胖 Service」规范。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowDefinitionService 流程定义服务
+ * @see FlowInstanceService 流程实例服务（模拟接口使用）
+ * @see FlowDeployProcessDTO 部署参数 DTO
  */
 @Slf4j
 @RestController

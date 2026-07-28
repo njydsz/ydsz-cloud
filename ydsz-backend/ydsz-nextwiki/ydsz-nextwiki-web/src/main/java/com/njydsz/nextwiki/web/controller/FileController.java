@@ -42,6 +42,14 @@ import java.util.Set;
 /**
  * 文件管理 REST API
  *
+ * <p>提供文件上传、下载、移动、重命名、删除等操作，
+ * 支持单文件上传、分片上传、版本管理、目录创建。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/nextwiki/files}
+ *
+ * <p><b>安全特性：</b>写接口启用 {@link Idempotent} 防重复、{@link Audit} 审计日志、
+ * {@link AuthApiPermission} 权限码校验。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

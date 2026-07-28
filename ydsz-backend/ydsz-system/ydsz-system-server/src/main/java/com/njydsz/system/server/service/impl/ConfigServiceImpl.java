@@ -36,11 +36,45 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
- * 系统配置 Service 实现。
+ * 系统配置 Service 实现
  *
- * <p>集成 Redis 缓存、Micrometer 指标、缓存穿透防护和配置变更事件。
+ * <p>对 {@link ConfigService} 接口的完整实现，是「系统配置中心」的核心业务逻辑层。
+ * 集成 Redis 缓存、Micrometer 指标、缓存穿透防护和配置变更事件总线。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@code page} / {@code getById} / {@code save} / {@code updateById} / {@code removeById}，
+ *       全部走 {@code @Transactional} 事务保证</li>
+ *   <li><b>缓存读</b>：{@code getConfigValue}（单 key） / {@code getConfigsByGroup}（组批量） —
+ *       走 Redis 二级缓存 + 本地 Caffeine 一级缓存</li>
+ *   <li><b>公开配置</b>：{@code listPublicConfigs} — 前端「公开配置」接口数据源</li>
+ *   <li><b>缓存穿透防护</b>：DB 不存在的 key 缓存「{@code __NULL__}」哨兵值 1min</li>
+ *   <li><b>变更广播</b>：通过 {@code OutboxService} 发布 {@code ConfigChangeEvent}，
+ *       订阅者可监听 {@code ydsz.workflow.sla-default-hours} 等关键配置变更</li>
+ *   <li><b>搜索同步</b>：通过 {@link SearchIndexEventBridge} 同步配置变更到 ES 索引</li>
+ *   <li><b>指标埋点</b>：通过 {@link com.njydsz.system.server.metrics.SystemMetrics} 暴露 Prometheus 指标</li>
+ * </ul>
+ *
+ * <p><b>缓存设计：</b>
+ * <ul>
+ *   <li>单 key 缓存：{@code system:config:value:{configKey}}，TTL 取自配置（默认 5min）</li>
+ *   <li>组批量缓存：{@code system:config:group:{configGroup}}，TTL 5min</li>
+ *   <li>公开配置缓存：{@code system:config:public}，TTL 5min</li>
+ *   <li>空值哨兵：{@code __NULL__}，TTL 1min（防恶意刷不存在 key）</li>
+ *   <li>写操作触发 {@code @CacheEvict} 主动失效</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}；
+ * 读方法不开启事务，依赖 MyBatis 自动提交。
+ *
+ * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离，租户过滤由 MyBatis 拦截器注入。
  *
  * @author ydsz-team
+ * @since 1.0.0
+ *
+ * @see ConfigService 配置 Service 接口
+ * @see com.njydsz.system.domain.entity.Config 系统配置实体
+ * @see com.njydsz.system.domain.enums.ConfigValueType 值类型枚举
  */
 @Slf4j
 @Service

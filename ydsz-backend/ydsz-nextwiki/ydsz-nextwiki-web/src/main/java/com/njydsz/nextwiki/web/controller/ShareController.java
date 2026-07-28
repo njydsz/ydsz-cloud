@@ -31,6 +31,14 @@ import com.njydsz.common.lock.annotation.Idempotent;
 /**
  * 文件分享 REST API
  *
+ * <p>提供文件分享链接的创建、访问验证、撤销等操作。
+ * 支持密码保护、提取码验证、过期时间和访问次数限制。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/nextwiki/shares}
+ *
+ * <p><b>安全特性：</b>写接口启用 {@link Idempotent} 防重复、{@link Audit} 审计日志、
+ * {@link AuthApiPermission} 权限码校验。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
