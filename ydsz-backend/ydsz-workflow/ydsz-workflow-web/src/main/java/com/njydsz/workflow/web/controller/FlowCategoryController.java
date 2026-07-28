@@ -64,7 +64,11 @@ public class FlowCategoryController {
     private final FlowCategoryService categoryService;
 
     /**
-     * 查询全部分类。
+     * 查询全部分类
+     *
+     * <p>返回当前租户的全部流程分类（不构建树形结构），按 {@code sortNum} 升序、{@code id} 升序排列。
+     * <p>典型场景：设计器左侧分类树加载、发起审批页分类筛选。
+     * <p>前端基于扁平结果自行组装树形结构。
      *
      * @return 分类列表
      */
@@ -75,9 +79,13 @@ public class FlowCategoryController {
     }
 
     /**
-     * 新增分类。
+     * 新增分类
      *
-     * @param dto 分类信息
+     * <p>幂等保护 5 秒；限流 50 QPS。
+     * <p>业务流程：categoryCode 唯一性校验 → 写入 DB → 清除分类缓存。
+     * <p>创建根分类时 {@code parentId} 应传 {@code "0"}（约定值）。
+     *
+     * @param dto 分类 DTO（categoryCode / categoryName / parentId / icon / sortNum）
      * @return 新建分类 ID
      */
     @Idempotent(key = "ydsz:workflow:FlowCategoryController:create:lock", ttlSeconds = 5)
@@ -89,9 +97,13 @@ public class FlowCategoryController {
     }
 
     /**
-     * 编辑分类。
+     * 编辑分类
      *
-     * @param dto 分类信息
+     * <p>幂等保护 5 秒；限流 50 QPS。
+     * <p>业务流程：使用 {@code BeanUpdateUtil.copyNonNull} 动态复制非 null 字段。
+     * <p>修改 {@code categoryCode} 会影响设计器分类树索引，<b>需谨慎</b>。
+     *
+     * @param dto 分类 DTO（必须包含 ID）
      * @return 空响应
      */
     @Idempotent(key = "ydsz:workflow:FlowCategoryController:update:lock", ttlSeconds = 5)
@@ -104,7 +116,15 @@ public class FlowCategoryController {
     }
 
     /**
-     * 删除分类。
+     * 删除分类
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS。
+     * <p>删除前置校验：
+     * <ul>
+     *   <li>有<b>子分类</b>的分类<b>禁止删除</b>（避免悬挂引用）</li>
+     *   <li>有<b>流程定义</b>关联的分类<b>禁止删除</b></li>
+     * </ul>
+     * <p>如需删除带子分类的分类，<b>必须先</b>迁移子分类和流程定义。
      *
      * @param id 分类 ID
      * @return 空响应

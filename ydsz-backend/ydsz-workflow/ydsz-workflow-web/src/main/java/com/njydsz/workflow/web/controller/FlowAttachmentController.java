@@ -32,8 +32,36 @@ import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
  *
  * <p>P2-3: 新增在线预览接口，根据文件类型返回预览策略与预览 URL。
  *
+ * <p><b>接口路径：</b>{@code /api/v1/workflow/engine/attachment/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>按任务查询</b>：{@code GET /attachment/task/{taskId}} — 当前任务上传的附件</li>
+ *   <li><b>按实例查询</b>：{@code GET /attachment/instance/{instanceId}} — 整个流程实例的全部附件</li>
+ *   <li><b>删除附件</b>：{@code DELETE /attachment/{id}} — 仅元数据逻辑删除，不联动文件存储</li>
+ *   <li><b>在线预览</b>：{@code GET /attachment/{id}/preview} — 根据文件类型返回预览策略与 URL</li>
+ * </ul>
+ *
+ * <p><b>附件生命周期：</b>
+ * <ol>
+ *   <li>前端通过统一文件服务上传文件二进制（OSS / MinIO / 本地）</li>
+ *   <li>前端调用 {@code ProjectFileController} 等业务文件服务记录文件元数据</li>
+ *   <li>前端将附件 ID 关联到具体任务（{@code FlowTaskService.attachFile}）</li>
+ *   <li>本 Controller 提供查询、删除、预览能力</li>
+ * </ol>
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 防重（5s）</li>
+ *   <li>写接口启用 {@link RateLimit} 限流 50 QPS</li>
+ *   <li>删除为逻辑删除（{@code deleted=1}），保留历史可追溯</li>
+ *   <li>附件元数据隔离多租户，跨租户不可见</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.workflow.server.service.FlowAttachmentService 附件 Service
+ * @see com.njydsz.common.file.storage.FileStorageService 统一文件存储服务
  */
 @Slf4j
 @RestController
@@ -68,10 +96,15 @@ public class FlowAttachmentController {
     }
 
     /**
-     * 删除附件（逻辑删除）。
+     * 删除附件（逻辑删除）
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS。
+     * <p><b>逻辑删除</b>：仅清除元数据记录（{@code deleted=1}），不联动清除文件存储中的二进制，
+     * 避免误删导致的历史数据丢失。彻底清理文件由定期任务统一执行。
+     * <p>权限校验：仅附件上传人或管理员可删除（由 Service 层校验）。
      *
      * @param attachmentId 附件 ID
-     * @param operatorId   操作人 ID
+     * @param operatorId   操作人 ID（用于审计日志）
      * @return 空响应
      */
     @Idempotent(key = "ydsz:workflow:FlowAttachmentController:delete:lock", ttlSeconds = 5)

@@ -33,19 +33,54 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 三方审批回调 Controller
+ * 三方审批回调 Controller（P0-2）
  *
- * <p>P0-2: 三方审批 SDK — 钉钉/飞书/企微审批回调入口。
+ * <p>钉钉 / 飞书 / 企业微信 审批中心 <b>Webhook 回调</b>的 HTTP 入口，
+ * 用于接收三方审批系统推送的审批动作（通过 / 驳回 / 撤回 / 抄送等），
+ * 反查系统用户并驱动 ydsz 工作流引擎执行相应操作。
  *
- * <p>说明：
+ * <p><b>接口路径：</b>{@code /api/v1/workflow/thirdParty/**}（免认证，需在安全配置中放行）
+ *
+ * <p><b>核心能力：</b>
  * <ul>
- *   <li>三个 webhook 端点接收三方系统回调，均为免认证（需在安全配置中放行）</li>
- *   <li>每个端点先验证签名，再记录回调日志，最后驱动工作流（通过/驳回等）</li>
- *   <li>签名密钥/Token 通过配置注入，避免硬编码</li>
+ *   <li>{@code POST /dingtalk/callback} — 钉钉审批回调</li>
+ *   <li>{@code POST /feishu/callback} — 飞书审批回调</li>
+ *   <li>{@code POST /wecom/callback} — 企业微信审批回调</li>
  * </ul>
+ *
+ * <p><b>回调处理流程：</b>
+ * <ol>
+ *   <li><b>签名校验</b>：按平台签名算法（HMAC-SHA256 / 自定义摘要）验证请求合法性，
+ *       校验失败立即返回 fail 不进入业务逻辑</li>
+ *   <li><b>回调落库</b>：将原始回调数据写入 {@code ydsz_flow_third_party_log}，
+ *       状态标记为 {@code PENDING}，便于后续对账与重试</li>
+ *   <li><b>账号反查</b>：通过 {@code openId} 反查系统用户 ID（{@code ydsz_flow_third_party_account}），
+ *       找不到时返回 fail</li>
+ *   <li><b>驱动工作流</b>：将三方事件类型映射为工作流动作（通过/驳回/撤回），
+ *       调用 {@link FlowEmbeddedApprovalService#quickAction} 执行</li>
+ *   <li><b>状态更新</b>：执行成功更新日志为 {@code SUCCESS}，失败更新为 {@code FAIL}</li>
+ * </ol>
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>三个 webhook 端点免认证（已在安全配置中放行），但<b>强签名校验</b>防止伪造回调</li>
+ *   <li>签名密钥 / Token 通过 {@code @Value} 从 {@code application.yml} 注入，<b>不硬编码</b></li>
+ *   <li>启用 {@link Idempotent} 5s 防重，避免三方重试导致重复驱动工作流</li>
+ *   <li>业务异常（如找不到任务）容错处理：log.warn 不抛出，三方可能回调已处理任务</li>
+ * </ul>
+ *
+ * <p><b>设计原则：</b>Controller 仅做参数接收、签名校验、调用 Service；
+ * 事件类型映射、用户反查、工作流驱动、状态机下沉到对应 Service。
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see FlowThirdPartyAccountService 三方账号映射服务
+ * @see FlowEmbeddedApprovalService 嵌入式审批服务
+ * @see FlowThirdPartyLogService 三方回调日志服务
+ * @see DingTalkSignatureUtil 钉钉签名工具
+ * @see FeishuSignatureUtil 飞书签名工具
+ * @see WeComSignatureUtil 企微签名工具
  */
 @Slf4j
 @Tag(name = "三方审批回调")

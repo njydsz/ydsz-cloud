@@ -36,8 +36,40 @@ import com.njydsz.common.audit.enums.AuditType;
 /**
  * 路由规则 Controller。
  *
+ * <p>提供<b>消息渠道路由规则</b>的 HTTP API，控制「什么类型的消息走什么渠道」的映射关系。
+ * 路由规则按 (消息类型 / 业务类型 / 用户属性) 多维度决策，命中后选取对应渠道发送。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/message/route/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@code POST /} 创建 / {@code PUT /{id}} 编辑 / {@code DELETE /{id}} 删除</li>
+ *   <li><b>分页查询</b>：{@code GET /page} 按渠道 / 消息类型 / 状态多维过滤</li>
+ *   <li><b>规则启用</b>：{@code POST /{id}/enable} / {@code POST /{id}/disable}</li>
+ *   <li><b>规则优先级</b>：通过 {@code priority} 字段控制匹配顺序（数字越小越先匹配）</li>
+ * </ul>
+ *
+ * <p><b>路由决策：</b>当 {@code MessageService.send} 收到发送请求时，按以下顺序匹配路由规则：
+ * <ol>
+ *   <li>按 {@code (msgType, businessType, tenantId, priority)} 复合索引查匹配规则</li>
+ *   <li>按优先级从低到高依次评估规则条件（{@code conditionExpression}）</li>
+ *   <li>首条命中的规则返回渠道 ID，未命中则使用默认渠道（{@code DEFAULT_CHANNEL}）</li>
+ * </ol>
+ *
+ * <p><b>多渠道支持：</b>SMS / EMAIL / IN_APP / DINGTALK / FEISHU / WECOM / WEBSOCKET 等。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 5s 防重</li>
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#NOTIF_ROUTE_RULE_MANAGE} 等权限码</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.message.server.service.config.RouteRuleService 路由规则服务
+ * @see com.njydsz.message.domain.entity.config.MsgRouteRule 路由规则实体
  */
 @Tag(name = "路由规则", description = "消息路由规则管理")
 @RestController

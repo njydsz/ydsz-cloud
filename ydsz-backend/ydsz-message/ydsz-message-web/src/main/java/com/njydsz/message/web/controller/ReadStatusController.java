@@ -28,12 +28,46 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 
 /**
- * P1-3: 消息已读/未读状态同步 Controller。
+ * 消息已读状态同步（Read Status）Controller。
  *
- * <p>提供全通道消息已读状态更新和未读数量查询接口。
+ * <p>提供<b>全通道消息已读/未读状态管理</b>的 HTTP API，是 P1-3「统一已读状态」的核心入口。
+ * 不同通道（站内信 / 短信 / 邮件 / 钉钉 / 飞书 / 企业微信）的已读状态由本 Controller 统一管理，
+ * 用户在一个渠道的已读操作会同步到所有渠道的未读计数。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/message/readStatus/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>标记消息已读</b>：{@code POST /read/{msgId}} — 标记某条消息已读</li>
+ *   <li><b>批量已读</b>：{@code POST /readBatch} — 一次性标记多条消息已读</li>
+ *   <li><b>通知已读</b>：{@code POST /notification/{notificationId}} — 标记某条站内通知已读</li>
+ *   <li><b>全部已读</b>：{@code POST /notification/readAll} — 标记某用户某业务类型下全部通知已读</li>
+ *   <li><b>未读数量</b>：{@code GET /unreadCount} — 查询用户的未读数量（支持按通道过滤）</li>
+ * </ul>
+ *
+ * <p><b>与 ReadReceiptController 的区别：</b>
+ * <ul>
+ *   <li>本 Controller：<b>有登录态</b>，由用户在前端主动操作（点击「标记已读」「全部已读」）</li>
+ *   <li>ReadReceiptController：<b>无登录态</b>，由邮件追踪像素 / 短信短链被动触发</li>
+ * </ul>
+ *
+ * <p><b>未读计数缓存：</b>未读数量通过 Redis 缓存（{@code ydsz:msg:unread:count:{userId}}）避免每次实时统计，
+ * 已读操作时同步失效缓存，保证一致性。
+ *
+ * <p><b>多租户隔离：</b>所有已读状态按 {@code tenantId} 隔离，跨租户状态不可见。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口（mark 系列）启用 {@link Idempotent} 5s 防重</li>
+ *   <li>写接口（mark 系列）启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>写接口（mark 系列）启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>读接口（unreadCount）需校验 {@link PermissionCodes#NOTIF_MESSAGE_VIEW} 权限码</li>
+ *   <li>用户仅能标记自己的消息（userId 与登录态一致性校验）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.message.server.service.receipt.ReadStatusSyncService 已读状态同步服务
  */
 @Tag(name = "已读状态", description = "消息已读/未读状态同步")
 @RestController

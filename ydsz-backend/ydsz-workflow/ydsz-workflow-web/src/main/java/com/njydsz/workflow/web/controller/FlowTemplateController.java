@@ -25,22 +25,43 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程模板市场 HTTP API
  *
- * <p>提供流程模板的查询、导入、导出能力。
- * 预置 15 套行业审批流程模板，支持按分类筛选、查看详情（含 BPMN XML）、
- * 一键导入为草稿流程定义，以及将已发布流程导出为模板。
+ * <p>提供流程模板的<b>查询 / 导入 / 导出 / 版本管理 / 智能推荐</b>能力。
+ * 内置行业审批流程模板库（含 HR / FINANCE / ADMIN / PROJECT 等分类），
+ * 业务方可按需筛选、一键导入为草稿流程定义；也可将已发布流程反向导出为模板沉淀。
  *
- * <p>P2-9: 模板继承与版本化能力
+ * <p><b>接口路径：</b>{@code /api/v1/workflow/template/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>模板查询</b>：{@code GET /list}（按 category 筛选）/ {@code GET /{templateCode}}（含 BPMN XML）</li>
+ *   <li><b>导入 / 导出</b>：{@code POST /{templateCode}/import}（从模板市场导入创建草稿流程）/
+ *       {@code POST /export/{definitionId}}（将已发布流程导出为模板）</li>
+ *   <li><b>智能推荐</b>：{@code GET /recommend}（基于用户历史）/ {@code GET /recommend/byBusinessType}（按业务类型）</li>
+ * </ul>
+ *
+ * <p><b>P2-9 模板继承与版本化：</b>
  * <ul>
  *   <li>{@code GET /{templateCode}/versions} 列出全部历史版本</li>
  *   <li>{@code GET /{templateCode}/versions/{version}} 获取指定版本详情</li>
- *   <li>{@code POST /{templateCode}/new-version} 创建新版本</li>
- *   <li>{@code POST /{templateCode}/clone} 克隆为独立新模板</li>
- *   <li>{@code POST /{parentTemplateCode}/inherit} 从父模板继承创建子模板</li>
+ *   <li>{@code POST /{templateCode}/newVersion} 创建新版本（自动降级旧版本）</li>
+ *   <li>{@code POST /{templateCode}/clone} 克隆为独立新模板（{@code CLONE} 关系）</li>
+ *   <li>{@code POST /{parentTemplateCode}/inherit} 从父模板继承创建子模板（{@code INHERIT} 关系）</li>
  *   <li>{@code GET /{parentTemplateCode}/inherited} 列出继承自指定父模板的子模板</li>
+ *   <li>{@code POST /{childTemplateCode}/sync} 子模板同步父模板最新版本（仅 INHERIT 类型）</li>
+ * </ul>
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口（import / newVersion / clone / inherit / sync）启用 {@link Idempotent} 5s 防重</li>
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>同步接口（{@code /sync}）有 INHERIT 关系校验，非 INHERIT 模板拒绝同步</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.workflow.server.service.FlowTemplateService 模板服务
+ * @see com.njydsz.workflow.server.service.FlowTemplateRecommendService 智能推荐服务
  */
 @Slf4j
 @Tag(name = "流程模板市场")

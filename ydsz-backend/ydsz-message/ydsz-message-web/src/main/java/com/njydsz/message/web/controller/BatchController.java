@@ -31,13 +31,54 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 
 /**
- * 批量发送 Controller。
+ * 批量发送（Batch Send）Controller。
  *
- * <p>提供异步批量发送入口与批次进度查询。异步模式下立即返回 batchId，
- * 后台线程池逐条发送，前端轮询 {@code /progress/{batchId}} 查询进度。
+ * <p>提供<b>异步批量发送</b>的 HTTP API，是 ydsz-message 处理大量通知的核心入口。
+ * 与 {@code MessageController.send}（单条同步发送）不同，批量发送使用独立线程池逐条处理，
+ * 适合大批量、低延迟要求的场景（如全员通知、活动推送）。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/message/batch/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>提交批量任务</b>：{@code POST /send} — 提交 (templateCode + receiverList) 的批量任务，立即返回 batchId</li>
+ *   <li><b>查询进度</b>：{@code GET /progress/{batchId}} — 轮询批量任务进度（total / success / failed / skipped / progressPercent）</li>
+ * </ul>
+ *
+ * <p><b>同步 vs 异步：</b>由 {@code BatchSendRequestDTO.async} 控制（默认 true 异步）：
+ * <ul>
+ *   <li><b>异步</b>（推荐）：立即返回 batchId，由 {@code BatchSendExecutor} 线程池逐条处理；适合大批量</li>
+ *   <li><b>同步</b>：阻塞等待全部完成后返回；适合小批量（≤ 50 条）且要求严格一致性的场景</li>
+ * </ul>
+ *
+ * <p><b>receiverList 模式：</b>所有接收人共享同一模板（同一 content / subject / vars），
+ * 系统按 (userId, contact) 解析每个接收人的发送地址，逐条生成 {@code ydsz_msg_log} 后批量提交到 MQ。
+ *
+ * <p><b>批次状态机：</b>{@code PENDING → RUNNING → COMPLETED / PARTIAL_FAILED / FAILED}，
+ * 由 {@code BatchSendExecutor} 在执行过程中更新。
+ *
+ * <p><b>典型场景：</b>
+ * <ul>
+ *   <li>系统维护通知：向全量用户推送维护公告</li>
+ *   <li>活动推送：向某标签用户群发活动通知</li>
+ *   <li>工资条通知：批量发送工资条详情（敏感数据）</li>
+ * </ul>
+ *
+ * <p><b>多租户隔离：</b>所有批量任务按 {@code tenantId} 隔离，跨租户批次不可见。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口（submit）启用 {@link Idempotent} 5s 防重（避免重复提交同一批）</li>
+ *   <li>写接口（submit）启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>写接口（submit）启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#NOTIF_MESSAGE_SEND} 权限码</li>
+ *   <li>大批量发送（receiverList &gt; 10000）建议走异步模式 + 进度轮询，避免 HTTP 超时</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.message.server.service.batch.BatchService 批量发送服务
+ * @see com.njydsz.message.domain.entity.batch.MsgBatch 批次实体
  */
 @Slf4j
 @Tag(name = "批量发送", description = "异步批量发送与进度查询")

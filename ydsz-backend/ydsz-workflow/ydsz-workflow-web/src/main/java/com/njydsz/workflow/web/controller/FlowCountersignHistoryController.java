@@ -22,21 +22,38 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 加签历史独立视图 Controller
+ * 加签历史独立视图 Controller（P1-8）
  *
- * <p>P1-8: 对标钉钉/飞书审批"加签历史"能力，提供独立的加签操作查询接口，
+ * <p>对标钉钉/飞书审批"加签历史"能力，提供独立的加签操作查询接口，
  * 前端可在审批详情页以独立卡片/抽屉展示加签轨迹，与普通审批时间线区分。
  *
- * <p>加签类型包括：
+ * <p><b>接口路径：</b>{@code /api/v1/workflow/engine/countersign/**}
+ *
+ * <p><b>核心能力：</b>
  * <ul>
- *   <li>前加签（COUNTERSIGN_BEFORE）- 在当前审批人之前增加审批人</li>
- *   <li>后加签（COUNTERSIGN_AFTER）- 在当前审批人之后增加审批人</li>
- *   <li>并加签（COUNTERSIGN_PARALLEL）- 与当前审批人并行审批</li>
- *   <li>减签（COUNTERSIGN_REMOVE）- 从会签中移除审批人</li>
+ *   <li>{@code GET /history/instance/{instanceId}} — 查询某实例的全部加签历史（按时间正序）</li>
+ *   <li>{@code GET /history/task/{taskId}} — 查询某任务上的加签轨迹</li>
  * </ul>
+ *
+ * <p><b>加签类型：</b>
+ * <ul>
+ *   <li>前加签（{@code COUNTERSIGN_BEFORE}）- 在当前审批人之前增加审批人</li>
+ *   <li>后加签（{@code COUNTERSIGN_AFTER}）- 在当前审批人之后增加审批人</li>
+ *   <li>并加签（{@code COUNTERSIGN_PARALLEL}）- 与当前审批人并行审批</li>
+ *   <li>减签（{@code COUNTERSIGN_REMOVE}）- 从会签中移除审批人</li>
+ * </ul>
+ *
+ * <p><b>与 FlowAuditLog 的关系：</b>加签历史是 {@code FlowAuditLog} 中 {@code action} 字段
+ * 以 {@code COUNTERSIGN_*} 开头的子集。本 Controller 通过 {@code COUNTERSIGN_ACTIONS} 常量做过滤，
+ * 仅返回加签相关记录，避免业务方在前端做二次过滤。
+ *
+ * <p><b>设计原则：</b>Controller 仅做参数透传与类型过滤；数据查询委托 {@link FlowAuditLogMapper}，
+ * 不做业务逻辑编排（保持视图层纯粹性）。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.workflow.infra.mapper.FlowAuditLogMapper 审计日志 Mapper
+ * @see com.njydsz.workflow.domain.entity.FlowAuditLog 审计日志实体
  */
 @Slf4j
 @RestController

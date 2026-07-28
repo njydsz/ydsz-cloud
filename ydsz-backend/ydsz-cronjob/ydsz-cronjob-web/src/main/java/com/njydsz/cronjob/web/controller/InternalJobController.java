@@ -22,22 +22,24 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.cronjob.domain.converter.CronjobConverter;
-import com.njydsz.cronjob.domain.vo.ProcessResultVO;
 
 /**
- * 内部任务执行接口（P1-4 远程派发接收端）。
+ * 内部任务执行接口 Controller（P1-4 远程派发接收端）。
  *
- * <p>每个 cronjob 实例都暴露此接口，接收 Leader 节点的远程分片派发请求。
+ * <p>集群模式下，每个 cronjob 节点都暴露此接口，接收 Leader 节点通过 HTTP 派发的远程分片任务。
  * Leader 通过 {@code RemoteTaskClient} 发送 HTTP POST 到
- * {@code http://{host}:{port}/cronjob/internal/execute}，
+ * {@code http://{host}:{port}/api/v1/cronjob/internal/execute}，
  * 本 Controller 接收后调用 {@link TaskDispatcher#executeLocally} 在本地执行。
+ *
+ * <p>同时支持 MapReduce 子任务的远程派发（{@link #executeSubTask}）：Leader 将大数据量任务
+ * 拆分为子任务后分发到各 Worker 节点并行执行，子任务执行结果返回 Leader 汇总。
  *
  * <h3>安全考虑</h3>
  * <ul>
- *   <li>仅限内网调用，生产环境应通过网络策略限制访问来源</li>
- *   <li>不走权限校验（@AuthApiPermission），因为是节点间内部通信</li>
- *   <li>请求体由 Leader 构造，信任内网来源</li>
+ *   <li>仅限内网调用，生产环境应通过网络策略（K8s NetworkPolicy / SecurityGroup）限制访问来源</li>
+ *   <li>不走 {@code @AuthApiPermission} 权限校验，因为是节点间内部通信</li>
+ *   <li>请求体由 Leader 节点构造，信任内网来源</li>
+ *   <li>对每个请求恢复 traceId 到 MDC，保证全链路追踪</li>
  * </ul>
  *
  * <h3>错误处理</h3>
@@ -47,30 +49,43 @@ import com.njydsz.cronjob.domain.vo.ProcessResultVO;
  *   <li>执行异常：返回 200 + code=0 + data=null（执行器已记录 FAILED 日志）</li>
  * </ul>
  *
+ * <h3>架构位置</h3>
+ * <pre>
+ *   Leader 节点（quartz 调度器）
+ *     → RemoteTaskClient（HTTP 派发）
+ *       → ydsz-cronjob-web.InternalJobController（本 Controller）
+ *         → TaskDispatcher.executeLocally
+ *           → JobProcessor（GLUE / Bean / Shell 等执行器）
+ * </pre>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-@Tag(name = "内部任务执行（远程派发接收端）")
+@Tag(name = "内部任务执行（远程派发接收端）", description = "集群节点间任务派发的 HTTP 接收端，接收 Leader 节点分片")
 @RestController
 @RequestMapping("/api/v1/cronjob/internal")
 @RequiredArgsConstructor
 public class InternalJobController {
 
-    /** 任务派发器 */
+    /** 任务派发器（封装本地执行逻辑） */
     private final TaskDispatcher taskDispatcher;
     /** P0-1: Spring 应用上下文（用于获取 MapProcessor Bean） */
     private final ApplicationContext applicationContext;
 
     /**
-     * 接收远程派发请求并在本地执行。
+     * 接收远程派发请求并在本地执行任务。
      *
-     * <p>Leader 节点将分片任务通过 HTTP 派发到本节点，本方法接收后：
+     * <p>处理流程：
      * <ol>
+     *   <li>参数校验：job 和 jobKey 必填</li>
      *   <li>从请求中恢复 traceId 到 MDC（保证全链路追踪）</li>
-     *   <li>调用 {@link TaskDispatcher#executeLocally} 在本地执行</li>
-     *   <li>返回执行日志 ID（data 字段）</li>
+     *   <li>调用 {@link TaskDispatcher#executeLocally} 在本地执行任务</li>
+     *   <li>finally 中清理 traceId，避免线程复用导致 MDC 污染</li>
      * </ol>
+     *
+     * <p>注意：执行异常时不返回 error，而是返回 success(null)。原因是执行器端已记录 FAILED 日志，
+     * 调用方通过日志 ID 即可查询失败原因；返回 error 会导致 Leader 误判为派发失败触发重试。
      *
      * @param request 远程派发请求（job + triggerType + shardIndex + shardTotal + traceId）
      * @return 统一响应结果，data 为执行日志 ID（锁被持有或执行失败时为 null）
@@ -117,23 +132,27 @@ public class InternalJobController {
     /**
      * P0-1: 接收 MapReduce 子任务远程派发请求并在本地执行。
      *
-     * <p>Leader 节点将 MapReduce 子任务通过 HTTP 派发到本节点，本方法接收后：
+     * <p>处理流程：
      * <ol>
+     *   <li>参数校验：jobKey / handler 必填</li>
      *   <li>从请求中恢复 traceId 到 MDC</li>
-     *   <li>从 ApplicationContext 获取 MapProcessor Bean</li>
+     *   <li>从 ApplicationContext 通过 handler Bean 名称获取 MapProcessor</li>
      *   <li>构造子任务 MapContext，调用 processor.process()</li>
      *   <li>返回执行结果（含 success/result/errorMessage）</li>
      * </ol>
      *
-     * @param request 子任务派发请求
-     * @return 统一响应结果，data 为子任务执行结果对象
+     * <p>注意：与 {@link #execute} 不同，本接口始终返回 success（包含执行结果对象），
+     * 因为子任务执行结果是 Leader 端做汇总归并的依据，需要传回。
+     *
+     * @param request 子任务派发请求（jobId/logId/jobKey/taskName/handler/taskParams/traceId）
+     * @return 统一响应结果，data 为子任务执行结果对象（{@link ProcessResultVO}）
      */
     @Operation(summary = "接收 MapReduce 子任务远程派发并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
     @RateLimit(resource = "cronjob.internaljob.executeSubTask", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:InternalJobController:executeSubTask:lock", ttlSeconds = 5)
     @PostMapping("/executeSubTask")
-    public BaseResponse<ProcessResultVO> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
+    public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {
             log.warn("[InternalJob] 子任务请求参数为空");
             return BaseResponse.error("400", "请求参数为空");
@@ -154,7 +173,8 @@ public class InternalJobController {
             } catch (Exception e) {
                 log.error("[InternalJob] 获取 MapProcessor Bean 失败: handler={} reason={}",
                         request.getHandler(), e.getMessage());
-                return BaseResponse.success(ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
+                return BaseResponse.success(CronjobConverter.INSTANT.toProcessResultVO(
+                        ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage())));
             }
             // 构造子任务上下文并执行
             MapContext context = new MapContext(
@@ -171,7 +191,7 @@ public class InternalJobController {
                         request.getJobKey(), request.getTaskName(), e.getMessage(), e);
                 result = ProcessResult.failed(e.getClass().getSimpleName() + ": " + e.getMessage());
             }
-            return BaseResponse.success(result);
+            return BaseResponse.success(CronjobConverter.INSTANT.toProcessResultVO(result));
         } finally {
             TracerUtils.clear();
         }

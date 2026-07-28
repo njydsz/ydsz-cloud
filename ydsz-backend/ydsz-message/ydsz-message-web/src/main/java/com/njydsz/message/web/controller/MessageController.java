@@ -40,14 +40,40 @@ import com.njydsz.common.audit.enums.AuditType;
 /**
  * 消息发送 Controller。
  *
- * <p>提供同步 / 异步两种发送入口：
+ * <p>提供<b>多模态消息发送能力</b>的 HTTP 入口：同步 / 异步 / 事务 / 批量四种发送语义，
+ * 是 {@code ydsz-message} 模块的核心门面，被 ydsz-workflow、ydsz-project、ydsz-system
+ * 等业务模块通过 Feign（{@code NotificationClient}）远程调用。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/message/**}
+ *
+ * <p><b>核心能力：</b>
  * <ul>
- *   <li>{@code /send} / {@code /send-direct}：同步发送，阻塞返回供应商结果</li>
- *   <li>{@code /send-async}：投递到 RocketMQ 异步处理，立即返回 messageId 供追踪</li>
+ *   <li><b>同步发送</b>：{@code POST /send} / {@code /sendDirect} — 阻塞返回供应商结果，适用于通知即时性要求高的场景（如登录验证码）</li>
+ *   <li><b>异步发送</b>：{@code POST /sendAsync} — 投递到 RocketMQ，由 {@code MessageConsumer} 消费后真正调用供应商，立即返回 {@code messageId} 用于状态追踪</li>
+ *   <li><b>事务消息</b>：{@code POST /sendTransactional} — 基于 RocketMQ 半消息机制，确保通知仅在本地事务校验通过后才投递</li>
+ *   <li><b>批量发送</b>：{@code POST /batchSend} — 同步循环（限制 100 条/批），返回 {@code BatchSendResult}</li>
+ *   <li><b>日志查询</b>：{@code GET /log/page} — 发送日志分页 / {@code GET /log/batch/{batchId}/page} — 批次进度</li>
+ * </ul>
+ *
+ * <p><b>异步发送落库机制（P0-3）：</b>为保证消息不丢失，
+ * 异步发送会先以 {@code PENDING} 状态写入 {@code ydsz_msg_log}，再投递到 MQ；
+ * MQ 消费失败时由 {@code DeadLetterController} 处理，避免「发送即丢」。
+ *
+ * <p><b>多渠道支持：</b>短信（阿里云 / 腾讯云 / 华为云）/ 邮件（QQ 邮箱 / 阿里邮箱）/ 站内信 / 钉钉 / 飞书 / 企业微信 / WebSocket。
+ * 渠道路由由 {@code RouteRuleController} 配置。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>所有写接口启用 {@link Idempotent} 5s 防重（Redis SET NX EX）</li>
+ *   <li>所有写接口启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>所有写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#NOTIF_MESSAGE_SEND} 等权限码</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.message.server.service.core.MessageService 消息发送服务
+ * @see com.njydsz.common.feign.MessageRequest 共享消息请求 DTO
  */
 @Slf4j
 @Tag(name = "消息发送", description = "消息发送与发送日志查询")

@@ -35,8 +35,41 @@ import com.njydsz.common.audit.enums.AuditType;
 /**
  * 消息模板管理 Controller。
  *
+ * <p>提供消息模板的<b>全生命周期管理</b> HTTP API：创建 / 查询 / 编辑 / 删除 / 审核 / 上下线，
+ * 是 ydsz-message 模块「模板中心」的入口。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/message/template/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>CRUD</b>：{@code POST /} 创建 / {@code PUT /{id}} 编辑 / {@code DELETE /{id}} 删除（仅 DRAFT 状态可删）</li>
+ *   <li><b>分页查询</b>：{@code GET /page} 支持按渠道 / 状态 / 关键字多维过滤</li>
+ *   <li><b>审核流</b>：{@code POST /audit} 模板审核（PASS / REJECT）</li>
+ *   <li><b>版本管理</b>：通过 {@code TemplateVersionController} 实现模板版本化</li>
+ *   <li><b>预览</b>：通过 {@code TemplatePreviewController} 实时预览模板渲染结果</li>
+ * </ul>
+ *
+ * <p><b>模板状态机：</b>{@code DRAFT}（待审核）→ {@code PUBLISHED}（已发布，可用于发送）→
+ * {@code OFFLINE}（已下线，停止使用）/ {@code REJECTED}（审核未通过）。
+ *
+ * <p><b>变量替换：</b>模板内容支持 {@code ${var}} 嵌套变量语法，发送时由 {@code TemplateEngine} 替换为实际值。
+ * 例如：{@code "您的验证码为 ${code}，5 分钟内有效"} → {@code "您的验证码为 123456，5 分钟内有效"}。
+ *
+ * <p><b>多渠道支持：</b>同一模板可绑定到多个渠道（短信 / 邮件 / 站内信 / 钉钉 / 飞书 / 企业微信），
+ * 每个渠道有独立的 {@code TemplateCode} 与供应商模板 ID。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 5s 防重（Redis SET NX EX）</li>
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#NOTIF_TEMPLATE_MANAGE} 等权限码</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.message.server.service.template.TemplateService 模板服务
+ * @see com.njydsz.message.domain.entity.template.MsgTemplate 模板实体
  */
 @Tag(name = "消息模板", description = "消息模板增删改查与审核")
 @RestController

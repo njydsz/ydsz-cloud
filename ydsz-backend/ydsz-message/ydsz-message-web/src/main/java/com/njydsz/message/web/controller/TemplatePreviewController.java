@@ -23,12 +23,44 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
- * 模板预览 Controller（P1-4）。
+ * 模板预览（Template Preview）Controller。
  *
- * <p>提供模板渲染预览接口,前端编辑模板时可实时预览渲染效果。
+ * <p>提供<b>消息模板实时渲染预览</b>的 HTTP API，是模板编辑器的核心支撑。
+ * 在模板编辑时，前端实时调用本 Controller 给定参数预览渲染结果，
+ * 避免每次都保存到数据库再触发发送测试。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/message/template/preview/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>按模板编码预览</b>：{@code POST /by-code} — 给定 templateCode/channel/locale/params 预览已发布模板的渲染结果</li>
+ *   <li><b>预览原始内容</b>：{@code POST /raw} — 给定任意模板字符串和参数，直接渲染（不依赖数据库中的模板）</li>
+ * </ul>
+ *
+ * <p><b>变量校验：</b>{@code /by-code} 流程中：
+ * <ol>
+ *   <li>从 {@code ydsz_msg_template} 加载模板（含 subject / content / variableDefs）</li>
+ *   <li>按 {@code variableDefs}（JSON 格式：{@code {"name": "code", "type": "string", "required": true, "defaultValue": "000000"}}）解析变量定义</li>
+ *   <li>调用 {@link com.njydsz.message.server.template.TemplateVariableValidator#validateAndFill} 校验必填项 + 填充默认值</li>
+ *   <li>用 {@link com.njydsz.message.server.template.TemplateEngine#render} 替换 {@code ${var}} 占位符</li>
+ *   <li>返回渲染后的 content / subject</li>
+ * </ol>
+ *
+ * <p><b>多租户隔离：</b>按 {@link com.njydsz.common.security.TenantContext#getTenantId()} 当前租户加载模板，
+ * 跨租户模板不可见。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>{@code /raw} 接口（自定义内容）启用 {@link Idempotent} 5s 防重，防止被刷渲染资源</li>
+ *   <li>{@code /raw} 接口启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>变量替换在沙箱内执行，避免模板注入风险（{@code TemplateEngine} 使用纯字符串替换，不求值 Groovy / OGNL 等表达式）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.message.server.template.TemplateEngine 模板渲染引擎
+ * @see com.njydsz.message.server.template.TemplateVariableValidator 变量校验器
+ * @see com.njydsz.message.server.service.template.TemplateService 模板服务
  */
 @Tag(name = "模板预览", description = "模板渲染预览")
 @RestController

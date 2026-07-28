@@ -33,8 +33,41 @@ import com.njydsz.common.audit.enums.AuditType;
 /**
  * 订阅关系 Controller。
  *
+ * <p>提供<b>用户订阅主题关系</b>的 HTTP API，支撑「订阅 - 发布」通知模式：
+ * 用户订阅感兴趣的主题（{@code topicCode}），系统按主题批量推送消息。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/message/subscription/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>订阅 / 取消订阅</b>：{@code POST /upsert} 增改订阅（覆盖式）/
+ *       {@code POST /{topicCode}/cancel} 取消订阅</li>
+ *   <li><b>我的订阅</b>：{@code GET /mine} 当前用户订阅的全部主题</li>
+ *   <li><b>订阅者</b>：{@code GET /topic/{topicCode}} 查询某主题的全部订阅者（发送时 fan-out 用）</li>
+ *   <li><b>订阅状态</b>：{@code GET /exists} 判断当前用户是否订阅某主题</li>
+ * </ul>
+ *
+ * <p><b>典型场景：</b>
+ * <ul>
+ *   <li>用户订阅「项目立项」主题，所有立项通知自动推送给该用户</li>
+ *   <li>用户订阅「系统公告」主题，平台公告自动推送给该用户</li>
+ *   <li>用户订阅「我审批的」主题，ydsz-workflow 待办变更自动推送给该用户</li>
+ * </ul>
+ *
+ * <p><b>多租户隔离：</b>所有操作按 {@code tenantId} 隔离，跨租户订阅不可见。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 5s 防重</li>
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验订阅管理权限码</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.message.server.service.config.SubscriptionService 订阅服务
+ * @see com.njydsz.message.domain.entity.config.MsgSubscription 订阅实体
  */
 @Tag(name = "消息订阅", description = "用户主题订阅关系管理")
 @RestController

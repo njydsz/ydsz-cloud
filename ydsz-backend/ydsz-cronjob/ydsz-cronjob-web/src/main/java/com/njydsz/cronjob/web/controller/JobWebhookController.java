@@ -29,11 +29,20 @@ import com.njydsz.cronjob.domain.vo.JobWebhookVO;
  * WebHook 事件订阅管理 Controller（P3-13）。
  *
  * <p>提供 WebHook 订阅的增删改查接口，支持按事件类型和任务 KEY 订阅。
+ * 任务执行过程中产生的关键事件（成功/失败/超时/开始/结束）会通过
+ * {@code WebhookEventDispatcher} 异步推送到已注册的 WebHook。
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>CRUD：创建 / 更新 / 删除 / 详情 / 分页查询</li>
+ *   <li>过滤：按 eventType 和 jobKey 组合过滤</li>
+ *   <li>测试：{@link #testWebhook} 主动发送测试事件</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Tag(name = "WebHook 事件订阅")
+@Tag(name = "WebHook 事件订阅", description = "订阅 CRUD、过滤查询、测试推送")
 @RestController
 @RequestMapping("/api/v1/cronjob/webhook")
 @RequiredArgsConstructor
@@ -45,8 +54,11 @@ public class JobWebhookController {
     /**
      * 新增 WebHook 订阅。
      *
-     * @param webhook WebHook 配置
-     * @return 统一响应结果，包含新增 ID
+     * <p>订阅创建后立即生效（{@code status=ACTIVE}）。默认 HTTP 方法 POST，可通过入参覆盖。
+     * 订阅的 eventType 支持通配（{@code *} 表示订阅所有事件）。
+     *
+     * @param dto WebHook 配置（url/eventType/jobKey/httpMethod/headers/secret）
+     * @return 新订阅 ID
      */
     @Operation(summary = "新增 WebHook 订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
@@ -70,7 +82,9 @@ public class JobWebhookController {
     /**
      * 更新 WebHook 订阅。
      *
-     * @param webhook WebHook 配置
+     * <p>修改 url/headers/secret 等配置。eventType/jobKey 不允许变更（应删除重建）。
+     *
+     * @param dto WebHook 更新请求体（必须含 id）
      * @return 统一响应结果
      */
     @Operation(summary = "更新 WebHook 订阅")
@@ -88,6 +102,9 @@ public class JobWebhookController {
 
     /**
      * 删除 WebHook 订阅（逻辑删除）。
+     *
+     * <p>将 {@code deleted=1} 标记为软删除，不再接收事件推送。
+     * 历史事件记录保留，便于审计追溯。
      *
      * @param id WebHook ID
      * @return 统一响应结果
@@ -110,11 +127,13 @@ public class JobWebhookController {
     /**
      * 分页查询 WebHook 订阅列表。
      *
+     * <p>按 created_at 倒序排列。eventType/jobKey 为可选过滤条件，二者可组合（AND 关系）。
+     *
      * @param page      页码（默认 1）
      * @param size      每页条数（默认 20）
      * @param eventType 事件类型过滤（可选）
      * @param jobKey    任务 KEY 过滤（可选）
-     * @return 统一响应结果，包含 WebHook 分页数据
+     * @return WebHook 分页数据
      */
     @Operation(summary = "分页查询 WebHook 订阅")
     @GetMapping("/page")
@@ -140,7 +159,7 @@ public class JobWebhookController {
      * 查询 WebHook 详情。
      *
      * @param id WebHook ID
-     * @return 统一响应结果，包含 WebHook 配置
+     * @return WebHook 配置详情 VO
      */
     @Operation(summary = "查询 WebHook 详情")
     @GetMapping("/{id}")
@@ -151,8 +170,11 @@ public class JobWebhookController {
     /**
      * 测试 WebHook 推送（发送测试事件）。
      *
+     * <p>主动发送一个 {@code TEST_WEBHOOK} 类型的合成事件，用于验证 WebHook 配置正确性。
+     * 异步执行，不阻塞当前线程；失败重试由 {@code WebhookEventDispatcher} 负责。
+     *
      * @param id WebHook ID
-     * @return 统一响应结果
+     * @return 统一响应结果（仅表示任务已派发，不代表实际推送成功）
      */
     @Operation(summary = "测试 WebHook 推送")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)

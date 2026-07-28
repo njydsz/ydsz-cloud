@@ -25,12 +25,29 @@ import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 /**
  * DAG 工作流实例 Controller（P2 DAG 增强）。
  *
- * <p>提供 DAG 实例的查询、暂停/恢复/取消、上下文管理等 HTTP 接口。
+ * <p>提供 DAG 运行实例的全生命周期管理 REST API：
+ * <ul>
+ *   <li>查询：实例详情 / 按 DAG 查 / 按状态查 / 节点列表 / 可视化</li>
+ *   <li>控制：暂停 / 恢复 / 取消</li>
+ *   <li>上下文：节点间参数传递（运行时更新）</li>
+ * </ul>
+ *
+ * <h3>实例状态机</h3>
+ * <pre>
+ *   PENDING → RUNNING ⇄ PAUSED
+ *                ↓
+ *           SUCCESS / FAILED / CANCELLED
+ * </pre>
+ * 状态转换由 {@link JobDagInstanceService#canTransitTo} 校验合法性。
+ *
+ * <h3>可视化数据</h3>
+ * {@link #getVisualization} 返回的 VO 包含节点/边的实时状态、运行时长、错误堆栈等，
+ * 供前端 DAG 查看器渲染节点颜色（绿/黄/红/灰）和边动画。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Tag(name = "DAG工作流实例")
+@Tag(name = "DAG工作流实例", description = "DAG 实例查询、暂停/恢复/取消、可视化、上下文管理")
 @RestController
 @RequestMapping("/api/v1/cronjob/dag/instance")
 @RequiredArgsConstructor
@@ -42,8 +59,11 @@ public class JobDagInstanceController {
     /**
      * 查询 DAG 实例详情。
      *
+     * <p>返回实例的元信息（status / triggerType / triggerBy / 时间戳），
+     * 不含节点列表（节点列表见 {@link #listNodes}）。
+     *
      * @param instanceId DAG 实例 ID
-     * @return 统一响应结果，包含 DAG 实例信息
+     * @return DAG 实例详情 VO
      */
     @Operation(summary = "查询 DAG 实例详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
@@ -55,9 +75,11 @@ public class JobDagInstanceController {
     /**
      * 查询指定 DAG 的实例列表。
      *
+     * <p>按 start_time 倒序，最近触发的实例排在前面。limit 默认 20，控制单次返回量。
+     *
      * @param dagId DAG ID
      * @param limit 最多返回条数（默认 20）
-     * @return 统一响应结果，包含 DAG 实例列表
+     * @return DAG 实例列表
      */
     @Operation(summary = "查询 DAG 的实例列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
@@ -70,8 +92,10 @@ public class JobDagInstanceController {
     /**
      * 按状态查询 DAG 实例。
      *
+     * <p>运维场景下常用：例如查所有 RUNNING 状态的实例做巡检；查所有 FAILED 做失败重跑。
+     *
      * @param status 实例状态（RUNNING/PAUSED/SUCCESS/FAILED/CANCELLED）
-     * @return 统一响应结果，包含 DAG 实例列表
+     * @return DAG 实例列表
      */
     @Operation(summary = "按状态查询 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
@@ -83,8 +107,11 @@ public class JobDagInstanceController {
     /**
      * 查询 DAG 实例的节点列表。
      *
+     * <p>展示每个节点实例的状态、开始/结束时间、耗时、错误信息等。
+     * 配合 {@link #getInstanceById} 一起使用，构成"实例总览 + 节点明细"的完整视图。
+     *
      * @param instanceId DAG 实例 ID
-     * @return 统一响应结果，包含节点实例列表
+     * @return 节点实例列表
      */
     @Operation(summary = "查询 DAG 实例的节点列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
@@ -94,10 +121,13 @@ public class JobDagInstanceController {
     }
 
     /**
-     * 获取 DAG 实例可视化数据。
+     * 获取 DAG 实例可视化数据（P4-1）。
+     *
+     * <p>返回节点/边的实时状态、运行时长、错误堆栈等，
+     * 供前端 DAG 查看器渲染节点颜色（绿/黄/红/灰）和边动画。
      *
      * @param instanceId DAG 实例 ID
-     * @return 统一响应结果，包含可视化数据（节点状态/边/时间线）
+     * @return 可视化数据 VO
      */
     @Operation(summary = "获取 DAG 实例可视化数据（P4-1）")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
@@ -108,6 +138,9 @@ public class JobDagInstanceController {
 
     /**
      * 暂停 DAG 实例。
+     *
+     * <p>将 RUNNING 转为 PAUSED：调度器暂停派发后续节点，正在执行的节点继续完成。
+     * 可通过 {@link #resumeInstance} 恢复。已 SUCCESS/FAILED/CANCELLED 的实例禁止暂停。
      *
      * @param instanceId DAG 实例 ID
      * @return 统一响应结果
@@ -125,6 +158,9 @@ public class JobDagInstanceController {
     /**
      * 恢复 DAG 实例。
      *
+     * <p>将 PAUSED 转回 RUNNING，调度器继续派发后续节点。
+     * 已 SUCCESS/FAILED/CANCELLED 的实例禁止恢复。
+     *
      * @param instanceId DAG 实例 ID
      * @return 统一响应结果
      */
@@ -140,6 +176,9 @@ public class JobDagInstanceController {
 
     /**
      * 取消 DAG 实例。
+     *
+     * <p>强制终止实例：正在执行的节点收到取消信号（{@code Thread.interrupt}），
+     * 未执行的节点被跳过。终态为 CANCELLED，不可恢复。
      *
      * @param instanceId DAG 实例 ID
      * @return 统一响应结果
@@ -157,8 +196,11 @@ public class JobDagInstanceController {
     /**
      * 更新 DAG 实例上下文（用于节点间参数传递）。
      *
-     * @param instanceId DAG 实例 ID
-     * @param contextJson 上下文 JSON 字符串
+     * <p>运行时上下文（runtime context）由各节点读写，实现"上游节点产出 → 下游节点消费"。
+     * 该接口用于外部系统注入上下文或运维人工修正。
+     *
+     * @param instanceId  DAG 实例 ID
+     * @param contextJson 上下文 JSON 字符串（会被合并而非覆盖已有上下文）
      * @return 统一响应结果
      */
     @Operation(summary = "更新 DAG 实例上下文")

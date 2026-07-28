@@ -41,8 +41,46 @@ import com.njydsz.common.audit.enums.AuditType;
 /**
  * 站内通知 Controller。
  *
+ * <p>提供<b>站内通知</b>的完整生命周期 HTTP API：发送 → 收件箱 → 已读 → 撤回 → 实时推送。
+ * 站内通知是 ydsz-message 的核心通知类型之一，与短信 / 邮件 / 钉钉 / 飞书 / 企业微信 / WebSocket 并列。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/message/notifications/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>发送</b>：{@code POST /} 单条发送 / {@code POST /batch} 批量发送</li>
+ *   <li><b>收件箱</b>：{@code GET /page} 我的通知分页 / {@code GET /unread-count} 未读数（导航栏徽标）</li>
+ *   <li><b>已读机制</b>：{@code POST /{id}/read} 标记单条已读 / {@code POST /read-all} 全部已读</li>
+ *   <li><b>撤回</b>：{@code POST /{id}/recall} 撤回通知（仅发送者 / 管理员可操作）</li>
+ *   <li><b>实时推送</b>：{@code POST /push} 通过 WebSocket 实时推送到客户端</li>
+ *   <li><b>详情</b>：{@code GET /{id}} 通知详情（含回执状态、阅读时间）</li>
+ * </ul>
+ *
+ * <p><b>与 MessageController 的区别：</b>
+ * <ul>
+ *   <li>本 Controller：<b>站内通知</b>（DB 持久化 + WebSocket 推送），收件人必须在系统内有账号</li>
+ *   <li>MessageController：<b>多渠道发送</b>（短信 / 邮件 / IM / WebSocket），收件人是渠道账号</li>
+ * </ul>
+ *
+ * <p><b>实时推送：</b>站内通知创建后由 {@link RealtimePushService} 通过 WebSocket 推送到在线用户的浏览器，
+ * 离线用户登录后从 {@code /page} 拉取未读通知。{@code ydsz:msg:realtime:user:{userId}} 用于维护在线用户连接。
+ *
+ * <p><b>多租户隔离：</b>所有操作按 {@code tenantId} 隔离，跨租户通知不可见。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 5s 防重</li>
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>撤回操作仅发送者 / 管理员可执行（由 Service 层校验）</li>
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#NOTIF_MESSAGE_SEND} 等权限码</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.message.server.service.core.NotificationService 站内通知服务
+ * @see com.njydsz.message.server.realtime.RealtimePushService 实时推送服务
+ * @see com.njydsz.message.server.service.receipt.RecallService 撤回服务
  */
 @Tag(name = "站内通知", description = "站内通知发送/收件箱/已读/撤回/推送")
 @RestController

@@ -42,12 +42,51 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 /**
- * 文件下载 REST API
- * <p>
- * 提供文件下载接口，集成下载限流与防盗链验证。
- * 支持单文件下载、批量下载（ZIP 打包）、签名下载。
+ * 文件下载 REST API Controller。
  *
- * <p><b>接口路径：</b>{@code /api/v1/nextwiki/download}
+ * <p>提供文件下载能力，集成下载限流、防盗链验证、断点续传、签名 URL 等关键能力：
+ * <ul>
+ *   <li>单文件下载：{@code POST /download/{nodeId}} - 支持 HTTP Range 断点续传</li>
+ *   <li>文件夹打包下载：{@code POST /download/folder/{folderId}} - 递归打包为 ZIP</li>
+ *   <li>签名 URL 生成：{@code POST /download/{nodeId}/signed-url} - 生成带时效/IP 绑定的下载链接</li>
+ *   <li>签名 URL 下载：{@code GET /download/signed/{sign}?expires=...} - 通过签名链接下载</li>
+ * </ul>
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>限流防盗链：每个 IP 维度的下载频率限制，超额后拒绝</li>
+ *   <li>断点续传：支持 HTTP {@code Range} 请求头，实现大文件分片下载/断点续传</li>
+ *   <li>签名 URL：生成包含 HMAC 签名的临时下载链接，可指定过期时间和绑定 IP</li>
+ *   <li>ZIP 打包：递归遍历文件夹并将所有文件打包为 ZIP 流式输出</li>
+ * </ul>
+ *
+ * <h3>安全与稳定性</h3>
+ * <ul>
+ *   <li>所有接口均加 {@link Idempotent} 防重（5s TTL）</li>
+ *   <li>所有接口均加 {@link AuthApiPermission} 权限码校验（NEXTWIKI_DOWNLOAD）</li>
+ *   <li>下载限流：基于 {@link DownloadApplicationService} 实现 IP 维度的限流</li>
+ *   <li>防盗链：校验 {@code Referer} 头，拒绝外部站点直接引用</li>
+ * </ul>
+ *
+ * <h3>接口路径</h3>
+ * <pre>
+ *   POST /api/v1/nextwiki/download/{nodeId}                  - 单文件下载
+ *   POST /api/v1/nextwiki/download/folder/{folderId}         - 文件夹 ZIP 打包下载
+ *   POST /api/v1/nextwiki/download/{nodeId}/signed-url       - 生成签名 URL
+ *   GET  /api/v1/nextwiki/download/signed/{sign}?expires=... - 签名 URL 下载
+ * </pre>
+ *
+ * <h3>架构位置</h3>
+ * <pre>
+ *   前端 (PC Web) → ydsz-gateway → ydsz-nextwiki-web (本 Controller)
+ *                                            ↓
+ *                                   ydsz-nextwiki-server.DownloadApplicationService
+ *                                            ↓
+ *                                   ydsz-common-safe (ClientIpResolver / 限流)
+ *                                   ydsz-common-file (IFileStorage 抽象)
+ *                                            ↓
+ *                                   ydsz-nextwiki-infra Mapper
+ * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -56,18 +95,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RestController
 @RequestMapping("/api/v1/nextwiki/download")
 @RequiredArgsConstructor
-@Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链")
+@Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链、Range 断点续传")
 public class DownloadController {
 
+    /** 下载应用服务（封装下载上下文准备、签名 URL 生成、限流等） */
     private final DownloadApplicationService downloadApplicationService;
+    /** 健康指标采集器（记录下载次数） */
     private final NextwikiHealthIndicator healthIndicator;
+    /** 文件节点仓储（用于文件夹子节点递归查询） */
     private final FileNodeRepository fileNodeRepository;
 
+    /** 客户端 IP 解析器（optional，可能不存在于所有部署环境） */
     @Autowired(required = false)
     private ClientIpResolver clientIpResolver;
 
     /**
-     * P1-3: 文件夹打包下载为 ZIP
+     * 将指定文件夹递归打包为 ZIP 流式下载。
+     *
+     * <p>遍历文件夹下所有文件和子文件夹，通过 {@link ZipOutputStream} 实时打包并写入 HTTP 响应流。
+     * 单个文件读取/写入失败不会中断整个打包流程，仅跳过该文件并记录日志。
+     *
+     * @param folderId 文件夹节点 ID
+     * @param userId   当前用户 ID
+     * @param response HTTP 响应对象（用于流式写入 ZIP 内容）
      */
     @Idempotent(key = "ydsz:nextwiki:DownloadController:downloadFolder:lock", ttlSeconds = 5)
     @PostMapping("/folder/{folderId}")
@@ -100,7 +150,15 @@ public class DownloadController {
     }
 
     /**
-     * 递归打包文件夹内容到 ZipOutputStream
+     * 递归将文件夹内容写入 ZIP 流。
+     *
+     * <p>深度优先遍历文件夹：先写入空目录条目（{@code xxx/}），再递归处理子节点。
+     * 对每个文件，从 {@link IFileStorage} 读取输入流并写入 ZIP。
+     *
+     * @param folder   当前处理的文件夹节点
+     * @param zos      ZIP 输出流
+     * @param userId   当前用户 ID
+     * @param basePath 当前 ZIP 条目的父路径（递归累加）
      */
     private void downloadFolderRecursive(FileNode folder,
                                            ZipOutputStream zos, String userId, String basePath) {
@@ -138,7 +196,20 @@ public class DownloadController {
     }
 
     /**
-     * 下载文件（支持 HTTP Range 断点续传）
+     * 下载文件（支持 HTTP Range 断点续传）。
+     *
+     * <p>根据请求是否携带 {@code Range} 头走两条路径：
+     * <ul>
+     *   <li>有 Range 头 → 调用 {@link #handleRangeDownload} 返回 206 Partial Content</li>
+     *   <li>无 Range 头 → 走全量下载路径</li>
+     * </ul>
+     *
+     * <p>下载前会通过 {@link DownloadApplicationService#prepareDownload} 校验限流与权限。
+     *
+     * @param nodeId   文件节点 ID
+     * @param userId   当前用户 ID
+     * @param request  HTTP 请求
+     * @param response HTTP 响应（用于写入文件流）
      */
     @Idempotent(key = "ydsz:nextwiki:DownloadController:download:lock", ttlSeconds = 5)
     @PostMapping("/{nodeId}")
@@ -179,7 +250,15 @@ public class DownloadController {
     }
 
     /**
-     * 处理 Range 请求（断点续传）
+     * 处理 HTTP Range 请求，实现断点续传 / 分片下载。
+     *
+     * <p>解析 {@code bytes=start-end} 格式的 Range 头，将文件指定区间的内容写入响应。
+     * 异常情况（如 start > end / start 越界）返回 416 Requested Range Not Satisfiable。
+     *
+     * @param storage     文件存储抽象
+     * @param fileNode    文件节点（含 size / storageKey / mimeType 等）
+     * @param rangeHeader HTTP Range 头（含 {@code bytes=} 前缀）
+     * @param response    HTTP 响应
      */
     private void handleRangeDownload(IFileStorage storage, FileNode fileNode,
                                        String rangeHeader, HttpServletResponse response) {

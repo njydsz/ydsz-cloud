@@ -33,11 +33,25 @@ import java.nio.charset.StandardCharsets;
  * <p>提供任务执行日志明细的分页查询、SSE 实时推送、行数统计等 HTTP 接口，
  * 供前端实现 XXL-JOB / PowerJob 级别的在线日志白屏化体验。
  *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>{@link #pageContent} - 分页查询日志内容（行级）</li>
+ *   <li>{@link #streamContent} - SSE 实时推送（秒级）</li>
+ *   <li>{@link #searchContent} - 关键字搜索日志行</li>
+ *   <li>{@link #downloadContent} - 下载完整日志</li>
+ *   <li>{@link #compareExecutions} - 对比两次执行结果</li>
+ *   <li>{@link #getExecutionTrace} - 全链路耗时分解</li>
+ * </ul>
+ *
+ * <h3>SSE 实现</h3>
+ * 守护线程每秒轮询增量日志行（{@code lineNo > lastLineNo}），当任务进入终态且无新行时主动断开。
+ * 使用 {@link SseEmitter} 兼容浏览器 EventSource API。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-@Tag(name = "任务执行日志")
+@Tag(name = "任务执行日志", description = "日志分页、SSE 实时推送、搜索、下载、对比、轨迹")
 @RestController
 @RequestMapping("/api/v1/cronjob/log")
 @RequiredArgsConstructor

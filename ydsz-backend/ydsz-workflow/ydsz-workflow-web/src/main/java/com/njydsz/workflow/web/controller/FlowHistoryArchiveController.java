@@ -22,20 +22,39 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 流程历史数据归档管理 API
+ * 流程历史数据归档管理 API（P2-8）
  *
- * <p>P2-8：提供手动触发归档、手动清理冷数据、查询归档配置等运维能力，
+ * <p>提供手动触发归档、手动清理冷数据、查询归档配置等运维能力，
  * 避免每次都需要等待 cron 触发或修改 ydsz_job 表。
  *
- * <p>典型场景：
+ * <p><b>接口路径：</b>{@code /api/v1/workflow/history/**}
+ *
+ * <p><b>核心能力：</b>
  * <ul>
- *   <li>磁盘空间告急时手动触发 purge 清理 1 年前的归档数据</li>
- *   <li>上线前验证归档逻辑时手动触发一次 archive</li>
+ *   <li><b>归档触发</b>：{@code POST /archive} — 手动触发一次归档（将历史实例 / 任务迁到归档表）</li>
+ *   <li><b>清理冷数据</b>：{@code POST /purge} — 手动清理 N 个月前的归档数据（释放磁盘）</li>
+ *   <li><b>配置查询</b>：{@code GET /config} — 查询当前生效的归档配置（无需登录服务器）</li>
+ *   <li><b>统计查询</b>：{@code GET /stats} — 各状态实例数量 / 归档前 N 条记录</li>
+ * </ul>
+ *
+ * <p><b>典型场景：</b>
+ * <ul>
+ *   <li>磁盘空间告急时手动触发 {@code /purge} 清理 1 年前的归档数据</li>
+ *   <li>上线前验证归档逻辑时手动触发一次 {@code /archive}</li>
  *   <li>运维查看当前生效的归档配置（无需登录服务器查看 yml）</li>
+ *   <li>周期性归档出现异常时手动补跑</li>
+ * </ul>
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口（archive / purge）启用 {@link Idempotent} 5s 防重</li>
+ *   <li>purge 操作为<b>不可逆</b>操作，建议通过细粒度权限码控制（如 {@code workflow:history:purge}）</li>
+ *   <li>大批量归档 / 清理走游标分页（{@code id > lastId} + {@code LIMIT 1000}），避免长事务</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see FlowHistoryArchiveService 归档服务
  */
 @Slf4j
 @Tag(name = "流程历史归档")

@@ -34,12 +34,24 @@ import com.njydsz.cronjob.domain.vo.StringVO;
  * 生态连接器 Controller（P2-3）。
  *
  * <p>提供与外部调度系统的集成接口：测试连接、导入任务、导出任务、查询远程任务。
+ * 通过 {@link JobConnector} SPI 接入不同的外部调度系统（XXL-Job、PowerJob、Elastic-Job 等）。
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>{@link #types} - 查询已注册的连接器类型（用于下拉选择器）</li>
+ *   <li>{@link #testConnection} - 测试与外部系统的连通性</li>
+ *   <li>{@link #listRemoteTasks} - 查询外部系统中的任务列表（不导入）</li>
+ *   <li>{@link #importTasks} - 从外部系统导入任务到本系统</li>
+ *   <li>{@link #exportTasks} - 将本系统任务导出到外部系统</li>
+ * </ul>
+ *
+ * <p>所有连接器由 {@link ConnectorManager} 统一管理，通过类型字符串路由。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-@Tag(name = "生态连接器")
+@Tag(name = "生态连接器", description = "外部调度系统集成：测试连接、导入/导出、查询远程任务")
 @RestController
 @RequestMapping("/api/v1/cronjob/connector")
 @RequiredArgsConstructor
@@ -49,6 +61,10 @@ public class ConnectorController {
 
     /**
      * 获取所有已注册的连接器类型。
+     *
+     * <p>前端连接器下拉选择器使用，返回所有可用的连接器类型字符串（XXL_JOB / POWER_JOB 等）。
+     *
+     * @return 已注册连接器类型列表
      */
     @Operation(summary = "查询已注册连接器类型")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
@@ -59,6 +75,13 @@ public class ConnectorController {
 
     /**
      * 测试连接器连接。
+     *
+     * <p>使用给定的连接配置（endpoint/认证信息等）尝试连接外部系统，验证配置正确性。
+     * 不会修改任何数据，用于导入/导出前的连通性验证。
+     *
+     * @param dto  连接配置（endpoint/authType/username/password/accessKey/secretKey 等）
+     * @param type 连接器类型（XXL_JOB / POWER_JOB / ELASTIC_JOB 等）
+     * @return true=连接成功，false=连接失败
      */
     @Operation(summary = "测试连接")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
@@ -77,6 +100,12 @@ public class ConnectorController {
 
     /**
      * 查询外部系统中的任务列表（不导入）。
+     *
+     * <p>仅查询远端任务列表并返回，供前端预览；用户可勾选后调用 {@link #importTasks} 真正导入。
+     *
+     * @param dto  连接配置
+     * @param type 连接器类型
+     * @return 远程任务列表（含名称/调度规则/Handler 等）
      */
     @Operation(summary = "查询远程任务列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
@@ -95,6 +124,13 @@ public class ConnectorController {
 
     /**
      * 从外部系统导入任务。
+     *
+     * <p>调用对应连接器的 importTasks 方法，将外部系统的任务定义转换为本系统任务并持久化。
+     * 已存在（jobKey 相同）的任务会被覆盖更新（upsert 语义）。
+     *
+     * @param dto  连接配置
+     * @param type 连接器类型
+     * @return 导入成功的任务列表
      */
     @Operation(summary = "导入任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_CREATE)
@@ -113,6 +149,12 @@ public class ConnectorController {
 
     /**
      * 导出任务到外部系统。
+     *
+     * <p>将本系统的任务列表（{@link ConnectorTaskInfo} 格式）通过连接器推送到外部调度系统。
+     * 返回导出结果（含成功数、失败明细等）。
+     *
+     * @param request 导出请求（含 type/config/tasks）
+     * @return 导出结果
      */
     @Operation(summary = "导出任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)

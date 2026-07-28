@@ -34,14 +34,24 @@ import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 /**
- * 任务执行统计 Controller（P2-3 执行历史趋势可视化）。
+ * 任务执行统计 Controller（P2-3 执行历史趋势可视化 + P1-2 监控仪表盘）。
  *
- * <p>提供每日统计趋势查询与区间汇总查询，供前端折线图/汇总卡片展示。
+ * <p>提供任务执行统计的多维度查询接口，供前端可视化展示：
+ * <ul>
+ *   <li>趋势图：每日统计（{@link #daily}）</li>
+ *   <li>汇总卡：日期范围汇总（{@link #summary}）</li>
+ *   <li>仪表盘：全局运行状态（{@link #dashboard}）</li>
+ *   <li>失败列表：最近失败任务 Top N（{@link #recentFailures}）</li>
+ *   <li>热力图：24 小时执行分布（{@link #heatmap}）</li>
+ * </ul>
+ *
+ * <p>数据源：{@code ydsz_job_daily_stats}（每日聚合表，由 {@code DailyStatsAggregator} 周期性生成）
+ * + {@code ydsz_job_log}（原始日志，用于实时统计）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Tag(name = "任务执行统计")
+@Tag(name = "任务执行统计", description = "每日趋势、范围汇总、仪表盘、热力图、失败列表")
 @RestController
 @RequestMapping("/api/v1/cronjob/stats")
 @RequiredArgsConstructor
@@ -58,6 +68,9 @@ public class JobStatsController {
 
     /**
      * 查询指定任务的每日统计（趋势图数据源）。
+     *
+     * <p>按日期升序返回每日统计数据（触发/成功/失败/超时/平均耗时），是折线图/柱状图的标准数据源。
+     * 数据由 {@code DailyStatsAggregator} 在每日 0 点批量生成（滞后一天）。
      *
      * @param jobId     任务 ID
      * @param startDate 起始日期（含，格式 yyyy-MM-dd）
@@ -77,7 +90,11 @@ public class JobStatsController {
     /**
      * 查询指定任务在日期范围内的汇总统计。
      *
-     * <p>汇总字段：总触发次数 / 总成功次数 / 总失败次数 / 平均耗时（毫秒）。
+     * <p>对日期范围内的每日统计做累加（avgDurationMs 用算术平均），得到区间汇总：
+     * <ul>
+     *   <li>总触发次数 / 总成功次数 / 总失败次数 / 总超时次数</li>
+     *   <li>平均耗时（毫秒，所有日期的算术平均）</li>
+     * </ul>
      *
      * @param jobId     任务 ID
      * @param startDate 起始日期（含）
@@ -186,7 +203,10 @@ public class JobStatsController {
     /**
      * P1-2: 获取最近失败任务列表。
      *
-     * @param limit 返回条数（默认 10）
+     * <p>按 start_time 倒序返回最近 FAILED 状态的执行日志。limit 默认 10，最大 100。
+     * 配合前端"故障快速定位"面板使用。
+     *
+     * @param limit 返回条数（默认 10，最大 100）
      * @return 失败日志列表
      */
     @Operation(summary = "最近失败任务")
@@ -203,10 +223,11 @@ public class JobStatsController {
     /**
      * P1-2: 获取任务执行热力图数据。
      *
-     * <p>按小时聚合统计任务执行分布，用于识别高峰时段。
+     * <p>按小时聚合统计任务执行分布（0-23 共 24 个时段），用于识别业务高峰时段。
+     * 缺省查询当天。
      *
      * @param date 查询日期（默认今天）
-     * @return 24 小时执行分布
+     * @return 24 小时执行分布 [{hour, count}, ...]
      */
     @Operation(summary = "执行热力图（按小时分布）")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)

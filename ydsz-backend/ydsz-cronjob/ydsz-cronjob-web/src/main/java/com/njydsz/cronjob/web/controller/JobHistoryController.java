@@ -28,10 +28,22 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  *
  * <p>提供任务配置历史版本的查询、详情、回滚、对比等 HTTP 接口。
  *
+ * <h3>版本机制</h3>
+ * 每次任务配置变更（create/update/import/rollback）都会写入 {@code ydsz_job_history} 快照，
+ * 形成完整的版本谱系。回滚不删除中间版本，而是基于历史版本创建新版本。
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>{@link #versions} - 获取任务版本列表（按版本号降序）</li>
+ *   <li>{@link #detail} - 获取指定版本完整配置</li>
+ *   <li>{@link #rollback} - 回滚到指定版本</li>
+ *   <li>{@link #compare} - 对比两个版本的差异字段</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Tag(name = "任务配置历史版本")
+@Tag(name = "任务配置历史版本", description = "版本列表、版本详情、回滚、版本对比")
 @RestController
 @RequestMapping("/api/v1/cronjob/history")
 @RequiredArgsConstructor
@@ -43,8 +55,10 @@ public class JobHistoryController {
     /**
      * 获取指定任务的版本列表（按版本号降序）。
      *
+     * <p>用于版本管理 UI：用户选择某个历史版本 → 调用 {@link #detail} 或 {@link #rollback}。
+     *
      * @param jobId 任务 ID
-     * @return 统一响应结果，包含历史版本列表
+     * @return 历史版本列表（含 version/createdBy/createdAt/changeReason）
      */
     @Operation(summary = "获取任务版本列表")
     @GetMapping("/versions")
@@ -55,9 +69,11 @@ public class JobHistoryController {
     /**
      * 获取指定任务的指定历史版本详情。
      *
+     * <p>返回完整任务配置（含 cron/handler/params/status 等），与当前版本对比即可识别差异。
+     *
      * @param jobId   任务 ID
      * @param version 版本号
-     * @return 统一响应结果，包含历史版本记录
+     * @return 历史版本记录
      */
     @Operation(summary = "获取指定版本详情")
     @GetMapping("/detail")
@@ -69,9 +85,12 @@ public class JobHistoryController {
     /**
      * 回滚到指定版本。
      *
+     * <p>基于目标历史版本创建新版本（version = current + 1），保留完整版本谱系。
+     * 已运行的实例继续按其启动时的配置执行；新触发的实例使用新版本。
+     *
      * @param jobId   任务 ID
      * @param version 目标版本号
-     * @return 统一响应结果，包含回滚后的任务定义
+     * @return 回滚后的任务定义
      */
     @Operation(summary = "回滚到指定版本")
     @Idempotent(key = "ydsz:cronjob:JobHistoryController:rollback:lock", ttlSeconds = 5)
@@ -85,10 +104,13 @@ public class JobHistoryController {
     /**
      * 对比两个版本的差异。
      *
+     * <p>深度比较两个版本的字段差异，返回新增/修改/删除的字段列表，
+     * 供前端"版本对比"对话框使用。版本顺序不影响结果。
+     *
      * @param jobId 任务 ID
      * @param v1    旧版本号
      * @param v2    新版本号
-     * @return 统一响应结果，包含差异字段列表
+     * @return 差异字段列表（含 field/oldValue/newValue/changeType）
      */
     @Operation(summary = "对比两个版本差异")
     @GetMapping("/compare")

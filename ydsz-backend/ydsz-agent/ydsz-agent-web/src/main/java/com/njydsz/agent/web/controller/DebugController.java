@@ -29,14 +29,33 @@ import com.njydsz.agent.domain.vo.AgentTraceDetailDTOVO;
 import com.njydsz.agent.domain.vo.AgentTraceListDTOVO;
 
 /**
- * Agent 调试 REST API
+ * Agent 调试 REST API Controller。
  *
- * <p>提供执行链路查询和重放接口，用于开发调试和问题排查。
+ * <p>提供 Agent 执行链路（Trace）的查询和重放接口，是开发调试和问题排查的关键工具：
  * <ul>
- *   <li>{@code GET /agent/debug/traces} — 列出最近执行链路</li>
- *   <li>{@code GET /agent/debug/trace/{traceId}} — 查询链路详情</li>
- *   <li>{@code POST /agent/debug/trace/{traceId}/replay} — 重放指定链路</li>
+ *   <li>{@code GET /agent/debug/traces} - 列出最近执行链路</li>
+ *   <li>{@code GET /agent/debug/trace/{traceId}} - 查询链路详情（含步骤摘要）</li>
+ *   <li>{@code POST /agent/debug/trace/{traceId}/replay} - 重放指定链路（从历史输入重新执行）</li>
  * </ul>
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>链路列表查询：返回最近 N 条链路元数据（traceId / conversationId / agentId / status / 耗时）</li>
+ *   <li>链路详情查询：返回完整执行步骤的可读摘要（步骤编号 / 步骤类型 / 步骤内容）</li>
+ *   <li>链路重放：从历史链路中提取原始输入（conversationId + userInput + agentId）重新执行 Agent</li>
+ * </ul>
+ *
+ * <h3>安全与稳定性</h3>
+ * <ul>
+ *   <li>重放接口加 {@link Idempotent} 防重（5s TTL）</li>
+ *   <li>重放接口加 {@link RateLimit} 限流（50 QPS）</li>
+ *   <li>重放操作加 {@link Audit} 异步落库审计日志（含 traceId 便于追溯）</li>
+ *   <li>查询接口不写操作，仅依赖链路存储层的访问控制</li>
+ * </ul>
+ *
+ * <h3>使用建议</h3>
+ * 调试链路存储在内存（{@code InMemoryTraceRecorder}），重启后丢失；
+     * 生产环境建议接入持久化存储（如 ClickHouse / ES），并配置合理的保留周期。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -47,7 +66,7 @@ public class DebugController {
 
     private static final Logger log = LoggerFactory.getLogger(DebugController.class);
 
-    /** Agent 调试服务 */
+    /** Agent 调试服务（封装链路查询 + 重放能力） */
     private final AgentDebuggerService agentDebuggerService;
 
     public DebugController(AgentDebuggerService agentDebuggerService) {
@@ -55,10 +74,13 @@ public class DebugController {
     }
 
     /**
-     * 列出最近执行链路
+     * 列出最近执行链路。
      *
-     * @param limit 最大数量，默认 20
-     * @return 链路列表
+     * <p>按 trace 开始时间倒序返回最近 {@code limit} 条链路元数据；每条链路额外统计其步骤数
+     * （{@code stepCount}）便于前端按复杂度排序展示。
+     *
+     * @param limit 最大数量（默认 20，建议不超过 100）
+     * @return 统一响应结果，data 为 {@link AgentTraceListDTOVO} 列表
      */
     @GetMapping("/traces")
     public BaseResponse<List<AgentTraceListDTOVO>> listTraces(
@@ -81,10 +103,13 @@ public class DebugController {
     }
 
     /**
-     * 查询链路详情
+     * 查询链路详情。
+     *
+     * <p>返回指定 traceId 的完整执行步骤摘要（{@code [stepIndex] stepType: content} 多行格式），
+     * 供前端"链路详情"面板渲染。
      *
      * @param traceId 链路 ID
-     * @return 链路详情（含步骤摘要）
+     * @return 统一响应结果，data 为 {@link AgentTraceDetailDTOVO}（含 traceId / agentType / 步骤摘要 plan）
      */
     @GetMapping("/trace/{traceId}")
     public BaseResponse<AgentTraceDetailDTOVO> getTrace(@PathVariable String traceId) {
@@ -98,13 +123,21 @@ public class DebugController {
     }
 
     /**
-     * 重放指定链路
+     * 重放指定链路。
      *
-     * <p>从链路元数据中提取原始 conversationId 和 agentType，
-     * 从第一个步骤中提取 userInput，重新执行 Agent。
+     * <p>从链路元数据中提取原始 conversationId 和 agentId，从第一个步骤中提取 userInput，
+     * 调用 {@link AgentDebuggerService#replay} 重新执行 Agent，返回新的响应内容。
+     *
+     * <p>典型场景：复现历史对话 / 调试失败原因 / A/B 对比新旧版本的执行差异。
+     *
+     * <p>错误情况：
+     * <ul>
+     *   <li>链路不存在 → 返回 {@code error(TRACE_NOT_FOUND)}</li>
+     *   <li>链路无步骤记录 → 返回 {@code error(TRACE_EMPTY)}</li>
+     * </ul>
      *
      * @param traceId 链路 ID
-     * @return 重放结果内容
+     * @return 统一响应结果，data 为重放后的 Agent 响应内容（字符串）
      */
     @Audit(module = "调试管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'replayTrace: ' + #traceId")
@@ -121,6 +154,7 @@ public class DebugController {
         if (steps.isEmpty()) {
             return BaseResponse.error("TRACE_EMPTY", "链路无步骤记录，无法提取重放输入: " + traceId);
         }
+        // 从链路第一个步骤提取原始 userInput，从元数据提取 conversationId / agentType
         String userInput = steps.get(0).getContent();
         String conversationId = meta.getConversationId();
         String agentType = meta.getAgentId();

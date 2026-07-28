@@ -5,76 +5,46 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
 
 /**
- * API 版本路由配置属性
+ * API 版本管理配置属性。
  *
- * <p>控制 API 版本路由的行为，支持 URL 路径模式和 Accept 头模式。
+ * <p>P3-1: API 版本管理策略 — 支持版本演进、废弃管理和兼容性控制。
  *
- * <p><b>配置示例：</b>
- * <pre>
+ * <h3>配置示例</h3>
+ * <pre>{@code
  * ydsz:
- *   web:
- *     api-version:
- *       enabled: true
- *       default-version: "1.0"
- *       header-name: "X-API-Version"
- *       url-pattern: "/v{version}/**"
- * </pre>
+ *   api:
+ *     version:
+ *       current-version: v1
+ *       deprecated-versions:
+ *         - v0
+ *       sunset-headers: true
+ *       sunset-duration-days: 90
+ * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-@ConfigurationProperties(prefix = "ydsz.web.api-version")
+@ConfigurationProperties(prefix = "ydsz.api.version")
 public class ApiVersionProperties {
 
     /**
-     * 是否启用 API 版本路由（默认 true）
+     * 当前 API 版本（如 "v1"）。
      */
-    private boolean enabled = true;
+    private String currentVersion = "v1";
 
     /**
-     * 默认 API 版本（当请求未指定版本时使用）
+     * 已废弃的版本列表（这些版本的请求将返回 410 Gone）。
      */
-    private String defaultVersion = "1.0";
+    private java.util.List<String> deprecatedVersions = java.util.List.of();
 
     /**
-     * 版本请求头名称（用于 Accept 头模式）
+     * 是否在响应头中添加 Deprecation/Sunset 头（RFC 8594）。
      */
-    private String headerName = "X-API-Version";
+    private boolean sunsetHeaders = true;
 
     /**
-     * URL 路径模式（用于 URL 路径模式）
-     * <p>支持占位符 {version}，如 /v{version}/**
+     * 废弃过渡期天数（超过此天数后版本将被移除）。
      */
-    private String urlPattern = "/v{version}/**";
-
-    /**
-     * 版本路由策略
-     * <ul>
-     *   <li>URL - 基于 URL 路径（/v1/api/users）</li>
-     *   <li>HEADER - 基于请求头（X-API-Version: 1.0）</li>
-     *   <li>ACCEPT - 基于 Accept 头（application/vnd.ydsz.v1+json）</li>
-     * </ul>
-     */
-    private VersionStrategy strategy = VersionStrategy.URL;
-
-    /**
-     * 版本路由策略枚举
-     */
-    public enum VersionStrategy {
-        /**
-         * 基于 URL 路径（/v1/api/users）
-         */
-        URL,
-
-        /**
-         * 基于请求头（X-API-Version: 1.0）
-         */
-        HEADER,
-
-        /**
-         * 基于 Accept 头（application/vnd.ydsz.v1+json）
-         */
-        ACCEPT
-    }
+    private int sunsetDurationDays = 90;
 }

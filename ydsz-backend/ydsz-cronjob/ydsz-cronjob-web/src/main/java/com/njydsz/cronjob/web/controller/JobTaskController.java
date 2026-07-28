@@ -28,13 +28,22 @@ import java.util.Map;
 /**
  * MapReduce 子任务查询 Controller（P0-4）。
  *
- * <p>提供按 logId 查询子任务列表、分页查询子任务等 HTTP 接口，
+ * <p>提供按 logId 查询子任务列表、分页查询子任务、查询子任务执行进度等 HTTP 接口，
  * 供前端展示 MapReduce 任务的子任务执行明细。
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>{@link #list} - 查询指定执行日志的全部子任务（无分页）</li>
+ *   <li>{@link #page} - 分页查询子任务（按 created_at 升序）</li>
+ *   <li>{@link #progress} - 查询子任务执行进度（各状态数量汇总 + 进度百分比）</li>
+ * </ul>
+ *
+ * <p>注意：子任务分片策略由 {@code MapTaskExecutor} 决定，本 Controller 仅负责查询。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Tag(name = "MapReduce 子任务查询")
+@Tag(name = "MapReduce 子任务查询", description = "子任务列表/分页/进度汇总")
 @RestController
 @RequestMapping("/api/v1/cronjob/task")
 @RequiredArgsConstructor
@@ -47,8 +56,11 @@ public class JobTaskController {
     /**
      * 查询指定执行日志的子任务列表。
      *
+     * <p>无分页，适用于子任务数量较少的场景（建议 &lt;1000 条）；
+     * 大量子任务请使用 {@link #page} 分页查询。
+     *
      * @param logId 执行日志 ID
-     * @return 统一响应结果，包含子任务列表
+     * @return 子任务列表（按 created_at 升序）
      */
     @Operation(summary = "查询子任务列表")
     @GetMapping("/list")
@@ -59,10 +71,13 @@ public class JobTaskController {
     /**
      * 分页查询子任务。
      *
+     * <p>按 created_at 升序排列，最先生成的子任务排在前面（便于复现执行顺序）。
+     * 软删除的子任务（{@code deleted=1}）会被过滤。
+     *
      * @param logId 执行日志 ID
-     * @param page  页码（默认 1）
-     * @param size  每页条数（默认 20）
-     * @return 统一响应结果，包含子任务分页数据
+     * @param page  页码（默认 1，最小 1）
+     * @param size  每页条数（默认 20，最大 100）
+     * @return 子任务分页数据
      */
     @Operation(summary = "分页查询子任务")
     @GetMapping("/page")
@@ -86,10 +101,11 @@ public class JobTaskController {
      * P0-A3: 查询子任务执行进度。
      *
      * <p>对标 XXL-Job 子任务进度页和 PowerJob InstanceDetail.taskList，
-     * 返回各状态子任务数量汇总，便于前端渲染进度条。
+     * 返回各状态子任务数量汇总（total/pending/running/success/failed）以及完成百分比，
+     * 便于前端渲染进度条。
      *
      * @param logId 执行日志 ID
-     * @return 进度汇总（total/pending/running/success/failed）
+     * @return 进度汇总（total/pending/running/success/failed/progressPercent）
      */
     @Operation(summary = "查询子任务执行进度")
     @GetMapping("/progress")

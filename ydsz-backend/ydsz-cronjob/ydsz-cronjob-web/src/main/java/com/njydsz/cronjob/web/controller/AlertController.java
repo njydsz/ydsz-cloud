@@ -33,12 +33,28 @@ import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;
 /**
  * 告警规则管理 Controller（P5 告警 + 监控）。
  *
- * <p>提供告警规则的增删改查 API 与告警日志查询 API。
+ * <p>提供任务告警的全生命周期管理 REST API：
+ * <ul>
+ *   <li>规则 CRUD：创建 / 更新 / 删除 / 详情 / 列表</li>
+ *   <li>规则状态：启用 / 禁用</li>
+ *   <li>告警日志：按任务 ID + 时间范围查询告警历史</li>
+ * </ul>
+ *
+ * <h3>告警通道</h3>
+ * 告警通过 {@link AlertChannel} SPI 派发，支持邮件/短信/企业微信/钉钉/飞书/Webhook。
+ * 告警冷却（cooldown）防止短时间内重复轰炸。
+ *
+ * <h3>安全与稳定性</h3>
+ * <ul>
+ *   <li>所有写操作 {@link Idempotent} 防重（5s TTL）</li>
+ *   <li>权限按告警维度细分（CRONJOB_ALERT_CREATE/UPDATE/DELETE/VIEW）</li>
+ *   <li>所有变更 {@link Audit} 异步落库审计日志</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Tag(name = "任务告警规则")
+@Tag(name = "任务告警规则", description = "告警规则 CRUD、启停、告警日志查询")
 @RestController
 @RequestMapping("/api/v1/cronjob/alert")
 @RequiredArgsConstructor
@@ -50,8 +66,11 @@ public class AlertController {
     /**
      * 创建告警规则。
      *
+     * <p>为指定任务/任务组绑定告警规则。规则匹配后由 {@code AlertScanner} 周期性扫描触发告警。
+     * 同一 jobId+alertType 只能有一条规则（唯一索引约束）。
+     *
      * @param dto 告警规则保存请求体
-     * @return 统一响应结果，包含新增规则 ID
+     * @return 新规则 ID
      */
     @Operation(summary = "创建告警规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_CREATE)
@@ -65,6 +84,8 @@ public class AlertController {
 
     /**
      * 更新告警规则。
+     *
+     * <p>修改阈值/通道/接收人等配置。规则 ID 不可变更；变更后下一次扫描立即生效。
      *
      * @param id  规则 ID
      * @param dto 告警规则保存请求体
@@ -84,6 +105,8 @@ public class AlertController {
     /**
      * 删除告警规则。
      *
+     * <p>逻辑删除（status 置为 DELETED）。历史告警日志保留，仅规则不再生效。
+     *
      * @param id 规则 ID
      * @return 统一响应结果
      */
@@ -102,7 +125,7 @@ public class AlertController {
      * 查询告警规则详情。
      *
      * @param id 规则 ID
-     * @return 统一响应结果，包含告警规则详情
+     * @return 告警规则详情 VO
      */
     @Operation(summary = "查询告警规则详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
@@ -114,7 +137,9 @@ public class AlertController {
     /**
      * 查询全部告警规则。
      *
-     * @return 统一响应结果，包含告警规则列表
+     * <p>用于规则管理页面与规则下拉选择器。
+     *
+     * @return 告警规则列表
      */
     @Operation(summary = "查询全部告警规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
@@ -125,6 +150,8 @@ public class AlertController {
 
     /**
      * 启用或禁用告警规则。
+     *
+     * <p>提供"软启停"能力，避免频繁增删。enabled=1 启用，enabled=0 禁用。
      *
      * @param id      规则 ID
      * @param enabled 启用状态（1=启用，0=禁用）
@@ -144,9 +171,12 @@ public class AlertController {
     /**
      * 查询任务告警历史日志。
      *
+     * <p>按告警时间倒序返回所有历史告警记录（含发送状态、通道、接收人、错误信息等）。
+     * 配合前端告警面板用于排查"为什么没收到告警"等问题。
+     *
      * @param jobId 任务 ID
      * @param since 起始时间（可选，ISO 8601 格式）
-     * @return 统一响应结果，包含告警日志列表
+     * @return 告警日志列表
      */
     @Operation(summary = "查询任务告警历史")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)

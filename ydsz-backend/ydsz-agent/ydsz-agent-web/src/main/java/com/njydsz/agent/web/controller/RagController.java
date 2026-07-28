@@ -28,14 +28,35 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
- * RAG REST API
+ * RAG 知识库管理 REST API Controller。
  *
- * <p>提供知识库管理和检索接口：
+ * <p>提供 RAG（Retrieval-Augmented Generation）知识库管理和检索能力，是 Agent 增强回答准确性的关键组件：
  * <ul>
- *   <li>{@code POST /agent/rag/ingest} — 摄入文档到知识库</li>
- *   <li>{@code POST /agent/rag/search} — 向量相似度检索</li>
- *   <li>{@code DELETE /agent/rag/documents/{documentId}} — 删除文档索引</li>
- *   <li>{@code GET /agent/rag/stats} — 获取向量存储统计</li>
+ *   <li>{@code POST /agent/rag/ingest} - 摄入文档到知识库（自动分块 + 向量化）</li>
+ *   <li>{@code POST /agent/rag/search} - 向量相似度检索（返回 TopK 匹配 + 引用 + 上下文）</li>
+ *   <li>{@code DELETE /agent/rag/documents/{documentId}} - 删除指定文档的所有索引</li>
+ *   <li>{@code GET /agent/rag/stats} - 获取向量存储统计（文档数 / chunk 数 / 容量等）</li>
+ * </ul>
+ *
+ * <h3>核心流程</h3>
+ * <pre>
+ *   文档摄入：原文 → 分块（chunking）→ Embedding → 向量存储
+ *   检索：Query → Embedding → 向量相似度（cosine/euclidean）→ TopK chunk + 引用
+ * </pre>
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>文档摄入：支持任意长度文档，自动按 token 长度切分 chunk</li>
+ *   <li>相似度检索：支持自定义 topK / minScore / includeContext</li>
+ *   <li>引用追溯：返回 {@code Citation} 列表（含 documentId / chunkId / score / 文本片段）</li>
+ *   <li>上下文构建：将 TopK chunk 拼装为 LLM 可消费的 context 字符串</li>
+ * </ul>
+ *
+ * <h3>安全与稳定性</h3>
+ * <ul>
+ *   <li>所有写操作均加 {@link Idempotent} 防重（5s TTL）</li>
+ *   <li>所有写操作均加 {@link Audit} 异步落库审计日志</li>
+ *   <li>删除接口加 {@link RateLimit} 限流（50 QPS）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -47,9 +68,9 @@ public class RagController {
 
     private static final Logger log = LoggerFactory.getLogger(RagController.class);
 
-    /** RAG 检索服务 */
+    /** RAG 检索服务（封装向量相似度检索 + 引用构建 + 上下文拼装） */
     private final RagService ragService;
-    /** 文档摄入服务 */
+    /** 文档摄入服务（封装分块 + Embedding + 写入向量库） */
     private final DocumentIngestionService ingestionService;
 
     public RagController(RagService ragService, DocumentIngestionService ingestionService) {
@@ -58,10 +79,21 @@ public class RagController {
     }
 
     /**
-     * 摄入文档
+     * 摄入文档到知识库。
+     *
+     * <p>处理流程：
+     * <ol>
+     *   <li>对 documentId 对应的原文做分块（按 token 长度切分）</li>
+     *   <li>对每个 chunk 调 Embedding 模型生成向量</li>
+     *   <li>将 chunk + vector 写入向量存储（pgvector / Milvus 等）</li>
+     *   <li>返回 chunk 数量，便于前端展示"已建立 X 条索引"</li>
+     * </ol>
+     *
+     * @param request 文档摄入请求（documentId / documentTitle / content / source）
+     * @return 统一响应结果，data 为 {@code {documentId, chunkCount, status}} Map
      */
-    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
-    @Idempotent(key = "ydsz:agent:RagController:write:lock", ttlSeconds = 5)
+    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'ingest'")
+    @Idempotent(key = "ydsz:agent:RagController:ingest:lock", ttlSeconds = 5)
     @PostMapping("/ingest")
     public BaseResponse<Map<String, Object>> ingest(@Valid @RequestBody DocumentIngestDTO request) {
         log.info("[RAG-API] 摄入文档: docId={}, title={}",
@@ -78,17 +110,32 @@ public class RagController {
     }
 
     /**
-     * 向量相似度检索
+     * 向量相似度检索。
+     *
+     * <p>处理流程：
+     * <ol>
+     *   <li>对 query 做 Embedding 得到查询向量</li>
+     *   <li>在向量库中按 cosine 相似度检索 TopK chunk</li>
+     *   <li>过滤 score &lt; minScore 的 chunk（默认 0.7）</li>
+     *   <li>构建引用列表（{@code Citation}）和上下文（{@code context}）</li>
+     * </ol>
+     *
+     * @param request RAG 检索请求（query / topK / minScore / includeContext）
+     * @return 统一响应结果，data 为 {@code {query, resultCount, citations, context}} Map
      */
-    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'search'")
     @PostMapping("/search")
     public BaseResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
+        // 参数默认值兜底：topK=5 / minScore=0.7 / includeContext=true
         int topK = request.getTopK() != null ? request.getTopK() : 5;
         double minScore = request.getMinScore() != null ? request.getMinScore() : 0.7;
         boolean includeContext = request.getIncludeContext() == null || request.getIncludeContext();
 
+        // 1. 检索 TopK chunk
         List<TextChunk> chunks = ragService.retrieve(request.getQuery(), topK, minScore);
+        // 2. 构建引用列表
         List<RagService.Citation> citations = ragService.getCitations(chunks);
+        // 3. 拼装上下文（可选）
         String context = includeContext ? ragService.buildContext(chunks) : null;
 
         return BaseResponse.success(Map.of(
@@ -99,19 +146,31 @@ public class RagController {
     }
 
     /**
-     * 删除文档索引
+     * 删除指定文档的所有索引。
+     *
+     * <p>从向量库中删除 documentId 对应的全部 chunk（按 document_id 字段过滤），
+     * 通常用于文档下线、内容修订后的索引重建。注意：此操作不可逆，删除后无法恢复。
+     *
+     * @param documentId 文档 ID
+     * @return 统一响应结果
      */
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteDocument'")
     @Idempotent(key = "ydsz:agent:RagController:deleteDocument:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
     @DeleteMapping("/documents/{documentId}")
     public BaseResponse<Void> deleteDocument(@PathVariable String documentId) {
+        log.info("[RAG-API] 删除文档索引: documentId={}", documentId);
         ingestionService.delete(documentId);
         return BaseResponse.success();
     }
 
     /**
-     * 获取向量存储统计
+     * 获取向量存储统计。
+     *
+     * <p>返回向量库的容量/使用情况（文档总数 / chunk 总数 / 存储占用等），
+     * 供运维监控和容量规划使用。
+     *
+     * @return 统一响应结果，data 为 {@link DocumentIngestionService.VectorStoreStats}
      */
     @GetMapping("/stats")
     public BaseResponse<DocumentIngestionService.VectorStoreStats> stats() {

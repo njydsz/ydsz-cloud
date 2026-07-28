@@ -17,10 +17,39 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 条件表达式可视化编辑器 Controller（P2-1）。
+ * 条件表达式可视化编辑器 Controller（P2-1 / P1-4）
+ *
+ * <p>提供流程网关条件表达式的<b>可视化编辑与调试</b>能力。流程设计器中
+ * ExclusiveGateway / InclusiveGateway 的跳转条件既可由后端生成（基于结构化 JSON），
+ * 也可由业务方手动编写（基于表达式字符串），本 Controller 在两种表达形式之间架起桥梁。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/workflow/conditionExpr/**}
+ *
+ * <p><b>核心能力：</b>
+ * <ul>
+ *   <li><b>结构化 ↔ 表达式</b>：{@code POST /build} 结构化 JSON → 表达式字符串；
+ *       {@code POST /parse} 表达式字符串 → 结构化 JSON（前端可视化编辑器双向同步）</li>
+ *   <li><b>语法校验</b>：{@code POST /validate} 校验表达式语法，返回结构化错误位置</li>
+ *   <li><b>元数据查询</b>：{@code GET /operators} 操作符列表 / {@code GET /valueTypes} 值类型列表 /
+ *       {@code GET /templates} 条件模板 / {@code GET /variables/{definitionId}} 流程可用变量</li>
+ *   <li><b>执行预览</b>：{@code POST /preview} 在前端编辑器中实时预览表达式执行结果</li>
+ * </ul>
+ *
+ * <p><b>支持的表达式引擎：</b>AVIATOR（默认，高性能轻量级求值器，{@code ydsz.workflow.engine.condition.default=AVIATOR}）、
+ * GROOVY（动态脚本，重量级但表达力强，需开启 {@code ydsz.workflow.engine.condition.allow-groovy=true}）。
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口（build/parse/validate）启用 {@link Idempotent} 5s 防重</li>
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流</li>
+ *   <li>表达式在 Service 层使用白名单操作符 / 函数，禁止运行时 new Java 对象 / 调用任意方法</li>
+ *   <li>GROOVY 引擎需在配置中显式开启，避免被误用为代码执行沙箱</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.workflow.server.service.FlowConditionExprService 条件表达式服务
+ * @see com.njydsz.workflow.server.engine.JsonHelper JSON 转换助手
  */
 @Slf4j
 @RestController

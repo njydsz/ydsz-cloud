@@ -40,6 +40,7 @@ import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.core.NotifyServiceImpl;
 import com.njydsz.common.notify.core.PersistentNotifyRetryQueue;
 import com.njydsz.common.notify.core.TransactionalNotifyPublisher;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.notify.dedup.NotifyDedupService;
 import com.njydsz.common.notify.fallback.NotifyFallbackManager;
 import com.njydsz.common.notify.health.NotifyHealthIndicator;
@@ -486,5 +487,14 @@ public class NotifyConfiguration {
 		if (notifyServiceInstance != null) {
 			notifyServiceInstance.flushAggregatedMessages();
 		}
+	}
+
+	// ==================== 通知辅助类 ====================
+
+	@Bean
+	@ConditionalOnMissingBean(NotifyHelper.class)
+	public NotifyHelper notifyHelper(NotifyService notifyService) {
+		log.info("[NotifyConfiguration] NotifyHelper bean registered");
+		return new NotifyHelper(notifyService);
 	}
 }
