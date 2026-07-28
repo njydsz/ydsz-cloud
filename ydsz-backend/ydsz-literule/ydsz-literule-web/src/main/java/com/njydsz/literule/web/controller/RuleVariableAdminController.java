@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+package com.njydsz.literule.web.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;

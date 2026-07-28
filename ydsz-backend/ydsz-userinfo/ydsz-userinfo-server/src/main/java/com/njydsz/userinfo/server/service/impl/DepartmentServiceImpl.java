@@ -12,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.BeanUpdateUtil;
 
-import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
+import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
@@ -108,14 +109,14 @@ public class DepartmentServiceImpl implements DepartmentService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String create(DepartmentSaveDTO dto) {
+    public String create(DepartmentPostDTO dto) {
         LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Department::getDeptCode, dto.getDeptCode());
         if (departmentMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_CODE_DUPLICATE);
         }
 
-        Department entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
+        Department entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
@@ -135,7 +136,7 @@ public class DepartmentServiceImpl implements DepartmentService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean update(DepartmentSaveDTO dto) {
+    public boolean update(DepartmentPutDTO dto) {
         Department entity = departmentMapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);

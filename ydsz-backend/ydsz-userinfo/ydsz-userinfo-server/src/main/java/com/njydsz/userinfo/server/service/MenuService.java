@@ -3,7 +3,8 @@ package com.njydsz.userinfo.server.service;
 import java.util.List;
 
 import com.njydsz.common.domain.service.BaseCrudService;
-import com.njydsz.userinfo.domain.dto.MenuSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
+import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
 import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;

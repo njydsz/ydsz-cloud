@@ -20,7 +20,6 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
-import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.server.service.RoleService;
 
@@ -137,7 +136,7 @@ public class RoleController {
     @PostMapping
     @Operation(summary = "创建角色")
     public BaseResponse<String> create(@Valid @RequestBody RolePostDTO dto) {
-        return BaseResponse.success(service.create(toSaveDTO(dto)));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -157,7 +156,7 @@ public class RoleController {
     @PutMapping
     @Operation(summary = "更新角色")
     public BaseResponse<Boolean> update(@Valid @RequestBody RolePutDTO dto) {
-        return BaseResponse.success(service.update(toSaveDTO(dto)));
+        return BaseResponse.success(service.update(dto));
     }
 
     /**
@@ -219,50 +218,5 @@ public class RoleController {
     @Operation(summary = "查询角色权限 ID 列表")
     public BaseResponse<List<String>> getRolePermissions(@PathVariable String roleId) {
         return BaseResponse.success(service.getRolePermissionIds(roleId));
-    }
-
-    /**
-     * 将 PostDTO 转换为 SaveDTO
-     *
-     * <p>PostDTO 仅用于 HTTP 创建接口，转换为内部统一的 {@link RoleSaveDTO} 后传递给 Service 层。
-     * 此转换隔离了 HTTP 层 DTO 和业务层 DTO，便于 Service 层复用。
-     *
-     * @param dto Post DTO
-     * @return 内部 Save DTO（不含 ID，由 Service 自动生成）
-     */
-    private RoleSaveDTO toSaveDTO(RolePostDTO dto) {
-        RoleSaveDTO saveDTO = new RoleSaveDTO();
-        saveDTO.setRoleCode(dto.getRoleCode());
-        saveDTO.setRoleName(dto.getRoleName());
-        saveDTO.setDescription(dto.getDescription());
-        saveDTO.setSortOrder(dto.getSortOrder());
-        saveDTO.setDataScope(dto.getDataScope());
-        saveDTO.setStatus(dto.getStatus());
-        saveDTO.setBuiltIn(dto.getBuiltIn());
-        saveDTO.setTenantId(dto.getTenantId());
-        return saveDTO;
-    }
-
-    /**
-     * 将 PutDTO 转换为 SaveDTO
-     *
-     * <p>PutDTO 用于 HTTP 更新接口，包含必填的 ID 字段。
-     * 转换后 ID 一并透传，Service 层据此定位要更新的实体。
-     *
-     * @param dto Put DTO
-     * @return 内部 Save DTO（含 ID）
-     */
-    private RoleSaveDTO toSaveDTO(RolePutDTO dto) {
-        RoleSaveDTO saveDTO = new RoleSaveDTO();
-        saveDTO.setId(dto.getId());
-        saveDTO.setRoleCode(dto.getRoleCode());
-        saveDTO.setRoleName(dto.getRoleName());
-        saveDTO.setDescription(dto.getDescription());
-        saveDTO.setSortOrder(dto.getSortOrder());
-        saveDTO.setDataScope(dto.getDataScope());
-        saveDTO.setStatus(dto.getStatus());
-        saveDTO.setBuiltIn(dto.getBuiltIn());
-        saveDTO.setTenantId(dto.getTenantId());
-        return saveDTO;
     }
 }

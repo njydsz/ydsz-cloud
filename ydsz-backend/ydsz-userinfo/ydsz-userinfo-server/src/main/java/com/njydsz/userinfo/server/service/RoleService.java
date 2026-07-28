@@ -6,7 +6,8 @@ import java.util.Map;
 
 import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
-import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.RolePostDTO;
+import com.njydsz.userinfo.domain.dto.put.RolePutDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 

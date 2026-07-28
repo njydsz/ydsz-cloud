@@ -8,7 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.BeanUpdateUtil;
 
-import com.njydsz.userinfo.domain.dto.MenuSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
+import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
 import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -98,8 +99,8 @@ public class MenuServiceImpl implements MenuService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String create(MenuSaveDTO dto) {
-        Menu entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
+    public String create(MenuPostDTO dto) {
+        Menu entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
@@ -119,7 +120,7 @@ public class MenuServiceImpl implements MenuService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean update(MenuSaveDTO dto) {
+    public boolean update(MenuPutDTO dto) {
         Menu entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);

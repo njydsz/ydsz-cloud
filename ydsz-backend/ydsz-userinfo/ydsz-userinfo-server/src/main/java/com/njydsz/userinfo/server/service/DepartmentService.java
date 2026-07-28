@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.domain.service.BaseCrudService;
-import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
+import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;

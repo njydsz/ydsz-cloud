@@ -14,7 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.util.BeanUpdateUtil;
 
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
-import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.RolePostDTO;
+import com.njydsz.userinfo.domain.dto.put.RolePutDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.RolePermission;
 import com.njydsz.userinfo.domain.entity.UserRole;
@@ -144,14 +145,14 @@ public class RoleServiceImpl implements RoleService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String create(RoleSaveDTO dto) {
+    public String create(RolePostDTO dto) {
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Role::getRoleCode, dto.getRoleCode());
         if (roleMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.ROLE_CODE_DUPLICATE);
         }
 
-        Role entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
+        Role entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
@@ -171,7 +172,7 @@ public class RoleServiceImpl implements RoleService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean update(RoleSaveDTO dto) {
+    public boolean update(RolePutDTO dto) {
         Role entity = roleMapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);

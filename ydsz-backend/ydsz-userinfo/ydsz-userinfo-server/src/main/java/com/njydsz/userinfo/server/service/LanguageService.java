@@ -3,7 +3,8 @@ package com.njydsz.userinfo.server.service;
 import java.util.List;
 
 import com.njydsz.common.domain.query.PageResult;
-import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
+import com.njydsz.userinfo.domain.dto.put.LanguagePutDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 

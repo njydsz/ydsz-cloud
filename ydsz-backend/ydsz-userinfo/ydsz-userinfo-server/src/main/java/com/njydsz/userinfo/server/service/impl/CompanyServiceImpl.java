@@ -15,7 +15,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.service.AbstractMpCrudService;
 import com.njydsz.common.util.BeanUpdateUtil;
-import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
+import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
+import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
@@ -76,7 +77,7 @@ public class CompanyServiceImpl
         if (dto == null) {
             return null;
         }
-        Company entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
+        Company entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
         return entity;
     }
 

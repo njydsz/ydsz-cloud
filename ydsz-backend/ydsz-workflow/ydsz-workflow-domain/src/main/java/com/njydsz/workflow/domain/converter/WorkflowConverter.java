@@ -31,7 +31,6 @@ import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.domain.entity.FlowTimer;
 import com.njydsz.workflow.domain.entity.FlowUser;
-import com.njydsz.workflow.domain.dto.FlowDelegateAuthSaveDTO;
 import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
@@ -171,27 +170,6 @@ public interface WorkflowConverter {
     FlowUserVO entityToVO(FlowUser entity);
     List<FlowUserVO> flowUserListToVO(List<FlowUser> entities);
 
-    // ===== FlowDelegateAuthSaveDTO → FlowDelegateAuth Entity =====
-    /**
-     * 委派授权表单 DTO → 实体（用于创建长期授权）。
-     *
-     * <p>忽略 {@code MpBaseEntity} 的自动填充字段（id/tenantId/审计字段/逻辑删除/乐观锁），
-     * 以及运行时字段 authStatus/providerTraceId（由服务层在创建时设置初始值）。
-     *
-     * @param dto 委派授权表单
-     * @return FlowDelegateAuth 实体（id/authStatus/providerTraceId 均为 null）
-     */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "authStatus", ignore = true)
-    @Mapping(target = "providerTraceId", ignore = true)
-    FlowDelegateAuth saveDtoToEntity(FlowDelegateAuthSaveDTO dto);
 
     /**
      * 委派授权 PostDTO → Entity（创建场景）。

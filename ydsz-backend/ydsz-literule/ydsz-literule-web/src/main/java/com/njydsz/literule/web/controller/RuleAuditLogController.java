@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+package com.njydsz.literule.web.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,13 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
 import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
-import com.njydsz.literule.server.audit.RuleAuditLogService.AuditLogEntry;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 
 /**

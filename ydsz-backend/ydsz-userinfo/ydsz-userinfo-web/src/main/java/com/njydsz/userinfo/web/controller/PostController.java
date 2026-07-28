@@ -17,7 +17,6 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.userinfo.domain.dto.PostSaveDTO;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.server.service.PostService;
 
@@ -113,7 +112,7 @@ public class PostController {
     @PostMapping
     @Operation(summary = "创建岗位")
     public BaseResponse<String> create(@Valid @RequestBody PostPostDTO dto) {
-        return BaseResponse.success(service.create(toSaveDTO(dto)));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -133,7 +132,7 @@ public class PostController {
     @PutMapping
     @Operation(summary = "更新岗位")
     public BaseResponse<Boolean> update(@Valid @RequestBody PostPutDTO dto) {
-        return BaseResponse.success(service.update(toSaveDTO(dto)));
+        return BaseResponse.success(service.update(dto));
     }
 
     /**
@@ -158,44 +157,5 @@ public class PostController {
     @Operation(summary = "删除岗位")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
-    }
-
-    /**
-     * 将 PostDTO 转换为 SaveDTO
-     *
-     * <p>PostDTO 用于 HTTP 创建接口，转换为内部统一的 {@link PostSaveDTO} 后传递给 Service 层。
-     * 转换过程隔离 HTTP 层 DTO 与业务层 DTO，便于 Service 层复用。
-     *
-     * @param dto Post DTO
-     * @return 内部 Save DTO（不含 ID，由 Service 自动生成）
-     */
-    private PostSaveDTO toSaveDTO(PostPostDTO dto) {
-        PostSaveDTO saveDTO = new PostSaveDTO();
-        saveDTO.setPostName(dto.getPostName());
-        saveDTO.setPostCode(dto.getPostCode());
-        saveDTO.setDescription(dto.getDescription());
-        saveDTO.setSortOrder(dto.getSortOrder());
-        saveDTO.setStatus(dto.getStatus());
-        return saveDTO;
-    }
-
-    /**
-     * 将 PutDTO 转换为 SaveDTO
-     *
-     * <p>PutDTO 用于 HTTP 更新接口，包含必填的 ID 字段。
-     * 转换后 ID 一并透传，Service 层据此定位要更新的实体。
-     *
-     * @param dto Put DTO
-     * @return 内部 Save DTO（含 ID）
-     */
-    private PostSaveDTO toSaveDTO(PostPutDTO dto) {
-        PostSaveDTO saveDTO = new PostSaveDTO();
-        saveDTO.setId(dto.getId());
-        saveDTO.setPostName(dto.getPostName());
-        saveDTO.setPostCode(dto.getPostCode());
-        saveDTO.setDescription(dto.getDescription());
-        saveDTO.setSortOrder(dto.getSortOrder());
-        saveDTO.setStatus(dto.getStatus());
-        return saveDTO;
     }
 }

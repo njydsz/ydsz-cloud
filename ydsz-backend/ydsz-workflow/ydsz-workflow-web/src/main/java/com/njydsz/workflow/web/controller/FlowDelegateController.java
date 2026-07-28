@@ -16,7 +16,6 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.workflow.domain.dto.FlowDelegateAuthSaveDTO;
 import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 
@@ -124,7 +123,7 @@ public class FlowDelegateController {
     @PostMapping("/delegateAuth/create")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthPostDTO dto) {
-        FlowDelegateAuth auth = WorkflowConverter.INSTANT.saveDtoToEntity(dto);
+        FlowDelegateAuth auth = WorkflowConverter.INSTANT.postDtoToEntity(dto);
         // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
             auth.setOwnerUserId(AuthContext.getUserId());
@@ -223,56 +222,5 @@ public class FlowDelegateController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         String ownerUserId = AuthContext.getUserId();
         return BaseResponse.success(delegateAuthService.listOwnerLog(ownerUserId, page, size));
-    }
-    /**
-     * 将 PostDTO 转换为 SaveDTO（统一内部使用的保存形态）。
-     *
-     * <p>PostDTO 是面向前端的"创建请求"形态，SaveDTO 是 Service 层内部统一的
-     * "保存"形态。本方法做字段对齐（owner / delegate / scope / flow / node / role / 时间 / 原因）。
-     * <p>当前 controller 主路径直接走 {@code WorkflowConverter} 完成转换；本方法为
-     * 兼容性保留的 fallback，供未来切换转换器或外部调用。
-     *
-     * @param dto 前端传入的 PostDTO
-     * @return 内部统一的 SaveDTO
-     */
-    private FlowDelegateAuthSaveDTO toSaveDTO(FlowDelegateAuthPostDTO dto) {
-        FlowDelegateAuthSaveDTO saveDTO = new FlowDelegateAuthSaveDTO();
-        saveDTO.setOwnerUserId(dto.getOwnerUserId());
-        saveDTO.setOwnerUserName(dto.getOwnerUserName());
-        saveDTO.setDelegateUserId(dto.getDelegateUserId());
-        saveDTO.setDelegateUserName(dto.getDelegateUserName());
-        saveDTO.setScopeType(dto.getScopeType());
-        saveDTO.setFlowCode(dto.getFlowCode());
-        saveDTO.setNodeCode(dto.getNodeCode());
-        saveDTO.setRoleCode(dto.getRoleCode());
-        saveDTO.setStartTime(dto.getStartTime());
-        saveDTO.setEndTime(dto.getEndTime());
-        saveDTO.setReason(dto.getReason());
-        return saveDTO;
-    }
-
-    /**
-     * 将 PutDTO 转换为 SaveDTO（用于更新场景的形态对齐）。
-     *
-     * <p>PutDTO 是面向前端的"更新请求"形态，与 PostDTO 字段一致但语义不同。
-     * 本方法保持二者与 SaveDTO 的字段映射同步，避免字段遗漏。
-     *
-     * @param dto 前端传入的 PutDTO
-     * @return 内部统一的 SaveDTO
-     */
-    private FlowDelegateAuthSaveDTO toSaveDTO(FlowDelegateAuthPutDTO dto) {
-        FlowDelegateAuthSaveDTO saveDTO = new FlowDelegateAuthSaveDTO();
-        saveDTO.setOwnerUserId(dto.getOwnerUserId());
-        saveDTO.setOwnerUserName(dto.getOwnerUserName());
-        saveDTO.setDelegateUserId(dto.getDelegateUserId());
-        saveDTO.setDelegateUserName(dto.getDelegateUserName());
-        saveDTO.setScopeType(dto.getScopeType());
-        saveDTO.setFlowCode(dto.getFlowCode());
-        saveDTO.setNodeCode(dto.getNodeCode());
-        saveDTO.setRoleCode(dto.getRoleCode());
-        saveDTO.setStartTime(dto.getStartTime());
-        saveDTO.setEndTime(dto.getEndTime());
-        saveDTO.setReason(dto.getReason());
-        return saveDTO;
     }
 }

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.server.service.CompanyService;
 
@@ -113,7 +112,7 @@ public class CompanyController {
     @PostMapping
     @Operation(summary = "创建公司")
     public BaseResponse<String> create(@Valid @RequestBody CompanyPostDTO dto) {
-        return BaseResponse.success(service.create(toSaveDTO(dto)));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -132,7 +131,7 @@ public class CompanyController {
     @PutMapping
     @Operation(summary = "更新公司")
     public BaseResponse<Boolean> update(@Valid @RequestBody CompanyPutDTO dto) {
-        return BaseResponse.success(service.update(toSaveDTO(dto)));
+        return BaseResponse.success(service.update(dto));
     }
 
     /**
@@ -158,48 +157,5 @@ public class CompanyController {
     @Operation(summary = "删除公司")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
-    }
-
-    /**
-     * 将 PostDTO 转换为 SaveDTO
-     *
-     * <p>PostDTO 用于 HTTP 创建接口，转换为内部统一的 {@link CompanySaveDTO} 后传递给 Service 层。
-     * 转换过程隔离 HTTP 层 DTO 与业务层 DTO，便于 Service 层复用。
-     *
-     * @param dto Post DTO
-     * @return 内部 Save DTO（不含 ID，由 Service 自动生成）
-     */
-    private CompanySaveDTO toSaveDTO(CompanyPostDTO dto) {
-        CompanySaveDTO saveDTO = new CompanySaveDTO();
-        saveDTO.setCompanyName(dto.getCompanyName());
-        saveDTO.setCompanyCode(dto.getCompanyCode());
-        saveDTO.setParentId(dto.getParentId());
-        saveDTO.setContactPerson(dto.getContactPerson());
-        saveDTO.setContactPhone(dto.getContactPhone());
-        saveDTO.setAddress(dto.getAddress());
-        saveDTO.setStatus(dto.getStatus());
-        return saveDTO;
-    }
-
-    /**
-     * 将 PutDTO 转换为 SaveDTO
-     *
-     * <p>PutDTO 用于 HTTP 更新接口，包含必填的 ID 字段。
-     * 转换后 ID 一并透传，Service 层据此定位要更新的实体。
-     *
-     * @param dto Put DTO
-     * @return 内部 Save DTO（含 ID）
-     */
-    private CompanySaveDTO toSaveDTO(CompanyPutDTO dto) {
-        CompanySaveDTO saveDTO = new CompanySaveDTO();
-        saveDTO.setId(dto.getId());
-        saveDTO.setCompanyName(dto.getCompanyName());
-        saveDTO.setCompanyCode(dto.getCompanyCode());
-        saveDTO.setParentId(dto.getParentId());
-        saveDTO.setContactPerson(dto.getContactPerson());
-        saveDTO.setContactPhone(dto.getContactPhone());
-        saveDTO.setAddress(dto.getAddress());
-        saveDTO.setStatus(dto.getStatus());
-        return saveDTO;
     }
 }

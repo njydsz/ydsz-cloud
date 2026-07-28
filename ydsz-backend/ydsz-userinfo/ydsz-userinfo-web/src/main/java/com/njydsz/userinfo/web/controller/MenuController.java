@@ -17,7 +17,6 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.userinfo.domain.dto.MenuSaveDTO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.server.service.MenuService;
@@ -134,7 +133,7 @@ public class MenuController {
     @PostMapping
     @Operation(summary = "创建菜单")
     public BaseResponse<String> create(@Valid @RequestBody MenuPostDTO dto) {
-        return BaseResponse.success(service.create(toSaveDTO(dto)));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -154,7 +153,7 @@ public class MenuController {
     @PutMapping
     @Operation(summary = "更新菜单")
     public BaseResponse<Boolean> update(@Valid @RequestBody MenuPutDTO dto) {
-        return BaseResponse.success(service.update(toSaveDTO(dto)));
+        return BaseResponse.success(service.update(dto));
     }
 
     /**
@@ -179,56 +178,5 @@ public class MenuController {
     @Operation(summary = "删除菜单")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
-    }
-
-    /**
-     * 将 PostDTO 转换为 SaveDTO
-     *
-     * <p>PostDTO 用于 HTTP 创建接口，转换为内部统一的 {@link MenuSaveDTO} 后传递给 Service 层。
-     * 转换过程隔离 HTTP 层 DTO 与业务层 DTO，便于 Service 层复用。
-     *
-     * @param dto Post DTO
-     * @return 内部 Save DTO（不含 ID，由 Service 自动生成）
-     */
-    private MenuSaveDTO toSaveDTO(MenuPostDTO dto) {
-        MenuSaveDTO saveDTO = new MenuSaveDTO();
-        saveDTO.setParentId(dto.getParentId());
-        saveDTO.setMenuName(dto.getMenuName());
-        saveDTO.setMenuCode(dto.getMenuCode());
-        saveDTO.setMenuType(dto.getMenuType());
-        saveDTO.setPath(dto.getPath());
-        saveDTO.setComponent(dto.getComponent());
-        saveDTO.setIcon(dto.getIcon());
-        saveDTO.setSortOrder(dto.getSortOrder());
-        saveDTO.setPermissionCode(dto.getPermissionCode());
-        saveDTO.setVisible(dto.getVisible());
-        saveDTO.setStatus(dto.getStatus());
-        return saveDTO;
-    }
-
-    /**
-     * 将 PutDTO 转换为 SaveDTO
-     *
-     * <p>PutDTO 用于 HTTP 更新接口，包含必填的 ID 字段。
-     * 转换后 ID 一并透传，Service 层据此定位要更新的实体。
-     *
-     * @param dto Put DTO
-     * @return 内部 Save DTO（含 ID）
-     */
-    private MenuSaveDTO toSaveDTO(MenuPutDTO dto) {
-        MenuSaveDTO saveDTO = new MenuSaveDTO();
-        saveDTO.setId(dto.getId());
-        saveDTO.setParentId(dto.getParentId());
-        saveDTO.setMenuName(dto.getMenuName());
-        saveDTO.setMenuCode(dto.getMenuCode());
-        saveDTO.setMenuType(dto.getMenuType());
-        saveDTO.setPath(dto.getPath());
-        saveDTO.setComponent(dto.getComponent());
-        saveDTO.setIcon(dto.getIcon());
-        saveDTO.setSortOrder(dto.getSortOrder());
-        saveDTO.setPermissionCode(dto.getPermissionCode());
-        saveDTO.setVisible(dto.getVisible());
-        saveDTO.setStatus(dto.getStatus());
-        return saveDTO;
     }
 }

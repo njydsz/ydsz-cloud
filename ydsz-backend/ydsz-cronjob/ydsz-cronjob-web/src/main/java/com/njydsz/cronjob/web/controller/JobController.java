@@ -18,7 +18,6 @@ import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
-import com.njydsz.cronjob.domain.dto.job.JobSaveDTO;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.server.service.job.JobService;
@@ -99,7 +98,7 @@ public class JobController {
     @RateLimit(resource = "cronjob.job.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobPostDTO dto) {
-        Job job = CronjobConverter.INSTANT.saveDtoToEntity(dto);
+        Job job = CronjobConverter.INSTANT.postDtoToEntity(dto);
         return BaseResponse.success(jobService.create(job));
     }
 
@@ -119,7 +118,7 @@ public class JobController {
     @RateLimit(resource = "cronjob.job.update", threshold = 50)
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody JobPutDTO dto) {
-        Job job = CronjobConverter.INSTANT.saveDtoToEntity(dto);
+        Job job = CronjobConverter.INSTANT.putDtoToEntity(dto);
         jobService.update(job);
         return BaseResponse.success();
     }
@@ -415,57 +414,5 @@ public class JobController {
     public BaseResponse<Map<String, Object>> reload() {
         jobService.loadOnStartup();
         return BaseResponse.success(Map.of("message", "ok"));
-    }
-    /**
-     * 将 PostDTO 转换为 SaveDTO。
-     */
-    private JobSaveDTO toSaveDTO(JobPostDTO dto) {
-        JobSaveDTO saveDTO = new JobSaveDTO();
-        saveDTO.setJobName(dto.getJobName());
-        saveDTO.setJobGroup(dto.getJobGroup());
-        saveDTO.setJobKey(dto.getJobKey());
-        saveDTO.setHandler(dto.getHandler());
-        saveDTO.setCronExpression(dto.getCronExpression());
-        saveDTO.setScheduleType(dto.getScheduleType());
-        saveDTO.setFixedRateMs(dto.getFixedRateMs());
-        saveDTO.setFixedDelayMs(dto.getFixedDelayMs());
-        saveDTO.setParamsJson(dto.getParamsJson());
-        saveDTO.setStatus(dto.getStatus());
-        saveDTO.setRemark(dto.getRemark());
-        saveDTO.setLockTtlMs(dto.getLockTtlMs());
-        saveDTO.setTimeoutMs(dto.getTimeoutMs());
-        saveDTO.setSlowThresholdMs(dto.getSlowThresholdMs());
-        saveDTO.setMisfirePolicy(dto.getMisfirePolicy());
-        saveDTO.setShardTotal(dto.getShardTotal());
-        saveDTO.setTimezone(dto.getTimezone());
-        saveDTO.setCluster(dto.getCluster());
-        return saveDTO;
-    }
-
-    /**
-     * 将 PutDTO 转换为 SaveDTO。
-     */
-    private JobSaveDTO toSaveDTO(JobPutDTO dto) {
-        JobSaveDTO saveDTO = new JobSaveDTO();
-        saveDTO.setId(dto.getId());
-        saveDTO.setJobName(dto.getJobName());
-        saveDTO.setJobGroup(dto.getJobGroup());
-        saveDTO.setJobKey(dto.getJobKey());
-        saveDTO.setHandler(dto.getHandler());
-        saveDTO.setCronExpression(dto.getCronExpression());
-        saveDTO.setScheduleType(dto.getScheduleType());
-        saveDTO.setFixedRateMs(dto.getFixedRateMs());
-        saveDTO.setFixedDelayMs(dto.getFixedDelayMs());
-        saveDTO.setParamsJson(dto.getParamsJson());
-        saveDTO.setStatus(dto.getStatus());
-        saveDTO.setRemark(dto.getRemark());
-        saveDTO.setLockTtlMs(dto.getLockTtlMs());
-        saveDTO.setTimeoutMs(dto.getTimeoutMs());
-        saveDTO.setSlowThresholdMs(dto.getSlowThresholdMs());
-        saveDTO.setMisfirePolicy(dto.getMisfirePolicy());
-        saveDTO.setShardTotal(dto.getShardTotal());
-        saveDTO.setTimezone(dto.getTimezone());
-        saveDTO.setCluster(dto.getCluster());
-        return saveDTO;
     }
 }

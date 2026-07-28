@@ -38,6 +38,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  *   <li>R20: Server 层不可依赖 Web 层</li>
  *   <li>R21: Infra 层不可依赖 Server/Web 层</li>
  *   <li>R22: 跨模块 Mapper/Entity 直接注入禁止</li>
+ *   <li>R23: Converter 禁止使用 saveDtoToEntity 方法名（必须用 postDtoToEntity/putDtoToEntity）</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -336,4 +337,17 @@ public class ArchitectureRulesTest {
                     "..nextwiki.infra.mapper..", "..nextwiki.domain.entity..")
             .because("跨模块数据访问必须通过 @FeignClient 调用对方服务 API，"
                     + "禁止直连其他业务模块的 Mapper/Entity");
+
+    /**
+     * R23: Converter 禁止使用 saveDtoToEntity 方法名。
+     *
+     * <p>DTO 拆分后，新增场景应使用 {@code postDtoToEntity(PostDTO)}，
+     * 更新场景应使用 {@code putDtoToEntity(PutDTO)}。
+     * {@code saveDtoToEntity} 是旧的共用 DTO 模式遗留，必须消除。
+     */
+    @ArchTest
+    static final ArchRule noSaveDtoToEntityMethodInConverter = noMethods()
+            .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Converter")
+            .should().haveName("saveDtoToEntity")
+            .because("Converter 必须使用 postDtoToEntity/putDtoToEntity 替代 saveDtoToEntity");
 }

@@ -13,7 +13,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.BeanUpdateUtil;
-import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
+import com.njydsz.userinfo.domain.dto.put.LanguagePutDTO;
 import com.njydsz.userinfo.domain.entity.Language;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
@@ -146,7 +147,7 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
     private Language toEntity(LanguageSaveDTO dto) {
-        Language entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
+        Language entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
         return entity;
     }
 }

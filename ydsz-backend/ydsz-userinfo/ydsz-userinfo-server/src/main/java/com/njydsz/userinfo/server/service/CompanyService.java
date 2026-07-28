@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.domain.service.BaseCrudService;
-import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
+import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
+import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.vo.CompanyVO;

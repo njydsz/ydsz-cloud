@@ -4,7 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.userinfo.domain.dto.PostSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.PostPostDTO;
+import com.njydsz.userinfo.domain.dto.put.PostPutDTO;
 import com.njydsz.userinfo.domain.vo.PostVO;
 
 /**
@@ -61,7 +62,7 @@ public interface PostService {
      * @param dto 岗位保存参数
      * @return 新岗位 ID
      */
-    String create(PostSaveDTO dto);
+    String create(PostPostDTO dto);
 
     /**
      * 更新岗位。
@@ -69,7 +70,7 @@ public interface PostService {
      * @param dto 岗位保存参数（含 ID）
      * @return true=成功
      */
-    boolean update(PostSaveDTO dto);
+    boolean update(PostPutDTO dto);
 
     /**
      * 删除岗位（逻辑删除）。

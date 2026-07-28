@@ -12,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.BeanUpdateUtil;
 
-import com.njydsz.userinfo.domain.dto.PostSaveDTO;
+import com.njydsz.userinfo.domain.dto.post.PostPostDTO;
+import com.njydsz.userinfo.domain.dto.put.PostPutDTO;
 import com.njydsz.userinfo.domain.entity.Post;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -94,7 +95,7 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String create(PostSaveDTO dto) {
+    public String create(PostPostDTO dto) {
         // 编码唯一性校验
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Post::getPostCode, dto.getPostCode());
@@ -102,7 +103,7 @@ public class PostServiceImpl implements PostService {
             throw new BusinessException(UserInfoResultCode.POST_CODE_DUPLICATE);
         }
 
-        Post entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
+        Post entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
@@ -119,7 +120,7 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean update(PostSaveDTO dto) {
+    public boolean update(PostPutDTO dto) {
         Post entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.POST_NOT_FOUND);
