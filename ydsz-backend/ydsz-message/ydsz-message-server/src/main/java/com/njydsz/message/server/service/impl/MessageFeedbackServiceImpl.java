@@ -7,7 +7,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.dto.core.MessageFeedbackDTO;

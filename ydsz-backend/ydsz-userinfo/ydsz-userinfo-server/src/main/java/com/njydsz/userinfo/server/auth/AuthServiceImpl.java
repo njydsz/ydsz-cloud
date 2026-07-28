@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.LoginDTO;

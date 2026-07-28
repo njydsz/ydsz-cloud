@@ -19,7 +19,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.constant.YdszMessageTopics;
 import com.njydsz.common.constant.SystemConstants;
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -72,9 +72,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
-import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 消息服务实现（核心）。

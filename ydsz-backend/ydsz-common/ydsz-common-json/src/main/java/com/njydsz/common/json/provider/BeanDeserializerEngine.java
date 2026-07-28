@@ -3,6 +3,7 @@ package com.njydsz.common.json.provider;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,11 @@ final class BeanDeserializerEngine {
      * @return 反序列化后的实例
      */
     static <T> T deserializeBeanZeroCopy(String json, Class<T> clazz) {
+        // Record 类反序列化路径：使用 canonical constructor
+        if (clazz.isRecord()) {
+            return deserializeRecord(json, clazz);
+        }
+
         // ASM 优化路径：使用字节码生成的反序列化器
         if (json.trim().startsWith("{") &&
             !clazz.isAssignableFrom(List.class) &&
@@ -157,6 +163,20 @@ final class BeanDeserializerEngine {
      * @return 反序列化后的列表
      */
     static <E> List<E> deserializeBeanListFast(String json, Class<E> elementClass) {
+        // Record 类列表反序列化：逐个使用 canonical constructor
+        if (elementClass.isRecord()) {
+            List<Object> rawList = YdszJsonParser.parseArray(json);
+            List<E> result = new ArrayList<>(rawList.size());
+            for (Object item : rawList) {
+                if (item == null) {
+                    result.add(null);
+                } else {
+                    result.add(deserializeRecord(SerializationProvider.serialize(item), elementClass));
+                }
+            }
+            return result;
+        }
+
         // 优先使用 ASM 反序列化器
         AsmDeserializer<E> asmDeserializer = null;
         try {
@@ -340,6 +360,74 @@ final class BeanDeserializerEngine {
         } catch (Exception e) {
             return YdszJsonParser.parseArray(json);
         }
+    }
+
+    /**
+     * 反序列化 Record 类。
+     *
+     * <p>Record 类不可变，使用 canonical constructor 创建实例。
+     * 先解析 JSON 为 Map，再按组件顺序提取值并调用 canonical constructor。
+     *
+     * @param json JSON 字符串
+     * @param clazz Record 类
+     * @param <T> 目标类型
+     * @return 反序列化后的 Record 实例
+     */
+    @SuppressWarnings("unchecked")
+    static <T> T deserializeRecord(String json, Class<T> clazz) {
+        Map<String, Object> map = YdszJsonParser.parseObject(json);
+        RecordComponent[] components = clazz.getRecordComponents();
+        Class<?>[] paramTypes = new Class<?>[components.length];
+        Object[] paramValues = new Object[components.length];
+
+        for (int i = 0; i < components.length; i++) {
+            paramTypes[i] = components[i].getType();
+            String jsonName = components[i].getName();
+            Object value = map.get(jsonName);
+            paramValues[i] = convertRecordValue(value, paramTypes[i]);
+        }
+
+        try {
+            Constructor<?> canonical = clazz.getDeclaredConstructor(paramTypes);
+            canonical.setAccessible(true);
+            return (T) canonical.newInstance(paramValues);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to deserialize Record: " + clazz.getName(), e);
+        }
+    }
+
+    /**
+     * 将 Map 中解析出的值转换为 Record 组件类型。
+     *
+     * @param value 解析值
+     * @param targetType 目标类型
+     * @return 转换后的值
+     */
+    private static Object convertRecordValue(Object value, Class<?> targetType) {
+        if (value == null) {
+            return null;
+        }
+        if (targetType.isInstance(value)) {
+            return value;
+        }
+        // 数字类型转换
+        if (value instanceof Number num) {
+            if (targetType == int.class || targetType == Integer.class) return num.intValue();
+            if (targetType == long.class || targetType == Long.class) return num.longValue();
+            if (targetType == double.class || targetType == Double.class) return num.doubleValue();
+            if (targetType == float.class || targetType == Float.class) return num.floatValue();
+            if (targetType == short.class || targetType == Short.class) return num.shortValue();
+            if (targetType == byte.class || targetType == Byte.class) return num.byteValue();
+        }
+        // String → 其他类型
+        if (value instanceof String str) {
+            if (targetType == int.class || targetType == Integer.class) return Integer.parseInt(str);
+            if (targetType == long.class || targetType == Long.class) return Long.parseLong(str);
+            if (targetType == double.class || targetType == Double.class) return Double.parseDouble(str);
+            if (targetType == float.class || targetType == Float.class) return Float.parseFloat(str);
+            if (targetType == boolean.class || targetType == Boolean.class) return Boolean.parseBoolean(str);
+        }
+        return value;
     }
 
     /**

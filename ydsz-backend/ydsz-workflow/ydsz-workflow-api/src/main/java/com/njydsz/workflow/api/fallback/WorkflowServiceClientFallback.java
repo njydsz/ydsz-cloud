@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.workflow.api.client.WorkflowServiceClient;
 
 import lombok.extern.slf4j.Slf4j;

@@ -385,7 +385,7 @@ public final class AsmBeanCodecGenerator {
         int fieldCount = 0;
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
-            String getterName = getGetterName(field);
+            String getterName = beanType.isRecord() ? getRecordAccessorName(field) : getGetterName(field);
             Method getter = findMethod(beanType, getterName);
             if (getter == null) continue;
             
@@ -780,7 +780,7 @@ public final class AsmBeanCodecGenerator {
         fieldCount = 0;
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
-            String getterName = getGetterName(field);
+            String getterName = beanType.isRecord() ? getRecordAccessorName(field) : getGetterName(field);
             Method getter = findMethod(beanType, getterName);
             if (getter == null) continue;
 
@@ -1214,6 +1214,10 @@ public final class AsmBeanCodecGenerator {
      * <p>支持所有类型：基本类型、日期类型、集合、Map、嵌套 Bean</p>
      */
     public static <T> Class<? extends AsmDeserializer<T>> generateDeserializer(Class<T> beanType) throws Exception {
+        // Record 类不支持 ASM 反序列化（无 no-arg 构造器和 setter），回退到反射路径
+        if (beanType.isRecord()) {
+            throw new UnsupportedOperationException("Record classes are not supported by ASM deserializer, use reflection path instead: " + beanType.getName());
+        }
         String className = beanType.getName() + "_ASM_Deserializer";
         String classInternalName = className.replace('.', '/');
         String beanInternalName = beanType.getName().replace('.', '/');
@@ -1512,6 +1516,20 @@ public final class AsmBeanCodecGenerator {
     }
 
     private static Field[] getSerializableFields(Class<?> clazz) {
+        // Record 类：使用 RecordComponent 的 backing field
+        if (clazz.isRecord()) {
+            java.lang.reflect.RecordComponent[] components = clazz.getRecordComponents();
+            List<Field> result = new ArrayList<>(components.length);
+            for (java.lang.reflect.RecordComponent rc : components) {
+                try {
+                    Field f = clazz.getDeclaredField(rc.getName());
+                    result.add(f);
+                } catch (NoSuchFieldException e) {
+                    // backing field 不存在，跳过
+                }
+            }
+            return result.toArray(new Field[0]);
+        }
         Field[] allFields = clazz.getDeclaredFields();
         List<Field> result = new ArrayList<>();
         for (Field f : allFields) {
@@ -1534,6 +1552,13 @@ public final class AsmBeanCodecGenerator {
         }
         String name = field.getName();
         return "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
+    /**
+     * 获取 Record 组件的访问器方法名（与组件名相同）
+     */
+    private static String getRecordAccessorName(Field field) {
+        return field.getName();
     }
 
     private static String getSetterName(Field field) {

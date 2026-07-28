@@ -9,7 +9,7 @@ import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.entity.job.TenantQuota;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;

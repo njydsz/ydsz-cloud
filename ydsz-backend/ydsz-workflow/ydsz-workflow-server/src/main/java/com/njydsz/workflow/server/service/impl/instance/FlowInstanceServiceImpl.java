@@ -24,7 +24,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.SysException;

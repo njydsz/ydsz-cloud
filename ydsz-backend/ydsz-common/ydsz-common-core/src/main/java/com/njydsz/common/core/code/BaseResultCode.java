@@ -1,5 +1,7 @@
-package com.njydsz.common.core.response;
+package com.njydsz.common.core.code;
 
+
+import com.njydsz.common.core.response.BaseResponse;
 
 /**
  * 标准结果码枚举

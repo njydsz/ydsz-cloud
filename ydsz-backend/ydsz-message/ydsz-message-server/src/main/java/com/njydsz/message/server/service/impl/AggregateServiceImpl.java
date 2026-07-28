@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.exception.custom.SysException;

@@ -2,7 +2,7 @@ package com.njydsz.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 
-import com.njydsz.common.core.response.ResultCode;
+import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;

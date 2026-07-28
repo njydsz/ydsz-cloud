@@ -4,7 +4,7 @@ import java.util.*;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 
 import lombok.extern.slf4j.Slf4j;

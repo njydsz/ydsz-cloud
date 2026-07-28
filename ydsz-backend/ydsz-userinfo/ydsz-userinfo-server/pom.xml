@@ -107,6 +107,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-file</artifactId>
         </dependency>
+        <!-- P1-2: 统一线程池管理（common-thread） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
         <!-- P0-2: 多租户隔离 -->
         <dependency>
             <groupId>com.njydsz</groupId>

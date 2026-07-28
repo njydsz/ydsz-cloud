@@ -2,7 +2,6 @@ package com.njydsz.workflow.server.service.impl.integration;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -10,7 +9,7 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;

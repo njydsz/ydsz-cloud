@@ -5,7 +5,7 @@ import java.util.Map;
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.common.auth.model.ColumnPermissionInfo;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.LoginUser;
 

@@ -243,12 +243,9 @@ public class YdszJson {
      */
     public static byte[] toJsonBytes(Object obj) {
         if (obj == null) {
-            return "null".getBytes(StandardCharsets.UTF_8);
+            return new byte[]{'n', 'u', 'l', 'l'};
         }
-        return recordSerialize(() -> {
-            String json = SerializerEngine.serialize(obj);
-            return json.getBytes(StandardCharsets.UTF_8);
-        });
+        return recordSerialize(() -> SerializationProvider.serializeToBytes(obj));
     }
     
     // ==================== 反序列化入口方法 ====================

@@ -1,17 +1,16 @@
 package com.njydsz.common.core.response;
 
-import java.io.Serializable;
-import java.time.Clock;
-
-import org.slf4j.MDC;
-
+import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.TraceConstants;
 import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
+import org.slf4j.MDC;
+
+import java.io.Serializable;
+import java.time.Clock;
 
 /**
  * 统一API返回结果封装类

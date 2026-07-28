@@ -48,16 +48,7 @@ import lombok.extern.slf4j.Slf4j;
     @Signature(type = Executor.class, method = "query",
                args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class, CacheKey.class, BoundSql.class}),
     @Signature(type = Executor.class, method = "update",
-               args = {MappedStatement.class, Object.class})
-
-/**
- * CircuitBreakerInterceptor 类。
- *
- * <p>所属包：{@code com.njydsz.common.jdbc.interceptor}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
+               args = {MappedStatement.class, Object.class}
 })
 public class CircuitBreakerInterceptor implements Interceptor {
 

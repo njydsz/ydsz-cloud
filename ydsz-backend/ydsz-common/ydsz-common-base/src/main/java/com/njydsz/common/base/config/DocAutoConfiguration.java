@@ -37,15 +37,6 @@ import com.njydsz.common.base.exporter.MarkdownDocExporter;
     Knife4jAutoConfiguration.class,
     DefaultDocExporter.class,
     MarkdownDocExporter.class
-
-/**
- * DocAutoConfiguration 自动配置类，注册模块 Bean 并管理装配条件。
- *
- * <p>所属包：{@code com.njydsz.common.base.config}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 })
 public class DocAutoConfiguration {
 }

@@ -540,6 +540,111 @@ public final class SerializationProvider {
     }
 
     /**
+     * 序列化对象为 UTF-8 字节数组（零拷贝优化版）
+     *
+     * <p>直接使用 {@link JSONWriter#toUtf8Bytes()} 将 char[] 转为 byte[]，
+     * 跳过 String 中间层，避免双重分配（String + getBytes）。
+     * 对于纯 ASCII 内容直接 1:1 拷贝，非 ASCII 回退到标准 UTF-8 编码。</p>
+     *
+     * @param obj 要序列化的对象
+     * @return UTF-8 编码的字节数组
+     * @since 1.0.0
+     */
+    public static byte[] serializeToBytes(Object obj) {
+        if (obj == null) {
+            return new byte[]{'n', 'u', 'l', 'l'};
+        }
+
+        Class<?> clazz = obj.getClass();
+        SerializationContext ctx = SerializationContext.CONTEXT.get();
+
+        // 快速路径：Bean 类型直接使用 ASM 序列化器，跳过 StringBuilder 中转
+        if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
+            try {
+                JSONWriter writer = ctx.fastWriterPool;
+                writer.reset();
+                if (AsmCodecCache.trySerialize(obj, writer)) {
+                    return writer.toUtf8Bytes();
+                }
+            } catch (Exception e) {
+                long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
+                if (count <= 10 || count % 100 == 0) {
+                    LOGGER.fine("ASM serialization (bytes) failed for " + clazz.getName()
+                            + ", falling back to reflection. Total downgrades: " + count
+                            + ", error: " + e.getMessage());
+                }
+            }
+        }
+
+        // 快速路径：Collection 类型直接使用 JSONWriter
+        if (obj instanceof Collection) {
+            JSONWriter writer = ctx.fastWriterPool;
+            writer.reset();
+            Collection<?> coll = (Collection<?>) obj;
+            if (!coll.isEmpty()) {
+                writer.preAllocate(coll.size() * 64);
+                AsmSerializer<Object> serializer = ctx.cachedListSerializer;
+                if (serializer == null) {
+                    Object first = null;
+                    if (coll instanceof List) {
+                        first = ((List<?>) coll).get(0);
+                    } else {
+                        first = coll.iterator().next();
+                    }
+                    if (first != null) {
+                        try {
+                            AsmSerializer<?> rawSerializer = AsmCodecCache.getOrCreateSerializerForType(first.getClass());
+                            if (rawSerializer != null) {
+                                serializer = captureSerializer(rawSerializer);
+                                ctx.cachedListSerializer = serializer;
+                                ctx.cachedListElementClass = first.getClass();
+                            }
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+                if (serializer != null) {
+                    writer.writeCollectionWithSerializer(coll, serializer);
+                    return writer.toUtf8Bytes();
+                }
+            }
+            writer.writeCollection(coll);
+            return writer.toUtf8Bytes();
+        }
+
+        // 快速路径：Map 类型直接使用 JSONWriter
+        if (obj instanceof Map) {
+            JSONWriter writer = ctx.fastWriterPool;
+            writer.reset();
+            writer.writeMap((Map<?, ?>) obj);
+            return writer.toUtf8Bytes();
+        }
+
+        // 回退路径：使用 StringBuilder + ValueWriter
+        StringBuilder sb = getSizedStringBuilder(256);
+        Set<Object> objects = ctx.serializingObjects;
+        objects.clear();
+
+        try {
+            if (!tryFastSerialize(obj, sb)) {
+                ValueWriter.writeValue(obj, sb);
+            }
+        } catch (JsonSerializationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JsonSerializationException(
+                JsonSerializationException.SERIALIZATION_ERROR,
+                "Serialization (bytes) failed for " + obj.getClass().getName() + ": " + e.getMessage(),
+                e
+            );
+        } finally {
+            objects.clear();
+        }
+
+        return sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    /**
      * 序列化对象（FastJSON2 快速路径）
      *
      * <p>当满足以下条件时使用快速路径：</p>

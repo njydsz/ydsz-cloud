@@ -12,13 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
-import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.server.service.batch.BatchService;
 

@@ -15,7 +15,7 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.constant.SystemConstants;
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;

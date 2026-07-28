@@ -14,18 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.security.LoginUser;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
-import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.EmbeddedApprovalViewDTOVO;
 
 /**

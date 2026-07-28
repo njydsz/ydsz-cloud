@@ -50,7 +50,7 @@ import com.njydsz.common.core.job.JobHandler;
 import com.njydsz.common.core.job.JobLoggerHolder;
 import com.njydsz.common.core.job.ProcessResult;
 import com.njydsz.common.core.job.ShardingContext;
-import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
