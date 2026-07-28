@@ -3,11 +3,11 @@ package com.njydsz.workflow.server.job;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.job.JobHandler;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
 import com.njydsz.workflow.server.service.FlowThirdPartyRetryService;
 
@@ -56,18 +56,8 @@ public class FlowThirdPartyRetryJobHandler implements JobHandler {
     private final FlowThirdPartyRetryService retryService;
     /** 集群锁辅助工具 */
     private final FlowClusterLockHelper clusterLockHelper;
-
-    /** 默认最大重试次数（可被 paramsJson 或配置覆盖） */
-    @Value("${ydsz.workflow.third-party.retry.max-retries:3}")
-    private int defaultMaxRetries;
-
-    /** 默认单批扫描条数 */
-    @Value("${ydsz.workflow.third-party.retry.batch-size:50}")
-    private int defaultBatchSize;
-
-    /** 默认集群锁持有时间（秒） */
-    @Value("${ydsz.workflow.third-party.retry.lock-lease-sec:120}")
-    private int defaultLockLeaseSec;
+    /** P3-3.4: 重试配置统一从 FlowProperties 读取 */
+    private final FlowProperties flowProperties;
 
     /**
      * 执行重试任务
@@ -79,6 +69,12 @@ public class FlowThirdPartyRetryJobHandler implements JobHandler {
     public Object execute(String paramsJson) throws Exception {
         long start = System.currentTimeMillis();
         log.info("[ThirdPartyRetry] 开始扫描失败回调 params={}", paramsJson);
+
+        // P3-3.4: 默认值从 FlowProperties.ThirdParty.Retry 读取
+        FlowProperties.ThirdParty.Retry retryCfg = flowProperties.getThirdParty().getRetry();
+        int defaultMaxRetries = retryCfg.getMaxRetries();
+        int defaultBatchSize = retryCfg.getBatchSize();
+        int defaultLockLeaseSec = retryCfg.getLockLeaseSec();
 
         // 解析参数
         int maxRetries = parseIntParam(paramsJson, "maxRetries", defaultMaxRetries);

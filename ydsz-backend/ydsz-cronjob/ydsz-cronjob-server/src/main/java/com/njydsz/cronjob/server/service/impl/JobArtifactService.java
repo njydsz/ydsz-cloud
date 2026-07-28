@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.cronjob.domain.entity.job.JobArtifact;
 import com.njydsz.cronjob.infra.mapper.job.JobArtifactMapper;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,12 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 public class JobArtifactService {
 
     private final JobArtifactMapper artifactMapper;
-
-    @Value("${ydsz.cronjob.artifact.storage-dir:./data/artifacts}")
-    private String storageDir;
-
-    @Value("${ydsz.cronjob.artifact.retention-days:30}")
-    private int retentionDays;
+    /** P3-3.3: 制品存储配置统一从 CronjobProperties 读取 */
+    private final CronjobProperties cronjobProperties;
 
     /**
      * 保存执行产物。
@@ -58,6 +54,8 @@ public class JobArtifactService {
                                 String artifactName, String artifactType,
                                 byte[] content, String contentType, String metadata) {
         try {
+            String storageDir = cronjobProperties.getArtifact().getStorageDir();
+            int retentionDays = cronjobProperties.getArtifact().getRetentionDays();
             // 存储文件
             String relativePath = jobKey + "/" + logId + "/" + UUID.randomUUID() + "_" + artifactName;
             Path fullPath = Paths.get(storageDir, relativePath);
@@ -103,6 +101,7 @@ public class JobArtifactService {
             return null;
         }
         try {
+            String storageDir = cronjobProperties.getArtifact().getStorageDir();
             Path fullPath = Paths.get(storageDir, artifact.getStoragePath());
             return Files.readAllBytes(fullPath);
         } catch (IOException e) {

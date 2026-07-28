@@ -9,9 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.message.server.config.MessageProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,14 +46,25 @@ public class SensitiveWordFilter {
     /** DFA 字典树根节点（volatile 保证 reload 后的可见性） */
     private volatile DfaNode dfaRoot = new DfaNode();
 
-    /** 是否启用敏感词过滤 */
-    private final boolean enabled;
+    /** P3-3.2: 敏感词过滤配置统一从 MessageProperties 读取 */
+    private final MessageProperties messageProperties;
 
-    public SensitiveWordFilter(
-            @Value("${ydsz.message.sensitive-filter-enabled:true}") boolean enabled,
-            @Value("${ydsz.message.sensitive-words:}") String sensitiveWords) {
-        this.enabled = enabled;
-        reload(parseWords(sensitiveWords));
+    /**
+     * 构造时根据 {@link MessageProperties.SensitiveFilterConfig} 初始化 DFA 词库。
+     *
+     * <p>支持运行时通过 {@link #reload(Set)} 刷新词库。
+     */
+    public SensitiveWordFilter(MessageProperties messageProperties) {
+        this.messageProperties = messageProperties;
+        MessageProperties.SensitiveFilterConfig cfg = messageProperties.getSensitiveFilter();
+        reload(parseWords(cfg.getWords()));
+    }
+
+    /**
+     * 当前是否启用敏感词过滤。
+     */
+    private boolean isEnabled() {
+        return messageProperties.getSensitiveFilter().isEnabled();
     }
 
     /**
@@ -65,7 +77,7 @@ public class SensitiveWordFilter {
      * @return 过滤后的内容；未启用或内容为空时原样返回
      */
     public String filter(String content) {
-        if (!enabled || !StringUtils.hasText(content)) {
+        if (!isEnabled() || !StringUtils.hasText(content)) {
             return content;
         }
         DfaNode root = dfaRoot;
@@ -139,7 +151,7 @@ public class SensitiveWordFilter {
         // 原子替换：构建完成后替换引用
         dfaRoot = newRoot;
         log.info("[SensitiveWordFilter] DFA 词库已加载: count={} enabled={}",
-                words.size(), enabled);
+                words.size(), isEnabled());
     }
 
     /**

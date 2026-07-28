@@ -3,7 +3,6 @@ package com.njydsz.workflow.web.controller.integration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +18,7 @@ import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.domain.enums.ThirdPartyPlatform;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import com.njydsz.workflow.server.service.FlowThirdPartyAccountService;
 import com.njydsz.workflow.server.service.FlowThirdPartyLogService;
@@ -96,18 +96,8 @@ public class FlowThirdPartyApprovalController {
     private final FlowEmbeddedApprovalService embeddedApprovalService;
     /** 三方审批回调日志服务（PENDING → SUCCESS/FAIL 状态流转） */
     private final FlowThirdPartyLogService thirdPartyLogService;
-
-    /** 钉钉应用 appSecret（签名校验密钥） */
-    @Value("${ydsz.workflow.third-party.dingtalk.app-secret:}")
-    private String dingTalkAppSecret;
-
-    /** 飞书应用 appSecret（签名校验密钥） */
-    @Value("${ydsz.workflow.third-party.feishu.app-secret:}")
-    private String feishuAppSecret;
-
-    /** 企微回调 Token（签名校验密钥） */
-    @Value("${ydsz.workflow.third-party.wecom.token:}")
-    private String weComToken;
+    /** P3-3.4: 三方签名密钥统一从 FlowProperties 读取 */
+    private final FlowProperties flowProperties;
 
     /**
      * 钉钉审批回调
@@ -130,7 +120,8 @@ public class FlowThirdPartyApprovalController {
             @RequestBody Map<String, Object> body) {
         String platform = ThirdPartyPlatform.DINGTALK.name();
         String encrypt = extractEncrypt(body);
-        if (!DingTalkSignatureUtil.verifySignature(timestamp, nonce, encrypt, signature, dingTalkAppSecret)) {
+        if (!DingTalkSignatureUtil.verifySignature(timestamp, nonce, encrypt, signature,
+                flowProperties.getThirdParty().getDingtalk().getAppSecret())) {
             log.warn("[ThirdPartyCallback] 钉钉签名校验失败: timestamp={} nonce={}", timestamp, nonce);
             return fail("signature verify failed");
         }

@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +16,7 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
@@ -52,18 +52,8 @@ public class FlowAutoUrgeScheduler {
     private final FlowTaskUrgeService urgeService;
     private final FlowNotificationService notificationService;
     private final FlowClusterLockHelper clusterLockHelper;
-
-    /** 自动催办阈值（小时），可配置 */
-    @Value("${flow.auto-urge.threshold-hours:24}")
-    private long thresholdHours;
-
-    /** 最大催办次数 */
-    @Value("${flow.auto-urge.max-count:3}")
-    private int maxUrgeCount;
-
-    /** 每次扫描批量大小 */
-    @Value("${flow.auto-urge.batch-size:200}")
-    private int batchSize;
+    /** P3-3.4: 自动催办配置统一从 FlowProperties 读取 */
+    private final FlowProperties flowProperties;
 
     /** IM 通道：钉钉 */
     private static final String CHANNEL_DINGTALK = "DINGTALK";
@@ -73,7 +63,7 @@ public class FlowAutoUrgeScheduler {
     /**
      * 每 30 分钟执行一次自动催办扫描。
      */
-    @Scheduled(fixedDelayString = "${flow.auto-urge.scan-interval-ms:1800000}")
+    @Scheduled(fixedDelayString = "${ydsz.flow.auto-urge.scan-interval-ms:1800000}")
     public void autoUrge() {
         clusterLockHelper.tryRun("flow:auto-urge:scan", 300, () -> {
             try {
@@ -85,6 +75,10 @@ public class FlowAutoUrgeScheduler {
     }
 
     private void doAutoUrge() {
+        FlowProperties.AutoUrge cfg = flowProperties.getAutoUrge();
+        long thresholdHours = cfg.getThresholdHours();
+        int batchSize = cfg.getBatchSize();
+
         LocalDateTime thresholdTime = LocalDateTime.now().minusHours(thresholdHours);
         log.info("[AutoUrge] 开始扫描: threshold={} batchSize={}", thresholdTime, batchSize);
 

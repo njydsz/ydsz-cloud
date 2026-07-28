@@ -7,9 +7,11 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.cronjob.server.config.CronjobProperties;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -29,16 +31,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class SandboxScriptExecutor {
 
-    @Value("${ydsz.cronjob.sandbox.timeout-seconds:300}")
-    private int defaultTimeoutSeconds;
-
-    @Value("${ydsz.cronjob.sandbox.max-output-size:1048576}")
-    private int maxOutputSize;
-
-    @Value("${ydsz.cronjob.sandbox.work-dir:./data/sandbox}")
-    private String workDir;
+    /** P3-3.3: 沙箱配置统一从 CronjobProperties 读取 */
+    private final CronjobProperties cronjobProperties;
 
     /**
      * 在沙箱中执行脚本。
@@ -51,6 +48,11 @@ public class SandboxScriptExecutor {
      */
     public SandboxResult execute(String scriptContent, String scriptType,
                                   int timeoutSeconds, Map<String, String> envVars) {
+        CronjobProperties.Sandbox sandbox = cronjobProperties.getSandbox();
+        int defaultTimeoutSeconds = sandbox.getTimeoutSeconds();
+        int maxOutputSize = sandbox.getMaxOutputSize();
+        String workDir = sandbox.getWorkDir();
+
         Path scriptFile = null;
         try {
             // 创建临时工作目录
