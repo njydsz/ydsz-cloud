@@ -53,6 +53,9 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.service.OutboxService;
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 任务调度服务实现
@@ -127,6 +130,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
 
     /** 已调度的任务: jobKey -> Future */
     private final Map<String, ScheduledFuture<?>> scheduledMap = new ConcurrentHashMap<>();
+    private final ObjectProvider<OutboxService> outboxServiceProvider;
 
     // ==================== 分布式锁常量 ====================
 
@@ -1054,4 +1058,21 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             return null;
         }
     }
+
+    /**
+     * 发布领域事件到 Outbox（OutboxService 不可用时静默跳过）。
+     */
+    private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
+        try {
+            OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+            if (outboxService != null) {
+                outboxService.appendToOutbox(aggregateType, aggregateId, eventType, payload);
+            } else {
+                log.debug("[Outbox] OutboxService not configured, skip: type={} id={}", eventType, aggregateId);
+            }
+        } catch (Exception e) {
+            log.warn("[Outbox] Event publish failed: type={} id={} err={}", eventType, aggregateId, e.getMessage());
+        }
+    }
+
 }

@@ -23,6 +23,7 @@ import com.njydsz.literule.server.spi.RuleTemplateProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 规则模板市场 Controller
@@ -98,6 +99,6 @@ public class RuleTemplateController {
     @PostMapping("/templates/{templateCode}/import")
     public BaseResponse<RuleDefinitionVO> importTemplate(@PathVariable String templateCode,
                                                   @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleTemplateProvider.importTemplate(templateCode, operator)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleTemplateProvider.importTemplate(templateCode, operator)), RuleDefinitionVO.class));
     }
 }

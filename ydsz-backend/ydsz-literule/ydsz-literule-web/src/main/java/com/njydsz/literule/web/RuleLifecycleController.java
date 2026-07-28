@@ -30,7 +30,6 @@ import com.njydsz.literule.api.dto.RuleDelegateDTO;
 import com.njydsz.literule.api.dto.RuleRejectDTO;
 import com.njydsz.literule.api.dto.RuleStatusChangeDTO;
 import com.njydsz.literule.api.dto.RuleSubmitReviewDTO;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
@@ -40,6 +39,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 规则生命周期 Controller
@@ -104,7 +104,7 @@ public class RuleLifecycleController {
             def.setReviewedAt(LocalDateTime.now().toString());
             def.setReviewComment(comment);
         }
-        return BaseResponse.success(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc()));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc())), RuleDefinitionVO.class));
     }
 
     /**
@@ -147,7 +147,7 @@ public class RuleLifecycleController {
 
         String changeDesc = String.format("[审批通过] %s -> PUBLISHED, 审批人=%s, 意见=%s",
                 current.getDesc(), operator, comment.isEmpty() ? "无" : comment);
-        return BaseResponse.success(ruleAdminService.save(def, operator, changeDesc));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleAdminService.save(def, operator, changeDesc)), RuleDefinitionVO.class));
     }
 
     /**
@@ -190,7 +190,7 @@ public class RuleLifecycleController {
 
         String changeDesc = String.format("[审批驳回] %s -> ARCHIVED, 审批人=%s, 理由=%s",
                 current.getDesc(), operator, reason);
-        return BaseResponse.success(ruleAdminService.save(def, operator, changeDesc));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleAdminService.save(def, operator, changeDesc)), RuleDefinitionVO.class));
     }
 
     /**
@@ -226,7 +226,7 @@ public class RuleLifecycleController {
             return BaseResponse.error("多级审批流服务未启用");
         }
         String flowCode = dto == null ? null : dto.getFlowCode();
-        return BaseResponse.success(svc.submitForReview(ruleCode, flowCode, operator));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(svc.submitForReview(ruleCode, flowCode, operator)), ApprovalRecordVO.class));
     }
 
     /**
@@ -252,7 +252,7 @@ public class RuleLifecycleController {
             return BaseResponse.error("多级审批流服务未启用");
         }
         String comment = dto.getComment() == null ? "" : dto.getComment();
-        return BaseResponse.success(svc.approve(ruleCode, operator, comment));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(svc.approve(ruleCode, operator, comment)), ApprovalRecordVO.class));
     }
 
     /**
@@ -276,7 +276,7 @@ public class RuleLifecycleController {
         if (svc == null) {
             return BaseResponse.error("多级审批流服务未启用");
         }
-        return BaseResponse.success(svc.reject(ruleCode, operator, dto.getReason()));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(svc.reject(ruleCode, operator, dto.getReason())), ApprovalRecordVO.class));
     }
 
     /**
@@ -301,7 +301,7 @@ public class RuleLifecycleController {
             return BaseResponse.error("多级审批流服务未启用");
         }
         String comment = dto.getComment() == null ? "" : dto.getComment();
-        return BaseResponse.success(svc.delegate(ruleCode, operator, dto.getDelegatedTo(), comment));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(svc.delegate(ruleCode, operator, dto.getDelegatedTo(), comment)), ApprovalRecordVO.class));
     }
 
     /**
@@ -314,9 +314,9 @@ public class RuleLifecycleController {
     public BaseResponse<ApprovalRecordVO> approvalStatus(@PathVariable String ruleCode) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(null));
+            return BaseResponse.success((ApprovalRecordVO) null);
         }
-        return BaseResponse.success(svc.getApprovalStatus(ruleCode));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(svc.getApprovalStatus(ruleCode)), ApprovalRecordVO.class));
     }
 
     /**
@@ -329,9 +329,9 @@ public class RuleLifecycleController {
     public BaseResponse<List<ApprovalRecordVO>> pendingApprovals(@RequestParam String approver) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.success(LiteruleConverter.INSTANT.approvalRecordListToVO(List.of()));
+            return BaseResponse.success(List.of());
         }
-        return BaseResponse.success(svc.listPendingApprovals(approver));
+        return BaseResponse.success(svc.listPendingApprovals(approver).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), ApprovalRecordVO.class)).toList());
     }
 
     /**
@@ -353,7 +353,7 @@ public class RuleLifecycleController {
         if (svc == null) {
             return BaseResponse.error("多级审批流服务未启用");
         }
-        return BaseResponse.success(svc.cancelReview(ruleCode, operator));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(svc.cancelReview(ruleCode, operator)), ApprovalRecordVO.class));
     }
 
     /**
@@ -365,8 +365,8 @@ public class RuleLifecycleController {
     public BaseResponse<List<ApprovalFlowVO>> approvalFlows() {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.success(LiteruleConverter.INSTANT.approvalFlowListToVO(List.of()));
+            return BaseResponse.success(List.of());
         }
-        return BaseResponse.success(svc.listFlows());
+        return BaseResponse.success(svc.listFlows().stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), ApprovalFlowVO.class)).toList());
     }
 }

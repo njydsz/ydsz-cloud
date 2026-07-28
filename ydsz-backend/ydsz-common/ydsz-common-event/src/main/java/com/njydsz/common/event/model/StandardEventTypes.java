@@ -97,4 +97,16 @@ public final class StandardEventTypes {
     public static final String USER_DISABLED = "USER_DISABLED";
     /** 组织架构变更 */
     public static final String ORG_STRUCTURE_CHANGED = "ORG_STRUCTURE_CHANGED";
+
+    // ========== Message 事件 ==========
+    /** 消息发送 */
+    public static final String MESSAGE_SENT = "MESSAGE_SENT";
+    /** 消息撤回 */
+    public static final String MESSAGE_RECALLED = "MESSAGE_RECALLED";
+
+    // ========== Cronjob 扩展事件 ==========
+    /** 任务创建 */
+    public static final String JOB_CREATED = "JOB_CREATED";
+    /** 任务删除 */
+    public static final String JOB_DELETED = "JOB_DELETED";
 }

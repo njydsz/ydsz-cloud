@@ -110,6 +110,6 @@ public class RuleDependencyController {
      */
     @GetMapping("/{ruleCode}/cascadingDisable")
     public BaseResponse<List<StringVO>> cascadingDisable(@PathVariable String ruleCode) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.stringListToVO(ruleDependencyProvider.cascadingDisable(ruleCode)));
+        return BaseResponse.success(ruleDependencyProvider.cascadingDisable(ruleCode).stream().map(StringVO::new).toList());
     }
 }

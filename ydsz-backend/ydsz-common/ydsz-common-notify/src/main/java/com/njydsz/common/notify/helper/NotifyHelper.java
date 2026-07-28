@@ -67,6 +67,22 @@ public class NotifyHelper {
     }
 
     /**
+     * 批量发送站内信通知（逐条发送，单条失败不影响其他接收者）。
+     *
+     * @param receiverIds 接收者用户 ID 列表
+     * @param title       通知标题
+     * @param content     通知内容
+     */
+    public void sendInAppBatch(java.util.List<String> receiverIds, String title, String content) {
+        if (receiverIds == null || receiverIds.isEmpty()) {
+            return;
+        }
+        for (String receiverId : receiverIds) {
+            sendInApp(receiverId, title, content);
+        }
+    }
+
+    /**
      * 发送邮件通知。
      *
      * @param emailAddress 接收者邮箱

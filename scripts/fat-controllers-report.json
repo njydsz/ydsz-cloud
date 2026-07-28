@@ -1,48 +1,5 @@
 [
   {
-    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleAdminController.java",
-    "module": "ydsz-literule",
-    "total_lines": 2377,
-    "injections": 16,
-    "method_count": 55,
-    "long_methods": [
-      {
-        "name": "batchRunTestCases",
-        "body_lines": 74,
-        "start_line": 600
-      },
-      {
-        "name": "replayTrace",
-        "body_lines": 54,
-        "start_line": 1013
-      },
-      {
-        "name": "batchReplayTraces",
-        "body_lines": 82,
-        "start_line": 1097
-      },
-      {
-        "name": "impactPreview",
-        "body_lines": 105,
-        "start_line": 1212
-      }
-    ],
-    "business_violations": [
-      "4b-loops(4)",
-      "4c-multiService(57)",
-      "5-entity(0new,16ref)"
-    ],
-    "hits": [
-      "1-lines(2377)",
-      "2-longMethods(4)",
-      "3-injections(16)",
-      "4b-loops(4)",
-      "4c-multiService(57)",
-      "5-entity(0new,16ref)"
-    ],
-    "is_fat": true
-  },
-  {
     "file": "ydsz-workflow\\ydsz-workflow-web\\src\\main\\java\\com\\njydsz\\workflow\\web\\controller\\FlowMonitorController.java",
     "module": "ydsz-workflow",
     "total_lines": 799,
@@ -79,56 +36,89 @@
     "is_fat": true
   },
   {
-    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\CEPController.java",
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleTraceController.java",
     "module": "ydsz-literule",
-    "total_lines": 370,
+    "total_lines": 462,
+    "injections": 2,
+    "method_count": 6,
+    "long_methods": [
+      {
+        "name": "replayTrace",
+        "body_lines": 54,
+        "start_line": 113
+      },
+      {
+        "name": "batchReplayTraces",
+        "body_lines": 82,
+        "start_line": 197
+      },
+      {
+        "name": "impactPreview",
+        "body_lines": 105,
+        "start_line": 312
+      }
+    ],
+    "business_violations": [
+      "5-entity(0new,14ref)"
+    ],
+    "hits": [
+      "1-lines(462)",
+      "2-longMethods(3)",
+      "5-entity(0new,14ref)"
+    ],
+    "is_fat": true
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\controller\\CEPController.java",
+    "module": "ydsz-literule",
+    "total_lines": 372,
     "injections": 0,
     "method_count": 10,
     "long_methods": [
       {
         "name": "testPattern",
         "body_lines": 52,
-        "start_line": 317
+        "start_line": 319
       }
     ],
     "business_violations": [
       "4b-loops(3)"
     ],
     "hits": [
-      "1-lines(370)",
+      "1-lines(372)",
       "2-longMethods(1)",
       "4b-loops(3)"
     ],
     "is_fat": true
   },
   {
-    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleDslController.java",
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\controller\\RuleDslController.java",
     "module": "ydsz-literule",
-    "total_lines": 357,
+    "total_lines": 356,
     "injections": 2,
     "method_count": 5,
     "long_methods": [
       {
         "name": "validate",
         "body_lines": 52,
-        "start_line": 85
+        "start_line": 84
       },
       {
         "name": "importDsl",
         "body_lines": 52,
-        "start_line": 179
+        "start_line": 178
       },
       {
         "name": "preview",
         "body_lines": 55,
-        "start_line": 301
+        "start_line": 300
       }
     ],
     "business_violations": [
       "4b-loops(4)"
     ],
     "hits": [
-      "1-lines(357)",
+      "1-lines(356)",
       "2-longMethods(3)",
       "4b-loops(4)"
     ],
@@ -199,6 +189,22 @@
     "is_fat": true
   },
   {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleAdminController.java",
+    "module": "ydsz-literule",
+    "total_lines": 355,
+    "injections": 4,
+    "method_count": 8,
+    "long_methods": [],
+    "business_violations": [
+      "4c-multiService(17)"
+    ],
+    "hits": [
+      "1-lines(355)",
+      "4c-multiService(17)"
+    ],
+    "is_fat": true
+  },
+  {
     "file": "ydsz-agent\\ydsz-agent-web\\src\\main\\java\\com\\njydsz\\agent\\web\\controller\\AgentController.java",
     "module": "ydsz-agent",
     "total_lines": 315,
@@ -219,17 +225,26 @@
     "is_fat": true
   },
   {
-    "file": "ydsz-cronjob\\ydsz-cronjob-web\\src\\main\\java\\com\\njydsz\\cronjob\\web\\controller\\JobController.java",
-    "module": "ydsz-cronjob",
-    "total_lines": 471,
-    "injections": 1,
-    "method_count": 13,
-    "long_methods": [],
-    "business_violations": [],
-    "hits": [
-      "1-lines(471)"
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleTestCaseController.java",
+    "module": "ydsz-literule",
+    "total_lines": 213,
+    "injections": 2,
+    "method_count": 3,
+    "long_methods": [
+      {
+        "name": "batchRunTestCases",
+        "body_lines": 74,
+        "start_line": 138
+      }
     ],
-    "is_fat": false
+    "business_violations": [
+      "5-entity(0new,2ref)"
+    ],
+    "hits": [
+      "2-longMethods(1)",
+      "5-entity(0new,2ref)"
+    ],
+    "is_fat": true
   },
   {
     "file": "ydsz-nextwiki\\ydsz-nextwiki-web\\src\\main\\java\\com\\njydsz\\nextwiki\\web\\controller\\DownloadController.java",
@@ -245,6 +260,19 @@
     "is_fat": false
   },
   {
+    "file": "ydsz-cronjob\\ydsz-cronjob-web\\src\\main\\java\\com\\njydsz\\cronjob\\web\\controller\\JobController.java",
+    "module": "ydsz-cronjob",
+    "total_lines": 418,
+    "injections": 1,
+    "method_count": 11,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [
+      "1-lines(418)"
+    ],
+    "is_fat": false
+  },
+  {
     "file": "ydsz-workflow\\ydsz-workflow-web\\src\\main\\java\\com\\njydsz\\workflow\\web\\controller\\FlowThirdPartyApprovalController.java",
     "module": "ydsz-workflow",
     "total_lines": 377,
@@ -254,6 +282,19 @@
     "business_violations": [],
     "hits": [
       "1-lines(377)"
+    ],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleLifecycleController.java",
+    "module": "ydsz-literule",
+    "total_lines": 372,
+    "injections": 1,
+    "method_count": 4,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [
+      "1-lines(372)"
     ],
     "is_fat": false
   },
@@ -293,6 +334,19 @@
     "business_violations": [],
     "hits": [
       "1-lines(338)"
+    ],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RulePackController.java",
+    "module": "ydsz-literule",
+    "total_lines": 307,
+    "injections": 1,
+    "method_count": 7,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [
+      "1-lines(307)"
     ],
     "is_fat": false
   },
@@ -404,28 +458,6 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-workflow\\ydsz-workflow-web\\src\\main\\java\\com\\njydsz\\workflow\\web\\controller\\FlowDelegateController.java",
-    "module": "ydsz-workflow",
-    "total_lines": 278,
-    "injections": 1,
-    "method_count": 5,
-    "long_methods": [],
-    "business_violations": [],
-    "hits": [],
-    "is_fat": false
-  },
-  {
-    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\RoleController.java",
-    "module": "ydsz-userinfo",
-    "total_lines": 268,
-    "injections": 1,
-    "method_count": 10,
-    "long_methods": [],
-    "business_violations": [],
-    "hits": [],
-    "is_fat": false
-  },
-  {
     "file": "ydsz-cronjob\\ydsz-cronjob-web\\src\\main\\java\\com\\njydsz\\cronjob\\web\\controller\\JobGroupController.java",
     "module": "ydsz-cronjob",
     "total_lines": 265,
@@ -481,11 +513,22 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\MenuController.java",
-    "module": "ydsz-userinfo",
-    "total_lines": 234,
-    "injections": 1,
-    "method_count": 8,
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleBatchController.java",
+    "module": "ydsz-literule",
+    "total_lines": 240,
+    "injections": 2,
+    "method_count": 1,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleDecisionTableController.java",
+    "module": "ydsz-literule",
+    "total_lines": 230,
+    "injections": 2,
+    "method_count": 7,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -514,11 +557,22 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\LanguageController.java",
-    "module": "ydsz-userinfo",
-    "total_lines": 223,
+    "file": "ydsz-workflow\\ydsz-workflow-web\\src\\main\\java\\com\\njydsz\\workflow\\web\\controller\\FlowDelegateController.java",
+    "module": "ydsz-workflow",
+    "total_lines": 226,
     "injections": 1,
-    "method_count": 8,
+    "method_count": 3,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleGraphController.java",
+    "module": "ydsz-literule",
+    "total_lines": 225,
+    "injections": 3,
+    "method_count": 5,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -536,11 +590,22 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\BreakpointController.java",
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\controller\\BreakpointController.java",
     "module": "ydsz-literule",
     "total_lines": 223,
     "injections": 0,
     "method_count": 10,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\RoleController.java",
+    "module": "ydsz-userinfo",
+    "total_lines": 222,
+    "injections": 1,
+    "method_count": 8,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -591,17 +656,6 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\CompanyController.java",
-    "module": "ydsz-userinfo",
-    "total_lines": 205,
-    "injections": 1,
-    "method_count": 7,
-    "long_methods": [],
-    "business_violations": [],
-    "hits": [],
-    "is_fat": false
-  },
-  {
     "file": "ydsz-system\\ydsz-system-web\\src\\main\\java\\com\\njydsz\\system\\web\\controller\\ConfigController.java",
     "module": "ydsz-system",
     "total_lines": 204,
@@ -624,33 +678,22 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\PostController.java",
-    "module": "ydsz-userinfo",
-    "total_lines": 201,
-    "injections": 1,
-    "method_count": 7,
-    "long_methods": [],
-    "business_violations": [],
-    "hits": [],
-    "is_fat": false
-  },
-  {
-    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\DepartmentController.java",
-    "module": "ydsz-userinfo",
-    "total_lines": 199,
-    "injections": 1,
-    "method_count": 8,
-    "long_methods": [],
-    "business_violations": [],
-    "hits": [],
-    "is_fat": false
-  },
-  {
     "file": "ydsz-cronjob\\ydsz-cronjob-web\\src\\main\\java\\com\\njydsz\\cronjob\\web\\controller\\JobWebhookController.java",
     "module": "ydsz-cronjob",
     "total_lines": 194,
     "injections": 1,
     "method_count": 5,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleImportExportController.java",
+    "module": "ydsz-literule",
+    "total_lines": 193,
+    "injections": 1,
+    "method_count": 3,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -673,6 +716,28 @@
     "total_lines": 185,
     "injections": 1,
     "method_count": 7,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\LanguageController.java",
+    "module": "ydsz-userinfo",
+    "total_lines": 183,
+    "injections": 1,
+    "method_count": 6,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\MenuController.java",
+    "module": "ydsz-userinfo",
+    "total_lines": 182,
+    "injections": 1,
+    "method_count": 6,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -954,6 +1019,28 @@
     "is_fat": false
   },
   {
+    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\CompanyController.java",
+    "module": "ydsz-userinfo",
+    "total_lines": 161,
+    "injections": 1,
+    "method_count": 5,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\PostController.java",
+    "module": "ydsz-userinfo",
+    "total_lines": 161,
+    "injections": 1,
+    "method_count": 5,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
     "file": "ydsz-message\\ydsz-message-web\\src\\main\\java\\com\\njydsz\\message\\web\\controller\\TemplateVersionController.java",
     "module": "ydsz-message",
     "total_lines": 161,
@@ -976,22 +1063,22 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-cronjob\\ydsz-cronjob-web\\src\\main\\java\\com\\njydsz\\cronjob\\web\\controller\\TaskTopologyController.java",
-    "module": "ydsz-cronjob",
+    "file": "ydsz-userinfo\\ydsz-userinfo-web\\src\\main\\java\\com\\njydsz\\userinfo\\web\\controller\\DepartmentController.java",
+    "module": "ydsz-userinfo",
     "total_lines": 155,
-    "injections": 5,
-    "method_count": 2,
+    "injections": 1,
+    "method_count": 6,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
     "is_fat": false
   },
   {
-    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleAuditLogController.java",
-    "module": "ydsz-literule",
-    "total_lines": 154,
-    "injections": 1,
-    "method_count": 0,
+    "file": "ydsz-cronjob\\ydsz-cronjob-web\\src\\main\\java\\com\\njydsz\\cronjob\\web\\controller\\TaskTopologyController.java",
+    "module": "ydsz-cronjob",
+    "total_lines": 155,
+    "injections": 5,
+    "method_count": 2,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -1014,6 +1101,17 @@
     "total_lines": 152,
     "injections": 1,
     "method_count": 5,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\controller\\RuleAuditLogController.java",
+    "module": "ydsz-literule",
+    "total_lines": 152,
+    "injections": 1,
+    "method_count": 0,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -1284,7 +1382,7 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleVariableAdminController.java",
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\controller\\RuleVariableAdminController.java",
     "module": "ydsz-literule",
     "total_lines": 136,
     "injections": 2,
@@ -1515,6 +1613,17 @@
     "is_fat": false
   },
   {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleABPolicyController.java",
+    "module": "ydsz-literule",
+    "total_lines": 123,
+    "injections": 1,
+    "method_count": 3,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
     "file": "ydsz-workflow\\ydsz-workflow-web\\src\\main\\java\\com\\njydsz\\workflow\\web\\controller\\FlowEventController.java",
     "module": "ydsz-workflow",
     "total_lines": 122,
@@ -1553,6 +1662,28 @@
     "total_lines": 119,
     "injections": 1,
     "method_count": 1,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleCategoryController.java",
+    "module": "ydsz-literule",
+    "total_lines": 118,
+    "injections": 2,
+    "method_count": 1,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleDependencyController.java",
+    "module": "ydsz-literule",
+    "total_lines": 115,
+    "injections": 1,
+    "method_count": 4,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -1724,7 +1855,7 @@
     "is_fat": false
   },
   {
-    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleDashboardController.java",
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\controller\\RuleDashboardController.java",
     "module": "ydsz-literule",
     "total_lines": 111,
     "injections": 1,
@@ -1784,6 +1915,17 @@
     "total_lines": 103,
     "injections": 0,
     "method_count": 1,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleTemplateController.java",
+    "module": "ydsz-literule",
+    "total_lines": 103,
+    "injections": 1,
+    "method_count": 3,
     "long_methods": [],
     "business_violations": [],
     "hits": [],
@@ -1859,6 +2001,17 @@
     "file": "ydsz-system\\ydsz-system-web\\src\\main\\java\\com\\njydsz\\system\\web\\controller\\DictVersionController.java",
     "module": "ydsz-system",
     "total_lines": 71,
+    "injections": 1,
+    "method_count": 1,
+    "long_methods": [],
+    "business_violations": [],
+    "hits": [],
+    "is_fat": false
+  },
+  {
+    "file": "ydsz-literule\\ydsz-literule-web\\src\\main\\java\\com\\njydsz\\literule\\web\\RuleConflictController.java",
+    "module": "ydsz-literule",
+    "total_lines": 54,
     "injections": 1,
     "method_count": 1,
     "long_methods": [],

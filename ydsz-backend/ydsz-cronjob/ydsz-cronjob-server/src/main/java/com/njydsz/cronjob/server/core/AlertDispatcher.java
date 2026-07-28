@@ -27,7 +27,7 @@ import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
-import com.njydsz.cronjob.server.notify.CronjobNotifyHelper;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.cronjob.server.core.AlertSendException;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
@@ -80,7 +80,7 @@ public class AlertDispatcher {
     /** P0-9: 告警智能降噪管理器（可选注入，仅 ydsz.cronjob.alert-dedup.enabled=true 时启用） */
     private final ObjectProvider<AlertDedupManager> alertDedupManagerProvider;
     /** P2-10: common-notify 通知助手（可选注入，IM 渠道直推） */
-    private final ObjectProvider<CronjobNotifyHelper> cronjobNotifyHelperProvider;
+    private final ObjectProvider<NotifyHelper> notifyHelperProvider;
     /** Outbox 事件服务（可选依赖，发布任务告警/执行结果领域事件） */
     private final ObjectProvider<OutboxService> outboxServiceProvider;
 
@@ -369,11 +369,11 @@ public class AlertDispatcher {
     }
 
     /**
-     * P2-10: 通过 CronjobNotifyHelper 发送 IM 通知（非阻塞，失败静默跳过）。
+     * P2-10: 通过 NotifyHelper 发送 IM 通知（非阻塞，失败静默跳过）。
      */
     private void tryNotifyViaHelper(AlertContext context, List<String> receivers) {
         try {
-            CronjobNotifyHelper helper = cronjobNotifyHelperProvider.getIfAvailable();
+            NotifyHelper helper = notifyHelperProvider.getIfAvailable();
             if (helper == null) {
                 return;
             }
@@ -383,7 +383,7 @@ public class AlertDispatcher {
                     context.jobKey(),
                     context.errorMessage(),
                     context.triggerLogId());
-            helper.notifySystemAlert(receivers, title, content);
+            helper.sendInAppBatch(receivers, title, content);
         } catch (Exception e) {
             log.debug("[AlertDispatcher] IM 通知发送失败(非阻塞): jobKey={} reason={}",
                     context.jobKey(), e.getMessage());

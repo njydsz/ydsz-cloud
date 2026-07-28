@@ -1,69 +1,72 @@
 package com.njydsz.workflow.web.controller.instance;
 
-import java.time.LocalDateTime;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.server.service.FlowTaskService;
-import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.workflow.domain.converter.WorkflowConverter;
-import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
- * 任务操作 Controller
+ * 核心任务操作 Controller（单任务办理入口）
  *
- * <p>流程任务的 HTTP 入口，对标钉钉 / 飞书审批中心接口。承担审批人全部日常操作：
- * 查看 / 签收 / 通过 / 驳回 / 转办 / 委派 / 加签 / 跳转 / 批量审批 / 催办 / 已阅 / 沟通 / 暂存 / 撤回。
+ * <p>流程任务的 HTTP 入口，对标钉钉 / 飞书审批中心接口。承担审批人对单个任务的
+ * 核心办理动作：查看 / 签收 / 通过 / 驳回 / 转办 / 委派 / 加签 / 跳转。
  *
  * <p><b>接口分组：</b>
  * <ul>
  *   <li><b>任务详情</b>：{@code GET /task/{taskId}}（含历史轨迹 / 表单权限）</li>
  *   <li><b>办理动作</b>：{@code POST /task/claim}（签收） / {@code pass}（通过） /
  *       {@code reject}（驳回） / {@code transfer}（转办） / {@code delegate}（委派）</li>
- *   <li><b>会签</b>：{@code POST /task/countersign-before} / {@code countersign-after} /
- *       {@code countersign-parallel} / {@code countersign-remove} / {@code add-approver}</li>
- *   <li><b>查询</b>：{@code /task/todo/page} / {@code /task/done/page} /
- *       {@code /task/overdue} / {@code /task/node-stats}</li>
- *   <li><b>批量</b>：{@code /task/batch/pass} / {@code batch/reject} /
- *       {@code batch/transfer} / {@code batch/urge}</li>
- *   <li><b>辅助</b>：{@code /task/save-draft}（暂存） / {@code communicate}（沟通） /
- *       {@code mark-read}（已阅） / {@code jump}（跳转） / {@code suspend} / {@code activate}</li>
- *   <li><b>撤回</b>：{@code POST /task/retract} — 审批人已审后撤回</li>
- *   <li><b>推送</b>：{@code /task/todo-count/ws}（WebSocket 待办数推送）</li>
+ *   <li><b>会签</b>：{@code POST /task/countersignBefore}（前加签） /
+ *       {@code countersignAfter}（后加签） / {@code countersignParallel}（并加签）</li>
+ *   <li><b>跳转</b>：{@code POST /task/jump}（管理员强制跳转） /
+ *       {@code freeJump}（办理人自由流跳转）</li>
+ *   <li><b>驳回候选节点</b>：{@code GET /task/{taskId}/rejectableNodes}</li>
  * </ul>
  *
  * <p><b>权限模型：</b>所有写接口通过 {@link AuthApiPermission} 校验
- * {@link PermissionCodes#WORKFLOW_TASK_VIEW} / {@code WORKFLOW_TASK_OPERATE} 等权限码；
+ * {@link PermissionCodes#WORKFLOW_TASK_VIEW} / {@code WORKFLOW_TASK_OPERATE} /
+ * {@code WORKFLOW_INSTANCE_CONTROL} / {@code WORKFLOW_TASK_FREE_JUMP} 等权限码；
  * 办理动作额外校验「操作人 == 任务办理人」防越权。
  *
- * <p><b>限流：</b>通过 / 驳回 / 转办 / 加签 / 撤回等高频操作通过 {@link RateLimit} 限流，
- * 防止恶意刷接口；幂等操作（撤回 / 暂存）通过 {@link Idempotent} 注解 5s 防重。
+ * <p><b>限流：</b>通过 / 驳回 / 转办 / 加签等高频操作通过 {@link RateLimit} 限流，
+ * 防止恶意刷接口；幂等操作通过 {@link Idempotent} 注解 5s 防重。
  *
  * <p><b>设计原则：</b>本 Controller 仅做参数透传、权限校验、VO 转换，所有业务逻辑下沉到
  * {@link FlowTaskService}（门面模式），底层由 4 个子 Service（Query/Complete/Sign/Batch）协作。
+ *
+ * <p><b>拆分说明：</b>原 FlowTaskController 承担全部 34 个任务相关接口，已按职责拆分为 4 个 Controller：
+ * <ul>
+ *   <li>本类 — 核心单任务办理操作（12 个接口）</li>
+ *   <li>{@link FlowTaskBatchController} — 批量操作（批量通过 / 驳回 / 转办 / 催办 / 一键通过）</li>
+ *   <li>{@link FlowTaskQueryController} — 查询与统计（待办 / 已办 / 超期 / 节点耗时 / 超期统计）</li>
+ *   <li>{@link FlowTaskAuxController} — 辅助操作与待办推送（减签 / 已阅 / 沟通 / 暂存 / 取回 / 挂起 / 激活 / 待办数推送）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -72,6 +75,9 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
  * @see WorkflowFacade 工作流门面（业务编排）
  * @see FlowTaskOperateDTO 任务操作 DTO
  * @see FlowRunTask 运行时任务实体
+ * @see FlowTaskBatchController 批量操作 Controller
+ * @see FlowTaskQueryController 查询与统计 Controller
+ * @see FlowTaskAuxController 辅助操作与待办推送 Controller
  */
 @Slf4j
 @RestController
@@ -87,8 +93,6 @@ public class FlowTaskController {
     private final WorkflowFacade workflowFacade;
     /** P1-1: 历史任务 mapper（驳回候选目标节点） */
     private final FlowHisTaskMapper hisTaskMapper;
-    /** P1-7: WebSocket 待办数实时推送服务 */
-    private final FlowTodoCountPushService todoCountPushService;
 
     // ============== 任务操作 ==============
 
@@ -299,386 +303,5 @@ public class FlowTaskController {
         dto.setAction("JUMP");
         workflowFacade.jumpTask(dto);
         return BaseResponse.success();
-    }
-
-    /**
-     * P2-26: 批量审批 — 对多个任务逐一通过
-     *
-     * <p>P0-1 修复：操作人 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
-     *
-     * @param taskIds 任务 ID 列表
-     * @param comment 审批意见（可选）
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:batchPass:lock", ttlSeconds = 5)
-    @PostMapping("/task/batchPass")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
-                                  @RequestParam(required = false) String comment) {
-        workflowFacade.batchPassTasks(taskIds, AuthContext.getUserId(), comment);
-        return BaseResponse.success();
-    }
-
-    /**
-     * P1-4: 批量驳回 — 对多个任务逐一执行 reject，任一失败整批回滚。
-     *
-     * @param taskIds        任务 ID 列表
-     * @param comment        审批意见
-     * @param targetNodeCode 退回目标节点编码（可选）
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:batchReject:lock", ttlSeconds = 5)
-    @PostMapping("/task/batchReject")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> batchReject(@RequestParam List<String> taskIds,
-                                    @RequestParam(required = false) String comment,
-                                    @RequestParam(required = false) String targetNodeCode) {
-        taskService.batchReject(taskIds, AuthContext.getUserId(), comment, targetNodeCode);
-        return BaseResponse.success();
-    }
-
-    /**
-     * P1-4: 批量转办 — 对多个任务逐一执行 transfer，任一失败整批回滚。
-     *
-     * @param taskIds        任务 ID 列表
-     * @param comment        转办说明
-     * @param targetUserId   目标人 ID
-     * @param targetUserName 目标人姓名
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:batchTransfer:lock", ttlSeconds = 5)
-    @PostMapping("/task/batchTransfer")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> batchTransfer(@RequestParam List<String> taskIds,
-                                      @RequestParam(required = false) String comment,
-                                      @RequestParam String targetUserId,
-                                      @RequestParam(required = false) String targetUserName) {
-        taskService.batchTransfer(taskIds, AuthContext.getUserId(), comment,
-                targetUserId, targetUserName);
-        return BaseResponse.success();
-    }
-
-    /**
-     * P1-4: 批量催办 — 对多个实例逐一执行 urge，单个失败不影响其他。
-     *
-     * @param instanceIds 实例 ID 列表
-     * @param comment     催办说明
-     * @return 统一响应结果，包含成功催办的实例数量
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:batchUrge:lock", ttlSeconds = 5)
-    @PostMapping("/instance/batchUrge")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Integer> batchUrge(@RequestParam List<String> instanceIds,
-                                     @RequestParam(required = false) String comment) {
-        return BaseResponse.success(taskService.batchUrge(instanceIds, AuthContext.getUserId(), comment));
-    }
-
-    /**
-     * GAP-P0-4: 一键通过所有待办 — 查询当前用户全部待办（上限 100 条）并逐一通过。
-     *
-     * <p>对标钉钉/飞书审批中心"一键通过"按钮。
-     *
-     * @param comment 审批意见（可选）
-     * @return 统一响应结果，包含实际通过的任务数量
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:passAll:lock", ttlSeconds = 5)
-    @PostMapping("/task/passAll")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Integer> passAll(@RequestParam(required = false) String comment) {
-        return BaseResponse.success(workflowFacade.passAllTodoTasks(AuthContext.getUserId(), comment));
-    }
-
-    /**
-     * 待办任务查询
-     *
-     * <p>P0-1 修复：用户 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
-     *
-     * @param page 页码
-     * @param size 每页大小
-     * @return 统一响应结果，包含待办任务列表
-     */
-    @GetMapping("/task/todo")
-    public BaseResponse<List<Map<String, Object>>> todo(@RequestParam(defaultValue = "1") @Min(1) int page,
-                                              @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.success(workflowFacade.listTodoTasks(AuthContext.getUserId(), page, size));
-    }
-
-    /**
-     * 已办任务查询
-     *
-     * <p>P0-1 修复：用户 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
-     *
-     * @param page 页码
-     * @param size 每页大小
-     * @return 统一响应结果，包含已办任务列表
-     */
-    @GetMapping("/task/done")
-    public BaseResponse<List<Map<String, Object>>> done(@RequestParam(defaultValue = "1") @Min(1) int page,
-                                              @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.success(workflowFacade.listDoneTasks(AuthContext.getUserId(), page, size));
-    }
-
-    /**
-     * P2-32: 查询超期任务
-     *
-     * @param assigneeId 办理人 ID（可选，为空时查全部）
-     * @param tenantId   租户 ID（可选）
-     * @return 统一响应结果，包含超期任务列表
-     */
-    @GetMapping("/task/overdue")
-    public BaseResponse<List<FlowRunTaskVO>> overdue(@RequestParam(required = false) String assigneeId,
-                                         @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(taskService.listOverdue(assigneeId, tid)));
-    }
-
-    /**
-     * P2-36: 标记任务超时（管理员手动标记）
-     *
-     * @param taskId 任务 ID
-     * @param reason 超时原因（可选）
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:timeoutTask:lock", ttlSeconds = 5)
-    @PostMapping("/task/{taskId}/timeout")
-    public BaseResponse<Void> timeoutTask(@PathVariable String taskId,
-                                    @RequestParam(required = false) String reason) {
-        taskService.timeoutTask(taskId, reason);
-        return BaseResponse.success();
-    }
-
-    /**
-     * P2-33: 已办多维筛选分页查询
-     *
-     * @param assigneeId   办理人 ID（可选）
-     * @param businessType 业务类型（可选）
-     * @param flowCode     流程编码（可选）
-     * @param startTime    完成时间下界（可选）
-     * @param endTime      完成时间上界（可选）
-     * @param tenantId     租户 ID（可选）
-     * @param pageNo       页码
-     * @param pageSize     每页大小
-     * @return 统一响应结果，包含分页已办列表
-     */
-    @GetMapping("/task/done/search")
-    public BaseResponse<PageResponse<FlowRunTaskVO>> doneSearch(
-            @RequestParam(required = false) String assigneeId,
-            @RequestParam(required = false) String businessType,
-            @RequestParam(required = false) String flowCode,
-            @RequestParam(required = false) LocalDateTime startTime,
-            @RequestParam(required = false) LocalDateTime endTime,
-            @RequestParam(required = false) String tenantId,
-            @RequestParam(defaultValue = "1") @Min(1) int pageNo,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
-                flowCode, startTime, endTime, tid, pageNo, pageSize));
-    }
-
-    // ============== GAP-P1: 减签 / GAP-P2: 已阅 / 沟通 / 暂存 / 追加处理人 ==============
-
-    /**
-     * GAP-P1: 减签 — 从会签任务中移除指定审批人
-     *
-     * @param dto 任务操作参数（需含 taskId + targetUserId）
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignRemove:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowtask.countersignRemove", threshold = 50)
-    @PostMapping("/task/countersignRemove")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
-        taskService.countersignRemove(dto);
-        return BaseResponse.success();
-    }
-
-    /**
-     * GAP-P2: 已阅 — 标记任务已阅
-     *
-     * @param taskId 任务 ID
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:markRead:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowtask.markRead", threshold = 50)
-    @PostMapping("/task/{taskId}/read")
-    public BaseResponse<Void> markRead(@PathVariable String taskId) {
-        String userId = AuthContext.getUserId();
-        taskService.markRead(taskId, userId);
-        return BaseResponse.success();
-    }
-
-    /**
-     * GAP-P2: 沟通 — 在任务下添加沟通评论
-     *
-     * @param dto 任务操作参数（需含 taskId + userId + comment）
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:communicate:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowtask.communicate", threshold = 50)
-    @PostMapping("/task/communicate")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
-        taskService.communicate(dto);
-        return BaseResponse.success();
-    }
-
-    /**
-     * GAP-P0: 暂存待审 — 审批人保存审批意见草稿
-     *
-     * @param dto 任务操作参数（需含 taskId + userId + comment）
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:saveDraft:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowtask.saveDraft", threshold = 50)
-    @PostMapping("/task/saveDraft")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
-        workflowFacade.saveDraft(dto);
-        return BaseResponse.success();
-    }
-
-    /**
-     * GAP-P0: 追加处理人 — 在已有会签任务中追加审批人
-     *
-     * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:addApprover:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowtask.addApprover", threshold = 50)
-    @PostMapping("/task/addApprover")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
-        workflowFacade.addApprover(dto);
-        return BaseResponse.success();
-    }
-
-    /**
-     * P1-3: 取回审批 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
-     *
-     * <p>对标钉钉/飞书"取回"。仅审批人本人可操作，且下一节点待办必须未处理。
-     *
-     * @param hisTaskId 历史任务 ID（ydsz_flow_his_task.id）
-     * @param comment   取回说明（可选）
-     * @return 统一响应结果，包含新创建的待办任务 ID
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:retract:lock", ttlSeconds = 5)
-    @PostMapping("/task/{hisTaskId}/retract")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<String> retract(@PathVariable String hisTaskId,
-                                  @RequestParam(required = false) String comment) {
-        return BaseResponse.success(taskService.retract(hisTaskId, AuthContext.getUserId(), comment));
-    }
-
-    /**
-     * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起为 SUSPENDED。
-     *
-     * <p>对标钉钉/飞书"任务挂起"。挂起期间不计超时，激活后回到 PENDING 需重新签收。
-     * 与实例级挂起（{@code /instance/suspend}）的区别：仅挂起指定任务，其它任务不受影响。
-     *
-     * @param taskId 任务 ID
-     * @param reason 挂起原因（可选）
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:suspendTask:lock", ttlSeconds = 5)
-    @PostMapping("/task/{taskId}/suspend")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> suspendTask(@PathVariable String taskId,
-                                    @RequestParam(required = false) String reason) {
-        workflowFacade.suspendTask(taskId, AuthContext.getUserId(), reason);
-        return BaseResponse.success();
-    }
-
-    /**
-     * P2-1: 任务级激活 — 将 SUSPENDED 任务恢复为 PENDING。
-     *
-     * @param taskId 任务 ID
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:activateTask:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowtask.activateTask", threshold = 50)
-    @PostMapping("/task/{taskId}/activate")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Void> activateTask(@PathVariable String taskId) {
-        workflowFacade.activateTask(taskId, AuthContext.getUserId());
-        return BaseResponse.success();
-    }
-
-    // ============== P1-7: WebSocket 待办数实时推送 ==============
-
-    /**
-     * P1-7: 查询当前用户的待办数（HTTP 拉模式，作为 WebSocket 推送的兜底）
-     *
-     * @return 包含 todoCount、userId、timestamp 的响应
-     */
-    @GetMapping("/todo/count")
-    public BaseResponse<Map<String, Object>> myTodoCount() {
-        String userId = AuthContext.getUserId();
-        if (userId == null) {
-            return BaseResponse.success(Map.of("userId", 0, "todoCount", 0));
-        }
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
-        // P0-1 修复：移除 countOverdue 死代码（结果被覆盖），直接用 listTodoByUser 计算待办数
-        var tasks = taskService.listTodoByUser(userId, null, null, tenantId);
-        long count = tasks == null ? 0 : tasks.size();
-        return BaseResponse.success(Map.of(
-                "userId", userId,
-                "todoCount", count,
-                "timestamp", System.currentTimeMillis()
-        ));
-    }
-
-    /**
-     * P1-7: 手动触发推送当前用户待办数到 WebSocket（前端重连后调一次同步）
-     *
-     * @return 是否成功
-     */
-    @Idempotent(key = "ydsz:workflow:FlowTaskController:pushMyTodoCount:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowtask.pushMyTodoCount", threshold = 50)
-    @PostMapping("/todo/pushMine")
-    public BaseResponse<Boolean> pushMyTodoCount() {
-        String userId = AuthContext.getUserId();
-        if (userId == null) {
-            return BaseResponse.success(false);
-        }
-        todoCountPushService.pushTodoCount(userId);
-        return BaseResponse.success(true);
-    }
-
-    // ============== P2-31/32/33: 审计运营统计 ==============
-
-    /**
-     * P2-31: 按节点统计平均耗时
-     *
-     * @param flowCode 流程编码
-     * @param tenantId 租户 ID（可选）
-     * @return 统一响应结果，包含每个节点的平均耗时统计
-     */
-    @GetMapping("/stats/nodeDuration")
-    public BaseResponse<List<Map<String, Object>>> nodeDurationStats(
-            @RequestParam String flowCode,
-            @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(taskService.nodeDurationStats(flowCode, tid));
-    }
-
-    /**
-     * P0-3: 超期任务列表（stats/overdue 别名，前端兼容）
-     *
-     * @param assigneeId 办理人 ID（可空）
-     * @return 超期任务列表
-     */
-    @GetMapping("/stats/overdue")
-    public BaseResponse<List<FlowRunTaskVO>> statsOverdue(
-            @RequestParam(required = false) String assigneeId) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(taskService.listOverdue(assigneeId, tenantId)));
     }
 }

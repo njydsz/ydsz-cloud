@@ -1,7 +1,9 @@
 package com.njydsz.literule.web.controller;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,7 +63,7 @@ public class RuleAuditLogController {
         if (limit <= 0 || limit > 200) {
             limit = 50;
         }
-        return BaseResponse.success(auditLogService.queryRecent(limit));
+        return BaseResponse.success(auditLogService.queryRecent(limit).stream().map(this::toAuditLogVO).toList());
     }
 
     /**
@@ -79,7 +81,7 @@ public class RuleAuditLogController {
         if (limit <= 0 || limit > 200) {
             limit = 50;
         }
-        return BaseResponse.success(auditLogService.queryByRuleCode(ruleCode, limit));
+        return BaseResponse.success(auditLogService.queryByRuleCode(ruleCode, limit).stream().map(this::toAuditLogVO).toList());
     }
 
     /**
@@ -97,7 +99,7 @@ public class RuleAuditLogController {
         if (limit <= 0 || limit > 200) {
             limit = 50;
         }
-        return BaseResponse.success(auditLogService.queryByOperator(operator, limit));
+        return BaseResponse.success(auditLogService.queryByOperator(operator, limit).stream().map(this::toAuditLogVO).toList());
     }
 
     /**
@@ -117,7 +119,7 @@ public class RuleAuditLogController {
         }
         try {
             AuditAction auditAction = AuditAction.valueOf(action.toUpperCase());
-            return BaseResponse.success(auditLogService.queryByAction(auditAction, limit));
+            return BaseResponse.success(auditLogService.queryByAction(auditAction, limit).stream().map(this::toAuditLogVO).toList());
         } catch (IllegalArgumentException e) {
             return BaseResponse.error("非法的操作类型: " + action
                     + "，合法值: CREATE / UPDATE / TOGGLE / STATUS_CHANGE / ROLLBACK / APPROVE / REJECT / IMPORT / EXPORT / DELETE / DRY_RUN / STRESS_TEST / REPLAY");
@@ -144,9 +146,34 @@ public class RuleAuditLogController {
         try {
             LocalDateTime start = LocalDateTime.parse(startTime);
             LocalDateTime end = LocalDateTime.parse(endTime);
-            return BaseResponse.success(auditLogService.queryByTimeRange(start, end, limit));
+            return BaseResponse.success(auditLogService.queryByTimeRange(start, end, limit).stream().map(this::toAuditLogVO).toList());
         } catch (Exception e) {
             return BaseResponse.error("时间格式错误，请使用 ISO 格式（如 2026-07-01T00:00:00）: " + e.getMessage());
         }
+    }
+
+    /**
+     * AuditLogEntry → AuditLogEntryVO 转换
+     */
+    private AuditLogEntryVO toAuditLogVO(RuleAuditLogService.AuditLogEntry e) {
+        AuditLogEntryVO vo = new AuditLogEntryVO();
+        vo.setId(e.getId());
+        vo.setRuleCode(e.getRuleCode());
+        vo.setRuleName(e.getRuleName());
+        vo.setAction(e.getAction() != null ? e.getAction().name() : null);
+        vo.setOperator(e.getOperator());
+        vo.setSource(e.getSource());
+        vo.setChangeDesc(e.getChangeDesc());
+        vo.setBeforeSnapshot(e.getBeforeSnapshot());
+        vo.setAfterSnapshot(e.getAfterSnapshot());
+        if (e.getFieldDiffs() != null) {
+            Map<String, Object> diffs = new LinkedHashMap<>();
+            e.getFieldDiffs().forEach(diffs::put);
+            vo.setFieldDiffs(diffs);
+        }
+        vo.setResult(e.getResult() != null ? e.getResult().name() : null);
+        vo.setErrorMessage(e.getErrorMessage());
+        vo.setCreatedAt(e.getCreatedAt());
+        return vo;
     }
 }

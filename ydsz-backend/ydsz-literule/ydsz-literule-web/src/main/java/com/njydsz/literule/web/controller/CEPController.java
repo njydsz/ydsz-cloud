@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
 
 /**
  * CEP 复杂事件处理 Controller（P0-2）
@@ -133,7 +132,7 @@ public class CEPController {
         if (engine == null) {
             return BaseResponse.error("CEP 引擎未启用");
         }
-        return BaseResponse.success(LiteruleConverter.INSTANT.cepPatternListToVO(engine.listPatterns()));
+        return BaseResponse.success(engine.listPatterns().stream().map(this::toPatternVO).toList());
     }
 
     /**
@@ -243,7 +242,7 @@ public class CEPController {
     @GetMapping("/hits")
     public BaseResponse<List<CEPHitVO>> recentHits() {
         synchronized (recentHits) {
-            return BaseResponse.success(LiteruleConverter.INSTANT.cEPHitListToVO(new ArrayList<>(recentHits)));
+            return BaseResponse.success(new ArrayList<>(recentHits).stream().map(this::toHitVO).toList());
         }
     }
 
@@ -262,6 +261,43 @@ public class CEPController {
                 "patternCount", engine.patternCount(),
                 "totalHits", engine.totalHits()
         ));
+    }
+
+    /**
+     * CEPPattern → CEPPatternVO 转换
+     */
+    private CEPPatternVO toPatternVO(CEPPattern p) {
+        CEPPatternVO vo = new CEPPatternVO();
+        vo.setId(p.getId());
+        vo.setType(p.getType() != null ? p.getType().name() : null);
+        vo.setRuleCode(p.getRuleCode());
+        vo.setName(p.getName());
+        vo.setWindow(p.getWindow());
+        vo.setSlide(p.getSlide());
+        vo.setWindowType(p.getWindowType() != null ? p.getWindowType().name() : null);
+        vo.setSessionGap(p.getSessionGap());
+        vo.setThreshold(p.getThreshold());
+        vo.setEventType(p.getEventType());
+        vo.setFilter(p.getFilter());
+        vo.setAggregateFunction(p.getAggregateFunction() != null ? p.getAggregateFunction().name() : null);
+        vo.setAggregateField(p.getAggregateField());
+        vo.setSequence(p.getSequence() == null ? null : p.getSequence().stream().map(e -> (Object) e).toList());
+        vo.setDescription(p.getDescription());
+        return vo;
+    }
+
+    /**
+     * CEPHit → CEPHitVO 转换
+     */
+    private CEPHitVO toHitVO(CEPHit h) {
+        CEPHitVO vo = new CEPHitVO();
+        vo.setPatternId(h.getPatternId());
+        vo.setRuleCode(h.getRuleCode());
+        vo.setMatchedEvents(h.getMatchedEvents() == null ? null : h.getMatchedEvents().stream().map(e -> (Object) e).toList());
+        vo.setHitAt(h.getHitAt());
+        vo.setMetric(h.getMetric());
+        vo.setContext(h.getContext());
+        return vo;
     }
 
     /**

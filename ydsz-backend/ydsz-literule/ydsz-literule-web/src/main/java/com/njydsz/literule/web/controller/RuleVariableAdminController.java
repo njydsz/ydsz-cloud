@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.VariableDefinitionVO;
 
 /**
@@ -53,10 +52,11 @@ public class RuleVariableAdminController {
     public BaseResponse<List<VariableDefinitionVO>> list(@RequestParam(required = false) String category) {
         List<VariableDefinition> all = variableRegistry.listAll();
         if (category == null || category.isBlank()) {
-            return BaseResponse.success(LiteruleConverter.INSTANT.variableDefinitionListToVO(all));
+            return BaseResponse.success(all.stream().map(this::toVariableVO).toList());
         }
         return BaseResponse.success(all.stream()
                 .filter(v -> category.equals(v.getCategory()))
+                .map(this::toVariableVO)
                 .collect(Collectors.toList()));
     }
 
@@ -72,7 +72,7 @@ public class RuleVariableAdminController {
         if (def == null) {
             return BaseResponse.error("变量不存在: " + varName);
         }
-        return BaseResponse.success(def);
+        return BaseResponse.success(toVariableVO(def));
     }
 
     /**
@@ -89,7 +89,7 @@ public class RuleVariableAdminController {
             return BaseResponse.error("变量定义及 name 不能为空");
         }
         variableRegistry.register(definition);
-        return BaseResponse.success(variableRegistry.lookup(definition.getName()));
+        return BaseResponse.success(toVariableVO(variableRegistry.lookup(definition.getName())));
     }
 
     /**
@@ -131,6 +131,22 @@ public class RuleVariableAdminController {
      */
     @GetMapping("/available")
     public BaseResponse<List<VariableDefinitionVO>> listAvailable() {
-        return BaseResponse.success(LiteruleConverter.INSTANT.variableDefinitionListToVO(expressionValidationService.listAvailableVariables()));
+        return BaseResponse.success(expressionValidationService.listAvailableVariables().stream().map(this::toVariableVO).toList());
+    }
+
+    /**
+     * VariableDefinition → VariableDefinitionVO 转换
+     */
+    private VariableDefinitionVO toVariableVO(VariableDefinition v) {
+        if (v == null) {
+            return null;
+        }
+        VariableDefinitionVO vo = new VariableDefinitionVO();
+        vo.setName(v.getName());
+        vo.setType(v.getType());
+        vo.setDescription(v.getDescription());
+        vo.setSampleValue(v.getSampleValue());
+        vo.setCategory(v.getCategory());
+        return vo;
     }
 }

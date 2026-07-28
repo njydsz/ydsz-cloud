@@ -16,7 +16,6 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.CategoryNodeVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.server.config.RuleAdminService;
@@ -25,6 +24,7 @@ import com.njydsz.literule.server.spi.RuleCategoryProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 规则目录树 Controller
@@ -65,7 +65,7 @@ public class RuleCategoryController {
      */
     @GetMapping("/categoryTree")
     public BaseResponse<CategoryNodeVO> categoryTree() {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleCategoryProvider.buildTree()));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleCategoryProvider.buildTree()), CategoryNodeVO.class));
     }
 
     /**
@@ -76,7 +76,7 @@ public class RuleCategoryController {
     @GetMapping("/byCategoryPath")
     public BaseResponse<List<RuleDefinitionVO>> listByCategoryPath(
             @RequestParam(value = "path", required = false) String path) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.ruleDefinitionListToVO(ruleCategoryProvider.listDefinitionsByCategoryPath(path)));
+        return BaseResponse.success(ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleDefinitionVO.class)).toList());
     }
 
     /**
@@ -85,7 +85,7 @@ public class RuleCategoryController {
     @GetMapping("/byOwner")
     public BaseResponse<List<RuleDefinitionVO>> listByOwner(
             @RequestParam(value = "owner") String owner) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.ruleDefinitionListToVO(ruleCategoryProvider.listDefinitionsByOwner(owner)));
+        return BaseResponse.success(ruleCategoryProvider.listDefinitionsByOwner(owner).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleDefinitionVO.class)).toList());
     }
 
     /**

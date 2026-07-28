@@ -24,7 +24,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.literule.api.RulePack;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.InstallResultVO;
 import com.njydsz.literule.domain.vo.PackDiffVO;
 import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
@@ -38,6 +37,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 规则集市场 Controller
@@ -79,7 +79,7 @@ public class RulePackController {
      */
     @GetMapping("/packs")
     public BaseResponse<List<RulePackVO>> listPacks() {
-        return BaseResponse.success(LiteruleConverter.INSTANT.rulePackListToVO(rulePackProvider.listAll()));
+        return BaseResponse.success(rulePackProvider.listAll().stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RulePackVO.class)).toList());
     }
 
     /**
@@ -87,7 +87,7 @@ public class RulePackController {
      */
     @GetMapping("/packs/search")
     public BaseResponse<List<RulePackVO>> searchPacks(@RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.rulePackListToVO(rulePackProvider.search(keyword)));
+        return BaseResponse.success(rulePackProvider.search(keyword).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RulePackVO.class)).toList());
     }
 
     /**
@@ -95,7 +95,7 @@ public class RulePackController {
      */
     @GetMapping("/packs/{packCode}/latest")
     public BaseResponse<RulePackVO> getLatestPack(@PathVariable String packCode) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(rulePackProvider.getLatest(packCode)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(rulePackProvider.getLatest(packCode)), RulePackVO.class));
     }
 
     /**
@@ -103,7 +103,7 @@ public class RulePackController {
      */
     @GetMapping("/packs/{packCode}/versions")
     public BaseResponse<List<RulePackVO>> listPackVersions(@PathVariable String packCode) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.rulePackListToVO(rulePackProvider.listVersions(packCode)));
+        return BaseResponse.success(rulePackProvider.listVersions(packCode).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RulePackVO.class)).toList());
     }
 
     /**
@@ -113,7 +113,7 @@ public class RulePackController {
     public BaseResponse<RulePackVO> getPackVersion(
             @PathVariable String packCode,
             @PathVariable String version) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(rulePackProvider.getVersion(packCode, version)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(rulePackProvider.getVersion(packCode, version)), RulePackVO.class));
     }
 
     /**
@@ -125,7 +125,7 @@ public class RulePackController {
             @PathVariable String packCode,
             @RequestParam(value = "version") String version,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(rulePackProvider.rollback(packCode, version, operator)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(rulePackProvider.rollback(packCode, version, operator)), InstallResultVO.class));
     }
 
     /**
@@ -136,7 +136,7 @@ public class RulePackController {
             @PathVariable String packCode,
             @RequestParam(value = "from") String fromVersion,
             @RequestParam(value = "to") String toVersion) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(rulePackProvider.diff(packCode, fromVersion, toVersion)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(rulePackProvider.diff(packCode, fromVersion, toVersion)), PackDiffVO.class));
     }
 
     /**
@@ -148,7 +148,7 @@ public class RulePackController {
     public BaseResponse<RulePackVO> publishPack(
             @Valid @RequestBody RulePack pack,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(rulePackProvider.publish(pack, operator)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(rulePackProvider.publish(pack, operator)), RulePackVO.class));
     }
 
     /**
@@ -160,7 +160,7 @@ public class RulePackController {
             @PathVariable String packCode,
             @RequestParam(value = "version", required = false) String version,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(rulePackProvider.install(packCode, version, operator)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(rulePackProvider.install(packCode, version, operator)), InstallResultVO.class));
     }
 
     /**
@@ -276,7 +276,7 @@ public class RulePackController {
     @GetMapping("/packs/updateCheck")
     @Operation(summary = "知识包更新检查", description = "对比已安装知识包与市场最新版本，返回有更新的包列表")
     public BaseResponse<List<PackUpdateInfoVO>> checkPackUpdates() {
-        return BaseResponse.success(LiteruleConverter.INSTANT.packUpdateInfoListToVO(rulePackProvider.checkPackUpdates()));
+        return BaseResponse.success(rulePackProvider.checkPackUpdates().stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), PackUpdateInfoVO.class)).toList());
     }
 
     /**
@@ -292,7 +292,7 @@ public class RulePackController {
             @RequestBody List<String> packCodes,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         if (packCodes == null || packCodes.isEmpty()) {
-            return BaseResponse.success(LiteruleConverter.INSTANT.installResultListToVO(List.of()));
+            return BaseResponse.success(List.of());
         }
         List<InstallResult> results = new ArrayList<>();
         for (String packCode : packCodes) {
@@ -302,6 +302,6 @@ public class RulePackController {
                 log.warn("[RuleAdmin] 批量更新知识包失败: packCode={}, err={}", packCode, e.getMessage());
             }
         }
-        return BaseResponse.success(results);
+        return BaseResponse.success(results.stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), InstallResultVO.class)).toList());
     }
 }

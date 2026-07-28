@@ -156,7 +156,7 @@ public class RuleDslController {
             RuleDsl dsl = "json".equalsIgnoreCase(format)
                     ? RuleDslParser.parseJson(content)
                     : RuleDslParser.parseYaml(content);
-            return BaseResponse.success(dsl);
+            return BaseResponse.success(toDslVO(dsl));
         } catch (Exception e) {
             log.warn("[DSL] 解析失败: {}", e.getMessage());
             return BaseResponse.error("DSL 解析失败: " + e.getMessage());
@@ -352,5 +352,16 @@ public class RuleDslController {
             log.warn("[DSL] 预览失败: {}", e.getMessage());
             return BaseResponse.error("DSL 预览失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * RuleDsl → RuleDslVO 转换
+     */
+    private RuleDslVO toDslVO(RuleDsl dsl) {
+        RuleDslVO vo = new RuleDslVO();
+        vo.setRules(dsl.getRules() == null ? null : dsl.getRules().stream().map(e -> (Object) e).toList());
+        vo.setChains(dsl.getChains() == null ? null : dsl.getChains().stream().map(e -> (Object) e).toList());
+        vo.setMeta(dsl.getMeta());
+        return vo;
     }
 }

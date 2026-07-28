@@ -24,7 +24,6 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.expr.ExpressionFunctionDef;
-import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
 import com.njydsz.literule.domain.vo.ExpressionPreviewResultVO;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
@@ -39,6 +38,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 规则链画布 Controller
@@ -88,7 +88,7 @@ public class RuleGraphController {
      */
     @GetMapping("/{ruleCode}/graph")
     public BaseResponse<RuleChainGraphVO> getChainGraph(@PathVariable String ruleCode) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleChainGraphProvider.getByRuleCode(ruleCode)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleChainGraphProvider.getByRuleCode(ruleCode)), RuleChainGraphVO.class));
     }
 
     /**
@@ -162,7 +162,7 @@ public class RuleGraphController {
     public BaseResponse<ExpressionPreviewResultVO> previewExpression(
             @RequestParam String expression,
             @RequestBody Map<String, Object> facts) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(expressionValidationService.previewEvaluate(expression, facts)));
+        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(expressionValidationService.previewEvaluate(expression, facts)), ExpressionPreviewResultVO.class));
     }
 
     /**
@@ -182,7 +182,7 @@ public class RuleGraphController {
                                                  @RequestBody Map<String, Object> facts) {
         try {
             List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
-            return BaseResponse.success(LiteruleConverter.INSTANT.ruleResultListToVO(results));
+            return BaseResponse.success(results.stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleResultVO.class)).toList());
         } catch (IllegalArgumentException e) {
             log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
             return BaseResponse.error(e.getMessage());
@@ -200,7 +200,7 @@ public class RuleGraphController {
      */
     @GetMapping("/{ruleCode}/graph/invalidRefs")
     public BaseResponse<List<StringVO>> invalidGraphRefs(@PathVariable String ruleCode) {
-        return BaseResponse.success(LiteruleConverter.INSTANT.stringListToVO(graphExecutionProvider.collectInvalidReferences(ruleCode)));
+        return BaseResponse.success(graphExecutionProvider.collectInvalidReferences(ruleCode).stream().map(StringVO::new).toList());
     }
 
     /**
@@ -220,6 +220,6 @@ public class RuleGraphController {
                 .filter(f -> "all".equalsIgnoreCase(engine)
                         || engine.equalsIgnoreCase(f.getSupportedEngines()))
                 .toList();
-        return BaseResponse.success(LiteruleConverter.INSTANT.expressionFunctionDefListToVO(filtered));
+        return BaseResponse.success(filtered.stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), ExpressionFunctionDefVO.class)).toList());
     }
 }

@@ -4,8 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import com.njydsz.common.util.security.DigestUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,9 +124,7 @@ public class AliyunSmsProvider implements SmsProvider {
             return "";
         }
         try {
-            Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-            byte[] signData = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            byte[] signData = DigestUtils.hmacSha256(payload.getBytes(StandardCharsets.UTF_8), secretKey.getBytes(StandardCharsets.UTF_8));
             String sign = Base64.getEncoder().encodeToString(signData);
             return (accessKey != null ? accessKey + ":" : "") + sign;
         } catch (Exception e) {

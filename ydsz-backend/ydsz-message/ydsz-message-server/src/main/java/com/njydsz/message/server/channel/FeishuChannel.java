@@ -7,8 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import com.njydsz.common.util.security.DigestUtils;
 
 import jakarta.annotation.PostConstruct;
 
@@ -246,9 +245,7 @@ public class FeishuChannel implements MessageChannel {
         try {
             long timestamp = System.currentTimeMillis() / 1000;
             String stringToSign = timestamp + "\n" + secret;
-            Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-            byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
+            byte[] signData = DigestUtils.hmacSha256(stringToSign.getBytes(StandardCharsets.UTF_8), secret.getBytes(StandardCharsets.UTF_8));
             String sign = Base64.getEncoder().encodeToString(signData);
             Map<String, String> result = new HashMap<>();
             result.put("timestamp", String.valueOf(timestamp));

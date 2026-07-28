@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.googlecode.aviator.AviatorEvaluator;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 

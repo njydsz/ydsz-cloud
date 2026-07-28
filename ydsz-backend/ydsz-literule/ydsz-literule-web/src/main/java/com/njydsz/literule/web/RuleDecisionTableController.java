@@ -42,6 +42,7 @@ import com.njydsz.literule.api.spi.DecisionTableEvalProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 决策表管理 Controller
@@ -109,7 +110,7 @@ public class RuleDecisionTableController {
         } else {
             decisionTableMapper.insert(decisionTable);
         }
-        return BaseResponse.success(decisionTable);
+        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(decisionTable));
     }
 
     /**
@@ -195,7 +196,7 @@ public class RuleDecisionTableController {
         try {
             byte[] bytes = file.getBytes();
             DecisionTableDefinition saved = svc.importExcel(bytes, operator);
-            return BaseResponse.success(saved);
+            return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(saved), DecisionTableDefinitionVO.class));
         } catch (IllegalArgumentException e) {
             log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
             return BaseResponse.error(e.getMessage());
