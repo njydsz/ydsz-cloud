@@ -39,6 +39,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  *   <li>R21: Infra 层不可依赖 Server/Web 层</li>
  *   <li>R22: 跨模块 Mapper/Entity 直接注入禁止</li>
  *   <li>R23: Converter 禁止使用 saveDtoToEntity 方法名（必须用 postDtoToEntity/putDtoToEntity）</li>
+ *   <li>R24: 业务模块 HealthIndicator 必须继承 AbstractModuleHealthIndicator</li>
+ *   <li>R25: 业务模块 Metrics 必须继承 AbstractModuleMetrics</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -350,4 +352,37 @@ public class ArchitectureRulesTest {
             .that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Converter")
             .should().haveName("saveDtoToEntity")
             .because("Converter 必须使用 postDtoToEntity/putDtoToEntity 替代 saveDtoToEntity");
+
+    /**
+     * R24: 业务模块 HealthIndicator 必须继承 AbstractModuleHealthIndicator。
+     *
+     * <p>各业务模块的健康检查类应继承统一基类，确保健康检查格式一致，
+     * 包含模块名、版本、依赖状态等标准信息。
+     */
+    @ArchTest
+    static final ArchRule businessHealthIndicatorShouldExtendAbstract = classes()
+            .that().haveSimpleNameEndingWith("HealthIndicator")
+            .and().resideInAnyPackage(
+                    "..workflow..", "..cronjob..", "..message..",
+                    "..nextwiki..", "..literule..", "..agent..",
+                    "..userinfo..", "..system..", "..project..")
+            .should().beAssignableTo("com.njydsz.common.web.health.AbstractModuleHealthIndicator")
+            .because("业务模块 HealthIndicator 必须继承 AbstractModuleHealthIndicator");
+
+    /**
+     * R25: 业务模块 Metrics 必须继承 AbstractModuleMetrics。
+     *
+     * <p>各业务模块的指标监控类应继承统一基类，确保指标命名规范一致，
+     * 包含 incrementCounter/gaugeRef/safe 等标准方法。
+     */
+    @ArchTest
+    static final ArchRule businessMetricsShouldExtendAbstract = classes()
+            .that().haveSimpleNameEndingWith("Metrics")
+            .and().resideInAnyPackage(
+                    "..workflow..", "..cronjob..", "..message..",
+                    "..nextwiki..", "..literule..", "..agent..",
+                    "..userinfo..", "..system..", "..project..")
+            .and().resideInAPackage("..server..")
+            .should().beAssignableTo("com.njydsz.common.core.metrics.AbstractModuleMetrics")
+            .because("业务模块 Metrics 必须继承 AbstractModuleMetrics");
 }

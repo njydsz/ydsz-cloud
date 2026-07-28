@@ -24,10 +24,10 @@ import lombok.extern.slf4j.Slf4j;
  * <p>启动时扫描 classpath 中所有标注 {@link YdszResultCode} 注解的枚举类，
  * 将其注册到 {@link ResultCodeRegistry} 全局注册表。
  *
- * <p>扫描范围：{@code classpath*:com/njydsz/**/*.class}，覆盖所有业务模块。
+ * <p>扫描范围见 {@value #SCAN_PATTERN}，覆盖所有业务模块。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ResultCodeScanner implements ApplicationContextAware {

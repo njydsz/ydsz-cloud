@@ -154,13 +154,13 @@ public class GetuiPushProvider implements PushProvider {
             body.put("appkey", config.getAppKey());
             ResponseEntity<String> resp = restTemplate.postForEntity(url, body, String.class);
             Map<String, Object> json = YdszJson.parseMap(resp.getBody());
-            if ("10000".equals(json.getString("code"))) {
-                Map<String, Object> data = json.getJSONObject("data");
-                cachedToken = data.getString("token");
+            if ("10000".equals(MapUtils.getString(json, "code"))) {
+                Map<String, Object> data = MapUtils.safeCastMap(json.get("data"));
+                cachedToken = MapUtils.getString(data, "token");
                 tokenExpireAt = System.currentTimeMillis() + 23L * 3600 * 1000;
                 return cachedToken;
             }
-            throw new IllegalStateException("个推鉴权失败: " + json.getString("msg"));
+            throw new IllegalStateException("个推鉴权失败: " + MapUtils.getString(json, "msg"));
         }
     }
 }
