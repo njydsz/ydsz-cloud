@@ -25,6 +25,21 @@ import java.util.List;
 /**
  * project 模块统一 MapStruct 转换器。
  *
+ * <p>承担项目管理模块所有 Entity ↔ VO、PostDTO → Entity、PutDTO → Entity 的类型转换。
+ * 覆盖项目立项、商机、合同、变更、预算、费用、发票、收款、对账、利润模拟、
+ * 利润快照、收入、成本分摊、成本采购、EVM 度量、执行关闭、交付项、交付标准、
+ * 风险、工时、WBS 任务、运维工单、满意度、保修、费率卡、内部费率、
+ * 告警分发、可计费利用率快照、文件存储等 30+ 核心实体的转换。
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射</li>
+ *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入</li>
+ *   <li>同名字段自动映射；系统字段通过 @Mapping(ignore = true) 忽略</li>
+ *   <li>PostDTO → Entity 忽略 id/deleted/revision/tenantId/createdBy/createdAt/updatedBy/updatedAt</li>
+ *   <li>PutDTO → Entity 忽略 deleted/revision/tenantId/createdBy/createdAt（保留 id/updatedBy/updatedAt）</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -38,6 +38,11 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  * config.apply();
  * </pre>
  *
+ * <p><b>线程安全：</b>读操作（getter）并发安全；写操作（setter）通过 volatile 字段
+ * 保证可见性，单字段写入原子；复合操作（{@link #reset()}、{@link #copyFrom(YdszJsonConfig)}）
+ * 通过 synchronized 保证一致性。如需在多线程中安全地批量修改配置，建议使用
+ * {@link #copyOf(YdszJsonConfig)} 创建副本修改后再调用 {@link #apply()}。</p>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -47,23 +52,22 @@ public final class YdszJsonConfig implements Serializable {
 
     private static volatile YdszJsonConfig instance;
 
-    private PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
+    /** 所有可变字段均为 volatile，保证单字段读写的可见性与原子性 */
+    private volatile PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
 
-    private CircularReferenceStrategy circularReferenceStrategy = CircularReferenceStrategy.REF;
+    private volatile CircularReferenceStrategy circularReferenceStrategy = CircularReferenceStrategy.REF;
 
-    private boolean writeNulls = false;
+    private volatile boolean writeNulls = false;
 
-    private String dateFormat = "";
+    private volatile String dateFormat = "";
 
-    private boolean serializeEnumUsingOrdinal = false;
+    private volatile boolean serializeEnumUsingOrdinal = false;
 
-    private boolean prettyPrint = false;
+    private volatile boolean prettyPrint = false;
 
-    private boolean failOnError = false;
+    private volatile boolean failOnError = false;
 
-    private int asmThreshold = 10000;
-
-    private String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
+    private volatile String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
 
     private volatile long maxJsonSize = 10L * 1024 * 1024;
 
@@ -236,15 +240,6 @@ public final class YdszJsonConfig implements Serializable {
         return this;
     }
 
-    public int getAsmThreshold() {
-        return asmThreshold;
-    }
-
-    public YdszJsonConfig setAsmThreshold(int asmThreshold) {
-        this.asmThreshold = asmThreshold;
-        return this;
-    }
-
     public String getDefaultDateFormat() {
         return defaultDateFormat;
     }
@@ -324,9 +319,11 @@ public final class YdszJsonConfig implements Serializable {
     /**
      * 重置配置为默认值
      *
+     * <p>复合操作，通过 synchronized 保证多字段写入的原子性。</p>
+     *
      * @return 当前配置实例（支持链式调用）
      */
-    public YdszJsonConfig reset() {
+    public synchronized YdszJsonConfig reset() {
         this.namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
         this.circularReferenceStrategy = CircularReferenceStrategy.REF;
         this.writeNulls = false;
@@ -334,7 +331,6 @@ public final class YdszJsonConfig implements Serializable {
         this.serializeEnumUsingOrdinal = false;
         this.prettyPrint = false;
         this.failOnError = false;
-        this.asmThreshold = 10000;
         this.defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
         this.maxJsonSize = 10L * 1024 * 1024;
         this.maxDepth = 256;
@@ -345,10 +341,12 @@ public final class YdszJsonConfig implements Serializable {
     /**
      * 从另一个配置复制
      *
+     * <p>复合操作，通过 synchronized 保证多字段写入的原子性。</p>
+     *
      * @param other 另一个配置
      * @return 当前配置实例（支持链式调用）
      */
-    public YdszJsonConfig copyFrom(YdszJsonConfig other) {
+    public synchronized YdszJsonConfig copyFrom(YdszJsonConfig other) {
         if (other != null) {
             this.namingStrategy = other.namingStrategy;
             this.circularReferenceStrategy = other.circularReferenceStrategy;
@@ -357,7 +355,6 @@ public final class YdszJsonConfig implements Serializable {
             this.serializeEnumUsingOrdinal = other.serializeEnumUsingOrdinal;
             this.prettyPrint = other.prettyPrint;
             this.failOnError = other.failOnError;
-            this.asmThreshold = other.asmThreshold;
             this.defaultDateFormat = other.defaultDateFormat;
             this.maxJsonSize = other.maxJsonSize;
             this.maxDepth = other.maxDepth;
@@ -376,8 +373,10 @@ public final class YdszJsonConfig implements Serializable {
                 ", serializeEnumUsingOrdinal=" + serializeEnumUsingOrdinal +
                 ", prettyPrint=" + prettyPrint +
                 ", failOnError=" + failOnError +
-                ", asmThreshold=" + asmThreshold +
                 ", defaultDateFormat='" + defaultDateFormat + '\'' +
+                ", maxJsonSize=" + maxJsonSize +
+                ", maxDepth=" + maxDepth +
+                ", useBigDecimal=" + useBigDecimal +
                 '}';
     }
 

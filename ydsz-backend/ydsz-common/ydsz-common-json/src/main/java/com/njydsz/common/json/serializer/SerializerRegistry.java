@@ -56,7 +56,7 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 注册自定义序列化。
+     * 注册自定义序列化器。
      *
      * @param type 目标类型
      * @param serializer 序列化器
@@ -76,7 +76,7 @@ public final class SerializerRegistry {
      * 注册自定义反序列化器
      *
      * @param type 目标类型
-     * @param deserializer 反序列化。
+     * @param deserializer 反序列化器
      * @param <T> 类型参数
      */
     public <T> void register(Class<T> type, JsonDeserializer<T> deserializer) {
@@ -101,7 +101,7 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 获取反序列化。
+     * 获取反序列化器。
      *
      * @param type 目标类型
      * @return 反序列化器，如果未注册返回null
@@ -120,7 +120,7 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 是否已注册序列化。
+     * 是否已注册序列化器。
      *
      * @param type 目标类型
      * @return 如果已注册返回 true
@@ -150,7 +150,7 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 移除反序列化。
+     * 移除反序列化器。
      *
      * @param type 目标类型
      * @return 被移除的反序列化器，如果未注册返回null
@@ -177,7 +177,7 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 获取已注册的反序列化器数。
+     * 获取已注册的反序列化器数量。
      *
      * @return 数量
      */

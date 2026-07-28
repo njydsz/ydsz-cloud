@@ -13,7 +13,6 @@ import com.njydsz.common.json.config.YdszJsonConfig;
  * <p>检查 YdszJson 引擎的运行状态：
  * <ul>
  *   <li>AutoType SafeMode 是否开启</li>
- *   <li>ASM 类阈值配置</li>
  *   <li>最大 JSON 大小限制</li>
  *   <li>最大序列化深度</li>
  * </ul>
@@ -30,7 +29,6 @@ public class JsonHealthIndicator implements HealthIndicator {
 
         Health.Builder builder = safeMode ? Health.up() : Health.down();
         builder.withDetail("safeMode", safeMode);
-        builder.withDetail("asmThreshold", config.getAsmThreshold());
         builder.withDetail("maxJsonSize", config.getMaxJsonSize());
         builder.withDetail("maxDepth", config.getMaxDepth());
         builder.withDetail("namingStrategy", config.getNamingStrategy());
