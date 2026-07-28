@@ -15,7 +15,8 @@ import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.expr.ExpressionEvaluator;
 
-import cn.hutool.core.util.StrUtil;
+import com.njydsz.common.util.string.StringUtils;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -206,7 +207,7 @@ public class ExpressionRule implements Rule {
      */
     private RuleSeverity resolveSeverity(RuleContext context) {
         String expr = definition.getSeverityExpression();
-        if (StrUtil.isNotBlank(expr)) {
+        if (StringUtils.isNotBlank(expr)) {
             Object code = evalCached(expr, context);
             RuleSeverity dynamic = RuleSeverity.fromCode(code == null ? null : String.valueOf(code));
             if (dynamic != null) return dynamic;
@@ -230,7 +231,7 @@ public class ExpressionRule implements Rule {
      * @return 渲染后的字符串
      */
     private String renderTemplate(String template, RuleContext context) {
-        if (StrUtil.isBlank(template)) {
+        if (StringUtils.isBlank(template)) {
             return getName();
         }
         String result = template;
