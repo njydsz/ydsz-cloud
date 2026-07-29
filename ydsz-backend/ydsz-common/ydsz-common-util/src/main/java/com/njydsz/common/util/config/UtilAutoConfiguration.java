@@ -12,7 +12,6 @@ import com.njydsz.common.util.http.OkHttpProperties;
 import com.njydsz.common.util.http.OkHttpUtils;
 import com.njydsz.common.util.id.SnowflakeHealthIndicator;
 import com.njydsz.common.util.id.SnowflakeProperties;
-import com.njydsz.common.util.retry.RetrySupport;
 import com.njydsz.common.util.spring.SpringContextHolder;
 
 import okhttp3.OkHttpClient;
@@ -100,14 +99,6 @@ public class UtilAutoConfiguration {
     }
 
     /**
-     * 提供清理 Bean，用于应用关闭时关闭 RetrySupport 异步线程池
-     */
-    @Bean
-    public RetryCleanupBean retryCleanupBean() {
-        return new RetryCleanupBean();
-    }
-
-    /**
      * OkHttp 资源清理 Bean
      */
     public static class OkHttpCleanupBean implements DisposableBean {
@@ -117,14 +108,4 @@ public class UtilAutoConfiguration {
         }
     }
 
-    /**
-     * RetrySupport 资源清理 Bean
-     */
-    @SuppressWarnings("removal")
-    public static class RetryCleanupBean implements DisposableBean {
-        @Override
-        public void destroy() {
-            RetrySupport.shutdown();
-        }
-    }
 }

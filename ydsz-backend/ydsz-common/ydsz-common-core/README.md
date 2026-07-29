@@ -12,7 +12,7 @@ YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 被 common 所有子模块及全部业务模块依赖 |
 | **构建顺序** | 最先编译（无业务依赖） |
-| **源文件数** | 34 个 Java 文件（main） |
+| **源文件数** | 33 个 Java 文件（main） |
 | **依赖范围** | Lombok + SLF4J + Jakarta Validation + ydsz-common-json + TTL + Spring Boot（可选） |
 
 ## 目录结构
@@ -21,7 +21,7 @@ YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId
 com.njydsz.common.core
 ├── response/        # 统一响应模型（4 个类）
 ├── code/            # 结果码体系（2 个类）
-├── context/         # 请求上下文与租户上下文（4 个类）
+├── context/         # 请求上下文与租户上下文（3 个类）
 ├── trace/           # TraceId 生成策略（3 个类）
 ├── enums/           # 通用枚举（5 个类）
 ├── constant/        # 全局常量定义（8 个类）
@@ -37,7 +37,7 @@ com.njydsz.common.core
 | 类 | 说明 |
 |---|---|
 | `IResponse<T>` | 响应标记接口，定义 `getCode()` / `getMsg()` / `getData()` / `isSuccess()` 契约 |
-| `BaseResponse<T>` | 统一 API 响应体，字段：`code` / `msg` / `data` / `traceId` / `timestamp`。使用 `@SuperBuilder` + `@YdszJsonField(notWriteNullValue=true)` + `@YdszJsonPropertyOrder` 控制序列化。提供 `success()` / `error()` / `of()` 静态工厂方法，以及 `error(ResultCode, Throwable)` / `errorWithDetail(ResultCode, String)` 便捷方法。函数式 API（`orElse` / `orElseThrow` / `map` / `ifSuccess` / `ifFailed`）已标记 `@Deprecated`。响应创建时自动通过 `CoreMetrics` SPI 上报指标 |
+| `BaseResponse<T>` | 统一 API 响应体，字段：`code` / `msg` / `data` / `traceId` / `timestamp`。使用 `@SuperBuilder` + `@YdszJsonField(notWriteNullValue=true)` + `@YdszJsonPropertyOrder` 控制序列化。提供 `success()` / `error()` / `of()` 静态工厂方法，以及 `error(ResultCode, Throwable)` / `errorWithDetail(ResultCode, String)` 便捷方法。响应创建时自动通过 `CoreMetrics` SPI 上报指标 |
 | `PageResponse<T>` | 分页响应体（继承 BaseResponse），字段：`total` / `pageNum` / `pageSize` / `pages`。自动计算总页数，提供 `success()` / `fail()` / `empty()` / `hasNext()` / `hasPrevious()` 方法 |
 | `ProblemDetail` | RFC 7807 Problem Details 标准错误详情载体，字段：`type` / `title` / `status` / `detail` / `instance`。通过 `BaseResponse.errorWithDetail()` 使用 |
 
@@ -103,8 +103,7 @@ return BaseResponse.errorWithDetail(BaseResultCode.NOT_FOUND, "订单不存在")
 
 | 类 | 说明 |
 |---|---|
-| `RequestContext` | 基于 `TransmittableThreadLocal` 的请求上下文，支持 `userId` / `tenantId` / `traceId` / `requestId` / `language` / 自定义属性。手动快照/传播方法（`snapshot()` / `restore()` / `wrapCallable()` / `wrapRunnable()`）已标记 `@Deprecated`，推荐使用 TTL 自动传播 |
-| `ContextKey<T>` | 强类型上下文 Key（已标记 `@Deprecated`）。当前项目全部使用 String key 方式 |
+| `RequestContext` | 基于 `TransmittableThreadLocal` 的请求上下文，支持 `userId` / `tenantId` / `traceId` / `requestId` / `language` / 自定义属性。配合 TTL 自动传播上下文 |
 | `TenantContextHolder` | 租户上下文持有者接口（SPI），定义 `getTenantId()` / `isSuperTenant()`。由业务模块（如 `ydsz-common-auth`）提供具体实现，避免 core 模块循环依赖 |
 | `TenantMdcFilter` | Jakarta Servlet Filter，在请求处理前将 `tenantId` / `userId` / `traceId` 从 RequestContext 写入 SLF4J MDC，请求结束后自动清理。Filter 优先级可通过 `ydsz.core.tenant-mdc-filter-order` 配置 |
 
@@ -151,8 +150,6 @@ public CoreMetricsCallback coreMetricsCallback(MeterRegistry registry) {
 | `DataScopeType` | `TypeEnum<String>` | 数据权限范围类型（TENANT / GROUP / COMPANY / DEPT / USER / PROJECT / REGION / CUSTOM），含 `priority` 优先级字段和 `max()` 比较方法 |
 | `IdentityType` | `TypeEnum<String>` | 身份类型（YDSZ / COMPANY / VISITOR） |
 | `ServiceType` | `TypeEnum<String>` | 服务类型（WEB_SERVICE / APP_SERVICE），含 `pathPrefix` 路径前缀字段 |
-| `YesOrNo` | `TypeEnum<Integer>` | 是/否枚举（NO=0 / YES=1），已标记 `@Deprecated`（项目实际使用 `Integer` 或 `Boolean`） |
-
 ### 7. 全局常量（`constant` 包）
 
 | 常量类 | 说明 |
@@ -294,74 +291,3 @@ com.njydsz.common.core.config.TraceAutoConfiguration
 ### 配置校验 fail-fast
 
 `CoreProperties` 及其 `TraceConfig` 内部类使用 JSR-303 校验注解（`@Min` / `@Max` / `@NotBlank` / `@Pattern`），配合 `@Validated` 和 `@Valid` 实现启动时校验。配置非法时应用启动失败，避免运行时出现意外行为。
-
-### 废弃 API 策略
-
-以下 API 已标记 `@Deprecated`，当前版本保留但不再推荐使用：
-
-| API | 原因 | 替代方案 |
-|---|---|---|
-| `ContextKey<T>` 类 + `RequestContext` 的 4 个 ContextKey 方法 | 项目全部使用 String key 方式 | `RequestContext.put(String, Object)` / `RequestContext.get(String)` |
-| `RequestContext` 的 `snapshot()` / `restore()` / `wrapCallable()` / `wrapRunnable()` | TTL 已自动传播上下文 | 配合 `common-thread` 的 `ThreadPoolTaskExecutor` 使用 |
-| `BaseResponse` 的 `orElse()` / `orElseThrow()` / `map()` / `ifSuccess()` / `ifFailed()` | 项目未使用函数式风格处理响应 | 直接使用 `isSuccess()` + `getData()` 判断 |
-| `YesOrNo` 枚举 | 项目使用 `Integer`（0/1）或 `Boolean` | 直接使用基本类型 |
-
-> 如 6 个月内仍无使用场景，这些 API 将在下一个大版本中删除。
-
-## 变更记录
-
-### 2025-07-30 行业对标优化（P0×2 + P1×2 + P2×3 = 7 项）
-
-| 级别 | 变更内容 |
-|---|---|
-| **P0-1** | 新增 `CoreMetricsCallback` SPI + `CoreMetrics` 静态 holder，core 模块在不引入 Micrometer 依赖的前提下支持关键操作指标采集。`TraceIdGenerator.generate()` 和 `BaseResponse` 构造器自动上报指标。`CoreAutoConfiguration` 通过 `ObjectProvider` 自动发现并注册回调 |
-| **P0-2** | `additional-spring-configuration-metadata.json` 新增 `groups` 分组（ydsz.core / ydsz.core.trace / ydsz.core.filter-ignore / ydsz.core.tenant-mdc-filter），所有配置项描述完善 |
-| **P1-1** | 新增 `ProblemDetail` 类（RFC 7807 Problem Details 标准错误详情载体），`BaseResponse` 新增 `errorWithDetail(ResultCode, String)` 和 `errorWithDetail(ResultCode, String, URI)` 便捷方法，支持标准化错误详情 |
-| **P1-2** | `CoreHealthIndicator` 增强：新增配置校验（id-type 合法性）、TraceId 生成探针（实际生成验证）、Snowflake workerId 报告、分页配置合法性校验、指标回调注册状态。健康状态规则明确化（探针失败/配置非法 → DOWN） |
-| **P2-1** | `BaseResultCode` 新增 12 个通用错误码：A106xx 请求语义（INVALID_RANGE / PAYLOAD_TOO_LARGE / TOO_MANY_REQUESTS）、B2xxxx 系统状态（SYSTEM_MAINTENANCE / FEATURE_DISABLED / CIRCUIT_BREAKER_OPEN）、C1xxxx 第三方服务（THIRD_PARTY_SERVICE_ERROR / THIRD_PARTY_TIMEOUT / THIRD_PARTY_RATE_LIMITED / CACHE_OPERATION_FAILED / MQ_PUBLISH_FAILED / MQ_CONSUME_FAILED）。`getHttpStatusCode()` switch 同步更新 |
-| **P2-2** | 新建 `i18n/messages.properties`（英文默认）和 `i18n/messages_zh_CN.properties`（简体中文），覆盖全部 49 个 `BaseResultCode` 错误码，消息 key 与 `ResultCode.getMessageKey()` 默认实现一致 |
-| **P2-3** | `CoreProperties` 校验增强：`TraceConfig.idType` 新增 `@NotBlank` + `@Pattern(regexp="uuid|snowflake")` 校验；`TraceConfig` 和 `CoreProperties.trace` 字段新增 `@Valid` 级联校验；`defaultPageSize` 新增 `@Max(5000)` 上限校验 |
-
-**新增文件（4 个）**：`CoreMetricsCallback.java`、`CoreMetrics.java`、`ProblemDetail.java`、`messages.properties`、`messages_zh_CN.properties`
-**修改文件（8 个）**：`BaseResponse.java`、`BaseResultCode.java`、`CoreProperties.java`、`CoreAutoConfiguration.java`、`CoreHealthIndicator.java`、`TraceIdGenerator.java`、`additional-spring-configuration-metadata.json`、`native-image.properties`
-**Lint 检查**：零 ERROR，零 WARNING
-
-### 2025-07-30 "简单够用"原则评估与过度设计清理
-
-| 级别 | 变更内容 |
-|---|---|
-| **P0-1** | 删除 `PageRequest` + `BaseRequest`（零业务使用，业务模块全部使用 `PageQuery`） |
-| **P0-2** | 删除 `BaseResponse` 的 Clock 抽象（`CLOCK_HOLDER` / `setClock()` / `getClock()`），改用 `System.currentTimeMillis()` 直接调用。新增 `isResolverRegistered()` 替代 `getClock() != null` 健康检查 |
-| **P0-3** | 删除空 featureflag 测试目录 |
-| **P1-1** | `HeaderConstants` 删除 22 个零引用的标准 HTTP 头常量，仅保留 20 个项目自定义头常量 |
-| **P1-2** | `BaseResultCode` 删除 13 个业务域专属错误码，业务模块自定义错误码请实现 `ResultCode` 接口 |
-| **P2-1** | `ContextKey<T>` 类标记 `@Deprecated`；`RequestContext` 的 4 个 ContextKey 方法标记 `@Deprecated` |
-| **P2-2** | `BaseResponse` 的 5 个函数式方法标记 `@Deprecated` |
-| **P2-3** | `RequestContext` 的 4 个手动传播方法标记 `@Deprecated` |
-| **P3-1** | `YesOrNo` 枚举标记 `@Deprecated` |
-
-### 2025-07-30 深度优化迭代
-
-| 级别 | 变更内容 |
-|---|---|
-| **P0-1** | SnowflakeTraceIdSupplier CAS 循环每轮重新读取时间戳，修复高并发场景下误判时钟回拨 |
-| **P0-2** | PageConstants 新增运行时覆盖机制，`CoreAutoConfiguration` 启动时同步 `CoreProperties` 配置 |
-| **P0-3** | TraceIdGenerator / BaseResponse 静态 holder 设计决策文档化 |
-| **P0-4** | 删除残留 FeatureFlag 测试文件 |
-| **P1-1** | `ResultCode` 接口新增 `getHttpStatusCode()` 默认方法 |
-| **P1-2** | `PageResponse` 新增 `success(long, int, int, T)` 基本类型便捷重载 |
-| **P1-3** | `SnowflakeTraceIdSupplier` workerId/datacenterId 推导增强：支持 K8s 环境变量 |
-| **P1-4** | `RequestContext` 新增 `getRequestId()` / `setRequestId()` / `getLanguage()` / `setLanguage()` 便捷方法 |
-| **P1-5** | `CoreHealthIndicator` 增强 |
-| **P1-6** | `BaseResponse` 新增 `error(ResultCode, Throwable)` 便捷方法 |
-
-### 2025-07-29 瘦身重构
-
-以下功能已从 core 模块迁出：
-- Feature Flag → 删除（无业务使用）
-- Graceful Shutdown → 删除（无业务使用，Spring Boot 内置）
-- AbstractModuleMetrics → `ydsz-common-base`（需 Micrometer 依赖）
-- DAG 条件评估 → `ydsz-common-domain`（需 SpEL 依赖）
-- Job 框架 → `ydsz-common-domain`（属于领域层调度能力）
-
-**core 模块最终状态**：34 个 Java 文件，零 AOP / SpEL / Micrometer 依赖。

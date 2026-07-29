@@ -12,9 +12,6 @@ import org.slf4j.MDC;
 
 import java.io.Serializable;
 import java.net.URI;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 /**
  * 统一API返回结果封装类
  *
@@ -419,77 +416,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public boolean isFailed() {
         return !isSuccess();
-    }
-
-    // ============================== 函数式 API（已废弃） ==============================
-
-    /**
-     * 返回数据，如果响应失败则返回默认值
-     *
-     * @param defaultValue 默认值
-     * @return 成功时返回 data，失败时返回 defaultValue
-     * @deprecated 项目未使用函数式风格处理响应，请直接使用 {@link #isSuccess()} + {@link #getData()} 判断。
-     */
-    @Deprecated
-    public T orElse(T defaultValue) {
-        return isSuccess() ? data : defaultValue;
-    }
-
-    /**
-     * 返回数据，如果响应失败则抛出异常
-     *
-     * @return 成功时的 data
-     * @throws IllegalStateException 如果响应失败
-     * @deprecated 项目未使用函数式风格处理响应，请直接使用 {@link #isSuccess()} + {@link #getData()} 判断。
-     */
-    @Deprecated
-    public T orElseThrow() {
-        if (!isSuccess()) {
-            throw new IllegalStateException("Response failed: code=" + code + ", msg=" + msg);
-        }
-        return data;
-    }
-
-    /**
-     * 对成功的数据执行映射转换
-     *
-     * @param mapper 映射函数
-     * @param <R>    目标类型
-     * @return 包含映射后数据的新响应（失败时保持原样）
-     * @deprecated 项目未使用函数式风格处理响应，请在业务层显式转换。
-     */
-    @Deprecated
-    public <R> BaseResponse<R> map(Function<T, R> mapper) {
-        if (isSuccess() && data != null) {
-            return of(code, msg, mapper.apply(data));
-        }
-        return of(code, msg, null);
-    }
-
-    /**
-     * 如果响应成功且数据非空，执行操作
-     *
-     * @param action 要执行的操作
-     * @deprecated 项目未使用函数式风格处理响应，请直接使用 {@link #isSuccess()} + {@link #getData()} 判断。
-     */
-    @Deprecated
-    public void ifSuccess(Consumer<T> action) {
-        if (isSuccess() && data != null) {
-            action.accept(data);
-        }
-    }
-
-    /**
-     * 如果响应失败，执行操作
-     *
-     * @param action 要执行的操作
-     * @deprecated 项目未使用函数式风格处理响应，请直接使用 {@link #isFailed()} 判断。
-     */
-    @Deprecated
-    public void ifFailed(Consumer<BaseResponse<T>> action) {
-        if (!isSuccess()) {
-            action.accept(this);
-        }
     }
 
 }

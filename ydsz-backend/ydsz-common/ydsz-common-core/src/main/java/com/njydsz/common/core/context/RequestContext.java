@@ -2,8 +2,6 @@ package com.njydsz.common.core.context;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
@@ -215,19 +213,6 @@ public final class RequestContext {
     }
 
     /**
-     * 通过强类型 Key 设置属性
-     *
-     * @param key   强类型 Key
-     * @param value 属性值
-     * @param <T>   关联类型
-     * @deprecated 项目全部使用 String key 方式，此方法从未被业务模块使用。
-     */
-    @Deprecated
-    public static <T> void put(ContextKey<T> key, T value) {
-        put(key.getName(), value);
-    }
-
-    /**
      * 获取属性
      *
      * @param key 属性键
@@ -238,56 +223,12 @@ public final class RequestContext {
     }
 
     /**
-     * 通过强类型 Key 获取属性（类型不匹配时抛异常）
-     *
-     * @param key 强类型 Key
-     * @param <T> 关联类型
-     * @return 属性值；不存在时返回 null
-     * @deprecated 项目全部使用 String key 方式，此方法从未被业务模块使用。
-     */
-    @Deprecated
-    public static <T> T get(ContextKey<T> key) {
-        Object value = CONTEXT_HOLDER.get().get(key.getName());
-        if (value == null) {
-            return null;
-        }
-        if (!key.getType().isInstance(value)) {
-            throw new IllegalStateException("ContextKey[" + key.getName() + "] expected "
-                    + key.getType().getName() + " but was " + value.getClass().getName());
-        }
-        return (T) value;
-    }
-    /**
-     * 通过强类型 Key 获取属性（Optional）
-     *
-     * @param key 强类型 Key
-     * @param <T> 关联类型
-     * @return Optional 包装的属性值
-     * @deprecated 项目全部使用 String key 方式，此方法从未被业务模块使用。
-     */
-    @Deprecated
-    public static <T> Optional<T> getOptional(ContextKey<T> key) {
-        return Optional.ofNullable(get(key));
-    }
-
-    /**
      * 移除属性
      *
      * @param key 属性键
      */
     public static void remove(String key) {
         CONTEXT_HOLDER.get().remove(key);
-    }
-
-    /**
-     * 通过强类型 Key 移除属性
-     *
-     * @param key 强类型 Key
-     * @deprecated 项目全部使用 String key 方式，此方法从未被业务模块使用。
-     */
-    @Deprecated
-    public static void remove(ContextKey<?> key) {
-        remove(key.getName());
     }
 
     /**
@@ -331,88 +272,6 @@ public final class RequestContext {
         } finally {
             clear();
         }
-    }
-
-    /**
-     * 获取当前上下文快照
-     *
-     * @return 上下文 Map 的副本
-     * @deprecated 项目使用 TTL（TransmittableThreadLocal）自动传播上下文，
-     * 无需手动 snapshot/restore。保留仅供极端场景使用。
-     */
-    @Deprecated
-    public static Map<String, Object> snapshot() {
-        return new HashMap<>(CONTEXT_HOLDER.get());
-    }
-
-    /**
-     * 从快照恢复上下文（覆盖当前线程的上下文）
-     *
-     * @param snapshot 之前通过 {@link #snapshot()} 获取的上下文快照
-     * @deprecated 项目使用 TTL（TransmittableThreadLocal）自动传播上下文，
-     * 无需手动 snapshot/restore。保留仅供极端场景使用。
-     */
-    @Deprecated
-    public static void restore(Map<String, Object> snapshot) {
-        if (snapshot != null) {
-            CONTEXT_HOLDER.set(new HashMap<>(snapshot));
-        }
-    }
-
-    /**
-     * 包装 Callable，自动传播当前上下文到异步线程
-     *
-     * <p>在 Callable 执行前恢复上下文快照，执行后清除，防止内存泄漏。
-     * 适用于手动提交到线程池的场景。</p>
-     *
-     * @param callable 原始 Callable
-     * @param <T>      返回类型
-     * @return 包装后的 Callable
-     * @deprecated 项目使用 TTL（TransmittableThreadLocal）自动传播上下文，
-     * 配合 common-thread 的 ThreadPoolTaskExecutor 使用，无需手动包装。
-     */
-    @Deprecated
-    public static <T> Callable<T> wrapCallable(Callable<T> callable) {
-        Map<String, Object> snapshot = snapshot();
-        return () -> {
-            Map<String, Object> previous = snapshot();
-            try {
-                restore(snapshot);
-                return callable.call();
-            } finally {
-                if (previous.isEmpty()) {
-                    clear();
-                } else {
-                    restore(previous);
-                }
-            }
-        };
-    }
-
-    /**
-     * 包装 Runnable，自动传播当前上下文到异步线程
-     *
-     * @param runnable 原始 Runnable
-     * @return 包装后的 Runnable
-     * @deprecated 项目使用 TTL（TransmittableThreadLocal）自动传播上下文，
-     * 配合 common-thread 的 ThreadPoolTaskExecutor 使用，无需手动包装。
-     */
-    @Deprecated
-    public static Runnable wrapRunnable(Runnable runnable) {
-        Map<String, Object> snapshot = snapshot();
-        return () -> {
-            Map<String, Object> previous = snapshot();
-            try {
-                restore(snapshot);
-                runnable.run();
-            } finally {
-                if (previous.isEmpty()) {
-                    clear();
-                } else {
-                    restore(previous);
-                }
-            }
-        };
     }
 
     /**

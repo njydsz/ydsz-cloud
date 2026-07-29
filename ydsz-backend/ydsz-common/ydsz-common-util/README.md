@@ -53,8 +53,6 @@ YDSZ 通用工具类库 — 70 个 Java 源文件覆盖 ID 生成、加密、HTT
 |---|---|
 | `ExecutorUtils` | 线程池工厂（Fixed/Cached/Single/CPU-Bound/VirtualThread/Priority/Scheduled） |
 | `ContextPropagationUtils` | 线程间上下文传播（MDC 轻量级编码，零 JSON 开销，自定义上下文注册） |
-| `RetrySupport` | 统一重试工具（指数退避 + 抖动、固定间隔、异步重试、溢出保护）— **@Deprecated**，推荐使用 Spring Retry 或 Resilience4j |
-
 ### 字符串与文本
 
 | 类 | 说明 |
@@ -123,7 +121,7 @@ YDSZ 通用工具类库 — 70 个 Java 源文件覆盖 ID 生成、加密、HTT
 
 | 配置类 | 激活条件 | 注册 Bean |
 |---|---|---|
-| `UtilAutoConfiguration` | 总是激活 | `SpringContextHolder`、`OkHttpClient`、`SnowflakeHealthIndicator`、`UtilHealthIndicator`、`OkHttpCleanupBean`、`RetryCleanupBean` |
+| `UtilAutoConfiguration` | 总是激活 | `SpringContextHolder`、`OkHttpClient`、`SnowflakeHealthIndicator`、`UtilHealthIndicator`、`OkHttpCleanupBean` |
 | `SnowflakeAutoConfiguration` | `ydsz.util.snowflake.enabled=true`（默认激活） | `SnowflakeUtils` |
 | `ThreadPoolMonitorAutoConfiguration` | `ydsz.util.threadpool.monitor.enabled=true`（默认激活），Micrometer 可用时自动注册指标 | `ExecutorService` 指标注册器 |
 
@@ -171,7 +169,6 @@ YDSZ 通用工具类库 — 70 个 Java 源文件覆盖 ID 生成、加密、HTT
 | `BeanCopyUtils` | PropertyDescriptor / Field 缓存（LRU 1024），避免重复反射 |
 | `StringUtils` | `PatternCache` 基于 ConcurrentHashMap + LRU 淘汰，无锁并发读 |
 | `ExecutorUtils` | 统一线程名前缀 `ydsz-`，有界队列 + CallerRunsPolicy 防止 OOM |
-| `RetrySupport` | 指数退避移位溢出保护，异步线程池可外部注入 |
 | `FileUtils` | NIO Path API，`Files.copy` 替代手动流拷贝，`try-with-resources` 自动关闭 |
 | `OkHttpUtils` | 连接池复用，请求级超时共享连接池，`executeWithTimeout` 含 write 超时 |
 
@@ -228,7 +225,7 @@ YDSZ 通用工具类库 — 70 个 Java 源文件覆盖 ID 生成、加密、HTT
 **P1 — 精简 SPI 层**
 
 - 删除 `security/password/` 整个包（4 文件）：`PasswordEncoder` 接口 + `PasswordEncoderFactory` + `Pbkdf2PasswordEncoder` + `PasswordStrengthEvaluator`。零调用，`PwdUtils` 直接使用 BCrypt/PBKDF2。如需 SPI，应使用 Spring Security 的 `PasswordEncoder`
-- `RetrySupport` 标记 `@Deprecated(since="1.3.0", forRemoval=true)`，推荐使用 Spring Retry 或 Resilience4j
+- 删除 `RetrySupport` 类（零业务调用，推荐使用 Spring Retry 或 Resilience4j）
 
 **P2 — 精简 BeanCopyUtils（-300 行）**
 
@@ -276,7 +273,7 @@ YDSZ 通用工具类库 — 70 个 Java 源文件覆盖 ID 生成、加密、HTT
 **P2 — 架构优化**
 
 - `TracerUtils`：使用反射解耦 SkyWalking 硬依赖，模块在无 SkyWalking 时正常降级
-- `RetrySupport`：线程名统一 `ydsz-` 前缀；`calculateExponentialBackoff` 增加移位溢出保护
+- `RetrySupport`：已删除（零业务调用，推荐使用 Spring Retry 或 Resilience4j）
 
 **P3 — 健康检查与文档**
 
