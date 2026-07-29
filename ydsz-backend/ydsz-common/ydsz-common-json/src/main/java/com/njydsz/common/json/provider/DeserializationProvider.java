@@ -3,8 +3,15 @@ package com.njydsz.common.json.provider;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.exception.JsonDeserializationException;
@@ -217,9 +224,9 @@ public final class DeserializationProvider {
                 }
             }
 
-            if (rawType == Map.class || rawType == java.util.HashMap.class
-                    || rawType == java.util.LinkedHashMap.class
-                    || rawType == java.util.TreeMap.class) {
+            if (rawType == Map.class || rawType == HashMap.class
+                    || rawType == LinkedHashMap.class
+                    || rawType == TreeMap.class) {
                 Type[] typeArgs = pt.getActualTypeArguments();
                 if (typeArgs.length == 2) {
                     // 安全检查：校验 Map 的 value 类型，防止泛型路径绕过 AutoType 白名单
@@ -230,9 +237,9 @@ public final class DeserializationProvider {
                 return (T) YdszJsonParser.parseObject(json);
             }
 
-            if (rawType == java.util.Set.class || rawType == java.util.HashSet.class
-                    || rawType == java.util.LinkedHashSet.class
-                    || rawType == java.util.TreeSet.class) {
+            if (rawType == Set.class || rawType == HashSet.class
+                    || rawType == LinkedHashSet.class
+                    || rawType == TreeSet.class) {
                 Type elementType = pt.getActualTypeArguments()[0];
                 if (elementType instanceof Class<?> elementClass) {
                     // 安全检查：校验 Set 元素类型
@@ -265,14 +272,14 @@ public final class DeserializationProvider {
      * @param list 元素列表
      * @return 填充好的 Set 实例
      */
-    private static java.util.Set<Object> createSet(Type rawType, List<?> list) {
-        java.util.Set<Object> set;
-        if (rawType == java.util.TreeSet.class) {
-            set = new java.util.TreeSet<>();
-        } else if (rawType == java.util.LinkedHashSet.class) {
-            set = new java.util.LinkedHashSet<>(list.size());
+    private static Set<Object> createSet(Type rawType, List<?> list) {
+        Set<Object> set;
+        if (rawType == TreeSet.class) {
+            set = new TreeSet<>();
+        } else if (rawType == LinkedHashSet.class) {
+            set = new LinkedHashSet<>(list.size());
         } else {
-            set = new java.util.HashSet<>(list.size());
+            set = new HashSet<>(list.size());
         }
         set.addAll(list);
         return set;

@@ -10,6 +10,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.core.config.CoreProperties;
 import com.njydsz.common.core.config.FilterIgnoreProperties;
 import com.njydsz.common.core.metrics.CoreMetrics;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.core.trace.TraceIdSupplier;
 import com.njydsz.common.core.trace.SnowflakeTraceIdSupplier;
@@ -119,8 +120,7 @@ public class CoreHealthIndicator implements HealthIndicator {
         }
 
         // ── i18n 解析器状态 ──
-        details.put("i18nResolverRegistered",
-                com.njydsz.common.core.response.BaseResponse.isResolverRegistered());
+        details.put("i18nResolverRegistered", BaseResponse.isResolverRegistered());
 
         // ── 指标回调状态 ──
         details.put("metricsCallbackRegistered", CoreMetrics.isCallbackRegistered());

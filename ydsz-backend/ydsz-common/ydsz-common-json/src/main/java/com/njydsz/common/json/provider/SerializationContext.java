@@ -5,6 +5,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.writer.JSONWriter;
 
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Set;
 
 /**
@@ -106,7 +107,7 @@ public final class SerializationContext {
         // 运行时状态字段
         this.sbPool = new StringBuilder(4096);
         this.fastWriterPool = new JSONWriter(4096);
-        this.serializingObjects = Collections.newSetFromMap(new java.util.IdentityHashMap<>(64));
+        this.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>(64));
         this.currentViewClass = null;
         this.cachedListSerializer = null;
         this.cachedListElementClass = null;

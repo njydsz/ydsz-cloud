@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 import com.njydsz.common.json.annotation.YdszJsonClass;
@@ -553,7 +554,7 @@ public final class SerializationProvider {
             objects.clear();
         }
 
-        return sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     /**

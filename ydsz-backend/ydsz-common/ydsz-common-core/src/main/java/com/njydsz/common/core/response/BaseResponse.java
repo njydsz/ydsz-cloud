@@ -2,6 +2,7 @@ package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.metrics.CoreMetrics;
 import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 import lombok.Data;
@@ -10,6 +11,7 @@ import lombok.experimental.SuperBuilder;
 import org.slf4j.MDC;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -311,7 +313,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * 记录响应创建指标（委托到 CoreMetrics SPI）
      */
     private void recordMetrics() {
-        com.njydsz.common.core.metrics.CoreMetrics.recordResponseCreated(
+        CoreMetrics.recordResponseCreated(
                 SUCCESS.equals(this.code), this.code);
     }
 
@@ -395,7 +397,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @since 1.1.0
      */
     @SuppressWarnings("unchecked")
-    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, java.net.URI instance) {
+    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, URI instance) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
         return of(resultCode.getCode(), resultCode.getMsg(), (T) problem);
     }

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
+import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 
@@ -105,7 +106,7 @@ public class ProblemDetail implements Serializable {
      * @param detail     错误详情
      * @return ProblemDetail 实例
      */
-    public static ProblemDetail of(com.njydsz.common.core.code.ResultCode resultCode, String detail) {
+    public static ProblemDetail of(ResultCode resultCode, String detail) {
         return ProblemDetail.builder()
                 .type(URI.create(DEFAULT_TYPE_PREFIX + resultCode.getCode()))
                 .title(resultCode.getMsg())
@@ -122,7 +123,7 @@ public class ProblemDetail implements Serializable {
      * @param instance   请求路径 URI
      * @return ProblemDetail 实例
      */
-    public static ProblemDetail of(com.njydsz.common.core.code.ResultCode resultCode, String detail, URI instance) {
+    public static ProblemDetail of(ResultCode resultCode, String detail, URI instance) {
         return ProblemDetail.builder()
                 .type(URI.create(DEFAULT_TYPE_PREFIX + resultCode.getCode()))
                 .title(resultCode.getMsg())

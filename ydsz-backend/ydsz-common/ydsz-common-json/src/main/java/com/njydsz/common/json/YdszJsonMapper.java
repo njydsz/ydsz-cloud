@@ -3,6 +3,7 @@ package com.njydsz.common.json;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -397,7 +398,7 @@ public class YdszJsonMapper {
             return null;
         }
         validateJsonSize(json);
-        Object result = DeserializationProvider.deserialize(json, new java.lang.reflect.ParameterizedType() {
+        Object result = DeserializationProvider.deserialize(json, new ParameterizedType() {
             @Override
             public Type[] getActualTypeArguments() { return new Type[]{elementClass}; }
             @Override

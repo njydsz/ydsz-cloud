@@ -1,6 +1,8 @@
 package com.njydsz.common.json.autotype;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -111,7 +113,7 @@ public final class AutoTypeChecker {
      *（如 OSGi、热部署、Groovy 脚本引擎）className 持续写入导致内存泄漏。</p>
      */
     private static final Map<String, Boolean> TYPE_CHECK_CACHE =
-        java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<>(256, 0.75f, true) {
+        Collections.synchronizedMap(new LinkedHashMap<>(256, 0.75f, true) {
             private static final int MAX_ENTRIES = 4096;
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
