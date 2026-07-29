@@ -9,6 +9,9 @@ import java.util.Optional;
  * <p>用于替代 {@code String} 类型的 Key，避免拼写错误与类型不匹配。
  * 配合 {@link RequestContext} 使用，提供编译期类型检查与 IDE 提示。</p>
  *
+ * <p><b>已废弃：</b>当前项目全部使用 String key 方式（如 {@code RequestContext.setUserId()}），
+ * 此类从未被业务模块使用。如 6 个月内仍无使用场景，将在下一个大版本中删除。</p>
+ *
  * <p><b>使用示例：</b></p>
  * <pre>{@code
  * // 1. 在公共常量类中声明强类型 Key
@@ -30,6 +33,7 @@ import java.util.Optional;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated
 public class ContextKey<T> {
 
     private final String name;

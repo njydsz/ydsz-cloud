@@ -1,6 +1,6 @@
 # ydsz-common-core
 
-YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId 生成、常量定义、枚举与分页请求。
+YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId 生成、常量定义、枚举与错误码。
 
 最小化依赖，**不包含** Spring AOP、Micrometer、SpEL、AspectJ 等框架能力。仅作为全项目最底层的类型定义与工具常量库被所有模块依赖。
 
@@ -12,7 +12,7 @@ YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 被 common 所有子模块及全部业务模块依赖 |
 | **构建顺序** | 最先编译（无业务依赖） |
-| **源文件数** | 35 个 Java 文件（main），5 个测试文件（test） |
+| **源文件数** | 32 个 Java 文件（main），4 个测试文件（test） |
 | **依赖范围** | Lombok + SLF4J + Jakarta Validation + ydsz-common-json + TTL + Spring Boot（可选） |
 
 ## 目录结构
@@ -23,9 +23,9 @@ com.njydsz.common.core
 ├── code/            # 结果码体系（2 个类）
 ├── context/         # 请求上下文与租户上下文（4 个类）
 ├── trace/           # TraceId 生成策略（3 个类）
-├── request/         # 请求模型基类（3 个类，预留 API）
+├── request/         # 请求标记接口（1 个类，预留 API）
 ├── enums/           # 通用枚举（5 个类）
-├── constant/        # 全局常量定义（9 个类，ProtocolConstants 已删除）
+├── constant/        # 全局常量定义（8 个类）
 ├── config/          # 自动配置与属性绑定（5 个类）
 └── health/          # 健康检查（1 个类）
 ```
@@ -37,7 +37,7 @@ com.njydsz.common.core
 | 类 | 说明 |
 |---|---|
 | `IResponse<T>` | 响应标记接口，定义 `getCode()` / `getMsg()` / `getData()` / `isSuccess()` 契约 |
-| `BaseResponse<T>` | 统一 API 响应体，字段：`code` / `msg` / `data` / `traceId` / `timestamp`。使用 `@SuperBuilder` + `@YdszJsonField(notWriteNullValue=true)` + `@YdszJsonPropertyOrder` 控制序列化。提供 `success()` / `error()` / `of()` 静态工厂方法，以及函数式 API（`orElse` / `orElseThrow` / `map` / `ifSuccess` / `ifFailed`）。支持 `error(ResultCode, Throwable)` 便捷方法 |
+| `BaseResponse<T>` | 统一 API 响应体，字段：`code` / `msg` / `data` / `traceId` / `timestamp`。使用 `@SuperBuilder` + `@YdszJsonField(notWriteNullValue=true)` + `@YdszJsonPropertyOrder` 控制序列化。提供 `success()` / `error()` / `of()` 静态工厂方法，以及 `error(ResultCode, Throwable)` 便捷方法。函数式 API（`orElse` / `orElseThrow` / `map` / `ifSuccess` / `ifFailed`）已标记 `@Deprecated` |
 | `PageResponse<T>` | 分页响应体（继承 BaseResponse），字段：`total` / `pageNum` / `pageSize` / `pages`。自动计算总页数，提供 `success()` / `fail()` / `empty()` / `hasNext()` / `hasPrevious()` 方法 |
 
 **业务响应码与 HTTP 状态码区分**：
@@ -48,7 +48,7 @@ com.njydsz.common.core
 
 **国际化支持**：
 
-`BaseResponse` 内置 `MessageResolver` 接口，当 Spring `MessageSource` 可用时，`CoreAutoConfiguration` 自动注册 `SpringMessageResolver` 并绑定到 `BaseResponse`，使成功/失败消息支持 i18n 国际化解析。
+`BaseResponse` 内置 `MessageResolver` 接口，当 Spring `MessageSource` 可用时，`CoreAutoConfiguration` 自动注册 `SpringMessageResolver` 并绑定到 `BaseResponse`，使成功/失败消息支持 i18n 国际化解析。可通过 `BaseResponse.isResolverRegistered()` 检查解析器是否已注册。
 
 ```java
 // 返回成功
@@ -72,7 +72,7 @@ return BaseResponse.error(BaseResultCode.INTERNAL_ERROR, exception);
 | 类 | 说明 |
 |---|---|
 | `ResultCode` | 结果码接口，定义 `getCode()` / `getMsg()` / `getMessageKey()`（默认返回 `"error." + 枚举名`，用于 i18n）/ `getHttpStatusCode()`（默认返回 500） |
-| `BaseResultCode` | 标准结果码枚举（实现 ResultCode），共 40+ 个错误码，按段位规划 |
+| `BaseResultCode` | 标准结果码枚举（实现 ResultCode），共 30+ 个错误码，按段位规划 |
 
 **错误码段位规划**：
 
@@ -82,16 +82,12 @@ return BaseResponse.error(BaseResultCode.INTERNAL_ERROR, exception);
 | `A1xxxx` | 通用错误（参数校验、资源不存在、限流等） | 400 / 404 / 405 / 408 / 409 / 429 |
 | `A2xxxx` | 认证授权（未登录、Token 过期、权限不足等） | 401 / 403 / 423 |
 | `B3xxxx` | 用户/组织/人员 | 404 / 401 |
-| `B4xxxx` | 项目/合同/商机 | 404 / 409 / 400 |
-| `B5xxxx` | 财务/成本/收入/利润 | 400 |
-| `B6xxxx` | 资源/工时/人员调度 | 409 / 423 |
 | `B7xxxx` | 工作流/审批 | 404 / 400 / 403 |
-| `B8xxxx` | 报表/驾驶舱 | 500 |
 | `B102xx` | 系统级业务异常 | 500 / 503 |
 | `C1xxxx` | 数据库/第三方异常 | 409 / 400 / 503 |
 | `C99999` | 未知错误 | 500 |
 
-业务模块自定义错误码需实现 `ResultCode` 接口：
+> **注意**：项目/合同/商机（B4xxxx）、财务/成本（B5xxxx）、资源/工时（B6xxxx）、报表（B8xxxx）等业务域专属错误码已从 `BaseResultCode` 中删除。业务模块自定义错误码请实现 `ResultCode` 接口，在各模块内自行定义。
 
 ```java
 public enum OrderResultCode implements ResultCode {
@@ -110,8 +106,8 @@ public enum OrderResultCode implements ResultCode {
 
 | 类 | 说明 |
 |---|---|
-| `RequestContext` | 基于 `TransmittableThreadLocal` 的请求上下文，支持 `userId` / `tenantId` / `traceId` / `requestId` / `language` / 自定义属性。提供快照（`snapshot()` / `restore()`）、异步传播（`wrapCallable()` / `wrapRunnable()`）、自动清理（`CleanupGuard` try-with-resources 模式、`runAndClear()`） |
-| `ContextKey<T>` | 强类型上下文 Key，支持编译期类型检查。通过 `ContextKey.of("userId", String.class)` 创建，配合 `RequestContext.put(ContextKey, T)` / `RequestContext.get(ContextKey)` 使用 |
+| `RequestContext` | 基于 `TransmittableThreadLocal` 的请求上下文，支持 `userId` / `tenantId` / `traceId` / `requestId` / `language` / 自定义属性。手动快照/传播方法（`snapshot()` / `restore()` / `wrapCallable()` / `wrapRunnable()`）已标记 `@Deprecated`，推荐使用 TTL 自动传播 |
+| `ContextKey<T>` | 强类型上下文 Key（已标记 `@Deprecated`）。当前项目全部使用 String key 方式 |
 | `TenantContextHolder` | 租户上下文持有者接口（SPI），定义 `getTenantId()` / `isSuperTenant()`。由业务模块（如 `ydsz-common-auth`）提供具体实现，避免 core 模块循环依赖 |
 | `TenantMdcFilter` | Jakarta Servlet Filter，在请求处理前将 `tenantId` / `userId` / `traceId` 从 RequestContext 写入 SLF4J MDC，请求结束后自动清理。Filter 优先级可通过 `ydsz.core.tenant-mdc-filter-order` 配置 |
 
@@ -136,15 +132,9 @@ try (RequestContext.CleanupGuard guard = RequestContext.newCleanupGuard()) {
     // ... 业务逻辑
 }
 
-// 强类型 Key
-ContextKey<String> DEPT_CODE = ContextKey.of("deptCode", String.class);
-RequestContext.put(DEPT_CODE, "R&D");
-String code = RequestContext.get(DEPT_CODE);
-
-// 异步传播
-executor.submit(RequestContext.wrapCallable(() -> {
-    String userId = RequestContext.getUserId();
-}));
+// 自定义属性（String key 方式）
+RequestContext.put("deptCode", "R&D");
+String code = RequestContext.get("deptCode");
 ```
 
 ### 4. TraceId 生成（`trace` 包）
@@ -185,24 +175,13 @@ public TraceIdSupplier customTraceIdSupplier() {
 }
 ```
 
-### 5. 请求模型（`request` 包）
+### 5. 请求标记接口（`request` 包）
 
 | 类 | 说明 |
 |---|---|
-| `IRequest` | 请求标记接口（`extends Serializable`） |
-| `BaseRequest` | 基础请求对象（`@SuperBuilder` + `@NoArgsConstructor`） |
-| `PageRequest` | 分页请求封装，字段：`pageNum`（Long，默认 1）/ `pageSize`（Long，默认 20）/ `orderBy` / `orderDir`（默认 ASC）。提供安全校验方法 |
+| `IRequest` | 请求标记接口（`extends Serializable`），当前为预留接口 |
 
-> **注意**：此包为预留 API，当前业务模块主要使用 `PageQuery`（domain 模块）。`PageRequest` 提供了 HTTP API 层的分页参数封装和 SQL 注入防护能力，可在新的 HTTP API 场景中使用。
-
-**PageRequest 安全特性**：
-
-- `@Min(1)` JSR-303 校验
-- `getSafePageNum()` / `getSafePageSize()` — null 及越界保护，上限使用运行时 `PageConstants.getMaxPageSize()`
-- `getSafeOrderBy()` — 正则校验防 SQL 注入，支持 `name ASC, age DESC` 多字段格式
-- `validateSort()` — 校验排序表达式合法性
-- `validateSortColumns(Set<String> allowedColumns)` — 排序字段白名单校验
-- `getOffset()` — 计算 MyBatis-Plus 分页 offset
+> **注意**：`BaseRequest` 和 `PageRequest` 已删除（零业务使用）。业务模块使用 `PageQuery`（domain 模块）作为分页查询基类。如需 HTTP API 层的请求封装，可实现 `IRequest` 接口。
 
 ### 6. 通用枚举（`enums` 包）
 
@@ -212,7 +191,7 @@ public TraceIdSupplier customTraceIdSupplier() {
 | `DataScopeType` | `TypeEnum<String>` | 数据权限范围类型（TENANT / GROUP / COMPANY / DEPT / USER / PROJECT / REGION / CUSTOM），含 `priority` 优先级字段和 `max()` 比较方法 |
 | `IdentityType` | `TypeEnum<String>` | 身份类型（YDSZ / COMPANY / VISITOR） |
 | `ServiceType` | `TypeEnum<String>` | 服务类型（WEB_SERVICE / APP_SERVICE），含 `pathPrefix` 路径前缀字段 |
-| `YesOrNo` | `TypeEnum<Integer>` | 是/否枚举（NO=0 / YES=1），支持 Integer 和 String 两种编码查找 |
+| `YesOrNo` | `TypeEnum<Integer>` | 是/否枚举（NO=0 / YES=1），已标记 `@Deprecated`（项目实际使用 `Integer` 或 `Boolean`） |
 
 所有枚举均通过 `TypeEnum.buildCodeMap()` 构建不可变映射，提供 `of()`（安全查找，返回 null）和 `codeOf()`（严格查找，抛异常）两种查找方式。
 
@@ -220,7 +199,7 @@ public TraceIdSupplier customTraceIdSupplier() {
 
 | 常量类 | 说明 |
 |---|---|
-| `HeaderConstants` | HTTP 请求头常量（认证 Token / 数据权限维度 / 列级权限 / 链路追踪 / CORS / 安全头部），共 30+ 个自定义头常量 |
+| `HeaderConstants` | HTTP 请求头常量（认证 Token / 数据权限维度 / 列级权限 / 链路追踪 / 网络信息），共 20 个自定义头常量。已删除 22 个零引用的标准 HTTP 头常量 |
 | `TokenConstants` | Token 相关常量（标识 / 前缀 "ydsz" / 回调 URL 参数名） |
 | `SecurityConstants` | 安全常量（密钥属性名 / BCrypt 强度 12 / CSRF 头部与参数名 / 安全头部引用） |
 | `PageConstants` | 分页默认值与上限（`DEFAULT_PAGE_NUM=1` / `DEFAULT_PAGE_SIZE=20` / `MAX_PAGE_SIZE=5000`）。**运行时值**由 `CoreProperties` 配置覆盖，通过 `getDefaultPageSize()` / `getMaxPageSize()` 获取 |
@@ -229,8 +208,6 @@ public TraceIdSupplier customTraceIdSupplier() {
 | `CacheConstants` | 缓存名称常量（workflow / nextwiki / system 三个模块的 8 个 cache name） |
 | `SystemConstants` | 系统级常量（`SYSTEM_USER_ID="SYSTEM"` / `DEFAULT_TENANT_ID="1"` / `DEFAULT_LOCALE="zh-CN"`） |
 | `YdszMessageTopics` | 消息中心 RocketMQ Topic / ConsumerGroup 常量（单条消息 / 批量消息 / 死信队列） |
-
-> **注意**：`ProtocolConstants` 已删除（零外部引用，Log4j JNDI 注入防护在 `common-safe` 模块中自行实现）。
 
 > **关于 CacheConstants / YdszMessageTopics**：这两个常量类包含业务模块特定的 cache name 和 MQ topic。当前保留在 core 模块作为"项目级共享常量"，后续可考虑迁移到 `ydsz-common-domain` 或各自模块的 API 包。
 
@@ -330,7 +307,6 @@ com.njydsz.common.core.config.TraceAutoConfiguration
 `META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties` 注册了以下类的反射配置：
 - `BaseResponse` — 无参构造器 + `(String, String, Object)` 构造器 + 5 个字段
 - `PageResponse` — 无参构造器 + 7 参数构造器 + 4 个字段
-- `BaseRequest` / `PageRequest` — 无参构造器
 - `CoreProperties` / `CoreProperties$TraceConfig` / `FilterIgnoreProperties` — 无参构造器
 
 ## 设计决策
@@ -351,9 +327,36 @@ com.njydsz.common.core.config.TraceAutoConfiguration
 - 需要运行时值时使用 `PageConstants.getDefaultPageSize()` / `PageConstants.getMaxPageSize()`
 - 需要编译时常量时（如 `@Max` 注解）使用 `PageConstants.DEFAULT_PAGE_SIZE` / `PageConstants.MAX_PAGE_SIZE`
 
+### 废弃 API 策略
+
+以下 API 已标记 `@Deprecated`，当前版本保留但不再推荐使用：
+
+| API | 原因 | 替代方案 |
+|---|---|---|
+| `ContextKey<T>` 类 + `RequestContext` 的 4 个 ContextKey 方法 | 项目全部使用 String key 方式 | `RequestContext.put(String, Object)` / `RequestContext.get(String)` |
+| `RequestContext` 的 `snapshot()` / `restore()` / `wrapCallable()` / `wrapRunnable()` | TTL 已自动传播上下文 | 配合 `common-thread` 的 `ThreadPoolTaskExecutor` 使用 |
+| `BaseResponse` 的 `orElse()` / `orElseThrow()` / `map()` / `ifSuccess()` / `ifFailed()` | 项目未使用函数式风格处理响应 | 直接使用 `isSuccess()` + `getData()` 判断 |
+| `YesOrNo` 枚举 | 项目使用 `Integer`（0/1）或 `Boolean` | 直接使用基本类型 |
+
+> 如 6 个月内仍无使用场景，这些 API 将在下一个大版本中删除。
+
 ## 变更记录
 
-### 2025-07-30 优化迭代
+### 2025-07-30 "简单够用"原则评估与过度设计清理
+
+| 级别 | 变更内容 |
+|---|---|
+| **P0-1** | 删除 `PageRequest` + `BaseRequest`（零业务使用，业务模块全部使用 `PageQuery`） |
+| **P0-2** | 删除 `BaseResponse` 的 Clock 抽象（`CLOCK_HOLDER` / `setClock()` / `getClock()`），改用 `System.currentTimeMillis()` 直接调用。新增 `isResolverRegistered()` 替代 `getClock() != null` 健康检查 |
+| **P0-3** | 删除空 featureflag 测试目录 |
+| **P1-1** | `HeaderConstants` 删除 22 个零引用的标准 HTTP 头常量（如 `CONTENT_TYPE` / `AUTHORIZATION` / `ACCEPT_LANGUAGE` 等），仅保留 20 个项目自定义头常量 |
+| **P1-2** | `BaseResultCode` 删除 13 个业务域专属错误码（B4xxxx 项目/合同/商机、B5xxxx 财务/成本、B6xxxx 资源/工时、B8xxxx 报表），业务模块自定义错误码请实现 `ResultCode` 接口 |
+| **P2-1** | `ContextKey<T>` 类标记 `@Deprecated`；`RequestContext` 的 `put(ContextKey, T)` / `get(ContextKey)` / `getOptional(ContextKey)` / `remove(ContextKey)` 4 个方法标记 `@Deprecated` |
+| **P2-2** | `BaseResponse` 的 `orElse()` / `orElseThrow()` / `map()` / `ifSuccess()` / `ifFailed()` 5 个函数式方法标记 `@Deprecated` |
+| **P2-3** | `RequestContext` 的 `snapshot()` / `restore()` / `wrapCallable()` / `wrapRunnable()` 4 个手动传播方法标记 `@Deprecated` |
+| **P3-1** | `YesOrNo` 枚举标记 `@Deprecated` |
+
+### 2025-07-30 深度优化迭代
 
 | 级别 | 变更内容 |
 |---|---|
@@ -387,4 +390,4 @@ com.njydsz.common.core.config.TraceAutoConfiguration
 | DAG 条件评估（SpELConditionEvaluator） | `ydsz-common-domain` | 需要 SpEL 依赖，属于领域层能力 |
 | Job 框架（JobHandler / MapProcessor 等） | `ydsz-common-domain` | 属于领域层调度能力 |
 
-**core 模块最终状态**：35 个 Java 文件，仅包含 response / request / context / trace / constant / enums / code / config / health 核心能力，零 AOP / SpEL / Micrometer 依赖。
+**core 模块最终状态**：32 个 Java 文件，仅包含 response / request / context / trace / constant / enums / code / config / health 核心能力，零 AOP / SpEL / Micrometer 依赖。

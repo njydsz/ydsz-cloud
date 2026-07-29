@@ -35,72 +35,40 @@
             <artifactId>snakeyaml</artifactId>
         </dependency>
 
-        <!--user-agent-->
+        <!--user-agent (IpAddrUtils User-Agent 解析)-->
         <dependency>
             <groupId>nl.basjes.parse.useragent</groupId>
             <artifactId>yauaa</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--ip2region-->
+        <!--ip2region (IpAddrUtils IP 地址库)-->
         <dependency>
             <groupId>org.lionsoul</groupId>
             <artifactId>ip2region</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--监控相关-->
+        <!--监控相关 (TracerUtils SkyWalking 集成)-->
         <dependency>
             <groupId>org.apache.skywalking</groupId>
             <artifactId>apm-toolkit-trace</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--okhttp3-->
+        <!--okhttp3 (OkHttpUtils / HttpClientFactory)-->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- dom4j -->
-        <dependency>
-            <artifactId>dom4j</artifactId>
-            <groupId>org.dom4j</groupId>
-            <optional>true</optional>
-        </dependency>
-        <!-- commons -->
+        <!-- commons-lang3 (StringUtils 等基础工具) -->
         <dependency>
             <artifactId>commons-lang3</artifactId>
             <groupId>org.apache.commons</groupId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <optional>true</optional>
-        </dependency>
+        <!-- commons-io (FileUtils/IOUtils) -->
         <dependency>
             <artifactId>commons-io</artifactId>
             <groupId>commons-io</groupId>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <artifactId>commons-net</artifactId>
-            <groupId>commons-net</groupId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>commons-validator</groupId>
-            <artifactId>commons-validator</artifactId>
-            <optional>true</optional>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-collections</groupId>
-                    <artifactId>commons-collections</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
             <optional>true</optional>
         </dependency>
         <!--slf4j-->
@@ -108,7 +76,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <!--transmittable-thread-local-->
+        <!--transmittable-thread-local (ContextPropagationUtils)-->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>
@@ -166,19 +134,13 @@
             <artifactId>bcprov-jdk18on</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Spring Security Crypto（BCryptPasswordEncoder） -->
+        <!-- Spring Security Crypto（BCryptPasswordEncoder, PwdUtils 使用） -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- OpenPDF（PdfUtil） -->
-        <dependency>
-            <groupId>com.github.librepdf</groupId>
-            <artifactId>openpdf</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!-- mybatis-plus-core（YdszSnowflakeIdentifierGenerator） -->
+        <!-- mybatis-plus-core（SnowflakeUtils ID 生成） -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-core</artifactId>
@@ -207,17 +169,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!-- JMH 基准测试（UtilBenchmark 等运行时压测使用，optional 不向下游传递） -->
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-core</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-generator-annprocess</artifactId>
             <optional>true</optional>
         </dependency>
 

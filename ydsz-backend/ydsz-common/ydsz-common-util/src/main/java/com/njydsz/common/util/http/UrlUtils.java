@@ -14,9 +14,6 @@ import com.njydsz.common.util.string.StringUtils;
  *
  * <p>提供 URL 协议检测、URL 编码解码、URL 校验等能力。
  *
- * <p>URL 路径匹配（Ant 风格）、路径变量提取请使用
- * {@link com.njydsz.common.util.url.UrlPathUtils}。
- *
  * @author ydsz-team
  * @since 1.0.0
  */

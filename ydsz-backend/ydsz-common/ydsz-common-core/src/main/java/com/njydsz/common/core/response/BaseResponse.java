@@ -10,7 +10,6 @@ import lombok.experimental.SuperBuilder;
 import org.slf4j.MDC;
 
 import java.io.Serializable;
-import java.time.Clock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -109,15 +108,10 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     private String traceId;
 
     /**
-     * 时钟提供者 - 使用 volatile 保证线程安全和可见性
-     */
-    private static volatile Clock CLOCK_HOLDER = Clock.systemDefaultZone();
-
-    /**
      * 默认构造函数
      */
     public BaseResponse() {
-        this.timestamp = CLOCK_HOLDER.millis();
+        this.timestamp = System.currentTimeMillis();
         this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
     }
 
@@ -132,29 +126,8 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.code = code;
         this.msg = msg;
         this.data = data;
-        this.timestamp = CLOCK_HOLDER.millis();
+        this.timestamp = System.currentTimeMillis();
         this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
-    }
-
-    /**
-     * 设置时钟（用于单元测试）
-     *
-     * @param clock 时钟实例
-     */
-    public static void setClock(Clock clock) {
-        if (clock == null) {
-            throw new IllegalArgumentException("Clock cannot be null");
-        }
-        CLOCK_HOLDER = clock;
-    }
-
-    /**
-     * 获取当前时钟（用于测试验证）
-     *
-     * @return 当前时钟实例
-     */
-    public static Clock getClock() {
-        return CLOCK_HOLDER;
     }
 
     /**
@@ -324,6 +297,15 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
+     * 检查国际化消息解析器是否已注册
+     *
+     * @return 已注册返回 true，否则返回 false
+     */
+    public static boolean isResolverRegistered() {
+        return resolver != null;
+    }
+
+    /**
      * 返回失败消息
      *
      * @param resultCode 结果码
@@ -392,14 +374,16 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         return !isSuccess();
     }
 
-    // ============================== 函数式 API ==============================
+    // ============================== 函数式 API（已废弃） ==============================
 
     /**
      * 返回数据，如果响应失败则返回默认值
      *
      * @param defaultValue 默认值
      * @return 成功时返回 data，失败时返回 defaultValue
+     * @deprecated 项目未使用函数式风格处理响应，请直接使用 {@link #isSuccess()} + {@link #getData()} 判断。
      */
+    @Deprecated
     public T orElse(T defaultValue) {
         return isSuccess() ? data : defaultValue;
     }
@@ -409,7 +393,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      *
      * @return 成功时的 data
      * @throws IllegalStateException 如果响应失败
+     * @deprecated 项目未使用函数式风格处理响应，请直接使用 {@link #isSuccess()} + {@link #getData()} 判断。
      */
+    @Deprecated
     public T orElseThrow() {
         if (!isSuccess()) {
             throw new IllegalStateException("Response failed: code=" + code + ", msg=" + msg);
@@ -423,7 +409,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param mapper 映射函数
      * @param <R>    目标类型
      * @return 包含映射后数据的新响应（失败时保持原样）
+     * @deprecated 项目未使用函数式风格处理响应，请在业务层显式转换。
      */
+    @Deprecated
     public <R> BaseResponse<R> map(Function<T, R> mapper) {
         if (isSuccess() && data != null) {
             return of(code, msg, mapper.apply(data));
@@ -435,7 +423,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * 如果响应成功且数据非空，执行操作
      *
      * @param action 要执行的操作
+     * @deprecated 项目未使用函数式风格处理响应，请直接使用 {@link #isSuccess()} + {@link #getData()} 判断。
      */
+    @Deprecated
     public void ifSuccess(Consumer<T> action) {
         if (isSuccess() && data != null) {
             action.accept(data);
@@ -446,7 +436,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * 如果响应失败，执行操作
      *
      * @param action 要执行的操作
+     * @deprecated 项目未使用函数式风格处理响应，请直接使用 {@link #isFailed()} 判断。
      */
+    @Deprecated
     public void ifFailed(Consumer<BaseResponse<T>> action) {
         if (!isSuccess()) {
             action.accept(this);

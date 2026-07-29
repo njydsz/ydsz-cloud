@@ -1,6 +1,6 @@
 # ydsz-common-util
 
-YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HTTP、字符串、日期、文件、集合、Bean 拷贝、Spring 等领域。
+YDSZ 通用工具类库 — 70 个 Java 源文件覆盖 ID 生成、加密、HTTP、字符串、日期、文件、集合、Bean 拷贝、Spring 等领域。
 
 ## 模块定位
 
@@ -8,7 +8,7 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 |---|---|
 | **层级** | L2 工具模块层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **源文件数** | 90+ |
+| **源文件数** | 70 |
 | **零依赖原则** | 核心工具不依赖 Spring（可选集成） |
 | **JDK 要求** | Java 21+ |
 
@@ -21,7 +21,6 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 | `SnowflakeUtils` | 雪花算法 ID 生成器（分片 CAS 优化、时钟回拨容忍、workerId 自动分配） |
 | `WorkerIdRegistry` | WorkerId 注册中心 SPI（支持 Redis/Zookeeper/ETCD 等） |
 | `UUIDUtils` | UUID 工具（带连字符 / 不带连字符 / UUID v7） |
-| `SequenceUtils` | 有界序列号生成 |
 | `RandomUtils` | 安全随机数工具 |
 | `TracerUtils` | 分布式链路追踪工具（SkyWalking 反射集成，无编译期硬依赖） |
 
@@ -35,8 +34,6 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 | `CryptoUtil` / `CryptoSignUtil` | 通用加解密 + 签名工具 |
 | `DigestUtils` | SHA-256 / MD5 / HMAC 摘要工具（常量时间比较、PBKDF2 密钥派生） |
 | `PwdUtils` | BCrypt（strength=12）/ PBKDF2（600000 次迭代，OWASP 2023）密码哈希 |
-| `PasswordEncoder` / `Pbkdf2PasswordEncoder` | 密码编码器 SPI 接口与实现 |
-| `PasswordStrengthEvaluator` | 密码强度评估器 |
 
 ### HTTP 工具
 
@@ -47,7 +44,7 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 | `OkHttpProperties` | OkHttp 配置属性（超时、连接池、Keep-Alive） |
 | `ServletUtils` / `WebFluxUtils` | Servlet / WebFlux 请求工具 |
 | `CookieUtils` | Cookie 读写工具 |
-| `UrlUtils` / `UrlPathUtils` | URL 解析与路径处理 |
+| `UrlUtils` | URL 解析与编码解码 |
 | `ResponseUtils` | HTTP 响应写入工具 |
 
 ### 并发与重试
@@ -56,15 +53,13 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 |---|---|
 | `ExecutorUtils` | 线程池工厂（Fixed/Cached/Single/CPU-Bound/VirtualThread/Priority/Scheduled） |
 | `ContextPropagationUtils` | 线程间上下文传播（MDC 轻量级编码，零 JSON 开销，自定义上下文注册） |
-| `RetrySupport` | 统一重试工具（指数退避 + 抖动、固定间隔、异步重试、溢出保护） |
+| `RetrySupport` | 统一重试工具（指数退避 + 抖动、固定间隔、异步重试、溢出保护）— **@Deprecated**，推荐使用 Spring Retry 或 Resilience4j |
 
 ### 字符串与文本
 
 | 类 | 说明 |
 |---|---|
 | `StringUtils` | 字符串判空 / 分割 / 连接 / 驼峰转换（内置 `PatternCache` LRU 缓存） |
-| `StringConvertUtils` | 类型安全转换 |
-| `StringFormatterUtils` | 字符串格式化（占位符替换） |
 | `CharsetUtils` | 字符集工具 |
 | `RegexUtils` | 正则验证（手机 / 邮箱 / 身份证 / IP） |
 
@@ -74,7 +69,6 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 |---|---|
 | `LocalDateTimeUtils` | 日期时间格式化 / 计算 / 比较 |
 | `NumberUtils` / `BigDecimalUtils` | 数字工具（精度计算 / 百分比 / 格式化） |
-| `MoneyUtils` | 金额计算（分 ↔ 元 / 加减乘除 / 四舍五入） |
 
 ### 文件与 IO
 
@@ -85,8 +79,6 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 | `FileValidator` | 文件校验（大小 / 类型 / 文件名安全） |
 | `ImageUtils` | 图片处理（缩放 / 水印 / 格式转换） |
 | `IOUtils` | 流读写 / 关闭 / Base64 转换 |
-| `CompressUtils` | ZIP / GZIP 压缩解压 |
-| `FtpUtils` / `FtpConfig` | FTP 上传下载 |
 
 ### 集合与对象
 
@@ -95,7 +87,7 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 | `CollectionUtils` / `ListUtils` / `SetUtils` / `MapUtils` | 集合工具（判空 / 分片 / 去重 / 排序） |
 | `ArrayUtils` / `SortUtils` | 数组工具 |
 | `ObjectUtils` | 对象工具（默认值 / 深拷贝 / 比较） |
-| `BeanCopyUtils` | Bean 属性拷贝（LRU 缓存、循环引用检测、Map ↔ Bean、嵌套深拷贝） |
+| `BeanCopyUtils` | Bean 属性拷贝（LRU 缓存、忽略字段、null 值处理、Lambda 转换器） |
 | `BeanUpdateUtil` | Bean PATCH 语义更新（仅复制非 null 属性，用于部分更新） |
 | `BeanCopyOptions` / `Converters` | 拷贝选项与类型转换器 |
 
@@ -120,17 +112,12 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 |---|---|
 | `YamlUtils` | YAML 解析工具 |
 | `CursorHelper` | 游标分页编码 / 解码（Keyset Pagination） |
-| `HashUtils` | 一致性哈希环 |
-| `ReflectUtils` | 反射工具（字段获取 / 方法调用 / 注解扫描） |
+| `HashUtils` | 非加密哈希（CRC32 / MurmurHash32 / Base62 编码解码） |
 | `ClassUtils` | 类加载器工具 |
-| `ValidateUtils` | 参数校验工具（非空 / 正则 / 范围） |
 | `ExceptionUtils` | 异常堆栈转字符串 |
-| `EncodingUtils` | 编码工具（Base64 / Base32 / Base16 Hex / URL 编码） |
-| `CaptchaUtils` | 图形验证码生成（数字 / 字母 / 混合 / 算术 / 中文） |
-| `SystemUtils` | 系统信息（OS / JVM / CPU 核数） |
-| `IpAddrUtils` / `IpInfoUtils` / `MacAddressUtils` | IP / MAC 地址工具 |
-| `SAMLUtils` / `DOMUtils` | SAML / XML 工具 |
+| `IpAddrUtils` / `IpInfoUtils` | IP 地址工具 |
 | `MessageUtils` | 国际化消息工具 |
+| `BeanUpdateUtil` | Bean 属性 PATCH 更新（仅非 null） |
 
 ## 自动配置
 
@@ -209,8 +196,66 @@ YDSZ 通用工具类库 — 90+ 个 Java 源文件覆盖 ID 生成、加密、HT
 | `yauaa` | User-Agent 解析 |
 | `micrometer` | 线程池监控指标 |
 | `spring-security-crypto` | PwdUtils BCrypt 支持 |
+| `hutool-all` | CryptoUtil 等加解密工具 |
+| `bcprov-jdk18on` | BouncyCastle 加密支持 |
+| `commons-lang3` | StringUtils 等基础工具 |
+| `commons-io` | FileUtils / IOUtils |
+| `transmittable-thread-local` | ContextPropagationUtils 上下文传播 |
+| `mybatis-plus-core` | SnowflakeUtils ID 生成 |
+| `reactor-core` / `spring-webflux` | WebFluxUtils 响应式工具 |
 
 ## 变更日志
+
+### 1.3.0 — 架构精简（消除过度设计）
+
+**P0 — 删除零引用文件（-21 文件，-5000 行）**
+
+删除在整个项目中零业务调用的工具类，消除维护负担和认知噪音：
+
+- `merge/MergeUtils` + `Merged`：12 种合并变体（735 行），零调用。需要时用 `stream().collect(groupingBy())` 替代
+- `function/FunctionUtils`：JDK 原生 API 薄包装（481 行），零调用
+- `hash/BloomFilterUtils`：本地布隆过滤器（299 行），common-redis 已有分布式版本
+- `saml/SAMLUtils`：SAML 2.0 协议工具（~250 行），当前使用 OAuth2
+- `benchmark/UtilBenchmark`：JMH 基准测试，非生产代码
+- `compress/CompressUtils` / `captcha/CaptchaUtils` / `money/MoneyUtils`：零调用
+- `xml/DOMUtils` / `system/SystemUtils` / `reflect/ReflectUtils`：零调用，Spring/JDK 已有替代
+- `ftp/FtpUtils` + `FtpConfig`：零调用
+- `ip/MacAddressUtils` / `url/UrlPathUtils`：零调用
+- `validate/ValidateUtils` / `encoding/EncodingUtils`：零调用，Spring Validation + JDK Base64 已覆盖
+- `string/StringConvertUtils` / `StringFormatterUtils`：零调用
+- `id/SequenceUtils`：依赖已删除的 MacAddressUtils，零外部引用
+
+**P1 — 精简 SPI 层**
+
+- 删除 `security/password/` 整个包（4 文件）：`PasswordEncoder` 接口 + `PasswordEncoderFactory` + `Pbkdf2PasswordEncoder` + `PasswordStrengthEvaluator`。零调用，`PwdUtils` 直接使用 BCrypt/PBKDF2。如需 SPI，应使用 Spring Security 的 `PasswordEncoder`
+- `RetrySupport` 标记 `@Deprecated(since="1.3.0", forRemoval=true)`，推荐使用 Spring Retry 或 Resilience4j
+
+**P2 — 精简 BeanCopyUtils（-300 行）**
+
+- 移除循环引用检测（IdentityHashMap 逻辑）：业务中从未拷贝自引用对象
+- 移除 Map ↔ Bean 转换方法：零调用，JSON 模块已提供 `YdszJson.parseMap`
+- 移除嵌套深拷贝：零调用，Converter 层应负责复杂转换
+- 保留核心能力：基础属性拷贝 + LRU 缓存 + `copyNonNullProperties` + 选项化拷贝 + Lambda 转换器
+
+**P3 — 精简 HashUtils（-200 行）**
+
+- 删除 Base58 编码/解码：零调用，加密货币场景专用
+- 删除一致性哈希环（TreeMap 虚拟节点）：零调用，分布式路由应在 Redis/网关层处理
+- 保留：CRC32 + MurmurHash32 + Base62 编码/解码
+
+**P4 — 清理 pom.xml 依赖**
+
+移除仅为已删除文件服务的可选依赖：
+
+| 移除依赖 | 原使用文件 |
+|---|---|
+| `commons-net` | FtpUtils（已删除） |
+| `commons-text` | StringFormatterUtils（已删除） |
+| `commons-validator` | ValidateUtils（已删除） |
+| `commons-collections4` | MergeUtils（已删除） |
+| `dom4j` | DOMUtils（已删除） |
+| `openpdf` | 无使用（历史遗留） |
+| `jmh-core` / `jmh-generator-annprocess` | UtilBenchmark（已删除） |
 
 ### 1.2.0
 

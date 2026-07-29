@@ -7,6 +7,9 @@ import com.njydsz.common.core.enums.ServiceType;
 /**
  * 全局 HTTP 请求头常量定义。
  *
+ * <p>仅定义项目自定义的请求头名称，标准 HTTP 头（如 {@code Content-Type}、{@code Authorization}）
+ * 直接在代码中使用字符串字面量即可，无需在此定义常量。
+ *
  * <p>约定：
  * <ul>
  *   <li>统一使用 Title Case 风格（如 X-Access-Token）</li>
@@ -16,7 +19,7 @@ import com.njydsz.common.core.enums.ServiceType;
  *
  * <p>与各模块对应关系：
  * <ul>
- *   <li>ydsz-common-web：解析请求头，构建 {@link com.njydsz.common.util.auth.YdszAuthInfo}</li>
+ *   <li>ydsz-common-web：解析请求头，构建 YdszAuthInfo</li>
  *   <li>ydsz-common-auth：{@code @RbacDataScope} 切面写入 extra headers</li>
  *   <li>ydsz-common-feign：透传请求头到下游服务</li>
  *   <li>ydsz-common-jdbc：SQL 拦截器读取并改写 SQL</li>
@@ -31,14 +34,14 @@ public final class HeaderConstants {
         throw new UnsupportedOperationException("Utility class");
     }
 
+    // ============================== 认证 / 身份 ==============================
+
     /**
-     * 服务类型。
+     * 登录访问令牌。
      *
-     * <p>用于区分请求来源服务类型（WEB_SERVICE / APP_SERVICE 等）。
-     *
-     * @see ServiceType
+     * <p>用户登录后颁发的 AccessToken，用于身份认证与用户信息加载。
      */
-    public static final String X_SERVICE_TYPE = "X-Service-Type";
+    public static final String X_ACCESS_TOKEN = "X-Access-Token";
 
     /**
      * 用户系统语言。
@@ -64,11 +67,15 @@ public final class HeaderConstants {
     public static final String X_IDENTITY_TYPE = "X-Identity-Type";
 
     /**
-     * 登录访问令牌。
+     * 服务类型。
      *
-     * <p>用户登录后颁发的 AccessToken，用于身份认证与用户信息加载。
+     * <p>用于区分请求来源服务类型（WEB_SERVICE / APP_SERVICE 等）。
+     *
+     * @see ServiceType
      */
-    public static final String X_ACCESS_TOKEN = "X-Access-Token";
+    public static final String X_SERVICE_TYPE = "X-Service-Type";
+
+    // ============================== 数据权限 ==============================
 
     /**
      * 数据权限范围类型。
@@ -93,6 +100,24 @@ public final class HeaderConstants {
     public static final String X_DATA_SCOPE = "X-Data-Scope";
 
     /**
+     * 租户ID。
+     *
+     * <p>当数据权限范围为租户类型（TENANT）时，此 header 作为行级过滤条件。
+     *
+     * <p>对应 scope：{@link DataScopeType#TENANT}
+     */
+    public static final String X_TENANT_ID = "X-Tenant-Id";
+
+    /**
+     * 当前登录用户唯一标识。
+     *
+     * <p>当数据权限范围为用户类型（USER）时，此 header 作为行级过滤条件。
+     *
+     * <p>对应 scope：{@link DataScopeType#USER}
+     */
+    public static final String X_UNIQUE_ID = "X-Unique-Id";
+
+    /**
      * 公司ID集合（CSV）。
      *
      * <p>当数据权限范围为集团类型（GROUP）时，此 header 包含用户可访问的所有公司ID。
@@ -110,28 +135,9 @@ public final class HeaderConstants {
      *
      * <p>格式：逗号分隔（如 {@code 2001,2002}），也允许多 header 值合并。
      *
-     * <p>对应 scope：{@link DataScopeType#COMPANY}、
-     * {@link DataScopeType#DEPT}
+     * <p>对应 scope：{@link DataScopeType#COMPANY}、{@link DataScopeType#DEPT}
      */
     public static final String X_DEPT_IDS = "X-Dept-Ids";
-
-    /**
-     * 当前登录用户唯一标识。
-     *
-     * <p>当数据权限范围为用户类型（USER）时，此 header 作为行级过滤条件。
-     *
-     * <p>对应 scope：{@link DataScopeType#USER}
-     */
-    public static final String X_UNIQUE_ID = "X-Unique-Id";
-
-    /**
-     * 租户ID。
-     *
-     * <p>当数据权限范围为租户类型（TENANT）时，此 header 作为行级过滤条件。
-     *
-     * <p>对应 scope：{@link DataScopeType#TENANT}
-     */
-    public static final String X_TENANT_ID = "X-Tenant-Id";
 
     /**
      * 项目ID集合（CSV）。
@@ -165,16 +171,11 @@ public final class HeaderConstants {
      * SQL 条件由服务端 Provider 生成，禁止将原始 SQL 通过 HTTP 请求传入，
      * 以防止 SQL 注入攻击。
      *
-     * <p>格式：标识键字符串（如 {@code project_member_scope}、{@code dept_tree_scope}）
-     *
      * <p>对应 scope：{@link DataScopeType#CUSTOM}
      */
     public static final String X_CUSTOM_SQL_CONDITION = "X-Custom-Sql-Condition";
 
-    /**
-     * 请求/响应头报文类型。
-     */
-    public static final String CONTENT_TYPE = "Content-Type";
+    // ============================== 列级权限 ==============================
 
     /**
      * 列级权限：表级可见列规则。
@@ -231,6 +232,24 @@ public final class HeaderConstants {
      */
     public static final String X_COL_PERMISSION_SIGN = "X-Col-Permission-Sign";
 
+    // ============================== 链路追踪 ==============================
+
+    /**
+     * 请求追踪 ID。
+     *
+     * <p>用于全链路请求追踪，贯穿网关、服务间调用、日志记录等场景。
+     * 若请求未携带，由服务端自动生成并写入响应头。
+     *
+     * <p>实际使用的 header 名为 {@code "X-Trace-Id"}，
+     * 统一常量定义在 {@link TraceConstants#TRACE_ID_HEADER}，
+     * 此处保留仅为向后兼容，推荐使用 {@link TraceConstants#TRACE_ID_HEADER}。</p>
+     *
+     * @see TraceConstants#TRACE_ID_HEADER
+     */
+    public static final String X_REQUEST_ID = TraceConstants.TRACE_ID_HEADER;
+
+    // ============================== 网络信息 ==============================
+
     /**
      * 请求来源标识。
      *
@@ -248,193 +267,4 @@ public final class HeaderConstants {
      * 本系统约定使用单值，作为"客户端 IP"的透传载体。
      */
     public static final String X_FORWARDED_FOR = "X-Forwarded-For";
-
-    /**
-     * 请求追踪 ID。
-     *
-     * <p>用于全链路请求追踪，贯穿网关、服务间调用、日志记录等场景。
-     * 若请求未携带，由服务端自动生成并写入响应头。
-     *
-     * <p>实际使用的 header 名为 {@code "X-Trace-Id"}，
-     * 统一常量定义在 {@link TraceConstants#TRACE_ID_HEADER}，
-     * 此处保留仅为向后兼容，推荐使用 {@link TraceConstants#TRACE_ID_HEADER}。</p>
-     *
-     * @see TraceConstants#TRACE_ID_HEADER
-     */
-    public static final String X_REQUEST_ID = TraceConstants.TRACE_ID_HEADER;
-
-    /**
-     * HTTP/2 流 ID。
-     *
-     * <p>用于 HTTP/2 协议下的流标识，支持多路复用场景的请求追踪。
-     */
-    public static final String HTTP2_STREAM_ID = "X-Http2-Stream-Id";
-
-    /**
-     * gRPC 追踪头。
-     *
-     * <p>用于 gRPC 服务间调用的追踪标识，与 HTTP 请求追踪体系保持一致。
-     */
-    public static final String GRPC_TRACE_HEADER = "grpc-trace-bin";
-
-    /**
-     * 链路追踪父 ID。
-     *
-     * <p>用于分布式链路追踪，标识当前请求的父 Span ID。
-     */
-    public static final String X_TRACE_PARENT = "traceparent";
-
-    /**
-     * 链路追踪状态。
-     *
-     * <p>W3C Trace Context 标准头部，标识追踪状态标志位。
-     */
-    public static final String X_TRACE_STATE = "tracestate";
-
-    /**
-     * 链路追踪 Baggage。
-     *
-     * <p>W3C Baggage 标准头部，用于在分布式链路中传递自定义键值对。
-     */
-    public static final String X_BAGGAGE = "baggage";
-
-    /**
-     * 用户代理。
-     *
-     * <p>标识客户端类型、操作系统、浏览器等信息。
-     */
-    public static final String USER_AGENT = "User-Agent";
-
-    /**
-     * 授权头。
-     *
-     * <p>用于传递认证凭据，如 Bearer Token、Basic Auth 等。
-     */
-    public static final String AUTHORIZATION = "Authorization";
-
-    /**
-     * 内容长度。
-     *
-     * <p>请求或响应体的字节长度。
-     */
-    public static final String CONTENT_LENGTH = "Content-Length";
-
-    /**
-     * 接受编码。
-     *
-     * <p>客户端支持的响应内容编码方式（如 gzip、deflate）。
-     */
-    public static final String ACCEPT_ENCODING = "Accept-Encoding";
-
-    /**
-     * 内容编码。
-     *
-     * <p>响应体使用的内容编码方式。
-     */
-    public static final String CONTENT_ENCODING = "Content-Encoding";
-
-    /**
-     * 缓存控制。
-     *
-     * <p>控制缓存行为，如 no-cache、max-age 等。
-     */
-    public static final String CACHE_CONTROL = "Cache-Control";
-
-    /**
-     * 跨域来源。
-     *
-     * <p>标识请求来源的源（scheme、host、port）。
-     */
-    public static final String ORIGIN = "Origin";
-
-    /**
-     * 跨域资源共享允许源。
-     *
-     * <p>响应头，指定允许访问该资源的外部域。
-     */
-    public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
-
-    /**
-     * 跨域资源共享允许方法。
-     *
-     * <p>响应头，指定允许的 HTTP 方法。
-     */
-    public static final String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
-
-    /**
-     * 跨域资源共享允许头。
-     *
-     * <p>响应头，指定允许的请求头。
-     */
-    public static final String ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers";
-
-    /**
-     * 内容安全策略。
-     *
-     * <p>用于防止 XSS 攻击，控制页面可以加载哪些资源。
-     */
-    public static final String CONTENT_SECURITY_POLICY = "Content-Security-Policy";
-
-    /**
-     * 严格传输安全。
-     *
-     * <p>强制浏览器使用 HTTPS 访问站点。
-     */
-    public static final String STRICT_TRANSPORT_SECURITY = "Strict-Transport-Security";
-
-    /**
-     * X 内容类型选项。
-     *
-     * <p>防止浏览器进行 MIME 类型嗅探。
-     */
-    public static final String X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
-
-    /**
-     * X 帧选项。
-     *
-     * <p>控制页面是否可以被嵌入到 frame/iframe 中，防止点击劫持。
-     */
-    public static final String X_FRAME_OPTIONS = "X-Frame-Options";
-
-    /**
-     * X XSS 保护。
-     *
-     * <p>启用浏览器的 XSS 过滤器。
-     */
-    public static final String X_XSS_PROTECTION = "X-XSS-Protection";
-
-    /**
-     * 引用策略。
-     *
-     * <p>控制 Referer 头的发送策略。
-     */
-    public static final String REFERRER_POLICY = "Referrer-Policy";
-
-    /**
-     * 权限策略。
-     *
-     * <p>控制浏览器特性（如摄像头、麦克风）的访问权限。
-     */
-    public static final String PERMISSIONS_POLICY = "Permissions-Policy";
-
-    /**
-     * 跨域嵌入策略。
-     *
-     * <p>控制页面是否可以嵌入跨域资源。
-     */
-    public static final String CROSS_ORIGIN_EMBEDDER_POLICY = "Cross-Origin-Embedder-Policy";
-
-    /**
-     * 跨域打开策略。
-     *
-     * <p>控制跨域窗口的打开行为。
-     */
-    public static final String CROSS_ORIGIN_OPENER_POLICY = "Cross-Origin-Opener-Policy";
-
-    /**
-     * 跨域资源策略。
-     *
-     * <p>控制跨域资源的访问策略。
-     */
-    public static final String CROSS_ORIGIN_RESOURCE_POLICY = "Cross-Origin-Resource-Policy";
 }

@@ -220,7 +220,9 @@ public final class RequestContext {
      * @param key   强类型 Key
      * @param value 属性值
      * @param <T>   关联类型
+     * @deprecated 项目全部使用 String key 方式，此方法从未被业务模块使用。
      */
+    @Deprecated
     public static <T> void put(ContextKey<T> key, T value) {
         put(key.getName(), value);
     }
@@ -241,7 +243,9 @@ public final class RequestContext {
      * @param key 强类型 Key
      * @param <T> 关联类型
      * @return 属性值；不存在时返回 null
+     * @deprecated 项目全部使用 String key 方式，此方法从未被业务模块使用。
      */
+    @Deprecated
     public static <T> T get(ContextKey<T> key) {
         Object value = CONTEXT_HOLDER.get().get(key.getName());
         if (value == null) {
@@ -259,7 +263,9 @@ public final class RequestContext {
      * @param key 强类型 Key
      * @param <T> 关联类型
      * @return Optional 包装的属性值
+     * @deprecated 项目全部使用 String key 方式，此方法从未被业务模块使用。
      */
+    @Deprecated
     public static <T> Optional<T> getOptional(ContextKey<T> key) {
         return Optional.ofNullable(get(key));
     }
@@ -277,7 +283,9 @@ public final class RequestContext {
      * 通过强类型 Key 移除属性
      *
      * @param key 强类型 Key
+     * @deprecated 项目全部使用 String key 方式，此方法从未被业务模块使用。
      */
+    @Deprecated
     public static void remove(ContextKey<?> key) {
         remove(key.getName());
     }
@@ -329,7 +337,10 @@ public final class RequestContext {
      * 获取当前上下文快照
      *
      * @return 上下文 Map 的副本
+     * @deprecated 项目使用 TTL（TransmittableThreadLocal）自动传播上下文，
+     * 无需手动 snapshot/restore。保留仅供极端场景使用。
      */
+    @Deprecated
     public static Map<String, Object> snapshot() {
         return new HashMap<>(CONTEXT_HOLDER.get());
     }
@@ -338,7 +349,10 @@ public final class RequestContext {
      * 从快照恢复上下文（覆盖当前线程的上下文）
      *
      * @param snapshot 之前通过 {@link #snapshot()} 获取的上下文快照
+     * @deprecated 项目使用 TTL（TransmittableThreadLocal）自动传播上下文，
+     * 无需手动 snapshot/restore。保留仅供极端场景使用。
      */
+    @Deprecated
     public static void restore(Map<String, Object> snapshot) {
         if (snapshot != null) {
             CONTEXT_HOLDER.set(new HashMap<>(snapshot));
@@ -354,7 +368,10 @@ public final class RequestContext {
      * @param callable 原始 Callable
      * @param <T>      返回类型
      * @return 包装后的 Callable
+     * @deprecated 项目使用 TTL（TransmittableThreadLocal）自动传播上下文，
+     * 配合 common-thread 的 ThreadPoolTaskExecutor 使用，无需手动包装。
      */
+    @Deprecated
     public static <T> Callable<T> wrapCallable(Callable<T> callable) {
         Map<String, Object> snapshot = snapshot();
         return () -> {
@@ -377,7 +394,10 @@ public final class RequestContext {
      *
      * @param runnable 原始 Runnable
      * @return 包装后的 Runnable
+     * @deprecated 项目使用 TTL（TransmittableThreadLocal）自动传播上下文，
+     * 配合 common-thread 的 ThreadPoolTaskExecutor 使用，无需手动包装。
      */
+    @Deprecated
     public static Runnable wrapRunnable(Runnable runnable) {
         Map<String, Object> snapshot = snapshot();
         return () -> {

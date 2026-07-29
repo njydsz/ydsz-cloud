@@ -20,13 +20,10 @@ import com.njydsz.common.core.response.BaseResponse;
  *   <li>B1xxxx - 系统级业务异常（内部错误、服务不可用等）</li>
  *   <li>A2xxxx - 认证授权</li>
  *   <li>B3xxxx - 用户/组织/人员</li>
- *   <li>B4xxxx - 项目/合同/商机</li>
- *   <li>B5xxxx - 财务/成本/收入/利润</li>
- *   <li>B6xxxx - 资源/工时/人员调度</li>
  *   <li>B7xxxx - 工作流/审批</li>
- *   <li>B8xxxx - 报表/驾驶舱</li>
- *   <li>C9xxxx - 系统/未知</li>
+ *   <li>C9xxxx - 系统/未知（第三方服务异常）
  * </ul>
+ * <p>业务模块自定义错误码请实现 {@link ResultCode} 接口，在各模块内自行定义。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -83,32 +80,10 @@ public enum BaseResultCode implements ResultCode {
     DEPARTMENT_NOT_FOUND("B30101", "部门不存在"),
     EMPLOYEE_NOT_FOUND("B30201", "员工不存在"),
 
-    // ==================== B4xxxx 项目/合同/商机 ====================
-    PROJECT_NOT_FOUND("B40001", "项目不存在"),
-    PROJECT_STATUS_INVALID("B40002", "项目状态不允许该操作"),
-    OPPORTUNITY_NOT_FOUND("B40101", "商机不存在"),
-    CONTRACT_NOT_FOUND("B40201", "合同不存在"),
-    CONTRACT_AMOUNT_EXCEED("B40202", "合同金额超限"),
-
-    // ==================== B5xxxx 财务/成本/收入/利润 ====================
-    COST_OVERFLOW("B50001", "成本超预算"),
-    INVOICE_EXCEED("B50002", "开票金额超限"),
-    PAYMENT_NOT_FOUND("B50101", "回款记录不存在"),
-    PROFIT_NEGATIVE("B50201", "项目利润为负"),
-
-    // ==================== B6xxxx 资源/工时/人员调度 ====================
-    RESOURCE_CONFLICT("B60001", "资源冲突"),
-    BENCH_OVER_LIMIT("B60002", "Bench 闲置超限"),
-    TIMESHEET_DUPLICATE("B60101", "工时重复填报"),
-    TIMESHEET_LOCKED("B60102", "工时已锁定"),
-
     // ==================== B7xxxx 工作流/审批 ====================
     WORKFLOW_NOT_FOUND("B70001", "流程不存在"),
     WORKFLOW_REJECT("B70002", "流程被驳回"),
     WORKFLOW_NO_PERMISSION("B70003", "无审批权限"),
-
-    // ==================== B8xxxx 报表/驾驶舱 ====================
-    REPORT_GENERATE_FAILED("B80001", "报表生成失败"),
 
     // ==================== C9xxxx 系统/未知 ====================
     UNKNOWN("C99999", "未知错误");
@@ -153,20 +128,17 @@ public enum BaseResultCode implements ResultCode {
         return switch (this) {
             // 1xxxx 通用
             case BAD_REQUEST, VALIDATION_FAILED, MISSING_PARAMETER, UNSUPPORTED_MEDIA_TYPE,
-                 BIZ_ERROR, CONTRACT_AMOUNT_EXCEED, COST_OVERFLOW, INVOICE_EXCEED,
-                 PROFIT_NEGATIVE, BENCH_OVER_LIMIT, WORKFLOW_REJECT,
+                 BIZ_ERROR, WORKFLOW_REJECT,
                  PASSWORD_WEAK, PASSWORD_REUSED,
                  DB_CONSTRAINT_VIOLATION, DB_DATA_INTEGRITY -> 400;
             case METHOD_NOT_ALLOWED -> 405;
             case NOT_FOUND, USER_NOT_FOUND, DEPARTMENT_NOT_FOUND, EMPLOYEE_NOT_FOUND,
-                 PROJECT_NOT_FOUND, OPPORTUNITY_NOT_FOUND, CONTRACT_NOT_FOUND,
-                 PAYMENT_NOT_FOUND, WORKFLOW_NOT_FOUND -> 404;
-            case DUPLICATE_KEY, USERNAME_DUPLICATE, TIMESHEET_DUPLICATE,
-                 RESOURCE_CONFLICT, PROJECT_STATUS_INVALID,
+                 WORKFLOW_NOT_FOUND -> 404;
+            case DUPLICATE_KEY, USERNAME_DUPLICATE,
                  DB_DUPLICATE_KEY, DB_LOCK_CONTENTION, RESOURCE_LOCKED -> 409;
             case RATE_LIMIT, QUOTA_EXCEEDED -> 429;
             case REQUEST_TIMEOUT -> 408;
-            case INTERNAL_ERROR, UNKNOWN, REPORT_GENERATE_FAILED -> 500;
+            case INTERNAL_ERROR, UNKNOWN -> 500;
             case SERVICE_UNAVAILABLE, DB_QUERY_TIMEOUT, DB_CONNECTION_FAILED -> 503;
             // 2xxxx 认证授权
             case UNAUTHORIZED, TOKEN_EXPIRED, TOKEN_INVALID,
@@ -175,7 +147,7 @@ public enum BaseResultCode implements ResultCode {
                  PASSWORD_INCORRECT -> 401;
             case FORBIDDEN, DATA_SCOPE_FORBIDDEN, USER_DISABLED,
                  WORKFLOW_NO_PERMISSION -> 403;
-            case ACCOUNT_LOCKED, USER_LOCKED, TIMESHEET_LOCKED -> 423;
+            case ACCOUNT_LOCKED, USER_LOCKED -> 423;
             case SUCCESS -> 200;
         };
     }

@@ -69,7 +69,7 @@ public class CoreHealthIndicator implements HealthIndicator {
         details.put("defaultPageSize", properties.getDefaultPageSize());
 
         // i18n 解析器状态
-        details.put("i18nResolverRegistered", com.njydsz.common.core.response.BaseResponse.getClock() != null);
+        details.put("i18nResolverRegistered", com.njydsz.common.core.response.BaseResponse.isResolverRegistered());
 
         // 过滤器忽略路径配置摘要
         if (filterIgnoreProperties != null) {

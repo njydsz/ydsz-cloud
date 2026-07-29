@@ -120,6 +120,7 @@ public class UtilAutoConfiguration {
     /**
      * RetrySupport 资源清理 Bean
      */
+    @SuppressWarnings("removal")
     public static class RetryCleanupBean implements DisposableBean {
         @Override
         public void destroy() {

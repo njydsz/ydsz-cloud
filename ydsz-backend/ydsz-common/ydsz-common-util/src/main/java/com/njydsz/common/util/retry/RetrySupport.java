@@ -44,8 +44,11 @@ import java.util.function.Predicate;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @deprecated 当前项目零业务调用。推荐使用 Spring Retry（@Retryable）或 Resilience4j
+ *             的 Retryer，它们提供更成熟的注解驱动、熔断集成和可观测性支持。
+ *             此类将在 2.0.0 版本移除。
  */
+@Deprecated(since = "1.3.0", forRemoval = true)
 public final class RetrySupport {
 
     /**

@@ -24,9 +24,13 @@ import lombok.Getter;
  *   <li>业务状态判断（如是否启用、是否删除等）</li>
  * </ul>
  *
+ * <p><b>已废弃：</b>项目实际使用 {@code Integer}（0/1）或 {@code Boolean} 表示二元状态，
+ * 此枚举从未被业务模块使用。如 6 个月内仍无使用场景，将在下一个大版本中删除。</p>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated
 @Getter
 @AllArgsConstructor
 public enum YesOrNo implements TypeEnum<Integer> {
