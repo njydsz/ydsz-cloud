@@ -1,7 +1,7 @@
 package com.njydsz.common.jdbc.exception;
 
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
-import com.njydsz.common.exception.custom.YdszSecurityException;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * 租户隔离异常。
@@ -17,7 +17,7 @@ import com.njydsz.common.exception.custom.YdszSecurityException;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class TenantIsolationException extends YdszSecurityException {
+public class TenantIsolationException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 

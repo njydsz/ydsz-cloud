@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>仅包含主键ID的实体基类，适用于不需要审计字段和版本控制的简单场景。
  * 这是实体继承层次结构中的第二层（第一层是 {@link Persistable} 接口）。
  *
- * <p><b>注意：</b>此类仅实现 {@link Persistable} 而非 {@link RootEntity}。
+ * <p><b>注意：</b>此类仅实现 {@link Persistable}。
  * 因为它不包含乐观锁版本（{@code revision}）和逻辑删除标识（{@code deleted}）。
  * 需要这些能力的实体应继承 {@link BaseEntity}。
  *
@@ -66,7 +66,7 @@ import lombok.experimental.SuperBuilder;
  * @author ydsz-team
  * @since 1.0.0
  * 
- * @see RootEntity
+ * @see Persistable
  * @see BaseAuditEntity
  * @see BaseEntity
  */

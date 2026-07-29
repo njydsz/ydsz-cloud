@@ -29,11 +29,7 @@ import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.DuplicateException;
-import com.njydsz.common.exception.custom.InfrastructureException;
-import com.njydsz.common.exception.custom.RateLimitException;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.exception.custom.YdszSecurityException;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 import lombok.extern.slf4j.Slf4j;
@@ -139,42 +135,6 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     /**
      * 处理系统异常
      */
-    @ExceptionHandler(DuplicateException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public Object handleDuplicateException(DuplicateException e, HttpServletRequest request) {
-        recordMetrics(e);
-        log.warn("{}重复提交异常 | 路径: {} | 错误码: {} | 消息: {}",
-                getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
-        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
-    }
-
-    @ExceptionHandler(RateLimitException.class)
-    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
-    public Object handleRateLimitException(RateLimitException e, HttpServletRequest request) {
-        recordMetrics(e);
-        log.warn("{}限流异常 | 路径: {} | 错误码: {} | 消息: {}",
-                getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
-        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
-    }
-
-    @ExceptionHandler(YdszSecurityException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public Object handleSecurityException(YdszSecurityException e, HttpServletRequest request) {
-        recordMetrics(e);
-        log.warn("{}安全异常 | 路径: {} | 错误码: {} | 消息: {}",
-                getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
-        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
-    }
-
-    @ExceptionHandler(InfrastructureException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Object handleInfrastructureException(InfrastructureException e, HttpServletRequest request) {
-        recordMetrics(e);
-        log.error("{}基础设施异常 | 路径: {} | 错误码: {} | 消息: {}",
-                getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
-        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
-    }
-
     @ExceptionHandler(SysException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Object handleSysException(SysException e, HttpServletRequest request) {

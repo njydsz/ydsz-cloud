@@ -103,7 +103,6 @@ public abstract class YdszExceptionBuilder<E extends AbstractYdszException, B ex
      *
      * @return 异常实例
      */
-    @SuppressWarnings("unchecked")
     public E build() {
         return doBuild(
                 code, null, key, params, httpStatus, level, category,

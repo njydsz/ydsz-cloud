@@ -9,7 +9,7 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
 
-import com.njydsz.common.exception.custom.InfrastructureException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
 import com.njydsz.common.queue.service.IMessageHandler;
@@ -97,7 +97,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
             running.set(false);
             lastError.set(e);
             log.error("[RocketMQ] 启动消费者失败，topic={}, groupId={}", topic, groupId, e);
-            throw new InfrastructureException("RocketMQ 消费者启动失败：" + e.getMessage(), e);
+            throw new SysException("RocketMQ 消费者启动失败：" + e.getMessage(), e);
         }
         return groupId;
     }
@@ -165,7 +165,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
             lastError.set(e);
             log.error("[RocketMQ] 消息处理异常，topic={}, msgId={}",
                     msgExt.getTopic(), msgExt.getMsgId(), e);
-            throw new InfrastructureException("消息处理失败", e);
+            throw new SysException("消息处理失败", e);
         }
     }
 
@@ -182,7 +182,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
         } catch (Exception e) {
             log.error("[RocketMQ] 创建消费者失败，topic={}, namesrvAddr={}",
                     topic, properties.resolvedNamesrvAddr(), e);
-            throw new InfrastructureException("RocketMQ 消费者创建失败：" + e.getMessage(), e);
+            throw new SysException("RocketMQ 消费者创建失败：" + e.getMessage(), e);
         }
     }
 }

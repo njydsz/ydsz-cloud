@@ -1,6 +1,6 @@
 package com.njydsz.agent.domain.gateway;
 
-import com.njydsz.common.exception.custom.InfrastructureException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * LLM 调用异常
@@ -10,7 +10,7 @@ import com.njydsz.common.exception.custom.InfrastructureException;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class LlmException extends InfrastructureException {
+public class LlmException extends SysException {
 
     private static final long serialVersionUID = 1L;
 

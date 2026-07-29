@@ -50,9 +50,8 @@ import org.slf4j.LoggerFactory;
  * @param <ID> ID类型
  * @author ydsz-team
  * @since 1.0.0
- * 
+ *
  * @see TreeNode
- * @see LazyTreeNode
  */
 public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
@@ -542,74 +541,6 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 node.setPath(TreeNode.PATH_SEPARATOR);
             }
         }
-    }
-
-    // ── 懒加载 ──────────────────────────────────────────────────────────────────
-
-    /**
-     * 构建懒加载树（使用默认配置）
-     *
-     * @param provider 节点提供者
-     * @return 懒加载根节点列表
-     */
-    public static <T extends TreeNode<T, ID>, ID extends Serializable>
-    List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider) {
-        TreeLazyConfig defaultConfig = new TreeLazyConfig();
-        return buildLazy(provider, defaultConfig.getMaxLazyDepth(), defaultConfig.getBatchSize());
-    }
-
-    /**
-     * 构建懒加载树（使用配置对象）
-     *
-     * @param provider 节点提供者
-     * @param config   懒加载配置
-     * @return 懒加载根节点列表
-     */
-    public static <T extends TreeNode<T, ID>, ID extends Serializable>
-    List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider, TreeLazyConfig config) {
-        Objects.requireNonNull(config, "config不能为null");
-        return buildLazy(provider, config.getMaxLazyDepth(), config.getBatchSize());
-    }
-
-    /**
-     * 构建懒加载树（指定最大深度）
-     *
-     * @param provider 节点提供者
-     * @param maxDepth 最大深度
-     * @return 懒加载根节点列表
-     */
-    public static <T extends TreeNode<T, ID>, ID extends Serializable>
-    List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider, int maxDepth) {
-        return buildLazy(provider, maxDepth, 0);
-    }
-
-    /**
-     * 构建懒加载树（指定最大深度和批量大小）
-     *
-     * @param provider  节点提供者
-     * @param maxDepth  最大深度
-     * @param batchSize 每批加载的子节点数量（0 表示全量加载）
-     * @return 懒加载根节点列表
-     */
-    public static <T extends TreeNode<T, ID>, ID extends Serializable>
-    List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider, int maxDepth, int batchSize) {
-        Objects.requireNonNull(provider, "provider不能为null");
-        if (maxDepth <= 0) {
-            throw new IllegalArgumentException("maxDepth必须大于0");
-        }
-
-        List<T> rootNodes = provider.getRootNodes();
-        if (rootNodes == null || rootNodes.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        Function<T, ID> idExtractor = TreeNode::getId;
-        List<LazyTreeNode<T, ID>> lazyRoots = new ArrayList<>(rootNodes.size());
-        for (T node : rootNodes) {
-            lazyRoots.add(new LazyTreeNode<>(node, provider, maxDepth, idExtractor, batchSize));
-        }
-
-        return lazyRoots;
     }
 
     // ==================== 静态便捷方法（无需实现 TreeNode 接口） ====================

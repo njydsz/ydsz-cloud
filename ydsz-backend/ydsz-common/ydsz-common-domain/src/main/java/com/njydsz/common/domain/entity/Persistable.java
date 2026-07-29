@@ -6,7 +6,7 @@ import java.io.Serializable;
  * 可持久化实体标识接口（Spring Data 风格）。
  *
  * <p>定义所有持久化实体的最小契约：具备主键 ID 并能判断新建/已存在状态。
- * 替代 {@code RootEntity} 中直接定义 getId/setId/isNew 的方式，
+ * 替代直接定义 getId/setId/isNew 的方式，
  * 使接口职责更单一、组合更灵活。
  *
  * <pre>

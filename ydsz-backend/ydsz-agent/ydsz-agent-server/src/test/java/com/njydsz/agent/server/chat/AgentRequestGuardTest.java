@@ -23,8 +23,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.njydsz.common.exception.custom.DuplicateException;
-import com.njydsz.common.exception.custom.RateLimitException;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * {@link AgentRequestGuard} 单元测试。
@@ -86,12 +86,12 @@ class AgentRequestGuardTest {
         }
 
         @Test
-        @DisplayName("第 11 次请求：抛 RateLimitException")
+        @DisplayName("第 11 次请求：抛 BusinessException")
         void shouldThrowOnExceedLimit() {
             when(valueOps.increment(anyString())).thenReturn(11L);
 
             assertThatThrownBy(() -> guard.check(null, "user-1"))
-                    .isInstanceOf(RateLimitException.class)
+                    .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("每分钟最多 10 次");
         }
 
@@ -127,26 +127,26 @@ class AgentRequestGuardTest {
         }
 
         @Test
-        @DisplayName("重复请求：SETNX 返回 false，抛 DuplicateException")
+        @DisplayName("重复请求：SETNX 返回 false，抛 BusinessException")
         void shouldThrowOnDuplicate() {
             when(valueOps.increment(anyString())).thenReturn(1L);
             when(valueOps.setIfAbsent(anyString(), eq("1"), anyLong(), eq(TimeUnit.SECONDS)))
                     .thenReturn(false);
 
             assertThatThrownBy(() -> guard.check("req-1", "user-1"))
-                    .isInstanceOf(DuplicateException.class)
+                    .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("60 秒");
         }
 
         @Test
-        @DisplayName("SETNX 返回 null：抛 DuplicateException（防御性）")
+        @DisplayName("SETNX 返回 null：抛 BusinessException（防御性）")
         void shouldThrowOnNullSetIfAbsent() {
             when(valueOps.increment(anyString())).thenReturn(1L);
             when(valueOps.setIfAbsent(anyString(), eq("1"), anyLong(), eq(TimeUnit.SECONDS)))
                     .thenReturn(null);
 
             assertThatThrownBy(() -> guard.check("req-1", "user-1"))
-                    .isInstanceOf(DuplicateException.class);
+                    .isInstanceOf(BusinessException.class);
         }
 
         @Test

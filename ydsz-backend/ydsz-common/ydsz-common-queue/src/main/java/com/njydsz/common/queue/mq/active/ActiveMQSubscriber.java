@@ -9,7 +9,7 @@ import jakarta.jms.*;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import com.njydsz.common.exception.custom.InfrastructureException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
 import com.njydsz.common.queue.recovery.ConsumerThreadGuard;
@@ -84,7 +84,7 @@ public class ActiveMQSubscriber implements IMessageSubscriber {
                     queueName, properties.resolvedBrokerUrl());
         } catch (Exception e) {
             log.error("[ActiveMQ] 初始化订阅者失败，queue={}", queueName, e);
-            throw new InfrastructureException("ActiveMQ 订阅者初始化失败：" + e.getMessage(), e);
+            throw new SysException("ActiveMQ 订阅者初始化失败：" + e.getMessage(), e);
         }
     }
 

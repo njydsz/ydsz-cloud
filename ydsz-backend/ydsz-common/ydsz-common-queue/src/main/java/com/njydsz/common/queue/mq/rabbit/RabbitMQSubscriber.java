@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.njydsz.common.exception.custom.InfrastructureException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
 import com.njydsz.common.queue.service.IMessageHandler;
@@ -93,7 +93,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
             log.info("[RabbitMQ] 订阅者初始化完成，queue={}", queueName);
         } catch (IOException | TimeoutException e) {
             log.error("[RabbitMQ] 初始化订阅者失败，queue={}", queueName, e);
-            throw new InfrastructureException("RabbitMQ 订阅者初始化失败：" + e.getMessage(), e);
+            throw new SysException("RabbitMQ 订阅者初始化失败：" + e.getMessage(), e);
         }
     }
 
@@ -136,7 +136,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
             running.set(false);
             lastError.set(e);
             log.error("[RabbitMQ] 启动消费者失败，queue={}", queueName, e);
-            throw new InfrastructureException("RabbitMQ 消费者启动失败：" + e.getMessage(), e);
+            throw new SysException("RabbitMQ 消费者启动失败：" + e.getMessage(), e);
         }
         return queueName;
     }

@@ -13,7 +13,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 
-import com.njydsz.common.exception.custom.InfrastructureException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessagePublisher;
 
@@ -78,7 +78,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
             publish(queueMessage);
         } catch (Exception e) {
             log.error("[Kafka] 消息发布失败，topic={}", topic, e);
-            throw new InfrastructureException("Kafka 消息发布失败：" + e.getMessage(), e);
+            throw new SysException("Kafka 消息发布失败：" + e.getMessage(), e);
         }
     }
 
@@ -107,7 +107,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
             });
         } catch (Exception e) {
             log.error("[Kafka] 消息发布失败，topic={}, traceId={}", topic, message.getTraceId(), e);
-            throw new InfrastructureException("Kafka 消息发布失败：" + e.getMessage(), e);
+            throw new SysException("Kafka 消息发布失败：" + e.getMessage(), e);
         }
     }
 
@@ -145,7 +145,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
             });
         } catch (Exception e) {
             log.error("[Kafka] 顺序消息发布失败，topic={}, groupKey={}", topic, message.getMessageGroupKey(), e);
-            throw new InfrastructureException("Kafka 顺序消息发布失败：" + e.getMessage(), e);
+            throw new SysException("Kafka 顺序消息发布失败：" + e.getMessage(), e);
         }
     }
 
@@ -187,7 +187,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
             producer.flush();
         } catch (Exception e) {
             log.error("[Kafka] 批量消息发布失败，topic={}", topic, e);
-            throw new InfrastructureException("Kafka 批量消息发布失败：" + e.getMessage(), e);
+            throw new SysException("Kafka 批量消息发布失败：" + e.getMessage(), e);
         }
     }
 

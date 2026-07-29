@@ -9,13 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 import jakarta.annotation.PreDestroy;
 
-import com.njydsz.common.exception.observability.TraceContext;
+import org.slf4j.MDC;
+import com.njydsz.common.core.constant.TraceConstants;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleDefinition;
@@ -122,7 +125,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *
      * <p>非 null 且候选规则数 ≥ {@link #parallelThreshold} 且无断点时，
      * 引擎将候选规则按互斥组分组并行评估，组内串行保持互斥语义。
-     * 并行评估期间通过 {@link TraceContext#withContext} 为每个工作线程传播 MDC traceId。
+     * 并行评估期间通过 {@link #withMdcTraceId} 为每个工作线程传播 MDC traceId。
      * 默认 null（串行评估，向后兼容）。
      */
     private volatile ParallelRuleEvaluator parallelEvaluator;
@@ -272,7 +275,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 单规则异常不影响其他规则评估（异常隔离）。
      *
      * <p>评估期间 MDC 中设置 traceId，确保全链路日志可追踪；
-     * 评估结束后恢复原有 MDC 状态（由 {@link TraceContext#withContext} 保证）。
+     * 评估结束后恢复原有 MDC 状态（由 {@link #withMdcTraceId} 保证）。
      *
      * @param context 规则上下文（包含 facts、场景、租户、环境等）
      * @return 已触发的规则结果列表（按严重度倒序）；无触发时返回空列表
@@ -280,7 +283,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     @Override
     public List<RuleResult> evaluate(RuleContext context) {
         String traceId = resolveTraceId(context);
-        return TraceContext.withContext(traceId, () -> doEvaluate(context));
+        return withMdcTraceId(traceId, () -> doEvaluate(context));
     }
 
     private List<RuleResult> doEvaluate(RuleContext context) {
@@ -620,7 +623,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     @Override
     public List<RuleResult> dryRun(RuleContext context) {
         String traceId = resolveTraceId(context);
-        return TraceContext.withContext(traceId, () -> doDryRun(context));
+        return withMdcTraceId(traceId, () -> doDryRun(context));
     }
 
     private List<RuleResult> doDryRun(RuleContext context) {
@@ -671,12 +674,39 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @return 有效 traceId（非 null、非空）
      * @since 1.0.0
      */
+    /**
+     * 在 MDC 中设置 traceId 执行_supplier，执行完毕后恢复原有 MDC 状态。
+     *
+     * <p>替代已删除的 {@code TraceContext.withContext()} 方法。
+     *
+     * @param traceId  要设置的 traceId（null 时不设置，仅执行 supplier）
+     * @param supplier 要执行的操作
+     * @param <T>      返回类型
+     * @return supplier 的返回值
+     */
+    private <T> T withMdcTraceId(String traceId, Supplier<T> supplier) {
+        String previous = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        try {
+            if (traceId != null) {
+                MDC.put(TraceConstants.MDC_TRACE_ID_KEY, traceId);
+            }
+            return supplier.get();
+        } finally {
+            if (previous != null) {
+                MDC.put(TraceConstants.MDC_TRACE_ID_KEY, previous);
+            } else {
+                MDC.remove(TraceConstants.MDC_TRACE_ID_KEY);
+            }
+        }
+    }
+
     private String resolveTraceId(RuleContext context) {
         String traceId = context.getTraceId();
         if (traceId != null && !traceId.isBlank()) {
             return traceId;
         }
-        return TraceContext.extractOrGenerate(null);
+        String mdcTraceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        return mdcTraceId != null ? mdcTraceId : UUID.randomUUID().toString().replace("-", "");
     }
 
     /**
@@ -1225,7 +1255,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 并行评估候选规则（P2-2）
      *
      * <p>将候选规则委托给 {@link ParallelRuleEvaluator#evaluateParallel}，
-     * 按互斥组分组并行评估。每个工作线程通过 {@link TraceContext#withContext}
+     * 按互斥组分组并行评估。每个工作线程通过 {@link #withMdcTraceId}
      * 传播 MDC traceId，确保并行评估期间日志可追踪。
      *
      * <p>并行路径不支持断点调试（已由 {@link #shouldUseParallelEvaluation} 排除）。
@@ -1239,7 +1269,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     private List<RuleResult> evaluateInParallel(List<Rule> candidateRules,
                                                  RuleContext context, String scenario) {
-        String traceId = TraceContext.getTraceId();
+        String traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
         if (log.isDebugEnabled()) {
             log.debug("[LiteRule-Parallel] 并行评估: rules={}, threshold={}",
                     candidateRules.size(), parallelThreshold);
@@ -1280,7 +1310,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     private RuleResult evaluateSingleRule(Rule rule, RuleContext context,
                                            String scenario, String traceId) {
-        return TraceContext.withContext(traceId, () -> {
+        return withMdcTraceId(traceId, () -> {
             // 熔断预检查
             if (circuitBreaker != null && !circuitBreaker.allowEvaluate(rule.getCode())) {
                 log.debug("[LiteRule-Parallel] 规则 {} 已被熔断，跳过评估", rule.getCode());

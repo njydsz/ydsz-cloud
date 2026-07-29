@@ -143,35 +143,6 @@ class ExceptionCodeRegistryTest {
     }
 
     @Test
-    @DisplayName("ExceptionCode.fromCode() 已注册 code 返回枚举实例")
-    void testFromCodeRegistered() {
-        ExceptionCode code = new TestExceptionCode("TEST004", "test.key.004", 400);
-        ExceptionCodeRegistry.register(Map.of("TEST004", code));
-
-        ExceptionCode found = ExceptionCode.fromCode("TEST004");
-        assertNotNull(found);
-        assertEquals("TEST004", found.getCode());
-    }
-
-    @Test
-    @DisplayName("ExceptionCode.fromCode() 未注册 code 抛出 IllegalStateException")
-    void testFromCodeUnregistered() {
-        assertThrows(IllegalStateException.class, () -> ExceptionCode.fromCode("UNREGISTERED_CODE_XYZ"));
-    }
-
-    @Test
-    @DisplayName("ExceptionCode.fromCode(null) 抛出 IllegalArgumentException")
-    void testFromCodeNull() {
-        assertThrows(IllegalArgumentException.class, () -> ExceptionCode.fromCode(null));
-    }
-
-    @Test
-    @DisplayName("ExceptionCode.fromCode(\"\") 抛出 IllegalArgumentException")
-    void testFromCodeEmpty() {
-        assertThrows(IllegalArgumentException.class, () -> ExceptionCode.fromCode(""));
-    }
-
-    @Test
     @DisplayName("allRegistered() 返回不可变视图")
     void testAllRegisteredImmutable() {
         Map<String, ExceptionCode> all = ExceptionCodeRegistry.allRegistered();

@@ -20,15 +20,8 @@ import lombok.experimental.SuperBuilder;
 /**
  * 基础实体。
  *
- * <p>继承自 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本和逻辑删除标识（0 表示未删除）
+ * <p>继承自 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本和逻辑删除标识（0 表示未删除）。
  * 这是系统中最常用的实体基类，适用于大多数业务实体。
- *
- * <p><b>设计原则：</b>
- * <ul>
- *   <li>开闭原则：对扩展开放，对修改关闭</li>
- *   <li>单一职责：每个字段有且只有一个职责</li>
- *   <li>依赖倒置：业务代码依赖抽象基类，不依赖具体实体</li>
- * </ul>
  *
  * <p><b>核心特性：</b>
  * <table>
@@ -37,6 +30,7 @@ import lombok.experimental.SuperBuilder;
  *   <tr><td>乐观锁</td><td>revision</td><td>并发控制，防止更新冲突</td></tr>
  *   <tr><td>逻辑删除</td><td>deleted</td><td>软删除，数据可恢复</td></tr>
  *   <tr><td>状态标识</td><td>status</td><td>业务状态启用/禁用</td></tr>
+ *   <tr><td>领域事件</td><td>domainEvents</td><td>可选的领域事件列表</td></tr>
  * </table>
  *
  * <p><b>使用示例：</b>
@@ -52,49 +46,20 @@ import lombok.experimental.SuperBuilder;
  *     private String phone;
  *
  *     private String status;
- * }
- * }</pre>
  *
- * <p><b>数据库表结构：</b>
- * <pre>{@code
- * CREATE TABLE sys_user (
- *     id BIGINT PRIMARY KEY COMMENT '主键ID',
- *     username VARCHAR(50) COMMENT '用户名',
- *     email VARCHAR(100) COMMENT '邮箱',
- *     phone VARCHAR(20) COMMENT '手机号',
- *     status INT DEFAULT 0 COMMENT '状态',
- *     created_by VARCHAR(64) COMMENT '创建人',
- *     created_at DATETIME COMMENT '创建时间',
- *     updated_by VARCHAR(64) COMMENT '更新人',
- *     updated_at DATETIME COMMENT '更新时间',
- *     revision INT DEFAULT 0 COMMENT '乐观锁版本',
- *     deleted INT DEFAULT 0 COMMENT '逻辑删除'
- * );
+ *     public void changeEmail(String newEmail) {
+ *         String oldEmail = this.email;
+ *         this.email = newEmail;
+ *         registerEvent(new EmailChangedEvent(this.getId(), oldEmail, newEmail));
+ *     }
+ * }
  * }</pre>
  *
  * @param <T> 主键ID类型，支持 Long、String、UUID 等
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @see BaseAuditEntity
- * @see BaseIdEntity
- * @see RootEntity
- *
- * <p><b>继承层级说明：</b>当前继承为 {@code RootEntity -> BaseIdEntity -> BaseAuditEntity -> BaseEntity} 4 层，
- * 字段来源清晰，各层职责单一。通过 {@link EntityCapabilities} 工具类可检测注解驱动的能力组合，
- * 支持扁平化实体设计。
- *
- * <p><b>字段来源说明：</b>
- * <table>
- *   <tr><th>字段</th><th>来源</th><th>说明</th></tr>
- *   <tr><td>id</td><td>BaseIdEntity</td><td>主键ID</td></tr>
- *   <tr><td>createdBy/createdAt</td><td>BaseAuditEntity</td><td>创建审计</td></tr>
- *   <tr><td>updatedBy/updatedAt</td><td>BaseAuditEntity</td><td>更新审计</td></tr>
- *   <tr><td>revision</td><td>BaseEntity</td><td>乐观锁版本</td></tr>
- *   <tr><td>deleted</td><td>BaseEntity</td><td>逻辑删除标识</td></tr>
- *   <tr><td>status</td><td>BaseEntity</td><td>业务状态</td></tr>
- * </table>
+ * @since 1.3.0 简化：移除 AggregateRoot/RootEntity 接口，内联事件管理
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -102,14 +67,15 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @SoftDelete
-public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> implements RootEntity<T>, AggregateRoot<T> {
+public class BaseEntity<T> extends BaseAuditEntity<T>
+        implements Versionable, SoftDeletable {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * 领域事件列表（瞬态，不参与序列化与持久化）
      *
-     * <p>聚合根在业务操作中可注册领域事件，由仓储层在持久化后统一发布。
+     * <p>可在实体中通过 {@code registerEvent} 注册领域事件，由业务层统一发布。
      * 默认实现为空列表；无事件时避免空指针。
      */
     @lombok.Getter(lombok.AccessLevel.NONE)
@@ -126,20 +92,6 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      *   <li>若影响行数为0，说明版本已变化，抛出乐观锁异常</li>
      * </ul>
      *
-     * <p><b>配置方式：</b>
-     * <pre>
-     * // 方式1：字段注解（推荐）
-     * &#64;Version
-     * private Integer revision;
-     *
-     * // 方式2：配置方式（参见 ydsz-common-jdbc 模块）
-     * ydsz:
-     *   sql-intercept:
-     *     optimistic-lock:
-     *       enable: true
-     *       revision-column: revision
-     * </pre>
-     *
      * @see Version
      */
     @Version
@@ -155,22 +107,6 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      *   <li>查询操作自动添加 WHERE deleted = 0 条件</li>
      *   <li>数据可恢复，适合重要业务数据</li>
      * </ul>
-     *
-     * <p><b>配置方式：</b>
-     * <pre>
-     * // 方式1：字段注解（推荐）
-     * &#64;TableLogic
-     * private Integer deleted;
-     *
-     * // 方式2：配置方式（参见 ydsz-common-jdbc 模块）
-     * ydsz:
-     *   sql-intercept:
-     *     logical-delete:
-     *       enable: true
-     *       deleted-column: deleted
-     * </pre>
-     *
-     * @see TableLogic
      */
     @YdszJsonField(ignore = true)
     private Integer deleted;
@@ -180,17 +116,27 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      *
      * <p>用于标识实体的业务状态，子类可按需覆盖为具体业务状态枚举值。
      * 默认值为空，由各子类根据业务语义自行定义。
-     *
-     * <p><b>字段映射：</b> status -> status
      */
     private String status;
 
+    // ==================== 领域事件管理 ====================
+
     /**
-     * {@inheritDoc}
+     * 注册领域事件
      *
-     * <p>懒加载领域事件列表，确保调用方始终拿到非空列表。
+     * @param event 领域事件
+     * @since 1.3.0 从 AggregateRoot 接口简化为内联方法
      */
-    @Override
+    public void registerEvent(DomainEvent event) {
+        getDomainEvents().add(event);
+    }
+
+    /**
+     * 获取已注册的领域事件
+     *
+     * @return 领域事件列表
+     * @since 1.3.0 从 AggregateRoot 接口简化为内联方法
+     */
     public List<DomainEvent> getDomainEvents() {
         if (domainEvents == null) {
             domainEvents = new ArrayList<>();
@@ -199,9 +145,10 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
     }
 
     /**
-     * {@inheritDoc}
+     * 清空已注册的领域事件
+     *
+     * @since 1.3.0 从 AggregateRoot 接口简化为内联方法
      */
-    @Override
     public void clearDomainEvents() {
         if (domainEvents != null) {
             domainEvents.clear();

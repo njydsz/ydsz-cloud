@@ -1,6 +1,6 @@
 package com.njydsz.common.queue.service;
 
-import com.njydsz.common.exception.custom.InfrastructureException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
 /**
  * 消息订阅者接口
@@ -111,7 +111,7 @@ public interface IMessageSubscriber {
             handler.onMessage(message);
             return message.getTraceId();
         } catch (Exception e) {
-            throw new InfrastructureException("消息处理失败: " + e.getMessage(), e);
+            throw new SysException("消息处理失败: " + e.getMessage(), e);
         }
     }
 
