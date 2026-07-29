@@ -8,7 +8,7 @@ import java.util.Objects;
  * <p>对应 dag_definition JSON 中的 edges 数组元素，描述一条
  * {@code from → to} 的依赖边。
  *
- * <p><b>P0-3 架构优化</b>：与 {@link com.njydsz.common.dag.DagEdge} 结构完全一致，
+ * <p><b>P0-3 架构优化</b>：与 {@link com.njydsz.common.domain.dag.DagEdge} 结构完全一致，
  * 通过 {@link #toCommon()} 方法可零拷贝转换为通用模型。
  * 后续大版本将直接替换为 common 模块的 DagEdge。
  *

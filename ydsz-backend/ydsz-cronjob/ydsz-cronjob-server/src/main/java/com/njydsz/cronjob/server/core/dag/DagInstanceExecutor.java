@@ -15,9 +15,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.dag.DagInstanceStatus;
-import com.njydsz.common.dag.DagNodeStatus;
-import com.njydsz.common.dag.SpELConditionEvaluator;
+import com.njydsz.common.domain.dag.DagInstanceStatus;
+import com.njydsz.common.domain.dag.DagNodeStatus;
+import com.njydsz.common.domain.dag.SpELConditionEvaluator;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;

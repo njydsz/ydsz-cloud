@@ -200,11 +200,36 @@ public final class DeserializationProvider {
             if (rawType == List.class || rawType == ArrayList.class) {
                 Type elementType = pt.getActualTypeArguments()[0];
                 if (elementType instanceof Class<?> elementClass) {
+                    // 安全检查：校验容器元素类型，防止泛型路径绕过 AutoType 白名单
+                    AutoTypeChecker.checkType(elementClass);
                     if (BeanDeserializerEngine.isSimpleType(elementClass)) {
                         return captureType(BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass));
                     } else {
                         return captureType(BeanDeserializerEngine.deserializeBeanListFast(json, elementClass));
                     }
+                }
+            }
+
+            if (rawType == Map.class || rawType == java.util.HashMap.class
+                    || rawType == java.util.LinkedHashMap.class
+                    || rawType == java.util.TreeMap.class) {
+                Type[] typeArgs = pt.getActualTypeArguments();
+                if (typeArgs.length == 2) {
+                    // 安全检查：校验 Map 的 value 类型，防止泛型路径绕过 AutoType 白名单
+                    if (typeArgs[1] instanceof Class<?> valueClass) {
+                        AutoTypeChecker.checkType(valueClass);
+                    }
+                }
+                return captureType(YdszJsonParser.parseObject(json));
+            }
+
+            if (rawType == java.util.Set.class || rawType == java.util.HashSet.class
+                    || rawType == java.util.LinkedHashSet.class
+                    || rawType == java.util.TreeSet.class) {
+                Type elementType = pt.getActualTypeArguments()[0];
+                if (elementType instanceof Class<?> elementClass) {
+                    // 安全检查：校验 Set 元素类型
+                    AutoTypeChecker.checkType(elementClass);
                 }
             }
         }

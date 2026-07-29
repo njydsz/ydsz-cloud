@@ -112,6 +112,46 @@ public final class SerializationProvider {
     }
 
     /**
+     * 设置当前线程的全局日期格式。
+     *
+     * @param dateFormat 日期格式字符串，空字符串表示使用默认 ISO 格式
+     * @since 1.0.0
+     */
+    public static void setDateFormat(String dateFormat) {
+        SerializationContext.CONTEXT.get().dateFormat = dateFormat != null ? dateFormat : "";
+    }
+
+    /**
+     * 获取当前线程的全局日期格式。
+     *
+     * @return 日期格式字符串，空字符串表示使用默认 ISO 格式
+     * @since 1.0.0
+     */
+    public static String getDateFormat() {
+        return SerializationContext.CONTEXT.get().dateFormat;
+    }
+
+    /**
+     * 设置序列化失败时是否抛出异常。
+     *
+     * @param failOnError true=抛异常，false=记录日志返回 null
+     * @since 1.0.0
+     */
+    public static void setFailOnError(boolean failOnError) {
+        SerializationContext.CONTEXT.get().failOnError = failOnError;
+    }
+
+    /**
+     * 获取序列化失败时是否抛出异常。
+     *
+     * @return true=抛异常，false=记录日志返回 null
+     * @since 1.0.0
+     */
+    public static boolean isFailOnError() {
+        return SerializationContext.CONTEXT.get().failOnError;
+    }
+
+    /**
      * 清理当前线程的 ThreadLocal 对象
      *
      * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法</p>
@@ -795,6 +835,8 @@ public final class SerializationProvider {
         private final String savedCircularRefStrategy;
         private final boolean savedSerializeEnumUsingOrdinal;
         private final Set<String> savedExcludedFields;
+        private final String savedDateFormat;
+        private final boolean savedFailOnError;
 
         /**
          * 捕获当前线程的 ThreadLocal 序列化参数快照。
@@ -806,6 +848,8 @@ public final class SerializationProvider {
             this.savedCircularRefStrategy = ctx.circularRefStrategy;
             this.savedSerializeEnumUsingOrdinal = ctx.serializeEnumUsingOrdinal;
             this.savedExcludedFields = ctx.excludedFields;
+            this.savedDateFormat = ctx.dateFormat;
+            this.savedFailOnError = ctx.failOnError;
         }
 
         /**
@@ -818,6 +862,8 @@ public final class SerializationProvider {
             ctx.circularRefStrategy = savedCircularRefStrategy;
             ctx.serializeEnumUsingOrdinal = savedSerializeEnumUsingOrdinal;
             ctx.excludedFields = savedExcludedFields;
+            ctx.dateFormat = savedDateFormat;
+            ctx.failOnError = savedFailOnError;
         }
     }
 }

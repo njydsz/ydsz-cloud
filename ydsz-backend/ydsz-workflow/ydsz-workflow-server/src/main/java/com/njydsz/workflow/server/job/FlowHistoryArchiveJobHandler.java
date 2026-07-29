@@ -7,7 +7,7 @@ import com.njydsz.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.job.JobHandler;
+import com.njydsz.common.domain.job.JobHandler;
 import com.njydsz.workflow.server.config.FlowHistoryProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 

@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.job.MapContext;
-import com.njydsz.common.job.MapProcessor;
-import com.njydsz.common.job.ProcessResult;
+import com.njydsz.common.domain.job.MapContext;
+import com.njydsz.common.domain.job.MapProcessor;
+import com.njydsz.common.domain.job.ProcessResult;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.util.id.TracerUtils;

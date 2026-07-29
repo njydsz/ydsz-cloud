@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.job.JobHandler;
+import com.njydsz.common.domain.job.JobHandler;
 
 /**
  * 数据一致性定时校验 Job。

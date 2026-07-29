@@ -21,6 +21,7 @@ import java.util.Map;
 import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonInclude;
+import com.njydsz.common.json.annotation.JsonRawValue;
 
 import java.lang.reflect.Array;
 /**
@@ -113,6 +114,9 @@ public final class FieldMeta {
 
     /** 是否直接序列化字段 */
     public final boolean direct;
+
+    /** 是否为原始 JSON 值（@JsonRawValue，序列化时不转义） */
+    public final boolean isRawValue;
 
     /** 反序列化别名列表（来自 @JsonAlias 注解） */
     public final String[] aliases;
@@ -207,6 +211,10 @@ public final class FieldMeta {
         // 加载 @JsonAlias 别名列表
         JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
         this.aliases = aliasAnnotation != null ? aliasAnnotation.value() : new String[0];
+
+        // 加载 @JsonRawValue 注解
+        JsonRawValue rawValueAnnotation = field.getAnnotation(JsonRawValue.class);
+        this.isRawValue = rawValueAnnotation != null;
 
         // 加载 @JsonInclude 包含策略
         JsonInclude includeAnnotation = field.getAnnotation(JsonInclude.class);

@@ -75,6 +75,9 @@ public final class YdszJsonConfig implements Serializable {
 
     private volatile boolean useBigDecimal = false;
 
+    /** 是否启用根名称包裹（配合 @JsonRootName 注解使用） */
+    private volatile boolean wrapRootValue = false;
+
     private YdszJsonConfig() {
     }
 
@@ -303,6 +306,31 @@ public final class YdszJsonConfig implements Serializable {
     }
 
     /**
+     * 是否启用根名称包裹。
+     *
+     * <p>启用后，带有 {@link com.njydsz.common.json.annotation.JsonRootName} 注解的类
+     * 在序列化时将被包裹在根名称中，反序列化时自动解包。</p>
+     *
+     * @return 是否启用根名称包裹
+     * @since 1.0.0
+     */
+    public boolean isWrapRootValue() {
+        return wrapRootValue;
+    }
+
+    /**
+     * 设置是否启用根名称包裹。
+     *
+     * @param wrapRootValue 是否启用根名称包裹
+     * @return 当前配置实例（支持链式调用）
+     * @since 1.0.0
+     */
+    public YdszJsonConfig setWrapRootValue(boolean wrapRootValue) {
+        this.wrapRootValue = wrapRootValue;
+        return this;
+    }
+
+    /**
      * 应用配置到序列化提供者
      *
      * <p>将当前配置应用到 SerializationProvider</p>
@@ -313,6 +341,8 @@ public final class YdszJsonConfig implements Serializable {
         SerializationProvider.setPrettyPrint(prettyPrint);
         SerializationProvider.setCircularReferenceStrategy(circularReferenceStrategy.name());
         SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
+        SerializationProvider.setDateFormat(dateFormat);
+        SerializationProvider.setFailOnError(failOnError);
         YdszJsonParser.setUseBigDecimal(useBigDecimal);
     }
 
@@ -335,11 +365,8 @@ public final class YdszJsonConfig implements Serializable {
         this.maxJsonSize = 10L * 1024 * 1024;
         this.maxDepth = 256;
         this.useBigDecimal = false;
+        this.wrapRootValue = false;
         return this;
-    }
-
-    /**
-     * 从另一个配置复制
      *
      * <p>复合操作，通过 synchronized 保证多字段写入的原子性。</p>
      *
@@ -359,6 +386,7 @@ public final class YdszJsonConfig implements Serializable {
             this.maxJsonSize = other.maxJsonSize;
             this.maxDepth = other.maxDepth;
             this.useBigDecimal = other.useBigDecimal;
+            this.wrapRootValue = other.wrapRootValue;
         }
         return this;
     }
@@ -377,6 +405,7 @@ public final class YdszJsonConfig implements Serializable {
                 ", maxJsonSize=" + maxJsonSize +
                 ", maxDepth=" + maxDepth +
                 ", useBigDecimal=" + useBigDecimal +
+                ", wrapRootValue=" + wrapRootValue +
                 '}';
     }
 

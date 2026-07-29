@@ -59,6 +59,11 @@
       "name": "ydsz.json.whitelist-packages",
       "type": "java.util.List<java.lang.String>",
       "description": "启动时扫描 @YdszJsonClass 注解类的基础包列表，扫描结果注册到 AutoTypeChecker 白名单，避免运行时反射加载类的副作用。默认 [com.njydsz]。"
+    },
+    {
+      "name": "ydsz.json.use-big-decimal",
+      "type": "java.lang.Boolean",
+      "description": "是否使用 BigDecimal 解析浮点数（金融场景精度保护，默认 false）。启用后包含小数点的数字将被解析为 BigDecimal，避免精度丢失。"
     }
   ]
 }

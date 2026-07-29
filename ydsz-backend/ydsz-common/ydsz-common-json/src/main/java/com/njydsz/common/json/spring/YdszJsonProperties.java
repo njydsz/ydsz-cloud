@@ -4,8 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * YdszJson 配置属性。
@@ -35,6 +38,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.json")
+@Validated
 public class YdszJsonProperties {
 
     /** 是否启用 YdszJson */
@@ -44,6 +48,7 @@ public class YdszJsonProperties {
     private String dateFormat = "yyyy-MM-dd HH:mm:ss";
 
     /** 命名策略 */
+    @NotNull
     private PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
 
     /** 是否输出 null 值 */
@@ -59,9 +64,11 @@ public class YdszJsonProperties {
     private boolean serializeEnumUsingOrdinal = false;
 
     /** 最大 JSON 大小（字节，默认 10MB） */
+    @Min(1)
     private long maxJsonSize = 10L * 1024 * 1024;
 
     /** 最大序列化深度 */
+    @Min(1)
     private int maxDepth = 256;
 
     /** 是否启用安全模式（AutoType 白名单检查，默认开启） */

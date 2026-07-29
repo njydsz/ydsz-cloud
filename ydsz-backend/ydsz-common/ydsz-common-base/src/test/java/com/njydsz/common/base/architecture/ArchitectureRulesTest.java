@@ -386,7 +386,7 @@ public class ArchitectureRulesTest {
                     "..nextwiki..", "..literule..", "..agent..",
                     "..userinfo..", "..system..", "..project..")
             .and().resideInAPackage("..server..")
-            .should().beAssignableTo("com.njydsz.common.metrics.AbstractModuleMetrics")
+            .should().beAssignableTo("com.njydsz.common.base.metrics.AbstractModuleMetrics")
             .because("业务模块 Metrics 必须继承 AbstractModuleMetrics");
 
     /**

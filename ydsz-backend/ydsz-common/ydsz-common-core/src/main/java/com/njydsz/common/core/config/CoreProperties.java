@@ -11,10 +11,7 @@ import lombok.Data;
 /**
  * Core 模块配置属性
  *
- * <p>仅包含分页和链路追踪相关的核心配置。优雅停机配置已迁移至
- * {@code ydsz-common-lifecycle} 模块（{@code ydsz.lifecycle.*}）。
- * 特性开关配置已迁移至 {@code ydsz-common-featureflag} 模块
- * （{@code ydsz.feature-flag.*}）。
+ * <p>仅包含分页和链路追踪相关的核心配置。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code

@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.TaskExecutor;
 
+import com.njydsz.common.domain.dag.SpELConditionEvaluator;
 import com.njydsz.common.domain.event.DomainEventPublisher;
 import com.njydsz.common.domain.health.DomainHealthIndicator;
 import com.njydsz.common.domain.tree.TreeLazyConfig;
@@ -55,6 +56,17 @@ public class DomainAutoConfiguration {
                                                       ObjectProvider<TaskExecutor> taskExecutorProvider) {
         TaskExecutor taskExecutor = taskExecutorProvider.getIfAvailable();
         return new DomainEventPublisher(eventPublisher, taskExecutor);
+    }
+
+    /**
+     * 注册 SpEL 条件评估器（DAG 条件分支节点使用）。
+     *
+     * @return SpELConditionEvaluator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SpELConditionEvaluator spELConditionEvaluator() {
+        return new SpELConditionEvaluator();
     }
 
     /**

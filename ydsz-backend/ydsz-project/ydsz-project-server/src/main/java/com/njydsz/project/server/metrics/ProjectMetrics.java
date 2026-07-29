@@ -2,7 +2,7 @@ package com.njydsz.project.server.metrics;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.njydsz.common.metrics.AbstractModuleMetrics;
+import com.njydsz.common.base.metrics.AbstractModuleMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Counter;

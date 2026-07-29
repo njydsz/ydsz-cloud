@@ -19,14 +19,13 @@ import lombok.extern.slf4j.Slf4j;
  * <p>检查内容：
  * <ul>
  *   <li>SnowflakeUtils 初始化状态（workerId / datacenterId）</li>
- *   <li>RateLimiterUtils 注册表大小（内存泄漏预警）</li>
  *   <li>JVM 运行时基础指标（内存使用率）</li>
  * </ul>
  *
  * <p>健康状态映射：
  * <ul>
  *   <li>无异常 → UP</li>
- *   <li>有警告（内存使用率 >85% 或注册表接近上限）→ UP（带详情）</li>
+ * <li>有警告（内存使用率 >85%）→ UP（带详情）</li>
  *   <li>有严重异常（SnowflakeUtils 未初始化）→ DOWN</li>
  * </ul>
  *
@@ -35,9 +34,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class UtilHealthIndicator implements HealthIndicator {
-
-    /** 限流器注册表大小预警阈值 */
-    private static final int RATE_LIMITER_WARNING_THRESHOLD = 5000;
 
     /** JVM 内存使用率警告阈值（百分比） */
     private static final double MEMORY_WARNING_PERCENT = 85.0;
@@ -61,18 +57,7 @@ public class UtilHealthIndicator implements HealthIndicator {
             hasCritical = true;
         }
 
-        // 2. RateLimiterUtils 注册表检查
-        try {
-            // 不再使用已废弃的 RateLimiterUtils，跳过健康检查（无实际业务依赖）
-            // TODO: 集成 RedisRateLimiter 指标后添加 check()
-            builder.withDetail("rateLimiter", "已废弃，集成 RedisRateLimiter 后添加 check()");
-            builder.withDetail("rateLimiter.note", "RateLimiterUtils 已废弃，集成 RedisRateLimiter 后添加 check()");
-        } catch (Exception e) {
-            log.warn("RateLimiterUtils health check failed: {}", e.getMessage());
-            builder.withDetail("rateLimiter.error", e.getMessage());
-        }
-
-        // 3. JVM 运行时基础指标
+        // 2. JVM 运行时基础指标
         try {
             Runtime runtime = Runtime.getRuntime();
             long maxMemory = runtime.maxMemory();
@@ -90,7 +75,7 @@ public class UtilHealthIndicator implements HealthIndicator {
             builder.withDetail("jvm.error", e.getMessage());
         }
 
-        // 4. 确定整体状态
+        // 3. 确定整体状态
         if (hasCritical) {
             builder.down();
         }
@@ -135,28 +120,7 @@ public class UtilHealthIndicator implements HealthIndicator {
             hasCritical = true;
         }
 
-        // 2. RateLimiterUtils 注册表检查
-        try {
-            int semaphoreSize = RateLimiterUtils.getSemaphoreRegistrySize();
-            int tokenBucketSize = RateLimiterUtils.getTokenBucketRegistrySize();
-            int totalSize = semaphoreSize + tokenBucketSize;
-            Map<String, Object> rateLimiterStatus = new LinkedHashMap<>();
-            rateLimiterStatus.put("semaphoreRegistrySize", semaphoreSize);
-            rateLimiterStatus.put("tokenBucketRegistrySize", tokenBucketSize);
-            rateLimiterStatus.put("totalSize", totalSize);
-            rateLimiterStatus.put("warningThreshold", RATE_LIMITER_WARNING_THRESHOLD);
-            rateLimiterStatus.put("nearLimit", totalSize >= RATE_LIMITER_WARNING_THRESHOLD);
-            details.put("rateLimiter", rateLimiterStatus);
-            if (totalSize >= RATE_LIMITER_WARNING_THRESHOLD) {
-                hasWarning = true;
-            }
-        } catch (Exception e) {
-            log.warn("RateLimiterUtils health check failed: {}", e.getMessage());
-            details.put("rateLimiterError", e.getMessage());
-            hasWarning = true;
-        }
-
-        // 3. JVM 运行时基础指标
+        // 2. JVM 运行时基础指标
         try {
             Runtime runtime = Runtime.getRuntime();
             Map<String, Object> jvmStatus = new LinkedHashMap<>();
@@ -179,7 +143,7 @@ public class UtilHealthIndicator implements HealthIndicator {
             details.put("jvmError", e.getMessage());
         }
 
-        // 4. 确定整体状态
+        // 3. 确定整体状态
         String status;
         if (hasCritical) {
             status = HealthStatus.DOWN.name();

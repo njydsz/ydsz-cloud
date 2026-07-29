@@ -15,7 +15,8 @@ import java.util.Set;
  *
  * <p><b>合并的字段：</b></p>
  * <ul>
- *   <li>配置类（5个）：namingStrategy、writeNulls、prettyPrint、circularRefStrategy、serializeEnumUsingOrdinal</li>
+ *   <li>配置类（7个）：namingStrategy、writeNulls、prettyPrint、circularRefStrategy、
+ *       serializeEnumUsingOrdinal、dateFormat、failOnError</li>
  *   <li>运行时状态（6个）：sbPool、fastWriterPool、serializingObjects、currentViewClass、
  *       cachedListSerializer、cachedListElementClass、excludedFields</li>
  * </ul>
@@ -37,7 +38,7 @@ public final class SerializationContext {
     static final ThreadLocal<SerializationContext> CONTEXT =
         ThreadLocal.withInitial(SerializationContext::new);
 
-    // ==================== 配置类字段（5个） ====================
+    // ==================== 配置类字段（7个） ====================
 
     /** 当前命名策略 */
     public PropertyNamingStrategy namingStrategy;
@@ -53,6 +54,12 @@ public final class SerializationContext {
 
     /** 枚举是否使用序号序列化 */
     public boolean serializeEnumUsingOrdinal;
+
+    /** 全局日期格式（非空时覆盖字段级 @YdszJsonFormat，空字符串表示使用默认 ISO 格式） */
+    public String dateFormat;
+
+    /** 序列化失败时是否抛出异常（true=抛异常，false=记录日志返回 null） */
+    public boolean failOnError;
 
     // ==================== 运行时状态字段（6个） ====================
 
@@ -94,6 +101,8 @@ public final class SerializationContext {
         this.prettyPrint = false;
         this.circularRefStrategy = "REF";
         this.serializeEnumUsingOrdinal = false;
+        this.dateFormat = "";
+        this.failOnError = true;
         // 运行时状态字段
         this.sbPool = new StringBuilder(4096);
         this.fastWriterPool = new JSONWriter(4096);

@@ -23,9 +23,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.job.JobHandler;
-import com.njydsz.common.job.JobLogger;
-import com.njydsz.common.job.JobLoggerHolder;
+import com.njydsz.common.domain.job.JobHandler;
+import com.njydsz.common.domain.job.JobLogger;
+import com.njydsz.common.domain.job.JobLoggerHolder;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;

@@ -112,6 +112,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Jakarta Validation（可选，用于 @Validated 配置校验） -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

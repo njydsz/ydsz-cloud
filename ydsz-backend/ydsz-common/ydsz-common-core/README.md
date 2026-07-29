@@ -1,6 +1,6 @@
 # ydsz-common-core
 
-YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId、特性开关、Job 框架、优雅停机、常量与枚举。
+YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId、常量与枚举。最小化依赖，不包含 Spring AOP、Micrometer、SpEL 等框架能力。
 
 ## 模块定位
 
@@ -48,52 +48,6 @@ YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId
 | `TraceIdGenerator` | 默认 TraceId 生成器（UUID 去连字符，32 位） |
 | `SnowflakeTraceIdSupplier` | Snowflake 有序 TraceId 生成器（CAS 无锁，时间排序友好） |
 
-### 特性开关
-
-| 类 | 说明 |
-|---|---|
-| `FeatureFlag` | 特性开关枚举定义 |
-| `FeatureFlagService` | 特性开关服务接口 |
-| `DefaultFeatureFlagService` | 默认内存实现（ConcurrentHashMap 线程安全） |
-| `NacosFeatureFlagService` | Nacos 动态配置源实现 |
-| `@FeatureToggle` | 特性开关注解（标注在 Controller/Service 方法上） |
-| `FeatureToggleAspect` | AOP 切面（拦截 @FeatureToggle，支持 NOT_FOUND / RETURN_NULL / THROW_EXCEPTION 降级） |
-
-### 优雅停机
-
-| 类 | 说明 |
-|---|---|
-| `GracefulShutdownCoordinator` | 停机协调器（CopyOnWriteArrayList 线程安全，按 phase 降序执行回调） |
-| `GracefulShutdownAutoConfiguration` | 自动配置（注册协调器 Bean） |
-
-### Metrics 基类
-
-| 类 | 说明 |
-|---|---|
-| `AbstractModuleMetrics` | 模块指标基类（内置 Counter/Timer 缓存，避免重复构建 Builder） |
-
-### DAG 条件评估
-
-| 类 | 说明 |
-|---|---|
-| `SpELConditionEvaluator` | SpEL 表达式条件评估器（ConcurrentHashMap 表达式缓存） |
-| `DagInstanceStatus` | DAG 实例状态枚举 |
-| `DagNodeStatus` | DAG 节点状态枚举 |
-
-### Job 框架
-
-| 类 | 说明 |
-|---|---|
-| `JobHandler` | 自定义 Job 处理器接口 |
-| `MapProcessor` | Map 任务处理器接口 |
-| `MapReduceProcessor` | MapReduce 任务处理器接口 |
-| `JobContextHolder` | Job 执行上下文持有者 |
-| `JobLogger` | Job 日志接口 |
-| `MapContext` | MapReduce 上下文 |
-| `MapTask` | MapReduce 子任务定义 |
-| `ProcessResult` | 处理结果 |
-| `ShardingContext` | 分片上下文 |
-
 ### 常量定义
 
 | 类 | 说明 |
@@ -129,7 +83,7 @@ YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId
 
 | 类 | 说明 |
 |---|---|
-| `CoreHealthIndicator` | Core 模块健康指标（报告 TraceId 策略、分页配置、优雅停机配置） |
+| `CoreHealthIndicator` | Core 模块健康指标（报告 TraceId 策略、分页配置） |
 
 ## 自动配置
 
@@ -137,8 +91,6 @@ YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId
 |---|---|
 | `CoreAutoConfiguration` | `ydsz.core.enabled=true` 时激活（默认启用） |
 | `TraceAutoConfiguration` | `ydsz.core.trace.enabled=true` 时激活（默认启用） |
-| `FeatureFlagAutoConfiguration` | `ydsz.feature-flag.enabled=true` 时激活（默认启用） |
-| `GracefulShutdownAutoConfiguration` | `ydsz.core.graceful-shutdown.enabled=true` 时激活（默认启用） |
 
 ## 配置项
 
@@ -150,26 +102,10 @@ ydsz:
     default-page-size: 20              # 默认每页记录数
     trace:
       enabled: true                    # 链路追踪开关
-      header-name: X-Trace-Id          # TraceId 请求头名称
       generate-if-missing: true         # 缺失时自动生成
+      id-type: uuid                    # uuid（默认）或 snowflake（有序）
     tenant-mdc-filter:
       enabled: true                    # 租户 MDC 过滤器开关
-    graceful-shutdown:
-      enabled: true                    # 优雅停机开关
-      timeout-seconds: 30              # 停机超时时间
-  feature-flag:
-    enabled: true                      # 特性开关总开关
-    nacos:
-      enabled: false                   # Nacos 动态配置源
-      server-addr:                     # Nacos 服务地址
-      data-id: ydsz-feature-flags.json # 配置 Data ID
-      group: DEFAULT_GROUP             # 配置 Group
-      timeout-ms: 5000                 # 拉取超时时间
-    flags:
-      NEW_DASHBOARD:
-        enabled: true                  # 开启新仪表盘
-      BATCH_EXPORT:
-        enabled: false                 # 关闭批量导出
 ```
 
 ## 依赖

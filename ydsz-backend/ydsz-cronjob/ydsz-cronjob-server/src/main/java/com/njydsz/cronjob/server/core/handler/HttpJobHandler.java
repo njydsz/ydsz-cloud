@@ -13,7 +13,7 @@ import com.njydsz.common.json.object.YdszJsonObject;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.common.job.JobHandler;
+import com.njydsz.common.domain.job.JobHandler;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 import lombok.extern.slf4j.Slf4j;

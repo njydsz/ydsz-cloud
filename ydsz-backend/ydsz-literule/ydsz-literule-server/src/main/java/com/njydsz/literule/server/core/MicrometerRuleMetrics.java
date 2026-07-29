@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.njydsz.common.metrics.AbstractModuleMetrics;
+import com.njydsz.common.base.metrics.AbstractModuleMetrics;
 import com.njydsz.literule.api.RuleSeverity;
 
 import io.micrometer.core.instrument.MeterRegistry;

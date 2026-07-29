@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.njydsz.common.job.JobLogger;
+import com.njydsz.common.domain.job.JobLogger;
 import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 任务执行日志器实现（P0-2 在线日志白屏化）。
  *
  * <p>由 {@code DefaultTaskDispatcher} 在任务执行前手动 new（非 Spring Bean），
- * 绑定到 {@link com.njydsz.common.job.JobLoggerHolder} 的 ThreadLocal。
+ * 绑定到 {@link com.njydsz.common.domain.job.JobLoggerHolder} 的 ThreadLocal。
  *
  * <h3>实现要点</h3>
  * <ul>

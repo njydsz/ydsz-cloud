@@ -5,7 +5,6 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.context.annotation.Configuration;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -23,13 +22,13 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code ydsz.json.deserialize.duration} — 反序列化耗时（P50/P90/P99）</li>
  *   <li>{@code ydsz.json.serialize.success} — 序列化成功次数</li>
  *   <li>{@code ydsz.json.serialize.failure} — 序列化失败次数</li>
+ *   <li>{@code ydsz.json.deserialize.success} — 反序列化成功次数</li>
  *   <li>{@code ydsz.json.deserialize.failure} — 反序列化失败次数</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Configuration
 @ConditionalOnClass(MeterRegistry.class)
 public class YdszJsonMetrics implements JsonMetricsCallback {
 
@@ -41,6 +40,7 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
     private final Timer deserializeTimer;
     private final Counter serializeSuccessCounter;
     private final Counter serializeFailureCounter;
+    private final Counter deserializeSuccessCounter;
     private final Counter deserializeFailureCounter;
 
     /**
@@ -68,12 +68,16 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
             this.deserializeFailureCounter = Counter.builder("ydsz.json.deserialize.failure")
                     .description("YdszJson deserialization failure count")
                     .register(meterRegistry);
+            this.deserializeSuccessCounter = Counter.builder("ydsz.json.deserialize.success")
+                    .description("YdszJson deserialization success count")
+                    .register(meterRegistry);
             log.info("[YdszJson] 注册 Micrometer 指标监控");
         } else {
             this.serializeTimer = null;
             this.deserializeTimer = null;
             this.serializeSuccessCounter = null;
             this.serializeFailureCounter = null;
+            this.deserializeSuccessCounter = null;
             this.deserializeFailureCounter = null;
             log.debug("[YdszJson] MeterRegistry 不存在，跳过指标监控注册");
         }
@@ -98,6 +102,7 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
     public void onDeserializeSuccess(long durationNanos) {
         if (deserializeTimer != null) {
             deserializeTimer.record(Duration.ofNanos(durationNanos));
+            deserializeSuccessCounter.increment();
         }
     }
 

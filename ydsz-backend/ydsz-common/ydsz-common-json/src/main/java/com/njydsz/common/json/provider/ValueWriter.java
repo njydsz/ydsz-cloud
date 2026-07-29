@@ -613,6 +613,11 @@ public final class ValueWriter {
                         if (!first) sb.append(',');
                         first = false;
                         sb.append(field.jsonKey);
+                        // @JsonRawValue 支持：原始 JSON 值直接写入，不转义
+                        if (field.isRawValue) {
+                            sb.append(strVal);
+                            break;
+                        }
                         // 快速路径：内联字符串检查
                         int len = strVal.length();
                         boolean needsEscape = false;
@@ -833,7 +838,12 @@ public final class ValueWriter {
     public static String formatDateValue(Object value) {
         if (value == null) return null;
 
-        String globalFormat = YdszJsonConfig.getInstance().getDateFormat();
+        // 优先从当前线程的 SerializationContext 读取 dateFormat（支持 YdszJsonMapper 独立配置）
+        String globalFormat = SerializationProvider.getDateFormat();
+        // 回退到全局单例配置
+        if (globalFormat == null || globalFormat.isEmpty()) {
+            globalFormat = YdszJsonConfig.getInstance().getDateFormat();
+        }
         if (globalFormat != null && !globalFormat.isEmpty()) {
             DateTimeFormatter formatter = getCachedFormatter(globalFormat);
             if (formatter != null) {
