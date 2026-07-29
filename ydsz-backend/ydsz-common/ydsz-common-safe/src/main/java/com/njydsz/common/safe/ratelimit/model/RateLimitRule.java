@@ -85,7 +85,7 @@ public class RateLimitRule implements Serializable {
     @Builder.Default
     private int priority = 50;
 
-    /** 关联的限流错误码（默认 RateLimitExceptionCode.API_QPS_LIMIT） */
+    /** 关联的限流错误码（默认 UnifiedExceptionCode.RATE_LIMIT） */
     private String errorCode;
 
     /** 降级方法（fallback bean name） */

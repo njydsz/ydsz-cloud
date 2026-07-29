@@ -1,6 +1,6 @@
 # ydsz-common-domain
 
-YDSZ DDD 领域模型基类库 — 实体基类、聚合根、值对象、领域事件、树形结构、分页查询、Job 框架、DAG 引擎、Specification 规约。
+YDSZ DDD 领域模型基类库 — 实体基类、领域事件、树形结构、分页查询、Job 框架、DAG 引擎。
 
 ## 模块定位
 
@@ -8,24 +8,58 @@ YDSZ DDD 领域模型基类库 — 实体基类、聚合根、值对象、领域
 |---|---|
 | **层级** | L3 基础服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **源文件数** | 67 |
+| **源文件数** | 43 |
+
+## 设计原则
+
+本模块遵循"简单够用"原则，只保留被业务模块实际使用的组件。在 1.3.0 版本中进行了大规模简化，
+删除了 24 个零引用文件（占总量的 36%），消除了约 2200 行无效代码。
+
+### 保留的组件（100% 有业务引用）
+
+| 组件 | 引用模块 |
+|---|---|
+| 实体基类体系 | 全项目所有 DO 继承 |
+| 审计注解 | MyBatis-Plus MetaObjectHandler 使用 |
+| 查询模型（PageQuery/PageResult） | 50+ 文件引用 |
+| TreeBuilder + TreeNode | userinfo 模块使用 |
+| Job 框架 | cronjob + workflow 模块使用 |
+| SpELConditionEvaluator | cronjob DAG 使用 |
+| DomainEvent | workflow/notify 事件基类 |
+
+### 已删除的组件（1.3.0 简化）
+
+| 已删除 | 原因 | 替代方案 |
+|---|---|---|
+| DomainEventPublisher | 0 业务调用 | Spring `@TransactionalEventListener` |
+| EventStore / TransactionPhase | 事件溯源 SPI，0 实现 | 如需事件溯源，届时再定义 |
+| EntityCapabilities | 0 调用 | MyBatis-Plus 内置注解机制 |
+| Specification | 0 使用 | Java Stream + Predicate |
+| BaseValueObject / ValueObject | 0 子类 | 无值对象场景 |
+| BaseConverter | 0 实现 | 各模块自有 Converter 模式 |
+| DomainException 系列 | 0 使用 | `common-exception` BusinessException |
+| AggregateRoot / RootEntity | 0 外部实现 | 内联到 BaseEntity |
+| LazyTreeNode / TreeLazyConfig / TreeNodeProvider | 0 使用 | TreeBuilder 全量构建已满足 |
+| CursorPageResult | 0 使用 | PageResult 偏移分页 |
+| TenantAware / ProjectAware / RegionAware / GroupAware | 0 使用 | common-tenant 模块处理 |
+| BaseVO | 0 使用 | 各模块直接定义 VO |
+| TypeEnumConverterFactory | 0 使用 | MyBatis-Plus `@EnumValue` |
 
 ## 核心能力
 
 ### 实体基类体系
 
-| 类 | 说明 |
-|---|---|
-| `BaseIdEntity<T>` | 带主键 ID 的基础实体 |
-| `BaseAuditEntity<T>` | 审计实体（继承 BaseIdEntity + 创建/更新审计字段） |
-| `BaseEntity<T>` | 标准实体（继承 BaseAuditEntity + 软删除 + 乐观锁 + 状态标识 + 聚合根事件管理） |
-| `Base` | String 主键实体基类（继承 BaseEntity<String>） |
-| `BaseLong` | Long 主键实体基类（继承 BaseEntity<Long>） |
-| `LogBase` | 日志型实体基类（继承 BaseAuditEntity<String>，不含乐观锁/软删除） |
-| `AggregateRoot<T>` | DDD 聚合根接口（管理领域事件） |
-| `RootEntity<T>` | 根实体组合接口（Persistable + Versionable + SoftDeletable） |
+```
+Persistable<T>                    (接口: ID + isNew)
+  └─ BaseIdEntity<T>              (ID 字段)
+       └─ BaseAuditEntity<T>     (审计字段, implements Auditable)
+            └─ BaseEntity<T>     (乐观锁 + 软删除 + status + 领域事件)
+                 ├─ Base          (String 主键)
+                 ├─ BaseLong      (Long 主键)
+                 └─ LogBase       (日志实体, String 主键, 无乐观锁/软删除)
+```
 
-### 实体能力接口（组合式设计）
+### 能力标记接口
 
 | 接口 | 说明 |
 |---|---|
@@ -33,24 +67,6 @@ YDSZ DDD 领域模型基类库 — 实体基类、聚合根、值对象、领域
 | `Auditable` | 可审计标记（创建/更新审计字段） |
 | `Versionable` | 可版本化标记（乐观锁） |
 | `SoftDeletable` | 可软删除标记 |
-| `TenantAware` | 多租户感知标记 |
-| `ProjectAware` | 项目维度感知标记 |
-| `RegionAware` | 区域维度感知标记 |
-| `GroupAware` | 分组维度感知标记 |
-| `EntityCapabilities` | 实体能力检测工具类（ClassValue 缓存，自动 ClassLoader 清理） |
-
-### DDD 战术模式
-
-| 类 / 接口 | 说明 |
-|---|---|
-| `ValueObject` | 值对象标记接口 |
-| `BaseValueObject` | 值对象抽象基类（基于属性值的 equals/hashCode，toString 含字段名） |
-| `DomainEvent` / `DomainEventPublisher` | 领域事件与发布器（同步/异步/事务后/多阶段/批量发布，Clock 注入） |
-| `TransactionPhase` | 事务阶段枚举（BEFORE_COMMIT/AFTER_COMMIT/AFTER_ROLLBACK/AFTER_COMPLETION） |
-| `EventStore` | 事件存储 SPI 接口（事件溯源） |
-| `ModuleEventTypes` | 跨模块事件类型常量注册表 |
-| `@DomainService` | 领域服务注解 |
-| `Specification<T>` | 查询规约接口（可组合谓词，and/or/negate） |
 
 ### 注解驱动审计
 
@@ -62,34 +78,47 @@ YDSZ DDD 领域模型基类库 — 实体基类、聚合根、值对象、领域
 | `@SoftDelete` | 软删除标记（类级注解） |
 | `@TenantId` | 租户 ID 字段 |
 
+### 领域事件
+
+| 类 | 说明 |
+|---|---|
+| `DomainEvent` | 领域事件基类（继承 Spring ApplicationEvent，Builder 模式 + Clock 注入） |
+| `ModuleEventTypes` | 跨模块事件类型常量注册表 |
+
+事件发布直接使用 Spring 内置机制：
+
+```java
+// 同步发布
+applicationEventPublisher.publishEvent(new OrderCreatedEvent(orderId));
+
+// 事务提交后发布（推荐）
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+public void onOrderCreated(OrderCreatedEvent event) { ... }
+```
+
 ### 查询模型
 
 | 类 | 说明 |
 |---|---|
-| `BaseQuery` | 查询基类（搜索关键字、状态、时间范围、排序、枚举状态联动、时间范围校验） |
-| `PageQuery` | 分页查询（pageNum / pageSize / 排序白名单 / SQL 注入防护 / orderItems 统一排序管理） |
+| `BaseQuery` | 查询基类（搜索关键字、状态、时间范围、枚举联动、时间范围校验） |
+| `PageQuery` | 分页查询（pageNum / pageSize / 排序白名单 / SQL 注入防护） |
 | `PageResult<T>` | 分页结果（支持 convert 类型转换） |
-| `CursorPageResult<T>` | 游标分页结果（适用于深分页场景，支持 convert，无视图泄漏） |
-| `BaseDTO` | 数据传输对象基类（无硬编码 i18n 默认值） |
-| `BaseVO<T>` | 视图对象基类（泛型主键支持） |
+| `BaseDTO` | 数据传输对象基类 |
 
 ### 树形结构
 
 | 类 | 说明 |
 |---|---|
 | `TreeNode<T, ID>` | 树节点接口（DFS/BFS 遍历、查找、复制） |
-| `LazyTreeNode<T, ID>` | 懒加载树节点（线程安全、分批加载） |
-| `TreeBuilder<T, ID>` | 树构建器（O(n) 构建、循环引用检测、路径生成按层级排序保证、缓存） |
-| `TreeNodeProvider<T, ID>` | 树节点数据提供者接口 |
-| `TreeLazyConfig` | 懒加载配置 |
+| `TreeBuilder<T, ID>` | 树构建器（O(n) 构建、循环引用检测、路径生成按层级排序） |
 
 ### DAG 工作流引擎
 
 | 类 | 说明 |
 |---|---|
-| `DagInstanceStatus` | DAG 实例状态枚举（PENDING/RUNNING/SUCCESS/FAILED/PARTIAL_SUCCESS/CANCELLED/TIMEOUT） |
-| `DagNodeStatus` | DAG 节点状态枚举（PENDING/RUNNING/SUCCESS/FAILED/SKIPPED/TIMEOUT） |
-| `SpELConditionEvaluator` | SpEL 条件表达式评估器（LRU 缓存，可配置容量上限） |
+| `DagInstanceStatus` | DAG 实例状态枚举 |
+| `DagNodeStatus` | DAG 节点状态枚举 |
+| `SpELConditionEvaluator` | SpEL 条件表达式评估器（LRU 缓存，可配置容量） |
 
 ### Job 分布式处理框架
 
@@ -100,119 +129,29 @@ YDSZ DDD 领域模型基类库 — 实体基类、聚合根、值对象、领域
 | `MapContext` / `MapTask` / `ProcessResult` | Map 执行上下文、子任务封装、处理结果 |
 | `ShardingContext` | 分片上下文 |
 | `JobLogger` | 任务日志接口 |
-| `JobContextHolder` | 任务上下文持有者（InheritableThreadLocal，子线程自动继承） |
-| `JobLoggerHolder` | 任务日志持有者（InheritableThreadLocal，子线程自动继承） |
-
-### 异常体系
-
-| 类 | 说明 |
-|---|---|
-| `DomainException` | 领域异常基类（含错误码） |
-| `AggregateNotFoundException` | 聚合根未找到异常 |
-| `ConcurrencyConflictException` | 并发冲突异常（乐观锁失败） |
+| `JobContextHolder` | 任务上下文持有者（InheritableThreadLocal） |
+| `JobLoggerHolder` | 任务日志持有者（InheritableThreadLocal） |
 
 ### 枚举体系
 
 | 类 | 说明 |
 |---|---|
 | `BaseStatusEnum<E>` | 状态枚举接口（状态流转校验） |
-| `TypeEnumConverterFactory` | TypeEnum 转换器工厂（code <-> enum 转换） |
-
-### Converter 规范
-
-| 接口 | 说明 |
-|---|---|
-| `BaseConverter<PostDTO, PutDTO, E, V>` | Converter 基类接口，统一 DTO ↔ Entity ↔ VO 转换方法命名 |
-| `TypeEnumConverterFactory` | TypeEnum 通用转换工厂 |
 
 ## 自动配置
-
-| 配置类 | 激活条件 |
-|---|---|
-| `DomainAutoConfiguration` | `ydsz.domain.enabled=true`（默认激活） |
-
-### 配置项
 
 ```yaml
 ydsz:
   domain:
-    enabled: true                    # 启用 domain 模块自动配置
-    event:
-      async-enabled: true            # 启用异步事件发布（需 TaskExecutor）
-      default-phase: AFTER_COMMIT    # 默认事务发布阶段
+    enabled: true                # 启用 domain 模块自动配置（默认 true）
     spel:
-      cache-enabled: true            # 启用 SpEL 表达式缓存
-      cache-max-size: 1024           # SpEL 缓存最大容量（LRU 淘汰）
-  tree:
-    lazy:
-      max-lazy-depth: 10             # 最大懒加载深度
-      batch-size: 100                # 懒加载批次大小
-      enabled: false                 # 是否启用懒加载
+      cache-enabled: true        # 启用 SpEL 表达式缓存（默认 true）
+      cache-max-size: 1024       # SpEL 缓存最大容量（LRU 淘汰，默认 1024）
 ```
 
-## 领域事件发布
-
-### 五种发布模式
-
-```java
-// 1. 同步发布（默认）
-domainEventPublisher.publish(new OrderCreatedEvent(orderId));
-
-// 2. 异步发布（通过 TaskExecutor，受 async-enabled 配置控制）
-domainEventPublisher.publishAsync(new OrderCreatedEvent(orderId));
-
-// 3. 事务提交后发布（推荐，确保数据一致性）
-domainEventPublisher.publishAfterCommit(new OrderCreatedEvent(orderId));
-
-// 4. 多阶段事务发布
-domainEventPublisher.publishWithPhase(new OrderFailedEvent(orderId), TransactionPhase.AFTER_ROLLBACK);
-
-// 5. 批量发布（P1-3 优化：注册单个 TransactionSynchronization 批量发布）
-domainEventPublisher.publishAll(order.getDomainEvents());
-domainEventPublisher.publishAllAfterCommit(order.getDomainEvents());
-domainEventPublisher.publishAllWithPhase(events, TransactionPhase.AFTER_COMPLETION);
-```
-
-### TransactionPhase 枚举
-
-| 阶段 | 触发时机 | 典型场景 |
-|---|---|---|
-| `BEFORE_COMMIT` | 事务提交前 | 事务内验证事件 |
-| `AFTER_COMMIT` | 事务成功提交后 | 发布业务变更事件（推荐） |
-| `AFTER_ROLLBACK` | 事务回滚后 | 补偿操作、失败告警 |
-| `AFTER_COMPLETION` | 事务完成后（无论提交或回滚） | 资源清理、审计日志 |
-
-### DomainEvent Builder（Clock 注入）
-
-```java
-// 标准创建
-DomainEvent event = DomainEvent.builder()
-    .eventType("OrderCreated")
-    .aggregateId("order-123")
-    .build();
-
-// 测试场景：注入 Clock 控制时间
-DomainEvent event = DomainEvent.builder()
-    .eventType("OrderCreated")
-    .clock(Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC))
-    .build();
-```
-
-## Specification 规约模式
-
-```java
-// 定义规约
-Specification<User> activeSpec = user -> "ACTIVE".equals(user.getStatus());
-Specification<User> adultSpec = user -> user.getAge() >= 18;
-
-// 组合规约
-Specification<User> spec = activeSpec.and(adultSpec);
-
-// 使用规约过滤
-List<User> result = users.stream()
-    .filter(spec::isSatisfiedBy)
-    .collect(Collectors.toList());
-```
+`DomainAutoConfiguration` 自动注册：
+- `SpELConditionEvaluator` — DAG 条件分支评估器
+- `DomainHealthIndicator` — SpEL 评估器健康状态（需 spring-boot-health）
 
 ## 依赖
 
@@ -223,43 +162,52 @@ List<User> result = users.stream()
 </dependency>
 ```
 
-## 变更日志（1.2.0）
+## 变更日志
 
-### P0 核心缺陷修复（3 项）
+### 1.3.0 — 过度设计简化（删除 24 个零引用文件，减少 ~2200 行无效代码）
+
+**P0 核心删除（4 项）**
+
+| 编号 | 操作 | 理由 |
+|---|---|---|
+| P0-1 | 删除 `DomainEventPublisher`（281 行） | 0 业务调用，Spring `@TransactionalEventListener` 已覆盖 |
+| P0-2 | 删除 `EventStore` + `TransactionPhase` | 事件溯源 SPI，0 实现 0 使用 |
+| P0-3 | 删除 `EntityCapabilities`（257 行） | 0 调用，MyBatis-Plus 内置注解机制已覆盖 |
+| P0-4 | 删除 `DomainException` 系列 3 个文件 | 0 使用，已被 `common-exception` BusinessException 取代 |
+
+**P1 架构简化（6 项）**
+
+| 编号 | 操作 | 理由 |
+|---|---|---|
+| P1-1 | 删除 `Specification` + `BaseValueObject` + `ValueObject` | 0 使用 |
+| P1-2 | 删除 `BaseConverter` | 0 实现，各模块自有 Converter 模式 |
+| P1-3 | 删除 `LazyTreeNode` + `TreeLazyConfig` + `TreeNodeProvider` | 0 使用，TreeBuilder 全量构建已满足 |
+| P1-4 | 删除 `CursorPageResult` | 0 使用，PageResult 偏移分页已满足 |
+| P1-5 | 删除 `AggregateRoot` + `RootEntity` 接口 | 内联到 BaseEntity，减少接口层级 |
+| P1-6 | 简化 `BaseEntity` | 移除 AggregateRoot/RootEntity 继承，直接 implements Versionable + SoftDeletable，内联 registerEvent/getDomainEvents/clearDomainEvents |
+
+**P2 工程清理（4 项）**
+
+| 编号 | 操作 | 理由 |
+|---|---|---|
+| P2-1 | 删除 `TenantAware` / `ProjectAware` / `RegionAware` / `GroupAware` | 0 使用，多租户由 common-tenant 模块处理 |
+| P2-2 | 删除 `BaseVO` + `TypeEnumConverterFactory` | 0 使用 |
+| P2-3 | 简化 `DomainHealthIndicator` / `DomainProperties` / `DomainAutoConfiguration` | 移除对已删除组件的引用 |
+| P2-4 | 清理测试目录 | 删除 InMemoryEventStore/DomainExceptionTest/TypeEnumConverterFactoryTest |
+
+### 1.2.0 — 质量优化与功能增强
 
 | 编号 | 变更 |
 |---|---|
-| P0-1 | DomainProperties 配置项实际接入 DomainEventPublisher（asyncEnabled）和 SpELConditionEvaluator（cacheEnabled + cacheMaxSize LRU 淘汰） |
-| P0-2 | EntityCapabilities 静态缓存从 ConcurrentHashMap 改为 ClassValue，消除 ClassLoader 级内存泄漏，自动随 ClassLoader 卸载清理 |
-| P0-3 | CursorPageResult.of subList 视图泄漏修复，改为 new ArrayList 复制独立列表 |
-
-### P1 架构优化 / 功能增强（6 项）
-
-| 编号 | 变更 |
-|---|---|
-| P1-1 | 删除 AuditInfo 死代码（@Deprecated since 1.0.0，从未使用），清理 BaseAuditEntity/BaseEntity 中的废弃引用 |
-| P1-2 | PageQuery.getOrderBy() 从 orderItems 派生，消除 orderBy/orderItems 双轨制，标记 @Deprecated |
-| P1-3 | DomainEventPublisher 批量事件注册优化：publishAllWithPhase 注册单个 TransactionSynchronization 批量发布 |
-| P1-4 | JobContextHolder/JobLoggerHolder 从 ThreadLocal 改为 InheritableThreadLocal，子线程自动继承 |
-| P1-5 | 新增 Specification 查询规约接口（and/or/negate 组合，always/never/where 工厂方法） |
-| P1-6 | BaseQuery 新增 statusEnum() 方法，支持与 BaseStatusEnum 枚举体系联动 |
-
-### P2 代码质量 / 性能（7 项）
-
-| 编号 | 变更 |
-|---|---|
-| P2-1 | DomainEvent.Builder 新增 clock() 方法，支持测试时间控制 |
-| P2-2 | BaseValueObject.identityValues 改为 Map<String,Object>，toString 输出字段名 |
-| P2-3 | BaseDTO.language 移除硬编码 "zh-CN"，由调用方显式设置 |
-| P2-4 | DomainHealthIndicator 删除已废弃的 2 参数旧构造器 |
-| P2-5 | TreeBuilder.generatePaths 按 level 排序后生成路径，消除对 nodeList 顺序的隐含依赖 |
-| P2-6 | Persistable.isNew 增强：UUID/String 主键通过 Auditable.createdAt 判断新建状态 |
-| P2-7 | BaseQuery 新增 isValidTimeRange() / validateTimeRange() 时间范围校验 |
-
-### P3 工程规范（3 项）
-
-| 编号 | 变更 |
-|---|---|
-| P3-1 | Lint 错误修复（SpELConditionEvaluator 未使用字段 @SuppressWarnings、MapAccessor 废弃警告抑制） |
-| P3-2 | README 源文件数更新为 67 |
-| P3-3 | README 全面重写，覆盖所有 P0-P3 变更，新增变更日志、Specification 和 Clock 注入文档 |
+| P0-1 | DomainProperties 配置接入 DomainEventPublisher + SpELConditionEvaluator |
+| P0-2 | EntityCapabilities 改用 ClassValue 消除 ClassLoader 泄漏 |
+| P0-3 | CursorPageResult subList 视图泄漏修复 |
+| P1-1 | 删除 AuditInfo 死代码 |
+| P1-2 | PageQuery getOrderBy 从 orderItems 派生 |
+| P1-3 | DomainEventPublisher 批量事件注册优化 |
+| P1-4 | JobContextHolder/JobLoggerHolder 改用 InheritableThreadLocal |
+| P1-6 | BaseQuery 新增 statusEnum 方法 |
+| P2-1 | DomainEvent.Builder Clock 注入 |
+| P2-5 | TreeBuilder.generatePaths 按 level 排序 |
+| P2-6 | Persistable.isNew 支持 UUID 主键 |
+| P2-7 | BaseQuery 时间范围校验 |

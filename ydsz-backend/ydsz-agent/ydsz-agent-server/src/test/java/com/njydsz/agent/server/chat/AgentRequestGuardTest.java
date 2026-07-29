@@ -1,7 +1,5 @@
 package com.njydsz.agent.server.chat;
 
-import java.util.concurrent.TimeUnit;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -9,22 +7,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.redis.service.RedisService;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * {@link AgentRequestGuard} 单元测试。
@@ -46,16 +40,13 @@ import com.njydsz.common.exception.custom.BusinessException;
 class AgentRequestGuardTest {
 
     @Mock
-    private StringRedisTemplate redisTemplate;
-    @Mock
-    private ValueOperations<String, String> valueOps;
+    private RedisService redisService;
 
     private AgentRequestGuard guard;
 
     @BeforeEach
     void setUp() {
-        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
-        guard = new AgentRequestGuard(redisTemplate);
+        guard = new AgentRequestGuard(redisService);
     }
 
     // ==================== 限流 ====================
@@ -65,21 +56,21 @@ class AgentRequestGuardTest {
     class RateLimit {
 
         @Test
-        @DisplayName("首次请求：increment 返回 1，设置 TTL，通过")
+        @DisplayName("首次请求：incr 返回 1，设置 TTL，通过")
         void shouldSetTtlOnFirstRequest() {
-            when(valueOps.increment(anyString())).thenReturn(1L);
+            when(redisService.incr(anyString(), eq(1L))).thenReturn(1L);
 
             assertThatCode(() -> guard.check(null, "user-1"))
                     .doesNotThrowAnyException();
 
-            verify(valueOps).increment("ydsz:agent:rate:user-1");
-            verify(redisTemplate).expire(eq("ydsz:agent:rate:user-1"), eq(60L), eq(TimeUnit.SECONDS));
+            verify(redisService).incr("ydsz:agent:rate:user-1", 1L);
+            verify(redisService).expire(eq("ydsz:agent:rate:user-1"), eq(60L));
         }
 
         @Test
         @DisplayName("第 10 次请求：通过（边界值）")
         void shouldPassAtLimit() {
-            when(valueOps.increment(anyString())).thenReturn(10L);
+            when(redisService.incr(anyString(), eq(1L))).thenReturn(10L);
 
             assertThatCode(() -> guard.check(null, "user-1"))
                     .doesNotThrowAnyException();
@@ -88,7 +79,7 @@ class AgentRequestGuardTest {
         @Test
         @DisplayName("第 11 次请求：抛 BusinessException")
         void shouldThrowOnExceedLimit() {
-            when(valueOps.increment(anyString())).thenReturn(11L);
+            when(redisService.incr(anyString(), eq(1L))).thenReturn(11L);
 
             assertThatThrownBy(() -> guard.check(null, "user-1"))
                     .isInstanceOf(BusinessException.class)
@@ -98,12 +89,12 @@ class AgentRequestGuardTest {
         @Test
         @DisplayName("null userId：使用 anonymous")
         void shouldUseAnonymousForNullUserId() {
-            when(valueOps.increment(anyString())).thenReturn(1L);
+            when(redisService.incr(anyString(), eq(1L))).thenReturn(1L);
 
             assertThatCode(() -> guard.check(null, null))
                     .doesNotThrowAnyException();
 
-            verify(valueOps).increment("ydsz:agent:rate:anonymous");
+            verify(redisService).incr("ydsz:agent:rate:anonymous", 1L);
         }
     }
 
@@ -114,24 +105,22 @@ class AgentRequestGuardTest {
     class Idempotent {
 
         @Test
-        @DisplayName("首次请求：SETNX 返回 true，通过")
+        @DisplayName("首次请求：setIfAbsent 返回 true，通过")
         void shouldPassOnFirstRequest() {
-            when(valueOps.increment(anyString())).thenReturn(1L);
-            when(valueOps.setIfAbsent(anyString(), eq("1"), anyLong(), eq(TimeUnit.SECONDS)))
-                    .thenReturn(true);
+            when(redisService.incr(anyString(), eq(1L))).thenReturn(1L);
+            when(redisService.setIfAbsent(anyString(), eq("1"), anyLong())).thenReturn(true);
 
             assertThatCode(() -> guard.check("req-1", "user-1"))
                     .doesNotThrowAnyException();
 
-            verify(valueOps).setIfAbsent(eq("ydsz:agent:idem:req-1"), eq("1"), eq(60L), eq(TimeUnit.SECONDS));
+            verify(redisService).setIfAbsent(eq("ydsz:agent:idem:req-1"), eq("1"), eq(60L));
         }
 
         @Test
-        @DisplayName("重复请求：SETNX 返回 false，抛 BusinessException")
+        @DisplayName("重复请求：setIfAbsent 返回 false，抛 BusinessException")
         void shouldThrowOnDuplicate() {
-            when(valueOps.increment(anyString())).thenReturn(1L);
-            when(valueOps.setIfAbsent(anyString(), eq("1"), anyLong(), eq(TimeUnit.SECONDS)))
-                    .thenReturn(false);
+            when(redisService.incr(anyString(), eq(1L))).thenReturn(1L);
+            when(redisService.setIfAbsent(anyString(), eq("1"), anyLong())).thenReturn(false);
 
             assertThatThrownBy(() -> guard.check("req-1", "user-1"))
                     .isInstanceOf(BusinessException.class)
@@ -139,36 +128,25 @@ class AgentRequestGuardTest {
         }
 
         @Test
-        @DisplayName("SETNX 返回 null：抛 BusinessException（防御性）")
-        void shouldThrowOnNullSetIfAbsent() {
-            when(valueOps.increment(anyString())).thenReturn(1L);
-            when(valueOps.setIfAbsent(anyString(), eq("1"), anyLong(), eq(TimeUnit.SECONDS)))
-                    .thenReturn(null);
-
-            assertThatThrownBy(() -> guard.check("req-1", "user-1"))
-                    .isInstanceOf(BusinessException.class);
-        }
-
-        @Test
         @DisplayName("null requestId：跳过幂等检查")
         void shouldSkipIdempotentForNullRequestId() {
-            when(valueOps.increment(anyString())).thenReturn(1L);
+            when(redisService.incr(anyString(), eq(1L))).thenReturn(1L);
 
             assertThatCode(() -> guard.check(null, "user-1"))
                     .doesNotThrowAnyException();
 
-            verify(valueOps, never()).setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+            verify(redisService, never()).setIfAbsent(anyString(), anyString(), anyLong());
         }
 
         @Test
         @DisplayName("blank requestId：跳过幂等检查")
         void shouldSkipIdempotentForBlankRequestId() {
-            when(valueOps.increment(anyString())).thenReturn(1L);
+            when(redisService.incr(anyString(), eq(1L))).thenReturn(1L);
 
             assertThatCode(() -> guard.check("   ", "user-1"))
                     .doesNotThrowAnyException();
 
-            verify(valueOps, never()).setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+            verify(redisService, never()).setIfAbsent(anyString(), anyString(), anyLong());
         }
     }
 
@@ -183,7 +161,7 @@ class AgentRequestGuardTest {
         void shouldReturnImmediatelyForNull() {
             guard.releaseIdempotent(null);
 
-            verify(redisTemplate, never()).delete(anyString());
+            verify(redisService, never()).delete(anyString());
         }
 
         @Test
@@ -191,7 +169,7 @@ class AgentRequestGuardTest {
         void shouldReturnImmediatelyForBlank() {
             guard.releaseIdempotent("");
 
-            verify(redisTemplate, never()).delete(anyString());
+            verify(redisService, never()).delete(anyString());
         }
 
         @Test
@@ -199,7 +177,7 @@ class AgentRequestGuardTest {
         void shouldDeleteKeyForValidRequestId() {
             guard.releaseIdempotent("req-1");
 
-            verify(redisTemplate).delete("ydsz:agent:idem:req-1");
+            verify(redisService).delete("ydsz:agent:idem:req-1");
         }
     }
 }

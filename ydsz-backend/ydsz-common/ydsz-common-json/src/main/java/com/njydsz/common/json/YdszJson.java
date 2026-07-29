@@ -15,6 +15,7 @@ import com.njydsz.common.json.exception.YdszJsonException;
 import com.njydsz.common.json.jsonpath.YdszJsonPath;
 import com.njydsz.common.json.merge.JsonMergePatch;
 import com.njydsz.common.json.metric.JsonMetricsCallback;
+import com.njydsz.common.json.metric.MetricsHelper;
 import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.object.YdszJsonArray;
 import com.njydsz.common.json.object.YdszJsonObject;
@@ -102,58 +103,26 @@ public class YdszJson {
         T get() throws Exception;
     }
 
+    /**
+     * 序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
+     *
+     * @param supplier 序列化操作
+     * @param <T> 返回类型
+     * @return 序列化结果
+     */
     private static <T> T recordSerialize(ThrowingSupplier<T> supplier) {
-        JsonMetricsCallback cb = metricsCallback;
-        if (cb == null) {
-            // 无监控回调时短路，避免 System.nanoTime() 和 lambda 捕获开销
-            try {
-                return supplier.get();
-            } catch (Exception e) {
-                if (e instanceof YdszJsonException) {
-                    throw (YdszJsonException) e;
-                }
-                throw new YdszJsonException("JSON serialize failed: " + e.getMessage(), e);
-            }
-        }
-        long start = System.nanoTime();
-        try {
-            T result = supplier.get();
-            cb.onSerializeSuccess(System.nanoTime() - start);
-            return result;
-        } catch (Exception e) {
-            cb.onSerializeFailure();
-            if (e instanceof YdszJsonException) {
-                throw (YdszJsonException) e;
-            }
-            throw new YdszJsonException("JSON serialize failed: " + e.getMessage(), e);
-        }
+        return MetricsHelper.recordSerialize(supplier::get, metricsCallback);
     }
 
+    /**
+     * 反序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
+     *
+     * @param supplier 反序列化操作
+     * @param <T> 返回类型
+     * @return 反序列化结果
+     */
     private static <T> T recordDeserialize(ThrowingSupplier<T> supplier) {
-        JsonMetricsCallback cb = metricsCallback;
-        if (cb == null) {
-            // 无监控回调时短路，避免 System.nanoTime() 和 lambda 捕获开销
-            try {
-                return supplier.get();
-            } catch (Exception e) {
-                if (e instanceof YdszJsonException) {
-                    throw (YdszJsonException) e;
-                }
-                throw new YdszJsonException("JSON deserialize failed: " + e.getMessage(), e);
-            }
-        }
-        long start = System.nanoTime();
-        try {
-            T result = supplier.get();
-            cb.onDeserializeSuccess(System.nanoTime() - start);
-            return result;
-        } catch (Exception e) {
-            cb.onDeserializeFailure();
-            if (e instanceof YdszJsonException) {
-                throw (YdszJsonException) e;
-            }
-            throw new YdszJsonException("JSON deserialize failed: " + e.getMessage(), e);
-        }
+        return MetricsHelper.recordDeserialize(supplier::get, metricsCallback);
     }
     
     // ==================== 序列化入口方法 ====================

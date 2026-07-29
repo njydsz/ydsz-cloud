@@ -90,9 +90,16 @@ public class YdszJsonProperties {
      * 启动时扫描 @YdszJsonClass 注解类的基础包列表。
      *
      * <p>扫描结果会注册到 {@code AutoTypeChecker} 白名单，避免运行时反射加载类的副作用。
+     * 支持通配符模式，例如 {@code com.njydsz.*.entity} 匹配所有子包下的 entity 包。
      * 默认扫描 {@code com.njydsz} 包，覆盖所有项目业务代码。</p>
      */
     private List<String> whitelistPackages = Arrays.asList("com.njydsz");
+
+    /** 是否启用流式输出（HTTP 响应使用 chunked transfer encoding） */
+    private boolean streamingEnabled = false;
+
+    /** HTTP 请求体最大大小（字节，默认 10MB） */
+    private long maxRequestBodySize = 10L * 1024 * 1024;
 
     // --- enabled ---
 
@@ -242,5 +249,25 @@ public class YdszJsonProperties {
 
     public void setWhitelistPackages(List<String> whitelistPackages) {
         this.whitelistPackages = whitelistPackages;
+    }
+
+    // --- streamingEnabled ---
+
+    public boolean isStreamingEnabled() {
+        return streamingEnabled;
+    }
+
+    public void setStreamingEnabled(boolean streamingEnabled) {
+        this.streamingEnabled = streamingEnabled;
+    }
+
+    // --- maxRequestBodySize ---
+
+    public long getMaxRequestBodySize() {
+        return maxRequestBodySize;
+    }
+
+    public void setMaxRequestBodySize(long maxRequestBodySize) {
+        this.maxRequestBodySize = maxRequestBodySize;
     }
 }

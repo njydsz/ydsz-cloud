@@ -67,7 +67,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @SoftDelete
-public class BaseEntity<T> extends BaseAuditEntity<T>
+public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T>
         implements Versionable, SoftDeletable {
 
     private static final long serialVersionUID = 1L;

@@ -36,9 +36,10 @@ public final class TokenConstants {
 
     /**
      * 令牌自定义标识键名
-     * <p>HTTP请求头中用于传递Bearer Token的键名，委托 {@link HeaderConstants#AUTHORIZATION}
+     * <p>HTTP请求头中用于传递Bearer Token的键名。
+     * <p>标准 HTTP 头，直接使用字符串字面量。
      */
-    public static final String AUTHENTICATION = HeaderConstants.AUTHORIZATION;
+    public static final String AUTHENTICATION = "Authorization";
 
     /**
      * 补充令牌自定义标识键名

@@ -66,7 +66,10 @@ public final class TraceIdGenerator {
      * @return TraceId 字符串
      */
     public static String generate() {
-        return supplier.generate();
+        String traceId = supplier.generate();
+        com.njydsz.common.core.metrics.CoreMetrics.recordTraceIdGenerated(
+                supplier.getClass().getSimpleName());
+        return traceId;
     }
 
     /**

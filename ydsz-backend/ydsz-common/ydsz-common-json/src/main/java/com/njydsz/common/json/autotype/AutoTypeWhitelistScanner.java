@@ -57,6 +57,10 @@ public final class AutoTypeWhitelistScanner {
 
         int registeredCount = 0;
         for (String basePackage : basePackages) {
+            // 注册包前缀到白名单，作为启动时扫描的补充
+            // 运行时遇到同包下未扫描到的新类也能通过包前缀匹配放行
+            AutoTypeChecker.addWhitelistPackage(basePackage);
+
             Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
             for (BeanDefinition bd : candidates) {
                 String className = bd.getBeanClassName();

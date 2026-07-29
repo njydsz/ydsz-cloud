@@ -93,6 +93,15 @@ public final class AutoTypeChecker {
     private static final Set<String> EXPLICIT_BLACKLIST = ConcurrentHashMap.newKeySet();
 
     /**
+     * 白名单包前缀集合（包级通配符回退匹配）。
+     *
+     * <p>当类名不以任何已注册前缀开头时，仍会检查是否在此集合中。
+     * 由 {@link AutoTypeWhitelistScanner#scanAndRegister} 在启动时注册，
+     * 作为启动时扫描的补充——运行时遇到同包下未扫描到的新类也能放行。</p>
+     */
+    private static final Set<String> WHITELIST_PACKAGE_PREFIXES = ConcurrentHashMap.newKeySet();
+
+    /**
      * 类型检查结果缓存（className -> 是否允许反序列化）
      *
      * <p>避免每次反序列化都重复扫描黑白名单集合。每个类型的检查结果只计算一次并缓存，
@@ -470,6 +479,12 @@ public final class AutoTypeChecker {
         if (ANNOTATION_WHITELIST.contains(className)) {
             return true;
         }
+        // 包前缀回退匹配：同包下未扫描到的新类也能放行
+        for (String prefix : WHITELIST_PACKAGE_PREFIXES) {
+            if (className.startsWith(prefix)) {
+                return true;
+            }
+        }
         // 注：原运行时反射检查 isAutoTypeClass 已删除
         // @YdszJsonClass 注解扫描由 AutoTypeWhitelistScanner 在启动时完成，
         // 启动时已将注解类（含 seeAlso 子类型）注册到 EXPLICIT_WHITELIST
@@ -641,6 +656,21 @@ public final class AutoTypeChecker {
     }
 
     /**
+     * 注册白名单包前缀（包级通配符回退匹配）。
+     *
+     * <p>注册后，所有以该前缀开头的类名都将被允许反序列化。
+     * 变更后自动清除类型检查缓存。</p>
+     *
+     * @param packageName 包名前缀（如 {@code com.njydsz}）
+     */
+    public static void addWhitelistPackage(String packageName) {
+        if (packageName != null && !packageName.isEmpty()) {
+            WHITELIST_PACKAGE_PREFIXES.add(packageName);
+            TYPE_CHECK_CACHE.clear();
+        }
+    }
+
+    /**
      * 清除所有缓存（用于测试）
      *
      * <p>清除注解白名单缓存以及类型检查结果缓存</p>
@@ -658,6 +688,7 @@ public final class AutoTypeChecker {
         ANNOTATION_WHITELIST.clear();
         TYPE_CHECK_CACHE.clear();
         EXPLICIT_BLACKLIST.clear();
+        WHITELIST_PACKAGE_PREFIXES.clear();
         safeMode = true;
     }
 }

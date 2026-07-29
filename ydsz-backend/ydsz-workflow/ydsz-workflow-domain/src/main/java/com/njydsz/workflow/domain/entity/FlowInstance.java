@@ -123,7 +123,7 @@ public class FlowInstance extends MpBaseEntity<String> {
     /** GAP-P1: 父流程中触发子流程的节点编码（可空） */
     private String parentNodeCode;
 
-    /** 链路追踪 ID（关联 {@code TraceContext}，用于跨服务追踪） */
+    /** 链路追踪 ID（关联 MDC traceId，用于跨服务追踪） */
     private String providerTraceId;
 
     /** 子流程超时时间（超时自动终止子流程，可空） */

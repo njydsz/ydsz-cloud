@@ -150,15 +150,14 @@ public final class SerializationContext {
      * @since 1.0.0
      */
     public static long estimateThreadLocalMemory() {
-        long total = 0;
-        // SerializationContext 本身约 80 字节（11 个字段 + 对象头）
-        total += 80;
-        // StringBuilder 池
-        total += 4096 * 2L; // DEFAULT capacity * 2 bytes/char
-        // JSONWriter 池
-        total += 4096 * 2L;
-        // IdentityHashMap（循环引用检测）
-        total += 256;
+        SerializationContext ctx = CONTEXT.get();
+        long total = 80; // SerializationContext 对象头 + 字段
+        // StringBuilder 池：按实际容量计算（char 占 2 字节）
+        total += ctx.sbPool.capacity() * 2L;
+        // JSONWriter 池：内部 char[] 缓冲区（约等于初始容量 4096 * 2）
+        total += ctx.fastWriterPool != null ? 4096 * 2L : 0;
+        // IdentityHashMap（循环引用检测，每个条目约 32 字节）
+        total += (long) ctx.serializingObjects.size() * 32L;
         return total;
     }
 

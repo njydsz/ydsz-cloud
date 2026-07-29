@@ -161,6 +161,6 @@ public class FlowNode extends MpBaseEntity<String> {
      */
     private String slaConfig;
 
-    /** 链路追踪 ID（关联 {@code TraceContext}，用于跨服务追踪） */
+    /** 链路追踪 ID（关联 MDC traceId，用于跨服务追踪） */
     private String providerTraceId;
 }

@@ -14,7 +14,8 @@ import java.util.Set;
 import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.exception.YdszJsonException;
 import com.njydsz.common.json.jsonpath.YdszJsonPath;
-import com.njydsz.common.json.metric.JsonMetricsCallback;
+import com.njydsz.common.json.metric.MetricsHelper;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.YdszJsonParser;
 import com.njydsz.common.json.pointer.JsonPointer;
 import com.njydsz.common.json.provider.DeserializationProvider;
@@ -624,70 +625,20 @@ public class YdszJsonMapper {
         }
     }
 
-    // ==================== 指标监控包装 ====================
+    // ==================== 指标监控包装（委托给 MetricsHelper） ====================
 
-    @FunctionalInterface
-    private interface ThrowingSupplier<T> {
-        T get() throws Exception;
+    /**
+     * 序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
+     */
+    private static <T> T recordSerialize(MetricsHelper.ThrowingSupplier<T> supplier) {
+        return MetricsHelper.recordSerialize(supplier, YdszJson.getMetricsCallback());
     }
 
     /**
-     * 序列化/反序列化操作的指标监控包装（统一逻辑，消除重复代码）。
-     *
-     * @param supplier 操作供应商
-     * @param isSerialize 是否为序列化操作
-     * @return 操作结果
+     * 反序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
      */
-    private static <T> T recordOperation(ThrowingSupplier<T> supplier, boolean isSerialize) {
-        JsonMetricsCallback cb = YdszJson.getMetricsCallback();
-        if (cb == null) {
-            try {
-                return supplier.get();
-            } catch (Exception e) {
-                if (e instanceof YdszJsonException) {
-                    throw (YdszJsonException) e;
-                }
-                throw new YdszJsonException(
-                    (isSerialize ? "JSON serialize failed: " : "JSON deserialize failed: ")
-                    + e.getMessage(), e);
-            }
-        }
-        long start = System.nanoTime();
-        try {
-            T result = supplier.get();
-            if (isSerialize) {
-                cb.onSerializeSuccess(System.nanoTime() - start);
-            } else {
-                cb.onDeserializeSuccess(System.nanoTime() - start);
-            }
-            return result;
-        } catch (Exception e) {
-            if (isSerialize) {
-                cb.onSerializeFailure();
-            } else {
-                cb.onDeserializeFailure();
-            }
-            if (e instanceof YdszJsonException) {
-                throw (YdszJsonException) e;
-            }
-            throw new YdszJsonException(
-                (isSerialize ? "JSON serialize failed: " : "JSON deserialize failed: ")
-                + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 序列化操作的指标监控包装。
-     */
-    private static <T> T recordSerialize(ThrowingSupplier<T> supplier) {
-        return recordOperation(supplier, true);
-    }
-
-    /**
-     * 反序列化操作的指标监控包装。
-     */
-    private static <T> T recordDeserialize(ThrowingSupplier<T> supplier) {
-        return recordOperation(supplier, false);
+    private static <T> T recordDeserialize(MetricsHelper.ThrowingSupplier<T> supplier) {
+        return MetricsHelper.recordDeserialize(supplier, YdszJson.getMetricsCallback());
     }
 
     /**
@@ -697,5 +648,99 @@ public class YdszJsonMapper {
      */
     public static YdszJsonMapper getDefault() {
         return DEFAULT;
+    }
+
+    // ==================== Builder API ====================
+
+    /**
+     * 创建 Builder 实例。
+     *
+     * @return Builder 实例
+     * @since 1.4.0
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * YdszJsonMapper 链式 Builder（对标 Jackson ObjectMapper.builder()）。
+     *
+     * <p>使用示例：</p>
+     * <pre>
+     * YdszJsonMapper mapper = YdszJsonMapper.builder()
+     *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+     *     .dateFormat("yyyy-MM-dd HH:mm:ss")
+     *     .writeNulls(true)
+     *     .useBigDecimal(true)
+     *     .build();
+     * </pre>
+     *
+     * @since 1.4.0
+     */
+    public static final class Builder {
+
+        private final YdszJsonConfig config = YdszJsonConfig.copyOf(YdszJsonConfig.getInstance());
+
+        private Builder() {
+        }
+
+        public Builder namingStrategy(PropertyNamingStrategy strategy) {
+            config.setNamingStrategy(strategy);
+            return this;
+        }
+
+        public Builder dateFormat(String dateFormat) {
+            config.setDateFormat(dateFormat);
+            return this;
+        }
+
+        public Builder writeNulls(boolean writeNulls) {
+            config.setWriteNulls(writeNulls);
+            return this;
+        }
+
+        public Builder prettyPrint(boolean prettyPrint) {
+            config.setPrettyPrint(prettyPrint);
+            return this;
+        }
+
+        public Builder circularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy strategy) {
+            config.setCircularReferenceStrategy(strategy);
+            return this;
+        }
+
+        public Builder serializeEnumUsingOrdinal(boolean ordinal) {
+            config.setSerializeEnumUsingOrdinal(ordinal);
+            return this;
+        }
+
+        public Builder useBigDecimal(boolean useBigDecimal) {
+            config.setUseBigDecimal(useBigDecimal);
+            return this;
+        }
+
+        public Builder wrapRootValue(boolean wrapRootValue) {
+            config.setWrapRootValue(wrapRootValue);
+            return this;
+        }
+
+        public Builder failOnError(boolean failOnError) {
+            config.setFailOnError(failOnError);
+            return this;
+        }
+
+        public Builder maxJsonSize(long maxJsonSize) {
+            config.setMaxJsonSize(maxJsonSize);
+            return this;
+        }
+
+        public Builder maxDepth(int maxDepth) {
+            config.setMaxDepth(maxDepth);
+            return this;
+        }
+
+        public YdszJsonMapper build() {
+            return new YdszJsonMapper(config);
+        }
     }
 }

@@ -347,77 +347,22 @@ public final class SerializationProvider {
             return "null";
         }
 
-        Class<?> clazz = obj.getClass();
         SerializationContext ctx = SerializationContext.CONTEXT.get();
 
-        // 快速路径：Bean 类型直接使用 ASM 序列化器，跳过 StringBuilder 中转
-        if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
-            try {
-                JSONWriter writer = ctx.fastWriterPool;
-                writer.reset();
-                if (AsmCodecCache.trySerialize(obj, writer)) {
-                    return writer.toString();
-                }
-            } catch (Exception e) {
-                // ASM 序列化失败，回退到常规序列化
-                logAsmDowngrade(clazz, "serialization", e);
-            }
-        }
-
-        // 快速路径：Collection 类型直接使用 JSONWriter，跳过 StringBuilder 中转
-        if (obj instanceof Collection) {
-            JSONWriter writer = ctx.fastWriterPool;
-            writer.reset();
-            Collection<?> coll = (Collection<?>) obj;
-            if (!coll.isEmpty()) {
-                writer.preAllocate(coll.size() * 64);
-                // 优化：使用 ThreadLocal 缓存的序列化器，避免每次查找 ConcurrentHashMap
-                AsmSerializer<Object> serializer = ctx.cachedListSerializer;
-                if (serializer == null) {
-                    Object first = null;
-                    if (coll instanceof List) {
-                        first = ((List<?>) coll).get(0);
-                    } else {
-                        first = coll.iterator().next();
-                    }
-                    if (first != null) {
-                        try {
-                            AsmSerializer<?> rawSerializer = AsmCodecCache.getOrCreateSerializerForType(first.getClass());
-                            if (rawSerializer != null) {
-                                serializer = captureSerializer(rawSerializer);
-                                ctx.cachedListSerializer = serializer;
-                                ctx.cachedListElementClass = first.getClass();
-                            }
-                        } catch (Exception e) {
-                            // ASM 序列化器创建失败，回退到通用 Collection 写入
-                        }
-                    }
-                }
-                if (serializer != null) {
-                    writer.writeCollectionWithSerializer(coll, serializer);
-                    return writer.toString();
-                }
-            }
-            writer.writeCollection(coll);
+        // 统一快速路径：Bean/Collection/Map 三条路径提取到 tryFastPathToWriter
+        JSONWriter writer = tryFastPathToWriter(obj, ctx);
+        if (writer != null) {
             return writer.toString();
         }
 
-        // 快速路径：Map 类型直接使用 JSONWriter
-        if (obj instanceof Map) {
-            JSONWriter writer = ctx.fastWriterPool;
-            writer.reset();
-            writer.writeMap((Map<?, ?>) obj);
-            return writer.toString();
-        }
-
-        // 使用大小分级策略获取 StringBuilder
+        // 回退路径：使用 StringBuilder + ValueWriter
         StringBuilder sb = getSizedStringBuilder(256);
 
         Set<Object> objects = ctx.serializingObjects;
         objects.clear();
 
         try {
-            if (!tryFastSerialize(obj, sb)) {
+            if (!tryBeanSerialize(obj, sb)) {
                 ValueWriter.writeValue(obj, sb);
             }
         } catch (Exception e) {
@@ -432,6 +377,9 @@ public final class SerializationProvider {
     /**
      * 序列化对象（带特性配置）
      *
+     * <p>当 PrettyPrint 特性未启用时，复用 {@link #serialize(Object)} 的 ASM 快速路径；
+     * 启用 PrettyPrint 时走格式化路径。</p>
+     *
      * @param obj 对象
      * @param features 特性标志（位运算值）
      * @return JSON 字符串
@@ -441,18 +389,19 @@ public final class SerializationProvider {
             return "null";
         }
 
-        // 使用大小分级策略获取 StringBuilder
-        StringBuilder sb = getSizedStringBuilder(256);
+        // 非 PrettyPrint 场景复用标准序列化路径（含 ASM 快速路径）
+        if (!JSONWriter.Feature.PrettyPrint.isEnabled(features)) {
+            return serialize(obj);
+        }
+
+        // PrettyPrint 格式化路径
+        StringBuilder sb = getSizedStringBuilder(LARGE_SB_CAPACITY);
 
         Set<Object> objects = SerializationContext.CONTEXT.get().serializingObjects;
         objects.clear();
 
         try {
-            if (JSONWriter.Feature.PrettyPrint.isEnabled(features)) {
-                ValueFormatter.formatValue(obj, sb, 0);
-            } else {
-                ValueWriter.writeValue(obj, sb);
-            }
+            ValueFormatter.formatValue(obj, sb, 0);
         } catch (JsonSerializationException e) {
             throw e;
         } catch (Exception e) {
@@ -581,23 +530,61 @@ public final class SerializationProvider {
             return new byte[]{'n', 'u', 'l', 'l'};
         }
 
-        Class<?> clazz = obj.getClass();
         SerializationContext ctx = SerializationContext.CONTEXT.get();
 
-        // 快速路径：Bean 类型直接使用 ASM 序列化器，跳过 StringBuilder 中转
+        // 统一快速路径：Bean/Collection/Map 三条路径提取到 tryFastPathToWriter
+        JSONWriter writer = tryFastPathToWriter(obj, ctx);
+        if (writer != null) {
+            return writer.toUtf8Bytes();
+        }
+
+        // 回退路径：使用 StringBuilder + ValueWriter
+        StringBuilder sb = getSizedStringBuilder(256);
+        Set<Object> objects = ctx.serializingObjects;
+        objects.clear();
+
+        try {
+            if (!tryBeanSerialize(obj, sb)) {
+                ValueWriter.writeValue(obj, sb);
+            }
+        } catch (Exception e) {
+            throw wrapSerializationException(obj, e);
+        } finally {
+            objects.clear();
+        }
+
+        return sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 统一快速路径：尝试将对象序列化到 JSONWriter（Bean/Collection/Map 三条路径）。
+     *
+     * <p>提取自 {@link #serialize} 和 {@link #serializeToBytes} 的公共快速路径逻辑，
+     * 消除约 80 行重复代码。调用方根据返回值决定使用 {@code writer.toString()} 还是
+     * {@code writer.toUtf8Bytes()} 获取结果。</p>
+     *
+     * @param obj 要序列化的对象（非 null）
+     * @param ctx 当前线程的序列化上下文
+     * @return 已写入内容的 JSONWriter，或 null 表示需要回退到 StringBuilder 路径
+     */
+    private static JSONWriter tryFastPathToWriter(Object obj, SerializationContext ctx) {
+        Class<?> clazz = obj.getClass();
+
+        // 快速路径 1：Bean 类型直接使用 ASM 序列化器
         if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
             try {
                 JSONWriter writer = ctx.fastWriterPool;
                 writer.reset();
                 if (AsmCodecCache.trySerialize(obj, writer)) {
-                    return writer.toUtf8Bytes();
+                    return writer;
                 }
             } catch (Exception e) {
-                logAsmDowngrade(clazz, "serialization (bytes)", e);
+                logAsmDowngrade(clazz, "serialization", e);
             }
+            return null; // Bean 类型 ASM 失败，需回退到 StringBuilder 路径
         }
 
-        // 快速路径：Collection 类型直接使用 JSONWriter
+        // 快速路径 2：Collection 类型直接使用 JSONWriter
         if (obj instanceof Collection) {
             JSONWriter writer = ctx.fastWriterPool;
             writer.reset();
@@ -621,58 +608,42 @@ public final class SerializationProvider {
                                 ctx.cachedListElementClass = first.getClass();
                             }
                         } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
+                            // ASM 序列化器创建失败，回退到通用 Collection 写入
+                        }
                     }
                 }
                 if (serializer != null) {
                     writer.writeCollectionWithSerializer(coll, serializer);
-                    return writer.toUtf8Bytes();
+                    return writer;
                 }
             }
             writer.writeCollection(coll);
-            return writer.toUtf8Bytes();
+            return writer;
         }
 
-        // 快速路径：Map 类型直接使用 JSONWriter
+        // 快速路径 3：Map 类型直接使用 JSONWriter
         if (obj instanceof Map) {
             JSONWriter writer = ctx.fastWriterPool;
             writer.reset();
             writer.writeMap((Map<?, ?>) obj);
-            return writer.toUtf8Bytes();
+            return writer;
         }
 
-        // 回退路径：使用 StringBuilder + ValueWriter
-        StringBuilder sb = getSizedStringBuilder(256);
-        Set<Object> objects = ctx.serializingObjects;
-        objects.clear();
-
-        try {
-            if (!tryFastSerialize(obj, sb)) {
-                ValueWriter.writeValue(obj, sb);
-            }
-        } catch (Exception e) {
-            throw wrapSerializationException(obj, e);
-        } finally {
-            objects.clear();
-        }
-
-        return sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return null; // 数组等其他类型，回退到 StringBuilder 路径
     }
 
     /**
-     * 序列化对象（FastJSON2 快速路径）
+     * Bean 序列化快速路径（BeanSerializer 路径，不重试 ASM）。
      *
-     * <p>当满足以下条件时使用快速路径：</p>
-     * <ul>
-     *   <li>无类级别注解</li>
-     *   <li>无字段级别注入</li>
-     *   <li>无视图过滤</li>
-     * </ul>
+     * <p>原 {@code tryFastSerialize} 方法中包含冗余的 ASM 调用——ASM 已在
+     * {@link #tryFastPathToWriter} 中尝试过，此处不再重复调用。
+     * 仅保留 BeanSerializer 路径作为 ASM 降级后的快速序列化方案。</p>
      *
-     * @return true 如果使用了快速路径
+     * @param obj 要序列化的对象
+     * @param sb StringBuilder 缓冲区
+     * @return true 如果使用了 BeanSerializer 快速路径
      */
-    private static boolean tryFastSerialize(Object obj, StringBuilder sb) {
+    private static boolean tryBeanSerialize(Object obj, StringBuilder sb) {
         if (obj == null) {
             return false;
         }
@@ -697,18 +668,6 @@ public final class SerializationProvider {
             return false;
         }
 
-        // 优先使用 ASM 序列化器（直接 getter 调用，无反射开销）
-        try {
-            JSONWriter writer = SerializationContext.CONTEXT.get().fastWriterPool;
-            writer.reset();
-            if (AsmCodecCache.trySerialize(obj, writer)) {
-                sb.append(writer.toString());
-                return true;
-            }
-            } catch (Exception e) {
-                logAsmDowngrade(clazz, "fast-serialize", e);
-            }
-
         // 获取或创建 BeanSerializer
         FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
         if (fields == null) {
@@ -721,7 +680,7 @@ public final class SerializationProvider {
             return false;
         }
 
-        // 使用 FastJSON2 JSONWriter 进行快速序列化（复用ThreadLocal 池）
+        // 使用 JSONWriter 进行快速序列化（复用 ThreadLocal 池）
         JSONWriter writer = SerializationContext.CONTEXT.get().fastWriterPool;
         writer.reset();
 

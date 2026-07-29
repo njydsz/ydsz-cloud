@@ -10,10 +10,11 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.parser.YdszJsonParser;
 import com.njydsz.common.json.reader.JSONReader;
+
 /**
  * YdszJson 反序列化提供者（零拷贝优化版）
  *
- * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
+ * <p>架构层级：YdszJson => Provider => Parser</p>
  *
  * <p><b>核心优化：</b></p>
  * <ul>
@@ -29,9 +30,9 @@ import com.njydsz.common.json.reader.JSONReader;
  *
  * <p><b>反序列化流程：</b></p>
  * <ol>
- *   <li>检查缓存 - 查找已编译的反序列化器</li>
- *   <li>选择策略 - 根据类型选择合适的反序列化方式</li>
- *   <li>执行解析 - 调用 ZeroCopyDeserializer + YdszJsonParser</li>
+ *   <li>类型安全检查 - AutoTypeChecker 白名单/黑名单校验</li>
+ *   <li>快速路径分派 - 基本类型直接解析，其余走 BeanDeserializerEngine</li>
+ *   <li>执行解析 - ASM/BeanReader/Creator/Builder/ZeroCopy 多级降级</li>
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
  * </ol>
  *
@@ -39,38 +40,6 @@ import com.njydsz.common.json.reader.JSONReader;
  * @since 1.0.0
  */
 public final class DeserializationProvider {
-
-    /**
-     * 反序列化策略缓存（线程安全 LRU 有界缓存，避免类加载器泄漏）
-     *
-     * <p>缓存 Class -> DeserializationStrategy 的映射，类似于序列化端的 ASM 序列化器缓存。
-     * 首次反序列化某类型时，会遍历策略链（ASM -> BeanReader -> Creator -> Builder -> ZeroCopy），
-     * 找到可用策略后缓存，后续直接使用缓存策略，跳过策略选择开销。</p>
-     *
-     * <p>使用 LRU 淘汰策略，最大 1024 个条目，避免动态类加载场景下的内存泄漏。</p>
-     */
-    private static final Map<Class<?>, DeserializationStrategy> STRATEGY_CACHE =
-        java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<>(256, 0.75f, true) {
-            private static final int MAX_ENTRIES = 1024;
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<Class<?>, DeserializationStrategy> eldest) {
-                return size() > MAX_ENTRIES;
-            }
-        });
-
-    /** 反序列化策略枚举 */
-    private enum DeserializationStrategy {
-        /** 基本类型（String/Integer/Long/Double/Float/Boolean） */
-        PRIMITIVE,
-        /** Object 类型 */
-        OBJECT,
-        /** Map 类型 */
-        MAP,
-        /** List 类型 */
-        LIST,
-        /** Bean 类型 - BeanDeserializerEngine */
-        BEAN
-    }
 
     private DeserializationProvider() {
         throw new UnsupportedOperationException();
@@ -111,21 +80,25 @@ public final class DeserializationProvider {
         if (type == Map.class) return YdszJsonParser.parseObject(json);
         if (type == List.class) return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
 
-// 缓存路径：使用策略缓存避免每次反序列化都重新判断类型
-// 注意：当前所有非简单类型都走 BEAN 策略，缓存主要用于标记"已分析过"避免重复类型检查
-DeserializationStrategy strategy = STRATEGY_CACHE.get(type);
-if (strategy == null) {
-    // 首次遇到此类型，确定策略并缓存
-    strategy = DeserializationStrategy.BEAN;
-    STRATEGY_CACHE.put(type, strategy);
-}
-
-// 根据策略分派（当前统一走 BEAN 路径，后续可扩展其他策略）
-return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
+        // Bean 类型：直接走 BeanDeserializerEngine 多级降级路径
+        // （ASM -> BeanReader -> Creator -> Builder -> ZeroCopy -> Map 降级）
+        // 注：原 STRATEGY_CACHE 已删除——所有非简单类型统一走 BEAN 路径，
+        // if-else 链已覆盖所有简单类型，缓存无策略分派价值，synchronizedMap 反而是性能瓶颈。
+        return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
     }
 
     /**
      * 反序列化 JSON 字符串（带特性配置）
+     *
+     * <p><b>注意：</b>当前版本 {@code features} 参数仅用于 JSON 长度限制检查，
+     * 其他 Feature 配置尚未实现，保留参数位置以便后续扩展。
+     * 如需 AutoType 安全检查，请通过 {@link AutoTypeChecker#setSafeMode(boolean)} 全局配置。</p>
+     *
+     * @param json JSON 字符串
+     * @param clazz 目标类型
+     * @param features 特性标志（位运算值，当前仅用于长度限制检查）
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
      */
     public static <T> T deserialize(String json, Class<T> clazz, long features) {
         if (json == null || json.isEmpty()) {
@@ -140,8 +113,7 @@ return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
             );
         }
 
-        // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护，
-        // 无需在此预扫描（原 validateDepth 存在 O(n) 双重扫描且不区分字符串字面量的逻辑缺陷）
+        // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护
         return deserialize(json, clazz);
     }
 
@@ -207,7 +179,17 @@ return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
 
     /**
      * 反序列化 JSON 字符串（支持 Type）
+     *
+     * <p>支持 {@link Class}、{@link ParameterizedType}（List/Map/Set 泛型）等类型。
+     * 类型不匹配时立即抛出 {@link JsonDeserializationException}，包含期望类型和实际类型信息。</p>
+     *
+     * @param json JSON 字符串
+     * @param type 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     * @throws JsonDeserializationException 如果 JSON 结构与目标类型不匹配
      */
+    @SuppressWarnings("unchecked")
     public static <T> T deserialize(String json, Type type) {
         if (json == null || json.isEmpty()) {
             return null;
@@ -216,7 +198,7 @@ return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
         if (type instanceof Class<?> clazz) {
             AutoTypeChecker.checkType(clazz);
             Object result = deserializeValue(json, clazz);
-            return captureType(result);
+            return result != null ? (T) clazz.cast(result) : null;
         }
 
         if (type instanceof ParameterizedType pt) {
@@ -228,9 +210,9 @@ return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
                     // 安全检查：校验容器元素类型，防止泛型路径绕过 AutoType 白名单
                     AutoTypeChecker.checkType(elementClass);
                     if (BeanDeserializerEngine.isSimpleType(elementClass)) {
-                        return captureType(BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass));
+                        return (T) BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);
                     } else {
-                        return captureType(BeanDeserializerEngine.deserializeBeanListFast(json, elementClass));
+                        return (T) BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);
                     }
                 }
             }
@@ -245,7 +227,7 @@ return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
                         AutoTypeChecker.checkType(valueClass);
                     }
                 }
-                return captureType(YdszJsonParser.parseObject(json));
+                return (T) YdszJsonParser.parseObject(json);
             }
 
             if (rawType == java.util.Set.class || rawType == java.util.HashSet.class
@@ -258,42 +240,41 @@ return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
                     if (BeanDeserializerEngine.isSimpleType(elementClass)) {
                         List<?> list = BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);
                         if (list == null) return null;
-                        java.util.Set<Object> set;
-                        if (rawType == java.util.TreeSet.class) {
-                            set = new java.util.TreeSet<>();
-                        } else if (rawType == java.util.LinkedHashSet.class) {
-                            set = new java.util.LinkedHashSet<>(list.size());
-                        } else {
-                            set = new java.util.HashSet<>(list.size());
-                        }
-                        set.addAll(list);
-                        return captureType(set);
+                        return (T) createSet(rawType, list);
                     } else {
                         List<?> list = BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);
                         if (list == null) return null;
-                        java.util.Set<Object> set;
-                        if (rawType == java.util.TreeSet.class) {
-                            set = new java.util.TreeSet<>();
-                        } else if (rawType == java.util.LinkedHashSet.class) {
-                            set = new java.util.LinkedHashSet<>(list.size());
-                        } else {
-                            set = new java.util.HashSet<>(list.size());
-                        }
-                        set.addAll(list);
-                        return captureType(set);
+                        return (T) createSet(rawType, list);
                     }
                 }
             }
         }
 
-        if (json.trim().startsWith("[")) {
-            return captureType(YdszJsonParser.parseArray(json));
+        // 兜底路径：根据 JSON 首字符决定解析为 List 或 Map
+        String trimmed = json.trim();
+        if (trimmed.startsWith("[")) {
+            return (T) YdszJsonParser.parseArray(json);
         }
-
-        return captureType(YdszJsonParser.parseObject(json));
+        return (T) YdszJsonParser.parseObject(json);
     }
 
-    private static <T> T captureType(Object value) {
-        return (T) value;
+    /**
+     * 根据原始类型创建对应的 Set 实例并填充元素。
+     *
+     * @param rawType 原始类型（TreeSet/LinkedHashSet/HashSet）
+     * @param list 元素列表
+     * @return 填充好的 Set 实例
+     */
+    private static java.util.Set<Object> createSet(Type rawType, List<?> list) {
+        java.util.Set<Object> set;
+        if (rawType == java.util.TreeSet.class) {
+            set = new java.util.TreeSet<>();
+        } else if (rawType == java.util.LinkedHashSet.class) {
+            set = new java.util.LinkedHashSet<>(list.size());
+        } else {
+            set = new java.util.HashSet<>(list.size());
+        }
+        set.addAll(list);
+        return set;
     }
 }

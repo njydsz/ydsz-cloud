@@ -72,6 +72,11 @@ public final class YdszJsonSchema {
     private List<String> requiredProperties;
     private YdszJsonSchema additionalProperties;
 
+    /** 组合关键字（JSON Schema Draft 07 allOf/anyOf/oneOf） */
+    private List<YdszJsonSchema> allOf;
+    private List<YdszJsonSchema> anyOf;
+    private List<YdszJsonSchema> oneOf;
+
     /**
      * 构造函数
      */
@@ -289,6 +294,53 @@ public final class YdszJsonSchema {
         return this;
     }
 
+    // ========== 组合关键字（allOf / anyOf / oneOf） ==========
+
+    /**
+     * 添加 allOf 约束（所有 Schema 都必须验证通过）。
+     *
+     * @param schemas 需要全部满足的 Schema 列表
+     * @return 当前 Schema（链式调用）
+     * @since 1.4.0
+     */
+    public YdszJsonSchema allOf(YdszJsonSchema... schemas) {
+        if (this.allOf == null) {
+            this.allOf = new ArrayList<>();
+        }
+        this.allOf.addAll(Arrays.asList(schemas));
+        return this;
+    }
+
+    /**
+     * 添加 anyOf 约束（至少一个 Schema 验证通过）。
+     *
+     * @param schemas 需要满足任一条件的 Schema 列表
+     * @return 当前 Schema（链式调用）
+     * @since 1.4.0
+     */
+    public YdszJsonSchema anyOf(YdszJsonSchema... schemas) {
+        if (this.anyOf == null) {
+            this.anyOf = new ArrayList<>();
+        }
+        this.anyOf.addAll(Arrays.asList(schemas));
+        return this;
+    }
+
+    /**
+     * 添加 oneOf 约束（恰好一个 Schema 验证通过）。
+     *
+     * @param schemas 需要满足唯一条件的 Schema 列表
+     * @return 当前 Schema（链式调用）
+     * @since 1.4.0
+     */
+    public YdszJsonSchema oneOf(YdszJsonSchema... schemas) {
+        if (this.oneOf == null) {
+            this.oneOf = new ArrayList<>();
+        }
+        this.oneOf.addAll(Arrays.asList(schemas));
+        return this;
+    }
+
     /**
      * Null 类型
      */
@@ -382,6 +434,18 @@ public final class YdszJsonSchema {
 
     public YdszJsonSchema getAdditionalProperties() {
         return additionalProperties;
+    }
+
+    public List<YdszJsonSchema> getAllOf() {
+        return allOf;
+    }
+
+    public List<YdszJsonSchema> getAnyOf() {
+        return anyOf;
+    }
+
+    public List<YdszJsonSchema> getOneOf() {
+        return oneOf;
     }
 
     @Override

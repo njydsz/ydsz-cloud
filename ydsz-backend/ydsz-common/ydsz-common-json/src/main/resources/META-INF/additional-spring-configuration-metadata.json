@@ -74,6 +74,16 @@
       "name": "ydsz.json.fail-on-error",
       "type": "java.lang.Boolean",
       "description": "反序列化失败时是否抛出异常（true，默认）或返回 null（false）。"
+    },
+    {
+      "name": "ydsz.json.streaming-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用流式输出（HTTP 响应使用 chunked transfer encoding，不设置 Content-Length）。适用于大响应体场景，可降低内存峰值。默认 false。"
+    },
+    {
+      "name": "ydsz.json.max-request-body-size",
+      "type": "java.lang.Long",
+      "description": "HTTP 请求体最大大小（字节，默认 10MB）。超过此值的请求将被拒绝，防止 DoS 攻击。"
     }
   ]
 }

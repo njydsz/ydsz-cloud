@@ -57,6 +57,24 @@ public enum BaseResultCode implements ResultCode {
     DB_LOCK_CONTENTION("C10406", "数据库锁冲突"),
     RESOURCE_LOCKED("A10501", "资源锁冲突"),
 
+    // ==================== A106xx 请求语义 ====================
+    INVALID_RANGE("A10601", "请求范围无效"),
+    PAYLOAD_TOO_LARGE("A10602", "请求体过大"),
+    TOO_MANY_REQUESTS("A10603", "请求过多"),
+
+    // ==================== B2xxxx 系统状态 ====================
+    SYSTEM_MAINTENANCE("B20001", "系统维护中"),
+    FEATURE_DISABLED("B20002", "功能已禁用"),
+    CIRCUIT_BREAKER_OPEN("B20003", "熔断器已开启，请稍后重试"),
+
+    // ==================== C1xxxx 第三方服务 ====================
+    THIRD_PARTY_SERVICE_ERROR("C10501", "第三方服务异常"),
+    THIRD_PARTY_TIMEOUT("C10502", "第三方服务调用超时"),
+    THIRD_PARTY_RATE_LIMITED("C10503", "第三方服务限流"),
+    CACHE_OPERATION_FAILED("C10601", "缓存操作失败"),
+    MQ_PUBLISH_FAILED("C10701", "消息发送失败"),
+    MQ_CONSUME_FAILED("C10702", "消息消费失败"),
+
     // ==================== A2xxxx 认证授权 ====================
     UNAUTHORIZED("A20001", "未登录"),
     TOKEN_EXPIRED("A20002", "Token 已过期"),
@@ -130,16 +148,23 @@ public enum BaseResultCode implements ResultCode {
             case BAD_REQUEST, VALIDATION_FAILED, MISSING_PARAMETER, UNSUPPORTED_MEDIA_TYPE,
                  BIZ_ERROR, WORKFLOW_REJECT,
                  PASSWORD_WEAK, PASSWORD_REUSED,
-                 DB_CONSTRAINT_VIOLATION, DB_DATA_INTEGRITY -> 400;
+                 DB_CONSTRAINT_VIOLATION, DB_DATA_INTEGRITY,
+                 INVALID_RANGE, PAYLOAD_TOO_LARGE -> 400;
             case METHOD_NOT_ALLOWED -> 405;
             case NOT_FOUND, USER_NOT_FOUND, DEPARTMENT_NOT_FOUND, EMPLOYEE_NOT_FOUND,
                  WORKFLOW_NOT_FOUND -> 404;
             case DUPLICATE_KEY, USERNAME_DUPLICATE,
-                 DB_DUPLICATE_KEY, DB_LOCK_CONTENTION, RESOURCE_LOCKED -> 409;
-            case RATE_LIMIT, QUOTA_EXCEEDED -> 429;
+                 DB_DUPLICATE_KEY, DB_LOCK_CONTENTION, RESOURCE_LOCKED,
+                 FEATURE_DISABLED -> 409;
+            case RATE_LIMIT, QUOTA_EXCEEDED, TOO_MANY_REQUESTS -> 429;
             case REQUEST_TIMEOUT -> 408;
-            case INTERNAL_ERROR, UNKNOWN -> 500;
-            case SERVICE_UNAVAILABLE, DB_QUERY_TIMEOUT, DB_CONNECTION_FAILED -> 503;
+            case INTERNAL_ERROR, UNKNOWN,
+                 THIRD_PARTY_SERVICE_ERROR, CACHE_OPERATION_FAILED,
+                 MQ_PUBLISH_FAILED, MQ_CONSUME_FAILED,
+                 CIRCUIT_BREAKER_OPEN -> 500;
+            case SERVICE_UNAVAILABLE, DB_QUERY_TIMEOUT, DB_CONNECTION_FAILED,
+                 THIRD_PARTY_TIMEOUT, THIRD_PARTY_RATE_LIMITED,
+                 SYSTEM_MAINTENANCE -> 503;
             // 2xxxx 认证授权
             case UNAUTHORIZED, TOKEN_EXPIRED, TOKEN_INVALID,
                  PASSWORD_EXPIRED,

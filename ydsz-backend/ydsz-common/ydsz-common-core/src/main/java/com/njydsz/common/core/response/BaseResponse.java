@@ -113,6 +113,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     public BaseResponse() {
         this.timestamp = System.currentTimeMillis();
         this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        recordMetrics();
     }
 
     /**
@@ -128,6 +129,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.data = data;
         this.timestamp = System.currentTimeMillis();
         this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        recordMetrics();
     }
 
     /**
@@ -306,6 +308,14 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
+     * 记录响应创建指标（委托到 CoreMetrics SPI）
+     */
+    private void recordMetrics() {
+        com.njydsz.common.core.metrics.CoreMetrics.recordResponseCreated(
+                SUCCESS.equals(this.code), this.code);
+    }
+
+    /**
      * 返回失败消息
      *
      * @param resultCode 结果码
@@ -353,6 +363,41 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
                 ? throwable.getMessage()
                 : resultCode.getMsg();
         return of(resultCode.getCode(), msg, null);
+    }
+
+    /**
+     * 返回携带 RFC 7807 Problem Details 的失败消息
+     *
+     * <p>将标准化的错误详情封装到 {@link ProblemDetail} 中作为 data 返回，
+     * 便于前端和第三方系统按 RFC 7807 规范处理错误。
+     *
+     * @param resultCode 结果码
+     * @param detail     错误详情（实例特定信息）
+     * @param <T>        数据类型
+     * @return 携带 ProblemDetail 的失败消息
+     * @since 1.1.0
+     * @see ProblemDetail
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail) {
+        ProblemDetail problem = ProblemDetail.of(resultCode, detail);
+        return of(resultCode.getCode(), resultCode.getMsg(), (T) problem);
+    }
+
+    /**
+     * 返回携带 RFC 7807 Problem Details 的失败消息（含请求路径）
+     *
+     * @param resultCode 结果码
+     * @param detail     错误详情
+     * @param instance   请求路径 URI
+     * @param <T>        数据类型
+     * @return 携带 ProblemDetail 的失败消息
+     * @since 1.1.0
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, java.net.URI instance) {
+        ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
+        return of(resultCode.getCode(), resultCode.getMsg(), (T) problem);
     }
 
     /**

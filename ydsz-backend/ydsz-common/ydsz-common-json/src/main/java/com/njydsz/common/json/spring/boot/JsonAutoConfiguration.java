@@ -67,7 +67,8 @@ public class JsonAutoConfiguration {
 @ConditionalOnClass(name = "org.springframework.http.converter.HttpMessageConverter")
 public JsonHttpMessageConverter ydszJsonHttpMessageConverter(YdszJsonProperties properties) {
 JsonHttpMessageConverter converter = new JsonHttpMessageConverter();
-converter.setMaxRequestBodySize(properties.getMaxJsonSize());
+converter.setStreamingEnabled(properties.isStreamingEnabled());
+converter.setMaxRequestBodySize(properties.getMaxRequestBodySize());
 return converter;
 }
 

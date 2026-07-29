@@ -13,7 +13,10 @@ import org.springframework.context.annotation.Bean;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.context.TenantMdcFilter;
 import com.njydsz.common.core.health.CoreHealthIndicator;
+import com.njydsz.common.core.metrics.CoreMetrics;
+import com.njydsz.common.core.metrics.CoreMetricsCallback;
 import com.njydsz.common.core.response.BaseResponse;
+import org.springframework.beans.factory.ObjectProvider;
 
 import jakarta.servlet.Filter;
 
@@ -86,6 +89,27 @@ public class CoreAutoConfiguration {
     public CoreHealthIndicator coreHealthIndicator(CoreProperties properties,
                                                     FilterIgnoreProperties filterIgnoreProperties) {
         return new CoreHealthIndicator(properties, filterIgnoreProperties);
+    }
+
+    /**
+     * 自动注册指标回调（当 classpath 上有 {@link CoreMetricsCallback} 实现时生效）。
+     *
+     * <p>上层模块（如 {@code ydsz-common-base}）可提供 {@link CoreMetricsCallback} Bean，
+     * 将 core 模块的关键操作指标桥接到 Micrometer / Prometheus 等监控系统。
+     * 未提供时使用 NOOP 空操作，零性能开销。</p>
+     *
+     * @param callbackProvider 指标回调 ObjectProvider
+     * @return 用于生命周期管理的 InitializingBean
+     */
+    @Bean
+    org.springframework.beans.factory.InitializingBean coreMetricsRegistrar(
+            ObjectProvider<CoreMetricsCallback> callbackProvider) {
+        return () -> {
+            CoreMetricsCallback callback = callbackProvider.getIfAvailable();
+            if (callback != null) {
+                CoreMetrics.setCallback(callback);
+            }
+        };
     }
 
     /**

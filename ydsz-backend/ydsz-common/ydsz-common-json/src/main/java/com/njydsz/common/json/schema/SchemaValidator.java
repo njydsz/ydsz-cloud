@@ -8,7 +8,8 @@ import java.util.regex.Pattern;
 /**
  * JSON Schema 验证器
  * 
- * <p>验证 JSON 数据是否符合 Schema 定义。</p>
+ * <p>验证 JSON 数据是否符合 Schema 定义，支持 JSON Schema Draft 07 的核心关键字，
+ * 包括 allOf/anyOf/oneOf 组合关键字。</p>
  * 
  * <p><b>使用示例：</b></p>
  * <pre>
@@ -96,8 +97,66 @@ public final class SchemaValidator {
                 validateObject(schema, (Map<?, ?>) data, result, path);
                 break;
         }
+
+        // 组合关键字验证（allOf / anyOf / oneOf）
+        validateCombinators(schema, data, result, path);
     }
     
+    /**
+     * 验证组合关键字（allOf / anyOf / oneOf）。
+     *
+     * @param schema 当前 Schema
+     * @param data 待验证的数据
+     * @param result 验证结果
+     * @param path 当前路径
+     * @since 1.4.0
+     */
+    private static void validateCombinators(YdszJsonSchema schema, Object data, ValidationResult result, String path) {
+        // allOf：所有 Schema 都必须验证通过
+        if (schema.getAllOf() != null && !schema.getAllOf().isEmpty()) {
+            for (int i = 0; i < schema.getAllOf().size(); i++) {
+                ValidationResult subResult = new ValidationResult(true);
+                validateType(schema.getAllOf().get(i), data, subResult, path + "/allOf[" + i + "]");
+                if (!subResult.isValid()) {
+                    result.addError(path + ": allOf[" + i + "] validation failed: " + subResult.getErrors());
+                }
+            }
+        }
+
+        // anyOf：至少一个 Schema 验证通过
+        if (schema.getAnyOf() != null && !schema.getAnyOf().isEmpty()) {
+            boolean anyValid = false;
+            for (int i = 0; i < schema.getAnyOf().size(); i++) {
+                ValidationResult subResult = new ValidationResult(true);
+                validateType(schema.getAnyOf().get(i), data, subResult, path);
+                if (subResult.isValid()) {
+                    anyValid = true;
+                    break;
+                }
+            }
+            if (!anyValid) {
+                result.addError(path + ": Value does not match any of the anyOf schemas");
+            }
+        }
+
+        // oneOf：恰好一个 Schema 验证通过
+        if (schema.getOneOf() != null && !schema.getOneOf().isEmpty()) {
+            int matchCount = 0;
+            for (YdszJsonSchema subSchema : schema.getOneOf()) {
+                ValidationResult subResult = new ValidationResult(true);
+                validateType(subSchema, data, subResult, path);
+                if (subResult.isValid()) {
+                    matchCount++;
+                }
+            }
+            if (matchCount == 0) {
+                result.addError(path + ": Value does not match any of the oneOf schemas");
+            } else if (matchCount > 1) {
+                result.addError(path + ": Value matches " + matchCount + " of the oneOf schemas, expected exactly 1");
+            }
+        }
+    }
+
     /**
      * 验证字符串
      */
