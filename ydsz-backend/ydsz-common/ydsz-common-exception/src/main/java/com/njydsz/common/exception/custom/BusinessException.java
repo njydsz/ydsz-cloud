@@ -294,7 +294,6 @@ public class BusinessException extends AbstractYdszException {
                                             Throwable cause, String path, Object extData, String message) {
             BusinessException exception = new BusinessException();
             exception.initFields(code, key, params);
-            exception.setSubCode(subCode);
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);
             exception.setCategory(category);

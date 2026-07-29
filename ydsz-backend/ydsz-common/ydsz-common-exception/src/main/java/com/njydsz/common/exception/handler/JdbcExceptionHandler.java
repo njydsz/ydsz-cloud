@@ -2,6 +2,7 @@ package com.njydsz.common.exception.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -12,12 +13,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.alert.ExceptionAlertPublisher;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.observability.TraceContext;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,17 +38,15 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     /**
      * 构造 JDBC 异常处理器
      *
-     * @param messageSource   国际化消息源
-     * @param exceptionMetrics 异常指标统计器
-     * @param properties      异常模块配置属性
-     * @param alertPublisher  异常告警发布器
+     * @param messageSource    国际化消息源
+     * @param exceptionMetrics  异常指标统计器
+     * @param properties       异常模块配置属性
      */
     public JdbcExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics,
-                               ExceptionProperties properties, ExceptionAlertPublisher alertPublisher) {
+                               ExceptionProperties properties) {
         this.messageSource = messageSource;
         setExceptionMetrics(exceptionMetrics);
         setExceptionProperties(properties);
-        setAlertPublisher(alertPublisher);
     }
 
     @Override
@@ -85,14 +82,14 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 从 HttpServletRequest 提取 traceId
+     * 从 MDC / Request Header 提取 traceId
      *
      * <p>优先级：MDC > Request Header（X-Trace-Id > X-Request-Id）
      */
     private String extractTraceId(HttpServletRequest request) {
-        String traceId = TraceContext.getTraceId();
+        String traceId = MDC.get("traceId");
         if (traceId == null) {
-            traceId = request.getHeader(TraceContext.HEADER_TRACE_ID);
+            traceId = request.getHeader("X-Trace-Id");
         }
         if (traceId == null) {
             traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);

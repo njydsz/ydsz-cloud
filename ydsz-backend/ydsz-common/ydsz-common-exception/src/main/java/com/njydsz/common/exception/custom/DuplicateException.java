@@ -3,7 +3,6 @@ package com.njydsz.common.exception.custom;
 import org.springframework.http.HttpStatus;
 
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
-import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -11,16 +10,16 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
 import lombok.ToString;
 
 /**
- * 唯一约束冲突异常类
+ * 重复提交异常
  *
- * <p>用于封装数据唯一约束冲突、重复提交等场景。
- * 默认 HTTP 状态码为 409（Conflict），异常分类为 DUPLICATE。
+ * <p>用于封装重复提交场景的异常。
  *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * throw new DuplicateException(UnifiedExceptionCode.DATA_ALREADY_EXISTS);
- * throw DuplicateException.of(UnifiedExceptionCode.DUPLICATE_SUBMISSION).build();
- * }</pre>
+ * <p><b>默认值：</b>
+ * <ul>
+ *   <li>HTTP 状态码：409 Conflict</li>
+ *   <li>异常级别：WARN</li>
+ *   <li>异常分类：BUSINESS</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -30,102 +29,49 @@ public class DuplicateException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 默认构造函数，初始化为 409 Conflict / WARN / DUPLICATE
-     */
+    private static final int DEFAULT_HTTP_STATUS = HttpStatus.CONFLICT.value();
+    private static final ExceptionLevel DEFAULT_LEVEL = ExceptionLevel.WARN;
+    private static final ExceptionCategory DEFAULT_CATEGORY = ExceptionCategory.BUSINESS;
+    private static final String DEFAULT_CODE = UnifiedExceptionCode.FAIL.getCode();
+
     public DuplicateException() {
         super();
-        initDefaults(HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
+        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
-    /**
-     * 使用异常码枚举构造重复异常
-     *
-     * @param exceptionCode 异常码枚举
-     */
     public DuplicateException(ExceptionCode exceptionCode) {
         super();
-        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
+        init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
-    /**
-     * 使用国际化消息键构造重复异常
-     *
-     * @param key 国际化消息键
-     */
-    public DuplicateException(String key) {
-        super();
-        init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
-    }
-
-    /**
-     * 使用异常码枚举和参数构造重复异常
-     *
-     * @param exceptionCode 异常码枚举
-     * @param params        消息参数
-     */
     public DuplicateException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
+        init(exceptionCode, params, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
-    /**
-     * 使用原始异常构造重复异常
-     *
-     * @param cause 原始异常
-     */
+    public DuplicateException(String key) {
+        super();
+        init(DEFAULT_CODE, key, new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
+    public DuplicateException(String key, Object[] params) {
+        super();
+        init(DEFAULT_CODE, key, params, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
+    public DuplicateException(String code, String key) {
+        super();
+        init(code, key, new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
+    public DuplicateException(String code, String key, Object[] params) {
+        super();
+        init(code, key, params, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
     public DuplicateException(Throwable cause) {
         super(cause);
-        initDefaults(HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
-        this.code = UnifiedExceptionCode.FAIL.getCode();
-    }
-
-    public ExceptionInfo toExceptionInfo() {
-        return buildExceptionInfo();
-    }
-
-    public static DuplicateException of(ExceptionCode exceptionCode) {
-        return new DuplicateException(exceptionCode);
-    }
-
-    public static DuplicateExceptionBuilder builder() {
-        return new DuplicateExceptionBuilder();
-    }
-
-    /**
-     * 重复异常构建器
-     */
-    public static class DuplicateExceptionBuilder extends YdszExceptionBuilder<DuplicateException, DuplicateExceptionBuilder> {
-
-        @Override
-        protected DuplicateExceptionBuilder self() {
-            return this;
-        }
-
-        public DuplicateExceptionBuilder() {
-            super();
-            this.code = UnifiedExceptionCode.FAIL.getCode();
-            this.httpStatus = HttpStatus.CONFLICT.value();
-            this.level = ExceptionLevel.WARN;
-            this.category = ExceptionCategory.DUPLICATE;
-        }
-
-        @Override
-        protected DuplicateException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
-                                              ExceptionLevel level, ExceptionCategory category,
-                                              Throwable cause, String path, Object extData, String message) {
-            DuplicateException exception = new DuplicateException();
-            exception.initFields(code, key, params);
-            exception.setSubCode(subCode);
-            exception.setHttpStatus(httpStatus);
-            exception.setLevel(level);
-            exception.setCategory(category);
-            exception.setPath(path);
-            exception.setExtData(extData);
-            if (cause != null) {
-                exception.initCause(cause);
-            }
-            return exception;
-        }
+        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        this.code = DEFAULT_CODE;
     }
 }

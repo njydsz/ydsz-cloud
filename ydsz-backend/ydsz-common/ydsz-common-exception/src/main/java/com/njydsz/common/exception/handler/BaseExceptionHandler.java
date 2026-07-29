@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.alert.ExceptionAlertPublisher;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
@@ -21,7 +20,6 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 import com.njydsz.common.exception.model.ProblemDetail;
-import com.njydsz.common.exception.sanitize.StackTraceSanitizer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,19 +29,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供通用的异常处理逻辑，子类只需实现特定的日志前缀和响应格式定制。
  * 支持国际化消息、异常链追踪、差异化环境处理（开发/生产）、
  * RFC 7807 ProblemDetail 输出格式切换、统一指标记录。
- *
- * <p><b>设计模式：</b>
- * <ul>
- *   <li>模板方法模式：子类通过重写抽象方法定制特定行为</li>
- *   <li>策略模式：不同子类实现不同的异常处理策略</li>
- * </ul>
- *
- * <p><b>响应格式：</b>
- * 通过 {@code ydsz.exception.response-format} 配置项切换：
- * <ul>
- *   <li>{@code base-response}（默认）— 返回 {@link BaseResponse} 格式</li>
- *   <li>{@code problem-detail} — 返回 RFC 7807 {@link ProblemDetail} 格式</li>
- * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -59,8 +44,6 @@ public abstract class BaseExceptionHandler {
 
     private ExceptionProperties properties;
     private ExceptionMetrics exceptionMetrics;
-    private ExceptionAlertPublisher alertPublisher;
-    private StackTraceSanitizer stackTraceSanitizer;
 
     /**
      * 获取日志前缀，由子类实现以定制不同端的日志前缀
@@ -71,8 +54,6 @@ public abstract class BaseExceptionHandler {
 
     /**
      * 设置异常模块配置属性（由 AutoConfiguration 注入）
-     *
-     * @param properties 异常模块配置属性
      */
     protected void setExceptionProperties(ExceptionProperties properties) {
         this.properties = properties;
@@ -80,29 +61,9 @@ public abstract class BaseExceptionHandler {
 
     /**
      * 设置异常指标统计器（由 AutoConfiguration 注入）
-     *
-     * @param exceptionMetrics 异常指标统计器
      */
     protected void setExceptionMetrics(ExceptionMetrics exceptionMetrics) {
         this.exceptionMetrics = exceptionMetrics;
-    }
-
-    /**
-     * 设置异常告警发布器（由 AutoConfiguration 注入）
-     *
-     * @param alertPublisher 异常告警发布器
-     */
-    protected void setAlertPublisher(ExceptionAlertPublisher alertPublisher) {
-        this.alertPublisher = alertPublisher;
-    }
-
-    /**
-     * 设置堆栈脱敏器（由 AutoConfiguration 注入）
-     *
-     * @param stackTraceSanitizer 堆栈脱敏器
-     */
-    protected void setStackTraceSanitizer(StackTraceSanitizer stackTraceSanitizer) {
-        this.stackTraceSanitizer = stackTraceSanitizer;
     }
 
     /**
@@ -118,7 +79,7 @@ public abstract class BaseExceptionHandler {
      * 记录异常指标（统一入口，所有 handler 调用此方法）
      *
      * <p>如果异常指标统计器未注入或被禁用，此方法为空操作。
-     * 同时记录异常处理耗时（Timer 指标）和发布异常告警。
+     * 同时记录异常处理耗时（Timer 指标）。
      *
      * @param throwable 异常对象
      */
@@ -127,9 +88,6 @@ public abstract class BaseExceptionHandler {
         try {
             if (exceptionMetrics != null) {
                 exceptionMetrics.recordException(throwable);
-            }
-            if (alertPublisher != null) {
-                alertPublisher.publishAlert(throwable);
             }
         } finally {
             if (exceptionMetrics != null) {
@@ -216,33 +174,6 @@ public abstract class BaseExceptionHandler {
     }
 
     /**
-     * 获取脱敏后的堆栈跟踪字符串
-     * <p>
-     * 在生产环境中，对堆栈进行脱敏处理：
-     * - 移除框架内部堆栈（Spring、MyBatis、Tomcat 等）
-     * - 隐藏敏感路径信息
-     * - 限制堆栈深度
-     * </p>
-     *
-     * @param throwable 异常对象
-     * @return 脱敏后的堆栈字符串；如果未启用脱敏则返回原始堆栈
-     */
-    protected String getSanitizedStackTraceString(Throwable throwable) {
-        if (throwable == null) {
-            return null;
-        }
-
-        // 如果未配置脱敏器或不在生产环境，返回原始堆栈
-        if (stackTraceSanitizer == null || !isProductionEnvironment()) {
-            return getStackTraceString(throwable);
-        }
-
-        // 使用脱敏器处理堆栈
-        Throwable sanitized = stackTraceSanitizer.sanitize(throwable);
-        return getStackTraceString(sanitized);
-    }
-
-    /**
      * 判断是否为生产环境
      *
      * @return true-生产环境，false-非生产环境
@@ -275,7 +206,7 @@ public abstract class BaseExceptionHandler {
             info.setHttpStatus(ex.getHttpStatus());
             if (includeExceptionInfo()) {
                 Map<String, Object> details = new LinkedHashMap<>();
-                details.put("stackTrace", getSanitizedStackTraceString(throwable));
+                details.put("stackTrace", getStackTraceString(throwable));
                 if (ex.getExtData() instanceof Map<?, ?> rawMap) {
                     rawMap.forEach((k, v) -> details.put(String.valueOf(k), v));
                 }
@@ -286,7 +217,7 @@ public abstract class BaseExceptionHandler {
             info.setMessage(getRootCauseMessage(throwable));
             info.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
             if (includeExceptionInfo()) {
-                info.setDetails(Map.of("stackTrace", getSanitizedStackTraceString(throwable)));
+                info.setDetails(Map.of("stackTrace", getStackTraceString(throwable)));
             }
         }
 
@@ -358,9 +289,6 @@ public abstract class BaseExceptionHandler {
 
     /**
      * 构建 ResponseEntity（动态 HTTP 状态码）
-     *
-     * <p>从异常对象中提取 HTTP 状态码，设置到 ResponseEntity 中。
-     * 解决 {@code @ResponseStatus} 只能设置固定状态码的问题。
      *
      * @param body      响应体
      * @param throwable 异常对象

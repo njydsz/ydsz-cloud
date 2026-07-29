@@ -14,13 +14,6 @@ package com.njydsz.common.exception.enums;
  *   <li>key：国际化消息键，对应 messages.properties 中的键</li>
  * </ul>
  *
- * <p><b>扩展能力（自 1.0.0 起）：</b>
- * <ul>
- *   <li>子错误码（subCode）：主错误码下细分的具体场景标识，4 位数字（如 0001 / 0002）</li>
- *   <li>TraceId 嵌入：将 traceId 编码到错误码末尾，便于日志关联与人工排查</li>
- *   <li>5 大分类（A/B/C/D/E）：业务、系统、安全、限流、外部</li>
- * </ul>
- *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * public enum UserExceptionCode implements ExceptionCode {
@@ -47,8 +40,6 @@ public interface ExceptionCode {
      * <p>返回业务错误码，用于标识具体的异常类型。
      * 建议格式：分类(1位) + 模块(2位) + 业务码(3位)，如 "A01001"
      *
-     * <p>JSON 序列化时输出 code 值而非枚举名称。
-     *
      * @return 异常码字符串
      */
     String getCode();
@@ -73,25 +64,6 @@ public interface ExceptionCode {
      */
     default int getHttpStatus() {
         return 400;
-    }
-
-    /**
-     * 获取子错误码（Sub Error Code）
-     *
-     * <p>用于在主错误码下细分具体场景，4 位数字字符串（如 "0001"）。
-     * 默认返回 "0000"（无子错误码）。
-     *
-     * <p><b>使用场景：</b>
-     * <ul>
-     *   <li>同一主错误码下区分不同的失败原因（如 USER_NOT_FOUND 在不同子错误码下表示不同原因）</li>
-     *   <li>便于国际化文案精确化（messages_{subCode}.properties）</li>
-     *   <li>便于客户端按子错误码做差异化提示</li>
-     * </ul>
-     *
-     * @return 4 位数字子错误码字符串
-     */
-    default String getSubCode() {
-        return "0000";
     }
 
     /**
@@ -131,64 +103,14 @@ public interface ExceptionCode {
                 return ExceptionCategory.TIMEOUT;
             case 'R':
                 return ExceptionCategory.RATE_LIMIT;
-            // 模块专属段位：映射到主分类
             case 'F':
-                // FileExceptionCode - 文件存储属于基础设施异常
                 return ExceptionCategory.INFRASTRUCTURE;
             case 'G':
-                // DocumentExceptionCode - 文档处理属于业务异常
-                return ExceptionCategory.BUSINESS;
             case 'H':
-                // ExcelExceptionCode - Excel 处理属于业务异常
-                return ExceptionCategory.BUSINESS;
             case 'W':
-                // NextwikiExceptionCode - 知识库属于业务异常
                 return ExceptionCategory.BUSINESS;
             default:
                 return ExceptionCategory.BUSINESS;
         }
-    }
-
-    /**
-     * 组合完整错误码（主错误码 + 子错误码）
-     *
-     * <p>格式：{@code {主错误码}-{子错误码}}，如 "A01001-0001"。
-     *
-     * @return 完整错误码字符串
-     */
-    default String getFullCode() {
-        String sub = getSubCode();
-        if (sub == null || sub.isEmpty() || "0000".equals(sub)) {
-            return getCode();
-        }
-        return getCode() + "-" + sub;
-    }
-
-    /**
-     * 根据 code 字符串查找已注册的 ExceptionCode
-     *
-     * <p>通过全局 {@link ExceptionCodeRegistry} 查找对应枚举实例。
-     * 各模块的异常码枚举需在静态块中完成注册才能被此方法找到。
-     *
-     * @param code 异常码字符串，如 "A01001"
-     * @return 对应的 ExceptionCode 枚举实例
-     * @throws IllegalArgumentException 如果 code 为 null 或空字符串
-     * @throws IllegalStateException 如果 code 未被任何模块注册
-     */
-    static ExceptionCode fromCode(String code) {
-        if (code == null || code.trim().isEmpty()) {
-            throw new IllegalArgumentException("Exception code cannot be null or empty");
-        }
-        // 兼容带子错误码的格式：截取主错误码部分
-        String mainCode = code;
-        int dashIdx = code.indexOf('-');
-        if (dashIdx > 0) {
-            mainCode = code.substring(0, dashIdx);
-        }
-        ExceptionCode result = ExceptionCodeRegistry.lookup(mainCode);
-        if (result == null) {
-            throw new IllegalStateException("No ExceptionCode registered for code: " + mainCode);
-        }
-        return result;
     }
 }

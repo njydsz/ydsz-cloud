@@ -24,7 +24,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.observability.TraceContext;
+import org.slf4j.MDC;
 
 /**
  * Validation 相关异常处理器
@@ -131,9 +131,9 @@ public class ValidationExceptionHandler {
      * <p>优先级：MDC > Request Header（X-Trace-Id > X-Request-Id）
      */
     private String extractTraceId(HttpServletRequest request) {
-        String traceId = TraceContext.getTraceId();
+        String traceId = MDC.get("traceId");
         if (traceId == null) {
-            traceId = request.getHeader(TraceContext.HEADER_TRACE_ID);
+            traceId = request.getHeader("X-Trace-Id");
         }
         if (traceId == null) {
             traceId = request.getHeader("X-Request-Id");
