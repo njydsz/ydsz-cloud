@@ -114,7 +114,8 @@ final class CreatorResolver {
                         Object convertedValue = TypeConverter.convertValue(value, field.getType());
                         field.set(null, convertedValue);
                     } catch (Exception e) {
-                    }
+                // 反射操作失败，忽略此路径，回退到默认行为
+            }
                 }
             }
             return createInstanceWithSetters(map, constructor.getDeclaringClass());
@@ -158,7 +159,8 @@ final class CreatorResolver {
                         Object convertedValue = TypeConverter.convertValue(value, field.getType());
                         field.set(null, convertedValue);
                     } catch (Exception e) {
-                    }
+                // 反射操作失败，忽略此路径，回退到默认行为
+            }
                 }
             }
 
@@ -179,7 +181,8 @@ final class CreatorResolver {
                         Object convertedValue = TypeConverter.convertValue(value, field.getType());
                         field.set(instance, convertedValue);
                     } catch (Exception e) {
-                    }
+                // 反射操作失败，忽略此路径，回退到默认行为
+            }
                 }
             }
             return instance;

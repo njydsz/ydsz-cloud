@@ -42,14 +42,22 @@ import com.njydsz.common.json.reader.JSONReader;
 public final class DeserializationProvider {
 
     /**
-     * 反序列化策略缓存（线程安全，避免每次反序列化都重新查找策略链）
+     * 反序列化策略缓存（线程安全 LRU 有界缓存，避免类加载器泄漏）
      *
      * <p>缓存 Class -> DeserializationStrategy 的映射，类似于序列化端的 ASM 序列化器缓存。
      * 首次反序列化某类型时，会遍历策略链（ASM -> BeanReader -> Creator -> Builder -> ZeroCopy），
      * 找到可用策略后缓存，后续直接使用缓存策略，跳过策略选择开销。</p>
+     *
+     * <p>使用 LRU 淘汰策略，最大 1024 个条目，避免动态类加载场景下的内存泄漏。</p>
      */
-    private static final ConcurrentHashMap<Class<?>, DeserializationStrategy> STRATEGY_CACHE =
-        new ConcurrentHashMap<>(256);
+    private static final Map<Class<?>, DeserializationStrategy> STRATEGY_CACHE =
+        java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<>(256, 0.75f, true) {
+            private static final int MAX_ENTRIES = 1024;
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Class<?>, DeserializationStrategy> eldest) {
+                return size() > MAX_ENTRIES;
+            }
+        });
 
     /** 反序列化策略枚举 */
     private enum DeserializationStrategy {

@@ -394,6 +394,7 @@ public final class SerializationProvider {
                                 ctx.cachedListElementClass = first.getClass();
                             }
                         } catch (Exception e) {
+                            // ASM 序列化器创建失败，回退到通用 Collection 写入
                         }
                     }
                 }
@@ -424,14 +425,8 @@ public final class SerializationProvider {
             if (!tryFastSerialize(obj, sb)) {
                 ValueWriter.writeValue(obj, sb);
             }
-        } catch (JsonSerializationException e) {
-            throw e;
         } catch (Exception e) {
-            throw new JsonSerializationException(
-                JsonSerializationException.SERIALIZATION_ERROR,
-                "Serialization failed for " + obj.getClass().getName() + ": " + e.getMessage(),
-                e
-            );
+            throw wrapSerializationException(obj, e);
         } finally {
             objects.clear();
         }
@@ -523,12 +518,8 @@ public final class SerializationProvider {
         ctx.currentViewClass = viewClass;
         try {
             ValueWriter.writeValue(obj, sb);
-        } catch (JsonSerializationException e) {
-            throw e;
         } catch (Exception e) {
-            throw new JsonSerializationException(
-                "Failed to serialize object with view: " + obj.getClass().getName(), e
-            );
+            throw wrapSerializationException(obj, e);
         } finally {
             ctx.currentViewClass = previousView;
             objects.clear();
@@ -640,7 +631,8 @@ public final class SerializationProvider {
                                 ctx.cachedListElementClass = first.getClass();
                             }
                         } catch (Exception e) {
-                        }
+                // 反射操作失败，忽略此路径，回退到默认行为
+            }
                     }
                 }
                 if (serializer != null) {
@@ -812,6 +804,26 @@ public final class SerializationProvider {
 
     private static AsmSerializer<Object> captureSerializer(AsmSerializer<?> serializer) {
         return (AsmSerializer<Object>) serializer;
+    }
+
+    // ==================== 内部辅助方法 ====================
+
+    /**
+     * 包装序列化异常（消除 serialize() 和 serializeWithView() 中的重复异常处理代码）。
+     *
+     * @param obj 正在序列化的对象
+     * @param e 原始异常
+     * @return 包装后的 JsonSerializationException
+     */
+    private static JsonSerializationException wrapSerializationException(Object obj, Exception e) {
+        if (e instanceof JsonSerializationException jse) {
+            return jse;
+        }
+        return new JsonSerializationException(
+            JsonSerializationException.SERIALIZATION_ERROR,
+            "Serialization failed for " + obj.getClass().getName() + ": " + e.getMessage(),
+            e
+        );
     }
 
     /**

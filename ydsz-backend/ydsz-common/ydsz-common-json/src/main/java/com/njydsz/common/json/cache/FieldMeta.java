@@ -248,17 +248,20 @@ public final class FieldMeta {
                     Method serializerMethod = field.getType().getMethod(serializeUsing);
                     cs = MethodHandles.lookup().unreflect(serializerMethod);
                 } catch (Exception e) {
-                }
+                // 反射操作失败，忽略此路径，回退到默认行为
+            }
             }
             if (!deserializeUsing.isEmpty()) {
                 try {
                     Method deserializerMethod = field.getType().getMethod(deserializeUsing, String.class);
                     cd = MethodHandles.lookup().unreflect(deserializerMethod);
                 } catch (Exception e) {
-                }
+                // 反射操作失败，忽略此路径，回退到默认行为
+            }
             }
         } catch (Exception e) {
-        }
+                // 反射操作失败，忽略此路径，回退到默认行为
+            }
         this.setter = s;
         this.getter = g;
         this.varHandle = vh;

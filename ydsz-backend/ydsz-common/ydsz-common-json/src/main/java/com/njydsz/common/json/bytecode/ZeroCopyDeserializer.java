@@ -254,6 +254,7 @@ field.setAccessible(true);
             try {
                 s = MethodHandles.lookup().unreflectSetter(field);
             } catch (Exception e) {
+                // 反射操作失败，忽略此路径，回退到默认行为
             }
             this.setter = s;
         }

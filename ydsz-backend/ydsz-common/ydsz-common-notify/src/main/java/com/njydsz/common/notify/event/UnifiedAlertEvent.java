@@ -2,11 +2,12 @@ package com.njydsz.common.notify.event;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.UUID;
 
 import com.njydsz.common.domain.event.DomainEvent;
 import com.njydsz.common.domain.event.ModuleEventTypes;
 
-import lombok.Builder;
 import lombok.Getter;
 
 /**
@@ -84,7 +85,10 @@ public class UnifiedAlertEvent extends DomainEvent {
                              String targetUserIds, String pushChannels,
                              LocalDateTime triggeredAt, String tenantId, String traceId,
                              boolean recovery) {
-        super(ModuleEventTypes.UNIFIED_ALERT, sourceId, sourceModule);
+        super(UUID.randomUUID().toString(), LocalDateTime.now(), ModuleEventTypes.UNIFIED_ALERT,
+              sourceId, sourceModule, 1,
+              tenantId, null, traceId,
+              Collections.emptyMap());
         this.alertCode = alertCode;
         this.alertType = alertType;
         this.alertLevel = alertLevel;

@@ -176,6 +176,7 @@ public final class ValueFormatter {
                 sb.append("\"").append(field.jsonName).append("\": ");
                 formatValue(value, sb, indent + 1);
             } catch (Exception e) {
+                // 反射操作失败，忽略此路径，回退到默认行为
             }
         }
         sb.append("\n");

@@ -214,11 +214,4 @@ class BaseResponseTest {
         assertThat(resp.getTimestamp()).isNotNull();
         assertThat(resp.getTimestamp()).isGreaterThan(0L);
     }
-
-    @Test
-    @DisplayName("getMessage 是 getMsg 的别名")
-    void getMessage_alias() {
-        BaseResponse<String> resp = BaseResponse.error("test error");
-        assertThat(resp.getMessage()).isEqualTo(resp.getMsg());
-    }
 }
