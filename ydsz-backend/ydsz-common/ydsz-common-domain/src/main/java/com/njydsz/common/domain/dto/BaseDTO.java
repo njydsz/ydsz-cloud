@@ -87,10 +87,11 @@ public class BaseDTO implements Serializable {
      *
      * <p>客户端语言偏好，用于国际化（i18n）处理。
      * 格式：zh-CN, en-US 等。
-     * 默认值：zh-CN
+     * 默认值为 null，应由调用方从 RequestContext 或请求头中设置。
+     *
+     * @since 1.2.0 移除硬编码默认值 "zh-CN"，由调用方显式设置
      */
-    @lombok.Builder.Default
-    private String language = "zh-CN";
+    private String language;
 
     /**
      * 请求来源

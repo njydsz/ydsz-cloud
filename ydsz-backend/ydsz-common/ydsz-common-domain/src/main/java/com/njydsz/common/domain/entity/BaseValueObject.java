@@ -1,6 +1,7 @@
 package com.njydsz.common.domain.entity;
 
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -35,6 +36,7 @@ import java.util.Objects;
  * Address a1 = new Address("广东省", "深圳市", "南山区");
  * Address a2 = new Address("广东省", "深圳市", "南山区");
  * a1.equals(a2); // true
+ * a1.toString();  // Address{province=广东省, city=深圳市, detail=南山区}
  * }</pre>
  *
  * <p><b>注意：</b>子类必须将所有字段声明为 {@code final} 以保证不可变性。
@@ -52,12 +54,12 @@ public abstract class BaseValueObject implements ValueObject {
     /**
      * 获取值对象的所有属性值，用于相等性比较和哈希码计算
      *
-     * <p>子类必须实现此方法，返回所有参与相等性判断的属性值。
-     * 返回的顺序应保持一致，以确保 {@code hashCode} 的稳定性。
+     * <p>子类必须实现此方法，返回所有参与相等性判断的属性名与属性值。
+     * 使用 {@link LinkedHashMap} 保证迭代顺序稳定，确保 {@code hashCode} 的稳定性。
      *
-     * @return 属性值列表
+     * @return 属性名到属性值的映射
      */
-    protected abstract List<Object> identityValues();
+    protected abstract Map<String, Object> identityValues();
 
     @Override
     public boolean equals(Object obj) {
@@ -78,17 +80,19 @@ public abstract class BaseValueObject implements ValueObject {
 
     @Override
     public String toString() {
-        List<Object> values = identityValues();
+        Map<String, Object> values = identityValues();
         String simpleName = this.getClass().getSimpleName();
         if (values == null || values.isEmpty()) {
             return simpleName + "{}";
         }
         StringBuilder sb = new StringBuilder(simpleName).append('{');
-        for (int i = 0; i < values.size(); i++) {
+        int i = 0;
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
             if (i > 0) {
                 sb.append(", ");
             }
-            sb.append(values.get(i));
+            sb.append(entry.getKey()).append('=').append(entry.getValue());
+            i++;
         }
         return sb.append('}').toString();
     }

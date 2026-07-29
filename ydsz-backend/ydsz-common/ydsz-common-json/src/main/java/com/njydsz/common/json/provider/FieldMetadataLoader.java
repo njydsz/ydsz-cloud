@@ -9,7 +9,6 @@ import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
 import com.njydsz.common.json.annotation.JsonProperty;
-import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 import com.njydsz.common.json.annotation.YdszJsonVisibility;
 import com.njydsz.common.json.cache.FieldMeta;
@@ -134,7 +133,6 @@ public final class FieldMetadataLoader {
             YdszJsonField jsonField = field.getAnnotation(YdszJsonField.class);
             JsonProperty jacksonProperty = field.getAnnotation(JsonProperty.class);
             JsonIgnore jacksonIgnore = field.getAnnotation(JsonIgnore.class);
-            JsonFormat jacksonFormat = field.getAnnotation(JsonFormat.class);
             if (jsonField != null && jsonField.ignore()) {
                 continue;
             }

@@ -214,26 +214,6 @@ public class AesUtils {
         return crypto.decrypt(encryptedBase64);
     }
 
-    /**
-     * AES 加密（GCM 模式，显式方法别名）
-     *
-     * @deprecated 使用 {@link #encrypt(String, String)} 代替，该方法已默认 GCM 模式
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static String encryptGcm(String content, String hexAesKey) throws GeneralSecurityException {
-        return encrypt(content, hexAesKey);
-    }
-
-    /**
-     * AES 解密（GCM 模式，显式方法别名）
-     *
-     * @deprecated 使用 {@link #decrypt(String, String)} 代替，该方法已默认 GCM 模式
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static String decryptGcm(String encryptedBase64, String hexAesKey) throws GeneralSecurityException {
-        return decrypt(encryptedBase64, hexAesKey);
-    }
-
     // ==================== 兼容旧密文解密 ====================
 
     /**

@@ -17,10 +17,10 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  *
  * <p><b>设计特点：</b>
  * <ul>
- *   <li>模块化架。- 类似 Jackson Module，支持可插拔扩展</li>
- *   <li>优先级排。- 高优先级模块先注册，先注册的序列化器优先级更。</li>
- *   <li>Spring 集成 - 支持自动发现和注入Spring Bean 形式的模。</li>
- *   <li>双重注册。- 分离序列化器和反序列化器注册。</li>
+ *   <li>模块化架构 - 类似 Jackson Module，支持可插拔扩展</li>
+ *   <li>优先级排序 - 高优先级模块先注册，先注册的序列化器优先级更高</li>
+ *   <li>Spring 集成 - 支持自动发现和注入 Spring Bean 形式的模块</li>
+ *   <li>双重注册 - 分离序列化器和反序列化器注册</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
@@ -31,8 +31,8 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  * registry.registerModule(new OrderModule());
  *
  * // 2. Spring Boot 环境自动注册
- * // 只需实现 YdszJsonModule.SpringFactory 接口并添。@Component 注解
- * // JsonSpringConfig 会自动发现并注册所有模。
+ * // 只需实现 YdszJsonModule.SpringFactory 接口并添加 @Component 注解
+ * // JsonSpringConfig 会自动发现并注册所有模块
  *
  * // 3. 获取序列化器
  * JsonSerializer serializer = registry.getSerializer(User.class);
@@ -111,7 +111,7 @@ public final class JsonModuleRegistry {
     /**
      * 注册 Spring 工厂模块（自动发现）
      *
-     * <p>Spring Boot 环境下，自动发现所有实与 {@link YdszJsonModule.SpringFactory} 。Bean</p>
+     * <p>Spring Boot 环境下，自动发现所有实现 {@link YdszJsonModule.SpringFactory} 的 Bean</p>
      *
      * @param springFactories Spring 工厂模块实例
      */
@@ -124,9 +124,9 @@ public final class JsonModuleRegistry {
     }
 
     /**
-     * 初始化所有模。
+     * 初始化所有模块。
      *
-     * <p>按优先级从高到低依次调用模块的注册方向/p>
+     * <p>按优先级从高到低依次调用模块的注册方法</p>
      */
     public void initialize() {
         if (initialized) {
@@ -219,11 +219,11 @@ public final class JsonModuleRegistry {
     }
 
     /**
-     * 获取反序列化。
+     * 获取反序列化器。
      *
      * @param type 目标类型
      * @param <T> 类型参数
-     * @return 反序列化器，如果未找到返回null
+     * @return 反序列化器，如果未找到返回 null
      */
     
     public <T> JsonDeserializer<T> getDeserializer(Class<T> type) {
@@ -236,10 +236,10 @@ public final class JsonModuleRegistry {
     }
 
     /**
-     * 检查是否有指定类型的序列化。
+     * 检查是否有指定类型的序列化器。
      *
      * @param type 目标类型
-     * @return 如果有返。true
+     * @return 如果有返回 true
      */
     public boolean hasSerializer(Class<?> type) {
         return serializers.containsKey(type);
@@ -249,7 +249,7 @@ public final class JsonModuleRegistry {
      * 检查是否有指定类型的反序列化器
      *
      * @param type 目标类型
-     * @return 如果有返。true
+     * @return 如果有返回 true
      */
     public boolean hasDeserializer(Class<?> type) {
         return deserializers.containsKey(type);
@@ -288,9 +288,9 @@ public final class JsonModuleRegistry {
     }
 
     /**
-     * 重新初始。
+     * 重新初始化。
      *
-     * <p>清空所有注册并重新注册所有模。/p>
+     * <p>清空所有注册并重新注册所有模块</p>
      */
     public void reinitialize() {
         synchronized (this) {
@@ -302,7 +302,7 @@ public final class JsonModuleRegistry {
     }
 
     /**
-     * 获取已注册模块数。
+     * 获取已注册模块数量。
      *
      * @return 模块数量
      */
@@ -311,7 +311,7 @@ public final class JsonModuleRegistry {
     }
 
     /**
-     * 获取已注册序列化器数。
+     * 获取已注册序列化器数量。
      *
      * @return 序列化器数量
      */
@@ -322,7 +322,7 @@ public final class JsonModuleRegistry {
     /**
      * 获取已注册反序列化器数量
      *
-     * @return 反序列化器数。
+     * @return 反序列化器数量
      */
     public int getDeserializerCount() {
         return deserializers.size();

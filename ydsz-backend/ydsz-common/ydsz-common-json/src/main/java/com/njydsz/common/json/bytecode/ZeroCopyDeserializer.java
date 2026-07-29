@@ -324,7 +324,7 @@ field.setAccessible(true);
             }
         }
 
-        /** ppackage-private */ boolean matchesHashCode(int hash) {
+        /** package-private */ boolean matchesHashCode(int hash) {
             return nameHashCode == hash;
         }
     }

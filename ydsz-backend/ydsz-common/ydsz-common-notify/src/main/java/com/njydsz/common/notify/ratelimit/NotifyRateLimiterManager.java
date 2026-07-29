@@ -1,7 +1,11 @@
 package com.njydsz.common.notify.ratelimit;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.enums.NotifyChannel;
@@ -21,6 +25,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>动态调整：支持运行时修改限流参数</li>
  * </ul>
  *
+ * <p><b>架构说明：</b>本类为纯内存实现（单实例部署）。
+ * 多实例部署应使用 {@code com.njydsz.common.redis.service.RedisRateLimiter}
+ * 的 {@code tryAcquireSlidingWindow()} 方法实现分布式滑动窗口限流。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -36,12 +44,12 @@ public class NotifyRateLimiterManager {
     private static final int DEFAULT_MAX_REQUESTS = 100;
     private static final long DEFAULT_WINDOW_MILLIS = 60_000L;
 
-	/**
-	 * 构造限流管理器
-	 *
-	 * @param rateLimitConfig 限流配置
-	 */
-	public NotifyRateLimiterManager(NotifyProperties.RateLimit rateLimitConfig) {
+    /**
+     * 构造限流管理器
+     *
+     * @param rateLimitConfig 限流配置
+     */
+    public NotifyRateLimiterManager(NotifyProperties.RateLimit rateLimitConfig) {
         this.rateLimitConfig = rateLimitConfig;
         initializeLimiters();
     }
@@ -141,5 +149,114 @@ public class NotifyRateLimiterManager {
         return rateLimitConfig.getDefaultWindowSeconds() > 0
                 ? rateLimitConfig.getDefaultWindowSeconds() * 1000L
                 : DEFAULT_WINDOW_MILLIS;
+    }
+
+    /**
+     * 基于滑动窗口的限流器（内存级，单实例部署）
+     *
+     * <p>使用滑动窗口算法实现限流控制，适用于通知发送等场景的频率限制。
+     * 相比固定窗口，滑动窗口能更平滑地控制请求速率，避免窗口边界处的突发流量。
+     *
+     * <p>使用 ReentrantLock 替代 synchronized，避免 JDK 21 虚拟线程被固定（VT pinning）。
+     */
+    private static class SlidingWindowRateLimiter {
+
+        private final long windowSizeMillis;
+        private final int maxRequests;
+        private final int subWindowCount;
+        private final long subWindowSizeMillis;
+        private final AtomicInteger[] subWindowCounts;
+        private final AtomicLong[] subWindowTimestamps;
+        private final ReentrantLock acquireLock = new ReentrantLock();
+
+        SlidingWindowRateLimiter(int maxRequests, long windowSizeMillis) {
+            this(maxRequests, windowSizeMillis, 10);
+        }
+
+        SlidingWindowRateLimiter(int maxRequests, long windowSizeMillis, int subWindowCount) {
+            if (maxRequests <= 0) {
+                throw new IllegalArgumentException("maxRequests must be positive");
+            }
+            if (windowSizeMillis <= 0) {
+                throw new IllegalArgumentException("windowSizeMillis must be positive");
+            }
+            if (subWindowCount <= 0) {
+                throw new IllegalArgumentException("subWindowCount must be positive");
+            }
+
+            this.maxRequests = maxRequests;
+            this.windowSizeMillis = windowSizeMillis;
+            this.subWindowCount = subWindowCount;
+            this.subWindowSizeMillis = windowSizeMillis / subWindowCount;
+
+            this.subWindowCounts = new AtomicInteger[subWindowCount];
+            this.subWindowTimestamps = new AtomicLong[subWindowCount];
+
+            for (int i = 0; i < subWindowCount; i++) {
+                subWindowCounts[i] = new AtomicInteger(0);
+                subWindowTimestamps[i] = new AtomicLong(0);
+            }
+        }
+
+        boolean tryAcquire() {
+            long now = Instant.now().toEpochMilli();
+            int currentIndex = (int) ((now / subWindowSizeMillis) % subWindowCount);
+
+            acquireLock.lock();
+            try {
+                cleanExpiredSubWindows(now);
+
+                int totalRequests = calculateTotalRequests(now);
+
+                if (totalRequests >= maxRequests) {
+                    log.debug("[RateLimiter] 限流触发 | currentRequests={} | maxRequests={} | windowSize={}ms",
+                            totalRequests, maxRequests, windowSizeMillis);
+                    return false;
+                }
+
+                subWindowCounts[currentIndex].incrementAndGet();
+                subWindowTimestamps[currentIndex].set(now);
+
+                return true;
+            } finally {
+                acquireLock.unlock();
+            }
+        }
+
+        int getCurrentRequestCount() {
+            long now = Instant.now().toEpochMilli();
+            return calculateTotalRequests(now);
+        }
+
+        String getConfigInfo() {
+            return String.format("maxRequests=%d, windowSize=%dms, subWindows=%d",
+                    maxRequests, windowSizeMillis, subWindowCount);
+        }
+
+        private void cleanExpiredSubWindows(long now) {
+            long windowStart = now - windowSizeMillis;
+
+            for (int i = 0; i < subWindowCount; i++) {
+                long timestamp = subWindowTimestamps[i].get();
+                if (timestamp < windowStart) {
+                    subWindowCounts[i].set(0);
+                    subWindowTimestamps[i].set(0);
+                }
+            }
+        }
+
+        private int calculateTotalRequests(long now) {
+            long windowStart = now - windowSizeMillis;
+            int total = 0;
+
+            for (int i = 0; i < subWindowCount; i++) {
+                long timestamp = subWindowTimestamps[i].get();
+                if (timestamp >= windowStart) {
+                    total += subWindowCounts[i].get();
+                }
+            }
+
+            return total;
+        }
     }
 }

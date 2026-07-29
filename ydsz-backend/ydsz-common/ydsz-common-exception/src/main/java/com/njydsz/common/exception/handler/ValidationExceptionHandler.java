@@ -88,27 +88,6 @@ public class ValidationExceptionHandler {
     }
 
     /**
-     * 构建校验错误响应
-     *
-     * @deprecated 使用 {@link #buildExceptionInfo(String, String, String)} 替代，包含 traceId
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    private BaseResponse<?> buildValidationErrorResponse(String message, String path) {
-        ExceptionInfo info = new ExceptionInfo(
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(),
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT.getKey(),
-                message,
-                HttpStatus.BAD_REQUEST.value()
-        );
-        info.setPath(path);
-        return BaseResponse.error(
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(),
-                message,
-                info
-        );
-    }
-
-    /**
      * 处理参数校验异常（简单参数 @Validated）
      */
     @ExceptionHandler(ConstraintViolationException.class)

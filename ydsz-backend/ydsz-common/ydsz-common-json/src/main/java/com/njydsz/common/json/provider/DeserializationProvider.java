@@ -111,15 +111,17 @@ public final class DeserializationProvider {
         if (type == Map.class) return YdszJsonParser.parseObject(json);
         if (type == List.class) return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
 
-        // 缓存路径：使用策略缓存避免每次反序列化都重新判断类型
-        DeserializationStrategy strategy = STRATEGY_CACHE.get(type);
-        if (strategy == null) {
-            // 首次遇到此类型，确定策略并缓存
-            strategy = DeserializationStrategy.BEAN; // 。PRIMITIVE/OBJECT/MAP/LIST 的都不是 BEAN
-            STRATEGY_CACHE.put(type, strategy);
-        }
+// 缓存路径：使用策略缓存避免每次反序列化都重新判断类型
+// 注意：当前所有非简单类型都走 BEAN 策略，缓存主要用于标记"已分析过"避免重复类型检查
+DeserializationStrategy strategy = STRATEGY_CACHE.get(type);
+if (strategy == null) {
+    // 首次遇到此类型，确定策略并缓存
+    strategy = DeserializationStrategy.BEAN;
+    STRATEGY_CACHE.put(type, strategy);
+}
 
-        return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
+// 根据策略分派（当前统一走 BEAN 路径，后续可扩展其他策略）
+return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
     }
 
     /**

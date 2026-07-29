@@ -23,7 +23,7 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | 类 | 说明 |
 |---|---|
 | `YdszJson` | JSON 统一入口（序列化 / 反序列化 / 树操作 / 流式 API / ASM 预热 / 单次配置序列化） |
-| `YdszJsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper，独立配置副本 / Metrics 回调 / 树模型 / JSONPath / 视图过滤） |
+| `YdszJsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper，独立配置副本 / Metrics 回调 / 树模型 / JSONPath / 视图过滤 / convertValue / treeToValue / writeValueAsString / writeValueAsBytes / format） |
 | `YdszJsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 根名称包裹 / 最大 JSON 大小 / 最大深度） |
 | `DeserializationConfig` | 反序列化配置（AutoType 安全检查委托） |
 
@@ -89,6 +89,9 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | 注解 | 说明 |
 |---|---|
 | `@YdszJsonField` | 字段映射（名称 / 格式 / 序列化控制） |
+| `@JsonProperty` | JSON 属性名称映射（Jackson 兼容，等价 @YdszJsonField.value） |
+| `@JsonIgnore` | 忽略字段（Jackson 兼容，等价 @YdszJsonField.ignore=true） |
+| `@JsonFormat` | 日期/数字格式化（Jackson 兼容，等价 @YdszJsonField.format） |
 | `@JsonAlias` | 反序列化别名（Jackson 兼容） |
 | `@YdszJsonFormat` | 格式化（日期 / 数字） |
 | `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT，Jackson 兼容） |
@@ -327,4 +330,32 @@ YdszJson (Facade, 用户接口)
 |---|---|---|
 | P2 | byte[] 直接解析路径 | 当前解析链基于 char[]，网络场景存在 byte[]→String→char[] 双重转换。计划新增 byte[] 直接解析路径，ASCII JSON 直接在 byte[] 上操作，非 ASCII 才转码。对标 FastJSON2 的 JSONReader byte[] 模式。 |
 | P3 | 流式增量解析（Streaming Parser） | 当前 YdszJsonParser 需全量加载 JSON 到 char[]，无法处理超大 JSON 流式解析。计划基于 InputStream 实现 token-by-token 增量解析器，对标 Jackson JsonParser。 |
-8. **Optional / UUID 原生支持**：序列化时自动展开 Optional、UUID 转字符串。
+| P3 | Optional / UUID 原生支持 | 序列化时自动展开 Optional、UUID 转字符串。 |
+| P3 | Schema/Patch 扩展能力 | JSON Schema 生成、JSON Patch (RFC 6902) 和 Merge Patch 为独立工具类，非核心路径，保留为扩展能力。 |
+
+## 已完成优化记录（第六轮，2026-07-29）
+
+| 级别 | 项 | 描述 |
+|---|---|---|
+| P0-1 | parseStringField 转义解码修复 | ASM 快速路径 parseStringField 现在正确解码 JSON 转义序列（\n/\"/\\ 等） |
+| P0-2 | DeserializationProvider Set 分支修复 | Set 泛型反序列化路径新增 return 语句和 Set 实例化逻辑 |
+| P0-3 | AutoTypeChecker 缓存有界化 | TYPE_CHECK_CACHE 从无界 ConcurrentHashMap 改为 LRU 有界缓存（max 4096） |
+| P0-4 | parseObject(json, clazz) 类型转换修复 | 非 Map 类型不再直接 cast，委托 YdszJson 反序列化为目标 Bean |
+| P1-1 | Jackson 兼容注解 | 新增 @JsonProperty / @JsonIgnore / @JsonFormat 注解，FieldMetadataLoader + FieldMeta 集成 |
+| P1-2 | YdszJsonMapper API 补全 | 新增 convertValue/treeToValue/writeValueAsString/writeValueAsBytes/readValue(String,Type)/format |
+| P1-3 | 配置项补全 | YdszJsonProperties 新增 wrapRootValue/failOnError 配置项 |
+| P1-4 | recordSerialize/recordDeserialize 去重 | 提取 recordOperation 统一方法消除重复 |
+| P1-5 | SerializationProvider 代码去重 | 提取 logAsmDowngrade 统一 ASM 降级日志，serializeToBytes 复用 wrapSerializationException |
+| P1-6 | JSONWriter.writeCollection 去重 | 提取 writeCollectionElement 消除 List/非List 路径约 40 行重复代码 |
+| P1-7 | Engine 层死代码清理 | 删除 SerializerEngine.java + DeserializerEngine.java（纯 Facade 委托，零外部引用） |
+| P2-1 | ASM 字段解析性能优化 | 新增 buildFieldPositionMap 单遍扫描方法，O(N*M)→O(N+M) |
+| P2-2 | parseNumberFast 幂表优化 | Math.pow(10,n) 替换为预计算 POW10 数组查表 |
+| P2-3 | ThreadLocalSnapshot 模板消除 | 提取 withConfig 辅助方法统一 snapshot/apply/restore 模式 |
+| P2-4 | FieldMeta 空 catch 块注释 | 12 处空 catch (Throwable/Exception) 块添加注释说明回退策略 |
+| P2-5 | STRATEGY_CACHE 逻辑修正 | 补充策略注释 + 修复格式化问题 |
+| P2-6 | JsonModuleRegistry Javadoc 修复 | 11 处乱码/截断的 Javadoc 注释修复 |
+| P2-7 | JsonAutoConfiguration Javadoc 修正 | "基于 Jackson 二次封装" 修正为 "自研 JSON 引擎" |
+| P3-1 | ppackage-private 拼写修正 | 3 处 "ppackage-private" 修正为 "package-private" |
+| P3-2 | YdszJsonMapperTest 测试补全 | 新建 20 个测试方法覆盖全量 Mapper API |
+| P3-3 | additional-spring-configuration-metadata.json 补全 | 新增 wrap-root-value/failOnError 配置项 |
+

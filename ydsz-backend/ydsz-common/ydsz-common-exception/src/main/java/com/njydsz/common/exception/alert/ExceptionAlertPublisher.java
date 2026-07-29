@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,12 +147,14 @@ public class ExceptionAlertPublisher {
                 return;
             }
 
-            // 检查去重窗口
+            // 检查去重窗口（取 dedupWindow 和 silencePeriod 中的较大值作为抑制窗口）
             String dedupKey = ex.getCode();
             Long lastTime = lastAlertTime.get(dedupKey);
             long now = System.currentTimeMillis();
-            if (lastTime != null && (now - lastTime) < dedupWindowMillis) {
-                log.debug("异常告警被去重策略抑制 | code={} | 距上次告警 {}ms", ex.getCode(), now - lastTime);
+            long suppressWindow = Math.max(dedupWindowMillis, silencePeriodMillis);
+            if (lastTime != null && (now - lastTime) < suppressWindow) {
+                log.debug("异常告警被去重/静默策略抑制 | code={} | 距上次告警 {}ms | 抑制窗口 {}ms",
+                        ex.getCode(), now - lastTime, suppressWindow);
                 return;
             }
             lastAlertTime.put(dedupKey, now);
@@ -244,7 +245,7 @@ public class ExceptionAlertPublisher {
      * <p>当去重记录超过最大容量时，移除所有已过期的记录以防止内存泄漏。
      */
     public void cleanupExpiredDedupEntries() {
-        long threshold = System.currentTimeMillis() - dedupWindowMillis;
+        long threshold = System.currentTimeMillis() - Math.max(dedupWindowMillis, silencePeriodMillis);
         lastAlertTime.entrySet().removeIf(entry -> entry.getValue() < threshold);
     }
 }

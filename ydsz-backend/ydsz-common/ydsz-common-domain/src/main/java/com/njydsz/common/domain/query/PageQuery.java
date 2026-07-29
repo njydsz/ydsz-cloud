@@ -123,8 +123,8 @@ public class PageQuery extends BaseQuery {
      * <p>注意：通过 {@link #addOrder(String, boolean)} 添加的排序项会经过安全校验，
      * 直接通过 setter 设置的排序项时 {@link #getOrderSql()} 时也会进行二次校验）
      *
-     * <p>orderBy 。ascending 字段继承自 {@link BaseQuery}。
-     * 本类通过覆写 {@link #setOrderBy(String)} 和 {@link #getOrderBy()} 安全校验）
+     * <p>ascending 字段继承自 {@link BaseQuery}。
+     * 本类通过覆写 {@link #setOrderBy(String)} 进行安全校验）
      */
     @Builder.Default
     private List<String> orderItems = new ArrayList<>();
@@ -279,16 +279,16 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置排序字符串（覆盖 Lombok 生成。setter）
+     * 设置排序字符串（覆盖 Lombok 生成的 setter）
      *
-     * <p>。orderBy 进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法排序项。
-     * 防止直接注入恶意 SQL 排序字段
+     * <p>对传入的排序字符串进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法排序项。
+     * 防止直接注入恶意 SQL 排序字段。校验通过的排序项会被添加到 {@link #orderItems} 列表中。
      *
      * @param orderBy 原始排序字符串，格式：field1 ASC, field2 DESC
      */
     public void setOrderBy(String orderBy) {
         if (orderBy == null || orderBy.isBlank()) {
-            super.setOrderBy(null);
+            this.orderItems = new ArrayList<>();
             return;
         }
         String[] parts = orderBy.split(",");
@@ -300,24 +300,7 @@ public class PageQuery extends BaseQuery {
                 safeParts.add(trimmed);
             }
         }
-        super.setOrderBy(safeParts.isEmpty() ? null : String.join(", ", safeParts));
-    }
-
-    /**
-     * 获取排序字符串（从 orderItems 派生）
-     *
-     * <p>从 {@link #orderItems} 列表拼接为排序字符串。此方法为向后兼容方法，
-     * 推荐直接使用 {@link #getOrderItems()} 获取排序项列表。
-     *
-     * @return 安全的排序字符串
-     * @deprecated 推荐使用 {@link #getOrderItems()} 管理排序
-     */
-    @Deprecated(since = "1.2.0", forRemoval = true)
-    public String getOrderBy() {
-        if (orderItems == null || orderItems.isEmpty()) {
-            return null;
-        }
-        return String.join(", ", orderItems);
+        this.orderItems = safeParts;
     }
 
     /**

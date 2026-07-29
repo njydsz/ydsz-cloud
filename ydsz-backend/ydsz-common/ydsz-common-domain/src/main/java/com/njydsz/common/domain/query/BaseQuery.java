@@ -32,7 +32,6 @@ import lombok.experimental.SuperBuilder;
  *   <tr><td>startDateTime</td><td>LocalDateTime</td><td>开始时间</td></tr>
  *   <tr><td>endDateTime</td><td>LocalDateTime</td><td>结束时间</td></tr>
  *   <tr><td>tenantId</td><td>String</td><td>租户ID</td></tr>
- *   <tr><td>orderBy</td><td>String</td><td>排序字段</td></tr>
  *   <tr><td>ascending</td><td>Boolean</td><td>是否升序</td></tr>
  * </table>
  *
@@ -89,26 +88,9 @@ public class BaseQuery implements Serializable {
     private String tenantId;
 
     /**
-     * 排序字段
-     *
-     * <p>用于指定排序字段，多个字段用逗号分隔。
-     * 格式：field1 ASC, field2 DESC
-     *
-     * <p><b>注意：</b>直接设置此字段可能存在 SQL 注入风险。
-     * 建议使用 {@link PageQuery#addOrder(String, boolean)} 方法。
-     *
-     * <p><b>废弃说明：</b>推荐使用 {@link PageQuery#getOrderItems()} 列表方式管理排序项，
-     * 提供更细粒度的控制和安全校验。此字段保留用于向后兼容。
-     *
-     * @deprecated 推荐使用 {@link PageQuery#addOrder(String, boolean)} 管理排序
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    private String orderBy;
-
-    /**
      * 是否升序
      *
-     * <p>配合 orderBy 使用，控制排序方向。
+     * <p>控制排序方向，配合子类的排序项使用。
      * <ul>
      *   <li>true - 升序（ASC）</li>
      *   <li>false - 降序（DESC）</li>
@@ -124,6 +106,34 @@ public class BaseQuery implements Serializable {
      */
     public boolean hasTimeRange() {
         return startDateTime != null || endDateTime != null;
+    }
+
+    /**
+     * 判断时间范围是否合法
+     *
+     * <p>当 startDateTime 和 endDateTime 均不为 null 时，
+     * 检查 startDateTime 不晚于 endDateTime。任一为 null 时视为合法。
+     *
+     * @return 时间范围合法返回 true
+     * @since 1.2.0
+     */
+    public boolean isValidTimeRange() {
+        return startDateTime == null || endDateTime == null
+                || !startDateTime.isAfter(endDateTime);
+    }
+
+    /**
+     * 校验时间范围，非法时抛出异常
+     *
+     * @throws IllegalArgumentException 当 startDateTime 晚于 endDateTime 时
+     * @since 1.2.0
+     */
+    public void validateTimeRange() {
+        if (!isValidTimeRange()) {
+            throw new IllegalArgumentException(
+                "startDateTime must not be after endDateTime: start=" + startDateTime
+                + ", end=" + endDateTime);
+        }
     }
 
     /**

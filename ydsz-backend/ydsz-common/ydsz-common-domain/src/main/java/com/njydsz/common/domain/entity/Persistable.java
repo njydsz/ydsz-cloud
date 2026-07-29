@@ -40,17 +40,14 @@ public interface Persistable<T extends Serializable> extends Serializable {
     /**
      * 判断实体是否为新建状态（尚未持久化）
      *
-     * <p>判断逻辑。
+     * <p>判断逻辑（P2-6 增强：支持 UUID 主键场景）：
      * <ul>
-     *   <li>ID 。null 时，视为新实体</li>
-     *   <li>ID 。Number 类型且值为 0 时，视为新实体（自增主键场景。</li>
-     *   <li>ID 。String 类型时，无法通过 isEmpty 判断新建状态（UUID 主键在构造时即赋值）。
-     *       默认返回 false，使。UUID 主键的实体应覆写此方法</li>
+     *   <li>ID 为 null 时，视为新实体</li>
+     *   <li>ID 为 Number 类型且值为 0 时，视为新实体（自增主键场景）</li>
+     *   <li>ID 为 String/UUID 类型时，如果实体实现了 {@link Auditable}，
+     *       则检查 {@code createdAt == null} 判断新建状态</li>
+     *   <li>其他情况默认返回 false</li>
      * </ul>
-     *
-     * <p><b>注意：</b>UUID 主键在构造时就已赋值，{@code isEmpty()} 永远返回 false。
-     * 因此无法通过此默认实现正确判。UUID 主键实体的新建状态。
-     * 建议使用 UUID 主键的子类根据实际情况覆写此方法（例如结为 {@code @Version} 字段判断）。
      *
      * @return true 表示新实体（尚未持久化），false 表示已持久化
      */
@@ -62,9 +59,10 @@ public interface Persistable<T extends Serializable> extends Serializable {
         if (id instanceof Number) {
             return ((Number) id).longValue() == 0;
         }
-        // UUID主键在构造时就已赋值，无法通过isEmpty判断
-        // 对于String类型ID，如果是UUID格式则不应依赖isEmpty判断
-        // 建议子类根据实际情况覆写此方法
+        // UUID/String 主键场景：通过 Auditable.createdAt 判断
+        if (this instanceof Auditable) {
+            return ((Auditable) this).getCreatedAt() == null;
+        }
         return false;
     }
 }

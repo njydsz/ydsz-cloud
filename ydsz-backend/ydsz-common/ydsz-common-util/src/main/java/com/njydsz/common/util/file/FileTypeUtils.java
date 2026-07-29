@@ -144,7 +144,7 @@ public class FileTypeUtils {
         if (lastDotIndex == -1 || lastDotIndex == fileName.length() - 1) {
             return StringUtils.EMPTY;
         }
-        return StringUtils.lowerCase(fileName.substring(lastDotIndex + 1));
+        return StringUtils.toLower(fileName.substring(lastDotIndex + 1));
     }
 
     /**
@@ -258,7 +258,7 @@ public class FileTypeUtils {
         if (StringUtils.isBlank(extension)) {
             return "application/octet-stream";
         }
-        return MIME_TYPE_MAP.getOrDefault(StringUtils.lowerCase(extension), "application/octet-stream");
+        return MIME_TYPE_MAP.getOrDefault(StringUtils.toLower(extension), "application/octet-stream");
     }
 
     /**
@@ -311,7 +311,7 @@ public class FileTypeUtils {
      */
     public static boolean isImage(String filePath) {
         String detectedType = detectFileType(filePath);
-        return getImageExtensions().contains(StringUtils.lowerCase(detectedType));
+        return getImageExtensions().contains(StringUtils.toLower(detectedType));
     }
 
     /**
@@ -319,7 +319,7 @@ public class FileTypeUtils {
      */
     public static boolean isImage(byte[] fileBytes) {
         String detectedType = getFileExtendName(fileBytes);
-        return getImageExtensions().contains(StringUtils.lowerCase(detectedType));
+        return getImageExtensions().contains(StringUtils.toLower(detectedType));
     }
 
     /**
@@ -327,7 +327,7 @@ public class FileTypeUtils {
      */
     public static boolean isVideo(String filePath) {
         String detectedType = detectFileType(filePath);
-        return getVideoExtensions().contains(StringUtils.lowerCase(detectedType));
+        return getVideoExtensions().contains(StringUtils.toLower(detectedType));
     }
 
     /**
@@ -335,7 +335,7 @@ public class FileTypeUtils {
      */
     public static boolean isAudio(String filePath) {
         String detectedType = detectFileType(filePath);
-        return getAudioExtensions().contains(StringUtils.lowerCase(detectedType));
+        return getAudioExtensions().contains(StringUtils.toLower(detectedType));
     }
 
     /**
@@ -343,7 +343,7 @@ public class FileTypeUtils {
      */
     public static boolean isDocument(String filePath) {
         String detectedType = detectFileType(filePath);
-        return getDocumentExtensions().contains(StringUtils.lowerCase(detectedType));
+        return getDocumentExtensions().contains(StringUtils.toLower(detectedType));
     }
 
     /**
@@ -351,7 +351,7 @@ public class FileTypeUtils {
      */
     public static boolean isArchive(String filePath) {
         String detectedType = detectFileType(filePath);
-        return getArchiveExtensions().contains(StringUtils.lowerCase(detectedType));
+        return getArchiveExtensions().contains(StringUtils.toLower(detectedType));
     }
 
     /**
@@ -362,7 +362,7 @@ public class FileTypeUtils {
             return true;
         }
         String extension = getFileType(filePath);
-        return allowedExtensions.contains(StringUtils.lowerCase(extension));
+        return allowedExtensions.contains(StringUtils.toLower(extension));
     }
 
     /**
@@ -373,7 +373,7 @@ public class FileTypeUtils {
             return true;
         }
         String detectedType = detectFileType(filePath);
-        return allowedTypes.contains(StringUtils.lowerCase(detectedType));
+        return allowedTypes.contains(StringUtils.toLower(detectedType));
     }
 
     /**
@@ -425,7 +425,7 @@ public class FileTypeUtils {
         if (StringUtils.isBlank(suffix)) {
             return false;
         }
-        String lowerSuffix = StringUtils.lowerCase(suffix);
+        String lowerSuffix = StringUtils.toLower(suffix);
         return "png".equals(lowerSuffix) || "bmp".equals(lowerSuffix) || 
                "jpg".equals(lowerSuffix) || "jpeg".equals(lowerSuffix) || 
                "gif".equals(lowerSuffix) || "svg".equals(lowerSuffix) || 
@@ -439,7 +439,7 @@ public class FileTypeUtils {
         if (StringUtils.isBlank(suffix)) {
             return false;
         }
-        String lowerSuffix = StringUtils.lowerCase(suffix);
+        String lowerSuffix = StringUtils.toLower(suffix);
         return "mp4".equals(lowerSuffix) || "flv".equals(lowerSuffix) || 
                "avi".equals(lowerSuffix) || "mkv".equals(lowerSuffix) || 
                "mov".equals(lowerSuffix) || "wmv".equals(lowerSuffix) || 
@@ -453,7 +453,7 @@ public class FileTypeUtils {
         if (StringUtils.isBlank(suffix)) {
             return false;
         }
-        String lowerSuffix = StringUtils.lowerCase(suffix);
+        String lowerSuffix = StringUtils.toLower(suffix);
         return "mp3".equals(lowerSuffix) || "wma".equals(lowerSuffix) || 
                "wav".equals(lowerSuffix) || "flac".equals(lowerSuffix) || 
                "aac".equals(lowerSuffix);
@@ -466,7 +466,7 @@ public class FileTypeUtils {
         if (StringUtils.isBlank(suffix)) {
             return false;
         }
-        String lowerSuffix = StringUtils.lowerCase(suffix);
+        String lowerSuffix = StringUtils.toLower(suffix);
         return "txt".equals(lowerSuffix) || "md".equals(lowerSuffix) || 
                "doc".equals(lowerSuffix) || "docx".equals(lowerSuffix) || 
                "xls".equals(lowerSuffix) || "xlsx".equals(lowerSuffix) || 
@@ -481,7 +481,7 @@ public class FileTypeUtils {
         if (StringUtils.isBlank(suffix)) {
             return false;
         }
-        String lowerSuffix = StringUtils.lowerCase(suffix);
+        String lowerSuffix = StringUtils.toLower(suffix);
         return "java".equals(lowerSuffix) || "sql".equals(lowerSuffix) || 
                "js".equals(lowerSuffix) || "py".equals(lowerSuffix) || 
                "py3".equals(lowerSuffix) || "php".equals(lowerSuffix) || 
@@ -498,7 +498,7 @@ public class FileTypeUtils {
         if (StringUtils.isBlank(suffix)) {
             return false;
         }
-        String lowerSuffix = StringUtils.lowerCase(suffix);
+        String lowerSuffix = StringUtils.toLower(suffix);
         return getImageExtensions().contains(lowerSuffix) || 
                getVideoExtensions().contains(lowerSuffix) || 
                getAudioExtensions().contains(lowerSuffix) || 

@@ -3,6 +3,7 @@ com.njydsz.common.exception.config.WebI18nConfiguration
 com.njydsz.common.exception.config.ExceptionMetricsAutoConfiguration
 com.njydsz.common.exception.config.ExceptionCodeDocEndpointAutoConfiguration
 com.njydsz.common.exception.config.ExceptionAlertAutoConfiguration
+com.njydsz.common.exception.config.ExceptionHealthAutoConfiguration
 com.njydsz.common.exception.config.JdbcExceptionHandlerAutoConfiguration
 com.njydsz.common.exception.config.TraceFilterAutoConfiguration
 com.njydsz.common.exception.handler.MvcExceptionHandlerAutoConfiguration

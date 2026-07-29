@@ -512,16 +512,6 @@ public class BeanCopyUtils {
     // ==================== 集合转换方法 ====================
 
     /**
-     * 转换 List 泛型（别名，内部调用 copyListProperties）
-     *
-     * @deprecated 使用 {@link #copyListProperties(List, Class)} 代替
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static <T> List<T> coverList(List<?> source, Class<T> clazz) {
-        return copyListProperties(source, clazz);
-    }
-
-    /**
      * 转换 Set 泛型
      *
      * @param source 数据源

@@ -129,22 +129,6 @@ public final class HttpClientFactory {
         return builder.build();
     }
 
-    /**
-     * 创建 OkHttpClient 实例（自定义 + 注入拦截器）
-     *
-     * @param interceptors 拦截器提供者（Spring）
-     * @return OkHttpClient 实例
-     * @deprecated 使用 {@link #create(OkHttpProperties, ObjectProvider)} 代替，支持配置化
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static OkHttpClient create(ObjectProvider<Interceptor> interceptors) {
-        OkHttpClient.Builder builder = newBuilder();
-        if (interceptors != null) {
-            interceptors.orderedStream().forEach(builder::addInterceptor);
-        }
-        return builder.build();
-    }
-
     private static Dispatcher newDispatcher() {
         ThreadPoolExecutor executor = (ThreadPoolExecutor) ExecutorUtils.newCachedThreadPool("ydsz-okhttp-");
         return new Dispatcher(executor);

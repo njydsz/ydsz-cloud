@@ -64,6 +64,16 @@
       "name": "ydsz.json.use-big-decimal",
       "type": "java.lang.Boolean",
       "description": "是否使用 BigDecimal 解析浮点数（金融场景精度保护，默认 false）。启用后包含小数点的数字将被解析为 BigDecimal，避免精度丢失。"
+    },
+    {
+      "name": "ydsz.json.wrap-root-value",
+      "type": "java.lang.Boolean",
+      "description": "是否包裹根对象（对标 Jackson @JsonRootValue / ObjectMapper.wrapRootValue，默认 false）。启用后序列化时使用类名作为根节点包裹 JSON 对象。"
+    },
+    {
+      "name": "ydsz.json.fail-on-error",
+      "type": "java.lang.Boolean",
+      "description": "反序列化失败时是否抛出异常（true，默认）或返回 null（false）。"
     }
   ]
 }

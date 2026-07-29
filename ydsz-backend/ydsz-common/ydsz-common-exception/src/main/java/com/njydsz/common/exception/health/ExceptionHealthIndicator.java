@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.exception.alert.ExceptionAlertPublisher;
 import com.njydsz.common.exception.config.ExceptionProperties;

@@ -51,8 +51,85 @@
     {
       "name": "ydsz.exception.alert-silence-period-seconds",
       "type": "java.lang.Integer",
-      "description": "告警全局静默期（秒，0=不静默）。",
+      "description": "告警静默期（秒），同一 errorCode 在静默期内不重复告警。0 表示不静默。",
+      "defaultValue": 300
+    },
+    {
+      "name": "ydsz.exception.problem-detail-type-base-url",
+      "type": "java.lang.String",
+      "description": "ProblemDetail type URI 基础 URL（RFC 7807），用于构建 problem.type 字段指向错误码文档。",
+      "defaultValue": "about:blank"
+    },
+    {
+      "name": "ydsz.exception.metrics-include-code-tag",
+      "type": "java.lang.Boolean",
+      "description": "是否在 Micrometer 指标中包含高基数 code tag。注意：code tag 可能导致 Prometheus 指标爆炸，仅在错误码数量可控时开启。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.exception.async-alert-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用异步告警发布（避免阻塞请求线程）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.async-alert-pool-size",
+      "type": "java.lang.Integer",
+      "description": "异步告警线程池大小。",
+      "defaultValue": 2
+    },
+    {
+      "name": "ydsz.i18n.basename",
+      "type": "java.lang.String",
+      "description": "国际化资源文件基路径，支持 classpath:、file: 等 Spring Resource 协议。",
+      "defaultValue": "classpath:i18n/messages"
+    },
+    {
+      "name": "ydsz.i18n.encoding",
+      "type": "java.lang.String",
+      "description": "国际化资源文件编码。",
+      "defaultValue": "UTF-8"
+    },
+    {
+      "name": "ydsz.i18n.dev-cache-seconds",
+      "type": "java.lang.Integer",
+      "description": "开发环境缓存刷新间隔（秒），0 表示不缓存。仅在 dev/test profile 下生效。",
       "defaultValue": 0
+    },
+    {
+      "name": "ydsz.i18n.prod-cache-seconds",
+      "type": "java.lang.Integer",
+      "description": "生产环境缓存刷新间隔（秒）。",
+      "defaultValue": 3600
+    },
+    {
+      "name": "ydsz.i18n.fallback-to-system-locale",
+      "type": "java.lang.Boolean",
+      "description": "当请求语言不在 supportedLocales 中时，是否回退到系统默认 Locale。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.i18n.default-message",
+      "type": "java.lang.String",
+      "description": "找不到国际化消息时的默认提示。占位符 {0} 会被替换为实际的消息键。",
+      "defaultValue": "未找到对应的提示信息: {0}"
+    },
+    {
+      "name": "ydsz.i18n.supported-locales",
+      "type": "java.util.List<java.lang.String>",
+      "description": "支持的语言列表，用于解析 Accept-Language 请求头和验证 lang 参数。"
+    },
+    {
+      "name": "ydsz.i18n.lang-param-name",
+      "type": "java.lang.String",
+      "description": "自定义语言参数名称，用于从请求参数中解析语言。",
+      "defaultValue": "lang"
+    },
+    {
+      "name": "ydsz.i18n.i18n-base-names",
+      "type": "java.lang.String",
+      "description": "国际化资源文件基础名（备用），与 basename 类似但优先级不同。",
+      "defaultValue": "i18n/messages"
     },
     {
       "name": "ydsz.i18n.validate-on-startup",

@@ -517,7 +517,14 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     /** 自动构建所有节点的路径 */
     private void generatePaths(List<T> nodeList, Map<ID, T> nodeMap) {
-        for (T node : nodeList) {
+        // 按 level 升序排序，确保父节点路径先生成（P2-5 修复：消除对 nodeList 顺序的隐含依赖）
+        List<T> sorted = new ArrayList<>(nodeList);
+        sorted.sort(Comparator.comparingInt(n -> {
+            Integer level = n.getLevel();
+            return level != null ? level : TreeNode.ROOT_LEVEL;
+        }));
+
+        for (T node : sorted) {
             ID parentId = parentIdExtractor.apply(node);
             if (parentId != null) {
                 T parent = nodeMap.get(parentId);

@@ -29,7 +29,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 /**
  * Ydsz JSON 自动配置。
  *
- * <p>注册全局 {@code YdszJson} Bean（基于 Jackson 二次封装），支持 Long 转 String、日期格式化、
+ * <p>注册全局 {@code YdszJson} Bean（自研 JSON 引擎，非 Jackson 封装），支持 Long 转 String、日期格式化、
  *
  * <p>脱敏字段、未知字段忽略、BigDecimal 精度等统一序列化策略。
  *

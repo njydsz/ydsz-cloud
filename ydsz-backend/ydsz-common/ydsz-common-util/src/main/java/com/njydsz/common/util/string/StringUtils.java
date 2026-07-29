@@ -656,26 +656,6 @@ public class StringUtils {
         return str == null ? null : str.toLowerCase();
     }
 
-    /**
-     * 转小写（别名方法，兼容 Apache Commons Lang3）
-     *
-     * @deprecated 使用 {@link #toLower(String)} 代替
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static String lowerCase(String str) {
-        return toLower(str);
-    }
-
-    /**
-     * 转大写（别名方法，兼容 Apache Commons Lang3）
-     *
-     * @deprecated 使用 {@link #toUpper(String)} 代替
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static String upperCase(String str) {
-        return toUpper(str);
-    }
-
     // ==================== 字符串比较方法 ====================
 
     /**

@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -40,9 +39,11 @@ public class SpELConditionEvaluator {
     private final ExpressionParser parser = new SpelExpressionParser();
 
     /** 是否启用表达式缓存 */
+    @SuppressWarnings("unused")
     private final boolean cacheEnabled;
 
     /** 表达式缓存最大容量（0 表示无限制） */
+    @SuppressWarnings("unused")
     private final int cacheMaxSize;
 
     /** 表达式解析缓存，避免重复解析相同表达式 */
@@ -130,8 +131,10 @@ public class SpELConditionEvaluator {
     }
 
     private EvaluationContext buildEvaluationContext(Map<String, Object> context) {
-        StandardEvaluationContext evalContext = new StandardEvaluationContext();
-        evalContext.addPropertyAccessor(new MapAccessor());
+        StandardEvaluationContext evalContext = new StandardEvaluationContext(context);
+        @SuppressWarnings("removal")
+        org.springframework.context.expression.MapAccessor mapAccessor = new org.springframework.context.expression.MapAccessor();
+        evalContext.addPropertyAccessor(mapAccessor);
         if (context != null) {
             for (Map.Entry<String, Object> entry : context.entrySet()) {
                 evalContext.setVariable(entry.getKey(), entry.getValue());

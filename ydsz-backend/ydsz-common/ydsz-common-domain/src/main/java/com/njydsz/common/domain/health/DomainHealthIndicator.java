@@ -36,18 +36,6 @@ public class DomainHealthIndicator implements HealthIndicator {
     /**
      * 构造 Domain 模块健康指标
      *
-     * @param domainEventPublisher 领域事件发布器（可为 null）
-     * @param treeLazyConfig       树懒加载配置（可为 null）
-     * @deprecated 使用 {@link #DomainHealthIndicator(DomainEventPublisher, TreeLazyConfig, ObjectProvider, ObjectProvider)} 替代
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public DomainHealthIndicator(DomainEventPublisher domainEventPublisher, TreeLazyConfig treeLazyConfig) {
-        this(domainEventPublisher, treeLazyConfig, null, null);
-    }
-
-    /**
-     * 构造 Domain 模块健康指标（全参数）
-     *
      * @param domainEventPublisher          领域事件发布器（可为 null）
      * @param treeLazyConfig               树懒加载配置（可为 null）
      * @param spELConditionEvaluatorProvider SpEL 评估器提供者（可为 null）

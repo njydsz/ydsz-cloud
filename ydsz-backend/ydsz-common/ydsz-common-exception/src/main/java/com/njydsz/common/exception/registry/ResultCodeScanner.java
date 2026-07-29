@@ -1,9 +1,5 @@
 package com.njydsz.common.exception.registry;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.type.classreading.MetadataReader;

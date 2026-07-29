@@ -296,16 +296,6 @@ public class PwdUtils {
     }
 
     /**
-     * 获取默认密码的加盐哈希值
-     *
-     * @deprecated 使用 {@link #getDefaultPassEncryption()} 代替，两者实现完全一致
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static String getDefaultPassEncryptionWithSalt() {
-        return getDefaultPassEncryption();
-    }
-
-    /**
      * 生成随机盐值
      * @param length 盐值长度（字节）
      * @return 十六进制盐值字符串

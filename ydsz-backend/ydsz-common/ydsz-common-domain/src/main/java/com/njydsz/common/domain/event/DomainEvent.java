@@ -1,6 +1,7 @@
 package com.njydsz.common.domain.event;
 
 import java.io.Serializable;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -255,6 +256,11 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
         private String traceId;
         private final Map<String, Object> metadata = new HashMap<>();
 
+        /**
+         * Clock 用于控制事件时间，便于单元测试
+         */
+        private Clock clock = Clock.systemDefaultZone();
+
         private Builder() {
         }
 
@@ -346,6 +352,18 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
          * @param value 元数据值
          * @return 当前 Builder
          */
+        /**
+         * 设置 Clock（用于测试控制时间）
+         *
+         * @param clock Clock 实例
+         * @return 当前 Builder
+         * @since 1.2.0
+         */
+        public Builder clock(Clock clock) {
+            this.clock = clock != null ? clock : Clock.systemDefaultZone();
+            return this;
+        }
+
         public Builder metadata(String key, Object value) {
             this.metadata.put(key, value);
             return this;
@@ -370,7 +388,7 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
                 throw new IllegalArgumentException("eventType must not be null or empty");
             }
             String eid = eventId != null ? eventId : UUID.randomUUID().toString();
-            LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now();
+            LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now(clock);
             String tid = tenantId != null ? tenantId : RequestContext.getTenantId();
             String uid = userId != null ? userId : RequestContext.getUserId();
             String trace = traceId != null ? traceId : RequestContext.getTraceId();
