@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 import org.springframework.beans.factory.ObjectProvider;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.core.metrics.AbstractModuleMetrics;
+import com.njydsz.common.metrics.AbstractModuleMetrics;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;

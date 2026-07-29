@@ -74,11 +74,8 @@ public final class CursorHelper {
      * @return Base64 编码的游标字符串
      */
     public static String create(String sortValue, String id) {
-        Map<String, String> cursor = new HashMap<>();
-        cursor.put("sv", sortValue);
-        cursor.put("id", id);
         try {
-            String json = YdszJson.toJson(cursor);
+            String json = YdszJson.toJson(Map.of("sv", sortValue, "id", id));
             return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new IllegalArgumentException("创建游标失败", e);
@@ -148,11 +145,8 @@ public final class CursorHelper {
      * @return Base64 编码的游标字符串
      */
     public static String encode(LocalDateTime sortValue, String id) {
-        Map<String, String> cursor = new HashMap<>();
-        cursor.put("sv", sortValue != null ? sortValue.format(DT_FORMATTER) : null);
-        cursor.put("id", id);
         try {
-            String json = YdszJson.toJson(cursor);
+            String json = YdszJson.toJson(Map.of("sv", sortValue != null ? sortValue.format(DT_FORMATTER) : "", "id", id));
             return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new IllegalArgumentException("编码游标失败", e);

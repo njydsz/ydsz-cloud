@@ -2,13 +2,11 @@
  * 系统变量 API 模块（前端）
  *
  * 封装系统变量（{@code ydsz_system_variable}）CRUD 接口，对应后端 {@code /api/v1/variable/*} 端点。
- * 使用 @ydsz/shared-api 的 createCrudApi 工厂消除重复 CRUD 代码。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 import { requestClient } from '#/api/request';
-import { createCrudApi } from '@ydsz/shared-api';
 
 export namespace VariableApi {
   export interface VariableVO {
@@ -38,39 +36,37 @@ export namespace VariableApi {
   }
 }
 
-/** 系统变量 CRUD API（由 createCrudApi 工厂创建） */
-export const variableApi = createCrudApi<
-  VariableApi.VariableVO,
-  VariableApi.VariablePageQuery,
-  VariableApi.VariableDTO
->(requestClient, '/api/v1/variable');
-
-/** @deprecated 使用 variableApi.page() 替代 */
+/** 分页查询系统变量列表 */
 export function getVariablePageApi(params: VariableApi.VariablePageQuery) {
-  return variableApi.page(params as any);
+  return requestClient.get<{
+    total: number;
+    current: number;
+    size: number;
+    items: VariableApi.VariableVO[];
+  }>('/api/v1/variable/page', { params });
 }
 
-/** @deprecated 使用 variableApi.list() 替代 */
+/** 查询全部系统变量列表 */
 export function getVariableListApi() {
-  return variableApi.list();
+  return requestClient.get<VariableApi.VariableVO[]>('/api/v1/variable/list');
 }
 
-/** @deprecated 使用 variableApi.getById() 替代 */
+/** 根据 ID 查询系统变量 */
 export function getVariableByIdApi(id: string) {
-  return variableApi.getById(id);
+  return requestClient.get<VariableApi.VariableVO>(`/api/v1/variable/${id}`);
 }
 
-/** @deprecated 使用 variableApi.create() 替代 */
+/** 创建系统变量 */
 export function createVariableApi(data: VariableApi.VariableDTO) {
-  return variableApi.create(data);
+  return requestClient.post<string>('/api/v1/variable', data);
 }
 
-/** @deprecated 使用 variableApi.update() 替代 */
+/** 更新系统变量 */
 export function updateVariableApi(data: VariableApi.VariableDTO) {
-  return variableApi.update(data.id ?? '', data);
+  return requestClient.put<boolean>('/api/v1/variable', data);
 }
 
-/** @deprecated 使用 variableApi.remove() 替代 */
+/** 删除系统变量 */
 export function deleteVariableApi(id: string) {
-  return variableApi.remove(id);
+  return requestClient.delete<boolean>(`/api/v1/variable/${id}`);
 }

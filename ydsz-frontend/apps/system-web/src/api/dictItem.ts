@@ -2,13 +2,11 @@
  * 字典项 API 模块（前端）
  *
  * 封装字典项（{@code ydsz_dict_item}）CRUD 接口，对应后端 {@code /api/v1/dict/item/*} 端点。
- * 使用 @ydsz/shared-api 的 createCrudApi 工厂消除重复 CRUD 代码。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 import { requestClient } from '#/api/request';
-import { createCrudApi } from '@ydsz/shared-api';
 
 export namespace DictitemApi {
   export interface DictitemVO {
@@ -45,62 +43,44 @@ export namespace DictitemApi {
   }
 }
 
-/** 字典项 CRUD API（由 createCrudApi 工厂创建） */
-export const dictitemApi = createCrudApi<
-  DictitemApi.DictitemVO,
-  DictitemApi.DictitemPageQuery,
-  DictitemApi.DictitemDTO
->(requestClient, '/api/v1/dict/item');
-
-/**
- * 分页查询字典项
- * @deprecated 使用 dictitemApi.page() 替代
- */
+/** 分页查询字典项 */
 export function getDictitemPageApi(params: DictitemApi.DictitemPageQuery) {
-  return dictitemApi.page(params as any);
+  return requestClient.get<{
+    total: number;
+    current: number;
+    size: number;
+    items: DictitemApi.DictitemVO[];
+  }>('/api/v1/dict/item/page', { params });
 }
 
-/**
- * 查询全部字典项
- * @deprecated 使用 dictitemApi.list() 替代
- */
+/** 查询全部字典项 */
 export function getDictitemListApi() {
-  return dictitemApi.list();
+  return requestClient.get<DictitemApi.DictitemVO[]>('/api/v1/dict/item/list');
 }
 
-/**
- * 根据 ID 查询字典项
- * @deprecated 使用 dictitemApi.getById() 替代
- */
+/** 根据 ID 查询字典项 */
 export function getDictitemByIdApi(id: string) {
-  return dictitemApi.getById(id);
+  return requestClient.get<DictitemApi.DictitemVO>(`/api/v1/dict/item/${id}`);
 }
 
-/**
- * 创建字典项
- * @deprecated 使用 dictitemApi.create() 替代
- */
+/** 创建字典项 */
 export function createDictitemApi(data: DictitemApi.DictitemDTO) {
-  return dictitemApi.create(data);
+  return requestClient.post<string>('/api/v1/dict/item', data);
 }
 
-/**
- * 更新字典项
- * @deprecated 使用 dictitemApi.update() 替代
- */
+/** 更新字典项 */
 export function updateDictitemApi(data: DictitemApi.DictitemDTO) {
-  return dictitemApi.update(data.id ?? '', data);
+  return requestClient.put<boolean>('/api/v1/dict/item', data);
 }
 
-/**
- * 删除字典项
- * @deprecated 使用 dictitemApi.remove() 替代
- */
+/** 删除字典项 */
 export function deleteDictitemApi(id: string) {
-  return dictitemApi.remove(id);
+  return requestClient.delete<boolean>(`/api/v1/dict/item/${id}`);
 }
 
 /** 按类型编码查询启用的字典项列表 */
 export function getDictItemListByTypeApi(typeCode: string) {
-  return requestClient.get<DictitemApi.DictitemVO[]>(`/api/v1/dict/item/type/${typeCode}`);
+  return requestClient.get<DictitemApi.DictitemVO[]>(
+    `/api/v1/dict/item/type/${typeCode}`,
+  );
 }

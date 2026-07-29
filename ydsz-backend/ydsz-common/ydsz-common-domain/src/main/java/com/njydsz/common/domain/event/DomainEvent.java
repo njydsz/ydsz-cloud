@@ -121,7 +121,9 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
      * <p>自动生成 eventId 和 occurredAt，并从 {@link RequestContext} 填充上下文元数据。
      *
      * @param eventType 事件类型
+     * @deprecated 使用 {@link #builder()} 创建领域事件，提供更完整的配置能力。
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public DomainEvent(String eventType) {
         this(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
              null, null, 1,
@@ -137,7 +139,9 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
      * @param aggregateType 聚合根类型
+     * @deprecated 使用 {@link #builder()} 创建领域事件，提供更完整的配置能力。
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public DomainEvent(String eventType, String aggregateId, String aggregateType) {
         this(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
              aggregateId, aggregateType, 1,

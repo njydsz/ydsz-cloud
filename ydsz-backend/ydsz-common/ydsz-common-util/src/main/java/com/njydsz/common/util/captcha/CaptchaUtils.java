@@ -189,11 +189,8 @@ public class CaptchaUtils {
         
         String code = sb.toString();
         
-        // 生成图像
-        CaptchaResult result = generateCustomImage(code, width, height);
-        if (bgColor != null) {
-            result.setCode(code);
-        }
+        // 生成图像（传入 bgColor 参数）
+        CaptchaResult result = generateCustomImage(code, width, height, bgColor);
         result.setCode(code);
         
         return result;
@@ -203,12 +200,23 @@ public class CaptchaUtils {
      * 生成自定义图像
      */
     private static CaptchaResult generateCustomImage(String text, int width, int height) {
+        return generateCustomImage(text, width, height, null);
+    }
+
+    /**
+     * 生成自定义图像（支持指定背景色）
+     */
+    private static CaptchaResult generateCustomImage(String text, int width, int height, Color bgColor) {
         // 创建图像
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = image.createGraphics();
 
-        // 设置背景色（随机浅色）
-        g2d.setColor(new Color(240 + random.nextInt(15), 240 + random.nextInt(15), 240 + random.nextInt(15)));
+        // 设置背景色（指定背景色或随机浅色）
+        if (bgColor != null) {
+            g2d.setColor(bgColor);
+        } else {
+            g2d.setColor(new Color(240 + random.nextInt(15), 240 + random.nextInt(15), 240 + random.nextInt(15)));
+        }
         g2d.fillRect(0, 0, width, height);
 
         // 绘制干扰线

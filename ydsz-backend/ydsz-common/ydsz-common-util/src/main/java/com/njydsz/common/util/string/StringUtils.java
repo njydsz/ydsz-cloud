@@ -16,11 +16,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Pattern 缓存 - 基于 ConcurrentHashMap 的线程安全缓存，用于缓存编译后的正则表达式
+ * Pattern 缓存 - 基于 ConcurrentHashMap + LRU 淘汰策略的线程安全缓存
  *
  * <p>使用 ConcurrentHashMap 替代 synchronized LinkedHashMap，
  * 利用 computeIfAbsent 的原子性实现无锁并发读、细粒度并发写。
- * 采用简单的大小限制策略：超过上限时清空全量缓存（适用于 pattern 种类有限的场景）。
+ * 采用 LRU 淘汰策略：超过上限时淘汰最久未使用的条目，
+ * 通过 ConcurrentHashMap + AtomicLong 访问时间戳实现。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -32,6 +33,9 @@ final class PatternCache {
 
     private static final ConcurrentHashMap<String, Pattern> CACHE = new ConcurrentHashMap<>(MAX_CACHE_SIZE);
 
+    /** 访问时间记录，用于 LRU 淘汰决策 */
+    private static final ConcurrentHashMap<String, Long> ACCESS_TIME = new ConcurrentHashMap<>(MAX_CACHE_SIZE);
+
     private PatternCache() {
         throw new UnsupportedOperationException("PatternCache is a utility class and cannot be instantiated");
     }
@@ -39,18 +43,38 @@ final class PatternCache {
     /**
      * 获取编译后的 Pattern，优先从缓存中获取
      *
+     * <p>缓存满时采用 LRU 策略淘汰最久未使用的条目（而非全量清空），
+     * 避免高频场景下缓存命中率骤降。
+     *
      * @param regex 正则表达式
      * @return 编译后的 Pattern
      */
     static Pattern compile(String regex) {
         Pattern cached = CACHE.get(regex);
         if (cached != null) {
+            ACCESS_TIME.put(regex, System.nanoTime());
             return cached;
         }
         if (CACHE.size() >= MAX_CACHE_SIZE) {
-            CACHE.clear();
+            evictOldestEntries(MAX_CACHE_SIZE / 4);
         }
+        ACCESS_TIME.put(regex, System.nanoTime());
         return CACHE.computeIfAbsent(regex, Pattern::compile);
+    }
+
+    /**
+     * LRU 淘汰：移除最旧的 N 个条目
+     *
+     * @param count 要淘汰的条目数
+     */
+    private static void evictOldestEntries(int count) {
+        ACCESS_TIME.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .limit(count)
+                .forEach(entry -> {
+                    CACHE.remove(entry.getKey());
+                    ACCESS_TIME.remove(entry.getKey());
+                });
     }
 }
 
@@ -282,12 +306,25 @@ public class StringUtils {
     /**
      * 下划线命名转驼峰命名
      * <p>user_name -> userName</p>
+     * <p>User_Name -> UserName (保留原始大小写)</p>
+     * <p>USER_NAME -> UserName (全大写转首字母大写)</p>
      */
     public static String toCamelCase(String s) {
         if (s == null) {
             return null;
         }
-        s = s.toLowerCase();
+        // 不强制 toLowerCase，保留下划线后首字母大写即可
+        // 对于全大写场景（如 USER_NAME），先 toLowerCase 再处理
+        boolean hasUpperCase = false;
+        for (int i = 0; i < s.length(); i++) {
+            if (Character.isUpperCase(s.charAt(i))) {
+                hasUpperCase = true;
+                break;
+            }
+        }
+        if (hasUpperCase) {
+            s = s.toLowerCase();
+        }
         StringBuilder sb = new StringBuilder(s.length());
         boolean upperCase = false;
         for (int i = 0; i < s.length(); i++) {

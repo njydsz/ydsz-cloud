@@ -991,85 +991,64 @@ public class RegexUtils {
     }
 
     /**
+     * 预编译 Pattern 映射表（用于 getPattern 方法快速查找）
+     *
+     * <p>替代超长 switch 语句，提供 O(1) 查找性能。
+     */
+    private static final Map<String, Pattern> PATTERN_MAP = createPatternMap();
+
+    /**
+     * 构建预编译 Pattern 映射表
+     */
+    private static Map<String, Pattern> createPatternMap() {
+        Map<String, Pattern> map = new LinkedHashMap<>(64);
+        map.put(MOBILE_SIMPLE, P_MOBILE_SIMPLE);
+        map.put(MOBILE_EXACT, P_MOBILE_EXACT);
+        map.put(TELEPHONE, P_TELEPHONE);
+        map.put(EMAIL, P_EMAIL);
+        map.put(ID_CARD, P_ID_CARD);
+        map.put(ID_CARD_ALL, P_ID_CARD_ALL);
+        map.put(URL, P_URL);
+        map.put(IP, P_IP);
+        map.put(IP_SIMPLE, P_IP_SIMPLE);
+        map.put(DATE, P_DATE);
+        map.put(DATETIME, P_DATETIME);
+        map.put(TIME, P_TIME);
+        map.put(POSTAL_CODE, P_POSTAL_CODE);
+        map.put(LICENSE_PLATE, P_LICENSE_PLATE);
+        map.put(LICENSE_PLATE_NEW_ENERGY, P_LICENSE_PLATE_NEW_ENERGY);
+        map.put(CREDIT_CODE, P_CREDIT_CODE);
+        map.put(BANK_CARD, P_BANK_CARD);
+        map.put(PASSWORD, P_PASSWORD);
+        map.put(USERNAME, P_USERNAME);
+        map.put(CHINESE, P_CHINESE);
+        map.put(CHINESE_NAME, P_CHINESE_NAME);
+        map.put(INTEGER, P_INTEGER);
+        map.put(POSITIVE_INTEGER, P_POSITIVE_INTEGER);
+        map.put(NEGATIVE_INTEGER, P_NEGATIVE_INTEGER);
+        map.put(DECIMAL, P_DECIMAL);
+        map.put(POSITIVE_DECIMAL, P_POSITIVE_DECIMAL);
+        map.put(NEGATIVE_DECIMAL, P_NEGATIVE_DECIMAL);
+        map.put(NUMBER, P_NUMBER);
+        map.put(MAC, P_MAC);
+        map.put(HTML_TAG, P_HTML_TAG);
+        map.put(EXTRACT_NUMBER, P_EXTRACT_NUMBER);
+        map.put(EXTRACT_LETTER, P_EXTRACT_LETTER);
+        map.put(EXTRACT_CHINESE, P_EXTRACT_CHINESE);
+        return Collections.unmodifiableMap(map);
+    }
+
+    /**
      * 获取预编译的 Pattern 对象
      *
      * @param type 正则类型（如 MOBILE_SIMPLE, EMAIL 等）
-     * @return 预编译的 Pattern 对象
+     * @return 预编译的 Pattern 对象，未找到返回 null
      */
     public static Pattern getPattern(String type) {
         if (type == null) {
             return null;
         }
-        switch (type) {
-            case MOBILE_SIMPLE:
-                return P_MOBILE_SIMPLE;
-            case MOBILE_EXACT:
-                return P_MOBILE_EXACT;
-            case TELEPHONE:
-                return P_TELEPHONE;
-            case EMAIL:
-                return P_EMAIL;
-            case ID_CARD:
-                return P_ID_CARD;
-            case ID_CARD_ALL:
-                return P_ID_CARD_ALL;
-            case URL:
-                return P_URL;
-            case IP:
-                return P_IP;
-            case IP_SIMPLE:
-                return P_IP_SIMPLE;
-            case DATE:
-                return P_DATE;
-            case DATETIME:
-                return P_DATETIME;
-            case TIME:
-                return P_TIME;
-            case POSTAL_CODE:
-                return P_POSTAL_CODE;
-            case LICENSE_PLATE:
-                return P_LICENSE_PLATE;
-            case LICENSE_PLATE_NEW_ENERGY:
-                return P_LICENSE_PLATE_NEW_ENERGY;
-            case CREDIT_CODE:
-                return P_CREDIT_CODE;
-            case BANK_CARD:
-                return P_BANK_CARD;
-            case PASSWORD:
-                return P_PASSWORD;
-            case USERNAME:
-                return P_USERNAME;
-            case CHINESE:
-                return P_CHINESE;
-            case CHINESE_NAME:
-                return P_CHINESE_NAME;
-            case INTEGER:
-                return P_INTEGER;
-            case POSITIVE_INTEGER:
-                return P_POSITIVE_INTEGER;
-            case NEGATIVE_INTEGER:
-                return P_NEGATIVE_INTEGER;
-            case DECIMAL:
-                return P_DECIMAL;
-            case POSITIVE_DECIMAL:
-                return P_POSITIVE_DECIMAL;
-            case NEGATIVE_DECIMAL:
-                return P_NEGATIVE_DECIMAL;
-            case NUMBER:
-                return P_NUMBER;
-            case MAC:
-                return P_MAC;
-            case HTML_TAG:
-                return P_HTML_TAG;
-            case EXTRACT_NUMBER:
-                return P_EXTRACT_NUMBER;
-            case EXTRACT_LETTER:
-                return P_EXTRACT_LETTER;
-            case EXTRACT_CHINESE:
-                return P_EXTRACT_CHINESE;
-            default:
-                return null;
-        }
+        return PATTERN_MAP.get(type);
     }
 
     /**

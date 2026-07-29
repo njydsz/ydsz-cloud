@@ -116,8 +116,9 @@ YDSZ 通用工具类库 — 95 个 Java 源文件覆盖 ID 生成、加密、HTT
 
 | 配置类 | 激活条件 |
 |---|---|
-| `UtilAutoConfiguration` | 总是激活 |
-| `SnowflakeAutoConfiguration` | Redis 可用时激活 |
+| `UtilAutoConfiguration` | 总是激活（注册 SpringContextHolder、OkHttpClient、SnowflakeHealthIndicator、UtilHealthIndicator） |
+| `SnowflakeAutoConfiguration` | `ydsz.util.snowflake.enabled=true`（默认激活） |
+| `ThreadPoolMonitorAutoConfiguration` | `ydsz.util.threadpool.monitor.enabled=true`（默认激活），Micrometer 可用时自动注册指标 |
 
 ## 依赖
 

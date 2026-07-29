@@ -11,7 +11,6 @@ import java.util.*;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
-import com.njydsz.common.json.engine.SerializerEngine;
 import com.njydsz.common.json.exception.YdszJsonException;
 import com.njydsz.common.json.jsonpath.YdszJsonPath;
 import com.njydsz.common.json.merge.JsonMergePatch;
@@ -896,7 +895,7 @@ public class YdszJson {
      * 将对象序列化为 JSON 并直接写入 Writer。
      *
      * <p>适用于字符流输出场景（如 FileWriter、StringWriter、BufferedWriter）。
-     * 内部使用 {@link SerializerEngine#serialize(Object)} 生成 JSON 字符串后写入 Writer，
+     * 内部使用 {@link SerializationProvider#serialize(Object)} 生成 JSON 字符串后写入 Writer，
      * 避免额外的 byte/char 转换。</p>
      *
      * @param obj 要序列化的对象

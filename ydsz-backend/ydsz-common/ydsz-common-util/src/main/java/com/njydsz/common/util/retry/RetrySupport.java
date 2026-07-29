@@ -3,6 +3,7 @@ package com.njydsz.common.util.retry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadLocalRandom;
@@ -52,8 +53,19 @@ public final class RetrySupport {
      *
      * <p>核心线程数 = CPU 核心数，最大线程数 = CPU 核心数 * 4，
      * 队列容量 512，拒绝策略为 CallerRunsPolicy（回退到同步执行）。
+     *
+     * <p>注意：推荐通过 {@link #executeAsync(Callable, Executor)} 注入
+     * common-thread 模块管理的命名线程池，此默认线程池仅为向后兼容保留。
      */
     private static final ExecutorService ASYNC_EXECUTOR = createAsyncExecutor();
+
+    /**
+     * 外部注入的线程池（可选，优先使用）
+     *
+     * <p>通过 {@link #setExternalExecutor(ExecutorService)} 注入 common-thread 模块
+     * 管理的命名线程池后，所有异步重试操作将委托给该线程池执行。
+     */
+    private static volatile ExecutorService externalExecutor;
 
     private static ExecutorService createAsyncExecutor() {
         int cpuCores = Runtime.getRuntime().availableProcessors();
@@ -87,6 +99,27 @@ public final class RetrySupport {
             ASYNC_EXECUTOR.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+
+    /**
+     * 注入外部线程池（推荐从 common-thread 模块的 ThreadPoolAutoConfiguration 获取）
+     *
+     * <p>注入后，{@link #executeAsync(Callable)} 和 {@link #executeAsyncRunnable(Runnable)}
+     * 将优先使用外部线程池，避免创建独立的默认线程池。
+     *
+     * @param executor 外部线程池实例
+     */
+    public static void setExternalExecutor(ExecutorService executor) {
+        externalExecutor = executor;
+    }
+
+    /**
+     * 获取实际使用的线程池（外部注入优先，否则使用默认）
+     *
+     * @return 用于异步执行的线程池
+     */
+    private static ExecutorService getEffectiveExecutor() {
+        return externalExecutor != null && !externalExecutor.isShutdown() ? externalExecutor : ASYNC_EXECUTOR;
     }
 
     private RetrySupport() {
@@ -298,7 +331,7 @@ public final class RetrySupport {
         }
 
         /**
-         * 异步执行有返回值的任务
+         * 异步执行有返回值的任务（使用默认或外部注入的线程池）
          *
          * @param task 要执行的任务
          * @param <T>  返回值类型
@@ -311,11 +344,32 @@ public final class RetrySupport {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            }, ASYNC_EXECUTOR);
+            }, getEffectiveExecutor());
         }
 
         /**
-         * 异步执行无返回值的任务
+         * 异步执行有返回值的任务（使用指定线程池）
+         *
+         * <p>推荐使用此方法注入 common-thread 模块管理的命名线程池，
+         * 实现线程池统一治理和监控。
+         *
+         * @param task     要执行的任务
+         * @param executor 外部线程池
+         * @param <T>      返回值类型
+         * @return CompletableFuture
+         */
+        public <T> CompletableFuture<T> executeAsync(Callable<T> task, Executor executor) {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return execute(task);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }, executor);
+        }
+
+        /**
+         * 异步执行无返回值的任务（使用默认或外部注入的线程池）
          *
          * @param task 要执行的任务
          * @return CompletableFuture
@@ -327,7 +381,7 @@ public final class RetrySupport {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            }, ASYNC_EXECUTOR);
+            }, getEffectiveExecutor());
         }
 
         /**

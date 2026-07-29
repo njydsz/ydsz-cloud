@@ -1,4 +1,4 @@
-package com.njydsz.common.core.dag;
+package com.njydsz.common.domain.dag;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,25 +13,12 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * SpEL 条件表达式评估器（P1-8 DAG 条件分支）。
+ * SpEL 条件表达式评估器（DAG 条件分支节点使用）。
  *
  * <p>用于 DAG 条件分支节点（CONDITION）的表达式评估，
  * 支持从上下文中读取上游节点的执行结果进行条件判断。
  *
  * <p>表达式格式：{@code ${nodeA.result=='success'}} 或 {@code #nodeA.status!='FAILED'}
- * <ul>
- *   <li>支持 {@code ==} 和 {@code !=} 操作符</li>
- *   <li>支持字符串字面量（单引号或双引号）</li>
- *   <li>支持嵌套属性访问（如 {@code nodeA.result.code}）</li>
- *   <li>支持逻辑操作符 {@code &&} / {@code ||} / {@code !}</li>
- * </ul>
- *
- * <p>示例：
- * <ul>
- *   <li>{@code #nodeA.result=='success'} — 判断 nodeA 的结果是否为 success</li>
- *   <li>{@code #nodeA.status!='FAILED'} — 判断 nodeA 的状态是否非 FAILED</li>
- *   <li>{@code #nodeA.result.code==200 && #nodeB.status=='SUCCESS'} — 组合条件</li>
- * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -56,7 +43,6 @@ public class SpELConditionEvaluator {
             return false;
         }
 
-        // 去除 ${...} 包裹（兼容 DAG 定义中的 ${expr} 格式）
         String spel = expression.trim();
         if (spel.startsWith("${") && spel.endsWith("}")) {
             spel = spel.substring(2, spel.length() - 1).trim();
@@ -74,12 +60,6 @@ public class SpELConditionEvaluator {
         }
     }
 
-    /**
-     * 构建 SpEL 评估上下文。
-     *
-     * <p>将 Map 中的每个 key 注册为 SpEL 变量（#{#key}），
-     * 同时注册 {@link MapAccessor} 支持 Map 属性的点号访问。
-     */
     private EvaluationContext buildEvaluationContext(Map<String, Object> context) {
         StandardEvaluationContext evalContext = new StandardEvaluationContext();
         evalContext.addPropertyAccessor(new MapAccessor());

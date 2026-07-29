@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.common.domain.annotation.SoftDelete;
+import com.njydsz.common.domain.annotation.Version;
 import com.njydsz.common.domain.event.DomainEvent;
 import com.njydsz.common.json.annotation.YdszJsonField;
 
@@ -79,14 +81,26 @@ import lombok.experimental.SuperBuilder;
  * @see BaseIdEntity
  * @see RootEntity
  *
- * <p><b>重构规划：</b>当前继承为 {@code RootEntity → BaseIdEntity → BaseAuditEntity → BaseEntity} 4 层，增加理解成本。
+ * <p><b>重构规划：</b>当前继承为 {@code RootEntity -> BaseIdEntity -> BaseAuditEntity -> BaseEntity} 4 层，增加理解成本。
  * 长期建议：扁平化为 2-3 层，或用 {@code @Embedded AuditInfo} 组合替代继承。
+ *
+ * <p><b>字段来源说明：</b>
+ * <table>
+ *   <tr><th>字段</th><th>来源</th><th>说明</th></tr>
+ *   <tr><td>id</td><td>BaseIdEntity</td><td>主键ID</td></tr>
+ *   <tr><td>createdBy/createdAt</td><td>BaseAuditEntity</td><td>创建审计</td></tr>
+ *   <tr><td>updatedBy/updatedAt</td><td>BaseAuditEntity</td><td>更新审计</td></tr>
+ *   <tr><td>revision</td><td>BaseEntity</td><td>乐观锁版本</td></tr>
+ *   <tr><td>deleted</td><td>BaseEntity</td><td>逻辑删除标识</td></tr>
+ *   <tr><td>status</td><td>BaseEntity</td><td>业务状态</td></tr>
+ * </table>
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@SoftDelete
 public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> implements RootEntity<T>, AggregateRoot<T> {
 
     private static final long serialVersionUID = 1L;
@@ -117,7 +131,7 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      * &#64;Version
      * private Integer revision;
      *
-     * // 方式2：配置方式（参见 ydsz-common-jdbc 模块。
+     * // 方式2：配置方式（参见 ydsz-common-jdbc 模块）
      * ydsz:
      *   sql-intercept:
      *     optimistic-lock:
@@ -127,13 +141,14 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      *
      * @see Version
      */
+    @Version
     @Builder.Default
     private Integer revision = 0;
 
     /**
      * 逻辑删除标识
      *
-     * <p>用于实现软删除，原理。
+     * <p>用于实现软删除，原理：
      * <ul>
      *   <li>删除操作变为 UPDATE 设置 deleted = 1</li>
      *   <li>查询操作自动添加 WHERE deleted = 0 条件</li>
@@ -146,7 +161,7 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      * &#64;TableLogic
      * private Integer deleted;
      *
-     * // 方式2：配置方式（参见 ydsz-common-jdbc 模块。
+     * // 方式2：配置方式（参见 ydsz-common-jdbc 模块）
      * ydsz:
      *   sql-intercept:
      *     logical-delete:

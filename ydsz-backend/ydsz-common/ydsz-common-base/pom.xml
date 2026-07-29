@@ -44,6 +44,12 @@
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
 
+        <!-- Micrometer Core（AbstractModuleMetrics 基类需要） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+
         <!-- Spring Boot Actuator（可选，用于 HealthIndicator） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

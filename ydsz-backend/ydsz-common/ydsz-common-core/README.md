@@ -147,7 +147,7 @@ ydsz:
   core:
     enabled: true                      # 模块总开关
     max-page-size: 1000                # 最大每页记录数上限
-    default-page-size: 10              # 默认每页记录数
+    default-page-size: 20              # 默认每页记录数
     trace:
       enabled: true                    # 链路追踪开关
       header-name: X-Trace-Id          # TraceId 请求头名称

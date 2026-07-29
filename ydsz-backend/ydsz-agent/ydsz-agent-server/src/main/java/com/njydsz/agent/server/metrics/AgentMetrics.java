@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.common.core.metrics.AbstractModuleMetrics;
+import com.njydsz.common.metrics.AbstractModuleMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;

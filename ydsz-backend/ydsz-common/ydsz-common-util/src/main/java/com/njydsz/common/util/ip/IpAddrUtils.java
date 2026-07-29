@@ -1,13 +1,5 @@
 package com.njydsz.common.util.ip;
 
-/**
- * IP 地址工具类 - 支持 IPv4/IPv6 地址解析、校验、范围判断、本地 IP 枚举等
- *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
-
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -24,9 +16,7 @@ import com.njydsz.common.util.string.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * IpAddrUtils 工具类，提供静态工具方法。
- *
- * <p>所属包：{@code com.njydsz.common.util.ip}
+ * IP 地址工具类 - 支持 IPv4/IPv6 地址解析、校验、范围判断、本地 IP 枚举等
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -403,20 +393,7 @@ public class IpAddrUtils {
     }
 
     public static boolean isDataCenterIp(String ip) {
-        if (isUnknown(ip)) {
-            return false;
-        }
-        String lowerIp = ip.toLowerCase();
-        return lowerIp.startsWith("10.") || 
-               lowerIp.startsWith("172.16.") || lowerIp.startsWith("172.17.") ||
-               lowerIp.startsWith("172.18.") || lowerIp.startsWith("172.19.") ||
-               lowerIp.startsWith("172.20.") || lowerIp.startsWith("172.21.") ||
-               lowerIp.startsWith("172.22.") || lowerIp.startsWith("172.23.") ||
-               lowerIp.startsWith("172.24.") || lowerIp.startsWith("172.25.") ||
-               lowerIp.startsWith("172.26.") || lowerIp.startsWith("172.27.") ||
-               lowerIp.startsWith("172.28.") || lowerIp.startsWith("172.29.") ||
-               lowerIp.startsWith("172.30.") || lowerIp.startsWith("172.31.") ||
-               lowerIp.startsWith("192.168.");
+        return isPrivateIp(ip);
     }
 
     public static boolean isProxyIp(String ip) {

@@ -2,13 +2,11 @@
  * 应用 API 模块（前端）
  *
  * 封装应用（{@code ydsz_app}）CRUD 接口，对应后端 {@code /api/v1/app/*} 端点。
- * 使用 @ydsz/shared-api 的 createCrudApi 工厂消除重复 CRUD 代码。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 import { requestClient } from '#/api/request';
-import { createCrudApi } from '@ydsz/shared-api';
 
 export namespace AppApi {
   export interface AppVO {
@@ -42,57 +40,37 @@ export namespace AppApi {
   }
 }
 
-/** 应用 CRUD API（由 createCrudApi 工厂创建） */
-export const appApi = createCrudApi<
-  AppApi.AppVO,
-  AppApi.AppPageQuery,
-  AppApi.AppDTO
->(requestClient, '/api/v1/app');
-
-/**
- * 分页查询应用
- * @deprecated 使用 appApi.page() 替代
- */
+/** 分页查询应用 */
 export function getAppPageApi(params: AppApi.AppPageQuery) {
-  return appApi.page(params as any);
+  return requestClient.get<{
+    total: number;
+    current: number;
+    size: number;
+    items: AppApi.AppVO[];
+  }>('/api/v1/app/page', { params });
 }
 
-/**
- * 查询全部应用
- * @deprecated 使用 appApi.list() 替代
- */
+/** 查询全部应用 */
 export function getAppListApi() {
-  return appApi.list();
+  return requestClient.get<AppApi.AppVO[]>('/api/v1/app/list');
 }
 
-/**
- * 根据 ID 查询应用
- * @deprecated 使用 appApi.getById() 替代
- */
+/** 根据 ID 查询应用 */
 export function getAppByIdApi(id: string) {
-  return appApi.getById(id);
+  return requestClient.get<AppApi.AppVO>(`/api/v1/app/${id}`);
 }
 
-/**
- * 创建应用
- * @deprecated 使用 appApi.create() 替代
- */
+/** 创建应用 */
 export function createAppApi(data: AppApi.AppDTO) {
-  return appApi.create(data);
+  return requestClient.post<string>('/api/v1/app', data);
 }
 
-/**
- * 更新应用
- * @deprecated 使用 appApi.update() 替代
- */
+/** 更新应用 */
 export function updateAppApi(data: AppApi.AppDTO) {
-  return appApi.update(data.id ?? '', data);
+  return requestClient.put<boolean>('/api/v1/app', data);
 }
 
-/**
- * 删除应用
- * @deprecated 使用 appApi.remove() 替代
- */
+/** 删除应用 */
 export function deleteAppApi(id: string) {
-  return appApi.remove(id);
+  return requestClient.delete<boolean>(`/api/v1/app/${id}`);
 }

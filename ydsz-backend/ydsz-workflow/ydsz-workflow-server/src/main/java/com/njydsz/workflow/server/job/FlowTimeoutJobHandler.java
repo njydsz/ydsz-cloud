@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.job.JobHandler;
+import com.njydsz.common.job.JobHandler;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowRunTask;

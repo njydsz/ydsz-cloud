@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.metrics.AbstractModuleMetrics;
+import com.njydsz.common.metrics.AbstractModuleMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;

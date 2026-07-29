@@ -2,13 +2,11 @@
  * 岗位 API 模块（前端）
  *
  * 封装岗位（{@code ydsz_post}）CRUD 接口，对应后端 {@code /api/v1/post/*} 端点。
- * 使用 @ydsz/shared-api 的 createCrudApi 工厂消除重复 CRUD 代码。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 import { requestClient } from '#/api/request';
-import { createCrudApi } from '@ydsz/shared-api';
 
 export namespace PostApi {
   export interface PostVO {
@@ -39,34 +37,37 @@ export namespace PostApi {
   }
 }
 
-/** 岗位 CRUD API（由 createCrudApi 工厂创建） */
-export const postApi = createCrudApi<
-  PostApi.PostVO,
-  PostApi.PostPageQuery,
-  PostApi.PostSaveDTO
->(requestClient, '/api/v1/post');
+/** 分页查询岗位列表 */
+export function getPostPageApi(params: PostApi.PostPageQuery) {
+  return requestClient.get<{
+    total: number;
+    current: number;
+    size: number;
+    items: PostApi.PostVO[];
+  }>('/api/v1/post/page', { params });
+}
 
 /** 查询全部岗位列表 */
 export function getPostListApi() {
-  return postApi.list();
+  return requestClient.get<PostApi.PostVO[]>('/api/v1/post/list');
 }
 
 /** 根据 ID 查询岗位 */
 export function getPostByIdApi(id: string) {
-  return postApi.getById(id);
+  return requestClient.get<PostApi.PostVO>(`/api/v1/post/${id}`);
 }
 
 /** 创建岗位 */
 export function createPostApi(data: PostApi.PostSaveDTO) {
-  return postApi.create(data);
+  return requestClient.post<string>('/api/v1/post', data);
 }
 
 /** 更新岗位 */
 export function updatePostApi(data: PostApi.PostSaveDTO) {
-  return postApi.update(data.id ?? '', data);
+  return requestClient.put<boolean>('/api/v1/post', data);
 }
 
 /** 删除岗位 */
 export function deletePostApi(id: string) {
-  return postApi.remove(id);
+  return requestClient.delete<boolean>(`/api/v1/post/${id}`);
 }

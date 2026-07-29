@@ -67,6 +67,16 @@ public final class EntityCapabilities {
     private static final Map<Class<?>, Boolean> VERSION_CACHE = new ConcurrentHashMap<>();
 
     /**
+     * 软删除字段名常量
+     */
+    private static final String SOFT_DELETE_FIELD_NAME = "deleted";
+
+    /**
+     * 乐观锁字段名常量
+     */
+    private static final String VERSION_FIELD_NAME = "revision";
+
+    /**
      * MyBatis-Plus Version 注解类缓存
      */
     private static volatile Class<? extends Annotation> mpVersionAnnotationClass;
@@ -88,12 +98,23 @@ public final class EntityCapabilities {
     /**
      * 检查实体是否启用逻辑删除能力
      *
+     * <p>检测顺序：
+     * <ol>
+     *   <li>类级 {@link SoftDelete} 注解</li>
+     *   <li>字段名约定：存在名为 {@code deleted} 的字段（含父类扫描）</li>
+     * </ol>
+     *
      * @param entityClass 实体类
      * @return 启用逻辑删除返回 true，否则返回 false
      */
     public static boolean isSoftDeleteEnabled(Class<?> entityClass) {
-        return SOFT_DELETE_CACHE.computeIfAbsent(entityClass, clazz ->
-                clazz.isAnnotationPresent(SoftDelete.class));
+        return SOFT_DELETE_CACHE.computeIfAbsent(entityClass, clazz -> {
+            if (clazz.isAnnotationPresent(SoftDelete.class)) {
+                return true;
+            }
+            // Fallback: field-name convention (deleted)
+            return findFieldByName(clazz, SOFT_DELETE_FIELD_NAME) != null;
+        });
     }
 
     /**
@@ -112,8 +133,12 @@ public final class EntityCapabilities {
     /**
      * 检查实体是否启用乐观锁能力
      *
-     * <p>优先检查自定义 {@link Version} 注解，若未找到再检查 MyBatis-Plus Version 注解。
-     * 结果使用缓存避免重复类加载检查。
+     * <p>检测顺序：
+     * <ol>
+     *   <li>字段级自定义 {@link Version} 注解</li>
+     *   <li>字段级 MyBatis-Plus {@code @Version} 注解</li>
+     *   <li>字段名约定：存在名为 {@code revision} 的字段（含父类扫描）</li>
+     * </ol>
      *
      * @param entityClass 实体类
      * @return 启用乐观锁返回 true，否则返回 false
@@ -124,7 +149,11 @@ public final class EntityCapabilities {
                 return true;
             }
             Class<? extends Annotation> mpVersion = resolveMpVersionAnnotation();
-            return mpVersion != null && getAnnotatedField(clazz, mpVersion).isPresent();
+            if (mpVersion != null && getAnnotatedField(clazz, mpVersion).isPresent()) {
+                return true;
+            }
+            // Fallback: field-name convention (revision)
+            return findFieldByName(clazz, VERSION_FIELD_NAME) != null;
         });
     }
 
@@ -163,6 +192,27 @@ public final class EntityCapabilities {
             clazz = clazz.getSuperclass();
         }
         return Optional.empty();
+    }
+
+    /**
+     * 按字段名查找字段（含父类扫描）
+     *
+     * @param entityClass 实体类
+     * @param fieldName  字段名
+     * @return 找到的 Field，未找到返回 null
+     */
+    private static Field findFieldByName(Class<?> entityClass, String fieldName) {
+        Class<?> clazz = entityClass;
+        while (clazz != null && clazz != Object.class) {
+            try {
+                Field field = clazz.getDeclaredField(fieldName);
+                return field;
+            } catch (NoSuchFieldException e) {
+                // continue to parent
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return null;
     }
 
     /**

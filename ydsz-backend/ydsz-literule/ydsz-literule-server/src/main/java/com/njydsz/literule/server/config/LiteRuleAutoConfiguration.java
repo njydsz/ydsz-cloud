@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.cronjob.api.client.CronjobServiceClient;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
@@ -1362,6 +1363,7 @@ public class LiteRuleAutoConfiguration {
          * CEP 过期事件清理（每 60 秒执行一次）
          */
         @Scheduled(fixedDelay = 60_000)
+        @DistributedScheduled(lockKey = "literule:cep-cleanup", leaseTime = 120)
         public void cleanupCepExpiredEvents() {
             try {
                 cepEngine.cleanupExpiredEvents();

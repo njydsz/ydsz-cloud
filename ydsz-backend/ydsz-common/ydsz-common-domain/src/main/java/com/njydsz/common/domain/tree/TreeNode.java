@@ -67,11 +67,12 @@ import lombok.experimental.SuperBuilder;
  * });
  * }</pre>
  *
- * <p><b>。泛型安全警告：</b>此类使用了递归泛型模式 {@code TreeNode<T extends TreeNode<T, ID>, ID>}。
- * 内部多处存在 {@code (T) this} 的未经检查强转。由。Java 类型擦除机制，{@code ClassCastException}
+ * <p><b>泛型安全说明：</b>此类使用了递归泛型模式 {@code TreeNode<T extends TreeNode<T, ID>, ID>}。
+ * 内部多处存在 {@code (T) this} 的未经检查强转。由于 Java 类型擦除机制，{@code ClassCastException}
  * 不会在强转时立即抛出，而是在返回值被使用时才可能触发。使用时必须确保泛型参数 {@code T}
  * 与具体子类类型一致，例如 {@code class Menu extends TreeNode<Menu, Long>} 是安全的。
- * 为 {@code class Menu extends TreeNode<OtherType, Long>} 将在运行时抛为 {@code ClassCastException}。
+ * 若为 {@code class Menu extends TreeNode<OtherType, Long>} 将在运行时抛出 {@code ClassCastException}。
+ * 此设计为递归泛型模式的已知限制，强转安全性由类型约束保证。
  *
  * @param <T>  继承自TreeNode的具体类型
  * @param <ID> ID类型

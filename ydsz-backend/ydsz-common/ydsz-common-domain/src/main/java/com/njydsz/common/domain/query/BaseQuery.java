@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * 查询对象基类型
  *
  * <p>所有查询参数对象的顶层基类，提供序列化支持和通用查询字段。
- * 子类可通过 {@link SuperBuilder} 继承 Builder 能力，实现链式构建查询参数量
+ * 子类可通过 {@link SuperBuilder} 继承 Builder 能力，实现链式构建查询参数。
  *
  * <p><b>继承体系：</b>
  * <pre>
@@ -27,10 +27,8 @@ import lombok.experimental.SuperBuilder;
  *   <tr><th>字段</th><th>类型</th><th>说明</th></tr>
  *   <tr><td>searchKey</td><td>String</td><td>模糊搜索关键字</td></tr>
  *   <tr><td>status</td><td>String</td><td>状态过滤</td></tr>
- *   <tr><td>startTime</td><td>String</td><td>开始时间（字符串格式）</td></tr>
- *   <tr><td>endTime</td><td>String</td><td>结束时间（字符串格式）</td></tr>
- *   <tr><td>startDateTime</td><td>LocalDateTime</td><td>开始时间（类型安全版本）</td></tr>
- *   <tr><td>endDateTime</td><td>LocalDateTime</td><td>结束时间（类型安全版本）</td></tr>
+ *   <tr><td>startDateTime</td><td>LocalDateTime</td><td>开始时间</td></tr>
+ *   <tr><td>endDateTime</td><td>LocalDateTime</td><td>结束时间</td></tr>
  *   <tr><td>tenantId</td><td>String</td><td>租户ID</td></tr>
  *   <tr><td>orderBy</td><td>String</td><td>排序字段</td></tr>
  *   <tr><td>ascending</td><td>Boolean</td><td>是否升序</td></tr>
@@ -64,21 +62,22 @@ public class BaseQuery implements Serializable {
      * <p>用于过滤数据状态，子类可按需覆盖为具体业务状态枚举值。
      * 默认值为空，由各子类根据业务语义自行定义。
      */
-    private String status;    /**
-     * 开始时间（类型安全版本）
-     *
-     * <p>用于时间范围查询的起始时间，使用 {@link LocalDateTime} 类型
-     * 替代 {@link #startTime} 字符串版本，避免手动解析和格式问题。
-     */
-    private transient LocalDateTime startDateTime;
+    private String status;
 
     /**
-     * 结束时间（类型安全版本）
+     * 开始时间
      *
-     * <p>用于时间范围查询的结束时间，使用 {@link LocalDateTime} 类型
-     * 替代 {@link #endTime} 字符串版本，避免手动解析和格式问题。
+     * <p>用于时间范围查询的起始时间，使用 {@link LocalDateTime} 类型。
      */
-    private transient LocalDateTime endDateTime;
+    private LocalDateTime startDateTime;
+
+    /**
+     * 结束时间
+     *
+     * <p>用于时间范围查询的结束时间，使用 {@link LocalDateTime} 类型。
+     */
+    private LocalDateTime endDateTime;
+
     /**
      * 租户ID
      *

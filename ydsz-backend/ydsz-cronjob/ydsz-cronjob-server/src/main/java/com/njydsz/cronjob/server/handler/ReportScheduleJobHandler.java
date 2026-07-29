@@ -8,7 +8,7 @@ import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.job.JobHandler;
+import com.njydsz.common.job.JobHandler;
 import com.njydsz.cronjob.server.service.job.ReportScheduleService;
 
 import lombok.RequiredArgsConstructor;

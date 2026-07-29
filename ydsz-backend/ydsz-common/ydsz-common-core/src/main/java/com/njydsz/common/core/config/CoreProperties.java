@@ -9,9 +9,12 @@ import org.springframework.validation.annotation.Validated;
 import lombok.Data;
 
 /**
- * Core 模块配置属性。
+ * Core 模块配置属性
  *
- * <p>仅包含分页和链路追踪相关的核心配置。缓存、认证、安全等配置由各自专属模块管理。
+ * <p>仅包含分页和链路追踪相关的核心配置。优雅停机配置已迁移至
+ * {@code ydsz-common-lifecycle} 模块（{@code ydsz.lifecycle.*}）。
+ * 特性开关配置已迁移至 {@code ydsz-common-featureflag} 模块
+ * （{@code ydsz.feature-flag.*}）。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -20,7 +23,7 @@ import lombok.Data;
  *   core:
  *     enabled: true
  *     max-page-size: 1000
- *     default-page-size: 10
+ *     default-page-size: 20
  *     trace:
  *       enabled: true
  *       generate-if-missing: true
@@ -42,33 +45,13 @@ public class CoreProperties {
 
     /** 默认每页记录数，分页查询未指定 pageSize 时使用 */
     @Min(1)
-    private int defaultPageSize = 10;
+    private int defaultPageSize = 20;
 
     /** 链路追踪配置 */
     private TraceConfig trace = new TraceConfig();
 
-    /** 优雅停机配置 */
-    private GracefulShutdownConfig gracefulShutdown = new GracefulShutdownConfig();
-
     /**
-     * 优雅停机配置属性。
-     *
-     * <p>控制 {@link com.njydsz.common.core.lifecycle.GracefulShutdownCoordinator} 的行为。
-     */
-    @Data
-    public static class GracefulShutdownConfig {
-
-        /** 是否启用优雅停机协调器（默认 true） */
-        private boolean enabled = true;
-
-        /** 停机超时时间（秒），超时后强制退出 */
-        @Min(5)
-        @Max(300)
-        private int timeoutSeconds = 30;
-    }
-
-    /**
-     * 链路追踪配置属性。
+     * 链路追踪配置属性
      *
      * <p>TraceId 请求头名称由 {@link com.njydsz.common.core.constant.TraceConstants#TRACE_ID_HEADER}
      * 统一定义，不支持配置覆盖，确保全项目一致。

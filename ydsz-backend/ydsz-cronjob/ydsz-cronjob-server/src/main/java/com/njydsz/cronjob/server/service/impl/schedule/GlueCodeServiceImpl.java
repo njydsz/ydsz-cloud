@@ -211,8 +211,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
                 template.put("template",
                         "// GLUE Groovy 模板\n" +
                         "// 实现 JobHandler 接口或定义 execute 方法\n" +
-                        "import com.njydsz.common.core.job.JobHandler\n" +
-                        "import com.njydsz.common.core.job.ProcessResult\n" +
+                        "import com.njydsz.common.job.JobHandler\n" +
+                        "import com.njydsz.common.job.ProcessResult\n" +
                         "\n" +
                         "class MyJob implements JobHandler {\n" +
                         "    @Override\n" +

@@ -5,9 +5,9 @@ import java.io.Serializable;
 /**
  * 组织维度标记接口
  *
- * <p>标识该实体支持组织维度数据隔离。业务实体可通过实现此接口替代继承 {@link GroupEntity}。
+ * <p>标识该实体支持组织维度数据隔离。
  *
- * <p>接口定义了公司ID和部门ID。getter/setter，与 {@link GroupEntity} 的字段对齐；
+ * <p>接口定义了公司ID和部门ID的 getter/setter；
  * {@link #getGroupId()} / {@link #setGroupId(Long)} 作为便捷方法，默认返回/ 设置 companyId。
  *
  * @author ydsz-team

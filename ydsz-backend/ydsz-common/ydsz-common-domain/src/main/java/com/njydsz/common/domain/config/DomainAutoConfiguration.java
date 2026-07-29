@@ -3,14 +3,17 @@ package com.njydsz.common.domain.config;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.TaskExecutor;
 
 import com.njydsz.common.domain.event.DomainEventPublisher;
+import com.njydsz.common.domain.health.DomainHealthIndicator;
 import com.njydsz.common.domain.tree.TreeLazyConfig;
 
 /**
@@ -20,6 +23,7 @@ import com.njydsz.common.domain.tree.TreeLazyConfig;
  * <ul>
  *   <li>树形结构懒加载配置（TreeLazyConfig）</li>
  *   <li>领域事件发布器（DomainEventPublisher）</li>
+ *   <li>模块健康指标（DomainHealthIndicator，需 spring-boot-health 在 classpath）</li>
  * </ul>
  *
  * <p><b>EventStore SPI：</b>{@link com.njydsz.common.domain.event.EventStore}
@@ -51,5 +55,24 @@ public class DomainAutoConfiguration {
                                                       ObjectProvider<TaskExecutor> taskExecutorProvider) {
         TaskExecutor taskExecutor = taskExecutorProvider.getIfAvailable();
         return new DomainEventPublisher(eventPublisher, taskExecutor);
+    }
+
+    /**
+     * 注册 Domain 模块健康指标
+     *
+     * <p>当 spring-boot-health 在 classpath 时自动注册。
+     * 报告领域事件发布器状态和树懒加载配置。
+     *
+     * @param eventPublisherProvider 领域事件发布器提供者
+     * @param treeLazyConfig         树懒加载配置
+     * @return Domain 健康指标实例
+     */
+    @Bean
+    @ConditionalOnClass(HealthIndicator.class)
+    @ConditionalOnMissingBean(DomainHealthIndicator.class)
+    public DomainHealthIndicator domainHealthIndicator(ObjectProvider<DomainEventPublisher> eventPublisherProvider,
+                                                         TreeLazyConfig treeLazyConfig) {
+        DomainEventPublisher eventPublisher = eventPublisherProvider.getIfAvailable();
+        return new DomainHealthIndicator(eventPublisher, treeLazyConfig);
     }
 }

@@ -17,7 +17,6 @@ import com.njydsz.common.core.trace.TraceIdSupplier;
  * <ul>
  *   <li>TraceId 生成策略（UUID / Snowflake）</li>
  *   <li>分页配置（maxPageSize / defaultPageSize）</li>
- *   <li>优雅停机超时配置</li>
  * </ul>
  *
  * <p>访问 {@code /actuator/health} 时，响应的 details 中会包含 {@code core} 节点。
@@ -51,10 +50,6 @@ public class CoreHealthIndicator implements HealthIndicator {
         // 分页配置
         details.put("maxPageSize", properties.getMaxPageSize());
         details.put("defaultPageSize", properties.getDefaultPageSize());
-
-        // 优雅停机配置
-        details.put("gracefulShutdownEnabled", properties.getGracefulShutdown().isEnabled());
-        details.put("gracefulShutdownTimeoutSeconds", properties.getGracefulShutdown().getTimeoutSeconds());
 
         return Health.up().withDetails(details).build();
     }

@@ -31,7 +31,7 @@ public class PageResult<T> implements Serializable {
     /**
      * 当前页数据列表
      */
-    private transient List<T> records;
+    private List<T> records;
 
     /**
      * 总记录数

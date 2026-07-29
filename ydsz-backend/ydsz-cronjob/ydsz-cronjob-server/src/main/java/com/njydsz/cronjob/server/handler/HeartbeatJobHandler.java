@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.job.JobHandler;
+import com.njydsz.common.job.JobHandler;
 
 import lombok.extern.slf4j.Slf4j;
 

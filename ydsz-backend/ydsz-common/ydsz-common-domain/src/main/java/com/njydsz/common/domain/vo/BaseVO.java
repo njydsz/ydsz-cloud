@@ -16,10 +16,13 @@ import lombok.experimental.SuperBuilder;
  * <p>用于前端展示的数据对象基类，包含通用的审计字段和状态信息。
  * 逻辑删除标识通过 {@code @YdszJsonField(ignore = true)} 对前端透明。
  *
+ * <p><b>泛型支持：</b>{@code T} 为主键 ID 类型，默认为 {@code String}。
+ * 当实体主键为 {@code Long} 时，可使用 {@code BaseVO<Long>} 保持类型一致。
+ *
  * <p><b>通用字段说明：</b>
  * <table>
  *   <tr><th>字段</th><th>类型</th><th>说明</th></tr>
- *   <tr><td>id</td><td>String</td><td>主键ID</td></tr>
+ *   <tr><td>id</td><td>T</td><td>主键ID</td></tr>
  *   <tr><td>createdAt</td><td>LocalDateTime</td><td>创建时间</td></tr>
  *   <tr><td>updatedAt</td><td>LocalDateTime</td><td>更新时间</td></tr>
  *   <tr><td>createdBy</td><td>String</td><td>创建人ID</td></tr>
@@ -32,6 +35,8 @@ import lombok.experimental.SuperBuilder;
  *   <tr><td>version</td><td>Integer</td><td>乐观锁版本</td></tr>
  * </table>
  *
+ * @param <T> 主键ID类型，默认为 String
+ *
  * @author ydsz-team
  * @since 1.0.0
  *
@@ -39,7 +44,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-public class BaseVO implements Serializable {
+public class BaseVO<T extends Serializable> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -48,7 +53,7 @@ public class BaseVO implements Serializable {
      *
      * <p>实体的唯一标识，通常由雪花算法生成。
      */
-    private String id;
+    private T id;
 
     /**
      * 创建时间

@@ -11,7 +11,7 @@
 
     <artifactId>ydsz-common-core</artifactId>
     <name>ydsz-common-core</name>
-    <description>minimal core, zero framework dependencies</description>
+    <description>minimal core — response model, request context, trace ID, constants, enums</description>
 
     <properties>
         <!-- JaCoCo 已全局禁用，提供默认空值避免 @{argLine} 占位符未解析 -->
@@ -60,17 +60,7 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!--
-            micrometer-core（P1: AbstractModuleMetrics 基类依赖）
-            提供统一的 Micrometer 指标注册能力（Counter / Timer / Gauge），
-            供各业务模块的 Metrics 类继承使用。
-            版本由 Spring Boot 4.1.0 BOM 统一管理。
-        -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-core</artifactId>
-        </dependency>
-        <!-- Spring Boot -->
+        <!-- Spring Boot (auto-configuration + @ConfigurationProperties) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
@@ -84,12 +74,7 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- AspectJ Weaver（FeatureToggleAspect AOP 切面需要） -->
-        <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjweaver</artifactId>
-        </dependency>
-        <!-- Spring Boot Health（Spring Boot 4.x: health classes moved from actuator to health module） -->
+        <!-- Spring Boot Health（optional, CoreHealthIndicator 需要） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-health</artifactId>

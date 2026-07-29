@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.metrics.AbstractModuleMetrics;
+import com.njydsz.common.metrics.AbstractModuleMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;

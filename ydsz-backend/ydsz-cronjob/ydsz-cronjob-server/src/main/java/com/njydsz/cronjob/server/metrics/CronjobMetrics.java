@@ -7,7 +7,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.core.metrics.AbstractModuleMetrics;
+import com.njydsz.common.metrics.AbstractModuleMetrics;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 

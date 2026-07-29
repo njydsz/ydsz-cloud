@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.impl.core;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -50,34 +49,21 @@ public class RetryScanner {
     private final MsgLogMapper msgLogMapper;
     private final ChannelRouter channelRouter;
     private final MessageMetrics messageMetrics;
-    private final DistributedLocker distributedLocker;
     private final RetryStrategyResolver retryStrategyResolver;
 
     /**
      * 定时扫描重试队列。
      *
      * <p>默认 30s 扫描一次,通过 {@code ydsz.message.retry-scan-interval-ms} 配置。
-     * 分布式锁 TTL 60s,等待 0s(不阻塞),获取失败直接跳过本次扫描。
+     * 分布式锁通过 {@link DistributedScheduled} 注解自动管理,TTL 60s,获取失败直接跳过。
      */
     @Scheduled(fixedDelayString = "${ydsz.message.retry-scan-interval-ms:30000}")
+    @DistributedScheduled(lockKey = "message:retry-scan", leaseTime = 60)
     public void scan() {
-        String lockValue = null;
         try {
-            lockValue = distributedLocker.tryLock(MessageConstants.RETRY_SCAN_LOCK_KEY, 0, 60, TimeUnit.SECONDS);
-            if (lockValue == null) {
-                log.debug("[RetryScanner] 未获取锁,跳过本次扫描");
-                return;
-            }
             doScan();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("[RetryScanner] 扫描被中断");
         } catch (Exception e) {
             log.error("[RetryScanner] 扫描异常: {}", e.getMessage(), e);
-        } finally {
-            if (lockValue != null) {
-                distributedLocker.unlock(MessageConstants.RETRY_SCAN_LOCK_KEY, lockValue);
-            }
         }
     }
 

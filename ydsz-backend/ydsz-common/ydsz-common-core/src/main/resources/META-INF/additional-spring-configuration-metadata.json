@@ -16,7 +16,7 @@
       "name": "ydsz.core.default-page-size",
       "type": "java.lang.Integer",
       "description": "默认每页记录数，分页查询未指定 pageSize 时使用。",
-      "defaultValue": 10
+      "defaultValue": 20
     },
     {
       "name": "ydsz.core.trace.enabled",
@@ -55,57 +55,10 @@
       "defaultValue": []
     },
     {
-      "name": "ydsz.core.graceful-shutdown.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用优雅停机协调器。",
-      "defaultValue": true
-    },
-    {
-      "name": "ydsz.core.graceful-shutdown.timeout-seconds",
-      "type": "java.lang.Integer",
-      "description": "停机超时时间（秒），超时后强制退出。",
-      "defaultValue": 30
-    },
-    {
       "name": "ydsz.core.tenant-mdc-filter.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用租户 MDC 过滤器（自动将 tenantId/userId/traceId 写入日志 MDC）。",
       "defaultValue": true
-    },
-    {
-      "name": "ydsz.feature-flag.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用特性开关模块自动配置。",
-      "defaultValue": true
-    },
-    {
-      "name": "ydsz.feature-flag.nacos.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用 Nacos 动态配置源（运行时推送特性开关变更）。",
-      "defaultValue": false
-    },
-    {
-      "name": "ydsz.feature-flag.nacos.server-addr",
-      "type": "java.lang.String",
-      "description": "Nacos 服务地址，未配置时回退到 spring.cloud.nacos.config.server-addr。"
-    },
-    {
-      "name": "ydsz.feature-flag.nacos.data-id",
-      "type": "java.lang.String",
-      "description": "Nacos 配置 Data ID。",
-      "defaultValue": "ydsz-feature-flags.json"
-    },
-    {
-      "name": "ydsz.feature-flag.nacos.group",
-      "type": "java.lang.String",
-      "description": "Nacos 配置 Group。",
-      "defaultValue": "DEFAULT_GROUP"
-    },
-    {
-      "name": "ydsz.feature-flag.nacos.timeout-ms",
-      "type": "java.lang.Long",
-      "description": "拉取配置超时时间（毫秒）。",
-      "defaultValue": 5000
     }
   ]
 }

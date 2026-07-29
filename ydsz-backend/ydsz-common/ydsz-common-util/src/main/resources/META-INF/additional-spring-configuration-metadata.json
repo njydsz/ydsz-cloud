@@ -44,6 +44,16 @@
       "name": "ydsz.util.snowflake.environment-variable-name",
       "type": "java.lang.String",
       "description": "环境变量名（默认 YDSZ_SNOWFLAKE_WORKER_ID）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Snowflake 自动配置（默认 true）。"
+    },
+    {
+      "name": "ydsz.util.threadpool.monitor.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用线程池监控自动配置（默认 true）。"
     }
   ]
 }

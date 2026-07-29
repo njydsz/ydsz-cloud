@@ -454,13 +454,21 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     // ── 排序 ────────────────────────────────────────────────────────────────────
 
-    /** 对节点列表进行排序，并递归排序子树 */
+    /** 对节点列表进行排序，并迭代排序子树（避免递归栈溢出） */
     private static <T extends TreeNode<T, ?>> void sortSubTree(List<T> nodes) {
-        for (T node : nodes) {
-            List<T> children = node.getChildren();
-            if (children != null && !children.isEmpty()) {
-                children.sort(getSortComparator());
-                sortSubTree(children);
+        if (nodes == null || nodes.isEmpty()) {
+            return;
+        }
+        Deque<List<T>> stack = new ArrayDeque<>();
+        stack.push(nodes);
+        while (!stack.isEmpty()) {
+            List<T> current = stack.pop();
+            current.sort(getSortComparator());
+            for (T node : current) {
+                List<T> children = node.getChildren();
+                if (children != null && !children.isEmpty()) {
+                    stack.push(children);
+                }
             }
         }
     }

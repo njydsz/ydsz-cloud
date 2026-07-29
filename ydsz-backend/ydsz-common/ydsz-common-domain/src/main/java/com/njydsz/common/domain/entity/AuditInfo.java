@@ -8,7 +8,11 @@ import java.util.List;
  * 审计信息值对象
  *
  * <p>将创建人/创建时间/更新人/更新时间封装为一个独立的值对象，
- * 支持以组合方式替代继承，降低实体继承链深度
+ * 支持以组合方式替代继承，降低实体继承链深度。
+ *
+ * <p><b>当前状态：</b>此值为未来组合式重构预留，当前项目实体审计字段仍以继承方式
+ * 内联于 {@link BaseAuditEntity} 中。如果短期内不实施继承到组合的迁移，
+ * 可安全忽略此类。待 {@code BaseEntity} 继承链扁平化时启用。
  *
  * <p><b>设计目标：</b>
  * <ul>
@@ -17,24 +21,13 @@ import java.util.List;
  *   <li>可独立测试：审计信息可脱离实体独立测试和验证</li>
  * </ul>
  *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // 从 Auditable 实体提取
- * AuditInfo info = AuditInfo.from(entity);
- *
- * // 创建新实例
- * AuditInfo info = AuditInfo.of("user123", LocalDateTime.now());
- *
- * // 不可变更新
- * AuditInfo updated = info.withUpdate("user456", LocalDateTime.now());
- * }</pre>
- *
  * @author ydsz-team
  * @since 1.0.0
  *
  * @see Auditable
  * @see BaseValueObject
  */
+@Deprecated(since = "1.0.0", forRemoval = false)
 public final class AuditInfo extends BaseValueObject {
 
     private static final long serialVersionUID = 1L;

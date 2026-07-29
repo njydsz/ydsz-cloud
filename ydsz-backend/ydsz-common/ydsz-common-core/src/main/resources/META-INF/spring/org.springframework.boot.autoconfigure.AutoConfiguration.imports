@@ -1,4 +1,2 @@
 com.njydsz.common.core.config.CoreAutoConfiguration
 com.njydsz.common.core.config.TraceAutoConfiguration
-com.njydsz.common.core.lifecycle.GracefulShutdownAutoConfiguration
-com.njydsz.common.core.featureflag.FeatureFlagAutoConfiguration

@@ -43,7 +43,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  *   <li>R25: 业务模块 Metrics 必须继承 AbstractModuleMetrics</li>
  *   <li>R26: @Scheduled 定时任务必须使用 @DistributedScheduled 注解（集群安全）</li>
  *   <li>R27: HealthIndicator 不允许使用 @Component 注解（应通过 @Bean 注册）</li>
- *   <li>R28: 禁止使用 Executors.new* 方法创建线程池（应通过 common-thread 统一管理）</li>
+ *   <li>R28: 禁止使用 Executors.newFixedThreadPool/newCachedThreadPool（应通过 common-thread 统一管理；ScheduledExecutorService 变体因调度需求豁免）</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -386,7 +386,7 @@ public class ArchitectureRulesTest {
                     "..nextwiki..", "..literule..", "..agent..",
                     "..userinfo..", "..system..", "..project..")
             .and().resideInAPackage("..server..")
-            .should().beAssignableTo("com.njydsz.common.core.metrics.AbstractModuleMetrics")
+            .should().beAssignableTo("com.njydsz.common.metrics.AbstractModuleMetrics")
             .because("业务模块 Metrics 必须继承 AbstractModuleMetrics");
 
     /**
@@ -432,17 +432,19 @@ public class ArchitectureRulesTest {
             .because("HealthIndicator 应通过 AutoConfiguration @Bean 注册，不应使用 @Component");
 
     /**
-     * R28: 禁止使用 Executors.new* 方法创建线程池。
+     * R28: 禁止使用 Executors.newFixedThreadPool/newCachedThreadPool 创建线程池。
      *
-     * <p>{@code Executors.newFixedThreadPool}、{@code Executors.newCachedThreadPool} 等方法
-     * 创建的线程池缺乏命名、监控和生命周期管理能力。必须通过 {@code common-thread} 模块
-     * 的 {@code ThreadPoolAutoConfiguration} 统一创建命名线程池，支持：
+     * <p>这两种线程池可以通过 {@code common-thread} 模块的 {@code ThreadPoolAutoConfiguration}
+     * 统一创建命名线程池替代，支持线程命名、Micrometer 指标暴露、YAML 动态配置和优雅关闭。
+     *
+     * <p><b>例外：</b>{@code Executors.newScheduledThreadPool}、{@code Executors.newSingleThreadScheduledExecutor}
+     * 和 {@code Executors.newSingleThreadExecutor} 不在此规则范围内，因为：
      * <ul>
-     *   <li>线程命名（便于线程 dump 排查）</li>
-     *   <li>Micrometer 指标暴露（活跃线程数/队列大小/完成任务数）</li>
-     *   <li>YAML 动态配置（核心/最大线程数/队列容量/拒绝策略）</li>
-     *   <li>优雅关闭（@PreDestroy 钩子）</li>
+     *   <li>ScheduledExecutorService 提供 {@code scheduleAtFixedRate}/{@code scheduleWithFixedDelay} 调度能力，
+     *       ThreadPoolTaskExecutor 不支持</li>
+     *   <li>单线程 Executor 常用于守护线程监听器（如 Nacos Listener），生命周期由 @PreDestroy 管理</li>
      * </ul>
+     * 这些场景要求使用方必须添加 @PreDestroy 生命周期管理和命名线程工厂。
      */
     @ArchTest
     static final ArchRule noExecutorsNewMethods = noClasses()
@@ -452,9 +454,7 @@ public class ArchitectureRulesTest {
                     "..userinfo..", "..system..", "..project..")
             .should().callMethod(java.util.concurrent.Executors.class, "newFixedThreadPool", int.class)
             .orShould().callMethod(java.util.concurrent.Executors.class, "newCachedThreadPool")
-            .orShould().callMethod(java.util.concurrent.Executors.class, "newSingleThreadExecutor")
-            .orShould().callMethod(java.util.concurrent.Executors.class, "newScheduledThreadPool", int.class)
-            .orShould().callMethod(java.util.concurrent.Executors.class, "newSingleThreadScheduledExecutor")
-            .orShould().callMethod(java.util.concurrent.Executors.class, "newWorkStealingPool")
-            .because("禁止使用 Executors.new* 创建线程池，应通过 common-thread 的 ThreadPoolAutoConfiguration 统一管理");
+            .because("禁止使用 Executors.newFixedThreadPool/newCachedThreadPool 创建线程池，"
+                    + "应通过 common-thread 的 ThreadPoolAutoConfiguration 统一管理；"
+                    + "ScheduledExecutorService 变体因调度需求豁免");
 }

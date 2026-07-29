@@ -62,7 +62,7 @@ import lombok.experimental.SuperBuilder;
  * <p><b>重构规划：</b>当前审计字段（createdBy/createdAt/updatedBy/updatedAt）以继承方式内联于此类中。
  * 未来计划提取为 {@code AuditInfo} 值对象，通过 {@code @Embedded} 组合方式替代继承。
  * 这将降低继承链深度，提高实体类的组合灵活性，并使审计信息可独立复用。
- * 迁移路径：BaseAuditEntity →BaseIdEntity + @Embedded AuditInfo
+ * 迁移路径：BaseAuditEntity -> BaseIdEntity + @Embedded AuditInfo
  *
  * @param <T> 主键ID类型，支持 Long、String、UUID 等
  *

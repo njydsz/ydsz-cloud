@@ -26,7 +26,6 @@
     "@ydsz/plugins": "workspace:*",
     "@ydsz/preferences": "workspace:*",
     "@ydsz/request": "workspace:*",
-    "@ydsz/shared-api": "workspace:*",
     "@ydsz/shared-auth": "workspace:*",
     "@ydsz/shared-business": "workspace:*",
     "@ydsz/stores": "workspace:*",

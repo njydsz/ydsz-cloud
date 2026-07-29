@@ -6,34 +6,19 @@ package com.njydsz.common.domain.event;
  * <p>定义所有跨模块事件的标准类型名称，作为模块间事件契约的单一来源。
  * 各模块发布事件时使用此处定义的常量，消费方按类型订阅。
  *
+ * <p><b>与 common-event StandardEventTypes 的关系：</b>
+ * <ul>
+ *   <li>本类定义 domain 模块内置的领域事件类型常量，与 {@link DomainEvent} 强绑定</li>
+ *   <li>{@code StandardEventTypes}（common-event 模块）定义通用基础设施事件类型（如 Outbox/MQ 事件）</li>
+ *   <li>领域事件优先使用本类常量，基础设施事件使用 StandardEventTypes</li>
+ * </ul>
+ *
  * <h3>命名规范</h3>
  * <ul>
  *   <li>格式：{@code MODULE_ACTION}（如 {@code WORKFLOW_TASK_CREATED}）</li>
  *   <li>使用过去时或完成时，表达"已发生的事实"</li>
  *   <li>每个事件类型注明发布方模块和消费方模块</li>
  * </ul>
- *
- * <h3>使用示例</h3>
- * <pre>{@code
- * // 发布方
- * DomainEvent event = DomainEvent.builder()
- *     .eventType(ModuleEventTypes.WORKFLOW_INSTANCE_COMPLETED)
- *     .aggregateId(instanceId)
- *     .aggregateType("FlowInstance")
- *     .build();
- * domainEventPublisher.publishAfterCommit(event);
- *
- * // 消费方
- * @EventListener
- * public void onWorkflowCompleted(DomainEvent event) {
- *     if (ModuleEventTypes.WORKFLOW_INSTANCE_COMPLETED.equals(event.getEventType())) {
- *         // 处理流程完成后的业务联动
- *     }
- * }
- * }</pre>
- *
- * <p><b>P2-1</b>：本类作为模块间事件契约的注册中心，新增跨模块事件类型时
- * 必须在此注册并注明发布方/消费方，确保契约可追溯。
  *
  * @author ydsz-team
  * @since 1.0.0

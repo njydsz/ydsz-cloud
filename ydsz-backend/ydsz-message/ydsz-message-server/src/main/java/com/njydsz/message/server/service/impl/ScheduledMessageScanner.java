@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.impl.core;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -10,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
@@ -47,10 +46,6 @@ public class ScheduledMessageScanner {
     private final MsgLogMapper msgLogMapper;
     private final ChannelRouter channelRouter;
     private final MessageMetrics messageMetrics;
-    private final DistributedLocker distributedLocker;
-
-    /** 分布式锁 key */
-    private static final String LOCK_KEY = "ydsz:msg:scheduled:scan:lock";
 
     /** 单次扫描批量大小 */
     private static final int BATCH_SIZE = 200;
@@ -58,27 +53,15 @@ public class ScheduledMessageScanner {
     /**
      * 定时扫描到期消息。
      *
-     * <p>默认 30s 扫描一次，分布式锁 TTL 60s，等待 0s（不阻塞），获取失败直接跳过。
+     * <p>默认 30s 扫描一次，分布式锁通过 {@link DistributedScheduled} 注解自动管理，TTL 60s，获取失败直接跳过。
      */
     @Scheduled(fixedDelayString = "${ydsz.message.scheduled-scan-interval-ms:30000}")
+    @DistributedScheduled(lockKey = "message:scheduled-scan", leaseTime = 60)
     public void scan() {
-        String lockValue = null;
         try {
-            lockValue = distributedLocker.tryLock(LOCK_KEY, 0, 60, TimeUnit.SECONDS);
-            if (lockValue == null) {
-                log.debug("[ScheduledScanner] 未获取锁,跳过本次扫描");
-                return;
-            }
             doScan();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("[ScheduledScanner] 扫描被中断");
         } catch (Exception e) {
             log.error("[ScheduledScanner] 扫描异常: {}", e.getMessage(), e);
-        } finally {
-            if (lockValue != null) {
-                distributedLocker.unlock(LOCK_KEY, lockValue);
-            }
         }
     }
 

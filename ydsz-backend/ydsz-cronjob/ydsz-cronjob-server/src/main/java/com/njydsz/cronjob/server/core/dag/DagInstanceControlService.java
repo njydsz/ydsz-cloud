@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.core.dag.DagInstanceStatus;
-import com.njydsz.common.core.dag.DagNodeStatus;
+import com.njydsz.common.dag.DagInstanceStatus;
+import com.njydsz.common.dag.DagNodeStatus;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.domain.entity.job.Job;

@@ -64,7 +64,16 @@ jobs:
         run: mvn -B -ntp spotless:check -DskipTests
 
       - name: ArchUnit 架构规则测试
-        # P3-1: ArchUnit 编译期架构约束（R1-R23）
+        # P3-1: ArchUnit 编译期架构约束（R1-R28）
+        # R1-R8:   DDD 分层 + 包结构规范
+        # R9-R11:  Service 层规范（禁 toVO/禁 BeanUtils/Controller 注解）
+        # R12-R16: 命名包约束（Converter/VO/Properties/SuppressWarnings/FeignClient）
+        # R17-R19: 返回结果封装 + DTO 分包规范
+        # R20-R23: 层级依赖方向 + 跨模块隔离 + Converter 方法命名
+        # R24-R25: HealthIndicator/Metrics 基类继承约束
+        # R26:     @Scheduled 必须使用 @DistributedScheduled 注解（集群安全）
+        # R27:     HealthIndicator 不允许使用 @Component 注解（应通过 @Bean 注册）
+        # R28:     禁止使用 Executors.new* 方法创建线程池（应通过 common-thread 统一管理）
         # 规则类：ydsz-common-base/src/test/.../ArchitectureRulesTest.java
         # ArchUnit 测试已在上方 mvn test 中自动执行，此处为独立确认步骤
         run: mvn -B -ntp test -pl ydsz-common/ydsz-common-base -Dtest=ArchitectureRulesTest -DfailIfNoTests=false

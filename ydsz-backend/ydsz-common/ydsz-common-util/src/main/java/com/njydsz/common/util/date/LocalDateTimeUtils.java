@@ -1081,16 +1081,6 @@ public class LocalDateTimeUtils {
     }
 
     /**
-     * 获取指定季度的月份数（固定为 3）
-     *
-     * @param dateTime 日期时间
-     * @return 季度的月份数
-     */
-    public static int getMonthsOfQuarter(LocalDateTime dateTime) {
-        return dateTime == null ? -1 : 3;
-    }
-
-    /**
      * 获取下一个工作日（跳过周末）
      *
      * @param dateTime 日期时间

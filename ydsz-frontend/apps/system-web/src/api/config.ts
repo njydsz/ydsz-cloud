@@ -2,13 +2,11 @@
  * 系统配置 API 模块（前端）
  *
  * 封装系统参数（{@code ydsz_config}）CRUD 接口，对应后端 {@code /api/v1/config/*} 端点。
- * 使用 @ydsz/shared-api 的 createCrudApi 工厂消除重复 CRUD 代码。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 import { requestClient } from '#/api/request';
-import { createCrudApi } from '@ydsz/shared-api';
 
 export namespace ConfigApi {
   export interface ConfigVO {
@@ -42,57 +40,37 @@ export namespace ConfigApi {
   }
 }
 
-/** 系统配置 CRUD API（由 createCrudApi 工厂创建） */
-export const configApi = createCrudApi<
-  ConfigApi.ConfigVO,
-  ConfigApi.ConfigPageQuery,
-  ConfigApi.ConfigDTO
->(requestClient, '/api/v1/config');
-
-/**
- * 分页查询 config 列表
- * @deprecated 使用 configApi.page() 替代
- */
+/** 分页查询系统配置列表 */
 export function getConfigPageApi(params: ConfigApi.ConfigPageQuery) {
-  return configApi.page(params as any);
+  return requestClient.get<{
+    total: number;
+    current: number;
+    size: number;
+    items: ConfigApi.ConfigVO[];
+  }>('/api/v1/config/page', { params });
 }
 
-/**
- * 查询全部 config 列表
- * @deprecated 使用 configApi.list() 替代
- */
+/** 查询全部系统配置列表 */
 export function getConfigListApi() {
-  return configApi.list();
+  return requestClient.get<ConfigApi.ConfigVO[]>('/api/v1/config/list');
 }
 
-/**
- * 根据 ID 查询 config
- * @deprecated 使用 configApi.getById() 替代
- */
+/** 根据 ID 查询系统配置 */
 export function getConfigByIdApi(id: string) {
-  return configApi.getById(id);
+  return requestClient.get<ConfigApi.ConfigVO>(`/api/v1/config/${id}`);
 }
 
-/**
- * 创建 config
- * @deprecated 使用 configApi.create() 替代
- */
+/** 创建系统配置 */
 export function createConfigApi(data: ConfigApi.ConfigDTO) {
-  return configApi.create(data);
+  return requestClient.post<string>('/api/v1/config', data);
 }
 
-/**
- * 更新 config
- * @deprecated 使用 configApi.update() 替代
- */
+/** 更新系统配置 */
 export function updateConfigApi(data: ConfigApi.ConfigDTO) {
-  return configApi.update(data.id ?? '', data);
+  return requestClient.put<boolean>('/api/v1/config', data);
 }
 
-/**
- * 删除 config
- * @deprecated 使用 configApi.remove() 替代
- */
+/** 删除系统配置 */
 export function deleteConfigApi(id: string) {
-  return configApi.remove(id);
+  return requestClient.delete<boolean>(`/api/v1/config/${id}`);
 }

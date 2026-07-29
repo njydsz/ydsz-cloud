@@ -5,17 +5,12 @@ import java.io.Serializable;
 /**
  * 项目维度标记接口
  *
- * <p>标识该实体支持项目维度数据隔离。业务实体可通过实现此接口替代继承 {@link ProjectEntity}。
- * 配合 SQL 拦截器自动注入project_id 条件
+ * <p>标识该实体支持项目维度数据隔离。
+ * 配合 SQL 拦截器自动注入 project_id 条件。
  *
- * <p><b>迁移策略：</b>
+ * <p><b>使用方式：</b>
  * <pre>{@code
- * // 旧写法（继承。
- * public class Task extends ProjectEntity<Long> {
- *     private String taskName;
- * }
- *
- * // 新写法（接口 + 组合。
+ * // 接口 + 组合
  * public class Task extends BaseEntity<Long> implements ProjectAware {
  *     @TableField("project_id")
  *     private Long projectId;
@@ -40,7 +35,6 @@ import java.io.Serializable;
  * @author ydsz-team
  * @since 1.0.0
  * 
- * @see ProjectEntity
  * @see TenantAware
  * @see RegionAware
  */

@@ -9,7 +9,7 @@ package com.njydsz.common.domain.entity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ *
  */
 public interface SoftDeletable {
 

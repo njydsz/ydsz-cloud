@@ -127,7 +127,7 @@ public class PageQuery extends BaseQuery {
      * 本类通过覆写 {@link #setOrderBy(String)} 和 {@link #getOrderBy()} 安全校验）
      */
     @Builder.Default
-    private transient List<String> orderItems = new ArrayList<>();
+    private List<String> orderItems = new ArrayList<>();
 
     /**
      * 允许排序的字段白名单

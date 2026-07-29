@@ -9,6 +9,9 @@ import java.util.function.Supplier;
 
 import org.slf4j.MDC;
 
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.type.YdszJsonType;
+
 /**
  * 上下文传播工具类
  *
@@ -86,28 +89,15 @@ public final class ContextPropagationUtils {
                 if (mdcMap == null || mdcMap.isEmpty()) {
                     return null;
                 }
-                // 将 MDC map 序列化为 "key1=value1\u0001key2=value2" 格式
-                StringBuilder sb = new StringBuilder();
-                for (Map.Entry<String, String> entry : mdcMap.entrySet()) {
-                    if (sb.length() > 0) {
-                        sb.append('\u0001');
-                    }
-                    sb.append(entry.getKey()).append('=').append(entry.getValue());
-                }
-                return sb.toString();
+                // 使用 YdszJson 序列化 MDC map，避免分隔符冲突
+                return YdszJson.toJson(mdcMap);
             },
             (name, value) -> {
                 if (value == null) {
                     MDC.clear();
                 } else {
-                    Map<String, String> mdcMap = new HashMap<>();
-                    String[] pairs = value.split("\u0001");
-                    for (String pair : pairs) {
-                        int idx = pair.indexOf('=');
-                        if (idx > 0) {
-                            mdcMap.put(pair.substring(0, idx), pair.substring(idx + 1));
-                        }
-                    }
+                    // 使用 YdszJson 反序列化 MDC map
+                    Map<String, String> mdcMap = YdszJson.toObject(value, new YdszJsonType<Map<String, String>>() {});
                     MDC.setContextMap(mdcMap);
                 }
             }

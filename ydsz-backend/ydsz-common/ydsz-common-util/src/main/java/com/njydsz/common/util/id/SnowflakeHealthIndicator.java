@@ -2,7 +2,6 @@ package com.njydsz.common.util.id;
 
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
 
 /**
  * Snowflake 健康检查指示器
@@ -14,26 +13,29 @@ import org.springframework.stereotype.Component;
  *   <li>ID 生成能力验证</li>
  * </ul>
  *
+ * <p>通过 {@link UtilAutoConfiguration} 中 {@code @Bean} 注册，
+ * 不使用 {@code @Component} 注解（项目规范：HealthIndicator 统一在 AutoConfiguration 中注册）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Component
 public class SnowflakeHealthIndicator implements HealthIndicator {
 
-    private final SnowflakeUtils snowflakeUtils;
-
     /**
-     * 构造 Snowflake 健康检查指示器
+     * 默认构造器
      *
-     * @param snowflakeUtils Snowflake ID 生成器实例
+     * <p>不通过构造器注入 SnowflakeUtils（它是静态单例类，非 Spring Bean），
+     * 在 {@link #health()} 方法中通过 {@link SnowflakeUtils#getInstance()} 获取实例。
      */
-    public SnowflakeHealthIndicator(SnowflakeUtils snowflakeUtils) {
-        this.snowflakeUtils = snowflakeUtils;
+    public SnowflakeHealthIndicator() {
+        // 无参构造器，SnowflakeUtils 通过静态 getInstance() 获取
     }
 
     @Override
     public Health health() {
         try {
+            SnowflakeUtils snowflakeUtils = SnowflakeUtils.getInstance();
+
             // 检查 workerId 有效性
             long workerId = snowflakeUtils.getWorkerId();
             if (workerId < 0 || workerId > 31) {
@@ -63,6 +65,7 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
 
             return Health.up()
                     .withDetail("workerId", workerId)
+                    .withDetail("datacenterId", snowflakeUtils.getDatacenterId())
                     .withDetail("lastTimestamp", lastTimestamp)
                     .withDetail("currentTimestamp", currentTimestamp)
                     .build();

@@ -3,23 +3,23 @@ package com.njydsz.common.domain.entity;
 import java.io.Serializable;
 
 /**
- * 可持久化实体标识接口（Spring Data 风格。
+ * 可持久化实体标识接口（Spring Data 风格）。
  *
  * <p>定义所有持久化实体的最小契约：具备主键 ID 并能判断新建/已存在状态。
- * 替代 {@code RootEntity} 中直接定。getId/setId/isNew 的方式，
+ * 替代 {@code RootEntity} 中直接定义 getId/setId/isNew 的方式，
  * 使接口职责更单一、组合更灵活。
  *
  * <pre>
- * 使用方式。
- *   BaseIdEntity&lt;Long&gt;  。 implements Persistable&lt;Long&gt;
- *   自定义实体           。 implements Persistable&lt;String&gt;
+ * 使用方式：
+ *   BaseIdEntity&lt;Long&gt;  implements Persistable&lt;Long&gt;
+ *   自定义实体           implements Persistable&lt;String&gt;
  * </pre>
  *
  * @param <T> 主键 ID 类型
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ *
  */
 public interface Persistable<T extends Serializable> extends Serializable {
 

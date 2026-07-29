@@ -12,9 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 
 import com.njydsz.common.core.context.TenantMdcFilter;
-import com.njydsz.common.core.dag.SpELConditionEvaluator;
-import com.njydsz.common.core.featureflag.FeatureFlagService;
-import com.njydsz.common.core.featureflag.FeatureToggleAspect;
 import com.njydsz.common.core.health.CoreHealthIndicator;
 import com.njydsz.common.core.response.BaseResponse;
 
@@ -57,32 +54,6 @@ public class CoreAutoConfiguration {
         SpringMessageResolver resolver = new SpringMessageResolver(messageSource);
         BaseResponse.setResolver(resolver);
         return resolver;
-    }
-
-    /**
-     * 注册 SpEL 条件评估器（DAG 条件分支节点使用）。
-     *
-     * @return SpELConditionEvaluator 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public SpELConditionEvaluator spELConditionEvaluator() {
-        return new SpELConditionEvaluator();
-    }
-
-    /**
-     * 注册 FeatureToggle AOP 切面。
-     *
-     * <p>当容器中存在 {@link FeatureFlagService} Bean 且 classpath 上有 AspectJ 时生效。
-     *
-     * @param featureFlagService 特性开关服务
-     * @return FeatureToggleAspect 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnBean(FeatureFlagService.class)
-    public FeatureToggleAspect featureToggleAspect(FeatureFlagService featureFlagService) {
-        return new FeatureToggleAspect(featureFlagService);
     }
 
     /**

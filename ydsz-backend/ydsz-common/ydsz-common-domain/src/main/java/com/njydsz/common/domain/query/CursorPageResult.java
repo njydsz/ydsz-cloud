@@ -69,4 +69,20 @@ public class CursorPageResult<T> implements Serializable {
         String nextCursor = hasMore ? cursorEncoder.apply(pageRecords.get(pageRecords.size() - 1)) : null;
         return new CursorPageResult<>(pageRecords, nextCursor, hasMore);
     }
+
+    /**
+     * 将当前游标分页结果的数据列表进行类型转换
+     *
+     * <p>适用于 DO -> VO 转换场景，避免手动重新构造游标分页对象。
+     *
+     * @param converter 转换函数
+     * @param <R>       目标类型
+     * @return 转换后的游标分页结果
+     */
+    public <R> CursorPageResult<R> convert(Function<T, R> converter) {
+        List<R> convertedRecords = records != null
+                ? records.stream().map(converter).collect(java.util.stream.Collectors.toList())
+                : Collections.emptyList();
+        return new CursorPageResult<>(convertedRecords, nextCursor, hasMore);
+    }
 }

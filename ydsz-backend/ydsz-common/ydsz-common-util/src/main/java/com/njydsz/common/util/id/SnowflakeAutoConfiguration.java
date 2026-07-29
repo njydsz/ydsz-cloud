@@ -6,10 +6,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.env.Environment;
 
 import com.njydsz.common.util.id.SnowflakeProperties.WorkerIdSource;
+import com.njydsz.common.util.security.DigestUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @AutoConfiguration
+@ConditionalOnProperty(prefix = "ydsz.util.snowflake", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(SnowflakeProperties.class)
 public class SnowflakeAutoConfiguration {
 
@@ -131,14 +134,17 @@ public class SnowflakeAutoConfiguration {
 
     /**
      * 自动计算 workerId（基于 IP 地址哈希）
+     *
+     * <p>使用 SHA-256 哈希算法，与 {@link SnowflakeUtils#computeWorkerId()} 保持一致，
+     * 避免不同路径产生不同 workerId 导致集群冲突。
      */
     private long resolveAutoWorkerId() {
         try {
             String hostAddress = InetAddress.getLocalHost().getHostAddress();
-            int hash = hostAddress.hashCode();
-            return Math.abs(hash) % (MAX_WORKER_ID + 1);
+            String hash = DigestUtils.sha256Hex(hostAddress);
+            return validateWorkerId(Long.parseLong(hash.substring(0, 5), 16) % 32);
         } catch (UnknownHostException e) {
-            return ThreadLocalRandom.current().nextLong(MAX_WORKER_ID + 1);
+            return validateWorkerId(ThreadLocalRandom.current().nextLong(32));
         }
     }
 
@@ -183,12 +189,17 @@ public class SnowflakeAutoConfiguration {
 
     /**
      * 自动计算 datacenterId（基于主机名哈希）
+     *
+     * <p>使用 SHA-256 哈希算法，与 {@link SnowflakeUtils#getDataCenterId()} 保持一致。
      */
     private long resolveAutoDatacenterId(Environment environment) {
         try {
             String hostName = InetAddress.getLocalHost().getHostName();
-            int hash = hostName.hashCode();
-            return Math.abs(hash) % (MAX_DATACENTER_ID + 1);
+            String hash = DigestUtils.sha256Hex(hostName);
+            if (Long.parseLong(hash.substring(0, 5), 16) % 32 > MAX_DATACENTER_ID) {
+                return MAX_DATACENTER_ID;
+            }
+            return Long.parseLong(hash.substring(0, 5), 16) % 32;
         } catch (UnknownHostException e) {
             return ThreadLocalRandom.current().nextLong(MAX_DATACENTER_ID + 1);
         }

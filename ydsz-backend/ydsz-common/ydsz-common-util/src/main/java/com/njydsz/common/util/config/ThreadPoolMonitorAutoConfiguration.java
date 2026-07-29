@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -45,8 +46,11 @@ public class ThreadPoolMonitorAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public ThreadPoolMonitor threadPoolMonitor() {
-        return new ThreadPoolMonitor();
+    public ThreadPoolMonitor threadPoolMonitor(ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        ThreadPoolMonitor monitor = new ThreadPoolMonitor();
+        // 自动注入 MeterRegistry 并注册指标（如果可用）
+        meterRegistryProvider.ifAvailable(monitor::registerWithMeterRegistry);
+        return monitor;
     }
 
     /**
