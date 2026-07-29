@@ -46,8 +46,8 @@ public final class JsonGenerator implements Closeable {
 
     private boolean closed = false;
 
-    private static final ThreadLocal<StringBuilder> SB_POOL =
-        ThreadLocal.withInitial(() -> new StringBuilder(256));
+    /** 字符串转义缓冲区（实例字段，JsonGenerator 实例本身是线程 confined 的，无需 ThreadLocal） */
+    private final StringBuilder escapeBuffer = new StringBuilder(64);
 
     /**
      * 创建流式生成器
@@ -332,8 +332,8 @@ public final class JsonGenerator implements Closeable {
     }
 
     private String escapeString(String str) {
-        StringBuilder sb = SB_POOL.get();
-        sb.setLength(0);
+StringBuilder sb = escapeBuffer;
+sb.setLength(0);
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
             switch (c) {

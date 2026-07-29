@@ -4,8 +4,11 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
+import com.njydsz.common.json.cache.AsmCodecCache;
+import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.YdszJsonCacheStats;
 import com.njydsz.common.json.config.YdszJsonConfig;
+import com.njydsz.common.json.provider.SerializationContext;
 
 /**
  * YdszJson 健康检查指标。
@@ -22,7 +25,7 @@ import com.njydsz.common.json.config.YdszJsonConfig;
  */
 public class JsonHealthIndicator implements HealthIndicator {
 
-    @Override
+        @Override
     public Health health() {
         YdszJsonConfig config = YdszJsonConfig.getInstance();
         boolean safeMode = AutoTypeChecker.isSafeMode();
@@ -33,9 +36,19 @@ public class JsonHealthIndicator implements HealthIndicator {
         builder.withDetail("maxDepth", config.getMaxDepth());
         builder.withDetail("namingStrategy", config.getNamingStrategy());
         builder.withDetail("circularReferenceStrategy", config.getCircularReferenceStrategy());
+        builder.withDetail("dateFormat", config.getDateFormat());
+        builder.withDetail("useBigDecimal", config.isUseBigDecimal());
+        builder.withDetail("wrapRootValue", config.isWrapRootValue());
 
+        // ASM 缓存统计
         builder.withDetail("asmLevel", YdszJsonCacheStats.getAsmLevel());
         builder.withDetail("asmGeneratedCount", YdszJsonCacheStats.getAsmGeneratedCount());
+        builder.withDetail("serializerCacheSize", YdszJsonCacheStats.getSerializerCacheSize());
+
+        // 缓存详情
+        builder.withDetail("codecCacheSize", AsmCodecCache.getCacheSize());
+        builder.withDetail("beanSerializerCacheSize", BeanSerializerCache.size());
+        builder.withDetail("threadLocalMemoryEstimate", SerializationContext.estimateThreadLocalMemory());
 
         if (!safeMode) {
             builder.withDetail("warning", "AutoType SafeMode is disabled, RCE risk exists");

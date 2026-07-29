@@ -520,27 +520,4 @@ public final class SnowflakeUtils {
         }
     }
 
-    /**
-     * 时钟回拨异常
-     *
-     * <p>当系统时钟发生回拨时抛出，调用方可捕获此异常进行特殊处理（如等待时钟同步、切换节点等）。
-     */
-    public static class ClockBackwardException extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-        
-        private final long backwardMillis;
-        private final long lastTimestamp;
-        private final long currentTimestamp;
-
-        public ClockBackwardException(long backwardMillis, long lastTimestamp, long currentTimestamp) {
-            super(String.format("时钟回拨%d毫秒，上次时间=%d，当前时间=%d", backwardMillis, lastTimestamp, currentTimestamp));
-            this.backwardMillis = backwardMillis;
-            this.lastTimestamp = lastTimestamp;
-            this.currentTimestamp = currentTimestamp;
-        }
-
-        public long getBackwardMillis() { return backwardMillis; }
-        public long getLastTimestamp() { return lastTimestamp; }
-        public long getCurrentTimestamp() { return currentTimestamp; }
-    }
 }

@@ -7,7 +7,6 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
-import com.njydsz.common.exception.registry.YdszResultCode;
 
 /**
  * 消息中心模块异常码枚举。
@@ -28,7 +27,6 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "message", description = "消息中心")
 public enum MessageResultCode implements ExceptionCode {
 
     // ==================== B91001-B91099 模板 ====================

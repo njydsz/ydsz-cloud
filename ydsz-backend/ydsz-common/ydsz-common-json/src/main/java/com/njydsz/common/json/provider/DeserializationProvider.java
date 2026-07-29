@@ -5,7 +5,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.exception.JsonDeserializationException;
@@ -160,26 +159,42 @@ public final class DeserializationProvider {
 
     private static Object parseValue(String json) {
         json = json.trim();
-        if (json.equals("null")) {
+        int len = json.length();
+
+        // 快速路径：按长度和首字符分派，避免多次 equals/startsWith 调用
+        if (len == 0) {
             return null;
         }
-        if (json.startsWith("{")) {
-            return YdszJsonParser.parseObject(json);
+        char first = json.charAt(0);
+        switch (first) {
+            case 'n':
+                if (len == 4 && json.equals("null")) {
+                    return null;
+                }
+                break;
+            case 't':
+                if (len == 4 && json.equals("true")) {
+                    return Boolean.TRUE;
+                }
+                break;
+            case 'f':
+                if (len == 5 && json.equals("false")) {
+                    return Boolean.FALSE;
+                }
+                break;
+            case '{':
+                return YdszJsonParser.parseObject(json);
+            case '[':
+                return YdszJsonParser.parseArray(json);
+            case '"':
+                return TypeConverter.parseStringValue(json);
+            default:
+                break;
         }
-        if (json.startsWith("[")) {
-            return YdszJsonParser.parseArray(json);
-        }
-        if (json.equals("true")) {
-            return Boolean.TRUE;
-        }
-        if (json.equals("false")) {
-            return Boolean.FALSE;
-        }
-        if (json.startsWith("\"")) {
-            return TypeConverter.parseStringValue(json);
-        }
+
+        // 数字解析
         try {
-            if (json.contains(".") || json.contains("E") || json.contains("e")) {
+            if (json.indexOf('.') >= 0 || json.indexOf('E') >= 0 || json.indexOf('e') >= 0) {
                 return Double.parseDouble(json);
             }
             return Long.parseLong(json);

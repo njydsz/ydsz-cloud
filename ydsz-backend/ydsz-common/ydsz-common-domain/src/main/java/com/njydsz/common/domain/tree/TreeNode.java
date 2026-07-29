@@ -306,16 +306,15 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      * @param visitor 访问者函数
      */
     public void traverseBFS(Consumer<T> visitor) {
-        visitor.accept((T) this);
         List<T> currentLevel = new ArrayList<>(List.of((T) this));
         while (!currentLevel.isEmpty()) {
+            currentLevel.forEach(visitor);
             List<T> nextLevel = new ArrayList<>();
             for (T node : currentLevel) {
                 if (node.getChildren() != null) {
                     nextLevel.addAll(node.getChildren());
                 }
             }
-            nextLevel.forEach(visitor);
             currentLevel = nextLevel;
         }
     }

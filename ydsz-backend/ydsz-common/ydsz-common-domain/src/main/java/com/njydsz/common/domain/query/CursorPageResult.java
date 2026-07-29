@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -81,7 +82,7 @@ public class CursorPageResult<T> implements Serializable {
      */
     public <R> CursorPageResult<R> convert(Function<T, R> converter) {
         List<R> convertedRecords = records != null
-                ? records.stream().map(converter).collect(java.util.stream.Collectors.toList())
+                ? records.stream().map(converter).collect(Collectors.toList())
                 : Collections.emptyList();
         return new CursorPageResult<>(convertedRecords, nextCursor, hasMore);
     }

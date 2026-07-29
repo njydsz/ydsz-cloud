@@ -79,7 +79,7 @@ public final class EntityCapabilities {
     /**
      * MyBatis-Plus Version 注解类缓存
      */
-    private static volatile Class<? extends Annotation> mpVersionAnnotationClass;
+    private static volatile Class<?> mpVersionAnnotationClass;
 
     private EntityCapabilities() {
         throw new UnsupportedOperationException("Utility class");
@@ -218,22 +218,31 @@ public final class EntityCapabilities {
     /**
      * 解析 MyBatis-Plus Version 注解类（延迟加载 + 缓存）
      *
+     * <p>使用双重检查锁定（DCL）模式，避免多线程下重复加载。
+     * 
      * @return MyBatis-Plus Version 注解类，不存在返回 null
      */
     private static Class<? extends Annotation> resolveMpVersionAnnotation() {
-        if (mpVersionAnnotationClass != null) {
-            return mpVersionAnnotationClass;
+        Class<?> cached = mpVersionAnnotationClass;
+        if (cached != null) {
+            return cached.asSubclass(Annotation.class);
         }
-        try {
-            Class<?> clazz = Class.forName("com.baomidou.mybatisplus.annotation.Version");
-            if (Annotation.class.isAssignableFrom(clazz)) {
-                mpVersionAnnotationClass = clazz.asSubclass(Annotation.class);
-                return mpVersionAnnotationClass;
+        synchronized (EntityCapabilities.class) {
+            cached = mpVersionAnnotationClass;
+            if (cached != null) {
+                return cached.asSubclass(Annotation.class);
             }
-        } catch (ClassNotFoundException e) {
-            // MyBatis-Plus 不在 classpath 中
+            try {
+                Class<?> clazz = Class.forName("com.baomidou.mybatisplus.annotation.Version");
+                if (Annotation.class.isAssignableFrom(clazz)) {
+                    mpVersionAnnotationClass = clazz;
+                    return clazz.asSubclass(Annotation.class);
+                }
+            } catch (ClassNotFoundException e) {
+                // MyBatis-Plus 不在 classpath 中
+            }
+            return null;
         }
-        return null;
     }
 
     /**

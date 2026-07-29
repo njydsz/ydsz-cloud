@@ -20,16 +20,25 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>表达式格式：{@code ${nodeA.result=='success'}} 或 {@code #nodeA.status!='FAILED'}
  *
+ * <p><b>缓存机制：</b>
+ * 表达式解析结果使用实例级 {@link ConcurrentHashMap} 缓存，避免重复解析相同表达式。
+ * 缓存为实例级而非静态级，确保：
+ * <ul>
+ *   <li>避免 classloader 级内存泄漏（静态 Map 随 JVM 生命周期存活）</li>
+ *   <li>支持 {@link #clearCache()} 在运行时清理缓存</li>
+ *   <li>实例可替换，便于测试和热部署</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 public class SpELConditionEvaluator {
 
-    private static final ExpressionParser PARSER = new SpelExpressionParser();
+    private final ExpressionParser parser = new SpelExpressionParser();
 
     /** 表达式解析缓存，避免重复解析相同表达式 */
-    private static final ConcurrentHashMap<String, Expression> EXPR_CACHE = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Expression> exprCache = new ConcurrentHashMap<>();
 
     /**
      * 评估条件表达式。
@@ -50,7 +59,7 @@ public class SpELConditionEvaluator {
 
         try {
             EvaluationContext evalContext = buildEvaluationContext(context);
-            Expression parsed = EXPR_CACHE.computeIfAbsent(spel, PARSER::parseExpression);
+            Expression parsed = exprCache.computeIfAbsent(spel, parser::parseExpression);
             Boolean result = parsed.getValue(evalContext, Boolean.class);
             return result != null && result;
         } catch (Exception e) {
@@ -69,5 +78,21 @@ public class SpELConditionEvaluator {
             }
         }
         return evalContext;
+    }
+
+    /**
+     * 清除表达式解析缓存（主要用于运行时配置变更或测试场景）。
+     */
+    public void clearCache() {
+        exprCache.clear();
+    }
+
+    /**
+     * 获取当前缓存中的表达式数量（主要用于监控和诊断）。
+     *
+     * @return 缓存的表达式数量
+     */
+    public int getCacheSize() {
+        return exprCache.size();
     }
 }

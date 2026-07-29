@@ -344,6 +344,7 @@ public final class YdszJsonConfig implements Serializable {
         SerializationProvider.setDateFormat(dateFormat);
         SerializationProvider.setFailOnError(failOnError);
         YdszJsonParser.setUseBigDecimal(useBigDecimal);
+        // wrapRootValue 不需要传播到 SerializationContext，因为它在 serialize() 入口处检查
     }
 
     /**

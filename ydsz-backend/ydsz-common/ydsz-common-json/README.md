@@ -23,7 +23,8 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | 类 | 说明 |
 |---|---|
 | `YdszJson` | JSON 统一入口（序列化 / 反序列化 / 树操作 / 流式 API / ASM 预热 / 单次配置序列化） |
-| `YdszJsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 最大 JSON 大小 / 最大深度） |
+| `YdszJsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper，独立配置副本 / Metrics 回调 / 树模型 / JSONPath / 视图过滤） |
+| `YdszJsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 根名称包裹 / 最大 JSON 大小 / 最大深度） |
 | `DeserializationConfig` | 反序列化配置（AutoType 安全检查委托） |
 
 ### ASM 字节码加速
@@ -93,6 +94,8 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT，Jackson 兼容） |
 | `@JsonIgnoreProperties` | 忽略指定属性（类级别，支持 ignoreUnknown，Jackson 兼容） |
 | `@JsonValue` | 枚举值序列化方式（方法级别，Jackson 兼容） |
+| `@JsonRawValue` | 原始 JSON 值嵌入（字段值直接写入输出，不转义，Jackson 兼容） |
+| `@JsonRootName` | 根名称包裹（配合 wrapRootValue 使用，Jackson 兼容） |
 | `@JsonAnyGetter` / `@JsonAnySetter` | 动态属性 Getter / Setter（Jackson 兼容） |
 | `@JsonUnwrapped` | 嵌套属性展开（支持 prefix / suffix，Jackson 兼容） |
 | `@YdszJsonView` | 视图过滤 |

@@ -50,6 +50,11 @@ import java.lang.reflect.Array;
  *   <li>命令模式 - 自定义序列化/反序列化方法</li>
  * </ul>
  *
+ * <p><b>设计决策：</b>字段元数据、字段访问（MethodHandle/VarHandle）和类型转换（日期格式化/解析）
+ * 有意共置于同一类中，与 Jackson 的 {@code BeanProperty} 和 Gson 的 {@code BoundField} 设计一致。
+ * 原因：类型转换逻辑依赖字段的 {@code format} 和 {@code type} 元数据，拆分到独立类会引入
+ * 不必要的间接调用和对象分配开销，降低序列化/反序列化热路径性能。</p>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

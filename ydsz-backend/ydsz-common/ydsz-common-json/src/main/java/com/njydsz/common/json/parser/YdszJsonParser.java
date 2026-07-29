@@ -42,10 +42,22 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  */
 public final class YdszJsonParser {
     
-    /** 字符数组缓存（ThreadLocal 复用） */
+    /**
+     * 字符数组缓存（ThreadLocal 复用）
+     *
+     * <p>解析器内部缓冲区，用于临时字符操作。与 {@link SerializationContext} 分离，
+     * 因为 SerializationContext 仅用于序列化路径，而 CHAR_BUFFER 用于反序列化路径。</p>
+     * <p>线程池环境下应调用 {@link #clearThreadLocals()} 清理，防止内存泄漏。</p>
+     */
     private static final ThreadLocal<char[]> CHAR_BUFFER = ThreadLocal.withInitial(() -> new char[8192]);
     
-    /** StringBuilder 对象池（ThreadLocal 复用） */
+    /**
+     * StringBuilder 对象池（ThreadLocal 复用）
+     *
+     * <p>解析器内部缓冲区，用于构建解析结果字符串。与 {@link SerializationContext} 分离，
+     * 因为 SerializationContext 仅用于序列化路径，而 SB_POOL 用于反序列化路径。</p>
+     * <p>线程池环境下应调用 {@link #clearThreadLocals()} 清理，防止内存泄漏。</p>
+     */
     private static final ThreadLocal<StringBuilder> SB_POOL =
         ThreadLocal.withInitial(() -> new StringBuilder(256));
 
