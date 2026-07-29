@@ -16,17 +16,14 @@ import java.util.stream.Stream;
  *   <li>安全相关的排除 URL（登录、认证、验证码等）</li>
  * </ul>
  *
+ * <p><b>注意：</b>认证过滤器忽略服务名的默认值硬编码在此处。
+ * 建议通过配置文件 {@code ydsz.core.filter-ignore.auth-filter-ignore-service-names} 覆盖，
+ * 避免新增/移除 web 模块时修改 core 模块代码。
+ * 通过 {@link com.njydsz.common.core.config.FilterIgnoreProperties#getResolvedAuthFilterIgnoreServiceNames()}
+ * 获取配置覆盖后的值。
+ *
  * <p><b>线程安全性：</b>所有常量集合均为不可变 Set（{@link Collections#unmodifiableSet(Set)}），
  * 多线程并发访问安全。</p>
- *
- * <p><b>使用示例：</b></p>
- * <pre>{@code
- * if (FilterIgnoreConstant.getCommonIgnoreUrls().stream()
- *         .anyMatch(pattern -> antPathMatcher.match(pattern, request.getRequestURI()))) {
- *     // 跳过过滤器
- *     return;
- * }
- * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0

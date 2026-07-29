@@ -304,28 +304,20 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取排序字符串（安全版本
+     * 获取排序字符串（从 orderItems 派生）
      *
-     * <p>返回经过安全校验）orderBy 值，若未通过校验则返回null。
+     * <p>从 {@link #orderItems} 列表拼接为排序字符串。此方法为向后兼容方法，
+     * 推荐直接使用 {@link #getOrderItems()} 获取排序项列表。
      *
      * @return 安全的排序字符串
+     * @deprecated 推荐使用 {@link #getOrderItems()} 管理排序
      */
+    @Deprecated(since = "1.2.0", forRemoval = true)
     public String getOrderBy() {
-        String raw = super.getOrderBy();
-        if (raw == null || raw.isBlank()) {
+        if (orderItems == null || orderItems.isEmpty()) {
             return null;
         }
-        // 二次校验，确保通过直接赋值绕过的非法内容也被过滤
-        String[] parts = raw.split(",");
-        List<String> safeParts = new ArrayList<>();
-        for (String part : parts) {
-            String trimmed = part.trim();
-            String column = trimmed.replaceAll("\\s+(ASC|DESC)$", "").trim();
-            if (SAFE_COLUMN_PATTERN.matcher(column).matches() && isColumnAllowed(column)) {
-                safeParts.add(trimmed);
-            }
-        }
-        return safeParts.isEmpty() ? null : String.join(", ", safeParts);
+        return String.join(", ", orderItems);
     }
 
     /**

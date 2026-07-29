@@ -41,7 +41,21 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  * @since 1.0.0
  */
 public final class YdszJsonParser {
-    
+
+    /**
+     * 预计算 10 的幂次表（替代 Math.pow(10, n)，避免浮点函数调用开销）。
+     *
+     * <p>覆盖 0~23 位小数（double 精度上限为 15-17 位有效数字，
+     * 超过 22 位时 parseNumberFast 已回退到 Double.parseDouble）。</p>
+     */
+    private static final double[] POW10 = new double[24];
+    static {
+        POW10[0] = 1.0;
+        for (int i = 1; i < POW10.length; i++) {
+            POW10[i] = POW10[i - 1] * 10.0;
+        }
+    }
+
     /**
      * 字符数组缓存（ThreadLocal 复用）
      *
@@ -467,13 +481,13 @@ public final class YdszJsonParser {
             }
             double value = (double) intValue;
             if (decimalDigits > 0) {
-                value += (double) decimalValue / Math.pow(10, decimalDigits);
+                value += (double) decimalValue / POW10[decimalDigits];
             }
             if (negative) {
                 value = -value;
             }
             if (exp != 0) {
-                value = expNegative ? value / Math.pow(10, exp) : value * Math.pow(10, exp);
+                value = expNegative ? value / POW10[exp] : value * POW10[exp];
             }
             return Double.valueOf(value);
         } else {

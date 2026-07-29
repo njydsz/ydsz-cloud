@@ -81,8 +81,9 @@ import lombok.experimental.SuperBuilder;
  * @see BaseIdEntity
  * @see RootEntity
  *
- * <p><b>重构规划：</b>当前继承为 {@code RootEntity -> BaseIdEntity -> BaseAuditEntity -> BaseEntity} 4 层，增加理解成本。
- * 长期建议：扁平化为 2-3 层，或用 {@code @Embedded AuditInfo} 组合替代继承。
+ * <p><b>继承层级说明：</b>当前继承为 {@code RootEntity -> BaseIdEntity -> BaseAuditEntity -> BaseEntity} 4 层，
+ * 字段来源清晰，各层职责单一。通过 {@link EntityCapabilities} 工具类可检测注解驱动的能力组合，
+ * 支持扁平化实体设计。
  *
  * <p><b>字段来源说明：</b>
  * <table>

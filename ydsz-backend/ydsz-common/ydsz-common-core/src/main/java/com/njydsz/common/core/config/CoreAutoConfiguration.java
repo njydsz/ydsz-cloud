@@ -9,7 +9,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
 
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.context.TenantMdcFilter;
@@ -67,10 +66,10 @@ public class CoreAutoConfiguration {
     @Bean
     @ConditionalOnClass(Filter.class)
     @ConditionalOnProperty(prefix = "ydsz.core.tenant-mdc-filter", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public FilterRegistrationBean<TenantMdcFilter> tenantMdcFilter() {
+    public FilterRegistrationBean<TenantMdcFilter> tenantMdcFilter(CoreProperties properties) {
         FilterRegistrationBean<TenantMdcFilter> registration =
                 new FilterRegistrationBean<>(new TenantMdcFilter());
-        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 100);
+        registration.setOrder(properties.getTenantMdcFilterOrder());
         registration.setName("tenantMdcFilter");
         return registration;
     }

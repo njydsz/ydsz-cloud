@@ -1,5 +1,7 @@
 package com.njydsz.common.domain.event;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -243,21 +245,20 @@ public class DomainEventPublisher {
     /**
      * 批量发布领域事件（事务提交后）
      *
-     * <p>将所有事件注册为事务后发布。如果当前没有活跃的事务，则直接同步发布。
+     * <p>注册单个 {@link TransactionSynchronization} 在事务提交后批量发布所有事件，
+     * 避免为每个事件注册独立的同步回调。如果当前没有活跃的事务，则直接同步发布。
      *
      * @param events 领域事件列表，不能为 null
      */
     public void publishAllAfterCommit(Iterable<DomainEvent> events) {
-        Objects.requireNonNull(events, "events must not be null");
-        for (DomainEvent event : events) {
-            publishAfterCommit(event);
-        }
+        publishAllWithPhase(events, TransactionPhase.AFTER_COMMIT);
     }
 
     /**
      * 批量发布领域事件（指定事务阶段）
      *
-     * <p>将所有事件注册为指定事务阶段发布。如果当前没有活跃的事务，则直接同步发布。
+     * <p>注册单个 {@link TransactionSynchronization} 在事务指定阶段批量发布所有事件，
+     * 避免为每个事件注册独立的同步回调。如果当前没有活跃的事务，则直接同步发布。
      *
      * @param events 领域事件列表，不能为 null
      * @param phase  事务阶段
@@ -265,9 +266,46 @@ public class DomainEventPublisher {
      */
     public void publishAllWithPhase(Iterable<DomainEvent> events, TransactionPhase phase) {
         Objects.requireNonNull(events, "events must not be null");
-        for (DomainEvent event : events) {
-            publishWithPhase(event, phase);
+        Objects.requireNonNull(phase, "phase must not be null");
+
+        List<DomainEvent> eventList = new ArrayList<>();
+        events.forEach(eventList::add);
+        if (eventList.isEmpty()) {
+            return;
         }
+
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            log.debug("No active transaction, publish all synchronously: count={}", eventList.size());
+            eventList.forEach(this::publish);
+            return;
+        }
+
+        log.debug("Registering {} domain events for {} phase (batch)", eventList.size(), phase);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void beforeCommit(boolean readOnly) {
+                if (phase == TransactionPhase.BEFORE_COMMIT) {
+                    eventList.forEach(event -> doPublishInTransaction(event, phase));
+                }
+            }
+
+            @Override
+            public void afterCommit() {
+                if (phase == TransactionPhase.AFTER_COMMIT) {
+                    eventList.forEach(event -> doPublishInTransaction(event, phase));
+                }
+            }
+
+            @Override
+            public void afterCompletion(int status) {
+                if (phase == TransactionPhase.AFTER_COMPLETION) {
+                    eventList.forEach(event -> doPublishInTransaction(event, phase));
+                } else if (phase == TransactionPhase.AFTER_ROLLBACK
+                           && status == STATUS_ROLLED_BACK) {
+                    eventList.forEach(event -> doPublishInTransaction(event, phase));
+                }
+            }
+        });
     }
 
     /**

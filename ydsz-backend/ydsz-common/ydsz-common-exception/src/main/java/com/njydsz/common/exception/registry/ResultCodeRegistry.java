@@ -46,11 +46,11 @@ public class ResultCodeRegistry {
      * 注册错误码。
      *
      * @param module   模块名称
-     * @param code     错误码
-     * @param message  错误消息
+     * @param code     错误码字符串（如 "A01001"）
+     * @param message  错误消息（i18n key）
      * @param enumName 枚举常量名
      */
-    public void registerCode(String module, int code, String message, String enumName) {
+    public void registerCode(String module, String code, String message, String enumName) {
         moduleErrorCodes.computeIfAbsent(module, k -> ConcurrentHashMap.newKeySet())
                 .add(new ErrorCodeEntry(code, message, enumName));
     }
@@ -80,5 +80,5 @@ public class ResultCodeRegistry {
     /**
      * 错误码条目。
      */
-    public record ErrorCodeEntry(int code, String message, String enumName) {}
+    public record ErrorCodeEntry(String code, String message, String enumName) {}
 }

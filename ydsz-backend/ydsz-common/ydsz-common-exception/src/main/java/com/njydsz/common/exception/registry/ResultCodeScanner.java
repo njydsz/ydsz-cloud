@@ -15,6 +15,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,6 +97,13 @@ public class ResultCodeScanner implements ApplicationContextAware {
 
     /**
      * 加载枚举类并注册所有错误码。
+     *
+     * <p>同时注册到两个注册中心：
+     * <ul>
+     *   <li>{@link ResultCodeRegistry} — 供文档端点按模块分组展示</li>
+     *   <li>{@link ExceptionCodeRegistry} — 供 {@link ExceptionCode#fromCode(String)} 反查</li>
+     * </ul>
+     * 这解决了静态块注册的类加载确定性问题（P1-5）。
      */
     private void registerEnum(String module, String description, String className) {
         try {
@@ -105,10 +113,14 @@ public class ResultCodeScanner implements ApplicationContextAware {
             }
             registry.registerModule(module, description);
             Object[] constants = clazz.getEnumConstants();
+            java.util.Map<String, ExceptionCode> codeMap = new java.util.HashMap<>();
             for (Object constant : constants) {
                 ExceptionCode code = (ExceptionCode) constant;
-                registry.registerCode(module, 0, code.getKey(), ((Enum<?>) constant).name());
+                registry.registerCode(module, code.getCode(), code.getKey(), ((Enum<?>) constant).name());
+                codeMap.put(code.getCode(), code);
             }
+            // 同步注册到 ExceptionCodeRegistry，确保 fromCode() 反查可用
+            ExceptionCodeRegistry.register(codeMap);
             log.debug("[ResultCodeScanner] 注册模块错误码: module={} codes={}", module, constants.length);
         } catch (Exception e) {
             log.debug("[ResultCodeScanner] 加载枚举失败: {} err={}", className, e.getMessage());

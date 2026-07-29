@@ -112,6 +112,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Boot Health (optional, for HealthIndicator) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- gRPC (optional, for gRPC exception translation) -->
         <dependency>
             <groupId>io.grpc</groupId>

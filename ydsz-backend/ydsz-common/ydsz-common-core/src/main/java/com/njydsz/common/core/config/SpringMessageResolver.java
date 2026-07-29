@@ -1,11 +1,10 @@
 package com.njydsz.common.core.config;
 
-import java.util.Locale;
-
+import com.njydsz.common.core.response.BaseResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
-import com.njydsz.common.core.response.BaseResponse;
+import java.util.Locale;
 
 /**
  * 基于 Spring {@link MessageSource} 的国际化消息解析器。
@@ -34,7 +33,6 @@ import com.njydsz.common.core.response.BaseResponse;
  * @author ydsz-team
  * @since 1.0.0
  * @see BaseResponse.MessageResolver
- * @see BaseResponse#setResolver(MessageResolver)
  */
 public class SpringMessageResolver implements BaseResponse.MessageResolver {
 

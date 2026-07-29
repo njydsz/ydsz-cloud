@@ -17,6 +17,7 @@ import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.observability.TraceContext;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,9 +86,14 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 从 HttpServletRequest 提取 traceId
+     *
+     * <p>优先级：MDC > Request Header（X-Trace-Id > X-Request-Id）
      */
     private String extractTraceId(HttpServletRequest request) {
-        String traceId = request.getHeader("X-Trace-Id");
+        String traceId = TraceContext.getTraceId();
+        if (traceId == null) {
+            traceId = request.getHeader(TraceContext.HEADER_TRACE_ID);
+        }
         if (traceId == null) {
             traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
         }

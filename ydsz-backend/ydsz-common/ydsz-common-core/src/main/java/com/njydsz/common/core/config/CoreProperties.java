@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.Ordered;
 import org.springframework.validation.annotation.Validated;
 
 import lombok.Data;
@@ -46,6 +47,9 @@ public class CoreProperties {
 
     /** 链路追踪配置 */
     private TraceConfig trace = new TraceConfig();
+
+    /** 租户 MDC 过滤器优先级，默认高于业务过滤器 */
+    private int tenantMdcFilterOrder = Ordered.HIGHEST_PRECEDENCE + 100;
 
     /**
      * 链路追踪配置属性

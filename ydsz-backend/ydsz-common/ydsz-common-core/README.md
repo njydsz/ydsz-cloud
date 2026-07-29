@@ -12,7 +12,7 @@ YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 被 common 所有子模块及全部业务模块依赖 |
 | **构建顺序** | 最先编译（无业务依赖） |
-| **源文件数** | 36 个 Java 文件，8 个包 |
+| **源文件数** | 35 个 Java 文件（main），5 个测试文件（test） |
 | **依赖范围** | Lombok + SLF4J + Jakarta Validation + ydsz-common-json + TTL + Spring Boot（可选） |
 
 ## 目录结构
@@ -23,9 +23,9 @@ com.njydsz.common.core
 ├── code/            # 结果码体系（2 个类）
 ├── context/         # 请求上下文与租户上下文（4 个类）
 ├── trace/           # TraceId 生成策略（3 个类）
-├── request/         # 请求模型基类（3 个类）
+├── request/         # 请求模型基类（3 个类，预留 API）
 ├── enums/           # 通用枚举（5 个类）
-├── constant/        # 全局常量定义（10 个类）
+├── constant/        # 全局常量定义（9 个类，ProtocolConstants 已删除）
 ├── config/          # 自动配置与属性绑定（5 个类）
 └── health/          # 健康检查（1 个类）
 ```
@@ -37,13 +37,13 @@ com.njydsz.common.core
 | 类 | 说明 |
 |---|---|
 | `IResponse<T>` | 响应标记接口，定义 `getCode()` / `getMsg()` / `getData()` / `isSuccess()` 契约 |
-| `BaseResponse<T>` | 统一 API 响应体，字段：`code` / `msg` / `data` / `traceId` / `timestamp`。使用 `@SuperBuilder` + `@YdszJsonField(notWriteNullValue=true)` + `@YdszJsonPropertyOrder` 控制序列化。提供 `success()` / `error()` / `of()` 静态工厂方法，以及函数式 API（`orElse` / `orElseThrow` / `map` / `ifSuccess` / `ifFailed`） |
+| `BaseResponse<T>` | 统一 API 响应体，字段：`code` / `msg` / `data` / `traceId` / `timestamp`。使用 `@SuperBuilder` + `@YdszJsonField(notWriteNullValue=true)` + `@YdszJsonPropertyOrder` 控制序列化。提供 `success()` / `error()` / `of()` 静态工厂方法，以及函数式 API（`orElse` / `orElseThrow` / `map` / `ifSuccess` / `ifFailed`）。支持 `error(ResultCode, Throwable)` 便捷方法 |
 | `PageResponse<T>` | 分页响应体（继承 BaseResponse），字段：`total` / `pageNum` / `pageSize` / `pages`。自动计算总页数，提供 `success()` / `fail()` / `empty()` / `hasNext()` / `hasPrevious()` 方法 |
 
 **业务响应码与 HTTP 状态码区分**：
 
 - `BaseResponse.code` 是**业务响应码**（`String` 类型），如 `"A00000"` 表示成功
-- `BaseResultCode.getHttpStatusCode()` 返回对应的 **HTTP 状态码**（`int` 类型），如 `200` / `400` / `500`
+- `ResultCode.getHttpStatusCode()` 返回对应的 **HTTP 状态码**（`int` 类型），如 `200` / `400` / `500`
 - 前端判断成功应检查 `resp.code === "A00000"`，而非 HTTP 状态码 `200`
 
 **国际化支持**：
@@ -63,16 +63,15 @@ return BaseResponse.error("A01002", "用户名已存在");
 // 返回失败（使用 ResultCode 枚举）
 return BaseResponse.error(BaseResultCode.VALIDATION_FAILED);
 
-// 函数式 API
-response.ifSuccess(data -> process(data));
-response.ifFailed(r -> log.error("请求失败: {}", r.getMsg()));
+// 返回失败（从异常对象提取消息）
+return BaseResponse.error(BaseResultCode.INTERNAL_ERROR, exception);
 ```
 
 ### 2. 结果码体系（`code` 包）
 
 | 类 | 说明 |
 |---|---|
-| `ResultCode` | 结果码接口，定义 `getCode()` / `getMsg()` / `getMessageKey()`（默认返回 `"error." + 枚举名`，用于 i18n） |
+| `ResultCode` | 结果码接口，定义 `getCode()` / `getMsg()` / `getMessageKey()`（默认返回 `"error." + 枚举名`，用于 i18n）/ `getHttpStatusCode()`（默认返回 500） |
 | `BaseResultCode` | 标准结果码枚举（实现 ResultCode），共 40+ 个错误码，按段位规划 |
 
 **错误码段位规划**：
@@ -103,6 +102,7 @@ public enum OrderResultCode implements ResultCode {
     
     @Override public String getCode() { return code; }
     @Override public String getMsg() { return msg; }
+    @Override public int getHttpStatusCode() { return 404; } // 覆盖默认 500
 }
 ```
 
@@ -110,10 +110,10 @@ public enum OrderResultCode implements ResultCode {
 
 | 类 | 说明 |
 |---|---|
-| `RequestContext` | 基于 `TransmittableThreadLocal` 的请求上下文，支持 `userId` / `tenantId` / `traceId` / 自定义属性。提供快照（`snapshot()` / `restore()`）、异步传播（`wrapCallable()` / `wrapRunnable()`）、自动清理（`CleanupGuard` try-with-resources 模式、`runAndClear()`） |
+| `RequestContext` | 基于 `TransmittableThreadLocal` 的请求上下文，支持 `userId` / `tenantId` / `traceId` / `requestId` / `language` / 自定义属性。提供快照（`snapshot()` / `restore()`）、异步传播（`wrapCallable()` / `wrapRunnable()`）、自动清理（`CleanupGuard` try-with-resources 模式、`runAndClear()`） |
 | `ContextKey<T>` | 强类型上下文 Key，支持编译期类型检查。通过 `ContextKey.of("userId", String.class)` 创建，配合 `RequestContext.put(ContextKey, T)` / `RequestContext.get(ContextKey)` 使用 |
 | `TenantContextHolder` | 租户上下文持有者接口（SPI），定义 `getTenantId()` / `isSuperTenant()`。由业务模块（如 `ydsz-common-auth`）提供具体实现，避免 core 模块循环依赖 |
-| `TenantMdcFilter` | Jakarta Servlet Filter，在请求处理前将 `tenantId` / `userId` / `traceId` 从 RequestContext 写入 SLF4J MDC，请求结束后自动清理 |
+| `TenantMdcFilter` | Jakarta Servlet Filter，在请求处理前将 `tenantId` / `userId` / `traceId` 从 RequestContext 写入 SLF4J MDC，请求结束后自动清理。Filter 优先级可通过 `ydsz.core.tenant-mdc-filter-order` 配置 |
 
 **内置上下文 Key**：
 
@@ -131,6 +131,8 @@ public enum OrderResultCode implements ResultCode {
 try (RequestContext.CleanupGuard guard = RequestContext.newCleanupGuard()) {
     RequestContext.setUserId("user123");
     RequestContext.setTenantId("tenant456");
+    RequestContext.setRequestId("req-789");
+    RequestContext.setLanguage("zh-CN");
     // ... 业务逻辑
 }
 
@@ -141,7 +143,6 @@ String code = RequestContext.get(DEPT_CODE);
 
 // 异步传播
 executor.submit(RequestContext.wrapCallable(() -> {
-    // 自动恢复调用方上下文
     String userId = RequestContext.getUserId();
 }));
 ```
@@ -151,8 +152,8 @@ executor.submit(RequestContext.wrapCallable(() -> {
 | 类 | 说明 |
 |---|---|
 | `TraceIdSupplier` | TraceId 生成策略接口（`@FunctionalInterface`），SPI 扩展点 |
-| `TraceIdGenerator` | TraceId 生成器统一入口（静态工具类），内部委托到 `TraceIdSupplier`。使用 `volatile` 持有当前策略，通过 `setSupplier()` 注入。提供 `generate()` / `getSupplier()` / `resetToDefault()` 方法 |
-| `SnowflakeTraceIdSupplier` | 基于 Snowflake 算法的有序 TraceId 生成器。生成 16 位十六进制字符串，结构：41 bit 时间戳 + 10 bit 工作节点 + 12 bit 序列号。使用 `AtomicLong` + CAS 自旋（无锁），支持时钟回拨检测与等待（回拨 ≤5s 等待恢复，>5s 抛异常） |
+| `TraceIdGenerator` | TraceId 生成器统一入口（静态工具类），内部委托到 `TraceIdSupplier`。使用 `volatile` 持有当前策略，通过 `setSupplier()` 注入 |
+| `SnowflakeTraceIdSupplier` | 基于 Snowflake 算法的有序 TraceId 生成器。生成 16 位十六进制字符串。使用 `AtomicLong` + CAS 自旋（无锁），支持时钟回拨检测与等待。**每轮 CAS 循环重新读取时间戳**，避免高并发场景下误判时钟回拨。workerId/datacenterId 支持 K8s 环境变量推导 |
 
 **两种生成策略**：
 
@@ -167,6 +168,13 @@ ydsz:
     trace:
       id-type: snowflake  # 切换为有序 TraceId
 ```
+
+**Snowflake workerId/datacenterId 推导优先级**：
+
+1. 环境变量 `SNOWFLAKE_WORKER_ID` / `SNOWFLAKE_DATACENTER_ID`（K8s deployment 显式配置）
+2. 环境变量 `POD_NAME` / `HOSTNAME` 的 hashCode 取低 5 位（workerId）
+3. 环境变量 `POD_IP` 的 IP 地址最后一字节低 5 位（datacenterId）
+4. PID % 32 / 本机网卡 IP 降级方案
 
 业务方可提供自定义 `TraceIdSupplier` Bean 覆盖默认实现：
 
@@ -185,23 +193,16 @@ public TraceIdSupplier customTraceIdSupplier() {
 | `BaseRequest` | 基础请求对象（`@SuperBuilder` + `@NoArgsConstructor`） |
 | `PageRequest` | 分页请求封装，字段：`pageNum`（Long，默认 1）/ `pageSize`（Long，默认 20）/ `orderBy` / `orderDir`（默认 ASC）。提供安全校验方法 |
 
+> **注意**：此包为预留 API，当前业务模块主要使用 `PageQuery`（domain 模块）。`PageRequest` 提供了 HTTP API 层的分页参数封装和 SQL 注入防护能力，可在新的 HTTP API 场景中使用。
+
 **PageRequest 安全特性**：
 
-- `@Min(1)` / `@Max(MAX_PAGE_SIZE)` JSR-303 校验
-- `getSafePageNum()` / `getSafePageSize()` — null 及越界保护
+- `@Min(1)` JSR-303 校验
+- `getSafePageNum()` / `getSafePageSize()` — null 及越界保护，上限使用运行时 `PageConstants.getMaxPageSize()`
 - `getSafeOrderBy()` — 正则校验防 SQL 注入，支持 `name ASC, age DESC` 多字段格式
 - `validateSort()` — 校验排序表达式合法性
 - `validateSortColumns(Set<String> allowedColumns)` — 排序字段白名单校验
 - `getOffset()` — 计算 MyBatis-Plus 分页 offset
-
-**与 `PageQuery` 的区别**：
-
-| | `PageRequest`（core 模块） | `PageQuery`（domain 模块） |
-|---|---|---|
-| 分页字段类型 | `Long` | `Integer` |
-| 用途 | HTTP API 层 | Service/Repository 层 |
-| 额外能力 | 排序校验 | 搜索/过滤/排序白名单 |
-| 共享 | 共用 `PageConstants` 默认值与上限 | 同左 |
 
 ### 6. 通用枚举（`enums` 包）
 
@@ -219,27 +220,30 @@ public TraceIdSupplier customTraceIdSupplier() {
 
 | 常量类 | 说明 |
 |---|---|
-| `HeaderConstants` | HTTP 请求头常量（认证 Token / 数据权限维度 / 列级权限 / 链路追踪 / CORS / 安全头部），共 30+ 个常量 |
+| `HeaderConstants` | HTTP 请求头常量（认证 Token / 数据权限维度 / 列级权限 / 链路追踪 / CORS / 安全头部），共 30+ 个自定义头常量 |
 | `TokenConstants` | Token 相关常量（标识 / 前缀 "ydsz" / 回调 URL 参数名） |
 | `SecurityConstants` | 安全常量（密钥属性名 / BCrypt 强度 12 / CSRF 头部与参数名 / 安全头部引用） |
-| `ProtocolConstants` | 协议前缀常量（RMI / LDAP / LDAPS / HTTP / HTTPS），用于 Log4j JNDI 注入防护等场景 |
-| `PageConstants` | 分页默认值与参数名（`DEFAULT_PAGE_NUM=1` / `DEFAULT_PAGE_SIZE=20` / `MAX_PAGE_SIZE=1000`） |
-| `FilterIgnoreConstant` | 过滤器忽略 URL 模式（静态资源 / API 文档 / actuator）与认证忽略服务名称（10 个 web 模块），不可变 Set |
+| `PageConstants` | 分页默认值与上限（`DEFAULT_PAGE_NUM=1` / `DEFAULT_PAGE_SIZE=20` / `MAX_PAGE_SIZE=5000`）。**运行时值**由 `CoreProperties` 配置覆盖，通过 `getDefaultPageSize()` / `getMaxPageSize()` 获取 |
+| `FilterIgnoreConstant` | 过滤器忽略 URL 模式（静态资源 / API 文档 / actuator）与认证忽略服务名称（10 个 web 模块），不可变 Set。建议通过 `FilterIgnoreProperties` 配置覆盖 |
 | `TraceConstants` | 链路追踪常量（`TRACE_ID_HEADER="X-Trace-Id"` / `MDC_TRACE_ID_KEY="traceId"`） |
 | `CacheConstants` | 缓存名称常量（workflow / nextwiki / system 三个模块的 8 个 cache name） |
 | `SystemConstants` | 系统级常量（`SYSTEM_USER_ID="SYSTEM"` / `DEFAULT_TENANT_ID="1"` / `DEFAULT_LOCALE="zh-CN"`） |
 | `YdszMessageTopics` | 消息中心 RocketMQ Topic / ConsumerGroup 常量（单条消息 / 批量消息 / 死信队列） |
 
+> **注意**：`ProtocolConstants` 已删除（零外部引用，Log4j JNDI 注入防护在 `common-safe` 模块中自行实现）。
+
+> **关于 CacheConstants / YdszMessageTopics**：这两个常量类包含业务模块特定的 cache name 和 MQ topic。当前保留在 core 模块作为"项目级共享常量"，后续可考虑迁移到 `ydsz-common-domain` 或各自模块的 API 包。
+
 ### 8. 自动配置（`config` 包）
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
-| `CoreAutoConfiguration` | `ydsz.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`TenantMdcFilter`（FilterRegistrationBean）、`CoreHealthIndicator`（Actuator 健康指标） |
+| `CoreAutoConfiguration` | `ydsz.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`TenantMdcFilter`（FilterRegistrationBean，order 可配置）、`CoreHealthIndicator`（Actuator 健康指标）、`PageConstantsInitializer`（分页配置运行时同步） |
 | `TraceAutoConfiguration` | `ydsz.core.trace.enabled=true`（默认启用） | `TraceIdSupplier`（UUID 或 Snowflake，根据 `id-type` 配置选择） |
 
 | 属性类 | 前缀 | 说明 |
 |---|---|---|
-| `CoreProperties` | `ydsz.core` | 分页配置（`maxPageSize` / `defaultPageSize`，带 `@Min` / `@Max` 校验）+ 链路追踪配置（`TraceConfig` 内部类） |
+| `CoreProperties` | `ydsz.core` | 分页配置（`maxPageSize` / `defaultPageSize`，带 `@Min` / `@Max` 校验）+ 链路追踪配置（`TraceConfig` 内部类）+ 租户 MDC 过滤器优先级（`tenantMdcFilterOrder`） |
 | `FilterIgnoreProperties` | `ydsz.core.filter-ignore` | 过滤器忽略路径配置，支持配置覆盖与默认值合并（`getMergedCommonIgnoreUrls()` / `getMergedSecurityExcludeUrls()` / `getResolvedAuthFilterIgnoreServiceNames()`） |
 | `SpringMessageResolver` | — | `BaseResponse.MessageResolver` 实现，适配 Spring `MessageSource`，从 `LocaleContextHolder` 获取 Locale 解析国际化消息 |
 
@@ -247,7 +251,7 @@ public TraceIdSupplier customTraceIdSupplier() {
 
 | 类 | 说明 |
 |---|---|
-| `CoreHealthIndicator` | Spring Boot Actuator 健康指标，访问 `/actuator/health` 时报告：TraceId 生成策略名称、Trace 是否启用、maxPageSize、defaultPageSize |
+| `CoreHealthIndicator` | Spring Boot Actuator 健康指标，访问 `/actuator/health` 时报告：TraceId 生成策略名称、Trace 是否启用、TraceId 类型、maxPageSize、defaultPageSize、i18n 解析器状态、过滤器忽略路径配置摘要 |
 
 ## 配置项
 
@@ -255,8 +259,9 @@ public TraceIdSupplier customTraceIdSupplier() {
 ydsz:
   core:
     enabled: true                          # 模块总开关（默认启用）
-    max-page-size: 1000                    # 最大每页记录数上限（1-5000）
-    default-page-size: 20                  # 默认每页记录数（≥1）
+    max-page-size: 1000                    # 最大每页记录数上限（1-5000），运行时生效
+    default-page-size: 20                  # 默认每页记录数（≥1），运行时生效
+    tenant-mdc-filter-order: -2147483647   # 租户 MDC 过滤器优先级（默认 HIGHEST_PRECEDENCE + 100）
     trace:
       enabled: true                        # 链路追踪开关（默认启用）
       generate-if-missing: true            # 请求头缺失 TraceId 时自动生成
@@ -328,9 +333,51 @@ com.njydsz.common.core.config.TraceAutoConfiguration
 - `BaseRequest` / `PageRequest` — 无参构造器
 - `CoreProperties` / `CoreProperties$TraceConfig` / `FilterIgnoreProperties` — 无参构造器
 
-## 迁移说明
+## 设计决策
 
-以下功能已从 core 模块迁出（2026-07-29 瘦身重构）：
+### 静态 holder 模式（TraceIdGenerator / BaseResponse）
+
+`TraceIdGenerator` 和 `BaseResponse` 使用 `volatile` 静态字段持有策略实例，而非 Spring Bean 依赖注入。这是因为这些组件在项目极早期（如 Filter 初始化、日志框架启动）即被调用，此时 Spring 容器可能尚未就绪。静态 holder 保证零依赖、即时可用。
+
+**代价**：
+- 多 ApplicationContext 场景下最后一个上下文的策略会覆盖前一个
+- 单元测试间需手动调用 `resetToDefault()` / `setResolver(null)` 隔离状态
+
+### 分页配置运行时覆盖
+
+`PageConstants` 的 `DEFAULT_PAGE_SIZE` / `MAX_PAGE_SIZE` 为编译期常量（用于 `@Max` 注解等编译时常量场景）。运行时实际值由 `CoreProperties` 配置控制，通过 `CoreAutoConfiguration.PageConstantsInitializer`（`SmartInitializingSingleton`）在容器启动后同步到 `PageConstants` 的 volatile 字段。
+
+**使用建议**：
+- 需要运行时值时使用 `PageConstants.getDefaultPageSize()` / `PageConstants.getMaxPageSize()`
+- 需要编译时常量时（如 `@Max` 注解）使用 `PageConstants.DEFAULT_PAGE_SIZE` / `PageConstants.MAX_PAGE_SIZE`
+
+## 变更记录
+
+### 2025-07-30 优化迭代
+
+| 级别 | 变更内容 |
+|---|---|
+| **P0-1** | SnowflakeTraceIdSupplier CAS 循环每轮重新读取时间戳，修复高并发场景下误判时钟回拨 |
+| **P0-2** | PageConstants 新增运行时覆盖机制（`getDefaultPageSize()` / `getMaxPageSize()`），`CoreAutoConfiguration` 启动时同步 `CoreProperties` 配置，消除编译期常量与运行时配置脱节 |
+| **P0-3** | TraceIdGenerator / BaseResponse 静态 holder 设计决策文档化 |
+| **P0-4** | 删除残留 FeatureFlag 测试文件（引用已删除的类） |
+| **P1-1** | `ResultCode` 接口新增 `getHttpStatusCode()` 默认方法（默认 500） |
+| **P1-2** | `PageResponse` 新增 `success(long, int, int, T)` 基本类型便捷重载 |
+| **P1-3** | `SnowflakeTraceIdSupplier` workerId/datacenterId 推导增强：支持 K8s 环境变量（`SNOWFLAKE_WORKER_ID` / `POD_NAME` / `HOSTNAME` / `POD_IP`） |
+| **P1-4** | `RequestContext` 新增 `getRequestId()` / `setRequestId()` / `getLanguage()` / `setLanguage()` 便捷方法 |
+| **P1-5** | `CoreHealthIndicator` 增强：新增 traceIdType、i18nResolver 状态、filterIgnore 配置摘要 |
+| **P1-6** | `BaseResponse` 新增 `error(ResultCode, Throwable)` 便捷方法 |
+| **P2-1** | 删除 `ProtocolConstants`（零外部引用死代码） |
+| **P2-2** | 删除 `PageConstants` 中零引用的参数名常量（`PAGE_NUM` / `PAGE_SIZE` / `ORDER_BY_COLUMN` / `IS_ASC` / `IS_DESC`） |
+| **P2-4** | `TraceIdGenerator` 移除对 `config` 包的反向依赖 |
+| **P2-5** | `SnowflakeTraceIdSupplier` 使用手动 hex 编码替代 `String.format`，提升性能 |
+| **P3-1** | 测试文件中 `Executors.newFixedThreadPool` 替换为 `ThreadPoolExecutor` |
+| **P3-2** | `FilterIgnoreConstant` Javadoc 补充配置覆盖说明 |
+| **P3-3** | 配置元数据新增 `ydsz.core.tenant-mdc-filter-order` 配置项，`CoreAutoConfiguration` 使用配置的 filter order |
+
+### 2025-07-29 瘦身重构
+
+以下功能已从 core 模块迁出：
 
 | 原功能 | 迁移目标 | 原因 |
 |---|---|---|
@@ -340,4 +387,4 @@ com.njydsz.common.core.config.TraceAutoConfiguration
 | DAG 条件评估（SpELConditionEvaluator） | `ydsz-common-domain` | 需要 SpEL 依赖，属于领域层能力 |
 | Job 框架（JobHandler / MapProcessor 等） | `ydsz-common-domain` | 属于领域层调度能力 |
 
-**core 模块最终状态**：36 个 Java 文件，仅包含 response / request / context / trace / constant / enums / code / config / health 核心能力，零 AOP / SpEL / Micrometer 依赖。
+**core 模块最终状态**：35 个 Java 文件，仅包含 response / request / context / trace / constant / enums / code / config / health 核心能力，零 AOP / SpEL / Micrometer 依赖。

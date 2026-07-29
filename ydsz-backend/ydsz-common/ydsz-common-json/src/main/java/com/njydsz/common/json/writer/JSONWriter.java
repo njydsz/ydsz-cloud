@@ -972,43 +972,7 @@ public final class JSONWriter {
                     buf[pos++] = ',';
                 }
                 Object item = list.get(i);
-                if (item == null) {
-                    buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';
-                    pos += 4;
-                    continue;
-                }
-
-                if (cachedSerializer != null) {
-                    AsmCodecCache.serializeWithSerializer(cachedSerializer, item, this);
-                    continue;
-                }
-
-                if (item instanceof String) {
-                    writeStringDirectNoCheck((String) item);
-                } else if (item instanceof Integer) {
-                    writeInt(((Integer) item).intValue());
-                } else if (item instanceof Long) {
-                    writeLong(((Long) item).longValue());
-                } else if (item instanceof Double) {
-                    writeDouble(((Double) item).doubleValue());
-                } else if (item instanceof Float) {
-                    writeFloat(((Float) item).floatValue());
-                } else if (item instanceof Boolean) {
-                    write(((Boolean) item).booleanValue() ? "true" : "false");
-                } else if (item instanceof Collection) {
-                    writeCollection((Collection<?>) item);
-                } else if (item instanceof Map) {
-                    writeMap((Map<?, ?>) item);
-                } else {
-                    AsmSerializer<?> serializer =
-                        AsmCodecCache.getOrCreateSerializerForType(item.getClass());
-                    if (serializer != null) {
-                        cachedSerializer = serializer;
-                        AsmCodecCache.serializeWithSerializer(serializer, item, this);
-                    } else {
-                        write(YdszJson.toJson(item));
-                    }
-                }
+                cachedSerializer = writeCollectionElement(item, cachedSerializer);
             }
         } else {
             boolean first = true;
@@ -1017,47 +981,58 @@ public final class JSONWriter {
                     buf[pos++] = ',';
                 }
                 first = false;
-
-                if (item == null) {
-                    buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';
-                    pos += 4;
-                    continue;
-                }
-
-                if (cachedSerializer != null) {
-                    AsmCodecCache.serializeWithSerializer(cachedSerializer, item, this);
-                    continue;
-                }
-
-                if (item instanceof String) {
-                    writeStringDirectNoCheck((String) item);
-                } else if (item instanceof Integer) {
-                    writeInt(((Integer) item).intValue());
-                } else if (item instanceof Long) {
-                    writeLong(((Long) item).longValue());
-                } else if (item instanceof Double) {
-                    writeDouble(((Double) item).doubleValue());
-                } else if (item instanceof Float) {
-                    writeFloat(((Float) item).floatValue());
-                } else if (item instanceof Boolean) {
-                    write(((Boolean) item).booleanValue() ? "true" : "false");
-                } else if (item instanceof Collection) {
-                    writeCollection((Collection<?>) item);
-                } else if (item instanceof Map) {
-                    writeMap((Map<?, ?>) item);
-                } else {
-                    AsmSerializer<?> serializer =
-                        AsmCodecCache.getOrCreateSerializerForType(item.getClass());
-                    if (serializer != null) {
-                        cachedSerializer = serializer;
-                        AsmCodecCache.serializeWithSerializer(serializer, item, this);
-                    } else {
-                        write(YdszJson.toJson(item));
-                    }
-                }
+                cachedSerializer = writeCollectionElement(item, cachedSerializer);
             }
         }
         buf[pos++] = ']';
+    }
+
+    /**
+     * 写入集合中的单个元素（提取自 writeCollection，消除 List/非List 路径重复代码）。
+     *
+     * @param item            元素值
+     * @param cachedSerializer 缓存的 ASM 序列化器（可能为 null）
+     * @return 更新后的缓存序列化器
+     */
+    private AsmSerializer<?> writeCollectionElement(Object item, AsmSerializer<?> cachedSerializer) {
+        if (item == null) {
+            buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';
+            pos += 4;
+            return cachedSerializer;
+        }
+
+        if (cachedSerializer != null) {
+            AsmCodecCache.serializeWithSerializer(cachedSerializer, item, this);
+            return cachedSerializer;
+        }
+
+        if (item instanceof String) {
+            writeStringDirectNoCheck((String) item);
+        } else if (item instanceof Integer) {
+            writeInt(((Integer) item).intValue());
+        } else if (item instanceof Long) {
+            writeLong(((Long) item).longValue());
+        } else if (item instanceof Double) {
+            writeDouble(((Double) item).doubleValue());
+        } else if (item instanceof Float) {
+            writeFloat(((Float) item).floatValue());
+        } else if (item instanceof Boolean) {
+            write(((Boolean) item).booleanValue() ? "true" : "false");
+        } else if (item instanceof Collection) {
+            writeCollection((Collection<?>) item);
+        } else if (item instanceof Map) {
+            writeMap((Map<?, ?>) item);
+        } else {
+            AsmSerializer<?> serializer =
+                AsmCodecCache.getOrCreateSerializerForType(item.getClass());
+            if (serializer != null) {
+                cachedSerializer = serializer;
+                AsmCodecCache.serializeWithSerializer(serializer, item, this);
+            } else {
+                write(YdszJson.toJson(item));
+            }
+        }
+        return cachedSerializer;
     }
 
     /**

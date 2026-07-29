@@ -104,6 +104,22 @@ public class YdszJsonMapper {
     // ==================== 序列化方法 ====================
 
     /**
+     * 在 Mapper 配置上下文中执行序列化操作（统一 snapshot/apply/restore 模式，减少代码重复）。
+     *
+     * @param supplier 序列化操作
+     * @return 序列化结果
+     */
+    private <T> T withConfig(ThrowingSupplier<T> supplier) {
+        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        try {
+            config.apply();
+            return recordSerialize(supplier);
+        } finally {
+            snapshot.restore();
+        }
+    }
+
+    /**
      * 序列化对象为 JSON 字符串。
      *
      * @param obj 要序列化的对象

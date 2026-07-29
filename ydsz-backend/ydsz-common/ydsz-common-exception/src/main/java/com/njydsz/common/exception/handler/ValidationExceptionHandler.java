@@ -3,6 +3,7 @@ package com.njydsz.common.exception.handler;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
@@ -23,6 +24,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.observability.TraceContext;
 
 /**
  * Validation 相关异常处理器
@@ -87,7 +89,10 @@ public class ValidationExceptionHandler {
 
     /**
      * 构建校验错误响应
+     *
+     * @deprecated 使用 {@link #buildExceptionInfo(String, String, String)} 替代，包含 traceId
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     private BaseResponse<?> buildValidationErrorResponse(String message, String path) {
         ExceptionInfo info = new ExceptionInfo(
                 UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(),
@@ -108,10 +113,12 @@ public class ValidationExceptionHandler {
      */
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleConstraintViolationException(ConstraintViolationException e) {
+    public BaseResponse<?> handleConstraintViolationException(ConstraintViolationException e,
+                                                              HttpServletRequest request) {
         recordMetrics(e);
         String message = extractConstraintViolationMessages(e);
-        return buildValidationErrorResponse(message, "");
+        ExceptionInfo info = buildExceptionInfo(message, request.getRequestURI(), extractTraceId(request));
+        return BaseResponse.error(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
     }
 
     /**
@@ -119,10 +126,12 @@ public class ValidationExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+    public BaseResponse<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e,
+                                                                 HttpServletRequest request) {
         recordMetrics(e);
         String message = extractBindingResultMessages(e.getBindingResult());
-        return buildValidationErrorResponse(message, "");
+        ExceptionInfo info = buildExceptionInfo(message, request.getRequestURI(), extractTraceId(request));
+        return BaseResponse.error(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
     }
 
     /**
@@ -130,9 +139,41 @@ public class ValidationExceptionHandler {
      */
     @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleBindException(BindException e) {
+    public BaseResponse<?> handleBindException(BindException e, HttpServletRequest request) {
         recordMetrics(e);
         String message = extractBindingResultMessages(e.getBindingResult());
-        return buildValidationErrorResponse(message, "");
+        ExceptionInfo info = buildExceptionInfo(message, request.getRequestURI(), extractTraceId(request));
+        return BaseResponse.error(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
+    }
+
+    /**
+     * 从 HttpServletRequest 提取 traceId
+     *
+     * <p>优先级：MDC > Request Header（X-Trace-Id > X-Request-Id）
+     */
+    private String extractTraceId(HttpServletRequest request) {
+        String traceId = TraceContext.getTraceId();
+        if (traceId == null) {
+            traceId = request.getHeader(TraceContext.HEADER_TRACE_ID);
+        }
+        if (traceId == null) {
+            traceId = request.getHeader("X-Request-Id");
+        }
+        return traceId;
+    }
+
+    /**
+     * 构建校验异常 ExceptionInfo
+     */
+    private ExceptionInfo buildExceptionInfo(String message, String path, String traceId) {
+        ExceptionInfo info = new ExceptionInfo(
+                UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(),
+                UnifiedExceptionCode.ILLEGAL_ARGUMENT.getKey(),
+                message,
+                HttpStatus.BAD_REQUEST.value()
+        );
+        info.setPath(path);
+        info.setTraceId(traceId);
+        return info;
     }
 }

@@ -6,7 +6,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
@@ -119,7 +121,9 @@ class TraceIdTest {
             SnowflakeTraceIdSupplier supplier = new SnowflakeTraceIdSupplier(1, 1);
             int threadCount = 10;
             int perThread = 100;
-            ExecutorService pool = Executors.newFixedThreadPool(threadCount);
+            ExecutorService pool = new ThreadPoolExecutor(
+                    threadCount, threadCount, 0L, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>());
             CountDownLatch latch = new CountDownLatch(threadCount);
             Set<String> ids = new HashSet<>();
             AtomicInteger duplicates = new AtomicInteger(0);
@@ -143,6 +147,7 @@ class TraceIdTest {
 
             latch.await();
             pool.shutdown();
+            pool.awaitTermination(5, TimeUnit.SECONDS);
 
             assertThat(duplicates.get()).isZero();
             assertThat(ids).hasSize(threadCount * perThread);

@@ -59,10 +59,9 @@ import lombok.experimental.SuperBuilder;
  * );
  * }</pre>
  *
- * <p><b>重构规划：</b>当前审计字段（createdBy/createdAt/updatedBy/updatedAt）以继承方式内联于此类中。
- * 未来计划提取为 {@code AuditInfo} 值对象，通过 {@code @Embedded} 组合方式替代继承。
- * 这将降低继承链深度，提高实体类的组合灵活性，并使审计信息可独立复用。
- * 迁移路径：BaseAuditEntity -> BaseIdEntity + @Embedded AuditInfo
+ * <p><b>设计说明：</b>审计字段以继承方式内联于此类中，由 MyBatis-Plus 自动填充。
+ * 各能力接口（{@link Auditable}）与实体基类通过组合模式协同，
+ * 支持扁平化实体设计。
  *
  * @param <T> 主键ID类型，支持 Long、String、UUID 等
  *
