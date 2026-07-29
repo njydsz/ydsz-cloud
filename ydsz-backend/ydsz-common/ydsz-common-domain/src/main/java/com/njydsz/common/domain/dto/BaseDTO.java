@@ -1,7 +1,6 @@
 package com.njydsz.common.domain.dto;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -116,15 +115,4 @@ public class BaseDTO implements Serializable {
      */
     private String remark;
 
-    /**
-     * 扩展属性
-     *
-     * <p>用于传递业务特定的扩展信息，避免频繁修改基类。
-     * 使用 Map 结构支持键值对形式的扩展数据。
-     *
-     * @deprecated 扩展属性使用 Map 结构类型不安全、序列化不可控，
-     * 建议在具体 DTO 子类中定义明确的业务字段。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    private Map<String, Object> extension;
 }

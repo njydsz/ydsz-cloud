@@ -1,7 +1,5 @@
 package com.njydsz.message.server.consumer;
 
-import java.time.Duration;
-
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -12,7 +10,7 @@ import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.common.constant.YdszMessageTopics;
+import com.njydsz.common.core.constant.YdszMessageTopics;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.json.YdszJson;

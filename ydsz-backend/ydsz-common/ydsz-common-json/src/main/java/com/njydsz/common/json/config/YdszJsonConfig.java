@@ -367,6 +367,10 @@ public final class YdszJsonConfig implements Serializable {
         this.useBigDecimal = false;
         this.wrapRootValue = false;
         return this;
+    }
+
+    /**
+     * 从另一个配置复制
      *
      * <p>复合操作，通过 synchronized 保证多字段写入的原子性。</p>
      *

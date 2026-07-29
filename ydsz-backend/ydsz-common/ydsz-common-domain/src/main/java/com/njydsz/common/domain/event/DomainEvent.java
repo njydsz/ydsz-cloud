@@ -43,14 +43,15 @@ import com.njydsz.common.core.context.RequestContext;
  *     .build();
  * }</pre>
  *
- * <p>子类继承时，只需在构造器中调用 {@link #DomainEvent(String)} 即可：
+ * <p>子类继承时，需在构造器中调用全参数构造器或使用 Builder：
  * <pre>{@code
  * public class OrderCreatedEvent extends DomainEvent {
  *     private final Long orderId;
  *     private final BigDecimal totalAmount;
  *
  *     public OrderCreatedEvent(Long orderId, BigDecimal totalAmount) {
- *         super("OrderCreated");
+ *         super(UUID.randomUUID().toString(), LocalDateTime.now(), "OrderCreated",
+ *               null, null, 1, null, null, null, Collections.emptyMap());
  *         this.orderId = orderId;
  *         this.totalAmount = totalAmount;
  *     }
@@ -114,40 +115,6 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
      * 扩展元数据
      */
     private final Map<String, Object> metadata;
-
-    /**
-     * 构造领域事件（子类推荐使用）
-     *
-     * <p>自动生成 eventId 和 occurredAt，并从 {@link RequestContext} 填充上下文元数据。
-     *
-     * @param eventType 事件类型
-     * @deprecated 使用 {@link #builder()} 创建领域事件，提供更完整的配置能力。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public DomainEvent(String eventType) {
-        this(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
-             null, null, 1,
-             RequestContext.getTenantId(), RequestContext.getUserId(), RequestContext.getTraceId(),
-             Collections.emptyMap());
-    }
-
-    /**
-     * 构造领域事件（包含聚合根关联信息，子类可使用）
-     *
-     * <p>自动生成 eventId 和 occurredAt，并从 {@link RequestContext} 填充上下文元数据。
-     *
-     * @param eventType     事件类型
-     * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类型
-     * @deprecated 使用 {@link #builder()} 创建领域事件，提供更完整的配置能力。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public DomainEvent(String eventType, String aggregateId, String aggregateType) {
-        this(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
-             aggregateId, aggregateType, 1,
-             RequestContext.getTenantId(), RequestContext.getUserId(), RequestContext.getTraceId(),
-             Collections.emptyMap());
-    }
 
     /**
      * 构造领域事件（全参数，包含上下文元数据）

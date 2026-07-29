@@ -1,4 +1,4 @@
-package com.njydsz.common.constant;
+package com.njydsz.common.core.constant;
 
 /**
  * 消息中心 RocketMQ Topic / ConsumerGroup 常量定义。

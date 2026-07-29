@@ -377,17 +377,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         return !isSuccess();
     }
 
-    /**
-     * 获取消息（getMessage 别名，兼容旧代码调用）
-     *
-     * @return 响应消息
-     * @deprecated 使用 {@link #getMsg()} 替代，此方法将在未来版本移除
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public String getMessage() {
-        return msg;
-    }
-
     // ============================== 函数式 API ==============================
 
     /**

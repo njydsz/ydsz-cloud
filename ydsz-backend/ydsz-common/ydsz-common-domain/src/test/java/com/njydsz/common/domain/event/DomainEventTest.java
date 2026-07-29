@@ -94,9 +94,13 @@ class DomainEventTest {
     }
 
     @Test
-    @DisplayName("构造器应正确创建带聚合根信息的事件")
+    @DisplayName("Builder 应正确创建带聚合根信息的事件")
     void shouldCreateEventWithAggregateInfo() {
-        DomainEvent event = new DomainEvent("OrderCreated", "order-1", "Order");
+        DomainEvent event = DomainEvent.builder()
+                .eventType("OrderCreated")
+                .aggregateId("order-1")
+                .aggregateType("Order")
+                .build();
         assertEquals("OrderCreated", event.getEventType());
         assertEquals("order-1", event.getAggregateId());
         assertEquals("Order", event.getAggregateType());
@@ -105,7 +109,9 @@ class DomainEventTest {
     @Test
     @DisplayName("新事件的 metadata 应为空 Map 而非 null")
     void shouldHaveEmptyMetadataForNewEvent() {
-        DomainEvent event = new DomainEvent("Test");
+        DomainEvent event = DomainEvent.builder()
+                .eventType("Test")
+                .build();
         assertNotNull(event.getMetadata());
         assertTrue(event.getMetadata().isEmpty());
     }
@@ -113,7 +119,9 @@ class DomainEventTest {
     @Test
     @DisplayName("新事件的 tenantId/userId/traceId 应为 null（无 RequestContext 时）")
     void shouldHaveNullContextFieldsWithoutRequestContext() {
-        DomainEvent event = new DomainEvent("Test");
+        DomainEvent event = DomainEvent.builder()
+                .eventType("Test")
+                .build();
         assertNull(event.getTenantId());
         assertNull(event.getUserId());
         assertNull(event.getTraceId());

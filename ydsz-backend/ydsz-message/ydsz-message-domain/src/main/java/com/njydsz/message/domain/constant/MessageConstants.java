@@ -1,6 +1,6 @@
 package com.njydsz.message.domain.constant;
 
-import com.njydsz.common.constant.SystemConstants;
+import com.njydsz.common.core.constant.SystemConstants;
 
 /**
  * 消息通知引擎常量集中定义

@@ -348,8 +348,8 @@ public class AlertDispatcher {
         try {
             BaseResponse<MessageResult> result = notificationClient.sendMessage(request);
             if (result == null || !result.isSuccess()) {
-                String reason = result != null && result.getMessage() != null
-                         ? result.getMessage() : "unknown";
+                String reason = result != null && result.getMsg() != null
+                         ? result.getMsg() : "unknown";
                 throw new AlertSendException("message module returned failure: " + reason);
             }
             MessageResult msgResult = result.getData();

@@ -3,7 +3,6 @@ package com.njydsz.message.server.consumer;
 import java.lang.management.ManagementFactory;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +21,7 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.util.StringUtils;
-import com.njydsz.common.constant.YdszMessageTopics;
+import com.njydsz.common.core.constant.YdszMessageTopics;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.security.TenantContext;

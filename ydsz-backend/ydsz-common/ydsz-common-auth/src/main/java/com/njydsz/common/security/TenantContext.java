@@ -1,6 +1,6 @@
 package com.njydsz.common.security;
 
-import com.njydsz.common.constant.SystemConstants;
+import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.context.RequestContext;
 
 /**

@@ -8,7 +8,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.constant.SystemConstants;
+import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.config.MsgPreference;
@@ -17,7 +17,6 @@ import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.config.PreferenceService;
 import com.njydsz.message.server.service.core.RateLimitService;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**

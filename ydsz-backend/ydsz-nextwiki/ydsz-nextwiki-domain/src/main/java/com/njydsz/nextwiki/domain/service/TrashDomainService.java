@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.constant.SystemConstants;
+import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.TrashItem;

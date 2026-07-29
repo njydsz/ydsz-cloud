@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.njydsz.common.constant.SystemConstants;
+import com.njydsz.common.core.constant.SystemConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
