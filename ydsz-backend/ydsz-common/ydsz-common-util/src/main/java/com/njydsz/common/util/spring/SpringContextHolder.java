@@ -7,13 +7,15 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 /**
  * Spring 上下文持有者
  *
  * <p>提供全局静态方法和实例方法访问 Spring ApplicationContext，
  * 支持通过实现 ApplicationContextAware 自动初始化。
+ *
+ * <p>本类不标注 {@code @Component}，统一在 {@link com.njydsz.common.util.config.UtilAutoConfiguration}
+ * 中以 {@code @Bean} 注册，避免组件扫描与 AutoConfiguration 双重注册冲突。
  *
  * <p><b>使用方式一：静态方法（向后兼容）</b>
  * <pre>{@code
@@ -57,7 +59,6 @@ import org.springframework.stereotype.Component;
  * @since 1.0.0
  * 
  */
-@Component
 @Order(Integer.MIN_VALUE)
 public class SpringContextHolder implements ApplicationContextAware {
 

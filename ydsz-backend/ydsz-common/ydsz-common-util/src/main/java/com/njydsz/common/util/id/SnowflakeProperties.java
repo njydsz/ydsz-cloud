@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -44,6 +45,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Validated
 @ConfigurationProperties(prefix = "ydsz.util.snowflake")
 public class SnowflakeProperties {
 

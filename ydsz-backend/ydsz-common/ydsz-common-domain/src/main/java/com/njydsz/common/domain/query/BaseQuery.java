@@ -94,7 +94,13 @@ public class BaseQuery implements Serializable {
      *
      * <p><b>注意：</b>直接设置此字段可能存在 SQL 注入风险。
      * 建议使用 {@link PageQuery#addOrder(String, boolean)} 方法。
+     *
+     * <p><b>废弃说明：</b>推荐使用 {@link PageQuery#getOrderItems()} 列表方式管理排序项，
+     * 提供更细粒度的控制和安全校验。此字段保留用于向后兼容。
+     *
+     * @deprecated 推荐使用 {@link PageQuery#addOrder(String, boolean)} 管理排序
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     private String orderBy;
 
     /**

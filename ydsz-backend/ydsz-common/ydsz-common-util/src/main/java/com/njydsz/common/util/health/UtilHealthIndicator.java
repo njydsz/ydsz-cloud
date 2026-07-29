@@ -6,6 +6,8 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
+import com.njydsz.common.util.bean.BeanCopyUtils;
+import com.njydsz.common.util.http.OkHttpUtils;
 import com.njydsz.common.util.id.SnowflakeUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,14 +20,16 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>检查内容：
  * <ul>
- *   <li>SnowflakeUtils 初始化状态（workerId / datacenterId）</li>
+ *   <li>SnowflakeUtils 初始化状态（workerId / datacenterId / shardCount）</li>
  *   <li>JVM 运行时基础指标（内存使用率）</li>
+ *   <li>BeanCopyUtils 缓存状态（fieldCacheSize / propertyCacheSize）</li>
+ *   <li>OkHttp 连接池统计（idleConnections / totalConnections / queuedCallsCount）</li>
  * </ul>
  *
  * <p>健康状态映射：
  * <ul>
  *   <li>无异常 → UP</li>
- * <li>有警告（内存使用率 >85%）→ UP（带详情）</li>
+ *   <li>有警告（内存使用率 >85%）→ UP（带详情）</li>
  *   <li>有严重异常（SnowflakeUtils 未初始化）→ DOWN</li>
  * </ul>
  *
@@ -41,6 +45,20 @@ public class UtilHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         Health.Builder builder = Health.up();
+        boolean hasCritical = collectHealthDetails(builder);
+        if (hasCritical) {
+            builder.down();
+        }
+        return builder.build();
+    }
+
+    /**
+     * 收集健康检查详情到 Health.Builder
+     *
+     * @param builder Health.Builder
+     * @return true 表示有严重异常（应标记为 DOWN）
+     */
+    private boolean collectHealthDetails(Health.Builder builder) {
         boolean hasCritical = false;
 
         // 1. SnowflakeUtils 检查
@@ -75,21 +93,32 @@ public class UtilHealthIndicator implements HealthIndicator {
             builder.withDetail("jvm.error", e.getMessage());
         }
 
-        // 3. 确定整体状态
-        if (hasCritical) {
-            builder.down();
+        // 3. BeanCopyUtils 缓存状态
+        try {
+            Map<String, Integer> cacheStats = BeanCopyUtils.getCacheStats();
+            builder.withDetail("beanCopy.fieldCacheSize", cacheStats.get("fieldCacheSize"));
+            builder.withDetail("beanCopy.propertyCacheSize", cacheStats.get("propertyCacheSize"));
+        } catch (Exception e) {
+            log.debug("BeanCopyUtils cache stats unavailable: {}", e.getMessage());
         }
 
-        return builder.build();
-    }
+        // 4. OkHttp 连接池统计
+        try {
+            Map<String, Object> httpStats = OkHttpUtils.getConnectionPoolStats();
+            if (!httpStats.isEmpty()) {
+                builder.withDetail("okHttp.idleConnections", httpStats.get("idleConnections"));
+                builder.withDetail("okHttp.totalConnections", httpStats.get("totalConnections"));
+                builder.withDetail("okHttp.queuedCallsCount", httpStats.get("queuedCallsCount"));
+                builder.withDetail("okHttp.runningCallsCount", httpStats.get("runningCallsCount"));
+            } else {
+                builder.withDetail("okHttp.available", false);
+            }
+        } catch (Exception e) {
+            log.debug("OkHttp connection pool stats unavailable: {}", e.getMessage());
+            builder.withDetail("okHttp.available", false);
+        }
 
-    /**
-     * 健康状态枚举（向后兼容，用于非 Spring 环境）
-     */
-    public enum HealthStatus {
-        UP,
-        DOWN,
-        DEGRADED
+        return hasCritical;
     }
 
     /**
@@ -98,63 +127,11 @@ public class UtilHealthIndicator implements HealthIndicator {
      * @return 健康检查结果 Map，包含 status 和详细信息
      */
     public Map<String, Object> checkHealth() {
+        Health health = health();
         Map<String, Object> result = new LinkedHashMap<>();
-        Map<String, Object> details = new LinkedHashMap<>();
-        boolean hasCritical = false;
-        boolean hasWarning = false;
-
-        // 1. SnowflakeUtils 检查
-        try {
-            SnowflakeUtils instance = SnowflakeUtils.getInstance();
-            Map<String, Object> snowflakeStatus = new LinkedHashMap<>();
-            snowflakeStatus.put("initialized", true);
-            snowflakeStatus.put("workerId", instance.getWorkerId());
-            snowflakeStatus.put("datacenterId", instance.getDatacenterId());
-            details.put("snowflake", snowflakeStatus);
-        } catch (Exception e) {
-            log.warn("SnowflakeUtils health check failed: {}", e.getMessage());
-            Map<String, Object> snowflakeStatus = new LinkedHashMap<>();
-            snowflakeStatus.put("initialized", false);
-            snowflakeStatus.put("error", e.getMessage());
-            details.put("snowflake", snowflakeStatus);
-            hasCritical = true;
-        }
-
-        // 2. JVM 运行时基础指标
-        try {
-            Runtime runtime = Runtime.getRuntime();
-            Map<String, Object> jvmStatus = new LinkedHashMap<>();
-            long maxMemory = runtime.maxMemory();
-            long totalMemory = runtime.totalMemory();
-            long freeMemory = runtime.freeMemory();
-            long usedMemory = totalMemory - freeMemory;
-            double memoryUsagePercent = maxMemory > 0 ? (double) usedMemory / maxMemory * 100 : 0;
-            jvmStatus.put("availableProcessors", runtime.availableProcessors());
-            jvmStatus.put("maxMemoryMB", maxMemory / (1024 * 1024));
-            jvmStatus.put("usedMemoryMB", usedMemory / (1024 * 1024));
-            jvmStatus.put("memoryUsagePercent", String.format("%.1f%%", memoryUsagePercent));
-            jvmStatus.put("memoryWarning", memoryUsagePercent > MEMORY_WARNING_PERCENT);
-            details.put("jvm", jvmStatus);
-            if (memoryUsagePercent > MEMORY_WARNING_PERCENT) {
-                hasWarning = true;
-            }
-        } catch (Exception e) {
-            log.warn("JVM health check failed: {}", e.getMessage());
-            details.put("jvmError", e.getMessage());
-        }
-
-        // 3. 确定整体状态
-        String status;
-        if (hasCritical) {
-            status = HealthStatus.DOWN.name();
-        } else if (hasWarning) {
-            status = HealthStatus.DEGRADED.name();
-        } else {
-            status = HealthStatus.UP.name();
-        }
-
-        result.put("status", status);
-        result.put("details", details);
+        String status = health.getStatus().getCode();
+        result.put("status", status.toUpperCase());
+        result.put("details", health.getDetails());
         return result;
     }
 
@@ -164,7 +141,7 @@ public class UtilHealthIndicator implements HealthIndicator {
      * @return 健康返回 true，不健康返回 false
      */
     public boolean isHealthy() {
-        String status = (String) checkHealth().get("status");
-        return HealthStatus.UP.name().equals(status) || HealthStatus.DEGRADED.name().equals(status);
+        Health health = health();
+        return "UP".equalsIgnoreCase(health.getStatus().getCode());
     }
 }

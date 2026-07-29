@@ -270,23 +270,6 @@ public class Rsa2Utils {
     }
 
     /**
-     * 生成 RSA 密钥对（带注释）
-     * @param keySize 密钥长度
-     * @param comment 注释（可选）
-     * @return 包含 publicKey、privateKey 和 comment 的 Map
-     */
-    public static Map<String, Object> initRSAKeyWithComment(int keySize, String comment) {
-        Map<String, String> keyPair = initRSAKey(keySize);
-        Map<String, Object> result = new HashMap<>(3);
-        result.put("publicKey", keyPair.get("publicKey"));
-        result.put("privateKey", keyPair.get("privateKey"));
-        if (comment != null) {
-            result.put("comment", comment);
-        }
-        return result;
-    }
-
-    /**
      * 从 PEM 格式字符串加载公钥
      */
     public static PublicKey loadPublicKeyFromPEM(String pem) throws GeneralSecurityException {

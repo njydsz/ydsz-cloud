@@ -244,6 +244,7 @@ public class OkHttpUtils {
      * springManagedClient 由 Spring 管理其生命周期，不做关闭。
      */
     public static void close() {
+        log.info("Closing OkHttpUtils resources");
         if (client != null) {
             client.dispatcher().executorService().shutdown();
             client.connectionPool().evictAll();
@@ -484,7 +485,10 @@ public class OkHttpUtils {
     }
 
     /**
-     * 使用请求级超时执行请求
+     * 使用请求级超时执行请求（含 write 超时）
+     *
+     * <p>基于基础客户端 {@code newBuilder()} 创建临时客户端，
+     * 共享连接池和 Dispatcher，仅覆盖超时配置。
      *
      * @param request          OkHttp 请求对象
      * @param connectTimeoutMs 连接超时（毫秒）
@@ -498,6 +502,7 @@ public class OkHttpUtils {
         OkHttpClient timedClient = baseClient.newBuilder()
                 .connectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS)
                 .readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)
+                .writeTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)
                 .build();
 
         try (Response response = timedClient.newCall(request).execute()) {

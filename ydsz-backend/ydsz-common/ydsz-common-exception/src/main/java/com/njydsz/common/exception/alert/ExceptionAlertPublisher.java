@@ -2,6 +2,9 @@ package com.njydsz.common.exception.alert;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +59,7 @@ public class ExceptionAlertPublisher {
 
     private final List<ExceptionAlertListener> listeners = new CopyOnWriteArrayList<>();
     private final long dedupWindowMillis;
+    private final long silencePeriodMillis;
 
     /** 上次告警时间（按 errorCode 分组），有界缓存防止无界增长 */
     private final ConcurrentHashMap<String, Long> lastAlertTime =
@@ -67,13 +71,42 @@ public class ExceptionAlertPublisher {
     /** 静默期结束时间（全局） */
     private volatile long silenceUntil = 0;
 
+    /** 异步执行器（null 表示同步执行） */
+    private final ExecutorService asyncExecutor;
+
+    /** 是否使用异步模式 */
+    private final boolean asyncEnabled;
+
     /**
      * 创建异常告警发布器
      *
-     * @param dedupWindowSeconds 去重时间窗口（秒），同一 errorCode 在此窗口内只告警一次
+     * @param dedupWindowSeconds  去重时间窗口（秒），同一 errorCode 在此窗口内只告警一次
+     * @param silencePeriodSeconds 静默期（秒），同一 errorCode 在静默期内不重复告警
      */
-    public ExceptionAlertPublisher(int dedupWindowSeconds) {
+    public ExceptionAlertPublisher(int dedupWindowSeconds, int silencePeriodSeconds) {
+        this(dedupWindowSeconds, silencePeriodSeconds, false, 2);
+    }
+
+    /**
+     * 创建异常告警发布器（支持异步模式）
+     *
+     * @param dedupWindowSeconds  去重时间窗口（秒）
+     * @param silencePeriodSeconds 静默期（秒）
+     * @param asyncEnabled         是否启用异步告警
+     * @param asyncPoolSize        异步线程池大小
+     */
+    public ExceptionAlertPublisher(int dedupWindowSeconds, int silencePeriodSeconds,
+                                   boolean asyncEnabled, int asyncPoolSize) {
         this.dedupWindowMillis = dedupWindowSeconds * 1000L;
+        this.silencePeriodMillis = silencePeriodSeconds * 1000L;
+        this.asyncEnabled = asyncEnabled;
+        this.asyncExecutor = asyncEnabled
+                ? Executors.newFixedThreadPool(asyncPoolSize, r -> {
+                    Thread t = new Thread(r, "exception-alert-" + System.nanoTime());
+                    t.setDaemon(true);
+                    return t;
+                })
+                : null;
     }
 
     /**
@@ -142,12 +175,32 @@ public class ExceptionAlertPublisher {
         );
 
         for (ExceptionAlertListener listener : listeners) {
-            try {
-                listener.onAlert(event);
-            } catch (Exception e) {
-                log.error("异常告警监听器执行失败 | listener={} | event={}",
-                        listener.getClass().getSimpleName(), event, e);
+            if (asyncEnabled && asyncExecutor != null) {
+                asyncExecutor.submit(() -> notifyListener(listener, event));
+            } else {
+                notifyListener(listener, event);
             }
+        }
+    }
+
+    /**
+     * 通知单个监听器（封装异常处理）
+     */
+    private void notifyListener(ExceptionAlertListener listener, ExceptionAlertEvent event) {
+        try {
+            listener.onAlert(event);
+        } catch (Exception e) {
+            log.error("异常告警监听器执行失败 | listener={} | event={}",
+                    listener.getClass().getSimpleName(), event, e);
+        }
+    }
+
+    /**
+     * 关闭异步执行器（由 Spring 容器在销毁时调用）
+     */
+    public void shutdown() {
+        if (asyncExecutor != null) {
+            asyncExecutor.shutdown();
         }
     }
 

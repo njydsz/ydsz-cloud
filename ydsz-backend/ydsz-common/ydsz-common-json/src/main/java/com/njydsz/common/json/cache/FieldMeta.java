@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonRawValue;
 
@@ -178,7 +179,14 @@ public final class FieldMeta {
         this.ordinal = ordinal;
 
         if (annotation != null) {
-            this.format = annotation.format();
+            // Jackson @JsonFormat 兼容：当 @YdszJsonField.format 为空时，回退到 @JsonFormat.pattern
+            JsonFormat jacksonFormat = field.getAnnotation(JsonFormat.class);
+            if ((annotation.format() == null || annotation.format().isEmpty())
+                    && jacksonFormat != null && !jacksonFormat.pattern().isEmpty()) {
+                this.format = jacksonFormat.pattern();
+            } else {
+                this.format = annotation.format();
+            }
             this.defaultValue = annotation.defaultValue();
             this.required = annotation.required();
             this.writeNull = annotation.writeNull();
@@ -195,7 +203,10 @@ public final class FieldMeta {
             this.serializeUsing = annotation.serializeUsing();
             this.deserializeUsing = annotation.deserializeUsing();
         } else {
-            this.format = "";
+            // Jackson @JsonFormat 兼容：无 @YdszJsonField 时，检查 @JsonFormat.pattern
+            JsonFormat jacksonFormat = field.getAnnotation(JsonFormat.class);
+            this.format = (jacksonFormat != null && !jacksonFormat.pattern().isEmpty())
+                ? jacksonFormat.pattern() : "";
             this.defaultValue = "";
             this.required = false;
             this.writeNull = false;

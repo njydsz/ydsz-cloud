@@ -230,18 +230,11 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
 
     @Override
     public String toString() {
-        return "DomainEvent{" +
-                "eventId='" + eventId + '\'' +
-                ", occurredAt=" + occurredAt +
-                ", eventType='" + eventType + '\'' +
-                ", aggregateId='" + aggregateId + '\'' +
-                ", aggregateType='" + aggregateType + '\'' +
-                ", version=" + version +
-                ", tenantId='" + tenantId + '\'' +
-                ", userId='" + userId + '\'' +
-                ", traceId='" + traceId + '\'' +
-                ", metadata=" + metadata +
-                '}';
+        return String.format(
+                "DomainEvent{eventId='%s', occurredAt=%s, eventType='%s', aggregateId='%s', "
+                + "aggregateType='%s', version=%d, tenantId='%s', userId='%s', traceId='%s', metadata=%s}",
+                eventId, occurredAt, eventType, aggregateId, aggregateType,
+                version, tenantId, userId, traceId, metadata);
     }
 
     /**

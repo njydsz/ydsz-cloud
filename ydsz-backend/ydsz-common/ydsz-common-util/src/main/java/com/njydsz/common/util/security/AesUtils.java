@@ -1,6 +1,5 @@
 package com.njydsz.common.util.security;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -8,8 +7,6 @@ import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -79,19 +76,9 @@ public class AesUtils {
     public static final int DEFAULT_KEY_SIZE = 256;
 
     /**
-     * GCM 模式完整转换模式
+     * 共享的线程安全 SecureRandom 实例（SecureRandom 本身是线程安全的）
      */
-    private static final String GCM_TRANSFORMATION = "AES/GCM/NoPadding";
-
-    /**
-     * GCM IV 长度（推荐 12 字节）
-     */
-    private static final int GCM_IV_LENGTH = 12;
-
-    /**
-     * GCM 认证标签长度（128 bit）
-     */
-    private static final int GCM_TAG_LENGTH = 128;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
      * CBC 模式转换（已废弃，仅兼容）
@@ -195,6 +182,8 @@ public class AesUtils {
      * <p>使用 AES-256-GCM 模式，自动生成 12 字节随机 IV。
      * 密文格式：Base64(IV(12字节) + 密文 + GCM 认证标签)。</p>
      *
+     * <p>实现委托给 {@link AesGcmCrypto}，消除重复的 GCM 加密逻辑。</p>
+     *
      * @param content   明文内容
      * @param hexAesKey Hex 格式的 AES 密钥
      * @return Base64 编码的密文
@@ -202,24 +191,8 @@ public class AesUtils {
      */
     public static String encrypt(String content, String hexAesKey) throws GeneralSecurityException {
         validateKey(hexAesKey);
-        byte[] keyBytes = hexToBytes(hexAesKey);
-        SecretKeySpec keySpec = new SecretKeySpec(keyBytes, KEY_ALGORITHM);
-
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] iv = new byte[GCM_IV_LENGTH];
-        secureRandom.nextBytes(iv);
-
-        Cipher cipher = Cipher.getInstance(GCM_TRANSFORMATION);
-        GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);
-
-        byte[] encrypted = cipher.doFinal(content.getBytes(StandardCharsets.UTF_8));
-
-        ByteBuffer buffer = ByteBuffer.allocate(iv.length + encrypted.length);
-        buffer.put(iv);
-        buffer.put(encrypted);
-
-        return Base64.getEncoder().encodeToString(buffer.array());
+        AesGcmCrypto crypto = new AesGcmCrypto(hexToBytes(hexAesKey));
+        return crypto.encrypt(content);
     }
 
     /**
@@ -228,6 +201,8 @@ public class AesUtils {
      * <p>自动从密文中提取 IV 进行解密。
      * GCM 模式提供认证，若密文被篡改将抛出异常。</p>
      *
+     * <p>实现委托给 {@link AesGcmCrypto}，消除重复的 GCM 解密逻辑。</p>
+     *
      * @param encryptedBase64 Base64 编码的密文
      * @param hexAesKey       Hex 格式的 AES 密钥
      * @return 解密后的明文
@@ -235,39 +210,26 @@ public class AesUtils {
      */
     public static String decrypt(String encryptedBase64, String hexAesKey) throws GeneralSecurityException {
         validateKey(hexAesKey);
-        byte[] decoded = Base64.getDecoder().decode(encryptedBase64);
-
-        if (decoded.length < GCM_IV_LENGTH) {
-            throw new IllegalArgumentException("Invalid encrypted data, too short");
-        }
-
-        ByteBuffer buffer = ByteBuffer.wrap(decoded);
-        byte[] iv = new byte[GCM_IV_LENGTH];
-        buffer.get(iv);
-        byte[] cipherText = new byte[buffer.remaining()];
-        buffer.get(cipherText);
-
-        byte[] keyBytes = hexToBytes(hexAesKey);
-        SecretKeySpec keySpec = new SecretKeySpec(keyBytes, KEY_ALGORITHM);
-
-        Cipher cipher = Cipher.getInstance(GCM_TRANSFORMATION);
-        GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmSpec);
-
-        byte[] decrypted = cipher.doFinal(cipherText);
-        return new String(decrypted, StandardCharsets.UTF_8);
+        AesGcmCrypto crypto = new AesGcmCrypto(hexToBytes(hexAesKey));
+        return crypto.decrypt(encryptedBase64);
     }
 
     /**
      * AES 加密（GCM 模式，显式方法别名）
+     *
+     * @deprecated 使用 {@link #encrypt(String, String)} 代替，该方法已默认 GCM 模式
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static String encryptGcm(String content, String hexAesKey) throws GeneralSecurityException {
         return encrypt(content, hexAesKey);
     }
 
     /**
      * AES 解密（GCM 模式，显式方法别名）
+     *
+     * @deprecated 使用 {@link #decrypt(String, String)} 代替，该方法已默认 GCM 模式
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static String decryptGcm(String encryptedBase64, String hexAesKey) throws GeneralSecurityException {
         return decrypt(encryptedBase64, hexAesKey);
     }
@@ -285,6 +247,7 @@ public class AesUtils {
      * @throws GeneralSecurityException 解密异常
      */
     public static String decryptECBCompat(String ecbBase64, String hexAesKey) throws GeneralSecurityException {
+        validateKey(hexAesKey);
         log.warn("Decrypting legacy ECB ciphertext, please migrate to GCM");
         byte[] keyBytes = hexToBytes(hexAesKey);
         byte[] encrypted = Base64.getDecoder().decode(ecbBase64);
@@ -309,6 +272,7 @@ public class AesUtils {
      * @throws GeneralSecurityException 解密异常
      */
     public static String decryptCBCCompat(String cbcResult, String hexAesKey) throws GeneralSecurityException {
+        validateKey(hexAesKey);
         log.warn("Decrypting legacy CBC ciphertext, please migrate to GCM");
         int colonIndex = cbcResult.indexOf(':');
         if (colonIndex < 0) {
@@ -354,14 +318,13 @@ public class AesUtils {
      * @param keySize 密钥位数，支持 128/192/256
      */
     public static byte[] initKey(int keySize) {
+        if (keySize != 128 && keySize != 192 && keySize != 256) {
+            throw new IllegalArgumentException("error keySize: " + keySize + ", must be 128, 192, or 256");
+        }
         try {
-            if (keySize != 128 && keySize != 192 && keySize != 256) {
-                throw new IllegalArgumentException("error keySize: " + keySize + ", must be 128, 192, or 256");
-            }
             KeyGenerator keyGen = KeyGenerator.getInstance(KEY_ALGORITHM);
-            keyGen.init(keySize, SecureRandom.getInstanceStrong());
-            SecretKey secretKey = keyGen.generateKey();
-            return secretKey.getEncoded();
+            keyGen.init(keySize, SECURE_RANDOM);
+            return keyGen.generateKey().getEncoded();
         } catch (Exception e) {
             throw new IllegalStateException("Failed to generate AES key", e);
         }

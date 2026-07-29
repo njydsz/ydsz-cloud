@@ -36,8 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 @EnableConfigurationProperties(SnowflakeProperties.class)
 public class SnowflakeAutoConfiguration {
 
-    private static final long MAX_WORKER_ID = SnowflakeUtils.MAX_WORKER_ID_PUBLIC;
-    private static final long MAX_DATACENTER_ID = SnowflakeUtils.MAX_DATACENTER_ID_PUBLIC;
+    private static final long MAX_WORKER_ID = SnowflakeUtils.getMaxWorkerId();
+    private static final long MAX_DATACENTER_ID = SnowflakeUtils.getMaxDatacenterId();
 
     /**
      * 自动配置 Snowflake ID 生成器
@@ -196,10 +196,8 @@ public class SnowflakeAutoConfiguration {
         try {
             String hostName = InetAddress.getLocalHost().getHostName();
             String hash = DigestUtils.sha256Hex(hostName);
-            if (Long.parseLong(hash.substring(0, 5), 16) % 32 > MAX_DATACENTER_ID) {
-                return MAX_DATACENTER_ID;
-            }
-            return Long.parseLong(hash.substring(0, 5), 16) % 32;
+            long id = Long.parseLong(hash.substring(0, 5), 16) % 32;
+            return Math.min(id, MAX_DATACENTER_ID);
         } catch (UnknownHostException e) {
             return ThreadLocalRandom.current().nextLong(MAX_DATACENTER_ID + 1);
         }

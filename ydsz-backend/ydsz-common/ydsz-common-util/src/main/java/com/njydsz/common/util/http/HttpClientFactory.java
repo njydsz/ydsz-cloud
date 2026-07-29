@@ -10,6 +10,7 @@ import com.njydsz.common.util.concurrent.ExecutorUtils;
 
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 /**
@@ -90,12 +91,53 @@ public final class HttpClientFactory {
     }
 
     /**
+     * 创建一个新的 OkHttpClient Builder（使用 OkHttpProperties 配置）
+     *
+     * @param properties OkHttp 配置属性
+     * @return OkHttpClient.Builder 实例
+     * @since 1.1.0
+     */
+    public static OkHttpClient.Builder newBuilder(OkHttpProperties properties) {
+        return new OkHttpClient.Builder()
+                .connectTimeout(Duration.ofSeconds(properties.getConnectTimeout()))
+                .readTimeout(Duration.ofSeconds(properties.getReadTimeout()))
+                .writeTimeout(Duration.ofSeconds(properties.getWriteTimeout()))
+                .callTimeout(Duration.ofSeconds(properties.getConnectTimeout() + properties.getReadTimeout()))
+                .connectionPool(new ConnectionPool(
+                        properties.getMaxIdleConnections(),
+                        properties.getKeepAliveDuration(),
+                        TimeUnit.MINUTES))
+                .dispatcher(newDispatcher())
+                .retryOnConnectionFailure(true)
+                .followRedirects(true)
+                .followSslRedirects(true);
+    }
+
+    /**
+     * 创建 OkHttpClient 实例（使用配置 + 注入拦截器）
+     *
+     * @param properties    OkHttp 配置属性
+     * @param interceptors  拦截器提供者（Spring）
+     * @return OkHttpClient 实例
+     * @since 1.1.0
+     */
+    public static OkHttpClient create(OkHttpProperties properties, ObjectProvider<Interceptor> interceptors) {
+        OkHttpClient.Builder builder = newBuilder(properties);
+        if (interceptors != null) {
+            interceptors.orderedStream().forEach(builder::addInterceptor);
+        }
+        return builder.build();
+    }
+
+    /**
      * 创建 OkHttpClient 实例（自定义 + 注入拦截器）
      *
      * @param interceptors 拦截器提供者（Spring）
      * @return OkHttpClient 实例
+     * @deprecated 使用 {@link #create(OkHttpProperties, ObjectProvider)} 代替，支持配置化
      */
-    public static OkHttpClient create(ObjectProvider<okhttp3.Interceptor> interceptors) {
+    @Deprecated(since = "1.1.0", forRemoval = true)
+    public static OkHttpClient create(ObjectProvider<Interceptor> interceptors) {
         OkHttpClient.Builder builder = newBuilder();
         if (interceptors != null) {
             interceptors.orderedStream().forEach(builder::addInterceptor);

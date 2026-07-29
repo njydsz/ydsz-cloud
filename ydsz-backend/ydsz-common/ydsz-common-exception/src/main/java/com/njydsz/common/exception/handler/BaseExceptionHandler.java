@@ -118,15 +118,24 @@ public abstract class BaseExceptionHandler {
      * 记录异常指标（统一入口，所有 handler 调用此方法）
      *
      * <p>如果异常指标统计器未注入或被禁用，此方法为空操作。
+     * 同时记录异常处理耗时（Timer 指标）和发布异常告警。
      *
      * @param throwable 异常对象
      */
     protected void recordMetrics(Throwable throwable) {
-        if (exceptionMetrics != null) {
-            exceptionMetrics.recordException(throwable);
-        }
-        if (alertPublisher != null) {
-            alertPublisher.publishAlert(throwable);
+        long startTime = System.nanoTime();
+        try {
+            if (exceptionMetrics != null) {
+                exceptionMetrics.recordException(throwable);
+            }
+            if (alertPublisher != null) {
+                alertPublisher.publishAlert(throwable);
+            }
+        } finally {
+            if (exceptionMetrics != null) {
+                long durationMs = (System.nanoTime() - startTime) / 1_000_000;
+                exceptionMetrics.recordHandlerDuration(durationMs, throwable);
+            }
         }
     }
 
@@ -155,6 +164,27 @@ public abstract class BaseExceptionHandler {
             return properties.getResponseFormat() == ExceptionProperties.ResponseFormat.PROBLEM_DETAIL;
         }
         return false;
+    }
+
+    /**
+     * 获取 ProblemDetail type URI 基础 URL
+     *
+     * @return 配置的基础 URL，未配置时返回 "about:blank"
+     */
+    protected String getProblemDetailTypeBaseUrl() {
+        if (properties != null && properties.getProblemDetailTypeBaseUrl() != null) {
+            return properties.getProblemDetailTypeBaseUrl();
+        }
+        return "about:blank";
+    }
+
+    /**
+     * 是否在 Micrometer 指标中包含异常 code tag
+     *
+     * @return true-包含高基数 code tag，false-不包含
+     */
+    protected boolean metricsIncludeCodeTag() {
+        return properties != null && properties.isMetricsIncludeCodeTag();
     }
 
     /**
@@ -272,6 +302,7 @@ public abstract class BaseExceptionHandler {
      * @return ProblemDetail 对象
      */
     protected ProblemDetail buildProblemDetail(Throwable throwable, String path, String traceId) {
+        String baseUrl = getProblemDetailTypeBaseUrl();
         ProblemDetail.ProblemDetailBuilder builder = ProblemDetail.builder()
                 .instance(path != null ? URI.create(path) : null)
                 .traceId(traceId)
@@ -280,7 +311,7 @@ public abstract class BaseExceptionHandler {
 
         if (throwable instanceof AbstractYdszException) {
             AbstractYdszException ex = (AbstractYdszException) throwable;
-            builder.type(URI.create("https://ydsz.njydsz.com/errors/" + ex.getCategory().name().toLowerCase()))
+            builder.type(URI.create(baseUrl + "/" + ex.getCategory().name().toLowerCase()))
                     .title(ex.getClass().getSimpleName())
                     .status(ex.getHttpStatus())
                     .detail(ex.getMessage())
@@ -291,7 +322,7 @@ public abstract class BaseExceptionHandler {
                 builder.extensions(extMap);
             }
         } else {
-            builder.type(URI.create("https://ydsz.njydsz.com/errors/system"))
+            builder.type(URI.create(baseUrl + "/system"))
                     .title("System Error")
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .detail(getRootCauseMessage(throwable))

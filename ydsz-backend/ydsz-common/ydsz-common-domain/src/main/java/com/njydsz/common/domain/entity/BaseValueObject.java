@@ -1,6 +1,5 @@
 package com.njydsz.common.domain.entity;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -84,6 +83,13 @@ public abstract class BaseValueObject implements ValueObject {
         if (values == null || values.isEmpty()) {
             return simpleName + "{}";
         }
-        return simpleName + Arrays.toString(values.toArray());
+        StringBuilder sb = new StringBuilder(simpleName).append('{');
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(values.get(i));
+        }
+        return sb.append('}').toString();
     }
 }

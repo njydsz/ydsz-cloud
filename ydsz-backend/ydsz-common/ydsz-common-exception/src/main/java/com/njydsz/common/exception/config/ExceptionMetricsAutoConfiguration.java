@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -28,7 +29,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 @ConditionalOnClass(MeterRegistry.class)
 @ConditionalOnBean(MeterRegistry.class)
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "metrics-enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(ExceptionProperties.class)
 public class ExceptionMetricsAutoConfiguration {
 
     /**
@@ -39,7 +39,9 @@ public class ExceptionMetricsAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(ExceptionMetrics.class)
-    public ExceptionMetrics exceptionMetrics(MeterRegistry meterRegistry) {
-        return new ExceptionMetrics(meterRegistry);
+    public ExceptionMetrics exceptionMetrics(MeterRegistry meterRegistry, ExceptionProperties properties) {
+        ExceptionMetrics metrics = new ExceptionMetrics(meterRegistry);
+        metrics.setIncludeCodeTag(properties.isMetricsIncludeCodeTag());
+        return metrics;
     }
 }

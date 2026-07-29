@@ -3,7 +3,6 @@ package com.njydsz.common.core.request;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 import com.njydsz.common.core.constant.PageConstants;
@@ -86,13 +85,12 @@ public class PageRequest extends BaseRequest {
 
     /**
      * 每页记录数
-     * <p>每页返回的记录数量，默认为 PageConstants.DEFAULT_PAGE_SIZE
-     * <p>最大值受 {@code ydsz.core.max-page-size} 配置控制（默认 1000）
+     * <p>每页返回的记录数量，默认为运行时 {@link PageConstants#getDefaultPageSize()}
+     * <p>最大值受 {@code ydsz.core.max-page-size} 配置控制（运行时 {@link PageConstants#getMaxPageSize()}）
      */
     @Min(1)
-    @Max(PageConstants.MAX_PAGE_SIZE)
     @Builder.Default
-    private Long pageSize = (long) PageConstants.DEFAULT_PAGE_SIZE;
+    private Long pageSize = (long) PageConstants.getDefaultPageSize();
 
     /**
      * 排序字段
@@ -117,13 +115,13 @@ public class PageRequest extends BaseRequest {
     /**
      * 获取安全的每页记录数
      *
-     * @return 每页记录数，已限制在 [1, MAX_PAGE_SIZE] 范围内
+     * @return 每页记录数，已限制在 [1, 运行时 maxPageSize] 范围内
      */
     public Long getSafePageSize() {
         if (pageSize == null || pageSize < 1) {
-            return (long) PageConstants.DEFAULT_PAGE_SIZE;
+            return (long) PageConstants.getDefaultPageSize();
         }
-        return Math.min(pageSize, PageConstants.MAX_PAGE_SIZE);
+        return Math.min(pageSize, PageConstants.getMaxPageSize());
     }
 
     /**
@@ -166,8 +164,8 @@ public class PageRequest extends BaseRequest {
     public static PageRequest of(Long pageNum, Long pageSize) {
         PageRequest req = new PageRequest();
         req.pageNum = pageNum != null ? Math.max(pageNum, 1L) : 1L;
-        long ps = pageSize != null ? pageSize : (long) PageConstants.DEFAULT_PAGE_SIZE;
-        req.pageSize = Math.max(1, Math.min(ps, PageConstants.MAX_PAGE_SIZE));
+        long ps = pageSize != null ? pageSize : (long) PageConstants.getDefaultPageSize();
+        req.pageSize = Math.max(1, Math.min(ps, PageConstants.getMaxPageSize()));
         return req;
     }
 

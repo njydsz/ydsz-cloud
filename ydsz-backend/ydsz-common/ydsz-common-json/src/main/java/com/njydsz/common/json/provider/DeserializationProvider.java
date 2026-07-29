@@ -253,6 +253,33 @@ public final class DeserializationProvider {
                 if (elementType instanceof Class<?> elementClass) {
                     // 安全检查：校验 Set 元素类型
                     AutoTypeChecker.checkType(elementClass);
+                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {
+                        List<?> list = BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);
+                        if (list == null) return null;
+                        java.util.Set<Object> set;
+                        if (rawType == java.util.TreeSet.class) {
+                            set = new java.util.TreeSet<>();
+                        } else if (rawType == java.util.LinkedHashSet.class) {
+                            set = new java.util.LinkedHashSet<>(list.size());
+                        } else {
+                            set = new java.util.HashSet<>(list.size());
+                        }
+                        set.addAll(list);
+                        return captureType(set);
+                    } else {
+                        List<?> list = BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);
+                        if (list == null) return null;
+                        java.util.Set<Object> set;
+                        if (rawType == java.util.TreeSet.class) {
+                            set = new java.util.TreeSet<>();
+                        } else if (rawType == java.util.LinkedHashSet.class) {
+                            set = new java.util.LinkedHashSet<>(list.size());
+                        } else {
+                            set = new java.util.HashSet<>(list.size());
+                        }
+                        set.addAll(list);
+                        return captureType(set);
+                    }
                 }
             }
         }

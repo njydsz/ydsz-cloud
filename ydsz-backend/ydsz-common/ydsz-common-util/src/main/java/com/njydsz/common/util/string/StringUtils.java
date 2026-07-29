@@ -65,12 +65,17 @@ final class PatternCache {
     /**
      * LRU 淘汰：移除最旧的 N 个条目
      *
+     * <p>先快照 ACCESS_TIME 的 entrySet，避免在迭代过程中并发修改导致
+     * ConcurrentModificationException。淘汰操作是 best-effort 的，
+     * 并发场景下可能淘汰不精确，但不影响正确性。
+     *
      * @param count 要淘汰的条目数
      */
     private static void evictOldestEntries(int count) {
         ACCESS_TIME.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue())
                 .limit(count)
+                .toList()
                 .forEach(entry -> {
                     CACHE.remove(entry.getKey());
                     ACCESS_TIME.remove(entry.getKey());
@@ -653,14 +658,20 @@ public class StringUtils {
 
     /**
      * 转小写（别名方法，兼容 Apache Commons Lang3）
+     *
+     * @deprecated 使用 {@link #toLower(String)} 代替
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static String lowerCase(String str) {
         return toLower(str);
     }
 
     /**
      * 转大写（别名方法，兼容 Apache Commons Lang3）
+     *
+     * @deprecated 使用 {@link #toUpper(String)} 代替
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static String upperCase(String str) {
         return toUpper(str);
     }
@@ -1426,7 +1437,7 @@ public class StringUtils {
         if (str == null || regex == null) {
             return false;
         }
-        return Pattern.matches(regex, str);
+        return PatternCache.compile(regex).matcher(str).matches();
     }
 
     /**

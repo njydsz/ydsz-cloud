@@ -24,6 +24,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 
+import com.njydsz.common.util.BeanUpdateUtil;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -77,7 +79,7 @@ public class BeanCopyUtils {
             });
 
     /**
-     * 缓存最大容量，超过后触发全量清空（防止内存泄漏）
+     * 缓存最大容量，超过后触发 LRU 淘汰最旧条目（防止内存泄漏）
      */
     private static final int MAX_CACHE_SIZE = 1024;
 
@@ -512,10 +514,9 @@ public class BeanCopyUtils {
     /**
      * 转换 List 泛型（别名，内部调用 copyListProperties）
      *
-     * @param source 数据源
-     * @param clazz  目标类
-     * @return 目标对象列表
+     * @deprecated 使用 {@link #copyListProperties(List, Class)} 代替
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static <T> List<T> coverList(List<?> source, Class<T> clazz) {
         return copyListProperties(source, clazz);
     }
@@ -570,29 +571,11 @@ public class BeanCopyUtils {
     /**
      * 忽略 null 值的拷贝实现
      *
-     * <p>使用缓存的 PropertyDescriptor 直接读写属性值，避免创建 Map 中间层和 BeanWrapper 实例。
+     * <p>委托给 {@link com.njydsz.common.util.BeanUpdateUtil#copyNonNull} 统一实现，
+     * 消除两个工具类之间的功能重叠。BeanUpdateUtil 是「PATCH 语义部分更新」的单一职责入口。
      */
     private static void copyPropertiesWithIgnoreNull(Object source, Object target) {
-        Class<?> sourceClass = source.getClass();
-        PropertyDescriptor[] props = computeIfAbsentBounded(PROPERTY_CACHE, sourceClass, BeanUtils::getPropertyDescriptors);
-        for (PropertyDescriptor pd : props) {
-            if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
-                continue;
-            }
-            String name = pd.getName();
-            if ("class".equals(name) || DEFAULT_IGNORE_FIELDS.contains(name)) {
-                continue;
-            }
-            try {
-                Object value = pd.getReadMethod().invoke(source);
-                if (value != null) {
-                    pd.getWriteMethod().invoke(target, value);
-                }
-            } catch (Exception e) {
-                log.warn("【BeanCopyUtils】属性拷贝失败 | property={} | error={}",
-                        name, e.getMessage());
-            }
-        }
+        BeanUpdateUtil.copyNonNull(source, target);
     }
 
     /**
@@ -636,6 +619,8 @@ public class BeanCopyUtils {
     /**
      * 从缓存获取或计算值（LRU 淘汰策略已由 LinkedHashMap 自动管理）
      *
+     * <p>使用 {@link Map#computeIfAbsent} 保证原子性，避免并发场景下重复计算。
+     *
      * @param cache  缓存 Map
      * @param key    缓存 key
      * @param mapper 缓存值生成函数
@@ -644,13 +629,7 @@ public class BeanCopyUtils {
      * @return 缓存值
      */
     private static <K, V> V computeIfAbsentBounded(Map<K, V> cache, K key, Function<K, V> mapper) {
-        V existing = cache.get(key);
-        if (existing != null) {
-            return existing;
-        }
-        V value = mapper.apply(key);
-        cache.put(key, value);
-        return value;
+        return cache.computeIfAbsent(key, mapper);
     }
 
     /**

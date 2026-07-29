@@ -1,15 +1,10 @@
 package com.njydsz.common.util.concurrent;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @Slf4j
 public class ExecutorUtils {
@@ -359,73 +353,7 @@ public class ExecutorUtils {
         };
     }
 
-    // ==================== 拒绝策略 ====================
-
-    /**
-     * 创建中止策略
-     */
-    public static RejectedExecutionHandler createAbortPolicy() {
-        return new ThreadPoolExecutor.AbortPolicy();
-    }
-
-    /**
-     * 创建调用者运行策略
-     */
-    public static RejectedExecutionHandler createCallerRunsPolicy() {
-        return new ThreadPoolExecutor.CallerRunsPolicy();
-    }
-
-    /**
-     * 创建丢弃策略
-     */
-    public static RejectedExecutionHandler createDiscardPolicy() {
-        return new ThreadPoolExecutor.DiscardPolicy();
-    }
-
-    /**
-     * 创建丢弃最旧任务策略
-     */
-    public static RejectedExecutionHandler createDiscardOldestPolicy() {
-        return new ThreadPoolExecutor.DiscardOldestPolicy();
-    }
-
-    /**
-     * 创建自定义拒绝策略
-     */
-    public static RejectedExecutionHandler createCustomPolicy(RejectedExecutionHandler handler) {
-        return handler != null ? handler : createCallerRunsPolicy();
-    }
-
     // ==================== 任务执行 ====================
-
-    /**
-     * 执行任务（不返回结果）
-     */
-    public static void execute(ExecutorService executor, Runnable task) {
-        if (executor != null && task != null) {
-            executor.execute(task);
-        }
-    }
-
-    /**
-     * 提交任务（返回 Future）
-     */
-    public static <T> Future<T> submit(ExecutorService executor, Callable<T> task) {
-        if (executor != null && task != null) {
-            return executor.submit(task);
-        }
-        return null;
-    }
-
-    /**
-     * 提交任务（返回 Future）
-     */
-    public static Future<?> submit(ExecutorService executor, Runnable task) {
-        if (executor != null && task != null) {
-            return executor.submit(task);
-        }
-        return null;
-    }
 
     /**
      * Submit a task with actual timeout enforcement.
@@ -455,89 +383,6 @@ public class ExecutorUtils {
     }
 
     /**
-     * 批量执行任务
-     */
-    public static <T> List<Future<T>> invokeAll(
-            ExecutorService executor,
-            Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        if (executor != null && tasks != null) {
-            return executor.invokeAll(tasks);
-        }
-        return new ArrayList<>();
-    }
-
-    /**
-     * 批量执行任务（带超时）
-     */
-    public static <T> List<Future<T>> invokeAll(
-            ExecutorService executor,
-            Collection<? extends Callable<T>> tasks,
-            long timeout,
-            TimeUnit unit) throws InterruptedException {
-        if (executor != null && tasks != null) {
-            return executor.invokeAll(tasks, timeout, unit);
-        }
-        return new ArrayList<>();
-    }
-
-    /**
-     * 执行任意一个任务并返回结果
-     */
-    public static <T> T invokeAny(
-            ExecutorService executor,
-            Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        if (executor != null && tasks != null) {
-            return executor.invokeAny(tasks);
-        }
-        return null;
-    }
-
-    /**
-     * 执行任意一个任务并返回结果（带超时）
-     */
-    public static <T> T invokeAny(
-            ExecutorService executor,
-            Collection<? extends Callable<T>> tasks,
-            long timeout,
-            TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        if (executor != null && tasks != null) {
-            return executor.invokeAny(tasks, timeout, unit);
-        }
-        return null;
-    }
-
-    // ==================== 线程池管理 ====================
-
-    /**
-     * 关闭线程池
-     */
-    public static void shutdown(ExecutorService executor) {
-        if (executor != null) {
-            executor.shutdown();
-        }
-    }
-
-    /**
-     * 立即关闭线程池
-     */
-    public static List<Runnable> shutdownNow(ExecutorService executor) {
-        if (executor != null) {
-            return executor.shutdownNow();
-        }
-        return new ArrayList<>();
-    }
-
-    /**
-     * 等待线程池终止
-     */
-    public static boolean awaitTermination(ExecutorService executor, long timeout, TimeUnit unit) throws InterruptedException {
-        if (executor != null) {
-            return executor.awaitTermination(timeout, unit);
-        }
-        return true;
-    }
-
-    /**
      * 优雅关闭线程池
      */
     public static boolean shutdownGracefully(ExecutorService executor, long timeout, TimeUnit unit) {
@@ -556,189 +401,6 @@ public class ExecutorUtils {
             executor.shutdownNow();
             Thread.currentThread().interrupt();
             return false;
-        }
-    }
-
-    // ==================== 监控 ====================
-
-    /**
-     * 获取线程池大小
-     */
-    public static int getPoolSize(ThreadPoolExecutor executor) {
-        return executor != null ? executor.getPoolSize() : 0;
-    }
-
-    /**
-     * 获取活跃线程数
-     */
-    public static int getActiveCount(ThreadPoolExecutor executor) {
-        return executor != null ? executor.getActiveCount() : 0;
-    }
-
-    /**
-     * 获取已完成任务数
-     */
-    public static long getCompletedTaskCount(ThreadPoolExecutor executor) {
-        return executor != null ? executor.getCompletedTaskCount() : 0;
-    }
-
-    /**
-     * 获取任务总数
-     */
-    public static long getTaskCount(ThreadPoolExecutor executor) {
-        return executor != null ? executor.getTaskCount() : 0;
-    }
-
-    /**
-     * 获取队列大小
-     */
-    public static int getQueueSize(ThreadPoolExecutor executor) {
-        return executor != null ? executor.getQueue().size() : 0;
-    }
-
-    /**
-     * 获取队列剩余容量
-     */
-    public static int getQueueRemainingCapacity(ThreadPoolExecutor executor) {
-        return executor != null ? executor.getQueue().remainingCapacity() : 0;
-    }
-
-    /**
-     * 判断线程池是否已关闭
-     */
-    public static boolean isShutdown(ExecutorService executor) {
-        return executor != null && executor.isShutdown();
-    }
-
-    /**
-     * 判断线程池是否已终止
-     */
-    public static boolean isTerminated(ExecutorService executor) {
-        return executor != null && executor.isTerminated();
-    }
-
-    /**
-     * 获取线程池状态信息
-     */
-    public static String getPoolStatus(ThreadPoolExecutor executor) {
-        if (executor == null) {
-            return "null";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Pool Status:\n");
-        sb.append("  Pool Size: ").append(executor.getPoolSize()).append("\n");
-        sb.append("  Active Count: ").append(executor.getActiveCount()).append("\n");
-        sb.append("  Completed Task Count: ").append(executor.getCompletedTaskCount()).append("\n");
-        sb.append("  Task Count: ").append(executor.getTaskCount()).append("\n");
-        sb.append("  Queue Size: ").append(executor.getQueue().size()).append("\n");
-        sb.append("  Is Shutdown: ").append(executor.isShutdown()).append("\n");
-        sb.append("  Is Terminated: ").append(executor.isTerminated()).append("\n");
-        return sb.toString();
-    }
-
-    // ==================== 队列工厂 ====================
-
-    /**
-     * 创建有界队列
-     */
-    public static <T> BlockingQueue<T> newBoundedQueue(int capacity) {
-        return new ArrayBlockingQueue<>(capacity);
-    }
-
-    /**
-     * 创建无界队列
-     */
-    public static <T> BlockingQueue<T> newUnboundedQueue() {
-        return new LinkedBlockingQueue<>();
-    }
-
-    /**
-     * 创建无界队列（初始容量）
-     */
-    public static <T> BlockingQueue<T> newUnboundedQueue(int initialCapacity) {
-        return new LinkedBlockingQueue<>(initialCapacity);
-    }
-
-    /**
-     * 创建同步队列
-     */
-    public static <T> BlockingQueue<T> newSynchronousQueue() {
-        return new SynchronousQueue<>();
-    }
-
-    /**
-     * 创建优先级队列
-     */
-    public static <T extends Comparable<? super T>> BlockingQueue<T> newPriorityQueue() {
-        return new PriorityBlockingQueue<>();
-    }
-
-    /**
-     * 创建优先级队列（初始容量）
-     */
-    public static <T extends Comparable<? super T>> BlockingQueue<T> newPriorityQueue(int initialCapacity) {
-        return new PriorityBlockingQueue<>(initialCapacity);
-    }
-
-    /**
-     * 创建延迟队列
-     */
-    public static <T extends Delayed> BlockingQueue<T> newDelayQueue() {
-        return new DelayQueue<>();
-    }
-
-    // ==================== 辅助方法 ====================
-
-    /**
-     * 睡眠（不抛出异常）
-     */
-    public static void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    /**
-     * 睡眠（不抛出异常）
-     */
-    public static void sleep(long millis, int nanos) {
-        try {
-            Thread.sleep(millis, nanos);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    /**
-     * 等待（不抛出异常）
-     */
-    public static void join(Thread thread, long millis) {
-        if (thread == null) {
-            return;
-        }
-
-        try {
-            thread.join(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    /**
-     * 等待（不抛出异常）
-     */
-    public static void join(Thread thread) {
-        if (thread == null) {
-            return;
-        }
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 }

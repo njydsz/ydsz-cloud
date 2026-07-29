@@ -14,9 +14,9 @@ import org.springframework.core.task.TaskExecutor;
 
 import com.njydsz.common.domain.dag.SpELConditionEvaluator;
 import com.njydsz.common.domain.event.DomainEventPublisher;
+import com.njydsz.common.domain.event.EventStore;
 import com.njydsz.common.domain.health.DomainHealthIndicator;
 import com.njydsz.common.domain.tree.TreeLazyConfig;
-
 /**
  * Domain 模块自动配置
  *
@@ -36,7 +36,7 @@ import com.njydsz.common.domain.tree.TreeLazyConfig;
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.domain", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(TreeLazyConfig.class)
+@EnableConfigurationProperties({TreeLazyConfig.class, DomainProperties.class})
 public class DomainAutoConfiguration {
 
     /**
@@ -53,9 +53,11 @@ public class DomainAutoConfiguration {
     @ConditionalOnBean(ApplicationEventPublisher.class)
     @ConditionalOnMissingBean(DomainEventPublisher.class)
     public DomainEventPublisher domainEventPublisher(ApplicationEventPublisher eventPublisher,
-                                                      ObjectProvider<TaskExecutor> taskExecutorProvider) {
+                                                      ObjectProvider<TaskExecutor> taskExecutorProvider,
+                                                      DomainProperties domainProperties) {
         TaskExecutor taskExecutor = taskExecutorProvider.getIfAvailable();
-        return new DomainEventPublisher(eventPublisher, taskExecutor);
+        return new DomainEventPublisher(eventPublisher, taskExecutor,
+                                         domainProperties.getEvent().isAsyncEnabled());
     }
 
     /**
@@ -65,8 +67,10 @@ public class DomainAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public SpELConditionEvaluator spELConditionEvaluator() {
-        return new SpELConditionEvaluator();
+    public SpELConditionEvaluator spELConditionEvaluator(DomainProperties domainProperties) {
+        return new SpELConditionEvaluator(
+                domainProperties.getSpel().isCacheEnabled(),
+                domainProperties.getSpel().getCacheMaxSize());
     }
 
     /**
@@ -83,8 +87,11 @@ public class DomainAutoConfiguration {
     @ConditionalOnClass(HealthIndicator.class)
     @ConditionalOnMissingBean(DomainHealthIndicator.class)
     public DomainHealthIndicator domainHealthIndicator(ObjectProvider<DomainEventPublisher> eventPublisherProvider,
-                                                         TreeLazyConfig treeLazyConfig) {
+                                                         TreeLazyConfig treeLazyConfig,
+                                                         ObjectProvider<SpELConditionEvaluator> spELConditionEvaluatorProvider,
+                                                         ObjectProvider<EventStore> eventStoreProvider) {
         DomainEventPublisher eventPublisher = eventPublisherProvider.getIfAvailable();
-        return new DomainHealthIndicator(eventPublisher, treeLazyConfig);
+        return new DomainHealthIndicator(eventPublisher, treeLazyConfig,
+                                         spELConditionEvaluatorProvider, eventStoreProvider);
     }
 }

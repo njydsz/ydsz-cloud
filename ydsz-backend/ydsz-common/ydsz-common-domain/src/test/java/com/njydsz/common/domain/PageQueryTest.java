@@ -162,12 +162,12 @@ class PageQueryTest {
     void testEffectivePageSize_normalization() {
         PageQuery query = new PageQuery();
         query.setPageSize(0);
-        assertEquals(PageConstants.DEFAULT_PAGE_SIZE, query.getEffectivePageSize());
+        assertEquals(PageConstants.getDefaultPageSize(), query.getEffectivePageSize());
 
-        query.setPageSize(PageConstants.MAX_PAGE_SIZE + 10);
-        assertEquals(PageConstants.MAX_PAGE_SIZE, query.getEffectivePageSize());
+        query.setPageSize(PageConstants.getMaxPageSize() + 10);
+        assertEquals(PageConstants.getMaxPageSize(), query.getEffectivePageSize());
 
         query.setPageSize(-10);
-        assertEquals(PageConstants.DEFAULT_PAGE_SIZE, query.getEffectivePageSize());
+        assertEquals(PageConstants.getDefaultPageSize(), query.getEffectivePageSize());
     }
 }

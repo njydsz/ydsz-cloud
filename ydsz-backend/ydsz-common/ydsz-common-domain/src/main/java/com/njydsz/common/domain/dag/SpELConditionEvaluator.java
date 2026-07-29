@@ -1,5 +1,7 @@
 package com.njydsz.common.domain.dag;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,8 +39,49 @@ public class SpELConditionEvaluator {
 
     private final ExpressionParser parser = new SpelExpressionParser();
 
+    /** 是否启用表达式缓存 */
+    private final boolean cacheEnabled;
+
+    /** 表达式缓存最大容量（0 表示无限制） */
+    private final int cacheMaxSize;
+
     /** 表达式解析缓存，避免重复解析相同表达式 */
-    private final ConcurrentHashMap<String, Expression> exprCache = new ConcurrentHashMap<>();
+    private final Map<String, Expression> exprCache;
+
+    /**
+     * 默认构造（启用缓存，容量 1024）
+     */
+    public SpELConditionEvaluator() {
+        this(true, 1024);
+    }
+
+    /**
+     * 构造 SpEL 条件评估器
+     *
+     * @param cacheEnabled 是否启用表达式缓存
+     * @param cacheMaxSize 缓存最大容量（0 表示无限制，仅在 cacheEnabled=true 时生效）
+     * @since 1.2.0
+     */
+    public SpELConditionEvaluator(boolean cacheEnabled, int cacheMaxSize) {
+        this.cacheEnabled = cacheEnabled;
+        this.cacheMaxSize = cacheMaxSize;
+        this.exprCache = cacheEnabled ? createLruCache(cacheMaxSize) : null;
+    }
+
+    /**
+     * 创建 LRU 缓存（有界）或 ConcurrentHashMap（无界）
+     */
+    private static Map<String, Expression> createLruCache(int maxSize) {
+        if (maxSize <= 0) {
+            return new ConcurrentHashMap<>();
+        }
+        return Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Expression> eldest) {
+                return size() > maxSize;
+            }
+        });
+    }
 
     /**
      * 评估条件表达式。
@@ -59,13 +102,30 @@ public class SpELConditionEvaluator {
 
         try {
             EvaluationContext evalContext = buildEvaluationContext(context);
-            Expression parsed = exprCache.computeIfAbsent(spel, parser::parseExpression);
+            Expression parsed = getOrParse(spel);
             Boolean result = parsed.getValue(evalContext, Boolean.class);
             return result != null && result;
         } catch (Exception e) {
             log.warn("[SpELConditionEvaluator] 表达式评估失败, 返回 false: expr={} reason={}",
                     expression, e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * 从缓存获取或解析表达式
+     */
+    private Expression getOrParse(String spel) {
+        if (!cacheEnabled) {
+            return parser.parseExpression(spel);
+        }
+        synchronized (exprCache) {
+            Expression parsed = exprCache.get(spel);
+            if (parsed == null) {
+                parsed = parser.parseExpression(spel);
+                exprCache.put(spel, parsed);
+            }
+            return parsed;
         }
     }
 
@@ -84,7 +144,9 @@ public class SpELConditionEvaluator {
      * 清除表达式解析缓存（主要用于运行时配置变更或测试场景）。
      */
     public void clearCache() {
-        exprCache.clear();
+        if (exprCache != null) {
+            exprCache.clear();
+        }
     }
 
     /**
@@ -93,6 +155,6 @@ public class SpELConditionEvaluator {
      * @return 缓存的表达式数量
      */
     public int getCacheSize() {
-        return exprCache.size();
+        return exprCache != null ? exprCache.size() : 0;
     }
 }

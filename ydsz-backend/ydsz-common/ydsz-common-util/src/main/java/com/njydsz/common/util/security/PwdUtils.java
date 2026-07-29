@@ -22,7 +22,11 @@ public class PwdUtils {
     /** BCrypt 格式正则 */
     private static final Pattern BCRYPT_PATTERN = Pattern.compile("^\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}$");
 
-    /** Spring Security BCrypt 编码器（线程安全） */
+    /** Spring Security BCrypt 编码器（线程安全）
+     *
+     * <p>强度 12 对应 2^12 = 4096 轮哈希计算，OWASP 推荐至少 10。
+     * 如需调整强度，请通过配置注入新的 BCryptPasswordEncoder 实例。
+     */
     private static final BCryptPasswordEncoder BCRYPT_ENCODER = new BCryptPasswordEncoder(12);
 
     /**
@@ -70,9 +74,13 @@ public class PwdUtils {
     }
 
     /**
-     * PBKDF2 默认迭代次数（推荐至少 10000 次）
+     * PBKDF2 默认迭代次数
+     *
+     * <p>OWASP 2023 推荐 PBKDF2-SHA256 至少 600000 次迭代。
+     * 迭代次数存储在编码密码中（salt:iterations:hash），
+     * 验证旧密码时使用存储的迭代次数，不受此值变化影响。
      */
-    private static final int DEFAULT_ITERATIONS = 10000;
+    private static final int DEFAULT_ITERATIONS = 600000;
 
     /**
      * 默认盐值长度（16 字节）
@@ -289,9 +297,12 @@ public class PwdUtils {
 
     /**
      * 获取默认密码的加盐哈希值
+     *
+     * @deprecated 使用 {@link #getDefaultPassEncryption()} 代替，两者实现完全一致
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static String getDefaultPassEncryptionWithSalt() {
-        return encodeWithAutoSalt(DEFAULT_PASS);
+        return getDefaultPassEncryption();
     }
 
     /**

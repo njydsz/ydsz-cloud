@@ -1,6 +1,7 @@
 package com.njydsz.common.json.autotype;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -96,8 +97,18 @@ public final class AutoTypeChecker {
      *
      * <p>避免每次反序列化都重复扫描黑白名单集合。每个类型的检查结果只计算一次并缓存，
      * 后续直接查缓存。当白名单/黑名单动态变更时，需调用 {@link #clearCache()} 清除缓存。</p>
+     *
+     * <p>使用 LRU 有界缓存（max 4096 entries），避免动态类加载场景下
+     *（如 OSGi、热部署、Groovy 脚本引擎）className 持续写入导致内存泄漏。</p>
      */
-    private static final ConcurrentHashMap<String, Boolean> TYPE_CHECK_CACHE = new ConcurrentHashMap<>(256);
+    private static final Map<String, Boolean> TYPE_CHECK_CACHE =
+        java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<>(256, 0.75f, true) {
+            private static final int MAX_ENTRIES = 4096;
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
+                return size() > MAX_ENTRIES;
+            }
+        });
 
     static {
         initBuiltinWhitelist();

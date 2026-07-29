@@ -103,7 +103,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
         Page<MsgNotification> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
-                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.getMaxPageSize()));
         LambdaQueryWrapper<MsgNotification> w = new LambdaQueryWrapper<MsgNotification>()
                 .eq(MsgNotification::getReceiverId, userId);
         if (query != null) {

@@ -88,9 +88,9 @@ public final class SnowflakeUtils {
     private static volatile SnowflakeUtils INSTANCE;
 
     /** 对外暴露的最大工作节点 ID */
-    public static final long MAX_WORKER_ID_PUBLIC = MAX_WORKER_ID;
+    public static long getMaxWorkerId() { return MAX_WORKER_ID; }
     /** 对外暴露的最大数据中心 ID */
-    public static final long MAX_DATACENTER_ID_PUBLIC = MAX_DATACENTER_ID;
+    public static long getMaxDatacenterId() { return MAX_DATACENTER_ID; }
 
     /**
      * 初始化 Snowflake 实例（仅可调用一次）
@@ -154,9 +154,12 @@ public final class SnowflakeUtils {
     /**
      * 等待下一毫秒
      *
+     * <p>当序列号耗尽时调用，等待到下一毫秒以重置序列号。
+     * 当 offset 为 0（同一毫秒内）时，至少等待 1ms 避免 CPU 忙等。
+     *
      * @param lastTimestamp 上一个时间戳
      * @return 下一毫秒的时间戳
-     * @throws RuntimeException 当时间回拨超过容忍阈值时抛出
+     * @throws ClockBackwardException 当时间回拨超过容忍阈值时抛出
      */
     protected long tilNextMillis(long lastTimestamp) {
         long timestamp = timeGen();
@@ -171,8 +174,10 @@ public final class SnowflakeUtils {
                 log.error("Clock moved backwards, waited {} ms, exceeds max wait {} ms", totalWaited, CLOCK_BACKWARD_MAX_WAIT_MILLIS);
                 throw new ClockBackwardException(offset, lastTimestamp, timeGen());
             }
-            LockSupport.parkNanos(offset * 1_000_000);
-            totalWaited += offset;
+            // offset 为 0 表示同一毫秒内序列号耗尽，至少等待 1ms 避免 CPU 忙等
+            long parkMillis = Math.max(offset, 1L);
+            LockSupport.parkNanos(parkMillis * 1_000_000);
+            totalWaited += parkMillis;
             timestamp = timeGen();
         }
         return timestamp;
@@ -499,6 +504,16 @@ public final class SnowflakeUtils {
             }
         }
         return maxTimestamp == 0L ? EPOCH : maxTimestamp;
+    }
+
+    /**
+     * 获取分片数量（用于健康检查和监控）
+     *
+     * @return 分片数量
+     * @since 1.2.0
+     */
+    public int getShardCount() {
+        return shardCount;
     }
 
     /**

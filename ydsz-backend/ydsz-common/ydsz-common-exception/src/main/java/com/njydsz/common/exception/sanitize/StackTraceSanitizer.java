@@ -97,30 +97,30 @@ public class StackTraceSanitizer {
     /**
      * 对异常堆栈进行脱敏处理
      *
+     * <p>直接在原始异常对象上替换 StackTraceElement 数组，
+     * 保留原始异常类型和所有字段（code/level/category 等），
+     * 确保 {@code instanceof} 检查在脱敏后仍然有效。
+     *
      * @param throwable 原始异常
-     * @return 脱敏后的异常（新实例，不修改原始异常）
+     * @return 脱敏后的异常（同一实例，堆栈已替换）
      */
     public Throwable sanitize(Throwable throwable) {
         if (throwable == null) {
             return null;
         }
 
-        // 创建新的异常实例，避免修改原始异常
-        Throwable sanitized = createSanitizedCopy(throwable);
-
-        // 处理堆栈跟踪
-        StackTraceElement[] originalStack = sanitized.getStackTrace();
+        // 直接在原始异常上替换堆栈，保留异常类型和所有字段
+        StackTraceElement[] originalStack = throwable.getStackTrace();
         StackTraceElement[] sanitizedStack = sanitizeStackTrace(originalStack);
-        sanitized.setStackTrace(sanitizedStack);
+        throwable.setStackTrace(sanitizedStack);
 
-        // 递归处理 cause
-        Throwable cause = sanitized.getCause();
-        if (cause != null && cause != sanitized) {
-            Throwable sanitizedCause = sanitize(cause);
-            sanitized.initCause(sanitizedCause);
+        // 递归处理 cause 链的堆栈
+        Throwable cause = throwable.getCause();
+        if (cause != null && cause != throwable) {
+            sanitize(cause);
         }
 
-        return sanitized;
+        return throwable;
     }
 
     /**
@@ -214,24 +214,4 @@ public class StackTraceSanitizer {
         return frame;
     }
 
-    /**
-     * 创建异常的脱敏副本
-     */
-    private Throwable createSanitizedCopy(Throwable throwable) {
-        try {
-            // 尝试使用构造函数创建副本
-            if (throwable instanceof RuntimeException) {
-                return new RuntimeException(throwable.getMessage(), throwable.getCause());
-            } else if (throwable instanceof Exception) {
-                return new Exception(throwable.getMessage(), throwable.getCause());
-            } else if (throwable instanceof Error) {
-                return new Error(throwable.getMessage(), throwable.getCause());
-            }
-        } catch (Exception e) {
-            // 创建副本失败，返回原始异常
-            return throwable;
-        }
-
-        return throwable;
-    }
 }

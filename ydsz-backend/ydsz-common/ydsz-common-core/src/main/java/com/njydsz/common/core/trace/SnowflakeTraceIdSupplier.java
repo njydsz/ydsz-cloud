@@ -65,6 +65,12 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
     /** 最大时钟回拨容忍时间（毫秒） */
     private static final long MAX_BACKWARD_MS = 5000L;
 
+    /** 十六进制字符表，用于快速 hex 编码 */
+    private static final char[] HEX_DIGITS = {
+            '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    };
+
     private final long workerId;
     private final long datacenterId;
 
@@ -105,12 +111,14 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
 
     @Override
     public String generate() {
-        long currentTimestamp = timeGen();
+        long currentTimestamp;
         long prev;
-        long next = 0L;
+        long next;
         long sequence;
 
         while (true) {
+            // 每轮循环重新读取时间戳，避免 CAS 失败后使用过期时间戳误判时钟回拨
+            currentTimestamp = timeGen();
             prev = state.get();
             long lastTimestamp = prev >>> SEQUENCE_BITS;
             sequence = prev & SEQUENCE_MASK;
@@ -162,7 +170,23 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
                 | (workerId << WORKER_ID_SHIFT)
                 | sequence;
 
-        return String.format("%016x", id);
+        return toHex16(id);
+    }
+
+    /**
+     * 将 long 值编码为 16 位零填充的十六进制字符串。
+     *
+     * <p>替代 {@code String.format("%016x", id)}，避免每次调用创建 Formatter 临时对象。
+     *
+     * @param val 待编码的值
+     * @return 16 位十六进制字符串
+     */
+    private static String toHex16(long val) {
+        char[] buf = new char[16];
+        for (int i = 15; i >= 0; i--) {
+            buf[i] = HEX_DIGITS[(int) (val >>> (i * 4)) & 0xF];
+        }
+        return new String(buf);
     }
 
     /**
@@ -194,12 +218,38 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
     /**
      * 从进程 PID 推导 workerId（0 ~ 31）
      *
-     * <p>相同 PID 多次调用结果一致，进程重启后 PID 变化不冲突。
+     * <p>推导优先级：
+     * <ol>
+     *   <li>环境变量 {@code SNOWFLAKE_WORKER_ID}（K8s deployment 显式配置）</li>
+     *   <li>环境变量 {@code POD_NAME} 或 {@code HOSTNAME} 的 hashCode 取低 5 位</li>
+     *   <li>PID % 32 降级方案</li>
+     * </ol>
      * 解析失败时降级返回 0。
      *
      * @return workerId
      */
     private static long deriveWorkerId() {
+        // 1. 优先从环境变量读取显式配置
+        String env = System.getenv("SNOWFLAKE_WORKER_ID");
+        if (env != null && !env.isBlank()) {
+            try {
+                long id = Long.parseLong(env.trim());
+                if (id >= 0 && id <= MAX_WORKER_ID) {
+                    return id;
+                }
+            } catch (NumberFormatException ignored) {
+                // fallthrough
+            }
+        }
+        // 2. 从 POD_NAME / HOSTNAME hash 推导（K8s 环境 Pod 名唯一）
+        String podName = System.getenv("POD_NAME");
+        if (podName == null || podName.isBlank()) {
+            podName = System.getenv("HOSTNAME");
+        }
+        if (podName != null && !podName.isBlank()) {
+            return Math.abs(podName.hashCode()) % (MAX_WORKER_ID + 1);
+        }
+        // 3. 降级从 PID 推导
         String name = ManagementFactory.getRuntimeMXBean().getName();
         try {
             long pid = Long.parseLong(name.split("@")[0]);
@@ -212,12 +262,40 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
     /**
      * 从本机 IP 推导 datacenterId（0 ~ 31）
      *
-     * <p>取本机非回环 IPv4 地址的最后一字节的低 5 位。
+     * <p>推导优先级：
+     * <ol>
+     *   <li>环境变量 {@code SNOWFLAKE_DATACENTER_ID}（K8s deployment 显式配置）</li>
+     *   <li>环境变量 {@code POD_IP} 指定的 IP 地址最后一字节低 5 位</li>
+     *   <li>本机网卡 IP 降级方案</li>
+     * </ol>
      * 解析失败时降级返回 0。
      *
      * @return datacenterId
      */
     private static long deriveDatacenterId() {
+        // 1. 优先从环境变量读取显式配置
+        String env = System.getenv("SNOWFLAKE_DATACENTER_ID");
+        if (env != null && !env.isBlank()) {
+            try {
+                long id = Long.parseLong(env.trim());
+                if (id >= 0 && id <= MAX_DATACENTER_ID) {
+                    return id;
+                }
+            } catch (NumberFormatException ignored) {
+                // fallthrough
+            }
+        }
+        // 2. 从 POD_IP 推导
+        String podIp = System.getenv("POD_IP");
+        if (podIp != null && !podIp.isBlank()) {
+            try {
+                byte[] bytes = InetAddress.getByName(podIp).getAddress();
+                return (bytes[bytes.length - 1] & 0x1F);
+            } catch (Exception ignored) {
+                // fallthrough
+            }
+        }
+        // 3. 降级从本机网卡 IP 推导
         try {
             InetAddress address = getLocalAddress();
             if (address != null) {

@@ -1,19 +1,24 @@
 package com.njydsz.common.domain.tree;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.stream.Collectors;
 /**
  * 树形结构核心构建器
  *
@@ -609,6 +614,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
      * 通过函数式接口传入 ID/parentId/children/sort 的获取和设置方式。
      *
      * <p>算法：O(n) 时间复杂度，通过 HashMap 分组实现。
+     * 默认根父ID 为 "0"，可使用 {@link #buildSimple(List, String, Function, Function, BiConsumer, Function)} 指定。
      *
      * @param flatList       扁平列表
      * @param idGetter       ID 获取函数
@@ -624,18 +630,44 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             Function<T, String> parentIdGetter,
             BiConsumer<T, List<T>> childrenSetter,
             Function<T, Integer> sortGetter) {
+        return buildSimple(flatList, "0", idGetter, parentIdGetter, childrenSetter, sortGetter);
+    }
+
+    /**
+     * 从扁平列表构建树形结构（指定根父ID）。
+     *
+     * <p>与 {@link #buildSimple(List, Function, Function, BiConsumer, Function)} 相同，
+     * 但允许调用方指定根父 ID（如 null、"0"、"-1" 等）。
+     *
+     * @param flatList       扁平列表
+     * @param rootParentId   根节点的父 ID 值（如 "0"、null、"-1" 等）
+     * @param idGetter       ID 获取函数
+     * @param parentIdGetter 父 ID 获取函数
+     * @param childrenSetter children 设置函数
+     * @param sortGetter     排序字段获取函数（可为 null，null 表示不排序）
+     * @param <T>            节点类型
+     * @return 树形结构根节点列表
+     */
+    public static <T> List<T> buildSimple(
+            List<T> flatList,
+            String rootParentId,
+            Function<T, String> idGetter,
+            Function<T, String> parentIdGetter,
+            BiConsumer<T, List<T>> childrenSetter,
+            Function<T, Integer> sortGetter) {
 
         if (flatList == null || flatList.isEmpty()) {
             return List.of();
         }
 
+        String effectiveRootParentId = rootParentId != null ? rootParentId : "0";
         Map<String, List<T>> parentIdMap = flatList.stream()
                 .collect(Collectors.groupingBy(item -> {
                     String pid = parentIdGetter.apply(item);
-                    return pid == null ? "0" : pid;
+                    return pid == null ? effectiveRootParentId : pid;
                 }));
 
-        List<T> roots = new ArrayList<>(parentIdMap.getOrDefault("0", Collections.emptyList()));
+        List<T> roots = new ArrayList<>(parentIdMap.getOrDefault(effectiveRootParentId, Collections.emptyList()));
         for (T item : flatList) {
             List<T> children = parentIdMap.get(idGetter.apply(item));
             if (children != null) {

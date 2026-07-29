@@ -66,6 +66,7 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
             return Health.up()
                     .withDetail("workerId", workerId)
                     .withDetail("datacenterId", snowflakeUtils.getDatacenterId())
+                    .withDetail("shardCount", snowflakeUtils.getShardCount())
                     .withDetail("lastTimestamp", lastTimestamp)
                     .withDetail("currentTimestamp", currentTimestamp)
                     .build();

@@ -182,7 +182,7 @@ public class FlowCcServiceImpl implements FlowCcService {
                 return List.of();
             }
             int page = (int) Math.max(query.getPageNum(), 1);
-            int size = (int) Math.min(Math.max(query.getPageSize(), 1), PageConstants.MAX_PAGE_SIZE);
+            int size = (int) Math.min(Math.max(query.getPageSize(), 1), PageConstants.getMaxPageSize());
             int offset = (page - 1) * size;
             return ccMapper.selectCcByUserPage(tenantId, userId,
                     query.getReadStatus(), query.getFlowCode(), offset, size);
@@ -238,7 +238,7 @@ public class FlowCcServiceImpl implements FlowCcService {
                 return PageResponse.empty();
             }
             int page = Math.max(pageNo, 1);
-            int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
+            int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.getMaxPageSize());
             int offset = (page - 1) * size;
 
             List<FlowCc> list = ccMapper.selectCcByUserPage(tenantId, userId,

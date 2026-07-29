@@ -133,20 +133,19 @@ public class PageResponse<T> extends BaseResponse<T> {
     }
 
     /**
-     * 创建成功分页响应（便捷重载，数据在前）
+     * 创建成功分页响应（便捷重载，接收基本类型）
      *
-     * <p>兼容 Controller 层 {@code PageResponse.success(data, total, current, size)} 调用模式，
-     * 接受基本类型 long/int 自动装箱。
+     * <p>适用于 MyBatis-Plus {@code IPage} 等返回 {@code long} / {@code int} 基本类型的场景。
      *
-     * @param data     分页数据
      * @param total    总记录数
      * @param pageNum  当前页码
      * @param pageSize 每页记录数
+     * @param data     分页数据
      * @param <T>      数据类型
      * @return 成功分页响应
      */
-    public static <T> PageResponse<T> success(T data, long total, int pageNum, int pageSize) {
-        return success(total, (long) pageNum, (long) pageSize, data);
+    public static <T> PageResponse<T> success(long total, int pageNum, int pageSize, T data) {
+        return success((long) total, (long) pageNum, (long) pageSize, data);
     }
 
     /**
@@ -197,7 +196,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @return 空分页响应
      */
     public static <T> PageResponse<T> empty() {
-        return success(0L, 1L, (long) PageConstants.DEFAULT_PAGE_SIZE, null);
+        return success(0L, 1L, (long) PageConstants.getDefaultPageSize(), null);
     }    /**
      * 是否有下一页
      *

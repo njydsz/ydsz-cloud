@@ -113,7 +113,7 @@ public class PageQuery extends BaseQuery {
     @Min(value = 1, message = "pageSize最小值为1")
     @Max(value = PageConstants.MAX_PAGE_SIZE, message = "pageSize最大值为" + PageConstants.MAX_PAGE_SIZE)
     @Builder.Default
-    private Integer pageSize = PageConstants.DEFAULT_PAGE_SIZE;
+    private Integer pageSize = PageConstants.getDefaultPageSize();
 
     /**
      * 排序字段列表
@@ -187,7 +187,7 @@ public class PageQuery extends BaseQuery {
      * @return 分页查询对象
      */
     public static PageQuery of(Integer pageNum) {
-        return of(pageNum, PageConstants.DEFAULT_PAGE_SIZE);
+        return of(pageNum, PageConstants.getDefaultPageSize());
     }
 
     /**
@@ -204,9 +204,9 @@ public class PageQuery extends BaseQuery {
      */
     private static int normalizePageSize(Integer pageSize) {
         if (pageSize == null || pageSize < 1) {
-            return PageConstants.DEFAULT_PAGE_SIZE;
+            return PageConstants.getDefaultPageSize();
         }
-        return Math.min(pageSize, PageConstants.MAX_PAGE_SIZE);
+        return Math.min(pageSize, PageConstants.getMaxPageSize());
     }
 
     /**
@@ -385,7 +385,7 @@ public class PageQuery extends BaseQuery {
         if (pageNum == null || pageSize == null) {
             return 0L;
         }
-        return (long) (Math.max(pageNum, 1) - 1) * Math.min(pageSize, PageConstants.MAX_PAGE_SIZE);
+        return (long) (Math.max(pageNum, 1) - 1) * Math.min(pageSize, PageConstants.getMaxPageSize());
     }
 
     /**

@@ -359,13 +359,8 @@ public final class SerializationProvider {
                     return writer.toString();
                 }
             } catch (Exception e) {
-                // ASM 序列化失败，记录日志和计数器，回退到常规序列化
-                long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
-                if (count <= 10 || count % 100 == 0) {
-                    LOGGER.fine("ASM serialization failed for " + clazz.getName()
-                            + ", falling back to reflection. Total downgrades: " + count
-                            + ", error: " + e.getMessage());
-                }
+                // ASM 序列化失败，回退到常规序列化
+                logAsmDowngrade(clazz, "serialization", e);
             }
         }
 
@@ -598,12 +593,7 @@ public final class SerializationProvider {
                     return writer.toUtf8Bytes();
                 }
             } catch (Exception e) {
-                long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
-                if (count <= 10 || count % 100 == 0) {
-                    LOGGER.fine("ASM serialization (bytes) failed for " + clazz.getName()
-                            + ", falling back to reflection. Total downgrades: " + count
-                            + ", error: " + e.getMessage());
-                }
+                logAsmDowngrade(clazz, "serialization (bytes)", e);
             }
         }
 
@@ -661,14 +651,8 @@ public final class SerializationProvider {
             if (!tryFastSerialize(obj, sb)) {
                 ValueWriter.writeValue(obj, sb);
             }
-        } catch (JsonSerializationException e) {
-            throw e;
         } catch (Exception e) {
-            throw new JsonSerializationException(
-                JsonSerializationException.SERIALIZATION_ERROR,
-                "Serialization (bytes) failed for " + obj.getClass().getName() + ": " + e.getMessage(),
-                e
-            );
+            throw wrapSerializationException(obj, e);
         } finally {
             objects.clear();
         }
@@ -721,14 +705,9 @@ public final class SerializationProvider {
                 sb.append(writer.toString());
                 return true;
             }
-        } catch (Exception e) {
-            long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
-            if (count <= 10 || count % 100 == 0) {
-                LOGGER.fine("ASM fast-serialize failed for " + clazz.getName()
-                        + ", falling back. Total downgrades: " + count
-                        + ", error: " + e.getMessage());
+            } catch (Exception e) {
+                logAsmDowngrade(clazz, "fast-serialize", e);
             }
-        }
 
         // 获取或创建 BeanSerializer
         FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
@@ -824,6 +803,22 @@ public final class SerializationProvider {
             "Serialization failed for " + obj.getClass().getName() + ": " + e.getMessage(),
             e
         );
+    }
+
+    /**
+     * ASM 序列化降级日志记录（统一逻辑，消除 3 处重复）。
+     *
+     * @param clazz  正在序列化的类
+     * @param phase  序列化阶段描述（如 "serialization"、"serialization (bytes)"、"fast-serialize"）
+     * @param e      异常
+     */
+    private static void logAsmDowngrade(Class<?> clazz, String phase, Exception e) {
+        long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
+        if (count <= 10 || count % 100 == 0) {
+            LOGGER.fine("ASM " + phase + " failed for " + clazz.getName()
+                    + ", falling back to reflection. Total downgrades: " + count
+                    + ", error: " + e.getMessage());
+        }
     }
 
     /**

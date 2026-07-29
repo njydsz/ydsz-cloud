@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.exception.alert.ExceptionAlertListener;
 import com.njydsz.common.exception.alert.ExceptionAlertPublisher;
+import com.njydsz.common.exception.config.ExceptionProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "alert-enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(ExceptionProperties.class)
 public class ExceptionAlertAutoConfiguration {
 
     /**
@@ -47,13 +47,16 @@ public class ExceptionAlertAutoConfiguration {
      * @param listenersProvider 告警监听器列表（可选）
      * @return 异常告警发布器实例
      */
-    @Bean
+    @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean(ExceptionAlertPublisher.class)
     public ExceptionAlertPublisher exceptionAlertPublisher(
             ExceptionProperties properties,
             ObjectProvider<List<ExceptionAlertListener>> listenersProvider) {
         ExceptionAlertPublisher publisher = new ExceptionAlertPublisher(
-                properties.getAlertDedupWindowSeconds()
+                properties.getAlertDedupWindowSeconds(),
+                properties.getAlertSilencePeriodSeconds(),
+                properties.isAsyncAlertEnabled(),
+                properties.getAsyncAlertPoolSize()
         );
         List<ExceptionAlertListener> listeners = listenersProvider.getIfAvailable();
         if (listeners != null) {
@@ -62,8 +65,8 @@ public class ExceptionAlertAutoConfiguration {
                 log.info("注册异常告警监听器: {}", listener.getClass().getSimpleName());
             }
         }
-        log.info("异常告警发布器已初始化 | 监听器数量: {}",
-                listeners != null ? listeners.size() : 0);
+        log.info("异常告警发布器已初始化 | 监听器数量: {} | 异步: {}",
+                listeners != null ? listeners.size() : 0, properties.isAsyncAlertEnabled());
         return publisher;
     }
 }

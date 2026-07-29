@@ -9,9 +9,6 @@ import java.util.function.Supplier;
 
 import org.slf4j.MDC;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.type.YdszJsonType;
-
 /**
  * 上下文传播工具类
  *
@@ -56,12 +53,21 @@ public final class ContextPropagationUtils {
     /** MDC 是否已注册 */
     private static volatile boolean mdcRegistered = false;
 
+    /** MDC Map 序列化条目分隔符（\u0001 控制字符，不会出现在正常 MDC 值中） */
+    private static final char MDC_ENTRY_SEPARATOR = '\u0001';
+
+    /** MDC Map 序列化键值分隔符（\u0002 控制字符） */
+    private static final char MDC_KV_SEPARATOR = '\u0002';
+
     /**
      * 注册内置 MDC 上下文传播
      *
      * <p>将 SLF4J MDC 注册为上下文提供者，使 MDC 中的所键值对自动跨线程传播。
      * 此方法使用 MDC 的 getCopyOfContextMap / setContextMap 实现整体快照传播，
      * 无需为每个 MDC key 单独注册。
+     *
+     * <p>序列化方式：使用控制字符分隔的轻量级编码（\u0001 分隔条目，\u0002 分隔键值），
+     * 替代 JSON 序列化，避免每次上下文传播的 JSON 解析开销。
      *
      * <p>调用此方法后，通过 {@link #wrap(Runnable)} 或 {@link #wrap(Callable)} 提交的任务
      * 将自动继承调用线程的 MDC 上下文。
@@ -89,21 +95,62 @@ public final class ContextPropagationUtils {
                 if (mdcMap == null || mdcMap.isEmpty()) {
                     return null;
                 }
-                // 使用 YdszJson 序列化 MDC map，避免分隔符冲突
-                return YdszJson.toJson(mdcMap);
+                // 轻量级编码：key1\u0002value1\u0001key2\u0002value2
+                return encodeMdcMap(mdcMap);
             },
             (name, value) -> {
                 if (value == null) {
                     MDC.clear();
                 } else {
-                    // 使用 YdszJson 反序列化 MDC map
-                    Map<String, String> mdcMap = YdszJson.toObject(value, new YdszJsonType<Map<String, String>>() {});
+                    Map<String, String> mdcMap = decodeMdcMap(value);
                     MDC.setContextMap(mdcMap);
                 }
             }
         ));
         mdcRegistered = true;
         return true;
+    }
+
+    /**
+     * 将 MDC Map 编码为轻量级字符串
+     *
+     * <p>格式：key1\u0002value1\u0001key2\u0002value2\u0001...
+     * 使用控制字符作为分隔符，避免与正常 MDC 值冲突。
+     * 相比 JSON 序列化，此方式零分配、零解析开销。
+     */
+    private static String encodeMdcMap(Map<String, String> mdcMap) {
+        StringBuilder sb = new StringBuilder(mdcMap.size() * 32);
+        boolean first = true;
+        for (Map.Entry<String, String> entry : mdcMap.entrySet()) {
+            if (!first) {
+                sb.append(MDC_ENTRY_SEPARATOR);
+            }
+            sb.append(entry.getKey()).append(MDC_KV_SEPARATOR).append(entry.getValue());
+            first = false;
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 将轻量级编码字符串解码为 MDC Map
+     */
+    private static Map<String, String> decodeMdcMap(String encoded) {
+        Map<String, String> map = new HashMap<>();
+        int start = 0;
+        while (start < encoded.length()) {
+            int entryEnd = encoded.indexOf(MDC_ENTRY_SEPARATOR, start);
+            if (entryEnd < 0) {
+                entryEnd = encoded.length();
+            }
+            int kvSep = encoded.indexOf(MDC_KV_SEPARATOR, start);
+            if (kvSep >= 0 && kvSep < entryEnd) {
+                String key = encoded.substring(start, kvSep);
+                String value = encoded.substring(kvSep + 1, entryEnd);
+                map.put(key, value);
+            }
+            start = entryEnd + 1;
+        }
+        return map;
     }
 
     /**

@@ -57,7 +57,7 @@ class PageRequestTest {
         void getSafePageSize_null() {
             PageRequest req = new PageRequest();
             req.setPageSize(null);
-            assertThat(req.getSafePageSize()).isEqualTo((long) PageConstants.DEFAULT_PAGE_SIZE);
+            assertThat(req.getSafePageSize()).isEqualTo((long) PageConstants.getDefaultPageSize());
         }
 
         @Test
@@ -65,7 +65,7 @@ class PageRequestTest {
         void getSafePageSize_exceedsMax() {
             PageRequest req = new PageRequest();
             req.setPageSize(99999L);
-            assertThat(req.getSafePageSize()).isEqualTo((long) PageConstants.MAX_PAGE_SIZE);
+            assertThat(req.getSafePageSize()).isEqualTo((long) PageConstants.getMaxPageSize());
         }
     }
 
@@ -188,6 +188,6 @@ class PageRequestTest {
     void factoryOf_clamps() {
         PageRequest req = PageRequest.of(-1L, 99999L);
         assertThat(req.getSafePageNum()).isEqualTo(1L);
-        assertThat(req.getSafePageSize()).isEqualTo((long) PageConstants.MAX_PAGE_SIZE);
+        assertThat(req.getSafePageSize()).isEqualTo((long) PageConstants.getMaxPageSize());
     }
 }

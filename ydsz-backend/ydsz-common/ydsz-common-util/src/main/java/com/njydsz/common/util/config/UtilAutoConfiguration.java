@@ -1,7 +1,5 @@
 package com.njydsz.common.util.config;
 
-import java.util.concurrent.TimeUnit;
-
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -9,6 +7,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.util.health.UtilHealthIndicator;
+import com.njydsz.common.util.http.HttpClientFactory;
 import com.njydsz.common.util.http.OkHttpProperties;
 import com.njydsz.common.util.http.OkHttpUtils;
 import com.njydsz.common.util.id.SnowflakeHealthIndicator;
@@ -16,7 +15,6 @@ import com.njydsz.common.util.id.SnowflakeProperties;
 import com.njydsz.common.util.retry.RetrySupport;
 import com.njydsz.common.util.spring.SpringContextHolder;
 
-import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 
 /**
@@ -37,8 +35,8 @@ public class UtilAutoConfiguration {
     /**
      * 注册 SpringContextHolder Bean
      *
-     * <p>SpringContextHolder 本身已标注 @Component，此处额外注册为 Bean
-     * 以确保即使未被组件扫描覆盖也能正常工作。
+     * <p>SpringContextHolder 已移除 {@code @Component} 注解，统一在此处以 {@code @Bean} 注册，
+     * 避免组件扫描与 AutoConfiguration 双重注册冲突。
      *
      * @return SpringContextHolder 实例
      */
@@ -60,16 +58,7 @@ public class UtilAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(OkHttpClient.class)
     public OkHttpClient okHttpClient(OkHttpProperties properties) {
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .connectTimeout(properties.getConnectTimeout(), TimeUnit.SECONDS)
-                .readTimeout(properties.getReadTimeout(), TimeUnit.SECONDS)
-                .writeTimeout(properties.getWriteTimeout(), TimeUnit.SECONDS)
-                .retryOnConnectionFailure(true)
-                .connectionPool(new ConnectionPool(
-                        properties.getMaxIdleConnections(),
-                        properties.getKeepAliveDuration(),
-                        TimeUnit.MINUTES))
-                .build();
+        OkHttpClient okHttpClient = HttpClientFactory.create(properties, null);
         OkHttpUtils.setSpringManagedClient(okHttpClient);
         return okHttpClient;
     }

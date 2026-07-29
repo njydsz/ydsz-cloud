@@ -83,57 +83,93 @@ public final class RequestContext {
     }
 
     /**
-     * 设置用户ID
+     * 设置用户 ID
      *
-     * @param userId 用户ID
+     * @param userId 用户 ID
      */
     public static void setUserId(String userId) {
         put(KEY_USER_ID, userId);
     }
 
     /**
-     * 获取用户ID
+     * 获取用户 ID
      *
-     * @return 用户ID，如果不存在返回 null
+     * @return 用户 ID，如果不存在返回 null
      */
     public static String getUserId() {
         return (String) get(KEY_USER_ID);
     }
 
     /**
-     * 设置租户ID
+     * 设置租户 ID
      *
-     * @param tenantId 租户ID
+     * @param tenantId 租户 ID
      */
     public static void setTenantId(String tenantId) {
         put(KEY_TENANT_ID, tenantId);
     }
 
     /**
-     * 获取租户ID
+     * 获取租户 ID
      *
-     * @return 租户ID，如果不存在返回 null
+     * @return 租户 ID，如果不存在返回 null
      */
     public static String getTenantId() {
         return (String) get(KEY_TENANT_ID);
     }
 
     /**
-     * 设置链路追踪ID
+     * 设置链路追踪 ID
      *
-     * @param traceId 追踪ID
+     * @param traceId 追踪 ID
      */
     public static void setTraceId(String traceId) {
         put(KEY_TRACE_ID, traceId);
     }
 
     /**
-     * 获取链路追踪ID
+     * 获取链路追踪 ID
      *
-     * @return 追踪ID，如果不存在返回 null
+     * @return 追踪 ID，如果不存在返回 null
      */
     public static String getTraceId() {
         return (String) get(KEY_TRACE_ID);
+    }
+
+    /**
+     * 设置请求 ID
+     *
+     * @param requestId 请求 ID
+     */
+    public static void setRequestId(String requestId) {
+        put(KEY_REQUEST_ID, requestId);
+    }
+
+    /**
+     * 获取请求 ID
+     *
+     * @return 请求 ID，如果不存在返回 null
+     */
+    public static String getRequestId() {
+        return (String) get(KEY_REQUEST_ID);
+    }
+
+    /**
+     * 设置语言区域
+     *
+     * @param language 语言区域（如 zh-CN、en-US）
+     */
+    public static void setLanguage(String language) {
+        put(KEY_LANGUAGE, language);
+    }
+
+    /**
+     * 获取语言区域
+     *
+     * @return 语言区域，如果不存在返回 null
+     */
+    public static String getLanguage() {
+        return (String) get(KEY_LANGUAGE);
     }
 
     /**

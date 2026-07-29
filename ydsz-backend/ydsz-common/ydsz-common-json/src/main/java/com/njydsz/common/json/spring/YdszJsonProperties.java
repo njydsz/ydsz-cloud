@@ -80,6 +80,12 @@ public class YdszJsonProperties {
     /** 是否使用 BigDecimal 解析浮点数（金融场景精度保护） */
     private boolean useBigDecimal = false;
 
+    /** 是否包裹根对象（对标 Jackson @JsonRootValue / ObjectMapper.wrapRootValue） */
+    private boolean wrapRootValue = false;
+
+    /** 反序列化失败时是否抛出异常（true）或返回 null（false） */
+    private boolean failOnError = true;
+
     /**
      * 启动时扫描 @YdszJsonClass 注解类的基础包列表。
      *
@@ -206,6 +212,26 @@ public class YdszJsonProperties {
 
     public void setUseBigDecimal(boolean useBigDecimal) {
         this.useBigDecimal = useBigDecimal;
+    }
+
+    // --- wrapRootValue ---
+
+    public boolean isWrapRootValue() {
+        return wrapRootValue;
+    }
+
+    public void setWrapRootValue(boolean wrapRootValue) {
+        this.wrapRootValue = wrapRootValue;
+    }
+
+    // --- failOnError ---
+
+    public boolean isFailOnError() {
+        return failOnError;
+    }
+
+    public void setFailOnError(boolean failOnError) {
+        this.failOnError = failOnError;
     }
 
     // --- whitelistPackages ---

@@ -138,15 +138,4 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
         return this.createdAt == null;
     }
 
-    /**
-     * 获取创建来源标识
-     *
-     * <p>用于记录数据创建来源，如：API、BATCH、IMPORT 等。
-     * 默认为空，子类可根据业务需要扩展。
-     *
-     * @return 创建来源标识
-     */
-    public String getCreateSource() {
-        return null;
-    }
 }

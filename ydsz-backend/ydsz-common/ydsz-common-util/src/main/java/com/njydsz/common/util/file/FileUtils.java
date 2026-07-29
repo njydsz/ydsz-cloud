@@ -1,7 +1,6 @@
 package com.njydsz.common.util.file;
 
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,8 +22,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -37,6 +34,8 @@ import java.util.Objects;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 
+import com.njydsz.common.util.bytes.HexUtils;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -706,17 +705,10 @@ public class FileUtils {
             return StringUtils.EMPTY;
         }
         
-        try {
-            MessageDigest digest = MessageDigest.getInstance(algorithm);
-            try (InputStream is = Files.newInputStream(path)) {
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    digest.update(buffer, 0, bytesRead);
-                }
-            }
-            return bytesToHex(digest.digest());
-        } catch (IOException | NoSuchAlgorithmException e) {
+        try (InputStream is = Files.newInputStream(path)) {
+            byte[] hash = DigestUtils.digest(is, algorithm);
+            return HexUtils.bytesToHex(hash);
+        } catch (IOException e) {
             log.error("FileUtils -> calculateHash error for path {}: {}", filePath, e.getMessage());
             return StringUtils.EMPTY;
         }
@@ -738,30 +730,12 @@ public class FileUtils {
         }
         
         try {
-            MessageDigest digest = MessageDigest.getInstance(algorithm);
-            return bytesToHex(digest.digest(data));
-        } catch (NoSuchAlgorithmException e) {
+            byte[] hash = DigestUtils.digest(data, algorithm, null, 1);
+            return HexUtils.bytesToHex(hash);
+        } catch (Exception e) {
             log.error("FileUtils -> calculateHash error: {}", e.getMessage());
             return StringUtils.EMPTY;
         }
-    }
-
-    /**
-     * 将字节数组转换为十六进制字符串
-     *
-     * @param bytes 字节数组
-     * @return 十六进制字符串
-     */
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-        return hexString.toString();
     }
 
     /**
@@ -1087,13 +1061,9 @@ public class FileUtils {
                 throw new IOException("HTTP 响应码：" + responseCode);
             }
 
-            try (InputStream in = conn.getInputStream();
-                 OutputStream out = new FileOutputStream(targetPath)) {
-                byte[] buffer = new byte[4096];
-                int len;
-                while ((len = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, len);
-                }
+            // 使用 NIO Files.copy 替代 FileOutputStream，自动管理资源
+            try (InputStream in = conn.getInputStream()) {
+                Files.copy(in, Paths.get(targetPath), StandardCopyOption.REPLACE_EXISTING);
             }
         } finally {
             if (conn != null) {

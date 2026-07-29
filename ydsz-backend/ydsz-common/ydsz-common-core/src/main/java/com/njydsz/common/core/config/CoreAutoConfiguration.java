@@ -11,6 +11,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 
+import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.context.TenantMdcFilter;
 import com.njydsz.common.core.health.CoreHealthIndicator;
 import com.njydsz.common.core.response.BaseResponse;
@@ -83,7 +84,42 @@ public class CoreAutoConfiguration {
     @Bean
     @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
     @ConditionalOnMissingBean(name = "coreHealthIndicator")
-    public CoreHealthIndicator coreHealthIndicator(CoreProperties properties) {
-        return new CoreHealthIndicator(properties);
+    public CoreHealthIndicator coreHealthIndicator(CoreProperties properties,
+                                                    FilterIgnoreProperties filterIgnoreProperties) {
+        return new CoreHealthIndicator(properties, filterIgnoreProperties);
+    }
+
+    /**
+     * 将 CoreProperties 中的分页配置传播到 PageConstants 运行时覆盖值。
+     *
+     * <p>使 {@link PageConstants#getMaxPageSize()} / {@link PageConstants#getDefaultPageSize()}
+     * 在运行时反映用户配置，消除编译期常量与运行时配置的脱节。
+     *
+     * @param properties 核心配置属性
+     */
+    @Bean
+    PageConstantsInitializer pageConstantsInitializer(CoreProperties properties) {
+        return new PageConstantsInitializer(properties);
+    }
+
+    /**
+     * 在容器启动时将 CoreProperties 的分页配置同步到 PageConstants。
+     *
+     * <p>实现 {@link org.springframework.beans.factory.SmartInitializingSingleton}
+     * 确保在所有 Bean 初始化完成后执行，避免依赖顺序问题。
+     */
+    static class PageConstantsInitializer implements org.springframework.beans.factory.SmartInitializingSingleton {
+
+        private final CoreProperties properties;
+
+        PageConstantsInitializer(CoreProperties properties) {
+            this.properties = properties;
+        }
+
+        @Override
+        public void afterSingletonsInstantiated() {
+            PageConstants.setMaxPageSize(properties.getMaxPageSize());
+            PageConstants.setDefaultPageSize(properties.getDefaultPageSize());
+        }
     }
 }

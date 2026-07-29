@@ -1,6 +1,9 @@
 package com.njydsz.common.util.id;
 
-import org.apache.skywalking.apm.toolkit.trace.TraceContext;
+import java.lang.reflect.Method;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import com.njydsz.common.util.string.StringUtils;
@@ -13,7 +16,7 @@ import com.njydsz.common.util.string.StringUtils;
  *
  * <p><b>核心特性：</b>
  * <ul>
- *   <li>支持 SkyWalking {@code TraceContext} 集成</li>
+ *   <li>支持 SkyWalking {@code TraceContext} 集成（反射调用，无编译期硬依赖）</li>
  *   <li>支持 SLF4J MDC 上下文注入</li>
  *   <li>支持基于 UUID v7 的 Trace ID 生成</li>
  *   <li>支持 Span ID 父子关系管理</li>
@@ -42,24 +45,74 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public final class TracerUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(TracerUtils.class);
+
     private static final String TRACE_ID_NAME = "traceId";
     private static final String SPAN_ID_NAME = "spanId";
     private static final String PARENT_SPAN_ID_NAME = "parentSpanId";
+
+    /**
+     * SkyWalking TraceContext 类名（反射调用，无编译期硬依赖）
+     */
+    private static final String SKYWALKING_TRACE_CONTEXT_CLASS = "org.apache.skywalking.apm.toolkit.trace.TraceContext";
+
+    /**
+     * SkyWalking TraceContext.traceId() 反射缓存
+     */
+    private static volatile Method skywalkingTraceIdMethod;
+    private static volatile boolean skywalkingChecked = false;
+    private static volatile boolean skywalkingAvailable = false;
 
     private TracerUtils() {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
     /**
+     * 反射调用 SkyWalking TraceContext.traceId()
+     *
+     * <p>使用反射避免对 SkyWalking toolkit 的编译期硬依赖。
+     * 当 SkyWalking 不在 classpath 时，返回 null。
+     * 反射结果缓存到 volatile 字段，避免每次调用都进行类加载检查。
+     *
+     * @return SkyWalking traceId，或 null（不可用时）
+     */
+    private static String getSkyWalkingTraceId() {
+        if (!skywalkingChecked) {
+            synchronized (TracerUtils.class) {
+                if (!skywalkingChecked) {
+                    try {
+                        Class<?> clazz = Class.forName(SKYWALKING_TRACE_CONTEXT_CLASS);
+                        skywalkingTraceIdMethod = clazz.getMethod("traceId");
+                        skywalkingAvailable = true;
+                    } catch (ClassNotFoundException | NoSuchMethodException e) {
+                        skywalkingAvailable = false;
+                        log.debug("SkyWalking TraceContext not available, trace ID will fallback to MDC only");
+                    }
+                    skywalkingChecked = true;
+                }
+            }
+        }
+        if (!skywalkingAvailable || skywalkingTraceIdMethod == null) {
+            return null;
+        }
+        try {
+            return (String) skywalkingTraceIdMethod.invoke(null);
+        } catch (Exception e) {
+            log.debug("SkyWalking TraceContext.traceId() invocation failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * 获取链路追踪编号。
-     * 1. 首先尝试获取 SkyWalking 的 TraceId。
+     * 1. 首先尝试获取 SkyWalking 的 TraceId（反射调用，无硬依赖）。
      * 2. 如果不存在，则尝试从 MDC 中获取。
      * 3. 如果都不存在，则返回空字符串。
      *
      * @return 链路追踪编号
      */
     public static String getTraceId() {
-        String traceId = TraceContext.traceId();
+        String traceId = getSkyWalkingTraceId();
         if (StringUtils.isNotEmpty(traceId) && !"Ignored_Trace".equalsIgnoreCase(traceId)) {
             return traceId;
         }

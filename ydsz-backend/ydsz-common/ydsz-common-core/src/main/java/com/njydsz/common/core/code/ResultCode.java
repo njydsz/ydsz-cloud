@@ -66,4 +66,16 @@ public interface ResultCode {
     default String getMessageKey() {
         return "error." + ((Enum<?>) this).name();
     }
+
+    /**
+     * 将结果码映射到合适的 HTTP 状态码
+     *
+     * <p>默认返回 500（INTERNAL_SERVER_ERROR）。
+     * 实现类应覆盖此方法以提供语义化的 HTTP 状态码映射。
+     *
+     * @return 对应的 HTTP 状态码
+     */
+    default int getHttpStatusCode() {
+        return 500;
+    }
 }

@@ -55,12 +55,17 @@ public class DomainEventPublisher {
     private final TaskExecutor taskExecutor;
 
     /**
+     * 是否启用异步发布（配置项 ydsz.domain.event.async-enabled）
+     */
+    private final boolean asyncEnabled;
+
+    /**
      * 构造领域事件发布器（同步模式）
      *
      * @param eventPublisher Spring 应用事件发布器
      */
     public DomainEventPublisher(ApplicationEventPublisher eventPublisher) {
-        this(eventPublisher, null);
+        this(eventPublisher, null, true);
     }
 
     /**
@@ -70,8 +75,21 @@ public class DomainEventPublisher {
      * @param taskExecutor   异步任务执行器，为 null 时退化为同步模式
      */
     public DomainEventPublisher(ApplicationEventPublisher eventPublisher, TaskExecutor taskExecutor) {
+        this(eventPublisher, taskExecutor, true);
+    }
+
+    /**
+     * 构造领域事件发布器（支持异步模式 + 配置开关）
+     *
+     * @param eventPublisher Spring 应用事件发布器
+     * @param taskExecutor   异步任务执行器，为 null 时退化为同步模式
+     * @param asyncEnabled   是否启用异步发布（为 false 时即使有 TaskExecutor 也同步发布）
+     * @since 1.2.0
+     */
+    public DomainEventPublisher(ApplicationEventPublisher eventPublisher, TaskExecutor taskExecutor, boolean asyncEnabled) {
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher must not be null");
         this.taskExecutor = taskExecutor;
+        this.asyncEnabled = asyncEnabled;
     }
 
     /**
@@ -99,6 +117,12 @@ public class DomainEventPublisher {
      */
     public void publishAsync(DomainEvent event) {
         Objects.requireNonNull(event, "event must not be null");
+        if (!asyncEnabled) {
+            log.debug("Async publish disabled by configuration, fallback to sync: type={}",
+                      event.getEventType());
+            publish(event);
+            return;
+        }
         if (taskExecutor == null) {
             log.warn("TaskExecutor not configured, fallback to sync publish for event: {}",
                      event.getEventType());
@@ -252,6 +276,6 @@ public class DomainEventPublisher {
      * @return 配置了 TaskExecutor 返回 true
      */
     public boolean isAsyncSupported() {
-        return taskExecutor != null;
+        return asyncEnabled && taskExecutor != null;
     }
 }

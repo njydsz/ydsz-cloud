@@ -6,7 +6,10 @@ import java.util.*;
 
 import com.njydsz.common.json.annotation.YdszJsonClass;
 import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
+import com.njydsz.common.json.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 import com.njydsz.common.json.annotation.YdszJsonVisibility;
 import com.njydsz.common.json.cache.FieldMeta;
@@ -129,7 +132,13 @@ public final class FieldMetadataLoader {
             }
 
             YdszJsonField jsonField = field.getAnnotation(YdszJsonField.class);
+            JsonProperty jacksonProperty = field.getAnnotation(JsonProperty.class);
+            JsonIgnore jacksonIgnore = field.getAnnotation(JsonIgnore.class);
+            JsonFormat jacksonFormat = field.getAnnotation(JsonFormat.class);
             if (jsonField != null && jsonField.ignore()) {
+                continue;
+            }
+            if (jacksonIgnore != null) {
                 continue;
             }
 
@@ -163,6 +172,8 @@ public final class FieldMetadataLoader {
                     jsonName = jsonField.value();
                 } else if (!jsonField.name().isEmpty()) {
                     jsonName = jsonField.name();
+                } else if (jacksonProperty != null && !jacksonProperty.value().isEmpty()) {
+                    jsonName = jacksonProperty.value();
                 } else if (classNaming != null) {
                     jsonName = classNaming.translate(jsonName);
                 }
@@ -170,6 +181,8 @@ public final class FieldMetadataLoader {
                 if (jsonField.ordinal() != 0) {
                     ordinal = jsonField.ordinal();
                 }
+            } else if (jacksonProperty != null && !jacksonProperty.value().isEmpty()) {
+                jsonName = jacksonProperty.value();
             } else if (classNaming != null) {
                 jsonName = classNaming.translate(jsonName);
             }

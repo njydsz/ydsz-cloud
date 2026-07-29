@@ -28,8 +28,10 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code type} - 异常简单类名（如 BusinessException）</li>
  *   <li>{@code level} - 异常级别（INFO/WARN/ERROR/FATAL）</li>
  *   <li>{@code category} - 异常类别（BUSINESS/SYSTEM/EXTERNAL 等）</li>
- *   <li>{@code code} - 异常编码</li>
  * </ul>
+ *
+ * <p><b>高基数标签治理：</b>{@code code} tag 默认不包含，
+ * 通过 {@code ydsz.exception.metrics-include-code-tag=true} 显式开启。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -64,7 +66,7 @@ public class ExceptionMetrics {
     public static final String TAG_CATEGORY = "category";
 
     /**
-     * Tag 名称 - 异常编码
+     * Tag 名称 - 异常编码（高基数，默认不包含）
      */
     public static final String TAG_CODE = "code";
 
@@ -75,8 +77,22 @@ public class ExceptionMetrics {
 
     private volatile boolean enabled = true;
 
+    /**
+     * 是否在指标中包含高基数 code tag
+     */
+    private volatile boolean includeCodeTag = false;
+
     public ExceptionMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
+    }
+
+    /**
+     * 设置是否包含 code tag
+     *
+     * @param includeCodeTag 是否包含
+     */
+    public void setIncludeCodeTag(boolean includeCodeTag) {
+        this.includeCodeTag = includeCodeTag;
     }
 
     /**
@@ -125,13 +141,14 @@ public class ExceptionMetrics {
                 }
             }
 
-            Counter.builder(METRIC_EXCEPTION_COUNT)
+            Counter.Builder counterBuilder = Counter.builder(METRIC_EXCEPTION_COUNT)
                     .tag(TAG_TYPE, exceptionType)
                     .tag(TAG_LEVEL, level)
-                    .tag(TAG_CATEGORY, category)
-                    .tag(TAG_CODE, code)
-                    .register(meterRegistry)
-                    .increment();
+                    .tag(TAG_CATEGORY, category);
+            if (includeCodeTag) {
+                counterBuilder.tag(TAG_CODE, code);
+            }
+            counterBuilder.register(meterRegistry).increment();
         } catch (Exception e) {
             log.warn("记录异常指标失败: {}", e.getMessage());
         }
@@ -190,8 +207,10 @@ public class ExceptionMetrics {
             Counter.Builder builder = Counter.builder(METRIC_EXCEPTION_COUNT)
                     .tag(TAG_TYPE, exceptionType)
                     .tag(TAG_LEVEL, level)
-                    .tag(TAG_CATEGORY, category)
-                    .tag(TAG_CODE, code);
+                    .tag(TAG_CATEGORY, category);
+            if (includeCodeTag) {
+                builder.tag(TAG_CODE, code);
+            }
 
             // 添加额外标签
             for (int i = 0; i + 1 < extraTags.length; i += 2) {

@@ -2,9 +2,10 @@ package com.njydsz.common.domain.entity;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.util.ReflectionUtils;
 
@@ -25,9 +26,10 @@ import com.njydsz.common.domain.annotation.Version;
  * <p><b>设计目标：</b>
  * 支持扁平化实体设计，实体无需继承多层基类，只需在字段或类上标注对应注解即可具备能力。
  *
- * <p><b>缓存机制：</b>
- * 反射结果使用 {@link ConcurrentHashMap} 缓存，避免重复扫描类层次结构。
- * 缓存键为 (entityClass, annotationClass) 组合，值为 {@link Optional} 包装的 {@link Field}。
+ * <p><b>缓存机制（P0-2 修复）：</b>
+ * 使用 JDK {@link ClassValue} 替代 {@code ConcurrentHashMap} 缓存反射结果。
+ * {@code ClassValue} 的条目随 ClassLoader 卸载自动清理，彻底消除静态 Map 导致的
+ * ClassLoader 级内存泄漏问题。{@code ClassValue} 内部保证线程安全，无需外部同步。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -52,19 +54,66 @@ import com.njydsz.common.domain.annotation.Version;
 public final class EntityCapabilities {
 
     /**
-     * 反射结果缓存：(entityClass + annotationClass) → Optional<Field>
+     * 注解字段缓存：entityClass → (annotationClass → Optional&lt;Field&gt;)
+     *
+     * <p>使用 {@link ClassValue} 缓存，扫描类层次结构中所有字段的注解。
+     * ClassValue 条目随 ClassLoader 卸载自动清理。
      */
-    private static final Map<String, Optional<Field>> FIELD_CACHE = new ConcurrentHashMap<>();
+    private static final ClassValue<Map<Class<? extends Annotation>, Optional<Field>>> FIELD_CACHE =
+            new ClassValue<>() {
+        @Override
+        protected Map<Class<? extends Annotation>, Optional<Field>> computeValue(Class<?> type) {
+            Map<Class<? extends Annotation>, Optional<Field>> map = new HashMap<>();
+            Class<?> clazz = type;
+            while (clazz != null && clazz != Object.class) {
+                for (Field field : clazz.getDeclaredFields()) {
+                    for (Annotation annotation : field.getAnnotations()) {
+                        Class<? extends Annotation> annType = annotation.annotationType();
+                        if (!map.containsKey(annType)) {
+                            ReflectionUtils.makeAccessible(field);
+                            map.put(annType, Optional.of(field));
+                        }
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            }
+            return Collections.unmodifiableMap(map);
+        }
+    };
 
     /**
-     * 软删除注解检测缓存：entityClass → boolean
+     * 软删除能力缓存：entityClass → boolean
+     *
+     * <p>使用 {@link ClassValue} 缓存，随 ClassLoader 卸载自动清理。
      */
-    private static final Map<Class<?>, Boolean> SOFT_DELETE_CACHE = new ConcurrentHashMap<>();
+    private static final ClassValue<Boolean> SOFT_DELETE_CACHE = new ClassValue<>() {
+        @Override
+        protected Boolean computeValue(Class<?> type) {
+            if (type.isAnnotationPresent(SoftDelete.class)) {
+                return true;
+            }
+            return findFieldByName(type, SOFT_DELETE_FIELD_NAME) != null;
+        }
+    };
 
     /**
-     * 乐观锁注解检测缓存：entityClass → boolean
+     * 乐观锁能力缓存：entityClass → boolean
+     *
+     * <p>使用 {@link ClassValue} 缓存，随 ClassLoader 卸载自动清理。
      */
-    private static final Map<Class<?>, Boolean> VERSION_CACHE = new ConcurrentHashMap<>();
+    private static final ClassValue<Boolean> VERSION_CACHE = new ClassValue<>() {
+        @Override
+        protected Boolean computeValue(Class<?> type) {
+            if (getAnnotatedField(type, Version.class).isPresent()) {
+                return true;
+            }
+            Class<? extends Annotation> mpVersion = resolveMpVersionAnnotation();
+            if (mpVersion != null && getAnnotatedField(type, mpVersion).isPresent()) {
+                return true;
+            }
+            return findFieldByName(type, VERSION_FIELD_NAME) != null;
+        }
+    };
 
     /**
      * 软删除字段名常量
@@ -108,13 +157,7 @@ public final class EntityCapabilities {
      * @return 启用逻辑删除返回 true，否则返回 false
      */
     public static boolean isSoftDeleteEnabled(Class<?> entityClass) {
-        return SOFT_DELETE_CACHE.computeIfAbsent(entityClass, clazz -> {
-            if (clazz.isAnnotationPresent(SoftDelete.class)) {
-                return true;
-            }
-            // Fallback: field-name convention (deleted)
-            return findFieldByName(clazz, SOFT_DELETE_FIELD_NAME) != null;
-        });
+        return SOFT_DELETE_CACHE.get(entityClass);
     }
 
     /**
@@ -144,24 +187,15 @@ public final class EntityCapabilities {
      * @return 启用乐观锁返回 true，否则返回 false
      */
     public static boolean isVersionEnabled(Class<?> entityClass) {
-        return VERSION_CACHE.computeIfAbsent(entityClass, clazz -> {
-            if (getAnnotatedField(clazz, Version.class).isPresent()) {
-                return true;
-            }
-            Class<? extends Annotation> mpVersion = resolveMpVersionAnnotation();
-            if (mpVersion != null && getAnnotatedField(clazz, mpVersion).isPresent()) {
-                return true;
-            }
-            // Fallback: field-name convention (revision)
-            return findFieldByName(clazz, VERSION_FIELD_NAME) != null;
-        });
+        return VERSION_CACHE.get(entityClass);
     }
 
     /**
      * 获取实体类中标注了指定注解的字段
      *
      * <p>递归扫描实体类及其所有父类（直到 {@link Object}），
-     * 返回第一个匹配的字段。结果使用缓存避免重复反射扫描。
+     * 返回第一个匹配的字段。结果使用 {@link ClassValue} 缓存，
+     * 随 ClassLoader 卸载自动清理。
      *
      * @param entityClass     实体类
      * @param annotationClass 目标注解类型
@@ -170,28 +204,7 @@ public final class EntityCapabilities {
      */
     public static <A extends Annotation> Optional<Field> getAnnotatedField(
             Class<?> entityClass, Class<A> annotationClass) {
-        String cacheKey = entityClass.getName() + "#" + annotationClass.getName();
-        return FIELD_CACHE.computeIfAbsent(cacheKey, key -> doFindAnnotatedField(entityClass, annotationClass));
-    }
-
-    /**
-     * 实际执行反射扫描查找标注字段
-     *
-     * <p>手动遍历类层次结构，找到第一个标注字段后立即返回。
-     */
-    private static <A extends Annotation> Optional<Field> doFindAnnotatedField(
-            Class<?> entityClass, Class<A> annotationClass) {
-        Class<?> clazz = entityClass;
-        while (clazz != null && clazz != Object.class) {
-            for (Field field : clazz.getDeclaredFields()) {
-                if (field.isAnnotationPresent(annotationClass)) {
-                    ReflectionUtils.makeAccessible(field);
-                    return Optional.of(field);
-                }
-            }
-            clazz = clazz.getSuperclass();
-        }
-        return Optional.empty();
+        return FIELD_CACHE.get(entityClass).getOrDefault(annotationClass, Optional.empty());
     }
 
     /**
@@ -219,7 +232,7 @@ public final class EntityCapabilities {
      * 解析 MyBatis-Plus Version 注解类（延迟加载 + 缓存）
      *
      * <p>使用双重检查锁定（DCL）模式，避免多线程下重复加载。
-     * 
+     *
      * @return MyBatis-Plus Version 注解类，不存在返回 null
      */
     private static Class<? extends Annotation> resolveMpVersionAnnotation() {
@@ -246,12 +259,26 @@ public final class EntityCapabilities {
     }
 
     /**
-     * 清除所有缓存（主要用于测试场景）
+     * 清除指定类的缓存（主要用于测试场景）
+     *
+     * <p>由于使用 {@link ClassValue} 缓存，条目随 ClassLoader 卸载自动清理。
+     * 此方法仅用于测试场景中需要强制刷新单个类缓存的场景。
+     *
+     * @param entityClass 需要清除缓存的实体类
+     * @since 1.2.0
      */
-    public static void clearCache() {
-        FIELD_CACHE.clear();
-        SOFT_DELETE_CACHE.clear();
-        VERSION_CACHE.clear();
+    public static void clearCache(Class<?> entityClass) {
+        FIELD_CACHE.remove(entityClass);
+        SOFT_DELETE_CACHE.remove(entityClass);
+        VERSION_CACHE.remove(entityClass);
+    }
+
+    /**
+     * 重置 MyBatis-Plus Version 注解类缓存（主要用于测试场景）
+     *
+     * @since 1.2.0
+     */
+    public static void resetMpVersionCache() {
         mpVersionAnnotationClass = null;
     }
 }

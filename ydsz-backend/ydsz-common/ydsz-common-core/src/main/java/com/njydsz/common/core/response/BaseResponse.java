@@ -359,9 +359,24 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
+     * 返回失败消息
+     *
+     * @param resultCode 结果码
+     * @param throwable  异常对象（消息从 throwable.getMessage() 提取）
+     * @param <T> 数据类型
+     * @return 失败消息
+     */
+    public static <T> BaseResponse<T> error(ResultCode resultCode, Throwable throwable) {
+        String msg = throwable != null && throwable.getMessage() != null
+                ? throwable.getMessage()
+                : resultCode.getMsg();
+        return of(resultCode.getCode(), msg, null);
+    }
+
+    /**
      * 判断是否成功
      *
-     * @return 成功返回true，否则返回false
+     * @return 成功返回 true，否则返回 false
      */
     @Override
     public boolean isSuccess() {

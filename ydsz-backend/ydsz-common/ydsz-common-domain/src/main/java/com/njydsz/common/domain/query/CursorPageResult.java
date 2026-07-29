@@ -1,6 +1,7 @@
 package com.njydsz.common.domain.query;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -66,7 +67,7 @@ public class CursorPageResult<T> implements Serializable {
             return empty();
         }
         boolean hasMore = records.size() > pageSize;
-        List<T> pageRecords = hasMore ? records.subList(0, (int) pageSize) : records;
+        List<T> pageRecords = hasMore ? new ArrayList<>(records.subList(0, (int) pageSize)) : records;
         String nextCursor = hasMore ? cursorEncoder.apply(pageRecords.get(pageRecords.size() - 1)) : null;
         return new CursorPageResult<>(pageRecords, nextCursor, hasMore);
     }

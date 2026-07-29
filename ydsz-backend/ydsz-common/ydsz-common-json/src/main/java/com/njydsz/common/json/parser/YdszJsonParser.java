@@ -895,7 +895,104 @@ public final class YdszJsonParser {
     }
     
     // ==================== ASM 反序列化器专用快速解析方法 ====================
-    
+
+    /**
+     * 单遍扫描构建字段位置映射（优化 O(N*M) 为 O(N)）。
+     *
+     * <p>当 ASM 反序列化器需要解析多个字段时，传统方式对每个字段调用
+     * {@link #findFieldPosition} 导致 O(N*M) 复杂度。此方法单遍扫描 JSON，
+     * 一次性提取所有顶层字段名及其值起始位置，将复杂度降为 O(N+M)。</p>
+     *
+     * @param json JSON 字符串
+     * @return 字段名 -> 值起始位置（冒号后第一个非空白字符）的映射
+     * @since 1.3.0
+     */
+    public static Map<String, Integer> buildFieldPositionMap(String json) {
+        Map<String, Integer> fieldPositions = new HashMap<>(16);
+        int len = json.length();
+        int i = 0;
+        // 跳过前导空白
+        while (i < len && json.charAt(i) <= ' ') i++;
+        if (i >= len || json.charAt(i) != '{') return fieldPositions;
+        i++; // 跳过 '{'
+
+        while (i < len) {
+            // 跳过空白
+            while (i < len && json.charAt(i) <= ' ') i++;
+            if (i >= len) break;
+            if (json.charAt(i) == '}') break;
+            if (json.charAt(i) == ',') { i++; continue; }
+
+            // 读取字段名（带引号）
+            if (json.charAt(i) != '"') break;
+            i++; // 跳过起始引号
+            int nameStart = i;
+            while (i < len && json.charAt(i) != '"') {
+                if (json.charAt(i) == '\\') i++;
+                i++;
+            }
+            String fieldName = json.substring(nameStart, i);
+            i++; // 跳过结束引号
+
+            // 跳过冒号和空白
+            while (i < len && json.charAt(i) != ':') i++;
+            i++; // 跳过冒号
+            while (i < len && json.charAt(i) <= ' ') i++;
+
+            // 记录值起始位置
+            fieldPositions.put(fieldName, i);
+
+            // 跳过值（根据类型）
+            i = skipValue(json, i);
+        }
+        return fieldPositions;
+    }
+
+    /**
+     * 跳过 JSON 值，返回值结束后的下一个位置。
+     */
+    private static int skipValue(String json, int start) {
+        int len = json.length();
+        if (start >= len) return start;
+        char c = json.charAt(start);
+        if (c == '"') {
+            // 字符串值
+            int i = start + 1;
+            while (i < len) {
+                if (json.charAt(i) == '\\') { i += 2; continue; }
+                if (json.charAt(i) == '"') return i + 1;
+                i++;
+            }
+            return i;
+        } else if (c == '{' || c == '[') {
+            // 嵌套对象/数组：计算深度
+            int depth = 0;
+            boolean inString = false;
+            boolean escaped = false;
+            for (int i = start; i < len; i++) {
+                char ch = json.charAt(i);
+                if (inString) {
+                    if (escaped) { escaped = false; }
+                    else if (ch == '\\') { escaped = true; }
+                    else if (ch == '"') { inString = false; }
+                } else {
+                    if (ch == '"') { inString = true; }
+                    else if (ch == '{' || ch == '[') { depth++; }
+                    else if (ch == '}' || ch == ']') { depth--; if (depth == 0) return i + 1; }
+                }
+            }
+            return len;
+        } else {
+            // 基本类型（number/boolean/null）
+            int i = start;
+            while (i < len) {
+                char ch = json.charAt(i);
+                if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ') return i;
+                i++;
+            }
+            return i;
+        }
+    }    
     /**
      * 在 JSON 中查找字段名的位置（跳过字符串值内部的文本）。
      *
@@ -1026,13 +1123,20 @@ public final class YdszJsonParser {
         valueStart++; // 跳过起始引号
         
         int valueEnd = valueStart;
+        boolean hasEscape = false;
         while (valueEnd < json.length() && json.charAt(valueEnd) != '"') {
             if (json.charAt(valueEnd) == '\\') {
                 valueEnd++; // 跳过转义字符
+                hasEscape = true;
             }
             valueEnd++;
         }
         
+        // 如果包含转义字符，需要解码后再返回
+        if (hasEscape) {
+            char[] chars = json.toCharArray();
+            return parseStringWithEscape(chars, valueStart, valueEnd);
+        }
         return json.substring(valueStart, valueEnd);
     }
     
@@ -1136,8 +1240,16 @@ public final class YdszJsonParser {
      */
     
     public static <T> T parseObject(String json, Class<T> clazz) {
+        // Map 及其子类直接 cast 返回
+        if (Map.class.isAssignableFrom(clazz)) {
+            Map<String, Object> map = parseObject(json);
+            if (map == null) return null;
+            return clazz.cast(map);
+        }
+        // 非 Map 类型：解析为 Map 后委托 YdszJson 反序列化为目标 Bean
         Map<String, Object> map = parseObject(json);
         if (map == null) return null;
-        return clazz.cast(map);
+        return com.njydsz.common.json.YdszJson.toObject(
+            com.njydsz.common.json.YdszJson.toJson(map), clazz);
     }
 }

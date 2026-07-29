@@ -76,7 +76,7 @@ public final class RetrySupport {
                 TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(512),
                 r -> {
-                    Thread t = new Thread(r, "retry-async");
+                    Thread t = new Thread(r, "ydsz-retry-async");
                     t.setDaemon(true);
                     return t;
                 },
@@ -455,6 +455,7 @@ public final class RetrySupport {
      * 计算指数退避延迟时间
      *
      * <p>公式：delay = min(initialDelay * 2^(attempt-1), maxDelay)
+     * <p>当 attempt 过大导致移位溢出时，直接返回 maxDelay。
      *
      * @param attempt          当前重试次数（从1开始）
      * @param initialDelayMs   初始延迟（毫秒）
@@ -462,15 +463,24 @@ public final class RetrySupport {
      * @return 延迟时间（毫秒）
      */
     public static long calculateExponentialBackoff(int attempt, long initialDelayMs, long maxDelayMs) {
-        long delay = initialDelayMs * (1L << (attempt - 1));
-        return Math.min(delay, maxDelayMs);
+        if (attempt <= 0 || attempt > 62) {
+            // attempt > 62 时 1L << (attempt-1) 会溢出，直接返回 maxDelay
+            return maxDelayMs;
+        }
+        long shift = initialDelayMs << (attempt - 1);
+        // 检查溢出：如果 shift < initialDelayMs 说明溢出了
+        if (shift < initialDelayMs) {
+            return maxDelayMs;
+        }
+        return Math.min(shift, maxDelayMs);
     }
 
     /**
      * 计算带抖动因子的指数退避延迟时间
      *
      * <p>公式：delay = min(initialDelay * 2^(attempt-1) * jitter, maxDelay)
-     * <p>抖动因子范围：[0.5, 1.0]，避免多个任务同时重试导致的"惊群效应"
+     * <p>抖动因子范围：[0.5, 1.0]，避免多个任务同时重试导致的“惊群效应”
+     * <p>当 attempt 过大导致移位溢出时，直接返回 maxDelay。
      *
      * @param attempt          当前重试次数（从1开始）
      * @param initialDelayMs   初始延迟（毫秒）
@@ -478,10 +488,9 @@ public final class RetrySupport {
      * @return 延迟时间（毫秒）
      */
     public static long calculateExponentialBackoffWithJitter(int attempt, long initialDelayMs, long maxDelayMs) {
-        long delay = initialDelayMs * (1L << (attempt - 1));
+        long baseDelay = calculateExponentialBackoff(attempt, initialDelayMs, maxDelayMs);
         double jitterFactor = 0.5 + ThreadLocalRandom.current().nextDouble() * 0.5;
-        delay = (long) (delay * jitterFactor);
-        return Math.min(delay, maxDelayMs);
+        return (long) (baseDelay * jitterFactor);
     }
 
     /**

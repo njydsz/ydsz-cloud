@@ -4,7 +4,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -14,7 +13,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.alert.ExceptionAlertPublisher;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.ConcurrencyException;
@@ -40,13 +41,16 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>职责：</b>
  * <ul>
  *   <li>处理业务异常、系统异常、安全异常等</li>
- *   <li>统一返回 BaseResponse 格式</li>
- *   <li>记录异常指标</li>
+ *   <li>统一返回 BaseResponse 或 ProblemDetail 格式（通过配置切换）</li>
+ *   <li>记录异常指标（Counter + Timer）</li>
  *   <li>提取 traceId 用于链路追踪</li>
+ *   <li>生产环境堆栈脱敏</li>
+ *   <li>异常告警发布（ERROR/FATAL 级别）</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see BaseExceptionHandler
  * @see MvcExceptionHandler
  */
 @Slf4j
@@ -55,33 +59,37 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 @ConditionalOnClass(name = "org.springframework.web.server.ServerWebExchange")
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
-public class WebFluxExceptionHandler {
+public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
     private final MessageSource messageSource;
-    private final ExceptionMetrics exceptionMetrics;
 
     /**
      * 构造 WebFlux 全局异常处理器
      *
-     * @param messageSource   国际化消息源
-     * @param exceptionMetrics 异常指标统计器
+     * @param messageSource    国际化消息源
+     * @param exceptionMetrics  异常指标统计器（可选）
+     * @param properties       异常模块配置属性（可选）
+     * @param alertPublisher   异常告警发布器（可选）
      */
-    public WebFluxExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics) {
+    public WebFluxExceptionHandler(MessageSource messageSource,
+                                   ExceptionMetrics exceptionMetrics,
+                                   ExceptionProperties properties,
+                                   ExceptionAlertPublisher alertPublisher) {
         this.messageSource = messageSource;
-        this.exceptionMetrics = exceptionMetrics;
+        setExceptionMetrics(exceptionMetrics);
+        setExceptionProperties(properties);
+        setAlertPublisher(alertPublisher);
     }
 
-    /**
-     * 记录异常指标
-     */
-    private void recordExceptionMetrics(Throwable throwable) {
-        if (exceptionMetrics != null) {
-            exceptionMetrics.recordException(throwable);
-        }
+    @Override
+    protected String getLogPrefix() {
+        return "【WebFlux】";
     }
 
     /**
      * 从 ServerWebExchange 提取 traceId
+     *
+     * <p>优先级：MDC > Request Header（X-Trace-Id > X-Request-Id）
      */
     private String extractTraceId(ServerWebExchange exchange) {
         String traceId = TraceContext.getTraceId();
@@ -94,30 +102,19 @@ public class WebFluxExceptionHandler {
         return traceId;
     }
 
-    /**
-     * 构建异常信息
-     */
-    private ExceptionInfo buildExceptionInfo(Exception e, String path, String traceId) {
-        ExceptionInfo info = new ExceptionInfo();
-        info.setPath(path);
-        info.setTraceId(traceId);
-        info.setMessage(e.getMessage());
-        return info;
-    }
+    // ============================ 异常处理方法 ============================
 
     /**
-     * 处理业务异常
+     * 处理业务异常（动态 HTTP 状态码）
      */
     @ExceptionHandler(BusinessException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleBusinessException(BusinessException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.warn("【全局】业务异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleBusinessException(BusinessException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.warn("{}业务异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        String traceId = extractTraceId(exchange);
+        return buildResponse(e, exchange.getRequest().getPath().value(), traceId);
     }
 
     /**
@@ -125,14 +122,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(ConcurrencyException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public BaseResponse<?> handleConcurrencyException(ConcurrencyException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.warn("【全局】并发冲突异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleConcurrencyException(ConcurrencyException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.warn("{}并发冲突异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -140,14 +135,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(DuplicateException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public BaseResponse<?> handleDuplicateException(DuplicateException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.warn("【全局】重复提交异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleDuplicateException(DuplicateException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.warn("{}重复提交异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -155,14 +148,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(RateLimitException.class)
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
-    public BaseResponse<?> handleRateLimitException(RateLimitException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.warn("【全局】限流异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleRateLimitException(RateLimitException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.warn("{}限流异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -170,14 +161,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(YdszSecurityException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public BaseResponse<?> handleSecurityException(YdszSecurityException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.warn("【全局】安全异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleSecurityException(YdszSecurityException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.warn("{}安全异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -185,14 +174,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleValidationException(ValidationException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.warn("【全局】校验异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleValidationException(ValidationException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.warn("{}校验异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -200,14 +187,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(YdszTimeoutException.class)
     @ResponseStatus(HttpStatus.GATEWAY_TIMEOUT)
-    public BaseResponse<?> handleTimeoutException(YdszTimeoutException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.error("【全局】超时异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleTimeoutException(YdszTimeoutException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.error("{}超时异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -215,14 +200,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(ExternalException.class)
     @ResponseStatus(HttpStatus.BAD_GATEWAY)
-    public BaseResponse<?> handleExternalException(ExternalException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.error("【全局】外部服务异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleExternalException(ExternalException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.error("{}外部服务异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -230,14 +213,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(InfrastructureException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleInfrastructureException(InfrastructureException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.error("【全局】基础设施异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleInfrastructureException(InfrastructureException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.error("{}基础设施异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -245,14 +226,12 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(SysException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleSysException(SysException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.error("【全局】系统异常 | 路径: {} | 错误码: {} | 消息: {}",
-                path, e.getCode(), e.getMessage(), e);
+    public Object handleSysException(SysException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.error("{}系统异常 | 路径: {} | 错误码: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
@@ -260,29 +239,34 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleIllegalArgumentException(IllegalArgumentException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.error("【全局】非法参数异常 | 路径: {} | 消息: {}", path, e.getMessage(), e);
+    public Object handleIllegalArgumentException(IllegalArgumentException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.error("{}非法参数异常 | 路径: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        info.setCode(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode());
-        return BaseResponse.error(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), e.getMessage(), info);
+        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
     }
 
     /**
      * 处理非法状态异常
+     *
+     * <p>IllegalStateException 属于系统级异常（非业务异常），统一返回 SYSTEM_ERROR，
+     * 避免暴露内部状态信息。
      */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleIllegalStateException(IllegalStateException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.error("【全局】非法状态异常 | 路径: {} | 消息: {}", path, e.getMessage(), e);
+    public Object handleIllegalStateException(IllegalStateException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.error("{}非法状态异常 | 路径: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-        info.setCode(UnifiedExceptionCode.INVALID_BUSINESS_STATE.getCode());
-        return BaseResponse.error(UnifiedExceptionCode.INVALID_BUSINESS_STATE.getCode(), e.getMessage(), info);
+        ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
+        info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
+
+        return BaseResponse.error(
+                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                info.getMessage(),
+                includeExceptionInfo() ? info : null);
     }
 
     /**
@@ -290,19 +274,18 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleNullPointerException(NullPointerException e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.error("【全局】空指针异常 | 路径: {} | 消息: {}", path, e.getMessage(), e);
+    public Object handleNullPointerException(NullPointerException e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.error("{}空指针异常 | 路径: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
-        String message = messageSource.getMessage("system.error", null,
-                "系统异常，请联系管理员", LocaleContextHolder.getLocale());
-
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
+        ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
         info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
-        info.setMessage(message);
 
-        return BaseResponse.error(UnifiedExceptionCode.SYSTEM_ERROR.getCode(), message, info);
+        return BaseResponse.error(
+                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                info.getMessage(),
+                includeExceptionInfo() ? info : null);
     }
 
     /**
@@ -310,17 +293,16 @@ public class WebFluxExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleException(Exception e, ServerWebExchange exchange) {
-        recordExceptionMetrics(e);
-        String path = exchange.getRequest().getPath().value();
-        log.error("【全局】系统异常 | 路径: {} | 类型: {} | 消息: {}",
-                path, e.getClass().getName(), e.getMessage(), e);
+    public Object handleException(Exception e, ServerWebExchange exchange) {
+        recordMetrics(e);
+        log.error("{}系统异常 | 路径: {} | 类型: {} | 消息: {}",
+                getLogPrefix(), exchange.getRequest().getPath().value(), e.getClass().getName(), e.getMessage(), e);
 
-        String message = messageSource.getMessage("system.error", null,
-                "系统异常，请联系管理员", LocaleContextHolder.getLocale());
+        ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
 
-        ExceptionInfo info = buildExceptionInfo(e, path, extractTraceId(exchange));
-
-        return BaseResponse.error(UnifiedExceptionCode.SYSTEM_ERROR.getCode(), message, info);
+        return BaseResponse.error(
+                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                info.getMessage(),
+                includeExceptionInfo() ? info : null);
     }
 }
