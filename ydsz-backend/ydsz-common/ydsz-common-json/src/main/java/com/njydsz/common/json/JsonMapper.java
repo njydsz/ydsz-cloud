@@ -143,8 +143,19 @@ public class JsonMapper {
         }
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
         config.apply();
+        JsonConfig.setThreadLocalOverride(config);
         configApplied = true;
         return snapshot;
+    }
+
+    /**
+     * 恢复配置快照（包括 ThreadLocal 序列化参数和 JsonConfig 覆盖）。
+     */
+    private void restoreConfig(SerializationProvider.ThreadLocalSnapshot snapshot) {
+        if (snapshot != null) {
+            restoreConfig(snapshot);
+            JsonConfig.clearThreadLocalOverride();
+        }
     }
 
     /**
@@ -161,7 +172,7 @@ public class JsonMapper {
         try {
             return recordSerialize(() -> SerializationProvider.serialize(obj));
         } finally {
-            if (snapshot != null) snapshot.restore();
+            if (snapshot != null) restoreConfig(snapshot);
         }
     }
 
@@ -181,7 +192,7 @@ public class JsonMapper {
             try {
                 return recordSerialize(() -> SerializationProvider.format(obj));
             } finally {
-                if (snapshot != null) snapshot.restore();
+                if (snapshot != null) restoreConfig(snapshot);
             }
         }
         return toJson(obj);
@@ -205,7 +216,7 @@ public class JsonMapper {
         try {
             return recordSerialize(() -> SerializationProvider.serializeWithView(obj, viewClass));
         } finally {
-            if (snapshot != null) snapshot.restore();
+            if (snapshot != null) restoreConfig(snapshot);
         }
     }
 
@@ -223,7 +234,7 @@ public class JsonMapper {
         try {
             return recordSerialize(() -> SerializationProvider.serializeToBytes(obj));
         } finally {
-            if (snapshot != null) snapshot.restore();
+            if (snapshot != null) restoreConfig(snapshot);
         }
     }
 
@@ -355,7 +366,7 @@ public class JsonMapper {
         try {
             return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, clazz));
         } finally {
-            if (snapshot != null) snapshot.restore();
+            if (snapshot != null) restoreConfig(snapshot);
         }
     }
 
@@ -409,7 +420,7 @@ public class JsonMapper {
             try {
                 return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, typeRef.getType()));
             } finally {
-                if (snapshot != null) snapshot.restore();
+                if (snapshot != null) restoreConfig(snapshot);
             }
         } catch (Exception e) {
             if (e instanceof JsonException) throw (JsonException) e;
@@ -718,7 +729,7 @@ public class JsonMapper {
                 SerializationProvider.setExcludedFields(previous);
             }
         } finally {
-            if (snapshot != null) snapshot.restore();
+            if (snapshot != null) restoreConfig(snapshot);
         }
     }
 
