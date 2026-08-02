@@ -3,7 +3,7 @@ package com.njydsz.gateway.config;
 import com.alibaba.cloud.nacos.NacosConfigManager;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.type.YdszJsonType;
+import com.njydsz.common.json.type.JsonType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
@@ -156,7 +156,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
             }
 
             List<RouteDefinition> routes = YdszJson.fromJson(config,
-                    new YdszJsonType<List<RouteDefinition>>() {});
+                    new JsonType<List<RouteDefinition>>() {});
             if (routes == null) {
                 routes = Collections.emptyList();
             }

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.type.YdszJsonType;
+import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
@@ -86,7 +86,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
         request.setTemplateCode(templateCode);
         if (templateParams instanceof Map<?, ?> map) {
             Map<String, Object> params = YdszJson.toObject(
-                    YdszJson.toJson(map), new YdszJsonType<Map<String, Object>>() {});
+                    YdszJson.toJson(map), new JsonType<Map<String, Object>>() {});
             request.setParams(params);
         }
         try {

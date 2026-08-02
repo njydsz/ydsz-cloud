@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.JsonBuilder;
-import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.parser.JsonParserUtil;
 
 /**
  * {@link JsonBuilder} 注解处理器。
@@ -57,7 +57,7 @@ final class BuilderResolver {
      * @return 反序列化后的实例
      */
     static <T> T deserializeWithBuilder(String json, Class<T> clazz, JsonBuilder annotation) {
-        Map<String, Object> map = YdszJsonParser.parseObject(json);
+        Map<String, Object> map = JsonParserUtil.parseObject(json);
         if (map == null || map.isEmpty()) {
             return CreatorResolver.createInstanceWithDefaultConstructor(clazz);
         }
@@ -116,7 +116,7 @@ final class BuilderResolver {
      * @return 反序列化后的实例
      */
     static <T> T deserializeWithInnerBuilder(String json, Class<T> clazz, Class<?> builderClass, JsonBuilder annotation) {
-        Map<String, Object> map = YdszJsonParser.parseObject(json);
+        Map<String, Object> map = JsonParserUtil.parseObject(json);
         if (map == null || map.isEmpty()) {
             return CreatorResolver.createInstanceWithDefaultConstructor(clazz);
         }

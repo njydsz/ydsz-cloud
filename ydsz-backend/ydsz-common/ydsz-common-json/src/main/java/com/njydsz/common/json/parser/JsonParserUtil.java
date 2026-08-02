@@ -29,19 +29,19 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 解析 JSON 对象
- * Map&lt;String, Object&gt; map = YdszJsonParser.parseObject(json);
+ * Map&lt;String, Object&gt; map = JsonParserUtil.parseObject(json);
  * 
  * // 解析 JSON 数组
- * List&lt;Object&gt; list = YdszJsonParser.parseArray(json);
+ * List&lt;Object&gt; list = JsonParserUtil.parseArray(json);
  * 
  * // 解析为 Object（自动识别）
- * Object obj = YdszJsonParser.parse(json);
+ * Object obj = JsonParserUtil.parse(json);
  * </pre>
  * 
  * @author ydsz-team
  * @since 1.0.0
  */
-public final class YdszJsonParser {
+public final class JsonParserUtil {
 
     /**
      * 预计算 10 的幂次表（替代 Math.pow(10, n)，避免浮点函数调用开销）。
@@ -79,8 +79,8 @@ public final class YdszJsonParser {
     /** 是否使用 BigDecimal 解析浮点数（避免精度丢失），默认 false */
     private static volatile boolean useBigDecimal = false;
 
-    private YdszJsonParser() {
-        throw new UnsupportedOperationException("YdszJsonParser is a utility class");
+    private JsonParserUtil() {
+        throw new UnsupportedOperationException("JsonParserUtil is a utility class");
     }
 
     /**

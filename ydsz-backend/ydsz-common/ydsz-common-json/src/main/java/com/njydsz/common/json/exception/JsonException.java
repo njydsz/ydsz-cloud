@@ -8,7 +8,7 @@ package com.njydsz.common.json.exception;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class YdszJsonException extends RuntimeException {
+public class JsonException extends RuntimeException {
     
     private static final long serialVersionUID = 1L;
     
@@ -23,7 +23,7 @@ public class YdszJsonException extends RuntimeException {
      *
      * @param message 错误消息
      */
-    public YdszJsonException(String message) {
+    public JsonException(String message) {
         super(message);
         this.errorCode = 0;
         this.position = -1;
@@ -35,7 +35,7 @@ public class YdszJsonException extends RuntimeException {
      * @param message 错误消息
      * @param cause 原始异常
      */
-    public YdszJsonException(String message, Throwable cause) {
+    public JsonException(String message, Throwable cause) {
         super(message, cause);
         this.errorCode = 0;
         this.position = -1;
@@ -47,7 +47,7 @@ public class YdszJsonException extends RuntimeException {
      * @param errorCode 错误码
      * @param message 错误消息
      */
-    public YdszJsonException(int errorCode, String message) {
+    public JsonException(int errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
         this.position = -1;
@@ -60,7 +60,7 @@ public class YdszJsonException extends RuntimeException {
      * @param message 错误消息
      * @param position JSON 字符串中的位置
      */
-    public YdszJsonException(int errorCode, String message, int position) {
+    public JsonException(int errorCode, String message, int position) {
         super(message + " at position " + position);
         this.errorCode = errorCode;
         this.position = position;
@@ -73,7 +73,7 @@ public class YdszJsonException extends RuntimeException {
      * @param message 错误消息
      * @param cause 原始异常
      */
-    public YdszJsonException(int errorCode, String message, Throwable cause) {
+    public JsonException(int errorCode, String message, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
         this.position = -1;

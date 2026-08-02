@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.YdszJsonObject;
+import com.njydsz.common.json.object.JsonObject;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -79,7 +79,7 @@ public class WebhookEventDispatcher {
             if (webhooks.isEmpty()) {
                 return;
             }
-            YdszJsonObject eventBody = new YdszJsonObject();
+            JsonObject eventBody = new JsonObject();
             eventBody.put("eventType", eventType);
             eventBody.put("jobKey", jobKey);
             eventBody.put("timestamp", LocalDateTime.now().toString());
@@ -97,7 +97,7 @@ public class WebhookEventDispatcher {
     /**
      * 发送 WebHook 通知。
      */
-    private void sendWebhook(JobWebhook webhook, YdszJsonObject body) {
+    private void sendWebhook(JobWebhook webhook, JsonObject body) {
         try {
             String method = webhook.getHttpMethod() != null ? webhook.getHttpMethod() : "POST";
             HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -107,7 +107,7 @@ public class WebhookEventDispatcher {
 
             // 添加自定义请求头
             if (webhook.getHeaders() != null && !webhook.getHeaders().isBlank()) {
-                YdszJsonObject headers = YdszJson.parseObjectToJsonObject(webhook.getHeaders());
+                JsonObject headers = YdszJson.parseObjectToJsonObject(webhook.getHeaders());
                 for (String key : headers.keySet()) {
                     builder.header(key, headers.getString(key));
                 }

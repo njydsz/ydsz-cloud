@@ -9,37 +9,46 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import com.njydsz.common.json.YdszJson;
 
 /**
- * YdszJson 对象实现
+ * YdszJson 数组实现
  *
- * <p>对应 FastJSON2 的 JSONObject，继承 LinkedHashMap 提供动态 JSON 对象操作。
- * 支持类型安全的 getter/setter、链式调用、嵌套对象访问等功能。</p>
+ * <p>对应 FastJSON2 的 JSONArray，继承 ArrayList 提供动态 JSON 数组操作。
+ * 支持类型安全的 getter、链式调用、嵌套对象访问等功能。</p>
  *
  * <p><b>主要功能：</b></p>
  * <ul>
  *   <li>类型安全的 getter - getString、getInteger、getLong 等</li>
- *   <li>链式调用 - put 方法返回 this</li>
  *   <li>嵌套对象访问 - getJSONObject、getJSONArray</li>
  *   <li>日期时间支持 - getDate、getLocalDateTime 等</li>
- *   <li>批量操作 - getAll、putAll 等</li>
+ *   <li>批量操作 - addAll、addAll 等</li>
  * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * JsonArray array = new JsonArray();
+ * array.add("hello")
+ *      .add(42)
+ *      .add(true);
+ *
+ * // 类型安全的 getter
+ * String first = array.getString(0);
+ * int second = array.getIntValue(1);
+ * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-public class YdszJsonObject extends LinkedHashMap<String, Object> {
+public class JsonArray extends ArrayList<Object> {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * 默认构造函数
      */
-    public YdszJsonObject() {
+    public JsonArray() {
         super();
     }
 
@@ -48,26 +57,17 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
      *
      * @param initialCapacity 初始容量
      */
-    public YdszJsonObject(int initialCapacity) {
+    public JsonArray(int initialCapacity) {
         super(initialCapacity);
     }
 
     /**
-     * 从 Map 创建 YdszJsonObject
+     * 从 List 创建 JsonArray
      *
-     * @param map 源 Map
+     * @param list 源 List
      */
-        public YdszJsonObject(Map<?, ?> map) {
-        super();
-        if (map != null) {
-            LinkedHashMap<String, Object> filtered = new LinkedHashMap<>(map.size());
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
-                if (entry.getKey() instanceof String) {
-                    filtered.put((String) entry.getKey(), entry.getValue());
-                }
-            }
-            super.putAll(filtered);
-        }
+    public JsonArray(Collection<?> list) {
+        super(list != null ? new ArrayList<>(list) : new ArrayList<>());
     }
 
     // ==================== 基本类型 getter ====================
@@ -75,22 +75,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取字符串值
      *
-     * @param key 键
+     * @param index 索引
      * @return 字符串值
      */
-    public String getString(String key) {
-        Object value = get(key);
+    public String getString(int index) {
+        Object value = get(index);
         return value != null ? value.toString() : null;
     }
 
     /**
      * 获取整数值
      *
-     * @param key 键
+     * @param index 索引
      * @return 整数值
      */
-    public Integer getInteger(String key) {
-        Object value = get(key);
+    public Integer getInteger(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -110,22 +110,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 int 基本类型值（为 null 时返回 0）
      *
-     * @param key 键
+     * @param index 索引
      * @return int 值
      */
-    public int getIntValue(String key) {
-        Integer value = getInteger(key);
+    public int getIntValue(int index) {
+        Integer value = getInteger(index);
         return value != null ? value : 0;
     }
 
     /**
      * 获取长整数值
      *
-     * @param key 键
+     * @param index 索引
      * @return 长整数值
      */
-    public Long getLong(String key) {
-        Object value = get(key);
+    public Long getLong(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -145,22 +145,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 long 基本类型值（为 null 时返回 0）
      *
-     * @param key 键
+     * @param index 索引
      * @return long 值
      */
-    public long getLongValue(String key) {
-        Long value = getLong(key);
+    public long getLongValue(int index) {
+        Long value = getLong(index);
         return value != null ? value : 0L;
     }
 
     /**
      * 获取双精度浮点数值
      *
-     * @param key 键
+     * @param index 索引
      * @return 双精度浮点数值
      */
-    public Double getDouble(String key) {
-        Object value = get(key);
+    public Double getDouble(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -180,22 +180,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 double 基本类型值（为 null 时返回 0）
      *
-     * @param key 键
+     * @param index 索引
      * @return double 值
      */
-    public double getDoubleValue(String key) {
-        Double value = getDouble(key);
+    public double getDoubleValue(int index) {
+        Double value = getDouble(index);
         return value != null ? value : 0.0;
     }
 
     /**
      * 获取布尔值
      *
-     * @param key 键
+     * @param index 索引
      * @return 布尔值
      */
-    public Boolean getBoolean(String key) {
-        Object value = get(key);
+    public Boolean getBoolean(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -215,22 +215,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 boolean 基本类型值（为 null 时返回 false）
      *
-     * @param key 键
+     * @param index 索引
      * @return boolean 值
      */
-    public boolean getBooleanValue(String key) {
-        Boolean value = getBoolean(key);
+    public boolean getBooleanValue(int index) {
+        Boolean value = getBoolean(index);
         return value != null ? value : false;
     }
 
     /**
      * 获取 byte 值
      *
-     * @param key 键
+     * @param index 索引
      * @return byte 值
      */
-    public Byte getByte(String key) {
-        Object value = get(key);
+    public Byte getByte(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -250,22 +250,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 byte 基本类型值（为 null 时返回 0）
      *
-     * @param key 键
+     * @param index 索引
      * @return byte 值
      */
-    public byte getByteValue(String key) {
-        Byte value = getByte(key);
+    public byte getByteValue(int index) {
+        Byte value = getByte(index);
         return value != null ? value : 0;
     }
 
     /**
      * 获取 short 值
      *
-     * @param key 键
+     * @param index 索引
      * @return short 值
      */
-    public Short getShort(String key) {
-        Object value = get(key);
+    public Short getShort(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -285,22 +285,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 short 基本类型值（为 null 时返回 0）
      *
-     * @param key 键
+     * @param index 索引
      * @return short 值
      */
-    public short getShortValue(String key) {
-        Short value = getShort(key);
+    public short getShortValue(int index) {
+        Short value = getShort(index);
         return value != null ? value : 0;
     }
 
     /**
      * 获取 float 值
      *
-     * @param key 键
+     * @param index 索引
      * @return float 值
      */
-    public Float getFloat(String key) {
-        Object value = get(key);
+    public Float getFloat(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -320,22 +320,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 float 基本类型值（为 null 时返回 0）
      *
-     * @param key 键
+     * @param index 索引
      * @return float 值
      */
-    public float getFloatValue(String key) {
-        Float value = getFloat(key);
+    public float getFloatValue(int index) {
+        Float value = getFloat(index);
         return value != null ? value : 0.0f;
     }
 
     /**
      * 获取 BigDecimal 值
      *
-     * @param key 键
+     * @param index 索引
      * @return BigDecimal 值
      */
-    public BigDecimal getBigDecimal(String key) {
-        Object value = get(key);
+    public BigDecimal getBigDecimal(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -358,11 +358,11 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 BigInteger 值
      *
-     * @param key 键
+     * @param index 索引
      * @return BigInteger 值
      */
-    public BigInteger getBigInteger(String key) {
-        Object value = get(key);
+    public BigInteger getBigInteger(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -387,22 +387,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 Date 对象
      *
-     * @param key 键
+     * @param index 索引
      * @return Date 对象
      */
-    public Date getDate(String key) {
-        return getDate(key, null);
+    public Date getDate(int index) {
+        return getDate(index, null);
     }
 
     /**
      * 获取 Date 对象（带格式）
      *
-     * @param key 键
+     * @param index 索引
      * @param pattern 日期格式
      * @return Date 对象
      */
-    public Date getDate(String key, String pattern) {
-        Object value = get(key);
+    public Date getDate(int index, String pattern) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -429,11 +429,11 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 Instant 对象
      *
-     * @param key 键
+     * @param index 索引
      * @return Instant 对象
      */
-    public Instant getInstant(String key) {
-        Object value = get(key);
+    public Instant getInstant(int index) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -456,22 +456,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 LocalDate 对象
      *
-     * @param key 键
+     * @param index 索引
      * @return LocalDate 对象
      */
-    public LocalDate getLocalDate(String key) {
-        return getLocalDate(key, null);
+    public LocalDate getLocalDate(int index) {
+        return getLocalDate(index, null);
     }
 
     /**
      * 获取 LocalDate 对象（带格式）
      *
-     * @param key 键
+     * @param index 索引
      * @param pattern 日期格式
      * @return LocalDate 对象
      */
-    public LocalDate getLocalDate(String key, String pattern) {
-        Object value = get(key);
+    public LocalDate getLocalDate(int index, String pattern) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -496,22 +496,22 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取 LocalDateTime 对象
      *
-     * @param key 键
+     * @param index 索引
      * @return LocalDateTime 对象
      */
-    public LocalDateTime getLocalDateTime(String key) {
-        return getLocalDateTime(key, null);
+    public LocalDateTime getLocalDateTime(int index) {
+        return getLocalDateTime(index, null);
     }
 
     /**
      * 获取 LocalDateTime 对象（带格式）
      *
-     * @param key 键
+     * @param index 索引
      * @param pattern 日期格式
      * @return LocalDateTime 对象
      */
-    public LocalDateTime getLocalDateTime(String key, String pattern) {
-        Object value = get(key);
+    public LocalDateTime getLocalDateTime(int index, String pattern) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -542,35 +542,35 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     // ==================== 嵌套对象 getter ====================
 
     /**
-     * 获取 YdszJsonObject
+     * 获取 JsonObject
      *
-     * @param key 键
-     * @return YdszJsonObject
+     * @param index 索引
+     * @return JsonObject
      */
-    public YdszJsonObject getJSONObject(String key) {
-        Object value = get(key);
-        if (value instanceof YdszJsonObject) {
-            return (YdszJsonObject) value;
+    public JsonObject getJSONObject(int index) {
+        Object value = get(index);
+        if (value instanceof JsonObject) {
+            return (JsonObject) value;
         }
         if (value instanceof Map) {
-            return new YdszJsonObject((Map<?, ?>) value);
+            return new JsonObject((Map<?, ?>) value);
         }
         return null;
     }
 
     /**
-     * 获取 YdszJsonArray
+     * 获取 JsonArray
      *
-     * @param key 键
-     * @return YdszJsonArray
+     * @param index 索引
+     * @return JsonArray
      */
-    public YdszJsonArray getJSONArray(String key) {
-        Object value = get(key);
-        if (value instanceof YdszJsonArray) {
-            return (YdszJsonArray) value;
+    public JsonArray getJSONArray(int index) {
+        Object value = get(index);
+        if (value instanceof JsonArray) {
+            return (JsonArray) value;
         }
         if (value instanceof List) {
-            return new YdszJsonArray((List<?>) value);
+            return new JsonArray((List<?>) value);
         }
         return null;
     }
@@ -578,13 +578,13 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取对象并转换为指定类型
      *
-     * @param key 键
+     * @param index 索引
      * @param clazz 目标类型
      * @param <T> 类型参数
      * @return 转换后的对象
      */
-    public <T> T getObject(String key, Class<T> clazz) {
-        Object value = get(key);
+    public <T> T getObject(int index, Class<T> clazz) {
+        Object value = get(index);
         if (value == null) {
             return null;
         }
@@ -596,192 +596,73 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
         return YdszJson.toObject(json, clazz);
     }
 
-    // ==================== 便捷方法 ====================
-
-    /**
-     * 获取值或默认值
-     *
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return 值或默认值
-     */
-    public Object getOrDefault(String key, Object defaultValue) {
-        return super.getOrDefault(key, defaultValue);
-    }
-
-    /**
-     * 获取字符串值或默认值
-     *
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return 字符串值或默认值
-     */
-    public String getStringOrDefault(String key, String defaultValue) {
-        String value = getString(key);
-        return value != null ? value : defaultValue;
-    }
-
-    /**
-     * 获取整数值或默认值
-     *
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return 整数值或默认值
-     */
-    public Integer getIntegerOrDefault(String key, Integer defaultValue) {
-        Integer value = getInteger(key);
-        return value != null ? value : defaultValue;
-    }
-
-    /**
-     * 获取长整数值或默认值
-     *
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return 长整数值或默认值
-     */
-    public Long getLongOrDefault(String key, Long defaultValue) {
-        Long value = getLong(key);
-        return value != null ? value : defaultValue;
-    }
-
-    /**
-     * 获取布尔值或默认值
-     *
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return 布尔值或默认值
-     */
-    public Boolean getBooleanOrDefault(String key, Boolean defaultValue) {
-        Boolean value = getBoolean(key);
-        return value != null ? value : defaultValue;
-    }
-
-    /**
-     * 不存在时添加
-     *
-     * @param key 键
-     * @param value 值
-     * @return 旧值，如果不存在则返回 null
-     */
-    public Object putIfAbsent(String key, Object value) {
-        return super.putIfAbsent(key, value);
-    }
-
-    /**
-     * 计算值
-     *
-     * @param key 键
-     * @param remappingFunction 重映射函数
-     * @return 新值
-     */
-    public Object compute(String key, BiFunction<? super String, ? super Object, ?> remappingFunction) {
-        return super.compute(key, (k, v) -> remappingFunction.apply(k, v));
-    }
-
-    /**
-     * 不存在时计算
-     *
-     * @param key 键
-     * @param mappingFunction 映射函数
-     * @return 计算后的值
-     */
-    public Object computeIfAbsent(String key, Function<? super String, ?> mappingFunction) {
-        return super.computeIfAbsent(key, mappingFunction);
-    }
-
-    /**
-     * 存在时重新计算
-     *
-     * @param key 键
-     * @param remappingFunction 重映射函数
-     * @return 新值，如果不存在则返回 null
-     */
-    public Object computeIfPresent(String key, BiFunction<? super String, ? super Object, ?> remappingFunction) {
-        return super.computeIfPresent(key, (k, v) -> remappingFunction.apply(k, v));
-    }
-
-    /**
-     * 合并值
-     *
-     * @param key 键
-     * @param value 值
-     * @param remappingFunction 重映射函数
-     * @return 合并后的值
-     */
-    public Object merge(String key, Object value, BiFunction<? super Object, ? super Object, ?> remappingFunction) {
-        return super.merge(key, value, remappingFunction);
-    }
-
-    /**
-     * 批量获取多个键的值
-     *
-     * @param keys 键集合
-     * @return Map 包含键值对
-     */
-    public Map<String, Object> getAll(Collection<String> keys) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        for (String key : keys) {
-            result.put(key, get(key));
-        }
-        return result;
-    }
-
     // ==================== setter ====================
 
     /**
-     * 设置值
+     * 添加元素
      *
-     * @param key 键
-     * @param value 值
-     * @return 当前对象，支持链式调用
+     * @param element 元素
+     * @return true
      */
-    public YdszJsonObject put(String key, Object value) {
-        super.put(key, value);
-        return this;
+    @Override
+    public boolean add(Object element) {
+        return super.add(element);
     }
 
     /**
-     * 设置值并返回旧值
+     * 在指定位置添加元素
      *
-     * @param key 键
-     * @param value 值
-     * @return 旧值
+     * @param index 索引
+     * @param element 元素
      */
-    public Object set(String key, Object value) {
-        return super.put(key, value);
+    public void add(int index, Object element) {
+        super.add(index, element);
     }
 
     /**
-     * 批量添加
+     * 添加所有元素
      *
-     * @param m Map 对象
+     * @param collection 集合
+     * @return true
      */
-    public void putAll(Map<? extends String, ?> m) {
-        super.putAll(m);
+    @Override
+    public boolean addAll(Collection<?> collection) {
+        return super.addAll(collection);
     }
 
     /**
-     * 移除键值对
+     * 在指定位置添加所有元素
      *
-     * @param key 键
-     * @return 移除的值
+     * @param index 索引
+     * @param collection 集合
+     * @return true
      */
-    public Object remove(String key) {
-        return super.remove(key);
+    public boolean addAll(int index, Collection<?> collection) {
+        return super.addAll(index, collection);
+    }
+
+    /**
+     * 移除元素
+     *
+     * @param index 索引
+     * @return 移除的元素
+     */
+    public Object remove(int index) {
+        return super.remove(index);
+    }
+
+    /**
+     * 设置元素
+     *
+     * @param index 索引
+     * @param element 元素
+     * @return 旧元素
+     */
+    public Object set(int index, Object element) {
+        return super.set(index, element);
     }
 
     // ==================== 查询方法 ====================
-
-    /**
-     * 是否包含键
-     *
-     * @param key 键
-     * @return 如果包含返回 true
-     */
-    public boolean containsKey(String key) {
-        return super.containsKey(key);
-    }
 
     /**
      * 是否为空
@@ -795,7 +676,7 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     /**
      * 获取大小
      *
-     * @return 键值对数量
+     * @return 元素数量
      */
     public int size() {
         return super.size();
@@ -809,21 +690,13 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * 获取所有键
+     * 是否包含元素
      *
-     * @return 键集合
+     * @param o 元素
+     * @return 如果包含返回 true
      */
-    public Set<String> keySet() {
-        return super.keySet();
-    }
-
-    /**
-     * 获取所有值
-     *
-     * @return 值集合
-     */
-    public Collection<Object> values() {
-        return super.values();
+    public boolean contains(Object o) {
+        return super.contains(o);
     }
 
     // ==================== 转换方法 ====================
@@ -841,32 +714,32 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
      * 从 JSON 字符串解析
      *
      * @param json JSON 字符串
-     * @return YdszJsonObject
+     * @return JsonArray
      */
-    public static YdszJsonObject parse(String json) {
-        return YdszJson.toObject(json, YdszJsonObject.class);
+    public static JsonArray parse(String json) {
+        return YdszJson.toObject(json, JsonArray.class);
     }
 
     /**
-     * 从 Map 创建
+     * 从 List 创建
      *
-     * @param map Map 对象
-     * @return YdszJsonObject
+     * @param list List 对象
+     * @return JsonArray
      */
-    public static YdszJsonObject of(Map<?, ?> map) {
-        if (map == null) {
-            return new YdszJsonObject();
+    public static JsonArray of(List<?> list) {
+        if (list == null) {
+            return new JsonArray();
         }
-        return new YdszJsonObject(map);
+        return new JsonArray(list);
     }
 
     /**
-     * 创建空的 YdszJsonObject
+     * 创建空的 JsonArray
      *
-     * @return YdszJsonObject
+     * @return JsonArray
      */
-    public static YdszJsonObject create() {
-        return new YdszJsonObject();
+    public static JsonArray create() {
+        return new JsonArray();
     }
 
     @Override

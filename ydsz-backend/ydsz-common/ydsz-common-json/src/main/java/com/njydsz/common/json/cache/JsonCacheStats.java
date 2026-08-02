@@ -21,10 +21,10 @@ import com.njydsz.common.json.provider.SerializationContext;
  * @author ydsz-team
  * @since 1.0.0
  */
-public final class YdszJsonCacheStats {
+public final class JsonCacheStats {
 
-    private YdszJsonCacheStats() {
-        throw new UnsupportedOperationException("YdszJsonCacheStats is a utility class");
+    private JsonCacheStats() {
+        throw new UnsupportedOperationException("JsonCacheStats is a utility class");
     }
 
     /**

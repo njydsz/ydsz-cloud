@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.type.YdszJsonType;
+import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.util.id.SnowflakeUtils;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.server.channel.MessageChannel;
@@ -120,7 +120,7 @@ public class AlipayMiniChannel implements MessageChannel {
             String respBody = resp.getBody();
 
             // 解析响应（支付宝返回 JSON）
-            Map<String, Object> result = YdszJson.toObject(respBody, new YdszJsonType<Map<String, Object>>() {});
+            Map<String, Object> result = YdszJson.toObject(respBody, new JsonType<Map<String, Object>>() {});
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
                 if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {

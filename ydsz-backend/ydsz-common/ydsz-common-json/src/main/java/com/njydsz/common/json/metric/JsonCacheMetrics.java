@@ -6,7 +6,7 @@ import io.micrometer.core.instrument.Tags;
 
 import com.njydsz.common.json.asm.AsmBeanCodecGenerator;
 import com.njydsz.common.json.cache.BeanSerializerCache;
-import com.njydsz.common.json.cache.YdszJsonCacheStats;
+import com.njydsz.common.json.cache.JsonCacheStats;
 
 /**
  * YdszJson 缓存指标 Micrometer 绑定器。
@@ -46,7 +46,7 @@ public final class JsonCacheMetrics {
         Tags tags = Tags.empty();
 
         // ASM 序列化器缓存大小
-        Gauge.builder(METRIC_PREFIX + "serializer.size", () -> YdszJsonCacheStats.getSerializerCacheSize())
+        Gauge.builder(METRIC_PREFIX + "serializer.size", () -> JsonCacheStats.getSerializerCacheSize())
                 .tags(tags)
                 .description("ASM serializer cache size")
                 .register(registry);
@@ -58,14 +58,14 @@ public final class JsonCacheMetrics {
                 .register(registry);
 
         // ASM 已生成类数量
-        Gauge.builder(METRIC_PREFIX + "asm.generated.count", () -> YdszJsonCacheStats.getAsmGeneratedCount())
+        Gauge.builder(METRIC_PREFIX + "asm.generated.count", () -> JsonCacheStats.getAsmGeneratedCount())
                 .tags(tags)
                 .description("ASM generated class count")
                 .register(registry);
 
         // ASM 降级级别
         Gauge.builder(METRIC_PREFIX + "asm.level", () ->
-                        YdszJsonCacheStats.getAsmLevel() == AsmBeanCodecGenerator.AsmLevel.REFLECTION ? 1.0 : 0.0)
+                        JsonCacheStats.getAsmLevel() == AsmBeanCodecGenerator.AsmLevel.REFLECTION ? 1.0 : 0.0)
                 .tags(tags)
                 .description("ASM degradation level (0=ASM, 1=REFLECTION)")
                 .register(registry);

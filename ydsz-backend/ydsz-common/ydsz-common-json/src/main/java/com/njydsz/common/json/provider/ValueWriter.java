@@ -18,7 +18,7 @@ import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
-import com.njydsz.common.json.config.YdszJsonConfig;
+import com.njydsz.common.json.config.JsonConfig;
 import com.njydsz.common.json.writer.JSONWriter;
 
 import java.sql.Date;
@@ -852,7 +852,7 @@ public final class ValueWriter {
      *
      * <p>格式化优先级：
      * <ol>
-     *   <li>{@link YdszJsonConfig#getDateFormat()} 全局日期格式（非空时优先）</li>
+     *   <li>{@link JsonConfig#getDateFormat()} 全局日期格式（非空时优先）</li>
      *   <li>ISO 默认格式（toString）</li>
      * </ol>
      * 支持所有 java.time.* 和 java.util.Date 类型。</p>
@@ -868,7 +868,7 @@ public final class ValueWriter {
         String globalFormat = SerializationProvider.getDateFormat();
         // 回退到全局单例配置
         if (globalFormat == null || globalFormat.isEmpty()) {
-            globalFormat = YdszJsonConfig.getInstance().getDateFormat();
+            globalFormat = JsonConfig.getInstance().getDateFormat();
         }
         if (globalFormat != null && !globalFormat.isEmpty()) {
             DateTimeFormatter formatter = getCachedFormatter(globalFormat);

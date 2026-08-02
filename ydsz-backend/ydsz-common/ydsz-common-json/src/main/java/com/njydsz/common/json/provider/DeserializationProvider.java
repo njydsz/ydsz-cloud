@@ -22,7 +22,7 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.annotation.JsonDeserialize;
 import com.njydsz.common.json.api.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonDeserializationException;
-import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.reader.JSONReader;
 
 /**
@@ -36,7 +36,7 @@ import com.njydsz.common.json.reader.JSONReader;
  *   <li>Constructor 缓存 - 避免每次反射获取</li>
  *   <li>HashMap 字段查找 - O(1) 替代 O(n)</li>
  *   <li>快速路径 - 简单对象（基本类型字段）直接内联解析</li>
- *   <li>YdszJsonType 支持 - 泛型类型推断</li>
+ *   <li>JsonType 支持 - 泛型类型推断</li>
  *   <li>Builder 模式支持 - 链式构建对象</li>
  *   <li>Creator 模式支持 - 自定义构造函数反序列化</li>
  *   <li>多态类型支持 - @YdszJsonTypeInfo 自动识别子类型</li>
@@ -219,7 +219,7 @@ public final class DeserializationProvider {
         if (type == Float.class || type == float.class) return TypeConverter.parseFloatValue(json);
         if (type == Boolean.class || type == boolean.class) return TypeConverter.parseBooleanValue(json);
         if (type == Object.class) return parseValue(json);
-        if (type == Map.class) return YdszJsonParser.parseObject(json);
+        if (type == Map.class) return JsonParserUtil.parseObject(json);
         if (type == List.class) return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
 
         // Bean 类型：直接走 BeanDeserializerEngine 多级降级路径
@@ -299,9 +299,9 @@ public final class DeserializationProvider {
                 }
                 break;
             case '{':
-                return YdszJsonParser.parseObject(json);
+                return JsonParserUtil.parseObject(json);
             case '[':
-                return YdszJsonParser.parseArray(json);
+                return JsonParserUtil.parseArray(json);
             case '"':
                 return TypeConverter.parseStringValue(json);
             default:
@@ -387,7 +387,7 @@ public final class DeserializationProvider {
                         AutoTypeChecker.checkType(valueClass);
                     }
                 }
-                return (T) YdszJsonParser.parseObject(json);
+                return (T) JsonParserUtil.parseObject(json);
             }
 
             if (rawType == Set.class || rawType == HashSet.class
@@ -423,9 +423,9 @@ public final class DeserializationProvider {
         // 兜底路径：根据 JSON 首字符决定解析为 List 或 Map
         String trimmed = json.trim();
         if (trimmed.startsWith("[")) {
-            return (T) YdszJsonParser.parseArray(json);
+            return (T) JsonParserUtil.parseArray(json);
         }
-        return (T) YdszJsonParser.parseObject(json);
+        return (T) JsonParserUtil.parseObject(json);
     }
 
     /**

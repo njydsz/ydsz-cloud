@@ -1,6 +1,6 @@
 # ydsz-common-json
 
-> YDSZ 高性能 JSON 引擎（L2 工具层）— ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、JIT 自动向量化、Schema 校验、YdszJsonPath 查询、JsonNode 树模型、Jackson 兼容注解
+> YDSZ 高性能 JSON 引擎（L2 工具层）— ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、JIT 自动向量化、Schema 校验、JsonPath 查询、JsonNode 树模型、Jackson 兼容注解
 
 纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 ASM 字节码生成、零拷贝反序列化、ThreadLocal 池优化等技术实现超高性能；通过 Jackson 兼容注解实现平滑迁移。
 
@@ -24,7 +24,7 @@
 | `JsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper），支持 `builder()` 链式 Builder、独立配置副本、`readerFor(Class)` / `writerFor(Class)` 绑定型读写器、`convertValue` / `treeToValue` 等 |
 | `JsonReader<T>` | 绑定型 JSON 读取器（对标 Jackson ObjectReader），绑定目标类型后可重复使用 |
 | `JsonWriter<T>` | 绑定型 JSON 写入器（对标 Jackson ObjectWriter），绑定 Mapper 配置后可重复使用 |
-| `YdszJsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 根名称包裹 / 最大 JSON 大小 / 最大深度 / `builder()` / `copyOf()`） |
+| `JsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 根名称包裹 / 最大 JSON 大小 / 最大深度 / `builder()` / `copyOf()`） |
 
 ### 2. ASM 字节码加速（asm 包）
 
@@ -39,7 +39,7 @@
 | 类 | 说明 |
 |---|---|
 | `JSONReader` | JSON 解析器（流式 / 事件驱动 / 递归下降，直接解析到 Bean 字段，无需 Map 中转） |
-| `YdszJsonParser` (stream) / `YdszJsonParser` (parser) | JSON 解析器（流式 token-by-token） |
+| `JsonParserUtil` (stream) / `JsonParserUtil` (parser) | JSON 解析器（流式 token-by-token） |
 | `JSONWriter` / `JsonGenerator` | JSON 生成器（流式写入，`toUtf8Bytes()` 零拷贝字节序列化） |
 | `BeanSerializer` / `BeanReader` / `ObjectReader` | Bean 序列化 / 反序列化 |
 | `BeanDeserializerEngine` | Bean 反序列化引擎 |
@@ -54,7 +54,7 @@
 | `SerializerCache` / `SerializerRegistry` | 序列化器注册表 |
 | `FieldMeta` | 字段元数据（统一类型代码 + `@JsonInclude` 过滤逻辑 + VarHandle 优化 + `@JsonUnwrapped` 展开） |
 | `SerializationContext` | 序列化上下文（合并 5+ ThreadLocal 为单一实例，动态内存估算） |
-| `YdszJsonCacheStats` | 缓存统计 |
+| `JsonCacheStats` | 缓存统计 |
 
 ### 5. 字节码优化（bytecode 包）
 
@@ -75,7 +75,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `YdszJsonType` / `TypeFactory` / `JsonTypeCode` | 类型系统（类型代码替代 instanceof 链，提高分支预测准确率） |
+| `JsonType` / `TypeFactory` / `JsonTypeCode` | 类型系统（类型代码替代 instanceof 链，提高分支预测准确率） |
 | `PropertyNamingStrategy` | 命名策略（`LOWER_CAMEL_CASE` / `UPPER_CAMEL_CASE` / `SNAKE_CASE` / `KEBAB_CASE`） |
 | `NumberUtils` | 数字解析工具 |
 
@@ -118,26 +118,26 @@
 
 | 注解 | 说明 |
 |---|---|
-| `@Experimental` | 实验性功能标记（标注 `YdszJsonSchema`、`JsonPatch` 等 RFC 扩展功能，API 尚未稳定，不保证向后兼容） |
+| `@Experimental` | 实验性功能标记（标注 `JsonSchema`、`JsonPatch` 等 RFC 扩展功能，API 尚未稳定，不保证向后兼容） |
 
 ### 9. 高级功能（jsonpath / pointer / patch / merge / schema / autotype 包）
 
-> **`@Experimental` 标注**：`YdszJsonSchema`、`JsonPatch` 标注了 `@Experimental`，属于 RFC 扩展功能，API 尚未稳定，不保证向后兼容。建议在非关键路径使用或做好隔离层。
+> **`@Experimental` 标注**：`JsonSchema`、`JsonPatch` 标注了 `@Experimental`，属于 RFC 扩展功能，API 尚未稳定，不保证向后兼容。建议在非关键路径使用或做好隔离层。
 
 | 类 | 说明 |
 |---|---|
 | `JsonPointer` | JSON Pointer（RFC 6901） |
-| `YdszJsonPath` | JSONPath 查询（递归下降 `$..` / 数组索引 `[0]` / 数组过滤 `[?(@.price > 100)]` / 切片 `[0:5]` / 通配符 `[*]` / 条件表达式 `&&` / `||`；编译结果 LRU 缓存，max 512） |
+| `JsonPath` | JSONPath 查询（递归下降 `$..` / 数组索引 `[0]` / 数组过滤 `[?(@.price > 100)]` / 切片 `[0:5]` / 通配符 `[*]` / 条件表达式 `&&` / `||`；编译结果 LRU 缓存，max 512） |
 | `JsonMergePatch` | JSON Merge Patch（RFC 7396，支持 `merge` 合并 + `diff` 计算差异补丁） |
 | `JsonPatch` `@Experimental` | JSON Patch（RFC 6902，支持 add/remove/replace/move/copy/test + Builder 链式构建 `applyTo()`） |
-| `YdszJsonSchema` `@Experimental` / `JsonSchemaValidator` / `ValidationResult` | JSON Schema 校验（JSON Schema Draft 07 核心关键字：type/required/enum/default/minLength/maxLength/pattern/minimum/maximum/exclusiveMinimum/exclusiveMaximum/multipleOf/items/minItems/maxItems/properties/additionalProperties + 组合关键字 allOf/anyOf/oneOf/not/const/if-then-else；静态工厂 `string()`/`number()`/`integer()`/`booleanType()`/`array()`/`object()`/`nullType()`） |
+| `JsonSchema` `@Experimental` / `JsonSchemaValidator` / `ValidationResult` | JSON Schema 校验（JSON Schema Draft 07 核心关键字：type/required/enum/default/minLength/maxLength/pattern/minimum/maximum/exclusiveMinimum/exclusiveMaximum/multipleOf/items/minItems/maxItems/properties/additionalProperties + 组合关键字 allOf/anyOf/oneOf/not/const/if-then-else；静态工厂 `string()`/`number()`/`integer()`/`booleanType()`/`array()`/`object()`/`nullType()`） |
 | `AutoTypeChecker` / `AutoTypeWhitelistScanner` | AutoType 安全检查（防反序列化漏洞，`TYPE_CHECK_CACHE` LRU 有界缓存 max 4096，支持包前缀白名单回退匹配） |
 
 ### 10. Module 系统（module 包）
 
 | 类 | 说明 |
 |---|---|
-| `YdszJsonModule` | 模块接口（参考 Jackson Module，可插拔的序列化/反序列化扩展机制） |
+| `JsonModule` | 模块接口（参考 Jackson Module，可插拔的序列化/反序列化扩展机制） |
 | `JsonModuleRegistry` / `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块注册表 |
 | `JsonModuleRegistrar` | Spring 环境模块注册器 |
 
@@ -148,14 +148,14 @@
 | `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（继承 `AbstractGenericHttpMessageConverter`，支持泛型类型 `@RequestBody List<User>`、`@YdszJsonView`、`streamingEnabled` / `maxRequestBodySize` 配置） |
 | `JsonReactiveUtils` | WebFlux 响应式编码工具 |
 | `JsonWarmupRunner` | ASM 预热 Runner（应用启动后异步预热高频序列化 Bean 的 ASM 字节码） |
-| `YdszJsonProperties` | 配置属性类（`ydsz.json.*`） |
+| `JsonProperties` | 配置属性类（`ydsz.json.*`） |
 
 ### 12. 可观测性（metric 包）
 
 | 类 | 说明 |
 |---|---|
 | `MetricsHelper` | 指标监控包装（统一序列化/反序列化指标记录，null 短路优化） |
-| `YdszJsonMetrics` | Micrometer 指标实现（自动绑定到 `YdszJson.setMetricsCallback`） |
+| `JsonMetrics` | Micrometer 指标实现（自动绑定到 `YdszJson.setMetricsCallback`） |
 | `JsonMetricsCallback` | 指标回调 SPI 接口 |
 | `JsonCacheMetrics` | 缓存指标（绑定到 MeterRegistry） |
 
@@ -163,9 +163,9 @@
 
 | 类 | 说明 |
 |---|---|
-| `YdszJsonException` | 顶层异常 |
-| `JsonSerializationException` | 序列化异常（继承自 `YdszJsonException`） |
-| `JsonDeserializationException` | 反序列化异常（继承自 `YdszJsonException`，含行列号 / 上下文片段） |
+| `JsonException` | 顶层异常 |
+| `JsonSerializationException` | 序列化异常（继承自 `JsonException`） |
+| `JsonDeserializationException` | 反序列化异常（继承自 `JsonException`，含行列号 / 上下文片段） |
 
 ### 14. 健康检查（health 包）
 
@@ -177,11 +177,11 @@
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
-| `JsonAutoConfiguration` | `ydsz.json.enabled=true`（默认启用），`YdszJsonConfig` 在类路径 | `JsonConfigBean`（全局配置初始化 + 模块注册）、`JsonHttpMessageConverter`、`YdszJsonMetrics`（Micrometer 可用时）、`JsonHealthIndicator`、`JsonWarmupRunner` |
+| `JsonAutoConfiguration` | `ydsz.json.enabled=true`（默认启用），`JsonConfig` 在类路径 | `JsonConfigBean`（全局配置初始化 + 模块注册）、`JsonHttpMessageConverter`、`JsonMetrics`（Micrometer 可用时）、`JsonHealthIndicator`、`JsonWarmupRunner` |
 
 | 属性类 | 前缀 | 说明 |
 |---|---|---|
-| `YdszJsonProperties` | `ydsz.json` | 全局 JSON 配置（日期格式 / 命名策略 / 空值处理 / BigDecimal 模式 / AutoType 安全模式 / ASM 预热类列表等） |
+| `JsonProperties` | `ydsz.json` | 全局 JSON 配置（日期格式 / 命名策略 / 空值处理 / BigDecimal 模式 / AutoType 安全模式 / ASM 预热类列表等） |
 
 ## 接入方式
 
@@ -307,15 +307,15 @@ User user = mapper.toObject(json, User.class);
 ### 3. JSON Schema 校验（含 allOf/anyOf/oneOf）
 
 ```java
-import com.njydsz.common.json.schema.YdszJsonSchema;
+import com.njydsz.common.json.schema.JsonSchema;
 import com.njydsz.common.json.schema.JsonSchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
 
-YdszJsonSchema schema = YdszJsonSchema.object()
-        .addProperty("name", YdszJsonSchema.string())
+JsonSchema schema = JsonSchema.object()
+        .addProperty("name", JsonSchema.string())
         .allOf(
-                YdszJsonSchema.object().addProperty("name", YdszJsonSchema.string().required()),
-                YdszJsonSchema.object().addProperty("age", YdszJsonSchema.integer().minimum(0))
+                JsonSchema.object().addProperty("name", JsonSchema.string().required()),
+                JsonSchema.object().addProperty("age", JsonSchema.integer().minimum(0))
         );
 
 ValidationResult result = JsonSchemaValidator.validate(schema, data);
@@ -327,11 +327,11 @@ if (!result.isValid()) {
 ### 4. JSONPath 查询与 JSON Patch
 
 ```java
-import com.njydsz.common.json.jsonpath.YdszJsonPath;
+import com.njydsz.common.json.jsonpath.JsonPath;
 import com.njdsz.common.json.patch.JsonPatch;
 
 // JSONPath 查询
-List<String> emails = YdszJsonPath.get(json, "$.users[*].email");
+List<String> emails = JsonPath.get(json, "$.users[*].email");
 
 // JSON Patch (RFC 6902)
 String result = JsonPatch.builder()
@@ -344,11 +344,11 @@ String result = JsonPatch.builder()
 ### 5. 自定义序列化器（Module 模式）
 
 ```java
-import com.njydsz.common.json.module.YdszJsonModule;
+import com.njydsz.common.json.module.JsonModule;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserModule implements YdszJsonModule, YdszJsonModule.SpringFactory {
+public class UserModule implements JsonModule, JsonModule.SpringFactory {
 
     @Override
     public String getModuleName() {
@@ -371,10 +371,10 @@ public class UserModule implements YdszJsonModule, YdszJsonModule.SpringFactory 
 
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
-| `YdszJsonModule` | 可插拔的序列化/反序列化扩展机制（参考 Jackson Module），为指定类型注册自定义 Serializer/Deserializer | 业务模块实现 `YdszJsonModule.SpringFactory` 标记接口后注册为 Spring Bean 即可自动发现 |
+| `JsonModule` | 可插拔的序列化/反序列化扩展机制（参考 Jackson Module），为指定类型注册自定义 Serializer/Deserializer | 业务模块实现 `JsonModule.SpringFactory` 标记接口后注册为 Spring Bean 即可自动发现 |
 | `JsonSerializer<T>` | 自定义序列化器（通过 `@JsonSerialize(using = ...)` 注解指定） | 业务模块实现 |
 | `JsonDeserializer<T>` | 自定义反序列化器（通过 `@JsonDeserialize(using = ...)` 注解指定） | 业务模块实现 |
-| `JsonMetricsCallback` | JSON 处理指标回调（序列化/反序列化成功/失败 + 耗时） | 框架内置 `YdszJsonMetrics`（Micrometer 实现），业务可覆盖 |
+| `JsonMetricsCallback` | JSON 处理指标回调（序列化/反序列化成功/失败 + 耗时） | 框架内置 `JsonMetrics`（Micrometer 实现），业务可覆盖 |
 
 ## 健康检查
 
@@ -419,5 +419,5 @@ public class UserModule implements YdszJsonModule, YdszJsonModule.SpringFactory 
   - `SchemaValidator` → `JsonSchemaValidator`（类名修正，影响 Section 9 与使用示例 3）
   - 使用示例 4 import 包名 `com.njdsz` → `com.njydsz`（拼写错误）
   - 补全 `@YdszJsonClass` 类级配置能力说明（ordering/ignores/includes/naming/seeAlso/features 等 14 项属性）
-  - 标注 `YdszJsonSchema`、`JsonPatch` 的 `@Experimental` 状态
-  - 补全 `YdszJsonSchema` 静态工厂方法列表与 `YdszJsonPath` 支持的 7 种路径表达式
+  - 标注 `JsonSchema`、`JsonPatch` 的 `@Experimental` 状态
+  - 补全 `JsonSchema` 静态工厂方法列表与 `JsonPath` 支持的 7 种路径表达式

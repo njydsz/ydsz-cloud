@@ -3,7 +3,7 @@ package com.njydsz.common.json;
 import java.io.OutputStream;
 import java.io.Writer;
 
-import com.njydsz.common.json.exception.YdszJsonException;
+import com.njydsz.common.json.exception.JsonException;
 
 /**
  * 绑定型 JSON 写入器（对标 Jackson {@code ObjectWriter}）。
@@ -76,7 +76,7 @@ public final class JsonWriter<T> {
         try {
             out.write(bytes);
         } catch (Exception e) {
-            throw new YdszJsonException("Failed to write to OutputStream", e);
+            throw new JsonException("Failed to write to OutputStream", e);
         }
     }
 
@@ -91,7 +91,7 @@ public final class JsonWriter<T> {
         try {
             writer.write(json);
         } catch (Exception e) {
-            throw new YdszJsonException("Failed to write to Writer", e);
+            throw new JsonException("Failed to write to Writer", e);
         }
     }
 

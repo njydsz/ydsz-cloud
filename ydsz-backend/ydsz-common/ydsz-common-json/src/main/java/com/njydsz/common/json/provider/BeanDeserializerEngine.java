@@ -12,7 +12,7 @@ import com.njydsz.common.json.annotation.JsonBuilder;
 import com.njydsz.common.json.asm.AsmDeserializer;
 import com.njydsz.common.json.bytecode.ZeroCopyDeserializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
-import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.util.JsonTypeUtils;
 import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.reader.JSONReader;
@@ -146,9 +146,9 @@ final class BeanDeserializerEngine {
             return clazz.cast(deserializer.deserialize(json));
         } catch (Exception e) {
             if (trimmed.startsWith("[")) {
-                return clazz.cast(YdszJsonParser.parseArray(json));
+                return clazz.cast(JsonParserUtil.parseArray(json));
             } else {
-                return clazz.cast(YdszJsonParser.parseObject(json));
+                return clazz.cast(JsonParserUtil.parseObject(json));
             }
         }
     }
@@ -166,7 +166,7 @@ final class BeanDeserializerEngine {
     static <E> List<E> deserializeBeanListFast(String json, Class<E> elementClass) {
         // Record 类列表反序列化：逐个使用 canonical constructor
         if (elementClass.isRecord()) {
-            List<Object> rawList = YdszJsonParser.parseArray(json);
+            List<Object> rawList = JsonParserUtil.parseArray(json);
             List<E> result = new ArrayList<>(rawList.size());
             for (Object item : rawList) {
                 if (item == null) {
@@ -342,7 +342,7 @@ final class BeanDeserializerEngine {
     /**
      * 零拷贝解析 JSON 数组为 Object 列表。
      *
-     * <p>委托给 {@link ZeroCopyDeserializer#parseArrayChars}，失败时降级为 {@link YdszJsonParser#parseArray}。
+     * <p>委托给 {@link ZeroCopyDeserializer#parseArrayChars}，失败时降级为 {@link JsonParserUtil#parseArray}。
      *
      * @param json          JSON 数组字符串
      * @param elementClass  元素类型（用于 ZeroCopy 类型推断）
@@ -353,7 +353,7 @@ final class BeanDeserializerEngine {
             char[] chars = json.toCharArray();
             return ZeroCopyDeserializer.parseArrayChars(chars, 0, chars.length, elementClass);
         } catch (Exception e) {
-            return YdszJsonParser.parseArray(json);
+            return JsonParserUtil.parseArray(json);
         }
     }
 
@@ -395,7 +395,7 @@ final class BeanDeserializerEngine {
      */
     @SuppressWarnings("unchecked")
     static <T> T deserializeRecord(String json, Class<T> clazz) {
-        Map<String, Object> map = YdszJsonParser.parseObject(json);
+        Map<String, Object> map = JsonParserUtil.parseObject(json);
         RecordComponent[] components = clazz.getRecordComponents();
         Class<?>[] paramTypes = new Class<?>[components.length];
         Object[] paramValues = new Object[components.length];

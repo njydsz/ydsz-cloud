@@ -141,23 +141,23 @@
 #### ydsz-common-json（超高性能 JSON 引擎）
 - **核心API**: `YdszJson.toJson/toObject/parseArray/parseMap/format`, `JsonMapper`, `JsonReader`, `JsonWriter`
 - **ASM 字节码**: `AsmBeanCodecGenerator`, `AsmSerializer`, `AsmDeserializer`, `AsmCodecCache`
-- **JSONPath**: `YdszJsonPath`
+- **JSONPath**: `JsonPath`
 - **JSON Pointer (RFC 6901)**: `JsonPointer`
 - **JSON Merge Patch (RFC 7396)**: `JsonMergePatch` (merge/diff)
-- **Schema 校验**: `SchemaValidator`, `YdszJsonSchema`, `ValidationResult`
-- **树模型**: `JsonNode`, `TreeConverter`, `YdszJsonObject`, `YdszJsonArray`
+- **Schema 校验**: `SchemaValidator`, `JsonSchema`, `ValidationResult`
+- **树模型**: `JsonNode`, `TreeConverter`, `JsonObject`, `JsonArray`
 - **流式API**: `JsonGenerator`, `JSONReader`, `JSONWriter`
 - **安全机制**: `AutoTypeChecker`, `AutoTypeWhitelistScanner`, `SafeObjectInputFilter`
 - **自定义注解**: 30+ (`@YdszJsonField`, `@YdszJsonView`, `@YdszJsonPropertyOrder`, `@YdszJsonFormat`, `@YdszJsonTypeInfo`, `@YdszJsonSubTypes` 等)
 - **命名策略**: `PropertyNamingStrategy`
-- **模块注册**: `JsonModuleRegistry`, `YdszJsonModule`
+- **模块注册**: `JsonModuleRegistry`, `JsonModule`
 - **多态类型**: `PolymorphicTypeResolver`
 - **GraalVM**: `GraalVmDetector`
 - **SIMD**: `VectorSimdUtil`
 - **零拷贝**: `ZeroCopyDeserializer`
-- **缓存**: `BeanSerializerCache`, `SerializerCache`, `YdszJsonCacheStats`
-- **指标**: `JsonCacheMetrics`, `YdszJsonMetrics`, `JsonMetricsCallback`
-- **配置**: `YdszJsonConfig`
+- **缓存**: `BeanSerializerCache`, `SerializerCache`, `JsonCacheStats`
+- **指标**: `JsonCacheMetrics`, `JsonMetrics`, `JsonMetricsCallback`
+- **配置**: `JsonConfig`
 - **Spring**: 5个配置类
 
 ### 2.4 L3 基础服务层

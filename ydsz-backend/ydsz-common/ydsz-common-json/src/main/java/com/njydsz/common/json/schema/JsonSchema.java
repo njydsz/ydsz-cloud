@@ -26,8 +26,8 @@ import com.njydsz.common.json.annotation.Experimental;
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * YdszJsonSchema schema = new YdszJsonSchema("object");
- * schema.addProperty("name", YdszJsonSchema.string());
+ * JsonSchema schema = new JsonSchema("object");
+ * schema.addProperty("name", JsonSchema.string());
  * schema.addRequired("name");
  *
  * ValidationResult result = schema.validate(json);
@@ -40,7 +40,7 @@ import com.njydsz.common.json.annotation.Experimental;
  * @since 1.0.0
  */
 @Experimental("JSON Schema 定义属于非核心 RFC 扩展，后续可能独立为单独模块")
-public final class YdszJsonSchema {
+public final class JsonSchema {
 
     /** Schema 类型 */
     private final String type;
@@ -70,35 +70,35 @@ public final class YdszJsonSchema {
     private Double multipleOf;
 
     /** 数组约束 */
-    private YdszJsonSchema items;
+    private JsonSchema items;
     private Integer minItems;
     private Integer maxItems;
 
     /** 对象约束 */
-    private Map<String, YdszJsonSchema> properties;
+    private Map<String, JsonSchema> properties;
     private List<String> requiredProperties;
-    private YdszJsonSchema additionalProperties;
+    private JsonSchema additionalProperties;
 
     /** 组合关键字（JSON Schema Draft 07 allOf/anyOf/oneOf） */
-    private List<YdszJsonSchema> allOf;
-    private List<YdszJsonSchema> anyOf;
-    private List<YdszJsonSchema> oneOf;
+    private List<JsonSchema> allOf;
+    private List<JsonSchema> anyOf;
+    private List<JsonSchema> oneOf;
 
     /** not 关键字：数据不能匹配此 Schema */
-    private YdszJsonSchema not;
+    private JsonSchema not;
 
     /** const 关键字：数据必须等于此固定值 */
     private Object constValue;
 
     /** if/then/else 条件关键字（JSON Schema Draft 07） */
-    private YdszJsonSchema ifSchema;
-    private YdszJsonSchema thenSchema;
-    private YdszJsonSchema elseSchema;
+    private JsonSchema ifSchema;
+    private JsonSchema thenSchema;
+    private JsonSchema elseSchema;
 
     /**
      * 构造函数
      */
-    public YdszJsonSchema(String type) {
+    public JsonSchema(String type) {
         this.type = type;
         this.properties = new LinkedHashMap<>();
         this.requiredProperties = new ArrayList<>();
@@ -109,50 +109,50 @@ public final class YdszJsonSchema {
     /**
      * 字符串类型
      */
-    public static YdszJsonSchema string() {
-        return new YdszJsonSchema("string");
+    public static JsonSchema string() {
+        return new JsonSchema("string");
     }
 
     /**
      * 数字类型
      */
-    public static YdszJsonSchema number() {
-        return new YdszJsonSchema("number");
+    public static JsonSchema number() {
+        return new JsonSchema("number");
     }
 
     /**
      * 整数类型
      */
-    public static YdszJsonSchema integer() {
-        return new YdszJsonSchema("integer");
+    public static JsonSchema integer() {
+        return new JsonSchema("integer");
     }
 
     /**
      * 布尔类型
      */
-    public static YdszJsonSchema booleanType() {
-        return new YdszJsonSchema("boolean");
+    public static JsonSchema booleanType() {
+        return new JsonSchema("boolean");
     }
 
     /**
      * 布尔类型（简化方法名）
      */
-    public static YdszJsonSchema boolean_() {
-        return new YdszJsonSchema("boolean");
+    public static JsonSchema boolean_() {
+        return new JsonSchema("boolean");
     }
 
     /**
      * 数组类型
      */
-    public static YdszJsonSchema array() {
-        return new YdszJsonSchema("array");
+    public static JsonSchema array() {
+        return new JsonSchema("array");
     }
 
     /**
      * 对象类型
      */
-    public static YdszJsonSchema object() {
-        return new YdszJsonSchema("object");
+    public static JsonSchema object() {
+        return new JsonSchema("object");
     }
 
     // ========== 链式配置方法 ==========
@@ -160,7 +160,7 @@ public final class YdszJsonSchema {
     /**
      * 设置描述
      */
-    public YdszJsonSchema description(String description) {
+    public JsonSchema description(String description) {
         this.description = description;
         return this;
     }
@@ -168,7 +168,7 @@ public final class YdszJsonSchema {
     /**
      * 设置为必填
      */
-    public YdszJsonSchema required() {
+    public JsonSchema required() {
         this.required = true;
         return this;
     }
@@ -176,7 +176,7 @@ public final class YdszJsonSchema {
     /**
      * 设置枚举值
      */
-    public YdszJsonSchema enumValues(Object... values) {
+    public JsonSchema enumValues(Object... values) {
         this.enumValues = Arrays.asList(values);
         return this;
     }
@@ -184,7 +184,7 @@ public final class YdszJsonSchema {
     /**
      * 添加单个枚举值
      */
-    public YdszJsonSchema addEnum(Object value) {
+    public JsonSchema addEnum(Object value) {
         if (this.enumValues == null) {
             this.enumValues = new ArrayList<>();
         }
@@ -195,7 +195,7 @@ public final class YdszJsonSchema {
     /**
      * 设置默认值
      */
-    public YdszJsonSchema defaultValue(Object defaultValue) {
+    public JsonSchema defaultValue(Object defaultValue) {
         this.defaultValue = defaultValue;
         return this;
     }
@@ -203,7 +203,7 @@ public final class YdszJsonSchema {
     /**
      * 设置字符串最小长度
      */
-    public YdszJsonSchema minLength(int minLength) {
+    public JsonSchema minLength(int minLength) {
         this.minLength = minLength;
         return this;
     }
@@ -211,7 +211,7 @@ public final class YdszJsonSchema {
     /**
      * 设置字符串最大长度
      */
-    public YdszJsonSchema maxLength(int maxLength) {
+    public JsonSchema maxLength(int maxLength) {
         this.maxLength = maxLength;
         return this;
     }
@@ -219,7 +219,7 @@ public final class YdszJsonSchema {
     /**
      * 设置字符串正则表达式
      */
-    public YdszJsonSchema pattern(String pattern) {
+    public JsonSchema pattern(String pattern) {
         this.pattern = pattern;
         return this;
     }
@@ -227,7 +227,7 @@ public final class YdszJsonSchema {
     /**
      * 设置数字最小值
      */
-    public YdszJsonSchema minimum(double minimum) {
+    public JsonSchema minimum(double minimum) {
         this.minimum = minimum;
         return this;
     }
@@ -235,7 +235,7 @@ public final class YdszJsonSchema {
     /**
      * 设置数字最大值
      */
-    public YdszJsonSchema maximum(double maximum) {
+    public JsonSchema maximum(double maximum) {
         this.maximum = maximum;
         return this;
     }
@@ -243,7 +243,7 @@ public final class YdszJsonSchema {
     /**
      * 添加属性（对象类型）
      */
-    public YdszJsonSchema addProperty(String name, YdszJsonSchema schema) {
+    public JsonSchema addProperty(String name, JsonSchema schema) {
         this.properties.put(name, schema);
         return this;
     }
@@ -251,7 +251,7 @@ public final class YdszJsonSchema {
     /**
      * 添加必填属性
      */
-    public YdszJsonSchema addRequired(String name) {
+    public JsonSchema addRequired(String name) {
         this.requiredProperties.add(name);
         return this;
     }
@@ -259,7 +259,7 @@ public final class YdszJsonSchema {
     /**
      * 设置数组项类型
      */
-    public YdszJsonSchema items(YdszJsonSchema items) {
+    public JsonSchema items(JsonSchema items) {
         this.items = items;
         return this;
     }
@@ -267,7 +267,7 @@ public final class YdszJsonSchema {
     /**
      * 设置数组项数最小值
      */
-    public YdszJsonSchema minItems(int minItems) {
+    public JsonSchema minItems(int minItems) {
         this.minItems = minItems;
         return this;
     }
@@ -275,7 +275,7 @@ public final class YdszJsonSchema {
     /**
      * 设置数组项数最大值
      */
-    public YdszJsonSchema maxItems(int maxItems) {
+    public JsonSchema maxItems(int maxItems) {
         this.maxItems = maxItems;
         return this;
     }
@@ -283,7 +283,7 @@ public final class YdszJsonSchema {
     /**
      * 设置倍数约束
      */
-    public YdszJsonSchema multipleOf(double multipleOf) {
+    public JsonSchema multipleOf(double multipleOf) {
         this.multipleOf = multipleOf;
         return this;
     }
@@ -291,7 +291,7 @@ public final class YdszJsonSchema {
     /**
      * 设置排除性最小值
      */
-    public YdszJsonSchema exclusiveMinimum(double exclusiveMinimum) {
+    public JsonSchema exclusiveMinimum(double exclusiveMinimum) {
         this.exclusiveMinimum = exclusiveMinimum;
         return this;
     }
@@ -299,7 +299,7 @@ public final class YdszJsonSchema {
     /**
      * 设置排除性最大值
      */
-    public YdszJsonSchema exclusiveMaximum(double exclusiveMaximum) {
+    public JsonSchema exclusiveMaximum(double exclusiveMaximum) {
         this.exclusiveMaximum = exclusiveMaximum;
         return this;
     }
@@ -307,7 +307,7 @@ public final class YdszJsonSchema {
     /**
      * 设置额外属性 Schema
      */
-    public YdszJsonSchema additionalProperties(YdszJsonSchema additionalProperties) {
+    public JsonSchema additionalProperties(JsonSchema additionalProperties) {
         this.additionalProperties = additionalProperties;
         return this;
     }
@@ -321,7 +321,7 @@ public final class YdszJsonSchema {
      * @return 当前 Schema（链式调用）
      * @since 1.4.0
      */
-    public YdszJsonSchema allOf(YdszJsonSchema... schemas) {
+    public JsonSchema allOf(JsonSchema... schemas) {
         if (this.allOf == null) {
             this.allOf = new ArrayList<>();
         }
@@ -336,7 +336,7 @@ public final class YdszJsonSchema {
      * @return 当前 Schema（链式调用）
      * @since 1.4.0
      */
-    public YdszJsonSchema anyOf(YdszJsonSchema... schemas) {
+    public JsonSchema anyOf(JsonSchema... schemas) {
         if (this.anyOf == null) {
             this.anyOf = new ArrayList<>();
         }
@@ -351,7 +351,7 @@ public final class YdszJsonSchema {
      * @return 当前 Schema（链式调用）
      * @since 1.4.0
      */
-    public YdszJsonSchema oneOf(YdszJsonSchema... schemas) {
+    public JsonSchema oneOf(JsonSchema... schemas) {
         if (this.oneOf == null) {
             this.oneOf = new ArrayList<>();
         }
@@ -362,8 +362,8 @@ public final class YdszJsonSchema {
     /**
      * Null 类型
      */
-    public static YdszJsonSchema nullType() {
-        return new YdszJsonSchema("null");
+    public static JsonSchema nullType() {
+        return new JsonSchema("null");
     }
 
     /**
@@ -373,7 +373,7 @@ public final class YdszJsonSchema {
      * @return 当前 Schema（链式调用）
      * @since 1.4.0
      */
-    public YdszJsonSchema not(YdszJsonSchema not) {
+    public JsonSchema not(JsonSchema not) {
         this.not = not;
         return this;
     }
@@ -385,7 +385,7 @@ public final class YdszJsonSchema {
      * @return 当前 Schema（链式调用）
      * @since 1.4.0
      */
-    public YdszJsonSchema constValue(Object constValue) {
+    public JsonSchema constValue(Object constValue) {
         this.constValue = constValue;
         return this;
     }
@@ -402,7 +402,7 @@ public final class YdszJsonSchema {
      * @return 当前 Schema（链式调用）
      * @since 1.4.0
      */
-    public YdszJsonSchema ifThenElse(YdszJsonSchema ifSchema, YdszJsonSchema thenSchema, YdszJsonSchema elseSchema) {
+    public JsonSchema ifThenElse(JsonSchema ifSchema, JsonSchema thenSchema, JsonSchema elseSchema) {
         this.ifSchema = ifSchema;
         this.thenSchema = thenSchema;
         this.elseSchema = elseSchema;
@@ -412,7 +412,7 @@ public final class YdszJsonSchema {
     /**
      * 添加多个必填属性
      */
-    public YdszJsonSchema addRequired(String... names) {
+    public JsonSchema addRequired(String... names) {
         for (String name : names) {
             this.requiredProperties.add(name);
         }
@@ -461,7 +461,7 @@ public final class YdszJsonSchema {
         return maximum;
     }
 
-    public Map<String, YdszJsonSchema> getProperties() {
+    public Map<String, JsonSchema> getProperties() {
         return properties;
     }
 
@@ -469,7 +469,7 @@ public final class YdszJsonSchema {
         return requiredProperties;
     }
 
-    public YdszJsonSchema getItems() {
+    public JsonSchema getItems() {
         return items;
     }
 
@@ -493,23 +493,23 @@ public final class YdszJsonSchema {
         return exclusiveMaximum;
     }
 
-    public YdszJsonSchema getAdditionalProperties() {
+    public JsonSchema getAdditionalProperties() {
         return additionalProperties;
     }
 
-    public List<YdszJsonSchema> getAllOf() {
+    public List<JsonSchema> getAllOf() {
         return allOf;
     }
 
-    public List<YdszJsonSchema> getAnyOf() {
+    public List<JsonSchema> getAnyOf() {
         return anyOf;
     }
 
-    public List<YdszJsonSchema> getOneOf() {
+    public List<JsonSchema> getOneOf() {
         return oneOf;
     }
 
-    public YdszJsonSchema getNot() {
+    public JsonSchema getNot() {
         return not;
     }
 
@@ -517,20 +517,20 @@ public final class YdszJsonSchema {
         return constValue;
     }
 
-    public YdszJsonSchema getIfSchema() {
+    public JsonSchema getIfSchema() {
         return ifSchema;
     }
 
-    public YdszJsonSchema getThenSchema() {
+    public JsonSchema getThenSchema() {
         return thenSchema;
     }
 
-    public YdszJsonSchema getElseSchema() {
+    public JsonSchema getElseSchema() {
         return elseSchema;
     }
 
     @Override
     public String toString() {
-        return "YdszJsonSchema{type='" + type + "', required=" + required + "}";
+        return "JsonSchema{type='" + type + "', required=" + required + "}";
     }
 }

@@ -4,12 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.module.ModuleDeserializerRegistry;
-import com.njydsz.common.json.module.YdszJsonModule;
+import com.njydsz.common.json.module.JsonModule;
 
 /**
  * Safe 模块 YdszJson SPI 注册。
  *
- * <p>实现 {@link YdszJsonModule.SpringFactory} 接口，通过 Spring Boot 自动装配机制
+ * <p>实现 {@link JsonModule.SpringFactory} 接口，通过 Spring Boot 自动装配机制
  * 将 {@link XssStringDeserializer} 注册到 YdszJson 引擎，替代手动 {@code YdszJson.register()} 调用。
  *
  * <p>由 {@link XssAutoConfiguration} 声明为 {@code @Bean}，当
@@ -19,7 +19,7 @@ import com.njydsz.common.json.module.YdszJsonModule;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class SafeJsonModule implements YdszJsonModule, YdszJsonModule.SpringFactory {
+public class SafeJsonModule implements JsonModule, JsonModule.SpringFactory {
 
     private static final Logger log = LoggerFactory.getLogger(SafeJsonModule.class);
 
@@ -31,7 +31,7 @@ public class SafeJsonModule implements YdszJsonModule, YdszJsonModule.SpringFact
     @Override
     public void setDeserializers(ModuleDeserializerRegistry registry) {
         registry.register(String.class, new XssStringDeserializer());
-        log.debug("[SafeJsonModule] XssStringDeserializer registered via YdszJsonModule SPI");
+        log.debug("[SafeJsonModule] XssStringDeserializer registered via JsonModule SPI");
     }
 
     @Override

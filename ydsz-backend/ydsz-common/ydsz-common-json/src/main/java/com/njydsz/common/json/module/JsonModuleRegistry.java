@@ -31,7 +31,7 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  * registry.registerModule(new OrderModule());
  *
  * // 2. Spring Boot 环境自动注册
- * // 只需实现 YdszJsonModule.SpringFactory 接口并添加 @Component 注解
+ * // 只需实现 JsonModule.SpringFactory 接口并添加 @Component 注解
  * // JsonSpringConfig 会自动发现并注册所有模块
  *
  * // 3. 获取序列化器
@@ -51,7 +51,7 @@ public final class JsonModuleRegistry {
 
     private final Map<Class<?>, JsonDeserializer<?>> deserializers = new ConcurrentHashMap<>();
 
-    private final List<YdszJsonModule> modules = Collections.synchronizedList(new ArrayList<>());
+    private final List<JsonModule> modules = Collections.synchronizedList(new ArrayList<>());
 
     private volatile boolean initialized = false;
 
@@ -79,7 +79,7 @@ public final class JsonModuleRegistry {
      *
      * @param module 要注册的模块
      */
-    public void registerModule(YdszJsonModule module) {
+    public void registerModule(JsonModule module) {
         if (module == null) {
             throw new IllegalArgumentException("Module cannot be null");
         }
@@ -99,11 +99,11 @@ public final class JsonModuleRegistry {
      *
      * @param modules 要注册的模块列表
      */
-    public void registerModules(Collection<YdszJsonModule> modules) {
+    public void registerModules(Collection<JsonModule> modules) {
         if (modules == null || modules.isEmpty()) {
             return;
         }
-        for (YdszJsonModule module : modules) {
+        for (JsonModule module : modules) {
             registerModule(module);
         }
     }
@@ -111,11 +111,11 @@ public final class JsonModuleRegistry {
     /**
      * 注册 Spring 工厂模块（自动发现）
      *
-     * <p>Spring Boot 环境下，自动发现所有实现 {@link YdszJsonModule.SpringFactory} 的 Bean</p>
+     * <p>Spring Boot 环境下，自动发现所有实现 {@link JsonModule.SpringFactory} 的 Bean</p>
      *
      * @param springFactories Spring 工厂模块实例
      */
-    public void registerSpringFactories(Collection<YdszJsonModule> springFactories) {
+    public void registerSpringFactories(Collection<JsonModule> springFactories) {
         if (springFactories == null || springFactories.isEmpty()) {
             return;
         }
@@ -138,7 +138,7 @@ public final class JsonModuleRegistry {
                 return;
             }
             log.info("Initializing JsonModuleRegistry with {} modules", modules.size());
-            for (YdszJsonModule module : modules) {
+            for (JsonModule module : modules) {
                 try {
                     registerModuleSerializers(module);
                     registerModuleDeserializers(module);
@@ -146,7 +146,7 @@ public final class JsonModuleRegistry {
                     log.error("Failed to initialize module: {}", module.getModuleName(), e);
                 }
             }
-            for (YdszJsonModule module : modules) {
+            for (JsonModule module : modules) {
                 if (module.needsCompleteRegistration()) {
                     try {
                         module.onRegisterComplete();
@@ -161,7 +161,7 @@ public final class JsonModuleRegistry {
         }
     }
 
-    private void registerModuleSerializers(YdszJsonModule module) {
+    private void registerModuleSerializers(JsonModule module) {
         ModuleSerializerRegistry registry = new ModuleSerializerRegistry();
         module.setSerializers(registry);
         Map<Class<?>, JsonSerializer<?>> moduleSerializers = registry.getSerializers();
@@ -179,7 +179,7 @@ public final class JsonModuleRegistry {
         }
     }
 
-    private void registerModuleDeserializers(YdszJsonModule module) {
+    private void registerModuleDeserializers(JsonModule module) {
         ModuleDeserializerRegistry registry = new ModuleDeserializerRegistry();
         module.setDeserializers(registry);
         Map<Class<?>, JsonDeserializer<?>> moduleDeserializers = registry.getDeserializers();
@@ -261,7 +261,7 @@ public final class JsonModuleRegistry {
      * @param module 要移除的模块
      * @return 如果成功移除返回 true
      */
-    public boolean removeModule(YdszJsonModule module) {
+    public boolean removeModule(JsonModule module) {
         if (module == null) {
             return false;
         }
@@ -333,7 +333,7 @@ public final class JsonModuleRegistry {
      *
      * @return 只读模块列表
      */
-    public List<YdszJsonModule> getModules() {
+    public List<JsonModule> getModules() {
         return Collections.unmodifiableList(new ArrayList<>(modules));
     }
 

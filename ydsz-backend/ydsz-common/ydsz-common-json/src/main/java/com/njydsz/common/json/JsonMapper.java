@@ -11,23 +11,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.common.json.config.YdszJsonConfig;
-import com.njydsz.common.json.exception.YdszJsonException;
-import com.njydsz.common.json.jsonpath.YdszJsonPath;
+import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.exception.JsonException;
+import com.njydsz.common.json.jsonpath.JsonPath;
 import com.njydsz.common.json.metric.MetricsHelper;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
-import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.pointer.JsonPointer;
 import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.TreeConverter;
-import com.njydsz.common.json.type.YdszJsonType;
+import com.njydsz.common.json.type.JsonType;
 
 /**
  * YdszJson 实例化 Mapper（对标 Jackson ObjectMapper）
  *
- * <p>提供实例化的 JSON 序列化/反序列化能力，每个实例持有独立的 {@link YdszJsonConfig} 配置副本，
+ * <p>提供实例化的 JSON 序列化/反序列化能力，每个实例持有独立的 {@link JsonConfig} 配置副本，
  * 允许在同一 JVM 中创建多个不同配置的 Mapper 实例，互不干扰。
  *
  * <p><b>与 {@link YdszJson} 的关系：</b></p>
@@ -66,7 +66,7 @@ public class JsonMapper {
     private static final JsonMapper DEFAULT = new JsonMapper();
 
     /** 此 Mapper 实例的配置（独立副本） */
-    private final YdszJsonConfig config;
+    private final JsonConfig config;
 
     /**
      * 配置是否已应用到 ThreadLocal 且未再变更（优化：避免每次序列化都执行 ThreadLocalSnapshot）。
@@ -81,7 +81,7 @@ public class JsonMapper {
      * 创建默认配置的 Mapper 实例。
      */
     public JsonMapper() {
-        this(YdszJsonConfig.getInstance());
+        this(JsonConfig.getInstance());
     }
 
     /**
@@ -89,8 +89,8 @@ public class JsonMapper {
      *
      * @param config 配置（会被复制为独立副本）
      */
-    public JsonMapper(YdszJsonConfig config) {
-        this.config = YdszJsonConfig.copyOf(config);
+    public JsonMapper(JsonConfig config) {
+        this.config = JsonConfig.copyOf(config);
     }
 
     /**
@@ -101,7 +101,7 @@ public class JsonMapper {
      *
      * @return 配置对象
      */
-    public YdszJsonConfig getConfig() {
+    public JsonConfig getConfig() {
         return config;
     }
 
@@ -237,7 +237,7 @@ public class JsonMapper {
         try {
             out.write(bytes);
         } catch (Exception e) {
-            throw new YdszJsonException("Failed to write to OutputStream", e);
+            throw new JsonException("Failed to write to OutputStream", e);
         }
     }
 
@@ -252,7 +252,7 @@ public class JsonMapper {
         try {
             writer.write(json);
         } catch (Exception e) {
-            throw new YdszJsonException("Failed to write to Writer", e);
+            throw new JsonException("Failed to write to Writer", e);
         }
     }
 
@@ -291,14 +291,14 @@ public class JsonMapper {
     }
 
     /**
-     * 反序列化 JSON 字符串为泛型类型（YdszJsonType）。
+     * 反序列化 JSON 字符串为泛型类型（JsonType）。
      *
      * @param json    JSON 字符串
      * @param typeRef 类型引用
      * @param <T>     类型参数
      * @return 反序列化后的对象
      */
-    public <T> T toObject(String json, YdszJsonType<T> typeRef) {
+    public <T> T toObject(String json, JsonType<T> typeRef) {
         if (json == null || json.isBlank()) {
             return null;
         }
@@ -328,7 +328,7 @@ public class JsonMapper {
      * @return 反序列化后的对象
      * @since 1.0.0
      */
-    public <T> T fromJson(String json, YdszJsonType<T> typeRef) {
+    public <T> T fromJson(String json, JsonType<T> typeRef) {
         return toObject(json, typeRef);
     }
 
@@ -347,7 +347,7 @@ public class JsonMapper {
         }
         long maxSize = config.getMaxJsonSize();
         if (bytes.length > maxSize) {
-            throw new YdszJsonException(
+            throw new JsonException(
                 "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
         }
         SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
@@ -377,7 +377,7 @@ public class JsonMapper {
             }
             return fromJsonBytes(bytes, clazz);
         } catch (Exception e) {
-            throw new YdszJsonException("Failed to read from InputStream", e);
+            throw new JsonException("Failed to read from InputStream", e);
         }
     }
 
@@ -390,7 +390,7 @@ public class JsonMapper {
      * @return 反序列化后的对象
      * @since 1.0.0
      */
-    public <T> T readValue(InputStream in, YdszJsonType<T> typeRef) {
+    public <T> T readValue(InputStream in, JsonType<T> typeRef) {
         if (in == null) {
             return null;
         }
@@ -401,7 +401,7 @@ public class JsonMapper {
             }
             long maxSize = config.getMaxJsonSize();
             if (bytes.length > maxSize) {
-                throw new YdszJsonException(
+                throw new JsonException(
                     "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
             }
             SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
@@ -411,8 +411,8 @@ public class JsonMapper {
                 if (snapshot != null) snapshot.restore();
             }
         } catch (Exception e) {
-            if (e instanceof YdszJsonException) throw (YdszJsonException) e;
-            throw new YdszJsonException("Failed to read from InputStream", e);
+            if (e instanceof JsonException) throw (JsonException) e;
+            throw new JsonException("Failed to read from InputStream", e);
         }
     }
 
@@ -481,7 +481,7 @@ public class JsonMapper {
      * @since 1.0.0
      */
     public JsonNode readTree(String json) {
-        Object parsed = YdszJsonParser.parse(json);
+        Object parsed = JsonParserUtil.parse(json);
         return TreeConverter.convertToJsonNode(parsed);
     }
 
@@ -508,7 +508,7 @@ public class JsonMapper {
      * @since 1.0.0
      */
     public Object getByPath(String json, String path) {
-        return YdszJsonPath.get(json, path);
+        return JsonPath.get(json, path);
     }
 
     /**
@@ -553,7 +553,7 @@ public class JsonMapper {
      * @return 转换后的对象
      * @since 1.3.0
      */
-    public <T> T convertValue(Object fromValue, YdszJsonType<T> toValueTypeRef) {
+    public <T> T convertValue(Object fromValue, JsonType<T> toValueTypeRef) {
         if (fromValue == null) {
             return null;
         }
@@ -707,7 +707,7 @@ public class JsonMapper {
     private void validateJsonSize(String json) {
         long maxSize = config.getMaxJsonSize();
         if (json.length() > maxSize) {
-            throw new YdszJsonException(
+            throw new JsonException(
                 "JSON size exceeds limit: " + json.length() + " > " + maxSize);
         }
     }
@@ -766,17 +766,17 @@ public class JsonMapper {
      */
     public static final class Builder {
 
-        private PropertyNamingStrategy namingStrategy = YdszJsonConfig.getInstance().getNamingStrategy();
-        private YdszJsonConfig.CircularReferenceStrategy circularReferenceStrategy = YdszJsonConfig.getInstance().getCircularReferenceStrategy();
-        private boolean writeNulls = YdszJsonConfig.getInstance().isWriteNulls();
-        private String dateFormat = YdszJsonConfig.getInstance().getDateFormat();
-        private boolean serializeEnumUsingOrdinal = YdszJsonConfig.getInstance().isSerializeEnumUsingOrdinal();
-        private boolean prettyPrint = YdszJsonConfig.getInstance().isPrettyPrint();
-        private boolean failOnError = YdszJsonConfig.getInstance().isFailOnError();
-        private boolean useBigDecimal = YdszJsonConfig.getInstance().isUseBigDecimal();
-        private boolean wrapRootValue = YdszJsonConfig.getInstance().isWrapRootValue();
-        private long maxJsonSize = YdszJsonConfig.getInstance().getMaxJsonSize();
-        private int maxDepth = YdszJsonConfig.getInstance().getMaxDepth();
+        private PropertyNamingStrategy namingStrategy = JsonConfig.getInstance().getNamingStrategy();
+        private JsonConfig.CircularReferenceStrategy circularReferenceStrategy = JsonConfig.getInstance().getCircularReferenceStrategy();
+        private boolean writeNulls = JsonConfig.getInstance().isWriteNulls();
+        private String dateFormat = JsonConfig.getInstance().getDateFormat();
+        private boolean serializeEnumUsingOrdinal = JsonConfig.getInstance().isSerializeEnumUsingOrdinal();
+        private boolean prettyPrint = JsonConfig.getInstance().isPrettyPrint();
+        private boolean failOnError = JsonConfig.getInstance().isFailOnError();
+        private boolean useBigDecimal = JsonConfig.getInstance().isUseBigDecimal();
+        private boolean wrapRootValue = JsonConfig.getInstance().isWrapRootValue();
+        private long maxJsonSize = JsonConfig.getInstance().getMaxJsonSize();
+        private int maxDepth = JsonConfig.getInstance().getMaxDepth();
 
         private Builder() {
         }
@@ -801,7 +801,7 @@ public class JsonMapper {
             return this;
         }
 
-        public Builder circularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy strategy) {
+        public Builder circularReferenceStrategy(JsonConfig.CircularReferenceStrategy strategy) {
             this.circularReferenceStrategy = strategy;
             return this;
         }
@@ -837,7 +837,7 @@ public class JsonMapper {
         }
 
         public JsonMapper build() {
-            YdszJsonConfig config = YdszJsonConfig.builder()
+            JsonConfig config = JsonConfig.builder()
                 .namingStrategy(namingStrategy)
                 .circularReferenceStrategy(circularReferenceStrategy)
                 .writeNulls(writeNulls)

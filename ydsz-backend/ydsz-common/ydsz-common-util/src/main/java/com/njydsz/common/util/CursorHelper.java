@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.type.YdszJsonType;
+import com.njydsz.common.json.type.JsonType;
 
 /**
  * 游标分页工具类。
@@ -95,7 +95,7 @@ public final class CursorHelper {
         try {
             byte[] decoded = Base64.getUrlDecoder().decode(cursor);
             String json = new String(decoded, StandardCharsets.UTF_8);
-            return YdszJson.toObject(json, new YdszJsonType<Map<String, String>>() {});
+            return YdszJson.toObject(json, new JsonType<Map<String, String>>() {});
         } catch (Exception e) {
             return null;
         }

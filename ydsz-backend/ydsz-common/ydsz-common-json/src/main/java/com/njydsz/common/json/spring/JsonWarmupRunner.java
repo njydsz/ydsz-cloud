@@ -13,7 +13,7 @@ import com.njydsz.common.json.YdszJson;
 /**
  * YdszJson ASM 预热 Runner。
  *
- * <p>在 Spring Boot 应用启动后，根据 {@link YdszJsonProperties#getWarmupClasses()}
+ * <p>在 Spring Boot 应用启动后，根据 {@link JsonProperties#getWarmupClasses()}
  * 配置的类列表，异步执行 ASM 字节码预热，避免首次请求时的延迟尖峰。
  *
  * <p>预热失败不会阻断应用启动，仅记录警告日志。
@@ -26,9 +26,9 @@ public class JsonWarmupRunner implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(JsonWarmupRunner.class);
 
-    private final YdszJsonProperties properties;
+    private final JsonProperties properties;
 
-    public JsonWarmupRunner(YdszJsonProperties properties) {
+    public JsonWarmupRunner(JsonProperties properties) {
         this.properties = properties;
     }
 

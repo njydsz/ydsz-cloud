@@ -2,7 +2,7 @@
   "groups": [
     {
       "name": "ydsz.json",
-      "type": "com.njydsz.common.json.spring.YdszJsonProperties",
+      "type": "com.njydsz.common.json.spring.JsonProperties",
       "description": "YDSZ 高性能 JSON 引擎配置项（主前缀）"
     }
   ],

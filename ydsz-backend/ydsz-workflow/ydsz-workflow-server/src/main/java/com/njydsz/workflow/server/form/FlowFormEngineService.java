@@ -6,7 +6,7 @@ import java.util.Map;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.schema.JsonSchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
-import com.njydsz.common.json.schema.YdszJsonSchema;
+import com.njydsz.common.json.schema.JsonSchema;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -135,9 +135,9 @@ public class FlowFormEngineService {
      *
      * <p>使用示例：
      * <pre>{@code
-     * YdszJsonSchema schema = YdszJsonSchema.object()
-     *     .addProperty("projectName", YdszJsonSchema.string().required().minLength(1).maxLength(100))
-     *     .addProperty("budget", YdszJsonSchema.number().minimum(0))
+     * JsonSchema schema = JsonSchema.object()
+     *     .addProperty("projectName", JsonSchema.string().required().minLength(1).maxLength(100))
+     *     .addProperty("budget", JsonSchema.number().minimum(0))
      *     .addRequired("projectName");
      * List<FlowFormValidationError> errors = service.validateWithJsonSchema(schema, formData);
      * }</pre>
@@ -146,7 +146,7 @@ public class FlowFormEngineService {
      * @param formData   表单数据
      * @return 校验错误列表（空列表表示通过）
      */
-    public List<FlowFormValidationError> validateWithJsonSchema(YdszJsonSchema jsonSchema,
+    public List<FlowFormValidationError> validateWithJsonSchema(JsonSchema jsonSchema,
                                                                  Map<String, Object> formData) {
         if (jsonSchema == null || formData == null) {
             return List.of();

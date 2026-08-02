@@ -40,7 +40,7 @@ import jakarta.validation.constraints.NotNull;
  */
 @ConfigurationProperties(prefix = "ydsz.json")
 @Validated
-public class YdszJsonProperties {
+public class JsonProperties {
 
     /** 是否启用 YdszJson */
     private boolean enabled = true;
@@ -84,7 +84,7 @@ public class YdszJsonProperties {
     /** 是否包裹根对象（对标 Jackson @JsonRootValue / ObjectMapper.wrapRootValue） */
     private boolean wrapRootValue = false;
 
-    /** 反序列化失败时是否抛出异常（true）或返回 null（false）。与 YdszJsonConfig 默认值保持一致。 */
+    /** 反序列化失败时是否抛出异常（true）或返回 null（false）。与 JsonConfig 默认值保持一致。 */
     private boolean failOnError = false;
 
     /**

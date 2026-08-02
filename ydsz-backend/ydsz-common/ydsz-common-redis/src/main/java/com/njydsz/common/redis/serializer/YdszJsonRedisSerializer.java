@@ -9,7 +9,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.type.YdszJsonType;
+import com.njydsz.common.json.type.JsonType;
 
 /**
  * YdszJson 版本的 Redis 序列化工具类
@@ -44,7 +44,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
     /**
      * 泛型类型引用（用于泛型类型反序列化，优先于 clazz 使用）
      */
-    private final YdszJsonType<?> typeRef;
+    private final JsonType<?> typeRef;
 
     /**
      * 无参构造器（兼容 Spring 反射创建）
@@ -75,7 +75,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
      * @param typeRef 泛型类型引用
      * @since 1.0.0
      */
-    public YdszJsonRedisSerializer(YdszJsonType<?> typeRef) {
+    public YdszJsonRedisSerializer(JsonType<?> typeRef) {
         this.clazz = Object.class;
         this.typeRef = typeRef;
     }
@@ -143,7 +143,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
      * @return 序列化器实例
      * @since 1.0.0
      */
-    public static YdszJsonRedisSerializer of(YdszJsonType<?> typeRef) {
+    public static YdszJsonRedisSerializer of(JsonType<?> typeRef) {
         return new YdszJsonRedisSerializer(typeRef);
     }
 }

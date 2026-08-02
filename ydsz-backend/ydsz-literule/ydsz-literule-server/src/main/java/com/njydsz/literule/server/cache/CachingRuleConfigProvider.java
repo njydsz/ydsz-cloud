@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.type.YdszJsonType;
+import com.njydsz.common.json.type.JsonType;
 
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RBucket;
@@ -248,7 +248,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
                 RBucket<String> bucket = redissonClient.getBucket(l2Key);
                 String json = bucket.get();
                 if (json != null) {
-                    List<RuleDefinition> l2Value = YdszJson.fromJson(json, new YdszJsonType<List<RuleDefinition>>() {});
+                    List<RuleDefinition> l2Value = YdszJson.fromJson(json, new JsonType<List<RuleDefinition>>() {});
                     if (l2Value != null) {
                         log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
                         return l2Value;

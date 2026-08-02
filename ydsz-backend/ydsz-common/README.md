@@ -37,7 +37,7 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 |---|---|---|
 | L1 | [common-core](ydsz-common-core/README.md) | 统一响应/请求模型、TraceId、请求上下文、JobHandler、DAG、特性开关、重试模板、线程池监控 |
 | L2 | [common-util](ydsz-common-util/README.md) | 99 个工具类（JSON/加密/HTTP/IP/Spring/雪花 ID/Bean 拷贝 等） |
-| L2 | [common-json](ydsz-common-json/README.md) | 高性能 JSON 引擎（ASM 字节码、SIMD 向量化、Schema 校验、YdszJsonPath、树模型） |
+| L2 | [common-json](ydsz-common-json/README.md) | 高性能 JSON 引擎（ASM 字节码、SIMD 向量化、Schema 校验、JsonPath、树模型） |
 | L3 | [common-domain](ydsz-common-domain/README.md) | DDD 基类（BaseEntity/AggregateRoot）、领域事件、规范模式、分页、树形结构 |
 | L3 | [common-exception](ydsz-common-exception/README.md) | 统一异常体系、错误码管理、ProblemDetail (RFC 7807)、i18n、异常构建器 |
 | L4 | [common-jdbc](ydsz-common-jdbc/README.md) | MyBatis-Plus 增强、动态数据源、行/列权限、逻辑删除、乐观锁、租户隔离、字段填充 |
@@ -83,7 +83,7 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | 机制 | 注册方式 | 典型场景 |
 |---|---|---|
 | **`@ConditionalOnMissingBean` 覆盖** | 业务方提供同类型 Bean 即可替换默认实现 | 单一实现的策略替换（如 `LockStrategy` / `EventStore` / `TraceContext`） |
-| **`List<T>` / `ObjectProvider<List<T>>` 自动收集** | 业务方 `@Component` 注册，框架自动聚合 | 多实现扩展（如 `NotifyChannelStrategy` / `SearchProvider` / `YdszJsonModule`） |
+| **`List<T>` / `ObjectProvider<List<T>>` 自动收集** | 业务方 `@Component` 注册，框架自动聚合 | 多实现扩展（如 `NotifyChannelStrategy` / `SearchProvider` / `JsonModule`） |
 | **`@ConditionalOnProperty` 切换** | 通过配置项值选择实现 | 后端切换（如 `ydsz.sentry.metrics.primary=micrometer` / `ydsz.seata.tcc-log-store=redis`） |
 
 > 标识为 **SPI** 的接口在 JavaDoc 中明确声明"业务方可实现"；其余为通过 `@ConditionalOnMissingBean` 暴露的覆盖点。
@@ -96,7 +96,7 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-core | `FeatureFlagService` | 特性开关后端 | `@ConditionalOnMissingBean` |
 | common-util | `WorkerIdRegistry` **SPI** | 雪花 WorkerId 注册中心（Redis/ZK/ETCD/Nacos） | `@Component` |
 | common-util | `PasswordEncoder` | 密码编码器（BCrypt/SCrypt/Argon2） | `@Component` |
-| common-json | `YdszJsonModule` | JSON 编解码模块 | `List<YdszJsonModule>` 自动收集 |
+| common-json | `JsonModule` | JSON 编解码模块 | `List<JsonModule>` 自动收集 |
 | common-json | `JsonSerializer` / `JsonDeserializer` | 自定义序列化器 | `@Component` |
 | common-json | `PropertyNamingStrategy` | 属性命名策略 | `@Component` |
 | common-json | `JsonMetricsCallback` | JSON 指标回调 | `@ConditionalOnMissingBean` |

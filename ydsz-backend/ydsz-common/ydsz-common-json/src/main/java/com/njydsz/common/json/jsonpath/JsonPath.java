@@ -7,7 +7,7 @@ import java.util.regex.*;
 import com.njydsz.common.json.YdszJson;
 
 /**
- * 增强的 YdszJsonPath 解析器
+ * 增强的 JsonPath 解析器
  *
  * <p>支持：
  * <ol>
@@ -20,23 +20,23 @@ import com.njydsz.common.json.YdszJson;
  *   <li>条件表达式：$.items[?(@.age >= 18 && @.status == 'active')]</li>
  * </ol>
  *
- * <p><b>性能优化：</b>编译后的 {@code YdszJsonPath} 实例和正则表达式均被缓存，
+ * <p><b>性能优化：</b>编译后的 {@code JsonPath} 实例和正则表达式均被缓存，
  * 避免每次调用重复解析路径表达式和编译正则。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-public class YdszJsonPath {
+public class JsonPath {
 
     /**
-     * 编译缓存（path -> YdszJsonPath），LRU 有界避免内存泄漏。
+     * 编译缓存（path -> JsonPath），LRU 有界避免内存泄漏。
      * 对标 Jayway JsonPath 的编译缓存机制。
      */
     private static final int COMPILE_CACHE_MAX = 512;
-    private static final Map<String, YdszJsonPath> COMPILE_CACHE =
-        Collections.synchronizedMap(new LinkedHashMap<String, YdszJsonPath>(64, 0.75f, true) {
+    private static final Map<String, JsonPath> COMPILE_CACHE =
+        Collections.synchronizedMap(new LinkedHashMap<String, JsonPath>(64, 0.75f, true) {
             @Override
-            protected boolean removeEldestEntry(Map.Entry<String, YdszJsonPath> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<String, JsonPath> eldest) {
                 return size() > COMPILE_CACHE_MAX;
             }
         });
@@ -50,7 +50,7 @@ public class YdszJsonPath {
 
     private final List<PathSegment> segments;
 
-    private YdszJsonPath(String path, List<PathSegment> segments) {
+    private JsonPath(String path, List<PathSegment> segments) {
         this.segments = segments;
     }
 
@@ -58,10 +58,10 @@ public class YdszJsonPath {
      * 编译 JSONPath 表达式
      *
      * @param path JSONPath 表达式（必须以 $ 开头）
-     * @return 编译后的 YdszJsonPath 实例
+     * @return 编译后的 JsonPath 实例
      * @throws IllegalArgumentException 如果路径格式无效
      */
-    public static YdszJsonPath compile(String path) {
+    public static JsonPath compile(String path) {
         if (path == null || path.trim().isEmpty()) {
             throw new IllegalArgumentException("Path cannot be null or empty");
         }
@@ -71,13 +71,13 @@ public class YdszJsonPath {
         }
 
         // 编译缓存：命中则直接返回，避免重复解析路径表达式
-        YdszJsonPath cached = COMPILE_CACHE.get(path);
+        JsonPath cached = COMPILE_CACHE.get(path);
         if (cached != null) {
             return cached;
         }
 
         List<PathSegment> segments = parse(path);
-        YdszJsonPath compiled = new YdszJsonPath(path, segments);
+        JsonPath compiled = new JsonPath(path, segments);
         COMPILE_CACHE.putIfAbsent(path, compiled);
         return compiled;
     }

@@ -1,6 +1,6 @@
 package com.njydsz.common.json.metric;
 
-import com.njydsz.common.json.exception.YdszJsonException;
+import com.njydsz.common.json.exception.JsonException;
 
 /**
  * 指标监控包装工具（统一序列化/反序列化的指标记录逻辑）。
@@ -64,10 +64,10 @@ public final class MetricsHelper {
             try {
                 return supplier.get();
             } catch (Exception e) {
-                if (e instanceof YdszJsonException) {
-                    throw (YdszJsonException) e;
+                if (e instanceof JsonException) {
+                    throw (JsonException) e;
                 }
-                throw new YdszJsonException(
+                throw new JsonException(
                     (isSerialize ? "JSON serialize failed: " : "JSON deserialize failed: ")
                     + e.getMessage(), e);
             }
@@ -87,10 +87,10 @@ public final class MetricsHelper {
             } else {
                 callback.onDeserializeFailure();
             }
-            if (e instanceof YdszJsonException) {
-                throw (YdszJsonException) e;
+            if (e instanceof JsonException) {
+                throw (JsonException) e;
             }
-            throw new YdszJsonException(
+            throw new JsonException(
                 (isSerialize ? "JSON serialize failed: " : "JSON deserialize failed: ")
                 + e.getMessage(), e);
         }

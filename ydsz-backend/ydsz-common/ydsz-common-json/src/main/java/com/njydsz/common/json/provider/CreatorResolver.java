@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.njydsz.common.json.annotation.JsonCreator;
 import com.njydsz.common.json.annotation.JsonProperty;
-import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.parser.JsonParserUtil;
 
 /**
  * {@link JsonCreator} 注解处理器。
@@ -74,7 +74,7 @@ final class CreatorResolver {
      * @return 反序列化后的实例，创建失败返回 {@code null}
      */
     static Object deserializeWithCreator(String json, Constructor<?> constructor) {
-        Map<String, Object> map = YdszJsonParser.parseObject(json);
+        Map<String, Object> map = JsonParserUtil.parseObject(json);
         if (map == null || map.isEmpty()) {
             try {
                 return constructor.newInstance();

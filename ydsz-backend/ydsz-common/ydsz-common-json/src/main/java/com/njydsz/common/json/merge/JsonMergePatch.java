@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.parser.JsonParserUtil;
 
 import com.njydsz.common.json.annotation.Experimental;
 
@@ -60,8 +60,8 @@ public final class JsonMergePatch {
             return target;
         }
 
-        Object targetObj = YdszJsonParser.parse(target);
-        Object patchObj = YdszJsonParser.parse(patch);
+        Object targetObj = JsonParserUtil.parse(target);
+        Object patchObj = JsonParserUtil.parse(patch);
 
         Object result = merge(targetObj, patchObj);
         return YdszJson.toJson(result);
@@ -125,8 +125,8 @@ public final class JsonMergePatch {
             return "{}";
         }
 
-        Object sourceObj = YdszJsonParser.parse(source);
-        Object targetObj = YdszJsonParser.parse(target);
+        Object sourceObj = JsonParserUtil.parse(source);
+        Object targetObj = JsonParserUtil.parse(target);
 
         Object diffObj = diffInternal(sourceObj, targetObj);
         return YdszJson.toJson(diffObj);

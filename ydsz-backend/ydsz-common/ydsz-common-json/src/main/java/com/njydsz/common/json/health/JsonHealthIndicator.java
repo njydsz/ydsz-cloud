@@ -6,8 +6,8 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.BeanSerializerCache;
-import com.njydsz.common.json.cache.YdszJsonCacheStats;
-import com.njydsz.common.json.config.YdszJsonConfig;
+import com.njydsz.common.json.cache.JsonCacheStats;
+import com.njydsz.common.json.config.JsonConfig;
 import com.njydsz.common.json.provider.SerializationContext;
 
 /**
@@ -27,7 +27,7 @@ public class JsonHealthIndicator implements HealthIndicator {
 
         @Override
     public Health health() {
-        YdszJsonConfig config = YdszJsonConfig.getInstance();
+        JsonConfig config = JsonConfig.getInstance();
         boolean safeMode = AutoTypeChecker.isSafeMode();
 
         Health.Builder builder = safeMode ? Health.up() : Health.down();
@@ -43,9 +43,9 @@ public class JsonHealthIndicator implements HealthIndicator {
         builder.withDetail("serializeEnumUsingOrdinal", config.isSerializeEnumUsingOrdinal());
 
         // ASM 缓存统计
-        builder.withDetail("asmLevel", YdszJsonCacheStats.getAsmLevel());
-        builder.withDetail("asmGeneratedCount", YdszJsonCacheStats.getAsmGeneratedCount());
-        builder.withDetail("serializerCacheSize", YdszJsonCacheStats.getSerializerCacheSize());
+        builder.withDetail("asmLevel", JsonCacheStats.getAsmLevel());
+        builder.withDetail("asmGeneratedCount", JsonCacheStats.getAsmGeneratedCount());
+        builder.withDetail("serializerCacheSize", JsonCacheStats.getSerializerCacheSize());
 
         // 缓存详情
         builder.withDetail("codecCacheSize", AsmCodecCache.getCacheSize());

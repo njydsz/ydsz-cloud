@@ -3,7 +3,7 @@ package com.njydsz.common.json;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 
-import com.njydsz.common.json.exception.YdszJsonException;
+import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.metric.MetricsHelper;
@@ -55,7 +55,7 @@ public final class JsonReader<T> {
         }
         long maxSize = mapper.getConfig().getMaxJsonSize();
         if (json.length() > maxSize) {
-            throw new YdszJsonException(
+            throw new JsonException(
                 "JSON size exceeds limit: " + json.length() + " > " + maxSize);
         }
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
@@ -79,7 +79,7 @@ public final class JsonReader<T> {
         }
         long maxSize = mapper.getConfig().getMaxJsonSize();
         if (bytes.length > maxSize) {
-            throw new YdszJsonException(
+            throw new JsonException(
                 "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
         }
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
@@ -105,8 +105,8 @@ public final class JsonReader<T> {
             byte[] bytes = in.readAllBytes();
             return read(bytes);
         } catch (Exception e) {
-            if (e instanceof YdszJsonException) throw (YdszJsonException) e;
-            throw new YdszJsonException("Failed to read from InputStream", e);
+            if (e instanceof JsonException) throw (JsonException) e;
+            throw new JsonException("Failed to read from InputStream", e);
         }
     }
 

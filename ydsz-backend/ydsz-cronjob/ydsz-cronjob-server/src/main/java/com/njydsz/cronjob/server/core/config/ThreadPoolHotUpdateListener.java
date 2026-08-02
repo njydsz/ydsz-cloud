@@ -3,7 +3,7 @@ package com.njydsz.cronjob.server.core.config;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.YdszJsonObject;
+import com.njydsz.common.json.object.JsonObject;
 
 import org.springframework.stereotype.Component;
 
@@ -63,7 +63,7 @@ public class ThreadPoolHotUpdateListener {
         }
         log.info("[ThreadPoolHotUpdate] 收到配置变更通知, 开始解析...");
         try {
-            YdszJsonObject config = parseConfig(configInfo);
+            JsonObject config = parseConfig(configInfo);
             if (config == null) {
                 return;
             }
@@ -82,30 +82,30 @@ public class ThreadPoolHotUpdateListener {
      * @param configInfo 配置内容
      * @return executor 配置 JSON 对象；解析失败返回 null
      */
-    private YdszJsonObject parseConfig(String configInfo) {
+    private JsonObject parseConfig(String configInfo) {
         try {
-            YdszJsonObject root = YdszJson.parseObjectToJsonObject(configInfo);
+            JsonObject root = YdszJson.parseObjectToJsonObject(configInfo);
             // 尝试 ydsz.cronjob.executor 路径
-            YdszJsonObject ydsz = root.getJSONObject("ydsz");
+            JsonObject ydsz = root.getJSONObject("ydsz");
             if (ydsz != null) {
-                YdszJsonObject cronjob = ydsz.getJSONObject("cronjob");
+                JsonObject cronjob = ydsz.getJSONObject("cronjob");
                 if (cronjob != null) {
-                    YdszJsonObject executor = cronjob.getJSONObject("executor");
+                    JsonObject executor = cronjob.getJSONObject("executor");
                     if (executor != null) {
                         return executor;
                     }
                 }
             }
             // 尝试直接 cronjob.executor 路径
-            YdszJsonObject cronjobDirect = root.getJSONObject("cronjob");
+            JsonObject cronjobDirect = root.getJSONObject("cronjob");
             if (cronjobDirect != null) {
-                YdszJsonObject executor = cronjobDirect.getJSONObject("executor");
+                JsonObject executor = cronjobDirect.getJSONObject("executor");
                 if (executor != null) {
                     return executor;
                 }
             }
             // 尝试直接 executor 路径
-            YdszJsonObject executorDirect = root.getJSONObject("executor");
+            JsonObject executorDirect = root.getJSONObject("executor");
             if (executorDirect != null) {
                 return executorDirect;
             }
@@ -122,7 +122,7 @@ public class ThreadPoolHotUpdateListener {
      *
      * @param executorConfig executor 配置 JSON
      */
-    private void applyExecutorConfigChanges(YdszJsonObject executorConfig) {
+    private void applyExecutorConfigChanges(JsonObject executorConfig) {
         boolean changed = false;
 
         // 1. maxConcurrent — 动态调整全局线程池

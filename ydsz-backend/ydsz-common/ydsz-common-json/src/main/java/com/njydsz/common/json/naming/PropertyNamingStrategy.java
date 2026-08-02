@@ -19,7 +19,7 @@ import java.io.Serializable;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 使用下划线命名策略
- * YdszJsonConfig.getInstance().setNamingStrategy(
+ * JsonConfig.getInstance().setNamingStrategy(
  *     PropertyNamingStrategy.SNAKE_CASE
  * );
  * 

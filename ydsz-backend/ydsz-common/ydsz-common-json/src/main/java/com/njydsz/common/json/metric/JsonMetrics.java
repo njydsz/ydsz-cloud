@@ -30,9 +30,9 @@ import io.micrometer.core.instrument.Timer;
  * @since 1.0.0
  */
 @ConditionalOnClass(MeterRegistry.class)
-public class YdszJsonMetrics implements JsonMetricsCallback {
+public class JsonMetrics implements JsonMetricsCallback {
 
-    private static final Logger log = LoggerFactory.getLogger(YdszJsonMetrics.class);
+    private static final Logger log = LoggerFactory.getLogger(JsonMetrics.class);
 
     private final MeterRegistry meterRegistry;
 
@@ -48,7 +48,7 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
      *
      * @param meterRegistry MeterRegistry（可为 null）
      */
-    public YdszJsonMetrics(MeterRegistry meterRegistry) {
+    public JsonMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         if (meterRegistry != null) {
             this.serializeTimer = Timer.builder("ydsz.json.serialize.duration")

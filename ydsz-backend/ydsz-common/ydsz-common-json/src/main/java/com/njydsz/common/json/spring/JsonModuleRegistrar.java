@@ -5,13 +5,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.json.module.YdszJsonModule;
+import com.njydsz.common.json.module.JsonModule;
 import com.njydsz.common.json.module.JsonModuleRegistry;
 
 /**
  * YdszJson 模块注册器。
  *
- * <p>自动发现所有实现 {@link YdszJsonModule.SpringFactory} 接口的 Bean 并注册到
+ * <p>自动发现所有实现 {@link JsonModule.SpringFactory} 接口的 Bean 并注册到
  * {@link JsonModuleRegistry}。
  *
  * @author ydsz-team
@@ -21,9 +21,9 @@ public class JsonModuleRegistrar {
 
     private static final Logger log = LoggerFactory.getLogger(JsonModuleRegistrar.class);
 
-    private final List<YdszJsonModule> springModules;
+    private final List<JsonModule> springModules;
 
-    public JsonModuleRegistrar(List<YdszJsonModule> springModules) {
+    public JsonModuleRegistrar(List<JsonModule> springModules) {
         this.springModules = springModules;
     }
 

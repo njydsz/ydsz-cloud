@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import com.njydsz.common.base.config.DocProperties;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.type.YdszJsonType;
+import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.util.yaml.YamlUtils;
 
 /**
@@ -189,7 +189,7 @@ public abstract class AbstractDocExporter implements DocExporter {
         String description = docProperties.getInfo().getDescription();
 
         try {
-            Map<String, Object> root = YdszJson.toObject(apiDocs, new YdszJsonType<Map<String, Object>>() {});
+            Map<String, Object> root = YdszJson.toObject(apiDocs, new JsonType<Map<String, Object>>() {});
             Map<String, Object> info = asMap(root.get("info"));
             if (info != null) {
                 if (info.containsKey("title")) {
@@ -246,7 +246,7 @@ public abstract class AbstractDocExporter implements DocExporter {
      */
     protected Map<String, Object> parseOpenApiJson(String apiDocs) {
         try {
-            return YdszJson.toObject(apiDocs, new YdszJsonType<Map<String, Object>>() {});
+            return YdszJson.toObject(apiDocs, new JsonType<Map<String, Object>>() {});
         } catch (Exception e) {
             logger.warn("解析 OpenAPI 文档失败: {}", e.getMessage());
             return new LinkedHashMap<>();

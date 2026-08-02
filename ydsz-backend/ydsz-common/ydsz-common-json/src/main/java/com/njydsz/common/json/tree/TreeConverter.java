@@ -23,7 +23,7 @@ import java.util.Map;
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * Object parsed = YdszJsonParser.parse("{\"name\":\"John\"}");
+ * Object parsed = JsonParserUtil.parse("{\"name\":\"John\"}");
  * JsonNode tree = TreeConverter.convertToJsonNode(parsed);
  * String name = tree.get("name").asText(); // "John"
  * </pre>

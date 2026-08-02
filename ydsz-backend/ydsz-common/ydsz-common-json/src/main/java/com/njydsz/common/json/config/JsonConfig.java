@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.SerializationProvider;
 
-import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.reader.JSONReader;
 /**
  * YdszJson 全局配置类
@@ -24,7 +24,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * <p><b>推荐使用 Builder 模式创建不可变配置：</b></p>
  * <pre>
  * // 推荐：使用 Builder 创建配置
- * YdszJsonConfig config = YdszJsonConfig.builder()
+ * JsonConfig config = JsonConfig.builder()
  *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
  *     .circularReferenceStrategy(CircularReferenceStrategy.REF)
  *     .dateFormat("yyyy-MM-dd HH:mm:ss")
@@ -35,7 +35,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * <p><b>兼容模式（已废弃）：</b></p>
  * <pre>
  * // 已废弃：使用 getInstance() + setter 链式调用
- * YdszJsonConfig config = YdszJsonConfig.getInstance();
+ * JsonConfig config = JsonConfig.getInstance();
  * config.setNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
  * config.apply();
  * </pre>
@@ -47,11 +47,11 @@ import com.njydsz.common.json.reader.JSONReader;
  * @author ydsz-team
  * @since 1.0.0
  */
-public final class YdszJsonConfig implements Serializable {
+public final class JsonConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static volatile YdszJsonConfig instance;
+    private static volatile JsonConfig instance;
 
     /** 所有可变字段均为 volatile，保证单字段读写的可见性与原子性 */
     private volatile PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
@@ -79,7 +79,7 @@ public final class YdszJsonConfig implements Serializable {
     /** 是否启用根名称包裹（配合 @JsonRootName 注解使用） */
     private volatile boolean wrapRootValue = false;
 
-    private YdszJsonConfig() {
+    private JsonConfig() {
     }
 
     /**
@@ -91,8 +91,8 @@ public final class YdszJsonConfig implements Serializable {
      * @return 新的配置实例，包含与源配置相同的值
      * @since 1.0.0
      */
-    public static YdszJsonConfig copyOf(YdszJsonConfig other) {
-        YdszJsonConfig copy = new YdszJsonConfig();
+    public static JsonConfig copyOf(JsonConfig other) {
+        JsonConfig copy = new JsonConfig();
         if (other != null) {
             copy.copyFrom(other);
         }
@@ -102,13 +102,13 @@ public final class YdszJsonConfig implements Serializable {
     /**
      * 获取配置实例（单例）
      *
-     * @return YdszJsonConfig 实例
+     * @return JsonConfig 实例
      */
-    public static YdszJsonConfig getInstance() {
+    public static JsonConfig getInstance() {
         if (instance == null) {
-            synchronized (YdszJsonConfig.class) {
+            synchronized (JsonConfig.class) {
                 if (instance == null) {
-                    instance = new YdszJsonConfig();
+                    instance = new JsonConfig();
                 }
             }
         }
@@ -229,7 +229,7 @@ public final class YdszJsonConfig implements Serializable {
         SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
         SerializationProvider.setDateFormat(dateFormat);
         SerializationProvider.setFailOnError(failOnError);
-        YdszJsonParser.setUseBigDecimal(useBigDecimal);
+        JsonParserUtil.setUseBigDecimal(useBigDecimal);
         // 传播 maxDepth 到反序列化路径（JSONReader 全局配置）
         JSONReader.setMaxDepth(maxDepth);
         // wrapRootValue 不需要传播到 SerializationContext，因为它在 serialize() 入口处检查
@@ -242,7 +242,7 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @return 当前配置实例（支持链式调用）
      */
-    public synchronized YdszJsonConfig reset() {
+    public synchronized JsonConfig reset() {
         this.namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
         this.circularReferenceStrategy = CircularReferenceStrategy.REF;
         this.writeNulls = false;
@@ -266,7 +266,7 @@ public final class YdszJsonConfig implements Serializable {
      * @param other 另一个配置
      * @return 当前配置实例（支持链式调用）
      */
-    public synchronized YdszJsonConfig copyFrom(YdszJsonConfig other) {
+    public synchronized JsonConfig copyFrom(JsonConfig other) {
         if (other != null) {
             this.namingStrategy = other.namingStrategy;
             this.circularReferenceStrategy = other.circularReferenceStrategy;
@@ -286,7 +286,7 @@ public final class YdszJsonConfig implements Serializable {
 
     @Override
     public String toString() {
-        return "YdszJsonConfig{" +
+        return "JsonConfig{" +
                 "namingStrategy=" + namingStrategy +
                 ", circularReferenceStrategy=" + circularReferenceStrategy +
                 ", writeNulls=" + writeNulls +
@@ -305,13 +305,13 @@ public final class YdszJsonConfig implements Serializable {
     // ==================== Builder 模式 ====================
 
     /**
-     * 创建一个 Builder 用于构建不可变的 YdszJsonConfig 实例。
+     * 创建一个 Builder 用于构建不可变的 JsonConfig 实例。
      *
      * <p>推荐使用 Builder 替代 getInstance() + setter 链式调用。
      * Builder 构建的实例所有字段均为 final，天然线程安全，无需 ThreadLocalSnapshot。</p>
      *
      * <pre>
-     * YdszJsonConfig config = YdszJsonConfig.builder()
+     * JsonConfig config = JsonConfig.builder()
      *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
      *     .writeNulls(true)
      *     .dateFormat("yyyy-MM-dd HH:mm:ss")
@@ -330,7 +330,7 @@ public final class YdszJsonConfig implements Serializable {
      * 不可变配置构建器。
      *
      * <p>对标 Jackson ObjectMapper.Builder 和 FastJSON2 JSON.config() 的 Builder 模式，
-     * 提供类型安全的链式配置构建方式。构建后的 YdszJsonConfig 实例不可修改，
+     * 提供类型安全的链式配置构建方式。构建后的 JsonConfig 实例不可修改，
      * 无需 ThreadLocalSnapshot 保存/恢复。</p>
      *
      * @since 2.0.0
@@ -418,7 +418,7 @@ public final class YdszJsonConfig implements Serializable {
          * @param config 源配置
          * @return 新的 Builder，预填充源配置的值
          */
-        public Builder from(YdszJsonConfig config) {
+        public Builder from(JsonConfig config) {
             if (config != null) {
                 this.namingStrategy = config.namingStrategy;
                 this.circularReferenceStrategy = config.circularReferenceStrategy;
@@ -437,12 +437,12 @@ public final class YdszJsonConfig implements Serializable {
         }
 
         /**
-         * 构建不可变的 YdszJsonConfig 实例。
+         * 构建不可变的 JsonConfig 实例。
          *
-         * @return 新的 YdszJsonConfig 实例
+         * @return 新的 JsonConfig 实例
          */
-        public YdszJsonConfig build() {
-            YdszJsonConfig config = new YdszJsonConfig();
+        public JsonConfig build() {
+            JsonConfig config = new JsonConfig();
             config.namingStrategy = this.namingStrategy;
             config.circularReferenceStrategy = this.circularReferenceStrategy;
             config.writeNulls = this.writeNulls;
