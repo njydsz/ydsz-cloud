@@ -6,7 +6,7 @@ import java.lang.annotation.*;
  * 类级命名策略注解（参考 Jackson 的 @JsonNaming）。
  *
  * <p>标注在类上，指定序列化/反序列化时使用的属性命名策略。
- * 优先级低于字段级 @JsonProperty / @YdszJsonField，高于全局配置。</p>
+ * 优先级低于字段级 @JsonProperty，高于全局配置。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>

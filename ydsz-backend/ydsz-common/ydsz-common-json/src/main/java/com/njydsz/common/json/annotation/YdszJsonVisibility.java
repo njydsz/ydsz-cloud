@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  * }
  *
  * // 字段级别：强制可见
- * &#064;YdszJsonField(visible = true)
+ * &#064;JsonProperty("secretKey")
  * private String secretKey;       // 强制可见
  * </pre>
  *

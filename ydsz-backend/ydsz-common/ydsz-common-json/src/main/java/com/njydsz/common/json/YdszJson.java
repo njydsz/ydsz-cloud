@@ -49,7 +49,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  *   <li><b>Java 8+ 日期时间</b>：完美支持 LocalDateTime 等新 API</li>
  *   <li><b>JSONPath</b>：支持嵌套字段提取</li>
  *   <li><b>Builder 模式</b>：链式调用，代码更优雅</li>
- *   <li><b>注解支持</b>：支持@YdszJsonField、@JsonProperty 等注解</li>
+ *   <li><b>注解支持</b>：支持@JsonProperty、@JsonFormat 等注解</li>
  *   <li><b>自定义序列化器</b>：支持注册自定义序列化/反序列化器</li>
  *   <li><b>命名策略</b>：支持 SNAKE_CASE、KEBAB_CASE 等多种命名策略</li>
  * </ul>

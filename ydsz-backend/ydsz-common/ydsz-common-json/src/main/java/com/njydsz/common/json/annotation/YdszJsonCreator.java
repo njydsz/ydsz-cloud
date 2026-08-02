@@ -61,7 +61,7 @@ import java.lang.annotation.*;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see YdszJsonField
+ * @see JsonProperty
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

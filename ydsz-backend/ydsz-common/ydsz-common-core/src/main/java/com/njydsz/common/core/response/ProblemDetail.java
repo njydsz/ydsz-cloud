@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import com.njydsz.common.core.code.ResultCode;
-import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 
 /**

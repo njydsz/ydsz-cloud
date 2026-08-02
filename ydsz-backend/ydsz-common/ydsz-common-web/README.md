@@ -413,14 +413,112 @@ public class MessageWebhookService {
 
 实现 `WebAuthHandler` 并注册为 Bean，由 `AuthHandlerFactory` 按 ServiceType 路由。具体接入方式参考 `common-auth` 模块文档。
 
-## 依赖
+## SPI 扩展点
 
-```xml
-<dependency>
-    <groupId>com.njydsz</groupId>
-    <artifactId>ydsz-common-web</artifactId>
-</dependency>
+本模块通过 Spring `@ConditionalOnMissingBean` 机制提供以下可覆盖的扩展点，业务方可按需替换默认实现。
+
+### 1. Webhook 投递 SPI
+
+| SPI 接口 | 默认实现 | 覆盖方式 |
+|---|---|---|
+| `WebhookDispatcher` | `DefaultWebhookDispatcher`（内存订阅表 + `RestTemplate` + HMAC-SHA256 签名 + 3 次指数退避重试） | 业务方提供 `WebhookDispatcher` Bean |
+
+**扩展场景**：Redis 持久化订阅、异步线程池投递、消息队列削峰。
+
+### 2. 认证处理器 SPI（模板方法模式）
+
+| SPI 基类 | 默认实现 | 覆盖方式 |
+|---|---|---|
+| `AbstractAuthHandler`（来自 `common-auth`） | `WebAuthHandler`（`@Component("webAuthHandler")`，仅提供 `WebAuthInfo` 实例创建，解析逻辑由基类统一处理） | 业务方提供 `AbstractAuthHandler` 子类 Bean，由 `AuthHandlerFactory` 按 ServiceType 路由 |
+
+### 3. Spring MVC 拦截器扩展
+
+`WebMvcConfiguration` 继承 `BaseMvcConfiguration` 并重写 `addInterceptors`，注册 Web 端专属拦截器：
+
+- `RequestLogInterceptor`（请求日志 + HTTP 指标埋点，order = `INTERCEPTOR_REQUEST_LOG`）
+- `BaseHttpInterceptor`（请求上下文清理，order = `REQUEST_CONTEXT_CLEANUP`）
+
+业务方实现 `WebMvcConfigurer` 或继承 `WebMvcConfiguration` 可追加自定义拦截器。
+
+### 4. 可覆盖的 Bean（`@ConditionalOnMissingBean` 守卫）
+
+| Bean | 作用 | 覆盖方式 |
+|---|---|---|
+| `GlobalResponseAdvice` | 全局响应包装 | 提供同类型 Bean |
+| `ContentCachingFilter` | 请求体缓存过滤器 | 提供 `FilterRegistrationBean` 同名 Bean |
+| `WebAuthFilter` | Web 认证过滤器 | 提供 `FilterRegistrationBean` 同名 Bean |
+| `SecurityHeaderFilter` | 安全头过滤器 | 提供 `FilterRegistrationBean` 同名 Bean |
+| `TraceIdResponseFilter` | TraceId 响应过滤器 | 提供 `FilterRegistrationBean` 同名 Bean |
+| `RequestLogInterceptor` | 请求日志 + 指标埋点 | 提供同类型 Bean |
+| `WebMetrics` | Micrometer 指标采集 | 提供同类型 Bean |
+| `WebHealthIndicator` | 健康检查（见下一章） | 提供同类型 Bean |
+
+### 5. OpenAPI 定制
+
+`WebOpenApiConfiguration` 提供 YDSZ 品牌的 OpenAPI 配置，业务方可通过 `OpenApiCustomizer` Bean 追加自定义文档元数据。
+
+## 健康检查
+
+`WebHealthIndicator` 实现 Spring Boot `HealthIndicator`，在 `/actuator/health` 端点下暴露 Web 基座核心能力状态。
+
+**激活条件：**
+- `org.springframework.boot.health.contributor.HealthIndicator` 类在 classpath（Spring Boot Actuator 可用）
+- `ydsz.web.health-indicator.enabled=true`（默认启用）
+
+**报告项：**
+
+| 检查维度 | 字段 | 来源 |
+|---|---|---|
+| CORS 跨域 | `corsEnabled` / `corsAllowCredentials` / `corsOriginCount` | `WebCorsProperties` |
+| Trace 追踪 | `traceEnabled` / `traceResponseHeaderEnabled` / `traceRequestLogEnabled` / `traceSamplingRate` | `WebTraceProperties` |
+| Session 策略 | `sessionStrategy`（`redis` / `none`） | 上下文中是否存在 `SessionRepository` Bean |
+| Security | `securityEnabled` | 上下文中是否存在 `SecurityFilterChain` Bean |
+| UserAgent 解析器 | `userAgentAnalyzerEnabled` / `userAgentCacheSize` | `UserAgentAnalyzer` Bean 是否存在 |
+
+**响应示例：**
+
+```json
+{
+  "status": "UP",
+  "details": {
+    "corsEnabled": true,
+    "corsAllowCredentials": false,
+    "corsOriginCount": 1,
+    "traceEnabled": true,
+    "traceResponseHeaderEnabled": true,
+    "traceRequestLogEnabled": true,
+    "traceSamplingRate": 1.0,
+    "sessionStrategy": "none",
+    "securityEnabled": true,
+    "userAgentAnalyzerEnabled": true,
+    "userAgentCacheSize": 10000
+  }
+}
 ```
+
+**关闭健康检查：**
+
+```yaml
+ydsz:
+  web:
+    health-indicator:
+      enabled: false
+```
+
+**关联指标采集：**
+
+`WebMetrics`（Micrometer）在 `WebAuthFilter` 与 `RequestLogInterceptor` 调用链中埋点，提供以下指标：
+
+| 指标名 | 说明 | 标签 |
+|---|---|---|
+| `web.auth.total` | 认证请求总数 | `result=success/failure` |
+| `web.auth.duration` | 认证耗时分布 | — |
+| `web.request.total` | HTTP 请求总数 | `method` / `status` |
+| `web.request.duration` | HTTP 请求耗时分布 | `method` |
+| `web.ratelimit.rejected` | 限流拒绝计数 | — |
+| `web.security.header.injected` | 安全响应头注入计数 | — |
+
+> 指标注册采用惰性创建模式，首次调用时注册到 `MeterRegistry`，后续复用已注册的 Counter/Timer 实例。
 
 ## 注意事项
 
