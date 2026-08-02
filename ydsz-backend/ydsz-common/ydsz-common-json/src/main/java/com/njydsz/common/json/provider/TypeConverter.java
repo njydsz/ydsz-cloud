@@ -242,7 +242,8 @@ final class TypeConverter {
      * @param enumType 枚举类型
      * @return 标有 @JsonEnumDefaultValue 的枚举常量，无匹配时原抛 IllegalArgumentException
      */
-    private static Object resolveEnumDefaultValue(Class<? extends Enum<?>> enumType) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static Object resolveEnumDefaultValue(Class<? extends Enum> enumType) {
         for (Field field : enumType.getDeclaredFields()) {
             if (field.isEnumConstant() && field.isAnnotationPresent(JsonEnumDefaultValue.class)) {
                 return Enum.valueOf(enumType, field.getName());
