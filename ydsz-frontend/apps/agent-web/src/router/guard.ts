@@ -16,6 +16,7 @@ import { startProgress, stopProgress } from '@ydsz/utils';
 
 import { accessRoutes } from '#/router/routes';
 
+// 免登录白名单：这些路径无需认证即可访问（含登录 / 认证相关页面）
 const WHITE_LIST = ['/auth', LOGIN_PATH];
 
 /**
@@ -97,6 +98,11 @@ function setupPermissionGuard(router: Router) {
   });
 }
 
+/**
+ * 创建并注册全部路由守卫（通用 / 认证 / 权限）。
+ *
+ * @param router - 待注册守卫的 Vue Router 实例
+ */
 function createRouterGuard(router: Router) {
   setupCommonGuard(router);
   setupAuthGuard(router);

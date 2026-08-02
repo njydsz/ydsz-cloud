@@ -20,6 +20,7 @@ import { useVbenModal } from '@ydsz/common-ui';
 import { ElForm, ElFormItem, ElInput, ElInputNumber, ElMessage, ElRadioGroup, ElRadio } from 'element-plus';
 import { computed, reactive, ref } from 'vue';
 import { createAgentApi, updateAgentApi } from '#/api/agent';
+/** 表单提交成功后触发，通知父级列表页刷新数据 */
 const emit = defineEmits<{ success: [] }>();
 const formRef = ref();
 const isEdit = ref(false);
