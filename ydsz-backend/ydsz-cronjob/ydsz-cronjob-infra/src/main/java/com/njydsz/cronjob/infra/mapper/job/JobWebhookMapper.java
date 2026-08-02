@@ -35,7 +35,13 @@ import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 public interface JobWebhookMapper extends BaseMapper<JobWebhook> {
 
     /**
-     * 查询指定事件类型的活跃 WebHook 列表。
+     * 查询指定事件类型的全部活跃 WebHook 列表。
+     *
+     * <p>仅返回 {@code status = 'ACTIVE'} 且未逻辑删除的记录，按事件类型拉取回调配置，
+     * 供 {@code WebhookEventDispatcher} 在对应事件触发时批量推送。
+     *
+     * @param eventType 事件类型（如 SUCCESS / FAILURE / COMPLETED）
+     * @return 活跃 WebHook 列表；无配置时返回空列表而非 null
      */
     @Select("SELECT id, name, event_type, job_key, job_group, callback_url, http_method, "
             + "       headers, secret, status, created_at, updated_at, deleted "
@@ -44,7 +50,15 @@ public interface JobWebhookMapper extends BaseMapper<JobWebhook> {
     List<JobWebhook> selectActiveByEventType(@Param("eventType") String eventType);
 
     /**
-     * 查询指定事件类型且匹配 jobKey 的活跃 WebHook。
+     * 查询指定事件类型且匹配任务 KEY 的活跃 WebHook。
+     *
+     * <p>{@code job_key} 为 null 的记录视为「全局 WebHook」，对所有任务生效；
+     * 因此查询条件包含 {@code job_key = #{jobKey} OR job_key IS NULL}，
+     * 保证任务专属回调与全局回调都能命中。
+     *
+     * @param eventType 事件类型
+     * @param jobKey    任务 KEY（用于匹配任务专属 WebHook）
+     * @return 命中的活跃 WebHook 列表；未命中时返回空列表
      */
     @Select("SELECT id, name, event_type, job_key, job_group, callback_url, http_method, "
             + "       headers, secret, status, created_at, updated_at, deleted "

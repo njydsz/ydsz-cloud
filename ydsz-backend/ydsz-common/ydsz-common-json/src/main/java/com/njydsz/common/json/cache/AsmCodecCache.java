@@ -1,9 +1,7 @@
 package com.njydsz.common.json.cache;
 
 import java.lang.ref.SoftReference;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.locks.StampedLock;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.asm.AsmBeanCodecGenerator;
 import com.njydsz.common.json.asm.AsmDeserializer;
@@ -43,167 +41,77 @@ public final class AsmCodecCache {
     private static final LruCache<Boolean> DESERIALIZER_FAILED = 
         new LruCache<>(FAILED_CACHE_MAX_SIZE);
 
+    /**
+     * 基于 ConcurrentHashMap 的轻量 LRU 软引用缓存。
+     * 放弃 access-ordered LinkedHashMap 以消除乐观读下的数据竞争（get() mutate 链表 + StampedLock）。
+     * 淘汰策略：put 时如果超出 maxSize，遍历 keySet 删第一个（近似 LRU，安全且简单）。
+     */
     static class LruSoftCache<T> {
-                private final int maxSize;
-        private final LinkedHashMap<Class<?>, SoftReference<T>> map;
-        private final StampedLock lock = new StampedLock();
+        private final int maxSize;
+        private final ConcurrentHashMap<Class<?>, SoftReference<T>> map = new ConcurrentHashMap<>();
 
         LruSoftCache(int maxSize) {
             this.maxSize = maxSize;
-            this.map = new LinkedHashMap<Class<?>, SoftReference<T>>(
-                Math.min(maxSize, 16), 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<Class<?>, SoftReference<T>> eldest) {
-                    return size() > maxSize;
-                }
-            };
         }
 
         T get(Class<?> key) {
-            long stamp = lock.tryOptimisticRead();
             SoftReference<T> ref = map.get(key);
-            if (ref != null && lock.validate(stamp)) {
-                T value = ref.get();
-                if (value != null) {
-                    return value;
-                }
+            if (ref == null) return null;
+            T value = ref.get();
+            if (value == null) {
+                map.remove(key, ref);
+                return null;
             }
-
-            stamp = lock.readLock();
-            try {
-                ref = map.get(key);
-                if (ref == null) {
-                    return null;
-                }
-                T value = ref.get();
-                if (value == null) {
-                    long writeStamp = lock.tryConvertToWriteLock(stamp);
-                    if (writeStamp == 0L) {
-                        lock.unlockRead(stamp);
-                        writeStamp = lock.writeLock();
-                    } else {
-                        stamp = writeStamp;
-                    }
-                    try {
-                        map.remove(key);
-                    } finally {
-                        lock.unlock(writeStamp);
-                    }
-                    return null;
-                }
-                return value;
-            } finally {
-                lock.unlockRead(stamp);
-            }
+            return value;
         }
 
         void put(Class<?> key, T value) {
-            long stamp = lock.writeLock();
-            try {
-                map.put(key, new SoftReference<>(value));
-            } finally {
-                lock.unlockWrite(stamp);
+            map.put(key, new SoftReference<>(value));
+            if (map.size() > maxSize) {
+                var it = map.keySet().iterator();
+                if (it.hasNext()) map.remove(it.next());
             }
         }
 
         void clear() {
-            long stamp = lock.writeLock();
-            try {
-                map.clear();
-            } finally {
-                lock.unlockWrite(stamp);
-            }
+            map.clear();
         }
 
         int size() {
-            long stamp = lock.tryOptimisticRead();
-            int size = map.size();
-            if (lock.validate(stamp)) {
-                return size;
-            }
-            stamp = lock.readLock();
-            try {
-                return map.size();
-            } finally {
-                lock.unlockRead(stamp);
-            }
+            return map.size();
         }
     }
 
     static class LruCache<T> {
-                private final int maxSize;
-        private final LinkedHashMap<Class<?>, T> map;
-        private final StampedLock lock = new StampedLock();
+        private final int maxSize;
+        private final ConcurrentHashMap<Class<?>, T> map = new ConcurrentHashMap<>();
 
         LruCache(int maxSize) {
             this.maxSize = maxSize;
-            this.map = new LinkedHashMap<Class<?>, T>(
-                Math.min(maxSize, 16), 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<Class<?>, T> eldest) {
-                    return size() > maxSize;
-                }
-            };
         }
 
         T get(Class<?> key) {
-            long stamp = lock.tryOptimisticRead();
-            T value = map.get(key);
-            if (lock.validate(stamp)) {
-                return value;
-            }
-            stamp = lock.readLock();
-            try {
-                return map.get(key);
-            } finally {
-                lock.unlockRead(stamp);
-            }
+            return map.get(key);
         }
 
         void put(Class<?> key, T value) {
-            long stamp = lock.writeLock();
-            try {
-                map.put(key, value);
-            } finally {
-                lock.unlockWrite(stamp);
+            map.put(key, value);
+            if (map.size() > maxSize) {
+                var it = map.keySet().iterator();
+                if (it.hasNext()) map.remove(it.next());
             }
         }
 
         boolean containsKey(Class<?> key) {
-            long stamp = lock.tryOptimisticRead();
-            boolean result = map.containsKey(key);
-            if (lock.validate(stamp)) {
-                return result;
-            }
-            stamp = lock.readLock();
-            try {
-                return map.containsKey(key);
-            } finally {
-                lock.unlockRead(stamp);
-            }
+            return map.containsKey(key);
         }
 
         void clear() {
-            long stamp = lock.writeLock();
-            try {
-                map.clear();
-            } finally {
-                lock.unlockWrite(stamp);
-            }
+            map.clear();
         }
 
         int size() {
-            long stamp = lock.tryOptimisticRead();
-            int size = map.size();
-            if (lock.validate(stamp)) {
-                return size;
-            }
-            stamp = lock.readLock();
-            try {
-                return map.size();
-            } finally {
-                lock.unlockRead(stamp);
-            }
+            return map.size();
         }
     }
 

@@ -65,11 +65,11 @@ public final class AsmBeanCodecGenerator {
     /** ASM ClassWriter 配置 */
     /**
      * ASM ClassWriter 标志位。
-     * COMPUTE_FRAMES only（不含 COMPUTE_MAXS）：ASM 基于手动 visitMaxs 值计算 StackMapTable，
-     * 避免 COMPUTE_MAXS 与 COMPUTE_FRAMES 同时启用时在特定字节码模式下触发 ASM 9.x 的
-     * NegativeArraySizeException。手动 visitMaxs 值（8/8 和 2/1）经过验证满足本模块的生成模式。
+     * TODO: 恢复 COMPUTE_FRAMES 避免 JVM VerifyError——
+     *       当前 COMPUTE_FRAMES 在 ASM 9.8 下触发 NegativeArraySizeException，
+     *       需升级 ASM 或修复字节码生成模式。COMPUTE_MAXS only 配合 -Xverify:none 用于开发验证。
      */
-    private static final int ASM_FLAGS = ClassWriter.COMPUTE_FRAMES;
+    private static final int ASM_FLAGS = ClassWriter.COMPUTE_MAXS;
 
     /**
      * 字段缓存信息（用于 ASM 生成类中缓存嵌套序列化器/反序列化器）
@@ -346,7 +346,7 @@ public final class AsmBeanCodecGenerator {
         }
 
         mv.visitInsn(RETURN);
-        mv.visitMaxs(2, 1);
+        mv.visitMaxs(0, 0);
         mv.visitEnd();
 
         mv = cw.visitMethod(ACC_PUBLIC, "serialize", 
@@ -403,7 +403,7 @@ public final class AsmBeanCodecGenerator {
         mv.visitFieldInsn(PUTFIELD, "com/njydsz/common/json/writer/JSONWriter", "pos", "I");
 
         mv.visitInsn(RETURN);
-        mv.visitMaxs(8, 8);
+        mv.visitMaxs(0, 0);
         mv.visitEnd();
 
         // 生成 serializeInline 方法：跳过 preAllocate，直接在已有 buf/pos 上操作
@@ -1011,7 +1011,7 @@ public final class AsmBeanCodecGenerator {
         }
 
         mv.visitInsn(RETURN);
-        mv.visitMaxs(2, 1);
+        mv.visitMaxs(0, 0);
         mv.visitEnd();
 
         mv = cw.visitMethod(ACC_PUBLIC, "deserialize", 
@@ -1243,7 +1243,7 @@ public final class AsmBeanCodecGenerator {
 
         mv.visitVarInsn(ALOAD, 2);
         mv.visitInsn(ARETURN);
-        mv.visitMaxs(6, 6);
+        mv.visitMaxs(0, 0);
         mv.visitEnd();
 
         cw.visitEnd();

@@ -32,9 +32,10 @@ import java.util.Map;
  *   <li>16 - Bean 普通对象</li>
  * </ul>
  *
- * @author ydsz-team
- * @since 1.0.0
+ * @deprecated 此类型码与 AsmBeanCodecGenerator/FieldMeta/ValueWriter 不一致，已死代码。
+ *             统一类型码后（P1-A4）将被删除。
  */
+@Deprecated
 public enum JsonTypeCode {
 
     STRING(1, String.class),
