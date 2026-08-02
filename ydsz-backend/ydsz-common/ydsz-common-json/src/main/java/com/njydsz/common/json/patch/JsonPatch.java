@@ -54,17 +54,22 @@ public final class JsonPatch {
         Map<String, Object> target = JsonParserUtil.parseObject(targetJson);
 
         for (Object opObj : operations) {
-            if (!(opObj instanceof Map<?, ?> rawOp)) {
-                continue;
+            if (!(opObj instanceof Map)) {
+                throw new IllegalArgumentException("Each patch operation must be a JSON object");
             }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> rawOp = (Map<String, Object>) opObj;
 
-            String opType = String.valueOf(rawOp.get("op"));
-            String path = String.valueOf(rawOp.get("path"));
+            Object opField = rawOp.get("op");
+            String opType = opField instanceof String ? (String) opField : null;
+            Object pathField = rawOp.get("path");
+            String path = pathField instanceof String ? (String) pathField : null;
             Object value = rawOp.get("value");
-            String from = String.valueOf(rawOp.get("from"));
+            Object fromField = rawOp.get("from");
+            String from = fromField instanceof String ? (String) fromField : null;
 
             if (opType == null || path == null) {
-                throw new IllegalArgumentException("Patch operation must have 'op' and 'path'");
+                throw new IllegalArgumentException("Patch operation must have 'op' and 'path' as strings");
             }
 
             switch (opType) {

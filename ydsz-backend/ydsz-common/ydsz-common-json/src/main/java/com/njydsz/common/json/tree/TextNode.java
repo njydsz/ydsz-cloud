@@ -84,7 +84,15 @@ public final class TextNode extends JsonNode {
                 case '\n': sb.append("\\n"); break;
                 case '\r': sb.append("\\r"); break;
                 case '\t': sb.append("\\t"); break;
-                default: sb.append(c);
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                default:
+                    if (c < ' ') {
+                        sb.append("\\u");
+                        sb.append(String.format("%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
             }
         }
         sb.append('"');

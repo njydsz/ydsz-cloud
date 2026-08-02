@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.convert.converter.Converter;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
@@ -24,6 +25,7 @@ import com.njydsz.common.json.spring.JsonHttpMessageConverter;
 import com.njydsz.common.json.spring.JsonModuleRegistrar;
 import com.njydsz.common.json.spring.JsonWarmupRunner;
 import com.njydsz.common.json.spring.JsonProperties;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -114,6 +116,37 @@ return converter;
     @ConditionalOnMissingBean
     public JsonWarmupRunner ydszJsonWarmupRunner(JsonProperties properties) {
         return new JsonWarmupRunner(properties);
+    }
+
+    /**
+     * 命名策略转换器，使 {@code ydsz.json.naming-strategy=SNAKE_CASE} 等 YAML 配置
+     * 能绑定到 {@link PropertyNamingStrategy} 接口常量。
+     *
+     * @return Converter 实例
+     * @since 1.0.0
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "namingStrategyConverter")
+    public Converter<String, PropertyNamingStrategy> namingStrategyConverter() {
+        return source -> {
+            if (source == null || source.isBlank()) {
+                return PropertyNamingStrategy.LOWER_CAMEL_CASE;
+            }
+            return switch (source.trim().toUpperCase()) {
+                case "SNAKE_CASE", "LOWER_UNDERSCORE" -> PropertyNamingStrategy.SNAKE_CASE;
+                case "KEBAB_CASE", "LOWER_HYPHEN" -> PropertyNamingStrategy.KEBAB_CASE;
+                case "LOWER_CAMEL_CASE" -> PropertyNamingStrategy.LOWER_CAMEL_CASE;
+                case "UPPER_CAMEL_CASE" -> PropertyNamingStrategy.UPPER_CAMEL_CASE;
+                case "LOWER_CASE" -> PropertyNamingStrategy.LOWER_CASE;
+                default -> {
+                    // 兼容旧文档中已删除的命名策略常量
+                    if ("LOWER_UNDERSCORE".equals(source.trim().toUpperCase())) {
+                        yield PropertyNamingStrategy.SNAKE_CASE;
+                    }
+                    yield PropertyNamingStrategy.LOWER_CAMEL_CASE;
+                }
+            };
+        };
     }
 
     /**
