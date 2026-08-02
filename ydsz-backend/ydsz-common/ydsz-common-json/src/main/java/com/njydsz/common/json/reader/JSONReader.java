@@ -266,7 +266,7 @@ public final class JSONReader {
      * 默认值 {@link #DEFAULT_MAX_DEPTH} = 256。
      *
      * @param depth 最大嵌套深度（必须 > 0）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static void setMaxDepth(int depth) {
         if (depth <= 0) {
@@ -279,7 +279,7 @@ public final class JSONReader {
      * 获取当前最大嵌套深度。
      *
      * @return 最大嵌套深度
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static int getMaxDepth() {
         return maxDepth;
@@ -785,7 +785,7 @@ public final class JSONReader {
      *
      * <p>调用后 {@code pos} 指向字符串结束引号之后的字符。</p>
      *
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void skipStringValue() {
         // 当前 pos 指向引号 "

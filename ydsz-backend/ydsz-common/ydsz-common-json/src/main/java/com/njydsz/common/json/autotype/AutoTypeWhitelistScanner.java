@@ -22,7 +22,7 @@ import com.njydsz.common.json.annotation.JsonClass;
  * <p>原实现中 {@code AutoTypeChecker.isAutoTypeClass} 在反序列化首次遇到某类型时
  * 调用 {@code Class.forName(name, false, ...)} 加载类并检查注解。虽然 {@code initialize=false}
  * 阻止 {@code <clinit>} 执行，但类加载本身可能触发 ServiceLoader 加载、JDBC 驱动注册等副作用。
- * 本扫描器将「识别 @YdszJsonClass 注解类」从运行时反射改为启动时一次性扫描，既安全又高效
+ * 本扫描器将「识别 @JsonClass 注解类」从运行时反射改为启动时一次性扫描，既安全又高效
  * （后续运行时仅做 O(1) 哈希查找）。</p>
  *
  * <p><b>使用方式：</b></p>
@@ -50,7 +50,7 @@ public final class AutoTypeWhitelistScanner {
             return;
         }
 
-        // 不使用默认 excludeFilter（默认会排除 @Repository/@Controller 等组件注解），我们要扫描所有标注 @YdszJsonClass 的类
+        // 不使用默认 excludeFilter（默认会排除 @Repository/@Controller 等组件注解），我们要扫描所有标注 @JsonClass 的类
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(JsonClass.class));
@@ -84,12 +84,12 @@ public final class AutoTypeWhitelistScanner {
                     }
                 } catch (NoClassDefFoundError | Exception e) {
                     // 某些类在当前 ClassPath 下无法解析（可选依赖未引入），跳过
-                    log.debug("[AutoType] Skipped @YdszJsonClass annotated class due to resolution failure: {} - {}",
+                    log.debug("[AutoType] Skipped @JsonClass annotated class due to resolution failure: {} - {}",
                             className, e.getMessage());
                 }
             }
-            log.info("[AutoType] Scanned package '{}' for @YdszJsonClass annotated classes", basePackage);
+            log.info("[AutoType] Scanned package '{}' for @JsonClass annotated classes", basePackage);
         }
-        log.info("[AutoType] Registered {} classes from @YdszJsonClass annotations into whitelist", registeredCount);
+        log.info("[AutoType] Registered {} classes from @JsonClass annotations into whitelist", registeredCount);
     }
 }

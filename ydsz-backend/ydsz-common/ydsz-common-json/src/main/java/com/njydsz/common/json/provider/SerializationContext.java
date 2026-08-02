@@ -56,7 +56,7 @@ public final class SerializationContext {
     /** 枚举是否使用序号序列化 */
     public boolean serializeEnumUsingOrdinal;
 
-    /** 全局日期格式（非空时覆盖字段级 @YdszJsonFormat，空字符串表示使用默认 ISO 格式） */
+    /** 全局日期格式（非空时覆盖字段级 @JsonFormat，空字符串表示使用默认 ISO 格式） */
     public String dateFormat;
 
     /** 序列化失败时是否抛出异常（true=抛异常，false=记录日志返回 null） */

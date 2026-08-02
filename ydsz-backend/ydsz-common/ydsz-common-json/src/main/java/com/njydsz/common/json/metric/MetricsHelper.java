@@ -13,7 +13,7 @@ import com.njydsz.common.json.exception.JsonException;
  * 跳过 {@code System.nanoTime()} 和 lambda 捕获开销。</p>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class MetricsHelper {
 

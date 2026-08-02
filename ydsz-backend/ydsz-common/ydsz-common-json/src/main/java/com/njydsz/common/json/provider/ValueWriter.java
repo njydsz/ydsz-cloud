@@ -922,7 +922,7 @@ public final class ValueWriter {
      * @param field 带有 @JsonUnwrapped 注解的字段元数据
      * @param sb JSON 字符串构建器
      * @param first 是否为第一个字段
-     * @since 1.4.0
+     * @since 1.0.0
      */
     private static void writeUnwrappedFields(Object nestedObj, FieldMeta field,
                                               StringBuilder sb, boolean first) {

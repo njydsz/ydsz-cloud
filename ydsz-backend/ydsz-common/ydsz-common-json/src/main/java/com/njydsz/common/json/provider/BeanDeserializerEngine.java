@@ -28,8 +28,8 @@ import com.njydsz.common.json.reader.JSONReader;
  *   <li><b>ASM 字节码路径</b>：通过 {@link AsmCodecCache} 动态生成反序列化器，
  *       直接操作字段偏移量，无反射开销</li>
  *   <li><b>BeanReader 路径</b>：针对简单 Bean（字段全为基本类型）的轻量级反射读取</li>
- *   <li><b>@YdszJsonCreator 路径</b>：通过注解标记的构造函数创建实例</li>
- *   <li><b>Builder 模式路径</b>：通过 {@code @YdszJsonBuilder} 或自动检测内部 Builder</li>
+ *   <li><b>@JsonCreator 路径</b>：通过注解标记的构造函数创建实例</li>
+ *   <li><b>Builder 模式路径</b>：通过 {@code @JsonBuilder} 或自动检测内部 Builder</li>
  *   <li><b>ZeroCopyDeserializer 路径</b>：零拷贝 char[] 直接解析</li>
  *   <li><b>降级路径</b>：解析为 Map 或 List 返回</li>
  * </ol>
@@ -119,7 +119,7 @@ final class BeanDeserializerEngine {
             }
         }
 
-        // 原有逻辑：@YdszJsonCreator、Builder 模式支持
+        // 原有逻辑：@JsonCreator、Builder 模式支持
         Constructor<?> creatorConstructor = CreatorResolver.findCreatorConstructor(clazz);
 
         if (creatorConstructor != null) {

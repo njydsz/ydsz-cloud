@@ -920,7 +920,7 @@ public final class JsonParserUtil {
      *
      * @param json JSON 字符串
      * @return 字段名 -> 值起始位置（冒号后第一个非空白字符）的映射
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public static Map<String, Integer> buildFieldPositionMap(String json) {
         Map<String, Integer> fieldPositions = new HashMap<>(16);

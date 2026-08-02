@@ -579,7 +579,7 @@ public final class SerializationProvider {
      *
      * @param obj 要序列化的对象
      * @param out 输出流
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static void serializeToStream(Object obj, java.io.OutputStream out) {
         if (obj == null) {
@@ -614,7 +614,7 @@ public final class SerializationProvider {
      *
      * @param obj 要序列化的对象
      * @param writer 字符输出流
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static void serializeToWriter(Object obj, java.io.Writer writer) {
         if (obj == null) {

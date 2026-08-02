@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
  * <ul>
  *   <li>审计字段对业务代码透明，由框架自动维护</li>
  *   <li>采用 LocalDateTime 作为时间类型，支持时区转换</li>
- *   <li>使用 {@code @YdszJsonFormat} 注解支持 JSON 序列化时的格式控制</li>
+ *   <li>使用 {@code @JsonFormat} 注解支持 JSON 序列化时的格式控制</li>
  * </ul>
  *
  * <p><b>审计字段说明：</b>

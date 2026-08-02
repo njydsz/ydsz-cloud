@@ -13,7 +13,7 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
 /**
  * 多态类型解析器
  *
- * <p>处理带 @YdszJsonTypeInfo 注解的基类的反序列化，
+ * <p>处理带 @JsonTypeInfo 注解的基类的反序列化，
  * 根据 JSON 中的类型属性值识别具体子类型。</p>
  *
  * <p><b>使用示例：</b></p>
@@ -75,7 +75,7 @@ public final class PolymorphicTypeResolver {
      *
      * <p>支持两种多态发现机制：</p>
      * <ol>
-     *   <li>注解驱动：通过 @YdszJsonTypeInfo + @YdszJsonSubTypes 显式声明子类型</li>
+     *   <li>注解驱动：通过 @JsonTypeInfo + @JsonSubTypes 显式声明子类型</li>
      *   <li>密封类自动发现：Java 17+ sealed class 通过 getPermittedSubclasses() 自动注册子类型
      *       （使用简单类名作为类型判别值）</li>
      * </ol>
@@ -97,7 +97,7 @@ public final class PolymorphicTypeResolver {
             if (subTypes != null) {
                 Map<String, Class<?>> nameToType = new HashMap<>(subTypes.value().length * 2);
                 for (JsonSubType subType : subTypes.value()) {
-                    // Jackson 兼容：子类上的 @JsonTypeName 优先于 @YdszJsonSubType.name()
+                    // Jackson 兼容：子类上的 @JsonTypeName 优先于 @JsonSubType.name()
                     String typeName = subType.name();
                     JsonTypeName jsonTypeName = subType.value().getAnnotation(JsonTypeName.class);
                     if (jsonTypeName != null && !jsonTypeName.value().isEmpty()) {

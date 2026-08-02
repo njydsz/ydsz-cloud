@@ -159,7 +159,7 @@ public class YdszJson {
     /**
      * 对象转 JSON 字符串（带视图过滤）
      * 
-     * <p>根据 @YdszJsonView 注解过滤字段，仅输出指定视图下可见的字段。</p>
+     * <p>根据 @JsonView 注解过滤字段，仅输出指定视图下可见的字段。</p>
      * 
      * @param obj 要序列化的对象
      * @param viewClass 视图类

@@ -19,7 +19,7 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  *   <li>黑名单检查（始终生效）：拒绝已知的危险类，即使 SafeMode=false 也生效</li>
  *   <li>内置基础类型白名单（Java 基础类型、集合、日期等）</li>
  *   <li>通过 addToWhitelist() 显式加入白名单的类</li>
- *   <li>启动时由 {@link AutoTypeWhitelistScanner} 扫描的 {@code @YdszJsonClass} 注解类（含 seeAlso 子类型）</li>
+ *   <li>启动时由 {@link AutoTypeWhitelistScanner} 扫描的 {@code @JsonClass} 注解类（含 seeAlso 子类型）</li>
  *   <li>类型检查结果缓存（TYPE_CHECK_CACHE），避免每次反序列化重复扫描黑白名单</li>
  *   <li>黑名单类的内部类（通过 {@code OuterClass$InnerClass} 命名约定）会被一并拦截</li>
  * </ul>
@@ -56,7 +56,7 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  *
  * <p><b>注解扫描方式：</b></p>
  * <p>原实现通过 {@code Class.forName(name, false, ...)} 在反序列化首次遇到类型时反射加载类
- * 检查 {@code @YdszJsonClass} 注解，存在 ServiceLoader 加载、JDBC 驱动注册等副作用风险。
+ * 检查 {@code @JsonClass} 注解，存在 ServiceLoader 加载、JDBC 驱动注册等副作用风险。
  * 现已改为由 {@link AutoTypeWhitelistScanner} 在 Spring 上下文启动时一次性扫描注册，
  * 运行时仅做 O(1) 哈希查找，既安全又高效。</p>
  *
@@ -402,7 +402,7 @@ public final class AutoTypeChecker {
                 JsonDeserializationException.PARSE_ERROR,
                 "AutoType check failed: " + clazz.getName()
                     + " is not in the whitelist. "
-                    + "Please add @YdszJsonClass annotation or use AutoTypeChecker.addToWhitelist()"
+                    + "Please add @JsonClass annotation or use AutoTypeChecker.addToWhitelist()"
             );
         }
     }
@@ -422,7 +422,7 @@ public final class AutoTypeChecker {
                 JsonDeserializationException.PARSE_ERROR,
                 "AutoType check failed: " + className
                     + " is not in the whitelist. "
-                    + "Please add @YdszJsonClass annotation or use AutoTypeChecker.addToWhitelist()"
+                    + "Please add @JsonClass annotation or use AutoTypeChecker.addToWhitelist()"
             );
         }
     }
@@ -488,7 +488,7 @@ public final class AutoTypeChecker {
             }
         }
         // 注：原运行时反射检查 isAutoTypeClass 已删除
-        // @YdszJsonClass 注解扫描由 AutoTypeWhitelistScanner 在启动时完成，
+        // @JsonClass 注解扫描由 AutoTypeWhitelistScanner 在启动时完成，
         // 启动时已将注解类（含 seeAlso 子类型）注册到 EXPLICIT_WHITELIST
         return false;
     }

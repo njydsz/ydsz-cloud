@@ -21,7 +21,7 @@ import com.njydsz.common.json.exception.JsonException;
  *
  * @param <T> 目标类型
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class JsonWriter<T> {
 
@@ -99,7 +99,7 @@ public final class JsonWriter<T> {
      * 获取绑定的目标类型。
      *
      * @return 绑定的目标类型，未绑定时返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public Class<T> getTargetClass() {
         return targetClass;

@@ -64,7 +64,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      * 本模块刻意不引入 Jackson 依赖，因此不能直接 import 引用该类（否则编译器会同时报告 5 个
      * "未知的枚举常量 JsonInclude.Include.NON_EMPTY" 警告）。
      * <p>此处用反射按需探测：找到则按既有语义解包；找不到（Spring 7.x 移除该类后）则降级为原样输出，
-     * 届时 controller 侧应改用 {@code @YdszJsonView} 注解由框架消息转换器处理视图过滤。
+     * 届时 controller 侧应改用 {@code @JsonView} 注解由框架消息转换器处理视图过滤。
      */
     private static final Class<?> MAPPING_JACKSON_VALUE_CLASS = loadClassOrNull(
             "org.springframework.http.converter.json.MappingJacksonValue");
@@ -150,7 +150,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      * @return 反序列化后的对象
      * @throws IOException 读取失败
      * @throws HttpMessageNotReadableException JSON 解析失败
-     * @since 1.4.0
+     * @since 1.0.0
      */
     @Override
     protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
@@ -227,7 +227,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     protected void writeInternal(Object o, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
         try {
-            // 检查是否带有 @YdszJsonView 视图过滤（通过反射探测 Spring 的 MappingJacksonValue 包装类）
+            // 检查是否带有 @JsonView 视图过滤（通过反射探测 Spring 的 MappingJacksonValue 包装类）
             Class<?> viewClass = extractViewClass(o);
             Object value = extractValue(o);
 
@@ -290,10 +290,10 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     }
 
     /**
-     * 从对象中提取 @YdszJsonView 视图类。
+     * 从对象中提取 @JsonView 视图类。
      *
      * <p>支持 Spring 的 {@code MappingJacksonValue} 包装类（反射探测，避免直接引用已废弃类），
-     * 当控制器方法使用 {@code @YdszJsonView} 注解时，Spring 会将返回值
+     * 当控制器方法使用 {@code @JsonView} 注解时，Spring 会将返回值
      * 包装在 {@code MappingJacksonValue} 中，其中包含视图类信息。</p>
      *
      * @param obj 待序列化对象

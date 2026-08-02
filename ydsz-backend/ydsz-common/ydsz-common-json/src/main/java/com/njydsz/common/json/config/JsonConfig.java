@@ -320,7 +320,7 @@ public final class JsonConfig implements Serializable {
      * </pre>
      *
      * @return 新的 Builder 实例
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static Builder builder() {
         return new Builder();
@@ -333,7 +333,7 @@ public final class JsonConfig implements Serializable {
      * 提供类型安全的链式配置构建方式。构建后的 JsonConfig 实例不可修改，
      * 无需 ThreadLocalSnapshot 保存/恢复。</p>
      *
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static final class Builder {
         private PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;

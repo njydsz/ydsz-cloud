@@ -265,7 +265,7 @@ public final class FieldMetadataLoader {
      * @param clazz 被扫描的类
      * @param fieldList 已加载的字段列表
      * @param classNaming 类级命名策略
-     * @since 1.4.0
+     * @since 1.0.0
      */
     private static void applyMethodAnnotations(Class<?> clazz, List<FieldMeta> fieldList, PropertyNamingStrategy classNaming) {
         // 构建字段名 -> 索引映射（用于替换 fieldList 中的元素）
@@ -372,7 +372,7 @@ public final class FieldMetadataLoader {
      *
      * @param clazz 要扫描的类
      * @return 标注了 {@code @JsonValue} 的 Method，未找到返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static Method findJsonValueMethod(Class<?> clazz) {
         return JSON_VALUE_METHOD_CACHE.computeIfAbsent(clazz, c -> {
@@ -399,7 +399,7 @@ public final class FieldMetadataLoader {
      *
      * @param clazz 要检查的类
      * @return true 如果类中存在 {@code @JsonValue} 标注的方法
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static boolean hasJsonValueMethod(Class<?> clazz) {
         return findJsonValueMethod(clazz) != null;
@@ -413,7 +413,7 @@ public final class FieldMetadataLoader {
      *
      * @param clazz 要扫描的类
      * @return 标注了 {@code @JsonAnyGetter} 的 Method，未找到返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static Method findAnyGetterMethod(Class<?> clazz) {
         return JSON_ANY_GETTER_CACHE.computeIfAbsent(clazz, c -> {
@@ -442,7 +442,7 @@ public final class FieldMetadataLoader {
      *
      * @param clazz 要扫描的类
      * @return 计算属性方法数组，未找到返回空数组
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static Method[] findComputedProperties(Class<?> clazz) {
         return COMPUTED_PROPERTIES_CACHE.computeIfAbsent(clazz, c -> {
@@ -477,7 +477,7 @@ public final class FieldMetadataLoader {
      *
      * @param clazz 要检查的类
      * @return true 如果类中存在计算属性方法
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static boolean hasComputedProperties(Class<?> clazz) {
         return findComputedProperties(clazz).length > 0;
@@ -488,7 +488,7 @@ public final class FieldMetadataLoader {
      *
      * @param method 标注了 @JsonGetter 的方法
      * @return JSON 属性名
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static String getComputedPropertyName(Method method) {
         JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);
@@ -507,7 +507,7 @@ public final class FieldMetadataLoader {
      *
      * @param clazz 要扫描的类
      * @return 标注了 {@code @JsonAnySetter} 的 Method，未找到返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static Method findAnySetterMethod(Class<?> clazz) {
         return JSON_ANY_SETTER_CACHE.computeIfAbsent(clazz, c -> {

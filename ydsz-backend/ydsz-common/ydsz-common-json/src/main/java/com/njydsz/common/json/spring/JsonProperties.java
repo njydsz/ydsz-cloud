@@ -88,7 +88,7 @@ public class JsonProperties {
     private boolean failOnError = false;
 
     /**
-     * 启动时扫描 @YdszJsonClass 注解类的基础包列表。
+     * 启动时扫描 @JsonClass 注解类的基础包列表。
      *
      * <p>扫描结果会注册到 {@code AutoTypeChecker} 白名单，避免运行时反射加载类的副作用。
      * 支持通配符模式，例如 {@code com.njydsz.*.entity} 匹配所有子包下的 entity 包。

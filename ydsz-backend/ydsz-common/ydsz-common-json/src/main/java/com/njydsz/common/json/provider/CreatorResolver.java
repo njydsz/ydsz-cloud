@@ -11,13 +11,13 @@ import com.njydsz.common.json.parser.JsonParserUtil;
 /**
  * {@link JsonCreator} 注解处理器。
  *
- * <p>负责处理带 {@code @YdszJsonCreator} 注解的构造函数反序列化逻辑。
+ * <p>负责处理带 {@code @JsonCreator} 注解的构造函数反序列化逻辑。
  * 当目标类没有默认无参构造函数时，通过注解标记的构造函数进行反序列化，
  * 类似 Jackson 的 {@code @JsonCreator} 和 Gson 的 {@code @SerializedName} 机制。
  *
  * <h3>参数名解析策略</h3>
  * <ol>
- *   <li>优先使用 {@code @YdszJsonCreator(parameterNames=...)} 显式指定的参数名数组</li>
+ *   <li>优先使用 {@code @JsonCreator(parameterNames=...)} 显式指定的参数名数组</li>
  *   <li>降级为通过类字段名 + {@code @JsonProperty} 注解映射 JSON 字段名</li>
  * </ol>
  *
@@ -34,13 +34,13 @@ final class CreatorResolver {
     }
 
     /**
-     * 查找类上带 {@code @YdszJsonCreator} 注解的构造函数。
+     * 查找类上带 {@code @JsonCreator} 注解的构造函数。
      *
      * <p>如果多个构造函数都标注了该注解，优先选择 {@code defaultCreator=true} 的构造函数。
      * 其次选择最后遍历到的已标注构造函数。
      *
      * @param clazz 目标类
-     * @return 标注了 {@code @YdszJsonCreator} 且 {@code enable=true} 的构造函数，未找到返回 {@code null}
+     * @return 标注了 {@code @JsonCreator} 且 {@code enable=true} 的构造函数，未找到返回 {@code null}
      */
     static Constructor<?> findCreatorConstructor(Class<?> clazz) {
         Constructor<?>[] constructors = clazz.getDeclaredConstructors();
@@ -59,7 +59,7 @@ final class CreatorResolver {
     }
 
     /**
-     * 使用带 {@code @YdszJsonCreator} 的构造函数进行反序列化。
+     * 使用带 {@code @JsonCreator} 的构造函数进行反序列化。
      *
      * <p>解析流程：
      * <ol>

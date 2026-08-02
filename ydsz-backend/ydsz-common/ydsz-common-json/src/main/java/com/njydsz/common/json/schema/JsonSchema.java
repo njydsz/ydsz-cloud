@@ -315,7 +315,7 @@ public final class JsonSchema {
      *
      * @param schemas 需要全部满足的 Schema 列表
      * @return 当前 Schema（链式调用）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public JsonSchema allOf(JsonSchema... schemas) {
         if (this.allOf == null) {
@@ -330,7 +330,7 @@ public final class JsonSchema {
      *
      * @param schemas 需要满足任一条件的 Schema 列表
      * @return 当前 Schema（链式调用）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public JsonSchema anyOf(JsonSchema... schemas) {
         if (this.anyOf == null) {
@@ -345,7 +345,7 @@ public final class JsonSchema {
      *
      * @param schemas 需要满足唯一条件的 Schema 列表
      * @return 当前 Schema（链式调用）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public JsonSchema oneOf(JsonSchema... schemas) {
         if (this.oneOf == null) {
@@ -367,7 +367,7 @@ public final class JsonSchema {
      *
      * @param not 不允许匹配的 Schema
      * @return 当前 Schema（链式调用）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public JsonSchema not(JsonSchema not) {
         this.not = not;
@@ -379,7 +379,7 @@ public final class JsonSchema {
      *
      * @param constValue 固定值
      * @return 当前 Schema（链式调用）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public JsonSchema constValue(Object constValue) {
         this.constValue = constValue;
@@ -396,7 +396,7 @@ public final class JsonSchema {
      * @param thenSchema 满足条件时必须匹配的 Schema
      * @param elseSchema 不满足条件时必须匹配的 Schema（可为 null）
      * @return 当前 Schema（链式调用）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public JsonSchema ifThenElse(JsonSchema ifSchema, JsonSchema thenSchema, JsonSchema elseSchema) {
         this.ifSchema = ifSchema;

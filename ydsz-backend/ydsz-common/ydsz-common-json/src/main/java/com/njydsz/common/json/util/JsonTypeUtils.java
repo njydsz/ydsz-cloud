@@ -9,7 +9,7 @@ package com.njydsz.common.json.util;
  * 几乎相同的基本类型判断逻辑，此处统一为单一来源。</p>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class JsonTypeUtils {
 

@@ -579,7 +579,7 @@ public class JsonPath {
     /**
      * 清除编译缓存（用于测试或配置变更场景）。
      *
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static void clearCache() {
         COMPILE_CACHE.clear();

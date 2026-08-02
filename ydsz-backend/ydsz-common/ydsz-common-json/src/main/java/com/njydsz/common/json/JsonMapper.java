@@ -111,7 +111,7 @@ public class JsonMapper {
      * <p>在使用 {@link #getConfig()} 修改配置后调用此方法。
      * 如果未调用，Mapper 可能继续使用上次应用的旧配置。</p>
      *
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void configChanged() {
         configApplied = false;
@@ -189,7 +189,7 @@ public class JsonMapper {
     /**
      * 序列化对象为 JSON 字符串（带视图过滤）。
      *
-     * <p>根据 @YdszJsonView 注解过滤字段，仅输出指定视图下可见的字段。</p>
+     * <p>根据 @JsonView 注解过滤字段，仅输出指定视图下可见的字段。</p>
      *
      * @param obj       要序列化的对象
      * @param viewClass 视图类
@@ -534,7 +534,7 @@ public class JsonMapper {
      * @param toValueType 目标类型
      * @param <T> 目标类型参数
      * @return 转换后的对象
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public <T> T convertValue(Object fromValue, Class<T> toValueType) {
         if (fromValue == null) {
@@ -551,7 +551,7 @@ public class JsonMapper {
      * @param toValueTypeRef 目标类型引用
      * @param <T> 目标类型参数
      * @return 转换后的对象
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public <T> T convertValue(Object fromValue, JsonType<T> toValueTypeRef) {
         if (fromValue == null) {
@@ -568,7 +568,7 @@ public class JsonMapper {
      * @param clazz 目标类型
      * @param <T> 目标类型参数
      * @return 转换后的对象
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public <T> T treeToValue(JsonNode node, Class<T> clazz) {
         if (node == null) {
@@ -583,7 +583,7 @@ public class JsonMapper {
      *
      * @param obj 要序列化的对象
      * @return JSON 字符串
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public String writeValueAsString(Object obj) {
         return toJson(obj);
@@ -594,7 +594,7 @@ public class JsonMapper {
      *
      * @param obj 要序列化的对象
      * @return UTF-8 编码的字节数组
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public byte[] writeValueAsBytes(Object obj) {
         return toJsonBytes(obj);
@@ -607,7 +607,7 @@ public class JsonMapper {
      * @param type 目标类型
      * @param <T> 目标类型参数
      * @return 反序列化后的对象
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public <T> T readValue(String json, Type type) {
         if (json == null || json.isBlank()) {
@@ -622,7 +622,7 @@ public class JsonMapper {
      *
      * @param obj 要序列化的对象
      * @return 格式化的 JSON 字符串
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public String format(Object obj) {
         return toJson(obj, true);
@@ -639,7 +639,7 @@ public class JsonMapper {
      * @param clazz 目标类型
      * @param <T>   类型参数
      * @return 绑定型读取器
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public <T> JsonReader<T> readerFor(Class<T> clazz) {
         return new JsonReader<>(this, clazz);
@@ -654,7 +654,7 @@ public class JsonMapper {
      * @param clazz 目标类型
      * @param <T>   类型参数
      * @return 绑定型写入器
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public <T> JsonWriter<T> writerFor(Class<T> clazz) {
         return new JsonWriter<>(this, clazz);
@@ -743,7 +743,7 @@ public class JsonMapper {
      * 创建 Builder 实例。
      *
      * @return Builder 实例
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static Builder builder() {
         return new Builder();
@@ -762,7 +762,7 @@ public class JsonMapper {
      *     .build();
      * </pre>
      *
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static final class Builder {
 

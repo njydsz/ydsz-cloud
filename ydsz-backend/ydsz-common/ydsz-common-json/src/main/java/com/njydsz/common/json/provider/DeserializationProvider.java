@@ -39,7 +39,7 @@ import com.njydsz.common.json.reader.JSONReader;
  *   <li>JsonType 支持 - 泛型类型推断</li>
  *   <li>Builder 模式支持 - 链式构建对象</li>
  *   <li>Creator 模式支持 - 自定义构造函数反序列化</li>
- *   <li>多态类型支持 - @YdszJsonTypeInfo 自动识别子类型</li>
+ *   <li>多态类型支持 - @JsonTypeInfo 自动识别子类型</li>
  * </ul>
  *
  * <p><b>反序列化流程：</b></p>
@@ -72,7 +72,7 @@ public final class DeserializationProvider {
      * @param clazz 目标类型
      * @param <T> 类型参数
      * @return 反序列化后的对象，bytes 为空时返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static <T> T deserialize(byte[] bytes, Class<T> clazz) {
         if (bytes == null || bytes.length == 0) {
@@ -89,7 +89,7 @@ public final class DeserializationProvider {
      * @param type 目标类型
      * @param <T> 类型参数
      * @return 反序列化后的对象
-     * @since 1.4.0
+     * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
     public static <T> T deserialize(byte[] bytes, Type type) {
@@ -262,7 +262,7 @@ public final class DeserializationProvider {
     /**
      * 解析多态类型
      *
-     * <p>如果目标类有 @YdszJsonTypeInfo 注解，则根据 JSON 中的类型属性值
+     * <p>如果目标类有 @JsonTypeInfo 注解，则根据 JSON 中的类型属性值
      * 识别具体子类型并返回。</p>
      *
      * @param json JSON 字符串

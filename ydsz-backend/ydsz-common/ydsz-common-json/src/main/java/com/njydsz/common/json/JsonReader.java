@@ -23,7 +23,7 @@ import com.njydsz.common.json.metric.MetricsHelper;
  *
  * @param <T> 目标类型
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class JsonReader<T> {
 

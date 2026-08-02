@@ -51,7 +51,7 @@ public final class JsonReactiveUtils {
      *
      * @param obj 要序列化的对象
      * @param bufferFactory DataBuffer 工厂
-     * @param viewClass 视图类（用于 @YdszJsonView 过滤）
+     * @param viewClass 视图类（用于 @JsonView 过滤）
      * @return 包含 JSON UTF-8 字节的 DataBuffer
      * @since 1.0.0
      */

@@ -19,7 +19,7 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  *
  * <h3>支持的 Builder 模式</h3>
  * <ul>
- *   <li><b>外部 Builder</b>：通过 {@code @YdszJsonBuilder(builderClass=...)} 显式指定 Builder 类</li>
+ *   <li><b>外部 Builder</b>：通过 {@code @JsonBuilder(builderClass=...)} 显式指定 Builder 类</li>
  *   <li><b>内部 Builder</b>：Builder 作为目标类的静态内部类，通过 {@code autoDetect=true} 自动发现</li>
  * </ul>
  *
@@ -52,7 +52,7 @@ final class BuilderResolver {
      *
      * @param json       JSON 字符串
      * @param clazz      目标类
-     * @param annotation {@code @YdszJsonBuilder} 注解配置
+     * @param annotation {@code @JsonBuilder} 注解配置
      * @param <T>        目标类型
      * @return 反序列化后的实例
      */
@@ -111,7 +111,7 @@ final class BuilderResolver {
      * @param json         JSON 字符串
      * @param clazz        目标类
      * @param builderClass Builder 内部类
-     * @param annotation   {@code @YdszJsonBuilder} 注解配置
+     * @param annotation   {@code @JsonBuilder} 注解配置
      * @param <T>          目标类型
      * @return 反序列化后的实例
      */
@@ -196,7 +196,7 @@ final class BuilderResolver {
     /**
      * 查找目标类的内部 Builder 类。
      *
-     * <p>遍历目标类的所有内部类，优先查找带 {@code @YdszJsonBuilder} 注解的类，
+     * <p>遍历目标类的所有内部类，优先查找带 {@code @JsonBuilder} 注解的类，
      * 其次查找含 {@code build()} 方法且返回目标类型的类。
      *
      * @param targetClass 目标类
@@ -264,7 +264,7 @@ final class BuilderResolver {
     /**
      * 创建默认的 {@link JsonBuilder} 注解实例。
      *
-     * <p>当内部 Builder 类未显式标注 {@code @YdszJsonBuilder} 时使用此默认配置：
+     * <p>当内部 Builder 类未显式标注 {@code @JsonBuilder} 时使用此默认配置：
      * buildMethod="build"、withPrefix=""、chainMethod=true。
      *
      * @return 默认注解实例

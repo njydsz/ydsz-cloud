@@ -170,7 +170,7 @@ return converter;
             // 安全模式设置
             AutoTypeChecker.setSafeMode(properties.isSafeMode());
 
-            // 启动时扫描 @YdszJsonClass 注解类，注册到 AutoTypeChecker 白名单
+            // 启动时扫描 @JsonClass 注解类，注册到 AutoTypeChecker 白名单
             // 替代原运行时反射加载方式，避免 Class.forName 的副作用
             if (properties.getWhitelistPackages() != null
                     && !properties.getWhitelistPackages().isEmpty()) {
