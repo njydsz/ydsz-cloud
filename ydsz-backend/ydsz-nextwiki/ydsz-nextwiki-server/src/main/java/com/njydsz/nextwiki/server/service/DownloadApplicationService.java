@@ -138,17 +138,21 @@ public class DownloadApplicationService {
     @Data
     @Builder
     public static class DownloadContext {
+        /** 待下载文件节点（含 storageKey、大小、后缀等元数据） */
         private FileNode fileNode;
+        /** 文件存储实例，未配置时为 {@code null} */
         private IFileStorage storage;
     }
 
     /**
-     * 签名下载上下文
+     * 签名下载上下文（经签名 URL 校验后还原的下载目标）。
      */
     @Data
     @Builder
     public static class SignedDownloadContext {
+        /** 存储对象键（由签名还原，对应对象存储中的实际文件） */
         private String storageKey;
+        /** 文件存储实例，未配置时为 {@code null} */
         private IFileStorage storage;
     }
 }

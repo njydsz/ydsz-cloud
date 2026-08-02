@@ -102,6 +102,17 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
     private String allowedOriginsConfig;
 
     @Override
+    /**
+     * WebSocket 独立认证过滤器：处理升级握手中的 Token 校验与内部头注入。
+     *
+     * <p>仅对 {@code /ws} 前缀且 {@code Upgrade: websocket} 的请求生效；先做 Origin 校验（P0-4 防跨域劫持），
+     * 再从查询参数 / Sec-WebSocket-Protocol / Authorization 提取 Token 并校验，
+     * 通过后注入 X-User-* 与签名头（X-Internal-Sig / Ts / Nonce），标记已认证后放行。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param chain    网关过滤器链
+     * @return 放行或拒绝（401 / 403）的完成信号 Mono
+     */
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();

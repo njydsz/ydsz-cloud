@@ -51,6 +51,7 @@ public final class ChatResponse implements Serializable {
     }
 
     public String getContent() {
+        // 消息可能为 null（异常兜底场景），返回 null 而非抛 NPE，调用方须判空
         return message != null ? message.getContent() : null;
     }
 

@@ -105,6 +105,17 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     private final GatewayMetrics gatewayMetrics;
 
     @Override
+    /**
+     * 记录结构化访问日志（在响应完成后异步输出）。
+     *
+     * <p>先于过滤器链记录请求开始时间与 traceId，并通过 {@code doFinally} 在响应完成后
+     * 输出 JSON 访问日志（含敏感参数脱敏、客户端真实 IP、路由、状态码、耗时、指标上报）。
+     * 顺序 {@code HIGHEST_PRECEDENCE + 1}，确保被拒绝的请求也被记录。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param chain    网关过滤器链
+     * @return 完成信号 Mono
+     */
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         long startTime = System.currentTimeMillis();
         String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
@@ -255,6 +266,13 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     }
 
     @Override
+    /**
+     * 过滤器执行顺序：{@code HIGHEST_PRECEDENCE + 1}。
+     *
+     * <p>早于鉴权（+10）、IP 黑名单（+3）等过滤器，确保所有请求（含被拒绝的）都能被访问日志记录。
+     *
+     * @return 顺序值
+     */
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE + 1;
     }

@@ -58,10 +58,17 @@ public class DownloadRateLimitService {
     private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
 
     /**
-     * 检查下载限流
-     * <p>
-     * 委托 {@link RedisRateLimiter#tryAcquireFixedWindow} 执行原子化限流，
-     * 故障时按 FAIL_CLOSED 策略拒绝请求，保证安全性。
+     * 检查下载限流（用户级 + IP 级双重固定窗口限流）。
+     * <p>委托 {@link RedisRateLimiter#tryAcquireFixedWindow}（Redis Lua 脚本，INCR+EXPIRE 原子）执行限流，
+     * 任一维度超限即拒绝；限流组件不可用时按 FAIL_CLOSED 策略拒绝请求，保证安全性。
+     *
+     * @param userId      用户 ID（用户级限流维度，阈值 {@code nextwiki.download.rate-limit-per-minute}）
+     * @param ip          客户端 IP（IP 级限流维度，阈值 {@code nextwiki.download.ip-rate-limit-per-minute}）
+     * @param fileNodeId  文件节点 ID（当前作为透传参数保留，未启用单文件级限流）
+     * @return 限流结果 {@link RateLimitResult}，{@code allowed=false} 时含拒绝原因
+     * @complexity O(1)（两次 Redis 原子计数）
+     * @concurrency 基于 Redis 原子窗口，支持多实例部署；窗口 {@link #RATE_WINDOW}=1 分钟
+     * @note 无本地状态，线程安全；限流计数由各维度 Key 独立维护
      */
     public RateLimitResult checkRateLimit(String userId, String ip, String fileNodeId) {
         int rateLimitPerMinute = properties.getDownload().getRateLimitPerMinute();
@@ -82,7 +89,15 @@ public class DownloadRateLimitService {
     }
 
     /**
-     * 验证防盗链
+     * 验证 Referer 防盗链（子域名/路径包含即放行）。
+     * <p>空 Referer 直接拒绝（防止无来源直链盗刷）；匹配规则为 {@code referer.contains(allowedDomain)}，
+     * 属宽松前缀/包含匹配，生产环境建议收紧为正则或精确域名。
+     *
+     * @param referer       请求 Referer 头
+     * @param allowedDomain 允许的来源域名（如 {@code example.com}）
+     * @return 是否通过防盗链校验
+     * @complexity O(1)（字符串包含判断）
+     * @security 仅作基础来源校验，不替代签名 URL 的强校验
      */
     public boolean verifyReferer(String referer, String allowedDomain) {
         if (referer == null || referer.isEmpty()) {
@@ -92,7 +107,17 @@ public class DownloadRateLimitService {
     }
 
     /**
-     * 生成签名下载 URL
+     * 生成签名下载 URL（MD5 签名 + Redis 落地，时效性与用户/IP 绑定）。
+     * <p>将 {@code storageKey|userId|ip|expireTime} 做 MD5 得到签名，并把签名→storageKey 写入 Redis，
+     * TTL 等于签名有效期；返回的路径由 Controller 路由到 {@link #verifySignedUrl} 校验。
+     *
+     * @param storageKey 存储对象键
+     * @param userId     用户 ID（参与签名，校验时绑定）
+     * @param ip         客户端 IP（参与签名，校验时绑定）
+     * @return 签名下载路径（如 {@code /nextwiki/download/{sign}?expires=...}）
+     * @complexity O(1)（一次 MD5 + 一次 Redis 写入）
+     * @security 签名含 userId 与 ip，理论上可限制重放来源；MD5 仅作完整性校验，非加密强度
+     * @note 有效期由 {@code nextwiki.download.signed-url-expire-seconds} 决定
      */
     public String generateSignedDownloadUrl(String storageKey, String userId, String ip) {
         long signedUrlExpireSeconds = properties.getDownload().getSignedUrlExpireSeconds();

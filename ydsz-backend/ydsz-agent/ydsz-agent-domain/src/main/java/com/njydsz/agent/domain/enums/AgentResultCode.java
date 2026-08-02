@@ -77,6 +77,7 @@ public enum AgentResultCode implements ExceptionCode {
         for (AgentResultCode c : values()) {
             registryMap.put(c.getCode(), c);
         }
+        // 类加载即完成全局注册，确保异常码在首次被抛出/翻译前已可用，避免消息键解析失败
         ExceptionCodeRegistry.register(registryMap);
     }
 }

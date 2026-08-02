@@ -48,8 +48,9 @@ public final class ToolRegistration {
         public Builder name(String name) { this.name = name; return this; }
         public Builder description(String description) { this.description = description; return this; }
         public Builder addParameter(String paramName, String paramDesc, boolean required) {
-            Map<String, Object> param = new HashMap<>();
-            param.put("type", "string");
+        Map<String, Object> param = new HashMap<>();
+        // 当前 Builder 仅支持 string 类型参数（简化约定）；如需 object/number 等复杂类型应直接构造 ToolDefinition
+        param.put("type", "string");
             param.put("description", paramDesc);
             param.put("required", required);
             parametersSchema.put(paramName, param);

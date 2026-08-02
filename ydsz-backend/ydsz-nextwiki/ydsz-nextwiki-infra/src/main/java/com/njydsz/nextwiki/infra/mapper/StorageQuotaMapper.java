@@ -32,8 +32,25 @@ import com.njydsz.nextwiki.domain.entity.StorageQuota;
 @Mapper
 public interface StorageQuotaMapper extends BaseMapper<StorageQuota> {
 
+    /**
+     * 按配额维度查询配额记录，用于上传/删除前的容量校验与用量读取。
+     *
+     * @param scopeType 配额维度：user / tenant / project
+     * @param scopeId 维度 ID（对应维度的具体对象 ID）
+     * @return 命中的配额实体；不存在则返回 null
+     */
     StorageQuota selectByScope(@Param("scopeType") String scopeType, @Param("scopeId") String scopeId);
 
+    /**
+     * 原子增加已用容量与文件数；SQL 内同时做容量上限校验（quota_used+增量 <= quota_limit 等），
+     * 仅当不超过上限时才更新，返回 0 即表示本次增量将导致超配额（调用方需据此拒绝写入）。
+     *
+     * @param scopeType   配额维度：user / tenant / project
+     * @param scopeId     维度 ID
+     * @param bytesDelta  新增字节数（正数）
+     * @param fileCountDelta 新增文件数（正数）
+     * @return 受影响行数（0 表示超配额未更新）
+     */
     @Update("UPDATE nw_storage_quota SET quota_used = quota_used + #{bytesDelta}, " +
             "file_count_used = file_count_used + #{fileCountDelta}, updated_at = NOW() " +
             "WHERE scope_type = #{scopeType} AND scope_id = #{scopeId} " +
@@ -42,6 +59,15 @@ public interface StorageQuotaMapper extends BaseMapper<StorageQuota> {
     int addUsage(@Param("scopeType") String scopeType, @Param("scopeId") String scopeId,
                  @Param("bytesDelta") long bytesDelta, @Param("fileCountDelta") int fileCountDelta);
 
+    /**
+     * 原子扣减已用容量与文件数（文件删除/移出回收站时调用）；使用 GREATEST(..., 0) 防止用量被减成负数。
+     *
+     * @param scopeType   配额维度：user / tenant / project
+     * @param scopeId     维度 ID
+     * @param bytesDelta  释放字节数（正数）
+     * @param fileCountDelta 释放文件数（正数）
+     * @return 受影响行数
+     */
     @Update("UPDATE nw_storage_quota SET quota_used = GREATEST(quota_used - #{bytesDelta}, 0), " +
             "file_count_used = GREATEST(file_count_used - #{fileCountDelta}, 0), updated_at = NOW() " +
             "WHERE scope_type = #{scopeType} AND scope_id = #{scopeId}")

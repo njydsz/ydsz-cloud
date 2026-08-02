@@ -49,6 +49,7 @@ public final class ChatChunk implements Serializable {
     public TokenUsage getUsage() { return usage; }
 
     public boolean isFinished() {
+        // 以 finishReason 是否非空判定流结束，与 OpenAI SSE 约定一致；null 表示仍有后续 chunk
         return finishReason != null;
     }
 

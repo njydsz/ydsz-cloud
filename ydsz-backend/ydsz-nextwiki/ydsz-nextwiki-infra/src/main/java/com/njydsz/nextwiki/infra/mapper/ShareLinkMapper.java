@@ -35,15 +35,45 @@ import com.njydsz.nextwiki.domain.entity.ShareLink;
 @Mapper
 public interface ShareLinkMapper extends BaseMapper<ShareLink> {
 
+    /**
+     * 按分享码查询分享链接，是外部用户通过分享入口访问文件的鉴权入口。
+     *
+     * @param shareCode 分享码（对外暴露的唯一标识）
+     * @return 命中的分享链接实体；不存在则返回 null
+     */
     ShareLink selectByShareCode(@Param("shareCode") String shareCode);
 
+    /**
+     * 查询指定文件节点下创建的全部分享链接（含有效与失效）。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @return 分享链接列表
+     */
     List<ShareLink> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
+    /**
+     * 查询某用户创建的、当前仍有效的分享链接列表（未过期且未撤销），用于"我的分享"管理页。
+     *
+     * @param userId 分享创建人 ID
+     * @return 有效分享链接列表
+     */
     List<ShareLink> selectActiveSharesByUserId(@Param("userId") String userId);
 
+    /**
+     * 撤销分享链接（将状态置为 revoked 使其立即失效），用于主动终止分享。
+     *
+     * @param id 分享链接主键
+     * @return 受影响行数
+     */
     @Update("UPDATE nw_share_link SET status = 'revoked', updated_at = NOW() WHERE id = #{id}")
     int revoke(@Param("id") String id);
 
+    /**
+     * 分享链接被访问时访问计数 +1（原子自增），用于热度统计与 maxAccessCount 限流判定。
+     *
+     * @param id 分享链接主键
+     * @return 受影响行数
+     */
     @Update("UPDATE nw_share_link SET access_count = access_count + 1, updated_at = NOW() WHERE id = #{id}")
     int incrementAccessCount(@Param("id") String id);
 

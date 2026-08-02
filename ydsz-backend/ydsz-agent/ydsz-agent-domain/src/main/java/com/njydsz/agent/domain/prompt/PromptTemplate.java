@@ -49,6 +49,7 @@ public final class PromptTemplate implements Serializable {
         for (Map.Entry<String, Object> entry : variables.entrySet()) {
             String placeholder = "#{" + entry.getKey() + "}";
             String value = entry.getValue() != null ? entry.getValue().toString() : "";
+            // 朴素字符串替换：按 #{key} 顺序替换；不做 SpEL 表达式求值，真正的 SpEL 渲染由独立渲染器负责
             result = result.replace(placeholder, value);
         }
         return result;
