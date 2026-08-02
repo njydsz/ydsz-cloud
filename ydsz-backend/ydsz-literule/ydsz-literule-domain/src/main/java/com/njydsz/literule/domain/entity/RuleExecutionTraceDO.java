@@ -4,8 +4,8 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -50,11 +50,11 @@ public class RuleExecutionTraceDO extends MpBaseEntity<String> {
     private Long elapsedMs;
 
     /** 事实数据快照 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private Map<String, Object> factsSnapshot;
 
     /** 结果快照 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private Map<String, Object> resultSnapshot;
 
     /** 错误信息 */

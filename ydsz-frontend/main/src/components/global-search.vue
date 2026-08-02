@@ -25,6 +25,7 @@ import { globalSearchApi, searchSuggestApi } from '#/api/core/search';
 
 const router = useRouter();
 
+/** 搜索弹窗显隐（v-model:visible） */
 const visible = defineModel<boolean>('visible', { default: false });
 
 const keyword = ref('');
@@ -93,6 +94,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('keydown', handleKeydown);
 }
 
+/** 模块标识到标签颜色的映射，用于结果列表中模块标签着色 */
 const moduleColorMap: Record<string, string> = {
   project: 'primary',
   workflow: 'success',

@@ -24,8 +24,11 @@ import {
  * 全局通知 Store — 整合 REST API + WebSocket 实时推送
  */
 class NotificationStore {
+  /** 通知列表（响应式） */
   notifications: Ref<NotificationApi.NotificationItem[]> = ref([]);
+  /** 未读通知数量（响应式） */
   unreadCount: Ref<number> = ref(0);
+  /** WebSocket 是否已连接（响应式） */
   wsConnected: Ref<boolean> = ref(false);
 
   private ws: null | WebSocket = null;
@@ -35,7 +38,10 @@ class NotificationStore {
   private readonly reconnectDelay = 5000;
 
   /**
-   * 从后端加载通知列表
+   * 从后端分页加载通知列表，并同步未读总数。
+   *
+   * @param pageNum - 页码，默认 1
+   * @param pageSize - 每页条数，默认 20
    */
   async loadNotifications(pageNum = 1, pageSize = 20) {
     try {
@@ -59,7 +65,9 @@ class NotificationStore {
   }
 
   /**
-   * 标记单条已读
+   * 标记单条通知为已读，并递减未读计数。
+   *
+   * @param id - 通知 ID
    */
   async markRead(id: string) {
     try {
@@ -137,7 +145,9 @@ class NotificationStore {
   }
 
   /**
-   * 处理 WebSocket 消息
+   * 处理 WebSocket 推送消息（新通知 / 未读数更新 / 多端已读同步）。
+   *
+   * @param data - 服务端推送的消息体
    */
   private handleWsMessage(data: any) {
     switch (data.type) {

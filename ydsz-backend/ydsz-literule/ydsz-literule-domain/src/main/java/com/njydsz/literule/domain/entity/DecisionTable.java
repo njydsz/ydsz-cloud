@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,19 +39,19 @@ public class DecisionTable extends MpBaseEntity<String> {
     private String category;
 
     /** 条件列定义 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private List<Map<String, Object>> conditionColumns;
 
     /** 动作列定义 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private List<Map<String, Object>> actionColumns;
 
     /** 决策行 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private List<Map<String, Object>> rows;
 
     /** 默认动作 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private Map<String, Object> defaultActions;
 
     /** 命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY，默认 FIRST */

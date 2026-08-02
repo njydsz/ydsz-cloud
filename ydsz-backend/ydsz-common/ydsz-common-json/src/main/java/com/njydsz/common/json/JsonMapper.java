@@ -143,7 +143,6 @@ public class JsonMapper {
         }
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
         config.apply();
-        JsonConfig.setThreadLocalOverride(config);
         configApplied = true;
         return snapshot;
     }

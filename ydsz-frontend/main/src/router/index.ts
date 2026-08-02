@@ -36,6 +36,7 @@ const router = createRouter({
   // strict: true,
 });
 
+// 重置静态路由：清空动态注入的路由，便于权限变更后重新生成。
 const resetRoutes = () => resetStaticRoutes(router, routes);
 
 // 在 Pinia 初始化后调用此函数以创建路由守卫

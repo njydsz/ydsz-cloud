@@ -7,6 +7,12 @@
  */
 import type { RouteRecordRaw } from 'vue-router';
 
+/**
+ * Agent 子应用的静态路由表。
+ *
+ * 包含 Agent 管理、RAG 知识库、DAG 编排、审批管理四大模块及其列表页，
+ * 菜单展示顺序由 meta.order 控制。
+ */
 const routes: RouteRecordRaw[] = [
   {
     meta: { icon: 'lucide:bot', order: 1, title: 'Agent管理' },

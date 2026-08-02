@@ -32,6 +32,11 @@ const router = createRouter({
   },
 });
 
+/**
+ * 重置路由：清空动态注册的路由并恢复静态基础路由。
+ *
+ * 用于登出或切换账号后避免旧路由残留。
+ */
 const resetRoutes = () => resetStaticRoutes(router, routes);
 
 initRoutes(router);

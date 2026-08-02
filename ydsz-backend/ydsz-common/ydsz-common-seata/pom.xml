@@ -24,6 +24,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+        <!-- ydsz-common-json（RedisTccTransactionLogStore 使用 YdszJson，显式声明避免传递依赖） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
         <!-- exception -->
         <dependency>
             <groupId>com.njydsz</groupId>

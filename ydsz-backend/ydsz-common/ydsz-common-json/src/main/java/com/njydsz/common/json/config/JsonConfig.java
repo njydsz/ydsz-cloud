@@ -58,31 +58,29 @@ public final class JsonConfig implements Serializable {
 
     /**
      * 设置当前线程的配置覆盖（JsonMapper 内部使用，支持真正的独立配置）。
-     * 调用后 {@link #getInstance()} 返回覆盖的配置对象。
      */
-    static void setThreadLocalOverride(JsonConfig config) {
+    public static void setThreadLocalOverride(JsonConfig config) {
         THREAD_LOCAL_OVERRIDE.set(config);
     }
 
     /**
      * 清除当前线程的配置覆盖。
      */
-    static void clearThreadLocalOverride() {
+    public static void clearThreadLocalOverride() {
         THREAD_LOCAL_OVERRIDE.remove();
     }
 
-    /** Package-private: 供 SerializationProvider.ThreadLocalSnapshot 使用 */
-    static JsonConfig getThreadLocalOverride() {
+    public static JsonConfig getThreadLocalOverride() {
         return THREAD_LOCAL_OVERRIDE.get();
     }
 
-    /** Package-private: 供 SerializationProvider.ThreadLocalSnapshot.restore 使用 */
-    static void setThreadLocalOverrideIfPresent(JsonConfig config) {
+    /** 供 SerializationProvider.ThreadLocalSnapshot.restore 使用 */
+    public static void setThreadLocalOverrideIfPresent(JsonConfig config) {
         THREAD_LOCAL_OVERRIDE.set(config);
     }
 
-    /** Package-private: 供 SerializationProvider.ThreadLocalSnapshot.restore 使用 */
-    static void removeThreadLocalOverride() {
+    /** 供 SerializationProvider.ThreadLocalSnapshot.restore 使用 */
+    public static void removeThreadLocalOverride() {
         THREAD_LOCAL_OVERRIDE.remove();
     }
 

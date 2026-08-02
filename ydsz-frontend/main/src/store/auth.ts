@@ -28,7 +28,13 @@ export const useAuthStore = defineStore('auth', () => {
   const loginLoading = ref(false);
 
   /**
-   * 异步处理登录操作
+   * 异步处理登录操作。
+   *
+   * 调用登录接口获取令牌与用户信息，写入访问/刷新令牌与权限码，成功后跳转首页或执行回调。
+   *
+   * @param params - 登录参数（用户名、密码、验证码等）
+   * @param onSuccess - 登录成功后的可选回调；不传则跳转首页
+   * @returns 登录得到的用户信息（失败时为 null）
    */
   async function authLogin(
     params: Recordable<any>,
@@ -91,6 +97,13 @@ export const useAuthStore = defineStore('auth', () => {
     };
   }
 
+  /**
+   * 退出登录。
+   *
+   * 调用登出接口（失败不阻断），重置所有状态仓库并跳转登录页。
+   *
+   * @param redirect - 是否携带当前路径作为 redirect 参数跳转登录页
+   */
   async function logout(redirect: boolean = true) {
     try {
       await logoutApi();
@@ -110,6 +123,11 @@ export const useAuthStore = defineStore('auth', () => {
     });
   }
 
+  /**
+   * 拉取并设置当前登录用户信息。
+   *
+   * @returns 当前用户的基础信息
+   */
   async function fetchUserInfo() {
     const userInfo = await getUserInfoApi();
     userStore.setUserInfo(userInfo);

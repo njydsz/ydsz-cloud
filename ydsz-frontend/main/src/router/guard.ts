@@ -18,8 +18,9 @@ import { useAuthStore } from '#/store';
 import { generateAccess } from './access';
 
 /**
- * 通用守卫配置
- * @param router
+ * 通用路由守卫：记录已加载页面并控制进度条。
+ *
+ * @param router - Vue Router 实例
  */
 function setupCommonGuard(router: Router) {
   // 记录已经加载的页面
@@ -48,8 +49,9 @@ function setupCommonGuard(router: Router) {
 }
 
 /**
- * 权限访问守卫配置
- * @param router
+ * 权限访问守卫：校验登录态并生成动态路由。
+ *
+ * @param router - Vue Router 实例
  */
 function setupAccessGuard(router: Router) {
   router.beforeEach(async (to, from) => {
@@ -133,8 +135,9 @@ function setupAccessGuard(router: Router) {
 }
 
 /**
- * 项目守卫配置
- * @param router
+ * 组装并注册全部路由守卫（通用 + 权限）。
+ *
+ * @param router - Vue Router 实例
  */
 function createRouterGuard(router: Router) {
   /** 通用 */

@@ -4,18 +4,28 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
 import com.njydsz.common.json.YdszJson;
 
-import java.sql.Types;
 /**
  * JSON 类型转换处理器
  *
- * <p>实现 MyBatis TypeHandler 接口，提供 Java 对象与 JSON 字符串之间的双向转换能力。
- * 使用 Jackson 进行序列化/反序列化，支持复杂对象的存储。</p>
+ * <p>实现 MyBatis {@link BaseTypeHandler} 接口，提供 Java 对象与 JSON 字符串之间的双向转换能力。
+ * 底层使用项目统一的 {@link YdszJson} 引擎（零外部 JSON 库依赖），替代 MyBatis-Plus 自带的
+ * {@code JacksonTypeHandler}，避免引入 Jackson 运行时依赖，保证全链路 JSON 引擎一致性。</p>
+ *
+ * <h2>数据库兼容性</h2>
+ * <ul>
+ *   <li><b>MySQL / Oracle / SQLServer / 等（VARCHAR / TEXT / CLOB 列）</b>：使用
+ *       {@link PreparedStatement#setString(int, String)} 写入，兼容性最佳。</li>
+ *   <li><b>PostgreSQL（原生 JSON / JSONB 列）</b>：当字段显式声明 {@code jdbcType=OTHER} 时使用
+ *       {@link PreparedStatement#setObject(int, Object, int)} 配合 {@link Types#OTHER}，
+ *       由 PostgreSQL 驱动完成二进制 JSON 处理。</li>
+ * </ul>
  *
  * <h2>支持的类型</h2>
  * <ul>
@@ -65,7 +75,22 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
     }
 
     /**
-     * 设置非空参数，将 Java 对象序列化为 JSON 字符串后设置到 PreparedStatement
+     * 无参构造（MyBatis 实例化兜底）。
+     *
+     * <p>当字段类型无法在注册阶段解析时，MyBatis 可能通过无参构造创建处理器，
+     * 此时默认以 {@code Object.class} 反序列化（运行时再按字段类型擦除处理）。</p>
+     */
+    public JsonTypeHandler() {
+        this(Object.class);
+    }
+
+    /**
+     * 设置非空参数，将 Java 对象序列化为 JSON 字符串后设置到 PreparedStatement。
+     *
+     * <p>数据库兼容策略：当 jdbcType 为字符串类（VARCHAR / CHAR / CLOB 等）或未指定时，
+     * 使用 {@code setString}（MySQL / Oracle / SQLServer 等最常见场景，兼容性最佳）；
+     * 仅当显式声明为 {@link JdbcType#OTHER}（PostgreSQL JSON / JSONB 原生列）时，
+     * 使用 {@code setObject(..., Types.OTHER)} 交由驱动处理二进制 JSON。</p>
      *
      * @param ps        PreparedStatement
      * @param i         参数索引
@@ -76,9 +101,13 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, JdbcType jdbcType) throws SQLException {
         String json = toJsonString(parameter);
-        // 使用 Types.OTHER 设置参数，兼容 PostgreSQL JSON/JSONB 列和其他数据库的 VARCHAR/TEXT 列
-        // PostgreSQL 驱动会根据列类型自动处理 JSONB 二进制格式
-        ps.setObject(i, json, Types.OTHER);
+        if (jdbcType == JdbcType.OTHER) {
+            // PostgreSQL 原生 JSON / JSONB 列
+            ps.setObject(i, json, Types.OTHER);
+        } else {
+            // MySQL / Oracle / SQLServer 等：VARCHAR / TEXT / CLOB 列（兼容 PostgreSQL 文本/json 列）
+            ps.setString(i, json);
+        }
     }
 
     /**

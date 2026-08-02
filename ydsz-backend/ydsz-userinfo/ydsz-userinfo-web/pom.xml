@@ -48,6 +48,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
+        <!-- ydsz-common-json（OAuth2Controller 使用 YdszJson，显式声明避免传递依赖） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

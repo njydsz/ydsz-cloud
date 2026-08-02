@@ -23,6 +23,12 @@ import { $t } from '#/locales';
 
 const forbiddenComponent = () => import('#/views/fallback/not-found.vue');
 
+/**
+ * 根据用户权限动态生成可访问路由表（前端静态 + 后端动态混合）。
+ *
+ * @param options - 路由生成选项（如菜单加载完成后的回调）
+ * @returns 生成的可访问路由配置
+ */
 async function generateAccess(options: GenerateMenuAndRoutesOptions) {
   const pageMap: ComponentRecordType = import.meta.glob('../views/**/*.vue');
 

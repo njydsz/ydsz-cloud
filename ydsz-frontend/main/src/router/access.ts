@@ -21,6 +21,14 @@ import { $t } from '#/locales';
 
 const forbiddenComponent = () => import('#/views/_core/fallback/forbidden.vue');
 
+/**
+ * 生成可访问的菜单与动态路由。
+ *
+ * 基于用户角色与后端返回的菜单树，调用权限库生成最终路由与菜单配置。
+ *
+ * @param options - 生成选项（含 router、roles、routes 等）
+ * @returns 可访问的菜单与路由信息
+ */
 async function generateAccess(options: GenerateMenuAndRoutesOptions) {
   const pageMap: ComponentRecordType = import.meta.glob('../views/**/*.vue');
 

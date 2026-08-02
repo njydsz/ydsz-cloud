@@ -24,6 +24,11 @@ import { initSetupYDSZForm } from './adapter/form';
 import App from './app.vue';
 import { router } from './router';
 
+/**
+ * 应用引导：依次初始化组件/表单适配器、i18n、状态与路由守卫，并挂载根组件。
+ *
+ * @param namespace - 存储命名空间，用于隔离本子应用的 pinia / preferences 持久化数据
+ */
 async function bootstrap(namespace: string) {
   // 初始化组件适配器
   await initComponentAdapter();

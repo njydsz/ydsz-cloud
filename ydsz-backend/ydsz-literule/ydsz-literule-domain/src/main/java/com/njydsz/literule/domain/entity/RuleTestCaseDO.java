@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,11 +33,11 @@ public class RuleTestCaseDO extends MpBaseEntity<String> {
     private String ruleCode;
 
     /** 事实数据 JSON */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private Map<String, Object> factsData;
 
     /** 预期触发规则编码列表 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JsonTypeHandler.class)
     private List<String> expectedTriggered;
 
     /** 描述 */
