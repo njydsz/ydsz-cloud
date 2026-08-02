@@ -32,6 +32,7 @@ ydsz:
     enabled: false
     default-type: SEATA_AT
   # P0-1: YdszJson ASM 预热（高频序列化 Bean，消除首次请求延迟尖峰）
+  # P2-3: 启用流式输出（流程定义/实例列表等大 JSON 响应使用 chunked encoding）
   json:
     warmup-classes:
       - com.njydsz.workflow.domain.entity.FlowDefinition
@@ -42,6 +43,7 @@ ydsz:
       - com.njydsz.workflow.domain.entity.FlowHisInstance
       - com.njydsz.workflow.domain.entity.FlowTemplate
       - com.njydsz.workflow.domain.entity.FlowAuditLog
+    streaming-enabled: true
 
 # Seata 客户端配置（TC 就绪后设置 seata.enabled=true 并取消注释）
 # seata:

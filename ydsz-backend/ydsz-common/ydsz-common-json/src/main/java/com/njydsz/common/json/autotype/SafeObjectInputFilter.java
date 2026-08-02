@@ -9,6 +9,12 @@ import java.io.ObjectInputFilter;
  * 统一委托给 {@link AutoTypeChecker}，消除散落在各模块的白名单硬编码，
  * 实现 JSON AutoType 与 Java 原生反序列化的<b>单一来源白名单</b>。
  *
+ * <p><b>已废弃</b>：此过滤器针对 Java 原生 {@code ObjectInputStream} 反序列化，
+ * 而非 JSON 反序列化。JSON 库不应承担 Java 原生序列化安全过滤的职责。
+ * 建议使用 JDK 内置的 {@code ObjectInputFilter.Configurator}
+ * （JDK 9+ 的 {@code -Djdk.serialFilter} 系统属性或
+ * {@code ObjectInputFilter.Configurator.setSerialFilter()} API）替代。</p>
+ *
  * <p><b>校验维度：</b>
  * <ul>
  *   <li><b>深度限制</b>：防止深度嵌套导致的栈溢出（默认 ≤5）</li>
@@ -48,7 +54,11 @@ import java.io.ObjectInputFilter;
  * @see ObjectInputFilter
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 此类针对 Java 原生 ObjectInputStream 反序列化，超出 JSON 库职责边界。
+ *             建议使用 JDK 内置 ObjectInputFilter.Configurator 替代。
+ *             将在 2.0.0 版本移除。
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public final class SafeObjectInputFilter {
 
     /** 默认最大反序列化深度 */

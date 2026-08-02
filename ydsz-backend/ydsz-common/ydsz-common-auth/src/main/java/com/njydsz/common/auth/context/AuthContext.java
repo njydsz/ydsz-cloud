@@ -160,7 +160,7 @@ public final class AuthContext {
             throw SysException.builder()
                     .code(BaseResultCode.FORBIDDEN.getCode())
                     .key("error.common.msg_1e40057e")
-                    .params(perm)
+                    .params(new Object[]{perm})
                     .httpStatus(BaseResultCode.FORBIDDEN.getHttpStatusCode())
                     .build();
         }

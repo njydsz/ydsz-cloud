@@ -9,7 +9,8 @@ import java.time.temporal.TemporalAccessor;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.UUID;
 
 import com.njydsz.common.json.annotation.YdszJsonClass;
@@ -40,7 +41,7 @@ import java.sql.Timestamp;
  */
 public final class ValueWriter {
 
-    private static final Logger LOGGER = Logger.getLogger(ValueWriter.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValueWriter.class);
     /** 小整数缓存（0-9999） */
     static final String[] SMALL_INTS = new String[10000];
 
@@ -567,7 +568,7 @@ public final class ValueWriter {
                     writeValueDirect(value, sb);
                 }
             } catch (Exception e) {
-                LOGGER.fine("Failed to serialize field " + field.name + " of " + obj.getClass().getName() + ": " + e.getMessage());
+                LOGGER.debug("Failed to serialize field {} of {}: {}", field.name, obj.getClass().getName(), e.getMessage());
             }
         }
 
@@ -584,7 +585,7 @@ public final class ValueWriter {
                     writeValueDirect(computedValue, sb);
                 }
             } catch (Exception e) {
-                LOGGER.fine("Failed to invoke @JsonGetter computed property " + computedMethod.getName() + ": " + e.getMessage());
+                LOGGER.debug("Failed to invoke @JsonGetter computed property {}: {}", computedMethod.getName(), e.getMessage());
             }
         }
 
@@ -612,7 +613,7 @@ public final class ValueWriter {
                 return;
             }
         } catch (Exception e) {
-            LOGGER.fine("ASM serialization failed in fast path for " + clazz.getName() + ": " + e.getMessage());
+            LOGGER.debug("ASM serialization failed in fast path for {}: {}", clazz.getName(), e.getMessage());
         }
         SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields);
 
@@ -835,7 +836,7 @@ public final class ValueWriter {
                         .toLocalDateTime().format(formatter);
             }
         } catch (Exception e) {
-            LOGGER.fine("Failed to format date with pattern '" + pattern + "': " + e.getMessage());
+            LOGGER.debug("Failed to format date with pattern '{}': {}", pattern, e.getMessage());
         }
         return value.toString();
     }

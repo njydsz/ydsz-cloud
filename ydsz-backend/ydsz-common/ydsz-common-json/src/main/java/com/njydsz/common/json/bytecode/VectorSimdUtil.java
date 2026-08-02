@@ -3,30 +3,20 @@ package com.njydsz.common.json.bytecode;
 /**
  * 字符数组批量操作工具类（JIT 自动向量化版本）
  *
- * <p>历史版本曾通过反射调用 JDK Vector API（{@code jdk.incubator.vector.CharVector}）
- * 尝试显式 SIMD 加速，但反射调用开销（{@code Method.invoke} 每次数百纳秒）远超
- * SIMD 收益，且 Vector API 在默认 JDK 启动参数下不可用（需要 {@code --add-modules
- * jdk.incubator.vector}），实际生产环境几乎不会启用。</p>
+ * <p><b>已废弃</b>：此工具类的所有方法均为朴素 {@code for} 循环，依赖 Hotspot JIT
+ * SuperWord 自动向量化。将这些方法保留在独立工具类中并无实际价值——JIT 虽然可以内联
+ * 调用方，但增加了不必要的间接调用开销和代码维护成本。</p>
  *
- * <p>当前版本回归朴素循环实现，依赖 Hotspot JIT 的自动向量化（SuperWord 优化）
- * 在紧密循环上自动生成 SIMD 指令。在 JDK 21 + 主流 x86_64 平台上，下列写法
- * 均可被 JIT 自动向量化：</p>
- * <ul>
- *   <li>线性字符扫描（{@code ==} 比较）</li>
- *   <li>范围检查（{@code > ' '}、{@code < '0'} 等）</li>
- *   <li>等长数组逐元素比较</li>
- * </ul>
- *
- * <p>相对于反射版本，本实现：</p>
- * <ul>
- *   <li>消除反射调用开销（每次调用从 ~300ns 降至 ~5ns/字符）</li>
- *   <li>无 JDK 模块依赖，开箱即用</li>
- *   <li>JIT 可内联到调用方（{@code ZeroCopyDeserializer} 热点路径）</li>
- * </ul>
+ * <p><b>替代方案</b>：调用方（如 {@link ZeroCopyDeserializer}）应直接内联循环逻辑，
+ * 或使用 JDK 标准方法（如 {@code String.indexOf}、{@code Arrays.equals}）。
+ * 新代码不应调用此类的方法。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 此类方法仅为朴素循环，应直接内联到调用方或使用 JDK 标准方法替代。
+ *             将在 2.0.0 版本移除。
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public final class VectorSimdUtil {
 
     private VectorSimdUtil() {

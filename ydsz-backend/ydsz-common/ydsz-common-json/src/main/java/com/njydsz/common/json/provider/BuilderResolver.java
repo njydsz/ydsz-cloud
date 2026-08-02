@@ -4,8 +4,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.YdszJsonBuilder;
 import com.njydsz.common.json.parser.YdszJsonParser;
@@ -38,7 +38,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  */
 final class BuilderResolver {
 
-    private static final Logger LOGGER = Logger.getLogger(BuilderResolver.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(BuilderResolver.class);
 
     private BuilderResolver() {
         throw new UnsupportedOperationException();
@@ -64,7 +64,7 @@ final class BuilderResolver {
 
         Class<?> builderClass = findBuilderClass(clazz, annotation);
         if (builderClass == null) {
-            LOGGER.log(Level.WARNING, "Builder class not found for: {0}", clazz.getName());
+            LOGGER.warn("Builder class not found for: {}", clazz.getName());
             return clazz.cast(map);
         }
 
@@ -89,7 +89,7 @@ final class BuilderResolver {
                         setterMethod.invoke(builderInstance, convertedValue);
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.FINEST, "Error invoking setter: {0}", e.getMessage());
+                    LOGGER.trace("Error invoking setter: {}", e.getMessage());
                 }
             }
 
@@ -97,7 +97,7 @@ final class BuilderResolver {
             Method buildMethod = builderClass.getMethod(buildMethodName);
             return clazz.cast(buildMethod.invoke(builderInstance));
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Builder deserialization failed for {0}: {1}", new Object[]{clazz.getName(), e.getMessage()});
+            LOGGER.warn("Builder deserialization failed for {}: {}", clazz.getName(), e.getMessage());
             return clazz.cast(map);
         }
     }

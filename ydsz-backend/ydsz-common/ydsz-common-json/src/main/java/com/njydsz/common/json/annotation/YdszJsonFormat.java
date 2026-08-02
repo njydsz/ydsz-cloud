@@ -31,11 +31,13 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
+ * @deprecated 使用 {@link JsonFormat} 替代。功能完全重复，统一使用 Jackson 兼容注解名。
  * @author ydsz-team
  * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+@Deprecated
 public @interface YdszJsonFormat {
 
     /**

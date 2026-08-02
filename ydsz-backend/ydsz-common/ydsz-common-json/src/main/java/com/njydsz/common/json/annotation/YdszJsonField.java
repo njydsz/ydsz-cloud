@@ -38,12 +38,15 @@ import java.lang.annotation.*;
  * }
  * </pre>
  *
+ * @deprecated 使用 {@link JsonProperty} 替代。功能完全重复，统一使用 Jackson 兼容注解名，
+ * 降低框架双套注解的维护成本。新代码请使用 {@code @JsonProperty}。
  * @author ydsz-team
  * @since 1.0.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
+@Deprecated
 public @interface YdszJsonField {
 
     /**
