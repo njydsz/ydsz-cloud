@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.json.annotation.JsonAlias;
+
 /**
  * Bean 反序列化读取器（FastJSON2 BeanDeserializer 移植版）
  * 
@@ -145,6 +147,18 @@ public final class BeanReader<T> {
                         break;
                     }
                 }
+                // @JsonAlias 别名匹配（非 ASM 路径联动）
+                if (!matched && fieldReaders[i].aliasHashes.length > 0) {
+                    FieldReader fr = fieldReaders[i];
+                    for (int j = 0; j < fr.aliasHashes.length; j++) {
+                        if (fr.aliasHashes[j] == hash && fr.aliases[j].equals(fieldName)) {
+                            fr.readValue(reader, obj);
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (matched) break;
+                }
             }
             
             if (!matched) {
@@ -165,12 +179,30 @@ public final class BeanReader<T> {
         public final Field field;
         public final int typeCode;
 
+        /** 反序列化别名列表（来自 @JsonAlias 注解） */
+        public final String[] aliases;
+        /** 别名哈希缓存（与 fieldNameHashes 配合使用） */
+        public final int[] aliasHashes;
+
         public FieldReader(Field field) {
             this.fieldName = field.getName();
             this.fieldType = field.getType();
             this.field = field;
             this.field.setAccessible(true);
             this.typeCode = getTypeCode(fieldType);
+
+            // 加载 @JsonAlias 别名列表
+            JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
+            if (aliasAnnotation != null && aliasAnnotation.value().length > 0) {
+                this.aliases = aliasAnnotation.value();
+                this.aliasHashes = new int[aliases.length];
+                for (int i = 0; i < aliases.length; i++) {
+                    aliasHashes[i] = aliases[i].hashCode();
+                }
+            } else {
+                this.aliases = new String[0];
+                this.aliasHashes = new int[0];
+            }
         }
 
         public void readValue(JSONReader reader, Object obj) {

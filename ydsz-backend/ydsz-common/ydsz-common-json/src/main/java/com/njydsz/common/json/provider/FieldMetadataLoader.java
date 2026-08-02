@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+import com.njydsz.common.json.annotation.JsonAutoDetect;
 import com.njydsz.common.json.annotation.YdszJsonClass;
 import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonGetter;
@@ -115,6 +116,12 @@ public final class FieldMetadataLoader {
             fieldVisibility = visibilityAnnotation.fields();
         }
 
+        // Jackson 兼容：@JsonAutoDetect 映射到 YdszJsonVisibility
+        JsonAutoDetect autoDetect = clazz.getAnnotation(JsonAutoDetect.class);
+        if (autoDetect != null && autoDetect.fieldVisibility() != JsonAutoDetect.Visibility.DEFAULT) {
+            fieldVisibility = autoDetect.fieldVisibility().toYdszVisibility();
+        }
+
         Field[] declaredFields = clazz.getDeclaredFields();
         List<FieldMeta> fieldList = new ArrayList<>(declaredFields.length);
 
@@ -222,10 +229,10 @@ public final class FieldMetadataLoader {
      * @since 1.4.0
      */
     private static void applyMethodAnnotations(Class<?> clazz, List<FieldMeta> fieldList, PropertyNamingStrategy classNaming) {
-        // 构建字段名 -> FieldMeta 索引
-        Map<String, FieldMeta> fieldIndex = new HashMap<>(fieldList.size());
-        for (FieldMeta fm : fieldList) {
-            fieldIndex.put(fm.name, fm);
+        // 构建字段名 -> 索引映射（用于替换 fieldList 中的元素）
+        Map<String, Integer> fieldIndex = new HashMap<>(fieldList.size());
+        for (int i = 0; i < fieldList.size(); i++) {
+            fieldIndex.put(fieldList.get(i).name, i);
         }
 
         for (Method method : clazz.getDeclaredMethods()) {
@@ -234,10 +241,14 @@ public final class FieldMetadataLoader {
             if (jsonGetter != null) {
                 String fieldName = inferFieldNameFromGetter(method.getName());
                 if (fieldName != null && fieldIndex.containsKey(fieldName)) {
-                    // 有对应字段：覆盖 JSON 名称（注：FieldMeta 的 jsonName 是 final，
-                    // 此处仅记录信息，实际覆盖需在序列化路径中检查方法注解。
-                    // 当前版本通过 @JsonProperty 字段级注解实现相同效果，
-                    // 方法级注解作为后续 ASM 序列化器生成的输入）
+                    String newJsonName = jsonGetter.value().isEmpty() ? fieldName : jsonGetter.value();
+                    int idx = fieldIndex.get(fieldName);
+                    FieldMeta original = fieldList.get(idx);
+                    // 创建新的 FieldMeta，覆盖 jsonName
+                    FieldMeta replaced = createWithJsonName(original, newJsonName);
+                    if (replaced != null) {
+                        fieldList.set(idx, replaced);
+                    }
                 }
             }
 
@@ -246,9 +257,40 @@ public final class FieldMetadataLoader {
             if (jsonSetter != null) {
                 String fieldName = inferFieldNameFromSetter(method.getName());
                 if (fieldName != null && fieldIndex.containsKey(fieldName)) {
-                    // 同上，方法级注解作为后续 ASM 反序列化器生成的输入
+                    String newJsonName = jsonSetter.value().isEmpty() ? fieldName : jsonSetter.value();
+                    int idx = fieldIndex.get(fieldName);
+                    FieldMeta original = fieldList.get(idx);
+                    // 如果 @JsonGetter 已经覆盖过，在此基础再覆盖
+                    String currentName = original.jsonName;
+                    if (!newJsonName.equals(currentName)) {
+                        FieldMeta replaced = createWithJsonName(original, newJsonName);
+                        if (replaced != null) {
+                            fieldList.set(idx, replaced);
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    /**
+     * 创建一个新的 FieldMeta，使用指定的 jsonName 替代原始的 jsonName。
+     *
+     * <p>由于 {@link FieldMeta} 的 {@code jsonName} 是 final 字段，
+     * 需要通过反射构造一个新的实例。如果创建失败返回 null（保持原始实例）。</p>
+     *
+     * @param original 原始 FieldMeta
+     * @param newJsonName 新的 JSON 名称
+     * @return 新的 FieldMeta 实例，或 null 如果创建失败
+     */
+    private static FieldMeta createWithJsonName(FieldMeta original, String newJsonName) {
+        try {
+            YdszJsonField annotation = original.field.getAnnotation(YdszJsonField.class);
+            FieldMeta replaced = new FieldMeta(original.field, newJsonName, original.ordinal, annotation);
+            return replaced;
+        } catch (Exception e) {
+            // 创建失败，保持原始 FieldMeta
+            return null;
         }
     }
 

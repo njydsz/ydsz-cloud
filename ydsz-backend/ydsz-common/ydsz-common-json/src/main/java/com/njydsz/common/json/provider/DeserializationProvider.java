@@ -1,7 +1,9 @@
 package com.njydsz.common.json.provider;
 
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.exception.JsonDeserializationException;
@@ -50,6 +53,80 @@ public final class DeserializationProvider {
 
     private DeserializationProvider() {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * 从 UTF-8 字节数组反序列化（ASCII 快速路径）。
+     *
+     * <p>先扫描字节流判断是否为纯 ASCII：如果是，直接逐字节转 char[] 构造 String，
+     * 跳过 UTF-8 解码开销；非 ASCII 则回退 {@code new String(bytes, UTF_8)}。</p>
+     *
+     * <p>对标 FastJSON2 {@code JSON.parseObject(byte[], Class)} 和 Jackson
+     * {@code ObjectMapper.readValue(byte[], Class)} 的 byte[] 直接入参 API。</p>
+     *
+     * @param bytes UTF-8 编码的 JSON 字节数组
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象，bytes 为空时返回 null
+     * @since 1.4.0
+     */
+    public static <T> T deserialize(byte[] bytes, Class<T> clazz) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        String json = bytesToAsciiFast(bytes);
+        return deserialize(json, clazz);
+    }
+
+    /**
+     * 从 UTF-8 字节数组反序列化（支持泛型 Type）。
+     *
+     * @param bytes UTF-8 编码的 JSON 字节数组
+     * @param type 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     * @since 1.4.0
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(byte[] bytes, Type type) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        String json = bytesToAsciiFast(bytes);
+        return deserialize(json, type);
+    }
+
+    /**
+     * ASCII 快速路径：扫描字节流，若全为 ASCII（&lt; 128）则直接逐字节转 char[] 构造 String，
+     * 跳过 UTF-8 解码开销；非 ASCII 回退 {@code new String(bytes, UTF_8)}。
+     *
+     * @param bytes UTF-8 编码的字节流
+     * @return 对应的 JSON 字符串
+     */
+    private static String bytesToAsciiFast(byte[] bytes) {
+        int len = bytes.length;
+        // 快速扫描前 64 字节判断是否为纯 ASCII
+        int scanLen = Math.min(len, 64);
+        boolean ascii = true;
+        for (int i = 0; i < scanLen; i++) {
+            if (bytes[i] < 0) { ascii = false; break; }
+        }
+        // 如果前 64 字节为 ASCII，继续扫描剩余部分
+        if (ascii) {
+            for (int i = scanLen; i < len; i++) {
+                if (bytes[i] < 0) { ascii = false; break; }
+            }
+        }
+        if (ascii) {
+            // 纯 ASCII：直接逐字节转 char[]，跳过 UTF-8 解码
+            char[] chars = new char[len];
+            for (int i = 0; i < len; i++) {
+                chars[i] = (char) (bytes[i] & 0xFF);
+            }
+            return new String(chars);
+        }
+        // 非 ASCII：回退标准 UTF-8 解码
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     /**
@@ -206,6 +283,24 @@ public final class DeserializationProvider {
             AutoTypeChecker.checkType(clazz);
             Object result = deserializeValue(json, clazz);
             return result != null ? (T) clazz.cast(result) : null;
+        }
+
+        if (type instanceof GenericArrayType gat) {
+            // 泛型数组类型（如 T[]）：先反序列化为 List，再转数组
+            Type componentType = gat.getGenericComponentType();
+            ParameterizedType listType = new ParameterizedType() {
+                @Override public Type[] getActualTypeArguments() { return new Type[]{componentType}; }
+                @Override public Type getRawType() { return List.class; }
+                @Override public Type getOwnerType() { return null; }
+            };
+            List<?> list = deserialize(json, listType);
+            if (list == null) return null;
+            Class<?> componentClass = componentType instanceof Class<?> c ? c : Object.class;
+            Object array = java.lang.reflect.Array.newInstance(componentClass, list.size());
+            for (int i = 0; i < list.size(); i++) {
+                java.lang.reflect.Array.set(array, i, list.get(i));
+            }
+            return (T) array;
         }
 
         if (type instanceof ParameterizedType pt) {

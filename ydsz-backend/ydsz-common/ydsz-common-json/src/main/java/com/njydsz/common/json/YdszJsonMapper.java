@@ -5,7 +5,6 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -308,8 +307,18 @@ public class YdszJsonMapper {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        String json = new String(bytes, StandardCharsets.UTF_8);
-        return toObject(json, clazz);
+        long maxSize = config.getMaxJsonSize();
+        if (bytes.length > maxSize) {
+            throw new YdszJsonException(
+                "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
+        }
+        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        try {
+            config.apply();
+            return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, clazz));
+        } finally {
+            snapshot.restore();
+        }
     }
 
     /**
@@ -329,8 +338,7 @@ public class YdszJsonMapper {
             if (bytes.length == 0) {
                 return null;
             }
-            String json = new String(bytes, StandardCharsets.UTF_8);
-            return toObject(json, clazz);
+            return fromJsonBytes(bytes, clazz);
         } catch (Exception e) {
             throw new YdszJsonException("Failed to read from InputStream", e);
         }
@@ -354,9 +362,20 @@ public class YdszJsonMapper {
             if (bytes.length == 0) {
                 return null;
             }
-            String json = new String(bytes, StandardCharsets.UTF_8);
-            return toObject(json, typeRef);
+            long maxSize = config.getMaxJsonSize();
+            if (bytes.length > maxSize) {
+                throw new YdszJsonException(
+                    "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
+            }
+            SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+            try {
+                config.apply();
+                return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, typeRef.getType()));
+            } finally {
+                snapshot.restore();
+            }
         } catch (Exception e) {
+            if (e instanceof YdszJsonException) throw (YdszJsonException) e;
             throw new YdszJsonException("Failed to read from InputStream", e);
         }
     }
@@ -571,6 +590,38 @@ public class YdszJsonMapper {
      */
     public String format(Object obj) {
         return toJson(obj, true);
+    }
+
+    // ==================== 绑定型读写器（对标 Jackson ObjectReader/ObjectWriter） ====================
+
+    /**
+     * 创建绑定指定类型的 JSON 读取器。
+     *
+     * <p>对标 Jackson {@code ObjectMapper.readerFor(Class)}，
+     * 返回的 {@link YdszJsonReader} 绑定了目标类型，可重复使用。</p>
+     *
+     * @param clazz 目标类型
+     * @param <T>   类型参数
+     * @return 绑定型读取器
+     * @since 1.4.0
+     */
+    public <T> YdszJsonReader<T> readerFor(Class<T> clazz) {
+        return new YdszJsonReader<>(this, clazz);
+    }
+
+    /**
+     * 创建绑定指定类型的 JSON 写入器。
+     *
+     * <p>对标 Jackson {@code ObjectMapper.writerFor(Class)}，
+     * 返回的 {@link YdszJsonWriter} 绑定了目标类型，可重复使用。</p>
+     *
+     * @param clazz 目标类型
+     * @param <T>   类型参数
+     * @return 绑定型写入器
+     * @since 1.4.0
+     */
+    public <T> YdszJsonWriter<T> writerFor(Class<T> clazz) {
+        return new YdszJsonWriter<>(this);
     }
 
     // ==================== ASM 预热 ====================

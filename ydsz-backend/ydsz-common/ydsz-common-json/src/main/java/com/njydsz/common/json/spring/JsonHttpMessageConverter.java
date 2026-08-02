@@ -5,17 +5,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.AbstractHttpMessageConverter;
+import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.util.StreamUtils;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider;
 
 /**
@@ -47,7 +50,7 @@ import com.njydsz.common.json.provider.SerializationProvider;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Object> {
+public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverter<Object> {
 
     /** 默认最大请求体大小（10MB），超过此值的请求将被拒绝 */
     private static final long MAX_REQUEST_BODY_SIZE = 10L * 1024 * 1024;
@@ -134,25 +137,58 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
         this.streamingEnabled = streamingEnabled;
     }
 
+    /**
+     * 读取泛型类型请求体（P1-5: 支持 @RequestBody List&lt;User&gt;等泛型类型）。
+     *
+     * <p>重写父类的 {@code read(Type, Class, HttpInputMessage)} 方法，当 {@code type}
+     * 为 {@link ParameterizedType} 时委托 {@link DeserializationProvider#deserialize(byte[], Type)}
+     * 处理泛型类型。</p>
+     *
+     * @param type 目标类型（可能是 Class 或 ParameterizedType）
+     * @param contextClass 上下文类
+     * @param inputMessage HTTP 输入消息
+     * @return 反序列化后的对象
+     * @throws IOException 读取失败
+     * @throws HttpMessageNotReadableException JSON 解析失败
+     * @since 1.4.0
+     */
     @Override
     protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
+        return read(clazz, null, inputMessage);
+    }
+
+    /**
+     * 重写父类的 {@code read(Type, Class, HttpInputMessage)} 方法，当 {@code type}
+     * 为 {@link ParameterizedType} 时委托 {@code DeserializationProvider.deserialize(byte[], Type)}
+     * 处理泛型类型。
+     */
+    @Override
+    public Object read(Type type, Class<?> contextClass, HttpInputMessage inputMessage)
+            throws IOException, HttpMessageNotReadableException {
         try {
-            // 第一重防护：Content-Length 预检（覆盖声明超大请求体的快速拒绝场景）
             long contentLength = inputMessage.getHeaders().getContentLength();
             if (contentLength > maxRequestBodySize) {
                 throw new IOException("Request body too large (Content-Length): " + contentLength
                         + " > " + maxRequestBodySize);
             }
-
-            // 第二重防护：流式字节计数（覆盖 Content-Length 伪造与 Transfer-Encoding: chunked 场景）
-            byte[] body = readBoundedBytes(inputMessage.getBody(), maxRequestBodySize);
+            // 预估容量：优先用 Content-Length 提示，避免 ByteArrayOutputStream 频繁扩容
+            int estimatedSize = contentLength > 0
+                    ? (int) Math.min(contentLength, maxRequestBodySize)
+                    : READ_BUFFER_SIZE;
+            byte[] body = readBoundedBytes(inputMessage.getBody(), maxRequestBodySize, estimatedSize);
             if (body.length == 0) {
                 return null;
             }
-            String json = new String(body, getDefaultCharset());
-            return YdszJson.toObject(json, clazz);
+            // 使用 ResolvableType 解析泛型类型
+            if (type instanceof ParameterizedType) {
+                return DeserializationProvider.deserialize(body, type);
+            }
+            // 非 ParameterizedType 退回常规路径
+            Class<?> rawClass = type instanceof Class<?> c ? c : Object.class;
+            return YdszJson.fromJsonBytes(body, rawClass);
         } catch (Exception e) {
+            if (e instanceof IOException) throw (IOException) e;
             throw new HttpMessageNotReadableException("JSON 解析失败：" + e.getMessage(), e, inputMessage);
         }
     }
@@ -166,13 +202,12 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
      *
      * @param input 原始输入流
      * @param maxBytes 最大允许读取字节数
+     * @param estimatedSize 预估容量（用于 ByteArrayOutputStream 初始分配，避免频繁扩容）
      * @return 读取的字节数组（长度不超过 maxBytes）
      * @throws IOException 读取失败或超过大小限制
      * @since 1.0.0
      */
-    private static byte[] readBoundedBytes(InputStream input, long maxBytes) throws IOException {
-        // 预估容量：优先用 Content-Length 提示，否则用默认 8KB
-        int estimatedSize = (int) Math.min(maxBytes, READ_BUFFER_SIZE);
+    private static byte[] readBoundedBytes(InputStream input, long maxBytes, int estimatedSize) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(estimatedSize);
         byte[] chunk = new byte[READ_BUFFER_SIZE];
         long totalRead = 0;
@@ -228,6 +263,12 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
         // 设置 Content-Length，避免 HTTP chunked 编码开销
         outputMessage.getHeaders().setContentLength(bytes.length);
         StreamUtils.copy(bytes, out);
+    }
+
+    @Override
+    protected void writeInternal(Object o, Type type, HttpOutputMessage outputMessage)
+            throws IOException, HttpMessageNotWritableException {
+        writeInternal(o, outputMessage);
     }
 
     /**

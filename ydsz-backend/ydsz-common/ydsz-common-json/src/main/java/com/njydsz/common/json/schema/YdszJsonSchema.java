@@ -77,6 +77,17 @@ public final class YdszJsonSchema {
     private List<YdszJsonSchema> anyOf;
     private List<YdszJsonSchema> oneOf;
 
+    /** not 关键字：数据不能匹配此 Schema */
+    private YdszJsonSchema not;
+
+    /** const 关键字：数据必须等于此固定值 */
+    private Object constValue;
+
+    /** if/then/else 条件关键字（JSON Schema Draft 07） */
+    private YdszJsonSchema ifSchema;
+    private YdszJsonSchema thenSchema;
+    private YdszJsonSchema elseSchema;
+
     /**
      * 构造函数
      */
@@ -349,6 +360,49 @@ public final class YdszJsonSchema {
     }
 
     /**
+     * 设置 not 约束（数据不能匹配此 Schema）。
+     *
+     * @param not 不允许匹配的 Schema
+     * @return 当前 Schema（链式调用）
+     * @since 1.4.0
+     */
+    public YdszJsonSchema not(YdszJsonSchema not) {
+        this.not = not;
+        return this;
+    }
+
+    /**
+     * 设置 const 约束（数据必须等于此固定值）。
+     *
+     * @param constValue 固定值
+     * @return 当前 Schema（链式调用）
+     * @since 1.4.0
+     */
+    public YdszJsonSchema constValue(Object constValue) {
+        this.constValue = constValue;
+        return this;
+    }
+
+    /**
+     * 设置 if/then/else 条件约束。
+     *
+     * <p>如果数据匹配 if Schema，则必须匹配 then Schema；
+     * 如果不匹配 if Schema，则必须匹配 else Schema。</p>
+     *
+     * @param ifSchema 条件 Schema
+     * @param thenSchema 满足条件时必须匹配的 Schema
+     * @param elseSchema 不满足条件时必须匹配的 Schema（可为 null）
+     * @return 当前 Schema（链式调用）
+     * @since 1.4.0
+     */
+    public YdszJsonSchema ifThenElse(YdszJsonSchema ifSchema, YdszJsonSchema thenSchema, YdszJsonSchema elseSchema) {
+        this.ifSchema = ifSchema;
+        this.thenSchema = thenSchema;
+        this.elseSchema = elseSchema;
+        return this;
+    }
+
+    /**
      * 添加多个必填属性
      */
     public YdszJsonSchema addRequired(String... names) {
@@ -446,6 +500,26 @@ public final class YdszJsonSchema {
 
     public List<YdszJsonSchema> getOneOf() {
         return oneOf;
+    }
+
+    public YdszJsonSchema getNot() {
+        return not;
+    }
+
+    public Object getConstValue() {
+        return constValue;
+    }
+
+    public YdszJsonSchema getIfSchema() {
+        return ifSchema;
+    }
+
+    public YdszJsonSchema getThenSchema() {
+        return thenSchema;
+    }
+
+    public YdszJsonSchema getElseSchema() {
+        return elseSchema;
     }
 
     @Override

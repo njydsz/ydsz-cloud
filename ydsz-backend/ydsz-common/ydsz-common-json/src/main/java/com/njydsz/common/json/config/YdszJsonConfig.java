@@ -6,6 +6,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.SerializationProvider;
 
 import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.reader.JSONReader;
 /**
  * YdszJson 全局配置类
  *
@@ -344,6 +345,8 @@ public final class YdszJsonConfig implements Serializable {
         SerializationProvider.setDateFormat(dateFormat);
         SerializationProvider.setFailOnError(failOnError);
         YdszJsonParser.setUseBigDecimal(useBigDecimal);
+        // 传播 maxDepth 到反序列化路径（JSONReader 全局配置）
+        JSONReader.setMaxDepth(maxDepth);
         // wrapRootValue 不需要传播到 SerializationContext，因为它在 serialize() 入口处检查
     }
 

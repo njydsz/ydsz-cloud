@@ -82,7 +82,8 @@ final class BeanDeserializerEngine {
         }
 
         // ASM 优化路径：使用字节码生成的反序列化器
-        if (json.trim().startsWith("{") &&
+        String trimmed = json.strip();
+        if (trimmed.startsWith("{") &&
             !clazz.isAssignableFrom(List.class) &&
             !clazz.isAssignableFrom(Map.class) &&
             !clazz.isArray() &&
@@ -101,7 +102,7 @@ final class BeanDeserializerEngine {
         }
 
         // BeanReader 路径：仅对简单 Bean 使用（无嵌套对象）
-        if (json.trim().startsWith("{") &&
+        if (trimmed.startsWith("{") &&
             !clazz.isAssignableFrom(List.class) &&
             !clazz.isAssignableFrom(Map.class) &&
             !clazz.isArray() &&
@@ -143,8 +144,7 @@ final class BeanDeserializerEngine {
                 ZeroCopyDeserializer.getDeserializer(clazz);
             return clazz.cast(deserializer.deserialize(json));
         } catch (Exception e) {
-            json = json.trim();
-            if (json.startsWith("[")) {
+            if (trimmed.startsWith("[")) {
                 return clazz.cast(YdszJsonParser.parseArray(json));
             } else {
                 return clazz.cast(YdszJsonParser.parseObject(json));
@@ -308,11 +308,8 @@ final class BeanDeserializerEngine {
                             depth--;
                             if (depth == 0) { pos++; break; }
                         } else if (ch == '"') {
-                            pos++;
-                            while (pos < len && chars[pos] != '"') {
-                                if (chars[pos] == '\\') pos++;
-                                pos++;
-                            }
+                            pos = skipStringValue(chars, pos, len);
+                            continue;
                         }
                         pos++;
                     }
@@ -328,11 +325,8 @@ final class BeanDeserializerEngine {
                     depth--;
                     if (depth <= 0) { pos++; break; }
                 } else if (ch == '"') {
-                    pos++;
-                    while (pos < len && chars[pos] != '"') {
-                        if (chars[pos] == '\\') pos++;
-                        pos++;
-                    }
+                    pos = skipStringValue(chars, pos, len);
+                    continue;
                 } else if (ch == ',' && depth == 0) {
                     break;
                 }
@@ -360,6 +354,31 @@ final class BeanDeserializerEngine {
         } catch (Exception e) {
             return YdszJsonParser.parseArray(json);
         }
+    }
+
+    /**
+     * 安全跳过 JSON 字符串值（从开引号到闭引号）。
+     *
+     * <p>正确处理转义序列，包括 {@code \\"} （转义引号）和 {@code \\\\} （转义反斜杠），
+     * 避免字符串内的 {@code {} 或 {@code "} 干扰深度跟踪。
+     *
+     * @param chars JSON 字符数组
+     * @param startPos 开始位置（指向开引号）
+     * @param len 字符数组总长度
+     * @return 闭引号后的下一个位置
+     */
+    private static int skipStringValue(char[] chars, int startPos, int len) {
+        int pos = startPos + 1; // 跳过开引号
+        while (pos < len) {
+            if (chars[pos] == '\\') {
+                pos += 2; // 跳过转义符和被转义的字符
+            } else if (chars[pos] == '"') {
+                return pos + 1; // 返回闭引号后的位置
+            } else {
+                pos++;
+            }
+        }
+        return pos;
     }
 
     /**

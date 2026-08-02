@@ -768,8 +768,8 @@ public class YdszJson {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        String json = new String(bytes, StandardCharsets.UTF_8);
-        return toObject(json, clazz);
+        validateJsonSizeBytes(bytes.length);
+        return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, clazz));
     }
 
     /**
@@ -784,8 +784,8 @@ public class YdszJson {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        String json = new String(bytes, StandardCharsets.UTF_8);
-        return toObject(json, typeRef);
+        validateJsonSizeBytes(bytes.length);
+        return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, typeRef.getType()));
     }
 
     /**
@@ -901,8 +901,7 @@ public class YdszJson {
             if (bytes.length == 0) {
                 return null;
             }
-            String json = new String(bytes, StandardCharsets.UTF_8);
-            return toObject(json, clazz);
+            return fromJsonBytes(bytes, clazz);
         } catch (IOException e) {
             throw new YdszJsonException("Failed to read from InputStream", e);
         }
@@ -926,8 +925,7 @@ public class YdszJson {
             if (bytes.length == 0) {
                 return null;
             }
-            String json = new String(bytes, StandardCharsets.UTF_8);
-            return toObject(json, typeRef);
+            return fromJsonBytes(bytes, typeRef);
         } catch (IOException e) {
             throw new YdszJsonException("Failed to read from InputStream", e);
         }
@@ -1057,6 +1055,20 @@ public class YdszJson {
         if (json.length() > maxSize) {
             throw new YdszJsonException(
                     "JSON size exceeds limit: " + json.length() + " > " + maxSize);
+        }
+    }
+
+    /**
+     * 校验 JSON 字节数组大小是否超过全局限制。
+     *
+     * @param byteLength JSON 字节数组长度
+     * @throws YdszJsonException 如果超过最大 JSON 大小限制
+     */
+    static void validateJsonSizeBytes(int byteLength) {
+        long maxSize = YdszJsonConfig.getInstance().getMaxJsonSize();
+        if (byteLength > maxSize) {
+            throw new YdszJsonException(
+                    "JSON size exceeds limit: " + byteLength + " > " + maxSize);
         }
     }
 }

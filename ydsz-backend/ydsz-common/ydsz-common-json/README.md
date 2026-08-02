@@ -1,6 +1,6 @@
 # ydsz-common-json
 
-YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、JIT 自动向量化、Schema 校验（allOf/anyOf/oneOf）、YdszJsonPath 查询、JsonNode 树模型、Optional/UUID 支持、BigDecimal 精度模式、GraalVM 兼容、Spring MVC 集成、Mapper Builder API、方法级注解（@JsonGetter/@JsonSetter）。
+YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、JIT 自动向量化、Schema 校验（allOf/anyOf/oneOf/not/const/if-then-else）、YdszJsonPath 查询、JsonNode 树模型、Optional/UUID 支持、BigDecimal 精度模式、GraalVM 兼容、Spring MVC 集成（泛型类型支持）、Mapper Builder API、方法级注解（@JsonGetter/@JsonSetter）、绑定型读写器（YdszJsonReader/YdszJsonWriter）。
 
 > **注**：本模块遵循 **ydsz 项目品牌命名规范**——Maven artifactId 为 `ydsz-common-json`，包路径为 `com.njydsz.common.json.*`，主入口类为 [`YdszJson`](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-common/ydsz-common-json/src/main/java/com/njydsz/common/json/YdszJson.java)，所有注解使用 `@YdszJson*` 前缀。`ydsz` 是项目主品牌标识（pmis 是已废弃的遗留代号），全仓库统一保留 ydsz 品牌。详见下方"模块定位"和"核心能力"章节。
 
@@ -21,7 +21,9 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | 类 | 说明 |
 |---|---|
 | `YdszJson` | JSON 统一入口（序列化 / 反序列化 / 树操作 / 流式 API / ASM 预热 / 单次配置序列化） |
-| `YdszJsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper，支持 `builder()` 链式 Builder / 独立配置副本 / Metrics 回调 / 树模型 / JSONPath / 视图过滤 / convertValue / treeToValue / writeValueAsString / writeValueAsBytes / format） |
+| `YdszJsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper，支持 `builder()` 链式 Builder / 独立配置副本 / Metrics 回调 / 树模型 / JSONPath / 视图过滤 / convertValue / treeToValue / writeValueAsString / writeValueAsBytes / format / `readerFor(Class)` / `writerFor(Class)`） |
+| `YdszJsonReader` | 绑定型 JSON 读取器（对标 Jackson ObjectReader，绑定目标类型后可重复使用） |
+| `YdszJsonWriter` | 绑定型 JSON 写入器（对标 Jackson ObjectWriter，绑定 Mapper 配置后可重复使用） |
 | `YdszJsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 根名称包裹 / 最大 JSON 大小 / 最大深度 / `copyOf()` 工厂方法） |
 | `MetricsHelper` | 指标监控包装工具（统一序列化/反序列化的指标记录逻辑，null 短路优化） |
 
@@ -378,11 +380,26 @@ YdszJson (Facade, 用户接口)
 
 | 优先级 | 特性 | 描述 |
 |---|---|---|
-| P2 | byte[] 直接解析路径 | 当前解析链基于 char[]，网络场景存在 byte[]→String→char[] 双重转换。计划新增 byte[] 直接解析路径，ASCII JSON 直接在 byte[] 上操作，非 ASCII 才转码。 |
 | P3 | 流式增量解析（Streaming Parser） | 当前 YdszJsonParser 需全量加载 JSON 到 char[]，无法处理超大 JSON 流式解析。计划基于 InputStream 实现 token-by-token 增量解析器。 |
-| P3 | @JsonGetter 计算属性完整支持 | 当前 @JsonGetter/@JsonSetter 方法级注解已创建并扫描，但计算属性（无对应字段的 getter）需要 FieldMeta 支持方法后端，计划后续实现。 |
+| P3 | @JsonGetter 计算属性完整支持 | 当前 @JsonGetter/@JsonSetter 方法级注解已实现字段名覆盖（通过 createWithJsonName 创建新 FieldMeta），但计算属性（无对应字段的 getter）需要 FieldMeta 支持方法后端，计划后续实现。 |
+| P3 | @JsonAnyGetter/@JsonAnySetter/@JsonUnwrapped 实现 | 三个注解已创建但尚未实现序列化/反序列化逻辑，计划后续迭代。 |
 
 ## 已完成优化记录
+
+### 第八轮（2026-07-30）
+
+| 级别 | 项 | 描述 |
+|---|---|---|
+| P1-3 | YdszJsonMapper readerFor/writerFor | 新建 `YdszJsonReader<T>` + `YdszJsonWriter<T>` 绑定型读写器（对标 Jackson ObjectReader/ObjectWriter），YdszJsonMapper 新增 `readerFor(Class)` / `writerFor(Class)` 工厂方法 |
+| P1-6 | BeanReader @JsonAlias 联动 | BeanReader.FieldReader 新增 aliases/aliasHashes 字段，readObject 字段匹配循环新增 @JsonAlias 别名 hash 检查分支（与 ASM 路径和 ZeroCopyDeserializer 路径一致） |
+| P1-8 | JSONReader maxDepth 传播 | JSONReader 新增 `maxDepth` volatile 字段 + `setMaxDepth(int)` / `getMaxDepth()` 方法，YdszJsonConfig.apply() 传播 maxDepth 到 JSONReader 全局配置 |
+| P2-3 | BeanDeserializerEngine trim 消除 | `deserializeBean` 方法入口 `json.trim()` 缓存为 `trimmed` 局部变量，消除 3 处重复 trim 调用（每次产生 char[] 拷贝） |
+| P2-5 | BeanDeserializerEngine 深度跟踪修复 | `deserializeBeanListWithZeroCopy` 新增 `skipStringValue()` 辅助方法，正确处理 `\"` 转义引号和 `\\` 转义反斜杠，消除字符串内 `{}` 干扰深度跟踪的风险 |
+| P2-6 | estimateThreadLocalMemory 硬编码修复 | JSONWriter 缓冲区内存估算从硬编码 `4096 * 2L` 改为 `ctx.fastWriterPool.capacity() * 2L` 动态计算 |
+| P2-7 | readBoundedBytes 预估容量修复 | `readBoundedBytes` 新增 `estimatedSize` 参数，调用方用 Content-Length 提示预估容量（不可用时回退 8KB），避免大请求体 ByteArrayOutputStream 频繁扩容 |
+| P2-补充 | JsonHttpMessageConverter 泛型类型升级 | 基类从 `AbstractHttpMessageConverter` 改为 `AbstractGenericHttpMessageConverter`，新增 `readInternal` 委托 + `writeInternal(Object, Type, HttpOutputMessage)` 重写，正确支持 `@RequestBody List<User>` 泛型类型反序列化 |
+| P3-1 | @JsonAnyGetter/@JsonAnySetter 标注 Roadmap | 注解 Javadoc 明确标注"已创建但尚未实现序列化/反序列化逻辑，标记为 Roadmap 待实现" |
+| P3-2 | @JsonUnwrapped 标注 Roadmap | 同上 |
 
 ### 第七轮（2026-07-30）
 

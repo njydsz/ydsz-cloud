@@ -25,6 +25,7 @@ import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonRawValue;
 
 import java.lang.reflect.Array;
+import java.util.logging.Logger;
 /**
  * 字段元数据（用于缓存字段信息，MethodHandle 优化）
  *
@@ -60,6 +61,8 @@ import java.lang.reflect.Array;
  * @since 1.0.0
  */
 public final class FieldMeta {
+
+    private static final Logger LOGGER = Logger.getLogger(FieldMeta.class.getName());
 
     /** 字段名 */
     public final String name;
@@ -160,6 +163,9 @@ public final class FieldMeta {
     /** MethodHandle 自定义反序列化方法 */
     private final MethodHandle customDeserializer;
 
+    /** 缓存的 DateTimeFormatter（线程安全，避免每次 ofPattern 编译） */
+    private final transient DateTimeFormatter cachedFormatter;
+
     /**
      * 构造函数（基础版本）
      */
@@ -240,6 +246,18 @@ public final class FieldMeta {
         this.includeStrategy = includeAnnotation != null ? includeAnnotation.value() : JsonInclude.Include.ALWAYS;
 
         field.setAccessible(true);
+
+        // 缓存 DateTimeFormatter（P2-1: 避免每次 formatDateValue/parseDateValue 重复编译模式）
+        DateTimeFormatter formatter = null;
+        if (this.format != null && !this.format.isEmpty()) {
+            try {
+                formatter = DateTimeFormatter.ofPattern(this.format);
+            } catch (Exception e) {
+                // 非法日期格式模式，formatDateValue/parseDateValue 会回退到 toString
+                LOGGER.fine("Invalid date format pattern '" + this.format + "' for field " + name + ": " + e.getMessage());
+            }
+        }
+        this.cachedFormatter = formatter;
 
         MethodHandle s = null;
         MethodHandle g = null;
@@ -328,19 +346,23 @@ public final class FieldMeta {
         if (varHandle != null) {
             try {
                 return varHandle.get(obj);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                LOGGER.fine("VarHandle.get failed for field " + name + ": " + e.getMessage());
             }
         }
         if (getter != null) {
             try {
                 return getter.invoke(obj);
             } catch (Throwable e) {
+                LOGGER.fine("MethodHandle.invoke failed for field " + name + ": " + e.getMessage());
             }
         }
         try {
             return field.get(obj);
         } catch (IllegalAccessException e) {
-            return null;
+            throw new com.njydsz.common.json.exception.JsonSerializationException(
+                com.njydsz.common.json.exception.JsonSerializationException.SERIALIZATION_ERROR,
+                "Failed to get field value: " + name, e);
         }
     }
 
@@ -355,11 +377,13 @@ public final class FieldMeta {
             try {
                 return (String) getter.invoke(obj);
             } catch (Throwable e) {
+                LOGGER.fine("MethodHandle.invoke failed for String field " + name + ": " + e.getMessage());
             }
         }
         try {
             return (String) field.get(obj);
         } catch (IllegalAccessException e) {
+            LOGGER.warning("Failed to get String field " + name + ": " + e.getMessage());
             return null;
         }
     }
@@ -389,11 +413,13 @@ public final class FieldMeta {
             try {
                 return (Integer) getter.invoke(obj);
             } catch (Throwable e) {
+                LOGGER.fine("MethodHandle.invoke failed for int field " + name + ": " + e.getMessage());
             }
         }
         try {
             return field.getInt(obj);
         } catch (IllegalAccessException e) {
+            LOGGER.warning("Failed to get int field " + name + ": " + e.getMessage());
             return 0;
         }
     }
@@ -423,11 +449,13 @@ public final class FieldMeta {
             try {
                 return (Long) getter.invoke(obj);
             } catch (Throwable e) {
+                LOGGER.fine("MethodHandle.invoke failed for long field " + name + ": " + e.getMessage());
             }
         }
         try {
             return field.getLong(obj);
         } catch (IllegalAccessException e) {
+            LOGGER.warning("Failed to get long field " + name + ": " + e.getMessage());
             return 0L;
         }
     }
@@ -457,11 +485,13 @@ public final class FieldMeta {
             try {
                 return (Double) getter.invoke(obj);
             } catch (Throwable e) {
+                LOGGER.fine("MethodHandle.invoke failed for double field " + name + ": " + e.getMessage());
             }
         }
         try {
             return field.getDouble(obj);
         } catch (IllegalAccessException e) {
+            LOGGER.warning("Failed to get double field " + name + ": " + e.getMessage());
             return 0.0;
         }
     }
@@ -491,11 +521,13 @@ public final class FieldMeta {
             try {
                 return (Boolean) getter.invoke(obj);
             } catch (Throwable e) {
+                LOGGER.fine("MethodHandle.invoke failed for boolean field " + name + ": " + e.getMessage());
             }
         }
         try {
             return field.getBoolean(obj);
         } catch (IllegalAccessException e) {
+            LOGGER.warning("Failed to get boolean field " + name + ": " + e.getMessage());
             return false;
         }
     }
@@ -523,7 +555,8 @@ public final class FieldMeta {
             try {
                 varHandle.set(obj, value);
                 return;
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                LOGGER.fine("VarHandle.set failed for field " + name + ": " + e.getMessage());
             }
         }
         if (setter != null) {
@@ -531,11 +564,14 @@ public final class FieldMeta {
                 setter.invoke(obj, value);
                 return;
             } catch (Throwable e) {
+                LOGGER.fine("MethodHandle.invoke failed for field " + name + ": " + e.getMessage());
             }
         }
         try {
             field.set(obj, value);
         } catch (IllegalAccessException e) {
+            throw new com.njydsz.common.json.exception.JsonDeserializationException(
+                "Failed to set field value: " + name, e);
         }
     }
 
@@ -558,11 +594,12 @@ public final class FieldMeta {
      */
     public String formatDateValue(Object value) {
         if (value == null) return null;
-        if (format == null || format.isEmpty()) {
+        // P2-1: 使用缓存的 DateTimeFormatter，避免每次 ofPattern 编译
+        if (cachedFormatter == null) {
             return value.toString();
         }
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            DateTimeFormatter formatter = cachedFormatter;
             if (value instanceof LocalDateTime) {
                 return ((LocalDateTime) value).format(formatter);
             } else if (value instanceof LocalDate) {
@@ -582,11 +619,12 @@ public final class FieldMeta {
      */
     public Object parseDateValue(String json) {
         if (json == null || json.equals("null")) return null;
-        if (format == null || format.isEmpty()) {
+        // P2-1: 使用缓存的 DateTimeFormatter，避免每次 ofPattern 编译
+        if (cachedFormatter == null) {
             return json;
         }
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            DateTimeFormatter formatter = cachedFormatter;
             if (type == LocalDateTime.class) {
                 return LocalDateTime.parse(json, formatter);
             } else if (type == LocalDate.class) {
@@ -670,6 +708,7 @@ public final class FieldMeta {
             try {
                 return customSerializer.invoke(value);
             } catch (Throwable e) {
+                LOGGER.fine("Custom serializer failed for field " + name + ": " + e.getMessage());
             }
         }
         return value;
@@ -680,6 +719,7 @@ public final class FieldMeta {
             try {
                 return customDeserializer.invoke(value);
             } catch (Throwable e) {
+                LOGGER.fine("Custom deserializer failed for field " + name + ": " + e.getMessage());
             }
         }
         return value;

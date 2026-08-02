@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.json.annotation.JsonTypeName;
 import com.njydsz.common.json.annotation.YdszJsonSubType;
 import com.njydsz.common.json.annotation.YdszJsonSubTypes;
 import com.njydsz.common.json.annotation.YdszJsonTypeInfo;
@@ -96,7 +97,13 @@ public final class PolymorphicTypeResolver {
             if (subTypes != null) {
                 Map<String, Class<?>> nameToType = new HashMap<>(subTypes.value().length * 2);
                 for (YdszJsonSubType subType : subTypes.value()) {
-                    nameToType.put(subType.name(), subType.value());
+                    // Jackson 兼容：子类上的 @JsonTypeName 优先于 @YdszJsonSubType.name()
+                    String typeName = subType.name();
+                    JsonTypeName jsonTypeName = subType.value().getAnnotation(JsonTypeName.class);
+                    if (jsonTypeName != null && !jsonTypeName.value().isEmpty()) {
+                        typeName = jsonTypeName.value();
+                    }
+                    nameToType.put(typeName, subType.value());
                 }
                 TypeMapping mapping = new TypeMapping(typeInfo.property(), typeInfo.visible(), nameToType);
                 TYPE_MAPPING_CACHE.put(clazz, mapping);
@@ -110,8 +117,11 @@ public final class PolymorphicTypeResolver {
             if (permitted != null && permitted.length > 0) {
                 Map<String, Class<?>> nameToType = new HashMap<>(permitted.length * 2);
                 for (Class<?> subType : permitted) {
-                    // 使用简单类名作为类型判别值
-                    nameToType.put(subType.getSimpleName(), subType);
+                    // Jackson 兼容：优先使用 @JsonTypeName，回退到简单类名
+                    JsonTypeName jsonTypeName = subType.getAnnotation(JsonTypeName.class);
+                    String typeName = (jsonTypeName != null && !jsonTypeName.value().isEmpty())
+                            ? jsonTypeName.value() : subType.getSimpleName();
+                    nameToType.put(typeName, subType);
                 }
                 String property = typeInfo != null ? typeInfo.property() : DEFAULT_TYPE_PROPERTY;
                 boolean visible = typeInfo != null && typeInfo.visible();

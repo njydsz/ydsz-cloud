@@ -100,6 +100,39 @@ public final class SchemaValidator {
 
         // 组合关键字验证（allOf / anyOf / oneOf）
         validateCombinators(schema, data, result, path);
+
+        // const 关键字：数据必须等于固定值
+        if (schema.getConstValue() != null) {
+            if (!schema.getConstValue().equals(data)) {
+                result.addError(path + ": Value must be " + schema.getConstValue() + " but got " + data);
+            }
+        }
+
+        // not 关键字：数据不能匹配此 Schema
+        if (schema.getNot() != null) {
+            ValidationResult notResult = new ValidationResult(true);
+            validateType(schema.getNot(), data, notResult, path + "/not");
+            if (notResult.isValid()) {
+                result.addError(path + ": Value must NOT match the 'not' schema");
+            }
+        }
+
+        // if/then/else 条件关键字
+        if (schema.getIfSchema() != null) {
+            ValidationResult ifResult = new ValidationResult(true);
+            validateType(schema.getIfSchema(), data, ifResult, path + "/if");
+            if (ifResult.isValid()) {
+                // 匹配 if 条件：必须匹配 then
+                if (schema.getThenSchema() != null) {
+                    validateType(schema.getThenSchema(), data, result, path + "/then");
+                }
+            } else {
+                // 不匹配 if 条件：必须匹配 else
+                if (schema.getElseSchema() != null) {
+                    validateType(schema.getElseSchema(), data, result, path + "/else");
+                }
+            }
+        }
     }
     
     /**

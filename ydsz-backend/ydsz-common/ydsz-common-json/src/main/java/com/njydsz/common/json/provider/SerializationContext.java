@@ -155,8 +155,8 @@ public final class SerializationContext {
         long total = 80; // SerializationContext 对象头 + 字段
         // StringBuilder 池：按实际容量计算（char 占 2 字节）
         total += ctx.sbPool.capacity() * 2L;
-        // JSONWriter 池：内部 char[] 缓冲区（约等于初始容量 4096 * 2）
-        total += ctx.fastWriterPool != null ? 4096 * 2L : 0;
+        // JSONWriter 池：内部 char[] 缓冲区（按实际容量计算）
+        total += ctx.fastWriterPool != null ? ctx.fastWriterPool.capacity() * 2L : 0;
         // IdentityHashMap（循环引用检测，每个条目约 32 字节）
         total += (long) ctx.serializingObjects.size() * 32L;
         return total;

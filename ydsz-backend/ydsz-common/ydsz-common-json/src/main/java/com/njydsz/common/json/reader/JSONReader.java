@@ -216,6 +216,9 @@ public final class JSONReader {
     /** 有效数据长度 */
     int len;
     
+    /** 最大嵌套深度（防止栈溢出攻击，默认 256） */
+    private static volatile int maxDepth = DEFAULT_MAX_DEPTH;
+    
     /** ThreadLocal 读取器池（复用 JSONReader 实例和 char[] 缓冲区，避免 GC 开销） */
     private static final ThreadLocal<JSONReader> READER_POOL = new ThreadLocal<>();
     
@@ -252,6 +255,32 @@ public final class JSONReader {
         len = newLen;
     }
     
+    /**
+     * 设置全局最大嵌套深度（防止栈溢出攻击）。
+     *
+     * <p>当 {@link Feature#LimitDepth} 启用时，解析过程中嵌套深度超过此值即抛异常。
+     * 默认值 {@link #DEFAULT_MAX_DEPTH} = 256。
+     *
+     * @param depth 最大嵌套深度（必须 > 0）
+     * @since 1.4.0
+     */
+    public static void setMaxDepth(int depth) {
+        if (depth <= 0) {
+            throw new IllegalArgumentException("maxDepth must be > 0, got: " + depth);
+        }
+        JSONReader.maxDepth = depth;
+    }
+
+    /**
+     * 获取当前最大嵌套深度。
+     *
+     * @return 最大嵌套深度
+     * @since 1.4.0
+     */
+    public static int getMaxDepth() {
+        return maxDepth;
+    }
+
     /**
      * 获取池化的 JSONReader（避免对象和 char[] 分配）
      *
