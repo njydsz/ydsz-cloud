@@ -56,7 +56,8 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestStrategy {
+public class PgSearchStrategy
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PgSearchStrategy.class); implements SearchStrategy, IndexStrategy, SuggestStrategy {
 
     private static final String ENGINE_NAME = "pg";
     private static final String DEFAULT_SEARCH_CONFIG = "search_zh";
@@ -716,22 +717,30 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                     .status(rs.getString("status"))
                     .score(rs.getFloat("rank"))
                     .build();
-            try { hit.setPath(rs.getString("path")); } catch (SQLException ignored) { }
+            try { hit.setPath(rs.getString("path")); }             try { hit.setPath(rs.getString("path")); } catch (SQLException ignored) {
+            try { hit.setPath(rs.getString("path")); }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            try { hit.setPath(rs.getString("path")); } }
             try {
                 String tagsJson = rs.getString("tags");
                 if (tagsJson != null && !tagsJson.isBlank() && !tagsJson.equals("[]")) {
                     List<String> tags = YdszJson.parseArray(tagsJson, String.class);
                     if (tags != null && !tags.isEmpty()) hit.setTags(tags);
                 }
-            } catch (SQLException ignored) { }
+            }             } catch (SQLException ignored) {
+            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            } }
             try {
                 var createdAt = rs.getTimestamp("created_at");
                 if (createdAt != null) hit.setCreatedAt(createdAt.toInstant().toString());
-            } catch (SQLException ignored) { }
+            }             } catch (SQLException ignored) {
+            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            } }
             try {
                 var updatedAt = rs.getTimestamp("updated_at");
                 if (updatedAt != null) hit.setUpdatedAt(updatedAt.toInstant().toString());
-            } catch (SQLException ignored) { }
+            }             } catch (SQLException ignored) {
+            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            } }
             if (withHighlight) hit.setHighlight(rs.getString("highlight"));
             return hit;
         }

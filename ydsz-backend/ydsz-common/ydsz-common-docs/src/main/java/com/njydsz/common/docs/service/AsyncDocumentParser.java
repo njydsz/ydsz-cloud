@@ -43,7 +43,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-public class AsyncDocumentParser {
+public class AsyncDocumentParser
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AsyncDocumentParser.class); {
 
     private final DocumentService documentService;
     private final ExecutorService executor;
@@ -110,7 +111,9 @@ public class AsyncDocumentParser {
                 log.error("[AsyncDocumentParser] temp file error: {}", fileName, e);
                 return DocumentParseResult.builder().success(false).errorMessage("IO error: " + e.getMessage()).fileName(fileName).elapsed(Duration.ZERO).build();
             } finally {
-                if (tempFile != null) { try { Files.deleteIfExists(tempFile); } catch (IOException ignored) {} }
+                if (tempFile != null) { try { Files.deleteIfExists(tempFile); }                 if (tempFile != null) { try { Files.deleteIfExists(tempFile); } catch (IOException ignored) {
+                if (tempFile != null) { try { Files.deleteIfExists(tempFile); }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                if (tempFile != null) { try { Files.deleteIfExists(tempFile); } } }
             }
         }, executor).orTimeout(timeoutMs, TimeUnit.MILLISECONDS).exceptionally(e -> {
             log.error("[AsyncDocumentParser] async error: {}", fileName, e);

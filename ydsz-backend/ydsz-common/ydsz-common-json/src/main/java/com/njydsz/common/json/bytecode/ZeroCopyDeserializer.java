@@ -63,7 +63,8 @@ import com.njydsz.common.json.util.StringInterner;
  * @author ydsz-team
  * @since 1.0.0
  */
-public final class ZeroCopyDeserializer {
+public final class ZeroCopyDeserializer
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ZeroCopyDeserializer.class); {
 
     /** 反序列化器缓存*/
     private static final ConcurrentHashMap<Class<?>, BeanDeserializer> CACHE = new ConcurrentHashMap<>();
@@ -286,41 +287,47 @@ field.setAccessible(true);
                 try {
                     setter.invoke(obj, value);
                     return;
-                } catch (Throwable e) {
-                }
+                }                 } catch (Throwable e) {
+                }     log.debug("Caught exception (ignored): {}", e.getMessage());
+                } }
             }
             try {
                 field.set(obj, value);
-            } catch (IllegalAccessException e) {
-            }
+            }             } catch (IllegalAccessException e) {
+            }     log.debug("Caught exception (ignored): {}", e.getMessage());
+            } }
         }
 
         void setIntValue(Object obj, int value) {
             try {
                 field.setInt(obj, value);
-            } catch (IllegalAccessException e) {
-            }
+            }             } catch (IllegalAccessException e) {
+            }     log.debug("Caught exception (ignored): {}", e.getMessage());
+            } }
         }
 
         void setLongValue(Object obj, long value) {
             try {
                 field.setLong(obj, value);
-            } catch (IllegalAccessException e) {
-            }
+            }             } catch (IllegalAccessException e) {
+            }     log.debug("Caught exception (ignored): {}", e.getMessage());
+            } }
         }
 
         void setDoubleValue(Object obj, double value) {
             try {
                 field.setDouble(obj, value);
-            } catch (IllegalAccessException e) {
-            }
+            }             } catch (IllegalAccessException e) {
+            }     log.debug("Caught exception (ignored): {}", e.getMessage());
+            } }
         }
 
         void setBooleanValue(Object obj, boolean value) {
             try {
                 field.setBoolean(obj, value);
-            } catch (IllegalAccessException e) {
-            }
+            }             } catch (IllegalAccessException e) {
+            }     log.debug("Caught exception (ignored): {}", e.getMessage());
+            } }
         }
 
         /** package-private */ boolean matchesHashCode(int hash) {

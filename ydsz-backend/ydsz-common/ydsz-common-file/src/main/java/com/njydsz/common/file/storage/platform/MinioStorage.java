@@ -59,7 +59,8 @@ import io.minio.MinioClient;
  * @see MinioClient
  */
 @Slf4j
-public class MinioStorage extends AbstractFileStorage {
+public class MinioStorage
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MinioStorage.class); extends AbstractFileStorage {
 
     private final MinioClient minioClient;
 
@@ -344,8 +345,9 @@ public class MinioStorage extends AbstractFileStorage {
                         String numStr = name.substring(name.lastIndexOf("/part-") + 6);
                         int partNumber = Integer.parseInt(numStr);
                         parts.add(new PartInfo(partNumber, null, item.size()));
-                    } catch (NumberFormatException ignored) {
-                    }
+                    }                     } catch (NumberFormatException ignored) {
+                    }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                    } }
                 }
             }
         } catch (Exception e) {

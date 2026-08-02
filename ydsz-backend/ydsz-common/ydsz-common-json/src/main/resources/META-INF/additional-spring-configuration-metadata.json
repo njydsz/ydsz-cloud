@@ -13,7 +13,7 @@
     {
       "name": "ydsz.json.naming-strategy",
       "type": "java.lang.String",
-      "description": "命名策略（LOWER_CAMEL_CASE、UPPER_CAMEL_CASE、SNAKE_CASE、UPPER_SNAKE_CASE）。默认 LOWER_CAMEL_CASE。"
+      "description": "命名策略（LOWER_CAMEL_CASE、UPPER_CAMEL_CASE、SNAKE_CASE、KEBAB_CASE、LOWER_CASE）。默认 LOWER_CAMEL_CASE。"
     },
     {
       "name": "ydsz.json.write-nulls",

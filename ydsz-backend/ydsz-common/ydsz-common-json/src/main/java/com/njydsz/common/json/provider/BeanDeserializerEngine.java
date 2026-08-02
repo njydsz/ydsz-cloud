@@ -47,6 +47,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * @see ZeroCopyDeserializer
  */
 final class BeanDeserializerEngine {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BeanDeserializerEngine.class);
 
     private BeanDeserializerEngine() {
         throw new UnsupportedOperationException();
@@ -182,7 +183,9 @@ final class BeanDeserializerEngine {
         AsmDeserializer<E> asmDeserializer = null;
         try {
             asmDeserializer = AsmCodecCache.getOrCreateDeserializer(elementClass);
-        } catch (Exception ignored) {}
+        }         } catch (Exception ignored) {
+        }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        } }
 
         if (asmDeserializer != null) {
             return deserializeBeanListWithAsm(json, elementClass, asmDeserializer);
@@ -280,7 +283,9 @@ final class BeanDeserializerEngine {
         ZeroCopyDeserializer.BeanDeserializer deserializer = null;
         try {
             deserializer = ZeroCopyDeserializer.getDeserializer(elementClass);
-        } catch (Exception ignored) {}
+        }         } catch (Exception ignored) {
+        }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        } }
 
         while (pos < len) {
             while (pos < len && chars[pos] <= ' ') pos++;
@@ -315,7 +320,9 @@ final class BeanDeserializerEngine {
                         pos++;
                     }
                     continue;
-                } catch (Exception ignored) {}
+                }                 } catch (Exception ignored) {
+                }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                } }
             }
 
             int depth = 0;

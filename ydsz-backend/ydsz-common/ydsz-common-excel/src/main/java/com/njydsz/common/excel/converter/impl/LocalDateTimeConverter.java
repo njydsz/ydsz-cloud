@@ -20,7 +20,8 @@ import com.njydsz.common.excel.converter.ConvertContext;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class LocalDateTimeConverter implements CellValueConverter {
+public class LocalDateTimeConverter
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LocalDateTimeConverter.class); implements CellValueConverter {
 
     private static final Map<String, DateTimeFormatter> FORMATTER_CACHE = new ConcurrentHashMap<>();
 
@@ -61,8 +62,9 @@ public class LocalDateTimeConverter implements CellValueConverter {
                 DateTimeFormatter formatter = FORMATTER_CACHE.computeIfAbsent(dateFormat,
                     DateTimeFormatter::ofPattern);
                 return LocalDateTime.parse(dateStr, formatter);
-            } catch (Exception ignored) {
-            }
+            }             } catch (Exception ignored) {
+            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            } }
         }
 
         try {

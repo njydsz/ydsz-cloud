@@ -47,7 +47,8 @@ import lombok.extern.slf4j.Slf4j;
  * 
  */
 @Slf4j
-public class LocalStorage extends AbstractFileStorage {
+public class LocalStorage
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LocalStorage.class); extends AbstractFileStorage {
 
     /**
      * uploadId 校验规则（白名单字符 + 长度限制），用于阻断路径注入与非法参数
@@ -313,8 +314,9 @@ public class LocalStorage extends AbstractFileStorage {
                             int partNumber = Integer.parseInt(fileName.substring("part-".length()));
                             long size = Files.size(p);
                             parts.add(new PartInfo(partNumber, null, size));
-                        } catch (NumberFormatException ignored) {
-                        } catch (IOException e) {
+                        }                         } catch (NumberFormatException ignored) {
+                        }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                        } } catch (IOException e) {
                             log.warn("[Local] listParts get size failed, path={}, message={}", p, e.getMessage());
                         }
                     });

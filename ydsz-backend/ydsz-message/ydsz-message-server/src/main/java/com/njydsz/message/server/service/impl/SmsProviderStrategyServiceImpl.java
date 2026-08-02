@@ -38,7 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyService {
+public class SmsProviderStrategyServiceImpl
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SmsProviderStrategyServiceImpl.class); implements SmsProviderStrategyService {
 
     /** Redis 模板（服务商日发送量 / 失败量统计） */
     private final RedisService redisService;
@@ -185,8 +186,9 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
                 if (kv.length == 2) {
                     try {
                         weights.put(kv[0].trim(), Integer.parseInt(kv[1].trim()));
-                    } catch (NumberFormatException ignored) {
-                    }
+                    }                     } catch (NumberFormatException ignored) {
+                    }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                    } }
                 }
             }
         }

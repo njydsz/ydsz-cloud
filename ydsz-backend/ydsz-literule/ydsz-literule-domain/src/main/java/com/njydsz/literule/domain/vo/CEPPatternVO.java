@@ -7,7 +7,11 @@ import lombok.Data;
 import java.time.Duration;
 
 /**
- * CEPPattern 视图对象（VO）。
+ * CEP（复杂事件处理）模式视图对象（VO）。
+ *
+ * <p>用于前端配置与展示复杂事件模式，支持计数窗口、滑动窗口、
+ * 会话窗口、序列模式等多种类型，并可设置阈值与聚合方式。
+ * 与后端 {@code CEPPattern} 领域对象对应，仅承载展示所需字段。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -15,61 +19,58 @@ import java.time.Duration;
 @Data
 public class CEPPatternVO {
 
-    /** id */
+    /** 模式 ID（业务唯一标识） */
     private String id;
 
-    /** type */
+    /** 模式类型（如 COUNT/SEQUENCE/SESSION，决定匹配语义） */
     private String type;
 
-    /** ruleCode */
+    /** 关联规则编码 */
     private String ruleCode;
 
-    /** name */
+    /** 模式名称（展示用） */
     private String name;
 
-    /** window */
+    /** 时间窗口长度（滑动/滚动窗口大小） */
     private Duration window;
 
-    /** slide */
+    /** 滑动步长（滑动窗口每次向前推进的间隔） */
     private Duration slide;
 
-    /** windowType */
+    /** 窗口类型（TUMBLING 滚动 / SLIDING 滑动 / SESSION 会话） */
     private String windowType;
 
-    /** sessionGap */
+    /** 会话窗口最大间隔（超过该间隔则会话断开重新计数） */
     private Duration sessionGap;
 
-    /** threshold */
+    /** 触发阈值（如次数或聚合值达到该值才命中） */
     private double threshold;
 
-    /** eventType */
+    /** 关注的事件类型（模式只匹配该类型事件） */
     private String eventType;
 
-
-    /** filter */
+    /** 事件过滤表达式（对事件附加条件过滤） */
     private String filter;
 
-    /** aggregateFunction */
+    /** 聚合函数（如 COUNT/SUM/AVG，用于窗口内计算） */
     private String aggregateFunction;
 
-    /** aggregateField */
+    /** 聚合字段（聚合函数作用的事件字段） */
     private String aggregateField;
 
-    /** sequence */
+    /** 序列事件定义（有序事件列表，仅 SEQUENCE 类型使用） */
     private List<Object> sequence;
 
-    /** description */
+    /** 模式描述 */
     private String description;
 
-    /** order */
+    /** 排序号（数值越小越优先，用于多模式展示顺序） */
     private int order;
 
-
-
-    /** minGap */
+    /** 序列事件最小间隔（相邻事件间隔下限） */
     private Duration minGap;
 
-    /** maxGap */
+    /** 序列事件最大间隔（相邻事件间隔上限） */
     private Duration maxGap;
 
 }

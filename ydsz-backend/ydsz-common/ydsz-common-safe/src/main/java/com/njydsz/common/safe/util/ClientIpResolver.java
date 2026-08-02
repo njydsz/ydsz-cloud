@@ -28,7 +28,8 @@ import org.springframework.util.StringUtils;
  * @author ydsz-team
  * @since 1.0.0
  */
-public final class ClientIpResolver {
+public final class ClientIpResolver
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ClientIpResolver.class); {
 
     private static final String UNKNOWN = "unknown";
     private static final String DEFAULT_IP = "0.0.0.0";
@@ -117,8 +118,9 @@ public final class ClientIpResolver {
                 if (secondOctet >= 16 && secondOctet <= 31) {
                     return true;
                 }
-            } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
-            }
+            }             } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
+            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            } }
         }
         return false;
     }

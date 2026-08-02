@@ -61,7 +61,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
-public class ChunkUploadApplicationService {
+public class ChunkUploadApplicationService
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ChunkUploadApplicationService.class); {
 
     private final RedisService redisService;
     private final FileNodeRepository fileNodeRepository;
@@ -410,8 +411,9 @@ public class ChunkUploadApplicationService {
                 Files.list(sessionDir).forEach(p -> {
                     try {
                         Files.deleteIfExists(p);
-                    } catch (IOException ignored) {
-                    }
+                    }                     } catch (IOException ignored) {
+                    }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                    } }
                 });
                 Files.deleteIfExists(sessionDir);
             }

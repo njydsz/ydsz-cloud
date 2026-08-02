@@ -530,8 +530,9 @@ JsonSerializationException.SERIALIZATION_ERROR,
                 return Date.from(LocalDateTime.parse(json, formatter)
                         .atZone(ZoneId.systemDefault()).toInstant());
             }
-        } catch (DateTimeParseException e) {
-        }
+        }         } catch (DateTimeParseException e) {
+        }     LOGGER.debug("Caught exception (ignored): {}", e.getMessage());
+        } }
         return json;
     }
 

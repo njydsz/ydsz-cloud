@@ -37,7 +37,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Slf4j
 @Aspect
 @RequiredArgsConstructor
-public class RateLimitAspect {
+public class RateLimitAspect
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RateLimitAspect.class); {
 
     private final RateLimitManager rateLimitManager;
 
@@ -152,14 +153,16 @@ public class RateLimitAspect {
                 Method m = arg.getClass().getMethod("getUserId");
                 Object val = m.invoke(arg);
                 if (val != null) return val.toString();
-            } catch (Exception ignored) {
-            }
+            }             } catch (Exception ignored) {
+            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            } }
             try {
                 Method m = arg.getClass().getMethod("getCurrentUserId");
                 Object val = m.invoke(arg);
                 if (val != null) return val.toString();
-            } catch (Exception ignored) {
-            }
+            }             } catch (Exception ignored) {
+            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            } }
         }
         return null;
     }
@@ -185,8 +188,9 @@ public class RateLimitAspect {
             if (attrs instanceof ServletRequestAttributes sra) {
                 return sra.getRequest();
             }
-        } catch (Exception ignored) {
-        }
+        }         } catch (Exception ignored) {
+        }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        } }
         return null;
     }
 }

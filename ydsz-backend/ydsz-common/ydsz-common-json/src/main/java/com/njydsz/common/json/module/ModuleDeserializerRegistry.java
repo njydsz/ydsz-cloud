@@ -67,6 +67,7 @@ public final class ModuleDeserializerRegistry {
      *
      * @return 只读列表
      */
+    @Deprecated
     List<JsonModule> getOrderedModules() {
         return Collections.unmodifiableList(orderedModules);
     }

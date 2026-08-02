@@ -49,7 +49,8 @@ import java.util.List;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class ExcelXmlParser {
+public class ExcelXmlParser
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ExcelXmlParser.class); {
 
     /** XML 标签前缀：<row */
     private static final byte[] ROW_START = "<row".getBytes(StandardCharsets.UTF_8);
@@ -301,8 +302,9 @@ public class ExcelXmlParser {
         if (styleStr != null && !styleStr.isEmpty()) {
             try {
                 cellStyle = Integer.parseInt(styleStr);
-            } catch (NumberFormatException e) {
-            }
+            }             } catch (NumberFormatException e) {
+            }     log.debug("Caught exception (ignored): {}", e.getMessage());
+            } }
         }
 
         if (cellHandler != null && currentRow > 0 && currentCol >= 0) {

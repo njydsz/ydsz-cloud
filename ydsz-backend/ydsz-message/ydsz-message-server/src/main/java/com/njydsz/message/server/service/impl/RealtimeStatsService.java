@@ -30,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RealtimeStatsService {
+public class RealtimeStatsService
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RealtimeStatsService.class); {
 
     private static final DateTimeFormatter MINUTE_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -136,8 +137,9 @@ public class RealtimeStatsService {
             if (val != null) {
                 try {
                     result.put(channel, Long.parseLong(val));
-                } catch (NumberFormatException ignored) {
-                }
+                }                 } catch (NumberFormatException ignored) {
+                }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                } }
             }
         }
         return result;
