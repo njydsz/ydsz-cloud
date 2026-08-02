@@ -5,8 +5,8 @@ import java.lang.annotation.*;
 /**
  * Jackson 兼容注解：标记字段在序列化/反序列化时被忽略。
  *
- * <p>等价于 {@link JsonProperty} 的 {@code ignore = true}。当项目中同时存在 Jackson 和 YdszJson
- * 时，可使用此注解替代 {@code @JsonIgnore(com.fasterxml.jackson.annotation.JsonIgnore)}，
+ * <p>当项目中同时存在 Jackson 和 YdszJson 时，可使用此注解替代
+ * {@code @JsonIgnore(com.fasterxml.jackson.annotation.JsonIgnore)}，
  * 避免引入 Jackson 依赖。</p>
  *
  * <p>使用示例：</p>

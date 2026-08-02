@@ -1,7 +1,7 @@
 package com.njydsz.workflow.domain.vo;
 
 /**
- * 流程定义视图层级（P2-1: 配合 @YdszJsonView 实现静态视图过滤）。
+ * 流程定义视图层级（P2-1: 配合 @JsonView 实现静态视图过滤）。
  *
  * <p>使用方式：
  * <pre>
