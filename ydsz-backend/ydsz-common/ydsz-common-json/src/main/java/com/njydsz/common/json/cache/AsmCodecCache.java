@@ -3,6 +3,9 @@ package com.njydsz.common.json.cache;
 import java.lang.ref.SoftReference;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.json.asm.AsmBeanCodecGenerator;
 import com.njydsz.common.json.asm.AsmDeserializer;
 import com.njydsz.common.json.asm.AsmSerializer;
@@ -24,6 +27,8 @@ import com.njydsz.common.json.writer.JSONWriter;
  * @since 1.0.0
  */
 public final class AsmCodecCache {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AsmCodecCache.class);
 
     private static final int DEFAULT_MAX_SIZE = 1024;
 
@@ -141,8 +146,7 @@ public final class AsmCodecCache {
             SERIALIZER_CACHE.put(beanType, serializer);
             return serializer;
         } catch (Exception e) {
-            System.err.println("[AsmCodecCache] generation FAILED for " + beanType.getName() + ": " + e);
-            e.printStackTrace(System.err);
+            LOGGER.warn("ASM serializer generation failed for {}, falling back to reflection", beanType.getName(), e);
             SERIALIZER_FAILED.put(beanType, Boolean.TRUE);
             return null;
         }
@@ -174,8 +178,7 @@ public final class AsmCodecCache {
             SERIALIZER_CACHE.put(beanType, serializer);
             return serializer;
         } catch (Exception e) {
-            System.err.println("[AsmCodecCache] generation FAILED for " + beanType.getName() + ": " + e);
-            e.printStackTrace(System.err);
+            LOGGER.warn("ASM serializer generation failed for {}, falling back to reflection", beanType.getName(), e);
             SERIALIZER_FAILED.put(beanType, Boolean.TRUE);
             return null;
         }
