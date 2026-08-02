@@ -393,7 +393,6 @@ final class BeanDeserializerEngine {
      * @param <T> 目标类型
      * @return 反序列化后的 Record 实例
      */
-    @SuppressWarnings("unchecked")
     static <T> T deserializeRecord(String json, Class<T> clazz) {
         Map<String, Object> map = JsonParserUtil.parseObject(json);
         RecordComponent[] components = clazz.getRecordComponents();
@@ -408,9 +407,9 @@ final class BeanDeserializerEngine {
         }
 
         try {
-            Constructor<?> canonical = clazz.getDeclaredConstructor(paramTypes);
+            Constructor<T> canonical = clazz.getDeclaredConstructor(paramTypes);
             canonical.setAccessible(true);
-            return (T) canonical.newInstance(paramValues);
+            return canonical.newInstance(paramValues);
         } catch (Exception e) {
             throw new RuntimeException("Failed to deserialize Record: " + clazz.getName(), e);
         }

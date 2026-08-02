@@ -143,7 +143,6 @@ return converter;
          * </ul>
          */
         @PostConstruct
-        @SuppressWarnings("deprecation")
         public void init() {
             // 使用 Builder 模式构建配置（推荐方式，避免 setter 链式调用）
             // 兼容期仍使用 getInstance() 单例，后续版本将改为 setInstance(builder().build())

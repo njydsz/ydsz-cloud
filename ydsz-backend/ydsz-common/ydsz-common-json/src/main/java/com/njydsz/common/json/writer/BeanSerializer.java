@@ -273,11 +273,10 @@ public final class BeanSerializer {
      * @param obj 要序列化的 Bean 对象
      * @param writer JSON 写入器
      */
-    @SuppressWarnings("unchecked")
     private void writeAnyGetterProperties(Object obj, JSONWriter writer) {
-        Map<String, Object> map;
+        Map<?, ?> map;
         try {
-            map = (Map<String, Object>) anyGetterMethod.invoke(obj);
+            map = (Map<?, ?>) anyGetterMethod.invoke(obj);
         } catch (Exception e) {
             return; // 调用失败时静默跳过
         }
@@ -289,16 +288,16 @@ public final class BeanSerializer {
         int pos = writer.pos - 1; // 回退到 } 的位置
         char[] buf = writer.buf;
         
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
             Object value = entry.getValue();
             if (value == null) continue;
             
-            writer.ensureCapacity(32 + entry.getKey().length() * 2);
+            String key = String.valueOf(entry.getKey());
+            writer.ensureCapacity(32 + key.length() * 2);
             buf = writer.buf; // ensureCapacity 可能重新分配
             
             buf[pos++] = ',';
             buf[pos++] = '"';
-            String key = entry.getKey();
             key.getChars(0, key.length(), buf, pos);
             pos += key.length();
             buf[pos++] = '"';

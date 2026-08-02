@@ -1460,9 +1460,17 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * ASM 动态生成类前缀
+     * ASM 动态生成类前缀（已废弃：实际生成类名形如 {@code <beanType.getName()>_ASM_Serializer}，
+     * 与宿主 Bean 同包；保留此常量仅为兼容历史引用，{@link SecureAsmClassLoader#defineInternal}
+     * 已改用后缀校验）
      */
     private static final String ASM_CLASS_PREFIX = "generated.";
+
+    /** ASM 序列化器类名后缀（类名形如 {@code <beanType>_ASM_Serializer}） */
+    private static final String ASM_CLASS_SUFFIX_SER = "_ASM_Serializer";
+
+    /** ASM 反序列化器类名后缀 */
+    private static final String ASM_CLASS_SUFFIX_DESER = "_ASM_Deserializer";
 
     /**
      * 动态生成类数量上限，超过此阈值降级到反射模式
@@ -1637,8 +1645,12 @@ public final class AsmBeanCodecGenerator {
         }
 
         Class<?> defineInternal(String name, byte[] b, int off, int len, CodeSource cs) {
-            if (!name.startsWith(ASM_CLASS_PREFIX)) {
-                throw new SecurityException("ASM class name must start with " + ASM_CLASS_PREFIX + ", got: " + name);
+            // 仅允许 ASM 生成的类名后缀，防止任意类名 defineClass 注入。
+            // 类名形如 <beanType.getName()>_ASM_Serializer / _ASM_Deserializer，与宿主 Bean 同包，
+            // 便于直接访问 package-private 成员（对齐 fastjson2 同包生成策略）。
+            if (!name.endsWith(ASM_CLASS_SUFFIX_SER) && !name.endsWith(ASM_CLASS_SUFFIX_DESER)) {
+                throw new SecurityException("ASM class name must end with " + ASM_CLASS_SUFFIX_SER
+                        + " or " + ASM_CLASS_SUFFIX_DESER + ", got: " + name);
             }
             return super.defineClass(name, b, off, len, cs);
         }

@@ -91,7 +91,6 @@ public final class DeserializationProvider {
      * @return 反序列化后的对象
      * @since 1.0.0
      */
-    @SuppressWarnings("unchecked")
     public static <T> T deserialize(byte[] bytes, Type type) {
         if (bytes == null || bytes.length == 0) {
             return null;
