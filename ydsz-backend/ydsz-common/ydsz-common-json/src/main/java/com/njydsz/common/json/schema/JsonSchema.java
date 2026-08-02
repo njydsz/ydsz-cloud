@@ -53,6 +53,15 @@ public final class JsonSchema {
     /** 默认值 */
     private Object defaultValue;
 
+    /** 数组 uniqueItems 约束 */
+    private Boolean uniqueItems;
+
+    /** 对象最少属性数 */
+    private Integer minProperties;
+
+    /** 对象最多属性数 */
+    private Integer maxProperties;
+
     /** 字符串约束 */
     private Integer minLength;
     private Integer maxLength;
@@ -407,6 +416,10 @@ public final class JsonSchema {
         }
         return this;
     }
+
+    public JsonSchema uniqueItems(boolean unique) { this.uniqueItems = unique; return this; }
+    public JsonSchema minProperties(int n) { this.minProperties = n; return this; }
+    public JsonSchema maxProperties(int n) { this.maxProperties = n; return this; }
 
     // ========== Getter 方法 ==========
 

@@ -201,11 +201,10 @@ public class JsonPath {
                 evaluate(list.get(index), segmentIndex + 1, results);
             }
         } else if (current.getClass().isArray()) {
-            Object[] array = (Object[]) current;
-            int index = normalizeIndex(segment.index, array.length);
-            
-            if (index >= 0 && index < array.length) {
-                evaluate(array[index], segmentIndex + 1, results);
+            int len = java.lang.reflect.Array.getLength(current);
+            int index = normalizeIndex(segment.index, len);
+            if (index >= 0 && index < len) {
+                evaluate(java.lang.reflect.Array.get(current, index), segmentIndex + 1, results);
             }
         }
     }
@@ -290,9 +289,9 @@ public class JsonPath {
                 evaluate(item, segmentIndex + 1, results);
             }
         } else if (current.getClass().isArray()) {
-            Object[] array = (Object[]) current;
-            for (Object item : array) {
-                evaluate(item, segmentIndex + 1, results);
+            int len = java.lang.reflect.Array.getLength(current);
+            for (int i = 0; i < len; i++) {
+                evaluate(java.lang.reflect.Array.get(current, i), segmentIndex + 1, results);
             }
         }
     }
