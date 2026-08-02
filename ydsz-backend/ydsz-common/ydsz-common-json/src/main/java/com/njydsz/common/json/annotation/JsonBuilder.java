@@ -77,6 +77,15 @@ import java.lang.annotation.*;
 public @interface JsonBuilder {
 
     /**
+     * 是否启用 Builder 模式反序列化。
+     *
+     * <p>默认为 true。设为 false 时跳过 Builder 路径，回退到默认反序列化逻辑。</p>
+     *
+     * @return 是否启用
+     */
+    boolean enable() default true;
+
+    /**
      * Builder 类
      *
      * <p>指定 Builder 类的类型。</p>

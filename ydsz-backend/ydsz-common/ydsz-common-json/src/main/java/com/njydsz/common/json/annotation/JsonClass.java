@@ -69,6 +69,40 @@ public @interface JsonClass {
      */
     NamingStrategy naming() default NamingStrategy.CAMEL_CASE;
     
+    /**
+     * 是否输出类名（序列化时写入 {@code @class} 字段标识实际类型）。
+     * 
+     * <p>用于多态场景下的类型保留，对标 fastjson2 的 serializerFeature WriteClassName。</p>
+     * 
+     * @return 是否输出类名，默认 false
+     */
+    boolean writeClassName() default false;
+    
+    /**
+     * 类级别日期格式（覆盖字段级 {@link JsonFormat} 的 pattern）。
+     * 
+     * <p>空字符串表示不启用类级日期格式，使用字段级配置或默认 toString。</p>
+     * 
+     * @return 日期格式字符串，默认空
+     */
+    String dateFormat() default "";
+    
+    /**
+     * 是否输出 null 值字段（类级别控制，覆盖全局配置）。
+     * 
+     * @return 是否输出 null，默认 false
+     */
+    boolean writeNulls() default false;
+    
+    /**
+     * 枚举是否以 ordinal（序号）形式序列化。
+     * 
+     * <p>默认 false，枚举以 name() 字符串序列化。</p>
+     * 
+     * @return 是否使用 ordinal 序列化枚举，默认 false
+     */
+    boolean serializeEnumUsingOrdinal() default false;
+    
     // ==================== 多态类型支持（参考@JSONType） ====================
     
     /**

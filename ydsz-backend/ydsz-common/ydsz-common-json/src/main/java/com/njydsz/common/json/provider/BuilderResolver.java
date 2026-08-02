@@ -272,6 +272,8 @@ final class BuilderResolver {
     static JsonBuilder createDefaultBuilderAnnotation() {
         return new JsonBuilder() {
             @Override
+            public boolean enable() { return true; }
+            @Override
             public Class<?> builderClass() { return void.class; }
             @Override
             public String buildMethod() { return "build"; }
