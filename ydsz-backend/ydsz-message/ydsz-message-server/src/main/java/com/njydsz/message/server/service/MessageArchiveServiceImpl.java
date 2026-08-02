@@ -35,6 +35,13 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     private final MessageProperties messageProperties;
 
     @Override
+    /**
+     * 单条消息写入归档索引。
+     *
+     * <p>仅当 ES 开关开启且 logDO 非空时执行；当前为 mock 降级（仅记录日志），后续接入 ElasticsearchRestTemplate。
+     *
+     * @param logDO 消息日志实体
+     */
     public void index(MsgLog logDO) {
         if (!messageProperties.getArchive().isEsEnabled() || logDO == null) {
             return;
@@ -46,6 +53,13 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     }
 
     @Override
+    /**
+     * 批量写入归档索引。
+     *
+     * <p>开关关闭 / 列表空时直接返回；否则逐条调用 {@link #index}。
+     *
+     * @param logList 消息日志列表
+     */
     public void batchIndex(List<MsgLog> logList) {
         if (!messageProperties.getArchive().isEsEnabled() || logList == null || logList.isEmpty()) {
             return;
@@ -57,6 +71,23 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     }
 
     @Override
+    /**
+     * 归档消息全文搜索（带 ES→数据库降级）。
+     *
+     * <p>ES 开关开启时走 Elasticsearch 全文检索（当前 mock），否则降级为数据库 LIKE 查询
+     * （按 内容/接收人/模板编码/业务ID 模糊匹配，并支持通道/状态/业务/时间范围过滤）。
+     *
+     * @param keyword   关键词（内容/接收人/模板/业务ID 模糊匹配）
+     * @param channel   通道过滤（可空）
+     * @param status    状态过滤（可空）
+     * @param bizType   业务类型过滤（可空）
+     * @param startTime 开始时间（可空）
+     * @param endTime   结束时间（可空）
+     * @param tenantId  租户 ID
+     * @param pageNum   页码
+     * @param pageSize  页大小
+     * @return 消息分页结果
+     */
     public Page<MsgLog> search(String keyword, String channel, String status, String bizType,
                                  LocalDateTime startTime, LocalDateTime endTime,
                                  String tenantId, int pageNum, int pageSize) {
@@ -70,6 +101,13 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     }
 
     @Override
+    /**
+     * 删除归档索引。
+     *
+     * <p>仅当 ES 开关开启且 id 非空时执行；当前为 mock 降级（仅记录日志）。
+     *
+     * @param id 消息 ID
+     */
     public void delete(String id) {
         if (!messageProperties.getArchive().isEsEnabled() || !StringUtils.hasText(id)) {
             return;

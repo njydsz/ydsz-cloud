@@ -52,6 +52,16 @@ public class TemplateServiceImpl implements TemplateService {
     private final TemplateEngine templateEngine;
 
     @Override
+    /**
+     * 创建消息模板。
+     *
+     * <p>按 (templateCode, channel, locale, tenantId) 唯一性校验，冲突抛 DUPLICATE_KEY；
+     * 新建模板默认状态 ENABLED、审核状态 DRAFT。locale 缺省回退 {@code DEFAULT_LOCALE}。
+     *
+     * @param dto 模板创建参数（templateCode/channel 必填）
+     * @return 已创建的模板实体
+     * @throws com.njydsz.common.exception.custom.SysException 参数为空 / 编码或通道为空 / 模板已存在时
+     */
     public MsgTemplate create(TemplateCreateDTO dto) {
         if (dto == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板参数不能为空");
@@ -93,6 +103,17 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
+    /**
+     * 更新消息模板（局部字段）。
+     *
+     * <p>先按 id 校验存在，再对非空字段做局部更新；id 为空抛 BAD_REQUEST。
+     * 注意：更新不触发版本化，发布版本化由发布流程处理。
+     *
+     * @param id  模板 ID
+     * @param dto 模板更新参数（非空字段覆盖）
+     * @return 更新后的模板实体
+     * @throws com.njydsz.common.exception.custom.SysException id 为空 / dto 为空 / 模板不存在时
+     */
     public MsgTemplate update(String id, TemplateCreateDTO dto) {
         if (!StringUtils.hasText(id)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板 ID 不能为空");
@@ -136,6 +157,12 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
+    /**
+     * 删除消息模板（物理删除）。
+     *
+     * @param id 模板 ID（为空抛 BAD_REQUEST）
+     * @throws com.njydsz.common.exception.custom.SysException id 为空时
+     */
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板 ID 不能为空");
@@ -144,6 +171,13 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
+    /**
+     * 按 ID 查询模板。
+     *
+     * @param id 模板 ID
+     * @return 模板实体
+     * @throws com.njydsz.common.exception.custom.SysException id 为空 / 模板不存在时
+     */
     public MsgTemplate getById(String id) {
         if (!StringUtils.hasText(id)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板 ID 不能为空");
@@ -156,6 +190,14 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
+    /**
+     * 分页查询模板（支持多条件动态过滤）。
+     *
+     * <p>按 createdAt 降序；页码/页大小缺失取默认，页大小受 {@code PageConstants} 上限保护。
+     *
+     * @param query 查询条件（可空，空则查全量分页）
+     * @return 模板分页结果
+     */
     public Page<MsgTemplate> page(TemplateQueryDTO query) {
         Page<MsgTemplate> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
@@ -175,6 +217,19 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
+    /**
+     * 按 (templateCode, channel, locale, tenantId) 加载启用模板。
+     *
+     * <p>先精确 locale 匹配启用模板；未命中且非默认 locale 时回退 {@code DEFAULT_LOCALE}（zh-CN）。
+     * 用于发送/渲染时按渠道取模板，tenantId 缺省取当前租户。
+     *
+     * @param templateCode 模板编码
+     * @param channel      通道
+     * @param locale       区域（可空，回退默认）
+     * @param tenantId     租户 ID（可空，取当前租户）
+     * @return 命中模板；无匹配返回 null
+     * @throws com.njydsz.common.exception.custom.SysException templateCode 或 channel 为空时
+     */
     public MsgTemplate loadByCodeAndChannel(String templateCode, String channel, String locale, String tenantId) {
         if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码与通道不能为空");
@@ -206,6 +261,15 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
+    /**
+     * 审核模板（状态流转 DRAFT→AUDITING→APPROVED/REJECTED）。
+     *
+     * <p>校验流转合法性（{@link #canTransitAudit}）；APPROVED 同步启用、REJECTED 同步禁用，并记录审核时间。
+     *
+     * @param id  模板 ID
+     * @param dto 审核参数（auditStatus 必填）
+     * @throws com.njydsz.common.exception.custom.SysException 参数为空 / 非法流转时
+     */
     public void audit(String id, TemplateAuditDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getAuditStatus())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "审核状态不能为空");
@@ -231,6 +295,19 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
+    /**
+     * 渲染模板预览。
+     *
+     * <p>先加载启用模板，再交由 {@link TemplateEngine} 按入参渲染变量；模板不存在抛 NOT_FOUND。
+     *
+     * @param templateCode 模板编码
+     * @param channel      通道
+     * @param params       渲染变量（可为 null）
+     * @param locale       区域（可空）
+     * @param tenantId     租户 ID（可空）
+     * @return 渲染后的模板内容
+     * @throws com.njydsz.common.exception.custom.SysException templateCode/channel 为空 / 模板不存在时
+     */
     public String preview(String templateCode, String channel, Map<String, Object> params, String locale, String tenantId) {
         if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码与通道不能为空");
