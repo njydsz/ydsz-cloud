@@ -59,6 +59,8 @@ YDSZ 统一安全框架 — XSS 防护、SQL 注入防护、CSRF Token（Synchro
 | `LocalRateLimiter` | 本地限流降级方案（Semaphore + 时间窗口） |
 | `MultiDimensionRateLimiter` | 多维度限流器（IP / USER / API / GLOBAL 组合） |
 
+**支持的 7 种限流算法**：SlidingWindow（滑动窗口）、TokenBucket（令牌桶）、LeakyBucket（漏桶）、FixedWindow（固定窗口）、Counter（计数器）、SlidingLog（滑动日志）、Guava（Guava RateLimiter）。
+
 ### 验证码
 
 | 类 | 说明 |
@@ -119,6 +121,21 @@ YDSZ 统一安全框架 — XSS 防护、SQL 注入防护、CSRF Token（Synchro
 |---|---|
 | `SecurityHeaderFilter` | 安全响应头过滤器（7 种安全头） |
 | `SecurityHeaderProperties` | 安全头配置 |
+
+### 开关注解
+
+| 注解 | 说明 |
+|---|---|
+| `@EnableYdszSafe` | 启用 ydsz 安全模块自动装配（显式开启 safe 模块的所有过滤器和 AOP 切面） |
+
+### 字段加密
+
+| 类 | 说明 |
+|---|---|
+| `FieldEncryptionAutoConfiguration` | 字段加密自动配置 |
+| `EncryptField` | 字段加密注解（标记敏感字段，支持入库加密 / 出库解密） |
+| `FieldEncryptionService` | 字段加解密服务（注解扫描 + AOP 拦截 + 密钥管理） |
+| `DecryptFailureStrategy` | 解密失败策略（IGNORE / THROW / RETURN_NULL） |
 
 ## 配置项
 

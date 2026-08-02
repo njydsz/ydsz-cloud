@@ -55,6 +55,13 @@ YDSZ HTTP 公共基座 — CORS、时区、I18n、安全头、TraceId、请求�
 |---|---|
 | `BaseHealthIndicator` | 健康指标（时区/安全头/文档状态报告） |
 
+### Actuator 端点与模块指标
+
+| 类 | 说明 |
+|---|---|
+| `ConfigRegistryEndpoint` | Actuator 端点（`@Endpoint` 暴露配置注册表，运行时查看模块配置项） |
+| `AbstractModuleMetrics` | 模块指标抽象基类（统一各模块 Micrometer 指标注册与命名规范） |
+
 ### 文档配置
 
 | 类 | 说明 |

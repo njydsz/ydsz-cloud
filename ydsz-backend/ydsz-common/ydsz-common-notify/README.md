@@ -41,7 +41,8 @@ YDSZ 统一通知服务 — 5 种通知渠道（邮件 / 短信 / 企微 / 钉�
 | `AsyncNotifyService` | 异步通知服务 |
 | `TransactionalNotifyPublisher` | 事务性发布器（事务提交后才投递，避免脏发） |
 | `NotifyRequest` | 通知请求载体 |
-| `NotifySendResult` / `DefaultNotifyResult` | 发送结果 |
+| `NotifySendResult` / `DefaultNotifyResult` | 通知结果模型（发送成功标志、消息 ID、错误信息、渠道、时间戳） |
+| `NotifyHelper` | 通知助手工具类（封装常用通知发送、结果构建、异常包装等便捷方法） |
 | `NotifyType` / `NotifyPriority` | 通知类型 / 优先级枚举 |
 | `NotifyException` | 通知模块异常 |
 

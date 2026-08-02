@@ -38,6 +38,15 @@ YDSZ Netty 网络通信框架 — TCP Server/Client 抽象、断线重连、心�
 | `IdleStateHandlerFactory` | 空闲状态处理器工厂（读 / 写 / 读写空闲检测） |
 | `ChannelGroupManager` | Channel 组管理（广播 / 分组推送 / 空分组自动清理） |
 
+### 消息处理与事件分发
+
+| 类 | 说明 |
+|---|---|
+| `MessageHandler<T>` | 消息处理器接口（按消息类型分发业务逻辑） |
+| `MessageDispatcher` | 消息分发器（注册 MessageHandler，按消息类型路由分发） |
+| `ChannelEventDispatcher` | Channel 事件分发器（连接 / 断开 / 异常等事件分发到监听器） |
+| `ChannelEventListener` | Channel 事件监听器接口（业务侧实现，订阅 Channel 生命周期事件） |
+
 ### SSL/TLS
 
 | 类 | 说明 |

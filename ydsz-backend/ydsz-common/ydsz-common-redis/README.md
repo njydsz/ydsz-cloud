@@ -1,6 +1,6 @@
 # ydsz-common-redis
 
-YDSZ Redis 服务增强 — 6 种基础 ops + 7 种高级 ops、布隆过滤器、延迟队列、滑动窗口限流、雪花 ID、缓存击穿防护、Pipeline 批处理、集群工具。
+YDSZ Redis 服务增强 — 6 种基础 ops + 9 种高级 ops（Pipeline / Lua / Pub-Sub / Stream / 事务 / 布隆过滤器 / 延迟队列 / 限流器 / 缓存击穿防护）、雪花 ID、Pipeline 批处理、集群工具。
 
 ## 模块定位
 
@@ -61,6 +61,7 @@ YDSZ Redis 服务增强 — 6 种基础 ops + 7 种高级 ops、布隆过滤器�
 |---|---|
 | `YdszJsonRedisSerializer` | 基于 YdszJson 的高性能 Redis 序列化器 |
 | `RedisKeyPrefixProvider` | Key 前缀提供者 |
+| `TenantRedisKeyPrefixer` | 租户级 Redis Key 前缀器（多租户数据隔离，格式 `{tenantId}:{originalKey}`，超级管理员不添加前缀） |
 
 ### 集群与配置
 

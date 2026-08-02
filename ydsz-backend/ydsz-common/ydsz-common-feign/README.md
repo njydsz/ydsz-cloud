@@ -40,13 +40,29 @@ YDSZ OpenFeign 增强框架 — 统一编解码、ResponseUnwrapDecoder 自动�
 | `FeignTraceHandler` | Feign 追踪处理器 |
 | `FeignRequestInterceptor` | 通用请求拦截器（Auth Token / 租户 ID / 请求 ID 传播） |
 
+### 舱壁隔离
+
+| 类 | 说明 |
+|---|---|
+| `BulkheadRequestInterceptor` | 舱壁隔离请求拦截器（基于信号量限制 Feign 调用并发数，防止级联雪崩） |
+
 ### 动态客户端
 
 | 类 | 说明 |
 |---|---|
 | `DynamicFeignClientFactory` | 动态 Feign 客户端工厂（运行时创建 Feign 代理） |
 | `FeignConfigRefresher` | Feign 配置刷新器（Nacos 配置变更 → 客户端重建） |
-| `FeignClientConstants` | 客户端常量 |
+| `FeignClientConstants` | Feign 客户端常量定义（客户端名称、上下文 key、默认配置常量） |
+
+### 客户端名称组装
+
+| 类 | 说明 |
+|---|---|
+| `NameAssembler` | Feign 客户端名称组装器接口（按规则组装客户端 name，支持环境/租户前缀等） |
+| `NameAssemblerAutoConfiguration` | 名称组装器自动配置 |
+| `NameAssemblerProperties` | 名称组装器配置属性 |
+| `NoOpNameAssembler` | 默认空实现（直接返回原始 name，不组装） |
+| `NameType` | 名称类型枚举 |
 
 ### Gzip 压缩
 

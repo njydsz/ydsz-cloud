@@ -29,6 +29,15 @@
 
 > **P1 优化**：`CacheProtectionGuard` 和 `NullValueGuard` 从全局静态状态重构为 per-cache 实例级状态（`WeakHashMap` 关联），消除跨缓存锁竞争和内存泄漏。
 
+### 注解驱动
+
+| 注解 / 类 | 说明 |
+|---|---|
+| `@Cached` | 声明式缓存读取（方法返回值自动缓存，支持 key / expire / cacheName 配置） |
+| `@CacheInvalidate` | 声明式缓存失效（方法执行后自动清除指定 key） |
+| `@CacheRefresh` | 声明式缓存刷新（异步刷新缓存，避免过期突刺） |
+| `CacheAnnotationAspect` | 注解驱动切面（拦截 `@Cached` / `@CacheInvalidate` / `@CacheRefresh`，委托底层 Cache 实例执行） |
+
 ### 可观测性
 
 - **Micrometer 指标**：`CacheMeterBinder` 注册 Gauge / FunctionCounter / FunctionTimer / Timer（P50/P90/P99 分位数）

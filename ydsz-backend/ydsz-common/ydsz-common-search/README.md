@@ -39,6 +39,35 @@
 | `SearchEngineRegistry` | 引擎注册中心 — 主引擎 + 降级链 |
 | `SearchProvider<T>` | 业务数据提供者 SPI — 各业务模块实现 |
 
+## 扩展组件
+
+### 业务排名
+
+| 类 | 说明 |
+|---|---|
+| `BusinessRanker` | 业务排名器（按业务权重、时间衰减、热度等维度对搜索结果重排序） |
+
+### 搜索分析
+
+| 类 | 说明 |
+|---|---|
+| `SearchAnalyticsService` | 搜索分析服务（搜索词统计、点击率、TopN 查询） |
+| `SearchQualityTracker` | 搜索质量追踪器（命中率、无结果率、平均耗时等指标） |
+
+### 索引同步
+
+| 类 | 说明 |
+|---|---|
+| `IndexSyncListener` | 索引同步监听器（监听业务数据变更事件，触发增量索引同步） |
+| `SearchIndexEventBridge` | 索引事件桥接器（业务事件 → 索引同步事件的转换桥梁） |
+| `IndexConsistencyChecker` | 索引一致性检查器（定时校验 DB 与索引的数据一致性） |
+
+### Provider 桥接
+
+| 类 | 说明 |
+|---|---|
+| `ProviderTypeBridge` | Provider 类型桥接器（业务实体类型与搜索文档类型的映射桥接） |
+
 ## 支持的搜索引擎
 
 | 引擎 | 策略类 | 能力 | 激活条件 |

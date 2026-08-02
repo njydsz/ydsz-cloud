@@ -78,6 +78,12 @@ Persistable<T>                    (接口: ID + isNew)
 | `@SoftDelete` | 软删除标记（类级注解） |
 | `@TenantId` | 租户 ID 字段 |
 
+### 领域服务标识
+
+| 注解 | 说明 |
+|---|---|
+| `@DomainService` | 领域服务标识注解，标记 DDD 领域服务层组件，与 `@Service` 区分领域语义 |
+
 ### 领域事件
 
 | 类 | 说明 |
