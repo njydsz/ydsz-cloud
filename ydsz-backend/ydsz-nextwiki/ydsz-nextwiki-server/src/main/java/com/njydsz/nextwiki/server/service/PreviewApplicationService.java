@@ -75,7 +75,14 @@ public class PreviewApplicationService {
     );
 
     /**
-     * 生成预览（异步调用）
+     * 生成预览（异步入口，由 {@code nextwikiTaskExecutor} 线程池执行）。
+     * <p>内部捕获全部异常仅记日志，避免阻塞上传主流程或导致事务回滚；真正逻辑见 {@link #doGeneratePreview}。
+     *
+     * @param fileNodeId 文件节点 ID（据此下载原文件并生成预览/缩略图）
+     * @return 无返回值
+     * @concurrency 异步执行，失败不影响主链路；同一文件可能并发触发，结果以最后写入为准
+     * @note 本方法无事务边界，异常被吞掉仅告警
+     * @complexity 取决于文件类型：Office 需 LibreOffice 进程转换（最慢），图片/直读类较快
      */
     @Async("nextwikiTaskExecutor")
     public void generatePreview(String fileNodeId) {
@@ -122,7 +129,12 @@ public class PreviewApplicationService {
     }
 
     /**
-     * 检查文件是否支持预览
+     * 判断某后缀是否支持预览（命中 Office/直读/图片任一集合即支持）。
+     *
+     * @param suffix 文件后缀（含或不含"."均可，内部统一小写；为 {@code null} 返回 false）
+     * @return 是否支持预览
+     * @complexity O(1)（三次 Set 包含判断）
+     * @note 纯判断，无副作用
      */
     public boolean isPreviewSupported(String suffix) {
         if (suffix == null) return false;
@@ -133,7 +145,12 @@ public class PreviewApplicationService {
     }
 
     /**
-     * 获取预览类型
+     * 返回预览类型标识，供前端选择预览渲染策略。
+     *
+     * @param suffix 文件后缀（为 {@code null} 返回 "none"）
+     * @return 预览类型：{@code office}（需转 PDF）、{@code direct}（直接可预览）、{@code image}（图片）、{@code none}（不支持）
+     * @complexity O(1)
+     * @note 纯判断，无副作用
      */
     public String getPreviewType(String suffix) {
         if (suffix == null) return "none";

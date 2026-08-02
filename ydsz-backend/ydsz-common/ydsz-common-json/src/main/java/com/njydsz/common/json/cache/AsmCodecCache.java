@@ -233,6 +233,8 @@ public final class AsmCodecCache {
             SERIALIZER_CACHE.put(beanType, serializer);
             return serializer;
         } catch (Exception e) {
+            System.err.println("[AsmCodecCache] generation FAILED for " + beanType.getName() + ": " + e);
+            e.printStackTrace(System.err);
             SERIALIZER_FAILED.put(beanType, Boolean.TRUE);
             return null;
         }
@@ -264,6 +266,8 @@ public final class AsmCodecCache {
             SERIALIZER_CACHE.put(beanType, serializer);
             return serializer;
         } catch (Exception e) {
+            System.err.println("[AsmCodecCache] generation FAILED for " + beanType.getName() + ": " + e);
+            e.printStackTrace(System.err);
             SERIALIZER_FAILED.put(beanType, Boolean.TRUE);
             return null;
         }
