@@ -97,4 +97,30 @@ public @interface JsonCreator {
      * @return 是否启用
      */
     boolean enable() default true;
+
+    /**
+     * 创建器模式（对标 Jackson {@code JsonCreator.Mode}）。
+     *
+     * <p>控制反序列化时如何将 JSON 映射到构造器/工厂方法参数：</p>
+     * <ul>
+     *   <li>{@link Mode#DEFAULT}：自动推断（单参+无 parameterNames 视为 DELEGATING，否则 PROPERTIES）</li>
+     *   <li>{@link Mode#PROPERTIES}：按属性名映射（配合 {@link #parameterNames()} 或 {@link JsonProperty}）</li>
+     *   <li>{@link Mode#DELEGATING}：整个 JSON 值作为单一参数传入（适用于 String→ValueObject 转换）</li>
+     * </ul>
+     *
+     * @return 创建器模式
+     */
+    Mode mode() default Mode.DEFAULT;
+
+    /**
+     * 创建器模式枚举（与 Jackson 一致）。
+     */
+    enum Mode {
+        /** 自动推断 */
+        DEFAULT,
+        /** 按属性映射 */
+        PROPERTIES,
+        /** 委托：整 JSON 作为单参 */
+        DELEGATING
+    }
 }

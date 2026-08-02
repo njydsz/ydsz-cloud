@@ -57,6 +57,16 @@ public @interface JsonFormat {
     String timezone() default "";
 
     /**
+     * 是否宽松解析（对标 Jackson {@code JsonFormat.lenient}）。
+     *
+     * <p>默认 false，采用严格解析（如日期格式不匹配时抛出异常）。
+     * 设为 true 时允许更宽松的解析规则，例如容忍多余字段或可空的可选项。</p>
+     *
+     * @return 是否宽松解析
+     */
+    boolean lenient() default false;
+
+    /**
      * 格式化形状枚举
      */
     enum Shape {

@@ -8,18 +8,24 @@ import java.lang.annotation.Target;
 /**
  * Jackson 兼容注解：控制字段/Getter/Setter/Creator 的自动检测可见性。
  *
- * <p>对标 Jackson {@code @JsonAutoDetect}，在 {@link com.njydsz.common.json.provider.FieldMetadataLoader}
- * 中映射到 {@link JsonVisibility.Visibility} 枚举。</p>
+ * <p><b>已废弃</b>，请改用原生注解 {@link JsonVisibility}。本注解仅作为 Jackson
+ * 兼容入口保留，在 {@link com.njydsz.common.json.provider.FieldMetadataLoader}
+ * 中通过 {@link Visibility#toYdszVisibility()} 委托到 {@link JsonVisibility.Visibility}。</p>
  *
- * <p><b>使用示例：</b></p>
+ * <p><b>迁移示例：</b></p>
  * <pre>
+ * // 旧（已废弃）
  * {@code @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)}
- * public class MyBean { ... }
+ *
+ * // 新（推荐）
+ * {@code @JsonVisibility(fieldVisibility = JsonVisibility.Visibility.ANY)}
  * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 改用 {@link JsonVisibility}，本注解仅为 Jackson 兼容入口，功能完全等价。
  */
+@Deprecated(since = "1.0.0", forRemoval = false)
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface JsonAutoDetect {
