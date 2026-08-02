@@ -60,32 +60,21 @@ public final class BeanSerializer {
      */
     public BeanSerializer(Class<?> clazz, FieldMeta[] fieldMetas) {
         this.clazz = clazz;
-        
+
         // 检测 @JsonAnyGetter 方法
         this.anyGetterMethod = FieldMetadataLoader.findAnyGetterMethod(clazz);
-        
-        // 计算有效字段数量
-        int count = 0;
-        for (FieldMeta meta : fieldMetas) {
-            if (!meta.shouldSkip()) {
-                count++;
-            }
-        }
-        
-        this.fieldCount = count;
-        this.fields = new FieldWriter[count];
+
+        // 所有字段均为有效字段（@JsonInclude 策略在写入时由 shouldSkipValue 判定）
+        this.fieldCount = fieldMetas.length;
+        this.fields = new FieldWriter[fieldCount];
         int estimatedSize = 2; // {}
-        
+
         int idx = 0;
         for (FieldMeta meta : fieldMetas) {
-            if (meta.shouldSkip()) {
-                continue;
-            }
-            
             this.fields[idx++] = new FieldWriter(meta);
             estimatedSize += meta.jsonKeyLen + 16; // 键名 + 平均字段值
         }
-        
+
         this.estimatedSize = estimatedSize;
     }
     

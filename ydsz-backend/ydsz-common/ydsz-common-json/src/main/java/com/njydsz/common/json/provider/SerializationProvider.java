@@ -804,21 +804,13 @@ public final class SerializationProvider {
         BeanSerializerInfo info = BEAN_SERIALIZER_INFO_CACHE.get(clazz);
         if (info == null) {
             // 计算有效字段
-            int count = 0;
-            for (FieldMeta field : fields) {
-                if (!field.shouldSkip()) {
-                    count++;
-                }
-            }
+            int count = fields.length;
 
             FieldMeta[] validFields = new FieldMeta[count];
             int idx = 0;
             int estimatedSize = 2; // {}
 
             for (FieldMeta field : fields) {
-                if (field.shouldSkip()) {
-                    continue;
-                }
                 validFields[idx++] = field;
                 estimatedSize += field.jsonKeyLen + 16;
             }

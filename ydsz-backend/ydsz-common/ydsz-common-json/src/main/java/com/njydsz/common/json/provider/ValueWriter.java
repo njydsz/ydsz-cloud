@@ -497,10 +497,6 @@ public final class ValueWriter {
         }
 
         for (FieldMeta field : fields) {
-            if (field.shouldSkip()) {
-                continue;
-            }
-
             // 列权限字段排除检查
             if (SerializationProvider.isFieldExcluded(field.jsonName)) {
                 continue;
@@ -528,7 +524,7 @@ public final class ValueWriter {
             try {
                 Object value = field.getValue(obj);
 
-                boolean shouldWriteNull = classWriteNulls || field.writeNull;
+                boolean shouldWriteNull = classWriteNulls;
                 if (value == null && !shouldWriteNull) {
                     continue;
                 }
@@ -546,18 +542,11 @@ public final class ValueWriter {
                 String jsonName = field.jsonName;
                 sb.append('"').append(jsonName).append('"').append(':');
 
-                if (field.hasCustomSerializer()) {
-                    Object serialized = field.invokeCustomSerializer(value);
-                    writeValueDirect(serialized, sb);
-                } else if (field.isDateType() && value != null) {
+                if (field.isDateType() && value != null) {
                     String formattedDate = dateFormat != null && !dateFormat.isEmpty()
                             ? formatDateWithPattern(value, dateFormat)
                             : field.formatDateValue(value);
                     writeString(formattedDate, sb);
-                } else if (value instanceof Number && !field.numberFormat.isEmpty()) {
-                    writeFormattedNumber((Number) value, field.numberFormat, sb);
-                } else if (field.htmlSafe && value instanceof String) {
-                    writeHtmlSafeString((String) value, sb);
                 } else if (value instanceof Enum) {
                     if (serializeEnumUsingOrdinal) {
                         sb.append(((Enum<?>) value).ordinal());
@@ -934,9 +923,6 @@ public final class ValueWriter {
         }
 
         for (FieldMeta nestedField : nestedFields) {
-            if (nestedField.shouldSkip()) {
-                continue;
-            }
             Object nestedValue;
             try {
                 nestedValue = nestedField.getValue(nestedObj);

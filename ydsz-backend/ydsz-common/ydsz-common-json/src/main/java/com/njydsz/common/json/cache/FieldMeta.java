@@ -4,7 +4,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -44,15 +43,14 @@ import org.slf4j.LoggerFactory;
  * <ul>
  *   <li>字段基本信息 - 名称、类型、Java 字段对象</li>
  *   <li>JSON 映射信息 - JSON 字段名、序列化优先级</li>
- *   <li>格式化配置 - 日期格式、数字格式、HTML 安全</li>
- *   <li>控制选项 - 是否忽略、是否输出 null、是否必需</li>
- *   <li>自定义序列化器 - MethodHandle 优化的方法调用</li>
+ *   <li>格式化配置 - 日期格式（缓存 DateTimeFormatter）</li>
+ *   <li>包含策略 - @JsonInclude 控制空值/默认值输出</li>
+ *   <li>字段访问 - MethodHandle/VarHandle 优化的 getter/setter</li>
  * </ul>
  *
  * <p><b>设计模式：</b></p>
  * <ul>
  *   <li>享元模式 - FieldMeta 实例可被缓存复用</li>
- *   <li>命令模式 - 自定义序列化/反序列化方法</li>
  * </ul>
  *
  * <p><b>设计决策：</b>字段元数据、字段访问（MethodHandle/VarHandle）和类型转换（日期格式化/解析）
@@ -88,45 +86,6 @@ public final class FieldMeta {
     /** 日期格式 */
     public final String format;
 
-    /** 默认值 */
-    public final String defaultValue;
-
-    /** 是否必需 */
-    public final boolean required;
-
-    /** 是否输出 null 值 */
-    public final boolean writeNull;
-
-    /** 是否忽略该字段 */
-    public final boolean ignore;
-
-    /** 数字格式 */
-    public final String numberFormat;
-
-    /** 是否 HTML 安全 */
-    public final boolean htmlSafe;
-
-    /** 是否不输出 null 值 */
-    public final boolean notWriteNullValue;
-
-    /** 是否不输出默认值 */
-    public final boolean notWriteDefaultValue;
-
-    /** 是否忽略 getter */
-    public final boolean ignoreGetters;
-
-    /** 是否忽略 setter */
-    public final boolean ignoreSetters;
-
-    /** 是否不输出字段 */
-    public final boolean notWrite;
-
-    /** 是否使用 Bean 名称 */
-    public final boolean useBeanName;
-
-    /** 是否直接序列化字段 */
-    public final boolean direct;
-
     /** 是否为原始 JSON 值（@JsonRawValue，序列化时不转义） */
     public final boolean isRawValue;
 
@@ -144,12 +103,6 @@ public final class FieldMeta {
 
     /** 包含策略（来自 @JsonInclude 注解，默认 ALWAYS） */
     public final JsonInclude.Include includeStrategy;
-
-    /** 自定义序列化方法名 */
-    public final String serializeUsing;
-
-    /** 自定义反序列化方法名 */
-    public final String deserializeUsing;
 
     /** 类型代码（优化序列化分支预测） */
     public final int serializeTypeCode;
@@ -169,12 +122,6 @@ public final class FieldMeta {
     /** VarHandle Getter（JDK 9+ 直接内存访问，避免装箱） */
     private final VarHandle varHandle;
 
-    /** MethodHandle 自定义序列化方法 */
-    private final MethodHandle customSerializer;
-
-    /** MethodHandle 自定义反序列化方法 */
-    private final MethodHandle customDeserializer;
-
     /** 缓存的 DateTimeFormatter（线程安全，避免每次 ofPattern 编译） */
     private final transient DateTimeFormatter cachedFormatter;
 
@@ -193,21 +140,6 @@ public final class FieldMeta {
         JsonFormat jacksonFormat = field.getAnnotation(JsonFormat.class);
         this.format = (jacksonFormat != null && !jacksonFormat.pattern().isEmpty())
             ? jacksonFormat.pattern() : "";
-        this.defaultValue = "";
-        this.required = false;
-        this.writeNull = false;
-        this.ignore = false;
-        this.numberFormat = "";
-        this.htmlSafe = false;
-        this.notWriteNullValue = false;
-        this.notWriteDefaultValue = false;
-        this.ignoreGetters = false;
-        this.ignoreSetters = false;
-        this.notWrite = false;
-        this.useBeanName = false;
-        this.direct = false;
-        this.serializeUsing = "";
-        this.deserializeUsing = "";
 
         // 加载 @JsonAlias 别名列表
         JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
@@ -247,8 +179,6 @@ public final class FieldMeta {
         MethodHandle s = null;
         MethodHandle g = null;
         VarHandle vh = null;
-        MethodHandle cs = null;
-        MethodHandle cd = null;
         try {
             s = MethodHandles.lookup().unreflectSetter(field);
             g = MethodHandles.lookup().unreflectGetter(field);
@@ -261,31 +191,13 @@ public final class FieldMeta {
             } catch (Exception ignored) {
                 // VarHandle 不可用（如 GraalVM Native Image），回退到 MethodHandle
             }
-
-            if (!serializeUsing.isEmpty()) {
-                try {
-                    Method serializerMethod = field.getType().getMethod(serializeUsing);
-                    cs = MethodHandles.lookup().unreflect(serializerMethod);
-                } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
-            }
-            if (!deserializeUsing.isEmpty()) {
-                try {
-                    Method deserializerMethod = field.getType().getMethod(deserializeUsing, String.class);
-                    cd = MethodHandles.lookup().unreflect(deserializerMethod);
-                } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
-            }
         } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
+            // 反射操作失败，setter/getter 保持 null，运行时回退到 field.get/set
+            LOGGER.debug("Failed to unreflect field handles for " + name + ": " + e.getMessage());
+        }
         this.setter = s;
         this.getter = g;
         this.varHandle = vh;
-        this.customSerializer = cs;
-        this.customDeserializer = cd;
         this.serializeTypeCode = computeSerializeTypeCode(type);
         this.jsonKey = "\"" + jsonName + "\":";
         this.jsonKeyLen = this.jsonKey.length();
@@ -624,17 +536,6 @@ JsonSerializationException.SERIALIZATION_ERROR,
     }
 
     /**
-     * 检查是否应该跳过（null值且不输出null）
-     */
-    public boolean shouldSkipNull(Object value) {
-        if (value == null) {
-            return !writeNull && !notWriteNullValue
-                    && includeStrategy != JsonInclude.Include.ALWAYS;
-        }
-        return false;
-    }
-
-    /**
      * 检查是否应该跳过值（根据 @JsonInclude 策略）。
      *
      * @param value 字段值
@@ -661,53 +562,6 @@ JsonSerializationException.SERIALIZATION_ERROR,
                 break;
         }
         return false;
-    }
-
-    /**
-     * 检查是否应该跳过（默认值且不输出默认值）
-     */
-    public boolean shouldSkipDefault(Object value) {
-        if (!notWriteDefaultValue || defaultValue == null || defaultValue.isEmpty()) {
-            return false;
-        }
-        return defaultValue.equals(String.valueOf(value));
-    }
-
-    /**
-     * 检查是否应该跳过（notWrite 或 ignore）
-     */
-    public boolean shouldSkip() {
-        return notWrite || ignore;
-    }
-
-    public boolean hasCustomSerializer() {
-        return customSerializer != null && !serializeUsing.isEmpty();
-    }
-
-    public boolean hasCustomDeserializer() {
-        return customDeserializer != null && !deserializeUsing.isEmpty();
-    }
-
-    public Object invokeCustomSerializer(Object value) {
-        if (customSerializer != null) {
-            try {
-                return customSerializer.invoke(value);
-            } catch (Throwable e) {
-                LOGGER.debug("Custom serializer failed for field " + name + ": " + e.getMessage());
-            }
-        }
-        return value;
-    }
-
-    public Object invokeCustomDeserializer(Object value) {
-        if (customDeserializer != null) {
-            try {
-                return customDeserializer.invoke(value);
-            } catch (Throwable e) {
-                LOGGER.debug("Custom deserializer failed for field " + name + ": " + e.getMessage());
-            }
-        }
-        return value;
     }
 
     @Override
