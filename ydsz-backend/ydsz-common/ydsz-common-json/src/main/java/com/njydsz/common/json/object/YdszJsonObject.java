@@ -17,6 +17,10 @@ import com.njydsz.common.json.YdszJson;
 /**
  * YdszJson 对象实现
  *
+ * <p><b>已废弃</b>：此类与 {@code tree/} 包中的 {@code ObjectNode} 功能重叠，
+ * 建议使用 {@link com.njydsz.common.json.tree.ObjectNode} 替代，
+ * 以统一树模型 API，减少维护成本。将在 2.0.0 版本移除。</p>
+ *
  * <p>对应 FastJSON2 的 JSONObject，继承 LinkedHashMap 提供动态 JSON 对象操作。
  * 支持类型安全的 getter/setter、链式调用、嵌套对象访问等功能。</p>
  *
@@ -44,6 +48,7 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public class YdszJsonObject extends LinkedHashMap<String, Object> {
 
     private static final long serialVersionUID = 1L;

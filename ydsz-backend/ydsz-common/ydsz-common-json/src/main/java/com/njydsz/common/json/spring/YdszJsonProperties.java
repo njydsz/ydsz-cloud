@@ -83,8 +83,8 @@ public class YdszJsonProperties {
     /** 是否包裹根对象（对标 Jackson @JsonRootValue / ObjectMapper.wrapRootValue） */
     private boolean wrapRootValue = false;
 
-    /** 反序列化失败时是否抛出异常（true）或返回 null（false） */
-    private boolean failOnError = true;
+    /** 反序列化失败时是否抛出异常（true）或返回 null（false）。与 YdszJsonConfig 默认值保持一致。 */
+    private boolean failOnError = false;
 
     /**
      * 启动时扫描 @YdszJsonClass 注解类的基础包列表。
