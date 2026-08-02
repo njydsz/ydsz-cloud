@@ -2,12 +2,14 @@ package com.njydsz.common.redis.serializer;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.lang.reflect.Type;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.type.YdszJsonType;
 
 /**
  * YdszJson 版本的 Redis 序列化工具类
@@ -21,6 +23,7 @@ import com.njydsz.common.json.YdszJson;
  *   <li>JSON 字节数组反序列化为对象（通过 YdszJson.fromJsonBytes）</li>
  *   <li>支持 Java 8 时间类型（由 YdszJson 内部处理）</li>
  *   <li>支持复杂对象嵌套</li>
+ *   <li>支持泛型类型（如 {@code List<User>}、{@code Map<String, Object>}）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -34,9 +37,14 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
     /**
-     * 要序列化的对象类型
+     * 要序列化的对象类型（用于简单类型反序列化）
      */
     private final Class<?> clazz;
+
+    /**
+     * 泛型类型引用（用于泛型类型反序列化，优先于 clazz 使用）
+     */
+    private final YdszJsonType<?> typeRef;
 
     /**
      * 无参构造器（兼容 Spring 反射创建）
@@ -45,6 +53,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
      */
     public YdszJsonRedisSerializer() {
         this.clazz = Object.class;
+        this.typeRef = null;
     }
 
     /**
@@ -54,6 +63,21 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
      */
     public YdszJsonRedisSerializer(Class<?> clazz) {
         this.clazz = clazz != null ? clazz : Object.class;
+        this.typeRef = null;
+    }
+
+    /**
+     * 泛型类型构造器
+     *
+     * <p>支持 {@code List<User>}、{@code Map<String, Object>} 等泛型类型的反序列化，
+     * 解决简单 Class 类型无法表达泛型参数的问题。
+     *
+     * @param typeRef 泛型类型引用
+     * @since 1.0.0
+     */
+    public YdszJsonRedisSerializer(YdszJsonType<?> typeRef) {
+        this.clazz = Object.class;
+        this.typeRef = typeRef;
     }
 
     /**
@@ -93,6 +117,9 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
             return null;
         }
         try {
+            if (typeRef != null) {
+                return YdszJson.fromJsonBytes(bytes, typeRef);
+            }
             return YdszJson.fromJsonBytes(bytes, clazz);
         } catch (Exception e) {
             throw new SerializationException("Redis对象反序列化失败", e);
@@ -107,5 +134,16 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
      */
     public static YdszJsonRedisSerializer of(Class<?> type) {
         return new YdszJsonRedisSerializer(type);
+    }
+
+    /**
+     * 创建支持泛型类型的序列化器
+     *
+     * @param typeRef 泛型类型引用
+     * @return 序列化器实例
+     * @since 1.0.0
+     */
+    public static YdszJsonRedisSerializer of(YdszJsonType<?> typeRef) {
+        return new YdszJsonRedisSerializer(typeRef);
     }
 }

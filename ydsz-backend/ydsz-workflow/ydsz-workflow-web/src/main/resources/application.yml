@@ -31,6 +31,17 @@ ydsz:
   seata:
     enabled: false
     default-type: SEATA_AT
+  # P0-1: YdszJson ASM 预热（高频序列化 Bean，消除首次请求延迟尖峰）
+  json:
+    warmup-classes:
+      - com.njydsz.workflow.domain.entity.FlowDefinition
+      - com.njydsz.workflow.domain.entity.FlowInstance
+      - com.njydsz.workflow.domain.entity.FlowNode
+      - com.njydsz.workflow.domain.entity.FlowRunTask
+      - com.njydsz.workflow.domain.entity.FlowHisTask
+      - com.njydsz.workflow.domain.entity.FlowHisInstance
+      - com.njydsz.workflow.domain.entity.FlowTemplate
+      - com.njydsz.workflow.domain.entity.FlowAuditLog
 
 # Seata 客户端配置（TC 就绪后设置 seata.enabled=true 并取消注释）
 # seata:

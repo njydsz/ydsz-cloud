@@ -23,3 +23,11 @@ ydsz:
         thread-name-prefix: ydsz-job-dispatch-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 15
+  # P0-1: YdszJson ASM 预热（DAG 编解码/任务调度高频序列化 Bean）
+  json:
+    warmup-classes:
+      - com.njydsz.cronjob.domain.entity.job.Job
+      - com.njydsz.cronjob.domain.entity.job.JobTask
+      - com.njydsz.cronjob.domain.entity.job.JobHistory
+      - com.njydsz.cronjob.domain.entity.dag.JobDag
+      - com.njydsz.cronjob.domain.entity.dag.JobDagInstance

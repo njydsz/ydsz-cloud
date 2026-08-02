@@ -140,15 +140,17 @@ ydsz-message/
 │           │   └── additional-spring-configuration-metadata.json
 │           ├── mapper/        # MyBatis XML 映射文件
 │           └── bootstrap.yml
-├── ydsz-message-web/          # Web 层（Controller）
-│   └── src/main/java/com/njydsz/message/web/controller/
-│       ├── batch/
-│       ├── canary/
-│       ├── config/
-│       ├── core/
-│       ├── notification/
-│       ├── receipt/
-│       └── template/
+├── ydsz-message-web/          # Web 层（Controller + 启动类）
+│   └── src/main/java/com/njydsz/message/web/
+│       ├── MessageApplication.java   # Spring Boot 启动类
+│       └── controller/
+│           ├── batch/
+│           ├── canary/
+│           ├── config/
+│           ├── core/
+│           ├── notification/
+│           ├── receipt/
+│           └── template/
 └── README.md
 ```
 

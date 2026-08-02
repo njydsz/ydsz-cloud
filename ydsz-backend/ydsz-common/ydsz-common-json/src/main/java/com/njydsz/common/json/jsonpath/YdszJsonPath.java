@@ -1,6 +1,7 @@
 package com.njydsz.common.json.jsonpath;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.*;
 
 import com.njydsz.common.json.YdszJson;
@@ -8,19 +9,44 @@ import com.njydsz.common.json.YdszJson;
 /**
  * 增强的 YdszJsonPath 解析器
  *
- * 支持：
- * 1. 基础路径：$.user.name
- * 2. 数组索引：$.items[0]
- * 3. 数组过滤：$.items[?(@.price > 100)]
- * 4. 递归下降：$..author
- * 5. 数组切片：$.items[0:5]
- * 6. 多选择器：$.items[*].name
- * 7. 条件表达式：$.items[?(@.age >= 18 && @.status == 'active')]
+ * <p>支持：
+ * <ol>
+ *   <li>基础路径：$.user.name</li>
+ *   <li>数组索引：$.items[0]</li>
+ *   <li>数组过滤：$.items[?(@.price > 100)]</li>
+ *   <li>递归下降：$..author</li>
+ *   <li>数组切片：$.items[0:5]</li>
+ *   <li>多选择器：$.items[*].name</li>
+ *   <li>条件表达式：$.items[?(@.age >= 18 && @.status == 'active')]</li>
+ * </ol>
+ *
+ * <p><b>性能优化：</b>编译后的 {@code YdszJsonPath} 实例和正则表达式均被缓存，
+ * 避免每次调用重复解析路径表达式和编译正则。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 public class YdszJsonPath {
+
+    /**
+     * 编译缓存（path -> YdszJsonPath），LRU 有界避免内存泄漏。
+     * 对标 Jayway JsonPath 的编译缓存机制。
+     */
+    private static final int COMPILE_CACHE_MAX = 512;
+    private static final Map<String, YdszJsonPath> COMPILE_CACHE =
+        Collections.synchronizedMap(new LinkedHashMap<String, YdszJsonPath>(64, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, YdszJsonPath> eldest) {
+                return size() > COMPILE_CACHE_MAX;
+            }
+        });
+
+    /**
+     * 过滤表达式正则（预编译，避免每次调用 Pattern.compile）。
+     * 对标 Jackson 的预编译 Pattern 常量。
+     */
+    private static final Pattern FILTER_PATTERN = Pattern.compile(
+        "@\\.(\\w+)\\s*(==|!=|>=|<=|>|<)\\s*(['\"]?)([^'\"\\s]+)\\3");
 
     private final List<PathSegment> segments;
 
@@ -39,13 +65,21 @@ public class YdszJsonPath {
         if (path == null || path.trim().isEmpty()) {
             throw new IllegalArgumentException("Path cannot be null or empty");
         }
-        
+
         if (!path.startsWith("$")) {
             throw new IllegalArgumentException("Path must start with '$'");
         }
-        
+
+        // 编译缓存：命中则直接返回，避免重复解析路径表达式
+        YdszJsonPath cached = COMPILE_CACHE.get(path);
+        if (cached != null) {
+            return cached;
+        }
+
         List<PathSegment> segments = parse(path);
-        return new YdszJsonPath(path, segments);
+        YdszJsonPath compiled = new YdszJsonPath(path, segments);
+        COMPILE_CACHE.putIfAbsent(path, compiled);
+        return compiled;
     }
 
     /**
@@ -292,9 +326,8 @@ public class YdszJsonPath {
             return false;
         }
         
-        // 处理比较操作符
-        Pattern pattern = Pattern.compile("@\\.(\\w+)\\s*(==|!=|>=|<=|>|<)\\s*(['\"]?)([^'\"\\s]+)\\3");
-        Matcher matcher = pattern.matcher(filter);
+        // 处理比较操作符（使用预编译的 static final Pattern）
+        Matcher matcher = FILTER_PATTERN.matcher(filter);
         
         if (matcher.matches()) {
             String property = matcher.group(1);
@@ -529,8 +562,7 @@ public class YdszJsonPath {
      * @return 提取的值
      */
     public static Object get(String json, String path) {
-        YdszJsonPath jsonPath = compile(path);
-        return jsonPath.getValue(json);
+        return compile(path).getValue(json);
     }
     
     /**
@@ -541,7 +573,15 @@ public class YdszJsonPath {
      * @return 提取的值
      */
     public static Object get(Object obj, String path) {
-        YdszJsonPath jsonPath = compile(path);
-        return jsonPath.getValue(obj);
+        return compile(path).getValue(obj);
+    }
+
+    /**
+     * 清除编译缓存（用于测试或配置变更场景）。
+     *
+     * @since 1.4.0
+     */
+    public static void clearCache() {
+        COMPILE_CACHE.clear();
     }
 }

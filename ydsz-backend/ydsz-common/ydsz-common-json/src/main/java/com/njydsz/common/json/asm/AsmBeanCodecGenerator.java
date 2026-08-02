@@ -385,386 +385,7 @@ public final class AsmBeanCodecGenerator {
         // buf[pos++] = '{' — 直接写入结构字符，消除 writer.write("{") 方法调用
         emitWriteCharDirect(mv, '{');
 
-        int fieldCount = 0;
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            String getterName = beanType.isRecord() ? getRecordAccessorName(field) : getGetterName(field);
-            Method getter = findMethod(beanType, getterName);
-            if (getter == null) continue;
-            
-            int typeCode = getTypeCode(field.getType());
-            
-            String jsonKey = (fieldCount == 0) ? 
-                ("\"" + field.getName() + "\":") : 
-                (",\"" + field.getName() + "\":");
-            fieldCount++;
-            int keyLen = jsonKey.length();
-
-            Label endField = new Label();
-
-            // 直接写入字段名：jsonKey.getChars(0, keyLen, buf, pos); pos += keyLen;
-            // 消除 writer.write(jsonKey) 方法调用开销
-            emitWriteStringGetChars(mv, jsonKey, keyLen);
-
-            // 获取字段值
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitTypeInsn(CHECKCAST, beanInternalName);
-            mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, getterName, 
-                             "()" + getTypeDescriptor(field.getType()), false);
-
-            // 根据类型码直接写入缓冲区
-            if (typeCode == 1) {
-                // String 字段：null 检查 → 无转义时内联快速写入，有转义时委托 writeStringToBuf
-                Label notNullLabel = new Label();
-                mv.visitInsn(DUP);
-                mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                mv.visitInsn(POP);
-                emitWriteNullDirect(mv);
-                mv.visitJumpInsn(GOTO, endField);
-                mv.visitLabel(notNullLabel);
-                mv.visitVarInsn(ASTORE, 5);
-
-                // 检查是否需要转义（1 次方法调用 vs 原来 4 次方法调用的 sync/re-read）
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/writer/JSONWriter",
-                    "needsEscape", "(Ljava/lang/String;)Z", false);
-
-                Label slowPath = new Label();
-                mv.visitJumpInsn(IFNE, slowPath);
-
-                // 快速路径（无需转义）：直接内联写入缓冲区，零 sync/re-read 开销
-                // len = str.length()
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I", false);
-                mv.visitVarInsn(ISTORE, 6);
-
-                // buf[pos++] = '"'
-                emitWriteCharDirect(mv, '"');
-
-                // str.getChars(0, len, buf, pos)
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitInsn(ICONST_0);
-                mv.visitVarInsn(ILOAD, 6);
-                mv.visitVarInsn(ALOAD, 3);
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "getChars", "(II[CI)V", false);
-
-                // pos += len
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitVarInsn(ILOAD, 6);
-                mv.visitInsn(IADD);
-                mv.visitVarInsn(ISTORE, 4);
-
-                // buf[pos++] = '"'
-                emitWriteCharDirect(mv, '"');
-
-                mv.visitJumpInsn(GOTO, endField);
-
-                // 慢速路径（需要转义）：委托 writeStringToBuf（2 次方法调用 vs 原来 4 次）
-                mv.visitLabel(slowPath);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeStringToBuf", "(Ljava/lang/String;I)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-                
-            } else if (typeCode == 2) {
-                // int/Integer 字段：null 检查 → 非空则 NumberUtils.writeInt 直接写入缓冲区
-                if (field.getType() == Integer.class) {
-                    Label notNullLabel = new Label();
-                    mv.visitInsn(DUP);
-                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mv.visitInsn(POP);
-                    emitWriteNullDirect(mv);
-                    mv.visitJumpInsn(GOTO, endField);
-                    mv.visitLabel(notNullLabel);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-                }
-                // pos += NumberUtils.writeInt(value, buf, pos)
-                emitWriteIntDirect(mv);
-                
-            } else if (typeCode == 3) {
-                // long/Long 字段：null 检查 → 非空则 NumberUtils.writeLong 直接写入缓冲区
-                if (field.getType() == Long.class) {
-                    Label notNullLabel = new Label();
-                    mv.visitInsn(DUP);
-                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mv.visitInsn(POP);
-                    emitWriteNullDirect(mv);
-                    mv.visitJumpInsn(GOTO, endField);
-                    mv.visitLabel(notNullLabel);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
-                }
-                // pos += NumberUtils.writeLong(value, buf, pos)
-                emitWriteLongDirect(mv);
-                
-            } else if (typeCode == 4) {
-                // double/Double 字段：null 检查 → 委托 writeDoubleToBuf（2 次调用 vs 原来 4 次）
-                if (field.getType() == Double.class) {
-                    Label notNullLabel = new Label();
-                    mv.visitInsn(DUP);
-                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mv.visitInsn(POP);
-                    emitWriteNullDirect(mv);
-                    mv.visitJumpInsn(GOTO, endField);
-                    mv.visitLabel(notNullLabel);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-                }
-                mv.visitVarInsn(DSTORE, 6);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(DLOAD, 6);
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeDoubleToBuf", "(DI)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-                
-            } else if (typeCode == 5) {
-                // float/Float 字段：null 检查 → 委托 writeFloatToBuf（2 次调用 vs 原来 4 次）
-                if (field.getType() == Float.class) {
-                    Label notNullLabel = new Label();
-                    mv.visitInsn(DUP);
-                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mv.visitInsn(POP);
-                    emitWriteNullDirect(mv);
-                    mv.visitJumpInsn(GOTO, endField);
-                    mv.visitLabel(notNullLabel);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-                }
-                mv.visitVarInsn(FSTORE, 6);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(FLOAD, 6);
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeFloatToBuf", "(FI)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-                
-            } else if (typeCode == 6) {
-                // boolean/Boolean 字段：null 检查 → 非空则直接写入 "true"/"false" 到缓冲区
-                if (field.getType() == Boolean.class) {
-                    Label notNullLabel = new Label();
-                    mv.visitInsn(DUP);
-                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mv.visitInsn(POP);
-                    emitWriteNullDirect(mv);
-                    mv.visitJumpInsn(GOTO, endField);
-                    mv.visitLabel(notNullLabel);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-                }
-                Label trueLabel = new Label();
-                Label boolEndLabel = new Label();
-                mv.visitJumpInsn(IFNE, trueLabel);
-                // false: 直接写入 "false" 到缓冲区
-                emitWriteStringGetChars(mv, "false", 5);
-                mv.visitJumpInsn(GOTO, boolEndLabel);
-                mv.visitLabel(trueLabel);
-                // true: 直接写入 "true" 到缓冲区
-                emitWriteStringGetChars(mv, "true", 4);
-                mv.visitLabel(boolEndLabel);
-                
-            } else if (typeCode >= 7 && typeCode <= 9) {
-                // short/byte/char 字段：null 检查 → NumberUtils.writeInt 直接写入
-                if (field.getType() == Short.class) {
-                    Label notNullLabel = new Label();
-                    mv.visitInsn(DUP);
-                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mv.visitInsn(POP);
-                    emitWriteNullDirect(mv);
-                    mv.visitJumpInsn(GOTO, endField);
-                    mv.visitLabel(notNullLabel);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
-                } else if (field.getType() == Byte.class) {
-                    Label notNullLabel = new Label();
-                    mv.visitInsn(DUP);
-                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mv.visitInsn(POP);
-                    emitWriteNullDirect(mv);
-                    mv.visitJumpInsn(GOTO, endField);
-                    mv.visitLabel(notNullLabel);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "byteValue", "()B", false);
-                } else if (field.getType() == Character.class) {
-                    Label notNullLabel = new Label();
-                    mv.visitInsn(DUP);
-                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mv.visitInsn(POP);
-                    emitWriteNullDirect(mv);
-                    mv.visitJumpInsn(GOTO, endField);
-                    mv.visitLabel(notNullLabel);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
-                }
-                emitWriteIntDirect(mv);
-
-            } else if (typeCode == 10 || typeCode == 11) {
-                // LocalDateTime/LocalDate 字段：null 检查 → 委托 writeStringToBuf（2 次调用 vs 原来 4 次）
-                mv.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mv);
-                mv.visitJumpInsn(GOTO, endNull);
-                mv.visitLabel(notNullLabel);
-                String dateInternalName = (typeCode == 10) ? "java/time/LocalDateTime" : "java/time/LocalDate";
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, 5);
-                // @YdszJsonFormat 支持：检查是否有格式化模式
-                YdszJsonFormat formatAnnotation = field.getAnnotation(YdszJsonFormat.class);
-                String datePattern = (formatAnnotation != null && !formatAnnotation.value().isEmpty()) ? formatAnnotation.value() : null;
-                if (datePattern != null) {
-                    mv.visitLdcInsn(datePattern);
-                    mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                        "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
-                } else {
-                    mv.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
-                }
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeStringToBuf", "(Ljava/lang/String;I)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-                mv.visitLabel(endNull);
-
-            } else if (typeCode == 12) {
-                // Date 字段：null 检查 → 委托 writeStringToBuf（2 次调用 vs 原来 4 次）
-                mv.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mv);
-                mv.visitJumpInsn(GOTO, endNull);
-                mv.visitLabel(notNullLabel);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, 5);
-                // @YdszJsonFormat 支持：检查是否有格式化模式
-                YdszJsonFormat dateFmtAnn = field.getAnnotation(YdszJsonFormat.class);
-                String datePattern2 = (dateFmtAnn != null && !dateFmtAnn.value().isEmpty()) ? dateFmtAnn.value() : null;
-                if (datePattern2 != null) {
-                    mv.visitLdcInsn(datePattern2);
-                    mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                        "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
-                } else {
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
-                }
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeStringToBuf", "(Ljava/lang/String;I)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-                mv.visitLabel(endNull);
-
-            } else if (typeCode == 13) {
-                // Collection 字段：null 检查 → 委托 writeCollectionToBuf/writeCollectionWithSerializerToBuf
-                mv.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mv);
-                mv.visitJumpInsn(GOTO, endNull);
-                mv.visitLabel(notNullLabel);
-
-                String cachedFieldName = "_list_" + field.getName();
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/njydsz/common/json/asm/AsmSerializer;");
-                Label hasSerializerLabel = new Label();
-                mv.visitJumpInsn(IFNONNULL, hasSerializerLabel);
-
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeCollectionToBuf", "(Ljava/util/Collection;I)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-                mv.visitJumpInsn(GOTO, endNull);
-
-                mv.visitLabel(hasSerializerLabel);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/njydsz/common/json/asm/AsmSerializer;");
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeCollectionWithSerializerToBuf", "(Ljava/util/Collection;Lcom/njydsz/common/json/asm/AsmSerializer;I)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-
-                mv.visitLabel(endNull);
-
-            } else if (typeCode == 14) {
-                // Map 字段：null 检查 → 委托 writeMapToBuf（2 次调用 vs 原来 4 次）
-                mv.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mv);
-                mv.visitJumpInsn(GOTO, endNull);
-                mv.visitLabel(notNullLabel);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeMapToBuf", "(Ljava/util/Map;I)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-                mv.visitLabel(endNull);
-
-            } else {
-                // 嵌套 Bean 字段：null 检查 → 委托 serializeNestedToBuf/serializeWithSerializerToBuf
-                mv.visitVarInsn(ASTORE, 5);
-
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitJumpInsn(IFNONNULL, notNullLabel);
-
-                emitWriteNullDirect(mv);
-                mv.visitJumpInsn(GOTO, endNull);
-
-                mv.visitLabel(notNullLabel);
-
-                String cachedFieldName = "_nested_" + field.getName();
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/njydsz/common/json/asm/AsmSerializer;");
-                Label hasSerializerLabel = new Label();
-                mv.visitJumpInsn(IFNONNULL, hasSerializerLabel);
-
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                    "serializeNestedToBuf", "(Lcom/njydsz/common/json/writer/JSONWriter;Ljava/lang/Object;I)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-                mv.visitJumpInsn(GOTO, endNull);
-
-                mv.visitLabel(hasSerializerLabel);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/njydsz/common/json/asm/AsmSerializer;");
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                    "serializeWithSerializerToBuf", "(Lcom/njydsz/common/json/asm/AsmSerializer;Ljava/lang/Object;Lcom/njydsz/common/json/writer/JSONWriter;I)I", false);
-                mv.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mv);
-
-                mv.visitLabel(endNull);
-            }
-            
-            mv.visitLabel(endField);
-        }
+        emitFieldSerializationLoop(mv, fields, classInternalName, beanInternalName, beanType);
 
         // buf[pos++] = '}' — 直接写入结构字符
         emitWriteCharDirect(mv, '}');
@@ -798,328 +419,7 @@ public final class AsmBeanCodecGenerator {
         // buf[pos++] = '{'
         emitWriteCharDirect(mvInline, '{');
 
-        fieldCount = 0;
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            String getterName = beanType.isRecord() ? getRecordAccessorName(field) : getGetterName(field);
-            Method getter = findMethod(beanType, getterName);
-            if (getter == null) continue;
-
-            int typeCode = getTypeCode(field.getType());
-
-            String jsonKey = (fieldCount == 0) ?
-                ("\"" + field.getName() + "\":") :
-                (",\"" + field.getName() + "\":");
-            fieldCount++;
-            int keyLen = jsonKey.length();
-
-            Label endField = new Label();
-
-            emitWriteStringGetChars(mvInline, jsonKey, keyLen);
-
-            mvInline.visitVarInsn(ALOAD, 1);
-            mvInline.visitTypeInsn(CHECKCAST, beanInternalName);
-            mvInline.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, getterName,
-                             "()" + getTypeDescriptor(field.getType()), false);
-
-            // 根据类型码直接写入缓冲区（与 serialize 方法相同的逻辑）
-            if (typeCode == 1) {
-                Label notNullLabel = new Label();
-                mvInline.visitInsn(DUP);
-                mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                mvInline.visitInsn(POP);
-                emitWriteNullDirect(mvInline);
-                mvInline.visitJumpInsn(GOTO, endField);
-                mvInline.visitLabel(notNullLabel);
-                mvInline.visitVarInsn(ASTORE, 5);
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/writer/JSONWriter",
-                    "needsEscape", "(Ljava/lang/String;)Z", false);
-                Label slowPath = new Label();
-                mvInline.visitJumpInsn(IFNE, slowPath);
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I", false);
-                mvInline.visitVarInsn(ISTORE, 6);
-                emitWriteCharDirect(mvInline, '"');
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitInsn(ICONST_0);
-                mvInline.visitVarInsn(ILOAD, 6);
-                mvInline.visitVarInsn(ALOAD, 3);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "getChars", "(II[CI)V", false);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitVarInsn(ILOAD, 6);
-                mvInline.visitInsn(IADD);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitWriteCharDirect(mvInline, '"');
-                mvInline.visitJumpInsn(GOTO, endField);
-                mvInline.visitLabel(slowPath);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeStringToBuf", "(Ljava/lang/String;I)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-            } else if (typeCode == 2 || typeCode == 7 || typeCode == 8 || typeCode == 9) {
-                if (field.getType() == Integer.class) {
-                    Label notNullLabel = new Label();
-                    mvInline.visitInsn(DUP);
-                    mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mvInline.visitInsn(POP);
-                    emitWriteNullDirect(mvInline);
-                    mvInline.visitJumpInsn(GOTO, endField);
-                    mvInline.visitLabel(notNullLabel);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-                } else if (field.getType() == Short.class) {
-                    Label notNullLabel = new Label();
-                    mvInline.visitInsn(DUP);
-                    mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mvInline.visitInsn(POP);
-                    emitWriteNullDirect(mvInline);
-                    mvInline.visitJumpInsn(GOTO, endField);
-                    mvInline.visitLabel(notNullLabel);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "intValue", "()I", false);
-                } else if (field.getType() == Byte.class) {
-                    Label notNullLabel = new Label();
-                    mvInline.visitInsn(DUP);
-                    mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mvInline.visitInsn(POP);
-                    emitWriteNullDirect(mvInline);
-                    mvInline.visitJumpInsn(GOTO, endField);
-                    mvInline.visitLabel(notNullLabel);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "intValue", "()I", false);
-                } else if (field.getType() == Character.class) {
-                    Label notNullLabel = new Label();
-                    mvInline.visitInsn(DUP);
-                    mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mvInline.visitInsn(POP);
-                    emitWriteNullDirect(mvInline);
-                    mvInline.visitJumpInsn(GOTO, endField);
-                    mvInline.visitLabel(notNullLabel);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
-                }
-                emitWriteIntDirect(mvInline);
-            } else if (typeCode == 3) {
-                if (field.getType() == Long.class) {
-                    Label notNullLabel = new Label();
-                    mvInline.visitInsn(DUP);
-                    mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mvInline.visitInsn(POP);
-                    emitWriteNullDirect(mvInline);
-                    mvInline.visitJumpInsn(GOTO, endField);
-                    mvInline.visitLabel(notNullLabel);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
-                }
-                emitWriteLongDirect(mvInline);
-            } else if (typeCode == 4) {
-                if (field.getType() == Double.class) {
-                    Label notNullLabel = new Label();
-                    mvInline.visitInsn(DUP);
-                    mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mvInline.visitInsn(POP);
-                    emitWriteNullDirect(mvInline);
-                    mvInline.visitJumpInsn(GOTO, endField);
-                    mvInline.visitLabel(notNullLabel);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-                }
-                mvInline.visitVarInsn(DSTORE, 6);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(DLOAD, 6);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeDoubleToBuf", "(DI)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-            } else if (typeCode == 5) {
-                if (field.getType() == Float.class) {
-                    Label notNullLabel = new Label();
-                    mvInline.visitInsn(DUP);
-                    mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mvInline.visitInsn(POP);
-                    emitWriteNullDirect(mvInline);
-                    mvInline.visitJumpInsn(GOTO, endField);
-                    mvInline.visitLabel(notNullLabel);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-                }
-                mvInline.visitVarInsn(FSTORE, 6);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(FLOAD, 6);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeFloatToBuf", "(FI)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-            } else if (typeCode == 6) {
-                if (field.getType() == Boolean.class) {
-                    Label notNullLabel = new Label();
-                    mvInline.visitInsn(DUP);
-                    mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                    mvInline.visitInsn(POP);
-                    emitWriteNullDirect(mvInline);
-                    mvInline.visitJumpInsn(GOTO, endField);
-                    mvInline.visitLabel(notNullLabel);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-                }
-                Label trueLabel = new Label();
-                Label boolEndLabel = new Label();
-                mvInline.visitJumpInsn(IFNE, trueLabel);
-                emitWriteStringGetChars(mvInline, "false", 5);
-                mvInline.visitJumpInsn(GOTO, boolEndLabel);
-                mvInline.visitLabel(trueLabel);
-                emitWriteStringGetChars(mvInline, "true", 4);
-                mvInline.visitLabel(boolEndLabel);
-            } else if (typeCode == 10 || typeCode == 11) {
-                // LocalDateTime/LocalDate 字段：null 检查 → @YdszJsonFormat 格式化 → 委托 writeStringToBuf
-                // 修复：serializeInline 原遗漏 @YdszJsonFormat 注解处理，与 serialize() 行为不一致
-                mvInline.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mvInline);
-                mvInline.visitJumpInsn(GOTO, endNull);
-                mvInline.visitLabel(notNullLabel);
-                String dateInternalName = (typeCode == 10) ? "java/time/LocalDateTime" : "java/time/LocalDate";
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(ALOAD, 5);
-                // @YdszJsonFormat 支持：检查是否有格式化模式（与 serialize() 保持一致）
-                YdszJsonFormat formatAnnotation = field.getAnnotation(YdszJsonFormat.class);
-                String datePattern = (formatAnnotation != null && !formatAnnotation.value().isEmpty()) ? formatAnnotation.value() : null;
-                if (datePattern != null) {
-                    mvInline.visitLdcInsn(datePattern);
-                    mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                        "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
-                } else {
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
-                }
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeStringToBuf", "(Ljava/lang/String;I)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-                mvInline.visitLabel(endNull);
-            } else if (typeCode == 12) {
-                // Date 字段：null 检查 → @YdszJsonFormat 格式化 → 委托 writeStringToBuf
-                // 修复：serializeInline 原遗漏 @YdszJsonFormat 注解处理，与 serialize() 行为不一致
-                mvInline.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mvInline);
-                mvInline.visitJumpInsn(GOTO, endNull);
-                mvInline.visitLabel(notNullLabel);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(ALOAD, 5);
-                // @YdszJsonFormat 支持：检查是否有格式化模式（与 serialize() 保持一致）
-                YdszJsonFormat dateFmtAnn = field.getAnnotation(YdszJsonFormat.class);
-                String datePattern2 = (dateFmtAnn != null && !dateFmtAnn.value().isEmpty()) ? dateFmtAnn.value() : null;
-                if (datePattern2 != null) {
-                    mvInline.visitLdcInsn(datePattern2);
-                    mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                        "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
-                } else {
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
-                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
-                }
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeStringToBuf", "(Ljava/lang/String;I)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-                mvInline.visitLabel(endNull);
-            } else if (typeCode == 13) {
-                mvInline.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mvInline);
-                mvInline.visitJumpInsn(GOTO, endNull);
-                mvInline.visitLabel(notNullLabel);
-                String cachedFieldName = "_list_" + field.getName();
-                mvInline.visitVarInsn(ALOAD, 0);
-                mvInline.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/njydsz/common/json/asm/AsmSerializer;");
-                Label hasSerializerLabel = new Label();
-                mvInline.visitJumpInsn(IFNONNULL, hasSerializerLabel);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeCollectionToBuf", "(Ljava/util/Collection;I)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-                mvInline.visitJumpInsn(GOTO, endNull);
-                mvInline.visitLabel(hasSerializerLabel);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitVarInsn(ALOAD, 0);
-                mvInline.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/njydsz/common/json/asm/AsmSerializer;");
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeCollectionWithSerializerToBuf", "(Ljava/util/Collection;Lcom/njydsz/common/json/asm/AsmSerializer;I)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-                mvInline.visitLabel(endNull);
-            } else if (typeCode == 14) {
-                mvInline.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mvInline);
-                mvInline.visitJumpInsn(GOTO, endNull);
-                mvInline.visitLabel(notNullLabel);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
-                    "writeMapToBuf", "(Ljava/util/Map;I)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-                mvInline.visitLabel(endNull);
-            } else {
-                mvInline.visitVarInsn(ASTORE, 5);
-                Label notNullLabel = new Label();
-                Label endNull = new Label();
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitJumpInsn(IFNONNULL, notNullLabel);
-                emitWriteNullDirect(mvInline);
-                mvInline.visitJumpInsn(GOTO, endNull);
-                mvInline.visitLabel(notNullLabel);
-                String cachedFieldName = "_nested_" + field.getName();
-                mvInline.visitVarInsn(ALOAD, 0);
-                mvInline.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/njydsz/common/json/asm/AsmSerializer;");
-                Label hasSerializerLabel = new Label();
-                mvInline.visitJumpInsn(IFNONNULL, hasSerializerLabel);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                    "serializeNestedToBuf", "(Lcom/njydsz/common/json/writer/JSONWriter;Ljava/lang/Object;I)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-                mvInline.visitJumpInsn(GOTO, endNull);
-                mvInline.visitLabel(hasSerializerLabel);
-                mvInline.visitVarInsn(ALOAD, 0);
-                mvInline.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/njydsz/common/json/asm/AsmSerializer;");
-                mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitVarInsn(ALOAD, 2);
-                mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                    "serializeWithSerializerToBuf", "(Lcom/njydsz/common/json/asm/AsmSerializer;Ljava/lang/Object;Lcom/njydsz/common/json/writer/JSONWriter;I)I", false);
-                mvInline.visitVarInsn(ISTORE, 4);
-                emitReadBufFromWriter(mvInline);
-                mvInline.visitLabel(endNull);
-            }
-
-            mvInline.visitLabel(endField);
-        }
+        emitFieldSerializationLoop(mvInline, fields, classInternalName, beanInternalName, beanType);
 
         // buf[pos++] = '}'
         emitWriteCharDirect(mvInline, '}');
@@ -1144,6 +444,406 @@ public final class AsmBeanCodecGenerator {
      *
      * <p>消除 writer.write(String) 方法调用的 externalSb 检查和 ensureCapacity 检查开销</p>
      */
+    /**
+     * Emit field serialization bytecode for all fields (shared by serialize() and serializeInline()).
+     *
+     * <p>Extracts the common field iteration loop, eliminating ~400 lines of duplication
+     * between serialize() and serializeInline() methods. Both methods generate identical
+     * field serialization bytecode, differing only in setup (preAllocate vs direct buf/pos access).</p>
+     *
+     * <p>Local variable slot layout: 0=this, 1=obj, 2=writer, 3=buf, 4=pos, 5+=temp</p>
+     *
+     * @param mv MethodVisitor to emit bytecode to
+     * @param fields serializable fields array
+     * @param classInternalName ASM internal name of the generated serializer class
+     * @param beanInternalName ASM internal name of the bean type
+     * @param beanType the bean class
+     */
+    private static void emitFieldSerializationLoop(MethodVisitor mv, Field[] fields,
+            String classInternalName, String beanInternalName, Class<?> beanType) {
+            int fieldCount = 0;
+            for (int i = 0; i < fields.length; i++) {
+                Field field = fields[i];
+                String getterName = beanType.isRecord() ? getRecordAccessorName(field) : getGetterName(field);
+                Method getter = findMethod(beanType, getterName);
+                if (getter == null) continue;
+            
+                int typeCode = getTypeCode(field.getType());
+            
+                String jsonKey = (fieldCount == 0) ? 
+                    ("\"" + field.getName() + "\":") : 
+                    (",\"" + field.getName() + "\":");
+                fieldCount++;
+                int keyLen = jsonKey.length();
+
+                Label endField = new Label();
+
+                // 直接写入字段名：jsonKey.getChars(0, keyLen, buf, pos); pos += keyLen;
+                // 消除 writer.write(jsonKey) 方法调用开销
+                emitWriteStringGetChars(mv, jsonKey, keyLen);
+
+                // 获取字段值
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitTypeInsn(CHECKCAST, beanInternalName);
+                mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, getterName, 
+                                 "()" + getTypeDescriptor(field.getType()), false);
+
+                // 根据类型码直接写入缓冲区
+                if (typeCode == 1) {
+                    // String 字段：null 检查 → 无转义时内联快速写入，有转义时委托 writeStringToBuf
+                    Label notNullLabel = new Label();
+                    mv.visitInsn(DUP);
+                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                    mv.visitInsn(POP);
+                    emitWriteNullDirect(mv);
+                    mv.visitJumpInsn(GOTO, endField);
+                    mv.visitLabel(notNullLabel);
+                    mv.visitVarInsn(ASTORE, 5);
+
+                    // 检查是否需要转义（1 次方法调用 vs 原来 4 次方法调用的 sync/re-read）
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/writer/JSONWriter",
+                        "needsEscape", "(Ljava/lang/String;)Z", false);
+
+                    Label slowPath = new Label();
+                    mv.visitJumpInsn(IFNE, slowPath);
+
+                    // 快速路径（无需转义）：直接内联写入缓冲区，零 sync/re-read 开销
+                    // len = str.length()
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I", false);
+                    mv.visitVarInsn(ISTORE, 6);
+
+                    // buf[pos++] = '"'
+                    emitWriteCharDirect(mv, '"');
+
+                    // str.getChars(0, len, buf, pos)
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitInsn(ICONST_0);
+                    mv.visitVarInsn(ILOAD, 6);
+                    mv.visitVarInsn(ALOAD, 3);
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "getChars", "(II[CI)V", false);
+
+                    // pos += len
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitVarInsn(ILOAD, 6);
+                    mv.visitInsn(IADD);
+                    mv.visitVarInsn(ISTORE, 4);
+
+                    // buf[pos++] = '"'
+                    emitWriteCharDirect(mv, '"');
+
+                    mv.visitJumpInsn(GOTO, endField);
+
+                    // 慢速路径（需要转义）：委托 writeStringToBuf（2 次方法调用 vs 原来 4 次）
+                    mv.visitLabel(slowPath);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
+                        "writeStringToBuf", "(Ljava/lang/String;I)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+                
+                } else if (typeCode == 2) {
+                    // int/Integer 字段：null 检查 → 非空则 NumberUtils.writeInt 直接写入缓冲区
+                    if (field.getType() == Integer.class) {
+                        Label notNullLabel = new Label();
+                        mv.visitInsn(DUP);
+                        mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                        mv.visitInsn(POP);
+                        emitWriteNullDirect(mv);
+                        mv.visitJumpInsn(GOTO, endField);
+                        mv.visitLabel(notNullLabel);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
+                    }
+                    // pos += NumberUtils.writeInt(value, buf, pos)
+                    emitWriteIntDirect(mv);
+                
+                } else if (typeCode == 3) {
+                    // long/Long 字段：null 检查 → 非空则 NumberUtils.writeLong 直接写入缓冲区
+                    if (field.getType() == Long.class) {
+                        Label notNullLabel = new Label();
+                        mv.visitInsn(DUP);
+                        mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                        mv.visitInsn(POP);
+                        emitWriteNullDirect(mv);
+                        mv.visitJumpInsn(GOTO, endField);
+                        mv.visitLabel(notNullLabel);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
+                    }
+                    // pos += NumberUtils.writeLong(value, buf, pos)
+                    emitWriteLongDirect(mv);
+                
+                } else if (typeCode == 4) {
+                    // double/Double 字段：null 检查 → 委托 writeDoubleToBuf（2 次调用 vs 原来 4 次）
+                    if (field.getType() == Double.class) {
+                        Label notNullLabel = new Label();
+                        mv.visitInsn(DUP);
+                        mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                        mv.visitInsn(POP);
+                        emitWriteNullDirect(mv);
+                        mv.visitJumpInsn(GOTO, endField);
+                        mv.visitLabel(notNullLabel);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
+                    }
+                    mv.visitVarInsn(DSTORE, 6);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(DLOAD, 6);
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
+                        "writeDoubleToBuf", "(DI)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+                
+                } else if (typeCode == 5) {
+                    // float/Float 字段：null 检查 → 委托 writeFloatToBuf（2 次调用 vs 原来 4 次）
+                    if (field.getType() == Float.class) {
+                        Label notNullLabel = new Label();
+                        mv.visitInsn(DUP);
+                        mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                        mv.visitInsn(POP);
+                        emitWriteNullDirect(mv);
+                        mv.visitJumpInsn(GOTO, endField);
+                        mv.visitLabel(notNullLabel);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
+                    }
+                    mv.visitVarInsn(FSTORE, 6);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(FLOAD, 6);
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
+                        "writeFloatToBuf", "(FI)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+                
+                } else if (typeCode == 6) {
+                    // boolean/Boolean 字段：null 检查 → 非空则直接写入 "true"/"false" 到缓冲区
+                    if (field.getType() == Boolean.class) {
+                        Label notNullLabel = new Label();
+                        mv.visitInsn(DUP);
+                        mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                        mv.visitInsn(POP);
+                        emitWriteNullDirect(mv);
+                        mv.visitJumpInsn(GOTO, endField);
+                        mv.visitLabel(notNullLabel);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
+                    }
+                    Label trueLabel = new Label();
+                    Label boolEndLabel = new Label();
+                    mv.visitJumpInsn(IFNE, trueLabel);
+                    // false: 直接写入 "false" 到缓冲区
+                    emitWriteStringGetChars(mv, "false", 5);
+                    mv.visitJumpInsn(GOTO, boolEndLabel);
+                    mv.visitLabel(trueLabel);
+                    // true: 直接写入 "true" 到缓冲区
+                    emitWriteStringGetChars(mv, "true", 4);
+                    mv.visitLabel(boolEndLabel);
+                
+                } else if (typeCode >= 7 && typeCode <= 9) {
+                    // short/byte/char 字段：null 检查 → NumberUtils.writeInt 直接写入
+                    if (field.getType() == Short.class) {
+                        Label notNullLabel = new Label();
+                        mv.visitInsn(DUP);
+                        mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                        mv.visitInsn(POP);
+                        emitWriteNullDirect(mv);
+                        mv.visitJumpInsn(GOTO, endField);
+                        mv.visitLabel(notNullLabel);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
+                    } else if (field.getType() == Byte.class) {
+                        Label notNullLabel = new Label();
+                        mv.visitInsn(DUP);
+                        mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                        mv.visitInsn(POP);
+                        emitWriteNullDirect(mv);
+                        mv.visitJumpInsn(GOTO, endField);
+                        mv.visitLabel(notNullLabel);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "byteValue", "()B", false);
+                    } else if (field.getType() == Character.class) {
+                        Label notNullLabel = new Label();
+                        mv.visitInsn(DUP);
+                        mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                        mv.visitInsn(POP);
+                        emitWriteNullDirect(mv);
+                        mv.visitJumpInsn(GOTO, endField);
+                        mv.visitLabel(notNullLabel);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
+                    }
+                    emitWriteIntDirect(mv);
+
+                } else if (typeCode == 10 || typeCode == 11) {
+                    // LocalDateTime/LocalDate 字段：null 检查 → 委托 writeStringToBuf（2 次调用 vs 原来 4 次）
+                    mv.visitVarInsn(ASTORE, 5);
+                    Label notNullLabel = new Label();
+                    Label endNull = new Label();
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                    emitWriteNullDirect(mv);
+                    mv.visitJumpInsn(GOTO, endNull);
+                    mv.visitLabel(notNullLabel);
+                    String dateInternalName = (typeCode == 10) ? "java/time/LocalDateTime" : "java/time/LocalDate";
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ALOAD, 5);
+                    // @YdszJsonFormat 支持：检查是否有格式化模式
+                    YdszJsonFormat formatAnnotation = field.getAnnotation(YdszJsonFormat.class);
+                    String datePattern = (formatAnnotation != null && !formatAnnotation.value().isEmpty()) ? formatAnnotation.value() : null;
+                    if (datePattern != null) {
+                        mv.visitLdcInsn(datePattern);
+                        mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
+                            "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
+                    } else {
+                        mv.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
+                    }
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
+                        "writeStringToBuf", "(Ljava/lang/String;I)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+                    mv.visitLabel(endNull);
+
+                } else if (typeCode == 12) {
+                    // Date 字段：null 检查 → 委托 writeStringToBuf（2 次调用 vs 原来 4 次）
+                    mv.visitVarInsn(ASTORE, 5);
+                    Label notNullLabel = new Label();
+                    Label endNull = new Label();
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                    emitWriteNullDirect(mv);
+                    mv.visitJumpInsn(GOTO, endNull);
+                    mv.visitLabel(notNullLabel);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ALOAD, 5);
+                    // @YdszJsonFormat 支持：检查是否有格式化模式
+                    YdszJsonFormat dateFmtAnn = field.getAnnotation(YdszJsonFormat.class);
+                    String datePattern2 = (dateFmtAnn != null && !dateFmtAnn.value().isEmpty()) ? dateFmtAnn.value() : null;
+                    if (datePattern2 != null) {
+                        mv.visitLdcInsn(datePattern2);
+                        mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
+                            "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
+                    } else {
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
+                    }
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
+                        "writeStringToBuf", "(Ljava/lang/String;I)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+                    mv.visitLabel(endNull);
+
+                } else if (typeCode == 13) {
+                    // Collection 字段：null 检查 → 委托 writeCollectionToBuf/writeCollectionWithSerializerToBuf
+                    mv.visitVarInsn(ASTORE, 5);
+                    Label notNullLabel = new Label();
+                    Label endNull = new Label();
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                    emitWriteNullDirect(mv);
+                    mv.visitJumpInsn(GOTO, endNull);
+                    mv.visitLabel(notNullLabel);
+
+                    String cachedFieldName = "_list_" + field.getName();
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
+                        "Lcom/njydsz/common/json/asm/AsmSerializer;");
+                    Label hasSerializerLabel = new Label();
+                    mv.visitJumpInsn(IFNONNULL, hasSerializerLabel);
+
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
+                        "writeCollectionToBuf", "(Ljava/util/Collection;I)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+                    mv.visitJumpInsn(GOTO, endNull);
+
+                    mv.visitLabel(hasSerializerLabel);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
+                        "Lcom/njydsz/common/json/asm/AsmSerializer;");
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
+                        "writeCollectionWithSerializerToBuf", "(Ljava/util/Collection;Lcom/njydsz/common/json/asm/AsmSerializer;I)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+
+                    mv.visitLabel(endNull);
+
+                } else if (typeCode == 14) {
+                    // Map 字段：null 检查 → 委托 writeMapToBuf（2 次调用 vs 原来 4 次）
+                    mv.visitVarInsn(ASTORE, 5);
+                    Label notNullLabel = new Label();
+                    Label endNull = new Label();
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
+                    emitWriteNullDirect(mv);
+                    mv.visitJumpInsn(GOTO, endNull);
+                    mv.visitLabel(notNullLabel);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
+                        "writeMapToBuf", "(Ljava/util/Map;I)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+                    mv.visitLabel(endNull);
+
+                } else {
+                    // 嵌套 Bean 字段：null 检查 → 委托 serializeNestedToBuf/serializeWithSerializerToBuf
+                    mv.visitVarInsn(ASTORE, 5);
+
+                    Label notNullLabel = new Label();
+                    Label endNull = new Label();
+
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitJumpInsn(IFNONNULL, notNullLabel);
+
+                    emitWriteNullDirect(mv);
+                    mv.visitJumpInsn(GOTO, endNull);
+
+                    mv.visitLabel(notNullLabel);
+
+                    String cachedFieldName = "_nested_" + field.getName();
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
+                        "Lcom/njydsz/common/json/asm/AsmSerializer;");
+                    Label hasSerializerLabel = new Label();
+                    mv.visitJumpInsn(IFNONNULL, hasSerializerLabel);
+
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
+                        "serializeNestedToBuf", "(Lcom/njydsz/common/json/writer/JSONWriter;Ljava/lang/Object;I)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+                    mv.visitJumpInsn(GOTO, endNull);
+
+                    mv.visitLabel(hasSerializerLabel);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
+                        "Lcom/njydsz/common/json/asm/AsmSerializer;");
+                    mv.visitVarInsn(ALOAD, 5);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitVarInsn(ILOAD, 4);
+                    mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
+                        "serializeWithSerializerToBuf", "(Lcom/njydsz/common/json/asm/AsmSerializer;Ljava/lang/Object;Lcom/njydsz/common/json/writer/JSONWriter;I)I", false);
+                    mv.visitVarInsn(ISTORE, 4);
+                    emitReadBufFromWriter(mv);
+
+                    mv.visitLabel(endNull);
+                }
+            
+                mv.visitLabel(endField);
+            }
+    }
+
+
     private static void emitWriteCharDirect(MethodVisitor mv, char c) {
         mv.visitVarInsn(ALOAD, 3);
         mv.visitVarInsn(ILOAD, 4);
@@ -1546,6 +1246,24 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
+     * DateTimeFormatter 缓存（按 pattern 缓存，避免每次调用 DateTimeFormatter.ofPattern）。
+     *
+     * <p>对标 Jackson 的 DateTimeFormatter 缓存机制，消除重复 pattern 编译开销。</p>
+     */
+    private static final ConcurrentHashMap<String, DateTimeFormatter> FORMATTER_CACHE =
+        new ConcurrentHashMap<>();
+
+    /**
+     * 获取或创建缓存的 DateTimeFormatter。
+     *
+     * @param pattern 日期格式模式
+     * @return 缓存的 DateTimeFormatter 实例
+     */
+    private static DateTimeFormatter getCachedFormatter(String pattern) {
+        return FORMATTER_CACHE.computeIfAbsent(pattern, DateTimeFormatter::ofPattern);
+    }
+
+    /**
      * 使用指定格式模式格式化日期对象（供 ASM 生成的字节码调用）
      *
      * @param dateValue 日期对象（LocalDateTime/LocalDate/Date）
@@ -1560,7 +1278,7 @@ public final class AsmBeanCodecGenerator {
             return dateValue.toString();
         }
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+            DateTimeFormatter formatter = getCachedFormatter(pattern);
             if (dateValue instanceof LocalDateTime ldt) {
                 return ldt.format(formatter);
             } else if (dateValue instanceof LocalDate ld) {
@@ -1583,12 +1301,12 @@ public final class AsmBeanCodecGenerator {
             return Date.from(Instant.parse(dateStr));
         } catch (Exception e) {
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+                DateTimeFormatter formatter = getCachedFormatter("yyyy-MM-dd'T'HH:mm:ss");
                 LocalDateTime ldt = LocalDateTime.parse(dateStr, formatter);
                 return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
             } catch (Exception e2) {
                 try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    DateTimeFormatter formatter = getCachedFormatter("yyyy-MM-dd");
                     LocalDate ld = LocalDate.parse(dateStr, formatter);
                     return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
                 } catch (Exception e3) {

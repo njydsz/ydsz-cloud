@@ -14,10 +14,10 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.constant.YdszMessageTopics;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.util.id.SnowflakeUtils;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.YdszJsonMapper;
+import com.njydsz.common.json.YdszJsonWriter;
 import com.njydsz.message.server.util.MessageCompressor;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -31,12 +31,19 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @ConditionalOnClass(name = "org.apache.rocketmq.spring.core.RocketMQTemplate")
 @ConditionalOnProperty(prefix = "rocketmq.producer", name = "group")
 public class RocketMQMessageProducer implements MessageQueueOperations {
 
     private final RocketMQTemplate rocketMQTemplate;
+
+    /** P3-3: 绑定型 Writer（预热 ASM 序列化器，避免每次类型推断开销） */
+    private final YdszJsonWriter<MessageRequest> messageWriter;
+
+    public RocketMQMessageProducer(RocketMQTemplate rocketMQTemplate) {
+        this.rocketMQTemplate = rocketMQTemplate;
+        this.messageWriter = YdszJsonMapper.getDefault().writerFor(MessageRequest.class);
+    }
 
     /** P1-6: 优先级 → RocketMQ Tag 映射 */
     private static final String TAG_URGENT = "URGENT";
@@ -56,7 +63,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(messageWriter.write(req));
         String destination = buildDestination(req);
         SendResult result;
         try {
@@ -86,7 +93,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(messageWriter.write(req));
         String destination = buildDestination(req);
         try {
             rocketMQTemplate.asyncSend(destination, payload, new SendCallback() {
@@ -169,7 +176,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(messageWriter.write(req));
         try {
             TransactionSendResult result =
                     rocketMQTemplate.sendMessageInTransaction(

@@ -182,9 +182,11 @@ ydsz-workflow/
 │       └── resources/META-INF/          # Spring Boot 自动配置
 │           ├── additional-spring-configuration-metadata.json
 │           └── spring/AutoConfiguration.imports
-└── ydsz-workflow-web/                   # Web 层 — Controller + 配置
+└── ydsz-workflow-web/                   # Web 层 — Controller + 启动类 + 配置
     └── src/main/
-        ├── java/.../web/                # REST Controller
+        ├── java/.../web/
+        │   ├── WorkflowApplication.java  # Spring Boot 启动类
+        │   └── controller/                # REST Controller
         └── resources/
             ├── bootstrap.yml            # Nacos 注册配置
             └── config/                  # 环境配置（dev/sit/uat）

@@ -7,6 +7,12 @@ ydsz:
   seata:
     enabled: false
     default-type: SEATA_AT
+  # P0-1: YdszJson ASM 预热
+  json:
+    warmup-classes:
+      - com.njydsz.project.domain.entity.ProjectInitiation
+  # P0-3: 启用 BigDecimal 精度模式（项目管理涉及预算/成本金额计算）
+    use-big-decimal: true
 
 # Seata 客户端配置（TC 就绪后设置 seata.enabled=true 并取消注释）
 # seata:

@@ -11,8 +11,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.YdszJsonArray;
-import com.njydsz.common.json.object.YdszJsonObject;
+import com.njydsz.common.json.YdszJsonMapper;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.ObjectNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +88,8 @@ public class OpenAiCompatibleClient implements LlmClient {
     private final Semaphore concurrencyLimiter;
     /** 最大重试次数 */
     private final int maxRetries;
+    /** SNAKE_CASE 命名策略的 Mapper（OpenAI API 要求 snake_case） */
+    private final YdszJsonMapper snakeCaseMapper;
 
     public OpenAiCompatibleClient(String provider, String baseUrl, String apiKey, int timeoutSeconds) {
         this(provider, baseUrl, apiKey, timeoutSeconds, DEFAULT_MAX_RETRIES, DEFAULT_MAX_CONCURRENT);
@@ -99,6 +103,9 @@ public class OpenAiCompatibleClient implements LlmClient {
         this.timeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : 60;
         this.maxRetries = maxRetries > 0 ? maxRetries : DEFAULT_MAX_RETRIES;
         this.concurrencyLimiter = new Semaphore(maxConcurrent > 0 ? maxConcurrent : DEFAULT_MAX_CONCURRENT);
+        this.snakeCaseMapper = YdszJsonMapper.builder()
+                .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+                .build();
         this.restClient = RestClient.builder()
                 .baseUrl(this.baseUrl)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
@@ -137,7 +144,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                 try {
                     String responseJson = restClient.post()
                             .uri("/chat/completions")
-                            .body(YdszJson.toJson(requestBody))
+                            .body(snakeCaseMapper.toJson(requestBody))
                             .retrieve()
                             .body(String.class);
                     return parseResponse(responseJson);
@@ -193,7 +200,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         try {
             webClient.post()
                     .uri("/chat/completions")
-                    .bodyValue(YdszJson.toJson(requestBody))
+                    .bodyValue(snakeCaseMapper.toJson(requestBody))
                     .retrieve()
                     .bodyToFlux(String.class)
                     .doOnNext(line -> {
@@ -299,38 +306,38 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     private ChatResponse parseResponse(String json) {
-        YdszJsonObject obj = YdszJson.parseObjectToJsonObject(json);
-        String id = obj.getString("id");
-        String model = obj.getString("model");
-        YdszJsonArray choices = obj.getJSONArray("choices");
-        if (choices == null || choices.isEmpty()) {
+        ObjectNode obj = (ObjectNode) YdszJson.readTree(json);
+        String id = obj.get("id").asText();
+        String model = obj.get("model").asText();
+        ArrayNode choices = (ArrayNode) obj.get("choices");
+        if (choices == null || choices.size() == 0) {
             throw new LlmException("LLM 响应无 choices", LlmException.ErrorType.INVALID_RESPONSE);
         }
-        YdszJsonObject choice = choices.getJSONObject(0);
-        YdszJsonObject message = choice.getJSONObject("message");
-        String finishReason = choice.getString("finish_reason");
-        String content = message != null ? message.getString("content") : null;
+        ObjectNode choice = (ObjectNode) choices.get(0);
+        ObjectNode message = choice.has("message") ? (ObjectNode) choice.get("message") : null;
+        String finishReason = choice.has("finish_reason") ? choice.get("finish_reason").asText() : null;
+        String content = message != null && message.has("content") ? message.get("content").asText() : null;
 
         List<ToolCall> toolCalls = new ArrayList<>();
-        if (message != null && message.containsKey("tool_calls")) {
-            YdszJsonArray calls = message.getJSONArray("tool_calls");
+        if (message != null && message.has("tool_calls")) {
+            ArrayNode calls = (ArrayNode) message.get("tool_calls");
             for (int i = 0; i < calls.size(); i++) {
-                YdszJsonObject call = calls.getJSONObject(i);
-                String callId = call.getString("id");
-                YdszJsonObject function = call.getJSONObject("function");
-                String name = function.getString("name");
-                String argsStr = function.getString("arguments");
+                ObjectNode call = (ObjectNode) calls.get(i);
+                String callId = call.get("id").asText();
+                ObjectNode function = (ObjectNode) call.get("function");
+                String name = function.get("name").asText();
+                String argsStr = function.get("arguments").asText();
                 Map<String, Object> args = YdszJson.toObject(argsStr, Map.class);
                 toolCalls.add(new ToolCall(callId, name, args));
             }
         }
 
         TokenUsage usage = TokenUsage.zero();
-        if (obj.containsKey("usage")) {
-            YdszJsonObject usageObj = obj.getJSONObject("usage");
+        if (obj.has("usage")) {
+            ObjectNode usageObj = (ObjectNode) obj.get("usage");
             usage = new TokenUsage(
-                    usageObj.getIntValue("prompt_tokens"),
-                    usageObj.getIntValue("completion_tokens"));
+                    usageObj.get("prompt_tokens").asInt(),
+                    usageObj.get("completion_tokens").asInt());
         }
 
         ChatMessage chatMessage = toolCalls.isEmpty()
@@ -342,24 +349,24 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     private ChatChunk parseChunk(String data) {
         try {
-            YdszJsonObject obj = YdszJson.parseObjectToJsonObject(data);
-            String id = obj.getString("id");
-            String model = obj.getString("model");
-            YdszJsonArray choices = obj.getJSONArray("choices");
-            if (choices == null || choices.isEmpty()) {
+            ObjectNode obj = (ObjectNode) YdszJson.readTree(data);
+            String id = obj.get("id").asText();
+            String model = obj.get("model").asText();
+            ArrayNode choices = (ArrayNode) obj.get("choices");
+            if (choices == null || choices.size() == 0) {
                 return null;
             }
-            YdszJsonObject choice = choices.getJSONObject(0);
-            YdszJsonObject delta = choice.getJSONObject("delta");
-            String finishReason = choice.getString("finish_reason");
-            String content = delta != null ? delta.getString("content") : null;
+            ObjectNode choice = (ObjectNode) choices.get(0);
+            ObjectNode delta = choice.has("delta") ? (ObjectNode) choice.get("delta") : null;
+            String finishReason = choice.has("finish_reason") ? choice.get("finish_reason").asText() : null;
+            String content = delta != null && delta.has("content") ? delta.get("content").asText() : null;
 
             TokenUsage usage = null;
-            if (obj.containsKey("usage") && obj.get("usage") != null) {
-                YdszJsonObject usageObj = obj.getJSONObject("usage");
+            if (obj.has("usage") && obj.get("usage") != null) {
+                ObjectNode usageObj = (ObjectNode) obj.get("usage");
                 usage = new TokenUsage(
-                        usageObj.getIntValue("prompt_tokens"),
-                        usageObj.getIntValue("completion_tokens"));
+                        usageObj.get("prompt_tokens").asInt(),
+                        usageObj.get("completion_tokens").asInt());
             }
 
             if (finishReason != null) {

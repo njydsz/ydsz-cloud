@@ -69,6 +69,15 @@ public class YdszJsonMapper {
     private final YdszJsonConfig config;
 
     /**
+     * 配置是否已应用到 ThreadLocal 且未再变更（优化：避免每次序列化都执行 ThreadLocalSnapshot）。
+     *
+     * <p>当 config 与全局配置一致或已 apply 后，此标志为 true，序列化时跳过
+     * ThreadLocalSnapshot save/restore 开销。config 变更后置为 false，
+     * 下次序列化时重新 apply 并 save/restore。</p>
+     */
+    private volatile boolean configApplied = false;
+
+    /**
      * 创建默认配置的 Mapper 实例。
      */
     public YdszJsonMapper() {
@@ -87,10 +96,25 @@ public class YdszJsonMapper {
     /**
      * 获取此 Mapper 的配置对象（可直接修改，不影响全局配置）。
      *
+     * <p>修改配置后，需调用 {@link #configChanged()} 通知 Mapper 配置已变更，
+     * 以便下次序列化时重新应用到 ThreadLocal。</p>
+     *
      * @return 配置对象
      */
     public YdszJsonConfig getConfig() {
         return config;
+    }
+
+    /**
+     * 通知 Mapper 配置已变更，下次序列化时将重新应用到 ThreadLocal。
+     *
+     * <p>在使用 {@link #getConfig()} 修改配置后调用此方法。
+     * 如果未调用，Mapper 可能继续使用上次应用的旧配置。</p>
+     *
+     * @since 1.4.0
+     */
+    public void configChanged() {
+        configApplied = false;
     }
 
     /**
@@ -105,6 +129,24 @@ public class YdszJsonMapper {
     // ==================== 序列化方法 ====================
 
     /**
+     * 如果配置已变更，则应用到 ThreadLocal 并返回 ThreadLocalSnapshot；否则返回 null（无需 restore）。
+     *
+     * <p>优化：当 Mapper 配置与上次 apply 一致时，跳过 ThreadLocalSnapshot save/restore，
+     * 消除每次序列化的 14 次字段读写开销。</p>
+     *
+     * @return ThreadLocalSnapshot（需在 finally 中 restore），或 null 表示无需 restore
+     */
+    private SerializationProvider.ThreadLocalSnapshot applyConfigIfNeeded() {
+        if (configApplied) {
+            return null;
+        }
+        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        config.apply();
+        configApplied = true;
+        return snapshot;
+    }
+
+    /**
      * 序列化对象为 JSON 字符串。
      *
      * @param obj 要序列化的对象
@@ -114,12 +156,11 @@ public class YdszJsonMapper {
         if (obj == null) {
             return "null";
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            config.apply();
             return recordSerialize(() -> SerializationProvider.serialize(obj));
         } finally {
-            snapshot.restore();
+            if (snapshot != null) snapshot.restore();
         }
     }
 
@@ -135,12 +176,11 @@ public class YdszJsonMapper {
             return "null";
         }
         if (pretty) {
-            SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+            SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
             try {
-                config.apply();
                 return recordSerialize(() -> SerializationProvider.format(obj));
             } finally {
-                snapshot.restore();
+                if (snapshot != null) snapshot.restore();
             }
         }
         return toJson(obj);
@@ -160,12 +200,11 @@ public class YdszJsonMapper {
         if (obj == null) {
             return "null";
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            config.apply();
             return recordSerialize(() -> SerializationProvider.serializeWithView(obj, viewClass));
         } finally {
-            snapshot.restore();
+            if (snapshot != null) snapshot.restore();
         }
     }
 
@@ -179,12 +218,11 @@ public class YdszJsonMapper {
         if (obj == null) {
             return new byte[]{'n', 'u', 'l', 'l'};
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            config.apply();
             return recordSerialize(() -> SerializationProvider.serializeToBytes(obj));
         } finally {
-            snapshot.restore();
+            if (snapshot != null) snapshot.restore();
         }
     }
 
@@ -312,12 +350,11 @@ public class YdszJsonMapper {
             throw new YdszJsonException(
                 "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            config.apply();
             return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, clazz));
         } finally {
-            snapshot.restore();
+            if (snapshot != null) snapshot.restore();
         }
     }
 
@@ -367,12 +404,11 @@ public class YdszJsonMapper {
                 throw new YdszJsonException(
                     "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
             }
-            SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+            SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
             try {
-                config.apply();
                 return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, typeRef.getType()));
             } finally {
-                snapshot.restore();
+                if (snapshot != null) snapshot.restore();
             }
         } catch (Exception e) {
             if (e instanceof YdszJsonException) throw (YdszJsonException) e;
@@ -652,9 +688,8 @@ public class YdszJsonMapper {
         if (obj == null) {
             return "null";
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            config.apply();
             Set<String> previous = SerializationProvider.getExcludedFields();
             SerializationProvider.setExcludedFields(excludedFieldNames);
             try {
@@ -663,7 +698,7 @@ public class YdszJsonMapper {
                 SerializationProvider.setExcludedFields(previous);
             }
         } finally {
-            snapshot.restore();
+            if (snapshot != null) snapshot.restore();
         }
     }
 

@@ -1103,6 +1103,20 @@ fieldNameHashes[i] = fields[i].nameHashCode;
             return new String(chars, start, len - start);
         }
 
+        // 快速路径：先扫描是否有转义字符，无转义则直接 new String
+        // 对标 Jackson 的 fast string parse 优化
+        int scanEnd = start + 1;
+        while (scanEnd < len) {
+            char c = chars[scanEnd];
+            if (c == '\\') break;          // 有转义，走慢速路径
+            if (c == '"') {
+                // 无转义字符的快速路径：直接 substring
+                return new String(chars, start + 1, scanEnd - start - 1);
+            }
+            scanEnd++;
+        }
+
+        // 慢速路径：有转义字符，使用 StringBuilder 逐字符处理
         int end = start + 1;
         StringBuilder sb = new StringBuilder();
 
