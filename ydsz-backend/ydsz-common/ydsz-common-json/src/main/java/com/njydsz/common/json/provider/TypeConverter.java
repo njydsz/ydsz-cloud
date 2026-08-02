@@ -1,7 +1,10 @@
 package com.njydsz.common.json.provider;
 
-/**
- * 类型转换与值解析工具。
+import java.lang.reflect.Field;
+
+import com.njydsz.common.json.annotation.JsonEnumDefaultValue;
+
+/** 类型转换与值解析工具。
  *
  * <p>负责 JSON 值到 Java 目标类型的转换，以及原始 JSON 片段的快速解析。
  * 该类是 {@link BuilderResolver} 和 {@link CreatorResolver} 的底层支撑，
@@ -64,6 +67,17 @@ final class TypeConverter {
 
         if (targetType == String.class) {
             return String.valueOf(value);
+        }
+
+        // 枚举转换：String → Enum（含 @JsonEnumDefaultValue 兜底）
+        if (targetType.isEnum() && value instanceof String) {
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            Class<? extends Enum> enumType = targetType.asSubclass(Enum.class);
+            try {
+                return Enum.valueOf(enumType, (String) value);
+            } catch (IllegalArgumentException e) {
+                return resolveEnumDefaultValue(enumType);
+            }
         }
 
         return value;
@@ -218,5 +232,22 @@ final class TypeConverter {
      */
     static boolean parseBooleanValue(String json) {
         return "true".equalsIgnoreCase(json.trim());
+    }
+
+    /**
+     * 查找枚举类中标记了 {@link JsonEnumDefaultValue @JsonEnumDefaultValue} 的常量作为兜底值。
+     *
+     * <p>当 {@code Enum.valueOf} 失败（未知枚举值）时调用。</p>
+     *
+     * @param enumType 枚举类型
+     * @return 标有 @JsonEnumDefaultValue 的枚举常量，无匹配时原抛 IllegalArgumentException
+     */
+    private static Object resolveEnumDefaultValue(Class<? extends Enum<?>> enumType) {
+        for (Field field : enumType.getDeclaredFields()) {
+            if (field.isEnumConstant() && field.isAnnotationPresent(JsonEnumDefaultValue.class)) {
+                return Enum.valueOf(enumType, field.getName());
+            }
+        }
+        throw new IllegalArgumentException("Unknown enum value for " + enumType.getName());
     }
 }
