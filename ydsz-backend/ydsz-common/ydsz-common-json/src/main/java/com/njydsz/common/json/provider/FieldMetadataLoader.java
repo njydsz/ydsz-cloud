@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonAnyGetter;
 import com.njydsz.common.json.annotation.JsonAnySetter;
-import com.njydsz.common.json.annotation.JsonAutoDetect;
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonGetter;
 import com.njydsz.common.json.annotation.JsonIgnore;
@@ -162,12 +161,6 @@ public final class FieldMetadataLoader {
         JsonVisibility.Visibility fieldVisibility = JsonVisibility.Visibility.ANY;
         if (visibilityAnnotation != null) {
             fieldVisibility = visibilityAnnotation.fields();
-        }
-
-        // Jackson 兼容：@JsonAutoDetect 映射到 JsonVisibility
-        JsonAutoDetect autoDetect = clazz.getAnnotation(JsonAutoDetect.class);
-        if (autoDetect != null && autoDetect.fieldVisibility() != JsonAutoDetect.Visibility.DEFAULT) {
-            fieldVisibility = autoDetect.fieldVisibility().toYdszVisibility();
         }
 
         Field[] declaredFields = clazz.getDeclaredFields();

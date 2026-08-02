@@ -81,44 +81,62 @@
 
 ### 8. 注解（annotation 包）
 
-> **命名约定**：`@YdszJson*` 前缀注解为 YdszJson 专有功能；`@Json*` 前缀注解（不带 Ydsz）为 Jackson 兼容注解，从 Jackson 迁移时注解名无需修改。两套注解命名并行是有意为之的设计决策。
+> **命名约定**：所有注解统一使用 `@Json*` 前缀，命名与 Jackson 兼容，从 Jackson 迁移时注解名无需修改。
 
-#### YdszJson 专有注解（`@YdszJson*` 前缀）
-
-| 注解 | 说明 |
-|---|---|
-| `@YdszJsonPropertyOrder` | 类级字段排序（指定顺序数组 `{"id","name"}` 或 `alphabetic=true` 字母序） |
-| `@YdszJsonView` | 视图过滤（对标 Jackson `@JsonView`，配合 `YdszJson.toJson(obj, ViewClass.class)` 使用） |
-| `@YdszJsonCreator` / `@YdszJsonBuilder` | 构造器 / Builder 标记（指定反序列化使用的构造方法或 Builder 类） |
-| `@YdszJsonClass` | 类级配置（字段排序 `ordering` / 忽略字段 `ignores` / 包含字段 `includes` / 命名策略 `naming` / 循环引用 `handleCircularReference` / 输出 null `writeNulls` / 输出类名 `writeClassName` / 日期格式 `dateFormat` / 快速模式 `fastMode` / 多态 `typeKey`+`seeAlso`+`seeAlsoNames`+`autoType` / 枚举序号 `serializeEnumUsingOrdinal` / 序列化特性 `features` / 反序列化特性 `deserializeFeatures`；同时作为 AutoType 白名单扫描标记） |
-| `@YdszJsonTypeInfo` / `@YdszJsonSubTypes` / `@YdszJsonSubType` | 多态序列化（类型标识字段 + 子类型注册） |
-| `@YdszJsonVisibility` | 可见性控制（对标 Jackson `@JsonAutoDetect`） |
-
-#### Jackson 兼容注解（`@Json*` 前缀）
+#### 字段级注解
 
 | 注解 | 说明 |
 |---|---|
-| `@JsonProperty` | 字段重命名（对标 Jackson `@JsonProperty`，如 `@JsonProperty("user_id")`） |
-| `@JsonIgnore` / `@JsonIgnoreProperties` | 字段忽略（字段级 / 类级） |
-| `@JsonFormat` | 日期/数字格式化（`pattern` / `shape` / `locale` / `timezone`，如 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")`） |
+| `@JsonProperty` | 字段重命名与访问控制（`value` 名称 / `required` 必需 / `defaultValue` 默认值 / `access` 访问模式 `AUTO`·`READ_ONLY`·`WRITE_ONLY`·`READ_WRITE`，如 `@JsonProperty(value="user_id", required=true)`） |
+| `@JsonIgnore` | 字段忽略（字段级，对标 Jackson `@JsonIgnore`） |
+| `@JsonFormat` | 日期/数字格式化（`pattern` / `shape` / `locale` / `timezone` / `lenient` 宽松解析，如 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")`） |
 | `@JsonAlias` | 反序列化别名（同一字段接受多个 JSON key） |
 | `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT） |
+| `@JsonRawValue` | 原始 JSON 值嵌入（不转义直接输出） |
+| `@JsonUnwrapped` | 嵌套属性展开（支持 `prefix` / `suffix`） |
+
+#### 方法级注解
+
+| 注解 | 说明 |
+|---|---|
 | `@JsonGetter` / `@JsonSetter` | 方法级 getter/setter 标记 |
 | `@JsonValue` | 枚举值序列化方式（方法级，序列化时输出该方法的返回值） |
-| `@JsonRawValue` | 原始 JSON 值嵌入（不转义直接输出） |
-| `@JsonRootName` | 根名称包裹（配合 `ydsz.json.wrap-root-value=true`） |
 | `@JsonAnyGetter` / `@JsonAnySetter` | 动态属性 Getter / Setter（Map 字段展开为 JSON 属性） |
-| `@JsonUnwrapped` | 嵌套属性展开（支持 `prefix` / `suffix`） |
-| `@JsonSerialize` / `@JsonDeserialize` | 自定义序列化器/反序列化器（`using = XxxSerializer.class`） |
+
+#### 类级注解
+
+| 注解 | 说明 |
+|---|---|
+| `@JsonClass` | 类级配置（字段排序 `ordering` / 忽略字段 `ignores` / 包含字段 `includes` / 命名策略 `naming` / 输出 null `writeNulls` / 输出类名 `writeClassName` / 日期格式 `dateFormat` / 枚举序号 `serializeEnumUsingOrdinal` / 多态 `typeKey`+`seeAlso`+`seeAlsoNames`+`autoType`；同时作为 AutoType 白名单扫描标记） |
+| `@JsonPropertyOrder` | 类级字段排序（指定顺序数组 `{"id","name"}` 或 `alphabetic=true` 字母序） |
+| `@JsonView` | 视图过滤（配合 `YdszJson.toJson(obj, ViewClass.class)` 使用） |
 | `@JsonNaming` | 类级命名策略 |
-| `@JsonAutoDetect` | 可见性控制（Jackson 兼容） |
-| `@JsonTypeName` | 多态类型名称 |
+| `@JsonIgnoreProperties` | 类级字段忽略 |
+| `@JsonRootName` | 根名称包裹（配合 `ydsz.json.wrap-root-value=true`） |
+| `@JsonVisibility` | 可见性控制（`fields` / `getters` / `setters`，枚举 `ANY`·`PUBLIC_ONLY`·`PROTECTED_AND_PUBLIC`·`NONE`） |
+| `@JsonSerialize` / `@JsonDeserialize` | 自定义序列化器/反序列化器（`using = XxxSerializer.class`，需实现 `JsonSerializer` / `JsonDeserializer` 接口） |
+
+#### 构造器 / Builder 注解
+
+| 注解 | 说明 |
+|---|---|
+| `@JsonCreator` | 构造器/工厂方法标记（`defaultCreator` 默认构造 / `parameterNames` 参数名映射 / `enable` 启用 / `mode` 模式 `DEFAULT`·`PROPERTIES`·`DELEGATING`） |
+| `@JsonBuilder` | Builder 模式反序列化（`enable` 启用 / `builderClass` Builder 类 / `buildMethod` 构建方法名 / `withPrefix` setter 前缀 / `autoDetect` 自动检测内部 Builder） |
+
+#### 多态类型注解
+
+| 注解 | 说明 |
+|---|---|
+| `@JsonTypeInfo` | 多态类型标识（`property` 类型键名 / `visible` 是否保留 / `use` 标识方式 `Id.NAME`·`CLASS`·`MINIMAL_CLASS`·`NONE` / `include` 包含结构 `As.PROPERTY`·`WRAPPER_ARRAY`·`WRAPPER_OBJECT`） |
+| `@JsonSubTypes` / `@JsonSubType` | 子类型注册（`value` 子类型类 / `name` 类型名） |
+| `@JsonTypeName` | 子类型逻辑名称（标注在子类上，优先于 `@JsonSubType.name()`） |
 
 #### 其他注解
 
 | 注解 | 说明 |
 |---|---|
 | `@Experimental` | 实验性功能标记（标注 `JsonSchema`、`JsonPatch` 等 RFC 扩展功能，API 尚未稳定，不保证向后兼容） |
+
 
 ### 9. 高级功能（jsonpath / pointer / patch / merge / schema / autotype 包）
 
