@@ -13,6 +13,7 @@ import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonGetter;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
+import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonNaming;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
@@ -517,16 +518,23 @@ public final class FieldMetadataLoader {
     }
 
     /**
-     * 检查字段是否有注解
+     * 检查字段是否有影响序列化的注解（用于快速路径判定）。
+     *
+     * <p>检测以下需要特殊处理的注解/状态：</p>
+     * <ul>
+     *   <li>{@code @JsonFormat} 日期格式（{@link FieldMeta#isDateType()}）</li>
+     *   <li>{@code @JsonUnwrapped} 嵌套展开（{@link FieldMeta#unwrapped}）</li>
+     *   <li>{@code @JsonRawValue} 原始值（{@link FieldMeta#isRawValue}）</li>
+     *   <li>{@code @JsonInclude} 非 ALWAYS 策略（{@link FieldMeta#includeStrategy}）</li>
+     * </ul>
      */
     public static boolean hasFieldAnnotations(FieldMeta[] fields) {
         if (fields == null) return false;
         for (FieldMeta field : fields) {
-            if (!field.numberFormat.isEmpty() ||
-                field.htmlSafe ||
-                field.writeNull ||
-                field.hasCustomSerializer() ||
-                field.isDateType()) {
+            if (field.isDateType()
+                || field.unwrapped
+                || field.isRawValue
+                || field.includeStrategy != JsonInclude.Include.ALWAYS) {
                 return true;
             }
         }
