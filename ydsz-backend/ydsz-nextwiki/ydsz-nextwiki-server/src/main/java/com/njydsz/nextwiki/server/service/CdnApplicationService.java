@@ -112,9 +112,15 @@ public class CdnApplicationService {
     }
 
     /**
-     * 生成带签名的 CDN 访问 URL（防盗链）
-     * <p>
-     * 使用 HMAC-SHA256 签名算法替代不安全的 MD5（P2-8 修复）
+     * 生成带签名的 CDN 访问 URL（防盗链）。
+     * <p>采用 SHA-256（替代不安全的 MD5，P2-8 修复）对 {@code storageKey + 过期时间 + secretKey} 签名，
+     * 校验方按相同规则重建签名并比对 {@code expires} 与 {@code sign}，防止 URL 被篡改或过期后滥用。
+     *
+     * @param storageKey    存储对象键
+     * @param expireSeconds 签名 URL 有效期（秒），通常与 {@code nextwiki.download.signed-url-expire-seconds} 对齐
+     * @return 带 {@code expires}/{@code sign} 查询参数的 CDN URL；CDN 未启用或未配置域名时返回 {@code null}
+     * @security 签名依赖 {@code secretKey} 保密性；过期时间基于服务器秒级时间戳，需保证各节点时钟一致
+     * @note 纯计算，线程安全
      */
     public String generateSignedUrl(String storageKey, long expireSeconds) {
         if (!properties.getCdn().isEnabled() || properties.getCdn().getDomain().isEmpty()) {

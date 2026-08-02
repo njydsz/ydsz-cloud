@@ -44,6 +44,7 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
 public class PlanExecuteAgentExecutor implements AgentExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(PlanExecuteAgentExecutor.class);
+    // 解析 LLM 返回的编号步骤列表：匹配行首「数字 + 分隔符(.、)、])」+ 步骤描述
     private static final Pattern STEP_PATTERN = Pattern.compile("(?m)^\\s*(\\d+)[.、)\\]]\\s*(.+)");
 
     private final LlmClient llmClient;
@@ -84,6 +85,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
         plan.markExecuting();
         List<String> stepResults = new ArrayList<>();
         TokenUsage totalUsage = TokenUsage.zero();
+        // 最大重规划次数 2：单步连续失败后允许重试生成剩余步骤两次，超过则抛出原始异常
         int maxReplans = 2;
         int replanCount = 0;
 
@@ -221,7 +223,9 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
                 .messages(List.of(
                         ChatMessage.system("你是任务规划器，只输出编号步骤列表，不加额外解释。"),
                         ChatMessage.user(planPrompt, null)))
+                // 规划阶段温度 0.3：偏低以保证步骤分解稳定、可复现
                 .temperature(0.3)
+                // 规划输出较短，maxTokens 512 足够；超出将被截断导致解析失败
                 .maxTokens(512)
                 .build();
 
@@ -258,7 +262,9 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
                 .messages(List.of(
                         ChatMessage.system("你是任务规划器，只输出编号步骤列表，不加额外解释。"),
                         ChatMessage.user(replanPrompt, null)))
+                // 规划阶段温度 0.3：偏低以保证步骤分解稳定、可复现
                 .temperature(0.3)
+                // 规划输出较短，maxTokens 512 足够；超出将被截断导致解析失败
                 .maxTokens(512)
                 .build();
 

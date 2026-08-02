@@ -134,22 +134,39 @@ public class HumanApprovalService {
      * 审批状态枚举
      */
     public enum ApprovalStatus {
-        PENDING, APPROVED, REJECTED, EXPIRED
+        /** 待审批：Agent 已暂停等待人工决策 */
+        PENDING,
+        /** 已通过：人工批准，Agent 可继续执行 */
+        APPROVED,
+        /** 已拒绝：人工驳回，Agent 终止当前步骤 */
+        REJECTED,
+        /** 已过期：超过 1 小时未完成审批，自动失效（见 evictExpired） */
+        EXPIRED
     }
 
     /**
      * 审批请求
      */
     public static class ApprovalRequest {
+        /** 审批请求唯一 ID（UUID） */
         private final String id;
+        /** 所属对话 ID，用于关联原始会话上下文 */
         private final String conversationId;
+        /** 执行链路 ID（TraceId），用于串联可观测性轨迹 */
         private final String traceId;
+        /** 待审批步骤的业务描述，展示给审批人判断 */
         private final String stepDescription;
+        /** 审批上下文（用户输入、已有执行结果等），供审批人参考 */
         private final Map<String, Object> context;
+        /** 请求创建时间，用于过期淘汰判断（超过 1 小时未处理即 EXPIRED） */
         private final LocalDateTime createdAt;
+        /** 当前审批状态；volatile 保证多线程可见（审批线程与查询线程并发访问） */
         private volatile ApprovalStatus status;
+        /** 审批人标识；volatile 保证多线程可见 */
         private volatile String approver;
+        /** 审批意见；volatile 保证多线程可见 */
         private volatile String comment;
+        /** 审批完成（通过/拒绝）时间 */
         private volatile LocalDateTime resolvedAt;
 
         public ApprovalRequest(String id, String conversationId, String traceId,

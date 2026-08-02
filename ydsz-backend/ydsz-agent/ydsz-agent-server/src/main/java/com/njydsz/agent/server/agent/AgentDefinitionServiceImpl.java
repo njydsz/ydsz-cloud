@@ -107,6 +107,13 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>逻辑删除 Agent 定义（物理删除，依赖 Mapper 的 deleteById）。
+     *
+     * @param id 主键 ID
+     * @return true=删除成功（影响行数 > 0）
+     */
     @Override
     @Transactional
     public boolean removeById(String id) {
@@ -133,10 +140,13 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
                 tools.add(String.valueOf(t));
             }
         }
+        // 模型温度默认值 0.7：在创造性与稳定性之间取平衡，缺省时使用
         double temperature = entity.getTemperature() != null ? entity.getTemperature() : 0.7;
+        // 单次对话最大 Token 默认 2048，缺省时使用，避免单请求占用过多额度
         int maxTokens = entity.getMaxTokens() != null ? entity.getMaxTokens() : 2048;
         // 从 modelConfig JSON 中提取 modelId（如果有）
         String modelId = null;
+        // 推理最大迭代次数默认 10，限制 ReAct 循环次数防止无限调用工具/超支
         int maxIterations = 10;
         if (entity.getModelConfig() != null && !entity.getModelConfig().isBlank()) {
             Map<String, Object> config = YdszJson.parseMap(entity.getModelConfig());
