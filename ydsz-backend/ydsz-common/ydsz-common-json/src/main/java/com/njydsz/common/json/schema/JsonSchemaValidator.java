@@ -42,6 +42,14 @@ public final class JsonSchemaValidator {
             return new ValidationResult(true);
         }
 
+        // $ref 引用解析：如果当前 schema 有 $ref，用引用目标替代
+        if (schema.getRef() != null) {
+            JsonSchema resolved = schema.resolveRef();
+            if (resolved != null) {
+                return validate(resolved, data);
+            }
+        }
+
         ValidationResult result = new ValidationResult(true);
 
         // null 值检查
@@ -315,6 +323,30 @@ public final class JsonSchemaValidator {
                 validatedProps.add(key);
             } else if (additionalProperties != null) {
                 validateType(additionalProperties, value, result, propPath);
+            } else {
+                // patternProperties 正则匹配
+                validatePatternProperties(schema, key, value, result, propPath);
+            }
+        }
+    }
+
+    /**
+     * 按 patternProperties 正则匹配并校验属性值。
+     */
+    private static void validatePatternProperties(JsonSchema schema, String key, Object value,
+                                                   ValidationResult result, String path) {
+        Map<String, JsonSchema> patternProps = schema.getPatternProperties();
+        if (patternProps == null || patternProps.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, JsonSchema> entry : patternProps.entrySet()) {
+            try {
+                if (key.matches(entry.getKey())) {
+                    validateType(entry.getValue(), value, result, path);
+                    return;
+                }
+            } catch (java.util.regex.PatternSyntaxException ignored) {
+                // 非法正则跳过
             }
         }
     }

@@ -72,6 +72,9 @@ public final class AsmBeanCodecGenerator {
      */
     private static final int ASM_FLAGS = ClassWriter.COMPUTE_FRAMES;
 
+    /** COMPUTE_MAXS 兜底：当 COMPUTE_FRAMES 触发 ASM 9.x NegativeArraySizeException 时回退使用 */
+    private static final int ASM_FLAGS_FALLBACK = ClassWriter.COMPUTE_MAXS;
+
     /**
      * 字段缓存信息（用于 ASM 生成类中缓存嵌套序列化器/反序列化器）
      */
@@ -445,7 +448,7 @@ public final class AsmBeanCodecGenerator {
 
         cw.visitEnd();
 
-        byte[] bytecode = cw.toByteArray();
+        byte[] bytecode = toByteArrayWithFallback(cw, className);
         return defineClass(className, bytecode, beanType);
     }
 
@@ -696,13 +699,17 @@ public final class AsmBeanCodecGenerator {
                     String dateInternalName = (typeCode == 10) ? "java/time/LocalDateTime" : "java/time/LocalDate";
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 5);
-                    // @JsonFormat 支持：检查是否有格式化模式
+                    // @JsonFormat 支持：检查是否有格式化模式/时区/地区
                     JsonFormat formatAnnotation = field.getAnnotation(JsonFormat.class);
                     String datePattern = (formatAnnotation != null && !formatAnnotation.pattern().isEmpty()) ? formatAnnotation.pattern() : null;
                     if (datePattern != null) {
                         mv.visitLdcInsn(datePattern);
+                        String tz = (formatAnnotation != null && !formatAnnotation.timezone().isEmpty()) ? formatAnnotation.timezone() : null;
+                        mv.visitLdcInsn(tz != null ? tz : "");
+                        String loc = (formatAnnotation != null && !formatAnnotation.locale().isEmpty()) ? formatAnnotation.locale() : null;
+                        mv.visitLdcInsn(loc != null ? loc : "");
                         mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                            "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
+                            "formatDate", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     } else {
                         mv.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
                     }
@@ -725,13 +732,17 @@ public final class AsmBeanCodecGenerator {
                     mv.visitLabel(notNullLabel);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 5);
-                    // @JsonFormat 支持：检查是否有格式化模式
+                    // @JsonFormat 支持：检查是否有格式化模式/时区/地区
                     JsonFormat dateFmtAnn = field.getAnnotation(JsonFormat.class);
                     String datePattern2 = (dateFmtAnn != null && !dateFmtAnn.pattern().isEmpty()) ? dateFmtAnn.pattern() : null;
                     if (datePattern2 != null) {
                         mv.visitLdcInsn(datePattern2);
+                        String tz2 = (dateFmtAnn != null && !dateFmtAnn.timezone().isEmpty()) ? dateFmtAnn.timezone() : null;
+                        mv.visitLdcInsn(tz2 != null ? tz2 : "");
+                        String loc2 = (dateFmtAnn != null && !dateFmtAnn.locale().isEmpty()) ? dateFmtAnn.locale() : null;
+                        mv.visitLdcInsn(loc2 != null ? loc2 : "");
                         mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
-                            "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
+                            "formatDate", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                     } else {
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
@@ -1251,7 +1262,7 @@ public final class AsmBeanCodecGenerator {
 
         cw.visitEnd();
 
-        byte[] bytecode = cw.toByteArray();
+        byte[] bytecode = toByteArrayWithFallback(cw, className);
         return defineDeserializerClass(className, bytecode, beanType);
     }
 
@@ -1281,6 +1292,13 @@ public final class AsmBeanCodecGenerator {
      * @return 格式化后的字符串
      */
     public static String formatDate(Object dateValue, String pattern) {
+        return formatDate(dateValue, pattern, null, null);
+    }
+
+    /**
+     * 格式化日期（ASM 字节码调用入口），支持时区和地区。
+     */
+    public static String formatDate(Object dateValue, String pattern, String timezone, String localeStr) {
         if (dateValue == null) {
             return null;
         }
@@ -1289,6 +1307,12 @@ public final class AsmBeanCodecGenerator {
         }
         try {
             DateTimeFormatter formatter = getCachedFormatter(pattern);
+            if (timezone != null && !timezone.isEmpty()) {
+                formatter = formatter.withZone(ZoneId.of(timezone));
+            }
+            if (localeStr != null && !localeStr.isEmpty()) {
+                formatter = formatter.withLocale(java.util.Locale.forLanguageTag(localeStr));
+            }
             if (dateValue instanceof LocalDateTime ldt) {
                 return ldt.format(formatter);
             } else if (dateValue instanceof LocalDate ld) {
@@ -1642,6 +1666,25 @@ public final class AsmBeanCodecGenerator {
         if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
         if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
         return String.format("%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+    }
+
+    /**
+     * toByteArray 兜底：ASM 9.x COMPUTE_FRAMES 在特定字节码模式触发 NegativeArraySizeException。
+     * 捕获后回退 COMPUTE_MAXS 重试生成不包含 StackMapTable 的字节码。
+     */
+    private static byte[] toByteArrayWithFallback(ClassWriter cw, String className) {
+        try {
+            return cw.toByteArray();
+        } catch (NegativeArraySizeException e) {
+            try {
+                java.lang.reflect.Field f = ClassWriter.class.getDeclaredField("flags");
+                f.setAccessible(true);
+                f.setInt(cw, ASM_FLAGS_FALLBACK);
+                return cw.toByteArray();
+            } catch (Exception suppressed) {
+                throw e;
+            }
+        }
     }
 
     /**

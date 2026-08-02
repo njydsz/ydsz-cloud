@@ -86,6 +86,12 @@ public final class FieldMeta {
     /** 日期格式 */
     public final String format;
 
+    /** 日期格式化时区（@JsonFormat.timezone，null 表示系统默认） */
+    public final java.time.ZoneId timezone;
+
+    /** 日期格式化区域（@JsonFormat.locale，null 表示系统默认） */
+    public final java.util.Locale locale;
+
     /** 是否为原始 JSON 值（@JsonRawValue，序列化时不转义） */
     public final boolean isRawValue;
 
@@ -141,6 +147,17 @@ public final class FieldMeta {
         this.format = (jacksonFormat != null && !jacksonFormat.pattern().isEmpty())
             ? jacksonFormat.pattern() : "";
 
+        // 读取 @JsonFormat 时区和地区
+        if (jacksonFormat != null) {
+            String tz = jacksonFormat.timezone();
+            this.timezone = (tz != null && !tz.isEmpty()) ? java.time.ZoneId.of(tz) : null;
+            String loc = jacksonFormat.locale();
+            this.locale = (loc != null && !loc.isEmpty()) ? java.util.Locale.forLanguageTag(loc) : null;
+        } else {
+            this.timezone = null;
+            this.locale = null;
+        }
+
         // 加载 @JsonAlias 别名列表
         JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
         this.aliases = aliasAnnotation != null ? aliasAnnotation.value() : new String[0];
@@ -169,6 +186,12 @@ public final class FieldMeta {
         if (this.format != null && !this.format.isEmpty()) {
             try {
                 formatter = DateTimeFormatter.ofPattern(this.format);
+                if (this.timezone != null) {
+                    formatter = formatter.withZone(this.timezone);
+                }
+                if (this.locale != null) {
+                    formatter = formatter.withLocale(this.locale);
+                }
             } catch (Exception e) {
                 // 非法日期格式模式，formatDateValue/parseDateValue 会回退到 toString
                 LOGGER.debug("Invalid date format pattern '" + this.format + "' for field " + name + ": " + e.getMessage());

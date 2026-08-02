@@ -14,6 +14,12 @@ dayjs.extend(timezone);
 
 dayjs.tz.setDefault('Asia/Shanghai');
 
+/**
+ * 已配置好时区的 dayjs 实例。
+ *
+ * 已启用 utc / timezone 插件并将默认时区设为 Asia/Shanghai，
+ * 全项目统一使用该实例以保证日期处理时区一致。
+ */
 const dateUtil = dayjs;
 
 export { dateUtil };

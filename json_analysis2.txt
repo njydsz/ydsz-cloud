@@ -1,0 +1,191 @@
+﻿=== Step 3: 各模块 JSON 能力使用深度分析 ===
+================================================
+
+ydsz-common                              总文件:146 浅层(YdszJson仅): 55 深度(含高级): 91
+  深度文件(使用了非YdszJson的高级类):
+    ydsz-backend\ydsz-common\ydsz-common-audit\src\main\java\com\njydsz\common\audit\diff\DiffReport.java --> [YdszJson; pointer.JsonPointer; ]
+    ydsz-backend\ydsz-common\ydsz-common-audit\src\main\java\com\njydsz\common\audit\mask\SensitiveFieldMask.java --> [tree.ObjectNode; YdszJson; tree.ArrayNode; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\desensitize\ColumnDesensitizationService.java --> [YdszJson; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\event\PermissionCacheInvalidationListener.java --> [YdszJson; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\service\impl\RedisRoleColumnPermissionResolver.java --> [tree.ObjectNode; YdszJson; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\service\impl\RedisRoleDataPermissionResolver.java --> [tree.ObjectNode; YdszJson; tree.ArrayNode; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\service\impl\RedisRolePermissionLoader.java --> [YdszJson; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-base\src\main\java\com\njydsz\common\base\exporter\AbstractDocExporter.java --> [type.JsonType; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-cache\src\main\java\com\njydsz\common\cache\export\CacheExportImport.java --> [autotype.AutoTypeChecker; ]
+    ydsz-backend\ydsz-common\ydsz-common-config\src\main\java\com\njydsz\common\config\hotreload\ConfigMergeUtils.java --> [merge.JsonMergePatch; ]
+    ydsz-backend\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java --> [annotation.JsonPropertyOrder; ]
+    ydsz-backend\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResponse.java --> [annotation.JsonInclude; annotation.JsonPropertyOrder; ]
+    ydsz-backend\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\ProblemDetail.java --> [annotation.JsonPropertyOrder; ]
+    ydsz-backend\ydsz-common\ydsz-common-domain\src\main\java\com\njydsz\common\domain\entity\BaseAuditEntity.java --> [annotation.JsonFormat; ]
+    ydsz-backend\ydsz-common\ydsz-common-domain\src\main\java\com\njydsz\common\domain\entity\BaseEntity.java --> [annotation.JsonIgnore; ]
+    ydsz-backend\ydsz-common\ydsz-common-domain\src\main\java\com\njydsz\common\domain\query\PageQuery.java --> [annotation.JsonIgnore; ]
+    ydsz-backend\ydsz-common\ydsz-common-domain\src\main\java\com\njydsz\common\domain\tree\TreeNode.java --> [annotation.JsonIgnore; ]
+    ydsz-backend\ydsz-common\ydsz-common-event\src\main\java\com\njydsz\common\event\repository\OutboxRepository.java --> [exception.JsonException; type.JsonType; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-file\src\main\java\com\njydsz\common\file\domain\UploadCheckpoint.java --> [annotation.JsonIgnore; ]
+    ydsz-backend\ydsz-common\ydsz-common-jdbc\src\main\java\com\njydsz\common\jdbc\entity\MpBaseAuditEntity.java --> [annotation.JsonFormat; ]
+    ydsz-backend\ydsz-common\ydsz-common-jdbc\src\main\java\com\njydsz\common\jdbc\entity\MpBaseEntity.java --> [annotation.JsonFormat; annotation.JsonIgnore; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\JsonMapper.java --> [provider.DeserializationProvider; parser.JsonParserUtil; tree.TreeConverter; metric.MetricsHelper; exception.JsonException; type.JsonType; tree.NullNode; jsonpath.JsonPath; naming.PropertyNamingStrategy; provider.SerializationProvider; pointer.JsonPointer; tree.JsonNode; config.JsonConfig; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\JsonReader.java --> [provider.DeserializationProvider; metric.MetricsHelper; exception.JsonException; provider.SerializationProvider; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\JsonWriter.java --> [exception.JsonException; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\YdszJson.java --> [provider.DeserializationProvider; deserializer.JsonDeserializer; metric.JsonMetricsCallback; parser.JsonParserUtil; module.JsonModuleRegistry; metric.MetricsHelper; exception.JsonException; type.JsonType; serializer.JsonSerializer; cache.AsmCodecCache; schema.JsonSchema; object.JsonArray; tree.*; schema.ValidationResult; jsonpath.JsonPath; merge.JsonMergePatch; provider.SerializationProvider; object.JsonObject; schema.JsonSchemaValidator; serializer.SerializerRegistry; reader.JSONReader; pointer.JsonPointer; stream.JsonGenerator; writer.JSONWriter; config.JsonConfig; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\annotation\JsonDeserialize.java --> [api.JsonDeserializer; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\annotation\JsonNaming.java --> [naming.PropertyNamingStrategy; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\annotation\JsonSerialize.java --> [api.JsonSerializer; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\asm\AsmBeanCodecGenerator.java --> [reader.BeanReader; annotation.JsonFormat; util.JsonTypeUtils; cache.AsmCodecCache; YdszJson; reader.JSONReader; annotation.JsonAlias; writer.JSONWriter; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\asm\AsmDeserializer.java --> [reader.JSONReader; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\asm\AsmSerializer.java --> [writer.JSONWriter; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\autotype\AutoTypeChecker.java --> [exception.JsonDeserializationException; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\autotype\AutoTypeWhitelistScanner.java --> [annotation.JsonClass; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\bytecode\ZeroCopyDeserializer.java --> [autotype.AutoTypeChecker; annotation.JsonProperty; util.StringInterner; util.JsonTypeUtils; exception.JsonDeserializationException; annotation.JsonAlias; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\cache\AsmCodecCache.java --> [asm.AsmBeanCodecGenerator; asm.AsmSerializer; asm.AsmDeserializer; writer.JSONWriter; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\cache\BeanSerializerCache.java --> [writer.BeanSerializer; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\cache\FieldMeta.java --> [annotation.JsonFormat; annotation.JsonUnwrapped; exception.JsonSerializationException; annotation.JsonInclude; exception.JsonDeserializationException; annotation.JsonAlias; annotation.JsonRawValue; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\cache\JsonCacheStats.java --> [provider.SerializationContext; asm.AsmBeanCodecGenerator; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\config\JsonConfig.java --> [parser.JsonParserUtil; naming.PropertyNamingStrategy; provider.SerializationProvider; reader.JSONReader; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\deserializer\JsonDeserializer.java --> [reader.JSONReader; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\health\JsonHealthIndicator.java --> [autotype.AutoTypeChecker; cache.JsonCacheStats; provider.SerializationContext; cache.BeanSerializerCache; cache.AsmCodecCache; config.JsonConfig; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\jsonpath\JsonPath.java --> [parser.JsonParserUtil; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\merge\JsonMergePatch.java --> [parser.JsonParserUtil; annotation.Experimental; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\metric\JsonCacheMetrics.java --> [cache.JsonCacheStats; cache.BeanSerializerCache; asm.AsmBeanCodecGenerator; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\metric\MetricsHelper.java --> [exception.JsonException; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\module\JsonModuleRegistry.java --> [deserializer.JsonDeserializer; serializer.JsonSerializer; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\module\ModuleDeserializerRegistry.java --> [deserializer.JsonDeserializer; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\module\ModuleSerializerRegistry.java --> [serializer.JsonSerializer; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\parser\JsonParserUtil.java --> [YdszJson; exception.JsonDeserializationException; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\patch\JsonPatch.java --> [parser.JsonParserUtil; annotation.Experimental; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\pointer\JsonPointer.java --> [parser.JsonParserUtil; exception.JsonException; annotation.Experimental; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\BeanDeserializerEngine.java --> [parser.JsonParserUtil; reader.BeanReader; util.JsonTypeUtils; cache.AsmCodecCache; annotation.JsonBuilder; reader.JSONReader; asm.AsmDeserializer; bytecode.ZeroCopyDeserializer; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\BuilderResolver.java --> [parser.JsonParserUtil; annotation.JsonBuilder; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\CreatorResolver.java --> [parser.JsonParserUtil; annotation.JsonProperty; annotation.JsonCreator; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\DeserializationProvider.java --> [annotation.JsonDeserialize; parser.JsonParserUtil; autotype.AutoTypeChecker; api.JsonDeserializer; exception.JsonDeserializationException; reader.JSONReader; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\FieldMetadataLoader.java --> [cache.FieldMeta; annotation.JsonProperty; annotation.JsonAnySetter; annotation.JsonClass; annotation.JsonGetter; annotation.JsonNaming; annotation.JsonIgnore; annotation.JsonInclude; annotation.JsonSetter; annotation.JsonAnyGetter; naming.PropertyNamingStrategy; annotation.JsonPropertyOrder; annotation.JsonValue; annotation.JsonIgnoreProperties; annotation.JsonVisibility; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\PolymorphicTypeResolver.java --> [annotation.JsonSubType; autotype.AutoTypeChecker; annotation.JsonTypeName; annotation.JsonSubTypes; annotation.JsonTypeInfo; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\SerializationContext.java --> [asm.AsmSerializer; naming.PropertyNamingStrategy; writer.JSONWriter; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\SerializationProvider.java --> [cache.FieldMeta; api.JsonSerializer; cache.BeanSerializerCache; annotation.JsonClass; cache.SerializerCache; exception.JsonSerializationException; asm.AsmSerializer; cache.AsmCodecCache; annotation.JsonSerialize; writer.BeanSerializer; naming.PropertyNamingStrategy; writer.JSONWriter; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\TypeConverter.java --> [annotation.JsonEnumDefaultValue; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\ValueFormatter.java --> [cache.FieldMeta; annotation.JsonView; cache.SerializerCache; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\ValueWriter.java --> [cache.FieldMeta; annotation.JsonView; annotation.JsonClass; cache.SerializerCache; cache.AsmCodecCache; writer.JSONWriter; config.JsonConfig; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\reader\BeanReader.java --> [provider.FieldMetadataLoader; annotation.JsonAlias; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\schema\JsonSchema.java --> [annotation.Experimental; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\schema\ValidationResult.java --> [annotation.Experimental; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\serializer\JsonSerializer.java --> [writer.JSONWriter; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\serializer\SerializerRegistry.java --> [deserializer.JsonDeserializer; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\spring\JsonHttpMessageConverter.java --> [provider.DeserializationProvider; YdszJson; provider.SerializationProvider; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\spring\JsonModuleRegistrar.java --> [module.JsonModuleRegistry; module.JsonModule; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\spring\JsonProperties.java --> [naming.PropertyNamingStrategy; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\spring\JsonReactiveUtils.java --> [YdszJson; provider.SerializationProvider; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\spring\boot\JsonAutoConfiguration.java --> [autotype.AutoTypeChecker; metric.JsonCacheMetrics; spring.JsonProperties; spring.JsonWarmupRunner; health.JsonHealthIndicator; spring.JsonHttpMessageConverter; YdszJson; autotype.AutoTypeWhitelistScanner; metric.JsonMetrics; naming.PropertyNamingStrategy; spring.JsonModuleRegistrar; module.JsonModule; config.JsonConfig; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\stream\JsonParser.java --> [util.StringInterner; exception.JsonDeserializationException; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\writer\BeanSerializer.java --> [cache.FieldMeta; provider.FieldMetadataLoader; number.NumberUtils; provider.SerializationProvider; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\writer\JSONWriter.java --> [number.NumberUtils; asm.AsmSerializer; cache.AsmCodecCache; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\test\java\com\njydsz\common\json\AsmEnabledTest.java --> [autotype.AutoTypeChecker; asm.AsmSerializer; cache.AsmCodecCache; provider.SerializationProvider; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\test\java\com\njydsz\common\json\AutoTypeSecurityTest.java --> [autotype.AutoTypeChecker; ]
+    ydsz-backend\ydsz-common\ydsz-common-json\src\test\java\com\njydsz\common\json\YdszJsonBasicTest.java --> [autotype.AutoTypeChecker; ]
+    ydsz-backend\ydsz-common\ydsz-common-notify\src\main\java\com\njydsz\common\notify\channel\SmsNotifySender.java --> [YdszJson; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-notify\src\main\java\com\njydsz\common\notify\channel\WeComNotifySender.java --> [YdszJson; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-notify\src\main\java\com\njydsz\common\notify\provider\AliyunSmsProvider.java --> [YdszJson; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-queue\src\main\java\com\njydsz\common\queue\domain\QueueMessage.java --> [annotation.JsonClass; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-redis\src\main\java\com\njydsz\common\redis\serializer\YdszJsonRedisSerializer.java --> [type.JsonType; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\converter\XssJsonMessageConverter.java --> [spring.JsonHttpMessageConverter; ]
+    ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\core\JsonBodyXssCleaner.java --> [tree.ObjectNode; YdszJson; tree.TextNode; tree.ArrayNode; tree.JsonNode; ]
+    ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\sensitive\SensitiveDataSerializer.java --> [serializer.JsonSerializer; YdszJson; writer.JSONWriter; ]
+    ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\xss\SafeJsonModule.java --> [module.ModuleDeserializerRegistry; module.JsonModule; ]
+    ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\xss\XssAutoConfiguration.java --> [module.JsonModule; ]
+    ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\xss\XssStringDeserializer.java --> [deserializer.JsonDeserializer; reader.JSONReader; ]
+    ydsz-backend\ydsz-common\ydsz-common-util\src\main\java\com\njydsz\common\util\CursorHelper.java --> [type.JsonType; YdszJson; ]
+    ydsz-backend\ydsz-common\ydsz-common-util\src\main\java\com\njydsz\common\util\yaml\YamlUtils.java --> [exception.JsonException; YdszJson; ]
+
+ydsz-workflow                            总文件: 34 浅层(YdszJson仅): 31 深度(含高级):  3
+  深度文件(使用了非YdszJson的高级类):
+    ydsz-backend\ydsz-workflow\ydsz-workflow-domain\src\main\java\com\njydsz\workflow\domain\entity\FlowDefinition.java --> [annotation.JsonView; ]
+    ydsz-backend\ydsz-workflow\ydsz-workflow-server\src\main\java\com\njydsz\workflow\server\form\FlowFormEngineService.java --> [YdszJson; schema.ValidationResult; schema.JsonSchemaValidator; schema.JsonSchema; ]
+    ydsz-backend\ydsz-workflow\ydsz-workflow-server\src\main\java\com\njydsz\workflow\server\service\impl\FlowDefinitionServiceImpl.java --> [YdszJson; jsonpath.JsonPath; ]
+
+ydsz-message                             总文件: 30 浅层(YdszJson仅): 27 深度(含高级):  3
+  深度文件(使用了非YdszJson的高级类):
+    ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\channel\AlipayMiniChannel.java --> [type.JsonType; YdszJson; ]
+    ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\channel\NotifyChannelStrategyAdapter.java --> [type.JsonType; YdszJson; ]
+    ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\producer\RocketMQMessageProducer.java --> [JsonWriter; JsonMapper; ]
+
+ydsz-cronjob                             总文件: 18 浅层(YdszJson仅):  5 深度(含高级): 13
+  深度文件(使用了非YdszJson的高级类):
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\alert\AlertDispatcher.java --> [object.JsonArray; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\config\ThreadPoolHotUpdateListener.java --> [object.JsonObject; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dag\DagDefinitionCodec.java --> [object.JsonObject; object.JsonArray; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dag\DagInstanceExecutor.java --> [object.JsonObject; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dispatch\CrossClusterDispatcher.java --> [object.JsonObject; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dispatch\RemoteTaskClient.java --> [object.JsonObject; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dispatch\WebhookEventDispatcher.java --> [object.JsonObject; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\handler\HttpJobHandler.java --> [object.JsonObject; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\handler\ScriptJobHandler.java --> [object.JsonObject; object.JsonArray; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\map\MapTaskExecutor.java --> [object.JsonObject; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\scheduler\CalendarScheduleFilter.java --> [object.JsonObject; object.JsonArray; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\handler\BillableUtilizationJobHandler.java --> [object.JsonObject; YdszJson; ]
+    ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\handler\ReportScheduleJobHandler.java --> [object.JsonObject; YdszJson; ]
+
+ydsz-literule                            总文件: 17 浅层(YdszJson仅): 16 深度(含高级):  1
+  深度文件(使用了非YdszJson的高级类):
+    ydsz-backend\ydsz-literule\ydsz-literule-server\src\main\java\com\njydsz\literule\server\cache\CachingRuleConfigProvider.java --> [type.JsonType; YdszJson; ]
+
+ydsz-gateway                             总文件: 11 浅层(YdszJson仅): 10 深度(含高级):  1
+  深度文件(使用了非YdszJson的高级类):
+    ydsz-backend\ydsz-gateway\src\main\java\com\njydsz\gateway\config\NacosRouteDefinitionRepository.java --> [type.JsonType; YdszJson; ]
+
+ydsz-agent                               总文件:  9 浅层(YdszJson仅):  7 深度(含高级):  2
+  深度文件(使用了非YdszJson的高级类):
+    ydsz-backend\ydsz-agent\ydsz-agent-infra\src\main\java\com\njydsz\agent\infra\llm\OpenAiCompatibleClient.java --> [naming.PropertyNamingStrategy; tree.ArrayNode; JsonMapper; YdszJson; tree.ObjectNode; ]
+    ydsz-backend\ydsz-agent\ydsz-agent-infra\src\main\java\com\njydsz\agent\infra\rag\OpenAiEmbeddingClient.java --> [object.JsonObject; YdszJson; object.JsonArray; ]
+
+ydsz-nextwiki                            总文件:  4 浅层(YdszJson仅):  2 深度(含高级):  2
+  深度文件(使用了非YdszJson的高级类):
+    ydsz-backend\ydsz-nextwiki\ydsz-nextwiki-domain\src\main\java\com\njydsz\nextwiki\domain\vo\FileNodeVO.java --> [annotation.JsonFormat; ]
+    ydsz-backend\ydsz-nextwiki\ydsz-nextwiki-domain\src\main\java\com\njydsz\nextwiki\domain\vo\ShareLinkVO.java --> [annotation.JsonFormat; ]
+
+ydsz-project                             总文件:  3 浅层(YdszJson仅):  3 深度(含高级):  0
+
+ydsz-userinfo                            总文件:  2 浅层(YdszJson仅):  2 深度(含高级):  0
+
+ydsz-system                              总文件:  2 浅层(YdszJson仅):  2 深度(含高级):  0
+
+=== 未在外部模块中使用的高级能力 ===
+===================================
+Package: com.njydsz.common.json.bytecode - 完全未被外部模块使用
+Package: com.njydsz.common.json.parser - 完全未被外部模块使用
+Package: com.njydsz.common.json.stream - 完全未被外部模块使用
+Package: com.njydsz.common.json.number - 完全未被外部模块使用
+Package: com.njydsz.common.json.provider - 完全未被外部模块使用
+Package: com.njydsz.common.json.api - 完全未被外部模块使用
+Package: com.njydsz.common.json.asm - 完全未被外部模块使用
+Package: com.njydsz.common.json.patch - 完全未被外部模块使用
+Package: com.njydsz.common.json.metric - 完全未被外部模块使用
+Package: com.njydsz.common.json.health - 完全未被外部模块使用
+Package: com.njydsz.common.json.util - 完全未被外部模块使用
+Package: com.njydsz.common.json.cache - 完全未被外部模块使用
+Package: com.njydsz.common.json.config - 完全未被外部模块使用
+  - patch.JsonPatch
+  - metric.JsonMetricsCallback
+  - metric.JsonMetrics
+  - stream.JsonGenerator
+  - bytecode.ZeroCopyDeserializer
+  - health.JsonHealthIndicator
+  - asm.AsmSerializer
+  - asm.AsmDeserializer
+  - annotation.JsonTypeInfo
+  - annotation.JsonSubType
+  - annotation.JsonSubTypes
+  - annotation.JsonCreator
+  - annotation.JsonAnyGetter
+  - annotation.JsonAnySetter
+  - annotation.JsonUnwrapped
+  - annotation.JsonSerialize
+  - annotation.JsonDeserialize
+  - annotation.JsonSetter
+  - annotation.JsonGetter
+  - annotation.JsonNaming
+  - annotation.JsonBuilder
+  - annotation.JsonVisibility
+  - annotation.JsonEnumDefaultValue
+  - annotation.JsonRawValue
+  - annotation.JsonValue
+  - annotation.JsonTypeName
+  - annotation.JsonIgnoreProperties

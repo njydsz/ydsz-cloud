@@ -84,6 +84,9 @@ public final class JsonSchema {
     private List<String> requiredProperties;
     private JsonSchema additionalProperties;
 
+    /** 正则模式属性匹配（JSON Schema Draft 07 patternProperties） */
+    private Map<String, JsonSchema> patternProperties;
+
     /** 组合关键字（JSON Schema Draft 07 allOf/anyOf/oneOf） */
     private List<JsonSchema> allOf;
     private List<JsonSchema> anyOf;
@@ -99,6 +102,12 @@ public final class JsonSchema {
     private JsonSchema ifSchema;
     private JsonSchema thenSchema;
     private JsonSchema elseSchema;
+
+    /** $ref 引用：指向 definitions 中的另一个 Schema */
+    private String ref;
+
+    /** definitions 定义：可复用的命名 Schema 集合 */
+    private Map<String, JsonSchema> definitions;
 
     /**
      * 构造函数
@@ -421,6 +430,12 @@ public final class JsonSchema {
     public JsonSchema minProperties(int n) { this.minProperties = n; return this; }
     public JsonSchema maxProperties(int n) { this.maxProperties = n; return this; }
 
+    public JsonSchema patternProperty(String regex, JsonSchema schema) {
+        if (this.patternProperties == null) { this.patternProperties = new LinkedHashMap<>(); }
+        this.patternProperties.put(regex, schema);
+        return this;
+    }
+
     // ========== Getter 方法 ==========
 
     public String getType() {
@@ -511,6 +526,10 @@ public final class JsonSchema {
         return additionalProperties;
     }
 
+    public Map<String, JsonSchema> getPatternProperties() {
+        return patternProperties;
+    }
+
     public List<JsonSchema> getAllOf() {
         return allOf;
     }
@@ -541,6 +560,28 @@ public final class JsonSchema {
 
     public JsonSchema getElseSchema() {
         return elseSchema;
+    }
+
+    // ---------- $ref / definitions ----------
+
+    public JsonSchema ref(String ref) { this.ref = ref; return this; }
+    public String getRef() { return ref; }
+
+    public JsonSchema addDefinition(String name, JsonSchema schema) {
+        if (this.definitions == null) { this.definitions = new LinkedHashMap<>(); }
+        this.definitions.put(name, schema);
+        return this;
+    }
+    public Map<String, JsonSchema> getDefinitions() { return definitions; }
+
+    /**
+     * 解析 $ref 引用，返回引用的 Schema，本地未找到返回 null。
+     */
+    public JsonSchema resolveRef() {
+        if (ref == null || !ref.startsWith("#/definitions/")) return null;
+        if (definitions == null) return null;
+        String name = ref.substring("#/definitions/".length());
+        return definitions.get(name);
     }
 
     @Override

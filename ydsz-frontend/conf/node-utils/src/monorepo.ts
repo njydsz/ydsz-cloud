@@ -14,8 +14,13 @@ import {
 import { findUpSync } from 'find-up';
 
 /**
- * 查找大仓的根目录
- * @param cwd
+ * 向上查找 pnpm 大仓（monorepo）的根目录。
+ *
+ * 依据 pnpm-lock.yaml 文件定位仓库根（pnpm 工作区根必定包含该锁文件），
+ * 默认从当前工作目录开始向上搜索。
+ *
+ * @param cwd - 起始查找目录，默认 process.cwd()
+ * @returns 大仓根目录的绝对路径
  */
 function findMonorepoRoot(cwd: string = process.cwd()) {
   const lockFile = findUpSync('pnpm-lock.yaml', {
@@ -26,7 +31,11 @@ function findMonorepoRoot(cwd: string = process.cwd()) {
 }
 
 /**
- * 获取大仓的所有包
+ * 同步获取大仓中所有包的元信息。
+ *
+ * 先定位大仓根再委托 @manypkg/get-packages 解析，适用于不允许 await 的同步场景。
+ *
+ * @returns 包含大仓所有包信息的同步结果对象
  */
 function getPackagesSync() {
   const root = findMonorepoRoot();
@@ -34,7 +43,11 @@ function getPackagesSync() {
 }
 
 /**
- * 获取大仓的所有包
+ * 异步获取大仓中所有包的元信息。
+ *
+ * 与 {@link getPackagesSync} 行为一致，但使用异步 API 解析，避免阻塞事件循环。
+ *
+ * @returns 包含大仓所有包信息的异步结果对象
  */
 async function getPackages() {
   const root = findMonorepoRoot();
@@ -43,7 +56,10 @@ async function getPackages() {
 }
 
 /**
- * 获取大仓指定的包
+ * 按包名在大仓中查找指定包。
+ *
+ * @param pkgName - 目标包的 package.json 中的 name 字段
+ * @returns 命中的包信息；未找到时返回 undefined
  */
 async function getPackage(pkgName: string) {
   const { packages } = await getPackages();
