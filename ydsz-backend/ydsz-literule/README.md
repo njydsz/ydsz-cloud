@@ -7,12 +7,13 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 独立微服务（**独立部署、独立 JVM 进程**） |
+| **端口** | **9008**（按构建顺序 9/10） |
 | **作用** | YDSZ 的规则引擎中心服务，提供规则定义、编排、评估、灰度、回放、审批全生命周期能力；通过 REST API 对内对外提供规则决策服务 |
-| **构建顺序** | 3/10（Maven 构建第 3 个） |
+| **构建顺序** | 9/10（Maven 构建） |
 | **JVM 进程** | 独立 JVM 进程，独立端口，注册到 Nacos |
 | **服务注册** | Nacos Discovery（服务名 `ydsz-literule`） |
 | **配置中心** | Nacos Config（`spring-cloud-starter-alibaba-nacos-config`） |
-| **当前版本** | `2.3.0-SNAPSHOT` |
+| **当前版本** | `1.0.0-SNAPSHOT`（项目版本号统一为 1.0.0） |
 | **脚手架状态** | ✅ 已包含 `@SpringBootApplication` 启动类、`application.yml` / `bootstrap.yml`，可独立部署 |
 
 ## 分层结构（DDD 五层）
@@ -134,7 +135,7 @@ com.njydsz.literule.server
 # 全量构建
 mvn -pl ydsz-backend/ydsz-literule -am clean package
 
-# 启动服务（补齐启动类后）
+# 启动服务
 java -jar ydsz-literule-web/target/ydsz-literule-web-1.0.0-SNAPSHOT.jar
 ```
 
@@ -439,7 +440,7 @@ server 模块通过 optional 依赖实现跨服务按需联动（规则触发后
 mvn -pl ydsz-backend/ydsz-literule -am test
 ```
 
-> 本服务构建产物为 `ydsz-literule-web` 可执行 jar，但目前 `spring-boot-maven-plugin` 配置了 `<skip>true</skip>`，需移除该配置后才能打包为可执行 jar。
+> 本服务构建产物为 `ydsz-literule-web` 可执行 jar。
 
 | 子模块 | 测试类数 | 覆盖范围 |
 |---|---|---|
@@ -454,12 +455,11 @@ mvn -pl ydsz-backend/ydsz-literule -am test
 ## 版本与变更
 
 - **首发版本**：v1.0.0（2026-06-30）
-- **当前版本**：`1.0.0-SNAPSHOT`
+- **当前版本**：`1.0.0-SNAPSHOT`（项目版本号统一为 1.0.0，详见 `.trae/rules/version-policy.md`）
 - **变更需走 PR + Code Review**
 - **跨服务回归**：任何修改需回归依赖规则引擎的 project / userinfo / agent 等服务（通过 REST API 或 Feign 调用）
 
 ---
 
 > 本模块是**独立规则引擎微服务**，独立部署、独立 JVM 进程、注册到 Nacos。
-> 当前脚手架待补齐：`@SpringBootApplication` 启动类、`application.yml` / `bootstrap.yml`、移除 `spring-boot-maven-plugin` 的 `<skip>true</skip>`。
 > 自动装配入口：`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册 `LiteRuleAutoConfiguration`。

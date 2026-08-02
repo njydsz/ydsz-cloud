@@ -970,6 +970,8 @@ public final class AsmBeanCodecGenerator {
                 emitWriteStringGetChars(mvInline, "true", 4);
                 mvInline.visitLabel(boolEndLabel);
             } else if (typeCode == 10 || typeCode == 11) {
+                // LocalDateTime/LocalDate 字段：null 检查 → @YdszJsonFormat 格式化 → 委托 writeStringToBuf
+                // 修复：serializeInline 原遗漏 @YdszJsonFormat 注解处理，与 serialize() 行为不一致
                 mvInline.visitVarInsn(ASTORE, 5);
                 Label notNullLabel = new Label();
                 Label endNull = new Label();
@@ -981,7 +983,16 @@ public final class AsmBeanCodecGenerator {
                 String dateInternalName = (typeCode == 10) ? "java/time/LocalDateTime" : "java/time/LocalDate";
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
+                // @YdszJsonFormat 支持：检查是否有格式化模式（与 serialize() 保持一致）
+                YdszJsonFormat formatAnnotation = field.getAnnotation(YdszJsonFormat.class);
+                String datePattern = (formatAnnotation != null && !formatAnnotation.value().isEmpty()) ? formatAnnotation.value() : null;
+                if (datePattern != null) {
+                    mvInline.visitLdcInsn(datePattern);
+                    mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
+                        "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
+                } else {
+                    mvInline.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
+                }
                 mvInline.visitVarInsn(ILOAD, 4);
                 mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
@@ -989,6 +1000,8 @@ public final class AsmBeanCodecGenerator {
                 emitReadBufFromWriter(mvInline);
                 mvInline.visitLabel(endNull);
             } else if (typeCode == 12) {
+                // Date 字段：null 检查 → @YdszJsonFormat 格式化 → 委托 writeStringToBuf
+                // 修复：serializeInline 原遗漏 @YdszJsonFormat 注解处理，与 serialize() 行为不一致
                 mvInline.visitVarInsn(ASTORE, 5);
                 Label notNullLabel = new Label();
                 Label endNull = new Label();
@@ -999,8 +1012,17 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitLabel(notNullLabel);
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
+                // @YdszJsonFormat 支持：检查是否有格式化模式（与 serialize() 保持一致）
+                YdszJsonFormat dateFmtAnn = field.getAnnotation(YdszJsonFormat.class);
+                String datePattern2 = (dateFmtAnn != null && !dateFmtAnn.value().isEmpty()) ? dateFmtAnn.value() : null;
+                if (datePattern2 != null) {
+                    mvInline.visitLdcInsn(datePattern2);
+                    mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
+                        "formatDate", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", false);
+                } else {
+                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
+                    mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
+                }
                 mvInline.visitVarInsn(ILOAD, 4);
                 mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);

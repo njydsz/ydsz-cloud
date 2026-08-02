@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | **9005**（按构建顺序 6/8） |
+| **端口** | **9005**（按构建顺序 6/10） |
 | **服务名** | `ydsz-cronjob` |
-| **构建顺序** | 6/8 |
+| **构建顺序** | 6/10 |
 | **数据库** | PostgreSQL |
 | **依赖** | Nacos、PostgreSQL、Redis、MinIO |
 
@@ -95,9 +95,13 @@ ydsz-cronjob/                          # 父 POM
 │   └── pom.xml
 ├── ydsz-cronjob-domain/               # 领域层（Entity / DTO / VO）
 │   ├── src/main/java/com/njydsz/cronjob/domain/
-│   │   ├── entity/                    # JobDO / JobLogDO / JobDagDO 等 18 个实体
-│   │   ├── dto/                       # JobSaveDTO / JobBatchDTO 等
-│   │   └── vo/
+│   │   ├── entity/                    # 实体（无 DO 后缀，共 13 个）
+│   │   │   ├── dag/                   # JobDag / JobDagInstance / JobDagNodeInstance / JobDagVersion
+│   │   │   ├── job/                   # Job / JobAlertLog / JobAlertRule / JobArtifact
+│   │   │   │                          # JobHistory / JobNode / JobTask / JobWebhook / TenantQuota
+│   │   │   └── schedule/              # GlueCode（胶水代码）
+│   │   ├── dto/                       # JobBatchDTO / JobRelationSaveDTO / alert / dag / post / put
+│   │   └── vo/                        # 15 个 VO（含 JobVO / JobDagVO / JobLogVO 等）
 │   └── pom.xml
 ├── ydsz-cronjob-infra/                # 基础设施层（Mapper）
 │   ├── src/main/java/com/njydsz/cronjob/infra/mapper/

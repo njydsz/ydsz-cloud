@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | **9002**（按构建顺序 3/8） |
+| **端口** | **9002**（按构建顺序 3/10） |
 | **服务名** | `ydsz-system` |
-| **构建顺序** | 3/8 |
+| **构建顺序** | 3/10 |
 | **数据库** | PostgreSQL（共享主库） |
 | **依赖** | Nacos、PostgreSQL、Redis |
 
@@ -24,6 +24,8 @@
 | **应用注册** | OAuth2 应用注册（`ydsz_app_info`），支持 BCrypt 密钥校验（强度可配置） |
 | **系统变量** | 业务级变量管理（`ydsz_variable`），支持 Redis 缓存、缓存穿透防护 |
 | **字典版本** | 字典变更历史快照（`ydsz_dict_version`），写操作自动记录变更、支持查询审计 |
+| **多租户** | 租户（`ydsz_tenant`）+ 套餐（`ydsz_tenant_plan`）+ 套餐菜单（`ydsz_tenant_plan_menu`），支持租户级菜单定制 |
+| **全局搜索** | `GlobalSearchController` + `SystemSearchController`，基于 common-search 聚合各模块 SearchProvider |
 
 ## DDD 分层结构
 
@@ -38,7 +40,16 @@ ydsz-system/
 │       └── ConfigClientFallback.java
 ├── ydsz-system-domain/                 # 领域层：Entity + DTO + VO
 │   └── src/main/java/com/njydsz/system/domain/
-│       ├── entity/                     # DO（ConfigDO, DictItemDO, DictTypeDO, AppInfoDO, VariableDO, DictVersionDO）
+│       ├── entity/                     # 实体（无 DO 后缀，符合 entity-naming 规范）
+│       │   ├── AppInfo.java            # OAuth2 应用注册
+│       │   ├── Config.java             # 系统参数
+│       │   ├── DictItem.java           # 字典项
+│       │   ├── DictType.java           # 字典类型
+│       │   ├── DictVersion.java        # 字典版本快照
+│       │   ├── Variable.java           # 系统变量
+│       │   ├── Tenant.java             # 租户
+│       │   ├── TenantPlan.java         # 租户套餐
+│       │   └── TenantPlanMenu.java     # 套餐菜单关联
 │       ├── dto/                        # 创建/更新 DTO（含 JSR-303 校验）
 │       └── vo/                         # 视图对象（不含敏感字段如 appSecret）
 ├── ydsz-system-infra/                  # 基础设施层：MyBatis Mapper
@@ -48,7 +59,13 @@ ydsz-system/
 │       ├── DictItemMapper.java         # 含 selectByTypeAndCode / listEnabledByTypeCode
 │       ├── DictTypeMapper.java
 │       ├── DictVersionMapper.java      # 含 listByTypeCode
+│       ├── TenantMapper.java           # 租户 CRUD
+│       ├── TenantPlanMapper.java       # 租户套餐 CRUD
+│       ├── TenantPlanMenuMapper.java   # 套餐菜单关联
 │       └── VariableMapper.java
+│   └── src/main/java/com/njydsz/system/infra/repository/
+│       ├── ConfigRepository.java       # Config 仓储
+│       └── DictRepository.java         # Dict 仓储
 ├── ydsz-system-server/                 # 应用层：Service + Config + Health + Metrics
 │   └── src/main/java/com/njydsz/system/server/
 │       ├── config/                     # SystemProperties + SystemConfiguration
@@ -71,7 +88,9 @@ ydsz-system/
             ├── DictController.java          # /api/v1/dict/type
             ├── DictItemController.java      # /api/v1/dict/item
             ├── DictVersionController.java   # /api/v1/dict/version
+            ├── GlobalSearchController.java  # /api/v1/search 全局搜索聚合
             ├── InternalApiController.java   # /api/internal（POST + body，Feign 内部调用）
+            ├── SystemSearchController.java  # /api/v1/system/search 系统模块搜索
             └── VariableController.java      # /api/v1/variable
 ```
 
@@ -85,6 +104,8 @@ ydsz-system/
 | `/api/v1/dict/version` | 字典版本历史查询 |
 | `/api/v1/app` | 应用注册 CRUD（支持搜索过滤） |
 | `/api/v1/variable` | 系统变量 CRUD + 按 key 查询值 |
+| `/api/v1/search` | 全局搜索（聚合各模块 SearchProvider，基于 common-search） |
+| `/api/v1/system/search` | 系统模块内搜索（Config/Dict/AppInfo） |
 | `POST /api/internal/config/get` | Feign 内部调用：按 key 查配置值（POST body 传输） |
 | `POST /api/internal/dict/item` | Feign 内部调用：按类型+编码查字典项（POST body 传输） |
 | `POST /api/internal/app/validate` | Feign 内部调用：校验应用密钥（POST body 传输，不暴露密钥） |
@@ -99,6 +120,9 @@ ydsz-system/
 | `ydsz_dict_version` | 字典版本（变更历史快照，含 tenant_id） |
 | `ydsz_app_info` | 应用注册（OAuth2 client_id/client_secret） |
 | `ydsz_variable` | 系统变量 |
+| `ydsz_tenant` | 租户（多租户隔离的租户主表） |
+| `ydsz_tenant_plan` | 租户套餐（套餐定义，含菜单配额/功能开关） |
+| `ydsz_tenant_plan_menu` | 套餐菜单关联（套餐 → 菜单多对多） |
 
 ## 核心能力
 

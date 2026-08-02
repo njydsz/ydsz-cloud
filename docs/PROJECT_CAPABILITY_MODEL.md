@@ -52,13 +52,13 @@
        │   └────────────────────┘       └────────────────┘      │
        │                                                           │
        │   ┌────────────────────┐       ┌────────────────┐      │
-       └──→│  ydsz-workflow     │←──────│   ydsz-agent   │←─────┘
+       └──→│  ydsz-workflow     │←──────│  ydsz-nextwiki │←─────┘
            │    (9006)          │       │    (9007)      │
            └────────────────────┘       └────────────────┘
 
   ┌────────────────────┐       ┌────────────────────┐
-  │  ydsz-literule     │       │  ydsz-nextwiki     │
-  │    (9009)          │       │    (9008)          │
+  │  ydsz-literule     │       │    ydsz-agent      │
+  │    (9008)          │       │    (9010)          │
   └────────────────────┘       └────────────────────┘
 
   ┌────────────────────────────────────────────────────────────┐
@@ -70,6 +70,12 @@
   │  L6: base, web, app                                        │
   └────────────────────────────────────────────────────────────┘
 ```
+
+> **端口分配**（按构建顺序）：
+> 1. ydsz-gateway (9000) → 2. ydsz-userinfo (9001) → 3. ydsz-system (9002) →
+> 4. ydsz-project (9003) → 5. ydsz-message (9004) → 6. ydsz-cronjob (9005) →
+> 7. ydsz-workflow (9006) → 8. ydsz-nextwiki (9007) → 9. ydsz-literule (9008) →
+> 10. ydsz-agent (9010)
 
 > **注意**：不存在独立的 ydsz-thirdparty 模块。钉钉/飞书/企微的签名工具类
 > （`DingTalkSignatureUtil`/`FeishuSignatureUtil`/`WeComSignatureUtil`）
@@ -774,9 +780,9 @@
 
 **数据库表**：`ydsz_job`、`ydsz_job_glue`、`ydsz_job_task`、`ydsz_job_history`、`ydsz_job_dag`、`ydsz_job_log`、`ydsz_job_node`、`ydsz_job_alert_rule` 等 18 张表
 
-### 3.8 ydsz-agent AI Agent 服务 (端口 9007)
+### 3.8 ydsz-agent AI Agent 服务 (端口 9010)
 
-#### 核心能力（P0 已实现）
+#### 核心能力（5 种 Agent 执行器 + 全链路能力）
 
 | 能力 | 描述 |
 |---|---|
@@ -784,23 +790,42 @@
 | 同步对话 | `POST /agent/chat` 完整请求/响应 |
 | 流式对话（SSE） | `POST /agent/chat/stream` 逐 token 推送 |
 | 对话管理 | Conversation 聚合 + ChatMessage 值对象 + Redis 滑动窗口记忆 |
-| Prompt 模板 | PromptTemplate + `#{var}` 变量替换 |
+| Prompt 模板 | PromptTemplate + `#{var}` 变量替换 + Prompt 管理服务 |
 | 多模型路由 | LlmClientRouter + Fallback 降级 |
 | Token 计量 | 每次 LLM 调用记录 prompt/completion/total tokens |
-| 健康检查 | `/actuator/health` 暴露 LLM Provider 和 Memory 状态 |
+| Simple Agent | 单轮对话，无工具调用（`SimpleAgentExecutor`） |
+| ReAct Agent | 推理-行动循环 + Tool Calling（`ReActAgentExecutor`） |
+| Router Agent | 路由分发到子 Agent（`RouterAgentExecutor`） |
+| Plan-Execute Agent | 先规划后执行，复杂任务分解（`PlanExecuteAgentExecutor`） |
+| RAG Agent | 检索增强生成，结合知识库回答（`RagAgentExecutor`） |
+| DAG 编排 | DSL 解析 + DAG 执行器（`DagDslParser` / `DagOrchestrationExecutor`） |
+| Tool Calling | `@Tool` 注解 + 工具注册中心（`ToolRegistry` / `ToolExecutor`） |
+| RAG 知识增强 | 文档摄入 Pipeline + 向量存储 + 检索（`RagService` / `DocumentIngestionService`） |
+| 人工审批 | Agent 执行中暂停等待人工审批（`HumanApprovalService`） |
+| 调试器 | 断点/单步/快照/恢复（`AgentDebuggerService`） |
+| 成本分析 | LLM 调用成本统计与分析（`CostAnalysisService`） |
+| 安全护栏 | 输入/输出 Guardrail + PII 脱敏（`GuardrailService`） |
+| 请求防护 | 限流/内容安全/越狱检测（`AgentRequestGuard`） |
+| 健康检查 | `/actuator/health` 暴露 LLM Provider + Memory + RAG 状态 |
+| 指标埋点 | 对话次数/Token 用量/延迟（`AgentMetrics`） |
 
-#### 后续规划（P1-P4）
+#### Web 层 Controller（8 个）
 
-| 阶段 | 能力 |
-|---|---|
-| P1 | ReAct Agent + Tool Calling + YDSZ 工具集 + Memory 策略 + 安全护栏 |
-| P2 | RAG 知识增强 + pgvector + 文档摄入 Pipeline + nextwiki 集成 |
-| P3 | Plan-Execute + Router Agent + 多 Agent 协作 + DSL 编排 |
-| P4 | 调试器 + Prompt 平台 + 成本分析 + Marketplace |
+| Controller | 路径 | 端点 |
+|---|---|---|
+| `ChatController` | `/agent/chat` | 同步/流式对话/历史 |
+| `AgentController` | `/agent` | Agent CRUD/启停/状态 |
+| `AgentDefinitionController` | `/agent/definition` | Agent 定义 CRUD/版本 |
+| `AgentMetadataController` | `/agent/metadata` | 元数据/模型配置/Token 用量 |
+| `DagController` | `/agent/dag` | DAG 编排定义/触发/状态 |
+| `DebugController` | `/agent/debug` | 调试器断点/单步/快照/恢复 |
+| `HumanApprovalController` | `/agent/approval` | 人工审批提交/查询/结果 |
+| `RagController` | `/agent/rag` | 文档上传/检索/索引管理 |
 
 ### 3.9 ydsz-literule 规则引擎 (独立微服务)
 
 **模块类型**：独立微服务（独立部署、独立 JVM 进程、注册到 Nacos）
+**端口**：9008（按构建顺序 9/10）
 
 #### 7 种规则类型
 
@@ -840,7 +865,7 @@
 ### 3.10 ydsz-nextwiki 网盘知识库服务（独立微服务）
 
 **模块类型**：独立可部署微服务（含 ydsz-nextwiki-web/src/main/resources/bootstrap.yml + application.yml，注册到 Nacos）
-**端口**：9008（参考部署配置）
+**端口**：9007（按构建顺序 8/10）
 
 | 能力 | 描述 |
 |---|---|

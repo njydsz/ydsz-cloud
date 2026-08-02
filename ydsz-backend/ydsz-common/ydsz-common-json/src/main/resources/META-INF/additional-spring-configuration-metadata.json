@@ -53,7 +53,7 @@
     {
       "name": "ydsz.json.monitoring-enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用监控（默认 false）。"
+      "description": "是否启用监控（默认 true）。序列化/反序列化指标通过 Micrometer 暴露到 Prometheus。"
     },
     {
       "name": "ydsz.json.whitelist-packages",
@@ -84,6 +84,11 @@
       "name": "ydsz.json.max-request-body-size",
       "type": "java.lang.Long",
       "description": "HTTP 请求体最大大小（字节，默认 10MB）。超过此值的请求将被拒绝，防止 DoS 攻击。"
+    },
+    {
+      "name": "ydsz.json.warmup-classes",
+      "type": "java.util.List<java.lang.String>",
+      "description": "启动时需要预热的类列表（全限定类名）。预热会提前为指定类型生成 ASM 序列化/反序列化字节码，避免首次请求时的延迟尖峰。默认为空。"
     }
   ]
 }

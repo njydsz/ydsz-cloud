@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | **9006**（按构建顺序 7/8） |
+| **端口** | **9006**（按构建顺序 7/10） |
 | **服务名** | `ydsz-workflow` |
-| **构建顺序** | 7/8 |
+| **构建顺序** | 7/10 |
 | **数据库** | PostgreSQL（`ydsz_flow_*` 表） |
 | **依赖** | Nacos、PostgreSQL、Redis |
 | **平台** | ⚠️ **仅 PC Web 端**（不支持移动端 / 独立 H5） |
@@ -142,8 +142,14 @@ ydsz-workflow/
 ├── ydsz-workflow-domain/                # 领域层 — 实体 + 枚举 + DTO
 │   └── src/main/java/.../domain/
 │       ├── dto/                         # 数据传输对象（20+）
-│       ├── entity/                      # 数据库实体 DO（25+）
-│       └── enums/                       # 枚举（11+）
+│       ├── entity/                      # 数据库实体（26 个，无 DO 后缀，符合 entity-naming 规范）
+│       │                                # FlowAdminRole/FlowAttachment/FlowAuditLog/FlowAutoTrigger
+│       │                                # FlowCategory/FlowCc/FlowCcRule/FlowComment/FlowDefinition
+│       │                                # FlowDelegateAuth/FlowDmnDecision/FlowDmnRule/FlowEventSubscription
+│       │                                # FlowHisInstance/FlowHisTask/FlowInstance/FlowNode
+│       │                                # FlowQuickComment/FlowRunTask/FlowSkip/FlowTemplate
+│       │                                # FlowThirdPartyAccount/FlowThirdPartyLog/FlowTimer/FlowUser
+│       └── enums/                       # 枚举（12 个）
 ├── ydsz-workflow-infra/                 # 基础设施层 — Mapper + XML
 │   └── src/main/
 │       ├── java/.../infra/mapper/       # MyBatis-Plus Mapper 接口（24+）

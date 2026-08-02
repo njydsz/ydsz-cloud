@@ -22,6 +22,7 @@ import com.njydsz.common.json.metric.YdszJsonMetrics;
 import com.njydsz.common.json.module.YdszJsonModule;
 import com.njydsz.common.json.spring.JsonHttpMessageConverter;
 import com.njydsz.common.json.spring.JsonModuleRegistrar;
+import com.njydsz.common.json.spring.JsonWarmupRunner;
 import com.njydsz.common.json.spring.YdszJsonProperties;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -100,6 +101,18 @@ return converter;
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     public JsonHealthIndicator ydszJsonHealthIndicator() {
         return new JsonHealthIndicator();
+    }
+
+    /**
+     * ASM 预热 Runner — 应用启动后异步预热高频序列化 Bean 的 ASM 字节码。
+     *
+     * @param properties YdszJson 配置属性
+     * @return 预热 Runner
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public JsonWarmupRunner ydszJsonWarmupRunner(YdszJsonProperties properties) {
+        return new JsonWarmupRunner(properties);
     }
 
     /**

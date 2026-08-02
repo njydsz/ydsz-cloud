@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | **9000**（按构建顺序 1/8） |
+| **端口** | **9000**（按构建顺序 1/10） |
 | **服务名** | `ydsz-gateway` |
-| **构建顺序** | 1/8（Maven 构建第一个部署单元） |
+| **构建顺序** | 1/10（Maven 构建第一个部署单元） |
 | **Nacos 注册** | ✅ 是（注册中心 + 配置中心） |
 | **数据库** | ❌ 不直接访问 |
 | **作用** | 统一入口、路由分发、限流/熔断、CORS、认证、Sentinel、灰度 |
@@ -39,6 +39,8 @@
 > - 限流统计写入 Redis（`ydsz:gateway:ratelimit:*`），不落库；
 > - 灰度标签仅作为请求头/Metadata 透传，不持久化。
 
+> **架构约束**：`ydsz-gateway` 为 reactive 栈（WebFlux），**不依赖** `common-web`（servlet 栈），只挑选 `common-core` / `common-exception` / `common-auth` 三个细粒度子模块。
+
 ## 启动顺序
 
 ```
@@ -46,12 +48,14 @@ gateway (9000) ─── 入口，必须最先启动
    ↓
 userinfo (9001) ─┐
 system (9002) ───┼─→ 可并行启动
-project (9003) ───┘
+project (9003) ──┘
    ↓
-message (9004) ─┐
-cronjob (9005) ─┼─→ 可并行启动
+message (9004) ──┐
+cronjob (9005) ──┼─→ 可并行启动
 workflow (9006)─┤
-agent (9007) ───┘
+nextwiki (9007)─┤
+literule (9008)─┤
+agent (9010) ───┘
 ```
 
 ## 目录结构
