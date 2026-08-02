@@ -5,12 +5,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.pointer.JsonPointer;
+
 import lombok.Getter;
 
 /**
  * 差异报告
  *
  * <p>封装一次更新操作中所有字段的变更差异，支持生成 JSON 和可读文本格式。
+ *
+ * <p><b>P3-1/P3-4 增强：</b>
+ * <ul>
+ *   <li>{@link #toJson()} 使用 YdszJson 引擎序列化，替代手动 StringBuilder</li>
+ *   <li>{@link #toJsonPatch()} 输出 RFC 6902 JsonPatch 格式</li>
+ *   <li>{@link #queryByPointer(String)} 使用 JsonPointer 定位特定字段变更</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -53,7 +63,9 @@ public class DiffReport implements Serializable {
     /**
      * 生成 JSON 格式的差异报告
      *
-     * <p>格式：[{"field":"username","label":"用户名","old":"张三","new":"李四","sensitive":false}]
+     * <p>格式：[{@code "field":"username","label":"用户名","old":"张三","new":"李四","sensitive":false}]
+     *
+     * <p>P3-1: 使用 YdszJson 引擎序列化，替代手动 StringBuilder 拼接。
      *
      * @return JSON 字符串
      */
@@ -61,22 +73,67 @@ public class DiffReport implements Serializable {
         if (diffs.isEmpty()) {
             return "[]";
         }
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < diffs.size(); i++) {
-            FieldDiff diff = diffs.get(i);
-            if (i > 0) {
-                sb.append(",");
-            }
-            sb.append("{")
-                    .append("\"field\":\"").append(escapeJson(diff.getFieldName())).append("\",")
-                    .append("\"label\":\"").append(escapeJson(diff.getFieldLabel())).append("\",")
-                    .append("\"old\":").append(quoteOrNull(diff.getOldValue())).append(",")
-                    .append("\"new\":").append(quoteOrNull(diff.getNewValue())).append(",")
-                    .append("\"sensitive\":").append(diff.isSensitive())
-                    .append("}");
+        return YdszJson.toJson(diffs);
+    }
+
+    /**
+     * P3-1: 生成 RFC 6902 JsonPatch 格式的差异报告。
+     *
+     * <p>每个变更字段输出一个 {@code replace} 操作：
+     * <pre>
+     * [
+     *   {"op":"replace","path":"/username","value":"李四"},
+     *   {"op":"replace","path":"/email","value":"lisi@example.com"}
+     * ]
+     * </pre>
+     *
+     * @return JsonPatch 格式 JSON 字符串
+     */
+    public String toJsonPatch() {
+        if (diffs.isEmpty()) {
+            return "[]";
         }
-        sb.append("]");
-        return sb.toString();
+        List<java.util.Map<String, Object>> patchOps = diffs.stream()
+                .map(diff -> {
+                    java.util.Map<String, Object> op = new java.util.LinkedHashMap<>();
+                    op.put("op", "replace");
+                    op.put("path", "/" + diff.getFieldName());
+                    op.put("value", diff.getNewValue());
+                    return op;
+                })
+                .collect(Collectors.toList());
+        return YdszJson.toJson(patchOps);
+    }
+
+    /**
+     * P3-4: 使用 JsonPointer 定位特定字段的变更值。
+     *
+     * <p>从 {@link #toJson()} 生成的 JSON 数组中，通过 JsonPointer 路径
+     * 定位特定字段的新值或旧值。
+     *
+     * <p>使用示例：
+     * <pre>
+     * DiffReport report = DiffCalculator.INSTANCE.calculate(oldUser, newUser);
+     * // 获取第一个变更字段的新值
+     * String newValue = report.queryByPointer("/0/new");
+     * // 获取字段名为 "username" 的旧值（需先找到索引）
+     * </pre>
+     *
+     * @param pointer JsonPointer 路径（如 {@code "/0/new"}、{@code "/1/old"}）
+     * @return 路径对应的值字符串，路径不存在返回 {@code null}
+     */
+    public String queryByPointer(String pointer) {
+        if (diffs.isEmpty() || pointer == null || pointer.isBlank()) {
+            return null;
+        }
+        try {
+            String json = toJson();
+            JsonPointer jp = new JsonPointer(pointer);
+            Object value = jp.evaluate(json);
+            return value == null ? null : String.valueOf(value);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
@@ -93,23 +150,5 @@ public class DiffReport implements Serializable {
         return diffs.stream()
                 .map(FieldDiff::toReadableString)
                 .collect(Collectors.joining("; "));
-    }
-
-    private static String quoteOrNull(String value) {
-        if (value == null) {
-            return "null";
-        }
-        return "\"" + escapeJson(value) + "\"";
-    }
-
-    private static String escapeJson(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
     }
 }

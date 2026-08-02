@@ -143,23 +143,28 @@ return converter;
          * </ul>
          */
         @PostConstruct
+        @SuppressWarnings("deprecation")
         public void init() {
-            YdszJsonConfig config = YdszJsonConfig.getInstance();
-            config.setDateFormat(properties.getDateFormat());
-            config.setNamingStrategy(properties.getNamingStrategy());
-            config.setWriteNulls(properties.isWriteNulls());
-            config.setPrettyPrint(properties.isPrettyPrint());
-            config.setSerializeEnumUsingOrdinal(properties.isSerializeEnumUsingOrdinal());
+            // 使用 Builder 模式构建配置（推荐方式，避免 setter 链式调用）
+            // 兼容期仍使用 getInstance() 单例，后续版本将改为 setInstance(builder().build())
+            YdszJsonConfig.CircularReferenceStrategy strategy;
             try {
-                config.setCircularReferenceStrategy(
-                        YdszJsonConfig.CircularReferenceStrategy.valueOf(
-                                properties.getCircularReferenceStrategy()));
+                strategy = YdszJsonConfig.CircularReferenceStrategy.valueOf(
+                        properties.getCircularReferenceStrategy());
             } catch (IllegalArgumentException e) {
-                config.setCircularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy.REF);
+                strategy = YdszJsonConfig.CircularReferenceStrategy.REF;
             }
-            config.setMaxJsonSize(properties.getMaxJsonSize());
-            config.setMaxDepth(properties.getMaxDepth());
-            config.setUseBigDecimal(properties.isUseBigDecimal());
+            YdszJsonConfig config = YdszJsonConfig.builder()
+                    .dateFormat(properties.getDateFormat())
+                    .namingStrategy(properties.getNamingStrategy())
+                    .writeNulls(properties.isWriteNulls())
+                    .prettyPrint(properties.isPrettyPrint())
+                    .serializeEnumUsingOrdinal(properties.isSerializeEnumUsingOrdinal())
+                    .circularReferenceStrategy(strategy)
+                    .maxJsonSize(properties.getMaxJsonSize())
+                    .maxDepth(properties.getMaxDepth())
+                    .useBigDecimal(properties.isUseBigDecimal())
+                    .build();
             config.apply();
 
             // 安全模式设置

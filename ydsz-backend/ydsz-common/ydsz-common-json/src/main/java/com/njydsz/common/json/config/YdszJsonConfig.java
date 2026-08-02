@@ -21,28 +21,28 @@ import com.njydsz.common.json.reader.JSONReader;
  *   <li>枚举序列化策略 - ordinal 或 name</li>
  * </ul>
  *
- * <p><b>使用示例：</b></p>
+ * <p><b>推荐使用 Builder 模式创建不可变配置：</b></p>
  * <pre>
- * // 获取配置实例
- * YdszJsonConfig config = YdszJsonConfig.getInstance();
- *
- * // 设置全局命名策略
- * config.setNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
- *
- * // 设置循环引用处理
- * config.setCircularReferenceStrategy(CircularReferenceStrategy.REF);
- *
- * // 设置日期格式
- * config.setDateFormat("yyyy-MM-dd HH:mm:ss");
- *
- * // 应用配置
+ * // 推荐：使用 Builder 创建配置
+ * YdszJsonConfig config = YdszJsonConfig.builder()
+ *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+ *     .circularReferenceStrategy(CircularReferenceStrategy.REF)
+ *     .dateFormat("yyyy-MM-dd HH:mm:ss")
+ *     .build();
  * config.apply();
  * </pre>
  *
- * <p><b>线程安全：</b>读操作（getter）并发安全；写操作（setter）通过 volatile 字段
- * 保证可见性，单字段写入原子；复合操作（{@link #reset()}、{@link #copyFrom(YdszJsonConfig)}）
- * 通过 synchronized 保证一致性。如需在多线程中安全地批量修改配置，建议使用
- * {@link #copyOf(YdszJsonConfig)} 创建副本修改后再调用 {@link #apply()}。</p>
+ * <p><b>兼容模式（已废弃）：</b></p>
+ * <pre>
+ * // 已废弃：使用 getInstance() + setter 链式调用
+ * YdszJsonConfig config = YdszJsonConfig.getInstance();
+ * config.setNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+ * config.apply();
+ * </pre>
+ *
+ * <p><b>线程安全：</b>Builder 构建的实例是不可变的，天然线程安全。
+ * 单例模式（{@link #getInstance()}）的 setter 仍保留 volatile 字段
+ * 保证可见性，但已标记 {@link Deprecated}，建议迁移到 Builder。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -129,7 +129,9 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @param namingStrategy 命名策略
      * @return 当前配置实例（支持链式调用）
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
      */
+    @Deprecated
     public YdszJsonConfig setNamingStrategy(PropertyNamingStrategy namingStrategy) {
         this.namingStrategy = namingStrategy;
         return this;
@@ -149,7 +151,9 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @param circularReferenceStrategy 循环引用处理策略
      * @return 当前配置实例（支持链式调用）
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
      */
+    @Deprecated
     public YdszJsonConfig setCircularReferenceStrategy(CircularReferenceStrategy circularReferenceStrategy) {
         this.circularReferenceStrategy = circularReferenceStrategy;
         return this;
@@ -169,7 +173,9 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @param writeNulls 是否输出空值
      * @return 当前配置实例（支持链式调用）
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
      */
+    @Deprecated
     public YdszJsonConfig setWriteNulls(boolean writeNulls) {
         this.writeNulls = writeNulls;
         return this;
@@ -189,7 +195,9 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @param dateFormat 日期格式字符串
      * @return 当前配置实例（支持链式调用）
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
      */
+    @Deprecated
     public YdszJsonConfig setDateFormat(String dateFormat) {
         this.dateFormat = dateFormat;
         return this;
@@ -209,7 +217,9 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @param serializeEnumUsingOrdinal 是否使用枚举序号序列化
      * @return 当前配置实例（支持链式调用）
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
      */
+    @Deprecated
     public YdszJsonConfig setSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
         this.serializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
         return this;
@@ -230,7 +240,15 @@ public final class YdszJsonConfig implements Serializable {
      * @param prettyPrint 是否格式化输出
      * @return 当前配置实例（支持链式调用）
      */
-   public YdszJsonConfig setPrettyPrint(boolean prettyPrint) {
+    /**
+     * 设置是否格式化输出
+     *
+     * @param prettyPrint 是否格式化输出
+     * @return 当前配置实例（支持链式调用）
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
+     */
+    @Deprecated
+    public YdszJsonConfig setPrettyPrint(boolean prettyPrint) {
         this.prettyPrint = prettyPrint;
         return this;
     }
@@ -239,6 +257,12 @@ public final class YdszJsonConfig implements Serializable {
         return failOnError;
     }
 
+    /**
+     * 设置序列化失败时是否抛出异常
+     *
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
+     */
+    @Deprecated
     public YdszJsonConfig setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
         return this;
@@ -248,6 +272,10 @@ public final class YdszJsonConfig implements Serializable {
         return defaultDateFormat;
     }
 
+    /**
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
+     */
+    @Deprecated
     public YdszJsonConfig setDefaultDateFormat(String defaultDateFormat) {
         this.defaultDateFormat = defaultDateFormat;
         return this;
@@ -263,6 +291,10 @@ public final class YdszJsonConfig implements Serializable {
     /**
      * 设置最大 JSON 大小限制（字节）
      */
+    /**
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
+     */
+    @Deprecated
     public YdszJsonConfig setMaxJsonSize(long maxJsonSize) {
         this.maxJsonSize = maxJsonSize;
         return this;
@@ -278,6 +310,10 @@ public final class YdszJsonConfig implements Serializable {
     /**
      * 设置最大序列化深度
      */
+    /**
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
+     */
+    @Deprecated
     public YdszJsonConfig setMaxDepth(int maxDepth) {
         this.maxDepth = maxDepth;
         return this;
@@ -300,7 +336,9 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @param useBigDecimal 是否使用 BigDecimal
      * @return 当前配置实例（支持链式调用）
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
      */
+    @Deprecated
     public YdszJsonConfig setUseBigDecimal(boolean useBigDecimal) {
         this.useBigDecimal = useBigDecimal;
         return this;
@@ -324,8 +362,10 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @param wrapRootValue 是否启用根名称包裹
      * @return 当前配置实例（支持链式调用）
+     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
      * @since 1.0.0
      */
+    @Deprecated
     public YdszJsonConfig setWrapRootValue(boolean wrapRootValue) {
         this.wrapRootValue = wrapRootValue;
         return this;
@@ -415,6 +455,163 @@ public final class YdszJsonConfig implements Serializable {
                 ", useBigDecimal=" + useBigDecimal +
                 ", wrapRootValue=" + wrapRootValue +
                 '}';
+    }
+
+    // ==================== Builder 模式 ====================
+
+    /**
+     * 创建一个 Builder 用于构建不可变的 YdszJsonConfig 实例。
+     *
+     * <p>推荐使用 Builder 替代 getInstance() + setter 链式调用。
+     * Builder 构建的实例所有字段均为 final，天然线程安全，无需 ThreadLocalSnapshot。</p>
+     *
+     * <pre>
+     * YdszJsonConfig config = YdszJsonConfig.builder()
+     *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+     *     .writeNulls(true)
+     *     .dateFormat("yyyy-MM-dd HH:mm:ss")
+     *     .build();
+     * config.apply();
+     * </pre>
+     *
+     * @return 新的 Builder 实例
+     * @since 2.0.0
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * 不可变配置构建器。
+     *
+     * <p>对标 Jackson ObjectMapper.Builder 和 FastJSON2 JSON.config() 的 Builder 模式，
+     * 提供类型安全的链式配置构建方式。构建后的 YdszJsonConfig 实例不可修改，
+     * 无需 ThreadLocalSnapshot 保存/恢复。</p>
+     *
+     * @since 2.0.0
+     */
+    public static final class Builder {
+        private PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
+        private CircularReferenceStrategy circularReferenceStrategy = CircularReferenceStrategy.REF;
+        private boolean writeNulls = false;
+        private String dateFormat = "";
+        private boolean serializeEnumUsingOrdinal = false;
+        private boolean prettyPrint = false;
+        private boolean failOnError = false;
+        private String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
+        private long maxJsonSize = 10L * 1024 * 1024;
+        private int maxDepth = 256;
+        private boolean useBigDecimal = false;
+        private boolean wrapRootValue = false;
+
+        private Builder() {
+        }
+
+        public Builder namingStrategy(PropertyNamingStrategy namingStrategy) {
+            this.namingStrategy = namingStrategy;
+            return this;
+        }
+
+        public Builder circularReferenceStrategy(CircularReferenceStrategy strategy) {
+            this.circularReferenceStrategy = strategy;
+            return this;
+        }
+
+        public Builder writeNulls(boolean writeNulls) {
+            this.writeNulls = writeNulls;
+            return this;
+        }
+
+        public Builder dateFormat(String dateFormat) {
+            this.dateFormat = dateFormat != null ? dateFormat : "";
+            return this;
+        }
+
+        public Builder serializeEnumUsingOrdinal(boolean ordinal) {
+            this.serializeEnumUsingOrdinal = ordinal;
+            return this;
+        }
+
+        public Builder prettyPrint(boolean prettyPrint) {
+            this.prettyPrint = prettyPrint;
+            return this;
+        }
+
+        public Builder failOnError(boolean failOnError) {
+            this.failOnError = failOnError;
+            return this;
+        }
+
+        public Builder defaultDateFormat(String defaultDateFormat) {
+            this.defaultDateFormat = defaultDateFormat;
+            return this;
+        }
+
+        public Builder maxJsonSize(long maxJsonSize) {
+            this.maxJsonSize = maxJsonSize;
+            return this;
+        }
+
+        public Builder maxDepth(int maxDepth) {
+            this.maxDepth = maxDepth;
+            return this;
+        }
+
+        public Builder useBigDecimal(boolean useBigDecimal) {
+            this.useBigDecimal = useBigDecimal;
+            return this;
+        }
+
+        public Builder wrapRootValue(boolean wrapRootValue) {
+            this.wrapRootValue = wrapRootValue;
+            return this;
+        }
+
+        /**
+         * 从现有配置创建 Builder（用于修改已有配置）。
+         *
+         * @param config 源配置
+         * @return 新的 Builder，预填充源配置的值
+         */
+        public Builder from(YdszJsonConfig config) {
+            if (config != null) {
+                this.namingStrategy = config.namingStrategy;
+                this.circularReferenceStrategy = config.circularReferenceStrategy;
+                this.writeNulls = config.writeNulls;
+                this.dateFormat = config.dateFormat;
+                this.serializeEnumUsingOrdinal = config.serializeEnumUsingOrdinal;
+                this.prettyPrint = config.prettyPrint;
+                this.failOnError = config.failOnError;
+                this.defaultDateFormat = config.defaultDateFormat;
+                this.maxJsonSize = config.maxJsonSize;
+                this.maxDepth = config.maxDepth;
+                this.useBigDecimal = config.useBigDecimal;
+                this.wrapRootValue = config.wrapRootValue;
+            }
+            return this;
+        }
+
+        /**
+         * 构建不可变的 YdszJsonConfig 实例。
+         *
+         * @return 新的 YdszJsonConfig 实例
+         */
+        public YdszJsonConfig build() {
+            YdszJsonConfig config = new YdszJsonConfig();
+            config.namingStrategy = this.namingStrategy;
+            config.circularReferenceStrategy = this.circularReferenceStrategy;
+            config.writeNulls = this.writeNulls;
+            config.dateFormat = this.dateFormat;
+            config.serializeEnumUsingOrdinal = this.serializeEnumUsingOrdinal;
+            config.prettyPrint = this.prettyPrint;
+            config.failOnError = this.failOnError;
+            config.defaultDateFormat = this.defaultDateFormat;
+            config.maxJsonSize = this.maxJsonSize;
+            config.maxDepth = this.maxDepth;
+            config.useBigDecimal = this.useBigDecimal;
+            config.wrapRootValue = this.wrapRootValue;
+            return config;
+        }
     }
 
     /**

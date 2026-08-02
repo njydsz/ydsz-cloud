@@ -6,7 +6,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.YdszJsonClass;
 import com.njydsz.common.json.annotation.JsonSerialize;
@@ -45,7 +46,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  */
 public final class SerializationProvider {
 
-    private static final Logger LOGGER = Logger.getLogger(SerializationProvider.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(SerializationProvider.class);
 
     /** ASM 序列化降级计数器 */
     private static final AtomicLong ASM_DOWNGRADE_COUNT = new AtomicLong(0);
@@ -925,7 +926,7 @@ public final class SerializationProvider {
     private static void logAsmDowngrade(Class<?> clazz, String phase, Exception e) {
         long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
         if (count <= 10 || count % 100 == 0) {
-            LOGGER.fine("ASM " + phase + " failed for " + clazz.getName()
+            LOGGER.debug("ASM " + phase + " failed for " + clazz.getName()
                     + ", falling back to reflection. Total downgrades: " + count
                     + ", error: " + e.getMessage());
         }
@@ -944,8 +945,12 @@ public final class SerializationProvider {
      * cachedListSerializer、cachedListElementClass），因为运行时状态仅在单次
      * 序列化调用内有意义。</p>
      *
+     * @deprecated 推荐使用 {@link com.njydsz.common.json.config.YdszJsonConfig.Builder}
+     * 构建不可变配置实例，无需 ThreadLocalSnapshot 保存/恢复。
+     * 新代码请使用 YdszJsonConfig.builder().xxx().build() 替代 getInstance() + setter + snapshot 模式。
      * @since 1.0.0
      */
+    @Deprecated
     public static final class ThreadLocalSnapshot {
         private final boolean savedWriteNulls;
         private final boolean savedPrettyPrint;
