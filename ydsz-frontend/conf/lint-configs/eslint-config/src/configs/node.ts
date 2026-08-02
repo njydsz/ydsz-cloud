@@ -9,6 +9,13 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 启用 eslint-plugin-n，规范 Node.js 环境下的 API 与全局变量使用。
+ *
+ * 约束回调错误命名、禁止已废弃 API，并对构建配置（conf/bash）放宽 process 全局要求。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function node(): Promise<Linter.Config[]> {
   const pluginNode = await interopDefault(import('eslint-plugin-n'));
 

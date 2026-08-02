@@ -7,12 +7,20 @@
  */
 import type { Linter } from 'eslint';
 
+/** 对这些配置文件放宽导入限制（避免与构建期脚本冲突） */
 const restrictedImportIgnores = [
   '**/vite.config.mts',
   '**/tailwind.config.mjs',
   '**/postcss.config.mjs',
 ];
 
+/**
+ * 项目自定义的 ESLint 规则集合。
+ *
+ * 按目录（apps / @core / comm 等）施加差异化的导入限制与规则开关，
+ * 例如禁止 @core 反向依赖 @ydsz、统一子包边界；restrictedImportIgnores 中的
+ * 构建配置文件则不受这些限制约束。
+ */
 const customConfig: Linter.Config[] = [
   // shadcn-ui 内部组件是自动生成的，不做太多限制
   {

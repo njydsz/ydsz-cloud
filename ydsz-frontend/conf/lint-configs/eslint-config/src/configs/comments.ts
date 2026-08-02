@@ -9,6 +9,13 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 启用 eslint-plugin-eslint-comments，约束 `eslint-disable` 等指令的规范使用。
+ *
+ * 防止出现聚合/重复/无限/未使用的 disable 指令，保持 lint 抑制可追溯。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function comments(): Promise<Linter.Config[]> {
   const [pluginComments] = await Promise.all([
     // @ts-expect-error - no types

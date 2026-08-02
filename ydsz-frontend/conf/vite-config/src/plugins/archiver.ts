@@ -15,6 +15,15 @@ import { join } from 'node:path';
 
 import archiver from 'archiver';
 
+/**
+ * 构建完成后将 dist 目录压缩为 zip 归档的 Vite 插件。
+ *
+ * 在 closeBundle 阶段（post）延迟到事件循环末尾执行，避免阻塞主构建流程；
+ * 归档名与输出目录可由 options 覆盖，默认生成 `dist.zip`。
+ *
+ * @param options - 归档配置（名称、输出目录），缺省使用默认值
+ * @returns Vite 插件对象
+ */
 export const viteArchiverPlugin = (
   options: ArchiverPluginOptions = {},
 ): PluginOption => {
@@ -50,6 +59,15 @@ export const viteArchiverPlugin = (
   };
 };
 
+/**
+ * 以流式方式将文件夹压缩为 zip 文件。
+ *
+ * 采用流式写入降低大目录的内存占用，压缩级别固定为 9 以求最高压缩率。
+ *
+ * @param folderPath - 待压缩的源文件夹路径
+ * @param outputPath - 生成的 zip 文件目标路径
+ * @throws 压缩过程出错时 reject
+ */
 async function zipFolder(
   folderPath: string,
   outputPath: string,

@@ -21,6 +21,16 @@ import { loadApplicationPlugins } from '../plugins';
 import { loadAndConvertEnv } from '../utils/env';
 import { getCommonConfig } from './common';
 
+/**
+ * 构造应用（Web 应用）类型的 Vite 配置。
+ *
+ * 加载并转换环境配置、装配应用插件集（压缩/归档/PWA/打印等），
+ * 并将 vue/element/vxe 等做 vendor 分包以优化缓存；最后依次叠加
+ * 共用配置与用户自定义 vite 配置，优先级：用户配置 > 应用配置 > 共用配置。
+ *
+ * @param userConfigPromise - 用户自定义应用配置函数
+ * @returns 应用类型的 Vite 配置
+ */
 function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
   return defineConfig(async (config) => {
     const options = await userConfigPromise?.(config);
@@ -110,6 +120,15 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
   });
 }
 
+/**
+ * 构造 SCSS 预处理器选项，按需向应用注入全局样式。
+ *
+ * 仅对 apps 下的包注入 `@ydsz/styles/global`，保证全局变量/混合宏可用；
+ * 非应用包（如库）不注入以避免副作用污染。
+ *
+ * @param injectGlobalScss - 是否注入全局 SCSS，默认 true
+ * @returns Vite CSS 配置对象
+ */
 function createCssOptions(injectGlobalScss = true): CSSOptions {
   const root = findMonorepoRoot();
   return {

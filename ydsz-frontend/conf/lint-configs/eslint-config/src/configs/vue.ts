@@ -9,6 +9,14 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 启用 eslint-plugin-vue 全量推荐规则并定制 SFC 规范。
+ *
+ * 约束宏顺序（defineProps/Emits…）、组件命名、事件命名、模板格式等，
+ * 统一 Vue 单文件组件的书写风格。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function vue(): Promise<Linter.Config[]> {
   const [pluginVue, parserVue, parserTs] = await Promise.all([
     interopDefault(import('eslint-plugin-vue')),

@@ -9,6 +9,14 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 启用 eslint-plugin-jsdoc，要求导出的函数/类具备规范的 JSDoc。
+ *
+ * 以 warn 级别校验 @param / @returns / @property 等标签的存在与命名，
+ * 配合本仓库的注释规约推动文档完整性。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function jsdoc(): Promise<Linter.Config[]> {
   const [pluginJsdoc] = await Promise.all([
     interopDefault(import('eslint-plugin-jsdoc')),

@@ -10,7 +10,9 @@ import type { RouteRecordStringComponent } from '@ydsz/types';
 import { requestClient } from '#/api/request';
 
 /**
- * 获取用户可访问的菜单树（动态路由）
+ * 获取当前用户可访问的菜单树（用于生成动态路由）。
+ *
+ * @returns 菜单路由数组，结构见 {@link RouteRecordStringComponent}
  */
 export async function getAllMenusApi() {
   return requestClient.get<RouteRecordStringComponent[]>(
@@ -19,7 +21,9 @@ export async function getAllMenusApi() {
 }
 
 /**
- * 获取全部菜单树（管理用）
+ * 获取全量菜单树（后台管理用，不含权限过滤）。
+ *
+ * @returns 完整菜单树数组
  */
 export async function getMenuTreeApi() {
   return requestClient.get<RouteRecordStringComponent[]>('/api/v1/menu/tree');

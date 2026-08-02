@@ -211,6 +211,16 @@ export default {
   safelist: ['dark'],
 } as Config;
 
+/**
+ * 根据主题色名生成 Tailwind 颜色调色板工具类。
+ *
+ * 将 50~700 阶梯以及 background/hover/active/foreground 等语义色映射到
+ * CSS 变量（hsl(var(--{name}-xx))），使主题可经 CSS 变量统一切换；
+ * 仅保留 50~700 而非完整 950 阶梯，以控制产物体积并贴合项目实际用量。
+ *
+ * @param name - 主题色名（如 primary / success），对应 CSS 变量前缀
+ * @returns 颜色名到 hsl 变量的映射对象
+ */
 function createColorsPalette(name: string) {
   // backgroundLightest: '#EFF6FF', // Tailwind CSS 默认的 `blue-50`
   //         backgroundLighter: '#DBEAFE',  // Tailwind CSS 默认的 `blue-100`

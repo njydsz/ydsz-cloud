@@ -9,6 +9,13 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 配置测试文件（vitest 等）的专属规则。
+ *
+ * 统一使用 `it`、禁止 `.only` 遗留、关闭 console 限制，适配测试场景。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function test(): Promise<Linter.Config[]> {
   const [pluginTest, pluginNoOnlyTests] = await Promise.all([
     interopDefault(import('eslint-plugin-vitest')),

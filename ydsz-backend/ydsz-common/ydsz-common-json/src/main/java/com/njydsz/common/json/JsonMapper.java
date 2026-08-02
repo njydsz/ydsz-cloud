@@ -143,6 +143,7 @@ public class JsonMapper {
         }
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
         config.apply();
+        JsonConfig.setThreadLocalOverride(config);
         configApplied = true;
         return snapshot;
     }
@@ -463,10 +464,9 @@ public class JsonMapper {
             public Type getOwnerType() { return null; }
         });
         if (result instanceof List<?> list) {
-            List<T> typedList = new ArrayList<>(list.size());
-            for (Object item : list) {
-                typedList.add(elementClass.cast(item));
-            }
+            // 优化：直接 unchecked cast 返回，消除 O(n) 拷贝
+            @SuppressWarnings("unchecked")
+            List<T> typedList = (List<T>) list;
             return typedList;
         }
         return new ArrayList<>();

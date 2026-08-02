@@ -9,6 +9,13 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 启用 @typescript-eslint，基于 strict 基线与项目定制开关校验 TypeScript。
+ *
+ * 关闭部分与脚手架/自动生成代码冲突的规则（如显式返回类型），保留非空断言等强约束。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function typescript(): Promise<Linter.Config[]> {
   const [pluginTs, parserTs] = await Promise.all([
     interopDefault(import('@typescript-eslint/eslint-plugin')),

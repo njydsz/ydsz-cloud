@@ -7,6 +7,13 @@
  */
 import type { Linter } from 'eslint';
 
+/**
+ * 声明 ESLint 全局忽略的目录与文件。
+ *
+ * 覆盖依赖、构建产物、缓存、锁文件等无需 lint 的路径，避免误报与性能损耗。
+ *
+ * @returns 含 ignores 的 ESLint flat 配置数组
+ */
 export async function ignores(): Promise<Linter.Config[]> {
   return [
     {

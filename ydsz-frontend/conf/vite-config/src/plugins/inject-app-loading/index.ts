@@ -15,8 +15,15 @@ import { fileURLToPath } from 'node:url';
 import { readPackageJSON } from '@ydsz/node-utils';
 
 /**
- * 用于生成将loading样式注入到项目中
- * 为多app提供loading样式，无需在每个 app -> index.html单独引入
+ * 将统一的应用启动 loading 样式/脚本注入 HTML，免去各 app 单独维护。
+ *
+ * 通过注入脚本提前从 localStorage 读取主题，保证深色主题下刷新时 loading 也
+ * 保持深色，避免首屏闪烁；支持在 app 内以自定义模板覆盖默认 loading。
+ *
+ * @param isBuild - 是否为构建模式（影响缓存主题标识 dev/prod）
+ * @param env - 环境变量（用于拼接主题缓存命名空间）
+ * @param loadingTemplate - loading 模板文件名，缺省 'loading.html'
+ * @returns Vite 插件对象；模板缺失时返回 undefined
  */
 async function viteInjectAppLoadingPlugin(
   isBuild: boolean,
@@ -56,7 +63,12 @@ async function viteInjectAppLoadingPlugin(
 }
 
 /**
- * 用于获取loading的html模板
+ * 读取 loading 的 HTML 模板内容。
+ *
+ * 优先使用 app 根目录下的自定义模板，缺失时回退到插件内置的 default-loading.html。
+ *
+ * @param loadingTemplate - loading 模板文件名
+ * @returns 模板 HTML 字符串；文件均不存在时返回空串
  */
 async function getLoadingRawByHtmlTemplate(loadingTemplate: string) {
   // 支持在app内自定义loading模板，模版参考default-loading.html即可

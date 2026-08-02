@@ -32,6 +32,13 @@ import {
 import { microApps } from './qiankun';
 import { initRouterGuard, router } from './router';
 
+/**
+ * 应用引导启动。
+ *
+ * 依次完成组件/表单适配器初始化、插件与指令注册、i18n、状态管理、路由守卫与微前端注册，最后挂载根实例。
+ *
+ * @param namespace - 项目唯一命名空间（含版本与环境），用于隔离偏好设置与本地存储
+ */
 async function bootstrap(namespace: string) {
   await initComponentAdapter();
   await initSetupYDSZForm();

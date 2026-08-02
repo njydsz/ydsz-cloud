@@ -161,6 +161,14 @@ public class ConfigServiceImpl implements ConfigService {
         return removed;
     }
 
+    /**
+     * 同步配置变更到 ES 搜索索引（可选能力）。
+     *
+     * <p>通过 {@code ObjectProvider} 获取可选依赖 {@link SearchIndexEventBridge}，
+     * 仅当搜索模块存在时才执行索引 upsert，避免对未启用搜索的环境产生硬依赖。
+     *
+     * @param entity 待同步的配置实体
+     */
     private void indexUpsert(Config entity) {
         SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
         if (bridge != null) {
@@ -168,6 +176,13 @@ public class ConfigServiceImpl implements ConfigService {
         }
     }
 
+    /**
+     * 从 ES 搜索索引删除配置文档（可选能力）。
+     *
+     * <p>同样走 {@code ObjectProvider} 可选依赖，未启用搜索模块时静默跳过。
+     *
+     * @param id 待删除的配置 ID
+     */
     private void indexDelete(String id) {
         SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
         if (bridge != null) {
@@ -245,6 +260,14 @@ public class ConfigServiceImpl implements ConfigService {
 
     // ============================== 私有方法 ==============================
 
+    /**
+     * 根据分页查询条件构造 MyBatis-Plus 查询包装器。
+     *
+     * <p>支持分组精确匹配、配置键模糊匹配、状态精确匹配；默认按创建时间倒序。
+     *
+     * @param query 分页查询条件
+     * @return 构造好的查询包装器
+     */
     private QueryWrapper<Config> buildQueryWrapper(ConfigPageQuery query) {
         QueryWrapper<Config> wrapper = new QueryWrapper<>();
         if (query.getConfigGroup() != null && !query.getConfigGroup().isBlank()) {
@@ -260,6 +283,14 @@ public class ConfigServiceImpl implements ConfigService {
         return wrapper;
     }
 
+    /**
+     * 将配置 DTO 转换为持久化实体。
+     *
+     * <p>未显式指定状态时默认置为 {@code ENABLED}，保证新建配置默认可用。
+     *
+     * @param dto 配置 DTO（为 null 时返回 null）
+     * @return 转换后的实体
+     */
     private Config toEntity(ConfigDTO dto) {
         if (dto == null) {
             return null;
@@ -278,10 +309,26 @@ public class ConfigServiceImpl implements ConfigService {
         return entity;
     }
 
+    /**
+     * 校验配置值类型合法性。
+     *
+     * <p>委托 {@link ConfigValueType#validate} 完成，
+     * 非法类型将抛出 {@link IllegalArgumentException} 阻止脏数据落库。
+     *
+     * @param valueType 值类型字符串
+     */
     private void validateValueType(String valueType) {
         ConfigValueType.validate(valueType);
     }
 
+    /**
+     * 校验同一分组下配置键是否重复。
+     *
+     * <p>写入前按 {@code (configGroup, configKey)} 唯一性预检，
+     * 命中已有记录时抛出 {@link IllegalArgumentException}，避免唯一索引冲突导致写入失败。
+     *
+     * @param entity 待校验的配置实体
+     */
     private void checkDuplicateKey(Config entity) {
         QueryWrapper<Config> checkWrapper = new QueryWrapper<>();
         checkWrapper.eq("config_group", entity.getConfigGroup())
@@ -292,6 +339,16 @@ public class ConfigServiceImpl implements ConfigService {
         }
     }
 
+    /**
+     * 失效配置相关缓存并广播变更事件。
+     *
+     * <p>依次删除单 key 缓存、分组缓存、公开配置缓存；
+     * 并通过可选的 {@code OutboxService} 追加 {@code CONFIG_CHANGED} 事件，
+     * 订阅方可感知配置变更（如热更新限流阈值）。事件发布失败仅告警，不影响主流程。
+     *
+     * @param configKey 配置键（为 null 时跳过单 key 缓存失效）
+     * @param configGroup 配置分组（为 null 时跳过分组缓存失效）
+     */
     private void evictCache(String configKey, String configGroup) {
         if (configKey != null) {
             redisService.delete(CACHE_KEY_PREFIX + configKey);
@@ -320,6 +377,14 @@ public class ConfigServiceImpl implements ConfigService {
         }
     }
 
+    /**
+     * 解析配置缓存 TTL。
+     *
+     * <p>取 {@code SystemProperties} 配置值；当配置非法（{@code <=0}）时回退到 5 分钟默认值，
+     * 防止错误配置导致缓存被立即淘汰而失去作用。
+     *
+     * @return 缓存过期时长
+     */
     private Duration getCacheTtl() {
         int minutes = properties.getConfig().getCacheTtlMinutes();
         return Duration.ofMinutes(minutes > 0 ? minutes : 5);

@@ -51,6 +51,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
  *   HIGHEST_PRECEDENCE + 100 ReactiveLoadBalancerClientFilter (Spring Cloud LB)
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @SpringBootApplication

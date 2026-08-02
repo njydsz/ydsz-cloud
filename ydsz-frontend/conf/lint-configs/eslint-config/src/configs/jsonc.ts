@@ -9,6 +9,14 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 启用 jsonc 插件校验 JSON/JSON5 文件，并对关键清单文件排序。
+ *
+ * 覆盖 package.json 与 tsconfig 的键位排序（见内部 sortPackageJson / sortTsconfig），
+ * 统一多包仓库的配置书写顺序，减少无意义的 diff。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function jsonc(): Promise<Linter.Config[]> {
   const [pluginJsonc, parserJsonc] = await Promise.all([
     interopDefault(import('eslint-plugin-jsonc')),
@@ -58,6 +66,13 @@ export async function jsonc(): Promise<Linter.Config[]> {
   ];
 }
 
+/**
+ * 按固定字段顺序对 package.json 的键与依赖分组排序。
+ *
+ * 统一 name/version/scripts/dependencies 等字段次序，使多包仓库清单更易比对。
+ *
+ * @returns 作用于 package.json 的 ESLint flat 配置
+ */
 function sortPackageJson(): Linter.Config {
   return {
     files: ['**/package.json'],
@@ -137,6 +152,13 @@ function sortPackageJson(): Linter.Config {
   };
 }
 
+/**
+ * 按语义分组对 tsconfig 的 compilerOptions 键排序。
+ *
+ * 将编译器选项按语言/模块/类型检查/产物等分组排序，保持配置可读一致。
+ *
+ * @returns 作用于 tsconfig 的 ESLint flat 配置
+ */
 function sortTsconfig(): Linter.Config {
   return {
     files: ['**/tsconfig.json', '**/tsconfig.*.json', 'conf/tsconfig/*.json'],

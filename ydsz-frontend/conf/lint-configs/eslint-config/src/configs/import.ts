@@ -9,6 +9,13 @@ import type { Linter } from 'eslint';
 
 import * as pluginImport from 'eslint-plugin-import-x';
 
+/**
+ * 启用 import-x 插件，规范 ES 模块的导入行为。
+ *
+ * 约束导入顺序、去重、禁止自引用与 webpack-loader 语法，提升模块可读性。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function importPluginConfig(): Promise<Linter.Config[]> {
   return [
     {

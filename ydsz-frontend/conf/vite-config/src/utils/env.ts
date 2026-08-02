@@ -37,9 +37,15 @@ function getConfFiles() {
 }
 
 /**
- * Get the environment variables starting with the specified prefix
- * @param match prefix
- * @param confFiles ext
+ * 读取并合并指定环境文件，仅保留匹配前缀的变量。
+ *
+ * 按优先级依次加载 .env / .env.local / .env.{mode} / .env.{mode}.local，
+ * 后者覆盖前者；读取失败仅告警不中断。最终用正则过滤出以 match 开头
+ * 的变量（默认 VITE_GLOB_），用于向客户端暴露白名单环境变量。
+ *
+ * @param match - 变量名前缀过滤规则，默认 'VITE_GLOB_'
+ * @param confFiles - 待加载的环境文件名列表，默认由当前 mode 推导
+ * @returns 过滤后的环境变量键值对象
  */
 async function loadEnv<T = Record<string, string>>(
   match = 'VITE_GLOB_',
@@ -70,6 +76,17 @@ async function loadEnv<T = Record<string, string>>(
   return envConfig as T;
 }
 
+/**
+ * 加载并转换环境配置为 Vite 插件可消费的结构化选项。
+ *
+ * 在 {@link loadEnv} 基础上，将 VITE_ 前缀的布尔/数值/字符串变量
+ * 转换为插件选项所需的真实类型（如 port 转 number、compress 解析为数组），
+ * 并为缺省项提供兜底默认值，避免调用方再做类型转换。
+ *
+ * @param match - 变量名前缀，默认 'VITE_'
+ * @param confFiles - 待加载的环境文件名列表，默认由当前 mode 推导
+ * @returns 含 appTitle / base / port 等字段的插件选项片段
+ */
 async function loadAndConvertEnv(
   match = 'VITE_',
   confFiles = getConfFiles(),

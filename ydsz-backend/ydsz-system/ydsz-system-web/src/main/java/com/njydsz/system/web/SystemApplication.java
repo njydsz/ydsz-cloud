@@ -30,6 +30,11 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableScheduling
 public class SystemApplication {
 
+    /**
+     * 系统基础服务启动入口。
+     *
+     * @param args 命令行参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(SystemApplication.class, args);
     }

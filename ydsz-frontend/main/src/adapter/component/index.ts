@@ -118,6 +118,11 @@ const ElUpload = defineAsyncComponent(() =>
   ]).then(([res]) => res.ElUpload),
 );
 
+/**
+ * 为业务组件包裹默认占位符与方法透传的高阶包装。
+ *
+ * 按类型（input/select）注入本地化 placeholder，并通过 Proxy 将内部实例暴露的方法透传给外层。
+ */
 const withDefaultPlaceholder = <T extends Component>(
   component: T,
   type: 'input' | 'select',
@@ -152,7 +157,11 @@ const withDefaultPlaceholder = <T extends Component>(
   });
 };
 
-// 这里需要自行根据业务组件库进行适配，需要用到的组件都需要在这里类型说明
+/**
+ * 表单支持的组件类型集合。
+ *
+ * 需随业务组件库自行适配：用到的组件都应在此联合类型中声明。
+ */
 export type ComponentType =
   | 'ApiSelect'
   | 'ApiTreeSelect'
@@ -172,6 +181,11 @@ export type ComponentType =
   | 'Upload'
   | BaseFormComponentType;
 
+/**
+ * 初始化组件适配器。
+ *
+ * 将 Element Plus 组件映射为表单/弹窗/抽屉可用的业务组件，并注册全局消息提示到共享状态。
+ */
 async function initComponentAdapter() {
   const components: Partial<Record<ComponentType, Component>> = {
     // 如果你的组件体积比较大，可以使用异步加载

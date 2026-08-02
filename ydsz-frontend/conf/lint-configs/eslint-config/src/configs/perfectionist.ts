@@ -9,6 +9,13 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 启用 perfectionist 插件，对导入/导出/对象等做自然序排序。
+ *
+ * 通过自定义分组将 @ydsz / @ydsz-core / vue 相关依赖排在前，统一仓库导入风格。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function perfectionist(): Promise<Linter.Config[]> {
   const perfectionistPlugin = await interopDefault(
     // @ts-expect-error - no types

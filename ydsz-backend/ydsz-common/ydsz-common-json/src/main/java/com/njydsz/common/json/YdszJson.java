@@ -363,10 +363,11 @@ public class YdszJson {
         };
         Object result = DeserializationProvider.deserialize(json, type);
         if (result instanceof List<?> list) {
-            List<T> typedList = new ArrayList<>(list.size());
-            for (Object item : list) {
-                typedList.add(clazz.cast(item));
-            }
+            // 优化：直接 unchecked cast 返回，消除 O(n) 拷贝。
+            // DeserializationProvider 内部已按 elementClass 生成了正确类型元素，
+            // 无需逐元素 Class.cast() 校验。
+            @SuppressWarnings("unchecked")
+            List<T> typedList = (List<T>) list;
             return typedList;
         }
         return new ArrayList<>();
@@ -1027,6 +1028,78 @@ public class YdszJson {
             return recordSerialize(() -> SerializationProvider.serialize(obj));
         } finally {
             SerializationProvider.setExcludedFields(previous);
+        }
+    }
+
+    // ==================== ThreadLocal 管理 ====================
+
+    /**
+     * 清理当前线程的 ThreadLocal 资源。
+     *
+     * <p>在非 Spring 环境（命令行工具、Flink/Spark 任务、自定义线程池等）
+     * 中，每次线程归还线程池前应调用此方法清理内部 ThreadLocal 状态，
+     * 防止内存泄漏。
+     *
+     * <p><b>Spring 环境无需手动调用：</b>{@link com.njydsz.common.json.spring.boot.JsonAutoConfiguration}
+     * 已通过 {@code @PreDestroy} 自动注册清理钩子。</p>
+     *
+     * <p><b>推荐使用 try-with-resources：</b></p>
+     * <pre>
+     * // 方式一：ScopedContext（推荐，自动清理）
+     * try (var ctx = YdszJson.scopedContext()) {
+     *     String json = YdszJson.toJson(obj);
+     *     User user = YdszJson.toObject(json, User.class);
+     * }
+     *
+     * // 方式二：手动清理
+     * try {
+     *     String json = YdszJson.toJson(obj);
+     * } finally {
+     *     YdszJson.cleanup();
+     * }
+     * </pre>
+     *
+     * @since 1.0.0
+     */
+    public static void cleanup() {
+        com.njydsz.common.json.provider.SerializationProvider.clearThreadLocals();
+    }
+
+    /**
+     * 创建 ScopedContext，在 try-with-resources 块结束时自动清理 ThreadLocal。
+     *
+     * <p>适用于非 Spring 环境的线程池场景，确保每次任务执行完毕后释放
+     * {@link com.njydsz.common.json.provider.SerializationContext} 持有的
+     * StringBuilder、JSONWriter、循环引用检测集等资源。</p>
+     *
+     * <pre>
+     * try (var ctx = YdszJson.scopedContext()) {
+     *     // 所有 YdszJson 操作都在此上下文中安全执行
+     *     String json = YdszJson.toJson(obj);
+     * }
+     * // 块结束时自动调用 cleanup()
+     * </pre>
+     *
+     * @return 一个 AutoCloseable 上下文，关闭时自动清理 ThreadLocal
+     * @since 1.0.0
+     */
+    public static ScopedContext scopedContext() {
+        return new ScopedContext();
+    }
+
+    /**
+     * ScopedContext - AutoCloseable 的序列化上下文。
+     *
+     * <p>实现 {@link AutoCloseable}，在 try-with-resources 块结束时
+     * 自动调用 {@link YdszJson#cleanup()} 清理 ThreadLocal 资源。</p>
+     */
+    public static final class ScopedContext implements AutoCloseable {
+        private ScopedContext() {
+        }
+
+        @Override
+        public void close() {
+            YdszJson.cleanup();
         }
     }
 

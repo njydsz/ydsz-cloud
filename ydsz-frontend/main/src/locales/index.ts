@@ -80,6 +80,12 @@ async function loadElementLocale(lang: SupportedLanguagesType) {
   }
 }
 
+/**
+ * 初始化应用国际化（i18n）。
+ *
+ * @param app - Vue 应用实例
+ * @param options - 额外的 i18n 配置项，会覆盖默认值（如默认语言、消息加载器）
+ */
 async function setupI18n(app: App, options: LocaleSetupOptions = {}) {
   await coreSetup(app, {
     defaultLocale: preferences.app.locale,

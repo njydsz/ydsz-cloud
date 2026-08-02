@@ -52,14 +52,20 @@ export namespace AuthApi {
 }
 
 /**
- * 登录
+ * 用户登录。
+ *
+ * @param data - 登录参数（用户名、密码、验证码等）
+ * @returns 登录结果，含 accessToken / refreshToken 与用户信息
  */
 export async function loginApi(data: AuthApi.LoginParams) {
   return requestClient.post<AuthApi.LoginResult>('/api/v1/auth/login', data);
 }
 
 /**
- * 刷新 accessToken
+ * 使用 refreshToken 刷新访问令牌。
+ *
+ * @param refreshToken - 刷新令牌
+ * @returns 新的令牌信息（accessToken / refreshToken / 过期时间）
  */
 export async function refreshTokenApi(refreshToken: string) {
   return baseRequestClient.post<AuthApi.RefreshTokenResult>(
@@ -69,14 +75,18 @@ export async function refreshTokenApi(refreshToken: string) {
 }
 
 /**
- * 退出登录
+ * 退出登录，使服务端会话失效。
+ *
+ * @returns 请求响应
  */
 export async function logoutApi() {
   return baseRequestClient.post('/api/v1/auth/logout', {});
 }
 
 /**
- * 获取用户权限码
+ * 获取当前用户的权限码列表（用于前端按钮级权限控制）。
+ *
+ * @returns 权限码字符串数组
  */
 export async function getAccessCodesApi() {
   return requestClient.get<string[]>('/api/v1/auth/codes');

@@ -7,6 +7,13 @@
  */
 import type { Linter } from 'eslint';
 
+/**
+ * 在测试、类型声明与 JS 文件中按需关闭部分规则以减少噪音。
+ *
+ * 例如测试文件允许 console、d.ts 放宽三斜线指令限制，避免无意义报错。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function disableds(): Promise<Linter.Config[]> {
   return [
     {

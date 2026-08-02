@@ -8,8 +8,10 @@ import { Generator } from '@jspm/generator';
 import { load } from 'cheerio';
 import { minify } from 'html-minifier-terser';
 
+/** 默认 CDN 供应商，未显式指定时使用 */
 const DEFAULT_PROVIDER = 'jspm.io';
 
+/** importmap 插件选项：在 jspm GeneratorOptions 基础上扩展依赖列表与供应商 */
 type pluginOptions = GeneratorOptions & {
   debug?: boolean;
   defaultProvider?: 'esm.sh' | 'jsdelivr' | 'jspm.io';
@@ -22,8 +24,17 @@ type pluginOptions = GeneratorOptions & {
 //   return version;
 // }
 
+/**
+ * 根据 CDN 供应商返回 es-module-shims 垫片的 URL。
+ *
+ * 版本固定为 1.10.0（升级需人工验证兼容性），未知供应商回退到默认 jspm.io。
+ *
+ * @param provide - CDN 供应商名（esm.sh / jsdelivr / jspm.io）
+ * @returns 对应供应商的 es-module-shims CDN 地址
+ */
 async function getShimsUrl(provide: string) {
   // const version = await getLatestVersionOfShims();
+  // 版本固定锁定，避免 CDN 升级引入破坏性变更
   const version = '1.10.0';
 
   const shimsSubpath = `dist/es-module-shims.js`;
@@ -41,6 +52,15 @@ async function getShimsUrl(provide: string) {
 
 let generator: Generator;
 
+/**
+ * 通过 CDN 以 importmap 方式加载指定依赖的 Vite 插件（参考 vite-plugin-jspm 改造）。
+ *
+ * 在构建阶段将声明的依赖通过 jspm generator 安装为 external，并在 HTML 注入
+ * importmap 与 es-module-shims 垫片，使其走 CDN 加载；非构建或 SSR 下不生效。
+ *
+ * @param pluginOptions - 插件选项（CDN 供应商、依赖列表、调试开关）
+ * @returns 由 external / install / html 三段组成的 Vite 插件数组
+ */
 async function viteImportMapPlugin(
   pluginOptions?: pluginOptions,
 ): Promise<Plugin[]> {
@@ -191,6 +211,16 @@ async function viteImportMapPlugin(
   ];
 }
 
+/**
+ * 将入口模块改写为经 es-module-shims 垫片加载，兼容不支持 importmap 的浏览器。
+ *
+ * 通过 cheerio 解析 HTML，移除原生 module 脚本属性后以 importShim 代理方式
+ * 加载入口，保证老旧浏览器也能使用 importmap。
+ *
+ * @param html - 原始 HTML 字符串
+ * @param esModuleShimUrl - es-module-shims 垫片脚本地址
+ * @returns 注入垫片加载逻辑后的 HTML 字符串
+ */
 async function injectShimsToHtml(html: string, esModuleShimUrl: string) {
   const $ = load(html);
 

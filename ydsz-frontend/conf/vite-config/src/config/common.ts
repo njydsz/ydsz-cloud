@@ -9,6 +9,14 @@ import type { UserConfig } from 'vite';
 
 import { defineConfig } from 'vite';
 
+/**
+ * 构造所有项目共用的基础 Vite 配置。
+ *
+ * 注入 Node 内置模块的浏览器端 polyfill 别名（buffer/process/stream 等），
+ * 并放宽 chunk 体积告警阈值到 2000KB、关闭压缩体积报告以加快构建反馈。
+ *
+ * @returns 共用基础 Vite 配置对象
+ */
 async function getCommonConfig(): Promise<UserConfig> {
   return defineConfig({
     define: {

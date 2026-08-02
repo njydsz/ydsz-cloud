@@ -992,6 +992,7 @@ public final class SerializationProvider {
         private final Set<String> savedExcludedFields;
         private final String savedDateFormat;
         private final boolean savedFailOnError;
+        private final com.njydsz.common.json.config.JsonConfig savedConfigOverride;
 
         /**
          * 捕获当前线程的 ThreadLocal 序列化参数快照。
@@ -1005,6 +1006,7 @@ public final class SerializationProvider {
             this.savedExcludedFields = ctx.excludedFields;
             this.savedDateFormat = ctx.dateFormat;
             this.savedFailOnError = ctx.failOnError;
+            this.savedConfigOverride = com.njydsz.common.json.config.JsonConfig.getThreadLocalOverride();
         }
 
         /**
@@ -1019,6 +1021,11 @@ public final class SerializationProvider {
             ctx.excludedFields = savedExcludedFields;
             ctx.dateFormat = savedDateFormat;
             ctx.failOnError = savedFailOnError;
+            if (savedConfigOverride != null) {
+                com.njydsz.common.json.config.JsonConfig.setThreadLocalOverrideIfPresent(savedConfigOverride);
+            } else {
+                com.njydsz.common.json.config.JsonConfig.removeThreadLocalOverride();
+            }
         }
     }
 }

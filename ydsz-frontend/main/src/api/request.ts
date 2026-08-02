@@ -23,7 +23,10 @@ const options: RequestClientOptions = {
 };
 
 /**
- * 重新认证逻辑
+ * 访问令牌失效时的重新认证回调。
+ *
+ * shared-auth 判定 accessToken / refreshToken 失效或过期时触发：清空本地令牌，
+ * 若配置为弹窗模式且已完成首次访问校验则弹出登录过期提示，否则直接登出，避免停留在无效会话。
  */
 async function doReAuthenticate() {
   console.warn('Access token or refresh token is invalid or expired. ');
@@ -41,7 +44,10 @@ async function doReAuthenticate() {
 }
 
 /**
- * 刷新token逻辑
+ * 刷新访问令牌回调。
+ *
+ * 使用本地 refreshToken 调用后端刷新接口，成功则更新 accessToken；
+ * 无 refreshToken 时返回 null，交由 shared-auth 触发 {@link doReAuthenticate}。
  */
 async function doRefreshToken() {
   const accessStore = useAccessStore();
@@ -57,10 +63,12 @@ async function doRefreshToken() {
   return newToken;
 }
 
+/** 主应用共享请求客户端：携带鉴权拦截器，响应统一只返回 data 字段。 */
 export const requestClient = createSharedRequestClient(
   doReAuthenticate,
   doRefreshToken,
   options,
 );
 
+/** 基础请求客户端：不含鉴权拦截器，用于登录、刷新令牌等公共接口。 */
 export const baseRequestClient = createSharedBaseClient();

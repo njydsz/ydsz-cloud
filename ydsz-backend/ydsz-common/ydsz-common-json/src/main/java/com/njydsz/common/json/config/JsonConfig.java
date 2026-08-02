@@ -53,6 +53,39 @@ public final class JsonConfig implements Serializable {
 
     private static volatile JsonConfig instance;
 
+    /** ThreadLocal 配置覆盖：JsonMapper 操作期间临时替换全局单例，操作结束后清除 */
+    private static final ThreadLocal<JsonConfig> THREAD_LOCAL_OVERRIDE = new ThreadLocal<>();
+
+    /**
+     * 设置当前线程的配置覆盖（JsonMapper 内部使用，支持真正的独立配置）。
+     * 调用后 {@link #getInstance()} 返回覆盖的配置对象。
+     */
+    static void setThreadLocalOverride(JsonConfig config) {
+        THREAD_LOCAL_OVERRIDE.set(config);
+    }
+
+    /**
+     * 清除当前线程的配置覆盖。
+     */
+    static void clearThreadLocalOverride() {
+        THREAD_LOCAL_OVERRIDE.remove();
+    }
+
+    /** Package-private: 供 SerializationProvider.ThreadLocalSnapshot 使用 */
+    static JsonConfig getThreadLocalOverride() {
+        return THREAD_LOCAL_OVERRIDE.get();
+    }
+
+    /** Package-private: 供 SerializationProvider.ThreadLocalSnapshot.restore 使用 */
+    static void setThreadLocalOverrideIfPresent(JsonConfig config) {
+        THREAD_LOCAL_OVERRIDE.set(config);
+    }
+
+    /** Package-private: 供 SerializationProvider.ThreadLocalSnapshot.restore 使用 */
+    static void removeThreadLocalOverride() {
+        THREAD_LOCAL_OVERRIDE.remove();
+    }
+
     /** 所有可变字段均为 volatile，保证单字段读写的可见性与原子性 */
     private volatile PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
 
@@ -105,6 +138,10 @@ public final class JsonConfig implements Serializable {
      * @return JsonConfig 实例
      */
     public static JsonConfig getInstance() {
+        JsonConfig threadLocal = THREAD_LOCAL_OVERRIDE.get();
+        if (threadLocal != null) {
+            return threadLocal;
+        }
         if (instance == null) {
             synchronized (JsonConfig.class) {
                 if (instance == null) {

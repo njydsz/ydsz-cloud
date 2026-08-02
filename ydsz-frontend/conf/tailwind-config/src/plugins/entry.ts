@@ -7,6 +7,12 @@
  */
 import plugin from 'tailwindcss/plugin.js';
 
+/**
+ * 生成 `enter-x / enter-y` 系列入场动画工具类的 Tailwind 插件。
+ *
+ * 为前 5 个子元素（maxChild）按序递增 0.1s 延迟，实现列表依次淡入位移效果，
+ * 避免逐个手写动画类；同时注册 enter-x / enter-y 的关键帧。
+ */
 const enterAnimationPlugin = plugin(({ addUtilities }) => {
   const maxChild = 5;
   const utilities: Record<string, any> = {};

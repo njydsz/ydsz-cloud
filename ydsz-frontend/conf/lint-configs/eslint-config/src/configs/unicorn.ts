@@ -9,6 +9,14 @@ import type { Linter } from 'eslint';
 
 import { interopDefault } from '../util';
 
+/**
+ * 启用 eslint-plugin-unicorn 推荐规则，并关闭与本项目风格冲突的部分。
+ *
+ * 如关闭 filename-case / no-null / prevent-abbreviations 等，避免对现有约定过度干预；
+ * 构建脚本（conf/bash）另放宽 no-process-exit。
+ *
+ * @returns ESLint flat 配置数组
+ */
 export async function unicorn(): Promise<Linter.Config[]> {
   const [pluginUnicorn] = await Promise.all([
     interopDefault(import('eslint-plugin-unicorn')),

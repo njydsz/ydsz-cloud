@@ -34,8 +34,13 @@ import { vitePrintPlugin } from './print';
 import { viteVxeTableImportsPlugin } from './vxe-table';
 
 /**
- * 获取条件成立的 vite 插件
- * @param conditionPlugins
+ * 过滤并执行条件成立的条件插件，收集其实际插件实例。
+ *
+ * 遍历条件插件列表，仅当 `condition` 为真时才调用对应工厂函数，
+ * 最终将结果展平为一维插件数组。
+ *
+ * @param conditionPlugins - 条件插件列表（含 condition 与插件工厂）
+ * @returns 条件成立插件展开后的 Vite 插件数组
  */
 async function loadConditionPlugins(conditionPlugins: ConditionPlugin[]) {
   const plugins: PluginOption[] = [];
@@ -49,7 +54,13 @@ async function loadConditionPlugins(conditionPlugins: ConditionPlugin[]) {
 }
 
 /**
- * 根据条件获取通用的vite插件
+ * 构造所有项目类型共用的条件插件集合（Vue/Vue-JSX/DevTools/元数据/依赖分析）。
+ *
+ * 以 {@link ConditionPlugin} 形式返回，便于由 {@link loadConditionPlugins}
+ * 统一按 condition 实际装载，devtools/visualizer 等仅在对应条件满足时生效。
+ *
+ * @param options - 通用插件配置（是否开发工具、是否注入元数据、是否构建、是否依赖分析）
+ * @returns 条件插件数组
  */
 async function loadCommonPlugins(
   options: CommonPluginOptions,
@@ -89,7 +100,14 @@ async function loadCommonPlugins(
 }
 
 /**
- * 根据条件获取应用类型的vite插件
+ * 装配应用类型所需的全部 Vite 插件（i18n/打印/归档/PWA/压缩等）。
+ *
+ * 先提取应用专属开关，剩余字段作为通用配置交给 {@link loadCommonPlugins}，
+ * 再按各自 condition 追加应用插件；所有插件经 {@link loadConditionPlugins}
+ * 过滤后合并返回。
+ *
+ * @param options - 应用插件配置选项
+ * @returns 应用类型插件数组
  */
 async function loadApplicationPlugins(
   options: ApplicationPluginOptions,
@@ -214,7 +232,13 @@ async function loadApplicationPlugins(
 }
 
 /**
- * 根据条件获取库类型的vite插件
+ * 装配库类型所需的 Vite 插件（仅 Vue/Vue-JSX 与可选的 DTS 类型输出）。
+ *
+ * 与 {@link loadApplicationPlugins} 不同，库不需要 PWA/压缩/归档等应用特性，
+ * 仅在构建时按需开启 DTS 声明文件生成。
+ *
+ * @param options - 库插件配置选项
+ * @returns 库类型插件数组
  */
 async function loadLibraryPlugins(
   options: LibraryPluginOptions,

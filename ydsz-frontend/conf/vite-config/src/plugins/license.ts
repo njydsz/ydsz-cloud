@@ -17,10 +17,14 @@ import { EOL } from 'node:os';
 import { dateUtil, readPackageJSON } from '@ydsz/node-utils';
 
 /**
- * 用于注入版权信息
- * @returns
+ * 在构建产物的入口 chunk 顶部注入版权头信息。
+ *
+ * 仅对入口 chunk（isEntry）追加 MIT 版权声明，包含版本、作者、构建日期等，
+ * 既满足开源协议要求，也便于产物溯源。
+ *
+ * @param root - 项目根目录，默认 process.cwd()
+ * @returns Vite 插件对象
  */
-
 async function viteLicensePlugin(
   root = process.cwd(),
 ): Promise<PluginOption | undefined> {
