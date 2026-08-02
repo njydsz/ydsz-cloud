@@ -97,25 +97,7 @@ final class CreatorResolver {
                 args[i] = TypeConverter.convertValue(value, paramTypes[i]);
             }
         } else {
-            Field[] fields = constructor.getDeclaringClass().getDeclaredFields();
-            for (Field field : fields) {
-                String fieldName = field.getName();
-                JsonProperty fieldAnnotation = field.getAnnotation(JsonProperty.class);
-                if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
-                    fieldName = fieldAnnotation.value();
-                }
-
-                Object value = map.get(fieldName);
-                if (value != null) {
-                    try {
-                        field.setAccessible(true);
-                        Object convertedValue = TypeConverter.convertValue(value, field.getType());
-                        field.set(null, convertedValue);
-                    } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
-                }
-            }
+            // 未指定 parameterNames 或长度不匹配，降级为无参构造 + 字段反射赋值
             return createInstanceWithSetters(map, constructor.getDeclaringClass());
         }
 
@@ -140,27 +122,8 @@ final class CreatorResolver {
      */
     static <T> T createInstanceWithSetters(Map<String, Object> map, Class<T> clazz) {
         try {
-            Field[] fields = clazz.getDeclaredFields();
-            for (Field field : fields) {
-                String fieldName = field.getName();
-                JsonProperty fieldAnnotation = field.getAnnotation(JsonProperty.class);
-                if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
-                    fieldName = fieldAnnotation.value();
-                }
-
-                Object value = map.get(fieldName);
-                if (value != null) {
-                    try {
-                        field.setAccessible(true);
-                        Object convertedValue = TypeConverter.convertValue(value, field.getType());
-                        field.set(null, convertedValue);
-                    } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
-                }
-            }
-
             T instance = clazz.getDeclaredConstructor().newInstance();
+            Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
                 String fieldName = field.getName();
                 JsonProperty fieldAnnotation = field.getAnnotation(JsonProperty.class);

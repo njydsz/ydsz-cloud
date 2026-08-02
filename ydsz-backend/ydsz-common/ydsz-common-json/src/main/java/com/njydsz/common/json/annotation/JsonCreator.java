@@ -5,13 +5,12 @@ import java.lang.annotation.*;
 /**
  * Json 构造函数注解（参考 fastjson2 的@JSONCreator）
  *
- * <p>用于标注构造函数或静态工厂方法，指定反序列化时使用的构造器。</p>
+ * <p>用于标注构造函数，指定反序列化时使用的构造器。</p>
  *
  * <p><b>主要功能：</b></p>
  * <ul>
  *   <li>指定反序列化时使用的构造函数</li>
  *   <li>支持多个构造函数，通过 default 属性指定默认构造函数</li>
- *   <li>支持静态工厂方法</li>
  * </ul>
  *
  * <p><b>使用示例：</b></p>
@@ -24,20 +23,6 @@ import java.lang.annotation.*;
  *     public User(Long id, String name) {
  *         this.id = id;
  *         this.name = name;
- *     }
- * }
- *
- * // 使用静态工厂方法
- * public class User {
- *     private Long id;
- *     private String name;
- *
- *     {@literal @}JsonCreator
- *     public static User create(Long id, String name) {
- *         User user = new User();
- *         user.setId(id);
- *         user.setName(name);
- *         return user;
  *     }
  * }
  *
@@ -55,6 +40,18 @@ import java.lang.annotation.*;
  *     {@literal @}JsonCreator
  *     public User(Long id) {
  *         this.id = id;
+ *     }
+ * }
+ *
+ * // 通过 parameterNames 显式指定 JSON 字段映射
+ * public class User {
+ *     private Long id;
+ *     private String name;
+ *
+ *     {@literal @}JsonCreator(parameterNames = {"userId", "userName"})
+ *     public User(Long id, String name) {
+ *         this.id = id;
+ *         this.name = name;
  *     }
  * }
  * </pre>
@@ -81,35 +78,16 @@ public @interface JsonCreator {
     boolean defaultCreator() default false;
 
     /**
-     * 构造函数名称（用于静态工厂方法）
-     *
-     * <p>当标注在静态工厂方法上时，指定方法名。</p>
-     *
-     * <p>默认为空，自动识别静态方法。</p>
-     *
-     * @return 方法名
-     */
-    String name() default "";
-
-    /**
      * 参数名称映射
      *
      * <p>指定构造函数参数与 JSON 字段的映射关系。</p>
      *
-     * <p>例如：{"id", "userId"} 表示构造函数的第一个参数对应 JSON 的 userId 字段。</p>
+     * <p>例如：{"id", "name"} 表示构造函数的第一个参数对应 JSON 的 id 字段，
+     * 第二个参数对应 name 字段。</p>
      *
      * @return 参数名称数组
      */
     String[] parameterNames() default {};
-
-    /**
-     * 参数类型
-     *
-     * <p>指定构造函数参数的类型，用于精确匹配构造函数。</p>
-     *
-     * @return 参数类型数组
-     */
-    Class<?>[] parameterTypes() default {};
 
     /**
      * 是否启用

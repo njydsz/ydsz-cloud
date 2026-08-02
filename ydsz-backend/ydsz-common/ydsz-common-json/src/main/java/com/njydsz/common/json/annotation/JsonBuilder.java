@@ -112,15 +112,6 @@ public @interface JsonBuilder {
     String withPrefix() default "with";
 
     /**
-     * 是否启用
-     *
-     * <p>如果为 false，则不使用 Builder 模式。</p>
-     *
-     * @return 是否启用
-     */
-    boolean enable() default true;
-
-    /**
      * 是否自动检测 Builder 类
      *
      * <p>如果为 true，则自动检测内部静态 Builder 类。</p>
@@ -128,33 +119,4 @@ public @interface JsonBuilder {
      * @return 是否自动检测
      */
     boolean autoDetect() default true;
-
-    /**
-     * Builder 类的构造函数名
-     *
-     * <p>指定 Builder 类的构造函数名。</p>
-     *
-     * <p>默认为空，使用默认构造函数。</p>
-     *
-     * @return 构造函数名
-     */
-    String builderConstructor() default "";
-
-    /**
-     * 是否支持链式调用
-     *
-     * <p>如果为 true，则 Builder 方法返回 Builder 自身。</p>
-     *
-     * @return 是否支持链式调用
-     */
-    boolean chainMethod() default true;
-
-    /**
-     * 忽略的方法
-     *
-     * <p>指定 Builder 类中忽略的方法名。</p>
-     *
-     * @return 方法名数组
-     */
-    String[] ignoreMethods() default {};
 }

@@ -189,11 +189,7 @@ public final class FieldMetadataLoader {
             }
 
             JsonProperty jsonField = field.getAnnotation(JsonProperty.class);
-            JsonProperty jacksonProperty = field.getAnnotation(JsonProperty.class);
             JsonIgnore jacksonIgnore = field.getAnnotation(JsonIgnore.class);
-            if (jsonField != null && jacksonIgnore != null) {
-                continue;
-            }
             if (jacksonIgnore != null) {
                 continue;
             }
@@ -221,16 +217,8 @@ public final class FieldMetadataLoader {
                 ordinal = propertyOrderMapping.get(fieldName);
             }
 
-            if (jsonField != null) {
-                if (!jsonField.value().isEmpty()) {
-                    jsonName = jsonField.value();
-                } else if (jacksonProperty != null && !jacksonProperty.value().isEmpty()) {
-                    jsonName = jacksonProperty.value();
-                } else if (classNaming != null) {
-                    jsonName = classNaming.translate(jsonName);
-                }
-            } else if (jacksonProperty != null && !jacksonProperty.value().isEmpty()) {
-                jsonName = jacksonProperty.value();
+            if (jsonField != null && !jsonField.value().isEmpty()) {
+                jsonName = jsonField.value();
             } else if (classNaming != null) {
                 jsonName = classNaming.translate(jsonName);
             }

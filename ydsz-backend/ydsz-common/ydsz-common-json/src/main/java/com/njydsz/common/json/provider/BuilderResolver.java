@@ -265,7 +265,7 @@ final class BuilderResolver {
      * 创建默认的 {@link JsonBuilder} 注解实例。
      *
      * <p>当内部 Builder 类未显式标注 {@code @JsonBuilder} 时使用此默认配置：
-     * buildMethod="build"、withPrefix=""、chainMethod=true。
+     * buildMethod="build"、withPrefix=""、autoDetect=false。
      *
      * @return 默认注解实例
      */
@@ -278,15 +278,7 @@ final class BuilderResolver {
             @Override
             public String withPrefix() { return ""; }
             @Override
-            public boolean enable() { return true; }
-            @Override
             public boolean autoDetect() { return false; }
-            @Override
-            public String builderConstructor() { return ""; }
-            @Override
-            public boolean chainMethod() { return true; }
-            @Override
-            public String[] ignoreMethods() { return new String[0]; }
             @Override
             public Class<? extends Annotation> annotationType() { return JsonBuilder.class; }
         };

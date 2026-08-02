@@ -11,8 +11,8 @@ import java.lang.annotation.*;
  * <ul>
  *   <li>指定字段排序</li>
  *   <li>忽略特定字段</li>
+ *   <li>指定包含字段</li>
  *   <li>指定命名策略</li>
- *   <li>配置循环引用处理</li>
  *   <li>支持多态类型（seeAlso）</li>
  *   <li>自动类型识别（autoType）</li>
  * </ul>
@@ -69,43 +69,6 @@ public @interface JsonClass {
      */
     NamingStrategy naming() default NamingStrategy.CAMEL_CASE;
     
-    /**
-     * 是否处理循环引用
-     * 
-     * @return 是否处理循环引用
-     */
-    boolean handleCircularReference() default true;
-    
-    /**
-     * 是否输出 null 值
-     *
-     * @return 是否输出 null 值
-     */
-    boolean writeNulls() default false;
-
-    /**
-     * 是否输出类名
-     *
-     * <p>如果为 true，则在序列化时输出类的全限定名</p>
-     *
-     * @return 是否输出类名
-     */
-    boolean writeClassName() default false;
-
-    /**
-     * 日期格式
-     *
-     * @return 日期格式字符串
-     */
-    String dateFormat() default "";
-    
-    /**
-     * 是否启用快速模式（跳过某些检查以提升性能）
-     * 
-     * @return 是否启用快速模式
-     */
-    boolean fastMode() default false;
-    
     // ==================== 多态类型支持（参考@JSONType） ====================
     
     /**
@@ -149,109 +112,6 @@ public @interface JsonClass {
      * @return 是否启用 autoType
      */
     boolean autoType() default false;
-    
-    /**
-     * 是否使用 ordinal 序列化枚举
-     * 
-     * <p>如果为 true，则枚举使用 ordinal 值（数字）序列化，否则使用 name（字符串）。</p>
-     * 
-     * @return 是否使用 ordinal 序列化枚举
-     */
-    boolean serializeEnumUsingOrdinal() default false;
-    
-    /**
-     * 序列化特性
-     * 
-     * @return 序列化特性数组
-     */
-    SerializeFeature[] features() default {};
-    
-    /**
-     * 反序列化特性
-     * 
-     * @return 反序列化特性数组
-     */
-    DeserializeFeature[] deserializeFeatures() default {};
-    
-    /**
-     * 序列化特性枚举
-     */
-    enum SerializeFeature {
-        /** 使用 Bean 名称 */
-        UseBeanName,
-        /** 禁用循环引用检测 */
-        DisableCircularReferenceDetect,
-        /** 输出 null 值 */
-        WriteMapNullValue,
-        /** 空集合输出为 null */
-        WriteNullListAsEmpty,
-        /** 空字符串输出为 null */
-        WriteNullStringAsEmpty,
-        /** 空布尔输出为 null */
-        WriteNullBooleanAsEmpty,
-        /** 空数字输出为 null */
-        WriteNullNumberAsEmpty,
-        /** 使用 ISO-8601 格式输出日期 */
-        UseISO8601DateFormat,
-        /** 单引号格式 */
-        UseSingleQuotes,
-        /** 使用下划线命名 */
-        SnakeCase,
-        /** 使用短横线命名 */
-        KebabCase,
-        /** 排序输出 */
-        SortField,
-        /** 使用对象池 */
-        UseObjectPool,
-        /** 非字段字段也输出 */
-        NotWriteDefaultValue,
-        /** 浏览器兼容模式 */
-        BrowserCompatible,
-        /** 输出类的 Class 对象 */
-        WriteClassName,
-        /** 忽略 getter */
-        IgnoreGetters,
-        /** 忽略 setter */
-        IgnoreSetters,
-        /** 忽略非字段 getter */
-        IgnoreNonFieldGetter,
-        /** 不输出 root 对象 */
-        NotWriteRootClassName,
-        /** 不输出 null 值 */
-        NotWriteNullValue,
-        /** 不输出空数组 */
-        NotWriteEmptyArray,
-        /** 枚举使用 ordinal 序列化 */
-        SerializeEnumUsingOrdinal
-    }
-    
-    /**
-     * 反序列化特性枚举
-     */
-    enum DeserializeFeature {
-        /** 支持注释 */
-        SupportComment,
-        /** 支持单引号 */
-        SupportSingleQuote,
-        /** 支持非标准引号 */
-        SupportNonStandardQuote,
-        /** 支持数组分隔符 */
-        SupportArbitraryComma,
-        /** 忽略不匹配的字段 */
-        IgnoreNotMatch,
-        /** 禁用 ASM */
-        DisableASM,
-        /** 禁用 autoType */
-        DisableAutoType,
-        /** 启用字段类型推断 */
-        EnableFieldBased,
-        /** 使用对象池 */
-        UseObjectPool,
-        /** 忽略控制字符 */
-        IgnoreControlChars,
-        /** 支持 JSON5 */
-        SupportJSON5
-    }
     
     /**
      * 命名策略枚举
