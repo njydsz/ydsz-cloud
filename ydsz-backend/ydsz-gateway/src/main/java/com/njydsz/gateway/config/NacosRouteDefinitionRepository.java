@@ -170,11 +170,30 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
     }
 
     @Override
+    /**
+     * 保存路由定义（当前为只读实现，不支持写操作）。
+     *
+     * <p>路由配置的唯一定义来源是 Nacos 配置中心（{@code gateway-routes.json}），
+     * 网关不提供通过 API 动态写入路由的能力，故此处直接返回空的完成信号。
+     * 新增 / 变更路由请在 Nacos Dashboard 修改配置后由 {@link #receiveConfigInfo} 监听刷新。
+     *
+     * @param route 待保存的路由定义（本实现忽略）
+     * @return 空完成信号
+     */
     public Mono<Void> save(Mono<RouteDefinition> route) {
         return Mono.empty();
     }
 
     @Override
+    /**
+     * 删除路由定义（当前为只读实现，不支持删除）。
+     *
+     * <p>与 {@link #save} 同理，路由生命周期完全由 Nacos 配置管理，
+     * 网关侧不提供运行时删除入口，直接返回空完成信号。
+     *
+     * @param routeId 待删除的路由 ID（本实现忽略）
+     * @return 空完成信号
+     */
     public Mono<Void> delete(Mono<String> routeId) {
         return Mono.empty();
     }
@@ -196,6 +215,15 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
         try {
             nacosConfigManager.getConfigService().addListener(dataId, group, new Listener() {
                 @Override
+                /**
+                 * Nacos 配置变更回调：路由定义被修改时触发。
+                 *
+                 * <p>重新加载路由到内存缓存（{@link #routeCache}）并发布
+                 * {@code RefreshRoutesEvent}，使 Spring Cloud Gateway 实时刷新路由表，
+                 * 实现秒级生效、无需重启网关。
+                 *
+                 * @param configInfo Nacos 推送的最新路由配置（JSON 数组字符串）
+                 */
                 public void receiveConfigInfo(String configInfo) {
                     log.info("[NacosRoutes] 检测到路由配置变更 dataId={} group={}", dataId, group);
                     // P0-5: 重新加载路由到内存缓存
@@ -206,6 +234,14 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                 }
 
                 @Override
+                /**
+                 * 返回监听器回调执行的线程池。
+                 *
+                 * <p>复用类级共享单线程 {@link #sharedExecutor}（守护线程），
+                 * 避免每次配置变更都新建线程池导致线程泄漏（P0-6）。
+                 *
+                 * @return 共享单线程执行器
+                 */
                 public Executor getExecutor() {
                     // P0-6: 返回共享 Executor，避免每次创建新线程池导致线程泄漏
                     return sharedExecutor;

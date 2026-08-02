@@ -71,6 +71,15 @@ public class GatewayHealthIndicator implements HealthIndicator {
     }
 
     @Override
+    /**
+     * 汇总网关核心依赖与能力的运行状态。
+     *
+     * <p>逐个探测 Redis 连通性、安全响应头、限流、IP 白名单、认证过滤器、灰度等，
+     * 各项均通过 {@link ObjectProvider#getIfAvailable()} 可选获取，缺失项标记 NOT_CONFIGURED 不影响整体。
+     * 任一关键项（如鉴权过滤器）不可用时整体健康状态降级为 DOWN。
+     *
+     * @return 包含各项 detail 的健康快照
+     */
     public Health health() {
         Map<String, Object> details = new LinkedHashMap<>();
         boolean healthy = true;

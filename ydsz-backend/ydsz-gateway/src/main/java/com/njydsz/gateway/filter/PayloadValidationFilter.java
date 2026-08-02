@@ -70,6 +70,17 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
     private static final int JSON_DEPTH_WARN_THRESHOLD = 30;
 
     @Override
+    /**
+     * 请求体安全校验过滤器：限制请求体大小与 Content-Type。
+     *
+     * <p>仅对 POST/PUT/PATCH 等有请求体的方法生效；校验 Content-Type 是否缺失、
+     * 请求体是否超过 {@code max-body-size-mb}（默认 10MB），超限返回 400。
+     * JSON 深度校验委托下游服务（避免在网关缓存全量请求体影响性能）。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param chain    网关过滤器链
+     * @return 放行或拒绝（400）的完成信号 Mono
+     */
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         if (!enabled) {
             return chain.filter(exchange);

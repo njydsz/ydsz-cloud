@@ -91,6 +91,7 @@ public final class ChatMessage implements Serializable {
     }
 
     public ChatMessage appendContent(String delta) {
+        // 不可变语义：拼接出新内容后返回全新 ChatMessage 实例，原消息的 toolCalls 也做拷贝防御，绝不原地修改
         String newContent = (content == null ? "" : content) + delta;
         return new ChatMessage(id, role, newContent, conversationId, createdAt,
                 new ArrayList<>(toolCalls), toolCallId, tokenUsage);

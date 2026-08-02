@@ -31,6 +31,7 @@ import com.njydsz.agent.domain.rag.VectorStore;
 public class DocumentIngestionService {
 
     private static final Logger log = LoggerFactory.getLogger(DocumentIngestionService.class);
+    // Embedding 批量调用大小：单次最多 20 条，平衡吞吐与单次请求超时风险
     private static final int EMBED_BATCH_SIZE = 20;
 
     private final TextChunker textChunker;

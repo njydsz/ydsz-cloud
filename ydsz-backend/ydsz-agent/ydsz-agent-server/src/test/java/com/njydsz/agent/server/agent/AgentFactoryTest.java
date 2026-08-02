@@ -73,7 +73,7 @@ class AgentFactoryTest {
 
     private AgentDefinition definition(AgentDefinition.Type type) {
         return new AgentDefinition("agent-1", "code-1", "name-1", type,
-                "system prompt", List.of(), 0.7, 2048, 10, "gpt-4o-mini");
+                "system prompt", List.of(), 0.7, 2048, 10, "gpt-4o-mini"); // 默认推理参数：temperature 0.7 / maxTokens 2048 / 最大迭代 10
     }
 
     @Test

@@ -73,6 +73,7 @@ public class AgentDebuggerService {
                 "Replay Agent",
                 AgentDefinition.Type.valueOf(agentType.toUpperCase()),
                 null, List.of(),
+                // 重放使用默认推理参数：temperature 0.7、maxTokens 2048、最大迭代 10
                 0.7, 2048, 10,
                 null);
 

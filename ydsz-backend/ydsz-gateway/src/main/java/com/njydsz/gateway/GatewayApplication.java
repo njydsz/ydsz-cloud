@@ -62,6 +62,15 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 })
 public class GatewayApplication {
 
+    /**
+     * 网关启动入口。
+     *
+     * <p>通过 {@link SpringApplication} 引导 Spring Boot 应用，激活
+     * {@code @EnableDiscoveryClient} 服务注册发现与 {@code @EnableConfigurationProperties}
+     * 配置属性绑定；所有过滤器、路由在安全校验后由 Spring 容器自动装配。
+     *
+     * @param args 命令行参数（如 {@code --spring.profiles.active=noroutes} 可禁用 Java 兜底路由）
+     */
     public static void main(String[] args) {
         SpringApplication.run(GatewayApplication.class, args);
     }

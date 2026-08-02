@@ -28,12 +28,20 @@ public class DocumentConversionApplicationService {
     }
 
     /**
-     * 转换文档格式
+     * 转换文档格式（按 {@code 源格式->目标格式} 路由到具体转换实现）。
+     * <p>当前支持 md/markdown→html、html→pdf（占位，待集成 OpenPDF/Flying Saucer）、
+     * txt→html、csv→html；不支持的组合抛出 {@link UnsupportedOperationException}。
+     * Markdown/文本/CSV 转 HTML 为内置轻量实现，HTML→PDF 暂仅回写 HTML 作为占位。
      *
-     * @param inputFormat  源格式
-     * @param outputFormat 目标格式
-     * @param inputStream  源文件流
-     * @param outputStream 目标文件流
+     * @param inputFormat  源格式（如 "md"、"html"、"txt"、"csv"），大小写不敏感
+     * @param outputFormat 目标格式（如 "html"、"pdf"）
+     * @param inputStream  源文件输入流（方法内会读尽，调用方不必复用）
+     * @param outputStream 目标文件输出流（方法内写入转换结果，调用方负责关闭）
+     * @throws Exception 不支持的格式组合抛 {@link UnsupportedOperationException}；IO/编码异常原样抛出
+     * @complexity O(contentLength)（全量读入内存后做正则/字符串替换）
+     * @note 本服务为无状态纯转换，线程安全；大文件会整体载入内存，注意内存占用
+     * @see #convertMarkdownToHtml(InputStream, OutputStream)
+     * @see #convertHtmlToPdf(InputStream, OutputStream)
      */
     public void convert(String inputFormat, String outputFormat,
                          InputStream inputStream, OutputStream outputStream) throws Exception {

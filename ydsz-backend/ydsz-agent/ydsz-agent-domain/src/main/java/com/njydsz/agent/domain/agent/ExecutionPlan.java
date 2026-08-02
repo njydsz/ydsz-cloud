@@ -47,6 +47,7 @@ public final class ExecutionPlan implements Serializable {
     }
 
     public PlanStep getCurrentStep() {
+        // 无 PENDING 步骤时返回 null，调用方据此判定计划已执行完毕并结束循环
         return steps.stream()
                 .filter(s -> s.getStatus() == PlanStep.StepStatus.PENDING)
                 .findFirst()
@@ -60,9 +61,11 @@ public final class ExecutionPlan implements Serializable {
      * @param newSteps  新的步骤列表
      */
     public void replaceRemainingSteps(int fromIndex, List<PlanStep> newSteps) {
+        // 自 fromIndex 起逐个移除旧步骤，保留其前已完成的步骤不变
         while (steps.size() > fromIndex) {
             steps.remove(fromIndex);
         }
+        // 用重规划产出的步骤按原索引接续追加，保证 steps 索引连续、序号不漂移
         for (int i = 0; i < newSteps.size(); i++) {
             steps.add(new PlanStep(fromIndex + i,
                     newSteps.get(i).getDescription(),

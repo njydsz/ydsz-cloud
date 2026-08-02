@@ -151,11 +151,33 @@ public class PromptManagementService {
         return content;
     }
 
-    public record PromptTemplate(String code, String name, String content,
-                                  String description, String category,
-                                  int version, LocalDateTime createdAt,
-                                  LocalDateTime updatedAt) {}
+    /** Prompt 模板（当前版本快照） */
+    public record PromptTemplate(
+            /** 模板唯一编码（业务标识，创建后不可变） */
+            String code,
+            /** 模板名称（展示用） */
+            String name,
+            /** 模板内容，支持 #{var} 占位符 */
+            String content,
+            /** 模板描述 */
+            String description,
+            /** 分类（用于 listByCategory 检索） */
+            String category,
+            /** 当前版本号，自 1 起每次 update 递增 */
+            int version,
+            /** 创建时间 */
+            LocalDateTime createdAt,
+            /** 最近更新时间 */
+            LocalDateTime updatedAt) {}
 
-    public record PromptVersion(String code, int version, String content,
-                                 LocalDateTime createdAt) {}
+    /** Prompt 模板的历史版本（每次 update 追加一条，支持 rollback） */
+    public record PromptVersion(
+            /** 所属模板编码 */
+            String code,
+            /** 版本号 */
+            int version,
+            /** 该版本的模板内容快照 */
+            String content,
+            /** 版本创建时间 */
+            LocalDateTime createdAt) {}
 }

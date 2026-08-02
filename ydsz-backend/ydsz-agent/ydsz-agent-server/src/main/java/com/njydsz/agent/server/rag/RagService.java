@@ -31,7 +31,9 @@ import com.njydsz.agent.infra.rag.HybridRetriever;
 public class RagService {
 
     private static final Logger log = LoggerFactory.getLogger(RagService.class);
+    // 默认返回 Top-5 召回；过小覆盖不足、过大引入噪声并增加上下文长度
     private static final int DEFAULT_TOP_K = 5;
+    // 默认最小相似度阈值 0.7：低于此分数视为不相关，过滤低质召回
     private static final double DEFAULT_MIN_SCORE = 0.7;
 
     private final VectorStore vectorStore;
@@ -73,7 +75,7 @@ public class RagService {
             chunks = vectorStore.search(query, topK, minScore);
         }
         log.info("[RAG] 检索完成: query='{}', mode={}, results={}",
-                truncate(query, 50), hybridRetriever != null ? "hybrid" : "vector", chunks.size());
+                truncate(query, 50), hybridRetriever != null ? "hybrid" : "vector", chunks.size()); // 日志中查询仅保留前 50 字符，避免长文本刷屏
         return chunks;
     }
 
@@ -133,7 +135,7 @@ public class RagService {
                     chunk.getDocumentId(),
                     chunk.getDocumentTitle(),
                     chunk.getSource(),
-                    truncate(chunk.getContent(), 200)));
+                    truncate(chunk.getContent(), 200))); // 引用摘要截取到 200 字符，供前端展示
         }
         return citations;
     }

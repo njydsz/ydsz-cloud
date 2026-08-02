@@ -47,7 +47,15 @@ public class ContentExtractionApplicationService {
     private static final int MAX_CONTENT_LENGTH = 1024 * 1024;
 
     /**
-     * 异步提取文件内容并更新搜索索引
+     * 异步提取文件内容并更新搜索索引（上传后管线入口）。
+     * <p>由 {@code nextwikiTaskExecutor} 线程池异步执行，内部捕获全部异常仅记日志，
+     * 避免阻塞主流程或导致上传事务回滚；真正的提取逻辑见 {@link #extractAndIndex}。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @param userId     操作人 ID（透传给索引，用于权限字段归属）
+     * @return 无返回值
+     * @concurrency 异步执行，失败不影响主链路；同一文件可能被并发触发，索引以最终写入为准
+     * @note 本方法本身无事务边界，异常被吞掉仅告警
      */
     @Async("nextwikiTaskExecutor")
     public void extractAndIndexAsync(String fileNodeId, String userId) {
@@ -59,7 +67,16 @@ public class ContentExtractionApplicationService {
     }
 
     /**
-     * 提取文件内容并更新搜索索引
+     * 提取文件内容并写入搜索索引（同步核心逻辑）。
+     * <p>对纯文本类后缀（{@code TEXT_SUFFIXES}）直接读取内容；PDF/Office 等二进制文档当前未接入 Tika，
+     * 仅索引文件元数据。提取内容超 {@link #MAX_CONTENT_LENGTH} 时截断，避免索引体积膨胀。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @param userId     操作人 ID
+     * @return 无返回值
+     * @note 节点不存在或非文件时静默返回；提取失败（如存储不可用）仅记 warn，不影响上传主流程
+     * @complexity O(contentLength)（读取 + 截取 + 索引写入）
+     * @concurrency 无共享可变状态，可并发；幂等（重复索引以最新内容覆盖）
      */
     public void extractAndIndex(String fileNodeId, String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);

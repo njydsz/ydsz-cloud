@@ -36,6 +36,7 @@ public final class AgentExecutionRequest {
         this.userInput = Objects.requireNonNull(userInput, "userInput 不能为 null");
         this.systemPrompt = systemPrompt;
         this.variables = variables != null ? Map.copyOf(variables) : Collections.emptyMap();
+        // 未指定迭代上限时默认 10 轮，作为 ReAct 循环的兜底上限，避免工具调用死循环
         this.maxIterations = maxIterations > 0 ? maxIterations : 10;
         this.enabledTools = enabledTools != null ? List.copyOf(enabledTools) : Collections.emptyList();
     }
@@ -56,7 +57,7 @@ public final class AgentExecutionRequest {
         private String userInput;
         private String systemPrompt;
         private Map<String, Object> variables;
-        private int maxIterations = 10;
+        private int maxIterations = 10; // Builder 默认值，与构造兜底保持一致，避免未设值时陷入无限迭代
         private List<String> enabledTools;
 
         public Builder conversationId(String conversationId) { this.conversationId = conversationId; return this; }

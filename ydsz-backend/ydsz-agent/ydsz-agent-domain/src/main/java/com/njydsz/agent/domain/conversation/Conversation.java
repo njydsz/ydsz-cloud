@@ -56,6 +56,7 @@ public final class Conversation {
     public void appendMessage(ChatMessage message) {
         Objects.requireNonNull(message, "message 不能为 null");
         messages.add(message);
+        // 累计本轮 Token 消耗（不可变对象相加返回新实例），用于对话级用量统计与配额控制
         if (message.getTokenUsage() != null) {
             totalUsage = totalUsage.add(message.getTokenUsage());
         }
@@ -70,6 +71,7 @@ public final class Conversation {
         if (messages.size() <= count) {
             return Collections.unmodifiableList(messages);
         }
+        // 滑动窗口：仅截取最近 count 条，控制发送给 LLM 的上下文长度，避免长对话撑爆 Token 预算
         return Collections.unmodifiableList(
                 messages.subList(messages.size() - count, messages.size()));
     }

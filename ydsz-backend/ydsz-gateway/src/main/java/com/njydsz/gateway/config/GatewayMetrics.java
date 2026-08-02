@@ -44,6 +44,14 @@ public class GatewayMetrics extends AbstractModuleMetrics {
     /** 按 routeId 维护的熔断器状态引用（AtomicInteger 可变，Gauge 回调能读到最新值） */
     private final ConcurrentMap<String, AtomicInteger> breakerStates = new ConcurrentHashMap<>();
 
+    /**
+     * 构造网关指标组件。
+     *
+     * <p>委托基类 {@link AbstractModuleMetrics} 以 {@code ydsz_gateway_} 为前缀注册 Micrometer 指标，
+     * 由 Micrometer 内部缓存 Timer / Counter 实例，避免每次调用重复创建。
+     *
+     * @param meterRegistry Micrometer 指标注册中心
+     */
     public GatewayMetrics(MeterRegistry meterRegistry) {
         super(meterRegistry, "ydsz_gateway_");
         log.info("[GatewayMetrics] 自定义 Prometheus 指标初始化完成");

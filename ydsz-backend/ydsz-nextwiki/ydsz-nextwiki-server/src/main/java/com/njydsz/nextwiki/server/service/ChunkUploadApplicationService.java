@@ -102,7 +102,19 @@ public class ChunkUploadApplicationService {
     }
 
     /**
-     * 初始化分片上传
+     * 初始化分片上传会话。
+     * <p>生成 {@code uploadId}，校验配额与总分片数上限（{@link #MAX_CHUNKS}），
+     * 将元数据写入 Redis（{@code KEY_UPLOAD_SESSION} 前缀，TTL {@link #SESSION_TTL}）以支持断点续传。
+     *
+     * @param fileName    原始文件名（含后缀），用于合并后落库
+     * @param fileSize    文件总大小（字节），用于配额预校验
+     * @param totalChunks 总分片数，超过 {@link #MAX_CHUNKS} 直接拒绝
+     * @param parentId    目标父目录节点 ID（{@code null}/"0" 视为根目录）
+     * @param userId      操作人 ID，用于配额归属与审计
+     * @return 初始化结果 {@link ChunkUploadInit}，含 {@code uploadId}、总分片数与单分片大小
+     * @throws BusinessException 分片数超限（FILE_TOO_LARGE）或配额不足时抛出
+     * @complexity O(1)（仅 Redis 写入 + 配额校验）
+     * @note 无数据库写；会话状态存于 Redis，依赖 {@link #SESSION_TTL} 自动过期清理
      */
     public ChunkUploadInit initChunkUpload(String fileName, long fileSize, int totalChunks,
                                             String parentId, String userId) {
@@ -137,7 +149,17 @@ public class ChunkUploadApplicationService {
     }
 
     /**
-     * 上传单个分片
+     * 上传单个分片并落盘到临时目录。
+     * <p>先校验会话有效性、分片非空与单分片大小（{@link #MAX_CHUNK_SIZE}），
+     * 写入磁盘后将分片号加入 Redis 已上传集合（{@code KEY_UPLOADED_CHUNKS}）。
+     *
+     * @param uploadId    初始化时返回的会话 ID
+     * @param chunkNumber 当前分片序号（从 1 开始）
+     * @param chunk       分片文件内容
+     * @throws BusinessException 会话不存在、分片为空或超限时抛出
+     * @complexity O(1)（磁盘写入 + Redis 集合追加）
+     * @concurrency 多个分片可并发上传，最终由 {@link #completeChunkUpload} 串行按序合并
+     * @note 仅依赖会话 Redis 状态，单分片幂等可重传（覆盖写同名临时文件）
      */
     public void uploadChunk(String uploadId, int chunkNumber, MultipartFile chunk) {
         validateSession(uploadId);
@@ -167,7 +189,19 @@ public class ChunkUploadApplicationService {
     }
 
     /**
-     * 完成分片上传（合并分片并上传到存储）
+     * 完成分片上传：校验完整性 → 合并分片 → 上传存储 → 建节点（含秒传去重）。
+     * <p>先核对已上传分片数与声明总数一致，再按序合并临时分片、计算 SHA-256 做秒传去重，
+     * 命中已有文件则复用其存储键（仅新增节点与配额）；否则上传对象存储并创建 FileNode。
+     * 成功后发布上传事件（驱动内容提取/索引/审计），并在 {@code finally} 清理临时文件与 Redis 会话。
+     *
+     * @param uploadId 会话 ID
+     * @param userId   操作人 ID，用于配额与审计归属
+     * @return 新建/去重的文件节点视图 {@link FileNodeVO}
+     * @throws BusinessException 分片不完整、存储未配置或合并失败（FILE_DOWNLOAD_FAILED）时抛出
+     * @transaction 整个方法 {@code @Transactional(rollbackFor = Exception.class)}，节点落库与配额/版本变更同事务
+     * @complexity O(totalChunks)（顺序合并）+ 一次存储上传 + 一次 SHA-256 全量读取
+     * @concurrency 同一 {@code uploadId} 应串行完成，避免并发合并竞争；分片上传阶段可并发
+     * @note 方法结束后强制清理临时分片与 Redis 会话，确保不残留孤儿文件
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO completeChunkUpload(String uploadId, String userId) {
@@ -290,7 +324,13 @@ public class ChunkUploadApplicationService {
     }
 
     /**
-     * 取消分片上传
+     * 取消分片上传并清理所有临时资源。
+     * <p>无论 Redis 会话是否存在都尝试清理临时分片与合并文件及会话键，保证不残留孤儿数据。
+     *
+     * @param uploadId 会话 ID
+     * @return 无返回值
+     * @note 幂等：重复取消不会报错（清理失败仅告警日志）
+     * @complexity O(totalChunks)（逐文件删除）+ Redis 删除
      */
     public void abortChunkUpload(String uploadId) {
         ChunkUploadSession session = getSession(uploadId);
@@ -306,7 +346,12 @@ public class ChunkUploadApplicationService {
     }
 
     /**
-     * 查询已上传分片列表（用于断点续传）
+     * 查询已上传分片号集合（客户端用于断点续传，仅重传缺失分片）。
+     *
+     * @param uploadId 会话 ID
+     * @return 已成功上传的分片序号集合；会话不存在时返回空集合（非 {@code null}）
+     * @complexity O(1)（Redis 集合读取）
+     * @note 只读，无副作用
      */
     public Set<Integer> getUploadedChunks(String uploadId) {
         Set<String> uploaded = redisService.sMembers(KEY_UPLOADED_CHUNKS + uploadId, String.class);
@@ -544,22 +589,33 @@ public class ChunkUploadApplicationService {
     @Data
     @Builder
     public static class ChunkUploadInit {
+        /** 上传会话 ID（UUID，作为 Redis 键与续传凭证） */
         private String uploadId;
+        /** 总分片数 */
         private int totalChunks;
+        /** 单分片大小上限（字节），见 {@link #MAX_CHUNK_SIZE} */
         private long chunkSize;
     }
 
     /**
-     * 分片上传会话（Redis 存储，P0-R4: 改用 YdszJson 序列化替代管道符分隔）
+     * 分片上传会话（Redis 存储，P0-R4: 改用 YdszJson 序列化替代管道符分隔）。
+     * <p>会话承载一次分片上传的全部上下文，TTL 由 {@link #SESSION_TTL} 控制，过期即视为放弃。
      */
     @Data
     public static class ChunkUploadSession {
+        /** 上传会话 ID */
         private String uploadId;
+        /** 原始文件名（含后缀） */
         private String fileName;
+        /** 文件总大小（字节），用于合并后大小校验 */
         private long fileSize;
+        /** 总分片数 */
         private int totalChunks;
+        /** 目标父目录节点 ID */
         private String parentId;
+        /** 操作人 ID（配额/审计归属） */
         private String userId;
+        /** 会话创建时间（ISO 本地时间字符串） */
         private String createdAt;
 
         String toJson() {

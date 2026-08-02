@@ -15,6 +15,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Configuration
 public class NextwikiSecurityConfig {
 
+    /**
+     * 注册 BCrypt 密码编码器 Bean。
+     * <p>用于对分享链接的访问密码进行安全散列存储与校验，供 {@code ShareDomainService} 注入使用。
+     *
+     * @return BCryptPasswordEncoder 实例（线程安全，可全局复用）
+     */
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();

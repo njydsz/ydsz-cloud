@@ -52,6 +52,17 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
     private static final String HEADER_TRACEPARENT = "traceparent";
 
     @Override
+    /**
+     * 注入 W3C Trace Context，建立全链路追踪上下文。
+     *
+     * <p>生成符合 W3C 标准的 traceparent（32hex traceId + 16hex spanId）并注入请求，
+     * 同时兼容写入 {@code X-Trace-Id}；响应头也回写两者。作为最早执行的过滤器（order=0），
+     * 后续过滤器统一复用此 traceId，避免各自生成导致链路断裂。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param chain    网关过滤器链
+     * @return 完成信号 Mono
+     */
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
 

@@ -36,6 +36,7 @@ public enum MessageRole {
                 return role;
             }
         }
+        // 无法识别的 role 字符串兜底为 USER，避免非法/新增角色导致整条链路解析失败
         return USER;
     }
 }

@@ -52,6 +52,7 @@ public final class AgentDag implements Serializable {
         }
         List<Node> roots = new ArrayList<>();
         for (String nodeId : nodes.keySet()) {
+            // 不在任何边依赖集合中的节点入度为 0，无前置依赖、可立即调度执行
             if (!hasIncoming.contains(nodeId)) {
                 roots.add(nodes.get(nodeId));
             }
@@ -67,6 +68,7 @@ public final class AgentDag implements Serializable {
         List<Node> deps = new ArrayList<>();
         for (String depId : depIds) {
             Node dep = nodes.get(depId);
+            // 依赖 ID 在节点表中缺失时静默跳过，避免 DAG 定义不一致导致 NPE
             if (dep != null) {
                 deps.add(dep);
             }

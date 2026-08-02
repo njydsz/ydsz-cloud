@@ -72,6 +72,17 @@ public class GatewayErrorConfig {
     static class GatewayExceptionHandler implements WebExceptionHandler {
 
         @Override
+        /**
+         * 处理网关层异常并返回统一 JSON 错误响应。
+         *
+         * <p>仅处理响应尚未提交（body 未写出）的异常；已提交则原样抛出交由容器兜底。
+         * 状态码 / 业务码 / 错误消息分别由 {@link #resolveHttpStatus}、{@link #resolveBizCode}、
+         * {@link #resolveMessage} 解析，并注入 traceId 便于跨服务排障。
+         *
+         * @param exchange 服务器 Web 交换上下文
+         * @param ex       待处理的异常
+         * @return 写出错误响应后的完成信号 Mono
+         */
         public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
             if (exchange.getResponse().isCommitted()) {
                 return Mono.error(ex);

@@ -109,6 +109,7 @@ public class DagOrchestrationExecutor {
 
         try {
             CompletableFuture.allOf(futureMap.values().toArray(new CompletableFuture[0]))
+                    // 整图总超时 300s（5 分钟）：任一节点超时即视为编排失败，避免长尾任务长期占用线程
                     .orTimeout(300, TimeUnit.SECONDS)
                     .join();
         } catch (CompletionException e) {
@@ -232,7 +233,7 @@ public class DagOrchestrationExecutor {
                                   String executionId) {
         String loopCondition = (String) node.getConfig().get("loopCondition");
         int maxIter = node.getConfig().containsKey("maxIterations")
-                ? (Integer) node.getConfig().get("maxIterations") : 10;
+                ? (Integer) node.getConfig().get("maxIterations") : 10; // 循环节点默认最多迭代 10 次，防止死循环耗尽资源
         String loopBodyStr = (String) node.getConfig().getOrDefault("loopBody", "");
         List<String> loopBodyNodes = loopBodyStr.isBlank()
                 ? List.of() : List.of(loopBodyStr.split(","));

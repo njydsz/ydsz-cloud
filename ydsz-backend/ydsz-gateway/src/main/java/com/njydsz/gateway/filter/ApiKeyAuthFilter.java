@@ -74,6 +74,17 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     private String protectedPaths;
 
     @Override
+    /**
+     * API Key 认证过滤器：为外部系统提供 JWT 之外的备选认证方式。
+     *
+     * <p>未启用 / 非受保护路径 / 已有 JWT 身份（X-User-Id 存在）时直接放行；
+     * 否则从 {@code X-API-Key} 头或 {@code api_key} 查询参数提取并校验，
+     * 通过则注入 {@code X-API-Key-User} 标识后放行，缺失 / 无效分别返回 401 / 403。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param chain    网关过滤器链
+     * @return 放行或拒绝（401 / 403）的完成信号 Mono
+     */
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         if (!enabled) {
             return chain.filter(exchange);

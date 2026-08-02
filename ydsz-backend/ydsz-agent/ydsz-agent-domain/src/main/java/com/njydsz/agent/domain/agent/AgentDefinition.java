@@ -48,11 +48,13 @@ public final class AgentDefinition implements Serializable {
         this.agentId = Objects.requireNonNull(agentId, "agentId 不能为 null");
         this.code = Objects.requireNonNull(code, "code 不能为 null");
         this.name = Objects.requireNonNull(name, "name 不能为 null");
+        // 类型缺失时降级为最基础的单轮 CHAT，避免空指针且保证一定可执行
         this.type = type != null ? type : Type.CHAT;
         this.systemPrompt = systemPrompt;
         this.toolNames = toolNames != null ? List.copyOf(toolNames) : List.of();
         this.temperature = temperature;
         this.maxTokens = maxTokens;
+        // 未指定迭代上限时默认 10 轮，作为 ReAct/Plan 循环的兜底熔断，防止无限递归
         this.maxIterations = maxIterations > 0 ? maxIterations : 10;
         this.modelId = modelId;
     }

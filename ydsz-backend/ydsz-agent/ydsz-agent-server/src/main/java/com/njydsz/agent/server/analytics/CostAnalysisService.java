@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 public class CostAnalysisService {
 
     private static final Logger log = LoggerFactory.getLogger(CostAnalysisService.class);
+    // 内存存储上限 1 万条：超出后写入时淘汰最旧记录（按 createdAt），防止长期运行 OOM
     private static final int MAX_RECORDS = 10000;
 
     private final TokenUsageRepository usageRepository = new TokenUsageRepository();
@@ -78,10 +79,23 @@ public class CostAnalysisService {
         return new ModelUsageStats(prompt, completion, total, cost, records.size());
     }
 
+    /**
+     * 查询指定模型的单价（USD / 千 Token）
+     *
+     * @param model 模型名称
+     * @return 单价；未配置时返回兜底单价 0.001
+     */
     public double getModelPrice(String model) {
         return priceConfig.getPrice(model);
     }
 
+    /**
+     * 计算指定日期范围内的 Token 总成本
+     *
+     * @param start 开始日期（含）
+     * @param end   结束日期（含）
+     * @return 总成本（USD）
+     */
     public double calculateTotalCost(LocalDate start, LocalDate end) {
         ModelUsageStats stats = getStatsByModel(start, end);
         return stats.cost();
@@ -91,8 +105,18 @@ public class CostAnalysisService {
                                     long promptTokens, long completionTokens, long totalTokens,
                                     LocalDateTime createdAt) {}
 
-    public record ModelUsageStats(long promptTokens, long completionTokens,
-                                   long totalTokens, double cost, long requestCount) {}
+    /** 按模型统计的用量与成本汇总（所有金额单位均为 USD） */
+    public record ModelUsageStats(
+            /** 提示词 Token 累计数 */
+            long promptTokens,
+            /** 补全 Token 累计数 */
+            long completionTokens,
+            /** 总 Token 累计数 */
+            long totalTokens,
+            /** 总成本（USD） */
+            double cost,
+            /** 请求次数 */
+            long requestCount) {}
 
     /**
      * Token 用量存储（线程安全 + 容量限制）
@@ -132,6 +156,7 @@ public class CostAnalysisService {
         private final Map<String, Double> prices;
 
         public ModelPriceConfig() {
+            // 默认单价表：key=模型名前缀，value=USD / 千 Token（与 getModelPrice 的兜底逻辑一致）
             this(Map.of(
                 "gpt-4o", 0.0025,
                 "gpt-4o-mini", 0.00015,
@@ -144,6 +169,7 @@ public class CostAnalysisService {
             if (customPrices != null && !customPrices.isEmpty()) {
                 this.prices = new LinkedHashMap<>(customPrices);
             } else {
+                // 自定义价格表为空时使用内置默认单价（USD / 千 Token）
                 this.prices = Map.of(
                     "gpt-4o", 0.0025,
                     "gpt-4o-mini", 0.00015,
@@ -154,6 +180,7 @@ public class CostAnalysisService {
         }
 
         public double getPrice(String model) {
+            // 模型名无法匹配任何配置时使用兜底单价 0.001 USD/千Token，避免成本统计为 0 造成误判
             if (model == null || model.isBlank()) {
                 return 0.001;
             }
@@ -162,6 +189,7 @@ public class CostAnalysisService {
                     return prices.get(key);
                 }
             }
+            // 未命中特定模型配置同样回退到兜底单价
             return 0.001;
         }
     }

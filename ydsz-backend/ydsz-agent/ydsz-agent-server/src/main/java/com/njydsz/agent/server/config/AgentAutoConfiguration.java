@@ -108,6 +108,7 @@ public class AgentAutoConfiguration {
     public ConversationMemory conversationMemory(RedisService redisService,
                                                    AgentProperties properties) {
         int maxMessages = properties.getMemory().getMaxMessages();
+        // Redis 列表容量取「滑动窗口 2 倍」与「至少 50」的较大值，预留余量避免边界被覆盖
         int maxListSize = Math.max(maxMessages * 2, 50);
         return new RedisConversationMemory(redisService,
                 properties.getMemory().getTtlHours(), maxListSize);

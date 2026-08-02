@@ -146,6 +146,17 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     );
 
     @Override
+    /**
+     * 精细化限流核心过滤器：多维度令牌桶限流（IP / 用户 / 租户）。
+     *
+     * <p>限流关闭或白名单路径直接放行 → 提取客户端 IP / 用户 / 租户标识 →
+     * 三维度并行执行 Redis Lua 令牌桶检查，任一维度拒绝即返回 429。
+     * Redis 连续失败超过阈值时切换本地兜底令牌桶（P0-3）。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param chain    网关过滤器链
+     * @return 放行或拒绝（429）的完成信号 Mono
+     */
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         if (!properties.isEnabled()) {
             return chain.filter(exchange);

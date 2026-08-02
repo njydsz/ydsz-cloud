@@ -64,6 +64,8 @@ public class AgentDefinitionSearchProvider implements SearchProvider<AgentDefini
 
     @Override
     public List<SearchField> getSearchableFields() {
+        // 字段权重反映相关性重要性：名称(title 3.0) > 类型(subtitle 2.0) > 描述(content 1.0) > 状态(status 0.5)
+        // status 不进入全文检索(searchable=false)，仅用于聚合筛选
         return List.of(
                 SearchField.builder()
                         .name("title").label("Agent名称").type(FieldType.TEXT)

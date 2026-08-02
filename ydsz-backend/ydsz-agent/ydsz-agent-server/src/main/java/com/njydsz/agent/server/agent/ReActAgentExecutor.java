@@ -66,6 +66,7 @@ public class ReActAgentExecutor implements AgentExecutor {
     private final TraceRecorder traceRecorder;
     /** Agent 指标采集 */
     private final AgentMetrics agentMetrics;
+    /** 成本分析服务（Token 用量核算，可为 null，调用处已做空判断） */
     private final CostAnalysisService costAnalysisService;
 
     public ReActAgentExecutor(LlmClient llmClient, ConversationMemory memory,
