@@ -9,15 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.njydsz.common.json.annotation.JsonAnyGetter;
 import com.njydsz.common.json.annotation.JsonAnySetter;
 import com.njydsz.common.json.annotation.JsonAutoDetect;
-import com.njydsz.common.json.annotation.YdszJsonClass;
+import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonGetter;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
 import com.njydsz.common.json.annotation.JsonNaming;
 import com.njydsz.common.json.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import com.njydsz.common.json.annotation.JsonSetter;
 import com.njydsz.common.json.annotation.JsonValue;
-import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 import com.njydsz.common.json.annotation.JsonVisibility;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
@@ -85,7 +85,7 @@ public final class FieldMetadataLoader {
      * 加载字段元数据
      */
     public static FieldMeta[] loadFields(Class<?> clazz) {
-        YdszJsonClass classAnnotation = clazz.getAnnotation(YdszJsonClass.class);
+        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
 
         int annotationFieldCount = classAnnotation != null
             ? classAnnotation.ignores().length + classAnnotation.includes().length + classAnnotation.ordering().length
@@ -109,7 +109,7 @@ public final class FieldMetadataLoader {
                     ordering.put(classAnnotation.ordering()[i], i);
                 }
             }
-            if (classAnnotation.naming() != YdszJsonClass.NamingStrategy.CAMEL_CASE) {
+            if (classAnnotation.naming() != JsonClass.NamingStrategy.CAMEL_CASE) {
                 switch (classAnnotation.naming()) {
                     case SNAKE_CASE:
                         classNaming = PropertyNamingStrategy.SNAKE_CASE;
@@ -127,7 +127,7 @@ public final class FieldMetadataLoader {
             }
         }
 
-        YdszJsonPropertyOrder propertyOrder = clazz.getAnnotation(YdszJsonPropertyOrder.class);
+        JsonPropertyOrder propertyOrder = clazz.getAnnotation(JsonPropertyOrder.class);
         Map<String, Integer> propertyOrderMapping = new HashMap<>();
         boolean alphabeticSort = false;
         if (propertyOrder != null) {
@@ -163,7 +163,7 @@ public final class FieldMetadataLoader {
             fieldVisibility = visibilityAnnotation.fields();
         }
 
-        // Jackson 兼容：@JsonAutoDetect 映射到 YdszJsonVisibility
+        // Jackson 兼容：@JsonAutoDetect 映射到 JsonVisibility
         JsonAutoDetect autoDetect = clazz.getAnnotation(JsonAutoDetect.class);
         if (autoDetect != null && autoDetect.fieldVisibility() != JsonAutoDetect.Visibility.DEFAULT) {
             fieldVisibility = autoDetect.fieldVisibility().toYdszVisibility();

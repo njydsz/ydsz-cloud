@@ -12,10 +12,10 @@ import java.lang.annotation.Target;
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * &#064;YdszJsonTypeInfo(property = "type")
- * &#064;YdszJsonSubTypes({
- *     &#064;YdszJsonSubType(value = Dog.class, name = "dog"),
- *     &#064;YdszJsonSubType(value = Cat.class, name = "cat")
+ * &#064;JsonTypeInfo(property = "type")
+ * &#064;JsonSubTypes({
+ *     &#064;JsonSubType(value = Dog.class, name = "dog"),
+ *     &#064;JsonSubType(value = Cat.class, name = "cat")
  * })
  * public abstract class Animal { }
  * </pre>

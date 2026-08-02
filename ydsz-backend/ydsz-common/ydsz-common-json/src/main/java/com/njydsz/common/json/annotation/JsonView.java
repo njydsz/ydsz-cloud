@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * JSON 视图注解
  *
- * <p>用于按场景过滤字段，对标 Jackson @YdszJsonView。</p>
+ * <p>用于按场景过滤字段，对标 Jackson @JsonView。</p>
  *
  * <p><b>使用场景：</b></p>
  * <ul>

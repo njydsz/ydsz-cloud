@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * JSON 属性排序注解
  *
- * <p>用于控制序列化时字段的输出顺序，对标 Jackson @YdszJsonPropertyOrder。</p>
+ * <p>用于控制序列化时字段的输出顺序，对标 Jackson @JsonPropertyOrder。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>

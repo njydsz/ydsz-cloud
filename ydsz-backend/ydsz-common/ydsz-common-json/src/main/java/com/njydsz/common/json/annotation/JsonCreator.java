@@ -3,7 +3,7 @@ package com.njydsz.common.json.annotation;
 import java.lang.annotation.*;
 
 /**
- * YdszJson 构造函数注解（参考 fastjson2 的@JSONCreator）
+ * Json 构造函数注解（参考 fastjson2 的@JSONCreator）
  *
  * <p>用于标注构造函数或静态工厂方法，指定反序列化时使用的构造器。</p>
  *

@@ -3,7 +3,7 @@ package com.njydsz.common.domain.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.json.annotation.YdszJsonFormat;
+import com.njydsz.common.json.annotation.JsonFormat;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -100,7 +100,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      *
      * <p><b>字段映射：</b> created_at -> createdAt
      */
-    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     /**
@@ -122,7 +122,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      *
      * <p><b>字段映射：</b> updated_at -> updatedAt
      */
-    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**

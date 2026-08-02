@@ -8,13 +8,13 @@ import java.lang.annotation.Target;
 /**
  * Jackson 兼容注解：指定多态子类型的逻辑名称。
  *
- * <p>对标 Jackson {@code @JsonTypeName}，用于配合 {@code @YdszJsonTypeInfo}
+ * <p>对标 Jackson {@code @JsonTypeName}，用于配合 {@code @JsonTypeInfo}
  * 实现多态类型识别。当 {@link PolymorphicTypeResolver} 解析多态类型时，
  * 会从子类的 {@code @JsonTypeName} 获取类型判别值。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * {@code @YdszJsonTypeInfo(property = "type")}
+ * {@code @JsonTypeInfo(property = "type")}
  * public abstract class Animal { }
  *
  * {@code @JsonTypeName("dog")}

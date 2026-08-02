@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
 
 /**
@@ -52,7 +52,7 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@YdszJsonField(notWriteNullValue = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "total", "pageNum", "pageSize", "pages"})
 public class PageResponse<T> extends BaseResponse<T> {
 

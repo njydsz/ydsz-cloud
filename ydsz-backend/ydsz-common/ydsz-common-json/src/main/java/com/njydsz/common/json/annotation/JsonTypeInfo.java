@@ -8,18 +8,18 @@ import java.lang.annotation.Target;
 /**
  * 多态类型注解
  *
- * <p>用于在反序列化时识别具体的子类类型，对标 Jackson @YdszJsonTypeInfo。</p>
+ * <p>用于在反序列化时识别具体的子类类型，对标 Jackson @JsonTypeInfo。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 基类
- * &#064;YdszJsonTypeInfo(
+ * &#064;JsonTypeInfo(
  *     property = "type",
  *     visible = true
  * )
- * &#064;YdszJsonSubTypes({
- *     &#064;YdszJsonSubType(value = Dog.class, name = "dog"),
- *     &#064;YdszJsonSubType(value = Cat.class, name = "cat")
+ * &#064;JsonSubTypes({
+ *     &#064;JsonSubType(value = Dog.class, name = "dog"),
+ *     &#064;JsonSubType(value = Cat.class, name = "cat")
  * })
  * public abstract class Animal {
  *     private String name;

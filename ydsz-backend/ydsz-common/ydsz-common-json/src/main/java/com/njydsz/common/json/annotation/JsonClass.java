@@ -3,7 +3,7 @@ package com.njydsz.common.json.annotation;
 import java.lang.annotation.*;
 
 /**
- * YdszJson 类级别注解（参考 Jackson 的@JsonIgnoreProperties 和 FastJSON2 的@JSONType）
+ * Json 类级别注解（参考 Jackson 的@JsonIgnoreProperties 和 FastJSON2 的@JSONType）
  * 
  * <p>用于标注 Java 类，控制整体序列化和反序列化行为。</p>
  * 
@@ -124,7 +124,7 @@ public @interface JsonClass {
      * 
      * <p>指定反序列化时可以识别的子类型。</p>
      * 
-     * <p>用于多态反序列化，类似 Jackson 的 {@code @YdszJsonSubTypes}。</p>
+     * <p>用于多态反序列化，类似 Jackson 的 {@code @JsonSubTypes}。</p>
      * 
      * @return 子类型数组
      */
