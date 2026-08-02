@@ -9,6 +9,8 @@ import java.util.Objects;
  *
  * <p>描述一个 LLM 模型的 Provider、API 地址、模型名称、调用参数等。
  *
+ * <p><b>线程安全</b>：字段 final 且停止词列表不可变，构造后只读，可安全被多个 LLM 调用线程并发读取。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

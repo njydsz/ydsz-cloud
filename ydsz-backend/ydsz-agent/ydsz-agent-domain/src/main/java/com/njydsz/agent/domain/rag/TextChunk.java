@@ -10,6 +10,8 @@ import java.util.Objects;
  *
  * <p>文档分块后的最小检索单元，包含文本内容、来源信息和向量嵌入。
  *
+ * <p><b>线程安全</b>：字段 final 且 metadata/embedding 经不可变封装，构造后不可变，可安全跨线程检索与传递。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

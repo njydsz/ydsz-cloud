@@ -14,6 +14,9 @@ import com.njydsz.agent.domain.model.ToolDefinition;
  *   <li>编程式注册（手动注册 ToolExecutor）</li>
  * </ul>
  *
+ * <p><b>线程安全</b>：注册中心通常为单例并在请求间共享，实现须保证 register/unregister/execute 的线程安全
+ * （如用 ConcurrentHashMap），避免并发注册导致工具定义竞态。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

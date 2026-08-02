@@ -12,6 +12,9 @@ import java.util.List;
  *   <li>内存（测试/降级）</li>
  * </ul>
  *
+ * <p><b>线程安全</b>：向量库通常为多请求共享的远程服务或单例，实现须保证 store/search/delete 的并发安全，
+ * search 返回列表不应暴露内部可变引用。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

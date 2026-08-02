@@ -7,6 +7,8 @@ import java.util.List;
  *
  * <p>将长文本切分为合适大小的块（chunk），以便向量化处理。
  *
+ * <p><b>线程安全</b>：分块器通常为无状态单例，实现须保证并发 chunk 调用的线程安全（不依赖可变实例字段）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -95,7 +95,21 @@ public class FileApplicationService {
     );
 
     /**
-     * 上传文件（支持秒传去重）
+     * 上传文件（安全校验 → 配额 → 同名策略 → SHA-256 秒传去重 → 存储上传 → 建节点 → 版本 → 事件）。
+     * <p>启用病毒扫描时，上传后会先扫描，命中病毒立即删除已上传对象并抛 {@code FILE_VIRUS_DETECTED}。
+     * 同名冲突按 {@code nextwiki.upload.conflict-strategy}（KEEP_BOTH/SKIP/OVERWRITE）处理。
+     *
+     * @param file         上传文件（含原始文件名与内容）
+     * @param parentId     目标父目录节点 ID（{@code null}/"0" 视为用户根目录）
+     * @param rename       自定义文件名（覆盖原始名），可为 {@code null}
+     * @param versionRemark 版本备注（写入版本记录），可为 {@code null}
+     * @param userId       操作人 ID（所有者/配额/审计归属）
+     * @return 上传后的文件节点视图 {@link FileNodeVO}（秒传命中时返回去重节点）
+     * @throws BusinessException 文件为空/超限/类型禁用（FILE_*）、存储未配置、病毒命中、配额不足时抛出
+     * @transaction 整个方法 {@code @Transactional(rollbackFor = Exception.class)}，节点/版本/配额/索引同事务
+     * @complexity 正常路径 O(1)（一次存储上传）；秒传路径 O(1)（一次按哈希查询）；扫描为额外 IO
+     * @concurrency 同一文件并发上传受存储幂等影响小；同名 OVERWRITE 由调用方保证串行
+     * @note 计算 SHA-256 与病毒扫描均通过 try-with-resources 关闭 InputStream，避免流泄漏
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO upload(MultipartFile file, String parentId, String rename,
@@ -228,7 +242,16 @@ public class FileApplicationService {
     }
 
     /**
-     * 创建目录
+     * 创建目录（文件夹名经净化处理，防路径穿越/特殊字符）。
+     *
+     * @param parentId 父目录节点 ID（{@code null}/"0" 视为根目录）
+     * @param name     新目录名（会经 {@link #sanitizeFileName} 净化）
+     * @param userId   操作人 ID
+     * @return 新建目录节点视图 {@link FileNodeVO}
+     * @throws BusinessException 父目录不存在/非目录、名称非法时抛出
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}
+     * @complexity O(1)（一次父目录解析 + 一次节点写入）
+     * @note 线程安全（无共享可变状态）
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO createFolder(String parentId, String name, String userId) {
@@ -249,6 +272,21 @@ public class FileApplicationService {
      * @param pageSize 每页大小（默认 50）
      * @return 分页结果（含 total/pageCount）
      */
+    /**
+     * 列出目录下子节点（支持排序/类型过滤/数据库分页，避免全量加载）。
+     *
+     * @param parentId 父目录节点 ID
+     * @param userId   用户 ID（用于根目录解析与权限上下文）
+     * @param sortBy   排序字段：name / size / time（默认 time）
+     * @param sortDir  排序方向：asc / desc（默认 desc）
+     * @param type     过滤类型：all / file / folder（默认 all）
+     * @param page     页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @return 分页结果 {@link PageResult}，元素为 {@link FileNodeVO}
+     * @throws BusinessException 父目录不存在/非目录时抛出
+     * @complexity O(query)（一次数据库分页查询 + 结果映射）
+     * @note 只读、无事务边界；分页由 DB 完成，不存在内存爆量风险
+     */
     public PageResult<FileNodeVO> listFiles(String parentId, String userId,
                                               String sortBy, String sortDir,
                                               String type, int page, int pageSize) {
@@ -266,7 +304,16 @@ public class FileApplicationService {
     }
 
     /**
-     * 移动文件
+     * 移动文件/目录到新父目录（带写权限校验 + 分布式锁防并发竞争）。
+     *
+     * @param nodeId         待移动节点 ID
+     * @param targetParentId 目标父目录 ID
+     * @param userId         操作人 ID
+     * @return 移动后的节点视图 {@link FileNodeVO}
+     * @throws BusinessException 无写权限（PERMISSION_DENIED）、节点/父目录不存在、锁忙（LOCK_BUSY）时抛出
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}，移动与索引更新同事务
+     * @concurrency 加 {@code nextwiki:lock:folder:{nodeId}} 可重入分布式锁，确保移动/重命名/删除互斥
+     * @complexity O(1)（一次领域服务移动 + 一次 VO 转换）
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO move(String nodeId, String targetParentId, String userId) {
@@ -283,7 +330,17 @@ public class FileApplicationService {
     }
 
     /**
-     * 重命名
+     * 重命名文件/目录（带写权限校验 + 分布式锁）。
+     * <p>新名经净化处理；若与目标目录内已有同名冲突，由底层领域服务决定是否覆盖或抛错。
+     *
+     * @param nodeId   待重命名节点 ID
+     * @param newName  新名称（会经 {@link #sanitizeFileName} 净化）
+     * @param userId   操作人 ID
+     * @return 重命名后的节点视图 {@link FileNodeVO}
+     * @throws BusinessException 无写权限、节点不存在、锁忙时抛出
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}
+     * @concurrency 同 {@link #move} 的分布式锁保护，避免与移动/删除并发竞争
+     * @complexity O(1)
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO rename(String nodeId, String newName, String userId) {
@@ -300,7 +357,17 @@ public class FileApplicationService {
     }
 
     /**
-     * 删除（移入回收站）
+     * 删除节点（逻辑删除 → 移入回收站 → 释放配额 → 删索引）。
+     * <p>文件节点在删除后保留于回收站，可由 {@link TrashApplicationService} 恢复；物理存储对象延迟清理。
+     *
+     * @param nodeId 待删除节点 ID
+     * @param userId 操作人 ID
+     * @return 无返回值
+     * @throws BusinessException 无删除权限、节点不存在、锁忙时抛出
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}，软删+入回收站+配额同事务
+     * @concurrency 加 {@code nextwiki:lock:folder:{nodeId}} 分布式锁，防止与移动/重命名并发
+     * @complexity O(1)（一次软删 + 一次回收站写入 + 一次配额扣减 + 一次索引删除）
+     * @note 解锁在 {@code finally} 中执行，确保异常也释放锁；索引删除在事务外（最终一致）
      */
     @Transactional(rollbackFor = Exception.class)
     public void delete(String nodeId, String userId) {
@@ -329,7 +396,14 @@ public class FileApplicationService {
     }
 
     /**
-     * 批量删除（允许部分成功，不使用整体事务）
+     * 批量删除（逐条调用 {@link #delete}，允许部分成功，无整体事务）。
+     * <p>单条失败被捕获并记录到 {@code failedItems}，不中断其余节点；适用于前端多选删除场景。
+     *
+     * @param nodeIds 待删除节点 ID 列表
+     * @param userId  操作人 ID
+     * @return 批量结果 {@link BatchResult}，含成功数与失败明细
+     * @complexity O(nodeIds.size())（逐条删除，串行）
+     * @note 无整体事务边界，部分成功部分失败属正常；单条失败不影响其他项
      */
     public BatchResult batchDelete(List<String> nodeIds, String userId) {
         int success = 0;
@@ -348,7 +422,14 @@ public class FileApplicationService {
     }
 
     /**
-     * 批量移动（允许部分成功，不使用整体事务）
+     * 批量移动（逐条调用 {@link #move}，允许部分成功，无整体事务）。
+     *
+     * @param nodeIds         待移动节点 ID 列表
+     * @param targetParentId  目标父目录 ID
+     * @param userId          操作人 ID
+     * @return 批量结果 {@link BatchResult}，含成功数与失败明细
+     * @complexity O(nodeIds.size())（逐条移动，串行）
+     * @note 单条失败被捕获并记入失败明细，不影响其余项
      */
     public BatchResult batchMove(List<String> nodeIds, String targetParentId, String userId) {
         int success = 0;
@@ -367,7 +448,18 @@ public class FileApplicationService {
     }
 
     /**
-     * 复制文件（创建副本，引用同一存储对象）
+     * 复制节点（新建节点，文件复用同一存储对象，不重复占用物理空间）。
+     * <p>仅对文件做配额校验与配额+1（共享同一 storageKey，不计重复存储但计文件数）；
+     * 复制后发布上传事件以便索引/缩略图等后续处理。
+     *
+     * @param nodeId         源节点 ID
+     * @param targetParentId 目标父目录 ID
+     * @param userId         操作人 ID
+     * @return 复制出的新节点视图 {@link FileNodeVO}
+     * @throws BusinessException 无读权限、源节点不存在、配额不足、父目录非法时抛出
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}，节点写入+版本+配额同事务
+     * @complexity O(1)（一次复制写入 + 一次版本引用 + 一次配额调整）
+     * @note 复制不复制目录递归子树（仅单节点）；存储对象共享，删除源不影响副本
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO copy(String nodeId, String targetParentId, String userId) {
@@ -435,7 +527,16 @@ public class FileApplicationService {
     }
 
     /**
-     * 版本回滚
+     * 版本回滚：将文件恢复至指定历史版本。
+     * <p>由领域服务完成版本指针与内容键回退，再返回最新节点视图。
+     *
+     * @param nodeId        文件节点 ID
+     * @param targetVersion 目标回滚版本号（非 {@code null}）
+     * @param userId        操作人 ID
+     * @return 回滚后的节点视图 {@link FileNodeVO}
+     * @throws BusinessException 节点不存在、版本不存在/无权限时抛出
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}
+     * @complexity O(1)（一次领域回滚 + 一次查询）
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO rollbackVersion(String nodeId, Integer targetVersion, String userId) {
@@ -445,14 +546,25 @@ public class FileApplicationService {
     }
 
     /**
-     * 获取版本历史
+     * 获取文件版本历史列表（按版本号升序）。
+     *
+     * @param nodeId 文件节点 ID
+     * @return 版本记录列表 {@link FileVersion}（可能为空，非 {@code null}）
+     * @complexity O(1)（一次按节点 ID 查询）
+     * @note 只读，无事务边界
      */
     public List<FileVersion> getVersionHistory(String nodeId) {
         return versionDomainService.getVersionHistory(nodeId);
     }
 
     /**
-     * 获取文件详情
+     * 获取文件详情（按节点 ID 查询并转为视图对象）。
+     *
+     * @param nodeId 文件节点 ID
+     * @return 文件节点视图 {@link FileNodeVO}
+     * @throws BusinessException 节点不存在时抛出 FILE_NOT_FOUND
+     * @complexity O(1)（一次按 ID 查询）
+     * @note 只读，无事务边界；不在此做权限校验，调用方可按需叠加 {@code permissionService}
      */
     public FileNodeVO getFileInfo(String nodeId) {
         FileNode node = fileNodeRepository.findById(nodeId);
@@ -463,7 +575,15 @@ public class FileApplicationService {
     }
 
     /**
-     * 星标/取消星标
+     * 切换星标状态（已星标→取消，未星标→星标）。
+     *
+     * @param nodeId 文件节点 ID
+     * @param userId 操作人 ID（同时记为最后更新人）
+     * @return 无返回值
+     * @throws BusinessException 节点不存在时抛出 FILE_NOT_FOUND
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}（一次字段更新）
+     * @complexity O(1)（一次查询 + 一次更新）
+     * @note 幂等：重复调用在两种状态间来回切换
      */
     @Transactional(rollbackFor = Exception.class)
     public void toggleStar(String nodeId, String userId) {

@@ -10,6 +10,8 @@ package com.njydsz.agent.domain.guardrail;
  *   <li>格式验证</li>
  * </ul>
  *
+ * <p><b>线程安全</b>：护栏通常以单例在并发请求中调用，实现应无状态或线程安全；getName/getPriority 须幂等。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

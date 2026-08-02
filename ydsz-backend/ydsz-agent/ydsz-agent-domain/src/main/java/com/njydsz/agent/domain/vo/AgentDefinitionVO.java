@@ -10,6 +10,8 @@ import lombok.Data;
  *
  * <p>用于 Controller 层返回 Agent 定义的展示数据。
  *
+ * <p><b>线程安全</b>：由 @Data 生成 setter，属可变视图载体；在单次响应序列化前于单线程内填充，勿跨线程共享。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

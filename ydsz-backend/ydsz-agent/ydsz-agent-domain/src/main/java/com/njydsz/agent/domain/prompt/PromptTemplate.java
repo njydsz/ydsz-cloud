@@ -13,6 +13,8 @@ import java.util.Objects;
  * String rendered = t.render(Map.of("projectName", "南京云顶 YDSZ"));
  * }</pre>
  *
+ * <p><b>线程安全</b>：字段 final 且 render 仅做只读字符串替换、不修改自身状态，可安全被并发渲染。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -31,7 +31,17 @@ public class OcrApplicationService {
     private final NextwikiProperties properties;
 
     /**
-     * 识别图片中的文字
+     * 识别图片中的文字（按配置服务商路由）。
+     * <p>OCR 未启用时直接返回 skipped；按 {@code nextwiki.ocr.provider} 路由到
+     * tesseract/aliyun/tencent，当前仅 tesseract 本地实现可用，云厂商为 TODO 占位。
+     * 整个识别过程异常被捕获并转为 {@code error} 结果，不会向上抛出。
+     *
+     * @param imageStream 图片输入流（方法内读尽，调用方不必复用）
+     * @param fileName    文件名（仅用于日志，不参与识别）
+     * @return OCR 结果 {@link OcrResult}（含 success/skipped/error 状态与文本）
+     * @complexity O(imageSize)（tesseract 为本地进程调用，受图片分辨率影响）
+     * @note 无事务边界；异常不抛出，调用方需通过 {@link OcrResult#isSuccess()} 等判断结果
+     * @concurrency 无共享可变状态，线程安全；tesseract 为进程调用，并发受系统资源约束
      */
     public OcrResult recognize(InputStream imageStream, String fileName) {
         if (!properties.getOcr().isEnabled()) {
@@ -113,11 +123,17 @@ public class OcrApplicationService {
     @Data
     @Builder
     public static class OcrResult {
+        /** 是否识别成功（含有效文本或空文本） */
         private boolean success;
+        /** 是否被跳过（如 OCR 未启用或云厂商未集成） */
         private boolean skipped;
+        /** 是否出错（异常或非法配置） */
         private boolean error;
+        /** 识别出的纯文本（skipped/error 时为空） */
         private String text;
+        /** 文本块列表（含位置/置信度，当前实现未填充，恒为单块或空） */
         private List<TextBlock> blocks;
+        /** 跳过/错误原因描述 */
         private String message;
 
         public static OcrResult success(String text, List<TextBlock> blocks) {
@@ -139,11 +155,17 @@ public class OcrApplicationService {
     @Data
     @Builder
     public static class TextBlock {
+        /** 该文本块识别出的文字 */
         private String text;
+        /** 文本块左上角 x 坐标（像素） */
         private int x;
+        /** 文本块左上角 y 坐标（像素） */
         private int y;
+        /** 文本块宽度（像素） */
         private int width;
+        /** 文本块高度（像素） */
         private int height;
+        /** 识别置信度（0~1，tesseract 当前未回填，默认 0） */
         private float confidence;
     }
 }

@@ -13,6 +13,8 @@ import lombok.experimental.SuperBuilder;
  *
  * <p>存储 Agent 的完整配置信息，包括类型、系统提示词、绑定工具、模型参数等。
  *
+ * <p><b>线程安全</b>：由 @Data 生成 setter，属可变持久化实体；仅在单请求/单事务内使用，勿跨线程共享。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

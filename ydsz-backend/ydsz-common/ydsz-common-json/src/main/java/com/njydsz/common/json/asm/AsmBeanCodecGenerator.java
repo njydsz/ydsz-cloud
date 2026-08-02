@@ -65,11 +65,11 @@ public final class AsmBeanCodecGenerator {
     /** ASM ClassWriter 配置 */
     /**
      * ASM ClassWriter 标志位。
-     * 使用 COMPUTE_MAXS 而非 COMPUTE_FRAMES：后者在特定字节码模式（密集 GOTO/Label）
-     * 下触发 ASM 9.x 的 NegativeArraySizeException。V1_8 class 在 Java 21+ 上不需
-     * StackMapTable 强制校验（可通过 -Xverify:none 或 JVM 默认宽松验证容忍缺失帧表）。
+     * COMPUTE_FRAMES only（不含 COMPUTE_MAXS）：ASM 基于手动 visitMaxs 值计算 StackMapTable，
+     * 避免 COMPUTE_MAXS 与 COMPUTE_FRAMES 同时启用时在特定字节码模式下触发 ASM 9.x 的
+     * NegativeArraySizeException。手动 visitMaxs 值（8/8 和 2/1）经过验证满足本模块的生成模式。
      */
-    private static final int ASM_FLAGS = ClassWriter.COMPUTE_MAXS;
+    private static final int ASM_FLAGS = ClassWriter.COMPUTE_FRAMES;
 
     /**
      * 字段缓存信息（用于 ASM 生成类中缓存嵌套序列化器/反序列化器）

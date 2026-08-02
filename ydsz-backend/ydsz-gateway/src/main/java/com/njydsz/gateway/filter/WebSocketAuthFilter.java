@@ -311,6 +311,14 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
         return exchange.getResponse().setComplete();
     }
 
+    /**
+     * 过滤器执行顺序：{@code HIGHEST_PRECEDENCE + 8}。
+     *
+     * <p>先于主鉴权过滤器（+10）处理 WebSocket 握手；认证成功写入
+     * {@link #ATTR_WS_AUTHENTICATED} 标记，{@link AuthGlobalFilter} 检测到后跳过重复认证。
+     *
+     * @return 顺序值
+     */
     @Override
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE + 8;

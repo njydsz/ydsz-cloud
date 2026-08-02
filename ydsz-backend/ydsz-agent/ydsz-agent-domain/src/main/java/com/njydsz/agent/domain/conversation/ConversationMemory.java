@@ -16,6 +16,9 @@ import com.njydsz.agent.domain.model.ChatMessage;
  *   <li><b>语义检索</b>：从全部历史中检索语义相关的消息</li>
  * </ul>
  *
+ * <p><b>线程安全</b>：记忆存储多为跨请求共享的远程/缓存实现，实现须保证并发 save/load/clear 的线程安全，
+ * 且 load 返回的消息列表不应被调用方原地修改（建议返回防御性拷贝）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

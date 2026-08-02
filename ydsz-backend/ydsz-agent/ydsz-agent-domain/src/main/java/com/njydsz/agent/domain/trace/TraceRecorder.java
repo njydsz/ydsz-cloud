@@ -8,6 +8,9 @@ import java.util.List;
  *
  * <p>记录 Agent 每一步的执行过程，用于调试和可观测性。
  *
+ * <p><b>线程安全</b>：链路记录器通常为单例且多请求并发写入，实现须保证 startTrace/recordStep/endTrace
+ * 的线程安全（建议按 traceId 隔离存储），TraceStep 为不可变记录载体。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

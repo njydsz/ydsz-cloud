@@ -7,6 +7,8 @@ import java.io.Serializable;
  *
  * <p>封装输入护栏或输出护栏的检查结论，包括是否通过、拒绝原因和脱敏后的内容。
  *
+ * <p><b>线程安全</b>：字段 final，不可变值对象，可安全在护栏链多个阶段间传递与共享。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
