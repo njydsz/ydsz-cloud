@@ -35,7 +35,7 @@ Persistable<T>                    (接口: ID + isNew，支持 UUID 主键判断
 | `BaseIdEntity<T>` | 主键基础实体，仅含 ID 字段，适用于字典表、配置表等简单场景 |
 | `BaseAuditEntity<T>` | 审计字段基础实体，含 createdBy/createdAt/updatedBy/updatedAt，由 MyBatis-Plus 自动填充；`isFresh()` 判断新建状态 |
 | `BaseEntity<T>` | 完整实体基类，含 `revision` 乐观锁、`deleted` 软删除、`status` 状态、`domainEvents` 瞬态领域事件列表；标注 `@SoftDelete` |
-| `Base` | String 主键实体基类（继承 `BaseEntity<String>`） |
+| `BaseString` | String 主键实体基类（继承 `BaseEntity<String>`） |
 | `BaseLong` | Long 主键实体基类（继承 `BaseEntity<Long>`），适用于雪花算法 / 自增 BIGINT |
 | `LogBase` | 日志型实体基类（继承 `BaseAuditEntity<String>`），仅审计字段不含乐观锁/软删除，适用于日志表、操作记录表 |
 
@@ -144,7 +144,7 @@ public void onOrderCreated(OrderCreatedEvent event) { ... }
 ### 3. 实体类继承
 
 ```java
-import com.njydsz.common.domain.entity.Base;
+import com.njydsz.common.domain.entity.BaseString;
 import com.njydsz.common.domain.entity.BaseLong;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -152,7 +152,7 @@ import lombok.EqualsAndHashCode;
 // String 主键实体（UUID / 业务主键）
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SysConfig extends Base {
+public class SysConfig extends BaseString {
     private String configKey;
     private String configValue;
 }
@@ -454,7 +454,7 @@ OrderStatus.DELIVERED.requireTransitTo(OrderStatus.PAID);  // 非法，抛 Illeg
 
 ## 注意事项
 
-1. **与 `common-jdbc` `MpBaseEntity` 的关系**：业务模块的数据库实体应直接继承 `common-jdbc` 的 `MpBaseEntity`（含 `@TableId` 雪花算法、`tenant_id` 字段、与 MyBatis-Plus 注解对齐）；本模块的 `Base/BaseLong/BaseEntity` 用于不需要 MyBatis-Plus 强绑定的领域实体场景。两者不可同时继承。
+1. **与 `common-jdbc` `MpBaseEntity` 的关系**：业务模块的数据库实体应直接继承 `common-jdbc` 的 `MpBaseEntity`（含 `@TableId` 雪花算法、`tenant_id` 字段、与 MyBatis-Plus 注解对齐）；本模块的 `BaseString/BaseLong/BaseEntity` 用于不需要 MyBatis-Plus 强绑定的领域实体场景。两者不可同时继承。
 2. **乐观锁与软删除**：`BaseEntity.revision` 与 `deleted` 字段由 `common-jdbc` 的自定义拦截器（`OptimisticLockInterceptor` / `LogicalDeleteInterceptor`）处理，**不**使用 `@Version` 与 `@TableLogic` 注解，避免双重处理冲突。
 3. **领域事件发布时机**：推荐使用 `@TransactionalEventListener(phase = AFTER_COMMIT)` 在事务提交后消费事件，避免事件消费者读到未提交数据或事务回滚后事件已发出的语义错误。
 4. **`JobContextHolder` / `JobLoggerHolder` 线程池限制**：使用 `InheritableThreadLocal`，仅在线程首次创建时继承父线程的值，**不会**在线程复用时更新。线程池场景请使用 `TaskDecorator` 或在提交任务前显式调用 `set(...)` / `clear()`，避免上下文泄漏到下一个任务。

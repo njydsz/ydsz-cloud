@@ -14,7 +14,7 @@ alwaysApply: true
 
 ## 基类
 
-- `Base`（原 `BaseDO`）— String 主键实体基类
+- `BaseString`（原 `BaseDO`）— String 主键实体基类
 - `BaseLong`（原 `BaseLongDO`）— Long 主键实体基类
 - `LogBase`（原 `LogBaseDO`）— 日志型实体基类
 

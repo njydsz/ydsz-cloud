@@ -221,9 +221,11 @@ long id = SnowflakeUtils.getInstance().nextId();
 // 手动初始化（覆盖自动配置）
 SnowflakeUtils.init(1L, 0L);
 
-// ID 解析
-long[] parts = SnowflakeUtils.parseId(id);
-// parts[0] = timestamp, parts[1] = datacenterId, parts[2] = workerId, parts[3] = sequence
+// ID 解析（拆分为 timestamp / datacenterId / workerId / sequence）
+long timestamp   = SnowflakeUtils.parseTimestamp(id);
+long datacenterId = SnowflakeUtils.parseDatacenterId(id);
+long workerId    = SnowflakeUtils.parseWorkerId(id);
+long sequence    = SnowflakeUtils.parseSequence(id);
 ```
 
 ### 2. AES-GCM 加密
