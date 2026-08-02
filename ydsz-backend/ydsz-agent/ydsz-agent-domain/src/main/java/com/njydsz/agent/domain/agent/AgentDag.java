@@ -18,6 +18,8 @@ import java.util.Set;
  * <p>每个节点（{@link Node}）代表一个 Agent 执行步骤，边（依赖关系）决定执行顺序。
  * 支持并行执行无依赖的节点。
  *
+ * <p><b>线程安全</b>：构造后 nodes/edges 以 unmodifiableMap 封装，全字段 final，实例不可变、可安全共享。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

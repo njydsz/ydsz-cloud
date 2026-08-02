@@ -133,7 +133,14 @@ public class DownloadRateLimitService {
     }
 
     /**
-     * 验证签名 URL
+     * 验证签名下载 URL：先判过期，再查 Redis 还原 storageKey，校验成功后删除签名（一次性）。
+     *
+     * @param sign       签名串
+     * @param expireTime 签名中的过期时间戳（秒级）
+     * @return 还原出的 storageKey；过期、签名无效或已被使用返回 {@code null}
+     * @complexity O(1)（一次时间判断 + 一次 Redis 读取 + 一次删除）
+     * @security 一次性使用：校验成功后立即删除 Redis 记录，防止签名 URL 重放
+     * @note 无事务边界
      */
     public String verifySignedUrl(String sign, long expireTime) {
         if (System.currentTimeMillis() / 1000 > expireTime) {

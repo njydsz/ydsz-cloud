@@ -17,6 +17,8 @@ import java.util.Objects;
  *   <li>最大迭代次数（ReAct 模式）</li>
  * </ul>
  *
+ * <p><b>线程安全</b>：全部字段 final 且集合经不可变封装，实例不可变、可安全跨线程传递。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -9,6 +9,8 @@ import java.util.Objects;
  *
  * <p>描述一个 Agent 的完整配置，包括类型、系统提示词、绑定工具、模型参数等。
  *
+ * <p><b>线程安全</b>：所有字段均为 final，构造后不可变，可在多线程间安全共享，无需外部同步。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

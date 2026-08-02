@@ -35,12 +35,36 @@ import com.njydsz.nextwiki.domain.entity.TrashItem;
 @Mapper
 public interface TrashItemMapper extends BaseMapper<TrashItem> {
 
+    /**
+     * 按原文件节点 ID 查询其对应的回收站条目。
+     *
+     * @param fileNodeId 原文件节点 ID
+     * @return 命中的回收站实体；不存在则返回 null
+     */
     TrashItem findByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
+    /**
+     * 查询某用户的活跃回收站条目列表（未过期、未彻底删除），用于回收站页面展示。
+     *
+     * @param userId 用户 ID
+     * @return 活跃回收站条目列表
+     */
     List<TrashItem> findActiveTrash(@Param("userId") String userId);
 
+    /**
+     * 查询已过期的回收站条目（用于定时清理任务），limit 限制单次批处理量以避免长事务。
+     *
+     * @param limit 返回数量上限
+     * @return 已过期待清理的回收站条目列表
+     */
     List<TrashItem> findExpiredItems(@Param("limit") int limit);
 
+    /**
+     * 统计某用户的活跃回收站条目数量（未过期、未彻底删除），用于回收站角标提示。
+     *
+     * @param userId 用户 ID
+     * @return 活跃回收站条目数
+     */
     int countActiveTrash(@Param("userId") String userId);
 
     /**

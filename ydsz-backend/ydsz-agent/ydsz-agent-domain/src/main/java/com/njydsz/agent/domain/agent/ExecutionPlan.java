@@ -10,6 +10,9 @@ import java.util.Objects;
  *
  * <p>Plan-and-Execute 模式中由 Planner 生成的步骤序列。
  *
+ * <p><b>线程安全</b>：非线程安全。status 字段与 steps 列表可变，且 replaceRemainingSteps 会修改列表，
+ * 须由单个执行线程独占访问或由外部加锁保护。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

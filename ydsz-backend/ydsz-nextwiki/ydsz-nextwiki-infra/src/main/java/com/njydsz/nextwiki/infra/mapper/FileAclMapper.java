@@ -35,12 +35,32 @@ import com.njydsz.nextwiki.domain.entity.FileAcl;
 @Mapper
 public interface FileAclMapper extends BaseMapper<FileAcl> {
 
+    /**
+     * 查询指定文件节点下的全部 ACL 规则。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @return 该节点下的 ACL 规则列表（可能为空；已逻辑删除记录由拦截器自动过滤）
+     */
     List<FileAcl> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
+    /**
+     * 精确查询某文件节点下、某授权主体（用户/角色/组）的 ACL 规则，供鉴权判定使用。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @param granteeType 主体类型：user / role / group
+     * @param granteeId 主体 ID
+     * @return 命中的 ACL 规则列表
+     */
     List<FileAcl> selectByFileNodeIdAndGrantee(@Param("fileNodeId") String fileNodeId,
                                                 @Param("granteeType") String granteeType,
                                                 @Param("granteeId") String granteeId);
 
+    /**
+     * 删除指定文件节点下的所有 ACL 规则（随节点删除级联清理，避免残留越权规则）。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @return 受影响行数
+     */
     @Delete("DELETE FROM nw_file_acl WHERE file_node_id = #{fileNodeId}")
     int deleteByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
@@ -51,5 +71,11 @@ public interface FileAclMapper extends BaseMapper<FileAcl> {
                                               @Param("userId") String userId,
                                               @Param("roleIds") List<String> roleIds);
 
+    /**
+     * 批量插入 ACL 规则（一次文件的批量授权场景）。
+     *
+     * @param acls 待插入的 ACL 列表
+     * @return 受影响行数
+     */
     int batchInsert(@Param("acls") List<FileAcl> acls);
 }
