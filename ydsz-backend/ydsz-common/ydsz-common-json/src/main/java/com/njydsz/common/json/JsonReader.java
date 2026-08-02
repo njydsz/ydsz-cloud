@@ -11,12 +11,12 @@ import com.njydsz.common.json.metric.MetricsHelper;
 /**
  * 绑定型 JSON 读取器（对标 Jackson {@code ObjectReader}）。
  *
- * <p>通过 {@link YdszJsonMapper#readerFor(Class)} 创建，
+ * <p>通过 {@link JsonMapper#readerFor(Class)} 创建，
  * 绑定目标类型后可重复使用，避免每次调用都传入类型参数。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * YdszJsonReader&lt;User&gt; reader = mapper.readerFor(User.class);
+ * JsonReader&lt;User&gt; reader = mapper.readerFor(User.class);
  * User user1 = reader.read(json1);
  * User user2 = reader.read(json2);
  * </pre>
@@ -25,9 +25,9 @@ import com.njydsz.common.json.metric.MetricsHelper;
  * @author ydsz-team
  * @since 1.4.0
  */
-public final class YdszJsonReader<T> {
+public final class JsonReader<T> {
 
-    private final YdszJsonMapper mapper;
+    private final JsonMapper mapper;
     private final Class<T> targetClass;
     private final Type targetType;
 
@@ -37,7 +37,7 @@ public final class YdszJsonReader<T> {
      * @param mapper 所属 Mapper
      * @param targetClass 目标类型
      */
-    YdszJsonReader(YdszJsonMapper mapper, Class<T> targetClass) {
+    JsonReader(JsonMapper mapper, Class<T> targetClass) {
         this.mapper = mapper;
         this.targetClass = targetClass;
         this.targetType = targetClass;

@@ -14,8 +14,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.constant.YdszMessageTopics;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.util.id.SnowflakeUtils;
-import com.njydsz.common.json.YdszJsonMapper;
-import com.njydsz.common.json.YdszJsonWriter;
+import com.njydsz.common.json.JsonMapper;
+import com.njydsz.common.json.JsonWriter;
 import com.njydsz.message.server.util.MessageCompressor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,11 +38,11 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
     private final RocketMQTemplate rocketMQTemplate;
 
     /** P3-3: 绑定型 Writer（预热 ASM 序列化器，避免每次类型推断开销） */
-    private final YdszJsonWriter<MessageRequest> messageWriter;
+    private final JsonWriter<MessageRequest> messageWriter;
 
     public RocketMQMessageProducer(RocketMQTemplate rocketMQTemplate) {
         this.rocketMQTemplate = rocketMQTemplate;
-        this.messageWriter = YdszJsonMapper.getDefault().writerFor(MessageRequest.class);
+        this.messageWriter = JsonMapper.getDefault().writerFor(MessageRequest.class);
     }
 
     /** P1-6: 优先级 → RocketMQ Tag 映射 */

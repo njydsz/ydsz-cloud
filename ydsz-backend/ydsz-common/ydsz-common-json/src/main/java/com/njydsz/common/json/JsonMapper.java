@@ -32,8 +32,8 @@ import com.njydsz.common.json.type.YdszJsonType;
  *
  * <p><b>与 {@link YdszJson} 的关系：</b></p>
  * <ul>
- *   <li>{@code YdszJson} 静态方法委托给内部默认 {@code YdszJsonMapper} 实例，保持向后兼容</li>
- *   <li>需要独立配置的场景应创建新的 {@code YdszJsonMapper} 实例</li>
+ *   <li>{@code YdszJson} 静态方法委托给内部默认 {@code JsonMapper} 实例，保持向后兼容</li>
+ *   <li>需要独立配置的场景应创建新的 {@code JsonMapper} 实例</li>
  *   <li>{@link #copy()} 方法创建配置副本，修改不影响原实例</li>
  *   <li>所有操作均纳入 {@link JsonMetricsCallback} 指标监控（与 YdszJson 静态方法一致）</li>
  * </ul>
@@ -41,10 +41,10 @@ import com.njydsz.common.json.type.YdszJsonType;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 创建默认 Mapper
- * YdszJsonMapper mapper = new YdszJsonMapper();
+ * JsonMapper mapper = new JsonMapper();
  *
  * // 创建配置副本并自定义
- * YdszJsonMapper prettyMapper = mapper.copy();
+ * JsonMapper prettyMapper = mapper.copy();
  * prettyMapper.getConfig().setWriteNulls(true);
  *
  * // 独立配置序列化，不影响全局
@@ -60,10 +60,10 @@ import com.njydsz.common.json.type.YdszJsonType;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class YdszJsonMapper {
+public class JsonMapper {
 
     /** 默认单例实例（YdszJson 静态方法委托给此实例） */
-    private static final YdszJsonMapper DEFAULT = new YdszJsonMapper();
+    private static final JsonMapper DEFAULT = new JsonMapper();
 
     /** 此 Mapper 实例的配置（独立副本） */
     private final YdszJsonConfig config;
@@ -80,7 +80,7 @@ public class YdszJsonMapper {
     /**
      * 创建默认配置的 Mapper 实例。
      */
-    public YdszJsonMapper() {
+    public JsonMapper() {
         this(YdszJsonConfig.getInstance());
     }
 
@@ -89,7 +89,7 @@ public class YdszJsonMapper {
      *
      * @param config 配置（会被复制为独立副本）
      */
-    public YdszJsonMapper(YdszJsonConfig config) {
+    public JsonMapper(YdszJsonConfig config) {
         this.config = YdszJsonConfig.copyOf(config);
     }
 
@@ -122,8 +122,8 @@ public class YdszJsonMapper {
      *
      * @return 新的 Mapper 实例
      */
-    public YdszJsonMapper copy() {
-        return new YdszJsonMapper(this.config);
+    public JsonMapper copy() {
+        return new JsonMapper(this.config);
     }
 
     // ==================== 序列化方法 ====================
@@ -634,30 +634,30 @@ public class YdszJsonMapper {
      * 创建绑定指定类型的 JSON 读取器。
      *
      * <p>对标 Jackson {@code ObjectMapper.readerFor(Class)}，
-     * 返回的 {@link YdszJsonReader} 绑定了目标类型，可重复使用。</p>
+     * 返回的 {@link JsonReader} 绑定了目标类型，可重复使用。</p>
      *
      * @param clazz 目标类型
      * @param <T>   类型参数
      * @return 绑定型读取器
      * @since 1.4.0
      */
-    public <T> YdszJsonReader<T> readerFor(Class<T> clazz) {
-        return new YdszJsonReader<>(this, clazz);
+    public <T> JsonReader<T> readerFor(Class<T> clazz) {
+        return new JsonReader<>(this, clazz);
     }
 
     /**
      * 创建绑定指定类型的 JSON 写入器。
      *
      * <p>对标 Jackson {@code ObjectMapper.writerFor(Class)}，
-     * 返回的 {@link YdszJsonWriter} 绑定了目标类型，可重复使用。</p>
+     * 返回的 {@link JsonWriter} 绑定了目标类型，可重复使用。</p>
      *
      * @param clazz 目标类型
      * @param <T>   类型参数
      * @return 绑定型写入器
      * @since 1.4.0
      */
-    public <T> YdszJsonWriter<T> writerFor(Class<T> clazz) {
-        return new YdszJsonWriter<>(this, clazz);
+    public <T> JsonWriter<T> writerFor(Class<T> clazz) {
+        return new JsonWriter<>(this, clazz);
     }
 
     // ==================== ASM 预热 ====================
@@ -733,7 +733,7 @@ public class YdszJsonMapper {
      *
      * @return 默认单例实例
      */
-    public static YdszJsonMapper getDefault() {
+    public static JsonMapper getDefault() {
         return DEFAULT;
     }
 
@@ -750,11 +750,11 @@ public class YdszJsonMapper {
     }
 
     /**
-     * YdszJsonMapper 链式 Builder（对标 Jackson ObjectMapper.builder()）。
+     * JsonMapper 链式 Builder（对标 Jackson ObjectMapper.builder()）。
      *
      * <p>使用示例：</p>
      * <pre>
-     * YdszJsonMapper mapper = YdszJsonMapper.builder()
+     * JsonMapper mapper = JsonMapper.builder()
      *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
      *     .dateFormat("yyyy-MM-dd HH:mm:ss")
      *     .writeNulls(true)
@@ -836,7 +836,7 @@ public class YdszJsonMapper {
             return this;
         }
 
-        public YdszJsonMapper build() {
+        public JsonMapper build() {
             YdszJsonConfig config = YdszJsonConfig.builder()
                 .namingStrategy(namingStrategy)
                 .circularReferenceStrategy(circularReferenceStrategy)
@@ -850,7 +850,7 @@ public class YdszJsonMapper {
                 .maxJsonSize(maxJsonSize)
                 .maxDepth(maxDepth)
                 .build();
-            YdszJsonMapper mapper = new YdszJsonMapper(config);
+            JsonMapper mapper = new JsonMapper(config);
             mapper.configChanged();
             return mapper;
         }

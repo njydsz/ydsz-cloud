@@ -6,7 +6,7 @@ import com.njydsz.common.json.exception.YdszJsonException;
  * 指标监控包装工具（统一序列化/反序列化的指标记录逻辑）。
  *
  * <p>提取自 {@link com.njydsz.common.json.YdszJson} 和
- * {@link com.njydsz.common.json.YdszJsonMapper} 中重复的 recordSerialize/recordDeserialize 逻辑，
+ * {@link com.njydsz.common.json.JsonMapper} 中重复的 recordSerialize/recordDeserialize 逻辑，
  * 消除约 100 行重复代码。</p>
  *
  * <p><b>性能优化：</b>当 {@code callback} 为 null 时（未启用监控），直接执行操作，

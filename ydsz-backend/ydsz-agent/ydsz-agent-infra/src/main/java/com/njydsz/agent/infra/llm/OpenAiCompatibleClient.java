@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.YdszJsonMapper;
+import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
@@ -89,7 +89,7 @@ public class OpenAiCompatibleClient implements LlmClient {
     /** 最大重试次数 */
     private final int maxRetries;
     /** SNAKE_CASE 命名策略的 Mapper（OpenAI API 要求 snake_case） */
-    private final YdszJsonMapper snakeCaseMapper;
+    private final JsonMapper snakeCaseMapper;
 
     public OpenAiCompatibleClient(String provider, String baseUrl, String apiKey, int timeoutSeconds) {
         this(provider, baseUrl, apiKey, timeoutSeconds, DEFAULT_MAX_RETRIES, DEFAULT_MAX_CONCURRENT);
@@ -103,7 +103,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         this.timeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : 60;
         this.maxRetries = maxRetries > 0 ? maxRetries : DEFAULT_MAX_RETRIES;
         this.concurrencyLimiter = new Semaphore(maxConcurrent > 0 ? maxConcurrent : DEFAULT_MAX_CONCURRENT);
-        this.snakeCaseMapper = YdszJsonMapper.builder()
+        this.snakeCaseMapper = JsonMapper.builder()
                 .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
                 .build();
         this.restClient = RestClient.builder()

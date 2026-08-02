@@ -139,7 +139,7 @@
 - **配置**: `UtilAutoConfiguration`, `ThreadPoolMonitorAutoConfiguration`
 
 #### ydsz-common-json（超高性能 JSON 引擎）
-- **核心API**: `YdszJson.toJson/toObject/parseArray/parseMap/format`, `YdszJsonMapper`, `YdszJsonReader`, `YdszJsonWriter`
+- **核心API**: `YdszJson.toJson/toObject/parseArray/parseMap/format`, `JsonMapper`, `JsonReader`, `JsonWriter`
 - **ASM 字节码**: `AsmBeanCodecGenerator`, `AsmSerializer`, `AsmDeserializer`, `AsmCodecCache`
 - **JSONPath**: `YdszJsonPath`
 - **JSON Pointer (RFC 6901)**: `JsonPointer`

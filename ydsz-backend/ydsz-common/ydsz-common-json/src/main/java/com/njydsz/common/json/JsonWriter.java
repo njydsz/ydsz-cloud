@@ -8,13 +8,13 @@ import com.njydsz.common.json.exception.YdszJsonException;
 /**
  * 绑定型 JSON 写入器（对标 Jackson {@code ObjectWriter}）。
  *
- * <p>通过 {@link YdszJsonMapper#writerFor(Class)} 创建，
+ * <p>通过 {@link JsonMapper#writerFor(Class)} 创建，
  * 绑定目标类型和 Mapper 配置后可重复使用。序列化时会校验对象类型与绑定类型的兼容性，
  * 并预查找 ASM 序列化器缓存以加速后续序列化。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * YdszJsonWriter&lt;User&gt; writer = mapper.writerFor(User.class);
+ * JsonWriter&lt;User&gt; writer = mapper.writerFor(User.class);
  * String json1 = writer.write(user1);
  * String json2 = writer.write(user2);
  * </pre>
@@ -23,9 +23,9 @@ import com.njydsz.common.json.exception.YdszJsonException;
  * @author ydsz-team
  * @since 1.4.0
  */
-public final class YdszJsonWriter<T> {
+public final class JsonWriter<T> {
 
-    private final YdszJsonMapper mapper;
+    private final JsonMapper mapper;
     private final Class<T> targetClass;
 
     /**
@@ -34,7 +34,7 @@ public final class YdszJsonWriter<T> {
      * @param mapper 所属 Mapper
      * @param targetClass 绑定的目标类型（可为 null，表示不绑定特定类型）
      */
-    YdszJsonWriter(YdszJsonMapper mapper, Class<T> targetClass) {
+    JsonWriter(JsonMapper mapper, Class<T> targetClass) {
         this.mapper = mapper;
         this.targetClass = targetClass;
         // 预热 ASM 序列化器缓存，加速后续序列化

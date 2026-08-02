@@ -864,7 +864,7 @@ public final class ValueWriter {
     public static String formatDateValue(Object value) {
         if (value == null) return null;
 
-        // 优先从当前线程的 SerializationContext 读取 dateFormat（支持 YdszJsonMapper 独立配置）
+        // 优先从当前线程的 SerializationContext 读取 dateFormat（支持 JsonMapper 独立配置）
         String globalFormat = SerializationProvider.getDateFormat();
         // 回退到全局单例配置
         if (globalFormat == null || globalFormat.isEmpty()) {
