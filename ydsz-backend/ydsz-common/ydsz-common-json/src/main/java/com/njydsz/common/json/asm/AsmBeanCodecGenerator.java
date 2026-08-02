@@ -65,11 +65,12 @@ public final class AsmBeanCodecGenerator {
     /** ASM ClassWriter 配置 */
     /**
      * ASM ClassWriter 标志位。
-     * TODO: 恢复 COMPUTE_FRAMES 避免 JVM VerifyError——
-     *       当前 COMPUTE_FRAMES 在 ASM 9.8 下触发 NegativeArraySizeException，
-     *       需升级 ASM 或修复字节码生成模式。COMPUTE_MAXS only 配合 -Xverify:none 用于开发验证。
+     * COMPUTE_FRAMES（不含 COMPUTE_MAXS）：让 ASM 生成 StackMapTable（Java 7+ 必需）。
+     * 已知限制：ASM 9.8 在特定字节码模式下 COMPUTE_FRAMES 触发 NegativeArraySizeException，
+     * 导致 ASM 生成静默降级为反射。修复方案：升级 ASM 版本或重构 emitFieldSerializationLoop 跳过帧计算。
+     * 当前 visitMaxs 设为 0 让 ASM 全自算。
      */
-    private static final int ASM_FLAGS = ClassWriter.COMPUTE_MAXS;
+    private static final int ASM_FLAGS = ClassWriter.COMPUTE_FRAMES;
 
     /**
      * 字段缓存信息（用于 ASM 生成类中缓存嵌套序列化器/反序列化器）

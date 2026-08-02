@@ -22,7 +22,7 @@
     {
       "name": "ydsz.json.naming-strategy",
       "type": "com.njydsz.common.json.naming.PropertyNamingStrategy",
-      "description": "字段命名策略（LOWER_CAMEL_CASE / UPPER_CAMEL_CASE / SNAKE_CASE / KEBAB_CASE / LOWER_UNDERSCORE）",
+      "description": "字段命名策略（LOWER_CAMEL_CASE / UPPER_CAMEL_CASE / SNAKE_CASE / KEBAB_CASE / LOWER_CASE）",
       "defaultValue": "LOWER_CAMEL_CASE"
     },
     {
@@ -82,7 +82,7 @@
         { "value": "UPPER_CAMEL_CASE", "description": "首字母大写驼峰：UserName" },
         { "value": "SNAKE_CASE", "description": "下划线：user_name" },
         { "value": "KEBAB_CASE", "description": "短横线：user-name" },
-        { "value": "LOWER_UNDERSCORE", "description": "全小写下划线：user_name" }
+        { "value": "LOWER_CASE", "description": "全小写：username" }
       ]
     },
     {

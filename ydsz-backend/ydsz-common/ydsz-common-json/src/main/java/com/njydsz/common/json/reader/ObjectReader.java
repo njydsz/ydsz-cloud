@@ -28,9 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>集合/Map 完整支持，自动类型转换</li>
  * </ul>
  * 
- * @author ydsz-team
- * @since 1.0.0
+ * @deprecated 此 ObjectReader 被 BeanReader 取代（仅 JSONReader.readArray 调用）。
+ *             后续统一 Bean 反序列化路径后将被删除。
  */
+@Deprecated
 public final class ObjectReader<T> {
     
     public final Class<T> objectType;
