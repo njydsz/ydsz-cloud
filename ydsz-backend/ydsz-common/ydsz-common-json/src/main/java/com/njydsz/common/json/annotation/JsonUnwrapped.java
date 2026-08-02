@@ -7,7 +7,9 @@ import java.lang.annotation.*;
  *
  * <p>标注在嵌套对象字段上，序列化时将其属性展开到父对象中。</p>
  *
- * <p><b>注意：此注解已创建但尚未实现序列化/反序列化逻辑。标记为 Roadmap 待实现。</b></p>
+ * <p><b>已实现：</b>在 {@code ValueWriter} 序列化路径中，
+ * 检测到 @JsonUnwrapped 字段时，递归序列化嵌套对象的字段并展开到父 JSON 中，
+ * 支持 prefix/suffix 属性名修饰。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>

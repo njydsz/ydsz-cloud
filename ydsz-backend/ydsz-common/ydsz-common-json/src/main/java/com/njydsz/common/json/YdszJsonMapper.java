@@ -621,7 +621,7 @@ public class YdszJsonMapper {
      * @since 1.4.0
      */
     public <T> YdszJsonWriter<T> writerFor(Class<T> clazz) {
-        return new YdszJsonWriter<>(this);
+        return new YdszJsonWriter<>(this, clazz);
     }
 
     // ==================== ASM 预热 ====================

@@ -531,6 +531,13 @@ public final class ValueWriter {
                     continue;
                 }
 
+                // @JsonUnwrapped：嵌套属性展开到父对象
+                if (field.unwrapped && value != null) {
+                    writeUnwrappedFields(value, field, sb, first);
+                    first = false;
+                    continue;
+                }
+
                 if (!first) sb.append(',');
                 first = false;
 
@@ -884,6 +891,49 @@ public final class ValueWriter {
             return newFormatter;
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /**
+     * 写入 @JsonUnwrapped 展开字段。
+     *
+     * <p>将嵌套对象的字段展开到父 JSON 对象中，可添加前缀/后缀。</p>
+     *
+     * @param nestedObj 嵌套对象
+     * @param field 带有 @JsonUnwrapped 注解的字段元数据
+     * @param sb JSON 字符串构建器
+     * @param first 是否为第一个字段
+     * @since 1.4.0
+     */
+    private static void writeUnwrappedFields(Object nestedObj, FieldMeta field,
+                                              StringBuilder sb, boolean first) {
+        Class<?> nestedClass = nestedObj.getClass();
+        FieldMeta[] nestedFields = SerializerCache.getFieldMeta(nestedClass);
+        if (nestedFields == null) {
+            nestedFields = FieldMetadataLoader.loadFields(nestedClass);
+            SerializerCache.putFieldMeta(nestedClass, nestedFields);
+        }
+
+        for (FieldMeta nestedField : nestedFields) {
+            if (nestedField.shouldSkip()) {
+                continue;
+            }
+            Object nestedValue;
+            try {
+                nestedValue = nestedField.getValue(nestedObj);
+            } catch (Exception e) {
+                continue;
+            }
+            if (nestedValue == null) {
+                continue;
+            }
+            if (!first) {
+                sb.append(',');
+            }
+            first = false;
+            // 应用前缀/后缀
+            sb.append('"').append(field.unwrapPrefix).append(nestedField.jsonName).append(field.unwrapSuffix).append("\":");
+            writeValueDirect(nestedValue, sb);
         }
     }
 

@@ -2,9 +2,12 @@ package com.njydsz.common.json.writer;
 
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.number.NumberUtils;
+import com.njydsz.common.json.provider.FieldMetadataLoader;
 import com.njydsz.common.json.provider.SerializationProvider;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Bean 专用序列化器
@@ -44,6 +47,9 @@ public final class BeanSerializer {
     /** 预估 JSON 大小 */
     public final int estimatedSize;
     
+    /** @JsonAnyGetter 方法（null 表示无） */
+    public final Method anyGetterMethod;
+    
     /**
      * 构造 Bean 序列化器
      *
@@ -54,6 +60,9 @@ public final class BeanSerializer {
      */
     public BeanSerializer(Class<?> clazz, FieldMeta[] fieldMetas) {
         this.clazz = clazz;
+        
+        // 检测 @JsonAnyGetter 方法
+        this.anyGetterMethod = FieldMetadataLoader.findAnyGetterMethod(clazz);
         
         // 计算有效字段数量
         int count = 0;
@@ -258,6 +267,59 @@ public final class BeanSerializer {
         }
         
         // 写入 }
+        buf[pos++] = '}';
+        writer.pos = pos;
+        
+        // @JsonAnyGetter：将 Map 中的键值对展开为顶层 JSON 属性
+        if (anyGetterMethod != null) {
+            writeAnyGetterProperties(obj, writer);
+        }
+    }
+    
+    /**
+     * 写入 @JsonAnyGetter 返回的 Map 中的键值对作为顶层 JSON 属性。
+     * 
+     * <p>在 } 之前插入逗号和新属性。需要回退 pos 以在 } 前插入内容。</p>
+     * 
+     * @param obj 要序列化的 Bean 对象
+     * @param writer JSON 写入器
+     */
+    @SuppressWarnings("unchecked")
+    private void writeAnyGetterProperties(Object obj, JSONWriter writer) {
+        Map<String, Object> map;
+        try {
+            map = (Map<String, Object>) anyGetterMethod.invoke(obj);
+        } catch (Exception e) {
+            return; // 调用失败时静默跳过
+        }
+        if (map == null || map.isEmpty()) {
+            return;
+        }
+        
+        // 回退 pos 以在 } 前插入内容
+        int pos = writer.pos - 1; // 回退到 } 的位置
+        char[] buf = writer.buf;
+        
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Object value = entry.getValue();
+            if (value == null) continue;
+            
+            writer.ensureCapacity(32 + entry.getKey().length() * 2);
+            buf = writer.buf; // ensureCapacity 可能重新分配
+            
+            buf[pos++] = ',';
+            buf[pos++] = '"';
+            String key = entry.getKey();
+            key.getChars(0, key.length(), buf, pos);
+            pos += key.length();
+            buf[pos++] = '"';
+            buf[pos++] = ':';
+            
+            writer.pos = pos;
+            writer.write(value.toString());
+            pos = writer.pos;
+        }
+        
         buf[pos++] = '}';
         writer.pos = pos;
     }

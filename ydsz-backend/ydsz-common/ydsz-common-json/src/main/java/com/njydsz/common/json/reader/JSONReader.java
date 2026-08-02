@@ -479,7 +479,7 @@ public final class JSONReader {
                 char ch2 = buf[pos];
                 if (ch2 == '{') depth++;
                 else if (ch2 == '}') depth--;
-                else if (ch2 == '"') { pos++; while (pos < len && buf[pos] != '"') { if (buf[pos] == '\\') pos++; pos++; } }
+                else if (ch2 == '"') { skipStringValue(); continue; }
                 pos++;
             }
         } else if (ch == '[') {
@@ -488,7 +488,7 @@ public final class JSONReader {
                 char ch2 = buf[pos];
                 if (ch2 == '[') depth++;
                 else if (ch2 == ']') depth--;
-                else if (ch2 == '"') { pos++; while (pos < len && buf[pos] != '"') { if (buf[pos] == '\\') pos++; pos++; } }
+                else if (ch2 == '"') { skipStringValue(); continue; }
                 pos++;
             }
         } else if (ch == '"') {
@@ -754,7 +754,7 @@ public final class JSONReader {
                 char ch2 = buf[pos];
                 if (ch2 == '{') depth++;
                 else if (ch2 == '}') depth--;
-                else if (ch2 == '"') { pos++; while (pos < len) { if (buf[pos] == '\\') { pos += 2; continue; } if (buf[pos] == '"') break; pos++; } }
+                else if (ch2 == '"') { skipStringValue(); continue; }
                 pos++;
             }
         } else if (ch == '[') {
@@ -763,7 +763,7 @@ public final class JSONReader {
                 char ch2 = buf[pos];
                 if (ch2 == '[') depth++;
                 else if (ch2 == ']') depth--;
-                else if (ch2 == '"') { pos++; while (pos < len) { if (buf[pos] == '\\') { pos += 2; continue; } if (buf[pos] == '"') break; pos++; } }
+                else if (ch2 == '"') { skipStringValue(); continue; }
                 pos++;
             }
         } else if (ch == '"') { readString(); }
@@ -773,6 +773,32 @@ public final class JSONReader {
         else { while (pos < len) { char ch2 = buf[pos]; if (ch2 == ',' || ch2 == '}' || ch2 == ']' || ch2 <= ' ') break; pos++; } }
     }
     
+    /**
+     * 跳过 JSON 字符串值（已定位到引号位置）。
+     *
+     * <p>正确处理转义引号 {@code \"} 和转义反斜杠 {@code \\}，
+     * 避免字符串内容中的引号导致解析错位。</p>
+     *
+     * <p>调用后 {@code pos} 指向字符串结束引号之后的字符。</p>
+     *
+     * @since 1.4.0
+     */
+    public void skipStringValue() {
+        // 当前 pos 指向引号 "
+        pos++; // 跳过起始引号
+        while (pos < len) {
+            char c = buf[pos];
+            if (c == '\\') {
+                pos += 2; // 跳过转义字符和被转义的字符
+            } else if (c == '"') {
+                pos++; // 跳过结束引号
+                return;
+            } else {
+                pos++;
+            }
+        }
+    }
+
     public List<Object> readArray(Class<?> elementType, ObjectReader<?> elementReader) {
         skipWhitespace();
         if (pos >= len || buf[pos] != '[') throw new RuntimeException("Expected [ at position " + pos);

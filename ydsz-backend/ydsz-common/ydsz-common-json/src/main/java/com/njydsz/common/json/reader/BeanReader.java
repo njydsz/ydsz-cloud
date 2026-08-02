@@ -2,6 +2,7 @@ package com.njydsz.common.json.reader;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonAlias;
+import com.njydsz.common.json.provider.FieldMetadataLoader;
 
 /**
  * Bean 反序列化读取器（FastJSON2 BeanDeserializer 移植版）
@@ -44,11 +46,17 @@ public final class BeanReader<T> {
     /** 默认构造函数*/
     public final Constructor<T> defaultConstructor;
     
+    /** @JsonAnySetter 方法（null 表示无）*/
+    public final Method anySetterMethod;
+    
     /**
      * 构造函数
      */
     public BeanReader(Class<T> beanType) {
         this.beanType = beanType;
+        
+        // 检测 @JsonAnySetter 方法
+        this.anySetterMethod = FieldMetadataLoader.findAnySetterMethod(beanType);
         
         // 缓存默认构造函数
         try {
@@ -162,13 +170,59 @@ public final class BeanReader<T> {
             }
             
             if (!matched) {
-                reader.skipValue();
+                if (anySetterMethod != null) {
+                    // @JsonAnySetter：将未匹配的属性通过方法写入
+                    String rawValue = reader.readRawValue().trim();
+                    try {
+                        Object parsedValue = parseValue(rawValue);
+                        anySetterMethod.invoke(obj, fieldName, parsedValue);
+                    } catch (Exception e) {
+                        // 调用失败时跳过该字段
+                    }
+                } else {
+                    reader.skipValue();
+                }
             }
         }
         
         return obj;
     }
     
+    /**
+     * 将原始 JSON 值字符串解析为 Java 对象。
+     * 
+     * <p>用于 @JsonAnySetter 路径，将未匹配字段的值解析为简单类型。</p>
+     * 
+     * @param rawValue 原始 JSON 值字符串（如 {@code "hello"}, {@code 123}, {@code true}, {@code null}, {@code {...}}）
+     * @return 解析后的 Java 对象
+     */
+    private static Object parseValue(String rawValue) {
+        if (rawValue == null || rawValue.isEmpty() || "null".equals(rawValue)) {
+            return null;
+        }
+        char first = rawValue.charAt(0);
+        if (first == '"') {
+            // 去除首尾引号
+            return rawValue.substring(1, rawValue.length() - 1);
+        }
+        if (first == '{' || first == '[') {
+            // 复杂对象/数组，返回原始字符串
+            return rawValue;
+        }
+        if ("true".equals(rawValue) || "false".equals(rawValue)) {
+            return Boolean.parseBoolean(rawValue);
+        }
+        // 尝试数值解析
+        try {
+            if (rawValue.contains(".") || rawValue.contains("e") || rawValue.contains("E")) {
+                return Double.parseDouble(rawValue);
+            }
+            return Long.parseLong(rawValue);
+        } catch (NumberFormatException e) {
+            return rawValue;
+        }
+    }
+
     /**
      * 字段读取器（消除 MethodHandle，改用直接字段访问）
      */

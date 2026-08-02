@@ -8,7 +8,8 @@ import java.lang.annotation.*;
  * <p>标注在返回 Map&lt;String, Object&gt; 的方法上，
  * 序列化时将 Map 的键值对展开为顶层 JSON 属性。</p>
  *
- * <p><b>注意：此注解已创建但尚未实现序列化/反序列化逻辑。标记为 Roadmap 待实现。</b></p>
+ * <p><b>已实现：</b>在 {@code BeanSerializer} 序列化路径中，
+ * 写入所有字段后调用标注方法，将返回的 Map 展开为顶层 JSON 属性。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>

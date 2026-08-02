@@ -4,7 +4,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.json.annotation.JsonAnyGetter;
+import com.njydsz.common.json.annotation.JsonAnySetter;
 import com.njydsz.common.json.annotation.JsonAutoDetect;
 import com.njydsz.common.json.annotation.YdszJsonClass;
 import com.njydsz.common.json.annotation.YdszJsonField;
@@ -13,6 +16,7 @@ import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.annotation.JsonSetter;
+import com.njydsz.common.json.annotation.JsonValue;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 import com.njydsz.common.json.annotation.YdszJsonVisibility;
 import com.njydsz.common.json.cache.FieldMeta;
@@ -39,6 +43,39 @@ public final class FieldMetadataLoader {
     /** 当前使用的命名策略 */
     static final ThreadLocal<PropertyNamingStrategy> NAMING_STRATEGY =
         ThreadLocal.withInitial(() -> PropertyNamingStrategy.LOWER_CAMEL_CASE);
+
+    /**
+     * @JsonValue 方法缓存（Class -> 标注了 @JsonValue 的 Method，null 表示无）。
+     *
+     * <p>避免每次序列化都反射扫描方法列表。一个类最多只能有一个 @JsonValue 方法。</p>
+     */
+    private static final ConcurrentHashMap<Class<?>, Method> JSON_VALUE_METHOD_CACHE =
+        new ConcurrentHashMap<>();
+
+    /**
+     * @JsonAnyGetter 方法缓存（Class -> 标注了 @JsonAnyGetter 的 Method，null 表示无）。
+     *
+     * <p>序列化时调用该方法获取 Map，将 Map 中的键值对展开为顶层 JSON 属性。</p>
+     */
+    private static final ConcurrentHashMap<Class<?>, Method> JSON_ANY_GETTER_CACHE =
+        new ConcurrentHashMap<>();
+
+    /**
+     * @JsonAnySetter 方法缓存（Class -> 标注了 @JsonAnySetter 的 Method，null 表示无）。
+     *
+     * <p>反序列化时，未匹配到字段的属性会调用该方法写入。</p>
+     */
+    private static final ConcurrentHashMap<Class<?>, Method> JSON_ANY_SETTER_CACHE =
+        new ConcurrentHashMap<>();
+
+    /**
+     * 计算属性缓存（Class -> 计算属性方法列表）。
+     *
+     * <p>存储标注了 @JsonGetter 但没有对应字段的计算属性方法。
+     * 序列化时在字段写完后补充输出这些计算属性。</p>
+     */
+    private static final ConcurrentHashMap<Class<?>, Method[]> COMPUTED_PROPERTIES_CACHE =
+        new ConcurrentHashMap<>();
 
     private FieldMetadataLoader() {
         throw new UnsupportedOperationException();
@@ -321,6 +358,173 @@ public final class FieldMetadataLoader {
             return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
         }
         return null;
+    }
+
+    /**
+     * 查找类中标注了 {@code @JsonValue} 的方法。
+     *
+     * <p>对标 Jackson {@code @JsonValue}：标注在方法上时，该方法的返回值
+     * 作为整个对象的 JSON 值（而非字段级序列化）。常用于枚举自定义序列化。</p>
+     *
+     * <p>一个类最多只能有一个 {@code @JsonValue} 方法。如果找到多个，使用第一个。
+     * 结果会被缓存，后续调用直接返回缓存值。</p>
+     *
+     * @param clazz 要扫描的类
+     * @return 标注了 {@code @JsonValue} 的 Method，未找到返回 null
+     * @since 1.4.0
+     */
+    public static Method findJsonValueMethod(Class<?> clazz) {
+        return JSON_VALUE_METHOD_CACHE.computeIfAbsent(clazz, c -> {
+            for (Method method : c.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(JsonValue.class)) {
+                    method.setAccessible(true);
+                    return method;
+                }
+            }
+            // 检查父类
+            Class<?> superClass = c.getSuperclass();
+            if (superClass != null && superClass != Object.class) {
+                Method inherited = findJsonValueMethod(superClass);
+                if (inherited != null) {
+                    return inherited;
+                }
+            }
+            return null;
+        });
+    }
+
+    /**
+     * 检查类是否有 {@code @JsonValue} 方法。
+     *
+     * @param clazz 要检查的类
+     * @return true 如果类中存在 {@code @JsonValue} 标注的方法
+     * @since 1.4.0
+     */
+    public static boolean hasJsonValueMethod(Class<?> clazz) {
+        return findJsonValueMethod(clazz) != null;
+    }
+
+    /**
+     * 查找类中标注了 {@code @JsonAnyGetter} 的方法。
+     *
+     * <p>对标 Jackson {@code @JsonAnyGetter}：标注在返回 {@code Map<String, Object>} 的 getter 上，
+     * 序列化时将 Map 的键值对展开为顶层 JSON 属性。</p>
+     *
+     * @param clazz 要扫描的类
+     * @return 标注了 {@code @JsonAnyGetter} 的 Method，未找到返回 null
+     * @since 1.4.0
+     */
+    public static Method findAnyGetterMethod(Class<?> clazz) {
+        return JSON_ANY_GETTER_CACHE.computeIfAbsent(clazz, c -> {
+            for (Method method : c.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(JsonAnyGetter.class)) {
+                    method.setAccessible(true);
+                    return method;
+                }
+            }
+            Class<?> superClass = c.getSuperclass();
+            if (superClass != null && superClass != Object.class) {
+                Method inherited = findAnyGetterMethod(superClass);
+                if (inherited != null) {
+                    return inherited;
+                }
+            }
+            return null;
+        });
+    }
+
+    /**
+     * 查找类中的计算属性方法（@JsonGetter 标注但没有对应字段的方法）。
+     *
+     * <p>对标 Jackson @JsonGetter 计算属性：标注在 getter 方法上，
+     * 方法返回值作为 JSON 属性输出，无需对应实际字段。</p>
+     *
+     * @param clazz 要扫描的类
+     * @return 计算属性方法数组，未找到返回空数组
+     * @since 1.4.0
+     */
+    public static Method[] findComputedProperties(Class<?> clazz) {
+        return COMPUTED_PROPERTIES_CACHE.computeIfAbsent(clazz, c -> {
+            List<Method> computed = new ArrayList<>();
+            // 获取已加载的字段名集合
+            Set<String> fieldNames = new HashSet<>();
+            Field[] fields = c.getDeclaredFields();
+            for (Field f : fields) {
+                int mods = f.getModifiers();
+                if (!java.lang.reflect.Modifier.isStatic(mods) && !java.lang.reflect.Modifier.isTransient(mods)) {
+                    fieldNames.add(f.getName());
+                }
+            }
+
+            for (Method method : c.getDeclaredMethods()) {
+                JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);
+                if (jsonGetter != null) {
+                    String inferredName = inferFieldNameFromGetter(method.getName());
+                    // 如果推断出的字段名不在已加载字段列表中，则为计算属性
+                    if (inferredName == null || !fieldNames.contains(inferredName)) {
+                        method.setAccessible(true);
+                        computed.add(method);
+                    }
+                }
+            }
+            return computed.isEmpty() ? new Method[0] : computed.toArray(new Method[0]);
+        });
+    }
+
+    /**
+     * 检查类是否有计算属性。
+     *
+     * @param clazz 要检查的类
+     * @return true 如果类中存在计算属性方法
+     * @since 1.4.0
+     */
+    public static boolean hasComputedProperties(Class<?> clazz) {
+        return findComputedProperties(clazz).length > 0;
+    }
+
+    /**
+     * 获取计算属性的 JSON 名称。
+     *
+     * @param method 标注了 @JsonGetter 的方法
+     * @return JSON 属性名
+     * @since 1.4.0
+     */
+    public static String getComputedPropertyName(Method method) {
+        JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);
+        if (jsonGetter != null && !jsonGetter.value().isEmpty()) {
+            return jsonGetter.value();
+        }
+        String inferred = inferFieldNameFromGetter(method.getName());
+        return inferred != null ? inferred : method.getName();
+    }
+
+    /**
+     * 查找类中标注了 {@code @JsonAnySetter} 的方法。
+     *
+     * <p>对标 Jackson {@code @JsonAnySetter}：标注在接收 {@code (String, Object)} 参数的方法上，
+     * 反序列化时将未匹配到字段的属性通过该方法写入。</p>
+     *
+     * @param clazz 要扫描的类
+     * @return 标注了 {@code @JsonAnySetter} 的 Method，未找到返回 null
+     * @since 1.4.0
+     */
+    public static Method findAnySetterMethod(Class<?> clazz) {
+        return JSON_ANY_SETTER_CACHE.computeIfAbsent(clazz, c -> {
+            for (Method method : c.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(JsonAnySetter.class)) {
+                    method.setAccessible(true);
+                    return method;
+                }
+            }
+            Class<?> superClass = c.getSuperclass();
+            if (superClass != null && superClass != Object.class) {
+                Method inherited = findAnySetterMethod(superClass);
+                if (inherited != null) {
+                    return inherited;
+                }
+            }
+            return null;
+        });
     }
 
     /**

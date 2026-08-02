@@ -23,6 +23,7 @@ import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonRawValue;
+import com.njydsz.common.json.annotation.JsonUnwrapped;
 
 import java.lang.reflect.Array;
 import java.util.logging.Logger;
@@ -126,6 +127,15 @@ public final class FieldMeta {
 
     /** 是否为原始 JSON 值（@JsonRawValue，序列化时不转义） */
     public final boolean isRawValue;
+
+    /** 是否为展开字段（@JsonUnwrapped，序列化时嵌套属性展开到父对象） */
+    public final boolean unwrapped;
+
+    /** @JsonUnwrapped 前缀 */
+    public final String unwrapPrefix;
+
+    /** @JsonUnwrapped 后缀 */
+    public final String unwrapSuffix;
 
     /** 反序列化别名列表（来自 @JsonAlias 注解） */
     public final String[] aliases;
@@ -237,6 +247,12 @@ public final class FieldMeta {
         // 加载 @JsonRawValue 注解
         JsonRawValue rawValueAnnotation = field.getAnnotation(JsonRawValue.class);
         this.isRawValue = rawValueAnnotation != null;
+
+        // 加载 @JsonUnwrapped 注解
+        JsonUnwrapped unwrappedAnnotation = field.getAnnotation(JsonUnwrapped.class);
+        this.unwrapped = unwrappedAnnotation != null;
+        this.unwrapPrefix = unwrappedAnnotation != null ? unwrappedAnnotation.prefix() : "";
+        this.unwrapSuffix = unwrappedAnnotation != null ? unwrappedAnnotation.suffix() : "";
 
         // 加载 @JsonInclude 包含策略
         JsonInclude includeAnnotation = field.getAnnotation(JsonInclude.class);

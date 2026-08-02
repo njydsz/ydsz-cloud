@@ -85,7 +85,7 @@ public final class YdszJsonReader<T> {
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
         try {
             mapper.getConfig().apply();
-            return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, targetClass));
+            return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, targetType));
         } finally {
             snapshot.restore();
         }

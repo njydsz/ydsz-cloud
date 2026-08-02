@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
@@ -346,6 +347,12 @@ public final class SerializationProvider {
     public static String serialize(Object obj) {
         if (obj == null) {
             return "null";
+        }
+
+        // @JsonValue 快速路径：如果类有 @JsonValue 标注的方法，直接序列化方法返回值
+        Method jsonValueMethod = FieldMetadataLoader.findJsonValueMethod(obj.getClass());
+        if (jsonValueMethod != null) {
+            return recordJsonValueSerialization(obj, jsonValueMethod);
         }
 
         SerializationContext ctx = SerializationContext.CONTEXT.get();
@@ -743,6 +750,34 @@ public final class SerializationProvider {
 
     private static AsmSerializer<Object> captureSerializer(AsmSerializer<?> serializer) {
         return (AsmSerializer<Object>) serializer;
+    }
+
+    /**
+     * @JsonValue 序列化路径：调用标注了 @JsonValue 的方法，序列化其返回值。
+     *
+     * <p>对标 Jackson @JsonValue：方法的返回值作为整个对象的 JSON 值，
+     * 跳过字段级序列化。常用于枚举自定义序列化（如返回枚举的 code 值而非 name）。</p>
+     *
+     * @param obj 要序列化的对象
+     * @param jsonValueMethod 标注了 @JsonValue 的方法
+     * @return 方法返回值的 JSON 表示
+     */
+    private static String recordJsonValueSerialization(Object obj, Method jsonValueMethod) {
+        try {
+            Object value = jsonValueMethod.invoke(obj);
+            if (value == null) {
+                return "null";
+            }
+            // 递归序列化返回值（返回值可能是 String/Number/Boolean 等简单类型）
+            return serialize(value);
+        } catch (Exception e) {
+            throw new JsonSerializationException(
+                JsonSerializationException.SERIALIZATION_ERROR,
+                "@JsonValue method invocation failed for " + obj.getClass().getName()
+                    + ": " + e.getMessage(),
+                e
+            );
+        }
     }
 
     // ==================== 内部辅助方法 ====================
