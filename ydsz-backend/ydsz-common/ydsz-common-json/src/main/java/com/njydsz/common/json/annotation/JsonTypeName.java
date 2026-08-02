@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * <p>序列化 Dog 对象时，JSON 中会包含 {@code "type": "dog"}。</p>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
