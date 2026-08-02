@@ -224,6 +224,10 @@ public final class JSONReader {
     
     /**
      * 构造函数
+     *
+     * <p><b>性能提示：</b>此构造函数会调用 {@code String.toCharArray()} 创建防御性拷贝。
+     * 高频场景应优先使用 {@link #getPooledReader(String)} + {@link #reset(String)} 复用 char[] 缓冲区，
+     * 避免每次反序列化都分配新的 char[]。ThreadLocal 池已在 {@link #getPooledReader} 中实现。</p>
      */
     public JSONReader(String json) {
         this.buf = json.toCharArray();

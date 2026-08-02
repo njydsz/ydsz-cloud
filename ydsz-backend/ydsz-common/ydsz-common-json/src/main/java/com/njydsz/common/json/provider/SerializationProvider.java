@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 import com.njydsz.common.json.annotation.YdszJsonClass;
+import com.njydsz.common.json.annotation.JsonSerialize;
+import com.njydsz.common.json.api.JsonSerializer;
 import com.njydsz.common.json.asm.AsmSerializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.BeanSerializerCache;
@@ -349,6 +351,12 @@ public final class SerializationProvider {
             return "null";
         }
 
+        // @JsonSerialize 快速路径：如果类有 @JsonSerialize 注解，使用自定义序列化器
+        JsonSerializer<Object> customSerializer = getCustomSerializer(obj.getClass());
+        if (customSerializer != null) {
+            return customSerializer.serialize(obj);
+        }
+
         // @JsonValue 快速路径：如果类有 @JsonValue 标注的方法，直接序列化方法返回值
         Method jsonValueMethod = FieldMetadataLoader.findJsonValueMethod(obj.getClass());
         if (jsonValueMethod != null) {
@@ -511,9 +519,7 @@ public final class SerializationProvider {
         } catch (JsonSerializationException e) {
             throw e;
         } catch (Exception e) {
-            throw new JsonSerializationException(
-                "Failed to serialize object with view: " + obj.getClass().getName(), e
-            );
+            throw wrapSerializationException(obj, e);
         } finally {
             ctx.currentViewClass = previousView;
             objects.clear();
@@ -562,6 +568,75 @@ public final class SerializationProvider {
         }
 
         return sb.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 序列化对象并直接写入 OutputStream（避免中间 byte[] 分配）。
+     *
+     * <p>先序列化为 JSON 字符串，再通过 OutputStream 直接写入 UTF-8 字节，
+     * 对于大数据量场景可减少一次 byte[] 分配和 GC 压力。</p>
+     *
+     * @param obj 要序列化的对象
+     * @param out 输出流
+     * @since 1.4.0
+     */
+    public static void serializeToStream(Object obj, java.io.OutputStream out) {
+        if (obj == null) {
+            try {
+                out.write(new byte[]{'n', 'u', 'l', 'l'});
+            } catch (java.io.IOException e) {
+                throw new JsonSerializationException(
+                    JsonSerializationException.SERIALIZATION_ERROR,
+                    "Failed to write null to OutputStream", e
+                );
+            }
+            return;
+        }
+
+        // 优先使用零拷贝 byte[] 路径，再写入流
+        byte[] bytes = serializeToBytes(obj);
+        try {
+            out.write(bytes);
+        } catch (java.io.IOException e) {
+            throw new JsonSerializationException(
+                JsonSerializationException.SERIALIZATION_ERROR,
+                "Failed to write to OutputStream", e
+            );
+        }
+    }
+
+    /**
+     * 序列化对象并直接写入 Writer（避免中间 String 分配）。
+     *
+     * <p>先序列化为 JSON 字符串，再通过 Writer 写入字符流。
+     * 对于需要输出到 FileWriter/PrintWriter 等场景可减少一次 String 分配。</p>
+     *
+     * @param obj 要序列化的对象
+     * @param writer 字符输出流
+     * @since 1.4.0
+     */
+    public static void serializeToWriter(Object obj, java.io.Writer writer) {
+        if (obj == null) {
+            try {
+                writer.write("null");
+            } catch (java.io.IOException e) {
+                throw new JsonSerializationException(
+                    JsonSerializationException.SERIALIZATION_ERROR,
+                    "Failed to write null to Writer", e
+                );
+            }
+            return;
+        }
+
+        String json = serialize(obj);
+        try {
+            writer.write(json);
+        } catch (java.io.IOException e) {
+            throw new JsonSerializationException(
+                JsonSerializationException.SERIALIZATION_ERROR,
+                "Failed to write to Writer", e
+            );
+        }
     }
 
     /**
@@ -683,8 +758,9 @@ public final class SerializationProvider {
             SerializerCache.putFieldMeta(clazz, fields);
         }
 
-        // 检查是否有字段注解
-        if (FieldMetadataLoader.hasFieldAnnotations(fields)) {
+        // 检查是否有字段注解（使用缓存的 BeanSerializerInfo）
+        BeanSerializerInfo serializerInfo = getOrCreateBeanSerializer(clazz, fields);
+        if (serializerInfo.hasAnnotations) {
             return false;
         }
 
@@ -710,9 +786,13 @@ public final class SerializationProvider {
         /** 预估的 JSON 大小 */
         final int estimatedSize;
 
-        BeanSerializerInfo(FieldMeta[] validFields, int estimatedSize) {
+        /** 是否有字段注解（缓存 FieldMetadataLoader.hasFieldAnnotations 结果） */
+        final boolean hasAnnotations;
+
+        BeanSerializerInfo(FieldMeta[] validFields, int estimatedSize, boolean hasAnnotations) {
             this.validFields = validFields;
             this.estimatedSize = estimatedSize;
+            this.hasAnnotations = hasAnnotations;
         }
     }
 
@@ -742,7 +822,7 @@ public final class SerializationProvider {
                 estimatedSize += field.jsonKeyLen + 16;
             }
 
-            info = new BeanSerializerInfo(validFields, estimatedSize);
+            info = new BeanSerializerInfo(validFields, estimatedSize, FieldMetadataLoader.hasFieldAnnotations(fields));
             BEAN_SERIALIZER_INFO_CACHE.put(clazz, info);
         }
         return info;
@@ -750,6 +830,41 @@ public final class SerializationProvider {
 
     private static AsmSerializer<Object> captureSerializer(AsmSerializer<?> serializer) {
         return (AsmSerializer<Object>) serializer;
+    }
+
+    /**
+     * @JsonSerialize 自定义序列化器缓存（Class -> JsonSerializer 实例）。
+     */
+    private static final ConcurrentHashMap<Class<?>, Object> CUSTOM_SERIALIZER_CACHE =
+        new ConcurrentHashMap<>();
+
+    /**
+     * 检查类是否有 @JsonSerialize 注解并获取自定义序列化器。
+     *
+     * @param clazz 要检查的类
+     * @return 自定义序列化器实例，或 null 如果没有
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static JsonSerializer<Object> getCustomSerializer(Class<?> clazz) {
+        JsonSerialize annotation = clazz.getAnnotation(JsonSerialize.class);
+        if (annotation == null || annotation.using() == Void.class) {
+            return null;
+        }
+        Object cached = CUSTOM_SERIALIZER_CACHE.get(clazz);
+        if (cached != null) {
+            return (JsonSerializer<Object>) cached;
+        }
+        try {
+            JsonSerializer<?> instance = (JsonSerializer<?>) annotation.using().getDeclaredConstructor().newInstance();
+            CUSTOM_SERIALIZER_CACHE.putIfAbsent(clazz, instance);
+            return (JsonSerializer) instance;
+        } catch (Exception e) {
+            throw new JsonSerializationException(
+                JsonSerializationException.SERIALIZATION_ERROR,
+                "Failed to instantiate custom serializer: " + annotation.using().getName(),
+                e
+            );
+        }
     }
 
     /**

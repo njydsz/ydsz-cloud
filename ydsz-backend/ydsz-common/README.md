@@ -14,14 +14,14 @@
 
 ## L1-L6 分层架构
 
-本模块按 DDD 分层组织 **27 个子模块**，依赖方向严格自下而上（上层依赖下层，不可反向）：
+本模块按 DDD 分层组织 **30 个子模块**，依赖方向严格自下而上（上层依赖下层，不可反向）：
 
 ```
 L1 基础设施层  → ydsz-common-core
 L2 工具模块层  → ydsz-common-util, ydsz-common-json
 L3 基础服务层  → ydsz-common-domain, ydsz-common-exception
 L4 基础数据层  → ydsz-common-jdbc, ydsz-common-redis, ydsz-common-lock,
-                 ydsz-common-cache
+                 ydsz-common-cache, ydsz-common-thread, ydsz-common-tenant
 L5 业务服务层  → ydsz-common-auth, ydsz-common-safe, ydsz-common-feign,
                  ydsz-common-audit, ydsz-common-file, ydsz-common-notify,
                  ydsz-common-queue, ydsz-common-docs, ydsz-common-excel,
@@ -44,6 +44,8 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 | L4 | [common-redis](ydsz-common-redis/README.md) | Redis 6 种 ops + 9 种高级 ops、布隆过滤器、延迟队列、限流、缓存击穿防护 |
 | L4 | [common-lock](ydsz-common-lock/README.md) | 分布式锁（4 种实现）、@Idempotent 幂等、@YdszDistributedLock、WatchDog、读写锁、信号量 |
 | L4 | [common-cache](ydsz-common-cache/README.md) | 高性能多策略本地缓存框架（Window-TinyLFU/LRU/LFU/TTL/MultiLevel）、三防、熔断降级 |
+| L4 | [common-thread](ydsz-common-thread/README.md) | 共享线程池自动配置、线程池监控、健康检查 |
+| L4 | [common-tenant](ydsz-common-tenant/README.md) | 多租户隔离（SINGLE/MULTI/ISOLATE_DB）、SQL 改写、全链路上下文传播、租户限流/审计/指标 |
 | L5 | [common-auth](ydsz-common-auth/README.md) | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限、TOTP 2FA、权限缓存热更新 |
 | L5 | [common-safe](ydsz-common-safe/README.md) | @Sensitive 7 种脱敏、@Xss、@RateLimit、CSRF、SQL 注入防护、验证码、安全事件告警 |
 | L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断、动态客户端 |
@@ -68,7 +70,7 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 
 ## 自动配置机制
 
-所有 27 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
+所有 30 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
 
 各服务的启动类通过 `@SpringBootApplication(scanBasePackages = {"com.njydsz.{service}", "com.njydsz.common"})` 扫描 common 包，激活自动配置。
 
@@ -282,11 +284,11 @@ deploy\windows\scripts\import-nacos-config.bat ydsz dev
 | 5 | ydsz-message | 9004 | message + common | 全量（通过 common-web） |
 | 6 | ydsz-cronjob | 9005 | cronjob + common | 全量（通过 common-web） |
 | 7 | ydsz-workflow | 9006 | workflow + common | 全量（通过 common-web） |
-| 8 | ydsz-agent | 9007 | agent + common + project | 全量（通过 common-web） |
+| 8 | ydsz-agent | 9007 | agent + common | 全量（通过 common-web） |
+| 9 | ydsz-nextwiki | 9008 | nextwiki + common | 全量（通过 common-web） |
+| 10 | ydsz-literule | 9009 | literule + common | 全量（通过 common-web） |
 
-> **literule** 不是独立部署单元，是 jar 库，被 project 作为业务规则引擎嵌入。
->
-> **2026-07-16 合并**：原 `ydsz-sales`（端口 9010）和 `ydsz-finance`（端口 9011）已合并到 `ydsz-project`。
+> **nextwiki** 和 **literule** 均为独立部署的微服务，拥有独立端口和 Web 控制台，注册到 Nacos。同时通过 Feign 接口（`FileQueryClient` / `LiteRuleClient`）为其他业务模块提供能力。
 
 ## 目录结构
 
@@ -302,6 +304,8 @@ ydsz-common/
 ├── ydsz-common-redis/    # L4 基础数据层
 ├── ydsz-common-lock/     # L4 基础数据层
 ├── ydsz-common-cache/    # L4 基础数据层（高性能多策略本地缓存）
+├── ydsz-common-thread/   # L4 基础数据层（共享线程池自动配置）
+├── ydsz-common-tenant/   # L4 基础数据层（多租户隔离）
 ├── ydsz-common-auth/     # L5 业务服务层
 ├── ydsz-common-safe/     # L5 业务服务层
 ├── ydsz-common-feign/    # L5 业务服务层
@@ -326,7 +330,7 @@ ydsz-common/
 ## 构建
 
 ```bash
-# 仅构建 common 模块（含所有 27 个子模块）
+# 仅构建 common 模块（含所有 30 个子模块）
 cd ydsz-backend
 mvn -pl ydsz-common -am clean install
 

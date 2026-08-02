@@ -39,6 +39,8 @@ public class JsonHealthIndicator implements HealthIndicator {
         builder.withDetail("dateFormat", config.getDateFormat());
         builder.withDetail("useBigDecimal", config.isUseBigDecimal());
         builder.withDetail("wrapRootValue", config.isWrapRootValue());
+        builder.withDetail("failOnError", config.isFailOnError());
+        builder.withDetail("serializeEnumUsingOrdinal", config.isSerializeEnumUsingOrdinal());
 
         // ASM 缓存统计
         builder.withDetail("asmLevel", YdszJsonCacheStats.getAsmLevel());

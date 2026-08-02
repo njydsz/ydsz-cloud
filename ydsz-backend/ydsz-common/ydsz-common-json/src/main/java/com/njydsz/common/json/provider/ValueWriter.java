@@ -1,6 +1,7 @@
 package com.njydsz.common.json.provider;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.*;
@@ -567,6 +568,23 @@ public final class ValueWriter {
                 }
             } catch (Exception e) {
                 LOGGER.fine("Failed to serialize field " + field.name + " of " + obj.getClass().getName() + ": " + e.getMessage());
+            }
+        }
+
+        // @JsonGetter 计算属性：输出没有对应字段的 @JsonGetter 方法返回值
+        Method[] computedProps = FieldMetadataLoader.findComputedProperties(clazz);
+        for (Method computedMethod : computedProps) {
+            try {
+                Object computedValue = computedMethod.invoke(obj);
+                if (computedValue != null) {
+                    if (!first) sb.append(',');
+                    first = false;
+                    String propName = FieldMetadataLoader.getComputedPropertyName(computedMethod);
+                    sb.append('"').append(propName).append("\":");
+                    writeValueDirect(computedValue, sb);
+                }
+            } catch (Exception e) {
+                LOGGER.fine("Failed to invoke @JsonGetter computed property " + computedMethod.getName() + ": " + e.getMessage());
             }
         }
 

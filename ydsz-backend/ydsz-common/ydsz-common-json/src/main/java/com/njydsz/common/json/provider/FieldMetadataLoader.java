@@ -14,6 +14,7 @@ import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonGetter;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
+import com.njydsz.common.json.annotation.JsonNaming;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.annotation.JsonSetter;
 import com.njydsz.common.json.annotation.JsonValue;
@@ -137,6 +138,16 @@ public final class FieldMetadataLoader {
                 }
             }
             alphabeticSort = propertyOrder.alphabetic();
+        }
+
+        // Jackson 兼容：@JsonNaming 类级命名策略
+        JsonNaming jsonNaming = clazz.getAnnotation(JsonNaming.class);
+        if (jsonNaming != null) {
+            try {
+                classNaming = jsonNaming.value().getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                // 命名策略实例化失败，回退到当前策略
+            }
         }
 
         // 处理 @JsonIgnoreProperties 注解

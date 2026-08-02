@@ -3,6 +3,7 @@ package com.njydsz.common.json.provider;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,8 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
+import com.njydsz.common.json.annotation.JsonDeserialize;
+import com.njydsz.common.json.api.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.parser.YdszJsonParser;
 import com.njydsz.common.json.reader.JSONReader;
@@ -130,11 +133,51 @@ public final class DeserializationProvider {
     }
 
     /**
+     * @JsonDeserialize 自定义反序列化器缓存（Class -> JsonDeserializer 实例）。
+     */
+    private static final java.util.concurrent.ConcurrentHashMap<Class<?>, Object> CUSTOM_DESERIALIZER_CACHE =
+        new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * 检查类是否有 @JsonDeserialize 注解并获取自定义反序列化器。
+     *
+     * @param clazz 要检查的类
+     * @return 自定义反序列化器实例，或 null 如果没有
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static <T> JsonDeserializer<T> getCustomDeserializer(Class<T> clazz) {
+        JsonDeserialize annotation = clazz.getAnnotation(JsonDeserialize.class);
+        if (annotation == null || annotation.using() == Void.class) {
+            return null;
+        }
+        Object cached = CUSTOM_DESERIALIZER_CACHE.get(clazz);
+        if (cached != null) {
+            return (JsonDeserializer<T>) cached;
+        }
+        try {
+            JsonDeserializer<?> instance = (JsonDeserializer<?>) annotation.using().getDeclaredConstructor().newInstance();
+            CUSTOM_DESERIALIZER_CACHE.putIfAbsent(clazz, instance);
+            return (JsonDeserializer) instance;
+        } catch (Exception e) {
+            throw new JsonDeserializationException(
+                "Failed to instantiate custom deserializer: " + annotation.using().getName(),
+                e
+            );
+        }
+    }
+
+    /**
      * 反序列化 JSON 字符串（零拷贝优化版）
      */
     public static <T> T deserialize(String json, Class<T> clazz) {
         if (json == null || json.isEmpty()) {
             return null;
+        }
+
+        // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
+        JsonDeserializer<T> customDeserializer = getCustomDeserializer(clazz);
+        if (customDeserializer != null) {
+            return customDeserializer.deserialize(json, clazz);
         }
 
         // 统一安全门控：AutoTypeChecker 作为唯一的类型安全检查入口
@@ -350,6 +393,16 @@ public final class DeserializationProvider {
                     }
                 }
             }
+        }
+
+        if (type instanceof WildcardType wt) {
+            // WildcardType（如 ? extends Number）：取上界进行反序列化
+            Type[] upperBounds = wt.getUpperBounds();
+            if (upperBounds != null && upperBounds.length > 0) {
+                return deserialize(json, upperBounds[0]);
+            }
+            // 无上界时回退到 Object
+            return (T) parseValue(json);
         }
 
         // 兜底路径：根据 JSON 首字符决定解析为 List 或 Map

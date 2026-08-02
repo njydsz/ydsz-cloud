@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.lang.reflect.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import com.njydsz.common.json.cache.AsmCodecCache;
@@ -844,20 +843,7 @@ public class YdszJson {
      * @since 1.0.0
      */
     public static void toJson(Object obj, OutputStream out) {
-        if (obj == null) {
-            try {
-                out.write("null".getBytes(StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                throw new YdszJsonException("Failed to write to OutputStream", e);
-            }
-            return;
-        }
-        byte[] bytes = toJsonBytes(obj);
-        try {
-            out.write(bytes);
-        } catch (IOException e) {
-            throw new YdszJsonException("Failed to write to OutputStream", e);
-        }
+        SerializationProvider.serializeToStream(obj, out);
     }
 
     /**
@@ -873,12 +859,7 @@ public class YdszJson {
      * @since 1.0.0
      */
     public static void toJson(Object obj, Writer writer) {
-        String json = toJson(obj);
-        try {
-            writer.write(json);
-        } catch (IOException e) {
-            throw new YdszJsonException("Failed to write to Writer", e);
-        }
+        SerializationProvider.serializeToWriter(obj, writer);
     }
 
     /**

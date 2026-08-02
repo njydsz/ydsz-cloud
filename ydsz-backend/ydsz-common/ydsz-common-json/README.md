@@ -10,7 +10,7 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 |---|---|
 | **层级** | L2 工具模块层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **源文件数** | ~102 |
+| **源文件数** | ~108 |
 | **主入口类** | `com.njydsz.common.json.YdszJson` |
 | **配置文件** | `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` → `JsonAutoConfiguration` |
 
@@ -381,10 +381,64 @@ YdszJson (Facade, 用户接口)
 | 优先级 | 特性 | 描述 |
 |---|---|---|
 | P3 | 流式增量解析（Streaming Parser） | 当前 YdszJsonParser 需全量加载 JSON 到 char[]，无法处理超大 JSON 流式解析。计划基于 InputStream 实现 token-by-token 增量解析器。 |
-| P3 | @JsonGetter 计算属性完整支持 | 当前 @JsonGetter/@JsonSetter 方法级注解已实现字段名覆盖（通过 createWithJsonName 创建新 FieldMeta），但计算属性（无对应字段的 getter）需要 FieldMeta 支持方法后端，计划后续实现。 |
-| P3 | @JsonAnyGetter/@JsonAnySetter/@JsonUnwrapped 实现 | 三个注解已创建但尚未实现序列化/反序列化逻辑，计划后续迭代。 |
+
+## Jackson 迁移指南
+
+YdszJson 提供 Jackson 兼容注解，可平滑迁移：
+
+| Jackson 注解 | YdszJson 状态 | 说明 |
+|---|---|---|
+| `@JsonProperty` | ✅ 已实现 | 字段名映射 |
+| `@JsonIgnore` | ✅ 已实现 | 字段忽略 |
+| `@JsonIgnoreProperties` | ✅ 已实现 | 类级字段忽略 |
+| `@JsonFormat` | ✅ 已实现 | 日期格式 |
+| `@JsonInclude` | ✅ 已实现 | 序列化包含策略 |
+| `@JsonAlias` | ✅ 已实现 | 反序列化别名 |
+| `@JsonValue` | ✅ 已实现 | 枚举/对象值序列化 |
+| `@JsonAnyGetter` | ✅ 已实现 | 动态属性 Getter |
+| `@JsonAnySetter` | ✅ 已实现 | 动态属性 Setter |
+| `@JsonUnwrapped` | ✅ 已实现 | 嵌套属性展开 |
+| `@JsonGetter` | ✅ 已实现 | 计算属性 + 字段名覆盖 |
+| `@JsonSetter` | ✅ 已实现 | 字段名覆盖 |
+| `@JsonNaming` | ✅ 已实现 | 类级命名策略 |
+| `@JsonSerialize` | ✅ 已实现 | 自定义序列化器 |
+| `@JsonDeserialize` | ✅ 已实现 | 自定义反序列化器 |
+| `@JsonRootName` | ✅ 已实现 | 根名称包裹 |
+| `@JsonRawValue` | ✅ 已实现 | 原始 JSON 值 |
+| `@JsonAutoDetect` | ✅ 已实现 | 可见性控制 |
+| `@JsonTypeName` | ✅ 已实现 | 多态类型名称 |
+
+**迁移步骤：**
+1. 将 `ObjectMapper` 替换为 `YdszJsonMapper`
+2. 将 `objectMapper.readValue/readTree/writeValueAsString` 替换为 `mapper.toObject/toJson/readTree`
+3. Jackson 注解无需修改，直接兼容
+4. `ObjectReader/ObjectWriter` 替换为 `YdszJsonReader/YdszJsonWriter`
 
 ## 已完成优化记录
+
+### 第九轮（2026-08-02）
+
+| 级别 | 项 | 描述 |
+|---|---|---|
+| P0-1 | YdszJsonWriter 绑定类型修复 | `YdszJsonWriter` 新增 `targetClass` 字段，`writerFor(Class)` 正确传递类型，`write()`/`writeAsBytes()` 新增类型兼容性校验，构造器预热 ASM 序列化器缓存 |
+| P0-2 | @JsonValue 注解接入 | `FieldMetadataLoader` 新增 `findJsonValueMethod()`/`hasJsonValueMethod()` 缓存方法，`SerializationProvider.serialize()` 序列化前检查 @JsonValue 方法并直接序列化返回值 |
+| P0-3 | JSONReader 字符串跳过修复 | 新增 `skipStringValue()` 辅助方法正确处理 `\"` 转义引号和 `\\` 转义反斜杠，`readRawValue()`/`skipValue()` 统一调用消除字符串内 `{}` 干扰 |
+| P1-1 | @JsonAnyGetter/@JsonAnySetter 实现 | `FieldMetadataLoader` 新增 `findAnyGetterMethod()`/`findAnySetterMethod()` 缓存；`BeanSerializer` 序列化后展开 Map 属性；`BeanReader` 反序列化时将未匹配字段通过 anySetter 写入 |
+| P1-2 | @JsonUnwrapped 实现 | `FieldMeta` 新增 `unwrapped`/`unwrapPrefix`/`unwrapSuffix` 字段，`ValueWriter` 序列化时递归展开嵌套对象字段到父 JSON |
+| P1-3 | @JsonGetter 计算属性 | `FieldMetadataLoader` 新增 `findComputedProperties()`/`getComputedPropertyName()` 方法，`ValueWriter` 字段写完后补充输出计算属性 |
+| P1-4 | @JsonDeserialize/@JsonSerialize | 新建注解 + `JsonSerializer`/`JsonDeserializer` SPI 接口，`SerializationProvider`/`DeserializationProvider` 序列化/反序列化前检查自定义序列化器 |
+| P1-5 | @JsonNaming 注解 | 新建注解，`FieldMetadataLoader.loadFields()` 检测类级 @JsonNaming 并实例化命名策略 |
+| P1-6 | WildcardType 反序列化 | `DeserializationProvider.deserialize(String, Type)` 新增 WildcardType 分支，取上界递归反序列化 |
+| P1-7 | YdszJsonReader.read(byte[]) 修复 | 使用 `targetType` 替代 `targetClass`，保留泛型类型信息 |
+| P2-1 | serializeToStream | `SerializationProvider` 新增 `serializeToStream(Object, OutputStream)` 方法，`YdszJson.toJson(Object, OutputStream)` 委托调用 |
+| P2-2 | serializeToWriter | `SerializationProvider` 新增 `serializeToWriter(Object, Writer)` 方法，`YdszJson.toJson(Object, Writer)` 委托调用 |
+| P2-3 | hasFieldAnnotations 缓存 | `BeanSerializerInfo` 新增 `hasAnnotations` 字段，`tryBeanSerialize` 使用缓存值替代每次调用 `hasFieldAnnotations` |
+| P2-4 | JSONReader char[] 文档 | 添加性能提示文档，引导使用 `getPooledReader` + `reset` 复用 char[] |
+| P2-5 | serializeWithView 异常统一 | `serializeWithView` 异常处理改用 `wrapSerializationException()` 统一 |
+| P3-1 | 删除空 engine/ 目录 | 清理遗留空目录 |
+| P3-2 | README 源文件数更新 | ~102 → ~108 |
+| P3-3 | Jackson 迁移指南 | 新增完整 Jackson 注解兼容表 + 迁移步骤 |
+| P3-4 | 健康检查增强 | `JsonHealthIndicator` 新增 `failOnError`/`serializeEnumUsingOrdinal` 状态报告 |
 
 ### 第八轮（2026-07-30）
 
