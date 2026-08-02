@@ -30,7 +30,7 @@
 | 类 | 说明 |
 |---|---|
 | `ResultCode` | 结果码接口，定义 `getCode()` / `getMsg()` / `getMessageKey()`（默认返回 `"error." + 枚举名`，用于 i18n）/ `getHttpStatusCode()`（默认返回 500） |
-| `BaseResultCode` | 标准结果码枚举（实现 ResultCode），共 49 个错误码，按段位规划 |
+| `BaseResultCode` | 标准结果码枚举（实现 ResultCode），共 56 个错误码，按段位规划 |
 
 **错误码段位规划**：
 
@@ -313,7 +313,7 @@ String traceId = TraceIdGenerator.generate();
 4. **业务模块自定义错误码请实现 `ResultCode` 接口**：项目/合同/商机（B4xxxx）、财务/成本（B5xxxx）、资源/工时（B6xxxx）、报表（B8xxxx）等业务域专属错误码已从 `BaseResultCode` 中删除，不应再放入。
 5. **配置校验 fail-fast**：`CoreProperties` 及其 `TraceConfig` 内部类使用 JSR-303 校验注解（`@Min` / `@Max` / `@NotBlank` / `@Pattern`），配合 `@Validated` 和 `@Valid` 实现启动时校验。配置非法时应用启动失败。
 6. **零依赖原则**：本模块不含 Spring AOP / AspectJ / Micrometer / SpEL / Spring Web MVC / MyBatis-Plus / Redis 依赖。监控能力通过 `CoreMetricsCallback` SPI 解耦，由上层模块桥接。
-7. **国际化资源**：模块自带 `i18n/messages.properties`（英文默认）和 `i18n/messages_zh_CN.properties`（中文）资源文件，覆盖全部 49 个 `BaseResultCode` 错误码。消息 key 格式为 `error.{ENUM_NAME}`，与 `ResultCode.getMessageKey()` 默认实现一致。
+7. **国际化资源**：模块自带 `i18n/messages.properties`（英文默认）和 `i18n/messages_zh_CN.properties`（中文）资源文件，覆盖全部 56 个 `BaseResultCode` 错误码。消息 key 格式为 `error.{ENUM_NAME}`，与 `ResultCode.getMessageKey()` 默认实现一致。
 8. **GraalVM Native Image 支持**：`META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties` 注册了 `BaseResponse` / `PageResponse` / `ProblemDetail` / `CoreProperties` / `CoreProperties$TraceConfig` / `FilterIgnoreProperties` 的反射配置。
 
 ## 变更记录

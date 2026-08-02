@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.schema.SchemaValidator;
+import com.njydsz.common.json.schema.JsonSchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
 import com.njydsz.common.json.schema.YdszJsonSchema;
 
@@ -152,7 +152,7 @@ public class FlowFormEngineService {
             return List.of();
         }
         try {
-            ValidationResult result = SchemaValidator.validate(jsonSchema, formData);
+            ValidationResult result = JsonSchemaValidator.validate(jsonSchema, formData);
             if (result.isValid()) {
                 return List.of();
             }

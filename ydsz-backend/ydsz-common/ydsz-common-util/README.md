@@ -167,10 +167,9 @@ ydsz:
       enabled: true                     # 启用 Snowflake 自动配置（默认启用）
       worker-id-source: ENVIRONMENT_VARIABLE   # workerId 来源策略
       environment-variable-name: YDSZ_SNOWFLAKE_WORKER_ID
-    threadpool:
-      monitor:
-        enabled: true                   # 启用线程池监控（默认启用）
 ```
+
+> 线程池监控（`ThreadPoolMonitorAutoConfiguration`）总是激活，无独立配置项；当 Micrometer `MeterRegistry` 在类路径时自动注册 `ydsz.threadpool.pool.*` 指标。
 
 ### 3. 基础使用
 
@@ -204,9 +203,10 @@ BeanCopyUtils.copyProperties(source, target);
 | `ydsz.util.snowflake.datacenter-id` | - | 数据中心 ID（0-31，未配置时基于主机名哈希自动计算） |
 | `ydsz.util.snowflake.worker-id-source` | `ENVIRONMENT_VARIABLE` | workerId 来源策略：`ENVIRONMENT_VARIABLE` / `CONFIG` / `INSTANCE_INDEX` |
 | `ydsz.util.snowflake.environment-variable-name` | `YDSZ_SNOWFLAKE_WORKER_ID` | 环境变量名 |
-| `ydsz.util.threadpool.monitor.enabled` | true | 是否启用线程池监控 |
 
 > workerId 解析优先级：分布式注册中心（`WorkerIdRegistry` Bean）> 配置策略（ENV/CONFIG/INSTANCE_INDEX）> 基于 IP 哈希自动计算。datacenterId 解析优先级：配置文件 > 环境变量 `SNOWFLAKE_DATACENTER_ID` > 基于主机名哈希自动计算。
+>
+> 线程池监控（`ThreadPoolMonitorAutoConfiguration`）总是激活，无 `@ConfigurationProperties` 配置项；Micrometer `MeterRegistry` 可用时自动注册 `ydsz.threadpool.pool.size` / `pool.active` / `pool.completed` / `pool.queue.size` / `pool.queue.capacity` / `pool.largest.size` Gauge 指标。
 
 ## 使用示例
 

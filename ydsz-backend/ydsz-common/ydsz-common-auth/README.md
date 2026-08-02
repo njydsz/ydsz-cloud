@@ -162,7 +162,7 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 | `AccessTokenUtils` / `PermissionMerger` / `PermissionUtils` | 工具类（见第 1、4 节） |
 | `PermissionMessageResolver`（新增） | 权限消息国际化（zh-CN 默认 / en-US，支持参数占位符 `{0}` 替换） |
 | `PermissionWarmUpInitializer`（新增） | 启动权限预热（监听 `ApplicationReadyEvent`，延迟异步加载指定角色权限到本地缓存） |
-| `PermissionCodes` / `PermissionCodeValidator` | 权限码常量与格式校验 |
+| `PermissionCodes` | 权限码常量 |
 
 ### 18. 指标（新增）
 

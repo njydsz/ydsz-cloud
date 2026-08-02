@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class Base extends BaseEntity<String> {
+public class BaseString extends BaseEntity<String> {
 
     private static final long serialVersionUID = 1L;
 }

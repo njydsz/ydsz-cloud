@@ -23,7 +23,7 @@ import com.njydsz.common.json.pointer.JsonPointer;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.reader.JSONReader;
-import com.njydsz.common.json.schema.SchemaValidator;
+import com.njydsz.common.json.schema.JsonSchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
 import com.njydsz.common.json.schema.YdszJsonSchema;
 import com.njydsz.common.json.serializer.JsonSerializer;
@@ -708,7 +708,7 @@ public class YdszJson {
      * @return 验证结果
      */
     public static ValidationResult validate(Object data, YdszJsonSchema schema) {
-        return SchemaValidator.validate(schema, data);
+        return JsonSchemaValidator.validate(schema, data);
     }
     
     /**
@@ -721,7 +721,7 @@ public class YdszJson {
     public static ValidationResult validate(String json, YdszJsonSchema schema) {
         try {
             Object data = DeserializationProvider.deserialize(json, Map.class);
-            return SchemaValidator.validate(schema, data);
+            return JsonSchemaValidator.validate(schema, data);
         } catch (Exception e) {
             ValidationResult result = new ValidationResult(false);
             result.addError("Failed to parse JSON: " + e.getMessage());
@@ -738,7 +738,7 @@ public class YdszJson {
      * @return 验证结果
      */
     public static <T> ValidationResult validate(T data, YdszJsonSchema schema, Class<T> clazz) {
-        return SchemaValidator.validate(schema, data);
+        return JsonSchemaValidator.validate(schema, data);
     }
     
     /**
