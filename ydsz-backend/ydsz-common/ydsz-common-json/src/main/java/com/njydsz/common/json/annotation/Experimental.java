@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  * </ul>
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 1.0.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

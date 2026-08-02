@@ -27,16 +27,16 @@ import java.lang.annotation.Target;
  *
  * // 使用注解
  * public class User {
- *     &#064;YdszJsonView(UserViews.List.class)
+ *     &#064;JsonView(UserViews.List.class)
  *     private Long id;
  *
- *     &#064;YdszJsonView(UserViews.List.class)
+ *     &#064;JsonView(UserViews.List.class)
  *     private String name;
  *
- *     &#064;YdszJsonView(UserViews.Detail.class)
+ *     &#064;JsonView(UserViews.Detail.class)
  *     private String email;
  *
- *     &#064;YdszJsonView(UserViews.Detail.class)
+ *     &#064;JsonView(UserViews.Detail.class)
  *     private String phone;
  * }
  *

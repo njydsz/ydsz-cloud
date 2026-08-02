@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
@@ -62,14 +62,14 @@ public @interface JsonAutoDetect {
         NONE;
 
         /**
-         * 将 Jackson 兼容枚举映射到 YdszJsonVisibility.Visibility。
+         * 将 Jackson 兼容枚举映射到 JsonVisibility.Visibility。
          *
-         * @return 对应的 YdszJsonVisibility.Visibility 枚举值
+         * @return 对应的 JsonVisibility.Visibility 枚举值
          */
         public JsonVisibility.Visibility toYdszVisibility() {
             switch (this) {
                 case ANY: return JsonVisibility.Visibility.ANY;
-                case NON_PRIVATE: return JsonVisibility.Visibility.ANY; // YdszJson 无 NON_PRIVATE，降级为 ANY
+                case NON_PRIVATE: return JsonVisibility.Visibility.ANY; // Json 无 NON_PRIVATE，降级为 ANY
                 case PROTECTED_AND_PUBLIC: return JsonVisibility.Visibility.PROTECTED_AND_PUBLIC;
                 case PUBLIC_ONLY: return JsonVisibility.Visibility.PUBLIC_ONLY;
                 case NONE: return JsonVisibility.Visibility.NONE;

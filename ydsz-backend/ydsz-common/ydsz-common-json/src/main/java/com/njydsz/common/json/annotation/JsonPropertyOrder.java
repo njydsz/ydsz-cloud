@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 按指定顺序输出
- * &#064;YdszJsonPropertyOrder({"id", "name", "email"})
+ * &#064;JsonPropertyOrder({"id", "name", "email"})
  * public class User {
  *     private String name;
  *     private Long id;
@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
  * // 输出：{"id":1,"name":"John","email":"john@example.com"}
  *
  * // 字母排序
- * &#064;YdszJsonPropertyOrder(alphabetic = true)
+ * &#064;JsonPropertyOrder(alphabetic = true)
  * public class Product {
  *     private String name;
  *     private Double price;

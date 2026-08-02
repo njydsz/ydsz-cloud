@@ -20,7 +20,7 @@ import java.lang.annotation.*;
  *     private Long id;
  *     private String name;
  *
- *     {@literal @}YdszJsonCreator
+ *     {@literal @}JsonCreator
  *     public User(Long id, String name) {
  *         this.id = id;
  *         this.name = name;
@@ -32,7 +32,7 @@ import java.lang.annotation.*;
  *     private Long id;
  *     private String name;
  *
- *     {@literal @}YdszJsonCreator
+ *     {@literal @}JsonCreator
  *     public static User create(Long id, String name) {
  *         User user = new User();
  *         user.setId(id);
@@ -46,13 +46,13 @@ import java.lang.annotation.*;
  *     private Long id;
  *     private String name;
  *
- *     {@literal @}YdszJsonCreator(defaultCreator = true)
+ *     {@literal @}JsonCreator(defaultCreator = true)
  *     public User(Long id, String name) {
  *         this.id = id;
  *         this.name = name;
  *     }
  *
- *     {@literal @}YdszJsonCreator
+ *     {@literal @}JsonCreator
  *     public User(Long id) {
  *         this.id = id;
  *     }

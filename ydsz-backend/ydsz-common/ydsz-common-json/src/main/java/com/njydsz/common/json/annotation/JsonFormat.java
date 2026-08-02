@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 /**
  * Jackson 兼容注解：指定日期/数字的序列化格式。
  *
- * <p>等价于 {@link YdszJsonField} 的 {@code format} 属性。当项目中同时存在 Jackson 和 YdszJson
+ * <p>等价于 {@link JsonProperty} 的 {@code format} 属性。当项目中同时存在 Jackson 和 YdszJson
  * 时，可使用此注解替代 {@code @JsonFormat(com.fasterxml.jackson.annotation.JsonFormat)}，
  * 避免引入 Jackson 依赖。</p>
  *
@@ -21,7 +21,7 @@ import java.lang.annotation.*;
  * </code></pre>
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

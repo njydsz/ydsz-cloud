@@ -19,7 +19,7 @@ import java.lang.annotation.*;
  * 
  * <p><b>使用示例：</b></p>
  * <pre>
- * {@literal @}YdszJsonClass(
+ * {@literal @}JsonClass(
  *     ordering = {"id", "name", "email"},
  *     ignores = {"password", "secretKey"},
  *     typeKey = "@type",
