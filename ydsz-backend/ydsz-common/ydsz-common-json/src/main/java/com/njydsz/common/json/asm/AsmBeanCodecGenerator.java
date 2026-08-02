@@ -1451,18 +1451,11 @@ public final class AsmBeanCodecGenerator {
 
     /**
      * 检查是否为简单类型
+     *
+     * <p>委托给 {@link com.njydsz.common.json.util.JsonTypeUtils} 统一实现。</p>
      */
     private static boolean isSimpleType(Class<?> type) {
-        return type.isPrimitive() || 
-               type == String.class ||
-               type == Integer.class || type == int.class ||
-               type == Long.class || type == long.class ||
-               type == Double.class || type == double.class ||
-               type == Float.class || type == float.class ||
-               type == Boolean.class || type == boolean.class ||
-               type == Short.class || type == short.class ||
-               type == Byte.class || type == byte.class ||
-               type == Character.class || type == char.class;
+        return com.njydsz.common.json.util.JsonTypeUtils.isSimpleType(type);
     }
 
     /**

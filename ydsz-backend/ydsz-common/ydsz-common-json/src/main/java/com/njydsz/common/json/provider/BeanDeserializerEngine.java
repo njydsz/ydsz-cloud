@@ -476,19 +476,12 @@ final class BeanDeserializerEngine {
     /**
      * 判断一个类型是否为基本类型或其包装类、String。
      *
+     * <p>委托给 {@link com.njydsz.common.json.util.JsonTypeUtils} 统一实现。</p>
+     *
      * @param type 待判断的类型
      * @return 是基本类型返回 true
      */
     static boolean isSimpleType(Class<?> type) {
-        return type.isPrimitive() ||
-               type == String.class ||
-               type == Integer.class || type == int.class ||
-               type == Long.class || type == long.class ||
-               type == Double.class || type == double.class ||
-               type == Float.class || type == float.class ||
-               type == Boolean.class || type == boolean.class ||
-               type == Short.class || type == short.class ||
-               type == Byte.class || type == byte.class ||
-               type == Character.class || type == char.class;
+        return com.njydsz.common.json.util.JsonTypeUtils.isSimpleType(type);
     }
 }

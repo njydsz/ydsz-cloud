@@ -27,8 +27,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class StringInterner {
 
-    /** 默认表大小（2的幂次，便于位运算） */
-    private static final int DEFAULT_CAPACITY = 512;
+    /** 默认表大小（2的幂次，便于位运算）。扩容至 4096 以适应生产环境字段名和短字符串数量。 */
+    private static final int DEFAULT_CAPACITY = 4096;
 
     /** 最大字符串长度（超过此长度不缓存） */
     private static final int MAX_STRING_LENGTH = 64;

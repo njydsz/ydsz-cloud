@@ -70,8 +70,8 @@ public final class ZeroCopyDeserializer {
     /** Constructor 缓存 */
     private static final ConcurrentHashMap<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = new ConcurrentHashMap<>();
 
-    /** 字符串驻留器（减少重复字符串分配。*/
-    private static final StringInterner STRING_INTERNER = new StringInterner(512);
+    /** 字符串驻留器（减少重复字符串分配。 */
+    private static final StringInterner STRING_INTERNER = new StringInterner(4096);
 
     /** ArrayList 对象。*/
     private static final ThreadLocal<ArrayList<Object>> ARRAY_LIST_POOL = ThreadLocal.withInitial(() -> new ArrayList<>(64));
@@ -178,9 +178,7 @@ return field.getName();
     }
 
     private static boolean isSimpleField(FieldInfo f) {
-        return f.type == int.class || f.type == long.class ||
-               f.type == double.class || f.type == float.class ||
-               f.type == boolean.class || f.type == String.class;
+        return com.njydsz.common.json.util.JsonTypeUtils.isSimpleType(f.type);
     }
 
     private static boolean isSimpleFields(FieldInfo[] fields) {
