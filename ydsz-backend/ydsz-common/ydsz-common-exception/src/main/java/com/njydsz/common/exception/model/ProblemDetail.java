@@ -4,7 +4,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
 
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,7 +40,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@YdszJsonField(notWriteNullValue = true)
 public class ProblemDetail {
 
     /**

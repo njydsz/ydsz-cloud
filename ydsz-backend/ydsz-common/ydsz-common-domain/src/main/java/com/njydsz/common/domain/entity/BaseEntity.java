@@ -7,7 +7,7 @@ import java.util.List;
 import com.njydsz.common.domain.annotation.SoftDelete;
 import com.njydsz.common.domain.annotation.Version;
 import com.njydsz.common.domain.event.DomainEvent;
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonIgnore;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -108,7 +108,7 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T>
      *   <li>数据可恢复，适合重要业务数据</li>
      * </ul>
      */
-    @YdszJsonField(ignore = true)
+    @JsonIgnore
     private Integer deleted;
 
     /**

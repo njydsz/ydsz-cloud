@@ -4,7 +4,7 @@ import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -113,7 +113,7 @@ public class UploadCheckpoint {
      *
      * @return 进度百分比（0-100）
      */
-    @YdszJsonField(ignore = true)
+    @JsonIgnore
     public int getProgressPercent() {
         if (totalSize == null || totalSize == 0) {
             return 0;

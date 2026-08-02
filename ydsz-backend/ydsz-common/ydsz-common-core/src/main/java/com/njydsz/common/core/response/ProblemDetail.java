@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import com.njydsz.common.core.code.ResultCode;
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 
 /**
@@ -53,7 +53,6 @@ import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@YdszJsonField(notWriteNullValue = true)
 @YdszJsonPropertyOrder({"type", "title", "status", "detail", "instance"})
 public class ProblemDetail implements Serializable {
 

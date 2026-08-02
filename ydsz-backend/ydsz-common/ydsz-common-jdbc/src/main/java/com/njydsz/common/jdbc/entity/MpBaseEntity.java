@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.njydsz.common.json.annotation.YdszJsonFormat;
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.domain.entity.BaseEntity;
 
 import lombok.*;
@@ -108,7 +108,7 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
      * 可在业务实体上单独添加 {@code @TableLogic} 注解使用 MP 内置能力。
      */
     @TableField("deleted")
-    @YdszJsonField(ignore = true)
+    @JsonIgnore
     private Integer deleted;
 
     /**
@@ -131,7 +131,7 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
      * （DDL 默认值 '1'），不会影响业务逻辑。
      */
     @TableField("tenant_id")
-    @YdszJsonField(ignore = true)
+    @JsonIgnore
     private String tenantId;
 
 }

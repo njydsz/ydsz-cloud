@@ -3,7 +3,7 @@ package com.njydsz.common.core.response;
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.TraceConstants;
 import com.njydsz.common.core.metrics.CoreMetrics;
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -51,7 +51,6 @@ import java.net.URI;
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
-@YdszJsonField(notWriteNullValue = true)
 @YdszJsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 

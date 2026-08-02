@@ -12,6 +12,7 @@ import com.njydsz.common.json.annotation.Experimental;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Experimental("RFC extension - non-core JSON serialization capability, may be extracted to separate module")
 public final class ValidationResult {
     
     /** 验证是否通过 */

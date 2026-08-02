@@ -238,6 +238,21 @@ spring:
     timeout-per-shutdown-phase: 30s   # 单阶段超时
 ```
 
+### 4. 自动配置
+
+引入依赖后，各自动配置类在满足条件时自动激活（均带 `@ConditionalOnMissingBean` 守卫，业务方可覆盖）：
+
+| 配置类 | 激活条件 |
+|---|---|
+| `WebMvcConfiguration` | Servlet Web 应用 |
+| `WebSecurityConfiguration` | Spring Security 可用时激活 |
+| `WebSessionAutoConfiguration` | Servlet Web 应用 + `spring-session-data-redis` 时激活 |
+| `UserAgentConfiguration` | `yauaa` 在 classpath 时激活 |
+| `ApiVersionAutoConfiguration` | Servlet Web 应用 + `ydsz.web.api-version.enabled=true`（默认启用） |
+| `WebMultipartAutoConfiguration` | Servlet Web 应用 + `MultipartConfigElement` 在 classpath + `ydsz.web.multipart.enabled=true`（默认启用） |
+| `ResponseCompressionConfiguration` | Servlet Web 应用 + `ydsz.web.compression.enabled=true`（默认启用） |
+| `WebGracefulShutdownAutoConfiguration` | Servlet Web 应用 + `ydsz.web.shutdown.log-enabled=true`（默认启用） |
+
 ## 配置项
 
 ### Security / Session / CORS / Trace
@@ -312,19 +327,6 @@ spring:
 | `ydsz.web.shutdown.log-enabled` | `true` | 优雅停机日志开关 |
 
 > Webhook 调度器（`DefaultWebhookDispatcher`）基于内存订阅表与 `RestTemplate`，无独立配置属性；订阅通过 `WebhookDispatcher.register(...)` 编程式注册。
-
-## 自动配置
-
-| 配置类 | 激活条件 |
-|---|---|
-| `WebMvcConfiguration` | Servlet Web 应用 |
-| `WebSecurityConfiguration` | Spring Security 可用时激活 |
-| `WebSessionAutoConfiguration` | Servlet Web 应用 + `spring-session-data-redis` 时激活 |
-| `UserAgentConfiguration` | `yauaa` 在 classpath 时激活 |
-| `ApiVersionAutoConfiguration` | Servlet Web 应用 + `ydsz.web.api-version.enabled=true`（默认启用） |
-| `WebMultipartAutoConfiguration` | Servlet Web 应用 + `MultipartConfigElement` 在 classpath + `ydsz.web.multipart.enabled=true`（默认启用） |
-| `ResponseCompressionConfiguration` | Servlet Web 应用 + `ydsz.web.compression.enabled=true`（默认启用） |
-| `WebGracefulShutdownAutoConfiguration` | Servlet Web 应用 + `ydsz.web.shutdown.log-enabled=true`（默认启用） |
 
 ## 使用示例
 

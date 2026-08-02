@@ -5,7 +5,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import com.njydsz.common.json.annotation.YdszJsonCreator;
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.parser.YdszJsonParser;
 
 /**
@@ -18,7 +18,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  * <h3>参数名解析策略</h3>
  * <ol>
  *   <li>优先使用 {@code @YdszJsonCreator(parameterNames=...)} 显式指定的参数名数组</li>
- *   <li>降级为通过类字段名 + {@code @YdszJsonField} 注解映射 JSON 字段名</li>
+ *   <li>降级为通过类字段名 + {@code @JsonProperty} 注解映射 JSON 字段名</li>
  * </ol>
  *
  * @author ydsz-team
@@ -100,10 +100,8 @@ final class CreatorResolver {
             Field[] fields = constructor.getDeclaringClass().getDeclaredFields();
             for (Field field : fields) {
                 String fieldName = field.getName();
-                YdszJsonField fieldAnnotation = field.getAnnotation(YdszJsonField.class);
-                if (fieldAnnotation != null && !fieldAnnotation.name().isEmpty()) {
-                    fieldName = fieldAnnotation.name();
-                } else if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
+                JsonProperty fieldAnnotation = field.getAnnotation(JsonProperty.class);
+                if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
                     fieldName = fieldAnnotation.value();
                 }
 
@@ -132,7 +130,7 @@ final class CreatorResolver {
     /**
      * 通过无参构造函数创建实例，再通过字段反射逐个赋值。
      *
-     * <p>字段名映射优先级：{@code @YdszJsonField(name)} > {@code @YdszJsonField(value)} > Java 字段名。
+     * <p>字段名映射优先级：{@code @JsonProperty(value)} > Java 字段名。
      * 值通过 {@link TypeConverter#convertValue} 进行类型转换。
      *
      * @param map   JSON 解析后的字段 Map
@@ -145,10 +143,8 @@ final class CreatorResolver {
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
                 String fieldName = field.getName();
-                YdszJsonField fieldAnnotation = field.getAnnotation(YdszJsonField.class);
-                if (fieldAnnotation != null && !fieldAnnotation.name().isEmpty()) {
-                    fieldName = fieldAnnotation.name();
-                } else if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
+                JsonProperty fieldAnnotation = field.getAnnotation(JsonProperty.class);
+                if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
                     fieldName = fieldAnnotation.value();
                 }
 
@@ -167,10 +163,8 @@ final class CreatorResolver {
             T instance = clazz.getDeclaredConstructor().newInstance();
             for (Field field : fields) {
                 String fieldName = field.getName();
-                YdszJsonField fieldAnnotation = field.getAnnotation(YdszJsonField.class);
-                if (fieldAnnotation != null && !fieldAnnotation.name().isEmpty()) {
-                    fieldName = fieldAnnotation.name();
-                } else if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
+                JsonProperty fieldAnnotation = field.getAnnotation(JsonProperty.class);
+                if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
                     fieldName = fieldAnnotation.value();
                 }
 

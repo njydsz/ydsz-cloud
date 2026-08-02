@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.JsonIgnore;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -245,7 +245,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      *
      * @return 直接子节点数量
      */
-    @YdszJsonField(ignore = true)
+    @JsonIgnore
     public int getChildCount() {
         return children != null ? children.size() : 0;
     }
@@ -257,7 +257,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      *
      * @return 后代节点总数
      */
-    @YdszJsonField(ignore = true)
+    @JsonIgnore
     public int getDescendantCount() {
         int count = 0;
         if (children == null || children.isEmpty()) {
