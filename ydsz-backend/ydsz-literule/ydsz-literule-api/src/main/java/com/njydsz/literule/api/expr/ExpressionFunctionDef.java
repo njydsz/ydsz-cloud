@@ -48,6 +48,15 @@ public class ExpressionFunctionDef implements Serializable {
     /** 适用引擎：liteexpr / all（2.1.0 起仅保留 LiteExpr） */
     private String supportedEngines;
 
+    /**
+     * 返回内置函数市场默认函数清单。
+     *
+     * <p>汇集表达式引擎开箱即用的内置函数（字符串、类型转换、逻辑、日期、数学、类型判断等），
+     * 供前端函数补全、签名展示与 hover 说明使用。2.1.0 起所有函数统一适用 LiteExpr 引擎
+     * （{@code supportedEngines="all"} 仅表示全量内置、不区分引擎）。
+     *
+     * @return 默认内置函数定义列表（不可变）
+     */
     public static List<ExpressionFunctionDef> defaults() {
         return List.of(
             of("concat", "concat(str, ...)", "字符串拼接，支持多个参数", "concat(\"hello\", \" \", \"world\")", "string", "all"),

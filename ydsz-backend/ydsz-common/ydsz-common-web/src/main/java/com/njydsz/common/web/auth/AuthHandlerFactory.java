@@ -39,6 +39,17 @@ public class AuthHandlerFactory {
         this.authHandlerMap = authHandlerMap == null ? Collections.emptyMap() : authHandlerMap;
     }
 
+    /**
+     * 根据服务类型获取对应的认证处理器，支持多级回退。
+     *
+     * <p>路由规则：{@code APP_SERVICE} → appAuthHandler，其余 → webAuthHandler；
+     * 若指定 Bean 不存在，先回退到 webAuthHandler，再回退到容器中任意可用的 {@link AuthHandler}。
+     * 全部缺失时抛出 {@link IllegalStateException}，提示未配置任何认证实现。
+     *
+     * @param serviceType 服务类型（WEB/APP）
+     * @return 可用的认证处理器，不会为 null
+     * @throws IllegalStateException 当容器中无任何 AuthHandler 实现时
+     */
     public AuthHandler getAuthHandler(ServiceType serviceType) {
         if (authHandlerMap.isEmpty()) {
             throw new IllegalStateException("未找到 AuthHandler 实现类");

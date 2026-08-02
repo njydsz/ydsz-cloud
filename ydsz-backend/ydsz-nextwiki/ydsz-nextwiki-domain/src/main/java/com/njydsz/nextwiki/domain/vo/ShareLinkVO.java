@@ -3,8 +3,6 @@ package com.njydsz.nextwiki.domain.vo;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.json.annotation.JsonFormat;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +36,6 @@ public class ShareLinkVO implements Serializable {
     private String shareType;
 
     @Schema(description = "过期时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime expireTime;
 
     @Schema(description = "最大访问次数")
@@ -57,6 +54,5 @@ public class ShareLinkVO implements Serializable {
     private String shareUrl;
 
     @Schema(description = "创建时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 }

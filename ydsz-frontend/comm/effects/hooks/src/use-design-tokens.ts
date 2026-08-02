@@ -81,6 +81,27 @@ export function useAntdDesignTokens() {
   };
 }
 
+/**
+ * 把项目 CSS 变量映射为 Naive UI 的 `commonTokens`，实现主题联动。
+ *
+ * @remarks
+ * 入参：无。
+ *
+ * 返回值：`{ commonTokens }`，可直接作为 `NConfigProvider` 的 `theme-overrides.common` 传入。
+ * 该对象是 `reactive` 的，主题切换后引用不变、内部字段自动更新，无需重新赋值。
+ *
+ * 副作用与生命周期：
+ * - 调用时立即（`immediate: true`）读取一次 CSS 变量并填充 tokens；
+ * - 侦听 `preferences.theme` 变化重新计算，**未显式停止侦听**，
+ *   因此建议在组件 `setup` 中调用（作用域销毁时自动回收），避免在模块顶层反复调用造成侦听器堆积；
+ * - 依赖 `document.documentElement`，只能在浏览器端调用，SSR 环境会直接报错；
+ * - `getComputedStyle` 的结果在调用时取得一次，若运行时替换整份主题样式表，需要重新调用本函数。
+ *
+ * 取值约定：项目 CSS 变量存的是不带 `hsl()` 包裹的裸值，这里统一补上 `hsl()`
+ * 再由 `convertToRgb` 转成 Naive UI 可识别的 rgb 字符串；圆角 `--radius` 属于非颜色值，原样返回带单位的字符串。
+ *
+ * @returns `commonTokens` —— Naive UI 通用主题变量集合（响应式）
+ */
 export function useNaiveDesignTokens() {
   const rootStyles = getComputedStyle(document.documentElement);
 
@@ -167,6 +188,24 @@ export function useNaiveDesignTokens() {
   };
 }
 
+/**
+ * 把项目 CSS 变量映射为 Element Plus 的 `--el-*` 变量，实现主题联动。
+ *
+ * @remarks
+ * 入参：无。返回值：无——与 Antd / Naive 版本不同，本函数**不返回 token 对象**，
+ * 而是直接把变量写入文档，Element Plus 组件通过 CSS 变量自动生效。
+ *
+ * 副作用与生命周期：
+ * - 侦听 `preferences.theme`（`immediate: true`，调用即执行一次），
+ *   每次变化都调用 `updateCSSVariables` 覆写 id 为 `__ydsz_design_styles__` 的全局 `<style>` 标签，
+ *   属于**全局副作用**，多次调用会互相覆盖；
+ * - 侦听器未显式停止，应在 `setup` 中调用以便随组件作用域回收；
+ * - 依赖 `document.documentElement`，仅浏览器端可用。
+ *
+ * 明暗适配：Element Plus 的 `light-N` 阶梯在亮色下由浅到深、暗色下需要反转，
+ * 因此这里按 `isDark` 分别映射到不同的色阶，保证暗色模式下对比度正确。
+ * `--el-mask-color` 单独硬编码，用于修复 ElLoading 遮罩在暗色下过亮的问题。
+ */
 export function useElementPlusDesignTokens() {
   const { isDark } = usePreferences();
   const rootStyles = getComputedStyle(document.documentElement);

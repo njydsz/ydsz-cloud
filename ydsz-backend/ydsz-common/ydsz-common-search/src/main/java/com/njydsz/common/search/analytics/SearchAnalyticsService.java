@@ -42,6 +42,27 @@ public class SearchAnalyticsService {
         this.redisProvider = redisProvider;
     }
 
+    /**
+     * 记录一次搜索行为，用于沉淀热门词、零结果词与每日搜索量。
+     *
+     * <p>关键词会先做 {@code trim + toLowerCase} 归一化，避免大小写与空格造成统计分裂。
+     * 空白关键词直接忽略，不计入任何指标。
+     *
+     * <p><b>存储与降级</b>：优先写 Redis
+     * （热门词 {@code search:analytics:hot}、零结果词 {@code search:analytics:zero}
+     * 均为 Sorted Set，每日量 {@code search:analytics:daily} 为 Hash，
+     * 这些 key 不设 TTL，需由运维侧定期归档）；
+     * Redis 未装配或写入抛异常时静默降级到内存 Map，仅打 debug 日志，
+     * <b>绝不向调用方抛异常</b>，保证埋点失败不影响主搜索链路。
+     *
+     * <p>内存模式下热门词与零结果词各自最多保留 {@code 1000} 条，
+     * 超限时淘汰计数最低的一半；每日量只保留最近 30 天。
+     *
+     * <p>线程安全：底层为 {@link ConcurrentHashMap} + {@link AtomicLong}，可并发调用。
+     *
+     * @param keyword     用户输入的原始搜索词，为 {@code null} 或空白时静默跳过
+     * @param resultCount 本次搜索命中的结果总数，取 0 时额外计入零结果词统计
+     */
     public void recordSearch(String keyword, long resultCount) {
         if (keyword == null || keyword.isBlank()) {
             return;
@@ -176,6 +197,15 @@ public class SearchAnalyticsService {
                 hotKeywords.size(), zeroResultKeywords.size());
     }
 
+    /**
+     * 清空全部搜索分析数据（Redis 与内存双端）。
+     *
+     * <p>属于<b>不可逆</b>操作，会删除三个 Redis key 并清空内存 Map，
+     * 仅应由运维接口或测试用例调用，切勿放在业务链路中。
+     *
+     * <p>Redis 删除失败时只记 debug 日志并继续清理内存，
+     * 因此可能出现「内存已清空但 Redis 仍有残留」的中间态，调用方需可接受该不一致。
+     */
     public void clear() {
         StringRedisTemplate redis = getRedis();
         if (redis != null) {

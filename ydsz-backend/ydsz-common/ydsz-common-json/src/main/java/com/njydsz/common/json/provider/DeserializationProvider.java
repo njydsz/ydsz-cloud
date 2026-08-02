@@ -55,6 +55,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class DeserializationProvider {
 
     private DeserializationProvider() {

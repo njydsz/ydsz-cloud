@@ -69,22 +69,54 @@ public final class ColumnarSchema {
         return builder().addFields(fields).build();
     }
 
+    /**
+     * 全部字段，顺序即列顺序，与数据行的取值顺序严格对应。
+     *
+     * @return 不可变字段列表，至少含一个元素；尝试修改会抛 {@link UnsupportedOperationException}
+     */
     public List<ColumnarField> fields() {
         return fields;
     }
 
+    /**
+     * 按列顺序返回列名，供导出表头或与 Excel 表头对齐时使用。
+     *
+     * @return 不可变列名列表，顺序与 {@link #fields()} 一致
+     */
     public List<String> headerNames() {
         return headerNames;
     }
 
+    /**
+     * 列数量。
+     *
+     * @return 列数量，恒 &gt;= 1（构建期已保证 Schema 非空）
+     */
     public int fieldCount() {
         return fields.size();
     }
 
+    /**
+     * 按下标获取字段。
+     *
+     * @param index 列下标，取值范围 {@code [0, fieldCount())}
+     * @return 对应字段，永不为 {@code null}
+     * @throws IndexOutOfBoundsException 当下标越界时抛出
+     */
     public ColumnarField field(int index) {
         return fields.get(index);
     }
 
+    /**
+     * 按列名获取字段。
+     *
+     * <p>基于构建期预建的名称索引查找，时间复杂度 O(1)。名称大小写敏感。
+     * 若调用方无法确保列存在，应先用 {@link #hasField(String)} 判断以避免异常。
+     *
+     * @param name 列名，大小写敏感
+     * @return 对应字段，永不为 {@code null}
+     * @throws IllegalArgumentException 当 Schema 中不存在该列名时抛出
+     */
     public ColumnarField field(String name) {
         Integer idx = indexMap.get(name);
         if (idx == null) {
@@ -93,6 +125,13 @@ public final class ColumnarSchema {
         return fields.get(idx);
     }
 
+    /**
+     * 按列名查询列下标，用于将命名访问转换为按位访问以提升批量读写性能。
+     *
+     * @param name 列名，大小写敏感
+     * @return 列下标，从 0 开始
+     * @throws IllegalArgumentException 当 Schema 中不存在该列名时抛出
+     */
     public int fieldIndex(String name) {
         Integer idx = indexMap.get(name);
         if (idx == null) {
@@ -116,12 +155,30 @@ public final class ColumnarSchema {
     public static final class Builder {
         private final List<ColumnarField> fields = new ArrayList<>();
 
+        /**
+         * 追加一个字段，添加顺序即最终列顺序。
+         *
+         * <p>此处不做重名检查，重名冲突延迟到 {@link #build()} 统一暴露。
+         *
+         * @param field 字段元数据，不可为 {@code null}
+         * @return 当前构建器，便于链式调用
+         * @throws NullPointerException 当 {@code field} 为 {@code null} 时抛出
+         */
         public Builder addField(ColumnarField field) {
             Objects.requireNonNull(field, "field must not be null");
             fields.add(field);
             return this;
         }
 
+        /**
+         * 批量追加字段，按数组顺序依次入列。
+         *
+         * <p>非原子操作：中途遇到 {@code null} 元素抛出后，此前已追加的字段仍保留在构建器中。
+         *
+         * @param fs 字段数组，数组本身及元素均不可为 {@code null}
+         * @return 当前构建器，便于链式调用
+         * @throws NullPointerException 当数组为 {@code null} 或含 {@code null} 元素时抛出
+         */
         public Builder addFields(ColumnarField... fs) {
             for (ColumnarField f : fs) {
                 addField(f);
@@ -129,6 +186,15 @@ public final class ColumnarSchema {
             return this;
         }
 
+        /**
+         * 批量追加字段，按列表迭代顺序依次入列。
+         *
+         * <p>非原子操作：中途遇到 {@code null} 元素抛出后，此前已追加的字段仍保留在构建器中。
+         *
+         * @param fs 字段列表，列表本身及元素均不可为 {@code null}
+         * @return 当前构建器，便于链式调用
+         * @throws NullPointerException 当列表为 {@code null} 或含 {@code null} 元素时抛出
+         */
         public Builder addFields(List<ColumnarField> fs) {
             for (ColumnarField f : fs) {
                 addField(f);
@@ -136,6 +202,13 @@ public final class ColumnarSchema {
             return this;
         }
 
+        /**
+         * 构建 Schema，并在此统一完成非空与列名唯一性校验。
+         *
+         * @return 不可变的 Schema 实例
+         * @throws IllegalStateException 当一个字段都未添加时抛出
+         * @throws IllegalArgumentException 当存在重复列名时抛出
+         */
         public ColumnarSchema build() {
             if (fields.isEmpty()) {
                 throw new IllegalStateException("ColumnarSchema must have at least one field");

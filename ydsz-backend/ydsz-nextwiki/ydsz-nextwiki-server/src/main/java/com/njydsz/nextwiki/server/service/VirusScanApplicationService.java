@@ -150,18 +150,56 @@ public class VirusScanApplicationService {
         /** 结果描述（OK / 病毒名 / 跳过原因 / 错误信息） */
         private String message;
 
+        /**
+         * 构造「扫描通过」结果，即 ClamAV 明确回复 OK。
+         *
+         * <p>四个状态位中<b>只有本结果</b>代表文件确已被查杀引擎放行。
+         * {@code skipped} 与 {@code error} 均<b>未</b>完成实际查杀，调用方
+         * 若以「非 infected 即安全」做判断会放过未扫描文件，务必显式判 {@code clean}。
+         *
+         * @return 通过结果，{@code clean=true}、{@code message="OK"}
+         */
         public static ScanResult clean() {
             return ScanResult.builder().clean(true).message("OK").build();
         }
 
+        /**
+         * 构造「检出病毒」结果。
+         *
+         * <p>命中即应阻断上传并留档告警。message 统一格式化为
+         * {@code "FOUND: {virusName}"}，与 ClamAV 原始应答保持一致，便于日志检索与对账。
+         *
+         * @param virusName ClamAV 回报的病毒特征名，从应答行中截取
+         * @return 检出结果，{@code infected=true}
+         */
         public static ScanResult infected(String virusName) {
             return ScanResult.builder().infected(true).message("FOUND: " + virusName).build();
         }
 
+        /**
+         * 构造「跳过扫描」结果。
+         *
+         * <p>用于扫描开关关闭、或文件超过 {@link VirusScanApplicationService#MAX_FILE_SIZE}
+         * 这类<b>主动放弃</b>的场景——超大文件走 ClamAV INSTREAM 会长时间占用连接，
+         * 故以放行换吞吐。此时文件<b>未经查杀</b>，安全等级由上层策略自行决定。
+         *
+         * @param reason 跳过原因（如 {@code "病毒扫描未启用"}、{@code "文件超过大小限制"}）
+         * @return 跳过结果，{@code skipped=true}
+         */
         public static ScanResult skipped(String reason) {
             return ScanResult.builder().skipped(true).message(reason).build();
         }
 
+        /**
+         * 构造「扫描出错」结果。
+         *
+         * <p>对应 ClamAV 连接失败、协议应答无法识别等异常；异常已在
+         * {@link VirusScanApplicationService#scan} 内被吞掉转为本结果，<b>不向上抛出</b>，
+         * 避免查杀服务抖动直接压垮上传链路。同样属于「未完成查杀」，不可当作安全。
+         *
+         * @param message 错误描述，含原始应答或异常摘要
+         * @return 错误结果，{@code error=true}
+         */
         public static ScanResult error(String message) {
             return ScanResult.builder().error(true).message(message).build();
         }

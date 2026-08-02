@@ -21,9 +21,16 @@ import java.util.Objects;
  */
 public class ColumnarConfig {
 
+    /** 默认批处理行数，与 ORC VectorizedRowBatch 的默认容量保持一致 */
     public static final int DEFAULT_BATCH_SIZE = 1024;
+
+    /** Parquet 默认 row group 大小（128MB），对齐 HDFS 块大小以避免跨块读放大 */
     public static final long DEFAULT_ROW_GROUP_SIZE = 128L * 1024L * 1024L; // 128MB
+
+    /** Parquet 默认 page 大小（1MB），是压缩与编码的最小单元 */
     public static final int DEFAULT_PAGE_SIZE = 1024 * 1024; // 1MB
+
+    /** ORC 默认 stripe 大小（64MB），决定单次刷盘的数据量与读取并行粒度 */
     public static final long DEFAULT_STRIPE_SIZE = 64L * 1024L * 1024L; // 64MB
 
     protected int batchSize = DEFAULT_BATCH_SIZE;
@@ -35,6 +42,15 @@ public class ColumnarConfig {
         return batchSize;
     }
 
+    /**
+     * 设置批处理行数。
+     *
+     * <p>该值直接决定单批驻留堆内的行数，调大可减少批次切换开销但线性抬高内存占用，
+     * 宽表场景建议下调。写入侧的实际落盘粒度仍由 rowGroup/stripe 大小主导。
+     *
+     * @param batchSize 批处理行数，必须 &gt;= 1
+     * @throws IllegalArgumentException 当 {@code batchSize < 1} 时抛出
+     */
     public void setBatchSize(int batchSize) {
         if (batchSize < 1) {
             throw new IllegalArgumentException("batchSize must be >= 1, got " + batchSize);
@@ -46,6 +62,12 @@ public class ColumnarConfig {
         return compression;
     }
 
+    /**
+     * 设置压缩算法。
+     *
+     * @param compression 压缩算法，不可为 {@code null}
+     * @throws NullPointerException 当 {@code compression} 为 {@code null} 时抛出
+     */
     public void setCompression(ColumnarCompression compression) {
         this.compression = Objects.requireNonNull(compression, "compression must not be null");
     }
@@ -108,6 +130,15 @@ public class ColumnarConfig {
         protected boolean enableDictionary = true;
         protected boolean withHeader = true;
 
+        /**
+         * 设置批处理行数。
+         *
+         * <p>调大可减少批次切换开销但线性抬高堆内存占用，宽表场景建议下调。
+         *
+         * @param batchSize 批处理行数，必须 &gt;= 1
+         * @return 当前构建器，便于链式调用
+         * @throws IllegalArgumentException 当 {@code batchSize < 1} 时抛出
+         */
         public Builder batchSize(int batchSize) {
             if (batchSize < 1) {
                 throw new IllegalArgumentException("batchSize must be >= 1, got " + batchSize);
@@ -116,16 +147,41 @@ public class ColumnarConfig {
             return this;
         }
 
+        /**
+         * 设置压缩算法。
+         *
+         * @param compression 压缩算法，不可为 {@code null}
+         * @return 当前构建器，便于链式调用
+         * @throws NullPointerException 当 {@code compression} 为 {@code null} 时抛出
+         */
         public Builder compression(ColumnarCompression compression) {
             this.compression = Objects.requireNonNull(compression, "compression must not be null");
             return this;
         }
 
+        /**
+         * 设置是否启用字典编码。
+         *
+         * <p>低基数列（如状态码、地区名）开启后可显著压缩体积；
+         * 高基数列（如订单号）开启反而增加字典维护开销，应显式关闭。
+         *
+         * @param enableDictionary {@code true} 表示启用字典编码
+         * @return 当前构建器，便于链式调用
+         */
         public Builder enableDictionary(boolean enableDictionary) {
             this.enableDictionary = enableDictionary;
             return this;
         }
 
+        /**
+         * 设置是否按表头语义处理首行。
+         *
+         * <p>Parquet/ORC 自带 schema、并无原生表头概念，此开关仅供上层导入导出场景
+         * 与 Excel 行为对齐时使用。
+         *
+         * @param withHeader {@code true} 表示首行视为表头
+         * @return 当前构建器，便于链式调用
+         */
         public Builder withHeader(boolean withHeader) {
             this.withHeader = withHeader;
             return this;

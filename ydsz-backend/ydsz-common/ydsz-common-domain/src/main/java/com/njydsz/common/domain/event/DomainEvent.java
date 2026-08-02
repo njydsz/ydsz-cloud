@@ -264,11 +264,29 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
         private Builder() {
         }
 
+        /**
+         * 显式指定事件唯一标识。
+         *
+         * <p>通常无需调用：{@link #build()} 会自动生成 UUID。
+         * 仅在需要保证幂等（如消息重投时复用同一事件 ID）或从持久化事件流恢复时使用。
+         *
+         * @param eventId 事件唯一标识；传 {@code null} 则退回自动生成
+         * @return 当前 Builder，便于链式调用
+         */
         public Builder eventId(String eventId) {
             this.eventId = eventId;
             return this;
         }
 
+        /**
+         * 显式指定事件发生时间。
+         *
+         * <p>通常无需调用：{@link #build()} 会按 {@link #clock(Clock)} 取当前时间。
+         * 仅在补录历史事件、或事件溯源回放需还原原始时间时使用。
+         *
+         * @param occurredAt 事件发生时间；传 {@code null} 则退回自动取值
+         * @return 当前 Builder，便于链式调用
+         */
         public Builder occurredAt(LocalDateTime occurredAt) {
             this.occurredAt = occurredAt;
             return this;
@@ -307,6 +325,15 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
             return this;
         }
 
+        /**
+         * 设置事件版本号（事件溯源场景下的聚合根修订号）。
+         *
+         * <p>默认为 {@code 1}。同一聚合根的事件应单调递增，
+         * 消费端可据此做顺序校验与幂等去重。
+         *
+         * @param version 事件版本号，应为正整数
+         * @return 当前 Builder，便于链式调用
+         */
         public Builder version(int version) {
             this.version = version;
             return this;
@@ -346,17 +373,14 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
         }
 
         /**
-         * 添加元数据项
+         * 设置时间源，用于在单元测试中固定事件发生时间。
          *
-         * @param key   元数据键
-         * @param value 元数据值
-         * @return 当前 Builder
-         */
-        /**
-         * 设置 Clock（用于测试控制时间）
+         * <p>生产环境无需调用，默认使用 {@link Clock#systemDefaultZone()}。
+         * 测试中可传入 {@code Clock.fixed(...)} 让 {@link #build()} 产出可预期的
+         * {@code occurredAt}，从而断言事件时间。
          *
-         * @param clock Clock 实例
-         * @return 当前 Builder
+         * @param clock 时间源；传 {@code null} 时回退为系统默认时区时钟，不会抛异常
+         * @return 当前 Builder，便于链式调用
          * @since 1.2.0
          */
         public Builder clock(Clock clock) {
@@ -364,6 +388,16 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
             return this;
         }
 
+        /**
+         * 追加单个元数据项。
+         *
+         * <p>与 {@link #metadata(Map)} 的区别：本方法为**增量追加**，
+         * 重复 key 会覆盖旧值；而 {@link #metadata(Map)} 会先清空再整体替换。
+         *
+         * @param key   元数据键，不建议为 {@code null}
+         * @param value 元数据值，允许为 {@code null}
+         * @return 当前 Builder，便于链式调用
+         */
         public Builder metadata(String key, Object value) {
             this.metadata.put(key, value);
             return this;

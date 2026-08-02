@@ -56,6 +56,48 @@ function getDefaultState(): YDSZFormProps {
   };
 }
 
+/**
+ * 表单的命令式操作句柄，承载配置状态与对 vee-validate 实例的所有操作。
+ *
+ * @remarks
+ * 设计目标是让业务代码脱离模板 ref，用 `formApi.xxx()` 的方式完成取值、赋值、校验、提交。
+ * 内部维护两份状态，职责不同：`store` 存放表单**配置**（schema、布局、按钮等），
+ * `form` 是挂载后注入的 vee-validate 实例，存放**字段值与校验态**。
+ *
+ * 使用时必须注意的几点：
+ *
+ * 1. **实例先于组件创建**。`new FormApi()` 时组件尚未挂载，此时 `form` 只是空对象。
+ *    因此所有涉及字段值的异步方法内部都会先 `await` 挂载完成信号再执行，
+ *    调用方可在 setup 阶段安全地提前调用而不必等 `onMounted`；
+ *    但若组件**始终未挂载**，这些 Promise 会一直挂起不 resolve，表现为「调用无响应」而非报错。
+ *
+ * 2. **卸载后不可复用**。`unmount()` 会重置表单值、清空最近提交值并把挂载标记置回 false，
+ *    此后再调用取值类方法会重新进入等待挂载状态。
+ *
+ * 3. **状态更新为合并语义**。`setState` 使用 `mergeWithArrayOverride`，
+ *    对象深合并、数组整体替换。这意味着传入部分字段即可局部更新，
+ *    但想「清空某个数组配置」必须显式传空数组。
+ *
+ * 4. **schema 缩减会连带清值**。当新 schema 的长度小于旧值时，
+ *    被移除字段的表单值会被自动置为 `undefined`，避免提交时携带已删除字段的脏数据。
+ *    注意该判断以**长度变小**为触发条件，等长替换字段时不会清值。
+ *
+ * 5. **校验失败不抛异常**。`validate` 系列方法在失败时打印 error 日志、
+ *    按需滚动到首个错误字段，并把结果作为返回值交回调用方判断 `valid`，
+ *    不要用 try/catch 捕获校验失败。
+ *
+ * 6. **`merge` 返回的是代理而非本实例**。多表单联合提交时，
+ *    通过返回的代理调用 `submitAllForm()` 才能收集全部表单；
+ *    其中任一表单校验不通过，对应结果为 `undefined` 而**不会中断**其他表单，
+ *    合并模式下该表单的值将静默缺失，调用方需自行校验完整性。
+ *
+ * @example
+ * ```ts
+ * const [Form, formApi] = useYDSZForm({ schema });
+ * const values = await formApi.getValues();
+ * await formApi.validateAndSubmitForm();
+ * ```
+ */
 export class FormApi {
   public form = {} as FormActions;
   isMounted = false;

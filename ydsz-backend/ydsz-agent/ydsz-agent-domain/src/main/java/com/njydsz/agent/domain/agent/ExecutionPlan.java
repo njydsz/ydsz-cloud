@@ -41,8 +41,28 @@ public final class ExecutionPlan implements Serializable {
     public List<PlanStep> getSteps() { return steps; }
     public PlanStatus getStatus() { return status; }
 
+    /**
+     * 将计划流转为执行中状态。
+     *
+     * <p>状态机：{@code PENDING -> EXECUTING}。方法不校验前置状态，重复调用等价于幂等赋值，
+     * 由调度方保证只在开始执行时调用一次。
+     */
     public void markExecuting() { this.status = PlanStatus.EXECUTING; }
+
+    /**
+     * 将计划流转为已完成状态。
+     *
+     * <p>状态机：{@code EXECUTING -> COMPLETED}。仅标记计划整体结果，
+     * 不会级联修改 {@link PlanStep} 的状态；调用前应通过 {@link #isCompleted()} 确认所有步骤均已完成。
+     */
     public void markCompleted() { this.status = PlanStatus.COMPLETED; }
+
+    /**
+     * 将计划流转为失败状态。
+     *
+     * <p>状态机：{@code EXECUTING -> FAILED}。终态，不支持回退；
+     * 若需要重试应由上层重新生成 {@link ExecutionPlan} 实例，而非复用已失败的计划。
+     */
     public void markFailed() { this.status = PlanStatus.FAILED; }
 
     public boolean isCompleted() {
@@ -111,8 +131,28 @@ public final class ExecutionPlan implements Serializable {
         public String getAction() { return action; }
         public StepStatus getStatus() { return status; }
 
+        /**
+         * 将步骤流转为已完成状态。
+         *
+         * <p>状态机：{@code EXECUTING -> COMPLETED}。完成后该步骤不再被 {@link #getCurrentStep()} 选中，
+         * 执行游标自动前移到下一个 {@code PENDING} 步骤。
+         */
         public void markCompleted() { this.status = StepStatus.COMPLETED; }
+
+        /**
+         * 将步骤流转为失败状态。
+         *
+         * <p>状态机：{@code EXECUTING -> FAILED}。失败步骤同样脱离 {@code PENDING} 队列，
+         * 因此不会被重复挑选；重试需通过 {@link #replaceRemainingSteps(int, List)} 重规划。
+         */
         public void markFailed() { this.status = StepStatus.FAILED; }
+
+        /**
+         * 将步骤流转为执行中状态。
+         *
+         * <p>状态机：{@code PENDING -> EXECUTING}。用于标识当前占用执行线程的步骤，
+         * 便于链路追踪定位卡住的步骤。
+         */
         public void markExecuting() { this.status = StepStatus.EXECUTING; }
 
         public enum StepStatus {

@@ -82,6 +82,11 @@ public class AuthRowPermissionAspect {
         this.resolver = resolver;
     }
 
+    /**
+     * 行级数据权限切点：匹配标注或元标注了 {@link AuthRowPermission} 的方法或类。
+     *
+     * <p>作为 {@link #doAround} 的引用锚点；命中后由该通知完成数据权限范围解析与参数注入。</p>
+     */
     @Pointcut("@annotation(com.njydsz.common.auth.annotation.AuthRowPermission) || @within(com.njydsz.common.auth.annotation.AuthRowPermission)")
     public void rowPermissionPointCut() {
     }

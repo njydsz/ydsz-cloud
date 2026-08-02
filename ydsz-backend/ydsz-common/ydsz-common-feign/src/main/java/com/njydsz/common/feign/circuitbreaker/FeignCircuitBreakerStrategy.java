@@ -144,6 +144,12 @@ public interface FeignCircuitBreakerStrategy {
             return totalCalls.sum();
         }
 
+        /**
+         * 覆盖式设置总调用次数。
+         *
+         * <p>由于 {@code LongAdder} 无直接赋值 API，这里以 {@code reset()} 后 {@code add()} 整体替换原值（非累加），
+         * 用于从外部指标源同步或重置统计。
+         */
         public void setTotalCalls(long totalCalls) {
             this.totalCalls.reset();
             this.totalCalls.add(totalCalls);
@@ -160,6 +166,9 @@ public interface FeignCircuitBreakerStrategy {
             return successfulCalls.sum();
         }
 
+        /**
+         * 覆盖式设置成功调用次数（重置后整体替换，语义同 {@link #setTotalCalls(long)}）。
+         */
         public void setSuccessfulCalls(long successfulCalls) {
             this.successfulCalls.reset();
             this.successfulCalls.add(successfulCalls);
@@ -176,6 +185,9 @@ public interface FeignCircuitBreakerStrategy {
             return failedCalls.sum();
         }
 
+        /**
+         * 覆盖式设置失败调用次数（重置后整体替换，语义同 {@link #setTotalCalls(long)}）。
+         */
         public void setFailedCalls(long failedCalls) {
             this.failedCalls.reset();
             this.failedCalls.add(failedCalls);
@@ -192,6 +204,9 @@ public interface FeignCircuitBreakerStrategy {
             return slowCalls.sum();
         }
 
+        /**
+         * 覆盖式设置慢调用次数（重置后整体替换，语义同 {@link #setTotalCalls(long)}）。
+         */
         public void setSlowCalls(long slowCalls) {
             this.slowCalls.reset();
             this.slowCalls.add(slowCalls);
@@ -208,6 +223,11 @@ public interface FeignCircuitBreakerStrategy {
             return Double.longBitsToDouble(failureRate.get());
         }
 
+        /**
+         * 原子写入失败率（百分比）。
+         *
+         * <p>{@code AtomicLong} 无原生 double 支持，借 {@code Double.doubleToLongBits} 将双精度打包为 long 以保证原子性。
+         */
         public void setFailureRate(double failureRate) {
             this.failureRate.set(Double.doubleToLongBits(failureRate));
         }
@@ -216,6 +236,9 @@ public interface FeignCircuitBreakerStrategy {
             return Double.longBitsToDouble(slowCallRate.get());
         }
 
+        /**
+         * 原子写入慢调用率（百分比），存储方式同 {@link #setFailureRate(double)}。
+         */
         public void setSlowCallRate(double slowCallRate) {
             this.slowCallRate.set(Double.doubleToLongBits(slowCallRate));
         }
@@ -224,6 +247,9 @@ public interface FeignCircuitBreakerStrategy {
             return averageDuration.get();
         }
 
+        /**
+         * 覆盖式设置平均调用耗时（毫秒）。
+         */
         public void setAverageDuration(long averageDuration) {
             this.averageDuration.set(averageDuration);
         }
@@ -232,6 +258,9 @@ public interface FeignCircuitBreakerStrategy {
             return maxDuration.get();
         }
 
+        /**
+         * 覆盖式设置最大调用耗时（毫秒）。
+         */
         public void setMaxDuration(long maxDuration) {
             this.maxDuration.set(maxDuration);
         }

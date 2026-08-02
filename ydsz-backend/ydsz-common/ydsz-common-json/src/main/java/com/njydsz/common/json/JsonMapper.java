@@ -24,6 +24,7 @@ import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.NullNode;
 import com.njydsz.common.json.tree.TreeConverter;
 import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.json.type.TypeFactory;
 
 /**
  * YdszJson 实例化 Mapper（对标 Jackson ObjectMapper）
@@ -44,9 +45,11 @@ import com.njydsz.common.json.type.JsonType;
  * // 创建默认 Mapper
  * JsonMapper mapper = new JsonMapper();
  *
- * // 创建配置副本并自定义
- * JsonMapper prettyMapper = mapper.copy();
- * prettyMapper.getConfig().setWriteNulls(true);
+ * // 通过 Builder 创建独立配置的 Mapper（推荐）
+ * JsonMapper prettyMapper = JsonMapper.builder()
+ *     .writeNulls(true)
+ *     .prettyPrint(true)
+ *     .build();
  *
  * // 独立配置序列化，不影响全局
  * String json = prettyMapper.toJson(obj);
@@ -70,15 +73,6 @@ public class JsonMapper {
     private final JsonConfig config;
 
     /**
-     * 配置是否已应用到 ThreadLocal 且未再变更（优化：避免每次序列化都执行 ThreadLocalSnapshot）。
-     *
-     * <p>当 config 与全局配置一致或已 apply 后，此标志为 true，序列化时跳过
-     * ThreadLocalSnapshot save/restore 开销。config 变更后置为 false，
-     * 下次序列化时重新 apply 并 save/restore。</p>
-     */
-    private volatile boolean configApplied = false;
-
-    /**
      * 创建默认配置的 Mapper 实例。
      */
     public JsonMapper() {
@@ -97,8 +91,7 @@ public class JsonMapper {
     /**
      * 获取此 Mapper 的配置对象（可直接修改，不影响全局配置）。
      *
-     * <p>修改配置后，需调用 {@link #configChanged()} 通知 Mapper 配置已变更，
-     * 以便下次序列化时重新应用到 ThreadLocal。</p>
+     * <p>修改配置后，下次序列化会自动重新应用到 ThreadLocal，无需额外通知。</p>
      *
      * @return 配置对象
      */
@@ -107,15 +100,17 @@ public class JsonMapper {
     }
 
     /**
-     * 通知 Mapper 配置已变更，下次序列化时将重新应用到 ThreadLocal。
+     * 通知 Mapper 配置已变更（兼容保留，当前实现为 no-op）。
      *
-     * <p>在使用 {@link #getConfig()} 修改配置后调用此方法。
-     * 如果未调用，Mapper 可能继续使用上次应用的旧配置。</p>
+     * <p>历史上此方法用于重置 {@code configApplied} 优化标志。该优化因在共享 Mapper
+     * 场景下跨线程误共享 ThreadLocal 状态而被移除——现在每次序列化都会通过
+     * {@link SerializationProvider.ThreadLocalSnapshot} 显式保存/恢复配置，保证
+     * 多线程共享同一 {@code JsonMapper} 实例时配置正确隔离。</p>
      *
      * @since 1.0.0
      */
     public void configChanged() {
-        configApplied = false;
+        // no-op：每次序列化都会重新 apply 配置，无需显式通知
     }
 
     /**
@@ -130,30 +125,34 @@ public class JsonMapper {
     // ==================== 序列化方法 ====================
 
     /**
-     * 如果配置已变更，则应用到 ThreadLocal 并返回 ThreadLocalSnapshot；否则返回 null（无需 restore）。
+     * 将此 Mapper 的配置应用到当前线程的 ThreadLocal，返回需要 restore 的快照。
      *
-     * <p>优化：当 Mapper 配置与上次 apply 一致时，跳过 ThreadLocalSnapshot save/restore，
-     * 消除每次序列化的 14 次字段读写开销。</p>
+     * <p>每次序列化都执行 save/apply/restore，确保多线程共享同一 {@code JsonMapper}
+     * 实例时各线程的 ThreadLocal 配置互不污染。这与 Jackson
+     * {@code ObjectMapper}（配置不可变 + 显式传递）的线程安全模型在 ThreadLocal
+     * 实现下的等价做法。</p>
      *
-     * @return ThreadLocalSnapshot（需在 finally 中 restore），或 null 表示无需 restore
+     * @return ThreadLocalSnapshot（不为 null，需在 finally 中 restore）
      */
     private SerializationProvider.ThreadLocalSnapshot applyConfigIfNeeded() {
-        if (configApplied) {
-            return null;
-        }
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
         config.apply();
         JsonConfig.setThreadLocalOverride(config);
-        configApplied = true;
         return snapshot;
     }
 
     /**
      * 恢复配置快照（包括 ThreadLocal 序列化参数和 JsonConfig 覆盖）。
+     *
+     * <p><b>注意：</b>此前实现误将 {@code snapshot.restore()} 写成
+     * {@code restoreConfig(snapshot)} 导致无限递归 + StackOverflowError，
+     * 任何 {@code JsonMapper} 实例首次序列化都会在 finally 中爆栈。此处修正为
+     * 调用 {@link SerializationProvider.ThreadLocalSnapshot#restore()} 后清除
+     * {@link JsonConfig} 的 ThreadLocal 覆盖。</p>
      */
     private void restoreConfig(SerializationProvider.ThreadLocalSnapshot snapshot) {
         if (snapshot != null) {
-            restoreConfig(snapshot);
+            snapshot.restore();
             JsonConfig.clearThreadLocalOverride();
         }
     }
@@ -465,14 +464,9 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        Object result = DeserializationProvider.deserialize(json, new ParameterizedType() {
-            @Override
-            public Type[] getActualTypeArguments() { return new Type[]{elementClass}; }
-            @Override
-            public Type getRawType() { return List.class; }
-            @Override
-            public Type getOwnerType() { return null; }
-        });
+        // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
+        Object result = DeserializationProvider.deserialize(json,
+            TypeFactory.getInstance().constructCollectionType(List.class, elementClass));
         if (result instanceof List<?> list) {
             // 优化：直接 unchecked cast 返回，消除 O(n) 拷贝
             @SuppressWarnings("unchecked")
@@ -812,56 +806,111 @@ public class JsonMapper {
         private Builder() {
         }
 
+        /**
+         * 设置字段命名策略。
+         *
+         * @param strategy 命名策略（如 SNAKE_CASE / LOWER_CAMEL_CASE），不可为 {@code null}
+         */
         public Builder namingStrategy(PropertyNamingStrategy strategy) {
             this.namingStrategy = strategy;
             return this;
         }
 
+        /**
+         * 设置日期类型序列化格式。
+         *
+         * @param dateFormat SimpleDateFormat 模式串；空串或 {@code null} 表示使用默认格式
+         */
         public Builder dateFormat(String dateFormat) {
             this.dateFormat = dateFormat;
             return this;
         }
 
+        /**
+         * 设置是否输出 null 字段。
+         *
+         * @param writeNulls {@code true} 保留 null 字段，{@code false} 跳过 null 字段
+         */
         public Builder writeNulls(boolean writeNulls) {
             this.writeNulls = writeNulls;
             return this;
         }
 
+        /**
+         * 设置是否格式化（缩进）输出。
+         *
+         * @param prettyPrint {@code true} 启用美化输出
+         */
         public Builder prettyPrint(boolean prettyPrint) {
             this.prettyPrint = prettyPrint;
             return this;
         }
 
+        /**
+         * 设置循环引用处理策略。
+         *
+         * @param strategy {@code REF} 输出引用路径 / {@code IGNORE} 忽略 / {@code ERROR} 抛异常
+         */
         public Builder circularReferenceStrategy(JsonConfig.CircularReferenceStrategy strategy) {
             this.circularReferenceStrategy = strategy;
             return this;
         }
 
+        /**
+         * 设置枚举序列化方式。
+         *
+         * @param ordinal {@code true} 用枚举 ordinal 序号，{@code false} 用 name 名称
+         */
         public Builder serializeEnumUsingOrdinal(boolean ordinal) {
             this.serializeEnumUsingOrdinal = ordinal;
             return this;
         }
 
+        /**
+         * 设置是否将浮点数解析为 BigDecimal 以保留精度。
+         *
+         * @param useBigDecimal {@code true} 启用（金融等高精度场景推荐）
+         */
         public Builder useBigDecimal(boolean useBigDecimal) {
             this.useBigDecimal = useBigDecimal;
             return this;
         }
 
+        /**
+         * 设置是否启用根名称包裹。
+         *
+         * @param wrapRootValue {@code true} 启用（配合 {@code @JsonRootName} 注解）
+         */
         public Builder wrapRootValue(boolean wrapRootValue) {
             this.wrapRootValue = wrapRootValue;
             return this;
         }
 
+        /**
+         * 设置序列化遇错时是否抛出异常。
+         *
+         * @param failOnError {@code true} 抛异常，{@code false} 降级为容错输出
+         */
         public Builder failOnError(boolean failOnError) {
             this.failOnError = failOnError;
             return this;
         }
 
+        /**
+         * 设置单次 JSON 处理的最大字节数上限。
+         *
+         * @param maxJsonSize 上限（字节），超过将抛出 {@link JsonException}
+         */
         public Builder maxJsonSize(long maxJsonSize) {
             this.maxJsonSize = maxJsonSize;
             return this;
         }
 
+        /**
+         * 设置序列化/反序列化的最大嵌套深度。
+         *
+         * @param maxDepth 最大深度，防止过深结构导致栈溢出
+         */
         public Builder maxDepth(int maxDepth) {
             this.maxDepth = maxDepth;
             return this;

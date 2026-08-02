@@ -23,17 +23,20 @@
     {
       "name": "ydsz.json.pretty-print",
       "type": "java.lang.Boolean",
-      "description": "是否格式化输出（默认 false）。"
+      "description": "是否格式化输出（默认 false）。",
+      "deprecated": true
     },
     {
       "name": "ydsz.json.circular-reference-strategy",
       "type": "java.lang.String",
-      "description": "循环引用处理策略（REF、IGNORE、ERROR）。默认 REF。"
+      "description": "循环引用处理策略（REF、IGNORE、ERROR）。默认 REF。",
+      "deprecated": true
     },
     {
       "name": "ydsz.json.serialize-enum-using-ordinal",
       "type": "java.lang.Boolean",
-      "description": "枚举是否使用序号序列化（默认 false）。"
+      "description": "枚举是否使用序号序列化（默认 false）。",
+      "deprecated": true
     },
     {
       "name": "ydsz.json.max-json-size",
@@ -43,7 +46,8 @@
     {
       "name": "ydsz.json.max-depth",
       "type": "java.lang.Integer",
-      "description": "最大序列化深度（默认 256）。"
+      "description": "最大序列化深度（默认 256）。",
+      "deprecated": true
     },
     {
       "name": "ydsz.json.safe-mode",
@@ -53,12 +57,13 @@
     {
       "name": "ydsz.json.monitoring-enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用监控（默认 true）。序列化/反序列化指标通过 Micrometer 暴露到 Prometheus。"
+      "description": "是否启用监控（默认 true）。序列化/反序列化指标通过 Micrometer 暴露到 Prometheus。",
+      "deprecated": true
     },
     {
       "name": "ydsz.json.whitelist-packages",
       "type": "java.util.List<java.lang.String>",
-      "description": "启动时扫描 @YdszJsonClass 注解类的基础包列表，扫描结果注册到 AutoTypeChecker 白名单，避免运行时反射加载类的副作用。默认 [com.njydsz]。"
+      "description": "启动时扫描 @JsonClass 注解类的基础包列表，扫描结果注册到 AutoTypeChecker 白名单，避免运行时反射加载类的副作用。默认 [com.njydsz]。"
     },
     {
       "name": "ydsz.json.use-big-decimal",
@@ -68,12 +73,14 @@
     {
       "name": "ydsz.json.wrap-root-value",
       "type": "java.lang.Boolean",
-      "description": "是否包裹根对象（对标 Jackson @JsonRootValue / ObjectMapper.wrapRootValue，默认 false）。启用后序列化时使用类名作为根节点包裹 JSON 对象。"
+      "description": "是否包裹根对象（对标 Jackson @JsonRootValue / ObjectMapper.wrapRootValue，默认 false）。启用后序列化时使用类名作为根节点包裹 JSON 对象。",
+      "deprecated": true
     },
     {
       "name": "ydsz.json.fail-on-error",
       "type": "java.lang.Boolean",
-      "description": "反序列化失败时是否抛出异常（true，默认）或返回 null（false）。"
+      "description": "反序列化失败时是否抛出异常（true，默认）或返回 null（false）。",
+      "deprecated": true
     },
     {
       "name": "ydsz.json.streaming-enabled",

@@ -22,6 +22,26 @@ function findParentElement(element: HTMLElement) {
     : element.closest(`.${parentCls}`);
 }
 
+/**
+ * 为标签页视图接入基于 SortableJS 的拖拽排序能力。
+ *
+ * @param props - 标签页组件 props，主要消费 `contentClass`、`draggable`、
+ * `styleType`；其中 `contentClass` 同时承担“定位可排序 DOM 容器”的选择器角色。
+ * @param emit - 组件 `emit` 函数，排序结束后抛出 `sortTabs(oldIndex, newIndex)`。
+ *
+ * @remarks
+ * 仅负责“拖拽交互 → 抛出排序事件”，不维护 tab 的顺序状态，真正的数组重排由
+ * 父组件监听 `sortTabs` 完成，避免组件与数据源双向耦合。
+ *
+ * 几个隐式约定（改动模板或 props 默认值易踩坑）：
+ * - 移动端（`useIsMobile`）直接跳过初始化，因为触屏拖拽体验由原生滚动替代；
+ * - 通过 `.group` / `.draggable` / `.affix-tab` 等 className 定位与判定节点，
+ *   这些类名散落在模板与 `findParentElement` 中，重命名需同步；
+ * - `onMove` 禁止在“固定页 ↔ 普通页”之间互拖，保证 affix 区顺序稳定；
+ * - `styleType` 变化会销毁并重建 Sortable 实例，以适配不同风格的容器结构；
+ * - 会直接改写容器的 `cursor` 样式并在拖拽中给条目加 `.dragging`，属副作用，
+ *   卸载时通过 `onUnmounted` 销毁实例，但若初始化前未找到容器仅 `warn` 后跳过。
+ */
 export function useTabsDrag(props: TabsProps, emit: EmitType) {
   const sortableInstance = ref<null | Sortable>(null);
 

@@ -204,12 +204,28 @@ public class LiteExprSandbox {
     // ===== 校验结果 =====
 
     public record SandboxResult(boolean passed, List<String> violations) {
+        /**
+         * 构造校验通过的结果（无违规项）。
+         *
+         * @return 通过的 {@link SandboxResult}（violations 为空列表）
+         */
         public static SandboxResult ok() {
             return new SandboxResult(true, List.of());
         }
+        /**
+         * 构造校验失败的结果。
+         *
+         * @param violations 违规描述列表（非空；调用方应保证不传 null）
+         * @return 失败的 {@link SandboxResult}
+         */
         public static SandboxResult fail(List<String> violations) {
             return new SandboxResult(false, violations);
         }
+        /**
+         * 将全部违规描述拼接为可读的半角分号分隔字符串，用于异常消息与日志。
+         *
+         * @return 违规摘要；无违规时返回空字符串
+         */
         public String violationSummary() {
             return String.join("; ", violations);
         }

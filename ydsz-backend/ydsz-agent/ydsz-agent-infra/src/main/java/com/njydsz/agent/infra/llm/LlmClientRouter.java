@@ -51,6 +51,19 @@ public class LlmClientRouter implements LlmClient {
     /** 默认客户端（无匹配 Provider 时使用） */
     private LlmClient defaultClient;
 
+    /**
+     * 注册一个 LLM Provider 客户端。
+     *
+     * <p>以 {@code client.getProvider()} 为键写入注册表，同名 Provider 会被静默覆盖，
+     * 便于运行时热替换配置。首个注册的客户端自动成为 {@code defaultClient}，
+     * 用于兜底处理无任何 Provider 显式 {@code supports} 的模型。
+     *
+     * <p><b>并发</b>：注册表基于 {@link ConcurrentHashMap}，写入本身线程安全；
+     * 但 {@code defaultClient} 为普通字段，仅适合在应用启动阶段完成注册，
+     * 不建议在高并发请求期间动态调用。
+     *
+     * @param client 待注册的客户端，不可为 {@code null}，其 {@code getProvider()} 需返回稳定唯一值
+     */
     public void register(LlmClient client) {
         clients.put(client.getProvider(), client);
         if (defaultClient == null) {
@@ -59,6 +72,17 @@ public class LlmClientRouter implements LlmClient {
         log.info("[LLM-Router] 注册 Provider: {}", client.getProvider());
     }
 
+    /**
+     * 注销指定 Provider，用于 Provider 下线或密钥失效时的快速摘除。
+     *
+     * <p>若被摘除的正是当前默认客户端，会任取剩余一个客户端顶替；注册表清空后
+     * {@code defaultClient} 置为 {@code null}，此后所有调用将以
+     * {@code MODEL_NOT_FOUND} 抛出 {@link LlmException}。
+     *
+     * <p>不存在的 provider 视为空操作，方法幂等。已在途的请求不受影响。
+     *
+     * @param provider Provider 名称，与注册时 {@code getProvider()} 返回值一致
+     */
     public void unregister(String provider) {
         clients.remove(provider);
         if (defaultClient != null && defaultClient.getProvider().equals(provider)) {

@@ -110,6 +110,27 @@ public class ConcurrentExcelWriter {
         return this;
     }
 
+    /**
+     * 执行写入，将数据落盘为 xlsx 文件。
+     *
+     * <p><b>小数据量短路</b>：当总行数不超过 {@code chunkSize} 时，并行拆分收益不抵线程池开销，
+     * 直接委派给 {@link ExcelFacade#write} 单线程写入。
+     *
+     * <p><b>并行策略</b>：超过阈值时按 {@code chunkSize} 切片，提交到固定大小线程池并行序列化为
+     * XML 字节；由于 OOXML 要求 ZIP 条目顺序写入，各分片结果会先按 {@code chunkIndex}
+     * 重排序，再单线程顺序写入同一个 sheet，从而保证输出行序与入参 {@code data} 完全一致。
+     *
+     * <p><b>资源与线程</b>：线程池为方法内私有、全部为 daemon 线程，{@code finally} 中先优雅
+     * 关闭，5 秒未终止则强制 {@code shutdownNow}；等待被中断时会强制关闭并恢复中断标记。
+     * 本方法非线程安全，同一实例不应并发调用。
+     *
+     * <p><b>失败语义</b>：任一分片序列化异常会通过 {@code CompletableFuture#join} 以
+     * {@link java.util.concurrent.CompletionException} 向外抛出，此时目标文件尚未创建；
+     * 而合并落盘阶段失败则可能残留不完整文件，需调用方自行清理。
+     * 单个字段取值异常不会中断整体写入，仅记录 warn 日志并将该单元格留空。
+     *
+     * @throws RuntimeException 分片序列化失败或合并写文件失败时抛出，原始异常置于 cause
+     */
     public void doWrite() {
         int totalSize = data.size();
         if (totalSize <= chunkSize) {

@@ -25,6 +25,15 @@ public enum FieldTypeCode {
         this.code = code;
     }
 
+    /**
+     * 返回该字段类型对应的整型类型码。
+     *
+     * <p>类型码用于序列化/反序列化路径上以 int 快速分支（取代反射或 instanceof 链），
+     * 编码表见类级文档。该值与旧系统类型码不完全兼容，跨系统转换请走
+     * {@link #fromLegacy(int, String)}。</p>
+     *
+     * @return 整型类型码（编码含义见枚举声明顺序）
+     */
     public int code() {
         return code;
     }

@@ -360,6 +360,13 @@ public class DagOrchestrationExecutor {
         return completed.containsAll(deps);
     }
 
+    /**
+     * 容器销毁钩子，本执行器<b>不负责</b>关闭线程池。
+     *
+     * <p>{@code executor} 由 common-thread 统一托管生命周期并被多个组件共享，
+     * 在此处 shutdown 会误伤其他使用方，因此方法体刻意留空。
+     * 保留该钩子是为了显式声明这一约定，防止后续维护者误加关闭逻辑。
+     */
     @PreDestroy
     public void shutdown() {
         // P0-3: executor 由 common-thread 管理生命周期，无需手动关闭

@@ -31,18 +31,50 @@ import com.njydsz.common.web.handler.WebAuthenticationEntryPoint;
 @ConditionalOnProperty(prefix = "ydsz.web.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSecurityConfiguration {
 
+    /**
+     * 注册 403 访问拒绝处理器。
+     *
+     * <p>认证用户访问无权限资源时由 Spring Security 回调，统一返回标准 JSON 错误响应。
+     * 仅在容器中不存在其他 {@link AccessDeniedHandler} 时装配（{@code @ConditionalOnMissingBean}），
+     * 便于业务侧自定义覆盖。
+     *
+     * @return 已注册的 Web 端 AccessDeniedHandler 实例
+     */
     @Bean
     @ConditionalOnMissingBean(AccessDeniedHandler.class)
     public AccessDeniedHandler webAccessDeniedHandler() {
         return new WebAccessDeniedHandler();
     }
 
+    /**
+     * 注册 401 未认证入口点。
+     *
+     * <p>匿名请求触及受保护资源、认证信息缺失或失效时由 Spring Security 回调，
+     * 统一返回标准 JSON 错误响应。仅在容器中不存在其他 {@link AuthenticationEntryPoint} 时装配，
+     * 便于业务侧自定义覆盖。
+     *
+     * @return 已注册的 Web 端 AuthenticationEntryPoint 实例
+     */
     @Bean
     @ConditionalOnMissingBean(AuthenticationEntryPoint.class)
     public AuthenticationEntryPoint webAuthenticationEntryPoint() {
         return new WebAuthenticationEntryPoint();
     }
 
+    /**
+     * 构建 Web 安全过滤器链。
+     *
+     * <p>关闭 CSRF（项目采用无状态 Bearer/Token 认证，无需 CSRF 防护）；会话策略设为
+     * {@code IF_REQUIRED} 保留框架默认；所有请求放行（{@code permitAll}），真正的鉴权由自定义
+     * {@code WebAuthFilter} 完成，本链仅负责将 401/403 异常处理器接入。
+     * 仅在容器中不存在其他 {@link SecurityFilterChain} 时装配，避免与业务安全配置冲突。
+     *
+     * @param http                    Spring Security 构建器
+     * @param accessDeniedHandler     注入的 403 处理器（见 {@link #webAccessDeniedHandler()}）
+     * @param authenticationEntryPoint 注入的 401 入口点（见 {@link #webAuthenticationEntryPoint()}）
+     * @return 构建完成的 SecurityFilterChain
+     * @throws Exception 配置 HttpSecurity 过程中抛出的异常（如策略冲突）
+     */
     @Bean
     @ConditionalOnMissingBean(SecurityFilterChain.class)
     public SecurityFilterChain securityFilterChain(HttpSecurity http,

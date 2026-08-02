@@ -106,48 +106,122 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     // ── 链式配置 ────────────────────────────────────────────────────────────────
 
+    /**
+     * 指定虚拟根节点 ID。
+     *
+     * <p>构建时以 {@code rootId} 作为父 ID 匹配根节点；为 {@code null} 则退化为按
+     * {@code parentId == null} 判定根（单根模式）。修改后标记缓存为脏，下次 {@code build()} 重建。
+     *
+     * @param rootId 根节点 ID，允许为 {@code null}
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> rootId(ID rootId) {
         this.rootId = rootId;
         this.dirty = true;
         return this;
     }
 
+    /**
+     * 配置是否自动计算每个节点的层级（level）。
+     *
+     * <p>开启后节点层级由父节点 {@code level + 1} 推导，支撑按层级筛选与展示；
+     * 若业务仅关注父子结构、无需层级信息，可关闭以省去层级计算开销。默认 {@code true}。
+     * 修改后标记缓存为脏，下次 {@code build()} 重建。
+     *
+     * @param autoCalcLevel {@code true} 开启自动层级计算
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> autoCalcLevel(boolean autoCalcLevel) {
         this.autoCalcLevel = autoCalcLevel;
         this.dirty = true;
         return this;
     }
 
+    /**
+     * 便捷开启自动层级计算（等价于 {@code autoCalcLevel(true)}）。
+     *
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> autoCalcLevel() {
         return autoCalcLevel(true);
     }
 
+    /**
+     * 配置是否自动构建节点路径（如 {@code /1/2/3/}）。
+     *
+     * <p>开启后会在构建阶段为每个节点拼接从根到自身的路径，便于按路径前缀检索子树；
+     * 若无需路径能力可关闭以省去路径拼接开销。默认 {@code true}。
+     * 修改后标记缓存为脏，下次 {@code build()} 重建（路径在 rebuild 阶段生成）。
+     *
+     * @param autoBuildPath {@code true} 开启自动路径生成
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> autoBuildPath(boolean autoBuildPath) {
         this.autoBuildPath = autoBuildPath;
         this.dirty = true;
         return this;
     }
 
+    /**
+     * 便捷开启自动路径生成（等价于 {@code autoBuildPath(true)}）。
+     *
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> autoBuildPath() {
         return autoBuildPath(true);
     }
 
+    /**
+     * 配置是否允许多根（森林结构）。
+     *
+     * <p>开启后 {@code parentId} 为 {@code null} 或不在节点映射中的节点均视为根，适用于多棵树并存；
+     * 关闭（默认）则严格以 {@code rootId} 匹配单一根，不匹配的节点会被忽略。
+     * 修改后标记缓存为脏，因直接影响 {@code isRootNode} 的判定逻辑。
+     *
+     * @param multiRoot {@code true} 允许多根
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> multiRoot(boolean multiRoot) {
         this.multiRoot = multiRoot;
         this.dirty = true;
         return this;
     }
 
+    /**
+     * 便捷开启多根模式（等价于 {@code multiRoot(true)}）。
+     *
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> multiRoot() {
         return multiRoot(true);
     }
 
+    /**
+     * 自定义从节点提取 ID 的函数。
+     *
+     * <p>默认 {@code TreeNode::getId}。当节点类型未实现 {@link TreeNode} 或 ID 字段名不同时使用，
+     * 是 {@code buildSimple} 之外让任意 VO 接入树构建的关键扩展点。
+     * 修改后标记缓存为脏，因直接影响节点映射与父子关系绑定。
+     *
+     * @param idExtractor 节点到 ID 的提取函数，非空
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> idExtractor(Function<T, ID> idExtractor) {
         this.idExtractor = idExtractor;
         this.dirty = true;
         return this;
     }
 
+    /**
+     * 自定义从节点提取父 ID 的函数。
+     *
+     * <p>默认 {@code TreeNode::getParentId}。与 {@link #idExtractor(Function)} 配套，
+     * 用于适配非 {@link TreeNode} 实现的节点或不同的父 ID 字段名。
+     * 修改后标记缓存为脏，因直接影响父子关系与根节点判定。
+     *
+     * @param parentIdExtractor 节点到父 ID 的提取函数，非空
+     * @return 当前构建器
+     */
     public TreeBuilder<T, ID> parentIdExtractor(Function<T, ID> parentIdExtractor) {
         this.parentIdExtractor = parentIdExtractor;
         this.dirty = true;

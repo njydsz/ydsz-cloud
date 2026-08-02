@@ -70,6 +70,11 @@ public interface RuleCategoryProvider {
             this.root = root;
         }
 
+        /**
+         * 累加本目录节点的规则计数（构建目录树时每挂接一条规则调用一次）。
+         *
+         * <p>仅作统计聚合，不影响规则本身的注册与评估；计数仅供前端目录树展示用。
+         */
         public void increaseRuleCount() {
             this.ruleCount++;
         }

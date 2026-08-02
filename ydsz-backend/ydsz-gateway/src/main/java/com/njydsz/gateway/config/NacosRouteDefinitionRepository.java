@@ -169,7 +169,6 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
         }
     }
 
-    @Override
     /**
      * 保存路由定义（当前为只读实现，不支持写操作）。
      *
@@ -180,11 +179,11 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
      * @param route 待保存的路由定义（本实现忽略）
      * @return 空完成信号
      */
+    @Override
     public Mono<Void> save(Mono<RouteDefinition> route) {
         return Mono.empty();
     }
 
-    @Override
     /**
      * 删除路由定义（当前为只读实现，不支持删除）。
      *
@@ -194,6 +193,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
      * @param routeId 待删除的路由 ID（本实现忽略）
      * @return 空完成信号
      */
+    @Override
     public Mono<Void> delete(Mono<String> routeId) {
         return Mono.empty();
     }
@@ -214,7 +214,6 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
 
         try {
             nacosConfigManager.getConfigService().addListener(dataId, group, new Listener() {
-                @Override
                 /**
                  * Nacos 配置变更回调：路由定义被修改时触发。
                  *
@@ -224,6 +223,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                  *
                  * @param configInfo Nacos 推送的最新路由配置（JSON 数组字符串）
                  */
+                @Override
                 public void receiveConfigInfo(String configInfo) {
                     log.info("[NacosRoutes] 检测到路由配置变更 dataId={} group={}", dataId, group);
                     // P0-5: 重新加载路由到内存缓存
@@ -233,7 +233,6 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                     log.info("[NacosRoutes] 已触发路由刷新事件");
                 }
 
-                @Override
                 /**
                  * 返回监听器回调执行的线程池。
                  *
@@ -242,6 +241,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                  *
                  * @return 共享单线程执行器
                  */
+                @Override
                 public Executor getExecutor() {
                     // P0-6: 返回共享 Executor，避免每次创建新线程池导致线程泄漏
                     return sharedExecutor;

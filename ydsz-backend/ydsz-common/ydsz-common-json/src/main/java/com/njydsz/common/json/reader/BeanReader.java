@@ -32,6 +32,7 @@ import com.njydsz.common.json.provider.FieldMetadataLoader;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class BeanReader<T> {
     
     /** Bean 类型 */
@@ -96,7 +97,20 @@ public final class BeanReader<T> {
     }
     
     /**
-     * 。JSONReader 反序列化对象
+     * 从 JSONReader 反序列化出当前 Bean 类型的实例（反序列化主路径）。
+     *
+     * <p>定位到 {@code '{'} 后通过默认构造函数创建空对象，再逐字段按 hash 匹配
+     * {@link FieldReader} 并写入字段值。支持：
+     * <ul>
+     *   <li>{@code @JsonAlias} 别名字段匹配（按 aliasHashes 二次比对，避免 hash 碰撞误命中）；</li>
+     *   <li>{@code @JsonAnySetter}：未匹配字段经 {@link #parseValue} 解析后通过 anySetter 方法写入；</li>
+     *   <li>无 anySetter 时，未匹配字段调用 {@code reader.skipValue()} 跳过，保持容错。</li>
+     * </ul>
+     * </p>
+     *
+     * @param reader 已初始化的 JSONReader，调用结束后其读取位置推进到对象末尾
+     * @return 反序列化得到的 Bean 实例，非 null
+     * @throws RuntimeException 当 JSON 意外终止、目标类缺少默认构造函数或字段赋值失败
      */
     public T readObject(JSONReader reader) {
         reader.skipTo('{');
@@ -259,6 +273,17 @@ public final class BeanReader<T> {
             }
         }
 
+        /**
+         * 将 reader 当前位置的值按字段类型写入目标对象。
+         *
+         * <p>依据 {@code typeCode} 分发：基础类型（String/int/long/double/float/boolean）直接读取并
+         * 通过 {@link Field#set} 赋值（读取到 null 时置为 null）；复杂类型（嵌套对象、List/Collection、
+         * Map）递归委托 {@link #getOrCreateForType} 或 reader 内建方法解析。字段写入失败（如类型不兼容）
+         * 包装为 {@link RuntimeException} 抛出。</p>
+         *
+         * @param reader 已定位到值起始的 JSONReader
+         * @param obj    目标 Bean 实例，字段值写入其中
+         */
         public void readValue(JSONReader reader, Object obj) {
             try {
                 switch (typeCode) {
@@ -342,16 +367,45 @@ public final class BeanReader<T> {
     private static final ConcurrentHashMap<Class<?>, BeanReader<?>> CACHE = new ConcurrentHashMap<>(1024);
     
     
+    /**
+     * 获取或创建指定 Bean 类型的读取器（全局缓存）。
+     *
+     * <p>{@link ConcurrentHashMap#computeIfAbsent} 保证每个 Class 仅被构造一次，
+     * 多线程下不会出现重复创建。BeanReader 的构建涉及反射扫描字段、缓存构造函数与
+     * 探测 {@code @JsonAnySetter}，开销较大，因此复用缓存对反序列化性能至关重要。</p>
+     *
+     * @param beanType 目标 Bean 类型，不可为 null（否则抛出 NPE）
+     * @param <T>      Bean 类型
+     * @return 对应类型的 BeanReader，非 null
+     */
     public static <T> BeanReader<T> getOrCreate(Class<T> beanType) {
         // computeIfAbsent ensures thread-safe single creation per Class
         // Type safety: cache is keyed by Class, value created with same Class
         return (BeanReader<T>) CACHE.computeIfAbsent(beanType, t -> new BeanReader<>(t));
     }
 
+    /**
+     * 获取或创建指定 Bean 类型的读取器（非泛型入口）。
+     *
+     * <p>与 {@link #getOrCreate(Class)} 等价，但返回原始 {@code BeanReader<?>}，
+     * 适用于调用方仅持有运行时 {@link Class}（无具体泛型参数）的场景，例如
+     * {@link FieldReader#readValue} 解析嵌套对象时按字段类型递归获取读取器。
+     * 同样基于进程级 {@link ConcurrentHashMap} 缓存，保证每类型仅构建一次。</p>
+     *
+     * @param beanType 目标 Bean 类型，不可为 null（否则抛出 NPE）
+     * @return 对应类型的 BeanReader，非 null
+     */
     public static BeanReader<?> getOrCreateForType(Class<?> beanType) {
         return CACHE.computeIfAbsent(beanType, t -> new BeanReader<>(t));
     }
     
+    /**
+     * 清空全局 BeanReader 缓存。
+     *
+     * <p>仅在类结构热更新或测试隔离场景下使用；清空后下次访问将重新反射构建读取器。
+     * 注意该缓存为进程级 {@link ConcurrentHashMap}，操作影响所有线程，
+     * 生产运行期慎用，避免并发反序列化瞬间因重建产生性能抖动。</p>
+     */
     public static void clearCache() {
         CACHE.clear();
     }

@@ -43,6 +43,15 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(prefix = "ydsz.ratelimit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RateLimitAutoConfiguration {
 
+    /**
+     * 注册限流规则提供方（基于配置文件）。
+     *
+     * <p>从 {@link RateLimitProperties} 读取规则，供 {@link RateLimitManager} 查询某资源/维度对应的限流阈值。
+     * {@code @ConditionalOnMissingBean} 允许外部自定义规则源（如数据库/配置中心）覆盖。
+     *
+     * @param properties 限流配置（含规则列表）
+     * @return 配置型规则提供方
+     */
     @Bean
     @ConditionalOnMissingBean
     public RateLimitRuleProvider rateLimitRuleProvider(RateLimitProperties properties) {
@@ -69,6 +78,17 @@ public class RateLimitAutoConfiguration {
                 properties.getFallbackOnError());
     }
 
+    /**
+     * 注册限流核心管理器，编排规则查询与具体限流器。
+     *
+     * <p>聚合 {@link RateLimitRuleProvider}（规则）与可选的 {@link ClusterRateLimiter}（分布式限流）；
+     * 集群限流器不可用时，CLUSTER 模式自动降级为本地限流。{@code @ConditionalOnMissingBean} 允许自定义覆盖。
+     *
+     * @param ruleProvider                规则提供方
+     * @param properties                  限流配置（mode、keyPrefix 等）
+     * @param clusterRateLimiterProvider  集群限流器（可选，Redis 不可用时为 null）
+     * @return 限流管理器
+     */
     @Bean
     @ConditionalOnMissingBean
     public RateLimitManager rateLimitManager(RateLimitRuleProvider ruleProvider,
@@ -80,6 +100,17 @@ public class RateLimitAutoConfiguration {
         return new RateLimitManager(ruleProvider, properties, clusterLimiter);
     }
 
+    /**
+     * 注册限流指标采集器（可选）。
+     *
+     * <p>当 {@code ydsz.ratelimit.metrics-enabled=false} 或 classpath 无 {@code MeterRegistry} 时返回 null，
+     * 即不采集指标，不影响限流主链路。注入后作为监听器挂到 {@link RateLimitManager}，采集 Counter/Timer。
+     *
+     * @param properties              限流配置（metrics 开关）
+     * @param meterRegistryProvider   Micrometer 注册中心（可选）
+     * @param rateLimitManager        限流管理器（挂载监听）
+     * @return 指标采集器；未启用或缺失依赖时返回 null
+     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(MeterRegistry.class)
@@ -102,6 +133,15 @@ public class RateLimitAutoConfiguration {
         return collector;
     }
 
+    /**
+     * 注册方法级限流 AOP 切面（@RateLimit）。
+     *
+     * <p>默认随限流模块启用（{@code ydsz.ratelimit.aop-enabled=true}）。拦截标注 {@code @RateLimit} 的方法，
+     * 命中限流时抛 {@code RateLimitExceededException}。{@code @ConditionalOnMissingBean} 允许自定义覆盖。
+     *
+     * @param rateLimitManager 限流管理器（提供决策）
+     * @return 限流切面
+     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "ydsz.ratelimit", name = "aop-enabled", havingValue = "true", matchIfMissing = true)

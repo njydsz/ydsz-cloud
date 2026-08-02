@@ -51,12 +51,19 @@ public class PermissionDeniedException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 
+    /** 触发拒绝的当前用户 ID；{@code null} 表示未登录或匿名上下文。 */
     private final String userId;
+    /** 当前用户拥有的角色集合；构造时包装为不可变集合，永不为 {@code null}。 */
     private final transient Set<String> userRoles;
+    /** 本次校验缺失/要求的权限集合；构造时传入 {@code null} 会被规范为不可变空集合。 */
     private final transient Set<String> requiredPermissions;
+    /** 被拒绝的权限类型（MENU/BUTTON/API/DATA/COLUMN），决定 HTTP 错误码与 i18n 文案键。 */
     private final PermissionType permissionType;
+    /** 被拒绝访问的资源标识，如接口路径或菜单编码。 */
     private final String resource;
+    /** 校验模式（AND/OR），表示所需权限之间的逻辑关系。 */
     private final String checkMode;
+    /** 用户已拥有的权限集合（调试用）；构造时包装为不可变集合，永不为 {@code null}。 */
     private final transient Set<String> grantedPermissions;
 
     public enum PermissionType {
@@ -162,6 +169,14 @@ public class PermissionDeniedException extends BusinessException {
         return sb.toString();
     }
 
+    /**
+     * 创建权限拒绝异常的构建器。
+     *
+     * <p>通过链式调用 {@code userId}/{@code requiredPermissions} 等方法填充上下文，最后调用 {@link Builder#build()} 抛出异常。
+     * 构造出的异常固定为 HTTP 403，错误码按 {@link PermissionType} 映射（如 API 为 {@code A03013}）。</p>
+     *
+     * @return 异常构建器实例
+     */
     public static Builder denied() {
         return new Builder();
     }
@@ -174,48 +189,102 @@ public class PermissionDeniedException extends BusinessException {
         private String resource;
         private String checkMode;
         private Set<String> grantedPermissions;
+        /** i18n 语言标识，默认 {@code "zh-CN"}。 */
         private String language = "zh-CN";
 
+        /**
+         * 设置 i18n 语言标识。
+         *
+         * @param language 语言标识，如 {@code "zh-CN"} / {@code "en-US"}；默认 {@code "zh-CN"}
+         * @return 当前构建器，支持链式调用
+         */
         public Builder language(String language) {
             this.language = language;
             return this;
         }
 
+        /**
+         * 设置触发拒绝的用户标识。
+         *
+         * @param userId 用户唯一标识（如工号），用于错误上下文与审计；可为 null 表示匿名
+         * @return 当前构建器，支持链式调用
+         */
         public Builder userId(String userId) {
             this.userId = userId;
             return this;
         }
 
+        /**
+         * 设置当前用户所拥有的角色集合。
+         *
+         * @param userRoles 角色编码集合（如 {@code ["ROLE_ADMIN"]}），用于展示“实际拥有”的权限上下文
+         * @return 当前构建器，支持链式调用
+         */
         public Builder userRoles(Set<String> userRoles) {
             this.userRoles = userRoles;
             return this;
         }
 
+        /**
+         * 设置本次校验要求的权限集合。
+         *
+         * @param requiredPermissions 必须具备的权限编码集合；任一缺失即触发拒绝
+         * @return 当前构建器，支持链式调用
+         */
         public Builder requiredPermissions(Set<String> requiredPermissions) {
             this.requiredPermissions = requiredPermissions;
             return this;
         }
 
+        /**
+         * 设置权限类型（决定 HTTP 错误码映射）。
+         *
+         * @param permissionType 权限类型，如 API / 菜单 / 数据；决定异常错误码（如 API 映射 {@code A03013}）
+         * @return 当前构建器，支持链式调用
+         */
         public Builder permissionType(PermissionType permissionType) {
             this.permissionType = permissionType;
             return this;
         }
 
+        /**
+         * 设置被访问的资源标识。
+         *
+         * @param resource 资源标识（如接口路径、菜单编码、数据主键），用于错误上下文定位
+         * @return 当前构建器，支持链式调用
+         */
         public Builder resource(String resource) {
             this.resource = resource;
             return this;
         }
 
+        /**
+         * 设置权限校验模式。
+         *
+         * @param checkMode 校验模式编码（如 {@code "rbac"} / {@code "dataScope"}），用于区分校验链路
+         * @return 当前构建器，支持链式调用
+         */
         public Builder checkMode(String checkMode) {
             this.checkMode = checkMode;
             return this;
         }
 
+        /**
+         * 设置用户实际被授予的权限集合（与要求权限做差集展示）。
+         *
+         * @param grantedPermissions 用户已授予的权限编码集合；可为 null 表示未计算
+         * @return 当前构建器，支持链式调用
+         */
         public Builder grantedPermissions(Set<String> grantedPermissions) {
             this.grantedPermissions = grantedPermissions;
             return this;
         }
 
+        /**
+         * 构建权限拒绝异常实例。
+         *
+         * @return 组装完成的 {@link PermissionDeniedException}
+         */
         public PermissionDeniedException build() {
             return new PermissionDeniedException(this);
         }

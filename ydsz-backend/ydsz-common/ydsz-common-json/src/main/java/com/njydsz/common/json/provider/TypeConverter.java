@@ -23,6 +23,7 @@ import com.njydsz.common.json.annotation.JsonEnumDefaultValue;
  * @see BuilderResolver
  * @see CreatorResolver
  */
+@SuppressWarnings("deprecation")
 final class TypeConverter {
 
     private TypeConverter() {

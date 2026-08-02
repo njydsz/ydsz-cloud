@@ -166,6 +166,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P2-1: 连接数限制 ====================
 
+    /**
+     * 注册全局/单用户连接数限制器 Bean。
+     *
+     * <p>基于在线用户服务计数与配置上限，在握手阶段拦截超额连接，防止单用户或整体连接数打爆导致 OOM/雪崩。
+     * 无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnMissingBean(ConnectionLimiter.class)
     public ConnectionLimiter connectionLimiter(
@@ -181,6 +187,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== 认证拦截器 ====================
 
+    /**
+     * 注册 WebSocket 握手鉴权拦截器 Bean。
+     *
+     * <p>在 STOMP 握手阶段校验 JWT、结合连接数限制器做准入控制，并联动审计服务记录连接事件。
+     * 依赖 TokenService 类存在时启用；无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnClass(TokenService.class)
     @ConditionalOnMissingBean(WebSocketAuthInterceptor.class)
@@ -194,6 +206,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== 在线用户状态 ====================
 
+    /**
+     * 注册在线用户状态服务 Bean。
+     *
+     * <p>维护用户-会话的在线映射与会话 TTL，支撑单点/多点登录与离线判定。
+     * Redis 为可选依赖，缺失时降级为 no-op 实现（仅记录日志、不实际维护状态），避免阻塞主流程。
+     */
     @Bean
     @ConditionalOnClass(StringRedisTemplate.class)
     @ConditionalOnMissingBean(OnlineUserService.class)
@@ -222,6 +240,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== 离线消息存储 ====================
 
+    /**
+     * 注册离线消息存储 Bean。
+     *
+     * <p>缓存接收方离线期间的下发消息，待其上线后拉取补投。Redis 存在时落地 {@link RedisOfflineMessageStore}，
+     * 缺失时降级为 no-op；并叠加熔断器保护，避免 Redis 故障拖垮推送链路。
+     */
     @Bean
     @ConditionalOnClass(StringRedisTemplate.class)
     @ConditionalOnMissingBean(OfflineMessageStore.class)
@@ -247,6 +271,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P0-3: 心跳保活 ====================
 
+    /**
+     * 注册心跳保活处理器 Bean。
+     *
+     * <p>定期探测并清理超时空闲会话，回收服务端资源、及时感知断线。
+     * 依据配置 staleSessionTimeout 判定过期；无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnMissingBean(WebSocketHeartbeatHandler.class)
     public WebSocketHeartbeatHandler webSocketHeartbeatHandler(
@@ -259,6 +289,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P1-2: ACK 确认 ====================
 
+    /**
+     * 注册消息 ACK 确认服务 Bean。
+     *
+     * <p>追踪每条推送消息的客户端确认回执，未确认消息可被重试或转入离线存储，支撑"至少一次"投递语义。
+     * 仅在 ack 启用时创建；Redis 可选，缺失时仅内存维护。
+     */
     @Bean
     @ConditionalOnMissingBean(MessageAckService.class)
     @ConditionalOnProperty(prefix = "ydsz.websocket.ack", name = "enabled", havingValue = "true")
@@ -271,6 +307,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P0-4: 重试队列 + 死信队列 ====================
 
+    /**
+     * 注册死信队列 Bean。
+     *
+     * <p>承接重试后仍不可达的消息，避免其无限占用重试队列；默认 Redis 实现，按死信开关启用。
+     * 无自定义 Bean 时注册，业务可替换为持久化实现。
+     */
     @Bean
     @ConditionalOnMissingBean(DeadLetterQueue.class)
     @ConditionalOnProperty(prefix = "ydsz.websocket.retry", name = "dead-letter-enabled", havingValue = "true")
@@ -280,6 +322,12 @@ public class WebSocketAutoConfiguration {
         return new RedisDeadLetterQueue(redisTemplate);
     }
 
+    /**
+     * 注册消息重试队列 Bean。
+     *
+     * <p>暂存未确认/发送失败的消息并按延迟重新投递；Redis 存在时落地，缺失时降级为 no-op，
+     * 达到最大重试次数后转交死信队列。保证推送在短暂故障后最终可达。
+     */
     @Bean
     @ConditionalOnMissingBean(MessageRetryQueue.class)
     @ConditionalOnProperty(prefix = "ydsz.websocket.retry", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -308,6 +356,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== 会话事件监听器 ====================
 
+    /**
+     * 注册会话事件监听器 Bean。
+     *
+     * <p>在连接/断开通告中联动在线状态维护、离线消息补投、心跳、审计与各业务监听器，
+     * 是会话生命周期的编排中枢；无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnMissingBean(WebSocketSessionEventListener.class)
     public WebSocketSessionEventListener webSocketSessionEventListener(
@@ -326,6 +380,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== 指标收集器 ====================
 
+    /**
+     * 注册 WebSocket 指标收集器 Bean。
+     *
+     * <p>聚合连接数、消息吞吐、延迟等 Metrics 接入 Micrometer（可选），为容量评估与告警提供底座；
+     * 无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnMissingBean(WebSocketMetrics.class)
     public WebSocketMetrics webSocketMetrics(@Autowired(required = false) MeterRegistry meterRegistry) {
@@ -335,6 +395,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== 速率限制器 ====================
 
+    /**
+     * 注册 WebSocket 速率限制器 Bean。
+     *
+     * <p>按连接/用户维度限流消息发送频率，防止单客户端刷屏或恶意压测打爆服务端；
+     * Redis 可选，缺失时退化为仅内存限流。无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnClass(StringRedisTemplate.class)
     @ConditionalOnMissingBean(WebSocketRateLimiter.class)
@@ -348,6 +414,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P3-1: STOMP 消息拦截器 ====================
 
+    /**
+     * 注册 STOMP 消息拦截器 Bean。
+     *
+     * <p>在消息收发链路做统一的限流与审计前置校验，是横切关注点（安全/计量）的接入点；
+     * 无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnMissingBean(StompMessageInterceptor.class)
     public StompMessageInterceptor stompMessageInterceptor(
@@ -359,6 +431,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P0-1: 健康检查 ====================
 
+    /**
+     * 注册 WebSocket 健康检查指示器 Bean。
+     *
+     * <p>暴露活跃连接数、Redis 可用性等健康度到 Actuator /health，供探活与告警；
+     * 依赖 Spring HealthIndicator 类存在时启用。无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnClass(HealthIndicator.class)
     @ConditionalOnMissingBean(name = "webSocketHealthIndicator")
@@ -373,6 +451,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== 统一推送模板 ====================
 
+    /**
+     * 注册统一实时推送模板 Bean。
+     *
+     * <p>封装点对点/广播/集群推送的完整链路（在线下发、离线存储、压缩、序列化、ACK、重试、审计、过滤），
+     * 业务侧仅需调用模板即可完成推送；集群未启用时以 NoOp 发布者降级为本地推送。无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnMissingBean(RealtimePushTemplate.class)
     public RealtimePushTemplate realtimePushTemplate(
@@ -398,6 +482,12 @@ public class WebSocketAutoConfiguration {
                 messageFilters);
     }
 
+    /**
+     * 注册重试刷新定时任务 Bean。
+     *
+     * <p>周期性触发推送模板的重试消息重投与 ACK 过期本地回执清理，是异步投递补偿的执行入口；
+     * 由 Spring 托管生命周期，无需手动启停。
+     */
     @Bean
     public RetryFlushTask retryFlushTask(
             RealtimePushTemplate pushTemplate,
@@ -414,6 +504,12 @@ public class WebSocketAutoConfiguration {
             this.ackService = ackService;
 }
 
+        /**
+         * 定时重投重试消息并清理过期本地 ACK。
+         *
+         * <p>每 10 秒执行一次（{@code fixedDelay=10000}），驱动 {@link RealtimePushTemplate#flushRetryMessages()}
+         * 与 ACK 服务的本地过期回执回收，保障延迟消息最终可达。
+         */
         @Scheduled(fixedDelay = 10000)
         public void flush() {
             pushTemplate.flushRetryMessages();

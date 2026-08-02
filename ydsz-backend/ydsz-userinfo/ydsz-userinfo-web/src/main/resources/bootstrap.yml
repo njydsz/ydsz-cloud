@@ -55,3 +55,15 @@ spring:
           - data-id: ydsz-userinfo.yml
             group: ${spring.profiles.active}
             refresh: true
+
+# JSON 引擎配置（ydsz-common-json）
+ydsz:
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    warmup-classes:
+      - com.njydsz.userinfo.domain.vo.LoginVO
+      - com.njydsz.userinfo.domain.entity.UserAccount

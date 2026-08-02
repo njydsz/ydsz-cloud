@@ -70,7 +70,6 @@ public class GatewayHealthIndicator implements HealthIndicator {
         this.gatewayMetricsProvider = gatewayMetricsProvider;
     }
 
-    @Override
     /**
      * 汇总网关核心依赖与能力的运行状态。
      *
@@ -80,6 +79,7 @@ public class GatewayHealthIndicator implements HealthIndicator {
      *
      * @return 包含各项 detail 的健康快照
      */
+    @Override
     public Health health() {
         Map<String, Object> details = new LinkedHashMap<>();
         boolean healthy = true;

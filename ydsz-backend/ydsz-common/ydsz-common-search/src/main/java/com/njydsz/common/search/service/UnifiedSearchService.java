@@ -85,6 +85,35 @@ public class UnifiedSearchService {
         this.searchConcurrencyLimit = new Semaphore(properties.getMaxPageSize(), true);
     }
 
+    /**
+     * 执行跨实体类型的统一检索，串联限流、熔断、缓存、分词、权限过滤与业务重排。
+     *
+     * <p><b>处理顺序</b>（任一环节短路都会返回空结果而非抛异常）：
+     * <ol>
+     *   <li>信号量限流：许可数为 {@code maxPageSize}，等待超过 {@code searchTimeout} 秒即放弃</li>
+     *   <li>参数兜底与校验：page/pageSize/高亮参数取默认值，翻页深度超 {@code maxPageDepth} 抛异常</li>
+     *   <li>文本预处理：交由 {@link SearchTextProcessor} 做分词与同义词改写，处理结果为空时保留原词</li>
+     *   <li>熔断判定：连续失败达 {@code failureThreshold} 后开启熔断，OPEN 期间直接拒绝</li>
+     *   <li>权限过滤：向各 {@link SearchProvider} 索取数据权限条件并合并进 filters</li>
+     *   <li>缓存查询：命中则直接返回，不再落引擎</li>
+     *   <li>检索执行：单类型走带超时的单引擎查询，多类型走并行分片查询后归并排序</li>
+     *   <li>后置处理：{@link BusinessRanker} 重排、指标上报、搜索行为埋点、结果回填缓存</li>
+     * </ol>
+     *
+     * <p><b>降级策略</b>：限流失败、线程中断、熔断开启、关键词为空、引擎异常或超时，
+     * 统一返回 {@link SearchResponse#empty} 的空结果，保证搜索接口对上游始终可用。
+     *
+     * <p><b>副作用</b>：本方法会<b>就地修改</b>传入的 {@code request}
+     * （回填默认分页参数、覆盖 keyword 为分词结果、追加权限 filters），
+     * 调用方不应复用同一个 request 对象发起第二次检索。
+     *
+     * <p>线程安全：熔断状态与失败计数均为原子变量，实例可被多线程并发调用。
+     *
+     * @param request 检索请求，不可为 {@code null}；keyword 为空时直接返回空结果
+     * @return 检索响应，永不为 {@code null}；失败与降级场景返回空结果而非异常
+     * @throws IllegalArgumentException 翻页深度 {@code offset} 超过 {@code maxPageDepth} 时抛出，
+     *                                  用于阻断深分页拖垮引擎
+     */
     public SearchResponse search(SearchRequest request) {
         try {
             if (!searchConcurrencyLimit.tryAcquire(properties.getSearchTimeout(), TimeUnit.SECONDS)) {
@@ -156,6 +185,17 @@ public class UnifiedSearchService {
         }
     }
 
+    /**
+     * 按前缀获取自动补全建议。
+     *
+     * <p>委派给主引擎注册的 {@link SuggestStrategy}；
+     * 若当前引擎不支持建议能力（如降级到基础 PG 全文检索），
+     * 返回 {@code suggestions} 为空列表的占位对象而非 {@code null}，
+     * 便于前端统一处理。
+     *
+     * @param prefix 用户已输入的前缀，原样透传给底层策略
+     * @return 建议结果，类型为 {@code AUTOCOMPLETE}，永不为 {@code null}
+     */
     public SearchSuggestion suggest(String prefix) {
         Optional<SuggestStrategy> suggestStrategy = engineRegistry.getSuggestStrategy();
         if (suggestStrategy.isPresent()) {
@@ -168,6 +208,16 @@ public class UnifiedSearchService {
                 .build();
     }
 
+    /**
+     * 生成「您是不是要找」纠错建议，在零结果场景下引导用户重新检索。
+     *
+     * <p>复用 {@link #suggest(String)} 的召回结果，仅把类型改写为
+     * {@code DID_YOU_MEAN}，不做额外的编辑距离过滤；
+     * 需要更精确的纠错请使用 {@link SuggestionService#didYouMean(String)}。
+     *
+     * @param keyword 原始关键词，通常是命中数为 0 的查询词
+     * @return 纠错建议；底层策略返回 {@code null} 时原样返回 {@code null}
+     */
     public SearchSuggestion didYouMean(String keyword) {
         SearchSuggestion suggestion = suggest(keyword);
         if (suggestion != null) {
@@ -176,6 +226,13 @@ public class UnifiedSearchService {
         return suggestion;
     }
 
+    /**
+     * 清空搜索结果缓存。
+     *
+     * <p>索引重建或数据批量变更后必须调用，否则在缓存 TTL 内会持续返回陈旧结果。
+     * 清空后短时间内缓存命中率降为 0，全部请求穿透到引擎，
+     * 应避开业务高峰执行。
+     */
     public void clearCache() {
         cacheService.clear();
     }
@@ -184,6 +241,15 @@ public class UnifiedSearchService {
         return cacheService.size();
     }
 
+    /**
+     * 关闭内部搜索线程池，释放线程资源。
+     *
+     * <p>由容器在 Bean 销毁阶段调用。线程池配置了
+     * {@code waitForTasksToCompleteOnShutdown=true} 与 5 秒等待，
+     * 因此本方法会让在途检索任务尽量执行完毕，最多阻塞约 5 秒。
+     *
+     * <p>调用后本实例不可再用于检索，重复调用是安全的（幂等）。
+     */
     public void shutdown() {
         searchExecutor.shutdown();
         log.info("[UnifiedSearch] 线程池已关闭");

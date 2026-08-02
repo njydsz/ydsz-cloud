@@ -73,7 +73,6 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     @Value("${ydsz.gateway.api-key.protected-paths:}")
     private String protectedPaths;
 
-    @Override
     /**
      * API Key 认证过滤器：为外部系统提供 JWT 之外的备选认证方式。
      *
@@ -85,6 +84,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
      * @param chain    网关过滤器链
      * @return 放行或拒绝（401 / 403）的完成信号 Mono
      */
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         if (!enabled) {
             return chain.filter(exchange);

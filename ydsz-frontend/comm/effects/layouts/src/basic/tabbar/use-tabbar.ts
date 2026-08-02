@@ -32,6 +32,32 @@ import { $t, useI18n } from '@ydsz/locales';
 import { getTabKey, useAccessStore, useTabbarStore } from '@ydsz/stores';
 import { filterTree } from '@ydsz/utils';
 
+/**
+ * 标签栏容器组件的逻辑聚合，负责标签数据、激活态与右键菜单的组装。
+ *
+ * @remarks
+ * 入参：无。
+ *
+ * 副作用与生命周期依赖（**必须在组件 `setup` 中调用**，内部使用了 `useRoute` / `useRouter` 与三个 `watch`）：
+ * 1. 侦听 `accessStore.accessMenus`（`immediate`）：权限菜单变化后重新扫描路由表，
+ *    把带 `meta.affixTab` 的路由写入 store 作为固定标签；
+ * 2. 侦听 `route.fullPath`（`immediate`）：每次路由变化自动向 store 追加标签，
+ *    取的是 `matched` 链最末级的 `meta`，以保证嵌套路由拿到叶子节点的标题与图标；
+ * 3. 侦听标签列表、`updateTime` 与当前语言：任一变化都会重建 `currentTabs`。
+ *
+ * 这些侦听器都随组件作用域自动销毁，无需手动清理。
+ *
+ * 国际化约定：`currentTabs` 中的 `meta.title` 已经过 `$t` 处理，是**翻译后的文本副本**，
+ * 不要直接回写 store；语言切换时依靠 `locale` 侦听整体重算，这也是把标签标题
+ * 以 i18n key 形式存进 store 的原因。
+ *
+ * 菜单裁剪：`createContextMenus` 生成全量菜单后，会按 `tabbarStore.getMenuList` 过滤，
+ * 因此用户在偏好设置里关闭的菜单项不会出现；禁用态由 `getTabDisableState` 统一计算。
+ *
+ * @returns 标签栏渲染所需的数据与回调：`currentTabs` 为已本地化的标签列表，
+ * `currentActive` 为当前激活标签的 key，`handleClick` 点击切换路由，
+ * `handleClose` 关闭指定标签，`createContextMenus` 按标签生成右键菜单项
+ */
 export function useTabbar() {
   const router = useRouter();
   const route = useRoute();

@@ -103,6 +103,16 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * 判断当前请求是否应跳过认证。
+     *
+     * <p>先检查服务级跳过开关（{@link #shouldSkipService}），再比对合并后的忽略路径白名单
+     * （通用/网关/自定义）。命中任一即视为无需认证、直接放行。
+     * {@code request} 由过滤器保证非空，此处不再做空校验。</p>
+     *
+     * @param request 当前 HTTP 请求，非空
+     * @return 是否跳过认证（{@code true} 表示放行）
+     */
     protected boolean shouldSkipAuth(HttpServletRequest request) {
         if (shouldSkipService()) {
             return true;
@@ -111,18 +121,73 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         return UrlPathUtils.isIgnoreUrl(ignoreUrl, request.getServletPath());
     }
 
+    /**
+     * 解析并构造认证信息（由子类实现）。
+     *
+     * <p>子类需从请求中抽取凭证（如 Token 解析、签名验签）并构建 {@link AuthInfo}。
+     * 返回实例随后被写入 {@link RequestHolder} 与 {@link AuthContext}，供下游拦截器与切面使用。
+     * 解析失败应直接抛出认证相关异常以中断请求。</p>
+     *
+     * @param request 当前 HTTP 请求
+     * @param response 当前 HTTP 响应
+     * @return 解析得到的认证信息，不应为 {@code null}
+     */
     protected abstract AuthInfo resolveAuthInfo(HttpServletRequest request, HttpServletResponse response);
 
+    /**
+     * 由子类决定当前服务是否整体跳过认证。
+     *
+     * <p>返回 {@code true} 时，本过滤器对所有请求直接放行（如纯静态资源服务或内部免鉴权环境）。
+     * 子类通常结合配置开关或应用角色实现该判定。</p>
+     *
+     * @return 是否整体跳过认证
+     */
     protected abstract boolean shouldSkipService();
 
+    /**
+     * 返回日志前缀（由子类提供）。
+     *
+     * <p>用于在过滤器各阶段日志前统一附加应用名/端点标识，便于在多服务混合日志中快速定位来源。
+     * 子类应返回稳定的简短前缀字符串。</p>
+     *
+     * @return 日志前缀，不应为 {@code null}
+     */
     protected abstract String getLogPrefix();
 
+    /**
+     * 认证前扩展钩子，默认空实现。
+     *
+     * <p>在路径白名单判定与 CSRF/限流之前调用；子类可重写以注入前置逻辑
+     * （如请求改写、审计埋点、上下文预热）。无特殊需求时无需重写。</p>
+     *
+     * @param request 当前 HTTP 请求
+     * @param response 当前 HTTP 响应
+     */
     protected void doPreAuth(HttpServletRequest request, HttpServletResponse response) {
     }
 
+    /**
+     * 认证后扩展钩子，默认空实现。
+     *
+     * <p>在过滤器 {@code finally} 块中、清理认证上下文之前调用；{@code duration} 为本请求认证耗时（毫秒）。
+     * 子类可重写用于指标上报、审计或链路追踪。</p>
+     *
+     * @param request 当前 HTTP 请求
+     * @param response 当前 HTTP 响应
+     * @param duration 本次认证耗时（毫秒）
+     */
     protected void doPostAuth(HttpServletRequest request, HttpServletResponse response, long duration) {
     }
 
+    /**
+     * 判断指定应用名是否被配置为整体跳过认证。
+     *
+     * <p>匹配 {@link FilterIgnoreConstant#getAuthFilterIgnoreServiceNames()} 中的服务名白名单。
+     * {@code appName} 为 {@code null} 时直接返回 {@code false}（不跳过）。</p>
+     *
+     * @param appName 应用名，允许为 {@code null}
+     * @return 是否整体跳过认证
+     */
     protected boolean isServiceIgnored(String appName) {
         if (appName == null) {
             return false;

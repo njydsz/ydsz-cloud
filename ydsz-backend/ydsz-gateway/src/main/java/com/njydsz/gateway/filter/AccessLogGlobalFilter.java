@@ -104,7 +104,6 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     /** P3-14: 网关自定义指标 */
     private final GatewayMetrics gatewayMetrics;
 
-    @Override
     /**
      * 记录结构化访问日志（在响应完成后异步输出）。
      *
@@ -116,6 +115,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
      * @param chain    网关过滤器链
      * @return 完成信号 Mono
      */
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         long startTime = System.currentTimeMillis();
         String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
@@ -265,7 +265,6 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         return traceId != null ? traceId : UUID.randomUUID().toString().replace("-", "");
     }
 
-    @Override
     /**
      * 过滤器执行顺序：{@code HIGHEST_PRECEDENCE + 1}。
      *
@@ -273,6 +272,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
      *
      * @return 顺序值
      */
+    @Override
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE + 1;
     }

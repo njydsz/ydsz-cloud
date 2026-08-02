@@ -27,6 +27,7 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  * @see BuilderResolver
  * @see TypeConverter
  */
+@SuppressWarnings("deprecation")
 final class CreatorResolver {
 
     private CreatorResolver() {

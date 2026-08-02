@@ -56,6 +56,18 @@ public final class Conversation {
         this.totalUsage = totalUsage != null ? totalUsage : TokenUsage.zero();
     }
 
+    /**
+     * 向对话尾部追加一条消息，并同步累计 Token 用量与更新时间。
+     *
+     * <p>聚合根不变量：消息严格按追加顺序排列，不支持插入或删除，保证上下文时序与 LLM 侧一致。
+     * 消息自带 {@code tokenUsage} 时会累加到对话级 {@code totalUsage}，供配额控制与成本核算使用；
+     * 未携带用量（如本地构造的占位消息）则只入列不计费。
+     *
+     * <p><b>并发</b>：非线程安全，同一 conversationId 的写入需由上层串行化。
+     *
+     * @param message 待追加的消息，不可为 {@code null}
+     * @throws NullPointerException 当 {@code message} 为 {@code null} 时抛出
+     */
     public void appendMessage(ChatMessage message) {
         Objects.requireNonNull(message, "message 不能为 null");
         messages.add(message);

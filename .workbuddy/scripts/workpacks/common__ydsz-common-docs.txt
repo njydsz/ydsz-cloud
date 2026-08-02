@@ -1,0 +1,10 @@
+# 工作包: common__ydsz-common-docs   待办文件 3 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-docs\src\main\java\com\njydsz\common\docs\config\DocsAutoConfiguration.java
+        成员: docsHealthIndicator
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-docs\src\main\java\com\njydsz\common\docs\metrics\DocsMetrics.java
+        成员: recordParse, recordPiiDetected, recordSecurityScan, recordPreprocess, updateAsyncQueueSize
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-docs\src\main\java\com\njydsz\common\docs\service\DocumentService.java
+        成员: convert, addWatermark, redact, ocrScan, summarize, extractKeywords

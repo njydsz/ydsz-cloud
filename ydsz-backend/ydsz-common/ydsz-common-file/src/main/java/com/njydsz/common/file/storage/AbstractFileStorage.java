@@ -232,8 +232,33 @@ public abstract class AbstractFileStorage implements IFileStorage {
     public void setFileMetrics(FileMetrics metrics) { this.fileMetrics = metrics; }
     public void setRetryHelper(StorageRetryHelper helper) { this.retryHelper = helper; }
 
+    /**
+     * 声明当前存储实现是否支持服务端复制（Server-Side Copy）。
+     *
+     * <p>返回 {@code true} 时 {@link #copyObject} 会走 {@link #doCopyObject}，
+     * 由对象存储服务内部完成数据搬运，无需经过应用进程，省带宽且速度快；
+     * 返回 {@code false} 则降级为"下载 + 重新上传"，大文件下会显著占用应用内存与带宽。
+     *
+     * <p>默认返回 {@code false}，支持该能力的子类（如 MinIO / OSS / COS）应覆盖为 {@code true}
+     * 并同时实现 {@link #doCopyObject}。
+     *
+     * @return 是否支持服务端复制
+     */
     protected boolean supportsServerSideCopy() { return false; }
 
+    /**
+     * 执行服务端复制，由具体存储的 SDK 直接完成对象搬运。
+     *
+     * <p>仅当 {@link #supportsServerSideCopy()} 返回 {@code true} 时才会被调用。
+     * 入参均已由上层完成默认桶解析与路径穿越校验，实现方无需重复校验。
+     *
+     * @param srcBucket  源桶名，已解析
+     * @param srcObject  源对象键，已规范化
+     * @param destBucket 目标桶名，已解析
+     * @param destObject 目标对象键，已规范化
+     * @throws UnsupportedOperationException 默认实现直接抛出；
+     *                                       子类若声明支持服务端复制却未覆盖本方法即属实现缺陷
+     */
     protected void doCopyObject(String srcBucket, String srcObject, String destBucket, String destObject) {
         throw new UnsupportedOperationException("Server-side copy not supported");
     }
@@ -847,6 +872,18 @@ public abstract class AbstractFileStorage implements IFileStorage {
         return normalizeObjectKey(normalized);
     }
 
+    /**
+     * 对已通过安全校验的对象键做存储侧格式适配，是 {@link #resolveObjectKey} 的最后一步。
+     *
+     * <p>默认原样返回（保留前导 {@code /}，适用于本地文件系统语义）。
+     * S3 协议族的对象键不允许以 {@code /} 开头，此类子类需覆盖本方法去掉前导斜杠。
+     *
+     * <p><b>约束</b>：实现只允许做格式规范化，不得再引入 {@code ..} 等路径穿越可能，
+     * 因为本方法之后不再有任何安全校验。
+     *
+     * @param objectKey 已完成穿越校验与斜杠归一的对象键，非空
+     * @return 适配存储实现后的最终对象键
+     */
     protected String normalizeObjectKey(String objectKey) {
         return objectKey;
     }

@@ -134,6 +134,15 @@ public final class JSONWriter {
             return (features & (1L << ordinal())) != 0;
         }
 
+        /**
+         * 返回该特性的位掩码（{@code 1L << ordinal()}）。
+         *
+         * <p>用于和特性组合值按位与（{@code features & mask}）判断是否启用，
+         * 或被 {@code of(...)} 按位或组合多个特性。位序依赖枚举声明顺序，
+         * 请勿随意调整枚举常量位置，否则会破坏已持久化/传输的特性位组合。</p>
+         *
+         * @return 64 位长整型位掩码
+         */
         public long mask() {
             return 1L << ordinal();
         }

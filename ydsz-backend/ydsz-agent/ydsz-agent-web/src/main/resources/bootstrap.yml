@@ -55,6 +55,19 @@ spring:
 
 # ---------- Agent 模块特有配置 ----------
 ydsz:
+  # JSON 引擎配置（ydsz-common-json）
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    warmup-classes:
+      - com.njydsz.agent.api.dto.ChatMessage
+      - com.njydsz.agent.api.dto.ChatRequest
+      - com.njydsz.agent.api.dto.ToolCall
+      - com.njydsz.agent.api.dto.ToolDefinition
+      - com.njydsz.agent.api.dto.TokenUsage
   agent:
     enabled: true
     llm:

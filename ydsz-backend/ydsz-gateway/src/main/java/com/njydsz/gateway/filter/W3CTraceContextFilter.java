@@ -51,7 +51,6 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
     /** traceparent 请求头名 */
     private static final String HEADER_TRACEPARENT = "traceparent";
 
-    @Override
     /**
      * 注入 W3C Trace Context，建立全链路追踪上下文。
      *
@@ -63,6 +62,7 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
      * @param chain    网关过滤器链
      * @return 完成信号 Mono
      */
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
 

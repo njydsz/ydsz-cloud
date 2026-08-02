@@ -49,6 +49,12 @@ public class NacosNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
     /** 当前节点 ID（hostname:port） */
     private final String localNodeId;
 
+    /**
+     * 构造基于 Nacos 服务发现的节点发现策略。
+     *
+     * @param discoveryClient Nacos 服务发现客户端
+     * @param serverPort      本节点服务端口，用于拼接 localNodeId
+     */
     public NacosNodeDiscoveryStrategy(DiscoveryClient discoveryClient,
                                       @Value("${server.port:0}") int serverPort) {
         this.discoveryClient = discoveryClient;
@@ -56,6 +62,14 @@ public class NacosNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
         log.info("[NacosNodeDiscovery] 初始化完成, localNodeId={}", localNodeId);
     }
 
+    /**
+     * 通过 Nacos 获取在线执行器节点。
+     *
+     * <p>Nacos 实例本身即存活节点，直接转换为 {@link JobNode}（心跳取当前时间），
+     * 按 nodeId 升序保证分片分配在各节点一致。异常时返回空列表。
+     *
+     * @return 在线节点列表，无可用时返回空列表
+     */
     @Override
     public List<JobNode> getOnlineNodes() {
         try {
@@ -87,6 +101,11 @@ public class NacosNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
         }
     }
 
+    /**
+     * 获取本节点 ID（hostname:port）。
+     *
+     * @return 本节点唯一标识
+     */
     @Override
     public String getLocalNodeId() {
         return localNodeId;

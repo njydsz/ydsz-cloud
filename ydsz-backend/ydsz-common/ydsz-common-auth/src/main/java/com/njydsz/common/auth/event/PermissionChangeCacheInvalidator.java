@@ -59,6 +59,13 @@ public class PermissionChangeCacheInvalidator {
     private final ColumnPermissionResolver columnPermissionResolver;
     private final RedisMessageListenerContainer redisMessageListenerContainer;
 
+    /**
+     * Bean 初始化时订阅 Redis 权限变更频道。
+     *
+     * <p>在容器启动阶段向 {@link RedisMessageListenerContainer} 注册监听器，
+     * 以接收其他集群节点通过 Pub/Sub 下发的权限变更通知。订阅失败仅记录错误日志，
+     * 不影响本地 Spring {@code ApplicationEvent} 通道的缓存失效能力。</p>
+     */
     @PostConstruct
     public void init() {
         subscribeToRedisChannel();
@@ -75,6 +82,14 @@ public class PermissionChangeCacheInvalidator {
         }
     }
 
+    /**
+     * 处理本地节点发出的权限变更事件。
+     *
+     * <p>作为 Spring {@code @EventListener} 监听 {@link PermissionChangedEvent}；
+     * 事件为 {@code null} 时直接忽略。最终委派 {@link #handlePermissionChange} 按变更类型失效对应角色的各权限缓存。</p>
+     *
+     * @param event 权限变更事件，允许为 {@code null}（忽略不处理）
+     */
     @EventListener
     public void onPermissionChanged(PermissionChangedEvent event) {
         if (event == null) {

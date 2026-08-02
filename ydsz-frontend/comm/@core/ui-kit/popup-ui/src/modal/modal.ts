@@ -11,6 +11,15 @@ import type { MaybePromise } from '@ydsz-core/typings';
 
 import type { ModalApi } from './modal-api';
 
+/**
+ * 模态弹窗的展示层配置。
+ *
+ * @remarks
+ * 只描述外观与交互开关，不含打开状态与业务数据（见 {@link ModalState}）。
+ *
+ * 与抽屉（Drawer）的配置高度相似，差异在于弹窗额外支持居中、全屏、拖拽等能力；
+ * 两者刻意不做类型复用，以免任一侧新增能力时被迫污染另一侧。
+ */
 export interface ModalProps {
   /**
    * 动画类型
@@ -149,21 +158,48 @@ export interface ModalProps {
   zIndex?: number;
 }
 
+/**
+ * 弹窗的运行时状态，即 ModalApi 内部 store 所存储的完整数据。
+ */
 export interface ModalState extends ModalProps {
-  /** 弹窗打开状态 */
+  /**
+   * 弹窗打开状态
+   *
+   * @remarks
+   * 应通过 API 的 `open()` / `close()` 变更，直接改写会绕过 `onBeforeClose` 拦截与动画回调。
+   */
   isOpen?: boolean;
   /**
    * 共享数据
+   *
+   * @remarks
+   * 打开方向弹窗内容组件传值的通道。**关闭后不会自动清空**，
+   * 新增/编辑复用同一弹窗时必须每次显式设置，否则会读到上一次的残留值。
    */
   sharedData?: Record<string, any>;
 }
 
+/**
+ * 附加了响应式订阅能力的弹窗 API，是业务实际持有的句柄类型。
+ *
+ * @remarks
+ * `useStore` 把内部状态桥接为 Vue 只读 ref；建议传 selector 只订阅所需切片，
+ * 否则任意状态变更都会触发重渲染。
+ */
 export type ExtendedModalApi = ModalApi & {
   useStore: <T = NoInfer<ModalState>>(
     selector?: (state: NoInfer<ModalState>) => T,
   ) => Readonly<Ref<T>>;
 };
 
+/**
+ * 创建弹窗 API 时的初始化选项。
+ *
+ * @remarks
+ * 在 {@link ModalState} 基础上追加了生命周期回调与独立弹窗组件的连接配置。
+ * 其中 `onBeforeClose` 是唯一可以阻断关闭流程的钩子——返回 `false` 即中止关闭，
+ * 返回 `undefined` 或其他值均视为放行，常用于「有未保存内容时二次确认」。
+ */
 export interface ModalApiOptions extends ModalState {
   /**
    * 独立的弹窗组件

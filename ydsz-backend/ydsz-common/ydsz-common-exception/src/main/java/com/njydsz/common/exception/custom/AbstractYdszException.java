@@ -187,6 +187,18 @@ public abstract class AbstractYdszException extends RuntimeException {
         initFields(code, key, params);
     }
 
+    /**
+     * 将异常自身的上下文投影为可序列化的 {@link ExceptionInfo}，供全局异常处理器输出响应体。
+     *
+     * <p>内部调用 {@link #getMessage()}，会触发国际化文案的懒加载解析，
+     * 因此本方法必须在请求线程（LocaleContextHolder 已就绪）内调用，
+     * 若在异步线程中调用将按默认 Locale 解析。
+     *
+     * <p>仅投影通用字段（code / key / message / httpStatus / path / timestamp），
+     * {@code traceId} 与 {@code details} 由子类或调用方补充。
+     *
+     * @return 新建的异常信息对象，永不为 {@code null}；各字段可能为 {@code null}（取决于异常构造时是否赋值）
+     */
     protected ExceptionInfo buildExceptionInfo() {
         ExceptionInfo info = new ExceptionInfo();
         info.setCode(this.code);
@@ -213,6 +225,15 @@ public abstract class AbstractYdszException extends RuntimeException {
         return key;
     }
 
+    /**
+     * 将 {@code null} 参数数组归一化为空数组。
+     *
+     * <p>目的是让 {@code params} 字段保持非 null 不变量，
+     * 使 i18n 格式化、参数克隆与序列化路径无需重复做空判断。
+     *
+     * @param params 原始消息参数数组，可为 {@code null}
+     * @return 入参本身；入参为 {@code null} 时返回长度为 0 的新数组，永不返回 {@code null}
+     */
     protected static Object[] normalizeParams(Object[] params) {
         return params == null ? new Object[]{} : params;
     }

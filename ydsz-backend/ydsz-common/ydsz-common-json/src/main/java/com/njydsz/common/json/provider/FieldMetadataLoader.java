@@ -38,6 +38,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class FieldMetadataLoader {
 
     /** 当前使用的命名策略 */

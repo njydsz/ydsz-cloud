@@ -36,6 +36,7 @@ import com.njydsz.common.json.annotation.Experimental;
  * @since 1.0.0
  */
 @Experimental("JSON Patch (RFC 6902) 属于独立工具域，非核心序列化能力")
+@Deprecated(since = "1.0.0", forRemoval = true)
 public final class JsonPatch {
 
     private JsonPatch() {
@@ -211,6 +212,14 @@ public final class JsonPatch {
     public static final class Builder {
         private final List<Object> operations = new ArrayList<>();
 
+        /**
+         * 追加一个 {@code add} 操作（RFC 6902）。
+         *
+         * <p>在 {@code path} 处写入 {@code value}；若父路径不存在则自动创建中间节点。</p>
+         *
+         * @param path 目标 JSON Pointer 路径
+         * @param value 要写入的值
+         */
         public Builder add(String path, Object value) {
             Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "add");
@@ -220,6 +229,11 @@ public final class JsonPatch {
             return this;
         }
 
+        /**
+         * 追加一个 {@code remove} 操作（RFC 6902）。
+         *
+         * @param path 要删除的 JSON Pointer 路径
+         */
         public Builder remove(String path) {
             Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "remove");
@@ -228,6 +242,12 @@ public final class JsonPatch {
             return this;
         }
 
+        /**
+         * 追加一个 {@code replace} 操作（RFC 6902）。
+         *
+         * @param path 目标 JSON Pointer 路径
+         * @param value 替换后的值
+         */
         public Builder replace(String path, Object value) {
             Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "replace");
@@ -237,6 +257,14 @@ public final class JsonPatch {
             return this;
         }
 
+        /**
+         * 追加一个 {@code move} 操作（RFC 6902）。
+         *
+         * <p>先读取 {@code from} 处的值并删除源节点，再写入 {@code path}。</p>
+         *
+         * @param from 源 JSON Pointer 路径
+         * @param path 目标 JSON Pointer 路径
+         */
         public Builder move(String from, String path) {
             Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "move");
@@ -246,6 +274,14 @@ public final class JsonPatch {
             return this;
         }
 
+        /**
+         * 追加一个 {@code copy} 操作（RFC 6902）。
+         *
+         * <p>将 {@code from} 处的值复制到 {@code path}，源节点保留。</p>
+         *
+         * @param from 源 JSON Pointer 路径
+         * @param path 目标 JSON Pointer 路径
+         */
         public Builder copy(String from, String path) {
             Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "copy");
@@ -255,6 +291,15 @@ public final class JsonPatch {
             return this;
         }
 
+        /**
+         * 追加一个 {@code test} 操作（RFC 6902）。
+         *
+         * <p>断言 {@code path} 处当前值等于 {@code value}；不等时，后续 {@link #applyTo} 将抛出
+         * {@link IllegalStateException}。</p>
+         *
+         * @param path 目标 JSON Pointer 路径
+         * @param value 期望的值
+         */
         public Builder test(String path, Object value) {
             Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "test");

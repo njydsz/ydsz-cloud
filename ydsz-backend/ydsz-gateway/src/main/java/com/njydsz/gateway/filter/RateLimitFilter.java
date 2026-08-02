@@ -145,7 +145,6 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             List.class
     );
 
-    @Override
     /**
      * 精细化限流核心过滤器：多维度令牌桶限流（IP / 用户 / 租户）。
      *
@@ -157,6 +156,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
      * @param chain    网关过滤器链
      * @return 放行或拒绝（429）的完成信号 Mono
      */
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         if (!properties.isEnabled()) {
             return chain.filter(exchange);

@@ -199,26 +199,63 @@ public class ExceptionInfo implements Serializable {
         private String traceId;
         private int httpStatus;
 
+        /**
+         * 设置业务错误码。
+         *
+         * @param code 业务错误码，形如 {@code "A01001"}，前端据此做差异化提示；允许为 {@code null}
+         * @return 当前构建器，便于链式调用
+         */
         public Builder code(String code) {
             this.code = code;
             return this;
         }
 
+        /**
+         * 设置国际化消息键。
+         *
+         * @param key i18n key，形如 {@code "user.not.found"}，用于按 Locale 反查文案；允许为 {@code null}
+         * @return 当前构建器，便于链式调用
+         */
         public Builder key(String key) {
             this.key = key;
             return this;
         }
 
+        /**
+         * 设置已解析完成的本地化消息。
+         *
+         * @param message 最终展示给调用方的文案，通常由 {@code key} 解析得到；允许为 {@code null}
+         * @return 当前构建器，便于链式调用
+         */
         public Builder message(String message) {
             this.message = message;
             return this;
         }
 
+        /**
+         * 整体替换错误详情集合。
+         *
+         * <p>直接持有传入引用而非拷贝，调用方在 {@code build()} 之后不应再修改该 Map，
+         * 否则会影响已构建的 {@link ExceptionInfo}。需要逐项累积时请改用 {@link #detail(String, Object)}。
+         *
+         * @param details 结构化错误详情，如字段校验失败明细；允许为 {@code null} 表示无详情
+         * @return 当前构建器，便于链式调用
+         */
         public Builder details(Map<String, Object> details) {
             this.details = details;
             return this;
         }
 
+        /**
+         * 追加一条错误详情，首次调用时惰性创建容器。
+         *
+         * <p>底层使用 {@link LinkedHashMap}，保证详情按追加顺序序列化，
+         * 前端表单可据此按字段顺序展示校验错误。相同 key 重复追加时后者覆盖前者。
+         *
+         * @param key   详情键，通常为字段名或子错误码，不可为 {@code null}
+         * @param value 详情值，可为任意可 JSON 序列化对象
+         * @return 当前构建器，便于链式调用
+         */
         public Builder detail(String key, Object value) {
             if (this.details == null) {
                 this.details = new LinkedHashMap<>();
@@ -227,21 +264,48 @@ public class ExceptionInfo implements Serializable {
             return this;
         }
 
+        /**
+         * 覆盖异常发生时间。
+         *
+         * <p>不设置时由 {@link ExceptionInfo} 构造器取当前时间；
+         * 仅在补录历史异常或需要与上游时间戳对齐时才显式指定。
+         *
+         * @param timestamp 异常发生时间；传 {@code null} 则保留构造器写入的当前时间
+         * @return 当前构建器，便于链式调用
+         */
         public Builder timestamp(LocalDateTime timestamp) {
             this.timestamp = timestamp;
             return this;
         }
 
+        /**
+         * 设置触发异常的请求路径。
+         *
+         * @param path 请求 URI，用于问题定位与错误聚合统计；允许为 {@code null}（非 Web 场景）
+         * @return 当前构建器，便于链式调用
+         */
         public Builder path(String path) {
             this.path = path;
             return this;
         }
 
+        /**
+         * 设置分布式链路追踪 ID。
+         *
+         * @param traceId 链路 ID，返回给客户端后可凭此在日志系统反查全链路；允许为 {@code null}
+         * @return 当前构建器，便于链式调用
+         */
         public Builder traceId(String traceId) {
             this.traceId = traceId;
             return this;
         }
 
+        /**
+         * 设置响应 HTTP 状态码。
+         *
+         * @param httpStatus HTTP 状态码，如 400、403、500；未设置时默认为 0，由上层兜底为 500
+         * @return 当前构建器，便于链式调用
+         */
         public Builder httpStatus(int httpStatus) {
             this.httpStatus = httpStatus;
             return this;

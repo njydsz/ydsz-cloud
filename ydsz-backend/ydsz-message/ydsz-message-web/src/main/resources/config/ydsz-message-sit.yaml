@@ -12,10 +12,6 @@ server:
 
 spring:
   profiles: sit
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
-    default-property-inclusion: NON_NULL
   mail:
     host: ${MAIL_HOST:smtp.example.com}
     port: ${MAIL_PORT:465}
@@ -35,6 +31,19 @@ spring:
           writetimeout: 10000
 
 ydsz:
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    safe-mode: true
+    warmup-classes:
+      - com.njydsz.common.feign.MessageRequest
+      - com.njydsz.message.domain.entity.core.MsgLog
+      - com.njydsz.message.domain.entity.config.MsgRouteRule
+      - com.njydsz.message.domain.entity.config.MsgTemplate
+      - com.njydsz.message.domain.entity.config.MsgCanary
   message:
     channel-enabled:
       SMS: true

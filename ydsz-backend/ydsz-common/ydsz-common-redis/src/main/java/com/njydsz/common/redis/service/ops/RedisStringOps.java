@@ -79,6 +79,13 @@ public class RedisStringOps {
         return prefix + ":" + key;
     }
 
+    /**
+     * Bean 初始化后的启动校验钩子（fail-fast）。
+     *
+     * <p>由 {@code @PostConstruct} 在依赖注入完成后触发，强校验 {@code RedisTemplate} 与其
+     * {@code ConnectionFactory} 已就绪，缺失则抛出 {@link NullPointerException} 阻止应用启动，
+     * 避免运行期才暴露配置问题。同时打印当前 key 前缀，便于确认多应用共享 Redis 时的命名空间隔离是否生效。
+     */
     @PostConstruct
     public void init() {
         Objects.requireNonNull(redisTemplate, "RedisTemplate 未正确初始化");

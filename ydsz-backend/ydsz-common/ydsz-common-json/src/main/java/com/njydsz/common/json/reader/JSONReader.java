@@ -170,6 +170,15 @@ public final class JSONReader {
             return (features & (1L << ordinal())) != 0;
         }
 
+        /**
+         * 返回该特性的位掩码（{@code 1L << ordinal()}）。
+         *
+         * <p>用于和特性组合值按位与（{@code features & mask}）判断是否启用，
+         * 或被 {@code of(...)} 按位或组合多个特性。位序依赖枚举声明顺序，
+         * 请勿随意调整枚举常量位置，否则会破坏已持久化/传输的特性位组合。</p>
+         *
+         * @return 64 位长整型位掩码
+         */
         public long mask() {
             return 1L << ordinal();
         }
@@ -310,15 +319,34 @@ public final class JSONReader {
         READER_POOL.set(reader);
     }
     
+    /**
+     * 读取并返回当前位置字符，读取位置前移一位。
+     *
+     * @return 当前字符
+     * @throws IllegalStateException 当已到达 JSON 末尾（pos >= len）
+     */
     public char readChar() {
         if (pos >= len) throw new IllegalStateException("Unexpected end of JSON");
         return buf[pos++];
     }
-    
+
+    /**
+     * 将读取位置回退一位（撤销上一次 readChar/peek 的推进）。
+     *
+     * <p>仅在 {@code pos > 0} 时回退，不会造成越界；用于试探性读取后的回溯。</p>
+     */
     public void back() {
         if (pos > 0) pos--;
     }
-    
+
+    /**
+     * 查看下一个非空白字符（不消费，读取位置不变）。
+     *
+     * <p>内部先 {@code skipWhitespace()} 定位，记录字符后再恢复 pos，因此不会推进读取位置；
+     * 与 {@link #peekChar()} 的区别在于本方法会跳过前置空白。</p>
+     *
+     * @return 下一个非空白字符，已到末尾则返回 {@code '\0'}
+     */
     public char peek() {
         int saved = pos;
         skipWhitespace();
@@ -336,16 +364,37 @@ public final class JSONReader {
         return (pos < len) ? buf[pos] : '\0';
     }
     
+    /**
+     * 快速读取字段名（假定当前已位于 {@code '"'} 引号处，不跳过前置空白）。
+     *
+     * <p>用于已定位到引号的高性能路径（如 ASM 反序列化器）；若当前字符非引号则直接返回 null，
+     * 不做任何字段名匹配尝试。等价于 {@code readString()} 的快捷版。</p>
+     *
+     * @return 字段名字符串，或 null（当前非字符串字段名）
+     */
     public String readFieldNameFast() {
         if (pos >= len) return null;
         if (buf[pos] != '"') return null;
         return readString();
     }
-    
+
+    /**
+     * 跳过所有空白字符（{@code char <= ' '}），推进读取位置到首个非空白字符。
+     *
+     * <p>JSON 规范中空白为空格、制表符、换行、回车；本实现以 {@code <= ' '} 统一处理。</p>
+     */
     public void skipWhitespace() {
         while (pos < len && buf[pos] <= ' ') pos++;
     }
-    
+
+    /**
+     * 向前定位到目标字符（跳过空白与非目标字符）。
+     *
+     * <p>用于跳到 {@code ':'} 等结构字符：遇到目标字符即停（不消费），
+     * 遇到非空白非目标字符也立即返回，避免越过值内容。典型用途是定位字段名后的冒号。</p>
+     *
+     * @param target 目标字符（如 {@code ':'}）
+     */
     public void skipTo(char target) {
         while (pos < len) {
             char c = buf[pos];
@@ -354,13 +403,29 @@ public final class JSONReader {
             pos++;
         }
     }
-    
+
+    /**
+     * 跳过空白后读取并返回下一个字符，读取位置前移一位。
+     *
+     * @return 下一个非空白字符
+     * @throws RuntimeException 当已到达 JSON 末尾
+     */
     public char nextChar() {
         skipWhitespace();
         if (pos >= len) throw new RuntimeException("Unexpected end of JSON");
         return buf[pos++];
     }
-    
+
+    /**
+     * 尝试匹配指定字段名并消费其后的冒号（字段定位核心方法）。
+     *
+     * <p>先跳过空白并确认当前为引号起始的字段名，再逐字符比对 {@code fieldName}；
+     * 不匹配则 {@code skipValue()} 跳过该值并返回 false。匹配成功后跳过结束引号、
+     * 空白与冒号，使读取位置停在字段值起始处，便于后续直接读取。</p>
+     *
+     * @param fieldName 期望匹配的字段名
+     * @return true 表示匹配成功且已定位到值，false 表示字段名不符
+     */
     public boolean matchField(String fieldName) {
         skipWhitespace();
         if (pos >= len || buf[pos] != '"') return false;
@@ -472,6 +537,15 @@ public final class JSONReader {
         return Float.parseFloat(new String(buf, start, pos - start));
     }
     
+    /**
+     * 读取当前值对应的原始 JSON 文本（含结构字符，不做类型解析）。
+     *
+     * <p>用于 {@code @JsonAnySetter} 等需保留原始片段的场景：对象/数组按括号配对截取，
+     * 字符串读取到结束引号，标量读取到逗号/括号/空白。已到末尾或当前为 null 时返回 {@code "null"}。
+     * 返回的是未解析的文本片段，调用方需自行决定如何解析。</p>
+     *
+     * @return 原始 JSON 文本片段
+     */
     public String readRawValue() {
         skipWhitespace();
         if (pos >= len) return "null";
@@ -503,6 +577,15 @@ public final class JSONReader {
         return new String(buf, start, pos - start);
     }
     
+    /**
+     * 读取并返回 JSON 字符串值（兼容单引号 {@code '\''} 与双引号 {@code '"'}）。
+     *
+     * <p>先 {@code nextChar()} 定位引号，再委托 {@code readStringContent} 读取内容（自动处理转义）。
+     * 非标准单引号由 SupportSingleQuotes 特性兼容。</p>
+     *
+     * @return 解析后的字符串（不含引号，转义已还原）
+     * @throws IllegalStateException 当当前非字符串起始或字符串未闭合
+     */
     public String readString() {
         char quote = nextChar();
         if (quote != '"' && quote != '\'') throw new IllegalStateException("Expected string, got: " + quote);
@@ -571,6 +654,12 @@ public final class JSONReader {
         return sb.toString();
     }
     
+    /**
+     * 读取并返回 JSON 整数（支持可选负号，直接 char 累加，无 String 分配）。
+     *
+     * @return 解析出的 int 值
+     * @throws IllegalStateException 当已到达 JSON 末尾或无有效数字
+     */
     public int readInt() {
         skipWhitespace();
         if (pos >= len) throw new IllegalStateException("Unexpected end of JSON");
@@ -585,6 +674,12 @@ public final class JSONReader {
         return negative ? -value : value;
     }
     
+    /**
+     * 读取并返回 JSON 长整数（支持可选负号，直接 char 累加，无 String 分配）。
+     *
+     * @return 解析出的 long 值
+     * @throws IllegalStateException 当已到达 JSON 末尾或无有效数字
+     */
     public long readLong() {
         skipWhitespace();
         if (pos >= len) throw new IllegalStateException("Unexpected end of JSON");
@@ -681,13 +776,27 @@ public final class JSONReader {
         return Double.parseDouble(new String(buf, start, pos - start));
     }
     
+    /**
+     * 读取并返回 JSON 布尔值（{@code true}/{@code false}）。
+     *
+     * @return 解析出的布尔值
+     * @throws IllegalStateException 当当前 token 非合法布尔字面量
+     */
     public boolean readBoolean() {
         skipWhitespace();
         if (pos + 4 <= len && buf[pos] == 't' && buf[pos+1] == 'r' && buf[pos+2] == 'u' && buf[pos+3] == 'e') { pos += 4; return true; }
         if (pos + 5 <= len && buf[pos] == 'f' && buf[pos+1] == 'a' && buf[pos+2] == 'l' && buf[pos+3] == 's' && buf[pos+4] == 'e') { pos += 5; return false; }
         throw new IllegalStateException("Expected boolean, got: " + buf[pos]);
     }
-    
+
+    /**
+     * 消费当前 JSON null 字面量（不返回值）。
+     *
+     * <p>用于已知字段为 null 时显式推进读取位置；若当前非 {@code "null"} 则抛异常。
+     * 通常配合 {@link #isNull()} 先判断再调用，避免误消费。</p>
+     *
+     * @throws IllegalStateException 当当前非 null 字面量
+     */
     public void readNull() {
         skipWhitespace();
         if (pos + 4 <= len && buf[pos] == 'n' && buf[pos+1] == 'u' && buf[pos+2] == 'l' && buf[pos+3] == 'l') pos += 4;
@@ -699,11 +808,42 @@ public final class JSONReader {
         return pos + 4 <= len && buf[pos] == 'n' && buf[pos+1] == 'u' && buf[pos+2] == 'l' && buf[pos+3] == 'l';
     }
     
+    /**
+     * 消费对象起始字符 {@code '{'}。
+     *
+     * @throws IllegalStateException 当当前字符非 {@code '{'}
+     */
     public void readObjectStart() { if (nextChar() != '{') throw new IllegalStateException("Expected '{'"); }
+
+    /**
+     * 消费对象结束字符 {@code '}'}。
+     *
+     * @throws IllegalStateException 当当前字符非 {@code '}'}
+     */
     public void readObjectEnd() { if (nextChar() != '}') throw new IllegalStateException("Expected '}'"); }
+
+    /**
+     * 消费数组起始字符 {@code '['}。
+     *
+     * @throws IllegalStateException 当当前字符非 {@code '['}
+     */
     public void readArrayStart() { if (nextChar() != '[') throw new IllegalStateException("Expected '['"); }
+
+    /**
+     * 消费数组结束字符 {@code ']'}。
+     *
+     * @throws IllegalStateException 当当前字符非 {@code ']'}
+     */
     public void readArrayEnd() { if (nextChar() != ']') throw new IllegalStateException("Expected ']'"); }
-    
+
+    /**
+     * 读取并返回下一个对象字段名（处理前置空白、逗号、结束括号）。
+     *
+     * <p>定位到引号起始的字符串并读取；若遇到 {@code '}'} 或已到末尾则返回 null，
+     * 表示对象结束。用于通用 Map 反序列化等无法预知字段名的路径。</p>
+     *
+     * @return 字段名字符串，或 null 表示对象已结束
+     */
     public String readFieldName() {
         if (pos >= len) return null;
         char ch = buf[pos];
@@ -739,6 +879,16 @@ public final class JSONReader {
         return hash;
     }
     
+    /**
+     * 计算字符串的 FNV-1a 哈希值（与 {@link #readFieldNameHash()} 同源算法）。
+     *
+     * <p>用于字段名预计算哈希，与解析时实时计算的 {@code readFieldNameHash()} 结果比对，
+     * 从而以 {@code long} 比较替代字符串相等判断，避免字段名 String 分配。
+     * 种子 {@code 0x811c9dc5}，乘子 {@code 0x100000001b3L}。</p>
+     *
+     * @param name 字段名
+     * @return FNV-1a 哈希值
+     */
     public static long fnv1aHash(String name) {
         long hash = 0x811c9dc5;
         for (int i = 0; i < name.length(); i++) { hash ^= name.charAt(i); hash *= 0x100000001b3L; }
@@ -748,6 +898,12 @@ public final class JSONReader {
     public int getPosition() { return pos; }
     public boolean isEnd() { return pos >= len; }
     
+    /**
+     * 跳过当前 JSON 值（不解析、不返回），将读取位置推进到值之后。
+     *
+     * <p>对象/数组按括号配对递归跳过（字符串内跳过转义），标量读取到逗号/括号/空白。
+     * 用于字段名未匹配时丢弃未知字段，保持容错。</p>
+     */
     public void skipValue() {
         skipWhitespace();
         if (pos >= len) return;
@@ -803,6 +959,17 @@ public final class JSONReader {
         }
     }
 
+    /**
+     * 读取 JSON 数组并反序列化为 {@code List<Object>}（按 elementType 逐元素解析）。
+     *
+     * <p>跳过前置空白并确认 {@code '['}；空数组返回空列表。每个元素交由
+     * {@code readArrayElement} 按类型解析（已知类型走快速路径，未知回退 {@code readAnyValue}）。
+     * 用于通用反序列化，持续读取直到 {@code ']'}。</p>
+     *
+     * @param elementType 数组元素类型，null 或 Object.class 表示按任意类型推断
+     * @return 反序列化得到的 List
+     * @throws RuntimeException 当起始非 {@code '['}
+     */
     public List<Object> readArray(Class<?> elementType) {
         skipWhitespace();
         if (pos >= len || buf[pos] != '[') throw new RuntimeException("Expected [ at position " + pos);
@@ -843,6 +1010,16 @@ public final class JSONReader {
         return readDouble();
     }
     
+    /**
+     * 读取 JSON 对象并反序列化为 {@code Map<String, Object>}（通用 Map 反序列化）。
+     *
+     * <p>跳过前置空白并确认 {@code '{'}，逐对读取字段名与值（值经
+     * {@code readAnyValue} 按首字符推断类型）。用于目标类型未知的场景，
+     * 例如 {@code @JsonAnySetter} 的复杂对象或弱类型入参。</p>
+     *
+     * @return 反序列化得到的 Map
+     * @throws RuntimeException 当起始非 {@code '{'}
+     */
     public Map<String, Object> readObjectMap() {
         skipWhitespace();
         if (pos >= len || buf[pos] != '{') throw new RuntimeException("Expected { at position " + pos);

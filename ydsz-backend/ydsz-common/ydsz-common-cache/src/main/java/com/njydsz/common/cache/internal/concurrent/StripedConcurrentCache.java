@@ -184,6 +184,17 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return maxSize;
   }
 
+  /**
+   * 将分段内的淘汰/显式删除事件向上透传给 Caffeine 父类的移除回调。
+   *
+   * <p>分段缓存自行管理各 Segment 的 LRU 与容量淘汰，但移除监听器、统计计数器由底层 Caffeine
+   * 统一维护，故此处仅做转发：{@code Segment.clear()} 触发时传入 {@link RemovalCause#EXPLICIT}
+   * （用户主动清空），达到容量阈值触发后台批量淘汰时传入 {@link RemovalCause#SIZE}。
+   *
+   * @param key 被移除的键，不会为 null（调用方均来自已存在于 map 中的 entry）
+   * @param value 被移除的值，可能携带 null（缓存允许以 null 占位表示"已探测为不存在"）
+   * @param cause 移除原因，决定监听器收到的语义，不可为 null
+   */
   protected void notifyRemoval(K key, V value, RemovalCause cause) {
     super.notifyRemoval(key, value, cause);
   }

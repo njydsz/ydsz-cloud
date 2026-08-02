@@ -82,7 +82,6 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
     /** Redis 响应式模板 */
     private final ReactiveStringRedisTemplate redisTemplate;
 
-    @Override
     /**
      * IP 黑名单拦截过滤器：基于本地 + Redis 两级缓存拒绝恶意 IP。
      *
@@ -94,6 +93,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
      * @param chain    网关过滤器链
      * @return 放行或拒绝（403）的完成信号 Mono
      */
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String clientIp = GatewayIpUtils.getClientIp(request);
@@ -154,7 +154,6 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
         return response.writeWith(Mono.just(buffer));
     }
 
-    @Override
     /**
      * 过滤器执行顺序：{@code HIGHEST_PRECEDENCE + 3}。
      *
@@ -162,6 +161,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
      *
      * @return 顺序值
      */
+    @Override
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE + 3;
     }

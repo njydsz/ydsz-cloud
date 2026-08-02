@@ -101,6 +101,12 @@ public class AuthColPermissionAspect {
         this.signer = new AuthColPermissionSigner(properties.getColPermissionSignKey());
     }
 
+    /**
+     * 列级权限切点：匹配标注或元标注了 {@link AuthColPermission} 的方法或类。
+     *
+     * <p>仅作为 {@code @Around} 通知 {@link #doAround} 的引用锚点，自身不含逻辑；
+     * 命中后由环绕通知统一完成列权限解析、参数注入与返回值过滤。</p>
+     */
     @Pointcut("@annotation(com.njydsz.common.auth.annotation.AuthColPermission) || @within(com.njydsz.common.auth.annotation.AuthColPermission)")
     public void colPermissionPointcut() {
     }

@@ -17,6 +17,19 @@ import {
 
 import { FORM_ITEM_INJECTION_KEY } from './injectionKeys';
 
+/**
+ * 在 `<FormField>` 上下文内获取表单字段的标识与校验状态。
+ *
+ * @remarks
+ * 必须位于 `FormField` / `FormItem` 的注入作用域内，否则抛出
+ * `useFormField should be used within <FormField>` 异常。内部通过 vee-validate 的
+ * `FieldContextKey` 与本项目 `FORM_ITEM_INJECTION_KEY` 注入拿到字段名与表单项 id，
+ * 并组合出 `aria` 所需的 `*-form-item-*` 描述 / 消息 id。
+ *
+ * @returns 包含 `name`、表单项 `id`，以及 `error` / `isDirty` / `isTouched` / `valid`
+ * 等字段状态的只读对象，供 `FormItem` / `FormMessage` 等组件消费
+ * @throws {Error} 当脱离 `FormField` 上下文调用时
+ */
 export function useFormField() {
   const fieldContext = inject(FieldContextKey);
   const fieldItemContext = inject(FORM_ITEM_INJECTION_KEY);

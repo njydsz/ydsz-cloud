@@ -299,6 +299,19 @@ public class WopiController {
 
     // ==================== DTO（P2-R4: 替代 Map<String, Object>） ====================
 
+    /**
+     * WOPI CheckFileInfo 响应体。
+     *
+     * <p>字段名<b>必须严格遵循 WOPI 规范的驼峰命名</b>（{@code BaseFileName}、
+     * {@code OwnerId} 等由序列化层映射），编辑器按名取值，重命名会直接导致文档打不开。
+     *
+     * <p>{@code userCanWrite} / {@code supportsUpdate} / {@code supportsLocks} 共同决定
+     * 编辑器展现只读还是可编辑模式；{@code version} 变化会触发编辑器重新拉取内容，
+     * 因此内容更新后务必同步递增，否则用户会看到陈旧文档。
+     *
+     * @author ydsz-team
+     * @since 1.0.0
+     */
     @lombok.Data
     @lombok.Builder
     @lombok.AllArgsConstructor
@@ -317,12 +330,36 @@ public class WopiController {
         private boolean supportsLocks;
         private String lastModifiedTime;
 
+        /**
+         * 构造 CheckFileInfo 的错误响应。
+         *
+         * <p>WOPI 客户端（OnlyOffice / Collabora）依据响应体判定是否放弃打开文档，
+         * 因此文件不存在、存储未配置等场景返回<b>带 error 标记的 200 响应</b>而非抛异常，
+         * 避免编辑器把 5xx 当作宿主故障持续重试。
+         *
+         * <p><b>安全约定：</b>{@code message} 只写对外可见的简短英文原因
+         * （如 {@code "file not found"}），严禁回传堆栈或内部路径。
+         * 除 {@code error}/{@code errorMessage} 外其余字段均为默认值，客户端不应读取。
+         *
+         * @param message 对外错误原因
+         * @return 错误响应，{@code error=true}
+         */
         public static WopiCheckFileInfoResponse error(String message) {
             return WopiCheckFileInfoResponse.builder()
                     .error(true).errorMessage(message).build();
         }
     }
 
+    /**
+     * WOPI 写操作（PutFile / Lock / Unlock）统一响应体。
+     *
+     * <p>三类写接口复用同一结构，便于编辑器以一致方式解析。约定即使失败也返回
+     * HTTP 200，由 {@code error} 标记区分成败——WOPI 客户端遇 5xx 会重试或丢弃
+     * 用户改动，返回 200 + error 可让其保留本地副本并给出明确提示。
+     *
+     * @author ydsz-team
+     * @since 1.0.0
+     */
     @lombok.Data
     @lombok.Builder
     @lombok.AllArgsConstructor
@@ -333,10 +370,31 @@ public class WopiController {
         @lombok.Builder.Default
         private String status = "ok";
 
+        /**
+         * 构造写操作成功响应，供 PutFile / Lock / Unlock 共用。
+         *
+         * <p>{@code status} 固定为 {@code "ok"}，WOPI 客户端据此结束保存流程；
+         * 若返回非 ok，编辑器会保留本地未保存副本并提示用户。
+         *
+         * @return 成功响应，{@code error=false}、{@code status="ok"}
+         */
         public static WopiPutFileResponse ok() {
             return WopiPutFileResponse.builder().status("ok").build();
         }
 
+        /**
+         * 构造写操作失败响应。
+         *
+         * <p>覆盖三类失败：文件不存在、<b>被其他用户锁定</b>（非锁持有者保存被拒，
+         * 用于防并发覆盖）、存储不可用或上传异常。同样以 200 + error 标记返回，
+         * 让编辑器保留用户改动而不是直接丢弃。
+         *
+         * <p><b>安全约定：</b>异常分支传入的是 {@code e.getMessage()}，
+         * 已由上层保证不含堆栈；新增调用点须同样避免泄露内部细节。
+         *
+         * @param message 对外错误原因
+         * @return 失败响应，{@code error=true}、{@code status="error"}
+         */
         public static WopiPutFileResponse error(String message) {
             return WopiPutFileResponse.builder()
                     .error(true).errorMessage(message).status("error").build();

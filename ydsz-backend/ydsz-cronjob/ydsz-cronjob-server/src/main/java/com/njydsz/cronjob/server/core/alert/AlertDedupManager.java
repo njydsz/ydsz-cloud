@@ -145,11 +145,11 @@ public class AlertDedupManager {
      * @param escalated  是否为升级通知
      */
     public record DedupDecision(boolean send, String channels, boolean escalated) {
-        /** 发送决策 */
+        /** 构造发送决策（允许附带升级通道）。 */
         public static DedupDecision send(String channels, boolean escalated) {
             return new DedupDecision(true, channels, escalated);
         }
-        /** 抑制决策 */
+        /** 构造抑制决策（窗口内重复告警，不发送）。 */
         public static DedupDecision suppress() {
             return new DedupDecision(false, null, false);
         }

@@ -76,6 +76,17 @@ public class StylePool {
         this.fontCache = Collections.synchronizedMap(new LruCache<>(maxSize));
     }
 
+    /**
+     * 获取或创建单元格样式（缓存优先）。
+     *
+     * <p>以 {@link StyleKey#toCacheKey()} 的结果作为缓存键：命中则直接返回已创建的 {@link CellStyle}，
+     * 未命中时基于 {@code key} 创建新样式并写入缓存后返回。样式与 {@code workbook} 强绑定，不可跨工作簿复用。
+     * 底层缓存为 {@link Collections#synchronizedMap} 包装的 LRU 实现，可安全并发调用，容量超限时自动淘汰最久未用项。</p>
+     *
+     * @param workbook 工作簿，样式将绑定到该工作簿，不可为 {@code null}
+     * @param key 样式配置键，作为缓存唯一标识，不可为 {@code null}
+     * @return 对应的单元格样式，不会为 {@code null}
+     */
     public CellStyle getOrCreateStyle(Workbook workbook, StyleKey key) {
         String cacheKey = key.toCacheKey();
         CellStyle cached = styleCache.get(cacheKey);
@@ -162,6 +173,12 @@ public class StylePool {
         return font;
     }
 
+    /**
+     * 清空样式与字体两类缓存。
+     *
+     * <p>释放全部已创建的 {@link CellStyle} 与 {@link Font} 引用，通常在工作簿关闭后调用以避免内存泄漏。
+     * 注意：已写入单元格的样式引用在清空后仍然有效，但后续请求将重新创建新样式。</p>
+     */
     public void clearCache() {
         styleCache.clear();
         fontCache.clear();
@@ -237,18 +254,31 @@ public class StylePool {
             this.fontKey = builder.fontKey;
         }
 
+        /** 前景填充色 RGB 索引；{@code -1} 表示不应用填充。 */
         public short fillForegroundColor() { return fillForegroundColor; }
+        /** 水平对齐方式编码（同 {@link HorizontalAlignment#getCode()}）；{@code -1} 表示沿用单元格默认。 */
         public short alignment() { return alignment; }
+        /** 垂直对齐方式编码（同 {@link VerticalAlignment#getCode()}）；{@code -1} 表示沿用单元格默认。 */
         public short verticalAlignment() { return verticalAlignment; }
+        /** 下边框样式，默认 {@link BorderStyle#NONE}（无边框）。 */
         public BorderStyle borderBottom() { return borderBottom; }
+        /** 上边框样式，默认 {@link BorderStyle#NONE}（无边框）。 */
         public BorderStyle borderTop() { return borderTop; }
+        /** 左边框样式，默认 {@link BorderStyle#NONE}（无边框）。 */
         public BorderStyle borderLeft() { return borderLeft; }
+        /** 右边框样式，默认 {@link BorderStyle#NONE}（无边框）。 */
         public BorderStyle borderRight() { return borderRight; }
+        /** 数据格式串（如 {@code "0.00"}），空串表示不设置。 */
         public String dataFormat() { return dataFormat; }
+        /** 是否自动换行，默认 {@code false}。 */
         public boolean wrapText() { return wrapText; }
+        /** 单元格是否隐藏，默认 {@code false}。 */
         public boolean hidden() { return hidden; }
+        /** 单元格是否锁定（保护态），默认 {@code true}。 */
         public boolean locked() { return locked; }
+        /** 是否缩放内容以适应列宽，默认 {@code false}。 */
         public boolean shrinkToFit() { return shrinkToFit; }
+        /** 关联字体缓存键；空串表示使用工作簿默认字体。 */
         public String fontKey() { return fontKey; }
 
         /**
@@ -290,66 +320,79 @@ public class StylePool {
             private boolean shrinkToFit = false;
             private String fontKey = "";
 
+            /** 设置前景填充色 RGB 索引，默认 {@code -1}（不填充）。 */
             public Builder fillForegroundColor(short val) {
                 this.fillForegroundColor = val;
                 return this;
             }
 
+            /** 设置水平对齐方式编码，默认 {@code -1}（沿用单元格默认）。 */
             public Builder alignment(short val) {
                 this.alignment = val;
                 return this;
             }
 
+            /** 设置垂直对齐方式编码，默认 {@code -1}（沿用单元格默认）。 */
             public Builder verticalAlignment(short val) {
                 this.verticalAlignment = val;
                 return this;
             }
 
+            /** 设置下边框样式，默认 {@link BorderStyle#NONE}（无边框）。 */
             public Builder borderBottom(BorderStyle val) {
                 this.borderBottom = val;
                 return this;
             }
 
+            /** 设置上边框样式，默认 {@link BorderStyle#NONE}（无边框）。 */
             public Builder borderTop(BorderStyle val) {
                 this.borderTop = val;
                 return this;
             }
 
+            /** 设置左边框样式，默认 {@link BorderStyle#NONE}（无边框）。 */
             public Builder borderLeft(BorderStyle val) {
                 this.borderLeft = val;
                 return this;
             }
 
+            /** 设置右边框样式，默认 {@link BorderStyle#NONE}（无边框）。 */
             public Builder borderRight(BorderStyle val) {
                 this.borderRight = val;
                 return this;
             }
 
+            /** 设置数据格式串，{@code null} 按空串处理（不设置格式）。 */
             public Builder dataFormat(String val) {
                 this.dataFormat = val != null ? val : "";
                 return this;
             }
 
+            /** 设置是否自动换行，默认 {@code false}。 */
             public Builder wrapText(boolean val) {
                 this.wrapText = val;
                 return this;
             }
 
+            /** 设置单元格是否隐藏，默认 {@code false}。 */
             public Builder hidden(boolean val) {
                 this.hidden = val;
                 return this;
             }
 
+            /** 设置单元格是否锁定（保护态），默认 {@code true}。 */
             public Builder locked(boolean val) {
                 this.locked = val;
                 return this;
             }
 
+            /** 设置是否缩放内容以适应列宽，默认 {@code false}。 */
             public Builder shrinkToFit(boolean val) {
                 this.shrinkToFit = val;
                 return this;
             }
 
+            /** 设置关联字体缓存键，{@code null} 按空串处理（使用工作簿默认字体）。 */
             public Builder fontKey(String val) {
                 this.fontKey = val != null ? val : "";
                 return this;

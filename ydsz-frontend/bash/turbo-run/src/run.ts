@@ -10,9 +10,27 @@ import { execaCommand, getPackages } from '@ydsz/node-utils';
 import { cancel, isCancel, select } from '@clack/prompts';
 
 interface RunOptions {
+  /** 待执行的 npm script 名称，如 `dev` / `build`；缺省时直接报错退出 */
   command?: string;
 }
 
+/**
+ * 交互式选择 Monorepo 中的子包并执行其指定 npm script。
+ *
+ * @remarks
+ * 用于 `pnpm dev` / `pnpm build` 这类需要先选应用再跑命令的场景，
+ * 免去手写 `--filter` 包名。
+ *
+ * 行为约定：
+ * - 只列出 `package.json` 中真正声明了该 script 的子包，避免选中后才失败；
+ * - 命中唯一子包时跳过交互直接执行，保证 CI 等非交互环境可用；
+ * - 命令缺失或无匹配子包时以退出码 1 结束，用户主动取消则以退出码 0 结束，
+ *   便于上层脚本区分「失败」与「主动放弃」；
+ * - 最终以 `stdio: 'inherit'` 透传子进程输出，保留 dev server 的彩色日志与交互能力。
+ *
+ * @param options - 运行参数，见 {@link RunOptions}
+ * @returns 无返回值；正常路径下进程会一直挂在子命令上，异常路径直接终止进程
+ */
 export async function run(options: RunOptions) {
   const { command } = options;
   if (!command) {

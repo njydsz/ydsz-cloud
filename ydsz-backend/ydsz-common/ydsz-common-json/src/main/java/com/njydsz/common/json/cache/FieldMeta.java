@@ -61,6 +61,7 @@ import org.slf4j.LoggerFactory;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class FieldMeta {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FieldMeta.class);

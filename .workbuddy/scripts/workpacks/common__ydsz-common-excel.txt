@@ -1,0 +1,46 @@
+# 工作包: common__ydsz-common-excel   待办文件 21 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[--]  9 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\api\result\ExcelReadResult.java
+        成员: data, totalRows, elapsedTime, success, error, future, fileName, sheetName, sheetIndex
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\ColumnarConfig.java
+        成员: setBatchSize, batchSize, compression, enableDictionary, withHeader
+[--]  7 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\ColumnarField.java
+        成员: name, type, precision, scale, comment, nullable, comment
+[--]  9 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\ColumnarSchema.java
+        成员: fields, headerNames, fieldCount, field, field, fieldIndex, addField, addFields, addFields
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\OrcConfig.java
+        成员: setStripeSize, setIndexStride, stripeSize, indexStride, writeStrategy, overwrite
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\ParquetConfig.java
+        成员: setRowGroupSize, setPageSize, rowGroupSize, pageSize, writeMode
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\converter\ConvertContext.java
+        成员: rowIndex, columnName, dateFormat, automaticTrim, strictNumberConversion, use1904Windowing
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\ConcurrentExcelWriter.java
+        成员: doWrite
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\ExcelTemplateWriter.java
+        成员: doWrite
+[--] 12 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\config\ExcelConfig.java
+        成员: setReadBufferSize, setWriteBufferSize, setDefaultDateFormat, setDefaultNumberFormat, setMaxReadCacheSize, setStreamingParseThresholdMB, setMaxReadFileSizeMB, setMaxWriteFileSizeMB, sanitizeFormulaInjection, setCompressionLevel, setHeadRowNumber, setWriteCacheSize
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\context\AnalysisContext.java
+        成员: incrementRow
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\context\WriteContext.java
+        成员: incrementRow, incrementColumn, resetColumn
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\metadata\ReadMetadata.java
+        成员: addHeadProperty
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\metadata\WriteMetadata.java
+        成员: addHeadProperty
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\reader\ChunkedSSTTable.java
+        成员: close
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\reader\ExcelXmlParser.java
+        成员: parseCells
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\writer\SuperFastExcelWriter.java
+        成员: doWrite
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\spring\boot\ExcelAutoConfiguration.java
+        成员: excelHealthIndicator
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\support\cache\ClassMetadataCache.java
+        成员: clearCache, clearCache
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\support\pool\GlobalObjectPool.java
+        成员: intern, clear
+[--] 27 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\support\pool\StylePool.java
+        成员: clearCache, fillForegroundColor, alignment, verticalAlignment, borderBottom, borderTop, borderLeft, borderRight, dataFormat, wrapText, hidden, locked, shrinkToFit, fontKey, fillForegroundColor, alignment, verticalAlignment, borderBottom, borderTop, borderLeft, borderRight, dataFormat, wrapText, hidden, locked

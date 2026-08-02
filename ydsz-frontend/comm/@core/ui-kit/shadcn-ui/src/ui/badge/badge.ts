@@ -29,4 +29,12 @@ export const badgeVariants = cva(
   },
 );
 
+/**
+ * 徽标组件的样式变体入参类型。
+ *
+ * @remarks
+ * 由 cva 从 `badgeVariants` 自动推导，新增变体时类型自动同步。
+ * 未指定 `variant` 时回落到 `default`；语义上 `destructive` 用于错误/危险状态，
+ * `outline` 为无底色描边样式，适合信息密度高、不宜大面积着色的场景。
+ */
 export type BadgeVariants = VariantProps<typeof badgeVariants>;

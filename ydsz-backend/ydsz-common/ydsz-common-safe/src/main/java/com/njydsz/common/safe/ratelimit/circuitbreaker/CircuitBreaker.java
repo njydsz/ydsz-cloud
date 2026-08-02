@@ -162,6 +162,14 @@ public class CircuitBreaker {
         @Builder.Default
         private SlidingWindowType slidingWindowType = SlidingWindowType.COUNT_BASED;
 
+        /**
+         * 创建采用默认参数的熔断器配置。
+         *
+         * <p>默认策略：失败率阈值 50%、慢调用率阈值 100%、最小调用数 10、滑动窗口 100（COUNT_BASED）、
+         * OPEN 等待 10s、半开探测数 10。等价于无参构造 {@link CircuitBreaker#CircuitBreaker()} 所引用配置。
+         *
+         * @return 默认配置实例
+         */
         public static CircuitBreakerConfig defaults() {
             return new CircuitBreakerConfig();
         }

@@ -132,11 +132,25 @@ public class ClassMetadataCache {
         return Integer.MAX_VALUE;
     }
 
+    /**
+     * 清空全部类元数据缓存。
+     *
+     * <p>同时清空读取与写入两类缓存，一般在运行时模型热更新或插件化类加载后调用。
+     * 该操作为全局副作用，会同时失效其他正在进行的读写任务所依赖的解析结果，调用方需确保此时无并发读写依赖旧缓存。</p>
+     */
     public void clearCache() {
         readCache.clear();
         writeCache.clear();
     }
 
+    /**
+     * 仅清空指定类的元数据缓存。
+     *
+     * <p>用于定向失效单个模型的注解解析结果，避免全量刷新带来的抖动。
+     * {@code clazz} 不可为 {@code null}，否则底层 {@link ConcurrentHashMap} 会抛出 {@link NullPointerException}。</p>
+     *
+     * @param clazz 需要失效缓存的目标类，非 {@code null}
+     */
     public void clearCache(Class<?> clazz) {
         readCache.remove(clazz);
         writeCache.remove(clazz);

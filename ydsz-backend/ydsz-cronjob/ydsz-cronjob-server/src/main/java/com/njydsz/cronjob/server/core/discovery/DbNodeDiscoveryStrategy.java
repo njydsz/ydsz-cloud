@@ -40,6 +40,13 @@ public class DbNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
     /** 当前节点 ID（hostname:port，与 JobNodeHeartbeat 保持一致） */
     private final String localNodeId;
 
+    /**
+     * 构造基于心跳表的节点发现策略。
+     *
+     * @param jobNodeMapper     节点表 Mapper
+     * @param cronjobProperties 调度配置（读取离线阈值）
+     * @param serverPort        本节点服务端口，用于拼接 localNodeId
+     */
     public DbNodeDiscoveryStrategy(JobNodeMapper jobNodeMapper,
                                    CronjobProperties cronjobProperties,
                                    @Value("${server.port:0}") int serverPort) {
@@ -49,6 +56,13 @@ public class DbNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
         log.info("[DbNodeDiscovery] 初始化完成, localNodeId={}", localNodeId);
     }
 
+    /**
+     * 查询在线执行器节点（心跳在离线阈值内且状态为 ONLINE）。
+     *
+     * <p>查询异常时返回空列表，避免影响调度主流程（降级为无可用节点）。
+     *
+     * @return 在线节点列表，无可用时返回空列表
+     */
     @Override
     public List<JobNode> getOnlineNodes() {
         try {
@@ -65,6 +79,11 @@ public class DbNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
         }
     }
 
+    /**
+     * 获取本节点 ID（hostname:port）。
+     *
+     * @return 本节点唯一标识，与 {@link com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat} 保持一致
+     */
     @Override
     public String getLocalNodeId() {
         return localNodeId;

@@ -20,10 +20,21 @@ public class AlertSendException extends SysException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 构造告警发送异常。
+     *
+     * @param message 异常描述信息
+     */
     public AlertSendException(String message) {
         super(message);
     }
 
+    /**
+     * 构造带根因的告警发送异常，便于链路追踪。
+     *
+     * @param message 异常描述信息
+     * @param cause   导致发送失败的根因（如网络异常、渠道超时）
+     */
     public AlertSendException(String message, Throwable cause) {
         super(message);
         this.initCause(cause);

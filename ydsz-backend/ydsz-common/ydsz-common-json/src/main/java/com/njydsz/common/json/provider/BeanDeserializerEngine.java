@@ -46,6 +46,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * @see BuilderResolver
  * @see ZeroCopyDeserializer
  */
+@SuppressWarnings("deprecation")
 final class BeanDeserializerEngine {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BeanDeserializerEngine.class);
 

@@ -95,6 +95,14 @@ public class SelfHealingScanner {
         return script;
     }
 
+    /**
+     * 初始化自愈扫描器：解析 Leader 角色并记录自愈策略参数。
+     *
+     * <p>本类由 {@code @ConditionalOnProperty(self-healing.enabled=true)} 限定仅在自愈功能开启时注册，
+     * 且需满足 Leader 选举能力（{@code @ConditionalOnBean(LeaderElector.class)}）。
+     * 初始化仅缓存 {@code leaderRole} 用于日志与 Leader 身份校验，并打印扫描间隔 /
+     * 卡死阈值 / 单批最大修复数等关键参数，无外部资源需要预分配（释放锁 Lua 脚本为静态常量）。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();

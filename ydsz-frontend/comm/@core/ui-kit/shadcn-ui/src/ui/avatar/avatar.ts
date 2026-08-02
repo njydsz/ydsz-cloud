@@ -26,4 +26,14 @@ export const avatarVariant = cva(
   },
 );
 
+/**
+ * 头像组件的样式变体入参类型（`shape` 与 `size`）。
+ *
+ * @remarks
+ * 由 cva 从 `avatarVariant` 的定义自动推导，因此**新增变体只需改 cva 配置，类型自动同步**，
+ * 无需手写联合类型，也不会出现二者不一致的情况。
+ *
+ * 注意 `avatarVariant` 未声明 `defaultVariants`，两项均不传时只会应用基础样式，
+ * 头像既没有圆角也没有尺寸，实际使用中应显式指定。
+ */
 export type AvatarVariants = VariantProps<typeof avatarVariant>;

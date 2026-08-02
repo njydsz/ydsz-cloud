@@ -168,6 +168,17 @@ public class RedisAdvancedOps {
         }
     }
 
+    /**
+     * 以 Consumer 形式执行 Pipeline 批量操作（可读性优先的便捷封装）。
+     *
+     * <p>与 {@link #executePipelined(RedisCallback)} 不同，此处不要求实现 {@code RedisCallback}，
+     * 调用方只需在 {@code operations} 中向传入的 {@code RedisTemplate} 发起命令，框架自动将其收集进 Pipeline。
+     * {@code operations} 为 null 时直接返回空列表，不抛异常；执行失败降级返回空列表并记录错误日志。
+     *
+     * @param operations 累积到同一 Pipeline 的命令集合，可能为 null
+     * @param <T> 结果元素类型（实际由 Pipeline 返回决定）
+     * @return Pipeline 执行结果列表，可能为 null 元素（命令未返回时）
+     */
     public <T> List<T> executePipelinedWithConsumer(Consumer<RedisTemplate<String, Object>> operations) {
         if (operations == null) {
             return Collections.emptyList();

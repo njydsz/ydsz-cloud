@@ -24,9 +24,6 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  * <p>支持将数据写入已有的Excel模板文件，保留模板中的样式、格式、公式等设置。
  * 参照EasyExcel的模板写入功能设计。</p>
  *
- * @author ydsz-team
- * @since 1.0.0
- *
  * <h3>使用示例</h3>
  * <pre>{@code
  * ExcelFacade.writeWithTemplate("template.xlsx", "output.xlsx", User.class)
@@ -34,6 +31,9 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  *     .dataStartRow(3)
  *     .doWrite(userList);
  * }</pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class ExcelTemplateWriter {
 
@@ -63,6 +63,26 @@ public class ExcelTemplateWriter {
         return this;
     }
 
+    /**
+     * 将数据填充到模板并输出到目标文件。
+     *
+     * <p><b>列映射</b>：不按字段声明顺序硬填，而是读取模板表头行文本，与
+     * {@link ExcelProperty#value()}（为空时回退字段名）做名称匹配后按列下标写入。
+     * 因此模板列可任意调序；模板中没有对应表头的字段会被静默跳过，不报错。
+     *
+     * <p><b>起始行推断</b>：显式设置了 {@code dataStartRow} 时，表头行取其上一行；
+     * 否则自动探测前 11 行中第一个非空行作为表头，数据从表头下一行开始写。
+     *
+     * <p><b>覆盖语义</b>：使用 {@code createRow} 写入，会整行覆盖模板中该位置的原有内容
+     * 及其行级样式；模板的表头样式、列宽、公式等不受影响。
+     *
+     * <p><b>容错</b>：单个字段取值或格式化失败时不中断整体写入，仅记录 warn 日志并将该单元格置空。
+     * 入参为空集合时直接返回，不会生成输出文件。
+     *
+     * @param data 待写入数据；非 {@link List} 时按单条记录处理，空列表则直接返回
+     * @throws ExcelWriteException 模板读取或结果落盘发生 IO 失败时抛出，
+     *                             由 {@link ExcelWriteException#fileAccessFailed} 构造
+     */
     public void doWrite(Object data) {
         List<?> list = data instanceof List ? (List<?>) data : Collections.singletonList(data);
         if (list.isEmpty()) return;

@@ -11,12 +11,35 @@ import type { Recordable } from '@ydsz-core/typings';
 
 import { createContext } from '@ydsz-core/shadcn-ui';
 
+/**
+ * 弹窗内置图标的语义类型。
+ *
+ * @remarks
+ * 仅表达语义，具体图形与配色由弹窗组件按主题映射，业务无需关心图标资源。
+ * `question` 专用于需要用户抉择的确认场景（区别于纯告知的 `info`），
+ * 需要自定义图形时可直接给 `icon` 传组件而非此处的枚举值。
+ */
 export type IconType = 'error' | 'info' | 'question' | 'success' | 'warning';
 
+/**
+ * 关闭前回调的入参上下文。
+ *
+ * @remarks
+ * 通过 `isConfirm` 区分本次关闭是「点了确认」还是「取消/遮罩/关闭按钮」，
+ * 使同一个 `beforeClose` 能对两条路径做差异处理（例如仅在确认时提交数据）。
+ */
 export type BeforeCloseScope = {
+  /** 是否由确认按钮触发；取消、点击遮罩、按 Esc 等路径均为 `false` */
   isConfirm: boolean;
 };
 
+/**
+ * 通用提示弹窗的配置项。
+ *
+ * @remarks
+ * 是 `ydszAlert` / `ydszConfirm` 共用的参数结构，二者差异仅在于默认是否显示取消按钮。
+ * 除 `content` 外均为可选，未指定项使用组件默认值或全局默认配置。
+ */
 export type AlertProps = {
   /** 关闭前的回调，如果返回false，则终止关闭 */
   beforeClose?: (

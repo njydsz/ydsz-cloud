@@ -200,46 +200,103 @@ public class LiteRuleSdk {
             this.builder = RuleDefinition.builder().code(code);
         }
 
+        /**
+         * 设置规则展示名称（仅用于 UI 展示，可空）。
+         *
+         * @param name 规则名称
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder name(String name) {
             builder.name(name);
             return this;
         }
 
+        /**
+         * 设置规则分类（category_path，用于目录树归类与按路径过滤）。
+         *
+         * @param category 分类路径（如 {@code "risk/anti-fraud"}），可空
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder category(String category) {
             builder.category(category);
             return this;
         }
 
+        /**
+         * 设置规则描述（业务说明，仅展示用，可空）。
+         *
+         * @param desc 规则描述
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder description(String desc) {
             builder.description(desc);
             return this;
         }
 
+        /**
+         * 设置条件表达式（规则的核心判定逻辑，映射到 RuleDefinition 的 conditionExpression）。
+         *
+         * <p>表达式为空或非法将导致规则无法正确触发。建议在 {@link #register()} 前务必设置，
+         * 否则评估时按空条件处理（通常视为不触发）。
+         *
+         * @param expression LiteExpr 条件表达式
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder condition(String expression) {
             builder.conditionExpression(expression);
             return this;
         }
 
+        /**
+         * 设置默认严重度（规则触发时上报的严重级别；为 null 时由引擎使用默认级别）。
+         *
+         * @param severity 严重度枚举（{@code RED}/{@code YELLOW}/{@code INFO} 等）
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder severity(RuleSeverity severity) {
             builder.defaultSeverity(severity);
             return this;
         }
 
+        /**
+         * 设置规则优先级（数值越大优先级越高，用于并行/冲突场景的排序与冲突裁决）。
+         *
+         * @param priority 优先级数值
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder priority(int priority) {
             builder.priority(priority);
             return this;
         }
 
+        /**
+         * 设置规则是否启用（false 时注册后不参与评估，仅作占位/草稿）。
+         *
+         * @param enabled true=启用；false=禁用
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder enabled(boolean enabled) {
             builder.enabled(enabled);
             return this;
         }
 
+        /**
+         * 设置告警标题模板（支持占位符，触发时渲染为通知标题）。
+         *
+         * @param template 标题模板字符串，可空
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder titleTemplate(String template) {
             builder.titleTemplate(template);
             return this;
         }
 
+        /**
+         * 设置告警描述模板（支持占位符，触发时渲染为通知正文）。
+         *
+         * @param template 描述模板字符串，可空
+         * @return 当前 Builder（链式调用）
+         */
         public RuleBuilder descriptionTemplate(String template) {
             builder.descriptionTemplate(template);
             return this;

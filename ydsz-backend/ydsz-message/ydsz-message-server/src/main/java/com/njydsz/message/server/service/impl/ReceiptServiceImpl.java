@@ -43,7 +43,6 @@ public class ReceiptServiceImpl implements ReceiptService {
     /** 消息日志服务（联动更新回执状态） */
     private final MessageLogService messageLogService;
 
-    @Override
     /**
      * 处理渠道回执回调（送达/已读/点击）。
      *
@@ -53,6 +52,7 @@ public class ReceiptServiceImpl implements ReceiptService {
      * @param dto 回执回调数据（含 logId/回执类型/渠道信息等）
      * @throws com.njydsz.common.exception.custom.SysException dto 或关联 logId 为空时
      */
+    @Override
     public void callback(ReceiptCallbackDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getLogId())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "回执关联日志 ID 不能为空");
@@ -80,7 +80,6 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
     }
 
-    @Override
     /**
      * 按消息日志 ID 查询回执列表（按回执时间倒序）。
      *
@@ -89,6 +88,7 @@ public class ReceiptServiceImpl implements ReceiptService {
      * @param logId 消息日志 ID
      * @return 回执列表（按 receiptTime 降序）；无结果返回空列表
      */
+    @Override
     public List<MsgReceipt> listByLogId(String logId) {
         if (!StringUtils.hasText(logId)) {
             return List.of();

@@ -1,0 +1,8 @@
+# 工作包: common__ydsz-common-util   待办文件 2 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[--]  7 | ydsz-backend\ydsz-common\ydsz-common-util\src\main\java\com\njydsz\common\util\http\OkHttpUtils.java
+        成员: doGet, doGet, doPost, doPostJson, doPostJson, doPutJson, doDelete
+[--] 10 | ydsz-backend\ydsz-common\ydsz-common-util\src\main\java\com\njydsz\common\util\ip\IpAddrUtils.java
+        成员: validIpv6, normalizeIp, normalizeIpv6, ipToLong, longToIp, getPrefixLength, getNetmaskFromPrefix, getNetworkAddress, getBroadcastAddress, listLocalIps

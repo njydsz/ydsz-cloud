@@ -35,6 +35,23 @@ public class CountersignStrategyFactory {
     /** 策略注册表：performType -> strategy */
     private final Map<FlowPerformType, CountersignStrategy> registry = new EnumMap<>(FlowPerformType.class);
 
+    /**
+     * 启动时把容器内所有 {@link CountersignStrategy} 按 {@code supportedType} 注册到查找表。
+     *
+     * <p>采用「启动期一次性建表」而非每次查找时遍历，使
+     * {@link #getStrategy(FlowPerformType)} 退化为 O(1) 的 {@link EnumMap} 取值——
+     * 该方法在每个会签节点的每次任务流转时都会被调用，属热点路径。
+     *
+     * <p><b>冲突处理：</b>同一 {@link FlowPerformType} 被多个策略声明时<b>后注册者覆盖先注册者</b>，
+     * 仅打印 warn 而不启动失败。这样做是为了允许业务方通过自定义 Bean 覆写内置策略；
+     * 代价是重复注册属于配置错误时不会被及时暴露，需人工关注启动日志。
+     *
+     * <p>建表后会校验枚举完整性，缺失的类型只告警不报错，运行时由
+     * {@link #getStrategy(FlowPerformType)} 回退到 {@code OR}（或签）策略。
+     *
+     * <p><b>线程安全：</b>{@link #registry} 仅在本方法内写入，之后全程只读，
+     * 因此无需加锁即可被多线程并发查找。
+     */
     @PostConstruct
     public void init() {
         for (CountersignStrategy strategy : strategies) {

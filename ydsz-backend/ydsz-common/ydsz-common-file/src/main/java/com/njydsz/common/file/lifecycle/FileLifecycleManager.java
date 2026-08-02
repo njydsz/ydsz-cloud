@@ -218,6 +218,15 @@ public class FileLifecycleManager {
 		public CleanupResult() {
 		}
 
+		/**
+		 * 构造一个“被跳过”的清理结果。
+		 *
+		 * <p>用于未满足执行前置条件（如清理未启用、规则为空、无法获取存储实例）的场景，
+		 * 此时 {@code success} 仍为 {@code true}，仅通过 {@code message} 说明跳过原因，表示“非错误的中止”。
+		 *
+		 * @param message 跳过原因描述，便于调用方感知为何未执行实际清理
+		 * @return 标记为非错误的跳过结果
+		 */
 		public static CleanupResult skipped(String message) {
 			CleanupResult result = new CleanupResult();
 			result.success = true;
@@ -225,6 +234,15 @@ public class FileLifecycleManager {
 			return result;
 		}
 
+		/**
+		 * 构造一个“失败”的清理结果。
+		 *
+		 * <p>用于无法继续执行清理的硬错误场景（与 {@link #skipped(String)} 的区别在于
+		 * {@code success} 置为 {@code false}，下游可据此判定本次清理任务执行失败）。
+		 *
+		 * @param message 失败原因描述
+		 * @return 标记为失败的清理结果
+		 */
 		public static CleanupResult failed(String message) {
 			CleanupResult result = new CleanupResult();
 			result.success = false;
@@ -232,18 +250,45 @@ public class FileLifecycleManager {
 			return result;
 		}
 
+		/**
+		 * 累加本轮已扫描的对象数。
+		 *
+		 * <p>无论对象最终被删除、跳过还是出错，只要被规则命中并进入处理流程即计数一次，
+		 * 用于衡量扫描覆盖面；该方法只更新内存计数，不触碰任何存储对象。
+		 */
 		public void incrementScanned() {
 			scannedCount++;
 		}
 
+		/**
+		 * 累加实际删除成功的对象数。
+		 *
+		 * <p>仅在对象确实被物理删除后置为计数，dry-run 模式下不会调用此方法，
+		 * 因此该值与真实删除量一致，可作为存储回收量的观测指标。
+		 */
 		public void incrementDeleted() {
 			deletedCount++;
 		}
 
+		/**
+		 * 累加被跳过删除的对象数。
+		 *
+		 * <p>用于命中清理规则但因 dry-run 预览、或不符合删除条件而未实际删除的对象计数，
+		 * 与 {@link #incrementDeleted()} 互补，帮助区分“已删”与“待删”。
+		 */
 		public void incrementSkipped() {
 			skippedCount++;
 		}
 
+		/**
+		 * 记录单条对象处理失败的信息。
+		 *
+		 * <p>采用“失败归类不中断”策略：单条出错仅收集 {@code path: error} 到错误列表并继续后续对象，
+		 * 保证部分失败不影响整体清理进度；{@code path} 与 {@code error} 均为非空，便于事后按路径回溯问题。
+		 *
+		 * @param path  出错对象的路径/键名，用于定位问题文件
+		 * @param error 具体错误信息
+		 */
 		public void addError(String path, String error) {
 			errors.add(path + ": " + error);
 		}

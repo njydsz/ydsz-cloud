@@ -59,6 +59,14 @@ public class AutoResumeScanner {
 
     private String leaderRole;
 
+    /**
+     * 缓存 Leader 选举角色名，供后续每次扫描判定本节点是否为 Leader。
+     *
+     * <p>角色名在容器初始化时一次性读入并驻留字段，避免每分钟扫描都穿透配置对象；
+     * 代价是<b>不支持运行期动态改角色</b>，修改配置需重启才生效。
+     *
+     * <p>本方法只做赋值与日志，不触碰数据库，因此不会拖慢容器启动。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();
@@ -147,6 +155,16 @@ public class AutoResumeScanner {
         scheduler.register(job);
     }
 
+    /**
+     * 容器销毁钩子，仅打印关闭日志。
+     *
+     * <p>本扫描器不持有自建线程池——调度由 Spring {@code @Scheduled} 线程池驱动，
+     * 由容器统一停机，因此无需在此释放资源。保留钩子是为了在日志中标记组件下线时刻，
+     * 便于排查"停机瞬间是否还有任务被恢复"。
+     *
+     * <p><b>注意</b>：正在执行中的 {@code scan()} 不会被本方法打断，
+     * 依赖 Spring 调度器的优雅停机等待。
+     */
     @PreDestroy
     public void shutdown() {
         log.info("[AutoResumeScanner] 关闭");

@@ -1,5 +1,9 @@
 package com.njydsz.common.excel.core.reader;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Excel XML 手工解析器。
  *
@@ -26,7 +30,7 @@ package com.njydsz.common.excel.core.reader;
  *
  * <h3>支持的单元格类型</h3>
  * <ul>
- *   <li>{@code s}：共享字符串（需通过 SST 索引查表）</li>
+ *   <li>{@code s}：共享字符串（回调返回的是 SST 索引，需调用方查表还原）</li>
  *   <li>{@code inlineStr}：内联字符串</li>
  *   <li>{@code str}：公式结果字符串</li>
  *   <li>{@code n}：数值</li>
@@ -34,17 +38,14 @@ package com.njydsz.common.excel.core.reader;
  *   <li>{@code e}：错误值</li>
  * </ul>
  *
- * @author ydsz-team
- * @since 1.0.0
- */
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * ExcelXmlParser 类。
- *
- * <p>所属包：{@code com.njydsz.common.excel.core.reader}
+ * <h3>注意事项</h3>
+ * <ul>
+ *   <li><b>线程安全性</b>：解析游标（{@code pos}、{@code currentRow} 等）为实例字段，
+ *       {@link #parse} 每次调用都会重置它们，因此实例<b>不可</b>在多线程间共享，
+ *       也不支持同一实例并发解析多份数据。</li>
+ *   <li>解析过程对畸形 XML 保持宽容：找不到闭合标签时跳过该片段而非抛异常，
+ *       以保证部分损坏的文件仍能读出可用数据。</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -530,6 +531,22 @@ public class ExcelXmlParser
         }
     }
 
+    /**
+     * 一次性解析出全部非空单元格，供无需流式处理的小数据量场景使用。
+     *
+     * <p>内部新建独立的解析器实例并注册匿名回调，因此本方法是线程安全的。
+     * 仅在 {@code onCellValue} 回调中收集数据，故<b>没有值的单元格不会出现在结果中</b>，
+     * 调用方不能依赖下标连续性，必须使用 {@link ParsedCell#row} / {@link ParsedCell#col} 定位。
+     *
+     * <p><b>内存特征</b>：结果全量驻留堆内，大表请改用
+     * {@link #parse(byte[], RowHandler, CellHandler)} 流式处理。
+     *
+     * @param sheetData sheet XML 字节数据
+     * @param sstTable  共享字符串表；<b>当前实现并未使用该参数</b>，
+     *                  {@code t="s"} 类型单元格返回的仍是 SST 索引字符串而非还原后的文本，
+     *                  需调用方自行查表转换
+     * @return 含值的单元格列表，按解析顺序排列；无数据时返回空列表而非 {@code null}
+     */
     public static List<ParsedCell> parseCells(byte[] sheetData, ChunkedSSTTable sstTable) {
         List<ParsedCell> cells = new ArrayList<>();
         ExcelXmlParser parser = new ExcelXmlParser(8192);

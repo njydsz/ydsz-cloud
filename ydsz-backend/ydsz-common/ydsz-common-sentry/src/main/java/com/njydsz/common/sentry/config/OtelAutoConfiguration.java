@@ -77,6 +77,19 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(SentryAutoConfiguration.class)
 public class OtelAutoConfiguration {
 
+    /**
+     * 注册 OTel SDK 初始化器，由 Spring 在 Bean 就绪时回调 {@code build()} 完成 SDK 装配。
+     *
+     * <p>之所以不在方法内直接构建 SDK，是因为构建依赖 {@link SpanExporter} 与自定义
+     * {@link SpanProcessor}，二者由业务模块延迟提供；用 {@code initMethod} 可保证在容器
+     * Bean 定义全部完成后再解析 {@link ObjectProvider}，避免过早触发循环依赖。
+     * 销毁阶段通过 {@code destroyMethod} 关闭 SDK，触发 Span 缓冲区 flush，防止进程退出丢数据。
+     *
+     * @param sentryProperties         监控配置，读取 tracing.otel 子树
+     * @param exporterProvider         Span 导出器提供者；未提供时 SDK 仅内存处理，不向外导出
+     * @param customProcessorsProvider 业务自定义 SpanProcessor 列表提供者，可为空
+     * @return 初始化器实例，永不为 {@code null}
+     */
     @Bean(initMethod = "build", destroyMethod = "close")
     @ConditionalOnMissingBean
     public OtelSdkInitializer otelSdkInitializer(
@@ -88,12 +101,30 @@ public class OtelAutoConfiguration {
         return new OtelSdkInitializer(sentryProperties, exporterProvider, customProcessorsProvider);
     }
 
+    /**
+     * 提供全局共享的默认 {@link Tracer}，instrumentation scope 固定为 {@code ydsz}。
+     *
+     * <p>统一 scope 名便于在 APM 后端按来源过滤自研埋点，区别于框架自动埋点产生的 Span。
+     * Tracer 实例线程安全，可被任意 Bean 注入后长期持有。
+     *
+     * @param openTelemetry 容器中的 OpenTelemetry 实例
+     * @return 默认 Tracer；SDK 未初始化时 OTel 会返回 no-op 实现而非 {@code null}
+     */
     @Bean
     @ConditionalOnMissingBean
     public Tracer ydszDefaultTracer(OpenTelemetry openTelemetry) {
         return openTelemetry.getTracer("ydsz");
     }
 
+    /**
+     * 兜底提供 {@link OpenTelemetry} 实例，来源于 {@link YdszOpenTelemetry} 持有的全局单例。
+     *
+     * <p>仅当容器中不存在名为 {@code ydszOtelOpenTelemetry} 的 Bean 时生效，避免与
+     * opentelemetry-spring-boot-starter 等第三方自动配置冲突。若 SDK 尚未通过
+     * {@link OtelSdkInitializer} 构建完成，此处返回的是 no-op 实现，埋点调用不会报错但也不上报。
+     *
+     * @return OpenTelemetry 实例，永不为 {@code null}
+     */
     @Bean
     @ConditionalOnMissingBean(name = "ydszOtelOpenTelemetry")
     public OpenTelemetry ydszOtelOpenTelemetry() {
@@ -186,6 +217,12 @@ public class OtelAutoConfiguration {
             this.sdk = builder.build();
         }
 
+        /**
+         * 关闭 OTel SDK，阻塞等待已缓冲的 Span 完成导出。
+         *
+         * <p>由 Spring 容器销毁阶段自动调用。{@code build()} 未执行或已失败时 {@code sdk}
+         * 为 {@code null}，此处直接跳过，保证关闭流程幂等、不抛异常。
+         */
         public void close() {
             if (sdk != null) {
                 sdk.close();

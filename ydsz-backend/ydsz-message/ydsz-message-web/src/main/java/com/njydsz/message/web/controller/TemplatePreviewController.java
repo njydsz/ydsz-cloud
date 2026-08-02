@@ -72,6 +72,16 @@ public class TemplatePreviewController {
     private final TemplateEngine templateEngine;
     private final TemplateVariableValidator variableValidator;
 
+    /**
+     * 按模板编码预览已发布模板的渲染结果。
+     *
+     * <p>从 DB 加载指定 {@code templateCode/channel/locale}（默认值 INAPP / zh-CN）的模板，
+     * 按 {@code variableDefs} 校验必填变量并填充默认值，再用 {@link TemplateEngine} 渲染
+     * subject / content。模板不存在或编码为空时返回 error，不抛异常。
+     *
+     * @param req 预览请求（含 templateCode 与渲染参数 params）
+     * @return 渲染后的 content / subject 映射；失败返回错误响应
+     */
     @Operation(summary = "按模板编码预览渲染结果")
     @PostMapping("/by-code")
     public BaseResponse<Map<String, String>> previewByCode(@RequestBody PreviewRequest req) {
@@ -104,6 +114,17 @@ public class TemplatePreviewController {
         return BaseResponse.success(result);
     }
 
+    /**
+     * 预览自定义模板字符串的渲染结果（不依赖数据库模板）。
+     *
+     * <p>直接对调用方传入的任意模板字符串与参数做 {@link TemplateEngine} 纯字符串替换，
+     * 不校验变量定义、不查库。模板内容为空时返回 error。
+     * 因接受外部内容，启用 5s 幂等防重与 50 QPS 限流，且渲染在沙箱内进行（不求值
+     * Groovy/OGNL 等表达式），避免模板注入风险。
+     *
+     * @param req 原始预览请求（含 template 字符串与渲染参数 params）
+     * @return 渲染后的字符串；失败返回错误响应
+     */
     @Operation(summary = "预览自定义模板内容")
     @RateLimit(resource = "message.templatepreview.previewRaw", threshold = 50)
     @Idempotent(key = "ydsz:message:TemplatePreviewController:previewRaw:lock", ttlSeconds = 5)

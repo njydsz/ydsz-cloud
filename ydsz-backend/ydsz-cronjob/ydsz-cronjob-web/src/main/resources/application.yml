@@ -25,6 +25,8 @@ ydsz:
         await-termination-seconds: 15
   # P0-1: YdszJson ASM 预热（DAG 编解码/任务调度高频序列化 Bean）
   json:
+    enabled: true
+    monitoring-enabled: true
     warmup-classes:
       - com.njydsz.cronjob.domain.entity.job.Job
       - com.njydsz.cronjob.domain.entity.job.JobTask

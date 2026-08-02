@@ -255,4 +255,38 @@ public final class ObjectNode extends JsonNode {
     public int hashCode() {
         return fields.hashCode();
     }
+
+    /**
+     * 从 Map 创建 ObjectNode（适配器方法，用于从 JsonObject 迁移）。
+     *
+     * <p>此方法为 {@link com.njydsz.common.json.object.JsonObject}（已废弃）的迁移提供桥接。
+     * JsonObject 继承自 LinkedHashMap，可直接传入此方法。
+     *
+     * <pre>{@code
+     * JsonObject legacy = YdszJson.parseObjectToJsonObject(json);
+     * ObjectNode node = ObjectNode.fromMap(legacy);
+     * }</pre>
+     *
+     * @param map 源 Map，null 返回空 ObjectNode
+     * @return ObjectNode 实例
+     * @since 1.0.0
+     */
+    public static ObjectNode fromMap(Map<String, ?> map) {
+        ObjectNode node = new ObjectNode();
+        if (map == null) {
+            return node;
+        }
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (value == null) {
+                node.fields.put(key, NullNode.getInstance());
+            } else if (value instanceof JsonNode) {
+                node.fields.put(key, (JsonNode) value);
+            } else {
+                node.fields.put(key, TreeConverter.convertToJsonNode(value));
+            }
+        }
+        return node;
+    }
 }

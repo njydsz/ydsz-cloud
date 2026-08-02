@@ -1,6 +1,6 @@
 # ydsz-common-json
 
-> YDSZ 高性能 JSON 引擎（L2 工具层）— ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、JIT 自动向量化、Schema 校验、JsonPath 查询、JsonNode 树模型、Jackson 兼容注解
+> YDSZ 高性能 JSON 引擎（L2 工具层）— ASM 字节码加速、有界软引用字段缓存、零拷贝反序列化、JIT 自动向量化、Schema 校验、JsonPath 查询、JsonNode 树模型、Jackson 兼容注解
 
 纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 ASM 字节码生成、零拷贝反序列化、ThreadLocal 池优化等技术实现超高性能；通过 Jackson 兼容注解实现平滑迁移。
 
@@ -49,7 +49,7 @@
 | 类 | 说明 |
 |---|---|
 | `SerializationProvider` / `DeserializationProvider` | 序列化/反序列化 Provider（核心实现，`tryFastPathToWriter` 统一快速路径） |
-| `AsmCodecCache` | ASM Codec 缓存（LRU + SoftReference） |
+| `AsmCodecCache` | ASM Codec 缓存（有界 + SoftReference，近似 LRU 淘汰） |
 | `BeanSerializerCache` / `BeanSerializerInfo` | Bean 序列化器缓存（含 `hasAnnotations` 标记，避免重复扫描） |
 | `SerializerCache` / `SerializerRegistry` | 序列化器注册表 |
 | `FieldMeta` | 字段元数据（统一类型代码 + `@JsonInclude` 过滤逻辑 + VarHandle 优化 + `@JsonUnwrapped` 展开） |
@@ -424,6 +424,11 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 5. **ASM 预热**：`warmup-classes` 配置项指定启动时预热的类列表，`JsonWarmupRunner` 在应用启动后异步预生成 ASM 字节码，避免首次请求延迟尖峰。也可通过 `YdszJson.warmup(Class...)` 手动触发。
 6. **Spring MVC 泛型类型支持**：`JsonHttpMessageConverter` 继承 `AbstractGenericHttpMessageConverter`，正确支持 `@RequestBody List<User>` 等泛型类型反序列化。
 7. **Jackson 迁移**：`@JsonProperty` / `@JsonIgnore` / `@JsonFormat` / `@JsonInclude` 等 Jackson 兼容注解无需修改即可使用。迁移步骤：`ObjectMapper` → `JsonMapper`，`readValue/readTree/writeValueAsString` → `toObject/readTree/toJson`，`ObjectReader/ObjectWriter` → `JsonReader/JsonWriter`。
+   - **迁移注意事项**：
+     - `JsonMapper` 实例可安全共享（线程安全），配置通过 `ThreadLocalSnapshot` 在每次序列化时 apply/restore，与 Jackson `ObjectMapper`（配置不可变 + 显式传参）模型在 ThreadLocal 实现下的等价做法。
+     - **命名策略在字段元数据加载时缓存**：`@JsonNaming` / `JsonConfig.namingStrategy` 对一个类的首次序列化生效并缓存 `jsonName`，后续切换命名策略对该已缓存类无效。如需不同命名策略，应在首次序列化前设置，或对不同命名使用不同 Bean 类型。
+     - **`writeNulls` 配置生效范围**：`JsonMapper.builder().writeNulls(true)` 对带 `@JsonClass` 注解的 Bean 生效（走 ValueWriter 注解路径）；无注解的 Bean 走 `writeBeanNoAnnotationOptimized` 快速路径，null 字段始终省略。如需全局 writeNulls 对所有 Bean 生效，请在 Bean 上加 `@JsonClass`。
+     - **响应式场景**：`SerializationContext` 基于 ThreadLocal，跨线程链路（WebFlux / 虚拟线程）中线程切换会丢失配置。响应式场景请使用 `JsonReactiveUtils` 或在调用线程内完成序列化。
 8. **ThreadLocal 池优化**：`SerializationContext` 合并 5+ ThreadLocal 为单一实例，降低内存碎片；`estimateThreadLocalMemory` 基于缓冲池容量动态计算，避免硬编码。
 9. **循环引用处理**：默认 `REF` 策略（自动检测并处理循环引用），可配置为 `IGNORE`（忽略）或 `ERROR`（抛出异常）。
 10. **流式输出**：`streaming-enabled=true` 启用 HTTP 响应 chunked transfer encoding，适用于大 JSON 响应场景。
@@ -439,3 +444,13 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
   - 补全 `@YdszJsonClass` 类级配置能力说明（ordering/ignores/includes/naming/seeAlso/features 等 14 项属性）
   - 标注 `JsonSchema`、`JsonPatch` 的 `@Experimental` 状态
   - 补全 `JsonSchema` 静态工厂方法列表与 `JsonPath` 支持的 7 种路径表达式
+- **v1.0.0**（2026-08-03）：架构优化与 Bug 修复（P0-P2）：
+  - **[P0-A1]** 修复 `JsonMapper.restoreConfig` 无限递归导致 `StackOverflowError`（`new JsonMapper().toJson(obj)` 必崩）
+  - **[P0-A2]** 移除 `JsonMapper.configApplied` 跨线程误共享优化，改为每次序列化 apply/restore，确保共享 Mapper 多线程配置隔离
+  - **[P0-A3]** `ThreadLocalSnapshot` 补全 `namingStrategy` 回滚，修复 `YdszJson.toJson(obj, config)` 单次配置泄漏
+  - **[P1-D1]** 删除死代码 `provider/JsonWriter`（含 10000 元素静态数组残留）
+  - **[P1-D2]** 删除已 `@Deprecated(forRemoval=true)` 的 `api.JsonSerializer`/`api.JsonDeserializer`，`SerializationProvider.invokeCustomSerializer` 简化为单一调用路径（移除 `Method` 反射双判）
+  - **[P1-E1]** 补 16 项 P0/D2 回归测试（`JsonMapperP0RegressionTest` / `CustomSerializerD2Test`）；修复 `pom.xml` 缺失 `<argLine>` 导致测试 fork 启动崩溃
+  - **[功能]** `ValueWriter` 注解路径补 `SerializationProvider.isWriteNulls()` 判断，使 `JsonMapper.builder().writeNulls(true)` 对带 `@JsonClass` 的 Bean 生效
+  - **[P2-A5]** `JsonConfig` 不可变契约 Javadoc 如实表述；修正 `JsonMapper` 示例中不存在的 `setWriteNulls` 调用
+  - **[P2-E2/A4/ASM]** README "LRU" 表述修正为"近似 LRU"；补 Jackson 迁移注意事项（ThreadLocal 配置模型、命名策略缓存、writeNulls 生效范围、响应式限制）

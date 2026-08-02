@@ -143,6 +143,16 @@ public abstract class BaseRequestLogInterceptor implements HandlerInterceptor, R
         return ServletUtils.getClientIp(request);
     }
 
+    /**
+     * 截断过长的 User-Agent 以控制访问日志体积。
+     *
+     * <p>User-Agent 常被客户端填入极长字符串（指纹特征、恶意构造的探测串），若原样写入日志会
+     * 撑爆日志存储并影响检索可读性。统一截断到 100 字符并追加 {@code "..."} 提示已截断。
+     * 空/空白 UA 返回占位符 {@code "-"}，保证日志字段始终非空、便于下游解析。
+     *
+     * @param userAgent 原始 User-Agent 字符串，允许为 {@code null} 或空
+     * @return 截断后的 UA，或空 UA 占位符 {@code "-"}
+     */
     protected String truncateUserAgent(String userAgent) {
         if (StringUtils.isBlank(userAgent)) {
             return "-";

@@ -226,6 +226,16 @@ public class GlobalObjectPool {
         private static final int MAX_POOL_SIZE = 5000;
         private static final AtomicInteger count = new AtomicInteger(0);
 
+        /**
+         * 复用或缓存给定时间点的 Date 对象。
+         *
+         * <p>以 {@code date.getTime()} 为键去重：命中则复用池中实例；未命中且未达容量上限时入池后返回原对象。
+         * 池已满或 {@code date} 为 {@code null} 时直接返回入参（{@code null} 返回 {@code null}），不做缓存，
+         * 以保证调用方始终拿到有效 Date，不会因池化丢失时间信息。</p>
+         *
+         * @param date 待复用的日期对象，允许为 {@code null}
+         * @return 池化后的 Date 实例，{@code null} 入参返回 {@code null}
+         */
         public static Date intern(Date date) {
             if (date == null) return null;
             long key = date.getTime();
@@ -245,6 +255,15 @@ public class GlobalObjectPool {
             return existing != null ? existing : date;
         }
 
+        /**
+         * 按时间戳获取（并池化）Date 对象。
+         *
+         * <p>以毫秒时间戳为键：命中缓存直接返回；未命中时创建新实例并在池未满前提下写入，池满则每次返回新建实例。
+         * 用于高频按时间构造 Date 的场景，降低重复分配与 GC 压力。</p>
+         *
+         * @param time 自 1970-01-01 起的毫秒时间戳
+         * @return 对应的 Date 实例，不会为 {@code null}
+         */
         public static Date getDate(long time) {
             Date pooled = POOL.get(time);
             if (pooled != null) {
@@ -263,6 +282,11 @@ public class GlobalObjectPool {
             return existing != null ? existing : newDate;
         }
 
+        /**
+         * 清空日期对象池并重置计数。
+         *
+         * <p>仅清理本类内部缓存，不影响字符串池与通用对象池。</p>
+         */
         public static void clear() {
             POOL.clear();
             count.set(0);

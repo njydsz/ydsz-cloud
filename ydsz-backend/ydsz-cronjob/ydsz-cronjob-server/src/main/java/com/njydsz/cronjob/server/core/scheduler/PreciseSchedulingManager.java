@@ -89,6 +89,18 @@ public class PreciseSchedulingManager {
     /** Leader 角色 */
     private String leaderRole;
 
+    /**
+     * 初始化精准调度：创建调度/扫描线程池并启动快速扫描循环。
+     *
+     * <p>两个线程池均为本类自建并自管理生命周期（非 common-thread）：
+     * <ul>
+     *   <li>{@code preciseScheduler}：{@code ScheduledThreadPool}，到点执行精准派发任务；</li>
+     *   <li>{@code fastScanner}：单线程 {@code ScheduledExecutor}，按 {@code fastScanIntervalMs}
+     *       周期预加载窗口内即将到期的任务、CAS 推进后提交到 preciseScheduler。</li>
+     * </ul>
+     * 仅当 {@code ydsz.cronjob.precise-scheduling.enabled=true} 时注册。
+     * 注意：扫描线程启动后不会立即抢占，需在 {@link #fastScan()} 内通过 Leader 身份校验才真正生效。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();
@@ -107,6 +119,15 @@ public class PreciseSchedulingManager {
                 config.getFastScanIntervalMs(), config.getPreLoadWindowSeconds(), config.getPoolSize());
     }
 
+    /**
+     * 容器销毁钩子：取消已调度任务并优雅关闭自建线程池。
+     *
+     * <p>关闭顺序：先取消 {@code preLoadedTasks} 中所有未执行的 {@link ScheduledFuture}
+     * （{@code cancel(false)} 不中断正在运行的派发），清空映射；再分别优雅关闭
+     * preciseScheduler 与 fastScanner（先 {@code shutdown()} + 最多等待 10s，
+     * 超时则 {@code shutdownNow()} 强制终止）。
+     * 被取消而未能派发的任务由 JobScanner 在兜底扫描中重新发现并派发，不会永久丢失。
+     */
     @PreDestroy
     public void shutdown() {
         log.info("[PreciseScheduling] 关闭中, 已加载任务数={}", preLoadedTasks.size());

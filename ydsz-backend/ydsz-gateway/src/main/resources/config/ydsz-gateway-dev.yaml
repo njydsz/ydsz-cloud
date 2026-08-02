@@ -93,6 +93,18 @@ feign:
 # YDSZ · Gateway · P0 安全配置（P0-2 / P0-4 / P0-6）
 # =====================================================================
 ydsz:
+  # JSON 引擎配置（ydsz-common-json）
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    streaming-enabled: true
+    warmup-classes:
+      - com.njydsz.common.core.response.BaseResponse
+      - org.springframework.cloud.gateway.route.RouteDefinition
+      - com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule
   gateway:
     # P0-2: 内部头签名密钥（与 JWT 密钥分离，避免单密钥泄漏导致整体信任链破裂）
     # ⚠️ 生产环境必须通过 YDSZ_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入强随机密钥（≥32 字节）

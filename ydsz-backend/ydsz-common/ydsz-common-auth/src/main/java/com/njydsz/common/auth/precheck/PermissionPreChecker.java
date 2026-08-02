@@ -479,8 +479,11 @@ public class PermissionPreChecker {
      * 权限预检项，用于批量预检时封装单次预检参数。
      */
     public static class PermissionCheckItem {
+        /** 权限类型（MENU/BUTTON/API）。 */
         private PermissionType type;
+        /** 需要校验的权限码集合。 */
         private Set<String> permissions;
+        /** 预检模式（ALL 需全部满足 / ANY 满足其一）。 */
         private PermissionCheckMode mode;
 
         public PermissionCheckItem(PermissionType type, Set<String> permissions, PermissionCheckMode mode) {
@@ -489,10 +492,24 @@ public class PermissionPreChecker {
             this.mode = mode;
         }
 
+        /**
+         * 以 ALL 模式创建预检项（需全部权限均满足）。
+         *
+         * @param type 权限类型（MENU/BUTTON/API）
+         * @param permissions 需要校验的权限码集合，允许为 {@code null}（空集合等效于无需校验）
+         * @return 预检项实例，模式固定为 {@link PermissionCheckMode#ALL}
+         */
         public static PermissionCheckItem of(PermissionType type, Set<String> permissions) {
             return new PermissionCheckItem(type, permissions, PermissionCheckMode.ALL);
         }
 
+        /**
+         * 以 ANY 模式创建预检项（满足任一权限即通过）。
+         *
+         * @param type 权限类型（MENU/BUTTON/API）
+         * @param permissions 需要校验的权限码集合，允许为 {@code null}（空集合等效于无需校验）
+         * @return 预检项实例，模式固定为 {@link PermissionCheckMode#ANY}
+         */
         public static PermissionCheckItem ofAny(PermissionType type, Set<String> permissions) {
             return new PermissionCheckItem(type, permissions, PermissionCheckMode.ANY);
         }

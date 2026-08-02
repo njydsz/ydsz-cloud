@@ -296,6 +296,17 @@ public class RedisConfiguration {
 
     // ============================ Redis Ops Beans ============================
 
+    /**
+     * 注册 String 类型键值操作封装（get/set/incr/expire 等基础命令）。
+     *
+     * <p>仅当容器已存在 {@code RedisTemplate} 时装配；依赖注入的 {@code RedisMetricsCollector} 通过
+     * {@code ObjectProvider#getIfAvailable()} 惰性获取，未引入监控模块时传 null，对应操作降级为不采集指标。
+     *
+     * @param redisTemplate  基础模板，由容器注入，不会为 null
+     * @param redisProperties 全局配置（含命令超时等），不会为 null
+     * @param metricsProvider 指标采集器供应方，可能返回 null（缺失监控依赖时）
+     * @return String 操作封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisStringOps.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -305,6 +316,16 @@ public class RedisConfiguration {
         return new RedisStringOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
     }
 
+    /**
+     * 注册 Hash 结构操作封装（hGet/hSet/hMGet/hDel 等）。
+     *
+     * <p>指标采集器同样为可选依赖，缺失时降级不采集。其余装配条件同 {@link #redisStringOps}。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置，不会为 null
+     * @param metricsProvider 指标采集器供应方，可能为 null
+     * @return Hash 操作封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisHashOps.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -314,6 +335,16 @@ public class RedisConfiguration {
         return new RedisHashOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
     }
 
+    /**
+     * 注册集合（List/Set/ZSet）操作封装（push/pop/sAdd/zRange 等）。
+     *
+     * <p>指标采集器可选，缺失时降级不采集。其余装配条件同 {@link #redisStringOps}。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置，不会为 null
+     * @param metricsProvider 指标采集器供应方，可能为 null
+     * @return 集合操作封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisCollectionOps.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -323,6 +354,16 @@ public class RedisConfiguration {
         return new RedisCollectionOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
     }
 
+    /**
+     * 注册地理空间（GEO）操作封装（GEOADD / GEORADIUS 等经纬度与半径检索）。
+     *
+     * <p>指标采集器可选，缺失时降级不采集。其余装配条件同 {@link #redisStringOps}。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置，不会为 null
+     * @param metricsProvider 指标采集器供应方，可能为 null
+     * @return GEO 操作封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisGeoOps.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -332,6 +373,15 @@ public class RedisConfiguration {
         return new RedisGeoOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
     }
 
+    /**
+     * 注册高级操作封装（Lua 脚本执行、SCAN 游标遍历、Bitmap/HyperLogLog 等底层命令）。
+     *
+     * <p>此类不接收指标采集器，其命令多属运维/批量场景，不纳入常规命令耗时统计。装配条件同其它 ops Bean。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置，不会为 null
+     * @return 高级操作封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisAdvancedOps.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -340,6 +390,16 @@ public class RedisConfiguration {
         return new RedisAdvancedOps(redisTemplate, redisProperties);
     }
 
+    /**
+     * 注册发布/订阅操作封装（publish/subscribe）。
+     *
+     * <p>除 {@code RedisTemplate} 外还需 {@link RedisMessageListenerContainer} 已存在（见上方
+     * {@link #redisMessageListenerContainer}），否则订阅能力无法装配，仅发布功能可用。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param listenerContainer 消息监听容器，不会为 null
+     * @return Pub/Sub 操作封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisPubSubOps.class)
     @ConditionalOnBean({RedisTemplate.class, RedisMessageListenerContainer.class})
@@ -348,6 +408,15 @@ public class RedisConfiguration {
         return new RedisPubSubOps(redisTemplate, listenerContainer);
     }
 
+    /**
+     * 注册 Redis Stream 流操作封装（XADD/XREADGROUP/消费者组等消息流场景）。
+     *
+     * <p>装配条件同其它 ops Bean，无独立指标采集器。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置，不会为 null
+     * @return Stream 操作封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisStreamOps.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -356,6 +425,14 @@ public class RedisConfiguration {
         return new RedisStreamOps(redisTemplate, redisProperties);
     }
 
+    /**
+     * 注册事务操作封装（MULTI/EXEC/DISCARD 命令批处理）。
+     *
+     * <p>仅依赖 {@code RedisTemplate}，不涉及配置或指标。注意事务仅在非管线、同连接内有效。
+     *
+     * @param redisTemplate 基础模板，不会为 null
+     * @return 事务操作封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisTransactionOps.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -363,6 +440,14 @@ public class RedisConfiguration {
         return new RedisTransactionOps(redisTemplate);
     }
 
+    /**
+     * 注册布隆过滤器封装（BF.ADD/BF.EXISTS，用于存在性判重与缓存穿透防护）。
+     *
+     * <p>建立在 RedisBloom 模块之上；若 Redis 未加载该模块，调用相关命令将抛异常，需由调用方保证模块可用。
+     *
+     * @param redisTemplate 基础模板，不会为 null
+     * @return 布隆过滤器封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisBloomFilter.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -370,6 +455,16 @@ public class RedisConfiguration {
         return new RedisBloomFilter(redisTemplate);
     }
 
+    /**
+     * 注册延迟队列封装（基于 ZSet 的 score 时间戳 + 轮询弹出实现定时任务）。
+     *
+     * <p>指标采集器可选，缺失时降级不采集。消费端需自行保证幂等：轮询取出后若处理失败，消息不会自动重回队列。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置（含延迟队列轮询参数），不会为 null
+     * @param metricsProvider 指标采集器供应方，可能为 null
+     * @return 延迟队列封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisDelayedQueue.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -379,6 +474,16 @@ public class RedisConfiguration {
         return new RedisDelayedQueue(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
     }
 
+    /**
+     * 注册分布式限流器封装（基于 Redis 原子计数/脚本实现的令牌桶或滑动窗口）。
+     *
+     * <p>依赖 {@code redisProperties} 中的限流阈值配置。Redis 不可用时限流判定无法执行，调用方应明确降级策略
+     * （fail-open 放行还是 fail-closed 拒绝）。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置（含限流参数），不会为 null
+     * @return 限流器封装实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisRateLimiter.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -387,6 +492,16 @@ public class RedisConfiguration {
         return new RedisRateLimiter(redisTemplate, redisProperties);
     }
 
+    /**
+     * 注册雪花 ID 生成器（依赖 Redis 注册并续约 workerId，避免多实例时钟回拨/workerId 冲突）。
+     *
+     * <p>workerId 的分配与保活由 {@code RedisWorkerIdRegistry} 协作完成；Redis 不可用时该生成器无法初始化 workerId，
+     * 将导致 ID 生成失败。装配条件同其它 ops Bean。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置，不会为 null
+     * @return 雪花 ID 生成器实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisSnowflakeIdGenerator.class)
     @ConditionalOnBean(RedisTemplate.class)
@@ -395,6 +510,25 @@ public class RedisConfiguration {
         return new RedisSnowflakeIdGenerator(redisTemplate, redisProperties);
     }
 
+    /**
+     * 注册 RedisService 门面，聚合并编排上述各 Ops 组件，对外提供更简洁的统一 API。
+     *
+     * <p>作为业务代码的主要入口，将 String/Hash/集合/GEO/高级/PubSub/Stream/事务等能力组合暴露。
+     * 使用 {@code @ConditionalOnMissingBean}，允许外部自定义 {@code RedisService} 整体覆盖默认实现。
+     * 所有子 Ops 实例必须由容器先提供（上方各 Bean），否则本 Bean 因依赖缺失而不装配。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置，不会为 null
+     * @param stringOps String 操作封装，不会为 null
+     * @param hashOps Hash 操作封装，不会为 null
+     * @param collectionOps 集合操作封装，不会为 null
+     * @param geoOps GEO 操作封装，不会为 null
+     * @param advancedOps 高级操作封装，不会为 null
+     * @param pubSubOps Pub/Sub 操作封装，不会为 null
+     * @param streamOps Stream 操作封装，不会为 null
+     * @param transactionOps 事务操作封装，不会为 null
+     * @return 聚合后的 RedisService 实例
+     */
     @Bean
     @ConditionalOnMissingBean(RedisService.class)
     @ConditionalOnBean(RedisTemplate.class)

@@ -92,6 +92,15 @@ public class TimeoutMonitor {
 
     private String leaderRole;
 
+    /**
+     * 初始化超时监控器：解析 Leader 角色并确认启用状态。
+     *
+     * <p>仅在 {@code ydsz.cronjob.leader.enabled=true} 时进入监控启用分支；
+     * 否则仅记录 Leaderless 日志。本方法不创建线程或锁资源——
+     * 超时检测依赖的 Redis 释放锁 {@code RELEASE_LOCK_SCRIPT} 为静态常量在类加载期即初始化，
+     * 扫描任务由 {@link #scan()} 方法上的 {@code @DistributedScheduled} + {@code @Scheduled}
+     * 双注解驱动，无需在此预注册。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();

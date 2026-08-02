@@ -10,7 +10,8 @@ import com.njydsz.common.json.reader.JSONReader;
 /**
  * YdszJson 全局配置类
  *
- * <p>参考大厂架构设计，提供统一的 JSON 处理配置中心。</p>
+ * <p><b>内部 API：</b>此类主要供 {@code JsonAutoConfiguration} 和框架内部使用。
+ * 业务代码请通过 {@code ydsz.json.*} 配置属性调整 JSON 行为，不要直接操作 JsonConfig。</p>
  *
  * <p><b>配置功能：</b></p>
  * <ul>
@@ -21,28 +22,20 @@ import com.njydsz.common.json.reader.JSONReader;
  *   <li>枚举序列化策略 - ordinal 或 name</li>
  * </ul>
  *
- * <p><b>推荐使用 Builder 模式创建不可变配置：</b></p>
+ * <p><b>Builder 模式（框架内部使用）：</b></p>
  * <pre>
- * // 推荐：使用 Builder 创建配置
+ * // JsonAutoConfiguration 内部使用 Builder 创建配置
  * JsonConfig config = JsonConfig.builder()
  *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
- *     .circularReferenceStrategy(CircularReferenceStrategy.REF)
  *     .dateFormat("yyyy-MM-dd HH:mm:ss")
  *     .build();
  * config.apply();
  * </pre>
  *
- * <p><b>兼容模式（已废弃）：</b></p>
- * <pre>
- * // 已废弃：使用 getInstance() + setter 链式调用
- * JsonConfig config = JsonConfig.getInstance();
- * config.setNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
- * config.apply();
- * </pre>
- *
- * <p><b>线程安全：</b>Builder 构建的实例是不可变的，天然线程安全。
- * 单例模式（{@link #getInstance()}）的 setter 仍保留 volatile 字段
- * 保证可见性，但已标记 {@link Deprecated}，建议迁移到 Builder。</p>
+ * <p><b>线程安全：</b>所有可变字段均为 {@code volatile}，保证单字段读写的可见性。
+ * Builder 构建的实例字段值在 {@code build()} 时一次性写入，之后不应再通过
+ * {@link #reset()} / {@link #copyFrom(JsonConfig)} 修改——这两个方法已标记 {@link Deprecated}。
+ * 如需"不可变"语义的强保证，请通过 Builder 重新构建新实例而非原地修改。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -122,6 +115,7 @@ public final class JsonConfig implements Serializable {
      * @return 新的配置实例，包含与源配置相同的值
      * @since 1.0.0
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public static JsonConfig copyOf(JsonConfig other) {
         JsonConfig copy = new JsonConfig();
         if (other != null) {
@@ -277,6 +271,7 @@ public final class JsonConfig implements Serializable {
      *
      * @return 当前配置实例（支持链式调用）
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public synchronized JsonConfig reset() {
         this.namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
         this.circularReferenceStrategy = CircularReferenceStrategy.REF;
@@ -301,6 +296,7 @@ public final class JsonConfig implements Serializable {
      * @param other 另一个配置
      * @return 当前配置实例（支持链式调用）
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public synchronized JsonConfig copyFrom(JsonConfig other) {
         if (other != null) {
             this.namingStrategy = other.namingStrategy;
@@ -365,8 +361,9 @@ public final class JsonConfig implements Serializable {
      * 不可变配置构建器。
      *
      * <p>对标 Jackson ObjectMapper.Builder 和 FastJSON2 JSON.config() 的 Builder 模式，
-     * 提供类型安全的链式配置构建方式。构建后的 JsonConfig 实例不可修改，
-     * 无需 ThreadLocalSnapshot 保存/恢复。</p>
+     * 提供类型安全的链式配置构建方式。构建后的 JsonConfig 实例字段在 {@code build()} 时
+     * 一次性写入，建议作为不可变实例使用（如需修改请重新构建，而非调用
+     * {@link #reset()} / {@link #copyFrom(JsonConfig)}）。</p>
      *
      * @since 1.0.0
      */
@@ -387,61 +384,121 @@ public final class JsonConfig implements Serializable {
         private Builder() {
         }
 
+        /**
+         * 设置字段命名策略。
+         *
+         * @param namingStrategy 命名策略（如 SNAKE_CASE / LOWER_CAMEL_CASE），不可为 {@code null}
+         */
         public Builder namingStrategy(PropertyNamingStrategy namingStrategy) {
             this.namingStrategy = namingStrategy;
             return this;
         }
 
+        /**
+         * 设置循环引用处理策略。
+         *
+         * @param strategy {@code REF} 输出引用路径 / {@code IGNORE} 忽略 / {@code ERROR} 抛异常
+         */
         public Builder circularReferenceStrategy(CircularReferenceStrategy strategy) {
             this.circularReferenceStrategy = strategy;
             return this;
         }
 
+        /**
+         * 设置是否输出 null 字段。
+         *
+         * @param writeNulls {@code true} 保留 null 字段，{@code false} 跳过 null 字段
+         */
         public Builder writeNulls(boolean writeNulls) {
             this.writeNulls = writeNulls;
             return this;
         }
 
+        /**
+         * 设置日期类型序列化格式。
+         *
+         * @param dateFormat SimpleDateFormat 模式串；{@code null} 按空串处理（使用默认格式）
+         */
         public Builder dateFormat(String dateFormat) {
             this.dateFormat = dateFormat != null ? dateFormat : "";
             return this;
         }
 
+        /**
+         * 设置枚举序列化方式。
+         *
+         * @param ordinal {@code true} 用枚举 ordinal 序号，{@code false} 用 name 名称
+         */
         public Builder serializeEnumUsingOrdinal(boolean ordinal) {
             this.serializeEnumUsingOrdinal = ordinal;
             return this;
         }
 
+        /**
+         * 设置是否格式化（缩进）输出。
+         *
+         * @param prettyPrint {@code true} 启用美化输出
+         */
         public Builder prettyPrint(boolean prettyPrint) {
             this.prettyPrint = prettyPrint;
             return this;
         }
 
+        /**
+         * 设置序列化遇错时是否抛出异常。
+         *
+         * @param failOnError {@code true} 抛异常，{@code false} 降级为容错输出
+         */
         public Builder failOnError(boolean failOnError) {
             this.failOnError = failOnError;
             return this;
         }
 
+        /**
+         * 设置反序列化时未显式指定格式的日期默认解析模式。
+         *
+         * @param defaultDateFormat 日期默认解析模式串
+         */
         public Builder defaultDateFormat(String defaultDateFormat) {
             this.defaultDateFormat = defaultDateFormat;
             return this;
         }
 
+        /**
+         * 设置单次 JSON 处理的最大字节数上限。
+         *
+         * @param maxJsonSize 上限（字节），超过将抛出 {@link JsonException}
+         */
         public Builder maxJsonSize(long maxJsonSize) {
             this.maxJsonSize = maxJsonSize;
             return this;
         }
 
+        /**
+         * 设置序列化/反序列化的最大嵌套深度。
+         *
+         * @param maxDepth 最大深度，防止过深结构导致栈溢出
+         */
         public Builder maxDepth(int maxDepth) {
             this.maxDepth = maxDepth;
             return this;
         }
 
+        /**
+         * 设置是否将浮点数解析为 BigDecimal 以保留精度。
+         *
+         * @param useBigDecimal {@code true} 启用（金融等高精度场景推荐）
+         */
         public Builder useBigDecimal(boolean useBigDecimal) {
             this.useBigDecimal = useBigDecimal;
             return this;
         }
 
+        /**
+         * 设置是否启用根名称包裹。
+         *
+         * @param wrapRootValue {@code true} 启用（配合 {@code @JsonRootName} 注解）
+         */
         public Builder wrapRootValue(boolean wrapRootValue) {
             this.wrapRootValue = wrapRootValue;
             return this;

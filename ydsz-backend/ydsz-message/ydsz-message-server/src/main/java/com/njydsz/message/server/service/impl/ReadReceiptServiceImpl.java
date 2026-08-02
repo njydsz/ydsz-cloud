@@ -53,7 +53,6 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     /** 短链 TTL（7 天） */
     private static final long SHORTLINK_TTL = 7 * 24 * 3600L;
 
-    @Override
     /**
      * 为 HTML 邮件正文注入不可见追踪像素，用于邮件已读回执。
      *
@@ -64,6 +63,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
      * @param msgId       消息 ID（用于回执关联）
      * @return 注入追踪像素后的 HTML；参数非法或内容非 HTML 时返回原内容
      */
+    @Override
     public String injectEmailTrackingPixel(String htmlContent, String msgId) {
         if (!StringUtils.hasText(htmlContent) || !StringUtils.hasText(msgId)) {
             return htmlContent;
@@ -88,7 +88,6 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
         return htmlContent + pixel;
     }
 
-    @Override
     /**
      * 为短信生成短链，用于短信已读回执与点击统计。
      *
@@ -100,6 +99,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
      * @param msgId       消息 ID（可选，用于回执关联）
      * @return 短链 URL；生成失败或 originalUrl 为空时返回 originalUrl
      */
+    @Override
     public String generateShortLink(String originalUrl, String msgId) {
         if (!StringUtils.hasText(originalUrl)) {
             return originalUrl;
@@ -120,7 +120,6 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
         return shortUrl;
     }
 
-    @Override
     /**
      * 处理邮件追踪像素回调，标记邮件已读。
      *
@@ -129,6 +128,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
      *
      * @param msgId 消息 ID
      */
+    @Override
     public void handleEmailRead(String msgId) {
         if (!StringUtils.hasText(msgId)) {
             return;
@@ -141,7 +141,6 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
         }
     }
 
-    @Override
     /**
      * 处理短信短链点击回调，返回原始 URL 并标记已读。
      *
@@ -151,6 +150,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
      * @param shortCode 短链编码
      * @return 原始长链接；短码无效或异常时返回 null
      */
+    @Override
     public String handleShortLinkClick(String shortCode) {
         if (!StringUtils.hasText(shortCode)) {
             return null;
@@ -174,7 +174,6 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
         }
     }
 
-    @Override
     /**
      * 判断消息是否已读（邮件或短信任一渠道已读即视为已读）。
      *
@@ -184,6 +183,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
      * @param msgId 消息 ID
      * @return true 表示邮件或短信渠道已标记已读
      */
+    @Override
     public boolean isRead(String msgId) {
         if (!StringUtils.hasText(msgId)) {
             return false;

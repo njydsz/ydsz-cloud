@@ -41,17 +41,19 @@ import com.njydsz.common.util.id.WorkerIdRegistry;
 @ConditionalOnClass({RedisTemplate.class, WorkerIdRegistry.class})
 @ConditionalOnProperty(prefix = "ydsz.snowflake.redis-registry", name = "enabled", havingValue = "true",
         matchIfMissing = true)
-
-/**
- * SnowflakeRedisAutoConfiguration 自动配置类，注册模块 Bean 并管理装配条件。
- *
- * <p>所属包：{@code com.njydsz.common.redis.config}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public class SnowflakeRedisAutoConfiguration {
 
+    /**
+     * 注册基于 Redis 的 WorkerId 注册中心，作为 {@link WorkerIdRegistry} 的实现。
+     *
+     * <p>仅在容器中尚不存在 {@code WorkerIdRegistry} 且已有 {@code RedisTemplate} 时装配，
+     * 由 {@code SnowflakeAutoConfiguration} 通过 {@code ObjectProvider<WorkerIdRegistry>} 惰性注入。
+     * 本 Bean 自带心跳续约与 {@code @PreDestroy} 释放逻辑，配置类不额外启动定时任务。
+     *
+     * @param redisTemplate  基础模板，不会为 null
+     * @param redisProperties 全局配置（含 key 前缀、租约时长），不会为 null
+     * @return Redis 版 WorkerId 注册中心实例
+     */
     @Bean
     @ConditionalOnMissingBean(WorkerIdRegistry.class)
     @ConditionalOnBean(RedisTemplate.class)

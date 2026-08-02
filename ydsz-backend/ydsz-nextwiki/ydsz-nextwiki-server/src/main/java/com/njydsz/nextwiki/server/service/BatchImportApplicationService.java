@@ -343,6 +343,20 @@ public class BatchImportApplicationService {
         /** 失败条数（单文件异常或超限导致） */
         private int failedCount;
 
+        /**
+         * 构造「批量导入完成」结果。
+         *
+         * <p><b>注意语义：</b>{@code success=true} 表示导入流程正常跑完，
+         * <b>不代表每条都成功</b>。批量导入采用「单条失败不中断整批」策略，
+         * 因此调用方必须结合 {@code failedCount} 判断是否需要提示用户重试，
+         * 不能只看 {@link #isSuccess()}。
+         *
+         * @param files   成功落库的文件节点视图；无成功项时为空列表而非 {@code null}
+         * @param total   本批总条目数（批量上传为文件数，ZIP 导入为压缩包内条目数）
+         * @param success 成功条数
+         * @param failed  失败条数，{@code success + failed} 应等于 {@code total}
+         * @return 导入结果，{@code success=true}
+         */
         public static BatchImportResult success(List<FileNodeVO> files, int total,
                                                   int success, int failed) {
             return BatchImportResult.builder()
@@ -354,6 +368,19 @@ public class BatchImportApplicationService {
                     .build();
         }
 
+        /**
+         * 构造「整批失败」结果。
+         *
+         * <p>仅用于导入<b>整体</b>无法进行的场景（如 ZIP 解压失败、目标目录无权限、
+         * 超出批量上限）；单个文件的失败不走这里，而是计入
+         * {@link #success(List, int, int, int)} 的 {@code failedCount}。
+         *
+         * <p>此时 {@code importedFiles} 为 {@code null}，各计数均为 0，
+         * 调用方遍历前需判空。
+         *
+         * @param message 整批失败原因，会透传至前端提示
+         * @return 失败结果，{@code success=false}
+         */
         public static BatchImportResult error(String message) {
             return BatchImportResult.builder()
                     .success(false)
@@ -361,6 +388,16 @@ public class BatchImportApplicationService {
                     .build();
         }
 
+        /**
+         * 构造「空批次」结果。
+         *
+         * <p>入参没有任何可导入条目时返回，视为<b>成功</b>而非失败——
+         * 用户提交空目录或全部条目被过滤属正常情形，不应弹错误。
+         * 与 {@link #error(String)} 的区别在于 {@code importedFiles} 为空列表
+         * （非 {@code null}），调用方可直接安全遍历。
+         *
+         * @return 空结果，{@code success=true} 且各计数为 0
+         */
         public static BatchImportResult empty() {
             return BatchImportResult.builder()
                     .success(true)

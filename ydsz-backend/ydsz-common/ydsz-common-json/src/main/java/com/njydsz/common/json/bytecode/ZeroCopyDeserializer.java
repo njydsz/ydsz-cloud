@@ -63,6 +63,7 @@ import com.njydsz.common.json.util.StringInterner;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class ZeroCopyDeserializer {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ZeroCopyDeserializer.class);
 

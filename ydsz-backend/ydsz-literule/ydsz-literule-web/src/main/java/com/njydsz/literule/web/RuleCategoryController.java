@@ -24,7 +24,7 @@ import com.njydsz.literule.server.spi.RuleCategoryProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.literule.domain.converter.LiteruleConverter;
 
 /**
  * 规则目录树 Controller
@@ -65,7 +65,7 @@ public class RuleCategoryController {
      */
     @GetMapping("/categoryTree")
     public BaseResponse<CategoryNodeVO> categoryTree() {
-        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleCategoryProvider.buildTree()), CategoryNodeVO.class));
+        return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(ruleCategoryProvider.buildTree()));
     }
 
     /**
@@ -76,7 +76,7 @@ public class RuleCategoryController {
     @GetMapping("/byCategoryPath")
     public BaseResponse<List<RuleDefinitionVO>> listByCategoryPath(
             @RequestParam(value = "path", required = false) String path) {
-        return BaseResponse.success(ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleDefinitionVO.class)).toList());
+        return BaseResponse.success(ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
     }
 
     /**
@@ -85,7 +85,7 @@ public class RuleCategoryController {
     @GetMapping("/byOwner")
     public BaseResponse<List<RuleDefinitionVO>> listByOwner(
             @RequestParam(value = "owner") String owner) {
-        return BaseResponse.success(ruleCategoryProvider.listDefinitionsByOwner(owner).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleDefinitionVO.class)).toList());
+        return BaseResponse.success(ruleCategoryProvider.listDefinitionsByOwner(owner).stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
     }
 
     /**

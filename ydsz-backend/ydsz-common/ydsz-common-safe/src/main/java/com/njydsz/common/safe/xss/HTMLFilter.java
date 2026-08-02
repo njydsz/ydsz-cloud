@@ -564,6 +564,12 @@ public final class HTMLFilter {
         private boolean encodeQuotes = true;
         private boolean alwaysMakeTags = false;
 
+        /**
+         * 将标签加入白名单（允许出现，但默认不带任何属性）。
+         *
+         * @param tags 标签名（不区分大小写）
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder allowTags(String... tags) {
             for (String tag : tags) {
                 if (!vAllowed.containsKey(tag.toLowerCase())) {
@@ -573,6 +579,13 @@ public final class HTMLFilter {
             return this;
         }
 
+        /**
+         * 将标签加入白名单并声明允许的属性集合。
+         *
+         * @param tag       标签名
+         * @param attributes 允许保留的属性名列表
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder allowTagWithAttributes(String tag, String... attributes) {
             String tagName = tag.toLowerCase();
             List<String> attrs = vAllowed.computeIfAbsent(tagName, k -> new ArrayList<>());
@@ -580,55 +593,121 @@ public final class HTMLFilter {
             return this;
         }
 
+        /**
+         * 将标签加入黑名单（无论是否在白名单中均强制移除，优先级最高）。
+         *
+         * @param tags 标签名
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder disallowTags(String... tags) {
             Collections.addAll(vDisallowed, tags);
             return this;
         }
 
+        /**
+         * 声明自闭合标签（如 img/br/hr），输出时以 {@code <tag />} 形式呈现且不计未闭合。
+         *
+         * @param tags 标签名
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder allowSelfClosingTags(String... tags) {
             Collections.addAll(vSelfClosingTags, tags);
             return this;
         }
 
+        /**
+         * 声明 URL 属性允许的协议白名单（如 http/https/mailto/ftp）。
+         *
+         * <p>不在白名单内的协议（如 {@code javascript:}）将被替换为 {@code #} 前缀，防 XSS。
+         *
+         * @param protocols 协议名
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder allowProtocols(String... protocols) {
             Collections.addAll(vAllowedProtocols, protocols);
             return this;
         }
 
+        /**
+         * 声明需要做协议校验的 URL 类属性（如 href/src/action）。
+         *
+         * @param attributes 属性名
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder protocolAttributes(String... attributes) {
             Collections.addAll(vProtocolAtts, attributes);
             return this;
         }
 
+        /**
+         * 声明允许保留的命名 HTML 实体（如 amp/lt/gt/quot/nbsp）。
+         *
+         * @param entities 实体名
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder allowEntities(String... entities) {
             Collections.addAll(vAllowedEntities, entities);
             return this;
         }
 
+        /**
+         * 声明成对空标签（如 {@code <p></p>}）应被整体移除的标签集合。
+         *
+         * @param tags 标签名
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder removeBlankTags(String... tags) {
             Collections.addAll(vRemoveBlanks, tags);
             return this;
         }
 
+        /**
+         * 是否移除 HTML 注释（默认 true）。
+         *
+         * @param strip 为 true 时移除 {@code <!-- -->} 内容
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder stripComments(boolean strip) {
             this.stripComment = strip;
             return this;
         }
 
+        /**
+         * 是否对文本内容中的引号进行 HTML 实体编码（默认 true）。
+         *
+         * @param encode 为 true 时编码引号，降低属性注入风险
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder encodeQuotes(boolean encode) {
             this.encodeQuotes = encode;
             return this;
         }
 
+        /**
+         * 是否自动补全未闭合标签（默认 false）。
+         *
+         * @param always 为 true 时尽力平衡标签，避免片段破坏整体页面结构
+         * @return 当前 Builder，支持链式调用
+         */
         public Builder alwaysMakeTags(boolean always) {
             this.alwaysMakeTags = always;
             return this;
         }
 
+        /**
+         * 基于当前配置构建不可变的 HTMLFilter 实例。
+         *
+         * @return HTMLFilter 实例
+         */
         public HTMLFilter build() {
             return new HTMLFilter(this);
         }
 
+        /**
+         * 宽松安全策略预设（保留较多富文本标签/属性，适用内容展示场景）。
+         *
+         * @return 宽松策略 Builder
+         */
         public static Builder relaxed() {
             Builder builder = new Builder();
             builder.allowTags("a", "b", "strong", "i", "em", "u", "s", "strike", "del", "ins",
@@ -653,6 +732,11 @@ public final class HTMLFilter {
             return builder;
         }
 
+        /**
+         * 标准安全策略预设（保留常用富文本，收紧危险属性与协议，推荐默认）。
+         *
+         * @return 标准策略 Builder
+         */
         public static Builder standard() {
             Builder builder = new Builder();
             builder.allowTags("a", "b", "strong", "i", "em", "u", "s", "strike", "del", "ins",
@@ -675,6 +759,11 @@ public final class HTMLFilter {
             return builder;
         }
 
+        /**
+         * 严格安全策略预设（仅保留极简排版标签，仅允许 http/https 协议）。
+         *
+         * @return 严格策略 Builder
+         */
         public static Builder strict() {
             Builder builder = new Builder();
             builder.allowTags("b", "strong", "i", "em", "u", "s", "strike", "del", "ins",

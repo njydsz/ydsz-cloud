@@ -167,10 +167,27 @@ public class DownloadRateLimitService {
         /** 拒绝原因描述（allowed=true 时为 null） */
         private String message;
 
+        /**
+         * 构造「放行」结果。
+         *
+         * <p>{@code message} 保持为 {@code null}：放行场景无需向调用方解释原因，
+         * 调用方只应依据 {@link #isAllowed()} 分支，不要读取 message。
+         *
+         * @return 放行结果，{@code allowed=true}、{@code message=null}
+         */
         public static RateLimitResult allowed() {
             return RateLimitResult.builder().allowed(true).build();
         }
 
+        /**
+         * 构造「限流拒绝」结果。
+         *
+         * <p>message 会被 Controller 直接回传给前端提示，因此只允许写入
+         * 维度与阈值这类可公开信息，<b>不得</b>包含 Redis Key、内部 IP 等实现细节。
+         *
+         * @param message 拒绝原因（如 {@code "用户下载频率超限: 60/分钟"}），不应为 {@code null}
+         * @return 拒绝结果，{@code allowed=false}
+         */
         public static RateLimitResult blocked(String message) {
             return RateLimitResult.builder().allowed(false).message(message).build();
         }

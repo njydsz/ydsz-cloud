@@ -20,6 +20,15 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 public class TenantContextHolderConfiguration {
 
+    /**
+     * 注册租户上下文持有者 Bean。
+     *
+     * <p>基于 ThreadLocal（或 TransmittableThreadLocal）在请求链路中传递租户 ID。
+     * 仅在容器中不存在该类型 Bean 时创建，允许业务方自定义租户上下文实现。
+     * 请求进入时由 WebAuthFilter 写入租户 ID，结束时由 BaseHttpInterceptor 清理，须确保配对以避免线程复用串号。</p>
+     *
+     * @return 租户上下文持有者实例
+     */
     @Bean
     @ConditionalOnMissingBean
     public TenantContextHolder tenantContextHolder() {

@@ -68,6 +68,14 @@ public class SlowTaskDetector {
 
     private String leaderRole;
 
+    /**
+     * 初始化慢任务诊断器：解析 Leader 角色并确认启用状态。
+     *
+     * <p>仅在 {@code ydsz.cronjob.leader.enabled=true} 时进入扫描启用分支；
+     * 否则仅记录 Leaderless 日志，不创建任何资源（扫描方法 {@link #scan()} 内部已通过
+     * Leader 身份与 enabled 双重校验拦截，故本方法不负责实际扫描逻辑）。
+     * 扫描的时间窗口 {@code LOOKBACK_MINUTES}（60min）固定，不依赖外部配置。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();

@@ -1,38 +1,5 @@
 package com.njydsz.common.excel.core.writer;
 
-/**
- * 高性能 Excel 写入器 — 纯手工 XML 序列化。
- *
- * <p>直接生成 OOXML（.xlsx）格式的 XML 字节流并写入 ZIP 包，
- * 绕过 Apache POI 的对象模型，以极低的内存开销实现高性能写入。
- *
- * <h3>写入原理</h3>
- * <p>.xlsx 文件本质上是一个 ZIP 包，包含以下 XML 文件：
- * <ul>
- *   <li>{@code [Content_Types].xml}：内容类型声明</li>
- *   <li>{@code _rels/.rels}：根关系文件</li>
- *   <li>{@code xl/workbook.xml}：工作簿定义</li>
- *   <li>{@code xl/worksheets/sheet1.xml}：Sheet 数据</li>
- *   <li>{@code xl/sharedStrings.xml}：共享字符串表</li>
- * </ul>
- * 本写入器预生成固定模板的 XML（ContentTypes/Rels/Workbook），
- * 仅动态生成 Sheet 数据和 SST 部分。
- *
- * <h3>性能优化</h3>
- * <ul>
- *   <li>使用 {@link ASMFieldAccessor} 替代反射获取字段值</li>
- *   <li>行级缓冲（1MB），减少 ZIP 写入次数</li>
- *   <li>公式注入防护（{@link FormulaInjectionGuard}）</li>
- *   <li>支持 {@code @ExcelProperty.order()} 列序排序</li>
- *   <li>支持 {@code excludeColumnFiledNames} / {@code includeColumnFiledNames} 列过滤</li>
- * </ul>
- *
- * @author ydsz-team
- * @since 1.0.0
- * @see ConcurrentExcelWriter
- * @see FormulaInjectionGuard
- * @see ASMFieldAccessor
- */
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -58,12 +25,48 @@ import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 
 /**
- * SuperFastExcelWriter 类。
+ * 高性能 Excel 写入器 — 纯手工 XML 序列化。
  *
- * <p>所属包：{@code com.njydsz.common.excel.core.writer}
+ * <p>直接生成 OOXML（.xlsx）格式的 XML 字节流并写入 ZIP 包，
+ * 绕过 Apache POI 的对象模型，以极低的内存开销实现高性能写入。
+ *
+ * <h3>写入原理</h3>
+ * <p>.xlsx 文件本质上是一个 ZIP 包，包含以下 XML 文件：
+ * <ul>
+ *   <li>{@code [Content_Types].xml}：内容类型声明</li>
+ *   <li>{@code _rels/.rels}：根关系文件</li>
+ *   <li>{@code xl/workbook.xml}：工作簿定义</li>
+ *   <li>{@code xl/worksheets/sheet1.xml}：Sheet 数据</li>
+ *   <li>{@code xl/sharedStrings.xml}：共享字符串表</li>
+ * </ul>
+ * 其中 ContentTypes/Rels/Workbook 为固定模板，在静态块中一次性生成为字节常量复用；
+ * 仅 Sheet 数据与 SST 需要按数据动态生成。
+ *
+ * <h3>性能优化</h3>
+ * <ul>
+ *   <li>使用 {@link ASMFieldAccessor} 替代反射获取字段值</li>
+ *   <li>行级缓冲（1MB），减少 ZIP 写入次数</li>
+ *   <li>公式注入防护（{@link FormulaInjectionGuard}）</li>
+ *   <li>支持 {@code @ExcelProperty.order()} 列序排序</li>
+ *   <li>支持 {@code excludeColumnFiledNames} / {@code includeColumnFiledNames} 列过滤</li>
+ * </ul>
+ *
+ * <h3>注意事项</h3>
+ * <ul>
+ *   <li><b>线程安全性</b>：实例持有行缓冲区、行游标、单元格引用暂存等可变状态，
+ *       <b>既不能跨线程共享，也不能重复调用 {@code doWrite}</b>（行号会累加）。
+ *       每次导出请新建实例。</li>
+ *   <li><b>输出目标优先级</b>：{@code filePath} &gt; {@code file} &gt; {@code outputStream}，
+ *       三者均未设置时抛 {@link IllegalArgumentException}。</li>
+ *   <li>写文件路径时先在系统临时目录落地 sheet1.xml 再转存进 ZIP，
+ *       临时目录在 {@code finally} 中递归删除，清理失败仅记 warn 不影响结果。</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see ConcurrentExcelWriter
+ * @see FormulaInjectionGuard
+ * @see ASMFieldAccessor
  */
 public class SuperFastExcelWriter {
 
@@ -135,6 +138,22 @@ public class SuperFastExcelWriter {
         this.metadata = metadata;
     }
 
+    /**
+     * 将数据序列化为 xlsx 并输出到 {@link WriteMetadata} 指定的目标。
+     *
+     * <p><b>执行顺序</b>：空数据短路返回 → 按 {@code clazz} 解析列元数据（列过滤、排序、
+     * ASM 访问器绑定）→ 按目标类型分派到文件或流写入。
+     *
+     * <p><b>目标选择</b>：依次判断 {@code filePath}、{@code file}、{@code outputStream}，
+     * 取第一个非空者；写流时不关闭调用方传入的流，由调用方负责关闭。
+     *
+     * <p><b>失败语义</b>：写文件过程中抛异常会残留不完整的目标文件，需调用方清理；
+     * 临时目录的清理已在 {@code finally} 中兜底。
+     *
+     * @param data 待写入数据；非 {@link List} 时按单条记录处理，空列表则直接返回、不生成文件
+     * @throws IllegalArgumentException 当未配置任何输出目标时抛出
+     * @throws Exception 序列化或 IO 过程中的异常原样向上抛出，不做包装
+     */
     public void doWrite(Object data) throws Exception {
         List<?> list = data instanceof List ? (List<?>) data : Collections.singletonList(data);
         if (list.isEmpty()) {

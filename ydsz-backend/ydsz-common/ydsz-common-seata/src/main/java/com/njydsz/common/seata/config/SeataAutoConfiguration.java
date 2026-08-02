@@ -271,12 +271,24 @@ public class SeataAutoConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.seata", name = "seata-at-enabled", havingValue = "true", matchIfMissing = true)
     public static class SeataAtConfiguration {
 
+        /**
+         * 注册 Seata AT 全局事务执行器 Bean。
+         *
+         * <p>Seata 在类路径且 {@code seata-at-enabled=true} 时生效，封装 Seata 全局事务的开启/提交/回滚。
+         * 方法名 {@code seataSeataGlobalTransactionExecutor} 为历史遗留前缀；无自定义 Bean 时注册默认实现。
+         */
         @Bean
         @ConditionalOnMissingBean(SeataGlobalTransactionExecutor.class)
         public SeataGlobalTransactionExecutor seataSeataGlobalTransactionExecutor() throws Exception {
             return new SeataGlobalTransactionExecutor();
         }
 
+        /**
+         * 注册 Seata AT 事务管理器 Bean。
+         *
+         * <p>基于 {@link SeataGlobalTransactionExecutor} 实现 AT 模式的事务编排，
+         * 在 Seata AT 启用时装配；无自定义 Bean 时注册，供 {@link DistributedTransactionManager} 委派。
+         */
         @Bean
         @ConditionalOnMissingBean(SeataTransactionManager.class)
         public SeataTransactionManager seataTransactionManager(

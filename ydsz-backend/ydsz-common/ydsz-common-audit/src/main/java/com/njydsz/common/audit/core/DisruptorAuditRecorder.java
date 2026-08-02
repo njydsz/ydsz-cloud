@@ -499,6 +499,12 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
             this.auditLog = auditLog;
         }
 
+        /**
+         * 清空事件承载的审计日志引用。
+         *
+         * <p>Disruptor 事件对象为 RingBuffer 中预分配并循环复用的槽位，消费后必须释放对
+         * {@link AuditLog} 的引用，避免大对象被槽位长期持有导致内存泄漏（GC 无法回收）。
+         */
         public void clear() {
             this.auditLog = null;
         }

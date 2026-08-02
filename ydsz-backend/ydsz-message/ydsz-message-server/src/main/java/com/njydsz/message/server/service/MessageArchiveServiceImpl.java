@@ -34,7 +34,6 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     /** P3-3.2: ES 归档开关统一从 MessageProperties 读取 */
     private final MessageProperties messageProperties;
 
-    @Override
     /**
      * 单条消息写入归档索引。
      *
@@ -42,6 +41,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
      *
      * @param logDO 消息日志实体
      */
+    @Override
     public void index(MsgLog logDO) {
         if (!messageProperties.getArchive().isEsEnabled() || logDO == null) {
             return;
@@ -52,7 +52,6 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
                 logDO.getId(), logDO.getChannel(), logDO.getStatus());
     }
 
-    @Override
     /**
      * 批量写入归档索引。
      *
@@ -60,6 +59,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
      *
      * @param logList 消息日志列表
      */
+    @Override
     public void batchIndex(List<MsgLog> logList) {
         if (!messageProperties.getArchive().isEsEnabled() || logList == null || logList.isEmpty()) {
             return;
@@ -70,7 +70,6 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
         }
     }
 
-    @Override
     /**
      * 归档消息全文搜索（带 ES→数据库降级）。
      *
@@ -88,6 +87,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
      * @param pageSize  页大小
      * @return 消息分页结果
      */
+    @Override
     public Page<MsgLog> search(String keyword, String channel, String status, String bizType,
                                  LocalDateTime startTime, LocalDateTime endTime,
                                  String tenantId, int pageNum, int pageSize) {
@@ -100,7 +100,6 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
                 startTime, endTime, tenantId, pageNum, pageSize);
     }
 
-    @Override
     /**
      * 删除归档索引。
      *
@@ -108,6 +107,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
      *
      * @param id 消息 ID
      */
+    @Override
     public void delete(String id) {
         if (!messageProperties.getArchive().isEsEnabled() || !StringUtils.hasText(id)) {
             return;

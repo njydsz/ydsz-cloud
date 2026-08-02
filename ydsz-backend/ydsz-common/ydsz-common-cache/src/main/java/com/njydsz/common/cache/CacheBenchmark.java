@@ -54,6 +54,14 @@ public class CacheBenchmark {
 
   private Cache<String, String> cache;
 
+  /**
+   * 每个基准迭代轮次（fork）启动前的初始化钩子。
+   *
+   * <p>按 {@link #cacheType} 参数（TINYLFU / LRU / STRIPED 三选一）构建对应策略的缓存实例，
+   * 预填充 5000 条数据使缓存进入"已 WarmUp"状态，从而让读写基准聚焦于命中路径与淘汰路径本身，
+   * 而非首条写入的冷启动开销。预热量（5000）远小于 {@code maximumSize(10000)}，确保命中与未命中
+   * 两类基准均能在容量约束内稳定复现。
+   */
   @Setup
   public void setup() {
     CacheType type = CacheType.valueOf(cacheType);

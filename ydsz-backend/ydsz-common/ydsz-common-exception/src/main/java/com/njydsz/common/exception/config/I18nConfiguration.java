@@ -99,6 +99,24 @@ public class I18nConfiguration {
         log.info("异常消息国际化解析器已注入 | MessageSource: {}", messageSource.getClass().getSimpleName());
     }
 
+    /**
+     * 创建全局国际化消息源，并在启动阶段对异常错误码的 i18n key 做 fail-fast 校验。
+     *
+     * <p>缓存策略按环境区分：激活 {@code prod} profile 时使用
+     * {@code prodCacheSeconds}（默认较长，避免频繁 IO）；其余环境使用
+     * {@code devCacheSeconds}（通常为 0，改文案后无需重启即可生效）。
+     *
+     * <p>底层为 {@link ReloadableResourceBundleMessageSource} 且开启
+     * {@code useCodeAsDefaultMessage}，因此查不到文案时返回 key 本身而非抛异常，
+     * 保证异常链路不会因缺少文案而二次失败。
+     *
+     * <p>启动校验默认开启，可通过 {@code ydsz.i18n.validate-on-startup=false} 关闭（不推荐）；
+     * 当 {@link Environment} 不可用时视为开启。
+     *
+     * @return 已完成 basename、编码、缓存与回退策略配置的消息源，永不为 {@code null}
+     * @throws IllegalStateException 启动校验开启且存在无法解析的 ExceptionCode i18n key 时抛出，
+     *                               以阻止应用带着残缺文案上线
+     */
     @Bean(name = "messageSource")
     @ConditionalOnMissingBean(name = "messageSource")
     public MessageSource messageSource() {

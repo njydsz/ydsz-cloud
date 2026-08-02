@@ -22,10 +22,18 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>优先级：{@code X-Lang} Header > {@code Accept-Language} > Cookie > Session。
  *
+ * <h3>注意事项</h3>
+ * <ul>
+ *   <li>仅当类路径存在 spring-webmvc 时才装配，避免 exception 模块强依赖 Web 容器</li>
+ *   <li>本类先于 {@link I18nConfiguration} 装配，保证 Locale 解析链在消息源就绪前已建立</li>
+ *   <li>产出的 Bean 为无状态单例，线程安全</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @see I18nConfiguration
+ * @see I18nProperties
  */
-
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties(I18nProperties.class)

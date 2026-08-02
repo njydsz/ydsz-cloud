@@ -134,6 +134,17 @@ public class BatchServiceImpl implements BatchService {
         return vo;
     }
 
+    /**
+     * 异步执行批次发送（在 {@code messageBatchExecutor} 线程池执行）。
+     *
+     * <p>由 {@link #submitBatch} 在 {@code async=true}（默认）时调用；内部委托
+     * {@link #doExecuteBatch} 完成状态推进与并行发送。
+     * 注意：本方法通过 Spring {@code @Async} 代理生效，<strong>务必经注入的
+     * Bean 调用</strong>，同类内直接调用（self-invocation）不会触发异步。
+     *
+     * @param batchId  批次 ID
+     * @param requests 待发送消息请求列表（非空，已在 {@link #submitBatch} 校验上限）
+     */
     @Async("messageBatchExecutor")
     public void executeBatchAsync(String batchId, List<MessageRequest> requests) {
         doExecuteBatch(batchId, requests);

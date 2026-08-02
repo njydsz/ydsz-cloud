@@ -1,12 +1,5 @@
 package com.njydsz.common.excel.core.context;
 
-/**
- * AnalysisContext 类
- *
- * @author ydsz-team
- * @email ydsz-dev@njydsz.com
- * @version 1.0.0
- */
 import com.njydsz.common.excel.core.ExcelReader;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
@@ -157,6 +150,15 @@ public class AnalysisContext {
         this.totalSheets = totalSheets;
     }
 
+    /**
+     * 将当前行号前进一行。
+     *
+     * <p>由解析流程在每完成一行回调后调用，是 {@link #getCurrentRow()} 的唯一推进方式。
+     * 仅自增不做上界校验，与 {@code totalRows} 无联动，越界与否由调用方保证。
+     *
+     * <p><b>线程安全性</b>：非原子操作，本上下文假定单线程串行解析，
+     * 多线程共享同一实例会丢失计数。
+     */
     public void incrementRow() {
         this.currentRow++;
     }

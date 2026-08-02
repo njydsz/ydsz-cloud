@@ -106,6 +106,16 @@ public class FailoverScanner {
 
     private String leaderRole;
 
+    /**
+     * 缓存 Leader 角色名并打印生效中的故障转移限流参数。
+     *
+     * <p>{@code leaderRole} 一次性读入字段，供后续每 30 秒的扫描判定身份，
+     * 避免高频穿透配置对象；<b>不支持运行期改角色</b>，需重启生效。
+     *
+     * <p>当 {@code leader.enabled=false} 时仅打印提示日志，本扫描器的 {@code scan()}
+     * 会在运行期直接短路返回，故障转移能力关闭——此时节点宕机遗留的 RUNNING 任务
+     * 只能依赖 {@code JobNodeReaper} 兜底清理，不会被重新派发。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();

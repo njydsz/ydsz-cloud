@@ -70,6 +70,12 @@ public class LogCleaner {
 
     private String leaderRole;
 
+    /**
+     * 初始化清理器：解析 Leader 角色名并输出启用状态。
+     *
+     * <p>由 {@code @PostConstruct} 在 Bean 创建后调用，缓存 leader 角色名，
+     * 供 {@link #clean()} 判定本节点是否执行凌晨清理任务。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();

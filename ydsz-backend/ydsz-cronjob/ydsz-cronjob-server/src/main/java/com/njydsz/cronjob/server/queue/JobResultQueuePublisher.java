@@ -57,6 +57,14 @@ public class JobResultQueuePublisher {
     private IMessageQueue resultQueue;
     private IMessagePublisher resultPublisher;
 
+    /**
+     * 启动任务结果队列发布者（应用启动即建立发布通道）。
+     *
+     * <p>通过 common-queue 创建 STREAM 类型队列与发布者，绑定
+     * {@link JobQueueChannels#JOB_RESULT} 通道，供 {@link #onTaskCompleted} 在任务完成时异步推送结果。
+     * 启动失败仅告警、不影响应用启动——结果通知属增强能力，缺失不影响任务执行主链路，
+     * 后续任务完成事件仍会触发但发布失败仅记录日志。
+     */
     @PostConstruct
     public void init() {
         try {
@@ -100,6 +108,12 @@ public class JobResultQueuePublisher {
         }
     }
 
+    /**
+     * 容器销毁钩子：关闭发布者与队列资源。
+     *
+     * <p>先 {@code close()} 发布者，再 {@code close()} 队列连接。启动失败导致
+     * publisher/queue 为 null 时安全跳过，避免 NPE。
+     */
     @PreDestroy
     public void destroy() {
         if (resultPublisher != null) {

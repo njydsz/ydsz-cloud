@@ -51,6 +51,13 @@ public class DailyStatsAggregator {
 
     private String leaderRole;
 
+    /**
+     * 初始化每日统计聚合器：解析 Leader 角色并确认启用状态。
+     *
+     * <p>仅在 {@code ydsz.cronjob.leader.enabled=true} 时进入聚合启用分支；
+     * 否则仅记录 Leaderless 日志。实际聚合由 {@link #aggregate()} 上的 {@code @DistributedScheduled}
+     * 保证全集群唯一执行，本方法不预分配资源（聚合写入走 PostgreSQL UPSERT 幂等，无需初始化缓存）。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();

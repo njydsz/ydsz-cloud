@@ -11,6 +11,24 @@ import js from '@eslint/js';
 import pluginUnusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
+/**
+ * 构建 JavaScript 基础 ESLint 扁平配置（Flat Config）。
+ *
+ * @remarks
+ * 作为全项目 lint 的最底层规则集，其他语言配置（TypeScript、Vue）在其之上叠加覆盖。
+ *
+ * 关键取舍：
+ * - 同时注入 browser / node / es2021 全局变量，因 Monorepo 内既有前端应用也有构建脚本，
+ *   拆分成本高于收益；配合 `no-undef: 'off'` 交由 TypeScript 做未定义标识符检查，避免误报。
+ * - 与格式化相关的规则（`keyword-spacing`、`space-before-function-paren`）一律关闭，
+ *   格式化统一交给 Prettier，防止两套工具互相打架。
+ * - `no-console` 仅放行 `warn` / `error`，避免调试日志进入生产包。
+ * - `no-restricted-syntax` 禁用 `const enum` 与 `export =`，二者在 `isolatedModules`
+ *   与 Vite 的单文件转译下会编译失败。
+ * - `unused-imports` 插件接管未使用导入的自动清理，`^_` 前缀的变量视为有意保留。
+ *
+ * @returns ESLint 扁平配置数组，可直接展开进入根 `eslint.config.js`
+ */
 export async function javascript(): Promise<Linter.Config[]> {
   return [
     {

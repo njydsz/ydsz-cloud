@@ -91,6 +91,12 @@ public class NotifyConfiguration {
 
 	// ==================== 密码加密 ====================
 
+	/**
+	 * 注册 SMTP 密码解析器 Bean。
+	 *
+	 * <p>负责 Jasypt 加密 SMTP 密码的运行时解密，避免明文配置泄露。
+	 * 仅在邮件渠道启用时创建；若容器中已有 {@link NotifyPasswordResolver} 则不再注册，便于外部自定义实现覆盖默认行为。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyPasswordResolver.class)
 	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
@@ -101,6 +107,13 @@ public class NotifyConfiguration {
 
 	// ==================== JavaMailSender ====================
 
+	/**
+	 * 构建 Spring {@link JavaMailSender} Bean（邮件发送客户端）。
+	 *
+	 * <p>依据 {@code ydsz.notify.email} 配置装配 SMTP 主机/端口/协议（SSL/STARTTLS）与超时参数；
+	 * 若密码经 Jasypt 加密则通过 {@link NotifyPasswordResolver} 解密后再注入。
+	 * 仅在邮件渠道启用且无自定义 {@link JavaMailSender} 时创建，避免与业务侧已有邮件客户端冲突。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(JavaMailSender.class)
 	@ConditionalOnClass(JavaMailSender.class)
@@ -158,6 +171,12 @@ public class NotifyConfiguration {
 
 	// ==================== SMTP 健康探活 ====================
 
+	/**
+	 * 注册 SMTP 健康探活 Bean。
+	 *
+	 * <p>定期连通 SMTP 服务器以判定邮件渠道可用性，为 {@link NotifyHealthIndicator} 提供底层探针。
+	 * 仅邮件渠道启用时创建，且无自定义实现时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(EmailSmtpHealthChecker.class)
 	@ConditionalOnClass(JavaMailSender.class)
@@ -169,6 +188,12 @@ public class NotifyConfiguration {
 
 	// ==================== 指标埋点 ====================
 
+	/**
+	 * 注册通知指标采集 Bean。
+	 *
+	 * <p>聚合发送量、成功率、延迟、渠道分布等 Metrics，接入 Micrometer {@link MeterRegistry}（可选，缺失时为无操作实现）。
+	 * 为容量评估与告警提供数据底座；无自定义 Bean 时注册，避免重复埋点。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyMetrics.class)
 	public NotifyMetrics notifyMetrics(ObjectProvider<MeterRegistry> meterRegistryProvider) {
@@ -180,6 +205,12 @@ public class NotifyConfiguration {
 
 	// ==================== 邮件追踪 ====================
 
+	/**
+	 * 注册邮件打开/点击追踪 Bean。
+	 *
+	 * <p>通过埋点像素与 Redis 记录邮件送达后的打开与点击行为，用于效果分析。
+	 * Redis 为可选依赖（缺失时降级为不追踪）；仅邮件渠道启用时创建。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(EmailTrackingService.class)
 	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
@@ -193,6 +224,12 @@ public class NotifyConfiguration {
 
 	// ==================== 渠道降级 ====================
 
+	/**
+	 * 注册渠道降级管理器 Bean。
+	 *
+	 * <p>在首选渠道（如短信）不可用或触发熔断时，按策略将通知降级到备用渠道（如邮件/站内信）。
+	 * 收集全部 {@link NotifyChannelStrategy} 作为降级目标；无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyFallbackManager.class)
 	public NotifyFallbackManager notifyFallbackManager(NotifyProperties properties,
@@ -204,6 +241,12 @@ public class NotifyConfiguration {
 
 	// ==================== HTML 模板注册 ====================
 
+	/**
+	 * 注册 HTML 邮件模板注册表 Bean。
+	 *
+	 * <p>集中管理可用的 HTML 邮件模板，供模板引擎按名称检索渲染。
+	 * 无自定义 Bean 时注册空的默认注册表，模板可由业务侧动态注册。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(HtmlTemplateRegistry.class)
 	public HtmlTemplateRegistry htmlTemplateRegistry() {
@@ -213,6 +256,12 @@ public class NotifyConfiguration {
 
 	// ==================== DKIM 签名 ====================
 
+	/**
+	 * 注册 DKIM 邮件签名 Bean。
+	 *
+	 * <p>对出站邮件施加 DKIM 签名以提升投递可信度、降低被判定为垃圾邮件的概率。
+	 * 仅邮件渠道启用时创建，且无自定义实现时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(DkimSigner.class)
 	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
@@ -223,6 +272,12 @@ public class NotifyConfiguration {
 
 	// ==================== 通知偏好 ====================
 
+	/**
+	 * 注册用户通知偏好管理器 Bean。
+	 *
+	 * <p>维护按用户/租户维度的通知渠道与免打扰偏好，决定某条通知是否、以何种渠道触达。
+	 * Redis 为可选依赖（缺失时按内存或默认策略降级）；无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyPreferenceManager.class)
 	public NotifyPreferenceManager notifyPreferenceManager(ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
@@ -234,6 +289,12 @@ public class NotifyConfiguration {
 
 	// ==================== 去重 ====================
 
+	/**
+	 * 注册通知去重服务 Bean。
+	 *
+	 * <p>基于内容指纹+时间窗拦截重复通知，避免同一事件在重试/多渠道下对用户造成骚扰。
+	 * Redis 为可选依赖（缺失时降级为进程内去重）；无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyDedupService.class)
 	public NotifyDedupService notifyDedupService(NotifyProperties properties,
@@ -246,6 +307,12 @@ public class NotifyConfiguration {
 
 	// ==================== 国际化 ====================
 
+	/**
+	 * 注册通知国际化（i18n）服务 Bean。
+	 *
+	 * <p>提供多语言模板与文案的解析能力，支撑按接收方语言偏好渲染通知内容。
+	 * 无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyI18nService.class)
 	public NotifyI18nService notifyI18nService() {
@@ -253,6 +320,12 @@ public class NotifyConfiguration {
 		return new NotifyI18nService();
 	}
 
+	/**
+	 * 注册国际化解析器 Bean。
+	 *
+	 * <p>结合用户偏好管理器与 i18n 服务，在渲染时确定最终语言与文案来源。
+	 * 依赖 {@link NotifyPreferenceManager} 与 {@link NotifyI18nService}，无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyI18nResolver.class)
 	public NotifyI18nResolver notifyI18nResolver(NotifyPreferenceManager preferenceManager,
@@ -263,6 +336,18 @@ public class NotifyConfiguration {
 
 	// ==================== 熔断器 ====================
 
+	/**
+	 * 注册通知熔断器注册表 Bean。
+	 *
+	 * <p>为每个渠道/Provider 维护独立的熔断状态，在下游持续异常时切断请求、防止线程池耗尽与级联故障。
+	 * 无自定义 Bean 时注册默认实现，供 {@link NotifyServiceImpl} 在发送前做熔断判定。
+	 */
+	/**
+	 * 注册通知熔断器注册表 Bean。
+	 *
+	 * <p>为每个渠道/Provider 维护独立的熔断状态，在下游持续异常时切断请求、防止线程池耗尽与级联故障。
+	 * 无自定义 Bean 时注册默认实现，供 {@link NotifyServiceImpl} 在发送前做熔断判定。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyCircuitBreakerRegistry.class)
 	public NotifyCircuitBreakerRegistry notifyCircuitBreakerRegistry() {
@@ -272,6 +357,12 @@ public class NotifyConfiguration {
 
 	// ==================== 死信队列 ====================
 
+	/**
+	 * 注册死信处理器 Bean。
+	 *
+	 * <p>承接多次重试仍失败的通知，避免其无限占用重试队列；默认使用内存实现，进程重启后丢失。
+	 * 无自定义 Bean 时注册，业务可替换为持久化实现以保证据。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(DeadLetterHandler.class)
 	public DeadLetterHandler notifyDeadLetterHandler() {
@@ -281,6 +372,12 @@ public class NotifyConfiguration {
 
 	// ==================== 审计日志 ====================
 
+	/**
+	 * 注册通知审计服务 Bean。
+	 *
+	 * <p>记录通知的发送/投递/失败等关键事件，满足合规审计与问题追溯诉求。
+	 * 无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyAuditService.class)
 	public NotifyAuditService notifyAuditService() {
@@ -290,6 +387,12 @@ public class NotifyConfiguration {
 
 	// ==================== 消息聚合器 ====================
 
+	/**
+	 * 注册时间窗消息聚合器 Bean。
+	 *
+	 * <p>将短时间窗内、同一接收方的多条通知合并为一条批量消息，降低打扰与发送成本。
+	 * 默认窗口 30 秒、单批上限 100 条，可由业务替换以调整聚合策略。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotificationAggregator.class)
 	public TimeWindowAggregator notifyAggregator() {
@@ -299,6 +402,12 @@ public class NotifyConfiguration {
 
 	// ==================== 模板变量校验器 ====================
 
+	/**
+	 * 注册模板变量校验器 Bean。
+	 *
+	 * <p>在渲染前校验模板引用变量是否齐全、类型是否合法，避免渲染期因缺参导致通知发送失败或内容错乱。
+	 * 无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(TemplateVariableValidator.class)
 	public TemplateVariableValidator templateVariableValidator() {
@@ -308,6 +417,13 @@ public class NotifyConfiguration {
 
 	// ==================== AliyunSmsProvider ====================
 
+	/**
+	 * 注册阿里云短信 Provider Bean。
+	 *
+	 * <p>在 {@code ydsz.notify.sms.provider=aliyun} 时生效，封装阿里云短信网关的鉴权与发送。
+	 * 注册于 {@link SmsProvider} 抽象之上，使通知服务无需感知具体厂商；
+	 * 若已有 {@link SmsProvider} 实现则不再注册，支持腾讯云/华为云等平滑切换。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(SmsProvider.class)
 	@ConditionalOnProperty(prefix = "ydsz.notify.sms", name = "provider", havingValue = "aliyun")
@@ -320,6 +436,12 @@ public class NotifyConfiguration {
 
 	// ==================== 健康检查 ====================
 
+	/**
+	 * 注册通知健康检查指示器 Bean。
+	 *
+	 * <p>聚合各渠道策略、重试队列积压、熔断状态，对外暴露通知子系统整体健康度（供 /health 探活）。
+	 * 依赖 Spring HealthIndicator 类存在时启用；无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyHealthIndicator.class)
 	@ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
@@ -334,6 +456,12 @@ public class NotifyConfiguration {
 
 	// ==================== RestTemplate =====================
 
+	/**
+	 * 注册通知专用 {@link RestTemplate} Bean。
+	 *
+	 * <p>供短信/第三方网关等 HTTP 调用复用，设置 5s 连接、10s 读取超时以约束外部依赖最大阻塞时间。
+	 * 使用 {@code @ConditionalOnMissingBean} 允许业务侧提供带拦截器/连接池的定制实例。
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public RestTemplate notifyRestTemplate() {
@@ -345,6 +473,12 @@ public class NotifyConfiguration {
 
 	// ==================== 限流器 ====================
 
+	/**
+	 * 注册通知限流管理器 Bean。
+	 *
+	 * <p>按渠道/租户维度对发送速率进行令牌桶限流，保护下游网关不被突发流量击穿。
+	 * 依据 {@code ydsz.notify.ratelimit} 配置初始化；无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyRateLimiterManager.class)
 	public NotifyRateLimiterManager notifyRateLimiterManager(NotifyProperties properties) {
@@ -405,6 +539,12 @@ public class NotifyConfiguration {
 
 	// ==================== 重试队列 ====================
 
+	/**
+	 * 注册通知重试队列 Bean。
+	 *
+	 * <p>承接发送失败的异步重试；当配置 {@code persistent=true} 时落地 Redis 以保证进程重启后仍可恢复，
+	 * 否则退化为内存队列（重启即丢）。达到最大重试次数后转交死信处理器。缓存实例引用供定时任务消费。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyRetryQueue.class)
 	public NotifyRetryQueue notifyRetryQueue(NotifyProperties properties,
@@ -434,6 +574,12 @@ public class NotifyConfiguration {
 
 	// ==================== 异步通知服务 ====================
 
+	/**
+	 * 注册异步通知服务 Bean。
+	 *
+	 * <p>将通知发送异步化，借助虚拟线程池解耦主流程与下游调用，提升吞吐；
+	 * 失败时回落到重试队列做补偿。无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(AsyncNotifyService.class)
 	public AsyncNotifyService asyncNotifyService(NotifyService notifyService, NotifyRetryQueue retryQueue,
@@ -444,6 +590,12 @@ public class NotifyConfiguration {
 
 	// ==================== 事务安全通知发布器 ====================
 
+	/**
+	 * 注册事务安全通知发布器 Bean。
+	 *
+	 * <p>保证通知仅在所在数据库事务成功提交后才会真正发出，避免事务回滚却已外发通知的一致性问题。
+	 * 借助 {@link ApplicationEventPublisher} 在事务提交后触发。无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(TransactionalNotifyPublisher.class)
 	public TransactionalNotifyPublisher transactionalNotifyPublisher(
@@ -455,6 +607,12 @@ public class NotifyConfiguration {
 
 	// ==================== 虚拟线程池 =====================
 
+	/**
+	 * 注册通知共享虚拟线程池 Bean。
+	 *
+	 * <p>为异步发送、聚合刷新等提供高并发、低开销的虚拟线程执行器；{@code destroyMethod="shutdown"} 确保容器关闭时优雅回收。
+	 * 以命名 bean 避免与业务线程池冲突；无同名 Bean 时注册默认实现。
+	 */
 	@Bean(destroyMethod = "shutdown")
 	@ConditionalOnMissingBean(name = "notifyVirtualThreadExecutor")
 	public ExecutorService notifyVirtualThreadExecutor() {
@@ -491,6 +649,12 @@ public class NotifyConfiguration {
 
 	// ==================== 通知辅助类 ====================
 
+	/**
+	 * 注册通知辅助工具类 Bean。
+	 *
+	 * <p>封装面向业务代码的便捷发送 API，屏蔽底层渠道选择/降级/异步等复杂度。
+	 * 依赖统一通知服务；无自定义 Bean 时注册默认实现。
+	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyHelper.class)
 	public NotifyHelper notifyHelper(NotifyService notifyService) {

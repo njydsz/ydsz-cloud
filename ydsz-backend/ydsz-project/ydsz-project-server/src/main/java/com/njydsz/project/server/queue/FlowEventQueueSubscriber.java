@@ -66,6 +66,20 @@ public class FlowEventQueueSubscriber {
     private IMessageQueue flowEventQueue;
     private IMessageSubscriber flowEventSubscriber;
 
+    /**
+     * 应用启动后异步订阅工作流事件通道。
+     *
+     * <p>创建 {@link QueueType#STREAM} 类型队列并在 {@link #FLOW_EVENT_CHANNEL} 上注册
+     * 异步消费者，使 project 服务启动完成即可接收 workflow 侧推送的立项状态变更事件，
+     * 无需等待首次业务请求触发。
+     *
+     * <p><b>失败降级：</b>队列基础设施（Redis Stream）不可用时<b>不向外抛异常</b>，
+     * 仅记录 warn 日志并放弃本次订阅，保证应用能正常完成启动。此时 project↔workflow
+     * 的异步联动链路失效，立项状态需依赖定时任务或人工补偿，且本方法不会自动重试。
+     *
+     * <p><b>线程模型：</b>{@code subscribeAsync} 在独立消费线程中回调
+     * {@link #handleFlowEvent}，本方法不会阻塞 Spring 容器初始化流程。
+     */
     @PostConstruct
     public void init() {
         try {
@@ -143,6 +157,15 @@ public class FlowEventQueueSubscriber {
                 initiationId, action, synced, traceId);
     }
 
+    /**
+     * 应用关闭前停止消费并释放队列连接。
+     *
+     * <p>严格按「先停订阅者、后关队列」的顺序释放：若先关闭队列，消费线程可能持有
+     * 已失效的连接继续拉取消息，导致停机阶段刷出大量异常日志。
+     *
+     * <p>当 {@link #init()} 因基础设施异常降级时，两个字段可能为 {@code null}，
+     * 故均做空值保护；方法可重复调用（幂等），不会因重复关闭而失败。
+     */
     @PreDestroy
     public void destroy() {
         if (flowEventSubscriber != null) {

@@ -14,7 +14,6 @@ import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.json.YdszJson;
 
 /**
  * 规则冲突检测 Controller
@@ -49,6 +48,6 @@ public class RuleConflictController {
      */
     @GetMapping("/conflicts")
     public BaseResponse<List<RuleConflictInfoVO>> detectConflicts() {
-        return BaseResponse.success(ruleConflictDetectorProvider.detectConflicts().stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleConflictInfoVO.class)).toList());
+        return BaseResponse.success(ruleConflictDetectorProvider.detectConflicts().stream().map(LiteruleWebConverter.INSTANT::entityToVO).toList());
     }
 }

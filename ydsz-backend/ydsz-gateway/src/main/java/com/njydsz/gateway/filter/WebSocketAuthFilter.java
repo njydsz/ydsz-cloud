@@ -101,7 +101,6 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
     @Value("${ydsz.gateway.websocket.allowed-origins:}")
     private String allowedOriginsConfig;
 
-    @Override
     /**
      * WebSocket 独立认证过滤器：处理升级握手中的 Token 校验与内部头注入。
      *
@@ -113,6 +112,7 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
      * @param chain    网关过滤器链
      * @return 放行或拒绝（401 / 403）的完成信号 Mono
      */
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();

@@ -81,6 +81,14 @@ public class JobNodeReaper {
 
     private String leaderRole;
 
+    /**
+     * 初始化僵尸节点回收器：解析 Leader 角色。
+     *
+     * <p>本类由 {@code @ConditionalOnBean(LeaderElector.class)} 与
+     * {@code @ConditionalOnProperty(node-discovery.type=db)} 限定仅 DB 节点发现模式下注册。
+     * 初始化仅缓存 Leader 角色用于日志与 Leader 身份校验；
+     * 回收阈值 {@code STALE_NODE_RETENTION_MINUTES}（30min）固定，无外部资源需要预分配。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();

@@ -42,6 +42,18 @@ public class DocsAutoConfiguration {
                 properties.isRedactEnabled());
     }
 
+    /**
+     * 装配文档模块健康探针，暴露解析器注册情况、PII 检测器状态与异步队列水位。
+     *
+     * <p>仅在 classpath 存在 Actuator health 相关类时生效，
+     * 使本模块可被无 Actuator 的应用（如纯批处理任务）直接依赖而不报错。
+     *
+     * @param parserRegistry      解析器注册表，用于探测已支持的文档格式
+     * @param piiDetector         PII 检测器组合，用于探测检测规则是否加载成功
+     * @param properties          文档模块配置，用于在健康详情中回显各功能开关
+     * @param asyncDocumentParser 异步解析器，用于探测队列积压情况
+     * @return 文档模块健康探针
+     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")

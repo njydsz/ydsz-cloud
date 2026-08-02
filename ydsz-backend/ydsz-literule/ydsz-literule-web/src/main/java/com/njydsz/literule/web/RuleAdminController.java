@@ -24,6 +24,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.dto.ExpressionValidateDTO;
@@ -101,7 +102,7 @@ public class RuleAdminController {
      */
     @GetMapping
     public BaseResponse<List<RuleDefinitionVO>> list() {
-        return BaseResponse.success(ruleAdminService.listAll().stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleDefinitionVO.class)).toList());
+        return BaseResponse.success(ruleAdminService.listAll().stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
     }
 
     /**
@@ -112,7 +113,7 @@ public class RuleAdminController {
      */
     @GetMapping("/{ruleCode}")
     public BaseResponse<RuleDefinitionVO> get(@PathVariable String ruleCode) {
-        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleAdminService.getByCode(ruleCode)), RuleDefinitionVO.class));
+        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleAdminService.getByCode(ruleCode)));
     }
 
     /**
@@ -130,7 +131,7 @@ public class RuleAdminController {
     public BaseResponse<RuleDefinitionVO> save(@RequestBody RuleDefinition definition,
                                         @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
                                         @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
-        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleAdminService.save(definition, operator, changeDesc)), RuleDefinitionVO.class));
+        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleAdminService.save(definition, operator, changeDesc)));
     }
 
     /**
@@ -160,7 +161,7 @@ public class RuleAdminController {
      */
     @GetMapping("/{ruleCode}/versions")
     public BaseResponse<List<RuleVersionVO>> listVersions(@PathVariable String ruleCode) {
-        return BaseResponse.success(ruleAdminService.listVersions(ruleCode).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleVersionVO.class)).toList());
+        return BaseResponse.success(ruleAdminService.listVersions(ruleCode).stream().map(LiteruleWebConverter.INSTANT::entityToVO).toList());
     }
 
     /**
@@ -191,7 +192,7 @@ public class RuleAdminController {
             RuleDefinition oldDef = YdszJson.toObject(oldV.getDefinitionJson(), RuleDefinition.class);
             RuleDefinition newDef = YdszJson.toObject(newV.getDefinitionJson(), RuleDefinition.class);
             RuleVersionDiffService diffService = new RuleVersionDiffService();
-            return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(diffService.diff(oldDef, newDef)), RuleVersionDiffVO.class));
+            return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(diffService.diff(oldDef, newDef)));
         } catch (Exception e) {
             log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}", ruleCode, oldVersion, newVersion, e);
             return BaseResponse.error("版本 Diff 解析失败: " + e.getMessage());
@@ -212,7 +213,7 @@ public class RuleAdminController {
     public BaseResponse<RuleDefinitionVO> rollback(@PathVariable String ruleCode,
                                             @RequestParam int version,
                                             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleAdminService.rollback(ruleCode, version, operator)), RuleDefinitionVO.class));
+        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleAdminService.rollback(ruleCode, version, operator)));
     }
 
     /**
@@ -227,7 +228,7 @@ public class RuleAdminController {
     @PostMapping("/dryRun")
     public BaseResponse<List<RuleResultVO>> dryRun(@RequestParam(required = false) String ruleCode,
                                             @RequestBody Map<String, Object> facts) {
-        return BaseResponse.success(ruleAdminService.dryRun(ruleCode, facts).stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleResultVO.class)).toList());
+        return BaseResponse.success(ruleAdminService.dryRun(ruleCode, facts).stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
     }
 
     /**
@@ -300,7 +301,7 @@ public class RuleAdminController {
                 result = expressionValidationService.validateCondition(expression);
                 break;
         }
-        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(result), ExpressionValidationResultVO.class));
+        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(result));
     }
 
     /**
@@ -349,6 +350,6 @@ public class RuleAdminController {
      */
     @GetMapping("/stats")
     public BaseResponse<RuleEngineStatsVO> stats() {
-        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleEngine.getStats()), RuleEngineStatsVO.class));
+        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleEngine.getStats()));
     }
 }

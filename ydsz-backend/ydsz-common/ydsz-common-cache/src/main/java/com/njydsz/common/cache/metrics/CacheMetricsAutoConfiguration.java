@@ -49,6 +49,19 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 @ConditionalOnBean({MeterRegistry.class, YdszCacheManager.class})
 public class CacheMetricsAutoConfiguration {
 
+  /**
+   * 注册缓存指标绑定器，将 YdszCacheManager 管理的缓存暴露为 Micrometer 指标。
+   *
+   * <p>由于用户在运行时可能动态创建新缓存，普通静态绑定无法覆盖，故返回 {@link CacheMetricsRegistrar}
+   * 这一 {@link SmartInitializingSingleton}：它在所有单例 Bean 就绪后被动绑定已存在缓存，并对外提供
+   * {@code registerCache} 供运行时动态注册。仅在 classpath 同时存在 {@code MeterRegistry} 与
+   * {@code YdszCacheManager} 时装配（见类级 {@code @ConditionalOnBean}），缺失监控依赖时整体不生效，
+   * 不影响缓存本身功能。
+   *
+   * @param cacheManager 缓存管理器，由 Spring 容器注入，不会为 null
+   * @param meterRegistry Micrometer 注册中心，由 Spring 容器注入，不会为 null
+   * @return 缓存指标注册器实例，交给 Spring 托管为单例
+   */
   @Bean
   public CacheMetricsRegistrar cacheMetricsRegistrar(
       YdszCacheManager cacheManager, MeterRegistry meterRegistry) {

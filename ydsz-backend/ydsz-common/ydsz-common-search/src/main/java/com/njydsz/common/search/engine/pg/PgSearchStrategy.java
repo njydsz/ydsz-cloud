@@ -422,6 +422,19 @@ public class PgSearchStrategy
         return EngineCapability.full();
     }
 
+    /**
+     * 关闭可用性探测调度线程池，由容器在 Bean 销毁阶段调用。
+     *
+     * <p>探测任务每 30 秒执行一次，在引擎被标记为不可用时尝试
+     * {@code SELECT 1 FROM <索引表> LIMIT 1} 以自动恢复降级状态。
+     *
+     * <p>关闭采用「优雅 + 强制」两段式：先 {@code shutdown()} 等待最多 3 秒，
+     * 超时或被中断则 {@code shutdownNow()} 强制终止；
+     * 被中断时会补回线程中断标志，不吞掉中断信号。
+     *
+     * <p>关闭后引擎的 {@code available} 状态将不再自动恢复，
+     * 需重启应用重新建立探测。重复调用是安全的（幂等）。
+     */
     public void shutdown() {
         probeScheduler.shutdown();
         try {

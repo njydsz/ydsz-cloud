@@ -81,9 +81,13 @@ public class ExcelReadResult<T> {
     /** 原始CompletableFuture */
     private CompletableFuture<List<T>> future;
 
-    /** 元数据 */
+    /** 来源文件名（含扩展名），仅用于日志与问题定位，不参与业务判断 */
     private String fileName;
+
+    /** 实际读取的 Sheet 名称；按索引读取且未解析到名称时可能为 null */
     private String sheetName;
+
+    /** 实际读取的 Sheet 索引，从 0 开始 */
     private int sheetIndex;
 
     public ExcelReadResult() {
@@ -403,51 +407,130 @@ public class ExcelReadResult<T> {
         private String sheetName;
         private int sheetIndex;
 
+        /**
+         * 设置读取到的数据列表。
+         *
+         * <p>直接持有入参引用而非拷贝，构建后请勿再修改该列表。
+         * 允许传 {@code null}，此时 {@link ExcelReadResult#getOrDefault()} 会兜底为空列表，
+         * 但 {@link ExcelReadResult#getData()} 仍会原样返回 {@code null}。
+         *
+         * @param data 数据列表，可为 {@code null}
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> data(List<T> data) {
             this.data = data;
             return this;
         }
 
+        /**
+         * 设置总行数。
+         *
+         * <p>此值不会由 {@link #data(List)} 自动推导，需调用方显式指定；
+         * 若与实际数据条数不一致，{@link ExcelReadResult#getRowsPerSecond()} 的统计结果也会随之偏差。
+         *
+         * @param totalRows 数据总行数（不含表头），应 &gt;= 0
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> totalRows(int totalRows) {
             this.totalRows = totalRows;
             return this;
         }
 
+        /**
+         * 设置读取耗时。
+         *
+         * <p>该值为 0 时 {@link ExcelReadResult#getRowsPerSecond()} 直接返回 0，避免除零。
+         *
+         * @param elapsedTime 读取耗时，单位毫秒
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> elapsedTime(long elapsedTime) {
             this.elapsedTime = elapsedTime;
             return this;
         }
 
+        /**
+         * 设置读取是否成功。
+         *
+         * <p>该标记与 {@link #error(Throwable)} 相互独立，不会联动，需调用方自行保证语义一致。
+         *
+         * @param success {@code true} 表示读取成功
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> success(boolean success) {
             this.success = success;
             return this;
         }
 
+        /**
+         * 设置失败原因。
+         *
+         * <p>异常在此被封装为结果字段而非向外抛出，调用方通过
+         * {@link ExcelReadResult#getError()} 主动获取，避免异常穿透业务代码。
+         *
+         * @param error 失败异常，成功场景传 {@code null}
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> error(Throwable error) {
             this.error = error;
             return this;
         }
 
+        /**
+         * 绑定底层异步任务。
+         *
+         * <p>绑定后 {@link ExcelReadResult#get()}、{@link ExcelReadResult#thenAccept}
+         * 等方法会转发到该 future；未绑定（{@code null}）时这些方法降级为直接返回已有的同步数据，
+         * 因此同步结果对象也能安全地按异步风格使用。
+         *
+         * @param future 底层异步任务，可为 {@code null} 表示同步结果
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> future(CompletableFuture<List<T>> future) {
             this.future = future;
             return this;
         }
 
+        /**
+         * 设置来源文件名，仅用于日志与问题定位。
+         *
+         * @param fileName 文件名（含扩展名），可为 {@code null}
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> fileName(String fileName) {
             this.fileName = fileName;
             return this;
         }
 
+        /**
+         * 设置实际读取的 Sheet 名称。
+         *
+         * @param sheetName Sheet 名称，按索引读取且无法解析名称时可为 {@code null}
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> sheetName(String sheetName) {
             this.sheetName = sheetName;
             return this;
         }
 
+        /**
+         * 设置实际读取的 Sheet 索引。
+         *
+         * @param sheetIndex Sheet 索引，从 0 开始
+         * @return 当前构建器，便于链式调用
+         */
         public Builder<T> sheetIndex(int sheetIndex) {
             this.sheetIndex = sheetIndex;
             return this;
         }
 
+        /**
+         * 构建不可再变更的结果对象。
+         *
+         * <p>构建器可重复调用本方法产出多个实例，但各实例共享同一份 {@code data} 列表引用。
+         *
+         * @return 结果对象，永不为 {@code null}
+         */
         public ExcelReadResult<T> build() {
             return new ExcelReadResult<>(this);
         }

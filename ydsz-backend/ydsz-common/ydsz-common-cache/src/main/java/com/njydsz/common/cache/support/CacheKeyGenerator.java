@@ -128,26 +128,78 @@ public final class CacheKeyGenerator {
 
     private Builder() {}
 
+    /**
+     * 设置 key 的一级前缀，用于隔离不同业务域的缓存。
+     *
+     * <p>多个应用共用一套 Redis 时必须设置，否则不同模块的同名 key 会互相覆盖。
+     * 前缀参与 SCAN 匹配模式的构造，因此选定后不宜随意变更，
+     * 否则历史 key 将无法被批量清理。
+     *
+     * @param prefix 业务前缀，如 {@code "user"}；为 {@code null} 或空串表示不加前缀
+     * @return 当前构建器，便于链式调用
+     */
     public Builder prefix(String prefix) {
       this.prefix = prefix;
       return this;
     }
 
+    /**
+     * 设置 key 的二级命名空间，常用于承载版本号。
+     *
+     * <p>缓存值的结构发生不兼容变更时，递增命名空间（如 {@code v1} → {@code v2}）
+     * 即可让全部旧 key 自然失效，无需停机清理，是灰度发布的常用手法。
+     *
+     * @param namespace 命名空间，如 {@code "v1"}；为 {@code null} 或空串表示不加命名空间
+     * @return 当前构建器，便于链式调用
+     */
     public Builder namespace(String namespace) {
       this.namespace = namespace;
       return this;
     }
 
+    /**
+     * 开启超长 key 的哈希压缩，默认关闭。
+     *
+     * <p>开启后，业务部分长度超过 {@link #maxLength(int)} 的 key 会被替换为
+     * MD5 摘要的 URL-safe Base64 编码（固定 22 字符），
+     * 以控制 Redis 内存占用与网络开销。
+     *
+     * <p><b>代价</b>：压缩<b>不可逆</b>，从 Redis 里看到的 key 无法还原为原始业务 key，
+     * 排查问题时需要自行复算摘要；且 MD5 存在理论碰撞可能，
+     * 极端情况下两个不同业务 key 会命中同一缓存条目。
+     *
+     * @param hashLongKeys {@code true} 开启压缩，{@code false} 保持原样
+     * @return 当前构建器，便于链式调用
+     */
     public Builder hashLongKeys(boolean hashLongKeys) {
       this.hashLongKeys = hashLongKeys;
       return this;
     }
 
+    /**
+     * 设置触发哈希压缩的 key 长度阈值，默认 128。
+     *
+     * <p>仅在 {@link #hashLongKeys(boolean)} 为 {@code true} 时生效，
+     * 且只统计业务 key 本身的长度，<b>不含</b>前缀与命名空间。
+     * MD5 不可用的兜底路径也会用该值对 key 做截断。
+     *
+     * @param maxLength 长度阈值（字符数），应大于 0
+     * @return 当前构建器，便于链式调用
+     */
     public Builder maxLength(int maxLength) {
       this.maxLength = maxLength;
       return this;
     }
 
+    /**
+     * 设置各层级之间的分隔符，默认为 {@code ":"}。
+     *
+     * <p>沿用 Redis 社区约定的冒号分层习惯可让 RedisInsight 等工具
+     * 自动把 key 渲染成树形结构；改成其他字符会丧失这一便利。
+     *
+     * @param separator 分隔符；为 {@code null} 时回退为默认的 {@code ":"}
+     * @return 当前构建器，便于链式调用
+     */
     public Builder separator(String separator) {
       this.separator = separator;
       return this;

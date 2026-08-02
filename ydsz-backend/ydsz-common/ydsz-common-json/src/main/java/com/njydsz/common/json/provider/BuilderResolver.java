@@ -36,6 +36,7 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  * @see CreatorResolver
  * @see TypeConverter
  */
+@SuppressWarnings("deprecation")
 final class BuilderResolver {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BuilderResolver.class);

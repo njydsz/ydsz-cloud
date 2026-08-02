@@ -76,10 +76,29 @@ public interface SmsProvider {
             this.errorMessage = errorMessage;
         }
 
+        /**
+         * 构造成功结果。
+         *
+         * <p>success 置为 {@code true}，{@code errorCode}/{@code errorMessage} 置 {@code null}。
+         * {@code messageId} 取厂商返回的消息 ID，是后续回执查询与投递追踪的唯一依据，调用方应妥善持久化。
+         *
+         * @param messageId 厂商返回的消息 ID，非空
+         * @return 成功结果
+         */
         public static SmsSendResult success(String messageId) {
             return new SmsSendResult(true, messageId, null, null);
         }
 
+        /**
+         * 构造失败结果。
+         *
+         * <p>success 置为 {@code false}，{@code messageId} 置 {@code null}（失败无有效消息 ID）。
+         * {@code errorCode} 用于告警归类与重试策略判断（如限流、参数错误），{@code errorMessage} 供人工排查。
+         *
+         * @param errorCode    厂商返回的错误码，非空
+         * @param errorMessage 错误描述信息
+         * @return 失败结果
+         */
         public static SmsSendResult failure(String errorCode, String errorMessage) {
             return new SmsSendResult(false, null, errorCode, errorMessage);
         }

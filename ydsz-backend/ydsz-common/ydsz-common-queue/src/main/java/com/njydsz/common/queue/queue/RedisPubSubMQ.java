@@ -105,6 +105,16 @@ public class RedisPubSubMQ implements IMessageQueue {
         }
     }
 
+    /**
+     * 登记订阅者到内部映射。
+     *
+     * <p>便于 {@link #close()} 时统一关闭所有订阅者、防止连接泄漏。
+     * 仅登记由本 MQ 创建的订阅者；{@code subscriberId} 重复会覆盖旧条目（旧订阅者不再被本 MQ 管理，需调用方自行关闭）。
+     * {@code subscriberId} 或 {@code subscriber} 为 {@code null} 时静默忽略。
+     *
+     * @param subscriberId 订阅者唯一 ID，用于后续移除/关闭
+     * @param subscriber   订阅者实例
+     */
     public void registerSubscriber(String subscriberId, RedisPubSubSubscriber subscriber) {
         if (subscriberId != null && subscriber != null) {
             subscribers.put(subscriberId, subscriber);
@@ -112,6 +122,15 @@ public class RedisPubSubMQ implements IMessageQueue {
         }
     }
 
+    /**
+     * 从内部映射移除订阅者登记。
+     *
+     * <p>通常在订阅者主动取消订阅时调用。注意：本方法<b>仅移除引用、不主动关闭底层订阅连接</b>，
+     * 以避免影响仍持有该订阅者的其它引用；真正的资源释放交由 {@link #close()} 或订阅者自身的 {@code shutdown()}。
+     * {@code subscriberId} 为 {@code null} 时忽略。
+     *
+     * @param subscriberId 待移除的订阅者 ID
+     */
     public void removeSubscriber(String subscriberId) {
         if (subscriberId != null) {
             subscribers.remove(subscriberId);

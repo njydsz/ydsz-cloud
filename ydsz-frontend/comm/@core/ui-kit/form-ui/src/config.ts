@@ -47,6 +47,30 @@ export const COMPONENT_BIND_EVENT_MAP: Partial<
   YDSZCheckbox: 'checked',
 };
 
+/**
+ * 初始化表单适配层，把宿主应用的 UI 组件库对接到 form-ui。
+ *
+ * @remarks
+ * 应在应用启动阶段（创建 app 之后、渲染表单之前）调用**一次**。它做了四件事：
+ * 1. 把控件行为默认值写入模块级单例 {@link DEFAULT_FORM_COMMON_CONFIG}；
+ * 2. 通过 vee-validate 的 `defineRule` 注册全局校验规则；
+ * 3. 从 {@link globalShareState} 读取宿主注册的组件，合并进 {@link COMPONENT_MAP}；
+ * 4. 为这些组件推导 v-model 的 prop 名，写入 {@link COMPONENT_BIND_EVENT_MAP}。
+ *
+ * 需要特别注意的副作用与顺序约束：
+ * - 三个映射表都是**模块级可变单例**，此函数为原地修改而非返回新配置。
+ *   重复调用会以后一次为准覆盖同名项，但**不会清除**上一次注册的多余项；
+ * - 必须在 `globalShareState.setComponents()` 之后调用，否则第 3 步读到空对象，
+ *   自定义控件全部注册失败，表现为字段渲染空白；
+ * - 同名 key 会直接覆盖内置控件（如自定义 `YDSZInput` 将替换默认实现），
+ *   这是有意保留的定制能力，但也意味着命名冲突不会有任何告警。
+ *
+ * `disabledOnChangeListener` / `disabledOnInputListener` 缺省均为 `true`，
+ * 即默认关闭 change/input 监听以避免与 v-model 重复触发校验；
+ * `emptyStateValue` 缺省为 `undefined`，对接 naive-ui 等要求 `null` 的库时必须显式指定。
+ *
+ * @param options - 适配器配置，含控件行为配置与内置规则实现，详见 {@link YDSZFormAdapterOptions}
+ */
 export function setupYDSZForm<
   T extends BaseFormComponentType = BaseFormComponentType,
 >(options: YDSZFormAdapterOptions<T>) {

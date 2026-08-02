@@ -251,6 +251,15 @@ public class BusinessException extends AbstractYdszException {
         return this;
     }
 
+    /**
+     * 转换为可序列化的异常响应体，供全局异常处理器写回 HTTP 响应。
+     *
+     * <p>会触发国际化消息的懒加载解析，应在请求线程内调用以保证取到正确的 Locale。
+     * 注意：通过 {@link #data(String, Object)} 附加的业务数据不会进入返回对象，
+     * 需要透出时由调用方自行从 {@code getExtData()} 读取并填充 {@code details}。
+     *
+     * @return 新建的异常信息对象，永不为 {@code null}
+     */
     public ExceptionInfo toExceptionInfo() {
         return buildExceptionInfo();
     }

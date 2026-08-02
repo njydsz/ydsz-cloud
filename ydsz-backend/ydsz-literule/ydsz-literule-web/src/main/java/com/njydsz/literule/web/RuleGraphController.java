@@ -38,7 +38,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.literule.domain.converter.LiteruleConverter;
 
 /**
  * 规则链画布 Controller
@@ -88,7 +88,7 @@ public class RuleGraphController {
      */
     @GetMapping("/{ruleCode}/graph")
     public BaseResponse<RuleChainGraphVO> getChainGraph(@PathVariable String ruleCode) {
-        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(ruleChainGraphProvider.getByRuleCode(ruleCode)), RuleChainGraphVO.class));
+        return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(ruleChainGraphProvider.getByRuleCode(ruleCode)));
     }
 
     /**
@@ -162,7 +162,7 @@ public class RuleGraphController {
     public BaseResponse<ExpressionPreviewResultVO> previewExpression(
             @RequestParam String expression,
             @RequestBody Map<String, Object> facts) {
-        return BaseResponse.success(YdszJson.toObject(YdszJson.toJson(expressionValidationService.previewEvaluate(expression, facts)), ExpressionPreviewResultVO.class));
+        return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(expressionValidationService.previewEvaluate(expression, facts)));
     }
 
     /**
@@ -182,7 +182,7 @@ public class RuleGraphController {
                                                  @RequestBody Map<String, Object> facts) {
         try {
             List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
-            return BaseResponse.success(results.stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), RuleResultVO.class)).toList());
+            return BaseResponse.success(results.stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
         } catch (IllegalArgumentException e) {
             log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
             return BaseResponse.error(e.getMessage());
@@ -220,6 +220,6 @@ public class RuleGraphController {
                 .filter(f -> "all".equalsIgnoreCase(engine)
                         || engine.equalsIgnoreCase(f.getSupportedEngines()))
                 .toList();
-        return BaseResponse.success(filtered.stream().map(e -> YdszJson.toObject(YdszJson.toJson(e), ExpressionFunctionDefVO.class)).toList());
+        return BaseResponse.success(filtered.stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
     }
 }

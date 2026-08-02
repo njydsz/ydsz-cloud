@@ -213,4 +213,36 @@ public final class ArrayNode extends JsonNode {
     public int hashCode() {
         return elements.hashCode();
     }
+
+    /**
+     * 从 List 创建 ArrayNode（适配器方法，用于从 JsonArray 迁移）。
+     *
+     * <p>此方法为 {@link com.njydsz.common.json.object.JsonArray}（已废弃）的迁移提供桥接。
+     * JsonArray 继承自 ArrayList，可直接传入此方法。
+     *
+     * <pre>{@code
+     * JsonArray legacy = YdszJson.parseArrayToJsonArray(json);
+     * ArrayNode node = ArrayNode.fromList(legacy);
+     * }</pre>
+     *
+     * @param list 源 List，null 返回空 ArrayNode
+     * @return ArrayNode 实例
+     * @since 1.0.0
+     */
+    public static ArrayNode fromList(List<?> list) {
+        ArrayNode node = new ArrayNode();
+        if (list == null) {
+            return node;
+        }
+        for (Object value : list) {
+            if (value == null) {
+                node.elements.add(NullNode.getInstance());
+            } else if (value instanceof JsonNode) {
+                node.elements.add((JsonNode) value);
+            } else {
+                node.elements.add(TreeConverter.convertToJsonNode(value));
+            }
+        }
+        return node;
+    }
 }

@@ -119,6 +119,19 @@ const ElUpload = defineAsyncComponent(() =>
   ]).then(([res]) => res.ElUpload),
 );
 
+/**
+ * 为底层组件包裹默认 placeholder 并透传 expose 方法的高阶包装函数。
+ *
+ * @remarks
+ * placeholder 取值优先级为 props > attrs > i18n 兜底，保证调用方显式传入时不被覆盖。
+ * 由于 `inheritAttrs: false` 且外层是新的 defineComponent，底层实例方法默认会丢失，
+ * 因此用 Proxy 惰性代理 `innerRef`，使 `formApi` 等调用方仍能拿到 focus/validate 等方法。
+ *
+ * @param component - 被包裹的底层组件
+ * @param type - 组件语义类型，用于回退到对应的 i18n 占位符（'input' | 'select'）
+ * @param componentProps - 透传给底层组件的默认 props，会被外部 props/attrs 覆盖
+ * @returns 包裹后的新组件，自动注入 placeholder 并透传内部实例方法
+ */
 const withDefaultPlaceholder = <T extends Component>(
   component: T,
   type: 'input' | 'select',
@@ -153,7 +166,13 @@ const withDefaultPlaceholder = <T extends Component>(
   });
 };
 
-// 这里需要自行根据业务组件库进行适配，需要用到的组件都需要在这里类型说明
+/**
+ * 表单可用的组件类型枚举。
+ *
+ * @remarks
+ * 需根据业务组件库自行扩展；所有表单渲染用到的组件都必须在此声明，
+ * 并在 {@link initComponentAdapter} 中注册对应实现，否则 Schema 里写了也渲染不出来。
+ */
 export type ComponentType =
   | 'ApiSelect'
   | 'ApiTreeSelect'
@@ -173,6 +192,15 @@ export type ComponentType =
   | 'Upload'
   | BaseFormComponentType;
 
+/**
+ * 初始化组件适配器：将表单/表格所需的 Element Plus 组件注册到全局共享状态。
+ *
+ * @remarks
+ * 需在应用启动时调用一次，使 ydsz-form、ydsz-modal、ydsz-drawer 能解析 {@link ComponentType}。
+ * 组件均以 `defineAsyncComponent` 按需引入，避免 Element Plus 全量进首屏包。
+ * TimePicker / DatePicker 在区间模式下会把 `name`、`id` 拆成 `[start, end]` 两项，
+ * 这是 Element Plus 区间控件的要求，否则表单校验无法定位到具体输入框。
+ */
 async function initComponentAdapter() {
   const components: Partial<Record<ComponentType, Component>> = {
     // 如果你的组件体积比较大，可以使用异步加载

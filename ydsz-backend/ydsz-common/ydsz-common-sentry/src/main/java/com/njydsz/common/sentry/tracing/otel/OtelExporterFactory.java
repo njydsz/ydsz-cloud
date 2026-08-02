@@ -109,10 +109,25 @@ public final class OtelExporterFactory {
         /** 单次导出超时（毫秒） */
         private long exporterTimeoutMillis = 30000;
 
+        /**
+         * 通用默认档：队列 2048、批量 512、5s 调度。
+         *
+         * <p>适用于绝大多数中低流量服务，在导出频次与内存占用之间取平衡。
+         *
+         * @return 全新的配置实例，可安全修改后使用
+         */
         public static BatchConfig defaults() {
             return new BatchConfig();
         }
 
+        /**
+         * 高吞吐档：队列 8192、批量 2048、2s 调度。
+         *
+         * <p>面向高 QPS 服务，通过放大队列降低 Span 因队列满而被丢弃的概率，
+         * 代价是常驻内存更高（队列按 Span 对象计数，非字节数）。
+         *
+         * @return 全新的配置实例，可安全修改后使用
+         */
         public static BatchConfig highThroughput() {
             BatchConfig c = new BatchConfig();
             c.setMaxQueueSize(8192);
@@ -121,6 +136,14 @@ public final class OtelExporterFactory {
             return c;
         }
 
+        /**
+         * 低延迟档：队列 512、批量 64、500ms 调度。
+         *
+         * <p>面向排障与灰度验证场景，让链路数据尽快可见；高流量下极易触发队列溢出丢 Span，
+         * 且导出请求频次高，不建议在生产主链路长期开启。
+         *
+         * @return 全新的配置实例，可安全修改后使用
+         */
         public static BatchConfig lowLatency() {
             BatchConfig c = new BatchConfig();
             c.setMaxQueueSize(512);

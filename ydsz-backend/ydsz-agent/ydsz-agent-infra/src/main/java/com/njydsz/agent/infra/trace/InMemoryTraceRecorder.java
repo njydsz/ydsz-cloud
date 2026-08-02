@@ -95,6 +95,16 @@ public class InMemoryTraceRecorder implements TraceRecorder {
         return traces.size();
     }
 
+    /**
+     * 清空全部链路数据（步骤、状态、元数据三张表）。
+     *
+     * <p>主要用于测试用例之间隔离数据，或调试面板手动释放内存；
+     * 生产环境慎用——链路是纯内存存储，清空后历史不可恢复。
+     *
+     * <p><b>并发</b>：三个 Map 逐个 clear，整体<b>非原子</b>。
+     * 若清理期间有链路正在写入，可能出现步骤已清空但状态残留的中间态，
+     * 因此不应在有活跃会话时调用。
+     */
     public void clear() {
         traces.clear();
         traceStatus.clear();

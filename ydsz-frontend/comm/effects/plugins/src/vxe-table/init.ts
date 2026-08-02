@@ -67,6 +67,19 @@ const createVirtualComponent = (name = '') => {
   });
 };
 
+/**
+ * 按需注册 vxe-table / vxe-pc-ui 组件。
+ *
+ * @remarks
+ * 幂等：通过模块级 `isInit` 标记保证只执行一次，重复调用直接返回。
+ *
+ * 为控制打包体积，这里只注册项目实际用到的组件；
+ * 其中 `VxeForm` 是用 `defineComponent` 造的**空壳虚拟组件**——
+ * vxe-table 内部会强校验其存在，不注册会报错，而项目实际使用的是自研表单，
+ * 因此以空组件占位既能规避报错又不引入真实实现的体积。
+ *
+ * 若业务需要用到被注释掉的组件（如 `VxeSwitch`），必须先在此处注册，否则运行时报错。
+ */
 export function initVxeTable() {
   if (isInit) {
     return;
@@ -107,6 +120,23 @@ export function initVxeTable() {
   isInit = true;
 }
 
+/**
+ * 完成 vxe-table 在本项目中的全部接入工作，应在应用启动阶段调用一次。
+ *
+ * @remarks
+ * 执行顺序（有依赖关系，勿调整）：
+ * 1. `initVxeTable()` 注册组件（幂等）；
+ * 2. 把应用层传入的表单实现赋值给模块级变量 `useTableForm`，供表格内置搜索表单使用；
+ * 3. 建立 `watch` 同步暗色主题与语言（`immediate: true`，调用即生效）；
+ * 4. 注册默认格式化器；
+ * 5. 最后执行调用方的 `configVxeTable`，因此**应用层配置可以覆盖上述默认设置**。
+ *
+ * 副作用：第 3 步的 `watch` 在应用生命周期内常驻不会被停止；
+ * 语言映射目前只覆盖 `zh-CN` 与 `en-US`，新增语种需要同步扩展 `localMap`，
+ * 否则 `setI18n` 会拿到 `undefined` 导致 vxe-table 文案回退为空。
+ *
+ * @param setupOptions - 应用层注入的适配参数，见 {@link SetupVxeTable}
+ */
 export function setupYDSZVxeTable(setupOptions: SetupVxeTable) {
   const { configVxeTable, useYDSZForm } = setupOptions;
 

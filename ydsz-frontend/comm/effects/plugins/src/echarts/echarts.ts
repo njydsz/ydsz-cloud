@@ -35,7 +35,20 @@ import * as echarts from 'echarts/core';
 import { LabelLayout, UniversalTransition } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
 
-// 通过 ComposeOption 来组合出一个只有必须组件和图表的 Option 类型
+/**
+ * 项目内 ECharts 图表配置项的收窄类型。
+ *
+ * @remarks
+ * 为了配合按需引入减小打包体积，这里用 `ComposeOption` 只组合出**当前已注册**的
+ * 系列与组件对应的配置类型，而非 echarts 完整的 `EChartsOption`。
+ *
+ * 因此存在两个使用约束：
+ * - 使用未在此列出的配置（如 `legend`、`toolbox`）时 TS 会报错，但运行时是可用的，
+ *   因为对应组件已在下方 `echarts.use` 中注册——需要类型支持时请把对应 Option 补进本联合类型；
+ * - 使用**未注册**的图表类型（如 `map`、`gauge`）会在运行时静默不渲染，务必先 `use` 再使用。
+ *
+ * 通过 `ComposeOption` 组合出只包含已注册组件与图表的 Option 类型。
+ */
 export type ECOption = ComposeOption<
   | BarSeriesOption
   | DatasetComponentOption

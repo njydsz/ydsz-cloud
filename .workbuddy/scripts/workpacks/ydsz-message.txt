@@ -1,0 +1,23 @@
+# 工作包: ydsz-message   待办文件 12 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[类头]  0 | ydsz-backend\ydsz-message\ydsz-message-api\src\main\java\com\njydsz\message\api\client\MessageSendClient.java
+[--]  3 | ydsz-backend\ydsz-message\ydsz-message-domain\src\main\java\com\njydsz\message\domain\dto\batch\BatchSendResult.java
+        成员: incSuccess, incFailed, incSkipped
+[--]  1 | ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\channel\DingTalkWorkNotificationChannel.java
+        成员: init
+[--]  1 | ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\channel\WeComAppChannel.java
+        成员: init
+[类头]  0 | ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\consumer\BatchMessageConsumer.java
+[类头]  0 | ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\consumer\MessageConsumer.java
+[类头]  0 | ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\consumer\MessageDlqConsumer.java
+[--]  1 | ydsz-backend\ydsz-message\ydsz-message-server\src\main\java\com\njydsz\message\server\service\impl\BatchServiceImpl.java
+        成员: executeBatchAsync
+[类头]  0 | ydsz-backend\ydsz-message\ydsz-message-web\src\main\java\com\njydsz\message\web\MessageApplication.java
+[--]  1 | ydsz-backend\ydsz-message\ydsz-message-web\src\main\java\com\njydsz\message\web\controller\MessageArchiveController.java
+        成员: search
+[--]  2 | ydsz-backend\ydsz-message\ydsz-message-web\src\main\java\com\njydsz\message\web\controller\TemplatePreviewController.java
+        成员: previewByCode, previewRaw
+[--]  4 | ydsz-backend\ydsz-message\ydsz-message-web\src\main\java\com\njydsz\message\web\controller\UserChannelBindingController.java
+        成员: upsert, listMine, listByUser, delete

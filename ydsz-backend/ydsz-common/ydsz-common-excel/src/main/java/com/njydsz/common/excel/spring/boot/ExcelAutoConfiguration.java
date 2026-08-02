@@ -133,6 +133,16 @@ public class ExcelAutoConfiguration {
         };
     }
 
+    /**
+     * 注册 Excel 健康检查指示器。
+     *
+     * <p>将全局 {@link ExcelConfig} 注入 {@link ExcelHealthIndicator}，用于暴露 Excel 读写链路的健康状态
+     * （如临时目录可用性、配置合法性），供 Actuator 健康端点采集。仅在容器中不存在该类型 Bean 时创建，
+     * 允许业务方提供自定义指示器实现以覆盖默认行为。</p>
+     *
+     * @param config Excel 全局配置，不可为 {@code null}
+     * @return Excel 健康检查指示器实例
+     */
     @Bean
     @ConditionalOnMissingBean
     public ExcelHealthIndicator excelHealthIndicator(ExcelConfig config) {

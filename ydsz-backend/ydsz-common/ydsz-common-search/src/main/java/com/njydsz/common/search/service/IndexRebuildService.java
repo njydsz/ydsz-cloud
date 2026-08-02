@@ -50,6 +50,24 @@ public class IndexRebuildService {
         this.rebuildExecutor.initialize();
     }
 
+    /**
+     * 同步执行全量索引重建：先清空目标索引，再从数据源全量回灌。
+     *
+     * <p><b>危险操作</b>：会先调用 {@code deleteAllIndices} 物理清空索引，
+     * 从清空到回灌完成之间搜索结果为空，属于有损重建，
+     * 只应在维护窗口或数据量较小的场景使用。
+     *
+     * <p><b>并发控制</b>：通过 {@code rebuilding} 标志位做单实例互斥，
+     * 已有重建在执行时立即返回 -1。该标志为普通 volatile 变量，
+     * <b>不是</b>严格的 CAS 锁，也<b>不跨节点</b>生效，集群环境需由调用方保证只有一个节点触发。
+     *
+     * <p>本方法在调用线程内同步阻塞直至完成，耗时与数据量成正比，
+     * 不要在 HTTP 请求线程中直接调用，应改用 {@link #rebuildAllAsync(String, String)}。
+     *
+     * @param type     实体类型；为 {@code null} 或空白表示重建全部已注册类型
+     * @param tenantId 租户 ID；为 {@code null} 表示不按租户过滤，重建全租户数据
+     * @return 成功索引的文档数；重建已在进行中、引擎不支持索引操作或执行异常时返回 -1
+     */
     public int rebuildAll(String type, String tenantId) {
         if (rebuilding) {
             log.warn("[IndexRebuild] 重建任务正在执行中");
@@ -82,6 +100,22 @@ public class IndexRebuildService {
         }
     }
 
+    /**
+     * 异步触发全量索引重建，立即返回不阻塞调用线程。
+     *
+     * <p>提交到专用的单线程池（核心/最大均为 1、队列容量 1、守护线程），
+     * 因此最多只有 1 个任务在跑 + 1 个排队，再多的提交会触发线程池拒绝策略。
+     * 进度可通过 {@code isRebuilding()} 与 {@code getProgressPercent()} 轮询。
+     *
+     * <p>任务内部已捕获所有异常并记 error 日志，失败不会向外传播，
+     * 调用方无法通过返回值感知结果，需依赖进度查询接口或日志告警。
+     *
+     * <p>注意线程池配置了 {@code waitForTasksToCompleteOnShutdown=false}，
+     * 应用关闭时未完成的重建会被直接中断，可能留下部分索引，需重跑。
+     *
+     * @param type     实体类型；为 {@code null} 或空白表示重建全部已注册类型
+     * @param tenantId 租户 ID；为 {@code null} 表示重建全租户数据
+     */
     public void rebuildAllAsync(String type, String tenantId) {
         rebuildExecutor.submit(() -> {
             try {
@@ -162,6 +196,15 @@ public class IndexRebuildService {
         return providerRegistry.getAllTypes();
     }
 
+    /**
+     * 关闭重建线程池，由容器在 Bean 销毁阶段调用。
+     *
+     * <p>线程池设置了 {@code waitForTasksToCompleteOnShutdown=false}，
+     * 因此本方法<b>不等待</b>在途重建任务完成即返回；
+     * 被中断的重建会留下不完整索引，应用重启后需重新触发重建。
+     *
+     * <p>重复调用是安全的（幂等）。
+     */
     public void shutdown() {
         rebuildExecutor.shutdown();
         log.info("[IndexRebuild] 重建线程池已关闭");

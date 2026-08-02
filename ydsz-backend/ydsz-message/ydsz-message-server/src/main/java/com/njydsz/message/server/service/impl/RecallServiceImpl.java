@@ -88,7 +88,6 @@ public class RecallServiceImpl implements RecallService {
         return true;
     }
 
-    @Override
     /**
      * 按消息日志 ID 撤回已发送消息。
      *
@@ -99,6 +98,7 @@ public class RecallServiceImpl implements RecallService {
      * @return true 表示撤回成功
      * @throws com.njydsz.common.exception.custom.SysException logId 为空时
      */
+    @Override
     public boolean recallMessage(String logId) {
         if (!StringUtils.hasText(logId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "日志 ID 不能为空");

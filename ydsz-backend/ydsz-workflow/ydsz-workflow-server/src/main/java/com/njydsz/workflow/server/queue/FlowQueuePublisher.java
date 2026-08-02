@@ -60,6 +60,16 @@ public class FlowQueuePublisher {
     private IMessageQueue flowEventQueue;
     private IMessagePublisher flowEventPublisher;
 
+    /**
+     * 应用启动后创建工作流事件通道的发布者。
+     *
+     * <p><b>失败降级：</b>队列基础设施不可用时<b>不抛异常</b>，仅记录 warn 并使
+     * {@code flowEventPublisher} 保持 {@code null}。此后所有发布方法都会在入口处静默返回，
+     * 系统退化为「仅本地 Spring 事件」——本服务内的监听逻辑照常工作，
+     * 只是 project 等跨服务消费方收不到消息。这样设计是为了让 MQ 故障不阻断审批主流程。
+     *
+     * <p>降级为一次性判定：本方法<b>不会</b>自动重试，MQ 恢复后需重启实例才能恢复发布能力。
+     */
     @PostConstruct
     public void init() {
         try {
@@ -191,6 +201,16 @@ public class FlowQueuePublisher {
         }
     }
 
+    /**
+     * 应用关闭前关闭发布者与队列连接。
+     *
+     * <p>按「先关发布者、后关队列」的顺序释放，确保缓冲区内已提交的消息先行 flush，
+     * 避免停机瞬间丢失刚发出的事件。两个字段在 {@link #init()} 降级失败时可能为
+     * {@code null}，故均做空值保护；方法幂等，可重复调用。
+     *
+     * <p><b>注意：</b>{@code @Async} 线程池中尚未执行的事件监听任务不在本方法管辖范围，
+     * 极端情况下停机会丢失少量异步事件，跨服务一致性由消费侧的对账逻辑兜底。
+     */
     @PreDestroy
     public void destroy() {
         if (flowEventPublisher != null) {

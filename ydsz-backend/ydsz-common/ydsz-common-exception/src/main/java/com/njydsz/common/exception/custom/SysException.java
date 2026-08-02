@@ -211,6 +211,15 @@ public class SysException extends AbstractYdszException {
              HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
+    /**
+     * 转换为可序列化的异常响应体，供全局异常处理器写回 HTTP 响应。
+     *
+     * <p>会触发国际化消息的懒加载解析，应在请求线程内调用以保证取到正确的 Locale。
+     * 系统异常默认 HTTP 状态码为 500，属于基础设施故障，
+     * 对外暴露时应避免把 {@code cause} 的原始堆栈信息带给客户端。
+     *
+     * @return 新建的异常信息对象，永不为 {@code null}
+     */
     public ExceptionInfo toExceptionInfo() {
         return buildExceptionInfo();
     }

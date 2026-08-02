@@ -80,6 +80,23 @@ public class MessageArchiveController {
 
     private final MessageArchiveService messageArchiveService;
 
+    /**
+     * 全文搜索消息发送日志。
+     *
+     * <p>基于 PostgreSQL 全文索引（GIN）对主题/内容/接收人/业务单据做关键字检索，
+     * 按当前租户隔离，返回分页 VO。所有查询参数均可空：全空时退化为按时间倒序的分页列举。
+     * 只读接口，需 {@code NOTIF_MESSAGE_LIST} 权限。
+     *
+     * @param keyword  全文关键字（可空）
+     * @param channel  通道过滤（SMS/EMAIL/IN_APP/DINGTALK/FEISHU/WECOM/WEBSOCKET，可空）
+     * @param status   消息状态过滤（PENDING/SENDING/SUCCESS/FAILED/DEAD 等，可空）
+     * @param bizType  业务类型（可空）
+     * @param startTime 发送时间下界（ISO 8601，可空）
+     * @param endTime   发送时间上界（ISO 8601，可空）
+     * @param pageNum  页码（默认 1）
+     * @param pageSize 每页大小（默认 20）
+     * @return 分页的消息日志 VO（已脱敏，不暴露实体内部字段）
+     */
     @Operation(summary = "全文搜索消息日志")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping

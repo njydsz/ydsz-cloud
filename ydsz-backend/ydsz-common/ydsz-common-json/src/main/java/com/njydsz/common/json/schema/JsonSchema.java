@@ -32,10 +32,15 @@ import com.njydsz.common.json.annotation.Experimental;
  * }
  * </pre>
  *
+ * @deprecated Schema 构建能力（静态工厂与组合方法 allOf/anyOf/oneOf 等）当前无业务使用，
+ *             计划抽离为独立子模块 {@code ydsz-common-json-schema}（可选依赖）。
+ *             核心模块仅保留 {@link JsonSchemaValidator} 的最小接口。
+ *             如需 Schema 校验，请使用 {@link JsonSchemaValidator#validate(JsonSchema, Object)}。
  * @author ydsz-team
  * @since 1.0.0
  */
 @Experimental("JSON Schema 定义属于非核心 RFC 扩展，后续可能独立为单独模块")
+@Deprecated(since = "1.0.0", forRemoval = true)
 public final class JsonSchema {
 
     /** Schema 类型 */

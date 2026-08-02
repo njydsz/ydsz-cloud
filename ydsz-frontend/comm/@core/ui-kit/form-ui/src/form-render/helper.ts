@@ -59,6 +59,24 @@ export function getDefaultValueInZodStack(schema: ZodTypeAny): any {
   return undefined;
 }
 
+/**
+ * 判断一个值是否「长得像」DOM 事件对象。
+ *
+ * @remarks
+ * 用于表单取值时区分两种回调形态：部分控件的更新回调回传的是纯值，
+ * 另一些（尤其原生 input）回传的是 Event，需要改取 `event.target.value`。
+ * 若不加区分，整个事件对象会被当作字段值写入表单数据。
+ *
+ * 采用**鸭子类型**判断而非 `instanceof Event`，是为了兼容两类情况：
+ * 跨 iframe / 测试环境中 `Event` 构造器不同源导致 `instanceof` 失效，
+ * 以及各 UI 库自造的仿事件对象。
+ *
+ * 代价是存在误判可能：任何同时具备 `target` 和 `stopPropagation` 两个属性的普通对象
+ * 都会被判定为事件。业务数据一般不会有 `stopPropagation`，实际风险可接受。
+ *
+ * @param obj - 任意待检测值；`null`、原始类型一律返回 `false`
+ * @returns 同时具备 `target` 与 `stopPropagation` 属性时返回 `true`
+ */
 export function isEventObjectLike(obj: any) {
   if (!obj || !isObject(obj)) {
     return false;

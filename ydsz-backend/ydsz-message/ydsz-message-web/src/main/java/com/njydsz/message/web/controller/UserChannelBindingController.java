@@ -87,6 +87,16 @@ public class UserChannelBindingController {
 
     private final UserChannelBindingService userChannelBindingService;
 
+    /**
+     * 新增或更新用户通道绑定。
+     *
+     * <p>绑定/覆盖用户的某通道具体联系方式（手机号 / 邮箱 / 钉钉 userId 等）；
+     * 敏感联系方式落库前自动脱敏。需 {@code NOTIF_MESSAGE_SEND} 权限，
+     * 启用 5s 幂等防重与 50 QPS 限流，并异步记录审计日志。
+     *
+     * @param dto 绑定信息（经 {@code @Valid} 校验，不可为 null）
+     * @return 绑定后的脱敏 VO
+     */
     @Operation(summary = "新增或更新通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Audit(module = "通道绑定", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
@@ -97,6 +107,14 @@ public class UserChannelBindingController {
         return BaseResponse.success(MessageConverter.INSTANT.entityToVO(userChannelBindingService.upsert(dto)));
     }
 
+    /**
+     * 查询当前登录用户的全部通道绑定（用于「我的通知设置」页面）。
+     *
+     * <p>按 {@link AuthContext#getUserId()} 当前用户寻址，结果已转为脱敏 VO。
+     * 需 {@code NOTIF_MESSAGE_LIST} 权限。
+     *
+     * @return 当前用户的绑定 VO 列表（无绑定时为空列表，非 null）
+     */
     @Operation(summary = "查询当前用户所有通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/mine")
@@ -104,6 +122,14 @@ public class UserChannelBindingController {
         return BaseResponse.success(MessageConverter.INSTANT.userChannelListToVO(userChannelBindingService.listByUser(AuthContext.getUserId())));
     }
 
+    /**
+     * 按用户 ID 查询其全部通道绑定（管理员视角）。
+     *
+     * <p>按传入 {@code userId} 寻址，结果已转为脱敏 VO。需 {@code NOTIF_MESSAGE_LIST} 权限。
+     *
+     * @param userId 目标用户 ID（路径变量，非空）
+     * @return 该用户的绑定 VO 列表（无绑定时为空列表，非 null）
+     */
     @Operation(summary = "按用户ID查询通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/user/{userId}")
@@ -111,6 +137,16 @@ public class UserChannelBindingController {
         return BaseResponse.success(MessageConverter.INSTANT.userChannelListToVO(userChannelBindingService.listByUser(userId)));
     }
 
+    /**
+     * 删除指定通道绑定。
+     *
+     * <p>解除某条用户通道绑定关系；需 {@code NOTIF_MESSAGE_SEND} 权限，
+     * 启用 5s 幂等防重与 50 QPS 限流，并异步记录审计日志。
+     * {@code id} 不存在时由服务层按未找到处理（不抛客户端异常）。
+     *
+     * @param id 绑定记录 ID（路径变量，非空）
+     * @return 成功响应（无业务数据）
+     */
     @Operation(summary = "删除通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Audit(module = "通道绑定", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")

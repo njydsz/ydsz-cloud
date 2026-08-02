@@ -28,5 +28,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
+@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonEnumDefaultValue {
 }

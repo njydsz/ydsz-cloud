@@ -60,6 +60,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class AsmBeanCodecGenerator {
 
     /** ASM ClassWriter 配置 */
@@ -313,8 +314,13 @@ public final class AsmBeanCodecGenerator {
         String classInternalName = className.replace('.', '/');
         String beanInternalName = beanType.getName().replace('.', '/');
 
-        ClassWriter cw = new ClassWriter(ASM_FLAGS);
-        cw.visit(V1_8, ACC_PUBLIC | ACC_FINAL, classInternalName, null, 
+        ClassWriter cw = new ClassWriter(ASM_FLAGS) {
+            @Override
+            protected String getCommonSuperClass(String type1, String type2) {
+                return "java/lang/Object";
+            }
+        };
+        cw.visit(V1_8, ACC_PUBLIC | ACC_FINAL, classInternalName, null,
                  "java/lang/Object", new String[]{"com/njydsz/common/json/asm/AsmSerializer"});
 
         Field[] fields = getSerializableFields(beanType);
@@ -986,8 +992,13 @@ public final class AsmBeanCodecGenerator {
         String classInternalName = className.replace('.', '/');
         String beanInternalName = beanType.getName().replace('.', '/');
 
-        ClassWriter cw = new ClassWriter(ASM_FLAGS);
-        cw.visit(V1_8, ACC_PUBLIC | ACC_FINAL, classInternalName, null, 
+        ClassWriter cw = new ClassWriter(ASM_FLAGS) {
+            @Override
+            protected String getCommonSuperClass(String type1, String type2) {
+                return "java/lang/Object";
+            }
+        };
+        cw.visit(V1_8, ACC_PUBLIC | ACC_FINAL, classInternalName, null,
                  "java/lang/Object", new String[]{"com/njydsz/common/json/asm/AsmDeserializer"});
 
         Field[] fields = getSerializableFields(beanType);
@@ -1676,12 +1687,20 @@ public final class AsmBeanCodecGenerator {
         try {
             return cw.toByteArray();
         } catch (NegativeArraySizeException e) {
+            // ASM 9.x COMPUTE_FRAMES bug: 两步法 — 先用 COMPUTE_MAXS 生成原始字节码，
+            // 再通过 ClassReader→ClassWriter(COMPUTE_FRAMES) 单独计算 StackMapTable
             try {
                 java.lang.reflect.Field f = ClassWriter.class.getDeclaredField("flags");
                 f.setAccessible(true);
                 f.setInt(cw, ASM_FLAGS_FALLBACK);
-                return cw.toByteArray();
-            } catch (Exception suppressed) {
+                byte[] rawBytes = cw.toByteArray();
+                // 第二步：单独计算帧
+                org.objectweb.asm.ClassReader cr = new org.objectweb.asm.ClassReader(rawBytes);
+                org.objectweb.asm.ClassWriter cw2 = new org.objectweb.asm.ClassWriter(ClassWriter.COMPUTE_FRAMES);
+                cr.accept(cw2, 0);
+                return cw2.toByteArray();
+            } catch (Exception e2) {
+                // 两步法也失败，原抛原始异常
                 throw e;
             }
         }
@@ -1745,11 +1764,17 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 检查 ASM 是否可用（未降级到反射模式）
+     * 检查 ASM 是否可用（未降级到反射模式且不在 GraalVM Native Image 中）
+     *
+     * <p>GraalVM Native Image 不支持运行时字节码生成（defineClass），
+     * 必须在此处提前短路，避免每个 Bean 类型都经历"生成-失败-回退"的无效开销。</p>
      *
      * @return true 如果 ASM 模式可用
      */
     public static boolean isAsmAvailable() {
+        if (GraalVmDetector.isInNativeImage()) {
+            return false;
+        }
         return !degradedToReflection && GENERATED_CLASS_COUNT.get() < ASM_CLASS_THRESHOLD;
     }
 

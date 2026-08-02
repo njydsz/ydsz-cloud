@@ -28,4 +28,12 @@ export const sheetVariants = cva(
   },
 );
 
+/**
+ * 侧边面板（Sheet）的样式变体入参类型，目前仅含 `side`（滑出方位）。
+ *
+ * @remarks
+ * 由 cva 从 `sheetVariants` 自动推导。方位不只决定动画方向，也决定尺寸约束：
+ * 左右方位固定宽度为 `3/4` 屏宽、高度铺满；上下方位则横向铺满、高度由内容撑开。
+ * 因此切换方位后原有的尺寸预期可能不再成立。未指定时默认从右侧滑出。
+ */
 export type SheetVariants = VariantProps<typeof sheetVariants>;

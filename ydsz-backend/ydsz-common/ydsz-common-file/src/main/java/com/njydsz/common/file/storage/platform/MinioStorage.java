@@ -528,6 +528,19 @@ public class MinioStorage
         }
     }
 
+    /**
+     * 清理分片上传产生的过期 chunk 残留对象。
+     *
+     * <p>大文件分片上传中断后，MinIO 不会自动回收已写入的分片，长期堆积会占用大量存储并增加列举开销。
+     * 本方法按 {@code CHUNK_DIR_PREFIX} 前缀列举疑似分片对象，将超过 {@code maxAgeHours} 阈值的对象删除。
+     *
+     * <p><b>容错策略：</b>单条对象删除失败仅 {@code warn} 记录并继续后续对象，不中断整体清理；
+     * 列举或整体流程异常仅 {@code error} 记录后吞掉，<b>不得向外抛出</b>，避免清理任务失败影响主存储链路。
+     * 桶名经 {@code resolveBucketName} 归一化，{@code null}/空桶名由调用方保证。
+     *
+     * @param bucketName   目标桶名（会经 resolveBucketName 解析），非空
+     * @param maxAgeHours  分片对象的最大存活时长（小时），超过该时长的残留分片将被清理
+     */
     public void cleanupStaleMultipartUploads(String bucketName, long maxAgeHours) {
         String resolvedBucket = resolveBucketName(bucketName);
         String stalePrefix = CHUNK_DIR_PREFIX + FileConstant.DIR_SPLIT;

@@ -65,7 +65,6 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     /** OD-1: DND 逻辑委托给 DndService，消除重复实现 */
     private final DndService dndService;
 
-    @Override
     /**
      * 获取用户触达画像。
      *
@@ -75,6 +74,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
      * @param userId 用户 ID，为空时直接返回默认画像
      * @return 用户触达画像（不会为 null）
      */
+    @Override
     public UserReachProfileDTO getProfile(String userId) {
         if (!StringUtils.hasText(userId)) {
             return defaultProfile();
@@ -120,7 +120,6 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
         }
     }
 
-    @Override
     /**
      * 选择最优触达通道列表（已按评分降序排列）。
      *
@@ -132,6 +131,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
      * @param bizType  业务类型，当前留作后续策略扩展点
      * @return 排序后的通道列表（评分高的在前）；无候选时返回空列表
      */
+    @Override
     public List<String> selectOptimalChannels(String userId, List<String> channels, String bizType) {
         if (channels == null || channels.isEmpty()) {
             return List.of();
@@ -148,7 +148,6 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
         return scored.stream().map(ChannelScore::channel).toList();
     }
 
-    @Override
     /**
      * 判断用户当前是否处于免打扰时段。
      *
@@ -157,12 +156,12 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
      * @param userId 用户 ID
      * @return true 表示当前处于免打扰时段，调用方应延迟发送
      */
+    @Override
     public boolean isInDndPeriod(String userId) {
         // OD-1: 委托给 DndService，消除重复的跨天窗口判断逻辑
         return dndService.shouldDelay(userId, null);
     }
 
-    @Override
     /**
      * 获取推荐的发送时间窗口。
      *
@@ -171,6 +170,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
      * @param userId 用户 ID
      * @return 推荐发送时间窗口字符串（格式 HH:mm-HH:mm）
      */
+    @Override
     public String getOptimalTimeWindow(String userId) {
         // 默认推荐 09:00-21:00
         return "09:00-21:00";

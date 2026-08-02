@@ -1,0 +1,30 @@
+# 工作包: ydsz-cronjob   待办文件 13 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[--]  2 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dispatch\AutoResumeScanner.java
+        成员: init, shutdown
+[--]  1 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dispatch\FailoverScanner.java
+        成员: init
+[--]  2 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dispatch\JobScanner.java
+        成员: init, destroy
+[--]  1 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dispatch\SlowTaskDetector.java
+        成员: init
+[--]  1 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\dispatch\TimeoutMonitor.java
+        成员: init
+[--]  1 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\executor\JobNodeReaper.java
+        成员: init
+[--]  1 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\healing\SelfHealingScanner.java
+        成员: init
+[--]  1 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\leader\PartitionLeaderManager.java
+        成员: init
+[--]  2 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\scheduler\AdaptiveBatchScheduler.java
+        成员: init, shutdown
+[--]  2 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\scheduler\PreciseSchedulingManager.java
+        成员: init, shutdown
+[--]  1 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\core\stats\DailyStatsAggregator.java
+        成员: init
+[--]  2 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\queue\JobEventQueueSubscriber.java
+        成员: init, destroy
+[--]  2 | ydsz-backend\ydsz-cronjob\ydsz-cronjob-server\src\main\java\com\njydsz\cronjob\server\queue\JobResultQueuePublisher.java
+        成员: init, destroy

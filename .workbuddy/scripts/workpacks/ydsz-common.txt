@@ -1,0 +1,218 @@
+# 工作包: ydsz-common   待办文件 110 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-audit\src\main\java\com\njydsz\common\audit\core\DisruptorAuditRecorder.java
+        成员: clear
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\aspect\AuthColPermissionAspect.java
+        成员: colPermissionPointcut
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\aspect\AuthPermissionAspect.java
+        成员: menuPointCut, apiPointCut
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\aspect\AuthRowPermissionAspect.java
+        成员: rowPermissionPointCut
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\config\AuthFilterConfiguration.java
+        成员: setCommonIgnoreUrl, setGatewayIgnoreUrl, setCustomIgnoreUrl, setVerifyPermission, setOnlyVerifyToken
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\config\TenantContextHolderConfiguration.java
+        成员: tenantContextHolder
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\event\PermissionChangeCacheInvalidator.java
+        成员: init, onPermissionChanged
+[--]  9 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\exception\PermissionDeniedException.java
+        成员: denied, language, userId, userRoles, requiredPermissions, permissionType, resource, checkMode, grantedPermissions
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\filter\BaseAuthFilter.java
+        成员: shouldSkipAuth, resolveAuthInfo, shouldSkipService, getLogPrefix, doPreAuth, doPostAuth
+[--] 11 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\model\DataScopeInfo.java
+        成员: resolveCustomSqlCondition, toBuilder, scope, tenantId, userId, companyIds, deptIds, projectIds, regionIds, customSqlCondition, customSqlConditionTemplate
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-auth\src\main\java\com\njydsz\common\auth\precheck\PermissionPreChecker.java
+        成员: ofAny
+[类头]  0 | ydsz-backend\ydsz-common\ydsz-common-base\src\main\java\com\njydsz\common\base\config\DocAutoConfiguration.java
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-base\src\main\java\com\njydsz\common\base\interceptor\BaseRequestLogInterceptor.java
+        成员: truncateUserAgent
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-cache\src\main\java\com\njydsz\common\cache\CacheBenchmark.java
+        成员: setup
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-cache\src\main\java\com\njydsz\common\cache\internal\concurrent\StripedConcurrentCache.java
+        成员: notifyRemoval
+[--]  4 | ydsz-backend\ydsz-common\ydsz-common-cache\src\main\java\com\njydsz\common\cache\internal\lfu\FrequencySketch.java
+        成员: ensureCapacity, increment, frequency, reset
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-cache\src\main\java\com\njydsz\common\cache\metrics\CacheMetricsAutoConfiguration.java
+        成员: cacheMetricsRegistrar
+[--]  7 | ydsz-backend\ydsz-common\ydsz-common-cache\src\main\java\com\njydsz\common\cache\spring\YdszCacheAutoConfiguration.java
+        成员: springLocalCacheManager, springCacheHealthIndicator, cacheHealthIndicator, cacheThreadPoolManager, cacheWarmer, distributedRebuildLock, cacheAnnotationAspect
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-cache\src\main\java\com\njydsz\common\cache\support\CacheKeyGenerator.java
+        成员: prefix, namespace, hashLongKeys, maxLength, separator
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-config\src\main\java\com\njydsz\common\config\ConfigAutoConfiguration.java
+        成员: configChangeBridge, configEncryptHealthIndicator
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\TraceAutoConfiguration.java
+        成员: uuidTraceIdSupplier
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-docs\src\main\java\com\njydsz\common\docs\config\DocsAutoConfiguration.java
+        成员: docsHealthIndicator
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-docs\src\main\java\com\njydsz\common\docs\metrics\DocsMetrics.java
+        成员: recordParse, recordPiiDetected, recordSecurityScan, recordPreprocess, updateAsyncQueueSize
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-docs\src\main\java\com\njydsz\common\docs\service\DocumentService.java
+        成员: convert, addWatermark, redact, ocrScan, summarize, extractKeywords
+[--]  4 | ydsz-backend\ydsz-common\ydsz-common-domain\src\main\java\com\njydsz\common\domain\event\DomainEvent.java
+        成员: eventId, occurredAt, version, metadata
+[--]  9 | ydsz-backend\ydsz-common\ydsz-common-domain\src\main\java\com\njydsz\common\domain\tree\TreeBuilder.java
+        成员: rootId, autoCalcLevel, autoCalcLevel, autoBuildPath, autoBuildPath, multiRoot, multiRoot, idExtractor, parentIdExtractor
+[--]  9 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\api\result\ExcelReadResult.java
+        成员: data, totalRows, elapsedTime, success, error, future, fileName, sheetName, sheetIndex
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\ColumnarConfig.java
+        成员: setBatchSize, batchSize, compression, enableDictionary, withHeader
+[--]  7 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\ColumnarField.java
+        成员: name, type, precision, scale, comment, nullable, comment
+[--]  9 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\ColumnarSchema.java
+        成员: fields, headerNames, fieldCount, field, field, fieldIndex, addField, addFields, addFields
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\OrcConfig.java
+        成员: setStripeSize, setIndexStride, stripeSize, indexStride, writeStrategy, overwrite
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\columnar\ParquetConfig.java
+        成员: setRowGroupSize, setPageSize, rowGroupSize, pageSize, writeMode
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\converter\ConvertContext.java
+        成员: rowIndex, columnName, dateFormat, automaticTrim, strictNumberConversion, use1904Windowing
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\ConcurrentExcelWriter.java
+        成员: doWrite
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\ExcelTemplateWriter.java
+        成员: doWrite
+[--] 12 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\config\ExcelConfig.java
+        成员: setReadBufferSize, setWriteBufferSize, setDefaultDateFormat, setDefaultNumberFormat, setMaxReadCacheSize, setStreamingParseThresholdMB, setMaxReadFileSizeMB, setMaxWriteFileSizeMB, sanitizeFormulaInjection, setCompressionLevel, setHeadRowNumber, setWriteCacheSize
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\context\AnalysisContext.java
+        成员: incrementRow
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\context\WriteContext.java
+        成员: incrementRow, incrementColumn, resetColumn
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\metadata\ReadMetadata.java
+        成员: addHeadProperty
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\metadata\WriteMetadata.java
+        成员: addHeadProperty
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\reader\ChunkedSSTTable.java
+        成员: close
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\reader\ExcelXmlParser.java
+        成员: parseCells
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\core\writer\SuperFastExcelWriter.java
+        成员: doWrite
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\spring\boot\ExcelAutoConfiguration.java
+        成员: excelHealthIndicator
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\support\cache\ClassMetadataCache.java
+        成员: clearCache, clearCache
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\support\pool\GlobalObjectPool.java
+        成员: intern, clear
+[--] 27 | ydsz-backend\ydsz-common\ydsz-common-excel\src\main\java\com\njydsz\common\excel\support\pool\StylePool.java
+        成员: clearCache, fillForegroundColor, alignment, verticalAlignment, borderBottom, borderTop, borderLeft, borderRight, dataFormat, wrapText, hidden, locked, shrinkToFit, fontKey, fillForegroundColor, alignment, verticalAlignment, borderBottom, borderTop, borderLeft, borderRight, dataFormat, wrapText, hidden, locked
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-exception\src\main\java\com\njydsz\common\exception\config\ExceptionHealthAutoConfiguration.java
+        成员: exceptionHealthIndicator
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-exception\src\main\java\com\njydsz\common\exception\config\I18nConfiguration.java
+        成员: messageSource
+[类头]  0 | ydsz-backend\ydsz-common\ydsz-common-exception\src\main\java\com\njydsz\common\exception\config\WebI18nConfiguration.java
+[--]  9 | ydsz-backend\ydsz-common\ydsz-common-exception\src\main\java\com\njydsz\common\exception\core\ExceptionInfo.java
+        成员: code, key, message, details, detail, timestamp, path, traceId, httpStatus
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-exception\src\main\java\com\njydsz\common\exception\custom\AbstractYdszException.java
+        成员: buildExceptionInfo, normalizeParams
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-exception\src\main\java\com\njydsz\common\exception\custom\BusinessException.java
+        成员: toExceptionInfo
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-exception\src\main\java\com\njydsz\common\exception\custom\SysException.java
+        成员: toExceptionInfo
+[--] 11 | ydsz-backend\ydsz-common\ydsz-common-exception\src\main\java\com\njydsz\common\exception\custom\YdszExceptionBuilder.java
+        成员: self, code, key, params, httpStatus, level, category, cause, path, extData, message
+[--]  8 | ydsz-backend\ydsz-common\ydsz-common-feign\src\main\java\com\njydsz\common\feign\circuitbreaker\FeignCircuitBreakerStrategy.java
+        成员: setTotalCalls, setSuccessfulCalls, setFailedCalls, setSlowCalls, setFailureRate, setSlowCallRate, setAverageDuration, setMaxDuration
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-file\src\main\java\com\njydsz\common\file\lifecycle\FileLifecycleManager.java
+        成员: skipped, failed, incrementScanned, incrementDeleted, incrementSkipped, addError
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-file\src\main\java\com\njydsz\common\file\storage\AbstractFileStorage.java
+        成员: supportsServerSideCopy, doCopyObject, normalizeObjectKey
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-file\src\main\java\com\njydsz\common\file\storage\platform\MinioStorage.java
+        成员: cleanupStaleMultipartUploads
+[类头]  0 | ydsz-backend\ydsz-common\ydsz-common-jdbc\src\main\java\com\njydsz\common\jdbc\config\MybatisPlusConfiguration.java
+[类头]  0 | ydsz-backend\ydsz-common\ydsz-common-jdbc\src\main\java\com\njydsz\common\jdbc\interceptor\CircuitBreakerInterceptor.java
+[类头]  0 | ydsz-backend\ydsz-common\ydsz-common-jdbc\src\main\java\com\njydsz\common\jdbc\interceptor\ReadWriteSplittingInterceptor.java
+[--] 11 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\JsonMapper.java
+        成员: namingStrategy, dateFormat, writeNulls, prettyPrint, circularReferenceStrategy, serializeEnumUsingOrdinal, useBigDecimal, wrapRootValue, failOnError, maxJsonSize, maxDepth
+[--] 12 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\config\JsonConfig.java
+        成员: namingStrategy, circularReferenceStrategy, writeNulls, dateFormat, serializeEnumUsingOrdinal, prettyPrint, failOnError, defaultDateFormat, maxJsonSize, maxDepth, useBigDecimal, wrapRootValue
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\patch\JsonPatch.java
+        成员: add, remove, replace, move, copy, test
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\pointer\JsonPointer.java
+        成员: depth
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\provider\SerializationProvider.java
+        成员: setNamingStrategy
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\reader\BeanReader.java
+        成员: readValue, getOrCreate, clearCache
+[--] 24 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\reader\JSONReader.java
+        成员: mask, readChar, back, peek, readFieldNameFast, skipWhitespace, skipTo, nextChar, matchField, readRawValue, readString, readInt, readLong, readBoolean, readNull, readObjectStart, readObjectEnd, readArrayStart, readArrayEnd, readFieldName, fnv1aHash, skipValue, readArray, readObjectMap
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\type\FieldTypeCode.java
+        成员: code
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-json\src\main\java\com\njydsz\common\json\writer\JSONWriter.java
+        成员: mask
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-lock\src\main\java\com\njydsz\common\lock\config\DistributedLockAutoConfiguration.java
+        成员: lockHealthIndicator, lockLeakDetector
+[--] 26 | ydsz-backend\ydsz-common\ydsz-common-notify\src\main\java\com\njydsz\common\notify\config\NotifyConfiguration.java
+        成员: notifyPasswordResolver, notifyJavaMailSender, emailSmtpHealthChecker, notifyMetrics, emailTrackingService, notifyFallbackManager, htmlTemplateRegistry, dkimSigner, notifyPreferenceManager, notifyDedupService, notifyI18nService, notifyI18nResolver, notifyCircuitBreakerRegistry, notifyDeadLetterHandler, notifyAuditService, notifyAggregator, templateVariableValidator, aliyunSmsProvider, notifyHealthIndicator, notifyRestTemplate, notifyRateLimiterManager, notifyRetryQueue, asyncNotifyService, transactionalNotifyPublisher, notifyVirtualThreadExecutor
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-notify\src\main\java\com\njydsz\common\notify\provider\SmsProvider.java
+        成员: success, failure
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-queue\src\main\java\com\njydsz\common\queue\queue\RedisPubSubMQ.java
+        成员: registerSubscriber, removeSubscriber
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-queue\src\main\java\com\njydsz\common\queue\scheduler\DeadLetterRetryScheduler.java
+        成员: scanAndRetry
+[--] 13 | ydsz-backend\ydsz-common\ydsz-common-redis\src\main\java\com\njydsz\common\redis\config\RedisConfiguration.java
+        成员: redisStringOps, redisHashOps, redisCollectionOps, redisGeoOps, redisAdvancedOps, redisPubSubOps, redisStreamOps, redisTransactionOps, redisBloomFilter, redisDelayedQueue, redisRateLimiter, redisSnowflakeIdGenerator, redisService
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-redis\src\main\java\com\njydsz\common\redis\config\SnowflakeRedisAutoConfiguration.java
+        成员: redisWorkerIdRegistry
+[--] 84 | ydsz-backend\ydsz-common\ydsz-common-redis\src\main\java\com\njydsz\common\redis\service\RedisService.java
+        成员: expire, expire, del, del, delByPattern, scan, scan, rename, renameIfAbsent, get, set, set, set, incr, decr, incrByFloat, mget, mgetObjects, mgetPartitioned, msetPartitioned, hGet, hGetAll, hMGet, hSet, hSetIfAbsent
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-redis\src\main\java\com\njydsz\common\redis\service\RedisWorkerIdRegistry.java
+        成员: shutdown
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-redis\src\main\java\com\njydsz\common\redis\service\ops\RedisAdvancedOps.java
+        成员: executePipelinedWithConsumer
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-redis\src\main\java\com\njydsz\common\redis\service\ops\RedisStringOps.java
+        成员: init
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\alert\SecurityEventAggregator.java
+        成员: cleanExpired
+[类头]  0 | ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\config\SafeConfiguration.java
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\crypto\NonceCache.java
+        成员: cleanExpiredNonces
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\ratelimit\circuitbreaker\CircuitBreaker.java
+        成员: defaults
+[--]  4 | ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\ratelimit\config\RateLimitAutoConfiguration.java
+        成员: rateLimitRuleProvider, rateLimitManager, rateLimitMetricsCollector, rateLimitAspect
+[--] 14 | ydsz-backend\ydsz-common\ydsz-common-safe\src\main\java\com\njydsz\common\safe\xss\HTMLFilter.java
+        成员: allowTags, allowTagWithAttributes, disallowTags, allowSelfClosingTags, allowProtocols, protocolAttributes, allowEntities, removeBlankTags, stripComments, encodeQuotes, alwaysMakeTags, relaxed, standard, strict
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\analytics\SearchAnalyticsService.java
+        成员: recordSearch, clear
+[--] 19 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\config\SearchAutoConfiguration.java
+        成员: pgSearchStrategy, searchProviderRegistry, searchEngineRegistry, searchCacheService, searchTextProcessor, searchMetrics, searchAnalyticsService, businessRanker, queryParser, searchQualityTracker, unifiedSearchService, indexSyncService, indexRebuildService, suggestionService, indexSyncListener, searchIndexEventBridge, indexConsistencyChecker, searchHealthIndicator, destroy
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\engine\pg\PgSearchStrategy.java
+        成员: shutdown
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\service\IndexRebuildService.java
+        成员: rebuildAll, rebuildAllAsync, shutdown
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\service\IndexSyncService.java
+        成员: handleOperation, indexAsync, deleteAsync, rebuildAll, retryDeadLetterQueue, shutdown
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\service\SuggestionService.java
+        成员: autocomplete, didYouMean
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\service\UnifiedSearchService.java
+        成员: search, suggest, didYouMean, clearCache, shutdown
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-seata\src\main\java\com\njydsz\common\seata\config\SeataAutoConfiguration.java
+        成员: inMemoryTccTransactionLogStore, seataSeataGlobalTransactionExecutor, seataTransactionManager
+[--]  4 | ydsz-backend\ydsz-common\ydsz-common-sentry\src\main\java\com\njydsz\common\sentry\config\OtelAutoConfiguration.java
+        成员: otelSdkInitializer, ydszDefaultTracer, ydszOtelOpenTelemetry, close
+[--] 17 | ydsz-backend\ydsz-common\ydsz-common-sentry\src\main\java\com\njydsz\common\sentry\config\SentryAutoConfiguration.java
+        成员: micrometerMetricsCollector, inMemoryMetricsCollector, systemMetricsCollector, elkCircuitBreaker, lokiCircuitBreaker, circuitBreakerMetricsBinder, logPublisher, traceContext, slowTraceDetector, alertPublisher, slaCollector, slaMetricAspect, sentrySelfMonitor, sentryHealthIndicator, systemResourceHealthIndicator, destroy, reportSelfMetrics
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-sentry\src\main\java\com\njydsz\common\sentry\tracing\otel\OtelExporterFactory.java
+        成员: defaults, highThroughput, lowLatency
+[--] 13 | ydsz-backend\ydsz-common\ydsz-common-sentry\src\main\java\com\njydsz\common\sentry\tracing\otel\YdszSpan.java
+        成员: kind, parent, tenantId, userId, businessNo, module, action, clientType, grayTag, pressureTag, tag, tag, attributes
+[--] 16 | ydsz-backend\ydsz-common\ydsz-common-socket\src\main\java\com\njydsz\common\socket\config\WebSocketAutoConfiguration.java
+        成员: connectionLimiter, webSocketAuthInterceptor, onlineUserService, offlineMessageStore, webSocketHeartbeatHandler, messageAckService, deadLetterQueue, messageRetryQueue, webSocketSessionEventListener, webSocketMetrics, webSocketRateLimiter, stompMessageInterceptor, webSocketHealthIndicator, realtimePushTemplate, retryFlushTask, flush
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-tenant\src\main\java\com\njydsz\common\tenant\config\TenantAutoConfiguration.java
+        成员: tenantDataSourceRouter, tenantDataSourceFilterRegistration
+[--]  7 | ydsz-backend\ydsz-common\ydsz-common-util\src\main\java\com\njydsz\common\util\http\OkHttpUtils.java
+        成员: doGet, doGet, doPost, doPostJson, doPostJson, doPutJson, doDelete
+[--] 10 | ydsz-backend\ydsz-common\ydsz-common-util\src\main\java\com\njydsz\common\util\ip\IpAddrUtils.java
+        成员: validIpv6, normalizeIp, normalizeIpv6, ipToLong, longToIp, getPrefixLength, getNetmaskFromPrefix, getNetworkAddress, getBroadcastAddress, listLocalIps
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-web\src\main\java\com\njydsz\common\web\auth\AuthHandlerFactory.java
+        成员: getAuthHandler
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-web\src\main\java\com\njydsz\common\web\config\UserAgentConfiguration.java
+        成员: userAgentAnalyzer
+[类头]  8 | ydsz-backend\ydsz-common\ydsz-common-web\src\main\java\com\njydsz\common\web\config\WebMvcConfiguration.java
+        成员: requestLogInterceptor, globalResponseAdvice, contentCachingFilter, authFilter, securityHeaderFilter, traceIdResponseFilter, webMetrics, webHealthIndicator
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-web\src\main\java\com\njydsz\common\web\config\WebSecurityConfiguration.java
+        成员: webAccessDeniedHandler, webAuthenticationEntryPoint, securityFilterChain
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-web\src\main\java\com\njydsz\common\web\filter\ResponseCompressionFilter.java
+        成员: finish
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-web\src\main\java\com\njydsz\common\web\metrics\WebMetrics.java
+        成员: recordAuthSuccess, recordAuthFailure, recordRequest, recordRateLimitRejected, recordSecurityHeaderInjected

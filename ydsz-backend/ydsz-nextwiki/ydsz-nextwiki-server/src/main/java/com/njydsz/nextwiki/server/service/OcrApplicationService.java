@@ -136,14 +136,45 @@ public class OcrApplicationService {
         /** 跳过/错误原因描述 */
         private String message;
 
+        /**
+         * 构造「识别成功」结果。
+         *
+         * <p>注意：<b>空文本也算成功</b>。Tesseract 退出码非 0 或图片无文字时，
+         * 会以空串调用本方法，语义是「OCR 流程正常跑完但没提取到内容」，
+         * 与 {@link #error(String)} 的「流程失败」严格区分，调用方勿把空文本当异常处理。
+         *
+         * @param text   识别出的纯文本，可能为空串，不为 {@code null}
+         * @param blocks 带坐标的文本块列表；当前 tesseract 实现不回填，恒为空列表
+         * @return 成功结果，{@code success=true}，其余状态位为 false
+         */
         public static OcrResult success(String text, List<TextBlock> blocks) {
             return OcrResult.builder().success(true).text(text).blocks(blocks).build();
         }
 
+        /**
+         * 构造「跳过识别」结果。
+         *
+         * <p>用于 OCR 开关关闭、或所选服务商尚未集成等<b>非故障</b>场景。
+         * 与 {@link #error(String)} 分开表达，避免把「有意不做」误报为告警。
+         * 此时 {@code text} 为 {@code null}，调用方须先判 {@code skipped} 再取文本。
+         *
+         * @param reason 跳过原因（如 {@code "OCR 未启用"}）
+         * @return 跳过结果，{@code skipped=true}
+         */
         public static OcrResult skipped(String reason) {
             return OcrResult.builder().skipped(true).message(reason).build();
         }
 
+        /**
+         * 构造「识别失败」结果。
+         *
+         * <p>OCR 属附加增强能力，其失败不应中断文件上传主流程，因此异常在
+         * {@link OcrApplicationService#recognize} 内被捕获并转成本结果返回，
+         * <b>不向上抛出</b>；此时 {@code text} 为 {@code null}。
+         *
+         * @param message 失败描述，通常携带底层异常摘要，供排查与日志留痕
+         * @return 失败结果，{@code error=true}
+         */
         public static OcrResult error(String message) {
             return OcrResult.builder().error(true).message(message).build();
         }

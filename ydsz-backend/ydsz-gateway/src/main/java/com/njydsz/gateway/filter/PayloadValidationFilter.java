@@ -69,7 +69,6 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
     private static final long BYTES_PER_MB = 1024L * 1024L;
     private static final int JSON_DEPTH_WARN_THRESHOLD = 30;
 
-    @Override
     /**
      * 请求体安全校验过滤器：限制请求体大小与 Content-Type。
      *
@@ -81,6 +80,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
      * @param chain    网关过滤器链
      * @return 放行或拒绝（400）的完成信号 Mono
      */
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         if (!enabled) {
             return chain.filter(exchange);

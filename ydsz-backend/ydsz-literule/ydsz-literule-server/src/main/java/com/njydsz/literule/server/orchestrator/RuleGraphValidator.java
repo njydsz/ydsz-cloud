@@ -154,10 +154,24 @@ public final class RuleGraphValidator {
             this.message = message;
         }
 
+        /**
+         * 构造 ERROR 级别问题（阻断性，使画布校验不通过）。
+         *
+         * @param code    问题代码（如 {@code SELF_LOOP}、{@code MISSING_ROOT}）
+         * @param message 人类可读的问题描述
+         * @return ERROR 级 {@link GraphValidationIssue}
+         */
         public static GraphValidationIssue error(String code, String message) {
             return new GraphValidationIssue(Level.ERROR, code, message);
         }
 
+        /**
+         * 构造 WARN 级别问题（非阻断性，仅告警，不影响校验通过）。
+         *
+         * @param code    问题代码（如 {@code ORPHAN_NODE}、{@code DUPLICATE_EDGE}）
+         * @param message 人类可读的问题描述
+         * @return WARN 级 {@link GraphValidationIssue}
+         */
         public static GraphValidationIssue warn(String code, String message) {
             return new GraphValidationIssue(Level.WARN, code, message);
         }

@@ -51,6 +51,15 @@ public class JobEventQueueSubscriber {
     private IMessageQueue eventTriggerQueue;
     private IMessageSubscriber eventTriggerSubscriber;
 
+    /**
+     * 启动事件触发消息订阅（应用启动即开始监听）。
+     *
+     * <p>通过 common-queue 创建一个 STREAM 类型的队列与订阅者，订阅
+     * {@link JobQueueChannels#JOB_EVENT_TRIGGER} 通道，并以
+     * {@code subscribeAsync} 异步持续消费，回调 {@link #handleEventTrigger} 触发任务执行。
+     * 启动失败（如队列组件不可用）仅告警、不影响应用启动——
+     * 事件触发属增强能力，缺失不影响定时调度主链路，由调用方后续重试或人工介入。
+     */
     @PostConstruct
     public void init() {
         try {
@@ -92,6 +101,12 @@ public class JobEventQueueSubscriber {
         }
     }
 
+    /**
+     * 容器销毁钩子：停止订阅并关闭队列资源。
+     *
+     * <p>先 {@code stop()} 停止异步消费（不再拉取新消息），再 {@code close()} 释放队列连接。
+     * 因启动失败而 subscriber/queue 为 null 时安全跳过，避免 NPE。
+     */
     @PreDestroy
     public void destroy() {
         if (eventTriggerSubscriber != null) {

@@ -1,0 +1,14 @@
+# 工作包: ydsz-system   待办文件 5 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[--]  3 | ydsz-backend\ydsz-system\ydsz-system-web\src\main\java\com\njydsz\system\web\controller\AppInfoController.java
+        成员: save, update, remove
+[--]  3 | ydsz-backend\ydsz-system\ydsz-system-web\src\main\java\com\njydsz\system\web\controller\ConfigController.java
+        成员: save, update, remove
+[--]  3 | ydsz-backend\ydsz-system\ydsz-system-web\src\main\java\com\njydsz\system\web\controller\DictController.java
+        成员: save, update, remove
+[--]  3 | ydsz-backend\ydsz-system\ydsz-system-web\src\main\java\com\njydsz\system\web\controller\DictItemController.java
+        成员: save, update, remove
+[--]  3 | ydsz-backend\ydsz-system\ydsz-system-web\src\main\java\com\njydsz\system\web\controller\VariableController.java
+        成员: save, update, remove

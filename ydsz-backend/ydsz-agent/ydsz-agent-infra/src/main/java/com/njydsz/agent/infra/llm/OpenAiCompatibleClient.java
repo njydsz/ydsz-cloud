@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.llm;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -248,7 +248,12 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     private Map<String, Object> buildRequestBody(ChatRequest request, boolean stream) {
-        Map<String, Object> body = new HashMap<>();
+        // 顶层字段保持显式 snake_case key（Map key 在序列化时原样透传，不受命名策略影响）；
+        // 嵌套的 messages / tools 直接放入领域对象，由 AgentJsonModule 注册的
+        // ChatMessageSerializer / ToolDefinitionSerializer 在全局 toJson 路径中统一产出
+        // OpenAI 契约形状（role 用 API 枚举值、tool_calls 结构、arguments 为 JSON 字符串），
+        // 替代原先此处手工拼装 Map 的冗余代码。
+        Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", request.getModel());
         body.put("temperature", request.getTemperature());
         body.put("max_tokens", request.getMaxTokens());
@@ -260,44 +265,9 @@ public class OpenAiCompatibleClient implements LlmClient {
         if (!request.getStop().isEmpty()) {
             body.put("stop", request.getStop());
         }
-        List<Map<String, Object>> messages = new ArrayList<>();
-        for (ChatMessage msg : request.getMessages()) {
-            Map<String, Object> m = new HashMap<>();
-            m.put("role", msg.getRole().getApiValue());
-            m.put("content", msg.getContent() != null ? msg.getContent() : "");
-            if (msg.hasToolCalls()) {
-                List<Map<String, Object>> calls = new ArrayList<>();
-                for (ToolCall tc : msg.getToolCalls()) {
-                    Map<String, Object> call = new HashMap<>();
-                    call.put("id", tc.getId());
-                    Map<String, Object> function = new HashMap<>();
-                    function.put("name", tc.getName());
-                    function.put("arguments", YdszJson.toJson(tc.getArguments()));
-                    call.put("type", "function");
-                    call.put("function", function);
-                    calls.add(call);
-                }
-                m.put("tool_calls", calls);
-            }
-            if (msg.getToolCallId() != null) {
-                m.put("tool_call_id", msg.getToolCallId());
-            }
-            messages.add(m);
-        }
-        body.put("messages", messages);
+        body.put("messages", request.getMessages());
         if (!request.getTools().isEmpty()) {
-            List<Map<String, Object>> tools = new ArrayList<>();
-            for (var tool : request.getTools()) {
-                Map<String, Object> t = new HashMap<>();
-                Map<String, Object> function = new HashMap<>();
-                function.put("name", tool.getName());
-                function.put("description", tool.getDescription() != null ? tool.getDescription() : "");
-                function.put("parameters", tool.getParametersSchema());
-                t.put("type", "function");
-                t.put("function", function);
-                tools.add(t);
-            }
-            body.put("tools", tools);
+            body.put("tools", request.getTools());
         }
         if (request.getToolChoice() != null) {
             body.put("tool_choice", request.getToolChoice());

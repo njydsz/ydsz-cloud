@@ -165,6 +165,14 @@ public class DistributedAutoConfiguration {
         return engine;
     }
 
+    /**
+     * 容器销毁钩子：关闭节点刷新/心跳调度线程池。
+     *
+     * <p>本类自建的 {@code scheduler}（单线程守护线程池）负责周期心跳与节点列表刷新，
+     * 非 common-thread 托管，需在容器下线时主动关闭以释放线程。
+     * 若分片感知引擎未初始化（{@code shardAwareRuleEngine} 因条件不满足未注册），
+     * scheduler 为 null，安全跳过。
+     */
     @PreDestroy
     public void destroy() {
         if (scheduler != null) {

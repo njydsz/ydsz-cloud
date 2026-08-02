@@ -35,6 +35,7 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class PolymorphicTypeResolver {
 
     /** 类型映射缓存 */

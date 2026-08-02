@@ -35,6 +35,14 @@ public class AuthFilterConfiguration {
         return properties.getCommonIgnoreUrl();
     }
 
+    /**
+     * 设置应用级通用放行路径。
+     *
+     * <p>匹配的请求在 WebAuthFilter 中跳过 Token 与权限校验，通常用于健康检查、静态资源、内部探针等无需鉴权的端点。
+     * 传入 {@code null} 会清空原配置，调用方需确保非空，避免误放行业务接口。</p>
+     *
+     * @param commonIgnoreUrl 应用级通用忽略路径列表，允许为 {@code null}
+     */
     public void setCommonIgnoreUrl(List<String> commonIgnoreUrl) {
         properties.setCommonIgnoreUrl(commonIgnoreUrl);
     }
@@ -43,6 +51,14 @@ public class AuthFilterConfiguration {
         return properties.getGatewayIgnoreUrl();
     }
 
+    /**
+     * 设置网关层忽略路径。
+     *
+     * <p>由网关或平台统一下发的放行清单，本服务直接信任并跳过校验，典型如网关自身回调、跨服务内部调用入口。
+     * 传入 {@code null} 会清空原配置。</p>
+     *
+     * @param gatewayIgnoreUrl 网关级忽略路径列表，允许为 {@code null}
+     */
     public void setGatewayIgnoreUrl(List<String> gatewayIgnoreUrl) {
         properties.setGatewayIgnoreUrl(gatewayIgnoreUrl);
     }
@@ -51,6 +67,14 @@ public class AuthFilterConfiguration {
         return properties.getCustomIgnoreUrl();
     }
 
+    /**
+     * 设置业务自定义放行路径。
+     *
+     * <p>供运维或租户在运行时动态追加的忽略清单（如第三方回调、消息通知接收端点），优先级叠加在通用/网关清单之上。
+     * 传入 {@code null} 会清空原配置。</p>
+     *
+     * @param customIgnoreUrl 业务自定义忽略路径列表，允许为 {@code null}
+     */
     public void setCustomIgnoreUrl(List<String> customIgnoreUrl) {
         properties.setCustomIgnoreUrl(customIgnoreUrl);
     }
@@ -59,6 +83,14 @@ public class AuthFilterConfiguration {
         return properties.getVerifyPermission();
     }
 
+    /**
+     * 设置是否开启细粒度权限校验的总开关。
+     *
+     * <p>关闭后 WebAuthFilter 仅校验 Token 合法性、不再执行菜单/接口权限判定，适用于纯身份认证场景或不依赖 RBAC 的内部服务。
+     * 该值为 {@code null} 时由 {@link AuthFilterProperties} 的默认值决定行为。</p>
+     *
+     * @param verifyPermission 是否校验权限，允许为 {@code null}
+     */
     public void setVerifyPermission(Boolean verifyPermission) {
         properties.setVerifyPermission(verifyPermission);
     }
@@ -67,6 +99,14 @@ public class AuthFilterConfiguration {
         return properties.getOnlyVerifyToken();
     }
 
+    /**
+     * 设置仅校验 Token 的路径列表。
+     *
+     * <p>命中该清单的请求完成身份解析后直接放行、跳过菜单/接口权限判定，用于已登录但无需 RBAC 校验的轻量接口。
+     * 传入 {@code null} 会清空原配置。</p>
+     *
+     * @param onlyVerifyToken 仅校验 Token 的路径列表，允许为 {@code null}
+     */
     public void setOnlyVerifyToken(List<String> onlyVerifyToken) {
         properties.setOnlyVerifyToken(onlyVerifyToken);
     }

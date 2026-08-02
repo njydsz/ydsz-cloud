@@ -113,52 +113,137 @@ public class FlowMetrics extends AbstractModuleMetrics {
     // Counter：任务操作
     // ===========================================
 
+    /**
+     * 待办任务创建计数，累加 {@code ydsz_flow_task_created_total}。
+     *
+     * <p>与 {@code task_passed/rejected} 之差即为节点积压量，是定位审批瓶颈节点的基线指标。
+     *
+     * <p><b>标签基数约定：</b>本组指标以 {@code flow_code} + {@code node_code} 为标签，
+     * 二者均来自流程定义、取值有限且可枚举。<b>严禁</b>把 instanceId、userId 等无界值
+     * 传入标签位，否则会造成 Prometheus 时间序列爆炸。入参为 {@code null} 时由
+     * {@code safe()} 兜底成占位值，不会抛异常。
+     *
+     * @param flowCode 流程定义编码，可为 {@code null}（回退为占位标签）
+     * @param nodeCode 节点编码，可为 {@code null}（回退为占位标签）
+     */
     public void incTaskCreated(String flowCode, String nodeCode) {
         counter("task_created_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
+    /**
+     * 任务审批通过计数，累加 {@code ydsz_flow_task_passed_total}。
+     *
+     * <p>与 {@link #incTaskRejected} 配合可算出各节点的驳回率，用于识别流程设计缺陷
+     * （某节点驳回率畸高通常意味着上游材料要求不清）。
+     *
+     * @param flowCode 流程定义编码
+     * @param nodeCode 审批通过的节点编码
+     */
     public void incTaskPassed(String flowCode, String nodeCode) {
         counter("task_passed_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
+    /**
+     * 任务驳回计数，累加 {@code ydsz_flow_task_rejected_total}。
+     *
+     * <p>记录的是<b>驳回发生的节点</b>，而非回退到达的目标节点；
+     * 若需分析回退落点，应另行埋点，勿据本指标推断。
+     *
+     * @param flowCode 流程定义编码
+     * @param nodeCode 执行驳回操作的节点编码
+     */
     public void incTaskRejected(String flowCode, String nodeCode) {
         counter("task_rejected_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
+    /**
+     * 任务转办计数，累加 {@code ydsz_flow_task_transferred_total}。
+     *
+     * <p>转办会<b>转移</b>任务归属：原办理人失去权限。持续偏高说明节点候选人配置
+     * 与实际职责不符，是组织架构与流程定义脱节的信号。
+     *
+     * @param flowCode 流程定义编码
+     * @param nodeCode 发生转办的节点编码
+     */
     public void incTaskTransferred(String flowCode, String nodeCode) {
         counter("task_transferred_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
+    /**
+     * 任务委派计数，累加 {@code ydsz_flow_task_delegated_total}。
+     *
+     * <p>与转办的区别：委派<b>保留</b>原办理人的最终责任，受托人处理后仍需回到原办理人。
+     * 二者分开计数以便区分「职责错配」与「临时代办」两类管理问题。
+     *
+     * @param flowCode 流程定义编码
+     * @param nodeCode 发生委派的节点编码
+     */
     public void incTaskDelegated(String flowCode, String nodeCode) {
         counter("task_delegated_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
+    /**
+     * 任务催办计数，累加 {@code ydsz_flow_task_urged_total}。
+     *
+     * <p>仅按 {@code flow_code} 聚合、<b>不带</b> {@code node_code}：催办由发起人主动触发，
+     * 可对同一任务重复发起，按节点细分意义不大且会放大标签基数。
+     *
+     * @param flowCode 流程定义编码
+     */
     public void incTaskUrged(String flowCode) {
         counter("task_urged_total", "flow_code", safe(flowCode)).increment();
     }
 
+    /**
+     * 任务认领计数，累加 {@code ydsz_flow_task_claimed_total}。
+     *
+     * <p>仅适用于候选人抢单模式的节点。认领量与 {@code task_created} 的差值可反映
+     * 「有人看无人领」的冷启动问题。
+     *
+     * @param flowCode 流程定义编码
+     * @param nodeCode 被认领任务所属节点编码
+     */
     public void incTaskClaimed(String flowCode, String nodeCode) {
         counter("task_claimed_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
+    /**
+     * 任务跳过计数，累加 {@code ydsz_flow_task_skipped_total}。
+     *
+     * <p>覆盖空审批人自动跳过、同人自动去重等规则触发的跳过。该值异常升高
+     * 意味着大量节点被绕过，属<b>合规风险信号</b>，应配置告警而非仅作观测。
+     *
+     * @param flowCode 流程定义编码
+     * @param nodeCode 被跳过的节点编码
+     */
     public void incTaskSkipped(String flowCode, String nodeCode) {
         counter("task_skipped_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
+    /**
+     * 任务自动处理计数，累加 {@code ydsz_flow_task_auto_handled_total}。
+     *
+     * <p>用于 SLA 超时自动通过/驳回、定时任务批量处理等<b>无人工介入</b>的场景，
+     * 通过 {@code action} 标签区分具体动作，便于审计「谁替系统做了决定」。
+     *
+     * @param flowCode 流程定义编码
+     * @param nodeCode 被自动处理的节点编码
+     * @param action   自动处理动作（如 {@code PASS}、{@code REJECT}），取值须为有限枚举
+     */
     public void incTaskAutoHandled(String flowCode, String nodeCode, String action) {
         counter("task_auto_handled_total",
                 "flow_code", safe(flowCode),
@@ -170,16 +255,46 @@ public class FlowMetrics extends AbstractModuleMetrics {
     // Counter：流程启动 + 错误
     // ===========================================
 
+    /**
+     * 流程启动失败计数，累加 {@code ydsz_flow_start_error_total}。
+     *
+     * <p>是发起环节最重要的告警源：启动失败意味着用户完全无法进入流程。
+     *
+     * <p><b>标签基数警告：</b>{@code reason} 必须传<b>归一化的错误分类</b>
+     * （如 {@code DEFINITION_NOT_FOUND}、{@code NO_START_NODE}），
+     * 严禁直接透传异常 message —— 其中常含实例 ID、时间戳等可变内容，会撑爆时间序列。
+     *
+     * @param flowCode 流程定义编码
+     * @param reason   归一化的失败原因分类，取值须可枚举
+     */
     public void incStartError(String flowCode, String reason) {
         counter("start_error_total",
                 "flow_code", safe(flowCode),
                 "reason", safe(reason)).increment();
     }
 
+    /**
+     * 流程撤回计数，累加 {@code ydsz_flow_recall_total}。
+     *
+     * <p>统计发起人主动撤回已启动实例的次数。撤回率高通常反映发起前信息不全，
+     * 可作为优化表单必填项与前置校验的依据。
+     *
+     * @param flowCode 流程定义编码
+     */
     public void incRecall(String flowCode) {
         counter("recall_total", "flow_code", safe(flowCode)).increment();
     }
 
+    /**
+     * SLA 超时计数，累加 {@code ydsz_flow_sla_timeout_total}。
+     *
+     * <p>在任务<b>超过时限的那一刻</b>由 SLA 扫描任务记录，与超时后执行的补偿动作
+     * （通过 {@code action} 标签区分催办、自动通过、升级上报等）一并上报。
+     * 同一任务在多级 SLA 策略下可能多次计数，统计时勿等同于「超时任务数」。
+     *
+     * @param flowCode 流程定义编码
+     * @param action   超时后触发的处置动作，取值须为有限枚举
+     */
     public void incSlaTimeout(String flowCode, String action) {
         counter("sla_timeout_total",
                 "flow_code", safe(flowCode),

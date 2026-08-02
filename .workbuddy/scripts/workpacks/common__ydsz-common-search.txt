@@ -1,0 +1,18 @@
+# 工作包: common__ydsz-common-search   待办文件 7 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\analytics\SearchAnalyticsService.java
+        成员: recordSearch, clear
+[--] 19 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\config\SearchAutoConfiguration.java
+        成员: pgSearchStrategy, searchProviderRegistry, searchEngineRegistry, searchCacheService, searchTextProcessor, searchMetrics, searchAnalyticsService, businessRanker, queryParser, searchQualityTracker, unifiedSearchService, indexSyncService, indexRebuildService, suggestionService, indexSyncListener, searchIndexEventBridge, indexConsistencyChecker, searchHealthIndicator, destroy
+[--]  1 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\engine\pg\PgSearchStrategy.java
+        成员: shutdown
+[--]  3 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\service\IndexRebuildService.java
+        成员: rebuildAll, rebuildAllAsync, shutdown
+[--]  6 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\service\IndexSyncService.java
+        成员: handleOperation, indexAsync, deleteAsync, rebuildAll, retryDeadLetterQueue, shutdown
+[--]  2 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\service\SuggestionService.java
+        成员: autocomplete, didYouMean
+[--]  5 | ydsz-backend\ydsz-common\ydsz-common-search\src\main\java\com\njydsz\common\search\service\UnifiedSearchService.java
+        成员: search, suggest, didYouMean, clearCache, shutdown

@@ -93,6 +93,30 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         return instanceService;
     }
 
+    /**
+     * 启动流程实例：从开始节点推进到第一批业务节点并生成待办。
+     *
+     * <p><b>推进流程：</b>定位开始节点 → 以 {@code PASS} 推进一步 → 为下一批节点生成任务
+     * → 回写实例的当前节点。若开始节点直连结束节点（无下游），流程<b>立即自动完成</b>，
+     * 不产生任何待办。下一批节点为 {@code END} 类型时不更新当前节点，交由完成逻辑收尾。
+     *
+     * <p><b>并发控制：</b>以 {@code flow:instance:op:{instanceId}} 为键加分布式锁，
+     * 最长等锁 5 秒、持锁 60 秒，防止「重复提交」或「启动与审批并发」造成同一实例被推进两次。
+     * 抢锁失败向调用方返回「流程正在处理中，请稍后重试」。
+     *
+     * <p><b>注意（Spring AOP 自调用）：</b>方法体内直接调用 {@link #advance} 属于同类自调用，
+     * 不经过代理，因此 {@code advance} 上的同键锁注解<b>不会</b>再次生效——这既避免了
+     * 非可重入锁自死锁，也意味着 {@code advance} 的原子性在此路径下完全由本方法的锁保证。
+     *
+     * <p><b>事务边界：</b>本方法自身不开事务，任务生成与状态回写各自落在
+     * {@code instanceService} 的方法事务内；若回写阶段失败，已生成的任务不会回滚，
+     * 需依赖对账任务修复。
+     *
+     * @param instanceId 流程实例 ID，不可为 {@code null}
+     * @return 推进后的实例视图，含当前待办任务列表
+     * @throws SysException 实例不存在时抛出，错误码 {@link BaseResultCode#NOT_FOUND}；
+     *                      流程定义缺少开始节点时抛出，错误码 {@link BaseResultCode#INTERNAL_ERROR}
+     */
     @Override
     @YdszDistributedLock(key = "'flow:instance:op:' + #{#instanceId}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
@@ -127,6 +151,50 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 loadCurrentTasks(instanceId));
     }
 
+    /**
+     * 计算流程从当前节点推进后应到达的下一批节点。
+     *
+     * <p><b>本方法是纯粹的「路由计算」</b>：只返回目标节点列表，<b>不</b>创建任务、
+     * <b>不</b>修改实例状态，副作用仅限于并行网关的 join 令牌。任务生成与状态流转
+     * 由调用方（{@code instanceService}）负责，便于在同一事务中统一提交。
+     *
+     * <h3>REJECT 回退规则</h3>
+     * <ol>
+     *   <li>显式传入 {@code targetNodeCode} 时优先按其回退，支持跳退到任意历史节点</li>
+     *   <li>未指定时由 {@link #resolveRejectTarget} 推导：取当前节点第一条入边的来源节点，
+     *       无入边则回退到开始节点</li>
+     *   <li>推导不出目标或目标节点不存在时抛异常，<b>不会</b>静默把流程留在原地</li>
+     * </ol>
+     *
+     * <h3>PASS 推进规则</h3>
+     * <ul>
+     *   <li>出边由 {@link #resolvePassSkips} 按网关语义筛选：排他网关只取首条匹配，
+     *       包容网关取全部匹配，均无匹配时走 BPMN {@code default} 出边</li>
+     *   <li>跳转目标节点不存在时<b>跳过该边并告警</b>，不中断其余分支，避免一条脏数据卡死整个流程</li>
+     *   <li>返回空列表表示无下游，调用方据此判定流程结束</li>
+     * </ul>
+     *
+     * <h3>并行/包容网关 join 聚合</h3>
+     * <p>目标为多入边的 join 节点时，通过 {@code joinTokenService} 令牌精确跟踪分支到达情况，
+     * 支持由节点 {@code ext.joinRequired} 配置的 N/M 聚合（全部到达 / 指定条数 / 过半数）。
+     * 未达聚合条件的分支<b>不进入返回列表</b>，即在此处静默等待。
+     *
+     * <p><b>降级策略：</b>令牌服务（Redis）异常时回退为扫描入边源节点的活跃任务数，
+     * 仅统计 PENDING/CLAIMED 任务。这样即使某分支已 CANCELLED/FAILED，join 也不会永久挂起。
+     * 降级路径依赖任务表实时状态，精度低于令牌，可能出现少数重复聚合。
+     *
+     * <p><b>并发控制：</b>锁键与 {@link #start} 相同；但经 {@code start}/{@code advanceMulti}
+     * 内部自调用进入时不走代理，锁由外层方法持有（详见 {@link #start}）。
+     *
+     * @param currentInstance 当前流程实例，须已持久化且 {@code definitionId} 有效，不可为 {@code null}
+     * @param currentNodeCode 当前节点编码，不可为 {@code null}
+     * @param skipType        推进类型，{@code "REJECT"} 走回退分支，其余（通常为 {@code "PASS"}）走正向推进，大小写不敏感
+     * @param targetNodeCode  回退目标节点编码；仅 REJECT 生效，为 {@code null} 时自动推导
+     * @param variables       流程变量，用于条件表达式求值；可为 {@code null}，等价于无变量
+     * @return 下一批节点列表；流程已无下游或 join 仍在等待时返回<b>空列表</b>而非 {@code null}
+     * @throws SysException 当前节点不存在或回退目标不存在时抛出，错误码 {@link BaseResultCode#NOT_FOUND}；
+     *                      REJECT 无法推导出回退目标时抛出，错误码 {@link BaseResultCode#BAD_REQUEST}
+     */
     @Override
     @YdszDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")

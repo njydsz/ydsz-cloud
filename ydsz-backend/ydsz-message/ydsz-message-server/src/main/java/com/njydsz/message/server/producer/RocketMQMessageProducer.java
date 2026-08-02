@@ -51,13 +51,13 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
     private static final String TAG_NORMAL = "NORMAL";
     private static final String TAG_LOW = "LOW";
 
-    @Override
     /**
      * 同步发送消息到 {@link YdszMessageTopics#TOPIC_MESSAGE}。
      *
      * @param req 消息请求
      * @return RocketMQ 消息 ID
      */
+    @Override
     public String syncSend(MessageRequest req) {
         if (req == null) {
             throw new IllegalArgumentException("MessageRequest must not be null");
@@ -82,12 +82,12 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
         return result.getMsgId();
     }
 
-    @Override
     /**
      * 异步发送消息(不阻塞,结果通过回调通知)。
      *
      * @param req 消息请求
      */
+    @Override
     public void asyncSend(MessageRequest req) {
         if (req == null) {
             throw new IllegalArgumentException("MessageRequest must not be null");
@@ -160,7 +160,6 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
         };
     }
 
-    @Override
     /**
      * P2-3: 发送事务消息（半消息）。
      *
@@ -171,6 +170,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
      * @param req 消息请求
      * @return RocketMQ 半消息 ID（后续 commit/rollback 由 TransactionListener 决定）
      */
+    @Override
     public String sendTransactionMessage(MessageRequest req) {
         if (req == null) {
             throw new IllegalArgumentException("MessageRequest must not be null");

@@ -11,10 +11,30 @@ import type { ClassType, MaybePromise } from '@ydsz-core/typings';
 
 import type { DrawerApi } from './drawer-api';
 
+/**
+ * 抽屉从哪一侧滑出。
+ *
+ * @remarks
+ * 方位不仅决定动画方向，也决定尺寸语义：左右侧滑出时宽度可调、高度铺满；
+ * 上下滑出时则相反。切换方位后原先设置的宽/高可能不再生效，需一并调整。
+ */
 export type DrawerPlacement = 'bottom' | 'left' | 'right' | 'top';
 
+/**
+ * 关闭按钮位于头部的哪一侧。
+ *
+ * @remarks
+ * 默认在右侧，符合桌面端习惯；置于左侧多用于模拟移动端「返回」的交互位置。
+ */
 export type CloseIconPlacement = 'left' | 'right';
 
+/**
+ * 抽屉组件的展示层配置。
+ *
+ * @remarks
+ * 这里只描述「长什么样、能不能关」，不包含打开状态与业务数据——
+ * 后者属于 {@link DrawerState}。这样拆分是为了让纯展示配置可以被静态复用。
+ */
 export interface DrawerProps {
   /**
    * 是否挂载到内容区域
@@ -134,21 +154,55 @@ export interface DrawerProps {
   zIndex?: number;
 }
 
+/**
+ * 抽屉的运行时状态，即 DrawerApi 内部 store 所存储的完整数据。
+ *
+ * @remarks
+ * 在展示配置 {@link DrawerProps} 之外补充了「开关状态」与「跨组件传值通道」，
+ * 这两项都会随交互变化，因此归入 state 而非 props。
+ */
 export interface DrawerState extends DrawerProps {
-  /** 弹窗打开状态 */
+  /**
+   * 弹窗打开状态
+   *
+   * @remarks
+   * 由 API 统一维护，业务不应直接改写 store 中的该值，
+   * 应调用 `open()` / `close()`，否则会跳过 `onBeforeClose` 拦截与动画回调。
+   */
   isOpen?: boolean;
   /**
    * 共享数据
+   *
+   * @remarks
+   * 打开方与抽屉内容组件之间的传值通道，典型用途是把「当前编辑行」传进抽屉。
+   * 注意其生命周期与抽屉实例一致，**关闭后不会自动清空**：
+   * 若下次打开时未重新赋值，会读到上一次的残留数据，
+   * 编辑/新增复用同一抽屉时尤其容易出现串数据。
    */
   sharedData?: Record<string, any>;
 }
 
+/**
+ * 附加了响应式订阅能力的抽屉 API，是业务实际持有的句柄类型。
+ *
+ * @remarks
+ * `DrawerApi` 本身为普通类实例，`useStore` 用于把内部状态桥接成 Vue 只读 ref，
+ * 以便在模板中消费（如根据 `isOpen` 控制内容懒加载）。
+ * 建议传入 selector 只订阅所需切片，避免任意状态变更都引发重渲染。
+ */
 export type ExtendedDrawerApi = DrawerApi & {
   useStore: <T = NoInfer<DrawerState>>(
     selector?: (state: NoInfer<DrawerState>) => T,
   ) => Readonly<Ref<T>>;
 };
 
+/**
+ * 创建抽屉 API 时的初始化选项。
+ *
+ * @remarks
+ * 在 {@link DrawerState} 基础上追加了生命周期回调与「独立抽屉组件」的连接配置。
+ * 所有回调都是可选的，未提供时对应环节不做任何处理。
+ */
 export interface DrawerApiOptions extends DrawerState {
   /**
    * 独立的抽屉组件

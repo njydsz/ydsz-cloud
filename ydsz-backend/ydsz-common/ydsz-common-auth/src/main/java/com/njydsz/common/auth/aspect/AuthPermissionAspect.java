@@ -56,10 +56,20 @@ public class AuthPermissionAspect {
         this.evaluator = evaluator;
     }
 
+    /**
+     * 菜单/按钮权限切点：匹配标注或元标注了 {@link AuthMenuPermission} 的方法或类。
+     *
+     * <p>作为 {@link #doMenuAround} 的引用锚点；命中后由该通知完成菜单/按钮权限校验。</p>
+     */
     @Pointcut("@annotation(com.njydsz.common.auth.annotation.AuthMenuPermission) || @within(com.njydsz.common.auth.annotation.AuthMenuPermission)")
     public void menuPointCut() {
     }
 
+    /**
+     * 接口权限切点：匹配标注或元标注了 {@link AuthApiPermission} 的方法或类。
+     *
+     * <p>作为 {@link #doApiAround} 的引用锚点；命中后由该通知完成接口权限校验。</p>
+     */
     @Pointcut("@annotation(com.njydsz.common.auth.annotation.AuthApiPermission) || @within(com.njydsz.common.auth.annotation.AuthApiPermission)")
     public void apiPointCut() {
     }

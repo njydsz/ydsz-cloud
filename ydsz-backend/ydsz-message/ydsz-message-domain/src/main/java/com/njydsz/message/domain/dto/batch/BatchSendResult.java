@@ -31,14 +31,23 @@ public class BatchSendResult {
     /** 被限流/拦截数 */
     private int skipped;
 
+    /**
+     * 累加成功数（线程不安全，批量统计请在单线程或外部同步下调用）。
+     */
     public void incSuccess() {
         this.success++;
     }
 
+    /**
+     * 累加失败数（线程不安全，批量统计请在单线程或外部同步下调用）。
+     */
     public void incFailed() {
         this.failed++;
     }
 
+    /**
+     * 累加被限流/拦截数（线程不安全，批量统计请在单线程或外部同步下调用）。
+     */
     public void incSkipped() {
         this.skipped++;
     }

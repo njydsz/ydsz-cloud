@@ -1,0 +1,321 @@
+{
+ "backend": {
+  "ydsz-agent": {
+   "files": 116,
+   "type_doc_missing": 0,
+   "methods_total": 122,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 14255,
+   "todo": []
+  },
+  "ydsz-common": {
+   "files": 1501,
+   "type_doc_missing": 0,
+   "methods_total": 3671,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 269913,
+   "todo": []
+  },
+  "ydsz-cronjob": {
+   "files": 214,
+   "type_doc_missing": 0,
+   "methods_total": 253,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 33951,
+   "todo": []
+  },
+  "ydsz-gateway": {
+   "files": 32,
+   "type_doc_missing": 0,
+   "methods_total": 34,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 6055,
+   "todo": []
+  },
+  "ydsz-literule": {
+   "files": 301,
+   "type_doc_missing": 0,
+   "methods_total": 460,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 49777,
+   "todo": []
+  },
+  "ydsz-message": {
+   "files": 267,
+   "type_doc_missing": 0,
+   "methods_total": 203,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 30298,
+   "todo": []
+  },
+  "ydsz-nextwiki": {
+   "files": 100,
+   "type_doc_missing": 0,
+   "methods_total": 189,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 15377,
+   "todo": []
+  },
+  "ydsz-project": {
+   "files": 361,
+   "type_doc_missing": 0,
+   "methods_total": 158,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 19572,
+   "todo": []
+  },
+  "ydsz-system": {
+   "files": 69,
+   "type_doc_missing": 0,
+   "methods_total": 47,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 7263,
+   "todo": []
+  },
+  "ydsz-userinfo": {
+   "files": 117,
+   "type_doc_missing": 0,
+   "methods_total": 68,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 11146,
+   "todo": []
+  },
+  "ydsz-workflow": {
+   "files": 307,
+   "type_doc_missing": 0,
+   "methods_total": 345,
+   "methods_missing": 0,
+   "misplaced": 0,
+   "lines": 55068,
+   "todo": []
+  }
+ },
+ "frontend": {
+  "playwright.config.ts": {
+   "files": 1,
+   "file_doc_missing": 0,
+   "exports_total": 0,
+   "exports_missing": 0,
+   "lines": 45,
+   "todo": []
+  },
+  "vitest.config.ts": {
+   "files": 1,
+   "file_doc_missing": 0,
+   "exports_total": 0,
+   "exports_missing": 0,
+   "lines": 22,
+   "todo": []
+  },
+  "vitest.workspace.ts": {
+   "files": 1,
+   "file_doc_missing": 0,
+   "exports_total": 0,
+   "exports_missing": 0,
+   "lines": 13,
+   "todo": []
+  },
+  ".storybook": {
+   "files": 2,
+   "file_doc_missing": 0,
+   "exports_total": 0,
+   "exports_missing": 0,
+   "lines": 68,
+   "todo": []
+  },
+  "apps/agent-web": {
+   "files": 40,
+   "file_doc_missing": 0,
+   "exports_total": 32,
+   "exports_missing": 0,
+   "lines": 2944,
+   "todo": []
+  },
+  "apps/cronjob-web": {
+   "files": 43,
+   "file_doc_missing": 0,
+   "exports_total": 38,
+   "exports_missing": 0,
+   "lines": 2857,
+   "todo": []
+  },
+  "apps/literule-web": {
+   "files": 43,
+   "file_doc_missing": 0,
+   "exports_total": 38,
+   "exports_missing": 0,
+   "lines": 2824,
+   "todo": []
+  },
+  "apps/message-web": {
+   "files": 46,
+   "file_doc_missing": 0,
+   "exports_total": 44,
+   "exports_missing": 0,
+   "lines": 3091,
+   "todo": []
+  },
+  "apps/nextwiki-web": {
+   "files": 40,
+   "file_doc_missing": 0,
+   "exports_total": 32,
+   "exports_missing": 0,
+   "lines": 2520,
+   "todo": []
+  },
+  "apps/project-web": {
+   "files": 61,
+   "file_doc_missing": 0,
+   "exports_total": 74,
+   "exports_missing": 0,
+   "lines": 4507,
+   "todo": []
+  },
+  "apps/system-web": {
+   "files": 40,
+   "file_doc_missing": 0,
+   "exports_total": 33,
+   "exports_missing": 0,
+   "lines": 3027,
+   "todo": []
+  },
+  "apps/userinfo-web": {
+   "files": 47,
+   "file_doc_missing": 0,
+   "exports_total": 49,
+   "exports_missing": 0,
+   "lines": 4488,
+   "todo": []
+  },
+  "apps/workflow-web": {
+   "files": 43,
+   "file_doc_missing": 0,
+   "exports_total": 38,
+   "exports_missing": 0,
+   "lines": 2822,
+   "todo": []
+  },
+  "bash": {
+   "files": 10,
+   "file_doc_missing": 0,
+   "exports_total": 1,
+   "exports_missing": 0,
+   "lines": 965,
+   "todo": []
+  },
+  "comm/@core": {
+   "files": 414,
+   "file_doc_missing": 0,
+   "exports_total": 129,
+   "exports_missing": 0,
+   "lines": 27581,
+   "todo": []
+  },
+  "comm/constants": {
+   "files": 2,
+   "file_doc_missing": 0,
+   "exports_total": 1,
+   "exports_missing": 0,
+   "lines": 43,
+   "todo": []
+  },
+  "comm/effects": {
+   "files": 231,
+   "file_doc_missing": 0,
+   "exports_total": 79,
+   "exports_missing": 0,
+   "lines": 26171,
+   "todo": []
+  },
+  "comm/icons": {
+   "files": 5,
+   "file_doc_missing": 0,
+   "exports_total": 0,
+   "exports_missing": 0,
+   "lines": 171,
+   "todo": []
+  },
+  "comm/locales": {
+   "files": 3,
+   "file_doc_missing": 0,
+   "exports_total": 4,
+   "exports_missing": 0,
+   "lines": 252,
+   "todo": []
+  },
+  "comm/preferences": {
+   "files": 1,
+   "file_doc_missing": 0,
+   "exports_total": 0,
+   "exports_missing": 0,
+   "lines": 25,
+   "todo": []
+  },
+  "comm/stores": {
+   "files": 10,
+   "file_doc_missing": 0,
+   "exports_total": 3,
+   "exports_missing": 0,
+   "lines": 1452,
+   "todo": []
+  },
+  "comm/styles": {
+   "files": 1,
+   "file_doc_missing": 0,
+   "exports_total": 0,
+   "exports_missing": 0,
+   "lines": 10,
+   "todo": []
+  },
+  "comm/types": {
+   "files": 5,
+   "file_doc_missing": 0,
+   "exports_total": 11,
+   "exports_missing": 0,
+   "lines": 225,
+   "todo": []
+  },
+  "comm/utils": {
+   "files": 14,
+   "file_doc_missing": 0,
+   "exports_total": 3,
+   "exports_missing": 0,
+   "lines": 975,
+   "todo": []
+  },
+  "conf": {
+   "files": 58,
+   "file_doc_missing": 0,
+   "exports_total": 25,
+   "exports_missing": 0,
+   "lines": 4770,
+   "todo": []
+  },
+  "e2e": {
+   "files": 1,
+   "file_doc_missing": 0,
+   "exports_total": 0,
+   "exports_missing": 0,
+   "lines": 100,
+   "todo": []
+  },
+  "main": {
+   "files": 52,
+   "file_doc_missing": 0,
+   "exports_total": 22,
+   "exports_missing": 0,
+   "lines": 4251,
+   "todo": []
+  }
+ }
+}

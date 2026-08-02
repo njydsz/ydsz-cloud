@@ -71,6 +71,14 @@ public class AdaptiveBatchScheduler {
     private final OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
     private final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
+    /**
+     * 初始化自适应批量调度器：以配置的固定 batchSize 作为起始值。
+     *
+     * <p>仅当 {@code ydsz.cronjob.adaptive-batch.enabled=true} 且有
+     * {@code cronjobMetrics} Bean 时注册。初始 {@code currentBatchSize} 取配置的
+     * {@code scanner.batchSize}，避免在首轮负载评估前 JobScanner 读到无意义的中间值；
+     * 后续由 {@link #evaluateAndAdjust()} 按实时负载动态覆写。无独立线程池或锁资源需预分配。
+     */
     @PostConstruct
     public void init() {
         CronjobProperties.AdaptiveBatch config = cronjobProperties.getAdaptiveBatch();
@@ -214,6 +222,13 @@ public class AdaptiveBatchScheduler {
         return Math.max(config.getMinBatchSize(), Math.min(config.getMaxBatchSize(), batchSize));
     }
 
+    /**
+     * 容器销毁钩子：仅打印关闭时的最终 batchSize 用于排查。
+     *
+     * <p>本类不持有线程池或外部连接，无需要主动释放的资源；
+     * 通过 {@link AtomicInteger} 发布的 {@code currentBatchSize} 随 Bean 销毁自然失效，
+     * JobScanner 在停机前读取到的最后一次评估值即为最终生效值。
+     */
     @PreDestroy
     public void shutdown() {
         log.info("[AdaptiveBatch] 关闭, 当前 batchSize={}", currentBatchSize.get());

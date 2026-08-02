@@ -106,6 +106,20 @@ public class JobScanner {
     /** P1-8: 是否使用外部线程池（true=common-thread 管理，不负责关闭） */
     private boolean useExternalDispatchPool = false;
 
+    /**
+     * 初始化扫描器：解析 Leader 角色，并决策并行派发线程池来源。
+     *
+     * <p>仅在 {@code ydsz.cronjob.leader.enabled=true} 时进入派发相关初始化；
+     * 否则仅记录 Leaderless 模式日志、不创建任何线程池。
+     * 当开启并行派发（{@code parallelDispatchEnabled=true}）时：
+     * <ul>
+     *   <li>优先复用 common-thread 统一托管的 {@code cronjobDispatchExecutor} 线程池，
+     *       此时 {@code useExternalDispatchPool=true}，生命周期由 common-thread 负责，本类不关闭；</li>
+     *   <li>若从 Spring 容器获取失败（该 Bean 未注册），则回退自建守护线程池，
+     *       此时 {@code useExternalDispatchPool=false}，由 {@link #shutdown()} 负责关闭。</li>
+     * </ul>
+     * 非并行派发模式下不创建线程池，走串行派发路径。
+     */
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();
@@ -144,6 +158,15 @@ public class JobScanner {
         }
     }
 
+    /**
+     * 容器销毁钩子（预留）。
+     *
+     * <p>本方法保持空实现：当并行派发复用 common-thread 托管的
+     * {@code cronjobDispatchExecutor} 时（{@code useExternalDispatchPool=true}），
+     * 线程池生命周期由 common-thread 统一回收，本类不应手动关闭以免误伤共享池。
+     * 仅在回退自建线程池的场景下，实际的线程池关闭逻辑统一收敛在 {@link #shutdown()} 中，
+     * 避免两处销毁逻辑重复执行。
+     */
     @PreDestroy
     public void destroy() {
         // P0-3: dispatchPool 由 common-thread 管理生命周期，无需手动关闭

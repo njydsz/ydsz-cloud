@@ -1,12 +1,5 @@
 package com.njydsz.common.excel.core.context;
 
-/**
- * WriteContext 类
- *
- * @author ydsz-team
- * @email ydsz-dev@njydsz.com
- * @version 1.0.0
- */
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
@@ -100,14 +93,33 @@ public class WriteContext {
         this.finished = finished;
     }
 
+    /**
+     * 将当前写入行号前进一行。
+     *
+     * <p>注意行游标的<b>起点是表头行数</b>（见带参构造），即首次写入的数据行紧接表头之后；
+     * 本方法只推进行号，不会自动重置列号，换行时通常需配合 {@link #resetColumn()} 使用。
+     *
+     * <p><b>线程安全性</b>：非原子操作，写入上下文假定单线程串行写入。
+     */
     public void incrementRow() {
         this.currentRow++;
     }
 
+    /**
+     * 将当前写入列号前进一列。
+     *
+     * <p>由写入流程在每写完一个单元格后调用；不做列数上界校验，
+     * 超出 Excel 单表最大列数时由底层 POI 抛出异常。
+     */
     public void incrementColumn() {
         this.currentColumn++;
     }
 
+    /**
+     * 将列游标复位到行首（第 0 列）。
+     *
+     * <p>每次换行前必须调用，否则列号会跨行持续累加导致数据写偏。
+     */
     public void resetColumn() {
         this.currentColumn = 0;
     }

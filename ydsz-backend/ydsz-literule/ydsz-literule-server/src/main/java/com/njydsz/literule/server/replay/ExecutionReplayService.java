@@ -411,6 +411,13 @@ public class ExecutionReplayService {
             return errorMessage == null;
         }
 
+        /**
+         * 构造回放失败结果（携带 errorMessage，{@link #isSuccess()} 返回 false）。
+         *
+         * @param traceId 追踪 ID（可能为 null，调用方用于回显）
+         * @param error   失败原因描述
+         * @return 失败的 {@link ReplayResult}
+         */
         public static ReplayResult error(String traceId, String error) {
             return ReplayResult.builder()
                     .traceId(traceId)
@@ -434,6 +441,11 @@ public class ExecutionReplayService {
         private String summary;
         private LocalDateTime replayedAt;
 
+        /**
+         * 构造空批量回放结果（输入为空时返回，所有计数归零、diffs 为空）。
+         *
+         * @return 空的 {@link BatchReplayResult}
+         */
         public static BatchReplayResult empty() {
             return BatchReplayResult.builder()
                     .totalReplayed(0)

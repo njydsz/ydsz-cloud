@@ -30,10 +30,58 @@ const USER_DRAWER_INJECT_KEY = Symbol('YDSZ_DRAWER_INJECT');
 
 const DEFAULT_DRAWER_PROPS: Partial<DrawerProps> = {};
 
+/**
+ * 设置抽屉的全局默认 props，统一整个应用的抽屉外观与交互。
+ *
+ * @remarks
+ * 应在应用启动阶段调用，用于集中约定「点遮罩是否可关」「默认从哪侧滑出」等策略，
+ * 避免每处调用重复传参。
+ *
+ * 副作用与约束：
+ * - 通过 `Object.assign` **原地修改模块级单例**，多次调用为累加式覆盖，
+ *   不会清除此前设置的其他键；
+ * - 优先级最低：单个抽屉在 `useYDSZDrawer(options)` 中传入的同名项会覆盖它；
+ * - **仅对之后创建的抽屉生效**，已创建的实例不受影响，因此不要在运行中动态调用它来批量改样式。
+ *
+ * @param props - 要合并进全局默认值的抽屉配置
+ */
 export function setDefaultDrawerProps(props: Partial<DrawerProps>) {
   Object.assign(DEFAULT_DRAWER_PROPS, props);
 }
 
+/**
+ * 创建一对「抽屉组件 + 命令式 API」，支持内联使用与独立组件两种模式。
+ *
+ * @remarks
+ * 函数依据是否传入 `connectedComponent` 走**两条完全不同的分支**：
+ *
+ * **模式一：内联（不传 `connectedComponent`）**
+ * 直接创建 DrawerApi 与渲染组件，抽屉内容写在当前组件的插槽里，适合简单场景。
+ * 配置按 `全局默认值 → 父级 inject 的配置 → 本次 options` 的顺序合并，后者优先。
+ *
+ * **模式二：独立组件（传入 `connectedComponent`）**
+ * 抽屉内容被抽到独立 SFC 中，父组件拿到的是一个「壳」。此时：
+ * - API 通过 provide/inject 由子组件反向注入给父组件，因此**父组件拿到的 API 在子组件完成
+ *   初始化之前是空对象**，不能在 setup 同步阶段立即调用其方法；
+ * - 扩展 API 时使用 `Object.setPrototypeOf` 而非 `Object.assign`——前者能保留类的原型方法，
+ *   后者只会拷贝自有属性导致方法丢失，同时又必须避免直接给 reactive 对象赋值以免丢响应性；
+ * - 开发期会校验传参：若在壳组件上传递了与抽屉 state 同名的 props/slots，
+ *   会打印 warn 提示改用 API 修改（`class` 属性除外），因为两条修改路径并存会让状态来源难以追踪；
+ * - 配置了 `destroyOnClose` 时，关闭动画结束后会通过切换渲染标记强制重建子组件，
+ *   从而彻底重置其内部状态；未配置时抽屉内容**会保留上一次的状态**。
+ *
+ * 两种模式下 `onOpenChange` 都会被包装成「先调本次 options 的回调、再调 inject 来的回调」，
+ * 两者都会执行，不存在覆盖关系。
+ *
+ * @param options - 抽屉初始化配置；传入 `connectedComponent` 即切换为独立组件模式
+ * @returns 只读元组 `[Drawer, drawerApi]`——`Drawer` 放入模板渲染，`drawerApi` 用于命令式开关与传值
+ *
+ * @example
+ * ```ts
+ * const [Drawer, drawerApi] = useYDSZDrawer({ connectedComponent: DetailDrawer });
+ * drawerApi.setData(row).open();
+ * ```
+ */
 export function useYDSZDrawer<
   TParentDrawerProps extends DrawerProps = DrawerProps,
 >(options: DrawerApiOptions = {}) {

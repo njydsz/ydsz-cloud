@@ -12,6 +12,34 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { useTabbarStore } from '@ydsz/stores';
 
+/**
+ * 封装标签栏（Tabbar）的常用操作，供页面与右键菜单调用。
+ *
+ * @remarks
+ * 入参：无。所有能力均转发给 `useTabbarStore`，本 Hook 只负责补齐默认的
+ * 「当前路由 / 当前 router 实例」上下文，避免调用方层层传参。
+ *
+ * 默认参数约定：绝大多数方法的 `tab` 参数可省略，省略时**默认作用于当前激活路由**（`useRoute()` 的结果）。
+ *
+ * 副作用：这些方法会直接修改全局标签栏状态并可能触发路由跳转
+ * （如关闭当前页后自动切到相邻标签、`openTabInNewWindow` 会打开新的浏览器窗口），
+ * 属于跨组件的全局副作用；固定（affix）标签受保护，关闭类操作会跳过它们。
+ *
+ * 生命周期依赖：内部使用 `useRoute()` / `useRouter()`，
+ * **必须在组件 `setup` 期间调用**；不注册侦听器，无需手动清理。
+ *
+ * @returns 标签栏操作方法集合：关闭类（`closeAllTabs` / `closeCurrentTab` / `closeLeftTabs` /
+ * `closeOtherTabs` / `closeRightTabs` / `closeTabByKey`）、固定类（`pinTab` / `unpinTab` / `toggleTabPin`）、
+ * 标题类（`setTabTitle` / `resetTabTitle`）、其他（`refreshTab` / `openTabInNewWindow`），
+ * 以及用于渲染右键菜单禁用态的 `getTabDisableState`
+ *
+ * @example
+ * ```ts
+ * const { closeCurrentTab, setTabTitle } = useTabs();
+ * setTabTitle(computed(() => $t('page.detail.title')));
+ * await closeCurrentTab();
+ * ```
+ */
 export function useTabs() {
   const router = useRouter();
   const route = useRoute();

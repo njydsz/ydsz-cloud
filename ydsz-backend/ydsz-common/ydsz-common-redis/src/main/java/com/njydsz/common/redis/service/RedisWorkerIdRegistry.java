@@ -225,6 +225,13 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
         }
     }
 
+    /**
+     * 优雅停机钩子：停止心跳、释放全部已持有的 WorkerId。
+     *
+     * <p>Spring 容器销毁 Bean 时由 {@code @PreDestroy} 触发。先置 {@code shutdown} 标记阻止后续心跳调度，
+     * 再两段式关闭调度线程（{@code shutdown} → 最多等待 5s → {@code shutdownNow} 强制中断），最后调用
+     * {@link #releaseAll()} 逐个释放持有的槽位。捕获中断异常后恢复中断标记，避免吞掉线程中断信号。
+     */
     @PreDestroy
     public void shutdown() {
         shutdown = true;

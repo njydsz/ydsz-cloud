@@ -206,6 +206,15 @@ public class IpAddrUtils {
         return IPV4_PATTERN.matcher(ip).matches();
     }
 
+    /**
+     * 校验 IPv6 地址格式是否合法。
+     *
+     * <p>通过预编译正则覆盖缩写、IPv4 映射（如 {@code ::ffff:ipv4}）、链路本地等常见格式；
+     * 空串直接返回 {@code false}。注意本方法仅做格式校验，不校验语义前缀合法性。
+     *
+     * @param ip IPv6 地址字符串
+     * @return true 表示格式合法
+     */
     public static boolean validIpv6(String ip) {
         if (StringUtils.isEmpty(ip)) {
             return false;
@@ -213,6 +222,15 @@ public class IpAddrUtils {
         return IPV6_PATTERN.matcher(ip).matches();
     }
 
+    /**
+     * 规范化 IPv4/IPv6 混合地址，用于统一存储与比对。
+     *
+     * <p>空/unknown 原样返回占位符；IPv6 本地回环 {@code ::1} 归一为 {@code 127.0.0.1}，其余去除首尾空白。
+     * 目的是消除代理头中携带的多余空格与回环表示差异，避免去重/判等失真。
+     *
+     * @param ip 原始 IP 字符串
+     * @return 规范化后的 IP，或 {@code unknown} 占位符
+     */
     public static String normalizeIp(String ip) {
         if (isUnknown(ip)) {
             return UNKNOWN;
@@ -223,6 +241,15 @@ public class IpAddrUtils {
         return ip.trim();
     }
 
+    /**
+     * 规范化 IPv6 地址（折叠连续冒号并转小写）。
+     *
+     * <p>将多个连续 {@code :} 折叠为单个并统一小写，便于作为缓存 key 或比对。
+     * 空串直接原样返回；不做完整合法性校验（校验见 {@link #validIpv6(String)}）。
+     *
+     * @param ipv6 原始 IPv6 字符串
+     * @return 折叠小写后的 IPv6 字符串
+     */
     public static String normalizeIpv6(String ipv6) {
         if (StringUtils.isEmpty(ipv6)) {
             return ipv6;
@@ -285,6 +312,16 @@ public class IpAddrUtils {
         }
     }
 
+    /**
+     * 将 IPv4 地址转换为 32 位无符号长整型。
+     *
+     * <p>便于做网段掩码运算，与 {@link #longToIp(long)} 互逆。
+     * 非合法 IPv4 会抛出 {@link IllegalArgumentException}，调用方应预先用 {@link #validIpv4(String)} 校验。
+     *
+     * @param ip 点分十进制 IPv4 地址，非空且合法
+     * @return 对应的长整型值
+     * @throws IllegalArgumentException 当 IP 格式非法时
+     */
     public static long ipToLong(String ip) {
         if (!validIpv4(ip)) {
             throw new IllegalArgumentException("Invalid IPv4 address: " + ip);
@@ -297,6 +334,15 @@ public class IpAddrUtils {
         return result;
     }
 
+    /**
+     * 将 32 位长整型还原为点分十进制 IPv4 地址。
+     *
+     * <p>与 {@link #ipToLong(String)} 互逆，用于网段计算结果的展示。
+     * 不校验入参范围，调用方应保证其为合法 IPv4 整数表示。
+     *
+     * @param ipLong IPv4 对应的长整型值
+     * @return 点分十进制地址字符串
+     */
     public static String longToIp(long ipLong) {
         return ((ipLong >> 24) & 0xFF) + "." +
                ((ipLong >> 16) & 0xFF) + "." +
@@ -304,6 +350,16 @@ public class IpAddrUtils {
                (ipLong & 0xFF);
     }
 
+    /**
+     * 从子网掩码反推前缀长度（CIDR prefix）。
+     *
+     * <p>例如掩码 {@code 255.255.255.0} 返回 24。掩码必须为高位连续 1、低位连续 0，
+     * 否则抛出 {@link IllegalArgumentException}（非法掩码）。
+     *
+     * @param netmask 点分十进制子网掩码，非空且合法
+     * @return 前缀长度（0~32）
+     * @throws IllegalArgumentException 当掩码格式非法或不连续时
+     */
     public static int getPrefixLength(String netmask) {
         if (!validIpv4(netmask)) {
             throw new IllegalArgumentException("Invalid netmask: " + netmask);
@@ -320,6 +376,16 @@ public class IpAddrUtils {
         return prefix;
     }
 
+    /**
+     * 由前缀长度生成对应的子网掩码。
+     *
+     * <p>与 {@link #getPrefixLength(String)} 互逆，例如 24 返回 {@code 255.255.255.0}。
+     * 前缀越界（&lt;0 或 &gt;32）抛出 {@link IllegalArgumentException}。
+     *
+     * @param prefix CIDR 前缀长度（0~32）
+     * @return 点分十进制子网掩码
+     * @throws IllegalArgumentException 当前缀越界时
+     */
     public static String getNetmaskFromPrefix(int prefix) {
         if (prefix < 0 || prefix > 32) {
             throw new IllegalArgumentException("Invalid prefix: " + prefix);
@@ -328,6 +394,17 @@ public class IpAddrUtils {
         return longToIp(mask);
     }
 
+    /**
+     * 计算 IP 所在子网的网络地址。
+     *
+     * <p>对 IP 与掩码按位与，得到网段起始地址（用于路由、ACL 判定）。
+     * 要求 IP 为合法 IPv4，否则抛出 {@link IllegalArgumentException}。
+     *
+     * @param ip     IPv4 地址，非空且合法
+     * @param prefix CIDR 前缀长度
+     * @return 网络地址（点分十进制）
+     * @throws IllegalArgumentException 当 IP 非法时
+     */
     public static String getNetworkAddress(String ip, int prefix) {
         if (!validIpv4(ip)) {
             throw new IllegalArgumentException("Invalid IP: " + ip);
@@ -337,6 +414,17 @@ public class IpAddrUtils {
         return longToIp(ipLong & mask);
     }
 
+    /**
+     * 计算 IP 所在子网的广播地址。
+     *
+     * <p>在网络地址基础上对主机位取全 1，用于子网内广播寻址。
+     * 要求 IP 为合法 IPv4，否则抛出 {@link IllegalArgumentException}。
+     *
+     * @param ip     IPv4 地址，非空且合法
+     * @param prefix CIDR 前缀长度
+     * @return 广播地址（点分十进制）
+     * @throws IllegalArgumentException 当 IP 非法时
+     */
     public static String getBroadcastAddress(String ip, int prefix) {
         if (!validIpv4(ip)) {
             throw new IllegalArgumentException("Invalid IP: " + ip);
@@ -347,6 +435,15 @@ public class IpAddrUtils {
         return longToIp(broadcast);
     }
 
+    /**
+     * 枚举本机所有非回环、非虚拟且在线的网络接口 IP。
+     *
+     * <p>遍历 {@link NetworkInterface}，跳过 loopback/virtual/未启用接口；
+     * 对 IPv6 仅收集非链路本地地址（避免 {@code fe80} 噪声）。
+     * 枚举异常时记录日志并返回已收集的部分结果（不抛异常，保证可用性）。
+     *
+     * @return 本机 IP 地址列表，可能为空
+     */
     public static List<String> listLocalIps() {
         List<String> ips = new ArrayList<>();
         try {

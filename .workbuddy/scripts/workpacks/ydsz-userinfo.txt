@@ -1,0 +1,25 @@
+# 工作包: ydsz-userinfo   待办文件 11 个
+# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
+#   类头/文件头 = 该文件缺少类级或文件级文档注释
+
+[--]  1 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-api\src\main\java\com\njydsz\userinfo\api\assembler\UserInfoNameAssemblerAutoConfiguration.java
+        成员: userInfoNameAssembler
+[类头]  0 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-api\src\main\java\com\njydsz\userinfo\api\client\OrgQueryClient.java
+[--]  5 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java
+        成员: recordLoginSuccess, recordLoginFail, recordLogout, startTimer, stopTimer
+[--]  3 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-web\src\main\java\com\njydsz\userinfo\web\controller\AuthController.java
+        成员: login, logout, refresh
+[--]  2 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-web\src\main\java\com\njydsz\userinfo\web\controller\CompanyController.java
+        成员: update, remove
+[--]  2 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-web\src\main\java\com\njydsz\userinfo\web\controller\DepartmentController.java
+        成员: create, update
+[--]  3 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-web\src\main\java\com\njydsz\userinfo\web\controller\LanguageController.java
+        成员: create, update, remove
+[--]  3 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-web\src\main\java\com\njydsz\userinfo\web\controller\MenuController.java
+        成员: create, update, remove
+[--]  3 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-web\src\main\java\com\njydsz\userinfo\web\controller\PostController.java
+        成员: create, update, remove
+[--]  4 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-web\src\main\java\com\njydsz\userinfo\web\controller\RoleController.java
+        成员: create, update, remove, assignPermissions
+[--]  4 | ydsz-backend\ydsz-userinfo\ydsz-userinfo-web\src\main\java\com\njydsz\userinfo\web\controller\UserAccountController.java
+        成员: create, update, remove, changePassword

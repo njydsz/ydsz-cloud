@@ -60,6 +60,33 @@ export const defaultResponseInterceptor = ({
   };
 };
 
+/**
+ * 创建「401 自动刷新 token 并重放请求」的响应拦截器。
+ *
+ * @remarks
+ * 处理流程：
+ * 1. 非 401 错误原样抛出，不做任何干预；
+ * 2. 未开启 refreshToken，或该请求已是重试请求（`config.__isRetryRequest`）时，
+ *    直接走重新登录并抛出原错误——`__isRetryRequest` 是防止「刷新后仍 401」造成无限重试的关键开关；
+ * 3. 若已有刷新在途（`client.isRefreshing`），当前请求挂入 `refreshTokenQueue` 排队，
+ *    刷新成功后用新 token 重放，保证并发 401 只触发**一次**刷新；
+ * 4. 否则由本请求发起刷新，成功后先唤醒队列再重放自身。
+ *
+ * 失败与副作用：刷新失败时会 reject 队列中所有等待请求、清空队列、执行 `doReAuthenticate`
+ * （通常是跳转登录页）并抛出刷新错误；无论成败 `finally` 中都会复位 `isRefreshing`，
+ * 避免刷新标记泄漏导致后续请求永久排队。
+ *
+ * 注意：拦截器直接读写 `client.isRefreshing` 与 `client.refreshTokenQueue`，
+ * 与传入的 `client` 强耦合，请勿在多个 client 之间共享同一个拦截器实例。
+ *
+ * @param options - 拦截器依赖项
+ * @param options.client - 该拦截器所属的请求客户端，用于共享刷新状态与重放请求
+ * @param options.doReAuthenticate - 重新认证回调，通常清理登录态并跳转登录页
+ * @param options.doRefreshToken - 刷新 token 回调，需返回新的 token 字符串
+ * @param options.enableRefreshToken - 是否启用无感刷新；为 false 时 401 直接走重新认证
+ * @param options.formatToken - 把 token 格式化为 Authorization 头的值（如加 `Bearer ` 前缀）
+ * @returns 可注册到请求客户端的响应拦截器配置（仅含 `rejected` 分支）
+ */
 export const authenticateResponseInterceptor = ({
   client,
   doReAuthenticate,
@@ -130,6 +157,24 @@ export const authenticateResponseInterceptor = ({
   };
 };
 
+/**
+ * 创建「把请求错误翻译成用户可读提示」的响应拦截器。
+ *
+ * @remarks
+ * 判定顺序：先识别主动取消的请求（`axios.isCancel`）并**静默透传**，不弹提示；
+ * 再识别网络异常与超时；最后按 HTTP 状态码映射国际化文案，未命中的状态码统一归为服务端错误。
+ *
+ * 行为约定：本拦截器**只负责提示、不吞异常**——所有分支最终都会
+ * `Promise.reject(error)` 把原始错误继续向上抛，业务侧仍可自行 catch 做补偿处理。
+ * 提示的实际呈现方式（Message / Notification / 静默上报）由 `makeErrorMessage` 决定，
+ * 未传时只做错误透传，不产生任何 UI 反馈。
+ *
+ * 注意：401 在这里也会产生提示文案，若同时启用了
+ * {@link authenticateResponseInterceptor}，需注意拦截器注册顺序以免出现重复提示。
+ *
+ * @param makeErrorMessage - 展示错误提示的回调，接收本地化后的文案与原始错误对象；省略则不提示
+ * @returns 可注册到请求客户端的响应拦截器配置（仅含 `rejected` 分支）
+ */
 export const errorMessageResponseInterceptor = (
   makeErrorMessage?: MakeErrorMessageFn,
 ): ResponseInterceptorConfig => {

@@ -53,6 +53,17 @@ nextwiki:
 
 # 统一线程池配置（ydsz-common-thread）
 ydsz:
+  # JSON 引擎配置（ydsz-common-json）
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    warmup-classes:
+      - com.njydsz.nextwiki.domain.vo.FileNodeVO
+      - com.njydsz.nextwiki.domain.vo.ShareLinkVO
+      - com.njydsz.nextwiki.server.service.ChunkUploadApplicationService
   thread:
     enabled: true
     pools:

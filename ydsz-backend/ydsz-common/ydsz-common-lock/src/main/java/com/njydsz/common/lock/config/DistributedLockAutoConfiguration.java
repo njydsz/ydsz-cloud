@@ -166,6 +166,12 @@ public class DistributedLockAutoConfiguration {
                 lockMetrics);
     }
 
+    /**
+     * 注册分布式锁健康检查指示器 Bean。
+     *
+     * <p>探测 Redis 连接可用性、看门狗存活与锁指标采集状态，对外暴露锁子系统健康度。
+     * 依赖 Spring HealthIndicator 类与 Redis 连接工厂存在时启用；无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
@@ -176,6 +182,12 @@ public class DistributedLockAutoConfiguration {
         return new LockHealthIndicator(redisConnectionFactory, lockWatchDogProvider, lockMetricsProvider);
     }
 
+    /**
+     * 注册锁泄漏检测器 Bean。
+     *
+     * <p>周期性扫描持有超时的锁记录（如看门狗续期失败、节点崩溃遗留），触发告警或强制释放，
+     * 防止死锁导致业务线程永久阻塞。依赖看门狗实例存在时启用；无自定义 Bean 时注册默认实现。
+     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(LockWatchDog.class)

@@ -42,6 +42,20 @@ public class DefaultToolRegistry implements ToolRegistry {
         log.info("[Tool-Registry] 注册工具: {}", name);
     }
 
+    /**
+     * 注册一个携带完整元数据的工具条目。
+     *
+     * <p>与 {@link #register(String, ToolExecutor)} 的区别在于：后者只能生成
+     * {@code "Tool: xxx"} 这类占位描述与空参数 schema，而本方法保留调用方定义的
+     * description 与参数 schema，LLM 才能据此正确选择工具并填充入参，
+     * 因此注解扫描与显式声明场景应优先使用本方法。
+     *
+     * <p>以工具名为键写入，同名工具后注册者覆盖先注册者，可用于运行时热更新工具实现。
+     *
+     * <p><b>并发</b>：底层为 {@link ConcurrentHashMap}，可在运行期安全并发调用。
+     *
+     * @param registration 工具注册条目，不可为 {@code null}，其 name 需全局唯一
+     */
     public void register(ToolRegistration registration) {
         registry.put(registration.getName(), registration);
         log.info("[Tool-Registry] 注册工具: {} (desc={})",

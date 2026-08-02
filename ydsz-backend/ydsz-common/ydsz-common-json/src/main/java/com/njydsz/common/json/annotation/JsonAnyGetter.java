@@ -29,5 +29,6 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonAnyGetter {
 }

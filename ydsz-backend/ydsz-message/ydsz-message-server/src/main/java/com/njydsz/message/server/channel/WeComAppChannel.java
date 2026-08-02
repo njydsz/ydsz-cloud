@@ -55,6 +55,12 @@ public class WeComAppChannel implements MessageChannel {
 
     RestClient restClient;
 
+    /**
+     * 初始化企业微信应用通道：构建带超时配置的 {@link RestClient}。
+     *
+     * <p>连接/读取超时取自 {@code wecomApp} 配置。该客户端供 {@link #send} 调用，
+     * 未启用或 Mock 降级场景下 {@code send} 不依赖真实网络，本方法仍照常构建以避免空指针。
+     */
     @PostConstruct
     public void init() {
         ChannelProperties.WeComAppConfig cfg = channelProperties.getChannel().getWecomApp();

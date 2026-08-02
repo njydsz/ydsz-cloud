@@ -175,6 +175,14 @@ public final class JsonPointer {
         return new JsonPointer(sb.toString());
     }
 
+    /**
+     * 获取当前 JSON Pointer 的路径深度（即 token 数量）。
+     *
+     * <p>空指针（""）深度为 0，{@code "/foo"} 深度为 1，{@code "/foo/bar"} 深度为 2。
+     * 可用于快速判断指针层级，或作为递归遍历 {@code evaluateInternal} 的边界条件。</p>
+     *
+     * @return token 数量，恒为非负整数
+     */
     public int depth() {
         return tokens.length;
     }

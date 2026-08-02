@@ -1,12 +1,5 @@
 package com.njydsz.common.excel.core.metadata;
 
-/**
- * ReadMetadata 类
- *
- * @author ydsz-team
- * @email ydsz-dev@njydsz.com
- * @version 1.0.0
- */
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -242,6 +235,18 @@ public class ReadMetadata {
         this.currentReadRow = currentReadRow;
     }
 
+    /**
+     * 追加一个表头映射项。
+     *
+     * <p>追加顺序即列匹配顺序。不做重名或列索引冲突校验，重复添加会产生多条映射，
+     * 最终以解析器的取用策略为准，调用方需自行保证唯一性。
+     *
+     * <p><b>前置条件</b>：{@code headList} 由构造方法初始化，但若调用方先用
+     * {@link #setHeadList(List)} 传入了 {@code null}，本方法会抛
+     * {@link NullPointerException}。
+     *
+     * @param property 表头映射项，不做非空校验，传 {@code null} 会被原样加入集合
+     */
     public void addHeadProperty(ReadHeaderProperty property) {
         this.headList.add(property);
     }

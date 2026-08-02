@@ -169,6 +169,18 @@ public class ResponseCompressionFilter implements Filter {
             }
         }
 
+        /**
+         * 收尾：将缓冲的响应体压缩或直接写出。
+         *
+         * <p>先 flush/close Writer 与 GZIP 流，取出内存缓冲中的字节数组。压缩需<b>同时满足</b>：
+         * 响应体大小 {@code >= minResponseSize}（默认 2KB，低于此阈值压缩收益为负）且
+         * {@link #shouldCompress()} 命中配置的 MIME 类型白名单；满足则设置
+         * {@code Content-Encoding: gzip} 头并以压缩数据回填响应体。
+         * 任一条件不成立则跳过压缩，直接以原始字节写出（仍补设 Content-Length），避免数据丢失。
+         * 在 {@link ResponseCompressionFilter#doFilter} 的 finally 中调用，确保异常路径也能正确刷出。
+         *
+         * @throws IOException 写出响应流失败时抛出
+         */
         public void finish() throws IOException {
             if (printWriter != null) {
                 printWriter.close();

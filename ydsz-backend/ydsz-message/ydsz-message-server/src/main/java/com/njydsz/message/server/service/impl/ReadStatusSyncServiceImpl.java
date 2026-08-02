@@ -185,7 +185,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         return updated;
     }
 
-    @Override
     /**
      * 查询用户站内未读通知总数。
      *
@@ -194,6 +193,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
      * @param userId 用户 ID
      * @return 未读通知数（>=0）
      */
+    @Override
     public long getUnreadCount(String userId) {
         if (!StringUtils.hasText(userId)) {
             return 0;
@@ -207,7 +207,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         return notifCount == null ? 0 : notifCount;
     }
 
-    @Override
     /**
      * 按通道查询用户未读数。
      *
@@ -218,6 +217,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
      * @param channel 通道编码（如 SMS/EMAIL/INAPP）
      * @return 该通道未读消息数（>=0）
      */
+    @Override
     public long getUnreadCountByChannel(String userId, String channel) {
         if (!StringUtils.hasText(userId)) {
             return 0;

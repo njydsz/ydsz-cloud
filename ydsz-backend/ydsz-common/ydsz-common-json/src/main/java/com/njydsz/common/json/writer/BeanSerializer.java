@@ -33,6 +33,7 @@ import java.util.Map;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class BeanSerializer {
     
     /** Bean 类 */

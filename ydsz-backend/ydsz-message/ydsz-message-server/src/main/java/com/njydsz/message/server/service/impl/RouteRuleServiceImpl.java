@@ -160,7 +160,6 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         return entity;
     }
 
-    @Override
     /**
      * 分页查询路由规则。
      *
@@ -170,6 +169,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
      * @param query 分页参数（可为 null，使用默认值）
      * @return 路由规则分页结果
      */
+    @Override
     public Page<MsgRouteRule> page(PageQuery query) {
         Page<MsgRouteRule> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
@@ -179,7 +179,6 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 .orderByDesc(MsgRouteRule::getCreatedAt));
     }
 
-    @Override
     /**
      * 查询所有启用的路由规则（按 priority/sortOrder 缓存）。
      *
@@ -187,11 +186,11 @@ public class RouteRuleServiceImpl implements RouteRuleService {
      *
      * @return 启用规则列表（按优先级升序）
      */
+    @Override
     public List<MsgRouteRule> listEnabled() {
         return loadEnabledRulesFromCache();
     }
 
-    @Override
     /**
      * 按 priority 升序遍历启用规则，SpEL 求值首个命中即返回。
      *
@@ -202,6 +201,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
      * @param request 消息请求（含 bizType/bizId/receiver/channel 等）
      * @return 命中的路由规则；未命中返回 null
      */
+    @Override
     public MsgRouteRule match(MessageRequest request) {
         if (request == null) {
             return null;

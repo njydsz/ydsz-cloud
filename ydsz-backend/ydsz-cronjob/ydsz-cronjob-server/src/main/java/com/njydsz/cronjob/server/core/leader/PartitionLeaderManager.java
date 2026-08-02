@@ -61,6 +61,14 @@ public class PartitionLeaderManager {
     /** 基础角色名 */
     private String baseRole;
 
+    /**
+     * 初始化分区调度：解析分区总数与基础角色名，并初始抢占所有分区 Leader。
+     *
+     * <p>节点启动时即尝试抢占 {@code [0, totalPartitions)} 全部分区的 Leader 角色
+     * （见 {@link #tryAcquireAllPartitions()}），使单节点在分区数较多时可同时持有多分区；
+     * 后续由 {@link #renewAndAcquirePartitions()} 周期续期已持有分区并尝试抢占他人释放的分区。
+     * 仅当 {@code ydsz.cronjob.leader.partition.enabled=true} 时本 Bean 才注册。
+     */
     @PostConstruct
     public void init() {
         this.totalPartitions = cronjobProperties.getLeader().getPartition().getTotalPartitions();

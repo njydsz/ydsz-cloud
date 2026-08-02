@@ -1,12 +1,5 @@
 package com.njydsz.common.excel.core.metadata;
 
-/**
- * WriteMetadata 类
- *
- * @author ydsz-team
- * @email ydsz-dev@njydsz.com
- * @version 1.0.0
- */
 import java.io.File;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
@@ -357,6 +350,18 @@ public class WriteMetadata {
         this.mergedRegions = mergedRegions;
     }
 
+    /**
+     * 追加一个表头定义项。
+     *
+     * <p>追加顺序即默认出列顺序（未显式指定 {@code order} 时）。不做重名或列索引冲突校验，
+     * 重复列索引会导致后写入的单元格覆盖先写入的内容。
+     *
+     * <p><b>前置条件</b>：{@code headList} 由构造方法初始化，但若调用方先用
+     * {@link #setHeadList(List)} 传入了 {@code null}，本方法会抛
+     * {@link NullPointerException}。
+     *
+     * @param property 表头定义项，不做非空校验，传 {@code null} 会被原样加入集合
+     */
     public void addHeadProperty(WriteHeaderProperty property) {
         this.headList.add(property);
     }
@@ -433,11 +438,13 @@ public class WriteMetadata {
         }
 
         /**
-         * 获取ASM字段Getter访问器
+         * 获取 ASM 字节码生成的字段访问器，用于替代反射以提升取值性能。
          *
-         * <p>如果尚未创建，则延迟初始化</p>
+         * <p>本方法<b>不做延迟初始化</b>，仅返回已有引用；访问器需由构建元数据的一方
+         * 通过 {@link #setAsmFieldGetter} 预先注入。该字段为 {@code transient}，
+         * 序列化后不保留，反序列化场景必须重新注入。
          *
-         * @return ASM FieldGetter
+         * @return 字段访问器；尚未注入时返回 {@code null}，调用方需自行回退到反射取值
          */
         public ASMFieldAccessor.FieldGetter getAsmFieldGetter() {
             return asmFieldGetter;

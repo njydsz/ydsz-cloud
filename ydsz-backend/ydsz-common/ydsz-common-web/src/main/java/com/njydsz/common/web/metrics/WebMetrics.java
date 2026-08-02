@@ -53,12 +53,30 @@ public class WebMetrics {
         this.meterRegistry = meterRegistry;
     }
 
+    /**
+     * 记录一次认证成功。
+     *
+     * <p>累加内部 {@link AtomicLong} 计数（无锁、线程安全），递增指标
+     * {@code web.auth.total{result=success}}，并采样 {@code web.auth.duration} 计时分布。
+     * {@code durationNanos} 为本次认证耗时（纳秒），由调用方测量后传入。
+     *
+     * @param durationNanos 认证耗时（纳秒）；传 0 仅累计计数、不产生有效耗时样本
+     */
     public void recordAuthSuccess(long durationNanos) {
         totalAuthRequests.incrementAndGet();
         getCounter(METRIC_AUTH_TOTAL, "result", "success").increment();
         getTimer(METRIC_AUTH_DURATION).record(Duration.ofNanos(durationNanos));
     }
 
+    /**
+     * 记录一次认证失败。
+     *
+     * <p>同时累加认证总次数与失败次数（两路 {@link AtomicLong}），递增指标
+     * {@code web.auth.total{result=failure}}，并采样 {@code web.auth.duration} 计时分布。
+     * 线程安全由 Atomic 计数与 Micrometer 内部并发语义保证。
+     *
+     * @param durationNanos 认证耗时（纳秒）；含失败路径的整体耗时
+     */
     public void recordAuthFailure(long durationNanos) {
         totalAuthRequests.incrementAndGet();
         totalAuthFailures.incrementAndGet();
@@ -66,16 +84,41 @@ public class WebMetrics {
         getTimer(METRIC_AUTH_DURATION).record(Duration.ofNanos(durationNanos));
     }
 
+    /**
+     * 记录一次 HTTP 请求完成。
+     *
+     * <p>递增指标 {@code web.request.total{method,status}}（按 HTTP 方法与会话状态码分桶），
+     * 并采样 {@code web.request.duration{method}} 计时分布。
+     * {@code method} 为请求方法（如 GET/POST），{@code status} 为响应状态码（如 200/401/404），
+     * 用于后续错误率与耗时多维分析。
+     *
+     * @param method       HTTP 请求方法
+     * @param status       HTTP 响应状态码
+     * @param durationNanos 请求处理耗时（纳秒）
+     */
     public void recordRequest(String method, int status, long durationNanos) {
         getCounter(METRIC_REQUEST_TOTAL, "method", method, "status", String.valueOf(status)).increment();
         getTimer(METRIC_REQUEST_DURATION, "method", method).record(Duration.ofNanos(durationNanos));
     }
 
+    /**
+     * 记录一次被限流拒绝的请求。
+     *
+     * <p>累加内部 {@link AtomicLong} 计数并递增指标 {@code web.ratelimit.rejected}（无标签）。
+     * 用于监控限流触发频率；该方法无参数，调用方在 {@code @RateLimit} 拦截或网关拒绝时调用。
+     */
     public void recordRateLimitRejected() {
         totalRateLimitRejected.incrementAndGet();
         getCounter(METRIC_RATELIMIT_REJECTED).increment();
     }
 
+    /**
+     * 记录一次安全响应头注入。
+     *
+     * <p>累加内部 {@link AtomicLong} 计数并递增指标 {@code web.security.header.injected}（无标签）。
+     * 由安全响应头过滤器在成功写入防护头（如 X-Content-Type-Options、X-Frame-Options）时调用，
+     * 用于统计安全头覆盖情况。
+     */
     public void recordSecurityHeaderInjected() {
         totalSecurityHeadersInjected.incrementAndGet();
         getCounter(METRIC_SECURITY_HEADER).increment();

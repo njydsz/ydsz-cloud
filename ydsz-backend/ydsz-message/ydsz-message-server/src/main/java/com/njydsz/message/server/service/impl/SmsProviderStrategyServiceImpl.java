@@ -55,7 +55,6 @@ public class SmsProviderStrategyServiceImpl
     /** 连续失败阈值 */
     private static final int FAILURE_THRESHOLD = 5;
 
-    @Override
     /**
      * 按配置策略从可用服务商中选择一个发送短信。
      *
@@ -66,6 +65,7 @@ public class SmsProviderStrategyServiceImpl
      * @return 选中的服务商
      * @throws IllegalStateException 当 availableProviders 为空时
      */
+    @Override
     public SmsProvider selectProvider(List<SmsProvider> availableProviders) {
         if (availableProviders == null || availableProviders.isEmpty()) {
             throw new IllegalStateException("无可用 SMS provider");
@@ -87,7 +87,6 @@ public class SmsProviderStrategyServiceImpl
         };
     }
 
-    @Override
     /**
      * 记录一次短信发送结果（成功/失败）到 Redis 日统计。
      *
@@ -97,6 +96,7 @@ public class SmsProviderStrategyServiceImpl
      * @param providerType 服务商类型
      * @param success      本次发送是否成功
      */
+    @Override
     public void recordSend(String providerType, boolean success) {
         try {
             String daySuffix = LocalDateTime.now()
@@ -115,7 +115,6 @@ public class SmsProviderStrategyServiceImpl
         }
     }
 
-    @Override
     /**
      * 查询各短信服务商的当日发送统计。
      *
@@ -124,6 +123,7 @@ public class SmsProviderStrategyServiceImpl
      *
      * @return providerType → long[3]{total, success, failed}
      */
+    @Override
     public Map<String, long[]> getProviderStats() {
         Map<String, long[]> stats = new HashMap<>();
         try {

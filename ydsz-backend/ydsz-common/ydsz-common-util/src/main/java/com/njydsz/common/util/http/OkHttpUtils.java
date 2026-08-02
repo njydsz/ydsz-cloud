@@ -259,6 +259,17 @@ public class OkHttpUtils {
 
     // ==================== GET 请求 ====================
 
+    /**
+     * 发起 GET 请求（带查询参数）。
+     *
+     * <p>将 {@code param} 拼接为 URL query 参数后发送 GET，复用单例连接池。
+     * {@code param} 为 {@code null} 时等同无参 GET。响应非 2xx 视为失败并抛出 {@link IOException}。
+     *
+     * @param url   目标 URL，非空
+     * @param param 查询参数，允许为 {@code null}
+     * @return 响应体字符串（空响应返回空串）
+     * @throws IOException 网络异常或非成功状态码
+     */
     public static String doGet(String url, Map<String, String> param) throws IOException {
         HttpUrl.Builder urlBuilder = HttpUrl.get(url).newBuilder();
         if (param != null) {
@@ -292,12 +303,32 @@ public class OkHttpUtils {
         return execute(request);
     }
 
+    /**
+     * 发起无参 GET 请求。
+     *
+     * <p>等价于 {@link #doGet(String, Map)} 传入 {@code null} 参数，适用于无需查询参数的简单资源拉取。
+     *
+     * @param url 目标 URL，非空
+     * @return 响应体字符串
+     * @throws IOException 网络异常或非成功状态码
+     */
     public static String doGet(String url) throws IOException {
         return doGet(url, null);
     }
 
     // ==================== POST 请求 ====================
 
+    /**
+     * 发起表单 POST 请求（application/x-www-form-urlencoded）。
+     *
+     * <p>将 {@code param} 编码为表单 body 提交；{@code param} 为 {@code null} 时发送空表单。
+     * 区别于 {@code doPostJson}，本方法面向传统表单接口而非 JSON 接口。
+     *
+     * @param url   目标 URL，非空
+     * @param param 表单字段，允许为 {@code null}
+     * @return 响应体字符串
+     * @throws IOException 网络异常或非成功状态码
+     */
     public static String doPost(String url, Map<String, String> param) throws IOException {
         FormBody.Builder formBodyBuilder = new FormBody.Builder();
         if (param != null) {
@@ -333,10 +364,33 @@ public class OkHttpUtils {
         return execute(request);
     }
 
+    /**
+     * 发起 JSON POST 请求（无自定义请求头）。
+     *
+     * <p>将 {@code json} 以 {@code application/json} 类型提交；{@code json} 为 {@code null} 时发送空 body。
+     * 等价于 {@link #doPostJson(String, String, Map)} 传入 {@code null} 请求头。
+     *
+     * @param url  目标 URL，非空
+     * @param json JSON 字符串，允许为 {@code null}
+     * @return 响应体字符串
+     * @throws IOException 网络异常或非成功状态码
+     */
     public static String doPostJson(String url, String json) throws IOException {
         return doPostJson(url, json, null);
     }
 
+    /**
+     * 发起 JSON POST 请求（带自定义请求头）。
+     *
+     * <p>在 JSON body 基础上追加 {@code headers}，常用于鉴权 token、追踪 header 等场景。
+     * {@code headers} 为 {@code null} 时等同 {@link #doPostJson(String, String)}。
+     *
+     * @param url     目标 URL，非空
+     * @param json    JSON 字符串，允许为 {@code null}
+     * @param headers 自定义请求头，允许为 {@code null}
+     * @return 响应体字符串
+     * @throws IOException 网络异常或非成功状态码
+     */
     public static String doPostJson(String url, String json, Map<String, String> headers) throws IOException {
         RequestBody body = RequestBody.create(json, JSON_MEDIA_TYPE);
 
@@ -361,6 +415,18 @@ public class OkHttpUtils {
         return doPutJson(url, json, null);
     }
 
+    /**
+     * 发起 JSON PUT 请求（带自定义请求头）。
+     *
+     * <p>语义同 JSON POST，但使用 HTTP PUT 方法（通常用于资源整体更新）。
+     * {@code headers} 为 {@code null} 时由 {@link #doPutJson(String, String)} 委托至此。
+     *
+     * @param url     目标 URL，非空
+     * @param json    JSON 字符串，允许为 {@code null}
+     * @param headers 自定义请求头，允许为 {@code null}
+     * @return 响应体字符串
+     * @throws IOException 网络异常或非成功状态码
+     */
     public static String doPutJson(String url, String json, Map<String, String> headers) throws IOException {
         RequestBody body = RequestBody.create(json, JSON_MEDIA_TYPE);
 
@@ -395,6 +461,15 @@ public class OkHttpUtils {
         return execute(request);
     }
 
+    /**
+     * 发起无参 DELETE 请求。
+     *
+     * <p>等价于 {@link #doDelete(String, Map)} 传入 {@code null} 参数，用于按 URL 直接删除资源。
+     *
+     * @param url 目标 URL，非空
+     * @return 响应体字符串
+     * @throws IOException 网络异常或非成功状态码
+     */
     public static String doDelete(String url) throws IOException {
         return doDelete(url, null);
     }

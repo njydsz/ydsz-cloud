@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class JsonSchemaValidator {
 
     private static final ConcurrentMap<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();

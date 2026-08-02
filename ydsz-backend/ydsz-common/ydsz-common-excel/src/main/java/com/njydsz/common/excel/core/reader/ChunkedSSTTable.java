@@ -1,28 +1,5 @@
 package com.njydsz.common.excel.core.reader;
 
-/**
- * 分块加载的 SST（Shared Strings Table）缓存表。
- *
- * <p>Excel .xlsx 文件中的 SharedStrings.xml 存储了所有共享字符串，
- * 单元格类型为 {@code t="s"} 时通过索引引用此表。当 Excel 文件包含大量字符串时，
- * 全量加载 SST 会消耗大量内存，本类实现了两种加载策略：
- *
- * <h3>加载策略</h3>
- * <ul>
- *   <li><b>简单模式</b>（totalSize < 5MB）：全量读入 byte[]，直接在内存中按索引查找</li>
- *   <li><b>分块模式</b>（totalSize ≥ 5MB）：使用 {@link RandomAccessFile} 随机访问，
- *       按需加载单个字符串，配合 LRU 缓存（2000 条）减少磁盘 I/O</li>
- * </ul>
- *
- * <h3>实例管理</h3>
- * <p>通过 {@link ConcurrentHashMap} 按文件路径缓存实例，避免重复解析同一文件的 SST。
- * 可通过 {@link #clearCache(String)} 或 {@link #clearAllCache()} 释放缓存。
- *
- * @author ydsz-team
- * @since 1.0.0
- * @see SharedStringsReader
- * @see LRUCache
- */
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -34,12 +11,37 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.excel.support.cache.LRUCache;
 
 /**
- * ChunkedSSTTable 类。
+ * 分块加载的 SST（Shared Strings Table）缓存表。
  *
- * <p>所属包：{@code com.njydsz.common.excel.core.reader}
+ * <p>Excel .xlsx 文件中的 SharedStrings.xml 存储了所有共享字符串，
+ * 单元格类型为 {@code t="s"} 时通过索引引用此表。当 Excel 文件包含大量字符串时，
+ * 全量加载 SST 会消耗大量内存，本类据此实现了两种加载策略：
+ *
+ * <h3>加载策略</h3>
+ * <ul>
+ *   <li><b>简单模式</b>（totalSize &lt; 5MB）：全量读入 byte[]，预扫描 {@code <si>} 标签
+ *       建立偏移量索引，查询时直接在内存中切片</li>
+ *   <li><b>分块模式</b>（totalSize &ge; 5MB）：将数据落到临时文件并用
+ *       {@link RandomAccessFile} 持有句柄，仅在内存中保留偏移量与长度索引</li>
+ * </ul>
+ *
+ * <h3>实例管理</h3>
+ * <p>通过 {@link ConcurrentHashMap} 按文件路径缓存实例，避免重复解析同一文件的 SST。
+ * 实例常驻直到显式调用 {@link #clearCache(String)} 或 {@link #clearAllCache()}，
+ * 长期运行的服务若持续处理不同文件需主动清理，否则实例表会无界增长。
+ *
+ * <h3>注意事项</h3>
+ * <ul>
+ *   <li><b>线程安全性</b>：实例表本身线程安全，但单个实例的 {@code parse} / {@code close}
+ *       与内部 LRU 缓存均无同步保护，同一文件不应被多线程并发解析。</li>
+ *   <li>分块模式会在系统临时目录生成 {@code sst_chunk_*.tmp}，已注册
+ *       {@code deleteOnExit}，但仅在 JVM 正常退出时才会清理。</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see SharedStringsReader
+ * @see LRUCache
  */
 public class ChunkedSSTTable {
 
@@ -285,6 +287,20 @@ public class ChunkedSSTTable {
         log.debug("SST解析完成: {} 个字符串, 分块模式", totalStrings);
     }
 
+    /**
+     * 按索引取共享字符串。
+     *
+     * <p>先查 LRU 缓存，未命中再按预建的偏移量/长度从简单模式的字节数组中切片，
+     * 并将结果回填缓存。
+     *
+     * <p><b>降级为空串的情形</b>（均不抛异常，以免单个坏单元格中断整表解析）：
+     * 索引为负、越界、尚未 {@code parse} 或已 {@code close}、切片区间非法。
+     * 此外<b>分块模式下本方法恒返回空字符串</b>——该分支尚未实现基于
+     * {@link RandomAccessFile} 的按需读取。
+     *
+     * @param index SST 中的字符串索引，从 0 开始
+     * @return 对应字符串；任何异常或越界情形均返回空字符串 {@code ""}，永不为 {@code null}
+     */
     public String getString(int index) {
         if (index < 0 || offsets == null || index >= offsets.length) {
             return "";
@@ -330,6 +346,17 @@ public class ChunkedSSTTable {
         return -1;
     }
 
+    /**
+     * 释放本实例占用的内存与文件句柄。
+     *
+     * <p>清空 LRU 缓存、置空偏移量/长度索引与简单模式的字节数组，并关闭分块模式的
+     * {@link RandomAccessFile}。关闭句柄时的 {@link IOException} 被有意吞掉（仅 debug 日志），
+     * 因为释放阶段的失败不应影响主流程。
+     *
+     * <p><b>调用后状态</b>：实例不可再使用，{@link #getString(int)} 将恒定返回空字符串；
+     * 但实例仍留在静态实例表中，需另行调用 {@link #clearCache(String)} 摘除，
+     * 否则后续 {@link #getInstance(String)} 会取到这个已关闭的对象。
+     */
     public void close() {
         cache.clear();
         offsets = null;

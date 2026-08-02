@@ -39,6 +39,7 @@ import java.sql.Timestamp;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class ValueWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ValueWriter.class);
@@ -524,7 +525,9 @@ public final class ValueWriter {
             try {
                 Object value = field.getValue(obj);
 
-                boolean shouldWriteNull = classWriteNulls;
+                // null 字段是否输出：@JsonClass(writeNulls=true) 类级注解 或 全局/Mapper writeNulls 配置
+                // 此前仅读类注解，导致 JsonConfig/JsonMapper.Builder 的 writeNulls(true) 对 Bean 序列化无效
+                boolean shouldWriteNull = classWriteNulls || SerializationProvider.isWriteNulls();
                 if (value == null && !shouldWriteNull) {
                     continue;
                 }

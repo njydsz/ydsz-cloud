@@ -45,6 +45,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * @author ydsz-team
  * @since 1.0.0
  */
+@SuppressWarnings("deprecation")
 public final class SerializationProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SerializationProvider.class);
@@ -77,6 +78,18 @@ public final class SerializationProvider {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 设置当前线程的字段命名策略（PropertyNamingStrategy）。
+     *
+     * <p>命名策略存放于 {@link FieldMetadataLoader#NAMING_STRATEGY} 这个<b>独立</b> ThreadLocal 中，
+     * 不在 {@code SerializationContext} 合并的 11 个字段范围内。因此 {@link #clearThreadLocals()}
+     * 会单独清理它，且 {@link ThreadLocalSnapshot} 也会保存/恢复它，避免跨调用配置泄漏。</p>
+     *
+     * <p>命名策略仅影响序列化时的字段名映射（如驼峰转下划线），需在序列化前设置；
+     * 请勿在单次序列化中途变更，否则可能产生字段名不一致的 JSON 输出。</p>
+     *
+     * @param strategy 命名策略实例，null 表示回退到默认（驼峰不变）策略
+     */
     public static void setNamingStrategy(PropertyNamingStrategy strategy) {
         FieldMetadataLoader.NAMING_STRATEGY.set(strategy);
     }
@@ -837,17 +850,6 @@ public final class SerializationProvider {
         new ConcurrentHashMap<>();
 
     /**
-     * 自定义序列化器 serialize 方法缓存（Class -> Method）。
-     * 
-     * <p>由于 {@code JsonSerializer<?>} 的 {@code serialize(?)} 方法无法直接以 {@code Object} 参数调用
-     * （泛型类型参数 ? 未知），使用 {@link Method#invoke(Object, Object...)} 进行反射调用，
-     * 避免 unchecked cast。{@code Method.invoke} 返回 {@code Object}，
-     * 转换为 {@code String} 是运行时检查的 checked cast。</p>
-     */
-    private static final ConcurrentHashMap<Class<?>, Method> SERIALIZE_METHOD_CACHE =
-        new ConcurrentHashMap<>();
-
-    /**
      * 检查类是否有 @JsonSerialize 注解并获取自定义序列化器。
      *
      * @param clazz 要检查的类
@@ -876,45 +878,22 @@ public final class SerializationProvider {
     }
 
     /**
-     * 通过反射调用自定义序列化器的 serialize 方法。
+     * 调用自定义序列化器，直接写入 JSONWriter 后输出字符串。
      *
-     * <p>使用 {@link Method#invoke(Object, Object...)} 避免泛型 unchecked cast。
-     * {@code Method.invoke} 返回 {@code Object}，强转为 {@code String} 是 checked cast。</p>
+     * <p>自定义序列化器统一实现 {@link com.njydsz.common.json.serializer.JsonSerializer}，
+     * 直接写入 {@link JSONWriter}，零拷贝、避免中间 String 分配。历史上曾兼容旧版
+     * {@code api.JsonSerializer}（String 返回版，已删除），需 {@code Method.invoke}
+     * 反射调用——旧接口已移除，此处简化为单一调用路径。</p>
      *
      * @param serializer 自定义序列化器实例
      * @param value 要序列化的对象
      * @return JSON 字符串
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static String invokeCustomSerializer(Object serializer, Object value) {
-        // 新版接口（serializer.JsonSerializer）：直接写入 JSONWriter，零拷贝、避免中间 String 分配
-        if (serializer instanceof com.njydsz.common.json.serializer.JsonSerializer) {
-            JSONWriter out = new JSONWriter(new StringBuilder(256));
-            ((com.njydsz.common.json.serializer.JsonSerializer<Object>) serializer).serialize(value, out);
-            return out.toString();
-        }
-        // 旧版接口（api.JsonSerializer，deprecated）：返回 String
-        Method method = SERIALIZE_METHOD_CACHE.computeIfAbsent(serializer.getClass(), cls -> {
-            try {
-                Method m = cls.getMethod("serialize", Object.class);
-                m.setAccessible(true);
-                return m;
-            } catch (NoSuchMethodException e) {
-                throw new JsonSerializationException(
-                    JsonSerializationException.SERIALIZATION_ERROR,
-                    "serialize method not found on " + cls.getName(),
-                    e
-                );
-            }
-        });
-        try {
-            return (String) method.invoke(serializer, value);
-        } catch (Exception e) {
-            throw new JsonSerializationException(
-                JsonSerializationException.SERIALIZATION_ERROR,
-                "Custom serializer failed: " + serializer.getClass().getName(),
-                e
-            );
-        }
+        JSONWriter out = new JSONWriter(new StringBuilder(256));
+        ((JsonSerializer) serializer).serialize(value, out);
+        return out.toString();
     }
 
     /**
@@ -989,10 +968,15 @@ public final class SerializationProvider {
      * 调用 {@link #restore()} 恢复原始值。避免修改全局单例。</p>
      *
      * <p>注意：仅保存/恢复配置类字段（writeNulls、prettyPrint、circularRefStrategy、
-     * serializeEnumUsingOrdinal、excludedFields），不保存运行时状态字段
-     * （sbPool、fastWriterPool、serializingObjects、currentViewClass、
+     * serializeEnumUsingOrdinal、excludedFields、dateFormat、failOnError、namingStrategy），
+     * 不保存运行时状态字段（sbPool、fastWriterPool、serializingObjects、currentViewClass、
      * cachedListSerializer、cachedListElementClass），因为运行时状态仅在单次
      * 序列化调用内有意义。</p>
+     *
+     * <p><b>namingStrategy 说明：</b>命名策略存放在 {@link FieldMetadataLoader#NAMING_STRATEGY}
+     * 这个独立 ThreadLocal 中（不在 SerializationContext 内）。此前快照未保存它，
+     * 导致 {@code YdszJson.toJson(obj, config)} 用不同命名策略序列化后未回滚，
+     * 后续默认调用仍使用旧命名策略（配置泄漏）。现已补全。</p>
      *
      * @since 1.0.0
      */
@@ -1004,6 +988,7 @@ public final class SerializationProvider {
         private final Set<String> savedExcludedFields;
         private final String savedDateFormat;
         private final boolean savedFailOnError;
+        private final com.njydsz.common.json.naming.PropertyNamingStrategy savedNamingStrategy;
 
         /**
          * 捕获当前线程的 ThreadLocal 序列化参数快照。
@@ -1017,6 +1002,7 @@ public final class SerializationProvider {
             this.savedExcludedFields = ctx.excludedFields;
             this.savedDateFormat = ctx.dateFormat;
             this.savedFailOnError = ctx.failOnError;
+            this.savedNamingStrategy = FieldMetadataLoader.NAMING_STRATEGY.get();
         }
 
         /**
@@ -1031,6 +1017,7 @@ public final class SerializationProvider {
             ctx.excludedFields = savedExcludedFields;
             ctx.dateFormat = savedDateFormat;
             ctx.failOnError = savedFailOnError;
+            FieldMetadataLoader.NAMING_STRATEGY.set(savedNamingStrategy);
         }
     }
 }

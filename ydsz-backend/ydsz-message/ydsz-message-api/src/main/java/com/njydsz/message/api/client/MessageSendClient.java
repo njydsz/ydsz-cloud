@@ -25,9 +25,6 @@ import com.njydsz.message.api.fallback.MessageSendClientFallback;
  * @author ydsz-team
  * @since 1.0.0
  */
-@FeignClient(name = FeignClientConstants.MESSAGE, contextId = "messageSendClient",
-        fallbackFactory = MessageSendClientFallback.class)
-
 /**
  * MessageSendClient Feign 客户端接口，声明跨服务远程调用。
  *
@@ -36,6 +33,9 @@ import com.njydsz.message.api.fallback.MessageSendClientFallback;
  * @author ydsz-team
  * @since 1.0.0
  */
+@FeignClient(name = FeignClientConstants.MESSAGE, contextId = "messageSendClient",
+        fallbackFactory = MessageSendClientFallback.class)
+
 public interface MessageSendClient {
 
     /**

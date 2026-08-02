@@ -26,10 +26,55 @@ const USER_MODAL_INJECT_KEY = Symbol('YDSZ_MODAL_INJECT');
 
 const DEFAULT_MODAL_PROPS: Partial<ModalProps> = {};
 
+/**
+ * 设置弹窗的全局默认 props，统一整个应用的弹窗外观与交互策略。
+ *
+ * @remarks
+ * 应在应用启动阶段调用一次，避免每处调用重复传「点遮罩是否可关」「是否居中」等参数。
+ *
+ * 副作用与约束：
+ * - 通过 `Object.assign` **原地修改模块级单例**，多次调用为累加覆盖，不会清空已有键；
+ * - 优先级最低，会被 `useYDSZModal(options)` 中的同名项覆盖；
+ * - **仅影响之后创建的弹窗**，已存在的实例不受影响。
+ *
+ * @param props - 要合并进全局默认值的弹窗配置
+ */
 export function setDefaultModalProps(props: Partial<ModalProps>) {
   Object.assign(DEFAULT_MODAL_PROPS, props);
 }
 
+/**
+ * 创建一对「弹窗组件 + 命令式 API」，支持内联使用与独立组件两种模式。
+ *
+ * @remarks
+ * 结构与 `useYDSZDrawer` 完全对称，依据是否传入 `connectedComponent` 分为两条分支：
+ *
+ * **模式一：内联（不传 `connectedComponent`）**
+ * 直接创建 ModalApi 与渲染组件，弹窗内容写在当前组件插槽内。
+ * 配置合并顺序为 `全局默认值 → 父级 inject 配置 → 本次 options`，后者优先。
+ *
+ * **模式二：独立组件（传入 `connectedComponent`）**
+ * 弹窗内容抽到独立 SFC，父组件只拿到壳组件。需注意：
+ * - API 由子组件通过 provide/inject 反向注入，**父组件在子组件初始化完成前拿到的是空对象**，
+ *   不可在 setup 同步阶段调用其方法；
+ * - 扩展 API 用 `Object.setPrototypeOf` 而非 `Object.assign`，前者保留类原型方法，
+ *   同时避免直接给 reactive 赋值造成响应性丢失；
+ * - 开发期校验：在壳组件上传递与弹窗 state 同名的 props/slots 会打印 warn
+ *   （`class` 除外），因为双通道修改状态会让数据来源难以追踪；
+ * - 配置 `destroyOnClose` 时，关闭动画结束后强制重建子组件以彻底重置其内部状态；
+ *   未配置则**内容状态会保留到下次打开**。
+ *
+ * `onOpenChange` 会被包装为「先执行本次 options 的回调、再执行 inject 来的回调」，两者均会触发。
+ *
+ * @param options - 弹窗初始化配置；传入 `connectedComponent` 即切换为独立组件模式
+ * @returns 只读元组 `[Modal, modalApi]`——`Modal` 放入模板渲染，`modalApi` 用于命令式开关与传值
+ *
+ * @example
+ * ```ts
+ * const [Modal, modalApi] = useYDSZModal({ connectedComponent: EditModal });
+ * modalApi.setData({ id }).open();
+ * ```
+ */
 export function useYDSZModal<TParentModalProps extends ModalProps = ModalProps>(
   options: ModalApiOptions = {},
 ) {
