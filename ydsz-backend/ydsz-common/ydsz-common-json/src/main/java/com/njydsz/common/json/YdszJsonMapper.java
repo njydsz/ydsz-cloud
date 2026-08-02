@@ -766,67 +766,90 @@ public class YdszJsonMapper {
      */
     public static final class Builder {
 
-        private final YdszJsonConfig config = YdszJsonConfig.copyOf(YdszJsonConfig.getInstance());
+        private PropertyNamingStrategy namingStrategy = YdszJsonConfig.getInstance().getNamingStrategy();
+        private YdszJsonConfig.CircularReferenceStrategy circularReferenceStrategy = YdszJsonConfig.getInstance().getCircularReferenceStrategy();
+        private boolean writeNulls = YdszJsonConfig.getInstance().isWriteNulls();
+        private String dateFormat = YdszJsonConfig.getInstance().getDateFormat();
+        private boolean serializeEnumUsingOrdinal = YdszJsonConfig.getInstance().isSerializeEnumUsingOrdinal();
+        private boolean prettyPrint = YdszJsonConfig.getInstance().isPrettyPrint();
+        private boolean failOnError = YdszJsonConfig.getInstance().isFailOnError();
+        private boolean useBigDecimal = YdszJsonConfig.getInstance().isUseBigDecimal();
+        private boolean wrapRootValue = YdszJsonConfig.getInstance().isWrapRootValue();
+        private long maxJsonSize = YdszJsonConfig.getInstance().getMaxJsonSize();
+        private int maxDepth = YdszJsonConfig.getInstance().getMaxDepth();
 
         private Builder() {
         }
 
         public Builder namingStrategy(PropertyNamingStrategy strategy) {
-            config.setNamingStrategy(strategy);
+            this.namingStrategy = strategy;
             return this;
         }
 
         public Builder dateFormat(String dateFormat) {
-            config.setDateFormat(dateFormat);
+            this.dateFormat = dateFormat;
             return this;
         }
 
         public Builder writeNulls(boolean writeNulls) {
-            config.setWriteNulls(writeNulls);
+            this.writeNulls = writeNulls;
             return this;
         }
 
         public Builder prettyPrint(boolean prettyPrint) {
-            config.setPrettyPrint(prettyPrint);
+            this.prettyPrint = prettyPrint;
             return this;
         }
 
         public Builder circularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy strategy) {
-            config.setCircularReferenceStrategy(strategy);
+            this.circularReferenceStrategy = strategy;
             return this;
         }
 
         public Builder serializeEnumUsingOrdinal(boolean ordinal) {
-            config.setSerializeEnumUsingOrdinal(ordinal);
+            this.serializeEnumUsingOrdinal = ordinal;
             return this;
         }
 
         public Builder useBigDecimal(boolean useBigDecimal) {
-            config.setUseBigDecimal(useBigDecimal);
+            this.useBigDecimal = useBigDecimal;
             return this;
         }
 
         public Builder wrapRootValue(boolean wrapRootValue) {
-            config.setWrapRootValue(wrapRootValue);
+            this.wrapRootValue = wrapRootValue;
             return this;
         }
 
         public Builder failOnError(boolean failOnError) {
-            config.setFailOnError(failOnError);
+            this.failOnError = failOnError;
             return this;
         }
 
         public Builder maxJsonSize(long maxJsonSize) {
-            config.setMaxJsonSize(maxJsonSize);
+            this.maxJsonSize = maxJsonSize;
             return this;
         }
 
         public Builder maxDepth(int maxDepth) {
-            config.setMaxDepth(maxDepth);
+            this.maxDepth = maxDepth;
             return this;
         }
 
         public YdszJsonMapper build() {
+            YdszJsonConfig config = YdszJsonConfig.builder()
+                .namingStrategy(namingStrategy)
+                .circularReferenceStrategy(circularReferenceStrategy)
+                .writeNulls(writeNulls)
+                .dateFormat(dateFormat)
+                .serializeEnumUsingOrdinal(serializeEnumUsingOrdinal)
+                .prettyPrint(prettyPrint)
+                .failOnError(failOnError)
+                .useBigDecimal(useBigDecimal)
+                .wrapRootValue(wrapRootValue)
+                .maxJsonSize(maxJsonSize)
+                .maxDepth(maxDepth)
+                .build();
             YdszJsonMapper mapper = new YdszJsonMapper(config);
             mapper.configChanged();
             return mapper;

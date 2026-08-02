@@ -83,43 +83,55 @@
 
 > **命名约定**：`@YdszJson*` 前缀注解为 YdszJson 专有功能；`@Json*` 前缀注解（不带 Ydsz）为 Jackson 兼容注解，从 Jackson 迁移时注解名无需修改。两套注解命名并行是有意为之的设计决策。
 
+#### YdszJson 专有注解（`@YdszJson*` 前缀）
+
 | 注解 | 说明 |
 |---|---|
-| `@YdszJsonField` | 字段映射（名称 / 格式 / 序列化控制 / `notWriteNullValue`） |
-| `@YdszJsonPropertyOrder` | 字段排序 |
-| `@YdszJsonFormat` | 格式化（日期 / 数字） |
-| `@YdszJsonView` | 视图过滤 |
-| `@YdszJsonCreator` / `@YdszJsonBuilder` | 构造器 / Builder |
-| `@YdszJsonClass` | 类型标记（用于 AutoType 白名单扫描） |
-| `@YdszJsonTypeInfo` / `@YdszJsonSubTypes` / `@YdszJsonSubType` | 多态序列化 |
-| `@YdszJsonVisibility` | 可见性控制 |
-| `@JsonProperty` | JSON 属性名称映射（Jackson 兼容） |
-| `@JsonIgnore` / `@JsonIgnoreProperties` | 字段忽略（Jackson 兼容） |
-| `@JsonFormat` | 日期/数字格式化（Jackson 兼容） |
-| `@JsonAlias` | 反序列化别名（Jackson 兼容） |
-| `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT，Jackson 兼容） |
-| `@JsonGetter` / `@JsonSetter` | 方法级 getter/setter 标记（Jackson 兼容） |
-| `@JsonValue` | 枚举值序列化方式（Jackson 兼容） |
-| `@JsonRawValue` | 原始 JSON 值嵌入（Jackson 兼容） |
-| `@JsonRootName` | 根名称包裹（Jackson 兼容） |
-| `@JsonAnyGetter` / `@JsonAnySetter` | 动态属性 Getter / Setter（Jackson 兼容） |
-| `@JsonUnwrapped` | 嵌套属性展开（支持 prefix / suffix，Jackson 兼容） |
-| `@JsonSerialize` / `@JsonDeserialize` | 自定义序列化器/反序列化器（Jackson 兼容） |
-| `@JsonNaming` | 类级命名策略（Jackson 兼容） |
+| `@YdszJsonPropertyOrder` | 类级字段排序（指定顺序数组 `{"id","name"}` 或 `alphabetic=true` 字母序） |
+| `@YdszJsonView` | 视图过滤（对标 Jackson `@JsonView`，配合 `YdszJson.toJson(obj, ViewClass.class)` 使用） |
+| `@YdszJsonCreator` / `@YdszJsonBuilder` | 构造器 / Builder 标记（指定反序列化使用的构造方法或 Builder 类） |
+| `@YdszJsonClass` | 类级配置（字段排序 `ordering` / 忽略字段 `ignores` / 包含字段 `includes` / 命名策略 `naming` / 循环引用 `handleCircularReference` / 输出 null `writeNulls` / 输出类名 `writeClassName` / 日期格式 `dateFormat` / 快速模式 `fastMode` / 多态 `typeKey`+`seeAlso`+`seeAlsoNames`+`autoType` / 枚举序号 `serializeEnumUsingOrdinal` / 序列化特性 `features` / 反序列化特性 `deserializeFeatures`；同时作为 AutoType 白名单扫描标记） |
+| `@YdszJsonTypeInfo` / `@YdszJsonSubTypes` / `@YdszJsonSubType` | 多态序列化（类型标识字段 + 子类型注册） |
+| `@YdszJsonVisibility` | 可见性控制（对标 Jackson `@JsonAutoDetect`） |
+
+#### Jackson 兼容注解（`@Json*` 前缀）
+
+| 注解 | 说明 |
+|---|---|
+| `@JsonProperty` | 字段重命名（对标 Jackson `@JsonProperty`，如 `@JsonProperty("user_id")`） |
+| `@JsonIgnore` / `@JsonIgnoreProperties` | 字段忽略（字段级 / 类级） |
+| `@JsonFormat` | 日期/数字格式化（`pattern` / `shape` / `locale` / `timezone`，如 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")`） |
+| `@JsonAlias` | 反序列化别名（同一字段接受多个 JSON key） |
+| `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT） |
+| `@JsonGetter` / `@JsonSetter` | 方法级 getter/setter 标记 |
+| `@JsonValue` | 枚举值序列化方式（方法级，序列化时输出该方法的返回值） |
+| `@JsonRawValue` | 原始 JSON 值嵌入（不转义直接输出） |
+| `@JsonRootName` | 根名称包裹（配合 `ydsz.json.wrap-root-value=true`） |
+| `@JsonAnyGetter` / `@JsonAnySetter` | 动态属性 Getter / Setter（Map 字段展开为 JSON 属性） |
+| `@JsonUnwrapped` | 嵌套属性展开（支持 `prefix` / `suffix`） |
+| `@JsonSerialize` / `@JsonDeserialize` | 自定义序列化器/反序列化器（`using = XxxSerializer.class`） |
+| `@JsonNaming` | 类级命名策略 |
 | `@JsonAutoDetect` | 可见性控制（Jackson 兼容） |
-| `@JsonTypeName` | 多态类型名称（Jackson 兼容） |
-| `@Experimental` | 实验性功能标记 |
+| `@JsonTypeName` | 多态类型名称 |
+
+#### 其他注解
+
+| 注解 | 说明 |
+|---|---|
+| `@Experimental` | 实验性功能标记（标注 `YdszJsonSchema`、`JsonPatch` 等 RFC 扩展功能，API 尚未稳定，不保证向后兼容） |
 
 ### 9. 高级功能（jsonpath / pointer / patch / merge / schema / autotype 包）
+
+> **`@Experimental` 标注**：`YdszJsonSchema`、`JsonPatch` 标注了 `@Experimental`，属于 RFC 扩展功能，API 尚未稳定，不保证向后兼容。建议在非关键路径使用或做好隔离层。
 
 | 类 | 说明 |
 |---|---|
 | `JsonPointer` | JSON Pointer（RFC 6901） |
-| `YdszJsonPath` | JSONPath 查询（递归下降 / 数组过滤 / 切片 / 通配符） |
-| `JsonMergePatch` | JSON Merge Patch（RFC 7396） |
-| `JsonPatch` | JSON Patch（RFC 6902，支持 add/remove/replace/move/copy/test + Builder） |
-| `YdszJsonSchema` / `SchemaValidator` / `ValidationResult` | JSON Schema 校验（支持 allOf / anyOf / oneOf / not / const / if-then-else 组合关键字） |
-| `AutoTypeChecker` / `AutoTypeWhitelistScanner` | AutoType 安全检查（防反序列化漏洞，支持包前缀白名单回退匹配） |
+| `YdszJsonPath` | JSONPath 查询（递归下降 `$..` / 数组索引 `[0]` / 数组过滤 `[?(@.price > 100)]` / 切片 `[0:5]` / 通配符 `[*]` / 条件表达式 `&&` / `||`；编译结果 LRU 缓存，max 512） |
+| `JsonMergePatch` | JSON Merge Patch（RFC 7396，支持 `merge` 合并 + `diff` 计算差异补丁） |
+| `JsonPatch` `@Experimental` | JSON Patch（RFC 6902，支持 add/remove/replace/move/copy/test + Builder 链式构建 `applyTo()`） |
+| `YdszJsonSchema` `@Experimental` / `JsonSchemaValidator` / `ValidationResult` | JSON Schema 校验（JSON Schema Draft 07 核心关键字：type/required/enum/default/minLength/maxLength/pattern/minimum/maximum/exclusiveMinimum/exclusiveMaximum/multipleOf/items/minItems/maxItems/properties/additionalProperties + 组合关键字 allOf/anyOf/oneOf/not/const/if-then-else；静态工厂 `string()`/`number()`/`integer()`/`booleanType()`/`array()`/`object()`/`nullType()`） |
+| `AutoTypeChecker` / `AutoTypeWhitelistScanner` | AutoType 安全检查（防反序列化漏洞，`TYPE_CHECK_CACHE` LRU 有界缓存 max 4096，支持包前缀白名单回退匹配） |
 
 ### 10. Module 系统（module 包）
 
@@ -296,7 +308,7 @@ User user = mapper.toObject(json, User.class);
 
 ```java
 import com.njydsz.common.json.schema.YdszJsonSchema;
-import com.njydsz.common.json.schema.SchemaValidator;
+import com.njydsz.common.json.schema.JsonSchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
 
 YdszJsonSchema schema = YdszJsonSchema.object()
@@ -306,7 +318,7 @@ YdszJsonSchema schema = YdszJsonSchema.object()
                 YdszJsonSchema.object().addProperty("age", YdszJsonSchema.integer().minimum(0))
         );
 
-ValidationResult result = SchemaValidator.validate(schema, data);
+ValidationResult result = JsonSchemaValidator.validate(schema, data);
 if (!result.isValid()) {
     System.err.println("验证失败：" + result.getErrors());
 }
@@ -315,7 +327,7 @@ if (!result.isValid()) {
 ### 4. JSONPath 查询与 JSON Patch
 
 ```java
-import com.njdsz.common.json.jsonpath.YdszJsonPath;
+import com.njydsz.common.json.jsonpath.YdszJsonPath;
 import com.njdsz.common.json.patch.JsonPatch;
 
 // JSONPath 查询
@@ -401,3 +413,11 @@ public class UserModule implements YdszJsonModule, YdszJsonModule.SpringFactory 
 ## 变更记录
 
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **v1.0.0**（2026-08-02）：基于源码核对修正文档与代码不一致：
+  - 删除不存在的 `@YdszJsonField` 注解（代码中未实现，仅在 `@JsonProperty`/`@JsonIgnore`/`@JsonFormat` 的 Javadoc `{@link}` 中残留无效引用）
+  - 删除不存在的 `@YdszJsonFormat` 注解（实际格式化注解为 `@JsonFormat`，Jackson 兼容）
+  - `SchemaValidator` → `JsonSchemaValidator`（类名修正，影响 Section 9 与使用示例 3）
+  - 使用示例 4 import 包名 `com.njdsz` → `com.njydsz`（拼写错误）
+  - 补全 `@YdszJsonClass` 类级配置能力说明（ordering/ignores/includes/naming/seeAlso/features 等 14 项属性）
+  - 标注 `YdszJsonSchema`、`JsonPatch` 的 `@Experimental` 状态
+  - 补全 `YdszJsonSchema` 静态工厂方法列表与 `YdszJsonPath` 支持的 7 种路径表达式

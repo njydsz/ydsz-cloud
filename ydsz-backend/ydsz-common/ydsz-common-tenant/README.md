@@ -152,6 +152,25 @@ ydsz:
 
 `tenantId` 字段已在 `MpBaseEntity` 基类中统一声明，业务 DO 无需再单独声明。如某表使用非标准列名，通过 `@TenantColumn` 注解或 `table-column-mapping` 配置覆盖。
 
+### 4. 自动装配
+
+`TenantAutoConfiguration` 在 `ydsz.tenant.enabled=true` 时装配以下 Bean（按条件触发）：
+
+| Bean | 条件 | 说明 |
+|---|---|---|
+| `TenantInterceptorProvider` | 总是 | SPI 注册 SQL 拦截器到 MybatisPlusInterceptor 链 |
+| `FilterRegistrationBean<TenantContextWebFilter>` | Web 应用 + `jakarta.servlet.Filter` | order=`HIGHEST_PRECEDENCE + 100` |
+| `TenantContextFeignInterceptor` | `feign.RequestInterceptor` 在 classpath | Feign 跨服务透传 |
+| `TenantContextTaskDecorator` | `TaskDecorator` 在 classpath | 异步传播装饰器 |
+| `tenantTaskDecoratorPostProcessor` | `ThreadPoolTaskExecutor` 在 classpath | 自动注入 TaskDecorator 到所有线程池 |
+| `TenantRedisKeyPrefixer` | `RedisSerializer` 在 classpath | Redis Key 租户前缀 |
+| `TenantRateLimiter` | `RedisRateLimiter` 在 classpath | 租户级限流门面 |
+| `TenantConfigProvider` | 总是 | 租户级配置隔离 |
+| `TenantMetrics` | `MeterRegistry` 在 classpath | Micrometer 指标 |
+| `TenantHealthIndicator` | `HealthIndicator` 在 classpath | 健康检查端点 |
+| `TenantDataSourceRouter` | `mode=ISOLATE_DB` + `DynamicRoutingDataSource` | 数据源路由器 |
+| `FilterRegistrationBean<TenantDataSourceFilter>` | `mode=ISOLATE_DB` + Web 应用 | order=`HIGHEST_PRECEDENCE + 90` |
+
 ## 配置项
 
 | 配置 | 默认值 | 说明 |
@@ -250,24 +269,55 @@ TenantAuditLogger.log("CREATE_USER", "创建用户: " + username);
 TenantAuditLogger.log("DELETE_FILE", "删除文件: " + fileId, fileId);
 ```
 
-## 自动装配
+## SPI 扩展点
 
-`TenantAutoConfiguration` 在 `ydsz.tenant.enabled=true` 时装配以下 Bean（按条件触发）：
+本模块基于 `common-jdbc` 的 `InnerInterceptorProvider` SPI 接口提供以下扩展点。
 
-| Bean | 条件 | 说明 |
+### 1. SQL 拦截器 SPI（核心）
+
+| SPI 接口 | 实现类 | 作用 |
 |---|---|---|
-| `TenantInterceptorProvider` | 总是 | SPI 注册 SQL 拦截器到 MybatisPlusInterceptor 链 |
-| `FilterRegistrationBean<TenantContextWebFilter>` | Web 应用 + `jakarta.servlet.Filter` | order=`HIGHEST_PRECEDENCE + 100` |
-| `TenantContextFeignInterceptor` | `feign.RequestInterceptor` 在 classpath | Feign 跨服务透传 |
-| `TenantContextTaskDecorator` | `TaskDecorator` 在 classpath | 异步传播装饰器 |
-| `tenantTaskDecoratorPostProcessor` | `ThreadPoolTaskExecutor` 在 classpath | 自动注入 TaskDecorator 到所有线程池 |
-| `TenantRedisKeyPrefixer` | `RedisSerializer` 在 classpath | Redis Key 租户前缀 |
-| `TenantRateLimiter` | `RedisRateLimiter` 在 classpath | 租户级限流门面 |
-| `TenantConfigProvider` | 总是 | 租户级配置隔离 |
-| `TenantMetrics` | `MeterRegistry` 在 classpath | Micrometer 指标 |
-| `TenantHealthIndicator` | `HealthIndicator` 在 classpath | 健康检查端点 |
-| `TenantDataSourceRouter` | `mode=ISOLATE_DB` + `DynamicRoutingDataSource` | 数据源路由器 |
-| `FilterRegistrationBean<TenantDataSourceFilter>` | `mode=ISOLATE_DB` + Web 应用 | order=`HIGHEST_PRECEDENCE + 90` |
+| `InnerInterceptorProvider`（来自 `common-jdbc`） | `TenantInterceptorProvider` | 通过 SPI 自动注册 `TenantIsolationInterceptor` 到 `MybatisPlusInterceptor` 链，order=400（位于字段填充 300 之后、数据权限 500 之前） |
+
+**扩展方式**：实现 `InnerInterceptorProvider` 接口，提供 `createInterceptor()` 与 `getOrder()` 方法，通过 Spring `@Component` 注册即可被 `common-jdbc` 的 `MybatisPlusConfiguration` 自动发现并按 order 排序注入拦截器链。
+
+### 2. 数据源路由扩展点（ISOLATE_DB 模式）
+
+| 扩展类 | 作用 | 覆盖方式 |
+|---|---|---|
+| `TenantDataSourceRouter` | 根据 `TenantContextHolder.getTenantId()` 路由到 `tenant_{tenantId}` 数据源 | 子类化重写 `resolveDatasourceKey(tenantId)`，从 `ydsz_tenant` 表查询 `datasource_key` 字段（当前为 TODO，使用约定命名） |
+
+### 3. 配置隔离扩展点
+
+| 扩展类 | 作用 | 覆盖方式 |
+|---|---|---|
+| `TenantConfigProvider` | per-tenant 配置覆盖（feature flag / 参数 / 阈值），优先级：per-tenant 覆盖 > 全局默认 | 编程式调用 `setOverride(tenantId, key, value)` 或 YAML 配置 `ydsz.tenant.overrides.{tenantId}.{key}` |
+
+### 4. 注解扩展点
+
+| 注解 | 作用 | 扩展方式 |
+|---|---|---|
+| `@TenantColumn("org_id")` | per-table 覆盖默认租户列名（`tenant_id`），支持 `dimensions` 指定多级租户维度 claim 名 | 标注在 DO 类上 |
+
+### 5. 缓存隔离策略
+
+| 枚举 | 作用 |
+|---|---|
+| `CacheIsolationStrategy` | 缓存隔离策略选择：`KEY_PREFIX`（默认，`{tenantId}:` 前缀）/ `REDIS_DB`（每租户独立 DB）/ `NONE`（不隔离） |
+
+### 6. 可覆盖的 Bean（`@ConditionalOnMissingBean` / `@ConditionalOnClass` 守卫）
+
+| Bean | 激活条件 | 覆盖方式 |
+|---|---|---|
+| `TenantInterceptorProvider` | `ydsz.tenant.enabled=true`（总是） | 提供同类型 Bean |
+| `TenantContextFeignInterceptor` | `feign.RequestInterceptor` 在 classpath | 提供同类型 Bean |
+| `TenantContextTaskDecorator` | `TaskDecorator` 在 classpath | 提供同类型 Bean |
+| `TenantRedisKeyPrefixer` | `RedisSerializer` 在 classpath | 提供同类型 Bean |
+| `TenantRateLimiter` | `RedisRateLimiter` 在 classpath | 提供同类型 Bean |
+| `TenantConfigProvider` | 总是 | 提供同类型 Bean |
+| `TenantMetrics` | `MeterRegistry` 在 classpath | 提供同类型 Bean |
+| `TenantHealthIndicator` | `HealthIndicator` 在 classpath | 提供同类型 Bean |
+| `TenantDataSourceRouter` | `mode=ISOLATE_DB` + `DynamicRoutingDataSource` | 提供同类型 Bean |
 
 ## 健康检查
 
@@ -295,6 +345,18 @@ TenantAuditLogger.log("DELETE_FILE", "删除文件: " + fileId, fileId);
   }
 }
 ```
+
+## 注意事项
+
+1. **Fail-Closed 优先**：无法确定租户时拒绝执行 SQL，避免数据泄露。如遇 `TenantIsolationException`，检查 `TenantContextWebFilter` 是否注册、异步任务是否使用 `SystemTenantContextRunner` 包装、相关表是否加入 `ignore-tables`。
+2. **超级管理员绕过**：`super-tenant-id` 对应的租户跳过 SQL 隔离，适用于跨租户管理场景。
+3. **匿名 URL**：`anon-urls` 配置的路径设置 `skip()` 上下文，跳过所有租户隔离（登录/注册等公开接口）。
+4. **ISOLATE_DB 模式**：当前 `TenantDataSourceRouter.resolveDatasourceKey` 使用 `tenant_{tenantId}` 命名约定，生产环境应从 `ydsz_tenant` 表查询 `datasource_key` 字段（代码中已标注 TODO）。
+5. **生命周期管理**：`TenantLifecycleManager` 当前使用内存 Map，多实例部署时状态不同步，生产环境应对接 `ydsz_tenant` 表 + Redis 缓存。
+6. **多值字段**：`multi-value=true` 时，header/claim 的值用逗号分隔（如 `dept_001,dept_002`），自动解析为 `IN (...)`。
+7. **header 安全**：外部请求的 `X-Tenant-*` header 应在网关层清洗，`TenantContextWebFilter` 仅在 JWT 不可用时从 header 恢复（Feign 内部调用场景）。
+8. **不启用时的行为**：未引入依赖或 `enabled=false` 时，`MpBaseEntity.tenantId` 字段被忽略，无任何租户逻辑。
+9. **拦截器顺序**：`TenantInterceptorProvider` 的 order=400，位于字段填充（300）之后、数据权限（500）之前，可通过 SPI 自动注册。
 
 ## 模块结构
 
@@ -337,18 +399,6 @@ com.njydsz.common.tenant/
 └── web/
     └── TenantContextWebFilter   # Web 入口过滤器
 ```
-
-## 注意事项
-
-1. **Fail-Closed 优先**：无法确定租户时拒绝执行 SQL，避免数据泄露。如遇 `TenantIsolationException`，检查 `TenantContextWebFilter` 是否注册、异步任务是否使用 `SystemTenantContextRunner` 包装、相关表是否加入 `ignore-tables`。
-2. **超级管理员绕过**：`super-tenant-id` 对应的租户跳过 SQL 隔离，适用于跨租户管理场景。
-3. **匿名 URL**：`anon-urls` 配置的路径设置 `skip()` 上下文，跳过所有租户隔离（登录/注册等公开接口）。
-4. **ISOLATE_DB 模式**：当前 `TenantDataSourceRouter.resolveDatasourceKey` 使用 `tenant_{tenantId}` 命名约定，生产环境应从 `ydsz_tenant` 表查询 `datasource_key` 字段（代码中已标注 TODO）。
-5. **生命周期管理**：`TenantLifecycleManager` 当前使用内存 Map，多实例部署时状态不同步，生产环境应对接 `ydsz_tenant` 表 + Redis 缓存。
-6. **多值字段**：`multi-value=true` 时，header/claim 的值用逗号分隔（如 `dept_001,dept_002`），自动解析为 `IN (...)`。
-7. **header 安全**：外部请求的 `X-Tenant-*` header 应在网关层清洗，`TenantContextWebFilter` 仅在 JWT 不可用时从 header 恢复（Feign 内部调用场景）。
-8. **不启用时的行为**：未引入依赖或 `enabled=false` 时，`MpBaseEntity.tenantId` 字段被忽略，无任何租户逻辑。
-9. **拦截器顺序**：`TenantInterceptorProvider` 的 order=400，位于字段填充（300）之后、数据权限（500）之前，可通过 SPI 自动注册。
 
 ## 变更记录
 
