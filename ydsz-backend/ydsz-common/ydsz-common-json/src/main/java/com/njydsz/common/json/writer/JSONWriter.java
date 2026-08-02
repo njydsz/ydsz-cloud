@@ -749,6 +749,40 @@ public final class JSONWriter {
         // 非 ASCII：回退到标准 UTF-8 编码
         return new String(buf, 0, pos).getBytes(StandardCharsets.UTF_8);
     }
+
+    /**
+     * 将当前缓冲区内容直接写入 OutputStream（免中间 byte[] 分配）。
+     *
+     * <p>对于纯 ASCII 内容，直接 1:1 char→byte 写入流；非 ASCII 内容回退
+     * 到 {@link #toUtf8Bytes()} 一次性写入。</p>
+     *
+     * @param out 目标输出流
+     * @throws java.io.IOException IO 异常
+     */
+    public void writeTo(java.io.OutputStream out) throws java.io.IOException {
+        if (externalSb != null) {
+            out.write(externalSb.toString().getBytes(StandardCharsets.UTF_8));
+            return;
+        }
+        if (pos == 0) {
+            return;
+        }
+        // 快速路径：检查是否纯 ASCII
+        boolean allAscii = true;
+        for (int i = 0; i < pos; i++) {
+            if (buf[i] > 127) {
+                allAscii = false;
+                break;
+            }
+        }
+        if (allAscii) {
+            for (int i = 0; i < pos; i++) {
+                out.write((byte) buf[i]);
+            }
+        } else {
+            out.write(new String(buf, 0, pos).getBytes(StandardCharsets.UTF_8));
+        }
+    }
     
     /**
      * 直接获取内部 char[] 缓冲区和长度（避免 String 拷贝）

@@ -53,21 +53,19 @@ public final class PolymorphicTypeResolver {
     private static final class TypeMapping {
         final String typeProperty;
         final boolean visible;
+        final JsonTypeInfo.As includeAs;
         final Map<String, Class<?>> nameToType;
 
-        TypeMapping(String typeProperty, boolean visible, Map<String, Class<?>> nameToType) {
+        TypeMapping(String typeProperty, boolean visible, JsonTypeInfo.As includeAs, Map<String, Class<?>> nameToType) {
             this.typeProperty = typeProperty;
             this.visible = visible;
+            this.includeAs = includeAs;
             this.nameToType = nameToType;
         }
 
-        boolean isVisible() {
-            return visible;
-        }
-
-        Class<?> resolveType(String typeName) {
-            return nameToType.get(typeName);
-        }
+        boolean isVisible() { return visible; }
+        JsonTypeInfo.As getIncludeAs() { return includeAs; }
+        Class<?> resolveType(String typeName) { return nameToType.get(typeName); }
     }
 
     /**
@@ -105,7 +103,8 @@ public final class PolymorphicTypeResolver {
                     }
                     nameToType.put(typeName, subType.value());
                 }
-                TypeMapping mapping = new TypeMapping(typeInfo.property(), typeInfo.visible(), nameToType);
+                TypeMapping mapping = new TypeMapping(typeInfo.property(), typeInfo.visible(),
+                    typeInfo.include(), nameToType);
                 TYPE_MAPPING_CACHE.put(clazz, mapping);
                 return mapping;
             }
@@ -125,7 +124,8 @@ public final class PolymorphicTypeResolver {
                 }
                 String property = typeInfo != null ? typeInfo.property() : DEFAULT_TYPE_PROPERTY;
                 boolean visible = typeInfo != null && typeInfo.visible();
-                TypeMapping mapping = new TypeMapping(property, visible, nameToType);
+                JsonTypeInfo.As includeAs = typeInfo != null ? typeInfo.include() : JsonTypeInfo.As.PROPERTY;
+                TypeMapping mapping = new TypeMapping(property, visible, includeAs, nameToType);
                 TYPE_MAPPING_CACHE.put(clazz, mapping);
                 return mapping;
             }
