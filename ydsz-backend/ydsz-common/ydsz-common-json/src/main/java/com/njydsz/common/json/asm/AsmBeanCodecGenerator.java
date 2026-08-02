@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import com.njydsz.common.json.annotation.JsonAlias;
-import com.njydsz.common.json.annotation.YdszJsonFormat;
+import com.njydsz.common.json.annotation.JsonFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -686,9 +686,9 @@ public final class AsmBeanCodecGenerator {
                     String dateInternalName = (typeCode == 10) ? "java/time/LocalDateTime" : "java/time/LocalDate";
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 5);
-                    // @YdszJsonFormat 支持：检查是否有格式化模式
-                    YdszJsonFormat formatAnnotation = field.getAnnotation(YdszJsonFormat.class);
-                    String datePattern = (formatAnnotation != null && !formatAnnotation.value().isEmpty()) ? formatAnnotation.value() : null;
+                    // @JsonFormat 支持：检查是否有格式化模式
+                    JsonFormat formatAnnotation = field.getAnnotation(JsonFormat.class);
+                    String datePattern = (formatAnnotation != null && !formatAnnotation.pattern().isEmpty()) ? formatAnnotation.pattern() : null;
                     if (datePattern != null) {
                         mv.visitLdcInsn(datePattern);
                         mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
@@ -715,9 +715,9 @@ public final class AsmBeanCodecGenerator {
                     mv.visitLabel(notNullLabel);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 5);
-                    // @YdszJsonFormat 支持：检查是否有格式化模式
-                    YdszJsonFormat dateFmtAnn = field.getAnnotation(YdszJsonFormat.class);
-                    String datePattern2 = (dateFmtAnn != null && !dateFmtAnn.value().isEmpty()) ? dateFmtAnn.value() : null;
+                    // @JsonFormat 支持：检查是否有格式化模式
+                    JsonFormat dateFmtAnn = field.getAnnotation(JsonFormat.class);
+                    String datePattern2 = (dateFmtAnn != null && !dateFmtAnn.pattern().isEmpty()) ? dateFmtAnn.pattern() : null;
                     if (datePattern2 != null) {
                         mv.visitLdcInsn(datePattern2);
                         mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/asm/AsmBeanCodecGenerator",
