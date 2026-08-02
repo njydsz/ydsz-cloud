@@ -50,6 +50,17 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     private final DeliveryTimeOptimizer deliveryTimeOptimizer;
 
     @Override
+    /**
+     * 标记单条消息已读。
+     *
+     * <p>事务内更新 {@code MsgLog.receipt_status} 为 READ（仅当状态非 READ 时才更新，保证幂等），
+     * 并记录回执时间与实时推送已读事件。参数缺失抛出 {@code SysException}(BAD_REQUEST)。
+     *
+     * @param msgId  消息 ID
+     * @param userId 用户 ID（须与消息接收人一致）
+     * @return true 表示状态发生变更（即本次真正标记已读）
+     * @throws com.njydsz.common.exception.custom.SysException msgId 或 userId 为空时
+     */
     @Transactional(rollbackFor = Exception.class)
     public boolean markRead(String msgId, String userId) {
         if (!StringUtils.hasText(msgId) || !StringUtils.hasText(userId)) {
@@ -75,6 +86,16 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     }
 
     @Override
+    /**
+     * 批量标记消息已读。
+     *
+     * <p>事务内对给定消息列表统一置 READ 并推送 {@code MESSAGE_READ_BATCH} 事件；
+     * 空列表或 userId 缺失返回 0，不抛异常。
+     *
+     * @param msgIds 消息 ID 列表
+     * @param userId 用户 ID
+     * @return 实际更新的消息条数
+     */
     @Transactional(rollbackFor = Exception.class)
     public int markReadBatch(List<String> msgIds, String userId) {
         if (msgIds == null || msgIds.isEmpty() || !StringUtils.hasText(userId)) {
@@ -98,6 +119,16 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     }
 
     @Override
+    /**
+     * 标记单条站内通知已读。
+     *
+     * <p>事务内将 {@code MsgNotification.readStatus} 由 0 置 1（条件更新，幂等），记录已读时间并推送事件。
+     *
+     * @param notificationId 通知 ID
+     * @param userId         用户 ID
+     * @return true 表示状态发生变更
+     * @throws com.njydsz.common.exception.custom.SysException notificationId 或 userId 为空时
+     */
     @Transactional(rollbackFor = Exception.class)
     public boolean markNotificationRead(String notificationId, String userId) {
         if (!StringUtils.hasText(notificationId) || !StringUtils.hasText(userId)) {
@@ -120,6 +151,16 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     }
 
     @Override
+    /**
+     * 标记用户全部站内通知已读（可按业务类型过滤）。
+     *
+     * <p>仅更新 {@code readStatus=0 且 recallStatus='NONE'} 的通知，避免把已撤回通知标记为已读；
+     * 更新后推送 {@code NOTIFICATION_READ_ALL} 事件。userId 为空返回 0。
+     *
+     * @param userId  用户 ID
+     * @param bizType 业务类型（可选，为空表示全部业务）
+     * @return 实际更新的通知条数
+     */
     @Transactional(rollbackFor = Exception.class)
     public int markAllNotificationsRead(String userId, String bizType) {
         if (!StringUtils.hasText(userId)) {
@@ -145,6 +186,14 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     }
 
     @Override
+    /**
+     * 查询用户站内未读通知总数。
+     *
+     * <p>统计 {@code readStatus=0 且 recallStatus='NONE'} 的通知数量；userId 为空返回 0，查询结果 null 视为 0。
+     *
+     * @param userId 用户 ID
+     * @return 未读通知数（>=0）
+     */
     public long getUnreadCount(String userId) {
         if (!StringUtils.hasText(userId)) {
             return 0;
@@ -159,6 +208,16 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     }
 
     @Override
+    /**
+     * 按通道查询用户未读数。
+     *
+     * <p>站内信（INAPP）走通知表统计；其他通道按 {@code MsgLog} 中 {@code receipt_status != READ 且 status != FAILED} 统计。
+     * channel 为空时退化为 {@link #getUnreadCount}。
+     *
+     * @param userId  用户 ID
+     * @param channel 通道编码（如 SMS/EMAIL/INAPP）
+     * @return 该通道未读消息数（>=0）
+     */
     public long getUnreadCountByChannel(String userId, String channel) {
         if (!StringUtils.hasText(userId)) {
             return 0;

@@ -66,10 +66,15 @@ public interface BudgetSnapshotProvider {
      *
      */
     record BudgetSnapshot(
+            /** 项目 ID，关联预算主数据的唯一标识 */
             String projectId,
+            /** 项目名称，用于大盘展示与人工核对 */
             String projectName,
+            /** 预算总额（元），来自预算主数据 */
             BigDecimal totalBudget,
+            /** 已发生成本（元），含采购 + 费用 + 分摊 */
             BigDecimal incurredCost,
+            /** 预算使用率（0~1+），≥1 表示已超支 */
             double usageRatio
     ) {}
 }

@@ -56,6 +56,17 @@ public class RecallServiceImpl implements RecallService {
     private final MessageTraceService messageTraceService;
 
     @Override
+    /**
+     * 撤回单条站内通知。
+     *
+     * <p>校验通知存在且属于当前用户（越权抛 FORBIDDEN），置 {@code recallStatus=RECALLED} 并记录撤回时间，
+     * 推送撤回事件到前端。仅本人可撤回，保证数据隔离。
+     *
+     * @param userId         用户 ID（须为通知接收人）
+     * @param notificationId 通知 ID
+     * @return true 表示撤回成功
+     * @throws com.njydsz.common.exception.custom.SysException 参数为空 / 通知不存在 / 越权时
+     */
     @Transactional(rollbackFor = Exception.class)
     public boolean recallNotification(String userId, String notificationId) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(notificationId)) {
@@ -78,6 +89,16 @@ public class RecallServiceImpl implements RecallService {
     }
 
     @Override
+    /**
+     * 按消息日志 ID 撤回已发送消息。
+     *
+     * <p>标记消息为已撤回，并通过 WebSocket 向接收人推送撤回事件、记录全链路撤回轨迹；
+     * 仅当消息存在且接收人有效时推送。logId 为空抛 BAD_REQUEST。
+     *
+     * @param logId 消息日志 ID
+     * @return true 表示撤回成功
+     * @throws com.njydsz.common.exception.custom.SysException logId 为空时
+     */
     public boolean recallMessage(String logId) {
         if (!StringUtils.hasText(logId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "日志 ID 不能为空");
@@ -145,6 +166,17 @@ public class RecallServiceImpl implements RecallService {
     }
 
     @Override
+    /**
+     * 按业务类型+单据 ID 批量撤回消息与通知。
+     *
+     * <p>将对应 {@code bizType/bizId} 下处于 NONE 状态的通知与消息日志统一置 RECALLED（仅更新非终态，幂等），
+     * 返回两类受影响记录数之和。
+     *
+     * @param bizType 业务类型
+     * @param bizId   单据 ID
+     * @return 实际撤回的通知数 + 消息数
+     * @throws com.njydsz.common.exception.custom.SysException bizType 或 bizId 为空时
+     */
     @Transactional(rollbackFor = Exception.class)
     public int recallBatch(String bizType, String bizId) {
         if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {

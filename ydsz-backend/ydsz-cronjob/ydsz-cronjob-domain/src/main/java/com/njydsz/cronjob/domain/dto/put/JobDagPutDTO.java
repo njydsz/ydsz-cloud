@@ -29,6 +29,7 @@ public class JobDagPutDTO implements Serializable {
     @Schema(description = "DAG 名称（展示用）", requiredMode = Schema.RequiredMode.REQUIRED)
     private String dagName;
 
+    @Schema(description = "DAG 定义 JSON（nodes + edges + 可视化坐标）")
     private String dagDefinition;
 
     @Schema(description = "DAG 状态: DRAFT 草稿 / ENABLED 启用 / DISABLED 禁用")

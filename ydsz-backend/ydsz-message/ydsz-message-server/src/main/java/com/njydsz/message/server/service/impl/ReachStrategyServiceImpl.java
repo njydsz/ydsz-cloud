@@ -66,6 +66,15 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     private final DndService dndService;
 
     @Override
+    /**
+     * 获取用户触达画像。
+     *
+     * <p>优先从 Redis 缓存加载由外部系统写入的画像数据（设备类型/时区/免打扰时段/打开率/通道活跃度），
+     * 解析失败或缓存缺失时降级返回 {@link #defaultProfile()} 默认画像，保证调用方永远拿到可用对象而非 null。
+     *
+     * @param userId 用户 ID，为空时直接返回默认画像
+     * @return 用户触达画像（不会为 null）
+     */
     public UserReachProfileDTO getProfile(String userId) {
         if (!StringUtils.hasText(userId)) {
             return defaultProfile();
@@ -112,6 +121,17 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     }
 
     @Override
+    /**
+     * 选择最优触达通道列表（已按评分降序排列）。
+     *
+     * <p>基于用户画像对候选通道逐一评分（活跃度/打开率/偏好/成本），
+     * 返回按综合评分从高到低排序的全部通道；空候选直接返回空列表，不会抛异常。
+     *
+     * @param userId   用户 ID
+     * @param channels 候选通道列表（如 SMS/EMAIL/INAPP 等）
+     * @param bizType  业务类型，当前留作后续策略扩展点
+     * @return 排序后的通道列表（评分高的在前）；无候选时返回空列表
+     */
     public List<String> selectOptimalChannels(String userId, List<String> channels, String bizType) {
         if (channels == null || channels.isEmpty()) {
             return List.of();
@@ -129,12 +149,28 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     }
 
     @Override
+    /**
+     * 判断用户当前是否处于免打扰时段。
+     *
+     * <p>委托 {@code DndService} 进行跨天免打扰窗口判断，避免重复实现（OD-1）。
+     *
+     * @param userId 用户 ID
+     * @return true 表示当前处于免打扰时段，调用方应延迟发送
+     */
     public boolean isInDndPeriod(String userId) {
         // OD-1: 委托给 DndService，消除重复的跨天窗口判断逻辑
         return dndService.shouldDelay(userId, null);
     }
 
     @Override
+    /**
+     * 获取推荐的发送时间窗口。
+     *
+     * <p>当前返回固定推荐窗口 09:00-21:00；后续可结合用户活跃画像动态计算最优时段。
+     *
+     * @param userId 用户 ID
+     * @return 推荐发送时间窗口字符串（格式 HH:mm-HH:mm）
+     */
     public String getOptimalTimeWindow(String userId) {
         // 默认推荐 09:00-21:00
         return "09:00-21:00";

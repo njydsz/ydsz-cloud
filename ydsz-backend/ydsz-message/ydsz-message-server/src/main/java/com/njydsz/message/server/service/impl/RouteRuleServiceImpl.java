@@ -161,6 +161,15 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     }
 
     @Override
+    /**
+     * 分页查询路由规则。
+     *
+     * <p>按 {@code sortOrder} 升序、{@code createdAt} 降序分页；页码/页大小缺失时取默认值，
+     * 页大小受 {@code PageConstants} 上限保护，防止一次拉取过多。
+     *
+     * @param query 分页参数（可为 null，使用默认值）
+     * @return 路由规则分页结果
+     */
     public Page<MsgRouteRule> page(PageQuery query) {
         Page<MsgRouteRule> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
@@ -171,11 +180,28 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     }
 
     @Override
+    /**
+     * 查询所有启用的路由规则（按 priority/sortOrder 缓存）。
+     *
+     * <p>直接读取内存缓存的已启用规则列表，供 {@link #match} 匹配使用，避免每次匹配都查库。
+     *
+     * @return 启用规则列表（按优先级升序）
+     */
     public List<MsgRouteRule> listEnabled() {
         return loadEnabledRulesFromCache();
     }
 
     @Override
+    /**
+     * 按 priority 升序遍历启用规则，SpEL 求值首个命中即返回。
+     *
+     * <p>将 {@code MessageRequest} 注入 SpEL 上下文（变量名 {@code request}），
+     * 条件表达式为空视为恒真命中；单条规则求值异常仅告警并跳过，不影响整体匹配。
+     * 全不匹配返回 null，由调用方决定兜底通道。
+     *
+     * @param request 消息请求（含 bizType/bizId/receiver/channel 等）
+     * @return 命中的路由规则；未命中返回 null
+     */
     public MsgRouteRule match(MessageRequest request) {
         if (request == null) {
             return null;

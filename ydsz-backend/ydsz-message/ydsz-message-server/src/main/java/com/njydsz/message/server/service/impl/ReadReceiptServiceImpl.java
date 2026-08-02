@@ -54,6 +54,16 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     private static final long SHORTLINK_TTL = 7 * 24 * 3600L;
 
     @Override
+    /**
+     * 为 HTML 邮件正文注入不可见追踪像素，用于邮件已读回执。
+     *
+     * <p>在 {@code </body>} 前注入 1x1 透明跟踪图（URL 含 Base64 编码的 msgId）；无 {@code </body>} 时追加到末尾。
+     * 非 HTML 内容或参数缺失时原样返回，不做注入。
+     *
+     * @param htmlContent 邮件 HTML 正文
+     * @param msgId       消息 ID（用于回执关联）
+     * @return 注入追踪像素后的 HTML；参数非法或内容非 HTML 时返回原内容
+     */
     public String injectEmailTrackingPixel(String htmlContent, String msgId) {
         if (!StringUtils.hasText(htmlContent) || !StringUtils.hasText(msgId)) {
             return htmlContent;
@@ -79,6 +89,17 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     }
 
     @Override
+    /**
+     * 为短信生成短链，用于短信已读回执与点击统计。
+     *
+     * <p>短码由雪花算法生成，Redis 中以 {@code ydsz:shortlink:{code} → originalUrl}、
+     * {@code ydsz:shortlink:msg:{code} → msgId} 存储，TTL 7 天。写入失败时降级返回原始 URL，
+     * 保证短信发送主流程不因短链异常中断。
+     *
+     * @param originalUrl 原始长链接（为空则原样返回）
+     * @param msgId       消息 ID（可选，用于回执关联）
+     * @return 短链 URL；生成失败或 originalUrl 为空时返回 originalUrl
+     */
     public String generateShortLink(String originalUrl, String msgId) {
         if (!StringUtils.hasText(originalUrl)) {
             return originalUrl;
@@ -100,6 +121,14 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     }
 
     @Override
+    /**
+     * 处理邮件追踪像素回调，标记邮件已读。
+     *
+     * <p>在 Redis 写入 {@code ydsz:read:email:{msgId}=1}（TTL 30 天）；msgId 为空直接忽略，
+     * 写入异常仅告警不影响主流程。
+     *
+     * @param msgId 消息 ID
+     */
     public void handleEmailRead(String msgId) {
         if (!StringUtils.hasText(msgId)) {
             return;
@@ -113,6 +142,15 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     }
 
     @Override
+    /**
+     * 处理短信短链点击回调，返回原始 URL 并标记已读。
+     *
+     * <p>根据短码查 Redis：命中则重定向到 originalUrl，并对关联 msgId 标记短信已读（TTL 30 天）；
+     * 短码不存在/已过期或查询异常时返回 null，由调用方决定降级行为。
+     *
+     * @param shortCode 短链编码
+     * @return 原始长链接；短码无效或异常时返回 null
+     */
     public String handleShortLinkClick(String shortCode) {
         if (!StringUtils.hasText(shortCode)) {
             return null;
@@ -137,6 +175,15 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     }
 
     @Override
+    /**
+     * 判断消息是否已读（邮件或短信任一渠道已读即视为已读）。
+     *
+     * <p>查询 Redis 中 {@code email:} 与 {@code sms:} 两个已读标记；查询异常时保守返回 false，
+     * 避免将未知状态误判为已读。
+     *
+     * @param msgId 消息 ID
+     * @return true 表示邮件或短信渠道已标记已读
+     */
     public boolean isRead(String msgId) {
         if (!StringUtils.hasText(msgId)) {
             return false;

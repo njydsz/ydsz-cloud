@@ -56,6 +56,16 @@ public class SmsProviderStrategyServiceImpl
     private static final int FAILURE_THRESHOLD = 5;
 
     @Override
+    /**
+     * 按配置策略从可用服务商中选择一个发送短信。
+     *
+     * <p>支持轮询/权重/成本优先/可用性优先四种策略（配置非法时降级为轮询），单 provider 直接返回。
+     * 无可用 provider 抛 {@code IllegalStateException}。
+     *
+     * @param availableProviders 当前可用的短信服务商列表
+     * @return 选中的服务商
+     * @throws IllegalStateException 当 availableProviders 为空时
+     */
     public SmsProvider selectProvider(List<SmsProvider> availableProviders) {
         if (availableProviders == null || availableProviders.isEmpty()) {
             throw new IllegalStateException("无可用 SMS provider");
@@ -78,6 +88,15 @@ public class SmsProviderStrategyServiceImpl
     }
 
     @Override
+    /**
+     * 记录一次短信发送结果（成功/失败）到 Redis 日统计。
+     *
+     * <p>按日分片 key={@code ydsz:sms:stats:{provider}:{yyyyMMdd}:{total|failed}} 计数；
+     * 失败时累加本地连续失败计数（供可用性优先策略熔断）。统计异常仅 debug 忽略，不影响主流程。
+     *
+     * @param providerType 服务商类型
+     * @param success      本次发送是否成功
+     */
     public void recordSend(String providerType, boolean success) {
         try {
             String daySuffix = LocalDateTime.now()
@@ -97,6 +116,14 @@ public class SmsProviderStrategyServiceImpl
     }
 
     @Override
+    /**
+     * 查询各短信服务商的当日发送统计。
+     *
+     * <p>返回 aliyun/tencent/mock 三家的 {@code [总量, 成功数, 失败数]}；查询异常时返回部分或空数据，
+     * 不抛异常，保证监控面板可用。
+     *
+     * @return providerType → long[3]{total, success, failed}
+     */
     public Map<String, long[]> getProviderStats() {
         Map<String, long[]> stats = new HashMap<>();
         try {

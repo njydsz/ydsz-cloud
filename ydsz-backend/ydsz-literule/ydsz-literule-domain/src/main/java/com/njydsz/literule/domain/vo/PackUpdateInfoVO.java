@@ -5,7 +5,10 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * PackUpdateInfo 视图对象（VO）。
+ * 规则集更新信息视图对象（VO）。
+ *
+ * <p>用于前端展示已安装规则集是否有新版本可升级，
+ * 包含已安装版本与最新版本对比、是否有更新及安装时间等。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -13,28 +16,28 @@ import lombok.Data;
 @Data
 public class PackUpdateInfoVO {
 
-    /** packCode */
+    /** 规则集编码 */
     private String packCode;
 
-    /** packName */
+    /** 规则集名称（展示用） */
     private String packName;
 
-    /** installedVersion */
+    /** 当前已安装版本号 */
     private String installedVersion;
 
-    /** latestVersion */
+    /** 最新可用版本号 */
     private String latestVersion;
 
-    /** hasUpdate */
+    /** 是否存在可更新版本（true=有新版可升级） */
     private boolean hasUpdate;
 
-    /** installedAt */
+    /** 安装时间 */
     private LocalDateTime installedAt;
 
-    /** industry */
+    /** 所属行业 */
     private String industry;
 
-    /** description */
+    /** 规则集描述 */
     private String description;
 
 }

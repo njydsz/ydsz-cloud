@@ -44,6 +44,15 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final MessageLogService messageLogService;
 
     @Override
+    /**
+     * 处理渠道回执回调（送达/已读/点击）。
+     *
+     * <p>将回执落库 {@code ydsz_msg_receipt} 并联动更新消息日志回执状态；进入追踪上下文（外部回调无原始 traceId 时自动生成）。
+     * 日志不存在仅告警不抛异常，保证回执可靠落库。dto 或 logId 为空抛 BAD_REQUEST。
+     *
+     * @param dto 回执回调数据（含 logId/回执类型/渠道信息等）
+     * @throws com.njydsz.common.exception.custom.SysException dto 或关联 logId 为空时
+     */
     public void callback(ReceiptCallbackDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getLogId())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "回执关联日志 ID 不能为空");
@@ -72,6 +81,14 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
+    /**
+     * 按消息日志 ID 查询回执列表（按回执时间倒序）。
+     *
+     * <p>用于前端展示某条消息的送达/已读/点击回执轨迹；logId 为空返回空列表。
+     *
+     * @param logId 消息日志 ID
+     * @return 回执列表（按 receiptTime 降序）；无结果返回空列表
+     */
     public List<MsgReceipt> listByLogId(String logId) {
         if (!StringUtils.hasText(logId)) {
             return List.of();

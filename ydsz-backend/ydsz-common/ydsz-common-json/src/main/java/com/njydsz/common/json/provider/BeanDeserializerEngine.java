@@ -183,9 +183,9 @@ final class BeanDeserializerEngine {
         AsmDeserializer<E> asmDeserializer = null;
         try {
             asmDeserializer = AsmCodecCache.getOrCreateDeserializer(elementClass);
-        }         } catch (Exception ignored) {
-        }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-        } }
+        } catch (Exception ignored) {
+            log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        }
 
         if (asmDeserializer != null) {
             return deserializeBeanListWithAsm(json, elementClass, asmDeserializer);
@@ -283,9 +283,9 @@ final class BeanDeserializerEngine {
         ZeroCopyDeserializer.BeanDeserializer deserializer = null;
         try {
             deserializer = ZeroCopyDeserializer.getDeserializer(elementClass);
-        }         } catch (Exception ignored) {
-        }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-        } }
+        } catch (Exception ignored) {
+            log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        }
 
         while (pos < len) {
             while (pos < len && chars[pos] <= ' ') pos++;
@@ -320,9 +320,9 @@ final class BeanDeserializerEngine {
                         pos++;
                     }
                     continue;
-                }                 } catch (Exception ignored) {
-                }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-                } }
+                } catch (Exception ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                }
             }
 
             int depth = 0;

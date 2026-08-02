@@ -469,20 +469,6 @@ public class ExcelFacade {
      * @param isXlsx 是否为 xlsx 格式 (true=xlsx, false=xls)
      */
     public static void setWebResponse(String fileName, boolean isXlsx) {
-        setWebResponse(fileName, isXlsx, null);
-    }
-
-
-    /**
-     * Generate web download response.
-     *
-     * <p>Uses DownloadContext to manage download context, unified ThreadLocal management.</p>
-     *
-     * @param fileName download file name
-     * @param isXlsx whether xlsx format
-     * @param contentType custom content type (deprecated, handled by ExcelWebSupport)
-     */
-    public static void setWebResponse(String fileName, boolean isXlsx, String contentType) {
         DownloadContext.setFileName(
             fileName + (isXlsx ? ".xlsx" : ".xls"));
     }

@@ -46,14 +46,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   finished: [];
-  /**
-   * @deprecated 请使用{@link finished}事件
-   */
-  onFinished: [];
-  /**
-   * @deprecated 请使用{@link started}事件
-   */
-  onStarted: [];
   started: [];
 }>();
 
@@ -91,14 +83,12 @@ function run() {
   outputValue = useTransition(source, {
     disabled,
     duration: props.duration,
-    onFinished: () => {
-      emit('finished');
-      emit('onFinished');
-    },
-    onStarted: () => {
-      emit('started');
-      emit('onStarted');
-    },
+        onFinished: () => {
+          emit('finished');
+        },
+        onStarted: () => {
+          emit('started');
+        },
     ...(props.useEasing
       ? { transition: TransitionPresets[props.transition] }
       : {}),
