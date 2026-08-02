@@ -353,9 +353,9 @@ public final class SerializationProvider {
         }
 
         // @JsonSerialize 快速路径：如果类有 @JsonSerialize 注解，使用自定义序列化器
-        JsonSerializer<Object> customSerializer = getCustomSerializer(obj.getClass());
+        JsonSerializer<?> customSerializer = getCustomSerializer(obj.getClass());
         if (customSerializer != null) {
-            return customSerializer.serialize(obj);
+            return invokeCustomSerializer(customSerializer, obj);
         }
 
         // @JsonValue 快速路径：如果类有 @JsonValue 标注的方法，直接序列化方法返回值
@@ -828,7 +828,18 @@ public final class SerializationProvider {
     /**
      * @JsonSerialize 自定义序列化器缓存（Class -> JsonSerializer 实例）。
      */
-    private static final ConcurrentHashMap<Class<?>, Object> CUSTOM_SERIALIZER_CACHE =
+    private static final ConcurrentHashMap<Class<?>, JsonSerializer<?>> CUSTOM_SERIALIZER_CACHE =
+        new ConcurrentHashMap<>();
+
+    /**
+     * 自定义序列化器 serialize 方法缓存（Class -> Method）。
+     * 
+     * <p>由于 {@code JsonSerializer<?>} 的 {@code serialize(?)} 方法无法直接以 {@code Object} 参数调用
+     * （泛型类型参数 ? 未知），使用 {@link Method#invoke(Object, Object...)} 进行反射调用，
+     * 避免 unchecked cast。{@code Method.invoke} 返回 {@code Object}，
+     * 转换为 {@code String} 是运行时检查的 checked cast。</p>
+     */
+    private static final ConcurrentHashMap<Class<?>, Method> SERIALIZE_METHOD_CACHE =
         new ConcurrentHashMap<>();
 
     /**
@@ -837,24 +848,58 @@ public final class SerializationProvider {
      * @param clazz 要检查的类
      * @return 自定义序列化器实例，或 null 如果没有
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static JsonSerializer<Object> getCustomSerializer(Class<?> clazz) {
+    private static JsonSerializer<?> getCustomSerializer(Class<?> clazz) {
         JsonSerialize annotation = clazz.getAnnotation(JsonSerialize.class);
         if (annotation == null || annotation.using() == Void.class) {
             return null;
         }
-        Object cached = CUSTOM_SERIALIZER_CACHE.get(clazz);
+        JsonSerializer<?> cached = CUSTOM_SERIALIZER_CACHE.get(clazz);
         if (cached != null) {
-            return (JsonSerializer<Object>) cached;
+            return cached;
         }
         try {
             JsonSerializer<?> instance = (JsonSerializer<?>) annotation.using().getDeclaredConstructor().newInstance();
             CUSTOM_SERIALIZER_CACHE.putIfAbsent(clazz, instance);
-            return (JsonSerializer) instance;
+            return instance;
         } catch (Exception e) {
             throw new JsonSerializationException(
                 JsonSerializationException.SERIALIZATION_ERROR,
                 "Failed to instantiate custom serializer: " + annotation.using().getName(),
+                e
+            );
+        }
+    }
+
+    /**
+     * 通过反射调用自定义序列化器的 serialize 方法。
+     *
+     * <p>使用 {@link Method#invoke(Object, Object...)} 避免泛型 unchecked cast。
+     * {@code Method.invoke} 返回 {@code Object}，强转为 {@code String} 是 checked cast。</p>
+     *
+     * @param serializer 自定义序列化器实例
+     * @param value 要序列化的对象
+     * @return JSON 字符串
+     */
+    private static String invokeCustomSerializer(JsonSerializer<?> serializer, Object value) {
+        Method method = SERIALIZE_METHOD_CACHE.computeIfAbsent(serializer.getClass(), cls -> {
+            try {
+                Method m = cls.getMethod("serialize", Object.class);
+                m.setAccessible(true);
+                return m;
+            } catch (NoSuchMethodException e) {
+                throw new JsonSerializationException(
+                    JsonSerializationException.SERIALIZATION_ERROR,
+                    "serialize method not found on " + cls.getName(),
+                    e
+                );
+            }
+        });
+        try {
+            return (String) method.invoke(serializer, value);
+        } catch (Exception e) {
+            throw new JsonSerializationException(
+                JsonSerializationException.SERIALIZATION_ERROR,
+                "Custom serializer failed: " + serializer.getClass().getName(),
                 e
             );
         }

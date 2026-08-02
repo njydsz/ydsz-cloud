@@ -79,6 +79,7 @@ return converter;
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
+    @ConditionalOnProperty(prefix = "ydsz.json", name = "monitoring-enabled", havingValue = "true", matchIfMissing = true)
     public JsonMetrics ydszJsonMetrics(
             ObjectProvider<MeterRegistry> meterRegistryProvider) {
         JsonMetrics metrics = new JsonMetrics(meterRegistryProvider.getIfAvailable());
@@ -163,6 +164,8 @@ return converter;
                     .maxJsonSize(properties.getMaxJsonSize())
                     .maxDepth(properties.getMaxDepth())
                     .useBigDecimal(properties.isUseBigDecimal())
+                    .wrapRootValue(properties.isWrapRootValue())
+                    .failOnError(properties.isFailOnError())
                     .build();
             config.apply();
 
@@ -177,10 +180,8 @@ return converter;
                         properties.getWhitelistPackages().toArray(new String[0]));
             }
 
-            // 监控设置
-            if (properties.isMonitoringEnabled()) {
-                System.setProperty("ydsz.json.monitoring", "true");
-            }
+            // 监控开关由 ydszJsonMetrics Bean 的 @ConditionalOnProperty(monitoring-enabled) 控制，
+            // 不再设置无人读取的 ydsz.json.monitoring system property。
 
             // 注册 Spring Factory 模块
             JsonModuleRegistrar registrar = new JsonModuleRegistrar(springModules);
