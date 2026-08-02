@@ -29,9 +29,10 @@ import com.njydsz.common.json.YdszJson;
  *   <li>批量操作 - getAll、putAll 等</li>
  * </ul>
  *
- * @author ydsz-team
- * @since 1.0.0
+ * @deprecated 使用 {@link com.njydsz.common.json.tree.ObjectNode} 替代——tree 包提供统一的 JsonNode 抽象，
+ *             与 Jackson 语义对齐且完整支持转义。此 LinkedHashMap 方案将在后续版本删除。
  */
+@Deprecated
 public class JsonObject extends LinkedHashMap<String, Object> {
 
     private static final long serialVersionUID = 1L;

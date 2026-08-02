@@ -215,10 +215,12 @@
 - 这是本模块"过度设计"嫌疑最大的部分。
 
 **E2. 删除死代码与半成品**【P2】
-- `reader/ObjectReader`（疑似被 BeanReader 取代的遗留）。
-- `type/JsonTypeCode`（死枚举）、`JsonTypeUtils.getTypeCode`（虚假统一）。
-- `module/ModuleSerializerRegistry.orderedModules`/`getOrderedModules()`（从未被调用）。
-- `AsmCodecCache.isEnabled()`（硬编码 return true）。
+- `reader/ObjectReader`（已被 BeanReader 取代，**已删除**）。
+- `type/JsonTypeCode`（死枚举，**已删除**）。
+- `JsonTypeUtils.getTypeCode`（虚假统一，未处理）。
+- `module/ModuleSerializerRegistry.getOrderedModules()`（**已删除**；`orderedModules` 字段保留未处理）。
+- `module/ModuleDeserializerRegistry.getOrderedModules()`（**已删除**）。
+- `AsmCodecCache.isEnabled()`（硬编码 return true，未处理）。
 - `schema/JsonSchema.boolean_()` 与 `booleanType()`（重复）。
 - `annotation/@JsonFormat.locale()`/`timezone()`（明确未实现，要么实现要么删除并在 Javadoc 标注）。
 - `monitoringEnabled`（死配置，见 D1）。

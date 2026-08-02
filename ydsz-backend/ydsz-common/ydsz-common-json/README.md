@@ -41,7 +41,7 @@
 | `JSONReader` | JSON 解析器（流式 / 事件驱动 / 递归下降，直接解析到 Bean 字段，无需 Map 中转） |
 | `JsonParserUtil` (stream) / `JsonParserUtil` (parser) | JSON 解析器（流式 token-by-token） |
 | `JSONWriter` / `JsonGenerator` | JSON 生成器（流式写入，`toUtf8Bytes()` 零拷贝字节序列化） |
-| `BeanSerializer` / `BeanReader` / `ObjectReader` | Bean 序列化 / 反序列化 |
+| `BeanSerializer` / `BeanReader` | Bean 序列化 / 反序列化 |
 | `BeanDeserializerEngine` | Bean 反序列化引擎 |
 
 ### 4. Provider 与字段缓存（provider / cache 包）
@@ -75,7 +75,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `JsonType` / `TypeFactory` / `JsonTypeCode` | 类型系统（类型代码替代 instanceof 链，提高分支预测准确率） |
+| `JsonType` / `TypeFactory` | 类型系统（类型代码替代 instanceof 链，提高分支预测准确率） |
 | `PropertyNamingStrategy` | 命名策略（`LOWER_CAMEL_CASE` / `UPPER_CAMEL_CASE` / `SNAKE_CASE` / `KEBAB_CASE`） |
 | `NumberUtils` | 数字解析工具 |
 

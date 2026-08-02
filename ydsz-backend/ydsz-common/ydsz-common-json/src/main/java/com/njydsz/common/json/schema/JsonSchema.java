@@ -131,13 +131,6 @@ public final class JsonSchema {
     }
 
     /**
-     * 布尔类型（简化方法名）
-     */
-    public static JsonSchema boolean_() {
-        return new JsonSchema("boolean");
-    }
-
-    /**
      * 数组类型
      */
     public static JsonSchema array() {

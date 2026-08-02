@@ -38,9 +38,10 @@ import com.njydsz.common.json.YdszJson;
  * int second = array.getIntValue(1);
  * </pre>
  *
- * @author ydsz-team
- * @since 1.0.0
+ * @deprecated 使用 {@link com.njydsz.common.json.tree.ArrayNode} 替代——tree 包提供统一的 JsonNode 抽象。
+ *             此 ArrayList 方案将在后续版本删除。
  */
+@Deprecated
 public class JsonArray extends ArrayList<Object> {
 
     private static final long serialVersionUID = 1L;

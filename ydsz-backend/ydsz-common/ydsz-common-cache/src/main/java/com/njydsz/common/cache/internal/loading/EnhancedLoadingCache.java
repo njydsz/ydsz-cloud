@@ -189,8 +189,8 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    */
   public static <K, V> EnhancedLoadingCache<K, V> create(
       Cache<K, V> cache, CacheLoader<K, V> loader) {
-    return new EnhancedLoadingCache<>(
-        cache, loader, null, 0, TimeUnit.NANOSECONDS, null, true, false);
+        return new EnhancedLoadingCache<>(
+            cache, loader, null, 0, TimeUnit.NANOSECONDS, null, true);
   }
 
   /**
@@ -225,14 +225,11 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             refreshInterval,
             refreshUnit,
             refreshExecutor,
-            recordStats,
-            false);
+            recordStats);
     instance.scheduleAutoRefresh();
     return instance;
   }  /**
    * 内部构造函数
-   *
-   * @param scheduleRefresh 是否在构造时立即调度自动刷新（仅 deprecated 公开构造函数传 true， 工厂方法传 false，由工厂方法在构造完成后调度）
    */
   private EnhancedLoadingCache(
       Cache<K, V> cache,
@@ -241,8 +238,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
       long refreshInterval,
       TimeUnit refreshUnit,
       Executor refreshExecutor,
-      boolean recordStats,
-      boolean scheduleRefresh) {
+      boolean recordStats) {
     this.cache = cache;
     this.loader = loader;
     this.executor = executor != null ? executor : getSharedExecutor();
@@ -251,9 +247,6 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (refreshInterval > 0 && refreshUnit != null) {
       this.refreshIntervalNanos = refreshUnit.toNanos(refreshInterval);
       this.refreshScheduler = getSharedRefreshScheduler();
-      if (scheduleRefresh) {
-        scheduleAutoRefresh();
-      }
     } else {
       this.refreshIntervalNanos = 0;
       this.refreshScheduler = null;

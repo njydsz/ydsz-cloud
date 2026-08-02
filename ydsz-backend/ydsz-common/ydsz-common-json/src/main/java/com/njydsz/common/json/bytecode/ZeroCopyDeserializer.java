@@ -289,13 +289,13 @@ field.setAccessible(true);
                     return;
                 } catch (Throwable e) {
                 log.debug("Caught exception (ignored): {}", e.getMessage());
-                } }
+            }
             }
             try {
                 field.set(obj, value);
             } catch (IllegalAccessException e) {
             log.debug("Caught exception (ignored): {}", e.getMessage());
-            } }
+        }
         }
 
         void setIntValue(Object obj, int value) {
@@ -303,7 +303,7 @@ field.setAccessible(true);
                 field.setInt(obj, value);
             } catch (IllegalAccessException e) {
             log.debug("Caught exception (ignored): {}", e.getMessage());
-            } }
+        }
         }
 
         void setLongValue(Object obj, long value) {
@@ -311,7 +311,7 @@ field.setAccessible(true);
                 field.setLong(obj, value);
             } catch (IllegalAccessException e) {
             log.debug("Caught exception (ignored): {}", e.getMessage());
-            } }
+        }
         }
 
         void setDoubleValue(Object obj, double value) {
@@ -319,7 +319,7 @@ field.setAccessible(true);
                 field.setDouble(obj, value);
             } catch (IllegalAccessException e) {
             log.debug("Caught exception (ignored): {}", e.getMessage());
-            } }
+        }
         }
 
         void setBooleanValue(Object obj, boolean value) {
@@ -327,7 +327,7 @@ field.setAccessible(true);
                 field.setBoolean(obj, value);
             } catch (IllegalAccessException e) {
             log.debug("Caught exception (ignored): {}", e.getMessage());
-            } }
+        }
         }
 
         /** package-private */ boolean matchesHashCode(int hash) {

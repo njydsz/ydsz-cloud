@@ -7,9 +7,10 @@ package com.njydsz.common.json.api;
  * 在反序列化目标类型时使用自定义逻辑替代默认反序列化。</p>
  *
  * @param <T> 要反序列化的类型
- * @author ydsz-team
- * @since 1.0.0
+ * @deprecated 使用 {@link com.njydsz.common.json.deserializer.JsonDeserializer} 替代（JSONReader 原生支持，流式解析性能更优）。
+ *             此接口（String 入参版）将在后续版本删除。
  */
+@Deprecated
 public interface JsonDeserializer<T> {
 
     /**
