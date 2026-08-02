@@ -5,8 +5,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 
+import com.njydsz.common.json.annotation.Experimental;
+
 /**
  * JSON Schema 验证器
+ *
+ * @Experimental 该功能属于 JSON 引擎的非核心 RFC 扩展，尚未稳定，不保证向后兼容。
+ */
+@Experimental("JSON Schema 校验属于 API 网关/数据校验域，非核心序列化能力，后续可能独立为单独模块")
  * 
  * <p>验证 JSON 数据是否符合 Schema 定义，支持 JSON Schema Draft 07 的核心关键字，
  * 包括 allOf/anyOf/oneOf 组合关键字。</p>

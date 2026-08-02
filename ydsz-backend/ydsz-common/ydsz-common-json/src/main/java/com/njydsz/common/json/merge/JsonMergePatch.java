@@ -6,8 +6,14 @@ import java.util.Map;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.parser.YdszJsonParser;
 
+import com.njydsz.common.json.annotation.Experimental;
+
 /**
  * JSON Merge Patch 实现（RFC 7396）
+ *
+ * @Experimental RFC 7396 扩展功能，尚未稳定，不保证向后兼容。
+ */
+@Experimental("JSON Merge Patch (RFC 7396) 属于独立工具域，非核心序列化能力")
  *
  * <p>RFC 7396 定义了一种简单的 JSON 合并算法：</p>
  * <ul>

@@ -5,8 +5,14 @@ import com.njydsz.common.json.parser.YdszJsonParser;
 
 import java.util.*;
 
+import com.njydsz.common.json.annotation.Experimental;
+
 /**
  * JSON Patch 实现（RFC 6902）。
+ *
+ * @Experimental RFC 6902 扩展功能，尚未稳定，不保证向后兼容。
+ */
+@Experimental("JSON Patch (RFC 6902) 属于独立工具域，非核心序列化能力")
  *
  * <p>支持以下操作：
  * <ul>

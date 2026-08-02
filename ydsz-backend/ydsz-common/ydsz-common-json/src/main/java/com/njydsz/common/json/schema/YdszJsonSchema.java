@@ -2,8 +2,14 @@ package com.njydsz.common.json.schema;
 
 import java.util.*;
 
+import com.njydsz.common.json.annotation.Experimental;
+
 /**
  * JSON Schema 定义（参考 JSON Schema 规范）
+ *
+ * @Experimental RFC 扩展功能，尚未稳定，不保证向后兼容。
+ */
+@Experimental("JSON Schema 定义属于非核心 RFC 扩展，后续可能独立为单独模块")
  *
  * <p>用于定义 JSON 数据的结构和约束条件。</p>
  *
