@@ -377,7 +377,7 @@ field.setAccessible(true);
                 if (pos < len && chars[pos] == ':') pos++;
 
                 int nameLen = nameEnd - nameStart;
-                if (nameLen == fieldName.length() && VectorSimdUtil.vectorizedEquals(chars, nameStart, fieldNameChars, 0, nameLen)) {
+                if (nameLen == fieldName.length() && BytesUtil.equals(chars, nameStart, fieldNameChars, 0, nameLen)) {
                     Object value = parseValue(chars, pos, field.type, len);
                     if (value != null) field.setValue(instance, value);
                     return instance;
@@ -442,7 +442,7 @@ field.setAccessible(true);
                 int fieldIdx = -1;
                 int nameLen = nameEnd - nameStart;
                 for (int i = 0; i < fieldNames.length; i++) {
-                    if (nameLen == fieldNames[i].length() && VectorSimdUtil.vectorizedEquals(chars, nameStart, fieldNameCharsArray[i], 0, nameLen)) {
+                    if (nameLen == fieldNames[i].length() && BytesUtil.equals(chars, nameStart, fieldNameCharsArray[i], 0, nameLen)) {
                         fieldIdx = i;
                         break;
                     }
@@ -562,7 +562,7 @@ field.setAccessible(true);
         private int findFieldIndexByHash(int fieldHash, int nameLen, int nameStart, char[] chars) {
             for (int i = 0; i < fieldNameHashes.length; i++) {
                 if (fieldNameHashes[i] == fieldHash && fieldNameCharsArray[i].length == nameLen) {
-                    if (VectorSimdUtil.vectorizedEquals(chars, nameStart, fieldNameCharsArray[i], 0, nameLen)) {
+                    if (BytesUtil.equals(chars, nameStart, fieldNameCharsArray[i], 0, nameLen)) {
                         return i;
                     }
                 }
@@ -775,7 +775,7 @@ return deserialize(chars, 0, chars.length);
         private FieldInfo findFieldByHash(int fieldHash, int nameLen, int nameStart, char[] chars) {
             for (int i = 0; i < fieldNameHashes.length; i++) {
                 if (fieldNameHashes[i] == fieldHash && fieldNameCharsArray[i].length == nameLen) {
-                    if (VectorSimdUtil.vectorizedEquals(chars, nameStart, fieldNameCharsArray[i], 0, nameLen)) {
+                    if (BytesUtil.equals(chars, nameStart, fieldNameCharsArray[i], 0, nameLen)) {
                         return fieldArray[i];
                     }
                 }
@@ -876,7 +876,7 @@ fieldNameHashes[i] = fields[i].nameHashCode;
         private FieldInfo findFieldByHashStandard(int fieldHash, int nameLen, int nameStart, char[] chars) {
             for (int i = 0; i < fieldNameHashes.length; i++) {
                 if (fieldNameHashes[i] == fieldHash && fieldNameCharsArray[i].length == nameLen) {
-                    if (VectorSimdUtil.vectorizedEquals(chars, nameStart, fieldNameCharsArray[i], 0, nameLen)) {
+                    if (BytesUtil.equals(chars, nameStart, fieldNameCharsArray[i], 0, nameLen)) {
                         return fieldArray[i];
                     }
                 }

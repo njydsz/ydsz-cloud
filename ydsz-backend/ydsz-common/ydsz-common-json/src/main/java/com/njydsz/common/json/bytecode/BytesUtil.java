@@ -3,8 +3,7 @@ package com.njydsz.common.json.bytecode;
 /**
  * 字节数组工具类（JSON 解析辅助）
  *
- * <p>提供高效的字符数组操作，作为 {@link VectorSimdUtil} 的薄包装层，
- * 统一对外暴露字符数组/字符串批处理 API。</p>
+ * <p>提供高效的字符数组操作，统一对外暴露字符数组/字符串批处理 API。</p>
  *
  * <p><b>性能策略：</b></p>
  * <ul>
@@ -32,7 +31,12 @@ public final class BytesUtil {
      * @return 目标字符的位置，未找到返回 -1
      */
     public static int indexOf(char[] chars, int start, int len, char target) {
-        return VectorSimdUtil.vectorizedIndexOf(chars, start, len, target);
+        for (int i = start; i < len; i++) {
+            if (chars[i] == target) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -44,7 +48,12 @@ public final class BytesUtil {
      * @return 第一个非空白字符的位置
      */
     public static int skipWhitespace(char[] chars, int start, int len) {
-        return VectorSimdUtil.vectorizedSkipWhitespace(chars, start, len);
+        for (int i = start; i < len; i++) {
+            if (chars[i] > ' ') {
+                return i;
+            }
+        }
+        return len;
     }
 
     /**
@@ -56,7 +65,12 @@ public final class BytesUtil {
      * @return true 如果全部为空白字符
      */
     public static boolean isAllWhitespace(char[] chars, int start, int end) {
-        return VectorSimdUtil.vectorizedIsAllWhitespace(chars, start, end);
+        for (int i = start; i < end; i++) {
+            if (chars[i] > ' ') {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -68,7 +82,13 @@ public final class BytesUtil {
      * @return true 如果全部为数字字符
      */
     public static boolean isAllDigits(char[] chars, int start, int len) {
-        return VectorSimdUtil.vectorizedIsAllDigits(chars, start, len);
+        for (int i = start; i < len; i++) {
+            char c = chars[i];
+            if (c < '0' || c > '9') {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -82,7 +102,12 @@ public final class BytesUtil {
      * @return true 如果相等
      */
     public static boolean equals(char[] chars1, int offset1, char[] chars2, int offset2, int len) {
-        return VectorSimdUtil.vectorizedEquals(chars1, offset1, chars2, offset2, len);
+        for (int i = 0; i < len; i++) {
+            if (chars1[offset1 + i] != chars2[offset2 + i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -94,7 +119,13 @@ public final class BytesUtil {
      * @return 目标字符的位置，未找到返回 -1
      */
     public static int indexOf(String str, int start, char target) {
-        return VectorSimdUtil.vectorizedIndexOf(str, start, target);
+        int len = str.length();
+        for (int i = start; i < len; i++) {
+            if (str.charAt(i) == target) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -105,7 +136,13 @@ public final class BytesUtil {
      * @return 第一个非空白字符的位置
      */
     public static int skipWhitespace(String str, int start) {
-        return VectorSimdUtil.vectorizedSkipWhitespace(str, start);
+        int len = str.length();
+        for (int i = start; i < len; i++) {
+            if (str.charAt(i) > ' ') {
+                return i;
+            }
+        }
+        return len;
     }
 
     /**
@@ -117,6 +154,18 @@ public final class BytesUtil {
      * @return true 如果匹配
      */
     public static boolean fastMatch(char[] chars, int start, String expected) {
-        return VectorSimdUtil.fastMatch(chars, start, expected);
+        if (expected == null || expected.isEmpty()) {
+            return true;
+        }
+        int len = expected.length();
+        if (start + len > chars.length) {
+            return false;
+        }
+        for (int i = 0; i < len; i++) {
+            if (chars[start + i] != expected.charAt(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
