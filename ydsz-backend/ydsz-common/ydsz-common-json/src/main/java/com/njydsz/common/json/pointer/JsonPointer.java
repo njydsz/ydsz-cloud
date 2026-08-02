@@ -12,9 +12,6 @@ import com.njydsz.common.json.annotation.Experimental;
  * JSON Pointer 实现（RFC 6901）
  *
  * <p>JSON Pointer 定义了一种字符串语法，用于标识 JSON 文档中的特定值。</p>
- * @Experimental RFC 6901 扩展功能，尚未稳定，不保证向后兼容。
- */
- * <p>JSON Pointer 定义了一种字符串语法，用于标识 JSON 文档中的特定值。</p>
  *
  * <p><b>语法示例：</b></p>
  * <ul>

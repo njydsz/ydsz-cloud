@@ -9,10 +9,6 @@ import com.njydsz.common.json.annotation.Experimental;
  *
  * <p>用于定义 JSON 数据的结构和约束条件。</p>
  *
- * @Experimental RFC 扩展功能，尚未稳定，不保证向后兼容。
- */
- * <p>用于定义 JSON 数据的结构和约束条件。</p>
- *
  * <p><b>支持的类型：</b></p>
  * <ul>
  *   <li>string - 字符串</li>

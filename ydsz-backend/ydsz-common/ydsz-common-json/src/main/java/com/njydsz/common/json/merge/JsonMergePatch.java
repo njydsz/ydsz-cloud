@@ -11,10 +11,6 @@ import com.njydsz.common.json.annotation.Experimental;
 /**
  * JSON Merge Patch 实现（RFC 7396）
  *
- * @Experimental RFC 7396 扩展功能，尚未稳定，不保证向后兼容。
- */
-@Experimental("JSON Merge Patch (RFC 7396) 属于独立工具域，非核心序列化能力")
- *
  * <p>RFC 7396 定义了一种简单的 JSON 合并算法：</p>
  * <ul>
  *   <li>patch 是对象：递归合并到 target</li>
@@ -39,6 +35,7 @@ import com.njydsz.common.json.annotation.Experimental;
  * @see <a href="https://tools.ietf.org/html/rfc7396">RFC 7396</a>
  * @since 1.0.0
  */
+@Experimental("JSON Merge Patch (RFC 7396) 属于独立工具域，非核心序列化能力")
 public final class JsonMergePatch {
 
     private JsonMergePatch() {
