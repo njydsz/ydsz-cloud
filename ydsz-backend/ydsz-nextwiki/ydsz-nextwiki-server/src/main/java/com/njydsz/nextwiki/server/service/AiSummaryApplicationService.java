@@ -59,7 +59,18 @@ public class AiSummaryApplicationService {
     private static final int MIN_SENTENCE_LENGTH = 10;
 
     /**
-     * 生成文档摘要
+     * 生成文档摘要（对外总入口）。
+     * <p>优先走 LLM（需配置 {@code nextwiki.ai.llm-enabled=true} 且已配置 API 地址/Key），
+     * 当 LLM 未启用、返回空或调用异常时，自动降级到本地 TextRank 算法，保证摘要能力始终可用。
+     *
+     * @param content 待摘要的文档纯文本；为 {@code null}/空时直接返回空串，不做任何处理
+     * @return 摘要文本；输入为空时返回空串，正常情况下不会直接抛出异常
+     * @throws 不会抛出受检或非受检异常（LLM 调用失败已被内部兜底捕获并降级）
+     * @see #generateSummaryByLlm(String)
+     * @see #generateSummaryByTextRank(String)
+     * @complexity LLM 模式为网络 IO（受 {@code llmApiUrl} 响应时间影响）；
+     *             TextRank 降级为 O(iter × N²)（iter=50 固定迭代，N 为句子数）
+     * @note 纯计算/IO 调用，无共享可变状态、无事务边界，线程安全，可并发调用
      */
     public String generateSummary(String content) {
         if (content == null || content.isEmpty()) {
@@ -73,7 +84,14 @@ public class AiSummaryApplicationService {
     }
 
     /**
-     * 提取关键词
+     * 提取文档关键词（对外总入口）。
+     * <p>与 {@link #generateSummary(String)} 同源：LLM 可用时调用大模型提取，否则降级到本地词频统计。
+     *
+     * @param content 文档纯文本；为 {@code null}/空时返回空列表
+     * @return 关键词列表（最多 {@link #MAX_KEYWORDS} 个），输入为空时返回空列表
+     * @throws 不会抛出非受检异常（LLM 失败已兜底降级）
+     * @complexity LLM 模式为网络 IO；降级模式 O(N)（N 为 token 数）
+     * @note 无事务边界，线程安全
      */
     public List<String> extractKeywords(String content) {
         if (content == null || content.isEmpty()) {
@@ -87,13 +105,20 @@ public class AiSummaryApplicationService {
     }
 
     /**
-     * 综合分析文档
+     * 综合分析文档：聚合摘要、关键词、字数与预估阅读时长。
+     * <p>基于字符数估算阅读时长（约 500 字/分钟粗略折算，下限为 1 分钟）。
+     *
+     * @param content 文档纯文本；为 {@code null}/空时摘要与关键词返回空、字数为 0
+     * @return 文档分析结果 {@link DocumentAnalysis}，其字段含义见该内部类定义
+     * @complexity 等于 {@link #generateSummary(String)} 与 {@link #extractKeywords(String)} 之和
+     * @note 无副作用、无事务边界，线程安全
      */
     public DocumentAnalysis analyze(String content) {
         return DocumentAnalysis.builder()
                 .summary(generateSummary(content))
                 .keywords(extractKeywords(content))
                 .wordCount(content.length())
+                // 阅读时长：以约 500 字/分钟估算，Math.max 保证最短 1 分钟，避免展示 0 分钟
                 .readingTimeEstimate(Math.max(1, content.length() / 500))
                 .build();
     }
@@ -360,9 +385,13 @@ public class AiSummaryApplicationService {
     @Data
     @Builder
     public static class DocumentAnalysis {
+        /** 文档摘要文本（LLM 或 TextRank 生成） */
         private String summary;
+        /** 关键词列表（最多 {@link #MAX_KEYWORDS} 个） */
         private List<String> keywords;
+        /** 文档字数（按字符数计，非分词数） */
         private int wordCount;
+        /** 预估阅读时长（分钟），约 500 字/分钟折算，最小为 1，用于前端展示 */
         private int readingTimeEstimate;
     }
 }

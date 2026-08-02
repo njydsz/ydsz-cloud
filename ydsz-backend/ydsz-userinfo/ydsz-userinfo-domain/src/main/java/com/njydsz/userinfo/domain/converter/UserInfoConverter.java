@@ -49,6 +49,15 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 @Mapper
 public interface UserInfoConverter {
 
+    /**
+     * MapStruct 生成的转换器单例。
+     *
+     * <p>在类加载时通过 {@link org.mapstruct.factory.Mappers#getMapper(Class)} 创建并缓存，
+     * 全局共享同一实例。MapStruct 编译期生成的实现为<b>无状态、线程安全</b>，
+     * 可被 Controller / Service 多线程并发复用，无需每次 new。
+     *
+     * <p>典型用法：{@code UserInfoConverter.INSTANT.entityToVO(company)}。
+     */
     UserInfoConverter INSTANT = Mappers.getMapper(UserInfoConverter.class);
 
     // ===== Company =====

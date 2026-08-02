@@ -69,7 +69,18 @@ public class BatchImportApplicationService {
     private static final long MAX_TOTAL_UNCOMPRESSED = 500L * 1024 * 1024;
 
     /**
-     * 批量上传文件
+     * 批量上传文件（并发处理，单批上限 {@link #MAX_BATCH_SIZE}）。
+     * <p>借助 {@code nextwikiBatchImportExecutor} 线程池并发上传，所有子任务完成（{@code join}）后汇总结果。
+     * 单个文件上传失败不影响整体，失败项以 {@code null} 过滤，最终在结果中体现失败计数。
+     *
+     * @param files   待上传的文件数组，为 {@code null}/空时返回空结果（不报错）
+     * @param parentId 目标父目录节点 ID，传入 {@code FileApplicationService.upload}
+     * @param userId   操作人 ID，用于审计与权限归属
+     * @return 批量导入结果 {@link BatchImportResult}，含成功/失败明细与计数
+     * @throws 不会抛出非受检异常（单文件异常已在子任务内捕获）
+     * @complexity 时间复杂度取决于最慢的单文件上传（并发执行），非累加
+     * @concurrency 并发度受线程池 {@code nextwikiBatchImportExecutor} 容量约束；结果为各 {@code CompletableFuture} 汇总
+     * @note 无数据库事务边界（逐个文件独立上传，不具备跨文件原子性）；线程安全
      */
     public BatchImportResult batchUpload(MultipartFile[] files, String parentId, String userId) {
         if (files == null || files.length == 0) {
@@ -107,10 +118,18 @@ public class BatchImportApplicationService {
     }
 
     /**
-     * 从 ZIP 压缩包导入
-     * <p>
-     * 解压 ZIP 文件并保持目录结构，递归创建目录和上传文件。
-     * 包含 ZIP 炸弹防护（限制条目数和总解压大小）。
+     * 从 ZIP 压缩包导入（保持目录结构，递归创建目录并上传文件）。
+     * <p>内置多重防护：限制条目数（{@link #MAX_ZIP_ENTRIES}）、单条目大小（{@link #MAX_ENTRY_SIZE}）、
+     * 总解压大小（{@link #MAX_TOTAL_UNCOMPRESSED}，防 ZIP 炸弹）、路径穿越（跳过含 {@code ".."} 的条目）。
+     *
+     * @param zipFile  上传的 ZIP 压缩包，为 {@code null}/空时返回错误结果
+     * @param parentId 导入目标父目录节点 ID
+     * @param userId   操作人 ID
+     * @return 批量导入结果 {@link BatchImportResult}，含成功文件列表与失败计数
+     * @throws 不会抛出非受检异常（解压/IO 异常已捕获并转为错误结果）
+     * @complexity 时间复杂度 O(M)（M 为条目数），受磁盘 IO 与逐文件上传影响
+     * @concurrency 单线程顺序解压；内部逐文件上传为串行，非并发
+     * @note 无整体事务边界，部分成功部分失败属正常；线程安全（仅使用局部变量）
      */
     public BatchImportResult importFromZip(MultipartFile zipFile, String parentId, String userId) {
         if (zipFile == null || zipFile.isEmpty()) {
@@ -311,11 +330,17 @@ public class BatchImportApplicationService {
     @Data
     @Builder
     public static class BatchImportResult {
+        /** 是否整体成功（部分失败仍可能返回 true，需结合 failedCount 判断） */
         private boolean success;
+        /** 错误/提示信息，成功时通常为空 */
         private String message;
+        /** 成功导入的文件节点视图列表 */
         private List<FileNodeVO> importedFiles;
+        /** 总处理条目数（批量上传为文件数，ZIP 导入为条目数） */
         private int totalCount;
+        /** 成功导入条数 */
         private int successCount;
+        /** 失败条数（单文件异常或超限导致） */
         private int failedCount;
 
         public static BatchImportResult success(List<FileNodeVO> files, int total,

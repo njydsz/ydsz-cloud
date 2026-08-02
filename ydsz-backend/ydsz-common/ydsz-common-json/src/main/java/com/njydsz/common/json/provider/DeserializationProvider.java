@@ -100,6 +100,37 @@ public final class DeserializationProvider {
     }
 
     /**
+     * 泛型桥接：从 UTF-8 字节数组反序列化为指定 Type。
+     *
+     * <p>调用方用此方法可保留泛型推断 {@code <T>}，内部委托 {@link #deserializeToObject(byte[], Type)}
+     * 并作 checked cast。unchecked 警告集中在桥接方法内（单处 {@code @SuppressWarnings}）。</p>
+     *
+     * @param bytes UTF-8 编码的 JSON 字节数组
+     * @param type  目标类型（{@link Class} 或 {@link java.lang.reflect.ParameterizedType}）
+     * @param <T>   类型参数
+     * @return 反序列化后的对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(byte[] bytes, Type type) {
+        return (T) deserializeToObject(bytes, type);
+    }
+
+    /**
+     * 泛型桥接：从 JSON 字符串反序列化为指定 Type。
+     *
+     * <p>调用方用此方法可保留泛型推断，内部委托 {@link #deserializeToObject(String, Type)}。</p>
+     *
+     * @param json JSON 字符串
+     * @param type 目标类型
+     * @param <T>  类型参数
+     * @return 反序列化后的对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(String json, Type type) {
+        return (T) deserializeToObject(json, type);
+    }
+
+    /**
      * ASCII 快速路径：扫描字节流，若全为 ASCII（&lt; 128）则直接逐字节转 char[] 构造 String，
      * 跳过 UTF-8 解码开销；非 ASCII 回退 {@code new String(bytes, UTF_8)}。
      *

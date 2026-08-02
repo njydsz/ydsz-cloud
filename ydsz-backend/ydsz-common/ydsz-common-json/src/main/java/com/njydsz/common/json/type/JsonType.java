@@ -103,65 +103,6 @@ public abstract class JsonType<T> implements Comparable<JsonType<T>> {
         return type;
     }
 
-    /**
-     * 获取此类型引用的原始类型（raw class）。
-     *
-     * <p>对于 {@code JsonType<List<User>>}，返回 {@code List.class}。
-     * 对于 {@code JsonType<String>}，返回 {@code String.class}。</p>
-     *
-     * @return 原始类型，无法确定时返回 {@code Object.class}
-     * @since 1.0.0
-     */
-    public Class<?> getRawClass() {
-        if (type instanceof Class<?> clazz) {
-            return clazz;
-        }
-        if (type instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> clazz) {
-            return clazz;
-        }
-        return Object.class;
-    }
-
-    /**
-     * 将反序列化结果安全转换为目标类型。
-     *
-     * <p>使用 {@link Class#cast(Object)} 执行运行时类型检查（checked cast），
-     * 而非编译期 unchecked cast。原始类型（raw type）的匹配由运行时检查保证，
-     * 泛型参数的精确匹配由反序列化过程使用正确的 {@link Type} 信息保证。</p>
-     *
-     * @param value 反序列化结果
-     * @return 类型转换后的值，{@code null} 返回 {@code null}
-     * @throws ClassCastException 如果值的运行时类型与声明的原始类型不匹配
-     * @since 1.0.0
-     */
-    public T cast(Object value) {
-        if (value == null) {
-            return null;
-        }
-        Class<?> rawClass = getRawClass();
-        if (!rawClass.isInstance(value)) {
-            throw new ClassCastException(
-                "Expected " + rawClass.getName() + " but got " + value.getClass().getName());
-        }
-        return castViaClass(value, rawClass);
-    }
-
-    /**
-     * 通过 {@link Class#cast(Object)} 执行 checked cast。
-     *
-     * <p>泛型方法签名确保 {@code Class.cast()} 的返回类型与调用者的类型参数匹配。
-     * 当传入 {@code Class<?>} 时，编译器将 {@code U} 推断为通配符的捕获（capture），
-     * 捕获类型可安全赋值给外层类型参数 {@code T}，无需 unchecked cast。</p>
-     *
-     * @param value 要转换的值
-     * @param clazz 目标类型
-     * @param <U> 目标类型参数
-     * @return 转换后的值
-     */
-    private <U> U castViaClass(Object value, Class<U> clazz) {
-        return clazz.cast(value);
-    }
-
     @Override
     public int compareTo(JsonType<T> other) {
         if (this == other) {
