@@ -61,7 +61,6 @@
 | 类 | 说明 |
 |---|---|
 | `ZeroCopyDeserializer` | 零拷贝反序列化器（避免不必要的字符串拷贝） |
-| `VectorSimdUtil` | 字符数组批量操作（朴素循环 + JIT 自动向量化，不依赖反射） |
 | `BytesUtil` | 字节工具 |
 
 ### 6. 树模型（tree 包）
@@ -120,7 +119,7 @@
 | `JsonMergePatch` | JSON Merge Patch（RFC 7396） |
 | `JsonPatch` | JSON Patch（RFC 6902，支持 add/remove/replace/move/copy/test + Builder） |
 | `YdszJsonSchema` / `SchemaValidator` / `ValidationResult` | JSON Schema 校验（支持 allOf / anyOf / oneOf / not / const / if-then-else 组合关键字） |
-| `AutoTypeChecker` / `AutoTypeWhitelistScanner` / `SafeObjectInputFilter` | AutoType 安全检查（防反序列化漏洞，支持包前缀白名单回退匹配） |
+| `AutoTypeChecker` / `AutoTypeWhitelistScanner` | AutoType 安全检查（防反序列化漏洞，支持包前缀白名单回退匹配） |
 
 ### 10. Module 系统（module 包）
 

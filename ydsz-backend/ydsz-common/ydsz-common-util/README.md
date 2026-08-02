@@ -118,7 +118,6 @@
 | `ExceptionUtils` | 异常堆栈转字符串 |
 | `IpAddrUtils` / `IpInfoUtils` | IP 地址工具（基于 ip2region） |
 | `MessageUtils` | 国际化消息工具 |
-| `BeanUpdateUtil` | Bean 属性 PATCH 更新（仅非 null） |
 | `ByteUtils` / `HexUtils` | 字节与十六进制工具 |
 
 ### 12. 健康检查（health 包）
