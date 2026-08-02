@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonTypeName;
-import com.njydsz.common.json.annotation.YdszJsonSubType;
-import com.njydsz.common.json.annotation.YdszJsonSubTypes;
-import com.njydsz.common.json.annotation.YdszJsonTypeInfo;
+import com.njydsz.common.json.annotation.JsonSubType;
+import com.njydsz.common.json.annotation.JsonSubTypes;
+import com.njydsz.common.json.annotation.JsonTypeInfo;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 
 /**
@@ -89,14 +89,14 @@ public final class PolymorphicTypeResolver {
             return cached;
         }
 
-        YdszJsonTypeInfo typeInfo = clazz.getAnnotation(YdszJsonTypeInfo.class);
+        JsonTypeInfo typeInfo = clazz.getAnnotation(JsonTypeInfo.class);
 
         // 路径 1：注解驱动多态
         if (typeInfo != null) {
-            YdszJsonSubTypes subTypes = clazz.getAnnotation(YdszJsonSubTypes.class);
+            JsonSubTypes subTypes = clazz.getAnnotation(JsonSubTypes.class);
             if (subTypes != null) {
                 Map<String, Class<?>> nameToType = new HashMap<>(subTypes.value().length * 2);
-                for (YdszJsonSubType subType : subTypes.value()) {
+                for (JsonSubType subType : subTypes.value()) {
                     // Jackson 兼容：子类上的 @JsonTypeName 优先于 @YdszJsonSubType.name()
                     String typeName = subType.name();
                     JsonTypeName jsonTypeName = subType.value().getAnnotation(JsonTypeName.class);

@@ -39,7 +39,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface YdszJsonClass {
+public @interface JsonClass {
     
     /**
      * 字段排序（指定字段的输出顺序）

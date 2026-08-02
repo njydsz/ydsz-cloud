@@ -3,8 +3,7 @@ package com.njydsz.common.core.response;
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.TraceConstants;
 import com.njydsz.common.core.metrics.CoreMetrics;
-import com.njydsz.common.json.annotation.JsonIgnore;
-import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
+import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
@@ -51,7 +50,7 @@ import java.net.URI;
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
-@YdszJsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
     private static final long serialVersionUID = 1L;

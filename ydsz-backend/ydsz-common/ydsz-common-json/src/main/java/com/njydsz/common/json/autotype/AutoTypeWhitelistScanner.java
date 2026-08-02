@@ -9,13 +9,13 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
 
-import com.njydsz.common.json.annotation.YdszJsonClass;
+import com.njydsz.common.json.annotation.JsonClass;
 
 /**
  * AutoType 白名单启动时扫描器
  *
- * <p>在 Spring 上下文启动时扫描指定基础包下标注了 {@link YdszJsonClass} 注解的类，
- * 将类名（包括 {@link YdszJsonClass#seeAlso()} 声明的子类型）注册到 {@link AutoTypeChecker}
+ * <p>在 Spring 上下文启动时扫描指定基础包下标注了 {@link JsonClass} 注解的类，
+ * 将类名（包括 {@link JsonClass#seeAlso()} 声明的子类型）注册到 {@link AutoTypeChecker}
  * 的显式白名单中，从而避免运行时通过反射加载类来识别注解的副作用。</p>
  *
  * <p><b>设计动机：</b></p>
@@ -41,7 +41,7 @@ public final class AutoTypeWhitelistScanner {
     }
 
     /**
-     * 扫描指定基础包下标注了 {@link YdszJsonClass} 的类，并注册到 {@link AutoTypeChecker} 白名单
+     * 扫描指定基础包下标注了 {@link JsonClass} 的类，并注册到 {@link AutoTypeChecker} 白名单
      *
      * @param basePackages 要扫描的基础包列表
      */
@@ -53,7 +53,7 @@ public final class AutoTypeWhitelistScanner {
         // 不使用默认 excludeFilter（默认会排除 @Repository/@Controller 等组件注解），我们要扫描所有标注 @YdszJsonClass 的类
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
-        scanner.addIncludeFilter(new AnnotationTypeFilter(YdszJsonClass.class));
+        scanner.addIncludeFilter(new AnnotationTypeFilter(JsonClass.class));
 
         int registeredCount = 0;
         for (String basePackage : basePackages) {
@@ -69,7 +69,7 @@ public final class AutoTypeWhitelistScanner {
                 }
                 try {
                     Class<?> clazz = ClassUtils.resolveClassName(className, null);
-                    YdszJsonClass annotation = clazz.getAnnotation(YdszJsonClass.class);
+                    JsonClass annotation = clazz.getAnnotation(JsonClass.class);
                     if (annotation == null) {
                         continue;
                     }

@@ -18,7 +18,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.annotation.JsonSetter;
 import com.njydsz.common.json.annotation.JsonValue;
 import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
-import com.njydsz.common.json.annotation.YdszJsonVisibility;
+import com.njydsz.common.json.annotation.JsonVisibility;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
@@ -157,8 +157,8 @@ public final class FieldMetadataLoader {
             }
         }
 
-        YdszJsonVisibility visibilityAnnotation = clazz.getAnnotation(YdszJsonVisibility.class);
-        YdszJsonVisibility.Visibility fieldVisibility = YdszJsonVisibility.Visibility.ANY;
+        JsonVisibility visibilityAnnotation = clazz.getAnnotation(JsonVisibility.class);
+        JsonVisibility.Visibility fieldVisibility = JsonVisibility.Visibility.ANY;
         if (visibilityAnnotation != null) {
             fieldVisibility = visibilityAnnotation.fields();
         }
@@ -452,7 +452,7 @@ public final class FieldMetadataLoader {
             Field[] fields = c.getDeclaredFields();
             for (Field f : fields) {
                 int mods = f.getModifiers();
-                if (!java.lang.reflect.Modifier.isStatic(mods) && !java.lang.reflect.Modifier.isTransient(mods)) {
+                if (!Modifier.isStatic(mods) && !Modifier.isTransient(mods)) {
                     fieldNames.add(f.getName());
                 }
             }
@@ -553,7 +553,7 @@ public final class FieldMetadataLoader {
      * @param field 字段对象
      * @return 是否可见
      */
-    public static boolean isFieldVisible(int modifiers, YdszJsonVisibility.Visibility visibility, Field field) {
+    public static boolean isFieldVisible(int modifiers, JsonVisibility.Visibility visibility, Field field) {
         switch (visibility) {
             case NONE:
                 return false;

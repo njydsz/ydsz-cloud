@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.annotation.YdszJsonBuilder;
+import com.njydsz.common.json.annotation.JsonBuilder;
 import com.njydsz.common.json.asm.AsmDeserializer;
 import com.njydsz.common.json.bytecode.ZeroCopyDeserializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
@@ -126,14 +126,14 @@ final class BeanDeserializerEngine {
             return clazz.cast(CreatorResolver.deserializeWithCreator(json, creatorConstructor));
         }
 
-        YdszJsonBuilder builderAnnotation = clazz.getAnnotation(YdszJsonBuilder.class);
+        JsonBuilder builderAnnotation = clazz.getAnnotation(JsonBuilder.class);
         if (builderAnnotation != null && builderAnnotation.enable()) {
             return BuilderResolver.deserializeWithBuilder(json, clazz, builderAnnotation);
         }
 
         Class<?> innerBuilderClass = BuilderResolver.findInnerBuilderClass(clazz);
         if (innerBuilderClass != null) {
-            YdszJsonBuilder innerAnnotation = innerBuilderClass.getAnnotation(YdszJsonBuilder.class);
+            JsonBuilder innerAnnotation = innerBuilderClass.getAnnotation(JsonBuilder.class);
             if (innerAnnotation == null) {
                 innerAnnotation = BuilderResolver.createDefaultBuilderAnnotation();
             }

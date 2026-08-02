@@ -8,7 +8,7 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.json.annotation.YdszJsonField;
-import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
+import com.njydsz.common.json.annotation.JsonPropertyOrder;
 
 /**
  * 分页响应结果封装类
@@ -53,7 +53,7 @@ import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @YdszJsonField(notWriteNullValue = true)
-@YdszJsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "total", "pageNum", "pageSize", "pages"})
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "total", "pageNum", "pageSize", "pages"})
 public class PageResponse<T> extends BaseResponse<T> {
 
     private static final long serialVersionUID = 1L;

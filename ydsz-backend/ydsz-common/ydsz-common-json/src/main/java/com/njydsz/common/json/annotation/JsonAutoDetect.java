@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * Jackson 兼容注解：控制字段/Getter/Setter/Creator 的自动检测可见性。
  *
  * <p>对标 Jackson {@code @JsonAutoDetect}，在 {@link com.njydsz.common.json.provider.FieldMetadataLoader}
- * 中映射到 {@link YdszJsonVisibility.Visibility} 枚举。</p>
+ * 中映射到 {@link JsonVisibility.Visibility} 枚举。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
@@ -66,14 +66,14 @@ public @interface JsonAutoDetect {
          *
          * @return 对应的 YdszJsonVisibility.Visibility 枚举值
          */
-        public YdszJsonVisibility.Visibility toYdszVisibility() {
+        public JsonVisibility.Visibility toYdszVisibility() {
             switch (this) {
-                case ANY: return YdszJsonVisibility.Visibility.ANY;
-                case NON_PRIVATE: return YdszJsonVisibility.Visibility.ANY; // YdszJson 无 NON_PRIVATE，降级为 ANY
-                case PROTECTED_AND_PUBLIC: return YdszJsonVisibility.Visibility.PROTECTED_AND_PUBLIC;
-                case PUBLIC_ONLY: return YdszJsonVisibility.Visibility.PUBLIC_ONLY;
-                case NONE: return YdszJsonVisibility.Visibility.NONE;
-                default: return YdszJsonVisibility.Visibility.ANY;
+                case ANY: return JsonVisibility.Visibility.ANY;
+                case NON_PRIVATE: return JsonVisibility.Visibility.ANY; // YdszJson 无 NON_PRIVATE，降级为 ANY
+                case PROTECTED_AND_PUBLIC: return JsonVisibility.Visibility.PROTECTED_AND_PUBLIC;
+                case PUBLIC_ONLY: return JsonVisibility.Visibility.PUBLIC_ONLY;
+                case NONE: return JsonVisibility.Visibility.NONE;
+                default: return JsonVisibility.Visibility.ANY;
             }
         }
     }

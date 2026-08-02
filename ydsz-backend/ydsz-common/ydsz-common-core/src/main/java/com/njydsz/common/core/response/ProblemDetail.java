@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import com.njydsz.common.core.code.ResultCode;
-import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
+import com.njydsz.common.json.annotation.JsonPropertyOrder;
 
 /**
  * RFC 7807 Problem Details 标准错误详情载体
@@ -52,7 +52,7 @@ import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@YdszJsonPropertyOrder({"type", "title", "status", "detail", "instance"})
+@JsonPropertyOrder({"type", "title", "status", "detail", "instance"})
 public class ProblemDetail implements Serializable {
 
     private static final long serialVersionUID = 1L;

@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
-public @interface YdszJsonVisibility {
+public @interface JsonVisibility {
 
     /**
      * 字段可见性级别

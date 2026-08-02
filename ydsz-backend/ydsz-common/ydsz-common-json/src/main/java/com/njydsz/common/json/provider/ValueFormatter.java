@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
-import com.njydsz.common.json.annotation.YdszJsonView;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
 
@@ -142,7 +142,7 @@ public final class ValueFormatter {
         if (currentView != null) {
             List<FieldMeta> filteredFields = new ArrayList<>(fields.length);
             for (FieldMeta field : fields) {
-                YdszJsonView viewAnnotation = field.field.getAnnotation(YdszJsonView.class);
+                JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);
                 if (viewAnnotation == null) {
                     continue;
                 }

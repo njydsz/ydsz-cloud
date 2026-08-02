@@ -4,12 +4,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import com.njydsz.common.json.annotation.YdszJsonCreator;
+import com.njydsz.common.json.annotation.JsonCreator;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.parser.YdszJsonParser;
 
 /**
- * {@link YdszJsonCreator} 注解处理器。
+ * {@link JsonCreator} 注解处理器。
  *
  * <p>负责处理带 {@code @YdszJsonCreator} 注解的构造函数反序列化逻辑。
  * 当目标类没有默认无参构造函数时，通过注解标记的构造函数进行反序列化，
@@ -23,7 +23,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see YdszJsonCreator
+ * @see JsonCreator
  * @see BuilderResolver
  * @see TypeConverter
  */
@@ -47,7 +47,7 @@ final class CreatorResolver {
         Constructor<?> annotatedConstructor = null;
 
         for (Constructor<?> ctor : constructors) {
-            YdszJsonCreator annotation = ctor.getAnnotation(YdszJsonCreator.class);
+            JsonCreator annotation = ctor.getAnnotation(JsonCreator.class);
             if (annotation != null && annotation.enable()) {
                 if (annotation.defaultCreator() || annotatedConstructor == null) {
                     annotatedConstructor = ctor;
@@ -83,7 +83,7 @@ final class CreatorResolver {
             }
         }
 
-        YdszJsonCreator annotation = constructor.getAnnotation(YdszJsonCreator.class);
+        JsonCreator annotation = constructor.getAnnotation(JsonCreator.class);
         String[] parameterNames = annotation != null && annotation.parameterNames().length > 0
                 ? annotation.parameterNames() : null;
 

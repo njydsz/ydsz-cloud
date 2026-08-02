@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.UUID;
 
-import com.njydsz.common.json.annotation.YdszJsonClass;
-import com.njydsz.common.json.annotation.YdszJsonView;
+import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
@@ -466,7 +466,7 @@ public final class ValueWriter {
      */
     public static void writeBean(Object obj, StringBuilder sb) {
         Class<?> clazz = obj.getClass();
-        YdszJsonClass classAnnotation = clazz.getAnnotation(YdszJsonClass.class);
+        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
 
         FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
         if (fields == null) {
@@ -508,7 +508,7 @@ public final class ValueWriter {
 
             Class<?> currentView = SerializationProvider.getCurrentViewClass();
             if (currentView != null) {
-                YdszJsonView viewAnnotation = field.field.getAnnotation(YdszJsonView.class);
+                JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);
                 if (viewAnnotation == null) {
                     continue;
                 }

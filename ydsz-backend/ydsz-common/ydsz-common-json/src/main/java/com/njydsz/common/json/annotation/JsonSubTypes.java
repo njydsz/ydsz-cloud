@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * 多态子类型列表注解
  *
- * <p>与 {@link YdszJsonTypeInfo} 配合使用，定义基类的所有可能子类型。</p>
+ * <p>与 {@link JsonTypeInfo} 配合使用，定义基类的所有可能子类型。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
@@ -25,10 +25,10 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface YdszJsonSubTypes {
+public @interface JsonSubTypes {
 
     /**
      * 子类型列表
      */
-    YdszJsonSubType[] value();
+    JsonSubType[] value();
 }

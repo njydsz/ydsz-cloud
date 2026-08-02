@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface YdszJsonTypeInfo {
+public @interface JsonTypeInfo {
 
     /**
      * 类型标识属性名

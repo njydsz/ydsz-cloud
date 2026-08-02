@@ -69,12 +69,12 @@ import java.lang.annotation.*;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see YdszJsonCreator
+ * @see JsonCreator
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface YdszJsonBuilder {
+public @interface JsonBuilder {
 
     /**
      * Builder 类

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.json.annotation.YdszJsonClass;
+import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.json.YdszJson;
@@ -54,7 +54,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@YdszJsonClass
+@JsonClass
 public class QueueMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;

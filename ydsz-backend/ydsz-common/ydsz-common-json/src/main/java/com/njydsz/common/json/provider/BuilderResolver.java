@@ -7,11 +7,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.json.annotation.YdszJsonBuilder;
+import com.njydsz.common.json.annotation.JsonBuilder;
 import com.njydsz.common.json.parser.YdszJsonParser;
 
 /**
- * {@link YdszJsonBuilder} 注解处理器。
+ * {@link JsonBuilder} 注解处理器。
  *
  * <p>负责处理 Builder 设计模式的 JSON 反序列化逻辑。当目标类使用 Builder 模式构建时，
  * 本类通过反射定位 Builder 类及其 setter 方法（如 {@code withXxx()}），
@@ -32,7 +32,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see YdszJsonBuilder
+ * @see JsonBuilder
  * @see CreatorResolver
  * @see TypeConverter
  */
@@ -56,7 +56,7 @@ final class BuilderResolver {
      * @param <T>        目标类型
      * @return 反序列化后的实例
      */
-    static <T> T deserializeWithBuilder(String json, Class<T> clazz, YdszJsonBuilder annotation) {
+    static <T> T deserializeWithBuilder(String json, Class<T> clazz, JsonBuilder annotation) {
         Map<String, Object> map = YdszJsonParser.parseObject(json);
         if (map == null || map.isEmpty()) {
             return CreatorResolver.createInstanceWithDefaultConstructor(clazz);
@@ -115,7 +115,7 @@ final class BuilderResolver {
      * @param <T>          目标类型
      * @return 反序列化后的实例
      */
-    static <T> T deserializeWithInnerBuilder(String json, Class<T> clazz, Class<?> builderClass, YdszJsonBuilder annotation) {
+    static <T> T deserializeWithInnerBuilder(String json, Class<T> clazz, Class<?> builderClass, JsonBuilder annotation) {
         Map<String, Object> map = YdszJsonParser.parseObject(json);
         if (map == null || map.isEmpty()) {
             return CreatorResolver.createInstanceWithDefaultConstructor(clazz);
@@ -177,7 +177,7 @@ final class BuilderResolver {
      * @param annotation  Builder 注解配置
      * @return Builder 类，未找到时返回 {@code null}
      */
-    static Class<?> findBuilderClass(Class<?> targetClass, YdszJsonBuilder annotation) {
+    static Class<?> findBuilderClass(Class<?> targetClass, JsonBuilder annotation) {
         if (annotation.builderClass() != void.class) {
             return annotation.builderClass();
         }
@@ -204,7 +204,7 @@ final class BuilderResolver {
      */
     static Class<?> findInnerBuilderClass(Class<?> targetClass) {
         for (Class<?> innerClass : targetClass.getDeclaredClasses()) {
-            YdszJsonBuilder annotation = innerClass.getAnnotation(YdszJsonBuilder.class);
+            JsonBuilder annotation = innerClass.getAnnotation(JsonBuilder.class);
             if (annotation != null) {
                 return innerClass;
             }
@@ -262,15 +262,15 @@ final class BuilderResolver {
     }
 
     /**
-     * 创建默认的 {@link YdszJsonBuilder} 注解实例。
+     * 创建默认的 {@link JsonBuilder} 注解实例。
      *
      * <p>当内部 Builder 类未显式标注 {@code @YdszJsonBuilder} 时使用此默认配置：
      * buildMethod="build"、withPrefix=""、chainMethod=true。
      *
      * @return 默认注解实例
      */
-    static YdszJsonBuilder createDefaultBuilderAnnotation() {
-        return new YdszJsonBuilder() {
+    static JsonBuilder createDefaultBuilderAnnotation() {
+        return new JsonBuilder() {
             @Override
             public Class<?> builderClass() { return void.class; }
             @Override
@@ -288,7 +288,7 @@ final class BuilderResolver {
             @Override
             public String[] ignoreMethods() { return new String[0]; }
             @Override
-            public Class<? extends Annotation> annotationType() { return YdszJsonBuilder.class; }
+            public Class<? extends Annotation> annotationType() { return JsonBuilder.class; }
         };
     }
 

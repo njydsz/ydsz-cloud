@@ -66,7 +66,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.CONSTRUCTOR, ElementType.METHOD})
-public @interface YdszJsonCreator {
+public @interface JsonCreator {
 
     /**
      * 是否为默认构造函数

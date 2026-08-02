@@ -16,6 +16,7 @@ import java.time.ZoneId;
 
 import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonFormat;
+import com.njydsz.common.json.util.JsonTypeUtils;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1320,9 +1321,9 @@ public final class AsmBeanCodecGenerator {
     private static Field[] getSerializableFields(Class<?> clazz) {
         // Record 类：使用 RecordComponent 的 backing field
         if (clazz.isRecord()) {
-            java.lang.reflect.RecordComponent[] components = clazz.getRecordComponents();
+            RecordComponent[] components = clazz.getRecordComponents();
             List<Field> result = new ArrayList<>(components.length);
-            for (java.lang.reflect.RecordComponent rc : components) {
+            for (RecordComponent rc : components) {
                 try {
                     Field f = clazz.getDeclaredField(rc.getName());
                     result.add(f);
@@ -1455,7 +1456,7 @@ public final class AsmBeanCodecGenerator {
      * <p>委托给 {@link com.njydsz.common.json.util.JsonTypeUtils} 统一实现。</p>
      */
     private static boolean isSimpleType(Class<?> type) {
-        return com.njydsz.common.json.util.JsonTypeUtils.isSimpleType(type);
+        return JsonTypeUtils.isSimpleType(type);
     }
 
     /**

@@ -35,7 +35,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface YdszJsonPropertyOrder {
+public @interface JsonPropertyOrder {
 
     /**
      * 属性名称数组，按指定顺序输出

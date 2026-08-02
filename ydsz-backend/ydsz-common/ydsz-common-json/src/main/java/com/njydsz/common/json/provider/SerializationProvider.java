@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.json.annotation.YdszJsonClass;
+import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonSerialize;
 import com.njydsz.common.json.api.JsonSerializer;
 import com.njydsz.common.json.asm.AsmSerializer;
@@ -742,7 +742,7 @@ public final class SerializationProvider {
         }
 
         // 检查是否可以使用快速路径
-        YdszJsonClass classAnnotation = clazz.getAnnotation(YdszJsonClass.class);
+        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
         if (classAnnotation != null) {
             return false;
         }
