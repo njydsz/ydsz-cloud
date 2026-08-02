@@ -7,10 +7,10 @@ import com.njydsz.common.json.annotation.Experimental;
 /**
  * JSON Schema 定义（参考 JSON Schema 规范）
  *
+ * <p>用于定义 JSON 数据的结构和约束条件。</p>
+ *
  * @Experimental RFC 扩展功能，尚未稳定，不保证向后兼容。
  */
-@Experimental("JSON Schema 定义属于非核心 RFC 扩展，后续可能独立为单独模块")
- *
  * <p>用于定义 JSON 数据的结构和约束条件。</p>
  *
  * <p><b>支持的类型：</b></p>
@@ -39,6 +39,7 @@ import com.njydsz.common.json.annotation.Experimental;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Experimental("JSON Schema 定义属于非核心 RFC 扩展，后续可能独立为单独模块")
 public final class YdszJsonSchema {
 
     /** Schema 类型 */

@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.schema.SchemaValidator;
+import com.njydsz.common.json.schema.ValidationResult;
+import com.njydsz.common.json.schema.YdszJsonSchema;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -119,5 +122,46 @@ public class FlowFormEngineService {
      */
     public List<FlowFormValidationError> validate(FlowFormSchema schema, Map<String, Object> formData) {
         return formValidator.validate(schema, formData);
+    }
+
+    /**
+     * P2-2: 使用标准 JSON Schema（Draft 07）校验表单数据。
+     *
+     * <p>与 {@link #validate(FlowFormSchema, Map)} 互补：
+     * <ul>
+     *   <li>{@link FlowFormValidator} 处理领域特定规则（字段类型、联动规则、附件大小等）</li>
+     *   <li>本方法处理标准 JSON Schema 规则（类型约束、required、minLength/maxLength、pattern、enum 等）</li>
+     * </ul>
+     *
+     * <p>使用示例：
+     * <pre>{@code
+     * YdszJsonSchema schema = YdszJsonSchema.object()
+     *     .addProperty("projectName", YdszJsonSchema.string().required().minLength(1).maxLength(100))
+     *     .addProperty("budget", YdszJsonSchema.number().minimum(0))
+     *     .addRequired("projectName");
+     * List<FlowFormValidationError> errors = service.validateWithJsonSchema(schema, formData);
+     * }</pre>
+     *
+     * @param jsonSchema JSON Schema 对象（通过 Builder API 构造）
+     * @param formData   表单数据
+     * @return 校验错误列表（空列表表示通过）
+     */
+    public List<FlowFormValidationError> validateWithJsonSchema(YdszJsonSchema jsonSchema,
+                                                                 Map<String, Object> formData) {
+        if (jsonSchema == null || formData == null) {
+            return List.of();
+        }
+        try {
+            ValidationResult result = SchemaValidator.validate(jsonSchema, formData);
+            if (result.isValid()) {
+                return List.of();
+            }
+            return result.getErrors().stream()
+                    .map(msg -> new FlowFormValidationError("", "JSON_SCHEMA", msg))
+                    .toList();
+        } catch (Exception e) {
+            log.warn("[FormEngine] JSON Schema 校验异常: {}", e.getMessage());
+            return List.of();
+        }
     }
 }

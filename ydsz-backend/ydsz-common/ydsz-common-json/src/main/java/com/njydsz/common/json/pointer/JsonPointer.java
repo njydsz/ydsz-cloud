@@ -6,9 +6,14 @@ import java.util.Map;
 import com.njydsz.common.json.exception.YdszJsonException;
 import com.njydsz.common.json.parser.YdszJsonParser;
 
+import com.njydsz.common.json.annotation.Experimental;
+
 /**
  * JSON Pointer 实现（RFC 6901）
  *
+ * <p>JSON Pointer 定义了一种字符串语法，用于标识 JSON 文档中的特定值。</p>
+ * @Experimental RFC 6901 扩展功能，尚未稳定，不保证向后兼容。
+ */
  * <p>JSON Pointer 定义了一种字符串语法，用于标识 JSON 文档中的特定值。</p>
  *
  * <p><b>语法示例：</b></p>
@@ -31,6 +36,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  * @see <a href="https://tools.ietf.org/html/rfc6901">RFC 6901</a>
  * @since 1.0.0
  */
+@Experimental("JSON Pointer (RFC 6901) 属于独立工具域，非核心序列化能力")
 public final class JsonPointer {
 
     private final String pointer;

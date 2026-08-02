@@ -10,9 +10,13 @@ import com.njydsz.common.json.annotation.Experimental;
 /**
  * JSON Schema 验证器
  *
- * @Experimental 该功能属于 JSON 引擎的非核心 RFC 扩展，尚未稳定，不保证向后兼容。
- */
-@Experimental("JSON Schema 校验属于 API 网关/数据校验域，非核心序列化能力，后续可能独立为单独模块")
+ * <p><b>已废弃</b>：此验证器仅支持 JSON Schema Draft 07 的子集，缺少 {@code $ref}、
+ * {@code patternProperties}、{@code format}、{@code uniqueItems}、{@code contains}
+ * 等关键关键字，无法满足生产级 Schema 校验需求。</p>
+ *
+ * <p><b>替代方案</b>：建议使用专业的 JSON Schema 校验库，如
+ * <a href="https://github.com/networknt/json-schema-validator">networknt/json-schema-validator</a>，
+ * 该库支持 JSON Schema Draft 4 至 Draft 2020-12 全特性。</p>
  * 
  * <p>验证 JSON 数据是否符合 Schema 定义，支持 JSON Schema Draft 07 的核心关键字，
  * 包括 allOf/anyOf/oneOf 组合关键字。</p>
@@ -31,7 +35,10 @@ import com.njydsz.common.json.annotation.Experimental;
  * 
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 此验证器仅支持 JSON Schema Draft 07 子集，建议使用 networknt/json-schema-validator 替代。
+ *             将在 2.0.0 版本移除。
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public final class SchemaValidator {
     
     private static final ConcurrentMap<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();
