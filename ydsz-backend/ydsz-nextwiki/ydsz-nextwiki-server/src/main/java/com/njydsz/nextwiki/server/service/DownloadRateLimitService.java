@@ -162,7 +162,9 @@ public class DownloadRateLimitService {
     @Data
     @Builder
     public static class RateLimitResult {
+        /** 是否放行下载（true=允许，false=被限流拒绝） */
         private boolean allowed;
+        /** 拒绝原因描述（allowed=true 时为 null） */
         private String message;
 
         public static RateLimitResult allowed() {

@@ -6,6 +6,8 @@ import java.util.Objects;
 /**
  * Token 用量计量值对象（对标 OpenAI usage）
  *
+ * <p><b>线程安全</b>：字段 final 且 add/zero 返回新实例，不可变值对象，可安全跨线程累计与传递。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

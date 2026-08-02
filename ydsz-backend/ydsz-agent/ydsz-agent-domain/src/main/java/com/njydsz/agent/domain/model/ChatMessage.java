@@ -13,6 +13,8 @@ import java.util.UUID;
  * <p>每条消息包含角色（System/User/Assistant/Tool）、内容、可选的工具调用信息。
  * 不可变值对象，修改操作返回新实例。
  *
+ * <p><b>线程安全</b>：全字段 final 且集合经不可变封装，实例不可变，可安全在多线程/流式回调间共享。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

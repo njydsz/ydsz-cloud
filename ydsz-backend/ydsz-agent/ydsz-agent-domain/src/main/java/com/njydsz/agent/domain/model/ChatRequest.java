@@ -9,6 +9,8 @@ import java.util.Objects;
  *
  * <p>对标 OpenAI Chat Completions API 请求体，支持消息列表、温度、最大 Token 等参数。
  *
+ * <p><b>线程安全</b>：所有字段 final 且集合不可变，构造后只读，可安全跨线程传递与复用。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

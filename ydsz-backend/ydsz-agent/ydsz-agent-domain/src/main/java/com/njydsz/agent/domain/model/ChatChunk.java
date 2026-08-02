@@ -9,6 +9,8 @@ import java.util.Objects;
  *
  * <p>流式输出时每个 SSE 事件对应一个 ChatChunk，包含增量内容或工具调用增量。
  *
+ * <p><b>线程安全</b>：全字段 final 且集合不可变，不可变值对象，可安全在流式回调与业务线程间共享。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

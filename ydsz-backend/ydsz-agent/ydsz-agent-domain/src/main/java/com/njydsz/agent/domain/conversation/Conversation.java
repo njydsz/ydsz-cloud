@@ -15,6 +15,9 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * <p>管理一组连续的消息序列，支持追加消息、查询历史、Token 统计。
  * 一个对话代表用户与 Agent 之间的一次完整交互会话。
  *
+ * <p><b>线程安全</b>：非线程安全。appendMessage 会修改内部消息列表与累计用量/更新时间，
+ * 同一对话实例须由单线程顺序写入或由外部同步（如按 conversationId 加锁）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

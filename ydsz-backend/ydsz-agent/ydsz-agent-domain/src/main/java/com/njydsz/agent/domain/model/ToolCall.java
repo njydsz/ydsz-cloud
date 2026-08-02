@@ -9,6 +9,8 @@ import java.util.Objects;
  *
  * <p>表示 LLM 决定调用某个工具时产生的调用请求，包含工具名称和参数。
  *
+ * <p><b>线程安全</b>：字段 final 且参数 Map 经不可变封装，不可变值对象，可安全跨线程传递。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

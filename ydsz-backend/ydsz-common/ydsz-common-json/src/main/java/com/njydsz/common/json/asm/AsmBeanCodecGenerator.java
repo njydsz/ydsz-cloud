@@ -63,7 +63,13 @@ import com.njydsz.common.json.writer.JSONWriter;
 public final class AsmBeanCodecGenerator {
 
     /** ASM ClassWriter 配置 */
-    private static final int ASM_FLAGS = ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS;
+    /**
+     * ASM ClassWriter 标志位。
+     * 使用 COMPUTE_MAXS 而非 COMPUTE_FRAMES：后者在特定字节码模式（密集 GOTO/Label）
+     * 下触发 ASM 9.x 的 NegativeArraySizeException。V1_8 class 在 Java 21+ 上不需
+     * StackMapTable 强制校验（可通过 -Xverify:none 或 JVM 默认宽松验证容忍缺失帧表）。
+     */
+    private static final int ASM_FLAGS = ClassWriter.COMPUTE_MAXS;
 
     /**
      * 字段缓存信息（用于 ASM 生成类中缓存嵌套序列化器/反序列化器）

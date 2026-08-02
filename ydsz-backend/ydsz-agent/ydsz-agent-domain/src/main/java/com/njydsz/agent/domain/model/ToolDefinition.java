@@ -9,6 +9,8 @@ import java.util.Objects;
  *
  * <p>描述一个可供 LLM 调用的工具，包含名称、描述和 JSON Schema 参数定义。
  *
+ * <p><b>线程安全</b>：字段 final 且参数 Schema 经不可变封装，不可变值对象，可安全跨线程共享元数据。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
