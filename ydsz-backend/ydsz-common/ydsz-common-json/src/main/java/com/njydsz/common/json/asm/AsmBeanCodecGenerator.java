@@ -246,9 +246,9 @@ public final class AsmBeanCodecGenerator {
         } else if (!isSimpleType(elementClass)) {
             try {
                 asmDeserializer = AsmCodecCache.getOrCreateDeserializerForType(elementClass);
-            }             } catch (Exception ignored) {
-            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            } }
+            } catch (Exception ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
         }
 
         while (true) {

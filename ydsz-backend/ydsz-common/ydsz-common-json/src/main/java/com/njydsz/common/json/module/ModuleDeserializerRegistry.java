@@ -63,16 +63,6 @@ public final class ModuleDeserializerRegistry {
     }
 
     /**
-     * 获取已排序的模块列表（按优先级降序）
-     *
-     * @return 只读列表
-     */
-    @Deprecated
-    List<JsonModule> getOrderedModules() {
-        return Collections.unmodifiableList(orderedModules);
-    }
-
-    /**
      * 清空注册表
      */
     void clear() {

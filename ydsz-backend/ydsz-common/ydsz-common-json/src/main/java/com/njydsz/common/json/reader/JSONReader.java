@@ -803,7 +803,7 @@ public final class JSONReader {
         }
     }
 
-    public List<Object> readArray(Class<?> elementType, ObjectReader<?> elementReader) {
+    public List<Object> readArray(Class<?> elementType) {
         skipWhitespace();
         if (pos >= len || buf[pos] != '[') throw new RuntimeException("Expected [ at position " + pos);
         pos++;
@@ -812,14 +812,14 @@ public final class JSONReader {
             skipWhitespace();
             if (buf[pos] == ']') { pos++; return result; }
             if (buf[pos] == ',') { pos++; continue; }
-            Object element = readArrayElement(elementType, elementReader);
+            Object element = readArrayElement(elementType);
             result.add(element);
         }
         return result;
     }
     
     
-    private Object readArrayElement(Class<?> elementType, ObjectReader<?> elementReader) {
+    private Object readArrayElement(Class<?> elementType) {
         if (elementType == null || elementType == Object.class) return readAnyValue();
         if (elementType == String.class) return readString();
         if (elementType == int.class || elementType == Integer.class) return Integer.valueOf(readInt());
@@ -827,7 +827,6 @@ public final class JSONReader {
         if (elementType == double.class || elementType == Double.class) return Double.valueOf(readDouble());
         if (elementType == float.class || elementType == Float.class) return Float.valueOf(readFloat());
         if (elementType == boolean.class || elementType == Boolean.class) return Boolean.valueOf(readBoolean());
-        if (elementReader != null) return elementReader.readObject(this);
         return readAnyValue();
     }
     
@@ -837,7 +836,7 @@ public final class JSONReader {
         char ch = buf[pos];
         if (ch == '"') return readString();
         if (ch == '{') return readObjectMap();
-        if (ch == '[') return readArray(Object.class, null);
+        if (ch == '[') return readArray(Object.class);
         if (ch == 't') { pos += 4; return true; }
         if (ch == 'f') { pos += 5; return false; }
         if (ch == 'n') { pos += 4; return null; }

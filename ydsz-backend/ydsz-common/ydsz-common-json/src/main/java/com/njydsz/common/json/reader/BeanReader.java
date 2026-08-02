@@ -311,7 +311,7 @@ public final class BeanReader<T> {
                             reader.readNull();
                             field.set(obj, null);
                         } else if (fieldType == List.class || fieldType == ArrayList.class || Collection.class.isAssignableFrom(fieldType)) {
-                            List<Object> listValue = reader.readArray(Object.class, null);
+                            List<Object> listValue = reader.readArray(Object.class);
                             field.set(obj, listValue);
                         } else if (fieldType == Map.class || fieldType == HashMap.class || Map.class.isAssignableFrom(fieldType)) {
                             field.set(obj, reader.readObjectMap());
