@@ -173,25 +173,39 @@ public final class DeserializationProvider {
             return null;
         }
 
-        // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
-        JsonDeserializer<T> customDeserializer = getCustomDeserializer(clazz);
-        if (customDeserializer != null) {
-            return customDeserializer.deserialize(json, clazz);
+        try {
+            // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
+            JsonDeserializer<T> customDeserializer = getCustomDeserializer(clazz);
+            if (customDeserializer != null) {
+                return customDeserializer.deserialize(json, clazz);
+            }
+
+            // 统一安全门控：AutoTypeChecker 作为唯一的类型安全检查入口
+            AutoTypeChecker.checkType(clazz);
+
+            Class<?> actualType = resolvePolymorphicType(json, clazz);
+            if (actualType != clazz) {
+                AutoTypeChecker.checkType(actualType);
+            }
+
+            // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护，
+            // 超阈值即抛 JsonDeserializationException，无需在此预扫描（原实现存在 O(n) 双重扫描
+            // 且不区分字符串字面量中的 { } 的逻辑缺陷）
+            Object result = deserializeValue(json, actualType);
+            return result != null ? clazz.cast(result) : null;
+        } catch (JsonDeserializationException e) {
+            // 已有上下文信息的异常直接抛出
+            if (e.getContextSnippet() != null) {
+                throw e;
+            }
+            throw JsonDeserializationException.parseError(json, e.getPosition());
+        } catch (Exception e) {
+            // 注入 JSON 上下文片段，帮助用户快速定位问题
+            throw new JsonDeserializationException(
+                JsonDeserializationException.PARSE_ERROR,
+                "Failed to deserialize JSON to " + clazz.getName() + ": " + e.getMessage(),
+                0, json);
         }
-
-        // 统一安全门控：AutoTypeChecker 作为唯一的类型安全检查入口
-        AutoTypeChecker.checkType(clazz);
-
-        Class<?> actualType = resolvePolymorphicType(json, clazz);
-        if (actualType != clazz) {
-            AutoTypeChecker.checkType(actualType);
-        }
-
-        // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护，
-        // 超阈值即抛 JsonDeserializationException，无需在此预扫描（原实现存在 O(n) 双重扫描
-        // 且不区分字符串字面量中的 { } 的逻辑缺陷）
-        Object result = deserializeValue(json, actualType);
-        return result != null ? clazz.cast(result) : null;
     }
 
     private static Object deserializeValue(String json, Class<?> type) {

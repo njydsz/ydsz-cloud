@@ -827,7 +827,9 @@ public class YdszJsonMapper {
         }
 
         public YdszJsonMapper build() {
-            return new YdszJsonMapper(config);
+            YdszJsonMapper mapper = new YdszJsonMapper(config);
+            mapper.configChanged();
+            return mapper;
         }
     }
 }
