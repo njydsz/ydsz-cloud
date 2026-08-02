@@ -393,7 +393,7 @@ public final class AsmCodecCache {
      * 检查是否启用 ASM 优化
      */
     public static boolean isEnabled() {
-        return true;
+        return AsmBeanCodecGenerator.isAsmAvailable();
     }
 
     /**

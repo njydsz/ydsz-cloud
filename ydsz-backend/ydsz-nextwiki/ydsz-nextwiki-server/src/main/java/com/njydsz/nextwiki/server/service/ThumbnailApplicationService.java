@@ -49,9 +49,11 @@ public class ThumbnailApplicationService {
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
 
-    /** 缩略图尺寸定义 */
+    /** 缩略图尺寸：小图边长（像素） */
     public static final int SIZE_SMALL = 64;
+    /** 缩略图尺寸：中图边长（像素），当前默认生成尺寸 */
     public static final int SIZE_MEDIUM = 128;
+    /** 缩略图尺寸：大图边长（像素） */
     public static final int SIZE_LARGE = 256;
 
     /** 支持缩略图生成的图片后缀 */
@@ -60,7 +62,13 @@ public class ThumbnailApplicationService {
     );
 
     /**
-     * 异步生成缩略图
+     * 异步生成缩略图（由 {@code nextwikiTaskExecutor} 线程池执行）。
+     * <p>内部捕获全部异常仅记日志，不阻塞主流程；真正逻辑见 {@link #generateThumbnail}。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @return 无返回值
+     * @concurrency 异步执行；异常被吞掉仅告警
+     * @note 本方法无事务边界
      */
     @Async("nextwikiTaskExecutor")
     public void generateThumbnailAsync(String fileNodeId) {
@@ -72,7 +80,17 @@ public class ThumbnailApplicationService {
     }
 
     /**
-     * 生成缩略图（P2-2 修复：实际生成并上传到存储）
+     * 生成缩略图并上传到存储（P2-2 修复：实际缩放生成而非仅占位）。
+     * <p>仅对图片类型（{@code IMAGE_SUFFIXES}）做真实缩放，输出为 PNG 上传至
+     * {@code wiki/thumbnail/{fileNodeId}_thumb.png} 并回填 {@code thumbnailKey}；
+     * 非图片类型仅预置 key（缩略图后续可由预览服务补充）。存储未配置时退化为仅写 key。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @return 无返回值
+     * @throws Exception 下载/缩放/上传过程中的 IO 或图像读取异常（仅异步入口吞掉，同步调用会向上抛）
+     * @complexity O(imagePixels)（图片解码 + 双线性缩放 + 编码上传）
+     * @concurrency 无共享可变状态，可并发；同一文件并发生成以最后写入为准
+     * @note 方法结束在 {@code finally} 清理原图临时文件；缩略图临时文件在成功后删除
      */
     public void generateThumbnail(String fileNodeId) throws Exception {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
@@ -166,7 +184,15 @@ public class ThumbnailApplicationService {
     }
 
     /**
-     * 生成缩略图（从 InputStream）
+     * 将图片 InputStream 等比缩放为边长不超过 {@code targetSize} 的缩略图（保持宽高比，双线性插值）。
+     *
+     * @param inputStream 原图输入流（方法内读取，调用方负责关闭）
+     * @param targetSize  目标边长上限（像素），取宽高缩放比的较小值以保证完整可见
+     * @return 缩放后的 {@link BufferedImage}（RGB 类型）
+     * @throws IllegalArgumentException 图像无法解码（{@code ImageIO.read} 返回 null）时抛出
+     * @throws Exception 图像 IO 异常
+     * @complexity O(originalPixels)（一次解码 + 一次绘制缩放）
+     * @note 纯计算，无副作用；线程安全
      */
     public BufferedImage generateThumbnailImage(InputStream inputStream, int targetSize) throws Exception {
         BufferedImage original = ImageIO.read(inputStream);

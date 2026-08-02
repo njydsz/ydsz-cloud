@@ -30,7 +30,7 @@ public class JsonHealthIndicator implements HealthIndicator {
         JsonConfig config = JsonConfig.getInstance();
         boolean safeMode = AutoTypeChecker.isSafeMode();
 
-        Health.Builder builder = safeMode ? Health.up() : Health.down();
+        Health.Builder builder = Health.up();
         builder.withDetail("safeMode", safeMode);
         builder.withDetail("maxJsonSize", config.getMaxJsonSize());
         builder.withDetail("maxDepth", config.getMaxDepth());
@@ -53,7 +53,8 @@ public class JsonHealthIndicator implements HealthIndicator {
         builder.withDetail("threadLocalMemoryEstimate", SerializationContext.estimateThreadLocalMemory());
 
         if (!safeMode) {
-            builder.withDetail("warning", "AutoType SafeMode is disabled, RCE risk exists");
+            builder.withDetail("warning", "AutoType SafeMode is disabled; RCE risk exists. "
+                + "Enable via ydsz.json.safe-mode=true.");
         }
 
         return builder.build();

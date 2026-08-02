@@ -59,7 +59,7 @@ public final class ValidationResult {
      * 验证是否通过（动态判断）
      */
     public boolean isValid() {
-        return errors.isEmpty();
+        return valid && errors.isEmpty();
     }
     
     public List<String> getErrors() {

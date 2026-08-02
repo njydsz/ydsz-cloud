@@ -40,15 +40,21 @@ public class VirusScanApplicationService {
     private static final long MAX_FILE_SIZE = 100L * 1024 * 1024;
 
     /** ClamAV 协议常量 */
+    // INSTREAM 命令：以 z 前缀长度帧流式发送文件内容（见 ClamAV INSTREAM 协议）
     private static final byte[] CMD_INSTREAM = zCommand("zINSTREAM\u0000");
+    /** INSTREAM 单次发送分块大小（字节） */
     private static final int CHUNK_SIZE = 4096;
 
     /**
-     * 扫描输入流
+     * 扫描输入流（门面方法：前置校验 + 委托 {@link #doScan} + 异常兜底）。
+     * <p>未启用 / 文件超过 {@link #MAX_FILE_SIZE} 时返回 skipped；扫描异常被捕获并返回 error，不向上抛。
      *
-     * @param inputStream 文件输入流
-     * @param fileSize    文件大小
-     * @return 扫描结果
+     * @param inputStream 文件输入流（方法内读取，调用方负责关闭）
+     * @param fileSize    文件大小（字节），用于超限快速跳过
+     * @return 扫描结果 {@link ScanResult}（clean/infected/skipped/error）
+     * @complexity 正常为一次 ClamAV TCP 往返（O(fileSize) 流式传输）；超限/未启用为 O(1)
+     * @note 本方法不抛异常，调用方需按 {@link ScanResult#isInfected()} 决策
+     * @concurrency 无共享可变状态，线程安全；每次扫描新建独立 Socket
      */
     public ScanResult scan(InputStream inputStream, long fileSize) {
         if (!properties.getVirusScan().isEnabled()) {
@@ -133,10 +139,15 @@ public class VirusScanApplicationService {
     @Data
     @Builder
     public static class ScanResult {
+        /** 是否扫描通过（无病毒） */
         private boolean clean;
+        /** 是否检出病毒 */
         private boolean infected;
+        /** 是否跳过（未启用或超限） */
         private boolean skipped;
+        /** 是否扫描出错（连接/协议异常） */
         private boolean error;
+        /** 结果描述（OK / 病毒名 / 跳过原因 / 错误信息） */
         private String message;
 
         public static ScanResult clean() {

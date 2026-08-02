@@ -44,7 +44,13 @@ public class StorageAnalysisApplicationService {
     private final TrashItemRepository trashItemRepository;
 
     /**
-     * 获取用户存储概览
+     * 获取用户存储概览（文件数/文件夹数/总大小/回收站占用）。
+     * <p>folderCount 由 {@code countFoldersByUser} 真实统计（早期版本曾硬编码为 0，P1-7 修复）。
+     *
+     * @param userId 用户 ID
+     * @return 存储概览 {@link StorageOverview}
+     * @complexity O(1)（4 次聚合查询）
+     * @note 只读，无事务边界；usagePercentage 由调用方结合配额计算后回填
      */
     public StorageOverview getUserOverview(String userId) {
         int fileCount = fileNodeRepository.countByUser(userId);
@@ -63,7 +69,13 @@ public class StorageAnalysisApplicationService {
     }
 
     /**
-     * 按文件类型统计
+     * 按文件后缀（类型）统计存储分布（含占比）。
+     * <p>占比 = 该类型总大小 / 用户全部文件总大小 × 100，四舍五入保留两位小数；无文件时占比为 0。
+     *
+     * @param userId 用户 ID
+     * @return 后缀 → 类型统计 {@link TypeStats} 的映射（unknown 表示无后缀文件）
+     * @complexity O(statRows)（一次分组聚合 + 一次遍历计算占比）
+     * @note 只读，无事务边界
      */
     public Map<String, TypeStats> statsByType(String userId) {
         List<FileNodeRepository.FileTypeStat> stats = fileNodeRepository.statsBySuffixAndUser(userId);
@@ -90,7 +102,13 @@ public class StorageAnalysisApplicationService {
     }
 
     /**
-     * 大文件 Top-N
+     * 查询用户占用空间最大的前 N 个文件（定位存储大户）。
+     *
+     * @param userId 用户 ID
+     * @param limit  返回条数上限（Top-N）
+     * @return 文件节点列表 {@link FileNode}（按大小降序，最多 limit 条）
+     * @complexity O(query)（一次按大小分页排序查询）
+     * @note 只读，无事务边界
      */
     public List<FileNode> topLargeFiles(String userId, int limit) {
         return fileNodeRepository.findTopLargeFilesByUser(userId, limit);
@@ -102,23 +120,33 @@ public class StorageAnalysisApplicationService {
     @Data
     @Builder
     public static class StorageOverview {
+        /** 用户 ID */
         private String userId;
+        /** 已用存储总大小（字节） */
         private Long totalSize;
+        /** 文件数（不含文件夹） */
         private Integer fileCount;
+        /** 文件夹数 */
         private Integer folderCount;
+        /** 回收站中文件数 */
         private Integer trashCount;
+        /** 配额使用率（0~100，由调用方结合配额上限回填，可能为 null） */
         private Double usagePercentage;
     }
 
     /**
-     * 类型统计
+     * 单类型存储统计（按后缀聚合）。
      */
     @Data
     @Builder
     public static class TypeStats {
+        /** 文件后缀（小写；无后缀为 "unknown"） */
         private String suffix;
+        /** 该类型文件数 */
         private Integer fileCount;
+        /** 该类型文件总大小（字节） */
         private Long totalSize;
+        /** 占用户总存储的比例（%，四舍五入保留两位） */
         private Double percentage;
     }
 }

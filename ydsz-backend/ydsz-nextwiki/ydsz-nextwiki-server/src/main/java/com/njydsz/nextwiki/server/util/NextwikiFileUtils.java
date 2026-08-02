@@ -59,7 +59,11 @@ public final class NextwikiFileUtils {
     );
 
     /**
-     * 解析存储实例
+     * 解析存储实例（从可选 provider 获取，未配置返回 {@code null}）。
+     *
+     * @param provider 文件存储 provider（可为 {@code null}）
+     * @return 存储实例 {@link IFileStorage}；provider 为 {@code null} 时返回 {@code null}
+     * @note 无副作用；调用方需判空
      */
     public static IFileStorage resolveStorage(IFileStorageProvider provider) {
         if (provider != null) {
@@ -69,7 +73,12 @@ public final class NextwikiFileUtils {
     }
 
     /**
-     * 提取文件后缀（小写，不含点号）
+     * 提取文件后缀（小写，不含点号）。
+     * <p>无点号或点号在末尾（如 "file."）视为无后缀，返回空串。
+     *
+     * @param filename 文件名（可为 {@code null}）
+     * @return 小写后缀（不含 "."）；无后缀或入参为空时返回空串
+     * @note 纯字符串处理，线程安全
      */
     public static String extractSuffix(String filename) {
         if (filename == null || filename.isEmpty()) {
@@ -83,7 +92,12 @@ public final class NextwikiFileUtils {
     }
 
     /**
-     * 净化文件名：去除路径穿越字符、特殊字符、超长名称
+     * 净化文件名：防路径穿越（{@code /}、{@code \\}、{@code ..}）→ 下划线，去除非法字符，限制长度 ≤255。
+     * <p>归一化后缀保留，截断时优先保留后缀；是上传/重命名的安全入口，防止目录穿越与非法文件名。
+     *
+     * @param filename 原始文件名（可为 {@code null}）
+     * @return 净化后的安全文件名；入参为空时原样返回
+     * @note 线程安全；仅做字符归一化，不改变文件内容
      */
     public static String sanitizeFileName(String filename) {
         if (filename == null || filename.isEmpty()) {
@@ -104,7 +118,13 @@ public final class NextwikiFileUtils {
     }
 
     /**
-     * 生成存储键
+     * 生成对象存储键（路径式：{@code wiki/{userId}/{yyyy/MM/dd}/{uuid}.{suffix}}）。
+     * <p>UUID 保证全局唯一，避免同名文件互相覆盖；按日期分目录便于生命周期管理。
+     *
+     * @param userId          用户 ID（作为存储命名空间一级目录）
+     * @param originalFilename 原始文件名（仅用于提取后缀）
+     * @return 存储键字符串（不含前导 "/"）
+     * @note 线程安全；后缀为空时不带点号
      */
     public static String generateStorageKey(String userId, String originalFilename) {
         String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
@@ -115,7 +135,15 @@ public final class NextwikiFileUtils {
     }
 
     /**
-     * 将 Path 包装为 MultipartFile（P1-R1: 消除 4 份重复实现）
+     * 将本地 {@link Path} 包装为 {@link MultipartFile}（P1-R1：统一消除多份重复实现）。
+     * <p>用于把本地临时文件/分片传给需要 MultipartFile 的存储上传接口，避免重复造轮子。
+     *
+     * @param filePath    本地文件路径（必须存在）
+     * @param name        逻辑文件名（如 {@code fileNodeId_thumb.png}）
+     * @param contentType 内容类型（如 "image/png"）
+     * @return 包装后的 {@link MultipartFile} 适配器
+     * @throws IOException 读取文件大小失败时抛出
+     * @note 适配器为懒加载内容（getBytes/getInputStream 实时读盘），非预读入内存
      */
     public static MultipartFile toMultipartFile(Path filePath, String name, String contentType)
             throws IOException {

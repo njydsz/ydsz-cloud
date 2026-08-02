@@ -470,7 +470,9 @@ public final class AutoTypeChecker {
             return true;
         }
         if (className.startsWith("[")) {
-            return true;
+            // 数组类型：解包元素类型做黑白名单检查，防止 [Ljava.lang.Runtime; 绕过
+            String elementName = extractArrayElementClassName(className);
+            return elementName != null && isTypeAllowed(elementName);
         }
         if (BUILTIN_WHITELIST.contains(className)) {
             return true;
@@ -494,21 +496,44 @@ public final class AutoTypeChecker {
     }
 
     /**
+     * 从数组类名提取元素类名（用于数组类型白名单检查，防止 {@code [Ljava.lang.Runtime;} 绕过）。
+     * <ul>
+     *   <li>{@code [Ljava.lang.String;} → {@code java.lang.String}</li>
+     *   <li>{@code [I} → {@code int}（基本类型，白名单放行）</li>
+     * </ul>
+     */
+    private static String extractArrayElementClassName(String className) {
+        int pos = 0;
+        while (pos < className.length() && className.charAt(pos) == '[') { pos++; }
+        if (pos >= className.length()) return null;
+        char elementStart = className.charAt(pos);
+        if (elementStart == 'L' && className.endsWith(";")) {
+            return className.substring(pos + 1, className.length() - 1);
+        }
+        switch (className.charAt(className.length() - 1)) {
+            case 'Z': return "boolean"; case 'B': return "byte"; case 'C': return "char";
+            case 'S': return "short"; case 'I': return "int"; case 'J': return "long";
+            case 'F': return "float"; case 'D': return "double"; default: return null;
+        }
+    }
+
+    /**
      * 检查类型是否在黑名单中
      *
-     * <p>同时阻止黑名单类的内部类（通过 {@code OuterClass$InnerClass} 命名约定）。
-     * 优化点：原实现遍历整个黑名单集合做 {@code startsWith(prefix + "$")} 匹配，
-     * 现改为先提取 {@code $} 前的外部类名再做 O(1) 哈希查找，复杂度从 O(n) 降到 O(1)。</p>
+     * <p>递归检查所有外部类名（{@code A$B$C} → 查 {@code A$B}、{@code A}），防止仅一层内部类检查被多级嵌套绕过。</p>
      */
     private static boolean isBlacklisted(String className) {
         if (BUILTIN_BLACKLIST.contains(className) || EXPLICIT_BLACKLIST.contains(className)) {
             return true;
         }
-        // 内部类检查：提取外部类名后做 O(1) 哈希查找
-        int dollarIdx = className.indexOf('$');
-        if (dollarIdx > 0) {
-            String outer = className.substring(0, dollarIdx);
-            return BUILTIN_BLACKLIST.contains(outer) || EXPLICIT_BLACKLIST.contains(outer);
+        // 递归检查所有外部类名：A$B$C → 依次检查 A$B$C（已做）、A$B、A，
+        // 防止黑名单只含 A$B 但 A$B$C 通过只取首次 $ 之前的外部类名绕过。
+        String outer = className;
+        for (int i = outer.indexOf('$'); i > 0; i = outer.indexOf('$')) {
+            outer = outer.substring(0, i);
+            if (BUILTIN_BLACKLIST.contains(outer) || EXPLICIT_BLACKLIST.contains(outer)) {
+                return true;
+            }
         }
         return false;
     }
