@@ -10,7 +10,6 @@ import com.njydsz.common.json.annotation.JsonAnyGetter;
 import com.njydsz.common.json.annotation.JsonAnySetter;
 import com.njydsz.common.json.annotation.JsonAutoDetect;
 import com.njydsz.common.json.annotation.YdszJsonClass;
-import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonGetter;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
@@ -189,10 +188,10 @@ public final class FieldMetadataLoader {
                 continue;
             }
 
-            YdszJsonField jsonField = field.getAnnotation(YdszJsonField.class);
+            JsonProperty jsonField = field.getAnnotation(JsonProperty.class);
             JsonProperty jacksonProperty = field.getAnnotation(JsonProperty.class);
             JsonIgnore jacksonIgnore = field.getAnnotation(JsonIgnore.class);
-            if (jsonField != null && jsonField.ignore()) {
+            if (jsonField != null && jacksonIgnore != null) {
                 continue;
             }
             if (jacksonIgnore != null) {
@@ -204,8 +203,6 @@ public final class FieldMetadataLoader {
                 if (jsonField != null) {
                     if (!jsonField.value().isEmpty()) {
                         jsonFieldName = jsonField.value();
-                    } else if (!jsonField.name().isEmpty()) {
-                        jsonFieldName = jsonField.name();
                     } else if (classNaming != null) {
                         jsonFieldName = classNaming.translate(field.getName());
                     }
@@ -227,16 +224,10 @@ public final class FieldMetadataLoader {
             if (jsonField != null) {
                 if (!jsonField.value().isEmpty()) {
                     jsonName = jsonField.value();
-                } else if (!jsonField.name().isEmpty()) {
-                    jsonName = jsonField.name();
                 } else if (jacksonProperty != null && !jacksonProperty.value().isEmpty()) {
                     jsonName = jacksonProperty.value();
                 } else if (classNaming != null) {
                     jsonName = classNaming.translate(jsonName);
-                }
-
-                if (jsonField.ordinal() != 0) {
-                    ordinal = jsonField.ordinal();
                 }
             } else if (jacksonProperty != null && !jacksonProperty.value().isEmpty()) {
                 jsonName = jacksonProperty.value();
@@ -246,7 +237,7 @@ public final class FieldMetadataLoader {
 
             try {
                 field.setAccessible(true);
-                fieldList.add(new FieldMeta(field, jsonName, ordinal, jsonField));
+                fieldList.add(new FieldMeta(field, jsonName, ordinal));
             } catch (Exception e) {
                 // 反射操作失败，忽略此路径，回退到默认行为
             }
@@ -333,8 +324,7 @@ public final class FieldMetadataLoader {
      */
     private static FieldMeta createWithJsonName(FieldMeta original, String newJsonName) {
         try {
-            YdszJsonField annotation = original.field.getAnnotation(YdszJsonField.class);
-            FieldMeta replaced = new FieldMeta(original.field, newJsonName, original.ordinal, annotation);
+            FieldMeta replaced = new FieldMeta(original.field, newJsonName, original.ordinal);
             return replaced;
         } catch (Exception e) {
             // 创建失败，保持原始 FieldMeta

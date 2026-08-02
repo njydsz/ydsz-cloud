@@ -26,6 +26,7 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 | `RedisFairLock` | 公平锁（FIFO 队列排队，先到先得） |
 | `RedisMultiLock` | 多锁（多个 Key 同时加锁，全部成功或全部失败） |
 | `FallbackDistributedLock` | 降级锁（Redis 不可用时退化为 JVM `ReentrantLock`） |
+| `DistributedLockException` | 分布式锁异常（获取锁超时 / 释放锁失败 / 续期失败，错误码 `LOCK_ERROR`） |
 
 ### 2. 读写锁与信号量
 

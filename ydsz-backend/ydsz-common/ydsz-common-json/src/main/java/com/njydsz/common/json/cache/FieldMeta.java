@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.Map;
 
 import com.njydsz.common.json.annotation.JsonAlias;
-import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonRawValue;
@@ -178,16 +177,9 @@ public final class FieldMeta {
     private final transient DateTimeFormatter cachedFormatter;
 
     /**
-     * 构造函数（基础版本）
+     * 构造函数
      */
     public FieldMeta(Field field, String jsonName, int ordinal) {
-        this(field, jsonName, ordinal, null);
-    }
-
-    /**
-     * 构造函数（带注解版本）
-     */
-    public FieldMeta(Field field, String jsonName, int ordinal, YdszJsonField annotation) {
         this.field = field;
         this.name = field.getName();
         this.type = field.getType();
@@ -195,51 +187,25 @@ public final class FieldMeta {
         this.isPrimitive = type.isPrimitive();
         this.ordinal = ordinal;
 
-        if (annotation != null) {
-            // Jackson @JsonFormat 兼容：当 @YdszJsonField.format 为空时，回退到 @JsonFormat.pattern
-            JsonFormat jacksonFormat = field.getAnnotation(JsonFormat.class);
-            if ((annotation.format() == null || annotation.format().isEmpty())
-                    && jacksonFormat != null && !jacksonFormat.pattern().isEmpty()) {
-                this.format = jacksonFormat.pattern();
-            } else {
-                this.format = annotation.format();
-            }
-            this.defaultValue = annotation.defaultValue();
-            this.required = annotation.required();
-            this.writeNull = annotation.writeNull();
-            this.ignore = annotation.ignore();
-            this.numberFormat = annotation.numberFormat();
-            this.htmlSafe = annotation.htmlSafe();
-            this.notWriteNullValue = annotation.notWriteNullValue();
-            this.notWriteDefaultValue = annotation.notWriteDefaultValue();
-            this.ignoreGetters = annotation.ignoreGetters();
-            this.ignoreSetters = annotation.ignoreSetters();
-            this.notWrite = annotation.notWrite();
-            this.useBeanName = annotation.useBeanName();
-            this.direct = annotation.direct();
-            this.serializeUsing = annotation.serializeUsing();
-            this.deserializeUsing = annotation.deserializeUsing();
-        } else {
-            // Jackson @JsonFormat 兼容：无 @YdszJsonField 时，检查 @JsonFormat.pattern
-            JsonFormat jacksonFormat = field.getAnnotation(JsonFormat.class);
-            this.format = (jacksonFormat != null && !jacksonFormat.pattern().isEmpty())
-                ? jacksonFormat.pattern() : "";
-            this.defaultValue = "";
-            this.required = false;
-            this.writeNull = false;
-            this.ignore = false;
-            this.numberFormat = "";
-            this.htmlSafe = false;
-            this.notWriteNullValue = false;
-            this.notWriteDefaultValue = false;
-            this.ignoreGetters = false;
-            this.ignoreSetters = false;
-            this.notWrite = false;
-            this.useBeanName = false;
-            this.direct = false;
-            this.serializeUsing = "";
-            this.deserializeUsing = "";
-        }
+        // 从 @JsonFormat 注解获取格式
+        JsonFormat jacksonFormat = field.getAnnotation(JsonFormat.class);
+        this.format = (jacksonFormat != null && !jacksonFormat.pattern().isEmpty())
+            ? jacksonFormat.pattern() : "";
+        this.defaultValue = "";
+        this.required = false;
+        this.writeNull = false;
+        this.ignore = false;
+        this.numberFormat = "";
+        this.htmlSafe = false;
+        this.notWriteNullValue = false;
+        this.notWriteDefaultValue = false;
+        this.ignoreGetters = false;
+        this.ignoreSetters = false;
+        this.notWrite = false;
+        this.useBeanName = false;
+        this.direct = false;
+        this.serializeUsing = "";
+        this.deserializeUsing = "";
 
         // 加载 @JsonAlias 别名列表
         JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
