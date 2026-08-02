@@ -15,10 +15,6 @@ import com.njydsz.common.json.YdszJson;
 /**
  * YdszJson 数组实现
  *
- * <p><b>已废弃</b>：此类与 {@code tree/} 包中的 {@code ArrayNode} 功能重叠，
- * 建议使用 {@link com.njydsz.common.json.tree.ArrayNode} 替代，
- * 以统一树模型 API，减少维护成本。将在 2.0.0 版本移除。</p>
- *
  * <p>对应 FastJSON2 的 JSONArray，继承 ArrayList 提供动态 JSON 数组操作。
  * 支持类型安全的 getter、链式调用、嵌套对象访问等功能。</p>
  *
@@ -45,7 +41,6 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Deprecated(since = "1.4.0", forRemoval = true)
 public class YdszJsonArray extends ArrayList<Object> {
 
     private static final long serialVersionUID = 1L;

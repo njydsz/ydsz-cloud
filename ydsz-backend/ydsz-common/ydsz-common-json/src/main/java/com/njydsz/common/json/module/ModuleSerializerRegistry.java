@@ -9,12 +9,9 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  *
  * <p>用于在模块中注册自定义序列化器，提供类型安全的注册接口。</p>
  *
- * @deprecated 当前无第三方 Module 实现，属于过早抽象（YAGNI）。
- * 保留接口但简化实现，等有真实需求时再完善。
  * @author ydsz-team
  * @since 1.0.0
  */
-@Deprecated
 public final class ModuleSerializerRegistry {
 
     private final Map<Class<?>, JsonSerializer<?>> serializers = new LinkedHashMap<>();

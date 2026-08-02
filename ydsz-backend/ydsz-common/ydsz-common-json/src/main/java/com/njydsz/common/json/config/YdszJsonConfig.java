@@ -125,38 +125,12 @@ public final class YdszJsonConfig implements Serializable {
     }
 
     /**
-     * 设置命名策略
-     *
-     * @param namingStrategy 命名策略
-     * @return 当前配置实例（支持链式调用）
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setNamingStrategy(PropertyNamingStrategy namingStrategy) {
-        this.namingStrategy = namingStrategy;
-        return this;
-    }
-
-    /**
      * 获取循环引用处理策略
      *
      * @return 循环引用处理策略
      */
     public CircularReferenceStrategy getCircularReferenceStrategy() {
         return circularReferenceStrategy;
-    }
-
-    /**
-     * 设置循环引用处理策略
-     *
-     * @param circularReferenceStrategy 循环引用处理策略
-     * @return 当前配置实例（支持链式调用）
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setCircularReferenceStrategy(CircularReferenceStrategy circularReferenceStrategy) {
-        this.circularReferenceStrategy = circularReferenceStrategy;
-        return this;
     }
 
     /**
@@ -169,38 +143,12 @@ public final class YdszJsonConfig implements Serializable {
     }
 
     /**
-     * 设置是否输出空值
-     *
-     * @param writeNulls 是否输出空值
-     * @return 当前配置实例（支持链式调用）
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setWriteNulls(boolean writeNulls) {
-        this.writeNulls = writeNulls;
-        return this;
-    }
-
-    /**
      * 获取日期格式
      *
      * @return 日期格式字符串
      */
     public String getDateFormat() {
         return dateFormat;
-    }
-
-    /**
-     * 设置日期格式
-     *
-     * @param dateFormat 日期格式字符串
-     * @return 当前配置实例（支持链式调用）
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setDateFormat(String dateFormat) {
-        this.dateFormat = dateFormat;
-        return this;
     }
 
     /**
@@ -213,19 +161,6 @@ public final class YdszJsonConfig implements Serializable {
     }
 
     /**
-     * 设置是否使用枚举序号序列化
-     *
-     * @param serializeEnumUsingOrdinal 是否使用枚举序号序列化
-     * @return 当前配置实例（支持链式调用）
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
-        this.serializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
-        return this;
-    }
-
-    /**
      * 是否格式化输出
      *
      * @return 是否格式化输出
@@ -234,51 +169,12 @@ public final class YdszJsonConfig implements Serializable {
         return prettyPrint;
     }
 
-    /**
-     * 设置是否格式化输出
-     *
-     * @param prettyPrint 是否格式化输出
-     * @return 当前配置实例（支持链式调用）
-     */
-    /**
-     * 设置是否格式化输出
-     *
-     * @param prettyPrint 是否格式化输出
-     * @return 当前配置实例（支持链式调用）
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setPrettyPrint(boolean prettyPrint) {
-        this.prettyPrint = prettyPrint;
-        return this;
-    }
-
     public boolean isFailOnError() {
         return failOnError;
     }
 
-    /**
-     * 设置序列化失败时是否抛出异常
-     *
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setFailOnError(boolean failOnError) {
-        this.failOnError = failOnError;
-        return this;
-    }
-
     public String getDefaultDateFormat() {
         return defaultDateFormat;
-    }
-
-    /**
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setDefaultDateFormat(String defaultDateFormat) {
-        this.defaultDateFormat = defaultDateFormat;
-        return this;
     }
 
     /**
@@ -289,34 +185,10 @@ public final class YdszJsonConfig implements Serializable {
     }
 
     /**
-     * 设置最大 JSON 大小限制（字节）
-     */
-    /**
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setMaxJsonSize(long maxJsonSize) {
-        this.maxJsonSize = maxJsonSize;
-        return this;
-    }
-
-    /**
      * 获取最大序列化深度
      */
     public int getMaxDepth() {
         return maxDepth;
-    }
-
-    /**
-     * 设置最大序列化深度
-     */
-    /**
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setMaxDepth(int maxDepth) {
-        this.maxDepth = maxDepth;
-        return this;
     }
 
     /**
@@ -332,19 +204,6 @@ public final class YdszJsonConfig implements Serializable {
     }
 
     /**
-     * 设置是否使用 BigDecimal 解析浮点数。
-     *
-     * @param useBigDecimal 是否使用 BigDecimal
-     * @return 当前配置实例（支持链式调用）
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     */
-    @Deprecated
-    public YdszJsonConfig setUseBigDecimal(boolean useBigDecimal) {
-        this.useBigDecimal = useBigDecimal;
-        return this;
-    }
-
-    /**
      * 是否启用根名称包裹。
      *
      * <p>启用后，带有 {@link com.njydsz.common.json.annotation.JsonRootName} 注解的类
@@ -355,20 +214,6 @@ public final class YdszJsonConfig implements Serializable {
      */
     public boolean isWrapRootValue() {
         return wrapRootValue;
-    }
-
-    /**
-     * 设置是否启用根名称包裹。
-     *
-     * @param wrapRootValue 是否启用根名称包裹
-     * @return 当前配置实例（支持链式调用）
-     * @deprecated 使用 {@link Builder} 替代链式 setter，构建不可变配置实例
-     * @since 1.0.0
-     */
-    @Deprecated
-    public YdszJsonConfig setWrapRootValue(boolean wrapRootValue) {
-        this.wrapRootValue = wrapRootValue;
-        return this;
     }
 
     /**
