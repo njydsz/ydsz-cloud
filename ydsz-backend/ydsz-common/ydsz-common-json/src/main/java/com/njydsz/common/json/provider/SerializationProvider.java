@@ -945,12 +945,8 @@ public final class SerializationProvider {
      * cachedListSerializer、cachedListElementClass），因为运行时状态仅在单次
      * 序列化调用内有意义。</p>
      *
-     * @deprecated 推荐使用 {@link com.njydsz.common.json.config.YdszJsonConfig.Builder}
-     * 构建不可变配置实例，无需 ThreadLocalSnapshot 保存/恢复。
-     * 新代码请使用 YdszJsonConfig.builder().xxx().build() 替代 getInstance() + setter + snapshot 模式。
      * @since 1.0.0
      */
-    @Deprecated
     public static final class ThreadLocalSnapshot {
         private final boolean savedWriteNulls;
         private final boolean savedPrettyPrint;

@@ -23,6 +23,8 @@ import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonRawValue;
 import com.njydsz.common.json.annotation.JsonUnwrapped;
+import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.exception.JsonSerializationException;
 
 import java.lang.reflect.Array;
 import org.slf4j.Logger;
@@ -343,8 +345,8 @@ public final class FieldMeta {
         try {
             return field.get(obj);
         } catch (IllegalAccessException e) {
-            throw new com.njydsz.common.json.exception.JsonSerializationException(
-                com.njydsz.common.json.exception.JsonSerializationException.SERIALIZATION_ERROR,
+throw new JsonSerializationException(
+JsonSerializationException.SERIALIZATION_ERROR,
                 "Failed to get field value: " + name, e);
         }
     }
@@ -553,7 +555,7 @@ public final class FieldMeta {
         try {
             field.set(obj, value);
         } catch (IllegalAccessException e) {
-            throw new com.njydsz.common.json.exception.JsonDeserializationException(
+            throw new JsonDeserializationException(
                 "Failed to set field value: " + name, e);
         }
     }

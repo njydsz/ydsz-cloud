@@ -2,6 +2,8 @@ package com.njydsz.common.json.annotation;
 
 import java.lang.annotation.*;
 
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
+
 /**
  * 类级命名策略注解（参考 Jackson 的 @JsonNaming）。
  *
@@ -32,5 +34,5 @@ public @interface JsonNaming {
      *
      * @return 命名策略类
      */
-    Class<? extends com.njydsz.common.json.naming.PropertyNamingStrategy> value();
+    Class<? extends PropertyNamingStrategy> value();
 }

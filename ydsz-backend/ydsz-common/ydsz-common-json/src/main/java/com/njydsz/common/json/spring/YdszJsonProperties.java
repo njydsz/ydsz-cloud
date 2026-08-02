@@ -1,6 +1,7 @@
 package com.njydsz.common.json.spring;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -116,7 +117,7 @@ public class YdszJsonProperties {
      *       - com.njydsz.workflow.domain.entity.FlowInstance
      * }</pre>
      */
-    private List<String> warmupClasses = java.util.Collections.emptyList();
+    private List<String> warmupClasses = Collections.emptyList();
 
     // --- enabled ---
 

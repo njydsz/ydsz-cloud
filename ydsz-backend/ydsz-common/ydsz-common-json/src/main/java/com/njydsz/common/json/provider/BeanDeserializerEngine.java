@@ -13,6 +13,7 @@ import com.njydsz.common.json.asm.AsmDeserializer;
 import com.njydsz.common.json.bytecode.ZeroCopyDeserializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.parser.YdszJsonParser;
+import com.njydsz.common.json.util.JsonTypeUtils;
 import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.reader.JSONReader;
 
@@ -482,6 +483,6 @@ final class BeanDeserializerEngine {
      * @return 是基本类型返回 true
      */
     static boolean isSimpleType(Class<?> type) {
-        return com.njydsz.common.json.util.JsonTypeUtils.isSimpleType(type);
+        return JsonTypeUtils.isSimpleType(type);
     }
 }

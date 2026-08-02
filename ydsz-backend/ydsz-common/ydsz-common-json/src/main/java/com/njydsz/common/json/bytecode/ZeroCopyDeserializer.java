@@ -23,6 +23,7 @@ import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.util.JsonTypeUtils;
 import com.njydsz.common.json.util.StringInterner;
 
 /**
@@ -178,7 +179,7 @@ return field.getName();
     }
 
     private static boolean isSimpleField(FieldInfo f) {
-        return com.njydsz.common.json.util.JsonTypeUtils.isSimpleType(f.type);
+        return JsonTypeUtils.isSimpleType(f.type);
     }
 
     private static boolean isSimpleFields(FieldInfo[] fields) {

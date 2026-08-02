@@ -3,6 +3,7 @@ package com.njydsz.common.json.parser;
 import java.math.BigDecimal;
 import java.util.*;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 
 /**
@@ -1263,7 +1264,7 @@ public final class YdszJsonParser {
         // 非 Map 类型：解析为 Map 后委托 YdszJson 反序列化为目标 Bean
         Map<String, Object> map = parseObject(json);
         if (map == null) return null;
-        return com.njydsz.common.json.YdszJson.toObject(
-            com.njydsz.common.json.YdszJson.toJson(map), clazz);
+        return YdszJson.toObject(
+            YdszJson.toJson(map), clazz);
     }
 }

@@ -1,5 +1,6 @@
 package com.njydsz.common.json.provider;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.annotation.JsonDeserialize;
@@ -134,8 +136,8 @@ public final class DeserializationProvider {
     /**
      * @JsonDeserialize 自定义反序列化器缓存（Class -> JsonDeserializer 实例）。
      */
-    private static final java.util.concurrent.ConcurrentHashMap<Class<?>, Object> CUSTOM_DESERIALIZER_CACHE =
-        new java.util.concurrent.ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<?>, Object> CUSTOM_DESERIALIZER_CACHE =
+        new ConcurrentHashMap<>();
 
     /**
      * 检查类是否有 @JsonDeserialize 注解并获取自定义反序列化器。
@@ -352,9 +354,9 @@ public final class DeserializationProvider {
             List<?> list = deserialize(json, listType);
             if (list == null) return null;
             Class<?> componentClass = componentType instanceof Class<?> c ? c : Object.class;
-            Object array = java.lang.reflect.Array.newInstance(componentClass, list.size());
+            Object array = Array.newInstance(componentClass, list.size());
             for (int i = 0; i < list.size(); i++) {
-                java.lang.reflect.Array.set(array, i, list.get(i));
+                Array.set(array, i, list.get(i));
             }
             return (T) array;
         }
