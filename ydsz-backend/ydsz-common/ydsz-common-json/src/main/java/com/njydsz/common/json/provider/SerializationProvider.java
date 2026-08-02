@@ -11,7 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonSerialize;
-import com.njydsz.common.json.api.JsonSerializer;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.asm.AsmSerializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.BeanSerializerCache;
@@ -353,7 +354,11 @@ public final class SerializationProvider {
         }
 
         // @JsonSerialize 快速路径：如果类有 @JsonSerialize 注解，使用自定义序列化器
-        JsonSerializer<?> customSerializer = getCustomSerializer(obj.getClass());
+        Object customSerializer = getCustomSerializer(obj.getClass());
+        if (customSerializer == null) {
+            // 模块注册 / 全局注册 快速路径：JsonModule.SpringFactory 或 YdszJson.register(...) 注册的序列化器
+            customSerializer = YdszJson.getRegisteredSerializer(obj.getClass());
+        }
         if (customSerializer != null) {
             return invokeCustomSerializer(customSerializer, obj);
         }
@@ -880,7 +885,14 @@ public final class SerializationProvider {
      * @param value 要序列化的对象
      * @return JSON 字符串
      */
-    private static String invokeCustomSerializer(JsonSerializer<?> serializer, Object value) {
+    private static String invokeCustomSerializer(Object serializer, Object value) {
+        // 新版接口（serializer.JsonSerializer）：直接写入 JSONWriter，零拷贝、避免中间 String 分配
+        if (serializer instanceof com.njydsz.common.json.serializer.JsonSerializer) {
+            JSONWriter out = new JSONWriter(new StringBuilder(256));
+            ((com.njydsz.common.json.serializer.JsonSerializer<Object>) serializer).serialize(value, out);
+            return out.toString();
+        }
+        // 旧版接口（api.JsonSerializer，deprecated）：返回 String
         Method method = SERIALIZE_METHOD_CACHE.computeIfAbsent(serializer.getClass(), cls -> {
             try {
                 Method m = cls.getMethod("serialize", Object.class);

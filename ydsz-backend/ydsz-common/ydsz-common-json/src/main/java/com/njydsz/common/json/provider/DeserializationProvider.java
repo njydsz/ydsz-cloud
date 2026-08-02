@@ -21,7 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.annotation.JsonDeserialize;
-import com.njydsz.common.json.api.JsonDeserializer;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.reader.JSONReader;
@@ -219,7 +220,14 @@ public final class DeserializationProvider {
      * @param type 目标类型
      * @return 反序列化后的对象
      */
-    private static Object invokeCustomDeserializer(JsonDeserializer<?> deserializer, String json, Class<?> type) {
+    private static Object invokeCustomDeserializer(Object deserializer, String json, Class<?> type) {
+        // 新版接口（deserializer.JsonDeserializer）：直接使用 JSONReader 流式解析，零拷贝
+        if (deserializer instanceof com.njydsz.common.json.deserializer.JsonDeserializer) {
+            JSONReader reader = new JSONReader(json);
+            return ((com.njydsz.common.json.deserializer.JsonDeserializer<Object>) deserializer)
+                .deserialize(reader);
+        }
+        // 旧版接口（api.JsonDeserializer，deprecated）：接收完整 JSON 字符串
         Method method = DESERIALIZE_METHOD_CACHE.computeIfAbsent(deserializer.getClass(), cls -> {
             try {
                 Method m = cls.getMethod("deserialize", String.class, Class.class);
@@ -227,7 +235,8 @@ public final class DeserializationProvider {
                 return m;
             } catch (NoSuchMethodException e) {
                 throw new JsonDeserializationException(
-                    "deserialize method not found on " + cls.getName(),
+                    "deserialize method not found on " + cls.getName()
+                        + " (neither new deserializer.JsonDeserializer nor old api.JsonDeserializer)",
                     e
                 );
             }
@@ -252,7 +261,11 @@ public final class DeserializationProvider {
 
         try {
             // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
-            JsonDeserializer<?> customDeserializer = getCustomDeserializer(clazz);
+            Object customDeserializer = getCustomDeserializer(clazz);
+            if (customDeserializer == null) {
+                // 模块注册 / 全局注册 快速路径：JsonModule.SpringFactory 或 YdszJson.register(...) 注册的反序列化器
+                customDeserializer = YdszJson.getRegisteredDeserializer(clazz);
+            }
             if (customDeserializer != null) {
                 Object result = invokeCustomDeserializer(customDeserializer, json, clazz);
                 return result != null ? clazz.cast(result) : null;

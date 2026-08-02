@@ -519,11 +519,31 @@ public class YdszJson {
         return JsonModuleRegistry.getInstance().getDeserializer(clazz);
     }
 
-    static <T> JsonSerializer<T> getRegisteredSerializer(Class<T> clazz) {
+    /**
+     * 获取已注册的自定义序列化器（来自 {@code YdszJson.register(...)} 或 {@code JsonModule} 模块）。
+     *
+     * <p>供序列化 Provider 在 {@code @JsonSerialize} 注解快速路径之后回退查询。
+     * 历史实现中该方法虽存在但未被 Provider 实际调用，导致模块注册机制形同虚设；
+     * 现已在 {@code SerializationProvider}/{@code DeserializationProvider} 接入，使
+     * {@code JsonModule.SpringFactory} 注册的序列化器/反序列化器在全局 {@code toJson/toObject}
+     * 路径中真正生效。</p>
+     *
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 序列化器，未注册返回 null
+     */
+    public static <T> JsonSerializer<T> getRegisteredSerializer(Class<T> clazz) {
         return getCustomSerializer(clazz);
     }
 
-    static <T> JsonDeserializer<T> getRegisteredDeserializer(Class<T> clazz) {
+    /**
+     * 获取已注册的自定义反序列化器（来自 {@code YdszJson.register(...)} 或 {@code JsonModule} 模块）。
+     *
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化器，未注册返回 null
+     */
+    public static <T> JsonDeserializer<T> getRegisteredDeserializer(Class<T> clazz) {
         return getCustomDeserializer(clazz);
     }
 
