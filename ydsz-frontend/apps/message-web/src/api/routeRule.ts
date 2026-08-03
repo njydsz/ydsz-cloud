@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace RouteRuleApi {
+  /** 消息路由规则视图对象 */
   export interface RouteRuleVO {
     id: string;
     ruleName: string;
@@ -21,12 +22,14 @@ export namespace RouteRuleApi {
     createTime: string;
   }
 
+  /** 路由规则分页查询参数 */
   export interface RouteRulePageQuery {
     pageNum?: number;
     pageSize?: number;
     ruleName?: string;
   }
 
+  /** 路由规则创建/更新请求参数 */
   export interface RouteRuleDTO {
     ruleName?: string;
     channel?: string;

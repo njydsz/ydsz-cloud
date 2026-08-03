@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.project.ProjectProfitSnapshot;
 import com.njydsz.project.server.service.ProjectProfitSnapshotService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -109,7 +110,7 @@ public class ProjectProfitSnapshotController {
      * @return 分页利润快照视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ProjectProfitSnapshotVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ProjectProfitSnapshotVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectProfitSnapshot> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.projectProfitSnapshotListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

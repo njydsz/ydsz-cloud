@@ -19,8 +19,11 @@ export const YDSZ_LOGO_URL =
  */
 export const YDSZ_PREVIEW_URL = 'https://www.ydsz.pro';
 
+/** @zh_CN YDSZ Element Plus 版预览地址 */
 export const YDSZ_ELE_PREVIEW_URL = 'https://ele.ydsz.pro';
 
+/** @zh_CN YDSZ Naive UI 版预览地址 */
 export const YDSZ_NAIVE_PREVIEW_URL = 'https://naive.ydsz.pro';
 
+/** @zh_CN YDSZ Ant Design 版预览地址 */
 export const YDSZ_ANT_PREVIEW_URL = 'https://ant.ydsz.pro';

@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace FileApi {
+  /** 文件节点视图对象 */
   export interface FileVO {
     id: string;
     fileName: string;
@@ -21,12 +22,14 @@ export namespace FileApi {
     createTime: string;
   }
 
+  /** 文件节点分页查询参数 */
   export interface FilePageQuery {
     pageNum?: number;
     pageSize?: number;
     fileName?: string;
   }
 
+  /** 文件节点创建/更新请求参数 */
   export interface FileDTO {
     fileName?: string;
     parentId?: string;

@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace JobGroupApi {
+  /** 任务分组视图对象 */
   export interface JobGroupVO {
     id: string;
     groupName: string;
@@ -19,12 +20,14 @@ export namespace JobGroupApi {
     createTime: string;
   }
 
+  /** 任务分组分页查询参数 */
   export interface JobGroupPageQuery {
     pageNum?: number;
     pageSize?: number;
     groupName?: string;
   }
 
+  /** 任务分组创建/更新请求参数 */
   export interface JobGroupDTO {
     groupName?: string;
     appname?: string;

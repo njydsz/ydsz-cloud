@@ -332,6 +332,19 @@ public final class FieldMetadataLoader {
     }
 
     /**
+     * 哨兵值：表示类中无 @JsonValue 方法（ConcurrentHashMap 不允许 null value）。
+     */
+    private static final Method NO_JSON_VALUE_SENTINEL;
+    static {
+        try {
+            NO_JSON_VALUE_SENTINEL = FieldMetadataLoader.class
+                .getDeclaredMethod("findJsonValueMethod", Class.class);
+        } catch (NoSuchMethodException e) {
+            throw new InternalError(e);
+        }
+    }
+
+    /**
      * 查找类中标注了 {@code @JsonValue} 的方法。
      *
      * <p>对标 Jackson {@code @JsonValue}：标注在方法上时，该方法的返回值
@@ -340,28 +353,42 @@ public final class FieldMetadataLoader {
      * <p>一个类最多只能有一个 {@code @JsonValue} 方法。如果找到多个，使用第一个。
      * 结果会被缓存，后续调用直接返回缓存值。</p>
      *
+     * <p>注意：不使用 {@code computeIfAbsent} 以避免递归调用导致的
+     * {@code IllegalStateException: Recursive update}。</p>
+     *
      * @param clazz 要扫描的类
      * @return 标注了 {@code @JsonValue} 的 Method，未找到返回 null
      * @since 1.0.0
      */
     public static Method findJsonValueMethod(Class<?> clazz) {
-        return JSON_VALUE_METHOD_CACHE.computeIfAbsent(clazz, c -> {
-            for (Method method : c.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(JsonValue.class)) {
-                    method.setAccessible(true);
-                    return method;
-                }
+        Method cached = JSON_VALUE_METHOD_CACHE.get(clazz);
+        if (cached != null) {
+            return cached == NO_JSON_VALUE_SENTINEL ? null : cached;
+        }
+        Method result = computeJsonValueMethod(clazz);
+        Method toCache = (result != null) ? result : NO_JSON_VALUE_SENTINEL;
+        Method existing = JSON_VALUE_METHOD_CACHE.putIfAbsent(clazz, toCache);
+        if (existing != null) {
+            return existing == NO_JSON_VALUE_SENTINEL ? null : existing;
+        }
+        return result;
+    }
+
+    /**
+     * 计算 @JsonValue 方法（不操作缓存，可安全递归调用）。
+     */
+    private static Method computeJsonValueMethod(Class<?> clazz) {
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(JsonValue.class)) {
+                method.setAccessible(true);
+                return method;
             }
-            // 检查父类
-            Class<?> superClass = c.getSuperclass();
-            if (superClass != null && superClass != Object.class) {
-                Method inherited = findJsonValueMethod(superClass);
-                if (inherited != null) {
-                    return inherited;
-                }
-            }
-            return null;
-        });
+        }
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && superClass != Object.class) {
+            return findJsonValueMethod(superClass);
+        }
+        return null;
     }
 
     /**

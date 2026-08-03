@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace OpportunityApi {
+  /** 销售商机视图对象 */
   export interface OpportunityVO {
     id: string;
     opportunityName: string;
@@ -23,6 +24,7 @@ export namespace OpportunityApi {
     createTime: string;
   }
 
+  /** 商机分页查询参数 */
   export interface OpportunityPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -30,6 +32,7 @@ export namespace OpportunityApi {
     stage?: string;
   }
 
+  /** 商机创建/更新请求参数 */
   export interface OpportunityDTO {
     opportunityName?: string;
     customerName?: string;

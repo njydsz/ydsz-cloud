@@ -15,6 +15,7 @@
  */
 // https://github.com/vuejs/pinia/issues/2098
 declare module 'pinia' {
+  /** 热更新模块替换函数：在 store 文件末尾注册 HMR，使 setup 语法的 store 热更时保留状态 */
   export function acceptHMRUpdate(
     initialUseStore: any | StoreDefinition,
     hot: any,

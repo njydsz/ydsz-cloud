@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace DeadLetterApi {
+  /** 死信消息视图对象 */
   export interface DeadLetterVO {
     id: string;
     messageId: string;
@@ -20,12 +21,14 @@ export namespace DeadLetterApi {
     createTime: string;
   }
 
+  /** 死信消息分页查询参数 */
   export interface DeadLetterPageQuery {
     pageNum?: number;
     pageSize?: number;
     messageId?: string;
   }
 
+  /** 死信消息处理请求参数 */
   export interface DeadLetterDTO {
     messageId?: string;
     channel?: string;

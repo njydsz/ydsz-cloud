@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.execution.ExecutionDeliveryItem;
 import com.njydsz.project.server.service.ExecutionDeliveryItemService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -71,7 +72,7 @@ public class ExecutionDeliveryItemController {
      * @return 分页交付项视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ExecutionDeliveryItemVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ExecutionDeliveryItemVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ExecutionDeliveryItem> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.executionDeliveryItemListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

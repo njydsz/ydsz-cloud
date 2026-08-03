@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.execution.ExecutionRisk;
 import com.njydsz.project.server.service.ExecutionRiskService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -70,7 +71,7 @@ public class ExecutionRiskController {
      * @return 分页风险记录视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ExecutionRiskVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ExecutionRiskVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ExecutionRisk> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.executionRiskListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

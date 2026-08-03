@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace TagApi {
+  /** 文件标签视图对象 */
   export interface TagVO {
     id: string;
     tagName: string;
@@ -18,12 +19,14 @@ export namespace TagApi {
     createTime: string;
   }
 
+  /** 标签分页查询参数 */
   export interface TagPageQuery {
     pageNum?: number;
     pageSize?: number;
     tagName?: string;
   }
 
+  /** 标签创建/更新请求参数 */
   export interface TagDTO {
     tagName?: string;
     tagColor?: string;

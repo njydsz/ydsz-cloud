@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace CepApi {
+  /** CEP 复杂事件规则视图对象 */
   export interface CepVO {
     id: string;
     cepName: string;
@@ -20,12 +21,14 @@ export namespace CepApi {
     createTime: string;
   }
 
+  /** CEP 规则分页查询参数 */
   export interface CepPageQuery {
     pageNum?: number;
     pageSize?: number;
     cepName?: string;
   }
 
+  /** CEP 规则创建/更新请求参数 */
   export interface CepDTO {
     cepName?: string;
     cepPattern?: string;

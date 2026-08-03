@@ -9,14 +9,17 @@
  * @since 3.0.0
  */
 
+/** 微应用事件总线的事件回调签名，接收事件负载 */
 export type EventHandler<T = unknown> = (payload: T) => void;
 
+/** 微应用事件总线接口：支持一次性消息的发布、订阅与退订 */
 export interface MicroEventBus {
   emit<T = unknown>(event: string, payload: T): void;
   on<T = unknown>(event: string, handler: EventHandler<T>): () => void;
   off<T = unknown>(event: string, handler: EventHandler<T>): void;
 }
 
+/** 创建一个微应用事件总线实例，事件名需集中在常量注册表中使用 */
 export function createEventBus(): MicroEventBus {
   const listeners = new Map<string, Set<EventHandler>>();
 

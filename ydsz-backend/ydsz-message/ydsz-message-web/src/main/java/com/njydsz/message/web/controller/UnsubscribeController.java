@@ -28,6 +28,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 
+import java.util.List;
+
 /**
  * 退订中心（Unsubscribe）Controller。
  *
@@ -134,11 +136,11 @@ public class UnsubscribeController {
     @Operation(summary = "分页查询已退订记录")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
     @GetMapping("/page")
-    public BaseResponse<PageResponse<MsgSubscriptionVO>> page(UnsubscribeQueryDTO query) {
-        PageResponse<MsgSubscription> page = unsubscribeService.pageUnsubscribed(query);
-        PageResponse<MsgSubscriptionVO> voPage = PageResponse.success(
+    public BaseResponse<PageResponse<List<MsgSubscriptionVO>>> page(UnsubscribeQueryDTO query) {
+        PageResponse<List<MsgSubscription>> page = unsubscribeService.pageUnsubscribed(query);
+        PageResponse<List<MsgSubscriptionVO>> voPage = PageResponse.success(
                 page.getTotal(), page.getPageNum(), page.getPageSize(),
-                MessageConverter.INSTANT.subscriptionListToVO(page.getRecords()));
+                MessageConverter.INSTANT.subscriptionListToVO(page.getData()));
         return BaseResponse.success(voPage);
     }
 

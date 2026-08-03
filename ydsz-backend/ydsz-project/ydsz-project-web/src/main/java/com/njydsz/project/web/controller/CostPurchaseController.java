@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.cost.CostPurchase;
 import com.njydsz.project.server.service.CostPurchaseService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -69,7 +70,7 @@ public class CostPurchaseController {
      * @return 分页采购成本视图对象
      */
     @GetMapping("/page")
-    public PageResponse<CostPurchaseVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<CostPurchaseVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<CostPurchase> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.costPurchaseListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

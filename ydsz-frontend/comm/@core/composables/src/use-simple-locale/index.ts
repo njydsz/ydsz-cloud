@@ -13,6 +13,7 @@ import { createSharedComposable } from '@vueuse/core';
 
 import { getMessages } from './messages';
 
+/** 全局共享的极简 i18n 组合式函数，提供 $t 翻译函数与当前语言切换能力 */
 export const useSimpleLocale = createSharedComposable(() => {
   const currentLocale = ref<Locale>('zh-CN');
 

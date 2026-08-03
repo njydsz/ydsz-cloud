@@ -9,6 +9,7 @@ import type { VariantProps } from 'class-variance-authority';
 
 import { cva } from 'class-variance-authority';
 
+/** 侧边面板（Sheet）的 cva 样式变体（side 滑出方位），返回类名生成函数 */
 export const sheetVariants = cva(
   'bg-background shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500 border-border',
   {

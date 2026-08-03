@@ -13,6 +13,7 @@
 
 import type { Plugin } from 'vite';
 
+/** Vite Manifest 插件配置项：子应用名称与可选版本号 */
 export interface ManifestPluginOptions {
   /** 子应用名称 */
   name: string;
@@ -20,6 +21,7 @@ export interface ManifestPluginOptions {
   version?: string;
 }
 
+/** 创建构建期生成 version.json 的 Vite 插件，供 lite-kernel 加载子应用入口与样式 */
 export function viteManifestPlugin(options: ManifestPluginOptions): Plugin {
   const appName = options.name;
   const appVersion = options.version ?? '0.0.0';

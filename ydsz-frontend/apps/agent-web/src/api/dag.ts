@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace DagApi {
+  /** DAG 编排视图对象，描述节点与边的编排配置 */
   export interface DagVO {
     /** DAG 唯一 ID */
     id: string;
@@ -25,6 +26,7 @@ export namespace DagApi {
     createTime: string;
   }
 
+  /** DAG 编排分页查询参数 */
   export interface DagPageQuery {
     /** 页码，从 1 开始 */
     pageNum?: number;
@@ -34,6 +36,7 @@ export namespace DagApi {
     dagName?: string;
   }
 
+  /** DAG 编排创建/更新请求参数 */
   export interface DagDTO {
     /** DAG 编排名称 */
     dagName?: string;

@@ -54,4 +54,5 @@ class GlobalShareState {
   }
 }
 
+/** 全局共享状态单例实例，宿主应用通过它注册组件映射与消息回调 */
 export const globalShareState = new GlobalShareState();

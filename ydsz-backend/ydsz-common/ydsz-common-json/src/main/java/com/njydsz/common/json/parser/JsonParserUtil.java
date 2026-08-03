@@ -1015,10 +1015,12 @@ public final class JsonParserUtil {
                     inString = false;
                 }
             } else {
-                if (c == '"') {
-                    inString = true;
-                } else if (c == fieldJson.charAt(0) && json.regionMatches(i, fieldJson, 0, fieldLen)) {
+                // 先检查是否匹配字段模式（fieldJson 以 '"' 开头），
+                // 再判断是否进入字符串值
+                if (c == fieldJson.charAt(0) && json.regionMatches(i, fieldJson, 0, fieldLen)) {
                     return i;
+                } else if (c == '"') {
+                    inString = true;
                 }
             }
         }

@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.project.ProjectRevenue;
 import com.njydsz.project.server.service.ProjectRevenueService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -49,7 +50,7 @@ public class ProjectRevenueController {
      * @return 分页收入视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ProjectRevenueVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ProjectRevenueVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectRevenue> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.projectRevenueListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

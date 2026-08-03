@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace BreakpointApi {
+  /** 规则断点视图对象 */
   export interface BreakpointVO {
     id: string;
     ruleCode: string;
@@ -19,12 +20,14 @@ export namespace BreakpointApi {
     createTime: string;
   }
 
+  /** 断点分页查询参数 */
   export interface BreakpointPageQuery {
     pageNum?: number;
     pageSize?: number;
     ruleCode?: string;
   }
 
+  /** 断点创建/更新请求参数 */
   export interface BreakpointDTO {
     ruleCode?: string;
     condition?: string;

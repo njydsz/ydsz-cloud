@@ -38,6 +38,7 @@ export namespace AuthApi {
     permissions?: string[];
   }
 
+  /** 刷新 token 的返回值结构（对齐后端刷新接口） */
   export interface RefreshTokenResult {
     accessToken: string;
     refreshToken: string;

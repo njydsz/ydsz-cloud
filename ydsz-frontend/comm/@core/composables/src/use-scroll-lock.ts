@@ -13,6 +13,7 @@ import {
   tryOnMounted,
 } from '@vueuse/core';
 
+/** 滚动锁定时需同步宽度补偿的 fixed 定位元素标记类名，脱离文档流元素不吃 body 的 padding */
 export const SCROLL_FIXED_CLASS = `_scroll__fixed_`;
 
 /**

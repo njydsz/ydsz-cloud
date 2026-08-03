@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace TemplateApi {
+  /** 消息模板视图对象 */
   export interface TemplateVO {
     id: string;
     templateCode: string;
@@ -21,6 +22,7 @@ export namespace TemplateApi {
     createTime: string;
   }
 
+  /** 消息模板分页查询参数 */
   export interface TemplatePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -28,6 +30,7 @@ export namespace TemplateApi {
     templateCode?: string;
   }
 
+  /** 消息模板创建/更新请求参数 */
   export interface TemplateDTO {
     templateCode?: string;
     templateName?: string;

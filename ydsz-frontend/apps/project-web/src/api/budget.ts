@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace BudgetApi {
+  /** 项目预算科目视图对象 */
   export interface BudgetVO {
     id: string;
     projectId: string;
@@ -22,6 +23,7 @@ export namespace BudgetApi {
     createTime: string;
   }
 
+  /** 预算科目分页查询参数 */
   export interface BudgetPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -29,6 +31,7 @@ export namespace BudgetApi {
     projectId?: string;
   }
 
+  /** 预算科目创建/更新请求参数 */
   export interface BudgetDTO {
     projectId?: string;
     budgetItemName?: string;

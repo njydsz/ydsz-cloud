@@ -88,6 +88,7 @@ const BUILT_IN_THEME_PRESETS: BuiltinThemePreset[] = [
   },
 ];
 
+/** 可选择的主题色预设列表，取自内置预设的前 7 个（含自定义项），供偏好设置面板渲染 */
 export const COLOR_PRESETS = [...BUILT_IN_THEME_PRESETS].slice(0, 7);
 
 export { BUILT_IN_THEME_PRESETS };

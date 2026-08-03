@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace RuleApi {
+  /** 规则定义视图对象 */
   export interface RuleVO {
     id: string;
     ruleCode: string;
@@ -22,6 +23,7 @@ export namespace RuleApi {
     createTime: string;
   }
 
+  /** 规则分页查询参数 */
   export interface RulePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -29,6 +31,7 @@ export namespace RuleApi {
     ruleCode?: string;
   }
 
+  /** 规则创建/更新请求参数 */
   export interface RuleDTO {
     ruleCode?: string;
     ruleName?: string;

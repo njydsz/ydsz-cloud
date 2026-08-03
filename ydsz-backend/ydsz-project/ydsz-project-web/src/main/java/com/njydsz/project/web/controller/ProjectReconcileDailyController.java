@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.project.ProjectReconcileDaily;
 import com.njydsz.project.server.service.ProjectReconcileDailyService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -49,7 +50,7 @@ public class ProjectReconcileDailyController {
      * @return 分页对账记录视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ProjectReconcileDailyVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ProjectReconcileDailyVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectReconcileDaily> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.projectReconcileDailyListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

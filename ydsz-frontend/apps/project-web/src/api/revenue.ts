@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace RevenueApi {
+  /** 项目回款记录视图对象 */
   export interface RevenueVO {
     id: string;
     projectId: string;
@@ -22,6 +23,7 @@ export namespace RevenueApi {
     createTime: string;
   }
 
+  /** 回款记录分页查询参数 */
   export interface RevenuePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -29,6 +31,7 @@ export namespace RevenueApi {
     projectId?: string;
   }
 
+  /** 回款记录创建/更新请求参数 */
   export interface RevenueDTO {
     projectId?: string;
     contractId?: string;

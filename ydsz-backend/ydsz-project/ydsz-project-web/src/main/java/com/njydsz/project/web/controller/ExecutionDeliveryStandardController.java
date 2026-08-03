@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.execution.ExecutionDeliveryStandard;
 import com.njydsz.project.server.service.ExecutionDeliveryStandardService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -71,7 +72,7 @@ public class ExecutionDeliveryStandardController {
      * @return 分页交付标准视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ExecutionDeliveryStandardVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ExecutionDeliveryStandardVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ExecutionDeliveryStandard> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.executionDeliveryStandardListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

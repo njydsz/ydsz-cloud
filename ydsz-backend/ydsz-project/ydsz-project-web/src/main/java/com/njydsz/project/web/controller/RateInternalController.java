@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.rate.RateInternal;
 import com.njydsz.project.server.service.RateInternalService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -89,7 +90,7 @@ public class RateInternalController {
      * @return 分页费率视图对象
      */
     @GetMapping("/page")
-    public PageResponse<RateInternalVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<RateInternalVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<RateInternal> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.rateInternalListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

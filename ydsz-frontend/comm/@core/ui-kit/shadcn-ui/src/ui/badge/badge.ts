@@ -9,6 +9,7 @@ import type { VariantProps } from 'class-variance-authority';
 
 import { cva } from 'class-variance-authority';
 
+/** 徽标组件的 cva 样式变体（variant），返回类名生成函数 */
 export const badgeVariants = cva(
   'inline-flex items-center rounded-md border border-border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
   {

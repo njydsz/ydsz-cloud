@@ -7,6 +7,7 @@
  */
 import { cva } from 'class-variance-authority';
 
+/** 按钮组件的 cva 样式变体（size 与 variant），返回类名生成函数 */
 export const buttonVariants = cva(
   'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:cursor-not-allowed  disabled:opacity-50',
   {

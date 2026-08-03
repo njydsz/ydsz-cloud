@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace JobLogApi {
+  /** 任务执行日志视图对象 */
   export interface JobLogVO {
     id: string;
     jobId: string;
@@ -22,12 +23,14 @@ export namespace JobLogApi {
     handleMsg: string;
   }
 
+  /** 执行日志分页查询参数 */
   export interface JobLogPageQuery {
     pageNum?: number;
     pageSize?: number;
     jobName?: string;
   }
 
+  /** 执行日志创建/更新请求参数 */
   export interface JobLogDTO {
     jobId?: string;
     jobName?: string;

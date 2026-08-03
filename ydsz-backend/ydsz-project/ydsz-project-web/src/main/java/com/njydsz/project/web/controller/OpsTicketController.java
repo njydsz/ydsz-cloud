@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.ops.OpsTicket;
 import com.njydsz.project.server.service.OpsTicketService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -71,7 +72,7 @@ public class OpsTicketController {
      * @return 分页工单视图对象
      */
     @GetMapping("/page")
-    public PageResponse<OpsTicketVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<OpsTicketVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<OpsTicket> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.opsTicketListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

@@ -30,6 +30,7 @@ export function initSharedRequest(
   }
 }
 
+/** 共享认证请求客户端代理，调用前必须先执行 initSharedRequest 注入实现 */
 export const requestClient: RequestClient = new Proxy(
   {} as RequestClient,
   {
@@ -44,6 +45,7 @@ export const requestClient: RequestClient = new Proxy(
   },
 );
 
+/** 共享基础请求客户端代理（不带认证拦截），调用前必须先执行 initSharedRequest 注入实现 */
 export const baseRequestClient: RequestClient = new Proxy(
   {} as RequestClient,
   {

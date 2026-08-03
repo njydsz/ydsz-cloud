@@ -15,6 +15,7 @@ export interface VersionedState<T> {
   data: T;
 }
 
+/** 全局状态变化监听器：接收新值与上一次值，用于跨应用状态同步 */
 export interface GlobalStateListener<T> {
   (state: T, prev: T): void;
 }

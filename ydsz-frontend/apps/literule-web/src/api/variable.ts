@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace VariableApi {
+  /** 系统变量视图对象 */
   export interface VariableVO {
     id: string;
     variableName: string;
@@ -20,12 +21,14 @@ export namespace VariableApi {
     createTime: string;
   }
 
+  /** 系统变量分页查询参数 */
   export interface VariablePageQuery {
     pageNum?: number;
     pageSize?: number;
     variableName?: string;
   }
 
+  /** 系统变量创建/更新请求参数 */
   export interface VariableDTO {
     variableName?: string;
     variableType?: string;

@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.project.ProjectChange;
 import com.njydsz.project.server.service.ProjectChangeService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -71,7 +72,7 @@ public class ProjectChangeController {
      * @return 分页变更记录视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ProjectChangeVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ProjectChangeVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectChange> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.projectChangeListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

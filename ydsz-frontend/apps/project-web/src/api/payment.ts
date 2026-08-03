@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace PaymentApi {
+  /** 项目付款记录视图对象 */
   export interface PaymentVO {
     id: string;
     projectId: string;
@@ -22,12 +23,14 @@ export namespace PaymentApi {
     createTime: string;
   }
 
+  /** 付款记录分页查询参数 */
   export interface PaymentPageQuery {
     pageNum?: number;
     pageSize?: number;
     projectId?: string;
   }
 
+  /** 付款记录创建/更新请求参数 */
   export interface PaymentDTO {
     projectId?: string;
     contractId?: string;

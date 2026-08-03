@@ -9,6 +9,7 @@ import type { VariantProps } from 'class-variance-authority';
 
 import { cva } from 'class-variance-authority';
 
+/** 头像组件的 cva 样式变体（shape 与 size），返回类名生成函数 */
 export const avatarVariant = cva(
   'inline-flex items-center justify-center font-normal text-foreground select-none shrink-0 bg-secondary overflow-hidden',
   {

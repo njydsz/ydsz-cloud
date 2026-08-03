@@ -25,6 +25,8 @@ import { useAuthStore } from '#/store';
 import { notificationStore } from '#/store/notification';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
+import { useTabbarMicroSync } from '#/hooks/use-tabbar-micro-sync';
+
 const userStore = useUserStore();
 const authStore = useAuthStore();
 const accessStore = useAccessStore();
@@ -92,6 +94,9 @@ watch(
 );
 
 onMounted(() => {
+  // 标签页-微前端联动：页签关闭时通知内核释放子应用资源
+  useTabbarMicroSync();
+
   if (accessStore.accessToken) {
     notificationStore.loadNotifications();
     notificationStore.refreshUnreadCount();

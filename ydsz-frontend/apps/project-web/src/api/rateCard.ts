@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace RateCardApi {
+  /** 计费卡视图对象 */
   export interface RateCardVO {
     id: string;
     rateName: string;
@@ -22,12 +23,14 @@ export namespace RateCardApi {
     createTime: string;
   }
 
+  /** 计费卡分页查询参数 */
   export interface RateCardPageQuery {
     pageNum?: number;
     pageSize?: number;
     rateName?: string;
   }
 
+  /** 计费卡创建/更新请求参数 */
   export interface RateCardDTO {
     rateName?: string;
     roleLevel?: string;

@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace CommentApi {
+  /** 文档评论视图对象 */
   export interface CommentVO {
     id: string;
     fileId: string;
@@ -19,12 +20,14 @@ export namespace CommentApi {
     createTime: string;
   }
 
+  /** 评论分页查询参数 */
   export interface CommentPageQuery {
     pageNum?: number;
     pageSize?: number;
     fileId?: string;
   }
 
+  /** 评论创建/更新请求参数 */
   export interface CommentDTO {
     fileId?: string;
     content?: string;

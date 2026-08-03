@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace JobDagApi {
+  /** 任务 DAG 编排视图对象 */
   export interface JobDagVO {
     id: string;
     dagName: string;
@@ -19,12 +20,14 @@ export namespace JobDagApi {
     createTime: string;
   }
 
+  /** DAG 编排分页查询参数 */
   export interface JobDagPageQuery {
     pageNum?: number;
     pageSize?: number;
     dagName?: string;
   }
 
+  /** DAG 编排创建/更新请求参数 */
   export interface JobDagDTO {
     dagName?: string;
     dagCode?: string;

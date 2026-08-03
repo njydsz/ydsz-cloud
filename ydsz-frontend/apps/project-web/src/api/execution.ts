@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace ExecutionApi {
+  /** 项目执行任务视图对象 */
   export interface ExecutionVO {
     id: string;
     taskName: string;
@@ -24,6 +25,7 @@ export namespace ExecutionApi {
     createTime: string;
   }
 
+  /** 执行任务分页查询参数 */
   export interface ExecutionPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -31,6 +33,7 @@ export namespace ExecutionApi {
     projectId?: string;
   }
 
+  /** 执行任务创建/更新请求参数 */
   export interface ExecutionDTO {
     taskName?: string;
     projectId?: string;

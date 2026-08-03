@@ -472,6 +472,11 @@ public final class SerializationProvider {
             StringBuilder sb = getSizedStringBuilder(256);
 
             if (!tryBeanSerialize(obj, sb)) {
+                // ValueWriter.writeValue → writeBeanWithCycleDetection 有自己的循环引用检测，
+                // 需先从 objects 中移除当前对象，避免误判为循环引用
+                if (isBeanType) {
+                    objects.remove(obj);
+                }
                 ValueWriter.writeValue(obj, sb);
             }
 
@@ -750,6 +755,12 @@ public final class SerializationProvider {
     private static JSONWriter tryFastPathToWriter(Object obj, SerializationContext ctx) {
         Class<?> clazz = obj.getClass();
 
+        // 简单类型（Number/CharSequence/Boolean/Character/Enum）跳过 Bean 路径，
+        // 由 ValueWriter.writeValue 统一处理
+        if (isSimpleType(obj)) {
+            return null;
+        }
+
         // 快速路径 1：Bean 类型直接使用 ASM 序列化器
         if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
             try {
@@ -813,6 +824,22 @@ public final class SerializationProvider {
     }
 
     /**
+     * 判断对象是否为简单类型（非 Bean），应由 ValueWriter 而非 ASM/BeanSerializer 处理。
+     *
+     * <p>包括：Number、CharSequence、Boolean、Character、Enum、java.util.Date、
+     * java.time.temporal.Temporal 及其子类。</p>
+     */
+    private static boolean isSimpleType(Object obj) {
+        return obj instanceof Number
+            || obj instanceof CharSequence
+            || obj instanceof Boolean
+            || obj instanceof Character
+            || obj instanceof Enum
+            || obj instanceof java.util.Date
+            || obj instanceof java.time.temporal.Temporal;
+    }
+
+    /**
      * Bean 序列化快速路径（BeanSerializer 路径，不重试 ASM）。
      *
      * <p>原 {@code tryFastSerialize} 方法中包含冗余的 ASM 调用——ASM 已在
@@ -829,6 +856,11 @@ public final class SerializationProvider {
         }
 
         Class<?> clazz = obj.getClass();
+
+        // 简单类型由 ValueWriter 处理
+        if (isSimpleType(obj)) {
+            return false;
+        }
 
         // 排除集合、Map、数组类型
         if (obj instanceof Collection ||

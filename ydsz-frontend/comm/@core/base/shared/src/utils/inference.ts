@@ -1,3 +1,14 @@
+/**
+ * 运行时环境与值的类型判断工具集。
+ *
+ * @remarks
+ * 提供 isUndefined / isBoolean / isEmpty / isHttpUrl / isWindow / isMacOs /
+ * isWindowsOs / isNumber / getFirstNonNullOrUndefined 等纯函数判断工具，
+ * 内部复用 @vue/shared 的 isFunction / isObject / isString，均无副作用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 // eslint-disable-next-line vue/prefer-import-from-vue
 import { isFunction, isObject, isString } from '@vue/shared';
 

@@ -1,5 +1,0 @@
--d
-ydsz-common/ydsz-common-safe/src/main/java\\..\\..\\target\\test_compile3
--cp
-;ydsz-common/ydsz-common-json/target/classes
-D:\\Code\\ydsz\\ydsz-pmis\\ydsz-backend\\ydsz-common\\ydsz-common-safe\\src\\main\\java\\com\\njydsz\\common\\safe\\xss\\XssPolicyFactory.java

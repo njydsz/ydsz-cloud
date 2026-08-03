@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.billable.BillableUtilizationSnapshot;
 import com.njydsz.project.server.service.BillableUtilizationSnapshotService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -71,7 +72,7 @@ public class BillableUtilizationSnapshotController {
      * @return 分页快照视图对象
      */
     @GetMapping("/page")
-    public PageResponse<BillableUtilizationSnapshotVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<BillableUtilizationSnapshotVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<BillableUtilizationSnapshot> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.billableUtilizationSnapshotListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.alert.AlertDispatch;
 import com.njydsz.project.server.service.AlertDispatchService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -74,7 +75,7 @@ public class AlertDispatchController {
      * @return 分页派发记录视图对象
      */
     @GetMapping("/page")
-    public PageResponse<AlertDispatchVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<AlertDispatchVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<AlertDispatch> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.alertDispatchListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

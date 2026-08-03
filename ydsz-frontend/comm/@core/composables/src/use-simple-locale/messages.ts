@@ -7,6 +7,7 @@
  */
 export type Locale = 'en-US' | 'zh-CN';
 
+/** 内置的极简文案字典，按语言分组，供基础组件兜底 i18n 使用；返回值为全局引用，请勿原地修改 */
 export const messages: Record<Locale, Record<string, string>> = {
   'en-US': {
     cancel: 'Cancel',

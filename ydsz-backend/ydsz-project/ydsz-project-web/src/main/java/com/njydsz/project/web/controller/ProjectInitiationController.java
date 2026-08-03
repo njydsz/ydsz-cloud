@@ -89,7 +89,7 @@ public class ProjectInitiationController {
      */
     @GetMapping("/{id}")
     public BaseResponse<ProjectInitiationVO> getById(@PathVariable String id) {
-        return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(projectInitiationService.getById(id)));
+        return BaseResponse.success(projectInitiationService.getById(id));
     }
 
     /**
@@ -100,7 +100,7 @@ public class ProjectInitiationController {
      */
     @GetMapping("/code/{projectCode}")
     public BaseResponse<ProjectInitiationVO> getByCode(@PathVariable String projectCode) {
-        return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(projectInitiationService.getByCode(projectCode)));
+        return BaseResponse.success(projectInitiationService.getByCode(projectCode));
     }
 
     /**
@@ -110,9 +110,9 @@ public class ProjectInitiationController {
      * @return 分页项目立项视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ProjectInitiationVO> page(@Valid ProjectInitiationPageQuery query) {
+    public PageResponse<List<ProjectInitiationVO>> page(@Valid ProjectInitiationPageQuery query) {
         IPage<ProjectInitiationVO> result = projectInitiationService.page(query);
-        return PageResponse.success(ProjectConverter.INSTANT.projectInitiationListToVO(result.getRecords()), result.getTotal(),
+        return PageResponse.success(result.getRecords(), result.getTotal(),
                 (int) result.getCurrent(), (int) result.getSize());
     }
 
@@ -180,6 +180,6 @@ public class ProjectInitiationController {
      */
     @GetMapping("/pm/{pmId}")
     public BaseResponse<List<ProjectInitiationVO>> listByPmId(@PathVariable String pmId) {
-        return BaseResponse.success(ProjectConverter.INSTANT.projectInitiationListToVO(projectInitiationService.listByPmId(pmId)));
+        return BaseResponse.success(projectInitiationService.listByPmId(pmId));
     }
 }

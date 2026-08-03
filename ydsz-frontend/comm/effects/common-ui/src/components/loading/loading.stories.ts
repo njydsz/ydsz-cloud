@@ -28,6 +28,7 @@ const meta: Meta<typeof Loading> = {
 export default meta;
 type Story = StoryObj<typeof Loading>;
 
+/** 默认尺寸的加载示例 */
 export const Default: Story = {
   args: {
     size: 'default',
@@ -35,6 +36,7 @@ export const Default: Story = {
   },
 };
 
+/** 小尺寸的加载示例 */
 export const Small: Story = {
   args: {
     size: 'small',
@@ -42,6 +44,7 @@ export const Small: Story = {
   },
 };
 
+/** 大尺寸的加载示例 */
 export const Large: Story = {
   args: {
     size: 'large',
@@ -49,6 +52,7 @@ export const Large: Story = {
   },
 };
 
+/** 不展示文字提示、仅保留加载图标的示例 */
 export const WithoutText: Story = {
   args: {
     size: 'default',

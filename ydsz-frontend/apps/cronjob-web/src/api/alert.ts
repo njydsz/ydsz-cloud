@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace AlertApi {
+  /** 任务告警规则视图对象 */
   export interface AlertVO {
     id: string;
     alertName: string;
@@ -21,12 +22,14 @@ export namespace AlertApi {
     createTime: string;
   }
 
+  /** 告警规则分页查询参数 */
   export interface AlertPageQuery {
     pageNum?: number;
     pageSize?: number;
     alertName?: string;
   }
 
+  /** 告警规则创建/更新请求参数 */
   export interface AlertDTO {
     alertName?: string;
     alertType?: string;

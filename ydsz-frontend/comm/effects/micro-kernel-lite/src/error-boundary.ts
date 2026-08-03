@@ -14,15 +14,18 @@ import type { MicroAppConfig } from '@ydsz/micro-runtime';
 /** 本次会话应用降级 set（key = app.name，该应用不再尝试微前端加载，走整页跳转） */
 const degradedApps = new Set<string>();
 
+/** 将指定子应用标记为本次会话降级，后续不再尝试微前端加载，直接整页跳转 */
 export function markDegraded(appName: string): void {
   degradedApps.add(appName);
   console.warn(`[LiteKernel] ${appName} degraded to full-page navigation`);
 }
 
+/** 判断指定子应用是否已被标记为本会话降级状态 */
 export function isDegraded(appName: string): boolean {
   return degradedApps.has(appName);
 }
 
+/** 清空本次会话的全部子应用降级标记 */
 export function clearDegraded(): void {
   degradedApps.clear();
 }

@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace PreferenceApi {
+  /** 消息偏好设置视图对象 */
   export interface PreferenceVO {
     id: string;
     userId: string;
@@ -21,12 +22,14 @@ export namespace PreferenceApi {
     createTime: string;
   }
 
+  /** 偏好设置分页查询参数 */
   export interface PreferencePageQuery {
     pageNum?: number;
     pageSize?: number;
     userId?: string;
   }
 
+  /** 偏好设置创建/更新请求参数 */
   export interface PreferenceDTO {
     userId?: string;
     channel?: string;

@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace DslApi {
+  /** 规则 DSL 脚本视图对象 */
   export interface DslVO {
     id: string;
     dslName: string;
@@ -19,12 +20,14 @@ export namespace DslApi {
     createTime: string;
   }
 
+  /** DSL 分页查询参数 */
   export interface DslPageQuery {
     pageNum?: number;
     pageSize?: number;
     dslName?: string;
   }
 
+  /** DSL 创建/更新请求参数 */
   export interface DslDTO {
     dslName?: string;
     dslContent?: string;

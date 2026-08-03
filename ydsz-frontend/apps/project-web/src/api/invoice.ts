@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace InvoiceApi {
+  /** 项目发票视图对象 */
   export interface InvoiceVO {
     id: string;
     invoiceCode: string;
@@ -22,12 +23,14 @@ export namespace InvoiceApi {
     createTime: string;
   }
 
+  /** 发票分页查询参数 */
   export interface InvoicePageQuery {
     pageNum?: number;
     pageSize?: number;
     invoiceCode?: string;
   }
 
+  /** 发票创建/更新请求参数 */
   export interface InvoiceDTO {
     invoiceCode?: string;
     projectId?: string;

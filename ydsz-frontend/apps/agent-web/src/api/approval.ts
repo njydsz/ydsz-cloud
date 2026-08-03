@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace ApprovalApi {
+  /** Agent 工具调用审批单视图对象 */
   export interface ApprovalVO {
     /** 审批单唯一 ID */
     id: string;
@@ -27,6 +28,7 @@ export namespace ApprovalApi {
     createTime: string;
   }
 
+  /** 审批单分页查询参数 */
   export interface ApprovalPageQuery {
     /** 页码，从 1 开始 */
     pageNum?: number;
@@ -38,6 +40,7 @@ export namespace ApprovalApi {
     approvalStatus?: string;
   }
 
+  /** 审批单创建/更新请求参数 */
   export interface ApprovalDTO {
     /** 关联 Agent 的 ID */
     agentId?: string;

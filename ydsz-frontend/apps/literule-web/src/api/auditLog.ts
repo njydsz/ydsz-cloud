@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace AuditLogApi {
+  /** 规则审计日志视图对象 */
   export interface AuditLogVO {
     id: string;
     ruleCode: string;
@@ -21,12 +22,14 @@ export namespace AuditLogApi {
     createTime: string;
   }
 
+  /** 审计日志分页查询参数 */
   export interface AuditLogPageQuery {
     pageNum?: number;
     pageSize?: number;
     ruleCode?: string;
   }
 
+  /** 审计日志创建/更新请求参数 */
   export interface AuditLogDTO {
     ruleCode?: string;
     operator?: string;

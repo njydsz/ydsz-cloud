@@ -15,6 +15,7 @@ import axios from 'axios';
 
 import { BusinessError } from './business-error';
 
+/** 默认响应拦截器：按 codeField/successCode 判定业务成功，剥离 dataField 数据或抛 BusinessError */
 export const defaultResponseInterceptor = ({
   codeField = 'code',
   dataField = 'data',

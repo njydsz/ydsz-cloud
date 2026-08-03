@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace RagApi {
+  /** RAG 知识库视图对象 */
   export interface RagVO {
     /** 知识库唯一 ID */
     id: string;
@@ -29,6 +30,7 @@ export namespace RagApi {
     createTime: string;
   }
 
+  /** RAG 知识库分页查询参数 */
   export interface RagPageQuery {
     /** 页码，从 1 开始 */
     pageNum?: number;
@@ -38,6 +40,7 @@ export namespace RagApi {
     knowledgeName?: string;
   }
 
+  /** RAG 知识库创建/更新请求参数 */
   export interface RagDTO {
     /** 知识库名称 */
     knowledgeName?: string;

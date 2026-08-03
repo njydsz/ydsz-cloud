@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.execution.ExecutionClosure;
 import com.njydsz.project.server.service.ExecutionClosureService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -72,7 +73,7 @@ public class ExecutionClosureController {
      * @return 分页结项记录视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ExecutionClosureVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ExecutionClosureVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ExecutionClosure> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.executionClosureListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

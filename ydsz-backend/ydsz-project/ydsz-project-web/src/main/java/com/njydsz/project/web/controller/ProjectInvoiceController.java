@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.project.ProjectInvoice;
 import com.njydsz.project.server.service.ProjectInvoiceService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -85,7 +86,7 @@ public class ProjectInvoiceController {
      * @return 分页发票视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ProjectInvoiceVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ProjectInvoiceVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectInvoice> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.projectInvoiceListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

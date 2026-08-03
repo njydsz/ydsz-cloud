@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace AgentApi {
+  /** Agent 智能体视图对象，描述单个智能体的配置与状态 */
   export interface AgentVO {
     /** 智能体唯一 ID */
     id: string;
@@ -31,6 +32,7 @@ export namespace AgentApi {
     createTime: string;
   }
 
+  /** Agent 智能体分页查询参数 */
   export interface AgentPageQuery {
     /** 页码，从 1 开始 */
     pageNum?: number;
@@ -40,6 +42,7 @@ export namespace AgentApi {
     agentName?: string;
   }
 
+  /** Agent 智能体创建/更新请求参数 */
   export interface AgentDTO {
     /** 智能体名称 */
     agentName?: string;

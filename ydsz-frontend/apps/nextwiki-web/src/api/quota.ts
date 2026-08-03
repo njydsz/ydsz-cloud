@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace QuotaApi {
+  /** 文件配额视图对象 */
   export interface QuotaVO {
     id: string;
     userId: string;
@@ -19,12 +20,14 @@ export namespace QuotaApi {
     createTime: string;
   }
 
+  /** 配额分页查询参数 */
   export interface QuotaPageQuery {
     pageNum?: number;
     pageSize?: number;
     userId?: string;
   }
 
+  /** 配额创建/更新请求参数 */
   export interface QuotaDTO {
     userId?: string;
     totalQuota?: number;

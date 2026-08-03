@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace ExpenseApi {
+  /** 项目费用记录视图对象 */
   export interface ExpenseVO {
     id: string;
     projectId: string;
@@ -22,6 +23,7 @@ export namespace ExpenseApi {
     createTime: string;
   }
 
+  /** 费用记录分页查询参数 */
   export interface ExpensePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -29,6 +31,7 @@ export namespace ExpenseApi {
     projectId?: string;
   }
 
+  /** 费用记录创建/更新请求参数 */
   export interface ExpenseDTO {
     projectId?: string;
     expenseType?: string;

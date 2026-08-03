@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace JobApi {
+  /** 定时任务视图对象 */
   export interface JobVO {
     id: string;
     jobName: string;
@@ -22,6 +23,7 @@ export namespace JobApi {
     createTime: string;
   }
 
+  /** 定时任务分页查询参数 */
   export interface JobPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -29,6 +31,7 @@ export namespace JobApi {
     jobGroup?: string;
   }
 
+  /** 定时任务创建/更新请求参数 */
   export interface JobDTO {
     jobName?: string;
     jobGroup?: string;

@@ -884,7 +884,12 @@ public final class JSONReader {
         if (ch == '}') { pos++; return null; }
         if (ch == ',') { pos++; while (pos < len) { ch = buf[pos]; if (ch == '"') break; pos++; } }
         if (pos >= len || buf[pos] != '"') return null;
-        return readString();
+        String name = readString();
+        // 消费冒号（含前置空白）
+        while (pos < len && buf[pos] <= ' ') pos++;
+        if (pos < len && buf[pos] == ':') pos++;
+        while (pos < len && buf[pos] <= ' ') pos++;
+        return name;
     }
     
     /**

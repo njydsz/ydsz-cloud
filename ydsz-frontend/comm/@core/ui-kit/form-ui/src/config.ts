@@ -29,8 +29,10 @@ import { defineRule } from 'vee-validate';
 
 const DEFAULT_MODEL_PROP_NAME = 'modelValue';
 
+/** 表单控件行为默认配置，由 setupYDSZForm 在启动时合并宿主传入的覆盖项 */
 export const DEFAULT_FORM_COMMON_CONFIG: FormCommonConfig = {};
 
+/** 基础表单控件类型到渲染组件的映射表，可由宿主通过 globalShareState 注册的组件按需覆盖 */
 export const COMPONENT_MAP: Record<BaseFormComponentType, Component> = {
   DefaultButton: h(YDSZButton, { size: 'sm', variant: 'outline' }),
   PrimaryButton: h(YDSZButton, { size: 'sm', variant: 'default' }),
@@ -41,6 +43,7 @@ export const COMPONENT_MAP: Record<BaseFormComponentType, Component> = {
   YDSZSelect,
 };
 
+/** 各表单控件默认绑定的 v-model prop 名映射，如复选框使用 `checked` 而非 `modelValue` */
 export const COMPONENT_BIND_EVENT_MAP: Partial<
   Record<BaseFormComponentType, string>
 > = {

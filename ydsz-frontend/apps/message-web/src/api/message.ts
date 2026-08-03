@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace MessageApi {
+  /** 消息发送记录视图对象 */
   export interface MessageVO {
     id: string;
     messageId: string;
@@ -22,6 +23,7 @@ export namespace MessageApi {
     createTime: string;
   }
 
+  /** 消息记录分页查询参数 */
   export interface MessagePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -29,6 +31,7 @@ export namespace MessageApi {
     status?: string;
   }
 
+  /** 消息发送请求参数 */
   export interface MessageDTO {
     channel?: string;
     recipient?: string;

@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace ShareApi {
+  /** 文件分享记录视图对象 */
   export interface ShareVO {
     id: string;
     fileName: string;
@@ -20,12 +21,14 @@ export namespace ShareApi {
     createTime: string;
   }
 
+  /** 分享记录分页查询参数 */
   export interface SharePageQuery {
     pageNum?: number;
     pageSize?: number;
     fileName?: string;
   }
 
+  /** 分享创建/更新请求参数 */
   export interface ShareDTO {
     fileId?: string;
     shareTo?: string;

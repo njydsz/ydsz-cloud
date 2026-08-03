@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.provider.DeserializationProvider;
@@ -37,6 +38,7 @@ class CoreEngineTest {
 
     @BeforeEach
     void setUp() {
+        AutoTypeChecker.setSafeMode(false);
         SerializationProvider.clearThreadLocals();
         JsonParserUtil.clearThreadLocals();
         JsonConfig.getInstance().apply();
@@ -44,6 +46,7 @@ class CoreEngineTest {
 
     @AfterEach
     void tearDown() {
+        AutoTypeChecker.setSafeMode(true);
         SerializationProvider.clearThreadLocals();
         JsonParserUtil.clearThreadLocals();
         JsonConfig.getInstance().apply();
@@ -199,8 +202,10 @@ class CoreEngineTest {
         JSONReader r = new JSONReader("{\"k\":[1]}");
         r.readObjectStart();
         assertEquals('\"', r.peek());
+        r.readFieldName(); // 读取字段名 "k" 和冒号
         r.readArrayStart();
         assertEquals('1', r.peek());
+        r.readInt(); // 读取数组元素 1
         r.readArrayEnd();
         r.readObjectEnd();
     }
@@ -219,11 +224,12 @@ class CoreEngineTest {
 
     @Test
     void jsonReaderSkipWhitespaceAndNextChar() {
-        JSONReader r = new JSONReader("  {  ");
+        JSONReader r = new JSONReader("  {  }");
         r.skipWhitespace();
         assertEquals('{', r.nextChar());
         r.skipWhitespace();
         assertTrue(!r.isEnd());
+        assertEquals('}', r.peek());
     }
 
     @Test

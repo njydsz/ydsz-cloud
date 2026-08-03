@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace RiskApi {
+  /** 项目风险视图对象 */
   export interface RiskVO {
     id: string;
     projectId: string;
@@ -23,12 +24,14 @@ export namespace RiskApi {
     createTime: string;
   }
 
+  /** 风险分页查询参数 */
   export interface RiskPageQuery {
     pageNum?: number;
     pageSize?: number;
     riskName?: string;
   }
 
+  /** 风险创建/更新请求参数 */
   export interface RiskDTO {
     projectId?: string;
     riskName?: string;

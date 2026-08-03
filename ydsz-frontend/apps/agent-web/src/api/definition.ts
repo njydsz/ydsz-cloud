@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace DefinitionApi {
+  /** Agent 工具定义视图对象 */
   export interface DefinitionVO {
     /** 工具定义唯一 ID */
     id: string;
@@ -29,6 +30,7 @@ export namespace DefinitionApi {
     createTime: string;
   }
 
+  /** 工具定义分页查询参数 */
   export interface DefinitionPageQuery {
     /** 页码，从 1 开始 */
     pageNum?: number;
@@ -38,6 +40,7 @@ export namespace DefinitionApi {
     defName?: string;
   }
 
+  /** 工具定义创建/更新请求参数 */
   export interface DefinitionDTO {
     /** 工具名称 */
     defName?: string;

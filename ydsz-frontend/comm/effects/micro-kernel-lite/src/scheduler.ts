@@ -15,8 +15,10 @@
 import type { LifecycleExports, MicroAppConfig, MountProps, UnmountResult } from '@ydsz/micro-runtime';
 import { loadApp, removeStylesheets } from './loader';
 
+/** 子应用生命周期状态：未加载 / 加载中 / 已加载 / 已挂载 / 已卸载 */
 export type AppStatus = 'NOT_LOADED' | 'LOADING' | 'LOADED' | 'MOUNTED' | 'UNMOUNTED';
 
+/** 单个子应用在调度器中的运行时实例，含配置、生命周期导出、状态与保活缓存 */
 export interface AppInstance {
   config: MicroAppConfig;
   status: AppStatus;
@@ -31,6 +33,7 @@ export interface AppInstance {
 
 const appInstances = new Map<string, AppInstance>();
 
+/** 创建并注册一个新的子应用实例，初始状态为 NOT_LOADED */
 export function createAppInstance(config: MicroAppConfig): AppInstance {
   const instance: AppInstance = {
     config,
@@ -45,10 +48,12 @@ export function createAppInstance(config: MicroAppConfig): AppInstance {
   return instance;
 }
 
+/** 按子应用名称获取已注册的实例，未注册时返回 undefined */
 export function getAppInstance(name: string): AppInstance | undefined {
   return appInstances.get(name);
 }
 
+/** 获取全部已注册的子应用实例列表，供调试与巡检使用 */
 export function getAllInstances(): AppInstance[] {
   return [...appInstances.values()];
 }

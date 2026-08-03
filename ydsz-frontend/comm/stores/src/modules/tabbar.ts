@@ -57,6 +57,24 @@ interface TabbarState {
 }
 
 /**
+ * 标签关闭回调注册中心。
+ * 主应用布局可注册回调，在标签关闭时通知微前端内核 unmountApp。
+ * 回调接收已关闭标签的 path（如 '/ydsz-proj/execution'）。
+ */
+const tabClosedCallbacks = new Set<(path: string) => void>();
+
+export function onTabClosed(callback: (path: string) => void) {
+  tabClosedCallbacks.add(callback);
+  return () => { tabClosedCallbacks.delete(callback); };
+}
+
+function notifyTabClosed(path: string) {
+  for (const cb of tabClosedCallbacks) {
+    try { cb(path); } catch (err) { console.error('[Tabbar] onTabClosed error:', err); }
+  }
+}
+
+/**
  * @zh_CN 访问权限相关
  */
 export const useTabbarStore = defineStore('core-tabbar', {
@@ -81,7 +99,11 @@ export const useTabbarStore = defineStore('core-tabbar', {
         return;
       }
       const index = this.tabs.findIndex((item) => equalTab(item, tab));
-      index !== -1 && this.tabs.splice(index, 1);
+      if (index !== -1) {
+        const closedPath = this.tabs[index]!.fullPath || this.tabs[index]!.path;
+        this.tabs.splice(index, 1);
+        notifyTabClosed(closedPath);
+      }
     },
     /**
      * @zh_CN 跳转到默认标签页

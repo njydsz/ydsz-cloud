@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace EvmApi {
+  /** EVM 挣值指标视图对象 */
   export interface EvmVO {
     id: string;
     projectId: string;
@@ -24,12 +25,14 @@ export namespace EvmApi {
     createTime: string;
   }
 
+  /** EVM 指标分页查询参数 */
   export interface EvmPageQuery {
     pageNum?: number;
     pageSize?: number;
     projectId?: string;
   }
 
+  /** EVM 指标创建/更新请求参数 */
   export interface EvmDTO {
     projectId?: string;
     measureDate?: string;

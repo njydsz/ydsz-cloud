@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.warranty.Warranty;
 import com.njydsz.project.server.service.WarrantyService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -90,7 +91,7 @@ public class WarrantyController {
      * @return 分页质保记录视图对象
      */
     @GetMapping("/page")
-    public PageResponse<WarrantyVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<WarrantyVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<Warranty> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.warrantyListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

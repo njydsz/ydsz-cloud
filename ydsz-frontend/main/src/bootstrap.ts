@@ -47,11 +47,9 @@ export let microRuntime: ReturnType<typeof createRuntime> | null = null;
  * 启动微前端运行时。
  *
  * 注册 qiankun adapter 作为内核，通过接口层 API 完成微应用注册与启动。
- * 保留hover预加载策略（从原 registerQiankun 平移，逻辑不变）。
+ * 预加载策略：登录后 requestIdleCallback 预加载最常用子应用，避免启动时全量加载。
  */
 function registerMicroRuntime() {
-  const { setupHoverPrefetch } = import('./qiankun/prefetch');
-
   // 1. 注册 qiankun 内核（业务零改动，只是包了一层）
   registerKernel('qiankun', () => createQiankunAdapter());
 
@@ -78,10 +76,41 @@ function registerMicroRuntime() {
     prefetch: false,
   });
 
-  // 6. Hover 预加载策略（逻辑不变，从 main/src/qiankun/prefetch.ts 独立模块加载）
-  import('./qiankun/prefetch').then(({ setupHoverPrefetch }) => {
-    setupHoverPrefetch();
-  });
+  // 6. 空闲时预加载最常用子应用（替代原 90 行 hover prefetch）
+  setupIdlePrefetch();
+}
+
+/**
+ * 空闲预加载：登录后按配置列表预加载最常用的子应用入口。
+ *
+ * 替代原来的自研 hover prefetch（bootstrap.ts 137-227 行），
+ * 用 requestIdleCallback 延迟预加载，不依赖鼠标行为。
+ */
+function setupIdlePrefetch() {
+  const PREFETCH_LIST = ['userinfo-web', 'project-web'];
+
+  const prefetchByLink = (entry: string) => {
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = entry;
+    link.as = 'document';
+    document.head.appendChild(link);
+  };
+
+  const doPrefetch = () => {
+    for (const name of PREFETCH_LIST) {
+      const app = microApps.find((a) => a.name === name);
+      if (app) prefetchByLink(app.entry);
+    }
+  };
+
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(doPrefetch, { timeout: 4000 });
+  } else {
+    setTimeout(doPrefetch, 3000);
+  }
+
+  console.info('[MicroRuntime] Idle prefetch strategy installed');
 }
 
 /**

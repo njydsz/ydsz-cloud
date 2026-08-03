@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace BatchApi {
+  /** 消息批量发送任务视图对象 */
   export interface BatchVO {
     id: string;
     batchName: string;
@@ -21,12 +22,14 @@ export namespace BatchApi {
     createTime: string;
   }
 
+  /** 批量发送任务分页查询参数 */
   export interface BatchPageQuery {
     pageNum?: number;
     pageSize?: number;
     batchName?: string;
   }
 
+  /** 批量发送任务创建/更新请求参数 */
   export interface BatchDTO {
     batchName?: string;
     channel?: string;

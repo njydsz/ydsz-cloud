@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace ConnectorApi {
+  /** 任务执行器视图对象 */
   export interface ConnectorVO {
     id: string;
     connectorName: string;
@@ -20,12 +21,14 @@ export namespace ConnectorApi {
     createTime: string;
   }
 
+  /** 执行器分页查询参数 */
   export interface ConnectorPageQuery {
     pageNum?: number;
     pageSize?: number;
     connectorName?: string;
   }
 
+  /** 执行器创建/更新请求参数 */
   export interface ConnectorDTO {
     connectorName?: string;
     connectorType?: string;

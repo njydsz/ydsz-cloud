@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace InitiationApi {
+  /** 项目立项视图对象 */
   export interface InitiationVO {
     id: string;
     projectCode: string;
@@ -24,6 +25,7 @@ export namespace InitiationApi {
     createTime: string;
   }
 
+  /** 立项分页查询参数 */
   export interface InitiationPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -31,6 +33,7 @@ export namespace InitiationApi {
     projectCode?: string;
   }
 
+  /** 立项创建/更新请求参数 */
   export interface InitiationDTO {
     projectCode?: string;
     projectName?: string;

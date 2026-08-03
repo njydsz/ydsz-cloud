@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.satisfaction.Satisfaction;
 import com.njydsz.project.server.service.SatisfactionService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -92,7 +93,7 @@ public class SatisfactionController {
      * @return 分页评价视图对象
      */
     @GetMapping("/page")
-    public PageResponse<SatisfactionVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<SatisfactionVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<Satisfaction> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.satisfactionListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

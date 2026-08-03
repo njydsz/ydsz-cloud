@@ -8,6 +8,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.project.domain.entity.project.ProjectGateReview;
 import com.njydsz.project.server.service.ProjectGateReviewService;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -80,7 +81,7 @@ public class ProjectGateReviewController {
      * @return 分页评审记录视图对象
      */
     @GetMapping("/page")
-    public PageResponse<ProjectGateReviewVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<List<ProjectGateReviewVO>> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectGateReview> r = service.page(p, s);
         return PageResponse.success(ProjectConverter.INSTANT.projectGateReviewListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

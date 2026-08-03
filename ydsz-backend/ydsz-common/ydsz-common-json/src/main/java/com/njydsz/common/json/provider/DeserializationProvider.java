@@ -290,6 +290,8 @@ public final class DeserializationProvider {
             if (e.getContextSnippet() != null) {
                 throw e;
             }
+            System.err.println("[DEBUG] Original JsonDeserializationException: " + e.getClass().getName() + ": " + e.getMessage() + ", position=" + e.getPosition());
+            e.printStackTrace(System.err);
             throw JsonDeserializationException.parseError(json, e.getPosition());
         } catch (Exception e) {
             // 注入 JSON 上下文片段，帮助用户快速定位问题
@@ -474,13 +476,21 @@ public final class DeserializationProvider {
                     || rawType == LinkedHashMap.class
                     || rawType == TreeMap.class) {
                 Type[] typeArgs = pt.getActualTypeArguments();
-                if (typeArgs.length == 2) {
-                    // 安全检查：校验 Map 的 value 类型，防止泛型路径绕过 AutoType 白名单
-                    if (typeArgs[1] instanceof Class<?> valueClass) {
-                        AutoTypeChecker.checkType(valueClass);
+                Map<String, Object> parsed = JsonParserUtil.parseObject(json);
+                if (parsed == null) return null;
+                // 当 value 类型为已知简单类型时，转换解析结果（如 Long → Integer）
+                if (typeArgs.length == 2 && typeArgs[1] instanceof Class<?> valueClass) {
+                    AutoTypeChecker.checkType(valueClass);
+                    if (valueClass != Object.class) {
+                        Map<String, Object> result = createMap(rawType);
+                        for (Map.Entry<String, Object> entry : parsed.entrySet()) {
+                            result.put(entry.getKey(),
+                                TypeConverter.convertValue(entry.getValue(), valueClass));
+                        }
+                        return result;
                     }
                 }
-                return JsonParserUtil.parseObject(json);
+                return parsed;
             }
 
             if (rawType == Set.class || rawType == HashSet.class
@@ -539,5 +549,17 @@ public final class DeserializationProvider {
         }
         set.addAll(list);
         return set;
+    }
+
+    /**
+     * 根据 rawType 创建对应的 Map 实例。
+     */
+    private static Map<String, Object> createMap(Type rawType) {
+        if (rawType == TreeMap.class) {
+            return new TreeMap<>();
+        } else if (rawType == LinkedHashMap.class) {
+            return new LinkedHashMap<>();
+        }
+        return new HashMap<>();
     }
 }

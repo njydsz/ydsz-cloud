@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace ContractApi {
+  /** 项目合同视图对象 */
   export interface ContractVO {
     id: string;
     contractCode: string;
@@ -24,6 +25,7 @@ export namespace ContractApi {
     createTime: string;
   }
 
+  /** 合同分页查询参数 */
   export interface ContractPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -31,6 +33,7 @@ export namespace ContractApi {
     contractCode?: string;
   }
 
+  /** 合同创建/更新请求参数 */
   export interface ContractDTO {
     contractCode?: string;
     contractName?: string;

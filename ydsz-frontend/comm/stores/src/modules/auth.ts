@@ -41,6 +41,7 @@ interface TokenState {
   lockScreenPassword?: string;
 }
 
+/** 认证令牌 Store：负责 accessToken / refreshToken / 锁屏状态的存取与持久化，登录登出业务在 useAuthStore 中 */
 export const useTokenStore = defineStore('core-auth', {
   actions: {
     setAccessToken(token: AuthToken) {

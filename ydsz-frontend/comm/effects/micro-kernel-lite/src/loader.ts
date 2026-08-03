@@ -13,6 +13,7 @@
 
 import type { LifecycleExports, MicroAppConfig } from '@ydsz/micro-runtime';
 
+/** 子应用构建产出的 manifest.json 结构：应用名、入口、样式表列表与版本号 */
 export interface Manifest {
   name: string;
   entry: string;
