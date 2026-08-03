@@ -61,3 +61,7 @@ export {
   setupCommonGuard,
   setupPermissionGuard,
 } from './guards';
+
+export {
+  createOpenApiClient,
+} from './create-openapi-client';

@@ -41,7 +41,7 @@ function handleClick(path?: string) {
 }
 </script>
 <template>
-  <Breadcrumb>
+  <Breadcrumb aria-label="面包屑导航">
     <BreadcrumbList>
       <TransitionGroup name="breadcrumb-transition">
         <template
@@ -51,17 +51,17 @@ function handleClick(path?: string) {
           <BreadcrumbItem>
             <div v-if="item.items?.length ?? 0 > 0">
               <DropdownMenu>
-                <DropdownMenuTrigger class="flex items-center gap-1">
-                  <YDSZIcon v-if="showIcon" :icon="item.icon" class="size-5" />
+                <DropdownMenuTrigger class="flex items-center gap-1" aria-haspopup="menu">
+                  <YDSZIcon v-if="showIcon" :icon="item.icon" class="size-5" aria-hidden="true" />
                   {{ item.title }}
-                  <ChevronDown class="size-4" />
+                  <ChevronDown class="size-4" aria-hidden="true" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
+                <DropdownMenuContent align="start" role="menu">
                   <template
                     v-for="menuItem in item.items"
                     :key="`sub-${menuItem.path}`"
                   >
-                    <DropdownMenuItem @click.stop="handleClick(menuItem.path)">
+                    <DropdownMenuItem role="menuitem" @click.stop="handleClick(menuItem.path)">
                       {{ menuItem.title }}
                     </DropdownMenuItem>
                   </template>
@@ -71,6 +71,7 @@ function handleClick(path?: string) {
             <BreadcrumbLink
               v-else-if="index !== breadcrumbs.length - 1"
               href="javascript:void 0"
+              :aria-label="`导航到 ${item.title}`"
               @click.stop="handleClick(item.path)"
             >
               <div class="flex-center">
@@ -79,23 +80,26 @@ function handleClick(path?: string) {
                   :class="{ 'size-5': item.isHome }"
                   :icon="item.icon"
                   class="mr-1 size-4"
+                  aria-hidden="true"
                 />
                 {{ item.title }}
               </div>
             </BreadcrumbLink>
-            <BreadcrumbPage v-else>
+            <BreadcrumbPage v-else :aria-current="index === breadcrumbs.length - 1 ? 'page' : undefined">
               <div class="flex-center">
                 <YDSZIcon
                   v-if="showIcon"
                   :class="{ 'size-5': item.isHome }"
                   :icon="item.icon"
                   class="mr-1 size-4"
+                  aria-hidden="true"
                 />
                 {{ item.title }}
               </div>
             </BreadcrumbPage>
             <BreadcrumbSeparator
               v-if="index < breadcrumbs.length - 1 && !item.isHome"
+              aria-hidden="true"
             />
           </BreadcrumbItem>
         </template>

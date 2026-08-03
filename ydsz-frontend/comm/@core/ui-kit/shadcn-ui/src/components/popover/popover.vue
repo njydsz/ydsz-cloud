@@ -58,6 +58,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       <PopoverContent
         :class="contentClass"
         class="side-content z-popup"
+        role="dialog"
         v-bind="contentProps"
       >
         <slot></slot>

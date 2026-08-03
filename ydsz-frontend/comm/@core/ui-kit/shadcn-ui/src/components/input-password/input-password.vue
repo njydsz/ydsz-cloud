@@ -42,10 +42,11 @@ const show = ref(false);
       v-model="modelValue"
       :class="cn(props.class)"
       :type="show ? 'text' : 'password'"
+      :aria-label="$attrs.placeholder || '密码输入框'"
     />
     <template v-if="passwordStrength">
-      <PasswordStrength :password="modelValue" />
-      <p v-if="slots.strengthText" class="text-muted-foreground mt-1.5 text-xs">
+      <PasswordStrength :password="modelValue" aria-label="密码强度指示器" />
+      <p v-if="slots.strengthText" class="text-muted-foreground mt-1.5 text-xs" aria-live="polite">
         <slot name="strengthText"> </slot>
       </p>
     </template>
@@ -55,10 +56,16 @@ const show = ref(false);
         'top-1/2 -translate-y-1/2 items-center': !passwordStrength,
       }"
       class="hover:text-foreground text-foreground/60 absolute inset-y-0 right-0 flex cursor-pointer pr-3 text-lg leading-5"
+      role="button"
+      :aria-label="show ? '隐藏密码' : '显示密码'"
+      :aria-pressed="show"
+      tabindex="0"
       @click="show = !show"
+      @keydown.enter="show = !show"
+      @keydown.space="show = !show"
     >
-      <Eye v-if="show" class="size-4" />
-      <EyeOff v-else class="size-4" />
+      <Eye v-if="show" class="size-4" aria-hidden="true" />
+      <EyeOff v-else class="size-4" aria-hidden="true" />
     </div>
   </div>
 </template>

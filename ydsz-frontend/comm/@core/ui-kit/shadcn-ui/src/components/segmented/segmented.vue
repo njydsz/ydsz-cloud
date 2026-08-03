@@ -46,12 +46,14 @@ const tabsIndicatorStyle = computed(() => {
 
 <template>
   <Tabs v-model="activeTab" :default-value="getDefaultValue">
-    <TabsList :style="tabsStyle" class="bg-accent relative grid w-full">
+    <TabsList :style="tabsStyle" class="bg-accent relative grid w-full" role="tablist">
       <TabsIndicator :style="tabsIndicatorStyle" />
       <template v-for="tab in tabs" :key="tab.value">
         <TabsTrigger
           :value="tab.value"
           class="z-20 inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium disabled:pointer-events-none disabled:opacity-50"
+          role="tab"
+          :aria-label="tab.label"
         >
           {{ tab.label }}
         </TabsTrigger>

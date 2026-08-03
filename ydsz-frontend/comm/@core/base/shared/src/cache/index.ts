@@ -6,3 +6,4 @@
  * @since 1.0.0
  */
 export * from './storage-manager';
+export * from './broadcast-channel';

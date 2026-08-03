@@ -102,6 +102,8 @@ function handleScroll(event: Event) {
     :class="[cn(props.class), computedShadowClasses]"
     :on-scroll="handleScroll"
     class="ydsz-scrollbar relative"
+    role="region"
+    aria-label="可滚动区域"
   >
     <div
       v-if="showShadowTop"

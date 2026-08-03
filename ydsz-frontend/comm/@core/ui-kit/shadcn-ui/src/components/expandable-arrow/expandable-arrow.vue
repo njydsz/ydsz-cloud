@@ -19,16 +19,21 @@ const collapsed = defineModel({ default: false });
 
 <template>
   <div
-    :class="cn('ydsz-link inline-flex items-center', props.class)"
+    :class="cn('ydsz-link inline-flex cursor-pointer items-center', props.class)"
+    role="button"
+    tabindex="0"
+    :aria-expanded="!collapsed"
     @click="collapsed = !collapsed"
+    @keydown.enter="collapsed = !collapsed"
+    @keydown.space.prevent="collapsed = !collapsed"
   >
     <slot :is-expanded="collapsed">
       {{ collapsed }}
-      <!-- <span>{{ isExpanded ? '收起' : '展开' }}</span> -->
     </slot>
     <div
       :class="{ 'rotate-180': !collapsed }"
       class="transition-transform duration-300"
+      aria-hidden="true"
     >
       <slot name="icon">
         <ChevronDown class="size-4" />

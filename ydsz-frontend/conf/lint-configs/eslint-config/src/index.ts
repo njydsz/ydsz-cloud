@@ -20,6 +20,7 @@ import {
   perfectionist,
   prettier,
   regexp,
+  sandbox,
   test,
   turbo,
   typescript,

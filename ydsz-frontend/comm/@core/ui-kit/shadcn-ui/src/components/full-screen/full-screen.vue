@@ -28,8 +28,12 @@ isFullscreen.value = !!(
 );
 </script>
 <template>
-  <YDSZIconButton @click="toggle">
-    <Minimize v-if="isFullscreen" class="text-foreground size-4" />
-    <Maximize v-else class="text-foreground size-4" />
+  <YDSZIconButton
+    :aria-label="isFullscreen ? '退出全屏' : '进入全屏'"
+    :aria-pressed="isFullscreen"
+    @click="toggle"
+  >
+    <Minimize v-if="isFullscreen" class="text-foreground size-4" aria-hidden="true" />
+    <Maximize v-else class="text-foreground size-4" aria-hidden="true" />
   </YDSZIconButton>
 </template>

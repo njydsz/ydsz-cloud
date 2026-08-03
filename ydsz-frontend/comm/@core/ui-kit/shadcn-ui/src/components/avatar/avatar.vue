@@ -68,15 +68,18 @@ const rootStyle = computed(() => {
     :class="props.class"
     :style="rootStyle"
     class="relative flex flex-shrink-0 items-center"
+    role="img"
+    :aria-label="alt"
   >
     <Avatar :class="props.class" class="size-full">
       <AvatarImage :alt="alt" :src="src" :style="imageStyle" />
-      <AvatarFallback>{{ text }}</AvatarFallback>
+      <AvatarFallback aria-hidden="true">{{ text }}</AvatarFallback>
     </Avatar>
     <span
       v-if="dot"
       :class="dotClass"
       class="border-background absolute bottom-0 right-0 size-3 rounded-full border-2"
+      aria-hidden="true"
     >
     </span>
   </div>

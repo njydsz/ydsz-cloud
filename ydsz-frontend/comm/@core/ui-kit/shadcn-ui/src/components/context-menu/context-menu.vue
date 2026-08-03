@@ -77,6 +77,7 @@ function handleClick(menu: IContextMenuItem) {
       :class="contentClass"
       v-bind="contentProps"
       class="side-content z-popup"
+      role="menu"
     >
       <template v-for="menu in menusView" :key="menu.key">
         <ContextMenuItem
@@ -84,12 +85,15 @@ function handleClick(menu: IContextMenuItem) {
           :disabled="menu.disabled"
           :inset="menu.inset || !menu.icon"
           class="cursor-pointer"
+          role="menuitem"
+          :aria-label="menu.text"
           @click="handleClick(menu)"
         >
           <component
             :is="menu.icon"
             v-if="menu.icon"
             class="mr-2 size-4 text-lg"
+            aria-hidden="true"
           />
 
           {{ menu.text }}
@@ -97,7 +101,7 @@ function handleClick(menu: IContextMenuItem) {
             {{ menu.shortcut }}
           </ContextMenuShortcut>
         </ContextMenuItem>
-        <ContextMenuSeparator v-if="menu.separator" />
+        <ContextMenuSeparator v-if="menu.separator" role="separator" />
       </template>
     </ContextMenuContent>
   </ContextMenu>

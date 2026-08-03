@@ -119,7 +119,7 @@ function formatNumber(num: number | string) {
 defineExpose({ reset });
 </script>
 <template>
-  <span :style="{ color }">
+  <span :style="{ color }" aria-live="polite" role="status">
     {{ value }}
   </span>
 </template>

@@ -58,6 +58,7 @@ withDefaults(defineProps<Props>(), {
     <a
       :class="$attrs.class"
       :href="href"
+      :aria-label="text"
       class="flex h-full items-center gap-2 overflow-hidden px-3 text-lg leading-normal transition-all duration-500"
     >
       <YDSZAvatar

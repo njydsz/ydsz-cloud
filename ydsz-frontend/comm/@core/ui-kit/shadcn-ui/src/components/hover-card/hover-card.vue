@@ -55,6 +55,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       :class="contentClass"
       v-bind="contentProps"
       class="side-content z-popup"
+      role="tooltip"
     >
       <slot></slot>
     </HoverCardContent>

@@ -8,11 +8,17 @@
  * 自托管 importmap 来源优先级：
  *   1. `public/vendor/importmap.json`（sync 脚本生成，含完整传递依赖与 scopes）
  *   2. 简易路径映射 `buildSelfHostedImportMap`（仅顶层依赖，适合快速验证）
+ *
+ * v3.2 新增 importmap 生成缓存：CDN 模式下，jspm Generator 的安装结果
+ * 会被缓存到 `node_modules/.cache/importmap/<hash>.json`，依赖列表未变时
+ * 直接复用，跳过公网 CDN 解析。TTL 默认 7 天，可通过环境变量
+ * `IMPORTMAP_CACHE_TTL`（毫秒）调整，`IMPORTMAP_NO_CACHE=1` 可强制跳过。
  */
 import type { GeneratorOptions } from '@jspm/generator';
 import type { Plugin } from 'vite';
 
-import { existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { Generator } from '@jspm/generator';
@@ -21,6 +27,11 @@ import { minify } from 'html-minifier-terser';
 
 /** 默认 CDN 供应商，未显式指定时使用 */
 const DEFAULT_PROVIDER = 'jspm.io';
+
+/** importmap 缓存目录（相对项目根） */
+const CACHE_DIR = path.join('node_modules', '.cache', 'importmap');
+/** 缓存默认 TTL：7 天（毫秒） */
+const DEFAULT_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** importmap 插件选项：在 jspm GeneratorOptions 基础上扩展依赖列表与供应商 */
 type pluginOptions = GeneratorOptions & {
@@ -36,6 +47,81 @@ type pluginOptions = GeneratorOptions & {
    */
   selfHostBase?: string;
 };
+
+/**
+ * 计算依赖列表的缓存键。
+ *
+ * 键由依赖名+range、provider、env、inputMap 共同决定，
+ * 任一变化都会生成不同的键，确保缓存与依赖声明一致。
+ */
+function getCacheKey(
+  deps: Array<{ name: string; range?: string }>,
+  options: pluginOptions,
+): string {
+  const payload = {
+    deps: deps
+      .map((d) => `${d.name}@${d.range || 'latest'}`)
+      .sort()
+      .join(','),
+    provider: options.defaultProvider || DEFAULT_PROVIDER,
+    env: options.env,
+    inputMap: options.inputMap,
+  };
+  return createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 16);
+}
+
+/**
+ * 读取缓存的 importmap（若存在且未过期）。
+ *
+ * @returns 缓存的 importmap 对象，或 null（无缓存/已过期/解析失败）
+ */
+function readCachedImportMap(cacheKey: string): unknown | null {
+  const cacheFile = path.join(process.cwd(), CACHE_DIR, `${cacheKey}.json`);
+  if (!existsSync(cacheFile)) return null;
+
+  try {
+    const raw = JSON.parse(readFileSync(cacheFile, 'utf-8')) as {
+      cachedAt: number;
+      importmap: unknown;
+    };
+    const ttl = Number(process.env.IMPORTMAP_CACHE_TTL) || DEFAULT_CACHE_TTL_MS;
+    if (Date.now() - raw.cachedAt > ttl) {
+      console.info(`[ImportMap] Cache expired for key ${cacheKey}`);
+      return null;
+    }
+    return raw.importmap;
+  } catch (err) {
+    console.warn(`[ImportMap] Failed to read cache:`, err);
+    return null;
+  }
+}
+
+/**
+ * 将 importmap 写入磁盘缓存。
+ *
+ * 静默失败：缓存写入不应阻断构建流程。
+ */
+function writeCachedImportMap(cacheKey: string, importmap: unknown): void {
+  try {
+    const cacheDir = path.join(process.cwd(), CACHE_DIR);
+    if (!existsSync(cacheDir)) {
+      mkdirSync(cacheDir, { recursive: true });
+    }
+    const cacheFile = path.join(cacheDir, `${cacheKey}.json`);
+    writeFileSync(
+      cacheFile,
+      JSON.stringify({ cachedAt: Date.now(), importmap }, null, 2),
+    );
+    console.info(`[ImportMap] Cache written: ${cacheFile}`);
+  } catch (err) {
+    console.warn(`[ImportMap] Failed to write cache:`, err);
+  }
+}
+
+/** 是否跳过缓存（环境变量 IMPORTMAP_NO_CACHE=1 时为 true） */
+function isCacheDisabled(): boolean {
+  return process.env.IMPORTMAP_NO_CACHE === '1';
+}
 
 // async function getLatestVersionOfShims() {
 //   const result = await fetch('https://ga.jspm.io/npm:es-module-shims');
@@ -97,12 +183,16 @@ function buildSelfHostedImportMap(
 }
 
 let generator: Generator;
+/** CDN 模式下安装后的 importmap（可能来自缓存或在线生成） */
+let resolvedImportMap: unknown | null = null;
 
 /**
  * 通过 CDN 以 importmap 方式加载指定依赖的 Vite 插件（参考 vite-plugin-jspm 改造）。
  *
  * 在构建阶段将声明的依赖通过 jspm generator 安装为 external，并在 HTML 注入
  * importmap 与 es-module-shims 垫片，使其走 CDN 加载；非构建或 SSR 下不生效。
+ *
+ * v3.2：CDN 模式下优先读取磁盘缓存，依赖列表未变且未过期时跳过公网解析。
  *
  * @param pluginOptions - 插件选项（CDN 供应商、依赖列表、调试开关）
  * @returns 由 external / install / html 三段组成的 Vite 插件数组
@@ -149,7 +239,20 @@ async function viteImportMapPlugin(
     }
   }
 
-  if (!selfHostBase) {
+  // CDN 模式：尝试从磁盘缓存读取已生成的 importmap
+  // 缓存命中时跳过 generator.install()，避免重复公网请求
+  let cacheKey: string | null = null;
+  if (!selfHostBase && !isCacheDisabled() && importmap?.length) {
+    cacheKey = getCacheKey(importmap, options);
+    const cached = readCachedImportMap(cacheKey);
+    if (cached) {
+      resolvedImportMap = cached;
+      installed = true; // 标记为已安装，跳过 install hook 的在线安装
+      console.info(`[ImportMap] Cache hit for key ${cacheKey}, skipping CDN install`);
+    }
+  }
+
+  if (!selfHostBase && !resolvedImportMap) {
     generator = new Generator({
       ...options,
       baseUrl: process.cwd(),
@@ -219,11 +322,18 @@ async function viteImportMapPlugin(
           );
           return null;
         }
+        // 缓存命中：installed 已在初始化时置为 true，此处不会进入
+        // 在线安装并写入缓存
         try {
           installed = true;
           await Promise.allSettled(
             (installDeps || []).map((dep) => generator.install(dep)),
           );
+          // 安装完成后，获取 importmap 并写入缓存
+          resolvedImportMap = generator.getMap();
+          if (cacheKey && resolvedImportMap) {
+            writeCachedImportMap(cacheKey, resolvedImportMap);
+          }
         } catch (error: any) {
           installError = error;
           installed = false;
@@ -247,9 +357,10 @@ async function viteImportMapPlugin(
             return html;
           }
 
+          // 优先使用缓存结果，其次 generator.getMap()
           const importmapJson = selfHostBase
             ? selfHostedImportMap
-            : generator.getMap();
+            : resolvedImportMap ?? generator.getMap();
 
           if (!importmapJson) {
             return html;

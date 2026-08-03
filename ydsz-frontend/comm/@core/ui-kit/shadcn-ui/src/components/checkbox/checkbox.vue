@@ -27,7 +27,12 @@ const id = useId();
 
 <template>
   <div class="flex items-center">
-    <Checkbox v-bind="forwarded" :id="id" v-model:checked="checked" />
+    <Checkbox
+      v-bind="forwarded"
+      :id="id"
+      v-model:checked="checked"
+      :aria-label="typeof forwarded.label === 'string' ? forwarded.label : undefined"
+    />
     <label :for="id" class="ml-2 cursor-pointer text-sm"> <slot></slot> </label>
   </div>
 </template>

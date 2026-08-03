@@ -5,6 +5,7 @@
  * @author ydsz-team
  * @since 1.0.0
  */
+export * from './use-cross-tab-state';
 export * from './use-is-mobile';
 export * from './use-layout-style';
 export * from './use-namespace';
