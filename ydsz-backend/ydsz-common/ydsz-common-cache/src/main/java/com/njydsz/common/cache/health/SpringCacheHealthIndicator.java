@@ -46,6 +46,15 @@ public class SpringCacheHealthIndicator implements HealthIndicator {
     }
   }
 
+  /**
+   * 获取缓存健康状态并转换为 Actuator Health。
+   *
+   * <p>状态映射约定：UP 与 WARN 均映射为 {@code Health.up()}（WARN 仅通过
+   * withDetail 附带 warning 字段告警），DOWN 映射为 {@code Health.down()}，
+   * 其余未知状态映射为 unknown。
+   *
+   * @return Actuator Health 对象，含全部缓存明细信息
+   */
   @Override
   public Health health() {
     CacheHealthIndicator.HealthResult result = delegate.health();

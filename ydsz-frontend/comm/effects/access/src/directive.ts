@@ -18,33 +18,42 @@ function getAccess() {
   return cachedAccess;
 }
 
-function isAccessible(
+function checkAccess(
   el: Element,
   binding: DirectiveBinding<string | string[]>,
-) {
+): boolean {
   const { accessMode, hasAccessByCodes, hasAccessByRoles } = getAccess();
-
   const value = binding.value;
 
-  if (!value) return;
+  if (!value) return true;
+
   const authMethod =
     accessMode.value === 'frontend' && binding.arg === 'role'
       ? hasAccessByRoles
       : hasAccessByCodes;
 
   const values = Array.isArray(value) ? value : [value];
-
-  if (!authMethod(values)) {
-    el?.remove();
-  }
+  return authMethod(values);
 }
 
 const mounted = (el: Element, binding: DirectiveBinding<string | string[]>) => {
-  isAccessible(el, binding);
+  if (!checkAccess(el, binding)) {
+    el.remove();
+  }
+};
+
+/** 权限变更时重新评估（如角色切换、权限码刷新） */
+const updated = (el: Element, binding: DirectiveBinding<string | string[]>) => {
+  // 若元素已在之前 mounted 中被 remove，则不再评估
+  if (!document.contains(el)) return;
+  if (!checkAccess(el, binding)) {
+    el.remove();
+  }
 };
 
 const authDirective: Directive = {
   mounted,
+  updated,
 };
 
 /**
@@ -55,11 +64,11 @@ const authDirective: Directive = {
  * 其余情况（含 `v-access:code`、后端权限模式下的 `v-access:role`）一律按权限码（`hasAccessByCodes`）匹配。
  * 指令值可以是单个字符串或字符串数组，数组语义为「命中任意一项即放行」。
  *
- * 失败表现：鉴权不通过时直接调用 `el.remove()` 将宿主元素从 DOM 中**物理移除**，
- * 而非隐藏，因此该元素的子组件会被销毁且无法恢复；指令值为空（`undefined`/`''`/`0`）时视为不做校验，元素保留。
+ * 失败表现：鉴权不通过时直接调用 `el.remove()` 将宿主元素从 DOM 中**物理移除**。
+ * 若需权限变更后自动恢复显示，请使用 `<AccessControl>` 组件或 `useAccess()` composable。
  *
- * 生命周期：只实现了 `mounted` 钩子，权限判定**仅在挂载时执行一次**。
- * 若用户权限在运行时发生变更（如重新登录、切换角色），需要重新渲染组件（例如刷新路由 key）才能生效。
+ * 生命周期：实现了 `mounted` + `updated`，支持元素属性更新时重新评估权限。
+ * 权限在运行时发生重大变更（如重新登录）后，推荐使用路由 key 刷新组件。
  *
  * @param app - 需要注册指令的 Vue 应用实例，通常在应用启动阶段调用一次
  *

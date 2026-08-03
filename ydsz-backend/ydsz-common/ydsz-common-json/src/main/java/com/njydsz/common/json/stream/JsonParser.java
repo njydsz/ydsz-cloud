@@ -212,7 +212,8 @@ public final class JsonParser implements AutoCloseable {
                 bufferPos++;
                 return nextToken();
             default:
-                throw new JsonDeserializationException("Unexpected character: " + c + " at position " + bufferPos);
+                throw new JsonDeserializationException("Unexpected character: " + c + " at position " + bufferPos)
+                    .withTokenType("UNKNOWN");
         }
     }
 
@@ -242,7 +243,8 @@ public final class JsonParser implements AutoCloseable {
                 }
                 bufferPos++;
                 if (bufferPos >= bufferLen && !fillBuffer()) {
-                    throw new JsonDeserializationException("Unterminated string");
+                    throw new JsonDeserializationException("Unterminated string")
+                        .withTokenType("VALUE_STRING");
                 }
                 char escaped = buffer[bufferPos];
                 switch (escaped) {
@@ -279,7 +281,8 @@ public final class JsonParser implements AutoCloseable {
             }
             bufferPos++;
         }
-        throw new JsonDeserializationException("Unterminated string");
+        throw new JsonDeserializationException("Unterminated string")
+            .withTokenType("VALUE_STRING");
     }
 
     /**
@@ -374,7 +377,8 @@ public final class JsonParser implements AutoCloseable {
         }
 
         if (numLen == 0) {
-            throw new JsonDeserializationException("Empty number at position " + bufferPos);
+            throw new JsonDeserializationException("Empty number at position " + bufferPos)
+                .withTokenType("VALUE_NUMBER");
         }
 
         String numStr = new String(numberBuffer, 0, numLen);

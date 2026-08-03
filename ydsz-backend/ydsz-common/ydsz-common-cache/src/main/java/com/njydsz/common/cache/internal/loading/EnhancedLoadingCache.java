@@ -286,6 +286,16 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     }
   }
 
+  /**
+   * 获取指定 key 的缓存值，不做加载。
+   *
+   * <p>命中时若开启了自动刷新且该 key 距上次刷新已超间隔，会异步触发一次刷新
+   * 但立即返回旧值（stale-while-revalidate 语义）；未命中返回 {@code null}，
+   * 不触发任何加载。命中/未命中均计入统计。
+   *
+   * @param key 查询的键，不可为 {@code null}
+   * @return 已缓存的值；未命中时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     V value = cache.getIfPresent(key);
@@ -311,6 +321,15 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     return null;
   }
 
+  /**
+   * 获取缓存值，未命中时同步调用 {@link CacheLoader#load} 加载。
+   *
+   * <p>并发请求同一未命中 key 时，后续线程会等待首个线程的加载结果（防击穿）。
+   * 加载失败时返回缓存中的旧值（若存在），否则返回 {@code null}，不抛出异常。
+   *
+   * @param key 查询的键，不可为 {@code null}
+   * @return 缓存值或同步加载后的值；加载失败且无旧值时返回 {@code null}
+   */
   @Override
   public V get(K key) {
     V value = getIfPresent(key);
@@ -375,6 +394,15 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     }
   }
 
+  /**
+   * 获取缓存值且不抛出任何异常。
+   *
+   * <p>与 {@link #get(Object)} 的区别：内部捕获并记录全部加载异常，
+   * 失败时返回 {@code null}，适合对失败容忍度高的调用场景。
+   *
+   * @param key 查询的键，不可为 {@code null}
+   * @return 缓存值；加载失败时返回 {@code null}
+   */
   @Override
   public V getUnchecked(K key) {
     try {
@@ -385,6 +413,16 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     }
   }
 
+  /**
+   * 异步获取缓存值，未命中时通过 {@link CacheLoader#loadAsync} 加载。
+   *
+   * <p>命中时返回已完成的 Future；未命中时返回加载 Future，加载成功后写入
+   * 底层缓存并更新刷新时间戳。加载失败时 Future 以 {@code null} 完成，
+   * 不传播异常。
+   *
+   * @param key 查询的键，不可为 {@code null}
+   * @return 携带加载结果的 Future；加载失败时结果为 {@code null}
+   */
   @Override
   public CompletableFuture<V> getAsync(K key) {
     V value = cache.getIfPresent(key);
@@ -423,6 +461,16 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             });
   }
 
+  /**
+   * 使用调用方提供的加载函数异步获取缓存值。
+   *
+   * <p>该重载不使用默认 {@link CacheLoader}，加载逻辑完全由入参
+   * {@code loader} 决定；加载成功后同样写入底层缓存并更新刷新时间戳。
+   *
+   * @param key    查询的键，不可为 {@code null}
+   * @param loader 本次调用的异步加载函数，不可为 {@code null}
+   * @return 携带加载结果的 Future；加载失败时以 {@code null} 完成
+   */
   @Override
   public CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader) {
     V value = cache.getIfPresent(key);
@@ -449,6 +497,15 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             });
   }
 
+  /**
+   * 批量获取多个 key 的缓存值，未命中的 key 通过 {@link CacheLoader#loadAll} 一次性加载。
+   *
+   * <p>先逐 key 查询命中项，汇总未命中的 key 集合后调用一次批量加载，
+   * 加载结果整体写入底层缓存。批量加载失败仅记录日志，不影响已命中的结果返回。
+   *
+   * @param keys 待查询的键集合，空集合返回空 map；为 {@code null} 时按空集合处理
+   * @return key 到值的映射；批量加载失败时缺失的 key 不会出现在结果中
+   */
   @Override
   public Map<K, V> getAll(Collection<K> keys) {
     if (keys == null || keys.isEmpty()) {
@@ -502,6 +559,15 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     return result;
   }
 
+  /**
+   * 异步批量加载多个 key，并整体写入底层缓存。
+   *
+   * <p>不做命中/未命中拆分，直接委托 {@link CacheLoader#loadAllAsync} 全量加载，
+   * 因此即使 key 已存在也会被重新加载覆盖。
+   *
+   * @param keys 待加载的键集合，空集合返回已完成的空 map Future
+   * @return 携带加载结果映射的 Future
+   */
   @Override
   public CompletableFuture<Map<K, V>> getAllAsync(Collection<K> keys) {
     if (keys == null || keys.isEmpty()) {
@@ -522,6 +588,14 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             });
   }
 
+  /**
+   * 异步刷新指定 key 的缓存值。
+   *
+   * <p>刷新在共享执行器上异步进行，不阻塞调用线程；刷新失败仅记录日志，
+   * 保留旧值。刷新成功后更新最后刷新时间戳，供自动刷新周期判定使用。
+   *
+   * @param key 待刷新的键，不可为 {@code null}
+   */
   @Override
   public void refresh(K key) {
     CompletableFuture.runAsync(
@@ -551,12 +625,29 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         executor);
   }
 
+  /**
+   * 写入缓存并更新该 key 的最后刷新时间戳。
+   *
+   * <p>写入后自动刷新机制将以本次写入时刻作为刷新起点。
+   *
+   * @param key   写入的键，不可为 {@code null}
+   * @param value 写入的值，允许为 {@code null}（按底层缓存契约处理）
+   */
   @Override
   public void put(K key, V value) {
     cache.put(key, value);
     lastRefreshTimes.put(key, System.nanoTime());
   }
 
+  /**
+   * 移除指定 key，并触发删除监听器通知。
+   *
+   * <p>与纯缓存移除不同，本实现额外清理刷新时间戳记录，
+   * 且仅在原值非空时通知监听器。
+   *
+   * @param key 待移除的键，不可为 {@code null}
+   * @return 被移除的旧值；key 原本不存在时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     V value = cache.remove(key);
@@ -567,32 +658,65 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     return value;
   }
 
+  /**
+   * 清空全部缓存项与刷新时间戳记录。
+   *
+   * <p>清理刷新时间戳是为了避免旧 key 的时间记录残留导致后续刷新逻辑误判。
+   */
   @Override
   public void clear() {
     cache.clear();
     lastRefreshTimes.clear();
   }
 
+  /**
+   * 返回当前缓存中的条目数。
+   *
+   * @return 已缓存条目的近似数量
+   */
   @Override
   public long estimatedSize() {
     return cache.estimatedSize();
   }
 
+  /**
+   * 判断指定 key 是否已缓存。
+   *
+   * @param key 查询的键，不可为 {@code null}
+   * @return true 表示该 key 存在于缓存中
+   */
   @Override
   public boolean containsKey(K key) {
     return cache.containsKey(key);
   }
 
+  /**
+   * 返回当前缓存键的快照视图。
+   *
+   * @return 缓存键的 {@link Set}，可能为弱一致视图
+   */
   @Override
   public Set<K> keySet() {
     return cache.keySet();
   }
 
+  /**
+   * 返回当前缓存值的集合视图。
+   *
+   * @return 缓存值的 {@link Collection}，可能为弱一致视图
+   */
   @Override
   public Collection<V> values() {
     return cache.values();
   }
 
+  /**
+   * 计算缓存命中率。
+   *
+   * <p>未开启统计时固定返回 0.0；开启统计且无访问记录时返回 0.0。
+   *
+   * @return 命中次数 / (命中次数 + 未命中次数)，范围 [0, 1]
+   */
   @Override
   public double getHitRate() {
     if (!recordStats) {
@@ -602,6 +726,14 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     return total == 0 ? 0.0 : (double) hitCount.sum() / total;
   }
 
+  /**
+   * 返回缓存统计信息。
+   *
+   * <p>统计维度包括命中/未命中、驱逐数、加载总数、加载成功/失败数及总加载耗时；
+   * 未开启统计时返回全零统计对象。驱逐数来自底层缓存。
+   *
+   * @return 聚合了加载统计与底层缓存统计的 {@link CacheStats}
+   */
   @Override
   public CacheStats getStats() {
     if (!recordStats) {

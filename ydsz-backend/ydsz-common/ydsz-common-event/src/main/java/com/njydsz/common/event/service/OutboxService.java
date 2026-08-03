@@ -384,6 +384,11 @@ public class OutboxService {
             return;
         }
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            /**
+             * 事务提交成功后回调：投递 Outbox 消息。
+             *
+             * <p>事务回滚时不会触发，确保只投递已随事务持久化的消息，避免"先投递、后回滚"造成下游脏数据。
+             */
             @Override
             public void afterCommit() {
                 doSyncPublish(message);

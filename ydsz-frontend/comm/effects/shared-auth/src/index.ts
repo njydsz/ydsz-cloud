@@ -48,3 +48,16 @@ export {
 export {
   setupSharedAuth,
 } from './setup-shared-auth';
+
+export {
+  type SubAppConfig,
+  createSubApp,
+} from './create-sub-app';
+
+export {
+  createSubAppRouterGuard,
+  initRoutes,
+  setupAuthGuard,
+  setupCommonGuard,
+  setupPermissionGuard,
+} from './guards';

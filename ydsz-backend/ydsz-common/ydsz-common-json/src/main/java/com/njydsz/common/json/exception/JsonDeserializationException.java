@@ -31,6 +31,12 @@ public class JsonDeserializationException extends JsonException {
     /** 当前字段名（发生错误的字段，可为 null） */
     private String fieldName;
 
+    /** JSON token 类型（如 "FIELD_NAME", "VALUE_STRING", "START_OBJECT" 等），可为 null */
+    private String tokenType;
+
+    /** 源码片段（出错位置前后 20 字符的短上下文），可为 null */
+    private String sourceSnippet;
+
     /**
      * 构造函数（仅消息）
      *
@@ -132,12 +138,56 @@ public class JsonDeserializationException extends JsonException {
     }
 
     /**
+     * 获取 JSON token 类型
+     *
+     * @return token 类型（如 "FIELD_NAME", "VALUE_STRING"），未设置时返回 null
+     * @since 1.0.0
+     */
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    /**
+     * 获取源码片段
+     *
+     * @return 出错位置前后 20 字符的短上下文片段，未设置时返回 null
+     * @since 1.0.0
+     */
+    public String getSourceSnippet() {
+        return sourceSnippet;
+    }
+
+    /**
      * 设置当前字段名（用于反序列化过程中追踪当前字段）
      *
      * @param fieldName 字段名
      */
     public void setFieldName(String fieldName) {
         this.fieldName = fieldName;
+    }
+
+    /**
+     * 设置 JSON token 类型（用于错误定位时标明正在解析的 token）
+     *
+     * @param tokenType token 类型（如 "FIELD_NAME", "VALUE_STRING"）
+     * @return this（链式调用）
+     * @since 1.0.0
+     */
+    public JsonDeserializationException withTokenType(String tokenType) {
+        this.tokenType = tokenType;
+        return this;
+    }
+
+    /**
+     * 设置源码片段（出错位置前后 20 字符的短上下文）
+     *
+     * @param sourceSnippet 源码片段
+     * @return this（链式调用）
+     * @since 1.0.0
+     */
+    public JsonDeserializationException withSourceSnippet(String sourceSnippet) {
+        this.sourceSnippet = sourceSnippet;
+        return this;
     }
 
     /**
@@ -160,14 +210,19 @@ public class JsonDeserializationException extends JsonException {
         this.line = lineNum;
         this.column = colNum;
 
-        // 提取上下文片段（前后各 40 字符）
+        // 提取长上下文片段（前后各 40 字符）
         int start = Math.max(0, position - 40);
         int end = Math.min(json.length(), position + 40);
-        StringBuilder sb = new StringBuilder(end - start + 3);
+        StringBuilder sb = new StringBuilder(end - start + 10);
         sb.append(json, start, position);
         sb.append("[HERE]");
         sb.append(json, position, end);
         this.contextSnippet = sb.toString();
+
+        // 提取短源码片段（前后各 20 字符）
+        int snippetStart = Math.max(0, position - 20);
+        int snippetEnd = Math.min(json.length(), position + 20);
+        this.sourceSnippet = json.substring(snippetStart, snippetEnd);
     }
 
     /**
@@ -195,6 +250,9 @@ public class JsonDeserializationException extends JsonException {
         StringBuilder sb = new StringBuilder(super.getMessage());
         if (fieldName != null) {
             sb.append(" [field: ").append(fieldName).append("]");
+        }
+        if (tokenType != null) {
+            sb.append(" [token: ").append(tokenType).append("]");
         }
         if (line > 0 && column > 0) {
             sb.append(" (line ").append(line).append(", column ").append(column).append(")");

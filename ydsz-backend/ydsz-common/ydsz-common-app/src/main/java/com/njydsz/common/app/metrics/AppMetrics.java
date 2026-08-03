@@ -69,6 +69,16 @@ public class AppMetrics implements AuthMetrics {
 
     // ==================== AuthMetrics 接口实现 ====================
 
+    /**
+     * 记录一次认证成功。
+     *
+     * <p>同时累计 {@code app.auth.total}（result=success）与耗时分布
+     * {@code app.auth.duration}；{@code userType} 为空时回退为 {@code app}。
+     * meterRegistry 不可用时静默降级（无副作用）。
+     *
+     * @param userType      用户类型（如 app/web/admin），为空回退为 {@code app}
+     * @param durationNanos 认证耗时（纳秒）
+     */
     @Override
     public void recordAuthSuccess(String userType, long durationNanos) {
         if (meterRegistry == null) {
@@ -80,6 +90,17 @@ public class AppMetrics implements AuthMetrics {
                 .record(durationNanos, TimeUnit.NANOSECONDS);
     }
 
+    /**
+     * 记录一次认证失败。
+     *
+     * <p>累计 {@code app.auth.total}（result=failure，带失败原因标签）与耗时分布；
+     * 失败原因可帮助监控定位是凭据错误、账号锁定还是策略拒绝。
+     * {@code userType} 为空回退为 {@code app}；reason 为空回退为 {@code unknown}。
+     *
+     * @param userType      用户类型，为空回退为 {@code app}
+     * @param reason        失败原因（如 bad_credentials / account_locked），为空回退为 {@code unknown}
+     * @param durationNanos 认证耗时（纳秒）
+     */
     @Override
     public void recordAuthFailure(String userType, String reason, long durationNanos) {
         if (meterRegistry == null) {
@@ -92,6 +113,14 @@ public class AppMetrics implements AuthMetrics {
                 .record(durationNanos, TimeUnit.NANOSECONDS);
     }
 
+    /**
+     * 记录一次认证跳过（如匿名访问、白名单路径）。
+     *
+     * <p>仅累计 {@code app.auth.total}（result=skip），不计耗时；
+     * 用于监控跳过认证的流量占比，辅助判断是否需要收敛白名单。
+     *
+     * @param reason 跳过原因（如 anonymous / whitelist），为空回退为 {@code unknown}
+     */
     @Override
     public void recordAuthSkip(String reason) {
         if (meterRegistry == null) {

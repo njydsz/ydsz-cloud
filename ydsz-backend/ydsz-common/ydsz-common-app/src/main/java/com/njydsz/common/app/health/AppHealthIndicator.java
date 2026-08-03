@@ -47,6 +47,13 @@ public class AppHealthIndicator implements HealthIndicator {
         this.appMetricsProvider = appMetricsProvider;
     }
 
+    /**
+     * 上报 App 模块健康状态。
+     *
+     * <p>汇总 API 签名验证配置摘要与指标采集可用性；当签名验证启用但密钥缺失时
+     * 标记 DOWN（此时所有 App 请求都会因签名校验失败而拒绝，属功能性故障）。
+     * details 中仅暴露配置摘要与计数，不包含密钥本身。
+     */
     @Override
     public Health health() {
         Map<String, Object> details = new LinkedHashMap<>();

@@ -10,7 +10,7 @@ import type { Router } from 'vue-router';
 import { LOGIN_PATH } from '@ydsz/constants';
 import { preferences } from '@ydsz/preferences';
 import { useAccessStore, useUserStore } from '@ydsz/stores';
-import { startProgress, stopProgress } from '@ydsz/utils';
+import { setupCommonGuard } from '@ydsz/shared-auth/guards';
 
 import { accessRoutes, coreRouteNames } from '#/router/routes';
 import { useAuthStore } from '#/store';
@@ -18,38 +18,10 @@ import { useAuthStore } from '#/store';
 import { generateAccess } from './access';
 
 /**
- * 通用路由守卫：记录已加载页面并控制进度条。
- *
- * @param router - Vue Router 实例
- */
-function setupCommonGuard(router: Router) {
-  // 记录已经加载的页面
-  const loadedPaths = new Set<string>();
-
-  router.beforeEach((to) => {
-    to.meta.loaded = loadedPaths.has(to.path);
-
-    // 页面加载进度条
-    if (!to.meta.loaded && preferences.transition.progress) {
-      startProgress();
-    }
-    return true;
-  });
-
-  router.afterEach((to) => {
-    // 记录页面是否加载,如果已经加载，后续的页面切换动画等效果不在重复执行
-
-    loadedPaths.add(to.path);
-
-    // 关闭页面加载进度条
-    if (preferences.transition.progress) {
-      stopProgress();
-    }
-  });
-}
-
-/**
  * 权限访问守卫：校验登录态并生成动态路由。
+ *
+ * 主应用特有逻辑：fetchUserInfo + generateAccess + 角色/菜单生成。
+ * 子应用使用 shared-auth 的简化版 createSubAppRouterGuard。
  *
  * @param router - Vue Router 实例
  */
@@ -137,12 +109,15 @@ function setupAccessGuard(router: Router) {
 /**
  * 组装并注册全部路由守卫（通用 + 权限）。
  *
+ * 主应用使用 shared-auth 的 setupCommonGuard（消除 25 行重复），
+ * 再追加主应用专有的 setupAccessGuard。
+ *
  * @param router - Vue Router 实例
  */
 function createRouterGuard(router: Router) {
-  /** 通用 */
+  /** 通用（来自 shared-auth 共享） */
   setupCommonGuard(router);
-  /** 权限访问 */
+  /** 权限访问（主应用特有） */
   setupAccessGuard(router);
 }
 

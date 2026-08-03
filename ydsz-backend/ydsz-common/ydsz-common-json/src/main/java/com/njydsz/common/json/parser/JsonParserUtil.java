@@ -168,44 +168,10 @@ public final class JsonParserUtil {
             throw new JsonDeserializationException("Invalid JSON array: " + json);
         }
 
-        List<Object> result = new ArrayList<>(64);
-
         char[] chars = getCharBuffer(json);
-        int len = chars.length;
-        int pos = 1; // 跳过起始的 '['
-
-        while (pos < len) {
-            // 跳过空白
-            while (pos < len && chars[pos] <= ' ') {
-                pos++;
-            }
-
-            if (pos >= len) {
-                break;
-            }
-
-            // 检查是否结束
-            if (chars[pos] == ']') {
-                break;
-            }
-
-            // 跳过逗号
-            if (chars[pos] == ',') {
-                pos++;
-                continue;
-            }
-
-            // 记录值的起始位置
-            int valueStart = pos;
-
-            // 解析值
-            Object value = parseValue(chars, pos);
-            result.add(value);
-
-            // 移动到值的结束位置
-            pos = getValueEndFast(chars, valueStart, value, len);
-        }
-
+        // 委托给 parseArrayRecursiveImpl 统一实现，消除重复代码
+        @SuppressWarnings("unchecked")
+        List<Object> result = (List<Object>) parseArrayRecursiveImpl(chars, 0);
         return result;
     }
     
@@ -584,7 +550,7 @@ public final class JsonParserUtil {
     /**
      * 递归解析数组（从 char 数组的指定位置开始）
      */
-    private static Object parseArrayRecursive(char[] chars, int start) {
+    private static Object parseArrayRecursiveImpl(char[] chars, int start) {
         int len = chars.length;
         int estimatedSize = estimateArraySize(chars, start + 1);
         List<Object> result = new ArrayList<>(Math.max(estimatedSize, 4));
@@ -611,15 +577,11 @@ public final class JsonParserUtil {
                 continue;
             }
             
-            // 记录值的起始位置
-            int valueStart = pos;
-            
-            // 解析值
-            Object value = parseValue(chars, pos);
+            // 解析值（返回解析终点，消除 getValueEndFast 二次扫描）
+            int[] endPos = new int[1];
+            Object value = parseValueWithPos(chars, pos, endPos);
             result.add(value);
-            
-            // 移动到值的结束位置
-            pos = getValueEndFast(chars, valueStart, value, len);
+            pos = endPos[0];
         }
         
         return result;

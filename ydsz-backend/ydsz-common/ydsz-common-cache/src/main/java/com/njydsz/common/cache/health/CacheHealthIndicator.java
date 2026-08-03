@@ -159,14 +159,34 @@ public class CacheHealthIndicator {
       this.details = details;
     }
 
+    /**
+     * 返回整体健康状态。
+     *
+     * @return 聚合后的 {@link Status}，任一缓存 DOWN 即为 DOWN，否则取最高告警级别
+     */
     public Status getStatus() {
       return status;
     }
 
+    /**
+     * 返回各缓存维度的健康详情。
+     *
+     * <p>键为缓存名称，值为该缓存的大小、命中率、容量使用率与告警信息；
+     * 末尾附 totalCaches 汇总字段。
+     *
+     * @return 健康详情映射，与注册顺序一致
+     */
     public Map<String, Object> getDetails() {
       return details;
     }
 
+    /**
+     * 判断缓存整体是否处于可用状态。
+     *
+     * <p>仅 {@link Status#UP} 视为健康，WARN/DOWN 均返回 false。
+     *
+     * @return true 表示全部缓存健康且无告警
+     */
     public boolean isUp() {
       return status == Status.UP;
     }

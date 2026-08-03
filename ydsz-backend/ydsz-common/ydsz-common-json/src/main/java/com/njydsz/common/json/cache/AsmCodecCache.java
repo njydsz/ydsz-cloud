@@ -1,6 +1,9 @@
 package com.njydsz.common.json.cache;
 
 import java.lang.ref.SoftReference;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -47,16 +50,22 @@ public final class AsmCodecCache {
         new LruCache<>(FAILED_CACHE_MAX_SIZE);
 
     /**
-     * 基于 ConcurrentHashMap 的轻量 LRU 软引用缓存。
-     * 放弃 access-ordered LinkedHashMap 以消除乐观读下的数据竞争（get() mutate 链表 + StampedLock）。
-     * 淘汰策略：put 时如果超出 maxSize，遍历 keySet 删第一个（近似 LRU，安全且简单）。
+     * 基于 LinkedHashMap(accessOrder=true) 的真 LRU 软引用缓存。
+     * 使用 synchronizedMap 包装以确保线程安全，每次 get/put 都通过 LinkedHashMap 的
+     * access-order 特性自动维护 LRU 顺序，put 时由 removeEldestEntry 自动淘汰最久未访问条目。
      */
     static class LruSoftCache<T> {
         private final int maxSize;
-        private final ConcurrentHashMap<Class<?>, SoftReference<T>> map = new ConcurrentHashMap<>();
+        private final Map<Class<?>, SoftReference<T>> map;
 
         LruSoftCache(int maxSize) {
             this.maxSize = maxSize;
+            this.map = Collections.synchronizedMap(new LinkedHashMap<Class<?>, SoftReference<T>>(maxSize, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<Class<?>, SoftReference<T>> eldest) {
+                    return size() > maxSize;
+                }
+            });
         }
 
         T get(Class<?> key) {
@@ -64,7 +73,7 @@ public final class AsmCodecCache {
             if (ref == null) return null;
             T value = ref.get();
             if (value == null) {
-                map.remove(key, ref);
+                map.remove(key);
                 return null;
             }
             return value;
@@ -72,10 +81,6 @@ public final class AsmCodecCache {
 
         void put(Class<?> key, T value) {
             map.put(key, new SoftReference<>(value));
-            if (map.size() > maxSize) {
-                var it = map.keySet().iterator();
-                if (it.hasNext()) map.remove(it.next());
-            }
         }
 
         void clear() {
@@ -89,10 +94,16 @@ public final class AsmCodecCache {
 
     static class LruCache<T> {
         private final int maxSize;
-        private final ConcurrentHashMap<Class<?>, T> map = new ConcurrentHashMap<>();
+        private final Map<Class<?>, T> map;
 
         LruCache(int maxSize) {
             this.maxSize = maxSize;
+            this.map = Collections.synchronizedMap(new LinkedHashMap<Class<?>, T>(maxSize, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<Class<?>, T> eldest) {
+                    return size() > maxSize;
+                }
+            });
         }
 
         T get(Class<?> key) {
@@ -101,10 +112,6 @@ public final class AsmCodecCache {
 
         void put(Class<?> key, T value) {
             map.put(key, value);
-            if (map.size() > maxSize) {
-                var it = map.keySet().iterator();
-                if (it.hasNext()) map.remove(it.next());
-            }
         }
 
         boolean containsKey(Class<?> key) {

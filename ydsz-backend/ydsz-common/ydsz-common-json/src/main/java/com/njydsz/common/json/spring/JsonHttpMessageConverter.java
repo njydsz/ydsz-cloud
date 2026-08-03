@@ -190,6 +190,9 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
         } catch (Exception e) {
             if (e instanceof IOException) throw (IOException) e;
             throw new HttpMessageNotReadableException("JSON 解析失败：" + e.getMessage(), e, inputMessage);
+        } finally {
+            // 请求结束后清理 ThreadLocal 资源，防止 Tomcat 线程池泄漏
+            SerializationProvider.clearThreadLocals();
         }
     }
 

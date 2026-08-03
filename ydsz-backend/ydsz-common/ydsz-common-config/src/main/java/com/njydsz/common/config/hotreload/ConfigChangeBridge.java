@@ -81,6 +81,17 @@ public class ConfigChangeBridge
         listeners.add(listener);
     }
 
+    /**
+     * 监听 Spring 配置刷新相关事件并路由分发。
+     *
+     * <p>按事件类名精确匹配（避免引入对 spring-cloud 的编译期强依赖）：
+     * <ul>
+     *   <li>{@code RefreshEvent} → 采集刷新前的属性快照（供后续 diff 计算旧值）</li>
+     *   <li>{@code EnvironmentChangeEvent} → 计算属性变更集合并分发到所有监听器</li>
+     * </ul>
+     *
+     * <p>其余事件一律忽略；事件处理不抛异常，异常在内部捕获并记录 WARN。
+     */
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
         String eventClassName = event.getClass().getName();

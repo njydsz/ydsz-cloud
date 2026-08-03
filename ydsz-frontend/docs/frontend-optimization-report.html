@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YDSZ Frontend 优化建议报告</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-hover: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --accent: #58a6ff;
+    --accent-bg: rgba(88, 166, 255, 0.1);
+    --green: #3fb950;
+    --green-bg: rgba(63, 185, 80, 0.1);
+    --yellow: #d29922;
+    --yellow-bg: rgba(210, 153, 34, 0.1);
+    --red: #f85149;
+    --red-bg: rgba(248, 81, 73, 0.1);
+    --purple: #bc8cff;
+    --purple-bg: rgba(188, 140, 255, 0.1);
+    --teal: #39d0d8;
+    --teal-bg: rgba(57, 208, 216, 0.1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 28px; margin-bottom: 8px; }
+  h2 { font-size: 22px; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; margin: 24px 0 12px; color: var(--accent); }
+  h4 { font-size: 15px; margin: 16px 0 8px; }
+  .subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; }
+  .meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; font-size: 13px; color: var(--text-muted); }
+  .meta span { background: var(--surface); padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border); }
+
+  .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 20px 0; }
+  .score-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .score-card .label { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+  .score-card .grade { font-size: 24px; font-weight: 700; }
+  .grade-a { color: var(--green); }
+  .grade-b { color: var(--yellow); }
+  .grade-c { color: var(--red); }
+  .score-card .desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin: 16px 0; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .badge-p0 { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+  .badge-p1 { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(210,153,34,0.3); }
+  .badge-p2 { background: var(--teal-bg); color: var(--teal); border: 1px solid rgba(57,208,216,0.3); }
+  .badge-good { background: var(--green-bg); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-over { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(188,140,255,0.3); }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th { text-align: left; padding: 10px 12px; background: var(--surface-hover); border: 1px solid var(--border); font-weight: 600; color: var(--text-secondary); font-size: 13px; }
+  td { padding: 10px 12px; border: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: var(--surface-hover); }
+
+  code { background: var(--surface-hover); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; color: var(--teal); }
+  pre { background: var(--surface-hover); padding: 12px 16px; border-radius: 6px; overflow-x: auto; margin: 12px 0; border: 1px solid var(--border); }
+  pre code { background: none; padding: 0; color: var(--text); }
+
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  .item { margin: 12px 0; padding: 12px 16px; background: var(--surface-hover); border-radius: 6px; border-left: 3px solid var(--border); }
+  .item-p0 { border-left-color: var(--red); }
+  .item-p1 { border-left-color: var(--yellow); }
+  .item-p2 { border-left-color: var(--teal); }
+  .item-good { border-left-color: var(--green); }
+  .item-over { border-left-color: var(--purple); }
+  .item-title { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .item-desc { color: var(--text-secondary); font-size: 14px; }
+  .item-action { margin-top: 8px; padding: 8px 12px; background: var(--bg); border-radius: 4px; font-size: 13px; color: var(--green); }
+  .item-action::before { content: "→ "; }
+
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin: 24px 0; }
+  .toc-title { font-weight: 600; margin-bottom: 12px; font-size: 15px; }
+  .toc ol { margin-left: 20px; }
+  .toc a { color: var(--accent); text-decoration: none; font-size: 14px; }
+  .toc a:hover { text-decoration: underline; }
+
+  .summary-box { background: var(--accent-bg); border: 1px solid rgba(88,166,255,0.3); border-radius: 8px; padding: 20px; margin: 24px 0; }
+  .stat-row { display: flex; gap: 24px; flex-wrap: wrap; margin: 16px 0; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 28px; font-weight: 700; color: var(--accent); }
+  .stat .lbl { font-size: 12px; color: var(--text-muted); }
+
+  .highlight { color: var(--green); }
+  .warn { color: var(--yellow); }
+  .danger { color: var(--red); }
+  .info { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .container { padding: 20px 16px 60px; }
+    h1 { font-size: 22px; }
+    h2 { font-size: 18px; }
+    table { font-size: 12px; }
+    th, td { padding: 6px 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>YDSZ Frontend 全面优化建议报告</h1>
+<p class="subtitle">对标行业主流竞品与互联网大厂研发规范，基于 ydsz-frontend 最新代码的多维度分析</p>
+<div class="meta">
+  <span>📊 分析模块：ydsz-frontend</span>
+  <span>🏗️ 技术栈：Qiankun + Vue 3 + Element Plus + Turbo Monorepo</span>
+  <span>📦 子应用数：9</span>
+  <span>📅 分析日期：2026-08-03</span>
+</div>
+
+<div class="summary-box">
+  <strong>总体评价：</strong>该项目工程化成熟度在行业同类 PMIS 系统中属于<span class="highlight">上游水平</span>，monorepo 分层、微前端沙箱、RequestClient 封装、权限三态模型等设计对标了 vben/element-plus-admin 等头部开源方案。但在<span class="warn">质量门禁落地、测试覆盖、构建性能极致优化</span>方面仍有明显差距，部分配置存在过度设计。以下按优先级给出 <span class="danger">7 项 P0</span>、<span class="warn">11 项 P1</span>、<span class="info">8 项 P2</span> 建议。
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="num">9</div><div class="lbl">微前端子应用</div></div>
+  <div class="stat"><div class="num">26</div><div class="lbl">优化建议总数</div></div>
+  <div class="stat"><div class="num">7</div><div class="lbl">P0 紧急项</div></div>
+  <div class="stat"><div class="num">11</div><div class="lbl">P1 重要项</div></div>
+  <div class="stat"><div class="num">8</div><div class="lbl">P2 增强项</div></div>
+</div>
+
+<div class="score-grid">
+  <div class="score-card"><div class="label">架构设计</div><div class="grade grade-a">A</div><div class="desc">分层清晰，微前端方案成熟</div></div>
+  <div class="score-card"><div class="label">代码质量</div><div class="grade grade-b">B+</div><div class="desc">Lint 完善，门禁未落地</div></div>
+  <div class="score-card"><div class="label">性能优化</div><div class="grade grade-b">B</div><div class="desc">基础完备，缺极致优化</div></div>
+  <div class="score-card"><div class="label">工程规范</div><div class="grade grade-c">C+</div><div class="desc">Git 钩子全注释，缺测试覆盖</div></div>
+  <div class="score-card"><div class="label">功能完备性</div><div class="grade grade-a">A-</div><div class="desc">功能丰富，文档化不足</div></div>
+  <div class="score-card"><div class="label">过度设计</div><div class="grade grade-b">B</div><div class="desc">部分插件配置冗余</div></div>
+</div>
+
+<div class="toc">
+  <div class="toc-title">📑 目录</div>
+  <ol>
+    <li><a href="#arch">架构优化</a></li>
+    <li><a href="#func">功能增强</a></li>
+    <li><a href="#perf">性能提升</a></li>
+    <li><a href="#exp">体验改善</a></li>
+    <li><a href="#over">过度设计精简</a></li>
+    <li><a href="#quality">工程质量补齐</a></li>
+    <li><a href="#roadmap">落地路线图</a></li>
+  </ol>
+</div>
+
+<!-- ==================== 架构优化 ==================== -->
+<h2 id="arch">一、架构优化</h2>
+
+<div class="section">
+  <div class="section-title">📍 现状评估：架构设计已是项目最大亮点</div>
+  <p>四层分层（<code>@core</code> 零业务基础 → <code>effects</code> 业务无关能力 → <code>comm</code> 工具/状态/i18n → <code>apps</code> 微应用）依赖方向单向纯净。Qiankun 微前端采用 hover 按需预加载策略对标飞书方案，<code>shared-auth</code> 抽公共消除 9 个子应用约 360 行重复代码，<code>RequestClient</code> 封装拦截器管理 + retry + AbortController + 401 并发队列刷新，工程化程度高。</p>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">1.1 抽取子应用启动模板 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc">9 个子应用的 <code>main.ts</code> 中 <code>bootstrap/mount/unmount</code> 生命周期 + <code>setupApp/createAppRouter</code> 逻辑几乎一致，diff 仅注释和 basename 差异。虽然 <code>setupSharedAuth(appName)</code> 已收敛了 auth 部分，但启动样板仍有可观重复。</div>
+  <div class="item-action">在 <code>comm/effects/shared-business</code> 中新增 <code>createSubApp(options)</code> 工厂函数，封装 qiankun 生命周期 + 路由创建 + 全局组件注册 + 指令注册 + 错误兜底，子应用 <code>main.ts</code> 缩减到 10 行以内配置式调用。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">1.2 路由守卫下沉到 shared 层 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc">main 与各子应用的 <code>setupCommonGuard</code>（nprogress + loadedPaths）和 <code>setupAuthGuard</code>（白名单 + token 检查 + redirect）逻辑高度重复，仅白名单路径不同。</div>
+  <div class="item-action">将守卫逻辑下沉到 <code>shared-auth</code>，通过参数注入白名单和 loginPath，各子应用只需 <code>setupSharedGuards(router, { loginPath, whitelist })</code> 一行调用。</div>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">1.3 globalState 明文传递 token 存在安全隐患 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc"><code>main/src/qiankun/global-state.ts</code> 通过 <code>initGlobalState</code> 广播 <code>{ user, theme, locale, token, tenantId }</code>，token 以明文形式在主子应用间传递，存在 XSS 窃取风险。大厂方案通常不在通信层传敏感凭据。</div>
+  <div class="item-action">子应用通过 <code>shared-auth</code> 的 Proxy 延迟初始化机制直接从 SecureLS 读取 token（已有此能力），移除 globalState 中的 token 字段，仅传递 theme/locale/tenantId 等非敏感配置。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">1.4 access store 职责过载，应拆分运行时态与持久化态 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>accessStore</code> 同时承载运行时态（accessMenus/accessRoutes/generateAccess）和持久化态（token/refreshToken/codes），职责混杂。<code>auth-store.ts</code> 中出现 <code>(accessStore as any).refreshToken</code> 类型断言绕过，说明类型设计已无法支撑现状。</div>
+  <div class="item-action">拆分为 <code>authStore</code>（token/refreshToken/codes，持久化）和 <code>accessStore</code>（menus/routes/generateAccess，运行时），消除 <code>as any</code> 断言。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">1.5 v-access 权限指令不支持响应式更新 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>v-access:code</code> / <code>v-access:role</code> 指令仅在 <code>mounted</code> 钩子判定一次，通过 <code>el.remove()</code> 物理移除元素。当权限码动态变更（如角色切换）时，已移除的元素无法恢复，需刷新整页。</div>
+  <div class="item-action">改用 <code>updated</code> 钩子或渲染函数方案，监听 accessStore 变化动态控制 <code>v-if</code>，或推荐业务侧统一使用 <code>&lt;AccessControl&gt;</code> 组件 + <code>useAccess()</code> composable 替代指令。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">1.6 tabbar Set 序列化隐患 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>tabbarStore</code> 的 <code>cachedTabs</code> 和 <code>excludeCachedTabs</code> 使用 <code>Set&lt;string&gt;</code>。虽然当前 persist 配置仅持久化 <code>tabs</code> 数组（未持久化 Set），但 Set 类型在 devtools 中不可观测，且如果后续误加入 persist 配置会静默丢失数据（JSON 序列化 Set 得到 <code>{}</code>）。</div>
+  <div class="item-action">将 <code>cachedTabs</code>/<code>excludeCachedTabs</code> 改为 <code>string[]</code>，用 <code>includes()</code> 替代 <code>has()</code>；或在 persist 配置中显式声明 serializer 做数组↔Set 转换。</div>
+</div>
+
+<!-- ==================== 功能增强 ==================== -->
+<h2 id="func">二、功能增强</h2>
+
+<div class="section">
+  <div class="section-title">📍 现状评估：功能覆盖面广，但工程化配套未跟上</div>
+  <p>9 个子应用覆盖用户/系统/项目/消息/定时任务/工作流/知识库/规则引擎/AI Agent 全链路，项目模块达 25 个视图（预算/合同/EVM/费用/收入/风险/费率等），功能深度可观。但 OpenAPI SDK 未真正接入业务、Storybook 组件文档空架子、错误监控仅 Web Vitals 缺异常上报。</p>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">2.1 OpenAPI SDK 生成后未接入业务，契约检测形同虚设 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc"><code>openapi-generator-config.yaml</code> 配置了 <code>typescript-axios</code> 输出到 <code>src/api/sdk</code>，CI 通过 <code>git diff</code> 检测接口变更阻断。但实际各 app 的 <code>api/</code> 目录仍是手写文件（<code>app.ts</code>/<code>dictType.ts</code> 等），SDK 生成目录与手写 API 并存，契约检测实际无效——后端改了接口，前端手写代码不会自动同步。</div>
+  <div class="item-action">制定迁移计划：(1) 确认 OpenAPI 规范文件来源（后端 Swagger 导出）；(2) 将手写 API 逐步替换为 SDK 调用，手写层仅保留业务逻辑包装；(3) CI 中加入 SDK 生成 + <code>git diff --exit-code</code> 强校验，确保 SDK 与后端契约一致。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">2.2 Storybook 配置就绪但仅 1 个 stories 文件 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>.storybook/main.ts</code> + <code>preview.ts</code> 已配置 vue3-vite + a11y + essentials 插件，但全仓仅 <code>loading.stories.ts</code> 一个文件。ui-kit 有 33 个 shadcn-ui 原子组件 + 22 个业务封装组件 + 5 个领域 ui-kit 包，均无文档化。</div>
+  <div class="item-action">优先为 ui-kit 高频组件（Button/Input/Select/Modal/Table/Form）补齐 stories，建立组件视觉规范和交互文档，降低团队沟通成本。可结合 AI 辅助批量生成 stories 骨架。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">2.3 错误监控仅有 Web Vitals，缺 JS 异常上报 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>comm/effects/monitor</code> 包含 <code>error-monitor</code> 和 <code>web-vitals</code>，但 error-monitor 的实际上报链路不明确。大厂方案通常接入 Sentry/自研 APM，覆盖 JS 异常 + Promise rejection + 资源加载失败 + API 错误。</div>
+  <div class="item-action">(1) 完善 error-monitor 的上报通道（接入 Sentry 或自研 APM 网关）；(2) 补充 <code>window.onerror</code> + <code>unhandledrejection</code> + <code>error</code> 事件捕获（资源加载失败）；(3) 在 RequestClient 的错误拦截器中自动上报 API 异常；(4) 上报数据携带 release 版本号便于版本回溯。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">2.4 errorMessageResponseInterceptor 存在冗余分支 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>preset-interceptors.ts</code> 中 HTTP 500+ 分支与 default 分支都返回 <code>internalServerError</code>，逻辑重复。</div>
+  <div class="item-action">合并 500+ 和 default 分支，或为不同 5xx 状态码映射更细粒度文案（502/503/504 网关类错误与 500 服务器内部错误区分提示）。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">2.5 retry 缺少指数退避策略 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>RequestClient</code> 的 retryConfig 使用固定 <code>retryDelay</code>，在高并发失败场景下可能加剧服务端压力（惊群效应）。</div>
+  <div class="item-action">增加指数退避 + 随机抖动选项：<code>backoff: 'fixed' | 'exponential'</code>，exponential 模式下 <code>delay = baseDelay * 2^attempt + randomJitter</code>。</div>
+</div>
+
+<!-- ==================== 性能提升 ==================== -->
+<h2 id="perf">三、性能提升</h2>
+
+<div class="section">
+  <div class="section-title">📍 现状评估：基础优化完备，缺极致压缩与缓存策略</div>
+  <p>已做：vendor 三分包（vue/element/vxe）、路由全懒加载、gzip 压缩、element-plus/vxe 按需引入、静态资源 immutable 长缓存、多阶段 Docker 镜像、HPA 自动伸缩、Lighthouse 性能预算门禁、visualizer 分析链路完整。Lighthouse 预算：FCP≤2s、LCP≤3s、CLS≤0.1、TBT≤300ms。</p>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">3.1 生产构建未 drop console，泄露风险 + 体积浪费 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc"><code>conf/vite-config/src/config/application.ts</code> 第 92-96 行，esbuild drop 配置中 <code>'console'</code> 被注释掉，仅 drop <code>'debugger'</code>。生产环境保留了所有 console 日志，既有信息泄露风险（可能打印敏感数据），又增加产物体积。</div>
+  <div class="item-action">取消注释，生产环境 drop <code>['console', 'debugger']</code>。如果需要保留特定日志，可用 <code>pure_funcs: ['console.log', 'console.info']</code> 保留 <code>console.warn/error</code>。</div>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">3.2 未启用 Brotli 压缩，gzip 可再降 15-20% <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc">前端 <code>vite-plugin-compression</code> 仅启用 gzip（<code>VITE_COMPRESS=gzip</code>），nginx 也仅配置 gzip <code>comp_level 6</code>，未启用 brotli 模块。Brotli 对文本资源（JS/CSS/HTML）压缩率比 gzip 高 15-20%。</div>
+  <div class="item-action">(1) 前端构建同时生成 gzip + brotli：<code>compression({ algorithms: ['gzip', 'brotliCompress'] })</code>；(2) nginx 安装 <code>ngx_brotli</code> 模块，配置 <code>brotli on; brotli_types text/css application/javascript ...</code>；(3) 或使用 <code>brotli_static on</code> 直接服务预压缩文件。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">3.3 build target 过低，es2015 可提至 es2018+ <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>target: 'es2015'</code>（ES6）会生成 polyfill 和降级代码。现代浏览器（Chrome 80+/Edge/Safari 14+）已全面支持 ES2018+（async/await/optional chaining/nullish coalescing），PMIS 系统用户群体通常为现代浏览器环境。</div>
+  <div class="item-action">提升 build target 至 <code>es2018</code> 或 <code>es2020</code>，可减小产物体积 5-10%。配合 <code>browserslist</code> 配置精确控制兼容范围。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">3.4 chunkSizeWarningLimit 偏高，掩盖超大 chunk 告警 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc">当前 <code>chunkSizeWarningLimit: 2000</code>（2MB），Rollup 默认 500KB。2MB 的阈值会让单个 chunk 超过 1MB 也不报警，掩盖了包体膨胀问题。</div>
+  <div class="item-action">降低至 <code>1000</code>（1MB），配合 manualChunks 更细粒度拆分。对确实无法拆分的大包（如 vxe-table），在注释中标注豁免原因。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">3.5 缺少图片压缩与字体子集化 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc">无 <code>vite-plugin-imagemin</code> 或类似图片压缩插件，无字体子集化（subsetting）处理。PMIS 项目中 project-web 有大量视图，可能包含较多图片资源。</div>
+  <div-action></div-action>
+  <div class="item-action">(1) 引入 <code>unplugin-imagemin</code> 压缩 PNG/JPG/SVG；(2) 中文字体使用 <code>font-spider</code> 或 <code>subset-font</code> 按使用字裁剪，中文字体文件可从 5MB+ 降至 100KB 以内。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">3.6 PWA 已配置但运行时关闭 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>vite-plugin-pwa</code> 插件代码存在但 <code>VITE_PWA=false</code> 关闭，<code>globPatterns: []</code> 无缓存策略。对于 PMIS 这类高频使用的内部系统，PWA 的离线缓存可显著提升二次访问速度。</div>
+  <div class="item-action">评估启用 PWA：配置 App Shell 缓存策略（precache 应用骨架），API 请求走 NetworkFirst（保证数据新鲜），静态资源走 CacheFirst。注意微前端场景下 Service Worker 的 scope 范围需匹配主应用。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">3.7 importmap CDN 外置依赖关闭但插件驻留 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc">importmap 插件整套（含 <code>html-minifier-terser</code>、<code>@jspm/generator</code>、<code>cheerio</code>）默认禁用，vue/pinia 等仍打包进 vue-vendor。如果启用 CDN 外置，9 个子应用可共享同一份 vue/element-plus，显著减少总体积。</div>
+  <div class="item-action">评估启用 importmap：将 vue/vue-router/pinia/element-plus 外置到 CDN，9 个子应用共享。对于微前端场景，这可避免每个子应用重复打包这些库（当前每个子应用 vue-vendor 约 80KB gzip × 9 = 720KB 冗余）。</div>
+</div>
+
+<!-- ==================== 体验改善 ==================== -->
+<h2 id="exp">四、体验改善</h2>
+
+<div class="section">
+  <div class="section-title">📍 现状评估：基础体验完善，微前端切换体验可优化</div>
+  <p>已做：nprogress 进度条、标签页拖拽 + keepAlive 缓存、SecureLS 加密持久化、i18n 延迟绑定、hover 预加载子应用、全屏/水印/锁屏功能。但微前端切换白屏、骨架屏缺失、错误边界薄弱等体验痛点仍存在。</p>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">4.1 微前端切换白屏问题 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc">Qiankun 切换子应用时，旧应用卸载 → 新应用加载 → 新应用挂载之间存在白屏间隙。虽然有 hover 预加载缓解首次加载，但已加载子应用切换时仍有可感知的白屏（尤其 project-web 这类重应用）。大厂方案通常有骨架屏或 loading 占位。</div>
+  <div class="item-action">(1) 在 <code>SubAppContainer</code> 中增加骨架屏/loading 占位，监听 qiankun 的 <code>beforeLoad/afterMount</code> 生命周期切换显示状态；(2) 配合 <code>prefetch</code> 策略预加载常用子应用 JS；(3) 评估使用 <code>keep-alive</code> 缓存已激活子应用（qiankun 支持但需注意内存）。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">4.2 缺少全局错误边界 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc">Vue 3 的 <code>app.config.errorHandler</code> 和 <code>onErrorCaptured</code> 未在子应用启动模板中统一配置。当某个子应用渲染异常时，可能导致整个微前端框架白屏，而非优雅降级到错误页。</div>
+  <div class="item-action">(1) 在 <code>createSubApp</code> 工厂中统一注入 <code>errorHandler</code>，捕获后渲染错误 fallback 组件；(2) 在 <code>SubAppContainer</code> 增加 <code>errorCaptured</code>，子应用崩溃时显示"应用加载失败，请刷新"提示并提供重试按钮。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">4.3 网络异常体验不够友好 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>errorMessageResponseInterceptor</code> 将错误转为 ElMessage 提示，但弱网/超时场景下用户体验差：消息一闪而过、无重试入口、列表页空白无反馈。</div>
+  <div class="item-action">(1) 对列表页引入空状态/错误状态/重试组件（参考 vxe-table 的 empty 插槽）；(2) 对关键操作（提交/保存）失败后保留表单数据，提供重试按钮；(3) 网络断开时全局展示离线提示条。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">4.4 registerLoadingDirective 参数不一致 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc">主应用调用 <code>registerLoadingDirective</code> 传 <code>'loading'</code> 字符串，子应用传 <code>false</code>，参数语义不一致，可能导致指令行为差异。</div>
+  <div class="item-action">统一参数类型和语义，在 <code>shared-auth</code> 或 <code>createSubApp</code> 工厂中统一调用，消除手动传参差异。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">4.5 骨架屏（Skeleton）缺失 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc">路由懒加载的页面组件加载期间无骨架屏，首屏和数据加载阶段用户看到空白。大厂方案通常有页面级骨架屏。</div>
+  <div class="item-action">为高频访问页面（Dashboard、列表页）设计骨架屏组件，在 Suspense fallback 或路由组件 loading 配置中使用。</div>
+</div>
+
+<!-- ==================== 过度设计 ==================== -->
+<h2 id="over">五、过度设计精简</h2>
+
+<div class="section">
+  <div class="section-title">📍 现状评估：部分插件配置维护成本高于收益</div>
+  <p>项目追求工程化全面性，引入了较多"以防万一"的配置，部分功能默认关闭但仍驻留代码和依赖，增加了维护成本和认知负担。</p>
+</div>
+
+<div class="item item-over">
+  <div class="item-title">5.1 三套格式化工具并存 <span class="badge badge-over">过度</span></div>
+  <div class="item-desc">ESLint 中 <code>prettier</code> 插件、<code>@stylistic/stylelint-plugin</code>、<code>eslint-plugin-perfectionist</code> 三套格式化工具并存，部分规则互相关闭（perfectionist 关闭与 prettier 冲突的规则，stylelint 也关 prettier 冲突项）。三套工具的规则协调成本高，新人理解门槛大。</div>
+  <div class="item-action">统一格式化入口：Prettier 负责 JS/TS/Vue/JSON/MD 格式化，Stylelint 仅管 CSS/SCSS 语法规则（不用 stylistic），perfectionist 仅管 import 排序（不用格式化规则）。明确各工具职责边界，删除重叠配置。</div>
+</div>
+
+<div class="item item-over">
+  <div class="item-title">5.2 archiver 每次构建生成 dist.zip 多余 <span class="badge badge-over">过度</span></div>
+  <div class="item-desc"><code>archiver: true</code> 配置每次构建都生成 <code>dist.zip</code>，但 CI 已直接使用 <code>dist/</code> 目录构建 Docker 镜像，zip 文件无人消费，徒增构建耗时。</div>
+  <div class="item-action">确认 zip 消费方后决定：若无使用方则关闭 <code>archiver</code>；若用于离线包分发则仅在有 <code>VITE_ARCHIVE=true</code> 环境变量时生成。</div>
+</div>
+
+<div class="item item-over">
+  <div class="item-title">5.3 rollup-plugin-node-polyfills 可能不必要 <span class="badge badge-over">过度</span></div>
+  <div class="item-desc">全局 alias 了 <code>buffer/process/stream/crypto</code> 等 Node 内建模块。如果项目无 Node 内建依赖（纯浏览器运行的前端项目），这些 polyfill 徒增体积和构建耗时。</div>
+  <div class="item-action">排查是否有依赖引用了 Node 内建模块（<code>depcheck</code> 或构建产物分析），若无则移除 node-polyfills 配置。</div>
+</div>
+
+<div class="item item-over">
+  <div class="item-title">5.4 importmap 插件整套维护成本高但默认禁用 <span class="badge badge-over">过度</span></div>
+  <div class="item-desc">importmap 插件含 <code>@jspm/generator</code>、<code>cheerio</code>、<code>html-minifier-terser</code> 等依赖，维护成本不低，但默认关闭（<code>condition: isBuild && importmap</code>，importmap 未传）。如果长期不启用，应移除以降低维护成本。</div>
+  <div class="item-action">决策：要么启用（见 3.7 建议，微前端场景收益明显），要么移除。不要让"可能用到"的代码长期驻留。</div>
+</div>
+
+<div class="item item-over">
+  <div class="item-title">5.5 license 注入每个 entry chunk 重复 <span class="badge badge-over">过度</span></div>
+  <div class="item-desc">license 注入到每个 entry chunk，微前端多入口场景下重复注入相同 license 文本。</div>
+  <div class="item-action">改为生成独立 <code>LICENSE.txt</code> 文件，或在主应用统一注入一次。</div>
+</div>
+
+<div class="item item-over">
+  <div class="item-title">5.6 cspell 拼写检查投入产出比低 <span class="badge badge-over">过度</span></div>
+  <div class="item-desc">cspell 配置了 ~50 个自定义词，对所有 <code>*/*.ts</code> 和 README 执行拼写检查。对于中文为主的 PMIS 项目，拼写检查的主要价值在于变量名拼写正确性，但误报率高、自定义词库维护成本持续存在。</div>
+  <div class="item-action">评估是否保留：如果团队无强制要求可降级为可选检查（不纳入 <code>check</code> 命令），或仅检查 commit message 而非全量代码。</div>
+</div>
+
+<!-- ==================== 工程质量补齐 ==================== -->
+<h2 id="quality">六、工程质量补齐</h2>
+
+<div class="section">
+  <div class="section-title">📍 现状评估：规范配置齐全但门禁未落地，这是最大短板</div>
+  <p>TypeScript 严格模式全开（strict + noUncheckedIndexedAccess + verbatimModuleSyntax）、ESLint 18 模块 + 17 插件、Stylelint 四件套、commitlint 13 种 type——<strong>配置层面已对标大厂</strong>。但 lefthook 钩子全部注释、changesets 未初始化、测试无覆盖率门槛，导致<strong>规范形同虚设</strong>。</p>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">6.1 Lefthook 钩子全部注释，本地质量门禁失效 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc"><code>lefthook.yml</code> 中 <code>pre-commit</code>、<code>pre-push</code>、<code>commit-msg</code> 钩子全部被注释掉，仅保留 <code>post-merge</code> 自动 install。这意味着提交前不执行任何 lint/type-check/commit 校验，所有质量保障完全依赖 CI——而 CI 只在 PR 时触发，本地直接 push 到分支则无任何拦截。</div>
+  <div class="item-action">立即启用 lefthook 钩子（取消注释），建议分阶段：(1) 先启用 <code>commit-msg</code>（commitlint 校验，最快见效）；(2) 再启用 <code>pre-commit</code> 的 lint-md/lint-vue/lint-js（仅对 staged 文件，<code>--cache</code> 加速）；(3) 最后启用 <code>pre-push</code> 的 type-check（耗时较长放 push 前）。如担心影响效率，可配置 <code>{staged_files}</code> 仅检查变更文件。</div>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">6.2 Changesets 依赖已引入但未初始化 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc"><code>package.json</code> 依赖 <code>@changesets/cli</code> + <code>@changesets/changelog-github</code>，但项目内不存在 <code>.changeset/</code> 目录及配置文件，版本管理能力未落地。monorepo 多包版本管理没有 changesets 会非常混乱。</div>
+  <div class="item-action">运行 <code>npx changeset init</code> 初始化配置，补充 <code>.changeset/config.json</code>，在 <code>package.json</code> 增加 <code>changeset</code> 和 <code>version-packages</code> 脚本。或如果确认不使用 changesets，则移除相关依赖减少误导。</div>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">6.3 测试无覆盖率门槛，业务应用几乎零单测 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc">34 个 <code>.test.ts</code> 集中在 <code>comm/@core/base/shared/utils</code>、<code>comm/stores</code>、<code>comm/effects/request</code> 等公共包，业务应用 <code>apps/*</code> 几乎无单测。Vitest 未配置 coverage provider 与阈值。E2E 仅 1 个 spec 5 个用例（chromium 单浏览器），断言宽泛（多处 <code>if isVisible</code> 软断言），用例硬编码 <code>admin/admin123</code>。</div>
+  <div class="item-action">(1) 配置 <code>vitest coverage</code>：<code>provider: 'v8'</code>，设定公共包覆盖率阈值 80%、业务包逐步补齐；(2) 公共工具函数（utils/request/auth）优先补齐单测；(3) E2E 扩展到 chromium+firefox 双浏览器，去掉硬编码凭据改用环境变量，补充关键业务流（项目创建/审批流/消息发送）；(4) 考虑引入 <code>@vitest/coverage-v8</code> + CI 上传覆盖率到 Codecov/Coveralls。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">6.4 tsconfig 未配置 paths，IDE 跳转受限 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>conf/tsconfig</code> 各层配置均未设置 <code>paths</code> 路径别名，<code>#/</code> 别名仅靠 Vite alias 解析。TypeScript 类型检查和 IDE 跳转/补全可能受限（虽然 vue-tsc 能配合 vite alias 工作，但纯 tsc 场景失效）。</div>
+  <div class="item-action">在 <code>tsconfig/base.json</code> 中补充 <code>paths</code> 映射，与 Vite alias 保持同步。可使用 <code>vite-tsconfig-paths</code> 插件自动同步，避免双重维护。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">6.5 缺少 PR 模板和 Issue 模板 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>.github/</code> 仅有 <code>workflows/frontend-ci.yml</code> 一个 CI 文件，缺少 PR 模板和 Issue 模板。大厂开源项目标配 <code>PULL_REQUEST_TEMPLATE.md</code> + <code>ISSUE_TEMPLATE/</code>（bug/feature/question 分类）。</div>
+  <div class="item-action">补充 <code>.github/PULL_REQUEST_TEMPLATE.md</code>（变更说明/测试方式/影响范围 checklist）和 <code>.github/ISSUE_TEMPLATE/{bug_report,feature_request}.yml</code>。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">6.6 check-circular 仅 warn 不 fail <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>vsh check-circular</code> 使用 circular-dependency-scanner 检测循环依赖，但仅 warn 不 fail。循环依赖是架构腐化的信号，应阻断构建。</div>
+  <div class="item-action">在 CI 的 <code>check</code> 命令中改为 fail 模式。如果当前存在历史循环依赖，先标记允许列表（ignore pattern），新增量不允许引入循环依赖。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">6.7 CI 缺少缓存优化 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>frontend-ci.yml</code> 的 lint→build→docker→deploy 四阶段，Docker 层有 gha 缓存，但 pnpm install 和 turbo build 的缓存策略不明确。</div>
+  <div class="item-action">(1) 使用 <code>pnpm/action-setup</code> + <code>actions/setup-node</code> 缓存 pnpm store；(2) 配置 <code>turbo</code> 的 Remote Cache（可选自建或 Turbo Cloud）；(3) CI 中并行执行 <code>check</code> 和 <code>build</code>（build 依赖 check 通过可拆为两个 job）。</div>
+</div>
+
+<div class="item item-p2">
+  <div class="item-title">6.8 E2E 测试用例薄弱 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc">Playwright 仅 1 个 <code>core-flows.spec.ts</code>（登录成功/失败/导航/登出 5 用例），chromium 单浏览器，断言宽泛，凭据硬编码。对于 9 个子应用的 PMIS 系统覆盖严重不足。</div>
+  <div class="item-action">(1) 扩展浏览器矩阵：<code>projects: [chromium, firefox]</code>；(2) 凭据改为 <code>process.env.E2E_USER</code>；(3) 补充各子应用核心流 E2E（项目管理/工作流审批/消息发送）；(4) 断言改用 <code>expect(locator).toBeVisible()</code> 替代 <code>if isVisible</code>。</div>
+</div>
+
+<!-- ==================== 落地路线图 ==================== -->
+<h2 id="roadmap">七、落地路线图</h2>
+
+<div class="section">
+  <h3>🗓️ 第一阶段：紧急修复（1-2 周）— P0 项</h3>
+  <table>
+    <thead>
+      <tr><th width="60">编号</th><th>建议</th><th width="100">预估工作量</th><th>影响面</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>6.1</td><td>启用 Lefthook 钩子（commit-msg → pre-commit → pre-push 分阶段）</td><td>0.5 天</td><td>全团队提交流程</td></tr>
+      <tr><td>6.2</td><td>初始化 Changesets 或移除依赖</td><td>0.5 天</td><td>版本管理</td></tr>
+      <tr><td>3.1</td><td>生产构建 drop console</td><td>0.5 天</td><td>全部构建产物</td></tr>
+      <tr><td>3.2</td><td>启用 Brotli 压缩（前端 + nginx）</td><td>1 天</td><td>全部静态资源</td></tr>
+      <tr><td>1.3</td><td>移除 globalState 中的 token 明文传递</td><td>1 天</td><td>主子应用通信</td></tr>
+      <tr><td>2.1</td><td>OpenAPI SDK 接入业务（制定迁移计划 + 试点 1 个 app）</td><td>3 天</td><td>API 层</td></tr>
+      <tr><td>4.1</td><td>微前端切换骨架屏/loading 占位</td><td>2 天</td><td>子应用切换体验</td></tr>
+      <tr><td>6.3</td><td>配置 Vitest coverage + 补齐公共包单测</td><td>3 天</td><td>测试体系</td></tr>
+    </tbody>
+  </table>
+
+  <h3>🗓️ 第二阶段：重要补强（3-4 周）— P1 项</h3>
+  <table>
+    <thead>
+      <tr><th width="60">编号</th><th>建议</th><th width="100">预估工作量</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1.1</td><td>抽取 createSubApp 工厂，收敛子应用 main.ts 样板</td><td>2 天</td></tr>
+      <tr><td>1.2</td><td>路由守卫下沉到 shared-auth</td><td>2 天</td></tr>
+      <tr><td>1.4</td><td>拆分 access store（authStore + accessStore）</td><td>2 天</td></tr>
+      <tr><td>1.6</td><td>tabbar Set → Array 类型修正</td><td>0.5 天</td></tr>
+      <tr><td>2.2</td><td>补齐 ui-kit Storybook stories</td><td>5 天（可并行）</td></tr>
+      <tr><td>2.3</td><td>完善错误监控上报链路</td><td>3 天</td></tr>
+      <tr><td>3.3</td><td>build target 提升至 es2018+</td><td>0.5 天</td></tr>
+      <tr><td>3.4</td><td>降低 chunkSizeWarningLimit 至 1000</td><td>0.5 天</td></tr>
+      <tr><td>3.5</td><td>引入图片压缩 + 字体子集化</td><td>1 天</td></tr>
+      <tr><td>4.2</td><td>统一全局错误边界</td><td>1 天</td></tr>
+      <tr><td>4.3</td><td>网络异常体验优化（空状态/重试组件）</td><td>2 天</td></tr>
+      <tr><td>6.4</td><td>tsconfig 补充 paths 映射</td><td>0.5 天</td></tr>
+      <tr><td>6.5</td><td>补充 PR/Issue 模板</td><td>0.5 天</td></tr>
+      <tr><td>6.6</td><td>check-circular 改为 fail 模式</td><td>0.5 天</td></tr>
+    </tbody>
+  </table>
+
+  <h3>🗓️ 第三阶段：增强优化（按需推进）— P2 项</h3>
+  <table>
+    <thead>
+      <tr><th width="60">编号</th><th>建议</th><th width="100">预估工作量</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1.5</td><td>v-access 指令改响应式或推荐组件方案</td><td>1 天</td></tr>
+      <tr><td>2.4</td><td>合并 errorMessageResponseInterceptor 冗余分支</td><td>0.5 天</td></tr>
+      <tr><td>2.5</td><td>retry 增加指数退避策略</td><td>1 天</td></tr>
+      <tr><td>3.6</td><td>评估启用 PWA</td><td>2 天</td></tr>
+      <tr><td>3.7</td><td>评估启用 importmap CDN 外置</td><td>2 天</td></tr>
+      <tr><td>4.4</td><td>统一 registerLoadingDirective 参数</td><td>0.5 天</td></tr>
+      <tr><td>4.5</td><td>页面级骨架屏</td><td>3 天</td></tr>
+      <tr><td>6.7</td><td>CI 缓存优化（pnpm store + turbo cache）</td><td>1 天</td></tr>
+      <tr><td>6.8</td><td>E2E 扩展浏览器矩阵 + 补充用例</td><td>3 天</td></tr>
+    </tbody>
+  </table>
+
+  <h3>🔧 过度设计精简（可与上述并行）</h3>
+  <table>
+    <tbody>
+      <tr><td>5.1</td><td>统一格式化工具职责边界（Prettier + Stylelint + perfectionist 明确分工）</td><td>1 天</td></tr>
+      <tr><td>5.2</td><td>关闭或条件化 archiver dist.zip</td><td>0.5 天</td></tr>
+      <tr><td>5.3</td><td>排查并移除不必要的 node-polyfills</td><td>0.5 天</td></tr>
+      <tr><td>5.4</td><td>决策 importmap 插件去留</td><td>0.5 天</td></tr>
+      <tr><td>5.5</td><td>license 注入去重</td><td>0.5 天</td></tr>
+      <tr><td>5.6</td><td>评估 cspell 保留或降级</td><td>0.5 天</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="summary-box" style="margin-top: 32px;">
+  <strong>对标总结：</strong>该项目在架构分层、微前端方案、RequestClient 封装、权限模型方面已达到 vben/element-plus-admin 等头部开源方案水平。与互联网大厂（如字节飞书、阿里钉钉）的主要差距集中在三点：<br>
+  <strong>① 质量门禁落地</strong>（lefthook 钩子注释 + 测试覆盖率缺失）——规范配置再好，不执行等于零；<br>
+  <strong>② 性能极致优化</strong>（brotli + console drop + build target + 图片压缩）——基础完备但缺最后一公里；<br>
+  <strong>③ 可观测性</strong>（错误上报 + 监控告警）——Web Vitals 有但异常上报链路不完整。<br>
+  建议优先完成 P0 项（约 2 周），可显著提升工程质量基线。
+</div>
+
+</div>
+</body>
+</html>

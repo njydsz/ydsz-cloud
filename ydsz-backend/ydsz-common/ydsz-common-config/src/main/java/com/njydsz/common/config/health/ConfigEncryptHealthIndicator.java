@@ -57,6 +57,18 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
         this.environment = environment;
     }
 
+    /**
+     * 上报配置加密健康状态。
+     *
+     * <p>扫描环境中所有以 {@code ENC(...)} 包裹的加密属性，按以下规则判定健康：
+     * <ul>
+     *   <li>不存在加密属性 → UP</li>
+     *   <li>存在加密属性但 Jasypt 主密码未配置（环境变量与配置项均缺失）→ DOWN，提示必须配置</li>
+     *   <li>存在加密属性且主密码就绪 → UP，附带密钥来源与加密属性数量</li>
+     * </ul>
+     *
+     * <p>details 中仅暴露属性名的最后一段（脱敏），不包含任何密文或明文值。
+     */
     @Override
     public Health health() {
         // 检查密钥来源
