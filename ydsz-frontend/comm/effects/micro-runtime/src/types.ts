@@ -45,6 +45,10 @@ export interface LifecycleExports {
   mount: (props: MountProps) => Promise<void>;
   unmount: (props: MountProps) => Promise<void>;
   update?: (props: MountProps) => Promise<void>;
+  /** keep-alive 激活时调用（可选） */
+  activate?: () => Promise<void> | void;
+  /** keep-alive 停用时调用（可选） */
+  deactivate?: () => Promise<void> | void;
 }
 
 /** 内核生命周期钩子 */

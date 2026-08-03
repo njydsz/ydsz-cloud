@@ -12,6 +12,7 @@ export * from './dom';
 export * from './download';
 export * from './inference';
 export * from './letter';
+export * from './logger';
 export * from './merge';
 export * from './nprogress';
 export * from './resources';

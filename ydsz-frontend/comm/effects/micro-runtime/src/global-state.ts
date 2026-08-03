@@ -40,7 +40,8 @@ export interface GlobalStateConfig<T> {
 
 /** 内核注入的原始全局状态通信能力 */
 export interface RawGlobalStateAPI<T = Record<string, unknown>> {
-  onGlobalStateChange: (listener: (state: T, prev: T) => void, fireImmediately?: boolean) => void;
+  /** 监听全局状态变化，返回取消订阅函数 */
+  onGlobalStateChange: (listener: (state: T, prev: T) => void, fireImmediately?: boolean) => () => void;
   setGlobalState: (state: Partial<T>) => void;
   getGlobalState: () => T;
 }
@@ -52,10 +53,11 @@ export function createGlobalStateHandle<T extends Record<string, unknown>>(
 ): GlobalStateHandle<T> {
   const version = config.version ?? 1;
   let current: VersionedState<T> = { version, data: { ...config.initial } };
+  let unsubscribeRaw: (() => void) | undefined;
 
   if (raw) {
-    // 对接内核通信通道
-    raw.onGlobalStateChange((state) => {
+    // 对接内核通信通道，保存取消订阅函数
+    unsubscribeRaw = raw.onGlobalStateChange((state) => {
       current = { version, data: { ...state } };
     }, true);
   }
@@ -86,7 +88,14 @@ export function createGlobalStateHandle<T extends Record<string, unknown>>(
     },
     subscribe(listener) {
       listeners.add(listener);
-      return () => { listeners.delete(listener); };
+      return () => {
+        listeners.delete(listener);
+        // 如果没有本地监听器了，且存在原始 API 订阅，则取消订阅
+        if (listeners.size === 0 && unsubscribeRaw) {
+          unsubscribeRaw();
+          unsubscribeRaw = undefined;
+        }
+      };
     },
   };
 }

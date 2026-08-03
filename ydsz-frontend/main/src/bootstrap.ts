@@ -14,6 +14,7 @@ import { registerAccessDirective } from '@ydsz/access';
 import { registerLoadingDirective } from '@ydsz/common-ui/es/loading';
 import { registerSafeHtmlDirective } from '@ydsz/common-ui/es/safe-html';
 import { registerWatermarkDirective } from '@ydsz/common-ui/es/watermark';
+import { initLogger } from '@ydsz-core/shared/utils';
 import { preferences } from '@ydsz/preferences';
 import { initStores, useUserStore } from '@ydsz/stores';
 import '@ydsz/styles';
@@ -39,10 +40,18 @@ import { router, initRouterGuard } from './router';
 
 import { createKernel, getVersionManager } from '@ydsz/micro-kernel';
 import { createRuntime, registerKernel } from '@ydsz/micro-runtime';
+import { createLogger } from '@ydsz-core/shared/utils';
 import { MICRO_APPS } from '@ydsz/vite-config';
 
 /** 单个 micro-runtime 实例（整个主应用生命周期唯一，供其他模块获取） */
 export let microRuntime: ReturnType<typeof createRuntime> | null = null;
+
+/** bootstrap 内部统一日志器（自动带 [ydsz][Bootstrap] 前缀） */
+const logger = createLogger('Bootstrap');
+/** 微运行时日志器 */
+const runtimeLogger = createLogger('MicroRuntime');
+/** 版本管理器日志器 */
+const versionLogger = createLogger('VersionManager');
 
 /**
  * 启动微前端运行时。
@@ -56,22 +65,22 @@ function registerMicroRuntime() {
 
   // 2. 创建运行时实例
   microRuntime = createRuntime({ kernel: 'micro-kernel' });
-  console.info('[MicroRuntime] Initialized with kernel: micro-kernel');
+  runtimeLogger.info('Initialized with kernel: micro-kernel');
 
   // 3. 初始化版本管理器
-  const versionManager = getVersionManager({
+  getVersionManager({
     checkInterval: 5 * 60 * 1000, // 5分钟检查一次
     autoCheck: true,
     onVersionCheck: (result) => {
       if (result.hasUpdate) {
-        console.info(
-          `[VersionManager] App ${result.appName} updated: ${result.currentVersion} -> ${result.latestVersion}`,
+        versionLogger.info(
+          `App ${result.appName} updated: ${result.currentVersion} -> ${result.latestVersion}`,
         );
         // 可以在这里触发更新提示或自动刷新逻辑
       }
     },
   });
-  console.info('[VersionManager] Initialized');
+  versionLogger.info('Initialized');
 
   // 4. 从注册表注入子应用配置
   microRuntime.registerApps(
@@ -85,15 +94,15 @@ function registerMicroRuntime() {
     })),
   );
 
-  // 5. 生命周期钩子
+  // 5. 生命周期钩子（debug 级别，避免生产噪音）
   microRuntime.addLifecycleHook('beforeLoad', (app) => {
-    console.warn(`[MicroRuntime] 子应用 ${app.name} 开始加载...`);
+    runtimeLogger.debug(`子应用 ${app.name} 开始加载...`);
   });
   microRuntime.addLifecycleHook('afterMount', (app) => {
-    console.warn(`[MicroRuntime] 子应用 ${app.name} 挂载完成`);
+    runtimeLogger.debug(`子应用 ${app.name} 挂载完成`);
   });
   microRuntime.addLifecycleHook('afterUnmount', (app) => {
-    console.warn(`[MicroRuntime] 子应用 ${app.name} 卸载完成`);
+    runtimeLogger.debug(`子应用 ${app.name} 卸载完成`);
   });
 
   // 6. 启动：micro-kernel 内建 prefetch 预热高频应用
@@ -106,6 +115,10 @@ function registerMicroRuntime() {
  * 应用引导启动。
  */
 async function bootstrap(namespace: string) {
+  // E6: 初始化日志系统（生产默认 INFO，开发默认 DEBUG）
+  // localStorage 'ydsz:debug' 可运行期覆盖调试过滤
+  initLogger({ isDev: import.meta.env.DEV });
+
   await initComponentAdapter();
   await initSetupYDSZForm();
 

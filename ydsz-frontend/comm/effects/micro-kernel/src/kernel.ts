@@ -63,7 +63,10 @@ const globalStateAPI: RawGlobalStateAPI = {
     if (fireImmediately) {
       try { listener({ ..._globalState }); } catch { /* 静默 */ }
     }
-    // 返回取消订阅函数（由 createGlobalStateHandle 内维护其 own listener set）
+    // 返回取消订阅函数，防止内存泄漏
+    return () => {
+      _globalStateListeners.delete(listener);
+    };
   },
   setGlobalState(patch) {
     Object.assign(_globalState, patch);
@@ -144,6 +147,27 @@ function patchHistory(): () => void {
 }
 
 /**
+ * P0-2: 匹配 activeRule 规则
+ *
+ * 支持三种匹配模式：
+ * - string: 路由前缀匹配（向后兼容）
+ * - RegExp: 正则表达式匹配 pathname
+ * - function: 自定义匹配函数，接收完整 pathname 参数
+ */
+function matchActiveRule(path: string, activeRule: string | RegExp | ((path: string) => boolean)): boolean {
+  if (typeof activeRule === 'string') {
+    return path.startsWith(activeRule);
+  }
+  if (activeRule instanceof RegExp) {
+    return activeRule.test(path);
+  }
+  if (typeof activeRule === 'function') {
+    return activeRule(path);
+  }
+  return false;
+}
+
+/**
  * 路由监听：匹配 activeRule → 激活对应子应用。
  * 覆盖 popstate（浏览器前进/后退）+ 自定义 route-change（history pushState/replaceState 补丁）。
  */
@@ -157,11 +181,13 @@ function startRouterSync(
     const path = window.location.pathname;
 
     for (const app of apps) {
-      if (path.startsWith(app.activeRule)) {
+      if (matchActiveRule(path, app.activeRule)) {
         if (isDegraded(app.name)) {
           // 降级应用走整页跳转
           if (activeAppName !== app.name) {
-            window.location.href = app.activeRule;
+            // P0-2: 降级跳转需要有效的 URL，字符串类型直接使用，其他类型使用 entry
+            const fallbackUrl = typeof app.activeRule === 'string' ? app.activeRule : app.entry;
+            window.location.href = fallbackUrl;
           }
           return;
         }

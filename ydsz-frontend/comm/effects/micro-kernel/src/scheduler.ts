@@ -85,6 +85,14 @@ export async function activateApp(
     container.appendChild(instance.cachedRoot);
     instance.cachedParent = null;
     instance.status = 'MOUNTED';
+    // 调用 activate 生命周期钩子
+    if (instance.exports?.activate) {
+      try {
+        await instance.exports.activate();
+      } catch (err) {
+        console.error(`[MicroKernel] ${config.name} activate hook failed:`, err);
+      }
+    }
     console.info(`[MicroKernel] ${config.name} reattached (keepAlive)`);
     return;
   }
@@ -152,6 +160,14 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
         container.removeChild(instance.cachedRoot);
       }
       instance.status = 'UNMOUNTED';
+      // 调用 deactivate 生命周期钩子
+      if (instance.exports?.deactivate) {
+        try {
+          await instance.exports.deactivate();
+        } catch (err) {
+          console.error(`[MicroKernel] ${config.name} deactivate hook failed:`, err);
+        }
+      }
       console.info(`[MicroKernel] ${config.name} detached (keepAlive)`);
       return { name: config.name, success: true };
     }
