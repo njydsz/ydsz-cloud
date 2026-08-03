@@ -85,7 +85,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
         plugins.push(viteManifestPlugin({ name: subAppName }));
         console.info(`[ViteConfig] Manifest plugin injected for ${subAppName}`);
       } catch {
-        // micro-kernel-lite 不可用时跳过（qiankun 模式无需 manifest）
+        // micro-kernel-lite 不可用时跳过
       }
     }
     const { build: buildConf } = vite;

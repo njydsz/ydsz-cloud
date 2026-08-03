@@ -3,7 +3,7 @@
  *
  * @remarks
  * 基于 {@code @ydsz/vite-config} 共享配置扩展：启用 CORS 供微前端子应用跨域访问、
- * 按需引入 Element Plus 组件，并配置 Qiankun 微前端相关选项。
+ * 按需引入 Element Plus 组件。
  *
  * @author ydsz-team
  * @since 1.0.0

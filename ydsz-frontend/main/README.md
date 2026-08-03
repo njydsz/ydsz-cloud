@@ -6,7 +6,7 @@
 
 | 属性 | 值 |
 |---|---|
-| **类型** | 微前端主应用（Qiankun Host） |
+| **类型** | 微前端主应用（lite-kernel micro-frontend host） |
 | **包名** | @ydsz/main-web |
 | **对应后端服务** | ydsz-gateway |
 | **前端端口** | 5600 |
@@ -14,7 +14,7 @@
 | **路由前缀** | / |
 | **版本** | 1.0.0 |
 
-主应用是整个 YDSZ PMIS 前端的入口与宿主，负责登录认证、全局布局、菜单分发、子应用注册与激活、全局状态通信（Qiankun initGlobalState）以及路由守卫。9 个业务子应用通过路径前缀匹配挂载到 `#subapp-container` 容器中。
+主应用是整个 YDSZ PMIS 前端的入口与宿主，负责登录认证、全局布局、菜单分发、子应用注册与激活、全局状态通信（lite-kernel globalState）以及路由守卫。9 个业务子应用通过路径前缀匹配挂载到 `#subapp-container` 容器中。
 
 ## 目录结构
 
@@ -27,7 +27,7 @@ main/
 │   ├── components/           # 全局组件（global-search）
 │   ├── layouts/              # 布局（basic + auth）
 │   ├── locales/              # 国际化（zh-CN/en-US）
-│   ├── qiankun/              # Qiankun 子应用注册与全局状态
+│   ├── 注册表 MICRO_APPS              # lite-kernel 子应用注册与全局状态
 │   ├── router/               # 路由守卫 + 模块化路由
 │   │   └── routes/modules/   # dashboard / subapps / demos
 │   ├── store/                # 全局 Store（auth/notification）
@@ -56,7 +56,6 @@ main/
 | `@ydsz/monitor` | 前端监控（错误捕获 + Web Vitals） |
 | `@ydsz/stores` | 全局状态管理 |
 | `@ydsz/locales` | 国际化基础包 |
-| `qiankun` | 微前端框架（子应用注册/激活/预加载） |
 | `element-plus` | UI 组件库 |
 | `pinia` | 状态管理 |
 
@@ -66,12 +65,12 @@ main/
 |---|---|---|
 | 登录认证 | 账号密码/验证码/二维码/注册/忘记密码 | `src/views/_core/authentication/` |
 | 仪表盘 | 数据分析（Analytics）与工作台（Workspace） | `src/views/dashboard/` |
-| 子应用管理 | Qiankun 子应用注册、激活、预加载 | `src/qiankun/index.ts` |
+| 子应用管理 | lite-kernel 子应用注册与激活 | 注册表 MICRO_APPS |
 | 路由守卫 | 登录态校验、权限码控制、子应用 catch-all | `src/router/guard.ts` |
 | 布局系统 | 基础布局（basic）与认证布局（auth） | `src/layouts/` |
 | 全局搜索 | 跨模块菜单/资源快速检索 | `src/components/global-search.vue` |
 | 国际化 | zh-CN / en-US 双语切换 | `src/locales/` |
-| 全局状态 | 认证状态、通知状态、Qiankun 全局状态 | `src/store/`、`src/qiankun/global-state.ts` |
+| 全局状态 | 认证状态、通知状态、lite-kernel 全局状态 | `src/store/` |
 | 异常页面 | 404/403/500/离线/敬请期待 | `src/views/_core/fallback/` |
 
 ## 启动方式
@@ -132,7 +131,7 @@ pnpm build:main
 | `src/views/dashboard/analytics/index.vue` | 数据分析仪表盘，含趋势/访问量/销售/来源统计组件 |
 | `src/views/dashboard/workspace/index.vue` | 个人工作台 |
 | `src/views/_core/authentication/login.vue` | 登录页（账号密码 + 验证码） |
-| `src/views/_core/subapp/index.vue` | 子应用挂载容器，承载 Qiankun 渲染 |
+| `src/views/_core/subapp/index.vue` | 子应用挂载容器，承载 lite-kernel 渲染 |
 | `src/components/global-search.vue` | 全局搜索弹窗组件 |
 | `src/layouts/basic.vue` | 主框架布局（顶栏 + 侧栏 + 标签页 + 内容区） |
 
@@ -165,11 +164,11 @@ export async function getAccessCodesApi() {
 
 ## 注意事项
 
-1. **子应用激活依赖路径前缀**：新增子应用时需同步在 `src/qiankun/index.ts`（microApps 配置）和 `src/router/routes/modules/subapps.ts`（catch-all 路由）两处注册，二者 `activeRule` 必须一致。
-2. **认证状态共享**：登录后 `accessToken` / `userInfo` 通过 `@ydsz/shared-auth` 的 `requestClient` 拦截器与 Qiankun `initGlobalState` 同步给所有子应用，子应用无需重复登录。
+1. **子应用激活依赖路径前缀**：新增子应用时需同步在注册表 MICRO_APPS 和 `src/router/routes/modules/subapps.ts`（catch-all 路由）两处注册，二者 `activeRule` 必须一致。
+2. **认证状态共享**：登录后 `accessToken` / `userInfo` 通过 `@ydsz/shared-auth` 的 `requestClient` 拦截器与 lite-kernel `globalState` 同步给所有子应用，子应用无需重复登录。
 3. **API 代理统一走 Gateway**：开发环境所有 `/api/*` 请求由 Vite proxy 转发到 `http://localhost:9000`（Gateway），不要直接指向子应用后端端口。
 4. **路由守卫顺序**：`src/router/guard.ts` 中先校验登录态再校验权限码，子应用 catch-all 路由使用 `hideInMenu` 避免菜单重复渲染。
-5. **生产环境子应用地址**：`src/qiankun/index.ts` 中 `prodUrls` 使用相对路径（如 `/ydsz-userinfo-web/`），部署时需保证 Nginx 反向代理到各子应用静态资源目录。
+5. **生产环境子应用地址**：注册表 MICRO_APPS 中 `prodUrls` 使用相对路径（如 `/ydsz-userinfo-web/`），部署时需保证 Nginx 反向代理到各子应用静态资源目录。
 
 ## 变更记录
 

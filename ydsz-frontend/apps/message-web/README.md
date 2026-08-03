@@ -157,7 +157,7 @@ export function createMessageApi(data: MessageApi.MessageDTO) {
 2. **死信队列操作**：死信消息支持重试与丢弃，重试前应检查失败原因（如手机号格式、模板变量缺失），避免反复失败。
 3. **路由规则优先级**：路由规则按优先级匹配，新增规则时需设置合理的 `priority`，避免高优先级规则吞掉所有消息。
 4. **用户偏好覆盖**：用户偏好（`preference`）可覆盖路由规则默认渠道，发送前需校验用户是否禁用该渠道。
-5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 Qiankun 全局状态注入。
+5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 lite-kernel globalState 注入。
 
 ## 变更记录
 

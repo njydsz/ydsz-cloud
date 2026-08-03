@@ -89,9 +89,11 @@ class BaseResponseTest {
     @Test
     @DisplayName("error(msg, data) 同时携带错误消息与数据")
     void error_msgAndData() {
-        BaseResponse<String> resp = BaseResponse.error("失败", "detail");
+        // 注意：两个 String 参数时 Java 会选择 error(String, String) 重载
+        // 此处用 Integer data 明确触发 error(String msg, T data)
+        BaseResponse<Integer> resp = BaseResponse.error("失败", 42);
         assertEquals("失败", resp.getMsg());
-        assertEquals("detail", resp.getData());
+        assertEquals(42, resp.getData());
     }
 
     @Test
@@ -113,9 +115,11 @@ class BaseResponseTest {
     @Test
     @DisplayName("error(ResultCode, data) 携带数据")
     void error_resultCodeWithData() {
-        BaseResponse<String> resp = BaseResponse.error(BaseResultCode.NOT_FOUND, "order-123");
+        // 注意：ResultCode + String 参数会被解析为 error(ResultCode, String msg)
+        // 此处用 Integer data 明确触发 error(ResultCode, T data)
+        BaseResponse<Integer> resp = BaseResponse.error(BaseResultCode.NOT_FOUND, 42);
         assertEquals("A10101", resp.getCode());
-        assertEquals("order-123", resp.getData());
+        assertEquals(42, resp.getData());
     }
 
     @Test
@@ -225,8 +229,10 @@ class BaseResponseTest {
 
     @Test
     @DisplayName("serialVersionUID 存在")
-    void serialVersionUid() {
-        assertEquals(1L, BaseResponse.class.getDeclaredField("serialVersionUID").getLong(null));
+    void serialVersionUid() throws Exception {
+        java.lang.reflect.Field field = BaseResponse.class.getDeclaredField("serialVersionUID");
+        field.setAccessible(true);
+        assertEquals(1L, field.getLong(null));
     }
 
     @Test

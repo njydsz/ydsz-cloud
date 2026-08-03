@@ -1,9 +1,8 @@
 /**
  * 应用引导程序，初始化全局插件和配置
  *
- * v3.0: 接入 @ydsz/micro-runtime 接口层，脱离对 qiankun 的直接依赖。
- *       内核通过 VITE_MICRO_KERNEL 环境变量选择（lite | qiankun，默认 lite）。
- *       寄存器同时注册两个内核，运行时按环境变量实例化一个。
+ * v3.0: 基于 @ydsz/micro-kernel-lite 自研 ESM 原生微前端运行时，
+ *       通过 @ydsz/micro-runtime 接口层完成内核注册与子应用生命周期管理。
  *
  * @path main/src/bootstrap.ts
  * @author ydsz-team
@@ -31,17 +30,9 @@ import { initSetupYDSZForm } from './adapter/form';
 import App from './app.vue';
 import { router, initRouterGuard } from './router';
 
-import { createQiankunAdapter } from '@ydsz/micro-adapter-qiankun';
 import { createLiteKernel } from '@ydsz/micro-kernel-lite';
-import {
-  createRuntime,
-  registerKernel,
-  type KernelName,
-} from '@ydsz/micro-runtime';
-import { microApps } from './qiankun';
-
-/** 当前选用的内核名（环境变量 VITE_MICRO_KERNEL，默认 lite） */
-const KERNEL: KernelName = (import.meta.env.VITE_MICRO_KERNEL as string) || 'lite';
+import { createRuntime, registerKernel } from '@ydsz/micro-runtime';
+import { MICRO_APPS } from '@ydsz/vite-config';
 
 /** 单个 micro-runtime 实例（整个主应用生命周期唯一，供其他模块获取） */
 export let microRuntime: ReturnType<typeof createRuntime> | null = null;
@@ -49,20 +40,28 @@ export let microRuntime: ReturnType<typeof createRuntime> | null = null;
 /**
  * 启动微前端运行时。
  *
- * 双内核寄存器：同时注册 qiankun 与 lite-kernel，运行时按 VITE_MICRO_KERNEL
- * 环境变量选择。切回 qiankun 仅需设置 VITE_MICRO_KERNEL=qiankun 重启。
+ * 注册 lite-kernel 自研内核，从注册表 MICRO_APPS 消费子应用清单。
+ * 预加载策略：lite-kernel 内置 requestIdleCallback 预热 userinfo/project 两个高频应用。
  */
 function registerMicroRuntime() {
-  // 1. 注册双内核
-  registerKernel('qiankun', () => createQiankunAdapter());
+  // 1. 注册 lite-kernel 内核
   registerKernel('lite', () => createLiteKernel());
 
   // 2. 创建运行时实例
-  microRuntime = createRuntime({ kernel: KERNEL });
-  console.info(`[MicroRuntime] Initialized with kernel: ${KERNEL}`);
+  microRuntime = createRuntime({ kernel: 'lite' });
+  console.info('[MicroRuntime] Initialized with kernel: lite');
 
-  // 3. 注入已有的子应用注册表
-  microRuntime.registerApps([...microApps]);
+  // 3. 从注册表注入子应用配置
+  microRuntime.registerApps(
+    MICRO_APPS.map((app) => ({
+      name: app.name,
+      entry: import.meta.env.DEV
+        ? `//localhost:${app.devPort}`
+        : `/ydsz-${app.name.replace('-web', '')}-web/`,
+      container: '#subapp-container',
+      activeRule: app.activeRule,
+    })),
+  );
 
   // 4. 生命周期钩子
   microRuntime.addLifecycleHook('beforeLoad', (app) => {
@@ -75,61 +74,14 @@ function registerMicroRuntime() {
     console.warn(`[MicroRuntime] 子应用 ${app.name} 卸载完成`);
   });
 
-  // 5. 启动
+  // 5. 启动：lite-kernel 内建 prefetch 预热高频应用
   microRuntime.start({
-    sandbox: { styleIsolation: KERNEL === 'qiankun' },
-    // lite-kernel: 启动后按 prefetch 函数预加载，qiankun: 走 idle prefetch
-    prefetch: KERNEL === 'lite'
-      ? (app) => ['userinfo-web', 'project-web'].includes(app.name)
-      : false,
+    prefetch: (app) => ['userinfo-web', 'project-web'].includes(app.name),
   });
-
-  // 6. qiankun 内核额外的预加载补丁（lite-kernel 通过 prefetch 函数已覆盖）
-  if (KERNEL === 'qiankun') {
-    setupIdlePrefetch();
-  }
-}
-
-/**
- * 空闲预加载：登录后按配置列表预加载最常用的子应用入口。
- *
- * 替代原来的自研 hover prefetch（bootstrap.ts 137-227 行），
- * 用 requestIdleCallback 延迟预加载，不依赖鼠标行为。
- */
-function setupIdlePrefetch() {
-  const PREFETCH_LIST = ['userinfo-web', 'project-web'];
-
-  const prefetchByLink = (entry: string) => {
-    const link = document.createElement('link');
-    link.rel = 'prefetch';
-    link.href = entry;
-    link.as = 'document';
-    document.head.appendChild(link);
-  };
-
-  const doPrefetch = () => {
-    for (const name of PREFETCH_LIST) {
-      const app = microApps.find((a) => a.name === name);
-      if (app) prefetchByLink(app.entry);
-    }
-  };
-
-  if (typeof requestIdleCallback !== 'undefined') {
-    requestIdleCallback(doPrefetch, { timeout: 4000 });
-  } else {
-    setTimeout(doPrefetch, 3000);
-  }
-
-  console.info('[MicroRuntime] Idle prefetch strategy installed');
 }
 
 /**
  * 应用引导启动。
- *
- * 依次完成组件/表单适配器初始化、插件与指令注册、i18n、状态管理、路由守卫，
- * 最后挂载根实例并在 DOM 就绪后启动微前端运行时。
- *
- * @param namespace - 项目唯一命名空间（含版本与环境），用于隔离偏好设置与本地存储
  */
 async function bootstrap(namespace: string) {
   await initComponentAdapter();

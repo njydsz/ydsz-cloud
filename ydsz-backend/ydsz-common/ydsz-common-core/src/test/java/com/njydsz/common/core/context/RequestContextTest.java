@@ -153,11 +153,17 @@ class RequestContextTest {
     }
 
     @Test
-    @DisplayName("普通线程池任务不传播上下文（未使用 TtlExecutors）")
+    @DisplayName("普通线程池（非 Ttl 包装）线程复用时上下文不传播")
     void threadPool_noPropagation() throws InterruptedException {
-        RequestContext.setUserId("main-user");
+        RequestContext.clear();
         ExecutorService pool = Executors.newSingleThreadExecutor();
         try {
+            // 预热：让线程池创建并复用线程（TTL 仅在 Thread 创建时继承一次值）
+            CountDownLatch warmup = new CountDownLatch(1);
+            pool.submit(warmup::countDown);
+            assertTrue(warmup.await(5, TimeUnit.SECONDS), "warmup timed out");
+
+            RequestContext.setUserId("main-user");
             CountDownLatch latch = new CountDownLatch(1);
             final String[] workerValue = new String[1];
             pool.submit(() -> {
@@ -165,11 +171,38 @@ class RequestContextTest {
                 latch.countDown();
             });
             assertTrue(latch.await(5, TimeUnit.SECONDS));
-            assertNull(workerValue[0], "plain executor must NOT inherit TTL context");
+            assertNull(workerValue[0], "reused pool thread must NOT inherit context without TtlExecutors");
         } finally {
             pool.shutdownNow();
             RequestContext.clear();
         }
+    }
+
+    @Test
+    @DisplayName("dump() 返回不可变快照且不影响原上下文")
+    void dump_snapshot() {
+        RequestContext.clear();
+        RequestContext.setUserId("u1");
+        RequestContext.setTenantId("t1");
+
+        java.util.Map<String, Object> snapshot = RequestContext.dump();
+        assertEquals(2, snapshot.size());
+        assertEquals("u1", snapshot.get(RequestContext.KEY_USER_ID));
+        assertEquals("t1", snapshot.get(RequestContext.KEY_TENANT_ID));
+        // 快照不可变
+        assertThrows(UnsupportedOperationException.class,
+                () -> snapshot.put("x", "y"));
+        // 修改原上下文不影响快照
+        RequestContext.setUserId("u2");
+        assertEquals("u1", snapshot.get(RequestContext.KEY_USER_ID));
+        RequestContext.clear();
+    }
+
+    @Test
+    @DisplayName("dump() 上下文未初始化时返回空 Map")
+    void dump_emptyWhenUninitialized() {
+        RequestContext.clear();
+        assertTrue(RequestContext.dump().isEmpty());
     }
 
     @Test

@@ -1,7 +1,7 @@
 <!--
- * Qiankun 子应用挂载容器组件 — 作为微前端子应用的 DOM 挂载点
+ * lite-kernel 微前端子应用挂载容器组件 — 作为子应用的 DOM 挂载点
  *
- * 监听 Qiankun 生命周期（beforeLoad / afterMount）控制骨架屏切换，
+ * 监听内核生命周期（beforeLoad / afterMount）控制骨架屏切换，
  * 避免子应用切换时出现白屏。
  *
  * @path main\src\views\_core\subapp\index.vue
@@ -28,7 +28,7 @@ onMounted(() => {
   const container = document.getElementById('subapp-container');
   if (!container) return;
 
-  // 监听 Qiankun 生命周期
+  // 监听内核生命周期
   const observer = new MutationObserver(() => {
     // 当子应用容器有内容时，隐藏 loading
     if (container.childElementCount > 0) {
@@ -38,7 +38,7 @@ onMounted(() => {
 
   observer.observe(container, { childList: true, subtree: false });
 
-  // 监听路由变化，Qiankun 切换子应用前触发 loading
+  // 监听路由变化，内核切换子应用前触发 loading
   const unsubscribe = route.afterEach?.(() => {
     isLoading.value = true;
   });
@@ -52,7 +52,7 @@ onMounted(() => {
 
 <template>
   <div class="subapp-wrapper">
-    <!-- Qiankun 子应用挂载容器 -->
+    <!-- 子应用挂载容器 -->
     <div id="subapp-container" class="subapp-container" :class="{ 'is-loading': isLoading }">
       <!-- 骨架屏（子应用加载中展示） -->
       <div v-if="isLoading" class="subapp-loading">

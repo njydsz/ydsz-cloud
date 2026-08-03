@@ -149,8 +149,8 @@ export function createConfigApi(data: ConfigApi.ConfigDTO) {
 
 1. **字典类型与字典项联动**：字典项归属于字典类型，新增字典项前需先确保对应字典类型已存在，列表页通过 `dictType` 字段联动筛选。
 2. **系统配置可见性**：`isPublic` 字段控制配置是否对外暴露，私有配置（`isPublic=0`）不应在前端明文展示敏感值，修改时注意脱敏。
-3. **应用注册一致性**：应用注册中的路由前缀需与主应用 `src/qiankun/index.ts` 的 `activeRule` 保持一致，否则子应用无法正确激活。
-4. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 Qiankun 全局状态注入。
+3. **应用注册一致性**：应用注册中的路由前缀需与注册表 MICRO_APPS 的 activeRule 保持一致，否则子应用无法正确激活。
+4. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 lite-kernel globalState 注入。
 5. **配置缓存**：系统配置与字典数据通常被其他子应用缓存引用，修改后可能需要通知刷新或等待缓存过期。
 
 ## 变更记录

@@ -3,7 +3,7 @@
   <p>YDSZ 项目管理信息系统 — 前端微应用架构</p>
 </div>
 
-基于 Qiankun 微前端框架，采用 Vue 3 + Element Plus + TypeScript 技术栈，每个后端微服务对应一个独立的前端微应用，实现「独立开发」、「独立测试」、「独立部署」。
+基于自研 lite-kernel 微前端运行时，采用 Vue 3 + Element Plus + TypeScript 技术栈，每个后端微服务对应一个独立的前端微应用，实现「独立开发」、「独立测试」、「独立部署」。
 
 ## 技术栈
 
@@ -12,7 +12,7 @@
 | 框架 | Vue 3 + TypeScript |
 | 构建工具 | Vite 6 |
 | 包管理 | pnpm 10 + Turbo (Monorepo) |
-| 微前端 | Qiankun 2.10 |
+| 微前端 | lite-kernel（自研 ESM 原生微前端运行时） |
 | UI 组件库 | Element Plus 2.10 |
 | 状态管理 | Pinia 3 + pinia-plugin-persistedstate |
 | 路由 | Vue Router 4 |
@@ -30,10 +30,11 @@
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                    main-web（主应用/宿主）                      │
-│         端口 5600  │  认证/布局/全局状态/路由分发/Qiankun Host       │
+│         端口 5600  │  认证/布局/全局状态/路由分发/lite-kernel Host       │
 │  ┌──────────┐  ┌───────────┐  ┌──────────────────────────┐    │
-│  │ Qiankun  │  │ Vue Router │  │ 全局 Store / 偏好 / i18n  │    │
-│  │  Host    │  │ (主路由)   │  │                          │    │
+│  │ lite-    │  │ Vue Router │  │ 全局 Store / 偏好 / i18n  │    │
+│  │ kernel   │  │ (主路由)   │  │                          │    │
+│  │ Host     │  │           │  │                          │    │
 │  └────┬─────┘  └─────┬─────┘  └──────────────────────────┘    │
 │  ┌────▼───────────────▼───────────────────────────────────┐   │
 │  │            子应用挂载容器 (#subapp-container)              │   │
@@ -72,7 +73,7 @@
 ydsz-frontend/
 ├── main/                              # 主应用（微前端宿主）
 │   ├── src/
-│   │   ├── qiankun/                  # Qiankun 子应用注册配置
+│   │   ├── 注册表 MICRO_APPS                  # lite-kernel 子应用注册配置
 │   │   ├── adapter/                  # Element Plus 组件适配器
 │   │   ├── api/                      # 核心 API（auth/user/menu）
 │   │   ├── layouts/                  # 布局（basic + auth）
@@ -208,7 +209,7 @@ server: {
 
 | 特性 | 说明 |
 |------|------|
-| **微前端架构** | Qiankun 主子应用隔离 + 按需预加载（hover 触发）+ 全局状态通信（initGlobalState） |
+| **微前端架构** | lite-kernel ESM 直引隔离 + 按需预加载（hover 触发）+ 全局状态通信（globalState） |
 | **公共认证包** | `@ydsz/shared-auth` 统一 RequestClient + Auth API + Auth Store，消除 9 份重复代码 |
 | **前端监控** | `@ydsz/monitor` 错误捕获（Vue/window/Promise/资源）+ Web Vitals（LCP/FID/CLS/INP/FCP/TTFB） |
 | **主题切换** | auto/light/dark 暗黑模式 + Element Plus 主题适配 + 系统偏好跟随 |

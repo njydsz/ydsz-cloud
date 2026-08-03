@@ -45,7 +45,8 @@ class SensitiveDataMaskerTest {
     @Test
     @DisplayName("邮箱脱敏：保留首字符与域名")
     void email() {
-        assertEquals("z***@example.com",
+        // zhangsan -> z*******（保留首字符 z，其余 7 个字符打码）
+        assertEquals("z*******@example.com",
                 SensitiveDataMasker.mask("zhangsan@example.com", SensitiveType.EMAIL));
     }
 
@@ -65,7 +66,8 @@ class SensitiveDataMaskerTest {
     @Test
     @DisplayName("地址脱敏：保留前6位")
     void address() {
-        assertEquals("江苏省南京市********",
+        // "江苏省南京市" 前6字保留，"玄武区中山路100号" 10字打码
+        assertEquals("江苏省南京市**********",
                 SensitiveDataMasker.mask("江苏省南京市玄武区中山路100号", SensitiveType.ADDRESS));
     }
 

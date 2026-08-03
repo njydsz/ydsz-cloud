@@ -42,7 +42,7 @@ export function useTabbarMicroSync(): void {
       // 标记不保活 + 卸载子应用（内核会在下一个页签关闭时执行完整卸载）
       microRuntime.setKeepAlive(appName, false);
 
-      // 卸载该子应用（若内核支持；qiankun 不支持则静默跳过）
+      // 卸载该子应用
       void microRuntime.unmountApp(appName).then((result) => {
         if (result.success) {
           console.info(`[MicroSync] Unmounted ${appName} (tab closed)`);

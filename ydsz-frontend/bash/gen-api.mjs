@@ -33,7 +33,7 @@ const ROOT = join(__dirname, '..');
 /**
  * 后端微服务 → 前端子应用 映射表。
  *
- * key:   子应用名（与 apps/ 和 qiankun 注册名一致）
+ * key:   子应用名（与 apps/ 和 MICRO_APPS 注册名一致）
  * spec:  后端 OpenAPI 规范地址
  * output: SDK 产物输出目录（相对于项目根）
  */

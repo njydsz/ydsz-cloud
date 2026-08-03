@@ -177,14 +177,17 @@ public class SnowflakeTraceIdSupplier implements TraceIdSupplier {
      * 将 long 值编码为 16 位零填充的十六进制字符串。
      *
      * <p>替代 {@code String.format("%016x", id)}，避免每次调用创建 Formatter 临时对象。
+     * 输出<b>高位在前</b>的标准十六进制，保证字符串字典序与数值序一致，
+     * 从而支持类文档宣称的"按 traceId 字符串排序还原请求时序"。</p>
      *
      * @param val 待编码的值
-     * @return 16 位十六进制字符串
+     * @return 16 位十六进制字符串（高位在前）
      */
     private static String toHex16(long val) {
         char[] buf = new char[16];
-        for (int i = 15; i >= 0; i--) {
-            buf[i] = HEX_DIGITS[(int) (val >>> (i * 4)) & 0xF];
+        for (int i = 0; i < 16; i++) {
+            // buf[0] 为最高 4 位（bit 60-63），buf[15] 为最低 4 位（bit 0-3）
+            buf[i] = HEX_DIGITS[(int) (val >>> ((15 - i) * 4)) & 0xF];
         }
         return new String(buf);
     }

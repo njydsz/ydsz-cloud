@@ -46,10 +46,11 @@ class SnowflakeTraceIdSupplierTest {
     @DisplayName("生成 ID 按时间有序（序列号递增）")
     void generate_monotonic() {
         SnowflakeTraceIdSupplier supplier = new SnowflakeTraceIdSupplier(0L, 0L);
-        long prev = Long.parseLong(supplier.generate(), 16);
+        // 16 位 hex 可能超过 Long.MAX_VALUE（首位 ≥ 8），使用 BigInteger 避免溢出
+        java.math.BigInteger prev = new java.math.BigInteger(supplier.generate(), 16);
         for (int i = 0; i < 1000; i++) {
-            long current = Long.parseLong(supplier.generate(), 16);
-            assertTrue(current > prev, "id must be monotonically increasing");
+            java.math.BigInteger current = new java.math.BigInteger(supplier.generate(), 16);
+            assertTrue(current.compareTo(prev) > 0, "id must be monotonically increasing");
             prev = current;
         }
     }

@@ -68,11 +68,19 @@ public final class RequestContext {
     /** 上下文键名：租户隔离跳过标记 */
     public static final String KEY_TENANT_ISOLATION_SKIPPED = "tenantIsolationSkipped";
 
+    /**
+     * 请求上下文存储（懒初始化）。
+     *
+     * <p>使用 {@link TransmittableThreadLocal} 支持线程池场景下的上下文传递。
+     * 采用懒初始化策略：仅当首次 {@link #put(String, Object)} 时才创建 Map，
+     * 避免仅读取上下文（如仅调用 {@link #getUserId()} 判断）时无谓分配 HashMap。
+     * 初始容量 8，适配内置 6 个键的典型场景。</p>
+     */
     private static final ThreadLocal<Map<String, Object>> CONTEXT_HOLDER =
             new TransmittableThreadLocal<Map<String, Object>>() {
                 @Override
                 protected Map<String, Object> initialValue() {
-                    return new HashMap<>();
+                    return null; // 懒初始化：首次 put 时才创建
                 }
             };
 
@@ -198,6 +206,9 @@ public final class RequestContext {
     /**
      * 设置属性
      *
+     * <p>首次调用时创建上下文 Map（懒初始化）。
+     * 传入 {@code null} 值等同于 {@link #remove(String)}。</p>
+     *
      * @param key   属性键
      * @param value 属性值
      */
@@ -206,20 +217,28 @@ public final class RequestContext {
             throw new NullPointerException("key cannot be null");
         }
         if (value == null) {
-            CONTEXT_HOLDER.get().remove(key);
+            remove(key);
             return;
         }
-        CONTEXT_HOLDER.get().put(key, value);
+        Map<String, Object> holder = CONTEXT_HOLDER.get();
+        if (holder == null) {
+            holder = new HashMap<>(8);
+            CONTEXT_HOLDER.set(holder);
+        }
+        holder.put(key, value);
     }
 
     /**
      * 获取属性
      *
+     * <p>上下文未初始化时返回 null，不触发 Map 创建。</p>
+     *
      * @param key 属性键
      * @return 属性值，如果不存在返回 null
      */
     public static Object get(String key) {
-        return CONTEXT_HOLDER.get().get(key);
+        Map<String, Object> holder = CONTEXT_HOLDER.get();
+        return holder != null ? holder.get(key) : null;
     }
 
     /**
@@ -228,7 +247,10 @@ public final class RequestContext {
      * @param key 属性键
      */
     public static void remove(String key) {
-        CONTEXT_HOLDER.get().remove(key);
+        Map<String, Object> holder = CONTEXT_HOLDER.get();
+        if (holder != null) {
+            holder.remove(key);
+        }
     }
 
     /**
@@ -272,6 +294,33 @@ public final class RequestContext {
         } finally {
             clear();
         }
+    }
+
+    /**
+     * 创建当前线程上下文的诊断快照。
+     *
+     * <p>返回当前线程上下文的<b>不可变浅拷贝</b>（Map 本身不可变，值为原引用），
+     * 用于开发诊断、日志输出、链路排查等场景。快照不影响原上下文。</p>
+     *
+     * <p><b>使用示例：</b></p>
+     * <pre>{@code
+     * // 联调时输出完整上下文
+     * log.debug("Request context: {}", RequestContext.dump());
+     *
+     * // 诊断特定键是否存在
+     * if (!RequestContext.dump().containsKey(RequestContext.KEY_TENANT_ID)) {
+     *     log.warn("tenantId missing in request context");
+     * }
+     * }</pre>
+     *
+     * @return 当前线程上下文的不可变快照；上下文未初始化时返回空 Map
+     */
+    public static java.util.Map<String, Object> dump() {
+        Map<String, Object> holder = CONTEXT_HOLDER.get();
+        if (holder == null || holder.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+        return java.util.Collections.unmodifiableMap(new HashMap<>(holder));
     }
 
     /**

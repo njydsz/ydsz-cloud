@@ -1,6 +1,6 @@
 package com.njydsz.common.core.trace;
 
-import java.util.UUID;
+import java.security.SecureRandom;
 
 /**
  * TraceId 生成器（统一入口）
@@ -45,9 +45,41 @@ import java.util.UUID;
  */
 public final class TraceIdGenerator {
 
-    /** 默认 UUID 供应器 */
-    private static final TraceIdSupplier DEFAULT_SUPPLIER =
-            () -> UUID.randomUUID().toString().replace("-", "");
+    /** 默认 UUID 供应器（32 位 hex，无连字符） */
+    private static final TraceIdSupplier DEFAULT_SUPPLIER = new UuidTraceIdSupplier();
+
+    /**
+     * 高性能 UUID TraceId 供应器。
+     *
+     * <p>直接编码 128 位随机数为 32 位 hex，避免
+     * {@code UUID.randomUUID().toString().replace("-", "")} 产生的
+     * 3 个中间 String 对象（UUID 字符串 + replace 结果 + 最终结果）。</p>
+     */
+    static final class UuidTraceIdSupplier implements TraceIdSupplier {
+
+        /** hex 字符表 */
+        private static final char[] HEX_DIGITS = {
+                '0', '1', '2', '3', '4', '5', '6', '7',
+                '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+        };
+
+        /** 随机源（UUID.randomUUID 内部同样使用 SecureRandom） */
+        private static final SecureRandom RANDOM = new SecureRandom();
+
+        @Override
+        public String generate() {
+            // 一次读取 16 字节，编码为 32 位 hex
+            byte[] bytes = new byte[16];
+            RANDOM.nextBytes(bytes);
+            char[] buf = new char[32];
+            for (int i = 0; i < 16; i++) {
+                int b = bytes[i] & 0xFF;
+                buf[i * 2] = HEX_DIGITS[b >>> 4];
+                buf[i * 2 + 1] = HEX_DIGITS[b & 0x0F];
+            }
+            return new String(buf);
+        }
+    }
 
     /** 当前生效的供应器，volatile 保证多线程可见性 */
     private static volatile TraceIdSupplier supplier = DEFAULT_SUPPLIER;

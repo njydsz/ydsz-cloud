@@ -86,4 +86,56 @@ public final class PageConstants {
     public static void setMaxPageSize(int maxPageSize) {
         runtimeMaxPageSize = maxPageSize;
     }
+
+    /**
+     * 标准化页大小。
+     *
+     * <p>统一分页参数的归一化规则，避免各业务模块重复实现：
+     * <ul>
+     *   <li>null 或小于 1 → 返回运行时默认值 {@link #getDefaultPageSize()}</li>
+     *   <li>大于运行时上限 → 截断为 {@link #getMaxPageSize()}</li>
+     *   <li>其余原样返回</li>
+     * </ul>
+     *
+     * @param pageSize 原始页大小（可为 null）
+     * @return 标准化后的页大小
+     */
+    public static int normalizePageSize(Integer pageSize) {
+        if (pageSize == null || pageSize < 1) {
+            return runtimeDefaultPageSize;
+        }
+        return Math.min(pageSize, runtimeMaxPageSize);
+    }
+
+    /**
+     * 标准化页码。
+     *
+     * <p>统一页码的归一化规则：
+     * <ul>
+     *   <li>null 或小于 1 → 返回 {@link #DEFAULT_PAGE_NUM}</li>
+     *   <li>其余原样返回</li>
+     * </ul>
+     *
+     * @param pageNum 原始页码（可为 null）
+     * @return 标准化后的页码
+     */
+    public static int normalizePageNum(Integer pageNum) {
+        return (pageNum == null || pageNum < DEFAULT_PAGE_NUM) ? DEFAULT_PAGE_NUM : pageNum;
+    }
+
+    /**
+     * 计算偏移量（数据库 LIMIT 的 offset）。
+     *
+     * <p>统一分页查询的 offset 计算：{@code (pageNum - 1) * pageSize}，
+     * 页码和页大小均先经过归一化。</p>
+     *
+     * @param pageNum  页码（可为 null，按第 1 页处理）
+     * @param pageSize 页大小（可为 null，按默认值处理）
+     * @return LIMIT 偏移量（long，避免 int 溢出）
+     */
+    public static long calcOffset(Integer pageNum, Integer pageSize) {
+        int normalizedPageNum = normalizePageNum(pageNum);
+        int normalizedPageSize = normalizePageSize(pageSize);
+        return (long) (normalizedPageNum - 1) * normalizedPageSize;
+    }
 }

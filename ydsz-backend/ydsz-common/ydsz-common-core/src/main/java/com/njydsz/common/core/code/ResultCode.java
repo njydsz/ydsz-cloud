@@ -70,12 +70,34 @@ public interface ResultCode {
     /**
      * 将结果码映射到合适的 HTTP 状态码
      *
-     * <p>默认返回 500（INTERNAL_SERVER_ERROR）。
-     * 实现类应覆盖此方法以提供语义化的 HTTP 状态码映射。
+     * <p>默认实现基于 code 前缀进行语义化推断（参照阿里《Java开发手册》段位规划）：
+     * <ul>
+     *   <li>{@code A2}（认证授权）→ 401</li>
+     *   <li>{@code A}（用户端错误）→ 400</li>
+     *   <li>{@code B}（系统业务异常）→ 500</li>
+     *   <li>{@code C}（第三方服务异常）→ 500</li>
+     *   <li>{@code A00000}（成功）→ 200</li>
+     *   <li>其他 → 500</li>
+     * </ul>
+     *
+     * <p>业务枚举若需更精确的映射（如 404 / 403 / 429），可覆盖此方法。</p>
      *
      * @return 对应的 HTTP 状态码
      */
     default int getHttpStatusCode() {
-        return 500;
+        String code = getCode();
+        if (code == null) {
+            return 500;
+        }
+        if (BaseResponse.SUCCESS.equals(code)) {
+            return 200;
+        }
+        char prefix = code.charAt(0);
+        return switch (prefix) {
+            case 'A' -> code.length() >= 2 && code.charAt(1) == '2' ? 401 : 400;
+            case 'B' -> 500;
+            case 'C' -> 500;
+            default -> 500;
+        };
     }
 }

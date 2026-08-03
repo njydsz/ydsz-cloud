@@ -83,18 +83,18 @@ function createAppRouter(basename?: string) {
 }
 
 /**
- * Qiankun 生命周期：bootstrap（子应用初始化，此处仅占位）。
+ * lite-kernel 生命周期：bootstrap（子应用初始化，此处仅占位）。
  */
 async function bootstrap() {
   console.warn('[agent-web] bootstrap');
 }
 
 /**
- * Qiankun 生命周期：mount（子应用挂载）。
+ * lite-kernel 生命周期：mount（子应用挂载）。
  *
  * 在挂载前完成偏好初始化与共享请求客户端装配，确保请求能正确携带 Token。
  *
- * @param props - 由主应用注入的 qiankun props（含挂载容器 container）
+ * @param props - 由主应用注入的 lite-kernel mountProps（含挂载容器 container）
  */
 async function mount(props: Record<string, unknown>) {
   console.warn('[agent-web] mount', props);
@@ -129,7 +129,7 @@ async function mount(props: Record<string, unknown>) {
 }
 
 /**
- * Qiankun 生命周期：unmount（子应用卸载）。
+ * lite-kernel 生命周期：unmount（子应用卸载）。
  *
  * 卸载 Vue 实例并清空引用，避免主应用切换时内存泄漏。
  */
@@ -140,7 +140,7 @@ async function unmount() {
 }
 
 /**
- * Qiankun 生命周期：update（主应用下发 props 变更时的回调，此处仅占位）。
+ * lite-kernel 生命周期：update（主应用下发 props 变更时的回调，此处仅占位）。
  *
  * @param props - 主应用下发的更新后 props
  */

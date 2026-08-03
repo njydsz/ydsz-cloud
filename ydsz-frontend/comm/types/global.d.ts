@@ -60,19 +60,5 @@ export interface ApplicationConfig {
 declare global {
   interface Window {
     _YDSZ_ADMIN_PRO_APP_CONF_: YDSZAdminProAppConfigRaw;
-    /**
-     * Qiankun 微前端标识
-     * 当应用运行在 Qiankun 微前端环境中时，此值为 true
-     */
-    __POWERED_BY_QIANKUN__?: boolean;
-    /**
-     * Qiankun 全局生命周期钩子
-     */
-    __QIANKUN__?: {
-      afterMount: (() => void)[];
-      afterUnmount: (() => void)[];
-      beforeMount: (() => void)[];
-      beforeUnmount: (() => void)[];
-    };
   }
 }

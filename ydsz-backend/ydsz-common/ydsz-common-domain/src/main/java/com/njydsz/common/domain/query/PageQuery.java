@@ -193,20 +193,14 @@ public class PageQuery extends BaseQuery {
     /**
      * 标准化页大小
      *
-     * <p>确保页大小在有效范围内：
-     * <ul>
-     *   <li>小于1修正为默认值</li>
-     *   <li>大于 {@link PageConstants#MAX_PAGE_SIZE} 修正为最大。</li>
-     * </ul>
+     * <p>委托到 {@link PageConstants#normalizePageSize(Integer)}，
+     * 统一分页归一化规则。</p>
      *
      * @param pageSize 原始页大小
      * @return 标准化后的页大小
      */
     private static int normalizePageSize(Integer pageSize) {
-        if (pageSize == null || pageSize < 1) {
-            return PageConstants.getDefaultPageSize();
-        }
-        return Math.min(pageSize, PageConstants.getMaxPageSize());
+        return PageConstants.normalizePageSize(pageSize);
     }
 
     /**
@@ -360,7 +354,8 @@ public class PageQuery extends BaseQuery {
         if (pageNum == null || pageSize == null) {
             return 0L;
         }
-        return (long) (Math.max(pageNum, 1) - 1) * Math.min(pageSize, PageConstants.getMaxPageSize());
+        // 委托 PageConstants 统一归一化（pageNum/pageSize 已非 null，此处安全）
+        return PageConstants.calcOffset(pageNum, pageSize);
     }
 
     /**

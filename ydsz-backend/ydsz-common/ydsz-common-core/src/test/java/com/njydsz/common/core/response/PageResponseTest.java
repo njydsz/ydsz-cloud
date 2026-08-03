@@ -4,10 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 
 import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.core.constant.TraceConstants;
 
 /**
  * {@link PageResponse} 单元测试
@@ -20,6 +24,16 @@ import com.njydsz.common.core.constant.PageConstants;
  */
 @DisplayName("PageResponse 分页响应体测试")
 class PageResponseTest {
+
+    @BeforeEach
+    void setUp() {
+        MDC.put(TraceConstants.MDC_TRACE_ID_KEY, "page-trace");
+    }
+
+    @AfterEach
+    void tearDown() {
+        MDC.clear();
+    }
 
     @Test
     @DisplayName("success 正确计算总页数")
