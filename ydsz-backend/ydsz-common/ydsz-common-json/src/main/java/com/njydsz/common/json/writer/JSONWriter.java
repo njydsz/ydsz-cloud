@@ -1007,8 +1007,9 @@ public final class JSONWriter {
         buf[pos++] = '[';
         AsmSerializer<?> cachedSerializer = null;
 
-        // 优化：对 List 使用索引循环，避免 Iterator 对象创建开销
-        if (collection instanceof List) {
+        // 优化：对支持随机访问的 List 使用索引循环，避免 Iterator 对象创建开销
+        // LinkedList 等非 RandomAccess 走 Iterator 路径，避免 O(N²) 退化
+        if (collection instanceof List && (collection instanceof java.util.RandomAccess || size < 100)) {
             List<?> list = (List<?>) collection;
             for (int i = 0; i < size; i++) {
                 if (i > 0) {
@@ -1100,7 +1101,7 @@ public final class JSONWriter {
 
         buf[pos++] = '[';
 
-        if (collection instanceof List) {
+        if (collection instanceof List && (collection instanceof java.util.RandomAccess || size < 100)) {
             List<?> list = (List<?>) collection;
             for (int i = 0; i < size; i++) {
                 if (i > 0) {

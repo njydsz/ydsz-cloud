@@ -644,8 +644,22 @@ public final class JSONReader {
                     case 'u':
                         if (pos + 4 > len) throw new IllegalStateException("Unexpected end of JSON string");
                         char unicode = (char) Integer.parseInt(new String(buf, pos, 4), 16);
-                        sb.append(unicode);
                         pos += 4;
+                        // 处理代理对（U+D800-U+DFFF），emoji 等补充字符在 JSON 中编码为两个 \u 序列
+                        if (Character.isHighSurrogate(unicode) && pos + 6 <= len
+                                && buf[pos] == '\\' && buf[pos + 1] == 'u') {
+                            try {
+                                char low = (char) Integer.parseInt(new String(buf, pos + 2, 4), 16);
+                                if (Character.isLowSurrogate(low)) {
+                                    sb.appendCodePoint(Character.toCodePoint(unicode, low));
+                                    pos += 6;
+                                    break;
+                                }
+                            } catch (NumberFormatException ignored) {
+                                // 不是有效代理对，按单字符处理
+                            }
+                        }
+                        sb.append(unicode);
                         break;
                     default: sb.append(escaped); break;
                 }
@@ -977,6 +991,7 @@ public final class JSONReader {
         List<Object> result = new ArrayList<>();
         while (pos < len) {
             skipWhitespace();
+            if (pos >= len) break;
             if (buf[pos] == ']') { pos++; return result; }
             if (buf[pos] == ',') { pos++; continue; }
             Object element = readArrayElement(elementType);
@@ -1027,6 +1042,7 @@ public final class JSONReader {
         Map<String, Object> result = new HashMap<>();
         while (pos < len) {
             skipWhitespace();
+            if (pos >= len) break;
             if (buf[pos] == '}') { pos++; return result; }
             if (buf[pos] == ',') { pos++; continue; }
             String key = readFieldNameFast();
