@@ -53,7 +53,9 @@
     "vite": "catalog:",
     "vite-plugin-compression": "catalog:",
     "vite-plugin-dts": "catalog:",
+    "vite-plugin-font": "catalog:",
     "vite-plugin-html": "catalog:",
+    "vite-plugin-imagemin": "catalog:",
     "vite-plugin-lazy-import": "catalog:"
   }
 }

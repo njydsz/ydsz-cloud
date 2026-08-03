@@ -56,6 +56,24 @@ interface StandardMountProps {
 
 let app: null | VueApp = null;
 
+/** 清理函数注册表 — 子应用 unmount 时自动调用 */
+const cleanupCallbacks = new Set<() => void | Promise<void>>();
+
+/**
+ * 注册清理回调 — 在子应用 unmount 时自动执行
+ *
+ * 用于清理 globalState 订阅、定时器、事件监听等资源，防止内存泄漏。
+ *
+ * @param cleanup - 清理函数
+ * @returns 取消注册函数
+ */
+export function registerCleanup(cleanup: () => void | Promise<void>): () => void {
+  cleanupCallbacks.add(cleanup);
+  return () => {
+    cleanupCallbacks.delete(cleanup);
+  };
+}
+
 /** 统一安装基础插件与指令 */
 async function installBasePlugins(vueApp: VueApp, appName: string) {
   vueApp.directive('loading', ElLoading.directive);
@@ -154,7 +172,10 @@ async function coreMount(
  * 子应用生命周期对象（ESM entry 标准导出格式）。
  *
  * micro-kernel 通过 dynamic import() 加载子应用入口，
- * 期望子应用 export { bootstrap, mount, unmount, update }。
+ * 期望子应用 export { bootstrap, mount, unmount, update, activate, deactivate }。
+ *
+ * v3.1: 增加 activate/deactivate 生命周期支持，配合 keep-alive 使用。
+ *       unmount 时自动执行所有注册的清理回调，防止内存泄漏。
  */
 export function defineSubApp(config: SubAppConfig) {
   return {
@@ -163,10 +184,34 @@ export function defineSubApp(config: SubAppConfig) {
       await coreMount(config, props);
     },
     async unmount() {
+      // 执行所有注册的清理回调（globalState 订阅、定时器等）
+      for (const cleanup of Array.from(cleanupCallbacks)) {
+        try {
+          await cleanup();
+        } catch (err) {
+          console.error(`[${config.appName}] Cleanup error:`, err);
+        }
+      }
+      cleanupCallbacks.clear();
+
       app?.unmount();
       app = null;
     },
     async update(_props: StandardMountProps) {},
+    /** keep-alive 激活时调用 — 恢复定时器、重新订阅等 */
+    async activate() {
+      // 子应用可在此钩子中恢复定时器、重新订阅数据等
+      if (!import.meta.env.PROD) {
+        console.debug(`[${config.appName}] Activated (keep-alive)`);
+      }
+    },
+    /** keep-alive 停用时调用 — 暂停定时器、取消订阅等 */
+    async deactivate() {
+      // 子应用可在此钩子中暂停定时器、取消订阅等
+      if (!import.meta.env.PROD) {
+        console.debug(`[${config.appName}] Deactivated (keep-alive)`);
+      }
+    },
   };
 }
 

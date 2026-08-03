@@ -25,7 +25,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 import viteVueDevTools from 'vite-plugin-vue-devtools';
 
 import { viteArchiverPlugin } from './archiver';
+import { viteFontPlugin } from './font';
 import { viteExtraAppConfigPlugin } from './extra-app-config';
+import { viteImageminPlugin } from './imagemin';
 import { viteImportMapPlugin } from './importmap';
 import { viteInjectAppLoadingPlugin } from './inject-app-loading';
 import { viteMetadataPlugin } from './inject-metadata';
@@ -124,6 +126,8 @@ async function loadApplicationPlugins(
     extraAppConfig,
     html,
     i18n,
+    imagemin,
+    font,
     importmap,
     importmapOptions,
     injectAppLoading,
