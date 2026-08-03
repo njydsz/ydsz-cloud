@@ -9,7 +9,6 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.core.config.CoreProperties;
 import com.njydsz.common.core.config.FilterIgnoreProperties;
-import com.njydsz.common.core.metrics.CoreMetrics;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.core.trace.TraceIdSupplier;
@@ -28,7 +27,6 @@ import com.njydsz.common.core.trace.SnowflakeTraceIdSupplier;
  *   <li>链路追踪是否启用、TraceId 类型配置校验</li>
  *   <li>分页配置（运行时 maxPageSize / defaultPageSize）及合法性校验</li>
  *   <li>国际化消息解析器是否注入</li>
- *   <li>指标回调（CoreMetricsCallback）是否注册</li>
  *   <li>Snowflake workerId / datacenterId（当策略为 Snowflake 时）</li>
  *   <li>过滤器忽略路径配置摘要</li>
  * </ul>
@@ -121,9 +119,6 @@ public class CoreHealthIndicator implements HealthIndicator {
 
         // ── i18n 解析器状态 ──
         details.put("i18nResolverRegistered", BaseResponse.isResolverRegistered());
-
-        // ── 指标回调状态 ──
-        details.put("metricsCallbackRegistered", CoreMetrics.isCallbackRegistered());
 
         // ── 过滤器忽略路径配置摘要 ──
         if (filterIgnoreProperties != null) {

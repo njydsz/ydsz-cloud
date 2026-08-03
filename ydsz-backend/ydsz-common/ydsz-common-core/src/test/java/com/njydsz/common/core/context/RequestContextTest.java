@@ -1,0 +1,200 @@
+package com.njydsz.common.core.context;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+/**
+ * {@link RequestContext} 单元测试
+ *
+ * <p>覆盖内置键的 set/get、自定义属性、清理语义（clear/remove）、
+ * runAndClear、CleanupGuard、线程池传播（TransmittableThreadLocal）、线程隔离等行为。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@DisplayName("RequestContext 请求上下文测试")
+class RequestContextTest {
+
+    @Test
+    @DisplayName("set/get 内置键正常工作")
+    void builtInKeys() {
+        RequestContext.setUserId("user-1");
+        RequestContext.setTenantId("tenant-1");
+        RequestContext.setTraceId("trace-1");
+        RequestContext.setRequestId("req-1");
+        RequestContext.setLanguage("zh-CN");
+
+        assertEquals("user-1", RequestContext.getUserId());
+        assertEquals("tenant-1", RequestContext.getTenantId());
+        assertEquals("trace-1", RequestContext.getTraceId());
+        assertEquals("req-1", RequestContext.getRequestId());
+        assertEquals("zh-CN", RequestContext.getLanguage());
+        RequestContext.clear();
+    }
+
+    @Test
+    @DisplayName("未设置时返回 null")
+    void unsetReturnsNull() {
+        RequestContext.clear();
+        assertNull(RequestContext.getUserId());
+        assertNull(RequestContext.getTenantId());
+        assertNull(RequestContext.getTraceId());
+    }
+
+    @Test
+    @DisplayName("put/get 自定义属性")
+    void customAttributes() {
+        RequestContext.put("orderId", "O-001");
+        assertEquals("O-001", RequestContext.get("orderId"));
+        RequestContext.clear();
+    }
+
+    @Test
+    @DisplayName("put(null key) 抛出 NullPointerException")
+    void putNullKeyThrows() {
+        assertThrows(NullPointerException.class, () -> RequestContext.put(null, "v"));
+        RequestContext.clear();
+    }
+
+    @Test
+    @DisplayName("put(key, null) 移除该键")
+    void putNullValueRemoves() {
+        RequestContext.put("k", "v");
+        RequestContext.put("k", null);
+        assertNull(RequestContext.get("k"));
+        RequestContext.clear();
+    }
+
+    @Test
+    @DisplayName("remove 移除指定键")
+    void remove() {
+        RequestContext.setUserId("u1");
+        RequestContext.remove(RequestContext.KEY_USER_ID);
+        assertNull(RequestContext.getUserId());
+        RequestContext.clear();
+    }
+
+    @Test
+    @DisplayName("clear 清空全部上下文")
+    void clear() {
+        RequestContext.setUserId("u1");
+        RequestContext.put("custom", "v");
+        RequestContext.clear();
+        assertNull(RequestContext.getUserId());
+        assertNull(RequestContext.get("custom"));
+    }
+
+    @Test
+    @DisplayName("setTenantIsolationSkipped(true) 标记跳过租户隔离")
+    void tenantIsolationSkipped() {
+        assertFalse(RequestContext.isTenantIsolationSkipped());
+        RequestContext.setTenantIsolationSkipped(true);
+        assertTrue(RequestContext.isTenantIsolationSkipped());
+        RequestContext.setTenantIsolationSkipped(false);
+        assertFalse(RequestContext.isTenantIsolationSkipped());
+        RequestContext.clear();
+    }
+
+    @Test
+    @DisplayName("runAndClear(Supplier) 执行后自动清理")
+    void runAndClear_supplier() {
+        String result = RequestContext.runAndClear(() -> {
+            RequestContext.setUserId("u1");
+            return "done";
+        });
+        assertEquals("done", result);
+        assertNull(RequestContext.getUserId(), "context must be cleared after runAndClear");
+    }
+
+    @Test
+    @DisplayName("runAndClear(Supplier) 异常时也清理")
+    void runAndClear_supplierException() {
+        assertThrows(IllegalStateException.class, () -> RequestContext.runAndClear(() -> {
+            RequestContext.setUserId("u1");
+            throw new IllegalStateException("boom");
+        }));
+        assertNull(RequestContext.getUserId(), "context must be cleared on exception");
+    }
+
+    @Test
+    @DisplayName("runAndClear(Runnable) 执行后自动清理")
+    void runAndClear_runnable() {
+        RequestContext.runAndClear(() -> RequestContext.setUserId("u1"));
+        assertNull(RequestContext.getUserId());
+    }
+
+    @Test
+    @DisplayName("newCleanupGuard 配合 try-with-resources 自动清理")
+    void cleanupGuard() {
+        try (RequestContext.CleanupGuard guard = RequestContext.newCleanupGuard()) {
+            RequestContext.setUserId("u1");
+            assertEquals("u1", RequestContext.getUserId());
+        }
+        assertNull(RequestContext.getUserId(), "guard must clear context on close");
+    }
+
+    @Test
+    @DisplayName("newCleanupGuard 异常时也清理")
+    void cleanupGuard_exception() {
+        assertThrows(RuntimeException.class, () -> {
+            try (RequestContext.CleanupGuard guard = RequestContext.newCleanupGuard()) {
+                RequestContext.setUserId("u1");
+                throw new RuntimeException("boom");
+            }
+        });
+        assertNull(RequestContext.getUserId());
+    }
+
+    @Test
+    @DisplayName("普通线程池任务不传播上下文（未使用 TtlExecutors）")
+    void threadPool_noPropagation() throws InterruptedException {
+        RequestContext.setUserId("main-user");
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            CountDownLatch latch = new CountDownLatch(1);
+            final String[] workerValue = new String[1];
+            pool.submit(() -> {
+                workerValue[0] = RequestContext.getUserId();
+                latch.countDown();
+            });
+            assertTrue(latch.await(5, TimeUnit.SECONDS));
+            assertNull(workerValue[0], "plain executor must NOT inherit TTL context");
+        } finally {
+            pool.shutdownNow();
+            RequestContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("线程间上下文隔离")
+    void threadIsolation() throws InterruptedException {
+        RequestContext.clear();
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            CountDownLatch latch = new CountDownLatch(2);
+            final boolean[] crossTalk = {false};
+            Runnable task = () -> {
+                // 每条线程设置自己的值后读取
+                RequestContext.setUserId(Thread.currentThread().getName());
+                if (!Thread.currentThread().getName().equals(RequestContext.getUserId())) {
+                    crossTalk[0] = true;
+                }
+                RequestContext.clear();
+                latch.countDown();
+            };
+            pool.submit(task);
+            pool.submit(task);
+            assertTrue(latch.await(5, TimeUnit.SECONDS));
+            assertFalse(crossTalk[0], "threads must not see each other's context");
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+}
