@@ -10,6 +10,10 @@
  */
 
 import type { MicroAppConfig } from '@ydsz/micro-runtime';
+import { createLogger } from '@ydsz-core/shared/utils';
+
+/** 模块级日志器 */
+const logger = createLogger('MicroKernel');
 
 /** 本次会话应用降级 set（key = app.name，该应用不再尝试微前端加载，走整页跳转） */
 const degradedApps = new Set<string>();
@@ -17,7 +21,7 @@ const degradedApps = new Set<string>();
 /** 将指定子应用标记为本次会话降级，后续不再尝试微前端加载，直接整页跳转 */
 export function markDegraded(appName: string): void {
   degradedApps.add(appName);
-  console.warn(`[MicroKernel] ${appName} degraded to full-page navigation`);
+  logger.warn(`${appName} degraded to full-page navigation`);
 }
 
 /** 判断指定子应用是否已被标记为本会话降级状态 */

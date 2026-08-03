@@ -12,6 +12,10 @@
  */
 
 import type { Manifest } from './loader';
+import { createLogger } from '@ydsz-core/shared/utils';
+
+/** 模块级日志器 */
+const logger = createLogger('VersionManager');
 
 /** 版本信息存储 */
 interface VersionInfo {
@@ -159,7 +163,7 @@ class VersionManager {
 
     this.checkTimer = setInterval(() => {
       // 自动检查逻辑由外部提供 manifests 触发
-      console.debug('[VersionManager] Auto-check triggered');
+      logger.debug('Auto-check triggered');
     }, this.checkInterval);
   }
 

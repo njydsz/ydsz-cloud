@@ -17,6 +17,10 @@ import { loadApp, removeStylesheets } from './loader';
 import type { LoadOptions, LoadResult } from './loader';
 import { enterSandbox, exitSandbox } from './sandbox';
 import type { SandboxInstance } from './sandbox';
+import { createLogger } from '@ydsz-core/shared/utils';
+
+/** 模块级日志器（生命周期事件默认 debug 级别，避免生产噪音） */
+const logger = createLogger('MicroKernel');
 
 /** 子应用生命周期状态：未加载 / 加载中 / 已加载 / 已挂载 / 已卸载 */
 export type AppStatus = 'NOT_LOADED' | 'LOADING' | 'LOADED' | 'MOUNTED' | 'UNMOUNTED';
@@ -90,10 +94,10 @@ export async function activateApp(
       try {
         await instance.exports.activate();
       } catch (err) {
-        console.error(`[MicroKernel] ${config.name} activate hook failed:`, err);
+        logger.error(`${config.name} activate hook failed:`, err);
       }
     }
-    console.info(`[MicroKernel] ${config.name} reattached (keepAlive)`);
+    logger.debug(`${config.name} reattached (keepAlive)`);
     return;
   }
 
@@ -129,7 +133,7 @@ export async function activateApp(
     await instance.exports.mount(mountProps);
     instance.status = 'MOUNTED';
     instance.error = null;
-    console.info(`[MicroKernel] ${config.name} mounted`);
+    logger.debug(`${config.name} mounted`);
   } catch (err) {
     // 挂载失败：退出沙箱，回滚全局状态
     exitSandbox(instance.sandbox);
@@ -165,10 +169,10 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
         try {
           await instance.exports.deactivate();
         } catch (err) {
-          console.error(`[MicroKernel] ${config.name} deactivate hook failed:`, err);
+          logger.error(`${config.name} deactivate hook failed:`, err);
         }
       }
-      console.info(`[MicroKernel] ${config.name} detached (keepAlive)`);
+      logger.debug(`${config.name} detached (keepAlive)`);
       return { name: config.name, success: true };
     }
   }
@@ -196,7 +200,7 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
     instance.exports = null;
     instance.status = 'NOT_LOADED';
     instance.error = null;
-    console.info(`[MicroKernel] ${config.name} unmounted`);
+    logger.debug(`${config.name} unmounted`);
     return { name: config.name, success: true };
   } catch (err) {
     // unmount 失败仍尝试退出沙箱

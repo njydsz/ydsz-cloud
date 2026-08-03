@@ -151,7 +151,7 @@ export function createAgentApi(data: AgentApi.AgentDTO) {
 2. **系统提示词安全**：`systemPrompt` 可能包含敏感指令，编辑时避免在前端日志或控制台明文输出完整提示词。
 3. **DAG 环路检测**：Agent DAG 编排需在前端做环路检测，避免循环依赖导致 Agent 执行死锁。
 4. **RAG 知识库容量**：知识库文档上传需限制单文件大小与总容量，大文件应走分片上传，避免前端内存溢出。
-5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 micro-kernel globalState 注入。
+5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 通过 `useTokenStore()` 从 SecureLS 读取，由 `@ydsz/shared-auth` 统一管理。
 
 ## 变更记录
 

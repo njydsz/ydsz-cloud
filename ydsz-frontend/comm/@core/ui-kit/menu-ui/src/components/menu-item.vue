@@ -15,6 +15,7 @@ import { YDSZIcon, YDSZTooltip } from '@ydsz-core/shadcn-ui';
 
 import { MenuBadge } from '../components';
 import { useMenu, useMenuContext, useSubMenuContext } from '../hooks';
+import { getPreloadManager } from '@ydsz/micro-kernel';
 
 interface Props extends MenuItemProps {}
 
@@ -77,6 +78,30 @@ function handleClick() {
   emit('click', item);
 }
 
+/**
+ * 菜单项 hover 事件 - 触发子应用预加载
+ */
+function handleMouseEnter() {
+  if (props.disabled || !props.path) {
+    return;
+  }
+  
+  // 根据菜单路径触发对应子应用的预加载
+  const preloadManager = getPreloadManager();
+  const menuPath = props.path;
+  
+  // 查找匹配的子应用（根据路径前缀）
+  // 这里使用路径的第一段作为子应用标识
+  const pathSegments = menuPath.split('/').filter(Boolean);
+  if (pathSegments.length > 0) {
+    const appName = pathSegments[0];
+    // 触发预加载（异步，不阻塞）
+    preloadManager.triggerPreload(appName).catch(() => {
+      // 预加载失败不影响用户体验，静默处理
+    });
+  }
+}
+
 onMounted(() => {
   subMenu?.addSubMenu?.(item);
   rootMenu?.addMenuItem?.(item);
@@ -98,6 +123,7 @@ onBeforeUnmount(() => {
     ]"
     role="menuitem"
     @click.stop="handleClick"
+    @mouseenter="handleMouseEnter"
   >
     <YDSZTooltip
       v-if="showTooltip"

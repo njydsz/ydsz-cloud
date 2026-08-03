@@ -10,6 +10,7 @@
     }
   },
   "dependencies": {
+    "@ydsz-core/shared": "workspace:*",
     "@ydsz/micro-runtime": "workspace:*",
     "vue": "catalog:"
   }

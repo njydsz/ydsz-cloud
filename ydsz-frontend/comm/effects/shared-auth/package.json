@@ -19,7 +19,7 @@
     "@ydsz/types": "workspace:*",
     "@ydsz/utils": "workspace:*",
     "element-plus": "catalog:",
-    "openapi-fetch": "workspace:*",
+    "openapi-fetch": "^0.17.0",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"

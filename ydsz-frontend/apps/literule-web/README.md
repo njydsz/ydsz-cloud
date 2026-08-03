@@ -154,7 +154,7 @@ export function createRuleApi(data: RuleApi.RuleDTO) {
 2. **规则版本管理**：规则支持多版本，编辑时需注意版本号递增，避免覆盖已上线版本，发布前建议在断点调试中回放验证。
 3. **CEP 模式复杂度**：CEP 复杂事件模式配置较复杂，表单页需对事件窗口、匹配条件做前端校验，避免提交不可执行的模式。
 4. **审计日志容量**：审计日志数据量随规则执行次数线性增长，列表页需强制分页与时间范围筛选。
-5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 micro-kernel globalState 注入。
+5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 通过 `useTokenStore()` 从 SecureLS 读取，由 `@ydsz/shared-auth` 统一管理。
 
 ## 变更记录
 

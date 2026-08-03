@@ -13,6 +13,10 @@
  */
 
 import type { MicroAppConfig } from '@ydsz/micro-runtime';
+import { createLogger } from '@ydsz-core/shared/utils';
+
+/** 模块级日志器 */
+const logger = createLogger('PreloadManager');
 
 /** 预加载策略类型 */
 export type PreloadStrategy = 'idle' | 'hover' | 'visibility' | 'route' | 'manual';
@@ -65,9 +69,9 @@ export class PreloadManager {
     try {
       this.preloadCache.add(appName);
       await strategy.onPreload(appName);
-      console.info(`[PreloadManager] Preloaded ${appName} via ${strategy.strategy} strategy`);
+      logger.debug(`Preloaded ${appName} via ${strategy.strategy} strategy`);
     } catch (error) {
-      console.warn(`[PreloadManager] Failed to preload ${appName}:`, error);
+      logger.warn(`Failed to preload ${appName}:`, error);
       this.preloadCache.delete(appName);
     }
   }

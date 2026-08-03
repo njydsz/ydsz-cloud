@@ -86,7 +86,7 @@ function readCachedImportMap(cacheKey: string): unknown | null {
     };
     const ttl = Number(process.env.IMPORTMAP_CACHE_TTL) || DEFAULT_CACHE_TTL_MS;
     if (Date.now() - raw.cachedAt > ttl) {
-      console.info(`[ImportMap] Cache expired for key ${cacheKey}`);
+      console.debug(`[ImportMap] Cache expired for key ${cacheKey}`);
       return null;
     }
     return raw.importmap;
@@ -112,7 +112,7 @@ function writeCachedImportMap(cacheKey: string, importmap: unknown): void {
       cacheFile,
       JSON.stringify({ cachedAt: Date.now(), importmap }, null, 2),
     );
-    console.info(`[ImportMap] Cache written: ${cacheFile}`);
+    console.debug(`[ImportMap] Cache written: ${cacheFile}`);
   } catch (err) {
     console.warn(`[ImportMap] Failed to write cache:`, err);
   }
@@ -226,7 +226,7 @@ async function viteImportMapPlugin(
     if (existsSync(importmapFile)) {
       try {
         selfHostedImportMap = JSON.parse(readFileSync(importmapFile, 'utf-8'));
-        console.info(`[ImportMap] 使用预生成 importmap: ${importmapFile}`);
+        console.debug(`[ImportMap] 使用预生成 importmap: ${importmapFile}`);
       } catch {
         selfHostedImportMap = buildSelfHostedImportMap(importmap || [], selfHostBase);
         console.warn(`[ImportMap] importmap.json 解析失败，回退到简易映射`);
@@ -248,7 +248,7 @@ async function viteImportMapPlugin(
     if (cached) {
       resolvedImportMap = cached;
       installed = true; // 标记为已安装，跳过 install hook 的在线安装
-      console.info(`[ImportMap] Cache hit for key ${cacheKey}, skipping CDN install`);
+      console.debug(`[ImportMap] Cache hit for key ${cacheKey}, skipping CDN install`);
     }
   }
 
@@ -317,7 +317,7 @@ async function viteImportMapPlugin(
         // 自托管模式无需公网安装
         if (selfHostBase) {
           installed = true;
-          console.info(
+          console.debug(
             `[ImportMap] Self-hosted mode → ${selfHostBase} (${importmap?.length ?? 0} deps). Run \`pnpm sync:shared-deps\` to populate.`,
           );
           return null;

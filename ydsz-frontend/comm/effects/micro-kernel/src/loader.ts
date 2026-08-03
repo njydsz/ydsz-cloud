@@ -14,6 +14,10 @@
  */
 
 import type { LifecycleExports, MicroAppConfig } from '@ydsz/micro-runtime';
+import { createLogger } from '@ydsz-core/shared/utils';
+
+/** 模块级日志器（重试等运维信息走 debug，避免生产噪音） */
+const logger = createLogger('MicroKernel');
 
 /** 子应用构建产出的 manifest.json 结构：应用名、入口、样式表列表与版本号 */
 export interface Manifest {
@@ -159,8 +163,8 @@ async function importWithRetry(
       lastError = err;
       if (attempt < opts.retries) {
         const delay = opts.retryBaseDelay * 2 ** attempt;
-        console.warn(
-          `[MicroKernel] Import failed (attempt ${attempt + 1}/${opts.retries + 1}): ${url}. Retrying in ${delay}ms...`,
+        logger.debug(
+          `Import failed (attempt ${attempt + 1}/${opts.retries + 1}): ${url}. Retrying in ${delay}ms...`,
         );
         await new Promise((r) => setTimeout(r, delay));
       }
@@ -187,8 +191,8 @@ async function fetchWithRetry<T>(
       lastError = err;
       if (attempt < opts.retries) {
         const delay = opts.retryBaseDelay * 2 ** attempt;
-        console.warn(
-          `[MicroKernel] Fetch failed (attempt ${attempt + 1}/${opts.retries + 1}): ${label}. Retrying in ${delay}ms...`,
+        logger.debug(
+          `Fetch failed (attempt ${attempt + 1}/${opts.retries + 1}): ${label}. Retrying in ${delay}ms...`,
         );
         await new Promise((r) => setTimeout(r, delay));
       }

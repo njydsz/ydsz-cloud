@@ -36,6 +36,10 @@ import {
 import { loadApp, type Manifest } from './loader';
 import { getVersionManager, type VersionManagerOptions } from './version-manager';
 import { getPreloadManager, type PreloadStrategyOptions } from './preload-strategy';
+import { createLogger } from '@ydsz-core/shared/utils';
+
+/** 模块级日志器 */
+const logger = createLogger('MicroKernel');
 
 /** 内核自定义路由变更事件名，供 history patch + popstate 统一触发 */
 const ROUTE_CHANGE_EVENT = 'micro-kernel:route-change';
@@ -203,7 +207,7 @@ function startRouterSync(
       if (current) {
         void deactivateApp(current);
         activeAppName = null;
-        console.info(`[MicroKernel] Deactivated "${current.config.name}" (no activeRule match)`);
+        logger.debug(`Deactivated "${current.config.name}" (no activeRule match)`);
       }
     }
   }
@@ -261,7 +265,7 @@ async function switchToApp(config: MicroAppConfig, options?: StartOptions): Prom
 
   const container = document.querySelector(config.container);
   if (!container) {
-    console.error(`[MicroKernel] Container "${config.container}" not found for ${config.name}`);
+    logger.error(`Container "${config.container}" not found for ${config.name}`);
     window.dispatchEvent(new CustomEvent('micro-kernel:error', { detail: { appName: config.name, error: 'Container not found' } }));
     return;
   }
@@ -275,7 +279,7 @@ async function switchToApp(config: MicroAppConfig, options?: StartOptions): Prom
     // 派发 after-mount 事件，触发骨架屏隐藏
     window.dispatchEvent(new CustomEvent('micro-kernel:after-mount', { detail: { appName: config.name } }));
   } catch (err) {
-    console.error(`[MicroKernel] Failed to activate ${config.name}:`, err);
+    logger.error(`Failed to activate ${config.name}:`, err);
     markDegraded(config.name);
     // v3.1: onRetry 回调使「重试」按钮重新激活子应用而非整页刷新
     renderErrorFallback(config, config.container, () => switchToApp(config, options));
@@ -380,7 +384,7 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
 
     start(options) {
       if (started) {
-        console.warn('[MicroKernel] Already started');
+        logger.warn('Already started');
         return;
       }
       started = true;
@@ -395,7 +399,7 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
         const toPrefetch = apps.filter(options.prefetch);
         // P2: 网络条件感知 — 慢速网络（2g/3g）或省流量模式下跳过预加载
         if (shouldSkipPrefetchDueToNetwork()) {
-          console.info('[MicroKernel] Prefetch skipped due to slow network or saveData');
+          logger.debug('Prefetch skipped due to slow network or saveData');
         } else {
           scheduleIdle(() => {
             // 二次校验：可能在 idle 等待期间网络已变差
@@ -426,7 +430,7 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
         });
       }
 
-      console.info(`[MicroKernel] Started with ${apps.length} apps`);
+      logger.info(`Started with ${apps.length} apps`);
       window.dispatchEvent(new CustomEvent('micro-kernel:started'));
     },
 
@@ -435,7 +439,7 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       // 不检查网络条件（用户主动悬停意味着即将访问，值得拉取）。
       const config = apps.find((a) => a.name === name);
       if (!config) {
-        console.warn(`[MicroKernel] prefetchApp: app "${name}" not registered`);
+        logger.warn(`prefetchApp: app "${name}" not registered`);
         return;
       }
       try {
@@ -498,7 +502,7 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       _globalState = {};
       _globalStateListeners.clear();
       started = false;
-      console.info('[MicroKernel] Stopped');
+      logger.info('Stopped');
     },
   };
 }

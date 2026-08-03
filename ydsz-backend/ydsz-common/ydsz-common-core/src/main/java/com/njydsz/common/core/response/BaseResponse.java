@@ -2,6 +2,7 @@ package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.context.ProblemDetail;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,8 +1,9 @@
-package com.njydsz.common.core.response;
+package com.njydsz.common.core.context;
 
 import java.io.Serializable;
 import java.net.URI;
 
+import com.njydsz.common.core.response.BaseResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
