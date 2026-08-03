@@ -115,7 +115,7 @@ public class JsonPath {
      * @return 匹配的值，如果路径不存在返回 null
      */
     public Object getValue(String json) {
-        Object obj = YdszJson.parseObjectToJsonObject(json);
+        Object obj = JsonParserUtil.parse(json);
         return getValue(obj);
     }
 
@@ -138,7 +138,7 @@ public class JsonPath {
      * @return 所有匹配值的列表
      */
     public List<Object> getAllValues(String json) {
-        Object obj = YdszJson.parseObjectToJsonObject(json);
+        Object obj = JsonParserUtil.parse(json);
         return getAllValues(obj);
     }
 

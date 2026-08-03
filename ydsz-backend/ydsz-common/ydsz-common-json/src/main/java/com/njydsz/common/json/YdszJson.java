@@ -16,8 +16,6 @@ import com.njydsz.common.json.merge.JsonMergePatch;
 import com.njydsz.common.json.metric.JsonMetricsCallback;
 import com.njydsz.common.json.metric.MetricsHelper;
 import com.njydsz.common.json.module.JsonModuleRegistry;
-import com.njydsz.common.json.object.JsonArray;
-import com.njydsz.common.json.object.JsonObject;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.pointer.JsonPointer;
 import com.njydsz.common.json.provider.SerializationProvider;
@@ -666,6 +664,50 @@ public class YdszJson {
     public static JsonNode readTree(String json) {
         Object parsed = JsonParserUtil.parse(json);
         return TreeConverter.convertToJsonNode(parsed);
+    }
+
+    /**
+     * 将 JSON 字符串解析为 ObjectNode 对象节点。
+     *
+     * <p>对标 FastJSON2 {@code JSON.parseObject(json)}，解析 JSON 对象字符串为 ObjectNode，
+     * 提供 getString/getInteger/getLong/getBoolean 等便捷访问方法。</p>
+     *
+     * @param json JSON 字符串
+     * @return ObjectNode 实例，json 为 null/blank 返回 null
+     * @throws JsonException 如果 JSON 不是对象（如为数组或标量）
+     * @since 1.0.0
+     */
+    public static ObjectNode parseObject(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        JsonNode tree = readTree(json);
+        if (tree instanceof ObjectNode objNode) {
+            return objNode;
+        }
+        throw new JsonException("JSON is not an object: " + tree.getClass().getSimpleName());
+    }
+
+    /**
+     * 将 JSON 字符串解析为 ArrayNode 数组节点。
+     *
+     * <p>对标 FastJSON2 {@code JSON.parseArray(json)}，解析 JSON 数组字符串为 ArrayNode，
+     * 提供 getString/getInteger/getLong/getBoolean 等便捷访问方法。</p>
+     *
+     * @param json JSON 字符串
+     * @return ArrayNode 实例，json 为 null/blank 返回 null
+     * @throws JsonException 如果 JSON 不是数组
+     * @since 1.0.0
+     */
+    public static ArrayNode parseArrayNode(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        JsonNode tree = readTree(json);
+        if (tree instanceof ArrayNode arrNode) {
+            return arrNode;
+        }
+        throw new JsonException("JSON is not an array: " + tree.getClass().getSimpleName());
     }
 
     /**

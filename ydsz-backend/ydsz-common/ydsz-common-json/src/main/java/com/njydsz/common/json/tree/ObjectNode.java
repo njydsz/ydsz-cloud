@@ -1,19 +1,23 @@
 package com.njydsz.common.json.tree;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * JSON 对象节点
  *
- * <p>对标 Jackson ObjectNode，表示一个 JSON 对象（key-value 结构），
+ * <p>对标 Jackson ObjectNode / FastJSON2 JSONObject，表示一个 JSON 对象（key-value 结构），
  * 内部使用 LinkedHashMap 保持字段插入顺序。</p>
  *
  * <p><b>主要功能：</b></p>
  * <ul>
  *   <li>支持动态添加/删除字段</li>
  *   <li>支持链式调用（Builder 模式）</li>
- *   <li>提供类型安全的字段访问</li>
+ *   <li>提供类型安全的字段访问（getString/getInteger/getLong/getBoolean 等）</li>
  *   <li>支持转换为 Map 和 JSON 字符串</li>
  * </ul>
  *
@@ -25,8 +29,9 @@ import java.util.stream.Collectors;
  *     .put("active", true);
  *
  * // 获取字段
- * JsonNode nameNode = node.get("name");
- * String name = nameNode.asText();
+ * String name = node.getString("name");
+ * int age = node.getIntValue("age");
+ * ObjectNode sub = node.getJSONObject("sub");
  * </pre>
  *
  * @author ydsz-team
@@ -240,6 +245,390 @@ public final class ObjectNode extends JsonNode {
         }
     }
 
+    // ==================== Map-like 便捷 getter（FastJSON2/Gson 风格） ====================
+
+    /**
+     * 获取字符串值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 字符串值
+     */
+    public String getString(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        return node.asText();
+    }
+
+    /**
+     * 获取整数值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 整数值
+     */
+    public Integer getInteger(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node.isNumber()) {
+            return node.asInt();
+        }
+        try {
+            return Integer.parseInt(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取 int 基本类型值（为 null 时返回 0）。
+     *
+     * @param name 字段名
+     * @return int 值
+     */
+    public int getIntValue(String name) {
+        Integer value = getInteger(name);
+        return value != null ? value : 0;
+    }
+
+    /**
+     * 获取长整数值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 长整数值
+     */
+    public Long getLong(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node.isNumber()) {
+            return node.asLong();
+        }
+        try {
+            return Long.parseLong(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取 long 基本类型值（为 null 时返回 0）。
+     *
+     * @param name 字段名
+     * @return long 值
+     */
+    public long getLongValue(String name) {
+        Long value = getLong(name);
+        return value != null ? value : 0L;
+    }
+
+    /**
+     * 获取双精度浮点数值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 双精度浮点数值
+     */
+    public Double getDouble(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node.isNumber()) {
+            return node.asDouble();
+        }
+        try {
+            return Double.parseDouble(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取 double 基本类型值（为 null 时返回 0）。
+     *
+     * @param name 字段名
+     * @return double 值
+     */
+    public double getDoubleValue(String name) {
+        Double value = getDouble(name);
+        return value != null ? value : 0.0;
+    }
+
+    /**
+     * 获取布尔值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 布尔值
+     */
+    public Boolean getBoolean(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node.isBoolean()) {
+            return node.asBoolean();
+        }
+        String str = node.asText();
+        if ("true".equalsIgnoreCase(str) || "1".equals(str)) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(str) || "0".equals(str)) {
+            return false;
+        }
+        return null;
+    }
+
+    /**
+     * 获取 boolean 基本类型值（为 null 时返回 false）。
+     *
+     * @param name 字段名
+     * @return boolean 值
+     */
+    public boolean getBooleanValue(String name) {
+        Boolean value = getBoolean(name);
+        return value != null ? value : false;
+    }
+
+    /**
+     * 获取 BigDecimal 值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return BigDecimal 值
+     */
+    public BigDecimal getBigDecimal(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node instanceof NumberNode numNode) {
+            Number num = numNode.numberValue();
+            if (num instanceof BigDecimal bd) {
+                return bd;
+            }
+            if (num instanceof BigInteger bi) {
+                return new BigDecimal(bi);
+            }
+            return new BigDecimal(num.toString());
+        }
+        try {
+            return new BigDecimal(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取 BigInteger 值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return BigInteger 值
+     */
+    public BigInteger getBigInteger(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node instanceof NumberNode numNode) {
+            Number num = numNode.numberValue();
+            if (num instanceof BigInteger bi) {
+                return bi;
+            }
+            if (num instanceof BigDecimal bd) {
+                return bd.toBigInteger();
+            }
+            return BigInteger.valueOf(num.longValue());
+        }
+        try {
+            return new BigInteger(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取嵌套对象节点，不存在或非对象返回 null。
+     *
+     * @param name 字段名
+     * @return ObjectNode 实例
+     */
+    public ObjectNode getJSONObject(String name) {
+        JsonNode node = fields.get(name);
+        if (node instanceof ObjectNode objNode) {
+            return objNode;
+        }
+        return null;
+    }
+
+    /**
+     * 获取嵌套数组节点，不存在或非数组返回 null。
+     *
+     * @param name 字段名
+     * @return ArrayNode 实例
+     */
+    public ArrayNode getJSONArray(String name) {
+        JsonNode node = fields.get(name);
+        if (node instanceof ArrayNode arrNode) {
+            return arrNode;
+        }
+        return null;
+    }
+
+    /**
+     * 获取节点并转换为指定类型。
+     *
+     * @param name 字段名
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 转换后的对象
+     */
+    public <T> T getObject(String name, Class<T> clazz) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        return YdszJson.toObject(node.toString(), clazz);
+    }
+
+    /**
+     * 获取字符串值或默认值。
+     *
+     * @param name 字段名
+     * @param defaultValue 默认值
+     * @return 字符串值或默认值
+     */
+    public String getStringOrDefault(String name, String defaultValue) {
+        String value = getString(name);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * 获取整数值或默认值。
+     *
+     * @param name 字段名
+     * @param defaultValue 默认值
+     * @return 整数值或默认值
+     */
+    public Integer getIntegerOrDefault(String name, Integer defaultValue) {
+        Integer value = getInteger(name);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * 获取长整数值或默认值。
+     *
+     * @param name 字段名
+     * @param defaultValue 默认值
+     * @return 长整数值或默认值
+     */
+    public Long getLongOrDefault(String name, Long defaultValue) {
+        Long value = getLong(name);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * 获取布尔值或默认值。
+     *
+     * @param name 字段名
+     * @param defaultValue 默认值
+     * @return 布尔值或默认值
+     */
+    public Boolean getBooleanOrDefault(String name, Boolean defaultValue) {
+        Boolean value = getBoolean(name);
+        return value != null ? value : defaultValue;
+    }
+
+    // ==================== Map-like 查询 ====================
+
+    /**
+     * 是否包含指定字段。
+     *
+     * @param name 字段名
+     * @return 包含返回 true
+     */
+    public boolean containsKey(String name) {
+        return fields.containsKey(name);
+    }
+
+    /**
+     * 是否为空对象。
+     *
+     * @return 为空返回 true
+     */
+    public boolean isEmpty() {
+        return fields.isEmpty();
+    }
+
+    /**
+     * 获取所有字段名。
+     *
+     * @return 字段名集合
+     */
+    public Set<String> keySet() {
+        return Collections.unmodifiableSet(fields.keySet());
+    }
+
+    /**
+     * 获取所有字段值。
+     *
+     * @return 字段值集合
+     */
+    public Collection<JsonNode> values() {
+        return Collections.unmodifiableCollection(fields.values());
+    }
+
+    /**
+     * 获取字段 entry 集合。
+     *
+     * @return entry 集合
+     */
+    public Set<Map.Entry<String, JsonNode>> entrySet() {
+        return Collections.unmodifiableSet(fields.entrySet());
+    }
+
+    // ==================== 通用 put（支持任意值） ====================
+
+    /**
+     * 添加任意值字段（自动转换为 JsonNode）。
+     *
+     * @param name 字段名
+     * @param value 字段值，null 转换为 NullNode
+     * @return 当前对象节点（支持链式调用）
+     */
+    public ObjectNode put(String name, Object value) {
+        if (value == null) {
+            fields.put(name, NullNode.getInstance());
+        } else if (value instanceof JsonNode node) {
+            fields.put(name, node);
+        } else if (value instanceof String str) {
+            fields.put(name, new TextNode(str));
+        } else if (value instanceof Boolean bool) {
+            fields.put(name, BooleanNode.of(bool));
+        } else if (value instanceof Number num) {
+            fields.put(name, new NumberNode(num));
+        } else if (value instanceof Map<?, ?> map) {
+            fields.put(name, ObjectNode.fromMap(map));
+        } else if (value instanceof List<?> list) {
+            fields.put(name, ArrayNode.fromList(list));
+        } else {
+            fields.put(name, TreeConverter.convertToJsonNode(value));
+        }
+        return this;
+    }
+
+    // ==================== 转换 ====================
+
+    /**
+     * 转换为 JSON 字符串。
+     *
+     * @return JSON 字符串
+     */
+    public String toJsonString() {
+        return toString();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -257,15 +646,7 @@ public final class ObjectNode extends JsonNode {
     }
 
     /**
-     * 从 Map 创建 ObjectNode（适配器方法，用于从 JsonObject 迁移）。
-     *
-     * <p>此方法为 {@link com.njydsz.common.json.object.JsonObject}（已废弃）的迁移提供桥接。
-     * JsonObject 继承自 LinkedHashMap，可直接传入此方法。
-     *
-     * <pre>{@code
-     * JsonObject legacy = YdszJson.parseObjectToJsonObject(json);
-     * ObjectNode node = ObjectNode.fromMap(legacy);
-     * }</pre>
+     * 从 Map 创建 ObjectNode。
      *
      * @param map 源 Map，null 返回空 ObjectNode
      * @return ObjectNode 实例
