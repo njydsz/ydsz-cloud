@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | **9007**（按构建顺序 8/10） |
+| **端口** | **9003**（按构建顺序 4/10） |
 | **服务名** | `ydsz-nextwiki` |
-| **构建顺序** | 8/10 |
+| **构建顺序** | 4/10 |
 | **数据库** | PostgreSQL |
 | **依赖** | Nacos、PostgreSQL、Redis、MinIO |
 | **公共依赖** | common-web / common-file / common-search / common-jdbc / common-lock / common-redis |

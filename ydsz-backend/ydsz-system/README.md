@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | **9002**（按构建顺序 3/10） |
+| **端口** | **9001**（按构建顺序 2/10） |
 | **服务名** | `ydsz-system` |
-| **构建顺序** | 3/10 |
+| **构建顺序** | 2/10 |
 | **数据库** | PostgreSQL（共享主库） |
 | **依赖** | Nacos、PostgreSQL、Redis |
 
@@ -189,7 +189,7 @@ spring:
           - data-id: ydsz-system.yml
             refresh: true
 server:
-  port: 9002
+  port: 9001
 ```
 
 **可配置属性**（`ydsz.system.*`）：

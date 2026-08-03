@@ -19,7 +19,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  *
  * <h3>端口与构建顺序</h3>
  * <ul>
- *   <li>端口：9008（按构建顺序 3/10）</li>
+ *   <li>端口：9007（按构建顺序 8/10）</li>
  *   <li>服务名：{@code ydsz-literule}</li>
  *   <li>配置中心：Nacos（共享 {@code ydsz-common.yaml} + 本服务 data-id）</li>
  * </ul>

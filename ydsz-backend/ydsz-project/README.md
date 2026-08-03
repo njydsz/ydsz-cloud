@@ -1,6 +1,6 @@
 # ydsz-project
 
-> 项目全生命周期管理服务（端口 9003）
+> 项目全生命周期管理服务（端口 9009）
 
 承载项目全生命周期核心业务域：商机 → 立项 → 合同 → 执行 → 成本 → 收入 → 利润 → 开票 → 回款 → 结项 → 售后。是 ydsz-pmis 平台的「经营主轴」，对标大厂 PMIS / 项目管理系统（如 Primavera P6 / Microsoft Project）的核心业务能力，复用 common-web、common-audit、common-lock、common-cache、common-excel、common-notify、common-search 等公共模块。
 
@@ -9,7 +9,7 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | 9003 |
+| **端口** | 9009 |
 | **启动类** | `com.njydsz.project.web.ProjectApplication` |
 | **作用** | 项目全生命周期管理：商机→立项→合同→执行→成本→收入→利润→开票→回款→结项→售后 |
 | **依赖** | ydsz-common（通过 common-web / common-audit / common-lock / common-cache / common-excel / common-notify / common-search）+ ydsz-literule（规则引擎）+ ydsz-userinfo / ydsz-system（Feign） |
@@ -311,7 +311,7 @@ VAC = BAC - EAC         （完工偏差；正数表示预算节约）
 
 ```yaml
 server:
-  port: 9003
+  port: 9009
   servlet:
     context-path: /
 
