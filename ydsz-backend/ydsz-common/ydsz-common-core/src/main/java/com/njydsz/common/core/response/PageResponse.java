@@ -16,6 +16,11 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
  * <p>用于封装分页查询的响应数据，包含分页信息和实际数据。
  * 继承 {@link BaseResponse}，遵循统一的响应结构规范。
  *
+ * <p><b>data 语义：</b>分页场景下 {@code data} 字段承载<b>列表数据</b>，
+ * 即调用 {@link #success(Long, Long, Long, Object)} 时传入的 data 应为
+ * {@code List<T>}（或其分页投影）。分页元信息（total / pageNum / pageSize / pages）
+ * 位于响应体顶层，与 data 平级。</p>
+ *
  * <p><b>响应结构：</b>
  * <ul>
  *   <li>code: 响应码，A00000表示成功，其他表示失败</li>
@@ -25,12 +30,12 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
  *   <li>pageNum: 当前页码</li>
  *   <li>pageSize: 每页记录数</li>
  *   <li>pages: 总页数</li>
- *   <li>data: 分页数据</li>
+ *   <li>data: 分页数据（列表）</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 构建分页响应
+ * // 构建分页响应（data 为 List<T>）
  * PageResponse<List<User>> result = PageResponse.success(total, pageNum, pageSize, userList);
  *
  * // 判断响应是否成功
@@ -39,7 +44,7 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
  * }
  * }</pre>
  *
- * @param <T> 数据类型
+ * @param <T> 数据类型（分页场景下通常为 List 或其投影）
  *
  * @author ydsz-team
  * @since 1.0.0
