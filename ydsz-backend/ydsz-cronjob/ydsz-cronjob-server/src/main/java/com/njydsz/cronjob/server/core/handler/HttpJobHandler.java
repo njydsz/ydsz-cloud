@@ -70,10 +70,9 @@ public class HttpJobHandler implements JobHandler {
     /**
      * P2-1: HTTP 任务参数 JsonSchema —— 试点验证自研 schema 引擎成熟度。
      *
-     * <p>当前 JsonSchema 类标记为 {@code @Deprecated(forRemoval = true)}（计划抽离为独立模块），
-     * 此处试点旨在验证其运行时正确性与 API 可用性，为后续推广或废弃提供决策依据。
+     * <p>{@code JsonSchema} 类已通过 1.0 评估保留为自研 schema 实现（标注 {@code @Experimental}），
+     * 此处试点旨在验证其运行时正确性与 API 可用性。
      */
-    @SuppressWarnings("deprecation")
     private static final JsonSchema HTTP_PARAMS_SCHEMA = JsonSchema.object()
             .addProperty("url",
                     JsonSchema.string().required().minLength(1)
@@ -268,14 +267,9 @@ public class HttpJobHandler implements JobHandler {
      * <p>试点目的：验证 {@link JsonSchema} + {@link JsonSchemaValidator} 运行时正确性。
      * 当前仅记录告警日志，不阻断任务执行——待 schema 引擎成熟度验证通过后再提升为硬校验。
      *
-     * <p>注意：{@code JsonSchema} API 当前标记为
-     * {@code @Deprecated(forRemoval = true)}，试点结论将直接决定该 API 的去留
-     * （按过度设计评估报告的建议：证实可用则保留并取消标记，否则冻结并迁移到成熟库）。
-     *
      * @param params 已解析的任务参数 Map
      * @return 校验错误列表（空列表表示通过）
      */
-    @SuppressWarnings("deprecation")
     private List<String> validateParams(Map<String, Object> params) {
         try {
             ValidationResult result = JsonSchemaValidator.validate(HTTP_PARAMS_SCHEMA, params);

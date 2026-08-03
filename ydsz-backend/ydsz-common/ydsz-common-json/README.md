@@ -135,19 +135,18 @@
 
 | 注解 | 说明 |
 |---|---|
-| `@Experimental` | 实验性功能标记（标注 `JsonSchema`、`JsonPatch` 等 RFC 扩展功能，API 尚未稳定，不保证向后兼容） |
+| `@Experimental` | 实验性功能标记（标注 `JsonSchema` 等 RFC 扩展功能，API 尚未稳定，不保证向后兼容） |
 
 
-### 9. 高级功能（jsonpath / pointer / patch / merge / schema / autotype 包）
+### 9. 高级功能（jsonpath / pointer / merge / schema / autotype 包）
 
-> **`@Experimental` 标注**：`JsonSchema`、`JsonPatch` 标注了 `@Experimental`，属于 RFC 扩展功能，API 尚未稳定，不保证向后兼容。建议在非关键路径使用或做好隔离层。
+> **`@Experimental` 标注**：`JsonSchema` 标注了 `@Experimental`，属于 RFC 扩展功能，API 尚未稳定，不保证向后兼容。建议在非关键路径使用或做好隔离层。
 
 | 类 | 说明 |
 |---|---|
 | `JsonPointer` | JSON Pointer（RFC 6901） |
 | `JsonPath` | JSONPath 查询（递归下降 `$..` / 数组索引 `[0]` / 数组过滤 `[?(@.price > 100)]` / 切片 `[0:5]` / 通配符 `[*]` / 条件表达式 `&&` / `||`；编译结果 LRU 缓存，max 512） |
 | `JsonMergePatch` | JSON Merge Patch（RFC 7396，支持 `merge` 合并 + `diff` 计算差异补丁） |
-| `JsonPatch` `@Experimental` | JSON Patch（RFC 6902，支持 add/remove/replace/move/copy/test + Builder 链式构建 `applyTo()`） |
 | `JsonSchema` `@Experimental` / `JsonSchemaValidator` / `ValidationResult` | JSON Schema 校验（JSON Schema Draft 07 核心关键字：type/required/enum/default/minLength/maxLength/pattern/minimum/maximum/exclusiveMinimum/exclusiveMaximum/multipleOf/items/minItems/maxItems/properties/additionalProperties + 组合关键字 allOf/anyOf/oneOf/not/const/if-then-else；静态工厂 `string()`/`number()`/`integer()`/`booleanType()`/`array()`/`object()`/`nullType()`） |
 | `AutoTypeChecker` / `AutoTypeWhitelistScanner` | AutoType 安全检查（防反序列化漏洞，`TYPE_CHECK_CACHE` LRU 有界缓存 max 4096，支持包前缀白名单回退匹配） |
 
@@ -342,21 +341,20 @@ if (!result.isValid()) {
 }
 ```
 
-### 4. JSONPath 查询与 JSON Patch
+### 4. JSONPath 查询与 JSON Merge Patch
 
 ```java
 import com.njydsz.common.json.jsonpath.JsonPath;
-import com.njdsz.common.json.patch.JsonPatch;
+import com.njydsz.common.json.merge.JsonMergePatch;
 
 // JSONPath 查询
 List<String> emails = JsonPath.get(json, "$.users[*].email");
 
-// JSON Patch (RFC 6902)
-String result = JsonPatch.builder()
-        .replace("/name", "Alice")
-        .add("/email", "alice@example.com")
-        .remove("/temp")
-        .applyTo("{\"name\":\"Bob\",\"temp\":true}");
+// JSON Merge Patch (RFC 7396)
+String merged = JsonMergePatch.merge(
+    "{\"name\":\"Bob\",\"age\":30}",
+    "{\"age\":31,\"email\":\"bob@example.com\"}");
+// merged: {"name":"Bob","age":31,"email":"bob@example.com"}
 ```
 
 ### 5. 自定义序列化器（Module 模式）
@@ -442,7 +440,7 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
   - `SchemaValidator` → `JsonSchemaValidator`（类名修正，影响 Section 9 与使用示例 3）
   - 使用示例 4 import 包名 `com.njdsz` → `com.njydsz`（拼写错误）
   - 补全 `@YdszJsonClass` 类级配置能力说明（ordering/ignores/includes/naming/seeAlso/features 等 14 项属性）
-  - 标注 `JsonSchema`、`JsonPatch` 的 `@Experimental` 状态
+  - 标注 `JsonSchema` 的 `@Experimental` 状态
   - 补全 `JsonSchema` 静态工厂方法列表与 `JsonPath` 支持的 7 种路径表达式
 - **v1.0.0**（2026-08-03）：架构优化与 Bug 修复（P0-P2）：
   - **[P0-A1]** 修复 `JsonMapper.restoreConfig` 无限递归导致 `StackOverflowError`（`new JsonMapper().toJson(obj)` 必崩）
@@ -454,3 +452,4 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
   - **[功能]** `ValueWriter` 注解路径补 `SerializationProvider.isWriteNulls()` 判断，使 `JsonMapper.builder().writeNulls(true)` 对带 `@JsonClass` 的 Bean 生效
   - **[P2-A5]** `JsonConfig` 不可变契约 Javadoc 如实表述；修正 `JsonMapper` 示例中不存在的 `setWriteNulls` 调用
   - **[P2-E2/A4/ASM]** README "LRU" 表述修正为"近似 LRU"；补 Jackson 迁移注意事项（ThreadLocal 配置模型、命名策略缓存、writeNulls 生效范围、响应式限制）
+  - **[T2.3]** 删除 `patch/JsonPatch`（RFC 6902 实现无业务使用，保留 `JsonPointer`/`JsonMergePatch` 因有业务引用）；同步更新 README

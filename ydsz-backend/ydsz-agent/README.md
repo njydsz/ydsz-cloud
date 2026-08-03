@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | **9010**（按构建顺序 10/10） |
+| **端口** | **9008**（按构建顺序 9/10） |
 | **服务名** | `ydsz-agent` |
-| **构建顺序** | 10/10（Maven 构建最后一个部署单元） |
+| **构建顺序** | 9/10（Maven 构建最后一个部署单元） |
 | **数据库** | PostgreSQL（`ydsz_agent_*` 表） |
 | **依赖** | Nacos、PostgreSQL、Redis、LLM API |
 | **公共依赖** | common-web / common-auth / common-redis / common-jdbc / common-queue |
@@ -155,7 +155,7 @@ ydsz:
 ### 2. 同步对话
 
 ```bash
-curl -X POST http://localhost:9010/agent/chat \
+curl -X POST http://localhost:9008/agent/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "你好，请介绍一下YDSZ系统"}'
 ```
@@ -163,7 +163,7 @@ curl -X POST http://localhost:9010/agent/chat \
 ### 3. 流式对话（SSE）
 
 ```bash
-curl -N -X POST http://localhost:9010/agent/chat/stream \
+curl -N -X POST http://localhost:9008/agent/chat/stream \
   -H "Content-Type: application/json" \
   -d '{"message": "帮我分析项目进度"}'
 ```
@@ -172,10 +172,10 @@ curl -N -X POST http://localhost:9010/agent/chat/stream \
 
 ```bash
 # 获取历史
-curl http://localhost:9010/agent/chat/history?conversationId=xxx
+curl http://localhost:9008/agent/chat/history?conversationId=xxx
 
 # 清除历史
-curl -X DELETE http://localhost:9010/agent/chat/history?conversationId=xxx
+curl -X DELETE http://localhost:9008/agent/chat/history?conversationId=xxx
 ```
 
 ## 启动

@@ -46,16 +46,16 @@
 ```
 gateway (9000) ─── 入口，必须最先启动
    ↓
-userinfo (9001) ─┐
-system (9002) ───┼─→ 可并行启动
-project (9003) ──┘
+system (9001) ──┐
+userinfo (9002) ─┼─→ 可并行启动
+nextwiki (9003) ─┘
    ↓
 message (9004) ──┐
-cronjob (9005) ──┼─→ 可并行启动
-workflow (9006)─┤
-nextwiki (9007)─┤
-literule (9008)─┤
-agent (9010) ───┘
+workflow (9005) ─┼─→ 可并行启动
+cronjob (9006) ─┤
+literule (9007) ─┤
+agent (9008) ────┤
+project (9009) ──┘
 ```
 
 ## 目录结构

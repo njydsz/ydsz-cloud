@@ -4,6 +4,12 @@
  * @path comm\stores\src\setup.ts
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @important 安全提醒（v3.0）
+ * secure-ls AES 加密的密钥 VITE_APP_STORE_SECURE_KEY 在构建期注入并随 JS bundle
+ * 分发到浏览器，任何人拿到 bundle 均可提取密钥解密存储数据。属于**伪安全**，
+ * 仅提供混淆层次的保护。token 等敏感凭据应改用后端下发的 HttpOnly Secure Cookie
+ * （SameSite=Lax），前端不存储凭据。详见 docs/FRONTEND_OPTIMIZATION_REVIEW.md 安全章节。
  */
 import type { Pinia } from 'pinia';
 

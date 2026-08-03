@@ -7,9 +7,9 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 部署单元（独立启动） |
-| **端口** | **9001**（按构建顺序 2/10） |
+| **端口** | **9002**（按构建顺序 3/10） |
 | **服务名** | `ydsz-userinfo` |
-| **构建顺序** | 2/10 |
+| **构建顺序** | 3/10 |
 | **数据库** | PostgreSQL（共享主库） |
 | **依赖** | Nacos、PostgreSQL、Redis、Gateway |
 | **公共依赖** | common-web / common-auth / common-redis / common-safe / common-jdbc |
