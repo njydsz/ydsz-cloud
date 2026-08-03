@@ -2,7 +2,6 @@ package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.TraceConstants;
-import com.njydsz.common.core.metrics.CoreMetrics;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -110,7 +109,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     public BaseResponse() {
         this.timestamp = System.currentTimeMillis();
         this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
-        recordMetrics();
     }
 
     /**
@@ -126,7 +124,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.data = data;
         this.timestamp = System.currentTimeMillis();
         this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
-        recordMetrics();
     }
 
     /**
@@ -302,14 +299,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public static boolean isResolverRegistered() {
         return resolver != null;
-    }
-
-    /**
-     * 记录响应创建指标（委托到 CoreMetrics SPI）
-     */
-    private void recordMetrics() {
-        CoreMetrics.recordResponseCreated(
-                SUCCESS.equals(this.code), this.code);
     }
 
     /**

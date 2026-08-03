@@ -86,6 +86,18 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- hibernate-validator（test，用于 @Validated 配置校验行为验证） -->
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- EL 实现（hibernate-validator 运行时依赖，Spring Boot BOM 管理版本） -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-el</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

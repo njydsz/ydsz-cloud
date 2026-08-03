@@ -39,7 +39,6 @@
     "vue-router": "catalog:"
   },
   "devDependencies": {
-    "unplugin-element-plus": "catalog:",
-    "vite-plugin-qiankun": "^1.0.15"
+    "unplugin-element-plus": "catalog:"
   }
 }

@@ -10,6 +10,7 @@ import type { CSSOptions, UserConfig } from 'vite';
 import type { DefineApplicationOptions } from '../typing';
 
 import path, { relative } from 'node:path';
+import { readFileSync } from 'node:fs';
 
 import { findMonorepoRoot } from '@ydsz/node-utils';
 
@@ -187,9 +188,12 @@ export { defineApplicationConfig };
  */
 function readSubAppName(): string | undefined {
   try {
-    const pkg = require(`${process.cwd()}/package.json`);
+    const pkgContent = readFileSync(
+      path.join(process.cwd(), 'package.json'),
+      'utf-8',
+    );
+    const pkg = JSON.parse(pkgContent);
     const name: string = pkg.name || '';
-    // 匹配 @ydsz/*-web 格式的子应用，或 main-web 基座
     if (name.startsWith('@ydsz/') && name.endsWith('-web')) {
       return name.replace('@ydsz/', '');
     }

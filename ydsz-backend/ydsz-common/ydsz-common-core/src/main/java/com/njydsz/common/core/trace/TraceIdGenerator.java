@@ -2,8 +2,6 @@ package com.njydsz.common.core.trace;
 
 import java.util.UUID;
 
-import com.njydsz.common.core.metrics.CoreMetrics;
-
 /**
  * TraceId 生成器（统一入口）
  *
@@ -68,10 +66,7 @@ public final class TraceIdGenerator {
      * @return TraceId 字符串
      */
     public static String generate() {
-        String traceId = supplier.generate();
-        CoreMetrics.recordTraceIdGenerated(
-                supplier.getClass().getSimpleName());
-        return traceId;
+        return supplier.generate();
     }
 
     /**

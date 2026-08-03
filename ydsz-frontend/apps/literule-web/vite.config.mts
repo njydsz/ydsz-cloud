@@ -2,7 +2,7 @@
  * 规则引擎子应用 Vite 构建配置。
  *
  * @remarks
- * 基于 @ydsz/vite-config 统一配置，接入 Qiankun 微应用与 ElementPlus 插件；
+ * 基于 @ydsz/vite-config 统一配置，接入 ElementPlus 插件；
  * 开发服务器固定端口 5608，/api 请求代理至本地 9000 端口。
  *
  * @author ydsz-team
@@ -11,7 +11,6 @@
 import { defineConfig } from '@ydsz/vite-config';
 
 import ElementPlus from 'unplugin-element-plus/vite';
-import qiankun from 'vite-plugin-qiankun';
 
 export default defineConfig(async () => {
   return {
@@ -21,9 +20,6 @@ export default defineConfig(async () => {
       plugins: [
         ElementPlus({
           format: 'esm',
-        }),
-        qiankun('literule-web', {
-          useDevMode: true,
         }),
       ],
       server: {

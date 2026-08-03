@@ -33,7 +33,7 @@
     "@ydsz/icons": "workspace:*",
     "@ydsz/layouts": "workspace:*",
     "@ydsz/locales": "workspace:*",
-    "@ydsz/micro-adapter-qiankun": "workspace:*",
+    "@ydsz/micro-kernel-lite": "workspace:*",
     "@ydsz/micro-runtime": "workspace:*",
     "@ydsz/monitor": "workspace:*",
     "@ydsz/plugins": "workspace:*",
@@ -51,7 +51,6 @@
     "vue-router": "catalog:"
   },
   "devDependencies": {
-    "unplugin-element-plus": "catalog:",
-    "vite-plugin-qiankun": "^1.0.15"
+    "unplugin-element-plus": "catalog:"
   }
 }

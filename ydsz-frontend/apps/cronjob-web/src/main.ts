@@ -20,10 +20,6 @@ import '@ydsz/styles';
 import '@ydsz/styles/ele';
 
 import { ElLoading } from 'element-plus';
-import {
-  qiankunWindow,
-  renderWithQiankun,
-} from 'vite-plugin-qiankun/dist/helper';
 
 import { initComponentAdapter } from './adapter/component';
 import { initSetupYDSZForm } from './adapter/form';
@@ -121,14 +117,7 @@ async function update(props: Record<string, unknown>) {
   console.warn('[cronjob-web] update', props);
 }
 
-renderWithQiankun({
-  bootstrap,
-  mount,
-  unmount,
-  update,
-});
-
-if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
+if (!import.meta.env.VITE_APP_NAMESPACE) {
   (async () => {
     await initPreferences({
       namespace,

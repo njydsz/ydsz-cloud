@@ -35,7 +35,6 @@ import { createQiankunAdapter } from '@ydsz/micro-adapter-qiankun';
 import { createLiteKernel } from '@ydsz/micro-kernel-lite';
 import {
   createRuntime,
-  provideGlobalState,
   registerKernel,
   type KernelName,
 } from '@ydsz/micro-runtime';

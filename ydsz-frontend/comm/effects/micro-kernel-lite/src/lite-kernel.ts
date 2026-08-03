@@ -20,7 +20,6 @@ import type {
   MicroRuntime,
   RawGlobalStateAPI,
   StartOptions,
-  UnmountResult,
 } from '@ydsz/micro-runtime';
 
 import { clearDegraded, isDegraded, markDegraded, renderErrorFallback } from './error-boundary';

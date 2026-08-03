@@ -178,6 +178,43 @@ const customConfig: Linter.Config[] = [
       'no-console': 'off',
     },
   },
+  // === 微前端架构约束 ===
+  {
+    // 子应用中禁止引入 shadcn-ui / radix-vue（组件体系收敛为 Element Plus + vxe-table）
+    files: ['apps/**/**', 'main/**/**'],
+    ignores: restrictedImportIgnores,
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@ydsz-core/ui-kit/shadcn-ui',
+              message: '[架构] 新页面禁止引入 shadcn-ui。统一使用 Element Plus 组件，存量代码随迭代逐步替换。',
+            },
+            {
+              name: 'radix-vue',
+              message: '[架构] 禁止直接引入 radix-vue，使用 Element Plus 对应组件替代。',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // 子应用中禁止直接写 window 全局变量（依赖 lite-kernel 快照沙箱兜底，lint 前置拦截）
+    files: ['apps/**/**'],
+    ignores: restrictedImportIgnores,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "AssignmentExpression[left.type='MemberExpression'][left.object.type='Identifier'][left.object.name='window']",
+          message: '[沙箱] 禁止子应用中直接给 window 挂属性。如需跨应用通信请使用 globalState 或对应的 Pinia store。',
+        },
+      ],
+    },
+  },
 ];
 
 export { customConfig };

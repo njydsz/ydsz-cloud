@@ -52,7 +52,6 @@ catalog:
   '@vueuse/core': ^13.4.0
   '@vueuse/integrations': ^13.4.0
   '@vueuse/motion': ^3.0.3
-  qiankun: ^2.10.16
   archiver: ^7.0.1
   autoprefixer: ^10.4.21
   axios: ^1.10.0
