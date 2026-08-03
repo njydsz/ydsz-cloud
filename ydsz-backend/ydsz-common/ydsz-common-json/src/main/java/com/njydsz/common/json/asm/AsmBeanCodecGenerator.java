@@ -958,9 +958,11 @@ public final class AsmBeanCodecGenerator {
         // 栈: [long_value] — 先存储到临时变量（long 占2个槽位：6和7）
         mv.visitVarInsn(LSTORE, 6);
         // pos += NumberUtils.writeLong(value, buf, pos)
+        // 栈布局: [pos, writeLong(value, buf, pos)] → IADD → [pos + written]
+        mv.visitVarInsn(ILOAD, 4);     // pos (用于加法)
         mv.visitVarInsn(LLOAD, 6);     // long_value
         mv.visitVarInsn(ALOAD, 3);     // buf
-        mv.visitVarInsn(ILOAD, 4);     // pos
+        mv.visitVarInsn(ILOAD, 4);     // pos (writeLong 参数)
         mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/number/NumberUtils", "writeLong", "(J[CI)I", false);
         mv.visitInsn(IADD);
         mv.visitVarInsn(ISTORE, 4);    // pos = pos + result
@@ -1796,9 +1798,12 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 重置 ASM 状态（用于测试）
+     * 重置 ASM 状态（用于测试）。
+     *
+     * <p>清除类加载器缓存和计数器，使后续测试可重新生成同名 ASM 类。
+     * 仅应在测试 {@code @BeforeEach} 中调用。</p>
      */
-    static void resetForTest() {
+    public static void resetForTest() {
         degradedToReflection = false;
         GENERATED_CLASS_COUNT.set(0);
         CLASSLOADER_CACHE.clear();

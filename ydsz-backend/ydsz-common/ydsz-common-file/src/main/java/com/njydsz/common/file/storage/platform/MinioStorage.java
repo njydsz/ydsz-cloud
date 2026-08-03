@@ -59,8 +59,7 @@ import io.minio.MinioClient;
  * @see MinioClient
  */
 @Slf4j
-public class MinioStorage
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MinioStorage.class); extends AbstractFileStorage {
+public class MinioStorage extends AbstractFileStorage {
 
     private final MinioClient minioClient;
 

@@ -96,13 +96,22 @@ public class NettyProperties {
     /** 原生传输模式（auto=自动检测, enabled=强制启用, disabled=禁用） */
     private NativeTransportMode nativeTransport = NativeTransportMode.AUTO;
 
-    /** 空闲检测配置 */
+    /**
+     * Netty 原生传输启用模式。
+     *
+     * <p>控制是否优先使用 JNI 原生传输（epoll / kqueue / io_uring）。
+     * {@link #AUTO} 会根据运行平台自动选择，无法加载原生库时回退到 NIO。
+     */
     public enum NativeTransportMode {
+        /** 自动检测平台并选择原生传输，失败时回退 NIO */
         AUTO,
+        /** 强制启用原生传输 */
         ENABLED,
+        /** 禁用原生传输，始终使用 NIO */
         DISABLED
     }
 
+    /** 空闲检测配置 */
     private Idle idle = new Idle();
 
     /** SSL/TLS 配置 */
@@ -114,6 +123,12 @@ public class NettyProperties {
     /** 断线重连配置 */
     private Reconnect reconnect = new Reconnect();
 
+    /**
+     * 空闲检测配置（IdleStateHandler）。
+     *
+     * <p>用于探测连接空闲状态，配合心跳机制及时发现半开连接与死连接；
+     * 任一超时时间设为 0 表示不检测对应方向。
+     */
     @Data
     public static class Idle {
         /** 读空闲超时（秒），0 表示不检测 */
@@ -127,6 +142,12 @@ public class NettyProperties {
         private long allIdleSeconds = 0L;
     }
 
+    /**
+     * SSL/TLS 加密配置。
+     *
+     * <p>用于为 TCP Server/Client 通道启用 SSL/TLS 加密，支持单向与双向认证；
+     * 密钥库/信任库路径支持 classpath: 前缀。
+     */
     @Data
     public static class Ssl {
         /** 是否启用 SSL/TLS */
@@ -147,6 +168,12 @@ public class NettyProperties {
         private boolean needClientAuth = false;
     }
 
+    /**
+     * 流量整形配置（GlobalTrafficShapingHandler）。
+     *
+     * <p>限制读写带宽，防止单个连接或整个 Server 的流量峰值打爆对端或上游；
+     * 写/读限速设为 0 表示不限速。
+     */
     @Data
     public static class TrafficShaping {
         /** 是否启用流量整形 */
@@ -164,6 +191,13 @@ public class NettyProperties {
         private boolean global = false;
     }
 
+    /**
+     * 断线重连配置。
+     *
+     * <p>当连接异常断开时按指数退避策略自动重连：
+     * 重连延迟从 initialDelayMs 起翻倍增长，直至达到 maxDelayMs 上限；
+     * 若配置的最终延迟（initialDelayMs * 2^(maxRetries-1)）未达 maxDelayMs 则按计算结果重试。
+     */
     @Data
     public static class Reconnect {
         /** 是否启用断线重连 */

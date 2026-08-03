@@ -495,6 +495,13 @@ public class WebSocketAutoConfiguration {
         return new RetryFlushTask(pushTemplate, ackService);
 }
 
+    /**
+     * 重试刷新定时任务。
+     *
+     * <p>由 Spring 调度线程周期性驱动：重投推送模板中待重试的消息，并清理
+     * ACK 服务的本地过期回执。作为异步投递的补偿执行入口，保证"至少一次"投递语义
+     * 下的延迟消息最终可达。
+     */
     public static class RetryFlushTask {
         private final RealtimePushTemplate pushTemplate;
         private final MessageAckService ackService;

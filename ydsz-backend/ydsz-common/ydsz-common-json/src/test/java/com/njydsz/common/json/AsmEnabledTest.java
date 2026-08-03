@@ -1,5 +1,6 @@
 package com.njydsz.common.json;
 
+import com.njydsz.common.json.asm.AsmBeanCodecGenerator;
 import com.njydsz.common.json.asm.AsmSerializer;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.cache.AsmCodecCache;
@@ -19,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <ol>
  *   <li>SecureAsmClassLoader.defineInternal 前缀检查改后缀校验（_ASM_Serializer/_ASM_Deserializer）</li>
  *   <li>ASM_FLAGS 改用 COMPUTE_MAXS 避免 ASM 9.x 的 NegativeArraySizeException（COMPUTE_FRAMES bug）</li>
+ *   <li>emitWriteIntDirect/emitWriteLongDirect 栈修复：IADD 前补充 ILOAD pos</li>
+ *   <li>@BeforeEach 调用 AsmBeanCodecGenerator.resetForTest() 清理类加载器缓存</li>
  * </ol>
  */
 class AsmEnabledTest {
@@ -26,6 +29,7 @@ class AsmEnabledTest {
     @BeforeEach
     void setUp() {
         AutoTypeChecker.setSafeMode(false);
+        AsmBeanCodecGenerator.resetForTest();
         AsmCodecCache.clearCache();
     }
 

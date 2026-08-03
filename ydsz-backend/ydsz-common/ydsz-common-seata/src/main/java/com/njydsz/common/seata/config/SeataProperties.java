@@ -79,6 +79,12 @@ public class SeataProperties {
     /** TCC 日志 Redis 保留时长（小时，仅当 tcc-log-store=redis 时生效） */
     private int tccLogRedisRetentionHours = 24;
 
+    /**
+     * TCC 事务日志存储类型。
+     *
+     * <p>决定 TCC 一阶段确认信息持久化在哪里，直接影响分布式事务的恢复能力：
+     * 生产环境跨服务共享时必须选择 {@link #REDIS}，否则事务恢复扫描无法跨实例工作。
+     */
     public enum TccLogStoreType {
         /** 内存实现（单机/测试） */
         MEMORY,

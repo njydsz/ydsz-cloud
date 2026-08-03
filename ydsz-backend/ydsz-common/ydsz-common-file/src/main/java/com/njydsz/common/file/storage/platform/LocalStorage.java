@@ -47,8 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  * 
  */
 @Slf4j
-public class LocalStorage
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LocalStorage.class); extends AbstractFileStorage {
+public class LocalStorage extends AbstractFileStorage {
 
     /**
      * uploadId 校验规则（白名单字符 + 长度限制），用于阻断路径注入与非法参数
