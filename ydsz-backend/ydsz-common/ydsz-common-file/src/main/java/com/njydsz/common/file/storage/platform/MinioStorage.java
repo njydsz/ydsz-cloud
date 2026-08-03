@@ -345,9 +345,9 @@ public class MinioStorage
                         String numStr = name.substring(name.lastIndexOf("/part-") + 6);
                         int partNumber = Integer.parseInt(numStr);
                         parts.add(new PartInfo(partNumber, null, item.size()));
-                    }                     } catch (NumberFormatException ignored) {
-                    }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-                    } }
+                    } catch (NumberFormatException ignored) {
+                        log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                    }
                 }
             }
         } catch (Exception e) {

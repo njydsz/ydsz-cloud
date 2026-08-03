@@ -29,8 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class ElkLogPublisher
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ElkLogPublisher.class); implements LogPublisher, AutoCloseable {
+public class ElkLogPublisher implements LogPublisher, AutoCloseable {
 
     private final String host;
     private final int port;
@@ -187,12 +186,13 @@ public class ElkLogPublisher
     public void close() {
         closeTcpSocketQuietly();
         if (udpSocket != null) {
-            try { udpSocket.close(); }             try { udpSocket.close(); } catch (Exception ignored) {
-            try { udpSocket.close(); }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            try { udpSocket.close(); } }
+            try {
+                udpSocket.close();
+            } catch (Exception ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
             udpSocket = null;
         }
-        log.info("[Sentry] ElkLogPublisher 已关闭");
         log.info("[Sentry] ElkLogPublisher 已关闭");
     }
 }

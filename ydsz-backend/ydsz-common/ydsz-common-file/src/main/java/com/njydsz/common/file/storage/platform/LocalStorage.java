@@ -314,9 +314,9 @@ public class LocalStorage
                             int partNumber = Integer.parseInt(fileName.substring("part-".length()));
                             long size = Files.size(p);
                             parts.add(new PartInfo(partNumber, null, size));
-                        }                         } catch (NumberFormatException ignored) {
-                        }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-                        } } catch (IOException e) {
+                        } catch (NumberFormatException ignored) {
+                            log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                        } catch (IOException e) {
                             log.warn("[Local] listParts get size failed, path={}, message={}", p, e.getMessage());
                         }
                     });

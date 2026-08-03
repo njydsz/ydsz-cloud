@@ -23,9 +23,6 @@ class HashUtilsTest {
     /**
      * 测试分组：CRC32 校验和
      */
-    /**
-     * 测试分组：「相同输入产生相同 CRC32」等
-     */
     class Crc32 {
 
         @Test
@@ -54,12 +51,12 @@ class HashUtilsTest {
             assertThat(HashUtils.crc32("")).isNotNegative();
         }
     }
-    /**
-     * 测试分组：「MurmurHash32」等
-     */
 
     @Nested
     @DisplayName("MurmurHash32")
+    /**
+     * 测试分组：MurmurHash32
+     */
     class MurmurHash32 {
 
         @Test
@@ -79,16 +76,16 @@ class HashUtilsTest {
         void hashIsWithinIntRange() {
             for (String s : Arrays.asList("", "a", "ab", "hello world", "中文测试")) {
                 int hash = HashUtils.murmurHash32(s);
-                assertThat(hash).isBetween(Integer.MIN_VALUE, Inte    /**
-     * 测试分组：「Base62 编解码」等
-     */
-ger.MAX_VALUE);
+                assertThat(hash).isBetween(Integer.MIN_VALUE, Integer.MAX_VALUE);
             }
         }
     }
 
     @Nested
     @DisplayName("Base62 编解码")
+    /**
+     * 测试分组：Base62 编解码
+     */
     class Base62 {
 
         @Test
@@ -120,16 +117,16 @@ ger.MAX_VALUE);
         @DisplayName("hashToBase62 同一字符串稳定")
         void hashToBase62Stable() {
             String b1 = HashUtils.hashToBase62("consistent-hash-key");
-            String b2 = HashUtils.hashToB    /**
-     * 测试分组：「Base58 编解码」等
-     */
-ase62("consistent-hash-key");
+            String b2 = HashUtils.hashToBase62("consistent-hash-key");
             assertThat(b1).isEqualTo(b2);
         }
     }
 
     @Nested
     @DisplayName("Base58 编解码")
+    /**
+     * 测试分组：Base58 编解码
+     */
     class Base58 {
 
         @Test
@@ -153,16 +150,16 @@ ase62("consistent-hash-key");
         @Test
         @DisplayName("Base58 不包含易混淆字符 0/O/I/l")
         void base58ShouldNotContainAmbiguousChars() {
-            String enc    /**
-     * 测试分组：「一致性哈希」等
-     */
-oded = HashUtils.stringToBase58("O0Il1ambiguity");
+            String encoded = HashUtils.stringToBase58("O0Il1ambiguity");
             assertThat(encoded).doesNotContain("0", "O", "I", "l");
         }
     }
 
     @Nested
     @DisplayName("一致性哈希")
+    /**
+     * 测试分组：一致性哈希
+     */
     class ConsistentHash {
 
         @Test

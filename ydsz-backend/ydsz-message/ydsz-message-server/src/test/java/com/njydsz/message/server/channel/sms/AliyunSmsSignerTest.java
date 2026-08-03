@@ -28,9 +28,6 @@ class AliyunSmsSignerTest {
     /**
      * 测试分组：sign() 签名计算
      */
-    /**
-     * 测试分组：「已知参数和密钥生成确定性签名」等
-     */
     class SignTest {
 
         @Test
@@ -102,11 +99,11 @@ class AliyunSmsSignerTest {
         }
     }
 
-    @Nes    /**
-     * 测试分组：「percentEncode() 百分号编码」等
-     */
-ted
+    @Nested
     @DisplayName("percentEncode() 百分号编码")
+    /**
+     * 测试分组：percentEncode() 百分号编码
+     */
     class PercentEncodeTest {
 
         @Test
@@ -163,15 +160,15 @@ ted
         @Test
         @DisplayName("空字符串返回空字符串")
         void shouldReturnEmptyStringForEmptyString() {
-            assertThat(AliyunSmsSigner.percentEncode    /**
-     * 测试分组：「buildCanonicalQuery() 规范化查询串」等
-     */
-("")).isEqualTo("");
+            assertThat(AliyunSmsSigner.percentEncode("")).isEqualTo("");
         }
     }
 
     @Nested
     @DisplayName("buildCanonicalQuery() 规范化查询串")
+    /**
+     * 测试分组：buildCanonicalQuery() 规范化查询串
+     */
     class BuildCanonicalQueryTest {
 
         @Test
@@ -217,15 +214,15 @@ ted
             params.put("SignName", "测试 签名");
 
             String result = AliyunSmsSigner.buildCanonicalQuery(params);
-         /**
-     * 测试分组：「buildQuery() 查询字符串拼接」等
-     */
-       assertThat(result).isEqualTo("SignName=%E6%B5%8B%E8%AF%95%20%E7%AD%BE%E5%90%8D");
+            assertThat(result).isEqualTo("SignName=%E6%B5%8B%E8%AF%95%20%E7%AD%BE%E5%90%8D");
         }
     }
 
     @Nested
     @DisplayName("buildQuery() 查询字符串拼接")
+    /**
+     * 测试分组：buildQuery() 查询字符串拼接
+     */
     class BuildQueryTest {
 
         @Test

@@ -53,9 +53,6 @@ class ConsistentHashSharderTest {
     /**
      * 测试分组：updateNodes 节点列表更新
      */
-    /**
-     * 测试分组：「更新非空节点列表后环非空」等
-     */
     class UpdateNodes {
 
         @Test
@@ -126,11 +123,11 @@ class ConsistentHashSharderTest {
         }
     }
 
-    /**
-     * 测试分组：「shard 分片确定性」等
-     */
     @Nested
     @DisplayName("shard 分片确定性")
+    /**
+     * 测试分组：shard 分片确定性
+     */
     class ShardDeterminism {
 
         @Test
@@ -194,16 +191,16 @@ class ConsistentHashSharderTest {
             // 任意 key 都应返回非 null 节点（覆盖环回绕与正常路径）
             for (int i = 0; i < 1000; i++) {
                 ClusterNode owner = sharder.shard(UUID.randomUUID().toString());
-                assertThat(owner).i    /**
-     * 测试分组：「isMine 归属判断」等
-     */
-sNotNull();
+                assertThat(owner).isNotNull();
             }
         }
     }
 
     @Nested
     @DisplayName("isMine 归属判断")
+    /**
+     * 测试分组：isMine 归属判断
+     */
     class IsMineCheck {
 
         @Test
@@ -238,16 +235,16 @@ sNotNull();
         @Test
         @DisplayName("null nodeId 时 isMine 返回 false")
         void shouldReturnFalseForNullNodeId() {
-            sharder.updateNodes(List.of(node("n1", "127.0.0.1:9001"    /**
-     * 测试分组：「静态 isMine 方法」等
-     */
-)));
+            sharder.updateNodes(List.of(node("n1", "127.0.0.1:9001")));
             assertThat(sharder.isMine("any", null)).isFalse();
         }
     }
 
     @Nested
     @DisplayName("静态 isMine 方法")
+    /**
+     * 测试分组：静态 isMine 方法
+     */
     class StaticIsMine {
 
         @Test
@@ -300,10 +297,7 @@ sNotNull();
                 // 静态方法基于 hash % size，只有一个节点会返回 true
                 long trueCount = 0;
                 if (n1) trueCount++;
-                if (n2    /**
-     * 测试分组：「权重与均匀性」等
-     */
-) trueCount++;
+                if (n2) trueCount++;
                 if (n3) trueCount++;
                 assertThat(trueCount).isEqualTo(1);
             }
@@ -312,6 +306,9 @@ sNotNull();
 
     @Nested
     @DisplayName("权重与均匀性")
+    /**
+     * 测试分组：权重与均匀性
+     */
     class WeightAndDistribution {
 
         @Test
@@ -379,10 +376,7 @@ sNotNull();
             }
 
             // 每个节点至少分得 20%（3000 * 0.2 = 600）
-            assertThat(counter.g    /**
-     * 测试分组：「节点变更最小迁移」等
-     */
-et("n1")).isGreaterThan(600);
+            assertThat(counter.get("n1")).isGreaterThan(600);
             assertThat(counter.get("n2")).isGreaterThan(600);
             assertThat(counter.get("n3")).isGreaterThan(600);
         }
@@ -390,6 +384,9 @@ et("n1")).isGreaterThan(600);
 
     @Nested
     @DisplayName("节点变更最小迁移")
+    /**
+     * 测试分组：节点变更最小迁移
+     */
     class MinimalMigration {
 
         @Test
@@ -456,10 +453,7 @@ et("n1")).isGreaterThan(600);
             sharder.updateNodes(twoNodes);
 
             // 原 n3 的 key 必须落到 n1 或 n2，不能丢失
-            for (String ke    /**
-     * 测试分组：「虚拟节点数配置」等
-     */
-y : n3Keys) {
+            for (String key : n3Keys) {
                 ClusterNode owner = sharder.shard(key);
                 assertThat(owner).isNotNull();
                 assertThat(owner.getNodeId()).isIn("n1", "n2");
@@ -469,6 +463,9 @@ y : n3Keys) {
 
     @Nested
     @DisplayName("虚拟节点数配置")
+    /**
+     * 测试分组：虚拟节点数配置
+     */
     class VirtualNodesConfig {
 
         @Test
@@ -493,10 +490,7 @@ y : n3Keys) {
 
         @Test
         @DisplayName("负数虚拟节点数被强制为 1")
-        void shouldForceMinForNegativeVirtualNode    /**
-     * 测试分组：负数虚拟节点数被强制为 1
-     */
-s() {
+        void shouldForceMinForNegativeVirtualNodes() {
             ConsistentHashSharder negSharder = new ConsistentHashSharder(-5);
             negSharder.updateNodes(List.of(node("n1", "127.0.0.1:9001")));
             assertThat(negSharder.shard("any-key")).isNotNull();
@@ -505,6 +499,9 @@ s() {
 
     @Nested
     @DisplayName("getNodeCount 节点计数")
+    /**
+     * 测试分组：getNodeCount 节点计数
+     */
     class NodeCount {
 
         @Test

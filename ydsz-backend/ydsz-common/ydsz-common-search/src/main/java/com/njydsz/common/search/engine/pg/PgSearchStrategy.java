@@ -56,8 +56,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class PgSearchStrategy
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PgSearchStrategy.class); implements SearchStrategy, IndexStrategy, SuggestStrategy {
+public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestStrategy {
 
     private static final String ENGINE_NAME = "pg";
     private static final String DEFAULT_SEARCH_CONFIG = "search_zh";

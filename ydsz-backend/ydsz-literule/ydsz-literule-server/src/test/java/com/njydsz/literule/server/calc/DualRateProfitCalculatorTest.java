@@ -25,9 +25,6 @@ class DualRateProfitCalculatorTest {
     /**
      * 测试分组：单一职级 calculate 计算
      */
-    /**
-     * 测试分组：「正常计算：对外1000/成本600/工时10 → 收入10000 成本6000 利润4000 毛利率40%」等
-     */
     class CalculateCases {
 
         @Test
@@ -101,15 +98,15 @@ class DualRateProfitCalculatorTest {
             assertThat(result.externalRevenue).isEqualByComparingTo(new BigDecimal("5000"));
             assertThat(result.internalCost).isEqualByComparingTo(new BigDecimal("8000"));
             assertThat(result.grossProfit).isEqualByComparingTo(new BigDecimal("-3000"));
-            assertThat(result.grossMargin).isEqualByComparingTo(new BigDecimal    /**
-     * 测试分组：「混合职级 calculateBlended 计算」等
-     */
-("-0.6"));
+            assertThat(result.grossMargin).isEqualByComparingTo(new BigDecimal("-0.6"));
         }
     }
 
     @Nested
     @DisplayName("混合职级 calculateBlended 计算")
+    /**
+     * 测试分组：混合职级 calculateBlended 计算
+     */
     class BlendedCases {
 
         @Test
@@ -196,15 +193,15 @@ class DualRateProfitCalculatorTest {
             assertThat(blended.grossProfit).isEqualByComparingTo(single.grossProfit);
             assertThat(blended.grossMargin).isEqualByComparingTo(single.grossMargin);
             assertThat(blended.expectedHours).isEqualByComparingTo(single.expectedHours);
-            asser    /**
-     * 测试分组：「利润率达成判断 marginAchieved」等
-     */
-tThat(blended.blendedRate).isEqualByComparingTo(single.blendedRate);
+            assertThat(blended.blendedRate).isEqualByComparingTo(single.blendedRate);
         }
     }
 
     @Nested
     @DisplayName("利润率达成判断 marginAchieved")
+    /**
+     * 测试分组：利润率达成判断 marginAchieved
+     */
     class MarginAchievedCases {
 
         @Test

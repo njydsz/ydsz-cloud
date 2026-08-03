@@ -44,8 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GlobalConcurrencyController
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalConcurrencyController.class); {
+public class GlobalConcurrencyController {
 
     private final RedisService redisService;
     private final CronjobProperties cronjobProperties;
@@ -147,9 +146,9 @@ public class GlobalConcurrencyController
         } finally {
             try {
                 redisService.delete(CALIBRATION_LOCK_KEY);
-            }             } catch (Exception ignored) {
-            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            } }
+            } catch (Exception ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
         }
     }
 }

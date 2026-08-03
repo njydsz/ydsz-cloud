@@ -23,9 +23,6 @@ class EncodingUtilsTest {
     /**
      * 测试分组：Base64
      */
-    /**
-     * 测试分组：「标准 Base64 编解码往返一致」等
-     */
     class Base64 {
 
         @Test
@@ -66,14 +63,14 @@ class EncodingUtilsTest {
         void illegalBase64Throws() {
             assertThatThrownBy(() -> EncodingUtils.decodeBase64("这不是 Base64!"))
                     .isInstanceOf(IllegalArgumentException.class);
-           /**
-     * 测试分组：「Base32」等
-     */
- }
+        }
     }
 
     @Nested
     @DisplayName("Base32")
+    /**
+     * 测试分组：Base32
+     */
     class Base32 {
 
         @Test
@@ -122,15 +119,15 @@ class EncodingUtilsTest {
         void illegalCharThrows() {
             assertThatThrownBy(() -> EncodingUtils.decodeBase32("INVALID!@#"))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Ill    /**
-     * 测试分组：「Base16 / Hex」等
-     */
-egal Base32 character");
+                    .hasMessageContaining("Illegal Base32 character");
         }
     }
 
     @Nested
     @DisplayName("Base16 / Hex")
+    /**
+     * 测试分组：Base16 / Hex
+     */
     class Hex {
 
         @Test
@@ -169,16 +166,16 @@ egal Base32 character");
         @DisplayName("非法 Hex 字符抛 IllegalArgumentException")
         void illegalHexCharThrows() {
             assertThatThrownBy(() -> EncodingUtils.decodeHex("XY"))
-                    .isInstanceOf(IllegalArgumentException.    /**
-     * 测试分组：「URL 编码」等
-     */
-class)
+                    .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Illegal hex character");
         }
     }
 
     @Nested
     @DisplayName("URL 编码")
+    /**
+     * 测试分组：URL 编码
+     */
     class UrlEncoding {
 
         @Test

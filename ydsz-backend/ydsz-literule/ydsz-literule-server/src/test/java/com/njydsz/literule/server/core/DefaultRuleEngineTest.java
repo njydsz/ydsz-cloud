@@ -72,9 +72,6 @@ class DefaultRuleEngineTest {
     /**
      * 测试分组：register / unregister 注册与注销
      */
-    /**
-     * 测试分组：「注册 null 规则时静默跳过，不影响已注册规则」等
-     */
     class RegisterUnregisterCases {
 
         @Test
@@ -136,14 +133,14 @@ class DefaultRuleEngineTest {
             engine.unregister("NOT_EXIST");
 
             assertThat(engine.getRules()).hasSize(1);
-           /**
-     * 测试分组：「evaluate 规则评估」等
-     */
- }
+        }
     }
 
     @Nested
     @DisplayName("evaluate 规则评估")
+    /**
+     * 测试分组：evaluate 规则评估
+     */
     class EvaluateCases {
 
         @Test
@@ -380,15 +377,15 @@ class DefaultRuleEngineTest {
             assertThat(results).hasSize(3);
             assertThat(results.get(0).getSeverity()).isEqualTo(RuleSeverity.RED);
             assertThat(results.get(1).getSeverity()).isEqualTo(RuleSeverity.YELLOW);
-            assertThat(results.get(2).getSe    /**
-     * 测试分组：「dryRun 仿真评估」等
-     */
-verity()).isEqualTo(RuleSeverity.INFO);
+            assertThat(results.get(2).getSeverity()).isEqualTo(RuleSeverity.INFO);
         }
     }
 
     @Nested
     @DisplayName("dryRun 仿真评估")
+    /**
+     * 测试分组：dryRun 仿真评估
+     */
     class DryRunCases {
 
         @Test
@@ -430,16 +427,16 @@ verity()).isEqualTo(RuleSeverity.INFO);
             engine.dryRun(contextWithFacts(facts));
 
             RuleEngineStats stats = engine.getStats();
-            assertThat(stats.getTotalEvaluatio    /**
-     * 测试分组：「topResult 取最高严重度结果」等
-     */
-ns()).isZero();
+            assertThat(stats.getTotalEvaluations()).isZero();
             assertThat(stats.getTotalTriggered()).isZero();
         }
     }
 
     @Nested
     @DisplayName("topResult 取最高严重度结果")
+    /**
+     * 测试分组：topResult 取最高严重度结果
+     */
     class TopResultCases {
 
         @Test
@@ -473,10 +470,7 @@ ns()).isZero();
             Rule rule = mockRule("R001", "未触发规则", 100);
             engine.register(rule);
 
-            Map<String, Object> fa    /**
-     * 测试分组：「getStats 统计计数」等
-     */
-cts = new HashMap<>();
+            Map<String, Object> facts = new HashMap<>();
             facts.put("v", 1);
 
             assertThat(engine.topResult(contextWithFacts(facts))).isNull();
@@ -485,6 +479,9 @@ cts = new HashMap<>();
 
     @Nested
     @DisplayName("getStats 统计计数")
+    /**
+     * 测试分组：getStats 统计计数
+     */
     class StatsCases {
 
         @Test
@@ -587,10 +584,7 @@ cts = new HashMap<>();
 
             engine.evaluate(contextWithFacts(facts));
 
-      /**
-     * 测试分组：「MDC traceId 传播」等
-     */
-          RuleEngineStats stats = engine.getStats();
+            RuleEngineStats stats = engine.getStats();
             assertThat(stats.getTotalEvaluations()).isZero();
             assertThat(stats.getTotalTriggered()).isZero();
         }
@@ -598,6 +592,9 @@ cts = new HashMap<>();
 
     @Nested
     @DisplayName("MDC traceId 传播")
+    /**
+     * 测试分组：MDC traceId 传播
+     */
     class MdcTraceIdCases {
 
         @Test

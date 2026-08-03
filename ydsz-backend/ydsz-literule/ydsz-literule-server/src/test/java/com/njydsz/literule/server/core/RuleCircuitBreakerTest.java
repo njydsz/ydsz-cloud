@@ -29,9 +29,6 @@ class RuleCircuitBreakerTest {
     /**
      * 测试分组：构造器参数校验
      */
-    /**
-     * 测试分组：「errorRateThreshold <= 0 时抛 IllegalArgumentException」等
-     */
     class ConstructorCases {
 
         @Test
@@ -63,15 +60,15 @@ class RuleCircuitBreakerTest {
         void shouldAllowThresholdEqualsOne() {
             RuleCircuitBreaker breaker = new RuleCircuitBreaker(1.0, MIN_EVALS, OPEN_MS);
 
-            assertThat(breaker.getState("R001")).i    /**
-     * 测试分组：「CLOSED 状态」等
-     */
-sEqualTo(State.CLOSED);
+            assertThat(breaker.getState("R001")).isEqualTo(State.CLOSED);
         }
     }
 
     @Nested
     @DisplayName("CLOSED 状态")
+    /**
+     * 测试分组：CLOSED 状态
+     */
     class ClosedStateCases {
 
         @Test
@@ -109,15 +106,15 @@ sEqualTo(State.CLOSED);
             breaker.recordResult("R001", true);
             breaker.recordResult("R001", false);
 
-            assert    /**
-     * 测试分组：「CLOSED → OPEN 状态转换」等
-     */
-That(breaker.getState("R001")).isEqualTo(State.CLOSED);
+            assertThat(breaker.getState("R001")).isEqualTo(State.CLOSED);
         }
     }
 
     @Nested
     @DisplayName("CLOSED → OPEN 状态转换")
+    /**
+     * 测试分组：CLOSED → OPEN 状态转换
+     */
     class ClosedToOpenCases {
 
         @Test
@@ -156,10 +153,7 @@ That(breaker.getState("R001")).isEqualTo(State.CLOSED);
             breaker.recordResult("R001", false);
             breaker.recordResult("R001", false);
             breaker.recordResult("R001", false);
-            assertThat(breaker.getS    /**
-     * 测试分组：「OPEN → HALF_OPEN 状态转换」等
-     */
-tate("R001")).isEqualTo(State.OPEN);
+            assertThat(breaker.getState("R001")).isEqualTo(State.OPEN);
 
             assertThat(breaker.allowEvaluate("R001")).isFalse();
         }
@@ -167,6 +161,9 @@ tate("R001")).isEqualTo(State.OPEN);
 
     @Nested
     @DisplayName("OPEN → HALF_OPEN 状态转换")
+    /**
+     * 测试分组：OPEN → HALF_OPEN 状态转换
+     */
     class OpenToHalfOpenCases {
 
         @Test
@@ -199,10 +196,7 @@ tate("R001")).isEqualTo(State.OPEN);
             // 等待超过 openStateMs
             Thread.sleep(OPEN_MS + 20);
 
-            // allowEvaluat    /**
-     * 测试分组：「HALF_OPEN 状态转换」等
-     */
-e 触发 OPEN → HALF_OPEN
+            // allowEvaluate 触发 OPEN → HALF_OPEN
             assertThat(breaker.allowEvaluate("R001")).isTrue();
             assertThat(breaker.getState("R001")).isEqualTo(State.HALF_OPEN);
         }
@@ -210,6 +204,9 @@ e 触发 OPEN → HALF_OPEN
 
     @Nested
     @DisplayName("HALF_OPEN 状态转换")
+    /**
+     * 测试分组：HALF_OPEN 状态转换
+     */
     class HalfOpenCases {
 
         /**
@@ -261,10 +258,7 @@ e 触发 OPEN → HALF_OPEN
 
             // 重新累积失败，应能再次触发 OPEN
             breaker.recordResult("R001", false);
-            breaker.recordResult("R001",     /**
-     * 测试分组：「多规则独立熔断」等
-     */
-false);
+            breaker.recordResult("R001", false);
             breaker.recordResult("R001", false);
             // 第 4 次失败（计数器重置后从 0 开始）
             breaker.recordResult("R001", false);
@@ -275,6 +269,9 @@ false);
 
     @Nested
     @DisplayName("多规则独立熔断")
+    /**
+     * 测试分组：多规则独立熔断
+     */
     class MultiRuleCases {
 
         @Test

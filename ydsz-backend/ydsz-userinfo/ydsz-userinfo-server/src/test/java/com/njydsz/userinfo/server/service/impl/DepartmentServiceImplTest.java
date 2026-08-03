@@ -63,9 +63,6 @@ class DepartmentServiceImplTest {
     /**
      * 测试分组：getById — 根据ID查询部门
      */
-    /**
-     * 测试分组：「部门存在且未删除时，应返回 DepartmentVO」等
-     */
     class GetByIdTest {
 
         @Test
@@ -110,14 +107,14 @@ class DepartmentServiceImplTest {
             // when & then
             assertThatThrownBy(() -> departmentService.getById("dept-002"))
                     .isInstanceOf(BusinessException.class);
-           /**
-     * 测试分组：「list — 查询全部部门列表」等
-     */
- }
+        }
     }
 
     @Nested
     @DisplayName("list — 查询全部部门列表")
+    /**
+     * 测试分组：list — 查询全部部门列表
+     */
     class ListTest {
 
         @Test
@@ -157,15 +154,15 @@ class DepartmentServiceImplTest {
             List<DepartmentVO> result = departmentService.list();
 
             // then
-            /**
-     * 测试分组：「removeById — 删除部门前置校验」等
-     */
-    assertThat(result).isEmpty();
+            assertThat(result).isEmpty();
         }
     }
 
     @Nested
     @DisplayName("removeById — 删除部门前置校验")
+    /**
+     * 测试分组：removeById — 删除部门前置校验
+     */
     class RemoveByIdTest {
 
         @Test

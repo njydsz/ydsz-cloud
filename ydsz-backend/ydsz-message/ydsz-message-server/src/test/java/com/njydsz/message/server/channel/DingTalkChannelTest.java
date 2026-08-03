@@ -51,9 +51,6 @@ class DingTalkChannelTest {
     /**
      * 测试分组：appendSign() 加签
      */
-    /**
-     * 测试分组：「正常加签: 返回带 timestamp/sign 的 URL」等
-     */
     class AppendSignTest {
 
         @Test
@@ -80,13 +77,13 @@ class DingTalkChannelTest {
             assertThat(signed).isNotNull();
             assertThat(signed).contains("timestamp=");
         }
-    /**
-     * 测试分组：「resolveUrl() URL 解析优先级」等
-     */
     }
 
     @Nested
     @DisplayName("resolveUrl() URL 解析优先级")
+    /**
+     * 测试分组：resolveUrl() URL 解析优先级
+     */
     class ResolveUrlTest {
 
         @Test
@@ -144,10 +141,7 @@ class DingTalkChannelTest {
         void returnsNullWhenNoConfig() {
             MessageRequest req = new MessageRequest();
 
-            String url = channel.resolveUrl    /**
-     * 测试分组：「buildPayload() 请求体构造」等
-     */
-(req);
+            String url = channel.resolveUrl(req);
 
             assertThat(url).isNull();
         }
@@ -155,6 +149,9 @@ class DingTalkChannelTest {
 
     @Nested
     @DisplayName("buildPayload() 请求体构造")
+    /**
+     * 测试分组：buildPayload() 请求体构造
+     */
     class BuildPayloadTest {
 
         @Test

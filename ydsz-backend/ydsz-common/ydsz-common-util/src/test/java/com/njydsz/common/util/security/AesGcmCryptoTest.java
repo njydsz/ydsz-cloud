@@ -31,9 +31,6 @@ class AesGcmCryptoTest {
     /**
      * 测试分组：密钥校验
      */
-    /**
-     * 测试分组：「16 字节密钥合法」等
-     */
     class KeyValidation {
 
         @Test
@@ -71,13 +68,13 @@ class AesGcmCryptoTest {
             assertThatThrownBy(() -> new AesGcmCrypto(null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
-        /**
-     * 测试分组：「加解密往返」等
-     */
-}
+    }
 
     @Nested
     @DisplayName("加解密往返")
+    /**
+     * 测试分组：加解密往返
+     */
     class EncryptDecryptRoundtrip {
 
         @Test
@@ -130,15 +127,15 @@ class AesGcmCryptoTest {
             new SecureRandom().nextBytes(data);
             String plaintext = new String(data, StandardCharsets.ISO_8859_1);
             String ciphertext = crypto.encrypt(plaintext);
-            assertThat(crypto.decrypt(ciphertext)).    /**
-     * 测试分组：「密文篡改检测」等
-     */
-isEqualTo(plaintext);
+            assertThat(crypto.decrypt(ciphertext)).isEqualTo(plaintext);
         }
     }
 
     @Nested
     @DisplayName("密文篡改检测")
+    /**
+     * 测试分组：密文篡改检测
+     */
     class TamperDetection {
 
         @Test

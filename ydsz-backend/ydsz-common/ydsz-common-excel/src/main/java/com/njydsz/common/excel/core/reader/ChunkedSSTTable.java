@@ -268,9 +268,9 @@ public class ChunkedSSTTable {
                             if (vEnd != -1 && vEnd < contentEnd) {
                                 try {
                                     stringIndex = Integer.parseInt(new String(Arrays.copyOfRange(data, vStart, vEnd), StandardCharsets.UTF_8));
-                                }                                 } catch (NumberFormatException e) {
-                                }     log.debug("Caught exception (ignored): {}", e.getMessage());
-                                } }
+                                } catch (NumberFormatException e) {
+                                    log.debug("Caught exception (ignored): {}", e.getMessage());
+                                }
                             }
                         }
                     }
@@ -365,9 +365,9 @@ public class ChunkedSSTTable {
         if (raf != null) {
             try {
                 raf.close();
-            }             } catch (IOException e) {
-            }     log.debug("Caught exception (ignored): {}", e.getMessage());
-            } }
+            } catch (IOException e) {
+                log.debug("Caught exception (ignored): {}", e.getMessage());
+            }
             raf = null;
         }
     }

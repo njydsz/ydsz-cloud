@@ -26,9 +26,6 @@ class GetuiPushSignerTest {
     /**
      * 测试分组：sign() 签名计算
      */
-    /**
-     * 测试分组：「已知 appKey/timestamp/masterSecret 生成确定性签名」等
-     */
     class SignTest {
 
         @Test
@@ -89,14 +86,14 @@ class GetuiPushSignerTest {
                 sb.append(Character.forDigit(b & 0xF, 16));
             }
             return sb.toString();
-    /**
-     * 测试分组：「bytesToHex() 字节数组转十六进制」等
-     */
         }
     }
 
     @Nested
     @DisplayName("bytesToHex() 字节数组转十六进制")
+    /**
+     * 测试分组：bytesToHex() 字节数组转十六进制
+     */
     class BytesToHexTest {
 
         @Test
