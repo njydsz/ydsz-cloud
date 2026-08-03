@@ -80,6 +80,12 @@ class RuleIndexerTest {
 
     @Nested
     @DisplayName("索引启用与重建")
+    /**
+     * 测试分组：索引启用与重建
+     */
+    /**
+     * 测试分组：「初始状态：索引未启用」等
+     */
     class IndexEnableCases {
 
         @Test
@@ -123,7 +129,10 @@ class RuleIndexerTest {
     }
 
     @Nested
-    @DisplayName("addToIndex / removeFromIndex 增量更新")
+    @Display    /**
+     * 测试分组：增量更新用例
+     */
+Name("addToIndex / removeFromIndex 增量更新")
     class IncrementalUpdateCases {
 
         @Test
@@ -179,7 +188,10 @@ class RuleIndexerTest {
             indexer.rebuildIndex(mockRules(10));
 
             // 不应抛异常
-            indexer.removeFromIndex("R0000");
+            indexer.removeFromIndex("R0000");    /**
+     * 测试分组：「findCandidates 按租户+环境+场景过滤」等
+     */
+
         }
     }
 
@@ -312,7 +324,10 @@ class RuleIndexerTest {
 
             // 指定不存在的租户
             Set<String> triggeredGroups = new HashSet<>();
-            List<Rule> candidates = indexer.findCandidates("NON_EXIST_TENANT", RuleEnvironment.DEFAULT, "DEFAULT", triggeredGroups);
+            List<Rule> candidates = indexer.findCandidates("NON_EXIST_TENANT", RuleEnvironment.DEFAULT, "DEFAULT"    /**
+     * 测试分组：「倒排索引与 filterByFacts」等
+     */
+, triggeredGroups);
             assertThat(candidates).isEmpty();
         }
     }
@@ -437,7 +452,10 @@ class RuleIndexerTest {
         @Test
         @DisplayName("extractFields：conditionExpression 为空时返回空集合")
         void shouldReturnEmptyWhenExpressionBlank() {
-            Rule rule = mockRuleWithExpr("R001", "规则", 10, "");
+            Rule rule = mockRuleWithEx    /**
+     * 测试分组：「兼容方法」等
+     */
+pr("R001", "规则", 10, "");
 
             Set<String> fields = indexer.extractFields(rule);
 

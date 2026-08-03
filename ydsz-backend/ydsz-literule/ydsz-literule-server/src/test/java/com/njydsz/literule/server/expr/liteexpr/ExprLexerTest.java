@@ -41,6 +41,12 @@ class ExprLexerTest {
 
     @Nested
     @DisplayName("数字字面量")
+    /**
+     * 测试分组：数字字面量
+     */
+    /**
+     * 测试分组：「十进制整数解析为 Integer」等
+     */
     class NumberLiterals {
 
         @Test
@@ -142,7 +148,10 @@ class ExprLexerTest {
             assertThat(token.type()).isEqualTo(TokenType.DECIMAL);
             assertThat(token.literal()).isEqualTo(new BigDecimal("3.14"));
         }
-    }
+     /**
+     * 测试分组：「字符串与模板字符串」等
+     */
+   }
 
     @Nested
     @DisplayName("字符串与模板字符串")
@@ -208,7 +217,10 @@ class ExprLexerTest {
             assertThat(tokens).isNotEmpty();
             assertThat(tokens).anyMatch(t -> t.type() == TokenType.TEMPLATE_VAR_START);
             assertThat(tokens).anyMatch(t -> t.type() == TokenType.IDENTIFIER && t.lexeme().equals("name"));
-            assertThat(tokens).anyMatch(t -> t.type() == TokenType.TEMPLATE_VAR_END);
+            assertThat(tokens).anyMatch(t -> t.type()     /**
+     * 测试分组：「关键字与标识符」等
+     */
+== TokenType.TEMPLATE_VAR_END);
         }
     }
 
@@ -283,7 +295,10 @@ class ExprLexerTest {
         @DisplayName("$ 开头的标识符")
         void shouldParseDollarIdentifier() {
             Token token = firstToken("$var");
-            assertThat(token.type()).isEqualTo(TokenType.IDENTIFIER);
+            assertThat(token.type()).isEqualTo(TokenType.    /**
+     * 测试分组：「运算符与分隔符」等
+     */
+IDENTIFIER);
             assertThat(token.lexeme()).isEqualTo("$var");
         }
     }
@@ -337,7 +352,10 @@ class ExprLexerTest {
         void shouldThrowOnUnknownChar() {
             ExprLexer lexer = new ExprLexer("@");
             assertThatThrownBy(lexer::tokenize)
-                    .isInstanceOf(LiteExprException.class)
+                    .isInstanceOf(LiteExprException.cla    /**
+     * 测试分组：「注释与空白」等
+     */
+ss)
                     .hasMessageContaining("无法识别的字符")
                     .hasMessageContaining("ASCII=64");
         }
@@ -390,7 +408,10 @@ class ExprLexerTest {
         @Test
         @DisplayName("纯空白符只产生 EOF")
         void shouldProduceOnlyEofForWhitespace() {
-            List<Token> all = new ExprLexer("   \t\n  \r\n").tokenize();
+            List<Token> all = n    /**
+     * 测试分组：「位置信息」等
+     */
+ew ExprLexer("   \t\n  \r\n").tokenize();
             assertThat(all).hasSize(1);
             assertThat(all.get(0).type()).isEqualTo(TokenType.EOF);
         }
@@ -423,7 +444,10 @@ class ExprLexerTest {
         void shouldTrackProgressiveColumns() {
             List<Token> tokens = tokensOf("a + b");
             assertThat(tokens).hasSize(3);
-            assertThat(tokens.get(0).column()).isEqualTo(1); // a
+            asser    /**
+     * 测试分组：「复杂表达式词法扫描」等
+     */
+tThat(tokens.get(0).column()).isEqualTo(1); // a
             assertThat(tokens.get(1).column()).isEqualTo(3); // +
             assertThat(tokens.get(2).column()).isEqualTo(5); // b
         }

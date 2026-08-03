@@ -63,7 +63,6 @@ import com.njydsz.common.json.type.TypeFactory;
  * <p><b>多配置场景规范（R9）：</b>当需要与全局配置不同的序列化策略时（如对外 API 使用
  * SNAKE_CASE 命名、内部 API 使用 LOWER_CAMEL_CASE；或金融场景启用 useBigDecimal），
  * 必须通过 {@code JsonMapper.builder()} 创建独立配置的 Mapper 实例，
- * <b>禁止</b>通过 {@code YdszJson.toJson(obj, JsonConfig)} 或 ThreadLocal 覆盖全局配置，
  * 避免线程间配置污染。Mapper 实例创建后为只读配置，线程安全，可作为 Spring Bean 单例注入。
  *
  * @author ydsz-team

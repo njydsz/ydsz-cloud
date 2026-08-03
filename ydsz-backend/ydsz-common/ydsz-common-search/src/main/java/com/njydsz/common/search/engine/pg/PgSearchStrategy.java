@@ -736,30 +736,32 @@ public class PgSearchStrategy
                     .status(rs.getString("status"))
                     .score(rs.getFloat("rank"))
                     .build();
-            try { hit.setPath(rs.getString("path")); }             try { hit.setPath(rs.getString("path")); } catch (SQLException ignored) {
-            try { hit.setPath(rs.getString("path")); }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            try { hit.setPath(rs.getString("path")); } }
+            try {
+                hit.setPath(rs.getString("path"));
+            } catch (SQLException ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
             try {
                 String tagsJson = rs.getString("tags");
                 if (tagsJson != null && !tagsJson.isBlank() && !tagsJson.equals("[]")) {
                     List<String> tags = YdszJson.parseArray(tagsJson, String.class);
                     if (tags != null && !tags.isEmpty()) hit.setTags(tags);
                 }
-            }             } catch (SQLException ignored) {
-            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            } }
+            } catch (SQLException ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
             try {
                 var createdAt = rs.getTimestamp("created_at");
                 if (createdAt != null) hit.setCreatedAt(createdAt.toInstant().toString());
-            }             } catch (SQLException ignored) {
-            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            } }
+            } catch (SQLException ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
             try {
                 var updatedAt = rs.getTimestamp("updated_at");
                 if (updatedAt != null) hit.setUpdatedAt(updatedAt.toInstant().toString());
-            }             } catch (SQLException ignored) {
-            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            } }
+            } catch (SQLException ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
             if (withHighlight) hit.setHighlight(rs.getString("highlight"));
             return hit;
         }

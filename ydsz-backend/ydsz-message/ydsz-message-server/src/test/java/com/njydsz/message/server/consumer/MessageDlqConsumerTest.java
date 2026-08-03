@@ -65,6 +65,12 @@ class MessageDlqConsumerTest {
 
     @Nested
     @DisplayName("幂等去重")
+    /**
+     * 测试分组：幂等去重
+     */
+    /**
+     * 测试分组：「首次处理: SET NX EX 返回 true,继续落库」等
+     */
     class IdempotentTest {
 
         @Test
@@ -104,7 +110,10 @@ class MessageDlqConsumerTest {
             verify(redisTemplate, never()).opsForValue();
             verify(msgLogMapper, never()).insert(any(MsgLog.class));
         }
-    }
+     /**
+     * 测试分组：「update-then-insert 落库」等
+     */
+   }
 
     @Nested
     @DisplayName("update-then-insert 落库")

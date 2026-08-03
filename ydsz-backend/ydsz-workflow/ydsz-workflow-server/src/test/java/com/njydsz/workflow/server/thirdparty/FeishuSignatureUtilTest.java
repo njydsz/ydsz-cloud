@@ -25,6 +25,12 @@ class FeishuSignatureUtilTest {
 
     @Nested
     @DisplayName("verifySignature() 签名验证")
+    /**
+     * 测试分组：verifySignature() 签名验证
+     */
+    /**
+     * 测试分组：「正确签名验证通过（使用 NIST 标准测试向量）」等
+     */
     class VerifySignatureTest {
 
         @Test

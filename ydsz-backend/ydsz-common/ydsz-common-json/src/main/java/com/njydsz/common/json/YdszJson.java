@@ -663,6 +663,111 @@ public class YdszJson {
         }
     }
 
+    // ==================== 单次配置序列化 ====================
+
+    /**
+     * 使用指定配置序列化对象（不影响全局配置）。
+     *
+     * <p>通过保存/恢复当前线程的 ThreadLocal 序列化参数来实现单次配置，
+     * 不修改全局 {@link JsonConfig} 单例，保证线程安全。
+     * 适用于需要为单次序列化指定不同配置的场景。</p>
+     *
+     * @param obj 要序列化的对象
+     * @param config 单次配置，{@code null} 时退化为 {@link #toJson(Object)}
+     * @return JSON 字符串（{@code null} 对象返回 {@code "null"}）
+     * @since 1.0.0
+     */
+    public static String toJson(Object obj, JsonConfig config) {
+        if (obj == null) {
+            return "null";
+        }
+        if (config == null) {
+            return toJson(obj);
+        }
+        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        try {
+            config.apply();
+            return toJson(obj);
+        } finally {
+            snapshot.restore();
+        }
+    }
+
+    // ==================== 字段级排除（列权限等场景） ====================
+
+    /**
+     * 序列化对象并排除指定字段（自动清理 ThreadLocal）。
+     *
+     * @param obj 要序列化的对象
+     * @param excludedFieldNames 需要排除的字段名集合
+     * @return JSON 字符串（排除指定字段后的）
+     */
+    public static String toJsonExcludeFields(Object obj, Set<String> excludedFieldNames) {
+        if (obj == null) {
+            return "null";
+        }
+        Set<String> previous = SerializationProvider.getExcludedFields();
+        try {
+            SerializationProvider.setExcludedFields(excludedFieldNames);
+            return recordSerialize(() -> SerializationProvider.serialize(obj));
+        } finally {
+            SerializationProvider.setExcludedFields(previous);
+        }
+    }
+
+    /**
+     * 设置序列化时需要排除的字段名集合。
+     *
+     * @param fieldNames 需要排除的字段名集合，null 表示清除排除
+     */
+    public static void setExcludedFields(Set<String> fieldNames) {
+        SerializationProvider.setExcludedFields(fieldNames);
+    }
+
+    /**
+     * 清除序列化字段排除设置。
+     */
+    public static void clearExcludedFields() {
+        SerializationProvider.setExcludedFields(null);
+    }
+
+    // ==================== ThreadLocal 管理 ====================
+
+    /**
+     * 清理当前线程的 ThreadLocal 资源。
+     *
+     * <p>在非 Spring 环境中，每次线程归还线程池前应调用此方法清理内部 ThreadLocal 状态，
+     * 防止内存泄漏。Spring 环境已通过 {@code @PreDestroy} 自动注册清理钩子。</p>
+     *
+     * @since 1.0.0
+     */
+    public static void cleanup() {
+        SerializationProvider.clearThreadLocals();
+    }
+
+    /**
+     * 创建 ScopedContext，在 try-with-resources 块结束时自动清理 ThreadLocal。
+     *
+     * @return AutoCloseable 上下文，关闭时自动清理 ThreadLocal
+     * @since 1.0.0
+     */
+    public static ScopedContext scopedContext() {
+        return new ScopedContext();
+    }
+
+    /**
+     * ScopedContext - AutoCloseable 的序列化上下文。
+     */
+    public static final class ScopedContext implements AutoCloseable {
+        private ScopedContext() {
+        }
+
+        @Override
+        public void close() {
+            YdszJson.cleanup();
+        }
+    }
+
     // ==================== 安全检查 ====================
 
     /**

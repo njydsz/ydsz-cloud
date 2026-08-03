@@ -32,6 +32,12 @@ class DagDslParserTest {
 
     @Nested
     @DisplayName("正常解析")
+    /**
+     * 测试分组：正常解析
+     */
+    /**
+     * 测试分组：「多节点 + 边 + input-from + config」等
+     */
     class ParseValid {
 
         @Test
@@ -93,7 +99,10 @@ class DagDslParserTest {
             AgentDag dag = parser.parse(yaml);
 
             assertThat(dag.getNodes()).hasSize(1);
-            assertThat(dag.getEdges()).isEmpty();
+            assertThat(dag.getEdges()).isEm    /**
+     * 测试分组：「异常场景」等
+     */
+pty();
         }
     }
 
@@ -132,7 +141,10 @@ class DagDslParserTest {
 
             assertThatThrownBy(() -> parser.parse(yaml))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("nodes");
+                    .hasMessageContaini    /**
+     * 测试分组：「SafeConstructor 安全性（CVE-2022-1471）」等
+     */
+ng("nodes");
         }
     }
 

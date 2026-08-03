@@ -303,9 +303,9 @@ public class ExcelXmlParser
         if (styleStr != null && !styleStr.isEmpty()) {
             try {
                 cellStyle = Integer.parseInt(styleStr);
-            }             } catch (NumberFormatException e) {
-            }     log.debug("Caught exception (ignored): {}", e.getMessage());
-            } }
+            } catch (NumberFormatException e) {
+                log.debug("Caught exception (ignored): {}", e.getMessage());
+            }
         }
 
         if (cellHandler != null && currentRow > 0 && currentCol >= 0) {

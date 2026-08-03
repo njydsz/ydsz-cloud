@@ -19,6 +19,12 @@ class CreditScoreEvaluatorTest {
 
     @Nested
     @DisplayName("正常值场景")
+    /**
+     * 测试分组：正常值场景
+     */
+    /**
+     * 测试分组：「满分场景：准时率100% + 大额合同 + 10份合同 + 无逾期 = 100分」等
+     */
     class NormalCases {
 
         @Test
@@ -56,7 +62,10 @@ class CreditScoreEvaluatorTest {
                     0,
                     0);
 
-            assertThat(score).isEqualTo(30);
+            assertThat(scor    /**
+     * 测试分组：「零值场景」等
+     */
+e).isEqualTo(30);
         }
     }
 
@@ -85,7 +94,10 @@ class CreditScoreEvaluatorTest {
                     new BigDecimal("0"),
                     new BigDecimal("0"),
                     1,
-                    0);
+                       /**
+     * 测试分组：「null 值场景」等
+     */
+ 0);
 
             assertThat(score).isEqualTo(1);
         }
@@ -115,7 +127,10 @@ class CreditScoreEvaluatorTest {
                     new BigDecimal("1.0"),
                     null,
                     10,
-                    0);
+                    0)    /**
+     * 测试分组：「逾期扣分与边界场景」等
+     */
+;
 
             // 及时 60 + 规模 0 + 次数 15 = 75
             assertThat(score).isEqualTo(75);

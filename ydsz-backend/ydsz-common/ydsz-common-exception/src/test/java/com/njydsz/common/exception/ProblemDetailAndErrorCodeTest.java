@@ -24,6 +24,12 @@ class ProblemDetailAndErrorCodeTest {
 
     @Nested
     @DisplayName("ProblemDetail RFC 7807")
+    /**
+     * 测试分组：ProblemDetail RFC 7807
+     */
+    /**
+     * 测试分组：「builder() 构建完整 ProblemDetail」等
+     */
     class ProblemDetailTest {
 
         @Test
@@ -85,6 +91,9 @@ class ProblemDetailAndErrorCodeTest {
             assertEquals(500, pd.getStatus());
         }
     }
+    /**
+     * 测试分组：「UnifiedExceptionCode 错误码体系」等
+     */
 
     @Nested
     @DisplayName("UnifiedExceptionCode 错误码体系")

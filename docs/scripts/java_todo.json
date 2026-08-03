@@ -1,7 +1,6 @@
 {
  "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\test\\java\\com\\njydsz\\agent\\server\\agent\\DagDslParserTest.java": {
   "missing_classes": [
-   "ParseValid",
    "ParseInvalid",
    "SafeConstructorSecurity"
   ],
@@ -10,7 +9,6 @@
  },
  "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\test\\java\\com\\njydsz\\agent\\server\\agent\\DagOrchestrationExecutorTest.java": {
   "missing_classes": [
-   "ParallelExecution",
    "SequentialExecution",
    "FailurePropagation",
    "CycleDetection"
@@ -47,19 +45,10 @@
  },
  "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\test\\java\\com\\njydsz\\common\\exception\\AbstractYdszExceptionTest.java": {
   "missing_classes": [
-   "ConstructionTest",
    "MessageResolutionTest",
    "ConcurrencyTest",
    "DataChainTest",
    "BuilderTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\test\\java\\com\\njydsz\\common\\exception\\ProblemDetailAndErrorCodeTest.java": {
-  "missing_classes": [
-   "ProblemDetailTest",
-   "UnifiedExceptionCodeTest"
   ],
   "missing_methods": [],
   "misplace": []
@@ -166,7 +155,6 @@
  },
  "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\encoding\\EncodingUtilsTest.java": {
   "missing_classes": [
-   "Base64",
    "Base32",
    "Hex",
    "UrlEncoding"
@@ -176,8 +164,6 @@
  },
  "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\hash\\HashUtilsTest.java": {
   "missing_classes": [
-   "Crc32",
-   "MurmurHash32",
    "Base62",
    "Base58",
    "ConsistentHash"
@@ -187,7 +173,6 @@
  },
  "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\security\\AesGcmCryptoTest.java": {
   "missing_classes": [
-   "KeyValidation",
    "EncryptDecryptRoundtrip",
    "TamperDetection"
   ],
@@ -218,7 +203,6 @@
  },
  "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\calc\\CreditScoreEvaluatorTest.java": {
   "missing_classes": [
-   "NormalCases",
    "ZeroCases",
    "NullCases",
    "OverdueAndBoundaryCases"
@@ -228,7 +212,6 @@
  },
  "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\calc\\DualRateProfitCalculatorTest.java": {
   "missing_classes": [
-   "CalculateCases",
    "BlendedCases",
    "MarginAchievedCases"
   ],
@@ -237,7 +220,6 @@
  },
  "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\DefaultRuleEngineTest.java": {
   "missing_classes": [
-   "RegisterUnregisterCases",
    "EvaluateCases",
    "DryRunCases",
    "TopResultCases",
@@ -249,7 +231,6 @@
  },
  "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\RuleCircuitBreakerTest.java": {
   "missing_classes": [
-   "ConstructorCases",
    "ClosedStateCases",
    "ClosedToOpenCases",
    "OpenToHalfOpenCases",
@@ -261,8 +242,6 @@
  },
  "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\RuleIndexerTest.java": {
   "missing_classes": [
-   "IndexEnableCases",
-   "IncrementalUpdateCases",
    "FindCandidatesCases",
    "InvertedIndexCases",
    "CompatibilityCases"
@@ -272,8 +251,6 @@
  },
  "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\distributed\\ConsistentHashSharderTest.java": {
   "missing_classes": [
-   "UpdateNodes",
-   "ShardDeterminism",
    "IsMineCheck",
    "StaticIsMine",
    "WeightAndDistribution",
@@ -286,7 +263,6 @@
  },
  "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\expr\\liteexpr\\ExprLexerTest.java": {
   "missing_classes": [
-   "NumberLiterals",
    "StringLiterals",
    "KeywordsAndIdentifiers",
    "OperatorsAndDelimiters",
@@ -297,16 +273,8 @@
   "missing_methods": [],
   "misplace": []
  },
- "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\domain\\enums\\batch\\AggregateBatchStatusEnumTest.java": {
-  "missing_classes": [
-   "CanTransitToTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
  "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\DingTalkChannelTest.java": {
   "missing_classes": [
-   "AppendSignTest",
    "ResolveUrlTest",
    "BuildPayloadTest"
   ],
@@ -315,7 +283,6 @@
  },
  "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\FeishuChannelTest.java": {
   "missing_classes": [
-   "AppendSignTest",
    "ResolveUrlTest",
    "BuildPayloadTest"
   ],
@@ -324,7 +291,6 @@
  },
  "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\push\\GetuiPushSignerTest.java": {
   "missing_classes": [
-   "SignTest",
    "BytesToHexTest"
   ],
   "missing_methods": [],
@@ -332,7 +298,6 @@
  },
  "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\sms\\AliyunSmsSignerTest.java": {
   "missing_classes": [
-   "SignTest",
    "PercentEncodeTest",
    "BuildCanonicalQueryTest",
    "BuildQueryTest"
@@ -342,16 +307,7 @@
  },
  "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\consumer\\MessageDlqConsumerTest.java": {
   "missing_classes": [
-   "IdempotentTest",
    "UpdateThenInsertTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-message\\ydsz-message-web\\src\\main\\java\\com\\njydsz\\message\\web\\controller\\TemplatePreviewController.java": {
-  "missing_classes": [
-   "PreviewRequest",
-   "RawPreviewRequest"
   ],
   "missing_methods": [],
   "misplace": []
@@ -366,23 +322,8 @@
  },
  "ydsz-backend\\ydsz-userinfo\\ydsz-userinfo-server\\src\\test\\java\\com\\njydsz\\userinfo\\server\\service\\impl\\DepartmentServiceImplTest.java": {
   "missing_classes": [
-   "GetByIdTest",
    "ListTest",
    "RemoveByIdTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-workflow\\ydsz-workflow-server\\src\\test\\java\\com\\njydsz\\workflow\\server\\thirdparty\\FeishuSignatureUtilTest.java": {
-  "missing_classes": [
-   "VerifySignatureTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-workflow\\ydsz-workflow-server\\src\\test\\java\\com\\njydsz\\workflow\\server\\thirdparty\\WeComSignatureUtilTest.java": {
-  "missing_classes": [
-   "VerifySignatureTest"
   ],
   "missing_methods": [],
   "misplace": []

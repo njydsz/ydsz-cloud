@@ -53,6 +53,12 @@ class AbstractYdszExceptionTest {
 
     @Nested
     @DisplayName("异常构造与字段初始化")
+    /**
+     * 测试分组：异常构造与字段初始化
+     */
+    /**
+     * 测试分组：「BusinessException 默认构造函数：HTTP 400 + ERROR + BUSINESS」等
+     */
     class ConstructionTest {
 
         @Test
@@ -90,7 +96,10 @@ class AbstractYdszExceptionTest {
             SysException ex = new SysException(UnifiedExceptionCode.DATABASE_ERROR, cause);
             assertEquals("B01053", ex.getCode());
             assertEquals("database.error", ex.getKey());
-            assertSame(cause, ex.getCause());
+            assertSame(cause, ex.getC    /**
+     * 测试分组：「getMessage() 懒加载与 i18n 解析」等
+     */
+ause());
         }
     }
 
@@ -140,7 +149,10 @@ class AbstractYdszExceptionTest {
             });
             BusinessException ex = new BusinessException(UnifiedExceptionCode.NOT_FOUND);
             ex.getMessage();
-            ex.getMessage();
+            ex.getMessa    /**
+     * 测试分组：「DCL 线程安全测试」等
+     */
+ge();
             ex.getMessage();
             assertEquals(1, callCount.get());
         }
@@ -179,7 +191,10 @@ class AbstractYdszExceptionTest {
             }
             startLatch.countDown();
             assertTrue(doneLatch.await(5, TimeUnit.SECONDS));
-            executor.shutdown();
+            executor.s    /**
+     * 测试分组：「链式 data() 方法」等
+     */
+hutdown();
 
             assertEquals(1, callCount.get(), "resolver should only be called once under concurrent access");
         }
@@ -205,7 +220,10 @@ class AbstractYdszExceptionTest {
         @Test
         @DisplayName("data() 在 extData 为 null 时正确初始化")
         void testDataInitialization() {
-            BusinessException ex = new BusinessException();
+            Busines    /**
+     * 测试分组：「Builder 模式测试」等
+     */
+sException ex = new BusinessException();
             assertNull(ex.getExtData());
             ex.data("key1", "value1");
             assertNotNull(ex.getExtData());

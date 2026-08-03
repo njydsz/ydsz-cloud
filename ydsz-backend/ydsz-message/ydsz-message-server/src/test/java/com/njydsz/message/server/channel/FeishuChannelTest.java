@@ -48,6 +48,12 @@ class FeishuChannelTest {
 
     @Nested
     @DisplayName("appendSign() 加签")
+    /**
+     * 测试分组：appendSign() 加签
+     */
+    /**
+     * 测试分组：「正常加签: 返回含 timestamp/sign 的 Map」等
+     */
     class AppendSignTest {
 
         @Test
@@ -70,6 +76,9 @@ class FeishuChannelTest {
             assertThat(sign).isNotNull();
             assertThat(sign.get("timestamp")).isNotBlank();
         }
+    /**
+     * 测试分组：「resolveUrl() URL 解析优先级」等
+     */
     }
 
     @Nested
@@ -118,7 +127,10 @@ class FeishuChannelTest {
         void returnsNullWhenNoConfig() {
             MessageRequest req = new MessageRequest();
 
-            String url = channel.resolveUrl(req);
+            String url = channel.resolveUrl    /**
+     * 测试分组：「buildPayload() 请求体构造」等
+     */
+(req);
 
             assertThat(url).isNull();
         }

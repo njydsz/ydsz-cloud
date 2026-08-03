@@ -26,6 +26,12 @@ class RuleCircuitBreakerTest {
 
     @Nested
     @DisplayName("构造器参数校验")
+    /**
+     * 测试分组：构造器参数校验
+     */
+    /**
+     * 测试分组：「errorRateThreshold <= 0 时抛 IllegalArgumentException」等
+     */
     class ConstructorCases {
 
         @Test
@@ -57,7 +63,10 @@ class RuleCircuitBreakerTest {
         void shouldAllowThresholdEqualsOne() {
             RuleCircuitBreaker breaker = new RuleCircuitBreaker(1.0, MIN_EVALS, OPEN_MS);
 
-            assertThat(breaker.getState("R001")).isEqualTo(State.CLOSED);
+            assertThat(breaker.getState("R001")).i    /**
+     * 测试分组：「CLOSED 状态」等
+     */
+sEqualTo(State.CLOSED);
         }
     }
 
@@ -100,7 +109,10 @@ class RuleCircuitBreakerTest {
             breaker.recordResult("R001", true);
             breaker.recordResult("R001", false);
 
-            assertThat(breaker.getState("R001")).isEqualTo(State.CLOSED);
+            assert    /**
+     * 测试分组：「CLOSED → OPEN 状态转换」等
+     */
+That(breaker.getState("R001")).isEqualTo(State.CLOSED);
         }
     }
 
@@ -144,7 +156,10 @@ class RuleCircuitBreakerTest {
             breaker.recordResult("R001", false);
             breaker.recordResult("R001", false);
             breaker.recordResult("R001", false);
-            assertThat(breaker.getState("R001")).isEqualTo(State.OPEN);
+            assertThat(breaker.getS    /**
+     * 测试分组：「OPEN → HALF_OPEN 状态转换」等
+     */
+tate("R001")).isEqualTo(State.OPEN);
 
             assertThat(breaker.allowEvaluate("R001")).isFalse();
         }
@@ -184,7 +199,10 @@ class RuleCircuitBreakerTest {
             // 等待超过 openStateMs
             Thread.sleep(OPEN_MS + 20);
 
-            // allowEvaluate 触发 OPEN → HALF_OPEN
+            // allowEvaluat    /**
+     * 测试分组：「HALF_OPEN 状态转换」等
+     */
+e 触发 OPEN → HALF_OPEN
             assertThat(breaker.allowEvaluate("R001")).isTrue();
             assertThat(breaker.getState("R001")).isEqualTo(State.HALF_OPEN);
         }
@@ -243,7 +261,10 @@ class RuleCircuitBreakerTest {
 
             // 重新累积失败，应能再次触发 OPEN
             breaker.recordResult("R001", false);
-            breaker.recordResult("R001", false);
+            breaker.recordResult("R001",     /**
+     * 测试分组：「多规则独立熔断」等
+     */
+false);
             breaker.recordResult("R001", false);
             // 第 4 次失败（计数器重置后从 0 开始）
             breaker.recordResult("R001", false);

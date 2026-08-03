@@ -82,6 +82,12 @@ class DagOrchestrationExecutorTest {
 
     @Nested
     @DisplayName("并行执行")
+    /**
+     * 测试分组：并行执行
+     */
+    /**
+     * 测试分组：「两个无依赖节点并行执行，均成功」等
+     */
     class ParallelExecution {
 
         @Test
@@ -107,7 +113,10 @@ class DagOrchestrationExecutorTest {
             assertThat(result.nodeUsages().get("a").getTotalTokens()).isEqualTo(20);
             assertThat(result.nodeUsages().get("b").getTotalTokens()).isEqualTo(40);
         }
-    }
+      /**
+     * 测试分组：「串行执行（依赖链）」等
+     */
+  }
 
     @Nested
     @DisplayName("串行执行（依赖链）")
@@ -131,7 +140,10 @@ class DagOrchestrationExecutorTest {
             assertThat(result.hasFailure()).isFalse();
             assertThat(result.completedNodes()).containsExactlyInAnyOrder("a", "b");
             assertThat(result.nodeResults()).containsEntry("a", "分析结果");
-            assertThat(result.nodeResults()).containsEntry("b", "最终报告");
+            assertThat(result.nodeResul    /**
+     * 测试分组：「失败传播」等
+     */
+ts()).containsEntry("b", "最终报告");
         }
     }
 
@@ -158,7 +170,10 @@ class DagOrchestrationExecutorTest {
             assertThat(result.failedNodes()).contains("a");
             // B 因依赖 A 失败而跳过，也标记为失败
             assertThat(result.failedNodes()).contains("b");
-            assertThat(result.completedNodes()).doesNotContain("a", "b");
+       /**
+     * 测试分组：「环检测」等
+     */
+         assertThat(result.completedNodes()).doesNotContain("a", "b");
         }
     }
 
