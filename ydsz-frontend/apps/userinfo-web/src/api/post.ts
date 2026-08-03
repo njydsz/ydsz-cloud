@@ -9,6 +9,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace PostApi {
+  /** 岗位视图对象 */
   export interface PostVO {
     id: string;
     postCode: string;
@@ -19,6 +20,7 @@ export namespace PostApi {
     createTime?: string;
   }
 
+  /** 岗位分页查询参数 */
   export interface PostPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -27,6 +29,7 @@ export namespace PostApi {
     status?: number;
   }
 
+  /** 岗位创建/更新请求参数 */
   export interface PostSaveDTO {
     id?: string;
     postCode: string;

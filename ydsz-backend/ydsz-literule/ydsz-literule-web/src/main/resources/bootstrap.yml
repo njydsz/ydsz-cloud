@@ -1,7 +1,7 @@
 # =====================================================================
 #  YDSZ 规则引擎服务 bootstrap 配置（自研 LiteExpr 规则引擎）
 #  --------------------------------------------------------------------
-#  端口：9008
+#  端口：9007
 #  职责：规则定义 / 编排 / 评估 / 灰度 / 回放 / 审批 / CEP
 #    - 7 种规则类型（Expression / DecisionTable / CrossDecisionTable
 #      / DecisionTree / Scorecard / Script / Static）
@@ -15,8 +15,8 @@
 # =====================================================================
 
 server:
-  # HTTP 监听端口（按构建顺序 9/10）
-  port: 9008
+  # HTTP 监听端口（按构建顺序 8/10）
+  port: 9007
   max-http-request-header-size: 16KB
   servlet:
     context-path: /
@@ -43,7 +43,7 @@ spring:
         password: ${NACOS_PASSWORD:nacos}
         metadata:
           version: 1.0.0
-          port: 9008
+          port: 9007
         ip-type: IPv4
       # ---------- 配置中心 ----------
       config:

@@ -43,6 +43,7 @@ export namespace UserApi {
     createTime?: string;
   }
 
+  /** 用户账号分页查询参数 */
   export interface UserAccountPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -55,6 +56,7 @@ export namespace UserApi {
     companyId?: string;
   }
 
+  /** 创建用户账号请求参数（含初始密码） */
   export interface UserAccountCreateDTO {
     username: string;
     password: string;
@@ -69,6 +71,7 @@ export namespace UserApi {
     status?: number;
   }
 
+  /** 更新用户账号请求参数（id 必填，不允许改用户名/密码） */
   export interface UserAccountUpdateDTO {
     id: string;
     realName?: string;
@@ -82,12 +85,14 @@ export namespace UserApi {
     status?: number;
   }
 
+  /** 用户自助修改密码请求参数 */
   export interface ChangePasswordDTO {
     userId: string;
     oldPassword: string;
     newPassword: string;
   }
 
+  /** 管理员重置用户密码请求参数 */
   export interface ResetPasswordDTO {
     userId: string;
     newPassword: string;

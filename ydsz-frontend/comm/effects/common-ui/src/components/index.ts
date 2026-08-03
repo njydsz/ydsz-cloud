@@ -16,6 +16,7 @@ export * from './icon-picker';
 export * from './json-viewer';
 export * from './loading';
 export * from './page';
+export * from './page-status';
 export * from './resize';
 export * from './safe-html';
 export * from './tippy';

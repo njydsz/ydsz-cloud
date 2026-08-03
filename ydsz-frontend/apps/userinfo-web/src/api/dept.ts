@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace DeptApi {
+  /** 部门视图对象，children 表示子部门树 */
   export interface DepartmentVO {
     id: string;
     deptName: string;
@@ -25,6 +26,7 @@ export namespace DeptApi {
     children?: DepartmentVO[];
   }
 
+  /** 部门树节点（仅含树形渲染所需字段） */
   export interface DepartmentTreeVO {
     id: string;
     label: string;
@@ -32,6 +34,7 @@ export namespace DeptApi {
     children?: DepartmentTreeVO[];
   }
 
+  /** 部门创建/更新请求参数 */
   export interface DepartmentSaveDTO {
     id?: string;
     deptName: string;

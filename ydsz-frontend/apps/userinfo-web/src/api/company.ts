@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace CompanyApi {
+  /** 公司视图对象 */
   export interface CompanyVO {
     id: string;
     companyName: string;
@@ -22,6 +23,7 @@ export namespace CompanyApi {
     createTime?: string;
   }
 
+  /** 公司创建/更新请求参数 */
   export interface CompanySaveDTO {
     id?: string;
     companyName: string;

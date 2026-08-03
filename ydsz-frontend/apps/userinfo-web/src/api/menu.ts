@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace MenuApi {
+  /** 菜单视图对象，children 表示子菜单树 */
   export interface MenuVO {
     id: string;
     menuName: string;
@@ -25,6 +26,7 @@ export namespace MenuApi {
     children?: MenuVO[];
   }
 
+  /** 菜单树节点（仅含树形渲染所需字段） */
   export interface MenuTreeVO {
     id: string;
     label: string;
@@ -32,6 +34,7 @@ export namespace MenuApi {
     children?: MenuTreeVO[];
   }
 
+  /** 菜单创建/更新请求参数 */
   export interface MenuSaveDTO {
     id?: string;
     menuName: string;

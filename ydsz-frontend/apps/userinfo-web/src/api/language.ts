@@ -9,6 +9,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace LanguageApi {
+  /** 语言包视图对象 */
   export interface LanguageVO {
     id: string;
     languageCode: string;
@@ -19,6 +20,7 @@ export namespace LanguageApi {
     createTime?: string;
   }
 
+  /** 语言分页查询参数 */
   export interface LanguagePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -27,6 +29,7 @@ export namespace LanguageApi {
     status?: number;
   }
 
+  /** 语言创建/更新请求参数 */
   export interface LanguageSaveDTO {
     id?: string;
     languageCode: string;
