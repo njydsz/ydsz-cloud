@@ -1,15 +1,15 @@
 # =====================================================================
 #  YDSZ AI Agent 服务 bootstrap 配置
 #  --------------------------------------------------------------------
-#  端口：9010
+#  端口：9008
 #  职责：LLM 对话/RAG/记忆/工具调用/PII 脱敏/护栏/Guardrail
 #  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、LLM API
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
 # =====================================================================
 
 server:
-  # HTTP 监听端口（按构建顺序 10/10）
-  port: 9010
+  # HTTP 监听端口（按构建顺序 9/10）
+  port: 9008
   max-http-request-header-size: 16KB
   servlet:
     context-path: /
@@ -36,7 +36,7 @@ spring:
         password: ${NACOS_PASSWORD:nacos}
         metadata:
           version: 1.0.0
-          port: 9010
+          port: 9008
         ip-type: IPv4
       # ---------- 配置中心 ----------
       config:

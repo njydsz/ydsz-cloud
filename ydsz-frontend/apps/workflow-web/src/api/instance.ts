@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace InstanceApi {
+  /** 流程实例视图对象 */
   export interface InstanceVO {
     id: string;
     processInstanceId: string;
@@ -22,6 +23,7 @@ export namespace InstanceApi {
     createTime: string;
   }
 
+  /** 流程实例分页查询参数 */
   export interface InstancePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -29,6 +31,7 @@ export namespace InstanceApi {
     status?: string;
   }
 
+  /** 流程启动请求参数 */
   export interface InstanceDTO {
     templateId?: string;
     starter?: string;

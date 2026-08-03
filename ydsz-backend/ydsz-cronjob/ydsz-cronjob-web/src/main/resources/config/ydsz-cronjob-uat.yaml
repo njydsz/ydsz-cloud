@@ -2,7 +2,7 @@
 #  YDSZ · CronJob · UAT 环境配置（Nacos DataId）
 #  DataId:    ydsz-cronjob-uat.yaml
 #  Group:     uat
-#  端口:      9005
+#  端口:      9006
 # =====================================================================
 
 # MinIO（UAT 环境密钥由环境变量注入）

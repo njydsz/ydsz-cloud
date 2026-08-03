@@ -2,7 +2,7 @@
 #  YDSZ · CronJob · SIT 环境配置（Nacos DataId）
 #  DataId:    ydsz-cronjob-sit.yaml
 #  Group:     sit
-#  端口:      9005
+#  端口:      9006
 # =====================================================================
 
 # MinIO（SIT 环境密钥由环境变量注入）

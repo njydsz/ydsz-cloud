@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace QuickCommentApi {
+  /** 快捷回复模板视图对象 */
   export interface QuickCommentVO {
     id: string;
     content: string;
@@ -19,12 +20,14 @@ export namespace QuickCommentApi {
     createTime: string;
   }
 
+  /** 快捷回复分页查询参数 */
   export interface QuickCommentPageQuery {
     pageNum?: number;
     pageSize?: number;
     content?: string;
   }
 
+  /** 快捷回复创建/更新请求参数 */
   export interface QuickCommentDTO {
     content?: string;
     category?: string;

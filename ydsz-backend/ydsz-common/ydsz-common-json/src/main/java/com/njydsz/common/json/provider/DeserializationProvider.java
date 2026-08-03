@@ -290,8 +290,6 @@ public final class DeserializationProvider {
             if (e.getContextSnippet() != null) {
                 throw e;
             }
-            System.err.println("[DEBUG] Original JsonDeserializationException: " + e.getClass().getName() + ": " + e.getMessage() + ", position=" + e.getPosition());
-            e.printStackTrace(System.err);
             throw JsonDeserializationException.parseError(json, e.getPosition());
         } catch (Exception e) {
             // 注入 JSON 上下文片段，帮助用户快速定位问题

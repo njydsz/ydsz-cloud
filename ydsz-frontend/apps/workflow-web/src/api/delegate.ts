@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace DelegateApi {
+  /** 流程委托记录视图对象 */
   export interface DelegateVO {
     id: string;
     assignee: string;
@@ -21,12 +22,14 @@ export namespace DelegateApi {
     createTime: string;
   }
 
+  /** 委托记录分页查询参数 */
   export interface DelegatePageQuery {
     pageNum?: number;
     pageSize?: number;
     assignee?: string;
   }
 
+  /** 委托创建/更新请求参数 */
   export interface DelegateDTO {
     assignee?: string;
     delegateTo?: string;

@@ -33,6 +33,16 @@ RUN echo "Builder Success 🎉"
 # ==================== Production Stage ====================
 FROM nginx:stable-alpine AS production
 
+# Enable brotli (需要 nginx-brotli 模块，nginx:stable-alpine 不含此模块)
+# 选项 A: 改用 nginx:stable-alpine-perl 并安装 nginx-module-brotli
+#   FROM nginx:stable-alpine AS production
+#   RUN apk add --no-cache nginx-module-brotli
+# 选项 B: 使用包含 brotli 的社区镜像
+#   FROM fholzer/nginx-brotli:latest AS production
+# 当前 bazh/deploy/nginx.conf 已配置 brotli_static on，
+# 切换到此镜像后即可生效。
+# 不阻塞部署：缺少 brotli 模块不影响运行，nginx 仅跳过 brotli config。
+
 # Fix MIME type for .mjs files
 RUN echo "types { application/javascript js mjs; }" > /etc/nginx/conf.d/mjs.conf \
     && rm -rf /etc/nginx/conf.d/default.conf

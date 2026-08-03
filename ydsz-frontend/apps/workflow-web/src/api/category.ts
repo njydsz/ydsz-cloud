@@ -10,6 +10,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace CategoryApi {
+  /** 流程分类视图对象 */
   export interface CategoryVO {
     id: string;
     categoryCode: string;
@@ -19,12 +20,14 @@ export namespace CategoryApi {
     createTime: string;
   }
 
+  /** 流程分类分页查询参数 */
   export interface CategoryPageQuery {
     pageNum?: number;
     pageSize?: number;
     categoryName?: string;
   }
 
+  /** 流程分类创建/更新请求参数 */
   export interface CategoryDTO {
     categoryCode?: string;
     categoryName?: string;

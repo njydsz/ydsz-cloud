@@ -1,14 +1,14 @@
 # =====================================================================
 #  YDSZ 项目核心业务域 bootstrap 配置
 #  --------------------------------------------------------------------
-#  端口：9003
+#  端口：9009
 #  职责：立项/合同/执行/EVM/成本/利润/资源/质保/工单/满意度
 #  依赖：Nacos 服务发现/配置中心、PostgreSQL、Redis
 # =====================================================================
 
 server:
-  # HTTP 监听端口（按构建顺序 4/10）
-  port: 9003
+  # HTTP 监听端口（按构建顺序 10/10）
+  port: 9009
   max-http-request-header-size: 16KB
   servlet:
     context-path: /
@@ -33,7 +33,7 @@ spring:
         password: ${NACOS_PASSWORD:nacos}
         metadata:
           version: 1.0.0
-          port: 9003
+          port: 9009
         ip-type: IPv4
       config:
         enabled: true
