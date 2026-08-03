@@ -143,8 +143,8 @@ public final class JsonParserUtil {
             throw new JsonDeserializationException("Invalid JSON object: expected '{' at position " + startPos, startPos);
         }
 
-        // 委托给 parseObjectRecursive 统一实现，消除重复代码
-        Object result = parseObjectRecursive(chars, startPos);
+        // 委托给 parseObjectRecursiveImpl 统一实现（参数化初始容量 64）
+        Object result = parseObjectRecursiveImpl(chars, startPos, 64);
         @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>) result;
         return map;
@@ -212,88 +212,100 @@ public final class JsonParserUtil {
     /**
      * 解析 JSON 值（优化版 - 关键路径内联）
      */
-    private static final Object parseValue(char[] chars, int pos) {
+    /**
+     * 解析 JSON 值（返回解析后的位置，消除调用方二次扫描）。
+     * @param chars 字符数组
+     * @param pos 起始位置
+     * @param endPos [out] 解析结束位置（值的下一个字符位置）
+     */
+    private static final Object parseValueWithPos(char[] chars, int pos, int[] endPos) {
         // 快速路径：跳过空白（内联）
         pos = skipWhitespace(chars, pos);
         
         if (pos >= chars.length) {
+            endPos[0] = pos;
             return null;
         }
         
         char c = chars[pos];
         
-        // 使用 switch 表达式优化分支预测
         switch (c) {
             case '"':
-                // 字符串 - 内联快速路径
-                return parseStringFast(chars, pos);
+                return parseStringFastWithPos(chars, pos, endPos);
             case '{':
-                // 对象
-                return parseObjectRecursive(chars, pos);
+                return parseObjectRecursiveWithPos(chars, pos, endPos);
             case '[':
-                // 数组
-                return parseArrayRecursive(chars, pos);
+                return parseArrayRecursiveWithPos(chars, pos, endPos);
             case 't':
-                // true - 快速路径（校验完整 token）
                 if (pos + 3 < chars.length && chars[pos + 1] == 'r'
                         && chars[pos + 2] == 'u' && chars[pos + 3] == 'e') {
+                    endPos[0] = pos + 4;
                     return Boolean.TRUE;
                 }
                 throw new JsonDeserializationException("Unexpected token starting with 't' at position " + pos, pos);
             case 'f':
-                // false - 快速路径（校验完整 token）
                 if (pos + 4 < chars.length && chars[pos + 1] == 'a'
                         && chars[pos + 2] == 'l' && chars[pos + 3] == 's'
                         && chars[pos + 4] == 'e') {
+                    endPos[0] = pos + 5;
                     return Boolean.FALSE;
                 }
                 throw new JsonDeserializationException("Unexpected token starting with 'f' at position " + pos, pos);
             case 'n':
-                // null - 快速路径（校验完整 token）
                 if (pos + 3 < chars.length && chars[pos + 1] == 'u'
                         && chars[pos + 2] == 'l' && chars[pos + 3] == 'l') {
+                    endPos[0] = pos + 4;
                     return null;
                 }
                 throw new JsonDeserializationException("Unexpected token starting with 'n' at position " + pos, pos);
             case '-':
             case '0': case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': case '9':
-                // 数字 - 内联快速路径
-                return parseNumberFast(chars, pos);
+                return parseNumberFastWithPos(chars, pos, endPos);
             default:
                 throw new JsonDeserializationException("Unexpected character at position " + pos + ": " + c, pos);
         }
     }
+
+    /** 兼容旧调用方（委托给 withPos 版本） */
+    private static final Object parseValue(char[] chars, int pos) {
+        int[] endPos = new int[1];
+        return parseValueWithPos(chars, pos, endPos);
+    }
     
     /**
-     * 快速解析字符串（内联优化）
+     * 快速解析字符串（返回值和结束位置）
      */
-    private static String parseStringFast(char[] chars, int pos) {
+    private static String parseStringFastWithPos(char[] chars, int pos, int[] endPos) {
         int len = chars.length;
         pos++; // 跳过起始引号
         
         int start = pos;
         boolean hasEscape = false;
         
-        // 快速路径：无转义字符
         while (pos < len) {
             char c = chars[pos];
             if (c == '"') {
+                endPos[0] = pos + 1; // 结束引号后
                 if (!hasEscape) {
-                    // 无转义，直接返回 substring
                     return new String(chars, start, pos - start);
                 } else {
-                    // 有转义，需要处理
                     return parseStringWithEscape(chars, start, pos);
                 }
             } else if (c == '\\') {
                 hasEscape = true;
-                pos++; // 跳过反斜杠后的被转义字符（如 \"），避免误判为结束引号
+                pos++;
             }
             pos++;
         }
         
         throw new JsonDeserializationException("Unterminated string", pos);
+    }
+
+    /** 兼容旧调用方 */
+    private static String parseStringFast(char[] chars, int pos) {
+        int[] endPos = new int[1];
+        return parseStringFastWithPos(chars, pos, endPos);
     }
     
     /**
@@ -359,10 +371,19 @@ public final class JsonParserUtil {
         useBigDecimal = enabled;
     }
 
-    /**
-     * 快速解析数字（内联优化）
-     */
+    private static Number parseNumberFastWithPos(char[] chars, int pos, int[] endPos) {
+        Number result = parseNumberFast(chars, pos, endPos);
+        return result;
+    }
+
     private static Number parseNumberFast(char[] chars, int pos) {
+        return parseNumberFast(chars, pos, new int[1]);
+    }
+
+    /**
+     * 快速解析数字（内联优化，可返回解析终点）
+     */
+    private static Number parseNumberFast(char[] chars, int pos, int[] endPos) {
         int len = chars.length;
         int startPos = pos;
 
@@ -433,12 +454,14 @@ public final class JsonParserUtil {
                     int scale = expNegative ? exp : -exp;
                     bd = bd.scaleByPowerOfTen(scale);
                 }
+                endPos[0] = pos;
                 return bd;
             }
             // 精度保护：intValue 超过 2^53 或 decimalDigits 超过 22 位时
             // double 无法精确表示，回退到 Double.parseDouble 避免精度丢失
             if (intValue > 9007199254740992L || decimalDigits > 22) {
                 String numStr = new String(chars, startPos, pos - startPos);
+                endPos[0] = pos;
                 return Double.parseDouble(numStr);
             }
             double value = (double) intValue;
@@ -451,18 +474,33 @@ public final class JsonParserUtil {
             if (exp != 0) {
                 value = expNegative ? value / POW10[exp] : value * POW10[exp];
             }
+            endPos[0] = pos;
             return Double.valueOf(value);
         } else {
+            endPos[0] = pos;
             return negative ? -intValue : intValue;
         }
     }
     
-    /**
-     * 递归解析对象（从 char 数组的指定位置开始）
-     */
-    private static Object parseObjectRecursive(char[] chars, int start) {
+    private static Object parseObjectRecursiveWithPos(char[] chars, int start, int[] endPos) {
+        Object result = parseObjectRecursiveImpl(chars, start, 64);
+        endPos[0] = getValueEndPosition(chars, start); // 对象/数组仍需一次扫描定位 `}`
+        return result;
+    }
+
+    private static Object parseArrayRecursive(char[] chars, int start) {
+        return parseArrayRecursiveImpl(chars, start);
+    }
+
+    private static Object parseArrayRecursiveWithPos(char[] chars, int start, int[] endPos) {
+        Object result = parseArrayRecursiveImpl(chars, start);
+        endPos[0] = getValueEndPosition(chars, start);
+        return result;
+    }
+
+    private static Object parseObjectRecursiveImpl(char[] chars, int start, int initialCapacity) {
         int len = chars.length;
-        Map<String, Object> result = new LinkedHashMap<>(64);
+        Map<String, Object> result = new LinkedHashMap<>(initialCapacity);
         int pos = start + 1;
         
         while (pos < len) {
@@ -518,15 +556,11 @@ public final class JsonParserUtil {
                 pos++;
             }
             
-            // 记录值的起始位置
-            int valueStart = pos;
-            
-            // 解析值
-            Object value = parseValue(chars, pos);
+            // 解析值（返回解析终点，消除 getValueEndFast 二次扫描）
+            int[] endPos = new int[1];
+            Object value = parseValueWithPos(chars, pos, endPos);
             result.put(fieldName, value);
-            
-            // 移动到值的结束位置
-            pos = getValueEndFast(chars, valueStart, value, len);
+            pos = endPos[0];
         }
         
         return result;

@@ -41,6 +41,10 @@ type ExtendOptions<T = any> = {
     retryDelay?: number;
     /** 重试条件判断函数，返回 true 时触发重试 */
     retryCondition?: (error: unknown) => boolean;
+    /** 退避策略：'fixed'（固定延迟）| 'exponential'（指数退避），默认 fixed */
+    retryBackoff?: 'exponential' | 'fixed';
+    /** 随机抖动因子（毫秒），仅 exponential 模式生效，默认 0 */
+    retryJitter?: number;
   };
 };
 type RequestClientConfig<T = any> = AxiosRequestConfig<T> & ExtendOptions<T>;

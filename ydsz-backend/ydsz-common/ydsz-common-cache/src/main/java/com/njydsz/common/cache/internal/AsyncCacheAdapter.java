@@ -64,11 +64,30 @@ public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {
     this.executor = executor;
   }
 
+  /**
+   * 异步获取缓存值（不触发加载）。
+   *
+   * <p>在异步线程上执行底层同步缓存查询，未命中时 Future 结果值为 null。
+   *
+   * @param key 缓存键
+   * @return 异步完成的缓存值；未命中时完成值为 null
+   */
   @Override
   public CompletableFuture<V> getIfPresent(K key) {
     return CompletableFuture.supplyAsync(() -> delegate.getIfPresent(key), actualExecutor());
   }
 
+  /**
+   * 异步获取缓存值，未命中时使用加载器加载。
+   *
+   * <p>同一 key 的并发请求共享同一个进行中的 Future（{@code loadingFutures} 防击穿），
+   * 只有首个请求真正执行加载；加载成功后写回底层缓存。若线程池为同步执行
+   * （默认 {@link Runnable#run}），此方法退化为同步语义但仍保持防击穿。
+   *
+   * @param key    缓存键
+   * @param loader 异步加载器，加载结果非 null 时写回缓存
+   * @return 异步完成的缓存值；加载结果为 null 时完成值为 null
+   */
   @Override
   public CompletableFuture<V> get(K key, AsyncFunction<K, V> loader) {
     // 异步防击穿：同一 key 的并发请求共享同一个 Future
@@ -95,6 +114,16 @@ public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {
         });
   }
 
+  /**
+   * 异步批量获取缓存值，未命中部分使用批量加载器加载。
+   *
+   * <p>先在异步线程上批量查询缓存，将未命中的 key 交给 loader 一次性加载并写回；
+   * 批量加载失败仅记录警告日志并返回已命中的部分，不向调用方抛出异常。
+   *
+   * @param keys   待获取的键集合
+   * @param loader 批量异步加载器，仅对未命中的键生效
+   * @return 异步完成的键值映射；未命中且加载失败的键不会出现在结果中
+   */
   @Override
   public CompletableFuture<Map<K, V>> getAll(
       Collection<K> keys, AsyncFunction<Collection<K>, Map<K, V>> loader) {
@@ -137,11 +166,32 @@ public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {
         actualExecutor());
   }
 
+  /**
+   * 异步写入键值对。
+   *
+   * <p>在异步线程上执行底层缓存写入，Future 完成表示写入已提交（同步执行的默认线程池下等价于直接写入）。
+   *
+   * @param key   缓存键
+   * @param value 缓存值
+   * @return 表示写入完成的 CompletableFuture
+   */
   @Override
   public CompletableFuture<Void> put(K key, V value) {
     return CompletableFuture.runAsync(() -> delegate.put(key, value), actualExecutor());
   }
 
+  /**
+   * 主动刷新单个键，强制重新加载并覆盖缓存。
+   *
+   * <p>与 {@link #get} 不同，本方法总是调用 loader，不先检查缓存是否命中。
+   * 同一 key 的并发刷新共享同一 Future（{@code refreshingFutures} 防击穿）；
+   * 加载成功（非 null）时覆盖缓存，加载返回 null 时移除该键，
+   * 加载抛异常时返回异常完成的 Future 且<b>保留缓存旧值</b>，避免刷新失败清空缓存。
+   *
+   * @param key    缓存键，不可为 null
+   * @param loader 异步加载器，不可为 null
+   * @return 异步完成的新值；key 或 loader 为 null 时返回异常完成的 Future
+   */
   @Override
   public CompletableFuture<V> refresh(K key, AsyncFunction<K, V> loader) {
     if (key == null) {
@@ -177,6 +227,17 @@ public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {
     return future;
   }
 
+  /**
+   * 主动批量刷新多个键。
+   *
+   * <p>一次性调用批量加载器加载全部键并写回：加载成功（非 null）的键用新值覆盖，
+   * 加载返回 null 的键从缓存移除，加载抛异常时保留所有旧值并返回空 Map（仅记录警告日志）。
+   * 空 keys 集合直接返回空 Map，不调用 loader。
+   *
+   * @param keys   待刷新的键集合，可为空
+   * @param loader 批量异步加载器，不可为 null
+   * @return 异步完成的键值映射，仅包含加载成功且非 null 的条目
+   */
   @Override
   public CompletableFuture<Map<K, V>> refreshAll(
       Collection<K> keys, AsyncFunction<Collection<K>, Map<K, V>> loader) {
@@ -215,6 +276,11 @@ public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {
             actualExecutor());
   }
 
+  /**
+   * 返回底层同步缓存。
+   *
+   * @return 适配器包装的同步 {@link Cache} 实例
+   */
   @Override
   public Cache<K, V> synchronous() {
     return delegate;

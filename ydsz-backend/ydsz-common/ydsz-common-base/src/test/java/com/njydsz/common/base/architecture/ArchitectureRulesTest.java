@@ -457,4 +457,45 @@ public class ArchitectureRulesTest {
             .because("禁止使用 Executors.newFixedThreadPool/newCachedThreadPool 创建线程池，"
                     + "应通过 common-thread 的 ThreadPoolAutoConfiguration 统一管理；"
                     + "ScheduledExecutorService 变体因调度需求豁免");
+
+    // ========================================
+    // JSON 统一治理规则（2026-08-03 新增）
+    // ========================================
+
+    /**
+     * R29: 禁止使用外部 JSON 库（Jackson/Fastjson/Gson）。
+     *
+     * <p>全仓库必须统一使用 {@code YdszJson}（ydsz-common-json 模块）作为唯一 JSON 底座。
+     * 禁止直接依赖以下外部 JSON 库的 API：
+     * <ul>
+     *   <li>{@code com.fasterxml.jackson.core}（ObjectMapper / JsonNode 等）</li>
+     *   <li>{@code com.alibaba.fastjson}（JSON / JSONObject / JSONArray 等）</li>
+     *   <li>{@code com.google.gson}（Gson / JsonObject / JsonElement 等）</li>
+     * </ul>
+     *
+     * <p><b>例外：</b>
+     * <ul>
+     *   <li>{@code ydsz-common-json} 模块自身允许使用 {@code jackson-annotations}
+     *       （compileOnly optional，仅用于编译期注解解析，不含运行时引擎）</li>
+     *   <li>{@code agent-domain} 模块中的自定义 {@code JsonSerializer} 实现
+     *       （如 {@code ChatMessageSerializer}），通过流 API 手写序列化是合理用法</li>
+     * </ul>
+     *
+     * <p>相关参考：{@code docs/ydsz-common-json-integration-analysis.md} P0/P1 治理项
+     *
+     * @since 2026-08-03
+     */
+    @ArchTest
+    static final ArchRule noExternalJsonLibraryUsage = noClasses()
+            .that().resideOutsideOfPackage(
+                    "com.njydsz.common.json..",
+                    "com.njydsz.agent.domain..")
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.fasterxml.jackson.core..",
+                    "com.fasterxml.jackson.databind..",
+                    "com.alibaba.fastjson..",
+                    "com.google.gson..")
+            .because("全仓库必须统一使用 YdszJson（ydsz-common-json），"
+                    + "禁止直接依赖 Jackson/Fastjson/Gson 等外部 JSON 库");
 }

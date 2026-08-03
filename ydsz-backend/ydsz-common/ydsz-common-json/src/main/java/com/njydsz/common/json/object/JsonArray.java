@@ -18,6 +18,22 @@ import com.njydsz.common.json.YdszJson;
  * <p>对应 FastJSON2 的 JSONArray，继承 ArrayList 提供动态 JSON 数组操作。
  * 支持类型安全的 getter、链式调用、嵌套对象访问等功能。</p>
  *
+ * <p><b>迁移指引：请使用 {@link com.njydsz.common.json.tree.ArrayNode}</b></p>
+ * <table>
+ *   <caption>JsonArray → ArrayNode 迁移对照表</caption>
+ *   <tr><th>JsonArray 方法</th><th>ArrayNode 替代</th></tr>
+ *   <tr><td>{@code getString(index)}</td><td>{@code node.get(index).asText()}</td></tr>
+ *   <tr><td>{@code getInteger(index)}</td><td>{@code node.get(index).asInt()}</td></tr>
+ *   <tr><td>{@code getLong(index)}</td><td>{@code node.get(index).asLong()}</td></tr>
+ *   <tr><td>{@code getBoolean(index)}</td><td>{@code node.get(index).asBoolean()}</td></tr>
+ *   <tr><td>{@code getJSONObject(index)}</td><td>{@code (ObjectNode) node.get(index)}</td></tr>
+ *   <tr><td>{@code getJSONArray(index)}</td><td>{@code (ArrayNode) node.get(index)}</td></tr>
+ *   <tr><td>{@code getObject(index, clazz)}</td><td>{@code JsonMapper.getDefault().treeToValue(node.get(index), clazz)}</td></tr>
+ *   <tr><td>{@code add(element)}</td><td>{@code node.add(element)}</td></tr>
+ *   <tr><td>{@code remove(index)}</td><td>{@code node.remove(index)}</td></tr>
+ *   <tr><td>{@code toJsonString()}</td><td>{@code node.toPrettyString()} 或 {@code YdszJson.toJson(node)}</td></tr>
+ * </table>
+ *
  * <p><b>主要功能：</b></p>
  * <ul>
  *   <li>类型安全的 getter - getString、getInteger、getLong 等</li>
@@ -39,7 +55,7 @@ import com.njydsz.common.json.YdszJson;
  * </pre>
  *
  * @deprecated 使用 {@link com.njydsz.common.json.tree.ArrayNode} 替代——tree 包提供统一的 JsonNode 抽象。
- *             此 ArrayList 方案将在后续版本删除。
+ *             此 ArrayList 方案将在后续版本删除（v1.1.0）。
  */
 @Deprecated
 public class JsonArray extends ArrayList<Object> {
@@ -74,22 +90,26 @@ public class JsonArray extends ArrayList<Object> {
     // ==================== 基本类型 getter ====================
 
     /**
-     * 获取字符串值
+     * 获取字符串值。
      *
      * @param index 索引
      * @return 字符串值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}: {@code node.get(index).asText()}
      */
+    @Deprecated
     public String getString(int index) {
         Object value = get(index);
         return value != null ? value.toString() : null;
     }
 
     /**
-     * 获取整数值
+     * 获取整数值。
      *
      * @param index 索引
      * @return 整数值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}: {@code node.get(index).asInt()}
      */
+    @Deprecated
     public Integer getInteger(int index) {
         Object value = get(index);
         if (value == null) {
@@ -109,11 +129,13 @@ public class JsonArray extends ArrayList<Object> {
     }
 
     /**
-     * 获取 int 基本类型值（为 null 时返回 0）
+     * 获取 int 基本类型值（为 null 时返回 0）。
      *
      * @param index 索引
      * @return int 值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}: {@code node.get(index).asInt(0)}
      */
+    @Deprecated
     public int getIntValue(int index) {
         Integer value = getInteger(index);
         return value != null ? value : 0;
@@ -190,11 +212,13 @@ public class JsonArray extends ArrayList<Object> {
     }
 
     /**
-     * 获取布尔值
+     * 获取布尔值。
      *
      * @param index 索引
      * @return 布尔值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}: {@code node.get(index).asBoolean()}
      */
+    @Deprecated
     public Boolean getBoolean(int index) {
         Object value = get(index);
         if (value == null) {
@@ -543,11 +567,13 @@ public class JsonArray extends ArrayList<Object> {
     // ==================== 嵌套对象 getter ====================
 
     /**
-     * 获取 JsonObject
+     * 获取 JsonObject。
      *
      * @param index 索引
      * @return JsonObject
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}: {@code (ObjectNode) node.get(index)}
      */
+    @Deprecated
     public JsonObject getJSONObject(int index) {
         Object value = get(index);
         if (value instanceof JsonObject) {
@@ -560,11 +586,13 @@ public class JsonArray extends ArrayList<Object> {
     }
 
     /**
-     * 获取 JsonArray
+     * 获取 JsonArray。
      *
      * @param index 索引
      * @return JsonArray
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}: {@code (ArrayNode) node.get(index)}
      */
+    @Deprecated
     public JsonArray getJSONArray(int index) {
         Object value = get(index);
         if (value instanceof JsonArray) {
@@ -577,13 +605,16 @@ public class JsonArray extends ArrayList<Object> {
     }
 
     /**
-     * 获取对象并转换为指定类型
+     * 获取对象并转换为指定类型。
      *
      * @param index 索引
      * @param clazz 目标类型
      * @param <T> 类型参数
      * @return 转换后的对象
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}:
+     *             {@code JsonMapper.getDefault().treeToValue(node.get(index), clazz)}
      */
+    @Deprecated
     public <T> T getObject(int index, Class<T> clazz) {
         Object value = get(index);
         if (value == null) {
@@ -643,11 +674,13 @@ public class JsonArray extends ArrayList<Object> {
     }
 
     /**
-     * 移除元素
+     * 移除元素。
      *
      * @param index 索引
      * @return 移除的元素
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}: {@code node.remove(index)}
      */
+    @Deprecated
     public Object remove(int index) {
         return super.remove(index);
     }

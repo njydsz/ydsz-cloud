@@ -82,6 +82,15 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
         shiftThreshold);
   }
 
+  /**
+   * 获取缓存值（不触发加载），并更新访问热度。
+   *
+   * <p>命中时向频率草图登记访问（用于淘汰决策）； 处于 Probation 队列的条目会尝试提升到 Protected 队列
+   * （提升在写锁内重新校验有效性，避免并发淘汰下的野指针）。 null 键直接返回 null 并计入 miss。
+   *
+   * @param key 缓存键，为 null 时返回 {@code null}
+   * @return 缓存值；未命中时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     if (key == null) {
@@ -102,6 +111,16 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     return node.value;
   }
 
+  /**
+   * 写入键值对；容量满时按 W-TinyLFU 频率策略淘汰候选条目。
+   *
+   * <p>整个流程持有写锁，保证容量检查、淘汰与写入原子化。新条目进入 Window 队列；
+   * 键已存在时仅覆盖值并登记访问。每累计 {@code shiftThreshold} 次访问对频率草图做一次
+   * 减半衰减，维持滑动窗口热度语义。null 键或 null 值被静默忽略。
+   *
+   * @param key   缓存键，为 null 时忽略
+   * @param value 缓存值，为 null 时忽略
+   */
   @Override
   public void put(K key, V value) {
     if (key == null || value == null) {
@@ -229,6 +248,14 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 移除指定键并返回被移除的值。
+   *
+   * <p>写锁内同时从数据表与所在链表移除节点，并向监听器发送 {@link RemovalCause#EXPLICIT} 通知。
+   *
+   * @param key 缓存键，为 null 时返回 {@code null}
+   * @return 被移除的值；键不存在时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     if (key == null) {
@@ -249,6 +276,13 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 清空缓存，重置三段 LRU 队列与尺寸计数。
+   *
+   * <p>写锁内对全部条目发送 {@link RemovalCause#EXPLICIT} 通知后清空；
+   * 频率草图不重置（其统计生命周期长于单次清空操作）。
+   *
+   */
   @Override
   public void clear() {
     writeLock.lock();
@@ -365,11 +399,22 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     updateTail(head, null, head);
   }
 
+  /**
+   * 返回缓存条目数（原子计数器，精确的近似值）。
+   *
+   * @return 当前缓存条目数
+   */
   @Override
   public long estimatedSize() {
     return sizeCounter.get();
   }
 
+  /**
+   * 判断缓存中是否存在指定键。
+   *
+   * @param key 缓存键，为 null 时返回 {@code false}
+   * @return 键存在时返回 {@code true}
+   */
   @Override
   public boolean containsKey(K key) {
     if (key == null) {
@@ -378,11 +423,25 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     return data.containsKey(key);
   }
 
+  /**
+   * 返回缓存键集合。
+   *
+   * <p>复制为新的 {@link HashSet}，返回一次性快照，不含弱一致视图语义。
+   *
+   * @return 当前缓存键的快照集合
+   */
   @Override
   public Set<K> keySet() {
     return new HashSet<>(data.keySet());
   }
 
+  /**
+   * 返回缓存值集合。
+   *
+   * <p>复制为一次性快照，值为节点中的实际数据。
+   *
+   * @return 当前缓存值的快照集合
+   */
   @Override
   public Collection<V> values() {
     List<V> values = new ArrayList<>(data.size());
@@ -392,12 +451,22 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     return values;
   }
 
+  /**
+   * 获取缓存命中率。
+   *
+   * @return 命中率，范围 [0.0, 1.0]
+   */
   @Override
   public double getHitRate() {
     long total = hitCount.sum() + missCount.sum();
     return total == 0 ? 0.0 : (double) hitCount.sum() / total;
   }
 
+  /**
+   * 获取缓存统计快照。
+   *
+   * @return 包含命中数与未命中数的统计对象
+   */
   @Override
   public CacheStats getStats() {
     return new CacheStats(hitCount.sum(), missCount.sum());

@@ -86,6 +86,15 @@ public class LFUCache<K, V> extends AbstractCache<K, V> {
     this.map = new ConcurrentHashMap<>(Math.max(16, maxSize));
   }
 
+  /**
+   * 获取缓存值（不触发加载），并递增访问频率。
+   *
+   * <p>采用乐观读 + StampedLock 升级路径：无写竞争时无锁读取并递增频率；
+   * 有写竞争时降级为读锁重查。命中计入 hit，未命中计入 miss 并返回 null。
+   *
+   * @param key 缓存键
+   * @return 缓存值；未命中时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     long stamp = lock.tryOptimisticRead();
@@ -127,6 +136,15 @@ public class LFUCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 写入键值对；容量满时按 LFU 采样策略淘汰最不常用条目。
+   *
+   * <p>整个流程持有写锁，保证容量检查、淘汰决策与写入原子化，避免并发超限。
+   * 键已存在时仅覆盖值（保留原访问频率）； 容量满且淘汰失败时保守拒绝写入并记录告警，防止容量超出 maxSize。
+   *
+   * @param key   缓存键
+   * @param value 缓存值
+   */
   @Override
   public void put(K key, V value) {
     // 整个 put 流程在 writeLock 内执行，避免：
@@ -165,6 +183,14 @@ public class LFUCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 移除指定键并返回被移除的值。
+   *
+   * <p>写锁内执行删除，并向监听器发出 {@link RemovalCause#EXPLICIT} 通知。
+   *
+   * @param key 缓存键
+   * @return 被移除的值；键不存在时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     long stamp = lock.writeLock();
@@ -180,6 +206,12 @@ public class LFUCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 清空缓存。
+   *
+   * <p>写锁内先对全部条目发送 {@link RemovalCause#EXPLICIT} 通知，再清空存储。
+   *
+   */
   @Override
   public void clear() {
     long stamp = lock.writeLock();
@@ -191,21 +223,46 @@ public class LFUCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 返回缓存条目数（近似值）。
+   *
+   * <p>直接统计底层 {@link ConcurrentHashMap} 大小，并发下为弱一致近似值。
+   *
+   * @return 缓存条目数
+   */
   @Override
   public long estimatedSize() {
     return map.size();
   }
 
+  /**
+   * 判断缓存中是否存在指定键。
+   *
+   * @param key 缓存键
+   * @return 键存在时返回 {@code true}
+   */
   @Override
   public boolean containsKey(K key) {
     return map.containsKey(key);
   }
 
+  /**
+   * 返回缓存键集合视图（透传底层并发映射，迭代器弱一致）。
+   *
+   * @return 缓存键集合视图
+   */
   @Override
   public Set<K> keySet() {
     return map.keySet();
   }
 
+  /**
+   * 返回缓存值集合。
+   *
+   * <p>复制到新列表返回一次性快照，值为解包后的实际数据。
+   *
+   * @return 当前缓存值的快照集合
+   */
   @Override
   public Collection<V> values() {
     List<V> list = new ArrayList<>(map.size());

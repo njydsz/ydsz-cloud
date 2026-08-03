@@ -233,11 +233,9 @@ export const errorMessageResponseInterceptor = (
           break;
         }
         default: {
-          if (status && status >= 500) {
-            errorMessage = $t('ui.fallback.http.internalServerError');
-          } else {
-            errorMessage = $t('ui.fallback.http.internalServerError');
-          }
+          // 兜底：所有其他状态码统一返回服务器错误提示
+          errorMessage = $t('ui.fallback.http.internalServerError');
+          break;
         }
       }
       makeErrorMessage?.(errorMessage, error);

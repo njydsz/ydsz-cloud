@@ -69,15 +69,15 @@ public class JsonAutoConfiguration {
      *
      * @return YdszJson HTTP 消息转换器
      */
-@Bean
-@ConditionalOnMissingBean(JsonHttpMessageConverter.class)
-@ConditionalOnClass(name = "org.springframework.http.converter.HttpMessageConverter")
-public JsonHttpMessageConverter ydszJsonHttpMessageConverter(JsonProperties properties) {
-JsonHttpMessageConverter converter = new JsonHttpMessageConverter();
-converter.setStreamingEnabled(properties.isStreamingEnabled());
-converter.setMaxRequestBodySize(properties.getMaxRequestBodySize());
-return converter;
-}
+    @Bean
+    @ConditionalOnMissingBean(JsonHttpMessageConverter.class)
+    @ConditionalOnClass(name = "org.springframework.http.converter.HttpMessageConverter")
+    public JsonHttpMessageConverter ydszJsonHttpMessageConverter(JsonProperties properties) {
+        JsonHttpMessageConverter converter = new JsonHttpMessageConverter();
+        converter.setStreamingEnabled(properties.isStreamingEnabled());
+        converter.setMaxRequestBodySize(properties.getMaxRequestBodySize());
+        return converter;
+    }
 
     /**
      * YdszJson 指标监控（Micrometer），并绑定到 YdszJson 引擎。

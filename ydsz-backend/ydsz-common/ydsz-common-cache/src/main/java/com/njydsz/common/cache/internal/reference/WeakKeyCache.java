@@ -81,6 +81,14 @@ public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 获取缓存值（不触发加载）。
+   *
+   * <p>通过 {@link #lookupKey} 构造等价查询键定位条目； 键对象已被 GC 回收的条目视为未命中（返回 null 并计入 miss）。
+   *
+   * @param key 缓存键
+   * @return 缓存值；未命中时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     maybeCleanup();
@@ -95,6 +103,15 @@ public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
     return value;
   }
 
+  /**
+   * 写入键值对，键以弱引用形式持有。
+   *
+   * <p>写入前先移除同键旧条目，再以弱引用键存储，避免同键重复引用残留；
+   * 键对象不再被外部强引用后，GC 即可回收该键并触发条目清理。
+   *
+   * @param key   缓存键（弱引用持有，可被 GC 回收）
+   * @param value 缓存值
+   */
   @Override
   public void put(K key, V value) {
     maybeCleanup();
@@ -102,6 +119,14 @@ public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
     map.put(new WeakReferenceKey<>(key, queue), value);
   }
 
+  /**
+   * 移除指定键并返回被移除的值。
+   *
+   * <p>成功移除时向监听器发送 {@link RemovalCause#EXPLICIT} 通知。
+   *
+   * @param key 缓存键
+   * @return 被移除的值；键不存在时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     maybeCleanup();
@@ -112,6 +137,12 @@ public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
     return value;
   }
 
+  /**
+   * 清空缓存。
+   *
+   * <p>对全部条目发送 {@link RemovalCause#EXPLICIT} 通知，同时清空底层映射与引用队列。
+   *
+   */
   @Override
   public void clear() {
     map.forEach(
@@ -123,18 +154,38 @@ public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
     while (queue.poll() != null) {}
   }
 
+  /**
+   * 返回缓存条目数（近似值）。
+   *
+   * <p>基于底层映射大小，可能包含键已回收但尚未被惰性清理的残留条目。
+   *
+   * @return 缓存条目数
+   */
   @Override
   public long estimatedSize() {
     maybeCleanup();
     return map.size();
   }
 
+  /**
+   * 判断缓存中是否存在指定键（键对象尚未被 GC 回收）。
+   *
+   * @param key 缓存键
+   * @return 键存在时返回 {@code true}
+   */
   @Override
   public boolean containsKey(K key) {
     maybeCleanup();
     return map.containsKey(lookupKey(key));
   }
 
+  /**
+   * 返回缓存键集合。
+   *
+   * <p>遍历弱引用键并解包为实际键，返回一次性快照； 已回收的键（{@code get()} 返回 null）被过滤。
+   *
+   * @return 当前存活键的快照集合
+   */
   @Override
   public Set<K> keySet() {
     maybeCleanup();
@@ -148,6 +199,11 @@ public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
     return keys;
   }
 
+  /**
+   * 返回缓存值集合（透传底层并发映射，迭代器弱一致）。
+   *
+   * @return 缓存值集合视图
+   */
   @Override
   public Collection<V> values() {
     maybeCleanup();
@@ -187,6 +243,13 @@ public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
       return hashCode;
     }
 
+    /**
+     * 解包返回被弱引用持有的实际键。
+     *
+     * <p>键已被 GC 回收时返回 null，调用方需据此过滤失效条目。
+     *
+     * @return 实际键对象；已回收时返回 {@code null}
+     */
     public K getKey() {
       return get();
     }

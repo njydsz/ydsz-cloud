@@ -137,6 +137,15 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
         flushIntervalMs, batchSize, maxQueueSize);
   }
 
+  /**
+   * 写入键值对：先更新缓存，再异步排队写回后端。
+   *
+   * <p>队列未满时写入操作入队（异步写回）；队列已满时降级为同步写后端以控制内存占用。
+   * 注意：缓存先更新成功而后端异步写入，存在短暂不一致与进程崩溃时的数据丢失风险。
+   *
+   * @param key   缓存键
+   * @param value 缓存值
+   */
   @Override
   public void put(K key, V value) {
     // 先写缓存
@@ -157,6 +166,14 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
     }
   }
 
+  /**
+   * 移除指定键并返回被移除的值，同时异步排队删除后端数据。
+   *
+   * <p>仅在键真实存在（返回值非 null）时才产生 DELETE 写操作， 避免无谓的后端删除调用。
+   *
+   * @param key 缓存键
+   * @return 被移除的值；键不存在时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     V value = delegate.remove(key);
@@ -233,6 +250,12 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
     return result;
   }
 
+  /**
+   * 关闭 Write-Behind 缓存。
+   *
+   * <p>先同步刷新队列中剩余的写操作（带重试与死信处理），确保关闭时尽量不丢数据；
+   * 线程池由 {@link CacheThreadPoolManager} 统一管理，不在此关闭。
+   */
   @Override
   public void close() {
     // 刷新剩余操作
@@ -243,47 +266,108 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
 
   // === 以下方法委托给底层缓存 ===
 
+  /**
+   * 获取缓存值（不触发加载）。
+   *
+   * @param key 缓存键
+   * @return 缓存值；未命中时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     return delegate.getIfPresent(key);
   }
 
+  /**
+   * 获取缓存值，未命中时使用加载器加载。
+   *
+   * @param key    缓存键
+   * @param loader 值加载器
+   * @return 缓存值或加载的新值
+   */
   @Override
   public V get(K key, Function<K, V> loader) {
     return delegate.get(key, loader);
   }
 
+  /**
+   * 异步获取缓存值，未命中时使用异步加载器加载。
+   *
+   * @param key    缓存键
+   * @param loader 异步值加载器
+   * @return 异步完成的缓存值
+   */
   @Override
   public CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader) {
     return delegate.getAsync(key, loader);
   }
 
+  /**
+   * 仅当键不存在时写入。
+   *
+   * <p>注意：直接委托底层缓存，不排队写后端，调用方需自行保证后端一致性。
+   *
+   * @param key   缓存键
+   * @param value 缓存值
+   * @return 已存在的旧值；键原本不存在时返回 {@code null}
+   */
   @Override
   public V putIfAbsent(K key, V value) {
     return delegate.putIfAbsent(key, value);
   }
 
+  /**
+   * 计算并写入缓存（直接委托，不排队写后端）。
+   *
+   * @param key             缓存键
+   * @param mappingFunction 映射函数
+   * @return 计算后的值
+   */
   @Override
   public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
     return delegate.computeIfAbsent(key, mappingFunction);
   }
 
+  /**
+   * 基于旧值重新计算映射并写回缓存（直接委托，不排队写后端）。
+   *
+   * @param key               缓存键
+   * @param remappingFunction 重映射函数
+   * @return 重映射后的值
+   */
   @Override
   public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     return delegate.compute(key, remappingFunction);
   }
 
+  /**
+   * 合并值与现有值（直接委托，不排队写后端）。
+   *
+   * @param key               缓存键
+   * @param value             待合并的值
+   * @param remappingFunction 合并函数
+   * @return 合并后的值
+   */
   @Override
   public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
     return delegate.merge(key, value, remappingFunction);
   }
 
+  /**
+   * 清空缓存与待写队列。
+   *
+   * <p>已入队的写操作被丢弃不再写回后端，调用方需注意数据一致性问题。
+   */
   @Override
   public void clear() {
     delegate.clear();
     writeQueue.clear();
   }
 
+  /**
+   * 批量写入：先写缓存，再逐条排队写回后端（队列满时同步降级）。
+   *
+   * @param map 待写入的映射
+   */
   @Override
   public void putAll(Map<K, V> map) {
     delegate.putAll(map);
@@ -305,87 +389,168 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
     }
   }
 
+  /**
+   * 批量获取指定键的缓存值（不触发加载）。
+   *
+   * @param keys 待获取的键集合
+   * @return 命中键值映射；未命中的键不会出现在结果中
+   */
   @Override
   public Map<K, V> getAll(Collection<K> keys) {
     return delegate.getAll(keys);
   }
 
+  /**
+   * 批量移除指定键，并为每个键排队 DELETE 写操作。
+   *
+   * @param keys 待移除的键集合
+   */
   @Override
   public void removeAll(Collection<K> keys) {
     delegate.removeAll(keys);
     keys.forEach(k -> writeQueue.offer(new WriteOp<>(OpType.DELETE, k, null)));
   }
 
+  /**
+   * 使单个键失效（等价于 {@link #remove}，会异步删除后端数据）。
+   *
+   * @param key 缓存键
+   */
   @Override
   public void invalidate(K key) {
     remove(key);
   }
 
+  /**
+   * 批量使指定键集合失效（等价于 {@link #removeAll}）。
+   *
+   * @param keys 待失效的键集合
+   */
   @Override
   public void invalidateAll(Collection<K> keys) {
     removeAll(keys);
   }
 
+  /**
+   * 使全部键失效（等价于 {@link #clear}）。
+   */
   @Override
   public void invalidateAll() {
     clear();
   }
 
+  /**
+   * 返回缓存条目数（近似值）。
+   *
+   * @return 底层缓存条目数
+   */
   @Override
   public long estimatedSize() {
     return delegate.estimatedSize();
   }
 
+  /**
+   * 判断缓存是否为空。
+   *
+   * @return 底层缓存无条目时返回 {@code true}
+   */
   @Override
   public boolean isEmpty() {
     return delegate.isEmpty();
   }
 
+  /**
+   * 获取缓存命中率。
+   *
+   * @return 底层缓存的命中率
+   */
   @Override
   public double getHitRate() {
     return delegate.getHitRate();
   }
 
+  /**
+   * 获取缓存统计快照。
+   *
+   * @return 底层缓存的统计对象
+   */
   @Override
   public CacheStats getStats() {
     return delegate.getStats();
   }
 
+  /**
+   * 重置统计计数器。
+   */
   @Override
   public void resetStats() {
     delegate.resetStats();
   }
 
+  /**
+   * 获取缓存策略查询接口。
+   *
+   * @return 底层缓存的策略接口
+   */
   @Override
   public CachePolicy policy() {
     return delegate.policy();
   }
 
+  /**
+   * 判断缓存中是否存在指定键。
+   *
+   * @param key 缓存键
+   * @return 底层缓存存在该键时返回 {@code true}
+   */
   @Override
   public boolean containsKey(K key) {
     return delegate.containsKey(key);
   }
 
+  /**
+   * 返回缓存键集合视图。
+   *
+   * @return 底层缓存的键集合视图
+   */
   @Override
   public Set<K> keySet() {
     return delegate.keySet();
   }
 
+  /**
+   * 返回缓存值集合视图。
+   *
+   * @return 底层缓存的值集合视图
+   */
   @Override
   public Collection<V> values() {
     return delegate.values();
   }
 
+  /**
+   * 执行缓存维护操作（清理过期条目等）。
+   */
   @Override
   public void cleanUp() {
     delegate.cleanUp();
   }
 
+  /**
+   * 添加删除监听器。
+   *
+   * @param listener 删除监听器
+   */
   @Override
   public void addListener(RemovalListener<? super K, ? super V> listener) {
     delegate.addListener(listener);
   }
 
+  /**
+   * 遍历缓存键值对。
+   *
+   * @param action 作用于每个键值对的消费动作
+   */
   @Override
   public void forEach(BiConsumer<? super K, ? super V> action) {
     delegate.forEach(action);

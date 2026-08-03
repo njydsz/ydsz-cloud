@@ -27,17 +27,17 @@ import { acceptHMRUpdate, defineStore } from 'pinia';
 
 interface TabbarState {
   /**
-   * @zh_CN 当前打开的标签页列表缓存
+   * @zh_CN 当前打开的标签页列表缓存（使用数组避免 Set 序列化隐患）
    */
-  cachedTabs: Set<string>;
+  cachedTabs: string[];
   /**
    * @zh_CN 拖拽结束的索引
    */
   dragEndIndex: number;
   /**
-   * @zh_CN 需要排除缓存的标签页
+   * @zh_CN 需要排除缓存的标签页（使用数组避免 Set 序列化隐患）
    */
-  excludeCachedTabs: Set<string>;
+  excludeCachedTabs: string[];
   /**
    * @zh_CN 标签右键菜单列表
    */
@@ -354,13 +354,13 @@ export const useTabbarStore = defineStore('core-tabbar', {
       const { currentRoute } = router;
       const { name } = currentRoute.value;
 
-      this.excludeCachedTabs.add(name as string);
+      this.excludeCachedTabs = [...new Set([...this.excludeCachedTabs, name as string])];
       this.renderRouteView = false;
       startProgress();
 
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      this.excludeCachedTabs.delete(name as string);
+      this.excludeCachedTabs = this.excludeCachedTabs.filter((n) => n !== (name as string));
       this.renderRouteView = true;
       stopProgress();
     },
@@ -369,9 +369,9 @@ export const useTabbarStore = defineStore('core-tabbar', {
      * 根据路由名称刷新指定标签页
      */
     async refreshByName(name: string) {
-      this.excludeCachedTabs.add(name);
+      this.excludeCachedTabs = [...new Set([...this.excludeCachedTabs, name])];
       await new Promise((resolve) => setTimeout(resolve, 200));
-      this.excludeCachedTabs.delete(name);
+      this.excludeCachedTabs = this.excludeCachedTabs.filter((n) => n !== name);
     },
 
     /**
@@ -504,7 +504,7 @@ export const useTabbarStore = defineStore('core-tabbar', {
         const name = tab.name as string;
         cacheMap.add(name);
       }
-      this.cachedTabs = cacheMap;
+      this.cachedTabs = [...cacheMap];
     },
   },
   getters: {
@@ -539,9 +539,9 @@ export const useTabbarStore = defineStore('core-tabbar', {
     },
   ],
   state: (): TabbarState => ({
-    cachedTabs: new Set(),
+    cachedTabs: [],
     dragEndIndex: 0,
-    excludeCachedTabs: new Set(),
+    excludeCachedTabs: [],
     menuList: [
       'close',
       'affix',

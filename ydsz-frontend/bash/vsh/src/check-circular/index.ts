@@ -41,6 +41,8 @@ interface CheckCircularConfig {
 
 interface CommandOptions {
   config?: CheckCircularConfig;
+  /** 是否发现循环依赖时以非零退出码失败（CI 环境建议开启） */
+  failOnCircular?: boolean;
   staged: boolean;
   verbose: boolean;
 }
@@ -75,6 +77,7 @@ function formatCircles(circles: CircularDependencyResult[]): void {
  */
 async function checkCircular({
   config = {},
+  failOnCircular = false,
   staged,
   verbose,
 }: CommandOptions): Promise<void> {
@@ -132,8 +135,14 @@ async function checkCircular({
       verbose && formatCircles(results);
     }
 
-    // 如果发现循环依赖，只输出警告信息
+    // 如果发现循环依赖
     if (results.length > 0) {
+      if (failOnCircular) {
+        console.error(
+          `\n❌ Found ${results.length} circular dependencies, build blocked.`,
+        );
+        process.exit(1);
+      }
       console.log(
         '\n⚠️ Warning: Circular dependencies found, please check and fix',
       );
@@ -155,12 +164,13 @@ function defineCheckCircularCommand(cac: CAC): void {
     .command('check-circular')
     .option('--staged', 'Only check staged files')
     .option('--verbose', 'Show detailed information')
+    .option('--fail', 'Exit with error if circular dependencies found')
     .option('--threshold <number>', 'Threshold for circular dependencies', {
       default: 0,
     })
     .option('--ignore-dirs <dirs>', 'Directories to ignore, comma separated')
     .usage('Analyze project circular dependencies')
-    .action(async ({ ignoreDirs, staged, threshold, verbose }) => {
+    .action(async ({ fail, ignoreDirs, staged, threshold, verbose }) => {
       const config: CheckCircularConfig = {
         threshold: Number(threshold),
         ...(ignoreDirs && { ignoreDirs: ignoreDirs.split(',') }),
@@ -168,6 +178,7 @@ function defineCheckCircularCommand(cac: CAC): void {
 
       await checkCircular({
         config,
+        failOnCircular: !!fail,
         staged,
         verbose: verbose ?? true,
       });

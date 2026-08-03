@@ -111,8 +111,7 @@ describe('useAccessStore', () => {
 
   it('returns all cache tabs', () => {
     const store = useTabbarStore();
-    store.cachedTabs.add('Home');
-    store.cachedTabs.add('About');
+    store.cachedTabs = ['Home', 'About'];
     expect(store.getCachedTabs).toEqual(['Home', 'About']);
   });
 
@@ -301,7 +300,7 @@ describe('useAccessStore', () => {
 
     await store.refresh(router);
 
-    expect(store.excludeCachedTabs.has('Dashboard')).toBe(false);
+    expect(store.excludeCachedTabs.includes('Dashboard')).toBe(false);
     expect(store.renderRouteView).toBe(true);
   });
 });

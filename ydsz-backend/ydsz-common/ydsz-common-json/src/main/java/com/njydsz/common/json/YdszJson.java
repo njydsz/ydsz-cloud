@@ -391,12 +391,16 @@ public class YdszJson {
     }
     
     /**
-     * JSON 字符串转 JsonObject
-     * 
+     * JSON 字符串转 JsonObject。
+     *
+     * <p>委托给 {@link #readTree(String)} 的底层解析器（{@link JsonParserUtil#parse(String)}），
+     * 解析完成后包装为 {@link JsonObject}。此方法为旧 API 过渡桥接，计划在 1.1.0 删除，
+     * 请迁移至 {@link #readTree(String)} 获取 {@link com.njydsz.common.json.tree.ObjectNode}。</p>
+     *
      * @param json JSON 字符串
      * @return JsonObject 对象
+     * @deprecated 请使用 {@link #readTree(String)} 获取 {@link com.njydsz.common.json.tree.ObjectNode}
      */
-    
     @Deprecated(since = "1.0.0", forRemoval = true)
     public static JsonObject parseObjectToJsonObject(String json) {
         Object result = DeserializationProvider.deserialize(json, Map.class);
@@ -407,12 +411,16 @@ public class YdszJson {
     }
     
     /**
-     * JSON 字符串转 JsonArray
-     * 
+     * JSON 字符串转 JsonArray。
+     *
+     * <p>委托给 {@link #readTree(String)} 的底层解析器（{@link JsonParserUtil#parse(String)}），
+     * 解析完成后包装为 {@link JsonArray}。此方法为旧 API 过渡桥接，计划在 1.1.0 删除，
+     * 请迁移至 {@link #readTree(String)} 获取 {@link com.njydsz.common.json.tree.ArrayNode}。</p>
+     *
      * @param json JSON 字符串
      * @return JsonArray 对象
+     * @deprecated 请使用 {@link #readTree(String)} 获取 {@link com.njydsz.common.json.tree.ArrayNode}
      */
-    
     @Deprecated(since = "1.0.0", forRemoval = true)
     public static JsonArray parseArrayToJsonArray(String json) {
         Object result = DeserializationProvider.deserialize(json, List.class);
@@ -467,27 +475,25 @@ public class YdszJson {
     // ==================== Builder 入口方法 ====================
 
     /**
-     * 创建 JSON 对象
+     * 创建 JSON 对象节点。
      *
-     * @return JSON 对象
-     * @deprecated 双重树模型已合并到 {@link com.njydsz.common.json.tree.ObjectNode}，
-     *             请使用 {@code new ObjectNode()} 或 {@link #readTree(String)} 替代
+     * @return ObjectNode 实例
+     * @deprecated 请直接使用 {@code new ObjectNode()} 或 {@link #readTree(String)}
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static JsonObject object() {
-        return new JsonObject();
+    @Deprecated(since = "1.0.0")
+    public static ObjectNode object() {
+        return new ObjectNode();
     }
 
     /**
-     * 创建 JSON 数组
+     * 创建 JSON 数组节点。
      *
-     * @return JSON 数组
-     * @deprecated 双重树模型已合并到 {@link com.njydsz.common.json.tree.ArrayNode}，
-     *             请使用 {@code new ArrayNode()} 或 {@link #readTree(String)} 替代
+     * @return ArrayNode 实例
+     * @deprecated 请直接使用 {@code new ArrayNode()} 或 {@link #readTree(String)}
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static JsonArray array() {
-        return new JsonArray();
+    @Deprecated(since = "1.0.0")
+    public static ArrayNode array() {
+        return new ArrayNode();
     }
     
     // ==================== 自定义序列化器注册 ====================

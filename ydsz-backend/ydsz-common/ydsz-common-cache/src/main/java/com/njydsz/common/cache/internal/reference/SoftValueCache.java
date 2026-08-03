@@ -98,6 +98,15 @@ public class SoftValueCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 获取缓存值（不触发加载）。
+   *
+   * <p>值被 GC 回收后等价于未命中：返回 null 并计入 miss。访问前会触发轻量级过期清理
+   * （受 {@link #CLEANUP_INTERVAL_NANOS} 节流）。
+   *
+   * @param key 缓存键
+   * @return 缓存值；未命中或软引用已被 GC 回收时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     maybeCleanup();
@@ -111,6 +120,14 @@ public class SoftValueCache<K, V> extends AbstractCache<K, V> {
     return value;
   }
 
+  /**
+   * 写入键值对，值以软引用形式存储。
+   *
+   * <p>值对象在 JVM 内存不足时可被 GC 回收（不阻塞回收）， 键的软引用注册到引用队列，便于后续清理残留条目。
+   *
+   * @param key   缓存键
+   * @param value 缓存值
+   */
   @Override
   public void put(K key, V value) {
     maybeCleanup();
@@ -118,6 +135,14 @@ public class SoftValueCache<K, V> extends AbstractCache<K, V> {
     map.put(key, ref);
   }
 
+  /**
+   * 移除指定键并返回被移除的值。
+   *
+   * <p>值若已被 GC 回收，则无法返回原值，仅清理条目（不发送删除通知）。
+   *
+   * @param key 缓存键
+   * @return 被移除的值；键不存在或值已被回收时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     maybeCleanup();
@@ -129,6 +154,12 @@ public class SoftValueCache<K, V> extends AbstractCache<K, V> {
     return value;
   }
 
+  /**
+   * 清空缓存。
+   *
+   * <p>对值仍存活（未被回收）的条目发送 {@link RemovalCause#EXPLICIT} 通知， 同时清空底层映射与引用队列。
+   *
+   */
   @Override
   public void clear() {
     map.forEach(
@@ -142,12 +173,25 @@ public class SoftValueCache<K, V> extends AbstractCache<K, V> {
     while (queue.poll() != null) {}
   }
 
+  /**
+   * 返回值仍存活（未被 GC 回收）的缓存条目数。
+   *
+   * <p>与底层 Map 大小不同，已回收值的条目会被过滤，结果随 GC 动态变化。
+   *
+   * @return 存活条目数
+   */
   @Override
   public long estimatedSize() {
     maybeCleanup();
     return map.entrySet().stream().filter(e -> e.getValue().get() != null).count();
   }
 
+  /**
+   * 判断缓存中是否存在指定键（值未被 GC 回收）。
+   *
+   * @param key 缓存键
+   * @return 键存在且值存活时返回 {@code true}
+   */
   @Override
   public boolean containsKey(K key) {
     maybeCleanup();
@@ -155,12 +199,26 @@ public class SoftValueCache<K, V> extends AbstractCache<K, V> {
     return ref != null && ref.get() != null;
   }
 
+  /**
+   * 返回缓存键集合。
+   *
+   * <p>透传底层并发映射的键视图（弱一致），可能包含值已被 GC 回收的残留键。
+   *
+   * @return 缓存键集合视图
+   */
   @Override
   public Set<K> keySet() {
     maybeCleanup();
     return map.keySet();
   }
 
+  /**
+   * 返回缓存值集合。
+   *
+   * <p>复制为一次性快照，仅包含仍存活的值；已回收值的条目被过滤。
+   *
+   * @return 当前存活值的快照集合
+   */
   @Override
   public Collection<V> values() {
     maybeCleanup();

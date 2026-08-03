@@ -307,6 +307,15 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     }
   }
 
+  /**
+   * 获取缓存值（不触发加载），并检查是否过期。
+   *
+   * <p>过期语义：读路径先查底层缓存，命中后再比对过期时间戳； 已过期则同步删除并返回 null（计入未命中）。 未过期时按
+   * expireAfterAccess / 自定义 Expiry 刷新过期时间（写后过期模式不受影响）。
+   *
+   * @param key 缓存键
+   * @return 缓存值；未命中或已过期时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     V value = delegate.getIfPresent(key);
@@ -324,6 +333,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return value;
   }
 
+  /**
+   * 获取缓存值，未命中时使用加载器加载，并按写后过期语义落缓存。
+   *
+   * @param key    缓存键
+   * @param loader 值加载器
+   * @return 缓存值或加载的新值
+   */
   @Override
   public V get(K key, Function<K, V> loader) {
     V value = getIfPresent(key);
@@ -336,6 +352,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return value;
   }
 
+  /**
+   * 异步获取缓存值，未命中时使用异步加载器加载并写入（写后过期）。
+   *
+   * @param key    缓存键
+   * @param loader 异步值加载器
+   * @return 异步完成的缓存值
+   */
   @Override
   public CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader) {
     V value = getIfPresent(key);
@@ -353,6 +376,15 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
             });
   }
 
+  /**
+   * 写入键值对，并记录新的过期时间。
+   *
+   * <p>先写入底层缓存，再按配置的过期策略（自定义 Expiry > 写后过期 > 访问后过期） 计算并登记过期时间戳，
+   * 同时加入时间桶索引供后台清理使用。 TTL 为 0 且无自定义策略时条目不设过期（Long.MAX_VALUE）。
+   *
+   * @param key   缓存键
+   * @param value 缓存值
+   */
   @Override
   public void put(K key, V value) {
     delegate.put(key, value);
@@ -361,6 +393,15 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     addToBucket(expireAt, key);
   }
 
+  /**
+   * 仅当键不存在（含已过期）时写入并返回旧值。
+   *
+   * <p>过期键视为不存在，允许覆盖写入。
+   *
+   * @param key   缓存键
+   * @param value 缓存值
+   * @return 已存在的旧值；键不存在或已过期时返回 {@code null}
+   */
   @Override
   public V putIfAbsent(K key, V value) {
     V existing = getIfPresent(key);
@@ -371,6 +412,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return existing;
   }
 
+  /**
+   * 键不存在或已过期时计算并写入，返回计算值。
+   *
+   * @param key             缓存键
+   * @param mappingFunction 映射函数
+   * @return 缓存值或计算的新值
+   */
   @Override
   public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
     V value = getIfPresent(key);
@@ -383,6 +431,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return value;
   }
 
+  /**
+   * 基于旧值重新计算并写回，重映射结果为 null 时删除该键。
+   *
+   * @param key               缓存键
+   * @param remappingFunction 重映射函数
+   * @return 重映射后的值；结果为 null 表示已删除
+   */
   @Override
   public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     V oldValue = getIfPresent(key);
@@ -395,6 +450,14 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return newValue;
   }
 
+  /**
+   * 合并值与现有值并写回，合并结果为 null 时删除该键。
+   *
+   * @param key               缓存键
+   * @param value             待合并的值
+   * @param remappingFunction 合并函数
+   * @return 合并后的值
+   */
   @Override
   public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
     V oldValue = getIfPresent(key);
@@ -407,6 +470,14 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return newValue;
   }
 
+  /**
+   * 移除指定键并返回被移除的值。
+   *
+   * <p>同步清除过期时间戳映射；时间桶中的残留索引由后台 {@code cleanupExpired} 回收， 无需在此处主动清理。
+   *
+   * @param key 缓存键
+   * @return 被移除的值；键不存在时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     expirationMap.remove(key);
@@ -414,21 +485,37 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return delegate.remove(key);
   }
 
+  /**
+   * 使单个键失效（等价于 {@link #remove}）。
+   *
+   * @param key 缓存键
+   */
   @Override
   public void invalidate(K key) {
     remove(key);
   }
 
+  /**
+   * 批量使指定键集合失效。
+   *
+   * @param keys 待失效的键集合
+   */
   @Override
   public void invalidateAll(Collection<K> keys) {
     removeAll(keys);
   }
 
+  /**
+   * 使全部键失效（等价于 {@link #clear}）。
+   */
   @Override
   public void invalidateAll() {
     clear();
   }
 
+  /**
+   * 清空缓存，同时清空过期时间戳映射与时间桶索引。
+   */
   @Override
   public void clear() {
     expirationMap.clear();
@@ -436,6 +523,11 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     delegate.clear();
   }
 
+  /**
+   * 批量写入，逐条按写后过期语义登记过期时间。
+   *
+   * @param map 待写入的映射
+   */
   @Override
   public void putAll(Map<K, V> map) {
     if (map == null || map.isEmpty()) {
@@ -444,6 +536,12 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     map.forEach(this::put);
   }
 
+  /**
+   * 批量获取指定键的缓存值（不触发加载），自动过滤已过期条目。
+   *
+   * @param keys 待获取的键集合
+   * @return 命中键值映射；未命中或已过期的键不会出现在结果中
+   */
   @Override
   public Map<K, V> getAll(Collection<K> keys) {
     if (keys == null || keys.isEmpty()) {
@@ -459,6 +557,11 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return result;
   }
 
+  /**
+   * 批量移除指定键。
+   *
+   * @param keys 待移除的键集合
+   */
   @Override
   public void removeAll(Collection<K> keys) {
     if (keys == null || keys.isEmpty()) {
@@ -469,59 +572,129 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     }
   }
 
+  /**
+   * 返回缓存条目数（近似值）。
+   *
+   * <p>透传底层缓存的估算值，未剔除尚未被后台清理的过期条目。
+   *
+   * @return 底层缓存条目数
+   */
   @Override
   public long estimatedSize() {
     return delegate.estimatedSize();
   }
 
+  /**
+   * 判断缓存是否为空。
+   *
+   * @return 底层缓存无条目时返回 {@code true}
+   */
   @Override
   public boolean isEmpty() {
     return estimatedSize() == 0;
   }
 
+  /**
+   * 获取缓存命中率。
+   *
+   * <p>过期导致的未命中同样计入 miss。
+   *
+   * @return 命中率，范围 [0.0, 1.0]
+   */
   @Override
   public double getHitRate() {
     long total = hitCount.sum() + missCount.sum();
     return total == 0 ? 0.0 : (double) hitCount.sum() / total;
   }
 
+  /**
+   * 获取缓存统计快照。
+   *
+   * @return 包含命中数与未命中数的统计对象
+   */
   @Override
   public CacheStats getStats() {
     return new CacheStats(hitCount.sum(), missCount.sum());
   }
 
+  /**
+   * 获取缓存策略查询接口。
+   *
+   * <p>淘汰策略透传底层缓存；过期策略由本装饰器提供， 但过期时间在构造时固定，运行时修改过期时间的 setter 均为空操作。
+   *
+   * @return 缓存策略；过期策略始终可用
+   */
   @Override
   public CachePolicy policy() {
     return new CachePolicy() {
+      /**
+       * 查询底层缓存的淘汰策略。
+       *
+       * @return 底层缓存支持的淘汰策略；不支持时返回空 Optional
+       */
       @Override
       public Optional<EvictionPolicy> eviction() {
         return delegate.policy().eviction();
       }
 
+      /**
+       * 查询本装饰器配置的过期策略。
+       *
+       * @return 过期策略；因本类总是管理过期时间，始终非空
+       */
       @Override
       public Optional<ExpirationPolicy> expiration() {
         return Optional.of(
             new ExpirationPolicy() {
+              /**
+               * 获取写后过期时间（纳秒）。
+               *
+               * @return 写后过期纳秒数；0 表示未启用该模式
+               */
               @Override
               public long getExpiresAfterWriteNanos() {
                 return expireAfterWriteNanos;
               }
 
+              /**
+               * 修改写后过期时间（空操作）。
+               *
+               * <p>过期时间在构造时固定，运行时不支持动态调整。
+               *
+               * @param expireAfterWriteNanos 期望的写后过期纳秒数，被忽略
+               */
               @Override
               public void setExpiresAfterWriteNanos(long expireAfterWriteNanos) {
                 // 过期时间在构造时固定，运行时不支持修改
               }
 
+              /**
+               * 获取访问后过期时间（纳秒）。
+               *
+               * @return 访问后过期纳秒数；0 表示未启用该模式
+               */
               @Override
               public long getExpiresAfterAccessNanos() {
                 return expireAfterAccessNanos;
               }
 
+              /**
+               * 修改访问后过期时间（空操作）。
+               *
+               * <p>过期时间在构造时固定，运行时不支持动态调整。
+               *
+               * @param expireAfterAccessNanos 期望的访问后过期纳秒数，被忽略
+               */
               @Override
               public void setExpiresAfterAccessNanos(long expireAfterAccessNanos) {
                 // 过期时间在构造时固定，运行时不支持修改
               }
 
+              /**
+               * 是否使用自定义过期策略。
+               *
+               * @return 构造时传入了 {@link Expiry} 时返回 {@code true}
+               */
               @Override
               public boolean isCustomExpiry() {
                 return expiry != null;
@@ -531,6 +704,14 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     };
   }
 
+  /**
+   * 判断缓存中是否存在指定键（未过期的）。
+   *
+   * <p>底层存在但已过期的键会被同步删除并视为不存在。
+   *
+   * @param key 缓存键
+   * @return 键存在且未过期时返回 {@code true}
+   */
   @Override
   public boolean containsKey(K key) {
     if (!delegate.containsKey(key)) {
@@ -543,6 +724,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return true;
   }
 
+  /**
+   * 返回缓存键集合，已自动过滤过期键。
+   *
+   * <p>返回一次性快照，不含底层缓存的实时视图语义。
+   *
+   * @return 当前未过期键的快照集合
+   */
   @Override
   public Set<K> keySet() {
     Set<K> keys = new HashSet<>();
@@ -554,6 +742,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return keys;
   }
 
+  /**
+   * 返回缓存值集合，已自动过滤过期条目。
+   *
+   * <p>返回一次性快照，值可能重复。
+   *
+   * @return 当前未过期值的快照集合
+   */
   @Override
   public Collection<V> values() {
     List<V> values = new ArrayList<>();
@@ -568,17 +763,34 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return values;
   }
 
+  /**
+   * 执行缓存维护操作。
+   *
+   * <p>先立即清理本装饰器的过期条目（复用后台任务的时间桶扫描逻辑）， 再透传底层缓存的维护动作。
+   */
   @Override
   public void cleanUp() {
     cleanupExpired();
     delegate.cleanUp();
   }
 
+  /**
+   * 添加删除监听器（透传底层缓存）。
+   *
+   * <p>注意：本装饰器内部已注册了一个用于清理过期映射的监听器， 外部监听器与其共存，互不影响。
+   *
+   * @param listener 删除监听器
+   */
   @Override
   public void addListener(RemovalListener<? super K, ? super V> listener) {
     delegate.addListener(listener);
   }
 
+  /**
+   * 遍历缓存键值对（自动过滤过期条目）。
+   *
+   * @param action 作用于每个未过期键值对的消费动作
+   */
   @Override
   public void forEach(BiConsumer<? super K, ? super V> action) {
     for (K key : delegate.keySet()) {
@@ -596,6 +808,11 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     return delegate;
   }
 
+  /**
+   * 关闭过期缓存，取消后台清理任务。
+   *
+   * <p>取消任务采用 {@code cancel(false)}，不中断正在执行的清理； 不关闭底层缓存与共享线程池，避免影响其他实例。
+   */
   @Override
   public void close() {
     if (cleanupFuture != null) {

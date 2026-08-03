@@ -76,6 +76,15 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
         perSegmentCapacity);
   }
 
+  /**
+   * 获取缓存值（不触发加载）。
+   *
+   * <p>读路径无锁，按 key 哈希路由到对应分段读取；命中/未命中分别递增统计。
+   * null 键直接返回 null 并计入未命中。
+   *
+   * @param key 缓存键，为 null 时返回 {@code null}
+   * @return 缓存值；未命中时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     if (key == null) {
@@ -91,6 +100,15 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return value;
   }
 
+  /**
+   * 写入键值对。
+   *
+   * <p>null 键或 null 值被静默忽略（不写入、不报错）。首次写入使分段尺寸达到淘汰阈值时，
+   * 在分段锁内批量淘汰最久未访问的条目，以维持总容量不超过 {@code maxCapacity}。
+   *
+   * @param key   缓存键，为 null 时忽略
+   * @param value 缓存值，为 null 时忽略
+   */
   @Override
   public void put(K key, V value) {
     if (key == null || value == null) {
@@ -100,6 +118,14 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     segments.get(segmentIndex).put(key, value);
   }
 
+  /**
+   * 移除指定键并返回被移除的值。
+   *
+   * <p>null 键直接返回 {@code null}，不触发任何删除动作。
+   *
+   * @param key 缓存键，为 null 时返回 {@code null}
+   * @return 被移除的值；键不存在时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     if (key == null) {
@@ -109,6 +135,12 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return segments.get(segmentIndex).remove(key);
   }
 
+  /**
+   * 清空全部分段。
+   *
+   * <p>逐段清空，每段会向监听器发送 {@link RemovalCause#EXPLICIT} 通知并重置段内尺寸计数。
+   *
+   */
   @Override
   public void clear() {
     for (Segment<K, V> segment : segments) {
@@ -116,11 +148,26 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 返回缓存条目总数。
+   *
+   * <p>基于 {@link AtomicLong} 总计数器，为精确的近似值（并发写入下可能略有滞后）。
+   *
+   * @return 缓存条目总数
+   */
   @Override
   public long estimatedSize() {
     return totalSize.get();
   }
 
+  /**
+   * 判断缓存中是否存在指定键。
+   *
+   * <p>null 键返回 {@code false}。
+   *
+   * @param key 缓存键，为 null 时返回 {@code false}
+   * @return 键存在时返回 {@code true}
+   */
   @Override
   public boolean containsKey(K key) {
     if (key == null) {
@@ -130,6 +177,13 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return segments.get(segmentIndex).containsKey(key);
   }
 
+  /**
+   * 返回缓存键集合。
+   *
+   * <p>聚合全部分段的键到新 {@link HashSet}，为一次性快照而非实时视图； 快照期间发生的并发修改不会被反映。
+   *
+   * @return 当前缓存所有键的快照集合
+   */
   @Override
   public Set<K> keySet() {
     Set<K> keys = new HashSet<>();
@@ -139,6 +193,13 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return keys;
   }
 
+  /**
+   * 返回缓存值集合。
+   *
+   * <p>聚合全部分段的值到新 {@link ArrayList}，为一次性快照； 值可能重复，且不保证与 {@link #keySet()} 顺序对应。
+   *
+   * @return 当前缓存所有值的快照集合
+   */
   @Override
   public Collection<V> values() {
     List<V> values = new ArrayList<>();
@@ -148,12 +209,24 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return values;
   }
 
+  /**
+   * 获取缓存命中率。
+   *
+   * <p>命中率 = 命中次数 / (命中 + 未命中)，无访问记录时返回 0.0。
+   *
+   * @return 命中率，范围 [0.0, 1.0]
+   */
   @Override
   public double getHitRate() {
     long total = hitCount.sum() + missCount.sum();
     return total == 0 ? 0.0 : (double) hitCount.sum() / total;
   }
 
+  /**
+   * 获取缓存统计快照。
+   *
+   * @return 包含命中数、未命中数的统计对象，淘汰计数由监听器链另行维护
+   */
   @Override
   public CacheStats getStats() {
     return new CacheStats(hitCount.sum(), missCount.sum());

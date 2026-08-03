@@ -44,6 +44,16 @@ public final class FrequencySketch {
     ensureCapacity(1024);
   }
 
+  /**
+   * 配置计数器位宽（4 或 8 bit）。
+   *
+   * <p>4 bit 计数器上限 15、表压缩率更高；8 bit 上限 255、精度更高但占内存翻倍。
+   * 应在 {@link #ensureCapacity} 之前调用，否则只会影响后续新建计数器的位宽；
+   * 传入其他位宽抛出 {@link IllegalArgumentException}。
+   *
+   * @param bitSize 计数器位宽，仅支持 4 或 8
+   * @throws IllegalArgumentException 当 bitSize 不是 4 或 8 时抛出
+   */
   public void setBitSize(int bitSize) {
     if (bitSize == 4) {
       counterMask = 0xf;

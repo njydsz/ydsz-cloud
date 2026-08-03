@@ -92,6 +92,12 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     this.writer = writer;
   }
 
+  /**
+   * 获取缓存值（不触发加载），并更新命中统计。
+   *
+   * @param key 缓存键
+   * @return 缓存值；未命中时返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     V value = delegate.getIfPresent(key);
@@ -103,6 +109,13 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     return value;
   }
 
+  /**
+   * 获取缓存值，未命中时使用加载器加载，并更新命中统计。
+   *
+   * @param key    缓存键
+   * @param loader 值加载器
+   * @return 缓存值或加载的新值
+   */
   @Override
   public V get(K key, Function<K, V> loader) {
     V value = delegate.get(key, loader);
@@ -114,11 +127,28 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     return value;
   }
 
+  /**
+   * 异步获取缓存值（直接委托，不参与命中统计）。
+   *
+   * @param key    缓存键
+   * @param loader 异步值加载器
+   * @return 异步完成的缓存值
+   */
   @Override
   public CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader) {
     return delegate.getAsync(key, loader);
   }
 
+  /**
+   * 写入键值对：先同步写后端存储，成功后写缓存。
+   *
+   * <p>采用"先持久层、后缓存"的顺序，后端写入抛异常时缓存保持原值不变，
+   * 避免缓存与数据库不一致。写成功时递增写入计数。
+   *
+   * @param key   缓存键
+   * @param value 缓存值
+   * @throws RuntimeException 当后端写入失败时抛出（由 {@link CacheWriter#write} 决定具体异常类型）
+   */
   @Override
   public void put(K key, V value) {
     // Write-Through: 先写持久层，再写缓存
@@ -128,6 +158,16 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     writeCount.increment();
   }
 
+  /**
+   * 移除指定键：先同步删除后端存储，成功后删除缓存。
+   *
+   * <p>缓存中不存在该键时仍尝试从后端删除（携带 null 值），保证后端数据被清理；
+   * 删除成功后向监听器发出 {@link RemovalCause#EXPLICIT} 通知并递增删除计数。
+   *
+   * @param key 缓存键
+   * @return 被移除的缓存值；键不存在时返回 {@code null}
+   * @throws RuntimeException 当后端删除失败时抛出（由 {@link CacheWriter#delete} 决定具体异常类型）
+   */
   @Override
   public V remove(K key) {
     V value = delegate.getIfPresent(key);
@@ -146,6 +186,12 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     return value;
   }
 
+  /**
+   * 清空缓存：先逐个从后端存储删除全部条目，再清空缓存。
+   *
+   * <p>逐条调用 {@link CacheWriter#delete} 同步删除后端数据， 并向监听器发出
+   * {@link RemovalCause#EXPLICIT} 通知。任一后端删除失败都会中断清空流程。
+   */
   @Override
   public void clear() {
     delegate.forEach(
@@ -156,62 +202,137 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     delegate.clear();
   }
 
+  /**
+   * 返回缓存条目数（近似值）。
+   *
+   * @return 底层缓存条目数
+   */
   @Override
   public long estimatedSize() {
     return delegate.estimatedSize();
   }
 
+  /**
+   * 判断缓存中是否存在指定键。
+   *
+   * @param key 缓存键
+   * @return 底层缓存存在该键时返回 {@code true}
+   */
   @Override
   public boolean containsKey(K key) {
     return delegate.containsKey(key);
   }
 
+  /**
+   * 返回缓存键集合视图。
+   *
+   * @return 底层缓存的键集合视图
+   */
   @Override
   public Set<K> keySet() {
     return delegate.keySet();
   }
 
+  /**
+   * 返回缓存值集合视图。
+   *
+   * @return 底层缓存的值集合视图
+   */
   @Override
   public Collection<V> values() {
     return delegate.values();
   }
 
+  /**
+   * 获取缓存命中率。
+   *
+   * <p>仅统计经 {@link #getIfPresent} / {@link #get} 路径的访问；异步获取不计入。
+   *
+   * @return 命中率，范围 [0.0, 1.0]
+   */
   @Override
   public double getHitRate() {
     long total = hitCount.sum() + missCount.sum();
     return total == 0 ? 0.0 : (double) hitCount.sum() / total;
   }
 
+  /**
+   * 获取缓存统计快照。
+   *
+   * @return 包含命中数与未命中数的统计对象
+   */
   @Override
   public CacheStats getStats() {
     return new CacheStats(hitCount.sum(), missCount.sum());
   }
 
+  /**
+   * 添加删除监听器。
+   *
+   * <p>监听器由本类维护（非透传底层），仅在写穿透删除路径（remove/clear/removeAll）触发。
+   *
+   * @param listener 删除监听器
+   */
   @Override
   public void addListener(RemovalListener<? super K, ? super V> listener) {
     listeners.add(listener);
   }
 
+  /**
+   * 计算并写入缓存（直接委托，不写后端）。
+   *
+   * <p>注意：此路径不会同步后端存储，需要持久化时请使用 {@link #put}。
+   *
+   * @param key             缓存键
+   * @param mappingFunction 映射函数
+   * @return 计算后的值
+   */
   @Override
   public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
     return delegate.computeIfAbsent(key, mappingFunction);
   }
 
+  /**
+   * 基于旧值重新计算映射并写回缓存（直接委托，不写后端）。
+   *
+   * @param key               缓存键
+   * @param remappingFunction 重映射函数
+   * @return 重映射后的值
+   */
   @Override
   public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
     return delegate.compute(key, remappingFunction);
   }
 
+  /**
+   * 遍历缓存键值对。
+   *
+   * @param action 作用于每个键值对的消费动作
+   */
   @Override
   public void forEach(BiConsumer<? super K, ? super V> action) {
     delegate.forEach(action);
   }
 
+  /**
+   * 批量获取指定键的缓存值（不触发加载）。
+   *
+   * @param keys 待获取的键集合
+   * @return 命中键值映射；未命中的键不会出现在结果中
+   */
   @Override
   public Map<K, V> getAll(Collection<K> keys) {
     return delegate.getAll(keys);
   }
 
+  /**
+   * 批量写入：先全部同步写后端存储，成功后写缓存。
+   *
+   * <p>任一后端写入失败都会中断并抛异常，此时缓存保持未更新状态。
+   *
+   * @param map 待写入的映射
+   * @throws RuntimeException 当后端批量写入失败时抛出
+   */
   @Override
   public void putAll(Map<K, V> map) {
     for (Map.Entry<K, V> entry : map.entrySet()) {
@@ -221,6 +342,12 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     writeCount.add(map.size());
   }
 
+  /**
+   * 批量移除指定键：逐个同步删除后端存储（仅对缓存中存在的键），再删除缓存。
+   *
+   * @param keys 待移除的键集合
+   * @throws RuntimeException 当后端删除失败时抛出
+   */
   @Override
   public void removeAll(Collection<K> keys) {
     for (K key : keys) {
@@ -234,16 +361,29 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     delegate.removeAll(keys);
   }
 
+  /**
+   * 使单个键失效（等价于 {@link #remove}，会同步删除后端数据）。
+   *
+   * @param key 缓存键
+   */
   @Override
   public void invalidate(K key) {
     remove(key);
   }
 
+  /**
+   * 批量使指定键集合失效（等价于 {@link #removeAll}）。
+   *
+   * @param keys 待失效的键集合
+   */
   @Override
   public void invalidateAll(Collection<K> keys) {
     removeAll(keys);
   }
 
+  /**
+   * 使全部键失效（等价于 {@link #clear}）。
+   */
   @Override
   public void invalidateAll() {
     clear();

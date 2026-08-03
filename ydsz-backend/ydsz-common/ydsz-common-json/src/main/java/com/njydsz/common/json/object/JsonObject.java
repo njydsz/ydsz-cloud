@@ -20,6 +20,24 @@ import com.njydsz.common.json.YdszJson;
  * <p>对应 FastJSON2 的 JSONObject，继承 LinkedHashMap 提供动态 JSON 对象操作。
  * 支持类型安全的 getter/setter、链式调用、嵌套对象访问等功能。</p>
  *
+ * <p><b>迁移指引：请使用 {@link com.njydsz.common.json.tree.ObjectNode}</b></p>
+ * <table>
+ *   <caption>JsonObject → ObjectNode 迁移对照表</caption>
+ *   <tr><th>JsonObject 方法</th><th>ObjectNode 替代</th></tr>
+ *   <tr><td>{@code getString(key)}</td><td>{@code node.get(key).asText()}</td></tr>
+ *   <tr><td>{@code getInteger(key)}</td><td>{@code node.get(key).asInt()}</td></tr>
+ *   <tr><td>{@code getLong(key)}</td><td>{@code node.get(key).asLong()}</td></tr>
+ *   <tr><td>{@code getBoolean(key)}</td><td>{@code node.get(key).asBoolean()}</td></tr>
+ *   <tr><td>{@code getJSONObject(key)}</td><td>{@code (ObjectNode) node.get(key)}</td></tr>
+ *   <tr><td>{@code getJSONArray(key)}</td><td>{@code (ArrayNode) node.get(key)}</td></tr>
+ *   <tr><td>{@code getObject(key, clazz)}</td><td>{@code JsonMapper.getDefault().treeToValue(node.get(key), clazz)}</td></tr>
+ *   <tr><td>{@code put(key, value)}</td><td>{@code node.put(key, value)}</td></tr>
+ *   <tr><td>{@code remove(key)}</td><td>{@code node.remove(key)}</td></tr>
+ *   <tr><td>{@code keySet()}</td><td>{@code node.fieldNames()}</td></tr>
+ *   <tr><td>{@code values()}</td><td>{@code node.fieldNames() + node.get(name)}</td></tr>
+ *   <tr><td>{@code toJsonString()}</td><td>{@code node.toPrettyString()} 或 {@code YdszJson.toJson(node)}</td></tr>
+ * </table>
+ *
  * <p><b>主要功能：</b></p>
  * <ul>
  *   <li>类型安全的 getter - getString、getInteger、getLong 等</li>
@@ -30,7 +48,7 @@ import com.njydsz.common.json.YdszJson;
  * </ul>
  *
  * @deprecated 使用 {@link com.njydsz.common.json.tree.ObjectNode} 替代——tree 包提供统一的 JsonNode 抽象，
- *             与 Jackson 语义对齐且完整支持转义。此 LinkedHashMap 方案将在后续版本删除。
+ *             与 Jackson 语义对齐且完整支持转义。此 LinkedHashMap 方案将在后续版本删除（v1.1.0）。
  */
 @Deprecated
 public class JsonObject extends LinkedHashMap<String, Object> {
@@ -74,22 +92,26 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     // ==================== 基本类型 getter ====================
 
     /**
-     * 获取字符串值
+     * 获取字符串值。
      *
      * @param key 键
      * @return 字符串值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}: {@code node.get(key).asText()}
      */
+    @Deprecated
     public String getString(String key) {
         Object value = get(key);
         return value != null ? value.toString() : null;
     }
 
     /**
-     * 获取整数值
+     * 获取整数值。
      *
      * @param key 键
      * @return 整数值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}: {@code node.get(key).asInt()}
      */
+    @Deprecated
     public Integer getInteger(String key) {
         Object value = get(key);
         if (value == null) {
@@ -109,11 +131,13 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * 获取 int 基本类型值（为 null 时返回 0）
+     * 获取 int 基本类型值（为 null 时返回 0）。
      *
      * @param key 键
      * @return int 值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}: {@code node.get(key).asInt(0)}
      */
+    @Deprecated
     public int getIntValue(String key) {
         Integer value = getInteger(key);
         return value != null ? value : 0;
@@ -190,11 +214,13 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * 获取布尔值
+     * 获取布尔值。
      *
      * @param key 键
      * @return 布尔值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}: {@code node.get(key).asBoolean()}
      */
+    @Deprecated
     public Boolean getBoolean(String key) {
         Object value = get(key);
         if (value == null) {
@@ -543,11 +569,13 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     // ==================== 嵌套对象 getter ====================
 
     /**
-     * 获取 JsonObject
+     * 获取 JsonObject。
      *
      * @param key 键
      * @return JsonObject
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}: {@code (ObjectNode) node.get(key)}
      */
+    @Deprecated
     public JsonObject getJSONObject(String key) {
         Object value = get(key);
         if (value instanceof JsonObject) {
@@ -560,11 +588,13 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * 获取 JsonArray
+     * 获取 JsonArray。
      *
      * @param key 键
      * @return JsonArray
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ArrayNode}: {@code (ArrayNode) node.get(key)}
      */
+    @Deprecated
     public JsonArray getJSONArray(String key) {
         Object value = get(key);
         if (value instanceof JsonArray) {
@@ -577,13 +607,16 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * 获取对象并转换为指定类型
+     * 获取对象并转换为指定类型。
      *
      * @param key 键
      * @param clazz 目标类型
      * @param <T> 类型参数
      * @return 转换后的对象
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}:
+     *             {@code JsonMapper.getDefault().treeToValue(node.get(key), clazz)}
      */
+    @Deprecated
     public <T> T getObject(String key, Class<T> clazz) {
         Object value = get(key);
         if (value == null) {
@@ -763,11 +796,13 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * 移除键值对
+     * 移除键值对。
      *
      * @param key 键
      * @return 移除的值
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}: {@code node.remove(key)}
      */
+    @Deprecated
     public Object remove(String key) {
         return super.remove(key);
     }
@@ -810,19 +845,23 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     }
 
     /**
-     * 获取所有键
+     * 获取所有键。
      *
      * @return 键集合
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}: {@code node.fieldNames()}
      */
+    @Deprecated
     public Set<String> keySet() {
         return super.keySet();
     }
 
     /**
-     * 获取所有值
+     * 获取所有值。
      *
      * @return 值集合
+     * @deprecated 请迁移至 {@link com.njydsz.common.json.tree.ObjectNode}: 通过 {@code node.fieldNames()} 遍历
      */
+    @Deprecated
     public Collection<Object> values() {
         return super.values();
     }

@@ -74,6 +74,10 @@ class RequestClient {
     retryDelay?: number;
     /** 最大重试次数 */
     retryCount?: number;
+    /** 退避策略：'fixed' | 'exponential' */
+    retryBackoff?: 'exponential' | 'fixed';
+    /** 随机抖动因子（0~1），仅 exponential 模式下生效 */
+    retryJitter?: number;
   } = {};
 
   constructor(options: RequestClientOptions = {}) {
@@ -160,7 +164,9 @@ class RequestClient {
     config: RequestClientConfig,
   ): Promise<T> {
     const maxRetries = this.retryConfig.retryCount ?? 0;
-    const retryDelay = this.retryConfig.retryDelay ?? 1000;
+    const baseDelay = this.retryConfig.retryDelay ?? 1000;
+    const backoff = this.retryConfig.retryBackoff ?? 'fixed';
+    const jitter = this.retryConfig.retryJitter ?? 0;
     const retryCondition = this.retryConfig.retryCondition ?? (() => false);
 
     let lastError: unknown;
@@ -184,7 +190,12 @@ class RequestClient {
         lastError = error;
 
         if (attempt < maxRetries && retryCondition(error)) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          // 指数退避 + 随机抖动，避免惊群效应
+          const delay =
+            backoff === 'exponential'
+              ? baseDelay * 2 ** attempt + Math.random() * jitter
+              : baseDelay;
+          await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
 

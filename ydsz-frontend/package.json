@@ -29,7 +29,7 @@
     "build:literule": "pnpm run build --filter=@ydsz/literule-web",
     "build:agent": "pnpm run build --filter=@ydsz/agent-web",
     "check": "pnpm run check:circular && pnpm run check:dep && pnpm run check:type && pnpm check:cspell",
-    "check:circular": "vsh check-circular",
+    "check:circular": "vsh check-circular --fail",
     "check:cspell": "cspell lint **/*.ts **/README.md --no-progress",
     "check:dep": "vsh check-dep",
     "check:type": "turbo run typecheck",
