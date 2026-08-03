@@ -36,7 +36,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
  *
  * @author ydsz-team
  * @since 1.1.0
- * @see TraceConstants
+ * @see HeaderConstants
  * @see TraceIdGenerator
  */
 public final class TraceIdPropagation {

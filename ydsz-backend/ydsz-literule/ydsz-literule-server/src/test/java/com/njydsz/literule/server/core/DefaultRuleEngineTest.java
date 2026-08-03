@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleEngineStats;
@@ -604,7 +604,7 @@ class DefaultRuleEngineTest {
             facts.put("v", 1);
 
             // 预设 MDC 中已有 traceId
-            MDC.put(TraceConstants.MDC_TRACE_ID_KEY, "previous-trace");
+            MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "previous-trace");
 
             Rule rule = mockRule("R001", "规则", 100);
             engine.register(rule);
@@ -614,7 +614,7 @@ class DefaultRuleEngineTest {
             engine.evaluate(ctx);
 
             // evaluate 后 MDC 应恢复为原值
-            assertThat(MDC.get(TraceConstants.MDC_TRACE_ID_KEY)).isEqualTo("previous-trace");
+            assertThat(MDC.get(HeaderConstants.MDC_TRACE_ID_KEY)).isEqualTo("previous-trace");
         }
 
         @Test
@@ -629,7 +629,7 @@ class DefaultRuleEngineTest {
             Rule rule = mockRule("R001", "规则", 100);
             when(rule.evaluate(any(RuleContext.class)))
                     .thenAnswer(inv -> {
-                        capturedTraceId.set(MDC.get(TraceConstants.MDC_TRACE_ID_KEY));
+                        capturedTraceId.set(MDC.get(HeaderConstants.MDC_TRACE_ID_KEY));
                         return RuleResult.notTriggered("R001");
                     });
 
@@ -649,7 +649,7 @@ class DefaultRuleEngineTest {
             facts.put("v", 1);
 
             // 确保初始 MDC 无 traceId
-            MDC.remove(TraceConstants.MDC_TRACE_ID_KEY);
+            MDC.remove(HeaderConstants.MDC_TRACE_ID_KEY);
 
             Rule rule = mockRule("R001", "规则", 100);
             engine.register(rule);
@@ -658,7 +658,7 @@ class DefaultRuleEngineTest {
             engine.evaluate(ctx);
 
             // evaluate 后 MDC traceId 应被清理（恢复为原状即 null）
-            assertThat(MDC.get(TraceConstants.MDC_TRACE_ID_KEY)).isNull();
+            assertThat(MDC.get(HeaderConstants.MDC_TRACE_ID_KEY)).isNull();
         }
     }
 }

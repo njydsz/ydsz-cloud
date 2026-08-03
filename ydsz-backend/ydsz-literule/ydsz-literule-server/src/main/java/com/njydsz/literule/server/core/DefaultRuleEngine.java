@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 import jakarta.annotation.PreDestroy;
 
 import org.slf4j.MDC;
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleDefinition;
@@ -685,17 +685,17 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @return supplier 的返回值
      */
     private <T> T withMdcTraceId(String traceId, Supplier<T> supplier) {
-        String previous = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        String previous = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         try {
             if (traceId != null) {
-                MDC.put(TraceConstants.MDC_TRACE_ID_KEY, traceId);
+                MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, traceId);
             }
             return supplier.get();
         } finally {
             if (previous != null) {
-                MDC.put(TraceConstants.MDC_TRACE_ID_KEY, previous);
+                MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, previous);
             } else {
-                MDC.remove(TraceConstants.MDC_TRACE_ID_KEY);
+                MDC.remove(HeaderConstants.MDC_TRACE_ID_KEY);
             }
         }
     }
@@ -705,7 +705,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         if (traceId != null && !traceId.isBlank()) {
             return traceId;
         }
-        String mdcTraceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        String mdcTraceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         return mdcTraceId != null ? mdcTraceId : UUID.randomUUID().toString().replace("-", "");
     }
 
@@ -1269,7 +1269,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     private List<RuleResult> evaluateInParallel(List<Rule> candidateRules,
                                                  RuleContext context, String scenario) {
-        String traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         if (log.isDebugEnabled()) {
             log.debug("[LiteRule-Parallel] 并行评估: rules={}, threshold={}",
                     candidateRules.size(), parallelThreshold);

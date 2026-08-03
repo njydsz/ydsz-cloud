@@ -1,7 +1,7 @@
 package com.njydsz.gateway.config;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * 网关层内部常量定义
@@ -20,7 +20,7 @@ import com.njydsz.common.core.constant.TraceConstants;
  * </ul>
  *
  * <p><b>P2-5 常量治理：</b>{@code HEADER_TRACE_ID} 和 {@code HEADER_TENANT_ID}
- * 已改为委托 {@link TraceConstants} 和 {@link HeaderConstants} 中的权威定义，
+ * 已改为委托 {@link HeaderConstants} 中的权威定义，
  * 消除跨模块重复声明。
  *
  * @since 1.0.0
@@ -32,8 +32,8 @@ public final class GatewayConstants {
         throw new UnsupportedOperationException("Utility class - do not instantiate");
     }
 
-    /** 链路追踪 ID 请求头（委托 {@link TraceConstants#TRACE_ID_HEADER}） */
-    public static final String HEADER_TRACE_ID = TraceConstants.TRACE_ID_HEADER;
+    /** 链路追踪 ID 请求头（委托 {@link HeaderConstants#TRACE_ID_HEADER}） */
+    public static final String HEADER_TRACE_ID = HeaderConstants.TRACE_ID_HEADER;
 
     /** 用户 ID 请求头 */
     public static final String HEADER_USER_ID = "X-User-Id";
