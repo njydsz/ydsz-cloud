@@ -27,7 +27,8 @@ import com.njydsz.common.json.annotation.JsonClass;
  *
  * <p><b>使用方式：</b></p>
  * <p>由 {@code JsonAutoConfiguration.JsonConfigBean.init()} 自动调用，无需手动触发。
- * 默认扫描 {@code com.njydsz} 包，可通过 {@code ydsz.json.whitelist-packages} 配置扩展。</p>
+ * 默认扫描 {@code com.njydsz} 包（可通过 {@code ydsz.json.whitelist-packages} 配置扩展）。
+ * <b>注意：</b>仅注册精确类名到白名单，不再注册包前缀通配符（包前缀白名单需管理员显式 opt-in）。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -57,9 +58,9 @@ public final class AutoTypeWhitelistScanner {
 
         int registeredCount = 0;
         for (String basePackage : basePackages) {
-            // 注册包前缀到白名单，作为启动时扫描的补充
-            // 运行时遇到同包下未扫描到的新类也能通过包前缀匹配放行
-            AutoTypeChecker.addWhitelistPackage(basePackage);
+            // 仅注册通过 @JsonClass 注解扫描到的精确类名，不再自动注册包前缀白名单。
+            // 包前缀白名单需通过 ydsz.json.whitelist-packages 显式 opt-in，并配合 addWhitelistPackage 使用。
+            // 此变更消除 startsWith 前缀匹配放行全包任意类的安全绕过面。
 
             Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
             for (BeanDefinition bd : candidates) {

@@ -24,7 +24,7 @@ public class JsonSerializationException extends JsonException {
      * @param message 错误消息
      */
     public JsonSerializationException(String message) {
-        super(UNSUPPORTED_TYPE, message);
+        super(SERIALIZATION_ERROR, message);
     }
 
     /**
@@ -44,7 +44,7 @@ public class JsonSerializationException extends JsonException {
      * @param cause 原始异常
      */
     public JsonSerializationException(String message, Throwable cause) {
-        super(UNSUPPORTED_TYPE, message, cause);
+        super(SERIALIZATION_ERROR, message, cause);
     }
 
     /**

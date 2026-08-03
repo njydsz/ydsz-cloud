@@ -299,14 +299,27 @@ public final class JsonParserUtil {
                 // 数组
                 return parseArrayRecursive(chars, pos);
             case 't':
-                // true - 快速路径
-                return Boolean.TRUE;
+                // true - 快速路径（校验完整 token）
+                if (pos + 3 < chars.length && chars[pos + 1] == 'r'
+                        && chars[pos + 2] == 'u' && chars[pos + 3] == 'e') {
+                    return Boolean.TRUE;
+                }
+                throw new JsonDeserializationException("Unexpected token starting with 't' at position " + pos, pos);
             case 'f':
-                // false - 快速路径
-                return Boolean.FALSE;
+                // false - 快速路径（校验完整 token）
+                if (pos + 4 < chars.length && chars[pos + 1] == 'a'
+                        && chars[pos + 2] == 'l' && chars[pos + 3] == 's'
+                        && chars[pos + 4] == 'e') {
+                    return Boolean.FALSE;
+                }
+                throw new JsonDeserializationException("Unexpected token starting with 'f' at position " + pos, pos);
             case 'n':
-                // null - 快速路径
-                return null;
+                // null - 快速路径（校验完整 token）
+                if (pos + 3 < chars.length && chars[pos + 1] == 'u'
+                        && chars[pos + 2] == 'l' && chars[pos + 3] == 'l') {
+                    return null;
+                }
+                throw new JsonDeserializationException("Unexpected token starting with 'n' at position " + pos, pos);
             case '-':
             case '0': case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': case '9':

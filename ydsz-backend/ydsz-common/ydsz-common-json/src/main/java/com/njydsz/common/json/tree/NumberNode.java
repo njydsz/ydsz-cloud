@@ -35,6 +35,9 @@ public final class NumberNode extends JsonNode {
      * @param value 数值，支持 Integer、Long、Double、Float、BigDecimal 等
      */
     public NumberNode(Number value) {
+        if (value == null) {
+            throw new IllegalArgumentException("NumberNode value must not be null");
+        }
         this.value = value;
     }
 

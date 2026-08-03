@@ -95,7 +95,7 @@ public final class JsonPatch {
                     break;
                 case "test":
                     Object currentValue = getByPath(target, path);
-                    if (!Objects.equals(currentValue, value)) {
+                    if (!nearlyEquals(currentValue, value)) {
                         throw new IllegalStateException(
                             "Test failed at path '" + path + "': expected "
                                 + YdszJson.toJson(value) + " but got "
@@ -218,6 +218,19 @@ public final class JsonPatch {
      */
     private static String unescapeToken(String token) {
         return token.replace("~1", "/").replace("~0", "~");
+    }
+
+    /**
+     * 数值感知的近似相等比较（对齐 RFC 6902 test 语义）。
+     * JSON 中 1(Integer) 与 1.0(Double) 应判等。
+     */
+    private static boolean nearlyEquals(Object a, Object b) {
+        if (a == b) return true;
+        if (a == null || b == null) return false;
+        if (a instanceof Number && b instanceof Number) {
+            return Double.compare(((Number) a).doubleValue(), ((Number) b).doubleValue()) == 0;
+        }
+        return Objects.equals(a, b);
     }
 
     /**

@@ -82,6 +82,17 @@ public class ThreadPoolAutoConfiguration implements InitializingBean, Disposable
         this.meterRegistryProvider = meterRegistryProvider;
     }
 
+    /**
+     * 注入并校验 BeanFactory。
+     *
+     * <p>本配置需要在 {@link #afterPropertiesSet()} 阶段动态注册线程池单例，
+     * 因此必须持有 {@link ConfigurableListableBeanFactory}（普通 {@link BeanFactory}
+     * 不具备 {@code registerSingleton} 能力）。类型不匹配时**快速失败**，
+     * 避免延迟到初始化阶段才报错。
+     *
+     * @param beanFactory Spring 容器工厂，必须是 {@link ConfigurableListableBeanFactory} 实现
+     * @throws IllegalStateException 当传入类型不是 {@link ConfigurableListableBeanFactory} 时抛出
+     */
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
         if (beanFactory instanceof ConfigurableListableBeanFactory) {
@@ -93,6 +104,21 @@ public class ThreadPoolAutoConfiguration implements InitializingBean, Disposable
         }
     }
 
+    /**
+     * 按配置批量创建线程池并注册为容器单例。
+     *
+     * <p>遍历 {@link ThreadPoolProperties#getPools()}，按 {@link PoolType} 分流：
+     * {@code VIRTUAL} 走 JDK 21 虚拟线程（每任务一线程，无队列与拒绝策略），
+     * 其余走平台线程池 {@link ThreadPoolTaskExecutor}。
+     * 注册的 Bean 名统一为 <b>{@code 配置键 + "Executor"}</b>，注入时需与之对应。
+     *
+     * <p><b>副作用</b>：直接调用 {@code beanFactory.registerSingleton} 动态注册，
+     * 这些 Bean 不参与 Spring 的依赖注入与 AOP 代理；最后调用 {@link #bindMetrics()}
+     * 绑定 Micrometer 指标。
+     *
+     * <p><b>边界</b>：未配置任何线程池时仅打印日志并静默返回，不视为异常；
+     * 同名配置键会覆盖已有单例，需由配置层保证键唯一。
+     */
     @Override
     public void afterPropertiesSet() {
         if (properties.getPools() == null || properties.getPools().isEmpty()) {
@@ -119,6 +145,17 @@ public class ThreadPoolAutoConfiguration implements InitializingBean, Disposable
         bindMetrics();
     }
 
+    /**
+     * 容器关闭时优雅停止全部线程池。
+     *
+     * <p>对平台线程池调用 {@code shutdown()}：因创建时已设置
+     * {@code waitForTasksToCompleteOnShutdown=true} 与 {@code awaitTerminationSeconds}，
+     * 会先拒绝新任务、再等待存量任务执行完毕（超时后强制结束）。
+     * 虚拟线程池同样调用 {@code shutdown()} 停止接收新任务。
+     *
+     * <p><b>注意</b>：本方法仅停止线程池，<b>不</b>从 BeanFactory 注销已注册的单例；
+     * 随后清空内部三个映射，使实例不可再用。方法不抛异常，保证关闭流程不被中断。
+     */
     @Override
     public void destroy() {
         executors.forEach((name, executor) -> {

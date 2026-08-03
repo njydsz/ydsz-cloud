@@ -72,7 +72,8 @@ public final class ValidationResult {
     
     @Override
     public String toString() {
-        if (valid) {
+        boolean isV = isValid();
+        if (isV) {
             return "ValidationResult{valid=true}";
         } else {
             return "ValidationResult{valid=false, errors=" + errors + "}";

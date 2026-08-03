@@ -37,7 +37,7 @@ public class JsonDeserializationException extends JsonException {
      * @param message 错误消息
      */
     public JsonDeserializationException(String message) {
-        super(TYPE_MISMATCH, message);
+        super(PARSE_ERROR, message);
     }
 
     /**
