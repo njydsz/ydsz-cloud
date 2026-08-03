@@ -5,10 +5,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.schema.JsonSchema;
+import com.njydsz.common.json.schema.JsonSchemaValidator;
+import com.njydsz.common.json.schema.ValidationResult;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
@@ -62,6 +66,35 @@ public class HttpJobHandler implements JobHandler {
     /** Bean 名称，dispatcher 在 jobType=HTTP 时路由到此 handler */
     public static final String BEAN_NAME = "httpJobHandler";
 
+    /**
+     * P2-1: HTTP 任务参数 JsonSchema —— 试点验证自研 schema 引擎成熟度。
+     *
+     * <p>当前 JsonSchema 类标记为 {@code @Deprecated(forRemoval = true)}（计划抽离为独立模块），
+     * 此处试点旨在验证其运行时正确性与 API 可用性，为后续推广或废弃提供决策依据。
+     */
+    @SuppressWarnings("deprecation")
+    private static final JsonSchema HTTP_PARAMS_SCHEMA = JsonSchema.object()
+            .addProperty("url",
+                    JsonSchema.string().required().minLength(1)
+                            .description("目标 URL（必填）"))
+            .addProperty("method",
+                    JsonSchema.string()
+                            .enumValues("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD")
+                            .description("HTTP 方法，默认 GET"))
+            .addProperty("headers",
+                    JsonSchema.object()
+                            .description("请求头键值对"))
+            .addProperty("body",
+                    JsonSchema.string()
+                            .description("请求体"))
+            .addProperty("timeoutMs",
+                    JsonSchema.integer().minimum(1000)
+                            .description("请求超时毫秒"))
+            .addProperty("successStatus",
+                    JsonSchema.string()
+                            .description("成功状态码范围，如 200-299"))
+            .addRequired("url");
+
     private final CronjobProperties cronjobProperties;
     private final HttpClient httpClient;
 
@@ -83,6 +116,13 @@ public class HttpJobHandler implements JobHandler {
         }
 
         JsonObject params = YdszJson.parseObjectToJsonObject(paramsJson);
+
+        // P2-1: JsonSchema 参数结构校验（试点验证自研 schema 引擎）
+        List<String> schemaErrors = validateParams(params);
+        if (!schemaErrors.isEmpty()) {
+            log.warn("[HttpJobHandler] 参数 schema 校验失败: {} errors={}", schemaErrors.size(), schemaErrors);
+        }
+
         String url = params.getString("url");
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("HTTP 任务参数缺少 url");
@@ -219,5 +259,32 @@ public class HttpJobHandler implements JobHandler {
             return "";
         }
         return s.length() > 500 ? s.substring(0, 500) + "..." : s;
+    }
+
+    /**
+     * P2-1: 使用自研 JsonSchema 引擎校验 HTTP 任务参数结构。
+     *
+     * <p>试点目的：验证 {@link JsonSchema} + {@link JsonSchemaValidator} 运行时正确性。
+     * 当前仅记录告警日志，不阻断任务执行——待 schema 引擎成熟度验证通过后再提升为硬校验。
+     *
+     * <p>注意：{@code JsonSchema} API 当前标记为
+     * {@code @Deprecated(forRemoval = true)}，试点结论将直接决定该 API 的去留
+     * （按过度设计评估报告的建议：证实可用则保留并取消标记，否则冻结并迁移到成熟库）。
+     *
+     * @param params 已解析的任务参数 Map
+     * @return 校验错误列表（空列表表示通过）
+     */
+    @SuppressWarnings("deprecation")
+    private List<String> validateParams(Map<String, Object> params) {
+        try {
+            ValidationResult result = JsonSchemaValidator.validate(HTTP_PARAMS_SCHEMA, params);
+            if (result.isValid()) {
+                return List.of();
+            }
+            return result.getErrors();
+        } catch (Exception e) {
+            log.warn("[HttpJobHandler] JsonSchema 校验异常: {}", e.getMessage());
+            return List.of("schema 校验引擎异常: " + e.getMessage());
+        }
     }
 }

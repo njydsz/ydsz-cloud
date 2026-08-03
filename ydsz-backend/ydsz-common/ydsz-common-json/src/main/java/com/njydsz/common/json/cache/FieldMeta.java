@@ -20,6 +20,7 @@ import java.util.Map;
 import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonInclude;
+import com.njydsz.common.json.type.FieldTypeCode;
 import com.njydsz.common.json.annotation.JsonRawValue;
 import com.njydsz.common.json.annotation.JsonUnwrapped;
 import com.njydsz.common.json.exception.JsonDeserializationException;
@@ -111,8 +112,12 @@ public final class FieldMeta {
     /** 包含策略（来自 @JsonInclude 注解，默认 ALWAYS） */
     public final JsonInclude.Include includeStrategy;
 
-    /** 类型代码（优化序列化分支预测） */
+    /** 类型代码（优化序列化分支预测）@deprecated 使用 {@link #typeCode} FieldTypeCode 枚举替代 */
+    @Deprecated
     public final int serializeTypeCode;
+
+    /** 统一类型码（替代 serializeTypeCode int） */
+    public final FieldTypeCode typeCode;
 
     /** MethodHandle Setter（优化字段设置） */
     private final MethodHandle setter;
@@ -223,6 +228,7 @@ public final class FieldMeta {
         this.getter = g;
         this.varHandle = vh;
         this.serializeTypeCode = computeSerializeTypeCode(type);
+        this.typeCode = computeFieldTypeCode(type);
         this.jsonKey = "\"" + jsonName + "\":";
         this.jsonKeyLen = this.jsonKey.length();
     }
@@ -254,6 +260,25 @@ public final class FieldMeta {
         if (type == Instant.class) return 13;        // TYPE_CODE_DATE
         if (type.isEnum()) return 16;                // TYPE_CODE_BEAN (enum falls to bean path)
         return 0;
+    }
+
+    /** 计算字段类型对应的 FieldTypeCode（统一类型码，向后兼容的 int 码仍通过 computeSerializeTypeCode 保留） */
+    private static FieldTypeCode computeFieldTypeCode(Class<?> type) {
+        if (type == String.class) return FieldTypeCode.STRING;
+        if (type == int.class || type == Integer.class) return FieldTypeCode.INT;
+        if (type == long.class || type == Long.class) return FieldTypeCode.LONG;
+        if (type == double.class || type == Double.class) return FieldTypeCode.DOUBLE;
+        if (type == float.class || type == Float.class) return FieldTypeCode.FLOAT;
+        if (type == boolean.class || type == Boolean.class) return FieldTypeCode.BOOLEAN;
+        if (type == char.class || type == Character.class) return FieldTypeCode.CHAR;
+        if (type == short.class || type == Short.class) return FieldTypeCode.SHORT;
+        if (type == byte.class || type == Byte.class) return FieldTypeCode.BYTE;
+        if (type == BigDecimal.class) return FieldTypeCode.BIG_DECIMAL;
+        if (type == BigInteger.class) return FieldTypeCode.BIG_INTEGER;
+        if (type == LocalDate.class || type == LocalDateTime.class || type == LocalTime.class
+                || type == Instant.class || type == Date.class) return FieldTypeCode.DATE;
+        if (type.isEnum()) return FieldTypeCode.STRING; // enum 序列化为 String
+        return FieldTypeCode.NESTED_OBJECT;
     }
 
     /**

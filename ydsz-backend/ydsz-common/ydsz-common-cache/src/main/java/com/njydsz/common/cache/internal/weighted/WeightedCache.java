@@ -84,6 +84,14 @@ public class WeightedCache<K, V> extends AbstractCache<K, V> {
     this.map = new ConcurrentHashMap<>(initialCapacity);
   }
 
+  /**
+   * 获取指定 key 的缓存值，不做加载。
+   *
+   * <p>命中/未命中均计入统计；未命中返回 {@code null}，不触发加载。
+   *
+   * @param key 查询的键，不可为 {@code null}
+   * @return 已缓存的值；未命中返回 {@code null}
+   */
   @Override
   public V getIfPresent(K key) {
     V value = map.get(key);
@@ -95,6 +103,16 @@ public class WeightedCache<K, V> extends AbstractCache<K, V> {
     return value;
   }
 
+  /**
+   * 写入缓存并维护总权重，超限时按插入顺序淘汰旧条目。
+   *
+   * <p>写操作在对象级锁内完成以保证权重计数一致；若替换已有 key 会扣减旧值权重
+   * 并通知 REPLACED 删除事件。总权重超过 {@code maxWeight} 且条目数大于 1 时，
+   * 循环淘汰最早插入的条目直到满足容量约束。
+   *
+   * @param key   写入的键，不可为 {@code null}
+   * @param value 写入的值，权重由 {@link Weigher#weigh} 计算
+   */
   @Override
   public void put(K key, V value) {
     long weight = weigher.weigh(key, value);
@@ -115,6 +133,14 @@ public class WeightedCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 移除指定 key 并扣减总权重。
+   *
+   * <p>仅当旧值非空时扣减权重并通知 EXPLICIT 删除事件。
+   *
+   * @param key 待移除的键，不可为 {@code null}
+   * @return 被移除的旧值；key 不存在时返回 {@code null}
+   */
   @Override
   public V remove(K key) {
     synchronized (this) {
@@ -127,6 +153,11 @@ public class WeightedCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 清空全部缓存条目并重置总权重。
+   *
+   * <p>对每个被清空的条目逐一触发 EXPLICIT 删除事件。
+   */
   @Override
   public void clear() {
     map.forEach((key, value) -> notifyRemoval(key, value, RemovalCause.EXPLICIT));
@@ -134,21 +165,42 @@ public class WeightedCache<K, V> extends AbstractCache<K, V> {
     currentWeight.reset();
   }
 
+  /**
+   * 返回当前缓存中的条目数。
+   *
+   * @return 已缓存条目的数量
+   */
   @Override
   public long estimatedSize() {
     return map.size();
   }
 
+  /**
+   * 判断指定 key 是否已缓存。
+   *
+   * @param key 查询的键，不可为 {@code null}
+   * @return true 表示该 key 存在于缓存中
+   */
   @Override
   public boolean containsKey(K key) {
     return map.containsKey(key);
   }
 
+  /**
+   * 返回当前缓存键的快照视图。
+   *
+   * @return 缓存键的 {@link Set}
+   */
   @Override
   public Set<K> keySet() {
     return map.keySet();
   }
 
+  /**
+   * 返回当前缓存值的集合视图。
+   *
+   * @return 缓存值的 {@link Collection}
+   */
   @Override
   public Collection<V> values() {
     return map.values();

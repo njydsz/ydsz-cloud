@@ -102,6 +102,17 @@ public class CacheMeterBinder implements MeterBinder {
     this.extraTags = extraTags;
   }
 
+  /**
+   * 将缓存的全部指标注册到指定 Micrometer 注册中心。
+   *
+   * <p>注册 Gauge / FunctionCounter / FunctionTimer / Timer 四类指标，
+   * 统一携带 {@code cache_name} 与 {@code cache_type} 标签；GET/PUT 耗时
+   * Timer 采用懒绑定（仅本方法调用后可用），供 {@code recordGetDuration} 等
+   * 方法写入。重复调用同一 registry 会因指标名冲突而抛出
+   * {@code IllegalArgumentException}，调用方需确保每个 binder 只绑定一次。
+   *
+   * @param registry 目标 Micrometer 注册中心，不可为 {@code null}
+   */
   @Override
     public void bindTo(MeterRegistry registry) {
     Tag cacheNameTag = Tag.of(TAG_CACHE_NAME, cacheName);

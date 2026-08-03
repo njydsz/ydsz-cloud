@@ -201,13 +201,15 @@ public final class JsonParser implements AutoCloseable {
                 return currentToken;
             case ',':
                 if (depth > maxDepth) {
-                    throw new JsonDeserializationException("Max depth exceeded: " + maxDepth);
+                    throw new JsonDeserializationException("Max depth exceeded: " + maxDepth)
+                        .withTokenType("SEPARATOR");
                 }
                 bufferPos++;
                 return nextToken();
             case ':':
                 if (depth > maxDepth) {
-                    throw new JsonDeserializationException("Max depth exceeded: " + maxDepth);
+                    throw new JsonDeserializationException("Max depth exceeded: " + maxDepth)
+                        .withTokenType("SEPARATOR");
                 }
                 bufferPos++;
                 return nextToken();
@@ -261,7 +263,8 @@ public final class JsonParser implements AutoCloseable {
                         bufferPos++;
                         while (bufferPos + 4 >= bufferLen) {
                             if (!fillBuffer()) {
-                                throw new JsonDeserializationException("Invalid unicode escape: insufficient characters");
+                                throw new JsonDeserializationException("Invalid unicode escape: insufficient characters")
+                                    .withTokenType("VALUE_STRING");
                             }
                         }
                         String hex = new String(buffer, bufferPos, 4);
@@ -424,7 +427,8 @@ public final class JsonParser implements AutoCloseable {
                 return;
             }
         }
-        throw new JsonDeserializationException("Unexpected token, expected 'true'");
+        throw new JsonDeserializationException("Unexpected token, expected 'true'")
+            .withTokenType("VALUE_TRUE");
     }
 
     private void parseFalse() throws IOException {
@@ -436,7 +440,8 @@ public final class JsonParser implements AutoCloseable {
                 return;
             }
         }
-        throw new JsonDeserializationException("Unexpected token, expected 'false'");
+        throw new JsonDeserializationException("Unexpected token, expected 'false'")
+            .withTokenType("VALUE_FALSE");
     }
 
     private void parseNull() throws IOException {
@@ -447,12 +452,14 @@ public final class JsonParser implements AutoCloseable {
                 return;
             }
         }
-        throw new JsonDeserializationException("Unexpected token, expected 'null'");
+        throw new JsonDeserializationException("Unexpected token, expected 'null'")
+            .withTokenType("VALUE_NULL");
     }
 
     private void checkDepth() {
         if (depth > maxDepth) {
-            throw new JsonDeserializationException("JSON 嵌套深度超过最大限制: " + maxDepth);
+            throw new JsonDeserializationException("JSON 嵌套深度超过最大限制: " + maxDepth)
+                .withTokenType(currentToken != null ? currentToken.name() : "UNKNOWN");
         }
     }
 
@@ -469,7 +476,8 @@ public final class JsonParser implements AutoCloseable {
             // 缓冲区满且无法移动：几何扩容以支持超大 token（如长字符串/大数字）
             int newLen = buffer.length * 2;
             if (newLen > maxInputLength) {
-                throw new JsonDeserializationException("JSON token exceeds maximum buffer size");
+                throw new JsonDeserializationException("JSON token exceeds maximum buffer size")
+                    .withTokenType("BUFFER_OVERFLOW");
             }
             char[] newBuf = new char[newLen];
             System.arraycopy(buffer, 0, newBuf, 0, bufferLen);
@@ -481,7 +489,8 @@ public final class JsonParser implements AutoCloseable {
         }
         totalCharsRead += read;
         if (totalCharsRead > maxInputLength) {
-            throw new JsonDeserializationException("JSON 输入超过最大长度限制: " + maxInputLength + " 字符");
+            throw new JsonDeserializationException("JSON 输入超过最大长度限制: " + maxInputLength + " 字符")
+                .withTokenType("INPUT_OVERFLOW");
         }
         bufferLen += read;
         return true;

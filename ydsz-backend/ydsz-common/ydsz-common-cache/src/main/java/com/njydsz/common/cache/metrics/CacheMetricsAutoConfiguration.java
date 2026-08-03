@@ -84,6 +84,13 @@ public class CacheMetricsAutoConfiguration {
       this.meterRegistry = meterRegistry;
     }
 
+    /**
+     * 所有单例 Bean 初始化完成后，为启动阶段已存在的缓存统一绑定指标。
+     *
+     * <p>实现 {@link SmartInitializingSingleton} 保证在依赖缓存注册完毕后才执行，
+     * 避免因 Bean 创建顺序导致漏绑；运行时新建的缓存仍需显式调用
+     * {@link #registerCache(String)}。
+     */
     @Override
     public void afterSingletonsInstantiated() {
       // 绑定所有启动时已存在的缓存
