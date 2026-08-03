@@ -153,18 +153,8 @@ public final class StringInterner {
      * @return 哈希值
      */
     private static int hash(String str) {
-        int h = str.length();
-        // 使用字符串的前几个字符和后几个字符计算哈希，提高分布性
-        int len = str.length();
-        if (len > 8) {
-            h = 31 * h + str.charAt(0);
-            h = 31 * h + str.charAt(1);
-            h = 31 * h + str.charAt(len - 2);
-            h = 31 * h + str.charAt(len - 1);
-        } else {
-            h = str.hashCode();
-        }
-        return h;
+        // 使用 String 标准 hashCode，分布性优于仅取首尾的采样 hash
+        return str.hashCode();
     }
 
     /**
