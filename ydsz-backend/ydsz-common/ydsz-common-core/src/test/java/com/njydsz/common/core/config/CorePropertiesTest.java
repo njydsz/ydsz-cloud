@@ -54,12 +54,14 @@ class CorePropertiesTest {
     }
 
     @Test
-    @DisplayName("maxPageSize 边界值 1 与 5000 通过校验")
+    @DisplayName("maxPageSize 边界值 1 与 5000 通过校验（defaultPageSize 同步调整避免交叉校验冲突）")
     void maxPageSize_boundaryValid() {
         CoreProperties props = new CoreProperties();
         props.setMaxPageSize(1);
+        props.setDefaultPageSize(1);
         assertTrue(validator.validate(props).isEmpty());
         props.setMaxPageSize(5000);
+        props.setDefaultPageSize(20);
         assertTrue(validator.validate(props).isEmpty());
     }
 

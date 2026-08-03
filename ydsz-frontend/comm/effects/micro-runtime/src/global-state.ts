@@ -4,6 +4,11 @@
  * 替代 qiankun initGlobalState（any 广播），提供类型化 get/set/subscribe。
  * 状态持久化复用现有的 Pinia + SecureLS 体系，本模块只负责主子应用通信。
  *
+ * **安全警告**：
+ * - 禁止在 globalState 中存储敏感信息（如密码、token、密钥等）
+ * - globalState 是内存广播机制，所有订阅方都能访问，无加密保护
+ * - 敏感数据应使用 SecureLS 或 Pinia persist 的加密存储
+ *
  * @path comm/effects/micro-runtime/src/global-state.ts
  * @author ydsz-team
  * @since 3.0.0

@@ -49,6 +49,12 @@ export interface MonitorConfig {
   beforeSend?: (report: ErrorReport) => ErrorReport | null;
   /** 动态获取用户 ID（如从 Pinia store） */
   getUserId?: () => string | undefined;
+  /** 上报失败时是否自动重试，默认 true */
+  retry?: boolean;
+  /** 最大重试次数，默认 3 */
+  maxRetries?: number;
+  /** 重试基础延迟（ms），默认 1000 */
+  retryBaseDelay?: number;
 }
 
 /** 上报端点 */
@@ -68,6 +74,12 @@ const FLUSH_INTERVAL = 10_000;
 
 /** 单类型最大排队数（防止单一错误类型打满队列） */
 const MAX_PER_TYPE = 5;
+
+/** 离线缓存键名 */
+const OFFLINE_CACHE_KEY = 'ydsz_monitor_offline_queue';
+
+/** 离线缓存最大条数 */
+const MAX_OFFLINE_CACHE = 100;
 
 /** 当前监控配置 */
 let monitorConfig: MonitorConfig = {};
@@ -155,6 +167,8 @@ function enqueueError(rawReport: ErrorReport) {
 
 /**
  * 批量上报错误到后端
+ *
+ * v3.2: 支持重试 + 离线缓存
  */
 function flush() {
   if (errorQueue.length === 0) return;
@@ -162,13 +176,27 @@ function flush() {
   const batch = errorQueue.splice(0, errorQueue.length);
   flushTimer = null;
 
+  sendBatch(batch, 0);
+}
+
+/**
+ * 发送错误批次，支持重试
+ */
+function sendBatch(batch: ErrorReport[], retryCount: number): void {
+  const maxRetries = monitorConfig.maxRetries ?? 3;
+  const retryBaseDelay = monitorConfig.retryBaseDelay ?? 1000;
+  const shouldRetry = monitorConfig.retry !== false;
+
   try {
     // 使用 sendBeacon 确保页面卸载时也能上报
     if (navigator.sendBeacon) {
       const blob = new Blob([JSON.stringify({ errors: batch })], {
         type: 'application/json',
       });
-      navigator.sendBeacon(REPORT_ENDPOINT, blob);
+      const sent = navigator.sendBeacon(REPORT_ENDPOINT, blob);
+      if (!sent && shouldRetry && retryCount < maxRetries) {
+        scheduleRetry(batch, retryCount, retryBaseDelay);
+      }
     } else {
       // 降级 fetch
       fetch(REPORT_ENDPOINT, {
@@ -176,10 +204,86 @@ function flush() {
         headers: { 'Content-Type': 'application/json' },
         keepalive: true,
         method: 'POST',
-      }).catch(() => {});
+      })
+        .then((res) => {
+          if (!res.ok && shouldRetry && retryCount < maxRetries) {
+            scheduleRetry(batch, retryCount, retryBaseDelay);
+          }
+        })
+        .catch(() => {
+          if (shouldRetry && retryCount < maxRetries) {
+            scheduleRetry(batch, retryCount, retryBaseDelay);
+          } else {
+            // 重试耗尽，缓存到本地存储
+            cacheForOffline(batch);
+          }
+        });
     }
   } catch {
-    // 上报失败静默
+    // 上报失败，尝试缓存
+    cacheForOffline(batch);
+  }
+}
+
+/**
+ * 调度重试（指数退避 + 抖动）
+ */
+function scheduleRetry(batch: ErrorReport[], retryCount: number, baseDelay: number): void {
+  // 指数退避：baseDelay * 2^retryCount
+  const delay = baseDelay * Math.pow(2, retryCount);
+  // 添加抖动：±25%
+  const jitter = delay * 0.25 * (Math.random() * 2 - 1);
+  const finalDelay = Math.max(0, delay + jitter);
+
+  setTimeout(() => {
+    sendBatch(batch, retryCount + 1);
+  }, finalDelay);
+}
+
+/**
+ * 缓存错误到本地存储（离线场景）
+ */
+function cacheForOffline(batch: ErrorReport[]): void {
+  try {
+    const cached = loadOfflineCache();
+    const merged = [...cached, ...batch].slice(-MAX_OFFLINE_CACHE);
+    localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(merged));
+  } catch {
+    // 存储失败静默
+  }
+}
+
+/**
+ * 加载离线缓存的错误
+ */
+function loadOfflineCache(): ErrorReport[] {
+  try {
+    const data = localStorage.getItem(OFFLINE_CACHE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 清空离线缓存
+ */
+function clearOfflineCache(): void {
+  try {
+    localStorage.removeItem(OFFLINE_CACHE_KEY);
+  } catch {
+    // 静默
+  }
+}
+
+/**
+ * 恢复离线缓存的错误（网络恢复时调用）
+ */
+function restoreOfflineCache(): void {
+  const cached = loadOfflineCache();
+  if (cached.length > 0) {
+    clearOfflineCache();
+    sendBatch(cached, 0);
   }
 }
 

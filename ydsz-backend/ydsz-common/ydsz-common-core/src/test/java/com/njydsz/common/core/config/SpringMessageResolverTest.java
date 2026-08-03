@@ -24,6 +24,8 @@ class SpringMessageResolverTest {
         ResourceBundleMessageSource source = new ResourceBundleMessageSource();
         source.setBasename("i18n/messages");
         source.setDefaultEncoding("UTF-8");
+        // 关闭系统 Locale 回退：en_US 缺失时回退到默认资源文件（英文），而非系统 zh_CN
+        source.setFallbackToSystemLocale(false);
         return new SpringMessageResolver(source);
     }
 

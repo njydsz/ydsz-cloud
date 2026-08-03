@@ -2,6 +2,7 @@ package com.njydsz.common.core.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -26,6 +27,14 @@ class CoreAutoConfigurationTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(CoreAutoConfiguration.class));
 
+    @AfterEach
+    void tearDown() {
+        // 清理静态状态，避免测试间污染
+        BaseResponse.setResolver(null);
+        PageConstants.setMaxPageSize(1000);
+        PageConstants.setDefaultPageSize(20);
+    }
+
     @Test
     @DisplayName("默认启用：注册 PageConstantsInitializer 并同步分页配置")
     void defaultEnabled_syncsPageConstants() {
@@ -34,7 +43,7 @@ class CoreAutoConfigurationTest {
                         "ydsz.core.max-page-size=500",
                         "ydsz.core.default-page-size=50")
                 .run(context -> {
-                    assertThat(context).hasSingleBean(PageConstantsInitializer.class);
+                    assertThat(context).hasSingleBean(CoreAutoConfiguration.PageConstantsInitializer.class);
                     // SmartInitializingSingleton 在上下文刷新后同步
                     assertThat(PageConstants.getMaxPageSize()).isEqualTo(500);
                     assertThat(PageConstants.getDefaultPageSize()).isEqualTo(50);
@@ -47,7 +56,7 @@ class CoreAutoConfigurationTest {
         contextRunner
                 .withPropertyValues("ydsz.core.enabled=false")
                 .run(context -> {
-                    assertThat(context).doesNotHaveBean(PageConstantsInitializer.class);
+                    assertThat(context).doesNotHaveBean(CoreAutoConfiguration.PageConstantsInitializer.class);
                     assertThat(context).doesNotHaveBean(SpringMessageResolver.class);
                 });
     }
