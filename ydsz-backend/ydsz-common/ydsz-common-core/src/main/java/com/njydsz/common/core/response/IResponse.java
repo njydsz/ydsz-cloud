@@ -11,6 +11,8 @@ package com.njydsz.common.core.response;
  *   <li>code: 响应码，A00000表示成功，其他表示失败</li>
  *   <li>msg: 响应消息，用于描述响应结果</li>
  *   <li>data: 响应数据，泛型类型</li>
+ *   <li>traceId: 链路追踪 ID</li>
+ *   <li>timestamp: 响应时间戳</li>
  * </ul>
  *
  * <p><b>实现类：</b>
@@ -65,4 +67,30 @@ public interface IResponse<T> {
      * @return 成功返回true，否则返回false
      */
     boolean isSuccess();
+
+    /**
+     * 获取链路追踪 ID
+     *
+     * <p>贯穿网关、服务间调用、日志记录等场景，便于问题排查。
+     * 可能为 null（如 MDC 中未设置 traceId 时）。
+     *
+     * @return 链路追踪 ID
+     * @since 1.2.0
+     */
+    default String getTraceId() {
+        return null;
+    }
+
+    /**
+     * 获取响应时间戳（毫秒）
+     *
+     * <p>响应生成时刻的 Unix 时间戳（毫秒）。
+     * 可能为 null（由实现类决定是否填充）。
+     *
+     * @return 响应时间戳
+     * @since 1.2.0
+     */
+    default Long getTimestamp() {
+        return null;
+    }
 }
