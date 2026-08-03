@@ -15,6 +15,7 @@ import com.njydsz.common.base.filter.RequestContextCleanupFilter;
 import com.njydsz.common.base.filter.SecurityHeadersFilter;
 import com.njydsz.common.base.filter.TraceFilter;
 import com.njydsz.common.base.health.BaseHealthIndicator;
+import com.njydsz.common.base.health.CoreHealthIndicator;
 
 import org.springframework.core.env.Environment;
 /**
@@ -126,5 +127,17 @@ public class BaseAutoConfiguration {
                                                     Environment environment) {
         String timezone = environment.getProperty("ydsz.base.timezone", "Asia/Shanghai");
         return new BaseHealthIndicator(securityHeadersProperties, docProperties, timezone);
+    }
+
+    /**
+     * Core 模块健康指标（从 CoreAutoConfiguration 迁出，L6 层）。
+     *
+     * <p>TraceId 生成探针 + i18n 解析器状态检查。
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "coreHealthIndicator")
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    public CoreHealthIndicator coreHealthIndicator() {
+        return new CoreHealthIndicator();
     }
 }

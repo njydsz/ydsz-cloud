@@ -1,4 +1,4 @@
-package com.njydsz.common.core.config;
+package com.njydsz.common.web.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 

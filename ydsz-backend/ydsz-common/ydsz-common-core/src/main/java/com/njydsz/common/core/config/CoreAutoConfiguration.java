@@ -3,19 +3,13 @@ package com.njydsz.common.core.config;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.web.filter.TenantMdcFilter;
-import com.njydsz.common.base.health.CoreHealthIndicator;
 import com.njydsz.common.core.response.BaseResponse;
-
-import jakarta.servlet.Filter;
 
 /**
  * Core 模块自动配置类。
@@ -33,7 +27,7 @@ import jakarta.servlet.Filter;
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.core", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties({CoreProperties.class, FilterIgnoreProperties.class})
+@EnableConfigurationProperties(CoreProperties.class)
 public class CoreAutoConfiguration {
 
     /**
@@ -51,32 +45,6 @@ public class CoreAutoConfiguration {
         SpringMessageResolver resolver = new SpringMessageResolver(messageSource);
         BaseResponse.setResolver(resolver);
         return resolver;
-    }
-
-    /**
-     * 注册租户 MDC 过滤器，将 tenantId/userId/traceId 写入 SLF4J MDC。
-     *
-     * @return FilterRegistrationBean 包装的 TenantMdcFilter
-     */
-    @Bean
-    @ConditionalOnClass(Filter.class)
-    @ConditionalOnProperty(prefix = "ydsz.core.tenant-mdc-filter", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public FilterRegistrationBean<TenantMdcFilter> tenantMdcFilter(CoreProperties properties) {
-        FilterRegistrationBean<TenantMdcFilter> registration =
-                new FilterRegistrationBean<>(new TenantMdcFilter());
-        registration.setOrder(properties.getTenantMdcFilterOrder());
-        registration.setName("tenantMdcFilter");
-        return registration;
-    }
-
-    /**
-     * 注册 Core 模块健康指标（当 Actuator 在 classpath 时生效）。
-     */
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
-    @ConditionalOnMissingBean(name = "coreHealthIndicator")
-    public CoreHealthIndicator coreHealthIndicator() {
-        return new CoreHealthIndicator();
     }
 
     /**

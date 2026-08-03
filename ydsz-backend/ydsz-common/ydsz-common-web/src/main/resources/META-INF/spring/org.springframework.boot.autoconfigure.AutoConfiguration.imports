@@ -8,3 +8,4 @@ com.njydsz.common.web.config.WebSessionAutoConfiguration
 com.njydsz.common.web.config.WebMultipartAutoConfiguration
 com.njydsz.common.web.config.WebGracefulShutdownAutoConfiguration
 com.njydsz.common.web.version.ApiVersionAutoConfiguration
+com.njydsz.common.web.config.WebCoreAutoConfiguration

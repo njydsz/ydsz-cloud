@@ -10,7 +10,7 @@ import type { NotificationItem } from '@ydsz/layouts';
 
 import { computed, onMounted, onUnmounted, watch } from 'vue';
 
-import { AuthenticationLoginExpiredModal } from '@ydsz/common-ui';
+import { AuthenticationLoginExpiredModal, NetworkStatus } from '@ydsz/common-ui';
 import { useWatermark } from '@ydsz/hooks';
 import {
   BasicLayout,
@@ -140,4 +140,7 @@ onUnmounted(() => {
       <LockScreen :avatar @to-login="handleLogout" />
     </template>
   </BasicLayout>
+
+  <!-- 全局网络状态监控 -->
+  <NetworkStatus />
 </template>

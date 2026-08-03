@@ -24,6 +24,10 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-redis</artifactId>
             <optional>true</optional>
         </dependency>

@@ -1,9 +1,5 @@
 package com.njydsz.common.core.constant;
 
-import com.njydsz.common.domain.enums.DataScopeType;
-import com.njydsz.common.domain.enums.IdentityType;
-import com.njydsz.common.domain.enums.ServiceType;
-
 /**
  * 全局 HTTP 请求头常量定义。
  *
@@ -62,7 +58,7 @@ public final class HeaderConstants {
      *
      * <p>用于区分公司用户、访客用户、ydsz用户等身份类型。
      *
-     * @see IdentityType
+    
      */
     public static final String X_IDENTITY_TYPE = "X-Identity-Type";
 
@@ -71,7 +67,7 @@ public final class HeaderConstants {
      *
      * <p>用于区分请求来源服务类型（WEB_SERVICE / APP_SERVICE 等）。
      *
-     * @see ServiceType
+    
      */
     public static final String X_SERVICE_TYPE = "X-Service-Type";
 
@@ -95,7 +91,7 @@ public final class HeaderConstants {
      * <p>当此 header 存在时，SQL 拦截器优先按该 scope 对应维度过滤；
      * 当不携带时，拦截器会按所有非空维度叠加（取交集）。
      *
-     * @see DataScopeType
+    
      */
     public static final String X_DATA_SCOPE = "X-Data-Scope";
 

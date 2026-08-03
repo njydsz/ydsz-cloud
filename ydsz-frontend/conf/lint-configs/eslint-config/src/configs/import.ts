@@ -9,10 +9,13 @@ import type { Linter } from 'eslint';
 
 import * as pluginImport from 'eslint-plugin-import-x';
 
+import { enforceLayerDepsConfig } from '../rules/enforce-layer-deps';
+
 /**
  * 启用 import-x 插件，规范 ES 模块的导入行为。
  *
  * 约束导入顺序、去重、禁止自引用与 webpack-loader 语法，提升模块可读性。
+ * 同时启用 no-restricted-paths 强制分层依赖方向。
  *
  * @returns ESLint flat 配置数组
  */
@@ -35,5 +38,7 @@ export async function importPluginConfig(): Promise<Linter.Config[]> {
         'import/no-webpack-loader-syntax': 'error',
       },
     },
+    // A7: 组件库分层约束 — 禁止跨层导入
+    enforceLayerDepsConfig(),
   ];
 }

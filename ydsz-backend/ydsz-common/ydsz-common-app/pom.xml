@@ -22,6 +22,10 @@
         <!-- HTTP 公共基座模块 -->
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-base</artifactId>
         </dependency>
 
