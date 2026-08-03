@@ -1,5 +1,8 @@
 /**
- * 微应用事件总线 — 一次性消息传递
+ * 微应用事件总线 — 一次性消息传递。
+ *
+ * @deprecated 当前全项目零消费方，跨应用通信请使用 {@link GlobalStateHandle} + lite-kernel globalStateAPI。
+ * 保留接口供未来外部集成使用，不推荐新代码引入。
  *
  * 场景：消息已读刷新角标、租户切换通知所有子应用刷新数据。
  * 事件名集中在 MicroEvents 常量注册表，禁止散写字符串 key。

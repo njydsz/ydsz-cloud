@@ -111,6 +111,9 @@ export async function activateApp(
     ...config.props,
   };
 
+  // 设置容器属性，与 PostCSS 构建期 CSS scoping 联动
+  container.setAttribute('data-lite-app', config.name);
+
   // 进入快照沙箱（挂载前快照 window，代理副作用 API）
   instance.sandbox = enterSandbox();
 
@@ -165,6 +168,12 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
     if (instance.sandbox) {
       exitSandbox(instance.sandbox);
       instance.sandbox = null;
+    }
+
+    // 移除容器级 CSS scoping 属性（data-lite-app）
+    const containerEl = document.querySelector(config.container);
+    if (containerEl) {
+      containerEl.removeAttribute('data-lite-app');
     }
 
     removeStylesheets(config.name);

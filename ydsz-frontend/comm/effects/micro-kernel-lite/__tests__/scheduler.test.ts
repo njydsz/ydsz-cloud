@@ -23,7 +23,6 @@ vi.mock('../src/loader', () => ({
   loadApp: vi.fn(async (_config: MicroAppConfig) => ({
     exports: {
       mount: vi.fn(async (_props: Record<string, unknown>) => {
-        // Mount a dummy DOM node
         const container = _props.container as HTMLElement;
         const div = document.createElement('div');
         div.id = `app-${_config.name}`;
@@ -34,6 +33,8 @@ vi.mock('../src/loader', () => ({
       }),
     },
     manifest: { name: 'test-app', entry: '/test.js', css: [], version: '1.0.0' },
+    duration: 42,
+    fromCache: false,
   })),
   removeStylesheets: vi.fn(),
 }));

@@ -19,6 +19,7 @@ import { defineConfig, loadEnv, mergeConfig } from 'vite';
 import { ALL_SHARED_DEPS } from '../micro-shared-deps';
 import { getDefaultPwaOptions } from '../options';
 import { loadApplicationPlugins } from '../plugins';
+import { postcssLiteScopedPlugin } from '../plugins/postcss-lite-scoped';
 import { loadAndConvertEnv } from '../utils/env';
 import { getCommonConfig } from './common';
 
@@ -74,6 +75,19 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
     });
 
     const { injectGlobalScss = true } = application;
+    const subAppName = readSubAppName();
+
+    // === lite-kernel manifest 插件：自动注入，子应用无需手工引入 ===
+    if (isBuild && subAppName) {
+      try {
+        const { viteManifestPlugin } = await import('@ydsz/micro-kernel-lite');
+        plugins.push(viteManifestPlugin({ name: subAppName }));
+        console.info(`[ViteConfig] Manifest plugin injected for ${subAppName}`);
+      } catch {
+        // micro-kernel-lite 不可用时跳过（qiankun 模式无需 manifest）
+      }
+    }
+    const { build: buildConf } = vite;
 
     const applicationConfig: UserConfig = {
       base,
@@ -88,7 +102,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
         chunkSizeWarningLimit: 1000,
         target: 'es2022',
       },
-      css: createCssOptions(injectGlobalScss),
+      css: createCssOptions(injectGlobalScss, readSubAppName()),
       esbuild: {
         drop: isBuild
           ? [
@@ -122,23 +136,25 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
 }
 
 /**
- * 构造 SCSS 预处理器选项，按需向应用注入全局样式。
+ * 构造 SCSS 预处理器选项，并按需注入 lite-kernel CSS 作用域插件。
  *
- * 仅对 apps 下的包注入 `@ydsz/styles/global`，保证全局变量/混合宏可用；
- * 非应用包（如库）不注入以避免副作用污染。
+ * - 仅对 apps 下的包注入 `@ydsz/styles/global` SCSS 全局样式
+ * - build 模式下，对子应用注入 PostCSS prefix 插件（[data-lite-app="xxx"]），
+ *   与 lite-kernel 的容器属性约定联动，实现构建期样式隔离
  *
  * @param injectGlobalScss - 是否注入全局 SCSS，默认 true
+ * @param appName - 子应用名（如 'project-web'），build 模式下用于 CSS 作用域
  * @returns Vite CSS 配置对象
  */
-function createCssOptions(injectGlobalScss = true): CSSOptions {
+function createCssOptions(injectGlobalScss = true, appName?: string): CSSOptions {
   const root = findMonorepoRoot();
-  return {
+
+  const result: CSSOptions = {
     preprocessorOptions: injectGlobalScss
       ? {
           scss: {
             additionalData: (content: string, filepath: string) => {
               const relativePath = relative(root, filepath);
-              // apps下的包注入全局样式
               if (relativePath.startsWith(`apps${path.sep}`)) {
                 return `@use "@ydsz/styles/global" as *;\n${content}`;
               }
@@ -150,6 +166,36 @@ function createCssOptions(injectGlobalScss = true): CSSOptions {
         }
       : {},
   };
+
+  // === lite-kernel CSS 作用域：有 appName 时启用 ===
+  if (appName) {
+    result.postcss = {
+      plugins: [postcssLiteScopedPlugin({ appName })],
+    };
+    console.info(`[ViteConfig] CSS scoping enabled for ${appName}`);
+  }
+
+  return result;
 }
 
 export { defineApplicationConfig };
+
+/**
+ * 从当前工作目录的 package.json 读取子应用名。
+ *
+ * 仅在 apps/ 或 main 目录下有效；库包（comm/、conf/）返回 undefined。
+ */
+function readSubAppName(): string | undefined {
+  try {
+    const pkg = require(`${process.cwd()}/package.json`);
+    const name: string = pkg.name || '';
+    // 匹配 @ydsz/*-web 格式的子应用，或 main-web 基座
+    if (name.startsWith('@ydsz/') && name.endsWith('-web')) {
+      return name.replace('@ydsz/', '');
+    }
+    if (name === '@ydsz/main-web') return 'main-web';
+  } catch {
+    // package.json 不存在时静默
+  }
+  return undefined;
+}
