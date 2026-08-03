@@ -21,9 +21,6 @@ class AggregateBatchStatusEnumTest {
     /**
      * 测试分组：canTransitTo() 状态流转校验
      */
-    /**
-     * 测试分组：「PENDING → READY/SENDING/CANCELLED 合法」等
-     */
     class CanTransitToTest {
 
         @Test

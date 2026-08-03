@@ -1,0 +1,21 @@
+{
+  "name": "@ydsz/micro-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./composable": {
+      "types": "./src/composable/index.ts",
+      "default": "./src/composable/index.ts"
+    }
+  },
+  "dependencies": {
+    "@ydsz/constants": "workspace:*",
+    "@ydsz/stores": "workspace:*",
+    "vue": "catalog:"
+  }
+}

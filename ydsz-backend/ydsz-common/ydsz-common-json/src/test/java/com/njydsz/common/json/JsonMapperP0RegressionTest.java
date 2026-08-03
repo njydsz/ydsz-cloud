@@ -34,11 +34,13 @@ class JsonMapperP0RegressionTest {
 
     @BeforeEach
     void setUp() {
+        SerializationProvider.clearThreadLocals();
         JsonConfig.getInstance().apply();
     }
 
     @AfterEach
     void tearDown() {
+        SerializationProvider.clearThreadLocals();
         JsonConfig.getInstance().apply();
     }
 

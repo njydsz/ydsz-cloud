@@ -256,6 +256,16 @@ public class RedisPubSubOps {
             return body;
         }
 
+        /**
+         * 按指定类型获取消息体（安全转换）。
+         *
+         * <p>仅当消息体是目标类型的实例时才返回转换结果，否则返回 {@code null}，
+         * 避免 ClassCastException 向上传播。</p>
+         *
+         * @param clazz 期望的消息体类型
+         * @param <T>   目标类型
+         * @return 转换后的消息体；body 为 null 或类型不匹配时返回 {@code null}
+         */
         public <T> T getBody(Class<T> clazz) {
             if (body == null) {
                 return null;

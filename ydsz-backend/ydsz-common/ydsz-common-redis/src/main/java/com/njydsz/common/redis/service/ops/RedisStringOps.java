@@ -654,7 +654,14 @@ public class RedisStringOps {
         return value;
     }
 
+    /**
+     * 空值占位符（缓存穿透保护用）。
+     *
+     * <p>当业务值本身为 null 时，缓存此占位对象以避免缓存穿透
+     * （即空值也短暂缓存，防止大量不存在 key 的请求直击数据库）。</p>
+     */
     private static class NullPlaceholder {
+        /** 单例占位实例 */
         static final Object INSTANCE = new NullPlaceholder();
     }
 

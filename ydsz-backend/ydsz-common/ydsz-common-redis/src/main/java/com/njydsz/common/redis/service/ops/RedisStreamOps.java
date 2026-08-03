@@ -567,10 +567,25 @@ public class RedisStreamOps {
             return streamKey;
         }
 
+        /**
+         * 获取消息体 Map。
+         *
+         * @return 消息体字段映射；body 为 null 时返回空 Map 而非 {@code null}
+         */
         public Map<Object, Object> getBody() {
             return body != null ? body : Collections.emptyMap();
         }
 
+        /**
+         * 按类型安全获取消息体指定字段。
+         *
+         * <p>字段不存在或类型不匹配时返回 {@code null}，不做强制转换。</p>
+         *
+         * @param field 字段名
+         * @param clazz 期望的字段值类型
+         * @param <T>   目标类型
+         * @return 转换后的字段值；缺失或类型不匹配时返回 {@code null}
+         */
         public <T> T getBodyField(String field, Class<T> clazz) {
             if (body == null || field == null) {
                 return null;

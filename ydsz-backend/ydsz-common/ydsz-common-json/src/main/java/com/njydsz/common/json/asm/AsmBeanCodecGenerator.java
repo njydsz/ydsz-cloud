@@ -63,18 +63,19 @@ import com.njydsz.common.json.writer.JSONWriter;
 @SuppressWarnings("deprecation")
 public final class AsmBeanCodecGenerator {
 
-    /** ASM ClassWriter 配置 */
     /**
      * ASM ClassWriter 标志位。
-     * COMPUTE_FRAMES（不含 COMPUTE_MAXS）：让 ASM 生成 StackMapTable（Java 7+ 必需）。
-     * 已知限制：ASM 9.8 在特定字节码模式下 COMPUTE_FRAMES 触发 NegativeArraySizeException，
-     * 导致 ASM 生成静默降级为反射。修复方案：升级 ASM 版本或重构 emitFieldSerializationLoop 跳过帧计算。
-     * 当前 visitMaxs 设为 0 让 ASM 全自算。
+     *
+     * <p>使用 {@link ClassWriter#COMPUTE_MAXS}：ASM 自动计算 max_stack/max_locals，
+     * 但不计算 StackMapTable 帧。原因：ASM 9.x 在特定字节码模式下 {@code COMPUTE_FRAMES}
+     * 会在 {@code visitMaxs} 阶段触发 {@link NegativeArraySizeException}（Frame.merge
+     * 内部 bug），导致 ASM 序列化器生成静默失败、降级为反射。</p>
+     *
+     * <p>缺少 StackMapTable 时，HotSpot/OpenJ9 等 JVM 会回退到类型推断验证器
+     * （type-inference verifier），仅影响类加载性能，不影响运行时性能。
+     * 生成字节码后会在 {@link #toByteArrayWithFallback} 中尝试二次补帧。</p>
      */
-    private static final int ASM_FLAGS = ClassWriter.COMPUTE_FRAMES;
-
-    /** COMPUTE_MAXS 兜底：当 COMPUTE_FRAMES 触发 ASM 9.x NegativeArraySizeException 时回退使用 */
-    private static final int ASM_FLAGS_FALLBACK = ClassWriter.COMPUTE_MAXS;
+    private static final int ASM_FLAGS = ClassWriter.COMPUTE_MAXS;
 
     /**
      * 字段缓存信息（用于 ASM 生成类中缓存嵌套序列化器/反序列化器）
@@ -935,9 +936,11 @@ public final class AsmBeanCodecGenerator {
         // 栈: [int_value] — 先存储到临时变量
         mv.visitVarInsn(ISTORE, 6);
         // pos += NumberUtils.writeInt(value, buf, pos)
+        // 栈布局: [pos, writeInt(value, buf, pos)] → IADD → [pos + written]
+        mv.visitVarInsn(ILOAD, 4);     // pos (用于加法)
         mv.visitVarInsn(ILOAD, 6);     // int_value
         mv.visitVarInsn(ALOAD, 3);     // buf
-        mv.visitVarInsn(ILOAD, 4);     // pos
+        mv.visitVarInsn(ILOAD, 4);     // pos (writeInt 参数)
         mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/common/json/number/NumberUtils", "writeInt", "(I[CI)I", false);
         mv.visitInsn(IADD);
         mv.visitVarInsn(ISTORE, 4);    // pos = pos + result
@@ -1680,29 +1683,34 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * toByteArray 兜底：ASM 9.x COMPUTE_FRAMES 在特定字节码模式触发 NegativeArraySizeException。
-     * 捕获后回退 COMPUTE_MAXS 重试生成不包含 StackMapTable 的字节码。
+     * 生成字节码并尝试补帧。
+     *
+     * <p>由于 {@code ASM_FLAGS} 使用 {@link ClassWriter#COMPUTE_MAXS}（不含 COMPUTE_FRAMES），
+     * {@code cw.toByteArray()} 产出的字节码不含 StackMapTable。此处通过 ClassReader→ClassWriter
+     * 二次流水线尝试补帧，提升 JVM 类加载验证效率。</p>
+     *
+     * <p>补帧失败（ASM 9.x {@code Frame.merge} 触发 {@link NegativeArraySizeException} 等）
+     * 时静默回退到无帧字节码 —— HotSpot/OpenJ9 会使用类型推断验证器，功能不受影响。</p>
      */
     private static byte[] toByteArrayWithFallback(ClassWriter cw, String className) {
+        byte[] rawBytes = cw.toByteArray();
         try {
-            return cw.toByteArray();
-        } catch (NegativeArraySizeException e) {
-            // ASM 9.x COMPUTE_FRAMES bug: 两步法 — 先用 COMPUTE_MAXS 生成原始字节码，
-            // 再通过 ClassReader→ClassWriter(COMPUTE_FRAMES) 单独计算 StackMapTable
-            try {
-                java.lang.reflect.Field f = ClassWriter.class.getDeclaredField("flags");
-                f.setAccessible(true);
-                f.setInt(cw, ASM_FLAGS_FALLBACK);
-                byte[] rawBytes = cw.toByteArray();
-                // 第二步：单独计算帧
-                org.objectweb.asm.ClassReader cr = new org.objectweb.asm.ClassReader(rawBytes);
-                org.objectweb.asm.ClassWriter cw2 = new org.objectweb.asm.ClassWriter(ClassWriter.COMPUTE_FRAMES);
-                cr.accept(cw2, 0);
-                return cw2.toByteArray();
-            } catch (Exception e2) {
-                // 两步法也失败，原抛原始异常
-                throw e;
+            ClassReader cr = new ClassReader(rawBytes);
+            ClassWriter cw2 = new ClassWriter(ClassWriter.COMPUTE_FRAMES) {
+                @Override
+                protected String getCommonSuperClass(String type1, String type2) {
+                    return "java/lang/Object";
+                }
+            };
+            cr.accept(cw2, 0);
+            return cw2.toByteArray();
+        } catch (Throwable e) {
+            // 补帧失败，使用无帧字节码（JVM 回退到类型推断验证器）
+            if (log.isDebugEnabled()) {
+                log.debug("ASM frame computation failed for {}, using frame-less bytecode: {}",
+                    className, e.toString());
             }
+            return rawBytes;
         }
     }
 

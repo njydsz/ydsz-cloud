@@ -1,21 +1,4 @@
 {
- "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\test\\java\\com\\njydsz\\agent\\server\\agent\\DagDslParserTest.java": {
-  "missing_classes": [
-   "ParseInvalid",
-   "SafeConstructorSecurity"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\test\\java\\com\\njydsz\\agent\\server\\agent\\DagOrchestrationExecutorTest.java": {
-  "missing_classes": [
-   "SequentialExecution",
-   "FailurePropagation",
-   "CycleDetection"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
  "ydsz-backend\\ydsz-common\\ydsz-common-app\\src\\test\\java\\com\\njydsz\\common\\app\\annotation\\AppApiTest.java": {
   "missing_classes": [
    "SampleAppController"
@@ -41,16 +24,6 @@
     "appendToOutbox"
    ]
   ],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\test\\java\\com\\njydsz\\common\\exception\\AbstractYdszExceptionTest.java": {
-  "missing_classes": [
-   "MessageResolutionTest",
-   "ConcurrencyTest",
-   "DataChainTest",
-   "BuilderTest"
-  ],
-  "missing_methods": [],
   "misplace": []
  },
  "ydsz-backend\\ydsz-common\\ydsz-common-jdbc\\src\\main\\java\\com\\njydsz\\common\\jdbc\\interceptor\\SqlFirewallInnerInterceptor.java": {
@@ -153,32 +126,6 @@
   ],
   "misplace": []
  },
- "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\encoding\\EncodingUtilsTest.java": {
-  "missing_classes": [
-   "Base32",
-   "Hex",
-   "UrlEncoding"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\hash\\HashUtilsTest.java": {
-  "missing_classes": [
-   "Base62",
-   "Base58",
-   "ConsistentHash"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\security\\AesGcmCryptoTest.java": {
-  "missing_classes": [
-   "EncryptDecryptRoundtrip",
-   "TamperDetection"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
  "ydsz-backend\\ydsz-common\\ydsz-common-web\\src\\main\\java\\com\\njydsz\\common\\web\\metrics\\WebMetrics.java": {
   "missing_classes": [],
   "missing_methods": [
@@ -201,129 +148,10 @@
   ],
   "misplace": []
  },
- "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\calc\\CreditScoreEvaluatorTest.java": {
-  "missing_classes": [
-   "ZeroCases",
-   "NullCases",
-   "OverdueAndBoundaryCases"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\calc\\DualRateProfitCalculatorTest.java": {
-  "missing_classes": [
-   "BlendedCases",
-   "MarginAchievedCases"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\DefaultRuleEngineTest.java": {
-  "missing_classes": [
-   "EvaluateCases",
-   "DryRunCases",
-   "TopResultCases",
-   "StatsCases",
-   "MdcTraceIdCases"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\RuleCircuitBreakerTest.java": {
-  "missing_classes": [
-   "ClosedStateCases",
-   "ClosedToOpenCases",
-   "OpenToHalfOpenCases",
-   "HalfOpenCases",
-   "MultiRuleCases"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\RuleIndexerTest.java": {
-  "missing_classes": [
-   "FindCandidatesCases",
-   "InvertedIndexCases",
-   "CompatibilityCases"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\distributed\\ConsistentHashSharderTest.java": {
-  "missing_classes": [
-   "IsMineCheck",
-   "StaticIsMine",
-   "WeightAndDistribution",
-   "MinimalMigration",
-   "VirtualNodesConfig",
-   "NodeCount"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\expr\\liteexpr\\ExprLexerTest.java": {
-  "missing_classes": [
-   "StringLiterals",
-   "KeywordsAndIdentifiers",
-   "OperatorsAndDelimiters",
-   "CommentsAndWhitespace",
-   "PositionTracking",
-   "ComplexExpressions"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\DingTalkChannelTest.java": {
-  "missing_classes": [
-   "ResolveUrlTest",
-   "BuildPayloadTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\FeishuChannelTest.java": {
-  "missing_classes": [
-   "ResolveUrlTest",
-   "BuildPayloadTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\push\\GetuiPushSignerTest.java": {
-  "missing_classes": [
-   "BytesToHexTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\sms\\AliyunSmsSignerTest.java": {
-  "missing_classes": [
-   "PercentEncodeTest",
-   "BuildCanonicalQueryTest",
-   "BuildQueryTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\consumer\\MessageDlqConsumerTest.java": {
-  "missing_classes": [
-   "UpdateThenInsertTest"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
  "ydsz-backend\\ydsz-project\\ydsz-project-server\\src\\main\\java\\com\\njydsz\\project\\server\\config\\ProjectProperties.java": {
   "missing_classes": [
    "CacheConfig",
    "NotifyConfig"
-  ],
-  "missing_methods": [],
-  "misplace": []
- },
- "ydsz-backend\\ydsz-userinfo\\ydsz-userinfo-server\\src\\test\\java\\com\\njydsz\\userinfo\\server\\service\\impl\\DepartmentServiceImplTest.java": {
-  "missing_classes": [
-   "ListTest",
-   "RemoveByIdTest"
   ],
   "missing_methods": [],
   "misplace": []
