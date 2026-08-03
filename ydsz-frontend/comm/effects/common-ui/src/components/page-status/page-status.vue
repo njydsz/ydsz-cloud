@@ -1,3 +1,12 @@
+<!--
+  PageStatus — 统一页面状态容器
+
+  以声明式 status prop 切换 loading / error / empty / success 四种状态，
+  消除 9 个子应用中各自实现的散落状态判断逻辑。
+
+  @author ydsz-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * PageStatus — 统一页面状态容器

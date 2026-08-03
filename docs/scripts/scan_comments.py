@@ -346,25 +346,29 @@ def analyze_ts(path: str):
     for line_no, name in exports:
         if not covered(line_no):
             found = False
-            for k in range(line_no - 2, max(line_no - 12, -1), -1):
-                t = lines[k].strip()
-                if not t:
+            # 上一行是 JSDoc 结束符 `*/`（长文档场景，直接判定已覆盖）
+            if lines[line_no - 2].strip().endswith("*/"):
+                found = True
+            else:
+                for k in range(line_no - 2, max(line_no - 12, -1), -1):
+                    t = lines[k].strip()
+                    if not t:
+                        break
+                    if t.startswith("/**"):
+                        found = True
+                        break
+                    if t.startswith("*") or t.endswith("*/"):
+                        for kk in range(k, max(k - 100, -1), -1):
+                            tt = lines[kk].strip()
+                            if tt.startswith("/**"):
+                                found = True
+                                break
+                            if not tt:
+                                break
+                        break
+                    if t.startswith("@") or t.startswith("//"):
+                        continue
                     break
-                if t.startswith("/**"):
-                    found = True
-                    break
-                if t.startswith("*") or t.endswith("*/"):
-                    for kk in range(k, max(k - 30, -1), -1):
-                        tt = lines[kk].strip()
-                        if tt.startswith("/**"):
-                            found = True
-                            break
-                        if not tt:
-                            break
-                    break
-                if t.startswith("@") or t.startswith("//"):
-                    continue
-                break
             if not found:
                 no_doc_exports.append((line_no, name))
     return {

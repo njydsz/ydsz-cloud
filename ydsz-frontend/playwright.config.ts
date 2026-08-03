@@ -1,3 +1,12 @@
+/**
+ * E2E 测试（Playwright）配置。
+ * 
+ * @remarks
+ * 定义浏览器项目、基准 URL 与测试目录，用于微前端应用端到端测试。
+ * 
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { defineConfig, devices } from '@playwright/test';
 
 /**

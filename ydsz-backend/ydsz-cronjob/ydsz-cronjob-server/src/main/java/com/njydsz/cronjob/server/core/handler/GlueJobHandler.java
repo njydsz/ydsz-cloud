@@ -252,7 +252,7 @@ public class GlueJobHandler implements JobHandler {
     @Override
     public Object execute(String paramsJson) throws Exception {
         // 从 JobContextHolder 获取当前 jobId
-        String jobId = JobContextHolder.getJobId();
+        String jobId = JobContextHolder.get().getJobId();
         if (!StringUtils.hasText(jobId)) {
             throw new IllegalStateException("GLUE 任务执行上下文缺少 jobId，请确认 JobContextHolder 已正确设置");
         }
@@ -436,7 +436,7 @@ public class GlueJobHandler implements JobHandler {
      */
     private void logToJobLogger(String format, Object... args) {
         try {
-            var logger = JobLoggerHolder.get();
+            var logger = JobLoggerHolder.getLogger();
             if (logger != null) {
                 logger.info(format, args);
             }

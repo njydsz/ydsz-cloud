@@ -229,7 +229,7 @@ public class ScriptJobHandler implements JobHandler {
         Path scriptFile = resolveScriptFile(language, script);
         boolean isTempFile = !script.startsWith(FILE_PREFIX);
         // 捕获当前线程的 JobLogger，传递给 IO 读取线程（ThreadLocal 不跨线程）
-        JobLogger jobLogger = JobLoggerHolder.get();
+        JobLogger jobLogger = JobLoggerHolder.getLogger();
         try {
             List<String> command = buildCommand(language, scriptFile, args);
             log.info("[ScriptJobHandler] 执行脚本: language={} file={} args={} timeoutMs={}",
@@ -428,7 +428,7 @@ public class ScriptJobHandler implements JobHandler {
             return new ArrayList<>();
         }
         List<String> args = new ArrayList<>(argsArray.size());
-        for (JsonNode arg : argsArray.elements()) {
+        for (JsonNode arg : argsArray.asList()) {
             args.add(arg == null || arg.isNull() ? "" : arg.asText());
         }
         return args;

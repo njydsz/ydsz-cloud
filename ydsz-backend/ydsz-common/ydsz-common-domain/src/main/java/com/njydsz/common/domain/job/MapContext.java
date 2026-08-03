@@ -17,9 +17,9 @@ import lombok.Data;
 public class MapContext {
 
     /** 任务 ID */
-    private Long jobId;
+    private String jobId;
     /** 日志 ID */
-    private Long logId;
+    private String logId;
     /** 任务 key */
     private String jobKey;
     /** 任务名称 */

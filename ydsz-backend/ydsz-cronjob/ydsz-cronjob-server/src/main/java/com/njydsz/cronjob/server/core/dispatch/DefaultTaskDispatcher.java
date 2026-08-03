@@ -596,9 +596,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
                 jobLogContentServiceProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
-        JobLoggerHolder.set(jobLogger);
+        JobLoggerHolder.setLogger(jobLogger);
         // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
-        JobContextHolder.set(job.getId(), job.getJobKey());
+        ShardingContext shardingCtx = new ShardingContext();
+        shardingCtx.setJobId(job.getId());
+        shardingCtx.setJobKey(job.getJobKey());
+        shardingCtx.setLogId(log0.getId());
+        JobContextHolder.set(shardingCtx);
 
         // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
         recordExecutionStart(job.getTenantId());
@@ -607,8 +611,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         Object result = null;
         try {
             JobHandler handler = resolveHandler(job);
-            ShardingContext ctx = new ShardingContext(shardTotal, shardIndex,
-                    Collections.emptyList(), job.getJobKey(), log0.getId());
+            ShardingContext ctx = new ShardingContext();
+            ctx.setShardTotal(shardTotal);
+            ctx.setShardIndex(shardIndex);
+            ctx.setJobId(job.getId());
+            ctx.setJobKey(job.getJobKey());
+            ctx.setLogId(log0.getId());
             result = handler.execute(job.getParamsJson(), ctx);
             success = true;
             log0.setResultJson(result == null ? null : YdszJson.toJson(result));
@@ -935,9 +943,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
                 jobLogContentServiceProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
-        JobLoggerHolder.set(jobLogger);
+        JobLoggerHolder.setLogger(jobLogger);
 // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
-JobContextHolder.set(job.getId(), job.getJobKey());
+ShardingContext shardingCtx = new ShardingContext();
+shardingCtx.setJobId(job.getId());
+shardingCtx.setJobKey(job.getJobKey());
+shardingCtx.setLogId(log0.getId());
+JobContextHolder.set(shardingCtx);
 
 // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
 recordExecutionStart(job.getTenantId());

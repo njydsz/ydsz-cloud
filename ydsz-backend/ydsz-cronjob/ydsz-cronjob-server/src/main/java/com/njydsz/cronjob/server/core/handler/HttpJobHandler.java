@@ -118,7 +118,7 @@ public class HttpJobHandler implements JobHandler {
         ObjectNode params = YdszJson.parseObject(paramsJson);
 
         // P2-1: JsonSchema 参数结构校验（试点验证自研 schema 引擎）
-        List<String> schemaErrors = validateParams(params);
+        List<String> schemaErrors = validateParams((Map<String, Object>) params.asValue());
         if (!schemaErrors.isEmpty()) {
             log.warn("[HttpJobHandler] 参数 schema 校验失败: {} errors={}", schemaErrors.size(), schemaErrors);
         }

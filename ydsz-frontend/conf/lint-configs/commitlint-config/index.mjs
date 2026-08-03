@@ -1,3 +1,12 @@
+/**
+ * commitlint 提交信息校验配置。
+ * 
+ * @remarks
+ * 按 pnpm workspace 自动识别包名与作用域，校验提交信息格式（type(scope): subject）。
+ * 
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { execSync } from 'node:child_process';
 
 import { getPackagesSync } from '@ydsz/node-utils';

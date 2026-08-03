@@ -150,8 +150,13 @@ public class MapTaskExecutor {
         jobTaskMapper.insert(rootTaskDO);
 
         // 3. 构造 root MapContext，调用 processor.process 处理 root task
-        MapContext rootContext = new MapContext(jobId, logId, jobKey, ROOT_TASK_NAME,
-                job.getParamsJson(), true);
+        MapContext rootContext = new MapContext();
+        rootContext.setJobId(jobId);
+        rootContext.setLogId(logId);
+        rootContext.setJobKey(jobKey);
+        rootContext.setTaskName(ROOT_TASK_NAME);
+        rootContext.setTaskParams(job.getParamsJson());
+        rootContext.setRoot(true);
         ProcessResult rootResult = executeTask(processor, rootContext, rootTaskDO, jobKey, logId);
 
         // 4. root task 失败时不产生子任务，直接返回
@@ -200,8 +205,13 @@ public class MapTaskExecutor {
                 List<MapContext> subTaskContexts = new ArrayList<>(subTasks.size());
                 for (int i = 0; i < subTasks.size(); i++) {
                     MapTask subTask = subTasks.get(i);
-                    MapContext subContext = new MapContext(jobId, logId, jobKey,
-                            subTask.getTaskName(), subTask.getTaskParams(), false);
+                    MapContext subContext = new MapContext();
+                    subContext.setJobId(jobId);
+                    subContext.setLogId(logId);
+                    subContext.setJobKey(jobKey);
+                    subContext.setTaskName(subTask.getTaskName());
+                    subContext.setTaskParams(subTask.getTaskParams());
+                    subContext.setRoot(false);
                     ProcessResult r = subTaskResults.get(i);
                     if (r != null && r.getResult() != null) {
                         try {
@@ -357,8 +367,13 @@ public class MapTaskExecutor {
                     subTask.getTaskParams(), TASK_TYPE_SUB_TASK, STATUS_PENDING);
             jobTaskMapper.insert(subTaskDO);
 
-            MapContext subContext = new MapContext(jobId, logId, jobKey, subTask.getTaskName(),
-                    subTask.getTaskParams(), false);
+            MapContext subContext = new MapContext();
+            subContext.setJobId(jobId);
+            subContext.setLogId(logId);
+            subContext.setJobKey(jobKey);
+            subContext.setTaskName(subTask.getTaskName());
+            subContext.setTaskParams(subTask.getTaskParams());
+            subContext.setRoot(false);
             ProcessResult subResult = executeTask(processor, subContext, subTaskDO, jobKey, logId);
             results.add(subResult);
         }
@@ -398,7 +413,11 @@ public class MapTaskExecutor {
                 boolean success = jsonObj.getBooleanValue("success");
                 String res = jsonObj.getString("result");
                 String errMsg = jsonObj.getString("errorMessage");
-                result = new ProcessResult(success, res, errMsg);
+                ProcessResult r = new ProcessResult();
+                r.setSuccess(success);
+                r.setResult(res);
+                r.setErrorMessage(errMsg);
+                result = r;
             }
         } catch (Exception e) {
             log.error("[MapTaskExecutor] 远程子任务派发异常: key={} taskName={} nodeId={} reason={}",
@@ -427,8 +446,13 @@ public class MapTaskExecutor {
     private ProcessResult executeTaskRemotely(MapProcessor processor, MapTask subTask,
                                                JobTask subTaskDO,
                                                String jobId, String logId, String jobKey) {
-        MapContext subContext = new MapContext(jobId, logId, jobKey, subTask.getTaskName(),
-                subTask.getTaskParams(), false);
+        MapContext subContext = new MapContext();
+        subContext.setJobId(jobId);
+        subContext.setLogId(logId);
+        subContext.setJobKey(jobKey);
+        subContext.setTaskName(subTask.getTaskName());
+        subContext.setTaskParams(subTask.getTaskParams());
+        subContext.setRoot(false);
         return executeTask(processor, subContext, subTaskDO, jobKey, logId);
     }
 
@@ -507,7 +531,7 @@ public class MapTaskExecutor {
      * @param context 执行上下文
      */
     private void logStartToJobLogger(MapContext context) {
-        JobLogger logger = JobLoggerHolder.get();
+        JobLogger logger = JobLoggerHolder.getLogger();
         if (logger == null) {
             return;
         }
@@ -522,7 +546,7 @@ public class MapTaskExecutor {
      * @param result  处理结果
      */
     private void logEndToJobLogger(MapContext context, ProcessResult result) {
-        JobLogger logger = JobLoggerHolder.get();
+        JobLogger logger = JobLoggerHolder.getLogger();
         if (logger == null) {
             return;
         }

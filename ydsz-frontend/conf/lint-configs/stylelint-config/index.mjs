@@ -1,3 +1,12 @@
+/**
+ * Stylelint 样式规范配置。
+ * 
+ * @remarks
+ * 基于标准 Stylelint 规则集，约束 CSS/SCSS 的书写规范，配合 Prettier 协同工作。
+ * 
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 export default {
   extends: ['stylelint-config-standard', 'stylelint-config-recess-order'],
   ignoreFiles: [

@@ -113,13 +113,13 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     @Transactional(rollbackFor = Exception.class)
     public void cancelInstance(String instanceId) {
         getInstanceById(instanceId);
-        // RUNNING → CANCELED
+        // RUNNING → CANCELLED
         int rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
-                DagInstanceStatus.RUNNING.name(), DagInstanceStatus.CANCELED.name());
+                DagInstanceStatus.RUNNING.name(), DagInstanceStatus.CANCELLED.name());
         if (rows == 0) {
-            // PAUSED → CANCELED
+            // PAUSED → CANCELLED
             rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
-                    DagInstanceStatus.PAUSED.name(), DagInstanceStatus.CANCELED.name());
+                    DagInstanceStatus.PAUSED.name(), DagInstanceStatus.CANCELLED.name());
         }
         if (rows == 0) {
             throw new SysException(BaseResultCode.BAD_REQUEST,

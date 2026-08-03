@@ -1,3 +1,12 @@
+/**
+ * 清理构建产物的脚本。
+ * 
+ * @remarks
+ * 递归删除各包 dist/target 等构建输出目录，保持工作区干净。
+ * 
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 import { promises as fs } from 'node:fs';
 import { join, normalize } from 'node:path';
 

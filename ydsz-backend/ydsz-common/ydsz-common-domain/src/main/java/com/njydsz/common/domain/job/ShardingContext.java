@@ -16,7 +16,9 @@ public class ShardingContext {
     /** 当前分片序号（从 0 开始） */
     private int shardIndex;
     /** 任务 ID */
-    private Long jobId;
+    private String jobId;
+    /** 任务 KEY */
+    private String jobKey;
     /** 日志 ID */
-    private Long logId;
+    private String logId;
 }
