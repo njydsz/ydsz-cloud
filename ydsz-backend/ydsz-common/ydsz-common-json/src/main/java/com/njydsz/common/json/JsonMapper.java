@@ -11,9 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.exception.JsonException;
-import com.njydsz.common.json.jsonpath.JsonPath;
 import com.njydsz.common.json.metric.MetricsHelper;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
@@ -143,23 +142,15 @@ public class JsonMapper {
     private SerializationProvider.ThreadLocalSnapshot applyConfigIfNeeded() {
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
         config.apply();
-        JsonConfig.setThreadLocalOverride(config);
         return snapshot;
     }
 
     /**
-     * 恢复配置快照（包括 ThreadLocal 序列化参数和 JsonConfig 覆盖）。
-     *
-     * <p><b>注意：</b>此前实现误将 {@code snapshot.restore()} 写成
-     * {@code restoreConfig(snapshot)} 导致无限递归 + StackOverflowError，
-     * 任何 {@code JsonMapper} 实例首次序列化都会在 finally 中爆栈。此处修正为
-     * 调用 {@link SerializationProvider.ThreadLocalSnapshot#restore()} 后清除
-     * {@link JsonConfig} 的 ThreadLocal 覆盖。</p>
+     * 恢复配置快照（ThreadLocal 序列化参数）。
      */
     private void restoreConfig(SerializationProvider.ThreadLocalSnapshot snapshot) {
         if (snapshot != null) {
             snapshot.restore();
-            JsonConfig.clearThreadLocalOverride();
         }
     }
 
@@ -520,19 +511,7 @@ public class JsonMapper {
         return readTree(json);
     }
 
-    // ==================== JSONPath / JSONPointer API ====================
-
-    /**
-     * 通过 JSONPath 获取值。
-     *
-     * @param json JSON 字符串
-     * @param path JSONPath 表达式
-     * @return 匹配的值
-     * @since 1.0.0
-     */
-    public Object getByPath(String json, String path) {
-        return JsonPath.get(json, path);
-    }
+    // ==================== JSONPointer API ====================
 
     /**
      * 使用 JSON Pointer 获取值。

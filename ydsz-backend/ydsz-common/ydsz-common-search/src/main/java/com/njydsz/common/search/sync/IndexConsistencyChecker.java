@@ -163,6 +163,11 @@ public class IndexConsistencyChecker {
             Map<String, Long> missingFromIndex,
             Map<String, Long> orphanInIndex
     ) {
+        /**
+         * 判断索引与数据库是否一致。
+         *
+         * @return {@code true} 表示索引无缺失文档且无冗余文档，两侧完全对齐
+         */
         public boolean isConsistent() {
             return missingFromIndex.isEmpty() && orphanInIndex.isEmpty();
         }

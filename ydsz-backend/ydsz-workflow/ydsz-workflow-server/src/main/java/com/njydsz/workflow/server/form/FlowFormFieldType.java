@@ -61,6 +61,15 @@ public enum FlowFormFieldType {
         return code;
     }
 
+    /**
+     * 根据字段类型编码解析枚举项。
+     *
+     * <p>入参为 {@code null} 或编码无匹配时统一回退为 {@link #TEXT}（单行文本），
+     * 保证旧表单数据与脏数据可正常渲染。
+     *
+     * @param code 字段类型编码，可为 {@code null}
+     * @return 匹配的字段类型；无匹配或入参为 {@code null} 时返回 {@link #TEXT}
+     */
     public static FlowFormFieldType of(String code) {
         if (code == null) {
             return TEXT;

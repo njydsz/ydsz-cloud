@@ -69,6 +69,15 @@ public class FlowInstanceViewDTO implements Serializable {
     /** 当前待办任务列表 */
     private List<FlowTaskViewDTO> currentTasks;
 
+    /**
+     * 流程任务视图 DTO（Feign 友好，办理人姓名字段已标注 {@link SensitiveData} 脱敏）。
+     *
+     * <p>对应实例下当前待办任务的最小视图，仅包含任务办理所需的字段，
+     * 不承载表单数据与审批流日志。
+     *
+     * @author ydsz-team
+     * @since 1.0.0
+     */
     @Data
     @Builder
     @NoArgsConstructor

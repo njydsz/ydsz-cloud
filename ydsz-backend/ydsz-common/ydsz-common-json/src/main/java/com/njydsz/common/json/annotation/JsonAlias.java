@@ -25,7 +25,6 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonAlias {
 
     /**

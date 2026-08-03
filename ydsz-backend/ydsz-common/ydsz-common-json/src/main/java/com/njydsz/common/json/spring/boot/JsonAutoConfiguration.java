@@ -17,7 +17,7 @@ import org.springframework.core.convert.converter.Converter;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.autotype.AutoTypeWhitelistScanner;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.health.JsonHealthIndicator;
 import com.njydsz.common.json.metric.JsonCacheMetrics;
 import com.njydsz.common.json.metric.JsonMetrics;

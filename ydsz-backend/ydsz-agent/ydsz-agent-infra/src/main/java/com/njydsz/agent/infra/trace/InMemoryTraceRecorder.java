@@ -87,10 +87,21 @@ public class InMemoryTraceRecorder implements TraceRecorder {
         return traces.getOrDefault(traceId, List.of());
     }
 
+    /**
+     * 获取指定链路的最终状态。
+     *
+     * @param traceId 链路追踪 ID
+     * @return 状态字符串（如 SUCCESS/FAILED）；链路不存在时返回 {@code "UNKNOWN"}
+     */
     public String getStatus(String traceId) {
         return traceStatus.getOrDefault(traceId, "UNKNOWN");
     }
 
+    /**
+     * 获取已记录的链路总数。
+     *
+     * @return 内存中保留的 traceId 数量
+     */
     public int getTraceCount() {
         return traces.size();
     }

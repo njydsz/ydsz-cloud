@@ -9,7 +9,7 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.JsonCacheStats;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.provider.SerializationContext;
 

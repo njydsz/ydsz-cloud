@@ -198,11 +198,18 @@ public final class OtelExporterFactory {
         /** TLS 配置 */
         private TlsConfig tls = new TlsConfig();
 
+        /**
+         * OTLP/gRPC 传输 TLS 配置。
+         */
         @Data
         public static class TlsConfig {
+            /** 是否启用 TLS 加密传输 */
             private boolean enabled = false;
+            /** 客户端证书文件路径 */
             private String certFile;
+            /** 客户端私钥文件路径 */
             private String keyFile;
+            /** CA 根证书文件路径 */
             private String caFile;
         }
     }

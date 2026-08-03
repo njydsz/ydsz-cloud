@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonProperty;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.testbean.NamingBean;
@@ -21,27 +21,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * P0 修复回归测试。
  *
- * <p>覆盖三项阻断性 Bug：</p>
+ * <p>覆盖两项阻断性 Bug：</p>
  * <ol>
  *   <li>{@code JsonMapper.restoreConfig} 无限递归 → StackOverflowError（A1）</li>
  *   <li>{@code JsonMapper.configApplied} 跨线程误共享 → 共享 Mapper 配置错乱（A2）</li>
- *   <li>{@code ThreadLocalSnapshot} 未回滚 namingStrategy → 单次配置泄漏（A3）</li>
  * </ol>
  *
- * <p>A2/A3 通过直接校验 {@link SerializationProvider} 的 ThreadLocal 状态隔离来验证修复，
+ * <p>A2 通过直接校验 {@link SerializationProvider} 的 ThreadLocal 状态隔离来验证修复，
  * 避免与预存的"字段元数据加载时缓存 jsonName"等行为缺口耦合。</p>
  */
 class JsonMapperP0RegressionTest {
 
     @BeforeEach
     void setUp() {
-        JsonConfig.getInstance().reset();
         JsonConfig.getInstance().apply();
     }
 
     @AfterEach
     void tearDown() {
-        JsonConfig.getInstance().reset();
         JsonConfig.getInstance().apply();
     }
 
@@ -189,50 +186,7 @@ class JsonMapperP0RegressionTest {
             () -> "default mapper should NOT output null, got: " + defaultJson);
     }
 
-    // ==================== A3: namingStrategy 单次配置泄漏 ====================
-
-    /**
-     * A3 回归：{@link YdszJson#toJson(Object, JsonConfig)} 用 SNAKE_CASE 配置后，
-     * ThreadLocalSnapshot 必须回滚 namingStrategy，否则后续默认调用泄漏为 SNAKE_CASE。
-     *
-     * <p>校验 {@link SerializationProvider#getNamingStrategy()} 在单次配置调用后恢复为默认值。
-     * （注：字段 jsonName 在元数据加载时缓存，故行为层面的逐调用命名对已缓存类无效；
-     * 但 ThreadLocal 泄漏会导致"调用期间新加载的类"被永久缓存错误命名，A3 修复消除该污染。）</p>
-     */
-    @Test
-    void singleShotSnakeCaseConfigRestoresNamingStrategyThreadLocal() {
-        NamingBean b = sampleBean();
-        PropertyNamingStrategy defaultStrategy = SerializationProvider.getNamingStrategy();
-
-        JsonConfig snakeConfig = JsonConfig.builder()
-            .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-            .build();
-
-        // 单次 snake 配置序列化
-        YdszJson.toJson(b, snakeConfig);
-
-        // ThreadLocal namingStrategy 必须恢复为默认（A3 修复点）
-        assertEquals(defaultStrategy, SerializationProvider.getNamingStrategy(),
-            "namingStrategy ThreadLocal must be restored after single-shot config (A3 leak)");
-    }
-
-    /**
-     * A3 回归（连续多次单次配置）：交替使用默认与 snake_case 配置，确保每次都正确回滚。
-     */
-    @Test
-    void repeatedSingleShotConfigsRestoreNamingStrategy() {
-        NamingBean b = sampleBean();
-        PropertyNamingStrategy defaultStrategy = SerializationProvider.getNamingStrategy();
-        JsonConfig snakeConfig = JsonConfig.builder()
-            .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-            .build();
-
-        for (int i = 0; i < 5; i++) {
-            YdszJson.toJson(b, snakeConfig);
-            assertEquals(defaultStrategy, SerializationProvider.getNamingStrategy(),
-                "iter " + i + ": namingStrategy must be restored (A3 leak)");
-        }
-    }
+    // ==================== A3: namingStrategy 配置泄漏 ====================
 
     /**
      * A3 回归（JsonMapper 实例）：snake_case Mapper 序列化后，全局 namingStrategy 不被污染。

@@ -41,6 +41,9 @@ public class AgentProperties {
     public Rag getRag() { return rag; }
     public void setRag(Rag rag) { this.rag = rag; }
 
+    /**
+     * LLM 相关配置组（默认 Provider、模型、密钥、价格等）。
+     */
     public static class Llm {
         /** 默认 Provider（openai / deepseek / qwen / ollama） */
         private String defaultProvider = "openai";
@@ -108,6 +111,9 @@ public class AgentProperties {
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
     }
 
+    /**
+     * 对话记忆相关配置组（TTL 与上下文窗口大小）。
+     */
     public static class Memory {
         /** 对话记忆 TTL（小时） */
         private int ttlHours = 24;
@@ -120,6 +126,9 @@ public class AgentProperties {
         public void setMaxMessages(int maxMessages) { this.maxMessages = maxMessages; }
     }
 
+    /**
+     * RAG 检索相关配置组（开关、向量存储类型、Embedding 模型等）。
+     */
     public static class Rag {
         /** 是否启用 RAG */
         private boolean enabled = false;

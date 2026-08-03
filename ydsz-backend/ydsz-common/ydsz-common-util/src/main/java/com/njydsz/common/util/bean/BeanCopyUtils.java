@@ -303,8 +303,16 @@ public class BeanCopyUtils {
         }
     }
 
+    /**
+     * Bean 拷贝策略枚举。
+     */
     private enum CopyStrategy {
-        FULL_COPY, IGNORE_PROPERTIES, IGNORE_NULL
+        /** 全量拷贝（含 null 值覆盖） */
+        FULL_COPY,
+        /** 忽略指定属性列表 */
+        IGNORE_PROPERTIES,
+        /** 忽略源对象中为 null 的属性（不覆盖目标已有值） */
+        IGNORE_NULL
     }
 
     /**

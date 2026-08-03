@@ -47,6 +47,9 @@ public class SentryProperties {
     /** SLA 配置 */
     private SlaConfig sla = new SlaConfig();
 
+    /**
+     * 指标采集配置（主采集器与系统资源指标）。
+     */
     @Data
     public static class MetricsConfig {
         /** 主指标采集器：micrometer / memory */
@@ -62,6 +65,9 @@ public class SentryProperties {
         private CircuitBreakerConfig circuitBreaker = new CircuitBreakerConfig();
     }
 
+    /**
+     * 指标上报熔断配置（失败率阈值与恢复参数）。
+     */
     @Data
     public static class CircuitBreakerConfig {
         /** 是否启用熔断器 */
@@ -77,6 +83,9 @@ public class SentryProperties {
         private int halfOpenAfterSeconds = 30;
     }
 
+    /**
+     * 日志发布配置（选择 ELK / Loki / 双发方案）。
+     */
     @Data
     public static class LoggingConfig {
         /** 主日志方案：elk / loki / dual */
@@ -95,6 +104,9 @@ public class SentryProperties {
         private AsyncConfig async = new AsyncConfig();
     }
 
+    /**
+     * ELK（Logstash）日志发布器配置。
+     */
     @Data
     public static class ElkConfig {
         private boolean enabled = false;
@@ -107,6 +119,9 @@ public class SentryProperties {
         private int circuitBreakerThreshold = 10;
     }
 
+    /**
+     * Loki 日志发布器配置。
+     */
     @Data
     public static class LokiConfig {
         private boolean enabled = true;
@@ -116,12 +131,18 @@ public class SentryProperties {
         private int circuitBreakerThreshold = 10;
     }
 
+    /**
+     * 双发（ELK + Loki 同时发布）失败判定配置。
+     */
     @Data
     public static class DualConfig {
         /** 所有发布器都失败才算失败 */
         private boolean failOnAllError = false;
     }
 
+    /**
+     * 异步日志发布配置（队列与批量刷新）。
+     */
     @Data
     public static class AsyncConfig {
         /** 是否启用异步日志发布 */
@@ -149,6 +170,9 @@ public class SentryProperties {
         }
     }
 
+    /**
+     * 链路追踪配置（主追踪系统与慢请求阈值）。
+     */
     @Data
     public static class TracingConfig {
         /** 主追踪系统：skywalking / opentelemetry / default */
@@ -161,6 +185,9 @@ public class SentryProperties {
         private OtelConfig otel = new OtelConfig();
     }
 
+    /**
+     * OpenTelemetry SDK 自动初始化配置（采样、资源属性、尾部采样等）。
+     */
     @Data
     public static class OtelConfig {
         /** 是否启用 OTel SDK 自动初始化 */
@@ -211,6 +238,9 @@ public class SentryProperties {
         /** 资源自定义属性 */
         private Map<String, String> resourceAttributes = new HashMap<>();
 
+        /**
+         * OTel 批量导出器配置（队列与调度参数）。
+         */
         @Data
         public static class BatchConfig {
             /** 队列大小 */
@@ -227,6 +257,9 @@ public class SentryProperties {
         }
     }
 
+    /**
+     * 尾部采样配置（延迟到 Span 结束后的决策采样）。
+     */
     @Data
     public static class TailSamplingConfig {
         /** 是否启用尾部采样 */
@@ -251,6 +284,9 @@ public class SentryProperties {
         private boolean pressureTraffic = true;
     }
 
+    /**
+     * 错误事件发布配置（慢 Span 阈值等）。
+     */
     @Data
     public static class ErrorEventConfig {
         /** 是否启用错误事件发布 */
@@ -260,6 +296,9 @@ public class SentryProperties {
         private long slowThresholdMillis = 3000;
     }
 
+    /**
+     * 告警配置（静默期与接收人）。
+     */
     @Data
     public static class AlertingConfig {
         private boolean enabled = true;
@@ -277,6 +316,9 @@ public class SentryProperties {
         private String emailReceiver = "";
     }
 
+    /**
+     * SLA 上报配置。
+     */
     @Data
     public static class SlaConfig {
         private boolean enabled = true;

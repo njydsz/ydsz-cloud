@@ -257,6 +257,16 @@ public class IpAddrUtils {
         return ipv6.replaceAll("(?i)::+", ":").toLowerCase();
     }
 
+    /**
+     * 判断 IP 是否在 CIDR 网段内。
+     *
+     * <p>自动识别 IPv4 / IPv6 并分派到对应实现；参数为空、CIDR 格式非法
+     * 或解析异常时统一返回 {@code false}（宽松失败，不影响调用方主流程）。</p>
+     *
+     * @param ip   待判断的 IP 地址
+     * @param cidr CIDR 网段（如 {@code 192.168.1.0/24} 或 {@code 2001:db8::/32}）
+     * @return {@code true} 表示 IP 在网段内；非法输入返回 {@code false}
+     */
     public static boolean isInRange(String ip, String cidr) {
         if (StringUtils.isEmpty(ip) || StringUtils.isEmpty(cidr)) {
             return false;
@@ -281,6 +291,14 @@ public class IpAddrUtils {
         }
     }
 
+    /**
+     * 判断 IPv4 是否在网段内（基于整型掩码比较）。
+     *
+     * @param ip        待判断的 IPv4 地址
+     * @param networkIp 网段起始地址（网络地址）
+     * @param prefix    前缀长度 [0, 32]
+     * @return {@code true} 表示在网段内；解析异常返回 {@code false}
+     */
     public static boolean isIpv4InRange(String ip, String networkIp, int prefix) {
         try {
             long ipLong = ipToLong(ip);
@@ -292,6 +310,14 @@ public class IpAddrUtils {
         }
     }
 
+    /**
+     * 判断 IPv6 是否在网段内（基于字节级掩码比较）。
+     *
+     * @param ip        待判断的 IPv6 地址
+     * @param networkIp 网段起始地址（网络地址）
+     * @param prefix    前缀长度 [0, 128]
+     * @return {@code true} 表示在网段内；解析异常返回 {@code false}
+     */
     public static boolean isIpv6InRange(String ip, String networkIp, int prefix) {
         try {
             byte[] ipBytes = InetAddress.getByName(ip).getAddress();
@@ -467,6 +493,14 @@ public class IpAddrUtils {
         return ips;
     }
 
+    /**
+     * 识别 IP 地址的类型。
+     *
+     * <p>判定顺序：未知 → 本机回环 → 合法 IPv4（私有/公网）→ 合法 IPv6（私有/公网）→ 非法。</p>
+     *
+     * @param ip 待识别的 IP 地址
+     * @return 对应的 {@link IpType} 枚举
+     */
     public static IpType getIpType(String ip) {
         if (isUnknown(ip)) {
             return IpType.UNKNOWN;
@@ -489,10 +523,28 @@ public class IpAddrUtils {
         return IpType.INVALID;
     }
 
+    /**
+     * 判断 IP 是否为数据中心/私有网段地址。
+     *
+     * <p>用于风控场景：数据中心 IP 通常不可信（代理/机房出口），
+     * 当前实现等价于私有网段判断。</p>
+     *
+     * @param ip 待判断的 IP 地址
+     * @return {@code true} 表示属于私有/数据中心网段
+     */
     public static boolean isDataCenterIp(String ip) {
         return isPrivateIp(ip);
     }
 
+    /**
+     * 判断 IP 是否为代理出口地址。
+     *
+     * <p>风控语义：代理 IP 以数据中心/私有网段为主，当前实现
+     * 委托给 {@link #isDataCenterIp(String)} 判断。</p>
+     *
+     * @param ip 待判断的 IP 地址
+     * @return {@code true} 表示疑似代理 IP
+     */
     public static boolean isProxyIp(String ip) {
         return isDataCenterIp(ip);
     }
@@ -513,13 +565,23 @@ public class IpAddrUtils {
         return ip;
     }
 
+    /**
+     * IP 地址类型枚举。
+     */
     public enum IpType {
+        /** 本机回环地址（127.0.0.1 / ::1） */
         LOCALHOST,
+        /** 私有 IPv4 地址（RFC1918） */
         PRIVATE_IPV4,
+        /** 私有 IPv6 地址（ULA 等） */
         PRIVATE_IPV6,
+        /** 公网 IPv4 地址 */
         PUBLIC_IPV4,
+        /** 公网 IPv6 地址 */
         PUBLIC_IPV6,
+        /** 无法判定的地址（如空值/特殊地址） */
         UNKNOWN,
+        /** 非法地址格式 */
         INVALID
     }
 }

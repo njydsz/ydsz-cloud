@@ -100,6 +100,15 @@ public class LockProperties {
      */
     private Idempotent idempotent = new Idempotent();
 
+    /**
+     * 锁获取线程池配置。
+     *
+     * <p>用于执行阻塞式锁获取与释放任务，避免在业务线程上直接阻塞；
+     * 核心/最大线程数与队列容量决定锁竞争激烈时的排队能力。
+     *
+     * @author ydsz-team
+     * @since 1.0.0
+     */
     @Data
     public static class ThreadPool {
         /** 核心线程数 */

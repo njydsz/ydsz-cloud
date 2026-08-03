@@ -342,6 +342,15 @@ public class LockWatchDog {
         return Collections.unmodifiableMap(new HashMap<>(activeTasks));
     }
 
+    /**
+     * 判断指定锁是否正在被看门狗续期。
+     *
+     * <p>仅当续期任务存在、运行标记为 true 且底层定时任务未完成/未取消时返回 {@code true}；
+     * 用于锁泄漏检测与资源清理判定。
+     *
+     * @param lockKey 锁的键
+     * @return true 表示该锁仍有活跃的续期任务
+     */
     public boolean isWatching(String lockKey) {
         WatchTask task = activeTasks.get(lockKey);
         return task != null && task.running.get() && !task.future.isDone() && !task.future.isCancelled();

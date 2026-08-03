@@ -149,6 +149,12 @@ public class OtelAutoConfiguration {
             this.customProcessorsProvider = customProcessorsProvider;
         }
 
+        /**
+         * 按配置组装 OTel SDK：Resource → Sampler → Processors → Exporter → 全局 SDK。
+         *
+         * <p>幂等执行：多次调用仅首次生效（{@code build} 内部由外层控制调用时机）。
+         * 任何单步异常都会回退为不初始化 OTel SDK，避免影响主业务链路。</p>
+         */
         public void build() {
             SentryProperties.TracingConfig tracingConfig = sentryProperties.getTracing();
             SentryProperties.OtelConfig otelConfig = tracingConfig.getOtel();

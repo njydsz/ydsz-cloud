@@ -149,11 +149,7 @@ public @interface JsonClass {
     
     /**
      * 命名策略枚举
-     *
-     * @deprecated 使用 {@link com.njydsz.common.json.naming.PropertyNamingStrategy} 替代，
-     *             通过 {@link #toPropertyNamingStrategy()} 桥接。
      */
-    @Deprecated
     enum NamingStrategy {
         /** 驼峰命名（默认） */
         CAMEL_CASE,

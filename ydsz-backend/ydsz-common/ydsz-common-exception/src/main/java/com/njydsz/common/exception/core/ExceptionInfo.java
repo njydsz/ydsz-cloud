@@ -311,6 +311,11 @@ public class ExceptionInfo implements Serializable {
             return this;
         }
 
+        /**
+         * 构建异常信息对象。
+         *
+         * @return 已填充全部 Builder 字段的 ExceptionInfo 实例
+         */
         public ExceptionInfo build() {
             ExceptionInfo info = new ExceptionInfo(code, key, message);
             info.setDetails(details);

@@ -161,6 +161,11 @@ public class LlmClientRouter implements LlmClient {
         return "router";
     }
 
+    /**
+     * 获取已注册的全部 Provider 名称。
+     *
+     * @return Provider 名称的不可修改列表（如 [openai, qwen, deepseek]）
+     */
     public List<String> getAvailableProviders() {
         return List.copyOf(clients.keySet());
     }

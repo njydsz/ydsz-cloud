@@ -48,6 +48,8 @@ JAVA_METHOD_RE = re.compile(
 JAVA_MODIFIER_RE = re.compile(r"\b(?:public|protected|private|static|final|abstract|default|synchronized|native|strictfp)\b")
 
 SKIP_METHODS = {"equals", "hashCode", "toString", "main", "clone", "wait", "notify", "notifyAll"}
+# 函数式接口的抽象方法名（@FunctionalInterface 单方法接口，规范允许省略）
+FUNCTIONAL_IFACE_METHODS = {"run", "call", "apply", "accept", "test", "supply", "get"}
 
 
 def strip_block_comments(src: str):
@@ -77,7 +79,32 @@ def strip_block_comments(src: str):
             if j == -1:
                 break
             i = j + 2
-        elif c == '"' or c == "'":
+        elif c == '"':
+            # 处理 Java 15+ 文本块（三个连续双引号），整体跳过避免其中内容被误判
+            if src.startswith('"""', i):
+                j = src.find('"""', i + 3)
+                block = src[i : j + 3] if j != -1 else src[i:]
+                out.append("\n" * block.count("\n"))
+                line_no += block.count("\n")
+                i = j + 3 if j != -1 else n
+            else:
+                quote = c
+                out.append(c)
+                i += 1
+                while i < n:
+                    ch = src[i]
+                    out.append(ch)
+                    if ch == "\\":
+                        if i + 1 < n:
+                            out.append(src[i + 1])
+                            i += 2
+                        continue
+                    if ch == quote:
+                        i += 1
+                        break
+                    i += 1
+                line_no = src.count("\n", 0, i) + 1
+        elif c == "'":
             quote = c
             out.append(c)
             i += 1
@@ -126,9 +153,15 @@ def find_doc_above(src_lines: list, line_no_1based: int, doc_spans=None) -> bool
         if line.endswith("*/"):
             end_line = k + 1  # 1-based
             return any(s <= end_line <= e for s, e in doc_spans)
-        # 注解参数续行（如 @EnableConfigurationProperties({ A.class, B.class }) 的中间行）：
-        # 不含分号且以 `)`/`,`/`"`/`.class` 结尾，无法区分时继续向上找
-        if ";" not in line and (line.endswith((")", ",", '"', ".class")) or ".class" in line):
+        # 注解参数续行（如 @EnableConfigurationProperties({ A.class, B.class }) 或
+        # @RocketMQMessageListener(topic=..., consumerGroup=...) 的中间行）：
+        # 不含分号且以 `)`/`,`/`"`/`.class` 结尾，或行内含 `=`（注解属性赋值），
+        # 无法区分时继续向上找
+        if ";" not in line and (
+                line.endswith((")", ",", '"', ".class"))
+                or ".class" in line
+                or "=" in line
+        ):
             continue
         return False  # 其他代码行，中断
     return False
@@ -139,6 +172,34 @@ SKIP_CTRL_WORDS = {
     "if", "for", "while", "switch", "catch", "synchronized", "return",
     "new", "super", "this", "case", "do", "try", "finally", "assert", "yield",
 }
+
+
+def is_functional_interface_above(src_lines: list, line_no_1based: int = None, method_line: int = None) -> bool:
+    """判断方法所在的上层接口是否标注了 @FunctionalInterface。
+
+    规则：从方法声明行向上回溯，找到最近的 interface 声明（可能跨越嵌套类），
+    检查其上方（含注解区）是否出现 @FunctionalInterface。
+    """
+    line = method_line or line_no_1based
+    if not line:
+        return False
+    idx = line - 2  # 0-based
+    # 向上找最近的 interface / class 关键字（限 200 行内）
+    for k in range(idx, max(idx - 200, -1), -1):
+        l = src_lines[k].strip()
+        if l.startswith("interface ") or " interface " in l or l.startswith("enum ") or l.startswith("class "):
+            # 找到类型声明，从其上一行开始向上（跳过注解）找 @FunctionalInterface
+            for kk in range(k - 1, max(k - 12, -1), -1):
+                t = src_lines[kk].strip()
+                if t.startswith("@FunctionalInterface"):
+                    return True
+                if t.startswith("@"):
+                    continue
+                if not t or t.startswith("//"):
+                    continue
+                break  # 遇到代码/注释块即停止
+            return False
+    return False
 
 
 def has_override_above(src_lines: list, line_no_1based: int) -> bool:
@@ -223,9 +284,14 @@ def analyze_java(path: str):
         name = m.group("name")
         if name in SKIP_METHODS or name.startswith("lambda$") or name in SKIP_CTRL_WORDS:
             continue
+        if name in ("throw", "return", "new"):  # throw xxx; 等语句误匹配
+            continue
         if name in enclosing_types:
             continue  # 构造器（方法名=类名），规范豁免
         line_no = stripped[: m.start("name")].count("\n") + 1
+        # 函数式接口抽象方法豁免（仅当该方法位于 @FunctionalInterface 接口内）
+        if name in FUNCTIONAL_IFACE_METHODS and is_functional_interface_above(lines, method_line=line_no):
+            continue
         # 过滤方法体内部的调用（如 return xxx(...)），而非声明
         prefix = stripped[max(0, m.start("name") - 40) : m.start("name")]
         if re.search(r"\b(?:return|this|super|new|case|throw|assert)\b\s*$", prefix):
@@ -247,13 +313,9 @@ def analyze_java(path: str):
             continue
         # 豁免：简单 getter/setter（方法体仅单行 return 字段 / 赋值字段），规范 1.2 豁免
         if is_simple_accessor(name, m, stripped):
-            if covered(line_no) or find_doc_above(lines, line_no, doc_spans):
-                method_pub_doc += 1
             continue  # 简单 getter/setter 不计入分母（豁免项）
         # 豁免：@Override 方法（父类/接口已有 Javadoc 时可省略）
         if has_override_above(lines, line_no):
-            if covered(line_no) or find_doc_above(lines, line_no, doc_spans):
-                method_pub_doc += 1
             continue  # @Override 方法不计入分母（豁免项）
         method_pub_total += 1
         if covered(line_no) or find_doc_above(lines, line_no, doc_spans):

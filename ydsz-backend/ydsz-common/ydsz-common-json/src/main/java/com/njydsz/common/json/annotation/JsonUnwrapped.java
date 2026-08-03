@@ -35,7 +35,6 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
-@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonUnwrapped {
 
     /**

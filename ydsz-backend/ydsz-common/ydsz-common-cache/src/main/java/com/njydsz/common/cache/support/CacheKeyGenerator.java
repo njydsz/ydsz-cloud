@@ -205,6 +205,14 @@ public final class CacheKeyGenerator {
       return this;
     }
 
+    /**
+     * 根据已设置的参数构造 {@link CacheKeyGenerator} 实例。
+     *
+     * <p>未显式设置的前缀、命名空间与分隔符分别回退为空串与默认的 {@code ":"}；
+     * 此处不校验参数组合合法性，入参 null 契约在 {@link #generate(Object)} 调用时才生效。
+     *
+     * @return 组装完成的缓存 Key 生成器
+     */
     public CacheKeyGenerator build() {
       return new CacheKeyGenerator(this);
     }

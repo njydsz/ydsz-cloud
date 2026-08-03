@@ -1,4 +1,4 @@
-package com.njydsz.common.json.config;
+package com.njydsz.common.json.internal;
 
 import java.io.Serializable;
 
@@ -33,9 +33,8 @@ import com.njydsz.common.json.reader.JSONReader;
  * </pre>
  *
  * <p><b>线程安全：</b>所有可变字段均为 {@code volatile}，保证单字段读写的可见性。
- * Builder 构建的实例字段值在 {@code build()} 时一次性写入，之后不应再通过
- * {@link #reset()} / {@link #copyFrom(JsonConfig)} 修改——这两个方法已标记 {@link Deprecated}。
- * 如需"不可变"语义的强保证，请通过 Builder 重新构建新实例而非原地修改。</p>
+ * Builder 构建的实例字段值在 {@code build()} 时一次性写入，之后不应再原地修改。
+ * 如需"不可变"语义的强保证，请通过 Builder 重新构建新实例。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -45,46 +44,6 @@ public final class JsonConfig implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static volatile JsonConfig instance;
-
-    /** ThreadLocal 配置覆盖：JsonMapper 操作期间临时替换全局单例，操作结束后清除 */
-    private static final ThreadLocal<JsonConfig> THREAD_LOCAL_OVERRIDE = new ThreadLocal<>();
-
-    /**
-     * 设置当前线程的配置覆盖（JsonMapper 内部使用，支持真正的独立配置）。
-     */
-    public static void setThreadLocalOverride(JsonConfig config) {
-        THREAD_LOCAL_OVERRIDE.set(config);
-    }
-
-    /**
-     * 清除当前线程的配置覆盖。
-     */
-    public static void clearThreadLocalOverride() {
-        THREAD_LOCAL_OVERRIDE.remove();
-    }
-
-    /**
-     * 获取当前线程的配置覆盖项。
-     *
-     * <p>若当前线程通过 {@link #setThreadLocalOverride(JsonConfig)} 设置了覆盖配置，
-     * 则返回覆盖值；否则返回 {@code null}。调用方需自行处理 {@code null} 时
-     * 回退到全局默认配置。</p>
-     *
-     * @return 当前线程的覆盖配置；未设置时返回 {@code null}
-     */
-    public static JsonConfig getThreadLocalOverride() {
-        return THREAD_LOCAL_OVERRIDE.get();
-    }
-
-    /** 供 SerializationProvider.ThreadLocalSnapshot.restore 使用 */
-    public static void setThreadLocalOverrideIfPresent(JsonConfig config) {
-        THREAD_LOCAL_OVERRIDE.set(config);
-    }
-
-    /** 供 SerializationProvider.ThreadLocalSnapshot.restore 使用 */
-    public static void removeThreadLocalOverride() {
-        THREAD_LOCAL_OVERRIDE.remove();
-    }
 
     /** 所有可变字段均为 volatile，保证单字段读写的可见性与原子性 */
     private volatile PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
@@ -116,33 +75,14 @@ public final class JsonConfig implements Serializable {
     }
 
     /**
-     * 创建指定配置的不可变快照副本。
-     *
-     * <p>用于单次配置场景，不影响全局单例。</p>
-     *
-     * @param other 源配置
-     * @return 新的配置实例，包含与源配置相同的值
-     * @since 1.0.0
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static JsonConfig copyOf(JsonConfig other) {
-        JsonConfig copy = new JsonConfig();
-        if (other != null) {
-            copy.copyFrom(other);
-        }
-        return copy;
-    }
-
-    /**
      * 获取配置实例（单例）
+     *
+     * <p>全局单例配置，由 Spring {@code ydsz.json.*} 属性初始化。
+     * 业务代码请通过 {@code JsonMapper.builder()} 创建独立配置的 Mapper 实例。</p>
      *
      * @return JsonConfig 实例
      */
     public static JsonConfig getInstance() {
-        JsonConfig threadLocal = THREAD_LOCAL_OVERRIDE.get();
-        if (threadLocal != null) {
-            return threadLocal;
-        }
         if (instance == null) {
             synchronized (JsonConfig.class) {
                 if (instance == null) {
@@ -151,6 +91,20 @@ public final class JsonConfig implements Serializable {
             }
         }
         return instance;
+    }
+
+    /**
+     * 创建指定配置的独立副本（供 JsonMapper 实例使用）。
+     *
+     * @param config 源配置
+     * @return 独立副本
+     * @since 1.0.0
+     */
+    public static JsonConfig copyOf(JsonConfig config) {
+        if (config == null) {
+            return new JsonConfig();
+        }
+        return builder().from(config).build();
     }
 
     /**
@@ -273,57 +227,6 @@ public final class JsonConfig implements Serializable {
         // wrapRootValue 不需要传播到 SerializationContext，因为它在 serialize() 入口处检查
     }
 
-    /**
-     * 重置配置为默认值
-     *
-     * <p>复合操作，通过 synchronized 保证多字段写入的原子性。</p>
-     *
-     * @return 当前配置实例（支持链式调用）
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public synchronized JsonConfig reset() {
-        this.namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
-        this.circularReferenceStrategy = CircularReferenceStrategy.REF;
-        this.writeNulls = false;
-        this.dateFormat = "";
-        this.serializeEnumUsingOrdinal = false;
-        this.prettyPrint = false;
-        this.failOnError = false;
-        this.defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
-        this.maxJsonSize = 10L * 1024 * 1024;
-        this.maxDepth = 256;
-        this.useBigDecimal = false;
-        this.wrapRootValue = false;
-        return this;
-    }
-
-    /**
-     * 从另一个配置复制
-     *
-     * <p>复合操作，通过 synchronized 保证多字段写入的原子性。</p>
-     *
-     * @param other 另一个配置
-     * @return 当前配置实例（支持链式调用）
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public synchronized JsonConfig copyFrom(JsonConfig other) {
-        if (other != null) {
-            this.namingStrategy = other.namingStrategy;
-            this.circularReferenceStrategy = other.circularReferenceStrategy;
-            this.writeNulls = other.writeNulls;
-            this.dateFormat = other.dateFormat;
-            this.serializeEnumUsingOrdinal = other.serializeEnumUsingOrdinal;
-            this.prettyPrint = other.prettyPrint;
-            this.failOnError = other.failOnError;
-            this.defaultDateFormat = other.defaultDateFormat;
-            this.maxJsonSize = other.maxJsonSize;
-            this.maxDepth = other.maxDepth;
-            this.useBigDecimal = other.useBigDecimal;
-            this.wrapRootValue = other.wrapRootValue;
-        }
-        return this;
-    }
-
     @Override
     public String toString() {
         return "JsonConfig{" +
@@ -371,8 +274,7 @@ public final class JsonConfig implements Serializable {
      *
      * <p>对标 Jackson ObjectMapper.Builder 和 FastJSON2 JSON.config() 的 Builder 模式，
      * 提供类型安全的链式配置构建方式。构建后的 JsonConfig 实例字段在 {@code build()} 时
-     * 一次性写入，建议作为不可变实例使用（如需修改请重新构建，而非调用
-     * {@link #reset()} / {@link #copyFrom(JsonConfig)}）。</p>
+     * 一次性写入，建议作为不可变实例使用（如需修改请重新构建新实例）。</p>
      *
      * @since 1.0.0
      */

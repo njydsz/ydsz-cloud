@@ -181,8 +181,15 @@ public class SearchCacheService {
         }
     }
 
+    /**
+     * 搜索缓存条目。
+     *
+     * <p>缓存响应体与过期时间戳，过期即视为未命中并从缓存中移除。</p>
+     */
     private static class CacheEntry {
+        /** 缓存的搜索结果 */
         final SearchResponse response;
+        /** 过期时间戳（毫秒） */
         final long expireAt;
 
         CacheEntry(SearchResponse response, long expireAt) {

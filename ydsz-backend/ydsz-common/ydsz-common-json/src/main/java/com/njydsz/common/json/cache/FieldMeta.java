@@ -112,8 +112,7 @@ public final class FieldMeta {
     /** 包含策略（来自 @JsonInclude 注解，默认 ALWAYS） */
     public final JsonInclude.Include includeStrategy;
 
-    /** 类型代码（优化序列化分支预测）@deprecated 使用 {@link #typeCode} FieldTypeCode 枚举替代 */
-    @Deprecated
+    /** 类型代码（优化序列化分支预测）*/
     public final int serializeTypeCode;
 
     /** 统一类型码（替代 serializeTypeCode int） */

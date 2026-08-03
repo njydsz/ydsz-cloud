@@ -104,9 +104,9 @@ public class NotifyDedupService {
 		if (redisTemplate != null) {
 			try {
 				redisTemplate.delete(redisKey);
-			} 			} catch (Exception ignored) {
-			}     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-			} }
+			} catch (Exception ignored) {
+				log.debug("Caught exception (ignored): {}", ignored.getMessage());
+			}
 		}
 		memoryDedup.remove(fingerprint);
 	}

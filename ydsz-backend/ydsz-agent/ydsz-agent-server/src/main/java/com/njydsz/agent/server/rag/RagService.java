@@ -160,6 +160,15 @@ public class RagService {
         // TODO: 通过 Feign 调用 nextwiki 获取文件内容 → 文档解析 → 向量化 → 存入 VectorStore
     }
 
+    /**
+     * RAG 答案引用来源。
+     *
+     * @param index          引用序号（从 0 开始，对应答案中的标注）
+     * @param documentId     被引用文档 ID
+     * @param documentTitle  被引用文档标题
+     * @param source         内容来源（文件路径/URL 等）
+     * @param snippet        命中的原文片段（用于人工核对）
+     */
     public record Citation(int index, String documentId, String documentTitle,
                             String source, String snippet) {}
 }

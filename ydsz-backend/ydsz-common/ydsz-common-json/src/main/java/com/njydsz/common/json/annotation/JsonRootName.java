@@ -7,7 +7,7 @@ import java.lang.annotation.*;
  *
  * <p>标注在类上，序列化时将对象包裹在指定根名中，反序列化时自动解包。</p>
  *
- * <p>需配合 {@link com.njydsz.common.json.config.JsonConfig} 的 wrapRootValue
+ * <p>需配合 {@link com.njydsz.common.json.internal.JsonConfig} 的 wrapRootValue
  * 或 {@link com.njydsz.common.json.writer.JSONWriter.Feature} WriteRootValue 使用。</p>
  *
  * <p><b>使用示例：</b></p>
@@ -31,7 +31,6 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonRootName {
 
     /**

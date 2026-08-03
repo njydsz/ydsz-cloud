@@ -150,14 +150,27 @@ public class HybridRetriever {
         return text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
     }
 
+    /**
+     * RRF（Reciprocal Rank Fusion）融合条目。
+     *
+     * <p>记录某文本块在多个检索通道（向量/关键词）中的累计融合得分，
+     * 用于混合检索结果的最终排序。</p>
+     */
     private static class RrfEntry {
+        /** 文本块 */
         final TextChunk chunk;
+        /** 累计 RRF 得分（各通道 1/(k+rank) 之和） */
         double rrfScore = 0.0;
 
         RrfEntry(TextChunk chunk) {
             this.chunk = chunk;
         }
 
+        /**
+         * 累加一个通道的得分。
+         *
+         * @param score 该通道的 1/(k+rank) 分值
+         */
         void addScore(double score) {
             this.rrfScore += score;
         }

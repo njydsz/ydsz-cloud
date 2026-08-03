@@ -1,28 +1,20 @@
 package com.njydsz.common.json;
 
 import com.njydsz.common.json.cache.AsmCodecCache;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonException;
-import com.njydsz.common.json.jsonpath.JsonPath;
-import com.njydsz.common.json.merge.JsonMergePatch;
 import com.njydsz.common.json.metric.JsonMetricsCallback;
 import com.njydsz.common.json.metric.MetricsHelper;
 import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.parser.JsonParserUtil;
-import com.njydsz.common.json.pointer.JsonPointer;
 import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider;
-import com.njydsz.common.json.reader.JSONReader;
-import com.njydsz.common.json.schema.JsonSchema;
-import com.njydsz.common.json.schema.JsonSchemaValidator;
-import com.njydsz.common.json.schema.ValidationResult;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.tree.*;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.json.type.TypeFactory;
-import com.njydsz.common.json.writer.JSONWriter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -151,64 +143,7 @@ public class YdszJson {
         }
         return recordSerialize(() -> SerializationProvider.serialize(obj));
     }
-    
-    /**
-     * 对象转 JSON 字符串（带配置）
-     *
-     * <p>当 {@code pretty=true} 时等价于 {@link #format(Object)}，
-     * {@code pretty=false} 时等价于 {@link #toJson(Object)}，存在语义重叠。</p>
-     *
-     * @param obj 要序列化的对象
-     * @param pretty 是否格式化
-     * @return JSON 字符串
-     * @deprecated 语义重叠，请直接使用 {@link #format(Object)} 或 {@link #toJson(Object)}
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String toJson(Object obj, boolean pretty) {
-        if (obj == null) {
-            return "null";
-        }
-        if (pretty) {
-            return format(obj);
-        }
-        return recordSerialize(() -> SerializationProvider.serialize(obj));
-    }
-    
-    /**
-     * 对象转 JSON 字符串（带视图过滤）
-     *
-     * <p>根据 @JsonView 注解过滤字段，仅输出指定视图下可见的字段。</p>
-     *
-     * @param obj 要序列化的对象
-     * @param viewClass 视图类
-     * @return JSON 字符串
-     * @deprecated 视图过滤功能当前无业务使用，后续如需启用将通过 Builder/Feature 重新设计 API
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String toJson(Object obj, Class<?> viewClass) {
-        if (obj == null) {
-            return "null";
-        }
-        return recordSerialize(() -> SerializationProvider.serializeWithView(obj, viewClass));
-    }
 
-    /**
-     * 对象转 JSON 字符串（带视图过滤和配置）
-     *
-     * @param obj 要序列化的对象
-     * @param viewClass 视图类
-     * @param pretty 是否格式化
-     * @return JSON 字符串
-     * @deprecated 视图过滤功能当前无业务使用，且与 {@link #toJson(Object, Class)} 语义重叠
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String toJson(Object obj, Class<?> viewClass, boolean pretty) {
-        if (obj == null) {
-            return "null";
-        }
-        return recordSerialize(() -> SerializationProvider.serializeWithView(obj, viewClass, pretty));
-    }
-    
     /**
      * 格式化 JSON（带缩进）
      *
@@ -285,28 +220,6 @@ public class YdszJson {
         }
         validateJsonSize(json);
         return recordDeserialize(() -> DeserializationProvider.deserialize(json, typeRef.getType()));
-    }
-    
-    /**
-     * JSON 字符串转对象（带默认值，容错解析）
-     *
-     * <p>当解析失败时返回默认值，而非抛出异常。适用于配置解析等容错场景。</p>
-     *
-     * @param json JSON 字符串
-     * @param clazz 目标类型
-     * @param defaultValue 解析失败时返回的默认值
-     * @param <T> 类型参数
-     * @return 反序列化后的对象，解析失败时返回 defaultValue
-     * @deprecated 容错解析当前无业务使用；如需容错请业务侧 try-catch + 默认值
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static <T> T toObject(String json, Class<T> clazz, T defaultValue) {
-        try {
-            T result = DeserializationProvider.deserialize(json, clazz);
-            return result != null ? result : defaultValue;
-        } catch (Exception e) {
-            return defaultValue;
-        }
     }
     
     /**
@@ -400,48 +313,6 @@ public class YdszJson {
             Object result = DeserializationProvider.deserialize(json, List.class);
             return toObjectList(result);
         });
-    }
-
-    // ==================== JSONPath 入口方法 ====================
-    
-    /**
-     * 通过 JSONPath 获取值。
-     *
-     * @param json JSON 字符串
-     * @param path JSONPath 表达式
-     * @return 匹配的值
-     * @deprecated 推荐使用 {@link JsonMapper#getByPath(String, String)}，
-     *             通过 {@code JsonMapper.getDefault().getByPath(json, path)}
-     *             或新建 {@code JsonMapper} 实例调用
-     */
-    @Deprecated(since = "1.0.0")
-    public static Object getByPath(String json, String path) {
-        return JsonPath.get(json, path);
-    }
-    
-    /**
-     * 通过 JSONPath 提取值并反序列化为指定类型
-     *
-     * <p>结合 JSONPath 提取与反序列化，先通过路径从 JSON 中提取子结构，
-     * 再将其反序列化为目标类型对象。</p>
-     *
-     * @param json JSON 字符串
-     * @param path JSONPath 表达式（如 "$.user.address"）
-     * @param clazz 目标类型
-     * @param <T> 类型参数
-     * @return 反序列化后的对象，路径不存在时返回 null
-     * @deprecated JSONPath 入口当前无业务使用；如需路径提取请使用 {@link #readTree(String)} + {@link JsonPointer}
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static <T> T parseObject(String json, String path, Class<T> clazz) {
-        Object value = JsonPath.get(json, path);
-        if (value == null) {
-            return null;
-        }
-        if (clazz.isInstance(value)) {
-            return clazz.cast(value);
-        }
-        return DeserializationProvider.deserialize(toJson(value), clazz);
     }
 
     // ==================== 自定义序列化器注册 ====================
@@ -539,70 +410,6 @@ public class YdszJson {
         return new ArrayList<>();
     }
 
-    // ==================== Feature API ====================
-
-    /**
-     * 使用特性序列化
-     *
-     * @param obj 要序列化的对象
-     * @param features 写入特性
-     * @return JSON 字符串
-     * @deprecated Feature API 当前无业务使用；单次配置请通过 JsonConfig.builder() + apply() 实现
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String toJson(Object obj, JSONWriter.Feature... features) {
-        return SerializationProvider.serialize(obj, JSONWriter.of(features));
-    }
-
-    /**
-     * 使用特性反序列化
-     *
-     * @param json JSON 字符串
-     * @param clazz 目标类型
-     * @param features 读取特性
-     * @param <T> 类型参数
-     * @return 反序列化后的对象
-     * @deprecated Feature API 当前无业务使用；单次配置请通过 JsonConfig.builder() + apply() 实现
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static <T> T toObject(String json, Class<T> clazz, JSONReader.Feature... features) {
-        if (json == null || json.isBlank()) {
-            return null;
-        }
-        validateJsonSize(json);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(json, clazz, JSONReader.of(features)));
-    }
-
-    // ==================== JSON Pointer API (RFC 6901) ====================
-
-    /**
-     * 使用 JSON Pointer 获取值
-     *
-     * @param json JSON 字符串
-     * @param pointer JSON Pointer 路径
-     * @return 指针指向的值
-     * @deprecated 推荐使用 {@link JsonMapper#getByPointer(String, String)}，
-     *             通过 {@code JsonMapper.getDefault().getByPointer(json, pointer)}
-     *             或新建 {@code JsonMapper} 实例调用
-     */
-    @Deprecated(since = "1.0.0")
-    public static Object getByPointer(String json, String pointer) {
-        return new JsonPointer(pointer).evaluate(json);
-    }
-
-    /**
-     * 使用 JSON Pointer 获取值
-     *
-     * @param json JSON 字符串
-     * @param pointer JsonPointer 对象
-     * @return 指针指向的值
-     * @deprecated 推荐使用 {@link JsonMapper#getByPointer(String, String)}
-     */
-    @Deprecated(since = "1.0.0")
-    public static Object getByPointer(String json, JsonPointer pointer) {
-        return pointer.evaluate(json);
-    }
-
     // ==================== Tree Model API ====================
 
     /**
@@ -683,120 +490,6 @@ public class YdszJson {
         return readTree(json);
     }
 
-    
-    // ==================== JSON Merge Patch (RFC 7396) ====================
-
-    /**
-     * 合并两个 JSON（RFC 7396）
-     *
-     * @param target 目标 JSON
-     * @param patch 补丁 JSON
-     * @return 合并后的 JSON 字符串
-     * @deprecated 推荐直接使用 {@link com.njydsz.common.json.merge.JsonMergePatch#merge(String, String)}
-     */
-    @Deprecated(since = "1.0.0")
-    public static String merge(String target, String patch) {
-        return JsonMergePatch.merge(target, patch);
-    }
-
-    /**
-     * 计算两个 JSON 的差异补丁
-     *
-     * @param source 源 JSON
-     * @param target 目标 JSON
-     * @return 差异补丁 JSON
-     * @deprecated 推荐直接使用 {@link com.njydsz.common.json.merge.JsonMergePatch#diff(String, String)}
-     */
-    @Deprecated(since = "1.0.0")
-    public static String diff(String source, String target) {
-        return JsonMergePatch.diff(source, target);
-    }
-
-    // ==================== 验证 API ====================
-
-    /**
-     * 验证字符串是否为合法 JSON
-     *
-     * <p>快速校验 JSON 语法合法性，不进行完整的对象解析，性能优于 try-catch 解析方式。</p>
-     *
-     * @param json 待验证的字符串
-     * @return 如果是合法 JSON 返回 true，否则返回 false
-     * @deprecated 推荐直接使用 {@link com.njydsz.common.json.parser.JsonParserUtil#parse(String)}
-     *             进行 try-catch 校验
-     */
-    @Deprecated(since = "1.0.0")
-    public static boolean isValid(String json) {
-        if (json == null || json.trim().isEmpty()) {
-            return false;
-        }
-        try {
-            JsonParserUtil.parse(json);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    
-    /**
-     * 验证 JSON 对象是否符合 Schema
-     *
-     * @param data 要验证的数据
-     * @param schema Schema 定义
-     * @return 验证结果
-     * @deprecated Schema 能力计划抽离为独立子模块，请直接使用 {@link JsonSchemaValidator#validate(JsonSchema, Object)}
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static ValidationResult validate(Object data, JsonSchema schema) {
-        return JsonSchemaValidator.validate(schema, data);
-    }
-
-    /**
-     * 验证 JSON 字符串是否符合 Schema
-     *
-     * @param json JSON 字符串
-     * @param schema Schema 定义
-     * @return 验证结果
-     * @deprecated Schema 能力计划抽离为独立子模块，请直接使用 {@link JsonSchemaValidator#validate(JsonSchema, Object)}
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static ValidationResult validate(String json, JsonSchema schema) {
-        try {
-            Object data = DeserializationProvider.deserialize(json, Map.class);
-            return JsonSchemaValidator.validate(schema, data);
-        } catch (Exception e) {
-            ValidationResult result = new ValidationResult(false);
-            result.addError("Failed to parse JSON: " + e.getMessage());
-            return result;
-        }
-    }
-
-    /**
-     * 验证 JSON 对象是否符合 Schema（带类型转换）
-     *
-     * @param data 要验证的数据
-     * @param schema Schema 定义
-     * @param <T> 类型参数
-     * @return 验证结果
-     * @deprecated 与 {@link #validate(Object, JsonSchema)} 重复（clazz 参数未使用），且 Schema 计划抽离
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static <T> ValidationResult validate(T data, JsonSchema schema, Class<T> clazz) {
-        return JsonSchemaValidator.validate(schema, data);
-    }
-
-    /**
-     * 检查验证结果，如果失败则抛出异常
-     *
-     * @param result 验证结果
-     * @throws IllegalArgumentException 验证失败时抛出
-     * @deprecated 便捷方法当前无业务使用；请业务侧直接判断 {@link ValidationResult#isValid()}
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static void ensureValid(ValidationResult result) {
-        if (!result.isValid()) {
-            throw new IllegalArgumentException("Validation failed: " + result.getErrors());
-        }
-    }
 
     // ==================== 便捷方法（字节数组 / 类型安全 Map） ====================
 
@@ -967,166 +660,6 @@ public class YdszJson {
             } catch (Exception ignored) {
                 // 预热失败不影响启动
             }
-        }
-    }
-
-    // ==================== 单次配置序列化 ====================
-
-    /**
-     * 使用指定配置序列化对象（不影响全局配置）。
-     *
-     * <p>通过保存/恢复当前线程的 ThreadLocal 序列化参数来实现单次配置，
-     * 不修改全局 {@link JsonConfig} 单例，保证线程安全。
-     * 适用于需要为单次序列化指定不同配置的场景。</p>
-     *
-     * <p><b>返回值约定：</b>与 {@link #toJson(Object)} 保持一致，{@code null} 对象返回
-     * JSON 字符串 {@code "null"}，而非 Java {@code null} 引用。</p>
-     *
-     * @param obj 要序列化的对象
-     * @param config 单次配置，{@code null} 时退化为 {@link #toJson(Object)}
-     * @return JSON 字符串（{@code null} 对象返回 {@code "null"}）
-     * @since 1.0.0
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String toJson(Object obj, JsonConfig config) {
-        if (obj == null) {
-            return "null";
-        }
-        if (config == null) {
-            return toJson(obj);
-        }
-        // 保存当前线程的序列化参数（不修改全局单例，避免并发污染）
-        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
-        try {
-            // 应用临时配置到当前线程的 ThreadLocal
-            config.apply();
-            return toJson(obj);
-        } finally {
-            // 恢复原始 ThreadLocal 参数
-            snapshot.restore();
-        }
-    }
-
-    // ==================== 字段级排除（列权限等场景） ====================
-
-    /**
-     * 设置序列化时需要排除的字段名集合。
-     *
-     * <p>设置后，当前线程后续的序列化操作会跳过集合中名称匹配的字段。
-     * 调用者负责在 finally 块中调用 {@link #clearExcludedFields()} 清理 ThreadLocal。
-     *
-     * @param fieldNames 需要排除的字段名集合，null 表示清除排除
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static void setExcludedFields(Set<String> fieldNames) {
-        SerializationProvider.setExcludedFields(fieldNames);
-    }
-
-    /**
-     * 清除序列化字段排除设置。
-     *
-     * <p>必须在 finally 块中调用，防止 ThreadLocal 泄漏。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static void clearExcludedFields() {
-        SerializationProvider.setExcludedFields(null);
-    }
-
-    /**
-     * 序列化对象并排除指定字段（自动清理 ThreadLocal）。
-     *
-     * <p>便捷方法，内部设置排除集合、序列化、清理 ThreadLocal。
-     *
-     * @param obj 要序列化的对象
-     * @param excludedFieldNames 需要排除的字段名集合
-     * @return JSON 字符串（排除指定字段后的）
-     */
-    public static String toJsonExcludeFields(Object obj, Set<String> excludedFieldNames) {
-        if (obj == null) {
-            return "null";
-        }
-        Set<String> previous = SerializationProvider.getExcludedFields();
-        try {
-            SerializationProvider.setExcludedFields(excludedFieldNames);
-            return recordSerialize(() -> SerializationProvider.serialize(obj));
-        } finally {
-            SerializationProvider.setExcludedFields(previous);
-        }
-    }
-
-    // ==================== ThreadLocal 管理 ====================
-
-    /**
-     * 清理当前线程的 ThreadLocal 资源。
-     *
-     * <p>在非 Spring 环境（命令行工具、Flink/Spark 任务、自定义线程池等）
-     * 中，每次线程归还线程池前应调用此方法清理内部 ThreadLocal 状态，
-     * 防止内存泄漏。
-     *
-     * <p><b>Spring 环境无需手动调用：</b>{@link com.njydsz.common.json.spring.boot.JsonAutoConfiguration}
-     * 已通过 {@code @PreDestroy} 自动注册清理钩子。</p>
-     *
-     * <p><b>推荐使用 try-with-resources：</b></p>
-     * <pre>
-     * // 方式一：ScopedContext（推荐，自动清理）
-     * try (var ctx = YdszJson.scopedContext()) {
-     *     String json = YdszJson.toJson(obj);
-     *     User user = YdszJson.toObject(json, User.class);
-     * }
-     *
-     * // 方式二：手动清理
-     * try {
-     *     String json = YdszJson.toJson(obj);
-     * } finally {
-     *     YdszJson.cleanup();
-     * }
-     * </pre>
-     *
-     * @since 1.0.0
-     * @deprecated 推荐使用 {@link #scopedContext()} try-with-resources 自动清理。
-     *             如需直接清理，可调用 {@code SerializationProvider.clearThreadLocals()}
-     */
-    @Deprecated(since = "1.0.0")
-    public static void cleanup() {
-        com.njydsz.common.json.provider.SerializationProvider.clearThreadLocals();
-    }
-
-    /**
-     * 创建 ScopedContext，在 try-with-resources 块结束时自动清理 ThreadLocal。
-     *
-     * <p>适用于非 Spring 环境的线程池场景，确保每次任务执行完毕后释放
-     * {@link com.njydsz.common.json.provider.SerializationContext} 持有的
-     * StringBuilder、JSONWriter、循环引用检测集等资源。</p>
-     *
-     * <pre>
-     * try (var ctx = YdszJson.scopedContext()) {
-     *     // 所有 YdszJson 操作都在此上下文中安全执行
-     *     String json = YdszJson.toJson(obj);
-     * }
-     * // 块结束时自动调用 cleanup()
-     * </pre>
-     *
-     * @return 一个 AutoCloseable 上下文，关闭时自动清理 ThreadLocal
-     * @since 1.0.0
-     */
-    public static ScopedContext scopedContext() {
-        return new ScopedContext();
-    }
-
-    /**
-     * ScopedContext - AutoCloseable 的序列化上下文。
-     *
-     * <p>实现 {@link AutoCloseable}，在 try-with-resources 块结束时
-     * 自动调用 {@link YdszJson#cleanup()} 清理 ThreadLocal 资源。</p>
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static final class ScopedContext implements AutoCloseable {
-        private ScopedContext() {
-        }
-
-        @Override
-        public void close() {
-            YdszJson.cleanup();
         }
     }
 

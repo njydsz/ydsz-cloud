@@ -34,6 +34,18 @@ public class NotifyCircuitBreaker {
     private static final int DEFAULT_FAILURE_THRESHOLD = 5;
     private static final long DEFAULT_RECOVERY_TIMEOUT_MS = 60_000L;
 
+    /**
+     * 熔断器状态。
+     *
+     * <ul>
+     *   <li>{@link #CLOSED}：正常放行，记录连续失败次数</li>
+     *   <li>{@link #OPEN}：连续失败达到阈值后开启，拒绝全部请求直至恢复等待时间到达</li>
+     *   <li>{@link #HALF_OPEN}：恢复时间到达后进入，仅放行单个探测请求验证渠道是否恢复</li>
+     * </ul>
+     *
+     * @author ydsz-team
+     * @since 1.0.0
+     */
     public enum State {
         CLOSED, OPEN, HALF_OPEN
     }

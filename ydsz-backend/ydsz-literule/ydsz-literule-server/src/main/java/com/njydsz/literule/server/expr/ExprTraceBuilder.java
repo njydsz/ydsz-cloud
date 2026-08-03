@@ -42,6 +42,14 @@ public class ExprTraceBuilder {
             List<TraceNode> children,
             String error
     ) {
+        /**
+         * 创建无子节点的叶子 TraceNode。
+         *
+         * @param type       节点类型（如 VARIABLE / LITERAL / BINARY_OP）
+         * @param expression 原始表达式文本
+         * @param result     该节点的求值结果
+         * @return 叶子追踪节点实例
+         */
         public static TraceNode of(String type, String expression, Object result) {
             return new TraceNode(type, expression, null, null, result, false, 0, new ArrayList<>(), null);
         }

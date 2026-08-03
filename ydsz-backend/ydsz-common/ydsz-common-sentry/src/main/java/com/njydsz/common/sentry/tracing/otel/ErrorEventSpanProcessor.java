@@ -151,7 +151,17 @@ public class ErrorEventSpanProcessor implements SpanProcessor {
      */
     @Data
     public static class ErrorEvent {
-        public enum Reason { SPAN_ERROR, SERVER_ERROR, SLOW }
+        /**
+         * 错误事件触发原因。
+         */
+        public enum Reason {
+            /** Span 自带错误状态（StatusCode.ERROR） */
+            SPAN_ERROR,
+            /** HTTP 服务端 5xx 响应 */
+            SERVER_ERROR,
+            /** 执行耗时超过慢请求阈值 */
+            SLOW
+        }
 
         private final String traceId;
         private final String spanId;

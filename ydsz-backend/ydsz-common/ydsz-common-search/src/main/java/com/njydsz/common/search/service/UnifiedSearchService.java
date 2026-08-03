@@ -50,6 +50,7 @@ public class UnifiedSearchService {
     private final ThreadPoolTaskExecutor searchExecutor;
     private final BusinessRanker ranker;
 
+    /** 熔断状态机：CLOSED（正常）→ OPEN（熔断）→ HALF_OPEN（半开探测）→ CLOSED */
     private enum CircuitState { CLOSED, OPEN, HALF_OPEN }
     private final AtomicReference<CircuitState> circuitState = new AtomicReference<>(CircuitState.CLOSED);
     private volatile long circuitOpenTime = 0;
@@ -237,6 +238,11 @@ public class UnifiedSearchService {
         cacheService.clear();
     }
 
+    /**
+     * 获取当前搜索缓存条目数。
+     *
+     * @return 缓存中的搜索响应条目数量
+     */
     public int getCacheSize() {
         return cacheService.size();
     }

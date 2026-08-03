@@ -26,7 +26,6 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonSetter {
 
     /**

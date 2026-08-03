@@ -55,6 +55,14 @@ public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTraceD
             FROM ydsz_rule_execution_trace
             WHERE created_at >= #{since} AND created_at < #{until}
             """)
+    /**
+     * 统计时间窗口内的规则执行汇总数据。
+     *
+     * @param since 窗口起始时间（含）
+     * @param until 窗口结束时间（不含）
+     * @return 汇总 Map，包含 totalEvaluations（总评估数）、totalTriggered（总触发数）、
+     *         errors（错误数）、totalElapsedMs（总耗时）、avgElapsedMs（平均耗时）
+     */
     Map<String, Object> selectStatsByTimeRange(@Param("since") LocalDateTime since,
                                                 @Param("until") LocalDateTime until);
 

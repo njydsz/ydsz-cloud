@@ -59,6 +59,16 @@ public class PgVectorStore implements VectorStore {
         this.dimension = embeddingClient.getDimension();
     }
 
+    /**
+     * 存储文本块到 PostgreSQL 向量表。
+     *
+     * <p>写入 {@code ydsz_agent_document_chunk} 表，向量列使用
+     * {@code ::vector} 类型转换，metadata 使用 {@code ::jsonb}；
+     * 通过 {@code ON CONFLICT (id) DO UPDATE} 实现幂等 upsert，
+     * 重复入库同一文档块时更新内容、向量与元数据。</p>
+     *
+     * @param chunk 待存储的文本块；未生成嵌入时向量列写入 {@code null}
+     */
     @Override
     public void store(TextChunk chunk) {
         String sql = """

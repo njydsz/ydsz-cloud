@@ -472,6 +472,17 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     return new CacheStats(hitCount.sum(), missCount.sum());
   }
 
+  /**
+   * W-TinyLFU 链表节点：同时服务于 Window / Probation / Protected 三段队列。
+   *
+   * <p>{@code queue} 标记当前所在队列（0=Window，1=Probation，2=Protected），
+   * 提升与降级即修改该字段并在目标队列头尾插入；
+   * {@code prev}/{@code next} 构成双向链表，由各队列的头节点（哨兵）组织。
+   * 除 key 外的字段均为 volatile，保证并发读写下的可见性。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
   private static final class Node<K, V> {
     final K key;
     volatile V value;

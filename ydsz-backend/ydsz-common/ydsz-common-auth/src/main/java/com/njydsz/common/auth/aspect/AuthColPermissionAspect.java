@@ -36,6 +36,7 @@ import com.njydsz.common.auth.util.AuthColPermissionSigner;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationExecutor;
+import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 import com.njydsz.common.util.auth.RequestHolder;
@@ -92,6 +93,7 @@ public class AuthColPermissionAspect {
     private final ColumnPermissionResolver resolver;
     private final ColumnDesensitizationService desensitizationService;
     private final AuthColPermissionSigner signer;
+    private final JsonMapper jsonMapper = new JsonMapper();
 
     public AuthColPermissionAspect(ColumnPermissionResolver resolver,
                                    ColumnDesensitizationService desensitizationService,
@@ -232,9 +234,9 @@ public class AuthColPermissionAspect {
             // 无需排除字段，直接返回原始值
             return returnValue;
         }
-        // 使用 YdszJson 序列化时排除字段 + 反序列化回原始类型
+        // 使用 JsonMapper 序列化时排除字段 + 反序列化回原始类型
         try {
-            String json = YdszJson.toJsonExcludeFields(returnValue, excludedFields);
+            String json = jsonMapper.toJsonExcludeFields(returnValue, excludedFields);
             return YdszJson.toObject(json, returnValue.getClass());
         } catch (Exception e) {
             log.warn("列权限序列化过滤失败，降级到反射过滤: {}", e.getMessage());

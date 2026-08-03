@@ -224,18 +224,42 @@ public class SysException extends AbstractYdszException {
         return buildExceptionInfo();
     }
 
+    /**
+     * 创建系统异常构建器。
+     *
+     * @return SysExceptionBuilder 实例
+     */
     public static SysExceptionBuilder builder() {
         return new SysExceptionBuilder();
     }
 
+    /**
+     * 通过消息 key 创建系统异常。
+     *
+     * @param key 国际化消息 key（错误码自动取默认系统错误码）
+     * @return SysException 实例
+     */
     public static SysException of(String key) {
         return new SysException(key);
     }
 
+    /**
+     * 从预定义的异常码创建系统异常。
+     *
+     * @param exceptionCode 异常码（含 code、key、默认消息、HTTP 状态）
+     * @return 携带该异常码默认配置的 SysException 实例
+     */
     public static SysException of(ExceptionCode exceptionCode) {
         return new SysException(exceptionCode);
     }
 
+    /**
+     * 通过错误码与消息 key 创建系统异常。
+     *
+     * @param code 业务错误码
+     * @param key  国际化消息 key
+     * @return SysException 实例
+     */
     public static SysException of(String code, String key) {
         return new SysException(code, key);
     }

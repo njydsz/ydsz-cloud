@@ -94,6 +94,15 @@ public enum FlowNodeType {
         return desc;
     }
 
+    /**
+     * 根据节点编码解析节点类型。
+     *
+     * <p>入参为 {@code null} 或编码无匹配时统一回退为 {@link #APPROVAL}（单人审批），
+     * 保证历史/脏数据可继续流转；调用方需严格校验时应先比对 {@link #getCode()}。
+     *
+     * @param code 节点编码，可为 {@code null}
+     * @return 匹配的节点类型；无匹配或入参为 {@code null} 时返回 {@link #APPROVAL}
+     */
     public static FlowNodeType of(Integer code) {
         if (code == null) {
             return APPROVAL;

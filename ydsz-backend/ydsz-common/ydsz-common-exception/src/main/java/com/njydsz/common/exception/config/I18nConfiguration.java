@@ -262,6 +262,16 @@ public class I18nConfiguration {
         }
     }
 
+    /**
+     * 注册关联国际化消息源的 JSR-303 验证器。
+     *
+     * <p>使参数校验失败信息（如 {@code @NotNull} 的 message）能够从
+     * i18n 资源文件中按当前 Locale 解析，实现校验错误的多语言提示。
+     * 仅在容器中尚无 {@link Validator} Bean 时生效。</p>
+     *
+     * @param messageSource 已配置的国际化消息源
+     * @return 关联消息源的验证器实例
+     */
     @Bean
     @ConditionalOnMissingBean(Validator.class)
     public Validator getValidator(MessageSource messageSource) {

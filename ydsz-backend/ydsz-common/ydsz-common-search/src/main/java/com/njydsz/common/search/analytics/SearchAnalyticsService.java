@@ -109,6 +109,15 @@ public class SearchAnalyticsService {
         }
     }
 
+    /**
+     * 获取热搜关键词排行。
+     *
+     * <p>优先从 Redis ZSet 读取；Redis 不可用时降级到本地内存统计，
+     * 保证分析面板在缓存故障时仍可用。</p>
+     *
+     * @param limit 返回条数上限
+     * @return 按搜索次数降序的热搜词列表；无数据时返回空列表
+     */
     public List<HotKeyword> getHotKeywords(int limit) {
         StringRedisTemplate redis = getRedis();
         if (redis != null) {
@@ -132,6 +141,14 @@ public class SearchAnalyticsService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 获取零结果关键词排行（用于优化搜索建议与内容补全）。
+     *
+     * <p>同样优先 Redis、降级内存，行为与 {@link #getHotKeywords(int)} 一致。</p>
+     *
+     * @param limit 返回条数上限
+     * @return 按零结果次数降序的关键词列表；无数据时返回空列表
+     */
     public List<HotKeyword> getZeroResultKeywords(int limit) {
         StringRedisTemplate redis = getRedis();
         if (redis != null) {
@@ -155,6 +172,15 @@ public class SearchAnalyticsService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 获取近 N 天的每日搜索量。
+     *
+     * <p>从 Redis Hash 读取每日计数，仅返回最近 {@code days} 天内的数据；
+     * Redis 不可用时返回空 Map。</p>
+     *
+     * @param days 统计天数范围
+     * @return 日期 → 搜索次数的映射；无数据时返回空 Map
+     */
     public Map<LocalDate, Long> getDailySearches(int days) {
         StringRedisTemplate redis = getRedis();
         if (redis != null) {
@@ -189,6 +215,11 @@ public class SearchAnalyticsService {
                         LinkedHashMap::new));
     }
 
+    /**
+     * 获取搜索分析汇总（内存统计，不依赖 Redis）。
+     *
+     * @return 汇总数据：总搜索量、零结果量、零结果率、去重关键词数与零结果关键词数
+     */
     public SearchAnalyticsSummary getSummary() {
         long totalSearches = hotKeywords.values().stream().mapToLong(AtomicLong::get).sum();
         long totalZeroResults = zeroResultKeywords.values().stream().mapToLong(AtomicLong::get).sum();
@@ -234,9 +265,24 @@ public class SearchAnalyticsService {
                 .forEach(e -> map.remove(e.getKey()));
     }
 
+    /**
+     * 热搜关键词统计条目。
+     *
+     * @param keyword 关键词
+     * @param count   搜索次数
+     */
     public record HotKeyword(String keyword, long count) {
     }
 
+    /**
+     * 搜索分析汇总数据。
+     *
+     * @param totalSearches       总搜索次数
+     * @param zeroResultSearches  零结果搜索次数
+     * @param zeroResultRate      零结果率（0.0 ~ 1.0）
+     * @param uniqueKeywords      去重后的关键词数量
+     * @param zeroResultKeywords  零结果关键词数量
+     */
     public record SearchAnalyticsSummary(
             long totalSearches,
             long zeroResultSearches,

@@ -285,6 +285,15 @@ public class FeignProperties {
          */
         private Set<String> retryOnMethods = new LinkedHashSet<>(Arrays.asList("GET"));
 
+        /**
+         * 退避策略配置。
+         *
+         * <p>控制重试间隔的递增方式：每次重试延迟 = min(delay * multiplier^n, maxDelay)，
+         * 指数退避可避免重试风暴打爆下游服务。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @Getter
 @Setter
         public static class Backoff {

@@ -20,11 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>已知问题：当前 ASM 字节码路径未生效，反射回退路径在部分注解（@JsonProperty 反序列化、
  * @JsonAlias、@JsonInclude.NON_EMPTY）上存在缺陷。相关测试标记 @Disabled 待修复后启用。
- *
- * <p>注意：AnnotationBean 使用了多个已 @Deprecated 注解（@JsonAlias、@JsonRawValue、
- * @JsonUnwrapped、@JsonRootName），本测试类添加 @SuppressWarnings 以避免编译警告。
  */
-@SuppressWarnings("deprecation")
 class AnnotationComboTest {
 
     @BeforeEach

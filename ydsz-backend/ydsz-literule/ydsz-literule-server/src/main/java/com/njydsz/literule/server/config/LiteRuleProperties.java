@@ -343,6 +343,9 @@ public class LiteRuleProperties {
         private boolean watchEnabled = true;
     }
 
+    /**
+     * Nacos 配置中心接入配置（规则定义动态下发）。
+     */
     @Data
     public static class NacosConfig {
         /** Nacos 服务地址 */
@@ -353,12 +356,18 @@ public class LiteRuleProperties {
         private String group = "DEFAULT_GROUP";
     }
 
+    /**
+     * Apollo 配置中心接入配置。
+     */
     @Data
     public static class ApolloConfig {
         /** Apollo Namespace */
         private String namespace = "rule-engine";
     }
 
+    /**
+     * Zookeeper 配置中心接入配置。
+     */
     @Data
     public static class ZookeeperConfig {
         /** ZK 连接地址 */

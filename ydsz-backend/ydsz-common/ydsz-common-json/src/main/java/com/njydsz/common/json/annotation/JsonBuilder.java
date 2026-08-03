@@ -74,7 +74,6 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonBuilder {
 
     /**

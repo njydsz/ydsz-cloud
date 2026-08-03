@@ -18,7 +18,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.jsonpath.JsonPath;
+import com.njydsz.common.json.tree.ObjectNode;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -983,7 +983,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String ext = MapUtils.getString(s, "ext");
                 if (StringUtils.hasText(ext)) {
                     try {
-                        skip.setFromNodeCode((String) JsonPath.get(ext, "$.sourceRef"));
+                        ObjectNode extNode = YdszJson.parseObject(ext);
+                        skip.setFromNodeCode(extNode != null ? extNode.getString("sourceRef") : null);
                     } catch (Exception e) {
                         log.warn("[Flow] 导入跳转 ext 解析失败: skipName={} err={}",
                                 MapUtils.getString(s, "skipName"), e.getMessage());
@@ -1031,7 +1032,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String source = null;
                 if (StringUtils.hasText(skip.getExt())) {
                     try {
-                        source = (String) JsonPath.get(skip.getExt(), "$.sourceRef");
+                        ObjectNode extNode = YdszJson.parseObject(skip.getExt());
+                        source = extNode != null ? extNode.getString("sourceRef") : null;
                     } catch (Exception e) { log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e); }
                 }
                 edge.put("source", source);

@@ -95,6 +95,15 @@ public class FlowProperties {
         /** 企微回调 Token（签名校验密钥） */
         private WeCom wecom = new WeCom();
 
+        /**
+         * 三方回调失败重试策略配置。
+         *
+         * <p>由 {@link com.njydsz.workflow.server.job.FlowThirdPartyRetryJobHandler} 定时消费，
+         * 超过 {@link #maxRetries} 次后进入死信不再扫描。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @Data
         public static class Retry {
             /** 最大重试次数（超过则进入死信不再扫描） */
@@ -105,18 +114,42 @@ public class FlowProperties {
             private int lockLeaseSec = 120;
         }
 
+        /**
+         * 钉钉审批回调签名校验配置。
+         *
+         * <p>appSecret 用于校验钉钉 Webhook 回调签名。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @Data
         public static class DingTalk {
             /** 钉钉应用 appSecret */
             private String appSecret = "";
         }
 
+        /**
+         * 飞书审批回调签名校验配置。
+         *
+         * <p>appSecret 用于校验飞书 Webhook 回调签名。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @Data
         public static class Feishu {
             /** 飞书应用 appSecret */
             private String appSecret = "";
         }
 
+        /**
+         * 企微审批回调签名校验配置。
+         *
+         * <p>Token 用于校验企微 Webhook 回调签名。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @Data
         public static class WeCom {
             /** 企微回调 Token */

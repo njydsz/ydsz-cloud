@@ -27,6 +27,16 @@ public enum NotifyChannel {
 
 	private final String name;
 
+	/**
+	 * 根据渠道编码解析对应的通知渠道。
+	 *
+	 * <p>遍历全部枚举项匹配 {@code code}；无匹配时抛出 {@link IllegalArgumentException}，
+	 * 不做静默回退，调用方需自行兜底处理未知渠道。
+	 *
+	 * @param code 渠道编码（对应各枚举项的 code 字段）
+	 * @return 匹配的通知渠道
+	 * @throws IllegalArgumentException 当编码不匹配任何已定义渠道时抛出
+	 */
 	public static NotifyChannel fromCode(int code) {
 		for (NotifyChannel channel : values()) {
 			if (channel.code == code) {

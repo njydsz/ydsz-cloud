@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonSubTypes {
 
     /**

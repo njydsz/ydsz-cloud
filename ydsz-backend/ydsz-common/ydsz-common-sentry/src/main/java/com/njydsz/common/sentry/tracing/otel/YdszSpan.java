@@ -100,21 +100,51 @@ public final class YdszSpan {
         return this;
     }
 
+    /**
+     * 设置长整型属性。
+     *
+     * @param key   属性名
+     * @param value 属性值
+     * @return 当前 Span 包装（链式调用）
+     */
     public YdszSpan setAttribute(String key, long value) {
         span.setAttribute(key, value);
         return this;
     }
 
+    /**
+     * 设置布尔型属性。
+     *
+     * @param key   属性名
+     * @param value 属性值
+     * @return 当前 Span 包装（链式调用）
+     */
     public YdszSpan setAttribute(String key, boolean value) {
         span.setAttribute(key, value);
         return this;
     }
 
+    /**
+     * 设置长整型属性（使用预声明的 AttributeKey，避免重复分配）。
+     *
+     * @param key   AttributeKey（Long）
+     * @param value 属性值
+     * @return 当前 Span 包装（链式调用）
+     */
     public YdszSpan setAttribute(AttributeKey<Long> key, long value) {
         span.setAttribute(key, value);
         return this;
     }
 
+    /**
+     * 设置字符串属性（使用预声明的 AttributeKey）。
+     *
+     * <p>{@code value} 为 {@code null} 时不写入，避免 OTel 对 null 属性的告警。</p>
+     *
+     * @param key   AttributeKey（String）
+     * @param value 属性值；{@code null} 时跳过
+     * @return 当前 Span 包装（链式调用）
+     */
     public YdszSpan setAttribute(AttributeKey<String> key, String value) {
         if (value != null) {
             span.setAttribute(key, value);

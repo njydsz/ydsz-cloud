@@ -366,6 +366,15 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
             return batchSize;
         }
 
+        /**
+         * 内存重试队列中的单条待重试消息记录。
+         *
+         * <p>持有通知要素（渠道/接收人/标题/内容）与重试进度（当前重试次数、
+         * 最近一次错误、下次重试时间）；下次重试时间由指数退避算法在失败时计算。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         private static class RetryEntry {
             private final NotifyChannel channel;
             private final String receiver;

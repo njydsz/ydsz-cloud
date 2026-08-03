@@ -148,15 +148,48 @@ public class NotifyPreference {
 
 	public String getUserId() { return userId; }
 	public void setUserId(String userId) { this.userId = userId; }
+	/**
+	 * 获取启用的通知渠道集合。
+	 *
+	 * <p>返回不可修改视图，调用方不可直接增删元素，需通过 {@link #setChannelEnabled} 调整。
+	 *
+	 * @return 当前启用的渠道集合（不可修改视图）
+	 */
 	public Set<NotifyChannel> getEnabledChannels() {
 		return Collections.unmodifiableSet(enabledChannels);
 	}
+
+	/**
+	 * 全量替换启用的通知渠道集合。
+	 *
+	 * <p>入参为 {@code null} 时视为清空（空集合）；内部复制为 {@link EnumSet} 防御性拷贝，
+	 * 避免外部集合后续修改影响内部状态。
+	 *
+	 * @param enabledChannels 新的启用渠道集合，可为 {@code null}
+	 */
 	public void setEnabledChannels(Set<NotifyChannel> enabledChannels) {
 		this.enabledChannels = enabledChannels != null ? EnumSet.copyOf(enabledChannels) : EnumSet.noneOf(NotifyChannel.class);
 	}
+
+	/**
+	 * 获取启用的通知类型集合。
+	 *
+	 * <p>返回不可修改视图，调用方不可直接增删元素，需通过 {@link #setTypeEnabled} 调整。
+	 *
+	 * @return 当前启用的通知类型集合（不可修改视图）
+	 */
 	public Set<NotifyType> getEnabledTypes() {
 		return Collections.unmodifiableSet(enabledTypes);
 	}
+
+	/**
+	 * 全量替换启用的通知类型集合。
+	 *
+	 * <p>入参为 {@code null} 时视为清空（空集合）；内部复制为 {@link EnumSet} 防御性拷贝，
+	 * 避免外部集合后续修改影响内部状态。
+	 *
+	 * @param enabledTypes 新的启用通知类型集合，可为 {@code null}
+	 */
 	public void setEnabledTypes(Set<NotifyType> enabledTypes) {
 		this.enabledTypes = enabledTypes != null ? EnumSet.copyOf(enabledTypes) : EnumSet.noneOf(NotifyType.class);
 	}

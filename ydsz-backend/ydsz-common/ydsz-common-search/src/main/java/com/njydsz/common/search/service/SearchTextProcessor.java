@@ -257,8 +257,16 @@ public class SearchTextProcessor {
             return matches;
         }
 
+        /**
+         * 前缀树（Trie）节点。
+         *
+         * <p>用于关键词/同义词/拼音的快速前缀匹配检索；
+         * {@code word} 非空表示该节点是一个完整词的终止点。</p>
+         */
         private static final class TrieNode {
+            /** 子节点映射（字符 → 子节点） */
             final Map<Character, TrieNode> children = new HashMap<>();
+            /** 完整词（非空表示该节点结束一个词） */
             String word = null;
         }
     }

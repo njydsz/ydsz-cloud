@@ -206,6 +206,14 @@ public class IndexSyncService {
         return total.get();
     }
 
+    /**
+     * 获取死信队列快照（同步失败的索引操作）。
+     *
+     * <p>返回副本而非原队列引用，调用方修改不会影响内部状态；
+     * 死信操作可通过 {@link #replayDeadLetters()} 重放补偿。</p>
+     *
+     * @return 死信操作的副本列表；无死信时返回空列表
+     */
     public List<IndexOperation> getDeadLetterQueue() {
         return new ArrayList<>(deadLetterQueue);
     }

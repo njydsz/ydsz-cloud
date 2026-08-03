@@ -289,6 +289,14 @@ public class ScorecardRule implements Rule {
         /** 因子描述 */
         private String description;
 
+        /**
+         * 创建静态分值因子。
+         *
+         * @param conditionExpression 触发条件表达式（满足时计分）
+         * @param score               满足条件时的固定分值
+         * @param description         因子描述（用于解释/审计）
+         * @return ScoreFactor 实例
+         */
         public static ScoreFactor of(String conditionExpression, double score, String description) {
             return ScoreFactor.builder()
                     .conditionExpression(conditionExpression)

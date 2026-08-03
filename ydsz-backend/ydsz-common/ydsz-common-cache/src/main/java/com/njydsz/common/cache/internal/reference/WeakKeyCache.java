@@ -210,6 +210,16 @@ public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
     return map.values();
   }
 
+  /**
+   * 弱引用键包装：持有键的 {@link WeakReference}，并在构造时固化键的 {@link System#identityHashCode}。
+   *
+   * <p>哈希码基于键对象的系统身份哈希提前固化，避免键被 GC 回收后无法再调用其
+   * {@code hashCode()}；{@link #equals} 要求两侧键对象均存活且引用同一实例（== 语义），
+   * 键已回收时视为不相等，从而正确支撑并发映射的查找与清理。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
   private static class WeakReferenceKey<K> extends WeakReference<K> {
     private final int hashCode;
 

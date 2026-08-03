@@ -272,6 +272,16 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     super.notifyRemoval(key, value, cause);
   }
 
+  /**
+   * 分段内部实现：每个分段持有独立的 {@link ConcurrentHashMap} 与淘汰锁。
+   *
+   * <p>容量阈值 {@code evictThreshold} 为分段容量的 90%，达到阈值后在 {@link #evict}
+   * 中按最近访问时间（LRU）批量淘汰最旧条目，减少锁竞争。
+   * 分段内读操作无锁，写与淘汰由 {@code evictLock} 串行化。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
   private static class Segment<K, V> {
 
     private final ConcurrentHashMap<K, Node<K, V>> map;
@@ -385,6 +395,16 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 缓存节点：持有缓存值与最近访问时间戳。
+   *
+   * <p>值 {@code value} 与访问时间 {@code lastAccessNanos} 均为 volatile，
+   * 保证并发读写下的可见性；LRU 淘汰按 {@code lastAccessNanos} 升序选择淘汰对象。
+   * 键本身由外层 {@link ConcurrentHashMap} 持有，节点内不再冗余存储。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
   private static class Node<K, V> {
     volatile V value;
     volatile long lastAccessNanos;

@@ -129,26 +129,56 @@ public class TenantMetrics {
         return interceptPassCount.get();
     }
 
+    /**
+     * 获取 SQL 拦截被阻断（fail-closed 拒绝）的次数。
+     *
+     * @return 被阻断次数
+     */
     public long getInterceptBlockedCount() {
         return interceptBlockedCount.get();
     }
 
+    /**
+     * 获取 SQL 拦截被跳过（匿名 URL / 超级管理员）的次数。
+     *
+     * @return 被跳过次数
+     */
     public long getInterceptSkippedCount() {
         return interceptSkippedCount.get();
     }
 
+    /**
+     * 获取 fail-closed 拒绝执行 SQL 的次数。
+     *
+     * @return fail-closed 拒绝次数
+     */
     public long getFailClosedCount() {
         return failClosedCount.get();
     }
 
+    /**
+     * 获取超级管理员绕过隔离的次数。
+     *
+     * @return 超级管理员绕过次数
+     */
     public long getSuperAdminCount() {
         return superAdminCount.get();
     }
 
+    /**
+     * 获取数据源切换（ISOLATE_DB 模式）次数。
+     *
+     * @return 数据源切换次数
+     */
     public long getDatasourceSwitchCount() {
         return datasourceSwitchCount.get();
     }
 
+    /**
+     * 获取当前活跃租户上下文数。
+     *
+     * @return 活跃上下文数
+     */
     public long getActiveContexts() {
         return activeContexts.get();
     }

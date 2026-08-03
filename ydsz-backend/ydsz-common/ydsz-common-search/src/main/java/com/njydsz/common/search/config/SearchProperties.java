@@ -154,6 +154,9 @@ public class SearchProperties {
         private long maxSize = 1000;
     }
 
+    /**
+     * 索引构建与同步配置（批大小、线程池、重试策略）。
+     */
     @Data
     public static class IndexConfig {
         private String syncMode = "event";
@@ -166,6 +169,9 @@ public class SearchProperties {
         private long retryIntervalMs = 1000;
     }
 
+    /**
+     * 搜索降级配置（引擎故障时回退到 LIKE 查询等降级策略）。
+     */
     @Data
     public static class DegradeConfig {
         private boolean enabled = true;
@@ -175,6 +181,9 @@ public class SearchProperties {
         private int probeInterval = 30;
     }
 
+    /**
+     * 搜索引擎熔断配置（连续失败阈值与恢复参数）。
+     */
     @Data
     public static class CircuitBreakerConfig {
         private boolean enabled = true;
@@ -186,12 +195,18 @@ public class SearchProperties {
         private int halfOpenRequests = 3;
     }
 
+    /**
+     * 同义词扩展配置（文件路径与开关）。
+     */
     @Data
     public static class SynonymConfig {
         private boolean enabled = false;
         private String file = "classpath:synonyms.txt";
     }
 
+    /**
+     * 拼音搜索配置（文件路径与开关）。
+     */
     @Data
     public static class PinyinConfig {
         private boolean enabled = false;
@@ -221,6 +236,9 @@ public class SearchProperties {
         private double timeDecayDays = 0;
     }
 
+    /**
+     * Elasticsearch 引擎连接与索引配置。
+     */
     @Data
     public static class EsConfig {
         private String host = "localhost";
@@ -230,6 +248,9 @@ public class SearchProperties {
         private FieldWeights fieldWeights = new FieldWeights();
     }
 
+    /**
+     * Redis RediSearch 引擎配置。
+     */
     @Data
     public static class RedisConfig {
         /** RediSearch 索引名称 */
@@ -238,6 +259,9 @@ public class SearchProperties {
         private String keyPrefix = "search:doc:";
     }
 
+    /**
+     * Apache Solr 引擎连接配置。
+     */
     @Data
     public static class SolrConfig {
         private String baseUrl = "http://localhost:8983/solr";
@@ -245,6 +269,9 @@ public class SearchProperties {
         private FieldWeights fieldWeights = new FieldWeights();
     }
 
+    /**
+     * OpenSearch 引擎连接与索引配置。
+     */
     @Data
     public static class OpenSearchConfig {
         private String host = "localhost";

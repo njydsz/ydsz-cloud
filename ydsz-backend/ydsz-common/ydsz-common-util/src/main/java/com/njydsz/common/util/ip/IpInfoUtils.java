@@ -246,22 +246,40 @@ public class IpInfoUtils {
         return "0".equals(value) ? null : value;
     }
 
+    /**
+     * IP 地理位置信息。
+     *
+     * <p>包含国家/地区/省份/城市/运营商等可选字段，字段缺失时
+     * {@link #getFullAddress()} / {@link #getShortAddress()} 自动跳过，
+     * 全部缺失时返回「未知」。</p>
+     */
     @Setter
     @Getter
     @ToString
     public static class IpInfo implements Serializable {
         private static final long serialVersionUID = 1L;
+        /** 国家 */
         private String country;
+        /** 地区（大区） */
         private String region;
+        /** 省份 */
         private String province;
+        /** 城市 */
         private String city;
+        /** 运营商（ISP） */
         private String isp;
+        /** 原始 IP 地址（不可变） */
         private final String ip;
 
         public IpInfo(String ip) {
             this.ip = ip;
         }
 
+        /**
+         * 拼接完整地址（国家+地区+省份+城市+运营商）。
+         *
+         * @return 完整地理位置字符串；所有字段缺失时返回「未知」
+         */
         public String getFullAddress() {
             StringBuilder sb = new StringBuilder();
             if (country != null) sb.append(country);
@@ -275,6 +293,11 @@ public class IpInfoUtils {
             return sb.length() > 0 ? sb.toString() : "未知";
         }
 
+        /**
+         * 拼接简要地址（省份+城市+运营商，不含国家/大区）。
+         *
+         * @return 简要地理位置字符串；字段缺失时返回「未知」
+         */
         public String getShortAddress() {
             StringBuilder sb = new StringBuilder();
             if (province != null) sb.append(province);
@@ -287,11 +310,18 @@ public class IpInfoUtils {
         }
     }
 
+    /**
+     * IP 地理位置缓存统计快照。
+     */
     @Getter
     public static class CacheStats {
+        /** 当前缓存条目数 */
         private final int size;
+        /** 命中次数 */
         private final int hits;
+        /** 未命中次数 */
         private final int misses;
+        /** 命中率（0.0 ~ 1.0） */
         private final double hitRate;
 
         public CacheStats(int size, int hits, int misses, double hitRate) {

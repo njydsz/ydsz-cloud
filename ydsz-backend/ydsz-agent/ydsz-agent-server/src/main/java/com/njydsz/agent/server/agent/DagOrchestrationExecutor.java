@@ -372,6 +372,17 @@ public class DagOrchestrationExecutor {
         // P0-3: executor 由 common-thread 管理生命周期，无需手动关闭
     }
 
+    /**
+     * DAG 编排执行结果。
+     *
+     * @param executionId    本次执行的唯一 ID
+     * @param dagName        执行的 DAG 名称
+     * @param nodeResults    各节点的执行结果（节点名 → 输出内容）
+     * @param nodeUsages     各节点的 Token 用量（节点名 → 用量）
+     * @param completedNodes 成功完成的节点集合
+     * @param failedNodes    执行失败的节点集合
+     * @param hasFailure     是否存在失败节点（{@code true} 表示整体执行未完全成功）
+     */
     public record DagExecutionResult(
             String executionId,
             String dagName,

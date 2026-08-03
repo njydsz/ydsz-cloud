@@ -254,6 +254,11 @@ public abstract class AbstractYdszException extends RuntimeException {
         this.key = key;
     }
 
+    /**
+     * 获取消息格式化参数（返回副本，防止外部修改内部状态）。
+     *
+     * @return 参数数组；未设置时返回 {@code null}
+     */
     public Object[] getParams() {
         return params != null ? params.clone() : null;
     }

@@ -26,6 +26,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CircuitBreaker {
 
+    /**
+     * 熔断状态枚举。
+     *
+     * <ul>
+     *   <li>{@link #CLOSED}：正常放行请求</li>
+     *   <li>{@link #OPEN}：熔断打开，直接拒绝请求</li>
+     *   <li>{@link #HALF_OPEN}：半开探测，放行少量试探请求</li>
+     * </ul>
+     */
     public enum State {
         CLOSED, OPEN, HALF_OPEN
     }
@@ -162,6 +171,11 @@ public class CircuitBreaker {
         }
     }
 
+    /**
+     * 获取当前熔断状态。
+     *
+     * @return 当前状态（CLOSED / OPEN / HALF_OPEN）
+     */
     public State getState() {
         return state.get();
     }
@@ -170,10 +184,20 @@ public class CircuitBreaker {
         return name;
     }
 
+    /**
+     * 获取滑动窗口内的失败次数。
+     *
+     * @return 当前失败计数
+     */
     public int getFailureCount() {
         return failureCount.get();
     }
 
+    /**
+     * 获取滑动窗口内的总请求次数。
+     *
+     * @return 当前总计数
+     */
     public int getTotalCount() {
         return totalCount.get();
     }

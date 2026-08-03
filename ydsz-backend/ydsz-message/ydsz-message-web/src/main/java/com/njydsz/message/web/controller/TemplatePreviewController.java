@@ -138,17 +138,29 @@ public class TemplatePreviewController {
         return BaseResponse.success(rendered);
     }
 
+    /**
+     * 模板预览请求体（按模板编码渲染）。
+     */
     @lombok.Data
     public static class PreviewRequest {
+        /** 模板编码（对应已注册的模板） */
         private String templateCode;
+        /** 消息渠道（sms / mail / dingtalk 等） */
         private String channel;
+        /** 语言区域（如 zh-CN），影响模板国际化 */
         private String locale;
+        /** 模板变量参数 */
         private Map<String, Object> params;
     }
 
+    /**
+     * 原始模板预览请求体（直接提交模板内容渲染）。
+     */
     @lombok.Data
     public static class RawPreviewRequest {
+        /** 模板原始内容（含占位符如 ${name}） */
         private String template;
+        /** 模板变量参数 */
         private Map<String, Object> params;
     }
 }

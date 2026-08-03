@@ -336,6 +336,15 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         return result;
     }
 
+    /**
+     * 租户字段取值载体：持有目标列名与实际取值。
+     *
+     * <p>{@code value} 可能为单值或 {@link List} 多值（对应 IN 条件），
+     * 由 {@link #buildTenantConditions} 按值类型构造等价条件。
+     *
+     * @author ydsz-team
+     * @since 1.0.0
+     */
     private static class TenantFieldValue {
         final String column;
         final Object value;

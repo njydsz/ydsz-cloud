@@ -143,7 +143,7 @@ public final class SerializationProvider {
      * 设置当前线程的循环引用处理策略。
      *
      * @param strategyName 策略名称（如 {@code REF}、{@code NULL}、{@code THROW}），
-     *                     需与 {@link com.njydsz.common.json.config.JsonConfig.CircularReferenceStrategy}
+     *                     需与 {@link com.njydsz.common.json.internal.JsonConfig.CircularReferenceStrategy}
      *                     枚举名一致
      */
     public static void setCircularReferenceStrategy(String strategyName) {

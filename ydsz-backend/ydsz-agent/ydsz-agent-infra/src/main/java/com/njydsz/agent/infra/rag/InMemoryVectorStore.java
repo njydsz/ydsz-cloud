@@ -111,5 +111,11 @@ public class InMemoryVectorStore implements VectorStore {
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 
+    /**
+     * 带相似度得分的检索结果条目。
+     *
+     * @param chunk 命中的文本块
+     * @param score 余弦相似度得分（[0,1]，越大越相关）
+     */
     private record ScoredChunk(TextChunk chunk, double score) {}
 }

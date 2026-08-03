@@ -261,9 +261,21 @@ public class MarkdownDocExporter extends AbstractDocExporter {
             super(ConfigurationPhase.PARSE_CONFIGURATION);
         }
 
+        /**
+         * 导出开关条件：{@code ydsz.doc.export.enabled=true}（缺省按 true 处理）。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @ConditionalOnProperty(prefix = "ydsz.doc.export", name = "enabled", havingValue = "true", matchIfMissing = true)
         static class OnExportEnabled {}
 
+        /**
+         * 导出器类型条件：{@code ydsz.doc.exporter=markdown}（需显式指定，缺省不激活）。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @ConditionalOnProperty(prefix = "ydsz.doc", name = "exporter", havingValue = "markdown")
         static class OnExporterType {}
     }

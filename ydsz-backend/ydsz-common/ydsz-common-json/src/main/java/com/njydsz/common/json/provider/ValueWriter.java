@@ -18,7 +18,7 @@ import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.writer.JSONWriter;
 
 import java.sql.Date;

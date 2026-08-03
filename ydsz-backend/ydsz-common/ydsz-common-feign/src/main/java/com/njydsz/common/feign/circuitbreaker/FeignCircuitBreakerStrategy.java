@@ -140,6 +140,13 @@ public interface FeignCircuitBreakerStrategy {
         public CircuitBreakerMetrics() {
         }
 
+        /**
+         * 获取总调用次数。
+         *
+         * <p>返回当前累计的总调用计数（成功 + 失败 + 慢调用）。
+         *
+         * @return 总调用次数
+         */
         public long getTotalCalls() {
             return totalCalls.sum();
         }
@@ -162,6 +169,11 @@ public interface FeignCircuitBreakerStrategy {
             this.totalCalls.increment();
         }
 
+        /**
+         * 获取成功调用次数。
+         *
+         * @return 成功调用次数
+         */
         public long getSuccessfulCalls() {
             return successfulCalls.sum();
         }
@@ -181,6 +193,11 @@ public interface FeignCircuitBreakerStrategy {
             this.successfulCalls.increment();
         }
 
+        /**
+         * 获取失败调用次数。
+         *
+         * @return 失败调用次数
+         */
         public long getFailedCalls() {
             return failedCalls.sum();
         }
@@ -200,6 +217,11 @@ public interface FeignCircuitBreakerStrategy {
             this.failedCalls.increment();
         }
 
+        /**
+         * 获取慢调用次数。
+         *
+         * @return 慢调用次数
+         */
         public long getSlowCalls() {
             return slowCalls.sum();
         }
@@ -219,6 +241,13 @@ public interface FeignCircuitBreakerStrategy {
             this.slowCalls.increment();
         }
 
+        /**
+         * 获取失败率（百分比）。
+         *
+         * <p>读取以 {@code doubleToLongBits} 打包存储的原子值并还原为 double。
+         *
+         * @return 失败率，取值范围 [0.0, 100.0]
+         */
         public double getFailureRate() {
             return Double.longBitsToDouble(failureRate.get());
         }
@@ -232,6 +261,13 @@ public interface FeignCircuitBreakerStrategy {
             this.failureRate.set(Double.doubleToLongBits(failureRate));
         }
 
+        /**
+         * 获取慢调用率（百分比）。
+         *
+         * <p>读取以 {@code doubleToLongBits} 打包存储的原子值并还原为 double。
+         *
+         * @return 慢调用率，取值范围 [0.0, 100.0]
+         */
         public double getSlowCallRate() {
             return Double.longBitsToDouble(slowCallRate.get());
         }
@@ -243,6 +279,11 @@ public interface FeignCircuitBreakerStrategy {
             this.slowCallRate.set(Double.doubleToLongBits(slowCallRate));
         }
 
+        /**
+         * 获取平均调用耗时。
+         *
+         * @return 平均耗时（毫秒）
+         */
         public long getAverageDuration() {
             return averageDuration.get();
         }
@@ -254,6 +295,11 @@ public interface FeignCircuitBreakerStrategy {
             this.averageDuration.set(averageDuration);
         }
 
+        /**
+         * 获取最大调用耗时。
+         *
+         * @return 最大耗时（毫秒）
+         */
         public long getMaxDuration() {
             return maxDuration.get();
         }

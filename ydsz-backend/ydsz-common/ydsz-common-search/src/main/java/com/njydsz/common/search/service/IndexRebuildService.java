@@ -187,11 +187,23 @@ public class IndexRebuildService {
     public int getProgress() { return progress; }
     public int getTotal() { return total; }
 
+    /**
+     * 获取重建进度百分比。
+     *
+     * <p>未在重建且无总量时返回 {@code -1}（表示从未执行）；重建中返回 [0, 100]。</p>
+     *
+     * @return 进度百分比；{@code -1} 表示不在重建状态
+     */
     public int getProgressPercent() {
         if (!rebuilding || total == 0) return rebuilding ? 0 : -1;
         return Math.min(100, (progress * 100) / total);
     }
 
+    /**
+     * 获取已注册的全部索引类型。
+     *
+     * @return 索引类型名列表（如 user / project / document）
+     */
     public List<String> getRegisteredTypes() {
         return providerRegistry.getAllTypes();
     }

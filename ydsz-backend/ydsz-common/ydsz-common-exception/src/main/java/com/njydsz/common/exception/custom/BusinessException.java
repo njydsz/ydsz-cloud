@@ -273,6 +273,12 @@ public class BusinessException extends AbstractYdszException {
         return new BusinessExceptionBuilder();
     }
 
+    /**
+     * 从预定义的异常码创建业务异常。
+     *
+     * @param exceptionCode 异常码（含 code、key、默认消息、HTTP 状态）
+     * @return 携带该异常码默认配置的 BusinessException 实例
+     */
     public static BusinessException of(ExceptionCode exceptionCode) {
         return new BusinessException(exceptionCode);
     }

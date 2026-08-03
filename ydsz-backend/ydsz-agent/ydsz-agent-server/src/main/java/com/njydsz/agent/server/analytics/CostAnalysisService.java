@@ -101,6 +101,17 @@ public class CostAnalysisService {
         return stats.cost();
     }
 
+    /**
+     * 单次对话的 Token 用量流水记录。
+     *
+     * @param id               流水记录 ID
+     * @param conversationId   所属对话 ID
+     * @param model            使用的模型标识
+     * @param promptTokens     提示词 Token 数
+     * @param completionTokens 补全 Token 数
+     * @param totalTokens      总 Token 数
+     * @param createdAt        记录创建时间
+     */
     public record TokenUsageRecord(String id, String conversationId, String model,
                                     long promptTokens, long completionTokens, long totalTokens,
                                     LocalDateTime createdAt) {}

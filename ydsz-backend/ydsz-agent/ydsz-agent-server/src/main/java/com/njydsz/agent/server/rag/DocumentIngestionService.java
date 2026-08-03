@@ -101,6 +101,14 @@ public class DocumentIngestionService {
                 embeddingClient.getModel(), embeddingClient.getDimension());
     }
 
+    /**
+     * 向量存储的统计快照。
+     *
+     * @param totalChunks    存储的文本块总数
+     * @param storeType      向量存储类型（pgvector / memory）
+     * @param embeddingModel 使用的 Embedding 模型名称
+     * @param dimension      向量维度
+     */
     public record VectorStoreStats(long totalChunks, String storeType,
                                     String embeddingModel, int dimension) {}
 }

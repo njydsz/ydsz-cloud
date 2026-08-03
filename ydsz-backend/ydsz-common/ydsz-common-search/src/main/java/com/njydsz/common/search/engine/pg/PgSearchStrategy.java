@@ -712,6 +712,12 @@ public class PgSearchStrategy
                 + text.substring(idx + keyword.length());
     }
 
+    /**
+     * PG 搜索结果行映射器。
+     *
+     * <p>将查询结果集行映射为 {@link SearchHit}，{@code withHighlight} 控制
+     * 是否同时解析 ts_headline 高亮片段列。</p>
+     */
     private static class SearchHitRowMapper implements RowMapper<SearchHit> {
         private final boolean withHighlight;
 

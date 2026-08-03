@@ -55,64 +55,36 @@ public class JsonProperties {
     /** 是否输出 null 值 */
     private boolean writeNulls = false;
 
-    /**
-     * 是否格式化输出
-     * @deprecated 当前无业务配置使用，计划 2.0.0 移除。如需格式化请使用 YdszJson.format(obj)。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    /** 是否格式化输出 */
     private boolean prettyPrint = false;
 
-    /**
-     * 循环引用处理策略（REF / IGNORE / ERROR）
-     * @deprecated 当前无业务配置使用，默认 REF 策略已满足需求。计划 2.0.0 移除。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    /** 循环引用处理策略（REF / IGNORE / ERROR） */
     private String circularReferenceStrategy = "REF";
 
-    /**
-     * 枚举是否使用序号序列化
-     * @deprecated 当前无业务配置使用，计划 2.0.0 移除。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    /** 枚举是否使用序号序列化 */
     private boolean serializeEnumUsingOrdinal = false;
 
     /** 最大 JSON 大小（字节，默认 10MB） */
     @Min(1)
     private long maxJsonSize = 10L * 1024 * 1024;
 
-    /**
-     * 最大序列化深度
-     * @deprecated 当前无业务配置使用，默认 256 已满足需求。计划 2.0.0 移除。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    /** 最大序列化深度 */
     @Min(1)
     private int maxDepth = 256;
 
     /** 是否启用安全模式（AutoType 白名单检查，默认开启） */
     private boolean safeMode = true;
 
-    /**
-     * 是否启用性能监控
-     * @deprecated 当前无业务配置使用，监控默认开启。计划 2.0.0 移除。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    /** 是否启用性能监控 */
     private boolean monitoringEnabled = true;
 
     /** 是否使用 BigDecimal 解析浮点数（金融场景精度保护） */
     private boolean useBigDecimal = false;
 
-    /**
-     * 是否包裹根对象
-     * @deprecated 当前无业务配置使用，计划 2.0.0 移除。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    /** 是否包裹根对象 */
     private boolean wrapRootValue = false;
 
-    /**
-     * 反序列化失败时是否抛出异常
-     * @deprecated 当前无业务配置使用，计划 2.0.0 移除。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    /** 反序列化失败时是否抛出异常 */
     private boolean failOnError = false;
 
     /**

@@ -100,6 +100,11 @@ public class I18nProperties {
      */
     private String i18nBaseNames = "i18n/messages";
 
+    /**
+     * 获取支持的 Locale 列表（返回副本，防止外部修改内部配置）。
+     *
+     * @return 支持的 Locale 标签数组（如 zh_CN / en_US）
+     */
     public String[] getSupportedLocales() {
         return supportedLocales.clone();
     }

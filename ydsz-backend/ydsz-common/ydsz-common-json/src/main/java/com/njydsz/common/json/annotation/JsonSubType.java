@@ -20,7 +20,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({})
-@Deprecated(since = "1.0.0", forRemoval = true)
 public @interface JsonSubType {
 
     /**

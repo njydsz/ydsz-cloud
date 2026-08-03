@@ -99,9 +99,21 @@ public class DefaultDocExporter extends AbstractDocExporter {
             super(ConfigurationPhase.PARSE_CONFIGURATION);
         }
 
+        /**
+         * 导出开关条件：{@code ydsz.doc.export.enabled=true}（缺省按 true 处理）。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @ConditionalOnProperty(prefix = "ydsz.doc.export", name = "enabled", havingValue = "true", matchIfMissing = true)
         static class OnExportEnabled {}
 
+        /**
+         * 导出器类型条件：{@code ydsz.doc.exporter=default}（缺省按 default 处理）。
+         *
+         * @author ydsz-team
+         * @since 1.0.0
+         */
         @ConditionalOnProperty(prefix = "ydsz.doc", name = "exporter", havingValue = "default", matchIfMissing = true)
         static class OnExporterType {}
     }

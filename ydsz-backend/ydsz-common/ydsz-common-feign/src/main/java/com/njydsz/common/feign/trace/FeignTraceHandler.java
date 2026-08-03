@@ -200,6 +200,14 @@ public interface FeignTraceHandler {
             this.parentSpanId = parentSpanId;
         }
 
+        /**
+         * 获取调用耗时。
+         *
+         * <p>{@code endTime} 已写入（调用已完成）时返回固定差值；
+         * 否则返回自 {@code startTime} 起的当前耗时，便于在调用进行中实时观测。
+         *
+         * @return 耗时（毫秒）
+         */
         public long getElapsedTime() {
             return endTime > 0 ? endTime - startTime : System.currentTimeMillis() - startTime;
         }

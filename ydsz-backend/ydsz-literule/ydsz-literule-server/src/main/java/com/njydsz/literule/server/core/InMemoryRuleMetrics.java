@@ -60,9 +60,32 @@ public class InMemoryRuleMetrics implements RuleMetrics {
                 ruleCode, elapsedMs, thresholdMs);
     }
 
+    /**
+     * 获取累计规则评估总次数。
+     *
+     * @return 累计评估次数
+     */
     public long getTotalEvaluations() { return totalEvaluations.get(); }
+
+    /**
+     * 获取累计规则命中（触发）次数。
+     *
+     * @return 累计触发次数
+     */
     public long getTotalTriggered() { return totalTriggered.get(); }
+
+    /**
+     * 获取累计规则执行错误次数。
+     *
+     * @return 累计错误次数
+     */
     public long getTotalErrors() { return totalErrors.get(); }
+
+    /**
+     * 获取累计规则执行耗时（毫秒）。
+     *
+     * @return 累计耗时（毫秒）
+     */
     public long getTotalElapsedMs() { return totalElapsedMs.get(); }
     public int getRegisteredRules() { return registeredRules; }
     public int getLastEvaluatedRules() { return lastEvaluatedRules; }
