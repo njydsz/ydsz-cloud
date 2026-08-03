@@ -72,6 +72,10 @@ public final class JsonPointer {
         return token.replace("~1", "/").replace("~0", "~");
     }
 
+    private static String escape(String token) {
+        return token.replace("~", "~0").replace("/", "~1");
+    }
+
     /**
      * 评估 JSON Pointer，从 JSON 文档中提取值
      *
@@ -154,7 +158,8 @@ public final class JsonPointer {
         if (tokens.length == 0) {
             return "";
         }
-        return unescape(tokens[tokens.length - 1]);
+        // tokens 在 parseTokens 阶段已完成 unescape，此处直接返回，避免双重反转义
+        return tokens[tokens.length - 1];
     }
 
     /**
@@ -170,7 +175,9 @@ public final class JsonPointer {
         }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < tokens.length - 1; i++) {
-            sb.append('/').append(tokens[i]);
+            // 重新 escape token（~ 和 / 需要还原为 ~0 / ~1），避免 parseTokens 双重反转义
+            String escaped = escape(tokens[i]);
+            sb.append('/').append(escaped);
         }
         return new JsonPointer(sb.toString());
     }

@@ -1,7 +1,0 @@
-# 工作包: conf   待办文件 2 个
-# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
-#   类头/文件头 = 该文件缺少类级或文件级文档注释
-
-[--]  1 | ydsz-frontend\conf\lint-configs\eslint-config\src\configs\javascript.ts
-        成员: function javascript
-[类头]  0 | ydsz-frontend\conf\node-utils\src\__tests__\path.test.ts

@@ -10,7 +10,7 @@ import com.njydsz.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.template.TemplateEngine;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.JsonMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,8 +85,8 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
         request.setReceiver(receiver);
         request.setTemplateCode(templateCode);
         if (templateParams instanceof Map<?, ?> map) {
-            Map<String, Object> params = YdszJson.toObject(
-                    YdszJson.toJson(map), new JsonType<Map<String, Object>>() {});
+            Map<String, Object> params = JsonMapper.getDefault().convertValue(
+                    map, new JsonType<Map<String, Object>>() {});
             request.setParams(params);
         }
         try {

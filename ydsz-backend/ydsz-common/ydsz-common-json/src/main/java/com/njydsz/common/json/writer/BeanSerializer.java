@@ -250,7 +250,7 @@ public final class BeanSerializer {
                     pos += keyLen;
                     
                     writer.pos = pos;
-                    writer.write(value.toString());
+                    writer.writeValueInline(value);
                     pos = writer.pos;
                     break;
             }

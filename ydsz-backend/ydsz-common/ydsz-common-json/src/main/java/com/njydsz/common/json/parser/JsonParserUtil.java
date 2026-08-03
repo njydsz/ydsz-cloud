@@ -340,6 +340,7 @@ public final class JsonParserUtil {
                 }
             } else if (c == '\\') {
                 hasEscape = true;
+                pos++; // 跳过反斜杠后的被转义字符（如 \"），避免误判为结束引号
             }
             pos++;
         }
@@ -425,7 +426,13 @@ public final class JsonParserUtil {
 
         long intValue = 0;
         while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {
-            intValue = intValue * 10 + (chars[pos] - '0');
+            int digit = chars[pos] - '0';
+            // 检测 long 溢出（19+ 位整数），溢出时回退到 BigDecimal/Double 路径
+            if (intValue > (Long.MAX_VALUE - digit) / 10) {
+                intValue = Long.MAX_VALUE; // 标记溢出，后续走精度保护路径
+            } else {
+                intValue = intValue * 10 + digit;
+            }
             pos++;
         }
 
@@ -434,7 +441,10 @@ public final class JsonParserUtil {
         if (pos < len && chars[pos] == '.') {
             pos++;
             while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {
-                decimalValue = decimalValue * 10 + (chars[pos] - '0');
+                int digit = chars[pos] - '0';
+                if (decimalValue <= (Long.MAX_VALUE - digit) / 10) {
+                    decimalValue = decimalValue * 10 + digit;
+                }
                 decimalDigits++;
                 pos++;
             }
@@ -452,6 +462,9 @@ public final class JsonParserUtil {
             }
             while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {
                 exp = exp * 10 + (chars[pos] - '0');
+                if (exp < 0) {
+                    throw new JsonDeserializationException("Exponent too large at position " + pos, pos);
+                }
                 pos++;
             }
         }

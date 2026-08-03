@@ -52,7 +52,8 @@ public final class JsonPatch {
      */
     public static String apply(String patchJson, String targetJson) {
         List<Object> operations = JsonParserUtil.parseArray(patchJson);
-        Map<String, Object> target = JsonParserUtil.parseObject(targetJson);
+        // 深拷贝目标对象，确保部分失败时原始对象不受影响（RFC 6902 隐含原子语义）
+        Map<String, Object> target = deepCopyMap(JsonParserUtil.parseObject(targetJson));
 
         for (Object opObj : operations) {
             if (!(opObj instanceof Map)) {
@@ -81,7 +82,7 @@ public final class JsonPatch {
                     removeByPath(target, path);
                     break;
                 case "replace":
-                    setByPath(target, path, value);
+                    replaceByPath(target, path, value);
                     break;
                 case "move":
                     Object movedValue = getByPath(target, from);
@@ -135,6 +136,30 @@ public final class JsonPatch {
             }
         }
         return current;
+    }
+
+    /**
+     * 根据 JSON Pointer 路径设置值（replace 操作专用，数组使用 set 而非 add）。
+     */
+    private static void replaceByPath(Map<String, Object> target, String path, Object value) {
+        String[] parts = path.split("/");
+        Object current = target;
+        for (int i = 1; i < parts.length - 1; i++) {
+            String part = unescapeToken(parts[i]);
+            if (current instanceof Map<?, ?>) {
+                current = ((Map<?, ?>) current).get(part);
+            } else if (current instanceof List<?> list) {
+                current = list.get(Integer.parseInt(part));
+            }
+        }
+        String lastPart = unescapeToken(parts[parts.length - 1]);
+        if (current instanceof Map<?, ?>) {
+            ((Map<String, Object>) current).put(lastPart, value);
+        } else if (current instanceof List<?>) {
+            int idx = Integer.parseInt(lastPart);
+            // RFC 6902 replace: replace element at index（set），而非 insert（add）
+            ((List<Object>) current).set(idx, value);
+        }
     }
 
     /**
@@ -193,6 +218,39 @@ public final class JsonPatch {
      */
     private static String unescapeToken(String token) {
         return token.replace("~1", "/").replace("~0", "~");
+    }
+
+    /**
+     * 递归深拷贝 Map（保证 JSON Patch 操作的原子性）。
+     */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> deepCopyMap(Map<String, Object> source) {
+        if (source == null) return null;
+        LinkedHashMap<String, Object> copy = new LinkedHashMap<>(source.size());
+        for (Map.Entry<String, Object> e : source.entrySet()) {
+            copy.put(e.getKey(), deepCopyValue(e.getValue()));
+        }
+        return copy;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object deepCopyValue(Object value) {
+        if (value instanceof Map) {
+            return deepCopyMap((Map<String, Object>) value);
+        } else if (value instanceof List) {
+            return deepCopyList((List<Object>) value);
+        }
+        return value; // 基本类型和字符串是不可变的
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Object> deepCopyList(List<Object> source) {
+        if (source == null) return null;
+        ArrayList<Object> copy = new ArrayList<>(source.size());
+        for (Object item : source) {
+            copy.add(deepCopyValue(item));
+        }
+        return copy;
     }
 
     /**

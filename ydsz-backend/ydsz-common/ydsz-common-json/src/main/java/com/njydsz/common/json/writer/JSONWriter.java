@@ -1201,7 +1201,7 @@ public final class JSONWriter {
     /**
      * 内联写入值（不调用 YdszJson.toJson）
      */
-    private void writeValueInline(Object value) {
+    void writeValueInline(Object value) {
         if (value == null) {
             buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';
             pos += 4;

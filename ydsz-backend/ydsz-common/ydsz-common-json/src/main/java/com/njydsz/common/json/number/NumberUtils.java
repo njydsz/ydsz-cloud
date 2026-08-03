@@ -248,7 +248,7 @@ public final class NumberUtils {
             throw new NumberFormatException("Invalid integer: " + str);
         }
 
-        // 通用路径：使用乘法展开循环
+        // 通用路径：使用 long 作为中间类型检测溢出
         boolean negative = false;
         int i = 0;
         if (first == '-') {
@@ -258,17 +258,23 @@ public final class NumberUtils {
             i = 1;
         }
 
-        int result = 0;
+        long result = 0;
         while (i < len) {
             char c = str.charAt(i);
             if (c < '0' || c > '9') {
                 throw new NumberFormatException("Invalid integer: " + str);
             }
             result = result * 10 + (c - '0');
+            if (negative && -result < Integer.MIN_VALUE) {
+                throw new NumberFormatException("Integer overflow: " + str);
+            }
+            if (!negative && result > Integer.MAX_VALUE) {
+                throw new NumberFormatException("Integer overflow: " + str);
+            }
             i++;
         }
 
-        return negative ? -result : result;
+        return negative ? (int) -result : (int) result;
     }
 
     /**
@@ -324,7 +330,7 @@ public final class NumberUtils {
             throw new NumberFormatException("Invalid long: " + str);
         }
 
-        // 通用路径：使用乘法展开循环
+        // 通用路径：使用乘法展开循环，带溢出检测
         boolean negative = false;
         int i = 0;
         if (first == '-') {
@@ -335,12 +341,20 @@ public final class NumberUtils {
         }
 
         long result = 0;
+        long limit = Long.MAX_VALUE / 10;
         while (i < len) {
             char c = str.charAt(i);
             if (c < '0' || c > '9') {
                 throw new NumberFormatException("Invalid long: " + str);
             }
-            result = result * 10 + (c - '0');
+            int digit = c - '0';
+            if (result > limit || (result == limit && digit > Long.MAX_VALUE % 10)) {
+                // 特例：-Long.MIN_VALUE = -9223372036854775808，其绝对值刚好溢出 long
+                if (!(negative && i == len - 1 && result == limit && digit == (Long.MAX_VALUE % 10) + 1)) {
+                    throw new NumberFormatException("Long overflow: " + str);
+                }
+            }
+            result = result * 10 + digit;
             i++;
         }
 
@@ -380,7 +394,7 @@ public final class NumberUtils {
             }
         }
 
-        // 通用路径
+        // 通用路径：使用 long 作为中间类型检测溢出
         boolean negative = false;
         int i = start;
         int end = start + len;
@@ -391,15 +405,22 @@ public final class NumberUtils {
             i++;
         }
 
-        int result = 0;
+        long result = 0;
         while (i < end) {
             char c = chars[i];
             if (c < '0' || c > '9') break;
-            result = result * 10 + (c - '0');
+            int digit = c - '0';
+            result = result * 10 + digit;
+            if (negative && -result < Integer.MIN_VALUE) {
+                throw new NumberFormatException("Integer overflow at offset " + start);
+            }
+            if (!negative && result > Integer.MAX_VALUE) {
+                throw new NumberFormatException("Integer overflow at offset " + start);
+            }
             i++;
         }
 
-        return negative ? -result : result;
+        return negative ? (int) -result : (int) result;
     }
 
     /**
@@ -433,7 +454,7 @@ public final class NumberUtils {
             }
         }
 
-        // 通用路径
+        // 通用路径：带溢出检测
         boolean negative = false;
         int i = start;
         int end = start + len;
@@ -445,10 +466,17 @@ public final class NumberUtils {
         }
 
         long result = 0;
+        long limit = Long.MAX_VALUE / 10;
         while (i < end) {
             char c = chars[i];
             if (c < '0' || c > '9') break;
-            result = result * 10 + (c - '0');
+            int digit = c - '0';
+            if (result > limit || (result == limit && digit > Long.MAX_VALUE % 10)) {
+                if (!(negative && i == end - 1 && result == limit && digit == (Long.MAX_VALUE % 10) + 1)) {
+                    throw new NumberFormatException("Long overflow at offset " + start);
+                }
+            }
+            result = result * 10 + digit;
             i++;
         }
 

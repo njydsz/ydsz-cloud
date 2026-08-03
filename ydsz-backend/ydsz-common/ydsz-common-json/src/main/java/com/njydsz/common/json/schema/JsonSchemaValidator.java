@@ -211,7 +211,7 @@ public final class JsonSchemaValidator {
         if (schema.getPattern() != null && !schema.getPattern().isEmpty()) {
             String patternStr = schema.getPattern();
             Pattern pattern = PATTERN_CACHE.computeIfAbsent(patternStr, Pattern::compile);
-            if (!pattern.matcher(str).matches()) {
+            if (!pattern.matcher(str).find()) {
                 result.addError(path + ": String does not match pattern '" + patternStr + "'");
             }
         }
@@ -366,7 +366,10 @@ public final class JsonSchemaValidator {
             case "number":
                 return data instanceof Number;
             case "integer":
-                return data instanceof Integer || data instanceof Long;
+                return data instanceof Integer || data instanceof Long
+                    || data instanceof Short || data instanceof Byte
+                    || data instanceof java.math.BigInteger
+                    || data instanceof java.util.concurrent.atomic.AtomicInteger;
             case "boolean":
                 return data instanceof Boolean;
             case "array":

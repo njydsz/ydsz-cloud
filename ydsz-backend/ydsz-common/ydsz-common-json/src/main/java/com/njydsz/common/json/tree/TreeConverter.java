@@ -59,7 +59,13 @@ public final class TreeConverter {
         if (value instanceof Map<?, ?> mapValue) {
             Map<String, JsonNode> fields = new LinkedHashMap<>();
             for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
-                fields.put((String) entry.getKey(), convertToJsonNode(entry.getValue()));
+                String key;
+                if (entry.getKey() instanceof String) {
+                    key = (String) entry.getKey();
+                } else {
+                    key = String.valueOf(entry.getKey());
+                }
+                fields.put(key, convertToJsonNode(entry.getValue()));
             }
             return new ObjectNode(fields);
         }

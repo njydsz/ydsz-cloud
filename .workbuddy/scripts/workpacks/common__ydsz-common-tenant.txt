@@ -1,6 +1,0 @@
-# 工作包: common__ydsz-common-tenant   待办文件 1 个
-# 格式: [标记] 缺失数 | 文件路径 | 缺注释的成员
-#   类头/文件头 = 该文件缺少类级或文件级文档注释
-
-[--]  2 | ydsz-backend\ydsz-common\ydsz-common-tenant\src\main\java\com\njydsz\common\tenant\config\TenantAutoConfiguration.java
-        成员: tenantDataSourceRouter, tenantDataSourceFilterRegistration

@@ -107,14 +107,16 @@ public abstract class JsonNode {
             if (part.isEmpty()) {
                 continue;
             }
+            // 反转 JSON Pointer 转义（~1 → /，~0 → ~），对齐 RFC 6901
+            String unescaped = part.replace("~1", "/").replace("~0", "~");
             if (current.isArray()) {
                 try {
-                    current = current.get(Integer.parseInt(part));
+                    current = current.get(Integer.parseInt(unescaped));
                 } catch (NumberFormatException e) {
                     return MissingNode.getInstance();
                 }
             } else {
-                current = current.get(part);
+                current = current.get(unescaped);
             }
             if (current.isMissing()) {
                 return current;

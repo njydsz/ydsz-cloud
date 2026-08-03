@@ -100,7 +100,31 @@ public final class NumberNode extends JsonNode {
         if (!(obj instanceof NumberNode)) {
             return false;
         }
-        return value.equals(((NumberNode) obj).value);
+        NumberNode other = (NumberNode) obj;
+        // 处理 null value 的情况
+        if (value == null) {
+            return other.value == null;
+        }
+        if (other.value == null) {
+            return false;
+        }
+        // 数值归一比较：整数值按 long 比较，浮点数按 double 比较，
+        // 避免 Integer(1).equals(Long(1L)) = false 这类问题
+        if (isIntegral(value) && isIntegral(other.value)) {
+            return value.longValue() == other.value.longValue();
+        }
+        return Double.compare(value.doubleValue(), other.value.doubleValue()) == 0;
+    }
+
+    /**
+     * 判断 Number 是否为整数类型（含 BigInteger）。
+     */
+    private static boolean isIntegral(Number n) {
+        return n instanceof Integer || n instanceof Long
+            || n instanceof Short || n instanceof Byte
+            || n instanceof java.math.BigInteger
+            || n instanceof java.util.concurrent.atomic.AtomicInteger
+            || n instanceof java.util.concurrent.atomic.AtomicLong;
     }
 
     @Override

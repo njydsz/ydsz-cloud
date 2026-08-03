@@ -179,13 +179,8 @@ public class JsonPath {
             Map<?, ?> map = (Map<?, ?>) current;
             Object value = map.get(segment.property);
             
-            // 尝试驼峰和下划线转换
-            if (value == null) {
-                value = map.get(toCamelCase(segment.property));
-            }
-            if (value == null) {
-                value = map.get(toSnakeCase(segment.property));
-            }
+            // 精确字段名匹配（不做隐式驼峰/下划线回退，避免安全策略绕过）
+            // 如需兼容命名风格差异，请在查询时使用精确字段名
             
             if (value != null) {
                 evaluate(value, segmentIndex + 1, results);
@@ -345,12 +340,6 @@ public class JsonPath {
         if (obj instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) obj;
             Object value = map.get(property);
-            if (value == null) {
-                value = map.get(toCamelCase(property));
-            }
-            if (value == null) {
-                value = map.get(toSnakeCase(property));
-            }
             return value;
         }
         return null;
