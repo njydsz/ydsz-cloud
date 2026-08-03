@@ -44,7 +44,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
     const plugins = await loadApplicationPlugins({
       archiver: env.VITE_ARCHIVER === 'true',
       archiverPluginOptions: {},
-      compress: false,
+      compress: true,
       compressTypes: ['brotli', 'gzip'],
       devtools: true,
       env,

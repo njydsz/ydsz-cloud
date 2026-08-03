@@ -417,6 +417,17 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
             return this;
         }
 
+        /**
+         * 构建领域事件实例。
+         *
+         * <p>组装 Builder 已设置的字段并自动填充缺失项：eventId 缺省时生成 UUID，
+         * occurredAt 缺省时取当前时钟时间；tenantId/userId/traceId 未显式设置时
+         * 从 {@link RequestContext} 自动填充。构建完成后事件不可变（metadata 为不可变 Map）。
+         *
+         * @return 组装完成的领域事件
+         * @throws IllegalArgumentException 当 eventType 为 null 或空字符串时抛出，
+         *                                 事件类型是跨模块契约的必需字段
+         */
         public DomainEvent build() {
             if (eventType == null || eventType.isEmpty()) {
                 throw new IllegalArgumentException("eventType must not be null or empty");

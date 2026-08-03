@@ -121,6 +121,12 @@ public class WebSocketProperties {
     /** 慢连接检测配置 */
     private SlowConnection slowConnection = new SlowConnection();
 
+    /**
+     * 心跳保活配置。
+     *
+     * <p>定义服务端与客户端的心跳发送间隔，以及判定僵尸会话的超时阈值；
+     * 超时未续期的 Session 将被心跳处理器主动清理。
+     */
     @Data
     public static class Heartbeat {
         /** 服务端心跳间隔（毫秒） */
@@ -131,6 +137,12 @@ public class WebSocketProperties {
         private long staleSessionTimeout = 60000L;
     }
 
+    /**
+     * 集群广播配置。
+     *
+     * <p>多实例部署时通过 Redis Pub/Sub 将推送消息广播到其他实例，
+     * 实现跨节点消息可达；未启用时退化为仅本地推送。
+     */
     @Data
     public static class Cluster {
         /** 是否启用集群广播（Redis Pub/Sub） */
@@ -139,6 +151,12 @@ public class WebSocketProperties {
         private String channel = "ydsz:ws:cluster:push";
     }
 
+    /**
+     * 离线消息补偿配置。
+     *
+     * <p>接收方离线期间缓存待投递消息，上线后拉取补投；缓存超出上限时
+     * 溢出到数据库持久化，防止 Redis 内存被离线消息打满。
+     */
     @Data
     public static class Offline {
         /** 是否启用离线消息补偿 */
@@ -151,6 +169,12 @@ public class WebSocketProperties {
         private int dbPersistThreshold = 50;
     }
 
+    /**
+     * 速率限制配置。
+     *
+     * <p>按用户/IP 维度限制消息发送频率，防止单客户端刷屏或恶意压测
+     * 打爆服务端；超限消息被直接拒绝。
+     */
     @Data
     public static class RateLimit {
         /** 是否启用速率限制 */
@@ -161,6 +185,12 @@ public class WebSocketProperties {
         private int maxPerIpPerMinute = 300;
     }
 
+    /**
+     * 熔断降级配置。
+     *
+     * <p>基于滑动窗口内失败率统计，超过阈值后熔断对外部依赖（如 Redis）的调用，
+     * 熔断期满后进入半开状态试探恢复，保护推送链路在主链路故障时不被拖垮。
+     */
     @Data
     public static class CircuitBreaker {
         /** 失败率阈值（0-1），超过则熔断 */
@@ -171,6 +201,12 @@ public class WebSocketProperties {
         private Duration halfOpenAfter = Duration.ofSeconds(30);
     }
 
+    /**
+     * 消息重试配置。
+     *
+     * <p>未确认或发送失败的消息按延迟策略重新投递，达到最大重试次数后
+     * 转入死信队列，避免无限重试占用队列资源。
+     */
     @Data
     public static class Retry {
         /** 是否启用消息重试 */
@@ -183,6 +219,12 @@ public class WebSocketProperties {
         private boolean deadLetterEnabled = true;
     }
 
+    /**
+     * ACK 确认配置。
+     *
+     * <p>客户端收到消息后回执 ACK，服务端在超时时间内未收到回执的
+     * 消息将被视为未送达，进而触发重试或转入离线存储。
+     */
     @Data
     public static class Ack {
         /** 是否启用 ACK 确认 */
@@ -191,6 +233,12 @@ public class WebSocketProperties {
         private Duration timeout = Duration.ofSeconds(30);
     }
 
+    /**
+     * 连接数限制配置。
+     *
+     * <p>在握手阶段对全局与单用户连接数设限，防止连接数超载导致
+     * 线程/内存资源耗尽（OOM 或雪崩）。
+     */
     @Data
     public static class ConnectionLimit {
         /** 全局最大连接数 */
@@ -199,6 +247,12 @@ public class WebSocketProperties {
         private int maxPerUserConnections = 5;
     }
 
+    /**
+     * 消息压缩配置。
+     *
+     * <p>超过最小大小阈值的推送消息先压缩再发送，降低带宽与 Redis 存储开销；
+     * 对极小消息压缩收益有限，默认关闭以避免 CPU 浪费。
+     */
     @Data
     public static class Compression {
         /** 是否启用消息压缩 */
@@ -207,6 +261,12 @@ public class WebSocketProperties {
         private int minSize = 1024;
     }
 
+    /**
+     * 慢连接检测配置。
+     *
+     * <p>检测处理耗时超过阈值的连接并告警/干预，识别异常客户端
+     * 或网络抖动导致的慢消费，防止其拖慢整体推送吞吐。
+     */
     @Data
     public static class SlowConnection {
         /** 是否启用慢连接检测 */

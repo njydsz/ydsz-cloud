@@ -27,8 +27,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WebSocketCircuitBreaker {
 
+    /**
+     * 熔断器状态。
+     *
+     * <p>状态流转为 CLOSED → OPEN → HALF_OPEN → CLOSED/OPEN：
+     * CLOSED 表示放行全部请求；OPEN 表示熔断、直接走降级；HALF_OPEN 表示
+     * 熔断期满后仅放行单个探测请求验证恢复情况。
+     */
     public enum State {
-        CLOSED, OPEN, HALF_OPEN
+        /** 关闭状态：正常放行，统计失败率 */
+        CLOSED,
+        /** 开启状态：熔断中，所有请求直接降级 */
+        OPEN,
+        /** 半开状态：放行单个探测请求验证恢复 */
+        HALF_OPEN
     }
 
     private final String name;
@@ -154,6 +166,14 @@ public class WebSocketCircuitBreaker {
         }
     }
 
+    /**
+     * 获取当前熔断器状态。
+     *
+     * <p>由 {@link AtomicReference} 无锁读取，供监控面板、健康检查或日志
+     * 展示熔断情况；结果是最新一次状态快照，非实时强一致。
+     *
+     * @return 当前状态（{@link State#CLOSED}/{@link State#OPEN}/{@link State#HALF_OPEN}）
+     */
     public State getState() {
         return state.get();
     }

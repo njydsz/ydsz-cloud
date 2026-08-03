@@ -17,7 +17,7 @@ import { createApp } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 import { registerAccessDirective } from '@ydsz/access';
-import { registerLoadingDirective } from '@ydsz/common-ui';
+import { registerLoadingDirective, registerSafeHtmlDirective } from '@ydsz/common-ui';
 import { setupMonitor } from '@ydsz/monitor';
 import { initPreferences } from '@ydsz/preferences';
 import { initStores } from '@ydsz/stores';
@@ -78,6 +78,7 @@ async function installBasePlugins(vueApp: VueApp, appName: string) {
     spinning: 'spinning',
   });
   registerAccessDirective(vueApp);
+  registerSafeHtmlDirective(vueApp);
 
   const { initTippy } = await import('@ydsz/common-ui/es/tippy');
   initTippy(vueApp);

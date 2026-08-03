@@ -173,7 +173,7 @@ const moduleColorMap: Record<string, string> = {
           <div
             v-if="item.snippet"
             class="mt-1 text-sm text-gray-500 line-clamp-2"
-            v-html="item.highlight || item.snippet"
+            v-safe-html="item.highlight || item.snippet"
           />
         </div>
       </div>

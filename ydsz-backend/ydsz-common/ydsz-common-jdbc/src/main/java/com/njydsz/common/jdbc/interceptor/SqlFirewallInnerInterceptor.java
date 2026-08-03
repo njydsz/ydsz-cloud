@@ -274,6 +274,16 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
         return allowTables;
     }
 
+    /**
+     * 设置允许执行危险操作的表名白名单。
+     *
+     * <p>配置来源为 {@code ydsz.jdbc.sql-firewall.allow-tables}。入参为
+     * {@code null} 时视为无白名单（任何 DROP/TRUNCATE 均被拦截）；非空时会对
+     * 表名做 trim 并统一转小写存储，与 SQL 检测时的小写化匹配逻辑保持一致，
+     * 避免因大小写差异导致白名单失效。
+     *
+     * @param allowTables 允许的表名集合；传 {@code null} 等价于空白名单
+     */
     public void setAllowTables(Set<String> allowTables) {
         if (allowTables == null) {
             this.allowTables = Collections.emptySet();

@@ -13,6 +13,7 @@ import { createApp, watchEffect } from 'vue';
 
 import { registerAccessDirective } from '@ydsz/access';
 import { registerLoadingDirective } from '@ydsz/common-ui/es/loading';
+import { registerSafeHtmlDirective } from '@ydsz/common-ui/es/safe-html';
 import { preferences } from '@ydsz/preferences';
 import { initStores } from '@ydsz/stores';
 import '@ydsz/styles';
@@ -111,6 +112,9 @@ async function bootstrap(namespace: string) {
   initRouterGuard();
 
   registerAccessDirective(app);
+
+  // v-safe-html — XSS 防护指令
+  registerSafeHtmlDirective(app);
 
   const { initTippy } = await import('@ydsz/common-ui/es/tippy');
   initTippy(app);

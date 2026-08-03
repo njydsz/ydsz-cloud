@@ -103,6 +103,12 @@ public class ProjectProperties {
      */
     private NotifyConfig notify = new NotifyConfig();
 
+    /**
+     * 项目缓存配置子属性。
+     *
+     * <p>对应 {@code ydsz.project.cache.*} 前缀，控制项目定义的本地缓存
+     * 过期时间与容量上限，防止缓存膨胀挤占内存。
+     */
     @Data
     public static class CacheConfig {
         /**
@@ -120,6 +126,12 @@ public class ProjectProperties {
         private Integer maxSize = 1000;
     }
 
+    /**
+     * 项目通知配置子属性。
+     *
+     * <p>对应 {@code ydsz.project.notify.*} 前缀，控制项目生命周期关键节点
+     * （立项创建、阶段变更、关闭、门审提醒）是否触发通知及提前提醒时长。
+     */
     @Data
     public static class NotifyConfig {
         /**

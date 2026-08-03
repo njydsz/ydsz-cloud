@@ -52,10 +52,9 @@ withDefaults(defineProps<Props>(), {
               <p class="text-foreground text-sm font-semibold leading-6">
                 {{ item.title }}
               </p>
-              <!-- eslint-disable vue/no-v-html -->
               <p
                 class="text-foreground/80 *:text-primary mt-1 truncate text-xs leading-5"
-                v-html="item.content"
+                v-safe-html="item.content"
               ></p>
             </div>
           </div>

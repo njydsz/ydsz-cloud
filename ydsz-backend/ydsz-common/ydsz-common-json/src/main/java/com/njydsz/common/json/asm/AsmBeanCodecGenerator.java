@@ -1072,9 +1072,7 @@ public final class AsmBeanCodecGenerator {
         mv.visitInsn(LCONST_0);
         mv.visitInsn(LCMP);
         mv.visitJumpInsn(IFEQ, loopEnd);
-        
-        Label nextField = new Label();
-        
+
         for (Field field : fields) {
             String setterName = getSetterName(field);
             Method setter = findSetter(beanType, setterName, field.getType());
@@ -1082,8 +1080,9 @@ public final class AsmBeanCodecGenerator {
 
             String fieldName = field.getName();
             int typeCode = getTypeCode(field.getType());
-            
+
             Label fieldMatched = new Label();
+            Label nextField = new Label();
             
             long fieldHash = JSONReader.fnv1aHash(fieldName);
             mv.visitVarInsn(LLOAD, 3);

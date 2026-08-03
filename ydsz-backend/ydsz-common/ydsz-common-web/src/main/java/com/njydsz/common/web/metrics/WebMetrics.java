@@ -124,18 +124,50 @@ public class WebMetrics {
         getCounter(METRIC_SECURITY_HEADER).increment();
     }
 
+    /**
+     * 获取认证请求累计总数。
+     *
+     * <p>与指标 {@code web.auth.total} 的 success/failure 分桶不同，该值为
+     * 进程内 {@link AtomicLong} 的无锁计数快照，供监控/日志展示或测试断言使用。
+     *
+     * @return 认证请求累计总数（含成功与失败）
+     */
     public long getTotalAuthRequests() {
         return totalAuthRequests.get();
     }
 
+    /**
+     * 获取认证失败累计总数。
+     *
+     * <p>统计认证失败次数，供错误率计算与告警阈值判定使用；
+     * 仅反映当前进程实例的计数，多实例场景需按实例聚合。
+     *
+     * @return 认证失败累计总数
+     */
     public long getTotalAuthFailures() {
         return totalAuthFailures.get();
     }
 
+    /**
+     * 获取被限流拒绝的请求累计总数。
+     *
+     * <p>统计 {@code @RateLimit} 拦截或网关限流拒绝的次数，用于评估
+     * 限流策略的触发频率与误伤情况。
+     *
+     * @return 被限流拒绝的累计总数
+     */
     public long getTotalRateLimitRejected() {
         return totalRateLimitRejected.get();
     }
 
+    /**
+     * 获取安全响应头注入累计总数。
+     *
+     * <p>统计安全过滤器成功写入防护头（如 X-Content-Type-Options、
+     * X-Frame-Options）的次数，用于衡量安全头覆盖率。
+     *
+     * @return 安全响应头注入累计总数
+     */
     public long getTotalSecurityHeadersInjected() {
         return totalSecurityHeadersInjected.get();
     }
