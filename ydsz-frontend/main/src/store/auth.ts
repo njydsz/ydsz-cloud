@@ -12,7 +12,7 @@ import { useRouter } from 'vue-router';
 
 import { LOGIN_PATH } from '@ydsz/constants';
 import { preferences } from '@ydsz/preferences';
-import { resetAllStores, useAccessStore, useUserStore } from '@ydsz/stores';
+import { resetAllStores, useAccessStore, useTokenStore, useUserStore } from '@ydsz/stores';
 
 import { ElNotification } from 'element-plus';
 import { defineStore } from 'pinia';
@@ -22,6 +22,7 @@ import { $t } from '#/locales';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
+  const tokenStore = useTokenStore();
   const userStore = useUserStore();
   const router = useRouter();
 
@@ -47,10 +48,10 @@ export const useAuthStore = defineStore('auth', () => {
       const { accessToken, refreshToken, userInfo: loginUserInfo } = loginResult;
 
       if (accessToken) {
-        accessStore.setAccessToken(accessToken);
+        tokenStore.setAccessToken(accessToken);
         // 存储 refreshToken 用于后续刷新
         if (refreshToken) {
-          (accessStore as any).refreshToken = refreshToken;
+          tokenStore.setRefreshToken(refreshToken);
         }
 
         // 如果登录接口已返回用户信息，直接使用；否则调接口获取
@@ -70,8 +71,8 @@ export const useAuthStore = defineStore('auth', () => {
           accessStore.setAccessCodes([]);
         }
 
-        if (authStore.loginExpired) {
-          authStore.setLoginExpired(false);
+        if (tokenStore.loginExpired) {
+          tokenStore.setLoginExpired(false);
         } else {
           onSuccess
             ? await onSuccess?.()
@@ -111,7 +112,7 @@ export const useAuthStore = defineStore('auth', () => {
       // 不做任何处理
     }
     resetAllStores();
-    accessStore.setLoginExpired(false);
+    tokenStore.setLoginExpired(false);
 
     await router.replace({
       path: LOGIN_PATH,

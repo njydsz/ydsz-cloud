@@ -26,7 +26,7 @@ const options: RequestClientOptions = {
  * 访问令牌失效时的重新认证回调。
  *
  * shared-auth 判定 accessToken / refreshToken 失效或过期时触发：清空本地令牌，
- * 若配置为弹窗模式且已完成首次访问校验则弹出登录过期提示，否则直接登出，避免停留在无效会话。
+ * 若配置为弹窗模式且已完成首次访问校验则弹出登录过期提示，否则直接登出。
  */
 async function doReAuthenticate() {
   console.warn('Access token or refresh token is invalid or expired. ');
@@ -39,26 +39,27 @@ async function doReAuthenticate() {
   ) {
     tokenStore.setLoginExpired(true);
   } else {
-    await tokenStore.logout();
+    const authStore = useAuthStore();
+    await authStore.logout();
   }
 }
 
 /**
  * 刷新访问令牌回调。
  *
- * 使用本地 refreshToken 调用后端刷新接口，成功则更新 accessToken；
+ * 使用 useTokenStore 的 refreshToken 调用后端刷新接口，成功则更新 accessToken；
  * 无 refreshToken 时返回 null，交由 shared-auth 触发 {@link doReAuthenticate}。
  */
 async function doRefreshToken() {
-  const authStore = useAuthStore();
-  const refreshToken = authStore.refreshToken;
+  const tokenStore = useTokenStore();
+  const refreshToken = tokenStore.refreshToken;
   if (!refreshToken) {
     return null;
   }
   const resp = await refreshTokenApi(refreshToken);
   const newToken = resp.data?.accessToken || resp.data as unknown as string;
   if (typeof newToken === 'string') {
-    authStore.setAccessToken(newToken);
+    tokenStore.setAccessToken(newToken);
   }
   return newToken;
 }
