@@ -9,6 +9,7 @@ import { initPreferences } from '@ydsz/preferences';
 import { unmountGlobalLoading } from '@ydsz/utils';
 
 import { overridesPreferences } from './preferences';
+import { registerServiceWorker } from './service-worker';
 
 /**
  * 应用初始化完成之后再进行页面加载渲染
@@ -33,6 +34,11 @@ async function initApplication() {
 
   // 移除并销毁loading
   unmountGlobalLoading();
+
+  // 注册 Service Worker（仅生产环境）
+  if (import.meta.env.PROD) {
+    registerServiceWorker();
+  }
 }
 
 initApplication();

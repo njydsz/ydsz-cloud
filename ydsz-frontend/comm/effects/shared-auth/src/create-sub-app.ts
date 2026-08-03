@@ -126,6 +126,8 @@ async function coreMount(
 
   app.use(router);
 
+  await initStores(app, { namespace });
+
   if (onSetup) {
     await onSetup(app);
   }

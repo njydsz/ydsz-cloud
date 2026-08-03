@@ -57,6 +57,8 @@ export function useMenuScroll(
         block: 'center',
         inline: 'center',
       });
+      // 无障碍优化：滚动后聚焦到活动菜单项
+      (activeElement as HTMLElement).focus();
     }
   }
 

@@ -55,6 +55,10 @@ export function createSharedAuthStore() {
           if (refreshToken) {
             tokenStore.setRefreshToken(refreshToken);
           }
+          // 记录绝对过期时间戳，供会话超时预警使用（expiresIn 单位：秒）
+          if (typeof loginResult.expiresIn === 'number' && loginResult.expiresIn > 0) {
+            tokenStore.setExpiresAt(Date.now() + loginResult.expiresIn * 1000);
+          }
 
           if (loginUserInfo) {
             userInfo = loginUserInfo as unknown as UserInfo;

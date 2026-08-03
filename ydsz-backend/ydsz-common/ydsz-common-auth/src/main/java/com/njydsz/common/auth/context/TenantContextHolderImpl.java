@@ -1,6 +1,6 @@
 package com.njydsz.common.auth.context;
 
-import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.tenant.spi.TenantContextHolder;
 
 /**
  * 租户上下文持有者实现

@@ -19,6 +19,7 @@ import { defineStore } from 'pinia';
 
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
+import { notifyCrossTab, CROSS_TAB_EVENTS } from '#/hooks/use-cross-tab-sync';
 
 /**
  * 认证状态管理 Store。
@@ -59,6 +60,10 @@ export const useAuthStore = defineStore('auth', () => {
         // 存储 refreshToken 用于后续刷新
         if (refreshToken) {
           tokenStore.setRefreshToken(refreshToken);
+        }
+        // 记录绝对过期时间戳，供会话超时预警使用（expiresIn 单位：秒）
+        if (typeof loginResult.expiresIn === 'number' && loginResult.expiresIn > 0) {
+          tokenStore.setExpiresAt(Date.now() + loginResult.expiresIn * 1000);
         }
 
         // 如果登录接口已返回用户信息，直接使用；否则调接口获取
@@ -109,6 +114,7 @@ export const useAuthStore = defineStore('auth', () => {
    * 退出登录。
    *
    * 调用登出接口（失败不阻断），重置所有状态仓库并跳转登录页。
+   * 同时广播跨标签页事件，其它标签页收到后会同步登出（不再广播，避免回环）。
    *
    * @param redirect - 是否携带当前路径作为 redirect 参数跳转登录页
    */
@@ -120,6 +126,9 @@ export const useAuthStore = defineStore('auth', () => {
     }
     resetAllStores();
     tokenStore.setLoginExpired(false);
+
+    // F6: 跨标签页广播登出事件（notifyCrossTab 内部有防回环保护）
+    notifyCrossTab(CROSS_TAB_EVENTS.LOGOUT, { redirect });
 
     await router.replace({
       path: LOGIN_PATH,

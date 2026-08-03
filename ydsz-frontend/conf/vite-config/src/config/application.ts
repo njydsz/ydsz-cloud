@@ -108,6 +108,9 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
             entryFileNames: 'jse/index-[name]-[hash].js',
           },
         },
+        // v3.1: VITE_MONITOR_SOURCEMAP=true 时生成 hidden sourcemap（不引用到 HTML），
+        // 供 upload-sourcemaps 脚本上传到后端做 stack trace 符号化，上传后从产物删除。
+        sourcemap: env.VITE_MONITOR_SOURCEMAP === 'true' ? 'hidden' : false,
         chunkSizeWarningLimit: 1000,
         target: 'es2022',
       },

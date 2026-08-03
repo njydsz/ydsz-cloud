@@ -23,7 +23,7 @@ interface FallbackProps {
   /**
    *  @zh_CN 内置类型
    */
-  status?: '403' | '404' | '500' | 'coming-soon' | 'offline';
+  status?: '403' | '404' | '500' | 'coming-soon' | 'offline' | 'empty';
   /**
    *  @zh_CN 页面提示语
    */

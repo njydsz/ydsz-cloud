@@ -111,5 +111,58 @@ describe('sandbox', () => {
       // 全局 API 应正确还原（两次 exit 幂等）
       expect(typeof window.setTimeout).toBe('function');
     });
+
+    it('v3.1: 退出内层沙箱不应过早 restoreGlobals', () => {
+      const originalSetTimeout = window.setTimeout;
+      const s1 = enterSandbox();
+      const s2 = enterSandbox();
+
+      // 退出内层 s2 — 外层 s1 仍激活，全局 API 应仍为代理
+      exitSandbox(s2);
+
+      expect(window.setTimeout).not.toBe(originalSetTimeout);
+
+      // 退出外层 s1 — 此时才应还原
+      exitSandbox(s1);
+
+      expect(window.setTimeout).toBe(originalSetTimeout);
+    });
+
+    it('v3.1: 嵌套期间副作用记录到当前激活沙箱', () => {
+      const s1 = enterSandbox();
+      // s1 激活期间注册监听
+      const handler1 = () => {};
+      window.addEventListener('resize', handler1);
+      expect(s1.listeners.length).toBe(1);
+
+      const s2 = enterSandbox();
+      // s2 激活期间注册监听 — 应记录到 s2
+      const handler2 = () => {};
+      window.addEventListener('scroll', handler2);
+      expect(s2.listeners.length).toBe(1);
+      expect(s2.listeners[0].type).toBe('scroll');
+      // s1 的监听不应增加
+      expect(s1.listeners.length).toBe(1);
+
+      exitSandbox(s2);
+      exitSandbox(s1);
+    });
+
+    it('v3.1: 非栈顶退出后仍能正确清理', () => {
+      const s1 = enterSandbox();
+      const s2 = enterSandbox();
+      const s3 = enterSandbox();
+
+      // 非栈顶退出 s2
+      exitSandbox(s2);
+
+      // s3 仍是栈顶，副作用仍记录
+      const handler = () => {};
+      window.addEventListener('resize', handler);
+      expect(s3.listeners.length).toBe(1);
+
+      exitSandbox(s3);
+      exitSandbox(s1);
+    });
   });
 });

@@ -12,6 +12,7 @@ export {
   setupErrorMonitoring,
   reportError,
 } from './error-monitor';
+export type { ErrorType, ErrorReport, MonitorConfig } from './error-monitor';
 
 export {
   setupWebVitals,

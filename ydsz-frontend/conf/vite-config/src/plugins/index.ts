@@ -176,15 +176,100 @@ async function loadApplicationPlugins(
       condition: pwa,
       plugins: () =>
         VitePWA({
+          // 手动注册 Service Worker，避免自动注入
           injectRegister: false,
+          // 开发模式下禁用，避免干扰 HMR
+          disable: !isBuild,
           workbox: {
-            globPatterns: [],
+            // 缓存静态资源（JS/CSS/图片/字体）
+            globPatterns: ['**/*.{js,css,html,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,eot,webp,wasm}'],
+            // 忽略较大的文件（> 2MB）
+            maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
+            // 运行时缓存策略
+            runtimeCaching: [
+              {
+                // API 请求使用 NetworkFirst 策略
+                urlPattern: /^https?:\/\/.*\/api\//,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'api-cache',
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 5 * 60, // 5分钟
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200],
+                  },
+                },
+              },
+              {
+                // 图片资源使用 CacheFirst 策略
+                urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'image-cache',
+                  expiration: {
+                    maxEntries: 100,
+                    maxAgeSeconds: 30 * 24 * 60 * 60, // 30天
+                  },
+                },
+              },
+              {
+                // 字体资源使用 CacheFirst 策略
+                urlPattern: /\.(?:woff|woff2|ttf|eot)$/,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'font-cache',
+                  expiration: {
+                    maxEntries: 30,
+                    maxAgeSeconds: 365 * 24 * 60 * 60, // 1年
+                  },
+                },
+              },
+              {
+                // 第三方库使用 StaleWhileRevalidate 策略
+                urlPattern: /^https?:\/\/(?:cdn|unpkg|esm\.sh|jspm\.io)/,
+                handler: 'StaleWhileRevalidate',
+                options: {
+                  cacheName: 'third-party-cache',
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 7 * 24 * 60 * 60, // 7天
+                  },
+                },
+              },
+            ],
+            // 离线回退页面
+            navigateFallback: '/index.html',
+            navigateFallbackDenylist: [/^\/api/, /\/__\w+__/],
           },
           ...pwaOptions,
           manifest: {
+            name: 'YDSZ PMIS',
+            short_name: 'YDSZ',
+            description: 'YDSZ 项目管理系统',
             display: 'standalone',
             start_url: '/',
-            theme_color: '#ffffff',
+            theme_color: '#409eff',
+            background_color: '#ffffff',
+            icons: [
+              {
+                src: '/pwa-192x192.png',
+                sizes: '192x192',
+                type: 'image/png',
+              },
+              {
+                src: '/pwa-512x512.png',
+                sizes: '512x512',
+                type: 'image/png',
+              },
+              {
+                src: '/pwa-512x512.png',
+                sizes: '512x512',
+                type: 'image/png',
+                purpose: 'maskable',
+              },
+            ],
             ...pwaOptions?.manifest,
           },
         }),

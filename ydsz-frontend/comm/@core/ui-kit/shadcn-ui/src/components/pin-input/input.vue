@@ -102,14 +102,16 @@ const id = useId();
     otp
     placeholder="○"
     type="number"
+    aria-label="验证码输入"
     @complete="handleComplete"
   >
     <div class="relative flex w-full">
-      <PinInputGroup class="mr-2">
+      <PinInputGroup class="mr-2" aria-label="验证码数字输入框">
         <PinInputInput
           v-for="(item, index) in codeLength"
           :key="item"
           :index="index"
+          :aria-label="`第 ${index + 1} 位验证码`"
         />
       </PinInputGroup>
       <YDSZButton
@@ -118,6 +120,7 @@ const id = useId();
         class="flex-grow"
         size="lg"
         variant="outline"
+        :aria-label="btnLoading ? '正在发送验证码' : '发送验证码'"
         @click="handleSend"
       >
         {{ btnText }}

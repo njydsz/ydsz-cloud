@@ -8,7 +8,7 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.njydsz.common.core.constant.FilterIgnoreConstant;
+import com.njydsz.common.web.config.FilterIgnoreConstant;
 
 /**
  * {@link FilterIgnoreProperties} 单元测试

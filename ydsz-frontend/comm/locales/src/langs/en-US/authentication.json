@@ -53,6 +53,11 @@
   "thirdPartyLogin": "Or continue with",
   "loginAgainTitle": "Please Log In Again",
   "loginAgainSubTitle": "Your login session has expired. Please log in again to continue.",
+  "sessionExpiryTitle": "Session Expiring Soon",
+  "sessionExpiringSoon": "Your session will expire in 5 minutes. Renew now to avoid interruption?",
+  "renew": "Renew now",
+  "renewFailed": "Renewal failed. Please log in again.",
+  "renewSuccess": "Session renewed",
   "layout": {
     "center": "Align Center",
     "alignLeft": "Align Left",

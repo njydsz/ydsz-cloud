@@ -1,65 +1,171 @@
 <!--
  * micro-kernel 微前端子应用挂载容器组件 — 作为子应用的 DOM 挂载点
  *
- * 监听内核生命周期（beforeLoad / afterMount）控制骨架屏切换，
- * 避免子应用切换时出现白屏。
+ * v3.2: 直接订阅 microRuntime 生命周期钩子（替代 window 事件），
+ *       细化加载阶段（loading/mounting/mounted/error/unmounting），
+ *       通过 unsubscribe 在组件卸载时彻底清理，避免泄漏。
  *
  * @path main\src\views\_core\subapp\index.vue
  * @author ydsz-team
  * @since 1.0.0
 -->
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import type { MicroAppConfig } from '@ydsz/micro-runtime';
+
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
+
+import { microRuntime } from '#/bootstrap';
 
 defineOptions({
   name: 'SubAppContainer',
 });
 
-const route = useRoute();
-const isLoading = ref(false);
+/**
+ * 子应用加载阶段 — 由内核生命周期钩子驱动。
+ *
+ * 注：内核 beforeLoad 在 loadApp + mount 之前触发，afterMount 在两者均完成后触发，
+ * 因此本组件无法细分 "ESM 加载完" 与 "mount() 完成"，合并为 loading 阶段。
+ */
+type LoadingPhase = 'error' | 'idle' | 'loading' | 'mounted' | 'unmounting';
 
-/** 从当前路由 path 提取子应用标识 */
-function getAppPathPrefix() {
-  return route.path.split('/').slice(0, 2).join('/') || '/';
+/** 当前阶段 */
+const phase = ref<LoadingPhase>('idle');
+/** 正在加载/激活的子应用名（来自 hook 入参，避免猜测路由） */
+const activeAppName = ref<null | string>(null);
+/** 进度百分比（按阶段映射，非随机模拟） */
+const progress = ref(0);
+/** 阶段对应的提示文案 */
+const phaseText = ref('');
+/** 最近一次错误信息（用于错误态展示） */
+const lastError = ref<null | string>(null);
+
+const state = reactive({ phase, activeAppName, progress, phaseText, lastError });
+
+/** 阶段 → (百分比, 文案) 映射表，保证进度反映真实生命周期而非随机数 */
+const PHASE_META: Record<LoadingPhase, readonly [number, string]> = {
+  idle: [0, ''],
+  loading: [30, '正在加载模块...'],
+  mounted: [100, '加载完成'],
+  unmounting: [50, '正在切换应用...'],
+  error: [0, '加载失败'],
+};
+
+function setPhase(next: LoadingPhase, appName: null | string = activeAppName.value): void {
+  const [pct, text] = PHASE_META[next];
+  state.phase = next;
+  state.progress = pct;
+  state.phaseText = text;
+  if (appName !== undefined) state.activeAppName = appName;
+  if (next !== 'error') state.lastError = null;
 }
 
+/** 取消订阅函数集合，组件卸载时统一调用 */
+const unsubscribers: Array<() => void> = [];
+
 onMounted(() => {
-  const container = document.getElementById('subapp-container');
-  if (!container) return;
+  if (!microRuntime) {
+    // 内核尚未初始化（理论上 bootstrap 已同步注册，防御性处理）
+    console.warn('[SubAppContainer] microRuntime not ready');
+    return;
+  }
 
-  // 监听内核生命周期
-  const observer = new MutationObserver(() => {
-    // 当子应用容器有内容时，隐藏 loading
-    if (container.childElementCount > 0) {
-      isLoading.value = false;
-    }
-  });
+  // beforeLoad: 子应用开始加载 ESM 模块
+  unsubscribers.push(
+    microRuntime.addLifecycleHook('beforeLoad', (app: MicroAppConfig) => {
+      setPhase('loading', app.name);
+    }),
+  );
 
-  observer.observe(container, { childList: true, subtree: false });
+  // afterMount: 子应用 mount() 完成，DOM 已挂载
+  unsubscribers.push(
+    microRuntime.addLifecycleHook('afterMount', (app: MicroAppConfig) => {
+      setPhase('mounted', app.name);
+      // 100% 后短暂保持，再切回 idle 以便复用
+      window.setTimeout(() => {
+        if (state.phase === 'mounted') setPhase('idle');
+      }, 300);
+    }),
+  );
 
-  // 监听路由变化，内核切换子应用前触发 loading
-  const unsubscribe = route.afterEach?.(() => {
-    isLoading.value = true;
-  });
+  // afterUnmount: 子应用卸载完成（切换中的过渡态）
+  unsubscribers.push(
+    microRuntime.addLifecycleHook('afterUnmount', (app: MicroAppConfig) => {
+      // 若当前激活应用仍是被卸载的应用，进入 unmounting 过渡
+      if (state.activeAppName === app.name) {
+        setPhase('unmounting', null);
+      }
+    }),
+  );
 
-  onUnmounted(() => {
-    observer.disconnect();
-    if (typeof unsubscribe === 'function') unsubscribe();
-  });
+  // error: 加载或挂载失败
+  unsubscribers.push(
+    microRuntime.addLifecycleHook('error', (app: MicroAppConfig, err: unknown) => {
+      state.lastError = err instanceof Error ? err.message : String(err);
+      setPhase('error', app.name);
+    }),
+  );
+
+  // 兜底：若初始路由已命中子应用但 beforeLoad 触发晚于组件挂载，
+  // 通过当前激活应用名回填一次状态
+  const active = microRuntime.getActiveAppName();
+  if (active && state.phase === 'idle') {
+    setPhase('mounted', active);
+  }
 });
+
+onUnmounted(() => {
+  for (const off of unsubscribers.splice(0)) {
+    try {
+      off();
+    } catch {
+      /* 静默 */
+    }
+  }
+});
+
+/** 是否展示骨架屏（loading/unmounting） */
+function showSkeleton(): boolean {
+  return ['loading', 'unmounting'].includes(state.phase);
+}
+
+/** 是否展示错误态（错误由内核 error-boundary 渲染容器内 fallback，此处仅作背景遮罩） */
+function showErrorMask(): boolean {
+  return state.phase === 'error';
+}
 </script>
 
 <template>
   <div class="subapp-wrapper">
     <!-- 子应用挂载容器 -->
-    <div id="subapp-container" class="subapp-container" :class="{ 'is-loading': isLoading }">
+    <div
+      id="subapp-container"
+      class="subapp-container"
+      :class="{ 'is-loading': showSkeleton(), 'has-error': showErrorMask() }"
+    >
       <!-- 骨架屏（子应用加载中展示） -->
-      <div v-if="isLoading" class="subapp-loading">
-        <div class="loading-spinner">
-          <div class="spinner-ring"></div>
+      <div v-if="showSkeleton()" class="subapp-skeleton">
+        <div class="skeleton-header">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-title"></div>
         </div>
-        <p class="loading-text">正在加载 {{ getAppPathPrefix() }} 模块...</p>
+        <div class="skeleton-content">
+          <div class="skeleton-paragraph"></div>
+          <div class="skeleton-paragraph short"></div>
+          <div class="skeleton-paragraph"></div>
+        </div>
+        <div class="skeleton-progress">
+          <div class="progress-bar" :style="{ width: `${state.progress}%` }"></div>
+        </div>
+        <p class="loading-text">
+          {{ state.phaseText }}<span v-if="state.activeAppName"> · {{ state.activeAppName }}</span>
+        </p>
+      </div>
+
+      <!-- 错误态遮罩（实际错误 UI 由内核 error-boundary 渲染） -->
+      <div v-else-if="showErrorMask()" class="subapp-error-mask" aria-live="polite">
+        <p class="error-app">{{ state.activeAppName }}</p>
+        <p class="error-msg">{{ state.lastError || '加载失败' }}</p>
+        <p class="error-hint">已降级为整页访问，请稍后重试</p>
       </div>
     </div>
   </div>
@@ -84,37 +190,139 @@ onMounted(() => {
   justify-content: center;
 }
 
-.subapp-loading {
+.subapp-container.has-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 骨架屏样式 */
+.subapp-skeleton {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
+  padding: 40px;
+  gap: 24px;
+}
+
+.skeleton-header {
+  display: flex;
+  align-items: center;
   gap: 16px;
+  width: 100%;
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-title {
+  flex: 1;
+  height: 20px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  animation-delay: 0.1s;
+}
+
+.skeleton-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.skeleton-paragraph {
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-paragraph.short {
+  width: 60%;
+}
+
+.skeleton-paragraph:nth-child(1) {
+  animation-delay: 0.2s;
+}
+
+.skeleton-paragraph:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.skeleton-paragraph:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.skeleton-progress {
+  width: 100%;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--el-color-primary-light-5, #409eff) 0%, var(--el-color-primary, #409eff) 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
 .loading-text {
-  color: var(--el-text-color-secondary);
+  color: var(--el-text-color-secondary, #909399);
   font-size: 14px;
+  margin: 0;
+  text-align: center;
+}
+
+/* 错误态遮罩样式 */
+.subapp-error-mask {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px;
+  color: var(--el-text-color-secondary, #909399);
+  text-align: center;
+}
+
+.error-app {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--el-text-color-primary, #303133);
   margin: 0;
 }
 
-.loading-spinner {
-  position: relative;
-  width: 40px;
-  height: 40px;
+.error-msg {
+  font-size: 14px;
+  margin: 0;
+  word-break: break-all;
 }
 
-.spinner-ring {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--el-border-color-lighter);
-  border-top-color: var(--el-color-primary);
-  border-radius: 50%;
-  animation: subapp-spin 0.8s linear infinite;
+.error-hint {
+  font-size: 12px;
+  color: var(--el-text-color-placeholder, #a8abb2);
+  margin: 0;
 }
 
-@keyframes subapp-spin {
-  to {
-    transform: rotate(360deg);
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
 </style>

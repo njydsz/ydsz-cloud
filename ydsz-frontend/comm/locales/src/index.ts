@@ -10,6 +10,9 @@ import {
   loadLocaleMessages,
   loadLocalesMap,
   loadLocalesMapFromDir,
+  loadNamespaceMessages,
+  loadNamespacedLocalesMap,
+  preloadLocaleOnIdle,
   setupI18n,
 } from './i18n';
 
@@ -32,11 +35,17 @@ export {
   loadLocaleMessages,
   loadLocalesMap,
   loadLocalesMapFromDir,
+  loadNamespaceMessages,
+  loadNamespacedLocalesMap,
+  preloadLocaleOnIdle,
   setupI18n,
 };
 export {
   type ImportLocaleFn,
+  type ImportNamespaceFn,
   type LocaleSetupOptions,
+  type NamespacedLocalesMap,
+  type PreloadLocaleOptions,
   type SupportedLanguagesType,
 } from './typing';
 export type { CompileError } from '@intlify/core-base';

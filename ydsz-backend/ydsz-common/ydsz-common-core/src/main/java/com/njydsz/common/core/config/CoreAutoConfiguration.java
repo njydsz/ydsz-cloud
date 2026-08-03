@@ -11,8 +11,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.context.TenantMdcFilter;
-import com.njydsz.common.core.health.CoreHealthIndicator;
+import com.njydsz.common.web.filter.TenantMdcFilter;
+import com.njydsz.common.base.health.CoreHealthIndicator;
 import com.njydsz.common.core.response.BaseResponse;
 
 import jakarta.servlet.Filter;

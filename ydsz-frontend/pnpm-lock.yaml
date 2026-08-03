@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@axe-core/playwright':
+      specifier: ^4.10.0
+      version: 4.12.1
     '@changesets/changelog-github':
       specifier: ^0.5.1
       version: 0.5.2
@@ -496,6 +499,9 @@ importers:
 
   .:
     devDependencies:
+      '@axe-core/playwright':
+        specifier: 'catalog:'
+        version: 4.12.1(playwright-core@1.62.1)
       '@changesets/changelog-github':
         specifier: 'catalog:'
         version: 0.5.2
@@ -1410,6 +1416,15 @@ importers:
         specifier: 'catalog:'
         version: 1.15.9
 
+  comm/@core/feature-flags:
+    dependencies:
+      '@ydsz-core/shared':
+        specifier: workspace:*
+        version: link:../base/shared
+      vue:
+        specifier: ^3.5.17
+        version: 3.5.40(typescript@5.9.3)
+
   comm/@core/preferences:
     dependencies:
       '@vueuse/core':
@@ -1618,7 +1633,7 @@ importers:
         version: 13.9.0(vue@3.5.40(typescript@5.9.3))
       '@vueuse/integrations':
         specifier: 'catalog:'
-        version: 13.9.0(async-validator@4.2.5)(axios@1.19.0)(nprogress@0.2.0)(qrcode@1.5.4)(sortablejs@1.15.7)(vue@3.5.40(typescript@5.9.3))
+        version: 13.9.0(async-validator@4.2.5)(axios@1.19.0)(change-case@5.4.4)(nprogress@0.2.0)(qrcode@1.5.4)(sortablejs@1.15.7)(vue@3.5.40(typescript@5.9.3))
       '@ydsz-core/form-ui':
         specifier: workspace:*
         version: link:../../@core/ui-kit/form-ui
@@ -1670,6 +1685,9 @@ importers:
       vue-tippy:
         specifier: 'catalog:'
         version: 6.7.1(vue@3.5.40(typescript@5.9.3))
+      watermark-js-plus:
+        specifier: 'catalog:'
+        version: 1.6.6
     devDependencies:
       '@types/qrcode':
         specifier: 'catalog:'
@@ -2017,7 +2035,7 @@ importers:
     dependencies:
       '@commitlint/cli':
         specifier: 'catalog:'
-        version: 19.8.1(@types/node@22.20.1)(typescript@5.9.3)
+        version: 19.8.1(@types/node@26.1.2)(typescript@5.9.3)
       '@commitlint/config-conventional':
         specifier: 'catalog:'
         version: 19.8.1
@@ -2340,6 +2358,9 @@ importers:
       '@vueuse/core':
         specifier: 'catalog:'
         version: 13.9.0(vue@3.5.40(typescript@5.9.3))
+      '@ydsz-core/feature-flags':
+        specifier: workspace:*
+        version: link:../comm/@core/feature-flags
       '@ydsz/access':
         specifier: workspace:*
         version: link:../comm/effects/access
@@ -2483,6 +2504,11 @@ packages:
   '@ast-grep/napi@0.37.0':
     resolution: {integrity: sha512-Hb4o6h1Pf6yRUAX07DR4JVY7dmQw+RVQMW5/m55GoiAT/VRoKCWBtIUPPOnqDVhbx1Cjfil9b6EDrgJsUAujEQ==}
     engines: {node: '>= 10'}
+
+  '@axe-core/playwright@4.12.1':
+    resolution: {integrity: sha512-rMd7xriptqKpP+w5265i4Hdkv2X5kbu6uiBi/B2I7uf3hieRBM3qDCfaKPtxfiYb2mKXfF+yLODJwIx+Jv1GDw==}
+    peerDependencies:
+      playwright-core: '>= 1.0.0'
 
   '@babel/code-frame@7.29.7':
     resolution: {integrity: sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==}
@@ -5397,6 +5423,10 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
+  axe-core@4.12.1:
+    resolution: {integrity: sha512-s7iGf5GaVMxEG0ENN9x+xTr7GFZCb1ZP/1uATUpCEK2X78nDB3RwbtFCo9pGAf9ru+VwoQ464DkaLEeRM08wJA==}
+    engines: {node: '>=4'}
+
   axios-mock-adapter@2.1.0:
     resolution: {integrity: sha512-AZUe4OjECGCNNssH8SOdtneiQELsqTsat3SQQCWLPjN436/H+L9AjWfV7bF+Zg/YL9cgbhrz5671hoh+Tbn98w==}
     peerDependencies:
@@ -5621,6 +5651,9 @@ packages:
   chalk@5.6.2:
     resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+
+  change-case@5.4.4:
+    resolution: {integrity: sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w==}
 
   chardet@2.2.0:
     resolution: {integrity: sha512-rddelWYNPRrXq6PtNEN2S3f6t9ILzvqaN5pVgi4kqt9jHQaXIial9PznB5iSPVlQSLNaaH22ItWz3EJtQ10+OA==}
@@ -10567,6 +10600,11 @@ snapshots:
       '@ast-grep/napi-win32-ia32-msvc': 0.37.0
       '@ast-grep/napi-win32-x64-msvc': 0.37.0
 
+  '@axe-core/playwright@4.12.1(playwright-core@1.62.1)':
+    dependencies:
+      axe-core: 4.12.1
+      playwright-core: 1.62.1
+
   '@babel/code-frame@7.29.7':
     dependencies:
       '@babel/helper-validator-identifier': 7.29.7
@@ -11466,11 +11504,11 @@ snapshots:
 
   '@colordx/core@5.5.0': {}
 
-  '@commitlint/cli@19.8.1(@types/node@22.20.1)(typescript@5.9.3)':
+  '@commitlint/cli@19.8.1(@types/node@26.1.2)(typescript@5.9.3)':
     dependencies:
       '@commitlint/format': 19.8.1
       '@commitlint/lint': 19.8.1
-      '@commitlint/load': 19.8.1(@types/node@22.20.1)(typescript@5.9.3)
+      '@commitlint/load': 19.8.1(@types/node@26.1.2)(typescript@5.9.3)
       '@commitlint/read': 19.8.1
       '@commitlint/types': 19.8.1
       tinyexec: 1.3.0
@@ -11517,7 +11555,7 @@ snapshots:
       '@commitlint/rules': 19.8.1
       '@commitlint/types': 19.8.1
 
-  '@commitlint/load@19.8.1(@types/node@22.20.1)(typescript@5.9.3)':
+  '@commitlint/load@19.8.1(@types/node@26.1.2)(typescript@5.9.3)':
     dependencies:
       '@commitlint/config-validator': 19.8.1
       '@commitlint/execute-rule': 19.8.1
@@ -11525,7 +11563,7 @@ snapshots:
       '@commitlint/types': 19.8.1
       chalk: 5.6.2
       cosmiconfig: 9.0.2(typescript@5.9.3)
-      cosmiconfig-typescript-loader: 6.3.0(@types/node@22.20.1)(cosmiconfig@9.0.2(typescript@5.9.3))(typescript@5.9.3)
+      cosmiconfig-typescript-loader: 6.3.0(@types/node@26.1.2)(cosmiconfig@9.0.2(typescript@5.9.3))(typescript@5.9.3)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
@@ -13602,7 +13640,7 @@ snapshots:
       '@vueuse/shared': 14.3.0(vue@3.5.40(typescript@5.9.3))
       vue: 3.5.40(typescript@5.9.3)
 
-  '@vueuse/integrations@13.9.0(async-validator@4.2.5)(axios@1.19.0)(nprogress@0.2.0)(qrcode@1.5.4)(sortablejs@1.15.7)(vue@3.5.40(typescript@5.9.3))':
+  '@vueuse/integrations@13.9.0(async-validator@4.2.5)(axios@1.19.0)(change-case@5.4.4)(nprogress@0.2.0)(qrcode@1.5.4)(sortablejs@1.15.7)(vue@3.5.40(typescript@5.9.3))':
     dependencies:
       '@vueuse/core': 13.9.0(vue@3.5.40(typescript@5.9.3))
       '@vueuse/shared': 13.9.0(vue@3.5.40(typescript@5.9.3))
@@ -13610,6 +13648,7 @@ snapshots:
     optionalDependencies:
       async-validator: 4.2.5
       axios: 1.19.0
+      change-case: 5.4.4
       nprogress: 0.2.0
       qrcode: 1.5.4
       sortablejs: 1.15.7
@@ -13842,6 +13881,8 @@ snapshots:
   available-typed-arrays@1.0.7:
     dependencies:
       possible-typed-array-names: 1.1.0
+
+  axe-core@4.12.1: {}
 
   axios-mock-adapter@2.1.0(axios@1.19.0):
     dependencies:
@@ -14081,6 +14122,9 @@ snapshots:
       supports-color: 7.2.0
 
   chalk@5.6.2: {}
+
+  change-case@5.4.4:
+    optional: true
 
   chardet@2.2.0: {}
 
@@ -14332,9 +14376,9 @@ snapshots:
 
   core-util-is@1.0.3: {}
 
-  cosmiconfig-typescript-loader@6.3.0(@types/node@22.20.1)(cosmiconfig@9.0.2(typescript@5.9.3))(typescript@5.9.3):
+  cosmiconfig-typescript-loader@6.3.0(@types/node@26.1.2)(cosmiconfig@9.0.2(typescript@5.9.3))(typescript@5.9.3):
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 26.1.2
       cosmiconfig: 9.0.2(typescript@5.9.3)
       jiti: 2.6.1
       typescript: 5.9.3

@@ -7,6 +7,8 @@
  */
 import type { Linter } from 'eslint';
 
+import { enforceRouteLazyImportRule } from './rules/enforce-route-lazy-import';
+
 /** 对这些配置文件放宽导入限制（避免与构建期脚本冲突） */
 const restrictedImportIgnores = [
   '**/vite.config.mts',
@@ -213,6 +215,21 @@ const customConfig: Linter.Config[] = [
           message: '[沙箱] 禁止子应用中直接给 window 挂属性。如需跨应用通信请使用 globalState 或对应的 Pinia store。',
         },
       ],
+    },
+  },
+  // === P3: 路由级代码分割强制化 ===
+  {
+    files: ['**/router/**'],
+    ignores: restrictedImportIgnores,
+    plugins: {
+      ydsz: {
+        rules: {
+          'enforce-route-lazy-import': enforceRouteLazyImportRule,
+        },
+      },
+    },
+    rules: {
+      'ydsz/enforce-route-lazy-import': 'error',
     },
   },
 ];

@@ -1,6 +1,11 @@
 /**
  * 错误监控 — Vue + window + Promise + 资源加载错误捕获
  *
+ * v3.1 增强：
+ *   - 会话追踪：每个错误携带 sessionId / traceId / release，支持全链路关联
+ *   - 采样控制：sampleRate + beforeSend 钩子，防止高频错误打满上报队列
+ *   - sourcemap 关联：release 字段供后端匹配 sourcemap 符号化 stack trace
+ *
  * 对标 Sentry / 阿里 ARMS / 腾讯 APM 的前端错误采集能力。
  */
 
@@ -25,7 +30,25 @@ export interface ErrorReport {
   appVersion?: string;
   userId?: string;
   route?: string;
+  /** v3.1: 会话 ID，单次页面生命周期唯一 */
+  sessionId?: string;
+  /** v3.1: 错误追踪 ID，单条错误唯一，便于后端关联 */
+  traceId?: string;
+  /** v3.1: 发布版本（commit hash），用于 sourcemap 符号化 */
+  release?: string;
   extra?: Record<string, any>;
+}
+
+/** 监控配置选项 */
+export interface MonitorConfig {
+  /** 发布版本标识（commit hash / 版本号），用于 sourcemap 关联 */
+  release?: string;
+  /** 采样率 0~1，默认 1（全量上报） */
+  sampleRate?: number;
+  /** 上报前钩子，返回 false 丢弃该错误，返回修改后的 report 可脱敏 */
+  beforeSend?: (report: ErrorReport) => ErrorReport | null;
+  /** 动态获取用户 ID（如从 Pinia store） */
+  getUserId?: () => string | undefined;
 }
 
 /** 上报端点 */
@@ -43,10 +66,65 @@ const MAX_QUEUE_SIZE = 10;
 /** 上报间隔（ms） */
 const FLUSH_INTERVAL = 10_000;
 
+/** 单类型最大排队数（防止单一错误类型打满队列） */
+const MAX_PER_TYPE = 5;
+
+/** 当前监控配置 */
+let monitorConfig: MonitorConfig = {};
+
+/** 当前会话 ID（页面生命周期内唯一） */
+let sessionId = '';
+
+/** 生成唯一 traceId */
+function generateTraceId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/** 初始化会话 ID */
+function ensureSessionId(): string {
+  if (!sessionId) {
+    sessionId = generateTraceId();
+  }
+  return sessionId;
+}
+
+/**
+ * 为错误报告注入会话追踪字段
+ */
+function enrichReport(report: ErrorReport): ErrorReport {
+  return {
+    ...report,
+    sessionId: ensureSessionId(),
+    traceId: generateTraceId(),
+    release: monitorConfig.release,
+    userId: report.userId || monitorConfig.getUserId?.(),
+  };
+}
+
 /**
  * 添加错误到队列并触发批量上报
+ *
+ * v3.1: 应用采样率 + beforeSend 钩子 + 单类型限流
  */
-function enqueueError(report: ErrorReport) {
+function enqueueError(rawReport: ErrorReport) {
+  // 采样：在 enrich 之前按 sampleRate 采样，避免无效处理
+  const sampleRate = monitorConfig.sampleRate ?? 1;
+  if (sampleRate < 1 && Math.random() > sampleRate) {
+    return;
+  }
+
+  let report = enrichReport(rawReport);
+
+  // beforeSend 钩子：可丢弃或脱敏
+  if (monitorConfig.beforeSend) {
+    const result = monitorConfig.beforeSend(report);
+    if (!result) return;
+    report = result;
+  }
+
   // 避免重复上报同一错误（10秒内）
   const isDuplicate = errorQueue.some(
     (item) =>
@@ -55,6 +133,12 @@ function enqueueError(report: ErrorReport) {
       Date.now() - item.timestamp < 10_000,
   );
   if (isDuplicate) return;
+
+  // 单类型限流：同类型错误超过阈值时丢弃（防止单一错误源打满队列）
+  const sameTypeCount = errorQueue.filter((e) => e.type === report.type).length;
+  if (sameTypeCount >= MAX_PER_TYPE) {
+    return;
+  }
 
   errorQueue.push(report);
 
@@ -131,9 +215,13 @@ function getCurrentRoute(): string {
 /**
  * 安装错误监控
  *
- * 在 app.mount() 之前调用 setupErrorMonitoring(app)
+ * 在 app.mount() 之前调用 setupErrorMonitoring(app, config)
+ * v3.1: config 支持采样率、beforeSend、release 版本标识
  */
-export function setupErrorMonitoring(app: any) {
+export function setupErrorMonitoring(app: any, config: MonitorConfig = {}) {
+  monitorConfig = config;
+  ensureSessionId();
+
   // 1. Vue 组件错误
   app.config.errorHandler = (err: any, _instance: any, info: string) => {
     const report: ErrorReport = {
@@ -206,5 +294,8 @@ export function setupErrorMonitoring(app: any) {
   // 4. 页面卸载时强制上报
   window.addEventListener('beforeunload', flush);
 
-  console.info('[Monitor] Error monitoring installed');
+  console.info('[Monitor] Error monitoring installed', {
+    release: config.release,
+    sampleRate: config.sampleRate ?? 1,
+  });
 }

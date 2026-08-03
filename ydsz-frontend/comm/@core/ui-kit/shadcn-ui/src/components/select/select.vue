@@ -35,7 +35,7 @@ function handleClear() {
 </script>
 <template>
   <Select v-model="modelValue">
-    <SelectTrigger :class="props.class" class="flex w-full items-center">
+    <SelectTrigger :class="props.class" class="flex w-full items-center" aria-label="选择框">
       <SelectValue class="flex-auto text-left" :placeholder="placeholder" />
       <CircleX
         @pointerdown.stop
@@ -43,6 +43,9 @@ function handleClear() {
         v-if="allowClear && modelValue"
         data-clear-button
         class="mr-1 size-4 cursor-pointer opacity-50 hover:opacity-100"
+        aria-label="清除选择"
+        role="button"
+        tabindex="0"
       />
     </SelectTrigger>
     <SelectContent>

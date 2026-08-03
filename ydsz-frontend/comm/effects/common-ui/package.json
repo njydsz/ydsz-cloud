@@ -25,6 +25,10 @@
     "./es/loading": {
       "types": "./src/components/loading/index.ts",
       "default": "./src/components/loading/index.ts"
+    },
+    "./es/watermark": {
+      "types": "./src/components/watermark/index.ts",
+      "default": "./src/components/watermark/index.ts"
     }
   },
   "dependencies": {
@@ -46,7 +50,8 @@
     "vue": "catalog:",
     "vue-json-viewer": "catalog:",
     "vue-router": "catalog:",
-    "vue-tippy": "catalog:"
+    "vue-tippy": "catalog:",
+    "watermark-js-plus": "catalog:"
   },
   "devDependencies": {
     "@types/qrcode": "catalog:"

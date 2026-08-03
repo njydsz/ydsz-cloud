@@ -15,8 +15,9 @@ import { ref } from 'vue';
 
 import {
   $t,
-  setupI18n as coreSetup,
   loadLocalesMapFromDir,
+  preloadLocaleOnIdle,
+  setupI18n as coreSetup,
 } from '@ydsz/locales';
 import { preferences } from '@ydsz/preferences';
 
@@ -87,12 +88,18 @@ async function loadElementLocale(lang: SupportedLanguagesType) {
  * @param options - 额外的 i18n 配置项，会覆盖默认值（如默认语言、消息加载器）
  */
 async function setupI18n(app: App, options: LocaleSetupOptions = {}) {
+  const defaultLocale = options.defaultLocale ?? preferences.app.locale;
   await coreSetup(app, {
-    defaultLocale: preferences.app.locale,
+    defaultLocale,
     loadMessages,
     missingWarn: !import.meta.env.PROD,
     ...options,
   });
+
+  // F2: 首屏完成后空闲预加载另一语种，使切换近似瞬时
+  const alternateLocale: SupportedLanguagesType =
+    defaultLocale === 'zh-CN' ? 'en-US' : 'zh-CN';
+  preloadLocaleOnIdle(alternateLocale, localesMap);
 }
 
 export { $t, elementLocale, setupI18n };

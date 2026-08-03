@@ -1,7 +1,7 @@
 package com.njydsz.common.auth.config;
 
 import com.njydsz.common.auth.context.TenantContextHolderImpl;
-import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.tenant.spi.TenantContextHolder;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;

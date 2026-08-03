@@ -9,6 +9,7 @@ import { createApp, watchEffect } from 'vue';
 
 import { registerAccessDirective } from '@ydsz/access';
 import { registerLoadingDirective } from '@ydsz/common-ui';
+import { registerWatermarkDirective } from '@ydsz/common-ui/es/watermark';
 import { preferences } from '@ydsz/preferences';
 import { initStores } from '@ydsz/stores';
 import '@ydsz/styles';
@@ -49,6 +50,9 @@ async function bootstrap(namespace: string) {
     loading: false, // YDSZ提供的v-loading指令和Element Plus提供的v-loading指令二选一即可，此处false表示不注册YDSZ提供的v-loading指令
     spinning: 'spinning',
   });
+
+  // v-watermark — 敏感页面水印指令
+  registerWatermarkDirective(app);
 
   // 国际化 i18n 配置
   await setupI18n(app);

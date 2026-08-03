@@ -14,6 +14,7 @@ packages:
 
 catalog:
   '@ast-grep/napi': ^0.37.0
+  '@axe-core/playwright': ^4.10.0
   '@changesets/changelog-github': ^0.5.1
   '@changesets/cli': ^2.29.5
   '@changesets/git': ^3.0.4

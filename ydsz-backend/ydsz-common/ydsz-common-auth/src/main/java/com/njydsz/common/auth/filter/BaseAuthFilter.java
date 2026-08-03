@@ -15,7 +15,7 @@ import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.auth.security.RateLimiter;
-import com.njydsz.common.core.constant.FilterIgnoreConstant;
+import com.njydsz.common.web.config.FilterIgnoreConstant;
 import com.njydsz.common.util.auth.AuthInfo;
 import com.njydsz.common.util.auth.RequestHolder;
 import com.njydsz.common.util.url.UrlPathUtils;

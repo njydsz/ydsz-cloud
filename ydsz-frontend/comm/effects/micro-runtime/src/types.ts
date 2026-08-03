@@ -9,6 +9,9 @@
  * @since 3.0.0
  */
 
+/** 子应用激活规则类型 */
+export type ActiveRule = string | RegExp | ((path: string) => boolean);
+
 /** 子应用注册配置（对齐现有 main/src/qiankun/index.ts microApps） */
 export interface MicroAppConfig {
   /** 应用唯一标识（如 'project-web'） */
@@ -17,8 +20,13 @@ export interface MicroAppConfig {
   entry: string;
   /** 挂载容器选择器（如 '#subapp-container'） */
   container: string;
-  /** 激活规则（路由前缀，如 '/ydsz-proj'） */
-  activeRule: string;
+  /**
+   * 激活规则，支持三种模式：
+   * - string: 路由前缀匹配（如 '/ydsz-proj'）
+   * - RegExp: 正则表达式匹配（如 /^\/ydsz-proj\/.*\/detail$/）
+   * - function: 自定义匹配函数（如 (path) => path.includes('/special')）
+   */
+  activeRule: ActiveRule;
   /** 自定义 props（注入子应用 mount 参数） */
   props?: Record<string, unknown>;
 }
@@ -41,6 +49,12 @@ export interface LifecycleExports {
 
 /** 内核生命周期钩子 */
 export type LifecycleHook = (app: MicroAppConfig) => Promise<void> | void;
+
+/** 内核错误钩子（接收错误对象） */
+export type ErrorLifecycleHook = (app: MicroAppConfig, error: unknown) => Promise<void> | void;
+
+/** 内核支持的生命周期钩子名 */
+export type LifecycleHookName = 'afterMount' | 'afterUnmount' | 'beforeLoad' | 'error';
 
 /** 内核启动选项 */
 export interface StartOptions {
@@ -94,8 +108,27 @@ export interface MicroRuntime {
   /** 路由导航（由内核决定走主应用 router 还是整页跳转） */
   navigateTo(path: string): void;
 
-  /** 添加生命周期钩子 */
-  addLifecycleHook(hookName: 'beforeLoad' | 'afterMount' | 'afterUnmount', hook: LifecycleHook): void;
+  /**
+   * 手动预加载指定子应用的 ESM 资源（不执行 mount）。
+   *
+   * 用于 hover 预热等场景：用户悬停菜单链接时提前拉取模块与样式，
+   * 后续点击切换时仅差 mount 耗时。已加载的应用会通过浏览器缓存复用，
+   * 重复调用安全（幂等）。
+   *
+   * @returns Promise 在资源加载完成（或失败）时 resolve
+   */
+  prefetchApp(name: string): Promise<void>;
+
+  /**
+   * 添加生命周期钩子。
+   *
+   * 'error' 钩子签名额外接收错误对象，其它钩子只接收 app。
+   * 返回取消订阅函数，组件卸载时调用以避免内存泄漏。
+   */
+  addLifecycleHook(
+    hookName: LifecycleHookName,
+    hook: ErrorLifecycleHook | LifecycleHook,
+  ): () => void;
 
   /** 获取当前激活的应用名 */
   getActiveAppName(): null | string;

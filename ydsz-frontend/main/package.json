@@ -26,6 +26,7 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@ydsz-core/feature-flags": "workspace:*",
     "@ydsz/access": "workspace:*",
     "@ydsz/common-ui": "workspace:*",
     "@ydsz/constants": "workspace:*",

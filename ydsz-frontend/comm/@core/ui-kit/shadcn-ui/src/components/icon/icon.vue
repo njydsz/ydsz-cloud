@@ -35,8 +35,24 @@ const isComponent = computed(() => {
 </script>
 
 <template>
-  <component :is="icon as Component" v-if="isComponent" v-bind="$attrs" />
-  <img v-else-if="isRemoteIcon" :src="icon as string" v-bind="$attrs" />
-  <IconifyIcon v-else-if="icon" v-bind="$attrs" :icon="icon as string" />
-  <IconDefault v-else-if="fallback" v-bind="$attrs" />
+  <component
+    :is="icon as Component"
+    v-if="isComponent"
+    v-bind="$attrs"
+    aria-hidden="true"
+  />
+  <img
+    v-else-if="isRemoteIcon"
+    :src="icon as string"
+    v-bind="$attrs"
+    role="img"
+    aria-hidden="true"
+  />
+  <IconifyIcon
+    v-else-if="icon"
+    v-bind="$attrs"
+    :icon="icon as string"
+    aria-hidden="true"
+  />
+  <IconDefault v-else-if="fallback" v-bind="$attrs" aria-hidden="true" />
 </template>

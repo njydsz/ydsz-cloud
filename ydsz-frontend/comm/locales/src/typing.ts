@@ -18,6 +18,44 @@ export type SupportedLanguagesType = 'en-US' | 'zh-CN';
 export type ImportLocaleFn = () => Promise<{ default: Record<string, string> }>;
 
 /**
+ * 单个命名空间语言包的动态导入函数。
+ *
+ * @remarks
+ * F2 国际化按需加载改造：以命名空间（如 `common`/`authentication`/`page`）
+ * 为粒度拆分语言包，使路由可声明所需命名空间并按需加载，
+ * 避免切换语种时一次性拉取全部命名空间。
+ */
+export type ImportNamespaceFn = () => Promise<{ default: Record<string, unknown> }>;
+
+/**
+ * 命名空间粒度的语言包映射表：`locale → namespace → 加载函数`。
+ *
+ * @remarks
+ * 由 {@link loadNamespacedLocalesMap} 构建，配合 {@link loadNamespaceMessages}
+ * 实现路由级按需加载。
+ */
+export type NamespacedLocalesMap = Record<
+  SupportedLanguagesType,
+  Record<string, ImportNamespaceFn>
+>;
+
+/**
+ * 空闲预加载语言包的可选配置。
+ *
+ * @remarks
+ * 供 {@link preloadLocaleOnIdle} 使用；浏览器空闲时预拉取非默认语种词条，
+ * 使后续切换语种近似瞬时完成。
+ */
+export interface PreloadLocaleOptions {
+  /** requestIdleCallback 的 timeout 上限（毫秒），默认 4000 */
+  timeout?: number;
+  /** 预加载完成回调（无论是否命中缓存） */
+  onLoaded?: () => void;
+  /** 预加载失败回调 */
+  onError?: (err: unknown) => void;
+}
+
+/**
  * 加载**业务侧**语言包的钩子函数。
  *
  * @remarks

@@ -39,10 +39,14 @@ const isDisabled = computed(() => {
     :as-child="asChild"
     :class="cn(buttonVariants({ variant, size }), props.class)"
     :disabled="isDisabled"
+    :aria-disabled="isDisabled"
+    :aria-busy="loading"
+    role="button"
   >
     <LoaderCircle
       v-if="loading"
       class="text-md mr-2 size-4 flex-shrink-0 animate-spin"
+      aria-hidden="true"
     />
     <slot></slot>
   </Primitive>

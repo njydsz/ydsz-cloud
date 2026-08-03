@@ -15,14 +15,16 @@
  */
 
 import type {
+  ErrorLifecycleHook,
   LifecycleHook,
+  LifecycleHookName,
   MicroAppConfig,
   MicroRuntime,
   RawGlobalStateAPI,
   StartOptions,
 } from '@ydsz/micro-runtime';
 
-import { clearDegraded, isDegraded, markDegraded, renderErrorFallback } from './error-boundary';
+import { clearDegraded, isDegraded, markDegraded, renderErrorFallback, resetRetryCount } from './error-boundary';
 import {
   activateApp,
   createAppInstance,
@@ -31,7 +33,9 @@ import {
   getAppInstance,
   setKeepAlive,
 } from './scheduler';
-import { loadApp } from './loader';
+import { loadApp, type Manifest } from './loader';
+import { getVersionManager, type VersionManagerOptions } from './version-manager';
+import { getPreloadManager, type PreloadStrategyOptions } from './preload-strategy';
 
 /** 内核自定义路由变更事件名，供 history patch + popstate 统一触发 */
 const ROUTE_CHANGE_EVENT = 'micro-kernel:route-change';
@@ -73,21 +77,38 @@ const globalStateAPI: RawGlobalStateAPI = {
   },
 };
 
-const lifecycleHooks = new Map<string, LifecycleHook[]>();
+const lifecycleHooks = new Map<string, Array<LifecycleHook | ErrorLifecycleHook>>();
 
 function addLifecycleHook(
-  hookName: 'beforeLoad' | 'afterMount' | 'afterUnmount',
-  hook: LifecycleHook,
-): void {
+  hookName: LifecycleHookName,
+  hook: ErrorLifecycleHook | LifecycleHook,
+): () => void {
   if (!lifecycleHooks.has(hookName)) {
     lifecycleHooks.set(hookName, []);
   }
   lifecycleHooks.get(hookName)!.push(hook);
+
+  return () => {
+    const list = lifecycleHooks.get(hookName);
+    if (!list) return;
+    const idx = list.indexOf(hook);
+    if (idx >= 0) list.splice(idx, 1);
+  };
 }
 
-async function runHooks(hookName: string, app: MicroAppConfig): Promise<void> {
+async function runHooks(hookName: LifecycleHookName, app: MicroAppConfig): Promise<void> {
   for (const hook of lifecycleHooks.get(hookName) || []) {
-    await hook(app);
+    await (hook as LifecycleHook)(app);
+  }
+}
+
+async function runErrorHooks(app: MicroAppConfig, error: unknown): Promise<void> {
+  for (const hook of lifecycleHooks.get('error') || []) {
+    try {
+      await (hook as ErrorLifecycleHook)(app, error);
+    } catch {
+      /* 错误钩子内部的错误不应影响后续钩子 */
+    }
   }
 }
 
@@ -206,12 +227,16 @@ async function switchToApp(config: MicroAppConfig, options?: StartOptions): Prom
     _globalState: globalStateAPI,
   };
 
+  // 派发 before-load 事件，触发骨架屏显示
+  window.dispatchEvent(new CustomEvent('micro-kernel:before-load', { detail: { appName: config.name } }));
+
   await runHooks('beforeLoad', config);
   if (token !== switchToken) return;
 
   const container = document.querySelector(config.container);
   if (!container) {
     console.error(`[MicroKernel] Container "${config.container}" not found for ${config.name}`);
+    window.dispatchEvent(new CustomEvent('micro-kernel:error', { detail: { appName: config.name, error: 'Container not found' } }));
     return;
   }
 
@@ -220,14 +245,81 @@ async function switchToApp(config: MicroAppConfig, options?: StartOptions): Prom
     if (token !== switchToken) return;
     activeAppName = config.name;
     await runHooks('afterMount', config);
+    
+    // 派发 after-mount 事件，触发骨架屏隐藏
+    window.dispatchEvent(new CustomEvent('micro-kernel:after-mount', { detail: { appName: config.name } }));
   } catch (err) {
     console.error(`[MicroKernel] Failed to activate ${config.name}:`, err);
     markDegraded(config.name);
-    renderErrorFallback(config, config.container);
+    // v3.1: onRetry 回调使「重试」按钮重新激活子应用而非整页刷新
+    renderErrorFallback(config, config.container, () => switchToApp(config, options));
+
+    // 派发 error 事件，触发骨架屏隐藏
+    window.dispatchEvent(new CustomEvent('micro-kernel:error', { detail: { appName: config.name, error: String(err) } }));
+
+    // 触发 error 生命周期钩子（供 SubAppContainer 等订阅方使用）
+    await runErrorHooks(config, err);
+
     if (activeAppName === config.name) {
       activeAppName = null;
     }
   }
+}
+
+/**
+ * requestIdleCallback 的安全包装。
+ *
+ * `requestIdleCallback` 在部分环境不可用：
+ *   - Safari < 16.4、Firefox < 116、Node/happy-dom 测试环境。
+ *
+ * 不可用时回退到 `setTimeout(cb, 0)`，保证预加载逻辑在这些环境下仍能执行
+ * （仅放弃"空闲时段"调度语义，不影响功能正确性）。
+ */
+type IdleCallback = () => void;
+function scheduleIdle(cb: IdleCallback): void {
+  const ric = (globalThis as { requestIdleCallback?: (cb: IdleCallback) => void }).requestIdleCallback;
+  if (typeof ric === 'function') {
+    ric(cb);
+  } else {
+    setTimeout(cb, 0);
+  }
+}
+
+/**
+ * P2: 网络条件感知 — 判断是否应跳过预加载。
+ *
+ * 依据 Network Information API（navigator.connection）：
+ *   - effectiveType 为 slow-2g / 2g / 3g 视为慢速网络
+ *   - saveData 为 true 表示用户开启省流量模式
+ *
+ * 任一命中即跳过自动预加载，避免在弱网下抢占主请求带宽。
+ * 浏览器不支持 Network Information API 时返回 false（保持默认预加载行为）。
+ *
+ * 注意：仅用于自动预加载决策；用户主动触发的 prefetchApp（hover 预热）
+ * 不调用本函数，因为主动行为意味着用户即将访问，值得拉取。
+ */
+function shouldSkipPrefetchDueToNetwork(): boolean {
+  const nav = navigator as Navigator & {
+    connection?: {
+      effectiveType?: string;
+      saveData?: boolean;
+    };
+  };
+  const conn = nav.connection;
+  if (!conn) return false;
+
+  if (conn.saveData === true) return true;
+
+  const effectiveType = conn.effectiveType;
+  if (
+    effectiveType === 'slow-2g' ||
+    effectiveType === '2g' ||
+    effectiveType === '3g'
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -243,6 +335,8 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
   let apps: MicroAppConfig[] = [];
   let started = false;
   let routerSyncCleanup: (() => void) | null = null;
+  const versionManager = getVersionManager();
+  const preloadManager = getPreloadManager();
 
   return {
     registerApps(newApps) {
@@ -273,16 +367,60 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       // 二次激活时仅差 mount 耗时，且不会篡改 activeAppName
       if (typeof options?.prefetch === 'function') {
         const toPrefetch = apps.filter(options.prefetch);
-        requestIdleCallback(() => {
-          for (const app of toPrefetch) {
-            void loadApp(app).catch(() => {
-              // 预加载失败不阻塞，静默跳过
-            });
-          }
+        // P2: 网络条件感知 — 慢速网络（2g/3g）或省流量模式下跳过预加载
+        if (shouldSkipPrefetchDueToNetwork()) {
+          console.info('[MicroKernel] Prefetch skipped due to slow network or saveData');
+        } else {
+          scheduleIdle(() => {
+            // 二次校验：可能在 idle 等待期间网络已变差
+            if (shouldSkipPrefetchDueToNetwork()) return;
+            for (const app of toPrefetch) {
+              void loadApp(app).catch(() => {
+                // 预加载失败不阻塞，静默跳过
+              });
+            }
+          });
+        }
+      }
+
+      // === P2-10: 初始化预加载策略 ===
+      // 为每个应用注册默认的 idle 预加载策略
+      for (const app of apps) {
+        preloadManager.registerStrategy(app.name, {
+          strategy: 'idle',
+          idleTimeout: 2000,
+          onPreload: (appName: string) => {
+            const config = apps.find((a) => a.name === appName);
+            if (config) {
+              void loadApp(config).catch(() => {
+                // 预加载失败不阻塞
+              });
+            }
+          },
         });
       }
 
       console.info(`[MicroKernel] Started with ${apps.length} apps`);
+      window.dispatchEvent(new CustomEvent('micro-kernel:started'));
+    },
+
+    async prefetchApp(name) {
+      // 手动预加载：用于 hover 预热等场景。
+      // 不检查网络条件（用户主动悬停意味着即将访问，值得拉取）。
+      const config = apps.find((a) => a.name === name);
+      if (!config) {
+        console.warn(`[MicroKernel] prefetchApp: app "${name}" not registered`);
+        return;
+      }
+      try {
+        const result = await loadApp(config);
+        // P2-10: 预加载成功后检查版本更新
+        if (result.manifest) {
+          void versionManager.checkUpdate(name, result.manifest);
+        }
+      } catch {
+        // 静默 — 预加载失败不影响后续正常激活
+      }
     },
 
     async unmountApp(name) {
@@ -326,6 +464,13 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       activeAppName = null;
       switchToken = 0;
       clearDegraded();
+      // v3.1: 清理重试计数器
+      for (const inst of getAllInstances()) {
+        resetRetryCount(inst.config.name);
+      }
+      // 重置全局通信状态，避免 HMR/测试场景下上轮状态残留污染下一轮
+      _globalState = {};
+      _globalStateListeners.clear();
       started = false;
       console.info('[MicroKernel] Stopped');
     },

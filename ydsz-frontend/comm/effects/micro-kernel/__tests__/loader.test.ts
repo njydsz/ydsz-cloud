@@ -51,6 +51,16 @@ describe('loader', () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('404'));
       await expect(fetchManifest('/bad/')).rejects.toThrow('404');
     });
+
+    it('v3.1: 第二次请求相同 entry 应命中缓存（不重复 fetch）', async () => {
+      // 使用独立 entry 避免跨用例缓存污染
+      const cacheEntry = '/cache-test-app/';
+      await fetchManifest(cacheEntry);
+      await fetchManifest(cacheEntry);
+
+      // fetch 只应被调用一次（第二次命中 manifestCache）
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('removeStylesheets', () => {

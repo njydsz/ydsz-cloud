@@ -16,10 +16,24 @@ export default defineConfig({
   plugins: [Vue(), VueJsx()],
   test: {
     coverage: {
-      enabled: false,
-      exclude: ['**/e2e/**', '**/node_modules/**'],
+      enabled: true,
+      exclude: [
+        '**/e2e/**',
+        '**/node_modules/**',
+        '**/*.config.{js,ts,mjs,mts}',
+        '**/*.d.ts',
+        '**/dist/**',
+        '**/build/**',
+        '**/.{git,idea,vscode}/**',
+        '**/coverage/**',
+        '**/fixtures/**',
+        '**/__mocks__/**',
+        '**/types/**',
+        '**/mock/**',
+      ],
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov', 'clover'],
+      reportsDirectory: './coverage',
       thresholds: {
         branches: 60,
         functions: 60,
@@ -29,6 +43,9 @@ export default defineConfig({
     },
     environment: 'happy-dom',
     exclude: [...configDefaults.exclude, '**/e2e/**'],
-    reporters: ['default'],
+    reporters: ['default', 'json'],
+    outputFile: {
+      json: './test-results.json',
+    },
   },
 });

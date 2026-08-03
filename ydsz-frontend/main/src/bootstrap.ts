@@ -13,8 +13,9 @@ import { createApp, watchEffect } from 'vue';
 import { registerAccessDirective } from '@ydsz/access';
 import { registerLoadingDirective } from '@ydsz/common-ui/es/loading';
 import { registerSafeHtmlDirective } from '@ydsz/common-ui/es/safe-html';
+import { registerWatermarkDirective } from '@ydsz/common-ui/es/watermark';
 import { preferences } from '@ydsz/preferences';
-import { initStores } from '@ydsz/stores';
+import { initStores, useUserStore } from '@ydsz/stores';
 import '@ydsz/styles';
 import '@ydsz/styles/ele';
 
@@ -28,9 +29,15 @@ import { setupMonitor } from '@ydsz/monitor';
 import { initComponentAdapter } from './adapter/component';
 import { initSetupYDSZForm } from './adapter/form';
 import App from './app.vue';
+import {
+  featureFlagsOptions,
+  registerApplicationFlags,
+} from './feature-flags';
+import { useCrossTabSync } from './hooks/use-cross-tab-sync';
+import { useSessionExpiryWarning } from './hooks/use-session-expiry-warning';
 import { router, initRouterGuard } from './router';
 
-import { createKernel } from '@ydsz/micro-kernel';
+import { createKernel, getVersionManager } from '@ydsz/micro-kernel';
 import { createRuntime, registerKernel } from '@ydsz/micro-runtime';
 import { MICRO_APPS } from '@ydsz/vite-config';
 
@@ -51,7 +58,22 @@ function registerMicroRuntime() {
   microRuntime = createRuntime({ kernel: 'micro-kernel' });
   console.info('[MicroRuntime] Initialized with kernel: micro-kernel');
 
-  // 3. 从注册表注入子应用配置
+  // 3. 初始化版本管理器
+  const versionManager = getVersionManager({
+    checkInterval: 5 * 60 * 1000, // 5分钟检查一次
+    autoCheck: true,
+    onVersionCheck: (result) => {
+      if (result.hasUpdate) {
+        console.info(
+          `[VersionManager] App ${result.appName} updated: ${result.currentVersion} -> ${result.latestVersion}`,
+        );
+        // 可以在这里触发更新提示或自动刷新逻辑
+      }
+    },
+  });
+  console.info('[VersionManager] Initialized');
+
+  // 4. 从注册表注入子应用配置
   microRuntime.registerApps(
     MICRO_APPS.map((app) => ({
       name: app.name,
@@ -63,7 +85,7 @@ function registerMicroRuntime() {
     })),
   );
 
-  // 4. 生命周期钩子
+  // 5. 生命周期钩子
   microRuntime.addLifecycleHook('beforeLoad', (app) => {
     console.warn(`[MicroRuntime] 子应用 ${app.name} 开始加载...`);
   });
@@ -74,7 +96,7 @@ function registerMicroRuntime() {
     console.warn(`[MicroRuntime] 子应用 ${app.name} 卸载完成`);
   });
 
-  // 5. 启动：micro-kernel 内建 prefetch 预热高频应用
+  // 6. 启动：micro-kernel 内建 prefetch 预热高频应用
   microRuntime.start({
     prefetch: (app) => ['userinfo-web', 'project-web'].includes(app.name),
   });
@@ -86,6 +108,12 @@ function registerMicroRuntime() {
 async function bootstrap(namespace: string) {
   await initComponentAdapter();
   await initSetupYDSZForm();
+
+  // 功能开关：在 Pinia 之前注册定义，保证默认值尽早生效；
+  // init 不阻塞（远程加载在内部异步进行，失败降级到默认值）
+  registerApplicationFlags();
+  const { initFeatureFlags } = await import('@ydsz-core/feature-flags');
+  await initFeatureFlags(featureFlagsOptions());
 
   const app = createApp(App);
 
@@ -107,6 +135,9 @@ async function bootstrap(namespace: string) {
   // v-safe-html — XSS 防护指令
   registerSafeHtmlDirective(app);
 
+  // v-watermark — 敏感页面水印指令
+  registerWatermarkDirective(app);
+
   const { initTippy } = await import('@ydsz/common-ui/es/tippy');
   initTippy(app);
 
@@ -125,7 +156,19 @@ async function bootstrap(namespace: string) {
   });
 
   // 安装前端监控（错误捕获 + Web Vitals）
-  setupMonitor(app);
+  // v3.1: 注入 release 版本（sourcemap 关联）+ getUserId（全链路追踪）+ 生产采样
+  setupMonitor(app, {
+    getUserId: () => {
+      try {
+        return useUserStore().userInfo?.userId;
+      } catch {
+        return undefined;
+      }
+    },
+    release: import.meta.env.VITE_APP_RELEASE || import.meta.env.VITE_APP_VERSION,
+    // 生产环境高频错误采样 80%，开发环境全量
+    sampleRate: import.meta.env.PROD ? 0.8 : 1,
+  });
 
   app.mount('#app');
 
@@ -133,6 +176,13 @@ async function bootstrap(namespace: string) {
   // 直接同步注册微前端运行时，避免此前 readyState 延迟导致的初始路由
   // 匹配与子应用激活时序竞态（直连子应用 URL 时可能出现容器空白闪烁）。
   registerMicroRuntime();
+
+  // E2: 会话超时预警（必须在 initStores 之后、app 挂载之后调用，
+  // 此时 Pinia 与 effect scope 均已就绪，组件卸载时定时器自动清理）
+  useSessionExpiryWarning();
+
+  // F6: 跨标签页状态同步（登出/会话失效联动）
+  useCrossTabSync();
 }
 
 export { bootstrap };

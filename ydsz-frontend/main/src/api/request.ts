@@ -33,6 +33,8 @@ async function doReAuthenticate() {
   const accessStore = useAccessStore();
   const tokenStore = useTokenStore();
   tokenStore.setAccessToken(null);
+  // 同步清空过期时间戳，避免登出后仍触发会话超时预警
+  tokenStore.setExpiresAt(null);
   if (
     preferences.app.loginExpiredMode === 'modal' &&
     accessStore.isAccessChecked
@@ -60,6 +62,11 @@ async function doRefreshToken() {
   const newToken = resp.data?.accessToken || resp.data as unknown as string;
   if (typeof newToken === 'string') {
     tokenStore.setAccessToken(newToken);
+  }
+  // 续期后同步刷新绝对过期时间戳（供会话超时预警使用）
+  const expiresIn = (resp.data as { expiresIn?: number } | undefined)?.expiresIn;
+  if (typeof expiresIn === 'number' && expiresIn > 0) {
+    tokenStore.setExpiresAt(Date.now() + expiresIn * 1000);
   }
   return newToken;
 }

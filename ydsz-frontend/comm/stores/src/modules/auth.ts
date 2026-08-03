@@ -39,6 +39,15 @@ interface TokenState {
   isLockScreen: boolean;
   /** 锁屏密码哈希值 */
   lockScreenPassword?: string;
+  /**
+   * accessToken 绝对过期时间戳（ms）。
+   *
+   * 由 login / refreshToken 响应中的 expiresIn（秒）换算而来：
+   * `expiresAt = Date.now() + expiresIn * 1000`。
+   * 用于会话超时预警（到期前 5 分钟提示续期）。
+   * null 表示未知（后端未返回 expiresIn），不触发预警。
+   */
+  expiresAt: null | number;
 }
 
 /** 认证令牌 Store：负责 accessToken / refreshToken / 锁屏状态的存取与持久化，登录登出业务在 useAuthStore 中 */
@@ -52,6 +61,10 @@ export const useTokenStore = defineStore('core-auth', {
     },
     setLoginExpired(loginExpired: boolean) {
       this.loginExpired = loginExpired;
+    },
+    /** 设置 accessToken 绝对过期时间戳（ms），null 表示未知 */
+    setExpiresAt(expiresAt: null | number) {
+      this.expiresAt = expiresAt;
     },
     async lockScreen(password: string) {
       this.isLockScreen = true;
@@ -67,7 +80,7 @@ export const useTokenStore = defineStore('core-auth', {
     },
   },
   persist: {
-    pick: ['accessToken', 'refreshToken', 'isLockScreen', 'lockScreenPassword'],
+    pick: ['accessToken', 'refreshToken', 'isLockScreen', 'lockScreenPassword', 'expiresAt'],
   },
   state: (): TokenState => ({
     accessToken: null,
@@ -75,6 +88,7 @@ export const useTokenStore = defineStore('core-auth', {
     loginExpired: false,
     isLockScreen: false,
     lockScreenPassword: undefined,
+    expiresAt: null,
   }),
 });
 

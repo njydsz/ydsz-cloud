@@ -9,5 +9,7 @@
 export { createKernel } from './kernel';
 export { viteManifestPlugin } from './vite-plugin-manifest';
 export { enterSandbox, exitSandbox } from './sandbox';
+export { getVersionManager, resetVersionManager } from './version-manager';
 export type { ManifestPluginOptions } from './vite-plugin-manifest';
 export type { SandboxInstance } from './sandbox';
+export type { VersionUpdateResult, VersionManagerOptions } from './version-manager';

@@ -14,7 +14,24 @@ import ElementPlus from 'unplugin-element-plus/vite';
 
 export default defineConfig(async () => {
   return {
-    application: {},
+    application: {
+      // 启用 PWA 支持（Service Worker 离线缓存）
+      pwa: true,
+      pwaOptions: {
+        // 自定义 Workbox 配置（已在 vite-config 中配置默认值）
+        workbox: {
+          // 预缓存 HTML 入口
+          globPatterns: ['**/*.{html,js,css}'],
+        },
+        manifest: {
+          name: 'YDSZ PMIS',
+          short_name: 'YDSZ',
+          description: 'YDSZ 项目管理系统',
+          theme_color: '#409eff',
+          background_color: '#ffffff',
+        },
+      },
+    },
     vite: {
       server: {
         port: 5600,

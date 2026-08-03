@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YDSZ Frontend 优化建议报告</title>
+<title>YDSZ Frontend 优化建议报告（micro-kernel 现状版）</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -58,8 +58,9 @@
   .badge-p0 { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
   .badge-p1 { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(210,153,34,0.3); }
   .badge-p2 { background: var(--teal-bg); color: var(--teal); border: 1px solid rgba(57,208,216,0.3); }
-  .badge-good { background: var(--green-bg); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-good { background: var(--green-bg); color: var(--green); border: 1px solid rgba(63,185,80,0.1); }
   .badge-over { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(188,140,255,0.3); }
+  .badge-done { background: var(--green-bg); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
 
   table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
   th { text-align: left; padding: 10px 12px; background: var(--surface-hover); border: 1px solid var(--border); font-weight: 600; color: var(--text-secondary); font-size: 13px; }
@@ -78,6 +79,7 @@
   .item-p2 { border-left-color: var(--teal); }
   .item-good { border-left-color: var(--green); }
   .item-over { border-left-color: var(--purple); }
+  .item-done { border-left-color: var(--green); }
   .item-title { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .item-desc { color: var(--text-secondary); font-size: 14px; }
   .item-action { margin-top: 8px; padding: 8px 12px; background: var(--bg); border-radius: 4px; font-size: 13px; color: var(--green); }
@@ -112,46 +114,46 @@
 <body>
 <div class="container">
 
-<h1>YDSZ Frontend 全面优化建议报告</h1>
-<p class="subtitle">对标行业主流竞品与互联网大厂研发规范，基于 ydsz-frontend 最新代码的多维度分析</p>
+<h1>YDSZ Frontend 优化建议报告</h1>
+<p class="subtitle">对标行业主流竞品与互联网大厂研发规范，基于自研 micro-kernel 最新代码的多维度分析</p>
 <div class="meta">
-  <span>📊 分析模块：ydsz-frontend</span>
-  <span>🏗️ 技术栈：Qiankun + Vue 3 + Element Plus + Turbo Monorepo</span>
-  <span>📦 子应用数：9</span>
-  <span>📅 分析日期：2026-08-03</span>
+  <span>分析模块：ydsz-frontend</span>
+  <span>技术栈：自研 micro-kernel + Vue 3 + Element Plus + Turbo Monorepo</span>
+  <span>子应用数：9</span>
+  <span>分析日期：2026-08-03</span>
 </div>
 
 <div class="summary-box">
-  <strong>总体评价：</strong>该项目工程化成熟度在行业同类 PMIS 系统中属于<span class="highlight">上游水平</span>，monorepo 分层、微前端沙箱、RequestClient 封装、权限三态模型等设计对标了 vben/element-plus-admin 等头部开源方案。但在<span class="warn">质量门禁落地、测试覆盖、构建性能极致优化</span>方面仍有明显差距，部分配置存在过度设计。以下按优先级给出 <span class="danger">7 项 P0</span>、<span class="warn">11 项 P1</span>、<span class="info">8 项 P2</span> 建议。
+  <strong>总体评价：</strong>项目已完成从 Qiankun 到<span class="highlight">自研 ESM micro-kernel</span>的关键架构升级，具备路由同步、快照沙箱、keep-alive、错误降级、全局状态通信等完整能力，工程化框架在行业同类 PMIS 系统中处于上游水平。<strong>但子应用入口仍未复用已提供的 createSubApp 工厂，导致大量样板重复；micro-kernel 在路由匹配精度、沙箱运行时隔离、globalState 生命周期管理等方面仍有提升空间。</strong>以下按优先级给出 <span class="danger">6 项 P0</span>、<span class="warn">10 项 P1</span>、<span class="info">9 项 P2</span> 建议，并单列 <span class="highlight">5 项已落地修复</span>。
 </div>
 
 <div class="stat-row">
   <div class="stat"><div class="num">9</div><div class="lbl">微前端子应用</div></div>
-  <div class="stat"><div class="num">26</div><div class="lbl">优化建议总数</div></div>
-  <div class="stat"><div class="num">7</div><div class="lbl">P0 紧急项</div></div>
-  <div class="stat"><div class="num">11</div><div class="lbl">P1 重要项</div></div>
-  <div class="stat"><div class="num">8</div><div class="lbl">P2 增强项</div></div>
+  <div class="stat"><div class="num">30</div><div class="lbl">优化建议总数</div></div>
+  <div class="stat"><div class="num">6</div><div class="lbl">P0 紧急项</div></div>
+  <div class="stat"><div class="num">10</div><div class="lbl">P1 重要项</div></div>
+  <div class="stat"><div class="num">5</div><div class="lbl">已落地修复</div></div>
 </div>
 
 <div class="score-grid">
-  <div class="score-card"><div class="label">架构设计</div><div class="grade grade-a">A</div><div class="desc">分层清晰，微前端方案成熟</div></div>
-  <div class="score-card"><div class="label">代码质量</div><div class="grade grade-b">B+</div><div class="desc">Lint 完善，门禁未落地</div></div>
-  <div class="score-card"><div class="label">性能优化</div><div class="grade grade-b">B</div><div class="desc">基础完备，缺极致优化</div></div>
-  <div class="score-card"><div class="label">工程规范</div><div class="grade grade-c">C+</div><div class="desc">Git 钩子全注释，缺测试覆盖</div></div>
-  <div class="score-card"><div class="label">功能完备性</div><div class="grade grade-a">A-</div><div class="desc">功能丰富，文档化不足</div></div>
-  <div class="score-card"><div class="label">过度设计</div><div class="grade grade-b">B</div><div class="desc">部分插件配置冗余</div></div>
+  <div class="score-card"><div class="label">架构设计</div><div class="grade grade-a">A-</div><div class="desc">自研 micro-kernel 成熟，但入口未复用工厂</div></div>
+  <div class="score-card"><div class="label">代码质量</div><div class="grade grade-b">B+</div><div class="desc">Lint 完善，子应用样板重复严重</div></div>
+  <div class="score-card"><div class="label">性能优化</div><div class="grade grade-a">A-</div><div class="desc">console/brotli/target 已优化</div></div>
+  <div class="score-card"><div class="label">工程规范</div><div class="grade grade-b">B</div><div class="desc">lefthook/changesets 已配置，缺覆盖率门槛</div></div>
+  <div class="score-card"><div class="label">功能完备性</div><div class="grade grade-b">B+</div><div class="desc">OpenAPI SDK 未接入，监控链路不完整</div></div>
+  <div class="score-card"><div class="label">体验</div><div class="grade grade-c">C+</div><div class="desc">切换白屏、骨架屏、错误边界待补齐</div></div>
 </div>
 
 <div class="toc">
-  <div class="toc-title">📑 目录</div>
+  <div class="toc-title">目录</div>
   <ol>
-    <li><a href="#arch">架构优化</a></li>
-    <li><a href="#func">功能增强</a></li>
-    <li><a href="#perf">性能提升</a></li>
-    <li><a href="#exp">体验改善</a></li>
-    <li><a href="#over">过度设计精简</a></li>
-    <li><a href="#quality">工程质量补齐</a></li>
-    <li><a href="#roadmap">落地路线图</a></li>
+    <li><a href="#arch">一、架构优化</a></li>
+    <li><a href="#func">二、功能增强</a></li>
+    <li><a href="#perf">三、性能提升</a></li>
+    <li><a href="#exp">四、体验改善</a></li>
+    <li><a href="#quality">五、工程质量补齐</a></li>
+    <li><a href="#done">六、已落地/已修复项</a></li>
+    <li><a href="#roadmap">七、落地路线图</a></li>
   </ol>
 </div>
 
@@ -159,354 +161,322 @@
 <h2 id="arch">一、架构优化</h2>
 
 <div class="section">
-  <div class="section-title">📍 现状评估：架构设计已是项目最大亮点</div>
-  <p>四层分层（<code>@core</code> 零业务基础 → <code>effects</code> 业务无关能力 → <code>comm</code> 工具/状态/i18n → <code>apps</code> 微应用）依赖方向单向纯净。Qiankun 微前端采用 hover 按需预加载策略对标飞书方案，<code>shared-auth</code> 抽公共消除 9 个子应用约 360 行重复代码，<code>RequestClient</code> 封装拦截器管理 + retry + AbortController + 401 并发队列刷新，工程化程度高。</p>
-</div>
-
-<div class="item item-p1">
-  <div class="item-title">1.1 抽取子应用启动模板 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc">9 个子应用的 <code>main.ts</code> 中 <code>bootstrap/mount/unmount</code> 生命周期 + <code>setupApp/createAppRouter</code> 逻辑几乎一致，diff 仅注释和 basename 差异。虽然 <code>setupSharedAuth(appName)</code> 已收敛了 auth 部分，但启动样板仍有可观重复。</div>
-  <div class="item-action">在 <code>comm/effects/shared-business</code> 中新增 <code>createSubApp(options)</code> 工厂函数，封装 qiankun 生命周期 + 路由创建 + 全局组件注册 + 指令注册 + 错误兜底，子应用 <code>main.ts</code> 缩减到 10 行以内配置式调用。</div>
-</div>
-
-<div class="item item-p1">
-  <div class="item-title">1.2 路由守卫下沉到 shared 层 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc">main 与各子应用的 <code>setupCommonGuard</code>（nprogress + loadedPaths）和 <code>setupAuthGuard</code>（白名单 + token 检查 + redirect）逻辑高度重复，仅白名单路径不同。</div>
-  <div class="item-action">将守卫逻辑下沉到 <code>shared-auth</code>，通过参数注入白名单和 loginPath，各子应用只需 <code>setupSharedGuards(router, { loginPath, whitelist })</code> 一行调用。</div>
+  <div class="section-title">现状评估：自研 micro-kernel 已具备生产可用雏形</div>
+  <p>当前采用 <code>micro-kernel（ESM 直引 + 快照沙箱）</code> + <code>micro-runtime（内核抽象层）</code> 双核架构，支持：</p>
+  <ul>
+    <li>基于 <code>manifest.json</code> 的 ESM 入口加载（生产）与 dev server 直引（开发）</li>
+    <li>快照沙箱：mount 前记录 window 键集合，unmount 后恢复新增/修改项并清理事件监听与定时器</li>
+    <li>keep-alive：DOM detach/reattach 复用，避免频繁 mount/unmount</li>
+    <li>路由同步：<code>history.pushState/replaceState</code> 补丁 + popstate 监听，按 <code>activeRule</code> 前缀匹配</li>
+    <li>全局通信：内存 pub-sub 的 <code>globalStateAPI</code>，通过 mountProps 注入子应用</li>
+    <li>错误降级：加载/挂载失败标记 degraded 并渲染重试 UI</li>
+  </ul>
+  <p>这与字节飞书、阿里钉钉等内部同源微前端方案思路一致，但部分实现细节仍需补齐。</p>
 </div>
 
 <div class="item item-p0">
-  <div class="item-title">1.3 globalState 明文传递 token 存在安全隐患 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>main/src/qiankun/global-state.ts</code> 通过 <code>initGlobalState</code> 广播 <code>{ user, theme, locale, token, tenantId }</code>，token 以明文形式在主子应用间传递，存在 XSS 窃取风险。大厂方案通常不在通信层传敏感凭据。</div>
-  <div class="item-action">子应用通过 <code>shared-auth</code> 的 Proxy 延迟初始化机制直接从 SecureLS 读取 token（已有此能力），移除 globalState 中的 token 字段，仅传递 theme/locale/tenantId 等非敏感配置。</div>
+  <div class="item-title">1.1 子应用入口未复用 createSubApp 工厂，main.ts 存在大量重复代码 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc"><code>@ydsz/shared-auth</code> 已提供 <code>createSubApp()</code> 工厂（<code>comm/effects/shared-auth/src/create-sub-app.ts</code>），但 9 个子应用的 <code>main.ts</code> 仍全部手写 <code>bootstrap/mount/unmount/setupApp/createAppRouter</code>，每个文件约 150 行，差异仅 basename 与应用名。总计约 1,300+ 行重复代码，且任何全局初始化调整（如新增插件、统一错误边界）需要改 9 处。</div>
+  <div class="item-action">以 createSubApp 重构全部 9 个子应用入口：将 rootComponent、routes、guard、basename、onSetup、preferencesOverrides 提取为配置对象，main.ts 缩减至 20 行以内。先在 1 个应用试点，验证独立运行与微前端挂载双路径正常后批量迁移。</div>
+</div>
+
+<div class="item item-p0">
+  <div class="item-title">1.2 micro-kernel 路由匹配仅支持 pathname startsWith，不支持 hash/函数式 activeRule <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc"><code>kernel.ts</code> 中 <code>startRouterSync</code> 仅通过 <code>path.startsWith(app.activeRule)</code> 匹配，所有子应用注册时必须使用字符串前缀。对比 qiankun / micro-app / Garfish 均支持 <code>activeRule: string | RegExp | ((location) => boolean)</code>，当前实现无法覆盖以下场景：hash 路由、动态前缀、多个不连续路径命中同一应用、带参数的路径前缀。</div>
+  <div class="item-action">将 activeRule 类型扩展为 <code>string | RegExp | (location: Location) => boolean</code>，在 <code>startRouterSync</code> 中按类型分别匹配：字符串用 startsWith，正则 test pathname+hash，函数直接调用。保持字符串默认行为向后兼容。</div>
 </div>
 
 <div class="item item-p1">
-  <div class="item-title">1.4 access store 职责过载，应拆分运行时态与持久化态 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc"><code>accessStore</code> 同时承载运行时态（accessMenus/accessRoutes/generateAccess）和持久化态（token/refreshToken/codes），职责混杂。<code>auth-store.ts</code> 中出现 <code>(accessStore as any).refreshToken</code> 类型断言绕过，说明类型设计已无法支撑现状。</div>
-  <div class="item-action">拆分为 <code>authStore</code>（token/refreshToken/codes，持久化）和 <code>accessStore</code>（menus/routes/generateAccess，运行时），消除 <code>as any</code> 断言。</div>
+  <div class="item-title">1.3 快照沙箱无法阻止运行时污染，仅能在 unmount 后恢复 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>sandbox.ts</code> 采用"先污染后恢复"的快照策略，子应用在 mount 期间对 <code>window</code> 的修改会真实生效（例如覆盖 <code>window.Promise</code>、修改 <code>document.title</code>、注册全局事件）。若两个子应用同时处于激活态（理论上不会，但异常降级或 keep-alive 场景下可能），或子应用在 mount 阶段就依赖被污染的全局状态，会产生交叉影响。大厂方案通常使用 Proxy 沙箱实现读写隔离。</div>
+  <div class="item-action">(1) 短期：强化 ESLint <code>no-restricted-globals</code> 规则，禁止子应用直接写 <code>window</code>；(2) 中期：评估引入 Proxy 沙箱（参考 qiankun proxySandbox），对 <code>window</code> / <code>document</code> / <code>location</code> 做读写代理，实现真正的运行时隔离；(3) 在 micro-kernel 文档中明确声明沙箱安全边界。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">1.4 globalState 监听未取消订阅，存在内存泄漏风险 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>kernel.ts</code> 的 <code>globalStateAPI.onGlobalStateChange</code> 将 listener 加入 <code>_globalStateListeners</code> Set，但未提供取消订阅机制（返回 void）。子应用在 mount 时订阅，unmount 后 listener 仍留在 Set 中，反复切换子应用会导致监听器累积。虽然当前子应用未大量消费 globalState，但 API 设计缺陷会阻碍后续使用。</div>
+  <div class="item-action">修改 <code>onGlobalStateChange</code> 返回取消订阅函数 <code>() => void</code>，在 <code>createGlobalStateHandle</code>（micro-runtime 层）维护每个子应用独立的 listener set，子应用 unmount 时自动清理。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">1.5 keep-alive 仅 detach DOM，未触发 Vue deactivate 生命周期 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>scheduler.ts</code> 的 keep-alive 实现将容器 DOM 从 document 移除并缓存，重新激活时 appendChild 回去。这种方式绕过了 Vue 的 <code>onDeactivated/onActivated</code> 钩子，子应用内部依赖这些钩子的逻辑（如暂停定时刷新、恢复动画）无法正确执行。同时，直接操作 DOM 可能与子应用的 Transition/KeepAlive 组件产生冲突。</div>
+  <div class="item-action">(1) keep-alive 缓存时调用子应用约定的 <code>deactivate</code> 生命周期（若存在），重新激活时调用 <code>activate</code>；(2) 或参考 qiankun 的 <code>loadMicroApp</code> + <code>mount</code>/<code>unmount</code> 模式，明确 keep-alive 不保证组件状态持久化，仅作为性能优化。</div>
+</div>
+
+<div class="item item-p1">
+  <div class="item-title">1.6 globalState 文档与实现不一致，敏感数据传播路径需收口 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc">多个子应用 README 描述"token 由主应用通过 micro-kernel globalState 注入"，但代码实现中 token 实际通过 <code>@ydsz/shared-auth</code> 的 Proxy 延迟初始化 + <code>useTokenStore()</code> 从 SecureLS 读取。globalState 当前仅注入空的 API 对象，未被用于传递 token，但 API 允许传递任意数据，存在误用风险。</div>
+  <div class="item-action">(1) 统一修正 README 与代码注释，明确 token 不通过 globalState 传递；(2) 在 globalState 类型定义中排除敏感字段，或提供默认白名单校验；(3) 如果确需通过 globalState 同步登录态变化，应仅广播"登录态变更事件"而非 token 本身。</div>
 </div>
 
 <div class="item item-p2">
-  <div class="item-title">1.5 v-access 权限指令不支持响应式更新 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>v-access:code</code> / <code>v-access:role</code> 指令仅在 <code>mounted</code> 钩子判定一次，通过 <code>el.remove()</code> 物理移除元素。当权限码动态变更（如角色切换）时，已移除的元素无法恢复，需刷新整页。</div>
-  <div class="item-action">改用 <code>updated</code> 钩子或渲染函数方案，监听 accessStore 变化动态控制 <code>v-if</code>，或推荐业务侧统一使用 <code>&lt;AccessControl&gt;</code> 组件 + <code>useAccess()</code> composable 替代指令。</div>
+  <div class="item-title">1.7 micro-kernel 不支持嵌套子应用或主子应用同容器场景 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc">当前每个子应用注册时指定 <code>container: '#subapp-container'</code>，所有子应用共用同一个容器。虽然通过 activeAppName 保证单时刻只有一个活跃应用，但不支持子应用内部再嵌套微应用（如某个子应用内部再加载一个 widget），也不支持多容器并行展示。</div>
+  <div class="item-action">将容器解析从字符串选择器改为支持传入 HTMLElement，或在 MicroAppConfig 中支持 <code>container: string | HTMLElement | (() => HTMLElement)</code>，为后续嵌套/多容器场景预留扩展点。</div>
 </div>
 
-<div class="item item-p1">
-  <div class="item-title">1.6 tabbar Set 序列化隐患 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc"><code>tabbarStore</code> 的 <code>cachedTabs</code> 和 <code>excludeCachedTabs</code> 使用 <code>Set&lt;string&gt;</code>。虽然当前 persist 配置仅持久化 <code>tabs</code> 数组（未持久化 Set），但 Set 类型在 devtools 中不可观测，且如果后续误加入 persist 配置会静默丢失数据（JSON 序列化 Set 得到 <code>{}</code>）。</div>
-  <div class="item-action">将 <code>cachedTabs</code>/<code>excludeCachedTabs</code> 改为 <code>string[]</code>，用 <code>includes()</code> 替代 <code>has()</code>；或在 persist 配置中显式声明 serializer 做数组↔Set 转换。</div>
+<div class="item item-p2">
+  <div class="item-title">1.8 importmap 默认使用公网 CDN，未启用自托管 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>application.ts</code> 中 importmap 插件默认使用 <code>esm.sh</code> 公网 CDN（<code>VITE_IMPORTMAP_SELF_HOST</code> 未设置时），存在可用性风险和政策合规风险。自托管模式（<code>public/vendor/importmap.json</code>）已设计但未成为默认。</div>
+  <div class="item-action">(1) 在 CI 构建中默认启用自托管：配置 <code>VITE_IMPORTMAP_SELF_HOST=/vendor</code>；(2) 完善 <code>bash/sync-shared-deps.mjs</code>，将其接入构建流水线，确保 vendor 目录随产物一起发布；(3) 内网环境禁用公网 CDN。</div>
 </div>
 
 <!-- ==================== 功能增强 ==================== -->
 <h2 id="func">二、功能增强</h2>
 
 <div class="section">
-  <div class="section-title">📍 现状评估：功能覆盖面广，但工程化配套未跟上</div>
-  <p>9 个子应用覆盖用户/系统/项目/消息/定时任务/工作流/知识库/规则引擎/AI Agent 全链路，项目模块达 25 个视图（预算/合同/EVM/费用/收入/风险/费率等），功能深度可观。但 OpenAPI SDK 未真正接入业务、Storybook 组件文档空架子、错误监控仅 Web Vitals 缺异常上报。</p>
+  <div class="section-title">现状评估：基础能力具备，工程化配套未跟上</div>
+  <p>9 个子应用覆盖用户/系统/项目/消息/定时任务/工作流/知识库/规则引擎/AI Agent 全链路。但 OpenAPI SDK 未真正接入业务、Storybook 组件文档空架子、错误监控实际上报链路不完整。</p>
 </div>
 
 <div class="item item-p0">
   <div class="item-title">2.1 OpenAPI SDK 生成后未接入业务，契约检测形同虚设 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>openapi-generator-config.yaml</code> 配置了 <code>typescript-axios</code> 输出到 <code>src/api/sdk</code>，CI 通过 <code>git diff</code> 检测接口变更阻断。但实际各 app 的 <code>api/</code> 目录仍是手写文件（<code>app.ts</code>/<code>dictType.ts</code> 等），SDK 生成目录与手写 API 并存，契约检测实际无效——后端改了接口，前端手写代码不会自动同步。</div>
-  <div class="item-action">制定迁移计划：(1) 确认 OpenAPI 规范文件来源（后端 Swagger 导出）；(2) 将手写 API 逐步替换为 SDK 调用，手写层仅保留业务逻辑包装；(3) CI 中加入 SDK 生成 + <code>git diff --exit-code</code> 强校验，确保 SDK 与后端契约一致。</div>
+  <div class="item-desc"><code>bash/gen-api.mjs</code> 可生成 TypeScript SDK，但各 app 的 <code>api/</code> 目录仍是手写文件（<code>app.ts</code>/<code>dictType.ts</code> 等），SDK 生成目录与手写 API 并存。后端接口变更时，手写代码不会自动同步，<code>check:contract</code> 只能检测 SDK 是否过期，无法保证业务代码使用最新契约。</div>
+  <div class="item-action">制定迁移计划：(1) 确认后端 Swagger/OpenAPI 规范文件来源与刷新频率；(2) 选择 1 个业务子应用（如 system-web）试点，将手写 API 逐步替换为 SDK 调用，手写层仅保留业务编排；(3) CI 中增加 SDK 生成 + <code>git diff --exit-code</code> 强校验，未同步阻断合并。</div>
 </div>
 
 <div class="item item-p1">
-  <div class="item-title">2.2 Storybook 配置就绪但仅 1 个 stories 文件 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc"><code>.storybook/main.ts</code> + <code>preview.ts</code> 已配置 vue3-vite + a11y + essentials 插件，但全仓仅 <code>loading.stories.ts</code> 一个文件。ui-kit 有 33 个 shadcn-ui 原子组件 + 22 个业务封装组件 + 5 个领域 ui-kit 包，均无文档化。</div>
-  <div class="item-action">优先为 ui-kit 高频组件（Button/Input/Select/Modal/Table/Form）补齐 stories，建立组件视觉规范和交互文档，降低团队沟通成本。可结合 AI 辅助批量生成 stories 骨架。</div>
+  <div class="item-title">2.2 错误监控实际上报链路不完整 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>comm/effects/monitor</code> 包含 <code>error-monitor</code> 和 <code>web-vitals</code>，Web Vitals 已实现 PerformanceObserver 采集与 sendBeacon 上报。但 error-monitor 的实际上报目标、采样策略、sourcemap 关联是否真正生效不明确，且未覆盖资源加载失败、API 错误自动上报。</div>
+  <div class="item-action">(1) 明确 error-monitor 上报端点与协议（Sentry / 自研 APM / 后端 /api/v1/monitor/error）；(2) 补充 <code>window.onerror</code>、<code>unhandledrejection</code>、<code>error</code> 事件捕获资源加载失败；(3) 在 RequestClient 错误拦截器中按状态码/业务码分类上报；(4) 生产环境按 release 版本聚合，配合 <code>VITE_MONITOR_SOURCEMAP</code> 上传 sourcemap。</div>
 </div>
 
 <div class="item item-p1">
-  <div class="item-title">2.3 错误监控仅有 Web Vitals，缺 JS 异常上报 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc"><code>comm/effects/monitor</code> 包含 <code>error-monitor</code> 和 <code>web-vitals</code>，但 error-monitor 的实际上报链路不明确。大厂方案通常接入 Sentry/自研 APM，覆盖 JS 异常 + Promise rejection + 资源加载失败 + API 错误。</div>
-  <div class="item-action">(1) 完善 error-monitor 的上报通道（接入 Sentry 或自研 APM 网关）；(2) 补充 <code>window.onerror</code> + <code>unhandledrejection</code> + <code>error</code> 事件捕获（资源加载失败）；(3) 在 RequestClient 的错误拦截器中自动上报 API 异常；(4) 上报数据携带 release 版本号便于版本回溯。</div>
+  <div class="item-title">2.3 Storybook 配置就绪但几乎无 stories <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>.storybook/main.ts</code> + <code>preview.ts</code> 已配置，但全仓 stories 文件极少。ui-kit 有 shadcn-ui 原子组件、form-ui、popup-ui、tabs-ui 等多个包，均无文档化示例。</div>
+  <div class="item-action">优先为高频组件（Button、Input、Select、Modal、Drawer、Form、Tabs、Table）补齐 stories，建立组件视觉规范。可结合 AI 辅助从组件 props 类型批量生成 stories 骨架。</div>
 </div>
 
 <div class="item item-p2">
-  <div class="item-title">2.4 errorMessageResponseInterceptor 存在冗余分支 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>preset-interceptors.ts</code> 中 HTTP 500+ 分支与 default 分支都返回 <code>internalServerError</code>，逻辑重复。</div>
-  <div class="item-action">合并 500+ 和 default 分支，或为不同 5xx 状态码映射更细粒度文案（502/503/504 网关类错误与 500 服务器内部错误区分提示）。</div>
+  <div class="item-title">2.4 错误降级 UI 硬编码中文，无 i18n <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>error-boundary.ts</code> 的 <code>renderErrorFallback</code> 直接拼接中文 HTML 字符串，未经过 Vue i18n 体系，无法满足多语言需求。</div>
+  <div class="item-action">将降级 UI 抽为 Vue 组件（如 <code>MicroAppErrorFallback.vue</code>），通过 i18n key 渲染，支持通过 MicroAppConfig 注入自定义 fallback 组件。</div>
 </div>
 
 <div class="item item-p2">
-  <div class="item-title">2.5 retry 缺少指数退避策略 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>RequestClient</code> 的 retryConfig 使用固定 <code>retryDelay</code>，在高并发失败场景下可能加剧服务端压力（惊群效应）。</div>
-  <div class="item-action">增加指数退避 + 随机抖动选项：<code>backoff: 'fixed' | 'exponential'</code>，exponential 模式下 <code>delay = baseDelay * 2^attempt + randomJitter</code>。</div>
+  <div class="item-title">2.5 retry 与超时配置分散，缺乏统一策略 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>loader.ts</code> 的 <code>loadApp</code> 已实现指数退避重试（<code>retryBaseDelay * 2^attempt</code>），但 RequestClient 层的 retry 仍使用固定延迟。两端策略不一致，且未共享抖动（jitter）逻辑。</div>
+  <div class="item-action">在 <code>@ydsz/request</code> 或 <code>@ydsz/shared-auth</code> 中提供统一的 <code>createRetryPolicy</code> 工具，支持 fixed / exponential / exponential-jitter 三种策略，供 loader 和 requestClient 共同使用。</div>
 </div>
 
 <!-- ==================== 性能提升 ==================== -->
 <h2 id="perf">三、性能提升</h2>
 
 <div class="section">
-  <div class="section-title">📍 现状评估：基础优化完备，缺极致压缩与缓存策略</div>
-  <p>已做：vendor 三分包（vue/element/vxe）、路由全懒加载、gzip 压缩、element-plus/vxe 按需引入、静态资源 immutable 长缓存、多阶段 Docker 镜像、HPA 自动伸缩、Lighthouse 性能预算门禁、visualizer 分析链路完整。Lighthouse 预算：FCP≤2s、LCP≤3s、CLS≤0.1、TBT≤300ms。</p>
-</div>
-
-<div class="item item-p0">
-  <div class="item-title">3.1 生产构建未 drop console，泄露风险 + 体积浪费 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>conf/vite-config/src/config/application.ts</code> 第 92-96 行，esbuild drop 配置中 <code>'console'</code> 被注释掉，仅 drop <code>'debugger'</code>。生产环境保留了所有 console 日志，既有信息泄露风险（可能打印敏感数据），又增加产物体积。</div>
-  <div class="item-action">取消注释，生产环境 drop <code>['console', 'debugger']</code>。如果需要保留特定日志，可用 <code>pure_funcs: ['console.log', 'console.info']</code> 保留 <code>console.warn/error</code>。</div>
-</div>
-
-<div class="item item-p0">
-  <div class="item-title">3.2 未启用 Brotli 压缩，gzip 可再降 15-20% <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc">前端 <code>vite-plugin-compression</code> 仅启用 gzip（<code>VITE_COMPRESS=gzip</code>），nginx 也仅配置 gzip <code>comp_level 6</code>，未启用 brotli 模块。Brotli 对文本资源（JS/CSS/HTML）压缩率比 gzip 高 15-20%。</div>
-  <div class="item-action">(1) 前端构建同时生成 gzip + brotli：<code>compression({ algorithms: ['gzip', 'brotliCompress'] })</code>；(2) nginx 安装 <code>ngx_brotli</code> 模块，配置 <code>brotli on; brotli_types text/css application/javascript ...</code>；(3) 或使用 <code>brotli_static on</code> 直接服务预压缩文件。</div>
+  <div class="section-title">现状评估：多项基础优化已落地，仍有可提升空间</div>
+  <p>已做：vendor 三分包、路由全懒加载、静态资源长缓存、多阶段 Docker 镜像、visualizer 分析链路。近期 <code>application.ts</code> 已补齐生产 drop console、Brotli+gzip、es2022 target、chunkSizeWarningLimit 1000 等关键优化。</p>
 </div>
 
 <div class="item item-p1">
-  <div class="item-title">3.3 build target 过低，es2015 可提至 es2018+ <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc"><code>target: 'es2015'</code>（ES6）会生成 polyfill 和降级代码。现代浏览器（Chrome 80+/Edge/Safari 14+）已全面支持 ES2018+（async/await/optional chaining/nullish coalescing），PMIS 系统用户群体通常为现代浏览器环境。</div>
-  <div class="item-action">提升 build target 至 <code>es2018</code> 或 <code>es2020</code>，可减小产物体积 5-10%。配合 <code>browserslist</code> 配置精确控制兼容范围。</div>
+  <div class="item-title">3.1 缺少图片压缩与字体子集化 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc">无 <code>vite-plugin-imagemin</code> 或类似图片压缩插件，无字体子集化处理。PMIS 项目视图较多，可能包含较多图标、截图、中文字体资源。</div>
+  <div class="item-action">(1) 引入 <code>unplugin-imagemin</code> 压缩 PNG/JPG/SVG；(2) 中文字体使用 <code>font-spider</code> / <code>subset-font</code> / <code>chinese-font-split</code> 按使用字裁剪，字体文件可从数 MB 降至百 KB 级。</div>
 </div>
 
 <div class="item item-p1">
-  <div class="item-title">3.4 chunkSizeWarningLimit 偏高，掩盖超大 chunk 告警 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc">当前 <code>chunkSizeWarningLimit: 2000</code>（2MB），Rollup 默认 500KB。2MB 的阈值会让单个 chunk 超过 1MB 也不报警，掩盖了包体膨胀问题。</div>
-  <div class="item-action">降低至 <code>1000</code>（1MB），配合 manualChunks 更细粒度拆分。对确实无法拆分的大包（如 vxe-table），在注释中标注豁免原因。</div>
-</div>
-
-<div class="item item-p1">
-  <div class="item-title">3.5 缺少图片压缩与字体子集化 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc">无 <code>vite-plugin-imagemin</code> 或类似图片压缩插件，无字体子集化（subsetting）处理。PMIS 项目中 project-web 有大量视图，可能包含较多图片资源。</div>
-  <div-action></div-action>
-  <div class="item-action">(1) 引入 <code>unplugin-imagemin</code> 压缩 PNG/JPG/SVG；(2) 中文字体使用 <code>font-spider</code> 或 <code>subset-font</code> 按使用字裁剪，中文字体文件可从 5MB+ 降至 100KB 以内。</div>
+  <div class="item-title">3.2 预加载策略较简单，未基于用户行为动态决策 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>bootstrap.ts</code> 中仅固定预热 <code>userinfo-web</code> 和 <code>project-web</code>。未根据用户角色、最近访问、菜单点击热度动态调整预加载列表，也未在 hover 菜单时预加载对应子应用。</div>
+  <div class="item-action">(1) 在菜单 hover 时调用 <code>microRuntime.prefetch(appName)</code>；(2) 基于用户权限菜单计算可访问子应用集合，优先预加载高频项；(3) 收集实际切换耗时数据，用 A/B 方式验证 prefetch 收益。</div>
 </div>
 
 <div class="item item-p2">
-  <div class="item-title">3.6 PWA 已配置但运行时关闭 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>vite-plugin-pwa</code> 插件代码存在但 <code>VITE_PWA=false</code> 关闭，<code>globPatterns: []</code> 无缓存策略。对于 PMIS 这类高频使用的内部系统，PWA 的离线缓存可显著提升二次访问速度。</div>
-  <div class="item-action">评估启用 PWA：配置 App Shell 缓存策略（precache 应用骨架），API 请求走 NetworkFirst（保证数据新鲜），静态资源走 CacheFirst。注意微前端场景下 Service Worker 的 scope 范围需匹配主应用。</div>
+  <div class="item-title">3.3 PWA 已配置但运行时关闭 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>vite-plugin-pwa</code> 插件代码存在但 <code>pwa: false</code> 关闭，<code>globPatterns: []</code> 无缓存策略。对于高频使用的内部系统，PWA 离线缓存可提升二次访问速度。</div>
+  <div class="item-action">评估启用 PWA：precache 应用骨架，API 走 NetworkFirst，静态资源走 CacheFirst。注意 Service Worker scope 需匹配主应用，且微前端子应用资源跨域缓存需配置 CORS。</div>
 </div>
 
 <div class="item item-p2">
-  <div class="item-title">3.7 importmap CDN 外置依赖关闭但插件驻留 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc">importmap 插件整套（含 <code>html-minifier-terser</code>、<code>@jspm/generator</code>、<code>cheerio</code>）默认禁用，vue/pinia 等仍打包进 vue-vendor。如果启用 CDN 外置，9 个子应用可共享同一份 vue/element-plus，显著减少总体积。</div>
-  <div class="item-action">评估启用 importmap：将 vue/vue-router/pinia/element-plus 外置到 CDN，9 个子应用共享。对于微前端场景，这可避免每个子应用重复打包这些库（当前每个子应用 vue-vendor 约 80KB gzip × 9 = 720KB 冗余）。</div>
+  <div class="item-title">3.4 requestIdleCallback 无 fallback <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>kernel.ts</code> 的 prefetch 直接调用 <code>requestIdleCallback</code>，在 Safari 15 之前及部分低版本浏览器中不存在该方法，会导致预加载静默失败。</div>
+  <div class="item-action">封装 <code>requestIdleCallbackPolyfill</code>：优先使用原生 API，不存在时回退到 <code>setTimeout(cb, 1)</code>，保证预加载在旧浏览器仍可执行。</div>
 </div>
 
 <!-- ==================== 体验改善 ==================== -->
 <h2 id="exp">四、体验改善</h2>
 
 <div class="section">
-  <div class="section-title">📍 现状评估：基础体验完善，微前端切换体验可优化</div>
-  <p>已做：nprogress 进度条、标签页拖拽 + keepAlive 缓存、SecureLS 加密持久化、i18n 延迟绑定、hover 预加载子应用、全屏/水印/锁屏功能。但微前端切换白屏、骨架屏缺失、错误边界薄弱等体验痛点仍存在。</p>
+  <div class="section-title">现状评估：基础体验完善，微前端切换体验是短板</div>
+  <p>已做：nprogress 进度条、标签页拖拽 + keepAlive 缓存、SecureLS 加密持久化、i18n 延迟绑定。但微前端切换白屏、骨架屏缺失、错误边界薄弱等痛点仍存在。</p>
 </div>
 
 <div class="item item-p0">
   <div class="item-title">4.1 微前端切换白屏问题 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc">Qiankun 切换子应用时，旧应用卸载 → 新应用加载 → 新应用挂载之间存在白屏间隙。虽然有 hover 预加载缓解首次加载，但已加载子应用切换时仍有可感知的白屏（尤其 project-web 这类重应用）。大厂方案通常有骨架屏或 loading 占位。</div>
-  <div class="item-action">(1) 在 <code>SubAppContainer</code> 中增加骨架屏/loading 占位，监听 qiankun 的 <code>beforeLoad/afterMount</code> 生命周期切换显示状态；(2) 配合 <code>prefetch</code> 策略预加载常用子应用 JS；(3) 评估使用 <code>keep-alive</code> 缓存已激活子应用（qiankun 支持但需注意内存）。</div>
+  <div class="item-desc">旧应用卸载 → 新应用加载 → 新应用挂载之间存在白屏间隙。虽然有固定 prefetch 缓解首次加载，但已加载子应用切换时仍有可感知的白屏，且 <code>#subapp-container</code> 在切换期间无占位内容。</div>
+  <div class="item-action">(1) 在 <code>SubAppContainer</code> 中增加骨架屏/loading 占位，监听 micro-kernel 的 <code>beforeLoad/afterMount</code> 生命周期切换显示状态；(2) 为高频子应用设计专属骨架屏；(3) 对 keep-alive 缓存过的子应用切换时直接复用 DOM，避免白屏。</div>
 </div>
 
 <div class="item item-p1">
   <div class="item-title">4.2 缺少全局错误边界 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc">Vue 3 的 <code>app.config.errorHandler</code> 和 <code>onErrorCaptured</code> 未在子应用启动模板中统一配置。当某个子应用渲染异常时，可能导致整个微前端框架白屏，而非优雅降级到错误页。</div>
-  <div class="item-action">(1) 在 <code>createSubApp</code> 工厂中统一注入 <code>errorHandler</code>，捕获后渲染错误 fallback 组件；(2) 在 <code>SubAppContainer</code> 增加 <code>errorCaptured</code>，子应用崩溃时显示"应用加载失败，请刷新"提示并提供重试按钮。</div>
+  <div class="item-desc"><code>createSubApp</code> 工厂中虽然注入了 <code>vueApp.config.errorHandler</code> 和 <code>warnHandler</code>，但仅打印 console，未渲染错误 fallback。当某个子应用渲染异常时，可能导致整个容器白屏。</div>
+  <div class="item-action">(1) 在 createSubApp 工厂中统一注入 errorHandler，捕获后渲染错误 fallback 组件；(2) 在子应用根组件外层包裹 <code>onErrorCaptured</code> 边界；(3) 提供重试按钮与返回首页按钮。</div>
 </div>
 
 <div class="item item-p1">
   <div class="item-title">4.3 网络异常体验不够友好 <span class="badge badge-p1">P1</span></div>
   <div class="item-desc"><code>errorMessageResponseInterceptor</code> 将错误转为 ElMessage 提示，但弱网/超时场景下用户体验差：消息一闪而过、无重试入口、列表页空白无反馈。</div>
-  <div class="item-action">(1) 对列表页引入空状态/错误状态/重试组件（参考 vxe-table 的 empty 插槽）；(2) 对关键操作（提交/保存）失败后保留表单数据，提供重试按钮；(3) 网络断开时全局展示离线提示条。</div>
+  <div class="item-action">(1) 对列表页引入空状态/错误状态/重试组件；(2) 对关键操作（提交/保存）失败后保留表单数据，提供重试按钮；(3) 网络断开时全局展示离线提示条。</div>
 </div>
 
 <div class="item item-p2">
   <div class="item-title">4.4 registerLoadingDirective 参数不一致 <span class="badge badge-p2">P2</span></div>
   <div class="item-desc">主应用调用 <code>registerLoadingDirective</code> 传 <code>'loading'</code> 字符串，子应用传 <code>false</code>，参数语义不一致，可能导致指令行为差异。</div>
-  <div class="item-action">统一参数类型和语义，在 <code>shared-auth</code> 或 <code>createSubApp</code> 工厂中统一调用，消除手动传参差异。</div>
+  <div class="item-action">统一参数类型和语义，在 createSubApp 工厂中统一调用，消除手动传参差异。</div>
 </div>
 
 <div class="item item-p2">
-  <div class="item-title">4.5 骨架屏（Skeleton）缺失 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc">路由懒加载的页面组件加载期间无骨架屏，首屏和数据加载阶段用户看到空白。大厂方案通常有页面级骨架屏。</div>
+  <div class="item-title">4.5 页面级骨架屏缺失 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc">路由懒加载的页面组件加载期间无骨架屏，首屏和数据加载阶段用户看到空白。</div>
   <div class="item-action">为高频访问页面（Dashboard、列表页）设计骨架屏组件，在 Suspense fallback 或路由组件 loading 配置中使用。</div>
 </div>
 
-<!-- ==================== 过度设计 ==================== -->
-<h2 id="over">五、过度设计精简</h2>
-
-<div class="section">
-  <div class="section-title">📍 现状评估：部分插件配置维护成本高于收益</div>
-  <p>项目追求工程化全面性，引入了较多"以防万一"的配置，部分功能默认关闭但仍驻留代码和依赖，增加了维护成本和认知负担。</p>
-</div>
-
-<div class="item item-over">
-  <div class="item-title">5.1 三套格式化工具并存 <span class="badge badge-over">过度</span></div>
-  <div class="item-desc">ESLint 中 <code>prettier</code> 插件、<code>@stylistic/stylelint-plugin</code>、<code>eslint-plugin-perfectionist</code> 三套格式化工具并存，部分规则互相关闭（perfectionist 关闭与 prettier 冲突的规则，stylelint 也关 prettier 冲突项）。三套工具的规则协调成本高，新人理解门槛大。</div>
-  <div class="item-action">统一格式化入口：Prettier 负责 JS/TS/Vue/JSON/MD 格式化，Stylelint 仅管 CSS/SCSS 语法规则（不用 stylistic），perfectionist 仅管 import 排序（不用格式化规则）。明确各工具职责边界，删除重叠配置。</div>
-</div>
-
-<div class="item item-over">
-  <div class="item-title">5.2 archiver 每次构建生成 dist.zip 多余 <span class="badge badge-over">过度</span></div>
-  <div class="item-desc"><code>archiver: true</code> 配置每次构建都生成 <code>dist.zip</code>，但 CI 已直接使用 <code>dist/</code> 目录构建 Docker 镜像，zip 文件无人消费，徒增构建耗时。</div>
-  <div class="item-action">确认 zip 消费方后决定：若无使用方则关闭 <code>archiver</code>；若用于离线包分发则仅在有 <code>VITE_ARCHIVE=true</code> 环境变量时生成。</div>
-</div>
-
-<div class="item item-over">
-  <div class="item-title">5.3 rollup-plugin-node-polyfills 可能不必要 <span class="badge badge-over">过度</span></div>
-  <div class="item-desc">全局 alias 了 <code>buffer/process/stream/crypto</code> 等 Node 内建模块。如果项目无 Node 内建依赖（纯浏览器运行的前端项目），这些 polyfill 徒增体积和构建耗时。</div>
-  <div class="item-action">排查是否有依赖引用了 Node 内建模块（<code>depcheck</code> 或构建产物分析），若无则移除 node-polyfills 配置。</div>
-</div>
-
-<div class="item item-over">
-  <div class="item-title">5.4 importmap 插件整套维护成本高但默认禁用 <span class="badge badge-over">过度</span></div>
-  <div class="item-desc">importmap 插件含 <code>@jspm/generator</code>、<code>cheerio</code>、<code>html-minifier-terser</code> 等依赖，维护成本不低，但默认关闭（<code>condition: isBuild && importmap</code>，importmap 未传）。如果长期不启用，应移除以降低维护成本。</div>
-  <div class="item-action">决策：要么启用（见 3.7 建议，微前端场景收益明显），要么移除。不要让"可能用到"的代码长期驻留。</div>
-</div>
-
-<div class="item item-over">
-  <div class="item-title">5.5 license 注入每个 entry chunk 重复 <span class="badge badge-over">过度</span></div>
-  <div class="item-desc">license 注入到每个 entry chunk，微前端多入口场景下重复注入相同 license 文本。</div>
-  <div class="item-action">改为生成独立 <code>LICENSE.txt</code> 文件，或在主应用统一注入一次。</div>
-</div>
-
-<div class="item item-over">
-  <div class="item-title">5.6 cspell 拼写检查投入产出比低 <span class="badge badge-over">过度</span></div>
-  <div class="item-desc">cspell 配置了 ~50 个自定义词，对所有 <code>*/*.ts</code> 和 README 执行拼写检查。对于中文为主的 PMIS 项目，拼写检查的主要价值在于变量名拼写正确性，但误报率高、自定义词库维护成本持续存在。</div>
-  <div class="item-action">评估是否保留：如果团队无强制要求可降级为可选检查（不纳入 <code>check</code> 命令），或仅检查 commit message 而非全量代码。</div>
-</div>
-
 <!-- ==================== 工程质量补齐 ==================== -->
-<h2 id="quality">六、工程质量补齐</h2>
+<h2 id="quality">五、工程质量补齐</h2>
 
 <div class="section">
-  <div class="section-title">📍 现状评估：规范配置齐全但门禁未落地，这是最大短板</div>
-  <p>TypeScript 严格模式全开（strict + noUncheckedIndexedAccess + verbatimModuleSyntax）、ESLint 18 模块 + 17 插件、Stylelint 四件套、commitlint 13 种 type——<strong>配置层面已对标大厂</strong>。但 lefthook 钩子全部注释、changesets 未初始化、测试无覆盖率门槛，导致<strong>规范形同虚设</strong>。</p>
+  <div class="section-title">现状评估：规范配置齐全，执行与覆盖率是最大短板</div>
+  <p>TypeScript 严格模式、ESLint flat config + 18 模块、Stylelint、commitlint、changesets、lefthook 等配置已存在。但 lefthook 是否真正安装到 .git/hooks 需确认，测试无覆盖率门槛，业务应用几乎零单测。</p>
 </div>
 
 <div class="item item-p0">
-  <div class="item-title">6.1 Lefthook 钩子全部注释，本地质量门禁失效 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>lefthook.yml</code> 中 <code>pre-commit</code>、<code>pre-push</code>、<code>commit-msg</code> 钩子全部被注释掉，仅保留 <code>post-merge</code> 自动 install。这意味着提交前不执行任何 lint/type-check/commit 校验，所有质量保障完全依赖 CI——而 CI 只在 PR 时触发，本地直接 push 到分支则无任何拦截。</div>
-  <div class="item-action">立即启用 lefthook 钩子（取消注释），建议分阶段：(1) 先启用 <code>commit-msg</code>（commitlint 校验，最快见效）；(2) 再启用 <code>pre-commit</code> 的 lint-md/lint-vue/lint-js（仅对 staged 文件，<code>--cache</code> 加速）；(3) 最后启用 <code>pre-push</code> 的 type-check（耗时较长放 push 前）。如担心影响效率，可配置 <code>{staged_files}</code> 仅检查变更文件。</div>
+  <div class="item-title">5.1 需确认 lefthook 是否真正安装到 Git hooks <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc"><code>lefthook.yml</code> 配置完整且未注释，但 <code>.git/hooks</code> 目录未找到钩子文件。若仅依赖 CI 检测，本地提交前不会执行 lint/type-check/commitlint。</div>
+  <div class="item-action">执行 <code>pnpm lefthook install</code> 确保钩子安装到 .git/hooks；CI 中增加 <code>lefthook run pre-commit --force</code> 作为兜底；分阶段启用：commit-msg → pre-commit（staged 文件） → pre-push（type-check）。</div>
 </div>
 
 <div class="item item-p0">
-  <div class="item-title">6.2 Changesets 依赖已引入但未初始化 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>package.json</code> 依赖 <code>@changesets/cli</code> + <code>@changesets/changelog-github</code>，但项目内不存在 <code>.changeset/</code> 目录及配置文件，版本管理能力未落地。monorepo 多包版本管理没有 changesets 会非常混乱。</div>
-  <div class="item-action">运行 <code>npx changeset init</code> 初始化配置，补充 <code>.changeset/config.json</code>，在 <code>package.json</code> 增加 <code>changeset</code> 和 <code>version-packages</code> 脚本。或如果确认不使用 changesets，则移除相关依赖减少误导。</div>
-</div>
-
-<div class="item item-p0">
-  <div class="item-title">6.3 测试无覆盖率门槛，业务应用几乎零单测 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc">34 个 <code>.test.ts</code> 集中在 <code>comm/@core/base/shared/utils</code>、<code>comm/stores</code>、<code>comm/effects/request</code> 等公共包，业务应用 <code>apps/*</code> 几乎无单测。Vitest 未配置 coverage provider 与阈值。E2E 仅 1 个 spec 5 个用例（chromium 单浏览器），断言宽泛（多处 <code>if isVisible</code> 软断言），用例硬编码 <code>admin/admin123</code>。</div>
-  <div class="item-action">(1) 配置 <code>vitest coverage</code>：<code>provider: 'v8'</code>，设定公共包覆盖率阈值 80%、业务包逐步补齐；(2) 公共工具函数（utils/request/auth）优先补齐单测；(3) E2E 扩展到 chromium+firefox 双浏览器，去掉硬编码凭据改用环境变量，补充关键业务流（项目创建/审批流/消息发送）；(4) 考虑引入 <code>@vitest/coverage-v8</code> + CI 上传覆盖率到 Codecov/Coveralls。</div>
+  <div class="item-title">5.2 测试无覆盖率门槛，业务应用几乎零单测 <span class="badge badge-p0">P0</span></div>
+  <div class="item-desc">全仓约 38 个 <code>.test.ts</code> 文件，主要集中在 <code>comm/@core/base/shared/utils</code>、<code>comm/stores</code>、<code>comm/effects/request</code>、<code>comm/effects/micro-kernel</code> 等公共包，业务应用 <code>apps/*</code> 几乎无单测。<code>vitest.config.ts</code> 中 coverage enabled 为 false，未配置阈值。</div>
+  <div class="item-action">(1) 开启 coverage：<code>enabled: true</code>，公共包设定阈值 80% lines/functions/branches，业务包 50% 起逐步提升；(2) 优先补齐 <code>@ydsz/shared-auth</code>、<code>@ydsz/request</code>、<code>@ydsz/micro-kernel</code> 核心路径；(3) CI 中上传覆盖率到 Codecov 或自研平台。</div>
 </div>
 
 <div class="item item-p1">
-  <div class="item-title">6.4 tsconfig 未配置 paths，IDE 跳转受限 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc"><code>conf/tsconfig</code> 各层配置均未设置 <code>paths</code> 路径别名，<code>#/</code> 别名仅靠 Vite alias 解析。TypeScript 类型检查和 IDE 跳转/补全可能受限（虽然 vue-tsc 能配合 vite alias 工作，但纯 tsc 场景失效）。</div>
-  <div class="item-action">在 <code>tsconfig/base.json</code> 中补充 <code>paths</code> 映射，与 Vite alias 保持同步。可使用 <code>vite-tsconfig-paths</code> 插件自动同步，避免双重维护。</div>
+  <div class="item-title">5.3 check-circular 应改为 fail 模式 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>package.json</code> 中 <code>check:circular</code> 使用 <code>vsh check-circular --fail</code>，但历史循环依赖可能未清理完，实际执行结果需验证。循环依赖是架构腐化信号，应阻断新增。</div>
+  <div class="item-action">运行 <code>pnpm check:circular</code> 确认当前状态；若存在历史问题，建立 ignore 清单并逐步修复，新增循环依赖必须阻断。</div>
 </div>
 
 <div class="item item-p1">
-  <div class="item-title">6.5 缺少 PR 模板和 Issue 模板 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc"><code>.github/</code> 仅有 <code>workflows/frontend-ci.yml</code> 一个 CI 文件，缺少 PR 模板和 Issue 模板。大厂开源项目标配 <code>PULL_REQUEST_TEMPLATE.md</code> + <code>ISSUE_TEMPLATE/</code>（bug/feature/question 分类）。</div>
-  <div class="item-action">补充 <code>.github/PULL_REQUEST_TEMPLATE.md</code>（变更说明/测试方式/影响范围 checklist）和 <code>.github/ISSUE_TEMPLATE/{bug_report,feature_request}.yml</code>。</div>
+  <div class="item-title">5.4 tsconfig 未配置 paths，IDE 跳转受限 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc"><code>conf/tsconfig</code> 各层配置未设置 <code>paths</code> 路径别名，<code>#/</code> 别名仅靠 Vite alias 解析。TypeScript 类型检查和 IDE 跳转/补全可能受限。</div>
+  <div class="item-action">在 <code>tsconfig/base.json</code> 中补充 <code>paths</code> 映射，与 Vite alias 保持同步；或使用 <code>vite-tsconfig-paths</code> 插件自动同步。</div>
 </div>
 
 <div class="item item-p1">
-  <div class="item-title">6.6 check-circular 仅 warn 不 fail <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc"><code>vsh check-circular</code> 使用 circular-dependency-scanner 检测循环依赖，但仅 warn 不 fail。循环依赖是架构腐化的信号，应阻断构建。</div>
-  <div class="item-action">在 CI 的 <code>check</code> 命令中改为 fail 模式。如果当前存在历史循环依赖，先标记允许列表（ignore pattern），新增量不允许引入循环依赖。</div>
+  <div class="item-title">5.5 E2E 测试用例薄弱 <span class="badge badge-p1">P1</span></div>
+  <div class="item-desc">Playwright 仅 1 个 <code>core-flows.spec.ts</code>（登录/导航/登出），chromium 单浏览器，断言宽泛，凭据硬编码。</div>
+  <div class="item-action">(1) 扩展浏览器矩阵到 chromium + firefox；(2) 凭据改为 <code>process.env.E2E_USER</code>；(3) 补充各子应用核心流 E2E（项目创建/审批流/消息发送）；(4) 断言改用 <code>expect(locator).toBeVisible()</code> 等硬断言。</div>
 </div>
 
 <div class="item item-p2">
-  <div class="item-title">6.7 CI 缺少缓存优化 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>frontend-ci.yml</code> 的 lint→build→docker→deploy 四阶段，Docker 层有 gha 缓存，但 pnpm install 和 turbo build 的缓存策略不明确。</div>
-  <div class="item-action">(1) 使用 <code>pnpm/action-setup</code> + <code>actions/setup-node</code> 缓存 pnpm store；(2) 配置 <code>turbo</code> 的 Remote Cache（可选自建或 Turbo Cloud）；(3) CI 中并行执行 <code>check</code> 和 <code>build</code>（build 依赖 check 通过可拆为两个 job）。</div>
+  <div class="item-title">5.6 CI 缓存策略可进一步优化 <span class="badge badge-p2">P2</span></div>
+  <div class="item-desc"><code>frontend-ci.yml</code> 已有 Docker 层缓存，但 pnpm store 和 turbo build 缓存策略不够明确。</div>
+  <div class="item-action">(1) 使用 <code>pnpm/action-setup</code> + <code>actions/setup-node</code> 缓存 pnpm store；(2) 配置 turbo Remote Cache（可选自建或 Turbo Cloud）；(3) 将 lint/type-check 与 build 拆分为并行 job，缩短 CI 总时长。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">6.8 E2E 测试用例薄弱 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc">Playwright 仅 1 个 <code>core-flows.spec.ts</code>（登录成功/失败/导航/登出 5 用例），chromium 单浏览器，断言宽泛，凭据硬编码。对于 9 个子应用的 PMIS 系统覆盖严重不足。</div>
-  <div class="item-action">(1) 扩展浏览器矩阵：<code>projects: [chromium, firefox]</code>；(2) 凭据改为 <code>process.env.E2E_USER</code>；(3) 补充各子应用核心流 E2E（项目管理/工作流审批/消息发送）；(4) 断言改用 <code>expect(locator).toBeVisible()</code> 替代 <code>if isVisible</code>。</div>
+<!-- ==================== 已落地/已修复项 ==================== -->
+<h2 id="done">六、已落地/已修复项</h2>
+
+<div class="section">
+  <div class="section-title">以下问题已在近期迭代中修复或已具备良好实践</div>
+</div>
+
+<div class="item item-done">
+  <div class="item-title">6.1 生产构建已 drop console <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>conf/vite-config/src/config/application.ts</code> 已配置 <code>esbuild.drop: ['console', 'debugger']</code>，生产环境不再保留 console。</div>
+</div>
+
+<div class="item item-done">
+  <div class="item-title">6.2 Brotli + gzip 压缩已默认启用 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>application.ts</code> 中 <code>compressTypes: ['brotli', 'gzip']</code>，构建产物同时生成 .br 和 .gz 文件。需确保 nginx 侧开启 <code>brotli_static on</code> 或动态 brotli 压缩。</div>
+</div>
+
+<div class="item item-done">
+  <div class="item-title">6.3 Build target 已提升至 es2022 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>application.ts</code> 中 <code>target: 'es2022'</code>，减少降级代码，产物体积更优。</div>
+</div>
+
+<div class="item item-done">
+  <div class="item-title">6.4 chunkSizeWarningLimit 已调整至 1000 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc">已从 2000 降至 1000（1MB），超大 chunk 更易被及时发现。</div>
+</div>
+
+<div class="item item-done">
+  <div class="item-title">6.5 micro-kernel 已具备单元测试覆盖 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>comm/effects/micro-kernel/__tests__</code> 已覆盖 loader、kernel、sandbox、scheduler、error-boundary，相比旧 Qiankun 时期测试覆盖显著提升。</div>
+</div>
+
+<div class="item item-done">
+  <div class="item-title">6.6 Changesets 已配置 <span class="badge badge-done">已配置</span></div>
+  <div class="item-desc"><code>.changeset/config.json</code> 已存在，建议补充 <code>package.json</code> 脚本（如 <code>changeset</code>、<code>version-packages</code>）并纳入发布流程。</div>
 </div>
 
 <!-- ==================== 落地路线图 ==================== -->
 <h2 id="roadmap">七、落地路线图</h2>
 
 <div class="section">
-  <h3>🗓️ 第一阶段：紧急修复（1-2 周）— P0 项</h3>
+  <h3>第一阶段：紧急修复（1-2 周）— P0 项</h3>
   <table>
     <thead>
       <tr><th width="60">编号</th><th>建议</th><th width="100">预估工作量</th><th>影响面</th></tr>
     </thead>
     <tbody>
-      <tr><td>6.1</td><td>启用 Lefthook 钩子（commit-msg → pre-commit → pre-push 分阶段）</td><td>0.5 天</td><td>全团队提交流程</td></tr>
-      <tr><td>6.2</td><td>初始化 Changesets 或移除依赖</td><td>0.5 天</td><td>版本管理</td></tr>
-      <tr><td>3.1</td><td>生产构建 drop console</td><td>0.5 天</td><td>全部构建产物</td></tr>
-      <tr><td>3.2</td><td>启用 Brotli 压缩（前端 + nginx）</td><td>1 天</td><td>全部静态资源</td></tr>
-      <tr><td>1.3</td><td>移除 globalState 中的 token 明文传递</td><td>1 天</td><td>主子应用通信</td></tr>
+      <tr><td>1.1</td><td>以 createSubApp 重构 9 个子应用入口（先试点后批量）</td><td>3 天</td><td>全部子应用</td></tr>
+      <tr><td>1.2</td><td>扩展 micro-kernel activeRule 支持 RegExp / 函数</td><td>1 天</td><td>微前端路由</td></tr>
       <tr><td>2.1</td><td>OpenAPI SDK 接入业务（制定迁移计划 + 试点 1 个 app）</td><td>3 天</td><td>API 层</td></tr>
-      <tr><td>4.1</td><td>微前端切换骨架屏/loading 占位</td><td>2 天</td><td>子应用切换体验</td></tr>
-      <tr><td>6.3</td><td>配置 Vitest coverage + 补齐公共包单测</td><td>3 天</td><td>测试体系</td></tr>
+      <tr><td>4.1</td><td>微应用切换骨架屏/loading 占位</td><td>2 天</td><td>子应用切换体验</td></tr>
+      <tr><td>5.1</td><td>确认并安装 lefthook 钩子（commit-msg → pre-commit → pre-push）</td><td>0.5 天</td><td>全团队提交流程</td></tr>
+      <tr><td>5.2</td><td>配置 Vitest coverage + 补齐公共包单测阈值</td><td>3 天</td><td>测试体系</td></tr>
     </tbody>
   </table>
 
-  <h3>🗓️ 第二阶段：重要补强（3-4 周）— P1 项</h3>
+  <h3>第二阶段：重要补强（3-4 周）— P1 项</h3>
   <table>
     <thead>
       <tr><th width="60">编号</th><th>建议</th><th width="100">预估工作量</th></tr>
     </thead>
     <tbody>
-      <tr><td>1.1</td><td>抽取 createSubApp 工厂，收敛子应用 main.ts 样板</td><td>2 天</td></tr>
-      <tr><td>1.2</td><td>路由守卫下沉到 shared-auth</td><td>2 天</td></tr>
-      <tr><td>1.4</td><td>拆分 access store（authStore + accessStore）</td><td>2 天</td></tr>
-      <tr><td>1.6</td><td>tabbar Set → Array 类型修正</td><td>0.5 天</td></tr>
-      <tr><td>2.2</td><td>补齐 ui-kit Storybook stories</td><td>5 天（可并行）</td></tr>
-      <tr><td>2.3</td><td>完善错误监控上报链路</td><td>3 天</td></tr>
-      <tr><td>3.3</td><td>build target 提升至 es2018+</td><td>0.5 天</td></tr>
-      <tr><td>3.4</td><td>降低 chunkSizeWarningLimit 至 1000</td><td>0.5 天</td></tr>
-      <tr><td>3.5</td><td>引入图片压缩 + 字体子集化</td><td>1 天</td></tr>
+      <tr><td>1.3</td><td>评估并补齐 Proxy 沙箱或强化 lint 约束</td><td>3 天</td></tr>
+      <tr><td>1.4</td><td>globalState 监听返回取消订阅函数，unmount 自动清理</td><td>1 天</td></tr>
+      <tr><td>1.5</td><td>keep-alive 补充 activate/deactivate 生命周期</td><td>1 天</td></tr>
+      <tr><td>1.6</td><td>统一修正 globalState 文档，敏感数据不上通信层</td><td>0.5 天</td></tr>
+      <tr><td>2.2</td><td>完善 error-monitor 实际上报链路</td><td>3 天</td></tr>
+      <tr><td>2.3</td><td>补齐 ui-kit Storybook stories（高频组件）</td><td>5 天（可并行）</td></tr>
+      <tr><td>3.1</td><td>引入图片压缩 + 字体子集化</td><td>1 天</td></tr>
+      <tr><td>3.2</td><td>基于菜单 hover/权限动态调整 prefetch</td><td>2 天</td></tr>
       <tr><td>4.2</td><td>统一全局错误边界</td><td>1 天</td></tr>
       <tr><td>4.3</td><td>网络异常体验优化（空状态/重试组件）</td><td>2 天</td></tr>
-      <tr><td>6.4</td><td>tsconfig 补充 paths 映射</td><td>0.5 天</td></tr>
-      <tr><td>6.5</td><td>补充 PR/Issue 模板</td><td>0.5 天</td></tr>
-      <tr><td>6.6</td><td>check-circular 改为 fail 模式</td><td>0.5 天</td></tr>
+      <tr><td>5.3</td><td>check-circular 改为 fail 模式</td><td>0.5 天</td></tr>
+      <tr><td>5.4</td><td>tsconfig 补充 paths 映射</td><td>0.5 天</td></tr>
+      <tr><td>5.5</td><td>E2E 扩展浏览器矩阵 + 补充核心流用例</td><td>3 天</td></tr>
     </tbody>
   </table>
 
-  <h3>🗓️ 第三阶段：增强优化（按需推进）— P2 项</h3>
+  <h3>第三阶段：增强优化（按需推进）— P2 项</h3>
   <table>
     <thead>
       <tr><th width="60">编号</th><th>建议</th><th width="100">预估工作量</th></tr>
     </thead>
     <tbody>
-      <tr><td>1.5</td><td>v-access 指令改响应式或推荐组件方案</td><td>1 天</td></tr>
-      <tr><td>2.4</td><td>合并 errorMessageResponseInterceptor 冗余分支</td><td>0.5 天</td></tr>
-      <tr><td>2.5</td><td>retry 增加指数退避策略</td><td>1 天</td></tr>
-      <tr><td>3.6</td><td>评估启用 PWA</td><td>2 天</td></tr>
-      <tr><td>3.7</td><td>评估启用 importmap CDN 外置</td><td>2 天</td></tr>
+      <tr><td>1.7</td><td>micro-kernel 容器支持 HTMLElement / 多容器</td><td>2 天</td></tr>
+      <tr><td>1.8</td><td>importmap 默认启用自托管 vendor</td><td>2 天</td></tr>
+      <tr><td>2.4</td><td>错误降级 UI 组件化 + i18n</td><td>1 天</td></tr>
+      <tr><td>2.5</td><td>统一 retry 策略（含 jitter）</td><td>1 天</td></tr>
+      <tr><td>3.3</td><td>评估启用 PWA</td><td>2 天</td></tr>
+      <tr><td>3.4</td><td>requestIdleCallback fallback</td><td>0.5 天</td></tr>
       <tr><td>4.4</td><td>统一 registerLoadingDirective 参数</td><td>0.5 天</td></tr>
       <tr><td>4.5</td><td>页面级骨架屏</td><td>3 天</td></tr>
-      <tr><td>6.7</td><td>CI 缓存优化（pnpm store + turbo cache）</td><td>1 天</td></tr>
-      <tr><td>6.8</td><td>E2E 扩展浏览器矩阵 + 补充用例</td><td>3 天</td></tr>
-    </tbody>
-  </table>
-
-  <h3>🔧 过度设计精简（可与上述并行）</h3>
-  <table>
-    <tbody>
-      <tr><td>5.1</td><td>统一格式化工具职责边界（Prettier + Stylelint + perfectionist 明确分工）</td><td>1 天</td></tr>
-      <tr><td>5.2</td><td>关闭或条件化 archiver dist.zip</td><td>0.5 天</td></tr>
-      <tr><td>5.3</td><td>排查并移除不必要的 node-polyfills</td><td>0.5 天</td></tr>
-      <tr><td>5.4</td><td>决策 importmap 插件去留</td><td>0.5 天</td></tr>
-      <tr><td>5.5</td><td>license 注入去重</td><td>0.5 天</td></tr>
-      <tr><td>5.6</td><td>评估 cspell 保留或降级</td><td>0.5 天</td></tr>
+      <tr><td>5.6</td><td>CI 缓存优化（pnpm store + turbo cache）</td><td>1 天</td></tr>
     </tbody>
   </table>
 </div>
 
 <div class="summary-box" style="margin-top: 32px;">
-  <strong>对标总结：</strong>该项目在架构分层、微前端方案、RequestClient 封装、权限模型方面已达到 vben/element-plus-admin 等头部开源方案水平。与互联网大厂（如字节飞书、阿里钉钉）的主要差距集中在三点：<br>
-  <strong>① 质量门禁落地</strong>（lefthook 钩子注释 + 测试覆盖率缺失）——规范配置再好，不执行等于零；<br>
-  <strong>② 性能极致优化</strong>（brotli + console drop + build target + 图片压缩）——基础完备但缺最后一公里；<br>
-  <strong>③ 可观测性</strong>（错误上报 + 监控告警）——Web Vitals 有但异常上报链路不完整。<br>
-  建议优先完成 P0 项（约 2 周），可显著提升工程质量基线。
+  <strong>对标总结：</strong>ydsz-frontend 在自研微前端内核、monorepo 分层、请求客户端封装方面已达到行业头部开源方案（vben、element-plus-admin）水准，与互联网大厂内部方案的主要差距集中在三点：<br>
+  <strong>① 子应用入口统一：</strong><code>createSubApp</code> 工厂已提供但未落地，9 个子应用仍存在大量重复样板；<br>
+  <strong>② 微前端运行时细节：</strong>路由匹配、沙箱隔离、globalState 生命周期、keep-alive 状态同步需要补齐；<br>
+  <strong>③ 质量门禁与可观测性：</strong>lefthook 安装状态需确认、测试覆盖率无门槛、错误监控实际上报链路不完整。<br>
+  建议优先完成第一阶段 P0 项（约 2 周），可显著提升工程质量基线与用户体验。
 </div>
 
 </div>
