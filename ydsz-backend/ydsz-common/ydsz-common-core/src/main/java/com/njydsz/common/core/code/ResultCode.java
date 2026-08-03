@@ -1,7 +1,5 @@
 package com.njydsz.common.core.code;
 
-import com.njydsz.common.core.response.BaseResponse;
-
 /**
  * 统一结果码接口
  *
@@ -19,14 +17,22 @@ import com.njydsz.common.core.response.BaseResponse;
  * <pre>{@code
  * // 业务模块自定义错误码
  * public enum OrderResultCode implements ResultCode {
- *     ORDER_NOT_FOUND("B02001", "订单不存在"),
- *     ORDER_CANCELLED("B02002", "订单已取消");
+ *     ORDER_NOT_FOUND("B02001", "订单不存在", 404),
+ *     ORDER_CANCELLED("B02002", "订单已取消", 400);
  *
  *     private final String code;
  *     private final String msg;
+ *     private final int httpStatus;
+ *
+ *     OrderResultCode(String code, String msg, int httpStatus) {
+ *         this.code = code;
+ *         this.msg = msg;
+ *         this.httpStatus = httpStatus;
+ *     }
  *
  *     @Override public String getCode() { return code; }
  *     @Override public String getMsg() { return msg; }
+ *     @Override public int getHttpStatusCode() { return httpStatus; }
  * }
  *
  * // 在 Controller 中使用
@@ -37,7 +43,7 @@ import com.njydsz.common.core.response.BaseResponse;
  * @since 1.0.0
  * 
  * @see BaseResultCode
- * @see BaseResponse#error(ResultCode)
+ * @see com.njydsz.common.core.response.BaseResponse#error(ResultCode)
  */
 public interface ResultCode {
 
@@ -68,36 +74,13 @@ public interface ResultCode {
     }
 
     /**
-     * 将结果码映射到合适的 HTTP 状态码
+     * 将结果码映射到合适的 HTTP 状态码。
      *
-     * <p>默认实现基于 code 前缀进行语义化推断（参照阿里《Java开发手册》段位规划）：
-     * <ul>
-     *   <li>{@code A2}（认证授权）→ 401</li>
-     *   <li>{@code A}（用户端错误）→ 400</li>
-     *   <li>{@code B}（系统业务异常）→ 500</li>
-     *   <li>{@code C}（第三方服务异常）→ 500</li>
-     *   <li>{@code A00000}（成功）→ 200</li>
-     *   <li>其他 → 500</li>
-     * </ul>
-     *
-     * <p>业务枚举若需更精确的映射（如 404 / 403 / 429），可覆盖此方法。</p>
+     * <p>实现类必须显式声明每个错误码对应的 HTTP 状态码，
+     * 禁止使用前缀猜测推断（如 A 开头一律 400），因为相同前缀下的
+     * 错误码可能需要不同的状态码（例如 A10301 限流应为 429 而非 400）。
      *
      * @return 对应的 HTTP 状态码
      */
-    default int getHttpStatusCode() {
-        String code = getCode();
-        if (code == null) {
-            return 500;
-        }
-        if (BaseResponse.SUCCESS.equals(code)) {
-            return 200;
-        }
-        char prefix = code.charAt(0);
-        return switch (prefix) {
-            case 'A' -> code.length() >= 2 && code.charAt(1) == '2' ? 401 : 400;
-            case 'B' -> 500;
-            case 'C' -> 500;
-            default -> 500;
-        };
-    }
+    int getHttpStatusCode();
 }

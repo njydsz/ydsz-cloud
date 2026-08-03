@@ -95,9 +95,6 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         if (traceId == null && request != null) {
             traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
-            if (traceId == null) {
-                traceId = request.getHeader(HeaderConstants.X_TRACE_ID);
-            }
         }
         return traceId;
     }

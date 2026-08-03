@@ -47,7 +47,6 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
  *
  * @author ydsz-team
  * @since 1.1.0
- * @see BaseResponse#error(ResultCode, Object)
  */
 @Data
 @NoArgsConstructor

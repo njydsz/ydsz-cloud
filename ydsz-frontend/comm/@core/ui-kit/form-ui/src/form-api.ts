@@ -14,6 +14,8 @@ import type {
 
 import type { Recordable } from '@ydsz-core/typings';
 
+import type { Ref } from 'vue';
+
 import type { FormActions, FormSchema, YDSZFormProps } from './types';
 
 import { toRaw } from 'vue';

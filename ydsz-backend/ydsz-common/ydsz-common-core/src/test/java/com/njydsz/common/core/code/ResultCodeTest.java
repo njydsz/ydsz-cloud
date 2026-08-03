@@ -6,100 +6,77 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * {@link ResultCode} 默认实现测试
+ * {@link ResultCode} 契约测试
  *
- * <p>覆盖 code 前缀推断 HTTP 状态码、messageKey 默认实现等行为。
+ * <p>覆盖：实现类必须显式声明 HTTP 状态码（禁止前缀猜测）、
+ * messageKey 默认实现、BaseResultCode 数据驱动映射等行为。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.2.0
  */
-@DisplayName("ResultCode 接口默认实现测试")
+@DisplayName("ResultCode 接口契约测试")
 class ResultCodeTest {
 
     @Test
-    @DisplayName("A2 前缀推断为 401")
-    void a2_prefix401() {
-        assertEquals(401, TestCode.A2_001.getHttpStatusCode());
-        assertEquals(401, TestCode.A2_101.getHttpStatusCode());
-    }
-
-    @Test
-    @DisplayName("A 前缀（非 A2）推断为 400")
-    void a_prefix400() {
-        assertEquals(400, TestCode.A1_001.getHttpStatusCode());
-        assertEquals(400, TestCode.A1_101.getHttpStatusCode());
-        assertEquals(400, TestCode.A1_301.getHttpStatusCode());
-    }
-
-    @Test
-    @DisplayName("B 前缀推断为 500")
-    void b_prefix500() {
-        assertEquals(500, TestCode.B1_201.getHttpStatusCode());
-        assertEquals(500, TestCode.B2_001.getHttpStatusCode());
-    }
-
-    @Test
-    @DisplayName("C 前缀推断为 500")
-    void c_prefix500() {
-        assertEquals(500, TestCode.C1_501.getHttpStatusCode());
-    }
-
-    @Test
-    @DisplayName("A00000 推断为 200")
-    void success200() {
+    @DisplayName("实现类必须显式声明 HTTP 状态码")
+    void explicitHttpStatusRequired() {
+        // TestCode 为每个枚举显式声明了 httpStatus，不依赖前缀推断
+        assertEquals(400, TestCode.BAD_REQUEST.getHttpStatusCode());
+        assertEquals(429, TestCode.RATE_LIMIT.getHttpStatusCode());
+        assertEquals(404, TestCode.NOT_FOUND.getHttpStatusCode());
         assertEquals(200, TestCode.SUCCESS.getHttpStatusCode());
-    }
-
-    @Test
-    @DisplayName("其他前缀推断为 500")
-    void otherPrefix500() {
-        assertEquals(500, TestCode.X1_001.getHttpStatusCode());
-        assertEquals(500, TestCode.D1_001.getHttpStatusCode());
-    }
-
-    @Test
-    @DisplayName("null code 推断为 500")
-    void nullCode500() {
-        assertEquals(500, TestCode.NULL_CODE.getHttpStatusCode());
     }
 
     @Test
     @DisplayName("getMessageKey 默认返回 error.枚举名")
     void messageKey() {
-        assertEquals("error.A1_001", TestCode.A1_001.getMessageKey());
+        assertEquals("error.BAD_REQUEST", TestCode.BAD_REQUEST.getMessageKey());
+        assertEquals("error.RATE_LIMIT", TestCode.RATE_LIMIT.getMessageKey());
     }
 
     @Test
-    @DisplayName("BaseResultCode 覆盖了默认实现（与接口推断一致）")
-    void baseResultCodeConsistency() {
-        // 抽查：BaseResultCode 的显式映射应与接口默认推断一致
+    @DisplayName("BaseResultCode 全部枚举显式声明 HTTP 状态码")
+    void baseResultCodeExplicitMapping() {
+        // 抽查常见错误码的精确映射（覆盖此前前缀推断会出错的场景）
         assertEquals(400, BaseResultCode.BAD_REQUEST.getHttpStatusCode());
+        assertEquals(404, BaseResultCode.NOT_FOUND.getHttpStatusCode());
+        assertEquals(409, BaseResultCode.DUPLICATE_KEY.getHttpStatusCode());
+        assertEquals(429, BaseResultCode.RATE_LIMIT.getHttpStatusCode());
         assertEquals(401, BaseResultCode.UNAUTHORIZED.getHttpStatusCode());
+        assertEquals(403, BaseResultCode.FORBIDDEN.getHttpStatusCode());
         assertEquals(500, BaseResultCode.INTERNAL_ERROR.getHttpStatusCode());
+        assertEquals(503, BaseResultCode.SERVICE_UNAVAILABLE.getHttpStatusCode());
         assertEquals(200, BaseResultCode.SUCCESS.getHttpStatusCode());
     }
 
+    @Test
+    @DisplayName("BaseResultCode 每个枚举的 HTTP 状态码与其段位语义一致")
+    void baseResultCodeSegmentConsistency() {
+        // A2 段位（认证授权）应映射 401/403/423，而非统一 400
+        assertTrue(BaseResultCode.UNAUTHORIZED.getHttpStatusCode() >= 401);
+        assertTrue(BaseResultCode.TOKEN_EXPIRED.getHttpStatusCode() >= 401);
+        assertTrue(BaseResultCode.ACCOUNT_LOCKED.getHttpStatusCode() >= 423);
+        // C 段位（第三方服务）应为 5xx
+        assertTrue(BaseResultCode.THIRD_PARTY_SERVICE_ERROR.getHttpStatusCode() >= 500);
+        assertTrue(BaseResultCode.MQ_PUBLISH_FAILED.getHttpStatusCode() >= 500);
+    }
+
     /**
-     * 测试用 ResultCode 实现（不覆盖 getHttpStatusCode，验证默认推断）。
+     * 测试用 ResultCode 实现（显式声明 HTTP 状态码，验证强制契约）。
      */
     private enum TestCode implements ResultCode {
-        SUCCESS("A00000"),
-        A1_001("A10001"),
-        A1_101("A10101"),
-        A1_301("A10301"),
-        A2_001("A20001"),
-        A2_101("A20101"),
-        B1_201("B10201"),
-        B2_001("B20001"),
-        C1_501("C10501"),
-        X1_001("X10001"),
-        D1_001("D10001"),
-        NULL_CODE(null);
+        SUCCESS("A00000", 200),
+        BAD_REQUEST("A10001", 400),
+        NOT_FOUND("A10101", 404),
+        RATE_LIMIT("A10301", 429),
+        UNAUTHORIZED("A20001", 401);
 
         private final String code;
+        private final int httpStatus;
 
-        TestCode(String code) {
+        TestCode(String code, int httpStatus) {
             this.code = code;
+            this.httpStatus = httpStatus;
         }
 
         @Override
@@ -110,6 +87,11 @@ class ResultCodeTest {
         @Override
         public String getMsg() {
             return "test";
+        }
+
+        @Override
+        public int getHttpStatusCode() {
+            return httpStatus;
         }
     }
 }

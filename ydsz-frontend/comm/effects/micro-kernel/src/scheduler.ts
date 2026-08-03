@@ -22,6 +22,19 @@ import { createLogger } from '@ydsz-core/shared/utils';
 /** 模块级日志器（生命周期事件默认 debug 级别，避免生产噪音） */
 const logger = createLogger('MicroKernel');
 
+/**
+ * 解析容器配置：支持 CSS 选择器字符串或 HTMLElement 实例。
+ *
+ * @param container - 容器配置（string | HTMLElement）
+ * @returns 解析后的 HTMLElement，未找到时返回 null
+ */
+function resolveContainer(container: string | HTMLElement): HTMLElement | null {
+  if (typeof container === 'string') {
+    return document.querySelector(container) as HTMLElement | null;
+  }
+  return container;
+}
+
 /** 子应用生命周期状态：未加载 / 加载中 / 已加载 / 已挂载 / 已卸载 */
 export type AppStatus = 'NOT_LOADED' | 'LOADING' | 'LOADED' | 'MOUNTED' | 'UNMOUNTED';
 
@@ -156,7 +169,7 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
   }
 
   if (instance.keepAlive) {
-    const container = document.querySelector(config.container);
+    const container = resolveContainer(config.container);
     if (container) {
       instance.cachedRoot = container.firstElementChild as HTMLElement;
       instance.cachedParent = container;
@@ -180,7 +193,7 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
   // 完整卸载
   try {
     await instance.exports!.unmount({
-      container: document.querySelector(config.container) || document.createElement('div'),
+      container: resolveContainer(config.container) || document.createElement('div'),
       basename: config.activeRule,
     });
 
@@ -191,7 +204,7 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
     }
 
     // 移除容器级 CSS scoping 属性（data-micro-app）
-    const containerEl = document.querySelector(config.container);
+    const containerEl = resolveContainer(config.container);
     if (containerEl) {
       containerEl.removeAttribute('data-micro-app');
     }

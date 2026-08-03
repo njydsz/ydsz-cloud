@@ -3,7 +3,7 @@ package com.njydsz.common.domain.enums;
 import java.util.Map;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.constant.TokenConstants;
+import com.njydsz.common.domain.constant.TokenConstants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

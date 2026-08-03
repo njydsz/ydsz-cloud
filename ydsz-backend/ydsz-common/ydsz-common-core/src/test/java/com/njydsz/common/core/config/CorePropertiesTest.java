@@ -72,6 +72,24 @@ class CorePropertiesTest {
     }
 
     @Test
+    @DisplayName("defaultPageSize 大于 maxPageSize 时交叉校验失败")
+    void crossField_defaultExceedsMax_invalid() {
+        CoreProperties props = new CoreProperties();
+        props.setMaxPageSize(20);
+        props.setDefaultPageSize(100);
+        assertFalse(validator.validate(props).isEmpty());
+    }
+
+    @Test
+    @DisplayName("defaultPageSize 等于 maxPageSize 时交叉校验通过")
+    void crossField_defaultEqualsMax_valid() {
+        CoreProperties props = new CoreProperties();
+        props.setMaxPageSize(100);
+        props.setDefaultPageSize(100);
+        assertTrue(validator.validate(props).isEmpty());
+    }
+
+    @Test
     @DisplayName("默认值正确")
     void defaults() {
         CoreProperties props = new CoreProperties();

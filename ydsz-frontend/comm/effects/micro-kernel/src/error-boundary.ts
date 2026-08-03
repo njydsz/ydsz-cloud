@@ -15,6 +15,93 @@ import { createLogger } from '@ydsz-core/shared/utils';
 /** 模块级日志器 */
 const logger = createLogger('MicroKernel');
 
+/**
+ * 错误降级 UI 消息配置，支持 i18n。
+ *
+ * @remarks
+ * 默认提供中英文消息，业务方可通过 {@link setErrorFallbackMessages} 注入自定义消息，
+ * 或通过 MicroAppConfig 传入自定义消息覆盖全局配置。
+ */
+export interface ErrorFallbackMessages {
+  /** 错误标题 */
+  title: string;
+  /** 错误描述 */
+  description: string;
+  /** 剩余重试次数提示 */
+  retriesLeft: string;
+  /** 重试按钮文案 */
+  retry: string;
+  /** 返回首页按钮文案 */
+  goHome: string;
+  /** 技术详情折叠标题 */
+  technicalDetails: string;
+  /** 技术详情 - 应用名称 */
+  appName: string;
+  /** 技术详情 - 入口地址 */
+  entry: string;
+  /** 技术详情 - 激活规则 */
+  activeRule: string;
+  /** 技术详情 - 重试次数 */
+  retryCount: string;
+  /** 重新加载中提示 */
+  reloading: string;
+}
+
+/** 默认中文消息 */
+const zhCNMessages: ErrorFallbackMessages = {
+  title: '应用加载失败',
+  description: '子应用可能正在发版或网络异常，请稍后重试。',
+  retriesLeft: '剩余重试次数：',
+  retry: '重试加载',
+  goHome: '返回首页',
+  technicalDetails: '技术详情',
+  appName: '应用名称：',
+  entry: '入口地址：',
+  activeRule: '激活规则：',
+  retryCount: '重试次数：',
+  reloading: '重新加载中...',
+};
+
+/** 默认英文消息 */
+const enUSMessages: ErrorFallbackMessages = {
+  title: 'Failed to Load Application',
+  description: 'The sub-application may be deploying or experiencing network issues. Please try again later.',
+  retriesLeft: 'Retries left: ',
+  retry: 'Retry',
+  goHome: 'Go Home',
+  technicalDetails: 'Technical Details',
+  appName: 'App Name: ',
+  entry: 'Entry: ',
+  activeRule: 'Active Rule: ',
+  retryCount: 'Retry Count: ',
+  reloading: 'Reloading...',
+};
+
+/** 当前全局消息配置 */
+let globalMessages: ErrorFallbackMessages = zhCNMessages;
+
+/**
+ * 设置全局错误降级 UI 消息。
+ *
+ * @param messages - 消息配置对象
+ */
+export function setErrorFallbackMessages(messages: ErrorFallbackMessages): void {
+  globalMessages = messages;
+}
+
+/**
+ * 根据语言标识获取预置消息。
+ *
+ * @param locale - 语言标识，如 'zh-CN'、'en-US'
+ * @returns 消息配置对象
+ */
+export function getErrorFallbackMessagesByLocale(locale: string): ErrorFallbackMessages {
+  if (locale.startsWith('en')) {
+    return enUSMessages;
+  }
+  return zhCNMessages;
+}
+
 /** 本次会话应用降级 set（key = app.name，该应用不再尝试微前端加载，走整页跳转） */
 const degradedApps = new Set<string>();
 
@@ -44,7 +131,7 @@ export function resetRetryCount(appName: string): void {
 }
 
 /**
- * 渲染降级错误 UI。
+ * 渲染错误降级 UI。
  *
  * v3.1: onRetry 回调优先于整页刷新。
  * 点击「重试」时：
@@ -53,20 +140,27 @@ export function resetRetryCount(appName: string): void {
  *
  * v3.2: 增强 UI 展示，提供错误详情、重试计数、返回首页等选项
  *
+ * v3.3: 支持 i18n，通过 ErrorFallbackMessages 配置消息
+ *
+ * v3.4: 支持 HTMLElement 容器，与 MicroAppConfig.container 类型对齐
+ *
  * @param config - 子应用配置
- * @param container - 容器选择器
+ * @param container - 容器（HTMLElement 或 null）
  * @param onRetry - 微前端级重试回调（清除降级标记 → 重新激活），不传则直接整页跳转
+ * @param messages - 可选的自定义消息配置，不传则使用全局配置
  */
 export function renderErrorFallback(
   config: MicroAppConfig,
-  container: string,
+  container: HTMLElement | null,
   onRetry?: () => Promise<void>,
+  messages?: ErrorFallbackMessages,
 ): void {
-  const el = document.querySelector(container);
+  const el = container;
   if (!el) return;
 
   const retryCount = retryCounters.get(config.name) ?? 0;
   const canRetry = onRetry && retryCount < MAX_MICRO_RETRIES;
+  const msg = messages ?? globalMessages;
 
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -85,7 +179,7 @@ export function renderErrorFallback(
       
       <!-- 错误标题 -->
       <h2 style="margin:0 0 8px;font-size:20px;font-weight:600;color:var(--el-text-color-primary, #303133)">
-        应用加载失败
+        ${msg.title}
       </h2>
       
       <!-- 应用名称 -->
@@ -96,8 +190,8 @@ export function renderErrorFallback(
       <!-- 错误描述 -->
       <p style="margin:0 0 24px;font-size:14px;color:var(--el-text-color-regular, #606266);
                 text-align:center;max-width:400px;line-height:1.6">
-        子应用可能正在发版或网络异常，请稍后重试。
-        ${canRetry ? `<br/>剩余重试次数：${MAX_MICRO_RETRIES - retryCount}` : ''}
+        ${msg.description}
+        ${canRetry ? `<br/>${msg.retriesLeft}${MAX_MICRO_RETRIES - retryCount}` : ''}
       </p>
       
       <!-- 操作按钮组 -->
@@ -107,14 +201,14 @@ export function renderErrorFallback(
                   style="padding:10px 24px;background:var(--el-color-primary, #409eff);
                          color:#fff;border:none;border-radius:6px;cursor:pointer;
                          font-size:14px;font-weight:500;transition:all 0.2s">
-            重试加载
+            ${msg.retry}
           </button>
         ` : ''}
         <button id="micro-kernel-home-${config.name}"
                 style="padding:10px 24px;background:var(--el-fill-color, #f5f7fa);
                        color:var(--el-text-color-regular, #606266);border:1px solid var(--el-border-color, #dcdfe6);
                        border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.2s">
-          返回首页
+          ${msg.goHome}
         </button>
       </div>
       
@@ -122,15 +216,15 @@ export function renderErrorFallback(
       <details style="margin-top:24px;width:100%;max-width:500px">
         <summary style="cursor:pointer;font-size:13px;color:var(--el-text-color-secondary, #909399);
                         padding:8px 0;user-select:none">
-          技术详情
+          ${msg.technicalDetails}
         </summary>
         <div style="margin-top:8px;padding:12px;background:var(--el-fill-color-light, #fafafa);
                     border-radius:6px;font-size:12px;color:var(--el-text-color-regular, #606266);
                     font-family:monospace;word-break:break-all">
-          <div>应用名称：${config.name}</div>
-          <div>入口地址：${config.entry}</div>
-          <div>激活规则：${config.activeRule}</div>
-          <div>重试次数：${retryCount}/${MAX_MICRO_RETRIES}</div>
+          <div>${msg.appName}${config.name}</div>
+          <div>${msg.entry}${config.entry}</div>
+          <div>${msg.activeRule}${config.activeRule}</div>
+          <div>${msg.retryCount}${retryCount}/${MAX_MICRO_RETRIES}</div>
         </div>
       </details>
     </div>`;
@@ -150,14 +244,14 @@ export function renderErrorFallback(
                     border-top-color:var(--el-color-primary, #409eff);border-radius:50%;
                     animation:spin 0.8s linear infinite"></div>
         <p style="margin:16px 0 0;font-size:14px;color:var(--el-text-color-secondary, #909399)">
-          重新加载中...
+          ${msg.reloading}
         </p>
         <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
       </div>`;
     
     onRetry().catch(() => {
       // 重试失败 → 重新渲染错误 UI
-      renderErrorFallback(config, container, onRetry);
+      renderErrorFallback(config, el, onRetry, messages);
     });
   });
 

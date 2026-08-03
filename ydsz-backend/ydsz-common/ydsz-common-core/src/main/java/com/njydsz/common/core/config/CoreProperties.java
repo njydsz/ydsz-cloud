@@ -1,5 +1,6 @@
 package com.njydsz.common.core.config;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
@@ -44,4 +45,17 @@ public class CoreProperties {
 
     /** 租户 MDC 过滤器优先级，默认高于业务过滤器 */
     private int tenantMdcFilterOrder = Ordered.HIGHEST_PRECEDENCE + 100;
+
+    /**
+     * 交叉校验：默认每页记录数不能超过最大每页记录数上限。
+     *
+     * <p>避免出现 {@code default-page-size > max-page-size} 的非法组合，
+     * 否则归一化逻辑会将默认值截断到上限，产生反直觉行为。</p>
+     *
+     * @return true=配置合法
+     */
+    @AssertTrue(message = "default-page-size must be <= max-page-size")
+    public boolean isPaginationRangeValid() {
+        return defaultPageSize <= maxPageSize;
+    }
 }

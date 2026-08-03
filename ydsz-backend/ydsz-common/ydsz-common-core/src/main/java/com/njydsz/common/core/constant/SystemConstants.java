@@ -21,7 +21,7 @@ public final class SystemConstants {
     public static final String SYSTEM_MODULE = "system";
 
     /** 默认租户 ID */
-    public static final String DEFAULT_TENANT_ID = "1";
+    public static final String DEFAULT_TENANT_ID = "0";
 
     /** 默认语言（zh-CN） */
     public static final String DEFAULT_LOCALE = "zh-CN";

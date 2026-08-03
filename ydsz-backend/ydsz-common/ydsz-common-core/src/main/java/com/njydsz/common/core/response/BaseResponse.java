@@ -63,7 +63,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 失败状态码
      */
-    public static final String ERROR = "A01001";
+    public static final String ERROR = "A99999";
 
     /**
      * 国际化消息 key
@@ -211,23 +211,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 返回失败消息
      *
-     * <p><b>重载注意：</b>当 {@code data} 为 String 类型时，Java 会优先匹配
-     * {@link #error(String, String)}（code + msg 语义），而非本方法。
-     * 需要携带 String 数据的失败响应请使用
-     * {@link #error(String, String, Object)} 三参重载。</p>
-     *
-     * @param msg 消息内容
-     * @param data 数据内容
-     * @param <T> 数据类型
-     * @return 失败响应
-     */
-    public static <T> BaseResponse<T> error(String msg, T data) {
-        return of(ERROR, msg, data);
-    }
-
-    /**
-     * 返回失败消息
-     *
      * @param code 错误码
      * @param msg 消息内容
      * @param <T> 数据类型
@@ -310,19 +293,22 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 返回失败消息
      *
+     * <p>自动走 i18n 链路：使用 {@link ResultCode#getMessageKey()} 作为
+     * 国际化 key 解析消息，解析失败时回退到 {@link ResultCode#getMsg()}。</p>
+     *
      * @param resultCode 结果码
      * @param <T> 数据类型
      * @return 失败消息
      */
     public static <T> BaseResponse<T> error(ResultCode resultCode) {
-        return of(resultCode.getCode(), resultCode.getMsg(), null);
+        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), null);
     }
 
     /**
      * 返回失败消息
      *
      * @param resultCode 结果码
-     * @param msg 自定义消息（覆盖 ResultCode 默认消息）
+     * @param msg 自定义消息（覆盖 ResultCode 默认消息，不走 i18n）
      * @param <T> 数据类型
      * @return 失败消息
      */
@@ -346,7 +332,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     @SuppressWarnings("unchecked")
     public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail);
-        return of(resultCode.getCode(), resultCode.getMsg(), (T) problem);
+        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), (T) problem);
     }
 
     /**
@@ -362,7 +348,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     @SuppressWarnings("unchecked")
     public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, URI instance) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
-        return of(resultCode.getCode(), resultCode.getMsg(), (T) problem);
+        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), (T) problem);
     }
 
     /**

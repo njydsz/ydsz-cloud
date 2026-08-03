@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AppRequestLogInterceptor extends BaseRequestLogInterceptor {
 
     /** 请求追踪 ID 请求头名称 */
-    private static final String REQUEST_ID_HEADER = HeaderConstants.X_TRACE_ID;
+    private static final String REQUEST_ID_HEADER = HeaderConstants.TRACE_ID_HEADER;
 
     /**
      * 构造方法

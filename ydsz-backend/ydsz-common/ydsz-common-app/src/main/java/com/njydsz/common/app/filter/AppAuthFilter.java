@@ -46,7 +46,7 @@ public class AppAuthFilter extends BaseAuthFilter {
     private static final String AUTH_HANDLER_NULL_MESSAGE = "AuthHandler or AuthenticationProvider must be configured";
 
     /** 请求追踪 ID 请求头名称 */
-    private static final String REQUEST_ID_HEADER = HeaderConstants.X_TRACE_ID;
+    private static final String REQUEST_ID_HEADER = HeaderConstants.TRACE_ID_HEADER;
 
     /** App 端用户类型标识，作为指标 userType 标签值 */
     private static final String USER_TYPE_APP = "app";

@@ -13,8 +13,6 @@ import type { Component, HtmlHTMLAttributes, Ref } from 'vue';
 import type { YDSZButtonProps } from '@ydsz-core/shadcn-ui';
 import type { ClassType, MaybeComputedRef } from '@ydsz-core/typings';
 
-import type { FormApi } from './form-api';
-
 /**
  * 表单项的标签排布方式。
  *
@@ -765,24 +763,6 @@ export interface YDSZFormProps<
    */
   submitOnEnter?: boolean;
 }
-
-/**
- * 在 {@link FormApi} 基础上附加响应式订阅能力的表单句柄，是业务实际拿到的 API 类型。
- *
- * @remarks
- * `FormApi` 本身是普通类实例，其内部状态无法直接在模板中响应式消费；
- * 这里补充的 `useStore` 用于把状态桥接为 Vue 的只读 ref。
- *
- * `useStore` 接受一个可选 selector 以订阅状态切片，**强烈建议传入**：
- * 不传则订阅整个 state，任意字段变化都会触发重渲染，大表单下性能损耗明显。
- * selector 应保持纯函数且返回稳定引用，否则每次比较都判定为变化，等同于没有优化。
- * 返回值为只读 ref，直接赋值修改不会同步回表单，需通过 `FormApi` 的方法更新。
- */
-export type ExtendedFormApi = FormApi & {
-  useStore: <T = NoInfer<YDSZFormProps>>(
-    selector?: (state: NoInfer<YDSZFormProps>) => T,
-  ) => Readonly<Ref<T>>;
-};
 
 /**
  * 表单适配器的全局初始化选项，用于把 form-ui 对接到具体的 UI 组件库。

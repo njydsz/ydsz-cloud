@@ -18,8 +18,12 @@ export interface MicroAppConfig {
   name: string;
   /** 入口 URL — prod 为子路径，dev 为 localhost 端口 */
   entry: string;
-  /** 挂载容器选择器（如 '#subapp-container'） */
-  container: string;
+  /**
+   * 挂载容器，支持两种模式：
+   * - string: CSS 选择器（如 '#subapp-container'）
+   * - HTMLElement: 直接传入 DOM 元素（适用于动态创建容器的场景）
+   */
+  container: string | HTMLElement;
   /**
    * 激活规则，支持三种模式：
    * - string: 路由前缀匹配（如 '/ydsz-proj'）

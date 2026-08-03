@@ -153,6 +153,39 @@ class RequestContextTest {
     }
 
     @Test
+    @DisplayName("builder().apply() 批量设置内置键")
+    void builder_apply() {
+        try (RequestContext.CleanupGuard guard = RequestContext.builder()
+                .userId("u1")
+                .tenantId("t1")
+                .traceId("tr1")
+                .requestId("r1")
+                .language("en-US")
+                .tenantIsolationSkipped(true)
+                .apply()) {
+            assertEquals("u1", RequestContext.getUserId());
+            assertEquals("t1", RequestContext.getTenantId());
+            assertEquals("tr1", RequestContext.getTraceId());
+            assertEquals("r1", RequestContext.getRequestId());
+            assertEquals("en-US", RequestContext.getLanguage());
+            assertTrue(RequestContext.isTenantIsolationSkipped());
+        }
+        // apply 返回的 guard 在 try 块结束后自动清理
+        assertNull(RequestContext.getUserId());
+    }
+
+    @Test
+    @DisplayName("builder() 未设置的属性不覆盖已有上下文")
+    void builder_partialNoOverride() {
+        try (RequestContext.CleanupGuard guard = RequestContext.newCleanupGuard()) {
+            RequestContext.setUserId("existing");
+            RequestContext.builder().tenantId("t1").apply();
+            assertEquals("existing", RequestContext.getUserId(), "null field must not overwrite");
+            assertEquals("t1", RequestContext.getTenantId());
+        }
+    }
+
+    @Test
     @DisplayName("普通线程池（非 Ttl 包装）线程复用时上下文不传播")
     void threadPool_noPropagation() throws InterruptedException {
         RequestContext.clear();

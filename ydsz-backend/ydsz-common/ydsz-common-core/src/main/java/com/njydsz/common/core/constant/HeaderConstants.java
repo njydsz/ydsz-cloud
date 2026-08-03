@@ -239,13 +239,6 @@ public final class HeaderConstants {
     public static final String TRACE_ID_HEADER = "X-Trace-Id";
 
     /**
-     * 请求追踪 ID HTTP 头（别名）。
-     *
-     * <p>等于 {@link #TRACE_ID_HEADER}，推荐使用 {@link #TRACE_ID_HEADER}。
-     */
-    public static final String X_TRACE_ID = TRACE_ID_HEADER;
-
-    /**
      * TraceId 在 SLF4J MDC 中的 key 名称。
      *
      * <p>日志框架通过此 key 从 MDC 中提取 traceId 注入日志输出格式。

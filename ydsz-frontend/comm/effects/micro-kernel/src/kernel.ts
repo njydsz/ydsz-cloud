@@ -44,8 +44,34 @@ const logger = createLogger('MicroKernel');
 /** 内核自定义路由变更事件名，供 history patch + popstate 统一触发 */
 const ROUTE_CHANGE_EVENT = 'micro-kernel:route-change';
 
+/**
+ * 解析容器配置：支持 CSS 选择器字符串或 HTMLElement 实例。
+ *
+ * @param container - 容器配置（string | HTMLElement）
+ * @returns 解析后的 HTMLElement，未找到时返回 null
+ */
+function resolveContainer(container: string | HTMLElement): HTMLElement | null {
+  if (typeof container === 'string') {
+    return document.querySelector(container) as HTMLElement | null;
+  }
+  return container;
+}
+
 /** 当前活跃应用名 */
 let activeAppName: null | string = null;
+
+/**
+ * 解析容器配置为 HTMLElement。
+ *
+ * @param container - 容器配置，支持 CSS 选择器字符串或 HTMLElement
+ * @returns 解析后的 HTMLElement，未找到时返回 null
+ */
+function resolveContainer(container: string | HTMLElement): HTMLElement | null {
+  if (typeof container === 'string') {
+    return document.querySelector(container) as HTMLElement | null;
+  }
+  return container;
+}
 
 /** 切换令牌：递增代次，防止快速连续切换时异步竞态 */
 let switchToken = 0;
@@ -263,7 +289,7 @@ async function switchToApp(config: MicroAppConfig, options?: StartOptions): Prom
   await runHooks('beforeLoad', config);
   if (token !== switchToken) return;
 
-  const container = document.querySelector(config.container);
+  const container = resolveContainer(config.container);
   if (!container) {
     logger.error(`Container "${config.container}" not found for ${config.name}`);
     window.dispatchEvent(new CustomEvent('micro-kernel:error', { detail: { appName: config.name, error: 'Container not found' } }));
@@ -282,7 +308,7 @@ async function switchToApp(config: MicroAppConfig, options?: StartOptions): Prom
     logger.error(`Failed to activate ${config.name}:`, err);
     markDegraded(config.name);
     // v3.1: onRetry 回调使「重试」按钮重新激活子应用而非整页刷新
-    renderErrorFallback(config, config.container, () => switchToApp(config, options));
+    renderErrorFallback(config, resolveContainer(config.container), () => switchToApp(config, options));
 
     // 派发 error 事件，触发骨架屏隐藏
     window.dispatchEvent(new CustomEvent('micro-kernel:error', { detail: { appName: config.name, error: String(err) } }));

@@ -88,11 +88,10 @@ class BaseResponseTest {
     }
 
     @Test
-    @DisplayName("error(msg, data) 同时携带错误消息与数据")
-    void error_msgAndData() {
-        // 注意：两个 String 参数时 Java 会选择 error(String, String) 重载
-        // 此处用 Integer data 明确触发 error(String msg, T data)
-        BaseResponse<Integer> resp = BaseResponse.error("失败", 42);
+    @DisplayName("error(code, msg, data) 同时携带错误码、消息与数据")
+    void error_codeMsgAndData() {
+        BaseResponse<Integer> resp = BaseResponse.error("B10001", "失败", 42);
+        assertEquals("B10001", resp.getCode());
         assertEquals("失败", resp.getMsg());
         assertEquals(42, resp.getData());
     }

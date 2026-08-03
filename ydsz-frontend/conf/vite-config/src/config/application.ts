@@ -55,14 +55,15 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       html: true,
       i18n: true,
       importmapOptions: {
-        // v3.1: VITE_IMPORTMAP_SELF_HOST=/vendor 时启用自托管，消除公网 CDN SPOF
+        // v3.2: 默认启用自托管 vendor，消除公网 CDN SPOF 风险
         // 需先运行 `pnpm sync:shared-deps` 将 ESM 产物下载到 public/vendor/
-        ...(env.VITE_IMPORTMAP_SELF_HOST
+        // 可通过 VITE_IMPORTMAP_SELF_HOST=false 回退到 CDN 模式
+        ...(env.VITE_IMPORTMAP_SELF_HOST === 'false'
           ? {
-              selfHostBase: env.VITE_IMPORTMAP_SELF_HOST,
+              defaultProvider: 'esm.sh',
             }
           : {
-              defaultProvider: 'esm.sh',
+              selfHostBase: env.VITE_IMPORTMAP_SELF_HOST || '/vendor',
             }),
         importmap: [...ALL_SHARED_DEPS],
       },
@@ -75,7 +76,8 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       printInfoMap: {
         'YDSZ Admin Docs': 'https://docs.njydsz.com.cn',
       },
-      // 中后台管理端 PWA 价值低且有缓存脏数据风险，关闭
+      // v3.2: PWA 支持由应用层配置，默认关闭（中后台管理端缓存脏数据风险）
+      // 应用层可通过 application.pwa = true 启用
       pwa: false,
       pwaOptions: getDefaultPwaOptions(appTitle),
       vxeTableLazyImport: true,

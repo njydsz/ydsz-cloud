@@ -344,6 +344,144 @@ public final class RequestContext {
     }
 
     /**
+     * 创建请求上下文 Builder，用于一次性批量设置多个属性。
+     *
+     * <p>调用 {@link Builder#apply()} 将全部属性写入当前线程上下文。</p>
+     *
+     * <p><b>使用示例：</b></p>
+     * <pre>{@code
+     * RequestContext.builder()
+     *         .userId("user123")
+     *         .tenantId("tenant456")
+     *         .traceId(TraceIdGenerator.generate())
+     *         .language("zh-CN")
+     *         .apply();
+     * }</pre>
+     *
+     * @return Builder 实例
+     * @since 1.2.0
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * 请求上下文 Builder。
+     *
+     * <p>提供类型化的 setter 链式调用，{@link #apply()} 一次性提交到当前线程上下文。</p>
+     *
+     * @since 1.2.0
+     */
+    public static final class Builder {
+
+        private String userId;
+        private String tenantId;
+        private String traceId;
+        private String requestId;
+        private String language;
+        private Boolean tenantIsolationSkipped;
+
+        private Builder() {
+            // 私有构造，仅允许通过 RequestContext.builder() 创建
+        }
+
+        /**
+         * 设置用户 ID。
+         *
+         * @param userId 用户 ID
+         * @return this
+         */
+        public Builder userId(String userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        /**
+         * 设置租户 ID。
+         *
+         * @param tenantId 租户 ID
+         * @return this
+         */
+        public Builder tenantId(String tenantId) {
+            this.tenantId = tenantId;
+            return this;
+        }
+
+        /**
+         * 设置链路追踪 ID。
+         *
+         * @param traceId 追踪 ID
+         * @return this
+         */
+        public Builder traceId(String traceId) {
+            this.traceId = traceId;
+            return this;
+        }
+
+        /**
+         * 设置请求 ID。
+         *
+         * @param requestId 请求 ID
+         * @return this
+         */
+        public Builder requestId(String requestId) {
+            this.requestId = requestId;
+            return this;
+        }
+
+        /**
+         * 设置语言区域。
+         *
+         * @param language 语言区域（如 zh-CN、en-US）
+         * @return this
+         */
+        public Builder language(String language) {
+            this.language = language;
+            return this;
+        }
+
+        /**
+         * 设置租户隔离跳过标记。
+         *
+         * @param skipped true=跳过租户隔离
+         * @return this
+         */
+        public Builder tenantIsolationSkipped(boolean skipped) {
+            this.tenantIsolationSkipped = skipped;
+            return this;
+        }
+
+        /**
+         * 将 Builder 中的属性一次性写入当前线程上下文。
+         *
+         * <p>仅写入非 null 属性；null 属性不覆盖已有上下文值。</p>
+         *
+         * @return CleanupGuard 实例，供 try-with-resources 使用
+         */
+        public CleanupGuard apply() {
+            if (userId != null) {
+                setUserId(userId);
+            }
+            if (tenantId != null) {
+                setTenantId(tenantId);
+            }
+            if (traceId != null) {
+                setTraceId(traceId);
+            }
+            if (requestId != null) {
+                setRequestId(requestId);
+            }
+            if (language != null) {
+                setLanguage(language);
+            }
+            if (tenantIsolationSkipped != null) {
+                setTenantIsolationSkipped(tenantIsolationSkipped);
+            }
+            return new CleanupGuard();
+        }
+    }
+
+    /**
      * 上下文清理守卫，实现 {@link AutoCloseable} 以支持 try-with-resources 模式
      *
      * <p>此类的唯一用途是配合 try-with-resources 语法，在 try 块结束时自动清理请求上下文。</p>

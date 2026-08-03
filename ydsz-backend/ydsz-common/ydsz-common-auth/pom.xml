@@ -19,6 +19,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
         <!--ydsz-common-redis-->
         <dependency>
             <groupId>com.njydsz</groupId>

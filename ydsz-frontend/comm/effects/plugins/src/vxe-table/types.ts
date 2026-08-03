@@ -18,8 +18,6 @@ import type { ClassType, DeepPartial } from '@ydsz/types';
 
 import type { BaseFormComponentType, YDSZFormProps } from '@ydsz-core/form-ui';
 
-import type { VxeGridApi } from './api';
-
 import { useYDSZForm } from '@ydsz-core/form-ui';
 
 /**
@@ -119,26 +117,6 @@ export interface VxeGridProps<
    */
   separator?: boolean | SeparatorOptions;
 }
-
-/**
- * 在 {@link VxeGridApi} 基础上附加响应式状态订阅能力的表格句柄。
- *
- * @remarks
- * 额外的 `useStore` 用于把 store 中的配置以只读 `Ref` 暴露给模板，
- * 可传 selector 只订阅关心的片段以减少无谓的重渲染；不传则订阅整个状态。
- * 返回值是只读的，修改配置必须走 `setState` 等方法。
- *
- * @typeParam D - 表格行数据类型
- * @typeParam F - 搜索表单所使用的组件库适配类型
- */
-export type ExtendedVxeGridApi<
-  D extends Record<string, any> = any,
-  F extends BaseFormComponentType = BaseFormComponentType,
-> = VxeGridApi<D> & {
-  useStore: <T = NoInfer<VxeGridProps<D, F>>>(
-    selector?: (state: NoInfer<VxeGridProps<any, any>>) => T,
-  ) => Readonly<Ref<T>>;
-};
 
 /**
  * vxe-table 初始化所需的宿主适配参数。
