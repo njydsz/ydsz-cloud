@@ -1,13 +1,20 @@
 # YDSZ 项目能力现状模型
 
 > 生成日期：2026-08-02
-> 文档版本：v2.0.0（基于代码审计）
+> 文档版本：v2.0.1（基于代码审计）
 > 适用范围：ydsz-pmis 全仓库（后端 10 部署单元 + common 公共库 30 子模块 + 前端 1 主应用 + 9 子应用 + comm 共享包 30 子包 + conf 构建配置 8 子包）
 >
 > **审计说明**：
 > - 本版本基于实际代码阅读审计生成，非仅依赖 README 文档
 > - 审计范围：ydsz-common 全部 30 个子模块 + 10 个业务部署单元 + 前端 10 个应用 + comm/conf 共享包
 > - 审计方法：读取每个模块的核心类、接口、配置类和注解定义
+>
+> **框架前提（Framework Premise）**：
+> - 本项目为南京云顶数字科技有限公司**内网自研开发框架**，前后端代码及公共依赖模块（ydsz-common、ydsz-frontend comm/conf）均为公司内部技术资产。
+> - 技术选型以**尽量不依赖外部框架**为前提：自研模块对标业界主流方案并深度定制，**不存在"重复造轮子"**。
+> - 对标关系：ydsz-json ↔ Jackson/FastJSON2、ydsz-cronjob ↔ XXL-Job、ydsz-literule ↔ Drools/LiteFlow、ydsz-workflow ↔ Flowable/Activiti、common-excel ↔ EasyExcel、common-cache ↔ Caffeine 多级缓存、common-file ↔ Spring Content。
+> - 因此在评估与优化自研模块时，**不应建议用外部框架整体替换自研实现**；优化方向聚焦内部精简、去重、内敛化、测试补齐与性能提升。
+> - 基础设施类依赖（Spring Boot/Cloud、MyBatis-Plus、Redis、PostgreSQL、Vite、Vue、Element Plus 等）按业界标准引入，不属于"自研 vs 外部"的讨论范畴。
 
 ---
 
