@@ -200,9 +200,15 @@ public final class JsonParser implements AutoCloseable {
                 parseNumberFast();
                 return currentToken;
             case ',':
+                if (depth > maxDepth) {
+                    throw new JsonDeserializationException("Max depth exceeded: " + maxDepth);
+                }
                 bufferPos++;
                 return nextToken();
             case ':':
+                if (depth > maxDepth) {
+                    throw new JsonDeserializationException("Max depth exceeded: " + maxDepth);
+                }
                 bufferPos++;
                 return nextToken();
             default:

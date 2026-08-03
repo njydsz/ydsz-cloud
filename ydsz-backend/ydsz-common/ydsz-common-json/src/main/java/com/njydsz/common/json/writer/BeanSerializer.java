@@ -289,6 +289,7 @@ public final class BeanSerializer {
         int pos = writer.pos - 1; // 回退到 } 的位置
         char[] buf = writer.buf;
         
+        boolean firstAny = true;
         for (Map.Entry<?, ?> entry : map.entrySet()) {
             Object value = entry.getValue();
             if (value == null) continue;
@@ -297,7 +298,10 @@ public final class BeanSerializer {
             writer.ensureCapacity(32 + key.length() * 2);
             buf = writer.buf; // ensureCapacity 可能重新分配
             
-            buf[pos++] = ',';
+            if (!firstAny) {
+                buf[pos++] = ',';
+            }
+            firstAny = false;
             buf[pos++] = '"';
             key.getChars(0, key.length(), buf, pos);
             pos += key.length();
@@ -305,7 +309,7 @@ public final class BeanSerializer {
             buf[pos++] = ':';
             
             writer.pos = pos;
-            writer.write(value.toString());
+            writer.writeValueInline(value);
             pos = writer.pos;
         }
         

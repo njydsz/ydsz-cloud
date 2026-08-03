@@ -356,8 +356,8 @@ public class JsonPath {
             double expectedNum = Double.parseDouble(expected);
             
             switch (operator) {
-                case "==": return actualNum == expectedNum;
-                case "!=": return actualNum != expectedNum;
+                case "==": return Double.compare(actualNum, expectedNum) == 0;
+                case "!=": return Double.compare(actualNum, expectedNum) != 0;
                 case ">": return actualNum > expectedNum;
                 case "<": return actualNum < expectedNum;
                 case ">=": return actualNum >= expectedNum;

@@ -29,11 +29,38 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
 
     private ApplicationContext applicationContext;
 
+    /**
+     * 注入应用上下文，供 {@link #health()} 运行时按类型检索线程池 Bean。
+     *
+     * <p>采用运行时检索而非构造注入，是为了同时覆盖
+     * {@code ThreadPoolAutoConfiguration} 动态注册的线程池单例。
+     *
+     * @param applicationContext Spring 应用上下文，由容器回调注入
+     */
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
+    /**
+     * 汇总全部线程池的运行时状态作为健康检查结果。
+     *
+     * <p>明细以 {@code <beanName>.<指标>} 为键输出 active / queueSize / poolSize /
+     * completed / threadNamePrefix 五项。
+     *
+     * <p><b>状态判定</b>：
+     * <ul>
+     *   <li>上下文未就绪或容器内无线程池 —— UP（视为"无需检查"，不阻塞应用启动）</li>
+     *   <li>任一线程池取底层 {@link ThreadPoolExecutor} 抛异常 —— DOWN，
+     *       并在 {@code <beanName>.error} 中记录异常信息</li>
+     *   <li>其余情况 —— UP</li>
+     * </ul>
+     *
+     * <p><b>注意</b>：单个线程池失败不会中断遍历，其余线程池指标仍会完整采集；
+     * 本方法只读取状态，无副作用。
+     *
+     * @return 健康检查结果，始终非 {@code null}
+     */
     @Override
     public Health health() {
         Map<String, Object> details = new LinkedHashMap<>();

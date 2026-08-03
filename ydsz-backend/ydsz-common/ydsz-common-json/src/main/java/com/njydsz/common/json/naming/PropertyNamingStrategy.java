@@ -61,10 +61,14 @@ public interface PropertyNamingStrategy extends Serializable {
         }
         
         StringBuilder result = new StringBuilder();
-        for (int i = 0; i < propertyName.length(); i++) {
+        int len = propertyName.length();
+        for (int i = 0; i < len; i++) {
             char c = propertyName.charAt(i);
             if (Character.isUpperCase(c)) {
-                if (i > 0) {
+                // 仅当前面是小写字母，或前面是大写且后面是小写（缩写词边界）时插入下划线
+                // 例如：userID → user_id，JSONParser → json_parser
+                if (i > 0 && (Character.isLowerCase(propertyName.charAt(i - 1))
+                        || (i + 1 < len && Character.isLowerCase(propertyName.charAt(i + 1))))) {
                     result.append('_');
                 }
                 result.append(Character.toLowerCase(c));
@@ -84,10 +88,12 @@ public interface PropertyNamingStrategy extends Serializable {
         }
         
         StringBuilder result = new StringBuilder();
-        for (int i = 0; i < propertyName.length(); i++) {
+        int len = propertyName.length();
+        for (int i = 0; i < len; i++) {
             char c = propertyName.charAt(i);
             if (Character.isUpperCase(c)) {
-                if (i > 0) {
+                if (i > 0 && (Character.isLowerCase(propertyName.charAt(i - 1))
+                        || (i + 1 < len && Character.isLowerCase(propertyName.charAt(i + 1))))) {
                     result.append('-');
                 }
                 result.append(Character.toLowerCase(c));
