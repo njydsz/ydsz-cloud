@@ -51,14 +51,6 @@ import com.njydsz.literule.api.fallback.LiteRuleClientFallback;
         contextId = "liteRuleClient",
         fallbackFactory = LiteRuleClientFallback.class)
 
-/**
- * LiteRuleClient Feign 客户端接口，声明跨服务远程调用。
- *
- * <p>所属包：{@code com.njydsz.literule.api.client}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public interface LiteRuleClient {
 
     /**

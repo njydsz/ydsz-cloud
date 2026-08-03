@@ -36,6 +36,9 @@ import com.njydsz.common.json.YdszJson;
  */
 public final class JsonGenerator implements Closeable {
 
+    /** 十六进制数字查找表 */
+    private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
+
     private final Writer writer;
 
     private final boolean prettyPrint;
@@ -346,7 +349,11 @@ sb.setLength(0);
                 case '\t': sb.append("\\t"); break;
                 default:
                     if (c < ' ') {
-                        sb.append(String.format("\\u%04x", (int) c));
+                        sb.append("\\u");
+                        sb.append(HEX_DIGITS[(c >> 12) & 0xf]);
+                        sb.append(HEX_DIGITS[(c >> 8) & 0xf]);
+                        sb.append(HEX_DIGITS[(c >> 4) & 0xf]);
+                        sb.append(HEX_DIGITS[c & 0xf]);
                     } else {
                         sb.append(c);
                     }

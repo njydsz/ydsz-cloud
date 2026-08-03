@@ -49,7 +49,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     /** 智能推送时间优化器（记录用户活跃行为） */
     private final DeliveryTimeOptimizer deliveryTimeOptimizer;
 
-    @Override
     /**
      * 标记单条消息已读。
      *
@@ -61,6 +60,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
      * @return true 表示状态发生变更（即本次真正标记已读）
      * @throws com.njydsz.common.exception.custom.SysException msgId 或 userId 为空时
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean markRead(String msgId, String userId) {
         if (!StringUtils.hasText(msgId) || !StringUtils.hasText(userId)) {
@@ -85,7 +85,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         return updated > 0;
     }
 
-    @Override
     /**
      * 批量标记消息已读。
      *
@@ -96,6 +95,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
      * @param userId 用户 ID
      * @return 实际更新的消息条数
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public int markReadBatch(List<String> msgIds, String userId) {
         if (msgIds == null || msgIds.isEmpty() || !StringUtils.hasText(userId)) {
@@ -118,7 +118,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         return updated;
     }
 
-    @Override
     /**
      * 标记单条站内通知已读。
      *
@@ -129,6 +128,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
      * @return true 表示状态发生变更
      * @throws com.njydsz.common.exception.custom.SysException notificationId 或 userId 为空时
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean markNotificationRead(String notificationId, String userId) {
         if (!StringUtils.hasText(notificationId) || !StringUtils.hasText(userId)) {
@@ -150,7 +150,6 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         return updated > 0;
     }
 
-    @Override
     /**
      * 标记用户全部站内通知已读（可按业务类型过滤）。
      *
@@ -161,6 +160,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
      * @param bizType 业务类型（可选，为空表示全部业务）
      * @return 实际更新的通知条数
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public int markAllNotificationsRead(String userId, String bizType) {
         if (!StringUtils.hasText(userId)) {

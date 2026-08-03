@@ -111,20 +111,7 @@ public final class FieldMetadataLoader {
                 }
             }
             if (classAnnotation.naming() != JsonClass.NamingStrategy.CAMEL_CASE) {
-                switch (classAnnotation.naming()) {
-                    case SNAKE_CASE:
-                        classNaming = PropertyNamingStrategy.SNAKE_CASE;
-                        break;
-                    case KEBAB_CASE:
-                        classNaming = PropertyNamingStrategy.KEBAB_CASE;
-                        break;
-                    case CAMEL_CASE:
-                        classNaming = PropertyNamingStrategy.LOWER_CAMEL_CASE;
-                        break;
-                    case ORIGINAL:
-                        classNaming = null;
-                        break;
-                }
+                classNaming = classAnnotation.naming().toPropertyNamingStrategy();
             }
         }
 

@@ -255,10 +255,12 @@ public final class JsonParser implements AutoCloseable {
                     case 'r': stringBuffer[strLen++] = '\r'; break;
                     case 't': stringBuffer[strLen++] = '\t'; break;
                     case 'u':
-                        // 解析 Unicode 转义
+                        // 解析 Unicode 转义（支持跨缓冲区边界）
                         bufferPos++;
-                        if (bufferPos + 4 >= bufferLen) {
-                            throw new JsonDeserializationException("Invalid unicode escape");
+                        while (bufferPos + 4 >= bufferLen) {
+                            if (!fillBuffer()) {
+                                throw new JsonDeserializationException("Invalid unicode escape: insufficient characters");
+                            }
                         }
                         String hex = new String(buffer, bufferPos, 4);
                         stringBuffer[strLen++] = (char) Integer.parseInt(hex, 16);

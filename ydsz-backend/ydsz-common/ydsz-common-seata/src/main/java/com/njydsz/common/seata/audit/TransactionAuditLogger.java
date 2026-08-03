@@ -1,11 +1,14 @@
 package com.njydsz.common.seata.audit;
 
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.seata.api.TransactionType;
-
-import java.time.LocalDateTime;
 
 /**
  * 分布式事务审计日志
@@ -46,21 +49,20 @@ public class TransactionAuditLogger {
         if (!auditLog.isInfoEnabled()) {
             return;
         }
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("{\"timestamp\":\"").append(LocalDateTime.now()).append("\"");
-        sb.append(",\"txName\":\"").append(transactionName).append("\"");
-        sb.append(",\"type\":\"").append(type).append("\"");
-        sb.append(",\"xid\":\"").append(xid).append("\"");
+        Map<String, Object> audit = new LinkedHashMap<>();
+        audit.put("timestamp", LocalDateTime.now().toString());
+        audit.put("txName", transactionName);
+        audit.put("type", type.name());
+        audit.put("xid", xid);
         if (branchId != null) {
-            sb.append(",\"branchId\":\"").append(branchId).append("\"");
+            audit.put("branchId", branchId);
         }
-        sb.append(",\"result\":\"").append(result).append("\"");
-        sb.append(",\"durationMs\":").append(durationMs);
+        audit.put("result", result);
+        audit.put("durationMs", durationMs);
         if (error != null) {
-            sb.append(",\"error\":\"").append(error.replace("\"", "\\\"")).append("\"");
+            audit.put("error", error);
         }
-        sb.append("}");
-        auditLog.info(sb.toString());
+        auditLog.info(YdszJson.toJson(audit));
     }
 
     /**

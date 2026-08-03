@@ -300,25 +300,26 @@ public class JsonPath {
         // 解析过滤条件
         filter = filter.trim();
         
-        // 处理 && 和 ||
-        if (filter.contains("&&")) {
-            String[] parts = filter.split("&&");
-            for (String part : parts) {
-                if (!matchesFilter(item, part.trim())) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        
+        // 处理 || 和 &&：|| 优先级低于 &&，因此先按 || 分组（外层 OR），
+        // 每组内递归处理 &&（内层 AND），符合标准布尔运算优先级。
         if (filter.contains("||")) {
-            String[] parts = filter.split("\\|\\|");
-            for (String part : parts) {
-                if (matchesFilter(item, part.trim())) {
+            String[] orParts = filter.split("\\|\\|");
+            for (String orPart : orParts) {
+                if (matchesFilter(item, orPart.trim())) {
                     return true;
                 }
             }
             return false;
+        }
+        
+        if (filter.contains("&&")) {
+            String[] andParts = filter.split("&&");
+            for (String andPart : andParts) {
+                if (!matchesFilter(item, andPart.trim())) {
+                    return false;
+                }
+            }
+            return true;
         }
         
         // 处理比较操作符（使用预编译的 static final Pattern）

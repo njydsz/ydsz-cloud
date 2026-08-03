@@ -34,14 +34,6 @@ import com.njydsz.cronjob.api.fallback.CronjobServiceClientFallback;
         contextId = "cronjobServiceClient",
         fallbackFactory = CronjobServiceClientFallback.class)
 
-/**
- * CronjobClient Service 接口，定义业务逻辑契约。
- *
- * <p>所属包：{@code com.njydsz.cronjob.api.client}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public interface CronjobServiceClient {
 
     /**

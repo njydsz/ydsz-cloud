@@ -48,6 +48,7 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
+            <!-- P1-2: 为下游 server 模块提供传递依赖，领域对象序列化能力由 ydsz-common-json 提供 -->
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

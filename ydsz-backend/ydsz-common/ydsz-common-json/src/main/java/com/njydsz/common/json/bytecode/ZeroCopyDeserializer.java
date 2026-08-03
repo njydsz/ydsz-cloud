@@ -125,6 +125,26 @@ return STRING_INTERNER.intern(str);
 }
 
 /**
+ * 扫描 JSON 字段名的结束位置，正确处理反斜杠转义。
+ * 遇到 {@code \} 时跳过下一个字符（支持转义引号 {@code \"} 和转义反斜杠 {@code \\}），
+ * 直到找到未转义的闭引号 {@code "} 为止。
+ *
+ * @param chars   字符数组
+ * @param nameEnd 字段名起始扫描位置（即 {@code nameStart}）
+ * @param len     数组长度
+ * @return 字段名结束位置（即闭引号的下标）
+ */
+private static int scanFieldName(char[] chars, int nameEnd, int len) {
+    while (nameEnd < len && chars[nameEnd] != '"') {
+        if (chars[nameEnd] == '\\' && nameEnd + 1 < len) {
+            nameEnd++; // 跳过转义字符
+        }
+        nameEnd++;
+    }
+    return nameEnd;
+}
+
+/**
  * 获取字段的 JSON 名称（优先从 @JsonProperty 注解获取，回退到 Java 字段名）。
  *
  * @param field Java 字段
@@ -379,7 +399,7 @@ field.setAccessible(true);
 
                 int nameStart = pos + 1;
                 int nameEnd = nameStart;
-                while (nameEnd < len && chars[nameEnd] != '"') nameEnd++;
+                nameEnd = scanFieldName(chars, nameEnd, len);
                 pos = nameEnd + 1;
 
                 while (pos < len && chars[pos] <= ' ') pos++;
@@ -442,7 +462,7 @@ field.setAccessible(true);
 
                 int nameStart = pos + 1;
                 int nameEnd = nameStart;
-                while (nameEnd < len && chars[nameEnd] != '"') nameEnd++;
+                nameEnd = scanFieldName(chars, nameEnd, len);
                 pos = nameEnd + 1;
 
                 while (pos < len && chars[pos] <= ' ') pos++;
@@ -518,7 +538,7 @@ field.setAccessible(true);
 
                 int nameStart = pos + 1;
                 int nameEnd = nameStart;
-                while (nameEnd < len && chars[nameEnd] != '"') nameEnd++;
+                nameEnd = scanFieldName(chars, nameEnd, len);
                 pos = nameEnd + 1;
 
                 while (pos < len && chars[pos] <= ' ') pos++;
@@ -697,7 +717,7 @@ return deserialize(chars, 0, chars.length);
 
                 int nameStart = pos + 1;
                 int nameEnd = nameStart;
-                while (nameEnd < len && chars[nameEnd] != '"') nameEnd++;
+                nameEnd = scanFieldName(chars, nameEnd, len);
                 pos = nameEnd + 1;
 
                 while (pos < len && chars[pos] <= ' ') pos++;
@@ -845,7 +865,7 @@ fieldNameHashes[i] = fields[i].nameHashCode;
 
                 int nameStart = pos + 1;
                 int nameEnd = nameStart;
-                while (nameEnd < len && chars[nameEnd] != '"') nameEnd++;
+                nameEnd = scanFieldName(chars, nameEnd, len);
                 pos = nameEnd + 1;
 
                 while (pos < len && chars[pos] <= ' ') pos++;
@@ -1272,7 +1292,7 @@ fieldNameHashes[i] = fields[i].nameHashCode;
                 if (c == '"') {
                     int nameStart = pos + 1;
                     int nameEnd = nameStart;
-                    while (nameEnd < len && chars[nameEnd] != '"') nameEnd++;
+                    nameEnd = scanFieldName(chars, nameEnd, len);
                     String key = new String(chars, nameStart, nameEnd - nameStart);
                     pos = nameEnd + 1;
 
@@ -1306,7 +1326,7 @@ fieldNameHashes[i] = fields[i].nameHashCode;
             char c = chars[pos];
 
             if (c == '\\' && inString) {
-                pos += 2;
+                pos += (pos + 1 < len) ? 2 : 1;
                 continue;
             }
 

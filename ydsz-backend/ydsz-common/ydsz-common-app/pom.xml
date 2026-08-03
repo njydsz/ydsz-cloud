@@ -64,12 +64,6 @@
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
 
-        <!-- JSON 引擎模块（用于签名验证错误响应序列化） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-
         <!-- spring-boot-actuator (optional for HealthIndicator) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

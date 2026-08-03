@@ -308,7 +308,7 @@ public class BpmnXmlParser {
                 }
             }
             node.setPermissionFlag(perm.toString());
-            node.setExt("{\"candidateUsers\":\"" + candidateUsers + "\"}");
+            node.setExt(YdszJson.toJson(Map.of("candidateUsers", candidateUsers)));
         } else if (candidateGroups != null && !candidateGroups.isBlank()) {
             // P2-15: 候选组同样支持多组逗号分隔，全部写入 permissionFlag
             String[] groups = candidateGroups.split(",");
@@ -324,7 +324,7 @@ public class BpmnXmlParser {
                 }
             }
             node.setPermissionFlag(perm.toString());
-            node.setExt("{\"candidateGroups\":\"" + candidateGroups + "\"}");
+            node.setExt(YdszJson.toJson(Map.of("candidateGroups", candidateGroups)));
         }
 
         // P0-4: 会签类型与扩展字段

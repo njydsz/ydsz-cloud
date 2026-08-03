@@ -53,7 +53,12 @@ public final class JsonMergePatch {
         if (target == null || target.isEmpty()) {
             return patch;
         }
-        if (patch == null || patch.isEmpty()) {
+        if (patch == null) {
+            // Java 层面参数未提供，保持 target 不变（防御性）
+            return target;
+        }
+        if (patch.isEmpty()) {
+            // 空字符串不提供有效 patch，返回 target 不变
             return target;
         }
 

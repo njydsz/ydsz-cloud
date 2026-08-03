@@ -162,6 +162,12 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     return new CacheStats(hitCount.sum(), missCount.sum(), evictionCount.sum(), 0, 0, 0, 0);
   }
 
+  /**
+   * 重置命中与未命中计数器。
+   *
+   * <p>仅清零 {@code hitCount} 与 {@code missCount}，不重置淘汰计数 {@code evictionCount}，
+   * 也不清空缓存数据本身。用于在监控周期切换时重新起算命中率。
+   */
   @Override
   public void resetStats() {
     hitCount.reset();

@@ -51,12 +51,6 @@
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
 
-        <!-- ydsz-common-json -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-
         <!-- 全局工具 -->
         <dependency>
             <groupId>com.njydsz</groupId>

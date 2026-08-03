@@ -20,14 +20,6 @@ import com.njydsz.project.api.fallback.ProjectInfoClientFallback;
 @FeignClient(name = FeignClientConstants.PROJECT, contextId = "projectInfoClient",
         fallbackFactory = ProjectInfoClientFallback.class)
 
-/**
- * ProjectInfoClient Feign 客户端接口，声明跨服务远程调用。
- *
- * <p>所属包：{@code com.njydsz.project.api.client}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public interface ProjectInfoClient {
 
     /**

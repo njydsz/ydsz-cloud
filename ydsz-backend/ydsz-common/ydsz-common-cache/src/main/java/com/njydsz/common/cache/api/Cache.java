@@ -227,11 +227,25 @@ public interface Cache<K, V> {
   default CachePolicy policy() {
     // 默认实现：不支持任何策略查询
     return new CachePolicy() {
+      /**
+       * 查询淘汰策略。
+       *
+       * <p>默认实现为"不支持淘汰策略"占位：返回空 Optional， 而非抛出异常，保证调用方无需判空即可安全使用。
+       *
+       * @return 空 {@link Optional}，表示当前缓存不支持淘汰策略查询
+       */
       @Override
       public Optional<EvictionPolicy> eviction() {
         return Optional.empty();
       }
 
+      /**
+       * 查询过期策略。
+       *
+       * <p>默认实现为"不支持过期策略"占位：返回空 Optional， 而非抛出异常，保证调用方无需判空即可安全使用。
+       *
+       * @return 空 {@link Optional}，表示当前缓存不支持过期策略查询
+       */
       @Override
       public Optional<ExpirationPolicy> expiration() {
         return Optional.empty();

@@ -22,14 +22,6 @@ import com.njydsz.system.api.fallback.ConfigClientFallback;
 @FeignClient(name = FeignClientConstants.SYSTEM, contextId = "configClient",
         fallbackFactory = ConfigClientFallback.class)
 
-/**
- * ConfigClient 自动配置类，注册模块 Bean 并管理装配条件。
- *
- * <p>所属包：{@code com.njydsz.system.api.client}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public interface ConfigClient {
 
     /**

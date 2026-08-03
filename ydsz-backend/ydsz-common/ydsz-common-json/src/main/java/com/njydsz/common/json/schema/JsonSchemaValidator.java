@@ -293,7 +293,6 @@ public final class JsonSchemaValidator {
     private static void validateObject(JsonSchema schema, Map<?, ?> obj, ValidationResult result, String path) {
         Map<String, JsonSchema> properties = schema.getProperties();
         List<String> required = schema.getRequiredProperties();
-        JsonSchema additionalProperties = schema.getAdditionalProperties();
 
         // 检查最少属性数
         if (schema.getMinProperties() != null && obj.size() < schema.getMinProperties()) {
@@ -313,6 +312,7 @@ public final class JsonSchemaValidator {
         }
 
         // 验证每个属性
+        Object additionalProperties = schema.getAdditionalProperties();
         Set<String> validatedProps = new HashSet<>();
         for (Object keyObj : obj.keySet()) {
             String key = (String) keyObj;
@@ -326,11 +326,14 @@ public final class JsonSchemaValidator {
                 // patternProperties 优先于 additionalProperties（RFC 规范顺序）
                 if (validatePatternProperties(schema, key, value, result, propPath)) {
                     validatedProps.add(key);
-                } else if (additionalProperties != null) {
-                    validateType(additionalProperties, value, result, propPath);
+                } else if (additionalProperties instanceof Boolean && !(Boolean) additionalProperties) {
+                    result.addError(propPath + ": Additional property '" + key + "' is not allowed");
+                } else if (additionalProperties instanceof JsonSchema) {
+                    validateType((JsonSchema) additionalProperties, value, result, propPath);
                 }
+                // additionalProperties == null 或 true → 允许任意额外属性，不做校验
+            }
         }
-    }
 
     /**
      * 按 patternProperties 正则匹配并校验属性值。

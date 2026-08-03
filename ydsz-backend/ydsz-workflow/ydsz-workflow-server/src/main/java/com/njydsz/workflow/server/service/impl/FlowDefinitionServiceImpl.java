@@ -294,7 +294,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                             ? s.getSkipType() : FlowSkipType.PASS.name());
                     skip.setSkipCondition(s.getSkipCondition());
                     skip.setNextNodeCode(s.getToNodeCode());
-                    skip.setExt("{\"sourceRef\":\"" + s.getFromNodeCode() + "\"}");
+                    skip.setExt(YdszJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
                     skips.add(skip);
                 }
             }
@@ -845,7 +845,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                                 ? s.getSkipType() : FlowSkipType.PASS.name());
                         skip.setSkipCondition(s.getSkipCondition());
                         skip.setNextNodeCode(s.getToNodeCode());
-                        skip.setExt("{\"sourceRef\":\"" + s.getFromNodeCode() + "\"}");
+                        skip.setExt(YdszJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
                         skips.add(skip);
                     }
                 }

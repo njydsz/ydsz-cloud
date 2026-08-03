@@ -26,8 +26,10 @@ export interface GlobalState {
   notificationCount?: number;
   /** 当前租户 */
   tenantId?: string;
-  /** 全局 Token（子应用可从全局状态获取，避免重复登录） */
-  token?: string;
+  /**
+   * 注意：token 等敏感凭据不再通过 globalState 明文传递，
+   * 子应用应通过 shared-auth 的 Proxy 延迟初始化机制直接从 SecureLS 读取。
+   */
 }
 
 /** 全局状态初始值 */

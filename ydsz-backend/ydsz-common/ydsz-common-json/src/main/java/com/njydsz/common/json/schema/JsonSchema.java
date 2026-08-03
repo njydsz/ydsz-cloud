@@ -87,7 +87,8 @@ public final class JsonSchema {
     /** 对象约束 */
     private Map<String, JsonSchema> properties;
     private List<String> requiredProperties;
-    private JsonSchema additionalProperties;
+    /** 额外属性约束（JsonSchema 或 Boolean.FALSE，RFC 规范支持 boolean 重载） */
+    private Object additionalProperties;
 
     /** 正则模式属性匹配（JSON Schema Draft 07 patternProperties） */
     private Map<String, JsonSchema> patternProperties;
@@ -317,9 +318,18 @@ public final class JsonSchema {
     }
 
     /**
-     * 设置额外属性 Schema
+     * 设置额外属性 Schema。
      */
     public JsonSchema additionalProperties(JsonSchema additionalProperties) {
+        this.additionalProperties = additionalProperties;
+        return this;
+    }
+
+    /**
+     * 设置额外属性开关（RFC 规范支持 boolean 重载）。
+     * {@code false} 表示禁止额外属性，{@code true} 或默认 null 表示允许。
+     */
+    public JsonSchema additionalProperties(boolean additionalProperties) {
         this.additionalProperties = additionalProperties;
         return this;
     }
@@ -527,7 +537,7 @@ public final class JsonSchema {
         return exclusiveMaximum;
     }
 
-    public JsonSchema getAdditionalProperties() {
+    public Object getAdditionalProperties() {
         return additionalProperties;
     }
 

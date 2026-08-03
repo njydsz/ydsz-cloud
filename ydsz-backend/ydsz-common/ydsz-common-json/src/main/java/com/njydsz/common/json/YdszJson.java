@@ -425,13 +425,16 @@ public class YdszJson {
     // ==================== JSONPath 入口方法 ====================
     
     /**
-     * 通过 JSONPath 获取值
-     * 
+     * 通过 JSONPath 获取值。
+     *
      * @param json JSON 字符串
      * @param path JSONPath 表达式
      * @return 匹配的值
+     * @deprecated 推荐使用 {@link JsonMapper#getByPath(String, String)}，
+     *             通过 {@code JsonMapper.getDefault().getByPath(json, path)}
+     *             或新建 {@code JsonMapper} 实例调用
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    @Deprecated(since = "1.0.0")
     public static Object getByPath(String json, String path) {
         return JsonPath.get(json, path);
     }
@@ -624,8 +627,11 @@ public class YdszJson {
      * @param json JSON 字符串
      * @param pointer JSON Pointer 路径
      * @return 指针指向的值
+     * @deprecated 推荐使用 {@link JsonMapper#getByPointer(String, String)}，
+     *             通过 {@code JsonMapper.getDefault().getByPointer(json, pointer)}
+     *             或新建 {@code JsonMapper} 实例调用
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    @Deprecated(since = "1.0.0")
     public static Object getByPointer(String json, String pointer) {
         return new JsonPointer(pointer).evaluate(json);
     }
@@ -636,8 +642,9 @@ public class YdszJson {
      * @param json JSON 字符串
      * @param pointer JsonPointer 对象
      * @return 指针指向的值
+     * @deprecated 推荐使用 {@link JsonMapper#getByPointer(String, String)}
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    @Deprecated(since = "1.0.0")
     public static Object getByPointer(String json, JsonPointer pointer) {
         return pointer.evaluate(json);
     }
@@ -656,12 +663,13 @@ public class YdszJson {
     }
 
     /**
-     * 将对象序列化为 JsonNode 树
+     * 将对象序列化为 JsonNode 树。
+     *
+     * <p>与 {@link JsonMapper#valueToTree(Object)} 语义一致，可直接使用 YdszJson 静态入口调用。</p>
      *
      * @param obj 要序列化的对象
      * @return JsonNode 树
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
     public static JsonNode valueToTree(Object obj) {
         if (obj == null) {
             return NullNode.getInstance();
@@ -711,8 +719,9 @@ public class YdszJson {
      * @param target 目标 JSON
      * @param patch 补丁 JSON
      * @return 合并后的 JSON 字符串
+     * @deprecated 推荐直接使用 {@link com.njydsz.common.json.merge.JsonMergePatch#merge(String, String)}
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    @Deprecated(since = "1.0.0")
     public static String merge(String target, String patch) {
         return JsonMergePatch.merge(target, patch);
     }
@@ -723,8 +732,9 @@ public class YdszJson {
      * @param source 源 JSON
      * @param target 目标 JSON
      * @return 差异补丁 JSON
+     * @deprecated 推荐直接使用 {@link com.njydsz.common.json.merge.JsonMergePatch#diff(String, String)}
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    @Deprecated(since = "1.0.0")
     public static String diff(String source, String target) {
         return JsonMergePatch.diff(source, target);
     }
@@ -738,8 +748,10 @@ public class YdszJson {
      *
      * @param json 待验证的字符串
      * @return 如果是合法 JSON 返回 true，否则返回 false
+     * @deprecated 推荐直接使用 {@link com.njydsz.common.json.parser.JsonParserUtil#parse(String)}
+     *             进行 try-catch 校验
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    @Deprecated(since = "1.0.0")
     public static boolean isValid(String json) {
         if (json == null || json.trim().isEmpty()) {
             return false;
@@ -1098,8 +1110,10 @@ public class YdszJson {
      * </pre>
      *
      * @since 1.0.0
+     * @deprecated 推荐使用 {@link #scopedContext()} try-with-resources 自动清理。
+     *             如需直接清理，可调用 {@code SerializationProvider.clearThreadLocals()}
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
+    @Deprecated(since = "1.0.0")
     public static void cleanup() {
         com.njydsz.common.json.provider.SerializationProvider.clearThreadLocals();
     }
@@ -1122,7 +1136,6 @@ public class YdszJson {
      * @return 一个 AutoCloseable 上下文，关闭时自动清理 ThreadLocal
      * @since 1.0.0
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
     public static ScopedContext scopedContext() {
         return new ScopedContext();
     }

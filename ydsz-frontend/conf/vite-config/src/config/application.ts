@@ -85,13 +85,14 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
             },
           },
         },
-        target: 'es2015',
+        chunkSizeWarningLimit: 1000,
+        target: 'es2018',
       },
       css: createCssOptions(injectGlobalScss),
       esbuild: {
         drop: isBuild
           ? [
-              // 'console',
+              'console',
               'debugger',
             ]
           : [],

@@ -10,6 +10,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,6 +38,7 @@ import com.njydsz.common.safe.config.condition.XssConverterModeCondition;
 import io.micrometer.core.instrument.MeterRegistry;
 import com.njydsz.common.safe.config.condition.XssFilterModeCondition;
 import com.njydsz.common.safe.converter.XssJsonMessageConverter;
+import com.njydsz.common.json.spring.boot.JsonAutoConfiguration;
 import com.njydsz.common.safe.core.JsonBodyXssCleaner;
 import com.njydsz.common.safe.csrf.CsrfTokenGenerator;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
@@ -77,6 +79,7 @@ import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
  * @since 1.0.0
  */
 @AutoConfiguration
+@AutoConfigureBefore(JsonAutoConfiguration.class)
 @ConditionalOnClass(FilterRegistrationBean.class)
 @EnableScheduling
 @EnableConfigurationProperties({

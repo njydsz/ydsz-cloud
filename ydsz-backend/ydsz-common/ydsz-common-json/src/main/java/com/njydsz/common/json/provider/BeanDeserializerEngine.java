@@ -147,10 +147,16 @@ final class BeanDeserializerEngine {
                 ZeroCopyDeserializer.getDeserializer(clazz);
             return clazz.cast(deserializer.deserialize(json));
         } catch (Exception e) {
-            if (trimmed.startsWith("[")) {
-                return clazz.cast(JsonParserUtil.parseArray(json));
-            } else {
-                return clazz.cast(JsonParserUtil.parseObject(json));
+            // ZeroCopy 失败时的回退路径：保留原始异常用于排障
+            try {
+                if (trimmed.startsWith("[")) {
+                    return clazz.cast(JsonParserUtil.parseArray(json));
+                } else {
+                    return clazz.cast(JsonParserUtil.parseObject(json));
+                }
+            } catch (ClassCastException fallbackEx) {
+                throw new JsonDeserializationException(
+                    "Failed to deserialize " + clazz.getName() + ": " + e.getMessage(), e);
             }
         }
     }

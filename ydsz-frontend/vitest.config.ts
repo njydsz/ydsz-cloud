@@ -15,7 +15,20 @@ import { configDefaults, defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [Vue(), VueJsx()],
   test: {
+    coverage: {
+      enabled: true,
+      exclude: ['**/e2e/**', '**/node_modules/**'],
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        branches: 60,
+        functions: 60,
+        lines: 70,
+        statements: 70,
+      },
+    },
     environment: 'happy-dom',
     exclude: [...configDefaults.exclude, '**/e2e/**'],
+    reporters: ['default'],
   },
 });

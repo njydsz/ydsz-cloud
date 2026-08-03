@@ -55,7 +55,6 @@ public class RecallServiceImpl implements RecallService {
     /** 消息全链路追踪服务 */
     private final MessageTraceService messageTraceService;
 
-    @Override
     /**
      * 撤回单条站内通知。
      *
@@ -67,6 +66,7 @@ public class RecallServiceImpl implements RecallService {
      * @return true 表示撤回成功
      * @throws com.njydsz.common.exception.custom.SysException 参数为空 / 通知不存在 / 越权时
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean recallNotification(String userId, String notificationId) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(notificationId)) {
@@ -165,7 +165,6 @@ public class RecallServiceImpl implements RecallService {
         return true;
     }
 
-    @Override
     /**
      * 按业务类型+单据 ID 批量撤回消息与通知。
      *
@@ -177,6 +176,7 @@ public class RecallServiceImpl implements RecallService {
      * @return 实际撤回的通知数 + 消息数
      * @throws com.njydsz.common.exception.custom.SysException bizType 或 bizId 为空时
      */
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public int recallBatch(String bizType, String bizId) {
         if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {

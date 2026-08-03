@@ -149,7 +149,11 @@ public @interface JsonClass {
     
     /**
      * 命名策略枚举
+     *
+     * @deprecated 使用 {@link com.njydsz.common.json.naming.PropertyNamingStrategy} 替代，
+     *             通过 {@link #toPropertyNamingStrategy()} 桥接。
      */
+    @Deprecated
     enum NamingStrategy {
         /** 驼峰命名（默认） */
         CAMEL_CASE,
@@ -158,6 +162,20 @@ public @interface JsonClass {
         /** 短横线命名 */
         KEBAB_CASE,
         /** 原始名称 */
-        ORIGINAL
+        ORIGINAL;
+
+        /**
+         * 转换为统一的 PropertyNamingStrategy（桥接方法）。
+         *
+         * @return 对应的 PropertyNamingStrategy，ORIGINAL 返回 null（不做转换）
+         */
+        public com.njydsz.common.json.naming.PropertyNamingStrategy toPropertyNamingStrategy() {
+            switch (this) {
+                case SNAKE_CASE: return com.njydsz.common.json.naming.PropertyNamingStrategy.SNAKE_CASE;
+                case KEBAB_CASE: return com.njydsz.common.json.naming.PropertyNamingStrategy.KEBAB_CASE;
+                case CAMEL_CASE: return com.njydsz.common.json.naming.PropertyNamingStrategy.LOWER_CAMEL_CASE;
+                default: return null;
+            }
+        }
     }
 }

@@ -34,6 +34,8 @@ ydsz:
   # P0-1: YdszJson ASM 预热（高频序列化 Bean，消除首次请求延迟尖峰）
   # P2-3: 启用流式输出（流程定义/实例列表等大 JSON 响应使用 chunked encoding）
   json:
+    # P1-1: 流程条件表达式涉及金额数值比较，必须开启 BigDecimal 精度模式
+    use-big-decimal: true
     warmup-classes:
       - com.njydsz.workflow.domain.entity.FlowDefinition
       - com.njydsz.workflow.domain.entity.FlowInstance

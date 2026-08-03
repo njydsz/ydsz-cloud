@@ -25,14 +25,6 @@ import com.njydsz.system.api.fallback.DictClientFallback;
 @FeignClient(name = FeignClientConstants.SYSTEM, contextId = "dictClient",
         fallbackFactory = DictClientFallback.class)
 
-/**
- * DictClient Feign 客户端接口，声明跨服务远程调用。
- *
- * <p>所属包：{@code com.njydsz.system.api.client}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public interface DictClient {
 
     /**

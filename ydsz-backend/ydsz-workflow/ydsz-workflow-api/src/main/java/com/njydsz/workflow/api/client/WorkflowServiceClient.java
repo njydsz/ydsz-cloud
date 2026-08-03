@@ -27,14 +27,6 @@ import com.njydsz.workflow.api.fallback.WorkflowServiceClientFallback;
         contextId = "workflowServiceClient",
         fallbackFactory = WorkflowServiceClientFallback.class)
 
-/**
- * WorkflowClient Service 接口，定义业务逻辑契约。
- *
- * <p>所属包：{@code com.njydsz.workflow.api.client}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public interface WorkflowServiceClient {
 
     /**

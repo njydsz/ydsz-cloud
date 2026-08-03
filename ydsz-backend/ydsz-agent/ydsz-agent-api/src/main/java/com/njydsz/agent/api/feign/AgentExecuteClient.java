@@ -24,14 +24,6 @@ import com.njydsz.common.feign.FeignClientConstants;
 @FeignClient(name = FeignClientConstants.AGENT, contextId = "agentExecuteClient",
         fallbackFactory = AgentExecuteClientFallback.class)
 
-/**
- * AgentExecuteClient Feign 客户端接口，声明跨服务远程调用。
- *
- * <p>所属包：{@code com.njydsz.agent.api.feign}
- *
- * @author ydsz-team
- * @since 1.0.0
- */
 public interface AgentExecuteClient {
 
     /**
