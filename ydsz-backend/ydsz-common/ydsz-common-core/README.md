@@ -61,10 +61,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `TraceIdSupplier` | TraceId 生成策略接口（`@FunctionalInterface`），SPI 扩展点 |
-| `TraceIdGenerator` | TraceId 生成器统一入口（静态工具类），内部委托到 `TraceIdSupplier`。使用 `volatile` 持有当前策略，通过 `setSupplier()` 注入。默认 UUID 策略使用高性能编码（直接 128 位随机数转 32 位 hex，零中间 String 分配） |
-| `UuidTraceIdSupplier` | 高性能 UUID 策略实现：一次读取 16 字节随机数，编码为 32 位 hex，避免 `UUID.toString().replace("-","")` 的 3 个中间对象 |
-| `SnowflakeTraceIdSupplier` | 基于 Snowflake 算法的有序 TraceId 生成器，生成 16 位高位在前的十六进制字符串（字符串字典序 = 数值序，可直接按 traceId 排序还原请求时序）。使用 `AtomicLong` + CAS 自旋（无锁），支持时钟回拨检测与等待；workerId/datacenterId 支持 K8s 环境变量推导 |
+| `TraceIdGenerator` | TraceId 生成器（纯 UUID，无配置切换）：一次读取 16 字节 `SecureRandom` 随机数，编码为 32 位 hex，零中间 String 分配。保证全局唯一，满足请求追踪需求 |
 | `TraceIdPropagation` | TraceId 传播工具类（纯 JDK，无框架依赖）：从 MDC 读取 traceId 并生成 `X-Trace-Id` 请求头，供 RestTemplate / WebClient / OkHttp 等 HTTP 客户端拦截器复用，实现服务间调用链路贯穿。提供 `traceHeader()` / `traceHeaderOrCreate()` / `currentTraceId()` 等方法 |
 
 ### 5. 敏感数据脱敏（sensitive 包）
@@ -90,12 +87,10 @@
 
 | 常量类 | 说明 |
 |---|---|
-| `HeaderConstants` | HTTP 请求头常量（认证 Token / 数据权限维度 / 列级权限 / 链路追踪 / 网络信息），共 20 个自定义头常量 |
+| `HeaderConstants` | HTTP 请求头常量（认证 Token / 数据权限维度 / 列级权限 / 链路追踪 `X-Trace-Id` + MDC key / 网络信息），链路追踪统一入口 |
 | `TokenConstants` | Token 相关常量（标识 / 前缀 "ydsz" / 回调 URL 参数名） |
-| `SecurityConstants` | 安全常量（密钥属性名 / BCrypt 强度 12 / CSRF 头部与参数名 / 安全头部引用） |
 | `PageConstants` | 分页默认值与上限（`DEFAULT_PAGE_NUM=1` / `DEFAULT_PAGE_SIZE=20` / `MAX_PAGE_SIZE=5000`）。运行时值由 `CoreProperties` 配置覆盖 |
 | `FilterIgnoreConstant` | 过滤器忽略 URL 模式与认证忽略服务名称 |
-| `TraceConstants` | 链路追踪常量（`TRACE_ID_HEADER="X-Trace-Id"` / `MDC_TRACE_ID_KEY="traceId"`） |
 | `CacheConstants` | 缓存名称常量（workflow / nextwiki / system 三个模块的 8 个 cache name） |
 | `SystemConstants` | 系统级常量（`SYSTEM_USER_ID="SYSTEM"` / `DEFAULT_TENANT_ID="1"` / `DEFAULT_LOCALE="zh-CN"`） |
 | `YdszMessageTopics` | 消息中心 RocketMQ Topic / ConsumerGroup 常量 |
@@ -105,18 +100,17 @@
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
 | `CoreAutoConfiguration` | `ydsz.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`TenantMdcFilter`（FilterRegistrationBean）、`CoreHealthIndicator`（Actuator 健康指标）、`PageConstantsInitializer`（分页配置运行时同步） |
-| `TraceAutoConfiguration` | `ydsz.core.trace.enabled=true`（默认启用） | `TraceIdSupplier`（UUID 或 Snowflake），并注入到 `TraceIdGenerator` 静态 holder |
 
 | 属性类 | 前缀 | 说明 |
 |---|---|---|
-| `CoreProperties` | `ydsz.core` | 分页配置（`maxPageSize` / `defaultPageSize`，带 `@Min` / `@Max` 校验）+ 链路追踪配置（`TraceConfig` 内部类，`idType` 带 `@NotBlank` + `@Pattern` 校验）+ 租户 MDC 过滤器优先级 |
+| `CoreProperties` | `ydsz.core` | 分页配置（`maxPageSize` / `defaultPageSize`，带 `@Min` / `@Max` 校验）+ 租户 MDC 过滤器优先级 |
 | `FilterIgnoreProperties` | `ydsz.core.filter-ignore` | 过滤器忽略路径配置，支持配置覆盖与默认值合并 |
 
 ### 9. 健康检查（health 包）
 
 | 类 | 说明 |
 |---|---|
-| `CoreHealthIndicator` | Spring Boot Actuator 健康指标，访问 `/actuator/health` 时报告：TraceId 策略名称、Trace 是否启用、TraceId 类型、配置校验结果、TraceId 生成探针（pass/fail）、Snowflake workerId（当策略为 Snowflake 时）、分页配置及合法性校验、i18n 解析器状态、过滤器忽略路径配置摘要 |
+| `CoreHealthIndicator` | Spring Boot Actuator 健康指标，访问 `/actuator/health` 时报告：TraceId 生成探针（pass/fail）、配置校验结果、i18n 解析器状态 |
 
 ## 接入方式
 
@@ -138,10 +132,6 @@ ydsz:
     max-page-size: 1000                    # 最大每页记录数上限（1-5000）
     default-page-size: 20                  # 默认每页记录数（1-5000）
     tenant-mdc-filter-order: -2147483647   # 租户 MDC 过滤器优先级
-    trace:
-      enabled: true                        # 链路追踪开关（默认启用）
-      generate-if-missing: true           # 请求头缺失 TraceId 时自动生成
-      id-type: uuid                        # uuid（默认）或 snowflake
     tenant-mdc-filter:
       enabled: true                        # 租户 MDC 过滤器开关
 ```
@@ -170,9 +160,6 @@ return BaseResponse.errorWithDetail(BaseResultCode.NOT_FOUND, "订单不存在")
 | `ydsz.core.max-page-size` | 1000 | 最大每页记录数上限（1-5000），运行时同步到 `PageConstants` |
 | `ydsz.core.default-page-size` | 20 | 默认每页记录数（1-5000），运行时同步到 `PageConstants` |
 | `ydsz.core.tenant-mdc-filter-order` | `Ordered.HIGHEST_PRECEDENCE + 100` | 租户 MDC 过滤器优先级 |
-| `ydsz.core.trace.enabled` | true | 链路追踪开关，关闭后 TraceAutoConfiguration 不生效 |
-| `ydsz.core.trace.generate-if-missing` | true | 请求头缺失 TraceId 时是否自动生成 |
-| `ydsz.core.trace.id-type` | uuid | TraceId 生成策略：`uuid`（32 位无序）或 `snowflake`（16 位有序） |
 | `ydsz.core.tenant-mdc-filter.enabled` | true | 租户 MDC 过滤器开关 |
 | `ydsz.core.filter-ignore.common-ignore-urls` | 内置默认值（合并） | 公共忽略 URL 模式列表 |
 | `ydsz.core.filter-ignore.auth-filter-ignore-service-names` | 内置默认值（覆盖） | 认证过滤器忽略服务名称列表 |
@@ -260,19 +247,12 @@ try (RequestContext.CleanupGuard guard = RequestContext.newCleanupGuard()) {
 } // 自动清理上下文，防止内存泄漏
 ```
 
-### 5. 切换 TraceId 生成策略
-
-```yaml
-ydsz:
-  core:
-    trace:
-      id-type: snowflake   # 切换为 Snowflake 有序策略
-```
+### 5. TraceId 使用
 
 ```java
 import com.njydsz.common.core.trace.TraceIdGenerator;
 
-// 自动使用配置的策略，无需感知 SPI 细节
+// 生成 32 位唯一 TraceId
 String traceId = TraceIdGenerator.generate();
 ```
 
@@ -280,7 +260,6 @@ String traceId = TraceIdGenerator.generate();
 
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
-| `TraceIdSupplier` | TraceId 生成策略扩展点，自定义 TraceId 格式与生成逻辑 | 框架内置 `UuidTraceIdSupplier` 与 `SnowflakeTraceIdSupplier`，业务可覆盖 |
 | `BaseResponse.MessageResolver` | 国际化消息解析 SPI，将响应消息委托到 Spring MessageSource 等实现 | 框架内置 `SpringMessageResolver`（自动注册），业务可覆盖 |
 | `TenantContextHolder` | 租户上下文持有者 SPI，避免 core 模块循环依赖 | 业务模块（如 ydsz-common-auth）提供实现 |
 | `SensitiveDataMasker.SensitiveMasker` | 自定义脱敏器 SPI，通过 `@Sensitive(masker=...)` 指定 | 业务按需实现 |
@@ -293,34 +272,28 @@ String traceId = TraceIdGenerator.generate();
 
 **`CoreHealthIndicator` 暴露信息**：
 
-- `traceIdStrategy` — 当前 TraceId 策略类名（如 `UuidTraceIdSupplier` / `SnowflakeTraceIdSupplier`）
-- `traceEnabled` / `traceIdType` — 链路追踪开关与配置类型
 - `configValidation` — 配置项合法性校验结果（PASS / FAIL）
 - `traceIdProbe` — TraceId 生成探针（pass / fail）
-- `snowflakeWorkerId` — Snowflake workerId（当策略为 Snowflake 时）
-- `maxPageSize` / `defaultPageSize` — 运行时分页配置
-- `pageSizeValidation` — 分页合法性校验（WARN 表示 default > max）
 - `i18nResolverRegistered` — i18n 解析器是否注册
-- `filterIgnoreCommonUrls` / `filterIgnoreSecurityExcludeUrls` / `authFilterIgnoreServiceNames` — 过滤器忽略路径配置摘要
 
 **健康状态规则**：
 
 - TraceId 生成探针失败 → DOWN
-- 配置项非法（如 `id-type` 不在 `uuid` / `snowflake` 范围内） → DOWN
+- 配置项非法 → DOWN
 - 所有检查通过 → UP
 
 ## 注意事项
 
 1. **业务响应码与 HTTP 状态码区分**：`BaseResponse.code` 是业务响应码（`String` 类型，如 `"A00000"`），`ResultCode.getHttpStatusCode()` 返回对应的 HTTP 状态码（`int` 类型，如 `200` / `400` / `500`）。前端判断成功应检查 `resp.code === "A00000"`，而非 HTTP 状态码 `200`。
-2. **静态 holder 模式**：`TraceIdGenerator` / `BaseResponse` 使用 `volatile` 静态字段持有策略实例，而非 Spring Bean 依赖注入。原因是这些组件在项目极早期（如 Filter 初始化、日志框架启动）即被调用，Spring 容器可能尚未就绪。代价是多 ApplicationContext 场景下最后一个上下文的策略会覆盖前一个；单元测试间需调用 `TraceIdGenerator.resetToDefault()` 隔离状态。
-3. **RequestContext 必须显式清理**：基于 TransmittableThreadLocal 的上下文必须在请求结束时调用 `RequestContext.clear()`，建议使用 `try-with-resources` 配合 `RequestContext.newCleanupGuard()`，避免线程池复用导致内存泄漏或上下文串扰。
-4. **业务模块自定义错误码请实现 `ResultCode` 接口**：项目/合同/商机（B4xxxx）、财务/成本（B5xxxx）、资源/工时（B6xxxx）、报表（B8xxxx）等业务域专属错误码已从 `BaseResultCode` 中删除，不应再放入。
-5. **配置校验 fail-fast**：`CoreProperties` 及其 `TraceConfig` 内部类使用 JSR-303 校验注解（`@Min` / `@Max` / `@NotBlank` / `@Pattern`），配合 `@Validated` 和 `@Valid` 实现启动时校验。配置非法时应用启动失败。
-6. **零依赖原则**：本模块不含 Spring AOP / AspectJ / Micrometer / SpEL / Spring Web MVC / MyBatis-Plus / Redis 依赖。监控等上层能力通过 SPI 接口解耦，由上层模块实现。
-7. **国际化资源**：模块自带 `i18n/messages.properties`（英文默认）和 `i18n/messages_zh_CN.properties`（中文）资源文件，覆盖全部 56 个 `BaseResultCode` 错误码。消息 key 格式为 `error.{ENUM_NAME}`，与 `ResultCode.getMessageKey()` 默认实现一致。
-8. **GraalVM Native Image 支持**：`META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties` 注册了 `BaseResponse` / `PageResponse` / `ProblemDetail` / `CoreProperties` / `CoreProperties$TraceConfig` / `FilterIgnoreProperties` 的反射配置。
+2. **RequestContext 必须显式清理**：基于 TransmittableThreadLocal 的上下文必须在请求结束时调用 `RequestContext.clear()`，建议使用 `try-with-resources` 配合 `RequestContext.newCleanupGuard()`，避免线程池复用导致内存泄漏或上下文串扰。
+3. **业务模块自定义错误码请实现 `ResultCode` 接口**：项目/合同/商机（B4xxxx）、财务/成本（B5xxxx）、资源/工时（B6xxxx）、报表（B8xxxx）等业务域专属错误码已从 `BaseResultCode` 中删除，不应再放入。
+4. **配置校验 fail-fast**：`CoreProperties` 使用 JSR-303 校验注解（`@Min` / `@Max`），配合 `@Validated` 实现启动时校验。配置非法时应用启动失败。
+5. **零依赖原则**：本模块不含 Spring AOP / AspectJ / Micrometer / SpEL / Spring Web MVC / MyBatis-Plus / Redis 依赖。监控等上层能力通过 SPI 接口解耦，由上层模块实现。
+6. **国际化资源**：模块自带 `i18n/messages.properties`（英文默认）和 `i18n/messages_zh_CN.properties`（中文）资源文件，覆盖全部 56 个 `BaseResultCode` 错误码。消息 key 格式为 `error.{ENUM_NAME}`，与 `ResultCode.getMessageKey()` 默认实现一致。
+7. **GraalVM Native Image 支持**：`META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties` 注册了 `BaseResponse` / `PageResponse` / `ProblemDetail` / `CoreProperties` / `FilterIgnoreProperties` 的反射配置。
 
 ## 变更记录
 
+- **v1.1.1**（2026-08-03）：移除 Snowflake 策略（`SnowflakeTraceIdSupplier` / `TraceIdSupplier` / `TraceAutoConfiguration` / `id-type` 配置），统一 UUID TraceId；删除零消费死代码 `TraceConstants` / `SecurityConstants`（合并到 `HeaderConstants`）；`HeaderConstants.X_REQUEST_ID` 重命名为 `X_TRACE_ID`
 - **v1.1.0**（2026-08-03）：新增敏感数据脱敏能力（`sensitive` 包）、TraceId 传播工具（`TraceIdPropagation`）、分页归一化方法（`PageConstants.normalizePageSize/normalizePageNum/calcOffset`）、`ResultCode` 前缀推断 HTTP 状态码默认实现；移除无消费方的 `metrics` 包（`CoreMetrics` / `CoreMetricsCallback`）；`FilterIgnoreProperties` 统一为"合并 + replace-builtin 开关"策略；`RequestContext` 改为懒初始化；修复 `SnowflakeTraceIdSupplier.toHex16` 输出反转 Bug；补齐 157 个单元测试
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
