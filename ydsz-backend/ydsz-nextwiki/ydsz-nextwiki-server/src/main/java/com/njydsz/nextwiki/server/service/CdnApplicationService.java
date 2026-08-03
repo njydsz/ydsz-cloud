@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
-import cn.hutool.crypto.digest.DigestUtil;
+import org.apache.commons.codec.digest.DigestUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -128,7 +128,7 @@ public class CdnApplicationService {
         }
         long expireTime = System.currentTimeMillis() / 1000 + expireSeconds;
         String signedValue = storageKey + "-" + expireTime + "-" + properties.getCdn().getSecretKey();
-        String sign = DigestUtil.sha256Hex(signedValue);
+        String sign = DigestUtils.sha256Hex(signedValue);
         return "https://" + properties.getCdn().getDomain() + "/" + storageKey + "?expires=" + expireTime + "&sign=" + sign;
     }
 }

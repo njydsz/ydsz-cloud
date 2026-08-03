@@ -300,6 +300,17 @@ ydsz-pmis/
 - **Feign 全面容错**：所有 Feign 客户端均有 Fallback 工厂
 - **API 显式定义**：每个 API 方法必须显式声明，不使用泛型工厂
 
+### 6.3 自研框架前提（重要）
+
+> **本项目为南京云顶数字科技有限公司内网自研开发框架，前后端代码及公共依赖模块均为公司内部技术资产。**
+
+| 原则 | 说明 |
+|------|------|
+| **自研优先** | 前端代码、后端代码、ydsz-common 公共库（30 子模块）、ydsz-frontend 共享包（comm/conf）均为公司自研，技术选型以**尽量不依赖外部框架**为前提 |
+| **不重复造轮子** | 自研模块均对标业界主流方案并深度定制（见下表），**不存在"重复造轮子"**：ydsz-json 对标 Jackson/FastJSON2、ydsz-cronjob 对标 XXL-Job、ydsz-literule 对标 Drools/LiteFlow、ydsz-workflow 对标 Flowable/Activiti、common-excel 对标 EasyExcel、common-cache 对标 Caffeine + 多级缓存、common-file 对标 Spring Content 等 |
+| **优化不替换** | 评估、优化、重构自研模块时，**不应建议用外部框架整体替换自研实现**；优化方向聚焦自研模块内部的精简、去重、内敛化、测试补齐与性能提升 |
+| **基础设施例外** | Spring Boot/Cloud、MyBatis-Plus、Redis、PostgreSQL、Vite、Vue、Element Plus 等基础设施类依赖按业界标准引入，不属于"自研 vs 外部"的讨论范畴 |
+
 > 完整规范见 [.trae/rules/](.trae/rules/)
 
 ---

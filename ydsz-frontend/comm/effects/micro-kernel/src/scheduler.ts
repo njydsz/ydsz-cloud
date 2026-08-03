@@ -17,6 +17,8 @@ import { loadApp, removeStylesheets } from './loader';
 import type { LoadOptions, LoadResult } from './loader';
 import { enterSandbox, exitSandbox } from './sandbox';
 import type { SandboxInstance } from './sandbox';
+import { createProxySandbox } from './proxy-sandbox';
+import type { ProxySandboxInstance } from './proxy-sandbox';
 import { createLogger } from '@ydsz-core/shared/utils';
 
 /** 模块级日志器（生命周期事件默认 debug 级别，避免生产噪音） */
@@ -38,6 +40,9 @@ function resolveContainer(container: string | HTMLElement): HTMLElement | null {
 /** 子应用生命周期状态：未加载 / 加载中 / 已加载 / 已挂载 / 已卸载 */
 export type AppStatus = 'NOT_LOADED' | 'LOADING' | 'LOADED' | 'MOUNTED' | 'UNMOUNTED';
 
+/** 沙箱类型：snapshot（默认，性能好）| proxy（隔离强，性能略低） */
+export type SandboxType = 'snapshot' | 'proxy';
+
 /** 单个子应用在调度器中的运行时实例，含配置、生命周期导出、状态与保活缓存 */
 export interface AppInstance {
   config: MicroAppConfig;
@@ -50,6 +55,10 @@ export interface AppInstance {
   cachedParent: null | Node;
   /** 快照沙箱实例（mount 时创建，unmount 时销毁；keepAlive 时保留） */
   sandbox: null | SandboxInstance;
+  /** Proxy 沙箱实例（当 sandboxType 为 'proxy' 时使用） */
+  proxySandbox: null | import('./proxy-sandbox').ProxySandboxInstance;
+  /** 沙箱类型：snapshot（默认）| proxy */
+  sandboxType: SandboxType;
   /** 最近一次加载的性能指标（为监控提供数据） */
   loadMetrics: null | { duration: number; fromCache: boolean };
   error: null | string;
@@ -67,6 +76,8 @@ export function createAppInstance(config: MicroAppConfig): AppInstance {
     cachedRoot: null,
     cachedParent: null,
     sandbox: null,
+    proxySandbox: null,
+    sandboxType: 'snapshot', // 默认使用快照沙箱
     loadMetrics: null,
     error: null,
   };
@@ -139,8 +150,17 @@ export async function activateApp(
   // 设置容器属性，与 PostCSS 构建期 CSS scoping 联动
   container.setAttribute('data-micro-app', config.name);
 
-  // 进入快照沙箱（挂载前快照 window，代理副作用 API）
-  instance.sandbox = enterSandbox();
+  // 根据沙箱类型进入对应的沙箱环境
+  if (instance.sandboxType === 'proxy') {
+    // Proxy 沙箱：创建并激活
+    instance.proxySandbox = createProxySandbox(config.name);
+    instance.proxySandbox.activate();
+    logger.debug(`${config.name} entered proxy sandbox`);
+  } else {
+    // 快照沙箱（默认）：进入快照沙箱
+    instance.sandbox = enterSandbox();
+    logger.debug(`${config.name} entered snapshot sandbox`);
+  }
 
   try {
     await instance.exports.mount(mountProps);
@@ -148,9 +168,14 @@ export async function activateApp(
     instance.error = null;
     logger.debug(`${config.name} mounted`);
   } catch (err) {
-    // 挂载失败：退出沙箱，回滚全局状态
-    exitSandbox(instance.sandbox);
-    instance.sandbox = null;
+    // 挂载失败：退出对应的沙箱
+    if (instance.sandboxType === 'proxy' && instance.proxySandbox) {
+      instance.proxySandbox.cleanup();
+      instance.proxySandbox = null;
+    } else if (instance.sandbox) {
+      exitSandbox(instance.sandbox);
+      instance.sandbox = null;
+    }
     instance.status = 'LOADED';
     instance.error = String(err);
     throw err;
@@ -197,10 +222,19 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
       basename: config.activeRule,
     });
 
-    // 退出快照沙箱（恢复 window / 清理事件与定时器）
-    if (instance.sandbox) {
-      exitSandbox(instance.sandbox);
-      instance.sandbox = null;
+    // 根据沙箱类型退出对应的沙箱环境
+    if (instance.sandboxType === 'proxy') {
+      // Proxy 沙箱：清理并释放
+      if (instance.proxySandbox) {
+        instance.proxySandbox.cleanup();
+        instance.proxySandbox = null;
+      }
+    } else {
+      // 快照沙箱：退出并恢复 window
+      if (instance.sandbox) {
+        exitSandbox(instance.sandbox);
+        instance.sandbox = null;
+      }
     }
 
     // 移除容器级 CSS scoping 属性（data-micro-app）
@@ -217,9 +251,16 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
     return { name: config.name, success: true };
   } catch (err) {
     // unmount 失败仍尝试退出沙箱
-    if (instance.sandbox) {
-      exitSandbox(instance.sandbox);
-      instance.sandbox = null;
+    if (instance.sandboxType === 'proxy') {
+      if (instance.proxySandbox) {
+        instance.proxySandbox.cleanup();
+        instance.proxySandbox = null;
+      }
+    } else {
+      if (instance.sandbox) {
+        exitSandbox(instance.sandbox);
+        instance.sandbox = null;
+      }
     }
     instance.error = String(err);
     return { name: config.name, success: false, reason: String(err) };

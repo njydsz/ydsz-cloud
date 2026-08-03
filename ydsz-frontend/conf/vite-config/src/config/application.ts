@@ -52,6 +52,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       devtools: true,
       env,
       extraAppConfig: true,
+      font: true, // 启用字体子集化（中文字体优化）
       html: true,
       i18n: true,
       importmapOptions: {
@@ -76,9 +77,10 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       printInfoMap: {
         'YDSZ Admin Docs': 'https://docs.njydsz.com.cn',
       },
-      // v3.2: PWA 支持由应用层配置，默认关闭（中后台管理端缓存脏数据风险）
-      // 应用层可通过 application.pwa = true 启用
-      pwa: false,
+      // v3.3: PWA 离线缓存默认启用，提升二次访问速度
+      // 已配置合理的缓存策略：API 使用 NetworkFirst，静态资源使用 CacheFirst
+      // 如需关闭，可在应用层设置 application.pwa = false
+      pwa: true,
       pwaOptions: getDefaultPwaOptions(appTitle),
       vxeTableLazyImport: true,
       ...envConfig,

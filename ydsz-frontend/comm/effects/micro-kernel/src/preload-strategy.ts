@@ -6,6 +6,8 @@
  * - hover 预加载：鼠标悬停时预加载
  * - visibility 预加载：根据页面可见性预加载
  * - route 预加载：根据路由预测预加载
+ * - permission 预加载：基于用户权限动态调整预加载
+ * - frequency 预加载：基于使用频率智能预加载
  *
  * @path comm/effects/micro-kernel/src/preload-strategy.ts
  * @author ydsz-team
@@ -18,8 +20,26 @@ import { createLogger } from '@ydsz-core/shared/utils';
 /** 模块级日志器 */
 const logger = createLogger('PreloadManager');
 
+/** 应用使用频率统计 */
+export interface AppUsageStats {
+  /** 应用名称 */
+  appName: string;
+  /** 访问次数 */
+  visitCount: number;
+  /** 最后访问时间 */
+  lastVisitTime: number;
+  /** 平均访问间隔（ms） */
+  averageInterval: number;
+}
+
+/** 权限检查函数类型 */
+export type PermissionChecker = (codes: string[]) => boolean;
+
+/** 预加载优先级 */
+export type PreloadPriority = 'high' | 'medium' | 'low';
+
 /** 预加载策略类型 */
-export type PreloadStrategy = 'idle' | 'hover' | 'visibility' | 'route' | 'manual';
+export type PreloadStrategy = 'idle' | 'hover' | 'visibility' | 'route' | 'manual' | 'permission' | 'frequency';
 
 /** 预加载策略配置 */
 export interface PreloadStrategyOptions {
@@ -29,6 +49,10 @@ export interface PreloadStrategyOptions {
   idleTimeout?: number;
   /** 预加载回调 */
   onPreload?: (appName: string) => void | Promise<void>;
+  /** 权限码（permission 策略使用） */
+  permissionCodes?: string[];
+  /** 预加载优先级（frequency 策略使用） */
+  priority?: PreloadPriority;
 }
 
 /** 预加载管理器 */
@@ -37,6 +61,87 @@ export class PreloadManager {
   private preloadCache: Set<string> = new Set();
   private hoverListeners: Map<string, () => void> = new Map();
   private visibilityListener: (() => void) | null = null;
+  private usageStats: Map<string, AppUsageStats> = new Map();
+  private permissionChecker: PermissionChecker | null = null;
+  private storageKey = 'ydsz_app_usage_stats';
+
+  constructor() {
+    this.loadUsageStats();
+  }
+
+  /**
+   * 设置权限检查器
+   *
+   * @param checker - 权限检查函数，接收权限码数组返回布尔值
+   */
+  setPermissionChecker(checker: PermissionChecker | null): void {
+    this.permissionChecker = checker;
+  }
+
+  /**
+   * 记录应用访问（用于频率统计）
+   *
+   * @param appName - 应用名称
+   */
+  recordAppVisit(appName: string): void {
+    const now = Date.now();
+    const stats = this.usageStats.get(appName);
+
+    if (stats) {
+      const interval = now - stats.lastVisitTime;
+      stats.visitCount++;
+      stats.lastVisitTime = now;
+      // 更新平均间隔（加权平均）
+      stats.averageInterval = (stats.averageInterval * (stats.visitCount - 1) + interval) / stats.visitCount;
+    } else {
+      this.usageStats.set(appName, {
+        appName,
+        visitCount: 1,
+        lastVisitTime: now,
+        averageInterval: 0,
+      });
+    }
+
+    this.saveUsageStats();
+  }
+
+  /**
+   * 获取应用使用统计
+   *
+   * @param appName - 应用名称
+   * @returns 应用使用统计，未记录时返回 null
+   */
+  getUsageStats(appName: string): AppUsageStats | null {
+    return this.usageStats.get(appName) || null;
+  }
+
+  /**
+   * 根据使用频率排序应用
+   *
+   * @returns 按访问频率降序排列的应用名称数组
+   */
+  getAppsByFrequency(): string[] {
+    return Array.from(this.usageStats.entries())
+      .sort((a, b) => b[1].visitCount - a[1].visitCount)
+      .map(([appName]) => appName);
+  }
+
+  /**
+   * 检查应用是否有权限预加载
+   *
+   * @param appName - 应用名称
+   * @returns 是否有权限
+   */
+  hasPermission(appName: string): boolean {
+    const strategy = this.strategies.get(appName);
+    if (!strategy?.permissionCodes || strategy.permissionCodes.length === 0) {
+      return true; // 无权限要求则默认允许
+    }
+    if (!this.permissionChecker) {
+      return true; // 未设置权限检查器则默认允许
+    }
+    return this.permissionChecker(strategy.permissionCodes);
+  }
 
   /**
    * 注册预加载策略
@@ -58,6 +163,12 @@ export class PreloadManager {
   async triggerPreload(appName: string): Promise<void> {
     // 避免重复预加载
     if (this.preloadCache.has(appName)) {
+      return;
+    }
+
+    // 权限检查：无权限则跳过
+    if (!this.hasPermission(appName)) {
+      logger.debug(`Skipped preload ${appName} due to permission check`);
       return;
     }
 
@@ -142,6 +253,33 @@ export class PreloadManager {
   }
 
   /**
+   * 保存使用统计到本地存储
+   */
+  private saveUsageStats(): void {
+    try {
+      const data = Object.fromEntries(this.usageStats);
+      localStorage.setItem(this.storageKey, JSON.stringify(data));
+    } catch {
+      // 存储失败静默处理
+    }
+  }
+
+  /**
+   * 从本地存储加载使用统计
+   */
+  private loadUsageStats(): void {
+    try {
+      const data = localStorage.getItem(this.storageKey);
+      if (data) {
+        const parsed = JSON.parse(data);
+        this.usageStats = new Map(Object.entries(parsed));
+      }
+    } catch {
+      // 加载失败静默处理
+    }
+  }
+
+  /**
    * 销毁管理器
    */
   destroy(): void {
@@ -159,6 +297,8 @@ export class PreloadManager {
 
     this.strategies.clear();
     this.preloadCache.clear();
+    this.usageStats.clear();
+    this.permissionChecker = null;
   }
 }
 

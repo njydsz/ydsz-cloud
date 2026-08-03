@@ -11,10 +11,14 @@
 -->
 <script setup lang="ts">
 import type { MicroAppConfig } from '@ydsz/micro-runtime';
+import type { Component } from 'vue';
 
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 import { microRuntime } from '#/bootstrap';
+
+import { getSkeletonComponent, type SkeletonType } from './skeletons/skeleton-registry';
 
 defineOptions({
   name: 'SubAppContainer',
@@ -40,6 +44,23 @@ const phaseText = ref('');
 const lastError = ref<null | string>(null);
 
 const state = reactive({ phase, activeAppName, progress, phaseText, lastError });
+
+/** 路由实例，用于读取 meta.skeletonType */
+const route = useRoute();
+
+/**
+ * 根据当前路由 meta.skeletonType 动态返回骨架屏组件。
+ *
+ * 路由配置示例：
+ *   { path: '/users', component: UserList, meta: { skeletonType: 'list' } }
+ *   { path: '/dashboard', component: Dashboard, meta: { skeletonType: 'dashboard' } }
+ *   { path: '/form', component: Form, meta: { skeletonType: 'form' } }
+ *   { path: '/detail/:id', component: Detail, meta: { skeletonType: 'detail' } }
+ */
+const pageSkeletonComponent = computed<Component>(() => {
+  const skeletonType = (route.meta?.skeletonType as SkeletonType) || 'default';
+  return getSkeletonComponent(skeletonType);
+});
 
 /** 阶段 → (百分比, 文案) 映射表，保证进度反映真实生命周期而非随机数 */
 const PHASE_META: Record<LoadingPhase, readonly [number, string]> = {
@@ -142,17 +163,9 @@ function showErrorMask(): boolean {
       class="subapp-container"
       :class="{ 'is-loading': showSkeleton(), 'has-error': showErrorMask() }"
     >
-      <!-- 骨架屏（子应用加载中展示） -->
-      <div v-if="showSkeleton()" class="subapp-skeleton">
-        <div class="skeleton-header">
-          <div class="skeleton-avatar"></div>
-          <div class="skeleton-title"></div>
-        </div>
-        <div class="skeleton-content">
-          <div class="skeleton-paragraph"></div>
-          <div class="skeleton-paragraph short"></div>
-          <div class="skeleton-paragraph"></div>
-        </div>
+      <!-- 页面级骨架屏（根据路由 meta.skeletonType 动态加载） -->
+      <div v-if="showSkeleton()" class="subapp-skeleton-wrapper">
+        <component :is="pageSkeletonComponent" />
         <div class="skeleton-progress">
           <div class="progress-bar" :style="{ width: `${state.progress}%` }"></div>
         </div>
@@ -196,77 +209,21 @@ function showErrorMask(): boolean {
   justify-content: center;
 }
 
-/* 骨架屏样式 */
-.subapp-skeleton {
+/* 骨架屏包装器样式 */
+.subapp-skeleton-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 600px;
+  height: 100%;
   padding: 40px;
   gap: 24px;
 }
 
-.skeleton-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-}
-
-.skeleton-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-}
-
-.skeleton-title {
-  flex: 1;
-  height: 20px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  animation-delay: 0.1s;
-}
-
-.skeleton-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.skeleton-paragraph {
-  height: 16px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-}
-
-.skeleton-paragraph.short {
-  width: 60%;
-}
-
-.skeleton-paragraph:nth-child(1) {
-  animation-delay: 0.2s;
-}
-
-.skeleton-paragraph:nth-child(2) {
-  animation-delay: 0.3s;
-}
-
-.skeleton-paragraph:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
 .skeleton-progress {
   width: 100%;
+  max-width: 600px;
   height: 4px;
   background: #f0f0f0;
   border-radius: 2px;

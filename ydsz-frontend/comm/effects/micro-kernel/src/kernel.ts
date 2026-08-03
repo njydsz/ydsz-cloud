@@ -35,7 +35,7 @@ import {
 } from './scheduler';
 import { loadApp, type Manifest } from './loader';
 import { getVersionManager, type VersionManagerOptions } from './version-manager';
-import { getPreloadManager, type PreloadStrategyOptions } from './preload-strategy';
+import { getPreloadManager, type PreloadStrategyOptions, type PermissionChecker } from './preload-strategy';
 import { createLogger } from '@ydsz-core/shared/utils';
 
 /** 模块级日志器 */
@@ -44,24 +44,15 @@ const logger = createLogger('MicroKernel');
 /** 内核自定义路由变更事件名，供 history patch + popstate 统一触发 */
 const ROUTE_CHANGE_EVENT = 'micro-kernel:route-change';
 
-/**
- * 解析容器配置：支持 CSS 选择器字符串或 HTMLElement 实例。
- *
- * @param container - 容器配置（string | HTMLElement）
- * @returns 解析后的 HTMLElement，未找到时返回 null
- */
-function resolveContainer(container: string | HTMLElement): HTMLElement | null {
-  if (typeof container === 'string') {
-    return document.querySelector(container) as HTMLElement | null;
-  }
-  return container;
-}
-
 /** 当前活跃应用名 */
 let activeAppName: null | string = null;
 
 /**
  * 解析容器配置为 HTMLElement。
+ *
+ * 支持两种模式：
+ * - string: CSS 选择器（如 '#subapp-container'）
+ * - HTMLElement: 直接传入 DOM 元素（适用于动态创建容器或嵌套子应用场景）
  *
  * @param container - 容器配置，支持 CSS 选择器字符串或 HTMLElement
  * @returns 解析后的 HTMLElement，未找到时返回 null
@@ -414,6 +405,11 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
         return;
       }
       started = true;
+
+      // P1-3.2: 设置权限检查器，预加载时会根据用户权限过滤
+      if (options?.permissionChecker) {
+        preloadManager.setPermissionChecker(options.permissionChecker);
+      }
 
       // 启动路由监听（含 history 补丁）
       routerSyncCleanup = startRouterSync(apps, options);

@@ -192,6 +192,80 @@ interface ApplicationPluginOptions extends CommonPluginOptions {
    */
   extraAppConfig?: boolean;
   /**
+   * 是否开启字体子集化
+   * @default false
+   * @description 使用 vite-plugin-font 自动提取字体子集，优化中文字体加载
+   */
+  font?: boolean;
+  /**
+   * 是否开启 HTML 插件
+   * @default true
+   */
+  html?: boolean;
+  /**
+   * 压缩归档插件配置
+   * @description 配置压缩归档的行为
+   */
+  archiverPluginOptions?: ArchiverPluginOptions;
+  /**
+   * 是否开启压缩
+   * @default false
+   * @description 支持 gzip 和 brotli 压缩
+   */
+  compress?: boolean;
+  /**
+   * 压缩类型
+   * @default ['gzip']
+   * @description 可选的压缩类型
+   */
+  compressTypes?: ('brotli' | 'gzip')[];
+  /**
+   * 是否抽离配置文件
+   * @default false
+   * @description 在构建时抽离配置文件
+   */
+  extraAppConfig?: boolean;
+  /**
+   * 是否开启字体子集化
+   * @default false
+   * @description 使用 vite-plugin-font 自动提取字体子集，优化中文字体加载
+   */
+  font?: boolean;
+  /**
+   * 是否开启 HTML 插件
+   * @default true
+   */
+  html?: boolean;
+  /**
+   * 压缩归档插件配置
+   * @description 配置压缩归档的行为
+   */
+  archiverPluginOptions?: ArchiverPluginOptions;
+  /**
+   * 是否开启压缩
+   * @default false
+   * @description 支持 gzip 和 brotli 压缩
+   */
+  compress?: boolean;
+  /**
+   * 压缩类型
+   * @default ['gzip']
+   * @description 可选的压缩类型
+   */
+  compressTypes?: ('brotli' | 'gzip')[];
+  /**
+   * 是否抽离配置文件
+   * @default false
+   * @description 在构建时抽离配置文件
+   */
+  extraAppConfig?: boolean;
+  /**
+   * 是否开启字体子集化
+   * @default false
+   * @description 使用 vite-plugin-font 自动提取字体子集，优化中文字体加载
+   */
+  font?: boolean;
+  /**
    * 是否开启 HTML 插件
    * @default true
    */

@@ -6,6 +6,7 @@
  * @since 1.0.0
  */
 export * from './helpers';
+export * from './retry';
 export * from '@ydsz-core/shared/cache';
 export * from '@ydsz-core/shared/color';
 export * from '@ydsz-core/shared/utils';

@@ -56,13 +56,13 @@
         <druid.version>1.2.28</druid.version>
         <!-- baomidou 动态数据源（读写分离 P2-3） -->
         <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
-        <hutool.version>5.8.46</hutool.version>
+
         <resilience4j.version>2.4.0</resilience4j.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok.version>1.18.42</lombok.version>
         <fastjson2.version>2.0.62</fastjson2.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <bcprov.version>1.81.1</bcprov.version>
+
         <knife4j.version>4.5.0</knife4j.version>
         <springdoc.version>3.0.3</springdoc.version>
         <easyexcel.version>4.0.3</easyexcel.version>
@@ -777,12 +777,7 @@
                 <version>${resilience4j.version}</version>
             </dependency>
 
-            
-            <dependency>
-                <groupId>cn.hutool</groupId>
-                <artifactId>hutool-all</artifactId>
-                <version>${hutool.version}</version>
-            </dependency>
+
 
             <!-- MapStruct -->
             <dependency>
@@ -825,11 +820,13 @@
                 <scope>runtime</scope>
             </dependency>
 
-            <!-- BouncyCastle (AES/SM4 加密) -->
+
+
+            <!-- BouncyCastle (MinIO 1.78 vs Spring Cloud 1.81.1，统一取高版本) -->
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
-                <version>${bcprov.version}</version>
+                <version>1.81.1</version>
             </dependency>
 
             <!-- SpringDoc (OpenAPI 3) -->

@@ -133,7 +133,7 @@ async function bootstrap(namespace: string) {
   app.directive('loading', ElLoading.directive);
 
   registerLoadingDirective(app, {
-    loading: 'loading',
+    loading: false, // YDSZ提供的v-loading指令和Element Plus提供的v-loading指令二选一即可，此处false表示不注册YDSZ提供的v-loading指令
     spinning: 'spinning',
   });
 

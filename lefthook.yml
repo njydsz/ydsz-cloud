@@ -1,0 +1,36 @@
+# Lefthook Git hooks configuration
+# Refer for explanation to following link:
+# https://lefthook.dev/configuration/
+#
+# P0-5.1: 启用 Git hooks 本地校验，CI 中作为兜底
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: eslint
+      glob: "*.{js,ts,jsx,tsx,vue}"
+      run: pnpm eslint --fix {staged_files}
+
+    - name: prettier
+      glob: "*.{js,ts,jsx,tsx,vue,json,md,css,scss,less}"
+      run: pnpm prettier --write {staged_files}
+
+    - name: stylelint
+      glob: "*.{css,scss,less,vue}"
+      run: pnpm stylelint --fix {staged_files}
+
+    - name: type-check
+      run: pnpm check:type
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm commitlint --edit {1}
+
+pre-push:
+  jobs:
+    - name: type-check
+      run: pnpm check:type
+
+    - name: test
+      run: pnpm test:unit

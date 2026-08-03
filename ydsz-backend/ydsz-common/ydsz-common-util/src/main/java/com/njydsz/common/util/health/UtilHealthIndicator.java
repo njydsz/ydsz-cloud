@@ -7,7 +7,6 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.util.bean.BeanCopyUtils;
-import com.njydsz.common.util.http.OkHttpUtils;
 import com.njydsz.common.util.id.SnowflakeUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -100,22 +99,6 @@ public class UtilHealthIndicator implements HealthIndicator {
             builder.withDetail("beanCopy.propertyCacheSize", cacheStats.get("propertyCacheSize"));
         } catch (Exception e) {
             log.debug("BeanCopyUtils cache stats unavailable: {}", e.getMessage());
-        }
-
-        // 4. OkHttp 连接池统计
-        try {
-            Map<String, Object> httpStats = OkHttpUtils.getConnectionPoolStats();
-            if (!httpStats.isEmpty()) {
-                builder.withDetail("okHttp.idleConnections", httpStats.get("idleConnections"));
-                builder.withDetail("okHttp.totalConnections", httpStats.get("totalConnections"));
-                builder.withDetail("okHttp.queuedCallsCount", httpStats.get("queuedCallsCount"));
-                builder.withDetail("okHttp.runningCallsCount", httpStats.get("runningCallsCount"));
-            } else {
-                builder.withDetail("okHttp.available", false);
-            }
-        } catch (Exception e) {
-            log.debug("OkHttp connection pool stats unavailable: {}", e.getMessage());
-            builder.withDetail("okHttp.available", false);
         }
 
         return hasCritical;

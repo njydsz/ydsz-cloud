@@ -1,20 +1,14 @@
 package com.njydsz.common.util.config;
 
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.util.health.UtilHealthIndicator;
-import com.njydsz.common.util.http.HttpClientFactory;
-import com.njydsz.common.util.http.OkHttpProperties;
-import com.njydsz.common.util.http.OkHttpUtils;
 import com.njydsz.common.util.id.SnowflakeHealthIndicator;
 import com.njydsz.common.util.id.SnowflakeProperties;
 import com.njydsz.common.util.spring.SpringContextHolder;
-
-import okhttp3.OkHttpClient;
 
 /**
  * 通用工具类自动配置。
@@ -28,7 +22,7 @@ import okhttp3.OkHttpClient;
  */
 
 @AutoConfiguration
-@EnableConfigurationProperties({OkHttpProperties.class, SnowflakeProperties.class})
+@EnableConfigurationProperties({SnowflakeProperties.class})
 public class UtilAutoConfiguration {
 
     /**
@@ -43,23 +37,6 @@ public class UtilAutoConfiguration {
     @ConditionalOnMissingBean
     public SpringContextHolder springContextHolder() {
         return new SpringContextHolder();
-    }
-
-    /**
-     * 注册 OkHttpClient Bean
-     *
-     * <p>基于 OkHttpProperties 配置创建 OkHttpClient 实例，
-     * 支持连接池复用和超时配置。创建后自动注册到 OkHttpUtils 静态工具类。
-     *
-     * @param properties OkHttp 配置属性
-     * @return OkHttpClient 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(OkHttpClient.class)
-    public OkHttpClient okHttpClient(OkHttpProperties properties) {
-        OkHttpClient okHttpClient = HttpClientFactory.create(properties, null);
-        OkHttpUtils.setSpringManagedClient(okHttpClient);
-        return okHttpClient;
     }
 
     /**
@@ -88,24 +65,6 @@ public class UtilAutoConfiguration {
     @ConditionalOnMissingBean
     public UtilHealthIndicator utilHealthIndicator() {
         return new UtilHealthIndicator();
-    }
-
-    /**
-     * 提供清理 Bean，用于应用关闭时清理 OkHttpUtils 资源
-     */
-    @Bean
-    public OkHttpCleanupBean okHttpCleanupBean() {
-        return new OkHttpCleanupBean();
-    }
-
-    /**
-     * OkHttp 资源清理 Bean
-     */
-    public static class OkHttpCleanupBean implements DisposableBean {
-        @Override
-        public void destroy() {
-            OkHttpUtils.close();
-        }
     }
 
 }

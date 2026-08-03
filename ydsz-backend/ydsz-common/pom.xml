@@ -24,7 +24,7 @@
         <yauaa.version>7.32.0</yauaa.version>
         <ip2region.version>2.7.0</ip2region.version>
         <velocity.version>2.4.1</velocity.version>
-        <javassist.version>3.30.2-GA</javassist.version>
+
         <rocketmq-client.version>5.3.3</rocketmq-client.version>
         <activemq.version>6.2.6</activemq.version>
         <owasp-html-sanitizer.version>20240325.1</owasp-html-sanitizer.version>
@@ -425,12 +425,7 @@
                 <version>${velocity.version}</version>
             </dependency>
 
-            <!-- javassist -->
-            <dependency>
-                <groupId>org.javassist</groupId>
-                <artifactId>javassist</artifactId>
-                <version>${javassist.version}</version>
-            </dependency>
+
 
             <!-- kafka-clients -->
             <dependency>

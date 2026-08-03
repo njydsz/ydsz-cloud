@@ -1,20 +1,27 @@
 /**
- * 轻量快照沙箱 — 防意外全局污染。
+ * 沙箱模块 — 支持快照沙箱与 Proxy 沙箱双模式
  *
- * 不做 proxy 拦截（性能与同源性的取舍），仅在子应用 mount/unmount 时执行
- * 快照恢复：记录 window 键集合变更 → unmount 恢复；记录事件监听/定时器 →
- * unmount 清理。
+ * **快照沙箱（默认）**：
+ * - 不做 proxy 拦截（性能与同源性的取舍），仅在子应用 mount/unmount 时执行
+ *   快照恢复：记录 window 键集合变更 → unmount 恢复；记录事件监听/定时器 →
+ *   unmount 清理。
+ * - **边界声明**：不防恶意代码，仅防「意外污染」。
+ * - 对标 Garfish snapshotSandbox 思路，适配同团队同技术栈场景。
  *
- * **边界声明**：不防恶意代码，仅防「意外污染」。
+ * **Proxy 沙箱（可选）**：
+ * - 通过 Proxy 拦截所有对 window 的读写，实现真正的运行时隔离。
+ * - 适用于多子应用同时激活（keep-alive）或需要更强隔离的场景。
+ * - 性能开销约 1-5%，某些第三方库可能依赖真实 window 对象。
+ *
  * 配合 ESLint no-restricted-globals 规则约束子应用不直接写 window，
  * 本沙箱处置规则兜底的漏网之鱼。
- *
- * 对标 Garfish snapshotSandbox 思路，适配同团队同技术栈场景。
  *
  * @path comm/effects/micro-kernel/src/sandbox.ts
  * @author ydsz-team
  * @since 3.0.0
  */
+
+import { createProxySandbox, type ProxySandboxInstance } from './proxy-sandbox';
 
 /** 沙箱实例：记录一个子应用在激活期间的全局副作用 */
 export interface SandboxInstance {

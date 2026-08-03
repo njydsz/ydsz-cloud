@@ -80,21 +80,29 @@ function handleClick() {
 
 /**
  * 菜单项 hover 事件 - 触发子应用预加载
+ *
+ * P1-3.2: 基于菜单 hover/权限动态调整 prefetch
+ * - 权限检查：无权限则跳过预加载
+ * - 频率统计：记录访问频率用于智能预加载
  */
 function handleMouseEnter() {
   if (props.disabled || !props.path) {
     return;
   }
-  
-  // 根据菜单路径触发对应子应用的预加载
+
   const preloadManager = getPreloadManager();
   const menuPath = props.path;
-  
+
   // 查找匹配的子应用（根据路径前缀）
-  // 这里使用路径的第一段作为子应用标识
   const pathSegments = menuPath.split('/').filter(Boolean);
   if (pathSegments.length > 0) {
     const appName = pathSegments[0];
+
+    // 权限检查：无权限则跳过
+    if (!preloadManager.hasPermission(appName)) {
+      return;
+    }
+
     // 触发预加载（异步，不阻塞）
     preloadManager.triggerPreload(appName).catch(() => {
       // 预加载失败不影响用户体验，静默处理

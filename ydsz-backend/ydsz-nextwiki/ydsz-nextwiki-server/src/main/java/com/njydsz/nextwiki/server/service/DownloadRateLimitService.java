@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
-import cn.hutool.crypto.digest.DigestUtil;
+import org.apache.commons.codec.digest.DigestUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -123,7 +123,7 @@ public class DownloadRateLimitService {
         long signedUrlExpireSeconds = properties.getDownload().getSignedUrlExpireSeconds();
         long expireTime = System.currentTimeMillis() / 1000 + signedUrlExpireSeconds;
         String rawData = storageKey + "|" + userId + "|" + ip + "|" + expireTime;
-        String sign = DigestUtil.md5Hex(rawData);
+        String sign = DigestUtils.md5Hex(rawData);
 
         // 存储签名到 Redis（用于验证）
         String signKey = "nextwiki:sign:" + sign;

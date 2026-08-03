@@ -15,6 +15,7 @@
 
 import type { LifecycleExports, MicroAppConfig } from '@ydsz/micro-runtime';
 import { createLogger } from '@ydsz-core/shared/utils';
+import { retryOperation, calculateRetryDelay } from '@ydsz-core/shared/utils/retry';
 
 /** 模块级日志器（重试等运维信息走 debug，避免生产噪音） */
 const logger = createLogger('MicroKernel');
@@ -133,6 +134,8 @@ export async function loadApp(
 /**
  * 带超时与指数退避重试的 dynamic import。
  *
+ * 使用统一的重试策略（含 jitter），避免惊群效应。
+ *
  * @param url - ESM 模块 URL
  * @param opts - 超时/重试配置
  * @returns 导入的模块对象
@@ -141,10 +144,8 @@ async function importWithRetry(
   url: string,
   opts: { timeout: number; retries: number; retryBaseDelay: number; extSignal?: AbortSignal },
 ): Promise<Record<string, unknown>> {
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt <= opts.retries; attempt++) {
-    try {
+  return retryOperation(
+    async () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(`Load timeout: ${url}`), opts.timeout);
 
@@ -159,47 +160,42 @@ async function importWithRetry(
         clearTimeout(timeoutId);
         opts.extSignal?.removeEventListener('abort', onExtAbort);
       }
-    } catch (err) {
-      lastError = err;
-      if (attempt < opts.retries) {
-        const delay = opts.retryBaseDelay * 2 ** attempt;
+    },
+    {
+      maxRetries: opts.retries,
+      baseDelay: opts.retryBaseDelay,
+      backoff: 'exponential',
+      jitter: 0.25,
+      onRetry: (error, attempt, delay) => {
         logger.debug(
           `Import failed (attempt ${attempt + 1}/${opts.retries + 1}): ${url}. Retrying in ${delay}ms...`,
         );
-        await new Promise((r) => setTimeout(r, delay));
-      }
-    }
-  }
-
-  throw lastError;
+      },
+    },
+  );
 }
 
 /**
  * 带重试的 fetch 包装。
+ *
+ * 使用统一的重试策略（含 jitter），避免惊群效应。
  */
 async function fetchWithRetry<T>(
   fn: () => Promise<T>,
   opts: { timeout: number; retries: number; retryBaseDelay: number },
   label: string,
 ): Promise<T> {
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt <= opts.retries; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      lastError = err;
-      if (attempt < opts.retries) {
-        const delay = opts.retryBaseDelay * 2 ** attempt;
-        logger.debug(
-          `Fetch failed (attempt ${attempt + 1}/${opts.retries + 1}): ${label}. Retrying in ${delay}ms...`,
-        );
-        await new Promise((r) => setTimeout(r, delay));
-      }
-    }
-  }
-
-  throw lastError;
+  return retryOperation(fn, {
+    maxRetries: opts.retries,
+    baseDelay: opts.retryBaseDelay,
+    backoff: 'exponential',
+    jitter: 0.25,
+    onRetry: (error, attempt, delay) => {
+      logger.debug(
+        `Fetch failed (attempt ${attempt + 1}/${opts.retries + 1}): ${label}. Retrying in ${delay}ms...`,
+      );
+    },
+  });
 }
 
 /** 注入样式表，并标记 data-micro-kernel-app="name" 以便卸载时移除 */

@@ -64,6 +64,9 @@ export type ErrorLifecycleHook = (app: MicroAppConfig, error: unknown) => Promis
 /** 内核支持的生命周期钩子名 */
 export type LifecycleHookName = 'afterMount' | 'afterUnmount' | 'beforeLoad' | 'error';
 
+/** 权限检查函数类型 */
+export type PermissionChecker = (codes: string[]) => boolean;
+
 /** 内核启动选项 */
 export interface StartOptions {
   /** 沙箱策略 */
@@ -73,6 +76,8 @@ export interface StartOptions {
   };
   /** 预加载策略：false 不预加载 / true 全部预加载 / 函数按应用名返回 true */
   prefetch?: boolean | ((app: MicroAppConfig) => boolean);
+  /** 权限检查器，用于预加载时过滤无权限的应用 */
+  permissionChecker?: PermissionChecker;
 }
 
 /** 微应用运行时卸载结果 */

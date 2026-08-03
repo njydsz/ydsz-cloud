@@ -210,16 +210,14 @@
   <div class="item-action">(1) 统一修正 README 与代码注释，明确 token 不通过 globalState 传递；(2) 在 globalState 类型定义中排除敏感字段，或提供默认白名单校验；(3) 如果确需通过 globalState 同步登录态变化，应仅广播"登录态变更事件"而非 token 本身。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">1.7 micro-kernel 不支持嵌套子应用或主子应用同容器场景 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc">当前每个子应用注册时指定 <code>container: '#subapp-container'</code>，所有子应用共用同一个容器。虽然通过 activeAppName 保证单时刻只有一个活跃应用，但不支持子应用内部再嵌套微应用（如某个子应用内部再加载一个 widget），也不支持多容器并行展示。</div>
-  <div class="item-action">将容器解析从字符串选择器改为支持传入 HTMLElement，或在 MicroAppConfig 中支持 <code>container: string | HTMLElement | (() => HTMLElement)</code>，为后续嵌套/多容器场景预留扩展点。</div>
+<div class="item item-done">
+  <div class="item-title">1.7 micro-kernel 容器支持 HTMLElement / 多容器 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>scheduler.ts</code> 中 <code>resolveContainer</code> 已支持 <code>string | HTMLElement</code>，可在 <code>MicroAppConfig.container</code> 中直接传入 DOM 元素，为嵌套子应用和多容器场景提供扩展能力。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">1.8 importmap 默认使用公网 CDN，未启用自托管 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>application.ts</code> 中 importmap 插件默认使用 <code>esm.sh</code> 公网 CDN（<code>VITE_IMPORTMAP_SELF_HOST</code> 未设置时），存在可用性风险和政策合规风险。自托管模式（<code>public/vendor/importmap.json</code>）已设计但未成为默认。</div>
-  <div class="item-action">(1) 在 CI 构建中默认启用自托管：配置 <code>VITE_IMPORTMAP_SELF_HOST=/vendor</code>；(2) 完善 <code>bash/sync-shared-deps.mjs</code>，将其接入构建流水线，确保 vendor 目录随产物一起发布；(3) 内网环境禁用公网 CDN。</div>
+<div class="item item-done">
+  <div class="item-title">1.8 importmap 默认启用自托管 vendor <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>application.ts</code> 中 importmap 插件已默认使用自托管模式（<code>selfHostBase</code>），CI 构建流程已集成 <code>sync:shared-deps</code> 脚本，确保 vendor 目录随产物发布，不再依赖公网 CDN。</div>
 </div>
 
 <!-- ==================== 功能增强 ==================== -->
@@ -248,16 +246,14 @@
   <div class="item-action">优先为高频组件（Button、Input、Select、Modal、Drawer、Form、Tabs、Table）补齐 stories，建立组件视觉规范。可结合 AI 辅助从组件 props 类型批量生成 stories 骨架。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">2.4 错误降级 UI 硬编码中文，无 i18n <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>error-boundary.ts</code> 的 <code>renderErrorFallback</code> 直接拼接中文 HTML 字符串，未经过 Vue i18n 体系，无法满足多语言需求。</div>
-  <div class="item-action">将降级 UI 抽为 Vue 组件（如 <code>MicroAppErrorFallback.vue</code>），通过 i18n key 渲染，支持通过 MicroAppConfig 注入自定义 fallback 组件。</div>
+<div class="item item-done">
+  <div class="item-title">2.4 错误降级 UI 组件化 + i18n <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>error-boundary.ts</code> 已重构为 Vue 组件 <code>MicroAppErrorFallback.vue</code>，支持 i18n 国际化，可通过 MicroAppConfig 注入自定义 fallback 组件。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">2.5 retry 与超时配置分散，缺乏统一策略 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>loader.ts</code> 的 <code>loadApp</code> 已实现指数退避重试（<code>retryBaseDelay * 2^attempt</code>），但 RequestClient 层的 retry 仍使用固定延迟。两端策略不一致，且未共享抖动（jitter）逻辑。</div>
-  <div class="item-action">在 <code>@ydsz/request</code> 或 <code>@ydsz/shared-auth</code> 中提供统一的 <code>createRetryPolicy</code> 工具，支持 fixed / exponential / exponential-jitter 三种策略，供 loader 和 requestClient 共同使用。</div>
+<div class="item item-done">
+  <div class="item-title">2.5 统一 retry 策略（含 jitter） <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc">已在 <code>@ydsz-core/shared/utils/retry</code> 中实现统一的 <code>retryOperation</code> 和 <code>calculateRetryDelay</code> 工具，支持指数退避 + 抖动策略，loader.ts 和 RequestClient 均已接入。</div>
 </div>
 
 <!-- ==================== 性能提升 ==================== -->
@@ -280,16 +276,14 @@
   <div class="item-action">(1) 在菜单 hover 时调用 <code>microRuntime.prefetch(appName)</code>；(2) 基于用户权限菜单计算可访问子应用集合，优先预加载高频项；(3) 收集实际切换耗时数据，用 A/B 方式验证 prefetch 收益。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">3.3 PWA 已配置但运行时关闭 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>vite-plugin-pwa</code> 插件代码存在但 <code>pwa: false</code> 关闭，<code>globPatterns: []</code> 无缓存策略。对于高频使用的内部系统，PWA 离线缓存可提升二次访问速度。</div>
-  <div class="item-action">评估启用 PWA：precache 应用骨架，API 走 NetworkFirst，静态资源走 CacheFirst。注意 Service Worker scope 需匹配主应用，且微前端子应用资源跨域缓存需配置 CORS。</div>
+<div class="item item-done">
+  <div class="item-title">3.3 评估启用 PWA <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>vite-plugin-pwa</code> 已启用，配置了 Workbox 策略：应用骨架走 precache，API 请求走 NetworkFirst，静态资源走 CacheFirst。Service Worker 已正确配置 scope 和 CORS。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">3.4 requestIdleCallback 无 fallback <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc"><code>kernel.ts</code> 的 prefetch 直接调用 <code>requestIdleCallback</code>，在 Safari 15 之前及部分低版本浏览器中不存在该方法，会导致预加载静默失败。</div>
-  <div class="item-action">封装 <code>requestIdleCallbackPolyfill</code>：优先使用原生 API，不存在时回退到 <code>setTimeout(cb, 1)</code>，保证预加载在旧浏览器仍可执行。</div>
+<div class="item item-done">
+  <div class="item-title">3.4 requestIdleCallback fallback <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc">已在 <code>kernel.ts</code> 中实现 <code>scheduleIdle</code> 函数，优先使用原生 <code>requestIdleCallback</code>，不支持时回退到 <code>setTimeout</code>，保证预加载在所有浏览器中正常工作。</div>
 </div>
 
 <!-- ==================== 体验改善 ==================== -->
@@ -318,16 +312,14 @@
   <div class="item-action">(1) 对列表页引入空状态/错误状态/重试组件；(2) 对关键操作（提交/保存）失败后保留表单数据，提供重试按钮；(3) 网络断开时全局展示离线提示条。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">4.4 registerLoadingDirective 参数不一致 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc">主应用调用 <code>registerLoadingDirective</code> 传 <code>'loading'</code> 字符串，子应用传 <code>false</code>，参数语义不一致，可能导致指令行为差异。</div>
-  <div class="item-action">统一参数类型和语义，在 createSubApp 工厂中统一调用，消除手动传参差异。</div>
+<div class="item item-done">
+  <div class="item-title">4.4 统一 registerLoadingDirective 参数 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc">已在 <code>createSubApp</code> 工厂中统一调用 <code>registerLoadingDirective</code>，参数标准化为 <code>{ loading: false, spinning: 'spinning' }</code>，所有子应用不再手动传参，消除行为差异。</div>
 </div>
 
-<div class="item item-p2">
-  <div class="item-title">4.5 页面级骨架屏缺失 <span class="badge badge-p2">P2</span></div>
-  <div class="item-desc">路由懒加载的页面组件加载期间无骨架屏，首屏和数据加载阶段用户看到空白。</div>
-  <div class="item-action">为高频访问页面（Dashboard、列表页）设计骨架屏组件，在 Suspense fallback 或路由组件 loading 配置中使用。</div>
+<div class="item item-done">
+  <div class="item-title">4.5 页面级骨架屏组件 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc">已实现 5 种页面级骨架屏组件（ListSkeleton / FormSkeleton / DetailSkeleton / DashboardSkeleton / DefaultSkeleton），通过 <code>skeleton-registry.ts</code> 按路由 <code>meta.skeletonType</code> 动态加载，在 <code>SubAppContainer</code> 中集成展示。</div>
 </div>
 
 <!-- ==================== 工程质量补齐 ==================== -->
