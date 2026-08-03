@@ -75,9 +75,10 @@ class JsonSchemaTest {
     @Test
     void validateRequiredFields() {
         JsonSchema schema = JsonSchema.object()
-            .addProperty("name", JsonSchema.string().required())
-            .addProperty("age", JsonSchema.integer().required())
-            .addRequired("name");
+            .addProperty("name", JsonSchema.string())
+            .addProperty("age", JsonSchema.integer())
+            .addRequired("name")
+            .addRequired("age");
 
         ValidationResult valid = JsonSchemaValidator.validate(schema, map("name", "Alice", "age", 30));
         assertTrue(valid.isValid());
@@ -148,9 +149,12 @@ class JsonSchemaTest {
 
     @Test
     void validateObjectProperties() {
+        // 注意：必填字段必须通过 addRequired 注册到外层 schema 的 requiredProperties 列表，
+        // 子 schema 上的 .required() 仅在值为 null 时触发，无法检测字段缺失。
         JsonSchema schema = JsonSchema.object()
-            .addProperty("name", JsonSchema.string().required())
-            .addProperty("age", JsonSchema.integer().minimum(0));
+            .addProperty("name", JsonSchema.string())
+            .addProperty("age", JsonSchema.integer().minimum(0))
+            .addRequired("name");
 
         ValidationResult ok = JsonSchemaValidator.validate(schema,
             map("name", "Alice", "age", 30));

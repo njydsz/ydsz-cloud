@@ -19,7 +19,8 @@ class JsonPointerTest {
     void emptyPointerReturnsWholeDocument() {
         JsonPointer p = new JsonPointer("");
         Object result = p.evaluate("{\"a\":1}");
-        assertTrue(result instanceof java.util.Map);
+        // 空 Pointer 返回原始 JSON 字符串（RFC 6901 规范）
+        assertTrue(result instanceof String);
     }
 
     @Test

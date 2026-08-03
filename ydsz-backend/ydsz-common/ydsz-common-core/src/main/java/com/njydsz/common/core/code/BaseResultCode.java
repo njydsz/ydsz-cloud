@@ -56,6 +56,7 @@ public enum BaseResultCode implements ResultCode {
     DB_CONNECTION_FAILED("C10405", "数据库连接失败"),
     DB_LOCK_CONTENTION("C10406", "数据库锁冲突"),
     RESOURCE_LOCKED("A10501", "资源锁冲突"),
+    RESOURCE_CONFLICT("A10502", "资源冲突"),
 
     // ==================== A106xx 请求语义 ====================
     INVALID_RANGE("A10601", "请求范围无效"),
@@ -155,7 +156,7 @@ public enum BaseResultCode implements ResultCode {
                  WORKFLOW_NOT_FOUND -> 404;
             case DUPLICATE_KEY, USERNAME_DUPLICATE,
                  DB_DUPLICATE_KEY, DB_LOCK_CONTENTION, RESOURCE_LOCKED,
-                 FEATURE_DISABLED -> 409;
+                 RESOURCE_CONFLICT, FEATURE_DISABLED -> 409;
             case RATE_LIMIT, QUOTA_EXCEEDED, TOO_MANY_REQUESTS -> 429;
             case REQUEST_TIMEOUT -> 408;
             case INTERNAL_ERROR, UNKNOWN,

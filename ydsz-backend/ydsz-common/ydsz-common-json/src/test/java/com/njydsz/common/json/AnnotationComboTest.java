@@ -45,14 +45,12 @@ class AnnotationComboTest {
     }
 
     @Test
-    @Disabled("BUG: @JsonProperty 反序列化未生效，uid 字段未映射到 id。待修复后启用。")
     void jsonPropertyRenamesFieldOnDeserialize() {
         AnnotationBean bean = YdszJson.toObject("{\"uid\":99}", AnnotationBean.class);
         assertEquals(99L, bean.getId());
     }
 
     @Test
-    @Disabled("BUG: @JsonAlias 反序列化未生效，别名 fullName/displayName 未映射到 name。待修复后启用。")
     void jsonAliasAcceptsAlternativeNames() {
         AnnotationBean bean = YdszJson.toObject("{\"fullName\":\"Alice\"}", AnnotationBean.class);
         assertEquals("Alice", bean.getName());
@@ -94,7 +92,6 @@ class AnnotationComboTest {
     }
 
     @Test
-    @Disabled("BUG: @JsonInclude(NON_EMPTY) 未正确处理空字符串。待修复后启用。")
     void jsonIncludeNonEmptyOmitsEmptyString() {
         AnnotationBean bean = new AnnotationBean();
         bean.setId(1L);
@@ -131,7 +128,6 @@ class AnnotationComboTest {
     }
 
     @Test
-    @Disabled("BUG: @JsonProperty 反序列化未生效导致 fullRoundTrip 中 id 丢失。待修复后启用。")
     void fullRoundTripPreservesCoreFields() {
         AnnotationBean bean = new AnnotationBean();
         bean.setId(1L);

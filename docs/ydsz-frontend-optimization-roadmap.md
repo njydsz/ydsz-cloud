@@ -1,262 +1,257 @@
-# YDSZ 前端微应用框架优化路线图
+# YDSZ 前端微应用框架优化路线图（lite-kernel 单内核版）
 
-> 对标行业主流微前端方案（Qiankun / Wujie / Micro-App / Garfish / Module Federation）与互联网大厂研发规范（阿里、字节、腾讯系中后台最佳实践），基于 `ydsz-frontend` 全量源码调研输出。
+> 技术路线已定：**下线 qiankun，以自研 micro-kernel-lite 为唯一微前端内核，补齐缺失能力**。
+> 对标行业主流方案（Qiankun / Wujie / Micro-App / Garfish / Module Federation）与大厂中后台研发规范。
+> 基于 `comm/effects/{micro-runtime, micro-kernel-lite, micro-adapter-qiankun}` 及 main/、apps/ 全量源码调研。
 > 调研日期：2026-08-03 ｜ 适用版本：v1.0.0-SNAPSHOT
 
 ---
 
-## 0. 现状评估摘要
+## 0. 路线判断与现状评估
 
-### 0.1 已具备的行业级亮点（保持）
+### 0.1 为什么 lite-kernel 单内核路线成立
 
-| 能力 | 现状 | 行业对标 |
-|------|------|----------|
-| 微前端内核抽象层 | 自研 `micro-runtime`（接口层）+ `micro-adapter-qiankun` + `micro-kernel-lite` 双内核，同产物双内核兼容 | 优于多数团队的裸用 qiankun，接近字节 Garfish 的内核/适配分层思想 |
-| Monorepo 工程化 | pnpm catalog（160+ 条目统一版本）+ Turborepo 缓存编排 + lefthook + commitlint + ESLint 9 flat config | 对齐 vben-admin 5.x / 大厂中后台模板水准 |
-| 请求层统一封装 | `createSharedRequestClient` 统一 token 注入、401 刷新、错误提示，子应用零重复接入 | 对齐 Ant Design Pro 的 request 规范 |
-| API 契约防漂移 | `gen-api.mjs`（SpringDoc OpenAPI → TS SDK）+ `--check` 契约校验 | 对齐大厂前后端契约治理实践 |
-| 权限体系 | 后端菜单驱动动态路由 + v-access 按钮级指令 + AccessControl 组件 | 完整度对齐 vben / RuoYi-Vue-Pro |
-| 观测性 | `@ydsz/monitor` 错误捕获 + Web Vitals | 基础具备，待接入微前端专项指标 |
+9 个子应用全部为**同一团队、同一 monorepo、统一 Vite 构建链的 Vue 3 应用**——这正是 ESM 原生微前端的理想场景。qiankun 的核心价值（HTML entry 解析、UMD 兼容、异构技术栈沙箱）在本项目中全部是过剩能力：
 
-### 0.2 核心短板（本报告重点）
+| 维度 | qiankun 2.10（现状） | lite-kernel（目标） | 行业参照 |
+|------|---------------------|--------------------|----------|
+| 加载方式 | import-html-entry + eval/UMD | ESM manifest + 原生 dynamic import | 对齐 Module Federation / Vite 生态方向 |
+| 包体成本 | qiankun 运行时 + 每应用 vite-plugin-qiankun | 零依赖（自研 ~500 行） | micro-app/wujie 均为重运行时 |
+| keep-alive | 不支持（adapter 空实现） | scheduler 已实现 DOM detach/reattach | wujie 保活同级别能力 |
+| 错误降级 | 无（adapter 未接错误处理） | error-boundary 已实现（降级 UI + 会话级熔断） | 优于 qiankun 裸用 |
+| JS 沙箱 | proxy 沙箱 | **无（最大缺口）** | 见 1.3 补齐方案 |
+| 样式隔离 | experimentalStyleIsolation | 仅 link 注入/移除，**无 scoping** | 见 1.4 补齐方案 |
+| 通信 | globalState 已注入 props | **未接入** | 见 1.5 |
+| 工程耦合 | 11 处 vite-plugin-qiankun 硬编码 | manifest 插件收进共享 vite-config | — |
 
-1. **微前端通信层名存实亡**：`useGlobalState`/event-bus 有封装无业务消费，`main/src/qiankun/global-state.ts` 为死代码，token 共享靠「同 namespace 的 SecureLS 持久化」隐式约定。
-2. **子应用无保活、无失败降级**：qiankun 内核不支持 keep-alive；未注册 `addGlobalUncaughtErrorHandler`；lite-kernel 已有的 error-boundary 因当前内核是 qiankun 而完全失效。
-3. **注册表三处硬编码**：应用清单/端口/前缀分散在 `qiankun/index.ts`、`subapps.ts`、`use-tabbar-micro-sync.ts`，需手工同步，不支持动态/远程注册。
-4. **质量门禁断链**：CI 跑 `pnpm run typecheck` 但根脚本叫 `check:type`（lint job 必挂）；lefthook pre-push 引用不存在的 `test:run`；turbo 未编排 lint/test 任务。
-5. **测试覆盖断层**：37 个测试文件全部集中在 comm/@core，main/ 与 9 个 apps **零测试**，e2e 仅 1 个 spec。
-6. **组件体系三套并存**：Element Plus + shadcn-ui(radix-vue) + vxe-table，包体与心智成本双高。
+### 0.2 lite-kernel 源码级问题清单（按严重度）
 
----
+调研发现 lite-kernel 当前处于「框架成形、关键路径未闭环」状态，以下问题按严重度排列：
 
-## 1. 架构优化
+**🔴 致命（不修则完全不可用）**
 
-### 1.1 微前端内核路线收敛（P1，方向性决策）
+| # | 问题 | 位置 |
+|---|------|------|
+| F1 | **manifest 文件名不一致**：构建插件产出 `version.json`，loader 却 fetch `manifest.json`，加载必然 404 | `vite-plugin-manifest.ts:65` vs `loader.ts:31` |
+| F2 | **路由同步盲区**：仅监听 `popstate`，而主应用 Vue Router 的 `router.push` 不触发 popstate → 基座内跳转子应用路由内核完全不感知（`navigateTo` 手动 dispatch popstate 只是补丁，第三方/基座 router 跳转全部漏接） | `lite-kernel.ts:87` |
+| F3 | **manifest 内路径硬编码 `/` 前缀**：entry/css 生成为 `/assets/xxx.js`，与生产 `/ydsz-*-web/` 子路径部署冲突 | `vite-plugin-manifest.ts:52,57` |
 
-当前「qiankun + 自研 lite 双内核」在业界无成功先例——字节（Modern.js/Garfish）、阿里（qiankun/ice）、京东（micro-app）均为单内核深耕。双内核导致：适配层大量空实现（`unmountApp`、`setKeepAlive`、`getActiveAppName` 返回不支持）、lite-kernel 的 error-boundary 永不生效、维护成本翻倍。
+**🟠 严重（功能错误）**
 
-**建议三选一：**
+| # | 问题 | 位置 |
+|---|------|------|
+| S1 | **预加载实现错误**：prefetch 直接调 `switchToApp` 会真实 mount 并篡改 `activeAppName`，「预加载后切回」是空 then；应只 `loadApp` 预热模块缓存不挂载 | `lite-kernel.ts:164-175` |
+| S2 | **路由不匹配时不卸载**：路径从子应用回到基座页面（不匹配任何 activeRule）时，当前子应用不会被 deactivate | `lite-kernel.ts:64-81` |
+| S3 | **切换无并发控制**：快速连续切换时 `switchToApp` 异步竞争，可能出现后到的 mount 覆盖先到的 | `lite-kernel.ts:94` |
+| S4 | **keep-alive 未打通**：`setKeepAlive` 存在但与 tabbar 集成是 TODO（代码注释「M3 阶段」），且 detach 缓存分支不触发任何 activated 钩子 | `lite-kernel.ts:116-117`、`scheduler.ts` |
 
-| 方案 | 说明 | 适用判断 |
-|------|------|----------|
-| **A. 收敛 qiankun 单内核（推荐）** | 补齐 qiankun 适配层缺失能力（见 1.2/1.3），下线 lite-kernel 或仅保留接口 | 团队熟悉 qiankun、子应用均为自研 Vue3，改造成本最低 |
-| B. 迁移 Wujie | 原生支持保活、iframe 沙箱隔离更强、去中心化通信 | 若保活与强隔离是硬需求且接受重写接入层 |
-| C. 迁移 Module Federation 2.0 | 构建时共享依赖天然解决、运行时动态 remote | 若未来子应用数量 >20 且需跨团队独立发布，长期收益最大但短期成本高 |
+**🟡 缺失能力（对标差距）**
 
-> 落地动作（方案 A）：删除 `micro-kernel-lite` 包或降级为内部实验；`micro-runtime` 接口裁剪到 qiankun 真实能力集；接口层补 `onError`、`prefetchStrategy` 等声明。
+| # | 缺失项 | 说明 |
+|---|--------|------|
+| M1 | 无 JS 沙箱/全局污染防护 | 注释明示不做；9 应用共存于同一 window，需轻量方案（见 1.3） |
+| M2 | 样式无 scoping | 仅注入/移除 link，子应用间 CSS 可互相污染（Element Plus 全量样式尤其危险） |
+| M3 | globalState 未注入 mountProps | qiankun adapter 有 `wrapGlobalStateProps`，lite 分支子应用拿不到通信句柄 |
+| M4 | dev 模式无 manifest | dev 下 entry 指向 vite dev server，不存在 version.json/manifest.json，需 dev 直引分支 |
+| M5 | 无加载超时/性能打点 | loadApp 无 timeout，无 mount 耗时上报（接 `@ydsz/monitor`） |
+| M6 | update 生命周期从不调用 | 接口已定义，scheduler 未消费 |
+| M7 | start() 无 stop/热重启 | `routerSyncCleanup` 保存但从不调用，基座 HMR 会重复注册监听 |
 
-### 1.2 补齐子应用保活能力（P1）
+### 0.3 不变的既有优势（继续沿用）
 
-行业现状：wujie/micro-app 原生支持 keep-alive；qiankun 官方不支持，主流实践是 **多例缓存**（`loadMicroApp` 手动管理 + 切换时 `unmount` 挂起而非销毁，或容器层 display:none 缓存多实例）。
-
-**落地建议：**
-- 短期（qiankun 方案）：基于 `loadMicroApp` 重写容器组件 `views/_core/subapp/index.vue`，维护 `Map<appName, MicroAppInstance>`，配合现有 tabbar 体系实现「切 tab 不丢状态」；显式设置每应用缓存上限（LRU，建议 ≤3），防止内存膨胀。
-- `use-tabbar-micro-sync.ts` 已预留 tab 关闭 → unmount 钩子，补齐实现即可闭环。
-- 验收标准：项目列表页输入筛选条件 → 切换到消息中心 → 切回，列表状态与滚动位置保留。
-
-### 1.3 统一异常治理与失败降级（P0）
-
-对齐大厂 SRE 规范「任何子应用故障不得拖垮基座」：
-
-1. 基座注册 `addGlobalUncaughtErrorHandler`：区分加载失败 / 运行时错误，加载失败渲染降级 UI（重试按钮 + 错误上报），运行时错误上报 `@ydsz/monitor` 并携带 appName。
-2. 将 lite-kernel 已有的「失败 → 降级 UI → 本会话标记降级 → 整页跳转」逻辑移植到 qiankun 适配层。
-3. 子应用 `errorHandler` 当前仅 console，改为上报 monitor（错误边界 + sourcemap 解析）。
-4. 增加子应用加载超时熔断（建议 10s），超时走降级 UI。
-
-### 1.4 注册表配置化与动态注册（P1）
-
-现状：应用清单/端口/前缀三处硬编码（`qiankun/index.ts`、`subapps.ts`、PATH_TO_APP），新增子应用需改 3+ 处且无法运行时上下线。
-
-**落地建议：**
-- 建立单一事实源：`conf/micro-apps.config.ts` 生成注册表，基座路由、tabbar 映射、vite 端口全部从此消费。
-- 中期演进为**远程 manifest**：基座启动时请求 `ydsz-system` 服务（已有「应用注册」能力域）获取应用清单，实现子应用运行时注册/灰度上下线/按权限挂载——这正是阿里 qiankun 生产实践与字节 Garfish 平台化的标准做法。
-- 收益：新增子应用零基座改动；支持按租户/角色下发不同应用集。
-
-### 1.5 通信与状态共享机制落地（P1）
-
-现状是「协议齐备、无人使用」：GlobalStateHandle 封装完整但业务零消费；各应用独立 Pinia，靠 SecureLS 落盘键软同步内存态不互通。
-
-**落地建议：**
-- 删除死代码 `main/src/qiankun/global-state.ts` 与未消费的 event-bus，或反向——把真实跨应用诉求（用户信息变更广播、字典刷新、消息未读数、主题切换）全部收敛到 `GlobalStateHandle`，并写入开发规范「跨应用状态只允许走 globalState」。
-- 内存态共享改为**基座注入**：基座通过 props 将 userStore/preferences 的只读快照注入子应用 mount，子应用变更经 globalState 回传基座统一落盘，消除「9 个应用各自读 SecureLS 赌时序」的隐患。
-- `resetAllStores` 当前劫持 `pinia._s.set` 属侵入式 hack，建议改用 Pinia 官方插件机制登记 store。
-
-### 1.6 Token 安全模型升级（P1）
-
-现状自述「伪安全」：SecureLS AES 密钥随 bundle 分发，本地 token 可被逆向；且依赖 namespace 公式隐式约定，无运行时校验。
-
-**落地建议（对齐大厂中后台标准）：**
-- 短期：access token 仅存内存（基座持有），刷新走 httpOnly Cookie 的 refreshToken + rotation；子应用经 props/globalState 获取，不落 localStorage。
-- 增加 namespace 版本漂移的运行时校验（启动时主子互验，不一致强制重新登录）。
-- 结合后端已有 TOTP 2FA 与 API 签名能力，前端补齐敏感操作的二次确认链路。
+- pnpm catalog + Turborepo + lefthook + ESLint 9 flat config 工程化基线
+- `createSharedRequestClient` 统一请求层、`shared-auth` 子应用一键接入
+- `defineSubApp`/`createSubApp` 已同时导出 qiankun `renderWithQiankun` 与标准 `{bootstrap, mount, unmount, update}` —— **子应用侧迁移成本接近零**，lite-kernel 消费的正是这套标准导出
+- `gen-api.mjs` 契约防漂移、`@ydsz/monitor` 观测基座、v-access 权限体系
 
 ---
 
-## 2. 功能增强
+## 1. lite-kernel 能力补齐清单（核心工作）
 
-### 2.1 微前端可观测性专项（P1）
+> 以下每项均给出文件级落点，按 P0（上线阻断）→ P1（体验与稳定）→ P2（平台化）排序。
 
-在 `@ydsz/monitor` 基础上补齐微前端维度指标（对齐 SkyWalking/Sentry 前端实践）：
+### 1.1 修复致命缺陷（P0，预计 2-3 人日）
 
-| 指标 | 说明 |
+1. **统一 manifest 契约**：定为 `manifest.json`（loader 侧不动），`vite-plugin-manifest.ts` 的 `emitFile` 文件名改为 `manifest.json`；同时把插件正式接入 `@ydsz/vite-config` 的 application 预设（从子应用 name 自动注入），删除各应用手工配置的可能。
+2. **路径基座化**：manifest 生成时 entry/css 使用相对构建 `base` 的完整前缀（读取 vite `config.base`），loader 侧拼接 `config.entry` 兜底，杜绝 `/` 根路径假设。
+3. **路由同步补丁**：在 `startRouterSync` 中 patch `history.pushState`/`replaceState`（包裹后派发自定义事件并恢复），同时保留 popstate 监听——与 qiankun、micro-app 的做法一致；或与基座 `router.afterEach` 显式打通（推荐两者兼有，patch 兜底任何来源的 URL 变更）。
+4. **未匹配卸载**：`handleRouteChange` 遍历无匹配时，若 `activeAppName` 非空则 `deactivateApp` 当前应用。
+
+### 1.2 调度器健壮性（P0/P1，预计 2-3 人日）
+
+1. **切换串行化**：`switchToApp` 改为 promise 链队列（或携带切换令牌 token，过期切换直接丢弃），解决快速切换竞态（S3）。
+2. **预加载重写**：prefetch 只调 `loadApp`（fetch manifest + dynamic import + 注入 CSS），**不执行 mount**；ESM 模块缓存天然命中，二次激活仅差 mount 耗时（S1）。保留 `requestIdleCallback` 时机与按应用过滤函数。
+3. **keep-alive 闭环**（S4）：
+   - 打通 tabbar：`use-tabbar-micro-sync.ts` 的 tab 关闭 → `unmountApp`、tab 存在 → `setKeepAlive(name, true)`；
+   - 增加 **LRU 上限**（建议 ≤3 个保活应用），超限按最久未用完整卸载，防内存膨胀；
+   - 保活 reattach 时向子应用派发 `update(mountProps)` 生命周期（顺带补齐 M6 的消费方），子应用可在 `update` 中刷新路由/数据——这正好用上已定义的空闲接口。
+4. **start/stop 对称**：返回 `stop()`（清理路由监听 + 卸载全部实例 + `clearDegraded`），支撑基座 HMR 与测试环境（M7）。
+
+### 1.3 JS 隔离：轻量快照沙箱（P1，预计 3-5 人日）
+
+lite-kernel 不做 proxy 沙箱是合理取舍（同团队同技术栈，性能优先——micro-app 的 with 沙箱与 qiankun proxy 沙箱都有可观运行时开销），但「零防护」不可接受。**对齐 Garfish 的 snapshot 沙箱思路做轻量补齐**：
+
+| 能力 | 方案 |
 |------|------|
-| 子应用加载耗时 | mount 前后打点，按应用分桶统计 P75/P95 |
-| 沙箱逃逸检测 | proxy 沙箱异常、全局污染告警 |
-| 资源加载失败率 | entry/chunk 404/5xx 按应用聚合 |
-| 主子通信量 | globalState 变更频次，防滥用 |
+| window 污染防护 | mount 前快照 `window` 键集合，unmount 时 diff 恢复（新增全局变量删除、被改写属性还原） |
+| 事件监听泄漏 | 包裹 `addEventListener/removeEventListener` 记录子应用注册的 window/document 级监听，unmount 统一移除 |
+| 定时器泄漏 | 同理记录 `setInterval/setTimeout`（raFID 可选），unmount 清理 |
+| 规范兜底 | ESLint `no-restricted-globals` + 自定义规则拦截子应用直接写 `window.xxx`，让沙箱只管「漏网之鱼」 |
 
-### 2.2 组件体系收敛（P1，先决策后执行）
+> 明确边界：不防恶意代码（同团队无此诉求），只防「意外污染」。文档中写明该边界，避免被当作安全沙箱误用。
 
-三套并存（Element Plus 为主 + shadcn-ui/radix-vue + vxe-table）带来包体冗余（element-vendor + radix + vxe 三个 vendor chunk）与交互不一致。大厂中后台通行做法是「**一套主组件库 + 一个表格增强**」。
+### 1.4 样式隔离：构建期 scoped（P1，预计 2-3 人日）
 
-**建议：**
-- 主库锁定 Element Plus（团队熟练度 + 生态）；表格场景统一 vxe-table（大数据量虚拟滚动优势明显）。
-- shadcn-ui 仅保留基座布局/偏好设置等存量使用面，新增页面禁止引入，写入 ESLint `no-restricted-imports` 强制约束；存量随迭代逐步替换下线。
-- `form-ui`（vee-validate+zod）与 Element Plus 表单二选一，避免表单双范式。
+运行时 scoping（qiankun experimentalStyleIsolation）对 Element Plus 弹层（body 下 teleport）会失效。**推荐构建期方案**：
 
-### 2.3 子应用独立交付能力（P2）
+1. 共享 vite-config 中为子应用 CSS 加 PostCSS prefix 插件（`postcss-prefix-selector`，前缀 `[data-lite-app="xxx"]`），与 lite-kernel 挂载容器属性约定一致；
+2. Element Plus 弹层类组件通过 `append-to` 配置或全局 `teleport` 容器收敛到子应用根节点内（项目已有 popup-ui，可统一封装）；
+3. 卸载时 `removeStylesheets` 已实现，保留；keep-alive detach 不移除样式（现状正确，保持）。
 
-- 已具备子应用独立运行（`defineSubApp` 自启动分支），补齐**独立部署 + 独立发版**流水线：每个 apps/* 单独构建产物 + nginx 配置，基座按 manifest 动态加载（依赖 1.4）。
-- 引入子应用版本号与灰度：manifest 携带 version/gray 字段，支持按用户灰度切流——对齐阿里/字节微前端平台化能力。
+### 1.5 通信接入：globalState 注入 mountProps（P1，预计 1-2 人日）
 
-### 2.4 开发者体验增强（P1）
+- lite-kernel 在 `activateApp` 组装 `mountProps` 时注入 `micro-runtime` 已有的 `GlobalStateHandle`（onGlobalStateChange/setGlobalState/globalState），与 qiankun adapter 的 `wrapGlobalStateProps` 语义对齐——子应用 `useGlobalState` composable 无需修改即可消费；
+- 借此机会**落地真实通信场景**（当前全项目零消费）：用户信息变更广播、数据字典刷新、消息未读数、主题切换四项写入规范「跨应用状态只允许走 globalState」；
+- 删除死代码 `main/src/qiankun/global-state.ts` 与未消费的 event-bus 二选一：保留 GlobalStateHandle 一条路径，其余移除。
 
-- `pnpm dev` 目前交互式选择应用，增加 `pnpm dev --filter project-web --with-main` 一键「基座 + 指定子应用」组合启动（turbo filter 已支持，封装脚本即可）。
-- 提供子应用脚手架：`pnpm gen:app <name>` 基于模板生成 vite.config/路由/locales/shared-auth 接入，新应用接入成本从「复制 9 处配置」降到 1 条命令。
-- 修复 `@ydsz-core/popup-ui` 版本 5.2.1 与全线 5.5.9 不一致；`vite-plugin-qiankun` 11 处硬编码版本收敛进 pnpm catalog。
+### 1.6 工程与可观测配套（P1，预计 2-3 人日）
 
----
-
-## 3. 性能提升
-
-### 3.1 公共依赖外置与共享（P0，收益最大）
-
-现状：9 个子应用各自打包 vue/element-plus 等（虽有 manualChunks vendor 分包，但跨应用仍是独立产物）；`conf/vite-config/plugins/importmap.ts` 已具备 jspm CDN importmap 外置能力却未作为主策略。
-
-**落地建议（qiankun 官方推荐 + 大厂通用实践）：**
-- vue / vue-router / pinia / element-plus / axios / echarts 等 6-8 个重依赖走 **importmap + CDN（或自建静态资源域）外置**，主子应用共享同一份 ESM 实例。
-- 收益预估：单个子应用首包减少 60-80%，9 应用整体静态资源体积下降一个数量级；同时天然解决「多份 Vue 实例」类隐患。
-- 注意：外置清单统一进 `conf/micro-apps.config.ts`（同 1.4 单一事实源），版本与 catalog 对齐；CDN 失败需有本地回退（script onerror fallback）。
-
-### 3.2 预加载策略升级（P1）
-
-- 当前仅对 userinfo/project 两应用 `requestIdleCallback` 插 prefetch link，qiankun `prefetch:false`。
-- 建议：登录成功后按「用户角色高频应用」预热（权限数据已有），或开启 qiankun `prefetch: 'all'`（idle 时机）并配合外置后的缓存命中率提升；hover 预加载保留作为交互层补充。
-- 与 1.2 保活结合后，二次进入子应用应接近 0 成本。
-
-### 3.3 构建产物优化（P1）
-
-| 项 | 现状 | 建议 |
-|----|------|------|
-| esbuild target | es2018 | 内部系统可升 **es2022**（Chrome 100+），减包 5-10% |
-| PWA | 开启 | 中后台管理端 PWA 价值低且有缓存脏数据风险，**建议关闭**或仅限离线白名单 |
-| 产物分析 | visualizer 需手动 `--mode analyze` | CI 增加周期性 bundle 报告 + 包体预算（bundle-budget），单 chunk >500KB 报警 |
-| 子应用首包 | 每应用独立 Pinia/preferences/i18n 全量初始化 | i18n 已按需加载，推广到 preferences/styles；首屏非关键插件延迟注册 |
-
-### 3.4 构建与 CI 性能（P1）
-
-- turbo 增补 `lint`、`test:unit` 任务编排，复用 `.turbo` 缓存，CI 阶段化并行（对齐 4.1 修复后落地）。
-- `pnpm build` 固定 8G 内存说明构建偏重，外置依赖（3.1）后重测内存基线并下调。
+1. **dev 模式分支**（M4）：loader 检测 `import.meta.env.DEV` 时跳过 manifest fetch，直接 `import(entry)`（指向 vite dev server 的 `/src/main.ts`），CORS 头复用现有子应用 dev server 配置；
+2. **加载超时与重试**（M5）：loadApp 包一层 timeout（建议 10s）+ 指数退避重试（2 次），最终失败走 error-boundary 降级（已有）；
+3. **监控接入**：`addLifecycleHook('beforeLoad'/'afterMount')` 中打点到 `@ydsz/monitor`——按应用统计加载 P75/P95、失败率、保活命中率；错误边界触发时携带 appName 上报；
+4. **共享依赖外置（与 lite-kernel 强绑定，见 3.1）**：ESM 直引模式下，vue/pinia/vue-router 必须经 importmap 外置为单例，否则 9 份 vue 实例会导致依赖注入割裂与包体爆炸——这是 lite 路线的**前置硬需求**，不是可选项。
 
 ---
 
-## 4. 体验改善
+## 2. qiankun 下线迁移计划
 
-### 4.1 加载与切换体验（P1）
+> 原则：双内核可切换期 → 全量验证 → 物理删除。`createRuntime({ kernel })` 的注册机制天然支持灰度。
 
-- 统一子应用 loading 体系：当前容器组件用 MutationObserver + 骨架屏，建议将骨架屏升级为「按应用类型定制骨架」（列表型/表单型/仪表盘型），对齐 antd Pro 的 PageLoading 规范。
-- 子应用切换增加 150-200ms 淡入过渡（`@ydsz/motion` 已有能力），消除白屏跳变感。
-- 配合保活（1.2），tab 切换体验对标浏览器标签页。
+### 阶段一：可切换（1 周）
+1. 完成 1.1/1.2 全部 P0 修复，lite-kernel 达到「能跑全量 9 应用」；
+2. 基座 `bootstrap.ts` 的 kernel 选择改为环境变量驱动（`VITE_MICRO_KERNEL=lite|qiankun`，默认 lite），保留 qiankun 回退通道；
+3. `defineSubApp` 中 `renderWithQiankun` 分支保留，确认 lite 分支（标准生命周期导出）9 应用全部工作。
 
-### 4.2 主题与视觉一致性（P2）
+### 阶段二：验证与能力补齐（2-3 周）
+1. 完成 1.3-1.6 补齐项；
+2. 双内核 A/B 回归：同一套 e2e 用例（见 5.2）分别在 lite/qiankun 下跑通；
+3. 性能对比报告：首屏、切换耗时、内存占用（lite 预期全面优于 qiankun，数据留档）。
 
-- 暗色模式已具备（design tokens + preferences），但 `themeToggle` 默认关闭：建议默认开启入口，并对 Element Plus 暗色变量做一轮对照走查（ele/index.css 定制需同步暗色分支）。
-- Tailwind 与 Element Plus 混用场景建立规范：「布局与间距用 Tailwind，组件内样式用 BEM/design token」，写入 `.trae/rules` 与 lint 约束。
-
-### 4.3 国际化补齐（P2）
-
-- locales 动态按需加载已具备，但需建立**覆盖率检查**：CI 增加 i18n key 缺失扫描（zh-CN/en-US 双向 diff），硬编码中文文案纳入 cspell/自定义 lint 规则拦截。
-
-### 4.4 可访问性与移动端（P3，低优先）
-
-- 中后台 PC 优先（workflow 明确 PC Only），仅需保证基座与 project-web 在 1280px 窄屏不崩坏；a11y 做键盘导航与 aria 基础项即可，不投入专项。
+### 阶段三：物理删除（1 周）
+1. 删除 `micro-adapter-qiankun` 包、根及 11 处 `vite-plugin-qiankun` 依赖、`defineSubApp` 中 qiankun 分支、`main/src/qiankun/` 目录；
+2. `registerKernel` 机制保留（接口层价值仍在——未来如需接入 wujie/三方内核不用改业务），但只注册 `lite`；
+3. README 与 `.trae/rules` 同步更新，eslint 增加 `no-restricted-imports: qiankun` 防回潮。
 
 ---
 
-## 5. 工程质量基线（贯穿所有维度）
+## 3. 性能提升（与 lite 路线联动）
 
-### 5.1 P0：修复质量门禁断链（当天可修）
+### 3.1 公共依赖 importmap 外置（P0，lite 路线前置）
+
+- vue / vue-router / pinia / element-plus / axios / echarts / vxe-table 外置为 importmap 单例（`conf/vite-config/plugins/importmap.ts` 已具备 jspm CDN 能力，建议改为**自建静态资源域**，CDN 仅作 fallback 并配 onerror 回退本地）；
+- 外置清单收进单一事实源配置（见 4.1），版本与 pnpm catalog 对齐校验；
+- 收益：子应用首包减 60-80%，且保证 lite-kernel 下跨应用共享 vue 实例单例（Pinia/provide 语义正确的前提）。
+
+### 3.2 加载性能
+
+| 项 | 动作 |
+|----|------|
+| 预加载 | 1.2 修正后，按「登录用户角色高频应用」预热（权限数据已有），hover 预加载保留 |
+| 保活 | 1.2 闭环后二次进入子应用 ≈ 0 成本（DOM reattach） |
+| esbuild target | es2018 → **es2022**（内部系统 Chrome 100+），减包 5-10% |
+| PWA | 中后台价值低且有缓存脏数据风险，建议关闭 |
+| 包体预算 | CI 增加 bundle 报告 + 单 chunk >500KB 告警 |
+
+### 3.3 构建性能
+
+- turbo 补 `lint`、`test:unit` 任务编排复用缓存；外置依赖后重测构建内存基线（当前固定 8G）。
+
+---
+
+## 4. 架构与功能增强
+
+### 4.1 注册表单一事实源 → 远程 manifest（P1→P2）
+
+- 近期：`conf/micro-apps.config.ts` 统一应用清单/端口/前缀/外置依赖，基座路由、tabbar 映射、vite 配置全部从此消费，消除三处硬编码（`qiankun/index.ts`、`subapps.ts`、PATH_TO_APP）；
+- 中期：基座启动时从 `ydsz-system`（已有「应用注册」能力域）拉取远程 manifest，实现子应用运行时注册、按权限/租户下发应用集、版本灰度——`registerApps` 接口天然支持，lite-kernel 无改造成本。
+
+### 4.2 Token 安全模型（P1）
+
+- access token 内存化（基座持有，经 globalState 快照注入子应用），刷新走 httpOnly Cookie + refreshToken rotation，替代当前「SecureLS 密钥随 bundle 分发」的伪安全方案；
+- 增加主子 namespace 版本漂移运行时校验；`resetAllStores` 的 `pinia._s.set` 劫持 hack 改官方插件机制。
+
+### 4.3 组件体系收敛（P1）
+
+- 主库锁定 Element Plus + vxe-table；shadcn-ui 冻结新增（ESLint `no-restricted-imports` 强制），存量随迭代下线；form-ui 与 Element 表单二选一——三套并存对包体与样式隔离（1.4）都是负担。
+
+### 4.4 开发者体验（P1）
+
+- `pnpm gen:app <name>` 脚手架：模板化生成 vite.config/路由/locales/shared-auth/manifest 接入，新应用 1 条命令接入；
+- `pnpm dev --filter project-web --with-main` 一键「基座+指定子应用」组合启动。
+
+---
+
+## 5. 工程质量基线
+
+### 5.1 P0：质量门禁断链修复（0.5 人日）
 
 | 问题 | 位置 | 修复 |
 |------|------|------|
-| CI 跑 `pnpm run typecheck`，根脚本实为 `check:type` | `.github/workflows/frontend-ci.yml` | 改脚本名或对齐根 package.json |
-| lefthook pre-push 引用不存在的 `pnpm test:run` | `lefthook.yml` | 改为 `pnpm test:unit` |
-| lefthook 中 `pnpm tsc --noEmit` 根无 tsconfig 无效 | `lefthook.yml` | 改为 `pnpm check:type`（turbo 编排） |
-| turbo 无 lint/test:unit 任务 | `turbo.json` | 补 `lint`、`test:unit` 任务并接缓存 |
-| `gen-api.mjs` 依赖 `openapi-typescript` 未声明 | `package.json` / catalog | 入 catalog 锁定版本，契约检查才能真正门禁化 |
+| CI 跑 `pnpm run typecheck`，根脚本实为 `check:type` | `.github/workflows/frontend-ci.yml` | 对齐脚本名 |
+| lefthook pre-push 引用不存在的 `pnpm test:run`；`tsc --noEmit` 根无 tsconfig 无效 | `lefthook.yml` | 改 `pnpm test:unit` / `pnpm check:type` |
+| turbo 无 lint/test:unit 任务 | `turbo.json` | 补任务并接缓存 |
+| `openapi-typescript` 未声明入 catalog | `package.json` | 入 catalog，契约检查门禁化 |
 
-### 5.2 P1：测试体系补齐（对齐大厂门禁）
+### 5.2 P1：测试体系（为内核切换兜底）
 
-| 层 | 现状 | 目标 |
-|----|------|------|
-| 单元测试 | 37 个文件全在 comm/@core，阈值 70% | apps/ 核心业务组件（project-web 优先）补至关键路径覆盖；main/ 基座的注册/路由/权限逻辑补测试 |
-| 契约测试 | gen-api --check 存在但未门禁 | 接入 CI：契约漂移即失败 |
-| e2e | 仅 1 个 spec | 补齐「登录 → 菜单 → 跨应用跳转 → 审批提交」3-5 条黄金路径，接入 CI 夜间任务 |
-| 微前端专项 | 无 | 增加主子通信、沙箱隔离、降级 UI 的集成测试 |
+| 层 | 目标 |
+|----|------|
+| 微内核专项（最高优先） | lite-kernel 的 loader/scheduler/error-boundary/沙箱/keep-alive 单测（当前零测试就换内核风险极高）；双内核 A/B 对照用例 |
+| e2e | 「登录 → 菜单 → 跨应用跳转 → 保活切回 → 审批提交」黄金路径 3-5 条，lite/qiankun 双跑 |
+| 单元 | apps 关键路径补测（project-web 优先），main 基座注册/路由/权限逻辑补测（当前 apps+main 零测试） |
+| 契约 | gen-api --check 接入 CI 门禁 |
 
-### 5.3 P1：规范沉淀
+### 5.3 P1：规范机器化
 
-- 将「跨应用状态只走 globalState」「新页面禁用 shadcn-ui」「公共依赖只允许从 catalog 引用」等决策写入 `.trae/rules/` 与 ESLint 规则，让规范可被机器执行而非仅靠 Code Review。
-- 依赖治理：taze 已具备，建议接入每月例行升级 + `vue-tsc@2.2.10` 精确锁、`@tailwindcss/nesting@insiders` 等风险点专项评估。
+跨应用状态只走 globalState、禁用 shadcn-ui 新增、禁引 qiankun、子应用禁写 window 全局——全部落 ESLint 规则与 `.trae/rules`，不靠 Code Review 人肉拦截。
 
 ---
 
-## 6. 落地路线图
+## 6. 落地路线图总览
 
-### P0（1-2 周，止血与高收益）
-
-| # | 事项 | 维度 | 预估工作量 |
-|---|------|------|-----------|
-| 1 | 修复 CI/lefthook 脚本名失配、turbo 补 lint/test 任务 | 质量 | 0.5 人日 |
-| 2 | 公共依赖 importmap 外置 + CDN 回退 | 性能 | 3-5 人日 |
-| 3 | 基座注册 `addGlobalUncaughtErrorHandler` + 加载失败降级 UI | 架构/体验 | 2-3 人日 |
-| 4 | 清理死代码（global-state.ts / event-bus / adapter 空实现标注） | 架构 | 1 人日 |
-
-### P1（1 个月，架构补强）
-
-| # | 事项 | 维度 |
+### P0（第 1-2 周）：让 lite-kernel 正确且可切换
+| # | 事项 | 预估 |
 |---|------|------|
-| 1 | 内核路线收敛决策（建议 qiankun 单内核）+ 适配层补齐 | 架构 |
-| 2 | 子应用保活（loadMicroApp 多例缓存 + LRU） | 架构/性能/体验 |
-| 3 | 注册表单一事实源 `micro-apps.config.ts` | 架构 |
-| 4 | globalState 通信落地（用户/字典/未读数）+ props 快照注入 | 架构 |
-| 5 | Token 内存化 + httpOnly refreshToken | 架构/安全 |
-| 6 | 组件体系收敛决策 + ESLint 约束 | 功能/性能 |
-| 7 | 测试补齐：apps 关键路径 + 契约门禁 + 3-5 条 e2e | 质量 |
-| 8 | 子应用加载耗时等微前端监控指标 | 功能 |
-| 9 | 微应用脚手架 `gen:app` + 组合启动脚本 | 功能/DX |
+| 1 | 1.1 致命修复（manifest 契约/路径/路由 patch/未匹配卸载） | 2-3 人日 |
+| 2 | 1.2 调度器（切换串行化、prefetch 重写、stop） | 2-3 人日 |
+| 3 | 3.1 importmap 外置 + vue 单例保障 | 3-5 人日 |
+| 4 | 5.1 CI/lefthook/turbo 断链修复 | 0.5 人日 |
+| 5 | 阶段一：kernel 环境变量可切换，9 应用 lite 下跑通 | 2 人日 |
 
-### P2（季度，平台化演进）
+### P1（第 3-6 周）：补齐能力 + 全量验证
+| # | 事项 |
+|---|------|
+| 1 | 1.3 快照沙箱 + 1.4 构建期样式 scoped |
+| 2 | 1.2.3 keep-alive 闭环（tabbar 打通 + LRU + update 消费） |
+| 3 | 1.5 globalState 注入 + 四个真实通信场景落地 + 死代码清理 |
+| 4 | 1.6 dev 分支 / 超时重试 / 监控打点 |
+| 5 | 5.2 微内核单测 + 双内核 e2e 对照 |
+| 6 | 4.1 注册表单一事实源、4.2 token 内存化、4.3 组件收敛决策 |
+| 7 | 阶段二验证 + 性能对比报告 → 阶段三物理删除 qiankun |
 
-| # | 事项 | 维度 |
-|---|------|------|
-| 1 | 远程 manifest 动态注册 + 按权限/租户下发应用集 | 架构 |
-| 2 | 子应用独立部署 + 版本灰度 | 功能 |
-| 3 | 暗色模式默认开启 + 视觉走查 | 体验 |
-| 4 | i18n 覆盖率 CI 检查 | 体验/质量 |
-| 5 | bundle 预算门禁 + 月度依赖治理 | 性能/质量 |
-
-### P3（按需）
-
-- 移动端适配（除 workflow 外的基础可用性）、a11y 基础项、Module Federation 长期评估（若子应用规模突破 20+）。
+### P2（季度）：平台化
+远程 manifest 动态注册与灰度、子应用独立部署发版、暗色模式默认开启、i18n 覆盖率门禁、bundle 预算门禁、月度依赖治理。
 
 ---
 
-## 7. 关键决策点（需架构组拍板）
+## 7. 风险与缓解
 
-1. **微前端内核路线**：收敛 qiankun（推荐）／迁 Wujie／迁 Module Federation——决定 1.x 系列所有工作的技术基座。
-2. **组件库收敛**：shadcn-ui 下线节奏——影响包体优化收益与存量页面改造量。
-3. **Token 模型**：是否接受「access token 内存化」带来的刷新即重登改造成本。
-4. **保活方案**：qiankun 多例缓存（自研维护）vs 借决策 1 迁内核原生获得。
+| 风险 | 缓解 |
+|------|------|
+| lite-kernel 无 JS 沙箱，历史全局污染问题暴露 | 1.3 快照沙箱 + ESLint 约束；切换期保留 qiankun 回退通道（环境变量一键切回） |
+| ESM 外置后 CDN/静态域故障导致全站不可用 | onerror 本地回退 + 静态域随基座同域部署优先 |
+| 样式 scoped 后 Element Plus 弹层样式失效 | 弹层 teleport 容器统一收敛，回归重点覆盖 popup/抽屉/消息提示 |
+| keep-alive 内存膨胀 | LRU ≤3 + monitor 内存占用打点 |
+| 双内核并行期配置漂移 | 单一事实源（4.1）先行，kernel 差异只允许在 adapter 层 |
 
-> 本报告所有 P0 项均不依赖上述决策，可立即启动。
+> 全程原则：**P0 不依赖任何未决事项，可立即启动**；qiankun 回退通道保留到阶段三验收通过。
