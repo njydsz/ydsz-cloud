@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * {@link TraceIdPropagation} 单元测试
@@ -31,13 +31,12 @@ class TraceIdPropagationTest {
     @AfterEach
     void tearDown() {
         MDC.clear();
-        TraceIdGenerator.resetToDefault();
     }
 
     @Test
     @DisplayName("MDC 有 traceId 时读取成功")
     void currentTraceId_fromMdc() {
-        MDC.put(TraceConstants.MDC_TRACE_ID_KEY, "trace-abc");
+        MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "trace-abc");
         assertEquals("trace-abc", TraceIdPropagation.currentTraceId());
     }
 
@@ -50,10 +49,10 @@ class TraceIdPropagationTest {
     @Test
     @DisplayName("traceHeader 生成单元素请求头")
     void traceHeader() {
-        MDC.put(TraceConstants.MDC_TRACE_ID_KEY, "trace-abc");
+        MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "trace-abc");
         Map<String, String> headers = TraceIdPropagation.traceHeader();
         assertEquals(1, headers.size());
-        assertEquals("trace-abc", headers.get(TraceConstants.TRACE_ID_HEADER));
+        assertEquals("trace-abc", headers.get(HeaderConstants.TRACE_ID_HEADER));
         assertThrows(UnsupportedOperationException.class,
                 () -> headers.put("X", "y"), "header map must be immutable");
     }
@@ -70,7 +69,7 @@ class TraceIdPropagationTest {
     void traceHeaderOrCreate_generates() {
         Map<String, String> headers = TraceIdPropagation.traceHeaderOrCreate();
         assertEquals(1, headers.size());
-        String traceId = headers.get(TraceConstants.TRACE_ID_HEADER);
+        String traceId = headers.get(HeaderConstants.TRACE_ID_HEADER);
         assertNotNull(traceId);
         assertFalse(traceId.isBlank());
     }
@@ -78,9 +77,9 @@ class TraceIdPropagationTest {
     @Test
     @DisplayName("traceHeaderOrCreate 优先使用 MDC 已有值")
     void traceHeaderOrCreate_usesMdc() {
-        MDC.put(TraceConstants.MDC_TRACE_ID_KEY, "trace-existing");
+        MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "trace-existing");
         Map<String, String> headers = TraceIdPropagation.traceHeaderOrCreate();
-        assertEquals("trace-existing", headers.get(TraceConstants.TRACE_ID_HEADER));
+        assertEquals("trace-existing", headers.get(HeaderConstants.TRACE_ID_HEADER));
     }
 
     @Test
@@ -88,13 +87,13 @@ class TraceIdPropagationTest {
     void currentTraceIdOrCreate_writesMdc() {
         String traceId = TraceIdPropagation.currentTraceIdOrCreate();
         assertNotNull(traceId);
-        assertEquals(traceId, MDC.get(TraceConstants.MDC_TRACE_ID_KEY));
+        assertEquals(traceId, MDC.get(HeaderConstants.MDC_TRACE_ID_KEY));
     }
 
     @Test
     @DisplayName("currentTraceIdOrCreate 已有值时直接返回")
     void currentTraceIdOrCreate_usesMdc() {
-        MDC.put(TraceConstants.MDC_TRACE_ID_KEY, "trace-keep");
+        MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "trace-keep");
         assertEquals("trace-keep", TraceIdPropagation.currentTraceIdOrCreate());
     }
 }

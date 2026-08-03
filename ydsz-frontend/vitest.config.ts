@@ -16,7 +16,7 @@ export default defineConfig({
   plugins: [Vue(), VueJsx()],
   test: {
     coverage: {
-      enabled: true,
+      enabled: false,
       exclude: ['**/e2e/**', '**/node_modules/**'],
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

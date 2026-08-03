@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * {@link BaseResponse} 单元测试
@@ -26,7 +26,7 @@ class BaseResponseTest {
 
     @BeforeEach
     void setUp() {
-        MDC.put(TraceConstants.MDC_TRACE_ID_KEY, "test-trace-001");
+        MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "test-trace-001");
     }
 
     @AfterEach

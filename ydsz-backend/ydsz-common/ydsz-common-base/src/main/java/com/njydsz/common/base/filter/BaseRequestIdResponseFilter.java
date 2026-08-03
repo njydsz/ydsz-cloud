@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter implements RequestIdResolver {
 
-    protected static final String HEADER_REQUEST_ID = HeaderConstants.X_REQUEST_ID;
+    protected static final String HEADER_REQUEST_ID = HeaderConstants.X_TRACE_ID;
 
     private final BaseTraceProperties traceProperties;
 

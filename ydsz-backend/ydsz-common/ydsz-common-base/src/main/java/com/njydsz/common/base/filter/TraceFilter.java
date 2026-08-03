@@ -12,7 +12,7 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.MDC;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 
@@ -43,8 +43,8 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
  */
 public class TraceFilter extends OncePerRequestFilter {
 
-    private static final String TRACE_ID_HEADER = TraceConstants.TRACE_ID_HEADER;
-    private static final String TRACE_ID_MDC_KEY = TraceConstants.MDC_TRACE_ID_KEY;
+    private static final String TRACE_ID_HEADER = HeaderConstants.TRACE_ID_HEADER;
+    private static final String TRACE_ID_MDC_KEY = HeaderConstants.MDC_TRACE_ID_KEY;
 
     /** traceId 最大长度 */
     private static final int MAX_TRACE_ID_LENGTH = 64;

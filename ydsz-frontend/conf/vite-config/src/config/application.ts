@@ -20,7 +20,7 @@ import { defineConfig, loadEnv, mergeConfig } from 'vite';
 import { ALL_SHARED_DEPS } from '../micro-shared-deps';
 import { getDefaultPwaOptions } from '../options';
 import { loadApplicationPlugins } from '../plugins';
-import { postcssMicroScopedPlugin } from '../plugins/postcss-micro-scoped';
+import { microScopedPostcssPlugin } from '../plugins/micro-scoped-postcss';
 import { loadAndConvertEnv } from '../utils/env';
 import { getCommonConfig } from './common';
 
@@ -171,7 +171,7 @@ function createCssOptions(injectGlobalScss = true, appName?: string): CSSOptions
   // === micro-kernel CSS 作用域：有 appName 时启用 ===
   if (appName) {
     result.postcss = {
-      plugins: [postcssMicroScopedPlugin({ appName })],
+      plugins: [microScopedPostcssPlugin({ appName })],
     };
     console.info(`[ViteConfig] CSS scoping enabled for ${appName}`);
   }

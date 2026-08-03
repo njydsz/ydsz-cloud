@@ -1,7 +1,7 @@
 package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.ResultCode;
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -108,7 +108,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public BaseResponse() {
         this.timestamp = System.currentTimeMillis();
-        this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        this.traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
     }
 
     /**
@@ -123,7 +123,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.msg = msg;
         this.data = data;
         this.timestamp = System.currentTimeMillis();
-        this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        this.traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
     }
 
     /**

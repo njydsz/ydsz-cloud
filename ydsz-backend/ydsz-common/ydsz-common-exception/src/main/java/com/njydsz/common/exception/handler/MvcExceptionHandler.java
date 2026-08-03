@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
@@ -92,11 +92,11 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      * <p>优先级：MDC > Request Header
      */
     private String extractTraceId(HttpServletRequest request) {
-        String traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         if (traceId == null && request != null) {
-            traceId = request.getHeader(TraceConstants.TRACE_ID_HEADER);
+            traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
             if (traceId == null) {
-                traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
+                traceId = request.getHeader(HeaderConstants.X_TRACE_ID);
             }
         }
         return traceId;

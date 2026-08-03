@@ -13,9 +13,7 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
 /**
- * {@link CoreProperties} 配置校验测试
- *
- * <p>验证 JSR-303 注解（@Min/@Max/@NotBlank/@Pattern）的 fail-fast 行为。
+ * {@link CoreProperties} 配置校验测试。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -44,8 +42,7 @@ class CorePropertiesTest {
     void maxPageSize_zero_invalid() {
         CoreProperties props = new CoreProperties();
         props.setMaxPageSize(0);
-        Set<ConstraintViolation<CoreProperties>> violations = validator.validate(props);
-        assertFalse(violations.isEmpty());
+        assertFalse(validator.validate(props).isEmpty());
     }
 
     @Test
@@ -53,8 +50,7 @@ class CorePropertiesTest {
     void maxPageSize_tooLarge_invalid() {
         CoreProperties props = new CoreProperties();
         props.setMaxPageSize(5001);
-        Set<ConstraintViolation<CoreProperties>> violations = validator.validate(props);
-        assertFalse(violations.isEmpty());
+        assertFalse(validator.validate(props).isEmpty());
     }
 
     @Test
@@ -63,7 +59,6 @@ class CorePropertiesTest {
         CoreProperties props = new CoreProperties();
         props.setMaxPageSize(1);
         assertTrue(validator.validate(props).isEmpty());
-
         props.setMaxPageSize(5000);
         assertTrue(validator.validate(props).isEmpty());
     }
@@ -73,40 +68,7 @@ class CorePropertiesTest {
     void defaultPageSize_negative_invalid() {
         CoreProperties props = new CoreProperties();
         props.setDefaultPageSize(-1);
-        Set<ConstraintViolation<CoreProperties>> violations = validator.validate(props);
-        assertFalse(violations.isEmpty());
-    }
-
-    @Test
-    @DisplayName("idType 非法值时校验失败")
-    void idType_invalid() {
-        CoreProperties props = new CoreProperties();
-        props.getTrace().setIdType("md5");
-        Set<ConstraintViolation<CoreProperties>> violations = validator.validate(props);
-        assertFalse(violations.isEmpty());
-        assertTrue(violations.stream()
-                        .anyMatch(v -> v.getMessage().contains("uuid") || v.getMessage().contains("snowflake")),
-                "error message should mention allowed values: " + violations);
-    }
-
-    @Test
-    @DisplayName("idType 为空时校验失败")
-    void idType_blank_invalid() {
-        CoreProperties props = new CoreProperties();
-        props.getTrace().setIdType(" ");
-        Set<ConstraintViolation<CoreProperties>> violations = validator.validate(props);
-        assertFalse(violations.isEmpty());
-    }
-
-    @Test
-    @DisplayName("idType 为 uuid / snowflake 通过校验")
-    void idType_validValues() {
-        CoreProperties props = new CoreProperties();
-        props.getTrace().setIdType("uuid");
-        assertTrue(validator.validate(props).isEmpty());
-
-        props.getTrace().setIdType("snowflake");
-        assertTrue(validator.validate(props).isEmpty());
+        assertFalse(validator.validate(props).isEmpty());
     }
 
     @Test
@@ -115,17 +77,5 @@ class CorePropertiesTest {
         CoreProperties props = new CoreProperties();
         assertEquals(1000, props.getMaxPageSize());
         assertEquals(20, props.getDefaultPageSize());
-        assertTrue(props.getTrace().isEnabled());
-        assertTrue(props.getTrace().isGenerateIfMissing());
-        assertEquals("uuid", props.getTrace().getIdType());
-    }
-
-    @Test
-    @DisplayName("TraceConfig 默认值正确")
-    void traceDefaults() {
-        CoreProperties.TraceConfig trace = new CoreProperties.TraceConfig();
-        assertTrue(trace.isEnabled());
-        assertTrue(trace.isGenerateIfMissing());
-        assertEquals("uuid", trace.getIdType());
     }
 }

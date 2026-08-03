@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.slf4j.MDC;
 
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * TraceId 传播工具类（纯 JDK 实现，无框架依赖）。
@@ -58,7 +58,7 @@ public final class TraceIdPropagation {
         if (traceId == null || traceId.isBlank()) {
             return Collections.emptyMap();
         }
-        return Collections.singletonMap(TraceConstants.TRACE_ID_HEADER, traceId);
+        return Collections.singletonMap(HeaderConstants.TRACE_ID_HEADER, traceId);
     }
 
     /**
@@ -74,7 +74,7 @@ public final class TraceIdPropagation {
         if (traceId == null || traceId.isBlank()) {
             traceId = TraceIdGenerator.generate();
         }
-        return Collections.singletonMap(TraceConstants.TRACE_ID_HEADER, traceId);
+        return Collections.singletonMap(HeaderConstants.TRACE_ID_HEADER, traceId);
     }
 
     /**
@@ -83,7 +83,7 @@ public final class TraceIdPropagation {
      * @return 当前 MDC 中的 traceId；不存在时返回 null
      */
     public static String currentTraceId() {
-        return MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        return MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
     }
 
     /**
@@ -95,7 +95,7 @@ public final class TraceIdPropagation {
         String traceId = currentTraceId();
         if (traceId == null || traceId.isBlank()) {
             traceId = TraceIdGenerator.generate();
-            MDC.put(TraceConstants.MDC_TRACE_ID_KEY, traceId);
+            MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, traceId);
         }
         return traceId;
     }

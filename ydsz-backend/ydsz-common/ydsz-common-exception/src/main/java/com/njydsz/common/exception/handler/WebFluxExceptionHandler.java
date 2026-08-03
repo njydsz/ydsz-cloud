@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
@@ -80,9 +80,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
      * <p>优先级：MDC > Request Header（X-Trace-Id > X-Request-Id）
      */
     private String extractTraceId(ServerWebExchange exchange) {
-        String traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
+        String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         if (traceId == null && exchange != null) {
-            traceId = exchange.getRequest().getHeaders().getFirst(TraceConstants.TRACE_ID_HEADER);
+            traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.TRACE_ID_HEADER);
             if (traceId == null) {
                 traceId = exchange.getRequest().getHeaders().getFirst("X-Request-Id");
             }

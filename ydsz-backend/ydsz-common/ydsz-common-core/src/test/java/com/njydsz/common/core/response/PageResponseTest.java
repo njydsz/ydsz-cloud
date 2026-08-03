@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.constant.TraceConstants;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * {@link PageResponse} 单元测试
@@ -27,7 +27,7 @@ class PageResponseTest {
 
     @BeforeEach
     void setUp() {
-        MDC.put(TraceConstants.MDC_TRACE_ID_KEY, "page-trace");
+        MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "page-trace");
     }
 
     @AfterEach
