@@ -659,42 +659,6 @@ public class JsonMapper {
         return toJson(obj, true);
     }
 
-    // ==================== 绑定型读写器（对标 Jackson ObjectReader/ObjectWriter） ====================
-
-    /**
-     * 创建绑定指定类型的 JSON 读取器。
-     *
-     * <p>对标 Jackson {@code ObjectMapper.readerFor(Class)}，
-     * 返回的 {@link JsonReader} 绑定了目标类型，可重复使用。</p>
-     *
-     * @param clazz 目标类型
-     * @param <T>   类型参数
-     * @return 绑定型读取器
-     * @since 1.0.0
-     * @deprecated {@link JsonReader} 绑定型 API 已标记移除，请使用 {@link #fromJson(String, Class)} 替代。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public <T> JsonReader<T> readerFor(Class<T> clazz) {
-        return new JsonReader<>(this, clazz);
-    }
-
-    /**
-     * 创建绑定指定类型的 JSON 写入器。
-     *
-     * <p>对标 Jackson {@code ObjectMapper.writerFor(Class)}，
-     * 返回的 {@link JsonWriter} 绑定了目标类型，可重复使用。</p>
-     *
-     * @param clazz 目标类型
-     * @param <T>   类型参数
-     * @return 绑定型写入器
-     * @since 1.0.0
-     * @deprecated {@link JsonWriter} 绑定型 API 已标记移除，请使用 {@link #toJson(Object)} 替代。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public <T> JsonWriter<T> writerFor(Class<T> clazz) {
-        return new JsonWriter<>(this, clazz);
-    }
-
     // ==================== ASM 预热 ====================
 
     /**

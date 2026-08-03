@@ -32,6 +32,16 @@ public final class TokenUsage implements Serializable {
     public int getCompletionTokens() { return completionTokens; }
     public int getTotalTokens() { return totalTokens; }
 
+    /**
+     * 累加另一份用量并返回新实例（不可变语义）。
+     *
+     * <p>用于多轮对话/多 chunk 流式场景下的用量累计，
+     * 原实例保持不变，返回值为两者的逐项和。</p>
+     *
+     * @param other 待累加的用量，不可为 {@code null}
+     * @return 累加后的新 TokenUsage 实例
+     * @throws NullPointerException 当 {@code other} 为 {@code null} 时抛出
+     */
     public TokenUsage add(TokenUsage other) {
         Objects.requireNonNull(other, "other 不能为 null");
         return new TokenUsage(
@@ -39,6 +49,13 @@ public final class TokenUsage implements Serializable {
                 this.completionTokens + other.completionTokens);
     }
 
+    /**
+     * 创建零用量实例。
+     *
+     * <p>用于对话初始化或占位场景。</p>
+     *
+     * @return prompt/completion/total 均为 0 的 TokenUsage 实例
+     */
     public static TokenUsage zero() {
         return new TokenUsage(0, 0);
     }

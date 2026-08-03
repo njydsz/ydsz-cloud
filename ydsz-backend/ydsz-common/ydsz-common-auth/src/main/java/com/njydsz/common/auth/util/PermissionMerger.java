@@ -66,6 +66,13 @@ public final class PermissionMerger {
         granted.addApiPermissions(rp.getApiPermissions());
     }
 
+    /**
+     * 权限集合，支持授予与拒绝的加减运算。
+     *
+     * <p>按菜单/按钮/API 三类权限分别以 {@link HashSet} 存储；合并后通过
+     * {@link #subtract} 移除拒绝项，最终由 {@link #toRolePermissions} 输出不可变结果。
+     * 非线程安全，仅供单线程合并流程内部使用。
+     */
     private static final class PermissionSet {
         private final Set<String> menuPerms = new HashSet<>();
         private final Set<String> buttonPerms = new HashSet<>();

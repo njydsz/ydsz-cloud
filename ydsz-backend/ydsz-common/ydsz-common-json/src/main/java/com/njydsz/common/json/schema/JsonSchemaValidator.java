@@ -334,6 +334,7 @@ public final class JsonSchemaValidator {
                 // additionalProperties == null 或 true → 允许任意额外属性，不做校验
             }
         }
+    }
 
     /**
      * 按 patternProperties 正则匹配并校验属性值。

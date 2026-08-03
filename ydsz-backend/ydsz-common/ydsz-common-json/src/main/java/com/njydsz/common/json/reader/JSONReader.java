@@ -656,7 +656,7 @@ public final class JSONReader {
                         if (pos + 4 > len) throw new IllegalStateException("Unexpected end of JSON string");
                         char unicode = (char) Integer.parseInt(new String(buf, pos, 4), 16);
                         pos += 4;
-                        // 处理代理对（U+D800-U+DFFF），emoji 等补充字符在 JSON 中编码为两个 \u 序列
+                        // 处理代理对（U+D800-U+DFFF），emoji 等补充字符在 JSON 中编码为两个反斜杠u 序列
                         if (Character.isHighSurrogate(unicode) && pos + 6 <= len
                                 && buf[pos] == '\\' && buf[pos + 1] == 'u') {
                             try {

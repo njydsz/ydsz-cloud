@@ -551,6 +551,12 @@ public final class HTMLFilter {
         return allowed(name) && (vAllowed.isEmpty() || vAllowed.get(name).contains(paramName));
     }
 
+    /**
+     * HTML 过滤器配置构建器。
+     *
+     * <p>通过链式方法配置标签/属性白名单、禁止标签、允许协议、去空白标签等策略，
+     * 最后调用 {@code build()} 生成对应的 {@link HTMLFilter} 实例；标签名匹配均不区分大小写。
+     */
     public static class Builder {
         private final Map<String, List<String>> vAllowed = new HashMap<>();
         private final List<String> vSelfClosingTags = new ArrayList<>();

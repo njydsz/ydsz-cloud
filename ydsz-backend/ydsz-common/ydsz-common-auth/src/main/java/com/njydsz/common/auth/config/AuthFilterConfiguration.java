@@ -31,6 +31,11 @@ public class AuthFilterConfiguration {
         this.properties = properties;
     }
 
+    /**
+     * 获取应用级通用放行路径列表。
+     *
+     * @return 应用级通用忽略路径；未配置时返回空列表，被显式置 {@code null} 时可能返回 {@code null}
+     */
     public List<String> getCommonIgnoreUrl() {
         return properties.getCommonIgnoreUrl();
     }
@@ -47,6 +52,11 @@ public class AuthFilterConfiguration {
         properties.setCommonIgnoreUrl(commonIgnoreUrl);
     }
 
+    /**
+     * 获取网关层放行路径列表。
+     *
+     * @return 网关级忽略路径；未配置时返回空列表，被显式置 {@code null} 时可能返回 {@code null}
+     */
     public List<String> getGatewayIgnoreUrl() {
         return properties.getGatewayIgnoreUrl();
     }
@@ -63,6 +73,11 @@ public class AuthFilterConfiguration {
         properties.setGatewayIgnoreUrl(gatewayIgnoreUrl);
     }
 
+    /**
+     * 获取业务自定义放行路径列表。
+     *
+     * @return 业务自定义忽略路径；未配置时返回空列表，被显式置 {@code null} 时可能返回 {@code null}
+     */
     public List<String> getCustomIgnoreUrl() {
         return properties.getCustomIgnoreUrl();
     }
@@ -79,6 +94,11 @@ public class AuthFilterConfiguration {
         properties.setCustomIgnoreUrl(customIgnoreUrl);
     }
 
+    /**
+     * 获取是否开启细粒度权限校验的总开关。
+     *
+     * @return 是否校验权限；默认 {@code true}，被显式置 {@code null} 时可能返回 {@code null}
+     */
     public Boolean getVerifyPermission() {
         return properties.getVerifyPermission();
     }
@@ -95,6 +115,11 @@ public class AuthFilterConfiguration {
         properties.setVerifyPermission(verifyPermission);
     }
 
+    /**
+     * 获取仅校验 Token、跳过权限判定的路径列表。
+     *
+     * @return 仅校验 Token 的路径；未配置时返回空列表，被显式置 {@code null} 时可能返回 {@code null}
+     */
     public List<String> getOnlyVerifyToken() {
         return properties.getOnlyVerifyToken();
     }

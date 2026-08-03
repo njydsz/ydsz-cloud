@@ -170,6 +170,13 @@ public class PermissionChangeCacheInvalidator {
         log.info("角色所有权限缓存已失效：roleCode={}", roleCode);
     }
 
+    /**
+     * Redis Pub/Sub 权限变更消息监听器。
+     *
+     * <p>订阅 {@value #PERMISSION_CHANGE_CHANNEL} 频道，接收其他集群节点下发的权限变更通知；
+     * 消息格式为 {@code roleCode|changeType|affectedTypes|...|sourceNode}，解析失败或格式非法时
+     * 记录告警日志并忽略，不影响本地缓存状态。
+     */
     private class RedisMessageListener implements MessageListener {
         @Override
         public void onMessage(Message message, byte[] pattern) {

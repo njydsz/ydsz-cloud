@@ -66,6 +66,12 @@ public class PermissionDeniedException extends BusinessException {
     /** 用户已拥有的权限集合（调试用）；构造时包装为不可变集合，永不为 {@code null}。 */
     private final transient Set<String> grantedPermissions;
 
+    /**
+     * 权限类型，决定权限校验维度与异常错误码映射。
+     *
+     * <p>每种类型携带中文描述与 i18n 消息键，错误码映射见 {@link PermissionDeniedException#buildCode}：
+     * 菜单/按钮/接口/数据/列权限分别对应 {@code A03011}~{@code A03015}。
+     */
     public enum PermissionType {
         MENU("菜单权限", "menu.permission"),
         BUTTON("按钮权限", "button.permission"),
@@ -181,6 +187,12 @@ public class PermissionDeniedException extends BusinessException {
         return new Builder();
     }
 
+    /**
+     * 权限拒绝异常构建器。
+     *
+     * <p>通过 {@link #denied()} 创建，链式填充拒绝上下文字段后调用 {@link #build()} 生成异常。
+     * 构建器非线程安全，单次使用完毕即弃，不应跨线程复用。
+     */
     public static class Builder {
         private String userId;
         private Set<String> userRoles;

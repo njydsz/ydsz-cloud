@@ -120,12 +120,37 @@ public class CircuitBreaker {
         return instance == null ? State.CLOSED : instance.getState();
     }
 
+    /**
+     * 熔断器三态。
+     *
+     * <p>CLOSED 正常调用并统计失败率；OPEN 直接拒绝；HALF_OPEN 放行少量探测请求，
+     * 成功则回退 CLOSED，失败则重回 OPEN。
+     */
     public enum State {
-        CLOSED, OPEN, HALF_OPEN
+        /** 关闭态：正常调用，统计失败率。 */
+        CLOSED,
+        /** 开启态：直接拒绝调用，等待 {@link CircuitBreakerConfig#getWaitDurationInOpenState()} 后进入半开。 */
+        OPEN,
+        /** 半开态：放行少量探测请求，用于试探下游是否已恢复。 */
+        HALF_OPEN
     }
 
+    /**
+     * 熔断器保护的调用回调。
+     *
+     * <p>由调用方实现，承载实际的下游调用逻辑；回调抛出异常将被熔断器计为一次失败，
+     * 并据此触发熔断状态流转。
+     *
+     * @param <T> 调用返回类型
+     */
     @FunctionalInterface
     public interface CircuitBreakerCallback<T> {
+        /**
+         * 执行受熔断保护的实际调用。
+         *
+         * @return 调用结果
+         * @throws Exception 调用过程抛出的任意异常，都会被熔断器记录为一次失败
+         */
         T call() throws Exception;
     }
 
@@ -175,8 +200,17 @@ public class CircuitBreaker {
         }
     }
 
+    /**
+     * 滑动窗口统计类型。
+     *
+     * <p>决定失败率/慢调用率统计窗口的划分方式：
+     * TIME_BASED 按时间窗口统计，COUNT_BASED 按调用次数窗口统计。
+     */
     public enum SlidingWindowType {
-        TIME_BASED, COUNT_BASED
+        /** 基于时间的滑动窗口。 */
+        TIME_BASED,
+        /** 基于调用次数的滑动窗口。 */
+        COUNT_BASED
     }
 
     /**

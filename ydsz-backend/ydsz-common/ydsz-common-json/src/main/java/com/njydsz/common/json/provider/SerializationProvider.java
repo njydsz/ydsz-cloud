@@ -432,29 +432,59 @@ public final class SerializationProvider {
 
         SerializationContext ctx = SerializationContext.CONTEXT.get();
 
-        // 统一快速路径：Bean/Collection/Map 三条路径提取到 tryFastPathToWriter
-        JSONWriter writer = tryFastPathToWriter(obj, ctx);
-        if (writer != null) {
-            return writer.toString();
-        }
-
-        // 回退路径：使用 StringBuilder + ValueWriter
-        StringBuilder sb = getSizedStringBuilder(256);
+        // 循环引用检测（仅对 Bean 类型，不含基本类型/Collection/Map/String/Number/Boolean）
+        Class<?> clazz = obj.getClass();
+        boolean isBeanType = !clazz.isPrimitive() && !clazz.isArray()
+            && !(obj instanceof Number) && !(obj instanceof CharSequence)
+            && !(obj instanceof Boolean) && !(obj instanceof Character)
+            && !(obj instanceof Collection) && !(obj instanceof Map)
+            && !(obj instanceof Enum);
 
         Set<Object> objects = ctx.serializingObjects;
-        objects.clear();
+        if (isBeanType) {
+            if (objects.contains(obj)) {
+                String strategy = ctx.circularRefStrategy;
+                if (strategy == null) strategy = "REF";
+                switch (strategy) {
+                    case "ERROR":
+                        throw new JsonSerializationException(
+                            JsonSerializationException.SERIALIZATION_ERROR,
+                            "Circular reference detected: " + clazz.getName());
+                    case "IGNORE":
+                    case "NULL":
+                        return "null";
+                    case "REF":
+                    default:
+                        return "{\"$ref\":\"..\"}";
+                }
+            }
+            objects.add(obj);
+        }
 
         try {
+            // 统一快速路径：Bean/Collection/Map 三条路径提取到 tryFastPathToWriter
+            JSONWriter writer = tryFastPathToWriter(obj, ctx);
+            if (writer != null) {
+                return writer.toString();
+            }
+
+            // 回退路径：使用 StringBuilder + ValueWriter
+            StringBuilder sb = getSizedStringBuilder(256);
+
             if (!tryBeanSerialize(obj, sb)) {
                 ValueWriter.writeValue(obj, sb);
             }
+
+            return sb.toString();
+        } catch (JsonSerializationException e) {
+            throw e;
         } catch (Exception e) {
             throw wrapSerializationException(obj, e);
         } finally {
-            objects.clear();
+            if (isBeanType) {
+                objects.remove(obj);
+            }
         }
-
-        return sb.toString();
     }
 
     /**

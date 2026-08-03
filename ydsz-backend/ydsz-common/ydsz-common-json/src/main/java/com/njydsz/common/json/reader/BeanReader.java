@@ -4,14 +4,19 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonAlias;
+import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.provider.FieldMetadataLoader;
 
 /**
@@ -87,8 +92,9 @@ public final class BeanReader<T> {
             }
             try {
                 field.setAccessible(true);
-                this.fieldReaders[idx] = new FieldReader(field);
-                this.fieldNameHashes[idx] = field.getName().hashCode();
+                FieldReader fr = new FieldReader(field);
+                this.fieldReaders[idx] = fr;
+                this.fieldNameHashes[idx] = fr.jsonNameHash;
                 idx++;
             } catch (Exception e) {
                 // skip
@@ -161,17 +167,21 @@ public final class BeanReader<T> {
             int hash = fieldName.hashCode();
             boolean matched = false;
             for (int i = 0; i < fieldReaders.length; i++) {
-                if (fieldNameHashes[i] == hash) {
-                    FieldReader fr = fieldReaders[i];
-                    if (fr.fieldName.equals(fieldName)) {
-                        fr.readValue(reader, obj);
-                        matched = true;
-                        break;
-                    }
+                FieldReader fr = fieldReaders[i];
+                // 主匹配：jsonName（@JsonProperty 值或字段名）
+                if (fieldNameHashes[i] == hash && fr.jsonName.equals(fieldName)) {
+                    fr.readValue(reader, obj);
+                    matched = true;
+                    break;
                 }
-                // @JsonAlias 别名匹配（非 ASM 路径联动）
-                if (!matched && fieldReaders[i].aliasHashes.length > 0) {
-                    FieldReader fr = fieldReaders[i];
+                // 回退匹配：原始 Java 字段名（当 @JsonProperty 设置但 JSON 仍用字段名时）
+                if (!matched && fr.fieldName.equals(fieldName)) {
+                    fr.readValue(reader, obj);
+                    matched = true;
+                    break;
+                }
+                // @JsonAlias 别名匹配
+                if (!matched && fr.aliasHashes.length > 0) {
                     for (int j = 0; j < fr.aliasHashes.length; j++) {
                         if (fr.aliasHashes[j] == hash && fr.aliases[j].equals(fieldName)) {
                             fr.readValue(reader, obj);
@@ -239,25 +249,42 @@ public final class BeanReader<T> {
 
     /**
      * 字段读取器（消除 MethodHandle，改用直接字段访问）
+     *
+     * <p>支持 @JsonProperty 重命名、@JsonAlias 别名匹配，以及 short/byte/char/
+     * Date/LocalDateTime/LocalDate/枚举/嵌套 Bean/Collection/Map 的完整反序列化。</p>
      */
     public static final class FieldReader {
 
+        /** Java 字段名（原始） */
         public final String fieldName;
+        /** JSON 匹配名（@JsonProperty 值或字段名） */
+        public final String jsonName;
+        /** JSON 匹配名哈希 */
+        public final int jsonNameHash;
         public final Class<?> fieldType;
         public final Field field;
         public final int typeCode;
 
         /** 反序列化别名列表（来自 @JsonAlias 注解） */
         public final String[] aliases;
-        /** 别名哈希缓存（与 fieldNameHashes 配合使用） */
+        /** 别名哈希缓存 */
         public final int[] aliasHashes;
 
         public FieldReader(Field field) {
+            this.field = field;
             this.fieldName = field.getName();
             this.fieldType = field.getType();
-            this.field = field;
             this.field.setAccessible(true);
             this.typeCode = getTypeCode(fieldType);
+
+            // 加载 @JsonProperty：如果标注了且 value 非空，用 value 作为 JSON 匹配名
+            JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+            if (jsonProperty != null && !jsonProperty.value().isEmpty()) {
+                this.jsonName = jsonProperty.value();
+            } else {
+                this.jsonName = this.fieldName;
+            }
+            this.jsonNameHash = this.jsonName.hashCode();
 
             // 加载 @JsonAlias 别名列表
             JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
@@ -276,14 +303,13 @@ public final class BeanReader<T> {
         /**
          * 将 reader 当前位置的值按字段类型写入目标对象。
          *
-         * <p>依据 {@code typeCode} 分发：基础类型（String/int/long/double/float/boolean）直接读取并
-         * 通过 {@link Field#set} 赋值（读取到 null 时置为 null）；复杂类型（嵌套对象、List/Collection、
-         * Map）递归委托 {@link #getOrCreateForType} 或 reader 内建方法解析。字段写入失败（如类型不兼容）
-         * 包装为 {@link RuntimeException} 抛出。</p>
+         * <p>依据 {@code typeCode} 分发：基础类型直接读取并赋值；复杂类型（嵌套对象、
+         * List/Collection、Map、Date 等）递归委托或按类型转换。null 值统一处理。</p>
          *
          * @param reader 已定位到值起始的 JSONReader
          * @param obj    目标 Bean 实例，字段值写入其中
          */
+        @SuppressWarnings("deprecation")
         public void readValue(JSONReader reader, Object obj) {
             try {
                 switch (typeCode) {
@@ -330,8 +356,50 @@ public final class BeanReader<T> {
                             field.setBoolean(obj, reader.readBoolean());
                         }
                         break;
+                    case 7: // short
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Short.class) field.set(obj, null);
+                        } else {
+                            short val = (short) reader.readInt();
+                            if (fieldType == short.class) {
+                                field.setShort(obj, val);
+                            } else {
+                                field.set(obj, Short.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 8: // byte
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Byte.class) field.set(obj, null);
+                        } else {
+                            byte val = (byte) reader.readInt();
+                            if (fieldType == byte.class) {
+                                field.setByte(obj, val);
+                            } else {
+                                field.set(obj, Byte.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 9: // char
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Character.class) field.set(obj, null);
+                        } else {
+                            String s = reader.readString();
+                            if (s != null && s.length() > 0) {
+                                char val = s.charAt(0);
+                                if (fieldType == char.class) {
+                                    field.setChar(obj, val);
+                                } else {
+                                    field.set(obj, Character.valueOf(val));
+                                }
+                            }
+                        }
+                        break;
                     default:
-                        // 复杂类型（嵌套对象、集合等）
+                        // 复杂类型（嵌套对象、集合、Date 等）
                         if (reader.isNull()) {
                             reader.readNull();
                             field.set(obj, null);
@@ -340,8 +408,19 @@ public final class BeanReader<T> {
                             field.set(obj, listValue);
                         } else if (fieldType == Map.class || fieldType == HashMap.class || Map.class.isAssignableFrom(fieldType)) {
                             field.set(obj, reader.readObjectMap());
+                        } else if (fieldType == LocalDateTime.class) {
+                            String s = reader.readString();
+                            field.set(obj, parseLocalDateTime(s));
+                        } else if (fieldType == LocalDate.class) {
+                            String s = reader.readString();
+                            field.set(obj, parseLocalDate(s));
+                        } else if (fieldType == Date.class) {
+                            String s = reader.readString();
+                            field.set(obj, parseDate(s));
+                        } else if (fieldType.isEnum()) {
+                            String s = reader.readString();
+                            field.set(obj, parseEnum(fieldType, s));
                         } else {
-                            
                             BeanReader<?> nestedReader = getOrCreateForType(fieldType);
                             field.set(obj, nestedReader.readObject(reader));
                         }
@@ -359,6 +438,9 @@ public final class BeanReader<T> {
             if (type == double.class || type == Double.class) return 4;
             if (type == float.class || type == Float.class) return 5;
             if (type == boolean.class || type == Boolean.class) return 6;
+            if (type == short.class || type == Short.class) return 7;
+            if (type == byte.class || type == Byte.class) return 8;
+            if (type == char.class || type == Character.class) return 9;
             return 10;
         }
     }
@@ -401,12 +483,78 @@ public final class BeanReader<T> {
     
     /**
      * 清空全局 BeanReader 缓存。
-     *
-     * <p>仅在类结构热更新或测试隔离场景下使用；清空后下次访问将重新反射构建读取器。
-     * 注意该缓存为进程级 {@link ConcurrentHashMap}，操作影响所有线程，
-     * 生产运行期慎用，避免并发反序列化瞬间因重建产生性能抖动。</p>
      */
     public static void clearCache() {
         CACHE.clear();
+    }
+
+    // ==================== 日期/枚举解析辅助方法 ====================
+
+    private static final DateTimeFormatter[] DATE_TIME_FORMATS = {
+        DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+    };
+
+    private static final DateTimeFormatter[] DATE_FORMATS = {
+        DateTimeFormatter.ISO_LOCAL_DATE,
+        DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+    };
+
+    @SuppressWarnings("deprecation")
+    private static LocalDateTime parseLocalDateTime(String s) {
+        if (s == null || s.isEmpty()) return null;
+        for (DateTimeFormatter fmt : DATE_TIME_FORMATS) {
+            try {
+                return LocalDateTime.parse(s, fmt);
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static LocalDate parseLocalDate(String s) {
+        if (s == null || s.isEmpty()) return null;
+        for (DateTimeFormatter fmt : DATE_FORMATS) {
+            try {
+                return LocalDate.parse(s, fmt);
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Date parseDate(String s) {
+        if (s == null || s.isEmpty()) return null;
+        try {
+            return new Date(Long.parseLong(s));
+        } catch (NumberFormatException ignored) {
+        }
+        try {
+            return new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(s);
+        } catch (Exception ignored) {
+        }
+        try {
+            return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(s);
+        } catch (Exception ignored) {
+        }
+        try {
+            return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(s);
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static Object parseEnum(Class<?> enumType, String s) {
+        if (s == null || s.isEmpty()) return null;
+        try {
+            return Enum.valueOf((Class<Enum>) enumType, s);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 }

@@ -48,10 +48,23 @@ public final class ChatResponse implements Serializable {
     public String getFinishReason() { return finishReason; }
     public List<ToolCall> getToolCalls() { return toolCalls; }
 
+    /**
+     * 判断响应是否携带工具调用。
+     *
+     * @return {@code true} 表示助手回复中包含至少一个工具调用
+     */
     public boolean hasToolCalls() {
         return !toolCalls.isEmpty();
     }
 
+    /**
+     * 获取助手回复的文本内容。
+     *
+     * <p>当响应为异常兜底或纯工具调用场景时，{@code message} 可能为
+     * {@code null}，此时返回 {@code null} 而非抛出 NPE，调用方须判空。</p>
+     *
+     * @return 回复文本内容；消息缺失时返回 {@code null}
+     */
     public String getContent() {
         // 消息可能为 null（异常兜底场景），返回 null 而非抛 NPE，调用方须判空
         return message != null ? message.getContent() : null;

@@ -65,10 +65,25 @@ public final class ExecutionPlan implements Serializable {
      */
     public void markFailed() { this.status = PlanStatus.FAILED; }
 
+    /**
+     * 判断计划是否已全部执行完成。
+     *
+     * @return {@code true} 当且仅当所有 {@link PlanStep} 的状态均为 {@code COMPLETED}；
+     *         只要存在任一 PENDING / EXECUTING / FAILED 步骤即返回 {@code false}
+     */
     public boolean isCompleted() {
         return steps.stream().allMatch(s -> s.getStatus() == PlanStep.StepStatus.COMPLETED);
     }
 
+    /**
+     * 获取当前应执行的下一步骤。
+     *
+     * <p>按索引顺序返回第一个仍处于 {@code PENDING} 状态的步骤，作为执行游标；
+     * 步骤标记为 EXECUTING / COMPLETED / FAILED 后即脱离候选队列，游标自动前移。
+     *
+     * @return 下一个待执行步骤；当所有步骤均已离开 {@code PENDING} 状态时返回 {@code null}，
+     *         调用方据此判定计划已执行完毕并结束执行循环
+     */
     public PlanStep getCurrentStep() {
         // 无 PENDING 步骤时返回 null，调用方据此判定计划已执行完毕并结束循环
         return steps.stream()
@@ -96,6 +111,11 @@ public final class ExecutionPlan implements Serializable {
         }
     }
 
+    /**
+     * 计划整体状态。
+     *
+     * <p>状态流转：{@code PENDING -> EXECUTING -> COMPLETED | FAILED}，其中 COMPLETED 与 FAILED 为终态。
+     */
     public enum PlanStatus {
         /** 待执行 */
         PENDING, 
@@ -107,6 +127,14 @@ public final class ExecutionPlan implements Serializable {
         FAILED
     }
 
+    /**
+     * 执行计划中的单个步骤。
+     *
+     * <p>由 Planner 生成并携带索引、描述与动作；步骤状态独立于计划整体状态流转，
+     * 支持在 Plan-and-Execute 执行过程中通过 {@link ExecutionPlan#replaceRemainingSteps(int, List)} 重规划。
+     *
+     * <p><b>线程安全</b>：status 字段可变，须由单一执行线程独占访问。
+     */
     public static final class PlanStep implements Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -155,6 +183,11 @@ public final class ExecutionPlan implements Serializable {
          */
         public void markExecuting() { this.status = StepStatus.EXECUTING; }
 
+        /**
+         * 步骤执行状态。
+         *
+         * <p>状态流转：{@code PENDING -> EXECUTING -> COMPLETED | FAILED}；仅 PENDING 步骤会被执行游标选中。
+         */
         public enum StepStatus {
             /** 待执行 */
             PENDING, 

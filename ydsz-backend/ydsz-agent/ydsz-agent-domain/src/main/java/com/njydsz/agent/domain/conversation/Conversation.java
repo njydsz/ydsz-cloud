@@ -78,10 +78,28 @@ public final class Conversation {
         updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * 获取全部消息列表。
+     *
+     * <p>返回不可修改视图，调用方无法通过此引用改动对话内部状态，
+     * 保证聚合根不变量的稳定性。</p>
+     *
+     * @return 全部消息的不可修改列表；空对话返回空列表而非 {@code null}
+     */
     public List<ChatMessage> getMessages() {
         return Collections.unmodifiableList(messages);
     }
 
+    /**
+     * 获取最近的 N 条消息。
+     *
+     * <p>当消息总数不超过 {@code count} 时返回全部；否则截取最后 {@code count} 条。
+     * 用于控制发送给 LLM 的上下文窗口大小，避免长对话超出 Token 预算。</p>
+     *
+     * @param count 需要获取的最近消息条数，须为非负整数
+     * @return 最近消息的不可修改列表（最多 count 条），空对话返回空列表
+     * @throws IllegalArgumentException 当 {@code count} 为负数时抛出
+     */
     public List<ChatMessage> getRecentMessages(int count) {
         if (messages.size() <= count) {
             return Collections.unmodifiableList(messages);
@@ -91,10 +109,20 @@ public final class Conversation {
                 messages.subList(messages.size() - count, messages.size()));
     }
 
+    /**
+     * 获取最后一条消息。
+     *
+     * @return 最后追加的消息；对话为空时返回 {@code null}
+     */
     public ChatMessage getLastMessage() {
         return messages.isEmpty() ? null : messages.get(messages.size() - 1);
     }
 
+    /**
+     * 获取消息总数。
+     *
+     * @return 对话中的消息条数（含用户与助手消息）
+     */
     public int getMessageCount() {
         return messages.size();
     }

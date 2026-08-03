@@ -52,21 +52,54 @@ public final class ChatMessage implements Serializable {
         this.tokenUsage = tokenUsage;
     }
 
+    /**
+     * 创建系统角色消息（通常用于注入系统提示词）。
+     *
+     * @param content 系统提示内容
+     * @return 系统消息实例（自动生成消息 ID 与时间戳）
+     */
     public static ChatMessage system(String content) {
         return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.SYSTEM, content, null, LocalDateTime.now(), null, null, null);
     }
 
+    /**
+     * 创建用户角色消息。
+     *
+     * @param content        用户输入内容
+     * @param conversationId 所属对话 ID
+     * @return 用户消息实例（自动生成消息 ID 与时间戳）
+     */
     public static ChatMessage user(String content, String conversationId) {
         return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.USER, content, conversationId, LocalDateTime.now(), null, null, null);
     }
 
+    /**
+     * 创建助手角色消息（纯文本回复）。
+     *
+     * @param content        助手回复内容
+     * @param conversationId 所属对话 ID
+     * @param usage          本次回复的 Token 用量（可空）
+     * @return 助手消息实例（自动生成消息 ID 与时间戳）
+     */
     public static ChatMessage assistant(String content, String conversationId, TokenUsage usage) {
         return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.ASSISTANT, content, conversationId, LocalDateTime.now(), null, null, usage);
     }
 
+    /**
+     * 创建助手角色消息（含工具调用）。
+     *
+     * <p>当 LLM 决定调用工具时，助手消息携带 {@code toolCalls} 列表，
+     * 后续由工具执行结果以 {@link #tool(String, String, String)} 形式回填。</p>
+     *
+     * @param content        助手回复内容（可为 null，纯工具调用场景无文本）
+     * @param conversationId 所属对话 ID
+     * @param toolCalls      工具调用列表
+     * @param usage          本次回复的 Token 用量（可空）
+     * @return 助手消息实例
+     */
     public static ChatMessage assistantWithTools(String content, String conversationId,
                                                   List<ToolCall> toolCalls, TokenUsage usage) {
         return new ChatMessage(UUID.randomUUID().toString(),
@@ -74,6 +107,14 @@ public final class ChatMessage implements Serializable {
                 toolCalls, null, usage);
     }
 
+    /**
+     * 创建工具角色消息（工具执行结果回填）。
+     *
+     * @param toolCallId     被执行的工具调用 ID（关联助手消息中的 toolCalls）
+     * @param content        工具执行结果内容
+     * @param conversationId 所属对话 ID
+     * @return 工具消息实例
+     */
     public static ChatMessage tool(String toolCallId, String content, String conversationId) {
         return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.TOOL, content, conversationId, LocalDateTime.now(), null, toolCallId, null);
@@ -88,10 +129,24 @@ public final class ChatMessage implements Serializable {
     public String getToolCallId() { return toolCallId; }
     public TokenUsage getTokenUsage() { return tokenUsage; }
 
+    /**
+     * 判断该消息是否携带工具调用。
+     *
+     * @return {@code true} 表示消息含至少一个工具调用
+     */
     public boolean hasToolCalls() {
         return !toolCalls.isEmpty();
     }
 
+    /**
+     * 追加内容并返回新消息（不可变语义）。
+     *
+     * <p>原消息不可修改，此方法拼接内容后返回全新实例；工具调用列表同样做
+     * 拷贝防御，避免外部引用影响新实例。</p>
+     *
+     * @param delta 待追加的内容片段（可为空字符串）
+     * @return 拼接内容后的新 ChatMessage 实例
+     */
     public ChatMessage appendContent(String delta) {
         // 不可变语义：拼接出新内容后返回全新 ChatMessage 实例，原消息的 toolCalls 也做拷贝防御，绝不原地修改
         String newContent = (content == null ? "" : content) + delta;

@@ -674,13 +674,13 @@ public final class ObjectNode extends JsonNode {
      * @return ObjectNode 实例
      * @since 1.0.0
      */
-    public static ObjectNode fromMap(Map<String, ?> map) {
+    public static ObjectNode fromMap(Map<?, ?> map) {
         ObjectNode node = new ObjectNode();
         if (map == null) {
             return node;
         }
-        for (Map.Entry<String, ?> entry : map.entrySet()) {
-            String key = entry.getKey();
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            String key = entry.getKey() instanceof String ? (String) entry.getKey() : String.valueOf(entry.getKey());
             Object value = entry.getValue();
             if (value == null) {
                 node.fields.put(key, NullNode.getInstance());

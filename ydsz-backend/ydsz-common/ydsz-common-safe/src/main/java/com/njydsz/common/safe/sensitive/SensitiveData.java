@@ -33,9 +33,8 @@ import java.lang.annotation.*;
  *
  * <p><b>配合 YdszJson 使用：</b>
  * <pre>{@code
- * // 方式一：使用 SensitiveDataSerializer（ydsz JsonSerializer），通过 SafeJsonModule 自动注册
+ * // 使用 SensitiveDataSerializer（ydsz JsonSerializer），通过 SafeJsonModule 自动注册
  * public class UserVO {
- *     @com.njydsz.common.json.annotation.JsonSerialize(using = SensitiveDataSerializer.class)
  *     @SensitiveData(SensitiveType.PHONE)
  *     private String phone;
  * }

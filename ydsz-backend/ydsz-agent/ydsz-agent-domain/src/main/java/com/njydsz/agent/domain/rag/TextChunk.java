@@ -62,10 +62,24 @@ public final class TextChunk implements Serializable {
     public Map<String, Object> getMetadata() { return metadata; }
     public List<Float> getEmbedding() { return embedding; }
 
+    /**
+     * 判断该文本块是否已生成向量嵌入。
+     *
+     * @return {@code true} 表示 {@code embedding} 非空；未嵌入（如仅建索引未走向量化）时返回 false
+     */
     public boolean hasEmbedding() {
         return embedding != null && !embedding.isEmpty();
     }
 
+    /**
+     * 复制文本块并绑定向量嵌入（不可变风格）。
+     *
+     * <p>嵌入向量通常由异步任务在分块后生成，本方法在不改动原块的前提下
+     * 派生携带嵌入的新实例，供向量检索使用。</p>
+     *
+     * @param newEmbedding 该文本块的向量嵌入（Float 列表）
+     * @return 携带嵌入的新 TextChunk 实例
+     */
     public TextChunk withEmbedding(List<Float> newEmbedding) {
         return new TextChunk(id, content, documentId, documentTitle, source,
                 chunkIndex, tokenCount, metadata, newEmbedding);

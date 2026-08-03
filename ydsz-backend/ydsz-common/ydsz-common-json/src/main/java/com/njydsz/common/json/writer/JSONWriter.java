@@ -1214,6 +1214,12 @@ public final class JSONWriter {
             pos += 4;
         } else if (value instanceof String) {
             writeStringDirectNoCheck((String) value);
+        } else if (value instanceof Character) {
+            // char 序列化为 JSON 字符串（"A" 而非裸字符 A）
+            ensureCapacity(4);
+            buf[pos++] = '"';
+            buf[pos++] = (Character) value;
+            buf[pos++] = '"';
         } else if (value instanceof Number) {
             write(value.toString());
         } else if (value instanceof Boolean) {
@@ -1228,6 +1234,8 @@ public final class JSONWriter {
             writeCollection((Collection<?>) value);
         } else if (value instanceof Map) {
             writeMap((Map<?, ?>) value);
+        } else if (value instanceof Enum) {
+            writeStringDirectNoCheck(((Enum<?>) value).name());
         } else {
             writeObjectInline(value);
         }

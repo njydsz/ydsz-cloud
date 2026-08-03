@@ -65,6 +65,15 @@ public final class LlmModelConfig implements Serializable {
     public List<String> getStop() { return stop; }
     public int getTimeoutSeconds() { return timeoutSeconds; }
 
+    /**
+     * 复制配置并替换 API Key（不可变风格）。
+     *
+     * <p>用于动态注入密钥场景：例如从密钥管理系统取到临时凭据后，
+     * 基于模板配置派生新实例，避免修改全局共享配置。</p>
+     *
+     * @param newApiKey 新的 API Key
+     * @return 携带新密钥的新 LlmModelConfig 实例
+     */
     public LlmModelConfig withApiKey(String newApiKey) {
         return new LlmModelConfig(modelId, provider, modelName, newApiKey, baseUrl,
                 temperature, maxTokens, topP, stop, timeoutSeconds);

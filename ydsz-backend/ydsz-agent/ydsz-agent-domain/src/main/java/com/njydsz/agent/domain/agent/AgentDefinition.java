@@ -72,6 +72,12 @@ public final class AgentDefinition implements Serializable {
     public int getMaxIterations() { return maxIterations; }
     public String getModelId() { return modelId; }
 
+    /**
+     * 判断该 Agent 是否绑定了至少一个工具。
+     *
+     * @return {@code true} 表示 {@link #getToolNames()} 非空；用于执行器在 ReAct/RAG 等
+     *         需要工具能力的模式下决策是否跳过工具调度
+     */
     public boolean hasTools() {
         return !toolNames.isEmpty();
     }

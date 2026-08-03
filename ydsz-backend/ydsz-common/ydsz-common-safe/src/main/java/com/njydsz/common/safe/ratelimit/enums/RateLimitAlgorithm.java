@@ -63,6 +63,15 @@ public enum RateLimitAlgorithm {
         return description;
     }
 
+    /**
+     * 根据编码解析对应的限流算法。
+     *
+     * <p>编码匹配不区分大小写；编码为 {@code null} 或无法匹配时返回 {@link #COUNTER}
+     * 作为降级默认值，不抛出异常，保证非法配置下限流仍可用。
+     *
+     * @param code 算法编码（如 {@code "token-bucket"}），允许为 {@code null}
+     * @return 匹配到的限流算法；无法匹配时返回 {@link #COUNTER}
+     */
     public static RateLimitAlgorithm fromCode(String code) {
         if (code == null) {
             return COUNTER;

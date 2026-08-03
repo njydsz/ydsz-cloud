@@ -687,6 +687,12 @@ public class AuthColPermissionAspect {
         return defaultValue;
     }
 
+    /**
+     * 列权限注解的缓存解析结果。
+     *
+     * <p>将 {@link AuthColPermission} 在类/方法上的配置合并解析为一份可复用的运行时模型，
+     * 避免每次请求重复反射解析注解；{@link #NULL_MARKER} 作为空值标记缓存"无注解"的方法。
+     */
     private static class ResolvedColumnPermission {
         private static final ResolvedColumnPermission NULL_MARKER = new ResolvedColumnPermission();
 
@@ -696,6 +702,12 @@ public class AuthColPermissionAspect {
         private String targetParamName;
     }
 
+    /**
+     * 一次列权限过滤所需的全部上下文。
+     *
+     * <p>聚合列权限信息、作用域信息、严格模式开关与脱敏上下文，
+     * 供环绕通知在注入参数与过滤返回值时一次性获取，避免多次解析规则。
+     */
     private static class ColumnPermissionBundle {
         private final ColumnPermissionInfo permissionInfo;
         private final ColumnScopeInfo scopeInfo;

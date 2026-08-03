@@ -1,0 +1,1348 @@
+{
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\conversation\\Conversation.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    81,
+    "getMessages"
+   ],
+   [
+    85,
+    "getRecentMessages"
+   ],
+   [
+    94,
+    "getLastMessage"
+   ],
+   [
+    98,
+    "getMessageCount"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\guardrail\\GuardrailResult.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    32,
+    "pass"
+   ],
+   [
+    36,
+    "pass"
+   ],
+   [
+    40,
+    "reject"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\model\\ChatChunk.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    38,
+    "content"
+   ],
+   [
+    42,
+    "finish"
+   ],
+   [
+    53,
+    "isFinished"
+   ],
+   [
+    58,
+    "hasContent"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\model\\ChatMessage.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    55,
+    "system"
+   ],
+   [
+    60,
+    "user"
+   ],
+   [
+    65,
+    "assistant"
+   ],
+   [
+    70,
+    "assistantWithTools"
+   ],
+   [
+    77,
+    "tool"
+   ],
+   [
+    91,
+    "hasToolCalls"
+   ],
+   [
+    95,
+    "appendContent"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\model\\ChatRequest.java": {
+  "missing_classes": [
+   "Builder"
+  ],
+  "missing_methods": [
+   [
+    64,
+    "withMessages"
+   ],
+   [
+    69,
+    "withStream"
+   ],
+   [
+    74,
+    "builder"
+   ],
+   [
+    108,
+    "build"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\model\\ChatResponse.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    51,
+    "hasToolCalls"
+   ],
+   [
+    55,
+    "getContent"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\model\\LlmModelConfig.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    68,
+    "withApiKey"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\model\\MessageRole.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    33,
+    "fromApiValue"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\model\\TokenUsage.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    35,
+    "add"
+   ],
+   [
+    42,
+    "zero"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\rag\\TextChunk.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    65,
+    "hasEmbedding"
+   ],
+   [
+    69,
+    "withEmbedding"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-domain\\src\\main\\java\\com\\njydsz\\agent\\domain\\tool\\ToolRegistration.java": {
+  "missing_classes": [
+   "Builder"
+  ],
+  "missing_methods": [
+   [
+    31,
+    "getName"
+   ],
+   [
+    77,
+    "build"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-infra\\src\\main\\java\\com\\njydsz\\agent\\infra\\llm\\LlmClientRouter.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    164,
+    "getAvailableProviders"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-infra\\src\\main\\java\\com\\njydsz\\agent\\infra\\rag\\HybridRetriever.java": {
+  "missing_classes": [
+   "RrfEntry"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-infra\\src\\main\\java\\com\\njydsz\\agent\\infra\\rag\\InMemoryVectorStore.java": {
+  "missing_classes": [
+   "ScoredChunk"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-infra\\src\\main\\java\\com\\njydsz\\agent\\infra\\rag\\PgVectorStore.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    65,
+    "ydsz_agent_document_chunk"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-infra\\src\\main\\java\\com\\njydsz\\agent\\infra\\trace\\InMemoryTraceRecorder.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    90,
+    "getStatus"
+   ],
+   [
+    94,
+    "getTraceCount"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\main\\java\\com\\njydsz\\agent\\server\\agent\\DagOrchestrationExecutor.java": {
+  "missing_classes": [
+   "DagExecutionResult"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\main\\java\\com\\njydsz\\agent\\server\\analytics\\CostAnalysisService.java": {
+  "missing_classes": [
+   "TokenUsageRecord"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\main\\java\\com\\njydsz\\agent\\server\\config\\AgentProperties.java": {
+  "missing_classes": [
+   "Llm",
+   "Memory",
+   "Rag"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\main\\java\\com\\njydsz\\agent\\server\\rag\\DocumentIngestionService.java": {
+  "missing_classes": [
+   "VectorStoreStats"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\main\\java\\com\\njydsz\\agent\\server\\rag\\RagService.java": {
+  "missing_classes": [
+   "Citation"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\test\\java\\com\\njydsz\\agent\\server\\agent\\DagDslParserTest.java": {
+  "missing_classes": [
+   "ParseValid",
+   "ParseInvalid",
+   "SafeConstructorSecurity"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-agent\\ydsz-agent-server\\src\\test\\java\\com\\njydsz\\agent\\server\\agent\\DagOrchestrationExecutorTest.java": {
+  "missing_classes": [
+   "ParallelExecution",
+   "SequentialExecution",
+   "FailurePropagation",
+   "CycleDetection"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-app\\src\\test\\java\\com\\njydsz\\common\\app\\annotation\\AppApiTest.java": {
+  "missing_classes": [
+   "SampleAppController"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-base\\src\\main\\java\\com\\njydsz\\common\\base\\exporter\\DefaultDocExporter.java": {
+  "missing_classes": [
+   "OnExportEnabled",
+   "OnExporterType"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-base\\src\\main\\java\\com\\njydsz\\common\\base\\exporter\\MarkdownDocExporter.java": {
+  "missing_classes": [
+   "OnExportEnabled",
+   "OnExporterType"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-base\\src\\main\\java\\com\\njydsz\\common\\base\\interceptor\\BaseRequestLogInterceptor.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    142,
+    "getClientIp"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-cache\\src\\main\\java\\com\\njydsz\\common\\cache\\internal\\concurrent\\StripedConcurrentCache.java": {
+  "missing_classes": [
+   "Segment",
+   "Node"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-cache\\src\\main\\java\\com\\njydsz\\common\\cache\\internal\\reference\\WeakKeyCache.java": {
+  "missing_classes": [
+   "WeakReferenceKey"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-cache\\src\\main\\java\\com\\njydsz\\common\\cache\\internal\\tinylfu\\WindowTinyLFUCache.java": {
+  "missing_classes": [
+   "Node"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-cache\\src\\main\\java\\com\\njydsz\\common\\cache\\support\\CacheKeyGenerator.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    208,
+    "build"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-domain\\src\\main\\java\\com\\njydsz\\common\\domain\\event\\DomainEvent.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    420,
+    "build"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-event\\src\\main\\java\\com\\njydsz\\common\\event\\service\\OutboxService.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    162,
+    "appendToOutbox"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\main\\java\\com\\njydsz\\common\\exception\\config\\I18nConfiguration.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    267,
+    "getValidator"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\main\\java\\com\\njydsz\\common\\exception\\config\\I18nProperties.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    103,
+    "getSupportedLocales"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\main\\java\\com\\njydsz\\common\\exception\\core\\ExceptionInfo.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    314,
+    "build"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\main\\java\\com\\njydsz\\common\\exception\\custom\\AbstractYdszException.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    257,
+    "getParams"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\main\\java\\com\\njydsz\\common\\exception\\custom\\BusinessException.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    276,
+    "of"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\main\\java\\com\\njydsz\\common\\exception\\custom\\SysException.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    227,
+    "builder"
+   ],
+   [
+    231,
+    "of"
+   ],
+   [
+    235,
+    "of"
+   ],
+   [
+    239,
+    "of"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\test\\java\\com\\njydsz\\common\\exception\\AbstractYdszExceptionTest.java": {
+  "missing_classes": [
+   "ConstructionTest",
+   "MessageResolutionTest",
+   "ConcurrencyTest",
+   "DataChainTest",
+   "BuilderTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-exception\\src\\test\\java\\com\\njydsz\\common\\exception\\ProblemDetailAndErrorCodeTest.java": {
+  "missing_classes": [
+   "ProblemDetailTest",
+   "UnifiedExceptionCodeTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-feign\\src\\main\\java\\com\\njydsz\\common\\feign\\circuitbreaker\\FeignCircuitBreakerStrategy.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    143,
+    "getTotalCalls"
+   ],
+   [
+    165,
+    "getSuccessfulCalls"
+   ],
+   [
+    184,
+    "getFailedCalls"
+   ],
+   [
+    203,
+    "getSlowCalls"
+   ],
+   [
+    222,
+    "getFailureRate"
+   ],
+   [
+    235,
+    "getSlowCallRate"
+   ],
+   [
+    246,
+    "getAverageDuration"
+   ],
+   [
+    257,
+    "getMaxDuration"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-feign\\src\\main\\java\\com\\njydsz\\common\\feign\\config\\FeignProperties.java": {
+  "missing_classes": [
+   "Backoff"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-feign\\src\\main\\java\\com\\njydsz\\common\\feign\\trace\\FeignTraceHandler.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    203,
+    "getElapsedTime"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-jdbc\\src\\main\\java\\com\\njydsz\\common\\jdbc\\interceptor\\SqlFirewallInnerInterceptor.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    277,
+    "setAllowTables"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-lock\\src\\main\\java\\com\\njydsz\\common\\lock\\config\\LockProperties.java": {
+  "missing_classes": [
+   "ThreadPool"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-lock\\src\\main\\java\\com\\njydsz\\common\\lock\\scheduler\\LockWatchDog.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    345,
+    "isWatching"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-netty\\src\\main\\java\\com\\njydsz\\common\\netty\\config\\NettyProperties.java": {
+  "missing_classes": [
+   "Idle",
+   "Ssl",
+   "TrafficShaping",
+   "Reconnect"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-notify\\src\\main\\java\\com\\njydsz\\common\\notify\\core\\NotifyCircuitBreaker.java": {
+  "missing_classes": [
+   "State"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-notify\\src\\main\\java\\com\\njydsz\\common\\notify\\core\\PersistentNotifyRetryQueue.java": {
+  "missing_classes": [
+   "RetryEntry"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-notify\\src\\main\\java\\com\\njydsz\\common\\notify\\enums\\NotifyChannel.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    30,
+    "fromCode"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-notify\\src\\main\\java\\com\\njydsz\\common\\notify\\preference\\NotifyPreference.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    151,
+    "getEnabledChannels"
+   ],
+   [
+    154,
+    "setEnabledChannels"
+   ],
+   [
+    157,
+    "getEnabledTypes"
+   ],
+   [
+    160,
+    "setEnabledTypes"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-redis\\src\\main\\java\\com\\njydsz\\common\\redis\\service\\ops\\RedisPubSubOps.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    259,
+    "getBody"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-redis\\src\\main\\java\\com\\njydsz\\common\\redis\\service\\ops\\RedisStreamOps.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    570,
+    "getBody"
+   ],
+   [
+    574,
+    "getBodyField"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-redis\\src\\main\\java\\com\\njydsz\\common\\redis\\service\\ops\\RedisStringOps.java": {
+  "missing_classes": [
+   "NullPlaceholder"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\analytics\\SearchAnalyticsService.java": {
+  "missing_classes": [
+   "HotKeyword",
+   "SearchAnalyticsSummary"
+  ],
+  "missing_methods": [
+   [
+    112,
+    "getHotKeywords"
+   ],
+   [
+    135,
+    "getZeroResultKeywords"
+   ],
+   [
+    158,
+    "getDailySearches"
+   ],
+   [
+    192,
+    "getSummary"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\config\\SearchProperties.java": {
+  "missing_classes": [
+   "IndexConfig",
+   "DegradeConfig",
+   "CircuitBreakerConfig",
+   "SynonymConfig",
+   "PinyinConfig",
+   "EsConfig",
+   "RedisConfig",
+   "SolrConfig",
+   "OpenSearchConfig"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\engine\\pg\\PgSearchStrategy.java": {
+  "missing_classes": [
+   "SearchHitRowMapper"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\service\\IndexRebuildService.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    190,
+    "getProgressPercent"
+   ],
+   [
+    195,
+    "getRegisteredTypes"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\service\\IndexSyncService.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    209,
+    "getDeadLetterQueue"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\service\\SearchCacheService.java": {
+  "missing_classes": [
+   "CacheEntry"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\service\\SearchTextProcessor.java": {
+  "missing_classes": [
+   "TrieNode"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\service\\UnifiedSearchService.java": {
+  "missing_classes": [
+   "CircuitState"
+  ],
+  "missing_methods": [
+   [
+    240,
+    "getCacheSize"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-search\\src\\main\\java\\com\\njydsz\\common\\search\\sync\\IndexConsistencyChecker.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    166,
+    "isConsistent"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-seata\\src\\main\\java\\com\\njydsz\\common\\seata\\config\\SeataProperties.java": {
+  "missing_classes": [
+   "TccLogStoreType"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-sentry\\src\\main\\java\\com\\njydsz\\common\\sentry\\config\\OtelAutoConfiguration.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    152,
+    "build"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-sentry\\src\\main\\java\\com\\njydsz\\common\\sentry\\config\\SentryProperties.java": {
+  "missing_classes": [
+   "MetricsConfig",
+   "CircuitBreakerConfig",
+   "LoggingConfig",
+   "ElkConfig",
+   "LokiConfig",
+   "DualConfig",
+   "AsyncConfig",
+   "TracingConfig",
+   "OtelConfig",
+   "BatchConfig",
+   "TailSamplingConfig",
+   "ErrorEventConfig",
+   "AlertingConfig",
+   "SlaConfig"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-sentry\\src\\main\\java\\com\\njydsz\\common\\sentry\\resilience\\CircuitBreaker.java": {
+  "missing_classes": [
+   "State"
+  ],
+  "missing_methods": [
+   [
+    165,
+    "getState"
+   ],
+   [
+    173,
+    "getFailureCount"
+   ],
+   [
+    177,
+    "getTotalCount"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-sentry\\src\\main\\java\\com\\njydsz\\common\\sentry\\tracing\\otel\\ErrorEventSpanProcessor.java": {
+  "missing_classes": [
+   "Reason"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-sentry\\src\\main\\java\\com\\njydsz\\common\\sentry\\tracing\\otel\\OtelExporterFactory.java": {
+  "missing_classes": [
+   "TlsConfig"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-sentry\\src\\main\\java\\com\\njydsz\\common\\sentry\\tracing\\otel\\YdszSpan.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    103,
+    "setAttribute"
+   ],
+   [
+    108,
+    "setAttribute"
+   ],
+   [
+    113,
+    "setAttribute"
+   ],
+   [
+    118,
+    "setAttribute"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-sentry\\src\\test\\java\\com\\njydsz\\common\\sentry\\alerting\\AlertConvergerTest.java": {
+  "missing_classes": [
+   "CountingPublisher"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-socket\\src\\main\\java\\com\\njydsz\\common\\socket\\config\\WebSocketAutoConfiguration.java": {
+  "missing_classes": [
+   "RetryFlushTask"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-socket\\src\\main\\java\\com\\njydsz\\common\\socket\\config\\WebSocketProperties.java": {
+  "missing_classes": [
+   "Heartbeat",
+   "Cluster",
+   "Offline",
+   "RateLimit",
+   "CircuitBreaker",
+   "Retry",
+   "Ack",
+   "ConnectionLimit",
+   "Compression",
+   "SlowConnection"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-socket\\src\\main\\java\\com\\njydsz\\common\\socket\\resilience\\WebSocketCircuitBreaker.java": {
+  "missing_classes": [
+   "State"
+  ],
+  "missing_methods": [
+   [
+    157,
+    "getState"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-tenant\\src\\main\\java\\com\\njydsz\\common\\tenant\\interceptor\\TenantIsolationInterceptor.java": {
+  "missing_classes": [
+   "TenantFieldValue"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-tenant\\src\\main\\java\\com\\njydsz\\common\\tenant\\metrics\\TenantMetrics.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    132,
+    "getInterceptBlockedCount"
+   ],
+   [
+    136,
+    "getInterceptSkippedCount"
+   ],
+   [
+    140,
+    "getFailClosedCount"
+   ],
+   [
+    144,
+    "getSuperAdminCount"
+   ],
+   [
+    148,
+    "getDatasourceSwitchCount"
+   ],
+   [
+    152,
+    "getActiveContexts"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\main\\java\\com\\njydsz\\common\\util\\bean\\BeanCopyUtils.java": {
+  "missing_classes": [
+   "CopyStrategy"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\main\\java\\com\\njydsz\\common\\util\\exception\\ExceptionUtils.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    321,
+    "throw"
+   ],
+   [
+    412,
+    "throw"
+   ],
+   [
+    484,
+    "run"
+   ],
+   [
+    492,
+    "call"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\main\\java\\com\\njydsz\\common\\util\\ip\\IpAddrUtils.java": {
+  "missing_classes": [
+   "IpType"
+  ],
+  "missing_methods": [
+   [
+    260,
+    "isInRange"
+   ],
+   [
+    284,
+    "isIpv4InRange"
+   ],
+   [
+    295,
+    "isIpv6InRange"
+   ],
+   [
+    470,
+    "getIpType"
+   ],
+   [
+    492,
+    "isDataCenterIp"
+   ],
+   [
+    496,
+    "isProxyIp"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\main\\java\\com\\njydsz\\common\\util\\ip\\IpInfoUtils.java": {
+  "missing_classes": [
+   "IpInfo",
+   "CacheStats"
+  ],
+  "missing_methods": [
+   [
+    265,
+    "getFullAddress"
+   ],
+   [
+    278,
+    "getShortAddress"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\encoding\\EncodingUtilsTest.java": {
+  "missing_classes": [
+   "Base64",
+   "Base32",
+   "Hex",
+   "UrlEncoding"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\hash\\HashUtilsTest.java": {
+  "missing_classes": [
+   "Crc32",
+   "MurmurHash32",
+   "Base62",
+   "Base58",
+   "ConsistentHash"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-util\\src\\test\\java\\com\\njydsz\\common\\util\\security\\AesGcmCryptoTest.java": {
+  "missing_classes": [
+   "KeyValidation",
+   "EncryptDecryptRoundtrip",
+   "TamperDetection"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-common\\ydsz-common-web\\src\\main\\java\\com\\njydsz\\common\\web\\metrics\\WebMetrics.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    127,
+    "getTotalAuthRequests"
+   ],
+   [
+    131,
+    "getTotalAuthFailures"
+   ],
+   [
+    135,
+    "getTotalRateLimitRejected"
+   ],
+   [
+    139,
+    "getTotalSecurityHeadersInjected"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-infra\\src\\main\\java\\com\\njydsz\\literule\\infra\\mapper\\RuleExecutionTraceMapper.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    50,
+    "COUNT"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\main\\java\\com\\njydsz\\literule\\server\\config\\LiteRuleProperties.java": {
+  "missing_classes": [
+   "NacosConfig",
+   "ApolloConfig",
+   "ZookeeperConfig"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\main\\java\\com\\njydsz\\literule\\server\\core\\InMemoryRuleMetrics.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    63,
+    "getTotalEvaluations"
+   ],
+   [
+    64,
+    "getTotalTriggered"
+   ],
+   [
+    65,
+    "getTotalErrors"
+   ],
+   [
+    66,
+    "getTotalElapsedMs"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\main\\java\\com\\njydsz\\literule\\server\\expr\\ExprTraceBuilder.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    45,
+    "of"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\main\\java\\com\\njydsz\\literule\\server\\impl\\ScorecardRule.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    292,
+    "of"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\calc\\CreditScoreEvaluatorTest.java": {
+  "missing_classes": [
+   "NormalCases",
+   "ZeroCases",
+   "NullCases",
+   "OverdueAndBoundaryCases"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\calc\\DualRateProfitCalculatorTest.java": {
+  "missing_classes": [
+   "CalculateCases",
+   "BlendedCases",
+   "MarginAchievedCases"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\DefaultRuleEngineTest.java": {
+  "missing_classes": [
+   "RegisterUnregisterCases",
+   "EvaluateCases",
+   "DryRunCases",
+   "TopResultCases",
+   "StatsCases",
+   "MdcTraceIdCases"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\RuleCircuitBreakerTest.java": {
+  "missing_classes": [
+   "ConstructorCases",
+   "ClosedStateCases",
+   "ClosedToOpenCases",
+   "OpenToHalfOpenCases",
+   "HalfOpenCases",
+   "MultiRuleCases"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\core\\RuleIndexerTest.java": {
+  "missing_classes": [
+   "IndexEnableCases",
+   "IncrementalUpdateCases",
+   "FindCandidatesCases",
+   "InvertedIndexCases",
+   "CompatibilityCases"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\distributed\\ConsistentHashSharderTest.java": {
+  "missing_classes": [
+   "UpdateNodes",
+   "ShardDeterminism",
+   "IsMineCheck",
+   "StaticIsMine",
+   "WeightAndDistribution",
+   "MinimalMigration",
+   "VirtualNodesConfig",
+   "NodeCount"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-literule\\ydsz-literule-server\\src\\test\\java\\com\\njydsz\\literule\\server\\expr\\liteexpr\\ExprLexerTest.java": {
+  "missing_classes": [
+   "NumberLiterals",
+   "StringLiterals",
+   "KeywordsAndIdentifiers",
+   "OperatorsAndDelimiters",
+   "CommentsAndWhitespace",
+   "PositionTracking",
+   "ComplexExpressions"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\main\\java\\com\\njydsz\\message\\server\\consumer\\BatchMessageConsumer.java": {
+  "missing_classes": [
+   "BatchMessageConsumer"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\main\\java\\com\\njydsz\\message\\server\\consumer\\MessageConsumer.java": {
+  "missing_classes": [
+   "MessageConsumer"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\main\\java\\com\\njydsz\\message\\server\\consumer\\MessageDlqConsumer.java": {
+  "missing_classes": [
+   "MessageDlqConsumer"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\domain\\enums\\batch\\AggregateBatchStatusEnumTest.java": {
+  "missing_classes": [
+   "CanTransitToTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\DingTalkChannelTest.java": {
+  "missing_classes": [
+   "AppendSignTest",
+   "ResolveUrlTest",
+   "BuildPayloadTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\FeishuChannelTest.java": {
+  "missing_classes": [
+   "AppendSignTest",
+   "ResolveUrlTest",
+   "BuildPayloadTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\push\\GetuiPushSignerTest.java": {
+  "missing_classes": [
+   "SignTest",
+   "BytesToHexTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\channel\\sms\\AliyunSmsSignerTest.java": {
+  "missing_classes": [
+   "SignTest",
+   "PercentEncodeTest",
+   "BuildCanonicalQueryTest",
+   "BuildQueryTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-server\\src\\test\\java\\com\\njydsz\\message\\server\\consumer\\MessageDlqConsumerTest.java": {
+  "missing_classes": [
+   "IdempotentTest",
+   "UpdateThenInsertTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-message\\ydsz-message-web\\src\\main\\java\\com\\njydsz\\message\\web\\controller\\TemplatePreviewController.java": {
+  "missing_classes": [
+   "PreviewRequest",
+   "RawPreviewRequest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-project\\ydsz-project-server\\src\\main\\java\\com\\njydsz\\project\\server\\config\\ProjectProperties.java": {
+  "missing_classes": [
+   "CacheConfig",
+   "NotifyConfig"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-userinfo\\ydsz-userinfo-server\\src\\test\\java\\com\\njydsz\\userinfo\\server\\service\\impl\\DepartmentServiceImplTest.java": {
+  "missing_classes": [
+   "GetByIdTest",
+   "ListTest",
+   "RemoveByIdTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-workflow\\ydsz-workflow-domain\\src\\main\\java\\com\\njydsz\\workflow\\domain\\dto\\FlowInstanceViewDTO.java": {
+  "missing_classes": [
+   "FlowTaskViewDTO"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-workflow\\ydsz-workflow-domain\\src\\main\\java\\com\\njydsz\\workflow\\domain\\enums\\FlowNodeType.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    97,
+    "of"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-workflow\\ydsz-workflow-server\\src\\main\\java\\com\\njydsz\\workflow\\server\\config\\FlowProperties.java": {
+  "missing_classes": [
+   "Retry",
+   "DingTalk",
+   "Feishu",
+   "WeCom"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-workflow\\ydsz-workflow-server\\src\\main\\java\\com\\njydsz\\workflow\\server\\form\\FlowFormFieldType.java": {
+  "missing_classes": [],
+  "missing_methods": [
+   [
+    64,
+    "of"
+   ]
+  ],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-workflow\\ydsz-workflow-server\\src\\test\\java\\com\\njydsz\\workflow\\server\\thirdparty\\FeishuSignatureUtilTest.java": {
+  "missing_classes": [
+   "VerifySignatureTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ },
+ "ydsz-backend\\ydsz-workflow\\ydsz-workflow-server\\src\\test\\java\\com\\njydsz\\workflow\\server\\thirdparty\\WeComSignatureUtilTest.java": {
+  "missing_classes": [
+   "VerifySignatureTest"
+  ],
+  "missing_methods": [],
+  "misplace": []
+ }
+}

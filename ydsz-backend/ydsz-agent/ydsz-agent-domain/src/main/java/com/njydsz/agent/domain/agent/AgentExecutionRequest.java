@@ -56,10 +56,24 @@ public final class AgentExecutionRequest {
     public int getMaxIterations() { return maxIterations; }
     public List<String> getEnabledTools() { return enabledTools; }
 
+    /**
+     * 创建 {@link AgentExecutionRequest} 的构建器入口。
+     *
+     * <p>仅 {@link Builder#userInput(String)} 为必填，其余字段均有安全默认值，
+     * 未显式设置时不会因空指针中断构造。
+     *
+     * @return 新的 {@link Builder} 实例，方法链式调用后通过 {@link Builder#build()} 产出请求对象
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * {@link AgentExecutionRequest} 的构建器。
+     *
+     * <p>所有 setter 均返回自身以支持链式调用；{@link #build()} 时会以「构造兜底 + 不可变拷贝」
+     * 的方式固化集合与默认值，确保产出的请求实例不可变、可安全跨线程传递。
+     */
     public static final class Builder {
         private String conversationId;
         private String userInput;
@@ -81,6 +95,15 @@ public final class AgentExecutionRequest {
         /** 设置本次可调用的工具白名单；传 {@code null} 或空列表表示不限制，放开 Agent 已注册的全部工具。 */
         public Builder enabledTools(List<String> enabledTools) { this.enabledTools = enabledTools; return this; }
 
+        /**
+         * 依据当前构建状态产出 {@link AgentExecutionRequest}。
+         *
+         * <p>集合字段（variables / enabledTools）在此处进行防御性拷贝，后续修改 Builder
+         * 持有的引用不会影响已构建的请求对象。
+         *
+         * @return 不可变的 {@link AgentExecutionRequest} 实例
+         * @throws NullPointerException 当 {@link #userInput(String)} 未设置时抛出
+         */
         public AgentExecutionRequest build() {
             return new AgentExecutionRequest(conversationId, userInput, systemPrompt,
                     variables, maxIterations, enabledTools);

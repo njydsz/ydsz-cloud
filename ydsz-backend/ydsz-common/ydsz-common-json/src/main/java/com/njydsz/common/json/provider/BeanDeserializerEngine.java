@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.json.annotation.JsonBuilder;
+import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.asm.AsmDeserializer;
 import com.njydsz.common.json.bytecode.ZeroCopyDeserializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
@@ -104,13 +105,13 @@ final class BeanDeserializerEngine {
             }
         }
 
-        // BeanReader 路径：仅对简单 Bean 使用（无嵌套对象）
+        // BeanReader 路径：对所有非容器、非接口、非数组的 Bean 类型使用
+        // BeanReader 已支持 short/byte/char/Date/LocalDateTime/LocalDate/枚举/嵌套 Bean/Collection/Map
         if (trimmed.startsWith("{") &&
             !clazz.isAssignableFrom(List.class) &&
             !clazz.isAssignableFrom(Map.class) &&
             !clazz.isArray() &&
-            !clazz.isInterface() &&
-            isSimpleBean(clazz)) {
+            !clazz.isInterface()) {
             try {
                 JSONReader reader =
                     new JSONReader(json);
@@ -155,7 +156,7 @@ final class BeanDeserializerEngine {
                     return clazz.cast(JsonParserUtil.parseObject(json));
                 }
             } catch (ClassCastException fallbackEx) {
-                throw new JsonDeserializationException(
+                throw new JsonException(
                     "Failed to deserialize " + clazz.getName() + ": " + e.getMessage(), e);
             }
         }

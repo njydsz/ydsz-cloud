@@ -168,6 +168,14 @@ public class PermissionCheckResult {
         return checkPassed;
     }
 
+    /**
+     * 判断当前用户是否拥有所需权限。
+     *
+     * <p>与 {@link #isCheckPassed()} 的区分：本标志表示权限预检的最终结论，
+     * 仅当 {@link #isCheckPassed()} 与本方法均返回 {@code true} 时请求才可放行。
+     *
+     * @return {@code true} 表示拥有所需权限，否则为 {@code false}
+     */
     public boolean hasPermission() {
         return hasPermission;
     }

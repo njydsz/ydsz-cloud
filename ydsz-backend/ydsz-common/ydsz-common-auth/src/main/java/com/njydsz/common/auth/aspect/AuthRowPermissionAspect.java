@@ -302,6 +302,12 @@ public class AuthRowPermissionAspect {
                 .collect(Collectors.joining(","));
     }
 
+    /**
+     * 行级数据权限注解的缓存解析结果。
+     *
+     * <p>将 {@link AuthRowPermission} 在类/方法上的配置合并解析为一份可复用的运行时模型，
+     * 避免每次请求重复反射解析注解；{@link #NULL_MARKER} 作为空值标记缓存"无注解"的方法。
+     */
     private static class ResolvedRowPermission {
         private static final ResolvedRowPermission NULL_MARKER = new ResolvedRowPermission();
 

@@ -57,6 +57,16 @@ public class ParsedAuthHeaders {
         this.editableColumns = builder.editableColumns;
     }
 
+    /**
+     * 从 HTTP 请求头解析出全部认证相关字段。
+     *
+     * <p>统一读取 {@code X-*} 认证请求头并委托 {@link AbstractAuthHandler} 解析 CSV 集合类字段；
+     * 数据范围编码解析失败时返回 {@code null} 而非抛出异常，容忍非法值。结果对象字段全部不可变。
+     *
+     * @param request 当前 HTTP 请求，不可为 {@code null}
+     * @param handler 认证请求头解析处理器，提供 CSV/规则串解析能力
+     * @return 解析完成的认证请求头快照，永不为 {@code null}
+     */
     public static ParsedAuthHeaders parse(HttpServletRequest request, AbstractAuthHandler handler) {
         Builder b = new Builder();
         b.language = request.getHeader(HeaderConstants.X_USER_LANGUAGE);
@@ -105,6 +115,11 @@ public class ParsedAuthHeaders {
     public Map<String, Set<String>> getVisibleColumns() { return visibleColumns; }
     public Map<String, Set<String>> getEditableColumns() { return editableColumns; }
 
+    /**
+     * 认证请求头解析结果构建器。
+     *
+     * <p>由 {@link #parse} 内部使用，承载各请求头的原始解析值，构造完成后组装为不可变结果对象。
+     */
     private static class Builder {
         String language, distinctId, authToken, userId, tenantId, requestSource;
         DataScopeType dataScope;

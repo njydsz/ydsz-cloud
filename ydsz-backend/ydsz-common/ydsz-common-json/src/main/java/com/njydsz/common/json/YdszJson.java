@@ -19,7 +19,6 @@ import com.njydsz.common.json.schema.JsonSchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
-import com.njydsz.common.json.stream.JsonGenerator;
 import com.njydsz.common.json.tree.*;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.json.type.TypeFactory;
@@ -685,31 +684,6 @@ public class YdszJson {
     }
 
     
-    // ==================== Streaming API ====================
-
-    /**
-     * 创建流式生成器
-     *
-     * @param writer 输出写入器
-     * @return JsonGenerator 实例
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static JsonGenerator createGenerator(Writer writer) {
-        return JsonGenerator.of(writer);
-    }
-
-    /**
-     * 创建流式生成器（格式化输出）
-     *
-     * @param writer 输出写入器
-     * @param pretty 是否格式化输出
-     * @return JsonGenerator 实例
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static JsonGenerator createGenerator(Writer writer, boolean pretty) {
-        return JsonGenerator.of(writer, pretty);
-    }
-
     // ==================== JSON Merge Patch (RFC 7396) ====================
 
     /**

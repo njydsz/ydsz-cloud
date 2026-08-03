@@ -29,14 +29,36 @@ public final class GuardrailResult implements Serializable {
         this.sanitizedInput = sanitizedInput;
     }
 
+    /**
+     * 创建「通过」检查结果。
+     *
+     * @param input 原始输入内容（未脱敏）
+     * @return 通过的护栏检查结果
+     */
     public static GuardrailResult pass(String input) {
         return new GuardrailResult(true, null, input);
     }
 
+    /**
+     * 创建「通过」检查结果（含脱敏内容）。
+     *
+     * <p>当输入内容包含敏感信息（如手机号、身份证）时，护栏会脱敏后放行，
+     * 业务方可使用 {@link #getSanitizedInput()} 获取脱敏后的安全内容。</p>
+     *
+     * @param input           原始输入内容
+     * @param sanitizedInput  脱敏后的输入内容
+     * @return 通过的护栏检查结果
+     */
     public static GuardrailResult pass(String input, String sanitizedInput) {
         return new GuardrailResult(true, null, sanitizedInput);
     }
 
+    /**
+     * 创建「拒绝」检查结果。
+     *
+     * @param reason 拒绝原因（将透传给上层用户/审计日志）
+     * @return 未通过的护栏检查结果
+     */
     public static GuardrailResult reject(String reason) {
         return new GuardrailResult(false, reason, null);
     }

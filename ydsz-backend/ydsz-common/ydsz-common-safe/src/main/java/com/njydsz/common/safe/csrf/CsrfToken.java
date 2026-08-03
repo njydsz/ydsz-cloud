@@ -40,6 +40,13 @@ public class CsrfToken {
         return expiresAt;
     }
 
+    /**
+     * 判断令牌是否已过期。
+     *
+     * <p>以当前系统时间为基准与过期时间比较；令牌过期后应立即判为无效并阻止请求放行。
+     *
+     * @return {@code true} 表示已过期，否则为 {@code false}
+     */
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
     }

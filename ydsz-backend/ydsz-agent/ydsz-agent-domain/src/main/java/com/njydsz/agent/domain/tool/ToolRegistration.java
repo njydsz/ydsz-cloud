@@ -28,17 +28,31 @@ public final class ToolRegistration {
     public ToolDefinition getDefinition() { return definition; }
     public ToolExecutor getExecutor() { return executor; }
 
+    /**
+     * 获取工具名称（委托给工具定义）。
+     *
+     * @return 工具名称字符串
+     */
     public String getName() {
         return definition.getName();
     }
 
     /**
-     * 快速创建 Builder
+     * 快速创建 Builder。
+     *
+     * @return Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * ToolRegistration 构建器。
+     *
+     * <p>简化工具注册流程：名称 + 描述 + 入参声明 + 执行器，
+     * 内部自动组装 {@link ToolDefinition}。受简化约定限制，
+     * 入参类型固定为 string，复杂类型请直接构造 {@link ToolDefinition}。</p>
+     */
     public static class Builder {
         private String name;
         private String description;
@@ -74,6 +88,11 @@ public final class ToolRegistration {
         /** 绑定实际执行逻辑；执行器会被 Agent 在工具调用线程上直接调用，实现需自行保证线程安全与超时控制。 */
         public Builder executor(ToolExecutor executor) { this.executor = executor; return this; }
 
+        /**
+         * 组装并构建 ToolRegistration 实例。
+         *
+         * @return 绑定定义与执行器的注册条目
+         */
         public ToolRegistration build() {
             Map<String, Object> schema = new HashMap<>();
             schema.put("type", "object");

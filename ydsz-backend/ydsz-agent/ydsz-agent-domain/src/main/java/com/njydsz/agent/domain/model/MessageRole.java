@@ -30,6 +30,16 @@ public enum MessageRole {
         return apiValue;
     }
 
+    /**
+     * 从 API 字符串解析角色枚举。
+     *
+     * <p>大小写不敏感匹配（如 {@code "System"}、{@code "SYSTEM"} 均解析为
+     * {@link #SYSTEM}）；无法识别的字符串兜底返回 {@link #USER}，
+     * 避免非法/新增角色值导致整条解析链路失败。</p>
+     *
+     * @param value API 返回的角色字符串；{@code null} 时同样兜底为 USER
+     * @return 对应的角色枚举，未知值返回 {@link #USER}
+     */
     public static MessageRole fromApiValue(String value) {
         for (MessageRole role : values()) {
             if (role.apiValue.equalsIgnoreCase(value)) {

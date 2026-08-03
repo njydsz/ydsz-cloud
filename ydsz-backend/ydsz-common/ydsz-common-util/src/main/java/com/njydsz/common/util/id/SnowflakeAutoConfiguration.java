@@ -34,8 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.util.snowflake", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(SnowflakeProperties.class)
-public class SnowflakeAutoConfiguration
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SnowflakeAutoConfiguration.class); {
+public class SnowflakeAutoConfiguration {
 
     private static final long MAX_WORKER_ID = SnowflakeUtils.getMaxWorkerId();
     private static final long MAX_DATACENTER_ID = SnowflakeUtils.getMaxDatacenterId();
@@ -170,9 +169,9 @@ public class SnowflakeAutoConfiguration
                 if (id >= 0 && id <= MAX_DATACENTER_ID) {
                     return id;
                 }
-            }             } catch (NumberFormatException ignored) {
-            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            } }
+            } catch (NumberFormatException ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
         }
 
         String dcProp = environment.getProperty("ydsz.snowflake.datacenterId");
@@ -182,9 +181,9 @@ public class SnowflakeAutoConfiguration
                 if (id >= 0 && id <= MAX_DATACENTER_ID) {
                     return id;
                 }
-            }             } catch (NumberFormatException ignored) {
-            }     log.debug("Caught exception (ignored): {}", ignored.getMessage());
-            } }
+            } catch (NumberFormatException ignored) {
+                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            }
         }
 
         return resolveAutoDatacenterId(environment);

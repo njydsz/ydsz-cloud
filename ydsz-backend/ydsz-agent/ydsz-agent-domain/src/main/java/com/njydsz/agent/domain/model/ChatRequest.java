@@ -61,20 +61,43 @@ public final class ChatRequest implements Serializable {
     public List<ToolDefinition> getTools() { return tools; }
     public String getToolChoice() { return toolChoice; }
 
+    /**
+     * 复制请求并替换消息列表（不可变风格）。
+     *
+     * @param newMessages 新的消息序列（须按时序排列）
+     * @return 携带新消息的新 ChatRequest 实例
+     */
     public ChatRequest withMessages(List<ChatMessage> newMessages) {
         return new ChatRequest(model, newMessages, temperature, maxTokens, topP, stop,
                 stream, tools, toolChoice);
     }
 
+    /**
+     * 复制请求并切换流式/非流式模式。
+     *
+     * @param newStream 是否流式输出
+     * @return 携带新模式的新 ChatRequest 实例
+     */
     public ChatRequest withStream(boolean newStream) {
         return new ChatRequest(model, messages, temperature, maxTokens, topP, stop,
                 newStream, tools, toolChoice);
     }
 
+    /**
+     * 创建 Builder 以构建 ChatRequest。
+     *
+     * @return Builder 实例
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * ChatRequest 构建器。
+     *
+     * <p>提供链式配置入口，{@code model} 与 {@code messages} 为必填项，
+     * 其余参数均有合理默认值，适用于绝大多数对话场景。</p>
+     */
     public static final class Builder {
         private String model;
         private List<ChatMessage> messages;
@@ -105,6 +128,12 @@ public final class ChatRequest implements Serializable {
         /** 设置工具选择策略，取值 {@code auto} / {@code none} / 具体工具名；{@code null} 时由 Provider 默认策略决定。 */
         public Builder toolChoice(String toolChoice) { this.toolChoice = toolChoice; return this; }
 
+        /**
+         * 校验并构建 ChatRequest 实例。
+         *
+         * @return 不可变的 ChatRequest 实例
+         * @throws NullPointerException 当 {@code model} 或 {@code messages} 未设置时抛出
+         */
         public ChatRequest build() {
             return new ChatRequest(model, messages, temperature, maxTokens, topP, stop,
                     stream, tools, toolChoice);

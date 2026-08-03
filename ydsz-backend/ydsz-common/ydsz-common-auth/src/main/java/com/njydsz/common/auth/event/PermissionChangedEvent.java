@@ -75,22 +75,54 @@ public class PermissionChangedEvent extends ApplicationEvent implements Serializ
         this.timestamp = System.currentTimeMillis();
     }
 
+    /**
+     * 创建"角色权限变更"事件。
+     *
+     * @param roleId 角色 ID，将写入 {@link #getRoleCode()} 作为缓存失效的键
+     * @return 变更类型为 {@link PermissionChangeType#ROLE_PERMISSION_CHANGED} 的事件实例
+     */
     public static PermissionChangedEvent rolePermissionChanged(String roleId) {
         return new PermissionChangedEvent(roleId, PermissionChangeType.ROLE_PERMISSION_CHANGED, null, null);
     }
 
+    /**
+     * 创建"用户角色变更"事件。
+     *
+     * @param userId 用户 ID，将写入 {@link #getRoleCode()} 作为缓存失效的键
+     * @return 变更类型为 {@link PermissionChangeType#USER_ROLE_CHANGED} 的事件实例
+     */
     public static PermissionChangedEvent userRoleChanged(String userId) {
         return new PermissionChangedEvent(userId, PermissionChangeType.USER_ROLE_CHANGED, null, null);
     }
 
+    /**
+     * 创建"数据范围变更"事件。
+     *
+     * @param scopeId 数据范围 ID，将写入 {@link #getRoleCode()} 作为缓存失效的键
+     * @return 变更类型为 {@link PermissionChangeType#DATA_SCOPE_CHANGED} 的事件实例
+     */
     public static PermissionChangedEvent dataScopeChanged(String scopeId) {
         return new PermissionChangedEvent(scopeId, PermissionChangeType.DATA_SCOPE_CHANGED, null, null);
     }
 
+    /**
+     * 创建"菜单变更"事件。
+     *
+     * <p>影响全部菜单缓存，角色编码固定为 {@code "ALL"}。
+     *
+     * @return 变更类型为 {@link PermissionChangeType#MENU_CHANGED} 的事件实例
+     */
     public static PermissionChangedEvent menuChanged() {
         return new PermissionChangedEvent("ALL", PermissionChangeType.MENU_CHANGED, null, null);
     }
 
+    /**
+     * 创建"全部权限变更"事件。
+     *
+     * <p>用于通知所有节点清空全部权限缓存，角色编码固定为 {@code "ALL"}。
+     *
+     * @return 变更类型为 {@link PermissionChangeType#ALL} 的事件实例
+     */
     public static PermissionChangedEvent allChanged() {
         return new PermissionChangedEvent("ALL", PermissionChangeType.ALL, null, null);
     }

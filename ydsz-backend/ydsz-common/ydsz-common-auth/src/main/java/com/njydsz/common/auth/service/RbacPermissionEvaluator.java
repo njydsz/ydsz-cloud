@@ -268,6 +268,15 @@ public class RbacPermissionEvaluator {
         }
     }
 
+    /**
+     * 设置缓存 Key 生成策略。
+     *
+     * <p>用于自定义权限缓存键的拼装规则（如按租户/数据源拆分缓存），
+     * 需在首次查询缓存前注入，运行期间替换会影响后续所有缓存读写。
+     *
+     * @param cacheKeyStrategy 缓存 Key 生成策略，不可为 {@code null}
+     * @throws NullPointerException 当 {@code cacheKeyStrategy} 为 {@code null} 时抛出
+     */
     public void setCacheKeyStrategy(CacheKeyStrategy cacheKeyStrategy) {
         Objects.requireNonNull(cacheKeyStrategy, "cacheKeyStrategy cannot be null");
         this.cacheKeyStrategy = cacheKeyStrategy;

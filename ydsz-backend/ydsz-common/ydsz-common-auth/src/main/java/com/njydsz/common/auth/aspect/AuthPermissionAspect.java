@@ -150,9 +150,21 @@ public class AuthPermissionAspect {
         return joinPoint.proceed();
     }
 
+    /**
+     * 菜单/按钮权限注解的缓存条目。
+     *
+     * <p>同时持有类级与方法级 {@link AuthMenuPermission}，避免每次请求重复反射解析注解；
+     * 两者可同时为 {@code null}，表示方法及其所在类上均未标注注解。
+     */
     private record CachedMenuAnnotation(AuthMenuPermission classAnnotation, AuthMenuPermission methodAnnotation) {
     }
 
+    /**
+     * 接口权限注解的缓存条目。
+     *
+     * <p>同时持有类级与方法级 {@link AuthApiPermission}，避免每次请求重复反射解析注解；
+     * 两者可同时为 {@code null}，表示方法及其所在类上均未标注注解。
+     */
     private record CachedApiAnnotation(AuthApiPermission classAnnotation, AuthApiPermission methodAnnotation) {
     }
 }
