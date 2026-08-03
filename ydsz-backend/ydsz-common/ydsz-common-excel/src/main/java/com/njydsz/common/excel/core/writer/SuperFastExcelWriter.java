@@ -791,6 +791,12 @@ public class SuperFastExcelWriter {
         }
     }
 
+    /**
+     * 单列访问元数据，绑定反射字段、表头文本、ASM 访问器与日期格式。
+     *
+     * <p>在 {@link #analyzeClass(Class)} 阶段构建；ASM 访问器生成失败时
+     * {@code getter} 为 {@code null}，写入阶段回退为直接反射访问 {@code field}。
+     */
     private static class FieldAccessorInfo {
         Field field;
         String headerName;
@@ -853,6 +859,13 @@ public class SuperFastExcelWriter {
         return rowBufferPos;
     }
 
+    /**
+     * 极速共享字符串表（SST）。
+     *
+     * <p>内部采用「数组 + HashMap」双结构：数组按插入顺序保存字符串以顺序生成 XML，
+     * HashMap 建立去重映射以复用索引、压缩文件体积。超过 50 字符的长字符串不走此表。
+     * 实例非线程安全，仅用于单线程的写入流程。
+     */
     private static class UltraFastSharedStrings {
         /** 字符串数组 */
         private String[] strings = new String[4096];

@@ -456,9 +456,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         Map<String, Object> context = new HashMap<>();
         // 1. 从 contextJson 获取节点结果
         Map<String, Object> dagContext = getDagContext(dagInstanceId);
-        for (String key : dagContext.keySet()) {
-            context.put(key, dagContext.get(key));
-        }
+        context.putAll(dagContext);
         // 2. 补充节点状态（status 字段）
         List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
         for (JobDagNodeInstance node : nodes) {
@@ -467,10 +465,12 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             }
             // 若 contextJson 中已有该 jobKey 的结果，补充 status；否则添加完整对象
             Object existing = context.get(node.getJobKey());
-            if (existing instanceof ObjectNode jo) {
+            if (existing instanceof Map<?, ?> map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> jo = (Map<String, Object>) map;
                 jo.put("status", node.getNodeStatus());
             } else {
-                ObjectNode jo = new ObjectNode();
+                Map<String, Object> jo = new LinkedHashMap<>();
                 jo.put("status", node.getNodeStatus());
                 jo.put("result", node.getResultJson());
                 context.put(node.getJobKey(), jo);
@@ -1127,8 +1127,11 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     public Map<String, Object> getDagContext(String dagInstanceId) {
         JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
-            return new ObjectNode();
+            return new LinkedHashMap<>();
         }
-        return parseContextJson(instance.getContextJson());
+        ObjectNode parsed = parseContextJson(instance.getContextJson());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = (Map<String, Object>) parsed.asValue();
+        return result;
     }
 }

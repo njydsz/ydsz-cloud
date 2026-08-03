@@ -671,7 +671,9 @@ public class JsonMapper {
      * @param <T>   类型参数
      * @return 绑定型读取器
      * @since 1.0.0
+     * @deprecated {@link JsonReader} 绑定型 API 已标记移除，请使用 {@link #fromJson(String, Class)} 替代。
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public <T> JsonReader<T> readerFor(Class<T> clazz) {
         return new JsonReader<>(this, clazz);
     }
@@ -686,7 +688,9 @@ public class JsonMapper {
      * @param <T>   类型参数
      * @return 绑定型写入器
      * @since 1.0.0
+     * @deprecated {@link JsonWriter} 绑定型 API 已标记移除，请使用 {@link #toJson(Object)} 替代。
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public <T> JsonWriter<T> writerFor(Class<T> clazz) {
         return new JsonWriter<>(this, clazz);
     }

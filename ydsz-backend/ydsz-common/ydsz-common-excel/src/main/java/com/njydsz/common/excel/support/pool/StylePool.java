@@ -184,10 +184,25 @@ public class StylePool {
         fontCache.clear();
     }
 
+    /**
+     * 返回当前样式缓存条目数。
+     *
+     * <p>用于监控缓存规模；超过容量上限时 LRU 自动淘汰最久未用的样式，
+     * 因此该值不会超过构造时指定的最大容量。
+     *
+     * @return 样式缓存条目数，恒大于等于 0
+     */
     public int getStyleCacheSize() {
         return styleCache.size();
     }
 
+    /**
+     * 返回当前字体缓存条目数。
+     *
+     * <p>用于监控缓存规模；超过容量上限时 LRU 自动淘汰最久未用的字体。
+     *
+     * @return 字体缓存条目数，恒大于等于 0
+     */
     public int getFontCacheSize() {
         return fontCache.size();
     }

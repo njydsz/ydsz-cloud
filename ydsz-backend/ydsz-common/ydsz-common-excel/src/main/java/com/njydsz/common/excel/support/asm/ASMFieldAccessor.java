@@ -75,6 +75,12 @@ public class ASMFieldAccessor {
 
     private static final GeneratedClassLoader CLASS_LOADER = new GeneratedClassLoader(ASMFieldAccessor.class.getClassLoader());
 
+    /**
+     * 自定义类加载器，用于加载 ASM 动态生成的访问器字节码。
+     *
+     * <p>将生成字节码的类定义委托到父加载器的应用类加载域，使生成的访问器类
+     * 能够直接读写目标类的字段（含包级私有字段的跨类访问场景）。
+     */
     private static class GeneratedClassLoader extends ClassLoader {
         GeneratedClassLoader(ClassLoader parent) {
             super(parent);

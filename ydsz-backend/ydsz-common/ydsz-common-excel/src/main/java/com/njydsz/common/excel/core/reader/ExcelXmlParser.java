@@ -573,10 +573,23 @@ public class ExcelXmlParser
         return cells;
     }
 
+    /**
+     * 单个单元格的解析结果。
+     *
+     * <p>仅承载有值的单元格（无值单元格不会出现在 {@link #parseCells} 的返回列表中），
+     * 因此调用方不能依赖返回列表下标的连续性，必须通过 {@link #row} / {@link #col} 定位。
+     *
+     * @author ydsz-team
+     * @since 1.0.0
+     */
     public static class ParsedCell {
+        /** 行号（1-based） */
         public int row;
+        /** 列号（0-based） */
         public int col;
+        /** 单元格值字符串；数值、布尔、字符串、公式结果统一按文本返回 */
         public String value;
+        /** 单元格类型（s/n/b/e/inlineStr/str）；未识别时可能为 {@code null} */
         public String type;
 
         @Override

@@ -40,10 +40,28 @@ public class ClassMetadataCache {
         return INSTANCE;
     }
 
+    /**
+     * 获取类的读取元数据（缓存优先）。
+     *
+     * <p>首次访问时基于 {@code @ExcelProperty}/{@code @ExcelIgnore} 注解解析构建并写入
+     * 读取缓存，后续直接返回缓存实例。读取与写入元数据分别缓存、互不干扰。
+     *
+     * @param clazz 目标类，不可为 {@code null}
+     * @return 读取元数据，永不为 {@code null}
+     */
     public ClassMetadata getReadMetadata(Class<?> clazz) {
         return readCache.computeIfAbsent(clazz, this::buildReadMetadata);
     }
 
+    /**
+     * 获取类的写入元数据（缓存优先）。
+     *
+     * <p>与 {@link #getReadMetadata(Class)} 类似，但额外解析 {@code width} 等仅写入阶段
+     * 需要的属性。
+     *
+     * @param clazz 目标类，不可为 {@code null}
+     * @return 写入元数据，永不为 {@code null}
+     */
     public ClassMetadata getWriteMetadata(Class<?> clazz) {
         return writeCache.computeIfAbsent(clazz, this::buildWriteMetadata);
     }
@@ -156,6 +174,14 @@ public class ClassMetadataCache {
         writeCache.remove(clazz);
     }
 
+    /**
+     * 统计当前缓存的类元数据总条目数。
+     *
+     * <p>为读取与写入两类缓存大小的总和，用于监控与调优；可在缓存自然增长或调用
+     * {@link #clearCache()} 后观察其变化。
+     *
+     * @return 缓存条目总数，恒大于等于 0
+     */
     public int getCacheSize() {
         return readCache.size() + writeCache.size();
     }
@@ -183,6 +209,14 @@ public class ClassMetadataCache {
             return fieldInfoList;
         }
 
+        /**
+         * 设置字段信息列表，并重建「名称 → 下标」索引。
+         *
+         * <p>列表顺序即列顺序（构建期已按 {@code order} 排序）；重建的索引供
+         * {@link #getFieldByName(String)} 做 O(1) 查找。
+         *
+         * @param fieldInfoList 字段信息列表，不可为 {@code null}
+         */
         public void setFieldInfoList(List<FieldInfo> fieldInfoList) {
             this.fieldInfoList = fieldInfoList;
             this.nameToIndexMap = new HashMap<>();
@@ -192,6 +226,14 @@ public class ClassMetadataCache {
             }
         }
 
+        /**
+         * 按下标获取字段信息。
+         *
+         * <p>下标越界时返回 {@code null} 而非抛异常，便于调用方直接判空处理。
+         *
+         * @param index 列下标，从 0 开始
+         * @return 对应字段信息；下标越界时返回 {@code null}
+         */
         public FieldInfo getFieldByIndex(int index) {
             if (index >= 0 && index < fieldInfoList.size()) {
                 return fieldInfoList.get(index);
@@ -199,6 +241,15 @@ public class ClassMetadataCache {
             return null;
         }
 
+        /**
+         * 按列名获取字段信息。
+         *
+         * <p>基于 {@link #setFieldInfoList(List)} 时建立的名称索引查找，名称大小写敏感；
+         * 列名不存在时返回 {@code null} 而非抛异常。
+         *
+         * @param name 列名
+         * @return 对应字段信息；未找到时返回 {@code null}
+         */
         public FieldInfo getFieldByName(String name) {
             Integer index = nameToIndexMap.get(name);
             if (index != null) {
@@ -207,6 +258,14 @@ public class ClassMetadataCache {
             return null;
         }
 
+        /**
+         * 返回字段总数。
+         *
+         * <p>元数据尚未设置（{@code fieldInfoList} 为 {@code null}）时返回 0，
+         * 保证外部可安全调用。
+         *
+         * @return 字段数量，恒大于等于 0
+         */
         public int getFieldCount() {
             return fieldInfoList != null ? fieldInfoList.size() : 0;
         }
