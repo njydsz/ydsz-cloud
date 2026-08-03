@@ -834,10 +834,10 @@ public final class ValueWriter {
     }
 
     /**
-     * 日期格式化器缓存（避免每次调用 DateTimeFormatter.ofPattern）
+     * 日期格式化器缓存（ConcurrentHashMap，支持多 @JsonFormat pattern 并发缓存）
      */
-    private static volatile String cachedDateFormat = null;
-    private static volatile DateTimeFormatter cachedFormatter = null;
+    private static final java.util.concurrent.ConcurrentHashMap<String, DateTimeFormatter> FORMATTER_CACHE =
+        new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
      * 格式化日期/时间值为字符串（统一入口，支持全局日期格式配置）。
@@ -892,14 +892,14 @@ public final class ValueWriter {
      * 获取缓存的 DateTimeFormatter（避免重复 ofPattern 调用）
      */
     private static DateTimeFormatter getCachedFormatter(String pattern) {
-        if (pattern.equals(cachedDateFormat)) {
-            return cachedFormatter;
+        DateTimeFormatter cached = FORMATTER_CACHE.get(pattern);
+        if (cached != null) {
+            return cached;
         }
         try {
             DateTimeFormatter newFormatter = DateTimeFormatter.ofPattern(pattern);
-            cachedDateFormat = pattern;
-            cachedFormatter = newFormatter;
-            return newFormatter;
+            DateTimeFormatter existing = FORMATTER_CACHE.putIfAbsent(pattern, newFormatter);
+            return existing != null ? existing : newFormatter;
         } catch (Exception e) {
             return null;
         }

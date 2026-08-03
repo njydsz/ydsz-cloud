@@ -39,6 +39,28 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.apache.poi.xslf.usermodel.XMLSlideShow")
 public class PptDocumentParser implements DocumentParser {
 
+    /**
+     * 遍历每页幻灯片的形状树，抽取文本框内容与表格。
+     *
+     * <p>以幻灯片序号（从 1 起）作为 {@code pageNumber}，使正文与表格都能回溯到具体页，
+     * 这是演示文稿最自然的定位单位。
+     *
+     * <p><b>抽取范围仅限当前页形状：</b>母版（Slide Master）、版式（Layout）、
+     * 备注页（Notes）以及组合形状（{@code XSLFGroupShape}）内的嵌套子形状<b>均不递归处理</b>，
+     * 图表、SmartArt、图片中的文字同样不会被提取。
+     * 因此对于内容主要放在组合形状或备注中的 PPT，抽取结果会明显偏少。
+     *
+     * <p>形状的遍历顺序取自 OOXML 中的 z-order（叠放次序）而非视觉阅读顺序，
+     * 故同一页内标题与正文的先后可能与肉眼所见不符。
+     * 表格行按实际行数遍历，缺失单元格补空串，保证每行列数对齐。
+     *
+     * @param inputStream PPTX 字节流，由调用方负责关闭；为 {@code null} 时视为空文档
+     * @param fileName    原始文件名，仅写入元数据标题；不读取 PPT 内嵌的文档属性
+     * @param options     解析选项，本实现未使用（表格恒抽取，不受 {@code extractTables} 控制），可传 {@code null}
+     * @return 文档内容，含各页文本分节与表格；{@code totalPages} 为幻灯片总数
+     * @throws DocumentException 入参流为 {@code null} 时错误码 {@code DOCUMENT_EMPTY}；
+     *                           读取失败或非 OOXML 容器时错误码 {@code PARSE_FAILED}
+     */
     @Override
     public DocumentContent parse(InputStream inputStream, String fileName, ParseOptions options) {
         if (inputStream == null) {
@@ -117,6 +139,15 @@ public class PptDocumentParser implements DocumentParser {
         }
     }
 
+    /**
+     * 声明本解析器在注册中心占据的格式槽位。
+     *
+     * <p>本类未覆写 {@code supports}，仅受理 OOXML 版 PPTX。
+     * 旧版二进制 PPT 需要 POI 的 HSLF 支持，当前无对应实现，
+     * 会在注册中心路由阶段以"不支持的格式"失败。
+     *
+     * @return 恒为 {@link DocumentFormat#PPTX}
+     */
     @Override
     public DocumentFormat getSupportedFormat() {
         return DocumentFormat.PPTX;

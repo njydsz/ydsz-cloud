@@ -459,6 +459,15 @@ public final class JsonParser implements AutoCloseable {
             System.arraycopy(buffer, bufferPos, buffer, 0, remaining);
             bufferLen = remaining;
             bufferPos = 0;
+        } else if (bufferPos == 0 && bufferLen == buffer.length) {
+            // 缓冲区满且无法移动：几何扩容以支持超大 token（如长字符串/大数字）
+            int newLen = buffer.length * 2;
+            if (newLen > maxInputLength) {
+                throw new JsonDeserializationException("JSON token exceeds maximum buffer size");
+            }
+            char[] newBuf = new char[newLen];
+            System.arraycopy(buffer, 0, newBuf, 0, bufferLen);
+            buffer = newBuf;
         }
         int read = reader.read(buffer, bufferLen, buffer.length - bufferLen);
         if (read == -1) {

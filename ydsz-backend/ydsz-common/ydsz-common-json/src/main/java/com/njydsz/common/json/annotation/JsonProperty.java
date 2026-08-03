@@ -23,7 +23,7 @@ import java.lang.annotation.*;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface JsonProperty {

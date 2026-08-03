@@ -67,11 +67,29 @@ public enum DocumentExceptionCode implements ExceptionCode {
         this.key = key;
     }
 
+    /**
+     * 获取对外暴露的业务错误码。
+     *
+     * <p>该码会随统一响应体返回给前端并写入日志，是跨系统排障的检索键，
+     * 一经发布不可修改，废弃时只能新增码值而非复用旧码。
+     * 段位含义见类级注释中的 G01~G99 分区说明。
+     *
+     * @return 形如 {@code G01001} 的错误码；恒不为 {@code null}
+     */
     @Override
     public String getCode() {
         return code;
     }
 
+    /**
+     * 获取国际化资源文件中的消息键。
+     *
+     * <p>由全局异常处理器拿该键去 {@code MessageSource} 查找对应语言的提示文案，
+     * 从而实现错误提示与错误码解耦。若资源文件中缺失该键，
+     * 框架通常降级为直接展示键名本身，因此新增枚举项时必须同步补齐 i18n 配置。
+     *
+     * @return 形如 {@code docs.parse.failed} 的点分消息键；恒不为 {@code null}
+     */
     @Override
     public String getKey() {
         return key;

@@ -92,11 +92,26 @@ public enum FileExceptionCode implements ExceptionCode {
         this.key = key;
     }
 
+    /**
+     * 返回错误码字符串，用于响应体 {@code code} 字段与日志检索。
+     *
+     * <p>该值为对外业务契约，客户端可能硬编码判断，禁止随意变更。
+     *
+     * @return 形如 {@code F01008} 的两段式错误码，非 {@code null}
+     */
     @Override
     public String getCode() {
         return code;
     }
 
+    /**
+     * 返回国际化消息 key，由异常处理器据此从资源文件解析用户可读文案。
+     *
+     * <p>若资源文件缺少对应条目，上层通常降级为直接展示 key 本身，
+     * 因此新增枚举项时务必同步补充 i18n 资源。
+     *
+     * @return 形如 {@code file.not.found} 的点分 i18n key，非 {@code null}
+     */
     @Override
     public String getKey() {
         return key;

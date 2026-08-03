@@ -16,8 +16,6 @@ public final class ModuleSerializerRegistry {
 
     private final Map<Class<?>, JsonSerializer<?>> serializers = new LinkedHashMap<>();
 
-    private final List<JsonModule> orderedModules = new ArrayList<>();
-
     ModuleSerializerRegistry() {
     }
 
@@ -39,21 +37,6 @@ public final class ModuleSerializerRegistry {
     }
 
     /**
-     * 注册自定义序列化器（带模块标记，用于优先级排序）
-     *
-     * @param type 目标类型
-     * @param serializer 序列化器
-     * @param module 来源模块
-     * @param <T> 类型参数
-     */
-    <T> void register(Class<T> type, JsonSerializer<T> serializer, JsonModule module) {
-        register(type, serializer);
-        if (!orderedModules.contains(module)) {
-            orderedModules.add(module);
-        }
-    }
-
-    /**
      * 获取已注册的序列化器
      *
      * @return 只读映射
@@ -67,6 +50,5 @@ public final class ModuleSerializerRegistry {
      */
     void clear() {
         serializers.clear();
-        orderedModules.clear();
     }
 }

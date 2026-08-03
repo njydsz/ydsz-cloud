@@ -434,6 +434,11 @@ public final class JSONReader {
         if (pos + fieldLen > len) return false;
         for (int i = 0; i < fieldLen; i++) {
             if (buf[pos + i] != fieldName.charAt(i)) {
+                // 字段名不匹配：先跳过剩余字段名（到下一个 \"），再跳过 : 和值
+                while (pos < len && buf[pos] != '"') pos++;
+                if (pos < len && buf[pos] == '"') pos++; // 跳过结束引号
+                skipWhitespace();
+                if (pos < len && buf[pos] == ':') pos++;
                 skipValue();
                 return false;
             }

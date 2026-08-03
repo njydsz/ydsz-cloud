@@ -137,82 +137,17 @@ public final class JsonParserUtil {
         }
 
         if (startPos >= len || chars[startPos] != '{') {
-            // 全空白或非对象
             if (startPos >= len) {
                 return new HashMap<>(8);
             }
             throw new JsonDeserializationException("Invalid JSON object: expected '{' at position " + startPos, startPos);
         }
 
-        Map<String, Object> result = new LinkedHashMap<>(16);
-
-        int pos = startPos + 1; // 跳过起始的 '{'
-
-        while (pos < len) {
-            // 跳过空白字符
-            while (pos < len && chars[pos] <= ' ') {
-                pos++;
-            }
-
-            if (pos >= len) {
-                break;
-            }
-
-            // 检查是否结束
-            if (chars[pos] == '}') {
-                break;
-            }
-
-            // 跳过逗号
-            if (chars[pos] == ',') {
-                pos++;
-                continue;
-            }
-
-            // 解析字段名
-            if (chars[pos] != '"') {
-                throw new JsonDeserializationException("Expected '\"' at position " + pos, pos);
-            }
-            pos++; // 跳过起始引号
-
-            int start = pos;
-            while (pos < len && chars[pos] != '"') {
-                if (chars[pos] == '\\') {
-                    pos++; // 跳过转义字符
-                }
-                pos++;
-            }
-
-            String fieldName = decodeStringIfNeeded(chars, start, pos - start);
-            pos++; // 跳过结束引号
-
-            // 跳过冒号前的空白
-            while (pos < len && chars[pos] <= ' ') {
-                pos++;
-            }
-
-            if (pos >= len || chars[pos] != ':') {
-                throw new JsonDeserializationException("Expected ':' at position " + pos, pos);
-            }
-            pos++; // 跳过冒号
-
-            // 跳过值前的空白
-            while (pos < len && chars[pos] <= ' ') {
-                pos++;
-            }
-
-            // 记录值的起始位置
-            int valueStart = pos;
-
-            // 解析值
-            Object value = parseValue(chars, pos);
-            result.put(fieldName, value);
-
-            // 移动到值的结束位置（消除简单值的二次扫描）
-            pos = getValueEndFast(chars, valueStart, value, len);
-        }
-
-        return result;
+        // 委托给 parseObjectRecursive 统一实现，消除重复代码
+        Object result = parseObjectRecursive(chars, startPos);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> map = (Map<String, Object>) result;
+        return map;
     }
 
     /**

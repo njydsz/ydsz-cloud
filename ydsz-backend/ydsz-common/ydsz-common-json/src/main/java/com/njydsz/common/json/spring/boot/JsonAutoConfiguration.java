@@ -6,6 +6,7 @@ import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,6 +44,9 @@ import io.micrometer.core.instrument.MeterRegistry;
 @AutoConfiguration
 @EnableConfigurationProperties(JsonProperties.class)
 @ConditionalOnClass(JsonConfig.class)
+@AutoConfigureBefore(name = {
+    "org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration"
+})
 @ConditionalOnProperty(prefix = "ydsz.json", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class JsonAutoConfiguration {
 

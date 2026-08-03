@@ -40,6 +40,29 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.apache.commons.csv.CSVParser")
 public class CsvDocumentParser implements DocumentParser {
 
+    /**
+     * 将 CSV 逐行解析为表格模型与制表符分隔的纯文本双份表示。
+     *
+     * <p>采用 {@link CSVFormat#DEFAULT} 逗号分隔规则，<b>不做表头识别</b>——
+     * 首行与数据行一视同仁地存入 {@code rows}，是否含表头由调用方自行判断。
+     * 输出同时包含结构化 {@link DocumentTable}（供表格渲染）和纯文本
+     * （供全文检索与 PII 扫描），文本形态下单元格以 {@code \t} 连接、行以 {@code \n} 分隔，
+     * 因此原始单元格内含制表符时会与分隔符混淆，重建表格请以 {@code tables} 为准。
+     *
+     * <p><b>列数口径不一致：</b>{@code colCount} 取首行列数，而非全表最大列数，
+     * 遇到锯齿形（每行列数不等）的 CSV 时该值会偏小，仅作参考。
+     *
+     * <p>整份 CSV 会全量驻留内存，超大文件请由上层先行按 {@code maxFileSizeMb} 拦截。
+     *
+     * @param inputStream CSV 字节流，由调用方负责关闭；为 {@code null} 时视为空文档
+     * @param fileName    原始文件名，同时用作表格标题与元数据标题，仅用于展示与排障
+     * @param options     解析选项，此处仅取 {@code charset} 字段；传 {@code null} 按 UTF-8 处理
+     * @return 文档内容，含单个 table 类型分节、单张表格；页数恒为 1
+     * @throws DocumentException 入参流为 {@code null} 时错误码 {@code DOCUMENT_EMPTY}；
+     *                           读取或 CSV 语法解析失败时错误码 {@code PARSE_FAILED}；
+     *                           {@code options.charset} 指定了 JVM 不支持的编码名时，
+     *                           抛出 {@link java.nio.charset.UnsupportedCharsetException}
+     */
     @Override
     public DocumentContent parse(InputStream inputStream, String fileName, ParseOptions options) {
         if (inputStream == null) {
@@ -98,11 +121,28 @@ public class CsvDocumentParser implements DocumentParser {
                 .build();
     }
 
+    /**
+     * 声明本解析器在注册中心占据的格式槽位。
+     *
+     * <p>本类未覆写 {@code supports}，故仅精确匹配 CSV 一种格式；
+     * 制表符分隔的 TSV 不在受理范围内。
+     *
+     * @return 恒为 {@link DocumentFormat#CSV}
+     */
     @Override
     public DocumentFormat getSupportedFormat() {
         return DocumentFormat.CSV;
     }
 
+    /**
+     * 确定读取 CSV 所用字符集，未显式配置时回退 UTF-8。
+     *
+     * <p>CSV 不像 XML 那样自带编码声明，无法从内容推断，因此把选择权交给调用方；
+     * 国产办公软件导出的 GBK 文件必须显式指定 {@code charset}，否则中文将乱码。
+     *
+     * @param options 解析选项，可为 {@code null}
+     * @return 解析出的字符集；未配置或配置为空白串时返回 {@link StandardCharsets#UTF_8}
+     */
     private Charset resolveCharset(ParseOptions options) {
         if (options != null && options.getCharset() != null && !options.getCharset().isBlank()) {
             return Charset.forName(options.getCharset());

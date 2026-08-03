@@ -62,10 +62,28 @@ public enum DocumentFormat {
         this.mimeType = mimeType;
     }
 
+    /**
+     * 获取该格式的标准文件扩展名（不含点号）。
+     *
+     * <p>该值是 {@link #fromFileName(String)} 做扩展名匹配的依据，
+     * 同时也用于生成下载文件名。注意一种格式只登记一个扩展名，
+     * 例如 {@link #MARKDOWN} 只登记 {@code md}，
+     * 因此 {@code .markdown} 后缀的文件会被推断为 {@link #UNKNOWN}。
+     *
+     * @return 小写扩展名，如 {@code pdf}、{@code docx}；{@link #UNKNOWN} 返回 {@code unknown}
+     */
     public String getExtension() {
         return extension;
     }
 
+    /**
+     * 获取该格式对应的标准 MIME 类型。
+     *
+     * <p>该值同时用于两个场景：一是 {@link #fromContent(InputStream)} 中与 Tika
+     * 嗅探结果做等值比对，二是文档下载时回填 HTTP {@code Content-Type} 响应头。
+     *
+     * @return MIME 类型字符串；{@link #UNKNOWN} 返回通用二进制类型 {@code application/octet-stream}
+     */
     public String getMimeType() {
         return mimeType;
     }

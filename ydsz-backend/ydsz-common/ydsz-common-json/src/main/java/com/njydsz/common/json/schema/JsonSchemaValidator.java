@@ -322,34 +322,36 @@ public final class JsonSchemaValidator {
             if (properties.containsKey(key)) {
                 validateType(properties.get(key), value, result, propPath);
                 validatedProps.add(key);
-            } else if (additionalProperties != null) {
-                validateType(additionalProperties, value, result, propPath);
             } else {
-                // patternProperties 正则匹配
-                validatePatternProperties(schema, key, value, result, propPath);
-            }
+                // patternProperties 优先于 additionalProperties（RFC 规范顺序）
+                if (validatePatternProperties(schema, key, value, result, propPath)) {
+                    validatedProps.add(key);
+                } else if (additionalProperties != null) {
+                    validateType(additionalProperties, value, result, propPath);
+                }
         }
     }
 
     /**
      * 按 patternProperties 正则匹配并校验属性值。
      */
-    private static void validatePatternProperties(JsonSchema schema, String key, Object value,
+    private static boolean validatePatternProperties(JsonSchema schema, String key, Object value,
                                                    ValidationResult result, String path) {
         Map<String, JsonSchema> patternProps = schema.getPatternProperties();
         if (patternProps == null || patternProps.isEmpty()) {
-            return;
+            return false;
         }
         for (Map.Entry<String, JsonSchema> entry : patternProps.entrySet()) {
             try {
                 if (key.matches(entry.getKey())) {
                     validateType(entry.getValue(), value, result, path);
-                    return;
+                    return true;
                 }
             } catch (java.util.regex.PatternSyntaxException ignored) {
                 // 非法正则跳过
             }
         }
+        return false;
     }
 
     /**

@@ -38,6 +38,28 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.apache.poi.xwpf.usermodel.XWPFDocument")
 public class WordDocumentParser implements DocumentParser {
 
+    /**
+     * 抽取 Word 正文段落与表格，并依据样式名还原标题层级。
+     *
+     * <p>标题层级来自段落<b>样式名</b>（如 {@code Heading1}）而非视觉字号，
+     * 因此仅靠手动放大字体、加粗模拟出的"标题"会被识别为普通段落。
+     * 这是可接受的取舍：样式名是 Word 中唯一可靠的结构化信号。
+     *
+     * <p><b>抽取范围限于主文档正文：</b>页眉、页脚、脚注、尾注、批注、文本框
+     * 以及表格单元格内的嵌套表格<b>均不处理</b>。
+     * 另外段落与表格分两轮遍历（先全部段落、后全部表格），
+     * 因此表格在原文中的位置信息丢失，无法还原图文混排的原始次序。
+     *
+     * <p>Word 分页由渲染引擎动态决定，解析阶段无法获知，故 {@code pageNumber}
+     * 与 {@code totalPages} 统一填 1。图片抽取未实现，{@code images} 恒为空列表。
+     *
+     * @param inputStream DOCX 字节流，由调用方负责关闭；为 {@code null} 时视为空文档
+     * @param fileName    原始文件名，仅写入元数据标题；不读取 Word 内嵌文档属性
+     * @param options     解析选项，仅读取 {@code extractTables} 开关；传 {@code null} 时视为开启
+     * @return 文档内容，含 heading/paragraph 分节与表格；页数恒为 1
+     * @throws DocumentException 入参流为 {@code null} 时错误码 {@code DOCUMENT_EMPTY}；
+     *                           读取失败或非 OOXML 容器（如旧版 .doc）时错误码 {@code PARSE_FAILED}
+     */
     @Override
     public DocumentContent parse(InputStream inputStream, String fileName, ParseOptions options) {
         if (inputStream == null) {
@@ -110,13 +132,31 @@ public class WordDocumentParser implements DocumentParser {
         }
     }
 
+    /**
+     * 声明本解析器在注册中心占据的格式槽位。
+     *
+     * <p>本类未覆写 {@code supports}，仅受理 OOXML 版 DOCX。
+     * 旧版二进制 DOC 需要 POI 的 HWPF 支持，当前无对应实现。
+     *
+     * @return 恒为 {@link DocumentFormat#DOCX}
+     */
     @Override
     public DocumentFormat getSupportedFormat() {
         return DocumentFormat.DOCX;
     }
 
     /**
-     * 从段落样式名中提取标题层级
+     * 从段落样式名中解析出标题层级。
+     *
+     * <p>做法是剥离样式名中的所有非数字字符后取整。这种宽松解析是为了兼容
+     * Word 不同语言版本与自定义样式的命名差异（如 {@code Heading1}、{@code heading 2}）。
+     *
+     * <p><b>降级为 0（普通段落）的情形：</b>样式名为 {@code null}、
+     * 不以 Heading/heading 开头、数字部分为空或无法解析、层级超出 1~9 合法区间。
+     * 全程不抛异常，保证单个异常样式不会中断整篇文档解析。
+     *
+     * @param style 段落样式名，可为 {@code null}
+     * @return 标题层级 1~9；非标题或无法识别时返回 0
      */
     private int extractHeadingLevel(String style) {
         if (style == null) {

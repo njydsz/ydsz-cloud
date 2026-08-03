@@ -54,6 +54,28 @@ public class FileHealthIndicator implements HealthIndicator {
         this.metricsProvider = metricsProvider;
     }
 
+    /**
+     * 执行一次存储后端连通性探测，并汇总文件模块各可选组件的启用状态。
+     *
+     * <p><b>判定规则</b>（决定 Actuator 整体健康状态）：
+     * <ol>
+     *   <li>配置了 bucket 但云端不存在 → {@code DOWN}，因为此时所有上传必然失败；</li>
+     *   <li>探测过程抛出任何异常（网络不通、鉴权失败等）→ {@code DOWN}，
+     *       异常信息写入 {@code error} 明细，同时打 warn 日志而非 error，
+     *       避免健康检查高频轮询刷屏；</li>
+     *   <li>未配置 bucket 时不判定为异常，仅以 {@code bucketConfigured=false} 提示，
+     *       因为本地存储（local）模式本就不需要 bucket。</li>
+     * </ol>
+     *
+     * <p>去重、病毒扫描、重试、指标四个组件均通过 {@link ObjectProvider} 惰性获取，
+     * 缺失时只记录为未启用，<b>不影响健康状态</b>——它们都是可选增强能力。
+     *
+     * <p><b>性能注意：</b>{@code bucketExists} 会发起一次真实的远端请求，
+     * Actuator 健康端点若被高频轮询会产生额外的存储 API 调用与费用。
+     *
+     * @return 健康检查结果；{@code UP} 表示存储可用，{@code DOWN} 表示不可用，
+     *         两种情况均携带 storageType、bucket、各组件开关等诊断明细
+     */
     @Override
     public Health health() {
         Map<String, Object> details = new LinkedHashMap<>();

@@ -16,8 +16,6 @@ public final class ModuleDeserializerRegistry {
 
     private final Map<Class<?>, JsonDeserializer<?>> deserializers = new LinkedHashMap<>();
 
-    private final List<JsonModule> orderedModules = new ArrayList<>();
-
     ModuleDeserializerRegistry() {
     }
 
@@ -39,21 +37,6 @@ public final class ModuleDeserializerRegistry {
     }
 
     /**
-     * 注册自定义反序列化器（带模块标记，用于优先级排序）
-     *
-     * @param type 目标类型
-     * @param deserializer 反序列化器
-     * @param module 来源模块
-     * @param <T> 类型参数
-     */
-    <T> void register(Class<T> type, JsonDeserializer<T> deserializer, JsonModule module) {
-        register(type, deserializer);
-        if (!orderedModules.contains(module)) {
-            orderedModules.add(module);
-        }
-    }
-
-    /**
      * 获取已注册的反序列化器
      *
      * @return 只读映射
@@ -67,6 +50,5 @@ public final class ModuleDeserializerRegistry {
      */
     void clear() {
         deserializers.clear();
-        orderedModules.clear();
     }
 }
