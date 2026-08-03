@@ -113,7 +113,10 @@ public class AnnotationBean {
      * @JsonView 视图定义
      */
     public static class View {
+        /** 公开视图（所有字段可见） */
         public interface Public {}
+
+        /** 内部视图（继承公开视图，追加内部字段） */
         public interface Internal extends Public {}
     }
 }

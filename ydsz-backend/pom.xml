@@ -1255,10 +1255,23 @@
                                     <exclude>org.apache.logging.log4j:log4j-core</exclude>
                                     <!-- 禁止 slf4j-log4j12 绑定 -->
                                     <exclude>org.slf4j:slf4j-log4j12</exclude>
+                                    <!--
+                                        与 ArchUnit R29 对齐：禁止直接声明竞品 JSON 库依赖。
+                                        业务模块的 JSON 序列化统一使用 ydsz-common-json 的 YdszJson。
+                                        jackson-databind 不在此全局 ban（公共模块有合理使用场景如第三方 SDK），
+                                        由 ArchUnit R29 在编译期约束业务代码不直接 import com.fasterxml.jackson.*。
+                                        hutool-all 不在此 ban（nextwiki/common-util 有合理 crypto.digest 使用），
+                                        仅 ban hutool-json 子模块防止 JSON 能力泄漏。
+                                    -->
+                                    <exclude>com.google.code.gson:gson</exclude>
+                                    <exclude>cn.hutool:hutool-json</exclude>
+                                    <exclude>org.json:json</exclude>
+                                    <exclude>com.googlecode.json-simple:json-simple</exclude>
                                 </excludes>
                                 <message>禁止使用 fastjson 1.x / commons-collections 3.x / Jackson 1.x / javax.* / log4j
-                                    等历史不安全或不兼容依赖，请使用 fastjson2 / commons-collections4 / Jackson 2.x /
-                                    jakarta.* / logback。
+                                    / gson / hutool-json / org.json / json-simple 等历史不安全或不兼容依赖。
+                                    JSON 序列化统一使用 ydsz-common-json（YdszJson），与 ArchUnit R29 对齐。
+                                    公共模块如需 Jackson（第三方 SDK 依赖），声明为 optional 并通过 ArchUnit 白名单。
                                 </message>
                             </bannedDependencies>
                             <requireNoRepositories>

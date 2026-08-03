@@ -96,8 +96,23 @@ public class YdszJson {
         return metricsCallback;
     }
 
+    /**
+     * 可抛出受检异常的供应商接口。
+     *
+     * <p>仅用于 {@link #recordSerialize}/{@link #recordDeserialize} 内部包装，
+     * 允许指标采集操作向上抛出受检异常，由 {@link MetricsHelper} 统一转为
+     * {@link com.njydsz.common.json.exception.JsonException}。</p>
+     *
+     * @param <T> 生产值的类型
+     */
     @FunctionalInterface
     private interface ThrowingSupplier<T> {
+        /**
+         * 获取结果。
+         *
+         * @return 生产的值
+         * @throws Exception 获取过程中可能抛出的任意异常
+         */
         T get() throws Exception;
     }
 
@@ -387,47 +402,7 @@ public class YdszJson {
             return toObjectList(result);
         });
     }
-    
-    /**
-     * JSON 字符串转 JsonObject。
-     *
-     * <p>委托给 {@link #readTree(String)} 的底层解析器（{@link JsonParserUtil#parse(String)}），
-     * 解析完成后包装为 {@link JsonObject}。此方法为旧 API 过渡桥接，计划在 1.1.0 删除，
-     * 请迁移至 {@link #readTree(String)} 获取 {@link com.njydsz.common.json.tree.ObjectNode}。</p>
-     *
-     * @param json JSON 字符串
-     * @return JsonObject 对象
-     * @deprecated 请使用 {@link #readTree(String)} 获取 {@link com.njydsz.common.json.tree.ObjectNode}
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static JsonObject parseObjectToJsonObject(String json) {
-        Object result = DeserializationProvider.deserialize(json, Map.class);
-        if (result instanceof Map<?, ?> map) {
-            return new JsonObject(map);
-        }
-        return new JsonObject();
-    }
-    
-    /**
-     * JSON 字符串转 JsonArray。
-     *
-     * <p>委托给 {@link #readTree(String)} 的底层解析器（{@link JsonParserUtil#parse(String)}），
-     * 解析完成后包装为 {@link JsonArray}。此方法为旧 API 过渡桥接，计划在 1.1.0 删除，
-     * 请迁移至 {@link #readTree(String)} 获取 {@link com.njydsz.common.json.tree.ArrayNode}。</p>
-     *
-     * @param json JSON 字符串
-     * @return JsonArray 对象
-     * @deprecated 请使用 {@link #readTree(String)} 获取 {@link com.njydsz.common.json.tree.ArrayNode}
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static JsonArray parseArrayToJsonArray(String json) {
-        Object result = DeserializationProvider.deserialize(json, List.class);
-        if (result instanceof List<?> list) {
-            return new JsonArray(list);
-        }
-        return new JsonArray();
-    }
-    
+
     // ==================== JSONPath 入口方法 ====================
     
     /**
@@ -469,31 +444,7 @@ public class YdszJson {
         }
         return DeserializationProvider.deserialize(toJson(value), clazz);
     }
-    
-    // ==================== Builder 入口方法 ====================
 
-    /**
-     * 创建 JSON 对象节点。
-     *
-     * @return ObjectNode 实例
-     * @deprecated 请直接使用 {@code new ObjectNode()} 或 {@link #readTree(String)}
-     */
-    @Deprecated(since = "1.0.0")
-    public static ObjectNode object() {
-        return new ObjectNode();
-    }
-
-    /**
-     * 创建 JSON 数组节点。
-     *
-     * @return ArrayNode 实例
-     * @deprecated 请直接使用 {@code new ArrayNode()} 或 {@link #readTree(String)}
-     */
-    @Deprecated(since = "1.0.0")
-    public static ArrayNode array() {
-        return new ArrayNode();
-    }
-    
     // ==================== 自定义序列化器注册 ====================
 
     /**

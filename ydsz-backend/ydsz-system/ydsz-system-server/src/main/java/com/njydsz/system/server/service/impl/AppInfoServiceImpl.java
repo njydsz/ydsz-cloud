@@ -63,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>设计要点：</b>
  * <ul>
- *   <li><b>密钥不返回</b>：{@link AppInfoVO} 中 {@code appSecret} 字段为 null（{@code @JsonIgnore}），
+ *   <li><b>密钥不返回</b>：{@link AppInfoVO} 中 {@code appSecret} 字段为 null（{@code @com.njydsz.common.json.annotation.JsonIgnore}），
  *       避免泄漏到前端 / 日志</li>
  *   <li><b>登录态隔离</b>：管理后台「应用列表」自动按当前用户部门 + 创建人过滤
  *       （{@code @DataScope}），避免越权查看</li>

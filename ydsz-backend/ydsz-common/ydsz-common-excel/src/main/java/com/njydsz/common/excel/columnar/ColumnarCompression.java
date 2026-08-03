@@ -24,10 +24,26 @@ public enum ColumnarCompression {
     /** Zstandard 压缩（高压缩率，可配置 level） */
     ZSTD;
 
+    /**
+     * 返回默认的压缩编解码器。
+     *
+     * <p>SNAPPY 在压缩率与 CPU 开销之间取得平衡，作为未显式指定时的兜底值。
+     *
+     * @return 默认压缩策略 {@link #SNAPPY}
+     */
     public static ColumnarCompression defaultCodec() {
         return SNAPPY;
     }
 
+    /**
+     * 将字符串形式的编解码器名解析为枚举。
+     *
+     * <p>名称大小写不敏感（内部统一转大写）；{@code null} 或无法识别的名称
+     * 均降级返回 {@link #defaultCodec()}，保证解析过程永不抛异常。
+     *
+     * @param name 编解码器名称，可为 {@code null}
+     * @return 对应的压缩枚举；无法解析时返回默认值 {@link #SNAPPY}
+     */
     public static ColumnarCompression fromName(String name) {
         if (name == null) {
             return defaultCodec();

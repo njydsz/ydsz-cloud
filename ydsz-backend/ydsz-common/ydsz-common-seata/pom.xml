@@ -86,12 +86,7 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- jackson-databind (optional, for TccTransactionLog JSON 序列化到 Redis) -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <optional>true</optional>
-        </dependency>
+        <!-- TccTransactionLog JSON 序列化使用 ydsz-common-json 的 YdszJson，无需 jackson-databind -->
         <!-- spring-web (optional, for XID servlet filter) -->
         <dependency>
             <groupId>org.springframework</groupId>

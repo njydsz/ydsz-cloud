@@ -16,10 +16,11 @@ import com.njydsz.common.json.writer.JSONWriter;
  *     @SensitiveData(SensitiveType.PHONE)
  *     private String phone;
  * }
- *
- * // 注册到 YdszJson 全局序列化器
- * YdszJson.register(Object.class, SensitiveDataSerializer.INSTANCE);
  * }</pre>
+ *
+ * <p><b>注册方式：</b>通过 {@link com.njydsz.common.safe.xss.SafeJsonModule}（实现
+ * {@link com.njydsz.common.json.module.JsonModule.SpringFactory}）自动注册到 YdszJson 引擎，
+ * 禁止在业务代码中散落调用 {@code YdszJson.register()}。
  *
  * <p><b>注意事项：</b>
  * <ul>

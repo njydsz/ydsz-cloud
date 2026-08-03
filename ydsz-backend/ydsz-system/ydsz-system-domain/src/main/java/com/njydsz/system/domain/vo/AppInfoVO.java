@@ -15,8 +15,8 @@ import lombok.Data;
  *       即便数据库被拖库也不可逆</li>
  *   <li>管理后台「查看密钥」入口走单独的 {@code /app/{id}/secret} 接口，
  *       该接口需 {@code ydsz:app:secret:view} 权限码 + 二次密码确认 + 操作审计</li>
- *   <li>列表接口在 {@code Jackson} 序列化层强制忽略 {@code appSecret} 字段
- *       （如未来误加 {@code @JsonProperty}，需通过单元测试拦截）</li>
+ *   <li>列表接口在 {@code YdszJson} 序列化层强制忽略 {@code appSecret} 字段
+ *       （如未来误加 {@code @com.njydsz.common.json.annotation.JsonProperty}，需通过单元测试拦截）</li>
  * </ul>
  *
  * <p><b>使用场景：</b>

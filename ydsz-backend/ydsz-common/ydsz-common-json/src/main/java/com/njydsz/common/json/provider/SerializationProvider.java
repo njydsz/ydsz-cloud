@@ -94,38 +94,86 @@ public final class SerializationProvider {
         FieldMetadataLoader.NAMING_STRATEGY.set(strategy);
     }
 
+    /**
+     * 获取当前线程的命名策略。
+     *
+     * @return 当前命名策略；未设置时返回 {@code null}（调用方按驼峰不变处理）
+     */
     public static PropertyNamingStrategy getNamingStrategy() {
         return FieldMetadataLoader.NAMING_STRATEGY.get();
     }
 
+    /**
+     * 设置当前线程是否序列化 null 值字段。
+     *
+     * @param writeNulls {@code true} 表示输出 null 字段，{@code false} 表示忽略
+     */
     public static void setWriteNulls(boolean writeNulls) {
         SerializationContext.CONTEXT.get().writeNulls = writeNulls;
     }
 
+    /**
+     * 查询当前线程是否序列化 null 值字段。
+     *
+     * @return {@code true} 表示输出 null 字段
+     */
     public static boolean isWriteNulls() {
         return SerializationContext.CONTEXT.get().writeNulls;
     }
 
+    /**
+     * 设置当前线程是否启用美化输出（pretty print）。
+     *
+     * @param prettyPrint {@code true} 表示输出带缩进的格式化 JSON
+     */
     public static void setPrettyPrint(boolean prettyPrint) {
         SerializationContext.CONTEXT.get().prettyPrint = prettyPrint;
     }
 
+    /**
+     * 查询当前线程是否启用美化输出。
+     *
+     * @return {@code true} 表示输出带缩进的格式化 JSON
+     */
     public static boolean isPrettyPrint() {
         return SerializationContext.CONTEXT.get().prettyPrint;
     }
 
+    /**
+     * 设置当前线程的循环引用处理策略。
+     *
+     * @param strategyName 策略名称（如 {@code REF}、{@code NULL}、{@code THROW}），
+     *                     需与 {@link com.njydsz.common.json.config.JsonConfig.CircularReferenceStrategy}
+     *                     枚举名一致
+     */
     public static void setCircularReferenceStrategy(String strategyName) {
         SerializationContext.CONTEXT.get().circularRefStrategy = strategyName;
     }
 
+    /**
+     * 获取当前线程的循环引用处理策略。
+     *
+     * @return 策略名称字符串；未设置时返回 {@code null}
+     */
     public static String getCircularReferenceStrategy() {
         return SerializationContext.CONTEXT.get().circularRefStrategy;
     }
 
+    /**
+     * 设置当前线程是否以 ordinal（序号）形式序列化枚举。
+     *
+     * @param ordinal {@code true} 表示输出枚举序号（如 {@code 0}），
+     *                {@code false} 表示输出枚举名（如 {@code "ACTIVE"}）
+     */
     public static void setSerializeEnumUsingOrdinal(boolean ordinal) {
         SerializationContext.CONTEXT.get().serializeEnumUsingOrdinal = ordinal;
     }
 
+    /**
+     * 查询当前线程是否以 ordinal 形式序列化枚举。
+     *
+     * @return {@code true} 表示输出枚举序号
+     */
     public static boolean isSerializeEnumUsingOrdinal() {
         return SerializationContext.CONTEXT.get().serializeEnumUsingOrdinal;
     }

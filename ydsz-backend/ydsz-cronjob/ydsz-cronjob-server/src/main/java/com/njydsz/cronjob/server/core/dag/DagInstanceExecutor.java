@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.tree.ObjectNode;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -467,10 +467,10 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             }
             // 若 contextJson 中已有该 jobKey 的结果，补充 status；否则添加完整对象
             Object existing = context.get(node.getJobKey());
-            if (existing instanceof JsonObject jo) {
+            if (existing instanceof ObjectNode jo) {
                 jo.put("status", node.getNodeStatus());
             } else {
-                JsonObject jo = new JsonObject();
+                ObjectNode jo = new ObjectNode();
                 jo.put("status", node.getNodeStatus());
                 jo.put("result", node.getResultJson());
                 context.put(node.getJobKey(), jo);
@@ -1076,11 +1076,11 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             // 构造待合并的 JSON 片段: {"jobKey": <nodeResult>}
             Object parsed;
             try {
-                parsed = YdszJson.parseObjectToJsonObject(nodeResultJson);
+                parsed = YdszJson.parseObject(nodeResultJson);
             } catch (Exception parseEx) {
                 parsed = nodeResultJson;
             }
-            JsonObject mergeFragment = new JsonObject();
+            ObjectNode mergeFragment = new ObjectNode();
             mergeFragment.put(jobKey, parsed);
             String mergeJson = YdszJson.toJson(mergeFragment);
 
@@ -1095,21 +1095,21 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     }
 
     /**
-     * 解析 contextJson，空值或异常时返回空 JsonObject。
+     * 解析 contextJson，空值或异常时返回空 ObjectNode。
      */
-    private JsonObject parseContextJson(String contextJson) {
+    private ObjectNode parseContextJson(String contextJson) {
         if (contextJson == null || contextJson.isBlank()) {
-            return new JsonObject();
+            return new ObjectNode();
         }
         try {
-            JsonObject parsed = YdszJson.parseObjectToJsonObject(contextJson);
+            ObjectNode parsed = YdszJson.parseObject(contextJson);
             if (parsed != null) {
                 return parsed;
             }
         } catch (Exception ignored) {
             // contextJson 非法时返回空对象，避免覆盖
         }
-        return new JsonObject();
+        return new ObjectNode();
     }
 
     /**
@@ -1127,7 +1127,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     public Map<String, Object> getDagContext(String dagInstanceId) {
         JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
-            return new JsonObject();
+            return new ObjectNode();
         }
         return parseContextJson(instance.getContextJson());
     }

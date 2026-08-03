@@ -31,11 +31,11 @@ import java.lang.annotation.*;
  * }
  * }</pre>
  *
- * <p><b>配合 Jackson 使用：</b>
+ * <p><b>配合 YdszJson 使用：</b>
  * <pre>{@code
- * // 方式一：使用 SensitiveDataSerializer Jackson JsonSerializer
+ * // 方式一：使用 SensitiveDataSerializer（ydsz JsonSerializer），通过 SafeJsonModule 自动注册
  * public class UserVO {
- *     @JsonSerialize(using = SensitiveDataSerializer.class)
+ *     @com.njydsz.common.json.annotation.JsonSerialize(using = SensitiveDataSerializer.class)
  *     @SensitiveData(SensitiveType.PHONE)
  *     private String phone;
  * }

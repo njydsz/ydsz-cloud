@@ -441,10 +441,40 @@ public final class JsonSchema {
         return this;
     }
 
+    /**
+     * 设置数组元素是否必须唯一。
+     *
+     * @param unique {@code true} 表示数组元素不允许重复
+     * @return 当前 JsonSchema 实例（链式调用）
+     */
     public JsonSchema uniqueItems(boolean unique) { this.uniqueItems = unique; return this; }
+
+    /**
+     * 设置对象最少属性个数。
+     *
+     * @param n 最少属性数量，须为非负整数
+     * @return 当前 JsonSchema 实例（链式调用）
+     */
     public JsonSchema minProperties(int n) { this.minProperties = n; return this; }
+
+    /**
+     * 设置对象最多属性个数。
+     *
+     * @param n 最多属性数量，须为非负整数
+     * @return 当前 JsonSchema 实例（链式调用）
+     */
     public JsonSchema maxProperties(int n) { this.maxProperties = n; return this; }
 
+    /**
+     * 添加按正则表达式匹配的属性约束。
+     *
+     * <p>符合 JSON Schema {@code patternProperties} 语义：对象中所有键名
+     * 匹配 {@code regex} 的属性都必须满足子 schema 约束。</p>
+     *
+     * @param regex  属性名正则表达式（如 {@code "^s_" } 匹配前缀为 s_ 的属性）
+     * @param schema 匹配该正则的属性需满足的子 schema
+     * @return 当前 JsonSchema 实例（链式调用）
+     */
     public JsonSchema patternProperty(String regex, JsonSchema schema) {
         if (this.patternProperties == null) { this.patternProperties = new LinkedHashMap<>(); }
         this.patternProperties.put(regex, schema);
@@ -582,6 +612,16 @@ public final class JsonSchema {
     public JsonSchema ref(String ref) { this.ref = ref; return this; }
     public String getRef() { return ref; }
 
+    /**
+     * 添加一个可复用的子 schema 定义（对应 JSON Schema {@code definitions} 部分）。
+     *
+     * <p>定义的子 schema 可通过 {@code $ref: "#/definitions/{name}"} 被本 schema
+     * 或同定义域内的其他 schema 引用，避免重复编写公共约束。</p>
+     *
+     * @param name   定义名称（$ref 引用时的标识）
+     * @param schema 子 schema 定义
+     * @return 当前 JsonSchema 实例（链式调用）
+     */
     public JsonSchema addDefinition(String name, JsonSchema schema) {
         if (this.definitions == null) { this.definitions = new LinkedHashMap<>(); }
         this.definitions.put(name, schema);

@@ -358,6 +358,28 @@ public final class ObjectNode extends JsonNode {
     }
 
     /**
+     * 获取浮点数值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return Float 值
+     */
+    public Float getFloat(String name) {
+        Double value = getDouble(name);
+        return value != null ? value.floatValue() : null;
+    }
+
+    /**
+     * 获取 float 基本类型值（为 null 时返回 0）。
+     *
+     * @param name 字段名
+     * @return float 值
+     */
+    public float getFloatValue(String name) {
+        Float value = getFloat(name);
+        return value != null ? value : 0.0f;
+    }
+
+    /**
      * 获取布尔值，不存在或 null 返回 null。
      *
      * @param name 字段名

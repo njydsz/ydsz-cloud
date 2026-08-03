@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.json.schema.JsonSchema;
 import com.njydsz.common.json.schema.JsonSchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
@@ -115,7 +115,7 @@ public class HttpJobHandler implements JobHandler {
             throw new IllegalArgumentException("HTTP 任务参数(paramsJson)为空");
         }
 
-        JsonObject params = YdszJson.parseObjectToJsonObject(paramsJson);
+        ObjectNode params = YdszJson.parseObject(paramsJson);
 
         // P2-1: JsonSchema 参数结构校验（试点验证自研 schema 引擎）
         List<String> schemaErrors = validateParams(params);
@@ -152,11 +152,11 @@ public class HttpJobHandler implements JobHandler {
         requestBuilder.timeout(timeout);
 
         // 设置请求头
-        Map<String, Object> headers = params.getJSONObject("headers");
+        ObjectNode headers = params.getJSONObject("headers");
         if (headers != null) {
-            for (Map.Entry<String, Object> entry : headers.entrySet()) {
-                if (entry.getValue() != null) {
-                    requestBuilder.header(entry.getKey(), String.valueOf(entry.getValue()));
+            for (Map.Entry<String, JsonNode> entry : headers.entrySet()) {
+                if (entry.getValue() != null && !entry.getValue().isNull()) {
+                    requestBuilder.header(entry.getKey(), entry.getValue().asText());
                 }
             }
         }
@@ -196,7 +196,7 @@ public class HttpJobHandler implements JobHandler {
                 method, url, status, responseBody == null ? 0 : responseBody.length());
 
         // 返回结构化结果
-        JsonObject result = new JsonObject();
+        ObjectNode result = new ObjectNode();
         result.put("status", status);
         result.put("body", responseBody);
         result.put("url", url);

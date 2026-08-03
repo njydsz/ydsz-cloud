@@ -37,6 +37,17 @@ import io.micrometer.core.instrument.MeterRegistry;
  *
  * <p>脱敏字段、未知字段忽略、BigDecimal 精度等统一序列化策略。
  *
+ * <p><b>与 Spring Boot Jackson 的关系（双引擎格局）：</b>
+ * 本配置通过 {@code @AutoConfigureBefore} 声明在 {@code JacksonAutoConfiguration} 之前加载，
+ * 并通过 {@code @ConditionalOnMissingBean} 占位 HTTP 消息转换器，使业务 REST 接口走 YdszJson。
+ * 但 Spring Boot 默认仍会注册 {@code ObjectMapper} Bean，供 Actuator 部分端点、
+ * Spring Data Redis 默认序列化器等 Spring 内部组件使用，构成"可控并存"的双引擎格局。
+ *
+ * <p>如需彻底统一为单引擎，可设置 {@code ydsz.json.disable-jackson-auto-configuration=true}，
+ * 由 {@link JacksonExclusionEnvironmentPostProcessor} 在启动早期将
+ * {@code JacksonAutoConfiguration} 加入 {@code spring.autoconfigure.exclude}。
+ * <b>注意：</b>禁用后需评估 Spring 生态内部依赖 {@code ObjectMapper} 的能力是否受影响。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

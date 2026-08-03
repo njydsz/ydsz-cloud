@@ -231,6 +231,7 @@ class AsmFieldTypeTest {
         public void setCharBox(Character v) { this.charBox = v; }
     }
 
+    /** 日期时间类型字段的测试 Bean（验证 LocalDateTime/LocalDate/Date 序列化格式） */
     public static class DateTimeBean {
         private LocalDateTime localDateTime;
         private LocalDate localDate;
@@ -244,6 +245,7 @@ class AsmFieldTypeTest {
         public void setDate(Date v) { this.date = v; }
     }
 
+    /** 集合/映射类型字段的测试 Bean（验证 List/Set/Map 泛型元素类型推导） */
     public static class CollectionMapBean {
         private List<String> list;
         private Set<Integer> set;
@@ -260,6 +262,7 @@ class AsmFieldTypeTest {
         public void setIntList(List<Integer> v) { this.intList = v; }
     }
 
+    /** 嵌套对象测试 Bean（验证嵌套 Bean 的递归反序列化与 ASM 字节码生成） */
     public static class NestedParentBean {
         private int id;
         private ChildBean child;
@@ -269,6 +272,7 @@ class AsmFieldTypeTest {
         public ChildBean getChild() { return child; }
         public void setChild(ChildBean v) { this.child = v; }
 
+        /** 嵌套子 Bean（与 NestedParentBean 配合测试递归解析） */
         public static class ChildBean {
             private String name;
             private int value;

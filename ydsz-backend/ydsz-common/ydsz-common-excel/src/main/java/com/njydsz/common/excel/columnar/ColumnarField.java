@@ -53,6 +53,13 @@ public final class ColumnarField {
         return builder(name, type).nullable(nullable).build();
     }
 
+    /**
+     * 创建字段构建器，用于配置精度、小数位、可空性等扩展属性。
+     *
+     * @param name 列名，在同一 {@link ColumnarSchema} 内唯一，不可为 {@code null}
+     * @param type 列的逻辑类型，不可为 {@code null}
+     * @return 字段构建器，可继续链式配置属性
+     */
     public static Builder builder(String name, ColumnarType type) {
         return new Builder(name, type);
     }

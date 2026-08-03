@@ -80,20 +80,60 @@ public class ConcurrentExcelWriter {
         }
     }
 
+    /**
+     * 创建并发写入器实例。
+     *
+     * <p>返回的实例是链式配置入口，需再调用 {@link #doWrite()} 才真正落盘。
+     * {@code clazz} 可为 {@code null}，但此时基于 {@link ExcelProperty} 注解的
+     * 列解析、过滤与排序均不生效。
+     *
+     * @param filePath 输出 xlsx 文件路径
+     * @param clazz    数据模型类，用于解析列元数据，可为 {@code null}
+     * @param data     待写入数据；可为空列表（空列表短路返回、不生成文件）
+     * @return 并发写入器实例
+     */
     public static ConcurrentExcelWriter write(String filePath, Class<?> clazz, List<?> data) {
         return new ConcurrentExcelWriter(filePath, clazz, data);
     }
 
+    /**
+     * 设置并行序列化线程数。
+     *
+     * <p>仅在数据量超过 {@link #chunkSize(int)} 时才生效；小于 1 按 1 处理，即退化为
+     * 单线程。建议不超过可用 CPU 核数，否则线程切换开销会抵消并行收益。
+     *
+     * @param parallelism 期望并行度，下限为 1
+     * @return 当前写入器，便于链式调用
+     */
     public ConcurrentExcelWriter parallelism(int parallelism) {
         this.parallelism = Math.max(1, parallelism);
         return this;
     }
 
+    /**
+     * 设置分片大小（行数）。
+     *
+     * <p>数据按该大小切分为多个分片并行序列化；小于 100 按 100 处理。分片过小会放大
+     * 线程调度与结果重排开销，过大则降低并行度，建议取值范围 5000~20000。
+     *
+     * @param chunkSize 每个分片的行数，下限为 100
+     * @return 当前写入器，便于链式调用
+     */
     public ConcurrentExcelWriter chunkSize(int chunkSize) {
         this.chunkSize = Math.max(100, chunkSize);
         return this;
     }
 
+    /**
+     * 设置排除列名集合，命中这些字段名的列不写入 Excel。
+     *
+     * <p>在 {@link ExcelIgnore} / {@link ExcelProperty#ignore()} 过滤之后、排序之前生效；
+     * 与 {@link #includeColumnFiledNames(Set)} 同时设置时排除优先。设置后会重新解析
+     * 类元数据，因此需在 {@link #doWrite()} 之前调用。
+     *
+     * @param excludeColumnFiledNames 需要排除的字段名集合，可为 {@code null}（不排除任何列）
+     * @return 当前写入器，便于链式调用
+     */
     public ConcurrentExcelWriter excludeColumnFiledNames(Set<String> excludeColumnFiledNames) {
         this.excludeColumnFiledNames = excludeColumnFiledNames;
         if (clazz != null) {
@@ -102,6 +142,15 @@ public class ConcurrentExcelWriter {
         return this;
     }
 
+    /**
+     * 设置包含列名白名单，仅这些字段名对应的列会写入 Excel。
+     *
+     * <p>与 {@link #excludeColumnFiledNames(Set)} 的排除语义相反，两者同时设置时排除优先；
+     * 集合为空视为不限制。设置后会重新解析类元数据，因此需在 {@link #doWrite()} 之前调用。
+     *
+     * @param includeColumnFiledNames 允许写入的字段名白名单，可为 {@code null} 或空集（全部写入）
+     * @return 当前写入器，便于链式调用
+     */
     public ConcurrentExcelWriter includeColumnFiledNames(Set<String> includeColumnFiledNames) {
         this.includeColumnFiledNames = includeColumnFiledNames;
         if (clazz != null) {
@@ -456,6 +505,12 @@ public class ConcurrentExcelWriter {
 
     // ==================== 内部类 ====================
 
+    /**
+     * 单个分片序列化结果，携带分片序号以便合并阶段重排序。
+     *
+     * <p>由各并行分片任务产出，合并写入前按 {@code chunkIndex} 升序排列，
+     * 保证最终行序与入参 {@code data} 完全一致。
+     */
     private static class ChunkResult {
         private final int chunkIndex;
         private final byte[] bytes;
@@ -474,6 +529,11 @@ public class ConcurrentExcelWriter {
         }
     }
 
+    /**
+     * 为并发写入线程池提供命名的 daemon 线程工厂。
+     *
+     * <p>线程名形如 {@code prefix-序号}；线程全部设为 daemon，避免阻塞 JVM 正常退出。
+     */
     private static class NamedThreadFactory implements ThreadFactory {
         private final AtomicInteger counter = new AtomicInteger(0);
         private final String prefix;
@@ -490,6 +550,11 @@ public class ConcurrentExcelWriter {
         }
     }
 
+    /**
+     * 单列访问元数据，绑定字段名、表头文本、ASM 访问器与日期格式。
+     *
+     * <p>在 {@link #analyzeClass()} 阶段构建，供各分片序列化线程只读共享。
+     */
     private static class FieldAccessorInfo {
         String fieldName;
         String headerName;

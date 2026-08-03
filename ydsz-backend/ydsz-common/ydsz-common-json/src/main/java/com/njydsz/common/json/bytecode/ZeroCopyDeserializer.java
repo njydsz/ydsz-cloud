@@ -247,15 +247,30 @@ return field.getName();
         return fieldList.toArray(new FieldInfo[0]);
     }
 
-private static class FieldInfo {
-final String name;
-final String[] aliases;
-final Class<?> type;
-final Field field;
-final MethodHandle setter;
-final int nameHashCode;
-final int typeCode;
-final Class<?> elementType;
+    /**
+     * 反序列化字段元信息。
+     *
+     * <p>在构建反序列化器时通过反射一次性采集字段的 JSON 名、别名、类型、
+     * 类型码及 MethodHandle setter，避免反序列化过程中的重复反射开销。
+     * 使用字符串驻留（{@link String#intern}）降低重复字段名的内存占用。</p>
+     */
+    private static class FieldInfo {
+        /** 字段的 JSON 名称（驻留字符串） */
+        final String name;
+        /** @JsonAlias 声明的别名列表，无别名时为空数组 */
+        final String[] aliases;
+        /** 字段的 Java 类型 */
+        final Class<?> type;
+        /** 字段反射句柄 */
+        final Field field;
+        /** 字段 setter 的 MethodHandle（反射失败时为 null，回退反射赋值） */
+        final MethodHandle setter;
+        /** 字段名的 hash 值，用于快速匹配 JSON 键 */
+        final int nameHashCode;
+        /** 字段类型码（由 {@link #computeTypeCode} 计算，用于生成专用反序列化逻辑） */
+        final int typeCode;
+        /** 泛型元素类型（如 List<User> -> User.class），非集合类型时为 null */
+        final Class<?> elementType;
 
 FieldInfo(Field field) {
 this.field = field;
@@ -356,11 +371,43 @@ field.setAccessible(true);
         }
     }
 
+    /**
+     * Bean 零拷贝反序列化器接口。
+     *
+     * <p>基于 char 数组原地解析的专用反序列化契约，避免创建中间字符串对象。
+     * 各实现按字段数量/类型复杂度分级（单字段、双字段、超快、快速、标准），
+     * 在解析速度与代码复杂度之间取平衡。</p>
+     */
     public interface BeanDeserializer {
+        /**
+         * 从字符串反序列化 Bean。
+         *
+         * @param json JSON 字符串
+         * @return 反序列化后的 Bean 实例
+         * @throws Exception 解析失败时抛出
+         */
         Object deserialize(String json) throws Exception;
+
+        /**
+         * 从 char 数组指定区间反序列化 Bean。
+         *
+         * @param chars 字符数组（原始 JSON 缓冲区）
+         * @param offset 起始偏移
+         * @param len 长度
+         * @return 反序列化后的 Bean 实例
+         * @throws Exception 解析失败时抛出
+         */
         Object deserialize(char[] chars, int offset, int len) throws Exception;
     }
 
+    /**
+     * 单字段 Bean 专用反序列化器。
+     *
+     * <p>针对仅有一个可反序列化字段的 Bean 做极致优化：字段名与类型在构造时
+     * 预解析为 char 数组，解析过程中通过逐字符比对直接定位字段，避免哈希查找。</p>
+     *
+     * @param <T> Bean 类型
+     */
     private static class SingleFieldDeserializer<T> implements BeanDeserializer {
         private final Constructor<T> constructor;
         private final FieldInfo field;
@@ -420,6 +467,14 @@ field.setAccessible(true);
         }
     }
 
+    /**
+     * 双字段 Bean 专用反序列化器。
+     *
+     * <p>针对恰好两个字段的 Bean 优化：字段名以 char 数组形式预缓存，
+     * 解析时按序比对两个字段名，命中即赋值，适用于高频小对象场景。</p>
+     *
+     * @param <T> Bean 类型
+     */
     private static class TwoFieldDeserializer<T> implements BeanDeserializer {
         private final Constructor<T> constructor;
         private final FieldInfo[] fields;
@@ -493,6 +548,15 @@ field.setAccessible(true);
         }
     }
 
+    /**
+     * 超快多字段 Bean 反序列化器。
+     *
+     * <p>通过字段名哈希（FNV-1a）预建整数索引表，解析时对 JSON 键做单次哈希
+     * 后直接跳转赋值，避免了 HashMap 的装箱/比较开销；字段类型码用于生成
+     * 专用的值解析分支（int/long/String/嵌套对象等）。</p>
+     *
+     * @param <T> Bean 类型
+     */
     private static class UltraFastDeserializer<T> implements BeanDeserializer {
         private final Constructor<T> constructor;
         private final FieldInfo[] fields;
@@ -666,6 +730,15 @@ field.setAccessible(true);
         }
     }
 
+    /**
+     * 快速多字段 Bean 反序列化器。
+     *
+     * <p>基于 {@link HashMap} 的字段名快速定位，配合 char 数组名比对与
+     * 哈希缓存，在字段数较多时提供接近哈希表性能的解析速度，
+     * 是 {@link UltraFastDeserializer} 的通用回退实现。</p>
+     *
+     * @param <T> Bean 类型
+     */
     private static class FastDeserializer<T> implements BeanDeserializer {
         private final Constructor<T> constructor;
         private final HashMap<String, FieldInfo> fieldMap;
@@ -813,6 +886,14 @@ return deserialize(chars, 0, chars.length);
         }
     }
 
+    /**
+     * 标准多字段 Bean 反序列化器。
+     *
+     * <p>最通用的实现：基于 {@link HashMap} 字段名映射，支持别名匹配、
+     * 类型转换与嵌套对象递归解析，作为所有专用优化器的最终回退路径。</p>
+     *
+     * @param <T> Bean 类型
+     */
     private static class StandardDeserializer<T> implements BeanDeserializer {
         private final Constructor<T> constructor;
         private final HashMap<String, FieldInfo> fieldMap;

@@ -92,6 +92,15 @@ public final class AsmCodecCache {
         }
     }
 
+    /**
+     * 基于 LinkedHashMap(accessOrder=true) 的强引用 LRU 缓存。
+     *
+     * <p>使用 synchronizedMap 包装保证线程安全，put 时由 removeEldestEntry
+     * 自动淘汰最久未访问条目。与 {@link LruSoftCache} 的区别在于持有强引用，
+     * 不会被 GC 提前回收，适用于缓存失效成本较低或条目生命周期较短的场景。</p>
+     *
+     * @param <T> 缓存值的类型
+     */
     static class LruCache<T> {
         private final int maxSize;
         private final Map<Class<?>, T> map;

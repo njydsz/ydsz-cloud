@@ -11,7 +11,7 @@ package com.njydsz.system.domain.enums;
  *   <li>{@link #STRING} — 字符串类型，原样存储 / 原样输出</li>
  *   <li>{@link #NUMBER} — 数值类型（{@code Integer / Long / BigDecimal}），写入时序列化为字符串，读取时反序列化</li>
  *   <li>{@link #BOOLEAN} — 布尔类型，存储为 {@code "true" / "false"} 字符串</li>
- *   <li>{@link #JSON} — JSON 对象 / 数组类型，写入时 {@code JSON.toJSONString}，读取时 {@code JSON.parseObject}</li>
+ *   <li>{@link #JSON} — JSON 对象 / 数组类型，写入时 {@code YdszJson.toJson}，读取时 {@code YdszJson.fromJson}</li>
  * </ul>
  *
  * <p><b>使用场景：</b>

@@ -51,6 +51,14 @@ public final class ColumnarSchema {
         this.headerNames = Collections.unmodifiableList(headers);
     }
 
+    /**
+     * 创建 Schema 构建器。
+     *
+     * <p>构建器初始为空，需先 {@link Builder#addField} 添加至少一个字段再调用
+     * {@link Builder#build()}，否则构建时会抛 {@link IllegalStateException}。
+     *
+     * @return 空的 Schema 构建器
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -140,6 +148,16 @@ public final class ColumnarSchema {
         return idx;
     }
 
+    /**
+     * 判断 Schema 中是否包含指定列名。
+     *
+     * <p>基于构建期预建的名称索引查找，时间复杂度 O(1)，名称大小写敏感。
+     * 供调用方在调用可能抛异常的 {@link #field(String)} / {@link #fieldIndex(String)}
+     * 之前做存在性预检，适配动态表头场景。
+     *
+     * @param name 列名，大小写敏感；可为 {@code null}（此时返回 {@code false}）
+     * @return {@code true} 表示 Schema 中存在该列
+     */
     public boolean hasField(String name) {
         return indexMap.containsKey(name);
     }

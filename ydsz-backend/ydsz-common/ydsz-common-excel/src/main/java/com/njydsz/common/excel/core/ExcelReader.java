@@ -268,6 +268,15 @@ public class ExcelReader {
         return this;
     }
 
+    /**
+     * 设置最大读取行数，超出部分的数据行将被忽略。
+     *
+     * <p>用于超大文件的采样读取或防止一次性载入过多数据导致内存溢出；
+     * 小于等于 0 表示不限制（默认行为）。
+     *
+     * @param maxRows 最大读取行数，小于等于 0 表示不限制
+     * @return 当前读取器实体
+     */
     public ExcelReader maxRows(int maxRows) {
         metadata.setMaxRows(maxRows);
         return this;

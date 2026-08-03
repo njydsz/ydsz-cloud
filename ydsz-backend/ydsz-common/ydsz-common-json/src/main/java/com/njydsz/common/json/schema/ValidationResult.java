@@ -62,10 +62,21 @@ public final class ValidationResult {
         return valid && errors.isEmpty();
     }
     
+    /**
+     * 获取不可修改的错误信息列表。
+     *
+     * @return 错误信息列表；无错误时返回空列表而非 {@code null}。
+     *         返回列表为 {@link Collections#unmodifiableList} 包装，不可修改
+     */
     public List<String> getErrors() {
         return Collections.unmodifiableList(errors);
     }
-    
+
+    /**
+     * 判断是否存在错误信息。
+     *
+     * @return {@code true} 表示至少存在一条错误信息，验证未通过
+     */
     public boolean hasErrors() {
         return !errors.isEmpty();
     }

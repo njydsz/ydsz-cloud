@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.tree.ObjectNode;
 
 import org.springframework.stereotype.Component;
 
@@ -52,7 +52,7 @@ public class BillableUtilizationJobHandler implements JobHandler {
 
         if (paramsJson != null && !paramsJson.isBlank()) {
             try {
-                JsonObject obj = YdszJson.parseObjectToJsonObject(paramsJson);
+                ObjectNode obj = YdszJson.parseObject(paramsJson);
                 if (obj != null) {
                     period = obj.getString("period");
                     recomputeAll = Boolean.TRUE.equals(obj.getBoolean("recomputeAll"));

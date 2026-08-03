@@ -501,6 +501,20 @@ public class JsonPath {
         return str.length();
     }
 
+    /**
+     * 路径段类型枚举。
+     *
+     * <p>定义 JsonPath 语法中每种路径段（segment）的语义类型，
+     * 由解析器生成、求值器按类型分发处理：</p>
+     * <ul>
+     *   <li>{@link #PROPERTY}：对象属性访问，如 {@code $.name}</li>
+     *   <li>{@link #ARRAY_INDEX}：数组按索引取值，如 {@code $.list[0]}</li>
+     *   <li>{@link #ARRAY_SLICE}：数组切片，如 {@code $.list[0:2]}</li>
+     *   <li>{@link #ARRAY_FILTER}：数组过滤表达式，如 {@code $.list[?(@.age>18)]}</li>
+     *   <li>{@link #RECURSIVE}：递归下降搜索，如 {@code $..name}</li>
+     *   <li>{@link #WILDCARD}：通配符匹配全部子节点，如 {@code $.list[*]}</li>
+     * </ul>
+     */
     private enum PathSegmentType {
         PROPERTY,
         ARRAY_INDEX,
@@ -510,12 +524,26 @@ public class JsonPath {
         WILDCARD
     }
 
+    /**
+     * 路径段：JsonPath 解析结果的单个组成部分。
+     *
+     * <p>不可变值对象，由 {@link #parse(String)} 解析产生，
+     * 与 {@link PathSegmentType} 共同描述一次求值过程中的单步导航动作。
+     * 不同 {@code type} 下仅对应字段有意义（如 {@code ARRAY_INDEX} 使用 {@code index}，
+     * {@code ARRAY_SLICE} 使用 {@code sliceStart}/{@code sliceEnd}）。</p>
+     */
     private static class PathSegment {
+        /** 路径段类型 */
         final PathSegmentType type;
+        /** 属性名（PROPERTY 类型时有效） */
         final String property;
+        /** 数组索引（ARRAY_INDEX 类型时有效，-1 表示未设置） */
         final int index;
+        /** 切片起始（含），ARRAY_SLICE 类型时有效，null 表示未设置 */
         final Integer sliceStart;
+        /** 切片结束（不含），ARRAY_SLICE 类型时有效，null 表示未设置 */
         final Integer sliceEnd;
+        /** 过滤表达式（ARRAY_FILTER 类型时有效） */
         final String filter;
 
         PathSegment(PathSegmentType type) {

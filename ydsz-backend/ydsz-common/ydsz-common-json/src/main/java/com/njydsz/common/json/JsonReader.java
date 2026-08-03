@@ -24,7 +24,11 @@ import com.njydsz.common.json.metric.MetricsHelper;
  * @param <T> 目标类型
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 绑定型 Reader API 业务零引用，业务侧普遍使用 {@code YdszJson.fromJson(json, Type.class)}
+ * 或 {@link JsonMapper#fromJson} 静态/实例方法。计划 2.0.0 移除，如需类型绑定请使用
+ * {@link JsonMapper#fromJson(String, Class)} 替代。
  */
+@Deprecated(since = "1.0.0", forRemoval = true)
 public final class JsonReader<T> {
 
     private final JsonMapper mapper;

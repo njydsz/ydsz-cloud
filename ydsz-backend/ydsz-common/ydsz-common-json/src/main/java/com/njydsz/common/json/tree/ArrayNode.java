@@ -316,6 +316,28 @@ public final class ArrayNode extends JsonNode {
     }
 
     /**
+     * 获取浮点数值，越界或 null 返回 null。
+     *
+     * @param index 索引
+     * @return Float 值
+     */
+    public Float getFloat(int index) {
+        Double value = getDouble(index);
+        return value != null ? value.floatValue() : null;
+    }
+
+    /**
+     * 获取 float 基本类型值（为 null 时返回 0）。
+     *
+     * @param index 索引
+     * @return float 值
+     */
+    public float getFloatValue(int index) {
+        Float value = getFloat(index);
+        return value != null ? value : 0.0f;
+    }
+
+    /**
      * 获取布尔值，越界或 null 返回 null。
      *
      * @param index 索引

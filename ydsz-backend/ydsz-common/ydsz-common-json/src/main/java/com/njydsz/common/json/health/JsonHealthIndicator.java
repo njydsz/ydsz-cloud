@@ -3,11 +3,14 @@ package com.njydsz.common.json.health;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
+import com.njydsz.common.json.asm.AsmBeanCodecGenerator;
+import com.njydsz.common.json.asm.GraalVmDetector;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.JsonCacheStats;
 import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.provider.SerializationContext;
 
 /**
@@ -18,6 +21,9 @@ import com.njydsz.common.json.provider.SerializationContext;
  *   <li>AutoType SafeMode 是否开启</li>
  *   <li>最大 JSON 大小限制</li>
  *   <li>最大序列化深度</li>
+ *   <li>AutoType 白名单/黑名单大小（R15）</li>
+ *   <li>GraalVM Native Image 检测 + ASM 可用状态（R17）</li>
+ *   <li>已注册 JsonModule 列表 + 序列化器/反序列化器计数（R16）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -51,6 +57,25 @@ public class JsonHealthIndicator implements HealthIndicator {
         builder.withDetail("codecCacheSize", AsmCodecCache.getCacheSize());
         builder.withDetail("beanSerializerCacheSize", BeanSerializerCache.size());
         builder.withDetail("threadLocalMemoryEstimate", SerializationContext.estimateThreadLocalMemory());
+
+        // R15: AutoType 白名单/黑名单大小
+        builder.withDetail("autoTypeWhitelistSize", AutoTypeChecker.getExplicitWhitelist().size()
+                + AutoTypeChecker.getBuiltinWhitelist().size()
+                + AutoTypeChecker.getAnnotationWhitelist().size());
+        builder.withDetail("autoTypeBlacklistSize", AutoTypeChecker.getBuiltinBlacklist().size()
+                + AutoTypeChecker.getExplicitBlacklist().size());
+
+        // R17: GraalVM 检测状态 + ASM 可用状态
+        builder.withDetail("graalVmNativeImage", GraalVmDetector.isInNativeImage());
+        builder.withDetail("asmAvailable", AsmBeanCodecGenerator.isAsmAvailable());
+        builder.withDetail("asmGeneratedClassCount", AsmBeanCodecGenerator.getGeneratedClassCount());
+
+        // R16: JsonModule 注册中心可观测性
+        JsonModuleRegistry moduleRegistry = JsonModuleRegistry.getInstance();
+        builder.withDetail("moduleCount", moduleRegistry.getModuleCount());
+        builder.withDetail("moduleNames", moduleRegistry.getModuleNames());
+        builder.withDetail("registeredSerializerCount", moduleRegistry.getSerializerCount());
+        builder.withDetail("registeredDeserializerCount", moduleRegistry.getDeserializerCount());
 
         if (!safeMode) {
             builder.withDetail("warning", "AutoType SafeMode is disabled; RCE risk exists. "

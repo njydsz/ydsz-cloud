@@ -166,6 +166,12 @@ public final class JSONReader {
             return enabledByDefault;
         }
 
+        /**
+         * 判断该特性在给定特性组合值中是否已启用。
+         *
+         * @param features 特性组合位掩码（多个特性按位或的结果）
+         * @return {@code true} 表示该特性的位已置位启用
+         */
         public boolean isEnabled(long features) {
             return (features & (1L << ordinal())) != 0;
         }
@@ -822,6 +828,14 @@ public final class JSONReader {
         else throw new IllegalStateException("Expected null, got: " + buf[pos]);
     }
     
+    /**
+     * 判断当前位置（跳过前置空白后）是否为 JSON {@code null} 字面量。
+     *
+     * <p>只做前瞻判断，不推进读取位置。若返回 {@code true}，
+     * 可调用 {@link #readNull()} 消费该字面量。</p>
+     *
+     * @return {@code true} 表示当前位置是 {@code null} 字面量
+     */
     public boolean isNull() {
         skipWhitespace();
         return pos + 4 <= len && buf[pos] == 'n' && buf[pos+1] == 'u' && buf[pos+2] == 'l' && buf[pos+3] == 'l';

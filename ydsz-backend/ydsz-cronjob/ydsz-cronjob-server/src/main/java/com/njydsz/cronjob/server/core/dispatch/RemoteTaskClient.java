@@ -9,7 +9,7 @@ import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.tree.ObjectNode;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
@@ -195,7 +195,7 @@ public class RemoteTaskClient {
             return null;
         }
         try {
-            JsonObject json = YdszJson.parseObjectToJsonObject(body);
+            ObjectNode json = YdszJson.parseObject(body);
             int code = json.getIntegerOrDefault("code", -1);
             if (code != 0) {
                 log.warn("[RemoteClient] 子任务远程执行业务失败: code={} message={}",
@@ -233,7 +233,7 @@ public class RemoteTaskClient {
             return null;
         }
         try {
-            JsonObject json = YdszJson.parseObjectToJsonObject(body);
+            ObjectNode json = YdszJson.parseObject(body);
             int code = json.getIntegerOrDefault("code", -1);
             if (code != 0) {
                 log.warn("[RemoteClient] 远程执行业务失败: code={} message={}",

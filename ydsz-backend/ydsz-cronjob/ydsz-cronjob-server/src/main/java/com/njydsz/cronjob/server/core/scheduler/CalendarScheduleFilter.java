@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.JsonArray;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.ObjectNode;
 
 import org.springframework.stereotype.Component;
 
@@ -109,8 +109,8 @@ public class CalendarScheduleFilter {
             return Set.of();
         }
         try {
-            JsonObject params = YdszJson.parseObjectToJsonObject(paramsJson);
-            JsonArray holidaysArr = params.getJSONArray("holidays");
+            ObjectNode params = YdszJson.parseObject(paramsJson);
+            ArrayNode holidaysArr = params.getJSONArray("holidays");
             if (holidaysArr == null || holidaysArr.isEmpty()) {
                 return Set.of();
             }
@@ -140,7 +140,7 @@ public class CalendarScheduleFilter {
             return DEFAULT_CALENDAR_TYPE;
         }
         try {
-            JsonObject params = YdszJson.parseObjectToJsonObject(paramsJson);
+            ObjectNode params = YdszJson.parseObject(paramsJson);
             String type = params.getString("calendarType");
             return type != null ? type.toUpperCase() : DEFAULT_CALENDAR_TYPE;
         } catch (Exception e) {

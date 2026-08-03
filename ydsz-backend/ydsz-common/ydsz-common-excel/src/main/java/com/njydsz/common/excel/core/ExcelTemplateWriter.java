@@ -53,11 +53,29 @@ public class ExcelTemplateWriter {
         this.valueFormatter = new ValueFormatter(true);
     }
 
+    /**
+     * 设置模板中作为写入目标的 Sheet 下标。
+     *
+     * <p>模板可能包含多个 Sheet，默认取第 0 个。下标越界时由底层
+     * {@link XSSFWorkbook#getSheetAt(int)} 抛出异常。
+     *
+     * @param sheetIndex 目标 Sheet 下标，从 0 开始
+     * @return 当前写入器，便于链式调用
+     */
     public ExcelTemplateWriter sheet(int sheetIndex) {
         this.sheetIndex = sheetIndex;
         return this;
     }
 
+    /**
+     * 设置数据写入的起始行号（1-based）。
+     *
+     * <p>表头行取该行的上一行；不设置（保持默认 {@code -1}）时自动探测前 11 行中
+     * 第一个非空行作为表头，数据从表头下一行开始写。
+     *
+     * @param row 数据起始行号，从 1 开始；设为 -1 可恢复自动探测
+     * @return 当前写入器，便于链式调用
+     */
     public ExcelTemplateWriter dataStartRow(int row) {
         this.dataStartRow = row;
         return this;

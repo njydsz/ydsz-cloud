@@ -22,7 +22,11 @@ import com.njydsz.common.json.exception.JsonException;
  * @param <T> 目标类型
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 绑定型 Writer API 业务零引用（仅 1 处 RocketMQMessageProducer 使用），
+ * 业务侧普遍使用 {@code YdszJson.toJson(obj)} 或 {@link JsonMapper#toJson} 静态/实例方法。
+ * 计划 2.0.0 移除，如需类型绑定请使用 {@link JsonMapper#toJson(Object)} 替代。
  */
+@Deprecated(since = "1.0.0", forRemoval = true)
 public final class JsonWriter<T> {
 
     private final JsonMapper mapper;

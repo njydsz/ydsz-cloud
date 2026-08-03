@@ -61,6 +61,12 @@ import com.njydsz.common.json.type.TypeFactory;
  * JsonNode tree = mapper.readTree(json);
  * </pre>
  *
+ * <p><b>多配置场景规范（R9）：</b>当需要与全局配置不同的序列化策略时（如对外 API 使用
+ * SNAKE_CASE 命名、内部 API 使用 LOWER_CAMEL_CASE；或金融场景启用 useBigDecimal），
+ * 必须通过 {@code JsonMapper.builder()} 创建独立配置的 Mapper 实例，
+ * <b>禁止</b>通过 {@code YdszJson.toJson(obj, JsonConfig)} 或 ThreadLocal 覆盖全局配置，
+ * 避免线程间配置污染。Mapper 实例创建后为只读配置，线程安全，可作为 Spring Bean 单例注入。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -916,6 +922,15 @@ public class JsonMapper {
             return this;
         }
 
+        /**
+         * 构建最终的 {@link JsonMapper} 实例。
+         *
+         * <p>将 Builder 上累积的全部配置项转换为 {@link JsonConfig}，
+         * 构造 {@code JsonMapper} 并触发 {@code configChanged()} 使新配置生效
+         * （例如清空 Bean 序列化缓存、刷新命名策略映射等）。</p>
+         *
+         * @return 已应用全部构建配置的 JsonMapper 实例
+         */
         public JsonMapper build() {
             JsonConfig config = JsonConfig.builder()
                 .namingStrategy(namingStrategy)

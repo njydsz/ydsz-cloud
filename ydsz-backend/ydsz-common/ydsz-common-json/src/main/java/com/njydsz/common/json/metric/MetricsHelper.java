@@ -21,8 +21,23 @@ public final class MetricsHelper {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 可抛出受检异常的供应商接口。
+     *
+     * <p>与 {@code java.util.function.Supplier} 的区别在于允许 {@code get()}
+     * 抛出 {@link Exception}，用于指标包装层在回调失败时向上传播异常，
+     * 最终由 {@link #recordOperation} 统一转换为 {@link JsonException}。</p>
+     *
+     * @param <T> 生产值的类型
+     */
     @FunctionalInterface
     public interface ThrowingSupplier<T> {
+        /**
+         * 获取结果。
+         *
+         * @return 生产的值
+         * @throws Exception 获取过程中可能抛出的任意异常
+         */
         T get() throws Exception;
     }
 

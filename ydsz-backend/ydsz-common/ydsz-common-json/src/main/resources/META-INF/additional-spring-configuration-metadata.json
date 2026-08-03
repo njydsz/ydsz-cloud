@@ -96,6 +96,11 @@
       "name": "ydsz.json.warmup-classes",
       "type": "java.util.List<java.lang.String>",
       "description": "启动时需要预热的类列表（全限定类名）。预热会提前为指定类型生成 ASM 序列化/反序列化字节码，避免首次请求时的延迟尖峰。默认为空。"
+    },
+    {
+      "name": "ydsz.json.disable-jackson-auto-configuration",
+      "type": "java.lang.Boolean",
+      "description": "是否禁用 Spring Boot Jackson 自动配置（默认 false）。设置为 true 后 JacksonAutoConfiguration 将被加入 spring.autoconfigure.exclude，Spring 容器不再注册 ObjectMapper Bean。禁用后依赖 ObjectMapper 的 Spring 内部组件（Actuator 部分端点、Spring Data Redis 默认序列化器等）可能降级或需额外适配，建议仅在确认无 Jackson 依赖后启用。"
     }
   ]
 }

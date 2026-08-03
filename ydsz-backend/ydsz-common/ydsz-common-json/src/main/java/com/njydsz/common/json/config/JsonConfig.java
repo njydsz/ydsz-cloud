@@ -63,6 +63,15 @@ public final class JsonConfig implements Serializable {
         THREAD_LOCAL_OVERRIDE.remove();
     }
 
+    /**
+     * 获取当前线程的配置覆盖项。
+     *
+     * <p>若当前线程通过 {@link #setThreadLocalOverride(JsonConfig)} 设置了覆盖配置，
+     * 则返回覆盖值；否则返回 {@code null}。调用方需自行处理 {@code null} 时
+     * 回退到全局默认配置。</p>
+     *
+     * @return 当前线程的覆盖配置；未设置时返回 {@code null}
+     */
     public static JsonConfig getThreadLocalOverride() {
         return THREAD_LOCAL_OVERRIDE.get();
     }

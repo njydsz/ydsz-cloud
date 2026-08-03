@@ -1,12 +1,5 @@
 package com.njydsz.common.excel.core.listener;
 
-/**
- * WriteHandler 类
- *
- * @author ydsz-team
- * @email ydsz-dev@njydsz.com
- * @version 1.0.0
- */
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,16 +73,34 @@ public class WriteHandler {
             this.formula = formula;
         }
 
+        /**
+         * 设置条件格式命中的字体颜色。
+         *
+         * @param fontColor 颜色名称（如 {@code "RED"}），可为 {@code null} 表示沿用默认色
+         * @return 当前配置，便于链式调用
+         */
         public ConditionalFormattingConfig setFontColor(String fontColor) {
             this.fontColor = fontColor;
             return this;
         }
 
+        /**
+         * 设置条件格式命中的背景填充色。
+         *
+         * @param backgroundColor 颜色名称（如 {@code "YELLOW"}），可为 {@code null} 表示不填充
+         * @return 当前配置，便于链式调用
+         */
         public ConditionalFormattingConfig setBackgroundColor(String backgroundColor) {
             this.backgroundColor = backgroundColor;
             return this;
         }
 
+        /**
+         * 设置条件格式命中的单元格是否加粗显示。
+         *
+         * @param bold {@code true} 表示加粗
+         * @return 当前配置，便于链式调用
+         */
         public ConditionalFormattingConfig setBold(boolean bold) {
             this.bold = bold;
             return this;
@@ -133,36 +144,91 @@ public class WriteHandler {
             this.showErrorMessage = false;
         }
 
+        /**
+         * 设置数据验证的公式 1（列表内容或数值区间下界）。
+         *
+         * <p>对 LIST 类型为逗号分隔的候选值；对 BETWEEN 等区间类型为下界公式。
+         *
+         * @param formula1 验证公式，可为 {@code null}
+         * @return 当前配置，便于链式调用
+         */
         public DataValidationConfig setFormula1(String formula1) {
             this.formula1 = formula1;
             return this;
         }
 
+        /**
+         * 设置数据验证的公式 2（数值区间上界）。
+         *
+         * <p>仅对 BETWEEN 等需要双边界的运算符类型生效。
+         *
+         * @param formula2 上界公式，可为 {@code null}
+         * @return 当前配置，便于链式调用
+         */
         public DataValidationConfig setFormula2(String formula2) {
             this.formula2 = formula2;
             return this;
         }
 
+        /**
+         * 设置数据验证的运算符类型。
+         *
+         * <p>取值参考 {@link DataValidationConstraint.OperatorType}（如 BETWEEN、GREATER_THAN），
+         * 默认 IGNORED（仅限制类型、不限范围）。
+         *
+         * @param operatorType 运算符类型编码
+         * @return 当前配置，便于链式调用
+         */
         public DataValidationConfig setOperatorType(int operatorType) {
             this.operatorType = operatorType;
             return this;
         }
 
+        /**
+         * 设置校验失败时的错误提示样式。
+         *
+         * <p>取值如 {@code "stop"}（阻止非法输入）、{@code "warning"}（警告但允许）等
+         * POI 错误样式标识。
+         *
+         * @param errorStyle 错误样式标识，可为 {@code null}
+         * @return 当前配置，便于链式调用
+         */
         public DataValidationConfig setErrorStyle(String errorStyle) {
             this.errorStyle = errorStyle;
             return this;
         }
 
+        /**
+         * 设置校验失败时的错误弹窗标题。
+         *
+         * @param errorTitle 标题文本，可为 {@code null}
+         * @return 当前配置，便于链式调用
+         */
         public DataValidationConfig setErrorTitle(String errorTitle) {
             this.errorTitle = errorTitle;
             return this;
         }
 
+        /**
+         * 设置校验失败时展示给用户的错误提示内容。
+         *
+         * @param error 错误提示文本，可为 {@code null}
+         * @return 当前配置，便于链式调用
+         */
         public DataValidationConfig setError(String error) {
             this.error = error;
             return this;
         }
 
+        /**
+         * 设置校验失败时是否弹出错误提示框。
+         *
+         * <p>默认 {@code false}，即静默拦截非法输入但不向用户提示原因；
+         * 设置为 {@code true} 后配合 {@link #setErrorTitle} / {@link #setError} 展示细节。
+         *
+         * @param showErrorMessage {@code true} 显示错误弹窗
+         * @return 当前配置，便于链式调用
+         */
         public DataValidationConfig setShowErrorMessage(boolean showErrorMessage) {
             this.showErrorMessage = showErrorMessage;
             return this;

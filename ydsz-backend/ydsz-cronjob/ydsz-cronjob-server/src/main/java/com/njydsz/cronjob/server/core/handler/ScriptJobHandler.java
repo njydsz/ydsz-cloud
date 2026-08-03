@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.JsonArray;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.ObjectNode;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -111,7 +111,7 @@ public class ScriptJobHandler implements JobHandler {
             throw new IllegalArgumentException("SHELL 任务参数(paramsJson)为空");
         }
 
-        JsonObject params = YdszJson.parseObjectToJsonObject(paramsJson);
+        ObjectNode params = YdszJson.parseObject(paramsJson);
         String language = params.getString("language");
         if (!StringUtils.hasText(language)) {
             throw new IllegalArgumentException("SHELL 任务参数缺少 language（shell/python）");
@@ -422,13 +422,13 @@ public class ScriptJobHandler implements JobHandler {
     /**
      * 解析参数列表。
      */
-    private List<String> parseArgs(JsonArray argsArray) {
+    private List<String> parseArgs(ArrayNode argsArray) {
         if (argsArray == null || argsArray.isEmpty()) {
             return new ArrayList<>();
         }
         List<String> args = new ArrayList<>(argsArray.size());
-        for (Object arg : argsArray) {
-            args.add(arg == null ? "" : String.valueOf(arg));
+        for (JsonNode arg : argsArray.elements()) {
+            args.add(arg == null || arg.isNull() ? "" : arg.asText());
         }
         return args;
     }

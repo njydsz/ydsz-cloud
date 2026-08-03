@@ -11,7 +11,7 @@ import java.util.Map;
 import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.JsonArray;
+import com.njydsz.common.json.tree.ArrayNode;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
@@ -269,7 +269,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            JsonArray array = YdszJson.parseArrayToJsonArray(channelsJson);
+            ArrayNode array = YdszJson.parseArrayNode(channelsJson);
             List<AlertChannel> channels = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 AlertChannel channel = AlertChannel.parse(array.getString(i));
@@ -296,7 +296,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            JsonArray array = YdszJson.parseArrayToJsonArray(receiversJson);
+            ArrayNode array = YdszJson.parseArrayNode(receiversJson);
             List<String> receivers = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 String receiver = array.getString(i);
@@ -525,7 +525,7 @@ public class AlertDispatcher {
             return "INAPP";
         }
         try {
-            JsonArray array = YdszJson.parseArrayToJsonArray(channelsJson);
+            ArrayNode array = YdszJson.parseArrayNode(channelsJson);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < array.size(); i++) {
                 if (i > 0) {
@@ -551,7 +551,7 @@ public class AlertDispatcher {
             return "[]";
         }
         String[] parts = channelsCsv.split(",");
-        JsonArray array = new JsonArray();
+        ArrayNode array = new ArrayNode();
         for (String part : parts) {
             String trimmed = part.trim();
             if (!trimmed.isEmpty()) {

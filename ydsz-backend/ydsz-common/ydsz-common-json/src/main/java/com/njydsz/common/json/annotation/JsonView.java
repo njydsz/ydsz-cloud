@@ -49,6 +49,11 @@ import java.lang.annotation.Target;
  * // 输出：{"id":1,"name":"John","email":"john@example.com","phone":"1234567890"}
  * </pre>
  *
+ * <p><b>规范建议（R8）：</b>列表/详情接口的字段裁剪应统一使用 {@code @JsonView} +
+ * {@code YdszJson.toJson(obj, ViewClass.class)}，<b>禁止</b>为不同视图创建多个 DTO 投影类。
+ * 视图类应集中定义在 domain 模块的 {@code XxxViews} 中（如 {@code FlowViews.Summary}），
+ * Controller 层通过 {@code @JsonView(ViewClass.class)} 或手动调用 {@code YdszJson.toJson} 指定视图。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

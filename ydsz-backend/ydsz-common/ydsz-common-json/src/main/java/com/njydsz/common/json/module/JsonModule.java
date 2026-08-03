@@ -40,6 +40,12 @@ package com.njydsz.common.json.module;
  * }
  * </pre>
  *
+ * <p><b>规范要求（R6）：</b>每个业务模块若有自定义序列化需求，必须实现
+ * {@code XxxJsonModule extends JsonModule} 并通过 {@code @Component} 注册为 Spring Bean，
+ * 由 {@link com.njydsz.common.json.spring.JsonModuleRegistrar} 自动发现并注册到引擎。
+ * <b>禁止</b>在业务代码中散落调用 {@code YdszJson.register()}，所有自定义序列化器/反序列化器
+ * 必须通过 JsonModule 收敛，确保可发现、可治理、可测试。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

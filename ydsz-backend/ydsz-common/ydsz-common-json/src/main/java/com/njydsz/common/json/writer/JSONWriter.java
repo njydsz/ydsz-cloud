@@ -130,6 +130,12 @@ public final class JSONWriter {
             return enabledByDefault;
         }
 
+        /**
+         * 判断该特性在给定特性组合值中是否已启用。
+         *
+         * @param features 特性组合位掩码（多个特性按位或的结果）
+         * @return {@code true} 表示该特性的位已置位启用
+         */
         public boolean isEnabled(long features) {
             return (features & (1L << ordinal())) != 0;
         }

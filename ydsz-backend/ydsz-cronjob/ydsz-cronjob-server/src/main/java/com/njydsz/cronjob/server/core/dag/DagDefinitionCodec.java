@@ -7,8 +7,8 @@ import java.util.Set;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.object.JsonArray;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.ObjectNode;
 
 import org.springframework.stereotype.Component;
 
@@ -43,10 +43,10 @@ public class DagDefinitionCodec {
         if (definition == null) {
             return null;
         }
-        Map<String, Object> root = new JsonObject();
-        List<Object> nodesArr = new JsonArray();
+        ObjectNode root = new ObjectNode();
+        ArrayNode nodesArr = new ArrayNode();
         for (DagNode node : definition.nodes()) {
-            JsonObject n = new JsonObject();
+            ObjectNode n = new ObjectNode();
             n.put("jobKey", node.jobKey());
             n.put("jobId", node.jobId());
             n.put("label", node.label());
@@ -64,9 +64,9 @@ public class DagDefinitionCodec {
             n.put("approvalTimeoutMinutes", node.approvalTimeoutMinutes());
             nodesArr.add(n);
         }
-        List<Object> edgesArr = new JsonArray();
+        ArrayNode edgesArr = new ArrayNode();
         for (DagEdge edge : definition.edges()) {
-            JsonObject e = new JsonObject();
+            ObjectNode e = new ObjectNode();
             e.put("from", edge.from());
             e.put("to", edge.to());
             e.put("failStrategy", edge.failStrategy());
@@ -89,9 +89,9 @@ public class DagDefinitionCodec {
         if (json == null || json.isBlank()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
         }
-        JsonObject root;
+        ObjectNode root;
         try {
-            root = YdszJson.parseObjectToJsonObject(json);
+            root = YdszJson.parseObject(json);
         } catch (Exception e) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_invalid");
         }
@@ -101,12 +101,12 @@ public class DagDefinitionCodec {
 
         // 解析 nodes
         List<DagNode> nodes = new ArrayList<>();
-        JsonArray nodesArr = root.getJSONArray("nodes");
+        ArrayNode nodesArr = root.getJSONArray("nodes");
         if (nodesArr == null || nodesArr.isEmpty()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
         }
         for (int i = 0; i < nodesArr.size(); i++) {
-            JsonObject n = nodesArr.getJSONObject(i);
+            ObjectNode n = nodesArr.getJSONObject(i);
             String jobKey = n.getString("jobKey");
             if (jobKey == null || jobKey.isBlank()) {
                 throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
@@ -137,10 +137,10 @@ public class DagDefinitionCodec {
 
         // 解析 edges（可为空）
         List<DagEdge> edges = new ArrayList<>();
-        JsonArray edgesArr = root.getJSONArray("edges");
+        ArrayNode edgesArr = root.getJSONArray("edges");
         if (edgesArr != null) {
             for (int i = 0; i < edgesArr.size(); i++) {
-                JsonObject e = edgesArr.getJSONObject(i);
+                ObjectNode e = edgesArr.getJSONObject(i);
                 String from = e.getString("from");
                 String to = e.getString("to");
                 if (from == null || to == null) {
