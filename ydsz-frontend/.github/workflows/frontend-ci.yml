@@ -65,7 +65,7 @@ jobs:
 
       - name: Type check
         working-directory: ydsz-frontend
-        run: pnpm run typecheck
+        run: pnpm run check:type
 
       - name: Lint
         working-directory: ydsz-frontend

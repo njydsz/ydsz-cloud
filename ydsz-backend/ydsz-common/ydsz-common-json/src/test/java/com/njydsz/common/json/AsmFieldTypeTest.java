@@ -8,7 +8,6 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,10 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>覆盖 15 种 FieldTypeCode：String、int/Integer、long/Long、double/Double、
  * float/Float、boolean/Boolean、short/Short、byte/Byte、char/Character、
  * LocalDateTime、LocalDate、Date、Collection、Map、嵌套 Bean。
- *
- * <p>已知问题：当前测试环境下 ASM 字节码生成路径未生效（AsmCodecCache.getOrCreateSerializerForType
- * 返回 null），反射回退路径在 char/Date/Collection/Map/嵌套 Bean 类型上存在反序列化缺陷。
- * 相关测试标记 @Disabled 待 ASM 路径修复后启用。
  */
 class AsmFieldTypeTest {
 
@@ -38,7 +33,6 @@ class AsmFieldTypeTest {
     }
 
     @Test
-    @Disabled("BUG: 反射回退路径下 toObject 返回 LinkedHashMap 而非目标 Bean 类型。待 ASM 路径修复后启用。")
     void primitiveAndBoxedTypesRoundTrip() {
         AllTypesBean bean = new AllTypesBean();
         bean.setStringVal("hello");
@@ -78,7 +72,6 @@ class AsmFieldTypeTest {
     }
 
     @Test
-    @Disabled("BUG: char 类型被序列化为裸字符（如 A 而非 \"A\"），导致 JSON 解析失败。待修复后启用。")
     void charTypeRoundTrip() {
         CharBean bean = new CharBean();
         bean.setCharVal('A');
@@ -92,7 +85,6 @@ class AsmFieldTypeTest {
     }
 
     @Test
-    @Disabled("BUG: LocalDateTime/LocalDate/Date 反序列化返回 null。待 ASM 路径修复或反射路径补全后启用。")
     void dateTimeTypesRoundTrip() {
         DateTimeBean bean = new DateTimeBean();
         bean.setLocalDateTime(LocalDateTime.of(2026, 8, 3, 14, 30, 0));
@@ -108,7 +100,6 @@ class AsmFieldTypeTest {
     }
 
     @Test
-    @Disabled("BUG: List/Set/Map 反序列化返回 null。待 ASM 路径修复或反射路径补全后启用。")
     void collectionAndMapRoundTrip() {
         CollectionMapBean bean = new CollectionMapBean();
         bean.setList(Arrays.asList("a", "b", "c"));
@@ -131,7 +122,6 @@ class AsmFieldTypeTest {
     }
 
     @Test
-    @Disabled("BUG: 嵌套 Bean 反序列化返回 null。待 ASM 路径修复或反射路径补全后启用。")
     void nestedBeanRoundTrip() {
         NestedParentBean bean = new NestedParentBean();
         bean.setId(1);
@@ -150,7 +140,6 @@ class AsmFieldTypeTest {
     }
 
     @Test
-    @Disabled("BUG: 反射回退路径下 toObject 返回 LinkedHashMap 而非目标 Bean 类型。待 ASM 路径修复后启用。")
     void nullFieldsHandledCorrectly() {
         AllTypesBean bean = new AllTypesBean();
         bean.setStringVal(null);

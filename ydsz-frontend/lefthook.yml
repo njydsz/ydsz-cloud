@@ -42,12 +42,12 @@ pre-push:
     test:
       name: "Running unit tests"
       tags: [test, frontend]
-      run: pnpm test:run
+      run: pnpm test:unit
     # 检查类型安全（TypeScript）
     type-check:
       name: "Type checking"
       tags: [typescript, frontend]
-      run: pnpm tsc --noEmit
+      run: pnpm check:type
     # 运行安全审计
     audit:
       name: "Dependency audit"

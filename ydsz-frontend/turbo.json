@@ -38,6 +38,13 @@
     },
     "typecheck": {
       "outputs": []
+    },
+    "lint": {
+      "outputs": []
+    },
+    "test:unit": {
+      "outputs": [],
+      "dependsOn": ["^build"]
     }
   }
 }

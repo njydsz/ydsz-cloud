@@ -532,6 +532,13 @@ public final class ValueWriter {
                     continue;
                 }
 
+                // @JsonInclude 策略：NON_EMPTY/NON_DEFAULT 等对非 null 值的过滤
+                // shouldSkipValue(null) 已由上方 shouldWriteNull 逻辑覆盖（writeNulls=true 时强制写出），
+                // 此处仅对非 null 值应用 NON_EMPTY/NON_DEFAULT 过滤，避免空字符串/空集合/默认值被写出
+                if (value != null && field.shouldSkipValue(value)) {
+                    continue;
+                }
+
                 // @JsonUnwrapped：嵌套属性展开到父对象
                 if (field.unwrapped && value != null) {
                     writeUnwrappedFields(value, field, sb, first);

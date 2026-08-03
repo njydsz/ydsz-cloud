@@ -1,10 +1,10 @@
 /**
- * 生命周期调度器 + 保活控制
+ * 生命周期调度器 + 保活控制 + 轻量沙箱集成
  *
  * 每个子应用一个 AppInstance 实例：
  * - 加载 → parsed LifecycleExports + metadata
- * - activate → mount
- * - deactivate → 视 keepAlive 决定是否卸载
+ * - activate → enterSandbox → mount
+ * - deactivate → unmount → exitSandbox（keepAlive 时只 detach，沙箱不退出）
  * - keepAlive 激活 → container.appendChild(cachedEl) 直接复用，零重新渲染
  *
  * @path comm/effects/micro-kernel-lite/src/scheduler.ts
@@ -14,6 +14,9 @@
 
 import type { LifecycleExports, MicroAppConfig, MountProps, UnmountResult } from '@ydsz/micro-runtime';
 import { loadApp, removeStylesheets } from './loader';
+import type { LoadOptions, LoadResult } from './loader';
+import { enterSandbox, exitSandbox } from './sandbox';
+import type { SandboxInstance } from './sandbox';
 
 /** 子应用生命周期状态：未加载 / 加载中 / 已加载 / 已挂载 / 已卸载 */
 export type AppStatus = 'NOT_LOADED' | 'LOADING' | 'LOADED' | 'MOUNTED' | 'UNMOUNTED';
@@ -28,6 +31,10 @@ export interface AppInstance {
   cachedRoot: null | HTMLElement;
   /** keepAlive 时原始父节点（切回时 appendChild 回此处） */
   cachedParent: null | Node;
+  /** 快照沙箱实例（mount 时创建，unmount 时销毁；keepAlive 时保留） */
+  sandbox: null | SandboxInstance;
+  /** 最近一次加载的性能指标（为监控提供数据） */
+  loadMetrics: null | { duration: number; fromCache: boolean };
   error: null | string;
 }
 
@@ -42,6 +49,8 @@ export function createAppInstance(config: MicroAppConfig): AppInstance {
     keepAlive: false,
     cachedRoot: null,
     cachedParent: null,
+    sandbox: null,
+    loadMetrics: null,
     error: null,
   };
   appInstances.set(config.name, instance);
@@ -65,7 +74,7 @@ export function getAllInstances(): AppInstance[] {
 export async function activateApp(
   instance: AppInstance,
   container: HTMLElement,
-  signal?: AbortSignal,
+  loadOpts: LoadOptions = {},
 ): Promise<void> {
   const { config } = instance;
 
@@ -84,8 +93,9 @@ export async function activateApp(
   if (!instance.exports) {
     instance.status = 'LOADING';
     try {
-      const { exports } = await loadApp(config, signal);
-      instance.exports = exports;
+      const result: LoadResult = await loadApp(config, loadOpts);
+      instance.exports = result.exports;
+      instance.loadMetrics = { duration: result.duration, fromCache: result.fromCache };
       instance.status = 'LOADED';
     } catch (err) {
       instance.status = 'NOT_LOADED';
@@ -101,12 +111,18 @@ export async function activateApp(
     ...config.props,
   };
 
+  // 进入快照沙箱（挂载前快照 window，代理副作用 API）
+  instance.sandbox = enterSandbox();
+
   try {
     await instance.exports.mount(mountProps);
     instance.status = 'MOUNTED';
     instance.error = null;
     console.info(`[LiteKernel] ${config.name} mounted`);
   } catch (err) {
+    // 挂载失败：退出沙箱，回滚全局状态
+    exitSandbox(instance.sandbox);
+    instance.sandbox = null;
     instance.status = 'LOADED';
     instance.error = String(err);
     throw err;
@@ -144,6 +160,13 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
       container: document.querySelector(config.container) || document.createElement('div'),
       basename: config.activeRule,
     });
+
+    // 退出快照沙箱（恢复 window / 清理事件与定时器）
+    if (instance.sandbox) {
+      exitSandbox(instance.sandbox);
+      instance.sandbox = null;
+    }
+
     removeStylesheets(config.name);
     instance.exports = null;
     instance.status = 'NOT_LOADED';
@@ -151,6 +174,11 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
     console.info(`[LiteKernel] ${config.name} unmounted`);
     return { name: config.name, success: true };
   } catch (err) {
+    // unmount 失败仍尝试退出沙箱
+    if (instance.sandbox) {
+      exitSandbox(instance.sandbox);
+      instance.sandbox = null;
+    }
     instance.error = String(err);
     return { name: config.name, success: false, reason: String(err) };
   }

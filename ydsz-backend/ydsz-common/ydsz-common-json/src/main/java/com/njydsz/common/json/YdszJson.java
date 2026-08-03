@@ -392,7 +392,7 @@ public class YdszJson {
         return SerializerRegistry.getInstance().hasDeserializer(clazz) || JsonModuleRegistry.getInstance().hasDeserializer(clazz);
     }
 
-    private static Map<String, Object> toStringObjectMap(Object obj) {
+    public static Map<String, Object> toStringObjectMap(Object obj) {
         if (obj instanceof Map<?, ?> map) {
             Map<String, Object> result = new LinkedHashMap<>(map.size());
             for (Map.Entry<?, ?> entry : map.entrySet()) {

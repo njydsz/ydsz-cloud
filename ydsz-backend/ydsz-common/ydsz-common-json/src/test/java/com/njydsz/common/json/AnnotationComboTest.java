@@ -7,7 +7,6 @@ import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.testbean.AnnotationBean;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,9 +16,6 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>覆盖 @JsonProperty、@JsonAlias、@JsonIgnore、@JsonFormat、@JsonInclude、
  * @JsonPropertyOrder、@JsonIgnoreProperties 等核心注解的组合场景。
- *
- * <p>已知问题：当前 ASM 字节码路径未生效，反射回退路径在部分注解（@JsonProperty 反序列化、
- * @JsonAlias、@JsonInclude.NON_EMPTY）上存在缺陷。相关测试标记 @Disabled 待修复后启用。
  */
 class AnnotationComboTest {
 

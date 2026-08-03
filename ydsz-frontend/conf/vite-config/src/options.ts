@@ -42,20 +42,18 @@ const getDefaultPwaOptions = (name: string): Partial<PwaPluginOptions> => ({
 });
 
 /**
- * importmap CDN 暂时不开启，因为有些包不支持，且网络不稳定
+ * importmap CDN 外置共享依赖。
+ *
+ * 与 lite-kernel ESM 直引模式联动：通过 importmap 将 Vue/Pinia/Element Plus
+ * 等核心依赖标记为 external，浏览器运行时按 importmap 映射统一加载单例。
+ * 具体依赖清单见 {@link ./micro-shared-deps.ts}。
+ *
+ * @deprecated 请直接使用 {@link ./micro-shared-deps.ts} 的 ALL_SHARED_DEPS / getSharedDeps
  */
+import { ALL_SHARED_DEPS } from './micro-shared-deps';
 const defaultImportmapOptions: ImportmapPluginOptions = {
-  // 通过 Importmap CDN 方式引入,
-  // 目前只有esm.sh源兼容性好一点，jspm.io对于 esm 入口要求高
   defaultProvider: 'esm.sh',
-  importmap: [
-    { name: 'vue' },
-    { name: 'pinia' },
-    { name: 'vue-router' },
-    // { name: 'vue-i18n' },
-    { name: 'dayjs' },
-    { name: 'vue-demi' },
-  ],
+  importmap: [...ALL_SHARED_DEPS],
 };
 
 export { defaultImportmapOptions, getDefaultPwaOptions };

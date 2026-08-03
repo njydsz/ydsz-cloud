@@ -21,7 +21,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
-import com.njydsz.workflow.domain.vo.FlowAttachmentPreviewVOVO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 
 import com.njydsz.common.audit.annotation.Audit;
@@ -138,7 +137,7 @@ public class FlowAttachmentController {
      */
     @GetMapping("/attachment/{attachmentId}/preview")
     @Operation(summary = "附件在线预览（根据文件类型返回预览策略）")
-    public BaseResponse<FlowAttachmentPreviewVOVO> preview(@PathVariable String attachmentId) {
-        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(attachmentService.previewAttachment(attachmentId)));
+    public BaseResponse<FlowAttachmentPreviewVO> preview(@PathVariable String attachmentId) {
+        return BaseResponse.success(attachmentService.previewAttachment(attachmentId));
     }
 }

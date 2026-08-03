@@ -16,8 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.workflow.domain.converter.WorkflowConverter;
-import com.njydsz.workflow.domain.vo.InstanceMigrationResultDTOVO;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -96,8 +94,8 @@ public class FlowMigrationController {
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:migrateInstances:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate")
     @Audit(module = "流程迁移", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'migrateInstances'")
-    public BaseResponse<InstanceMigrationResultDTOVO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
-        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(instanceMigrationService.migrate(dto)));
+    public BaseResponse<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
+        return BaseResponse.success(instanceMigrationService.migrate(dto));
     }
 
     /**
@@ -115,8 +113,8 @@ public class FlowMigrationController {
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:previewMigration:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate/preview")
     @Audit(module = "流程迁移", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'previewMigration'")
-    public BaseResponse<InstanceMigrationResultDTOVO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
-        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(instanceMigrationService.previewMigration(dto)));
+    public BaseResponse<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
+        return BaseResponse.success(instanceMigrationService.previewMigration(dto));
     }
 
     /**

@@ -4,7 +4,6 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.provider.SerializationProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,9 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * 循环引用处理策略测试（P0）。
  *
  * <p>覆盖 REF（输出引用路径）、IGNORE（忽略循环引用）、ERROR（抛出异常）三种策略。
- *
- * <p>已知问题：当前引擎在反射回退路径下不支持循环引用检测，REF/IGNORE 策略均导致
- * StackOverflowError。ASM 字节码路径下可能有不同行为。相关测试标记 @Disabled 待修复后启用。
  */
 class CircularReferenceTest {
 
@@ -31,7 +27,6 @@ class CircularReferenceTest {
     }
 
     @Test
-    @Disabled("BUG: REF 策略未正确实现循环引用检测，导致 StackOverflowError。待修复后启用。")
     void refStrategyHandlesCycle() {
         SerializationProvider.setCircularReferenceStrategy("REF");
         CycleNode a = new CycleNode();
@@ -47,7 +42,6 @@ class CircularReferenceTest {
     }
 
     @Test
-    @Disabled("BUG: IGNORE 策略未正确实现循环引用检测，导致 StackOverflowError。待修复后启用。")
     void ignoreStrategyHandlesCycle() {
         SerializationProvider.setCircularReferenceStrategy("IGNORE");
         CycleNode a = new CycleNode();
@@ -89,7 +83,6 @@ class CircularReferenceTest {
     }
 
     @Test
-    @Disabled("BUG: 自引用未正确处理，导致 StackOverflowError。待修复后启用。")
     void selfReferenceHandled() {
         SerializationProvider.setCircularReferenceStrategy("REF");
         CycleNode a = new CycleNode();

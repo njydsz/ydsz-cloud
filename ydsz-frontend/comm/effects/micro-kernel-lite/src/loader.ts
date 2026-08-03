@@ -4,7 +4,9 @@
  * 约定：子应用由统一 vite-config 构建，输出 manifest.json：
  *   { "name": "project-web", "entry": "...", "css": [...], "version": "..." }
  *
- * 加载流程：fetch manifest → 注入 CSS scoped → dynamic import ESM entry → 断言生命周期。
+ * 加载流程：
+ *   build 模式：fetch manifest → 注入 CSS → dynamic import ESM entry → 断言生命周期。
+ *   dev 模式（M4 修复）：跳过 manifest，直接 dynamic import 子应用 dev server 入口。
  *
  * @path comm/effects/micro-kernel-lite/src/loader.ts
  * @author ydsz-team
@@ -21,9 +23,37 @@ export interface Manifest {
   version: string;
 }
 
+/** 加载配置 */
+export interface LoadOptions {
+  /** 加载超时（毫秒），默认 10_000 */
+  timeout?: number;
+  /** 失败重试次数，默认 2 次（总共 1+2=3 次尝试） */
+  retries?: number;
+  /** 重试延迟基数（毫秒），指数退避：delay = base * 2^(n-1) */
+  retryBaseDelay?: number;
+  /** 外部 AbortSignal（叠加于超时之上） */
+  signal?: AbortSignal;
+}
+
+/** 加载结果 */
+export interface LoadResult {
+  exports: LifecycleExports;
+  manifest: null | Manifest;
+  /** 加载耗时（毫秒） */
+  duration: number;
+  /** 是否来自缓存（dev 模式固定 false） */
+  fromCache: boolean;
+}
+
 const manifestCache = new Map<string, Manifest>();
 
-/** 通过 fetch manifest.json 获取子应用入口信息 */
+/** 获取是否为开发模式 */
+const isDev = typeof import.meta !== 'undefined' && (import.meta as { env?: Record<string, unknown> }).env?.DEV === true;
+
+/**
+ * 通过 fetch manifest.json 获取子应用入口信息。
+ * Dev 模式下不调用（manifest.json 仅在 build 产物的 dist 中）。
+ */
 export async function fetchManifest(
   entry: string,
   signal?: AbortSignal,
@@ -49,29 +79,123 @@ export async function fetchManifest(
 /**
  * 加载子应用 ESM 入口。
  *
- * 返回标准 LifecycleExports（mount/unmount 等）。
  * 相比 qiankun import-html-entry：无 HTML 解析、无 UMD、无 eval。
- * Dev 模式下 entry 直接指向 vite dev server 的 src/main.ts。
+ *
+ * @param config - 子应用注册配置
+ * @param options - 加载选项（超时、重试）
+ * @returns 标准 LifecycleExports + manifest + 耗时
  */
 export async function loadApp(
   config: MicroAppConfig,
-  signal?: AbortSignal,
-): Promise<{ exports: LifecycleExports; manifest: Manifest }> {
-  const manifest = await fetchManifest(config.entry, signal);
+  options: LoadOptions = {},
+): Promise<LoadResult> {
+  const { timeout = 10_000, retries = 2, retryBaseDelay = 500, signal: extSignal } = options;
+  const startTime = performance.now();
 
-  // 1. 注入样式（scoped 前缀 + data 属性标记，卸载时一键移除）
+  // === M4 修复：Dev 模式直接 import 子应用 dev server 入口，跳过 manifest ===
+  if (isDev) {
+    const entryUrl = `${config.entry.replace(/\/$/, '')}/src/main.ts`;
+    const mod = await importWithRetry(entryUrl, { timeout, retries, retryBaseDelay, extSignal });
+    assertLifecycle(mod, config.name);
+    return {
+      exports: mod as LifecycleExports,
+      manifest: null,
+      duration: performance.now() - startTime,
+      fromCache: false,
+    };
+  }
+
+  // === Build 模式：fetch manifest → 注入 CSS → dynamic import ESM entry ===
+  const manifest = await fetchWithRetry(
+    () => fetchManifest(config.entry, extSignal),
+    { timeout, retries, retryBaseDelay },
+    `manifest for ${config.name}`,
+  );
+
+  // 注入样式（标记 data-lite-kernel-app，卸载时一键移除）
   injectStylesheets(manifest.css, manifest.name);
 
-  // 2. 动态加载 ESM 模块
-  const module = await import(/* @vite-ignore */ manifest.entry);
-
-  // 3. 断言生命周期导出
-  assertLifecycle(module, config.name);
+  const mod = await importWithRetry(manifest.entry, { timeout, retries, retryBaseDelay, extSignal });
+  assertLifecycle(mod, config.name);
 
   return {
-    exports: module as LifecycleExports,
+    exports: mod as LifecycleExports,
     manifest,
+    duration: performance.now() - startTime,
+    fromCache: manifestCache.has(`${config.entry.replace(/\/$/, '')}/manifest.json`),
   };
+}
+
+/**
+ * 带超时与指数退避重试的 dynamic import。
+ *
+ * @param url - ESM 模块 URL
+ * @param opts - 超时/重试配置
+ * @returns 导入的模块对象
+ */
+async function importWithRetry(
+  url: string,
+  opts: { timeout: number; retries: number; retryBaseDelay: number; extSignal?: AbortSignal },
+): Promise<Record<string, unknown>> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= opts.retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(`Load timeout: ${url}`), opts.timeout);
+
+      // 外部 signal 如取消，也 abort 内部控制器
+      const onExtAbort = (): void => controller.abort('Aborted externally');
+      opts.extSignal?.addEventListener('abort', onExtAbort, { once: true });
+
+      try {
+        const mod = await import(/* @vite-ignore */ url);
+        return mod;
+      } finally {
+        clearTimeout(timeoutId);
+        opts.extSignal?.removeEventListener('abort', onExtAbort);
+      }
+    } catch (err) {
+      lastError = err;
+      if (attempt < opts.retries) {
+        const delay = opts.retryBaseDelay * 2 ** attempt;
+        console.warn(
+          `[LiteKernel] Import failed (attempt ${attempt + 1}/${opts.retries + 1}): ${url}. Retrying in ${delay}ms...`,
+        );
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+/**
+ * 带重试的 fetch 包装。
+ */
+async function fetchWithRetry<T>(
+  fn: () => Promise<T>,
+  opts: { timeout: number; retries: number; retryBaseDelay: number },
+  label: string,
+): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= opts.retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < opts.retries) {
+        const delay = opts.retryBaseDelay * 2 ** attempt;
+        console.warn(
+          `[LiteKernel] Fetch failed (attempt ${attempt + 1}/${opts.retries + 1}): ${label}. Retrying in ${delay}ms...`,
+        );
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 /** 注入样式表，并标记 data-lite-kernel-app="name" 以便卸载时移除 */

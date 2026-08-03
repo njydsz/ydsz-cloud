@@ -2,8 +2,8 @@
  * 应用引导程序，初始化全局插件和配置
  *
  * v3.0: 接入 @ydsz/micro-runtime 接口层，脱离对 qiankun 的直接依赖。
- *       内核实现通过 createRuntime({ kernel: 'qiankun' }) 选择，
- *       后续切换 lite-kernel 只需改一个字面量。
+ *       内核通过 VITE_MICRO_KERNEL 环境变量选择（lite | qiankun，默认 lite）。
+ *       寄存器同时注册两个内核，运行时按环境变量实例化一个。
  *
  * @path main/src/bootstrap.ts
  * @author ydsz-team
@@ -32,13 +32,17 @@ import App from './app.vue';
 import { router, initRouterGuard } from './router';
 
 import { createQiankunAdapter } from '@ydsz/micro-adapter-qiankun';
+import { createLiteKernel } from '@ydsz/micro-kernel-lite';
 import {
-  type MicroAppConfig,
   createRuntime,
   provideGlobalState,
   registerKernel,
+  type KernelName,
 } from '@ydsz/micro-runtime';
 import { microApps } from './qiankun';
+
+/** 当前选用的内核名（环境变量 VITE_MICRO_KERNEL，默认 lite） */
+const KERNEL: KernelName = (import.meta.env.VITE_MICRO_KERNEL as string) || 'lite';
 
 /** 单个 micro-runtime 实例（整个主应用生命周期唯一，供其他模块获取） */
 export let microRuntime: ReturnType<typeof createRuntime> | null = null;
@@ -46,20 +50,22 @@ export let microRuntime: ReturnType<typeof createRuntime> | null = null;
 /**
  * 启动微前端运行时。
  *
- * 注册 qiankun adapter 作为内核，通过接口层 API 完成微应用注册与启动。
- * 预加载策略：登录后 requestIdleCallback 预加载最常用子应用，避免启动时全量加载。
+ * 双内核寄存器：同时注册 qiankun 与 lite-kernel，运行时按 VITE_MICRO_KERNEL
+ * 环境变量选择。切回 qiankun 仅需设置 VITE_MICRO_KERNEL=qiankun 重启。
  */
 function registerMicroRuntime() {
-  // 1. 注册 qiankun 内核（业务零改动，只是包了一层）
+  // 1. 注册双内核
   registerKernel('qiankun', () => createQiankunAdapter());
+  registerKernel('lite', () => createLiteKernel());
 
   // 2. 创建运行时实例
-  microRuntime = createRuntime({ kernel: 'qiankun' });
+  microRuntime = createRuntime({ kernel: KERNEL });
+  console.info(`[MicroRuntime] Initialized with kernel: ${KERNEL}`);
 
-  // 3. 注入已有的子应用配置（保留 dev/prod 端口映射——配置已从 qiankun/index.ts 兼容读取）
-  microRuntime.registerApps(microApps as MicroAppConfig[]);
+  // 3. 注入已有的子应用注册表
+  microRuntime.registerApps([...microApps]);
 
-  // 4. 生命周期钩子：从现有 bootstrap.ts:104-115 平移
+  // 4. 生命周期钩子
   microRuntime.addLifecycleHook('beforeLoad', (app) => {
     console.warn(`[MicroRuntime] 子应用 ${app.name} 开始加载...`);
   });
@@ -72,12 +78,17 @@ function registerMicroRuntime() {
 
   // 5. 启动
   microRuntime.start({
-    sandbox: { styleIsolation: true },
-    prefetch: false,
+    sandbox: { styleIsolation: KERNEL === 'qiankun' },
+    // lite-kernel: 启动后按 prefetch 函数预加载，qiankun: 走 idle prefetch
+    prefetch: KERNEL === 'lite'
+      ? (app) => ['userinfo-web', 'project-web'].includes(app.name)
+      : false,
   });
 
-  // 6. 空闲时预加载最常用子应用（替代原 90 行 hover prefetch）
-  setupIdlePrefetch();
+  // 6. qiankun 内核额外的预加载补丁（lite-kernel 通过 prefetch 函数已覆盖）
+  if (KERNEL === 'qiankun') {
+    setupIdlePrefetch();
+  }
 }
 
 /**

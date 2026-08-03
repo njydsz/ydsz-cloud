@@ -16,7 +16,8 @@ import { findMonorepoRoot } from '@ydsz/node-utils';
 import { NodePackageImporter } from 'sass';
 import { defineConfig, loadEnv, mergeConfig } from 'vite';
 
-import { defaultImportmapOptions, getDefaultPwaOptions } from '../options';
+import { ALL_SHARED_DEPS } from '../micro-shared-deps';
+import { getDefaultPwaOptions } from '../options';
 import { loadApplicationPlugins } from '../plugins';
 import { loadAndConvertEnv } from '../utils/env';
 import { getCommonConfig } from './common';
@@ -51,7 +52,10 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       extraAppConfig: true,
       html: true,
       i18n: true,
-      importmapOptions: defaultImportmapOptions,
+      importmapOptions: {
+        defaultProvider: 'esm.sh',
+        importmap: [...ALL_SHARED_DEPS],
+      },
       injectAppLoading: true,
       injectMetadata: true,
       isBuild,
@@ -61,7 +65,8 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       printInfoMap: {
         'YDSZ Admin Docs': 'https://docs.njydsz.com.cn',
       },
-      pwa: true,
+      // 中后台管理端 PWA 价值低且有缓存脏数据风险，关闭
+      pwa: false,
       pwaOptions: getDefaultPwaOptions(appTitle),
       vxeTableLazyImport: true,
       ...envConfig,
@@ -78,15 +83,10 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
             assetFileNames: '[ext]/[name]-[hash].[ext]',
             chunkFileNames: 'js/[name]-[hash].js',
             entryFileNames: 'jse/index-[name]-[hash].js',
-            manualChunks: {
-              'vue-vendor': ['vue', 'vue-router', 'pinia'],
-              'element-vendor': ['element-plus', '@element-plus/icons-vue'],
-              'vxe-vendor': ['vxe-table', 'vxe-pc-ui'],
-            },
           },
         },
         chunkSizeWarningLimit: 1000,
-        target: 'es2018',
+        target: 'es2022',
       },
       css: createCssOptions(injectGlobalScss),
       esbuild: {

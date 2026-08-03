@@ -10,20 +10,11 @@
  */
 
 import { onTabClosed } from '@ydsz/stores';
+import { PATH_TO_APP_MAP } from '@ydsz/vite-config';
 import { microRuntime } from '../bootstrap';
 
-/** 路由前缀 → 子应用名 映射（与 main/src/qiankun/index.ts 注册表一致） */
-const PATH_TO_APP: Record<string, string> = {
-  '/ydsz-user': 'userinfo-web',
-  '/ydsz-sys': 'system-web',
-  '/ydsz-proj': 'project-web',
-  '/ydsz-msg': 'message-web',
-  '/ydsz-cron': 'cronjob-web',
-  '/ydsz-flow': 'workflow-web',
-  '/ydsz-wiki': 'nextwiki-web',
-  '/ydsz-rule': 'literule-web',
-  '/ydsz-ai': 'agent-web',
-};
+/** 路由前缀 → 子应用名 映射（由注册表单源 PATH_TO_APP_MAP 驱动） */
+const PATH_TO_APP = PATH_TO_APP_MAP;
 
 /**
  * 根据路径前缀提取子应用名。

@@ -1,6 +1,7 @@
 package com.njydsz.workflow.domain.converter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -58,6 +59,7 @@ import com.njydsz.workflow.domain.vo.FlowThirdPartyAccountVO;
 import com.njydsz.workflow.domain.vo.FlowThirdPartyLogVO;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
+import com.njydsz.workflow.domain.vo.StringVO;
 
 /**
  * workflow 模块统一 MapStruct 转换器。
@@ -208,5 +210,23 @@ public interface WorkflowConverter {
     @Mapping(target = "authStatus", ignore = true)
     @Mapping(target = "providerTraceId", ignore = true)
     FlowDelegateAuth putDtoToEntity(FlowDelegateAuthPutDTO dto);
+
+    // ===== String (通用字符串包装) =====
+    /**
+     * 字符串 → {@link StringVO}（如合并组 ID 包装）。
+     */
+    default StringVO entityToVO(String value) {
+        return value == null ? null : new StringVO(value);
+    }
+
+    /**
+     * 字符串列表 → {@link StringVO} 列表（如已审批人 ID 列表包装）。
+     */
+    default List<StringVO> stringListToVO(List<String> values) {
+        if (values == null) {
+            return null;
+        }
+        return values.stream().map(this::entityToVO).collect(Collectors.toList());
+    }
 
 }

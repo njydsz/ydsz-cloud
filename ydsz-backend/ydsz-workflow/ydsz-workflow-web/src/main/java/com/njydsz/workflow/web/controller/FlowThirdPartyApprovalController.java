@@ -23,9 +23,9 @@ import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import com.njydsz.workflow.server.service.FlowThirdPartyAccountService;
 import com.njydsz.workflow.server.service.FlowThirdPartyLogService;
 import com.njydsz.workflow.server.thirdparty.DingTalkSignatureUtil;
-import com.njydsz.workflow.server.thirdparty.FeishuSignatureUtil;
+import com.njydsz.common.notify.signature.FeishuSignatureUtil;
 import com.njydsz.workflow.server.thirdparty.ThirdPartyApprovalActionResolver;
-import com.njydsz.workflow.server.thirdparty.WeComSignatureUtil;
+import com.njydsz.common.notify.signature.WeComSignatureUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
