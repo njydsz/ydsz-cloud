@@ -154,7 +154,7 @@ export function createJobApi(data: JobApi.JobDTO) {
 2. **DAG 环路检测**：DAG 编排需在前端做环路检测，避免配置出循环依赖导致任务无法执行。
 3. **任务启停**：任务状态切换（NORMAL/PAUSE）需二次确认，避免误停关键任务，启停操作即时生效。
 4. **日志容量**：执行日志数据量较大，列表页需强制分页与时间范围筛选，避免一次性拉取全量日志。
-5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 lite-kernel globalState 注入。
+5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 micro-kernel globalState 注入。
 
 ## 变更记录
 

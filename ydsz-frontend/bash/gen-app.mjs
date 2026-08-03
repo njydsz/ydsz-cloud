@@ -3,7 +3,7 @@
  *
  * 一条命令从模板生成新的微应用，自动完成：
  *   - package.json（含 workspace 引用与 scripts）
- *   - vite.config.mts（lite-kernel manifest 插件 + ElementPlus + 端口配置）
+ *   - vite.config.mts（micro-kernel manifest 插件 + ElementPlus + 端口配置）
  *   - tsconfig.json（继承 @ydsz/tsconfig）
  *   - src/main.ts / bootstrap.ts / App.vue（标准生命周期导出）
  *   - index.html
@@ -83,7 +83,7 @@ const pkgJson = {
     '@ydsz/tsconfig': 'workspace:*',
     '@ydsz/vite-config': 'workspace:*',
     '@ydsz/tailwind-config': 'workspace:*',
-    '@ydsz/micro-kernel-lite': 'workspace:*',
+    '@ydsz/micro-kernel': 'workspace:*',
     typescript: 'catalog:',
     vite: 'catalog:',
     'unplugin-element-plus': 'catalog:',
@@ -175,8 +175,8 @@ const mainTs = `import { createSubApp } from '@ydsz/effects/shared-auth';
 /**
  * ${title} 子应用入口。
  *
- * 导出 lite-kernel 需要的标准生命周期：{ bootstrap, mount, unmount, update }。
- * lite-kernel 通过动态 import 加载此入口并调用 lifecycle 方法。
+ * 导出 micro-kernel 需要的标准生命周期：{ bootstrap, mount, unmount, update }。
+ * micro-kernel 通过动态 import 加载此入口并调用 lifecycle 方法。
  *
  * @path apps/${name}/src/main.ts
  * @since 1.0.0

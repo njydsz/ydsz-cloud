@@ -202,7 +202,7 @@ const customConfig: Linter.Config[] = [
     },
   },
   {
-    // 子应用中禁止直接写 window 全局变量（依赖 lite-kernel 快照沙箱兜底，lint 前置拦截）
+    // 子应用中禁止直接写 window 全局变量（依赖 micro-kernel 快照沙箱兜底，lint 前置拦截）
     files: ['apps/**/**'],
     ignores: restrictedImportIgnores,
     rules: {

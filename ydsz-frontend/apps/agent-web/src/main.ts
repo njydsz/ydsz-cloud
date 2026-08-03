@@ -83,18 +83,18 @@ function createAppRouter(basename?: string) {
 }
 
 /**
- * lite-kernel 生命周期：bootstrap（子应用初始化，此处仅占位）。
+ * micro-kernel 生命周期：bootstrap（子应用初始化，此处仅占位）。
  */
 export async function bootstrap() {
   console.warn('[agent-web] bootstrap');
 }
 
 /**
- * lite-kernel 生命周期：mount（子应用挂载）。
+ * micro-kernel 生命周期：mount（子应用挂载）。
  *
  * 在挂载前完成偏好初始化与共享请求客户端装配，确保请求能正确携带 Token。
  *
- * @param props - 由主应用注入的 lite-kernel mountProps（含挂载容器 container）
+ * @param props - 由主应用注入的 micro-kernel mountProps（含挂载容器 container）
  */
 export async function mount(props: Record<string, unknown>) {
   console.warn('[agent-web] mount', props);
@@ -129,7 +129,7 @@ export async function mount(props: Record<string, unknown>) {
 }
 
 /**
- * lite-kernel 生命周期：unmount（子应用卸载）。
+ * micro-kernel 生命周期：unmount（子应用卸载）。
  *
  * 卸载 Vue 实例并清空引用，避免主应用切换时内存泄漏。
  */
@@ -140,7 +140,7 @@ export async function unmount() {
 }
 
 /**
- * lite-kernel 生命周期：update（主应用下发 props 变更时的回调，此处仅占位）。
+ * micro-kernel 生命周期：update（主应用下发 props 变更时的回调，此处仅占位）。
  *
  * @param props - 主应用下发的更新后 props
  */

@@ -151,7 +151,7 @@ export function createFileApi(data: FileApi.FileDTO) {
 2. **节点类型区分**：文件节点支持目录/文件/快捷方式三种类型，表单页需按节点类型动态渲染字段，目录无文件大小，快捷方式需指向目标节点。
 3. **分享权限控制**：分享链接需配置有效期与访问权限（预览/下载/编辑），过期链接应在前端拦截并提示。
 4. **配额校验**：上传文件前需校验用户剩余配额，超限应在前端拦截并提示，避免上传后端再拒绝。
-5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 lite-kernel globalState 注入。
+5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 micro-kernel globalState 注入。
 
 ## 变更记录
 

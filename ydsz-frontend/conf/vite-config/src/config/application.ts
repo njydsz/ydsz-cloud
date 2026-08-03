@@ -20,7 +20,7 @@ import { defineConfig, loadEnv, mergeConfig } from 'vite';
 import { ALL_SHARED_DEPS } from '../micro-shared-deps';
 import { getDefaultPwaOptions } from '../options';
 import { loadApplicationPlugins } from '../plugins';
-import { postcssLiteScopedPlugin } from '../plugins/postcss-lite-scoped';
+import { postcssMicroScopedPlugin } from '../plugins/postcss-micro-scoped';
 import { loadAndConvertEnv } from '../utils/env';
 import { getCommonConfig } from './common';
 
@@ -78,14 +78,14 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
     const { injectGlobalScss = true } = application;
     const subAppName = readSubAppName();
 
-    // === lite-kernel manifest 插件：自动注入，子应用无需手工引入 ===
+    // === micro-kernel manifest 插件：自动注入，子应用无需手工引入 ===
     if (isBuild && subAppName) {
       try {
-        const { viteManifestPlugin } = await import('@ydsz/micro-kernel-lite');
+        const { viteManifestPlugin } = await import('@ydsz/micro-kernel');
         plugins.push(viteManifestPlugin({ name: subAppName }));
         console.info(`[ViteConfig] Manifest plugin injected for ${subAppName}`);
       } catch {
-        // micro-kernel-lite 不可用时跳过
+        // micro-kernel 不可用时跳过
       }
     }
     const { build: buildConf } = vite;
@@ -137,11 +137,11 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
 }
 
 /**
- * 构造 SCSS 预处理器选项，并按需注入 lite-kernel CSS 作用域插件。
+ * 构造 SCSS 预处理器选项，并按需注入 micro-kernel CSS 作用域插件。
  *
  * - 仅对 apps 下的包注入 `@ydsz/styles/global` SCSS 全局样式
- * - build 模式下，对子应用注入 PostCSS prefix 插件（[data-lite-app="xxx"]），
- *   与 lite-kernel 的容器属性约定联动，实现构建期样式隔离
+ * - build 模式下，对子应用注入 PostCSS prefix 插件（[data-micro-app="xxx"]），
+ *   与 micro-kernel 的容器属性约定联动，实现构建期样式隔离
  *
  * @param injectGlobalScss - 是否注入全局 SCSS，默认 true
  * @param appName - 子应用名（如 'project-web'），build 模式下用于 CSS 作用域
@@ -168,10 +168,10 @@ function createCssOptions(injectGlobalScss = true, appName?: string): CSSOptions
       : {},
   };
 
-  // === lite-kernel CSS 作用域：有 appName 时启用 ===
+  // === micro-kernel CSS 作用域：有 appName 时启用 ===
   if (appName) {
     result.postcss = {
-      plugins: [postcssLiteScopedPlugin({ appName })],
+      plugins: [postcssMicroScopedPlugin({ appName })],
     };
     console.info(`[ViteConfig] CSS scoping enabled for ${appName}`);
   }

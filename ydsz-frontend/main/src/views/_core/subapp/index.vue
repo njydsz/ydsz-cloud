@@ -1,5 +1,5 @@
 <!--
- * lite-kernel 微前端子应用挂载容器组件 — 作为子应用的 DOM 挂载点
+ * micro-kernel 微前端子应用挂载容器组件 — 作为子应用的 DOM 挂载点
  *
  * 监听内核生命周期（beforeLoad / afterMount）控制骨架屏切换，
  * 避免子应用切换时出现白屏。

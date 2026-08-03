@@ -2,7 +2,7 @@
  * 标签页保活与微前端内核联动
  *
  * 注册 tabClosed 回调：当用户关闭页签时，通知微前端内核卸载对应子应用。
- * lite-kernel 利用此回调实现：页签关闭 → 子应用完整卸载并释放内存。
+ * micro-kernel 利用此回调实现：页签关闭 → 子应用完整卸载并释放内存。
  *
  * @path main/src/hooks/use-tabbar-micro-sync.ts
  * @author ydsz-team

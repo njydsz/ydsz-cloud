@@ -1,7 +1,7 @@
 /**
  * 应用引导程序，初始化全局插件和配置
  *
- * v3.0: 基于 @ydsz/micro-kernel-lite 自研 ESM 原生微前端运行时，
+ * v3.0: 基于 @ydsz/micro-kernel 自研 ESM 原生微前端运行时，
  *       通过 @ydsz/micro-runtime 接口层完成内核注册与子应用生命周期管理。
  *
  * @path main/src/bootstrap.ts
@@ -30,7 +30,7 @@ import { initSetupYDSZForm } from './adapter/form';
 import App from './app.vue';
 import { router, initRouterGuard } from './router';
 
-import { createLiteKernel } from '@ydsz/micro-kernel-lite';
+import { createKernel } from '@ydsz/micro-kernel';
 import { createRuntime, registerKernel } from '@ydsz/micro-runtime';
 import { MICRO_APPS } from '@ydsz/vite-config';
 
@@ -40,16 +40,16 @@ export let microRuntime: ReturnType<typeof createRuntime> | null = null;
 /**
  * 启动微前端运行时。
  *
- * 注册 lite-kernel 自研内核，从注册表 MICRO_APPS 消费子应用清单。
- * 预加载策略：lite-kernel 内置 requestIdleCallback 预热 userinfo/project 两个高频应用。
+ * 注册 micro-kernel 自研内核，从注册表 MICRO_APPS 消费子应用清单。
+ * 预加载策略：micro-kernel 内置 requestIdleCallback 预热 userinfo/project 两个高频应用。
  */
 function registerMicroRuntime() {
-  // 1. 注册 lite-kernel 内核
-  registerKernel('lite', () => createLiteKernel());
+  // 1. 注册 micro-kernel 内核
+  registerKernel('micro-kernel', () => createKernel());
 
   // 2. 创建运行时实例
-  microRuntime = createRuntime({ kernel: 'lite' });
-  console.info('[MicroRuntime] Initialized with kernel: lite');
+  microRuntime = createRuntime({ kernel: 'micro-kernel' });
+  console.info('[MicroRuntime] Initialized with kernel: micro-kernel');
 
   // 3. 从注册表注入子应用配置
   microRuntime.registerApps(
@@ -74,7 +74,7 @@ function registerMicroRuntime() {
     console.warn(`[MicroRuntime] 子应用 ${app.name} 卸载完成`);
   });
 
-  // 5. 启动：lite-kernel 内建 prefetch 预热高频应用
+  // 5. 启动：micro-kernel 内建 prefetch 预热高频应用
   microRuntime.start({
     prefetch: (app) => ['userinfo-web', 'project-web'].includes(app.name),
   });

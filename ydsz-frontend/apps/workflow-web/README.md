@@ -154,7 +154,7 @@ export function createTemplateApi(data: TemplateApi.TemplateDTO) {
 2. **第三方审批同步例外**：通过 webhook 与钉钉/飞书/企微服务端通信的审批状态同步（`FlowThirdPartySyncService`）属于服务端到服务端通信，不涉及移动端 UI，不在 PC-only 禁止范围内。
 3. **模板版本管理**：流程模板支持多版本与灰度发布，列表页按 `templateCode` 聚合，编辑时需注意版本号递增，避免覆盖已上线版本。
 4. **委派授权时效**：委派配置需设置起止时间，过期自动失效，代理人仅能在授权范围内处理任务。
-5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 lite-kernel globalState 注入。
+5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 micro-kernel globalState 注入。
 
 ## 变更记录
 

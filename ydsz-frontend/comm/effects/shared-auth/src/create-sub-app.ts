@@ -1,9 +1,9 @@
 /**
  * 子应用启动工厂 — 消除各子应用 main.ts 中重复的 bootstrap/mount/unmount 样板代码。
  *
- * v3.0: 对接 lite-kernel ESM 原生微前端运行时。
+ * v3.0: 对接 micro-kernel ESM 原生微前端运行时。
  *       - defineSubApp 导出标准 LifecycleExports（ESM entry 规范）
- *       - lite-kernel 通过 dynamic import() 加载并调用 lifecycle 方法
+ *       - micro-kernel 通过 dynamic import() 加载并调用 lifecycle 方法
  *       - 独立运行时（非微前端环境）自启动
  *
  * @path comm/effects/shared-auth/src/create-sub-app.ts
@@ -48,7 +48,7 @@ export interface SubAppConfig {
   namespace?: string;
 }
 
-/** 标准化挂载参数（兼容 lite-kernel mountProps） */
+/** 标准化挂载参数（兼容 micro-kernel mountProps） */
 interface StandardMountProps {
   container?: HTMLElement;
   [key: string]: unknown;
@@ -81,7 +81,7 @@ async function installBasePlugins(vueApp: VueApp, appName: string) {
   };
 }
 
-/** 内核 mount 逻辑（lite-kernel & 独立运行共享） */
+/** 内核 mount 逻辑（micro-kernel & 独立运行共享） */
 async function coreMount(
   config: SubAppConfig,
   props?: StandardMountProps,
@@ -151,7 +151,7 @@ async function coreMount(
 /**
  * 子应用生命周期对象（ESM entry 标准导出格式）。
  *
- * lite-kernel 通过 dynamic import() 加载子应用入口，
+ * micro-kernel 通过 dynamic import() 加载子应用入口，
  * 期望子应用 export { bootstrap, mount, unmount, update }。
  */
 export function defineSubApp(config: SubAppConfig) {

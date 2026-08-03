@@ -33,7 +33,7 @@
     "@ydsz/icons": "workspace:*",
     "@ydsz/layouts": "workspace:*",
     "@ydsz/locales": "workspace:*",
-    "@ydsz/micro-kernel-lite": "workspace:*",
+    "@ydsz/micro-kernel": "workspace:*",
     "@ydsz/micro-runtime": "workspace:*",
     "@ydsz/monitor": "workspace:*",
     "@ydsz/plugins": "workspace:*",

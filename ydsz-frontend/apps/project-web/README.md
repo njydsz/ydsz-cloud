@@ -170,7 +170,7 @@ export function createOpportunityApi(data: OpportunityApi.OpportunityDTO) {
 2. **财务模块归组**：预算/费用/收入/发票/回款同属「财务管理」路由组（`/finance/*`），但 API 文件各自独立，新增财务类目时需同步路由与 API 两处。
 3. **EVM 数据依赖**：挣值分析依赖 WBS 任务进度与预算数据，需先完成执行与预算录入，否则 SPI/CPI 指标无意义。
 4. **表单页复用**：各模块 `*-form.vue` 同时承载新增与编辑，通过路由 query 参数 `id` 区分模式，无 `id` 为新增，有 `id` 为编辑回填。
-5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 lite-kernel globalState 注入。
+5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 micro-kernel globalState 注入。
 
 ## 变更记录
 

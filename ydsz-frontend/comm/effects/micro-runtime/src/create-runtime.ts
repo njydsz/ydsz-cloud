@@ -1,7 +1,7 @@
 /**
  * 运行时工厂 + 内核注册机制
  *
- * 内核实现（qiankun / lite-kernel）通过 registerKernel 注册，
+ * 内核实现（qiankun / micro-kernel）通过 registerKernel 注册，
  * createRuntime 按 name 选择内核并返回 MicroRuntime 实例。
  *
  * 主应用 bootstrap.ts 中调用 createRuntime({ kernel: 'qiankun' })
@@ -15,7 +15,7 @@
 import type { MicroRuntime } from './types';
 
 /** 已知内核名称 */
-export type KernelName = 'lite' | 'qiankun' | string;
+export type KernelName = 'micro-kernel' | 'qiankun' | string;
 
 /** 内核工厂注册表 */
 const kernelRegistry = new Map<KernelName, () => MicroRuntime>();
@@ -25,7 +25,7 @@ const kernelRegistry = new Map<KernelName, () => MicroRuntime>();
  *
  * @example
  * registerKernel('qiankun', () => createQiankunAdapter());
- * registerKernel('lite',   () => createLiteKernel());
+ * registerKernel('micro-kernel',   () => createKernel());
  */
 export function registerKernel(name: KernelName, factory: () => MicroRuntime): void {
   if (kernelRegistry.has(name)) {

@@ -161,7 +161,7 @@ export function resetPasswordApi(data: UserApi.ResetPasswordDTO) {
 2. **角色分配接口**：`assignUserRolesApi` 为全量覆盖语义，传入的 `roleIds` 会替换该用户所有角色，调用前需先 `getUserRolesApi` 查询当前角色再合并。
 3. **密码安全**：修改密码（`changePasswordApi`）与重置密码（`resetPasswordApi`）走不同端点，重置密码为管理员能力，需配合权限码控制。
 4. **菜单树一致性**：菜单管理维护的权限标识需与各子应用路由 `meta` 中的权限码对齐，否则前端权限守卫会误判。
-5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 lite-kernel globalState 注入。
+5. **认证复用**：本应用依赖 `@ydsz/shared-auth`，不重复实现登录，token 由主应用通过 micro-kernel globalState 注入。
 
 ## 变更记录
 

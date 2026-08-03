@@ -44,7 +44,7 @@ const getDefaultPwaOptions = (name: string): Partial<PwaPluginOptions> => ({
 /**
  * importmap CDN 外置共享依赖。
  *
- * 与 lite-kernel ESM 直引模式联动：通过 importmap 将 Vue/Pinia/Element Plus
+ * 与 micro-kernel ESM 直引模式联动：通过 importmap 将 Vue/Pinia/Element Plus
  * 等核心依赖标记为 external，浏览器运行时按 importmap 映射统一加载单例。
  * 具体依赖清单见 {@link ./micro-shared-deps.ts}。
  *
