@@ -9,6 +9,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace AppApi {
+  /** 应用视图对象 */
   export interface AppVO {
     id: string;
     appCode: string;
@@ -21,6 +22,7 @@ export namespace AppApi {
     createTime: string;
   }
 
+  /** 应用分页查询参数 */
   export interface AppPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -28,6 +30,7 @@ export namespace AppApi {
     status?: string;
   }
 
+  /** 应用创建/更新请求参数 */
   export interface AppDTO {
     id?: string;
     appCode?: string;

@@ -1,15 +1,15 @@
 # =====================================================================
 #  YDSZ 网盘知识库服务 bootstrap 配置
 #  --------------------------------------------------------------------
-#  端口：9007
+#  端口：9003
 #  职责：文件管理/版本/分享/配额/回收站/标签/预览/锁定/分片上传
 #  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、MinIO
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
 # =====================================================================
 
 server:
-  # HTTP 监听端口（按构建顺序 8/10）
-  port: 9007
+  # HTTP 监听端口（按构建顺序 4/10）
+  port: 9003
   max-http-request-header-size: 16KB
   servlet:
     context-path: /
@@ -36,7 +36,7 @@ spring:
         password: ${NACOS_PASSWORD:nacos}
         metadata:
           version: 1.0.0
-          port: 9007
+          port: 9003
         ip-type: IPv4
       # ---------- 配置中心 ----------
       config:

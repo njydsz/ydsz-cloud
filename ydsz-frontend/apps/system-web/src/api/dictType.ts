@@ -9,6 +9,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace DicttypeApi {
+  /** 字典类型视图对象 */
   export interface DicttypeVO {
     id: string;
     typeCode: string;
@@ -18,6 +19,7 @@ export namespace DicttypeApi {
     createTime: string;
   }
 
+  /** 字典类型分页查询参数 */
   export interface DicttypePageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -25,6 +27,7 @@ export namespace DicttypeApi {
     typeCode?: string;
   }
 
+  /** 字典类型创建/更新请求参数 */
   export interface DicttypeDTO {
     id?: string;
     typeCode?: string;

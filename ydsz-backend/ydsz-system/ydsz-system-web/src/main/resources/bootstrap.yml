@@ -1,15 +1,15 @@
 # =====================================================================
 #  YDSZ 系统管理服务 bootstrap 配置
 #  --------------------------------------------------------------------
-#  端口：9002
+#  端口：9001
 #  职责：配置/字典/审计/文件/租户配额/导出/登录审计/敏感操作
 #  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、MinIO
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
 # =====================================================================
 
 server:
-  # HTTP 监听端口（按构建顺序 3/10）
-  port: 9002
+  # HTTP 监听端口（按构建顺序 2/10）
+  port: 9001
   max-http-request-header-size: 16KB
   servlet:
     context-path: /
@@ -36,7 +36,7 @@ spring:
         password: ${NACOS_PASSWORD:nacos}
         metadata:
           version: 1.0.0
-          port: 9002
+          port: 9001
         ip-type: IPv4
       # ---------- 配置中心 ----------
       config:

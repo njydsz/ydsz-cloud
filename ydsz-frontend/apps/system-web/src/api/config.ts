@@ -9,6 +9,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace ConfigApi {
+  /** 系统配置项视图对象 */
   export interface ConfigVO {
     id: string;
     configKey: string;
@@ -21,6 +22,7 @@ export namespace ConfigApi {
     createTime: string;
   }
 
+  /** 系统配置分页查询参数 */
   export interface ConfigPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -28,6 +30,7 @@ export namespace ConfigApi {
     configGroup?: string;
   }
 
+  /** 系统配置创建/更新请求参数 */
   export interface ConfigDTO {
     id?: string;
     configKey?: string;

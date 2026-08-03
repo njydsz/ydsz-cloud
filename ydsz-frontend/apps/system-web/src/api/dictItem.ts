@@ -9,6 +9,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace DictitemApi {
+  /** 字典项视图对象 */
   export interface DictitemVO {
     id: string;
     typeCode: string;
@@ -22,6 +23,7 @@ export namespace DictitemApi {
     createTime: string;
   }
 
+  /** 字典项分页查询参数 */
   export interface DictitemPageQuery {
     pageNum?: number;
     pageSize?: number;
@@ -30,6 +32,7 @@ export namespace DictitemApi {
     status?: string;
   }
 
+  /** 字典项创建/更新请求参数 */
   export interface DictitemDTO {
     id?: string;
     typeCode?: string;
