@@ -9,7 +9,7 @@
 | **层级** | L2 工具模块层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供 ID 生成、加密、HTTP、字符串、日期、文件、集合、Bean 拷贝、Spring 集成等通用工具能力 |
-| **依赖** | ydsz-common-core、ydsz-common-json、snakeyaml；可选依赖 OkHttp、SkyWalking、ip2region、yauaa、Micrometer、Hutool、BouncyCastle、Spring Security Crypto、MyBatis-Plus Core、TransmittableThreadLocal、Spring Web/WebFlux |
+| **依赖** | ydsz-common-core、ydsz-common-json、snakeyaml；可选依赖 SkyWalking、ip2region、yauaa、Micrometer、Hutool、BouncyCastle、Spring Security Crypto、MyBatis-Plus Core、TransmittableThreadLocal、Spring Web/WebFlux |
 | **版本** | 1.0.0 |
 
 ## 核心能力
@@ -38,9 +38,6 @@
 
 | 类 | 说明 |
 |---|---|
-| `OkHttpUtils` | OkHttp 静态封装（连接池复用、请求级超时、异步请求、连接池监控） |
-| `HttpClientFactory` | OkHttpClient 工厂（配置化创建、拦截器注入、Dispatcher 自定义） |
-| `OkHttpProperties` | OkHttp 配置属性（超时、连接池、Keep-Alive） |
 | `ServletUtils` / `WebFluxUtils` | Servlet / WebFlux 请求工具 |
 | `CookieUtils` | Cookie 读写工具 |
 | `UrlUtils` | URL 解析与编码解码 |
@@ -86,7 +83,7 @@
 | `CollectionUtils` / `ListUtils` / `SetUtils` / `MapUtils` | 集合工具（判空 / 分片 / 去重 / 排序） |
 | `ArrayUtils` / `SortUtils` | 数组工具与排序工具 |
 | `ObjectUtils` | 对象工具（默认值 / 深拷贝 / 比较） |
-| `BeanCopyUtils` | Bean 属性拷贝（PropertyDescriptor LRU 1024 缓存、忽略字段、null 值处理、Lambda 转换器） |
+| `BeanCopyUtils` | Bean 属性拷贝（忽略字段、null 值处理、Lambda 转换器） |
 | `BeanUpdateUtil` | Bean PATCH 语义更新（仅复制非 null 属性，用于部分更新） |
 | `BeanCopyOptions` / `Converters` / `PropertyConverter` | 拷贝选项与类型转换器 |
 | `BeanCopyException` | 拷贝异常 |
@@ -124,20 +121,18 @@
 
 | 类 | 说明 |
 |---|---|
-| `UtilHealthIndicator` | 工具模块健康检查（Snowflake 状态、JVM 内存、BeanCopy 缓存、OkHttp 连接池） |
+| `UtilHealthIndicator` | 工具模块健康检查（Snowflake 状态、JVM 内存） |
 | `SnowflakeHealthIndicator` | Snowflake ID 生成器健康检查（时钟回拨、workerId、ID 生成验证、分片数） |
 
 ### 13. 自动配置（config 包）
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
-| `UtilAutoConfiguration` | 总是激活 | `SpringContextHolder`、`OkHttpClient`、`SnowflakeHealthIndicator`、`UtilHealthIndicator`、`OkHttpCleanupBean` |
+| `UtilAutoConfiguration` | 总是激活 | `SpringContextHolder`、`SnowflakeHealthIndicator`、`UtilHealthIndicator` |
 | `SnowflakeAutoConfiguration` | `ydsz.util.snowflake.enabled=true`（默认启用） | 构造期自动初始化 `SnowflakeUtils` |
-| `ThreadPoolMonitorAutoConfiguration` | 总是激活 | `ThreadPoolMonitor`（Micrometer 可用时自动注册指标） |
 
 | 属性类 | 前缀 | 说明 |
 |---|---|---|
-| `OkHttpProperties` | `ydsz.util.okhttp` | OkHttp 连接池与超时配置，带 `@Min` / `@Max` 校验 |
 | `SnowflakeProperties` | `ydsz.util.snowflake` | Snowflake workerId/datacenterId 配置，含来源策略枚举 `WorkerIdSource` |
 
 ## 接入方式
@@ -156,19 +151,13 @@
 ```yaml
 ydsz:
   util:
-    okhttp:
-      connect-timeout: 5               # 连接超时（秒）
-      read-timeout: 30                  # 读取超时（秒）
-      write-timeout: 30                 # 写入超时（秒）
-      max-idle-connections: 50          # 最大空闲连接数
-      keep-alive-duration: 5            # 连接保持时间（分钟）
     snowflake:
       enabled: true                     # 启用 Snowflake 自动配置（默认启用）
       worker-id-source: ENVIRONMENT_VARIABLE   # workerId 来源策略
       environment-variable-name: YDSZ_SNOWFLAKE_WORKER_ID
 ```
 
-> 线程池监控（`ThreadPoolMonitorAutoConfiguration`）总是激活，无独立配置项；当 Micrometer `MeterRegistry` 在类路径时自动注册 `ydsz.threadpool.pool.*` 指标。
+> 线程池监控由 `ydsz-common-thread` 模块统一提供（配置驱动的池自动绑定 Micrometer 指标 + `ThreadHealthIndicator`）；本模块 `ExecutorUtils` 仅提供静态工厂方法，业务自行管理生命周期。
 
 ### 3. 基础使用
 
@@ -192,11 +181,6 @@ BeanCopyUtils.copyProperties(source, target);
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `ydsz.util.okhttp.connect-timeout` | 5 | 连接超时（秒，1-300） |
-| `ydsz.util.okhttp.read-timeout` | 30 | 读取超时（秒，1-600） |
-| `ydsz.util.okhttp.write-timeout` | 30 | 写入超时（秒，1-600） |
-| `ydsz.util.okhttp.max-idle-connections` | 50 | 最大空闲连接数（1-1000） |
-| `ydsz.util.okhttp.keep-alive-duration` | 5 | 连接保持时间（分钟，1-60） |
 | `ydsz.util.snowflake.enabled` | true | 是否启用 Snowflake 自动配置 |
 | `ydsz.util.snowflake.worker-id` | - | 工作节点 ID（0-31，仅 `worker-id-source=CONFIG` 时生效） |
 | `ydsz.util.snowflake.datacenter-id` | - | 数据中心 ID（0-31，未配置时基于主机名哈希自动计算） |
@@ -205,7 +189,7 @@ BeanCopyUtils.copyProperties(source, target);
 
 > workerId 解析优先级：分布式注册中心（`WorkerIdRegistry` Bean）> 配置策略（ENV/CONFIG/INSTANCE_INDEX）> 基于 IP 哈希自动计算。datacenterId 解析优先级：配置文件 > 环境变量 `SNOWFLAKE_DATACENTER_ID` > 基于主机名哈希自动计算。
 >
-> 线程池监控（`ThreadPoolMonitorAutoConfiguration`）总是激活，无 `@ConfigurationProperties` 配置项；Micrometer `MeterRegistry` 可用时自动注册 `ydsz.threadpool.pool.size` / `pool.active` / `pool.completed` / `pool.queue.size` / `pool.queue.capacity` / `pool.largest.size` Gauge 指标。
+> 线程池监控统一由 `ydsz-common-thread` 模块提供（Micrometer 指标前缀 `executor.*`）；本模块不重复实现线程池监控。
 
 ## 使用示例
 
@@ -263,7 +247,7 @@ import com.njydsz.common.util.BeanUpdateUtil;
 BeanCopyUtils.copyProperties(source, target);
 
 // PATCH 更新（仅复制非 null 属性，用于 PUT/PATCH 接口）
-BeanUpdateUtil.copyNonNullProperties(updateDTO, entity);
+BeanUpdateUtil.copyNonNull(updateDTO, entity);
 ```
 
 ### 5. 自定义 WorkerId 注册中心
@@ -315,8 +299,6 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
 
 - `snowflake.initialized` / `snowflake.workerId` / `snowflake.datacenterId` / `snowflake.lastTimestamp` — SnowflakeUtils 初始化状态
 - `jvm.availableProcessors` / `jvm.maxMemoryMB` / `jvm.usedMemoryMB` / `jvm.memoryUsagePercent` / `jvm.memoryWarning` — JVM 运行时基础指标
-- `beanCopy.fieldCacheSize` / `beanCopy.propertyCacheSize` — BeanCopyUtils 缓存状态
-- `okHttp.idleConnections` / `okHttp.totalConnections` / `okHttp.queuedCallsCount` / `okHttp.runningCallsCount` — OkHttp 连接池统计
 
 **`SnowflakeHealthIndicator` 暴露信息**：
 
@@ -330,16 +312,15 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
 
 ## 注意事项
 
-1. **零依赖原则**：核心工具不依赖 Spring，可选依赖（OkHttp、SkyWalking、ip2region、yauaa、Micrometer、Hutool、BouncyCastle、Spring Security Crypto、MyBatis-Plus Core、TransmittableThreadLocal、Spring Web/WebFlux）按需引入，未引入时对应工具类调用会降级或抛出 `NoClassDefFoundError`。
+1. **零依赖原则**：核心工具不依赖 Spring，可选依赖（SkyWalking、ip2region、yauaa、Micrometer、Hutool、BouncyCastle、Spring Security Crypto、MyBatis-Plus Core、TransmittableThreadLocal、Spring Web/WebFlux）按需引入，未引入时对应工具类调用会降级或抛出 `NoClassDefFoundError`。
 2. **AES 安全规范**：默认使用 AES-256-GCM 模式（认证加密 AEAD），每次加密生成随机 12 字节 IV；密钥通过 `setConfiguredKey()` 注入或环境变量配置，禁止硬编码。`AesUtils` 兼容 ECB/CBC 旧密文解密，但新加密一律走 GCM。
 3. **密码哈希规范**：BCrypt strength=12（OWASP 推荐至少 10），PBKDF2 600000 次迭代（OWASP 2023 推荐），所有密码验证使用 `MessageDigest.isEqual()` 常量时间比较防止时序攻击。
 4. **SnowflakeUtils 单例初始化**：通过 `SnowflakeUtils.init(workerId, datacenterId)` 初始化，重复调用抛出 `IllegalStateException`。自动配置捕获此异常并跳过（用于手动初始化场景）。时钟回拨容忍 5ms 以内直接等待，超过 5 秒抛出 `ClockBackwardException`。
-5. **BeanCopyUtils 缓存策略**：使用 `synchronized LinkedHashMap`（accessOrder=true）实现 LRU 淘汰，最大 1024 条，避免全量清空导致缓存命中率骤降。深拷贝请使用 JSON 序列化/反序列化或 `Cloneable`。
+5. **BeanCopyUtils 使用规范**：基于 Spring BeanUtils 委托实现，深拷贝请使用 JSON 序列化/反序列化或 `Cloneable`。
 6. **ContextPropagationUtils 性能优化**：MDC 传播使用控制字符（`\u0001` / `\u0002`）编码替代 JSON 序列化，零解析开销。自定义上下文通过 `registerContextProvider()` 注册。
-7. **OkHttpUtils 资源清理**：`OkHttpCleanupBean` 实现 `DisposableBean`，应用关闭时调用 `OkHttpUtils.close()` 释放连接池资源。`buildInsecureClient()` 跳过 SSL 验证，禁止生产环境使用。
-8. **ExecutorUtils 线程池规范**：统一线程名前缀 `ydsz-`，有界队列 + `CallerRunsPolicy` 防止 OOM，支持 VirtualThread（JDK 21+）。
-9. **路径安全**：`FileUtils.isSafePath()` / `checkAllowDownload()` 防止路径遍历攻击，禁止 `..` 跨目录访问。
-10. **ip2region 离线库**：`IpAddrUtils` 依赖 `ip2region.xdb` 离线数据库（位于 `src/main/resources`），首次调用时加载到内存。
+7. **ExecutorUtils 线程池规范**：统一线程名前缀 `ydsz-`，有界队列 + `CallerRunsPolicy` 防止 OOM，支持 VirtualThread（JDK 21+）。
+8. **路径安全**：`FileUtils.isSafePath()` / `checkAllowDownload()` 防止路径遍历攻击，禁止 `..` 跨目录访问。
+9. **ip2region 离线库**：`IpAddrUtils` 依赖 `ip2region.xdb` 离线数据库（位于 `src/main/resources`），首次调用时加载到内存。
 
 ## 变更记录
 

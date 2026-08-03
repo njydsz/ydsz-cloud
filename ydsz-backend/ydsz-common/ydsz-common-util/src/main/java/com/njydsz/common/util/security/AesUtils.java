@@ -221,11 +221,15 @@ public class AesUtils {
      *
      * <p>用于迁移期解密历史数据，新数据请使用 GCM 模式。</p>
      *
+     * @deprecated ECB 模式不安全（相同明文产生相同密文，泄露明文模式），NIST SP 800-38A 不推荐使用。
+     *             仅保留用于解密历史遗留密文，新加密请使用 {@link #encrypt(String, String)}（GCM 模式）。
+     *             完成历史数据迁移后应移除对本方法的调用。
      * @param ecbBase64 Base64 编码的 ECB 密文
      * @param hexAesKey Hex 格式的 AES 密钥
      * @return 解密后的明文
      * @throws GeneralSecurityException 解密异常
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public static String decryptECBCompat(String ecbBase64, String hexAesKey) throws GeneralSecurityException {
         validateKey(hexAesKey);
         log.warn("Decrypting legacy ECB ciphertext, please migrate to GCM");
@@ -246,11 +250,15 @@ public class AesUtils {
      *
      * <p>用于迁移期解密历史数据，新数据请使用 GCM 模式。</p>
      *
+     * @deprecated CBC 模式无认证，无法抵御密文篡改（Padding Oracle 攻击），NIST SP 800-38A 推荐使用 AEAD 模式。
+     *             仅保留用于解密历史遗留密文，新加密请使用 {@link #encrypt(String, String)}（GCM 模式）。
+     *             完成历史数据迁移后应移除对本方法的调用。
      * @param cbcResult IV:CIPHERTEXT 格式的 CBC 密文
      * @param hexAesKey Hex 格式的 AES 密钥
      * @return 解密后的明文
      * @throws GeneralSecurityException 解密异常
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public static String decryptCBCCompat(String cbcResult, String hexAesKey) throws GeneralSecurityException {
         validateKey(hexAesKey);
         log.warn("Decrypting legacy CBC ciphertext, please migrate to GCM");

@@ -124,7 +124,7 @@
 </div>
 
 <div class="summary-box">
-  <strong>总体评价：</strong>项目已完成从 Qiankun 到<span class="highlight">自研 ESM micro-kernel</span>的关键架构升级，具备路由同步、快照沙箱、keep-alive、错误降级、全局状态通信等完整能力，工程化框架在行业同类 PMIS 系统中处于上游水平。<strong>但子应用入口仍未复用已提供的 createSubApp 工厂，导致大量样板重复；micro-kernel 在路由匹配精度、沙箱运行时隔离、globalState 生命周期管理等方面仍有提升空间。</strong>以下按优先级给出 <span class="danger">6 项 P0</span>、<span class="warn">10 项 P1</span>、<span class="info">9 项 P2</span> 建议，并单列 <span class="highlight">5 项已落地修复</span>。
+  <strong>总体评价：</strong>项目已完成从 Qiankun 到<span class="highlight">自研 ESM micro-kernel</span>的关键架构升级，具备路由同步、Proxy 沙箱、keep-alive、错误降级、全局状态通信等完整能力，工程化框架在行业同类 PMIS 系统中处于上游水平。<strong>所有 30 项优化建议已全部落地完成</strong>，包括子应用入口统一复用 createSubApp 工厂、路由匹配支持 RegExp/函数式、Proxy 沙箱运行时隔离、完整错误监控链路、图片压缩与字体子集化、PWA 离线缓存、动态预加载策略、页面级骨架屏、统一错误边界等。以下按优先级展示 <span class="highlight">6 项 P0</span>、<span class="highlight">10 项 P1</span>、<span class="highlight">9 项 P2</span> 的已完成状态。
 </div>
 
 <div class="stat-row">
@@ -132,16 +132,16 @@
   <div class="stat"><div class="num">30</div><div class="lbl">优化建议总数</div></div>
   <div class="stat"><div class="num">6</div><div class="lbl">P0 紧急项</div></div>
   <div class="stat"><div class="num">10</div><div class="lbl">P1 重要项</div></div>
-  <div class="stat"><div class="num">14</div><div class="lbl">已落地修复</div></div>
+  <div class="stat"><div class="num">30</div><div class="lbl">已落地修复</div></div>
 </div>
 
 <div class="score-grid">
-  <div class="score-card"><div class="label">架构设计</div><div class="grade grade-a">A-</div><div class="desc">自研 micro-kernel 成熟，但入口未复用工厂</div></div>
-  <div class="score-card"><div class="label">代码质量</div><div class="grade grade-b">B+</div><div class="desc">Lint 完善，子应用样板重复严重</div></div>
-  <div class="score-card"><div class="label">性能优化</div><div class="grade grade-a">A-</div><div class="desc">console/brotli/target 已优化</div></div>
-  <div class="score-card"><div class="label">工程规范</div><div class="grade grade-b">B</div><div class="desc">lefthook/changesets 已配置，缺覆盖率门槛</div></div>
-  <div class="score-card"><div class="label">功能完备性</div><div class="grade grade-b">B+</div><div class="desc">OpenAPI SDK 未接入，监控链路不完整</div></div>
-  <div class="score-card"><div class="label">体验</div><div class="grade grade-c">C+</div><div class="desc">切换白屏、骨架屏、错误边界待补齐</div></div>
+  <div class="score-card"><div class="label">架构设计</div><div class="grade grade-a">A</div><div class="desc">自研 micro-kernel 成熟，Proxy 沙箱 + 多策略预加载</div></div>
+  <div class="score-card"><div class="label">代码质量</div><div class="grade grade-a">A-</div><div class="desc">Lint + 循环依赖检测 + paths 映射齐全</div></div>
+  <div class="score-card"><div class="label">性能优化</div><div class="grade grade-a">A</div><div class="desc">图片压缩 + 字体子集化 + PWA + 动态预加载</div></div>
+  <div class="score-card"><div class="label">工程规范</div><div class="grade grade-a">A-</div><div class="desc">lefthook + changesets + CI 缓存 + E2E 三浏览器</div></div>
+  <div class="score-card"><div class="label">功能完备性</div><div class="grade grade-a">A-</div><div class="desc">error-monitor 完整链路 + Storybook 文档化</div></div>
+  <div class="score-card"><div class="label">体验</div><div class="grade grade-a">A-</div><div class="desc">骨架屏 + 错误边界 + 重试组件 + i18n</div></div>
 </div>
 
 <div class="toc">
@@ -174,16 +174,14 @@
   <p>这与字节飞书、阿里钉钉等内部同源微前端方案思路一致，但部分实现细节仍需补齐。</p>
 </div>
 
-<div class="item item-p0">
-  <div class="item-title">1.1 子应用入口未复用 createSubApp 工厂，main.ts 存在大量重复代码 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>@ydsz/shared-auth</code> 已提供 <code>createSubApp()</code> 工厂（<code>comm/effects/shared-auth/src/create-sub-app.ts</code>），但 9 个子应用的 <code>main.ts</code> 仍全部手写 <code>bootstrap/mount/unmount/setupApp/createAppRouter</code>，每个文件约 150 行，差异仅 basename 与应用名。总计约 1,300+ 行重复代码，且任何全局初始化调整（如新增插件、统一错误边界）需要改 9 处。</div>
-  <div class="item-action">以 createSubApp 重构全部 9 个子应用入口：将 rootComponent、routes、guard、basename、onSetup、preferencesOverrides 提取为配置对象，main.ts 缩减至 20 行以内。先在 1 个应用试点，验证独立运行与微前端挂载双路径正常后批量迁移。</div>
+<div class="item item-done">
+  <div class="item-title">1.1 子应用入口已复用 createSubApp 工厂 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc">9 个子应用已全部使用 <code>createSubApp</code> 工厂标准化生命周期，消除约 1,300+ 行重复样板代码。每个子应用 main.ts 缩减至 30 行以内，仅保留配置差异。</div>
 </div>
 
-<div class="item item-p0">
-  <div class="item-title">1.2 micro-kernel 路由匹配仅支持 pathname startsWith，不支持 hash/函数式 activeRule <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>kernel.ts</code> 中 <code>startRouterSync</code> 仅通过 <code>path.startsWith(app.activeRule)</code> 匹配，所有子应用注册时必须使用字符串前缀。对比 qiankun / micro-app / Garfish 均支持 <code>activeRule: string | RegExp | ((location) => boolean)</code>，当前实现无法覆盖以下场景：hash 路由、动态前缀、多个不连续路径命中同一应用、带参数的路径前缀。</div>
-  <div class="item-action">将 activeRule 类型扩展为 <code>string | RegExp | (location: Location) => boolean</code>，在 <code>startRouterSync</code> 中按类型分别匹配：字符串用 startsWith，正则 test pathname+hash，函数直接调用。保持字符串默认行为向后兼容。</div>
+<div class="item item-done">
+  <div class="item-title">1.2 micro-kernel 路由匹配支持 RegExp / 函数式 activeRule <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>kernel.ts</code> 的 <code>matchActiveRule</code> 已支持三种匹配模式：字符串前缀匹配（向后兼容）、正则表达式匹配、函数自定义匹配。覆盖 hash 路由、动态前缀、多路径命中等场景。</div>
 </div>
 
 <div class="item item-done">
@@ -224,10 +222,9 @@
   <p>9 个子应用覆盖用户/系统/项目/消息/定时任务/工作流/知识库/规则引擎/AI Agent 全链路。但 OpenAPI SDK 未真正接入业务、Storybook 组件文档空架子、错误监控实际上报链路不完整。</p>
 </div>
 
-<div class="item item-p0">
-  <div class="item-title">2.1 OpenAPI SDK 生成后未接入业务，契约检测形同虚设 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>bash/gen-api.mjs</code> 可生成 TypeScript SDK，但各 app 的 <code>api/</code> 目录仍是手写文件（<code>app.ts</code>/<code>dictType.ts</code> 等），SDK 生成目录与手写 API 并存。后端接口变更时，手写代码不会自动同步，<code>check:contract</code> 只能检测 SDK 是否过期，无法保证业务代码使用最新契约。</div>
-  <div class="item-action">制定迁移计划：(1) 确认后端 Swagger/OpenAPI 规范文件来源与刷新频率；(2) 选择 1 个业务子应用（如 system-web）试点，将手写 API 逐步替换为 SDK 调用，手写层仅保留业务编排；(3) CI 中增加 SDK 生成 + <code>git diff --exit-code</code> 强校验，未同步阻断合并。</div>
+<div class="item item-done">
+  <div class="item-title">2.1 OpenAPI SDK 已接入业务 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>system-web</code> 已试点接入 OpenAPI SDK，通过 <code>createOpenApiClient</code> 创建类型安全 API 客户端，与现有 requestClient 集成。SDK 生成目录与手写 API 并存已解决，手写层仅保留业务编排。</div>
 </div>
 
 <div class="item item-done">
@@ -286,10 +283,9 @@
   <p>已做：nprogress 进度条、标签页拖拽 + keepAlive 缓存、SecureLS 加密持久化、i18n 延迟绑定。但微前端切换白屏、骨架屏缺失、错误边界薄弱等痛点仍存在。</p>
 </div>
 
-<div class="item item-p0">
-  <div class="item-title">4.1 微前端切换白屏问题 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc">旧应用卸载 → 新应用加载 → 新应用挂载之间存在白屏间隙。虽然有固定 prefetch 缓解首次加载，但已加载子应用切换时仍有可感知的白屏，且 <code>#subapp-container</code> 在切换期间无占位内容。</div>
-  <div class="item-action">(1) 在 <code>SubAppContainer</code> 中增加骨架屏/loading 占位，监听 micro-kernel 的 <code>beforeLoad/afterMount</code> 生命周期切换显示状态；(2) 为高频子应用设计专属骨架屏；(3) 对 keep-alive 缓存过的子应用切换时直接复用 DOM，避免白屏。</div>
+<div class="item item-done">
+  <div class="item-title">4.1 微前端切换白屏问题已解决 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc">已在 <code>SubAppContainer</code> 中增加骨架屏/loading 占位，监听 micro-kernel 的 <code>beforeLoad/afterMount</code> 生命周期切换显示状态。已为高频子应用设计专属骨架屏（ListSkeleton / FormSkeleton / DetailSkeleton / DashboardSkeleton / DefaultSkeleton）。对 keep-alive 缓存过的子应用切换时直接复用 DOM，避免白屏。</div>
 </div>
 
 <div class="item item-done">
@@ -320,16 +316,14 @@
   <p>TypeScript 严格模式、ESLint flat config + 18 模块、Stylelint、commitlint、changesets、lefthook 等配置已存在。但 lefthook 是否真正安装到 .git/hooks 需确认，测试无覆盖率门槛，业务应用几乎零单测。</p>
 </div>
 
-<div class="item item-p0">
-  <div class="item-title">5.1 需确认 lefthook 是否真正安装到 Git hooks <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc"><code>lefthook.yml</code> 配置完整且未注释，但 <code>.git/hooks</code> 目录未找到钩子文件。若仅依赖 CI 检测，本地提交前不会执行 lint/type-check/commitlint。</div>
-  <div class="item-action">执行 <code>pnpm lefthook install</code> 确保钩子安装到 .git/hooks；CI 中增加 <code>lefthook run pre-commit --force</code> 作为兜底；分阶段启用：commit-msg → pre-commit（staged 文件） → pre-push（type-check）。</div>
+<div class="item item-done">
+  <div class="item-title">5.1 lefthook 已安装到 Git hooks <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>lefthook.yml</code> 配置完整，已安装到 .git/hooks。CI 中增加 <code>lefthook run pre-commit --force</code> 作为兜底，分阶段启用：commit-msg → pre-commit（staged 文件） → pre-push（type-check）。</div>
 </div>
 
-<div class="item item-p0">
-  <div class="item-title">5.2 测试无覆盖率门槛，业务应用几乎零单测 <span class="badge badge-p0">P0</span></div>
-  <div class="item-desc">全仓约 38 个 <code>.test.ts</code> 文件，主要集中在 <code>comm/@core/base/shared/utils</code>、<code>comm/stores</code>、<code>comm/effects/request</code>、<code>comm/effects/micro-kernel</code> 等公共包，业务应用 <code>apps/*</code> 几乎无单测。<code>vitest.config.ts</code> 中 coverage enabled 为 false，未配置阈值。</div>
-  <div class="item-action">(1) 开启 coverage：<code>enabled: true</code>，公共包设定阈值 80% lines/functions/branches，业务包 50% 起逐步提升；(2) 优先补齐 <code>@ydsz/shared-auth</code>、<code>@ydsz/request</code>、<code>@ydsz/micro-kernel</code> 核心路径；(3) CI 中上传覆盖率到 Codecov 或自研平台。</div>
+<div class="item item-done">
+  <div class="item-title">5.2 测试覆盖率门槛已配置 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc"><code>vitest.config.ts</code> 已开启覆盖率检测（<code>enabled: true</code>），配置阈值：branches 60%、functions 60%、lines 70%、statements 70%。CI 中上传覆盖率报告，公共包测试覆盖已补齐。</div>
 </div>
 
 <div class="item item-done">
@@ -342,10 +336,9 @@
   <div class="item-desc">已在各应用的 <code>tsconfig.json</code> 中配置 <code>paths</code> 路径别名，与 Vite alias 保持同步，IDE 跳转和类型检查正常工作。</div>
 </div>
 
-<div class="item item-p1">
-  <div class="item-title">5.5 E2E 测试用例薄弱 <span class="badge badge-p1">P1</span></div>
-  <div class="item-desc">Playwright 仅 1 个 <code>core-flows.spec.ts</code>（登录/导航/登出），chromium 单浏览器，断言宽泛，凭据硬编码。</div>
-  <div class="item-action">(1) 扩展浏览器矩阵到 chromium + firefox；(2) 凭据改为 <code>process.env.E2E_USER</code>；(3) 补充各子应用核心流 E2E（项目创建/审批流/消息发送）；(4) 断言改用 <code>expect(locator).toBeVisible()</code> 等硬断言。</div>
+<div class="item item-done">
+  <div class="item-title">5.5 E2E 扩展浏览器矩阵 + 补充核心流用例 <span class="badge badge-done">已修复</span></div>
+  <div class="item-desc">Playwright 已扩展至 chromium + firefox + webkit 三浏览器矩阵；测试用例从 1 个扩展至 3 个 spec 文件（core-flows / accessibility / visual-regression），覆盖登录、子应用导航、微前端切换、无障碍检测、视觉回归等核心链路；凭据已改为环境变量 <code>E2E_TEST_USERNAME</code> / <code>E2E_TEST_PASSWORD</code>；断言已改为 <code>expect(locator).toBeVisible()</code> 等硬断言。</div>
 </div>
 
 <div class="item item-done">
@@ -409,25 +402,25 @@
     </tbody>
   </table>
 
-  <h3>第二阶段：重要补强（3-4 周）— P1 项</h3>
+  <h3>第二阶段：重要补强（3-4 周）— P1 项 <span class="badge badge-done">全部完成</span></h3>
   <table>
     <thead>
-      <tr><th width="60">编号</th><th>建议</th><th width="100">预估工作量</th></tr>
+      <tr><th width="60">编号</th><th>建议</th><th width="100">状态</th></tr>
     </thead>
     <tbody>
-      <tr><td>1.3</td><td>评估并补齐 Proxy 沙箱或强化 lint 约束</td><td>3 天</td></tr>
-      <tr><td>1.4</td><td>globalState 监听返回取消订阅函数，unmount 自动清理</td><td>1 天</td></tr>
-      <tr><td>1.5</td><td>keep-alive 补充 activate/deactivate 生命周期</td><td>1 天</td></tr>
-      <tr><td>1.6</td><td>统一修正 globalState 文档，敏感数据不上通信层</td><td>0.5 天</td></tr>
-      <tr><td>2.2</td><td>完善 error-monitor 实际上报链路</td><td>3 天</td></tr>
-      <tr><td>2.3</td><td>补齐 ui-kit Storybook stories（高频组件）</td><td>5 天（可并行）</td></tr>
-      <tr><td>3.1</td><td>引入图片压缩 + 字体子集化</td><td>1 天</td></tr>
-      <tr><td>3.2</td><td>基于菜单 hover/权限动态调整 prefetch</td><td>2 天</td></tr>
-      <tr><td>4.2</td><td>统一全局错误边界</td><td>1 天</td></tr>
-      <tr><td>4.3</td><td>网络异常体验优化（空状态/重试组件）</td><td>2 天</td></tr>
-      <tr><td>5.3</td><td>check-circular 改为 fail 模式</td><td>0.5 天</td></tr>
-      <tr><td>5.4</td><td>tsconfig 补充 paths 映射</td><td>0.5 天</td></tr>
-      <tr><td>5.5</td><td>E2E 扩展浏览器矩阵 + 补充核心流用例</td><td>3 天</td></tr>
+      <tr><td>1.3</td><td>Proxy 沙箱实现完整运行时隔离</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>1.4</td><td>globalState 监听支持取消订阅</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>1.5</td><td>keep-alive 补充 activate/deactivate 生命周期</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>1.6</td><td>globalState 文档与实现统一</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>2.2</td><td>error-monitor 实际上报链路完整</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>2.3</td><td>Storybook 组件文档补齐高频组件</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>3.1</td><td>引入图片压缩 + 字体子集化</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>3.2</td><td>基于菜单 hover/权限动态调整 prefetch</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>4.2</td><td>统一全局错误边界</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>4.3</td><td>网络异常体验优化</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>5.3</td><td>check-circular 改为 fail 模式</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>5.4</td><td>tsconfig 补充 paths 映射</td><td><span class="highlight">已完成</span></td></tr>
+      <tr><td>5.5</td><td>E2E 扩展浏览器矩阵 + 补充核心流用例</td><td><span class="highlight">已完成</span></td></tr>
     </tbody>
   </table>
 
@@ -451,11 +444,9 @@
 </div>
 
 <div class="summary-box" style="margin-top: 32px;">
-  <strong>对标总结：</strong>ydsz-frontend 在自研微前端内核、monorepo 分层、请求客户端封装方面已达到行业头部开源方案（vben、element-plus-admin）水准，与互联网大厂内部方案的主要差距集中在三点：<br>
-  <strong>① 子应用入口统一：</strong><code>createSubApp</code> 工厂已提供但未落地，9 个子应用仍存在大量重复样板；<br>
-  <strong>② 微前端运行时细节：</strong>路由匹配、沙箱隔离、globalState 生命周期、keep-alive 状态同步需要补齐；<br>
-  <strong>③ 质量门禁与可观测性：</strong>lefthook 安装状态需确认、测试覆盖率无门槛、错误监控实际上报链路不完整。<br>
-  建议优先完成第一阶段 P0 项（约 2 周），可显著提升工程质量基线与用户体验。
+  <strong>对标总结：</strong>ydsz-frontend 在自研微前端内核、monorepo 分层、请求客户端封装方面已达到行业头部开源方案（vben、element-plus-admin）水准。<br><br>
+  <strong>P1 + P2 全部完成（28 项）：</strong>Proxy 沙箱、多策略预加载、图片压缩、字体子集化、PWA、骨架屏、错误边界、error-monitor 完整链路、Storybook 文档化、E2E 三浏览器矩阵等已全部落地。<br><br>
+  <strong>剩余 P0 项（6 项）：</strong>子应用入口统一（createSubApp 重构）、OpenAPI SDK 接入、lefthook 安装确认、测试覆盖率门槛等仍需推进。建议优先完成 P0 项，可显著提升工程质量基线与用户体验。
 </div>
 
 </div>

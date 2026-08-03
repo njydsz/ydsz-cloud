@@ -134,21 +134,32 @@ public class DigestUtils {
 
     /**
      * 计算 MD5 散列
- */
+     *
+     * @deprecated MD5 已被证明存在碰撞攻击，不应用于安全场景（OWASP 2023 不再推荐）。
+     *             请使用 {@link #sha256(byte[])} 或 {@link #sha512(byte[])}。
+     *             仅保留用于兼容旧数据校验和非安全场景（如缓存键、ETag）。
+     */
+    @Deprecated(since = "1.0.0", forRemoval = false)
     public static byte[] md5(byte[] input) {
         return digest(input, "MD5", null, 1);
     }
 
     /**
      * 计算 MD5 散列（Hex 格式）
- */
+     *
+     * @deprecated 同 {@link #md5(byte[])}，请使用 {@link #sha256Hex(byte[])}。
+     */
+    @Deprecated(since = "1.0.0", forRemoval = false)
     public static String md5Hex(byte[] input) {
         return HexUtils.bytesToHex(md5(input));
     }
 
     /**
      * 计算 MD5 散列（字符串）
- */
+     *
+     * @deprecated 同 {@link #md5(byte[])}，请使用 {@link #sha256Hex(String)}。
+     */
+    @Deprecated(since = "1.0.0", forRemoval = false)
     public static String md5Hex(String input) {
         if (input == null) {
             return null;
@@ -158,21 +169,32 @@ public class DigestUtils {
 
     /**
      * 计算 SHA-1 散列
- */
+     *
+     * @deprecated SHA-1 已被证明存在碰撞攻击（SHAttered 2017），不应用于安全场景。
+     *             请使用 {@link #sha256(byte[])} 或 {@link #sha512(byte[])}。
+     *             仅保留用于兼容旧数据校验和非安全场景。
+     */
+    @Deprecated(since = "1.0.0", forRemoval = false)
     public static byte[] sha1(byte[] input) {
         return digest(input, "SHA-1", null, 1);
     }
 
     /**
      * 计算 SHA-1 散列（Hex 格式）
- */
+     *
+     * @deprecated 同 {@link #sha1(byte[])}，请使用 {@link #sha256Hex(byte[])}。
+     */
+    @Deprecated(since = "1.0.0", forRemoval = false)
     public static String sha1Hex(byte[] input) {
         return HexUtils.bytesToHex(sha1(input));
     }
 
     /**
      * 计算 SHA-1 散列（字符串）
- */
+     *
+     * @deprecated 同 {@link #sha1(byte[])}，请使用 {@link #sha256Hex(String)}。
+     */
+    @Deprecated(since = "1.0.0", forRemoval = false)
     public static String sha1Hex(String input) {
         if (input == null) {
             return null;

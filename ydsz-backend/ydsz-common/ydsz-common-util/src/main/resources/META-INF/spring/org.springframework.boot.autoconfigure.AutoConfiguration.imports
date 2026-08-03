@@ -1,3 +1,2 @@
 com.njydsz.common.util.config.UtilAutoConfiguration
 com.njydsz.common.util.id.SnowflakeAutoConfiguration
-com.njydsz.common.util.config.ThreadPoolMonitorAutoConfiguration
