@@ -16,11 +16,38 @@ import com.njydsz.common.util.string.StringUtils;
 /**
  * CookieUtils - Cookie 操作工具类 (增强版)
  *
+ * <p>支持 SameSite 属性（Strict / Lax / None）与反代场景下的 Secure 自动检测
+ * （读取 {@code X-Forwarded-Proto} 头）。
+ *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ *
  */
 public class CookieUtils {
+
+    /**
+     * SameSite 属性枚举，用于防御 CSRF 与跨站追踪。
+     *
+     * @see <a href="https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite">MDN SameSite</a>
+     */
+    public enum SameSite {
+        /** 严格模式：跨站请求一律不发送 Cookie（最安全，可能影响用户体验） */
+        STRICT("Strict"),
+        /** 宽松模式：顶级导航和 GET 请求发送 Cookie（默认推荐） */
+        LAX("Lax"),
+        /** 无限制：跨站请求均发送 Cookie（必须同时设置 Secure） */
+        NONE("None");
+
+        private final String attribute;
+
+        SameSite(String attribute) {
+            this.attribute = attribute;
+        }
+
+        public String attribute() {
+            return attribute;
+        }
+    }
 
     /**
      * 按名称获取 cookie
@@ -66,7 +93,10 @@ public class CookieUtils {
     }
 
     /**
-     * 添加 cookie (默认开启 HttpOnly 和 Secure 校验)
+     * 添加 cookie (默认开启 HttpOnly + SameSite=Lax，Secure 校验支持反代)
+     *
+     * <p>Secure 判断优先级：{@code X-Forwarded-Proto} 头 → {@code request.getScheme()}，
+     * 兼容 Nginx / SLB 等反向代理场景。
      */
     public static void addCookie(String name, String value, String path, HttpServletRequest request, HttpServletResponse response) {
         if (StringUtils.isEmpty(name) || value == null || response == null) {
@@ -78,17 +108,27 @@ public class CookieUtils {
             cookie.setPath(path);
         }
         if (request != null) {
-            cookie.setSecure("https".equals(request.getScheme()));
+            cookie.setSecure(isSecureRequest(request));
         }
         cookie.setHttpOnly(true);
-        response.addCookie(cookie);
+        appendSameSiteAndAdd(cookie, SameSite.LAX, response);
     }
 
     /**
-     * 添加 cookie（可自定义配置）
+     * 添加 cookie（可自定义配置，含 SameSite 属性）。
+     *
+     * @param name     Cookie 名称
+     * @param value    Cookie 值
+     * @param maxAge   有效期（秒）
+     * @param path     路径
+     * @param httpOnly 是否仅 HTTP
+     * @param secure   是否仅 HTTPS
+     * @param sameSite SameSite 策略；null 表示不写入 SameSite 属性
+     * @param response HTTP 响应
      */
     public static void addCookie(String name, String value, int maxAge, String path,
-                                  boolean httpOnly, boolean secure, HttpServletResponse response) {
+                                  boolean httpOnly, boolean secure, SameSite sameSite,
+                                  HttpServletResponse response) {
         if (StringUtils.isEmpty(name) || value == null || response == null) {
             return;
         }
@@ -98,11 +138,11 @@ public class CookieUtils {
         cookie.setMaxAge(maxAge);
         cookie.setHttpOnly(httpOnly);
         cookie.setSecure(secure);
-        response.addCookie(cookie);
+        appendSameSiteAndAdd(cookie, sameSite, response);
     }
 
     /**
-     * 添加会话 cookie（浏览器关闭即失效）
+     * 添加会话 cookie（浏览器关闭即失效，默认 SameSite=Lax）
      *
      * @param name     Cookie 名称
      * @param value    Cookie 值
@@ -115,10 +155,10 @@ public class CookieUtils {
         Cookie cookie = new Cookie(name, URLEncoder.encode(value, StandardCharsets.UTF_8));
         cookie.setPath(path != null ? path : "/");
         if (request != null) {
-            cookie.setSecure("https".equals(request.getScheme()));
+            cookie.setSecure(isSecureRequest(request));
         }
         cookie.setHttpOnly(true);
-        response.addCookie(cookie);
+        appendSameSiteAndAdd(cookie, SameSite.LAX, response);
     }
 
     /**
@@ -192,5 +232,55 @@ public class CookieUtils {
             return;
         }
         cookies.forEach((name, value) -> addCookie(name, value, path, request, response));
+    }
+
+    // ==================== 内部辅助方法 ====================
+
+    /**
+     * 判断请求是否为 HTTPS（兼容反代场景）。
+     *
+     * <p>优先级：{@code X-Forwarded-Proto} 头 → {@code request.getScheme()}。
+     * 反代终止 TLS 时，Servlet 容器看到的 scheme 是 http，需读转发头。
+     */
+    private static boolean isSecureRequest(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        if ("https".equalsIgnoreCase(forwardedProto)) {
+            return true;
+        }
+        return "https".equals(request.getScheme());
+    }
+
+    /**
+     * 写入 Cookie 并附加 SameSite 属性。
+     *
+     * <p>Servlet 6.0 的 {@link Cookie} API 不直接支持 SameSite，
+     * 需通过 {@code Set-Cookie} 响应头手动附加。
+     * 当 sameSite 为 null 时不附加该属性。
+     */
+    private static void appendSameSiteAndAdd(Cookie cookie, SameSite sameSite, HttpServletResponse response) {
+        if (sameSite == null) {
+            response.addCookie(cookie);
+            return;
+        }
+        // 使用 setHeader 写入完整 Set-Cookie，确保 SameSite 属性生效
+        StringBuilder sb = new StringBuilder();
+        sb.append(cookie.getName()).append('=').append(cookie.getValue());
+        if (cookie.getPath() != null) {
+            sb.append("; Path=").append(cookie.getPath());
+        }
+        if (cookie.getMaxAge() >= 0) {
+            sb.append("; Max-Age=").append(cookie.getMaxAge());
+        }
+        if (cookie.getSecure()) {
+            sb.append("; Secure");
+        }
+        if (cookie.isHttpOnly()) {
+            sb.append("; HttpOnly");
+        }
+        sb.append("; SameSite=").append(sameSite.attribute());
+        response.addHeader("Set-Cookie", sb.toString());
     }
 }

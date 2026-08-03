@@ -40,15 +40,6 @@ class DigestUtilsTest {
     }
 
     @Test
-    @DisplayName("MD5 已知向量校验")
-    @SuppressWarnings("deprecation") // 验证 MD5 已知向量，确认兼容旧数据场景
-    void md5KnownVector() {
-        // MD5("abc") = 900150983cd24fb0d6963f7d28e17f72
-        assertThat(DigestUtils.md5Hex("abc"))
-                .isEqualTo("900150983cd24fb0d6963f7d28e17f72");
-    }
-
-    @Test
     @DisplayName("HMAC-SHA256 已知向量校验（RFC 4231 Test Case 1）")
     void hmacSha256KnownVector() {
         // RFC 4231 Test Case 1: key=0x0b*20, data="Hi There"

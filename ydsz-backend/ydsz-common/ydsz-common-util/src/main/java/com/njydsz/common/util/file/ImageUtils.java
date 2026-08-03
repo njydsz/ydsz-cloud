@@ -54,7 +54,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ImageUtils {
 
+    /**
+     * 图片处理线程池（4 线程，固定大小，命名 image-）。
+     *
+     * <p>类加载时注册 JVM ShutdownHook 自动关闭，避免应用关闭时线程泄漏；
+     * 业务也可显式调用 {@link #shutdown()} 提前关闭。
+     */
     private static final ExecutorService EXECUTOR_SERVICE = ExecutorUtils.newFixedThreadPool(4, "image-");
+
+    static {
+        // JVM 关闭时自动优雅关闭线程池，避免遗忘 shutdown 导致 JVM 挂起
+        Runtime.getRuntime().addShutdownHook(new Thread(ImageUtils::shutdown, "image-utils-shutdown-hook"));
+    }
 
     private static final int DEFAULT_CONNECT_TIMEOUT = 10000;
     private static final int DEFAULT_READ_TIMEOUT = 30000;
@@ -257,23 +268,33 @@ public class ImageUtils {
 
     /**
      * 缩放图片 (指定目标尺寸)
+     *
+     * <p>根据源图是否含 alpha 通道自动选择 {@code TYPE_INT_ARGB} 或 {@code TYPE_INT_RGB}，
+     * 避免 PNG 透明背景变黑。
      */
     public static BufferedImage scaleImage(BufferedImage source, int targetWidth, int targetHeight) {
         if (source == null || targetWidth <= 0 || targetHeight <= 0) {
             return null;
         }
-        
+
+        Image scaledImage = source.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+        int imageType = source.getTransparency() != BufferedImage.OPAQUE
+                ? BufferedImage.TYPE_INT_ARGB
+                : BufferedImage.TYPE_INT_RGB;
+        BufferedImage result = new BufferedImage(targetWidth, targetHeight, imageType);
+        Graphics2D g2d = null;
         try {
-            Image scaledImage = source.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
-            BufferedImage result = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g2d = result.createGraphics();
+            g2d = result.createGraphics();
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g2d.drawImage(scaledImage, 0, 0, null);
-            g2d.dispose();
             return result;
         } catch (Exception e) {
             log.error("ImageUtils -> 缩放图片异常：{}", e.getMessage());
             return null;
+        } finally {
+            if (g2d != null) {
+                g2d.dispose();
+            }
         }
     }
 
@@ -350,26 +371,31 @@ public class ImageUtils {
         if (source == null) {
             return null;
         }
-        
+
+        BufferedImage result = null;
+        Graphics2D g2d = null;
         try {
             double radians = Math.toRadians(angle);
             int width = source.getWidth();
             int height = source.getHeight();
-            
+
             AffineTransform transform = new AffineTransform();
             transform.rotate(radians, width / 2.0, height / 2.0);
-            
-            BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = result.createGraphics();
+
+            result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            g2d = result.createGraphics();
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g2d.transform(transform);
             g2d.drawImage(source, 0, 0, null);
-            g2d.dispose();
-            
+
             return result;
         } catch (Exception e) {
             log.error("ImageUtils -> 旋转图片异常：{}", e.getMessage());
             return null;
+        } finally {
+            if (g2d != null) {
+                g2d.dispose();
+            }
         }
     }
 
@@ -380,53 +406,62 @@ public class ImageUtils {
         if (source == null) {
             return null;
         }
-        
+
+        BufferedImage result = null;
+        Graphics2D g2d = null;
         try {
             int width = source.getWidth();
             int height = source.getHeight();
-            
-            BufferedImage result = new BufferedImage(height, width, source.getType());
-            Graphics2D g2d = result.createGraphics();
+
+            int imageType = source.getTransparency() != BufferedImage.OPAQUE
+                    ? BufferedImage.TYPE_INT_ARGB
+                    : source.getType();
+            result = new BufferedImage(height, width, imageType);
+            g2d = result.createGraphics();
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-            
+
             AffineTransform transform = new AffineTransform();
             transform.translate(height, 0);
             transform.rotate(Math.toRadians(90));
-            
+
             g2d.transform(transform);
             g2d.drawImage(source, 0, 0, null);
-            g2d.dispose();
-            
+
             return result;
         } catch (Exception e) {
             log.error("ImageUtils -> 旋转图片 90 度异常：{}", e.getMessage());
             return null;
+        } finally {
+            if (g2d != null) {
+                g2d.dispose();
+            }
         }
     }
 
     /**
      * 添加文字水印
      */
-    public static BufferedImage addTextWatermark(BufferedImage source, String text, Color color, 
+    public static BufferedImage addTextWatermark(BufferedImage source, String text, Color color,
                                                  float fontSize, float alpha, int position) {
         if (source == null || StringUtils.isBlank(text)) {
             return null;
         }
-        
+
+        BufferedImage result = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = null;
         try {
-            BufferedImage result = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = result.createGraphics();
-            
+            g2d = result.createGraphics();
+
             g2d.drawImage(source, 0, 0, null);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha));
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2d.setColor(color);
             g2d.setFont(new Font("Arial", Font.BOLD, (int) fontSize));
-            
+
             FontMetrics metrics = g2d.getFontMetrics();
             int textWidth = metrics.stringWidth(text);
             int textHeight = metrics.getHeight();
-            
+
             int x, y;
             switch (position) {
                 case 1: // 左上角
@@ -467,36 +502,39 @@ public class ImageUtils {
                     y = source.getHeight() - 10;
                     break;
             }
-            
+
             g2d.drawString(text, x, y);
-            g2d.dispose();
-            
             return result;
         } catch (Exception e) {
             log.error("ImageUtils -> 添加文字水印异常：{}", e.getMessage());
             return null;
+        } finally {
+            if (g2d != null) {
+                g2d.dispose();
+            }
         }
     }
 
     /**
      * 添加图片水印
      */
-    public static BufferedImage addImageWatermark(BufferedImage source, BufferedImage watermark, 
+    public static BufferedImage addImageWatermark(BufferedImage source, BufferedImage watermark,
                                                   int position, float alpha) {
         if (source == null || watermark == null) {
             return null;
         }
-        
+
+        BufferedImage result = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = null;
         try {
-            BufferedImage result = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = result.createGraphics();
-            
+            g2d = result.createGraphics();
+
             g2d.drawImage(source, 0, 0, null);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha));
-            
+
             int watermarkWidth = watermark.getWidth();
             int watermarkHeight = watermark.getHeight();
-            
+
             int x, y;
             switch (position) {
                 case 1: // 左上角
@@ -537,14 +575,16 @@ public class ImageUtils {
                     y = source.getHeight() - watermarkHeight - 10;
                     break;
             }
-            
+
             g2d.drawImage(watermark, x, y, null);
-            g2d.dispose();
-            
             return result;
         } catch (Exception e) {
             log.error("ImageUtils -> 添加图片水印异常：{}", e.getMessage());
             return null;
+        } finally {
+            if (g2d != null) {
+                g2d.dispose();
+            }
         }
     }
 
@@ -729,15 +769,19 @@ public class ImageUtils {
 
     /**
      * 批量下载图片
+     *
+     * <p>任意一张图片下载失败将通过 {@link CompletableFuture#completeExceptionally(Throwable)}
+     * 传播异常，调用方可感知失败；全部成功才返回 true。
      */
     public static CompletableFuture<Boolean> downloadImagesAsync(String[] imageUrls, String saveDirectory) {
         return CompletableFuture.supplyAsync(() -> {
             if (imageUrls == null || imageUrls.length == 0 || StringUtils.isBlank(saveDirectory)) {
                 return false;
             }
-            
+
             FileUtils.mkdirs(saveDirectory);
-            
+
+            RuntimeException firstError = null;
             for (String imageUrl : imageUrls) {
                 try {
                     byte[] imageData = readRemoteFile(imageUrl);
@@ -751,7 +795,13 @@ public class ImageUtils {
                     }
                 } catch (Exception e) {
                     log.error("ImageUtils -> 下载图片失败 {}: {}", imageUrl, e.getMessage());
+                    if (firstError == null) {
+                        firstError = new RuntimeException("Download failed for " + imageUrl + ": " + e.getMessage(), e);
+                    }
                 }
+            }
+            if (firstError != null) {
+                throw firstError;
             }
             return true;
         }, EXECUTOR_SERVICE);

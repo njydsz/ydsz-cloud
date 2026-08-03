@@ -353,15 +353,16 @@ public final class SnowflakeUtils {
      * 计算工作节点 ID，支持通过系统属性或环境变量覆盖
      * <ul>
      *   <li>系统属性：ydsz.snowflake.workerId</li>
-     *   <li>环境变量：SNOWFLAKE_WORKER_ID</li>
+     *   <li>环境变量：YDSZ_SNOWFLAKE_WORKER_ID（与 SnowflakeProperties / SnowflakeAutoConfiguration 统一）</li>
      *   <li>默认：通过 IP 地址哈希自动计算</li>
      * </ul>
      *
      * @return 计算得到的节点 ID
      */
     private static long computeWorkerId() {
+        // 优先读系统属性，其次环境变量；环境变量名与 SnowflakeProperties 默认值保持一致
         String configured = System.getProperty("ydsz.snowflake.workerId",
-                System.getenv("SNOWFLAKE_WORKER_ID"));
+                System.getenv("YDSZ_SNOWFLAKE_WORKER_ID"));
         if (configured != null && !configured.isEmpty()) {
             try {
                 long id = Long.parseLong(configured);

@@ -9,7 +9,9 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Signature;
+import java.security.SignatureException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -63,6 +65,11 @@ public class Rsa2Utils {
     private static final String CIPHER_TRANSFORMATION = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
 
     /**
+     * 最小允许密钥长度（NIST SP 800-57：1024 位 RSA 已废弃，2030 年前至少使用 2048 位）。
+     */
+    public static final int MIN_KEY_SIZE = 2048;
+
+    /**
      * 建议密钥长度
      */
     public static final int KEY_SIZE_2048 = 2048;
@@ -83,22 +90,28 @@ public class Rsa2Utils {
     private static final int MAX_DECRYPT_BLOCK_2048 = 256;
 
     /**
+     * 共享的线程安全 SecureRandom 实例（KeyPairGenerator 显式传入，避免使用 JDK 默认 StrongRandom）
+     */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    /**
      * 生成 RSA 密钥对
      *
-     * @param keySize 密钥长度，建议 2048 或更高
+     * @param keySize 密钥长度，最小 2048（NIST SP 800-57 强制要求）
      * @return 包含 publicKey 和 privateKey 的 Map (Base64 编码)
      */
     public static Map<String, String> initRSAKey(int keySize) {
         try {
-            if (keySize < 1024) {
-                throw new IllegalArgumentException("Key size must be at least 1024 bits");
+            if (keySize < MIN_KEY_SIZE) {
+                throw new IllegalArgumentException(
+                        "Key size must be at least " + MIN_KEY_SIZE + " bits (NIST SP 800-57)");
             }
-            
+
             KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
-            keyPairGen.initialize(keySize);
-            
+            keyPairGen.initialize(keySize, SECURE_RANDOM);
+
             KeyPair keyPair = keyPairGen.generateKeyPair();
-            
+
             Map<String, String> keyPairMap = new HashMap<>(2);
             keyPairMap.put("publicKey", Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
             keyPairMap.put("privateKey", Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()));

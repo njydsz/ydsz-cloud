@@ -1,19 +1,13 @@
 package com.njydsz.common.util.security;
 
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import com.njydsz.common.util.bytes.HexUtils;
 import com.njydsz.common.util.string.StringUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * AES 加密解密工具类
@@ -25,14 +19,12 @@ import lombok.extern.slf4j.Slf4j;
  *   <li><b>GCM 模式（默认推荐）</b>：encrypt/decrypt 默认使用 AES-GCM，提供认证加密（AEAD）</li>
  *   <li><b>自动 IV 生成</b>：使用 SecureRandom 生成 12 字节随机 IV</li>
  *   <li><b>256 位密钥</b>：默认生成 256 位强密钥</li>
- *   <li><b>兼容解密</b>：提供 decryptECBCompat/decryptCBCCompat 兼容旧密文</li>
  *   <li><b>Hex/Base64 编码</b>：支持两种输出格式</li>
  * </ul>
  *
  * <p><b>安全说明：</b>
  * <ul>
  *   <li>GCM 模式同时保证机密性和完整性，推荐用于生产环境</li>
- *   <li>ECB/CBC 模式已标记废弃，仅提供兼容解密方法</li>
  *   <li>密钥请使用安全的方式存储和传输，切勿硬编码在代码中</li>
  * </ul>
  *
@@ -46,16 +38,12 @@ import lombok.extern.slf4j.Slf4j;
  *
  * // 解密（GCM 模式）
  * String plaintext = AesUtils.decrypt(ciphertext, hexKey);
- *
- * // 兼容旧 ECB 密文解密
- * String oldPlaintext = AesUtils.decryptECBCompat(oldCiphertext, hexKey);
  * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0
  * 
  */
-@Slf4j
 public class AesUtils {
 
     /**
@@ -79,16 +67,6 @@ public class AesUtils {
      * 共享的线程安全 SecureRandom 实例（SecureRandom 本身是线程安全的）
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
-    /**
-     * CBC 模式转换（已废弃，仅兼容）
-     */
-    private static final String CBC_TRANSFORMATION = "AES/CBC/PKCS5Padding";
-
-    /**
-     * ECB 模式转换（已废弃，仅兼容）
-     */
-    private static final String ECB_TRANSFORMATION = "AES/ECB/PKCS5Padding";
 
     /**
      * 可配置的 AES 密钥（Hex 格式），为空时使用 initKey() 生成临时密钥
@@ -123,11 +101,19 @@ public class AesUtils {
     }
 
     /**
-     * 校验密钥强度，最小支持 AES-128（16 字节 = 32 Hex 字符）
+     * 校验密钥强度，必须为 AES 标准长度（16/24/32 字节 = 32/48/64 个 Hex 字符）。
+     *
+     * <p>与 {@link AesGcmCrypto#AesGcmCrypto(byte[])} 的严格校验保持一致，
+     * 避免传入非标准长度密钥时 AesUtils 通过校验但 AesGcmCrypto 抛异常。
      */
     private static void validateKey(String hexKey) {
-        if (hexKey == null || hexKey.length() < 32) {
-            throw new IllegalArgumentException("AES 密钥长度不足，最小需要 16 字节（32 个 Hex 字符）");
+        if (hexKey == null) {
+            throw new IllegalArgumentException("AES 密钥不能为空");
+        }
+        int len = hexKey.length();
+        if (len != 32 && len != 48 && len != 64) {
+            throw new IllegalArgumentException(
+                    "AES 密钥长度必须为 16/24/32 字节（对应 32/48/64 个 Hex 字符），当前长度: " + len);
         }
     }
 
@@ -212,76 +198,6 @@ public class AesUtils {
         validateKey(hexAesKey);
         AesGcmCrypto crypto = new AesGcmCrypto(hexToBytes(hexAesKey));
         return crypto.decrypt(encryptedBase64);
-    }
-
-    // ==================== 兼容旧密文解密 ====================
-
-    /**
-     * 兼容解密旧 ECB 模式密文
-     *
-     * <p>用于迁移期解密历史数据，新数据请使用 GCM 模式。</p>
-     *
-     * @deprecated ECB 模式不安全（相同明文产生相同密文，泄露明文模式），NIST SP 800-38A 不推荐使用。
-     *             仅保留用于解密历史遗留密文，新加密请使用 {@link #encrypt(String, String)}（GCM 模式）。
-     *             完成历史数据迁移后应移除对本方法的调用。
-     * @param ecbBase64 Base64 编码的 ECB 密文
-     * @param hexAesKey Hex 格式的 AES 密钥
-     * @return 解密后的明文
-     * @throws GeneralSecurityException 解密异常
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String decryptECBCompat(String ecbBase64, String hexAesKey) throws GeneralSecurityException {
-        validateKey(hexAesKey);
-        log.warn("Decrypting legacy ECB ciphertext, please migrate to GCM");
-        byte[] keyBytes = hexToBytes(hexAesKey);
-        byte[] encrypted = Base64.getDecoder().decode(ecbBase64);
-
-        SecretKeySpec keySpec = new SecretKeySpec(keyBytes, KEY_ALGORITHM);
-
-        Cipher cipher = Cipher.getInstance(ECB_TRANSFORMATION);
-        cipher.init(Cipher.DECRYPT_MODE, keySpec);
-
-        byte[] decrypted = cipher.doFinal(encrypted);
-        return new String(decrypted, StandardCharsets.UTF_8);
-    }
-
-    /**
-     * 兼容解密旧 CBC 模式密文（IV:CIPHERTEXT 格式）
-     *
-     * <p>用于迁移期解密历史数据，新数据请使用 GCM 模式。</p>
-     *
-     * @deprecated CBC 模式无认证，无法抵御密文篡改（Padding Oracle 攻击），NIST SP 800-38A 推荐使用 AEAD 模式。
-     *             仅保留用于解密历史遗留密文，新加密请使用 {@link #encrypt(String, String)}（GCM 模式）。
-     *             完成历史数据迁移后应移除对本方法的调用。
-     * @param cbcResult IV:CIPHERTEXT 格式的 CBC 密文
-     * @param hexAesKey Hex 格式的 AES 密钥
-     * @return 解密后的明文
-     * @throws GeneralSecurityException 解密异常
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String decryptCBCCompat(String cbcResult, String hexAesKey) throws GeneralSecurityException {
-        validateKey(hexAesKey);
-        log.warn("Decrypting legacy CBC ciphertext, please migrate to GCM");
-        int colonIndex = cbcResult.indexOf(':');
-        if (colonIndex < 0) {
-            throw new IllegalArgumentException("Invalid CBC encrypted format, expected IV:CIPHERTEXT");
-        }
-
-        String ivBase64 = cbcResult.substring(0, colonIndex);
-        String encryptedBase64 = cbcResult.substring(colonIndex + 1);
-
-        byte[] keyBytes = hexToBytes(hexAesKey);
-        byte[] iv = Base64.getDecoder().decode(ivBase64);
-        byte[] encrypted = Base64.getDecoder().decode(encryptedBase64);
-
-        SecretKeySpec keySpec = new SecretKeySpec(keyBytes, KEY_ALGORITHM);
-        IvParameterSpec ivSpec = new IvParameterSpec(iv);
-
-        Cipher cipher = Cipher.getInstance(CBC_TRANSFORMATION);
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
-
-        byte[] decrypted = cipher.doFinal(encrypted);
-        return new String(decrypted, StandardCharsets.UTF_8);
     }
 
     // ==================== 密钥生成 ====================

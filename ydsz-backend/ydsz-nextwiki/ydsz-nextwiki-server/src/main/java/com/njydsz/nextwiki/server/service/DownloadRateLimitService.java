@@ -107,23 +107,23 @@ public class DownloadRateLimitService {
     }
 
     /**
-     * 生成签名下载 URL（MD5 签名 + Redis 落地，时效性与用户/IP 绑定）。
-     * <p>将 {@code storageKey|userId|ip|expireTime} 做 MD5 得到签名，并把签名→storageKey 写入 Redis，
+     * 生成签名下载 URL（SHA-256 签名 + Redis 落地，时效性与用户/IP 绑定）。
+     * <p>将 {@code storageKey|userId|ip|expireTime} 做 SHA-256 得到签名，并把签名→storageKey 写入 Redis，
      * TTL 等于签名有效期；返回的路径由 Controller 路由到 {@link #verifySignedUrl} 校验。
      *
      * @param storageKey 存储对象键
      * @param userId     用户 ID（参与签名，校验时绑定）
      * @param ip         客户端 IP（参与签名，校验时绑定）
      * @return 签名下载路径（如 {@code /nextwiki/download/{sign}?expires=...}）
-     * @complexity O(1)（一次 MD5 + 一次 Redis 写入）
-     * @security 签名含 userId 与 ip，理论上可限制重放来源；MD5 仅作完整性校验，非加密强度
+     * @complexity O(1)（一次 SHA-256 + 一次 Redis 写入）
+     * @security 签名含 userId 与 ip，理论上可限制重放来源；SHA-256 仅作完整性校验，非加密强度
      * @note 有效期由 {@code nextwiki.download.signed-url-expire-seconds} 决定
      */
     public String generateSignedDownloadUrl(String storageKey, String userId, String ip) {
         long signedUrlExpireSeconds = properties.getDownload().getSignedUrlExpireSeconds();
         long expireTime = System.currentTimeMillis() / 1000 + signedUrlExpireSeconds;
         String rawData = storageKey + "|" + userId + "|" + ip + "|" + expireTime;
-        String sign = DigestUtils.md5Hex(rawData);
+        String sign = DigestUtils.sha256Hex(rawData);
 
         // 存储签名到 Redis（用于验证）
         String signKey = "nextwiki:sign:" + sign;

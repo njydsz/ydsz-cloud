@@ -12,7 +12,7 @@ import com.njydsz.common.util.bytes.HexUtils;
 /**
  * 用户密码安全工具类（纯 JDK 实现 + Spring Security BCrypt）
  *
- * <p>支持多种密码加密方式：BCrypt（推荐）、PBKDF2（推荐）、SHA-256+Salt（兼容旧版）。
+ * <p>支持多种密码加密方式：BCrypt（推荐）、PBKDF2（推荐）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -69,7 +69,7 @@ public class PwdUtils {
         new SecureRandom().nextBytes(randomBytes);
         String generated = HexUtils.bytesToHex(randomBytes);
         System.getLogger(PwdUtils.class.getName()).log(System.Logger.Level.WARNING,
-                "未配置默认密码(ydsz.default.password/YDSZ_DEFAULT_PASSWORD)，已随机生成，请通过getDefaultPassEncryption()获取哈希值");
+                "未配置默认密码(ydsz.default.password/YDSZ_DEFAULT_PASSWORD)，已随机生成");
         return generated;
     }
 
@@ -116,110 +116,6 @@ public class PwdUtils {
      */
     public static boolean isBCryptFormat(String password) {
         return password != null && BCRYPT_PATTERN.matcher(password).matches();
-    }
-
-    /**
-     * 使用 SHA-256 + Salt 验证密码（兼容旧版密码，单次迭代）
-     *
-     * <p>此方法仅用于验证历史遗留的单次 SHA-256 哈希密码。
-     * 新密码应使用 {@link #hashPasswordBCrypt(String)} 或 {@link #encodePBKDF2WithAutoSalt(char[])}。
-     *
-     * @deprecated 单次 SHA-256 不符合 OWASP 2023 密码存储指南（应使用慢哈希）。
-     *             仅保留用于验证历史遗留密码，新密码请使用 {@link #encodePBKDF2WithAutoSalt(char[])}
-     *             或 {@link #hashPasswordBCrypt(String)}。
-     *             完成历史密码迁移后应移除对本方法的调用。
-     * @param rawPassword 原始密码
-     * @param hashedPassword 已存储的哈希值（Hex 编码）
-     * @param salt 盐值
-     * @return 匹配返回 true
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static boolean verifyPasswordWithSha256Salt(String rawPassword, String hashedPassword, String salt) {
-        if (rawPassword == null || hashedPassword == null || salt == null) {
-            return false;
-        }
-        try {
-            byte[] saltBytes = salt.getBytes(StandardCharsets.UTF_8);
-            byte[] inputBytes = rawPassword.getBytes(StandardCharsets.UTF_8);
-            byte[] hash = DigestUtils.digest(inputBytes, "SHA-256", saltBytes, 1);
-            String computedHex = HexUtils.bytesToHex(hash);
-            return MessageDigest.isEqual(
-                computedHex.getBytes(StandardCharsets.UTF_8),
-                hashedPassword.getBytes(StandardCharsets.UTF_8)
-            );
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * 验证密码是否匹配（支持盐值）
-     *
-     * @param password 明文密码
-     * @param encodedPassword 加密后的密码（格式：salt:hash）
-     * @return 是否匹配
-     *
-     * @deprecated 编码格式 {@code salt:hash} 不存储迭代次数，未来调整 {@code DEFAULT_ITERATIONS}
-     *             后旧密码无法验证。请使用 {@link #verifyPBKDF2(String, String)}
-     *             （编码格式 {@code salt:iterations:hash}，迭代次数随密文存储）。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static boolean isValidPasswordWithSalt(String password, String encodedPassword) {
-        if (password == null || password.isEmpty() || encodedPassword == null || encodedPassword.isEmpty()) {
-            return false;
-        }
-
-        int colonIndex = encodedPassword.indexOf(':');
-        if (colonIndex < 0) {
-            return false;
-        }
-
-        String saltHex = encodedPassword.substring(0, colonIndex);
-
-        String computedHash = encodeWithSalt(password, saltHex);
-        return MessageDigest.isEqual(
-            computedHash.getBytes(StandardCharsets.UTF_8),
-            encodedPassword.getBytes(StandardCharsets.UTF_8)
-        );
-    }
-
-    /**
-     * 加盐哈希（推荐）
-     *
-     * @param password 密码
-     * @param saltHex 十六进制盐值
-     * @return 加密结果（salt:hash 格式）
-     *
-     * @deprecated 编码格式 {@code salt:hash} 不存储迭代次数，未来调整 {@code DEFAULT_ITERATIONS}
-     *             后旧密码无法验证。请使用 {@link #encodePBKDF2(char[], String)}
-     *             （编码格式 {@code salt:iterations:hash}，迭代次数随密文存储）。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String encodeWithSalt(String password, String saltHex) {
-        if (password == null || password.isEmpty() || saltHex == null || saltHex.isEmpty()) {
-            throw new IllegalArgumentException("Password and salt must not be empty");
-        }
-        byte[] salt = HexUtils.hexToBytes(saltHex);
-        byte[] hash = DigestUtils.digest(password.getBytes(StandardCharsets.UTF_8), "SHA-256", salt, DEFAULT_ITERATIONS);
-        return saltHex + ":" + HexUtils.bytesToHex(hash);
-    }
-
-    /**
-     * 加盐哈希（自动生成盐值）
-     *
-     * @param password 密码
-     * @return 加密结果（salt:hash 格式）
-     *
-     * @deprecated 同 {@link #encodeWithSalt(String, String)}，请使用
-     *             {@link #encodePBKDF2WithAutoSalt(char[])}。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String encodeWithAutoSalt(String password) {
-        if (password == null || password.isEmpty()) {
-            throw new IllegalArgumentException("Password must not be empty");
-        }
-        String saltHex = DigestUtils.genSaltHex(DEFAULT_SALT_LENGTH);
-        return encodeWithSalt(password, saltHex);
     }
 
     /**
@@ -308,17 +204,6 @@ public class PwdUtils {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    /**
-     * 获取默认密码的哈希值
-     *
-     * @deprecated 内部使用已废弃的 {@link #encodeWithAutoSalt(String)}，
-     *             请改用 {@link #encodePBKDF2WithAutoSalt(char[])} 显式编码默认密码。
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static String getDefaultPassEncryption() {
-        return encodeWithAutoSalt(DEFAULT_PASS);
     }
 
     /**

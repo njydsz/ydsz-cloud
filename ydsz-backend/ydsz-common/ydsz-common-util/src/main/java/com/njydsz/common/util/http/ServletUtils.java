@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.njydsz.common.domain.constant.TokenConstants;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.ip.IpAddrUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +37,50 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ServletUtils {
 
+    /**
+     * 可信代理 IP 集合（精确 IP 匹配）。
+     *
+     * <p>仅当 {@code request.getRemoteAddr()} 命中此集合或为内网/回环地址时，
+     * 才信任 {@code X-Forwarded-For} / {@code X-Real-IP} 等代理头，防止客户端伪造。
+     *
+     * <p>默认规则：内网地址（RFC 1918 + 回环）始终可信；
+     * 额外精确 IP 可通过 {@link #setTrustedProxies(Set)} 配置（如反代 SLB 公网出口 IP）。
+     */
+    private static volatile Set<String> trustedProxies = Set.of();
+
     private ServletUtils() {
         throw new UnsupportedOperationException("Utility class");
+    }
+
+    /**
+     * 配置可信代理 IP 集合（精确匹配，非 CIDR）。
+     *
+     * <p>用于在反向代理或 SLB 公网出口场景下，仅信任来自已知代理的转发头。
+     * 内网地址（RFC 1918 + 回环）始终可信，无需显式配置。
+     *
+     * @param proxies 可信代理 IP 集合；null 或空集合表示仅信任内网/回环
+     */
+    public static void setTrustedProxies(Set<String> proxies) {
+        trustedProxies = (proxies == null || proxies.isEmpty())
+                ? Set.of()
+                : Set.copyOf(proxies);
+    }
+
+    /**
+     * 判断 remoteAddr 是否为可信代理。
+     *
+     * <p>可信条件：内网/回环地址，或显式配置的可信代理 IP。
+     */
+    private static boolean isTrustedProxy(String remoteAddr) {
+        if (StringUtils.isBlank(remoteAddr)) {
+            return false;
+        }
+        // 内网/回环地址始终可信（RFC 1918 + 127.0.0.0/8 + ::1）
+        if (IpAddrUtils.isInternalIp(remoteAddr)) {
+            return true;
+        }
+        // 显式配置的可信代理（如 SLB 公网出口 IP）
+        return trustedProxies.contains(remoteAddr);
     }
 
     /**
@@ -216,11 +260,15 @@ public final class ServletUtils {
     }
 
     /**
-     * 获取客户端真实 IP 地址
+     * 获取客户端真实 IP 地址（防伪造）。
      *
      * <p>支持多层代理场景，按优先级依次检查以下 Header：
      * X-Real-IP → X-Forwarded-For → Proxy-Client-IP → WL-Proxy-Client-IP
      * → HTTP_CLIENT_IP → HTTP_X_FORWARDED_FOR → RemoteAddr
+     *
+     * <p><b>安全说明（防伪造）</b>：仅在 {@code request.getRemoteAddr()} 为可信代理
+     * （内网/回环地址，或通过 {@link #setTrustedProxies(Set)} 显式配置的代理 IP）时，
+     * 才信任上述转发头；否则直接返回 RemoteAddr，防止客户端通过伪造 Header 绕过 IP 鉴权。
      *
      * <p>当 X-Forwarded-For 包含多个 IP 时，取第一个（最左侧为真实客户端 IP）。
      * 当所有 Header 均无效时，返回 RemoteAddr。
@@ -231,6 +279,12 @@ public final class ServletUtils {
     public static String getClientIp(HttpServletRequest request) {
         if (request == null) {
             return "0.0.0.0";
+        }
+
+        String remoteAddr = request.getRemoteAddr();
+        // 防伪造：仅当直连对端为可信代理时才信任转发头
+        if (!isTrustedProxy(remoteAddr)) {
+            return remoteAddr != null ? remoteAddr : "0.0.0.0";
         }
 
         String ip = request.getHeader("X-Real-IP");
@@ -264,7 +318,7 @@ public final class ServletUtils {
             return ip;
         }
 
-        return request.getRemoteAddr();
+        return remoteAddr != null ? remoteAddr : "0.0.0.0";
     }
 
     private static boolean isValidIp(String ip) {
