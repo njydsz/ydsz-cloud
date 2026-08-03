@@ -52,7 +52,7 @@ export function createSharedAuthStore() {
         if (accessToken) {
           accessStore.setAccessToken(accessToken);
           if (refreshToken) {
-            (accessStore as any).refreshToken = refreshToken;
+            accessStore.setRefreshToken(refreshToken);
           }
 
           if (loginUserInfo) {

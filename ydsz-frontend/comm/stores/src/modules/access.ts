@@ -1,5 +1,8 @@
 /**
- * access Pinia 状态管理
+ * access Pinia 状态管理 — 访问控制（menus/routes/codes）
+ *
+ * 注意：认证相关状态（token/refreshToken/lockScreen）已迁移到 useAuthStore，
+ * 本 store 保留兼容的 getter/setter 代理，推荐新代码直接使用 useAuthStore。
  *
  * @path comm\stores\src\modules\access.ts
  * @author ydsz-team
@@ -11,35 +14,9 @@ import type { MenuRecordRaw } from '@ydsz-core/typings';
 
 import { acceptHMRUpdate, defineStore } from 'pinia';
 
+import { useAuthStore } from './auth';
+
 type AccessToken = null | string;
-
-/**
- * 对密码进行简单哈希处理
- * @description 使用 SHA-256 对密码进行哈希，避免明文存储
- * @param password 原始密码
- * @returns 哈希后的十六进制字符串
- */
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-/**
- * 验证锁屏密码
- * @param password 待验证的密码
- * @param storedHash 存储的哈希值
- * @returns 密码是否匹配
- */
-async function verifyPassword(
-  password: string,
-  storedHash: string,
-): Promise<boolean> {
-  const hash = await hashPassword(password);
-  return hash === storedHash;
-}
 
 interface AccessState {
   /**
@@ -55,33 +32,15 @@ interface AccessState {
    */
   accessRoutes: RouteRecordRaw[];
   /**
-   * 登录 accessToken
-   */
-  accessToken: AccessToken;
-  /**
    * 是否已经检查过权限
    */
   isAccessChecked: boolean;
-  /**
-   * 是否锁屏状态
-   */
-  isLockScreen: boolean;
-  /**
-   * 锁屏密码哈希值
-   */
-  lockScreenPassword?: string;
-  /**
-   * 登录是否过期
-   */
-  loginExpired: boolean;
-  /**
-   * 登录 accessToken
-   */
-  refreshToken: AccessToken;
 }
 
 /**
- * @zh_CN 访问权限相关
+ * @zh_CN 访问权限相关（menus/routes/codes）
+ *
+ * 认证 Token 相关操作请使用 useAuthStore。
  */
 export const useAccessStore = defineStore('core-access', {
   actions: {
@@ -104,9 +63,9 @@ export const useAccessStore = defineStore('core-access', {
       }
       return findMenu(this.accessMenus, path);
     },
+    /** @deprecated 请使用 useAuthStore().lockScreen() */
     async lockScreen(password: string) {
-      this.isLockScreen = true;
-      this.lockScreenPassword = await hashPassword(password);
+      return useAuthStore().lockScreen(password);
     },
     setAccessCodes(codes: string[]) {
       this.accessCodes = codes;
@@ -117,54 +76,62 @@ export const useAccessStore = defineStore('core-access', {
     setAccessRoutes(routes: RouteRecordRaw[]) {
       this.accessRoutes = routes;
     },
+    /** @deprecated 请使用 useAuthStore().setAccessToken() */
     setAccessToken(token: AccessToken) {
-      this.accessToken = token;
+      useAuthStore().setAccessToken(token);
     },
     setIsAccessChecked(isAccessChecked: boolean) {
       this.isAccessChecked = isAccessChecked;
     },
+    /** @deprecated 请使用 useAuthStore().setLoginExpired() */
     setLoginExpired(loginExpired: boolean) {
-      this.loginExpired = loginExpired;
+      useAuthStore().setLoginExpired(loginExpired);
     },
+    /** @deprecated 请使用 useAuthStore().setRefreshToken() */
     setRefreshToken(token: AccessToken) {
-      this.refreshToken = token;
+      useAuthStore().setRefreshToken(token);
     },
+    /** @deprecated 请使用 useAuthStore().unlockScreen() */
     unlockScreen() {
-      this.isLockScreen = false;
-      this.lockScreenPassword = undefined;
+      useAuthStore().unlockScreen();
     },
-    /**
-     * 验证锁屏密码是否正确
-     * @param password 待验证的密码
-     * @returns 密码是否匹配
-     */
+    /** @deprecated 请使用 useAuthStore().verifyLockScreenPassword() */
     async verifyLockScreenPassword(password: string): Promise<boolean> {
-      if (!this.lockScreenPassword) {
-        return false;
-      }
-      return verifyPassword(password, this.lockScreenPassword);
+      return useAuthStore().verifyLockScreenPassword(password);
+    },
+  },
+  getters: {
+    /** 代理到 useAuthStore.accessToken */
+    accessToken(): AccessToken {
+      return useAuthStore().accessToken;
+    },
+    /** 代理到 useAuthStore.isLockScreen */
+    isLockScreen(): boolean {
+      return useAuthStore().isLockScreen;
+    },
+    /** 代理到 useAuthStore.loginExpired */
+    loginExpired(): boolean {
+      return useAuthStore().loginExpired;
+    },
+    /** 代理到 useAuthStore.lockScreenPassword */
+    lockScreenPassword(): string | undefined {
+      return useAuthStore().lockScreenPassword;
+    },
+    /** 代理到 useAuthStore.refreshToken */
+    refreshToken(): AccessToken {
+      return useAuthStore().refreshToken;
     },
   },
   persist: {
-    // 持久化
-    pick: [
-      'accessToken',
-      'refreshToken',
-      'accessCodes',
-      'isLockScreen',
-      'lockScreenPassword',
-    ],
+    // ⚠️ 迁移说明：accessToken/refreshToken/isLockScreen/lockScreenPassword
+    // 已迁移到 useAuthStore 持久化，此处仅保留 accessCodes
+    pick: ['accessCodes'],
   },
   state: (): AccessState => ({
     accessCodes: [],
     accessMenus: [],
     accessRoutes: [],
-    accessToken: null,
     isAccessChecked: false,
-    isLockScreen: false,
-    lockScreenPassword: undefined,
-    loginExpired: false,
-    refreshToken: null,
   }),
 });
 
