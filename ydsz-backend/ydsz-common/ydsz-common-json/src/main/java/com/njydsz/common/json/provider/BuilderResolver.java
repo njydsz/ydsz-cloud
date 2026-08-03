@@ -143,8 +143,8 @@ final class BuilderResolver {
                         setterMethod.invoke(builderInstance, convertedValue);
                     }
                 } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
+                    LOGGER.warn("Inner builder setter failed for {}.{}, skipping field", builderClass.getName(), fieldName, e);
+                }
             }
 
             String buildMethodName = annotation.buildMethod();
@@ -160,8 +160,8 @@ final class BuilderResolver {
                 }
             }
         } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
+            LOGGER.warn("Inner builder deserialization failed for {}, falling back to map", clazz.getName(), e);
+        }
         return clazz.cast(map);
     }
 

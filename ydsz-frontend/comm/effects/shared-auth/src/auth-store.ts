@@ -10,7 +10,7 @@ import { useRouter } from 'vue-router';
 
 import { LOGIN_PATH } from '@ydsz/constants';
 import { preferences } from '@ydsz/preferences';
-import { resetAllStores, useAccessStore, useUserStore } from '@ydsz/stores';
+import { resetAllStores, useAccessStore, useTokenStore, useUserStore } from '@ydsz/stores';
 
 import { ElNotification } from 'element-plus';
 import { defineStore } from 'pinia';
@@ -30,6 +30,7 @@ import { $t } from './i18n-setup';
 export function createSharedAuthStore() {
   return defineStore('auth', () => {
     const accessStore = useAccessStore();
+    const tokenStore = useTokenStore();
     const userStore = useUserStore();
     const router = useRouter();
 
@@ -50,9 +51,9 @@ export function createSharedAuthStore() {
         } = loginResult;
 
         if (accessToken) {
-          accessStore.setAccessToken(accessToken);
+          tokenStore.setAccessToken(accessToken);
           if (refreshToken) {
-            accessStore.setRefreshToken(refreshToken);
+            tokenStore.setRefreshToken(refreshToken);
           }
 
           if (loginUserInfo) {
@@ -69,8 +70,8 @@ export function createSharedAuthStore() {
             accessStore.setAccessCodes([]);
           }
 
-          if (accessStore.loginExpired) {
-            accessStore.setLoginExpired(false);
+          if (tokenStore.loginExpired) {
+            tokenStore.setLoginExpired(false);
           } else {
             onSuccess
               ? await onSuccess?.()
@@ -101,7 +102,7 @@ export function createSharedAuthStore() {
         // 静默
       }
       resetAllStores();
-      accessStore.setLoginExpired(false);
+      tokenStore.setLoginExpired(false);
 
       await router.replace({
         path: LOGIN_PATH,

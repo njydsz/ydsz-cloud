@@ -10,6 +10,8 @@ export * from './captcha';
 export * from './col-page';
 export * from './count-to';
 export * from './ellipsis-text';
+export * from './empty-state';
+export * from './error-state';
 export * from './icon-picker';
 export * from './json-viewer';
 export * from './loading';

@@ -14,7 +14,7 @@ import type { MenuRecordRaw } from '@ydsz-core/typings';
 
 import { acceptHMRUpdate, defineStore } from 'pinia';
 
-import { useAuthStore } from './auth';
+import { useTokenStore } from './auth';
 
 type AccessToken = null | string;
 
@@ -63,9 +63,9 @@ export const useAccessStore = defineStore('core-access', {
       }
       return findMenu(this.accessMenus, path);
     },
-    /** @deprecated 请使用 useAuthStore().lockScreen() */
+    /** @deprecated 请使用 useTokenStore().lockScreen() */
     async lockScreen(password: string) {
-      return useAuthStore().lockScreen(password);
+      return useTokenStore().lockScreen(password);
     },
     setAccessCodes(codes: string[]) {
       this.accessCodes = codes;
@@ -76,50 +76,50 @@ export const useAccessStore = defineStore('core-access', {
     setAccessRoutes(routes: RouteRecordRaw[]) {
       this.accessRoutes = routes;
     },
-    /** @deprecated 请使用 useAuthStore().setAccessToken() */
+    /** @deprecated 请使用 useTokenStore().setAccessToken() */
     setAccessToken(token: AccessToken) {
-      useAuthStore().setAccessToken(token);
+      useTokenStore().setAccessToken(token);
     },
     setIsAccessChecked(isAccessChecked: boolean) {
       this.isAccessChecked = isAccessChecked;
     },
-    /** @deprecated 请使用 useAuthStore().setLoginExpired() */
+    /** @deprecated 请使用 useTokenStore().setLoginExpired() */
     setLoginExpired(loginExpired: boolean) {
-      useAuthStore().setLoginExpired(loginExpired);
+      useTokenStore().setLoginExpired(loginExpired);
     },
-    /** @deprecated 请使用 useAuthStore().setRefreshToken() */
+    /** @deprecated 请使用 useTokenStore().setRefreshToken() */
     setRefreshToken(token: AccessToken) {
-      useAuthStore().setRefreshToken(token);
+      useTokenStore().setRefreshToken(token);
     },
-    /** @deprecated 请使用 useAuthStore().unlockScreen() */
+    /** @deprecated 请使用 useTokenStore().unlockScreen() */
     unlockScreen() {
-      useAuthStore().unlockScreen();
+      useTokenStore().unlockScreen();
     },
-    /** @deprecated 请使用 useAuthStore().verifyLockScreenPassword() */
+    /** @deprecated 请使用 useTokenStore().verifyLockScreenPassword() */
     async verifyLockScreenPassword(password: string): Promise<boolean> {
-      return useAuthStore().verifyLockScreenPassword(password);
+      return useTokenStore().verifyLockScreenPassword(password);
     },
   },
   getters: {
-    /** 代理到 useAuthStore.accessToken */
+    /** 代理到 useTokenStore.accessToken */
     accessToken(): AccessToken {
-      return useAuthStore().accessToken;
+      return useTokenStore().accessToken;
     },
-    /** 代理到 useAuthStore.isLockScreen */
+    /** 代理到 useTokenStore.isLockScreen */
     isLockScreen(): boolean {
-      return useAuthStore().isLockScreen;
+      return useTokenStore().isLockScreen;
     },
-    /** 代理到 useAuthStore.loginExpired */
+    /** 代理到 useTokenStore.loginExpired */
     loginExpired(): boolean {
-      return useAuthStore().loginExpired;
+      return useTokenStore().loginExpired;
     },
-    /** 代理到 useAuthStore.lockScreenPassword */
+    /** 代理到 useTokenStore.lockScreenPassword */
     lockScreenPassword(): string | undefined {
-      return useAuthStore().lockScreenPassword;
+      return useTokenStore().lockScreenPassword;
     },
-    /** 代理到 useAuthStore.refreshToken */
+    /** 代理到 useTokenStore.refreshToken */
     refreshToken(): AccessToken {
-      return useAuthStore().refreshToken;
+      return useTokenStore().refreshToken;
     },
   },
   persist: {

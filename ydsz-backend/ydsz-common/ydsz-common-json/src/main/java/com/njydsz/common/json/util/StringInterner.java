@@ -45,6 +45,9 @@ public final class StringInterner {
     /** 缓存未命中计数 */
     private final AtomicInteger missCount = new AtomicInteger(0);
 
+    /** Entry 总数计数器，用于 LRU 淘汰触发 */
+    private volatile int size = 0;
+
     /**
      * 字符串条目
      */
@@ -142,6 +145,12 @@ public final class StringInterner {
         Entry newEntry = new Entry(str, hash);
         newEntry.next = currentTable[index];
         currentTable[index] = newEntry;
+
+        // LRU 淘汰：Entry 数量超过容量 1.5 倍时触发清理
+        if (++size > currentTable.length * 3 / 2) {
+            this.table = new Entry[currentTable.length];
+            this.size = 0;
+        }
 
         return str;
     }

@@ -8,6 +8,9 @@ import com.njydsz.common.json.annotation.JsonCreator;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.parser.JsonParserUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * {@link JsonCreator} 注解处理器。
  *
@@ -29,6 +32,8 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  */
 @SuppressWarnings("deprecation")
 final class CreatorResolver {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreatorResolver.class);
 
     private CreatorResolver() {
         throw new UnsupportedOperationException();
@@ -80,6 +85,7 @@ final class CreatorResolver {
             try {
                 return constructor.newInstance();
             } catch (Exception e) {
+                LOGGER.warn("Constructor invocation failed for {} (empty map)", constructor.getDeclaringClass().getName(), e);
                 return null;
             }
         }
@@ -106,6 +112,7 @@ final class CreatorResolver {
             constructor.setAccessible(true);
             return constructor.newInstance(args);
         } catch (Exception e) {
+            LOGGER.warn("Constructor invocation failed for {}", constructor.getDeclaringClass().getName(), e);
             return null;
         }
     }
@@ -139,12 +146,13 @@ final class CreatorResolver {
                         Object convertedValue = TypeConverter.convertValue(value, field.getType());
                         field.set(instance, convertedValue);
                     } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
-            }
+                        LOGGER.warn("Field setter failed for {}.{}, skipping field", clazz.getName(), field.getName(), e);
+                    }
                 }
             }
             return instance;
         } catch (Exception e) {
+            LOGGER.warn("Failed to create instance with setters for {}", clazz.getName(), e);
             return null;
         }
     }
@@ -164,6 +172,7 @@ final class CreatorResolver {
             constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (Exception e) {
+            LOGGER.warn("Failed to create instance with default constructor for {}", clazz.getName(), e);
             return null;
         }
     }

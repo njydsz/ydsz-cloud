@@ -100,7 +100,7 @@ final class BeanDeserializerEngine {
                     return asmDeserializer.deserialize(reader);
                 }
             } catch (Exception e) {
-                // ASM 生成失败，回退到 BeanReader
+                log.warn("ASM deserialization failed for {}, falling back to BeanReader", clazz.getName(), e);
             }
         }
 
@@ -117,7 +117,7 @@ final class BeanDeserializerEngine {
                 BeanReader<T> beanReader = BeanReader.getOrCreate(clazz);
                 return beanReader.readObject(reader);
             } catch (Exception e) {
-                // 回退到原有逻辑
+                log.warn("BeanReader deserialization failed for {}, falling back to creator/builder/zerocopy", clazz.getName(), e);
             }
         }
 
@@ -191,7 +191,7 @@ final class BeanDeserializerEngine {
         try {
             asmDeserializer = AsmCodecCache.getOrCreateDeserializer(elementClass);
         } catch (Exception ignored) {
-            log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            log.warn("ASM deserializer creation failed for {}, falling back to BeanReader", elementClass.getName(), ignored);
         }
 
         if (asmDeserializer != null) {
@@ -253,6 +253,7 @@ final class BeanDeserializerEngine {
                     E element = asmDeserializer.deserialize(reader);
                     result.add(element);
                 } catch (Exception e) {
+                    log.warn("ASM element deserialization failed for {}, skipping element", elementClass.getName(), e);
                     reader.skipValue();
                     result.add(null);
                 }
@@ -291,7 +292,7 @@ final class BeanDeserializerEngine {
         try {
             deserializer = ZeroCopyDeserializer.getDeserializer(elementClass);
         } catch (Exception ignored) {
-            log.debug("Caught exception (ignored): {}", ignored.getMessage());
+            log.warn("ZeroCopy deserializer creation failed for {}, falling back to manual parse", elementClass.getName(), ignored);
         }
 
         while (pos < len) {
@@ -328,7 +329,7 @@ final class BeanDeserializerEngine {
                     }
                     continue;
                 } catch (Exception ignored) {
-                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                    log.warn("ZeroCopy element deserialization failed for {}, skipping element", elementClass.getName(), ignored);
                 }
             }
 
@@ -367,6 +368,7 @@ final class BeanDeserializerEngine {
             char[] chars = json.toCharArray();
             return ZeroCopyDeserializer.parseArrayChars(chars, 0, chars.length, elementClass);
         } catch (Exception e) {
+            log.warn("ZeroCopy array deserialization failed for {}, falling back to JsonParserUtil", elementClass.getName(), e);
             return JsonParserUtil.parseArray(json);
         }
     }

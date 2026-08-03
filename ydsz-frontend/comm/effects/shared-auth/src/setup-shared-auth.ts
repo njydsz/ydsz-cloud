@@ -17,36 +17,37 @@ import { initSharedRequest, refreshTokenApi } from './request-setup';
  */
 export async function setupSharedAuth(appName: string): Promise<void> {
   const { preferences } = await import('@ydsz/preferences');
-  const { resetAllStores, useAccessStore } = await import('@ydsz/stores');
+  const { resetAllStores, useAccessStore, useTokenStore } = await import('@ydsz/stores');
 
   initSharedRequest(
     // doReAuthenticate: token 失效时退出登录
     async () => {
       console.warn(`[${appName}] Access token expired, re-authenticating...`);
+      const tokenStore = useTokenStore();
       const accessStore = useAccessStore();
-      accessStore.setAccessToken(null);
+      tokenStore.setAccessToken(null);
       if (
         preferences.app.loginExpiredMode === 'modal' &&
         accessStore.isAccessChecked
       ) {
-        accessStore.setLoginExpired(true);
+        tokenStore.setLoginExpired(true);
       } else {
         resetAllStores();
-        accessStore.setLoginExpired(false);
+        tokenStore.setLoginExpired(false);
         window.location.href = '/';
       }
     },
     // doRefreshToken: 刷新 accessToken
     async () => {
-      const accessStore = useAccessStore();
-      const refreshToken = (accessStore as any).refreshToken;
+      const tokenStore = useTokenStore();
+      const refreshToken = tokenStore.refreshToken;
       if (!refreshToken) return null;
       try {
         const resp = await refreshTokenApi(refreshToken);
         const newToken =
           resp.data?.accessToken || (resp.data as unknown as string);
         if (typeof newToken === 'string') {
-          accessStore.setAccessToken(newToken);
+          tokenStore.setAccessToken(newToken);
         }
         return newToken;
       } catch {

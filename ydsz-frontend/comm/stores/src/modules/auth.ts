@@ -1,8 +1,8 @@
 /**
- * Auth Store — 独立的认证状态管理（token / refreshToken / 锁屏）。
+ * Token Store — 独立的认证令牌状态管理（accessToken / refreshToken / 锁屏）
  *
- * 从 accessStore 中拆分出纯认证职责，accessStore 仅负责 menus/routes/codes 的
- * 访问控制逻辑。两者职责清晰，消除跨 store 访问的 as any 类型断言。
+ * 从 accessStore 中拆分出纯令牌职责，与 main 应用的 useAuthStore（业务级登录/登出）
+ * 明确区分：useTokenStore 只管令牌存取，业务 login/logout 逻辑在 useAuthStore 中。
  *
  * @path comm\stores\src\modules\auth.ts
  * @author ydsz-team
@@ -28,7 +28,7 @@ async function verifyPassword(password: string, storedHash: string): Promise<boo
   return hash === storedHash;
 }
 
-interface AuthState {
+interface TokenState {
   /** 登录 accessToken */
   accessToken: AuthToken;
   /** 刷新 token */
@@ -41,7 +41,7 @@ interface AuthState {
   lockScreenPassword?: string;
 }
 
-export const useAuthStore = defineStore('core-auth', {
+export const useTokenStore = defineStore('core-auth', {
   actions: {
     setAccessToken(token: AuthToken) {
       this.accessToken = token;
@@ -68,7 +68,7 @@ export const useAuthStore = defineStore('core-auth', {
   persist: {
     pick: ['accessToken', 'refreshToken', 'isLockScreen', 'lockScreenPassword'],
   },
-  state: (): AuthState => ({
+  state: (): TokenState => ({
     accessToken: null,
     refreshToken: null,
     loginExpired: false,
@@ -79,5 +79,5 @@ export const useAuthStore = defineStore('core-auth', {
 
 const hot = import.meta.hot;
 if (hot) {
-  hot.accept(acceptHMRUpdate(useAuthStore, hot));
+  hot.accept(acceptHMRUpdate(useTokenStore, hot));
 }

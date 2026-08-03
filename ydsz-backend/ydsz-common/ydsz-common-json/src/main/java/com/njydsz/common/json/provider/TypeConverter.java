@@ -4,6 +4,9 @@ import java.lang.reflect.Field;
 
 import com.njydsz.common.json.annotation.JsonEnumDefaultValue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /** 类型转换与值解析工具。
  *
  * <p>负责 JSON 值到 Java 目标类型的转换，以及原始 JSON 片段的快速解析。
@@ -25,6 +28,8 @@ import com.njydsz.common.json.annotation.JsonEnumDefaultValue;
  */
 @SuppressWarnings("deprecation")
 final class TypeConverter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TypeConverter.class);
 
     private TypeConverter() {
         throw new UnsupportedOperationException();
@@ -177,6 +182,7 @@ final class TypeConverter {
         try {
             return Integer.parseInt(json.trim());
         } catch (NumberFormatException e) {
+            LOGGER.warn("Failed to parse int value: \"{}\"", json, e);
             return 0;
         }
     }
@@ -191,6 +197,7 @@ final class TypeConverter {
         try {
             return Long.parseLong(json.trim());
         } catch (NumberFormatException e) {
+            LOGGER.warn("Failed to parse long value: \"{}\"", json, e);
             return 0L;
         }
     }
@@ -205,6 +212,7 @@ final class TypeConverter {
         try {
             return Double.parseDouble(json.trim());
         } catch (NumberFormatException e) {
+            LOGGER.warn("Failed to parse double value: \"{}\"", json, e);
             return 0.0;
         }
     }
@@ -219,6 +227,7 @@ final class TypeConverter {
         try {
             return Float.parseFloat(json.trim());
         } catch (NumberFormatException e) {
+            LOGGER.warn("Failed to parse float value: \"{}\"", json, e);
             return 0.0f;
         }
     }

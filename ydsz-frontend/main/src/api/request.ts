@@ -8,7 +8,7 @@
 import type { RequestClientOptions } from '@ydsz/request';
 
 import { preferences } from '@ydsz/preferences';
-import { useAccessStore } from '@ydsz/stores';
+import { useAccessStore, useTokenStore } from '@ydsz/stores';
 import {
   createSharedBaseClient,
   createSharedRequestClient,
@@ -31,15 +31,15 @@ const options: RequestClientOptions = {
 async function doReAuthenticate() {
   console.warn('Access token or refresh token is invalid or expired. ');
   const accessStore = useAccessStore();
-  const authStore = useAuthStore();
-  accessStore.setAccessToken(null);
+  const tokenStore = useTokenStore();
+  tokenStore.setAccessToken(null);
   if (
     preferences.app.loginExpiredMode === 'modal' &&
     accessStore.isAccessChecked
   ) {
-    accessStore.setLoginExpired(true);
+    tokenStore.setLoginExpired(true);
   } else {
-    await authStore.logout();
+    await tokenStore.logout();
   }
 }
 
@@ -50,15 +50,15 @@ async function doReAuthenticate() {
  * 无 refreshToken 时返回 null，交由 shared-auth 触发 {@link doReAuthenticate}。
  */
 async function doRefreshToken() {
-  const accessStore = useAccessStore();
-  const refreshToken = accessStore.refreshToken;
+  const authStore = useAuthStore();
+  const refreshToken = authStore.refreshToken;
   if (!refreshToken) {
     return null;
   }
   const resp = await refreshTokenApi(refreshToken);
   const newToken = resp.data?.accessToken || resp.data as unknown as string;
   if (typeof newToken === 'string') {
-    accessStore.setAccessToken(newToken);
+    authStore.setAccessToken(newToken);
   }
   return newToken;
 }

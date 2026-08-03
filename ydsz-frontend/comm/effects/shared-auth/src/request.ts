@@ -13,7 +13,7 @@ import {
   errorMessageResponseInterceptor,
   RequestClient,
 } from '@ydsz/request';
-import { useAccessStore } from '@ydsz/stores';
+import { useAccessStore, useTokenStore } from '@ydsz/stores';
 
 import { ElMessage } from 'element-plus';
 
@@ -63,9 +63,9 @@ export function createSharedRequestClient(
   // 请求头处理
   client.addRequestInterceptor({
     fulfilled: async (config) => {
-      const accessStore = useAccessStore();
+      const tokenStore = useTokenStore();
 
-      config.headers.Authorization = formatToken(accessStore.accessToken);
+      config.headers.Authorization = formatToken(tokenStore.accessToken);
       config.headers['Accept-Language'] = preferences.app.locale;
       // P1-6: 生成前端 TraceID，与后端日志/链路追踪关联
       if (!config.headers['X-Trace-Id']) {
