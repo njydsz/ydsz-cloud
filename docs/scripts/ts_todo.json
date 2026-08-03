@@ -1,0 +1,3673 @@
+{
+ "ydsz-frontend\\apps\\agent-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\agent-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    168,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\agent-web\\src\\api\\agent.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "AgentVO"
+   ],
+   [
+    33,
+    "AgentPageQuery"
+   ],
+   [
+    42,
+    "AgentDTO"
+   ],
+   [
+    67,
+    "getAgentPageApi"
+   ],
+   [
+    81,
+    "getAgentListApi"
+   ],
+   [
+    91,
+    "getAgentByIdApi"
+   ],
+   [
+    101,
+    "createAgentApi"
+   ],
+   [
+    111,
+    "updateAgentApi"
+   ],
+   [
+    121,
+    "deleteAgentApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\agent-web\\src\\api\\approval.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "ApprovalVO"
+   ],
+   [
+    29,
+    "ApprovalPageQuery"
+   ],
+   [
+    40,
+    "ApprovalDTO"
+   ],
+   [
+    59,
+    "getApprovalPageApi"
+   ],
+   [
+    73,
+    "getApprovalListApi"
+   ],
+   [
+    83,
+    "getApprovalByIdApi"
+   ],
+   [
+    93,
+    "createApprovalApi"
+   ],
+   [
+    103,
+    "updateApprovalApi"
+   ],
+   [
+    113,
+    "deleteApprovalApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\agent-web\\src\\api\\dag.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "DagVO"
+   ],
+   [
+    27,
+    "DagPageQuery"
+   ],
+   [
+    36,
+    "DagDTO"
+   ],
+   [
+    55,
+    "getDagPageApi"
+   ],
+   [
+    69,
+    "getDagListApi"
+   ],
+   [
+    79,
+    "getDagByIdApi"
+   ],
+   [
+    89,
+    "createDagApi"
+   ],
+   [
+    99,
+    "updateDagApi"
+   ],
+   [
+    109,
+    "deleteDagApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\agent-web\\src\\api\\definition.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "DefinitionVO"
+   ],
+   [
+    31,
+    "DefinitionPageQuery"
+   ],
+   [
+    40,
+    "DefinitionDTO"
+   ],
+   [
+    63,
+    "getDefinitionPageApi"
+   ],
+   [
+    77,
+    "getDefinitionListApi"
+   ],
+   [
+    87,
+    "getDefinitionByIdApi"
+   ],
+   [
+    97,
+    "createDefinitionApi"
+   ],
+   [
+    107,
+    "updateDefinitionApi"
+   ],
+   [
+    117,
+    "deleteDefinitionApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\agent-web\\src\\api\\rag.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "RagVO"
+   ],
+   [
+    31,
+    "RagPageQuery"
+   ],
+   [
+    40,
+    "RagDTO"
+   ],
+   [
+    63,
+    "getRagPageApi"
+   ],
+   [
+    77,
+    "getRagListApi"
+   ],
+   [
+    87,
+    "getRagByIdApi"
+   ],
+   [
+    97,
+    "createRagApi"
+   ],
+   [
+    107,
+    "updateRagApi"
+   ],
+   [
+    117,
+    "deleteRagApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\agent-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    16,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\agent-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\agent-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    176,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\src\\api\\alert.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "AlertVO"
+   ],
+   [
+    23,
+    "AlertPageQuery"
+   ],
+   [
+    29,
+    "AlertDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\src\\api\\connector.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "ConnectorVO"
+   ],
+   [
+    22,
+    "ConnectorPageQuery"
+   ],
+   [
+    28,
+    "ConnectorDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\src\\api\\job.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "JobVO"
+   ],
+   [
+    24,
+    "JobPageQuery"
+   ],
+   [
+    31,
+    "JobDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\src\\api\\jobDag.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "JobDagVO"
+   ],
+   [
+    21,
+    "JobDagPageQuery"
+   ],
+   [
+    27,
+    "JobDagDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\src\\api\\jobGroup.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "JobGroupVO"
+   ],
+   [
+    21,
+    "JobGroupPageQuery"
+   ],
+   [
+    27,
+    "JobGroupDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\src\\api\\jobLog.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "JobLogVO"
+   ],
+   [
+    24,
+    "JobLogPageQuery"
+   ],
+   [
+    30,
+    "JobLogDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    9,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\cronjob-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\literule-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\literule-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    179,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\literule-web\\src\\api\\auditLog.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "AuditLogVO"
+   ],
+   [
+    23,
+    "AuditLogPageQuery"
+   ],
+   [
+    29,
+    "AuditLogDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\literule-web\\src\\api\\breakpoint.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "BreakpointVO"
+   ],
+   [
+    21,
+    "BreakpointPageQuery"
+   ],
+   [
+    27,
+    "BreakpointDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\literule-web\\src\\api\\cep.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "CepVO"
+   ],
+   [
+    22,
+    "CepPageQuery"
+   ],
+   [
+    28,
+    "CepDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\literule-web\\src\\api\\dsl.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "DslVO"
+   ],
+   [
+    21,
+    "DslPageQuery"
+   ],
+   [
+    27,
+    "DslDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\literule-web\\src\\api\\rule.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "RuleVO"
+   ],
+   [
+    24,
+    "RulePageQuery"
+   ],
+   [
+    31,
+    "RuleDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\literule-web\\src\\api\\variable.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "VariableVO"
+   ],
+   [
+    22,
+    "VariablePageQuery"
+   ],
+   [
+    28,
+    "VariableDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\literule-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    10,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\literule-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\literule-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\message-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\message-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    175,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\message-web\\src\\api\\batch.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "BatchVO"
+   ],
+   [
+    23,
+    "BatchPageQuery"
+   ],
+   [
+    29,
+    "BatchDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\message-web\\src\\api\\deadLetter.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "DeadLetterVO"
+   ],
+   [
+    22,
+    "DeadLetterPageQuery"
+   ],
+   [
+    28,
+    "DeadLetterDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\message-web\\src\\api\\message.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "MessageVO"
+   ],
+   [
+    24,
+    "MessagePageQuery"
+   ],
+   [
+    31,
+    "MessageDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\message-web\\src\\api\\preference.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "PreferenceVO"
+   ],
+   [
+    23,
+    "PreferencePageQuery"
+   ],
+   [
+    29,
+    "PreferenceDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\message-web\\src\\api\\routeRule.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "RouteRuleVO"
+   ],
+   [
+    23,
+    "RouteRulePageQuery"
+   ],
+   [
+    29,
+    "RouteRuleDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\message-web\\src\\api\\template.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "TemplateVO"
+   ],
+   [
+    23,
+    "TemplatePageQuery"
+   ],
+   [
+    30,
+    "TemplateDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\message-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    9,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\message-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\message-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    179,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\src\\api\\comment.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "CommentVO"
+   ],
+   [
+    21,
+    "CommentPageQuery"
+   ],
+   [
+    27,
+    "CommentDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\src\\api\\file.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "FileVO"
+   ],
+   [
+    23,
+    "FilePageQuery"
+   ],
+   [
+    29,
+    "FileDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\src\\api\\quota.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "QuotaVO"
+   ],
+   [
+    21,
+    "QuotaPageQuery"
+   ],
+   [
+    27,
+    "QuotaDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\src\\api\\share.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "ShareVO"
+   ],
+   [
+    22,
+    "SharePageQuery"
+   ],
+   [
+    28,
+    "ShareDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\src\\api\\tag.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "TagVO"
+   ],
+   [
+    20,
+    "TagPageQuery"
+   ],
+   [
+    26,
+    "TagDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    9,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\nextwiki-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\project-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    179,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\budget.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "BudgetVO"
+   ],
+   [
+    24,
+    "BudgetPageQuery"
+   ],
+   [
+    31,
+    "BudgetDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\contract.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "ContractVO"
+   ],
+   [
+    26,
+    "ContractPageQuery"
+   ],
+   [
+    33,
+    "ContractDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\evm.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "EvmVO"
+   ],
+   [
+    26,
+    "EvmPageQuery"
+   ],
+   [
+    32,
+    "EvmDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\execution.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "ExecutionVO"
+   ],
+   [
+    26,
+    "ExecutionPageQuery"
+   ],
+   [
+    33,
+    "ExecutionDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\expense.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "ExpenseVO"
+   ],
+   [
+    24,
+    "ExpensePageQuery"
+   ],
+   [
+    31,
+    "ExpenseDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\initiation.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "InitiationVO"
+   ],
+   [
+    26,
+    "InitiationPageQuery"
+   ],
+   [
+    33,
+    "InitiationDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\invoice.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "InvoiceVO"
+   ],
+   [
+    24,
+    "InvoicePageQuery"
+   ],
+   [
+    30,
+    "InvoiceDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\opportunity.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "OpportunityVO"
+   ],
+   [
+    25,
+    "OpportunityPageQuery"
+   ],
+   [
+    32,
+    "OpportunityDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\payment.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "PaymentVO"
+   ],
+   [
+    24,
+    "PaymentPageQuery"
+   ],
+   [
+    30,
+    "PaymentDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\rateCard.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "RateCardVO"
+   ],
+   [
+    24,
+    "RateCardPageQuery"
+   ],
+   [
+    30,
+    "RateCardDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\revenue.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "RevenueVO"
+   ],
+   [
+    24,
+    "RevenuePageQuery"
+   ],
+   [
+    31,
+    "RevenueDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\api\\risk.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "RiskVO"
+   ],
+   [
+    25,
+    "RiskPageQuery"
+   ],
+   [
+    31,
+    "RiskDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    9,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\project-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\project-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\system-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\system-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    175,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\system-web\\src\\api\\app.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "AppVO"
+   ],
+   [
+    23,
+    "AppPageQuery"
+   ],
+   [
+    30,
+    "AppDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\system-web\\src\\api\\config.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "ConfigVO"
+   ],
+   [
+    23,
+    "ConfigPageQuery"
+   ],
+   [
+    30,
+    "ConfigDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\system-web\\src\\api\\dictItem.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "DictitemVO"
+   ],
+   [
+    24,
+    "DictitemPageQuery"
+   ],
+   [
+    32,
+    "DictitemDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\system-web\\src\\api\\dictType.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "DicttypeVO"
+   ],
+   [
+    20,
+    "DicttypePageQuery"
+   ],
+   [
+    27,
+    "DicttypeDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\system-web\\src\\api\\variable.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "VariableVO"
+   ],
+   [
+    21,
+    "VariablePageQuery"
+   ],
+   [
+    28,
+    "VariableDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\system-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    9,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\system-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\system-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    178,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\src\\api\\company.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "CompanyVO"
+   ],
+   [
+    24,
+    "CompanySaveDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\src\\api\\dept.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "DepartmentVO"
+   ],
+   [
+    27,
+    "DepartmentTreeVO"
+   ],
+   [
+    34,
+    "DepartmentSaveDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\src\\api\\language.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "LanguageVO"
+   ],
+   [
+    21,
+    "LanguagePageQuery"
+   ],
+   [
+    29,
+    "LanguageSaveDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\src\\api\\menu.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "MenuVO"
+   ],
+   [
+    27,
+    "MenuTreeVO"
+   ],
+   [
+    34,
+    "MenuSaveDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\src\\api\\post.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "PostVO"
+   ],
+   [
+    21,
+    "PostPageQuery"
+   ],
+   [
+    29,
+    "PostSaveDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\src\\api\\user.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    45,
+    "UserAccountPageQuery"
+   ],
+   [
+    57,
+    "UserAccountCreateDTO"
+   ],
+   [
+    71,
+    "UserAccountUpdateDTO"
+   ],
+   [
+    84,
+    "ChangePasswordDTO"
+   ],
+   [
+    90,
+    "ResetPasswordDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    9,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\userinfo-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\workflow-web\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\workflow-web\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    176,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\workflow-web\\src\\api\\category.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "CategoryVO"
+   ],
+   [
+    21,
+    "CategoryPageQuery"
+   ],
+   [
+    27,
+    "CategoryDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\workflow-web\\src\\api\\delegate.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "DelegateVO"
+   ],
+   [
+    23,
+    "DelegatePageQuery"
+   ],
+   [
+    29,
+    "DelegateDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\workflow-web\\src\\api\\instance.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "InstanceVO"
+   ],
+   [
+    24,
+    "InstancePageQuery"
+   ],
+   [
+    31,
+    "InstanceDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\workflow-web\\src\\api\\quickComment.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "QuickCommentVO"
+   ],
+   [
+    21,
+    "QuickCommentPageQuery"
+   ],
+   [
+    27,
+    "QuickCommentDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\workflow-web\\src\\api\\template.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "TemplateVO"
+   ],
+   [
+    23,
+    "TemplatePageQuery"
+   ],
+   [
+    30,
+    "TemplateDTO"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\workflow-web\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    10,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\apps\\workflow-web\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\apps\\workflow-web\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\bash\\clean.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\bash\\turbo-run\\bin\\turbo-run.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\bash\\turbo-run\\src\\run.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    34,
+    "run"
+   ]
+  ]
+ },
+ "ydsz-frontend\\bash\\vsh\\bin\\vsh.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\base\\design\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\color\\color.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    29,
+    "isDarkColor"
+   ],
+   [
+    44,
+    "isLightColor"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\constants\\globals.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    16,
+    "DEFAULT_NAMESPACE"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\constants\\remi.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    4,
+    "YDSZ_GITHUB_URL"
+   ],
+   [
+    9,
+    "YDSZ_DOC_URL"
+   ],
+   [
+    14,
+    "YDSZ_LOGO_URL"
+   ],
+   [
+    20,
+    "YDSZ_PREVIEW_URL"
+   ],
+   [
+    21,
+    "YDSZ_ELE_PREVIEW_URL"
+   ],
+   [
+    23,
+    "YDSZ_NAIVE_PREVIEW_URL"
+   ],
+   [
+    25,
+    "YDSZ_ANT_PREVIEW_URL"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\global-state.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    24,
+    "IGlobalSharedState"
+   ],
+   [
+    56,
+    "globalShareState"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\utils\\date.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    32,
+    "formatDate"
+   ],
+   [
+    56,
+    "formatDateTime"
+   ],
+   [
+    72,
+    "isDate"
+   ],
+   [
+    90,
+    "isDayjsObject"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\utils\\dom.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "VisibleDomRect"
+   ],
+   [
+    21,
+    "getElementVisibleRect"
+   ],
+   [
+    75,
+    "getScrollbarWidth"
+   ],
+   [
+    109,
+    "needsScrollbar"
+   ],
+   [
+    139,
+    "triggerWindowResize"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\utils\\download.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    22,
+    "downloadFileFromUrl"
+   ],
+   [
+    53,
+    "downloadFileFromBase64"
+   ],
+   [
+    65,
+    "downloadFileFromImageUrl"
+   ],
+   [
+    76,
+    "downloadFileFromBlob"
+   ],
+   [
+    91,
+    "downloadFileFromBlobPart"
+   ],
+   [
+    110,
+    "urlToBase64"
+   ],
+   [
+    140,
+    "triggerDownload"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\utils\\inference.ts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\utils\\merge.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "mergeWithArrayOverride"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\utils\\state-handler.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "StateHandler"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\utils\\to.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    6,
+    "to"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\shared\\src\\utils\\util.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "bindMethods"
+   ],
+   [
+    34,
+    "getNestedValue"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\base\\typings\\src\\tabs.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    20,
+    "TabDefinition"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\composables\\src\\use-is-mobile.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    32,
+    "useIsMobile"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\composables\\src\\use-layout-style.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    27,
+    "useLayoutContentStyle"
+   ],
+   [
+    87,
+    "useLayoutHeaderStyle"
+   ],
+   [
+    110,
+    "useLayoutFooterStyle"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\composables\\src\\use-priority-value.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    23,
+    "usePriorityValue"
+   ],
+   [
+    62,
+    "usePriorityValues"
+   ],
+   [
+    80,
+    "useForwardPriorityValues"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\composables\\src\\use-scroll-lock.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    15,
+    "SCROLL_FIXED_CLASS"
+   ],
+   [
+    41,
+    "useScrollLock"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\composables\\src\\use-simple-locale\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    15,
+    "useSimpleLocale"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\composables\\src\\use-simple-locale\\messages.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "Locale"
+   ],
+   [
+    9,
+    "messages"
+   ],
+   [
+    49,
+    "getMessages"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\preferences\\src\\constants.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    90,
+    "COLOR_PRESETS"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\config.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    31,
+    "DEFAULT_FORM_COMMON_CONFIG"
+   ],
+   [
+    33,
+    "COMPONENT_MAP"
+   ],
+   [
+    43,
+    "COMPONENT_BIND_EVENT_MAP"
+   ],
+   [
+    74,
+    "setupYDSZForm"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\form-api.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    101,
+    "FormApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\form-render\\context.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    32,
+    "useFormContext"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\form-render\\expandable.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    21,
+    "useExpandable"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\form-render\\helper.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    23,
+    "getBaseRules"
+   ],
+   [
+    39,
+    "getDefaultValueInZodStack"
+   ],
+   [
+    80,
+    "isEventObjectLike"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\form-scroll-helper.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    16,
+    "FormScrollHelper"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\form-value-transformer.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    16,
+    "FormValueTransformer"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    26,
+    "FormLayout"
+   ],
+   [
+    37,
+    "BaseFormComponentType"
+   ],
+   [
+    59,
+    "WrapperClassType"
+   ],
+   [
+    74,
+    "FormItemClassType"
+   ],
+   [
+    91,
+    "FormFieldOptions"
+   ],
+   [
+    107,
+    "FormShape"
+   ],
+   [
+    145,
+    "MaybeComponentPropKey"
+   ],
+   [
+    160,
+    "MaybeComponentProps"
+   ],
+   [
+    170,
+    "FormActions"
+   ],
+   [
+    181,
+    "CustomRenderType"
+   ],
+   [
+    196,
+    "FormSchemaRuleType"
+   ],
+   [
+    230,
+    "FormItemDependencies"
+   ],
+   [
+    311,
+    "FormCommonConfig"
+   ],
+   [
+    402,
+    "HandleSubmitFn"
+   ],
+   [
+    415,
+    "HandleResetFn"
+   ],
+   [
+    434,
+    "FieldMappingTime"
+   ],
+   [
+    458,
+    "ArrayToStringFields"
+   ],
+   [
+    472,
+    "FormSchema"
+   ],
+   [
+    570,
+    "FormFieldProps"
+   ],
+   [
+    586,
+    "FormRenderProps"
+   ],
+   [
+    663,
+    "ActionButtonOptions"
+   ],
+   [
+    687,
+    "YDSZFormProps"
+   ],
+   [
+    781,
+    "ExtendedFormApi"
+   ],
+   [
+    795,
+    "YDSZFormAdapterOptions"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\use-form-context.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    59,
+    "useFormInitial"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\src\\use-remi-form.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    50,
+    "useYDSZForm"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\form-ui\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\layout-ui\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\layout-ui\\src\\hooks\\use-layout.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    34,
+    "useLayout"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\layout-ui\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\menu-ui\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\menu-ui\\src\\hooks\\use-menu-scroll.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    41,
+    "useMenuScroll"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\menu-ui\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\alert\\AlertBuilder.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    35,
+    "ydszAlert"
+   ],
+   [
+    43,
+    "ydszAlert"
+   ],
+   [
+    55,
+    "ydszAlert"
+   ],
+   [
+    93,
+    "ydszAlert"
+   ],
+   [
+    167,
+    "ydszConfirm"
+   ],
+   [
+    175,
+    "ydszConfirm"
+   ],
+   [
+    187,
+    "ydszConfirm"
+   ],
+   [
+    214,
+    "ydszConfirm"
+   ],
+   [
+    266,
+    "ydszPrompt"
+   ],
+   [
+    383,
+    "clearAllAlerts"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\alert\\alert.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    22,
+    "IconType"
+   ],
+   [
+    31,
+    "BeforeCloseScope"
+   ],
+   [
+    43,
+    "AlertProps"
+   ],
+   [
+    109,
+    "AlertContext"
+   ],
+   [
+    123,
+    "useAlertContext"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\drawer\\drawer-api.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    37,
+    "DrawerApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\drawer\\drawer.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    21,
+    "DrawerPlacement"
+   ],
+   [
+    29,
+    "CloseIconPlacement"
+   ],
+   [
+    38,
+    "DrawerProps"
+   ],
+   [
+    164,
+    "DrawerState"
+   ],
+   [
+    193,
+    "ExtendedDrawerApi"
+   ],
+   [
+    206,
+    "DrawerApiOptions"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\drawer\\use-drawer.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    48,
+    "setDefaultDrawerProps"
+   ],
+   [
+    85,
+    "useYDSZDrawer"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\modal\\modal-api.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    43,
+    "ModalApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\modal\\modal.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    23,
+    "ModalProps"
+   ],
+   [
+    164,
+    "ModalState"
+   ],
+   [
+    189,
+    "ExtendedModalApi"
+   ],
+   [
+    203,
+    "ModalApiOptions"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\modal\\use-modal-draggable.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    42,
+    "useModalDraggable"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\modal\\use-modal.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    42,
+    "setDefaultModalProps"
+   ],
+   [
+    78,
+    "useYDSZModal"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\src\\popup-api.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    16,
+    "PopupApiCallbacks"
+   ],
+   [
+    28,
+    "PopupApiOptions"
+   ],
+   [
+    39,
+    "PopupApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\popup-ui\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\components\\back-top\\backtop.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "backtopProps"
+   ],
+   [
+    47,
+    "BacktopProps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\components\\back-top\\use-backtop.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    35,
+    "useBackTop"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\components\\breadcrumb\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "IBreadcrumb"
+   ],
+   [
+    49,
+    "BreadcrumbProps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\components\\button\\button.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    22,
+    "YDSZButtonProps"
+   ],
+   [
+    48,
+    "CustomRenderType"
+   ],
+   [
+    58,
+    "ValueType"
+   ],
+   [
+    68,
+    "YDSZButtonGroupProps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\avatar\\avatar.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "avatarVariant"
+   ],
+   [
+    39,
+    "AvatarVariants"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\badge\\badge.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "badgeVariants"
+   ],
+   [
+    40,
+    "BadgeVariants"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\button\\button.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    9,
+    "buttonVariants"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\button\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "ButtonVariantSize"
+   ],
+   [
+    30,
+    "ButtonVariants"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\form\\injectionKeys.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "FORM_ITEM_INJECTION_KEY"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\form\\useFormField.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    33,
+    "useFormField"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\sheet\\sheet.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "sheetVariants"
+   ],
+   [
+    39,
+    "SheetVariants"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\toggle\\toggle.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "toggleVariants"
+   ],
+   [
+    44,
+    "ToggleVariants"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\src\\ui\\tree\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    23,
+    "TreeProps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\shadcn-ui\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\tabs-ui\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\tabs-ui\\src\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    20,
+    "TabsEmits"
+   ],
+   [
+    36,
+    "TabsProps"
+   ],
+   [
+    102,
+    "TabConfig"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\tabs-ui\\src\\use-tabs-drag.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    45,
+    "useTabsDrag"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\tabs-ui\\src\\use-tabs-view-scroll.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    39,
+    "useTabsViewScroll"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\@core\\ui-kit\\tabs-ui\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\constants\\src\\core.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    4,
+    "LOGIN_PATH"
+   ],
+   [
+    13,
+    "LanguageOption"
+   ],
+   [
+    23,
+    "SUPPORT_LANGUAGES"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\access\\src\\directive.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    84,
+    "registerAccessDirective"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\captcha\\hooks\\useCaptchaPoints.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    37,
+    "useCaptchaPoints"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\captcha\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "CaptchaData"
+   ],
+   [
+    40,
+    "CaptchaPoint"
+   ],
+   [
+    50,
+    "PointSelectionCaptchaCardProps"
+   ],
+   [
+    94,
+    "PointSelectionCaptchaProps"
+   ],
+   [
+    121,
+    "SliderCaptchaProps"
+   ],
+   [
+    176,
+    "SliderRotateCaptchaProps"
+   ],
+   [
+    225,
+    "SliderTranslateCaptchaProps"
+   ],
+   [
+    268,
+    "CaptchaVerifyPassingData"
+   ],
+   [
+    282,
+    "SliderCaptchaActionType"
+   ],
+   [
+    294,
+    "SliderRotateVerifyPassingData"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\col-page\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    18,
+    "ColPageProps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\count-to\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    22,
+    "TransitionPresets"
+   ],
+   [
+    23,
+    "TransitionPresetsKeys"
+   ],
+   [
+    39,
+    "CountToProps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\icon-picker\\icons.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "ICONS_MAP"
+   ],
+   [
+    33,
+    "fetchIconsData"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\json-viewer\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "JsonViewerProps"
+   ],
+   [
+    39,
+    "JsonViewerAction"
+   ],
+   [
+    57,
+    "JsonViewerValue"
+   ],
+   [
+    71,
+    "JsonViewerToggle"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\loading\\directive.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    108,
+    "registerLoadingDirective"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\loading\\loading.stories.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    30,
+    "Default"
+   ],
+   [
+    37,
+    "Small"
+   ],
+   [
+    44,
+    "Large"
+   ],
+   [
+    51,
+    "WithoutText"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\page\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "PageProps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\safe-html\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    90,
+    "vSafeHtml"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\common-ui\\src\\components\\tippy\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    39,
+    "TippyProps"
+   ],
+   [
+    68,
+    "initTippy"
+   ],
+   [
+    97,
+    "Tippy"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\hooks\\src\\use-app-config.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    16,
+    "useAppConfig"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\hooks\\src\\use-content-maximize.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "useContentMaximize"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\hooks\\src\\use-design-tokens.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    16,
+    "useAntdDesignTokens"
+   ],
+   [
+    105,
+    "useNaiveDesignTokens"
+   ],
+   [
+    209,
+    "useElementPlusDesignTokens"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\hooks\\src\\use-hover-toggle.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    34,
+    "useHoverToggle"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\hooks\\src\\use-pagination.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    62,
+    "usePagination"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\hooks\\src\\use-refresh.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    34,
+    "useRefresh"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\hooks\\src\\use-tabs.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    43,
+    "useTabs"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\hooks\\src\\use-watermark.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    48,
+    "useWatermark"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\layouts\\src\\authentication\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "ToolbarType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\layouts\\src\\basic\\tabbar\\use-tabbar.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    61,
+    "useTabbar"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-adapter-qiankun\\src\\index.ts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\effects\\micro-adapter-qiankun\\src\\qiankun-adapter.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    44,
+    "createQiankunAdapter"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-kernel-lite\\src\\error-boundary.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    16,
+    "markDegraded"
+   ],
+   [
+    21,
+    "isDegraded"
+   ],
+   [
+    25,
+    "clearDegraded"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-kernel-lite\\src\\lite-kernel.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    134,
+    "createLiteKernel"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-kernel-lite\\src\\loader.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    15,
+    "Manifest"
+   ],
+   [
+    55,
+    "loadApp"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-kernel-lite\\src\\scheduler.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "AppStatus"
+   ],
+   [
+    19,
+    "AppInstance"
+   ],
+   [
+    33,
+    "createAppInstance"
+   ],
+   [
+    47,
+    "getAppInstance"
+   ],
+   [
+    51,
+    "getAllInstances"
+   ],
+   [
+    60,
+    "activateApp"
+   ],
+   [
+    115,
+    "deactivateApp"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-kernel-lite\\src\\vite-plugin-manifest.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    15,
+    "ManifestPluginOptions"
+   ],
+   [
+    22,
+    "viteManifestPlugin"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-runtime\\src\\composable\\index.ts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\comm\\effects\\micro-runtime\\src\\composable\\use-global-state.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    36,
+    "useGlobalState"
+   ],
+   [
+    65,
+    "useGlobalStateRef"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-runtime\\src\\create-runtime.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    30,
+    "registerKernel"
+   ],
+   [
+    45,
+    "createRuntime"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-runtime\\src\\event-bus.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "EventHandler"
+   ],
+   [
+    13,
+    "MicroEventBus"
+   ],
+   [
+    19,
+    "createEventBus"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-runtime\\src\\global-state.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "GlobalStateListener"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\micro-runtime\\src\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    69,
+    "MicroRuntime"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\monitor\\src\\error-monitor.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    105,
+    "reportError"
+   ],
+   [
+    136,
+    "setupErrorMonitoring"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\monitor\\src\\setup.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    12,
+    "setupMonitor"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\monitor\\src\\web-vitals.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    61,
+    "reportWebVital"
+   ],
+   [
+    110,
+    "setupWebVitals"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\plugins\\src\\echarts\\echarts.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    52,
+    "ECOption"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\plugins\\src\\motion\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "MotionPresets"
+   ],
+   [
+    43,
+    "MotionPreset"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\plugins\\src\\vxe-table\\api.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    61,
+    "VxeGridApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\plugins\\src\\vxe-table\\extends.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    37,
+    "extendProxyOptions"
+   ],
+   [
+    110,
+    "extendsDefaultFormatter"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\plugins\\src\\vxe-table\\init.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    61,
+    "useTableForm"
+   ],
+   [
+    83,
+    "initVxeTable"
+   ],
+   [
+    140,
+    "setupYDSZVxeTable"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\plugins\\src\\vxe-table\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    28,
+    "VxePaginationInfo"
+   ],
+   [
+    49,
+    "VxeTableGridOptions"
+   ],
+   [
+    60,
+    "SeparatorOptions"
+   ],
+   [
+    80,
+    "VxeGridProps"
+   ],
+   [
+    134,
+    "ExtendedVxeGridApi"
+   ],
+   [
+    150,
+    "SetupVxeTable"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\plugins\\src\\vxe-table\\use-vxe-grid.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    59,
+    "useYDSZVxeGrid"
+   ],
+   [
+    113,
+    "UseYDSZVxeGrid"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\request\\src\\request-client\\business-error.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    5,
+    "BusinessError"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\request\\src\\request-client\\create-request-client.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "CreateRequestClientOptions"
+   ],
+   [
+    26,
+    "createRequestClient"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\request\\src\\request-client\\preset-interceptors.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "defaultResponseInterceptor"
+   ],
+   [
+    90,
+    "authenticateResponseInterceptor"
+   ],
+   [
+    178,
+    "errorMessageResponseInterceptor"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\auth-api.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    13,
+    "loginApi"
+   ],
+   [
+    23,
+    "refreshTokenApi"
+   ],
+   [
+    33,
+    "logoutApi"
+   ],
+   [
+    40,
+    "getAccessCodesApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\auth-store.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    30,
+    "createSharedAuthStore"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\create-sub-app.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    170,
+    "defineSubApp"
+   ],
+   [
+    198,
+    "createSubApp"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\guards.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    32,
+    "setupCommonGuard"
+   ],
+   [
+    62,
+    "setupAuthGuard"
+   ],
+   [
+    97,
+    "setupPermissionGuard"
+   ],
+   [
+    134,
+    "initRoutes"
+   ],
+   [
+    151,
+    "createSubAppRouterGuard"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\menu-api.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "getAllMenusApi"
+   ],
+   [
+    20,
+    "getMenuTreeApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\request-setup.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "initSharedRequest"
+   ],
+   [
+    32,
+    "requestClient"
+   ],
+   [
+    46,
+    "baseRequestClient"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\request.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    47,
+    "createSharedRequestClient"
+   ],
+   [
+    113,
+    "createSharedBaseClient"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\setup-shared-auth.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    18,
+    "setupSharedAuth"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\types.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    40,
+    "RefreshTokenResult"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\effects\\shared-auth\\src\\user-api.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "getUserInfoApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\icons\\src\\iconify\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "MdiKeyboardEsc"
+   ],
+   [
+    13,
+    "MdiWechat"
+   ],
+   [
+    15,
+    "MdiGithub"
+   ],
+   [
+    17,
+    "MdiGoogle"
+   ],
+   [
+    19,
+    "MdiQqchat"
+   ],
+   [
+    21,
+    "RiDingding"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\locales\\src\\typing.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "SupportedLanguagesType"
+   ],
+   [
+    18,
+    "ImportLocaleFn"
+   ],
+   [
+    28,
+    "LoadMessageFn"
+   ],
+   [
+    35,
+    "LocaleSetupOptions"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\stores\\shim-pinia.d.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    18,
+    "acceptHMRUpdate"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\stores\\src\\modules\\access.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    45,
+    "useAccessStore"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\stores\\src\\modules\\auth.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    43,
+    "useTokenStore"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\stores\\src\\modules\\tabbar.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    62,
+    "useTabbarStore"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\stores\\src\\modules\\user.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    26,
+    "useUserStore"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\stores\\src\\setup.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    27,
+    "InitStoreOptions"
+   ],
+   [
+    54,
+    "initStores"
+   ],
+   [
+    96,
+    "resetAllStores"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\types\\global.d.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    26,
+    "YDSZAdminProAppConfigRaw"
+   ],
+   [
+    53,
+    "ApplicationConfig"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\utils\\src\\helpers\\get-popup-container.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    6,
+    "getPopupContainer"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\utils\\src\\helpers\\reset-routes.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    15,
+    "resetStaticRoutes"
+   ]
+  ]
+ },
+ "ydsz-frontend\\comm\\utils\\src\\helpers\\unmount-global-loading.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    8,
+    "unmountGlobalLoading"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\commitlint-config\\index.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\command.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "command"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\comments.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "comments"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\disableds.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "disableds"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\ignores.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "ignores"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\import.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "importPluginConfig"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\javascript.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    32,
+    "javascript"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\jsdoc.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    20,
+    "jsdoc"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\jsonc.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    20,
+    "jsonc"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\node.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "node"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\perfectionist.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "perfectionist"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\prettier.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "prettier"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\regexp.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "regexp"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\test.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "test"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\turbo.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "turbo"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\typescript.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    19,
+    "typescript"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\unicorn.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    20,
+    "unicorn"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\configs\\vue.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    20,
+    "vue"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\eslint-config\\src\\util.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    20,
+    "interopDefault"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\lint-configs\\prettier-config\\index.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\conf\\lint-configs\\stylelint-config\\index.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\conf\\node-utils\\src\\fs.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    20,
+    "outputJSON"
+   ],
+   [
+    44,
+    "ensureFile"
+   ],
+   [
+    62,
+    "readJSON"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\node-utils\\src\\spinner.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    32,
+    "spinner"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\vite-config\\src\\plugins\\archiver.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    27,
+    "viteArchiverPlugin"
+   ]
+  ]
+ },
+ "ydsz-frontend\\conf\\vite-config\\src\\plugins\\print.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    23,
+    "vitePrintPlugin"
+   ]
+  ]
+ },
+ "ydsz-frontend\\eslint.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\main\\postcss.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\main\\src\\adapter\\component\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    165,
+    "ComponentType"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\api\\core\\auth.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    45,
+    "RefreshTokenResult"
+   ],
+   [
+    60,
+    "loginApi"
+   ],
+   [
+    70,
+    "refreshTokenApi"
+   ],
+   [
+    82,
+    "logoutApi"
+   ],
+   [
+    91,
+    "getAccessCodesApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\api\\core\\menu.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "getAllMenusApi"
+   ],
+   [
+    28,
+    "getMenuTreeApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\api\\core\\notification.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "NotificationItem"
+   ],
+   [
+    29,
+    "NotificationPageQuery"
+   ],
+   [
+    48,
+    "getNotificationsApi"
+   ],
+   [
+    64,
+    "getUnreadCountApi"
+   ],
+   [
+    74,
+    "markAsReadApi"
+   ],
+   [
+    83,
+    "markAllAsReadApi"
+   ],
+   [
+    93,
+    "deleteNotificationApi"
+   ],
+   [
+    102,
+    "clearAllNotificationsApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\api\\core\\search.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "SearchRequest"
+   ],
+   [
+    21,
+    "SearchResultItem"
+   ],
+   [
+    40,
+    "SearchResponse"
+   ],
+   [
+    61,
+    "globalSearchApi"
+   ],
+   [
+    74,
+    "searchSuggestApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\api\\core\\user.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    17,
+    "getUserInfoApi"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\preferences.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    15,
+    "overridesPreferences"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\qiankun\\global-state.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    48,
+    "initGlobalStateCommunication"
+   ],
+   [
+    65,
+    "setGlobalState"
+   ],
+   [
+    74,
+    "getGlobalStateActions"
+   ],
+   [
+    83,
+    "getSubAppProps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\qiankun\\index.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    42,
+    "microApps"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\qiankun\\prefetch.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    11,
+    "setupHoverPrefetch"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\store\\auth.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    22,
+    "useAuthStore"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\src\\store\\notification.ts": {
+  "no_header": false,
+  "no_exports": [
+   [
+    229,
+    "notificationStore"
+   ]
+  ]
+ },
+ "ydsz-frontend\\main\\tailwind.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\main\\vite.config.mts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\playwright.config.ts": {
+  "no_header": true,
+  "no_exports": []
+ },
+ "ydsz-frontend\\stylelint.config.mjs": {
+  "no_header": true,
+  "no_exports": []
+ }
+}

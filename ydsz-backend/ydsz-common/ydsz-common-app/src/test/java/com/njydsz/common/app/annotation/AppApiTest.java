@@ -23,6 +23,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 @DisplayName("AppApi 注解测试")
 class AppApiTest {
 
+    /** 测试用样例控制器（验证 @AppApi 元注解映射到 @RestController） */
     @AppApi
     static class SampleAppController {
     }

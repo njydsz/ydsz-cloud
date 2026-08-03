@@ -84,6 +84,7 @@ class AlertConvergerTest {
         assertThat(p0.dedupKey()).isNotEqualTo(p1.dedupKey());
     }
 
+    /** 测试用计数发布器（记录发布次数以断言收敛逻辑） */
     static class CountingPublisher implements AlertPublisher {
         private int publishCount = 0;
 

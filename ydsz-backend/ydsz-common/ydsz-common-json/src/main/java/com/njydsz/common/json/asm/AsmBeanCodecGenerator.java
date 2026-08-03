@@ -16,6 +16,14 @@ import java.time.ZoneId;
 
 import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonFormat;
+import com.njydsz.common.json.annotation.JsonIgnore;
+import com.njydsz.common.json.annotation.JsonIgnoreProperties;
+import com.njydsz.common.json.annotation.JsonInclude;
+import com.njydsz.common.json.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonPropertyOrder;
+import com.njydsz.common.json.annotation.JsonRootName;
+import com.njydsz.common.json.annotation.JsonUnwrapped;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.util.JsonTypeUtils;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -311,6 +319,8 @@ public final class AsmBeanCodecGenerator {
      * 生成序列化器（缓存嵌套类型序列化器为实例字段，消除运行时 ConcurrentHashMap 查找）
      */
     public static <T> Class<? extends AsmSerializer<T>> generateSerializer(Class<T> beanType) throws Exception {
+        // 非 public 类或含 JSON 注解的类跳过 ASM，使用反射路径（注解感知）
+        checkAsmSuitability(beanType);
         String className = beanType.getName() + "_ASM_Serializer";
         String classInternalName = className.replace('.', '/');
         String beanInternalName = beanType.getName().replace('.', '/');
@@ -993,6 +1003,8 @@ public final class AsmBeanCodecGenerator {
         if (beanType.isRecord()) {
             throw new UnsupportedOperationException("Record classes are not supported by ASM deserializer, use reflection path instead: " + beanType.getName());
         }
+        // 非 public 类或含 JSON 注解的类跳过 ASM，使用反射路径（注解感知）
+        checkAsmSuitability(beanType);
         String className = beanType.getName() + "_ASM_Deserializer";
         String classInternalName = className.replace('.', '/');
         String beanInternalName = beanType.getName().replace('.', '/');
@@ -1362,6 +1374,45 @@ public final class AsmBeanCodecGenerator {
                     log.warn("日期解析失败: {}", dateStr);
                     return null;
                 }
+            }
+        }
+    }
+
+    /**
+     * 检查 Bean 类是否适合 ASM 字节码生成。
+     *
+     * <p>跳过 ASM（回退到反射路径）的条件：
+     * <ul>
+     *   <li>非 public 类：ASM 生成的序列化器位于不同 ClassLoader，无法访问非 public 类</li>
+     *   <li>含 JSON 注解：ASM 字节码路径未实现注解感知（@JsonIgnore、@JsonProperty 等），
+     *       需使用反射路径以确保注解语义正确</li>
+     * </ul>
+     *
+     * @param beanType 待检查的 Bean 类
+     * @throws UnsupportedOperationException 如果 Bean 类不适合 ASM 生成
+     */
+    private static void checkAsmSuitability(Class<?> beanType) {
+        // 非 public 类（含内部类）跨 ClassLoader 不可访问
+        if (!Modifier.isPublic(beanType.getModifiers())) {
+            throw new UnsupportedOperationException(
+                "Non-public class not supported by ASM, use reflection path: " + beanType.getName());
+        }
+        // 类级注解：影响整体序列化行为
+        if (beanType.isAnnotationPresent(JsonIgnoreProperties.class) ||
+            beanType.isAnnotationPresent(JsonPropertyOrder.class) ||
+            beanType.isAnnotationPresent(JsonRootName.class)) {
+            throw new UnsupportedOperationException(
+                "Class-level JSON annotations not supported by ASM: " + beanType.getName());
+        }
+        // 字段级注解：ASM 未实现注解感知的字段过滤/重命名
+        for (Field f : beanType.getDeclaredFields()) {
+            if (f.isAnnotationPresent(JsonIgnore.class) ||
+                f.isAnnotationPresent(JsonProperty.class) ||
+                f.isAnnotationPresent(JsonInclude.class) ||
+                f.isAnnotationPresent(JsonUnwrapped.class) ||
+                f.isAnnotationPresent(JsonView.class)) {
+                throw new UnsupportedOperationException(
+                    "Field-level JSON annotations not supported by ASM: " + beanType.getName() + "." + f.getName());
             }
         }
     }

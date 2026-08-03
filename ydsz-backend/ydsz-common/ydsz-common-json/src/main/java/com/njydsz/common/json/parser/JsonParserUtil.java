@@ -348,6 +348,14 @@ public final class JsonParserUtil {
 
     /**
      * 快速解析数字（内联优化，可返回解析终点）
+     *
+     * <p>溢出处理策略：</p>
+     * <ul>
+     *   <li>整数部分超过 long 范围时标记 overflow，不再累加</li>
+     *   <li>溢出后统一回退到字符串解析（BigDecimal/Double）</li>
+     *   <li>特例：-9223372036854775808（Long.MIN_VALUE）虽超出 long 正数范围，
+     *       但其负值可表示，直接返回 Long.MIN_VALUE</li>
+     * </ul>
      */
     private static Number parseNumberFast(char[] chars, int pos, int[] endPos) {
         int len = chars.length;
@@ -360,12 +368,14 @@ public final class JsonParserUtil {
         }
 
         long intValue = 0;
+        boolean overflow = false;
         while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {
             int digit = chars[pos] - '0';
-            // 检测 long 溢出（19+ 位整数），溢出时回退到 BigDecimal/Double 路径
-            if (intValue > (Long.MAX_VALUE - digit) / 10) {
-                intValue = Long.MAX_VALUE; // 标记溢出，后续走精度保护路径
-            } else {
+            if (!overflow && intValue > (Long.MAX_VALUE - digit) / 10) {
+                // 检测 long 溢出（19+ 位整数），标记后停止累加
+                overflow = true;
+            }
+            if (!overflow) {
                 intValue = intValue * 10 + digit;
             }
             pos++;
@@ -402,6 +412,20 @@ public final class JsonParserUtil {
                 }
                 pos++;
             }
+        }
+
+        // 溢出路径：统一使用字符串解析，避免 intValue 不准确
+        if (overflow) {
+            endPos[0] = pos;
+            String numStr = new String(chars, startPos, pos - startPos);
+            // 特例：Long.MIN_VALUE 的绝对值超出 long 正数范围，但负值可表示
+            if (negative && numStr.equals("-9223372036854775808")) {
+                return Long.MIN_VALUE;
+            }
+            if (useBigDecimal) {
+                return new BigDecimal(numStr);
+            }
+            return Double.parseDouble(numStr);
         }
 
         if (decimalDigits > 0 || exp != 0) {

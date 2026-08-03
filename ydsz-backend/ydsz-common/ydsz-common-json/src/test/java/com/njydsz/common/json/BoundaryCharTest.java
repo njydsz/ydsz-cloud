@@ -7,7 +7,6 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +54,6 @@ class BoundaryCharTest {
     }
 
     @Test
-    @Disabled("BUG: 解析器在处理字符串内嵌套转义引号（\\\"）时存在缺陷，position 17 处解析失败。待修复后启用。")
     void quotesInsideString() {
         String json = "{\"msg\":\"He said \\\"Hello\\\"\"}";
         Map<String, Object> map = YdszJson.parseMap(json);

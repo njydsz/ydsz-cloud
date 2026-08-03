@@ -292,8 +292,8 @@ def analyze_java(path: str):
         # 函数式接口抽象方法豁免（仅当该方法位于 @FunctionalInterface 接口内）
         if name in FUNCTIONAL_IFACE_METHODS and is_functional_interface_above(lines, method_line=line_no):
             continue
-        # 过滤方法体内部的调用（如 return xxx(...)），而非声明
-        prefix = stripped[max(0, m.start("name") - 40) : m.start("name")]
+        # 过滤方法体内部的调用（如 return xxx(...) 或换行调用 xxx(builder()...）），而非声明
+        prefix = stripped[max(0, m.start("name") - 60) : m.start("name")]
         if re.search(r"\b(?:return|this|super|new|case|throw|assert)\b\s*$", prefix):
             continue
         if prefix.rstrip().endswith((".", "=", "(", "[", ",", "?", ":")):
@@ -302,6 +302,18 @@ def analyze_java(path: str):
         # m.end() 之后若是 `,`、`;`、`)` 等则为调用，跳过。
         tail = stripped[m.end() : m.end() + 20]
         if re.match(r"^\s*(;|,|\))", tail):
+            continue
+        # 调用链续行场景（如 appendToOutbox(OutboxMessage.builder()... 换行）：
+        # 方法名所在行从行首到方法名之间若含 `(` 或 `.`，则是调用而非声明
+        line_prefix = stripped[stripped.rfind("\n", 0, m.start("name")) + 1 : m.start("name")].strip()
+        if "(" in line_prefix or line_prefix.endswith("."):
+            continue
+        # 方法名所在行的上一行以 `{` 结尾（方法体第一条语句）→ 调用
+        # 注意：m.start() 可能位于行首（ret 组从行首匹配），需取上一个完整行
+        prev_end = stripped.rfind("\n", 0, m.start())
+        prev_start = stripped.rfind("\n", 0, prev_end)
+        prev_line_stripped = stripped[max(0, prev_start) : prev_end].strip()
+        if prev_line_stripped.endswith("{"):
             continue
         # 判断可见性
         head = stripped[m.start() - 200 : m.start()]
