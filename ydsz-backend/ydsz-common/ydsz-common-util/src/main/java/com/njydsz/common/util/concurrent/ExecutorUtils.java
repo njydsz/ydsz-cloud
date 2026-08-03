@@ -267,7 +267,7 @@ public class ExecutorUtils {
      */
     public static ExecutorService newPriorityThreadPool(int nThreads, Comparator<Runnable> comparator) {
         BlockingQueue<Runnable> queue = new PriorityBlockingQueue<>(DEFAULT_QUEUE_CAPACITY,
-                new RunnableComparatorAdapter(comparator));
+                comparator);
         return new ThreadPoolExecutor(
                 nThreads,
                 nThreads,
@@ -277,23 +277,6 @@ public class ExecutorUtils {
                 createThreadFactory("priority-pool-"),
                 new ThreadPoolExecutor.CallerRunsPolicy()
         );
-    }
-
-    /**
-     * 将 Comparator&lt;Runnable&gt; 适配为可直接比较 Runnable 的 Comparator
-     * 由于 PriorityBlockingQueue 中的元素需要可比较，此适配器确保任意 Runnable 都能安全比较
-     */
-    private static class RunnableComparatorAdapter implements Comparator<Runnable> {
-        private final Comparator<Runnable> delegate;
-
-        RunnableComparatorAdapter(Comparator<Runnable> delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public int compare(Runnable o1, Runnable o2) {
-            return delegate.compare(o1, o2);
-        }
     }
 
     /**

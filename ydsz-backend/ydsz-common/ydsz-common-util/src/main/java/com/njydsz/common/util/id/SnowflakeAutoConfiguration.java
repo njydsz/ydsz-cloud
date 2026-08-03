@@ -174,7 +174,7 @@ public class SnowflakeAutoConfiguration {
             }
         }
 
-        String dcProp = environment.getProperty("ydsz.snowflake.datacenterId");
+        String dcProp = environment.getProperty("ydsz.util.snowflake.datacenter-id");
         if (dcProp != null && !dcProp.isEmpty()) {
             try {
                 long id = Long.parseLong(dcProp);

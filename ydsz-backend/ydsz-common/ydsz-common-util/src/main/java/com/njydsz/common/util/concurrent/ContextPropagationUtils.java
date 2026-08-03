@@ -171,7 +171,7 @@ public final class ContextPropagationUtils {
      * @param getter   上下文值读取器（从当前线程读取值）
      * @param setter   上下文值写入器（将值写入当前线程），value=null 表示清除
      */
-    public static void registerContextProvider(String name, Supplier<String> getter, BiConsumer<String, String> setter) {
+    public static synchronized void registerContextProvider(String name, Supplier<String> getter, BiConsumer<String, String> setter) {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name must not be null or empty");
         }

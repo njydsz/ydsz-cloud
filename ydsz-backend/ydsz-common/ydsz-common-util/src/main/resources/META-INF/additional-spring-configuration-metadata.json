@@ -1,31 +1,6 @@
 {
   "properties": [
     {
-      "name": "ydsz.util.okhttp.max-idle-connections",
-      "type": "java.lang.Integer",
-      "description": "最大空闲连接数（默认 50）。"
-    },
-    {
-      "name": "ydsz.util.okhttp.keep-alive-duration",
-      "type": "java.lang.Long",
-      "description": "连接保持时间（分钟，默认 5）。"
-    },
-    {
-      "name": "ydsz.util.okhttp.connect-timeout",
-      "type": "java.lang.Long",
-      "description": "连接超时时间（秒，默认 5）。"
-    },
-    {
-      "name": "ydsz.util.okhttp.read-timeout",
-      "type": "java.lang.Long",
-      "description": "读取超时时间（秒，默认 30）。"
-    },
-    {
-      "name": "ydsz.util.okhttp.write-timeout",
-      "type": "java.lang.Long",
-      "description": "写入超时时间（秒，默认 30）。"
-    },
-    {
       "name": "ydsz.util.snowflake.worker-id",
       "type": "java.lang.Long",
       "description": "工作节点ID（范围 0-31，仅 workerIdSource 为 CONFIG 时生效）。"
@@ -49,11 +24,6 @@
       "name": "ydsz.util.snowflake.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 Snowflake 自动配置（默认 true）。"
-    },
-    {
-      "name": "ydsz.util.threadpool.monitor.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用线程池监控自动配置（默认 true）。"
     }
   ]
 }

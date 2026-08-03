@@ -600,14 +600,19 @@ public class SetUtils {
     /**
      * 判断 Set 是否包含所有给定的元素
      *
+     * <p>空集是任意集合的子集：当 elements 为 null 或空数组时返回 true。
+     *
      * @param set Set 对象
      * @param elements 元素数组
      * @param <T> 元素类型
-     * @return 如果包含所有元素则返回 true
+     * @return 如果包含所有元素则返回 true；elements 为空时返回 true
      */
     @SafeVarargs
     public static <T> boolean containsAll(Set<T> set, T... elements) {
-        if (isEmpty(set) || elements == null || elements.length == 0) {
+        if (elements == null || elements.length == 0) {
+            return true;
+        }
+        if (isEmpty(set)) {
             return false;
         }
         for (T element : elements) {
@@ -621,13 +626,18 @@ public class SetUtils {
     /**
      * 判断 Set 是否包含所有给定集合的元素
      *
+     * <p>空集是任意集合的子集：当 collection 为 null 或空时返回 true。
+     *
      * @param set Set 对象
      * @param collection 集合
      * @param <T> 元素类型
-     * @return 如果包含所有元素则返回 true
+     * @return 如果包含所有元素则返回 true；collection 为空时返回 true
      */
     public static <T> boolean containsAll(Set<T> set, Collection<?> collection) {
-        if (isEmpty(set) || collection == null || collection.isEmpty()) {
+        if (collection == null || collection.isEmpty()) {
+            return true;
+        }
+        if (isEmpty(set)) {
             return false;
         }
         return set.containsAll(collection);

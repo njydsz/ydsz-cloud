@@ -1113,7 +1113,10 @@ public class MapUtils {
      */
     @SafeVarargs
     public static <K> boolean containsAll(Map<K, ?> map, K... keys) {
-        if (isEmpty(map) || keys == null || keys.length == 0) {
+        if (keys == null || keys.length == 0) {
+            return true;
+        }
+        if (isEmpty(map)) {
             return false;
         }
         for (K key : keys) {
@@ -1131,13 +1134,13 @@ public class MapUtils {
      *
      * <p>用于 JSON 反序列化后 Map 的类型归一化：当 JSON 解析器返回
      * {@code Map<?, ?>}（如 FastJSON / Jackson 的默认行为）时，
-     * 调用本方法将其强转为 {@code Map<String, Object>} 以便业务使用。
+     * 调用本方法将其转换为 {@code Map<String, Object>} 以便业务使用。
      *
-     * <p>本方法仅做 unchecked cast，不复制 Map（性能优先）；
-     * 若需要深拷贝请使用 {@link #deepCopy(Map)}。
+     * <p>本方法会创建新的 LinkedHashMap 并逐条复制（类型安全）；
+     * 若需要深拷贝嵌套 Map 请使用 {@link #deepCopy(Map)}。
      *
      * @param map 原始 Map（可为 null）
-     * @return 强转后的 Map；入参为 null 时返回空 Map
+     * @return 转换后的 Map；入参为 null 时返回空 Map
      */
     public static Map<String, Object> toStringObjectMap(Map<?, ?> map) {
         if (map == null) {

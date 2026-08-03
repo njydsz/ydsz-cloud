@@ -255,17 +255,28 @@ public class Rsa2Utils {
 
     /**
      * 公钥验签 (RSA2 / SHA256withRSA)
+     *
+     * @return 签名匹配返回 true，签名不匹配返回 false；仅当密钥加载/算法初始化等异常时抛 RuntimeException
      */
     public static boolean verify(String data, String publicKey, String signStr) {
+        PublicKey pubKey;
+        Signature signature;
         try {
-            PublicKey pubKey = loadPublicKey(publicKey);
-            Signature signature = Signature.getInstance(SIGN_ALGORITHM);
+            pubKey = loadPublicKey(publicKey);
+            signature = Signature.getInstance(SIGN_ALGORITHM);
             signature.initVerify(pubKey);
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException("RSA 验签初始化失败: " + e.getMessage(), e);
+        }
+        try {
             signature.update(data.getBytes(StandardCharsets.UTF_8));
             byte[] signBytes = Base64.getDecoder().decode(signStr);
             return signature.verify(signBytes);
+        } catch (SignatureException e) {
+            // 签名数据格式异常，按验签失败处理
+            return false;
         } catch (Exception e) {
-            throw new RuntimeException("RSA验签异常: " + e.getMessage(), e);
+            throw new RuntimeException("RSA 验签异常: " + e.getMessage(), e);
         }
     }
 

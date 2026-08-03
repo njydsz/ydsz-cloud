@@ -6,7 +6,6 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.util.bean.BeanCopyUtils;
 import com.njydsz.common.util.id.SnowflakeUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +18,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>检查内容：
  * <ul>
- *   <li>SnowflakeUtils 初始化状态（workerId / datacenterId / shardCount）</li>
+ *   <li>SnowflakeUtils 初始化状态（workerId / datacenterId / lastTimestamp）</li>
  *   <li>JVM 运行时基础指标（内存使用率）</li>
- *   <li>BeanCopyUtils 缓存状态（fieldCacheSize / propertyCacheSize）</li>
- *   <li>OkHttp 连接池统计（idleConnections / totalConnections / queuedCallsCount）</li>
  * </ul>
  *
  * <p>健康状态映射：
@@ -90,15 +87,6 @@ public class UtilHealthIndicator implements HealthIndicator {
         } catch (Exception e) {
             log.warn("JVM health check failed: {}", e.getMessage());
             builder.withDetail("jvm.error", e.getMessage());
-        }
-
-        // 3. BeanCopyUtils 缓存状态
-        try {
-            Map<String, Integer> cacheStats = BeanCopyUtils.getCacheStats();
-            builder.withDetail("beanCopy.fieldCacheSize", cacheStats.get("fieldCacheSize"));
-            builder.withDetail("beanCopy.propertyCacheSize", cacheStats.get("propertyCacheSize"));
-        } catch (Exception e) {
-            log.debug("BeanCopyUtils cache stats unavailable: {}", e.getMessage());
         }
 
         return hasCritical;

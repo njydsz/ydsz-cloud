@@ -1,13 +1,8 @@
 package com.njydsz.common.util.bean;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,11 +20,10 @@ import lombok.extern.slf4j.Slf4j;
  * Bean 拷贝工具类
  *
  * <p>功能特性：
- * 1. PropertyDescriptor 缓存，避免重复反射
- * 2. 灵活的拷贝选项（忽略字段、null 值处理、自定义转换器）
- * 3. 支持集合和数组映射
- * 4. 提供 Lambda 表达式支持
- * 5. 异常统一抛出 BeanCopyException
+ * 1. 灵活的拷贝选项（忽略字段、null 值处理、自定义转换器）
+ * 2. 支持集合和数组映射
+ * 3. 提供 Lambda 表达式支持
+ * 4. 异常统一抛出 BeanCopyException
  * </p>
  *
  * <p><b>注意：</b>深拷贝请使用序列化方式（如 {@link Cloneable} 或 JSON 序列化/反序列化）。
@@ -44,38 +38,6 @@ public class BeanCopyUtils {
     private BeanCopyUtils() {
         throw new UnsupportedOperationException("BeanCopyUtils is a utility class and cannot be instantiated");
     }
-
-    /**
-     * PropertyDescriptor 缓存，提升属性拷贝性能
-     *
-     * <p>使用 synchronized LinkedHashMap（accessOrder=true）实现 LRU 淘汰策略，
-     * 避免全量清空导致缓存命中率骤降。
-     */
-    private static final Map<Class<?>, PropertyDescriptor[]> PROPERTY_CACHE =
-            Collections.synchronizedMap(new LinkedHashMap<>(128, 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<Class<?>, PropertyDescriptor[]> eldest) {
-                    return size() > MAX_CACHE_SIZE;
-                }
-            });
-
-    /**
-     * 字段缓存，提升 entityToMap 性能
-     *
-     * <p>使用 synchronized LinkedHashMap（accessOrder=true）实现 LRU 淘汰策略。
-     */
-    private static final Map<Class<?>, Field[]> FIELD_CACHE =
-            Collections.synchronizedMap(new LinkedHashMap<>(128, 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<Class<?>, Field[]> eldest) {
-                    return size() > MAX_CACHE_SIZE;
-                }
-            });
-
-    /**
-     * 缓存最大容量，超过后触发 LRU 淘汰最旧条目（防止内存泄漏）
-     */
-    private static final int MAX_CACHE_SIZE = 1024;
 
     // ==================== 基础拷贝方法 ====================
 
@@ -326,26 +288,5 @@ public class BeanCopyUtils {
             return CopyStrategy.IGNORE_NULL;
         }
         return CopyStrategy.FULL_COPY;
-    }
-
-    /**
-     * 清空缓存（用于测试或内存优化）
-     */
-    public static void clearCache() {
-        FIELD_CACHE.clear();
-        PROPERTY_CACHE.clear();
-        log.info("BeanCopyUtils cache cleared");
-    }
-
-    /**
-     * 获取缓存统计信息
-     *
-     * @return 缓存统计 Map
-     */
-    public static Map<String, Integer> getCacheStats() {
-        Map<String, Integer> stats = new HashMap<>();
-        stats.put("fieldCacheSize", FIELD_CACHE.size());
-        stats.put("propertyCacheSize", PROPERTY_CACHE.size());
-        return stats;
     }
 }

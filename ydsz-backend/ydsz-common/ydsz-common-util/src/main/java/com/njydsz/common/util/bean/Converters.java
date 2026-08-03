@@ -1,13 +1,10 @@
 package com.njydsz.common.util.bean;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -24,12 +21,6 @@ import java.util.function.Function;
  * 
  */
 public class Converters {
-
-    /**
-     * 日期格式
-     */
-    private static final ThreadLocal<Map<String, SimpleDateFormat>> DATE_FORMAT_CACHE =
-            ThreadLocal.withInitial(HashMap::new);
 
     /**
      * 私有构造函数，防止实例化
@@ -226,12 +217,5 @@ public class Converters {
             }
             return converter.convert(source);
         };
-    }
-
-    /**
-     * 清除当前线程的日期格式缓存
-     */
-    public static void clearDateFormatCache() {
-        DATE_FORMAT_CACHE.remove();
     }
 }

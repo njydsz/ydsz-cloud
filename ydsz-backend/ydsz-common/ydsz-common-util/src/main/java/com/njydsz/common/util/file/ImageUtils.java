@@ -31,7 +31,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.IIOImage;
 import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.ImageOutputStream;
 
 import com.njydsz.common.util.concurrent.ExecutorUtils;
 import com.njydsz.common.util.string.StringUtils;
@@ -677,28 +681,46 @@ public class ImageUtils {
 
     /**
      * 压缩图片 (质量压缩)
+     *
+     * @param sourcePath 源图片路径
+     * @param targetPath 目标图片路径
+     * @param quality    压缩质量 (0 < quality <= 1)
+     * @return 压缩成功返回 true
      */
     public static boolean compressImage(String sourcePath, String targetPath, float quality) {
         if (StringUtils.isBlank(sourcePath) || StringUtils.isBlank(targetPath) || quality <= 0 || quality > 1) {
             return false;
         }
-        
+
         try {
             BufferedImage image = ImageIO.read(new File(sourcePath));
             if (image == null) {
                 return false;
             }
-            
+
             FileUtils.mkdirsForFile(targetPath);
             File outputFile = new File(targetPath);
-            
+
             // 根据扩展名确定格式
             String format = FileTypeUtils.getFileType(targetPath);
             if (StringUtils.isEmpty(format)) {
                 format = "jpg";
             }
-            
-            return ImageIO.write(image, format, outputFile);
+
+            // 通过 ImageWriter 实现质量压缩
+            ImageWriter writer = ImageIO.getImageWritersByFormatName(format).next();
+            ImageWriteParam writeParam = writer.getDefaultWriteParam();
+            if (writeParam.canWriteCompressed()) {
+                writeParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                writeParam.setCompressionQuality(quality);
+            }
+            try (ImageOutputStream ios = ImageIO.createImageOutputStream(outputFile)) {
+                writer.setOutput(ios);
+                writer.write(null, new IIOImage(image, null, null), writeParam);
+            } finally {
+                writer.dispose();
+            }
+            return true;
         } catch (Exception e) {
             log.error("ImageUtils -> 压缩图片异常 {}: {}", sourcePath, e.getMessage());
             return false;

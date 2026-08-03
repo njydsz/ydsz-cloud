@@ -13,7 +13,12 @@ import com.njydsz.common.util.spring.SpringContextHolder;
 /**
  * 通用工具类自动配置。
  *
- * <p>注册项目级工具 Bean：雪花 ID 生成器、Tracer、加密工具、Bean 拷贝器、断言工具。
+ * <p>注册项目级工具 Bean：
+ * <ul>
+ *   <li>{@link SpringContextHolder} — ApplicationContext 静态持有者</li>
+ *   <li>{@link SnowflakeHealthIndicator} — Snowflake ID 生成器健康检查</li>
+ *   <li>{@link UtilHealthIndicator} — 工具模块健康检查（Snowflake 状态、JVM 内存指标）</li>
+ * </ul>
  *
  * <p>所有工具 Bean 均为无状态、线程安全，可直接注入使用。
  *
