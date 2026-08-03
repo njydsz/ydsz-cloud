@@ -77,7 +77,7 @@
     {
       "name": "ydsz.core.filter-ignore.auth-filter-ignore-service-names",
       "type": "java.util.List<java.lang.String>",
-      "description": "认证过滤器忽略服务名称列表（覆盖内置默认值，服务名需与 application.name 一致）。",
+      "description": "认证过滤器忽略服务名称列表（与内置默认值合并，服务名需与 application.name 一致）。",
       "defaultValue": []
     },
     {
@@ -85,6 +85,12 @@
       "type": "java.util.List<java.lang.String>",
       "description": "安全排除 URL 模式列表（与内置默认值合并，用于安全过滤器的白名单配置）。",
       "defaultValue": []
+    },
+    {
+      "name": "ydsz.core.filter-ignore.replace-builtin",
+      "type": "java.lang.Boolean",
+      "description": "是否用配置值整体替换内置默认忽略规则。false（默认）表示配置值与内置默认值合并；true 表示仅使用配置值，忽略内置默认值。",
+      "defaultValue": false
     }
   ]
 }

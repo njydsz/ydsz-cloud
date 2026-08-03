@@ -210,10 +210,15 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 返回失败消息
      *
+     * <p><b>重载注意：</b>当 {@code data} 为 String 类型时，Java 会优先匹配
+     * {@link #error(String, String)}（code + msg 语义），而非本方法。
+     * 需要携带 String 数据的失败响应请使用
+     * {@link #error(String, String, Object)} 三参重载。</p>
+     *
      * @param msg 消息内容
      * @param data 数据内容
      * @param <T> 数据类型
-     * @return 失败消息
+     * @return 失败响应
      */
     public static <T> BaseResponse<T> error(String msg, T data) {
         return of(ERROR, msg, data);
@@ -315,10 +320,15 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 返回失败消息
      *
+     * <p><b>重载注意：</b>当 {@code data} 为 String 类型时，Java 会优先匹配
+     * {@link #error(ResultCode, String)}（ResultCode + msg 语义），而非本方法。
+     * 需要携带 String 数据的失败响应请使用 {@link #error(String, String, Object)}
+     * 三参重载并传入 resultCode.getCode()。</p>
+     *
      * @param resultCode 结果码
      * @param data 数据内容
      * @param <T> 数据类型
-     * @return 失败消息
+     * @return 失败响应
      */
     public static <T> BaseResponse<T> error(ResultCode resultCode, T data) {
         return of(resultCode.getCode(), resultCode.getMsg(), data);

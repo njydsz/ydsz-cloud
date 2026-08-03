@@ -85,7 +85,7 @@ function createAppRouter(basename?: string) {
 /**
  * lite-kernel 生命周期：bootstrap（子应用初始化，此处仅占位）。
  */
-async function bootstrap() {
+export async function bootstrap() {
   console.warn('[agent-web] bootstrap');
 }
 
@@ -96,7 +96,7 @@ async function bootstrap() {
  *
  * @param props - 由主应用注入的 lite-kernel mountProps（含挂载容器 container）
  */
-async function mount(props: Record<string, unknown>) {
+export async function mount(props: Record<string, unknown>) {
   console.warn('[agent-web] mount', props);
 
   const { container } = props;
@@ -133,7 +133,7 @@ async function mount(props: Record<string, unknown>) {
  *
  * 卸载 Vue 实例并清空引用，避免主应用切换时内存泄漏。
  */
-async function unmount() {
+export async function unmount() {
   console.warn('[agent-web] unmount');
   app?.unmount();
   app = null;
@@ -144,7 +144,7 @@ async function unmount() {
  *
  * @param props - 主应用下发的更新后 props
  */
-async function update(props: Record<string, unknown>) {
+export async function update(props: Record<string, unknown>) {
   console.warn('[agent-web] update', props);
 }
 

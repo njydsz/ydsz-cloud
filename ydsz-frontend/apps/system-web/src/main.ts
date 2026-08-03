@@ -71,11 +71,11 @@ function createAppRouter(basename?: string) {
   });
 }
 
-async function bootstrap() {
+export async function bootstrap() {
   console.warn('[system-web] bootstrap');
 }
 
-async function mount(props: Record<string, unknown>) {
+export async function mount(props: Record<string, unknown>) {
   console.warn('[system-web] mount', props);
 
   const { container } = props;
@@ -107,13 +107,13 @@ async function mount(props: Record<string, unknown>) {
   app.mount(mountNode);
 }
 
-async function unmount() {
+export async function unmount() {
   console.warn('[system-web] unmount');
   app?.unmount();
   app = null;
 }
 
-async function update(props: Record<string, unknown>) {
+export async function update(props: Record<string, unknown>) {
   console.warn('[system-web] update', props);
 }
 

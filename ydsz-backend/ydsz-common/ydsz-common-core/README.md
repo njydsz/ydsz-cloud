@@ -21,7 +21,7 @@
 | 类 | 说明 |
 |---|---|
 | `IResponse<T>` | 响应标记接口，定义 `getCode()` / `getMsg()` / `getData()` / `isSuccess()` 契约 |
-| `BaseResponse<T>` | 统一 API 响应体，字段：`code` / `msg` / `data` / `traceId` / `timestamp`。使用 `@SuperBuilder` + `@YdszJsonField(notWriteNullValue=true)` + `@YdszJsonPropertyOrder` 控制序列化。提供 `success()` / `error()` / `of()` / `errorWithDetail()` 静态工厂方法，响应创建时自动通过 `CoreMetrics` SPI 上报指标 |
+| `BaseResponse<T>` | 统一 API 响应体，字段：`code` / `msg` / `data` / `traceId` / `timestamp`。使用 `@SuperBuilder` + `@YdszJsonField(notWriteNullValue=true)` + `@YdszJsonPropertyOrder` 控制序列化。提供 `success()` / `error()` / `of()` / `errorWithDetail()` 静态工厂方法，消息支持 i18n 国际化解析 |
 | `PageResponse<T>` | 分页响应体（继承 BaseResponse），字段：`total` / `pageNum` / `pageSize` / `pages`。自动计算总页数，提供 `success()` / `fail()` / `empty()` / `hasNext()` / `hasPrevious()` 方法 |
 | `ProblemDetail` | RFC 7807 Problem Details 标准错误详情载体，字段：`type` / `title` / `status` / `detail` / `instance`。通过 `BaseResponse.errorWithDetail()` 使用 |
 
@@ -57,20 +57,25 @@
 | `TenantContextHolder` | 租户上下文持有者接口（SPI），定义 `getTenantId()` / `isSuperTenant()`。由业务模块（如 ydsz-common-auth）提供具体实现，避免 core 模块循环依赖 |
 | `TenantMdcFilter` | Jakarta Servlet Filter，在请求处理前将 `tenantId` / `userId` / `traceId` 从 RequestContext 写入 SLF4J MDC，请求结束后自动清理 |
 
-### 4. TraceId 生成（trace 包）
+### 4. TraceId 生成与传播（trace 包）
 
 | 类 | 说明 |
 |---|---|
 | `TraceIdSupplier` | TraceId 生成策略接口（`@FunctionalInterface`），SPI 扩展点 |
-| `TraceIdGenerator` | TraceId 生成器统一入口（静态工具类），内部委托到 `TraceIdSupplier`。使用 `volatile` 持有当前策略，通过 `setSupplier()` 注入。生成 TraceId 后自动通过 `CoreMetrics` SPI 上报指标 |
-| `SnowflakeTraceIdSupplier` | 基于 Snowflake 算法的有序 TraceId 生成器，生成 16 位十六进制字符串。使用 `AtomicLong` + CAS 自旋（无锁），支持时钟回拨检测与等待；workerId/datacenterId 支持 K8s 环境变量推导 |
+| `TraceIdGenerator` | TraceId 生成器统一入口（静态工具类），内部委托到 `TraceIdSupplier`。使用 `volatile` 持有当前策略，通过 `setSupplier()` 注入。默认 UUID 策略使用高性能编码（直接 128 位随机数转 32 位 hex，零中间 String 分配） |
+| `UuidTraceIdSupplier` | 高性能 UUID 策略实现：一次读取 16 字节随机数，编码为 32 位 hex，避免 `UUID.toString().replace("-","")` 的 3 个中间对象 |
+| `SnowflakeTraceIdSupplier` | 基于 Snowflake 算法的有序 TraceId 生成器，生成 16 位高位在前的十六进制字符串（字符串字典序 = 数值序，可直接按 traceId 排序还原请求时序）。使用 `AtomicLong` + CAS 自旋（无锁），支持时钟回拨检测与等待；workerId/datacenterId 支持 K8s 环境变量推导 |
+| `TraceIdPropagation` | TraceId 传播工具类（纯 JDK，无框架依赖）：从 MDC 读取 traceId 并生成 `X-Trace-Id` 请求头，供 RestTemplate / WebClient / OkHttp 等 HTTP 客户端拦截器复用，实现服务间调用链路贯穿。提供 `traceHeader()` / `traceHeaderOrCreate()` / `currentTraceId()` 等方法 |
 
-### 5. 轻量级指标回调（metrics 包）
+### 5. 敏感数据脱敏（sensitive 包）
 
 | 类 | 说明 |
 |---|---|
-| `CoreMetricsCallback` | 指标回调 SPI 接口，定义 `onTraceIdGenerated(strategy)` / `onResponseCreated(success, code)` 方法。上层模块（如 ydsz-common-base）可实现此接口桥接到 Micrometer / Prometheus。未注册时使用 NOOP 空操作，零性能开销 |
-| `CoreMetrics` | 指标采集器统一入口，使用 `volatile` 静态 holder 管理 `CoreMetricsCallback` 实例。提供 `recordTraceIdGenerated()` / `recordResponseCreated()` 方法，由 `TraceIdGenerator` 和 `BaseResponse` 内部调用 |
+| `Sensitive` | 字段标注注解：`@Sensitive(type = SensitiveType.MOBILE)` 标注需要脱敏的字段，支持自定义脱敏器 |
+| `SensitiveType` | 敏感数据类型枚举：MOBILE（保留前3后4）/ ID_CARD（保留前4后4）/ BANK_CARD / EMAIL / NAME / ADDRESS / PASSWORD / CUSTOM |
+| `SensitiveDataMasker` | 纯 Java 脱敏算法工具类（与 JSON 引擎解耦）：`mask(value, type)` 单值脱敏 + `maskObject(obj)` 反射遍历 `@Sensitive` 标注字段就地脱敏，递归处理父类字段。自定义脱敏器通过 `SensitiveMasker` SPI + `Sensitive#masker()` 指定 |
+
+> **JSON 序列化集成**：core 模块保持零依赖原则不绑定具体 JSON 引擎，上层模块（如 ydsz-common-web）可在序列化链路中读取 `@Sensitive` 注解并调用 `SensitiveDataMasker.mask()` 实现自动脱敏。
 
 ### 6. 通用枚举（enums 包）
 
@@ -99,7 +104,7 @@
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
-| `CoreAutoConfiguration` | `ydsz.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`TenantMdcFilter`（FilterRegistrationBean）、`CoreHealthIndicator`（Actuator 健康指标）、`PageConstantsInitializer`（分页配置运行时同步）、`coreMetricsRegistrar`（CoreMetricsCallback 自动注册） |
+| `CoreAutoConfiguration` | `ydsz.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`TenantMdcFilter`（FilterRegistrationBean）、`CoreHealthIndicator`（Actuator 健康指标）、`PageConstantsInitializer`（分页配置运行时同步） |
 | `TraceAutoConfiguration` | `ydsz.core.trace.enabled=true`（默认启用） | `TraceIdSupplier`（UUID 或 Snowflake），并注入到 `TraceIdGenerator` 静态 holder |
 
 | 属性类 | 前缀 | 说明 |
@@ -111,7 +116,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `CoreHealthIndicator` | Spring Boot Actuator 健康指标，访问 `/actuator/health` 时报告：TraceId 策略名称、Trace 是否启用、TraceId 类型、配置校验结果、TraceId 生成探针（pass/fail）、Snowflake workerId（当策略为 Snowflake 时）、分页配置及合法性校验、i18n 解析器状态、指标回调注册状态、过滤器忽略路径配置摘要 |
+| `CoreHealthIndicator` | Spring Boot Actuator 健康指标，访问 `/actuator/health` 时报告：TraceId 策略名称、Trace 是否启用、TraceId 类型、配置校验结果、TraceId 生成探针（pass/fail）、Snowflake workerId（当策略为 Snowflake 时）、分页配置及合法性校验、i18n 解析器状态、过滤器忽略路径配置摘要 |
 
 ## 接入方式
 
@@ -275,10 +280,10 @@ String traceId = TraceIdGenerator.generate();
 
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
-| `TraceIdSupplier` | TraceId 生成策略扩展点，自定义 TraceId 格式与生成逻辑 | 框架内置 `UuidTraceIdSupplier`（lambda）与 `SnowflakeTraceIdSupplier`，业务可覆盖 |
+| `TraceIdSupplier` | TraceId 生成策略扩展点，自定义 TraceId 格式与生成逻辑 | 框架内置 `UuidTraceIdSupplier` 与 `SnowflakeTraceIdSupplier`，业务可覆盖 |
 | `BaseResponse.MessageResolver` | 国际化消息解析 SPI，将响应消息委托到 Spring MessageSource 等实现 | 框架内置 `SpringMessageResolver`（自动注册），业务可覆盖 |
-| `CoreMetricsCallback` | 核心模块指标回调 SPI，将 TraceId 生成与响应创建事件桥接到监控系统 | 上层模块（如 ydsz-common-base）实现并注册为 Bean，未注册时为 NOOP |
 | `TenantContextHolder` | 租户上下文持有者 SPI，避免 core 模块循环依赖 | 业务模块（如 ydsz-common-auth）提供实现 |
+| `SensitiveDataMasker.SensitiveMasker` | 自定义脱敏器 SPI，通过 `@Sensitive(masker=...)` 指定 | 业务按需实现 |
 
 ## 健康检查
 
@@ -296,7 +301,6 @@ String traceId = TraceIdGenerator.generate();
 - `maxPageSize` / `defaultPageSize` — 运行时分页配置
 - `pageSizeValidation` — 分页合法性校验（WARN 表示 default > max）
 - `i18nResolverRegistered` — i18n 解析器是否注册
-- `metricsCallbackRegistered` — 指标回调是否注册
 - `filterIgnoreCommonUrls` / `filterIgnoreSecurityExcludeUrls` / `authFilterIgnoreServiceNames` — 过滤器忽略路径配置摘要
 
 **健康状态规则**：
@@ -308,14 +312,15 @@ String traceId = TraceIdGenerator.generate();
 ## 注意事项
 
 1. **业务响应码与 HTTP 状态码区分**：`BaseResponse.code` 是业务响应码（`String` 类型，如 `"A00000"`），`ResultCode.getHttpStatusCode()` 返回对应的 HTTP 状态码（`int` 类型，如 `200` / `400` / `500`）。前端判断成功应检查 `resp.code === "A00000"`，而非 HTTP 状态码 `200`。
-2. **静态 holder 模式**：`TraceIdGenerator` / `BaseResponse` / `CoreMetrics` 使用 `volatile` 静态字段持有策略实例，而非 Spring Bean 依赖注入。原因是这些组件在项目极早期（如 Filter 初始化、日志框架启动）即被调用，Spring 容器可能尚未就绪。代价是多 ApplicationContext 场景下最后一个上下文的策略会覆盖前一个；单元测试间需调用 `TraceIdGenerator.resetToDefault()` 隔离状态。
+2. **静态 holder 模式**：`TraceIdGenerator` / `BaseResponse` 使用 `volatile` 静态字段持有策略实例，而非 Spring Bean 依赖注入。原因是这些组件在项目极早期（如 Filter 初始化、日志框架启动）即被调用，Spring 容器可能尚未就绪。代价是多 ApplicationContext 场景下最后一个上下文的策略会覆盖前一个；单元测试间需调用 `TraceIdGenerator.resetToDefault()` 隔离状态。
 3. **RequestContext 必须显式清理**：基于 TransmittableThreadLocal 的上下文必须在请求结束时调用 `RequestContext.clear()`，建议使用 `try-with-resources` 配合 `RequestContext.newCleanupGuard()`，避免线程池复用导致内存泄漏或上下文串扰。
 4. **业务模块自定义错误码请实现 `ResultCode` 接口**：项目/合同/商机（B4xxxx）、财务/成本（B5xxxx）、资源/工时（B6xxxx）、报表（B8xxxx）等业务域专属错误码已从 `BaseResultCode` 中删除，不应再放入。
 5. **配置校验 fail-fast**：`CoreProperties` 及其 `TraceConfig` 内部类使用 JSR-303 校验注解（`@Min` / `@Max` / `@NotBlank` / `@Pattern`），配合 `@Validated` 和 `@Valid` 实现启动时校验。配置非法时应用启动失败。
-6. **零依赖原则**：本模块不含 Spring AOP / AspectJ / Micrometer / SpEL / Spring Web MVC / MyBatis-Plus / Redis 依赖。监控能力通过 `CoreMetricsCallback` SPI 解耦，由上层模块桥接。
+6. **零依赖原则**：本模块不含 Spring AOP / AspectJ / Micrometer / SpEL / Spring Web MVC / MyBatis-Plus / Redis 依赖。监控等上层能力通过 SPI 接口解耦，由上层模块实现。
 7. **国际化资源**：模块自带 `i18n/messages.properties`（英文默认）和 `i18n/messages_zh_CN.properties`（中文）资源文件，覆盖全部 56 个 `BaseResultCode` 错误码。消息 key 格式为 `error.{ENUM_NAME}`，与 `ResultCode.getMessageKey()` 默认实现一致。
 8. **GraalVM Native Image 支持**：`META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties` 注册了 `BaseResponse` / `PageResponse` / `ProblemDetail` / `CoreProperties` / `CoreProperties$TraceConfig` / `FilterIgnoreProperties` 的反射配置。
 
 ## 变更记录
 
+- **v1.1.0**（2026-08-03）：新增敏感数据脱敏能力（`sensitive` 包）、TraceId 传播工具（`TraceIdPropagation`）、分页归一化方法（`PageConstants.normalizePageSize/normalizePageNum/calcOffset`）、`ResultCode` 前缀推断 HTTP 状态码默认实现；移除无消费方的 `metrics` 包（`CoreMetrics` / `CoreMetricsCallback`）；`FilterIgnoreProperties` 统一为"合并 + replace-builtin 开关"策略；`RequestContext` 改为懒初始化；修复 `SnowflakeTraceIdSupplier.toHex16` 输出反转 Bug；补齐 157 个单元测试
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
