@@ -21,7 +21,7 @@ services:
       retries: 3
       start_period: 30s
 
-  # ==================== Backend Gateway ====================
+  # ==================== Backend Gateway (9000) ====================
   gateway:
     image: ydsz-pmis/gateway:latest
     container_name: ydsz-gateway
@@ -34,10 +34,10 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== Userinfo Service ====================
-  userinfo:
-    image: ydsz-pmis/userinfo:latest
-    container_name: ydsz-userinfo
+  # ==================== System Service (9001) ====================
+  system:
+    image: ydsz-pmis/system:latest
+    container_name: ydsz-system
     ports:
       - "9001:9001"
     environment:
@@ -47,10 +47,10 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== System Service ====================
-  system:
-    image: ydsz-pmis/system:latest
-    container_name: ydsz-system
+  # ==================== Userinfo Service (9002) ====================
+  userinfo:
+    image: ydsz-pmis/userinfo:latest
+    container_name: ydsz-userinfo
     ports:
       - "9002:9002"
     environment:
@@ -60,10 +60,10 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== Project Service ====================
-  project:
-    image: ydsz-pmis/project:latest
-    container_name: ydsz-project
+  # ==================== Nextwiki Service (9003) ====================
+  nextwiki:
+    image: ydsz-pmis/nextwiki:latest
+    container_name: ydsz-nextwiki
     ports:
       - "9003:9003"
     environment:
@@ -73,7 +73,7 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== Message Service ====================
+  # ==================== Message Service (9004) ====================
   message:
     image: ydsz-pmis/message:latest
     container_name: ydsz-message
@@ -86,10 +86,10 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== Cronjob Service ====================
-  cronjob:
-    image: ydsz-pmis/cronjob:latest
-    container_name: ydsz-cronjob
+  # ==================== Workflow Service (9005) ====================
+  workflow:
+    image: ydsz-pmis/workflow:latest
+    container_name: ydsz-workflow
     ports:
       - "9005:9005"
     environment:
@@ -99,10 +99,10 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== Workflow Service ====================
-  workflow:
-    image: ydsz-pmis/workflow:latest
-    container_name: ydsz-workflow
+  # ==================== Cronjob Service (9006) ====================
+  cronjob:
+    image: ydsz-pmis/cronjob:latest
+    container_name: ydsz-cronjob
     ports:
       - "9006:9006"
     environment:
@@ -112,10 +112,10 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== Nextwiki Service ====================
-  nextwiki:
-    image: ydsz-pmis/nextwiki:latest
-    container_name: ydsz-nextwiki
+  # ==================== LiteRule Service (9007) ====================
+  literule:
+    image: ydsz-pmis/literule:latest
+    container_name: ydsz-literule
     ports:
       - "9007:9007"
     environment:
@@ -125,10 +125,10 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== LiteRule Service ====================
-  literule:
-    image: ydsz-pmis/literule:latest
-    container_name: ydsz-literule
+  # ==================== Agent Service (9008) ====================
+  agent:
+    image: ydsz-pmis/agent:latest
+    container_name: ydsz-agent
     ports:
       - "9008:9008"
     environment:
@@ -138,12 +138,12 @@ services:
       - ydsz-net
     restart: unless-stopped
 
-  # ==================== Agent Service ====================
-  agent:
-    image: ydsz-pmis/agent:latest
-    container_name: ydsz-agent
+  # ==================== Project Service (9009) ====================
+  project:
+    image: ydsz-pmis/project:latest
+    container_name: ydsz-project
     ports:
-      - "9010:9010"
+      - "9009:9009"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - JAVA_OPTS=-Xms256m -Xmx512m

@@ -42,23 +42,23 @@
        ┌───────────────────────────┼───────────────────────────┐
        │                           │                           │
 ┌──────┴──────┐         ┌──────────┴──────────┐       ┌────────┴────────┐
-│ydsz-userinfo│         │     ydsz-system      │       │  ydsz-project   │
+│ydsz-system  │         │   ydsz-userinfo      │       │  ydsz-nextwiki  │
 │   (9001)    │         │      (9002)          │       │    (9003)       │
 └──────┬──────┘         └──────────────────────┘       └────────┬────────┘
        │                                                        │
        │   ┌────────────────────┐       ┌────────────────┐      │
-       │   │   ydsz-message     │       │  ydsz-cronjob  │      │
+       │   │   ydsz-message     │       │  ydsz-workflow │      │
        │   │     (9004)         │       │    (9005)      │      │
        │   └────────────────────┘       └────────────────┘      │
        │                                                           │
        │   ┌────────────────────┐       ┌────────────────┐      │
-       └──→│  ydsz-workflow     │←──────│  ydsz-nextwiki │←─────┘
+       └──→│  ydsz-cronjob      │←──────│  ydsz-literule  │←─────┘
            │    (9006)          │       │    (9007)      │
            └────────────────────┘       └────────────────┘
 
   ┌────────────────────┐       ┌────────────────────┐
-  │  ydsz-literule     │       │    ydsz-agent      │
-  │    (9008)          │       │    (9010)          │
+  │   ydsz-agent       │       │   ydsz-project     │
+  │    (9008)          │       │    (9009)          │
   └────────────────────┘       └────────────────────┘
 
   ┌────────────────────────────────────────────────────────────┐
@@ -72,10 +72,10 @@
 ```
 
 > **端口分配**（按构建顺序）：
-> 1. ydsz-gateway (9000) → 2. ydsz-userinfo (9001) → 3. ydsz-system (9002) →
-> 4. ydsz-project (9003) → 5. ydsz-message (9004) → 6. ydsz-cronjob (9005) →
-> 7. ydsz-workflow (9006) → 8. ydsz-nextwiki (9007) → 9. ydsz-literule (9008) →
-> 10. ydsz-agent (9010)
+> 1. ydsz-gateway (9000) → 2. ydsz-system (9001) → 3. ydsz-userinfo (9002) →
+> 4. ydsz-nextwiki (9003) → 5. ydsz-message (9004) → 6. ydsz-workflow (9005) →
+> 7. ydsz-cronjob (9006) → 8. ydsz-literule (9007) → 9. ydsz-agent (9008) →
+> 10. ydsz-project (9009)
 
 > **注意**：不存在独立的 ydsz-thirdparty 模块。钉钉/飞书/企微的签名工具类
 > （`DingTalkSignatureUtil`/`FeishuSignatureUtil`/`WeComSignatureUtil`）
@@ -639,7 +639,7 @@
 
 **依赖的 common 子模块**：common-core / common-exception / common-auth（细粒度依赖，不依赖 servlet 栈）
 
-### 3.2 ydsz-userinfo 用户信息中心 (端口 9001)
+### 3.2 ydsz-userinfo 用户信息中心 (端口 9002)
 
 | 能力域 | 功能描述 | 数据库表 | 关键 Controller |
 |---|---|---|---|
@@ -655,7 +655,7 @@
 
 **Feign 客户端**：`UserServiceClient`、`OrgQueryClient`
 
-### 3.3 ydsz-system 系统基础服务 (端口 9002)
+### 3.3 ydsz-system 系统基础服务 (端口 9001)
 
 | 能力域 | 功能描述 | 数据库表 | 关键 Controller |
 |---|---|---|---|
@@ -667,7 +667,7 @@
 
 **Feign 客户端**：`ConfigClient`、`AppInfoClient`
 
-### 3.4 ydsz-project 项目管理 (端口 9003)
+### 3.4 ydsz-project 项目管理 (端口 9009)
 
 **模块类型**：部署单元（独立启动，项目全生命周期核心）
 
@@ -694,7 +694,7 @@
 | **预警管理** | `ydsz_project_alert_dispatch` | `AlertDispatchController` | 红/黄/绿阈值告警 |
 | **报表分析** | - | `ProjectSearchController`、`ProjectExcelController` | 高级报表、Dashboard、数据导出 |
 
-### 3.5 ydsz-workflow 工作流引擎 (端口 9006)
+### 3.5 ydsz-workflow 工作流引擎 (端口 9005)
 
 **模块类型**：部署单元（独立启动）
 **平台约束**：⚠️ **仅 PC Web 端**（不支持移动端，详见 `.trae/rules/workflow-pc-only.md`）
@@ -757,7 +757,7 @@
 
 **数据库表**：`ydsz_msg_log`、`ydsz_msg_template`、`ydsz_msg_notification`、`ydsz_msg_receipt`、`ydsz_msg_preference`、`ydsz_msg_subscription`、`ydsz_msg_route_rule`、`ydsz_msg_canary` 等 24 张表
 
-### 3.7 ydsz-cronjob 分布式任务调度引擎 (端口 9005)
+### 3.7 ydsz-cronjob 分布式任务调度引擎 (端口 9006)
 
 | 能力 | 描述 |
 |---|---|
@@ -780,7 +780,7 @@
 
 **数据库表**：`ydsz_job`、`ydsz_job_glue`、`ydsz_job_task`、`ydsz_job_history`、`ydsz_job_dag`、`ydsz_job_log`、`ydsz_job_node`、`ydsz_job_alert_rule` 等 18 张表
 
-### 3.8 ydsz-agent AI Agent 服务 (端口 9010)
+### 3.8 ydsz-agent AI Agent 服务 (端口 9008)
 
 #### 核心能力（5 种 Agent 执行器 + 全链路能力）
 
@@ -825,7 +825,7 @@
 ### 3.9 ydsz-literule 规则引擎 (独立微服务)
 
 **模块类型**：独立微服务（独立部署、独立 JVM 进程、注册到 Nacos）
-**端口**：9008（按构建顺序 9/10）
+**端口**：9007（按构建顺序 8/10）
 
 #### 7 种规则类型
 
@@ -865,7 +865,7 @@
 ### 3.10 ydsz-nextwiki 网盘知识库服务（独立微服务）
 
 **模块类型**：独立可部署微服务（含 ydsz-nextwiki-web/src/main/resources/bootstrap.yml + application.yml，注册到 Nacos）
-**端口**：9007（按构建顺序 8/10）
+**端口**：9003（按构建顺序 4/10）
 
 | 能力 | 描述 |
 |---|---|

@@ -43,6 +43,9 @@ export namespace AuthApi {
     permissions?: string[];
   }
 
+  /**
+   * 刷新令牌接口返回结果。
+   */
   export interface RefreshTokenResult {
     accessToken: string;
     refreshToken: string;

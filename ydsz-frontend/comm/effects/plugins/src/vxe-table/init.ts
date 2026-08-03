@@ -57,6 +57,14 @@ import { extendsDefaultFormatter } from './extends';
 // 是否加载过
 let isInit = false;
 
+/**
+ * 延迟绑定的表格表单 API（模块加载后由 init 赋值）。
+ *
+ * @remarks
+ * 由于 `useYDSZForm` 依赖运行时注册的 vxe-table 组件，此处先声明可变的
+ * 导出占位，待 {@link initVxeTable} 完成组件注册后再赋值为真正的实现，
+ * 供业务侧统一从本模块导入，避免时序问题。
+ */
 // eslint-disable-next-line import/no-mutable-exports
 export let useTableForm: typeof useYDSZForm;
 

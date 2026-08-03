@@ -8,6 +8,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace SearchApi {
+  /** 全局搜索请求参数。 */
   export interface SearchRequest {
     /** 搜索关键词 */
     keyword: string;
@@ -19,6 +20,7 @@ export namespace SearchApi {
     pageSize?: number;
   }
 
+  /** 搜索结果条目。 */
   export interface SearchResultItem {
     /** 结果唯一 ID */
     id: string;
@@ -38,6 +40,7 @@ export namespace SearchApi {
     score?: number;
   }
 
+  /** 全局搜索分页响应。 */
   export interface SearchResponse {
     /** 总命中数 */
     total: number;

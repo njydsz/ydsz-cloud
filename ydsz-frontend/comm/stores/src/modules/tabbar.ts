@@ -63,6 +63,16 @@ interface TabbarState {
  */
 const tabClosedCallbacks = new Set<(path: string) => void>();
 
+/**
+ * 注册标签关闭回调。
+ *
+ * @remarks
+ * 主应用布局在标签关闭时注册回调，通知微前端内核 unmount 对应子应用；
+ * 返回的取消函数可在组件卸载时调用以解除注册，避免回调泄漏。
+ *
+ * @param callback - 回调函数，接收已关闭标签的 path（如 '/ydsz-proj/execution'）
+ * @returns 取消注册函数（调用后移除该回调）
+ */
 export function onTabClosed(callback: (path: string) => void) {
   tabClosedCallbacks.add(callback);
   return () => { tabClosedCallbacks.delete(callback); };

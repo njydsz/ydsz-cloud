@@ -14,7 +14,7 @@ const SubAppContainer = () => import('#/views/_core/subapp/index.vue');
  * 每个微应用通过路径前缀匹配激活，catch-all 路由确保子应用内部路由正常工作
  */
 const routes: RouteRecordRaw[] = [
-  // 用户中心 → ydsz-userinfo:9001
+  // 用户中心 → ydsz-userinfo:9002
   {
     meta: {
       icon: 'lucide:users',
@@ -38,7 +38,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // 系统管理 → ydsz-system:9002
+  // 系统管理 → ydsz-system:9001
   {
     meta: {
       icon: 'lucide:settings',
@@ -62,7 +62,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // 项目管理 → ydsz-project:9003
+  // 项目管理 → ydsz-project:9009
   {
     meta: {
       icon: 'lucide:folder-kanban',
@@ -110,7 +110,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // 定时任务 → ydsz-cronjob:9005
+  // 定时任务 → ydsz-cronjob:9006
   {
     meta: {
       icon: 'lucide:clock',
@@ -134,7 +134,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // 工作流引擎 → ydsz-workflow:9006
+  // 工作流引擎 → ydsz-workflow:9005
   {
     meta: {
       icon: 'lucide:workflow',
@@ -158,7 +158,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // 网盘知识库 → ydsz-nextwiki:9007
+  // 网盘知识库 → ydsz-nextwiki:9003
   {
     meta: {
       icon: 'lucide:folder-open',
@@ -182,7 +182,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // 规则引擎 → ydsz-literule:9008
+  // 规则引擎 → ydsz-literule:9007
   {
     meta: {
       icon: 'lucide:git-branch',
@@ -206,7 +206,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // AI 助手 → ydsz-agent:9010
+  // AI 助手 → ydsz-agent:9008
   {
     meta: {
       icon: 'lucide:bot',

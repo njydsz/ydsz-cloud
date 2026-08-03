@@ -20,6 +20,13 @@ import { defineStore } from 'pinia';
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
 
+/**
+ * 认证状态管理 Store。
+ *
+ * @remarks
+ * 负责登录/登出、令牌刷新、用户信息与权限码的获取与缓存，
+ * 组合 {@link useAccessStore}/{@link useTokenStore}/{@link useUserStore} 完成认证闭环。
+ */
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
   const tokenStore = useTokenStore();

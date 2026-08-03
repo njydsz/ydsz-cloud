@@ -8,6 +8,7 @@
 import { requestClient } from '#/api/request';
 
 export namespace NotificationApi {
+  /** 通知列表项。 */
   export interface NotificationItem {
     /** 通知唯一 ID */
     id: string;
@@ -27,6 +28,7 @@ export namespace NotificationApi {
     link?: string;
   }
 
+  /** 通知分页查询参数。 */
   export interface NotificationPageQuery {
     /** 页码，从 1 开始 */
     pageNum?: number;

@@ -98,6 +98,15 @@ function getDefaultState(): YDSZFormProps {
  * await formApi.validateAndSubmitForm();
  * ```
  */
+
+/**
+ * 表单 API 实例。
+ *
+ * @remarks
+ * 由 {@link useYDSZForm} 创建并随表单实例返回，提供命令式操作表单的能力：
+ * 获取/设置表单值、触发校验、提交、合并多表单等。
+ * 所有方法均为异步 Promise 风格，校验失败不抛异常（详见 useYDSZForm 文档第 5 点）。
+ */
 export class FormApi {
   public form = {} as FormActions;
   isMounted = false;

@@ -47,7 +47,7 @@
  └─────┘    └─────┘   └──────┘   └──────┘   └──────┘   └──────┘   └──────┘   └──────┘   └──────┘
     │           │          │          │          │          │          │          │          │
  ┌──▼──┐    ┌──▼──┐   ┌──▼───┐   ┌──▼───┐   ┌──▼───┐   ┌──▼───┐   ┌──▼───┐   ┌──▼───┐   ┌──▼───┐
- │:9001│    │:9002│   │:9003 │   │:9004 │   │:9005 │   │:9006 │   │:9007 │   │:9008 │   │:9010 │
+ │:9001│    │:9002│   │:9003 │   │:9004 │   │:9005 │   │:9006 │   │:9007 │   │:9008 │   │:9009 │
  └─────┘    └─────┘   └──────┘   └──────┘   └──────┘   └──────┘   └──────┘   └──────┘   └──────┘
 ```
 
@@ -56,15 +56,15 @@
 | 应用 | 前端端口 | 后端端口 | 后端服务 | 路由前缀 | 职责 |
 | --- | --- | --- | --- | --- | --- |
 | **main-web** | 5600 | 9000 | ydsz-gateway | / | 微前端宿主，认证/布局/全局状态/路由分发 |
-| **userinfo-web** | 5601 | 9001 | ydsz-userinfo | /ydsz-user | 用户/部门/角色/菜单/岗位/OAuth2 |
-| **system-web** | 5602 | 9002 | ydsz-system | /ydsz-sys | 系统配置/字典/变量/应用注册 |
-| **project-web** | 5603 | 9003 | ydsz-project | /ydsz-proj | 商机/合同/预算/执行/EVM/成本/利润 |
+| **userinfo-web** | 5601 | 9002 | ydsz-userinfo | /ydsz-user | 用户/部门/角色/菜单/岗位/OAuth2 |
+| **system-web** | 5602 | 9001 | ydsz-system | /ydsz-sys | 系统配置/字典/变量/应用注册 |
+| **project-web** | 5603 | 9009 | ydsz-project | /ydsz-proj | 商机/合同/预算/执行/EVM/成本/利润 |
 | **message-web** | 5604 | 9004 | ydsz-message | /ydsz-msg | 消息/模板/通知/路由/灰度/追踪 |
-| **cronjob-web** | 5605 | 9005 | ydsz-cronjob | /ydsz-cron | 任务/DAG/日志/告警/拓扑 |
-| **workflow-web** | 5606 | 9006 | ydsz-workflow | /ydsz-flow | 流程模板/设计器/实例/待办/SLA |
-| **nextwiki-web** | 5607 | 9007 | ydsz-nextwiki | /ydsz-wiki | 文件/预览/搜索/分享/锁定 |
-| **literule-web** | 5608 | 9008 | ydsz-literule | /ydsz-rule | 规则/DSL/变量/CEP/断点 |
-| **agent-web** | 5610 | 9010 | ydsz-agent | /ydsz-ai | 对话/Agent/RAG/DAG/审批 |
+| **cronjob-web** | 5605 | 9006 | ydsz-cronjob | /ydsz-cron | 任务/DAG/日志/告警/拓扑 |
+| **workflow-web** | 5606 | 9005 | ydsz-workflow | /ydsz-flow | 流程模板/设计器/实例/待办/SLA |
+| **nextwiki-web** | 5607 | 9003 | ydsz-nextwiki | /ydsz-wiki | 文件/预览/搜索/分享/锁定 |
+| **literule-web** | 5608 | 9007 | ydsz-literule | /ydsz-rule | 规则/DSL/变量/CEP/断点 |
+| **agent-web** | 5610 | 9008 | ydsz-agent | /ydsz-ai | 对话/Agent/RAG/DAG/审批 |
 
 ## 目录结构
 
@@ -83,15 +83,15 @@ ydsz-frontend/
 │   │   └── preferences.ts            # 偏好覆盖
 │   └── ...
 ├── apps/                              # 9 个业务子应用
-│   ├── userinfo-web/                # 用户中心 → ydsz-userinfo:9001
-│   ├── system-web/                  # 系统管理 → ydsz-system:9002
-│   ├── project-web/                 # 项目管理 → ydsz-project:9003
+│   ├── userinfo-web/                # 用户中心 → ydsz-userinfo:9002
+│   ├── system-web/                  # 系统管理 → ydsz-system:9001
+│   ├── project-web/                 # 项目管理 → ydsz-project:9009
 │   ├── message-web/                 # 消息中心 → ydsz-message:9004
-│   ├── cronjob-web/                 # 定时任务 → ydsz-cronjob:9005
-│   ├── workflow-web/                # 工作流引擎 → ydsz-workflow:9006
-│   ├── nextwiki-web/                # 网盘知识库 → ydsz-nextwiki:9007
-│   ├── literule-web/                # 规则引擎 → ydsz-literule:9008
-│   ├── agent-web/                   # AI 助手 → ydsz-agent:9010
+│   ├── cronjob-web/                 # 定时任务 → ydsz-cronjob:9006
+│   ├── workflow-web/                # 工作流引擎 → ydsz-workflow:9005
+│   ├── nextwiki-web/                # 网盘知识库 → ydsz-nextwiki:9003
+│   ├── literule-web/                # 规则引擎 → ydsz-literule:9007
+│   ├── agent-web/                   # AI 助手 → ydsz-agent:9008
 ├── comm/                              # 公共共享包
 │   ├── @core/                        # 核心 SDK（base/composables/preferences/ui-kit）
 │   ├── effects/                      # 副作用（access/common-ui/hooks/layouts/plugins/request/shared-auth/monitor）

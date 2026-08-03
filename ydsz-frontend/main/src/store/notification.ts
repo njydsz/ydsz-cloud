@@ -227,4 +227,11 @@ class NotificationStore {
   }
 }
 
+/**
+ * 通知中心全局单例 Store。
+ *
+ * @remarks
+ * 维护通知列表、未读计数，并通过 WebSocket 与后端保持实时连接，
+ * 支持自动重连与手动断开（见 {@link NotificationStore}）。
+ */
 export const notificationStore = new NotificationStore();

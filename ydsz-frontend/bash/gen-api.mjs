@@ -38,15 +38,15 @@ const ROOT = join(__dirname, '..');
  * output: SDK 产物输出目录（相对于项目根）
  */
 const SERVICE_MAP = {
-  userinfo: { spec: 'http://localhost:9001/v3/api-docs', output: 'apps/userinfo-web/src/api/sdk' },
-  system:   { spec: 'http://localhost:9002/v3/api-docs', output: 'apps/system-web/src/api/sdk' },
-  project:  { spec: 'http://localhost:9003/v3/api-docs', output: 'apps/project-web/src/api/sdk' },
+  userinfo: { spec: 'http://localhost:9002/v3/api-docs', output: 'apps/userinfo-web/src/api/sdk' },
+  system:   { spec: 'http://localhost:9001/v3/api-docs', output: 'apps/system-web/src/api/sdk' },
+  project:  { spec: 'http://localhost:9009/v3/api-docs', output: 'apps/project-web/src/api/sdk' },
   message:  { spec: 'http://localhost:9004/v3/api-docs', output: 'apps/message-web/src/api/sdk' },
-  cronjob:  { spec: 'http://localhost:9005/v3/api-docs', output: 'apps/cronjob-web/src/api/sdk' },
-  workflow: { spec: 'http://localhost:9006/v3/api-docs', output: 'apps/workflow-web/src/api/sdk' },
-  nextwiki: { spec: 'http://localhost:9007/v3/api-docs', output: 'apps/nextwiki-web/src/api/sdk' },
-  literule: { spec: 'http://localhost:9008/v3/api-docs', output: 'apps/literule-web/src/api/sdk' },
-  agent:    { spec: 'http://localhost:9010/v3/api-docs', output: 'apps/agent-web/src/api/sdk' },
+  cronjob:  { spec: 'http://localhost:9006/v3/api-docs', output: 'apps/cronjob-web/src/api/sdk' },
+  workflow: { spec: 'http://localhost:9005/v3/api-docs', output: 'apps/workflow-web/src/api/sdk' },
+  nextwiki: { spec: 'http://localhost:9003/v3/api-docs', output: 'apps/nextwiki-web/src/api/sdk' },
+  literule: { spec: 'http://localhost:9007/v3/api-docs', output: 'apps/literule-web/src/api/sdk' },
+  agent:    { spec: 'http://localhost:9008/v3/api-docs', output: 'apps/agent-web/src/api/sdk' },
 };
 
 /** 为生成的 SDK 计算稳定 hash，输出到 .api-contract.lock */
