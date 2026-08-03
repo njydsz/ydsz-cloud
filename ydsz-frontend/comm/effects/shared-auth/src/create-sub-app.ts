@@ -1,10 +1,12 @@
 /**
  * 子应用启动工厂 — 消除各子应用 main.ts 中重复的 bootstrap/mount/unmount 样板代码。
  *
- * 封装了 Qiankun 生命周期 + Vue 应用创建 + 路由/状态/I18N/权限/监控初始化全流程。
- * 子应用只需配置 appName / basename / routes / guard / onSetup 即可一行启动。
+ * v3.0: 增加 defineSubApp 双兼容导出。
+ *       - qiankun 环境：走 renderWithQiankun（向后兼容，现有行为不变）
+ *       - lite-kernel 环境：导出标准 LifecycleExports（ESM entry 规范）
+ *       - 同一份构建产物可被两种内核加载，支撑灰度切换。
  *
- * @path comm\effects\shared-auth\src\create-sub-app.ts
+ * @path comm/effects/shared-auth/src/create-sub-app.ts
  * @author ydsz-team
  * @since 2.0.0
  */
@@ -28,26 +30,41 @@ import {
 
 import { setupSharedAuth } from './setup-shared-auth';
 
+/** 运行时环境检测 */
+function isQiankunEnv(): boolean {
+  try {
+    return qiankunWindow.__POWERED_BY_QIANKUN__ === true;
+  } catch {
+    return false;
+  }
+}
+
 /** 子应用启动配置 */
 export interface SubAppConfig {
-  /** 应用唯一标识（如 'project-web'，与 Qiankun 注册名一致） */
+  /** 应用唯一标识（如 'project-web'，与微应用注册名一致） */
   appName: string;
   /** 路由 basename（如 '/ydsz-proj'） */
   basename: string;
   /** 路由表 */
   routes: RouteRecordRaw[];
-  /** 路由守卫安装回调（在各子应用内部实现） */
+  /** 路由守卫安装回调 */
   guard?: (router: Router) => void;
   /** 初始化动态路由回调（在 router 创建后、guard 注册前执行） */
   initRoutes?: (router: Router) => void;
   /** Vue 根组件 */
   rootComponent: Parameters<typeof createApp>[0];
-  /** 应用级自定义 setup（在 stores 初始化后执行，用于 I18N/ComponentAdapter 等） */
+  /** 应用级自定义 setup（用于 I18N/ComponentAdapter 等） */
   onSetup?: (app: VueApp) => Promise<void> | void;
   /** 偏好设置覆盖 */
   preferencesOverrides?: Record<string, unknown>;
-  /** 命名空间覆写（默认由 VITE_APP_NAMESPACE + version + env 组成） */
+  /** 命名空间覆写 */
   namespace?: string;
+}
+
+/** 标准化挂载参数（兼容 qiankun 与 lite-kernel） */
+interface StandardMountProps {
+  container?: HTMLElement;
+  [key: string]: unknown;
 }
 
 let app: null | VueApp = null;
@@ -62,14 +79,12 @@ async function installBasePlugins(vueApp: VueApp, appName: string) {
   });
   registerAccessDirective(vueApp);
 
-  // 动态导入避免顶层静态分析阻塞
   const { initTippy } = await import('@ydsz/common-ui/es/tippy');
   initTippy(vueApp);
 
   const { MotionPlugin } = await import('@ydsz/plugins/motion');
   vueApp.use(MotionPlugin);
 
-  // 全局错误边界：捕获未处理的组件异常
   vueApp.config.errorHandler = (err, _instance, info) => {
     console.error(`[${appName}] Unhandled error:`, err, info);
   };
@@ -78,10 +93,10 @@ async function installBasePlugins(vueApp: VueApp, appName: string) {
   };
 }
 
-/** 内核 mount 逻辑（Qiankun 子应用 & 独立运行共享） */
+/** 内核 mount 逻辑（qiankun 子应用 & lite-kernel & 独立运行共享） */
 async function coreMount(
   config: SubAppConfig,
-  props?: Record<string, unknown>,
+  props?: StandardMountProps,
 ) {
   const {
     appName,
@@ -123,19 +138,16 @@ async function coreMount(
 
   app.use(router);
 
-  // 应用级自定义 setup（I18N / ComponentAdapter 等）
   if (onSetup) {
     await onSetup(app);
   }
 
   await installBasePlugins(app, appName);
 
-  // 初始化动态路由（accessRoutes，在 guard 之前注册）
   if (initRoutes) {
     initRoutes(router);
   }
 
-  // 路由守卫（如有）
   if (guard) {
     guard(router);
   }
@@ -149,50 +161,54 @@ async function coreMount(
 }
 
 /**
- * 创建子应用标准启动入口，一行配置即可完成任务注册、生命周期、独立运行支持。
+ * 子应用生命周期对象（ESM entry 标准导出格式）。
  *
- * @param config - 子应用配置
- *
- * @example
- * ```ts
- * import { createSubApp } from '@ydsz/shared-auth/create-sub-app';
- *
- * createSubApp({
- *   appName: 'project-web',
- *   basename: '/ydsz-proj',
- *   routes,
- *   guard: createRouterGuard,
- *   rootComponent: RootApp,
- *   onSetup: async (app) => {
- *     await initComponentAdapter();
- *     await setupI18n(app);
- *   },
- * });
- * ```
+ * lite-kernel 通过 dynamic import() 加载子应用入口，
+ * 期望子应用 export { bootstrap, mount, unmount, update }。
  */
-export function createSubApp(config: SubAppConfig) {
-  const { appName, basename } = config;
-
-  renderWithQiankun({
+export function defineSubApp(config: SubAppConfig) {
+  const lifecycle = {
     async bootstrap() {},
-    async mount(props: Record<string, unknown>) {
+    async mount(props: StandardMountProps) {
       await coreMount(config, props);
     },
     async unmount() {
       app?.unmount();
       app = null;
     },
-    async update(_props: Record<string, unknown>) {}
-  });
+    async update(_props: StandardMountProps) {},
+  };
 
-  if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
+  // 双兼容：qiankun 环境注册生命周期；lite-kernel 环境直接 export
+  if (isQiankunEnv()) {
+    renderWithQiankun(lifecycle);
+  }
+
+  return lifecycle;
+}
+
+/**
+ * 创建子应用标准启动入口（保留向后兼容的 API）。
+ *
+ * 内部调用 defineSubApp，并在独立运行时自启动。
+ *
+ * @param config - 子应用配置
+ */
+export function createSubApp(config: SubAppConfig) {
+  const lifecycle = defineSubApp(config);
+
+  // 独立运行（非 Qiankun 也非 lite-kernel）时自启动
+  const isMicro = isQiankunEnv() || typeof (globalThis as any).__MICRO_RUNTIME__ !== 'undefined';
+
+  if (!isMicro) {
     (async () => {
       const router = await coreMount(config);
-      // 独立运行时需要手动触发首次导航
-      await router.push(window.location.pathname.replace(basename, '') || '/');
+      await router.push(window.location.pathname.replace(config.basename, '') || '/');
 
       const { unmountGlobalLoading } = await import('@ydsz/utils');
       unmountGlobalLoading();
     })();
   }
+
+  return lifecycle;
 }

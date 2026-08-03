@@ -33,6 +33,8 @@
     "@ydsz/icons": "workspace:*",
     "@ydsz/layouts": "workspace:*",
     "@ydsz/locales": "workspace:*",
+    "@ydsz/micro-adapter-qiankun": "workspace:*",
+    "@ydsz/micro-runtime": "workspace:*",
     "@ydsz/monitor": "workspace:*",
     "@ydsz/plugins": "workspace:*",
     "@ydsz/preferences": "workspace:*",
@@ -45,7 +47,6 @@
     "dayjs": "catalog:",
     "element-plus": "catalog:",
     "pinia": "catalog:",
-    "qiankun": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"
   },
