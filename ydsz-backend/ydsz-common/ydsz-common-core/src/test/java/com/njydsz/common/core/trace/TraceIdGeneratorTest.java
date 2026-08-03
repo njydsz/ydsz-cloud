@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationTargetException;
+
 /**
  * {@link TraceIdGenerator} 单元测试。
  *
@@ -32,12 +34,15 @@ class TraceIdGeneratorTest {
 
     @Test
     @DisplayName("工具类不可实例化")
-    void utilityClass() {
-        assertThrows(UnsupportedOperationException.class, () -> {
-            java.lang.reflect.Constructor<TraceIdGenerator> ctor =
-                    TraceIdGenerator.class.getDeclaredConstructor();
-            ctor.setAccessible(true);
+    void utilityClass() throws Exception {
+        java.lang.reflect.Constructor<TraceIdGenerator> ctor =
+                TraceIdGenerator.class.getDeclaredConstructor();
+        ctor.setAccessible(true);
+        try {
             ctor.newInstance();
-        });
+            fail("should have thrown");
+        } catch (InvocationTargetException e) {
+            assertInstanceOf(UnsupportedOperationException.class, e.getCause());
+        }
     }
 }

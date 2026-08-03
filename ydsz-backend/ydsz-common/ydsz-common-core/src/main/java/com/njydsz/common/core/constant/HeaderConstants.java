@@ -1,8 +1,8 @@
 package com.njydsz.common.core.constant;
 
-import com.njydsz.common.core.enums.DataScopeType;
-import com.njydsz.common.core.enums.IdentityType;
-import com.njydsz.common.core.enums.ServiceType;
+import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.domain.enums.IdentityType;
+import com.njydsz.common.domain.enums.ServiceType;
 
 /**
  * 全局 HTTP 请求头常量定义。

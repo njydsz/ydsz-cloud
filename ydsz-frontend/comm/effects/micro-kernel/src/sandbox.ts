@@ -50,13 +50,28 @@ let originalRequestAnimationFrame: typeof window.requestAnimationFrame;
 /** 记录 cancelAnimationFrame 原始方法 */
 let originalCancelAnimationFrame: typeof window.cancelAnimationFrame;
 
-/** 当前哪个沙箱处于激活状态（同时只允许一个） */
-let activeSandbox: SandboxInstance | null = null;
+/**
+ * 沙箱栈：支持嵌套进入。栈顶为当前激活沙箱。
+ *
+ * v3.1 修复：此前用单一 `activeSandbox` 引用，导致
+ *   (1) `exitSandbox` 内 `activeSandbox = null; if (activeSandbox === null)` 恒真，
+ *       嵌套场景下任何沙箱退出都会过早 `restoreGlobals`；
+ *   (2) `proxyGlobals` 闭包捕获首个 sandbox，嵌套时副作用记录到错误的沙箱。
+ *
+ * 现采用栈式管理：首个 enter 时代理全局 API（代理函数动态读取栈顶），
+ * 最后一个 exit 时还原全局 API。
+ */
+const sandboxStack: SandboxInstance[] = [];
+
+/** 获取当前栈顶沙箱（无激活时返回 null） */
+function topSandbox(): SandboxInstance | null {
+  return sandboxStack.length > 0 ? sandboxStack[sandboxStack.length - 1] : null;
+}
 
 /**
  * 进入沙箱：快照当前 window 状态 + 代理副作用 API。
  *
- * 调用时机：子应用 mount 前。
+ * 调用时机：子应用 mount 前。支持嵌套，栈顶为当前生效沙箱。
  */
 export function enterSandbox(): SandboxInstance {
   const snapshot = new Set(Object.keys(window));
@@ -72,11 +87,11 @@ export function enterSandbox(): SandboxInstance {
     timerIds: [],
   };
 
-  // 仅在第一个沙箱激活时代理全局 API（幂等）
-  if (!activeSandbox) {
-    proxyGlobals(sandbox);
+  // 仅在栈为空（首个沙箱）时代理全局 API（幂等）
+  if (sandboxStack.length === 0) {
+    proxyGlobals();
   }
-  activeSandbox = sandbox;
+  sandboxStack.push(sandbox);
 
   return sandbox;
 }
@@ -84,7 +99,7 @@ export function enterSandbox(): SandboxInstance {
 /**
  * 退出沙箱：移除新增的 window 键、还原被修改的值、清理事件与定时器。
  *
- * 调用时机：子应用 unmount 后。
+ * 调用时机：子应用 unmount 后。栈空时还原全局 API。
  */
 export function exitSandbox(sandbox: SandboxInstance): void {
   // 1. 清理定时器
@@ -113,9 +128,14 @@ export function exitSandbox(sandbox: SandboxInstance): void {
     }
   }
 
-  // 4. 清除自身
-  activeSandbox = null;
-  if (activeSandbox === null) {
+  // 4. 从栈中移除指定沙箱（支持非栈顶退出）
+  const idx = sandboxStack.lastIndexOf(sandbox);
+  if (idx !== -1) {
+    sandboxStack.splice(idx, 1);
+  }
+
+  // 5. 仅当栈空时还原全局 API（修复此前恒真 bug）
+  if (sandboxStack.length === 0) {
     restoreGlobals();
   }
 }
@@ -123,9 +143,12 @@ export function exitSandbox(sandbox: SandboxInstance): void {
 /**
  * 代理全局副作用 API，记录子应用注册的监听与定时器。
  *
+ * v3.1 修复：代理函数动态读取栈顶沙箱（`topSandbox()`），而非闭包捕获首个 sandbox，
+ * 确保嵌套沙箱期间副作用记录到当前激活的沙箱。
+ *
  * 在第一个沙箱进入时执行，避免重复代理。
  */
-function proxyGlobals(sandbox: SandboxInstance): void {
+function proxyGlobals(): void {
   originalAddEventListener = window.addEventListener.bind(window);
   originalRemoveEventListener = window.removeEventListener.bind(window);
 
@@ -136,9 +159,10 @@ function proxyGlobals(sandbox: SandboxInstance): void {
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ): void {
-    // 只记录绑定在 windwocument 上的监听（组件级监听由 Vue 自行管理）
-    if ((this === window || this === document) && activeSandbox === sandbox) {
-      sandbox.listeners.push({ target: this, type, listener, options });
+    // 只记录绑定在 window/document 上的监听（组件级监听由 Vue 自行管理）
+    const current = topSandbox();
+    if ((this === window || this === document) && current) {
+      current.listeners.push({ target: this, type, listener, options });
     }
     return originalAddEventListener.call(this, type, listener, options);
   } as typeof window.addEventListener;
@@ -150,73 +174,83 @@ function proxyGlobals(sandbox: SandboxInstance): void {
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions,
   ): void {
-    if (activeSandbox === sandbox) {
-      const idx = sandbox.listeners.findIndex(
+    const current = topSandbox();
+    if (current) {
+      const idx = current.listeners.findIndex(
         (l) => l.target === this && l.type === type && l.listener === listener,
       );
-      if (idx !== -1) sandbox.listeners.splice(idx, 1);
+      if (idx !== -1) current.listeners.splice(idx, 1);
     }
     return originalRemoveEventListener.call(this, type, listener, options);
   } as typeof window.removeEventListener;
 
   // --- 定时器代理 ---
-  originalSetTimeout = window.setTimeout.bind(window);
-  originalSetInterval = window.setInterval.bind(window);
-  originalClearTimeout = window.clearTimeout.bind(window);
-  originalClearInterval = window.clearInterval.bind(window);
-  originalRequestAnimationFrame = window.requestAnimationFrame.bind(window);
-  originalCancelAnimationFrame = window.cancelAnimationFrame.bind(window);
+  // 防御：在 happy-dom 等非标准环境下 window.setTimeout 可能不存在
+  if (typeof window.setTimeout === 'function') {
+    originalSetTimeout = window.setTimeout.bind(window);
+    originalSetInterval = window.setInterval.bind(window);
+    originalClearTimeout = window.clearTimeout.bind(window);
+    originalClearInterval = window.clearInterval.bind(window);
+    originalRequestAnimationFrame = window.requestAnimationFrame.bind(window);
+    originalCancelAnimationFrame = window.cancelAnimationFrame.bind(window);
 
-  window.setTimeout = function proxySetTimeout(
-    handler: TimerHandler,
-    timeout?: number,
-    ...args: unknown[]
-  ): number {
-    const id = originalSetTimeout(handler, timeout, ...args);
-    if (activeSandbox === sandbox) sandbox.timerIds.push(id);
-    return id;
-  } as typeof window.setTimeout;
+    window.setTimeout = function proxySetTimeout(
+      handler: TimerHandler,
+      timeout?: number,
+      ...args: unknown[]
+    ): number {
+      const id = originalSetTimeout(handler, timeout, ...args);
+      const current = topSandbox();
+      if (current) current.timerIds.push(id);
+      return id;
+    } as typeof window.setTimeout;
 
-  window.setInterval = function proxySetInterval(
-    handler: TimerHandler,
-    timeout?: number,
-    ...args: unknown[]
-  ): number {
-    const id = originalSetInterval(handler, timeout, ...args);
-    if (activeSandbox === sandbox) sandbox.timerIds.push(id);
-    return id;
-  } as typeof window.setInterval;
+    window.setInterval = function proxySetInterval(
+      handler: TimerHandler,
+      timeout?: number,
+      ...args: unknown[]
+    ): number {
+      const id = originalSetInterval(handler, timeout, ...args);
+      const current = topSandbox();
+      if (current) current.timerIds.push(id);
+      return id;
+    } as typeof window.setInterval;
 
-  window.clearTimeout = function proxyClearTimeout(id?: number): void {
-    if (activeSandbox === sandbox) {
-      const idx = sandbox.timerIds.indexOf(id!);
-      if (idx !== -1) sandbox.timerIds.splice(idx, 1);
-    }
-    return originalClearTimeout(id);
-  } as typeof window.clearTimeout;
+    window.clearTimeout = function proxyClearTimeout(id?: number): void {
+      const current = topSandbox();
+      if (current) {
+        const idx = current.timerIds.indexOf(id!);
+        if (idx !== -1) current.timerIds.splice(idx, 1);
+      }
+      return originalClearTimeout(id);
+    } as typeof window.clearTimeout;
 
-  window.clearInterval = function proxyClearInterval(id?: number): void {
-    if (activeSandbox === sandbox) {
-      const idx = sandbox.timerIds.indexOf(id!);
-      if (idx !== -1) sandbox.timerIds.splice(idx, 1);
-    }
-    return originalClearInterval(id);
-  } as typeof window.clearInterval;
+    window.clearInterval = function proxyClearInterval(id?: number): void {
+      const current = topSandbox();
+      if (current) {
+        const idx = current.timerIds.indexOf(id!);
+        if (idx !== -1) current.timerIds.splice(idx, 1);
+      }
+      return originalClearInterval(id);
+    } as typeof window.clearInterval;
 
-  // --- requestAnimationFrame 代理 ---
-  window.requestAnimationFrame = function proxyRAF(cb: FrameRequestCallback): number {
-    const id = originalRequestAnimationFrame(cb);
-    if (activeSandbox === sandbox) sandbox.timerIds.push(id);
-    return id;
-  };
+    // --- requestAnimationFrame 代理 ---
+    window.requestAnimationFrame = function proxyRAF(cb: FrameRequestCallback): number {
+      const id = originalRequestAnimationFrame(cb);
+      const current = topSandbox();
+      if (current) current.timerIds.push(id);
+      return id;
+    };
 
-  window.cancelAnimationFrame = function proxyCAF(id: number): void {
-    if (activeSandbox === sandbox) {
-      const idx = sandbox.timerIds.indexOf(id);
-      if (idx !== -1) sandbox.timerIds.splice(idx, 1);
-    }
-    originalCancelAnimationFrame(id);
-  };
+    window.cancelAnimationFrame = function proxyCAF(id: number): void {
+      const current = topSandbox();
+      if (current) {
+        const idx = current.timerIds.indexOf(id);
+        if (idx !== -1) current.timerIds.splice(idx, 1);
+      }
+      originalCancelAnimationFrame(id);
+    };
+  }
 }
 
 /** 还原所有代理的全局 API 到原始实现 */

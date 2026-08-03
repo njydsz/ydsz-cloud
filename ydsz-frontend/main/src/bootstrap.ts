@@ -129,12 +129,10 @@ async function bootstrap(namespace: string) {
 
   app.mount('#app');
 
-  // 使用 DOMContentLoaded 确保 DOM 已渲染后注册微前端运行时
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', registerMicroRuntime);
-  } else {
-    registerMicroRuntime();
-  }
+  // v3.1 修复：app.mount 同步渲染，#subapp-container 已就绪，
+  // 直接同步注册微前端运行时，避免此前 readyState 延迟导致的初始路由
+  // 匹配与子应用激活时序竞态（直连子应用 URL 时可能出现容器空白闪烁）。
+  registerMicroRuntime();
 }
 
 export { bootstrap };

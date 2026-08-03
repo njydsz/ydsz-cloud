@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.core.constant.YdszMessageTopics;
+import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.code.BaseResultCode;

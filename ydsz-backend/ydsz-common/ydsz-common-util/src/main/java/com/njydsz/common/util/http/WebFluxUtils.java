@@ -10,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 
-import com.njydsz.common.core.constant.TokenConstants;
+import com.njydsz.common.auth.constant.TokenConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.string.StringUtils;

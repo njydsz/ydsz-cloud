@@ -12,8 +12,11 @@ import { defineConfig } from 'vite';
 /**
  * 构造所有项目共用的基础 Vite 配置。
  *
- * 注入 Node 内置模块的浏览器端 polyfill 别名（buffer/process/stream 等），
- * 并放宽 chunk 体积告警阈值到 2000KB、关闭压缩体积报告以加快构建反馈。
+ * 历史曾注入 buffer/process/stream/crypto 等 Node 内置模块的浏览器 polyfill，
+ * 审计确认无源码消费（浏览器原生 Web Crypto API 足以替代 crypto-browserify），
+ * 已于 v3.1 移除以削减产物体积与构建耗时。
+ *
+ * 保留 global→globalThis 映射，兼容少数第三方库对 Node global 的引用。
  *
  * @returns 共用基础 Vite 配置对象
  */
@@ -22,19 +25,8 @@ async function getCommonConfig(): Promise<UserConfig> {
     define: {
       global: 'globalThis',
     },
-    resolve: {
-      alias: {
-        util: 'rollup-plugin-node-polyfills/polyfills/util',
-        buffer: 'rollup-plugin-node-polyfills/polyfills/buffer-es6',
-        process: 'rollup-plugin-node-polyfills/polyfills/process-es6',
-        events: 'rollup-plugin-node-polyfills/polyfills/events',
-        stream: 'rollup-plugin-node-polyfills/polyfills/stream',
-        assert: 'rollup-plugin-node-polyfills/polyfills/assert',
-        crypto: 'rollup-plugin-node-polyfills/polyfills/crypto-browserify',
-      },
-    },
     build: {
-      chunkSizeWarningLimit: 2000,
+      chunkSizeWarningLimit: 1000,
       reportCompressedSize: false,
       sourcemap: false,
     },

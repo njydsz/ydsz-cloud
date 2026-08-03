@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.core.constant.CacheConstants;
+import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.entity.FileNode;

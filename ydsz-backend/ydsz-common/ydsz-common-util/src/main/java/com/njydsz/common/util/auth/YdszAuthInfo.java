@@ -4,9 +4,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.common.core.enums.DataScopeType;
-import com.njydsz.common.core.enums.IdentityType;
-import com.njydsz.common.core.enums.ServiceType;
+import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.domain.enums.IdentityType;
+import com.njydsz.common.domain.enums.ServiceType;
 
 import lombok.Data;
 

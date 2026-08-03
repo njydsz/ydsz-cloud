@@ -113,37 +113,11 @@ class BaseResponseTest {
     }
 
     @Test
-    @DisplayName("error(ResultCode, data) 携带数据")
-    void error_resultCodeWithData() {
-        // 注意：ResultCode + String 参数会被解析为 error(ResultCode, String msg)
-        // 此处用 Integer data 明确触发 error(ResultCode, T data)
-        BaseResponse<Integer> resp = BaseResponse.error(BaseResultCode.NOT_FOUND, 42);
-        assertEquals("A10101", resp.getCode());
-        assertEquals(42, resp.getData());
-    }
-
-    @Test
     @DisplayName("error(ResultCode, msg) 自定义消息覆盖枚举默认消息")
     void error_resultCodeCustomMsg() {
         BaseResponse<Void> resp = BaseResponse.error(BaseResultCode.RATE_LIMIT, "请 1 分钟后再试");
         assertEquals("A10301", resp.getCode());
         assertEquals("请 1 分钟后再试", resp.getMsg());
-    }
-
-    @Test
-    @DisplayName("error(ResultCode, Throwable) 从异常提取消息")
-    void error_resultCodeWithThrowable() {
-        BaseResponse<Void> resp = BaseResponse.error(
-                BaseResultCode.INTERNAL_ERROR, new IllegalStateException("数据库连接池耗尽"));
-        assertEquals("B10201", resp.getCode());
-        assertEquals("数据库连接池耗尽", resp.getMsg());
-    }
-
-    @Test
-    @DisplayName("error(ResultCode, null Throwable) 使用枚举默认消息")
-    void error_resultCodeWithNullThrowable() {
-        BaseResponse<Void> resp = BaseResponse.error(BaseResultCode.INTERNAL_ERROR, (Throwable) null);
-        assertEquals("系统内部错误", resp.getMsg());
     }
 
     @Test

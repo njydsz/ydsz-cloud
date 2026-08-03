@@ -55,7 +55,15 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       html: true,
       i18n: true,
       importmapOptions: {
-        defaultProvider: 'esm.sh',
+        // v3.1: VITE_IMPORTMAP_SELF_HOST=/vendor 时启用自托管，消除公网 CDN SPOF
+        // 需先运行 `pnpm sync:shared-deps` 将 ESM 产物下载到 public/vendor/
+        ...(env.VITE_IMPORTMAP_SELF_HOST
+          ? {
+              selfHostBase: env.VITE_IMPORTMAP_SELF_HOST,
+            }
+          : {
+              defaultProvider: 'esm.sh',
+            }),
         importmap: [...ALL_SHARED_DEPS],
       },
       injectAppLoading: true,

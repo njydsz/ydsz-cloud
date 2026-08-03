@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.constant.CacheConstants;
+import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 import com.njydsz.workflow.infra.mapper.FlowThirdPartyAccountMapper;
 import com.njydsz.workflow.server.service.FlowThirdPartyAccountService;

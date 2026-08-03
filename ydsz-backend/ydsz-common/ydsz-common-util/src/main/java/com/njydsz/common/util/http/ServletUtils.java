@@ -16,7 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.njydsz.common.core.constant.TokenConstants;
+import com.njydsz.common.auth.constant.TokenConstants;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.string.StringUtils;
 
