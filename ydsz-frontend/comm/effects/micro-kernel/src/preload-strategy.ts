@@ -330,6 +330,15 @@ export class PreloadManager {
   }
 
   /**
+   * 检查应用是否已预加载。
+   *
+   * v3.4: 供 frequency 策略避免重复预加载
+   */
+  hasPreloaded(appName: string): boolean {
+    return this.preloadCache.has(appName);
+  }
+
+  /**
    * 保存使用统计到本地存储
    */
   private saveUsageStats(): void {
@@ -463,6 +472,40 @@ export function createRoutePreloadStrategy(
         const app = apps.find((a) => route.startsWith(a.activeRule));
         if (app) {
           await onPreload(app.name);
+        }
+      }
+    },
+  };
+}
+
+/**
+ * 创建基于使用频率的预加载策略。
+ *
+ * v3.4: 从 PreloadManager 已记录的 usageStats 中取访问频率最高的 N 个应用，
+ * 在 idle 时按优先级预加载。频率数据由 kernel.ts 在每次 activateApp 成功后
+ * 调用 `preloadManager.recordAppVisit()` 自动累积。
+ *
+ * 无历史数据时（首次访问）回退为空列表，不预加载任何应用。
+ *
+ * @param topN 预加载前 N 个高频应用，默认 3
+ * @param onPreload 预加载回调
+ * @returns 预加载策略配置
+ */
+export function createFrequencyPreloadStrategy(
+  topN = 3,
+  onPreload: (appName: string) => void | Promise<void>,
+): PreloadStrategyOptions {
+  return {
+    strategy: 'frequency' as const,
+    priority: 'medium' as const,
+    onPreload: async () => {
+      const manager = getPreloadManager();
+      const ranked = manager.getAppsByFrequency();
+      const candidates = ranked.slice(0, topN);
+      for (const appName of candidates) {
+        // 仅预加载尚未缓存的应用
+        if (!manager.hasPreloaded(appName)) {
+          await onPreload(appName);
         }
       }
     },

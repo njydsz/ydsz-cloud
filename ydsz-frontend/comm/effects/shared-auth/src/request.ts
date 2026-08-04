@@ -96,11 +96,33 @@ export function createSharedRequestClient(
   );
 
   // 通用的错误处理
+  // v3.4: 增强错误提示友好度
+  //   - 401 已由 authenticateResponseInterceptor 处理，此处跳过避免重复弹窗
+  //   - 5xx 错误附带 traceId 便于用户报障
+  //   - 网络错误/超时给出可操作的中文提示
   client.addResponseInterceptor(
     errorMessageResponseInterceptor((msg: string, error) => {
+      const status = error?.response?.status;
+      // 401 由 authenticateResponseInterceptor 处理，跳过避免重复弹窗
+      if (status === 401) return;
+
       const responseData = error?.response?.data ?? {};
-      const errorMessage = responseData?.error ?? responseData?.message ?? '';
-      ElMessage.error(errorMessage || msg);
+      const serverMessage = responseData?.error ?? responseData?.message ?? '';
+      const traceId = error?.config?.headers?.['X-Trace-Id'] as string | undefined;
+
+      // 5xx 服务端错误：附带 traceId 便于报障
+      if (status && status >= 500) {
+        const tip = serverMessage || msg;
+        const trace = traceId ? `\n追踪号: ${traceId}` : '';
+        ElMessage.error({
+          message: `${tip}${trace}`,
+          duration: 6000,
+        });
+        return;
+      }
+
+      // 其他错误：优先服务端消息，其次本地化 msg
+      ElMessage.error(serverMessage || msg);
     }),
   );
 

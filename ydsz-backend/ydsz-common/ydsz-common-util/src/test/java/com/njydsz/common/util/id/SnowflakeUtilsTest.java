@@ -15,12 +15,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
 /**
- * {@link SnowflakeUtils} 单元测试 — 覆盖 ID 唯一性、单调性、参数校验、解析等关键路径。
+ * {@link SnowflakeUtils} 单元测试 — 覆盖 ID 唯一性、单调性、参数校验等关键路径。
  *
  * <p>注意：{@link SnowflakeUtils#init(long, long)} 是一次性单例初始化，
- * 在同一 JVM 中只能被调用一次。测试中使用反射重置 INSTANCE 字段以隔离各用例。
+ * 在同一 JVM 中只能被调用一次。测试中通过 {@link SnowflakeUtils#resetForTesting()}
+ * 重置单例以隔离各用例。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -28,11 +28,9 @@ import java.lang.reflect.Field;
 @DisplayName("SnowflakeUtils 雪花 ID 测试")
 class SnowflakeUtilsTest {
 
-    /** 通过反射重置单例，便于多次测试。 */
-    private static void resetInstance() throws Exception {
-        Field f = SnowflakeUtils.class.getDeclaredField("INSTANCE");
-        f.setAccessible(true);
-        f.set(null, null);
+    /** 重置单例，便于多次测试。 */
+    private static void resetInstance() {
+        SnowflakeUtils.resetForTesting();
     }
 
     @Test
@@ -139,12 +137,11 @@ class SnowflakeUtilsTest {
     }
 
     @Test
-    @DisplayName("getInstance 未初始化时自动创建单例")
-    void getInstanceAutoInitializeWhenNotInitialized() throws Exception {
+    @DisplayName("getInstance 未初始化时抛 IllegalStateException")
+    void getInstanceThrowsWhenNotInitialized() throws Exception {
         resetInstance();
-        SnowflakeUtils instance = SnowflakeUtils.getInstance();
-        assertThat(instance).isNotNull();
-        long id = instance.nextId();
-        assertThat(id).isPositive();
+        assertThatThrownBy(() -> SnowflakeUtils.getInstance())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("未初始化");
     }
 }

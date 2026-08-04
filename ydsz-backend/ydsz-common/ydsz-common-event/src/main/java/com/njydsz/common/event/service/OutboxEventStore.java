@@ -2,8 +2,8 @@ package com.njydsz.common.event.service;
 
 import java.util.List;
 
-import com.njydsz.common.domain.event.DomainEvent;
-import com.njydsz.common.domain.event.EventStore;
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.EventStore;
 
 /**
  * 基于 Outbox 的领域事件存储适配器

@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.enums.DataScopeType;
+import com.njydsz.common.domain.enums.DataScopeType;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 import com.njydsz.common.util.auth.RequestHolder;
 import com.njydsz.common.util.http.ServletUtils;

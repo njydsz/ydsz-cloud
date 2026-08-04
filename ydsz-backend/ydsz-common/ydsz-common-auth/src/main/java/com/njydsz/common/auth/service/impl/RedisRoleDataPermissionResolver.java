@@ -15,7 +15,7 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.core.enums.DataScopeType;
+import com.njydsz.common.domain.enums.DataScopeType;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;

@@ -46,9 +46,9 @@ import org.springframework.scheduling.support.SimpleTriggerContext;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
-import com.njydsz.common.domain.job.JobHandler;
+import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.job.ProcessResult;
-import com.njydsz.common.domain.job.ShardingContext;
+import com.njydsz.cronjob.domain.job.ShardingContext;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.util.id.TracerUtils;

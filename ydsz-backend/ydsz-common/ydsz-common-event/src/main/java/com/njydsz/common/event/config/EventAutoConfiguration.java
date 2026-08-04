@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.njydsz.common.domain.event.EventStore;
+import com.njydsz.common.event.api.EventStore;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.common.event.health.OutboxHealthIndicator;

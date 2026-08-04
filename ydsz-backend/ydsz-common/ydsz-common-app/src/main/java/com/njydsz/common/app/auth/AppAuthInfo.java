@@ -1,7 +1,7 @@
 package com.njydsz.common.app.auth;
 
 import com.njydsz.common.base.auth.BaseAuthInfo;
-import com.njydsz.common.core.enums.ServiceType;
+import com.njydsz.common.domain.enums.ServiceType;
 import com.njydsz.common.util.auth.RequestHolder;
 
 /**

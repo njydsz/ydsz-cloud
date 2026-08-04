@@ -4,8 +4,8 @@ package com.njydsz.common.util.auth;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.common.core.enums.DataScopeType;
-import com.njydsz.common.core.enums.IdentityType;
+import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.domain.enums.IdentityType;
 
 /**
  * 认证信息统一接口

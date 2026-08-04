@@ -10,7 +10,7 @@ import com.njydsz.common.json.tree.ObjectNode;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.domain.job.JobHandler;
+import com.njydsz.cronjob.domain.job.JobHandler;
 
 import lombok.extern.slf4j.Slf4j;
 

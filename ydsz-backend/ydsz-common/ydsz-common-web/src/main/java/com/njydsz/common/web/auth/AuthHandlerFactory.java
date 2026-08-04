@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.handler.AuthHandler;
-import com.njydsz.common.core.enums.ServiceType;
+import com.njydsz.common.domain.enums.ServiceType;
 
 /**
  * Web 端认证处理器工厂

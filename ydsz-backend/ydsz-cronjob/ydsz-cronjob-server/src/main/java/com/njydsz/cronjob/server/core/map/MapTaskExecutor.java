@@ -17,7 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.domain.job.JobLogger;
+import com.njydsz.cronjob.domain.job.JobLogger;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.MapContext;
 import com.njydsz.cronjob.domain.job.MapProcessor;

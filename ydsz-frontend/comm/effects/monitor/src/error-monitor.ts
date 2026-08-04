@@ -6,8 +6,14 @@
  *   - 采样控制：sampleRate + beforeSend 钩子，防止高频错误打满上报队列
  *   - sourcemap 关联：release 字段供后端匹配 sourcemap 符号化 stack trace
  *
+ * v3.4 增强：
+ *   - 面包屑：错误上报时附带最近 N 条用户行为轨迹
+ *   - 离线恢复：监听 online 事件自动重放离线缓存的上报
+ *
  * 对标 Sentry / 阿里 ARMS / 腾讯 APM 的前端错误采集能力。
  */
+
+import { getBreadcrumbs, type Breadcrumb } from './breadcrumb';
 
 /** 错误事件类型 */
 export type ErrorType =
@@ -36,6 +42,8 @@ export interface ErrorReport {
   traceId?: string;
   /** v3.1: 发布版本（commit hash），用于 sourcemap 符号化 */
   release?: string;
+  /** v3.4: 错误发生前的用户行为面包屑 */
+  breadcrumbs?: Breadcrumb[];
   extra?: Record<string, any>;
 }
 
@@ -105,6 +113,8 @@ function ensureSessionId(): string {
 
 /**
  * 为错误报告注入会话追踪字段
+ *
+ * v3.4: 同时附带当前面包屑快照，便于后端复现错误路径
  */
 function enrichReport(report: ErrorReport): ErrorReport {
   return {
@@ -113,6 +123,7 @@ function enrichReport(report: ErrorReport): ErrorReport {
     traceId: generateTraceId(),
     release: monitorConfig.release,
     userId: report.userId || monitorConfig.getUserId?.(),
+    breadcrumbs: getBreadcrumbs(),
   };
 }
 
@@ -397,6 +408,15 @@ export function setupErrorMonitoring(app: any, config: MonitorConfig = {}) {
 
   // 4. 页面卸载时强制上报
   window.addEventListener('beforeunload', flush);
+
+  // 5. 网络恢复时自动重放离线缓存的上报
+  //    v3.4: 此前 restoreOfflineCache 已定义但从未调用，导致离线缓存写而不读
+  window.addEventListener('online', restoreOfflineCache);
+
+  // 启动时若已在线，尝试重放上次会话遗留的离线缓存
+  if (navigator.onLine) {
+    restoreOfflineCache();
+  }
 
   console.info('[Monitor] Error monitoring installed', {
     release: config.release,

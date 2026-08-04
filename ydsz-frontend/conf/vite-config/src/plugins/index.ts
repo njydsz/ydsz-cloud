@@ -25,6 +25,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import viteVueDevTools from 'vite-plugin-vue-devtools';
 
 import { viteArchiverPlugin } from './archiver';
+import { bundleBudgetPlugin } from './bundle-budget';
 import { viteFontPlugin } from './font';
 import { viteExtraAppConfigPlugin } from './extra-app-config';
 import { viteImageminPlugin } from './imagemin';
@@ -317,6 +318,11 @@ async function loadApplicationPlugins(
         return [await viteArchiverPlugin(archiverPluginOptions)];
       },
     },
+    {
+      // v3.4: Bundle Budget 硬阈值校验，构建产物体积超限时阻断构建
+      condition: isBuild,
+      plugins: () => [bundleBudgetPlugin()],
+    },
   ]);
 }
 
@@ -348,6 +354,7 @@ async function loadLibraryPlugins(
 export {
   loadApplicationPlugins,
   loadLibraryPlugins,
+  bundleBudgetPlugin,
   viteArchiverPlugin,
   viteCompressPlugin,
   viteDtsPlugin,

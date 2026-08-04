@@ -4,7 +4,7 @@ import java.lang.annotation.*;
 
 import com.njydsz.common.auth.model.DataScopeAware;
 import com.njydsz.common.auth.model.DataScopeInfo;
-import com.njydsz.common.core.enums.DataScopeType;
+import com.njydsz.common.domain.enums.DataScopeType;
 
 /**
  * 行级数据权限校验与注入注解。

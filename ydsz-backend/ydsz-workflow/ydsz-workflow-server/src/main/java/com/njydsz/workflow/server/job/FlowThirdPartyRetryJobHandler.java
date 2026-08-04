@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.domain.job.JobHandler;
+import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowClusterLockHelper;

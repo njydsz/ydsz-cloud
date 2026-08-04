@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import com.njydsz.common.domain.event.DomainEvent;
-import com.njydsz.common.domain.event.ModuleEventTypes;
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.ModuleEventTypes;
 
 import lombok.Getter;
 

@@ -479,7 +479,7 @@ const routesCoreTs = `import type { RouteRecordRaw } from 'vue-router';
 export const coreRoutes: RouteRecordRaw[] = [
   {
     component: () => import('#/views/index.vue'),
-    meta: { title: '${title}' },
+    meta: { skeletonType: 'default', title: '${title}' },
     name: 'Root',
     path: '${routePrefix}',
     redirect: '${routePrefix}/',
@@ -589,6 +589,7 @@ console.info(`    title: '${title}',`);
 console.info(`    icon: 'lucide:box',  // TODO: 选择合适的 lucide 图标`);
 console.info(`    order: 109,  // TODO: 调整排序权重`);
 console.info(`    devPort: ${port},`);
+console.info(`    skeletonType: 'default',  // 可选: dashboard | default | detail | form | list`);
 console.info(`  },`);
 console.info(`\n然后运行 pnpm install 安装新包依赖。`);
 console.info(`\n完成注册表追加后，请同步 nginx 配置：`);

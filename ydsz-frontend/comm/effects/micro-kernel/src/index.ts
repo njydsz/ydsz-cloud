@@ -10,7 +10,26 @@ export { createKernel } from './kernel';
 export { viteManifestPlugin } from './vite-plugin-manifest';
 export { enterSandbox, exitSandbox } from './sandbox';
 export { createProxySandbox } from './proxy-sandbox';
+export { createIframeSandbox } from './iframe-sandbox';
 export { getVersionManager, resetVersionManager } from './version-manager';
+// v3.4: 公开预加载策略工厂，供主应用按需注册 frequency 策略
+export {
+  createFrequencyPreloadStrategy,
+  createIdlePreloadStrategy,
+  createHoverPreloadStrategy,
+  createRoutePreloadStrategy,
+  getPreloadManager,
+  resetPreloadManager,
+} from './preload-strategy';
+export type {
+  AppUsageStats,
+  PermissionChecker,
+  PreloadPriority,
+  PreloadStrategy,
+  PreloadStrategyOptions,
+  PrefetchStrategy,
+  PrefetchStrategyConfig,
+} from './preload-strategy';
 export {
   evictAllKeepAliveOnMemoryPressure,
   getAllInstances,
@@ -24,8 +43,11 @@ export {
   setErrorFallbackMessages,
 } from './error-boundary';
 export type { ManifestPluginOptions, ManifestPluginRoute } from './vite-plugin-manifest';
-export type { SandboxInstance, SandboxType } from './sandbox';
+export type { SandboxInstance } from './sandbox';
 export type { ProxySandboxInstance } from './proxy-sandbox';
+export type { IframeSandboxInstance } from './iframe-sandbox';
+// SandboxType 定义在 scheduler.ts，从此处 re-export 保持类型公开
+export type { SandboxType } from './scheduler';
 export type { VersionUpdateResult, VersionManagerOptions } from './version-manager';
 export type { ErrorFallbackMessages } from './error-boundary';
 // v3.3: 公开 Manifest 类型供主应用容器读取 routes 配置（骨架屏细化）

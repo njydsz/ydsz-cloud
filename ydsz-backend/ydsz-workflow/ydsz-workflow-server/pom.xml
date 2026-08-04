@@ -28,6 +28,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
+        <!-- ydsz-cronjob-domain: JobHandler 抽象（FlowTimeout/ThirdPartyRetry/HistoryArchive JobHandler 由 cronjob 框架调度） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-cronjob-domain</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- common-feign 传递引入: spring-cloud-starter-openfeign -->
         <dependency>
             <groupId>com.njydsz</groupId>

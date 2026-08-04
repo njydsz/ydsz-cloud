@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
-import com.njydsz.common.domain.job.JobHandler;
+import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
@@ -207,7 +207,7 @@ public class GlueJobHandler implements JobHandler {
                 "java.math.BigDecimal",
                 "java.math.BigInteger",
                 "java.math.RoundingMode",
-                "com.njydsz.common.domain.job.JobHandler",
+                "com.njydsz.cronjob.domain.job.JobHandler",
                 "com.njydsz.cronjob.domain.job.JobExecutionContext",
                 "com.njydsz.cronjob.domain.job.JobExecutionContext",
                 "com.njydsz.cronjob.domain.job.ProcessResult"

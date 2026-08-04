@@ -17,7 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.domain.event.DomainEvent;
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.config.EventProperties;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.model.OutboxMessage;

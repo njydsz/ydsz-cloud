@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.njydsz.common.domain.job.JobLogger;
+import com.njydsz.cronjob.domain.job.JobLogger;
 import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 

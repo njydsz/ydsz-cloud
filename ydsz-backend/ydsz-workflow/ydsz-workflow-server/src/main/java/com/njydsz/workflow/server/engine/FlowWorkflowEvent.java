@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import com.njydsz.common.domain.event.DomainEvent;
+import com.njydsz.common.event.api.DomainEvent;
 
 import lombok.Getter;
 
@@ -13,11 +13,11 @@ import lombok.Getter;
  * 工作流事件（领域事件封装）。
  *
  * <p>继承 {@link DomainEvent}（→ {@link org.springframework.context.ApplicationEvent}），
- * 通过 {@code ApplicationEventPublisher} 或 {@link com.njydsz.common.domain.event.DomainEventPublisher}
+ * 通过 {@code ApplicationEventPublisher} 或 {@link com.njydsz.common.event.api.DomainEventPublisher}
  * 发布，监听方使用 {@code @EventListener} + {@code @Async} 异步处理，解耦主流程事务。
  *
  * <p><b>P2-1</b>：现在继承 {@link DomainEvent}，复用统一的元数据字段（tenantId/userId/traceId），
- * 事件类型常量定义在 {@link com.njydsz.common.domain.event.ModuleEventTypes}。
+ * 事件类型常量定义在 {@link com.njydsz.common.event.api.ModuleEventTypes}。
  *
  * <p>事件类型（eventType）枚举：
  * <ul>

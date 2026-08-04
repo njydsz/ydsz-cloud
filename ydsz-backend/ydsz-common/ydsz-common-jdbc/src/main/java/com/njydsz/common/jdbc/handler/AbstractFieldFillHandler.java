@@ -1,6 +1,6 @@
 package com.njydsz.common.jdbc.handler;
 
-import com.njydsz.common.jdbc.domain.InterceptConfig;
+import com.njydsz.common.jdbc.config.InterceptConfig;
 import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
 
 import net.sf.jsqlparser.expression.Expression;

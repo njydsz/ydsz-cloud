@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
  * <ul>
  *   <li>对象判空：isEmpty / isNotEmpty / isBlank / isNotBlank / hasText（支持 CharSequence 与 Object 多类型）</li>
  *   <li>默认值：defaultIfBlank</li>
+ *   <li>前缀匹配：startsWithIgnoreCase（忽略大小写）</li>
  *   <li>命名转换：toCamelCase / toUnderScoreCase</li>
  *   <li>格式化：format（使用 {} 占位符，类似 SLF4J 风格）</li>
  *   <li>数据脱敏：maskSensitive / maskMobile / maskIdCard / maskEmail</li>
@@ -148,6 +149,20 @@ public class StringUtils {
      */
     public static String defaultIfBlank(CharSequence str, String defaultStr) {
         return isBlank(str) ? defaultStr : str.toString();
+    }
+
+    /**
+     * 判断字符串是否以指定前缀开头（忽略大小写）
+     *
+     * @param str    待检查字符串
+     * @param prefix 前缀
+     * @return 如果 str 以 prefix 开头（忽略大小写）返回 true；str 或 prefix 为 null 返回 false
+     */
+    public static boolean startsWithIgnoreCase(String str, String prefix) {
+        if (str == null || prefix == null) {
+            return false;
+        }
+        return str.regionMatches(true, 0, prefix, 0, prefix.length());
     }
 
     // ==================== 命名转换方法 ====================

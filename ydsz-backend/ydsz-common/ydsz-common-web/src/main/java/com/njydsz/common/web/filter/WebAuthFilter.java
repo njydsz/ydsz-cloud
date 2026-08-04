@@ -13,7 +13,7 @@ import com.njydsz.common.auth.filter.BaseAuthFilter;
 import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.model.AuthenticationProvider;
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.enums.ServiceType;
+import com.njydsz.common.domain.enums.ServiceType;
 import com.njydsz.common.util.auth.AuthInfo;
 import com.njydsz.common.util.auth.RequestHolder;
 import com.njydsz.common.util.id.TracerUtils;

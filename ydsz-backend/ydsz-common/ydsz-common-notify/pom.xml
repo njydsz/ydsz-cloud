@@ -40,6 +40,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-event</artifactId>
+        </dependency>
 
         <!-- common-redis（可选：分布式限流，多实例部署时自动升级为 Redis 滑动窗口限流） -->
         <dependency>

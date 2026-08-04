@@ -201,4 +201,16 @@ class StringUtilsTest {
         assertThat(StringUtils.defaultIfBlank("hello", "default")).isEqualTo("hello");
         assertThat(StringUtils.defaultIfBlank(null, "default")).isEqualTo("default");
     }
+
+    // ==================== startsWithIgnoreCase ====================
+
+    @Test
+    @DisplayName("startsWithIgnoreCase - 忽略大小写匹配")
+    void startsWithIgnoreCase() {
+        assertThat(StringUtils.startsWithIgnoreCase("Application/json", "application/json")).isTrue();
+        assertThat(StringUtils.startsWithIgnoreCase("APPLICATION/JSON", "application/json")).isTrue();
+        assertThat(StringUtils.startsWithIgnoreCase("text/html", "application/json")).isFalse();
+        assertThat(StringUtils.startsWithIgnoreCase(null, "prefix")).isFalse();
+        assertThat(StringUtils.startsWithIgnoreCase("str", null)).isFalse();
+    }
 }

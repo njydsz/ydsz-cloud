@@ -296,6 +296,12 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
         instance.proxySandbox.cleanup();
         instance.proxySandbox = null;
       }
+    } else if (instance.sandboxType === 'iframe') {
+      // iframe 沙箱：清理 iframe 并释放
+      if (instance.iframeSandbox) {
+        instance.iframeSandbox.cleanup();
+        instance.iframeSandbox = null;
+      }
     } else {
       // 快照沙箱：退出并恢复 window
       if (instance.sandbox) {
@@ -322,6 +328,11 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
       if (instance.proxySandbox) {
         instance.proxySandbox.cleanup();
         instance.proxySandbox = null;
+      }
+    } else if (instance.sandboxType === 'iframe') {
+      if (instance.iframeSandbox) {
+        instance.iframeSandbox.cleanup();
+        instance.iframeSandbox = null;
       }
     } else {
       if (instance.sandbox) {

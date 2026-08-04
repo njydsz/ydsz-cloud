@@ -308,6 +308,8 @@ async function switchToApp(config: MicroAppConfig, options?: StartOptions): Prom
     });
     if (token !== switchToken) return;
     activeAppName = config.name;
+    // v3.4: 记录应用访问频率，供 frequency 预加载策略使用
+    preloadManager.recordAppVisit(config.name);
     await runHooks('afterMount', config);
 
     // 派发 after-mount 事件，触发骨架屏隐藏
