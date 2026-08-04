@@ -12,6 +12,9 @@
 /** 子应用激活规则类型 */
 export type ActiveRule = string | RegExp | ((path: string) => boolean);
 
+/** 全局状态句柄 — 从 global-state 统一导出，避免使用方直接依赖 internal 模块 */
+export type { GlobalStateHandle, GlobalStateListener, RawGlobalStateAPI, VersionedState } from './global-state';
+
 /**
  * 沙箱类型。
  *

@@ -36,6 +36,11 @@ import {
   registerApplicationFlags,
 } from './feature-flags';
 import { useCrossTabSync } from './hooks/use-cross-tab-sync';
+import {
+  getSubAppSessionSnapshot,
+  getSubAppLastActivePath,
+  recordSubAppTabOpened,
+} from './hooks/use-tabbar-micro-sync';
 import { useSessionExpiryWarning } from './hooks/use-session-expiry-warning';
 import { router, initRouterGuard } from './router';
 
@@ -47,7 +52,7 @@ import {
 } from '@ydsz/micro-kernel';
 import { createRuntime, registerKernel, type MicroAppEntry } from '@ydsz/micro-runtime';
 import { createLogger } from '@ydsz-core/shared/utils';
-import { MICRO_APPS, getProdEntry } from '@ydsz/vite-config';
+import { MICRO_APPS, PATH_TO_APP_MAP, getProdEntry } from '@ydsz/vite-config';
 import { resolveRegistry, resolveAppEntry } from '@ydsz/micro-kernel';
 import { enableMicroDevTools } from '@ydsz/micro-kernel';
 
@@ -195,6 +200,30 @@ function finishRuntimeSetup() {
   microRuntime.start({
     prefetch: (app) => prefetchApps.includes(app.name),
   });
+
+  // P3-1: 注册 per-app Tab 会话追踪
+  // 每次路由跳转后，若目标路由属于某子应用，更新该子应用的会话状态
+  // （打开路径集合 / 最后激活路径），驱动 useTabbarMicroSync 的保活/pin 决策
+  router.afterEach((to) => {
+    if (!to?.fullPath) return;
+    const appName = getAppFromPathFromMap(to.fullPath);
+    if (appName) {
+      recordSubAppTabOpened(to.fullPath, appName);
+    }
+  });
+}
+
+/**
+ * 从子应用路由映射中反查应用名（bootstrap 内部复用）。
+ * 与 use-tabbar-micro-sync 保持解耦，避免 import cycle。
+ */
+function getAppFromPathFromMap(path: string): null | string {
+  for (const [prefix, appName] of Object.entries(PATH_TO_APP_MAP)) {
+    if (path.startsWith(prefix)) {
+      return appName;
+    }
+  }
+  return null;
 }
 
 /**

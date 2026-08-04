@@ -151,6 +151,33 @@ public class StringUtils {
         return str.regionMatches(true, 0, prefix, 0, prefix.length());
     }
 
+    /**
+     * 从字符串开头移除指定的前缀。
+     *
+     * <p>如果字符串以指定前缀开头，则移除该前缀并返回剩余部分；
+     * 如果字符串为 null 或不以前缀开头，则返回原字符串。
+     *
+     * <p>示例：
+     * <pre>
+     * removeStart("/path/to/file", "/")   -> "path/to/file"
+     * removeStart("hello", "xyz")        -> "hello"
+     * removeStart(null, "/")             -> null
+     * </pre>
+     *
+     * @param str    待处理字符串（可为 null）
+     * @param remove 要移除的前缀（可为 null）
+     * @return 移除前缀后的字符串；如果输入为 null 或不以前缀开头，返回原字符串
+     */
+    public static String removeStart(String str, String remove) {
+        if (str == null || remove == null || remove.isEmpty()) {
+            return str;
+        }
+        if (str.startsWith(remove)) {
+            return str.substring(remove.length());
+        }
+        return str;
+    }
+
     // ==================== 命名转换方法 ====================
 
     /**
