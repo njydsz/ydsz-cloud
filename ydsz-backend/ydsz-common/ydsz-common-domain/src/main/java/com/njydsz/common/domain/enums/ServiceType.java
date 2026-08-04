@@ -1,4 +1,4 @@
-package com.njydsz.common.core.enums;
+package com.njydsz.common.domain.enums;
 
 import java.util.Arrays;
 import java.util.Collections;

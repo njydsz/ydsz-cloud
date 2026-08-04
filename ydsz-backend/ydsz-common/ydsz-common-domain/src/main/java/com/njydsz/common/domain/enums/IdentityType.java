@@ -1,4 +1,4 @@
-package com.njydsz.common.core.enums;
+package com.njydsz.common.domain.enums;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import lombok.AllArgsConstructor;
