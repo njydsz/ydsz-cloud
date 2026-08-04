@@ -16,7 +16,7 @@ import { useHoverToggle } from '@ydsz/hooks';
 import { LockKeyhole, LogOut } from '@ydsz/icons';
 import { $t } from '@ydsz/locales';
 import { preferences, usePreferences } from '@ydsz/preferences';
-import { useAccessStore } from '@ydsz/stores';
+import { useTokenStore } from '@ydsz/stores';
 import { isWindowsOs } from '@ydsz/utils';
 
 import { useYDSZModal } from '@ydsz-core/popup-ui';
@@ -93,7 +93,7 @@ const emit = defineEmits<{ logout: [] }>();
 
 const { globalLockScreenShortcutKey, globalLogoutShortcutKey } =
   usePreferences();
-const accessStore = useAccessStore();
+const tokenStore = useTokenStore();
 const [LockModal, lockModalApi] = useYDSZModal({
   connectedComponent: LockScreenModal,
 });
@@ -144,7 +144,7 @@ function handleOpenLock() {
 
 function handleSubmitLock(lockScreenPassword: string) {
   lockModalApi.close();
-  accessStore.lockScreen(lockScreenPassword);
+  tokenStore.lockScreen(lockScreenPassword);
 }
 
 function handleLogout() {

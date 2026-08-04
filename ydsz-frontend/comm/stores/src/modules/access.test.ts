@@ -24,19 +24,6 @@ describe('useAccessStore', () => {
     ]);
   });
 
-  it('updates accessToken state correctly', () => {
-    const store = useAccessStore();
-    expect(store.accessToken).toBeNull(); // 初始状态
-    store.setAccessToken('abc123');
-    expect(store.accessToken).toBe('abc123');
-  });
-
-  it('returns the correct accessToken', () => {
-    const store = useAccessStore();
-    store.setAccessToken('xyz789');
-    expect(store.accessToken).toBe('xyz789');
-  });
-
   // 测试设置空的访问菜单列表
   it('handles empty accessMenus correctly', () => {
     const store = useAccessStore();
@@ -49,5 +36,21 @@ describe('useAccessStore', () => {
     const store = useAccessStore();
     store.setAccessRoutes([]);
     expect(store.accessRoutes).toEqual([]);
+  });
+
+  // 测试设置权限码
+  it('updates accessCodes correctly', () => {
+    const store = useAccessStore();
+    expect(store.accessCodes).toEqual([]);
+    store.setAccessCodes(['AC_100100', 'AC_100200']);
+    expect(store.accessCodes).toEqual(['AC_100100', 'AC_100200']);
+  });
+
+  // 测试 isAccessChecked 标记
+  it('updates isAccessChecked correctly', () => {
+    const store = useAccessStore();
+    expect(store.isAccessChecked).toBe(false);
+    store.setIsAccessChecked(true);
+    expect(store.isAccessChecked).toBe(true);
   });
 });

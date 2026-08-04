@@ -1,8 +1,8 @@
 /**
  * access Pinia 状态管理 — 访问控制（menus/routes/codes）
  *
- * 注意：认证相关状态（token/refreshToken/lockScreen）已迁移到 useAuthStore，
- * 本 store 保留兼容的 getter/setter 代理，推荐新代码直接使用 useAuthStore。
+ * 认证相关状态（token/refreshToken/lockScreen）由 useTokenStore 管理，
+ * 本 store 仅负责权限码、菜单、路由的存取。
  *
  * @path comm\stores\src\modules\access.ts
  * @author ydsz-team
@@ -13,10 +13,6 @@ import type { RouteRecordRaw } from 'vue-router';
 import type { MenuRecordRaw } from '@ydsz-core/typings';
 
 import { acceptHMRUpdate, defineStore } from 'pinia';
-
-import { useTokenStore } from './auth';
-
-type AccessToken = null | string;
 
 interface AccessState {
   /**
@@ -35,12 +31,31 @@ interface AccessState {
    * 是否已经检查过权限
    */
   isAccessChecked: boolean;
+  /**
+   * 数据权限范围（行级）。
+   *
+   * 后端返回的资源访问范围清单，键为资源码（如 'project:budget'），
+   * 值为该资源的数据范围约束（如部门 ID 列表、项目 ID 列表等）。
+   * undefined/null 表示未受限，可访问全部数据。
+   *
+   * @since 3.4.0
+   */
+  dataScopes: Record<string, unknown>;
+  /**
+   * 字段级权限清单。
+   *
+   * 后端返回的字段访问控制清单，键为字段标识（如 'project.budget.amount'），
+   * 值为访问模式：'read'（只读）/ 'mask'（脱敏展示）/ 'hidden'（隐藏）。
+   *
+   * @since 3.4.0
+   */
+  fieldPermissions: Record<string, 'mask' | 'hidden' | 'read'>;
 }
 
 /**
  * @zh_CN 访问权限相关（menus/routes/codes）
  *
- * 认证 Token 相关操作请使用 useAuthStore。
+ * 认证 Token 相关操作请使用 useTokenStore。
  */
 export const useAccessStore = defineStore('core-access', {
   actions: {
@@ -63,10 +78,6 @@ export const useAccessStore = defineStore('core-access', {
       }
       return findMenu(this.accessMenus, path);
     },
-    /** @deprecated 请使用 useTokenStore().lockScreen() */
-    async lockScreen(password: string) {
-      return useTokenStore().lockScreen(password);
-    },
     setAccessCodes(codes: string[]) {
       this.accessCodes = codes;
     },
@@ -76,55 +87,17 @@ export const useAccessStore = defineStore('core-access', {
     setAccessRoutes(routes: RouteRecordRaw[]) {
       this.accessRoutes = routes;
     },
-    /** @deprecated 请使用 useTokenStore().setAccessToken() */
-    setAccessToken(token: AccessToken) {
-      useTokenStore().setAccessToken(token);
+    setDataScopes(scopes: Record<string, unknown>) {
+      this.dataScopes = scopes;
+    },
+    setFieldPermissions(perms: Record<string, 'mask' | 'hidden' | 'read'>) {
+      this.fieldPermissions = perms;
     },
     setIsAccessChecked(isAccessChecked: boolean) {
       this.isAccessChecked = isAccessChecked;
     },
-    /** @deprecated 请使用 useTokenStore().setLoginExpired() */
-    setLoginExpired(loginExpired: boolean) {
-      useTokenStore().setLoginExpired(loginExpired);
-    },
-    /** @deprecated 请使用 useTokenStore().setRefreshToken() */
-    setRefreshToken(token: AccessToken) {
-      useTokenStore().setRefreshToken(token);
-    },
-    /** @deprecated 请使用 useTokenStore().unlockScreen() */
-    unlockScreen() {
-      useTokenStore().unlockScreen();
-    },
-    /** @deprecated 请使用 useTokenStore().verifyLockScreenPassword() */
-    async verifyLockScreenPassword(password: string): Promise<boolean> {
-      return useTokenStore().verifyLockScreenPassword(password);
-    },
-  },
-  getters: {
-    /** 代理到 useTokenStore.accessToken */
-    accessToken(): AccessToken {
-      return useTokenStore().accessToken;
-    },
-    /** 代理到 useTokenStore.isLockScreen */
-    isLockScreen(): boolean {
-      return useTokenStore().isLockScreen;
-    },
-    /** 代理到 useTokenStore.loginExpired */
-    loginExpired(): boolean {
-      return useTokenStore().loginExpired;
-    },
-    /** 代理到 useTokenStore.lockScreenPassword */
-    lockScreenPassword(): string | undefined {
-      return useTokenStore().lockScreenPassword;
-    },
-    /** 代理到 useTokenStore.refreshToken */
-    refreshToken(): AccessToken {
-      return useTokenStore().refreshToken;
-    },
   },
   persist: {
-    // ⚠️ 迁移说明：accessToken/refreshToken/isLockScreen/lockScreenPassword
-    // 已迁移到 useAuthStore 持久化，此处仅保留 accessCodes
     pick: ['accessCodes'],
   },
   state: (): AccessState => ({
@@ -132,6 +105,8 @@ export const useAccessStore = defineStore('core-access', {
     accessMenus: [],
     accessRoutes: [],
     isAccessChecked: false,
+    dataScopes: {},
+    fieldPermissions: {},
   }),
 });
 

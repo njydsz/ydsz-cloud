@@ -1,11 +1,10 @@
 package com.njydsz.common.core.enums;
 
-import java.util.Map;
-
 import com.njydsz.common.core.constant.HeaderConstants;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.util.Map;
 
 /**
  * 身份类型枚举
@@ -28,7 +27,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum IdentityType implements TypeEnum<String> {
 
-    YDSZ("YDSZ", "ydsz软件账号"),
+    YDSZ("njydsz", "云顶数字账号"),
     COMPANY("company", "集团公司账户"),
     VISITOR("visitor", "游客体验账号");
 

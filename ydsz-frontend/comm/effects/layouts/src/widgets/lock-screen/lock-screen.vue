@@ -10,7 +10,7 @@ import { computed, reactive, ref } from 'vue';
 
 import { LockKeyhole } from '@ydsz/icons';
 import { $t, useI18n } from '@ydsz/locales';
-import { storeToRefs, useAccessStore } from '@ydsz/stores';
+import { storeToRefs, useTokenStore } from '@ydsz/stores';
 
 import { useScrollLock } from '@ydsz-core/composables';
 import { useYDSZForm, z } from '@ydsz-core/form-ui';
@@ -33,7 +33,7 @@ withDefaults(defineProps<Props>(), {
 defineEmits<{ toLogin: [] }>();
 
 const { locale } = useI18n();
-const accessStore = useAccessStore();
+const tokenStore = useTokenStore();
 
 const now = useNow();
 const meridiem = useDateFormat(now, 'A');
@@ -42,7 +42,7 @@ const minute = useDateFormat(now, 'mm');
 const date = useDateFormat(now, 'YYYY-MM-DD dddd', { locales: locale.value });
 
 const showUnlockForm = ref(false);
-const { lockScreenPassword } = storeToRefs(accessStore);
+const { lockScreenPassword } = storeToRefs(tokenStore);
 
 const [Form, { form, validate }] = useYDSZForm(
   reactive({
@@ -73,7 +73,7 @@ async function handleSubmit() {
   const { valid } = await validate();
   if (valid) {
     if (validPass.value) {
-      accessStore.unlockScreen();
+      tokenStore.unlockScreen();
     } else {
       form.setFieldError('password', $t('authentication.passwordErrorTip'));
     }

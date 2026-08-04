@@ -43,6 +43,10 @@ public class DomainHealthIndicator implements HealthIndicator {
             if (evaluator != null) {
                 details.put("spELConditionEvaluator.available", true);
                 details.put("spELConditionEvaluator.cacheSize", evaluator.getCacheSize());
+                details.put("spELConditionEvaluator.hitRate", evaluator.getHitRate());
+                details.put("spELConditionEvaluator.hitCount", evaluator.getCacheStats().hitCount());
+                details.put("spELConditionEvaluator.missCount", evaluator.getCacheStats().missCount());
+                details.put("spELConditionEvaluator.evictionCount", evaluator.getCacheStats().evictionCount());
             } else {
                 details.put("spELConditionEvaluator.available", false);
             }

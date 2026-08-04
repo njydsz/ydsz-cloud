@@ -1,10 +1,13 @@
 package com.njydsz.workflow.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
+
 /**
  * 流程实例状态枚举
  *
  * <p>用于表示自研工作流 v2 流程实例在执行全生命周期的状态。
  * 与 {@link FlowTaskStatus}（任务级状态）共同构成工作流状态体系。
+ * 实现 {@link BaseStatusEnum} 契约，提供 {@link #canTransitTo} 状态流转校验。
  *
  * <p><b>状态流转：</b>
  * <pre>
@@ -33,7 +36,7 @@ package com.njydsz.workflow.domain.enums;
  * @see FlowTaskStatus 任务级状态枚举
  * @see com.njydsz.workflow.domain.entity.FlowInstance 流程实例实体
  */
-public enum FlowInstanceStatus {
+public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
 
     /** 运行中：流程已启动，至少有一个任务未完成 */
     RUNNING,
@@ -79,5 +82,45 @@ public enum FlowInstanceStatus {
                 || this == TERMINATED
                 || this == REJECTED
                 || this == ROLLED_BACK;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>与 {@link #isFinished()} 语义对齐：终态包含已回滚（ROLLED_BACK）。
+     */
+    @Override
+    public boolean isTerminal() {
+        return isFinished();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>流转规则：
+     * <ul>
+     *   <li>RUNNING → SUSPENDED / COMPLETED / TERMINATED / REJECTED / ERROR / ROLLED_BACK</li>
+     *   <li>SUSPENDED → RUNNING（恢复）/ TERMINATED / REJECTED / ERROR</li>
+     *   <li>ERROR → RUNNING（重试）/ TERMINATED / REJECTED / ROLLED_BACK</li>
+     *   <li>COMPLETED → ROLLED_BACK（撤销已完成的实例）</li>
+     *   <li>TERMINATED / REJECTED / ROLLED_BACK 为终态，不可再流转</li>
+     * </ul>
+     *
+     * @param target 目标状态
+     * @return true 表示允许流转
+     */
+    @Override
+    public boolean canTransitTo(FlowInstanceStatus target) {
+        if (this == target) {
+            return true;
+        }
+        return switch (this) {
+            case RUNNING -> target == SUSPENDED || target == COMPLETED || target == TERMINATED
+                    || target == REJECTED || target == ERROR || target == ROLLED_BACK;
+            case SUSPENDED -> target == RUNNING || target == TERMINATED || target == REJECTED || target == ERROR;
+            case ERROR -> target == RUNNING || target == TERMINATED || target == REJECTED || target == ROLLED_BACK;
+            case COMPLETED -> target == ROLLED_BACK;
+            case TERMINATED, REJECTED, ROLLED_BACK -> false;
+        };
     }
 }

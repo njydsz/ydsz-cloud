@@ -1,13 +1,10 @@
 package com.njydsz.system.domain.dto;
 
-import com.njydsz.common.domain.dto.BaseDTO;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -36,15 +33,13 @@ import lombok.experimental.SuperBuilder;
  * @author ydsz-team
  * @since 1.0.0
  *
- * @see com.njydsz.common.domain.dto.BaseDTO 父类（公共字段）
  * @see com.njydsz.system.domain.entity.AppInfo 应用注册实体
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @Schema(description = "应用注册创建/更新 DTO")
-public class AppInfoDTO extends BaseDTO {
+public class AppInfoDTO {
 
     @Schema(description = "主键 ID（更新时必填）")
     private String id;

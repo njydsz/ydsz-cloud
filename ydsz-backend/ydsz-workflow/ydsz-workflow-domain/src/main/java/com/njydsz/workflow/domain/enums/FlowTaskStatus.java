@@ -1,10 +1,13 @@
 package com.njydsz.workflow.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
+
 /**
  * 工作流任务状态枚举
  *
  * <p>表示流程任务（{@code ydsz_flow_run_task}）在执行全生命周期的状态。
  * 与 {@link FlowInstanceStatus}（实例级状态）共同构成工作流状态体系。
+ * 实现 {@link BaseStatusEnum} 契约，提供 {@link #canTransitTo} 状态流转校验。
  *
  * <p><b>状态分类：</b>
  * <ul>
@@ -34,7 +37,7 @@ package com.njydsz.workflow.domain.enums;
  * @see FlowInstanceStatus 实例级状态
  * @see com.njydsz.workflow.domain.entity.FlowRunTask 任务实体
  */
-public enum FlowTaskStatus {
+public enum FlowTaskStatus implements BaseStatusEnum<FlowTaskStatus> {
 
     /** 待办：任务已生成，等待审批人处理（多人任务时可能需要先签收 CLAIMED） */
     PENDING,
@@ -83,5 +86,49 @@ public enum FlowTaskStatus {
                 || this == SKIPPED
                 || this == CANCELLED
                 || this == TIMEOUT;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>与 {@link #isFinished()} 语义对齐。
+     */
+    @Override
+    public boolean isTerminal() {
+        return isFinished();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>流转规则：
+     * <ul>
+     *   <li>PENDING → CLAIMED / COMPLETED / REJECTED / SKIPPED / CANCELLED / DELEGATED / FROZEN / SUSPENDED / DRAFT</li>
+     *   <li>CLAIMED → COMPLETED / REJECTED / DELEGATED / FROZEN / SUSPENDED / DRAFT</li>
+     *   <li>DRAFT → PENDING / CLAIMED（草稿提交后回到可处理状态）</li>
+     *   <li>DELEGATED → PENDING / CLAIMED（被委派人处理完或退回原办理人）</li>
+     *   <li>FROZEN / SUSPENDED → PENDING（激活恢复）</li>
+     *   <li>COMPLETED / REJECTED / SKIPPED / CANCELLED / TIMEOUT 为终态，不可再流转</li>
+     * </ul>
+     *
+     * @param target 目标状态
+     * @return true 表示允许流转
+     */
+    @Override
+    public boolean canTransitTo(FlowTaskStatus target) {
+        if (this == target) {
+            return true;
+        }
+        return switch (this) {
+            case PENDING -> target == CLAIMED || target == COMPLETED || target == REJECTED
+                    || target == SKIPPED || target == CANCELLED || target == DELEGATED
+                    || target == FROZEN || target == SUSPENDED || target == DRAFT;
+            case CLAIMED -> target == COMPLETED || target == REJECTED || target == DELEGATED
+                    || target == FROZEN || target == SUSPENDED || target == DRAFT;
+            case DRAFT -> target == PENDING || target == CLAIMED;
+            case DELEGATED -> target == PENDING || target == CLAIMED;
+            case FROZEN, SUSPENDED -> target == PENDING;
+            case COMPLETED, REJECTED, SKIPPED, CANCELLED, TIMEOUT -> false;
+        };
     }
 }

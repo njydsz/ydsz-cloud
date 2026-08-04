@@ -7,27 +7,14 @@ package com.njydsz.common.domain.enums;
  * 避免各模块重复定义状态机逻辑。配合 {@code StatusTransitionAspect} 或业务层
  * 显式调用 {@code canTransitTo} 实现状态变迁前置校验。
  *
- * <h3>实现示例</h3>
- * <pre>{@code
- * public enum OrderStatus implements BaseStatusEnum<OrderStatus> {
- *     PENDING,
- *     PAID,
- *     SHIPPED,
- *     DELIVERED,
- *     CANCELLED;
+ * <p>实现约定：
+ * <ul>
+ *   <li>自身到自身（{@code this == target}）返回 {@code true}</li>
+ *   <li>{@code target == null} 返回 {@code false}</li>
+ *   <li>终态到任何其他状态返回 {@code false}</li>
+ * </ul>
  *
- *     @Override
- *     public boolean canTransitTo(OrderStatus target) {
- *         if (this == target) return true;
- *         return switch (this) {
- *             case PENDING -> target == PAID || target == CANCELLED;
- *             case PAID -> target == SHIPPED || target == CANCELLED;
- *             case SHIPPED -> target == DELIVERED;
- *             case DELIVERED, CANCELLED -> false;
- *         };
- *     }
- * }
- * }</pre>
+ * <p>实现示例见 README「状态枚举实现」章节。
  *
  * @param <E> 具体状态枚举类型
  * @author ydsz-team
@@ -37,13 +24,6 @@ public interface BaseStatusEnum<E extends Enum<E>> {
 
     /**
      * 校验状态流转是否合法。
-     *
-     * <p>实现方应遵循以下约定：
-     * <ul>
-     *   <li>自身到自身（{@code this == target}）返回 {@code true}</li>
-     *   <li>终态到任何其他状态返回 {@code false}</li>
-     *   <li>{@code target == null} 返回 {@code false}</li>
-     * </ul>
      *
      * @param target 目标状态
      * @return true 表示允许从当前状态流转到目标状态

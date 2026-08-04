@@ -6,7 +6,6 @@
  * @since 3.0.0
  */
 export * from './create-runtime';
-export * from './event-bus';
 export * from './global-state';
 export * from './types';
 

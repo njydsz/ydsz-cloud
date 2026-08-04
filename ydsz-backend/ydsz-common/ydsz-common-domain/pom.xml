@@ -49,6 +49,11 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
+        <!--caffeine（SpEL 表达式解析缓存，版本由 spring-boot-dependencies BOM 管理）-->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
         <!--spring-boot-health（DomainHealthIndicator，可选）-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
