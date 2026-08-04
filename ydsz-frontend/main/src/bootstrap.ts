@@ -111,6 +111,8 @@ function registerMicroRuntime() {
         : getProdEntry(app),
       container: '#subapp-container',
       activeRule: app.activeRule,
+      // v3.6.0: 透传沙箱类型配置（未配置时 micro-kernel 默认 'snapshot'）
+      sandbox: app.sandbox,
     })),
   );
 

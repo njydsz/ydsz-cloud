@@ -57,6 +57,17 @@ export interface MicroAppEntry {
    * 再回退到 'default'。
    */
   skeletonType?: MicroAppSkeletonType;
+  /**
+   * 沙箱类型（v3.6.0 新增，可选）。
+   *
+   * - 未配置（undefined）：默认 'snapshot' 快照沙箱
+   * - 'snapshot'：快照沙箱，性能最佳，仅防意外污染 window
+   * - 'proxy'：Proxy fakeWindow 数据隔离，子应用通过 mountProps.fakeWindow 读写隔离数据
+   * - 'iframe'：iframe 强隔离（CSS + DOM + window），适用于全局样式冲突的子应用
+   *
+   * 业务侧按子应用实际隔离需求配置，大多数同源子应用用 'snapshot' 即可。
+   */
+  sandbox?: 'snapshot' | 'proxy' | 'iframe';
 }
 
 /**

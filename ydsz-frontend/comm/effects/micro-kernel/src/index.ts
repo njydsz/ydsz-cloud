@@ -18,6 +18,7 @@ export {
   injectModulePreload,
   injectPreconnect,
   preloadAppAssets,
+  preloadManifest,
 } from './link-hints';
 // v3.4: 公开预加载策略工厂，供主应用按需注册 frequency 策略
 export {
@@ -44,6 +45,8 @@ export {
   getKeepAliveCount,
   setMaxKeepAliveApps,
 } from './scheduler';
+// v3.6.0: 公开 GlobalStateBridge 类型，供外部扩展沙箱时使用
+export type { GlobalStateBridge } from './scheduler';
 // v3.3: 公开 error-boundary i18n helpers，主应用可运行时切换降级 UI 文案语言
 export {
   getErrorFallbackMessagesByLocale,
@@ -53,7 +56,7 @@ export type { ManifestPluginOptions, ManifestPluginRoute } from './vite-plugin-m
 export type { SandboxInstance } from './sandbox';
 export type { ProxySandboxInstance } from './proxy-sandbox';
 export type { IframeSandboxInstance } from './iframe-sandbox';
-// SandboxType 定义在 scheduler.ts，从此处 re-export 保持类型公开
+// v3.6.0: SandboxType 单一事实源在 micro-runtime，scheduler re-export
 export type { SandboxType } from './scheduler';
 export type { VersionUpdateResult, VersionManagerOptions } from './version-manager';
 export type { ErrorFallbackMessages } from './error-boundary';

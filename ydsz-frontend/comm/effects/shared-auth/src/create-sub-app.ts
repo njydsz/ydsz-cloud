@@ -51,6 +51,10 @@ export interface SubAppConfig {
 /** 标准化挂载参数（兼容 micro-kernel mountProps） */
 interface StandardMountProps {
   container?: HTMLElement;
+  /** v3.6.0: Proxy 沙箱注入的 fakeWindow */
+  fakeWindow?: Record<string, unknown>;
+  /** v3.6.0: iframe 沙箱注入的 contentWindow */
+  iframeWindow?: Window;
   [key: string]: unknown;
 }
 
@@ -130,6 +134,15 @@ async function coreMount(
 
   app = createApp(RootComponent);
   setupMonitor(app);
+
+  // v3.6.0: 注入沙箱 fakeWindow / iframeWindow 到 Vue 全局属性
+  // 子应用代码可通过 `const win = inject('$microWindow') ?? window` 透明降级
+  if (props?.fakeWindow) {
+    app.config.globalProperties.$microWindow = props.fakeWindow;
+  }
+  if (props?.iframeWindow) {
+    app.config.globalProperties.$iframeWindow = props.iframeWindow;
+  }
 
   const router = createRouter({
     history: createWebHistory(basename),

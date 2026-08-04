@@ -247,6 +247,18 @@ export function removeStylesheets(appName: string): void {
   }
 }
 
+/**
+ * 清空 manifest 缓存。
+ *
+ * 供 kernel `_stop()` 在 HMR / 测试场景调用，
+ * 确保新一轮内核启动时不会命中上一轮的 manifest 缓存（避免旧版本残留）。
+ *
+ * @since 3.6.1
+ */
+export function clearManifestCache(): void {
+  manifestCache.clear();
+}
+
 /** 断言模块导出 mount 方法（必需）和 unmount（必需） */
 function assertLifecycle(module: Record<string, unknown>, appName: string): void {
   if (typeof module.mount !== 'function') {

@@ -60,7 +60,15 @@ public enum SensitiveType {
      *
      * <p>适用于无特定格式的敏感字段。
      */
-    MASK_ALL;
+    MASK_ALL,
+
+    /**
+     * 自定义脱敏：头部/尾部保留字符数由 {@link Sensitive#prefixKeep()} /
+     * {@link Sensitive#suffixKeep()} 参数控制。
+     *
+     * <p>调用方式：{@code SensitiveUtils.mask(value, prefixKeep, suffixKeep)}。
+     */
+    CUSTOM;
 
     private final int prefixKeep;
     private final int suffixKeep;
@@ -96,16 +104,4 @@ public enum SensitiveType {
     public boolean isCustom() {
         return this == CUSTOM;
     }
-
-    /**
-     * 自定义脱敏类型（前缀/后缀保留数由注解参数控制）。
-     *
-     * @since 1.5.0
-     */
-    public static final SensitiveType CUSTOM = new SensitiveType() {
-        @Override
-        public boolean isCustom() {
-            return true;
-        }
-    };
 }

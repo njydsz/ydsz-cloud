@@ -1,0 +1,124 @@
+com.njydsz:ydsz-common-core:jar:1.0.0-SNAPSHOT
++- org.projectlombok:lombok:jar:1.18.42:provided (scope not updated to compile)
++- org.slf4j:slf4j-api:jar:2.0.18:compile
++- jakarta.validation:jakarta.validation-api:jar:3.1.1:compile
++- jakarta.annotation:jakarta.annotation-api:jar:3.0.0:compile
++- com.njydsz:ydsz-common-json:jar:1.0.0-SNAPSHOT:compile
+|  \- (org.projectlombok:lombok:jar:1.18.42:compile - version managed from 1.18.42; omitted for duplicate)
++- com.alibaba:transmittable-thread-local:jar:2.14.5:compile
++- jakarta.servlet:jakarta.servlet-api:jar:6.1.0:provided
++- org.springframework.boot:spring-boot:jar:4.1.0:compile
+|  +- org.springframework:spring-core:jar:7.0.8:compile (version managed from 7.0.8; scope not updated to compile)
+|  |  +- commons-logging:commons-logging:jar:1.3.5:compile (version managed from 1.3.5)
+|  |  \- org.jspecify:jspecify:jar:1.0.0:compile (version managed from 1.0.0; scope not updated to compile)
+|  \- org.springframework:spring-context:jar:7.0.8:compile (version managed from 7.0.8)
+|     +- org.springframework:spring-aop:jar:7.0.8:compile (version managed from 7.0.8)
+|     |  +- (org.springframework:spring-beans:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
+|     |  \- (org.springframework:spring-core:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
+|     +- org.springframework:spring-beans:jar:7.0.8:compile (version managed from 7.0.8)
+|     |  \- (org.springframework:spring-core:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
+|     +- (org.springframework:spring-core:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
+|     +- org.springframework:spring-expression:jar:7.0.8:compile (version managed from 7.0.8)
+|     |  \- (org.springframework:spring-core:jar:7.0.8:compile - version managed from 7.0.8; omitted for duplicate)
+|     \- io.micrometer:micrometer-observation:jar:1.17.0:compile (version managed from 1.16.6)
+|        +- (org.jspecify:jspecify:jar:1.0.0:compile - version managed from 1.0.0; omitted for duplicate)
+|        \- io.micrometer:micrometer-commons:jar:1.17.0:compile (version managed from 1.17.0)
+|           \- (org.jspecify:jspecify:jar:1.0.0:compile - version managed from 1.0.0; omitted for duplicate)
++- org.springframework.boot:spring-boot-autoconfigure:jar:4.1.0:compile
+|  \- (org.springframework.boot:spring-boot:jar:4.1.0:compile - version managed from 4.1.0; omitted for duplicate)
++- org.springframework.boot:spring-boot-configuration-processor:jar:4.1.0:compile
++- org.springframework.boot:spring-boot-health:jar:4.1.0:compile
+|  \- (org.springframework.boot:spring-boot:jar:4.1.0:compile - version managed from 4.1.0; omitted for duplicate)
++- org.springframework.boot:spring-boot-starter-test:jar:4.1.0:test
+|  +- org.springframework.boot:spring-boot-starter:jar:4.1.0:test (version managed from 4.1.0)
+|  |  +- org.springframework.boot:spring-boot-starter-logging:jar:4.1.0:test (version managed from 4.1.0)
+|  |  |  +- ch.qos.logback:logback-classic:jar:1.5.34:test (version managed from 1.5.34)
+|  |  |  |  +- ch.qos.logback:logback-core:jar:1.5.34:test (version managed from 1.5.34)
+|  |  |  |  \- (org.slf4j:slf4j-api:jar:2.0.18:test - version managed from 2.0.17; omitted for duplicate)
+|  |  |  +- org.apache.logging.log4j:log4j-to-slf4j:jar:2.25.4:test (version managed from 2.25.4)
+|  |  |  |  +- org.apache.logging.log4j:log4j-api:jar:2.25.4:test (version managed from 2.25.4)
+|  |  |  |  \- (org.slf4j:slf4j-api:jar:2.0.18:test - version managed from 2.0.17; omitted for duplicate)
+|  |  |  \- org.slf4j:jul-to-slf4j:jar:2.0.18:test (version managed from 2.0.18)
+|  |  |     \- (org.slf4j:slf4j-api:jar:2.0.18:test - version managed from 2.0.18; omitted for duplicate)
+|  |  +- (org.springframework.boot:spring-boot-autoconfigure:jar:4.1.0:test - version managed from 4.1.0; omitted for duplicate)
+|  |  +- (jakarta.annotation:jakarta.annotation-api:jar:3.0.0:test - version managed from 3.0.0; omitted for duplicate)
+|  |  \- org.yaml:snakeyaml:jar:2.6:test (version managed from 2.6)
+|  +- org.springframework.boot:spring-boot-test:jar:4.1.0:test (version managed from 4.1.0)
+|  |  +- (org.springframework.boot:spring-boot:jar:4.1.0:test - version managed from 4.1.0; omitted for duplicate)
+|  |  \- (org.springframework:spring-test:jar:7.0.8:test - version managed from 7.0.8; omitted for duplicate)
+|  +- org.springframework.boot:spring-boot-test-autoconfigure:jar:4.1.0:test (version managed from 4.1.0)
+|  |  \- (org.springframework.boot:spring-boot-test:jar:4.1.0:test - version managed from 4.1.0; omitted for duplicate)
+|  +- com.jayway.jsonpath:json-path:jar:2.10.0:test (version managed from 2.10.0)
+|  |  +- (net.minidev:json-smart:jar:2.6.0:test - version managed from 2.6.0; omitted for duplicate)
+|  |  \- (org.slf4j:slf4j-api:jar:2.0.18:test - version managed from 2.0.17; omitted for duplicate)
+|  +- jakarta.xml.bind:jakarta.xml.bind-api:jar:4.0.5:test (version managed from 4.0.5)
+|  |  \- jakarta.activation:jakarta.activation-api:jar:2.1.4:test (version managed from 2.1.4)
+|  +- net.minidev:json-smart:jar:2.6.0:test (version managed from 2.6.0)
+|  |  \- net.minidev:accessors-smart:jar:2.6.0:test
+|  |     \- org.ow2.asm:asm:jar:9.7.1:test (version managed from 9.7.1)
+|  +- org.assertj:assertj-core:jar:3.27.7:test (version managed from 3.27.7)
+|  |  \- net.bytebuddy:byte-buddy:jar:1.18.10:test (version managed from 1.18.3)
+|  +- org.awaitility:awaitility:jar:4.3.0:test (version managed from 4.3.0)
+|  |  \- (org.hamcrest:hamcrest:jar:3.0:test - version managed from 2.1; omitted for duplicate)
+|  +- org.hamcrest:hamcrest:jar:3.0:test (version managed from 3.0)
+|  +- org.junit.jupiter:junit-jupiter:jar:6.0.3:test (version managed from 6.0.3)
+|  |  +- org.junit.jupiter:junit-jupiter-api:jar:6.0.3:test (version managed from 6.0.3)
+|  |  |  +- org.opentest4j:opentest4j:jar:1.3.0:test
+|  |  |  +- org.junit.platform:junit-platform-commons:jar:6.0.3:test (version managed from 6.0.3)
+|  |  |  |  +- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+|  |  |  |  \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|  |  |  +- org.apiguardian:apiguardian-api:jar:1.1.2:test
+|  |  |  \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|  |  +- org.junit.jupiter:junit-jupiter-params:jar:6.0.3:test (version managed from 6.0.3)
+|  |  |  +- (org.junit.jupiter:junit-jupiter-api:jar:6.0.3:test - version managed from 6.0.3; omitted for duplicate)
+|  |  |  +- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+|  |  |  \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|  |  \- org.junit.jupiter:junit-jupiter-engine:jar:6.0.3:test (version managed from 6.0.3)
+|  |     +- org.junit.platform:junit-platform-engine:jar:6.0.3:test (version managed from 6.0.3)
+|  |     |  +- (org.opentest4j:opentest4j:jar:1.3.0:test - omitted for duplicate)
+|  |     |  +- (org.junit.platform:junit-platform-commons:jar:6.0.3:test - version managed from 6.0.3; omitted for duplicate)
+|  |     |  +- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+|  |     |  \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|  |     +- (org.junit.jupiter:junit-jupiter-api:jar:6.0.3:test - version managed from 6.0.3; omitted for duplicate)
+|  |     +- (org.apiguardian:apiguardian-api:jar:1.1.2:test - omitted for duplicate)
+|  |     \- (org.jspecify:jspecify:jar:1.0.0:test - version managed from 1.0.0; omitted for duplicate)
+|  +- org.mockito:mockito-core:jar:5.23.0:test (version managed from 5.23.0)
+|  |  +- (net.bytebuddy:byte-buddy:jar:1.18.10:test - version managed from 1.17.7; omitted for duplicate)
+|  |  +- net.bytebuddy:byte-buddy-agent:jar:1.18.10:test (version managed from 1.17.7)
+|  |  \- org.objenesis:objenesis:jar:3.3:test
+|  +- org.mockito:mockito-junit-jupiter:jar:5.23.0:test (version managed from 5.23.0)
+|  |  +- (org.mockito:mockito-core:jar:5.23.0:test - version managed from 5.23.0; omitted for duplicate)
+|  |  \- (org.junit.jupiter:junit-jupiter-api:jar:6.0.3:test - version managed from 5.13.4; omitted for duplicate)
+|  +- org.skyscreamer:jsonassert:jar:1.5.3:test (version managed from 1.5.3)
+|  |  \- com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1:test
+|  +- (org.springframework:spring-core:jar:7.0.8:test - version managed from 7.0.8; omitted for duplicate)
+|  +- org.springframework:spring-test:jar:7.0.8:test (version managed from 7.0.8)
+|  |  \- (org.springframework:spring-core:jar:7.0.8:test - version managed from 7.0.8; omitted for duplicate)
+|  \- org.xmlunit:xmlunit-core:jar:2.11.0:test (version managed from 2.11.0)
+|     \- (jakarta.xml.bind:jakarta.xml.bind-api:jar:4.0.5:test - version managed from 2.3.3; omitted for duplicate)
++- org.hibernate.validator:hibernate-validator:jar:9.1.0.Final:test
+|  +- (jakarta.validation:jakarta.validation-api:jar:3.1.1:test - version managed from 3.1.1; omitted for duplicate)
+|  +- org.jboss.logging:jboss-logging:jar:3.6.3.Final:test (version managed from 3.6.1.Final)
+|  \- com.fasterxml:classmate:jar:1.7.3:test (version managed from 1.7.1)
++- org.apache.tomcat.embed:tomcat-embed-el:jar:11.0.22:test
++- org.testcontainers:testcontainers:jar:2.0.5:test
+|  +- (org.slf4j:slf4j-api:jar:2.0.18:test - version managed from 1.7.36; omitted for duplicate)
+|  +- org.apache.commons:commons-compress:jar:1.28.0:test (version managed from 1.28.0)
+|  |  +- commons-codec:commons-codec:jar:1.17.1:test (version managed from 1.19.0)
+|  |  +- commons-io:commons-io:jar:2.16.1:test (version managed from 2.20.0)
+|  |  \- org.apache.commons:commons-lang3:jar:3.20.0:test (version managed from 3.18.0)
+|  +- org.rnorth.duct-tape:duct-tape:jar:1.0.8:test
+|  |  \- org.jetbrains:annotations:jar:24.1.0:test (version managed from 17.0.0)
+|  +- com.github.docker-java:docker-java-api:jar:3.7.1:test
+|  |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.21:test (version managed from 2.20)
+|  |  \- (org.slf4j:slf4j-api:jar:2.0.18:test - version managed from 1.7.30; omitted for duplicate)
+|  \- com.github.docker-java:docker-java-transport-zerodep:jar:3.7.1:test
+|     +- com.github.docker-java:docker-java-transport:jar:3.7.1:test
+|     +- (org.slf4j:slf4j-api:jar:2.0.18:test - version managed from 1.7.36; omitted for duplicate)
+|     \- net.java.dev.jna:jna:jar:5.18.1:test
++- org.testcontainers:postgresql:jar:1.20.6:test
+|  \- org.testcontainers:jdbc:jar:1.20.6:test (version managed from 1.20.6)
+|     \- org.testcontainers:database-commons:jar:1.20.6:test (version managed from 1.20.6)
+|        \- (org.testcontainers:testcontainers:jar:2.0.5:test - version managed from 1.20.6; omitted for duplicate)
+\- org.testcontainers:junit-jupiter:jar:1.20.6:test
+   \- (org.testcontainers:testcontainers:jar:2.0.5:test - version managed from 1.20.6; omitted for duplicate)

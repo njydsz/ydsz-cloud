@@ -3,7 +3,8 @@
  *
  * 负责：
  * - 存储和查询子应用版本信息
- * - 检测版本更新
+ * - 主动 fetch manifest 比较版本（P0-F1）
+ * - 版本更新时派发事件 + 清理 loader 缓存（P0-F1）
  * - 版本比较和兼容性检查
  *
  * @path comm/effects/micro-kernel/src/version-manager.ts
@@ -12,6 +13,7 @@
  */
 
 import type { Manifest } from './loader';
+import { clearManifestCache } from './loader';
 import { createLogger } from '@ydsz-core/shared/utils';
 
 /** 模块级日志器 */
@@ -47,12 +49,21 @@ export interface VersionManagerOptions {
 const STORAGE_KEY = 'micro-kernel:versions';
 const DEFAULT_CHECK_INTERVAL = 5 * 60 * 1000; // 5分钟
 
+/** 是否为开发模式（dev 模式无 manifest.json，跳过自动检查） */
+const isDev =
+  typeof import.meta !== 'undefined' &&
+  (import.meta as { env?: Record<string, unknown> }).env?.DEV === true;
+
 class VersionManager {
   private versions: Map<string, VersionInfo> = new Map();
   private checkInterval: number;
   private autoCheck: boolean;
   private onVersionCheck?: (result: VersionUpdateResult) => void;
   private checkTimer: null | ReturnType<typeof setInterval> = null;
+  /** P0-F1: 注册的子应用入口（appName → entry URL），供自动检查 fetch manifest */
+  private appEntries: Map<string, string> = new Map();
+  /** 并发保护：防止上一轮检查未完成时启动新一轮 */
+  private checking = false;
 
   constructor(options: VersionManagerOptions = {}) {
     this.checkInterval = options.checkInterval ?? DEFAULT_CHECK_INTERVAL;
@@ -66,6 +77,16 @@ class VersionManager {
     if (this.autoCheck) {
       this.startAutoCheck();
     }
+  }
+
+  /**
+   * P0-F1: 注册子应用入口，供自动检查使用。
+   *
+   * kernel 在 `registerApps` 时调用，将 appName → entry 映射注入版本管理器。
+   * 后续自动检查会根据这些入口 URL 主动 fetch manifest.json 比较版本。
+   */
+  setAppEntries(entries: Map<string, string>): void {
+    this.appEntries = new Map(entries);
   }
 
   /**
@@ -156,15 +177,117 @@ class VersionManager {
   }
 
   /**
-   * 启动自动版本检查
+   * P0-F1: 启动自动版本检查。
+   *
+   * 定时主动 fetch 各子应用 manifest.json，比较版本号：
+   * - 检测到更新时派发 `micro-kernel:version-update` 事件
+   * - 清理 loader 的 manifest 缓存，确保下次 loadApp 拉取最新 manifest
+   * - 调用 onVersionCheck 回调
+   *
+   * dev 模式下跳过（无 manifest.json 产物）。
+   * 页面不可见时跳过（节省网络请求）。
    */
   startAutoCheck(): void {
     if (this.checkTimer) return;
 
+    // dev 模式无 manifest.json 产物，自动检查无意义
+    if (isDev) {
+      logger.debug('Auto-check skipped in dev mode');
+      return;
+    }
+
+    // 首次延迟 10 秒检查，避免与首屏加载抢带宽
+    const initialDelay = 10_000;
+    setTimeout(() => this.runCheck(), initialDelay);
+
     this.checkTimer = setInterval(() => {
-      // 自动检查逻辑由外部提供 manifests 触发
-      logger.debug('Auto-check triggered');
+      void this.runCheck();
     }, this.checkInterval);
+  }
+
+  /**
+   * P0-F1: 手动触发一次版本检查。
+   *
+   * 供外部（如用户主动"检查更新"按钮）调用。
+   */
+  async checkNow(): Promise<VersionUpdateResult[]> {
+    return this.runCheck();
+  }
+
+  /**
+   * P0-F1: 执行一轮版本检查。
+   *
+   * 遍历所有已注册的子应用入口，fetch 最新 manifest，
+   * 与已存储的版本比较，检测到更新时派发事件并清理缓存。
+   */
+  private async runCheck(): Promise<VersionUpdateResult[]> {
+    if (this.checking) {
+      logger.debug('Check already in progress, skipping');
+      return [];
+    }
+
+    // 页面不可见时跳过，节省网络请求
+    if (typeof document !== 'undefined' && document.hidden) {
+      logger.debug('Tab hidden, skipping check');
+      return [];
+    }
+
+    if (this.appEntries.size === 0) {
+      logger.debug('No app entries registered, skipping check');
+      return [];
+    }
+
+    this.checking = true;
+    const results: VersionUpdateResult[] = [];
+
+    try {
+      for (const [appName, entry] of this.appEntries) {
+        try {
+          const manifest = await this.fetchLatestManifest(entry);
+          const result = await this.checkUpdate(appName, manifest);
+          results.push(result);
+
+          if (result.hasUpdate) {
+            logger.info(
+              `App "${appName}" updated: ${result.currentVersion} -> ${result.latestVersion}`,
+            );
+
+            // 派发版本更新事件，供 UI 层提示用户刷新
+            window.dispatchEvent(
+              new CustomEvent('micro-kernel:version-update', { detail: result }),
+            );
+
+            // 清理 loader 的 manifest 缓存，确保下次 loadApp 拉取新版本
+            clearManifestCache();
+          }
+        } catch {
+          // 单个应用检查失败不阻塞其他应用
+          logger.debug(`Failed to check version for "${appName}"`);
+        }
+      }
+    } finally {
+      this.checking = false;
+    }
+
+    return results;
+  }
+
+  /**
+   * P0-F1: 直接 fetch manifest.json（绕过 loader 缓存）。
+   *
+   * 自动检查需要获取最新的 manifest 来比较版本，
+   * 不能使用 loader 的 manifestCache（其中可能缓存了旧版本）。
+   */
+  private async fetchLatestManifest(entry: string): Promise<Manifest> {
+    const manifestUrl = `${entry.replace(/\/$/, '')}/manifest.json`;
+    const response = await fetch(manifestUrl, {
+      cache: 'no-cache',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch manifest from ${manifestUrl}: ${response.status}`);
+    }
+    return (await response.json()) as Manifest;
   }
 
   /**
@@ -183,6 +306,7 @@ class VersionManager {
   destroy(): void {
     this.stopAutoCheck();
     this.versions.clear();
+    this.appEntries.clear();
   }
 
   /**

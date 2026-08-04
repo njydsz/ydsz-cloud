@@ -127,6 +127,30 @@ export function preloadAppAssets(
 }
 
 /**
+ * P0-P1: 为子应用 manifest.json 注入 preload 提示。
+ *
+ * 在 `registerApps` 时调用，让浏览器在页面空闲时提前 fetch manifest.json，
+ * 后续 `loadApp` 调用时可直接命中 HTTP 缓存，消除 manifest 串行等待。
+ *
+ * 仅 build 模式有效（dev 模式无 manifest.json 产物）。
+ *
+ * @param entry - 子应用入口基路径
+ * @since 3.6.1
+ */
+export function preloadManifest(entry: string): void {
+  try {
+    const manifestUrl = `${entry.replace(/\/$/, '')}/manifest.json`;
+    const absoluteUrl = new URL(manifestUrl, window.location.origin).href;
+    // preconnect 提前建立连接（跨域时）
+    injectPreconnect(entry);
+    // preload manifest.json（as=fetch，不阻塞渲染）
+    injectLinkHint('preload', absoluteUrl, { crossorigin: true, as: 'fetch' });
+  } catch {
+    // URL 解析失败时静默跳过
+  }
+}
+
+/**
  * 清理所有由本模块注入的 link hints。
  *
  * 用于子应用卸载或内核销毁时清理 DOM。

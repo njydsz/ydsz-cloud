@@ -14,6 +14,15 @@
  * - **DOM 隔离**：iframe 有独立 document，querySelector 等不跨域
  * - **fakeWindow**：iframe 的 contentWindow 可作为 mountProps 注入的隔离 window
  *
+ * **跨 realm 通信（v3.6.0 新增）**：
+ * 由于 iframe 有独立 realm，主应用直接传给子应用的 `_globalState` 对象
+ * 在跨 realm 调用时可能引发异常（如 instanceof 失效、原型链不一致）。
+ * 本沙箱内置 postMessage 桥接协议：
+ * - 主侧通过 `postToChild(payload)` 发送 globalState 快照
+ * - 子侧通过监听 `message` 事件接收，并回传 `setGlobalState` 调用
+ * - 协议消息含 `__MICRO_KERNEL_BRIDGE__: true` 标记 + `type` + `payload`
+ * - 主侧维护 childMessageHandler，由 kernel 注入 globalState 同步逻辑
+ *
  * **适用场景**：
  * - 子应用使用全局 CSS 选择器（如 `body { ... }`）可能与主应用冲突时
  * - 需要完全独立的 document 环境的第三方子应用
@@ -21,7 +30,6 @@
  *
  * **限制**：
  * - iframe 创建有额外开销（首次约 10-30ms）
- * - 跨 realm 通信需通过 postMessage，事件系统不直通
  * - 弹窗/抽屉等 fixed 定位元素会被限制在 iframe 视口内
  *
  * **对标实现**：
@@ -47,11 +55,112 @@ export interface IframeSandboxInstance {
   deactivate: () => void;
   /** 清理沙箱（移除 iframe，释放资源） */
   cleanup: () => void;
+  /**
+   * 向子应用发送消息（主 → 子）。
+   *
+   * @since 3.6.0
+   * @param payload - 任意可结构化克隆的消息体
+   */
+  postToChild: (payload: unknown) => void;
+  /**
+   * 注册子应用消息处理器（子 → 主）。
+   *
+   * @since 3.6.0
+   * @param handler - 收到子应用消息时的回调
+   * @returns 取消注册函数
+   */
+  onChildMessage: (handler: (payload: unknown) => void) => () => void;
 }
 
 /** iframe 默认样式：撑满容器、无边框 */
 const IFRAME_STYLE =
   'width:100%;height:100%;border:0;display:block;margin:0;padding:0;';
+
+/**
+ * postMessage 桥接协议标记。
+ *
+ * 所有由本沙箱桥接发送的消息都带此标记，子侧/主侧据此区分微内核桥接消息
+ * 与业务侧自己的 postMessage 通信，避免互相干扰。
+ *
+ * @since 3.6.0
+ */
+const BRIDGE_MARK = '__MICRO_KERNEL_BRIDGE__';
+
+/**
+ * 桥接消息类型。
+ *
+ * - `state-sync`：主 → 子，globalState 快照同步
+ * - `state-set`：子 → 主，子应用调用 setGlobalState
+ *
+ * @since 3.6.0
+ */
+type BridgeMessageType = 'state-set' | 'state-sync';
+
+/** 桥接消息结构 */
+interface BridgeMessage<T = unknown> {
+  [BRIDGE_MARK]: true;
+  type: BridgeMessageType;
+  payload: T;
+}
+
+/**
+ * 判断消息是否为本沙箱桥接协议消息。
+ *
+ * @since 3.6.0
+ */
+function isBridgeMessage(data: unknown): data is BridgeMessage {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    (data as Record<string, unknown>)[BRIDGE_MARK] === true
+  );
+}
+
+/**
+ * 在 iframe 内注入桥接监听器脚本。
+ *
+ * 注入的脚本在 iframe realm 中执行，监听 `message` 事件：
+ * - 收到 `state-sync` 消息时，将 payload 写入 `window.__MICRO_GLOBAL_STATE__`
+ * - 暴露 `window.__MICRO_SET_GLOBAL_STATE__(patch)` 供子应用调用，
+ *   该方法通过 postMessage 回传 `state-set` 给主应用
+ *
+ * 子应用代码通过 `mountProps.iframeWindow.__MICRO_GLOBAL_STATE__` 读取同步过来的状态，
+ * 通过 `mountProps.iframeWindow.__MICRO_SET_GLOBAL_STATE__({ key: value })` 回写。
+ *
+ * @since 3.6.0
+ * @param iframeWin - iframe 的 contentWindow
+ */
+function injectBridgeScript(iframeWin: Window): void {
+  // 在 iframe document 中注入 <script>，确保代码在 iframe realm 执行
+  const iframeDoc = iframeWin.document;
+  const script = iframeDoc.createElement('script');
+  script.textContent = `
+    (function() {
+      // 当前 globalState 快照（由主应用同步过来）
+      window.__MICRO_GLOBAL_STATE__ = {};
+
+      // 子应用调用此方法回写状态到主应用
+      window.__MICRO_SET_GLOBAL_STATE__ = function(patch) {
+        window.parent.postMessage({
+          ${BRIDGE_MARK}: true,
+          type: 'state-set',
+          payload: patch
+        }, '*');
+      };
+
+      // 监听主应用发来的 state-sync 消息
+      window.addEventListener('message', function(event) {
+        var data = event.data;
+        if (!data || data.${BRIDGE_MARK} !== true) return;
+        if (data.type === 'state-sync') {
+          window.__MICRO_GLOBAL_STATE__ = data.payload || {};
+        }
+      });
+    })();
+  `;
+  iframeDoc.head.appendChild(script);
+  script.remove();
+}
 
 /**
  * 创建 iframe 沙箱实例。
@@ -113,6 +222,30 @@ export function createIframeSandbox(
   container.setAttribute('data-micro-app', appName);
   contentDocument.body.appendChild(container);
 
+  // v3.6.0: 注入 postMessage 桥接脚本，建立跨 realm 通信通道
+  injectBridgeScript(contentWindow);
+
+  // v3.6.0: 主侧消息处理器集合（子 → 主）
+  const childMessageHandlers = new Set<(payload: unknown) => void>();
+
+  // 主侧监听 iframe 发来的消息（通过 postMessage 回传）
+  const onMessage = (event: MessageEvent): void => {
+    if (event.source !== contentWindow) return;
+    const data = event.data;
+    if (!isBridgeMessage(data)) return;
+    // 只转发 state-set 类型的消息（子 → 主）
+    if (data.type === 'state-set') {
+      for (const handler of childMessageHandlers) {
+        try {
+          handler(data.payload);
+        } catch {
+          // 单个 handler 异常不影响其他 handler
+        }
+      }
+    }
+  };
+  window.addEventListener('message', onMessage);
+
   let isActive = false;
   let cleaned = false;
 
@@ -142,6 +275,10 @@ export function createIframeSandbox(
       cleaned = true;
       isActive = false;
 
+      // v3.6.0: 移除主侧 message 监听器，避免内存泄漏
+      window.removeEventListener('message', onMessage);
+      childMessageHandlers.clear();
+
       // 清空 iframe 内容并移除
       try {
         contentDocument.write('');
@@ -154,6 +291,25 @@ export function createIframeSandbox(
       if (!import.meta.env.PROD) {
         console.debug(`[IframeSandbox:${appName}] Cleaned up`);
       }
+    },
+
+    // v3.6.0: 主 → 子 消息发送
+    postToChild(payload: unknown): void {
+      if (cleaned || !contentWindow) return;
+      const message: BridgeMessage = {
+        [BRIDGE_MARK]: true,
+        type: 'state-sync',
+        payload,
+      } as BridgeMessage;
+      contentWindow.postMessage(message, '*');
+    },
+
+    // v3.6.0: 注册子 → 主 消息处理器
+    onChildMessage(handler: (payload: unknown) => void): () => void {
+      childMessageHandlers.add(handler);
+      return () => {
+        childMessageHandlers.delete(handler);
+      };
     },
   };
 }
