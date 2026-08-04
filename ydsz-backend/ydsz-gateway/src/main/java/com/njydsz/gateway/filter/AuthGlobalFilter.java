@@ -1,4 +1,4 @@
-﻿package com.njydsz.gateway.filter;
+package com.njydsz.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;

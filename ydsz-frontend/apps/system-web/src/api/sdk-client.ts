@@ -9,7 +9,7 @@
  * import { apiClient } from '#/api/sdk-client';
  *
  * // 类型安全的 API 调用
- * const { data, error } = await apiClient.GET('/api/system/users/{id}', {
+ * const { data, error } = await apiClient.GET('/api/v1/dict/type/{id}', {
  *   params: { path: { id: '123' } },
  * });
  * ```
@@ -28,7 +28,7 @@ import type { paths } from './sdk/schema';
  * 所有 API 路径、参数、响应类型均与后端 OpenAPI 规范对齐。
  */
 export const apiClient = createOpenApiClient<paths>({
-  baseUrl: '/api/system',
+  baseUrl: '',
 });
 
 /**
@@ -38,68 +38,36 @@ export const apiClient = createOpenApiClient<paths>({
  */
 
 /**
- * 获取用户列表
+ * 获取字典类型分页
  * @param params - 查询参数（分页、筛选等）
  */
-export async function getUsers(params?: {
-  page?: number;
+export async function getDictTypePage(params?: {
+  pageNum?: number;
   pageSize?: number;
-  keyword?: string;
+  typeName?: string;
+  typeCode?: string;
 }) {
-  return apiClient.GET('/users', {
+  return apiClient.GET('/api/v1/dict/type/page', {
     params: { query: params },
   });
 }
 
 /**
- * 获取用户详情
- * @param id - 用户 ID
+ * 获取字典类型详情
+ * @param id - 字典类型 ID
  */
-export async function getUserById(id: string) {
-  return apiClient.GET('/users/{id}', {
+export async function getDictTypeById(id: string) {
+  return apiClient.GET('/api/v1/dict/type/{id}', {
     params: { path: { id } },
   });
 }
 
 /**
- * 创建用户
- * @param data - 用户数据
+ * 按类型编码查询字典项
+ * @param typeCode - 字典类型编码
  */
-export async function createUser(data: {
-  username: string;
-  email: string;
-  password: string;
-}) {
-  return apiClient.POST('/users', {
-    body: data,
-  });
-}
-
-/**
- * 更新用户
- * @param id - 用户 ID
- * @param data - 更新数据
- */
-export async function updateUser(
-  id: string,
-  data: Partial<{
-    username: string;
-    email: string;
-    password: string;
-  }>,
-) {
-  return apiClient.PUT('/users/{id}', {
-    params: { path: { id } },
-    body: data,
-  });
-}
-
-/**
- * 删除用户
- * @param id - 用户 ID
- */
-export async function deleteUser(id: string) {
-  return apiClient.DELETE('/users/{id}', {
-    params: { path: { id } },
+export async function getDictItemsByType(typeCode: string) {
+  return apiClient.GET('/api/v1/dict/item/type/{typeCode}', {
+    params: { path: { typeCode } },
   });
 }

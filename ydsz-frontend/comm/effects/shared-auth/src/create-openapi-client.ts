@@ -12,7 +12,7 @@
 import type { ClientOptions } from 'openapi-fetch';
 import createClient from 'openapi-fetch';
 
-import { requestClient } from './request-client';
+import { requestClient } from './request-setup';
 
 /**
  * 创建 OpenAPI SDK 客户端
