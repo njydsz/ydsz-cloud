@@ -6,4 +6,5 @@
  * @since 1.0.0
  */
 export * from './request-client';
+export * from './cache-adapter';
 export * from 'axios';

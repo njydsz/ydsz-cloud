@@ -55,6 +55,7 @@
     "gen:app": "node ./bash/gen-app.mjs",
     "gen:nginx": "node ./bash/gen-nginx-conf.mjs",
     "gen:nginx:check": "node ./bash/gen-nginx-conf.mjs --check",
+    "gen:registry": "node ./bash/gen-registry.mjs",
     "lint": "vsh lint",
     "postinstall": "pnpm -r run stub --if-present",
     "preinstall": "npx only-allow pnpm",

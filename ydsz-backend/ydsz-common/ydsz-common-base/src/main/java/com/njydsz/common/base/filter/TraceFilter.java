@@ -14,14 +14,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.util.id.UUIDUtils;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 /**
  * 链路追踪过滤器
  *
  * <p>功能说明：
  * <ul>
- *   <li>生成或提取 traceId</li>
+ *   <li>生成或提取 traceId（生成复用 {@link TraceIdGenerator}，线程本地高性能实现）</li>
  *   <li>将 traceId 注入 MDC，供日志框架使用</li>
  *   <li>将 traceId 存入 RequestContext</li>
  *   <li>在响应头中返回 traceId</li>
@@ -80,7 +80,8 @@ public class TraceFilter extends OncePerRequestFilter {
      *   <li>长度不超过 64 字符</li>
      *   <li>仅允许字母、数字、连字符、下划线</li>
      * </ul>
-     * 校验失败时重新生成，防止日志注入和日志膨胀。
+     * 校验失败时调用 {@link TraceIdGenerator#generateTraceId()} 重新生成
+     * （ThreadLocalRandom 实现，性能优于 UUID），防止日志注入和日志膨胀。
      *
      * @param request HTTP 请求
      * @return traceId
@@ -94,7 +95,7 @@ public class TraceFilter extends OncePerRequestFilter {
                 || traceId.isEmpty()
                 || traceId.length() > MAX_TRACE_ID_LENGTH
                 || !TRACE_ID_PATTERN.matcher(traceId).matches()) {
-            traceId = UUIDUtils.simpleUuid();
+            traceId = TraceIdGenerator.generateTraceId();
         }
 
         return traceId;

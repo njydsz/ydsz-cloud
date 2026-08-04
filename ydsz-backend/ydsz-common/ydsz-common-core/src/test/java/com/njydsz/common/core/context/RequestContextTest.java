@@ -59,7 +59,7 @@ class RequestContextTest {
     @Test
     @DisplayName("put(null key) 抛出 NullPointerException")
     void putNullKeyThrows() {
-        assertThrows(NullPointerException.class, () -> RequestContext.put(null, "v"));
+        assertThrows(NullPointerException.class, () -> RequestContext.put((String) null, "v"));
         RequestContext.clear();
     }
 

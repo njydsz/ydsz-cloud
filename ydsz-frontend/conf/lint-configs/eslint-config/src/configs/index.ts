@@ -8,6 +8,7 @@
 export * from './command';
 export * from './comments';
 export * from './disableds';
+export * from './i18n';
 export * from './ignores';
 export * from './import';
 export * from './javascript';
@@ -18,6 +19,7 @@ export * from './perfectionist';
 export * from './prettier';
 export * from './regexp';
 export * from './sandbox';
+export * from './scoped-css';
 export * from './test';
 export * from './turbo';
 export * from './typescript';

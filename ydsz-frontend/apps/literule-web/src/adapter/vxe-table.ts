@@ -1,78 +1,13 @@
 /**
- * vxe-table 表格组件适配器
- * <p>封装 ydsz-literule 子应用的 vxe-table 全局配置，包括列渲染器（状态标签、图片预览等）和统一表格选项。
+ * vxe-table 适配器（应用级 re-export）
  *
- * @path apps\literule-web\src\adapter\vxe-table.ts
+ * 统一实现已提取至 @ydsz/shared-business，此处保留应用级入口以兼容既有导入路径。
+ * 如需应用级扩展自定义 renderer，可在此文件内补充。
+ *
+ * @path apps/literule-web/src/adapter/vxe-table.ts
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.1.0
  */
-import type { VxeTableGridOptions } from '@ydsz/plugins/vxe-table';
-
-import { h } from 'vue';
-
-import { setupYDSZVxeTable, useYDSZVxeGrid } from '@ydsz/plugins/vxe-table';
-
-import { ElButton, ElImage } from 'element-plus';
-
-import { useYDSZForm } from './form';
-
-setupYDSZVxeTable({
-  configVxeTable: (vxeUI) => {
-    vxeUI.setConfig({
-      grid: {
-        align: 'center',
-        border: false,
-        columnConfig: {
-          resizable: true,
-        },
-        minHeight: 180,
-        formConfig: {
-          // 全局禁用vxe-table的表单配置，使用formOptions
-          enabled: false,
-        },
-        proxyConfig: {
-          autoLoad: true,
-          response: {
-            result: 'items',
-            total: 'total',
-            list: 'items',
-          },
-          showActiveMsg: true,
-          showResponseMsg: false,
-        },
-        round: true,
-        showOverflow: true,
-        size: 'small',
-      } as VxeTableGridOptions,
-    });
-
-    // 表格配置项可以用 cellRender: { name: 'CellImage' },
-    vxeUI.renderer.add('CellImage', {
-      renderTableDefault(_renderOpts, params) {
-        const { column, row } = params;
-        const src = row[column.field];
-        return h(ElImage, { src, previewSrcList: [src] });
-      },
-    });
-
-    // 表格配置项可以用 cellRender: { name: 'CellLink' },
-    vxeUI.renderer.add('CellLink', {
-      renderTableDefault(renderOpts) {
-        const { props } = renderOpts;
-        return h(
-          ElButton,
-          { size: 'small', link: true },
-          { default: () => props?.text },
-        );
-      },
-    });
-
-    // 这里可以自行扩展 vxe-table 的全局配置，比如自定义格式化
-    // vxeUI.formats.add
-  },
-  useYDSZForm,
-});
-
-export { useYDSZVxeGrid };
+export { useYDSZVxeGrid } from '@ydsz/shared-business';
 
 export type * from '@ydsz/plugins/vxe-table';

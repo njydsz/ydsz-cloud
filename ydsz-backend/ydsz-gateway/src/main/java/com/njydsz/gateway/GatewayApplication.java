@@ -11,6 +11,7 @@ import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.safe.crypto.NonceCache;
+import com.njydsz.gateway.config.CorsProperties;
 import com.njydsz.gateway.config.GatewayAlertService;
 import com.njydsz.gateway.config.GatewayHealthIndicator;
 import com.njydsz.gateway.config.GatewayMetrics;
@@ -59,7 +60,8 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 @EnableConfigurationProperties({
         RateLimitProperties.class,
         SecurityHeadersProperties.class,
-        IpWhitelistProperties.class
+        IpWhitelistProperties.class,
+        CorsProperties.class
 })
 public class GatewayApplication {
 

@@ -31,8 +31,6 @@ class CoreAutoConfigurationTest {
     void tearDown() {
         // 清理静态状态，避免测试间污染
         BaseResponse.setResolver(null);
-        PageConstants.setMaxPageSize(1000);
-        PageConstants.setDefaultPageSize(20);
     }
 
     @Test

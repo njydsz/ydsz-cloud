@@ -137,6 +137,71 @@ export interface StartOptions {
   prefetch?: boolean | ((app: MicroAppConfig) => boolean);
   /** 权限检查器，用于预加载时过滤无权限的应用 */
   permissionChecker?: PermissionChecker;
+  /**
+   * 注册表适配器（v3.7.0 新增）。
+   *
+   * 默认 'static'：从 micro-apps.config.ts 静态 MICRO_APPS 数组读取。
+   * 'remote' / 'auto'：优先拉取远程 registry.json，失败回退到静态。
+   */
+  registry?: 'static' | 'remote' | 'auto';
+  /**
+   * 自定义注册表获取函数（覆盖默认 resolveRegistry）。
+   *
+   * 用于测试或需要自定义获取逻辑（如从不同端点、带鉴权）的场景。
+   *
+   * @since 3.7.0
+   */
+  registryFetcher?: () => Promise<MicroAppEntry[]>;
+}
+
+/**
+ * 远程注册表适配器（v3.7.0 新增）。
+ *
+ * 运行时可传入此接口以动态提供子应用注册信息，
+ * 替代传统的静态 MICRO_APPS 数组硬编码方式。
+ *
+ * @since 3.7.0
+ */
+export interface RegistryAdapter {
+  /** 获取子应用注册表 */
+  resolve(): Promise<MicroAppEntry[]>;
+  /** 清空缓存 */
+  clearCache(): void;
+  /** 强制刷新注册表（忽略缓存重新拉取） */
+  refresh(): Promise<MicroAppEntry[]>;
+}
+
+/** 子应用注册表条目（字段复用 MicroAppEntry，作为运行时契约导出） */
+export interface MicroAppEntry {
+  /** 子应用唯一标识（如 'project-web'） */
+  name: string;
+  /** Monorepo 内包名（如 @ydsz/project-web） */
+  packageName: string;
+  /** 路由前缀（如 '/ydsz-proj'），也作为 activeRule */
+  activeRule: string;
+  /** 菜单默认重定向路径 */
+  redirect: string;
+  /** 菜单标题 */
+  title: string;
+  /** 菜单图标（lucide 图标名） */
+  icon: string;
+  /** 菜单排序权重（越小越靠前） */
+  order: number;
+  /** 开发服务器端口 */
+  devPort: number;
+  /** 生产环境部署子路径 */
+  prodPath?: string;
+  /** 子应用默认骨架屏类型 */
+  skeletonType?: 'dashboard' | 'default' | 'detail' | 'form' | 'list';
+  /** 沙箱类型 */
+  sandbox?: 'snapshot' | 'proxy' | 'iframe';
+  /**
+   * 显式入口 URL（v3.7.0 新增）。
+   *
+   * 设置时将覆盖自动推导逻辑（devPort），直接作为子应用入口。
+   * 适用于：远程注册表下发完整 entry、自定义部署路径等场景。
+   */
+  entry?: string;
 }
 
 /** 微应用运行时卸载结果 */
@@ -155,6 +220,22 @@ export interface UnmountResult {
 export interface MicroRuntime {
   /** 注册子应用列表（必须在 start 前调用） */
   registerApps(apps: MicroAppConfig[]): void;
+
+  /**
+   * 异步注册子应用列表（v3.7.0 新增）。
+   *
+   * 调用后可立即返回（不阻塞），内部 await 注册表就绪后自动注册。
+   * 用于 'remote' / 'auto' 注册表适配器场景，基座可在注册表拉取完成前渲染骨架。
+   *
+   * 返回 Promise 在注册完成（或失败回退到静态）后 resolve。
+   *
+   * @param registry - 注册表配置（adapter / fetcher）
+   * @returns 注册完成后的应用配置数组
+   */
+  registerAppsAsync(registry: {
+    adapter: 'static' | 'remote' | 'auto';
+    fetcher?: () => Promise<MicroAppEntry[]>;
+  }): Promise<MicroAppConfig[]>;
 
   /** 查询已注册应用 */
   getRegisteredApps(): ReadonlyArray<MicroAppConfig>;

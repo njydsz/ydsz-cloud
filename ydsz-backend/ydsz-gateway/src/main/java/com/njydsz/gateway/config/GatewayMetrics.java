@@ -44,6 +44,9 @@ public class GatewayMetrics extends AbstractModuleMetrics {
     /** 按 routeId 维护的熔断器状态引用（AtomicInteger 可变，Gauge 回调能读到最新值） */
     private final ConcurrentMap<String, AtomicInteger> breakerStates = new ConcurrentHashMap<>();
 
+    /** P1-2: 本地兜底限流配额引用（Gauge 读取最新值） */
+    private final AtomicInteger fallbackQuotaRef = new AtomicInteger(0);
+
     /**
      * 构造网关指标组件。
      *
@@ -85,6 +88,32 @@ public class GatewayMetrics extends AbstractModuleMetrics {
         incrementCounter("ratelimit_triggered_total",
                 "dimension", safe(dimension),
                 "route", safe(routeId));
+    }
+
+    /**
+     * 增加限流本地兜底计数（Redis 不可用时的降级模式）。
+     *
+     * <p>P1-2: 用于监控 Redis 故障期间限流降级频率，
+     * 指标 {@code ydsz_gateway_ratelimit_fallback_total}，Grafana 可据此告警
+     * "限流降级中，请检查 Redis"。
+     */
+    public void incrementRatelimitFallback() {
+        incrementCounter("ratelimit_fallback_total");
+    }
+
+    /**
+     * 上报本地兜底令牌桶的自适应配额（按实例数分摊后的 QPS）。
+     *
+     * <p>P1-2: Gauge 指标 {@code ydsz_gateway_ratelimit_fallback_quota}，
+     * 便于确认 Redis 故障期间的实际限流阈值。首次调用注册 Gauge，后续仅更新引用值。
+     *
+     * @param quota 自适应分摊后的本地 QPS 配额
+     */
+    public void setRatelimitFallbackQuota(int quota) {
+        if (fallbackQuotaRef.getAndSet(quota) == 0) {
+            // 首次注册 Gauge（幂等：Micrometer 对同名称+标签的重复注册会合并）
+            gaugeRef("ratelimit_fallback_quota", fallbackQuotaRef, AtomicInteger::doubleValue);
+        }
     }
 
     /**

@@ -65,3 +65,5 @@ export type { VersionUpdateResult, VersionManagerOptions } from './version-manag
 export type { ErrorFallbackMessages } from './error-boundary';
 // v3.3: 公开 Manifest 类型供主应用容器读取 routes 配置（骨架屏细化）
 export type { LoadOptions, LoadResult, Manifest, ManifestRoute } from './loader';
+// v3.7.0: 远程注册表适配器 — 支持运行时拉取子应用配置
+export { clearRegistryCache, refreshRegistry, resolveAppEntry, resolveRegistry } from './registry-adapter';

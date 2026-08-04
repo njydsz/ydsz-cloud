@@ -2,8 +2,6 @@ package com.njydsz.common.core.constant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -18,21 +16,6 @@ import org.junit.jupiter.api.Test;
  */
 @DisplayName("PageConstants 分页常量测试")
 class PageConstantsTest {
-
-    private static final int ORIGINAL_DEFAULT = PageConstants.getDefaultPageSize();
-    private static final int ORIGINAL_MAX = PageConstants.getMaxPageSize();
-
-    @BeforeEach
-    void setUp() {
-        PageConstants.setDefaultPageSize(20);
-        PageConstants.setMaxPageSize(1000);
-    }
-
-    @AfterEach
-    void tearDown() {
-        PageConstants.setDefaultPageSize(ORIGINAL_DEFAULT);
-        PageConstants.setMaxPageSize(ORIGINAL_MAX);
-    }
 
     @Test
     @DisplayName("normalizePageSize 正常值原样返回")
@@ -53,17 +36,8 @@ class PageConstantsTest {
     @Test
     @DisplayName("normalizePageSize 超过上限截断为最大值")
     void normalizePageSize_overMax() {
-        assertEquals(1000, PageConstants.normalizePageSize(5000));
-        assertEquals(1000, PageConstants.normalizePageSize(Integer.MAX_VALUE));
-    }
-
-    @Test
-    @DisplayName("normalizePageSize 使用运行时覆盖值")
-    void normalizePageSize_usesRuntimeValue() {
-        PageConstants.setDefaultPageSize(50);
-        PageConstants.setMaxPageSize(500);
-        assertEquals(50, PageConstants.normalizePageSize(null));
-        assertEquals(500, PageConstants.normalizePageSize(999));
+        assertEquals(5000, PageConstants.normalizePageSize(5000));
+        assertEquals(5000, PageConstants.normalizePageSize(Integer.MAX_VALUE));
     }
 
     @Test

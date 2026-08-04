@@ -15,9 +15,13 @@
   },
   "dependencies": {
     "@ydsz/common-ui": "workspace:*",
+    "@ydsz/locales": "workspace:*",
+    "@ydsz/plugins": "workspace:*",
     "@ydsz/stores": "workspace:*",
+    "@ydsz/types": "workspace:*",
     "element-plus": "^2.7.0",
-    "vue": "^3.4.0"
+    "vue": "^3.4.0",
+    "xlsx": "catalog:"
   },
   "devDependencies": {
     "typescript": "^5.5.0"

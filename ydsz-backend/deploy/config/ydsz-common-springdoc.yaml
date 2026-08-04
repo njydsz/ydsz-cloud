@@ -1,0 +1,81 @@
+# =====================================================================
+#  SpringDoc OpenAPI 网关聚合配置
+#  --------------------------------------------------------------------
+#  网关层聚合各微服务的 OpenAPI 文档为统一门户
+#
+#  对标：阿里 API 网关统一文档、K8s Ingress API 聚合
+#
+#  访问地址：http://localhost:9000/swagger-ui.html
+# =====================================================================
+
+springdoc:
+  # ---------- API 文档基础配置 ----------
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    # 按标签排序
+    tags-sorter: alpha
+    # 按方法排序
+    operations-sorter: alpha
+    # 显示请求持续时间
+    display-request-duration: true
+
+  # ---------- 聚合各微服务 API 文档 ----------
+  # Spring Cloud Gateway 自动发现下游服务并聚合 OpenAPI
+  grouping:
+    # 是否启用服务发现分组
+    enabled: true
+
+  # ---------- 自定义 OpenAPI 配置 ----------
+  swagger-ui-config:
+    # 默认展开所有接口
+    doc-expansion: list
+    # 启用过滤
+    filter: true
+    # 显示扩展信息
+    show-extensions: true
+    # 显示公共扩展信息
+    show-common-extensions: true
+
+  # ---------- 全局鉴权 ----------
+  swagger-ui:
+    oauth2:
+      # 使用 Bearer Token 认证
+      use-bearer-token: true
+
+# =====================================================================
+#  网关 OpenAPI 聚合配置（Spring Cloud Gateway + SpringDoc）
+# =====================================================================
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          # 启用服务发现定位器
+          enabled: true
+          # 服务 ID 转小写
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: "*"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
+            exposed-headers:
+              - X-Trace-Id
+              - X-RateLimit-Limit
+              - X-RateLimit-Remaining
+              - X-RateLimit-Reset
+              - X-API-Version
+              - X-API-Deprecated

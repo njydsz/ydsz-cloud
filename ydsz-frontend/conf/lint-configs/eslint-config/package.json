@@ -49,6 +49,8 @@
     "eslint-plugin-unused-imports": "catalog:",
     "eslint-plugin-vitest": "catalog:",
     "eslint-plugin-vue": "catalog:",
+    "eslint-plugin-vue-i18n": "catalog:",
+    "eslint-plugin-vue-scoped-css": "catalog:",
     "globals": "catalog:",
     "jsonc-eslint-parser": "catalog:",
     "vue-eslint-parser": "catalog:"

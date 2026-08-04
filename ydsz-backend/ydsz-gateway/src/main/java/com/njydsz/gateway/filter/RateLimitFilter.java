@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.njydsz.common.json.YdszJson;
 
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -78,6 +79,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     private final RateLimitProperties properties;
     private final ReactiveStringRedisTemplate redisTemplate;
     private final GatewayMetrics gatewayMetrics;
+    private final DiscoveryClient discoveryClient;
 
     /**
      * P0-3: Redis 连续失败计数器，超过阈值切换本地兜底
@@ -90,6 +92,13 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
      */
     private volatile long localBucketTokens = 200;
     private volatile long localBucketLastRefill = System.currentTimeMillis() / 1000;
+
+    /**
+     * P1-2: 网关实例数缓存（10 秒刷新，避免频繁调用 Nacos 服务发现）
+     */
+    private static final long INSTANCE_COUNT_CACHE_MS = 10_000;
+    private volatile int cachedInstanceCount = 1;
+    private volatile long instanceCountFetchedAt = 0;
 
     /**
      * 令牌桶 Lua 脚本
@@ -324,12 +333,23 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
     /**
      * P0-3: 本地兜底限流（Redis 不可用时的降级策略）
+     *
+     * <p>P1-2 分布式协调增强：本地兜底按网关实例数自适应分摊配额。
+     * Redis 故障时无法共享计数（共享存储已不可用），行业标准做法是
+     * 各实例按 {@code replenishRate / instanceCount} 分摊，使集群总限流
+     * 效果接近配置值，避免"N 个实例 = N 倍配额"的稀释问题。
      */
     private RateLimitResult localFallback(int replenishRate, int burstCapacity) {
+        // P1-2: 降级模式指标（Grafana 据此告警"限流降级中，请检查 Redis"）
+        if (gatewayMetrics != null) {
+            gatewayMetrics.incrementRatelimitFallback();
+        }
+        int effectiveRate = resolveFallbackRate(replenishRate);
+        int effectiveCapacity = Math.max(1, burstCapacity / Math.max(1, getGatewayInstanceCount()));
         long now = System.currentTimeMillis() / 1000;
         long elapsed = now - localBucketLastRefill;
-        long refill = elapsed * replenishRate;
-        long tokens = Math.min(burstCapacity, localBucketTokens + refill);
+        long refill = elapsed * effectiveRate;
+        long tokens = Math.min(effectiveCapacity, localBucketTokens + refill);
 
         boolean allowed = tokens >= 1;
         if (allowed) {
@@ -338,10 +358,46 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         localBucketTokens = tokens;
         localBucketLastRefill = now;
 
-        int reset = replenishRate > 0
-                ? (int) Math.ceil((double) (burstCapacity - tokens) / replenishRate)
+        if (gatewayMetrics != null) {
+            gatewayMetrics.setRatelimitFallbackQuota(effectiveRate);
+        }
+
+        int reset = effectiveRate > 0
+                ? (int) Math.ceil((double) (effectiveCapacity - tokens) / effectiveRate)
                 : properties.getResponseHeaders().getRetryAfter();
         return new RateLimitResult(allowed, (int) tokens, reset);
+    }
+
+    /**
+     * P1-2: 解析本地兜底的有效速率（按实例数分摊，下限 1）
+     */
+    private int resolveFallbackRate(int replenishRate) {
+        int instanceCount = getGatewayInstanceCount();
+        return instanceCount > 1 ? Math.max(1, replenishRate / instanceCount) : replenishRate;
+    }
+
+    /**
+     * P1-2: 获取网关实例数（10 秒缓存，从 Nacos 服务发现读取）
+     *
+     * <p>服务发现不可用或异常时返回 1（退化为单机模式，保证可用性）。
+     *
+     * @return 当前网关服务实例数（>= 1）
+     */
+    private int getGatewayInstanceCount() {
+        long now = System.currentTimeMillis();
+        if (now - instanceCountFetchedAt < INSTANCE_COUNT_CACHE_MS) {
+            return Math.max(1, cachedInstanceCount);
+        }
+        int count = 1;
+        try {
+            List<?> instances = discoveryClient.getInstances("ydsz-gateway");
+            count = instances == null ? 1 : instances.size();
+        } catch (Exception e) {
+            log.warn("[RateLimit] 获取网关实例数失败，按单机处理: {}", e.getMessage());
+        }
+        cachedInstanceCount = count;
+        instanceCountFetchedAt = now;
+        return Math.max(1, count);
     }
 
     /**

@@ -1,0 +1,55 @@
+# =====================================================================
+#  Feign 客户端连接池配置
+#  --------------------------------------------------------------------
+#  通过 Nacos shared-configs 引入，所有服务共享此配置
+#
+#  对标：美团 OkHttp 连接池 + HTTP/2 多路复用实践
+# =====================================================================
+
+spring:
+  cloud:
+    openfeign:
+      # ---------- HTTP 客户端配置 ----------
+      httpclient:
+        # 启用 Apache HttpClient 5（连接池 + 复用）
+        hc5:
+          enabled: true
+        # 连接超时 3s
+        connect-timeout: 3000
+        # 读取超时 10s
+        read-timeout: 10000
+        # 连接池最大连接数
+        max-connections: 200
+        # 每个路由（每个下游服务）最大连接数
+        max-connections-per-route: 50
+
+      # ---------- 压缩 ----------
+      compression:
+        request:
+          enabled: true
+          mime-types: application/json,application/xml,text/html,text/xml,text/plain
+          min-request-size: 2048
+        response:
+          enabled: true
+          mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+      # ---------- 客户端默认配置 ----------
+      client:
+        config:
+          default:
+            # 连接超时
+            connect-timeout: 3000
+            # 读取超时
+            read-timeout: 10000
+            # 日志级别（basic: 仅请求方法、URL、响应状态码、执行时间）
+            logger-level: basic
+            # 错误解码器
+            error-decoder: com.njydsz.common.feign.decoder.FeignErrorDecoder
+            # 重试器（已在 FeignClientConfig 自定义）
+            retryer: com.njydsz.common.feign.retryer.FeignRetryer
+
+      # ---------- 断路器（Sentinel 熔断） ----------
+      circuitbreaker:
+        enabled: true
+        # 开启 Sentinel 熔断降级
+        alphanaptic-toolzin-circuit-breaker-enabled: true

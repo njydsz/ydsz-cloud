@@ -16,8 +16,99 @@ export { default as StatusBadge } from './components/status-badge.vue';
 // 用户头像组件 — 含在线状态、角色标签
 export { default as UserAvatar } from './components/user-avatar.vue';
 
-// 字典选择器组件 — 从 system 模块获取字典数据
+// 字典选择器组件 — 从全局字典缓存获取数据
 export { default as DictSelect } from './components/dict-select.vue';
+
+// 字典标签组件 — 字典值渲染为彩色标签（表格列常用）
+export { default as DictTag } from './components/dict-tag.vue';
 
 // 文件类型图标组件
 export { default as FileIcon } from './components/file-icon.vue';
+
+// Excel 导出按钮组件 — 声明式导出
+export { default as ExcelExportButton } from './components/excel-export-button.vue';
+
+// Excel 导入按钮组件 — 声明式导入
+export { default as ExcelImportButton } from './components/excel-import-button.vue';
+
+// Excel 导入导出 composable
+export {
+  useExcelExport,
+  type ExcelExportColumn,
+  type ExcelExportOptions,
+} from './composables/use-excel-export';
+export {
+  useExcelImport,
+  type ExcelImportColumn,
+  type ExcelImportResult,
+  type ExcelImportOptions,
+} from './composables/use-excel-import';
+
+// 统一空状态组件
+export { default as EmptyState } from './components/empty-state.vue';
+
+// 统一错误状态组件
+export { default as ErrorState } from './components/error-state.vue';
+
+// 异步状态容器组件（loading/error/empty/data 自动切换）
+export { default as AsyncState } from './components/async-state.vue';
+
+// 键盘快捷键帮助面板
+export { default as KeyboardHelp } from './components/keyboard-help.vue';
+
+// 键盘快捷键 composable
+export {
+  useKeyboardShortcut,
+  bindGlobalShortcut,
+  clearScope,
+  type ShortcutDescriptor,
+} from './composables/use-keyboard-shortcut';
+
+// 实时通信（WebSocket）
+export {
+  RealtimeClient,
+  useRealtime,
+  getRealtimeClient,
+  type RealtimeOptions,
+  type RealtimeStatus,
+} from './realtime';
+
+// 审计日志表格组件
+export { default as AuditLogTable } from './components/audit-log-table.vue';
+
+// 审计日志查询 composable
+export {
+  useAuditLog,
+  type AuditLogFetcher,
+  type AuditLogItem,
+  type AuditLogQuery,
+  type AuditLogPageResult,
+} from './composables/use-audit-log';
+
+// 服务端分页 composable
+export {
+  useServerPagination,
+  type ServerPaginationFetcher,
+  type ServerPaginationOptions,
+} from './composables/use-server-pagination';
+
+// 通用 CRUD 列表 composable
+export {
+  useCrudTable,
+  type CrudTableOptions,
+  type DeleteFetcher,
+} from './composables/use-crud-table';
+
+// ===== 统一适配器（消除 9 个子应用的重复代码） =====
+export {
+  initSetupYDSZForm,
+  useYDSZForm,
+  z,
+  type YDSZFormProps,
+  type YDSZFormSchema,
+} from './adapter/form';
+export {
+  initComponentAdapter,
+  type ComponentType,
+} from './adapter/component';
+export { useYDSZVxeGrid } from './adapter/vxe-table';

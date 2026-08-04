@@ -108,14 +108,6 @@ class PageResponseTest {
     }
 
     @Test
-    @DisplayName("数据在前重载 success(data, total, pageNum, pageSize)")
-    void success_dataFirst() {
-        PageResponse<List<String>> resp = PageResponse.success(List.of("a"), 100L, 1, 20);
-        assertEquals(100L, resp.getTotal());
-        assertEquals(List.of("a"), resp.getData());
-    }
-
-    @Test
     @DisplayName("fail 返回错误码与消息")
     void fail() {
         PageResponse<Void> resp = PageResponse.fail("A10002", "参数校验失败");

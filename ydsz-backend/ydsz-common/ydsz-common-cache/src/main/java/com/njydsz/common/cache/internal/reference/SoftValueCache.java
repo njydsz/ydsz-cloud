@@ -170,7 +170,10 @@ public class SoftValueCache<K, V> extends AbstractCache<K, V> {
           }
         });
     map.clear();
-    while (queue.poll() != null) {}
+    // 清空引用队列（防 GC 回调残留）
+    while (queue.poll() != null) {
+        // drain reference queue
+    }
   }
 
   /**

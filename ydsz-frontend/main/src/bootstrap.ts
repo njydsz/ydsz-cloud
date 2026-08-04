@@ -45,9 +45,10 @@ import {
   getVersionManager,
   setErrorFallbackMessages,
 } from '@ydsz/micro-kernel';
-import { createRuntime, registerKernel } from '@ydsz/micro-runtime';
+import { createRuntime, registerKernel, type MicroAppEntry } from '@ydsz/micro-runtime';
 import { createLogger } from '@ydsz-core/shared/utils';
 import { MICRO_APPS, getProdEntry } from '@ydsz/vite-config';
+import { resolveRegistry, resolveAppEntry } from '@ydsz/micro-kernel';
 
 /** 单个 micro-runtime 实例（整个主应用生命周期唯一，供其他模块获取） */
 export let microRuntime: ReturnType<typeof createRuntime> | null = null;
@@ -59,18 +60,24 @@ const runtimeLogger = createLogger('MicroRuntime');
 /** 版本管理器日志器 */
 const versionLogger = createLogger('VersionManager');
 
+/** 注册表模式：默认 'auto'（优先远程，回退静态），可通过 VITE_MICRO_APPS_REGISTRY_MODE 覆盖 */
+function getRegistryMode(): 'static' | 'remote' | 'auto' {
+  const mode = import.meta.env.VITE_MICRO_APPS_REGISTRY_MODE;
+  if (mode === 'static' || mode === 'remote' || mode === 'auto') return mode;
+  // 若未配 VITE_MICRO_APPS_REGISTRY_MODE 但配了 VITE_MICRO_APPS_REGISTRY endpoint，自动启用 remote
+  if (import.meta.env.VITE_MICRO_APPS_REGISTRY) return 'remote';
+  return 'auto';
+}
+
 /**
  * 启动微前端运行时。
  *
- * 注册 micro-kernel 自研内核，从注册表 MICRO_APPS 消费子应用清单。
- * 预加载策略：micro-kernel 内置 requestIdleCallback 预热 userinfo/project 两个高频应用。
- *
+ * v3.7.0: 支持远程注册表（registry='auto'/'remote' 时异步拉取注册表）；
+ *         registry='static' 保持同步注册以兼容既有流程。
  * v3.3:
  *   - 同步 error-boundary 降级 UI 文案至当前偏好语言，运行时随语言切换更新
  *   - nprogress 联动 micro-kernel 生命周期：beforeLoad 启动、afterMount/error 停止，
  *     使子应用几秒级 ESM 加载 + mount 耗时获得连续的顶部进度条反馈
- *     （路由守卫 afterEach 的 stopProgress 与 beforeLoad 的 startProgress 之间
- *     nprogress done 的 fade 动画会被 start 取消，视觉上保持连续）
  */
 function registerMicroRuntime() {
   // 1. 注册 micro-kernel 内核
@@ -102,23 +109,61 @@ function registerMicroRuntime() {
     setErrorFallbackMessages(getErrorFallbackMessagesByLocale(locale));
   });
 
-  // 4. 从注册表注入子应用配置
-  microRuntime.registerApps(
-    MICRO_APPS.map((app) => ({
-      name: app.name,
-      entry: import.meta.env.DEV
-        ? `//localhost:${app.devPort}`
-        : getProdEntry(app),
-      container: '#subapp-container',
-      activeRule: app.activeRule,
-      // v3.6.0: 透传沙箱类型配置（未配置时 micro-kernel 默认 'snapshot'）
-      sandbox: app.sandbox,
-    })),
-  );
+  // 4. 注入子应用配置（支持异步注册表）
+  const registryMode = getRegistryMode();
+
+  if (registryMode === 'static') {
+    // === 静态注册（同步） ===
+    microRuntime!.registerApps(
+      MICRO_APPS.map((app) => ({
+        name: app.name,
+        entry: import.meta.env.DEV
+          ? `//localhost:${app.devPort}`
+          : getProdEntry(app),
+        container: '#subapp-container',
+        activeRule: app.activeRule,
+        sandbox: app.sandbox,
+      })),
+    );
+    finishRuntimeSetup();
+  } else {
+    // === 远程/自动注册（异步：拉取注册表 → 注册 → 启动） ===
+    void (async () => {
+      try {
+        runtimeLogger.info(`Registry mode: ${registryMode}, fetching ...`);
+        const configs = await microRuntime!.registerAppsAsync({
+          adapter: registryMode,
+        });
+        runtimeLogger.info(`Registry resolved: ${configs.length} apps registered`);
+        finishRuntimeSetup();
+      } catch (err) {
+        // 注册表拉取失败：回退到静态配置
+        runtimeLogger.warn(`Registry fetch failed (${String(err)}), fallback to static`);
+        microRuntime!.registerApps(
+          MICRO_APPS.map((app) => ({
+            name: app.name,
+            entry: import.meta.env.DEV
+              ? `//localhost:${app.devPort}`
+              : getProdEntry(app),
+            container: '#subapp-container',
+            activeRule: app.activeRule,
+            sandbox: app.sandbox,
+          })),
+        );
+        finishRuntimeSetup();
+      }
+    })();
+  }
+}
+
+/**
+ * 公共后续流程：生命周期钩子 + 启动 prefetch。
+ * 同步 / 异步两条注册路径最终都汇聚于此。
+ */
+function finishRuntimeSetup() {
+  if (!microRuntime) return;
 
   // 5. 生命周期钩子
-  // v3.3: nprogress 联动 — beforeLoad 启动，afterMount/error 停止
-  // 仅在启用进度条偏好时生效，避免与未启用场景冲突
   microRuntime.addLifecycleHook('beforeLoad', (app) => {
     runtimeLogger.debug(`子应用 ${app.name} 开始加载...`);
     if (preferences.transition.progress) {
@@ -139,13 +184,9 @@ function registerMicroRuntime() {
   });
   microRuntime.addLifecycleHook('afterUnmount', (app) => {
     runtimeLogger.debug(`子应用 ${app.name} 卸载完成`);
-    // afterUnmount 不停止 nprogress：切换场景下通常会立即 beforeLoad 另一个应用，
-    // nprogress 保持连续；若卸载后无新激活，则由路由守卫 afterEach 兜底 stop。
   });
 
   // 6. 启动：micro-kernel 内建 prefetch 预热高频应用
-  // 预加载应用清单优先从环境变量 VITE_PREFETCH_APPS 读取（逗号分隔），
-  // 未配置时回退到默认的 userinfo-web / project-web
   const prefetchApps = import.meta.env.VITE_PREFETCH_APPS
     ? import.meta.env.VITE_PREFETCH_APPS.split(',').map((s) => s.trim())
     : ['userinfo-web', 'project-web'];

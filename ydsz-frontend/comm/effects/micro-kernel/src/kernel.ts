@@ -22,10 +22,12 @@ import type {
   LifecycleHook,
   LifecycleHookName,
   MicroAppConfig,
+  MicroAppEntry,
   MicroRuntime,
   RawGlobalStateAPI,
   StartOptions,
 } from '@ydsz/micro-runtime';
+import { clearRegistryCache, resolveAppEntry, resolveRegistry } from './registry-adapter';
 
 import { clearDegraded, isDegraded, markDegraded, renderErrorFallback, resetRetryCount } from './error-boundary';
 import {
@@ -431,33 +433,68 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
     };
   }
 
+  // === 闭包级 registerApps 实现（供 registerApps 与 registerAppsAsync 复用） ===
+  function registerAppsInternal(newApps: MicroAppConfig[]): void {
+    apps = [...new Set([...apps, ...newApps])];
+    for (const app of newApps) {
+      if (!getAppInstance(app.name)) {
+        createAppInstance(app);
+      }
+    }
+    versionManager.setAppEntries(
+      new Map(apps.map((a) => [a.name, a.entry])),
+    );
+    const isBuildMode = !(
+      typeof import.meta !== 'undefined' &&
+      (import.meta as { env?: Record<string, unknown> }).env?.DEV === true
+    );
+    if (isBuildMode) {
+      for (const app of newApps) {
+        preloadManifest(app.entry);
+      }
+    }
+  }
+
   return {
     registerApps(newApps) {
-      apps = [...new Set([...apps, ...newApps])];
-      for (const app of newApps) {
-        if (!getAppInstance(app.name)) {
-          createAppInstance(app);
-        }
-      }
-      // P0-F1: 将子应用入口注入版本管理器，供自动检查 fetch manifest
-      versionManager.setAppEntries(
-        new Map(apps.map((a) => [a.name, a.entry])),
-      );
-      // P0-P1: 预加载各子应用 manifest.json，消除首次 loadApp 时的串行等待
-      // build 模式下注入 <link rel="preload" as="fetch">，浏览器空闲时提前拉取
-      const isBuildMode = !(
-        typeof import.meta !== 'undefined' &&
-        (import.meta as { env?: Record<string, unknown> }).env?.DEV === true
-      );
-      if (isBuildMode) {
-        for (const app of newApps) {
-          preloadManifest(app.entry);
-        }
-      }
+      registerAppsInternal(newApps);
     },
 
     getRegisteredApps() {
       return [...getAllInstances().map((i) => i.config)];
+    },
+
+    // === v3.7.0: 异步注册表支持 ===
+
+    async registerAppsAsync(registry: {
+      adapter: 'static' | 'remote' | 'auto';
+      fetcher?: () => Promise<MicroAppEntry[]>;
+    }): Promise<MicroAppConfig[]> {
+      let entries: MicroAppEntry[];
+
+      if (registry.fetcher) {
+        // 自定义 fetcher 优先
+        entries = await registry.fetcher();
+      } else if (registry.adapter === 'static') {
+        // 静态配置：动态导入 MICRO_APPS，避免 kernel 模块每次加载都携带完整注册表
+        const { MICRO_APPS } = await import('@ydsz/vite-config');
+        entries = MICRO_APPS as MicroAppEntry[];
+      } else {
+        // 'remote' / 'auto'：使用 registry-adapter 拉取（含缓存回退）
+        entries = await resolveRegistry(true);
+      }
+
+      const configs: MicroAppConfig[] = entries.map((entry) => ({
+        name: entry.name,
+        entry: resolveAppEntry(entry),
+        container: '#subapp-container',
+        activeRule: entry.activeRule,
+        sandbox: entry.sandbox,
+      }));
+
+      // 调用闭包级 registerApps（避免 this 指向混乱）
+      registerAppsInternal(configs);
+      return configs;
     },
 
     start(options) {
