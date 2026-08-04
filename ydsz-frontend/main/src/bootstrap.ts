@@ -49,6 +49,7 @@ import { createRuntime, registerKernel, type MicroAppEntry } from '@ydsz/micro-r
 import { createLogger } from '@ydsz-core/shared/utils';
 import { MICRO_APPS, getProdEntry } from '@ydsz/vite-config';
 import { resolveRegistry, resolveAppEntry } from '@ydsz/micro-kernel';
+import { enableMicroDevTools } from '@ydsz/micro-kernel';
 
 /** 单个 micro-runtime 实例（整个主应用生命周期唯一，供其他模块获取） */
 export let microRuntime: ReturnType<typeof createRuntime> | null = null;
@@ -274,6 +275,11 @@ async function bootstrap(namespace: string) {
   // 直接同步注册微前端运行时，避免此前 readyState 延迟导致的初始路由
   // 匹配与子应用激活时序竞态（直连子应用 URL 时可能出现容器空白闪烁）。
   registerMicroRuntime();
+
+  // v3.7.0: 开发态启用微前端 DevTools 面板（Alt+Shift+M 切换）
+  if (import.meta.env.DEV) {
+    enableMicroDevTools();
+  }
 
   // E2: 会话超时预警（必须在 initStores 之后、app 挂载之后调用，
   // 此时 Pinia 与 effect scope 均已就绪，组件卸载时定时器自动清理）

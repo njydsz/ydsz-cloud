@@ -489,9 +489,8 @@ public class ArchitectureRulesTest {
      */
     @ArchTest
     static final ArchRule noExternalJsonLibraryUsage = noClasses()
-            .that().resideOutsideOfPackage(
-                    "com.njydsz.common.json..",
-                    "com.njydsz.agent.domain..")
+            .that().resideOutsideOfPackage("com.njydsz.common.json..")
+            .and().resideOutsideOfPackage("com.njydsz.agent.domain..")
             .should().dependOnClassesThat()
             .resideInAnyPackage(
                     "com.fasterxml.jackson.core..",

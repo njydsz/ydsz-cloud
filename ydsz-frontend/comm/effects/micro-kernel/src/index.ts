@@ -43,7 +43,11 @@ export {
   getAllInstances,
   getAppInstance,
   getKeepAliveCount,
+  getKeepAliveTTL,
+  setKeepAlive,
+  setKeepAliveTTL,
   setMaxKeepAliveApps,
+  setPinnedApp,
   setupVisibilityAutoRelease,
 } from './scheduler';
 // v3.6.0: 公开 GlobalStateBridge 类型，供外部扩展沙箱时使用

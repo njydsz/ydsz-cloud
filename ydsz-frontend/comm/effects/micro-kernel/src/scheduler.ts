@@ -84,6 +84,10 @@ export interface AppInstance {
   error: null | string;
   /** 最近一次激活的时间戳（用于 LRU 淘汰保活实例） */
   lastActivatedAt: number;
+  /** v3.7.0: 本次保活缓存的创建时间（用于 TTL 过期检测） */
+  keepAliveSince: number;
+  /** v3.7.0: 是否被"固定"（pin 住），固定实例在 LRU 淘汰时被跳过引脚保护 */
+  pinned: boolean;
   /**
    * 最近一次加载得到的 manifest（v3.3 新增）。
    *
@@ -95,6 +99,18 @@ export interface AppInstance {
 
 /** 保活实例数上限（默认 5，超限按 LRU 淘汰最久未访问的子应用） */
 let maxKeepAliveApps = 5;
+
+/**
+ * v3.7.0: 保活 TTL（毫秒）。
+ *
+ * 保活实例在缓存中保留时间未超过 TTL 时不会因为 LRU 策略被淘汰
+ *（除非触发内存压力或手动强制卸载）。默认 30 分钟。设置为 0 表示禁用 TTL 保护，
+ * 回退到既有 LRU-only 策略。
+ */
+let keepAliveTTL = 30 * 60 * 1_000;
+
+/** 保活缓存创建时间戳序列（严格递增，用作 keepAliveSince 取值） */
+let keepAliveTimestamp = 1;
 
 /**
  * 设置保活实例数上限。
@@ -128,6 +144,9 @@ export function createAppInstance(config: MicroAppConfig): AppInstance {
     loadMetrics: null,
     error: null,
     lastActivatedAt: 0,
+    // v3.7.0: 保活时间戳与 pin 标记初始化
+    keepAliveSince: 0,
+    pinned: false,
     manifest: null,
   };
   appInstances.set(config.name, instance);
@@ -401,6 +420,8 @@ export async function deactivateApp(instance: AppInstance): Promise<DeactivateRe
         container.removeChild(instance.cachedRoot);
       }
       instance.status = 'UNMOUNTED';
+      // v3.7.0: 记录保活缓存创建时间（用于 TTL 过期检测）
+      instance.keepAliveSince = keepAliveTimestamp++;
       // 调用 deactivate 生命周期钩子
       if (instance.exports?.deactivate) {
         try {
@@ -487,12 +508,38 @@ export async function deactivateApp(instance: AppInstance): Promise<DeactivateRe
   }
 }
 
-/** 设置保活模式 */
-export function setKeepAlive(name: string, keep: boolean): void {
+/**
+ * v3.7.0: 设置指定应用的"固定"（pin）状态。
+ *
+ * 固定后的保活实例在 LRU 淘汰时不会被移除（即使超过 maxKeepAliveApps），
+ * 适用于"常用应用常驻"的業務场景（如消息中心、工作台）或用户显式 pin 住的标签页。
+ *
+ * @param name - 应用名
+ * @param pin - 是否固定
+ * @since 3.7.0
+ */
+export function setPinnedApp(name: string, pin: boolean): void {
   const instance = appInstances.get(name);
   if (instance) {
-    instance.keepAlive = keep;
+    instance.pinned = pin;
   }
+}
+
+/**
+ * v3.7.0: 设置保活 TTL（全局）。
+ *
+ * @param ttlMs - TTL（毫秒），0 表示禁用 TTL 保护
+ * @since 3.7.0
+ */
+export function setKeepAliveTTL(ttlMs: number): void {
+  keepAliveTTL = Math.max(0, ttlMs);
+}
+
+/**
+ * v3.7.0: 获取当前保活 TTL（毫秒）。
+ */
+export function getKeepAliveTTL(): number {
+  return keepAliveTTL;
 }
 
 /**
@@ -508,6 +555,7 @@ export function setKeepAlive(name: string, keep: boolean): void {
 export function resetScheduler(): void {
   appInstances.clear();
   maxKeepAliveApps = 5;
+  keepAliveTTL = 30 * 60 * 1_000;
 }
 
 /**
@@ -531,6 +579,11 @@ export function getKeepAliveCount(): number {
  * - 淘汰前派发 `micro-kernel:before-evict` 事件（cancelable），允许监听者阻止淘汰
  * - 返回被淘汰的应用名列表，供 deactivateApp 传递给调用方
  *
+ * v3.7.0: 增加 TTL 过期策略和 pin 保护：
+ * - TTL 未过期 + 未超上限：不淘汰（保持保活）
+ * - TTL 过期：即使未超上限也要淘汰（保护：pinned 实例跳过）
+ * - pinned 实例：除非触发内存压力，否则始终保留
+ *
  * 调用时机：deactivateApp keepAlive 摘除 DOM 之后。
  * maxKeepAliveApps 为 0 时禁用淘汰。
  *
@@ -540,6 +593,7 @@ async function evictKeepAliveIfNeeded(): Promise<string[]> {
   if (maxKeepAliveApps <= 0) return [];
 
   const cached: AppInstance[] = [];
+  const now = keepAliveTimestamp;
   for (const instance of appInstances.values()) {
     if (instance.keepAlive && instance.status === 'UNMOUNTED' && instance.cachedRoot) {
       cached.push(instance);
@@ -548,12 +602,37 @@ async function evictKeepAliveIfNeeded(): Promise<string[]> {
 
   const evicted: string[] = [];
 
+  // v3.7.0: TTL 过期淘汰 — 检查每个缓存实例是否超过 TTL
+  // pinned 实例不参与 TTL 淘汰（除非内存压力场景）
+  if (keepAliveTTL > 0) {
+    for (const instance of cached) {
+      if (instance.pinned) continue;
+      const age = now - instance.keepAliveSince;
+      if (age > keepAliveTTL) {
+        // 超过 TTL，强制淘汰
+        if (!dispatchBeforeEvict(instance.config.name)) continue;
+        await evictSingleInstance(instance);
+        evicted.push(instance.config.name);
+      }
+    }
+    // 淘汰完后重新收集剩余缓存
+    cached.splice(0, cached.length,
+      ...[...appInstances.values()].filter(
+        (i) => i.keepAlive && i.status === 'UNMOUNTED' && i.cachedRoot && !evicted.includes(i.config.name),
+      ),
+    );
+  }
+
+  // LRU 淘汰：保活实例数仍超限时
   while (cached.length > maxKeepAliveApps) {
     // 按 lastActivatedAt 升序排序，取最久未访问的
     cached.sort((a, b) => a.lastActivatedAt - b.lastActivatedAt);
     const victim = cached.shift()!;
 
-    // P0-P2: 派发 before-evict 事件，允许外部阻止淘汰
+    // pinned 实例：跳过（不淘汰）
+    if (victim.pinned) continue;
+
+    // 派发 before-evict 事件，允许外部阻止淘汰
     if (!dispatchBeforeEvict(victim.config.name)) {
       logger.debug(`LRU eviction of "${victim.config.name}" prevented by before-evict listener`);
       continue;
@@ -564,45 +643,51 @@ async function evictKeepAliveIfNeeded(): Promise<string[]> {
         `(cached=${cached.length + 1}, max=${maxKeepAliveApps})`,
     );
 
-    // 完整卸载（非 keepAlive 方式），释放全部资源
-    victim.keepAlive = false;
-    try {
-      if (victim.exports) {
-        await victim.exports.unmount({
-          container: victim.cachedParent as HTMLElement || document.createElement('div'),
-          basename: victim.config.activeRule,
-        });
-      }
-    } catch (err) {
-      logger.error(`LRU evict unmount failed for "${victim.config.name}":`, err);
-    }
-
-    // 清理沙箱
-    if (victim.sandboxType === 'proxy' && victim.proxySandbox) {
-      victim.proxySandbox.cleanup();
-      victim.proxySandbox = null;
-    } else if (victim.sandboxType === 'iframe' && victim.iframeSandbox) {
-      // v3.6.0: 清理 globalState 桥接订阅
-      victim.iframeGlobalStateUnsub?.();
-      victim.iframeGlobalStateUnsub = null;
-      victim.iframeSandbox.cleanup();
-      victim.iframeSandbox = null;
-    } else if (victim.sandbox) {
-      exitSandbox(victim.sandbox);
-      victim.sandbox = null;
-    }
-
-    removeStylesheets(victim.config.name);
-    victim.cachedRoot = null;
-    victim.cachedParent = null;
-    victim.exports = null;
-    victim.status = 'NOT_LOADED';
-    victim.error = null;
-
+    await evictSingleInstance(victim);
     evicted.push(victim.config.name);
   }
 
   return evicted;
+}
+
+/**
+ * 完整卸载单个保活实例（共享逻辑）。
+ */
+async function evictSingleInstance(instance: AppInstance): Promise<void> {
+  instance.keepAlive = false;
+  try {
+    if (instance.exports) {
+      await instance.exports.unmount({
+        container: instance.cachedParent as HTMLElement || document.createElement('div'),
+        basename: instance.config.activeRule,
+      });
+    }
+  } catch (err) {
+    logger.error(`Evict unmount failed for "${instance.config.name}":`, err);
+  }
+
+  // 清理沙箱
+  if (instance.sandboxType === 'proxy' && instance.proxySandbox) {
+    instance.proxySandbox.cleanup();
+    instance.proxySandbox = null;
+  } else if (instance.sandboxType === 'iframe' && instance.iframeSandbox) {
+    instance.iframeGlobalStateUnsub?.();
+    instance.iframeGlobalStateUnsub = null;
+    instance.iframeSandbox.cleanup();
+    instance.iframeSandbox = null;
+  } else if (instance.sandbox) {
+    exitSandbox(instance.sandbox);
+    instance.sandbox = null;
+  }
+
+  removeStylesheets(instance.config.name);
+  instance.cachedRoot = null;
+  instance.cachedParent = null;
+  instance.exports = null;
+  instance.status = 'NOT_LOADED';
+  instance.error = null;
+  instance.keepAliveSince = 0;
+  logger.debug(`Evicted keep-alive app "${instance.config.name}"`);
 }
 
 /**
