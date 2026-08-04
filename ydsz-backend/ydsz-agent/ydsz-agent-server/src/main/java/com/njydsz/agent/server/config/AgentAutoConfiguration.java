@@ -322,6 +322,21 @@ public class AgentAutoConfiguration {
     }
 
     /**
+     * 装配 Agent 运行态指标采集组件（P2 增强）。
+     *
+     * <p>覆盖 Agent 执行、工具调用、RAG 检索、流式 TTFT、会话活跃度、DAG 编排与人工审批
+     * 等运行态场景，与基础 {@link AgentMetrics} 互补。指标名统一拼接 {@code agent_} 前缀。
+     *
+     * @param meterRegistry Micrometer 注册表，由 Spring Boot Actuator 提供
+     * @return 运行态指标组件
+     */
+    @Bean
+    @ConditionalOnMissingBean(AgentRuntimeMetrics.class)
+    public AgentRuntimeMetrics agentRuntimeMetrics(MeterRegistry meterRegistry) {
+        return new AgentRuntimeMetrics(meterRegistry);
+    }
+
+    /**
      * 装配 Token 成本核算服务。
      *
      * <p>配置了 {@code llm.modelPrices} 时使用自定义单价表（保序，越具体的模型名应排越前，

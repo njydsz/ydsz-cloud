@@ -25,6 +25,7 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
@@ -67,6 +68,8 @@ public class ChatService {
     private final List<OutputGuardrail> outputGuardrails;
     /** Agent 指标采集 */
     private final AgentMetrics metrics;
+    /** Agent 运行态指标采集（P2 增强：活跃度、执行耗时、消息量等） */
+    private final AgentRuntimeMetrics runtimeMetrics;
     /** 成本分析服务 */
     private final CostAnalysisService costAnalysisService;
     /** 链路记录器 */
@@ -78,6 +81,7 @@ public class ChatService {
                        List<InputGuardrail> inputGuardrails,
                        List<OutputGuardrail> outputGuardrails,
                        AgentMetrics metrics,
+                       AgentRuntimeMetrics runtimeMetrics,
                        CostAnalysisService costAnalysisService,
                        TraceRecorder traceRecorder,
                        ObjectProvider<OutboxService> outboxServiceProvider) {
@@ -91,6 +95,7 @@ public class ChatService {
                 ? outputGuardrails.stream().sorted(Comparator.comparingInt(OutputGuardrail::getPriority)).toList()
                 : List.of();
         this.metrics = metrics;
+        this.runtimeMetrics = runtimeMetrics;
         this.costAnalysisService = costAnalysisService;
         this.traceRecorder = traceRecorder;
         this.outboxServiceProvider = outboxServiceProvider;
@@ -118,6 +123,9 @@ public class ChatService {
         String traceId = traceRecorder.startTrace(convId, "CHAT");
         log.info("[Chat] 同步对话: convId={}, traceId={}, messageLen={}", convId, traceId, userMessage.length());
 
+        // P2: 运行态指标埋点 — 标记会话活跃
+        runtimeMetrics.markConversationActive();
+
         String sanitizedInput = applyInputGuardrails(userMessage);
         if (sanitizedInput == null) {
             log.warn("[Chat] 输入被安全护栏拒绝: convId={}", convId);
@@ -126,11 +134,15 @@ public class ChatService {
             ChatMessage rejectedMsg = ChatMessage.assistant(
                     "抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
             memory.save(convId, rejectedMsg);
+            runtimeMetrics.recordMessage("assistant");
+            runtimeMetrics.recordExecution("simple", false, 0);
             return new ChatResponse(UUID.randomUUID().toString(), "guardrail",
                     rejectedMsg, TokenUsage.zero(), "guardrail_rejected", List.of());
         }
 
         memory.save(convId, ChatMessage.user(sanitizedInput, convId));
+        // P2: 记录用户消息
+        runtimeMetrics.recordMessage("user");
 
         List<ChatMessage> messages = buildMessages(convId, sanitizedInput, systemPrompt);
         ChatRequest request = ChatRequest.builder()
@@ -151,22 +163,27 @@ public class ChatService {
             metrics.recordLlmCall(provider, model, duration, null, e);
             traceRecorder.recordStep(traceId, "LLM_CALL_ERROR", "LLM call failed", request, e.getMessage(), duration);
             traceRecorder.endTrace(traceId, "FAILED");
+            // P2: 运行态指标埋点 — 执行失败
+            runtimeMetrics.recordExecution("simple", false, duration);
             log.error("[Chat] LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
             ChatMessage errorMsg = ChatMessage.assistant(
                     "[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
             memory.save(convId, errorMsg);
             throw e;
         }
-        metrics.recordLlmCall(provider, model, System.currentTimeMillis() - startTime, response, null);
+        long duration = System.currentTimeMillis() - startTime;
+        metrics.recordLlmCall(provider, model, duration, response, null);
         if (response.getUsage() != null && costAnalysisService != null) {
             costAnalysisService.recordUsage(convId, model, response.getUsage());
         }
-        traceRecorder.recordStep(traceId, "LLM_CALL", "Chat LLM call", request, response,
-                System.currentTimeMillis() - startTime);
+        traceRecorder.recordStep(traceId, "LLM_CALL", "Chat LLM call", request, response, duration);
 
         String output = applyOutputGuardrails(response.getContent());
         ChatMessage assistantMsg = ChatMessage.assistant(output, convId, response.getUsage());
         memory.save(convId, assistantMsg);
+        // P2: 运行态指标埋点 — 助手消息 + Agent 执行成功
+        runtimeMetrics.recordMessage("assistant");
+        runtimeMetrics.recordExecution("simple", true, duration);
 
         log.info("[Chat] 对话完成: convId={}, tokens={}", convId,
                 response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
@@ -193,6 +210,9 @@ public class ChatService {
         String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
         log.info("[Chat-Stream] 流式对话: convId={}, traceId={}, messageLen={}", convId, traceId, userMessage.length());
 
+        // P2: 运行态指标埋点 — 标记会话活跃
+        runtimeMetrics.markConversationActive();
+
         String sanitizedInput = applyInputGuardrails(userMessage);
         if (sanitizedInput == null) {
             log.warn("[Chat-Stream] 流式输入被安全护栏拒绝: convId={}", convId);
@@ -202,6 +222,8 @@ public class ChatService {
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             memory.save(convId, ChatMessage.assistant(
                     "抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero()));
+            runtimeMetrics.recordMessage("assistant");
+            runtimeMetrics.recordExecution("simple", false, 0);
             chunkConsumer.accept(ChatChunk.content("", "guardrail",
                     "抱歉，您的输入被安全护栏拒绝。"));
             chunkConsumer.accept(ChatChunk.finish("", "guardrail", "guardrail_rejected", null));
@@ -209,6 +231,8 @@ public class ChatService {
         }
 
         memory.save(convId, ChatMessage.user(sanitizedInput, convId));
+        // P2: 记录用户消息
+        runtimeMetrics.recordMessage("user");
 
         List<ChatMessage> messages = buildMessages(convId, sanitizedInput, systemPrompt);
         ChatRequest request = ChatRequest.builder()
@@ -224,14 +248,26 @@ public class ChatService {
         long startTime = System.currentTimeMillis();
         StringBuilder contentBuilder = new StringBuilder();
         final TokenUsage[] usage = {TokenUsage.zero()};
+        // P2: 流式首 Token 测 TTFT
+        final boolean[] firstTokenRecorded = {false};
 
         try {
             llmClient.stream(request, chunk -> {
+                if (!firstTokenRecorded[0] && chunk.hasContent()) {
+                    long ttftMs = System.currentTimeMillis() - startTime;
+                    runtimeMetrics.recordTtft(provider, model, ttftMs);
+                    firstTokenRecorded[0] = true;
+                }
                 if (chunk.hasContent()) {
                     contentBuilder.append(chunk.getDeltaContent());
                 }
                 if (chunk.isFinished() && chunk.getUsage() != null) {
                     usage[0] = chunk.getUsage();
+                    // P2: 记录完整流式调用结果
+                    long duration = System.currentTimeMillis() - startTime;
+                    if (!firstTokenRecorded[0]) {
+                        runtimeMetrics.recordTtft(provider, model, duration);
+                    }
                 }
                 chunkConsumer.accept(chunk);
             });
@@ -241,6 +277,8 @@ public class ChatService {
             traceRecorder.recordStep(traceId, "LLM_CALL_ERROR",
                     "Stream LLM call failed", request, e.getMessage(), duration);
             traceRecorder.endTrace(traceId, "FAILED");
+            // P2: 运行态指标埋点 — 执行失败
+            runtimeMetrics.recordExecution("simple", false, duration);
             log.error("[Chat-Stream] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
             memory.save(convId, ChatMessage.assistant(
                     "[错误] LLM 流式调用失败: " + e.getMessage(), convId, TokenUsage.zero()));
@@ -257,6 +295,9 @@ public class ChatService {
         String output = applyOutputGuardrails(contentBuilder.toString());
         ChatMessage assistantMsg = ChatMessage.assistant(output, convId, usage[0]);
         memory.save(convId, assistantMsg);
+        // P2: 运行态指标埋点 — 助手消息 + Agent 执行成功
+        runtimeMetrics.recordMessage("assistant");
+        runtimeMetrics.recordExecution("simple", true, duration);
 
         traceRecorder.endTrace(traceId, "SUCCESS");
         log.info("[Chat-Stream] 流式对话完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());

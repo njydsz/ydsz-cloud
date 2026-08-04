@@ -146,4 +146,56 @@
         </dependency>
     </dependencies>
 
+    <!--
+        GraalVM Native Image 试点（P2） - 仅 development 阶段显式激活：
+        mvn native:compile -Pnative
+        详见 deploy/docs/GRAALVM_NATIVE_IMAGE_TRIAL.md
+    -->
+    <profiles>
+        <profile>
+            <id>native</id>
+            <properties>
+                <native-maven-plugin.version>0.10.6</native-maven-plugin.version>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${native-maven-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>test-native</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <phase>test</phase>
+                            </execution>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <imageName>ydsz-common-json</imageName>
+                            <mainClass>com.njydsz.common.json.YdszJson</mainClass>
+                            <buildArgs>
+                                <buildArg>--no-fallback</buildArg>
+                                <buildArg>--verbose</buildArg>
+                                <buildArg>-H:+ReportExceptionStackTraces</buildArg>
+                                <buildArg>-H:ReflectionConfigurationFiles=${project.basedir}/src/main/resources/META-INF/native-image/com.njydsz/ydsz-common-json/reflect-config.json</buildArg>
+                                <buildArg>-H:ResourceConfigurationFiles=${project.basedir}/src/main/resources/META-INF/native-image/com.njydsz/ydsz-common-json/resource-config.json</buildArg>
+                                <buildArg>-H:+InlineBeforeAnalysis</buildArg>
+                            </buildArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
