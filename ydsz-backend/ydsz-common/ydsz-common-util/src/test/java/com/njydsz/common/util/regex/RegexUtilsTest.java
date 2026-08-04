@@ -239,9 +239,9 @@ class RegexUtilsTest {
     @Test
     @DisplayName("提取分组")
     void extractGroup() {
-        assertThat(RegexUtils.extractGroup("\\d+", "abc123def", 1)).isEqualTo("123");
-        assertThat(RegexUtils.extractGroup("\\d+", "no numbers", 1)).isNull();
-        assertThat(RegexUtils.extractGroup("\\d+", null, 1)).isNull();
+        assertThat(RegexUtils.extractGroup("(\\d+)", "abc123def", 1)).isEqualTo("123");
+        assertThat(RegexUtils.extractGroup("(\\d+)", "no numbers", 1)).isNull();
+        assertThat(RegexUtils.extractGroup("(\\d+)", null, 1)).isNull();
     }
 
     // ==================== isLetterOrDigit 字符串检查 ====================

@@ -66,9 +66,9 @@ public class RegexUtils {
     // ==================== 常用正则模式常量 ====================
 
     /**
-     * 手机号（简单）
+     * 手机号（简单）— 第二位为 3-9，共 11 位
      */
-    public static final String MOBILE_SIMPLE = "^1\\d{10}$";
+    public static final String MOBILE_SIMPLE = "^1[3-9]\\d{9}$";
     private static final Pattern P_MOBILE_SIMPLE = Pattern.compile(MOBILE_SIMPLE);
 
     /**
@@ -114,21 +114,21 @@ public class RegexUtils {
     private static final Pattern P_IP = Pattern.compile(IP);
 
     /**
-     * IP 地址（简单版）
+     * IP 地址（简单版，校验 0-255 范围）
      */
-    public static final String IP_SIMPLE = "^(\\d{1,3}\\.){3}\\d{1,3}$";
+    public static final String IP_SIMPLE = "^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$";
     private static final Pattern P_IP_SIMPLE = Pattern.compile(IP_SIMPLE);
 
     /**
-     * 日期（YYYY-MM-DD）
+     * 日期（YYYY-MM-DD，月日支持单位数）
      */
-    public static final String DATE = "^\\d{4}-\\d{2}-\\d{2}$";
+    public static final String DATE = "^\\d{4}-\\d{1,2}-\\d{1,2}$";
     private static final Pattern P_DATE = Pattern.compile(DATE);
 
     /**
-     * 日期时间（YYYY-MM-DD HH:MM:SS）
+     * 日期时间（YYYY-MM-DD HH:MM:SS，月日时支持单位数）
      */
-    public static final String DATETIME = "^\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}$";
+    public static final String DATETIME = "^\\d{4}-\\d{1,2}-\\d{1,2}\\s+\\d{1,2}:\\d{2}:\\d{2}$";
     private static final Pattern P_DATETIME = Pattern.compile(DATETIME);
 
     /**
@@ -150,9 +150,11 @@ public class RegexUtils {
     private static final Pattern P_LICENSE_PLATE = Pattern.compile(LICENSE_PLATE);
 
     /**
-     * 车牌号（新能源）
+     * 车牌号（新能源）— 小型车 D/F 在第 3 位，大型车 D/F 在末位
      */
-    public static final String LICENSE_PLATE_NEW_ENERGY = "^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][DF][A-Z0-9]{5}$";
+    public static final String LICENSE_PLATE_NEW_ENERGY =
+            "^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][DF][A-Z0-9]{5}$"
+          + "|^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][A-Z0-9]{5}[DF]$";
     private static final Pattern P_LICENSE_PLATE_NEW_ENERGY = Pattern.compile(LICENSE_PLATE_NEW_ENERGY);
 
     /**
@@ -192,9 +194,9 @@ public class RegexUtils {
     private static final Pattern P_CHINESE_NAME = Pattern.compile(CHINESE_NAME);
 
     /**
-     * 整数
+     * 整数（支持正负号）
      */
-    public static final String INTEGER = "^-?\\d+$";
+    public static final String INTEGER = "^[+-]?\\d+$";
     private static final Pattern P_INTEGER = Pattern.compile(INTEGER);
 
     /**
@@ -234,9 +236,9 @@ public class RegexUtils {
     private static final Pattern P_NUMBER = Pattern.compile(NUMBER);
 
     /**
-     * MAC 地址
+     * MAC 地址（支持 xx:xx:xx:xx:xx:xx、xx-xx-xx-xx-xx-xx、xxxx.xxxx.xxxx 格式）
      */
-    public static final String MAC = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$";
+    public static final String MAC = "^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$|^[0-9A-Fa-f]{4}(\\.[0-9A-Fa-f]{4}){2}$";
     private static final Pattern P_MAC = Pattern.compile(MAC);
 
     /**
@@ -402,13 +404,17 @@ public class RegexUtils {
     }
 
     /**
-     * 验证车牌号
+     * 验证车牌号（同时匹配普通车牌和新能源车牌）
      *
      * @param input 输入字符串
      * @return 是否匹配
      */
     public static boolean isLicensePlate(String input) {
-        return input != null && P_LICENSE_PLATE.matcher(input).matches();
+        if (input == null) {
+            return false;
+        }
+        return P_LICENSE_PLATE.matcher(input).matches()
+                || P_LICENSE_PLATE_NEW_ENERGY.matcher(input).matches();
     }
 
     /**

@@ -92,7 +92,8 @@ class LocalDateTimeUtilsTest {
         @Test
         @DisplayName("获取星期几")
         void getDayOfWeek() {
-            assertThat(LocalDateTimeUtils.getDayOfWeek(DT)).isEqualTo(DayOfWeek.MONDAY);
+            // getDayOfWeek 返回 int（1-7，1 代表周一）
+            assertThat(LocalDateTimeUtils.getDayOfWeek(DT)).isEqualTo(1);
         }
     }
 

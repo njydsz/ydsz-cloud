@@ -240,6 +240,35 @@ describe('kernel', () => {
       expect(order).toEqual(['beforeLoad', 'afterMount', 'afterUnmount']);
     });
 
+    it('afterLoad / beforeMount 细化钩子应在加载与挂载之间触发（v3.3）', async () => {
+      const order: string[] = [];
+      kernel.addLifecycleHook('beforeLoad', () => {
+        order.push('beforeLoad');
+      });
+      kernel.addLifecycleHook('afterLoad', () => {
+        order.push('afterLoad');
+      });
+      kernel.addLifecycleHook('beforeMount', () => {
+        order.push('beforeMount');
+      });
+      kernel.addLifecycleHook('afterMount', () => {
+        order.push('afterMount');
+      });
+
+      kernel.registerApps([makeAppConfig('refined', '/refined')]);
+      kernel.start();
+
+      kernel.navigateTo('/refined');
+      await vi.waitFor(() => {
+        expect(kernel.getActiveAppName()).toBe('refined');
+      });
+
+      // 等待所有异步钩子（afterLoad / beforeMount 通过 void runHooks 异步触发）
+      await vi.waitFor(() => {
+        expect(order).toEqual(['beforeLoad', 'afterLoad', 'beforeMount', 'afterMount']);
+      });
+    });
+
     it('addLifecycleHook 返回的取消订阅函数应移除钩子', async () => {
       const calls: string[] = [];
       const off = kernel.addLifecycleHook('beforeLoad', (app) => {

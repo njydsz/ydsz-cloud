@@ -17,6 +17,7 @@ import { registerWatermarkDirective } from '@ydsz/common-ui/es/watermark';
 import { initLogger } from '@ydsz-core/shared/utils';
 import { preferences } from '@ydsz/preferences';
 import { initStores, useUserStore } from '@ydsz/stores';
+import { startProgress, stopProgress } from '@ydsz/utils';
 import '@ydsz/styles';
 import '@ydsz/styles/ele';
 
@@ -38,7 +39,12 @@ import { useCrossTabSync } from './hooks/use-cross-tab-sync';
 import { useSessionExpiryWarning } from './hooks/use-session-expiry-warning';
 import { router, initRouterGuard } from './router';
 
-import { createKernel, getVersionManager } from '@ydsz/micro-kernel';
+import {
+  createKernel,
+  getErrorFallbackMessagesByLocale,
+  getVersionManager,
+  setErrorFallbackMessages,
+} from '@ydsz/micro-kernel';
 import { createRuntime, registerKernel } from '@ydsz/micro-runtime';
 import { createLogger } from '@ydsz-core/shared/utils';
 import { MICRO_APPS } from '@ydsz/vite-config';
@@ -58,6 +64,13 @@ const versionLogger = createLogger('VersionManager');
  *
  * 注册 micro-kernel 自研内核，从注册表 MICRO_APPS 消费子应用清单。
  * 预加载策略：micro-kernel 内置 requestIdleCallback 预热 userinfo/project 两个高频应用。
+ *
+ * v3.3:
+ *   - 同步 error-boundary 降级 UI 文案至当前偏好语言，运行时随语言切换更新
+ *   - nprogress 联动 micro-kernel 生命周期：beforeLoad 启动、afterMount/error 停止，
+ *     使子应用几秒级 ESM 加载 + mount 耗时获得连续的顶部进度条反馈
+ *     （路由守卫 afterEach 的 stopProgress 与 beforeLoad 的 startProgress 之间
+ *     nprogress done 的 fade 动画会被 start 取消，视觉上保持连续）
  */
 function registerMicroRuntime() {
   // 1. 注册 micro-kernel 内核
@@ -82,6 +95,13 @@ function registerMicroRuntime() {
   });
   versionLogger.info('Initialized');
 
+  // v3.3: 同步 error-boundary 降级 UI 文案至当前偏好语言
+  // watchEffect 保证后续语言切换时文案自动更新
+  watchEffect(() => {
+    const locale = preferences.app.locale;
+    setErrorFallbackMessages(getErrorFallbackMessagesByLocale(locale));
+  });
+
   // 4. 从注册表注入子应用配置
   microRuntime.registerApps(
     MICRO_APPS.map((app) => ({
@@ -94,15 +114,31 @@ function registerMicroRuntime() {
     })),
   );
 
-  // 5. 生命周期钩子（debug 级别，避免生产噪音）
+  // 5. 生命周期钩子
+  // v3.3: nprogress 联动 — beforeLoad 启动，afterMount/error 停止
+  // 仅在启用进度条偏好时生效，避免与未启用场景冲突
   microRuntime.addLifecycleHook('beforeLoad', (app) => {
     runtimeLogger.debug(`子应用 ${app.name} 开始加载...`);
+    if (preferences.transition.progress) {
+      startProgress();
+    }
   });
   microRuntime.addLifecycleHook('afterMount', (app) => {
     runtimeLogger.debug(`子应用 ${app.name} 挂载完成`);
+    if (preferences.transition.progress) {
+      stopProgress();
+    }
+  });
+  microRuntime.addLifecycleHook('error', (app, err) => {
+    runtimeLogger.error(`子应用 ${app.name} 加载/挂载失败:`, err);
+    if (preferences.transition.progress) {
+      stopProgress();
+    }
   });
   microRuntime.addLifecycleHook('afterUnmount', (app) => {
     runtimeLogger.debug(`子应用 ${app.name} 卸载完成`);
+    // afterUnmount 不停止 nprogress：切换场景下通常会立即 beforeLoad 另一个应用，
+    // nprogress 保持连续；若卸载后无新激活，则由路由守卫 afterEach 兜底 stop。
   });
 
   // 6. 启动：micro-kernel 内建 prefetch 预热高频应用
