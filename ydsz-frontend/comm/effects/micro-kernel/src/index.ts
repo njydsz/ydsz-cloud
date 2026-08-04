@@ -23,9 +23,10 @@ export {
 // v3.4: 公开预加载策略工厂，供主应用按需注册 frequency 策略
 export {
   createFrequencyPreloadStrategy,
-  createIdlePreloadStrategy,
   createHoverPreloadStrategy,
+  createIdlePreloadStrategy,
   createRoutePreloadStrategy,
+  recordRouteTransition,
   getPreloadManager,
   resetPreloadManager,
 } from './preload-strategy';
@@ -38,6 +39,9 @@ export type {
   PrefetchStrategy,
   PrefetchStrategyConfig,
 } from './preload-strategy';
+// v4.0 P1-2: 路由预测引擎（马尔可夫链转移概率模型）
+export { getRoutePredictor, resetRoutePredictor } from './route-predictor';
+export type { Prediction } from './route-predictor';
 export {
   evictAllKeepAliveOnMemoryPressure,
   getAllInstances,

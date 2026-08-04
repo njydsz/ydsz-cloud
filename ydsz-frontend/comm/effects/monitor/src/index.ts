@@ -12,6 +12,9 @@
 export {
   setupErrorMonitoring,
   reportError,
+  enableSentryForwarding,
+  disableSentryForwarding,
+  setSentryForwarding,
 } from './error-monitor';
 export type { ErrorType, ErrorReport, MonitorConfig } from './error-monitor';
 
@@ -32,3 +35,13 @@ export type { Breadcrumb, BreadcrumbCategory, BreadcrumbLevel } from './breadcru
 export {
   setupMonitor,
 } from './setup';
+
+export {
+  initSentry,
+  captureError as sentryCaptureError,
+  captureMessage as sentryCaptureMessage,
+  sentrySetUser,
+  isSentryInitialized,
+  getSentryConfig,
+} from './sentry';
+export type { SentryConfig } from './sentry';

@@ -43,6 +43,79 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
 SQL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 STATUS_FILE="${SQL_DIR}/STATUS.md"
 
+# ---------------- 静态检查函数（无 Docker 时降级使用） ----------------
+# 校验内容：文件命名规范 + 版本递增 + 占位检测 + 回滚注释完整性
+_static_check_sql_files() {
+  local sql_dir="$1"
+  local schema_dir="${sql_dir}/schema"
+  local error=0
+
+  echo "  📐 静态模式 — 无 Docker，执行文件级校验"
+
+  # 1. 校验文件命名规范（V<主>.<次>.<补丁>__描述.sql）
+  local bad_naming=0
+  for f in "${schema_dir}"/V*.sql; do
+    [[ -f "${f}" ]] || continue
+    local basename_f
+    basename_f="$(basename "${f}")"
+    if [[ ! "${basename_f}" =~ ^V[0-9]+\.[0-9]+\.[0-9]+__[a-zA-Z0-9_]+\.sql$ ]]; then
+      echo "     ❌ 文件命名不规范: ${basename_f}（期望格式：V<主>.<次>.<补丁>__描述.sql）"
+      bad_naming=1
+      error=1
+    fi
+  done
+  if [[ "${bad_naming}" -eq 0 ]]; then
+    echo "     ✅ 文件命名规范校验通过"
+  fi
+
+  # 2. 版本号严格递增校验（不允许版本回退或重复）
+  local versions=()
+  for f in "${schema_dir}"/V*.sql; do
+    [[ -f "${f}" ]] || continue
+    versions+=("$(basename "${f}" | sed 's/^V\([0-9]*\.[0-9]*\.[0-9]*\)__.*/\1')")
+  done
+  local sorted_unique
+  sorted_unique=$(printf '%s\n' "${versions[@]}" | sort -V | uniq | wc -l | tr -d ' ')
+  local total=${#versions[@]}
+  if [[ "${sorted_unique}" -ne "${total}" ]]; then
+  echo "     ❌ 版本号存在重复或未递增（共 ${total} 个文件，唯一版本 ${sorted_unique} 个）"
+    error=1
+  else
+    echo "     ✅ 版本号递增校验通过（共 ${total} 个版本文件）"
+  fi
+
+  # 3. 占位文件检测（V1.0.0 之外的占位文件应被显式标记或清空）
+  for f in "${schema_dir}"/V*.sql; do
+    [[ -f "${f}" ]] || continue
+    local basename_f
+    basename_f="$(basename "${f}")"
+    if grep -qi '占位' "${f}" 2>/dev/null && [[ "${basename_f}" != "V1.0.0__init.sql" ]]; then
+      echo "     ⚠️  非 V1.0.0 文件包含占位标记: ${basename_f}（请确认是否已填充 DDL）"
+    fi
+  done
+
+  # 4. 回滚注释完整性校验（占位文件 V1.0.0 除外）
+  local rollback_missing=0
+  for f in "${schema_dir}"/V*.sql; do
+    [[ -f "${f}" ]] || continue
+    local basename_f
+    basename_f="$(basename "${f}")"
+    if [[ "${basename_f}" == "V1.0.0__init.sql" ]]; then
+      continue
+    fi
+    if ! grep -qi 'ROLLBACK' "${f}" 2>/dev/null; then
+      echo "     ❌ 缺少 ROLLBACK 注释: ${basename_f}"
+      rollback_missing=1
+      error=1
+    fi
+  done
+  if [[ "${rollback_missing}" -eq 0 ]]; then
+    echo "     ✅ ROLLBACK 注释完整性校验通过"
+  fi
+
+  return "${error}"
+}
+
 # ---------------- 状态检测 ----------------
 CURRENT_STATUS="PLACEHOLDER"
 if [[ -f "${STATUS_FILE}" ]]; then
@@ -60,10 +133,10 @@ echo "📋 Schema 校验模式: ${CURRENT_STATUS}"
 
 # ---------------- Docker 可用性检查 ----------------
 if ! command -v docker &>/dev/null; then
-  echo "⚠️  未找到 docker，Schema 校验降级为语法宽松检查" >&2
-  # 无 Docker 时仅做静态检查
+  echo "⚠️  未找到 docker，Schema 校验降级为静态校验（精确但无容器内 diff）" >&2
+  # 无 Docker 时执行增强版静态检查
   _static_check_sql_files "${SQL_DIR}"
-  exit 0
+  exit $?  # 显式传递返回码
 fi
 
 # ---------------- 容器生命周期管理 ----------------

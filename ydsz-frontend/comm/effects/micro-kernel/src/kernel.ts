@@ -59,6 +59,7 @@ import { createLogger } from '@ydsz-core/shared/utils';
 import { applyPrefetchBoost, removeSpeculationRules } from './speculation-rules';
 import type { MicroAppEntry } from '@ydsz/micro-runtime';
 import { createNamespacedGlobalStateWrapper } from '@ydsz/micro-runtime/namespaced-state';
+import { buildStandardMountProps } from '@ydsz/micro-runtime/standard-props';
 import {
   clearPendingRequests,
   registerAppMessageHandler,
@@ -325,20 +326,32 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
     // 激活目标
     const instance = getAppInstance(config.name) || createAppInstance(config);
 
-    // === globalState 注入：子应用 mountProps 中注入跨应用通信 API ===
-    // v3.7.0: 注入带命名空间能力的 globalState（useNamespace(scope) 可获取隔离空间）
+    // === v4.0 P1-2: 使用标准化 Props 构造器注入跨应用通信 API ===
     const enhancedGlobalState = createNamespacedGlobalStateWrapper(globalStateAPI);
+
+    // 构建标准化 mountProps（单一事实源）
+    const standardProps = buildStandardMountProps(config, {
+      rawGlobalState: globalStateAPI,
+      sendMessage: (action: string, payload?: unknown) => sendMessage(config.name, action, payload),
+      sendRequest: <R = unknown>(action: string, payload?: unknown, timeout?: number) =>
+        sendRequest(config.name, action, payload, timeout) as Promise<R>,
+      registerHandler: <T = unknown, R = unknown>(
+        handler: (msg: { action: string; payload: T; from: string }) => R | Promise<R>,
+      ) =>
+        registerAppMessageHandler(config.name, (msg) =>
+          handler({ action: msg.action, payload: msg.payload as T, from: msg.from }),
+        ),
+      theme: undefined, // 由 bootstrap 侧注入时可不传，子应用通过 context.theme 获取
+      locale: undefined,
+      userId: undefined,
+    });
+
+    // 覆盖 config.props：标准化 props + 向后兼容别名（旧代码使用 _globalState / _messageBus）
     config.props = {
-      ...config.props,
+      ...standardProps,
+      // 向后兼容别名：确保未迁移的子应用仍能通过 _globalState / _messageBus 访问
       _globalState: enhancedGlobalState,
-      // v3.7.0: 注入点对点消息通信 API 到子应用 mountProps
-      _messageBus: {
-        sendMessage: (action: string, payload?: unknown) => sendMessage(config.name, action, payload),
-        sendRequest: <R = unknown>(action: string, payload?: unknown, timeout?: number) =>
-          sendRequest(config.name, action, payload, timeout) as Promise<R>,
-        registerHandler: <T = unknown, R = unknown>(handler: (msg: { action: string; payload: T; from: string }) => R | Promise<R>) =>
-          registerAppMessageHandler(config.name, (msg) => handler({ action: msg.action, payload: msg.payload as T, from: msg.from })),
-      },
+      _messageBus: standardProps.messageBus,
     };
 
     // 派发 before-load 事件，触发骨架屏显示

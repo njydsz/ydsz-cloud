@@ -19,6 +19,14 @@
     "./namespaced-state": {
       "types": "./src/namespaced-state.ts",
       "default": "./src/namespaced-state.ts"
+    },
+    "./standard-props": {
+      "types": "./src/standard-props.ts",
+      "default": "./src/standard-props.ts"
+    },
+    "./use-micro-props": {
+      "types": "./src/use-micro-props.ts",
+      "default": "./src/use-micro-props.ts"
     }
   },
   "dependencies": {

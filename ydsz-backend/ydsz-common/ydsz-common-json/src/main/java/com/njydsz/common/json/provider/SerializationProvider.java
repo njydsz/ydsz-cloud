@@ -9,9 +9,10 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonSerialize;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.asm.AsmSerializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
@@ -70,9 +71,6 @@ public final class SerializationProvider {
      * circularRefStrategy、serializeEnumUsingOrdinal 等 11 个原 ThreadLocal 字段）
      * 已合并到 {@link SerializationContext#CONTEXT} 单一 ThreadLocal 中。
      */
-
-    /** Bean 序列化信息缓存*/
-    private static final ConcurrentMap<Class<?>, BeanSerializerInfo> BEAN_SERIALIZER_INFO_CACHE = new ConcurrentHashMap<>(1024);
 
     private SerializationProvider() {
         throw new UnsupportedOperationException();
@@ -225,11 +223,35 @@ public final class SerializationProvider {
      *
      * <p>注：11 个原 ThreadLocal 已合并到 {@link SerializationContext#CONTEXT}，
      * 调用 {@link SerializationContext#clear()} 一次即可全部清理。
-     * {@code FieldMetadataLoader.NAMING_STRATEGY} 属于另一类，不在合并范围内，仍需单独清理。</p>
+     * {@code FieldMetadataLoader.NAMING_STRATEGY} 和 {@code JsonParserUtil#useBigDecimal}
+     * 属于另外两个独立 ThreadLocal，仍需单独清理。</p>
      */
     public static void clearThreadLocals() {
         SerializationContext.clear();
         FieldMetadataLoader.NAMING_STRATEGY.remove();
+        JsonParserUtil.clearThreadLocals();
+    }
+
+    /**
+     * 设置当前线程是否使用 BigDecimal 解析浮点数。
+     *
+     * <p>替代直接调用 {@link JsonParserUtil#setUseBigDecimal(boolean)}，
+     * 同时将其纳入 {@link ThreadLocalSnapshot} 保存/恢复范围，
+     * 避免不同配置的 Mapper 在使用后相互泄漏。</p>
+     *
+     * @param enabled {@code true} 表示将浮点数解析为 BigDecimal，避免精度丢失
+     */
+    public static void setUseBigDecimal(boolean enabled) {
+        JsonParserUtil.setUseBigDecimal(enabled);
+    }
+
+    /**
+     * 查询当前线程是否使用 BigDecimal 解析浮点数。
+     *
+     * @return {@code true} 表示使用 BigDecimal 解析
+     */
+    public static boolean isUseBigDecimal() {
+        return JsonParserUtil.isUseBigDecimal();
     }
 
     /**
@@ -880,15 +902,16 @@ public final class SerializationProvider {
             return false;
         }
 
-        // 获取或创建 BeanSerializer
-        FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
+        // 获取或创建 BeanSerializer（按当前线程命名策略隔离缓存）
+        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+        FieldMeta[] fields = SerializerCache.getFieldMeta(clazz, strategy);
         if (fields == null) {
             fields = FieldMetadataLoader.loadFields(clazz);
-            SerializerCache.putFieldMeta(clazz, fields);
+            SerializerCache.putFieldMeta(clazz, strategy, fields);
         }
 
-        // 检查是否有字段注解（使用缓存的 BeanSerializerInfo）
-        BeanSerializerInfo serializerInfo = getOrCreateBeanSerializer(clazz, fields);
+        // 检查是否有字段注解（使用按策略隔离的 BeanSerializerInfo）
+        BeanSerializerInfo serializerInfo = getOrCreateBeanSerializer(clazz, fields, strategy);
         if (serializerInfo.hasAnnotations) {
             return false;
         }
@@ -926,10 +949,14 @@ public final class SerializationProvider {
     }
 
     /**
-     * 获取或创建 BeanSerializerInfo（架构优化）
+     * 获取或创建 BeanSerializerInfo（按当前线程命名策略隔离缓存）
+     *
+     * @param clazz    目标类
+     * @param fields   字段元数据（由调用方按当前策略加载）
+     * @param strategy 当前线程的命名策略
      */
-    static BeanSerializerInfo getOrCreateBeanSerializer(Class<?> clazz, FieldMeta[] fields) {
-        BeanSerializerInfo info = BEAN_SERIALIZER_INFO_CACHE.get(clazz);
+    static BeanSerializerInfo getOrCreateBeanSerializer(Class<?> clazz, FieldMeta[] fields, PropertyNamingStrategy strategy) {
+        BeanSerializerInfo info = SerializerCache.getBeanSerializerInfo(clazz, strategy);
         if (info == null) {
             // 计算有效字段
             int count = fields.length;
@@ -944,7 +971,7 @@ public final class SerializationProvider {
             }
 
             info = new BeanSerializerInfo(validFields, estimatedSize, FieldMetadataLoader.hasFieldAnnotations(fields));
-            BEAN_SERIALIZER_INFO_CACHE.put(clazz, info);
+            SerializerCache.putBeanSerializerInfo(clazz, strategy, info);
         }
         return info;
     }
@@ -1088,6 +1115,11 @@ public final class SerializationProvider {
      * 导致 {@code YdszJson.toJson(obj, config)} 用不同命名策略序列化后未回滚，
      * 后续默认调用仍使用旧命名策略（配置泄漏）。现已补全。</p>
      *
+     * <p><b>useBigDecimal 说明（P0-2 并发安全修复，2026-08-04）：</b>useBigDecimal
+     * 从全局 volatile static 改为 ThreadLocal，快照中保存/恢复其值，
+     * 确保不同配置的 Mapper 在使用后相互隔离，避免某 Mapper 开启 BigDecimal
+     * 后永久影响所有线程、所有 Mapper 的解析行为。</p>
+     *
      * @since 1.0.0
      */
     public static final class ThreadLocalSnapshot {
@@ -1099,6 +1131,7 @@ public final class SerializationProvider {
         private final String savedDateFormat;
         private final boolean savedFailOnError;
         private final com.njydsz.common.json.naming.PropertyNamingStrategy savedNamingStrategy;
+        private final boolean savedUseBigDecimal;
 
         /**
          * 捕获当前线程的 ThreadLocal 序列化参数快照。
@@ -1113,6 +1146,7 @@ public final class SerializationProvider {
             this.savedDateFormat = ctx.dateFormat;
             this.savedFailOnError = ctx.failOnError;
             this.savedNamingStrategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+            this.savedUseBigDecimal = JsonParserUtil.isUseBigDecimal();
         }
 
         /**
@@ -1128,6 +1162,7 @@ public final class SerializationProvider {
             ctx.dateFormat = savedDateFormat;
             ctx.failOnError = savedFailOnError;
             FieldMetadataLoader.NAMING_STRATEGY.set(savedNamingStrategy);
+            JsonParserUtil.setUseBigDecimal(savedUseBigDecimal);
         }
     }
 }

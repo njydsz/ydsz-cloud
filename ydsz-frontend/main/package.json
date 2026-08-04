@@ -15,6 +15,9 @@
     "url": "https://github.com/njydsz"
   },
   "type": "module",
+  "ydsz": {
+    "shareStrategy": "all"
+  },
   "scripts": {
     "build": "pnpm vite build --mode production",
     "build:analyze": "pnpm vite build --mode analyze",

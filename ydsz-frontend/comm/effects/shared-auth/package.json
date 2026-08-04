@@ -13,6 +13,7 @@
     "@ydsz/constants": "workspace:*",
     "@ydsz/hooks": "workspace:*",
     "@ydsz/locales": "workspace:*",
+    "@ydsz/micro-runtime": "workspace:*",
     "@ydsz/preferences": "workspace:*",
     "@ydsz/request": "workspace:*",
     "@ydsz/stores": "workspace:*",

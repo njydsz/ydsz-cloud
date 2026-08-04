@@ -38,3 +38,14 @@ pre-push:
 
     - name: test
       run: pnpm test:unit
+
+    # P0-7：后端单测左移——推送前运行后端增量测试
+    # 全量 mvn test 较慢但保证质量；仅当 ydsz-backend 发生变更时执行
+    - name: backend-test
+      run: |
+        if git diff --name-only HEAD@{1} HEAD 2>/dev/null | grep -q '^ydsz-backend/'; then
+          echo "🔧 检测到 ydsz-backend 变更，执行后端全量单测"
+          cd ydsz-backend && mvn -B test -DskipJacoco=false
+        else
+          echo "⏭️  未检测到 ydsz-backend 变更，跳过后端测试"
+        fi

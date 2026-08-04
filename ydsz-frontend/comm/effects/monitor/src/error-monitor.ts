@@ -15,6 +15,36 @@
 
 import { getBreadcrumbs, type Breadcrumb } from './breadcrumb';
 
+/** Sentry 转发开关：由 setupErrorMonitoring 设置 */
+let sentryForwardingEnabled = false;
+
+/**
+ * 设置 Sentry 转发开关
+ *
+ * 由 setupErrorMonitoring 内部调用（当 config.sentryDsn 非空时启用）。
+ * 也可以使用 enableSentryForwarding() / disableSentryForwarding() 手动控制。
+ */
+export function setSentryForwarding(enabled: boolean): void {
+  sentryForwardingEnabled = enabled;
+}
+
+/**
+ * 动态启用 Sentry 转发（无需重启应用）
+ *
+ * @example
+ * enableSentryForwarding(); // 运行时启用
+ */
+export function enableSentryForwarding(): void {
+  sentryForwardingEnabled = true;
+}
+
+/**
+ * 动态禁用 Sentry 转发
+ */
+export function disableSentryForwarding(): void {
+  sentryForwardingEnabled = false;
+}
+
 /** 错误事件类型 */
 export type ErrorType =
   | 'vue'
@@ -63,6 +93,17 @@ export interface MonitorConfig {
   maxRetries?: number;
   /** 重试基础延迟（ms），默认 1000 */
   retryBaseDelay?: number;
+  /**
+   * Sentry DSN（可选）。设置后错误将同时转发到 Sentry APM。
+   *
+   * 启用流程：
+   * 1. 在 .env.production 中设置 VITE_SENTRY_DSN=...
+   * 2. 调用 initSentry({ dsn, release }) 在 bootstrap 中初始化
+   * 3. 本模块会在 enqueueError 时自动向 Sentry 转发
+   *
+   * @since 4.0.0
+   */
+  sentryDsn?: string;
 }
 
 /** 上报端点 */
@@ -165,6 +206,11 @@ function enqueueError(rawReport: ErrorReport) {
 
   errorQueue.push(report);
 
+  // 同时转发到 Sentry（如果已启用）
+  if (sentryForwardingEnabled) {
+    void forwardToSentry(report);
+  }
+
   // 达到最大数量立即上报
   if (errorQueue.length >= MAX_QUEUE_SIZE) {
     flush();
@@ -174,6 +220,23 @@ function enqueueError(rawReport: ErrorReport) {
   // 延迟批量上报
   if (flushTimer) clearTimeout(flushTimer);
   flushTimer = setTimeout(flush, FLUSH_INTERVAL);
+}
+
+/**
+ * 将错误报告转发到 Sentry
+ *
+ * 异步动态导入 @sentry/monitor/src/sentry.ts 中的 captureError，
+ * 避免循环依赖（sentry.ts 不 import error-monitor.ts）。
+ *
+ * 失败时静默，不影响主监控流程。
+ */
+async function forwardToSentry(report: ErrorReport): Promise<void> {
+  try {
+    const { captureError } = await import('./sentry');
+    captureError(report);
+  } catch {
+    // Sentry 未初始化或不可用 —— 静默降级
+  }
 }
 
 /**
@@ -418,8 +481,27 @@ export function setupErrorMonitoring(app: any, config: MonitorConfig = {}) {
     restoreOfflineCache();
   }
 
+  // v4.0 P0-3: 可选启用 Sentry 转发（需同时配置 sentryDsn）
+  if (config.sentryDsn) {
+    void (async () => {
+      try {
+        const { initSentry } = await import('./sentry');
+        await initSentry({
+          dsn: config.sentryDsn,
+          release: config.release,
+          environment: import.meta.env.MODE,
+          sampleRate: config.sampleRate,
+        });
+        enableSentryForwarding();
+      } catch {
+        console.warn('[Monitor] Sentry auto-init failed, forwarding disabled');
+      }
+    })();
+  }
+
   console.info('[Monitor] Error monitoring installed', {
     release: config.release,
     sampleRate: config.sampleRate ?? 1,
+    sentryForwarding: !!config.sentryDsn,
   });
 }

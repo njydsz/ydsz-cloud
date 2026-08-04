@@ -28,7 +28,10 @@ async function getCommonConfig(): Promise<UserConfig> {
     build: {
       chunkSizeWarningLimit: 1000,
       reportCompressedSize: false,
-      sourcemap: false,
+      // v4.0 P0-3: 生产环境启用 hidden sourcemap（用于 Sentry 符号化）
+      // 'hidden' 表示生成 .map 文件但不附加 source map 注释（浏览器不加载）
+      // CI 中通过 sentry-cli 上传 .map 到 Sentry 进行符号化
+      sourcemap: process.env.NODE_ENV === 'production' ? 'hidden' : false,
     },
   });
 }

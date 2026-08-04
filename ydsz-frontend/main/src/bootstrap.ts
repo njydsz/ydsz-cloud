@@ -287,6 +287,8 @@ async function bootstrap(namespace: string) {
 
   // 安装前端监控（错误捕获 + Web Vitals）
   // v3.1: 注入 release 版本（sourcemap 关联）+ getUserId（全链路追踪）+ 生产采样
+  // v4.0 P0-3: 可选 Sentry 转发（设置 VITE_SENTRY_DSN 时启用）
+  const sentryDsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
   setupMonitor(app, {
     getUserId: () => {
       try {
@@ -298,6 +300,7 @@ async function bootstrap(namespace: string) {
     release: import.meta.env.VITE_APP_RELEASE || import.meta.env.VITE_APP_VERSION,
     // 生产环境高频错误采样 80%，开发环境全量
     sampleRate: import.meta.env.PROD ? 0.8 : 1,
+    ...(sentryDsn ? { sentryDsn } : {}),
   });
 
   app.mount('#app');

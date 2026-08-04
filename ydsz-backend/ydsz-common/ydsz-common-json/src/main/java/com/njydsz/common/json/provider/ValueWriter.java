@@ -18,6 +18,7 @@ import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.writer.JSONWriter;
 
@@ -469,10 +470,11 @@ public final class ValueWriter {
         Class<?> clazz = obj.getClass();
         JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
 
-        FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
+        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+        FieldMeta[] fields = SerializerCache.getFieldMeta(clazz, strategy);
         if (fields == null) {
             fields = FieldMetadataLoader.loadFields(clazz);
-            SerializerCache.putFieldMeta(clazz, fields);
+            SerializerCache.putFieldMeta(clazz, strategy, fields);
         }
 
         boolean hasFieldAnnotations = FieldMetadataLoader.hasFieldAnnotations(fields);
@@ -926,10 +928,11 @@ public final class ValueWriter {
     private static void writeUnwrappedFields(Object nestedObj, FieldMeta field,
                                               StringBuilder sb, boolean first) {
         Class<?> nestedClass = nestedObj.getClass();
-        FieldMeta[] nestedFields = SerializerCache.getFieldMeta(nestedClass);
+        PropertyNamingStrategy nestedStrategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+        FieldMeta[] nestedFields = SerializerCache.getFieldMeta(nestedClass, nestedStrategy);
         if (nestedFields == null) {
             nestedFields = FieldMetadataLoader.loadFields(nestedClass);
-            SerializerCache.putFieldMeta(nestedClass, nestedFields);
+            SerializerCache.putFieldMeta(nestedClass, nestedStrategy, nestedFields);
         }
 
         for (FieldMeta nestedField : nestedFields) {

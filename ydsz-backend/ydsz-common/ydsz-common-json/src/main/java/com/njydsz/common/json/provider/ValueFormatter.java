@@ -8,6 +8,7 @@ import java.util.*;
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
 /**
  * Pretty-print 格式化写入器
@@ -127,10 +128,11 @@ public final class ValueFormatter {
      */
     public static void formatBean(Object obj, StringBuilder sb, int indent) {
         Class<?> clazz = obj.getClass();
-        FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
+        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+        FieldMeta[] fields = SerializerCache.getFieldMeta(clazz, strategy);
         if (fields == null) {
             fields = FieldMetadataLoader.loadFields(clazz);
-            SerializerCache.putFieldMeta(clazz, fields);
+            SerializerCache.putFieldMeta(clazz, strategy, fields);
         }
 
         if (fields.length == 0) {

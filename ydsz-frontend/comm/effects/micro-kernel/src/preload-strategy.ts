@@ -5,7 +5,7 @@
  * - idle 预加载：在浏览器空闲时预加载
  * - hover 预加载：鼠标悬停时预加载
  * - visibility 预加载：根据页面可见性预加载
- * - route 预加载：根据路由预测预加载
+ * - route 预加载：根据路由预测预加载（v4.0 P1-2: 接入 route-predictor 马尔可夫链预测）
  * - permission 预加载：基于用户权限动态调整预加载
  * - frequency 预加载：基于使用频率智能预加载
  *
@@ -16,6 +16,7 @@
 
 import type { MicroAppConfig } from '@ydsz/micro-runtime';
 import { createLogger } from '@ydsz-core/shared/utils';
+import { getRoutePredictor, type Prediction } from './route-predictor';
 
 /** 模块级日志器 */
 const logger = createLogger('PreloadManager');
@@ -457,25 +458,103 @@ export function createHoverPreloadStrategy(
 }
 
 /**
- * 创建路由预测预加载策略
+ * 创建路由预测预加载策略（v4.0 P1-2 增强）。
+ *
+ * 两种使用方式：
+ * 1. 自动模式（推荐）：不传 `getRoutePredictor`，内部使用全局 RoutePredictor 单例，
+ *    基于用户历史跳转的马尔可夫链概率预测下一步应用。
+ * 2. 自定义模式：传入 `getRoutePredictions` 回调，按自定义逻辑返回预测路径。
+ *
+ * 仅在转移概率 ≥ minProbability（默认 0.15）时才触发预加载，
+ * 避免低频误判浪费带宽。
  */
 export function createRoutePreloadStrategy(
   apps: MicroAppConfig[],
-  getRoutePredictions: () => string[],
-  onPreload: (appName: string) => void | Promise<void>,
+  getRoutePredictions?: () => string[],
+  onPreload?: (appName: string) => void | Promise<void>,
+  options: {
+    /** 最低转移概率阈值（0~1），默认 0.15 */
+    minProbability?: number;
+    /** 单源最大预加载数量，默认 2 */
+    maxPreloads?: number;
+  } = {},
 ): PreloadStrategyOptions {
+  const { minProbability = 0.15, maxPreloads = 2 } = options;
+
+  // 内部预加载回调，去重并标记已预加载
+  const preloadedApps = new Set<string>();
+  const doPreload = async (appName: string) => {
+    if (preloadedApps.has(appName)) return;
+    preloadedApps.add(appName);
+    if (onPreload) {
+      try {
+        await onPreload(appName);
+      } catch (err) {
+        // 回滚标记，允许重试
+        preloadedApps.delete(appName);
+        throw err;
+      }
+    }
+  };
+
   return {
     strategy: 'route' as const,
     onPreload: async () => {
-      const predictions = getRoutePredictions();
-      for (const route of predictions) {
-        const app = apps.find((a) => route.startsWith(a.activeRule));
-        if (app) {
-          await onPreload(app.name);
+      // 1. 自定义模式：使用传入的预测回调
+      if (getRoutePredictions) {
+        const predictions = getRoutePredictions();
+        for (const route of predictions) {
+          const app = apps.find((a) => a.activeRule && route.startsWith(a.activeRule));
+          if (app) {
+            await doPreload(app.name);
+          }
+        }
+        return;
+      }
+
+      // 2. 自动模式：从 RoutePredictor 获取当前应用的预测
+      const predictor = getRoutePredictor();
+      const knownApps = predictor.getKnownApps();
+
+      // 对每个已知来源应用，获取 top predictions 并预加载
+      let preloadCount = 0;
+      for (const fromApp of knownApps) {
+        if (preloadCount >= maxPreloads) break;
+
+        const predictions: Prediction[] = predictor.predict(fromApp, maxPreloads);
+        for (const pred of predictions) {
+          if (preloadCount >= maxPreloads) break;
+          if (pred.probability < minProbability) continue;
+
+          const app = apps.find((a) => a.name === pred.appName);
+          if (app) {
+            await doPreload(app.name);
+            preloadCount++;
+            logger.debug(
+              `Route preload: ${fromApp} → ${pred.appName} (p=${pred.probability.toFixed(2)}, n=${pred.sampleSize})`,
+            );
+          }
         }
       }
     },
   };
+}
+
+/**
+ * 记录一次路由跳转供预测模型学习。
+ *
+ * 由 kernel.ts 在 switchToApp 成功后调用。
+ *
+ * @param fromApp - 来源应用名（可为空表示主应用入口）
+ * @param toApp - 目标应用名
+ */
+export function recordRouteTransition(fromApp: string | undefined | null, toApp: string): void {
+  if (!fromApp || fromApp === toApp) return;
+  try {
+    getRoutePredictor().recordTransition(fromApp, toApp);
+  } catch {
+    // 预测器不可用时静默
+  }
 }
 
 /**

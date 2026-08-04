@@ -76,8 +76,8 @@ public final class JsonParserUtil {
     private static final ThreadLocal<StringBuilder> SB_POOL =
         ThreadLocal.withInitial(() -> new StringBuilder(256));
 
-    /** 是否使用 BigDecimal 解析浮点数（避免精度丢失），默认 false */
-    private static volatile boolean useBigDecimal = false;
+    /** 是否使用 BigDecimal 解析浮点数（避免精度丢失），默认 false（按线程隔离，避免跨线程泄漏） */
+    private static final ThreadLocal<Boolean> useBigDecimal = ThreadLocal.withInitial(() -> false);
 
     private JsonParserUtil() {
         throw new UnsupportedOperationException("JsonParserUtil is a utility class");
@@ -89,6 +89,7 @@ public final class JsonParserUtil {
     public static void clearThreadLocals() {
         CHAR_BUFFER.remove();
         SB_POOL.remove();
+        useBigDecimal.remove();
     }
     
     /**
@@ -334,7 +335,14 @@ public final class JsonParserUtil {
  * @since 1.0.0
      */
     public static void setUseBigDecimal(boolean enabled) {
-        useBigDecimal = enabled;
+        useBigDecimal.set(enabled);
+    }
+
+    /**
+     * 查询当前线程是否使用 BigDecimal 解析浮点数。
+     */
+    public static boolean isUseBigDecimal() {
+        return useBigDecimal.get();
     }
 
     private static Number parseNumberFastWithPos(char[] chars, int pos, int[] endPos) {
@@ -422,7 +430,7 @@ public final class JsonParserUtil {
             if (negative && numStr.equals("-9223372036854775808")) {
                 return Long.MIN_VALUE;
             }
-            if (useBigDecimal) {
+            if (useBigDecimal.get()) {
                 return new BigDecimal(numStr);
             }
             return Double.parseDouble(numStr);
@@ -430,7 +438,7 @@ public final class JsonParserUtil {
 
         if (decimalDigits > 0 || exp != 0) {
             // BigDecimal 路径：金融场景精度保护
-            if (useBigDecimal) {
+            if (useBigDecimal.get()) {
                 BigDecimal bd = BigDecimal.valueOf(intValue);
                 if (decimalDigits > 0) {
                     BigDecimal decimal = BigDecimal.valueOf(decimalValue)

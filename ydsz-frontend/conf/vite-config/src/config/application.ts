@@ -17,7 +17,7 @@ import { findMonorepoRoot } from '@ydsz/node-utils';
 import { NodePackageImporter } from 'sass';
 import { defineConfig, loadEnv, mergeConfig } from 'vite';
 
-import { ALL_SHARED_DEPS } from '../micro-shared-deps';
+import { ALL_SHARED_DEPS, getSharedDeps, isValidStrategy, type ShareStrategy } from '../micro-shared-deps';
 import { getDefaultPwaOptions } from '../options';
 import { loadApplicationPlugins } from '../plugins';
 import { microScopedPostcssPlugin } from '../plugins/micro-scoped-postcss';
@@ -44,6 +44,12 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
     const isBuild = command === 'build';
     const env = loadEnv(mode, root);
 
+    // v4.0 P1-1: 读取子应用 package.json 中的共享策略声明，选择对应 importmap 依赖集
+    const appName = readSubAppName();
+    const shareStrategy = readSubAppShareStrategy();
+    const sharedDeps = [...getSharedDeps(shareStrategy)];
+    console.info(`[ViteConfig] ImportMap strategy for ${appName || 'unknown'}: ${shareStrategy} (${sharedDeps.length} deps)`);
+
     const plugins = await loadApplicationPlugins({
       archiver: env.VITE_ARCHIVER === 'true',
       archiverPluginOptions: {},
@@ -66,7 +72,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
           : {
               selfHostBase: env.VITE_IMPORTMAP_SELF_HOST || '/vendor',
             }),
-        importmap: [...ALL_SHARED_DEPS],
+        importmap: sharedDeps,
       },
       injectAppLoading: true,
       injectMetadata: true,
@@ -118,7 +124,9 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
         },
         // v3.1: VITE_MONITOR_SOURCEMAP=true 时生成 hidden sourcemap（不引用到 HTML），
         // 供 upload-sourcemaps 脚本上传到后端做 stack trace 符号化，上传后从产物删除。
-        sourcemap: env.VITE_MONITOR_SOURCEMAP === 'true' ? 'hidden' : false,
+        // v4.0 P0-3: common.ts 中已默认在生产环境启用 hidden sourcemap（用于 Sentry 符号化）；
+        //       此处仅当 VITE_MONITOR_SOURCEMAP 显式设为 false 时关闭。
+        sourcemap: env.VITE_MONITOR_SOURCEMAP === 'false' ? false : (process.env.NODE_ENV === 'production' ? 'hidden' : false),
         chunkSizeWarningLimit: 1000,
         target: 'es2022',
       },
@@ -275,4 +283,36 @@ function readSubAppName(): string | undefined {
     // package.json 不存在时静默
   }
   return undefined;
+}
+
+/**
+ * 读取子应用 package.json 中声明的 importmap 共享策略（v4.0 P1-1）。
+ *
+ * 取值优先级：
+ * 1. package.json 中 `ydsz.shareStrategy` 字段
+ * 2. 默认 'all'（全量外置，保持向后兼容）
+ *
+ * 无效值会警告并回退到 'all'。
+ */
+function readSubAppShareStrategy(): ShareStrategy {
+  try {
+    const pkgContent = readFileSync(
+      path.join(process.cwd(), 'package.json'),
+      'utf-8',
+    );
+    const pkg = JSON.parse(pkgContent);
+    const strategy = pkg?.ydsz?.shareStrategy;
+    if (isValidStrategy(strategy)) {
+      return strategy;
+    }
+    if (strategy !== undefined) {
+      console.warn(
+        `[ViteConfig] Invalid shareStrategy "${strategy}" in package.json; ` +
+        `expected one of ${getAvailableStrategies().join(', ')}. Falling back to 'all'.`,
+      );
+    }
+  } catch {
+    // package.json 不存在时静默
+  }
+  return 'all';
 }

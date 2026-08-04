@@ -25,6 +25,8 @@ import { initStores } from '@ydsz/stores';
 import { ElLoading } from 'element-plus';
 
 import { setupSharedAuth } from './setup-shared-auth';
+import { provideMicroProps, MICRO_PROPS_KEY } from '@ydsz/micro-runtime/use-micro-props';
+import type { StandardMicroProps } from '@ydsz/micro-runtime/standard-props';
 
 /** 子应用启动配置 */
 export interface SubAppConfig {
@@ -48,8 +50,14 @@ export interface SubAppConfig {
   namespace?: string;
 }
 
-/** 标准化挂载参数（兼容 micro-kernel mountProps） */
-interface StandardMountProps {
+/**
+ * 标准化挂载参数（兼容 micro-kernel mountProps）
+ *
+ * v4.0: 继承 StandardMicroProps 契约，保留向后兼容字段。
+ * 新代码推荐直接使用 useMicroProps() 访问标准化 props，
+ * 而非从函数参数逐字段解构。
+ */
+interface StandardMountProps extends Partial<StandardMicroProps> {
   container?: HTMLElement;
   /** v3.6.0: Proxy 沙箱注入的 fakeWindow */
   fakeWindow?: Record<string, unknown>;
@@ -135,8 +143,15 @@ async function coreMount(
   app = createApp(RootComponent);
   setupMonitor(app);
 
+  // v4.0 P1-2: 将标准化 mountProps 注入子应用组件树
+  // 子组件可通过 useMicroProps() / useGlobalState() / useMessageBus() 类型化访问
+  if (props) {
+    provideMicroProps(props as StandardMicroProps);
+  }
+
   // v3.6.0: 注入沙箱 fakeWindow / iframeWindow 到 Vue 全局属性
   // 子应用代码可通过 `const win = inject('$microWindow') ?? window` 透明降级
+  // v4.0: 保留此全局属性作为兼容路径，新代码推荐使用 useMicroProps().fakeWindow
   if (props?.fakeWindow) {
     app.config.globalProperties.$microWindow = props.fakeWindow;
   }
@@ -194,6 +209,9 @@ export function defineSubApp(config: SubAppConfig) {
   return {
     async bootstrap() {},
     async mount(props: StandardMountProps) {
+      // v4.0 P1-2: 兼容新旧两种 props 结构
+      // 新结构：props 中包含 globalState / messageBus / context（由 buildStandardMountProps 构造）
+      // 旧结构：props 中包含 _globalState / _messageBus（向后兼容别名）
       await coreMount(config, props);
     },
     async unmount() {

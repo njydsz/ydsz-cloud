@@ -21,9 +21,11 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useElementPlusDesignTokens } from '@ydsz/hooks';
 
 import { ElConfigProvider } from 'element-plus';
+import { preferences } from '@ydsz/preferences';
 
 import GlobalSearch from '#/components/global-search.vue';
 import NetworkAlert from '#/components/network-alert.vue';
+import SubAppProgress from '#/components/subapp-progress.vue';
 import { elementLocale } from '#/locales';
 import { registerKeyboard } from '#/hooks/use-global-shortcut';
 
@@ -47,6 +49,7 @@ onUnmounted(() => { stopSearchShortcut?.(); });
 <template>
   <ElConfigProvider :locale="elementLocale">
     <NetworkAlert />
+    <SubAppProgress v-if="preferences.transition.progress" />
     <RouterView />
     <GlobalSearch v-model:visible="searchVisible" />
   </ElConfigProvider>
