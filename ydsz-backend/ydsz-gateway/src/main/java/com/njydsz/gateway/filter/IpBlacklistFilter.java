@@ -3,6 +3,7 @@ package com.njydsz.gateway.filter;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -84,6 +85,16 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
     private final ReactiveStringRedisTemplate redisTemplate;
 
     /**
+     * P0-3 修复：Redis 故障时的降级策略。
+     * <ul>
+     *   <li>{@code fail-open}（默认）：Redis 异常时放行，保证可用性</li>
+     *   <li>{@code fail-closed}：Redis 异常时拒绝，保证安全性（生产环境推荐）</li>
+     * </ul>
+     */
+    @Value("${ydsz.gateway.ip-blacklist.fail-mode:fail-open}")
+    private String failMode;
+
+    /**
      * IP 黑名单拦截过滤器：基于本地 + Redis 两级缓存拒绝恶意 IP。
      *
      * <p>无法获取客户端 IP 时放行；先查 L1 本地缓存（TTL 10s，命中即拒绝或放行），
@@ -129,7 +140,12 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
                     return chain.filter(exchange);
                 })
                 .onErrorResume(e -> {
-                    log.warn("[IpBlacklist] Redis 查询异常，降级放行 ip={} err={}", clientIp, e.getMessage());
+                    // P0-3 修复：根据 fail-mode 决定 Redis 异常时的降级策略
+                    if ("fail-closed".equalsIgnoreCase(failMode)) {
+                        log.warn("[IpBlacklist] Redis 查询异常，fail-closed 拒绝 ip={} err={}", clientIp, e.getMessage());
+                        return forbidden(exchange, clientIp);
+                    }
+                    log.warn("[IpBlacklist] Redis 查询异常，fail-open 降级放行 ip={} err={}", clientIp, e.getMessage());
                     return chain.filter(exchange);
                 });
     }

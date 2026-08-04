@@ -54,9 +54,9 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
     /**
      * 注入 W3C Trace Context，建立全链路追踪上下文。
      *
-     * <p>生成符合 W3C 标准的 traceparent（32hex traceId + 16hex spanId）并注入请求，
-     * 同时兼容写入 {@code X-Trace-Id}；响应头也回写两者。作为最早执行的过滤器（order=0），
-     * 后续过滤器统一复用此 traceId，避免各自生成导致链路断裂。
+     * <p>遵循 W3C Trace Context 规范：优先继承上游 traceparent 的 traceId，
+     * 仅当上游无 traceparent 或格式非法时才生成新的 traceId。
+     * 每跳生成新的 spanId，确保 span 层级正确。
      *
      * @param exchange 服务器 Web 交换上下文
      * @param chain    网关过滤器链
@@ -66,12 +66,24 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
 
-        // 生成 W3C 格式的 traceId（32 hex）和 spanId（16 hex）
-        String traceId = generateTraceId();
-        String spanId = generateSpanId();
+        String traceId;
+        String spanId;
+        String traceparent;
 
-        // 构造 traceparent 头
-        String traceparent = TRACE_VERSION + "-" + traceId + "-" + spanId + "-" + TRACE_FLAGS;
+        // P0-3 修复：优先继承上游 traceparent（W3C 规范），不存在才生成新的
+        String upstreamTraceparent = request.getHeaders().getFirst(HEADER_TRACEPARENT);
+        if (isValidTraceparent(upstreamTraceparent)) {
+            // 延续上游 traceId，生成新 spanId（每跳新 span）
+            String[] parts = upstreamTraceparent.split("-");
+            traceId = parts[1];
+            spanId = generateSpanId();
+            traceparent = TRACE_VERSION + "-" + traceId + "-" + spanId + "-" + TRACE_FLAGS;
+        } else {
+            // 上游无 traceparent，生成新的 traceId + spanId
+            traceId = generateTraceId();
+            spanId = generateSpanId();
+            traceparent = TRACE_VERSION + "-" + traceId + "-" + spanId + "-" + TRACE_FLAGS;
+        }
 
         // 注入 traceparent 和 X-Trace-Id（兼容）
         ServerHttpRequest mutated = request.mutate()
@@ -84,6 +96,52 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
         exchange.getResponse().getHeaders().add(HEADER_TRACEPARENT, traceparent);
 
         return chain.filter(exchange.mutate().request(mutated).build());
+    }
+
+    /**
+     * 校验 traceparent 格式是否符合 W3C 规范。
+     *
+     * <p>格式：00-{traceId(32hex)}-{spanId(16hex)}-{flags(2hex)}
+     * traceId 和 spanId 不能全为 0。
+     *
+     * @param traceparent 待校验的 traceparent 头值
+     * @return 合法返回 true
+     */
+    private boolean isValidTraceparent(String traceparent) {
+        if (traceparent == null || traceparent.isEmpty()) {
+            return false;
+        }
+        String[] parts = traceparent.split("-");
+        if (parts.length != 4) {
+            return false;
+        }
+        // traceId: 32 hex，不能全 0
+        if (parts[1].length() != 32 || !isHex(parts[1])
+                || parts[1].equals("00000000000000000000000000000000")) {
+            return false;
+        }
+        // spanId: 16 hex，不能全 0
+        if (parts[2].length() != 16 || !isHex(parts[2])
+                || parts[2].equals("0000000000000000")) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 判断字符串是否全为十六进制字符。
+     *
+     * @param s 待检查字符串
+     * @return 全 hex 返回 true
+     */
+    private boolean isHex(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

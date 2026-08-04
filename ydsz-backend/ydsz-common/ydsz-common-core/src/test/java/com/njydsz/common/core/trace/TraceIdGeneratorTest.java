@@ -3,6 +3,7 @@ package com.njydsz.common.core.trace;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,7 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 class TraceIdGeneratorTest {
 
     @Test
-    @DisplayName("生成 32 位十六进制字符串")
+    @DisplayName("generate() 生成 32 位十六进制字符串")
     void format_32hex() {
         String id = TraceIdGenerator.generate();
         assertEquals(32, id.length());
@@ -25,11 +26,48 @@ class TraceIdGeneratorTest {
     }
 
     @Test
-    @DisplayName("连续生成唯一")
+    @DisplayName("generate() 连续生成唯一")
     void unique() {
         String a = TraceIdGenerator.generate();
         String b = TraceIdGenerator.generate();
         assertNotEquals(a, b);
+    }
+
+    @Test
+    @DisplayName("generateTraceId() 生成 32 位十六进制字符串")
+    void generateTraceId_format32hex() {
+        String id = TraceIdGenerator.generateTraceId();
+        assertEquals(32, id.length());
+        assertTrue(id.matches("^[0-9a-f]{32}$"), "must be 32 lowercase hex: " + id);
+    }
+
+    @Test
+    @DisplayName("generateSpanId() 生成 16 位十六进制字符串")
+    void generateSpanId_format16hex() {
+        String id = TraceIdGenerator.generateSpanId();
+        assertEquals(16, id.length());
+        assertTrue(id.matches("^[0-9a-f]{16}$"), "must be 16 lowercase hex: " + id);
+    }
+
+    @Test
+    @DisplayName("traceparentHeader() 无参版本格式正确")
+    void traceparentHeader_format() {
+        String header = TraceIdGenerator.traceparentHeader();
+        String[] parts = header.split("-");
+        assertEquals(4, parts.length);
+        assertEquals("00", parts[0]);
+        assertEquals(32, parts[1].length());
+        assertEquals(16, parts[2].length());
+        assertEquals("01", parts[3]);
+    }
+
+    @Test
+    @DisplayName("traceparentHeader(traceId,spanId) 参数传递正确")
+    void traceparentHeader_withParams() {
+        String traceId = "abcdef1234567890abcdef1234567890";
+        String spanId = "1234567890abcdef";
+        String header = TraceIdGenerator.traceparentHeader(traceId, spanId);
+        assertEquals("00-" + traceId + "-" + spanId + "-01", header);
     }
 
     @Test
@@ -44,5 +82,11 @@ class TraceIdGeneratorTest {
         } catch (InvocationTargetException e) {
             assertInstanceOf(UnsupportedOperationException.class, e.getCause());
         }
+    }
+
+    @RepeatedTest(10)
+    @DisplayName("SpanId 不重复（重复 10 次）")
+    void spanId_noCollision() {
+        assertNotEquals(TraceIdGenerator.generateSpanId(), TraceIdGenerator.generateSpanId());
     }
 }

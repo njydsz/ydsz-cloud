@@ -262,6 +262,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
                     String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
                     String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
+                    // P0-3 修复：注入租户 ID，供 RateLimitFilter 做租户级限流
+                    String tenantIdStr = userInfo.getTenantId() != null ? userInfo.getTenantId() : "";
                     // P0-7: permsStr 留空（UserInfo 暂无 permissions 字段，权限由下游从 RBAC 缓存加载）
                     String permsStr = "";
 
@@ -288,6 +290,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                                 stripInternalHeaders(h);
                                 // 注入网关签发的内部头
                                 h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
+                                h.set(GatewayConstants.HEADER_TENANT_ID, tenantIdStr);
                                 h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
                                 h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
                                 h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);

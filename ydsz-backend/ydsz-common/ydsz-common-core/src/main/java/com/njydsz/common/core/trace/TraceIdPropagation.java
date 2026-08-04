@@ -1,6 +1,7 @@
 package com.njydsz.common.core.trace;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.MDC;
@@ -14,6 +15,8 @@ import com.njydsz.common.core.constant.HeaderConstants;
  * TraceId 请求头生成能力，实现服务间调用的链路追踪贯穿。
  * 本类不依赖任何 HTTP 框架，上层客户端拦截器只需调用
  * {@link #traceHeader()} 获取请求头并注入即可。</p>
+ *
+ * <p>同时提供符合 W3C Trace Context 标准的 {@code traceparent} header 支持。</p>
  *
  * <p><b>使用示例（RestTemplate 拦截器）：</b></p>
  * <pre>{@code
@@ -75,6 +78,45 @@ public final class TraceIdPropagation {
             traceId = TraceIdGenerator.generate();
         }
         return Collections.singletonMap(HeaderConstants.TRACE_ID_HEADER, traceId);
+    }
+
+    /**
+     * 生成包含 {@code X-Trace-Id} 和 W3C {@code traceparent} 的完整传播请求头。
+     *
+     * <p>同时注入两种 header，兼容老版 {@code X-Trace-Id} 透传和
+     * 新版 W3C Trace Context 标准（如 SkyWalking / Jaeger）。</p>
+     *
+     * @return 请求头 Map（不可变，包含 X-Trace-Id 和 traceparent）
+     * @since 1.5.0
+     */
+    public static Map<String, String> traceHeaders() {
+        String traceId = currentTraceId();
+        if (traceId == null || traceId.isBlank()) {
+            return Collections.emptyMap();
+        }
+        String spanId = TraceIdGenerator.generateSpanId();
+        Map<String, String> headers = new HashMap<>(2);
+        headers.put(HeaderConstants.TRACE_ID_HEADER, traceId);
+        headers.put(HeaderConstants.W3C_TRACEPARENT, TraceIdGenerator.traceparentHeader(traceId, spanId));
+        return Collections.unmodifiableMap(headers);
+    }
+
+    /**
+     * 生成包含 {@code X-Trace-Id} 和 W3C {@code traceparent} 的完整传播请求头（缺失时自动生成）。
+     *
+     * @return 请求头 Map（不可变，包含 X-Trace-Id 和 traceparent）
+     * @since 1.5.0
+     */
+    public static Map<String, String> traceHeadersOrCreate() {
+        String traceId = currentTraceId();
+        if (traceId == null || traceId.isBlank()) {
+            traceId = TraceIdGenerator.generate();
+        }
+        String spanId = TraceIdGenerator.generateSpanId();
+        Map<String, String> headers = new HashMap<>(2);
+        headers.put(HeaderConstants.TRACE_ID_HEADER, traceId);
+        headers.put(HeaderConstants.W3C_TRACEPARENT, TraceIdGenerator.traceparentHeader(traceId, spanId));
+        return Collections.unmodifiableMap(headers);
     }
 
     /**

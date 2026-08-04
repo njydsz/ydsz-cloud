@@ -245,6 +245,27 @@ public final class HeaderConstants {
      */
     public static final String MDC_TRACE_ID_KEY = "traceId";
 
+    /**
+     * W3C Trace Context 标准的 traceparent header 名称。
+     *
+     * <p>格式：{@code 00-{traceId}-{spanId}-01}，用于对接 SkyWalking/Jaeger/Zipkin
+     * 等主流分布式链路追踪系统。
+     *
+     * @since 1.5.0
+     * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
+     */
+    public static final String W3C_TRACEPARENT = "traceparent";
+
+    /**
+     * W3C Trace Context 标准的 tracestate header 名称。
+     *
+     * <p>用于传递供应商特定的追踪上下文信息。
+     *
+     * @since 1.5.0
+     * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
+     */
+    public static final String W3C_TRACESTATE = "tracestate";
+
     // ============================== 网络信息 ==============================
 
     /**
