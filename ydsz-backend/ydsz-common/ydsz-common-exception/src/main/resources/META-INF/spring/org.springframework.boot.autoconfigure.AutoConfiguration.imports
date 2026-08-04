@@ -1,9 +1,0 @@
-com.njydsz.common.exception.config.I18nConfiguration
-com.njydsz.common.exception.config.WebI18nConfiguration
-com.njydsz.common.exception.config.ExceptionMetricsAutoConfiguration
-com.njydsz.common.exception.config.ExceptionCodeDocEndpointAutoConfiguration
-com.njydsz.common.exception.config.ExceptionHealthAutoConfiguration
-com.njydsz.common.exception.config.JdbcExceptionHandlerAutoConfiguration
-com.njydsz.common.exception.handler.MvcExceptionHandlerAutoConfiguration
-com.njydsz.common.exception.handler.ValidationExceptionHandlerAutoConfiguration
-com.njydsz.common.exception.handler.WebFluxExceptionHandlerAutoConfiguration

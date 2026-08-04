@@ -1,2 +1,0 @@
-com.njydsz.common.lock.config.DistributedLockAutoConfiguration
-com.njydsz.common.lock.metrics.LockMetricsConfiguration
