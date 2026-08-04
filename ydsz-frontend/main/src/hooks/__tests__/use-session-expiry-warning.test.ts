@@ -39,6 +39,12 @@ vi.mock('#/locales', () => ({
   $t: (key: string) => key,
 }));
 
+// === mock #/hooks/use-cross-tab-sync — D4 跨标签页广播 ===
+vi.mock('#/hooks/use-cross-tab-sync', () => ({
+  CROSS_TAB_EVENTS: { TOKEN_REFRESHED: 'token-refreshed' },
+  notifyCrossTab: vi.fn(),
+}));
+
 import { useTokenStore } from '@ydsz/stores';
 
 import { useSessionExpiryWarning } from '../use-session-expiry-warning';

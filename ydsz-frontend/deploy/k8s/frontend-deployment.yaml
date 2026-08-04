@@ -21,6 +21,14 @@ spec:
         app: ydsz-frontend
         component: web
     spec:
+      # E6: 跨节点反亲和，确保 Pod 分散到不同节点，提升可用性
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: ydsz-frontend
       containers:
         - name: frontend
           image: registry.cn-hangzhou.aliyuncs.com/ydsz-pmis/frontend:latest
@@ -29,29 +37,37 @@ spec:
               name: http
               protocol: TCP
           resources:
+            # E6: nginx 静态资源服务基线很低，但 brotli/gzip 压缩需要突发 CPU
+            #     收窄 request→limit 间距（2-3x），使 HPA 扩缩容更可预测
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 50m
+              memory: 64Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 200m
+              memory: 256Mi
+          # 启动探针：nginx 启动很快（<2s），用短间隔快速放行流量
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 2
+            failureThreshold: 10
+            timeoutSeconds: 2
           # 浅探针：nginx 静态返回，验证 Pod 存活
           livenessProbe:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 15
             periodSeconds: 30
-            timeoutSeconds: 5
+            timeoutSeconds: 3
             failureThreshold: 3
           # 深探针：检查后端网关连通性，确保前端能真正服务
           readinessProbe:
             httpGet:
               path: /health/deep
               port: 8080
-            initialDelaySeconds: 5
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 3
             failureThreshold: 3
           lifecycle:
             preStop:

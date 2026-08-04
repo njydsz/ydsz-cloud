@@ -69,7 +69,7 @@ COPY ydsz-message/       ydsz-message/
 COPY ydsz-nextwiki/      ydsz-nextwiki/
 COPY checkstyle.xml spotbugs-exclude.xml ./
 
-# 构建指定模块及其依赖模块，跳过测试（CI 流水线已单独跑测试）
+# 构建指定模块及其依赖模块，跳过测试与质量检查（CI 流水线 .github/workflows/backend-ci.yml 负责跑测试/CheckStyle/SpotBugs/JaCoCo/OWASP）
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -pl ${MODULE_NAME} -am clean package -DskipTests -Dcheckstyle.skip=true -Dspotbugs.skip=true
 

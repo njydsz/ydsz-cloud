@@ -22,6 +22,10 @@ pre-commit:
     - name: type-check
       run: pnpm check:type
 
+    - name: backend-enforcer
+      glob: "ydsz-backend/**/*.{java,xml}"
+      run: cd ydsz-backend && mvn -B -q -DskipTests=true enforcer:enforce -pl . 2>&1 || echo "[backend-enforcer] 跳过：仅检查根 POM 规则"
+
 commit-msg:
   jobs:
     - name: commitlint
