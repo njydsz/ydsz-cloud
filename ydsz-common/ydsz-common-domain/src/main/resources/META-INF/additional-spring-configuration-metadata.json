@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.domain.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 domain 模块自动配置（默认 true）。"
+    }
+  ]
+}

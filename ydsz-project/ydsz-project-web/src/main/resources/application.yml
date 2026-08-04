@@ -1,0 +1,30 @@
+# YDSZ 项目管理服务本地配置
+# 公共配置（mybatis-plus / management / springdoc / datasource / redis）由 Nacos 共享配置
+# ydsz-common.yaml 提供，此处仅保留服务私有配置
+
+# P0-2: 分布式事务配置（Seata AT 模式，默认关闭，TC 就绪后开启）
+ydsz:
+  seata:
+    enabled: false
+    default-type: SEATA_AT
+  # P0-1: YdszJson ASM 预热
+  json:
+    warmup-classes:
+      - com.njydsz.project.domain.entity.ProjectInitiation
+    # P0-3: 启用 BigDecimal 精度模式（项目管理涉及预算/成本金额计算）
+    use-big-decimal: true
+
+# Seata 客户端配置（TC 就绪后设置 seata.enabled=true 并取消注释）
+# seata:
+#   enabled: true
+#   application-id: ${spring.application.name}
+#   tx-service-group: ydsz_tx_group
+#   service:
+#     vgroup-mapping:
+#       ydsz_tx_group: default
+#     grouplist:
+#       default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+#   config:
+#     type: file
+#   registry:
+#     type: file

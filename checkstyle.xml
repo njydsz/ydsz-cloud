@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    YDSZ PMIS 项目 CheckStyle 配置
+
+    规则范围：仅强制"正确性"与"安全性"规则，不包含代码风格规则（风格由 EditorConfig 统一）。
+    设计原则：零误报 — 所有规则必须是确定性的、不依赖主观审美判断的。
+
+    关键规则：
+    R1: 禁止手工拼接 JSON 字符串（必须使用 YdszJson.toJson()）
+    R2: 禁止 System.out/System.err 直接输出（必须使用 Slf4j）
+    R3: 禁止 printStackTrace()（必须使用 Slf4j 日志记录异常）
+    R4: 空块检查（允许空 catch）
+
+    移除说明（2026-08-04）：
+    - ImportOrder / FileLength / MethodLength / ParameterNumber / NewlineAtEndOfFile
+      属于代码风格与规模类规则，与本文件"仅正确性+安全性、零误报"定位不符，
+      且对既有代码（如 ydsz-common-json 的 ASM 字节码生成器）产生大规模误报，故移除。
+    - @SuppressWarnings 禁止已由 ArchUnit R15 强制执行，CheckStyle 层不再重复校验。
+
+    关联文档：docs/ydsz-common-json-integration-analysis.md (P0/P1 治理项)
+    关联架构约束：ydsz-common-base/src/test/.../ArchitectureRulesTest.java (R29)
+-->
+
+<module name="Checker">
+    <!-- 字符集：UTF-8 -->
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <module name="TreeWalker">
+        <!--
+            R1: 禁止手工拼接 JSON 字符串
+            检测模式：字符串以 { 开头且包含 ":" 后紧跟字符串拼接操作
+            示例违规代码：
+                "{\"key\":\"" + value + "\"}"
+                "{\"key\":\"" +
+            合理豁免：
+                - agent-domain 下的 ChatMessageSerializer 等通过 out.writeString() 走引擎转义 → 文件名排除
+         -->
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="no-manual-json-concat"/>
+            <property name="format"
+                     value='&quot;\{\\&quot;[a-zA-Z0-9_]+\&quot;\s*:\s*\&quot;&quot;\s*\+'/>
+            <property name="message"
+                     value="禁止手工拼接 JSON 字符串 (使用 YdszJson.toJson() 替代)"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <!--
+            R2: 禁止 System.out / System.err 直接输出
+            必须使用 Slf4j 日志门面进行所有输出。
+            豁免：main() 方法的快速调试输出（极少场景）。
+         -->
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="no-system-out"/>
+            <property name="format" value='System\.(out|err)\.print'/>
+            <property name="message"
+                     value="禁止直接使用 System.out/System.err（使用 Slf4j Logger 替代）"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <!--
+            R3: 禁止 printStackTrace()
+            必须使用 Slf4j 日志记录异常，参数化日志可提供更丰富的上下文信息。
+         -->
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="no-print-stack-trace"/>
+            <property name="format" value='\.printStackTrace\s*\('/>
+            <property name="message"
+                     value="禁止使用 printStackTrace()（使用 Slf4j Logger.error(msg, e) 替代）"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <!--
+            R4: 空块检查（允许空 catch）
+            空代码块通常是遗漏实现或吞掉异常，catch 块豁免（部分场景需静默吞异常）。
+         -->
+        <module name="EmptyBlock">
+            <property name="tokens" value="LITERAL_WHILE,LITERAL_TRY,LITERAL_FINALLY,LITERAL_DO,LITERAL_IF,LITERAL_ELSE,LITERAL_FOR,INSTANCE_INIT,STATIC_INIT,LITERAL_SWITCH,LITERAL_SYNCHRONIZED"/>
+            <property name="option" value="text"/>
+        </module>
+    </module>
+
+    <!--
+        JSON 拼接规则补充（Checker 级，无需 TreeWalker，直接匹配文件内容行）
+    -->
+    <module name="RegexpSingleline">
+        <property name="id" value="no-manual-json-concat-checker"/>
+        <property name="format"
+                 value='"\{\\"[a-zA-Z0-9_]+\&quot;\s*:\s*\&quot;'/>
+        <property name="message"
+                 value="禁止手工拼接 JSON 字符串 (使用 YdszJson.toJson() 替代 - Checker 级补充检测)"/>
+        <property name="fileExtensions" value="java"/>
+    </module>
+</module>

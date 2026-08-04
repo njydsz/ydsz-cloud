@@ -1,0 +1,94 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.excel.read-buffer-size",
+      "type": "java.lang.Integer",
+      "description": "Read buffer size in bytes, default 8192.",
+      "defaultValue": 8192
+    },
+    {
+      "name": "ydsz.excel.write-buffer-size",
+      "type": "java.lang.Integer",
+      "description": "Write buffer size in bytes, default 8192.",
+      "defaultValue": 8192
+    },
+    {
+      "name": "ydsz.excel.default-date-format",
+      "type": "java.lang.String",
+      "description": "Default date format.",
+      "defaultValue": "yyyy-MM-dd HH:mm:ss"
+    },
+    {
+      "name": "ydsz.excel.default-number-format",
+      "type": "java.lang.String",
+      "description": "Default number format.",
+      "defaultValue": "#,##0.00"
+    },
+    {
+      "name": "ydsz.excel.automatic-trim",
+      "type": "java.lang.Boolean",
+      "description": "Auto trim strings.",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.excel.use-fast-reader",
+      "type": "java.lang.Boolean",
+      "description": "Use fast reader (zero POI).",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.excel.use-fast-writer",
+      "type": "java.lang.Boolean",
+      "description": "Use fast writer (zero POI).",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.excel.streaming-parse-threshold-mb",
+      "type": "java.lang.Integer",
+      "description": "Streaming parse threshold in MB.",
+      "defaultValue": 10
+    },
+    {
+      "name": "ydsz.excel.max-read-file-size-mb",
+      "type": "java.lang.Integer",
+      "description": "Max read file size in MB.",
+      "defaultValue": 100
+    },
+    {
+      "name": "ydsz.excel.max-write-file-size-mb",
+      "type": "java.lang.Integer",
+      "description": "Max write file size in MB.",
+      "defaultValue": 50
+    },
+    {
+      "name": "ydsz.excel.compression-level",
+      "type": "java.lang.Integer",
+      "description": "ZIP compression level.",
+      "defaultValue": 1
+    },
+    {
+      "name": "ydsz.excel.formula-injection-protection",
+      "type": "java.lang.Boolean",
+      "description": "Enable formula injection protection.",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.excel.strict-number-conversion",
+      "type": "java.lang.Boolean",
+      "description": "Strict number conversion.",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.excel.head-row-number",
+      "type": "java.lang.Integer",
+      "description": "Default head row number.",
+      "defaultValue": 1
+    },
+    {
+      "name": "ydsz.excel.write-cache-size",
+      "type": "java.lang.Integer",
+      "description": "SXSSF write cache size.",
+      "defaultValue": 100
+    }
+  ]
+}

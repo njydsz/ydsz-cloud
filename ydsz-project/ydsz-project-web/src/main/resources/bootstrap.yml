@@ -1,0 +1,53 @@
+# =====================================================================
+#  YDSZ 项目核心业务域 bootstrap 配置
+#  --------------------------------------------------------------------
+#  端口：9009
+#  职责：立项/合同/执行/EVM/成本/利润/资源/质保/工单/满意度
+#  依赖：Nacos 服务发现/配置中心、PostgreSQL、Redis
+# =====================================================================
+
+server:
+  # HTTP 监听端口（按构建顺序 10/10）
+  port: 9009
+  max-http-request-header-size: 16KB
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: ydsz-project
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      discovery:
+        enabled: true
+        register-enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        metadata:
+          version: 1.0.0
+          port: 9009
+        ip-type: IPv4
+      config:
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        file-extension: yaml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: ydsz-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
+          - data-id: ydsz-project.yml
+            group: ${spring.profiles.active}
+            refresh: true

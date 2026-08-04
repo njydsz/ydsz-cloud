@@ -1,0 +1,121 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.base.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 base 模块自动配置（CORS、Trace、安全头等）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.base.timezone",
+      "type": "java.lang.String",
+      "description": "JVM 默认时区，应用启动时强制设置。",
+      "defaultValue": "Asia/Shanghai"
+    },
+    {
+      "name": "ydsz.base.security-headers.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全响应头过滤器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.base.security-headers.xss-protection",
+      "type": "java.lang.String",
+      "description": "X-XSS-Protection 响应头值。",
+      "defaultValue": "1; mode=block"
+    },
+    {
+      "name": "ydsz.base.security-headers.content-type-options",
+      "type": "java.lang.String",
+      "description": "X-Content-Type-Options 响应头值。",
+      "defaultValue": "nosniff"
+    },
+    {
+      "name": "ydsz.base.security-headers.frame-options",
+      "type": "java.lang.String",
+      "description": "X-Frame-Options 响应头值（DENY / SAMEORIGIN）。",
+      "defaultValue": "DENY"
+    },
+    {
+      "name": "ydsz.base.security-headers.hsts",
+      "type": "java.lang.String",
+      "description": "Strict-Transport-Security 响应头值。",
+      "defaultValue": "max-age=31536000; includeSubDomains"
+    },
+    {
+      "name": "ydsz.base.security-headers.csp",
+      "type": "java.lang.String",
+      "description": "Content-Security-Policy 响应头值。",
+      "defaultValue": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+    },
+    {
+      "name": "ydsz.base.security-headers.referrer-policy",
+      "type": "java.lang.Long",
+      "description": "慢请求阈值（毫秒），超过此值日志升级为 WARN。",
+      "defaultValue": 3000
+    },
+    {
+      "name": "ydsz.doc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 OpenAPI/Knife4j 文档功能。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.doc.production-enabled",
+      "type": "java.lang.Boolean",
+      "description": "生产环境是否允许访问文档。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.doc.api-docs-path",
+      "type": "java.lang.String",
+      "description": "OpenAPI 文档基础路径。",
+      "defaultValue": "/v3/api-docs"
+    },
+    {
+      "name": "ydsz.doc.knife4j-path",
+      "type": "java.lang.String",
+      "description": "Knife4j 文档访问路径。",
+      "defaultValue": "/doc.html"
+    },
+    {
+      "name": "ydsz.doc.doc-version",
+      "type": "java.lang.String",
+      "description": "文档版本号，覆盖自动检测的版本。"
+    },
+    {
+      "name": "ydsz.doc.export.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用文档导出功能。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.doc.export.format",
+      "type": "java.lang.String",
+      "description": "默认导出格式（json / yaml / html / markdown）。",
+      "defaultValue": "json"
+    },
+    {
+      "name": "ydsz.doc.export.output-dir",
+      "type": "java.lang.String",
+      "description": "文档导出目录。",
+      "defaultValue": "./api-docs"
+    },
+    {
+      "name": "ydsz.doc.basic-auth.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用文档 Basic 认证保护。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.doc.basic-auth.username",
+      "type": "java.lang.String",
+      "description": "文档 Basic 认证用户名。"
+    },
+    {
+      "name": "ydsz.doc.basic-auth.password",
+      "type": "java.lang.String",
+      "description": "文档 Basic 认证密码。建议使用环境变量引用或 Jasypt 加密。"
+    }
+  ]
+}

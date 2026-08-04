@@ -1,0 +1,16 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "\\QMETA-INF/services/javax.spi.parser.JsonParser\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/\\E.*"
+      },
+      {
+        "pattern": "\\Qjson/\\E.*"
+      }
+    ]
+  },
+  "bundles": []
+}

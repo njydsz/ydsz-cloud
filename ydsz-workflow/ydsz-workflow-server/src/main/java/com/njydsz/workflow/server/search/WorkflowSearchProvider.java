@@ -1,0 +1,87 @@
+package com.njydsz.workflow.server.search;
+
+import java.time.ZoneId;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.common.search.core.IndexDocument;
+import com.njydsz.common.search.core.SearchField;
+import com.njydsz.common.search.core.SearchField.FieldType;
+import com.njydsz.common.search.provider.SearchProvider;
+import com.njydsz.workflow.domain.entity.FlowTemplate;
+import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 工作流模板搜索提供者 — 将流程模板数据注册到统一搜索体系。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class WorkflowSearchProvider implements SearchProvider<FlowTemplate> {
+
+    private final FlowTemplateMapper flowTemplateMapper;
+
+    @Override
+    public String getType() {
+        return "workflow";
+    }
+
+    @Override
+    public String getTypeLabel() {
+        return "流程模板";
+    }
+
+    @Override
+    public IndexDocument toIndexDocument(FlowTemplate entity) {
+        if (entity == null || entity.getId() == null) {
+            return null;
+        }
+        return IndexDocument.builder()
+                .id(entity.getId())
+                .type("workflow")
+                .title(entity.getTemplateName())
+                .subtitle(entity.getCategory())
+                .content(entity.getDescription())
+                .snippet(entity.getTemplateCode())
+                .status(entity.getStatus())
+                .path("/workflow/template/" + entity.getId())
+                .tenantId(entity.getTenantId())
+                .createdBy(entity.getCreatedBy())
+                .createdAt(entity.getCreatedAt() != null
+                        ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant() : null)
+                .updatedBy(entity.getUpdatedBy())
+                .updatedAt(entity.getUpdatedAt() != null
+                        ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant() : null)
+                .build();
+    }
+
+    @Override
+    public List<SearchField> getSearchableFields() {
+        return List.of(
+                SearchField.builder()
+                        .name("title").label("模板名称").type(FieldType.TEXT)
+                        .weight(3.0f).searchable(true).highlightable(true).sortable(true)
+                        .build(),
+                SearchField.builder()
+                        .name("subtitle").label("分类").type(FieldType.KEYWORD)
+                        .weight(2.0f).searchable(true).aggregatable(true)
+                        .build(),
+                SearchField.builder()
+                        .name("content").label("描述").type(FieldType.TEXT)
+                        .weight(1.0f).searchable(true)
+                        .build()
+        );
+    }
+
+    @Override
+    public FlowTemplate loadById(String id) {
+        return flowTemplateMapper.selectById(id);
+    }
+}

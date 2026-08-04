@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.message.infra.mapper.MsgAggregateMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.message.domain.entity.MsgAggregate">
+        <id column="id" property="id"/>
+        <result column="aggregate_group" property="aggregateGroup"/>
+        <result column="receiver" property="receiver"/>
+        <result column="channel" property="channel"/>
+        <result column="batch_status" property="batchStatus"/>
+        <result column="message_count" property="messageCount"/>
+        <result column="first_message_at" property="firstMessageAt"/>
+        <result column="last_message_at" property="lastMessageAt"/>
+        <result column="scheduled_send_at" property="scheduledSendAt"/>
+        <result column="sent_at" property="sentAt"/>
+        <result column="digest_content" property="digestContent"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, aggregate_group, receiver, channel, batch_status, message_count, first_message_at,
+        last_message_at, scheduled_send_at, sent_at, digest_content,
+        created_by, created_at, updated_by, updated_at, deleted, tenant_id
+    </sql>
+
+</mapper>

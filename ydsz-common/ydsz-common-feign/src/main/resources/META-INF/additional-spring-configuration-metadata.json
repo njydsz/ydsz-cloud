@@ -1,0 +1,94 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.feign.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Feign 模块（默认 true）。"
+    },
+    {
+      "name": "ydsz.feign.logger-level",
+      "type": "java.lang.String",
+      "description": "Feign 日志级别（NONE、BASIC、HEADERS、FULL）。默认 BASIC。"
+    },
+    {
+      "name": "ydsz.feign.propagation.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用请求头透传（默认 true）。"
+    },
+    {
+      "name": "ydsz.feign.propagation.headers",
+      "type": "java.util.List",
+      "description": "需要透传的请求头列表。"
+    },
+    {
+      "name": "ydsz.feign.retry.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用重试（默认 true）。"
+    },
+    {
+      "name": "ydsz.feign.retry.max-attempts",
+      "type": "java.lang.Integer",
+      "description": "最大重试次数（默认 3）。"
+    },
+    {
+      "name": "ydsz.feign.retry.backoff.delay",
+      "type": "java.lang.Long",
+      "description": "重试初始延迟（毫秒，默认 100）。"
+    },
+    {
+      "name": "ydsz.feign.retry.backoff.max-delay",
+      "type": "java.lang.Long",
+      "description": "重试最大延迟（毫秒，默认 500）。"
+    },
+    {
+      "name": "ydsz.feign.retry.backoff.multiplier",
+      "type": "java.lang.Double",
+      "description": "退避乘数（默认 2.0）。"
+    },
+    {
+      "name": "ydsz.feign.timeout.connect",
+      "type": "java.lang.Long",
+      "description": "连接超时（毫秒，默认 5000）。"
+    },
+    {
+      "name": "ydsz.feign.timeout.read",
+      "type": "java.lang.Long",
+      "description": "读取超时（毫秒，默认 10000）。"
+    },
+    {
+      "name": "ydsz.feign.error.include-body",
+      "type": "java.lang.Boolean",
+      "description": "错误响应是否包含 body（默认 true）。"
+    },
+    {
+      "name": "ydsz.feign.error.max-body-bytes",
+      "type": "java.lang.Integer",
+      "description": "错误 body 最大字节数（默认 4096）。"
+    },
+    {
+      "name": "ydsz.feign.client.max-connections",
+      "type": "java.lang.Integer",
+      "description": "HTTP 客户端最大连接数（默认 200）。"
+    },
+    {
+      "name": "ydsz.feign.client.max-per-route",
+      "type": "java.lang.Integer",
+      "description": "每路由最大连接数（默认 50）。"
+    },
+    {
+      "name": "ydsz.feign.client.keep-alive",
+      "type": "java.lang.Long",
+      "description": "连接保持时间（毫秒，默认 30000）。"
+    },
+    {
+      "name": "ydsz.feign.name-assembler.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用名称解析器（默认 true）。"
+    },
+    {
+      "name": "ydsz.feign.name-assembler.cache-ttl-minutes",
+      "type": "java.lang.Integer",
+      "description": "名称解析缓存 TTL（分钟，默认 5）。"
+    }
+  ]
+}

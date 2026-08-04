@@ -1,0 +1,74 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.lock.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用分布式锁功能（默认开启）。"
+    },
+    {
+      "name": "ydsz.lock.fallback-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用锁降级策略（Redis 不可用时降级为本地 ReentrantLock，默认 true）。"
+    },
+    {
+      "name": "ydsz.lock.max-renew-times",
+      "type": "java.lang.Integer",
+      "description": "WatchDog 最大续期次数（默认 100 次，约 30 分钟）。"
+    },
+    {
+      "name": "ydsz.lock.acquire-pool.core-size",
+      "type": "java.lang.Integer",
+      "description": "锁获取线程池核心线程数（默认 4）。"
+    },
+    {
+      "name": "ydsz.lock.acquire-pool.max-size",
+      "type": "java.lang.Integer",
+      "description": "锁获取线程池最大线程数（默认 32）。"
+    },
+    {
+      "name": "ydsz.lock.acquire-pool.queue-capacity",
+      "type": "java.lang.Integer",
+      "description": "锁获取线程池队列容量（默认 256）。"
+    },
+    {
+      "name": "ydsz.lock.scheduler-pool-size",
+      "type": "java.lang.Integer",
+      "description": "调度线程池大小（用于 WatchDog 续期和信号量超时调度，默认 2）。"
+    },
+    {
+      "name": "ydsz.lock.watchdog-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 WatchDog 自动续期功能（默认 true）。"
+    },
+    {
+      "name": "ydsz.lock.namespace",
+      "type": "java.lang.String",
+      "description": "锁键命名空间前缀（通常使用 ${spring.application.name}）。"
+    },
+    {
+      "name": "ydsz.lock.default-lock-timeout-seconds",
+      "type": "java.lang.Integer",
+      "description": "锁默认超时时间（秒，默认 30）。"
+    },
+    {
+      "name": "ydsz.lock.multi-lock.max-renew-count",
+      "type": "java.lang.Integer",
+      "description": "多 Key 联锁最大续期次数（默认 30）。"
+    },
+    {
+      "name": "ydsz.lock.multi-lock.renew-interval-seconds",
+      "type": "java.lang.Integer",
+      "description": "多 Key 联锁续期间隔（秒，默认 10）。"
+    },
+    {
+      "name": "ydsz.lock.idempotent.default-ttl-seconds",
+      "type": "java.lang.Integer",
+      "description": "幂等锁默认过期时间（秒，默认 5）。"
+    },
+    {
+      "name": "ydsz.lock.idempotent.key-prefix",
+      "type": "java.lang.String",
+      "description": "幂等键 Redis 前缀（默认 ydsz:idem:）。"
+    }
+  ]
+}

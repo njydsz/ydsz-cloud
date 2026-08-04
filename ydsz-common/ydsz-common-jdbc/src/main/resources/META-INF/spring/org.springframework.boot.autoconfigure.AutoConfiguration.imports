@@ -1,0 +1,7 @@
+com.njydsz.common.jdbc.config.MybatisPlusConfiguration
+com.njydsz.common.jdbc.config.MapperScanConfiguration
+com.njydsz.common.jdbc.config.HikariCPConfiguration
+com.njydsz.common.jdbc.config.SqlTraceAutoConfiguration
+com.njydsz.common.jdbc.config.ReadWriteSplittingAutoConfiguration
+com.njydsz.common.jdbc.config.DatabaseCircuitBreakerAutoConfiguration
+com.njydsz.common.jdbc.exception.DataIntegrityExceptionHandler

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-backend</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>ydsz-nextwiki</artifactId>
+    <packaging>pom</packaging>
+    <name>ydsz-nextwiki</name>
+    <description>网盘知识库服务 - 融合文件存储、文档解析、全文搜索、在线预览、版本控制、分享协作的一体化平台</description>
+    <modules>
+        <module>ydsz-nextwiki-api</module>
+        <module>ydsz-nextwiki-domain</module>
+        <module>ydsz-nextwiki-infra</module>
+        <module>ydsz-nextwiki-server</module>
+        <module>ydsz-nextwiki-web</module>
+    </modules>
+
+</project>
