@@ -4,16 +4,6 @@
       "name": "ydsz.domain.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 domain 模块自动配置（默认 true）。"
-    },
-    {
-      "name": "ydsz.domain.spel.cache-enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用 SpEL 表达式解析缓存（默认 true）。"
-    },
-    {
-      "name": "ydsz.domain.spel.cache-max-size",
-      "type": "java.lang.Integer",
-      "description": "SpEL 表达式缓存最大容量，0 表示无限制（默认 1024）。"
     }
   ]
 }

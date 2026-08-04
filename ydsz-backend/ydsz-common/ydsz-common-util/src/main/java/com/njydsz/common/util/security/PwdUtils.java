@@ -165,6 +165,11 @@ public class PwdUtils {
         try {
             String saltHex = parts[0];
             int iterations = Integer.parseInt(parts[1]);
+            // 防御恶意高迭代次数导致 CPU DoS（如 Integer.MAX_VALUE）。
+            // 上限 10_000_000 远高于 OWASP 推荐 600000，兼顾合法旧数据与安全性。
+            if (iterations < 1 || iterations > 10_000_000) {
+                throw new IllegalArgumentException("iterations 超出允许范围 [1, 10000000]");
+            }
             String expectedHash = parts[2];
             
             byte[] salt = HexFormat.of().parseHex(saltHex);

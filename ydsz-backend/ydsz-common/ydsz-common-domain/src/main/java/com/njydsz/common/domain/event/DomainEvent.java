@@ -329,12 +329,13 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
          * occurredAt 缺省时取当前时钟时间。构建完成后事件不可变（metadata 为不可变 Map）。
          *
          * @return 组装完成的领域事件
-         * @throws IllegalArgumentException 当 eventType 为 null 或空字符串时抛出，
-         *                                 事件类型是跨模块契约的必需字段
+         * @throws com.njydsz.common.domain.exception.EventBuildException 当 eventType 为 null 或空字符串时抛出，
+         *                                                             事件类型是跨模块契约的必需字段
          */
         public DomainEvent build() {
             if (eventType == null || eventType.isEmpty()) {
-                throw new IllegalArgumentException("eventType must not be null or empty");
+                throw new com.njydsz.common.domain.exception.EventBuildException(
+                        "eventType must not be null or empty");
             }
             String eid = eventId != null ? eventId : UUID.randomUUID().toString();
             LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now(clock);

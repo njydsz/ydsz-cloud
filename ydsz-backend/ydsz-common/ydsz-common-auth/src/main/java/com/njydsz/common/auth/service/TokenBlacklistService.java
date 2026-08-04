@@ -154,7 +154,7 @@ public class TokenBlacklistService {
         if (refreshToken == null || refreshToken.isBlank()) {
             return false;
         }
-        String lockKey = REFRESH_LOCK_KEY_PREFIX + AuthDigestUtils.sha256Hex(refreshToken);
+        String lockKey = REFRESH_LOCK_KEY_PREFIX + DigestUtils.sha256Hex(refreshToken);
         try {
             Boolean acquired = redisStringOps.setIfAbsent(lockKey, "1", REFRESH_LOCK_TTL_SECONDS);
             if (Boolean.TRUE.equals(acquired)) {
@@ -181,7 +181,7 @@ public class TokenBlacklistService {
         if (refreshToken == null || refreshToken.isBlank()) {
             return;
         }
-        String lockKey = REFRESH_LOCK_KEY_PREFIX + AuthDigestUtils.sha256Hex(refreshToken);
+        String lockKey = REFRESH_LOCK_KEY_PREFIX + DigestUtils.sha256Hex(refreshToken);
         try {
             redisStringOps.del(lockKey);
         } catch (Exception e) {

@@ -94,7 +94,7 @@ public class TraceFilter extends OncePerRequestFilter {
                 || traceId.isEmpty()
                 || traceId.length() > MAX_TRACE_ID_LENGTH
                 || !TRACE_ID_PATTERN.matcher(traceId).matches()) {
-            traceId = TraceIdGenerator.generate();
+            traceId = UUIDUtils.simpleUuid();
         }
 
         return traceId;

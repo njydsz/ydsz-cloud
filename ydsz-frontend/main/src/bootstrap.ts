@@ -47,7 +47,7 @@ import {
 } from '@ydsz/micro-kernel';
 import { createRuntime, registerKernel } from '@ydsz/micro-runtime';
 import { createLogger } from '@ydsz-core/shared/utils';
-import { MICRO_APPS } from '@ydsz/vite-config';
+import { MICRO_APPS, getProdEntry } from '@ydsz/vite-config';
 
 /** 单个 micro-runtime 实例（整个主应用生命周期唯一，供其他模块获取） */
 export let microRuntime: ReturnType<typeof createRuntime> | null = null;
@@ -108,7 +108,7 @@ function registerMicroRuntime() {
       name: app.name,
       entry: import.meta.env.DEV
         ? `//localhost:${app.devPort}`
-        : `/ydsz-${app.name.replace('-web', '')}-web/`,
+        : getProdEntry(app),
       container: '#subapp-container',
       activeRule: app.activeRule,
     })),

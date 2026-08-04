@@ -79,6 +79,8 @@ public class DigestUtils {
     /**
      * 优化的散列方法（支持 salt 和多次迭代）
      *
+     * @apiNote 本方法为自研迭代哈希，非标准 PBKDF2/bcrypt/scrypt，<b>不可用于密码存储</b>。密码存储请使用 {@link PwdUtils}。
+     *
      * <p>每次迭代均混入 salt，确保 salt 对最终哈希值的充分影响。
      * 迭代公式：H_0 = H(salt || input)，H_i = H(salt || H_{i-1})
      *
@@ -87,8 +89,12 @@ public class DigestUtils {
      * @param salt       盐值（可为 null）
      * @param iterations 迭代次数（\u22651）
      * @return 散列结果
+     * @throws IllegalArgumentException 当 iterations &lt; 1 时抛出
      */
     public static byte[] digest(byte[] input, String algorithm, byte[] salt, int iterations) {
+        if (iterations < 1) {
+            throw new IllegalArgumentException("iterations 必须 >= 1");
+        }
         try {
             final MessageDigest digest = MessageDigest.getInstance(algorithm);
             byte[] currentHash;

@@ -6,7 +6,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+import com.njydsz.common.util.ip.IpAddrUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -23,6 +25,10 @@ public class UrlUtils {
     private static final String HTTPS_PREFIX = "https://";
     private static final String FILE_PREFIX = "file://";
     private static final String FTP_PREFIX = "ftp://";
+    /** 折叠连续斜杠的预编译正则（类加载时编译一次，避免每次调用重新编译） */
+    private static final Pattern MULTI_SLASH_PATTERN = Pattern.compile("/+");
+    /** 修复协议部分双斜杠的预编译正则 */
+    private static final Pattern PROTOCOL_SLASH_PATTERN = Pattern.compile("^(https?):/([^/])");
 
     /**
      * 判断是否为 HTTP/HTTPS 协议
@@ -198,6 +204,10 @@ public class UrlUtils {
         if (params != null && !params.isEmpty()) {
             boolean first = !hasQuery;
             for (Map.Entry<String, String> entry : params.entrySet()) {
+                // value 为 null 时跳过该 entry，避免写入字符串 "null"
+                if (entry.getValue() == null) {
+                    continue;
+                }
                 if (first) {
                     sb.append("?");
                     first = false;
@@ -221,8 +231,9 @@ public class UrlUtils {
         
         Map<String, String> params = parseQueryString(url);
         params.remove(paramName);
-        
-        String baseUrl = url.split("\\?")[0];
+
+        int qIdx = url.indexOf('?');
+        String baseUrl = qIdx >= 0 ? url.substring(0, qIdx) : url;
         return buildUrl(baseUrl, params);
     }
 
@@ -233,11 +244,12 @@ public class UrlUtils {
         if (StringUtils.isEmpty(url) || StringUtils.isEmpty(paramName)) {
             return url;
         }
-        
+
         Map<String, String> params = parseQueryString(url);
         params.put(paramName, paramValue);
-        
-        String baseUrl = url.split("\\?")[0];
+
+        int qIdx = url.indexOf('?');
+        String baseUrl = qIdx >= 0 ? url.substring(0, qIdx) : url;
         return buildUrl(baseUrl, params);
     }
 
@@ -254,11 +266,11 @@ public class UrlUtils {
             url = url.substring(0, url.length() - 1);
         }
         
-        // 替换多个斜杠为一个
-        url = url.replaceAll("/+", "/");
-        
+        // 替换多个斜杠为一个（使用预编译 Pattern，避免每次调用重新编译正则）
+        url = MULTI_SLASH_PATTERN.matcher(url).replaceAll("/");
+
         // 修复协议部分的双斜杠
-        url = url.replaceAll("^(https?):/([^/])", "$1://$2");
+        url = PROTOCOL_SLASH_PATTERN.matcher(url).replaceAll("$1://$2");
         
         return url;
     }
@@ -311,17 +323,24 @@ public class UrlUtils {
     }
 
     /**
-     * 确保 URL 以 http:// 或 https:// 开头
+     * 确保 URL 以 http:// 或 https:// 开头。
+     *
+     * <p>若 url 已以 http:// 或 https:// 开头则原样返回；否则抛出 {@link IllegalArgumentException}，
+     * 不再自动拼接 https:// 以免对非 http URL（如 ftp://、file://）生成畸形 URL。
+     *
+     * @param url 待校验的 URL
+     * @return 原 url（已具备 http/https 前缀）
+     * @throws IllegalArgumentException 当 url 非空且不以 http:// 或 https:// 开头时
      */
     public static String ensureHttpPrefix(String url) {
         if (StringUtils.isEmpty(url)) {
             return url;
         }
-        
+
         if (!isHttpUrl(url)) {
-            return HTTPS_PREFIX + url;
+            throw new IllegalArgumentException("URL 必须以 http:// 或 https:// 开头: " + url);
         }
-        
+
         return url;
     }
 }

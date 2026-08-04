@@ -167,6 +167,19 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
   },
 ];
 
+/**
+ * 获取子应用生产环境部署子路径（如 '/ydsz-userinfo-web/'）。
+ *
+ * 优先使用注册表中显式声明的 `prodPath`，未声明时回退到 `/ydsz-${name}/`。
+ * 基座 bootstrap、nginx.conf 生成、Docker 部署均应消费此函数，确保三端一致。
+ *
+ * @param app 子应用注册信息
+ * @since 1.0.0
+ */
+export function getProdEntry(app: MicroAppEntry): string {
+  return app.prodPath ?? `/ydsz-${app.name}/`;
+}
+
 /** 路由前缀 → 子应用名 映射（供 use-tabbar-micro-sync 等场景快速查找） */
 export const PATH_TO_APP_MAP: Readonly<Record<string, string>> = Object.freeze(
   Object.fromEntries(MICRO_APPS.map((app) => [app.activeRule, app.name])),

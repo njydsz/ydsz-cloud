@@ -138,7 +138,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.BAD_REQUEST);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        String traceId = TraceIdGenerator.generate();
+        String traceId = UUIDUtils.simpleUuid();
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.BAD_REQUEST, message);
         body.setTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);

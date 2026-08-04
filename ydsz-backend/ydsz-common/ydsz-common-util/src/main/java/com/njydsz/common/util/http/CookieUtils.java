@@ -247,18 +247,22 @@ public class CookieUtils {
     /**
      * 判断请求是否为 HTTPS（兼容反代场景）。
      *
-     * <p>优先级：{@code X-Forwarded-Proto} 头 → {@code request.getScheme()}。
-     * 反代终止 TLS 时，Servlet 容器看到的 scheme 是 http，需读转发头。
+     * <p>仅当直连对端为可信代理（{@link ServletUtils#isTrustedProxy(HttpServletRequest)}）时，
+     * 才信任 {@code X-Forwarded-Proto} 头；否则忽略该头直接使用 {@code request.isSecure()}，
+     * 防止客户端通过伪造转发头使 Cookie 缺失 Secure 标志。
      */
     private static boolean isSecureRequest(HttpServletRequest request) {
         if (request == null) {
             return false;
         }
-        String forwardedProto = request.getHeader("X-Forwarded-Proto");
-        if ("https".equalsIgnoreCase(forwardedProto)) {
-            return true;
+        // 仅当直连对端为可信代理时，才信任 X-Forwarded-Proto 头，防止客户端伪造
+        if (ServletUtils.isTrustedProxy(request)) {
+            String forwardedProto = request.getHeader("X-Forwarded-Proto");
+            if ("https".equalsIgnoreCase(forwardedProto)) {
+                return true;
+            }
         }
-        return "https".equals(request.getScheme());
+        return request.isSecure();
     }
 
     /**

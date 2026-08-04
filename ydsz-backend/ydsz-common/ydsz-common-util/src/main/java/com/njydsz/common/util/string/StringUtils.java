@@ -262,7 +262,11 @@ public class StringUtils {
 
     /**
      * 判断是否为有效的邮箱地址
+     *
+     * @deprecated 正则校验能力已规划迁移至 {@code com.njydsz.common.util.regex.RegexUtils#isEmail}，
+     * 请后续切换至 RegexUtils 统一入口，避免正则重复维护。
      */
+    @Deprecated
     public static boolean isEmail(CharSequence str) {
         if (str == null) {
             return false;
@@ -272,7 +276,11 @@ public class StringUtils {
 
     /**
      * 判断是否为有效的手机号码（中国大陆）
+     *
+     * @deprecated 正则校验能力已规划迁移至 {@code com.njydsz.common.util.regex.RegexUtils#isMobile}，
+     * 请后续切换至 RegexUtils 统一入口，避免正则重复维护。
      */
+    @Deprecated
     public static boolean isMobile(CharSequence str) {
         if (str == null) {
             return false;
@@ -282,7 +290,11 @@ public class StringUtils {
 
     /**
      * 判断是否为有效的身份证号（中国大陆 18 位）
+     *
+     * @deprecated 正则校验能力已规划迁移至 {@code com.njydsz.common.util.regex.RegexUtils#isIdCard}，
+     * 请后续切换至 RegexUtils 统一入口，避免正则重复维护。
      */
+    @Deprecated
     public static boolean isIdCard(CharSequence str) {
         if (str == null) {
             return false;
@@ -292,7 +304,11 @@ public class StringUtils {
 
     /**
      * 判断是否为有效的 IPv4 地址
+     *
+     * @deprecated 正则校验能力已规划迁移至 {@code com.njydsz.common.util.regex.RegexUtils#isIpv4}，
+     * 请后续切换至 RegexUtils 统一入口，避免正则重复维护。
      */
+    @Deprecated
     public static boolean isIpv4(CharSequence str) {
         if (str == null) {
             return false;

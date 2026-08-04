@@ -156,7 +156,7 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
         String permsStr = "";
 
         // P0-9: traceId 统一由网关生成（不信任客户端传入的 X-Trace-Id）
-        String traceId = TraceIdGenerator.generate();
+        String traceId = UUIDUtils.simpleUuid();
 
         // P0-1 + P0-6: 生成 nonce 与签名（与 AuthGlobalFilter 一致）
         String nonce = UUID.randomUUID().toString().replace("-", "");

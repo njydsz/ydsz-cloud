@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.security.TokenBlacklistBloomFilter;
-import com.njydsz.common.auth.util.AuthDigestUtils;
+import com.njydsz.common.util.security.DigestUtils;
 
 import reactor.core.publisher.Mono;
 
@@ -135,6 +135,6 @@ public class ReactiveTokenBlacklistService {
      * 将 Token 的 SHA-256 摘要作为 Redis key
      */
     private String buildBlacklistKey(String token) {
-        return BLACKLIST_KEY_PREFIX + AuthDigestUtils.sha256Hex(token);
+        return BLACKLIST_KEY_PREFIX + DigestUtils.sha256Hex(token);
     }
 }

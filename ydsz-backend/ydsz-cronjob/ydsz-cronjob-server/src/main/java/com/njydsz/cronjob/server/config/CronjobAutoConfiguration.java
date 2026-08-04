@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.njydsz.cronjob.domain.dag.SpELConditionEvaluator;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.health.CronjobHealthIndicator;
@@ -47,5 +48,19 @@ public class CronjobAutoConfiguration {
             CronjobProperties cronjobProperties) {
         return new CronjobHealthIndicator(redisConnectionFactoryProvider, leaderElectorProvider,
                 jobMapperProvider, cronjobMetricsProvider, cronjobProperties);
+    }
+
+    /**
+     * 注册 SpEL 条件评估器（DAG 条件分支节点使用）。
+     *
+     * <p><b>v1.4.0</b>：自 ydsz-common-domain 迁移至本模块（原由 DomainAutoConfiguration 注册），
+     * 使用默认配置（启用表达式缓存，容量 1024）。
+     *
+     * @return SpELConditionEvaluator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SpELConditionEvaluator spELConditionEvaluator() {
+        return new SpELConditionEvaluator();
     }
 }
