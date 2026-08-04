@@ -13,7 +13,7 @@ import { computed, onMounted, watch } from 'vue';
 
 import { ElOption, ElSelect } from 'element-plus';
 
-import { useDictStore } from '../store/dict';
+import { useDictStore } from '@ydsz/stores';
 
 interface Props {
   /** 字典类型编码，如 system_status */

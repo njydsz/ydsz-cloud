@@ -1,7 +1,6 @@
 package com.njydsz.gateway.config;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * 网关层内部常量定义
