@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.json.cache.SerializerCache;
+import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.provider.SerializationProvider;

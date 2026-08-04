@@ -26,10 +26,6 @@ public final class SerializerCache {
     private static final ConcurrentMap<Class<?>, ConcurrentMap<PropertyNamingStrategy, FieldMeta[]>> FIELD_META_CACHE =
         new ConcurrentHashMap<>(1024);
 
-    /** Bean 序列化信息缓存（双层：外层 Class -> 内层 命名策略 -> BeanSerializerInfo） */
-    private static final ConcurrentMap<Class<?>, ConcurrentMap<PropertyNamingStrategy, BeanSerializerInfo>> BEAN_SERIALIZER_CACHE =
-        new ConcurrentHashMap<>(1024);
-
     private SerializerCache() {
         throw new UnsupportedOperationException();
     }
@@ -59,31 +55,10 @@ public final class SerializerCache {
     }
 
     /**
-     * 获取 Bean 序列化信息（按命名策略隔离）
-     */
-    public static BeanSerializerInfo getBeanSerializerInfo(Class<?> clazz, PropertyNamingStrategy strategy) {
-        ConcurrentMap<PropertyNamingStrategy, BeanSerializerInfo> strategyMap = BEAN_SERIALIZER_CACHE.get(clazz);
-        if (strategyMap == null) {
-            return null;
-        }
-        return strategyMap.get(strategy);
-    }
-
-    /**
-     * 缓存 Bean 序列化信息（按命名策略隔离）
-     */
-    public static void putBeanSerializerInfo(Class<?> clazz, PropertyNamingStrategy strategy, BeanSerializerInfo info) {
-        BEAN_SERIALIZER_CACHE
-            .computeIfAbsent(clazz, k -> new ConcurrentHashMap<>())
-            .put(strategy, info);
-    }
-
-    /**
      * 清理所有缓存
      */
     public static void clear() {
         FIELD_META_CACHE.clear();
-        BEAN_SERIALIZER_CACHE.clear();
     }
 
     /**

@@ -616,7 +616,8 @@ public final class ValueWriter {
         } catch (Exception e) {
             LOGGER.debug("ASM serialization failed in fast path for {}: {}", clazz.getName(), e.getMessage());
         }
-        SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields);
+        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+        SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields, strategy);
 
         // 精确容量预分配
         sb.ensureCapacity(info.estimatedSize);

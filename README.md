@@ -313,6 +313,19 @@ ydsz-pmis/
 
 > 完整规范见 [.trae/rules/](.trae/rules/)
 
+### 6.4 安全纵深配置（P2-2：依赖治理与物料清单）
+
+| 组件 | 配置 |
+|------|------|
+| **OWASP Dependency-Check** | `dependency-check-maven` 插件（`org.owasp`），默认启用（`-DskipDependencyCheck=false`）；CVSS 评分 >= 7（高危及以上）直接阻断构建；`failOnError=true` 防止报告异常漏报；`autoUpdate=true` 自动同步 NVD 漏洞库；报告同时输出 HTML（人工审阅）和 JSON（CI 归档）两种格式 |
+| **CycloneDX SBOM** | `cyclonedx-maven-plugin`（`org.cyclonedx@2.9.0`），`verify` 阶段默认执行 `makeAggregateBom` 目标；产物路径 `ydsz-backend/target/sbom.json`，CycloneDX v1.6 schema JSON 格式，含所有直接与传递依赖的物料清单 |
+| **本地快速开发** | 通过 Maven Profile `-P local-dev` 一键跳过所有非必要质量/安全扫描（`skipDependencyCheck` / `skipCycloneDX` / `skipJacoco` / `checkstyle.skip` / `spotbugs.skip` 等） |
+| **CI 产物** | GitHub Actions `quality-gate` job 中，OWASP 与 CycloneDX 步骤产物上传为 `sbom-reports` artifact，保留 90 天；前端产物在其对应 module 的 `target/` 目录下 |
+
+报告产物路径速查：
+- OWASP 报告：`ydsz-backend/target/dependency-check-report.html`（及 `.json`）
+- SBOM 物料清单：`ydsz-backend/target/sbom.json`
+
 ---
 
 ## 7. 文档导航

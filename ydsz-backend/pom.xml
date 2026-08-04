@@ -107,8 +107,8 @@
         <grpc.version>1.80.0</grpc.version>
 
         <!-- 质量与安全扫描（P0-3：CI 质量门禁） -->
-        <!-- 本地默认跳过以加速开发；CI 通过 -DskipDependencyCheck=false 启用 -->
-        <skipDependencyCheck>true</skipDependencyCheck>
+        <!-- P2-2：OWASP 依赖漏洞检查默认启用（纵深防御）；本地可通过 local-dev profile 跳过 -->
+        <skipDependencyCheck>false</skipDependencyCheck>
 
         <!-- Maven Enforcer（P2-8：构建规则约束） -->
         <enforcer.version>3.5.0</enforcer.version>
@@ -116,6 +116,9 @@
 
         <!-- ArchUnit 架构守护（P1：verify 阶段自动执行架构测试，CI 中可 -DskipArchUnit=true 跳过） -->
         <skipArchUnit>false</skipArchUnit>
+
+        <!-- CycloneDX SBOM（P2-2：verify 阶段生成 SBOM 物料清单；本地可通过 local-dev profile 跳过） -->
+        <skipCycloneDX>false</skipCycloneDX>
 
         <!-- JaCoCo 覆盖率（P1-5：单元测试覆盖率采集与报告）
              项目已恢复单元测试（105+ 测试类分布于 common-json/cache/queue/literule/agent/message 等模块）。
@@ -1201,18 +1204,52 @@
                         </annotationProcessorPaths>
                     </configuration>
                 </plugin>
-                <!-- OWASP dependency-check（P0-3：依赖漏洞扫描，默认跳过，CI 中 -DskipDependencyCheck=false 启用） -->
+                <!-- OWASP dependency-check（P2-2：依赖漏洞扫描，默认启用）
+                     failBuildOnCVSS=7：CVSS 评分 >= 7 则构建失败（高危及以上）
+                     failOnError=true：报告生成异常同样阻断构建，避免漏报
+                     autoUpdate=true：自动更新 NVD 漏洞数据库（多模块首次构建较慢，属正常现象）
+                     formats：同时输出 HTML（人工审阅）与 JSON（机器解析）两种报告 -->
                 <plugin>
                     <groupId>org.owasp</groupId>
                     <artifactId>dependency-check-maven</artifactId>
                     <version>9.0.9</version>
                     <configuration>
                         <failBuildOnCVSS>7</failBuildOnCVSS>
+                        <failOnError>true</failOnError>
+                        <autoUpdate>true</autoUpdate>
                         <formats>
                             <format>HTML</format>
                             <format>JSON</format>
                         </formats>
                         <skip>${skipDependencyCheck}</skip>
+                    </configuration>
+                </plugin>
+                <!-- CycloneDX SBOM（P2-2：verify 阶段生成软件物料清单）
+                     makeAggregateBom：聚合所有子模块依赖到单一 BOM
+                     outputFormat=json：输出 JSON 格式（CycloneDX v1.6 schema）
+                     outputName=bom：产物名 bom.json → 重命名为 sbom.json
+                     产物路径：${project.build.directory}/sbom.json -->
+                <plugin>
+                    <groupId>org.cyclonedx</groupId>
+                    <artifactId>cyclonedx-maven-plugin</artifactId>
+                    <version>2.9.0</version>
+                    <executions>
+                        <execution>
+                            <id>cyclonedx-generate-sbom</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>makeAggregateBom</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <projectType>application</projectType>
+                        <schemaVersion>1.6</schemaVersion>
+                        <includeBomSerialNumber>true</includeBomSerialNumber>
+                        <outputFormat>json</outputFormat>
+                        <outputName>sbom</outputName>
+                        <outputDirectory>${project.build.directory}</outputDirectory>
+                        <skip>${skipCycloneDX}</skip>
                     </configuration>
                 </plugin>
                 <!-- Maven Enforcer（P2-8：构建规则约束） -->
@@ -1469,8 +1506,11 @@
             </plugins>
         </pluginManagement>
 
-        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + 质量门禁（所有子模块继承生效）
-         CheckStyle / SpotBugs 每次 build 强制执行；JaCoCo / OWASP dependency-check 默认跳过，CI 通过参数启用 -->
+        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + 质量门禁 + 安全纵深（所有子模块继承生效）
+         CheckStyle / SpotBugs 每次 build 强制执行；
+         OWASP dependency-check 默认启用（P2-2，可通过 local-dev profile 跳过）；
+         JaCoCo 默认跳过（本地开发），CI 通过参数启用；
+         CycloneDX SBOM 默认启用（P2-2，verify 阶段产出，可通过 local-dev profile 跳过） -->
     <plugins>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -1508,13 +1548,36 @@
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
         </plugin>
-        <!-- OWASP dependency-check：依赖漏洞扫描（本地默认跳过 skipDependencyCheck=true，CI 通过 -DskipDependencyCheck=false 启用） -->
+        <!-- OWASP dependency-check：依赖漏洞扫描（P2-2，默认启用，CVSS>=7 阻断，本地可通过 local-dev profile 跳过） -->
         <plugin>
             <groupId>org.owasp</groupId>
             <artifactId>dependency-check-maven</artifactId>
         </plugin>
+        <!-- CycloneDX SBOM：	verify 阶段生成 sbom.json（P2-2，默认启用，本地可通过 local-dev profile 跳过） -->
+        <plugin>
+            <groupId>org.cyclonedx</groupId>
+            <artifactId>cyclonedx-maven-plugin</artifactId>
+        </plugin>
     </plugins>
     </build>
+
+    <profiles>
+        <!-- local-dev profile：本地开发加速，跳过耗时安全扫描与覆盖率采集
+             用法：mvn verify -P local-dev
+             或 MAVEN_OPTS="-P localDev" -->
+        <profile>
+            <id>local-dev</id>
+            <properties>
+                <skipDependencyCheck>true</skipDependencyCheck>
+                <skipCycloneDX>true</skipCycloneDX>
+                <skipJacoco>true</skipJacoco>
+                <skipJacocoCheck>true</skipJacocoCheck>
+                <skipArchUnit>true</skipArchUnit>
+                <checkstyle.skip>true</checkstyle.skip>
+                <spotbugs.skip>true</spotbugs.skip>
+            </properties>
+        </profile>
+    </profiles>
 
     <repositories>
         <repository>

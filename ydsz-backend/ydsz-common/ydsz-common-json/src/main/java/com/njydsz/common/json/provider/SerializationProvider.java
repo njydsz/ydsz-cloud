@@ -72,6 +72,10 @@ public final class SerializationProvider {
      * 已合并到 {@link SerializationContext#CONTEXT} 单一 ThreadLocal 中。
      */
 
+    /** Bean 序列化信息双层缓存（Class -> 命名策略 -> BeanSerializerInfo，v4.0.0 添加策略维度修复并发隔离） */
+    private static final ConcurrentMap<Class<?>, ConcurrentMap<PropertyNamingStrategy, BeanSerializerInfo>> BEAN_SERIALIZER_INFO_CACHE =
+        new ConcurrentHashMap<>(1024);
+
     private SerializationProvider() {
         throw new UnsupportedOperationException();
     }
@@ -956,7 +960,9 @@ public final class SerializationProvider {
      * @param strategy 当前线程的命名策略
      */
     static BeanSerializerInfo getOrCreateBeanSerializer(Class<?> clazz, FieldMeta[] fields, PropertyNamingStrategy strategy) {
-        BeanSerializerInfo info = SerializerCache.getBeanSerializerInfo(clazz, strategy);
+        ConcurrentMap<PropertyNamingStrategy, BeanSerializerInfo> strategyMap =
+            BEAN_SERIALIZER_INFO_CACHE.computeIfAbsent(clazz, k -> new ConcurrentHashMap<>());
+        BeanSerializerInfo info = strategyMap.get(strategy);
         if (info == null) {
             // 计算有效字段
             int count = fields.length;
@@ -971,7 +977,7 @@ public final class SerializationProvider {
             }
 
             info = new BeanSerializerInfo(validFields, estimatedSize, FieldMetadataLoader.hasFieldAnnotations(fields));
-            SerializerCache.putBeanSerializerInfo(clazz, strategy, info);
+            strategyMap.put(strategy, info);
         }
         return info;
     }
