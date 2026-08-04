@@ -68,7 +68,7 @@
 |---|---|
 | `HeaderConstants` | 全项目共享 HTTP 请求头常量契约（认证 Token / 数据权限维度 / 链路追踪 `X-Trace-Id` / 网络信息）。供 common-auth / common-base / common-web / gateway 共同引用 |
 | `PageConstants` | 分页默认值与上限（`DEFAULT_PAGE_NUM=1` / `DEFAULT_PAGE_SIZE=20` / `MAX_PAGE_SIZE=5000`），运行时值由 `CoreProperties` 配置覆盖，提供 `normalizePageSize()` / `normalizePageNum()` / `calcOffset()` 归一化工具 |
-| `SystemConstants` | 系统级常量（`SYSTEM_USER_ID="SYSTEM"` / `DEFAULT_TENANT_ID="1"` / `DEFAULT_LOCALE="zh-CN"`） |
+| `SystemConstants` | 系统级常量（`SYSTEM_USER_ID="SYSTEM"` / `DEFAULT_TENANT_ID="0"` / `DEFAULT_LOCALE="zh-CN"`） |
 
 ### 6. 自动配置（config 包）
 
