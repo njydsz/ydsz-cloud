@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -32,19 +31,6 @@ public class IpAddrUtils {
     private static final String LOCALHOST_IPV6 = "0:0:0:0:0:0:0:1";
     /** IPv4 本地回环地址 */
     private static final String LOCALHOST_IPV4 = "127.0.0.1";
-    /** 代理头列表（按优先级从高到低），用于 getIpAddr 遍历 */
-    private static final List<String> PROXY_HEADERS = Collections.unmodifiableList(Arrays.asList(
-            "x-forwarded-for",
-            "Proxy-Client-IP",
-            "WL-Proxy-Client-IP",
-            "X-Real-IP",
-            "HTTP_X_FORWARDED_FOR",
-            "HTTP_X_FORWARDED",
-            "HTTP_X_CLUSTER_CLIENT_IP",
-            "HTTP_CLIENT_IP",
-            "HTTP_FORWARDED_FOR",
-            "HTTP_FORWARDED"
-    ));
     /** IPv4 正则校验模式 */
     private static final Pattern IPV4_PATTERN = Pattern.compile(
             "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$");
@@ -69,41 +55,6 @@ public class IpAddrUtils {
     private static final String[] PRIVATE_IPV6_PREFIXES = {
             "fe80:", "fc", "fd", "::1", "::ffff:"
     };
-
-    /**
-     * 从 HTTP 请求中获取客户端真实 IP 地址。
-     * <p>依次检查 X-Forwarded-For、Proxy-Client-IP、WL-Proxy-Client-IP、X-Real-IP 等
-     * 代理头，取第一个非 unknown 的 IP。IPv6 本地回环自动转换为 IPv4。
-     *
-     * <p><b>安全提示：</b>本方法无条件信任代理头，存在伪造风险，攻击者可伪造 X-Forwarded-For 绕过 IP 限制。
-     * 请使用 {@link #getIpAddrWithTrustedProxies(HttpServletRequest, Set)} 配置可信代理 IP 白名单。
-     *
-     * @param request HTTP 请求
-     * @return 客户端 IP 地址，request 为 null 时返回 "unknown"
-     * @deprecated 本方法无条件信任代理头，存在伪造风险，请使用 {@link #getIpAddrWithTrustedProxies(HttpServletRequest, Set)}
-     */
-    @Deprecated
-    public static String getIpAddr(HttpServletRequest request) {
-        if (request == null) {
-            return UNKNOWN;
-        }
-        String ip = UNKNOWN;
-        for (String header : PROXY_HEADERS) {
-            ip = request.getHeader(header);
-            if (!isUnknown(ip)) {
-                break;
-            }
-        }
-        if (isUnknown(ip)) {
-            ip = request.getRemoteAddr();
-        }
-
-        if (LOCALHOST_IPV6.equals(ip)) {
-            ip = LOCALHOST_IPV4;
-        }
-
-        return getMultistageReverseProxyIp(ip);
-    }
 
     /**
      * 从 HTTP 请求中获取客户端真实 IP 地址（基于可信代理白名单）。
@@ -644,18 +595,6 @@ public class IpAddrUtils {
 
     private static boolean isUnknown(String ip) {
         return StringUtils.isEmpty(ip) || UNKNOWN.equalsIgnoreCase(ip);
-    }
-
-    private static String getMultistageReverseProxyIp(String ip) {
-        if (ip != null && ip.indexOf(",") > 0) {
-            final String[] ips = ip.split(",");
-            for (String subIp : ips) {
-                if (!isUnknown(subIp)) {
-                    return subIp.trim();
-                }
-            }
-        }
-        return ip;
     }
 
     /**

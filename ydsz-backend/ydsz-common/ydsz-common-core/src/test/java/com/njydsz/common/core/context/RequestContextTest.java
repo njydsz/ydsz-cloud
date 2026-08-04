@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
  * {@link RequestContext} 单元测试
  *
  * <p>覆盖内置键的 set/get、自定义属性、清理语义（clear/remove）、
- * runAndClear、CleanupGuard、线程池传播（TransmittableThreadLocal）、线程隔离等行为。
+ * CleanupGuard、线程池传播（TransmittableThreadLocal）、线程隔离等行为。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -100,34 +100,6 @@ class RequestContextTest {
         RequestContext.setTenantIsolationSkipped(false);
         assertFalse(RequestContext.isTenantIsolationSkipped());
         RequestContext.clear();
-    }
-
-    @Test
-    @DisplayName("runAndClear(Supplier) 执行后自动清理")
-    void runAndClear_supplier() {
-        String result = RequestContext.runAndClear(() -> {
-            RequestContext.setUserId("u1");
-            return "done";
-        });
-        assertEquals("done", result);
-        assertNull(RequestContext.getUserId(), "context must be cleared after runAndClear");
-    }
-
-    @Test
-    @DisplayName("runAndClear(Supplier) 异常时也清理")
-    void runAndClear_supplierException() {
-        assertThrows(IllegalStateException.class, () -> RequestContext.runAndClear(() -> {
-            RequestContext.setUserId("u1");
-            throw new IllegalStateException("boom");
-        }));
-        assertNull(RequestContext.getUserId(), "context must be cleared on exception");
-    }
-
-    @Test
-    @DisplayName("runAndClear(Runnable) 执行后自动清理")
-    void runAndClear_runnable() {
-        RequestContext.runAndClear(() -> RequestContext.setUserId("u1"));
-        assertNull(RequestContext.getUserId());
     }
 
     @Test

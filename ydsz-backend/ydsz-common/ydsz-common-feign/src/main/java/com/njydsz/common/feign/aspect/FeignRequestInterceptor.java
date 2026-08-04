@@ -163,7 +163,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
                 && !hasHeader(requestTemplate, HeaderConstants.X_FORWARDED_FOR)) {
             String forwardedFor = resolveHeader(httpServletRequest, HeaderConstants.X_FORWARDED_FOR);
             if (StringUtils.isEmpty(forwardedFor) && httpServletRequest != null) {
-                forwardedFor = IpAddrUtils.getIpAddr(httpServletRequest);
+                forwardedFor = IpAddrUtils.getIpAddrWithTrustedProxies(httpServletRequest, java.util.Collections.emptySet());
             }
             setHeaderIfAbsent(requestTemplate, HeaderConstants.X_FORWARDED_FOR, forwardedFor);
         }

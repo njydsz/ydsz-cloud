@@ -295,37 +295,6 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置排序字符串（兼容旧格式）。
-     *
-     * <p>解析形如 {@code "field1 ASC, field2 DESC"} 的排序字符串，
-     * 仅保留通过 {@link #SAFE_COLUMN_PATTERN} 与 {@link #allowedOrderByFields()} 校验的合法项。
-     *
-     * @param orderBy 原始排序字符串，格式：field1 ASC, field2 DESC
-     * @deprecated 自 1.4.0 起推荐使用结构化 API {@link #addOrder(String, boolean)} /
-     *             {@link #addAscOrder(String)} / {@link #addDescOrder(String)} /
-     *             {@link #addOrders(OrderItem...)}，避免字符串解析歧义与注入面。
-     *             本方法保留用于兼容旧调用方，后续版本将移除。
-     */
-    @Deprecated
-    public void setOrderBy(String orderBy) {
-        if (orderBy == null || orderBy.isBlank()) {
-            this.orderItems = new ArrayList<>();
-            return;
-        }
-        List<OrderItem> parsed = new ArrayList<>();
-        for (String part : orderBy.split(",")) {
-            String trimmed = part.trim();
-            String column = trimmed.replaceAll("\\s+(ASC|DESC)$", "").trim();
-            if (!isSafeColumn(column)) {
-                continue;
-            }
-            OrderItem.Direction dir = OrderItem.Direction.of(trimmed.replaceFirst("^[^\\s]+\\s*", ""));
-            parsed.add(OrderItem.of(column, dir != OrderItem.Direction.DESC));
-        }
-        this.orderItems = parsed;
-    }
-
-    /**
      * 设置搜索关键字（覆盖Lombok生成的setter）
      *
      * <p>对搜索关键字进行安全处理。

@@ -234,7 +234,7 @@ public class AuditAspect {
             context.setUrl(request.getRequestURL() != null ? request.getRequestURL().toString() : "");
             context.setUri(request.getRequestURI());
             context.setHttpMethod(request.getMethod());
-            context.setIpAddress(IpAddrUtils.getIpAddr(request));
+            context.setIpAddress(IpAddrUtils.getIpAddrWithTrustedProxies(request, java.util.Collections.emptySet()));
             context.setToken(request.getHeader("X-Access-Token"));
             context.setBusinessNo(request.getHeader("X-Business-No"));
 

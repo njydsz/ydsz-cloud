@@ -2,7 +2,6 @@ package com.njydsz.common.core.context;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.common.core.constant.HeaderConstants;
@@ -302,44 +301,6 @@ public final class RequestContext {
      */
     public static void clear() {
         CONTEXT_HOLDER.remove();
-    }
-
-    /**
-     * 在当前上下文中执行 Supplier，执行完毕后自动清除上下文
-     *
-     * <p><b>注意：</b>无论执行是否成功，finally 块都会调用 {@link #clear()} 清除当前线程的上下文，
-     * 请确保调用此方法时上下文的生命周期确实应当在此处结束。</p>
-     *
-     * @param supplier 要执行的逻辑
-     * @param <T>      返回值类型
-     * @return supplier 的返回值
-     * @deprecated 请使用 try-with-resources + {@link #newCleanupGuard()} 替代，语义更明确。
-     */
-    @Deprecated(since = "1.5.0", forRemoval = true)
-    public static <T> T runAndClear(Supplier<T> supplier) {
-        try {
-            return supplier.get();
-        } finally {
-            clear();
-        }
-    }
-
-    /**
-     * 在当前上下文中执行 Runnable，执行完毕后自动清除上下文
-     *
-     * <p><b>注意：</b>无论执行是否成功，finally 块都会调用 {@link #clear()} 清除当前线程的上下文，
-     * 请确保调用此方法时上下文的生命周期确实应当在此处结束。</p>
-     *
-     * @param runnable 要执行的逻辑
-     * @deprecated 请使用 try-with-resources + {@link #newCleanupGuard()} 替代。
-     */
-    @Deprecated(since = "1.5.0", forRemoval = true)
-    public static void runAndClear(Runnable runnable) {
-        try {
-            runnable.run();
-        } finally {
-            clear();
-        }
     }
 
     /**

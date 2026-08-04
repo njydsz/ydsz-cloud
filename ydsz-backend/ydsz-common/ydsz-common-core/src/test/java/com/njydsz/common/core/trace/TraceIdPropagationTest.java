@@ -47,39 +47,43 @@ class TraceIdPropagationTest {
     }
 
     @Test
-    @DisplayName("traceHeader 生成单元素请求头")
-    void traceHeader() {
+    @DisplayName("traceHeaders 生成双请求头（X-Trace-Id + traceparent）")
+    void traceHeaders() {
         MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "trace-abc");
-        Map<String, String> headers = TraceIdPropagation.traceHeader();
-        assertEquals(1, headers.size());
+        Map<String, String> headers = TraceIdPropagation.traceHeaders();
+        assertEquals(2, headers.size());
         assertEquals("trace-abc", headers.get(HeaderConstants.TRACE_ID_HEADER));
+        assertNotNull(headers.get(HeaderConstants.W3C_TRACEPARENT));
+        assertTrue(headers.get(HeaderConstants.W3C_TRACEPARENT).startsWith("00-trace-abc-"));
         assertThrows(UnsupportedOperationException.class,
                 () -> headers.put("X", "y"), "header map must be immutable");
     }
 
     @Test
-    @DisplayName("MDC 无 traceId 时 traceHeader 返回空 Map")
-    void traceHeader_emptyWhenMissing() {
-        Map<String, String> headers = TraceIdPropagation.traceHeader();
+    @DisplayName("MDC 无 traceId 时 traceHeaders 返回空 Map")
+    void traceHeaders_emptyWhenMissing() {
+        Map<String, String> headers = TraceIdPropagation.traceHeaders();
         assertTrue(headers.isEmpty());
     }
 
     @Test
-    @DisplayName("traceHeaderOrCreate 缺失时自动生成")
-    void traceHeaderOrCreate_generates() {
-        Map<String, String> headers = TraceIdPropagation.traceHeaderOrCreate();
-        assertEquals(1, headers.size());
+    @DisplayName("traceHeadersOrCreate 缺失时自动生成")
+    void traceHeadersOrCreate_generates() {
+        Map<String, String> headers = TraceIdPropagation.traceHeadersOrCreate();
+        assertEquals(2, headers.size());
         String traceId = headers.get(HeaderConstants.TRACE_ID_HEADER);
         assertNotNull(traceId);
         assertFalse(traceId.isBlank());
+        assertNotNull(headers.get(HeaderConstants.W3C_TRACEPARENT));
     }
 
     @Test
-    @DisplayName("traceHeaderOrCreate 优先使用 MDC 已有值")
-    void traceHeaderOrCreate_usesMdc() {
+    @DisplayName("traceHeadersOrCreate 优先使用 MDC 已有值")
+    void traceHeadersOrCreate_usesMdc() {
         MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, "trace-existing");
-        Map<String, String> headers = TraceIdPropagation.traceHeaderOrCreate();
+        Map<String, String> headers = TraceIdPropagation.traceHeadersOrCreate();
         assertEquals("trace-existing", headers.get(HeaderConstants.TRACE_ID_HEADER));
+        assertTrue(headers.get(HeaderConstants.W3C_TRACEPARENT).startsWith("00-trace-existing-"));
     }
 
     @Test
