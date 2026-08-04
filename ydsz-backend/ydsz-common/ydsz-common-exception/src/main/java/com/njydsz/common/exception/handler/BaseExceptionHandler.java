@@ -1,6 +1,5 @@
 package com.njydsz.common.exception.handler;
 
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.time.Instant;
@@ -161,14 +160,28 @@ public abstract class BaseExceptionHandler {
 
     /**
      * 获取堆栈跟踪字符串
+     *
+     * <p>手动遍历 {@link Throwable#getStackTrace()} 写入内存字符串，
+     * 不使用 {@code printStackTrace()}（Checkstyle R3 规则禁止）。
      */
     protected static String getStackTraceString(Throwable throwable) {
         if (throwable == null) {
             return null;
         }
-        StringWriter writer = new StringWriter();
-        try (PrintWriter printWriter = new PrintWriter(writer)) {
-            throwable.printStackTrace(printWriter);
+        StringWriter writer = new StringWriter(256);
+        Throwable current = throwable;
+        while (current != null) {
+            writer.write(current.toString());
+            writer.write(System.lineSeparator());
+            for (StackTraceElement element : current.getStackTrace()) {
+                writer.write("\tat ");
+                writer.write(element.toString());
+                writer.write(System.lineSeparator());
+            }
+            current = current.getCause();
+            if (current != null) {
+                writer.write("Caused by: ");
+            }
         }
         return writer.toString();
     }
