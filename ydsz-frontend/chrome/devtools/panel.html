@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:12px;color:#303133;background:#fff}
-.hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#409eff;color:#fff;font-weight:600}
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:12px;color:#303133}
+.hdr{display:flex;justify-content:space-between;padding:8px 12px;background:#409eff;color:#fff;font-weight:600}
 .hdr small{font-weight:400;opacity:.85}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #ebeef5}
 .stat{padding:8px;text-align:center;border-right:1px solid #ebeef5}
@@ -26,20 +21,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:12px;colo
 .btns{display:flex;gap:8px;padding:8px 12px;background:#fafafa;border-top:1px solid #ebeef5}
 .b{padding:4px 12px;cursor:pointer;border:1px solid #dcdfe6;border-radius:4px;background:#fff;font-size:11px}
 .b.w{border-color:#e6a23c;color:#e6a23c}
-.b.s{border-color:#67c23a;color:#67c23a}
 .log{padding:8px 12px;font-family:monospace;font-size:11px;color:#606266;max-height:200px;overflow-y:auto;background:#fafafa}
 .le{padding:2px 0;border-bottom:1px dotted #ebeef5}
-.le.err{color:#f56c6c}.le.warn{color:#e6a23c}
+.le.err{color:#f56c6c}
 .empty{text-align:center;padding:24px;color:#c0c4cc}
 @keyframes p{0%,100%{opacity:1}50%{opacity:.5}}
-</style>
-</head>
-<body>
-<div class="hdr"><span>🛠 Micro Kernel Inspector</span><small id="kv">v—</small></div>
+</style></head><body>
+<div class="hdr"><span>YDSZ Micro Kernel Inspector</span><small id="kv">v—</small></div>
 <div class="stats">
   <div class="stat"><div class="sv" id="sa">—</div><div class="sl">活跃</div></div>
   <div class="stat"><div class="sv" id="kl">0</div><div class="sl">KeepAlive</div></div>
-  <div class="stat"><div class="sv" id="mem">—</div><div class="sl">JS 内存</div></div>
+  <div class="stat"><div class="sv" id="mem">—</div><div class="sl">JS内存</div></div>
   <div class="stat"><div class="sv" id="na">0</div><div class="sl">已注册</div></div>
 </div>
 <div class="sec"><div class="st">子应用状态</div><div id="al"><div class="empty">未检测到运行时</div></div></div>
@@ -47,8 +39,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:12px;colo
 <div class="btns">
   <button class="b" id="br">刷新注册表</button>
   <button class="b w" id="bc">清缓存</button>
-  <button class="b s" id="bh">健康检查</button>
+  <button class="b" id="bh">健康检查</button>
 </div>
 <script src="panel.js"></script>
-</body>
-</html>
+</body></html>

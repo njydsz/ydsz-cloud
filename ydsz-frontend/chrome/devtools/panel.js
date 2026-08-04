@@ -1,10 +1,8 @@
-/* DevTools Panel 主逻辑 */
 ;(function () {
   const port = chrome.runtime.connect({ name: 'micro-kernel-devtools' });
   let state = { activeApp: null, keepAlive: 0, total: 0, memory: 'N/A', apps: [], caps: {} };
   const $ = (s) => document.querySelector(s);
   const al = $('#al'), elog = $('#elog');
-
   function render() {
     $('#sa').textContent = state.activeApp || '—';
     $('#kl').textContent = state.keepAlive;
@@ -26,32 +24,28 @@
       send({ type: act === 'unmount' ? 'kernel:unmount' : 'kernel:reload', payload: { appName: app } });
     }));
   }
-
-  function log(text, lv = 'info') {
-    const el = document.createElement('div'); el.className = 'le ' + lv;
-    el.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+  function log(t, lv = 'info') {
+    const el = document.createElement('div'); el.className = 'le ' + (lv === 'err' ? 'err' : '');
+    el.textContent = `[${new Date().toLocaleTimeString()}] ${t}`;
     elog.appendChild(el); elog.scrollTop = elog.scrollHeight;
     if (elog.children.length > 100) elog.removeChild(elog.firstChild);
   }
-
   function send(msg) { chrome.runtime.sendMessage({ target: 'background', ...msg }).catch(e => log(e.message, 'err')); }
-
-  chrome.runtime.onMessage.addListener(m => {
-    if (m.target !== 'devtools') return;
+  chrome.runtime.onMessage.addListener(m => handleMsg(m));
+  window.addEventListener('message', e => { if (e.source === window && e.data?.source === 'ext-bg') handleMsg(e.data.detail); });
+  function handleMsg(m) {
+    if (!m) return;
     if (m.type === 'kernel:state:response') { state = { ...state, ...m.payload }; render(); }
-    else if (m.type === 'kernel:health:response') log(`健康检查: ${JSON.stringify(m.payload)}`, 'warn');
-    else if (m.type === 'kernel:event') log(`${m.payload?.eventName || 'event'}`, 'warn');
+    else if (m.type === 'kernel:health:response') log(`健康检查: ${JSON.stringify(m.payload)}`, 'info');
+    else if (m.type === 'kernel:event') log(`${m.payload?.eventName || 'event'}`);
     else if (m.type === 'kernel:tab:activated') log(`Tab #${m.payload.tabId} 就绪`);
-  });
-  window.addEventListener('message', e => { if (e.source === window && e.data?.source === 'ext-bg') handleBg(e.data.detail); });
-  function handleBg(m) {
-    if (m.type === 'kernel:state:response') { state = { ...state, ...m.payload }; render(); }
+    else if (m.type === 'kernel:tab:deactivated') log(`Tab #${m.payload.tabId} 离线`, 'err');
   }
   $('#br').addEventListener('click', () => { send({ type: 'kernel:refresh-registry' }); log('触发注册刷新'); });
   $('#bc').addEventListener('click', () => { send({ type: 'kernel:clear-cache' }); log('触发缓存清理'); });
   $('#bh').addEventListener('click', () => send({ type: 'kernel:health:request' }));
   setInterval(() => port.postMessage({ type: 'ping' }), 25000);
-  port.onMessage.addListener(m => { if (m.type === 'state:snapshot') render(); });
+  port.onMessage.addListener(m => { if (m.type === 'pong') {} });
   setTimeout(() => send({ type: 'kernel:state:request' }), 300);
   log('DevTools Panel 已启动');
 })();

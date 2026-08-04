@@ -509,7 +509,7 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
     }
   }
 
-  return {
+  const kernelApi = {
     registerApps(newApps) {
       registerAppsInternal(newApps);
     },
@@ -765,5 +765,45 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       clearDegraded();
       logger.info('Stopped');
     },
+
+    // === P2-1: DevTools 公开方法 —— 供 enableDevToolsBridge 调用 ===
+    getAllInstances() {
+      return getAllInstances();
+    },
+    getAppInstance(name: string) {
+      return getAppInstance(name);
+    },
+    /**
+     * 内核健康检查（P1-1 落地到 kernel）。
+     * 返回 capabilities + metrics，供 Sentry 监控 / DevTools Extension 拉取。
+     */
+    healthCheck() {
+      const all = getAllInstances();
+      let ka = 0;
+      for (const [, i] of all) if (i.keepAlive && i.status === 'MOUNTED') ka++;
+      return {
+        kernelVersion: '4.0.0',
+        kernelName: 'micro-kernel',
+        capabilities: {
+          sandbox: ['snapshot', 'proxy', 'iframe'] as const,
+          prefetch: true,
+          keepAlive: true,
+          hmr: !!import.meta.env.DEV,
+        },
+        metrics: { activeApps: all.size, keepAliveCount: ka, registeredApps: (this as any).getRegisteredApps?.().length ?? 0 },
+      };
+    },
+    /** 刷新远程注册表（每次调用清缓存重新拉取） */
+    refreshRegistry() {
+      clearRegistryCache();
+      logger.info('Registry cache cleared, will re-fetch on next access');
+    },
   };
+
+  // === P2-1: 暴露到 window 主对象， DevTools Extension bridge 可自检 ===
+  try {
+    (window as any).__MICRO_KERNEL__ = kernelApi;
+  } catch { /* SSR 或无 window 环境静默 */ }
+
+  return kernelApi;
 }

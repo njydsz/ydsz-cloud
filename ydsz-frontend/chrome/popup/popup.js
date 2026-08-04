@@ -1,9 +1,6 @@
-/* Popup —— 快速触达面板 */
 ;(function () {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0]?.id) {
-      chrome.tabs.sendMessage(tabs[0].id, { target: 'content-script', type: 'kernel:state:request' }).catch(() => {});
-    }
+    if (tabs[0]?.id) chrome.tabs.sendMessage(tabs[0].id, { target: 'content-script', type: 'kernel:state:request' }).catch(() => {});
   });
   chrome.runtime.sendMessage({ target: 'background', type: 'devtools:subscribe' }, (res) => {
     const d = res?.cached?.aggregate;
@@ -15,12 +12,7 @@
   });
   document.getElementById('b').addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]?.id) {
-        chrome.scripting?.executeScript({
-          target: { tabId: tabs[0].id },
-          func: () => !!window.__YDSZ_MICRO_KERNEL__ACTIVE__,
-        });
-      }
+      if (tabs[0]?.id) chrome.tabs.sendMessage(tabs[0].id, { target: 'content-script', type: 'kernel:state:request' });
     });
     window.close();
   });

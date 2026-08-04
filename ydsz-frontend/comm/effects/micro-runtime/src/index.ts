@@ -13,6 +13,9 @@ export { provideGlobalState, useGlobalState, useGlobalStateRef } from './composa
 // v3.7.0: 命名空间 globalState 工厂
 export { createNamespacedGlobalStateWrapper, createNamespacedState } from './namespaced-state';
 export type { NamespacedGlobalStateAPI } from './namespaced-state';
+// v4.0 P1-1: semver 版本校验工具
+export { satisfiesVersion, parseVersion, compareVersion } from './semver';
+export type { SemVer } from './semver';
 
 // v3.7: 直接导出 MicroAppEntry 避免外部从 conf/vite-config 反向依赖
 export type { MicroAppEntry } from './types';

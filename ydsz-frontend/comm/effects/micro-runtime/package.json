@@ -11,6 +11,14 @@
     "./composable": {
       "types": "./src/composable/index.ts",
       "default": "./src/composable/index.ts"
+    },
+    "./semver": {
+      "types": "./src/semver.ts",
+      "default": "./src/semver.ts"
+    },
+    "./namespaced-state": {
+      "types": "./src/namespaced-state.ts",
+      "default": "./src/namespaced-state.ts"
     }
   },
   "dependencies": {

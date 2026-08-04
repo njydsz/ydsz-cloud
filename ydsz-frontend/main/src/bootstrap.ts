@@ -55,6 +55,8 @@ import { createLogger } from '@ydsz-core/shared/utils';
 import { MICRO_APPS, PATH_TO_APP_MAP, getProdEntry } from '@ydsz/vite-config';
 import { resolveRegistry, resolveAppEntry } from '@ydsz/micro-kernel';
 import { enableMicroDevTools } from '@ydsz/micro-kernel';
+import { enableDevToolsBridge } from './monitoring/devtools-bridge';
+import { getCanaryManager } from '@ydsz/micro-kernel';
 
 /** 单个 micro-runtime 实例（整个主应用生命周期唯一，供其他模块获取） */
 export let microRuntime: ReturnType<typeof createRuntime> | null = null;
@@ -300,6 +302,22 @@ async function bootstrap(namespace: string) {
 
   app.mount('#app');
 
+  // v4.0 P2-2: 初始化灰度分流管理器（有远端 URL 或本地 fallback 配置时启用）
+  // Canary 在首次 prefetch 决策时影响子应用加载哪个版本（stable/canary）
+  void (async () => {
+    try {
+      const remoteUrl = import.meta.env.VITE_CANARY_CONFIG_URL;
+      if (remoteUrl || import.meta.env.DEV) {
+        await getCanaryManager().init({
+          remoteUrl: remoteUrl || undefined,
+        });
+        runtimeLogger.info('Canary manager initialized');
+      }
+    } catch (err) {
+      runtimeLogger.warn(`Canary init skipped: ${String(err)}`);
+    }
+  })();
+
   // v3.1 修复：app.mount 同步渲染，#subapp-container 已就绪，
   // 直接同步注册微前端运行时，避免此前 readyState 延迟导致的初始路由
   // 匹配与子应用激活时序竞态（直连子应用 URL 时可能出现容器空白闪烁）。
@@ -308,6 +326,16 @@ async function bootstrap(namespace: string) {
   // v3.7.0: 开发态启用微前端 DevTools 面板（Alt+Shift+M 切换）
   if (import.meta.env.DEV) {
     enableMicroDevTools();
+  }
+
+  // v4.0 P2-1: 启用微前端运行时 DevTools Bridge —— 桥接生命周期事件到 Chrome Extension
+  // 启用条件：开发态自动启用；生产态需 localStorage 'micro-kernel:devtools' = '1'
+  // kernel 实例在 registerMicroRuntime() 内 createKernel() 时被挂载到 window.__MICRO_KERNEL__
+  if ((window as any).__MICRO_KERNEL__) {
+    enableDevToolsBridge({
+      kernel: (window as any).__MICRO_KERNEL__,
+      microRuntime,
+    });
   }
 
   // E2: 会话超时预警（必须在 initStores 之后、app 挂载之后调用，

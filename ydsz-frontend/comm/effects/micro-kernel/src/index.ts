@@ -86,3 +86,8 @@ export {
 export type { MicroMessage, MessageHandler } from './message-broker';
 // v3.7.0: DevTools 管理面板（开发态可视化工具）
 export { enableMicroDevTools, toggleMicroDevTools, destroyMicroDevTools } from './devtools-panel';
+// v4.0 P2-2: 灰度版本分流管理器
+export { getCanaryManager, resetCanaryManager } from './canary-manager';
+export type { CanaryVersion, CanaryGlobalConfig, CanaryTag } from './canary-manager';
+// v4.0 P1-1 (公开): semver 兼容校验工具 —— 子应用 bootstrap 阶段版本断言
+export { satisfiesVersion, parseVersion, compareVersion } from '@ydsz/micro-runtime/semver';
