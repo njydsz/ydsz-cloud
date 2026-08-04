@@ -53,7 +53,7 @@ import {
 import type { GlobalStateBridge } from './scheduler';
 import { clearManifestCache, loadApp } from './loader';
 import { getVersionManager } from './version-manager';
-import { getPreloadManager } from './preload-strategy';
+import { getPreloadManager, recordRouteTransition } from './preload-strategy';
 import { preloadManifest } from './link-hints';
 import { createLogger } from '@ydsz-core/shared/utils';
 import { applyPrefetchBoost, removeSpeculationRules } from './speculation-rules';
@@ -395,9 +395,14 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
         },
       }, globalStateBridge);
       if (token !== switchToken) return;
+      const prevAppName = activeAppName;
       activeAppName = config.name;
       // v3.4: 记录应用访问频率，供 frequency 预加载策略使用
       preloadManager.recordAppVisit(config.name);
+      // v4.0 P1-2: 记录路由跳转供预测引擎学习
+      if (prevAppName) {
+        recordRouteTransition(prevAppName, config.name);
+      }
       await runHooks('afterMount', config);
 
       // 派发 after-mount 事件，触发骨架屏隐藏
