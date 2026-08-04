@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">Remi-Cloud</h1>
+  <h1 align="center">Remi Cloud</h1>
   <p align="center">
     基于 Spring Boot 4 &amp; Spring Cloud 的企业级微服务开发平台
   </p>
