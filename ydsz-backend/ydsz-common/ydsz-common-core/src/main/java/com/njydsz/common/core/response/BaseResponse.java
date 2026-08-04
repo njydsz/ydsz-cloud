@@ -62,9 +62,22 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     public static final String SUCCESS = BaseResultCode.SUCCESS.getCode();
 
     /**
-     * 失败状态码（复用 {@link BaseResultCode#UNKNOWN}，与错误码体系保持一致）。
+     * 未知错误状态码（复用 {@link BaseResultCode#UNKNOWN}，与错误码体系保持一致）。
+     *
+     * <p>该常量表示系统未知错误（C99999），用于与 {@link #SUCCESS} 进行反向校验场景。
+     * 命名明确区分"通用错误"与"未知错误"语义，避免与 {@code error()} 方法名混淆。
+     *
+     * @since 1.7.0
      */
-    public static final String ERROR = BaseResultCode.UNKNOWN.getCode();
+    public static final String UNKNOWN_CODE = BaseResultCode.UNKNOWN.getCode();
+
+    /**
+     * 失败状态码（复用 {@link BaseResultCode#UNKNOWN}，与错误码体系保持一致）。
+     *
+     * @deprecated 使用 {@link #UNKNOWN_CODE} 替代，语义更明确
+     */
+    @Deprecated
+    public static final String ERROR = UNKNOWN_CODE;
 
     /**
      * 国际化消息 key
@@ -279,21 +292,12 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @since 1.6.0
      */
     public static boolean setResolverIfAbsent(MessageResolver resolver) {
-        return RESOLVER.compareAndSet(null, resolver);
-    }
-
-    /**
-     * 设置全局消息解析器（已废弃）。
-     *
-     * <p>仅为向后兼容保留，新代码请使用 {@link #setResolverIfAbsent(MessageResolver)}。
-     * 注意：此方法会覆盖已有解析器，可能导致 i18n 行为在运行期发生变化。</p>
-     *
-     * @param resolver 消息解析器实现
-     * @deprecated 使用 {@link #setResolverIfAbsent(MessageResolver)} 替代
-     */
-    @Deprecated
-    public static void setResolver(MessageResolver resolver) {
-        RESOLVER.set(resolver);
+        boolean success = RESOLVER.compareAndSet(null, resolver);
+        if (!success && resolver != null) {
+            org.slf4j.LoggerFactory.getLogger(BaseResponse.class)
+                    .debug("MessageResolver already registered, ignoring subsequent setResolverIfAbsent call");
+        }
+        return success;
     }
 
     /**
@@ -447,7 +451,10 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
                 }
             }
         } catch (Exception ignored) {
-            // 反射失败时返回 null，使用默认处理
+            // 反射失败时输出 DEBUG 日志，便于 SECURITY 模式下排查
+            org.slf4j.LoggerFactory.getLogger(BaseResponse.class)
+                    .debug("Failed to extract ResultCode from exception {} via reflection: {}",
+                            throwable.getClass().getName(), ignored.getMessage());
         }
 
         return null;
@@ -504,58 +511,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     public static BaseResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail, URI instance) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
         return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
-    }
-
-    /**
-     * 返回携带 RFC 7807 Problem Details 的失败消息（泛型兼容版本）。
-     *
-     * <p>仅为向后兼容旧版 API 保留，新代码请使用 {@link #errorWithDetail(ResultCode, String)}。
-     * 此方法仅在类型匹配时工作，否则抛出 ClassCastException。</p>
-     *
-     * @param resultCode 结果码
-     * @param detail     错误详情（实例特定信息）
-     * @param type       期望的返回数据类型（必须为 ProblemDetail.class）
-     * @param <T>        数据类型
-     * @return 携带 ProblemDetail 的失败消息
-     * @deprecated 使用 {@link #errorWithDetail(ResultCode, String)} 替代，返回类型更明确
-     * @since 1.1.0
-     */
-    @Deprecated
-    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, Class<T> type) {
-        ProblemDetail problem = ProblemDetail.of(resultCode, detail);
-        if (!type.isInstance(problem)) {
-            throw new ClassCastException("Expected " + type.getName() + " but got " + problem.getClass().getName());
-        }
-        @SuppressWarnings("unchecked")
-        BaseResponse<T> response = (BaseResponse<T>) of(
-                resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
-        return response;
-    }
-
-    /**
-     * 返回携带 RFC 7807 Problem Details 的失败消息（含请求路径，泛型兼容版本）。
-     *
-     * <p>仅为向后兼容保留，新代码请使用 {@link #errorWithDetail(ResultCode, String, URI)}。</p>
-     *
-     * @param resultCode 结果码
-     * @param detail     错误详情
-     * @param instance   请求路径 URI
-     * @param type       期望的返回数据类型（必须为 ProblemDetail.class）
-     * @param <T>        数据类型
-     * @return 携带 ProblemDetail 的失败消息
-     * @deprecated 使用 {@link #errorWithDetail(ResultCode, String, URI)} 替代，返回类型更明确
-     * @since 1.1.0
-     */
-    @Deprecated
-    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, URI instance, Class<T> type) {
-        ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
-        if (!type.isInstance(problem)) {
-            throw new ClassCastException("Expected " + type.getName() + " but got " + problem.getClass().getName());
-        }
-        @SuppressWarnings("unchecked")
-        BaseResponse<T> response = (BaseResponse<T>) of(
-                resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
-        return response;
     }
 
     /**

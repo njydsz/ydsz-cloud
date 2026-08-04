@@ -33,8 +33,6 @@ class BaseResponseTest {
     @AfterEach
     void tearDown() {
         MDC.clear();
-        // 使用 deprecated 的 setResolver 清理测试状态（仅测试场景使用）
-        BaseResponse.setResolver(null);
     }
 
     @Test
@@ -155,7 +153,7 @@ class BaseResponseTest {
     @Test
     @DisplayName("设置 MessageResolver 后 success() 使用国际化消息")
     void i18n_resolverApplied() {
-        BaseResponse.setResolver((key, defaultValue) -> "i18n-" + key);
+        BaseResponse.setResolverIfAbsent((key, defaultValue) -> "i18n-" + key);
         BaseResponse<Void> resp = BaseResponse.success();
         assertEquals("i18n-response.success", resp.getMsg());
     }
@@ -163,7 +161,7 @@ class BaseResponseTest {
     @Test
     @DisplayName("MessageResolver 返回 null 时回退默认值")
     void i18n_resolverReturnsNull_fallbackToDefault() {
-        BaseResponse.setResolver((key, defaultValue) -> null);
+        BaseResponse.setResolverIfAbsent((key, defaultValue) -> null);
         BaseResponse<Void> resp = BaseResponse.success();
         assertEquals("操作成功", resp.getMsg());
     }
@@ -177,16 +175,13 @@ class BaseResponseTest {
     @Test
     @DisplayName("注册 resolver 后 isResolverRegistered 为 true")
     void i18n_registered() {
-        BaseResponse.setResolver((key, defaultValue) -> defaultValue);
+        BaseResponse.setResolverIfAbsent((key, defaultValue) -> defaultValue);
         assertTrue(BaseResponse.isResolverRegistered());
     }
 
     @Test
     @DisplayName("setResolverIfAbsent 首次设置返回 true，重复设置返回 false")
     void setResolverIfAbsent_idempotent() {
-        // 清理已有状态
-        BaseResponse.setResolver(null);
-
         BaseResponse.MessageResolver first = (key, defaultValue) -> "first-" + key;
         BaseResponse.MessageResolver second = (key, defaultValue) -> "second-" + key;
 
@@ -196,9 +191,6 @@ class BaseResponseTest {
         // 验证第一个解析器生效
         BaseResponse<Void> resp = BaseResponse.success();
         assertTrue(resp.getMsg().startsWith("first-"));
-
-        // 清理
-        BaseResponse.setResolver(null);
     }
 
     @Test
@@ -225,9 +217,9 @@ class BaseResponseTest {
     @Test
     @DisplayName("errorWithDetail 泛型兼容版本（向后兼容）")
     void errorWithDetail_legacyCompatibility() {
-        @SuppressWarnings("deprecation")
+        // 调用新的类型安全版本（直接返回 BaseResponse<ProblemDetail>，无需 Class<T>）
         BaseResponse<ProblemDetail> resp = BaseResponse.errorWithDetail(
-                BaseResultCode.NOT_FOUND, "订单不存在", ProblemDetail.class);
+                BaseResultCode.NOT_FOUND, "订单不存在");
         assertEquals("A10101", resp.getCode());
         assertEquals("订单不存在", resp.getData().getDetail());
     }
@@ -235,11 +227,7 @@ class BaseResponseTest {
     @Test
     @DisplayName("errorWithDetail 泛型兼容版本拒绝错误类型")
     void errorWithDetail_rejectsWrongType() {
-        @SuppressWarnings("deprecation")
-        BaseResponseTest self = this;
-        org.junit.jupiter.api.Assertions.assertThrows(ClassCastException.class, () -> {
-            BaseResponse.errorWithDetail(BaseResultCode.NOT_FOUND, "test", String.class);
-        }, "应抛出 ClassCastException 当类型不匹配时");
+        // 不再测试已删除的 Class<T> 重载版本
     }
 
     @Test
@@ -254,6 +242,6 @@ class BaseResponseTest {
     @DisplayName("success 与 error 的 code 常量与 BaseResultCode 一致")
     void constants_consistent() {
         assertEquals(BaseResultCode.SUCCESS.getCode(), BaseResponse.SUCCESS);
-        assertNotEquals(BaseResponse.SUCCESS, BaseResponse.ERROR);
+        assertNotEquals(BaseResponse.SUCCESS, BaseResponse.UNKNOWN_CODE);
     }
 }

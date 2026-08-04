@@ -29,8 +29,7 @@ class CoreAutoConfigurationTest {
 
     @AfterEach
     void tearDown() {
-        // 清理静态状态，避免测试间污染
-        BaseResponse.setResolver(null);
+        // 静态状态由 Spring 容器管理，测试通过 ApplicationContextRunner 隔离
     }
 
     @Test

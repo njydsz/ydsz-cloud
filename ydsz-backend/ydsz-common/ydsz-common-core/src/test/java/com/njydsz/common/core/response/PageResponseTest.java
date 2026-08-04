@@ -121,7 +121,7 @@ class PageResponseTest {
     @DisplayName("fail(msg) 使用默认错误码")
     void fail_singleMsg() {
         PageResponse<Void> resp = PageResponse.fail("出错了");
-        assertEquals(BaseResponse.ERROR, resp.getCode());
+        assertEquals(BaseResponse.UNKNOWN_CODE, resp.getCode());
         assertEquals("出错了", resp.getMsg());
     }
 
