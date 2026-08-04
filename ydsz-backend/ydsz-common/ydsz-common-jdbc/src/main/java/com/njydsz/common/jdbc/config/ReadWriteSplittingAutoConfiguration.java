@@ -7,7 +7,9 @@ import org.springframework.context.annotation.Bean;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.jdbc.interceptor.ReadWriteSplittingInterceptor;
+import com.njydsz.common.jdbc.monitor.ReadWriteSplittingMetrics;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -15,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>当 dynamic-datasource 可用且配置启用时，注册 {@link ReadWriteSplittingInterceptor}
  * 作为 MyBatis 外层拦截器 Bean。Spring Boot 会自动将其注入到所有 SqlSessionFactory 中。
+ *
+ * <p>同时注册 {@link ReadWriteSplittingMetrics}，用于暴露读写分离路由指标到 Micrometer。
  *
  * <p>配置示例：
  * <pre>
@@ -37,13 +41,27 @@ import lombok.extern.slf4j.Slf4j;
 public class ReadWriteSplittingAutoConfiguration {
 
     /**
+     * 注册读写分离监控指标收集器
+     *
+     * @param meterRegistry Micrometer 注册表
+     * @return ReadWriteSplittingMetrics 实例
+     */
+    @Bean
+    @ConditionalOnClass(MeterRegistry.class)
+    public ReadWriteSplittingMetrics readWriteSplittingMetrics(MeterRegistry meterRegistry) {
+        return new ReadWriteSplittingMetrics(meterRegistry);
+    }
+
+    /**
      * 注册自动读写分离拦截器
      *
      * @param properties 读写分离配置
+     * @param metrics    读写分离监控指标（可选，Micrometer 不可用时为 null）
      * @return ReadWriteSplittingInterceptor 实例
      */
     @Bean
-    public ReadWriteSplittingInterceptor readWriteSplittingInterceptor(ReadWriteSplittingProperties properties) {
-        return new ReadWriteSplittingInterceptor(properties);
+    public ReadWriteSplittingInterceptor readWriteSplittingInterceptor(ReadWriteSplittingProperties properties,
+                                                                       ReadWriteSplittingMetrics metrics) {
+        return new ReadWriteSplittingInterceptor(properties, metrics);
     }
 }

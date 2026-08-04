@@ -20,6 +20,7 @@ import com.njydsz.common.jdbc.config.RandomLoadBalanceStrategy;
 import com.njydsz.common.jdbc.config.ReadWriteSplittingProperties;
 import com.njydsz.common.jdbc.config.RoundRobinLoadBalanceStrategy;
 import com.njydsz.common.jdbc.config.WeightedLoadBalanceStrategy;
+import com.njydsz.common.jdbc.monitor.ReadWriteSplittingMetrics;
 
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -65,16 +66,19 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
 
     private final ReadWriteSplittingProperties properties;
     private final DataSourceLoadBalanceStrategy loadBalanceStrategy;
+    private final ReadWriteSplittingMetrics metrics;
 
     /**
      * 构造自动读写分离拦截器
      *
      * @param properties 读写分离配置
+     * @param metrics    读写分离监控指标（可为 null，Micrometer 不可用时降级）
      */
-    public ReadWriteSplittingInterceptor(ReadWriteSplittingProperties properties) {
+    public ReadWriteSplittingInterceptor(ReadWriteSplittingProperties properties, ReadWriteSplittingMetrics metrics) {
         this.properties = properties;
         this.loadBalanceStrategy = createLoadBalanceStrategy(properties);
-        log.info("ReadWriteSplitting interceptor enabled: master={}, slaves={}, strategy={}",
+        this.metrics = metrics;
+        log.info("ReadWriteSplitting interceptor enabled: master={}, {}, strategy={}",
                 properties.getMasterDs(), properties.getSlaveDsList(), properties.getLoadBalanceStrategy());
     }
 
@@ -84,6 +88,7 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
         MappedStatement ms = (MappedStatement) args[0];
         SqlCommandType commandType = ms.getSqlCommandType();
 
+        long startTime = System.nanoTime();
         String targetDs = resolveTargetDataSource(commandType);
         if (targetDs != null) {
             DynamicDataSourceContextHolder.push(targetDs);
@@ -94,6 +99,9 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
         } finally {
             if (targetDs != null) {
                 DynamicDataSourceContextHolder.poll();
+            }
+            if (metrics != null) {
+                metrics.recordSqlExecutionTime(targetDs, commandType.name(), System.nanoTime() - startTime);
             }
         }
     }
@@ -106,22 +114,40 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
      * @return 数据源名称
      */
     private String resolveTargetDataSource(SqlCommandType commandType) {
+        String sqlTypeName = commandType.name();
         // 事务感知：@Transactional 中 SELECT 必须读主库，避免读写不一致
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             log.debug("ReadWriteSplitting: Transaction active, routing to master for {}", commandType);
+            if (metrics != null) {
+                metrics.recordRoute(properties.getMasterDs(), sqlTypeName, "transaction_forced");
+                metrics.recordTransactionForced(sqlTypeName);
+            }
             return properties.getMasterDs();
         }
         if (commandType == SqlCommandType.SELECT) {
             List<String> slaves = properties.getSlaveDsList();
             if (slaves == null || slaves.isEmpty()) {
+                if (metrics != null) {
+                    metrics.recordRoute(properties.getMasterDs(), sqlTypeName, "master_no_slaves");
+                }
                 return properties.getMasterDs();
             }
             if (slaves.size() == 1) {
+                if (metrics != null) {
+                    metrics.recordRoute(slaves.get(0), sqlTypeName, "slave_single");
+                }
                 return slaves.get(0);
             }
-            return loadBalanceStrategy.select(slaves);
+            String selectedSlave = loadBalanceStrategy.select(slaves);
+            if (metrics != null) {
+                metrics.recordRoute(selectedSlave, sqlTypeName, "slave");
+            }
+            return selectedSlave;
         }
-        // INSERT/UPDATE/DELETE/OTHER → 主库
+        // INSERT/UPDATE/DELETE/UNKNOWN → 主库
+        if (metrics != null) {
+            metrics.recordRoute(properties.getMasterDs(), sqlTypeName, "master");
+        }
         return properties.getMasterDs();
     }
 

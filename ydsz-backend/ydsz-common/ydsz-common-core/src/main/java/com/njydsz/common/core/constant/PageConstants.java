@@ -101,6 +101,45 @@ public final class PageConstants {
     // ======================== 归一化工具方法 ========================
 
     /**
+     * 标准化 offset（偏移量）。
+     *
+     * <p>适用于 offset/limit 分页模式（常用于大数据量深度分页场景）。
+     * 统一 offset 的归一化规则：
+     * <ul>
+     *   <li>null 或小于 0 → 返回 0</li>
+     *   <li>其余原样返回</li>
+     * </ul>
+     *
+     * @param offset 原始偏移量（可为 null）
+     * @return 标准化后的偏移量
+     * @since 1.6.0
+     */
+    public static long normalizeOffset(Long offset) {
+        return offset == null || offset < 0 ? 0L : offset;
+    }
+
+    /**
+     * 标准化 limit（返回记录数）。
+     *
+     * <p>适用于 offset/limit 分页模式。统一的 limit 归一化规则：
+     * <ul>
+     *   <li>null 或小于 1 → 返回运行时默认值 {@link #getDefaultPageSize()}</li>
+     *   <li>大于运行时上限 → 截断为 {@link #getMaxPageSize()}</li>
+     *   <li>其余原样返回</li>
+     * </ul>
+     *
+     * @param limit 原始返回记录数（可为 null）
+     * @return 标准化后的返回记录数
+     * @since 1.6.0
+     */
+    public static int normalizeLimit(Long limit) {
+        if (limit == null || limit < 1) {
+            return getDefaultPageSize();
+        }
+        return (int) Math.min(limit, getMaxPageSize());
+    }
+
+    /**
      * 标准化页大小。
      *
      * <p>统一分页参数的归一化规则，避免各业务模块重复实现：
@@ -151,4 +190,64 @@ public final class PageConstants {
         int normalizedPageSize = normalizePageSize(pageSize);
         return (long) (normalizedPageNum - 1) * normalizedPageSize;
     }
+
+    /**
+     * 从 offset 反算页码（用于 offset/limit 分页模式）。
+     *
+     * <p>计算公式：{@code pageNum = (offset / pageSize) + 1}
+     * 当 offset 不能被 pageSize 整除时，向上取整。</p>
+     *
+     * @param offset   偏移量（可为 null，按 0 处理）
+     * @param pageSize 页大小（可为 null，按默认值处理）
+     * @return 计算出的页码（从 1 开始）
+     * @since 1.6.0
+     */
+    public static int calcPageNum(Long offset, Integer pageSize) {
+        long normalizedOffset = normalizeOffset(offset);
+        int normalizedPageSize = normalizePageSize(pageSize);
+        return (int) (normalizedOffset / normalizedPageSize) + 1;
+    }
+
+    /**
+     * 计算总页数（用于 offset/limit 分页场景下返回分页元信息）。
+     *
+     * <p>计算公式：{@code (total + pageSize - 1) / pageSize}</p>
+     *
+     * @param total    总记录数
+     * @param pageSize 页大小（可为 null，按默认值处理）
+     * @return 总页数
+     * @since 1.6.0
+     */
+    public static long calcTotalPages(long total, Integer pageSize) {
+        if (total <= 0) {
+            return 0;
+        }
+        int normalizedPageSize = normalizePageSize(pageSize);
+        return (total + normalizedPageSize - 1) / normalizedPageSize;
+    }
+
+    /**
+     * 判断偏移量是否安全（不会导致深度分页性能问题）。
+     *
+     * <p>当 offset 超过 {@link #MAX_SAFE_OFFSET} 时，建议改用
+     * 游标分页（cursor-based pagination）或其他优化方案。</p>
+     *
+     * @param offset 偏移量（可为 null，按 0 处理）
+     * @return true=安全，false=可能导致性能问题
+     * @since 1.6.0
+     */
+    public static boolean isOffsetSafe(Long offset) {
+        long normalizedOffset = normalizeOffset(offset);
+        return normalizedOffset <= MAX_SAFE_OFFSET;
+    }
+
+    /**
+     * 最大安全偏移量阈值（10000）。
+     *
+     * <p>超过此值的深度分页在 PostgreSQL/MySQL 中可能导致性能急剧下降，
+     * 建议改用 WHERE id > lastId 的游标模式。
+     *
+     * @since 1.6.0
+     */
+    public static final long MAX_SAFE_OFFSET = 10000L;
 }

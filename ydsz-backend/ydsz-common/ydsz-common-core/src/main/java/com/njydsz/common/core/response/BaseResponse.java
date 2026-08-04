@@ -333,6 +333,131 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
+     * 从 Throwable 构建标准化错误响应（RFC 7807 Problem Details）。
+     *
+     * <p>提供与异常体系的轻量级桥接，允许在 core 模块中将任意异常转换为
+     * 符合 RFC 7807 规范的 {@link ProblemDetail} 响应。</p>
+     *
+     * <p>处理逻辑：
+     * <ul>
+     *   <li>如果异常实现了 {@link ResultCode} 接口（或包含 getCode/getMsg 方法），
+     *       优先使用其错误码和 HTTP 状态码</li>
+     *   <li>如果异常是标准 RuntimeException，使用 UNKNOWN 错误码</li>
+     *   <li>异常消息作为 ProblemDetail.detail 返回</li>
+     * </ul>
+     *
+     * <p><b>使用示例：</b>
+     * <pre>{@code
+     * try {
+     *     // ... 业务逻辑
+     * } catch (BusinessException e) {
+     *     return BaseResponse.error(e, URI.create("/api/v1/orders"));
+     * } catch (Exception e) {
+     *     return BaseResponse.error(e);
+     * }
+     * }</pre>
+     *
+     * @param throwable 异常对象
+     * @param instance  请求路径 URI（可为 null）
+     * @return 携带 {@link ProblemDetail} 的错误响应
+     * @since 1.6.0
+     * @see ProblemDetail
+     */
+    public static BaseResponse<ProblemDetail> error(Throwable throwable, URI instance) {
+        if (throwable == null) {
+            return errorWithDetail(BaseResultCode.UNKNOWN, "未知错误", instance);
+        }
+
+        String detail = throwable.getMessage();
+        if (detail == null || detail.isEmpty()) {
+            detail = throwable.getClass().getSimpleName();
+        }
+
+        // 尝试从异常中提取 ResultCode
+        ResultCode resultCode = extractResultCode(throwable);
+        if (resultCode != null) {
+            ProblemDetail problem = ProblemDetail.builder()
+                    .type(URI.create(ProblemDetail.DEFAULT_TYPE_PREFIX + resultCode.getCode()))
+                    .title(resultCode.getMsg())
+                    .status(resultCode.getHttpStatusCode())
+                    .detail(detail)
+                    .instance(instance)
+                    .errorCode(resultCode.getCode())
+                    .timestamp(java.time.Instant.now())
+                    .build();
+            return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
+        }
+
+        // 默认使用 UNKNOWN
+        return errorWithDetail(BaseResultCode.UNKNOWN, detail, instance);
+    }
+
+    /**
+     * 从 Throwable 构建标准化错误响应（便捷重载，不携带 instance）。
+     *
+     * @param throwable 异常对象
+     * @return 携带 {@link ProblemDetail} 的错误响应
+     * @since 1.6.0
+     * @see #error(Throwable, URI)
+     */
+    public static BaseResponse<ProblemDetail> error(Throwable throwable) {
+        return error(throwable, null);
+    }
+
+    /**
+     * 从异常中提取 ResultCode。
+     *
+     * <p>支持以下场景：
+     * <ul>
+     *   <li>异常本身实现了 {@link ResultCode} 接口</li>
+     *   <li>异常持有 resultCause 字段（通过反射检测，兼容 ydsz-common-exception 模块）</li>
+     * </ul>
+     *
+     * @param throwable 异常对象
+     * @return 提取到的 ResultCode；无法提取时返回 null
+     */
+    private static ResultCode extractResultCode(Throwable throwable) {
+        if (throwable instanceof ResultCode) {
+            return (ResultCode) throwable;
+        }
+
+        // 尝试通过反射获取异常中的 resultCode/code 字段（兼容 exception 模块的 AbstractYdszException）
+        try {
+            java.lang.reflect.Field codeField = findField(throwable.getClass(), "resultCode");
+            if (codeField != null) {
+                codeField.setAccessible(true);
+                Object value = codeField.get(throwable);
+                if (value instanceof ResultCode) {
+                    return (ResultCode) value;
+                }
+            }
+        } catch (Exception ignored) {
+            // 反射失败时返回 null，使用默认处理
+        }
+
+        return null;
+    }
+
+    /**
+     * 在类层次结构中查找指定字段（包括父类）。
+     *
+     * @param clazz     起始类
+     * @param fieldName 字段名
+     * @return 找到的字段；未找到返回 null
+     */
+    private static java.lang.reflect.Field findField(Class<?> clazz, String fieldName) {
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            try {
+                return current.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                current = current.getSuperclass();
+            }
+        }
+        return null;
+    }
+
+    /**
      * 返回携带 RFC 7807 Problem Details 的失败消息
      *
      * <p>将标准化的错误详情封装到 {@link ProblemDetail} 中作为 data 返回，
