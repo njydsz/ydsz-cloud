@@ -16,6 +16,19 @@
 
 import type { RouteRecordRaw } from 'vue-router';
 
+/**
+ * 子应用默认骨架屏类型。
+ *
+ * 与主应用 main/src/views/_core/subapp/skeletons/skeleton-registry.ts 的 SkeletonType 对齐。
+ * 此处单独定义类型而非从主应用导入，避免 conf/vite-config 反向依赖 main 包。
+ */
+export type MicroAppSkeletonType =
+  | 'dashboard'
+  | 'default'
+  | 'detail'
+  | 'form'
+  | 'list';
+
 /** 单个微应用的完整注册信息 */
 export interface MicroAppEntry {
   /** 子应用唯一标识（如 'project-web'），与 pnpm workspace 包名后缀一致 */
@@ -36,6 +49,14 @@ export interface MicroAppEntry {
   devPort: number;
   /** 生产环境部署子路径（null 表示与 activeRule 不一致时手动指定） */
   prodPath?: string;
+  /**
+   * 子应用默认骨架屏类型（v3.3 新增，可选）。
+   *
+   * 用于子应用首次加载 / 切换时的过渡骨架屏。
+   * 子应用 manifest.routes 可按路由前缀进一步细化，未匹配时回退到此值，
+   * 再回退到 'default'。
+   */
+  skeletonType?: MicroAppSkeletonType;
 }
 
 /**
@@ -54,6 +75,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:users',
     order: 100,
     devPort: 5601,
+    skeletonType: 'list',
   },
   {
     name: 'system-web',
@@ -64,6 +86,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:settings',
     order: 101,
     devPort: 5602,
+    skeletonType: 'form',
   },
   {
     name: 'project-web',
@@ -74,6 +97,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:folder-kanban',
     order: 102,
     devPort: 5603,
+    skeletonType: 'dashboard',
   },
   {
     name: 'message-web',
@@ -84,6 +108,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:message-square',
     order: 103,
     devPort: 5604,
+    skeletonType: 'list',
   },
   {
     name: 'cronjob-web',
@@ -94,6 +119,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:clock',
     order: 104,
     devPort: 5605,
+    skeletonType: 'list',
   },
   {
     name: 'workflow-web',
@@ -104,6 +130,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:workflow',
     order: 105,
     devPort: 5606,
+    skeletonType: 'list',
   },
   {
     name: 'nextwiki-web',
@@ -114,6 +141,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:folder-open',
     order: 106,
     devPort: 5607,
+    skeletonType: 'list',
   },
   {
     name: 'literule-web',
@@ -124,6 +152,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:git-branch',
     order: 107,
     devPort: 5608,
+    skeletonType: 'list',
   },
   {
     name: 'agent-web',
@@ -134,6 +163,7 @@ export const MICRO_APPS: readonly MicroAppEntry[] = [
     icon: 'lucide:bot',
     order: 108,
     devPort: 5610,
+    skeletonType: 'default',
   },
 ];
 
@@ -152,6 +182,8 @@ export const APP_BY_NAME: Readonly<Record<string, MicroAppEntry>> = Object.freez
  *
  * 每条路由包含一个 catch-all 子路由（`:path(.*)*`），
  * 用于渲染微前端容器组件，被子应用内部路由接管。
+ *
+ * v3.3: 透传 skeletonType 到 catch-all 路由 meta，供 SubAppContainer 读取。
  */
 export function generateSubAppRoutes(): RouteRecordRaw[] {
   return MICRO_APPS.map((app) => ({
@@ -174,6 +206,7 @@ export function generateSubAppRoutes(): RouteRecordRaw[] {
           title: app.title,
           hideInMenu: true,
           hideInTab: true,
+          skeletonType: app.skeletonType,
         },
       },
     ],

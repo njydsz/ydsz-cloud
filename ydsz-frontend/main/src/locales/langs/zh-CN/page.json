@@ -10,5 +10,19 @@
     "title": "YDSZ PMIS 项目管理平台",
     "analytics": "数据分析",
     "workspace": "工作台"
+  },
+  "microKernel": {
+    "phase": {
+      "loading": "正在加载模块...",
+      "loaded": "模块加载完成",
+      "mounting": "正在挂载应用...",
+      "mounted": "加载完成",
+      "unmounting": "正在切换应用...",
+      "error": "加载失败"
+    },
+    "errorMask": {
+      "title": "应用加载失败",
+      "hint": "已降级为整页访问，请稍后重试"
+    }
   }
 }

@@ -19,10 +19,12 @@ import com.njydsz.common.core.response.BaseResponse;
  *   <li>A1xxxx - 通用错误（参数校验、资源不存在、限流等）</li>
  *   <li>B1xxxx - 系统级业务异常（内部错误、服务不可用等）</li>
  *   <li>A2xxxx - 认证授权</li>
- *   <li>B3xxxx - 用户/组织/人员</li>
- *   <li>B7xxxx - 工作流/审批</li>
- *   <li>C9xxxx - 系统/未知（第三方服务异常）</li>
+ *   <li>B2xxxx - 系统状态（维护、熔断等）</li>
+ *   <li>C1xxxx - 第三方服务异常（DB、缓存、MQ 等）</li>
+ *   <li>C9xxxx - 系统/未知（兜底错误码）</li>
  * </ul>
+ * <p>业务模块专用错误码（如 B3xxxx 用户/B4xxxx 项目/B7xxxx 工作流）已下沉至各模块
+ * 的 {@code XXResultCode} 枚举中统一管理。
  * <p>业务模块自定义错误码请实现 {@link ResultCode} 接口，在各模块内自行定义。
  *
  * @author ydsz-team
@@ -89,40 +91,6 @@ public enum BaseResultCode implements ResultCode {
     MFA_INVALID("A20109", "双因素认证码无效", 401),
     ACCOUNT_LOCKED("A20110", "账号已锁定", 423),
     SESSION_KICKED("A20111", "账号已在其他设备登录", 401),
-
-    // ==================== B3xxxx 用户/组织/人员（已弃用，请使用对应业务模块的错误码） ====================
-    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#USER_NOT_FOUND} */
-    @Deprecated
-    USER_NOT_FOUND("B30001", "用户不存在", 404),
-    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode} 中对应错误码 */
-    @Deprecated
-    PASSWORD_INCORRECT("B30002", "密码错误", 401),
-    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#USER_DISABLED} */
-    @Deprecated
-    USER_DISABLED("B30003", "用户已停用", 403),
-    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#USER_LOCKED} */
-    @Deprecated
-    USER_LOCKED("B30004", "用户已被锁定", 423),
-    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#USERNAME_DUPLICATE} */
-    @Deprecated
-    USERNAME_DUPLICATE("B30005", "用户名已存在", 409),
-    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#DEPARTMENT_NOT_FOUND} */
-    @Deprecated
-    DEPARTMENT_NOT_FOUND("B30101", "部门不存在", 404),
-    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#EMPLOYEE_NOT_FOUND} */
-    @Deprecated
-    EMPLOYEE_NOT_FOUND("B30201", "员工不存在", 404),
-
-    // ==================== B7xxxx 工作流/审批（已弃用，请使用对应业务模块的错误码） ====================
-    /** @deprecated 请使用 {@code com.njydsz.workflow.domain.enums.WorkflowResultCode} 中对应错误码 */
-    @Deprecated
-    WORKFLOW_NOT_FOUND("B70001", "流程不存在", 404),
-    /** @deprecated 请使用 {@code com.njydsz.workflow.domain.enums.WorkflowResultCode} 中对应错误码 */
-    @Deprecated
-    WORKFLOW_REJECT("B70002", "流程被驳回", 400),
-    /** @deprecated 请使用 {@code com.njydsz.workflow.domain.enums.WorkflowResultCode} 中对应错误码 */
-    @Deprecated
-    WORKFLOW_NO_PERMISSION("B70003", "无审批权限", 403),
 
     // ==================== C9xxxx 系统/未知 ====================
     UNKNOWN("C99999", "未知错误", 500);

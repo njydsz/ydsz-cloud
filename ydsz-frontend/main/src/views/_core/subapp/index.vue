@@ -4,6 +4,10 @@
  * v3.2: 直接订阅 microRuntime 生命周期钩子（替代 window 事件），
  *       细化加载阶段（loading/mounting/mounted/error/unmounting），
  *       通过 unsubscribe 在组件卸载时彻底清理，避免泄漏。
+ * v3.3: 进一步细化生命周期（beforeLoad/afterLoad/beforeMount/afterMount），
+ *       进度条按真实阶段推进（10% → 60% → 75% → 100%），
+ *       PHASE_META 与错误遮罩文案全面 i18n 化，
+ *       骨架屏类型优先取自子应用 manifest.routes，回退到 route.meta.skeletonType。
  *
  * @path main\src\views\_core\subapp\index.vue
  * @author ydsz-team
@@ -13,9 +17,12 @@
 import type { MicroAppConfig } from '@ydsz/micro-runtime';
 import type { Component } from 'vue';
 
+import { getAppInstance } from '@ydsz/micro-kernel';
+
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
+import { $t } from '#/locales';
 import { microRuntime } from '#/bootstrap';
 
 import { getSkeletonComponent, type SkeletonType } from './skeletons/skeleton-registry';
@@ -25,12 +32,24 @@ defineOptions({
 });
 
 /**
- * 子应用加载阶段 — 由内核生命周期钩子驱动。
+ * 子应用加载阶段 — 由内核细化生命周期钩子驱动（v3.3）。
  *
- * 注：内核 beforeLoad 在 loadApp + mount 之前触发，afterMount 在两者均完成后触发，
- * 因此本组件无法细分 "ESM 加载完" 与 "mount() 完成"，合并为 loading 阶段。
+ *   idle         → 初始/无活跃应用
+ *   loading      → beforeLoad 触发后，ESM 模块加载中（10%）
+ *   loaded       → afterLoad 触发后，模块就绪等待挂载（60%，短暂过渡）
+ *   mounting     → beforeMount 触发后，mount() 调用中（75%）
+ *   mounted      → afterMount 触发后，DOM 已挂载（100%）
+ *   unmounting   → afterUnmount 触发后，切换中的过渡态（50%）
+ *   error        → 加载或挂载失败（0%）
  */
-type LoadingPhase = 'error' | 'idle' | 'loading' | 'mounted' | 'unmounting';
+type LoadingPhase =
+  | 'error'
+  | 'idle'
+  | 'loaded'
+  | 'loading'
+  | 'mounted'
+  | 'mounting'
+  | 'unmounting';
 
 /** 当前阶段 */
 const phase = ref<LoadingPhase>('idle');
@@ -38,18 +57,74 @@ const phase = ref<LoadingPhase>('idle');
 const activeAppName = ref<null | string>(null);
 /** 进度百分比（按阶段映射，非随机模拟） */
 const progress = ref(0);
-/** 阶段对应的提示文案 */
-const phaseText = ref('');
+/** 阶段对应的提示文案 key */
+const phaseTextKey = ref('');
 /** 最近一次错误信息（用于错误态展示） */
 const lastError = ref<null | string>(null);
 
-const state = reactive({ phase, activeAppName, progress, phaseText, lastError });
+const state = reactive({ phase, activeAppName, progress, phaseTextKey, lastError });
 
-/** 路由实例，用于读取 meta.skeletonType */
+/** 路由实例，用于读取 meta.skeletonType 与当前 path */
 const route = useRoute();
 
 /**
- * 根据当前路由 meta.skeletonType 动态返回骨架屏组件。
+ * 阶段 → (百分比, i18n key) 映射表，保证进度反映真实生命周期而非随机数。
+ * i18n key 对应 page.microKernel.phase.* 命名空间。
+ */
+const PHASE_META: Record<LoadingPhase, readonly [number, string]> = {
+  idle: [0, ''],
+  loading: [10, 'page.microKernel.phase.loading'],
+  loaded: [60, 'page.microKernel.phase.loaded'],
+  mounting: [75, 'page.microKernel.phase.mounting'],
+  mounted: [100, 'page.microKernel.phase.mounted'],
+  unmounting: [50, 'page.microKernel.phase.unmounting'],
+  error: [0, 'page.microKernel.phase.error'],
+};
+
+/** 当前阶段的展示文案（i18n） */
+const phaseText = computed(() => (phaseTextKey.value ? $t(phaseTextKey.value) : ''));
+
+function setPhase(next: LoadingPhase, appName: null | string = activeAppName.value): void {
+  const [pct, key] = PHASE_META[next];
+  state.phase = next;
+  state.progress = pct;
+  state.phaseTextKey = key;
+  if (appName !== undefined) state.activeAppName = appName;
+  if (next !== 'error') state.lastError = null;
+}
+
+/**
+ * 根据当前路由子路径从子应用 manifest.routes 匹配骨架屏类型。
+ *
+ * 优先级（v3.3）：
+ *   1. manifest.routes 中按子路径前缀匹配（build 模式可用）
+ *   2. route.meta.skeletonType（注册表配置）
+ *   3. 'default'
+ */
+function resolveSkeletonTypeFromManifest(): SkeletonType | null {
+  if (!activeAppName.value) return null;
+  const instance = getAppInstance(activeAppName.value);
+  const routes = instance?.manifest?.routes;
+  if (!routes || routes.length === 0) return null;
+
+  // 计算相对于子应用 basename 的子路径
+  const activeRule = instance?.config.activeRule;
+  const fullPath = route.path;
+  const subPath = activeRule && fullPath.startsWith(activeRule)
+    ? fullPath.slice(activeRule.length)
+    : fullPath;
+
+  for (const r of routes) {
+    if (!r.skeletonType) continue;
+    if (subPath.startsWith(r.path)) {
+      return r.skeletonType as SkeletonType;
+    }
+  }
+  return null;
+}
+
+/**
+ * 根据当前路由 meta.skeletonType 与 manifest.routes 动态返回骨架屏组件。
  *
  * 路由配置示例：
  *   { path: '/users', component: UserList, meta: { skeletonType: 'list' } }
@@ -58,27 +133,23 @@ const route = useRoute();
  *   { path: '/detail/:id', component: Detail, meta: { skeletonType: 'detail' } }
  */
 const pageSkeletonComponent = computed<Component>(() => {
+  // v3.3: 优先取自子应用 manifest.routes（自描述）
+  const fromManifest = resolveSkeletonTypeFromManifest();
+  if (fromManifest) {
+    return getSkeletonComponent(fromManifest);
+  }
+  // 回退到 route.meta.skeletonType（注册表配置）
   const skeletonType = (route.meta?.skeletonType as SkeletonType) || 'default';
   return getSkeletonComponent(skeletonType);
 });
 
-/** 阶段 → (百分比, 文案) 映射表，保证进度反映真实生命周期而非随机数 */
-const PHASE_META: Record<LoadingPhase, readonly [number, string]> = {
-  idle: [0, ''],
-  loading: [30, '正在加载模块...'],
-  mounted: [100, '加载完成'],
-  unmounting: [50, '正在切换应用...'],
-  error: [0, '加载失败'],
-};
-
-function setPhase(next: LoadingPhase, appName: null | string = activeAppName.value): void {
-  const [pct, text] = PHASE_META[next];
-  state.phase = next;
-  state.progress = pct;
-  state.phaseText = text;
-  if (appName !== undefined) state.activeAppName = appName;
-  if (next !== 'error') state.lastError = null;
-}
+// 路由变化时重算骨架屏（manifest 模式下子路径变化需切换骨架屏）
+watch(
+  () => route.path,
+  () => {
+    // 触发 pageSkeletonComponent 重算即可
+  },
+);
 
 /** 取消订阅函数集合，组件卸载时统一调用 */
 const unsubscribers: Array<() => void> = [];
@@ -90,14 +161,32 @@ onMounted(() => {
     return;
   }
 
-  // beforeLoad: 子应用开始加载 ESM 模块
+  // beforeLoad: 子应用开始加载 ESM 模块（10%）
   unsubscribers.push(
     microRuntime.addLifecycleHook('beforeLoad', (app: MicroAppConfig) => {
       setPhase('loading', app.name);
     }),
   );
 
-  // afterMount: 子应用 mount() 完成，DOM 已挂载
+  // afterLoad: ESM 模块加载完成、LifecycleExports 就绪（60%）
+  unsubscribers.push(
+    microRuntime.addLifecycleHook('afterLoad', (app: MicroAppConfig) => {
+      if (state.activeAppName === app.name) {
+        setPhase('loaded', app.name);
+      }
+    }),
+  );
+
+  // beforeMount: mount() 即将调用（75%）
+  unsubscribers.push(
+    microRuntime.addLifecycleHook('beforeMount', (app: MicroAppConfig) => {
+      if (state.activeAppName === app.name) {
+        setPhase('mounting', app.name);
+      }
+    }),
+  );
+
+  // afterMount: 子应用 mount() 完成，DOM 已挂载（100%）
   unsubscribers.push(
     microRuntime.addLifecycleHook('afterMount', (app: MicroAppConfig) => {
       setPhase('mounted', app.name);
@@ -144,15 +233,20 @@ onUnmounted(() => {
   }
 });
 
-/** 是否展示骨架屏（loading/unmounting） */
+/** 是否展示骨架屏（loading/loaded/mounting/unmounting） */
 function showSkeleton(): boolean {
-  return ['loading', 'unmounting'].includes(state.phase);
+  return ['loaded', 'loading', 'mounting', 'unmounting'].includes(state.phase);
 }
 
 /** 是否展示错误态（错误由内核 error-boundary 渲染容器内 fallback，此处仅作背景遮罩） */
 function showErrorMask(): boolean {
   return state.phase === 'error';
 }
+
+/** 错误遮罩标题文案（i18n） */
+const errorMaskTitle = computed(() => $t('page.microKernel.errorMask.title'));
+/** 错误遮罩提示文案（i18n） */
+const errorMaskHint = computed(() => $t('page.microKernel.errorMask.hint'));
 </script>
 
 <template>
@@ -163,22 +257,24 @@ function showErrorMask(): boolean {
       class="subapp-container"
       :class="{ 'is-loading': showSkeleton(), 'has-error': showErrorMask() }"
     >
-      <!-- 页面级骨架屏（根据路由 meta.skeletonType 动态加载） -->
+      <!-- 页面级骨架屏（优先取自 manifest.routes，回退到路由 meta.skeletonType） -->
       <div v-if="showSkeleton()" class="subapp-skeleton-wrapper">
         <component :is="pageSkeletonComponent" />
-        <div class="skeleton-progress">
+        <div class="skeleton-progress" role="progressbar"
+          :aria-valuenow="state.progress" aria-valuemin="0" aria-valuemax="100">
           <div class="progress-bar" :style="{ width: `${state.progress}%` }"></div>
         </div>
         <p class="loading-text">
-          {{ state.phaseText }}<span v-if="state.activeAppName"> · {{ state.activeAppName }}</span>
+          {{ phaseText }}<span v-if="state.activeAppName"> · {{ state.activeAppName }}</span>
         </p>
       </div>
 
       <!-- 错误态遮罩（实际错误 UI 由内核 error-boundary 渲染） -->
       <div v-else-if="showErrorMask()" class="subapp-error-mask" aria-live="polite">
         <p class="error-app">{{ state.activeAppName }}</p>
-        <p class="error-msg">{{ state.lastError || '加载失败' }}</p>
-        <p class="error-hint">已降级为整页访问，请稍后重试</p>
+        <p class="error-title">{{ errorMaskTitle }}</p>
+        <p class="error-msg">{{ state.lastError || phaseText }}</p>
+        <p class="error-hint">{{ errorMaskHint }}</p>
       </div>
     </div>
   </div>
@@ -259,6 +355,13 @@ function showErrorMask(): boolean {
   font-size: 16px;
   font-weight: 600;
   color: var(--el-text-color-primary, #303133);
+  margin: 0;
+}
+
+.error-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--el-text-color-regular, #606266);
   margin: 0;
 }
 

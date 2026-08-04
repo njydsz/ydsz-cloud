@@ -14,7 +14,7 @@
 
 import type { LifecycleExports, MicroAppConfig, MountProps, UnmountResult } from '@ydsz/micro-runtime';
 import { loadApp, removeStylesheets } from './loader';
-import type { LoadOptions, LoadResult } from './loader';
+import type { LoadOptions, LoadResult, Manifest } from './loader';
 import { enterSandbox, exitSandbox } from './sandbox';
 import type { SandboxInstance } from './sandbox';
 import { createProxySandbox } from './proxy-sandbox';
@@ -64,6 +64,13 @@ export interface AppInstance {
   error: null | string;
   /** 最近一次激活的时间戳（用于 LRU 淘汰保活实例） */
   lastActivatedAt: number;
+  /**
+   * 最近一次加载得到的 manifest（v3.3 新增）。
+   *
+   * build 模式下含子应用自描述的 routes（骨架屏类型映射），
+   * 主应用容器据此细化骨架屏；dev 模式为 null。
+   */
+  manifest: null | Manifest;
 }
 
 /** 保活实例数上限（默认 5，超限按 LRU 淘汰最久未访问的子应用） */
@@ -98,6 +105,7 @@ export function createAppInstance(config: MicroAppConfig): AppInstance {
     loadMetrics: null,
     error: null,
     lastActivatedAt: 0,
+    manifest: null,
   };
   appInstances.set(config.name, instance);
   return instance;
@@ -162,6 +170,8 @@ export async function activateApp(
       const result: LoadResult = await loadApp(config, loadOpts);
       instance.exports = result.exports;
       instance.loadMetrics = { duration: result.duration, fromCache: result.fromCache };
+      // v3.3: 记录 manifest 供主应用容器读取 routes（骨架屏细化）
+      instance.manifest = result.manifest;
       instance.status = 'LOADED';
       // v3.3: 通知外部"加载完成"阶段（用于进度条推进、骨架屏细化）
       callbacks.onLoaded?.(instance);

@@ -10,5 +10,19 @@
     "title": "YDSZ PMIS Platform",
     "analytics": "Analytics",
     "workspace": "Workspace"
+  },
+  "microKernel": {
+    "phase": {
+      "loading": "Loading modules...",
+      "loaded": "Modules loaded",
+      "mounting": "Mounting application...",
+      "mounted": "Loaded",
+      "unmounting": "Switching application...",
+      "error": "Load failed"
+    },
+    "errorMask": {
+      "title": "Failed to load application",
+      "hint": "Degraded to full-page navigation, please retry later"
+    }
   }
 }
