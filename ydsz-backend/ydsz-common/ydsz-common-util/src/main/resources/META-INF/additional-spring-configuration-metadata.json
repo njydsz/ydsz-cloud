@@ -13,12 +13,7 @@
     {
       "name": "ydsz.util.snowflake.worker-id-source",
       "type": "java.lang.String",
-      "description": "workerId 来源策略（ENVIRONMENT_VARIABLE、CONFIG、INSTANCE_INDEX）。默认 ENVIRONMENT_VARIABLE。"
-    },
-    {
-      "name": "ydsz.util.snowflake.environment-variable-name",
-      "type": "java.lang.String",
-      "description": "环境变量名（默认 YDSZ_SNOWFLAKE_WORKER_ID）。"
+      "description": "workerId 来源策略（ENVIRONMENT_VARIABLE、CONFIG）。默认 ENVIRONMENT_VARIABLE。"
     },
     {
       "name": "ydsz.util.snowflake.enabled",

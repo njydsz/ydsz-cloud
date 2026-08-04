@@ -19,6 +19,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.Cipher;
 
@@ -101,6 +102,15 @@ public class Rsa2Utils {
      * 共享的线程安全 SecureRandom 实例（KeyPairGenerator 显式传入，避免使用 JDK 默认 StrongRandom）
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    /**
+     * Key 解析结果缓存，以 Base64 密钥字符串为 key。
+     *
+     * <p>loadPublicKey/loadPrivateKey 每次重新执行 Base64 解码 + KeyFactory.getInstance + 密钥解析开销较大，
+     * 缓存 PublicKey/PrivateKey 对象避免重复解析。ConcurrentHashMap 保证并发读写的线程安全。
+     * Key 对象本身不可变且线程安全，可被多个 Cipher/Signature 并发使用。
+     */
+    private static final ConcurrentHashMap<String, Key> KEY_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 生成 RSA 密钥对

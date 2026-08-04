@@ -660,6 +660,10 @@ public class IOUtils {
      * 使用 MappedByteBuffer 复制大文件（超高性能）
      * 适合 GB 级别的大文件复制
      *
+     * <p><b>已知限制：</b>MappedByteBuffer 由 GC 回收，JDK 无公开 API 主动 unmap。
+     * 在 Windows 下映射区域可能锁定源文件直至 GC 回收，导致文件无法立即删除/移动。
+     * 如需立即释放，建议改用 {@link #copyFileFast(File, File)}。</p>
+     *
      * @param sourceFile 源文件
      * @param destFile   目标文件
      * @throws IOException IO 异常
@@ -709,7 +713,11 @@ public class IOUtils {
         }
 
         try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
-            ByteBuffer buffer = ByteBuffer.allocate((int) channel.size());
+            long fileSize = channel.size();
+            if (fileSize > Integer.MAX_VALUE) {
+                throw new IllegalArgumentException("文件过大，超过 2GB 限制");
+            }
+            ByteBuffer buffer = ByteBuffer.allocate((int) fileSize);
             channel.read(buffer);
             buffer.flip();
             byte[] bytes = new byte[buffer.remaining()];

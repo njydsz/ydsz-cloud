@@ -77,7 +77,7 @@ public class SnowflakeAutoConfiguration implements DisposableBean {
                     workerId, datacenterId, properties.getWorkerIdSource(),
                     registry != null ? registry.type() : "none");
         } catch (IllegalStateException e) {
-            log.debug("SnowflakeUtils already initialized manually, skipping auto-configuration: {}", e.getMessage());
+            log.warn("SnowflakeUtils 已被提前初始化，配置无效，请检查是否存在 Bean 初始化顺序问题: {}", e.getMessage());
         }
     }
 
@@ -134,47 +134,30 @@ public class SnowflakeAutoConfiguration implements DisposableBean {
                 Long workerId = properties.getWorkerId();
                 if (workerId == null) {
                     log.warn("workerIdSource is CONFIG but workerId not configured, falling back to environment variable");
-                    yield resolveFromEnv(properties);
+                    yield resolveFromEnv();
                 }
                 yield validateWorkerId(workerId);
             }
-            case ENVIRONMENT_VARIABLE -> resolveFromEnv(properties);
-            case INSTANCE_INDEX -> resolveFromInstanceIndex(environment);
+            case ENVIRONMENT_VARIABLE -> resolveFromEnv();
         };
     }
 
     /**
      * 从环境变量解析 workerId
      */
-    private long resolveFromEnv(SnowflakeProperties properties) {
-        String envVarName = properties.getEnvironmentVariableName();
-        String value = System.getenv(envVarName);
+    private long resolveFromEnv() {
+        String value = System.getenv(SnowflakeProperties.WORKER_ID_ENV_VAR);
         if (value != null && !value.isEmpty()) {
             try {
                 long workerId = Long.parseLong(value);
                 return validateWorkerId(workerId);
             } catch (NumberFormatException e) {
-                log.warn("Invalid environment variable {}={}, falling back to auto-calculate", envVarName, value);
+                log.warn("Invalid environment variable {}={}, falling back to auto-calculate",
+                        SnowflakeProperties.WORKER_ID_ENV_VAR, value);
             }
         }
-        log.debug("Environment variable {} not set, falling back to auto-calculate", envVarName);
-        return resolveAutoWorkerId();
-    }
-
-    /**
-     * 从实例索引解析 workerId
-     */
-    private long resolveFromInstanceIndex(Environment environment) {
-        String indexStr = environment.getProperty("spring.cloud.instance.index");
-        if (indexStr != null && !indexStr.isEmpty()) {
-            try {
-                long index = Long.parseLong(indexStr);
-                return validateWorkerId(index);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid spring.cloud.instance.index={}, falling back to auto-calculate", indexStr);
-            }
-        }
-        log.debug("spring.cloud.instance.index not set, falling back to auto-calculate");
+        log.debug("Environment variable {} not set, falling back to auto-calculate",
+                SnowflakeProperties.WORKER_ID_ENV_VAR);
         return resolveAutoWorkerId();
     }
 

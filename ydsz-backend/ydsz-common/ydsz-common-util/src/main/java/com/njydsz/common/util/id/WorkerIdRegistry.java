@@ -58,6 +58,10 @@ public interface WorkerIdRegistry {
      * <p>在租约到期前一半的时间点自动续约，避免 WorkerId 因租约过期被回收。
      * 调用方应持有返回的 ScheduledExecutorService 以便在应用关闭时停止。
      *
+     * <p>心跳连续失败达到阈值（默认 3 次）时，记录 ERROR 日志并抛出
+     * {@link RuntimeException} 终止心跳调度，避免租约过期后 WorkerId 被抢占导致 ID 重复。
+     * 调用方应捕获并处理调度终止（如停止 ID 生成或重新获取 WorkerId）。
+     *
      * @param workerId    WorkerId
      * @param nodeIp      节点 IP
      * @param leaseMillis 租约时间（毫秒）
@@ -73,19 +77,46 @@ public interface WorkerIdRegistry {
                     return t;
                 });
         long heartbeatInterval = leaseMillis / 2;
+        // 心跳失败计数器：连续失败达到阈值后终止心跳调度，避免租约过期后 workerId 被抢占导致 ID 重复
+        final AtomicInteger heartbeatFailCount = new AtomicInteger(0);
+        final int heartbeatFailThreshold = 3;
         scheduler.scheduleAtFixedRate(() -> {
             try {
-                if (!heartbeat(workerId, nodeIp)) {
+                if (heartbeat(workerId, nodeIp)) {
+                    heartbeatFailCount.set(0);
+                } else {
+                    int failCount = heartbeatFailCount.incrementAndGet();
                     System.getLogger(WorkerIdRegistry.class.getName())
                             .log(System.Logger.Level.WARNING,
-                                    "WorkerId heartbeat failed for {} on {}, lease may expire",
-                                    workerId, nodeIp);
+                                    "WorkerId heartbeat failed for {} on {}, fail count: {}, lease may expire",
+                                    workerId, nodeIp, failCount);
+                    if (failCount >= heartbeatFailThreshold) {
+                        System.getLogger(WorkerIdRegistry.class.getName())
+                                .log(System.Logger.Level.ERROR,
+                                        "WorkerId heartbeat failed {} consecutive times for {} on {}, terminating heartbeat to prevent ID duplication",
+                                        failCount, workerId, nodeIp);
+                        throw new RuntimeException("WorkerId heartbeat failed " + failCount
+                                + " consecutive times for " + workerId + " on " + nodeIp
+                                + ", terminating heartbeat to prevent ID duplication");
+                    }
                 }
+            } catch (RuntimeException e) {
+                // 重新抛出以终止 ScheduledExecutorService 调度
+                throw e;
             } catch (Exception e) {
+                int failCount = heartbeatFailCount.incrementAndGet();
                 System.getLogger(WorkerIdRegistry.class.getName())
                         .log(System.Logger.Level.WARNING,
-                                "WorkerId heartbeat error for {} on {}: {}",
-                                workerId, nodeIp, e.getMessage());
+                                "WorkerId heartbeat error for {} on {}: {}, fail count: {}",
+                                workerId, nodeIp, e.getMessage(), failCount);
+                if (failCount >= heartbeatFailThreshold) {
+                    System.getLogger(WorkerIdRegistry.class.getName())
+                            .log(System.Logger.Level.ERROR,
+                                    "WorkerId heartbeat failed {} consecutive times for {} on {}, terminating heartbeat to prevent ID duplication",
+                                    failCount, workerId, nodeIp);
+                    throw new RuntimeException("WorkerId heartbeat failed " + failCount
+                            + " consecutive times for " + workerId + " on " + nodeIp, e);
+                }
             }
         }, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
         return scheduler;

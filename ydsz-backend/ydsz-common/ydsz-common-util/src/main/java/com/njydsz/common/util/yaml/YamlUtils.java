@@ -12,6 +12,10 @@ import com.njydsz.common.json.exception.JsonException;
  * <p>提供 JSON 与 YAML 格式之间的双向转换，复用 {@link YdszJson} 的 JSON
  * 解析/序列化能力，保持日期格式、未知字段处理等行为一致。
  *
+ * <p><b>线程安全说明：</b>SnakeYAML 官方明确 {@link Yaml} 实例非线程安全，
+ * 并发 dump/load 会导致数据错乱。本类不复用静态 Yaml 实例，每次调用方法时
+ * 创建新实例；{@link DumperOptions} 为可共享的配置对象，静态复用安全。
+ *
  * @author ydsz-team
  * 
  * @since 1.0.0
@@ -19,16 +23,19 @@ import com.njydsz.common.json.exception.JsonException;
 public final class YamlUtils {
 
     /**
-     * 共享的 Yaml 实例（线程安全）
+     * 共享的 DumperOptions 配置（线程安全可复用）
+     *
+     * <p>DumperOptions 仅承载 dump 行为配置，本身不持有可变解析状态，
+     * 可在多线程间共享；Yaml 实例则每次新建。
      */
-    private static final Yaml YAML;
+    private static final DumperOptions DUMPER_OPTIONS;
 
     static {
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setIndent(2);
         options.setPrettyFlow(true);
-        YAML = new Yaml(options);
+        DUMPER_OPTIONS = options;
     }
 
     private YamlUtils() {
@@ -48,7 +55,8 @@ public final class YamlUtils {
         }
         try {
             Object parsed = YdszJson.parseMap(json);
-            return YAML.dump(parsed);
+            // Yaml 非线程安全，每次调用创建新实例
+            return new Yaml(DUMPER_OPTIONS).dump(parsed);
         } catch (Exception e) {
             throw new JsonException("JSON转YAML失败: " + e.getMessage(), e);
         }
@@ -66,7 +74,8 @@ public final class YamlUtils {
             return null;
         }
         try {
-            Object parsed = YAML.load(yaml);
+            // Yaml 非线程安全，每次调用创建新实例
+            Object parsed = new Yaml(DUMPER_OPTIONS).load(yaml);
             return YdszJson.toJson(parsed);
         } catch (Exception e) {
             throw new JsonException("YAML转JSON失败: " + e.getMessage(), e);

@@ -10,7 +10,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * <ul>
  *   <li>时钟回拨检测</li>
  *   <li>workerId 有效性</li>
- *   <li>ID 生成能力验证</li>
+ *   <li>Snowflake 状态健康检查（不调用 nextId，仅校验配置与时间戳）</li>
  * </ul>
  *
  * <p>通过 {@link UtilAutoConfiguration} 中 {@code @Bean} 注册，
@@ -36,9 +36,9 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
         try {
             SnowflakeUtils snowflakeUtils = SnowflakeUtils.getInstance();
 
-            // 检查 workerId 有效性
+            // 检查 workerId 有效性（上界使用 SnowflakeUtils.getMaxWorkerId()，避免硬编码 31）
             long workerId = snowflakeUtils.getWorkerId();
-            if (workerId < 0 || workerId > 31) {
+            if (workerId < 0 || workerId > SnowflakeUtils.getMaxWorkerId()) {
                 return Health.down()
                         .withDetail("error", "Invalid workerId: " + workerId)
                         .build();

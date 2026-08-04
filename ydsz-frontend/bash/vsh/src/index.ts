@@ -10,6 +10,7 @@ import { colors, consola } from '@ydsz/node-utils';
 import { cac } from 'cac';
 
 import { version } from '../package.json';
+import { defineCheckArchCommand } from './check-arch';
 import { defineCheckCircularCommand } from './check-circular';
 import { defineDepcheckCommand } from './check-dep';
 import { defineCodeWorkspaceCommand } from './code-workspace';
@@ -18,6 +19,7 @@ import { definePubLintCommand } from './publint';
 
 // 命令描述
 const COMMAND_DESCRIPTIONS = {
+  'check-arch': 'Check architecture layer constraints (frontend ArchUnit)',
   'check-circular': 'Check for circular dependencies',
   'check-dep': 'Check for unused dependencies',
   'code-workspace': 'Manage VS Code workspace settings',
@@ -36,6 +38,7 @@ async function main(): Promise<void> {
     defineLintCommand(vsh);
     definePubLintCommand(vsh);
     defineCodeWorkspaceCommand(vsh);
+    defineCheckArchCommand(vsh);
     defineCheckCircularCommand(vsh);
     defineDepcheckCommand(vsh);
 

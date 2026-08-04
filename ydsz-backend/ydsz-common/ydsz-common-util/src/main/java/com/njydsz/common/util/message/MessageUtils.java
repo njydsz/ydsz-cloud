@@ -22,6 +22,15 @@ public class MessageUtils {
     private static final Logger logger = LoggerFactory.getLogger(MessageUtils.class);
 
     /**
+     * 缓存的 MessageSource 实例
+     *
+     * <p>避免每次 getMessage 都查询 BeanFactory，首次成功解析后缓存。
+     * volatile 保证多线程可见性。null 表示尚未解析或解析失败（不缓存"未找到"状态，
+     * 以便下次调用可重新尝试解析）。
+     */
+    private static volatile MessageSource cachedMessageSource;
+
+    /**
      * 获得多语言内容，默认根据当前用户的 Locale 获取
      *
      * @param key 多语言 key

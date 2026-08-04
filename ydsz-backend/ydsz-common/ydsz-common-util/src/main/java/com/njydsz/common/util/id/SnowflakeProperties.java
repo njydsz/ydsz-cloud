@@ -22,7 +22,6 @@ import lombok.Setter;
  *       worker-id: 1
  *       datacenter-id: 0
  *       worker-id-source: CONFIG
- *       environment-variable-name: YDSZ_SNOWFLAKE_WORKER_ID
  * }</pre>
  *
  * <p><b>配置说明：</b>
@@ -31,12 +30,10 @@ import lombok.Setter;
  *   <li>datacenterId：数据中心ID，范围 0-31</li>
  *   <li>workerIdSource：workerId 来源策略
  *     <ul>
- *       <li>ENVIRONMENT_VARIABLE：从环境变量读取（默认）</li>
+ *       <li>ENVIRONMENT_VARIABLE：从环境变量 YDSZ_SNOWFLAKE_WORKER_ID 读取（默认）</li>
  *       <li>CONFIG：从配置文件读取</li>
- *       <li>INSTANCE_INDEX：从 Spring Cloud 实例索引读取</li>
  *     </ul>
  *   </li>
- *   <li>environmentVariableName：环境变量名，默认 YDSZ_SNOWFLAKE_WORKER_ID</li>
  * </ul>
  *
  * @author ydsz-team
@@ -48,6 +45,9 @@ import lombok.Setter;
 @Validated
 @ConfigurationProperties(prefix = "ydsz.util.snowflake")
 public class SnowflakeProperties {
+
+    /** WorkerId 环境变量名（与 SnowflakeUtils 保持一致） */
+    public static final String WORKER_ID_ENV_VAR = "YDSZ_SNOWFLAKE_WORKER_ID";
 
     /**
      * 工作节点ID
@@ -72,13 +72,6 @@ public class SnowflakeProperties {
     private WorkerIdSource workerIdSource = WorkerIdSource.ENVIRONMENT_VARIABLE;
 
     /**
-     * 环境变量名
-     * <p>当 workerIdSource 为 ENVIRONMENT_VARIABLE 时使用
-     * <p>默认值：YDSZ_SNOWFLAKE_WORKER_ID
-     */
-    private String environmentVariableName = "YDSZ_SNOWFLAKE_WORKER_ID";
-
-    /**
      * WorkerId 租约时间（毫秒）
      * <p>仅在使用 WorkerIdRegistry（分布式注册中心）时生效。
      * <p>租约到期前一半时间点自动续约，未续约则 WorkerId 可被其他实例抢占。
@@ -98,12 +91,6 @@ public class SnowflakeProperties {
         /**
          * 从配置文件读取 workerId
          */
-        CONFIG,
-
-        /**
-         * 从 Spring Cloud 实例索引读取 workerId
-         * <p>适用于云原生环境（如 Cloud Foundry、Kubernetes）
-         */
-        INSTANCE_INDEX
+        CONFIG
     }
 }

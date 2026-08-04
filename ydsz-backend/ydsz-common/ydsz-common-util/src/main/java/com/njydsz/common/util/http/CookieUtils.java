@@ -4,6 +4,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.util.string.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * CookieUtils - Cookie 操作工具类 (增强版)
@@ -23,6 +26,7 @@ import com.njydsz.common.util.string.StringUtils;
  * @since 1.0.0
  *
  */
+@Slf4j
 public class CookieUtils {
 
     /**
@@ -109,6 +113,8 @@ public class CookieUtils {
         }
         if (request != null) {
             cookie.setSecure(isSecureRequest(request));
+        } else {
+            log.warn("addCookie -> request 为 null，无法设置 Secure 标志");
         }
         cookie.setHttpOnly(true);
         appendSameSiteAndAdd(cookie, SameSite.LAX, response);
