@@ -58,9 +58,6 @@ public final class PageConstants {
     /**
      * 注入运行时配置。由 {@code CoreAutoConfiguration} 在启动时调用。
      *
-     * <p>此方法替代旧版 {@link #setMaxPageSize(int)} / {@link #setDefaultPageSize(int)}，
-     * 以 {@link CoreProperties} 作为单一数据源消除全局可变状态。</p>
-     *
      * @param coreProperties 已校验通过的 CoreProperties 实例
      * @since 1.5.0
      */

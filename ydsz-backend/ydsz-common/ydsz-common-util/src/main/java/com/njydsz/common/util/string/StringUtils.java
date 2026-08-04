@@ -15,7 +15,6 @@ import java.util.Map;
  *   <li>命名转换：toCamelCase / toUnderScoreCase</li>
  *   <li>格式化：format（使用 {} 占位符，类似 SLF4J 风格）</li>
  *   <li>数据脱敏：maskSensitive / maskMobile / maskIdCard / maskEmail</li>
- *   <li>格式校验：isEmail / isMobile / isIdCard / isIpv4</li>
  * </ul>
  *
  * <p><b>不提供的能力（直接使用 JDK）：</b>
@@ -306,9 +305,11 @@ public class StringUtils {
 
     /**
      * 邮箱脱敏（保留前 2 位和域名）
+     *
+     * <p>内联简单正则校验邮箱格式（原 isEmail 已移除，脱敏场景无需完整 RFC 校验）。
      */
     public static String maskEmail(String email) {
-        if (email == null || !isEmail(email)) {
+        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
             return email;
         }
         int atIndex = email.indexOf("@");
@@ -317,4 +318,8 @@ public class StringUtils {
         }
         return email.substring(0, 2) + "*".repeat(atIndex - 2) + email.substring(atIndex);
     }
+
+    /** 邮箱格式简单校验正则（脱敏用） */
+    private static final java.util.regex.Pattern EMAIL_PATTERN =
+            java.util.regex.Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 }
