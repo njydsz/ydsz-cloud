@@ -27,13 +27,11 @@ import java.net.URI;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 推荐：简洁 API
- * return BaseResponse.ok(user);
- * return BaseResponse.fail(BaseResultCode.NOT_FOUND);
- *
- * // 兼容旧版
+ * // 返回成功
  * return BaseResponse.success(user);
- * return BaseResponse.error(BaseResultCode.FORBIDDEN);
+ *
+ * // 返回失败（走 i18n）
+ * return BaseResponse.error(BaseResultCode.NOT_FOUND);
  * }</pre>
  *
  * @param <T> 数据泛型

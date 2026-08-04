@@ -18,27 +18,19 @@ import java.lang.reflect.InvocationTargetException;
 class TraceIdGeneratorTest {
 
     @Test
-    @DisplayName("generate() 生成 32 位十六进制字符串")
-    void format_32hex() {
-        String id = TraceIdGenerator.generate();
-        assertEquals(32, id.length());
-        assertTrue(id.matches("^[0-9a-f]{32}$"), "must be 32 lowercase hex: " + id);
-    }
-
-    @Test
-    @DisplayName("generate() 连续生成唯一")
-    void unique() {
-        String a = TraceIdGenerator.generate();
-        String b = TraceIdGenerator.generate();
-        assertNotEquals(a, b);
-    }
-
-    @Test
     @DisplayName("generateTraceId() 生成 32 位十六进制字符串")
-    void generateTraceId_format32hex() {
+    void format_32hex() {
         String id = TraceIdGenerator.generateTraceId();
         assertEquals(32, id.length());
         assertTrue(id.matches("^[0-9a-f]{32}$"), "must be 32 lowercase hex: " + id);
+    }
+
+    @Test
+    @DisplayName("generateTraceId() 连续生成唯一")
+    void unique() {
+        String a = TraceIdGenerator.generateTraceId();
+        String b = TraceIdGenerator.generateTraceId();
+        assertNotEquals(a, b);
     }
 
     @Test

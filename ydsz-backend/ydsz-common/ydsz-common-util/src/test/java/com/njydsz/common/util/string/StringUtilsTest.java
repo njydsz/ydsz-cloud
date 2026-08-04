@@ -161,36 +161,7 @@ class StringUtilsTest {
         }
     }
 
-    // ==================== 验证方法 ====================
-
-    @Nested
-    @DisplayName("验证方法")
-    class ValidateTest {
-
-        @Test
-        @DisplayName("邮箱验证")
-        void isEmail() {
-            assertThat(StringUtils.isEmail("test@example.com")).isTrue();
-            assertThat(StringUtils.isEmail("invalid")).isFalse();
-            assertThat(StringUtils.isEmail(null)).isFalse();
-        }
-
-        @Test
-        @DisplayName("手机号验证")
-        void isMobile() {
-            assertThat(StringUtils.isMobile("13812345678")).isTrue();
-            assertThat(StringUtils.isMobile("12345678901")).isFalse();
-            assertThat(StringUtils.isMobile(null)).isFalse();
-        }
-
-        @Test
-        @DisplayName("IPv4 验证")
-        void isIpv4() {
-            assertThat(StringUtils.isIpv4("192.168.1.1")).isTrue();
-            assertThat(StringUtils.isIpv4("256.1.1.1")).isFalse();
-            assertThat(StringUtils.isIpv4(null)).isFalse();
-        }
-    }
+    // ==================== 验证方法（已迁移至 RegexUtils，待创建后补充） ====================
 
     // ==================== defaultIfBlank ====================
 

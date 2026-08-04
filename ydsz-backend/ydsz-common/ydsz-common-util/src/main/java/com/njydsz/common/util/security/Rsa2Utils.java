@@ -233,65 +233,6 @@ public class Rsa2Utils {
     }
 
     /**
-     * 私钥加密
-     *
-     * <p><b>已废弃</b>：使用 RSA 私钥加密在密码学上不正确，混淆了「加密」与「签名」语义。
-     * RSA 私钥操作的正确用途是签名，请使用 {@link #sign(String, String)} 代替。
-     *
-     * <p>保留该方法仅为兼容旧版调用方，后续版本将移除。
-     *
-     * @param data       原始数据
-     * @param privateKey 私钥（Base64 编码）
-     * @return 加密后的 Base64 字符串
-     * @deprecated 使用 {@link #sign(String, String)} 进行签名，不应使用私钥加密
-     */
-    @Deprecated
-    public static String encryptByPrivateKey(String data, String privateKey) {
-        try {
-            PrivateKey priKey = loadPrivateKey(privateKey);
-            Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-            cipher.init(Cipher.ENCRYPT_MODE, priKey);
-
-            byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
-            int maxBlock = getMaxEncryptBlock(priKey);
-
-            byte[] encryptedBytes = doFinal(cipher, dataBytes, maxBlock);
-            return Base64.getEncoder().encodeToString(encryptedBytes);
-        } catch (Exception e) {
-            throw new RuntimeException("RSA 私钥加密失败：" + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 公钥解密
-     *
-     * <p><b>已废弃</b>：与 {@link #encryptByPrivateKey(String, String)} 配套，
-     * 用于解密私钥「加密」的数据。由于私钥加密本身不正确，此方法同样不推荐使用。
-     * 验签请使用 {@link #verify(String, String, String)}。
-     *
-     * @param data      加密数据（Base64 编码）
-     * @param publicKey 公钥（Base64 编码）
-     * @return 解密后的原始字符串
-     * @deprecated 使用 {@link #verify(String, String, String)} 进行验签
-     */
-    @Deprecated
-    public static String decryptByPublicKey(String data, String publicKey) {
-        try {
-            PublicKey pubKey = loadPublicKey(publicKey);
-            Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-            cipher.init(Cipher.DECRYPT_MODE, pubKey);
-
-            byte[] dataBytes = Base64.getDecoder().decode(data);
-            int maxBlock = getMaxDecryptBlock(pubKey);
-
-            byte[] decryptedBytes = doFinal(cipher, dataBytes, maxBlock);
-            return new String(decryptedBytes, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new RuntimeException("RSA 公钥解密失败：" + e.getMessage(), e);
-        }
-    }
-
-    /**
      * 根据密钥长度动态计算最大加密块
      *
      * <p>OAEPWithSHA-256AndMGF1Padding 填充开销 = 2 * 32 + 2 = 66 字节。

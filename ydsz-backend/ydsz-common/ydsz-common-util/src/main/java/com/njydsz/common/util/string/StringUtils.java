@@ -3,7 +3,6 @@ package com.njydsz.common.util.string;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * 字符串工具类
@@ -43,18 +42,6 @@ public class StringUtils {
 
     /** 下划线字符常量 */
     private static final char SEPARATOR = '_';
-
-    /** 邮箱地址正则表达式 */
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$");
-
-    /** 中国大陆手机号正则表达式（1[3-9] 开头 + 9 位数字） */
-    private static final Pattern MOBILE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
-
-    /** 18 位身份证号正则表达式（含校验位 X） */
-    private static final Pattern ID_CARD_PATTERN = Pattern.compile("^[1-9]\\d{5}(18|19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]$");
-
-    /** IPv4 地址正则表达式 */
-    private static final Pattern IPV4_PATTERN = Pattern.compile("^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$");
 
     // ==================== 判空方法 ====================
 
@@ -271,64 +258,6 @@ public class StringUtils {
             lastIndex = placeholderIndex + 2;
         }
         return result.toString();
-    }
-
-    // ==================== 格式校验方法 ====================
-
-    /**
-     * 判断是否为有效的邮箱地址
-     *
-     * @deprecated 正则校验能力已规划迁移至 {@code com.njydsz.common.util.regex.RegexUtils#isEmail}，
-     * 请后续切换至 RegexUtils 统一入口，避免正则重复维护。
-     */
-    @Deprecated
-    public static boolean isEmail(CharSequence str) {
-        if (str == null) {
-            return false;
-        }
-        return EMAIL_PATTERN.matcher(str).matches();
-    }
-
-    /**
-     * 判断是否为有效的手机号码（中国大陆）
-     *
-     * @deprecated 正则校验能力已规划迁移至 {@code com.njydsz.common.util.regex.RegexUtils#isMobile}，
-     * 请后续切换至 RegexUtils 统一入口，避免正则重复维护。
-     */
-    @Deprecated
-    public static boolean isMobile(CharSequence str) {
-        if (str == null) {
-            return false;
-        }
-        return MOBILE_PATTERN.matcher(str).matches();
-    }
-
-    /**
-     * 判断是否为有效的身份证号（中国大陆 18 位）
-     *
-     * @deprecated 正则校验能力已规划迁移至 {@code com.njydsz.common.util.regex.RegexUtils#isIdCard}，
-     * 请后续切换至 RegexUtils 统一入口，避免正则重复维护。
-     */
-    @Deprecated
-    public static boolean isIdCard(CharSequence str) {
-        if (str == null) {
-            return false;
-        }
-        return ID_CARD_PATTERN.matcher(str).matches();
-    }
-
-    /**
-     * 判断是否为有效的 IPv4 地址
-     *
-     * @deprecated 正则校验能力已规划迁移至 {@code com.njydsz.common.util.regex.RegexUtils#isIpv4}，
-     * 请后续切换至 RegexUtils 统一入口，避免正则重复维护。
-     */
-    @Deprecated
-    public static boolean isIpv4(CharSequence str) {
-        if (str == null) {
-            return false;
-        }
-        return IPV4_PATTERN.matcher(str).matches();
     }
 
     // ==================== 数据脱敏方法 ====================

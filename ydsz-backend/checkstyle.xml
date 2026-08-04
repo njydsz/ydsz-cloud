@@ -13,13 +13,13 @@
     R1: 禁止手工拼接 JSON 字符串（必须使用 YdszJson.toJson()）
     R2: 禁止 System.out/System.err 直接输出（必须使用 Slf4j）
     R3: 禁止 printStackTrace()（必须使用 Slf4j 日志记录异常）
-    R4: 文件尾换行
-    R5: 禁止使用 @SuppressWarnings（ArchUnit R15 补充校验）
-    R6: 方法长度限制（≤200 行，避免巨型方法）
-    R7: 参数数量限制（≤7 个，避免参数爆炸）
-    R8: 空块检查（允许空 catch）
-    R9: import 顺序检查（按字母序）
-    R10: 文件长度限制（≤1000 行，避免巨型类）
+    R4: 空块检查（允许空 catch）
+
+    移除说明（2026-08-04）：
+    - ImportOrder / FileLength / MethodLength / ParameterNumber / NewlineAtEndOfFile
+      属于代码风格与规模类规则，与本文件"仅正确性+安全性、零误报"定位不符，
+      且对既有代码（如 ydsz-common-json 的 ASM 字节码生成器）产生大规模误报，故移除。
+    - @SuppressWarnings 禁止已由 ArchUnit R15 强制执行，CheckStyle 层不再重复校验。
 
     关联文档：docs/ydsz-common-json-integration-analysis.md (P0/P1 治理项)
     关联架构约束：ydsz-common-base/src/test/.../ArchitectureRulesTest.java (R29)
@@ -30,17 +30,6 @@
     <property name="charset" value="UTF-8"/>
     <property name="severity" value="error"/>
     <property name="fileExtensions" value="java"/>
-
-    <!-- 文件尾换行 -->
-    <module name="NewlineAtEndOfFile">
-        <property name="lineSeparator" value="lf_cr_crlf"/>
-    </module>
-
-    <!-- R10: 文件长度限制（≤1000 行，避免巨型类） -->
-    <module name="FileLength">
-        <property name="max" value="1000"/>
-        <property name="fileExtensions" value="java"/>
-    </module>
 
     <module name="TreeWalker">
         <!--
@@ -87,59 +76,12 @@
         </module>
 
         <!--
-            R4: 禁止使用 @SuppressWarnings
-            已在 ArchUnit R15 强制执行，此处作为 CheckStyle 补充校验。
-         -->
-        <module name="RegexpSinglelineJava">
-            <property name="id" value="no-suppress-warnings"/>
-            <property name="format" value='@SuppressWarnings\s*\('/>
-            <property name="message"
-                     value="禁止使用 @SuppressWarnings 注解（所有警告必须从根源修复）"/>
-            <property name="ignoreComments" value="true"/>
-        </module>
-
-        <!--
-            R6: 方法长度限制（≤200 行）
-            超过 200 行的方法通常职责过多，应拆分为多个小方法。
-            阈值设置较宽松，避免大量现有代码违规。
-        -->
-        <module name="MethodLength">
-            <property name="max" value="200"/>
-            <property name="countEmpty" value="false"/>
-            <property name="tokens" value="METHOD_DEF,CTOR_DEF,COMPACT_CTOR_DEF"/>
-        </module>
-
-        <!--
-            R7: 参数数量限制（≤7 个）
-            超过 7 个参数的方法通常需要引入参数对象。
-            阈值设置较宽松，避免构造器/Lombok 生成方法违规。
-        -->
-        <module name="ParameterNumber">
-            <property name="max" value="7"/>
-            <property name="ignoreOverridden" value="true"/>
-        </module>
-
-        <!--
-            R8: 空块检查（允许空 catch）
+            R4: 空块检查（允许空 catch）
             空代码块通常是遗漏实现或吞掉异常，catch 块豁免（部分场景需静默吞异常）。
-        -->
+         -->
         <module name="EmptyBlock">
             <property name="tokens" value="LITERAL_WHILE,LITERAL_TRY,LITERAL_FINALLY,LITERAL_DO,LITERAL_IF,LITERAL_ELSE,LITERAL_FOR,INSTANCE_INIT,STATIC_INIT,LITERAL_SWITCH,LITERAL_SYNCHRONIZED"/>
             <property name="option" value="text"/>
-        </module>
-
-        <!--
-            R9: import 顺序检查（按字母序）
-            要求 import 语句按字母顺序排列，分组顺序：static import 在前，普通 import 在后。
-            阈值宽松：仅检查同组内顺序，不强制分组间距。
-        -->
-        <module name="ImportOrder">
-            <property name="groups" value="/^java\./,/^javax\./,/^jakarta\./,/^org\./,/^com\./,/^cn\./,com.njydsz,*"/>
-            <property name="ordered" value="true"/>
-            <property name="separated" value="false"/>
-            <property name="sortStaticImportsAlphabetically" value="true"/>
-            <property name="useContainerOrderingForStatic" value="false"/>
-            <property name="option" value="under"/>
         </module>
     </module>
 

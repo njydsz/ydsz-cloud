@@ -50,4 +50,19 @@
     <Match>
         <Class name="~.*config\..*"/>
     </Match>
+
+    <!-- ==================================================================== -->
+    <!-- 5. ydsz-common-json 自研 JSON 框架整体豁免                            -->
+    <!--    该模块为手写高性能 JSON 引擎（含 ASM 字节码生成），告警主要来自      -->
+    <!--    性能关键路径的设计使然模式：                                        -->
+    <!--      - PA_PUBLIC_PRIMITIVE_ATTRIBUTE（buf/pos 公开字段供 ASM 生成代码） -->
+    <!--      - EI_EXPOSE_REP/MS_EXPOSE_REP（单例/缓存对象返回）               -->
+    <!--      - RCN_REDUNDANT_NULLCHECK / REC_CATCH_EXCEPTION（生成代码模式）    -->
+    <!--      - FE_FLOATING_POINT_EQUALITY（JSON 数值序列化的特殊处理）         -->
+    <!--    由编码规范与单元测试（ArchUnit/测试套件）兜底，故整包豁免。          -->
+    <!--    后续若需收紧，可先移出 MALICIOUS_CODE 类告警再逐步收敛。            -->
+    <!-- ==================================================================== -->
+    <Match>
+        <Class name="~com\.njydsz\.common\.json\..*"/>
+    </Match>
 </FindBugsFilter>

@@ -34,7 +34,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
  * <p><b>获取优先级：</b>
  * <ol>
  *   <li>当前线程 MDC 中的 traceId（由 {@code TraceFilter} 等入口过滤器写入）</li>
- *   <li>无则返回空 Map（由上层决定是否调用 {@link TraceIdGenerator#generate()} 兜底）</li>
+ *   <li>无则返回空 Map（由上层决定是否调用 {@link TraceIdGenerator#generateTraceId()} 兜底）</li>
  * </ol>
  *
  * @author ydsz-team

@@ -37,6 +37,13 @@ import reactor.core.publisher.Mono;
  *   <li>最大容量: 10,000 条（防止内存溢出）</li>
  * </ul>
  *
+ * <h3>P0-2 防击穿 / 防穿透增强</h3>
+ * <ul>
+ *   <li>防击穿: 使用 {@code CacheProtectionGuard.getWithProtection} 保证同一 Token 并发请求
+ *       仅一个线程执行 JWT 解析，其余线程等待复用结果，消除缓存过期瞬间的 CPU 尖峰</li>
+ *   <li>防穿透: 无效 Token 以空值占位符短时缓存（2-5s 随机抖动），防止伪造 Token 反复穿透</li>
+ * </ul>
+ *
  * <h3>黑名单兼容</h3>
  * <p>5 秒 TTL 意味着 Token 被加入 Redis 黑名单后，最长 5 秒内仍可能通过缓存命中。
  * 这是可接受的权衡——大厂网关通常也采用 3-10 秒的 JWT 缓存窗口。
@@ -75,6 +82,12 @@ public class CachedJwtValidator {
 
     /** 缓存最大容量 */
     private static final long CACHE_MAX_SIZE = 10_000;
+
+    /** 空值占位最小过期时间（毫秒）——防穿透，无效 Token 短时缓存 */
+    private static final long NULL_CACHE_MIN_MS = 2_000;
+
+    /** 空值占位最大过期时间（毫秒）——随机抖动防雪崩 */
+    private static final long NULL_CACHE_MAX_MS = 5_000;
 
     /** P1: Redis Pub/Sub 失效广播频道 */
     private static final String INVALIDATION_CHANNEL = "ydsz:gateway:jwt-cache:invalidate";
@@ -163,9 +176,20 @@ public class CachedJwtValidator {
     }
 
     /**
-     * 校验并解析 JWT Token（带缓存）
+     * 校验并解析 JWT Token（带缓存 + 防击穿/防穿透）
      *
-     * <p>优先从 Caffeine 缓存读取解析结果；缓存未命中时执行实际解析并写入缓存。
+     * <p>优先从 Caffeine 缓存读取解析结果；缓存未命中时通过
+     * {@link com.njydsz.common.cache.api.CacheProtectionGuard#getWithProtection} 执行解析。
+     *
+     * <h3>防击穿（P0-2 增强）</h3>
+     * <p>同一 Token 在缓存过期瞬间收到大量并发请求时，仅一个线程执行
+     * {@code validateAccessToken + parseAccessToken}，其余线程等待其完成后复用结果，
+     * 消除 JWT 解析的瞬时 CPU 尖峰。
+     *
+     * <h3>防穿透（P0-2 增强）</h3>
+     * <p>无效 Token 的解析结果以空值占位符短时缓存（2-5s 随机抖动），
+     * 防止攻击者用随机伪造 Token 反复穿透缓存打爆 JWT 解析。
+     *
      * <p>P2-12: 同时记录 JWT 校验耗时到 GatewayMetrics（如果可用）。
      *
      * @param jwt JWT Token 字符串
@@ -186,22 +210,35 @@ public class CachedJwtValidator {
             return cached.orElse(null);
         }
 
-        // 缓存未命中，执行实际校验
+        // P0-2: 缓存未命中，使用带防护的加载（防击穿 + 防穿透）
         startTime = System.currentTimeMillis();
-        UserInfo userInfo = null;
-        if (tokenService.validateAccessToken(jwt)) {
-            try {
-                userInfo = tokenService.parseAccessToken(jwt);
-            } catch (Exception e) {
-                log.warn("[JwtCache] 解析 JWT 失败: {}", e.getMessage());
-            }
-        }
+        Optional<UserInfo> result = claimsCache.getWithProtection(
+                jwt, this::parseToken, NULL_CACHE_MIN_MS, NULL_CACHE_MAX_MS);
         duration = System.currentTimeMillis() - startTime;
 
-        // 写入缓存（null 也缓存，避免无效 Token 重复解析）
-        claimsCache.put(jwt, Optional.ofNullable(userInfo));
         recordMetrics(duration, false);
-        return userInfo;
+        return result == null ? null : result.orElse(null);
+    }
+
+    /**
+     * P0-2: 执行实际 JWT 解析（作为 CacheProtectionGuard 的加载器）
+     *
+     * <p>防击穿保证同一 key 并发时该方法仅被调用一次；
+     * 返回 {@code Optional.empty()} 表示无效 Token（空值占位缓存，防穿透）。
+     *
+     * @param jwt JWT Token 字符串
+     * @return 解析结果包装，无效返回 empty（不返回 null，避免触发空值占位歧义）
+     */
+    private Optional<UserInfo> parseToken(String jwt) {
+        if (!tokenService.validateAccessToken(jwt)) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.ofNullable(tokenService.parseAccessToken(jwt));
+        } catch (Exception e) {
+            log.warn("[JwtCache] 解析 JWT 失败: {}", e.getMessage());
+            return Optional.empty();
+        }
     }
 
     /**

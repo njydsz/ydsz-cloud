@@ -1,6 +1,6 @@
 package com.njydsz.common.core.test;
 
-import org.springframework.boot.test.autoconfigure.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.GenericContainer;
