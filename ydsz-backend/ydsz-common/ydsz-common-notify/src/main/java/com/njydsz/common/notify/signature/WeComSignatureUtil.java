@@ -49,6 +49,9 @@ public final class WeComSignatureUtil {
             for (String s : arr) {
                 sb.append(s);
             }
+            // 注意：此处保留手写 MessageDigest 实现。
+            // 企微回调签名算法规定使用 SHA-1，而 DigestUtils 仅提供 sha256Hex / sha512Hex /
+            // hmacSha256Hex 等便捷方法，未提供 SHA-1 的 Hex 便捷方法，因此无法委托 DigestUtils。
             MessageDigest md = MessageDigest.getInstance(SHA_1);
             byte[] digest = md.digest(sb.toString().getBytes(StandardCharsets.UTF_8));
             String computed = toHexLower(digest);

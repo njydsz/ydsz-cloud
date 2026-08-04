@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.IpWhitelistProperties;

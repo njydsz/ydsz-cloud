@@ -106,14 +106,15 @@ public class StringUtils {
     /**
      * 判断对象是否为空（支持 CharSequence / Collection / Map / Array / Iterator / Iterable）
      *
-     * <p>注意：对 CharSequence 判断是否为空白（isBlank 语义），而非仅长度为 0。
+     * <p>注意：对 CharSequence 判断长度是否为 0（与 {@link #isEmpty(CharSequence)} 语义一致），
+     * 不按空白字符判空。如需按空白判空请使用 {@link #isBlank(CharSequence)}。
      */
     public static boolean isEmpty(Object obj) {
         if (obj == null) {
             return true;
         }
         if (obj instanceof CharSequence) {
-            return isBlank((CharSequence) obj);
+            return ((CharSequence) obj).length() == 0;
         }
         if (obj instanceof Collection) {
             return ((Collection<?>) obj).isEmpty();

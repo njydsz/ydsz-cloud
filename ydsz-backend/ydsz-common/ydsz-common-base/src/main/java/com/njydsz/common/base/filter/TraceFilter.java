@@ -14,7 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.util.id.UUIDUtils;
 
 /**
  * 链路追踪过滤器

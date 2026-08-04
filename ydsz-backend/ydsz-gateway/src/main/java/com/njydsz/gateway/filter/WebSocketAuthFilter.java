@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.auth.model.UserInfo;
-import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.InternalHeaderSigner;
