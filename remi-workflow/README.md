@@ -199,7 +199,7 @@ remi-workflow/
 ## 启动
 
 ```bash
-cd remi-backend
+cd remi-cloud
 mvn -pl remi-common -am install -DskipTests
 mvn -pl remi-workflow spring-boot:run
 ```

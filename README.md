@@ -1,0 +1,391 @@
+<p align="center">
+  <h1 align="center">Remi-Cloud</h1>
+  <p align="center">
+    基于 Spring Boot 4 &amp; Spring Cloud 的企业级微服务开发平台
+  </p>
+</p>
+
+<p align="center">
+  <a href="https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html"><img src="https://img.shields.io/badge/JDK-21-orange.svg" alt="JDK 21"></a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen.svg" alt="Spring Boot 4.1.0"></a>
+  <a href="https://spring.io/projects/spring-cloud"><img src="https://img.shields.io/badge/Spring%20Cloud-2025.1.2-blue.svg" alt="Spring Cloud 2025.1.2"></a>
+  <a href="https://github.com/alibaba/spring-cloud-alibaba"><img src="https://img.shields.io/badge/Spring%20Cloud%20Alibaba-2025.1.0.0-ff69b4.svg" alt="Spring Cloud Alibaba"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://maven.apache.org/"><img src="https://img.shields.io/badge/Maven-3.9+-C71A36.svg" alt="Maven 3.9+"></a>
+</p>
+
+---
+
+## 项目简介
+
+**Remi-Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 五层分层架构，内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共基础库），覆盖用户认证、系统管理、工作流引擎、消息通知、分布式任务调度、规则引擎、网盘知识库、AI 智能体等企业级业务场景。
+
+平台对标 **若依（RuoYi）**、**Pig**、**Spring Cloud Alibaba** 等主流开源微服务项目，在架构设计、代码质量、工程规范与安全治理方面对齐 **阿里巴巴 Java 开发手册**、**Google Java Style Guide** 等行业标准，并通过 Maven Enforcer、CheckStyle、SpotBugs、OWASP Dependency-Check、JaCoCo、ArchUnit 等 7 道质量门禁保障交付质量。
+
+### 核心特性
+
+- **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10
+- **DDD 分层架构**：严格 `api` / `domain` / `infra` / `server` / `web` 五层分离，依赖方向单向收敛
+- **自研引擎矩阵**：「规则引擎（对标 Drools + LiteFlow）+ 任务调度（对标 XXL-Job + PowerJob）+ 工作流（BPMN 2.0）+ AI Agent 框架」——四大引擎全部自研，开箱即用
+- **质量门禁全链路**：CheckStyle → SpotBugs → OWASP → JaCoCo（Line ≥ 60%, Branch ≥ 50%）→ ArchUnit → CycloneDX SBOM，构建阶段自动执行
+- **多租户隔离**：支持 SINGLE（共享表）、MULTI（字段隔离）、ISOLATE_DB（独立数据库）三种策略
+- **全渠道消息**：12 种通知渠道（短信/邮件/Push/企微/钉钉/飞书/微信小程序/支付宝小程序等），支持 DAG 编排与跨渠道抑制
+- **安全纵深防御**：JWT + RBAC + 数据权限 + PII 脱敏 + XSS/SQL 注入/CSRF 防护 + 敏感配置加密（AES-256-GCM）+ OWASP 漏洞扫描
+- **生产可观测**：Prometheus + Grafana + Sentry + ELK/Loki + Micrometer Tracing（W3C TraceContext）
+
+---
+
+## 系统架构
+
+```mermaid
+graph TB
+    subgraph "接入层"
+        Nginx[Nginx / LB]
+    end
+
+    subgraph "网关层"
+        Gateway["Remi-Gateway :9000<br/>Spring Cloud Gateway + WebFlux<br/>路由 · 鉴权 · 限流 · 灰度"]
+    end
+
+    subgraph "注册中心 & 配置中心"
+        Nacos[Nacos Server]
+    end
+
+    subgraph "业务服务层"
+        UserInfo["Remi-UserInfo :9001<br/>用户认证 / RBAC / OAuth2"]
+        System["Remi-System :9002<br/>系统参数 / 字典 / 多租户"]
+        NextWiki["Remi-NextWiki :9003<br/>网盘 / 知识库 / Office 预览"]
+        Message["Remi-Message :9004<br/>消息通知 / 12 渠道 / DAG 编排"]
+        Workflow["Remi-Workflow :9005<br/>BPMN 2.0 / 审批流 / 决策表"]
+        CronJob["Remi-CronJob :9006<br/>分布式调度 / 分片 / DAG"]
+        LiteRule["Remi-LiteRule :9007<br/>规则引擎 / DSL / 热加载"]
+        Agent["Remi-Agent :9008<br/>AI 智能体 / RAG / Tool Calling"]
+    end
+
+    subgraph "中间件"
+        PG[(PostgreSQL)]
+        Redis[(Redis)]
+        RMQ[RocketMQ]
+        MinIO[MinIO / OSS]
+    end
+
+    subgraph "公共能力底座"
+        Common["Remi-Common（30 子模块）<br/>Core · Util · Auth · Safe · Feign · Lock · Cache · Excel · Docs · ..."]
+    end
+
+    subgraph "可观测性"
+        Prom[Prometheus]
+        Grafana[Grafana]
+        Sentry[Sentry]
+        ELK[ELK / Loki]
+    end
+
+    Nginx --> Gateway
+    Gateway --> UserInfo & System & NextWiki & Message & Workflow & CronJob & LiteRule & Agent
+    UserInfo & System & NextWiki & Message & Workflow & CronJob & LiteRule & Agent -.-> Nacos
+    UserInfo & System & NextWiki & Message & Workflow & CronJob & LiteRule & Agent --> PG & Redis & RMQ & MinIO
+    UserInfo & System & NextWiki & Message & Workflow & CronJob & LiteRule & Agent -.-> Common
+    Gateway -.-> Common
+    UserInfo & System & NextWiki & Message & Workflow & CronJob & LiteRule & Agent --> Prom & Sentry
+    Prom --> Grafana
+    Sentry --> ELK
+```
+
+---
+
+## 技术选型
+
+| 分层 | 技术 | 版本 | 说明 |
+|------|------|------|------|
+| **基础框架** | Spring Boot | 4.1.0 | 新一代企业级应用框架 |
+| | Spring Cloud | 2025.1.2 | 微服务治理套件 |
+| | Spring Cloud Alibaba | 2025.1.0.0 | Nacos / Sentinel / Seata |
+| **语言 & 构建** | Java | 21 (LTS) | 虚拟线程 + 模式匹配 |
+| | Maven | 3.9+ | 聚合多模块构建 |
+| **数据持久化** | MyBatis-Plus | 3.5.16 | 增强 ORM（Spring Boot 4 Starter） |
+| | PostgreSQL | 42.7.4 | 主数据库（共享主库） |
+| | Druid | 1.2.28 | 连接池 |
+| | Dynamic-Datasource | 4.3.1 | 读写分离 |
+| **缓存 & 锁** | Redis / Redisson | 4.6.1 | 分布式缓存 / 分布式锁 |
+| **消息队列** | RocketMQ Spring | 2.3.1 | 异步消息 / 事务消息 |
+| **分布式事务** | Seata | 2.5.0 | AT / TCC / SAGA |
+| **流量控制** | Sentinel | 1.8.9 | 限流 / 熔断 / 降级 |
+| | Resilience4j | 2.4.0 | 重试 / 舱壁 / 速率限制 |
+| **对象存储** | MinIO / 阿里云 OSS / 腾讯云 COS / 华为云 OBS / 七牛 / AWS S3 | — | 7 种存储平台统一抽象 |
+| **认证鉴权** | jjwt | 0.12.6 | JWT Token |
+| **文档 & API** | SpringDoc + Knife4j | 3.0.3 / 4.5.0 | OpenAPI 3.0 文档 |
+| **对象映射** | MapStruct | 1.6.3 | 编译期代码生成 |
+| **JSON** | fastjson2 | 2.0.62 | ASM 字节码增强 |
+| **监控** | Micrometer + Prometheus + Sentry | — | 指标采集 / 异常追踪 |
+| **日志** | Logback + Logstash Encoder | 7.4 | JSON 格式日志输出 |
+
+---
+
+## 模块说明
+
+```
+remi-cloud/
+├── remi-common/              # 🧱 公共能力底座（30 子模块，不独立部署）
+│   ├── remi-common-core      # L1：统一响应 / TraceId / 特性开关
+│   ├── remi-common-util      # L2：99 工具类（加密 / IP / 雪花ID）
+│   ├── remi-common-json      # L2：高性能 JSON 引擎（ASM / SIMD）
+│   ├── remi-common-domain    # L3：DDD 基类 / 领域事件
+│   ├── remi-common-exception # L3：统一异常 / RFC 7807 ProblemDetail
+│   ├── remi-common-jdbc      # L4：MyBatis-Plus 增强 / 行权限
+│   ├── remi-common-redis     # L4：Redis 操作封装（15 种 ops）
+│   ├── remi-common-lock      # L4：分布式锁（4 种实现）/ 幂等
+│   ├── remi-common-cache     # L4：多策略本地缓存（W-TinyLFU）
+│   ├── remi-common-thread    # L4：共享线程池
+│   ├── remi-common-tenant    # L4：多租户隔离
+│   ├── remi-common-auth      # L5：JWT / RBAC / TOTP 2FA
+│   ├── remi-common-safe      # L5：脱敏 / XSS / 限流 / CSRF
+│   ├── remi-common-feign     # L5：OpenFeign + Resilience4j
+│   ├── remi-common-audit     # L5：操作日志 / Disruptor 批写
+│   ├── remi-common-file      # L5：7 种存储平台 / 分片 / 秒传
+│   ├── remi-common-notify    # L5：5 种通知渠道抽象
+│   ├── remi-common-queue     # L5：5 种 MQ 抽象
+│   ├── remi-common-docs      # L5：8 种文档解析 / OCR
+│   ├── remi-common-excel     # L5：高性能 Excel 读写
+│   ├── remi-common-netty     # L5：TCP 通信
+│   ├── remi-common-socket    # L5：WebSocket 集群广播
+│   ├── remi-common-search    # L5：统一搜索（PG / ES）
+│   ├── remi-common-event     # L5：事务性 Outbox
+│   ├── remi-common-config    # L5：敏感配置加密
+│   ├── remi-common-seata     # L5：Seata 分布式事务
+│   ├── remi-common-sentry    # L5：统一监控告警
+│   ├── remi-common-base      # L6：HTTP 公共基座
+│   ├── remi-common-web       # L6：PC Web 基座（Spring Security）
+│   └── remi-common-app       # L6：移动端 App 基座（API 签名）
+│
+├── remi-gateway/             # 🚪 API 网关 :9000（WebFlux 反应式）
+├── remi-userinfo/            # 👤 用户信息中心 :9001（登录 / RBAC / 组织架构 / OAuth2）
+├── remi-system/              # ⚙️ 系统基础服务 :9002（参数 / 字典 / 多租户）
+├── remi-nextwiki/            # 📁 网盘知识库 :9003（文件管理 / Office 预览 / WOPI）
+├── remi-message/             # 📨 消息通知引擎 :9004（12 渠道 / DAG 编排 / 灰度）
+├── remi-workflow/            # 🔀 工作流引擎 :9005（BPMN 2.0 / DMN 决策表）
+├── remi-cronjob/             # ⏰ 分布式调度 :9006（Leader 选举 / 分片广播）
+├── remi-literule/            # 📏 规则引擎 :9007（DSL / 热加载 / A/B 测试）
+└── remi-agent/               # 🤖 AI 智能体 :9008（ReAct / RAG / Tool Calling）
+```
+
+### 各模块能力详述
+
+| 模块 | 核心能力 |
+|------|----------|
+| **remi-gateway** | 路由分发 · JWT 鉴权 · CORS · IP 黑白名单 · 灰度路由（加权轮询） · Sentinel 限流熔断 · WebSocket 转发 · W3C 链路追踪 |
+| **remi-userinfo** | 登录认证（密码 + 验证码 + LDAP/ADFS） · JWT Token · RBAC 6 要素 · 部门树 · OAuth2 授权码 · 登录锁定（5 次/30 min） · 国际化 |
+| **remi-system** | 系统参数（Redis 缓存 + 穿透防护） · 数据字典（树形 + 版本快照） · OAuth2 应用注册 · 多租户（租户 + 套餐 + 权限） · 全局搜索 |
+| **remi-nextwiki** | 文件秒传（SHA-256） · 版本控制（20 版本） · 分享 + ACL · 全文搜索 · Office 预览（LibreOffice → PDF） · WOPI（OnlyOffice/Collabora） · ClamAV 病毒扫描 · OCR · AI 摘要 |
+| **remi-message** | 12 大通知渠道 · 模板（i18n + 版本） · 用户偏好 · 条件路由 + 通道降级链 · DAG 编排 · 灰度 · 敏感词过滤（DFA） · RocketMQ 死信 |
+| **remi-workflow** | REMI-Flow v2 + BPMN 2.0 · 8 种节点 · 定时器 · SLA · 灰度发布 · bpmn-js 设计器 · DMN 决策表 · 50 步模拟运行 |
+| **remi-cronjob** | Leader 选举 · 多分区调度 · Cron + 固定频率 + 精准（时间轮） · 分片广播 · 故障转移 · DAG 编排 · 胶水代码编辑 · 自愈系统 |
+| **remi-literule** | 7 种规则类型 · 自研 LiteExpr 引擎（AST + 沙箱） · Caffeine L1 + Redis L2 缓存 · 热加载 · 版本 Diff + 回滚 · Dry-Run 仿真 · A/B 测试 · 规则市场 |
+| **remi-agent** | 5 种 Agent 执行器 · LLM Provider 抽象（OpenAI 兼容） · 同步/流式对话（SSE） · RAG · DAG 编排 · Tool Calling · 安全护栏（PII + Prompt 注入检测） |
+
+---
+
+## 快速开始
+
+### 环境要求
+
+| 依赖 | 最低版本 | 说明 |
+|------|----------|------|
+| JDK | 21 | 推荐 Eclipse Temurin / Amazon Corretto |
+| Maven | 3.9+ | 聚合多模块构建 |
+| PostgreSQL | 15+ | 共享主数据库 |
+| Redis | 7.x | 缓存 / 分布式锁 / 会话 |
+| Nacos | 2.4+ | 注册中心 & 配置中心 |
+| RocketMQ | 5.x | 消息队列（消息模块必选） |
+| MinIO | — | 对象存储（网盘模块必选） |
+
+### 克隆与构建
+
+```bash
+# 克隆仓库
+git clone http://192.168.31.88:6080/remiopen/remi-cloud.git
+cd remi-cloud
+
+# 编译全量模块（含质量检查）
+mvn clean verify
+
+# 快速本地模式（跳过质量门禁，加速开发迭代）
+mvn clean verify -P local-dev
+```
+
+### 数据库初始化
+
+> 项目规范**禁止**使用 Flyway / Liquibase 等 schema-migration 框架。数据库 DDL 统一以 SQL 脚本形式管理，存放于各模块的 `deploy/sql/` 目录下。
+
+```bash
+# 1. 创建数据库
+psql -U postgres -c "CREATE DATABASE remi_cloud;"
+
+# 2. 按模块导入初始化脚本（示例）
+psql -U postgres -d remi_cloud -f remi-userinfo/remi-userinfo-web/src/main/resources/sql/init.sql
+psql -U postgres -d remi_cloud -f remi-system/remi-system-web/src/main/resources/sql/init.sql
+# ...依此类推
+```
+
+### 本地启动
+
+**启动顺序建议**：Nacos → 中间件 → Gateway → 业务服务（按端口号升序）
+
+```bash
+# 启动 Gateway（必须先启动）
+cd remi-gateway
+mvn spring-boot:run
+
+# 启动各业务服务
+cd ../remi-userinfo/remi-userinfo-web && mvn spring-boot:run
+cd ../../remi-system/remi-system-web && mvn spring-boot:run
+cd ../../remi-nextwiki/remi-nextwiki-web && mvn spring-boot:run
+cd ../../remi-message/remi-message-web && mvn spring-boot:run
+cd ../../remi-workflow/remi-workflow-web && mvn spring-boot:run
+cd ../../remi-cronjob/remi-cronjob-web && mvn spring-boot:run
+cd ../../remi-literule/remi-literule-web && mvn spring-boot:run
+cd ../../remi-agent/remi-agent-web && mvn spring-boot:run
+```
+
+启动完成后，访问 API 文档：
+- **Knife4j 聚合文档**：`http://localhost:9000/doc.html`
+- **Nacos 控制台**：`http://localhost:8848/nacos`（默认账密 nacos/nacos）
+
+---
+
+## 开发指南
+
+### 工程结构约定
+
+每个可部署的业务模块遵循标准 DDD 五层结构：
+
+```
+remi-{module}/
+├── pom.xml                          # 父 POM
+├── remi-{module}-api/               # API 层：Feign Client + DTO
+├── remi-{module}-domain/            # 领域层：Entity + VO + Repository 接口
+├── remi-{module}-infra/             # 基础设施层：Repository 实现 + 外部集成
+├── remi-{module}-server/            # 应用服务层：Service + 事务编排
+└── remi-{module}-web/               # Web 层：Controller + 启动类 + 配置
+```
+
+**依赖方向**：`web → server → domain ← infra`，`api` 层独立对外。
+
+### 代码规范
+
+项目遵循以下编码标准，并通过 CheckStyle 自动检查：
+
+- **阿里巴巴 Java 开发手册（泰山版）** —— Java 代码规范基线
+- **Google Java Style Guide** —— 补充格式化规则
+- **SpotBugs + FindSecBugs** —— 静态缺陷与安全模式检测
+- **ArchUnit** —— 分层架构守护（禁止跨层依赖、命名约束）
+
+### 提交规范
+
+提交信息采用 **Conventional Commits** 规范（中文描述）：
+
+```bash
+feat: 新增用户批量导入功能
+fix: 修复部门树查询死循环问题
+refactor: 重构 RBAC 权限校验逻辑
+test: 补充消息模块单元测试
+docs: 更新 API 接口文档
+```
+
+### 分支策略
+
+| 分支 | 用途 |
+|------|------|
+| `main` | 生产就绪代码，仅通过 PR 合入 |
+| `develop` | 开发主线，功能分支的合入目标 |
+| `feature/*` | 特性开发分支 |
+| `hotfix/*` | 紧急修复分支 |
+
+---
+
+## 质量与安全
+
+### CI 质量门禁（verify 阶段自动执行）
+
+| 门禁 | 工具 | 阻断条件 |
+|------|------|----------|
+| **构建约束** | Maven Enforcer 3.5.0 | JDK < 21 · Maven < 3.9 · 依赖版本冲突 · 禁止的不安全依赖 |
+| **代码规范** | CheckStyle | 违反规则即阻断（基于阿里 + Google 规范） |
+| **静态缺陷** | SpotBugs + FindSecBugs | 检测到 HIGH 级别缺陷 |
+| **漏洞扫描** | OWASP Dependency-Check | CVSS ≥ 7.0 的已知漏洞 |
+| **架构守护** | ArchUnit | 违反分层规则 / 命名约束 |
+| **测试覆盖率** | JaCoCo 0.8.13 | 行覆盖率 < 60% · 分支覆盖率 < 50% |
+| **SBOM** | CycloneDX | 生成软件物料清单（非阻断，强制生成） |
+
+### 安全措施
+
+- **认证鉴权**：JWT + RBAC + 数据权限 + TOTP 2FA
+- **传输安全**：HTTPS + CORS 严格策略 + CSRF Token
+- **存储安全**：BCrypt 密码哈希 + 敏感配置 AES-256-GCM 加密
+- **输入安全**：XSS 过滤 + SQL 注入防护（PreparedStatement） + 参数校验
+- **数据安全**：PII 脱敏（手机号/身份证/邮箱） + 行/列级权限
+- **运维安全**：IP 白名单/黑名单 + 登录失败锁定 + 验证码 + API 签名验证
+- **供应链安全**：OWASP 依赖漏洞扫描 + CycloneDX SBOM + 禁止不安全依赖（Maven Enforcer）
+
+---
+
+## 文档
+
+| 文档 | 位置 | 说明 |
+|------|------|------|
+| 项目 README | `./README.md` | 本文档 |
+| MIT 开源协议 | `./LICENSE` | 开源许可协议 |
+| CheckStyle 规则 | `./checkstyle.xml` | 代码规范检查配置 |
+| SpotBugs 排除 | `./spotbugs-exclude.xml` | 静态分析排除规则 |
+| Effective POM | `./effective-pom.xml` | 解析后的完整 POM |
+| 模块 README | `remi-*/README.md` | 各模块详细说明文档 |
+| 编码规范 | *(内部 Wiki)* | 团队开发规范 |
+| API 文档 | Knife4j 聚合 | 启动后访问 `:9000/doc.html` |
+
+---
+
+## 贡献指南
+
+我们欢迎任何形式的贡献！
+
+### 贡献流程
+
+1. **Fork** 本项目
+2. 从 `develop` 分支创建你的特性分支：`git checkout -b feature/amazing-feature`
+3. 编写代码，确保通过 `mvn verify` 全量质量门禁
+4. 提交变更：`git commit -m 'feat: 新增某某功能'`
+5. 推送分支：`git push origin feature/amazing-feature`
+6. 提交 **Pull Request** 到 `develop` 分支
+
+### 贡献要求
+
+- 新增代码需通过 CheckStyle / SpotBugs / OWASP 检查
+- 核心逻辑需补充单元测试，覆盖率不低于项目现有基线
+- 新增模块的 README.md 需同步更新
+- 数据库变更需提供 SQL 初始化脚本
+- PR 需至少一位 Maintainer 审核通过
+
+---
+
+## 开源协议
+
+本项目基于 **[MIT License](./LICENSE)** 开源，允许自由使用、修改、分发，但需保留原始版权声明。
+
+---
+
+## 致谢
+
+本项目在设计与实现过程中，参考并致敬以下优秀开源项目：
+
+- [Spring Boot](https://spring.io/projects/spring-boot) &amp; [Spring Cloud](https://spring.io/projects/spring-cloud) —— Java 微服务生态基石
+- [Spring Cloud Alibaba](https://github.com/alibaba/spring-cloud-alibaba) —— 微服务一站式解决方案
+- [若依（RuoYi-Cloud）](https://gitee.com/y_project/RuoYi-Cloud) —— 优秀的国产微服务快速开发框架
+- [Pig](https://gitee.com/log4j/pig) —— 基于 Spring Cloud 的微服务 RBAC 权限管理系统
+- [XXL-Job](https://github.com/xuxueli/xxl-job) &amp; [PowerJob](https://github.com/PowerJob/PowerJob) —— 分布式任务调度标杆
+- [Drools](https://www.drools.org/) &amp; [LiteFlow](https://liteflow.cc/) —— 规则引擎领域先驱
+- [Flowable](https://www.flowable.com/) &amp; [Camunda](https://camunda.com/) —— BPMN 工作流引擎参考
+
+---
+
+<p align="center">
+  <sub>Made with ❤️ by RemiSoft Team</sub>
+</p>

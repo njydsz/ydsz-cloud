@@ -209,7 +209,7 @@ remi-gateway/
 curl http://127.0.0.1:8848/nacos/actuator/health
 
 # 2. 编译公共模块（首次）
-cd remi-backend
+cd remi-cloud
 mvn -pl remi-common -am install -DskipTests
 
 # 3. 启动 gateway

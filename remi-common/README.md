@@ -331,7 +331,7 @@ remi-common/
 
 ```bash
 # 仅构建 common 模块（含所有 30 个子模块）
-cd remi-backend
+cd remi-cloud
 mvn -pl remi-common -am clean install
 
 # 全量构建

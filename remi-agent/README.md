@@ -181,7 +181,7 @@ curl -X DELETE http://localhost:9008/agent/chat/history?conversationId=xxx
 ## 启动
 
 ```bash
-cd remi-backend
+cd remi-cloud
 mvn -pl remi-common -am install -DskipTests
 mvn -pl remi-agent spring-boot:run
 ```

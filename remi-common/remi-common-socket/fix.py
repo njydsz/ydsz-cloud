@@ -1,6 +1,6 @@
 import pathlib
 
-p = pathlib.Path(r'd:\Code\remi\remi-cloud\remi-backend\remi-common\remi-common-socket\src\main\java\com\remisoft\common\socket\config\WebSocketAutoConfiguration.java')
+p = pathlib.Path(r'd:\Code\remi\remi-cloud\remi-cloud\remi-common\remi-common-socket\src\main\java\com\remisoft\common\socket\config\WebSocketAutoConfiguration.java')
 t = p.read_text(encoding='utf-8')
 
 # Remove OnlineUserService from heartbeat handler method

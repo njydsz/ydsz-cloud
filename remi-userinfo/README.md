@@ -148,7 +148,7 @@ remi-userinfo/
 依赖 `common` + `nacos`，**应在 `gateway` 之后**启动。
 
 ```bash
-cd remi-backend
+cd remi-cloud
 mvn -pl remi-common -am install -DskipTests
 mvn -pl remi-userinfo spring-boot:run
 ```

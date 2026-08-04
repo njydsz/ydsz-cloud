@@ -213,7 +213,7 @@ server:
 ## 启动
 
 ```bash
-cd remi-backend
+cd remi-cloud
 mvn -pl remi-system spring-boot:run
 ```
 

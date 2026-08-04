@@ -153,7 +153,7 @@ remi-nextwiki/
 ## 启动
 
 ```bash
-cd remi-backend
+cd remi-cloud
 mvn -pl remi-common -am install -DskipTests
 mvn -pl remi-nextwiki spring-boot:run
 ```

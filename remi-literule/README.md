@@ -133,7 +133,7 @@ com.remisoft.literule.server
 
 ```bash
 # 全量构建
-mvn -pl remi-backend/remi-literule -am clean package
+mvn -pl remi-cloud/remi-literule -am clean package
 
 # 启动服务
 java -jar remi-literule-web/target/remi-literule-web-1.0.0-SNAPSHOT.jar
@@ -437,7 +437,7 @@ server 模块通过 optional 依赖实现跨服务按需联动（规则触发后
 当前测试覆盖情况：
 
 ```bash
-mvn -pl remi-backend/remi-literule -am test
+mvn -pl remi-cloud/remi-literule -am test
 ```
 
 > 本服务构建产物为 `remi-literule-web` 可执行 jar。
