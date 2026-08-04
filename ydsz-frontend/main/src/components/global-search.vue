@@ -58,10 +58,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted, defineModel } from 'vue';
+import { ref, computed, watch, nextTick, defineModel } from 'vue';
 import type { SearchItem } from '@/hooks/use-global-search';
-import { registerKeyboard } from '@/hooks/use-global-shortcut';
-import LucideIcon from '@/components/lucide-icon.vue';
 
 /** 受控显隐 */
 const props = defineProps<{ items: SearchItem[]; appNameLabels?: Record<string, string> }>();
@@ -135,8 +133,8 @@ function handler(e: KeyboardEvent) {
   }
 }
 
-onMounted(() => registerKeyboard('cmd+k', handler));
-onUnmounted(() => {});
+// v4.0: cmd+k 快捷键由 App.vue 通过 useKeyboard 中枢统一注册，避免重复
+void handler;
 </script>
 
 <style scoped>

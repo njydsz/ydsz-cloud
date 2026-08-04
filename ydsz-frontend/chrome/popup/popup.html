@@ -1,14 +1,39 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><style>
-body{width:300px;padding:12px;font-family:-apple-system,sans-serif;font-size:12px}
-.r{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f7fa}
-.m{color:#909399}
-.bg{padding:1px 6px;border-radius:10px;font-size:10px;background:#ecf5ff;color:#409eff}
-button{width:100%;padding:6px;margin-top:8px;cursor:pointer;border:1px solid #dcdfe6;border-radius:4px;background:#409eff;color:#fff}
-</style></head><body>
-<div class="r"><strong>YDSZ Micro Kernel</strong><span class="bg" id="bg">v4</span></div>
-<div class="r"><span>活跃</span><span id="sa" class="m">—</span></div>
-<div class="r"><span>KeepAlive</span><span id="kl" class="m">0</span></div>
-<div class="r"><span>实例</span><span id="na" class="m">0</span></div>
-<button id="b">打开调试面板</button>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+body{width:300px;padding:12px;font-family:-apple-system,sans-serif;font-size:12px;color:#303133}
+h3{font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.version{font-size:10px;padding:1px 8px;border-radius:10px;background:#ecf5ff;color:#1677ff;font-weight:600}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f2f3f5}
+.row:last-of-type{border-bottom:none}
+.label{color:#909399}
+.value{font-weight:600;color:#303133}
+.value.ok{color:#52c41a}
+.value.warn{color:#faad14}
+.value.err{color:#ff4d4f}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.dot.on{background:#52c41a;box-shadow:0 0 4px #52c41a}
+.dot.off{background:#d9d9d9}
+.btn{display:block;width:100%;padding:8px;margin-top:12px;cursor:pointer;border:none;border-radius:6px;background:#1677ff;color:#fff;font-size:12px;font-weight:500;transition:all .15s}
+.btn:hover{background:#096dd9}
+.tip{margin-top:8px;padding:6px 8px;background:#f5f7fa;border-radius:4px;font-size:10px;color:#8c8c8c;line-height:1.5}
+</style>
+</head>
+<body>
+<h3>🛠 YDSZ Micro Kernel <span class="version" id="v">v4.0</span></h3>
+
+<div class="row"><span class="label">内核状态</span><span class="value" id="vs"><span class="dot off"></span>等待连接</span></div>
+<div class="row"><span class="label">活跃应用</span><span class="value" id="sa">—</span></div>
+<div class="row"><span class="label">KeepAlive 实例</span><span class="value" id="kl">0</span></div>
+<div class="row"><span class="label">已注册应用</span><span class="value" id="na">0</span></div>
+<div class="row"><span class="label">JS 内存占用</span><span class="value" id="mem">—</span></div>
+
+<button class="btn" id="open">打开 Micro Kernel 调试面板</button>
+
+<div class="tip">按 F12 打开开发者工具，切换到 <b>Micro Kernel</b> 标签页查看完整运行时状态。</div>
+
 <script src="popup.js"></script>
-</body></html>
+</body>
+</html>
