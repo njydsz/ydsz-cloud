@@ -6,16 +6,6 @@
       "description": "是否启用 domain 模块自动配置（默认 true）。"
     },
     {
-      "name": "ydsz.domain.event.async-enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用异步事件发布（需 TaskExecutor，默认 true）。"
-    },
-    {
-      "name": "ydsz.domain.event.default-phase",
-      "type": "java.lang.String",
-      "description": "默认事务发布阶段。可选值：BEFORE_COMMIT, AFTER_COMMIT, AFTER_ROLLBACK, AFTER_COMPLETION（默认 AFTER_COMMIT）。"
-    },
-    {
       "name": "ydsz.domain.spel.cache-enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 SpEL 表达式解析缓存（默认 true）。"
@@ -24,21 +14,6 @@
       "name": "ydsz.domain.spel.cache-max-size",
       "type": "java.lang.Integer",
       "description": "SpEL 表达式缓存最大容量，0 表示无限制（默认 1024）。"
-    },
-    {
-      "name": "ydsz.tree.lazy.max-lazy-depth",
-      "type": "java.lang.Integer",
-      "description": "最大懒加载深度（默认 10）。"
-    },
-    {
-      "name": "ydsz.tree.lazy.batch-size",
-      "type": "java.lang.Integer",
-      "description": "懒加载批次大小（默认 100）。"
-    },
-    {
-      "name": "ydsz.tree.lazy.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用懒加载（默认 false）。"
     }
   ]
 }
