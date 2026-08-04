@@ -16,6 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-server</artifactId>
         </dependency>
+        <!-- ydsz-common-domain: explicit declaration (controllers use PageResult/BaseStatusEnum, was transitive via server→jdbc) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>

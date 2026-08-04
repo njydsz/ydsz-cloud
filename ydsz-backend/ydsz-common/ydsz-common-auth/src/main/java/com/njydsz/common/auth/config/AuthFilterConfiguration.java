@@ -7,7 +7,7 @@ import java.util.Set;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-import com.njydsz.common.domain.config.FilterIgnoreConstant;
+import com.njydsz.common.core.constant.FilterIgnoreConstant;
 import com.njydsz.common.util.url.UrlPathUtils;
 
 /**

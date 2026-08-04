@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.core.enums.DataScopeType;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import com.njydsz.common.domain.config.FilterIgnoreConstant;
+import com.njydsz.common.core.constant.FilterIgnoreConstant;
 
 import lombok.Data;
 

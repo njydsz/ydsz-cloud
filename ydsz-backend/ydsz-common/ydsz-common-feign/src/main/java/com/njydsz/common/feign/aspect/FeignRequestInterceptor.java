@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.domain.enums.DataScopeType;
-import com.njydsz.common.domain.enums.IdentityType;
+import com.njydsz.common.core.enums.DataScopeType;
+import com.njydsz.common.core.enums.IdentityType;
 import com.njydsz.common.feign.config.FeignProperties;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 import com.njydsz.common.util.auth.RequestHolder;

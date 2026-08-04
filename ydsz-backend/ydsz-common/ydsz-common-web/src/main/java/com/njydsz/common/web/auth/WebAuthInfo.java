@@ -1,7 +1,7 @@
 package com.njydsz.common.web.auth;
 
 import com.njydsz.common.base.auth.BaseAuthInfo;
-import com.njydsz.common.domain.enums.ServiceType;
+import com.njydsz.common.core.enums.ServiceType;
 
 /**
  * Web 端认证上下文信息

@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.core.enums.DataScopeType;
 
 import lombok.Data;
 

@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.core.enums.DataScopeType;
 
 import lombok.Getter;
 

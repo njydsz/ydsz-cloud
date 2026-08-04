@@ -35,6 +35,11 @@
         </dependency>
         <!-- common-web 传递引入: common-base(→core/util/exception), common-auth, common-safe, common-redis -->
         <!-- common-jdbc 传递引入: common-domain -->
+        <!-- ydsz-common-domain: explicit declaration for direct usage (PageQuery/BaseStatusEnum, was transitive via common-jdbc) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
         <!-- common-feign 传递引入: spring-cloud-starter-openfeign -->
         <dependency>
             <groupId>com.njydsz</groupId>
