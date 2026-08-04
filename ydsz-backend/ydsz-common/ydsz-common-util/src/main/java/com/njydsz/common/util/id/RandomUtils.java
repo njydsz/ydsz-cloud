@@ -1,7 +1,6 @@
 package com.njydsz.common.util.id;
 
 import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -35,8 +34,12 @@ public final class RandomUtils {
     /** 数字字符集 */
     private static final String NUMBER_CHAR = "0123456789";
 
-    /** 加密级安全随机数生成器 ThreadLocal，用于 generateSecure 系列方法。 */
-    private static final ThreadLocal<SecureRandom> SECURE_RANDOM = ThreadLocal.withInitial(SecureRandom::new);
+    /** 加密级安全随机数生成器（SecureRandom 本身线程安全，无需 ThreadLocal）。 */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    /** URL 安全字符集，用于 generateSecureString（Base64 URL 编码字符）。 */
+    private static final String SECURE_URL_CHARS =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
     /**
      * 私有构造器，工具类不允许实例化。
@@ -166,6 +169,9 @@ public final class RandomUtils {
     /**
      * 生成加密级别的随机字符串（适用于 token、密钥等安全场景）
      *
+     * <p>使用 URL 安全字符集（A-Z a-z 0-9 - _），每个字符 6 位熵。
+     * 直接从 SecureRandom 逐字符采样，避免 Base64 编码后截断造成的 25% 熵损失。
+     *
      * @param length 字符串长度
      * @return 加密级别随机字符串
      */
@@ -173,9 +179,12 @@ public final class RandomUtils {
         if (length <= 0) {
             return "";
         }
-        byte[] bytes = new byte[length];
-        SECURE_RANDOM.get().nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes).substring(0, Math.min(length, (length * 4 + 2) / 3));
+        char[] result = new char[length];
+        // 字符集长度为 64（2 的幂），可直接用 byte 低 6 位索引，无模偏
+        for (int i = 0; i < length; i++) {
+            result[i] = SECURE_URL_CHARS.charAt(SECURE_RANDOM.nextInt(64));
+        }
+        return new String(result);
     }
 
     /**

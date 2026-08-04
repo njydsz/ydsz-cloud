@@ -20,12 +20,35 @@ import { retryOperation, calculateRetryDelay } from '@ydsz-core/shared/utils/ret
 /** 模块级日志器（重试等运维信息走 debug，避免生产噪音） */
 const logger = createLogger('MicroKernel');
 
+/**
+ * 子应用 manifest.json 中声明的路由级骨架屏配置。
+ *
+ * 子应用可按自身路由前缀声明骨架屏类型，主应用容器在加载阶段
+ * 优先使用 manifest.routes 匹配当前子路径，无匹配时回退到
+ * route.meta.skeletonType，再回退到 'default'。
+ *
+ * @since 3.3
+ */
+export interface ManifestRoute {
+  /** 路由前缀或正则字符串（相对于子应用 basename 的子路径，如 '/users'、'/detail'） */
+  path: string;
+  /** 骨架屏类型（与主应用 SkeletonType 对齐：list/form/detail/dashboard/default） */
+  skeletonType?: string;
+}
+
 /** 子应用构建产出的 manifest.json 结构：应用名、入口、样式表列表与版本号 */
 export interface Manifest {
   name: string;
   entry: string;
   css: string[];
   version: string;
+  /**
+   * 路由级骨架屏配置（v3.3 新增，可选）。
+   *
+   * 子应用通过 vite-plugin-manifest 的 routes 选项声明，构建期写入 manifest.json，
+   * 主应用容器加载 manifest 后据此匹配当前路由子路径，渲染对应骨架屏。
+   */
+  routes?: ManifestRoute[];
 }
 
 /** 加载配置 */

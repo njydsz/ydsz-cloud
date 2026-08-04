@@ -36,8 +36,7 @@ public class MessageLogQueryDTO extends PageQuery {
     /** 撤回状态 */
     private String recallStatus;
 
-    /** 租户 ID */
-    private String tenantId;
+    // tenantId 已由父类 BaseQuery 提供，此处不再重复声明
 
     /** P2-13: 全文搜索关键词（模糊匹配 content / receiver / templateCode） */
     private String keyword;

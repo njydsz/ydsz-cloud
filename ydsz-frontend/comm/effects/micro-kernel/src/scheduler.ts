@@ -116,11 +116,22 @@ export function getAllInstances(): AppInstance[] {
 /**
  * 激活子应用：加载 → 挂载。
  * 若 keepAlive 且已有缓存 DOM，直接放回容器。
+ *
+ * @param instance - 子应用实例
+ * @param container - 挂载容器
+ * @param loadOpts - 加载选项（超时、重试）
+ * @param callbacks - 细化阶段回调（v3.3）：
+ *   - onLoaded: loadApp 完成、LifecycleExports 就绪后触发（keepAlive 复用路径不触发）
+ *   - onBeforeMount: mount() 调用之前、沙箱进入之后触发（keepAlive 复用路径不触发）
  */
 export async function activateApp(
   instance: AppInstance,
   container: HTMLElement,
   loadOpts: LoadOptions = {},
+  callbacks: {
+    onBeforeMount?: (instance: AppInstance, container: HTMLElement) => void;
+    onLoaded?: (instance: AppInstance) => void;
+  } = {},
 ): Promise<void> {
   const { config } = instance;
 
@@ -152,6 +163,8 @@ export async function activateApp(
       instance.exports = result.exports;
       instance.loadMetrics = { duration: result.duration, fromCache: result.fromCache };
       instance.status = 'LOADED';
+      // v3.3: 通知外部"加载完成"阶段（用于进度条推进、骨架屏细化）
+      callbacks.onLoaded?.(instance);
     } catch (err) {
       instance.status = 'NOT_LOADED';
       instance.error = String(err);
@@ -180,6 +193,9 @@ export async function activateApp(
     instance.sandbox = enterSandbox();
     logger.debug(`${config.name} entered snapshot sandbox`);
   }
+
+  // v3.3: 通知外部"挂载之前"阶段（沙箱已进入，mount 即将调用）
+  callbacks.onBeforeMount?.(instance, container);
 
   try {
     await instance.exports.mount(mountProps);

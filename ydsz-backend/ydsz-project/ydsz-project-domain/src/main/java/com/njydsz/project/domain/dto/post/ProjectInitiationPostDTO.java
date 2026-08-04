@@ -7,10 +7,18 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import com.njydsz.common.domain.dto.BaseDTO;
+
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 项目立项 新增请求 DTO。
+ *
+ * <p>继承 {@link BaseDTO}，自动携带 operatorId/operatorName/requestId/traceId/tenantId
+ * 等审计上下文字段，无需在每个 DTO 中重复声明。
  *
  * <p>创建场景：项目编号、名称、客户、类型为必填；
  * 预估金额、预算金额、计划日期等为可选。
@@ -19,7 +27,10 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-public class ProjectInitiationPostDTO {
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class ProjectInitiationPostDTO extends BaseDTO {
 
     @NotBlank(message = "项目编号不能为空")
     @Size(max = 64, message = "项目编号长度不能超过64")

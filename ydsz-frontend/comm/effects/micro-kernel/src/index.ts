@@ -18,7 +18,15 @@ export {
   getKeepAliveCount,
   setMaxKeepAliveApps,
 } from './scheduler';
-export type { ManifestPluginOptions } from './vite-plugin-manifest';
+// v3.3: 公开 error-boundary i18n helpers，主应用可运行时切换降级 UI 文案语言
+export {
+  getErrorFallbackMessagesByLocale,
+  setErrorFallbackMessages,
+} from './error-boundary';
+export type { ManifestPluginOptions, ManifestPluginRoute } from './vite-plugin-manifest';
 export type { SandboxInstance, SandboxType } from './sandbox';
 export type { ProxySandboxInstance } from './proxy-sandbox';
 export type { VersionUpdateResult, VersionManagerOptions } from './version-manager';
+export type { ErrorFallbackMessages } from './error-boundary';
+// v3.3: 公开 Manifest 类型供主应用容器读取 routes 配置（骨架屏细化）
+export type { LoadOptions, LoadResult, Manifest, ManifestRoute } from './loader';

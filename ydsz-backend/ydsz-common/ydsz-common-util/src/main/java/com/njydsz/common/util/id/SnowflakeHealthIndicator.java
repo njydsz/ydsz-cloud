@@ -44,15 +44,7 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
                         .build();
             }
 
-            // 尝试生成一个 ID 验证功能正常
-            long testId = snowflakeUtils.nextId();
-            if (testId <= 0) {
-                return Health.down()
-                        .withDetail("error", "Failed to generate test ID")
-                        .build();
-            }
-
-            // 检查时钟状态
+            // 检查时钟状态（不调用 nextId()，避免健康检查消耗真实 ID）
             long currentTimestamp = System.currentTimeMillis();
             long lastTimestamp = snowflakeUtils.getLastTimestamp();
             if (currentTimestamp < lastTimestamp) {

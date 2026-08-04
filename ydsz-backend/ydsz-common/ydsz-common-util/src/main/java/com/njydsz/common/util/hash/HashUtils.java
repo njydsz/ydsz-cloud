@@ -10,7 +10,7 @@ import java.util.zip.CRC32;
  * <p>提供加密哈希以外的哈希算法和编码方案：
  * <ul>
  *   <li>CRC32 校验和</li>
- *   <li>MurmurHash32（非加密哈希，用于哈希表/分片）</li>
+ *   <li>MurmurHash2 32-bit（非加密哈希，用于哈希表/分片）</li>
  *   <li>Base62 编码/解码（用于短链接 ID）</li>
  * </ul>
  *
@@ -65,13 +65,16 @@ public class HashUtils {
         return crc32.getValue();
     }
 
-    // ==================== MurmurHash32 算法 ====================
+    // ==================== MurmurHash2 32-bit 算法 ====================
 
     /**
-     * 计算 MurmurHash32 哈希值（纯 JDK 实现，无第三方依赖）
+     * 计算 MurmurHash2 32-bit 哈希值（纯 JDK 实现，无第三方依赖）
+     *
+     * <p>注意：本方法实现的是 <b>MurmurHash2</b>（常数 m=0x5bd1e995, r=24），
+     * 而非 MurmurHash3。如需与 MurmurHash3 实现互操作，请注意版本差异。
      *
      * @param input 输入字符串
-     * @return MurmurHash32 哈希值
+     * @return MurmurHash2 32-bit 哈希值
      */
     public static int murmurHash32(String input) {
         if (input == null || input.isEmpty()) {
@@ -81,10 +84,13 @@ public class HashUtils {
     }
 
     /**
-     * 计算 MurmurHash32 哈希值（字节数组）
+     * 计算 MurmurHash2 32-bit 哈希值（字节数组）
+     *
+     * <p>注意：本方法实现的是 <b>MurmurHash2</b>（常数 m=0x5bd1e995, r=24），
+     * 而非 MurmurHash3。
      *
      * @param data 输入字节数组
-     * @return MurmurHash32 哈希值
+     * @return MurmurHash2 32-bit 哈希值
      */
     public static int murmurHash32(byte[] data) {
         if (data == null || data.length == 0) {
@@ -137,12 +143,14 @@ public class HashUtils {
     /**
      * 将字符串哈希值转换为 Base62 编码
      *
+     * <p>使用 MurmurHash2 32-bit 计算哈希，再将无符号 32 位整数编码为 Base62 字符串。
+     *
      * @param str 输入字符串
      * @return Base62 编码字符串
      */
     public static String hashToBase62(String str) {
         int hash = murmurHash32(str);
-        long num = hash < 0 ? Integer.MAX_VALUE - (long) hash : hash;
+        long num = hash & 0xFFFFFFFFL;
         return convertDecToBase62(num);
     }
 
@@ -187,6 +195,9 @@ public class HashUtils {
     /**
      * 将字节数组转换为 Base62 编码
      *
+     * <p><b>注意</b>：前导零字节会被丢弃（因 BigInteger 将字节数组视为无符号大整数，
+     * 0x00[0x01] 与 0x01 编码结果相同）。如需保留前导零，请在调用方自行处理。
+     *
      * @param bytes 字节数组
      * @return Base62 编码字符串
      */
@@ -201,6 +212,9 @@ public class HashUtils {
     /**
      * 将 Base62 编码转换为字节数组
      *
+     * <p>与 {@link #bytesToBase62(byte[])} 互逆。BigInteger.toByteArray() 在最高位为 1 时
+     * 会添加前导 0x00 符号字节，本方法会将其剥离以保持与 {@code new BigInteger(1, bytes)} 的对称性。
+     *
      * @param base62 Base62 编码字符串
      * @return 字节数组
      */
@@ -209,7 +223,16 @@ public class HashUtils {
             return new byte[0];
         }
         BigInteger bigInteger = stringToBigInteger(base62, BASE62_SIZE);
-        return bigInteger.toByteArray();
+        byte[] bytes = bigInteger.toByteArray();
+        // BigInteger.toByteArray() 对正数也可能在首位添加 0x00（当次高位为 1 时用于区分符号），
+        // 而 bytesToBase62 使用 new BigInteger(1, bytes) 视为无符号，不会产生前导 0x00。
+        // 为保证 round-trip 一致，需剥离该多余的前导 0x00。
+        if (bytes.length > 1 && bytes[0] == 0) {
+            byte[] trimmed = new byte[bytes.length - 1];
+            System.arraycopy(bytes, 1, trimmed, 0, trimmed.length);
+            return trimmed;
+        }
+        return bytes;
     }
 
     private static String convertDecToBase62(long num) {

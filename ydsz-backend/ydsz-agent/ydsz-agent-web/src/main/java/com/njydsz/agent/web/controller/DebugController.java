@@ -19,6 +19,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.trace.TraceRecorder.TraceStep;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder.TraceMeta;
 import com.njydsz.agent.server.debug.AgentDebuggerService;
+import com.njydsz.agent.domain.enums.AgentResultCode;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -147,11 +148,11 @@ public class DebugController {
         log.info("[Debug-API] 重放链路: traceId={}", traceId);
         TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
         if (meta == null) {
-            return BaseResponse.error("TRACE_NOT_FOUND", "链路不存在或不支持重放: " + traceId);
+            return BaseResponse.error(AgentResultCode.TRACE_NOT_FOUND, "链路不存在或不支持重放: " + traceId);
         }
         List<TraceStep> steps = agentDebuggerService.getTrace(traceId);
         if (steps.isEmpty()) {
-            return BaseResponse.error("TRACE_EMPTY", "链路无步骤记录，无法提取重放输入: " + traceId);
+            return BaseResponse.error(AgentResultCode.TRACE_EMPTY, "链路无步骤记录，无法提取重放输入: " + traceId);
         }
         // 从链路第一个步骤提取原始 userInput，从元数据提取 conversationId / agentType
         String userInput = steps.get(0).getContent();

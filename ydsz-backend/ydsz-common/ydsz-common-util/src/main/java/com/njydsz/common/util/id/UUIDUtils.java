@@ -5,7 +5,6 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 高性能 UUID 生成工具类
@@ -49,12 +48,14 @@ public final class UUIDUtils {
     /**
      * 生成不带横杠的 UUID 字符串（标准 v4 版本）
      *
+     * <p>使用 {@link SecureRandom} 生成随机位，符合 RFC 4122 对 UUID v4
+     * 应使用密码学安全随机数的要求。
+     *
      * @return 32 位 UUID 字符串
      */
     public static String simpleUuid() {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        long msb = random.nextLong();
-        long lsb = random.nextLong();
+        long msb = SECURE_RANDOM.nextLong();
+        long lsb = SECURE_RANDOM.nextLong();
 
         msb = (msb & 0xFFFFFFFFFFFF0FFFL) | 0x0000000000004000L;
         lsb = (lsb & 0x3FFFFFFFFFFFFFFFL) | 0x8000000000000000L;
@@ -71,12 +72,14 @@ public final class UUIDUtils {
     /**
      * 生成标准 UUID 字符串（带横杠，v4 版本）
      *
+     * <p>使用 {@link SecureRandom} 生成随机位，符合 RFC 4122 对 UUID v4
+     * 应使用密码学安全随机数的要求。
+     *
      * @return 36 位 UUID 字符串（格式：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）
      */
     public static String uuid() {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        long msb = random.nextLong();
-        long lsb = random.nextLong();
+        long msb = SECURE_RANDOM.nextLong();
+        long lsb = SECURE_RANDOM.nextLong();
 
         msb = (msb & 0xFFFFFFFFFFFF0FFFL) | 0x0000000000004000L;
         lsb = (lsb & 0x3FFFFFFFFFFFFFFFL) | 0x8000000000000000L;

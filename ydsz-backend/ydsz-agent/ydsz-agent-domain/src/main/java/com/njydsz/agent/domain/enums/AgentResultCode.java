@@ -20,7 +20,8 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  *   <li>B94001-B94099 Agent 定义/执行</li>
  *   <li>B94101-B94199 对话/记忆</li>
  *   <li>B94201-B94299 LLM 调用</li>
- *   <li>B94301-B94399 RAG/工具/Prompt
+ *   <li>B94301-B94399 RAG/工具/Prompt</li>
+ *   <li>B94401-B94499 调试/追踪
  * </ul>
  *
  * @author ydsz-team
@@ -53,7 +54,11 @@ public enum AgentResultCode implements ExceptionCode {
     TOOL_EXECUTION_FAILED("B94303", "agent.tool.execution.failed", 500),
     PROMPT_TEMPLATE_NOT_FOUND("B94304", "agent.prompt.template.not.found", 404),
     PROMPT_TEMPLATE_DUPLICATE("B94305", "agent.prompt.template.duplicate"),
-    GUARDRAIL_REJECTED("B94306", "agent.guardrail.rejected", 403);
+    GUARDRAIL_REJECTED("B94306", "agent.guardrail.rejected", 403),
+
+    // ==================== B94401-B94499 调试/追踪 ====================
+    TRACE_NOT_FOUND("B94401", "agent.trace.not.found", 404),
+    TRACE_EMPTY("B94402", "agent.trace.empty", 400);
 
     /** 错误码 */
     private final String code;

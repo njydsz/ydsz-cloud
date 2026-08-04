@@ -288,11 +288,28 @@ async function switchToApp(config: MicroAppConfig, options?: StartOptions): Prom
   }
 
   try {
-    await activateApp(instance, container as HTMLElement);
+    await activateApp(instance, container as HTMLElement, {}, {
+      // v3.3: 细化生命周期 — 加载完成后触发 afterLoad 钩子与事件
+      onLoaded: (inst) => {
+        if (token !== switchToken) return;
+        void runHooks('afterLoad', inst.config);
+        window.dispatchEvent(
+          new CustomEvent('micro-kernel:after-load', { detail: { appName: inst.config.name } }),
+        );
+      },
+      // v3.3: 细化生命周期 — mount 之前触发 beforeMount 钩子与事件
+      onBeforeMount: (inst) => {
+        if (token !== switchToken) return;
+        void runHooks('beforeMount', inst.config);
+        window.dispatchEvent(
+          new CustomEvent('micro-kernel:before-mount', { detail: { appName: inst.config.name } }),
+        );
+      },
+    });
     if (token !== switchToken) return;
     activeAppName = config.name;
     await runHooks('afterMount', config);
-    
+
     // 派发 after-mount 事件，触发骨架屏隐藏
     window.dispatchEvent(new CustomEvent('micro-kernel:after-mount', { detail: { appName: config.name } }));
   } catch (err) {

@@ -387,7 +387,18 @@ public final class TenantContextHolder {
 | **杂项** | MessageResultCode 注解 | 1 | 补全 `@YdszResultCode` 注解 |
 | **杂项** | RepeatSubmitTokenController | 1 | 硬编码 "401" → `BaseResultCode.UNAUTHORIZED` |
 
-**累计变更：59 个文件，83+ 处代码修改**
+**累计变更：66 个文件，95+ 处代码修改**
+
+### 📋 第二轮补充完成 (2026-08-04 第二轮)
+
+| 编号 | 项目 | 变更文件数 | 详情 |
+|------|------|-----------|------|
+| 遗漏修复 | NotificationClientFallbackFactory | 1 | 4 处 "B01004" → `BaseResultCode.SERVICE_UNAVAILABLE` |
+| 遗漏修复 | DebugController + AgentResultCode | 2 | 2 处字符串 code → 新增 `B94401`/`B94402` 专用错误码 |
+| 遗漏修复 | RepeatSubmitTokenController | 1 | "401" → `BaseResultCode.UNAUTHORIZED` |
+| P3-5 | ArchUnit R30 规则 | 1 | 禁止 Controller 中 `BaseResponse.error(String)` 单参无码调用 |
+| P3-1 | ProjectInitiationPostDTO 继承 BaseDTO | 1 | 示范 DDD 基类继承模式 |
+| P3-1 | MessageLogQueryDTO 移除冗余字段 | 1 | 移除与 BaseQuery 重复的 `tenantId` 声明 |
 
 ### 📋 建议后续跟进
 

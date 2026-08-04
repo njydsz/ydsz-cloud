@@ -61,8 +61,27 @@ export type LifecycleHook = (app: MicroAppConfig) => Promise<void> | void;
 /** 内核错误钩子（接收错误对象） */
 export type ErrorLifecycleHook = (app: MicroAppConfig, error: unknown) => Promise<void> | void;
 
-/** 内核支持的生命周期钩子名 */
-export type LifecycleHookName = 'afterMount' | 'afterUnmount' | 'beforeLoad' | 'error';
+/**
+ * 内核支持的生命周期钩子名。
+ *
+ * 细化阶段（v3.3）：
+ *   beforeLoad  → 子应用开始加载 ESM 模块（manifest fetch + dynamic import）
+ *   afterLoad   → 子应用 ESM 模块加载完成、LifecycleExports 已就绪
+ *   beforeMount → 子应用 mount() 调用之前（沙箱已进入）
+ *   afterMount  → 子应用 mount() 完成，DOM 已挂载
+ *   afterUnmount → 子应用卸载完成
+ *   error       → 加载或挂载失败
+ *
+ * SubAppContainer 等订阅方可基于细化钩子驱动真实进度条推进，
+ * 避免仅有 beforeLoad/afterMount 两个粗粒度节点导致进度跳变。
+ */
+export type LifecycleHookName =
+  | 'afterLoad'
+  | 'afterMount'
+  | 'afterUnmount'
+  | 'beforeLoad'
+  | 'beforeMount'
+  | 'error';
 
 /** 权限检查函数类型 */
 export type PermissionChecker = (codes: string[]) => boolean;

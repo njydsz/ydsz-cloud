@@ -69,9 +69,13 @@ public class RequestHolder {
 
     /**
      * 请求初始化标记：add() 时置为 true，remove() 时置为 false。
-     * 用于在线程复用时检测上一个请求是否正确清理。
+     *
+     * <p><b>使用普通 {@link ThreadLocal} 而非 {@link TransmittableThreadLocal}</b>：
+     * 该标记仅用于检测同一物理线程的复用（上一个请求是否已 remove），
+     * 不应透传到线程池子线程，否则子线程会继承父线程的 {@code true} 并在
+     * 调用 {@link #add(AuthInfo)} 时产生误报。
      */
-    private static final ThreadLocal<Boolean> initialized = new TransmittableThreadLocal<>();
+    private static final ThreadLocal<Boolean> initialized = new ThreadLocal<>();
 
     /**
      * 写入认证信息到当前线程上下文。
@@ -247,6 +251,49 @@ public class RequestHolder {
             return;
         }
         extraHeadersHolder.set(new HashMap<>(snapshot));
+    }
+
+    /**
+     * 以指定认证信息执行任务，执行完毕后恢复原有上下文。
+     *
+     * <p>典型场景：内部定时任务、回调等需要以系统身份执行、执行完毕后恢复用户上下文。
+     * 避免手动 set/remove 容易遗漏清理导致上下文泄露。
+     *
+     * <pre>{@code
+     * RequestHolder.withContext(systemAuth, () -> {
+     *     // 以系统身份执行的逻辑
+     * });
+     * // 此处上下文已恢复为调用前状态
+     * }</pre>
+     *
+     * @param authInfo 临时认证信息；为 null 时清除当前认证上下文
+     * @param runnable 待执行任务
+     * @since 1.0.0
+     */
+    public static void withContext(AuthInfo authInfo, Runnable runnable) {
+        AuthInfo originalAuth = authInfoHolder.get();
+        Boolean originalInitialized = initialized.get();
+        try {
+            if (authInfo != null) {
+                authInfoHolder.set(authInfo);
+                initialized.set(true);
+            } else {
+                authInfoHolder.remove();
+                initialized.remove();
+            }
+            runnable.run();
+        } finally {
+            if (originalAuth != null) {
+                authInfoHolder.set(originalAuth);
+            } else {
+                authInfoHolder.remove();
+            }
+            if (Boolean.TRUE.equals(originalInitialized)) {
+                initialized.set(true);
+            } else {
+                initialized.remove();
+            }
+        }
     }
 
     /**

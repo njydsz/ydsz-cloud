@@ -39,8 +39,8 @@ class BaseResultCodeTest {
             assertFalse(rc.getCode().isBlank(), "code must not be blank: " + rc.name());
             assertTrue(codes.add(rc.getCode()), "duplicate code: " + rc.getCode());
         }
-        // 56 个错误码 + SUCCESS
-        assertEquals(57, BaseResultCode.values().length);
+        // 46 个系统级错误码 + SUCCESS（已移除 B3xxxx/B7xxxx 业务模块错误码）
+        assertEquals(46, BaseResultCode.values().length);
     }
 
     @Test
@@ -98,7 +98,7 @@ class BaseResultCodeTest {
         assertEquals(401, BaseResultCode.TOKEN_EXPIRED.getHttpStatusCode());
         assertEquals(401, BaseResultCode.TOKEN_INVALID.getHttpStatusCode());
         assertEquals(401, BaseResultCode.PASSWORD_EXPIRED.getHttpStatusCode());
-        assertEquals(401, BaseResultCode.PASSWORD_INCORRECT.getHttpStatusCode());
+        assertEquals(401, BaseResultCode.MFA_REQUIRED.getHttpStatusCode());
     }
 
     @Test
@@ -106,16 +106,12 @@ class BaseResultCodeTest {
     void forbidden_403() {
         assertEquals(403, BaseResultCode.FORBIDDEN.getHttpStatusCode());
         assertEquals(403, BaseResultCode.DATA_SCOPE_FORBIDDEN.getHttpStatusCode());
-        assertEquals(403, BaseResultCode.USER_DISABLED.getHttpStatusCode());
     }
 
     @Test
     @DisplayName("资源不存在类错误映射到 404")
     void notFound_404() {
         assertEquals(404, BaseResultCode.NOT_FOUND.getHttpStatusCode());
-        assertEquals(404, BaseResultCode.USER_NOT_FOUND.getHttpStatusCode());
-        assertEquals(404, BaseResultCode.DEPARTMENT_NOT_FOUND.getHttpStatusCode());
-        assertEquals(404, BaseResultCode.WORKFLOW_NOT_FOUND.getHttpStatusCode());
     }
 
     @Test
@@ -148,7 +144,6 @@ class BaseResultCodeTest {
     @DisplayName("锁定类错误映射到 423")
     void locked_423() {
         assertEquals(423, BaseResultCode.ACCOUNT_LOCKED.getHttpStatusCode());
-        assertEquals(423, BaseResultCode.USER_LOCKED.getHttpStatusCode());
     }
 
     @Test

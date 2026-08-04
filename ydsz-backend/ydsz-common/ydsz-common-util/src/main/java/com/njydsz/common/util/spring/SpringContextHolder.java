@@ -3,8 +3,6 @@ package com.njydsz.common.util.spring;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -65,26 +63,16 @@ import org.springframework.core.annotation.Order;
 @Order(Integer.MIN_VALUE)
 public class SpringContextHolder implements ApplicationContextAware {
 
-    /** Spring 应用上下文 */
+    /** Spring 应用上下文（volatile 保证可见性，无需额外锁） */
     private static volatile ApplicationContext applicationContext;
-
-    /** 线程锁（用于 setApplicationContext 的双重检查） */
-    private static final Lock LOCK = new ReentrantLock();
 
     // ==================== ApplicationContextAware 实现 ====================
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        if (SpringContextHolder.applicationContext == null) {
-            LOCK.lock();
-            try {
-                if (SpringContextHolder.applicationContext == null) {
-                    SpringContextHolder.applicationContext = applicationContext;
-                }
-            } finally {
-                LOCK.unlock();
-            }
-        }
+        // Spring 保证每个 Bean 的 setApplicationContext 仅调用一次；
+        // volatile 写足以保证可见性，无需 DCL + ReentrantLock。
+        SpringContextHolder.applicationContext = applicationContext;
     }
 
     // ==================== 实例方法（支持注入使用） ====================
@@ -292,6 +280,9 @@ public class SpringContextHolder implements ApplicationContextAware {
     /**
      * 检查容器中是否包含指定类型的 Bean
      *
+     * <p>使用 {@link ApplicationContext#getBeanNamesForType(Class)} 查询，
+     * 避免通过 {@code getBean} 抛出异常来判断是否存在（异常开销大）。
+     *
      * @param clazz Bean 类型
      * @param <T> Bean 类型
      * @return 如果包含返回 true，否则返回 false
@@ -300,12 +291,12 @@ public class SpringContextHolder implements ApplicationContextAware {
         if (clazz == null) {
             return false;
         }
-        try {
-            getBean(clazz);
-            return true;
-        } catch (Exception e) {
+        ApplicationContext ctx = applicationContext;
+        if (ctx == null) {
             return false;
         }
+        String[] names = ctx.getBeanNamesForType(clazz);
+        return names != null && names.length > 0;
     }
 
     /**

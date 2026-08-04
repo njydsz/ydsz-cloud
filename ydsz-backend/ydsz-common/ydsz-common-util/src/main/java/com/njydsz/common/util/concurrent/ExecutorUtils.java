@@ -175,7 +175,10 @@ public class ExecutorUtils {
     public static ExecutorService newVirtualThreadExecutor(String threadNamePrefix) {
         try {
             String name = threadNamePrefix != null ? threadNamePrefix : "virtual-";
-            ThreadFactory factory = Thread.ofVirtual().name(name, 0).factory();
+            ThreadFactory factory = Thread.ofVirtual()
+                    .name(name, 0)
+                    .uncaughtExceptionHandler(ExecutorUtils::handleUncaughtException)
+                    .factory();
             return Executors.newThreadPerTaskExecutor(factory);
         } catch (Exception | Error e) {
             log.warn("VirtualThread not supported, fallback to cached thread pool: {}", e.getMessage());
@@ -332,11 +335,26 @@ public class ExecutorUtils {
             if (thread.getPriority() != Thread.NORM_PRIORITY) {
                 thread.setPriority(Thread.NORM_PRIORITY);
             }
+            // 设置未捕获异常处理器，避免异常被静默吞没
+            thread.setUncaughtExceptionHandler(ExecutorUtils::handleUncaughtException);
             return thread;
         };
     }
 
     // ==================== 任务执行 ====================
+
+    /**
+     * 线程未捕获异常处理器
+     *
+     * <p>记录线程名和异常堆栈，避免 {@code execute()} 提交的任务异常被静默吞没。
+     * {@code submit()} 提交的任务异常会被封装到 Future 中，不会触发此处理器。
+     *
+     * @param t 抛出未捕获异常的线程
+     * @param e 异常
+     */
+    private static void handleUncaughtException(Thread t, Throwable e) {
+        log.error("Uncaught exception in thread {}", t.getName(), e);
+    }
 
     /**
      * Submit a task with actual timeout enforcement.

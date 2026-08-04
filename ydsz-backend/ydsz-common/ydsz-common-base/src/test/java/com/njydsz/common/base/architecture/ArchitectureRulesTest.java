@@ -44,6 +44,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  *   <li>R26: @Scheduled 定时任务必须使用 @DistributedScheduled 注解（集群安全）</li>
  *   <li>R27: HealthIndicator 不允许使用 @Component 注解（应通过 @Bean 注册）</li>
  *   <li>R28: 禁止使用 Executors.newFixedThreadPool/newCachedThreadPool（应通过 common-thread 统一管理；ScheduledExecutorService 变体因调度需求豁免）</li>
+ *   <li>R29: 禁止使用外部 JSON 库（全仓库统一使用 YdszJson）</li>
+ *   <li>R30: Controller 中 BaseResponse.error() 禁止无 error code 的单参调用（防止前端收到 A99999 盲盒）</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -498,4 +500,41 @@ public class ArchitectureRulesTest {
                     "com.google.gson..")
             .because("全仓库必须统一使用 YdszJson（ydsz-common-json），"
                     + "禁止直接依赖 Jackson/Fastjson/Gson 等外部 JSON 库");
+
+    // ========================================
+    // 错误码治理规则（2026-08-04 新增）
+    // ========================================
+
+    /**
+     * R30: Controller 中 BaseResponse.error() 禁止无 error code 的单参调用。
+     *
+     * <p>BaseResponse.error(String msg) 使用默认错误码 "A99999"，
+     * 导致前端无法对不同的错误做差异化处理。
+     *
+     * <p><b>正确用法：</b>
+     * <ul>
+     *   <li>{@code BaseResponse.error(XXResultCode.XXX)} — 使用业务错误码枚举</li>
+     *   <li>{@code BaseResponse.error(XXResultCode.XXX, "具体消息")} — 带自定义消息</li>
+     *   <li>{@code BaseResponse.error(BaseResultCode.BAD_REQUEST, "参数错误")} — 使用系统级错误码</li>
+     * </ul>
+     *
+     * <p><b>例外：</b>
+     * <ul>
+     *   <li>Feign Fallback 工厂类（如 {@code *ClientFallbackFactory}）豁免，
+     *       因为它们使用两参形式 {@code error(code, msg)}</li>
+     *   <li>测试代码（{@code src/test/}）豁免</li>
+     * </ul>
+     *
+     * @since 2026-08-04
+     */
+    @ArchTest
+    static final ArchRule controllerErrorMustIncludeCode = noClasses()
+            .that().resideInAPackage("..web.controller..")
+            .should().callMethod(
+                    com.njydsz.common.core.response.BaseResponse.class,
+                    "error",
+                    String.class)
+            .because("Controller 的 BaseResponse.error() 必须携带错误码参数，"
+                    + "禁止单参 msg 调用（默认 code=A99999）；"
+                    + "应使用 error(ResultCode) 或 error(ResultCode, msg)");
 }

@@ -16,12 +16,34 @@
 
 import type { Plugin } from 'vite';
 
+/** 子应用 manifest.json 中声明的路由级骨架屏配置（与 loader.ts ManifestRoute 对齐） */
+export interface ManifestPluginRoute {
+  /** 路由前缀（相对于子应用 basename 的子路径，如 '/users'、'/detail'） */
+  path: string;
+  /** 骨架屏类型（list/form/detail/dashboard/default） */
+  skeletonType?: string;
+}
+
 /** Vite Manifest 插件配置项：子应用名称与可选版本号 */
 export interface ManifestPluginOptions {
   /** 子应用名称 */
   name: string;
   /** 子应用版本（建议取 package.json version + build hash） */
   version?: string;
+  /**
+   * 路由级骨架屏配置（v3.3 新增，可选）。
+   *
+   * 子应用按自身路由前缀声明骨架屏类型，构建期写入 manifest.json，
+   * 主应用容器加载 manifest 后据此匹配当前路由子路径，渲染对应骨架屏。
+   *
+   * @example
+   *   routes: [
+   *     { path: '/users', skeletonType: 'list' },
+   *     { path: '/dashboard', skeletonType: 'dashboard' },
+   *     { path: '/form', skeletonType: 'form' },
+   *   ]
+   */
+  routes?: ManifestPluginRoute[];
 }
 
 /** 创建构建期生成 manifest.json 的 Vite 插件，供 micro-kernel 加载子应用入口与样式 */
@@ -60,12 +82,17 @@ export function viteManifestPlugin(options: ManifestPluginOptions): Plugin {
         )
         .map((asset) => `${base}${asset.fileName}`);
 
-      const manifest = {
+      const manifest: Record<string, unknown> = {
         name: appName,
         entry: `${base}${entryChunk.fileName}`,
         css: cssFiles,
         version: appVersion,
       };
+
+      // v3.3: 透传路由级骨架屏配置（可选）
+      if (Array.isArray(options.routes) && options.routes.length > 0) {
+        manifest.routes = options.routes;
+      }
 
       // 追加 manifest.json 到产物（loader.ts 对应 fetch manifest.json）
       this.emitFile({
