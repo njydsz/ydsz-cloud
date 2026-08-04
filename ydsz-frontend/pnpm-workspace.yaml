@@ -101,7 +101,7 @@ catalog:
   eslint-plugin-unused-imports: ^4.1.4
   eslint-plugin-vitest: ^0.5.4
   eslint-plugin-vue: ^10.2.0
-  eslint-plugin-vue-i18n: ^4.1.0
+  eslint-plugin-vue-i18n: ^0.3.0
   eslint-plugin-vue-scoped-css: ^2.8.1
   execa: ^9.6.0
   find-up: ^7.0.0

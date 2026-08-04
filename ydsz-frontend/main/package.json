@@ -26,6 +26,7 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@vueuse/core": "catalog:",
     "@ydsz-core/feature-flags": "workspace:*",
     "@ydsz/access": "workspace:*",
     "@ydsz/common-ui": "workspace:*",
@@ -44,7 +45,6 @@
     "@ydsz/styles": "workspace:*",
     "@ydsz/types": "workspace:*",
     "@ydsz/utils": "workspace:*",
-    "@vueuse/core": "catalog:",
     "dayjs": "catalog:",
     "element-plus": "catalog:",
     "pinia": "catalog:",
@@ -52,6 +52,7 @@
     "vue-router": "catalog:"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
     "unplugin-element-plus": "catalog:"
   }
 }
