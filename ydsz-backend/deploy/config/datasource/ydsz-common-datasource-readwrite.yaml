@@ -1,0 +1,170 @@
+# =====================================================================
+# Nacos 共享配置：数据库读写分离数据源
+# data-id: ydsz-common-datasource-readwrite.yaml
+# group: DEFAULT_GROUP
+#
+# ydsz-backend 统一数据源配置（支持读写分离 + Druid 连接池）
+#
+# 使用方式：在 bootstrap.yml shared-configs 中添加：
+#   - data-id: ydsz-common-datasource-readwrite.yaml
+#     group: ${spring.profiles.active}
+#     refresh: true
+#
+# 依赖：
+#   - PostgreSQL 主从架构（流复制模式）
+#   - ydsz-common-jdbc DynamicRoutingDataSource 自动装配
+#
+# @since 1.0.0
+# =====================================================================
+
+spring:
+  datasource:
+    # 启用动态数据源路由（ydsz-common-jdbc 提供）
+    dynamic:
+      enabled: true
+      primary: master              # 默认数据源
+      strict: false                # 未匹配到数据源时不报错，使用默认
+      
+      # 健康检查与熔断
+      health-check:
+        enabled: true
+        interval: 10s              # 检查周期
+        threshold: 3               # 连续失败 N 次后标记不可用
+        
+      # 读写分离配置
+      replication:
+        delay-threshold: 5s        # 复制延迟熔断阈值
+        failover-delay: 30s        # 故障转移冷却时间
+
+      datasource:
+        # ========== 主库（读写） ==========
+        master:
+          type: com.alibaba.druid.pool.DruidDataSource
+          driver-class-name: org.postgresql.Driver
+          url: jdbc:postgresql://${PG_HOST:127.0.0.1}:5432/ydsz?useUnicode=true&characterEncoding=utf8&tc漂移e=simple
+          username: ${PG_USER:ydsz}
+          password: ${PG_PASSWORD:ydsz}
+          # Druid 连接池配置
+          initial-size: 10
+          min-idle: 10
+          max-active: 30
+          max-wait: 5000
+          # 连接验证
+          validation-query: SELECT 1
+          validation-query-timeout: 3
+          test-while-idle: true
+          test-on-borrow: false
+          test-on-return: false
+          # 连接泄漏检测
+          remove-abandoned: true
+          remove-abandoned-timeout: 300
+          log-abandoned: true
+          # 时间配置
+          time-between-eviction-runs-millis: 60000
+          min-evictable-idle-time-millis: 300000
+          max-evictable-idle-time-millis: 600000
+          # 监控
+          filters: stat,wall,slf4j
+          # SQL 防火墙
+          wall:
+            config:
+              drop-table-allow: false
+              truncate-allow: false
+              multi-statement-allow: false
+              none-base-statement-allow: false
+              
+        # ========== 从库1（读优先） ==========
+        slave:
+          type: com.alibaba.druid.pool.DruidDataSource
+          driver-class-name: org.postgresql.Driver
+          url: jdbc:postgresql://${PG_SLAVE_HOST:127.0.0.1}:5433/ydsz?useUnicode=true&characterEncoding=utf8&targetSessionAttrs=read-only&application_name=ydsz_slave
+          username: ${PG_USER:ydsz}
+          password: ${PG_PASSWORD:ydsz}
+          # Druid 配置（读库可配置更多连接）
+          initial-size: 10
+          min-idle: 10
+          max-active: 50
+          max-wait: 5000
+          validation-query: SELECT 1
+          validation-query-timeout: 3
+          test-while-idle: true
+          test-on-borrow: false
+          time-between-eviction-runs-millis: 60000
+          min-evictable-idle-time-millis: 300000
+          filters: stat,slf4j
+          # 从库强制只读模式
+          default-transaction-isolation: 2  # READ_COMMITTED
+          connection-init-sqls: SET default_transaction_read_only = on
+
+        # ========== 从库2（报表/分析隔离） ==========
+        slave_report:
+          type: com.alibaba.druid.pool.DruidDataSource
+          driver-class-name: org.postgresql.Driver
+          url: jdbc:postgresql://${PG_SLAVE_REPORT_HOST:127.0.0.1}:5434/ydsz?useUnicode=true&characterEncoding=utf8&targetSessionAttrs=read-only&application_name=ydsz_report
+          username: ${PG_REPORT_USER:ydsz_report}
+          password: ${PG_REPORT_PASSWORD:ydsz}
+          initial-size: 5
+          min-idle: 5
+          max-active: 20
+          max-wait: 10000       # 报表查询可接受更长等待
+          validation-query: SELECT 1
+          test-while-idle: true
+          test-on-borrow: false
+          time-between-eviction-runs-millis: 120000
+          filters: stat,slf4j
+          connection-init-sqls: SET default_transaction_read_only = on; SET statement_timeout = 60000
+
+# =====================================================================
+# MyBatis-Plus 配置
+# =====================================================================
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    lazy-loading-enabled: false
+    aggressive-lazy-loading: false
+  global-config:
+    db-config:
+      id-type: auto
+      table-prefix: ""
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+# =====================================================================
+# 健康检查端点（Actuator）
+# =====================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      profile: ${spring.profiles.active}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+
+# =====================================================================
+# 日志配置
+# =====================================================================
+logging:
+  level:
+    com.njydsz.common.datasource: DEBUG
+    com.alibaba.druid.pool: WARN
+    org.postgresql: WARN

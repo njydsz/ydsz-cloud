@@ -110,6 +110,10 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
             assetFileNames: '[ext]/[name]-[hash].[ext]',
             chunkFileNames: 'js/[name]-[hash].js',
             entryFileNames: 'jse/index-[name]-[hash].js',
+            // v3.7.0 (P2-3): manualChunks — 将未外部化的第三方依赖拆分为独立缓存块
+            // 注意：vue/vue-router/pinia/element-plus/vxe-table 等已通过 importmap 外部化，
+            // 不会进入 chunk 拆分逻辑；此处针对 @vueuse/echarts/lodash-es 等未外置依赖
+            manualChunks: createManualChunks(),
           },
         },
         // v3.1: VITE_MONITOR_SOURCEMAP=true 时生成 hidden sourcemap（不引用到 HTML），
@@ -195,6 +199,60 @@ function createCssOptions(injectGlobalScss = true, appName?: string): CSSOptions
 }
 
 export { defineApplicationConfig };
+
+/**
+ * 生成 Rollup manualChunks 函数，将未外部化的第三方依赖拆分为独立缓存块。
+ *
+ * importmap 外部化的依赖（vue/vue-router/pinia/element-plus/vxe-table 等）不会进入
+ * 构建产物，因此无需在此重复声明。本函数主要处理未外置的大型库：
+ * - @vueuse/*: 工具函数集合，体积大且变动频率与业务代码不同
+ * - echarts: 图表库（仅主子应用引用时进入 bundle）
+ * - lodash-es / lodash: 工具库
+ * - async-validator: 表单校验（element-plus 依赖，但可能被业务直接引用）
+ * - @ctrl/*: tinycolor2 / @popperjs 等小型 UI 底座
+ * - 其他 node_modules 统一归入 vendor 块
+ *
+ * 分包收益：
+ * 1. 浏览器可独立缓存频繁变动的业务 chunk 与稳定的 vendor chunk
+ * 2. 多个子应用共享同一份 vendor chunk 时（hash 一致）命中缓存概率更高
+ *
+ * @returns Rollup manualChunks 函数
+ */
+function createManualChunks(): (id: string) => string | undefined {
+  return (id: string): string | undefined => {
+    // 只处理 node_modules 中的依赖
+    if (!id.includes('node_modules')) return undefined;
+
+    // 规范化路径：id 可能是绝对路径或 "prefix:" 开头的 URL
+    // 提取包名（scope 包取 scope/name，普通包取 name）
+    const nmIndex = id.indexOf('node_modules');
+    const subpath = id.slice(nmIndex + 'node_modules/'.length);
+    const segments = subpath.split('/');
+    const isScope = segments[0]?.startsWith('@');
+    const pkgName = isScope ? `${segments[0]}/${segments[1]}` : segments[0];
+
+    // 按包名分组
+    switch (pkgName) {
+      case '@vueuse/core':
+      case '@vueuse/shared':
+        return 'vendor-vueuse';
+      case 'echarts':
+      case 'echarts/core':
+        return 'vendor-echarts';
+      case 'lodash-es':
+      case 'lodash':
+        return 'vendor-lodash';
+      case 'async-validator':
+        return 'vendor-async-validator';
+      case '@ctrl/tinycolor':
+      case '@popperjs/core':
+        return 'vendor-ui-base';
+      default:
+        // 其他所有 node_modules 依赖统一归入 vendor
+        return 'vendor';
+    }
+  };
+}
 
 /**
  * 从当前工作目录的 package.json 读取子应用名。
