@@ -2,6 +2,11 @@
  * 共享 Auth Store 工厂 — 完整登录/登出/token 刷新流程
  *
  * 子应用调用 createSharedAuthStore(router) 获得与主应用一致的 auth store。
+ *
+ * P0-F2: 支持 HttpOnly Cookie 模式。当 `VITE_APP_AUTH_TOKEN_STORAGE=httpOnlyCookie` 时：
+ * - 登录成功后不从响应体读取 accessToken/refreshToken（后端通过 Set-Cookie 下发）
+ * - 仍读取 userInfo 和 accessCodes（非敏感数据，正常通过响应体返回）
+ * - 登出时调用 logoutApi 让后端清除 Cookie，前端仅清理本地 UI 状态
  */
 import type { Recordable, UserInfo } from '@ydsz/types';
 
@@ -17,6 +22,14 @@ import { defineStore } from 'pinia';
 
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from './auth-api';
 import { $t } from './i18n-setup';
+
+/**
+ * P0-F2: 认证令牌存储模式（构建期常量，与 request.ts 保持一致）。
+ *
+ * @see comm/effects/shared-auth/src/request.ts 中的 isHttpOnlyCookieMode
+ */
+const isHttpOnlyCookieMode: boolean =
+  import.meta.env.VITE_APP_AUTH_TOKEN_STORAGE === 'httpOnlyCookie';
 
 /**
  * 创建共享 Auth Store
@@ -62,14 +75,21 @@ export function createSharedAuthStore(options: {
           userInfo: loginUserInfo,
         } = loginResult;
 
-        if (accessToken) {
-          tokenStore.setAccessToken(accessToken);
-          if (refreshToken) {
-            tokenStore.setRefreshToken(refreshToken);
-          }
-          // 记录绝对过期时间戳，供会话超时预警使用（expiresIn 单位：秒）
-          if (typeof loginResult.expiresIn === 'number' && loginResult.expiresIn > 0) {
-            tokenStore.setExpiresAt(Date.now() + loginResult.expiresIn * 1000);
+        // P0-F2: HttpOnly Cookie 模式下，令牌由后端通过 Set-Cookie 下发，
+        //        前端不从响应体读取/存储 accessToken/refreshToken。
+        //        判定登录成功的条件从 "有 accessToken" 改为 "请求成功无异常"。
+        const isLoginSuccess = isHttpOnlyCookieMode || Boolean(accessToken);
+
+        if (isLoginSuccess) {
+          if (!isHttpOnlyCookieMode) {
+            tokenStore.setAccessToken(accessToken);
+            if (refreshToken) {
+              tokenStore.setRefreshToken(refreshToken);
+            }
+            // 记录绝对过期时间戳，供会话超时预警使用（expiresIn 单位：秒）
+            if (typeof loginResult.expiresIn === 'number' && loginResult.expiresIn > 0) {
+              tokenStore.setExpiresAt(Date.now() + loginResult.expiresIn * 1000);
+            }
           }
 
           if (loginUserInfo) {

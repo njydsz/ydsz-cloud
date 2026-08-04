@@ -114,6 +114,9 @@
         <enforcer.version>3.5.0</enforcer.version>
         <skipEnforcer>false</skipEnforcer>
 
+        <!-- ArchUnit 架构守护（P1：verify 阶段自动执行架构测试，CI 中可 -DskipArchUnit=true 跳过） -->
+        <skipArchUnit>false</skipArchUnit>
+
         <!-- JaCoCo 覆盖率（P1-5：单元测试覆盖率采集与报告）
              项目已恢复单元测试（105+ 测试类分布于 common-json/cache/queue/literule/agent/message 等模块）。
              本地构建默认跳过覆盖率采集以加速开发；CI 通过 -DskipJacoco=false -DskipJacocoCheck=false 启用。
@@ -1439,6 +1442,22 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <!-- ArchUnit 架构守护（P1：verify 阶段自动执行架构守护测试，CI 中可 -DskipArchUnit=true 跳过） -->
+                <plugin>
+                    <groupId>com.societegenerale.commons</groupId>
+                    <artifactId>archunit-maven-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>arch-test</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <skip>${skipArchUnit}</skip>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

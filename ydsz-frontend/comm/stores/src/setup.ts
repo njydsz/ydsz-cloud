@@ -10,6 +10,19 @@
  * 分发到浏览器，任何人拿到 bundle 均可提取密钥解密存储数据。属于**伪安全**，
  * 仅提供混淆层次的保护。token 等敏感凭据应改用后端下发的 HttpOnly Secure Cookie
  * （SameSite=Lax），前端不存储凭据。详见 docs/FRONTEND_OPTIMIZATION_REVIEW.md 安全章节。
+ *
+ * @important P0-F2 HttpOnly Cookie 迁移准备（v3.6.1）
+ * 通过环境变量 `VITE_APP_AUTH_TOKEN_STORAGE=httpOnlyCookie` 启用 Cookie 模式后：
+ * 1. useTokenStore 不再持久化 accessToken/refreshToken/expiresAt 到 localStorage
+ * 2. 共享 RequestClient 启用 withCredentials，不再注入 Authorization 头
+ * 3. 登录/登出流程依赖后端 Set-Cookie / Clear-Cookie，前端不接触令牌明文
+ * 4. SecureLS 仍保留用于非敏感 UI 状态（如锁屏、偏好设置）的持久化
+ *
+ * 迁移步骤（后端配合）：
+ * - 后端登录接口响应头增加 `Set-Cookie: accessToken=...; HttpOnly; Secure; SameSite=Lax`
+ * - 后端 401 响应时清除 Cookie 或返回刷新后的 Cookie
+ * - 后端 logout 接口清除 Cookie
+ * - 前端 .env 文件设置 `VITE_APP_AUTH_TOKEN_STORAGE=httpOnlyCookie`
  */
 import type { Pinia } from 'pinia';
 
@@ -22,6 +35,15 @@ let pinia: Pinia;
 
 /** 已注册的 store 列表，用于替代访问 Pinia 内部 _s 属性 */
 const registeredStores: Set<ReturnType<Pinia['_s']['get']>> = new Set();
+
+/**
+ * P0-F2: 认证令牌存储模式（构建期常量）。
+ *
+ * 在 Cookie 模式下，SecureLS 仍用于非敏感 UI 状态的加密持久化，
+ * 但不再存储 accessToken / refreshToken / expiresAt。
+ */
+const isHttpOnlyCookieMode: boolean =
+  import.meta.env.VITE_APP_AUTH_TOKEN_STORAGE === 'httpOnlyCookie';
 
 /**
  * {@link initStores} 的初始化参数。

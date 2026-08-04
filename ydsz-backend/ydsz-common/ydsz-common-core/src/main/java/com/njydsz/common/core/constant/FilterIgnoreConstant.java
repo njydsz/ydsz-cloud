@@ -76,6 +76,12 @@ public final class FilterIgnoreConstant {
             "/captcha/**"
     ));
 
+    /** 全部排除路径（预计算，避免每次调用 Stream.concat 重建） */
+    private static final Set<String> ALL_EXCLUDE_URLS = Stream.concat(
+            COMMON_IGNORE_URL.stream(),
+            SECURITY_EXCLUDE_URL.stream()
+    ).collect(Collectors.toUnmodifiableSet());
+
     /**
      * 获取过滤器忽略的URL模式集合
      *
@@ -100,10 +106,7 @@ public final class FilterIgnoreConstant {
      * @return 全部排除路径集合
      */
     public static Set<String> getAllExcludeUrls() {
-        return Stream.concat(
-                COMMON_IGNORE_URL.stream(),
-                SECURITY_EXCLUDE_URL.stream()
-        ).collect(Collectors.toUnmodifiableSet());
+        return ALL_EXCLUDE_URLS;
     }
 
     /**

@@ -7,9 +7,20 @@
  * 行为与原各子应用内联实现完全一致：
  * - doReAuthenticate: token 失效时清除 token，按 loginExpiredMode 决定弹窗或跳转
  * - doRefreshToken: 使用 refreshToken 刷新 accessToken
+ *
+ * P0-F2: HttpOnly Cookie 模式下，doRefreshToken 直接返回 null（后端通过 Cookie 续期），
+ *        doReAuthenticate 不再清空本地 token（前端无 token 可清）。
  */
 import { CROSS_TAB_EVENTS, notifyCrossTab } from './cross-tab';
 import { initSharedRequest, refreshTokenApi } from './request-setup';
+
+/**
+ * P0-F2: 认证令牌存储模式（构建期常量，与 request.ts 保持一致）。
+ *
+ * @see comm/effects/shared-auth/src/request.ts 中的 isHttpOnlyCookieMode
+ */
+const isHttpOnlyCookieMode: boolean =
+  import.meta.env.VITE_APP_AUTH_TOKEN_STORAGE === 'httpOnlyCookie';
 
 /**
  * 初始化共享请求客户端（注入 reAuthenticate / refreshToken 回调）
@@ -26,9 +37,12 @@ export async function setupSharedAuth(appName: string): Promise<void> {
       console.warn(`[${appName}] Access token expired, re-authenticating...`);
       const tokenStore = useTokenStore();
       const accessStore = useAccessStore();
-      tokenStore.setAccessToken(null);
-      // 同步清空过期时间戳，避免登出后仍触发会话超时预警
-      tokenStore.setExpiresAt(null);
+      // P0-F2: HttpOnly Cookie 模式下前端无 token 可清，跳过 setAccessToken(null)
+      if (!isHttpOnlyCookieMode) {
+        tokenStore.setAccessToken(null);
+        // 同步清空过期时间戳，避免登出后仍触发会话超时预警
+        tokenStore.setExpiresAt(null);
+      }
       if (
         preferences.app.loginExpiredMode === 'modal' &&
         accessStore.isAccessChecked
@@ -41,7 +55,10 @@ export async function setupSharedAuth(appName: string): Promise<void> {
       }
     },
     // doRefreshToken: 刷新 accessToken
+    // P0-F2: HttpOnly Cookie 模式下后端通过 Cookie 自动续期，前端不主动刷新
     async () => {
+      if (isHttpOnlyCookieMode) return null;
+
       const tokenStore = useTokenStore();
       const refreshToken = tokenStore.refreshToken;
       if (!refreshToken) return null;

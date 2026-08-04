@@ -254,6 +254,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 携带 ProblemDetail 的失败消息
      * @since 1.5.0
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static <T> BaseResponse<T> failWithDetail(ResultCode resultCode, String detail) {
         return errorWithDetail(resultCode, detail);
     }

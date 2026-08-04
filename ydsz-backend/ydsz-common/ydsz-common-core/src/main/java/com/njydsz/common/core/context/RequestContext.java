@@ -313,7 +313,9 @@ public final class RequestContext {
      * @param supplier 要执行的逻辑
      * @param <T>      返回值类型
      * @return supplier 的返回值
+     * @deprecated 请使用 try-with-resources + {@link #newCleanupGuard()} 替代，语义更明确。
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static <T> T runAndClear(Supplier<T> supplier) {
         try {
             return supplier.get();
@@ -329,7 +331,9 @@ public final class RequestContext {
      * 请确保调用此方法时上下文的生命周期确实应当在此处结束。</p>
      *
      * @param runnable 要执行的逻辑
+     * @deprecated 请使用 try-with-resources + {@link #newCleanupGuard()} 替代。
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static void runAndClear(Runnable runnable) {
         try {
             runnable.run();
