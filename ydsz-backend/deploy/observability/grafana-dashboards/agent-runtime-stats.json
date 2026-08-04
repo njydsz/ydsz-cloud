@@ -1,0 +1,335 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 200,
+      "title": "概览 — Agent 运行时",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(agent_active_conversations)", "legendFormat": "活跃对话" }],
+      "title": "活跃对话数",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "unit": "reqps" }
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum by (type) (rate(agent_execution_total[5m]))",
+          "legendFormat": "{{type}}"
+        }
+      ],
+      "title": "Agent 执行 QPS（按类型）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "unit": "reqps" }
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 1 },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(agent_execution_total[5m]))",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "title": "Agent 执行速率（按状态）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "unit": "s" }
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 1 },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (type, le) (rate(agent_execution_duration_seconds_bucket[5m])))",
+          "legendFormat": "P99 {{type}}"
+        },
+        {
+          "expr": "histogram_quantile(0.5, sum by (type, le) (rate(agent_execution_duration_seconds_bucket[5m])))",
+          "legendFormat": "P50 {{type}}"
+        }
+      ],
+      "title": "Agent 执行耗时 P50/P99",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 201,
+      "title": "工具调用 — Tool Calls",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 8 },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum by (tool_name) (rate(agent_tool_calls_total[5m]))",
+          "legendFormat": "{{tool_name}}"
+        }
+      ],
+      "title": "工具调用 QPS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 8 },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (tool_name, le) (rate(agent_tool_call_duration_seconds_bucket[5m])))",
+          "legendFormat": "P99 {{tool_name}}"
+        },
+        {
+          "expr": "sum by (tool_name) (rate(agent_tool_calls_total{status='failure'}[5m])) / sum by (tool_name) (rate(agent_tool_calls_total[5m]))",
+          "legendFormat": "失败率 {{tool_name}}"
+        }
+      ],
+      "title": "工具调用 P99 耗时 & 失败率",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 202,
+      "title": "RAG 检索 — Retrieval",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 16 },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "sum by (provider, status) (rate(agent_rag_retrieval_total[5m]))",
+          "legendFormat": "{{provider}} / {{status}}"
+        }
+      ],
+      "title": "RAG 检索 QPS（按通路/状态）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 16 },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (provider, le) (rate(agent_rag_retrieval_duration_seconds_bucket[5m])))",
+          "legendFormat": "P99 {{provider}}"
+        }
+      ],
+      "title": "RAG 检索 P99 耗时",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 2 }, { "color": "red", "value": 5 }] }, "unit": "s" }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 16 },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum by (provider, le) (rate(agent_rag_retrieval_duration_seconds_bucket[5m])))",
+          "legendFormat": "P50 {{provider}}"
+        }
+      ],
+      "title": "RAG 检索 P50 耗时（SLO 阈值线）",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 203,
+      "title": "流式首 Token — TTFT / LLM",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 23 },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (provider, le) (rate(agent_llm_ttft_seconds_bucket[5m])))",
+          "legendFormat": "P99 {{provider}}"
+        },
+        {
+          "expr": "histogram_quantile(0.5, sum by (provider, le) (rate(agent_llm_ttft_seconds_bucket[5m])))",
+          "legendFormat": "P50 {{provider}}"
+        }
+      ],
+      "title": "流式 LLM TTFT P50 / P99",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 23 },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (provider, model, le) (rate(agent_llm_call_duration_seconds_bucket[5m])))",
+          "legendFormat": "P99 {{provider}}/{{model}}"
+        }
+      ],
+      "title": "LLM 调用 P99 耗时（基线）",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 },
+      "id": 204,
+      "title": "DAG 编排 & Human Approval",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 31 },
+      "id": 12,
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(agent_dag_nodes_executed_total[5m]))",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "title": "DAG 节点执行速率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 31 },
+      "id": 13,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(agent_dag_execution_duration_seconds_bucket[5m])))",
+          "legendFormat": "P99"
+        },
+        {
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(agent_dag_execution_duration_seconds_bucket[5m])))",
+          "legendFormat": "P50"
+        }
+      ],
+      "title": "DAG 整图编排耗时",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 31 },
+      "id": 14,
+      "targets": [
+        {
+          "expr": "rate(agent_human_approval_waiting_total[5m])",
+          "legendFormat": "审批请求速率"
+        },
+        {
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(agent_human_approval_wait_duration_seconds_bucket[5m])))",
+          "legendFormat": "P50 等待"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(agent_human_approval_wait_duration_seconds_bucket[5m])))",
+          "legendFormat": "P99 等待"
+        }
+      ],
+      "title": "Human-in-the-Loop 审批",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 },
+      "id": 205,
+      "title": "会话消息",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" }
+      },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 38 },
+      "id": 15,
+      "targets": [
+        {
+          "expr": "sum by (role) (rate(agent_conversation_messages_total[5m]))",
+          "legendFormat": "{{role}}"
+        }
+      ],
+      "title": "对话消息速率（按角色）",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["ydsz", "agent", "runtime"],
+  "templating": { "list": [] },
+  "time": { "from": "now-3h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "YDSZ Agent Runtime — 运行时指标",
+  "uid": "ydsz-agent-runtime",
+  "version": 1,
+  "weekStart": ""
+}
