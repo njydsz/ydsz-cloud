@@ -129,12 +129,12 @@ public final class ContextKey<T> {
         if (this == o) return true;
         if (!(o instanceof ContextKey)) return false;
         ContextKey<?> that = (ContextKey<?>) o;
-        return key.equals(that.key);
+        return key.equals(that.key) && type.equals(that.type);
     }
 
     @Override
     public int hashCode() {
-        return key.hashCode();
+        return 31 * key.hashCode() + type.hashCode();
     }
 
     @Override

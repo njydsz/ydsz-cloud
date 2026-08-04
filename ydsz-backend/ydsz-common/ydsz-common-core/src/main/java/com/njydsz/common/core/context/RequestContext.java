@@ -273,6 +273,24 @@ public final class RequestContext {
     }
 
     /**
+     * 使用类型安全的 {@link ContextKey} 获取属性，不存在时返回默认值（推荐）。
+     *
+     * <p>对标 {@link java.util.Map#getOrDefault(Object, Object)} 语义，
+     * 避免调用方手动判空。</p>
+     *
+     * @param <T>          值类型
+     * @param key          上下文键
+     * @param defaultValue 不存在时返回的默认值
+     * @return 属性值；不存在则返回 defaultValue
+     * @since 1.7.0
+     * @see ContextKey
+     */
+    public static <T> T getOrDefault(ContextKey<T> key, T defaultValue) {
+        T value = get(key);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
      * 移除属性
      *
      * @param key 属性键
