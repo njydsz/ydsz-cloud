@@ -15,6 +15,8 @@ import { configDefaults, defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [Vue(), VueJsx()],
   test: {
+    // 默认包含 src 和 comm 下的 spec/contract 测试文件
+    include: ['**/*.spec.ts', '**/*.test.ts'],
     coverage: {
       enabled: true,
       exclude: [

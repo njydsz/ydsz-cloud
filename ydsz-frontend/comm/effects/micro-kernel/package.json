@@ -9,6 +9,10 @@
       "default": "./src/index.ts"
     }
   },
+  "scripts": {
+    "test": "vitest run --reporter=verbose",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "@ydsz-core/shared": "workspace:*",
     "@ydsz/micro-runtime": "workspace:*",
