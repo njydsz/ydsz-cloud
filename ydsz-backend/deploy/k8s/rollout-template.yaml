@@ -1,0 +1,133 @@
+# =============================================================================
+#  YDSZ · 后端微服务通用 Argo Rollouts 金丝雀发布模板
+# -----------------------------------------------------------------------------
+#  占位符（同 deployment-template.yaml）：
+#    ${SERVICE_NAME} / ${MODULE_NAME} / ${IMAGE_TAG} / ${APP_PORT}
+#    ${SPRING_PROFILES_ACTIVE} / ${NACOS_SERVER_ADDR} / ${OTEL_EXPORTER_OTLP_ENDPOINT}
+#
+#  前置条件：集群已安装 Argo Rollouts controller（https://argoproj.github.io/rollouts/）
+#
+#  使用方式：
+#    kubectl apply -f deploy/k8s/rollout-template.yaml
+#    kubectl argo rollouts get rollout ${SERVICE_NAME} --watch
+#
+#  灰度流程：
+#    1. 新版本 Pod 启动，5% 流量导入（canary），暂停 2 分钟观察监控
+#    2. 放大到 25%，暂停 2 分钟
+#    3. 放大到 50%，暂停 2 分钟
+#    4. 全量发布（100%）
+#    5. 任一阶段可通过 `kubectl argo rollouts abort ${SERVICE_NAME}` 回滚
+#
+#  注意：
+#    - 部署此 Rollout 后，需删除同名的 Deployment（Service / HPA 保持不变）
+#    - nginx 流量路由要求存在名为 ${SERVICE_NAME} 的 Ingress；如无 Ingress，
+#      可改用 Istio / SMI 等 trafficRouting，或移除 trafficRouting 字段
+#      （此时 canary 仅按副本比例切流）
+#
+#  @path deploy/k8s/rollout-template.yaml
+#  @author ydsz-team
+#  @since 1.0.0
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ${SERVICE_NAME}
+  labels:
+    app: ${SERVICE_NAME}
+    module: ${MODULE_NAME}
+    component: backend
+    app.kubernetes.io/name: ${SERVICE_NAME}
+    app.kubernetes.io/part-of: ydsz-pmis
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+  strategy:
+    canary:
+      canaryService: ${SERVICE_NAME}-canary
+      stableService: ${SERVICE_NAME}-stable
+      trafficRouting:
+        nginx:
+          stableIngress: ${SERVICE_NAME}
+      steps:
+        # 1. 5% 灰度，暂停 2 分钟观察
+        - setWeight: 5
+        - pause: { duration: 2m }
+        # 2. 25% 灰度，暂停 2 分钟
+        - setWeight: 25
+        - pause: { duration: 2m }
+        # 3. 50% 灰度，暂停 2 分钟
+        - setWeight: 50
+        - pause: { duration: 2m }
+        # 4. 全量发布
+        - setWeight: 100
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}
+        module: ${MODULE_NAME}
+        component: backend
+        app.kubernetes.io/name: ${SERVICE_NAME}
+        app.kubernetes.io/part-of: ydsz-pmis
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: ${SERVICE_NAME}
+      containers:
+        - name: ${MODULE_NAME}
+          image: registry.example.com/ydsz/${SERVICE_NAME}:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: ${APP_PORT}
+              name: http
+              protocol: TCP
+          env:
+            - name: APP_PORT
+              value: "${APP_PORT}"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "${SPRING_PROFILES_ACTIVE}"
+            - name: NACOS_SERVER_ADDR
+              value: "${NACOS_SERVER_ADDR}"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "${OTEL_EXPORTER_OTLP_ENDPOINT}"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - "sleep 10"
+      terminationGracePeriodSeconds: 60

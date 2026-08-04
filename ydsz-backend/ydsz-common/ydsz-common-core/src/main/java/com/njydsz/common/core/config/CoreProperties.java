@@ -47,6 +47,23 @@ public class CoreProperties {
     private int tenantMdcFilterOrder = Ordered.HIGHEST_PRECEDENCE + 100;
 
     /**
+     * 创建一个仅包含分页参数的临时实例（不经过 Spring 绑定和校验）。
+     *
+     * <p>仅供内部兼容使用。调用方需确保参数合法性。</p>
+     *
+     * @param defaultPageSize 默认每页记录数
+     * @param maxPageSize     最大每页记录数
+     * @return 临时 CoreProperties 实例
+     * @since 1.5.0
+     */
+    static CoreProperties temporary(int defaultPageSize, int maxPageSize) {
+        CoreProperties props = new CoreProperties();
+        props.defaultPageSize = defaultPageSize;
+        props.maxPageSize = maxPageSize;
+        return props;
+    }
+
+    /**
      * 交叉校验：默认每页记录数不能超过最大每页记录数上限。
      *
      * <p>避免出现 {@code default-page-size > max-page-size} 的非法组合，

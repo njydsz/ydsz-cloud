@@ -44,10 +44,17 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 public class GatewaySentinelConfig {
 
+    private final GatewayMetrics gatewayMetrics;
+
+    public GatewaySentinelConfig(GatewayMetrics gatewayMetrics) {
+        this.gatewayMetrics = gatewayMetrics;
+    }
+
     /**
      * 初始化网关限流/熔断响应处理器
      *
      * <p>P1-8: 根据异常类型区分限流与熔断，返回不同 HTTP 状态码与业务错误码。
+     * P0-3 修复：熔断触发时上报 Prometheus 指标（CircuitBreakerState=open）。
      */
     @PostConstruct
     public void init() {
@@ -62,6 +69,11 @@ public class GatewaySentinelConfig {
                 httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
                 bizCode = 50300;
                 message = "error.SERVICE_DEGRADED";
+                // P0-3 修复：熔断触发时上报指标（state=1 open）
+                String routeId = extractRouteId(exchange);
+                if (routeId != null) {
+                    gatewayMetrics.setCircuitBreakerState(routeId, 1);
+                }
             } else if (ex instanceof SystemBlockException) {
                 httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
                 bizCode = 50301;
@@ -96,6 +108,25 @@ public class GatewaySentinelConfig {
         };
         GatewayCallbackManager.setBlockHandler(handler);
 
-        log.info("[SentinelConfig] 限流/熔断响应处理器初始化完成（P1-8: 区分限流(429)/熔断(503)/系统保护(503)）");
+        log.info("[SentinelConfig] 限流/熔断响应处理器初始化完成（P1-8: 区分限流(429)/熔断(503)/系统保护(503)；P0-3: 熔断指标上报）");
+    }
+
+    /**
+     * 从交换上下文中提取路由 ID。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @return 路由 ID，无法获取时返回 null
+     */
+    private String extractRouteId(org.springframework.web.server.ServerWebExchange exchange) {
+        try {
+            Object route = exchange.getAttribute(
+                    org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
+            if (route instanceof org.springframework.cloud.gateway.route.Route routeObj) {
+                return routeObj.getId();
+            }
+        } catch (Exception e) {
+            // 忽略异常，指标上报不应影响请求处理
+        }
+        return null;
     }
 }

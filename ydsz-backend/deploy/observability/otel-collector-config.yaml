@@ -1,0 +1,116 @@
+# =============================================================================
+#  YDSZ · OpenTelemetry Collector 配置模板
+# -----------------------------------------------------------------------------
+#  作用：接收微服务上报的 OTLP 数据，batch 后处理后导出到后端存储。
+#
+#  接收端口：
+#    - 4317  OTLP gRPC（Dockerfile 中 OTel Java Agent 默认走此端口）
+#    - 4318  OTLP HTTP（备选）
+#
+#  导出后端（默认 Jaeger，可选 Tempo）：
+#    - Jaeger：默认 jaeger:14250（gRPC collector 端口）
+#    - Tempo：可选，tempo:4317（OTLP gRPC），需切换 pipeline
+#
+#  部署方式（Docker Compose 示例）：
+#    services:
+#      otel-collector:
+#        image: otel/opentelemetry-collector-contrib:0.110.0
+#        container_name: otel-collector
+#        command: ["--config=/etc/otelcol/config.yaml"]
+#        volumes:
+#          - ./deploy/observability/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+#        ports:
+#          - "4317:4317"   # OTLP gRPC
+#          - "4318:4318"   # OTLP HTTP
+#          - "8888:8888"   # Collector 自身 metrics
+#        depends_on:
+#          - jaeger
+#
+#  说明：
+#    - 使用 otel-collector-contrib 镜像（contrib 版本含 jaeger exporter）
+#    - 如需切换到 Tempo，注释 jaeger exporter，启用 otlp/tempo exporter 并改 pipeline
+#    - 后端服务只需配置 OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+#  Receivers —— 接收 OTLP 数据（gRPC + HTTP）
+# -----------------------------------------------------------------------------
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        # 单条消息最大体（默认 4MiB，链路较长时可适当上调）
+        max_recv_msg_size_mib: 16
+      http:
+        endpoint: 0.0.0.0:4318
+
+# -----------------------------------------------------------------------------
+#  Processors —— 数据处理
+# -----------------------------------------------------------------------------
+processors:
+  # 批处理：降低上报频率，提升吞吐
+  batch:
+    send_batch_size: 8192
+    send_batch_max_size: 10000
+    timeout: 5s
+
+  # 资源属性兜底（若上游未上报 service.name 则补默认值）
+  resourcedetection:
+    detectors: [env, system]
+    timeout: 2s
+    override: false
+
+  # 限流保护，避免突发流量压垮后端（按服务维度）
+  memory_limiter:
+    check_interval: 2s
+    limit_percentage: 80
+    spike_limit_percentage: 25
+
+# -----------------------------------------------------------------------------
+#  Exporters —— 导出到后端存储
+# -----------------------------------------------------------------------------
+exporters:
+  # === 默认：Jaeger（gRPC collector，端口 14250） ===
+  # 注意：jaeger exporter 需使用 otel/opentelemetry-collector-contrib 镜像
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+    # 默认发送超时
+    timeout: 10s
+
+  # === 可选：Tempo（OTLP gRPC，端口 4317） ===
+  # 切换到 Tempo 时：注释上方 jaeger exporter，启用下方配置，
+  # 并将 service.pipelines.traces.exporters 改为 [otlp/tempo]
+  # otlp/tempo:
+  #   endpoint: tempo:4317
+  #   tls:
+  #     insecure: true
+
+  # Collector 自身指标导出到 Prometheus（可选，便于监控 collector 健康）
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: otelcol
+
+# -----------------------------------------------------------------------------
+#  Service —— 管道编排
+# -----------------------------------------------------------------------------
+service:
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      address: 0.0.0.0:8888
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [jaeger]
+
+    # metrics 管道（如需采集 OTel metrics，取消注释即可）
+    # metrics:
+    #   receivers: [otlp]
+    #   processors: [memory_limiter, batch]
+    #   exporters: [prometheus]

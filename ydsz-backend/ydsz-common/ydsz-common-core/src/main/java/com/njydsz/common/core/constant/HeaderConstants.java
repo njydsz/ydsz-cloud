@@ -71,6 +71,16 @@ public final class HeaderConstants {
      */
     public static final String X_SERVICE_TYPE = "X-Service-Type";
 
+    /**
+     * 幂等键。
+     *
+     * <p>客户端通过此 Header 传递幂等键，服务端据此保证操作幂等性。
+     * 参考 Stripe API 的 Idempotency-Key 设计。
+     *
+     * @since 1.5.0
+     */
+    public static final String IDEMPOTENCY_KEY = "X-Idempotency-Key";
+
     // ============================== 数据权限 ==============================
 
     /**

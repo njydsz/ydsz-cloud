@@ -26,17 +26,13 @@ import java.net.URI;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 返回成功
+ * // 推荐：简洁 API
+ * return BaseResponse.ok(user);
+ * return BaseResponse.fail(BaseResultCode.NOT_FOUND);
+ *
+ * // 兼容旧版
  * return BaseResponse.success(user);
- *
- * // 返回成功带消息
- * return BaseResponse.success("操作成功", user);
- *
- * // 返回失败
- * return BaseResponse.error("参数错误");
- *
- * // 返回失败带错误码
- * return BaseResponse.error("A01002", "用户名已存在");
+ * return BaseResponse.error(BaseResultCode.FORBIDDEN);
  * }</pre>
  *
  * @param <T> 数据泛型
@@ -148,6 +144,109 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public static <T> BaseResponse<T> success() {
         return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), null);
+    }
+
+    // ======================== 精简 API (1.5.0+) ========================
+
+    /**
+     * 返回成功（无数据）。
+     *
+     * <p>推荐替代 {@link #success()}，命名更简洁。</p>
+     *
+     * @param <T> 数据类型
+     * @return 成功消息
+     * @since 1.5.0
+     */
+    public static <T> BaseResponse<T> ok() {
+        return success();
+    }
+
+    /**
+     * 返回成功（带数据）。
+     *
+     * <p>推荐替代 {@link #success(Object)}。</p>
+     *
+     * @param data 数据内容
+     * @param <T>  数据类型
+     * @return 成功消息
+     * @since 1.5.0
+     */
+    public static <T> BaseResponse<T> ok(T data) {
+        return success(data);
+    }
+
+    /**
+     * 返回成功（带消息和数据）。
+     *
+     * <p>推荐替代 {@link #success(String, Object)}。</p>
+     *
+     * @param msg  消息内容
+     * @param data 数据内容
+     * @param <T>  数据类型
+     * @return 成功消息
+     * @since 1.5.0
+     */
+    public static <T> BaseResponse<T> ok(String msg, T data) {
+        return success(msg, data);
+    }
+
+    /**
+     * 返回失败（基于 ResultCode，自动走 i18n）。
+     *
+     * <p>推荐替代 {@link #error(ResultCode)}。</p>
+     *
+     * @param resultCode 结果码
+     * @param <T>        数据类型
+     * @return 失败消息
+     * @since 1.5.0
+     */
+    public static <T> BaseResponse<T> fail(ResultCode resultCode) {
+        return error(resultCode);
+    }
+
+    /**
+     * 返回失败（基于 ResultCode + 自定义消息，不走 i18n）。
+     *
+     * <p>推荐替代 {@link #error(ResultCode, String)}。</p>
+     *
+     * @param resultCode 结果码
+     * @param msg        自定义消息
+     * @param <T>        数据类型
+     * @return 失败消息
+     * @since 1.5.0
+     */
+    public static <T> BaseResponse<T> fail(ResultCode resultCode, String msg) {
+        return error(resultCode, msg);
+    }
+
+    /**
+     * 返回失败（自定义 code 和 msg）。
+     *
+     * <p>推荐替代 {@link #error(String, String)}。</p>
+     *
+     * @param code 错误码
+     * @param msg  消息内容
+     * @param <T>  数据类型
+     * @return 失败消息
+     * @since 1.5.0
+     */
+    public static <T> BaseResponse<T> fail(String code, String msg) {
+        return error(code, msg);
+    }
+
+    /**
+     * 返回携带 RFC 7807 Problem Details 的失败消息。
+     *
+     * <p>推荐替代 {@link #errorWithDetail(ResultCode, String)}。</p>
+     *
+     * @param resultCode 结果码
+     * @param detail     错误详情
+     * @param <T>        数据类型
+     * @return 携带 ProblemDetail 的失败消息
+     * @since 1.5.0
+     */
+    public static <T> BaseResponse<T> failWithDetail(ResultCode resultCode, String detail) {
+        return errorWithDetail(resultCode, detail);
     }
 
     /**

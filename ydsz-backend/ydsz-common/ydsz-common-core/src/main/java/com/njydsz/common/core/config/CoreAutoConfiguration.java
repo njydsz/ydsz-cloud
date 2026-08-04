@@ -65,8 +65,7 @@ public class CoreAutoConfiguration {
 
         @Override
         public void afterSingletonsInstantiated() {
-            PageConstants.setMaxPageSize(properties.getMaxPageSize());
-            PageConstants.setDefaultPageSize(properties.getDefaultPageSize());
+            PageConstants.init(properties);
         }
     }
 }

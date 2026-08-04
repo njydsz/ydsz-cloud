@@ -1,0 +1,87 @@
+# =============================================================================
+#  YDSZ · 后端微服务通用 Helm Chart 默认值
+# -----------------------------------------------------------------------------
+#  各模块通过 --set 或自定义 values.yaml 覆盖，例如：
+#    helm install ydsz-gateway ./deploy/helm/ydsz-backend \
+#      --set serviceName=ydsz-gateway \
+#      --set moduleName=ydsz-gateway \
+#      --set image.tag=v1.3.0 \
+#      --set env.APP_PORT=9000 \
+#      --set env.SPRING_PROFILES_ACTIVE=prod
+# =============================================================================
+
+# --- 服务标识 ---
+# serviceName: K8s 资源名称（Deployment / Service / HPA 共用）
+# moduleName:  Maven 模块名（容器名 + 溯源 label）
+serviceName: ydsz-backend
+moduleName: ydsz-backend
+
+# --- 副本数 ---
+replicaCount: 3
+
+# --- 镜像 ---
+image:
+  repository: registry.example.com/ydsz
+  name: ydsz-backend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# --- Service ---
+service:
+  type: ClusterIP
+  port: 8080          # Service 对外暴露端口
+  # targetPort 指向容器命名端口 http（即 env.APP_PORT），无需在此重复
+
+# --- 环境变量（容器内注入） ---
+env:
+  APP_PORT: "8080"
+  SPRING_PROFILES_ACTIVE: "dev"
+  NACOS_SERVER_ADDR: "127.0.0.1:8848"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+
+# --- 资源限制 ---
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+# --- 健康探针 ---
+probes:
+  liveness:
+    path: /actuator/health/liveness
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  startup:
+    path: /actuator/health/liveness
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 30
+
+# --- 优雅停机 ---
+lifecycle:
+  preStop:
+    sleepSeconds: 10
+terminationGracePeriodSeconds: 60
+
+# --- 跨节点反亲和 ---
+topologySpreadConstraints:
+  enabled: true
+  maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: ScheduleAnyway
+
+# --- HPA ---
+hpa:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  cpuUtilization: 70

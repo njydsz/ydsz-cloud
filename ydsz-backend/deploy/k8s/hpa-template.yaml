@@ -1,0 +1,37 @@
+# =============================================================================
+#  YDSZ · 后端微服务通用 HPA 模板
+# -----------------------------------------------------------------------------
+#  占位符：${SERVICE_NAME} / ${MODULE_NAME}
+#
+#  策略：
+#    - CPU 平均利用率 70% 触发扩容
+#    - 最小 3 副本（与 Deployment replicas 对齐，保底可用性）
+#    - 最大 10 副本（防止雪崩扩容）
+#
+#  @path deploy/k8s/hpa-template.yaml
+#  @author ydsz-team
+#  @since 1.0.0
+# =============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ${SERVICE_NAME}
+  labels:
+    app: ${SERVICE_NAME}
+    module: ${MODULE_NAME}
+    app.kubernetes.io/name: ${SERVICE_NAME}
+    app.kubernetes.io/part-of: ydsz-pmis
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ${SERVICE_NAME}
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

@@ -229,6 +229,21 @@ public final class RequestContext {
     }
 
     /**
+     * 使用类型安全的 {@link ContextKey} 设置属性（推荐）。
+     *
+     * <p>编译期保证类型安全，避免运行时的 ClassCastException。</p>
+     *
+     * @param <T>   值类型
+     * @param key   上下文键
+     * @param value 属性值
+     * @since 1.5.0
+     * @see ContextKey
+     */
+    public static <T> void put(ContextKey<T> key, T value) {
+        put(key.key(), value);
+    }
+
+    /**
      * 获取属性
      *
      * <p>上下文未初始化时返回 null，不触发 Map 创建。</p>
@@ -242,6 +257,22 @@ public final class RequestContext {
     }
 
     /**
+     * 使用类型安全的 {@link ContextKey} 获取属性（推荐）。
+     *
+     * <p>返回值已是目标类型，无需手动转型。</p>
+     *
+     * @param <T> 值类型
+     * @param key 上下文键
+     * @return 属性值；不存在则返回 null
+     * @since 1.5.0
+     * @see ContextKey
+     */
+    public static <T> T get(ContextKey<T> key) {
+        Object value = get(key.key());
+        return key.cast(value);
+    }
+
+    /**
      * 移除属性
      *
      * @param key 属性键
@@ -251,6 +282,16 @@ public final class RequestContext {
         if (holder != null) {
             holder.remove(key);
         }
+    }
+
+    /**
+     * 使用类型安全的 {@link ContextKey} 移除属性（推荐）。
+     *
+     * @param key 上下文键
+     * @since 1.5.0
+     */
+    public static void remove(ContextKey<?> key) {
+        remove(key.key());
     }
 
     /**

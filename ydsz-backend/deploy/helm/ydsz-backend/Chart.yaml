@@ -1,0 +1,14 @@
+apiVersion: v2
+name: ydsz-backend
+description: YDSZ 后端微服务通用 Helm Chart（gateway / system / userinfo / project / workflow / agent / cronjob / message / nextwiki / literule）
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - ydsz
+  - pmis
+  - microservice
+  - spring-boot
+home: https://github.com/njydsz/ydsz-pmis
+maintainers:
+  - name: ydsz-team

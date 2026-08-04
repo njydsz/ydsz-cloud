@@ -19,6 +19,7 @@
 #    5. BuildKit 缓存挂载加速 Maven 构建（.m2 / target）
 #    6. 健康检查通过 Spring Boot Actuator
 #    7. 时区固定 Asia/Shanghai
+#    8. OpenTelemetry Java Agent 默认注入（SkyWalking 作为备选）
 # =============================================================================
 # syntax=docker/dockerfile:1.7
 
@@ -85,6 +86,8 @@ FROM eclipse-temurin:21-jre-alpine AS runtime
 
 ARG MODULE_NAME=ydsz-gateway
 ARG APP_PORT=9000
+# OpenTelemetry Java Agent 版本（可通过 --build-arg 覆盖）
+ARG OTEL_AGENT_VERSION=2.9.0
 
 LABEL org.opencontainers.image.title="ydsz-${MODULE_NAME}" \
       org.opencontainers.image.source="https://github.com/njydsz/ydsz-pmis" \
@@ -100,6 +103,14 @@ RUN apk add --no-cache tini curl tzdata ca-certificates && \
     adduser -u 65532 -S ydsz -G ydsz -h /app && \
     # 清理 apk 缓存
     rm -rf /var/cache/apk/*
+
+# 下载 OpenTelemetry Java Agent（运行期 APM/Tracing 注入）
+# 默认从 GitHub Releases 拉取，离线构建可通过 build-arg 指定版本或挂载本地 agent
+RUN mkdir -p /opt/otel && \
+    curl -fsSL -o /opt/otel/opentelemetry-javaagent.jar \
+        "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent.jar" && \
+    chmod 644 /opt/otel/opentelemetry-javaagent.jar && \
+    ls -lh /opt/otel/opentelemetry-javaagent.jar
 
 ENV TZ=Asia/Shanghai \
     LANG=C.UTF-8 \
@@ -126,7 +137,22 @@ EXPOSE ${APP_PORT}
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
     CMD curl -sf http://127.0.0.1:${APP_PORT}/actuator/health || exit 1
 
-# P0-3: SkyWalking Java Agent 支持（可选）
+# =============================================================================
+#  OpenTelemetry Java Agent（默认启用，作为首选 APM/Tracing 方案）
+#  - OTEL_SERVICE_NAME 取自 MODULE_NAME，标识当前微服务
+#  - 默认通过 OTLP gRPC 上报到 otel-collector (4317)
+#  - 通过 OTEL_ENABLED=false 可关闭 agent 注入（保留 jar 以便热切换）
+# =============================================================================
+ENV OTEL_ENABLED=${OTEL_ENABLED:-true} \
+    OTEL_TRACES_EXPORTER=otlp \
+    OTEL_METRICS_EXPORTER=otlp \
+    OTEL_LOGS_EXPORTER=none \
+    OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317} \
+    OTEL_EXPORTER_OTLP_PROTOCOL=${OTEL_EXPORTER_OTLP_PROTOCOL:-grpc} \
+    OTEL_SERVICE_NAME=${MODULE_NAME} \
+    OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_LOG_ATTRIBUTES_FORWARDING=true
+
+# P0-3: SkyWalking Java Agent 支持（备选，默认关闭）
 # K8s 环境：通过 init-container + emptyDir 注入 agent（见 patch-skywalking.yaml）
 # Docker Compose 环境：通过 volume 挂载 agent 目录
 #   docker run -v /path/to/skywalking-agent:/skywalking/agent:ro ...
@@ -134,13 +160,19 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
 ENV SW_AGENT_ENABLED=${SW_AGENT_ENABLED:-false}
 
 # tini 作为 PID 1，正确转发 SIGTERM 给 JVM
-# P0-3: 条件注入 SkyWalking agent — 若 /skywalking/agent/skywalking-agent.jar 存在则加载
+# 条件注入 APM Agent：
+#   - OpenTelemetry Agent（首选，OTEL_ENABLED 默认 true，jar 内置于 /opt/otel）
+#   - SkyWalking Agent（备选，SW_AGENT_ENABLED 默认 false，需挂载到 /skywalking/agent）
+# 两者可共存；默认仅启用 OTel。
 ENTRYPOINT ["/sbin/tini", "--", "sh", "-c", "\
-  if [ -f /skywalking/agent/skywalking-agent.jar ] && [ \"$SW_AGENT_ENABLED\" = \"true\" ]; then \
-    AGENT_OPT=\"-javaagent:/skywalking/agent/skywalking-agent.jar\"; \
-    echo '[SkyWalking] Agent enabled: ' $AGENT_OPT; \
-  else \
-    AGENT_OPT=''; \
+  AGENT_OPTS=''; \
+  if [ \"$OTEL_ENABLED\" = \"true\" ] && [ -f /opt/otel/opentelemetry-javaagent.jar ]; then \
+    AGENT_OPTS=\"$AGENT_OPTS -javaagent:/opt/otel/opentelemetry-javaagent.jar\"; \
+    echo '[OTel] Agent enabled: -javaagent:/opt/otel/opentelemetry-javaagent.jar'; \
   fi; \
-  exec java $JAVA_OPTS $AGENT_OPT -jar /app/app.jar \
+  if [ -f /skywalking/agent/skywalking-agent.jar ] && [ \"$SW_AGENT_ENABLED\" = \"true\" ]; then \
+    AGENT_OPTS=\"$AGENT_OPTS -javaagent:/skywalking/agent/skywalking-agent.jar\"; \
+    echo '[SkyWalking] Agent enabled: -javaagent:/skywalking/agent/skywalking-agent.jar'; \
+  fi; \
+  exec java $JAVA_OPTS $AGENT_OPTS -jar /app/app.jar \
 "]

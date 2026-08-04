@@ -1,0 +1,33 @@
+# =============================================================================
+#  YDSZ · 后端微服务通用 Service 模板
+# -----------------------------------------------------------------------------
+#  占位符：${SERVICE_NAME} / ${MODULE_NAME}
+#
+#  说明：
+#    - ClusterIP 类型，集群内部访问（对外由网关 ydsz-gateway 统一暴露）
+#    - Service 暴露 8080 端口，targetPort 指向容器命名端口 http（即 APP_PORT）
+#      各模块 APP_PORT 不同（gateway=9000 等），通过命名端口解耦
+#
+#  @path deploy/k8s/service-template.yaml
+#  @author ydsz-team
+#  @since 1.0.0
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}
+  labels:
+    app: ${SERVICE_NAME}
+    module: ${MODULE_NAME}
+    component: backend
+    app.kubernetes.io/name: ${SERVICE_NAME}
+    app.kubernetes.io/part-of: ydsz-pmis
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: ${SERVICE_NAME}
