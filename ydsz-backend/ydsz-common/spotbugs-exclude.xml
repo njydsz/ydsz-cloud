@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!--
+        SpotBugs 排除规则（详见 docs/coding-standards.md Section 6.3）
+        设计原则：仅排除“确定性的误报”与“生成代码”，业务代码告警必须修复。
+        执行配置：ydsz-backend/pom.xml spotbugs-maven-plugin effort=Max / threshold=Low / failOnError=true
+    -->
+
+    <!-- ==================================================================== -->
+    <!-- 1. 测试 / 基准测试类全局排除                                          -->
+    <!--    测试代码允许使用反射、可见性 hack、内嵌 HTTP 服务等非常规手段，      -->
+    <!--    SpotBugs 规则不适用于测试上下文。                                  -->
+    <!--    命名约定见 coding-standards.md Section 2.2：*Test / *IT / *Benchmark -->
+    <!-- ==================================================================== -->
+    <Match>
+        <Class name="~.*\..*Test"/>
+    </Match>
+
+    <!-- ==================================================================== -->
+    <!-- 2. EI_EXPOSE_REP / EI_EXPOSE_REP2：仅对 DO/DTO/VO/Entity 类排除       -->
+    <!--    原"全局排除"会掩盖业务类（Service/Manager）真实的可变字段泄露。     -->
+    <!--    DO/DTO/VO/Entity 通过 getter 暴露 Date/数组/集合是分层的数据契约，  -->
+    <!--    SpotBugs 无法识别 Lombok @Data 生成语义，属确定性误报。             -->
+    <!--    业务类若出现该告警必须修复（返回防御性拷贝或不可变视图）。           -->
+    <!-- ==================================================================== -->
+    <Match>
+        <Class name="~.*\.(entity|domain)\..*|.*(DTO|VO|Entity)"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- ==================================================================== -->
+    <!-- 2b. ydsz-common-* 基础设施类豁免（context/response/constant 等）        -->
+    <!--    两者形成统一实践：基础设施层的数据对象/常量类无需对每一个 getter     -->
+    <!--    做防御性拷贝，其一因为大多是单例/静态常量，其二因为调用方受 ArchUnit   -->
+    <!--    R12-14（分层依赖规则）约束，不会将底层对象传出模块边界。              -->
+    <!-- ==================================================================== -->
+    <Match>
+        <Class name="~com\.njydsz\.common\..*\.(constant|context|response|domain)\..*"/>
+    </Match>
+
+    <!-- ==================================================================== -->
+    <!-- 3. MapStruct 编译期生成的 *MapperImpl 排除                            -->
+    <!--    原“mapper.* 整包排除”会连带排除手写 Mapper 接口与辅助类，范围过宽。  -->
+    <!--    MapStruct 在 target/generated-sources/annotations 下生成 *MapperImpl， -->
+    <!--    不入人工 review 范围。MyBatis-Plus 的 Mapper 接口为手写，不在此排除。 -->
+    <!-- ==================================================================== -->
+    <Match>
+        <Class name="~.*MapperImpl"/>
+    </Match>
+
+    <!-- ==================================================================== -->
+    <!-- 4. Spring @Configuration 类排除（已知 false positive 集中区）          -->
+    <!--    原因：Spring 通过 CGLIB 生成 @Configuration 代理子类，并反射调用     -->
+    <!--    @Bean 工厂方法，SpotBugs 静态分析无法识别该框架约定，典型误报：      -->
+    <!--      - SIC_INNER_SHOULD_BE_STATIC（@Configuration 嵌套配置类）         -->
+    <!--      - MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR（@Bean 方法互调）     -->
+    <!--      - EI_EXPOSE_REP（@Bean 返回单例，框架保证生命周期）              -->
+    <!--    若新增 @Configuration 类确认无上述框架模式，应将其从本排除中移出。    -->
+    <!-- ==================================================================== -->
+    <Match>
+        <Class name="~.*config\..*"/>
+    </Match>
+
+    <!-- ==================================================================== -->
+    <!-- 5. ydsz-common-json 自研 JSON 框架整体豁免                            -->
+    <!--    该模块为手写高性能 JSON 引擎（含 ASM 字节码生成），告警主要来自      -->
+    <!--    性能关键路径的设计使然模式：                                        -->
+    <!--      - PA_PUBLIC_PRIMITIVE_ATTRIBUTE（buf/pos 公开字段供 ASM 生成代码） -->
+    <!--      - EI_EXPOSE_REP/MS_EXPOSE_REP（单例/缓存对象返回）               -->
+    <!--      - RCN_REDUNDANT_NULLCHECK / REC_CATCH_EXCEPTION（生成代码模式）    -->
+    <!--      - FE_FLOATING_POINT_EQUALITY（JSON 数值序列化的特殊处理）         -->
+    <!--    由编码规范与单元测试（ArchUnit/测试套件）兜底，故整包豁免。          -->
+    <!--    后续若需收紧，可先移出 MALICIOUS_CODE 类告警再逐步收敛。            -->
+    <!-- ==================================================================== -->
+    <Match>
+        <Class name="~com\.njydsz\.common\.json\..*"/>
+    </Match>
+</FindBugsFilter>
