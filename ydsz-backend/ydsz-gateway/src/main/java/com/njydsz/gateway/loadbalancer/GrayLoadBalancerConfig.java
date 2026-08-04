@@ -2,6 +2,7 @@ package com.njydsz.gateway.loadbalancer;
 
 import java.util.function.BiFunction;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClients;
@@ -27,6 +28,13 @@ import reactor.core.publisher.Mono;
  * <p>配合 {@code spring.cloud.loadbalancer.configurations=gray} 配置项,
  * 抑制默认轮询负载均衡器,使灰度负载均衡器接管所有 {@code lb://} 路由。
  *
+ * <h3>P2-1: 可选辅助定位</h3>
+ * <p>入口流量拆分由 Argo Rollouts 统一控制（Infrastructue 层）。
+ * 本模块降为可选的辅助组件,仅用于服务间调用透传灰度标记
+ * （header-based 路由,如压测、定向灰度验证）。
+ * 通过 {@code ydsz.gray-loadbalancer.enabled=true} 控制是否启用
+ * （默认 true,保持向后兼容）。
+ *
  * <h3>P1-1/P2-10: 主动健康检查（已启用）</h3>
  * <p>注册 {@link HealthCheckServiceInstanceListSupplier} 作为实例列表供给者的装饰器,
  * 实现主动健康检查：定期向后端实例发送 HTTP 探活请求，
@@ -47,6 +55,7 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Configuration
+@ConditionalOnProperty(value = "ydsz.gray-loadbalancer.enabled", havingValue = "true", matchIfMissing = true)
 @LoadBalancerClients(defaultConfiguration = GrayLoadBalancerConfig.class)
 public class GrayLoadBalancerConfig {
 

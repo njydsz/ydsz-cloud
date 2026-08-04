@@ -18,6 +18,17 @@
 #    4. 全量发布（100%）
 #    5. 任一阶段可通过 `kubectl argo rollouts abort ${SERVICE_NAME}` 回滚
 #
+#  注：当前 pause 阶段依赖人工观察监控面板后手动 promote。
+#  如需自动推进，建议补充 analysis.template（例如基于 Prometheus 错误率/延迟阈值），
+#  示例如下：
+#    analysis:
+#      templates:
+#        - templateName: success-rate
+#      startingStep: 1
+#      args:
+#        - name: service-name
+#          value: ${SERVICE_NAME}
+#
 #  注意：
 #    - 部署此 Rollout 后，需删除同名的 Deployment（Service / HPA 保持不变）
 #    - nginx 流量路由要求存在名为 ${SERVICE_NAME} 的 Ingress；如无 Ingress，

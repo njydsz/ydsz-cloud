@@ -198,6 +198,12 @@
       "defaultValue": "same-origin"
     },
     {
+      "name": "ydsz.gray-loadbalancer.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 GrayLoadBalancer（请求头驱动的灰度路由）。默认 true（向后兼容）。入口流量拆分由 Argo Rollouts 统一控制；本开关用于服务间调用透传灰度标记（header-based 路由），不需要时可设为 false 关闭。",
+      "defaultValue": true
+    },
+    {
       "name": "ydsz.gateway.dynamic-routes.enabled",
       "type": "java.lang.boolean",
       "description": "是否启用 Nacos 动态路由。",
