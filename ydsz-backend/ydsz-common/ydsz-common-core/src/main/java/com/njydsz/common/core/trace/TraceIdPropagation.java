@@ -56,6 +56,10 @@ public final class TraceIdPropagation {
      *
      * @return 请求头 Map；MDC 无 traceId 时返回空 Map（不可变）
      */
+    /**
+     * @deprecated 请使用 {@link #traceHeaders()} 替代，后者同时输出 X-Trace-Id 和 W3C traceparent。
+     */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static Map<String, String> traceHeader() {
         String traceId = currentTraceId();
         if (traceId == null || traceId.isBlank()) {
@@ -72,10 +76,13 @@ public final class TraceIdPropagation {
      *
      * @return 请求头 Map（不可变，始终包含 {@code X-Trace-Id}）
      */
+     * @deprecated 请使用 {@link #traceHeadersOrCreate()} 替代。
+     */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static Map<String, String> traceHeaderOrCreate() {
         String traceId = currentTraceId();
         if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdGenerator.generate();
+            traceId = TraceIdGenerator.generateTraceId();
         }
         return Collections.singletonMap(HeaderConstants.TRACE_ID_HEADER, traceId);
     }
@@ -110,7 +117,7 @@ public final class TraceIdPropagation {
     public static Map<String, String> traceHeadersOrCreate() {
         String traceId = currentTraceId();
         if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdGenerator.generate();
+            traceId = TraceIdGenerator.generateTraceId();
         }
         String spanId = TraceIdGenerator.generateSpanId();
         Map<String, String> headers = new HashMap<>(2);
@@ -136,7 +143,7 @@ public final class TraceIdPropagation {
     public static String currentTraceIdOrCreate() {
         String traceId = currentTraceId();
         if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdGenerator.generate();
+            traceId = TraceIdGenerator.generateTraceId();
             MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, traceId);
         }
         return traceId;

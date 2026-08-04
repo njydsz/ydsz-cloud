@@ -1,5 +1,6 @@
 package com.njydsz.common.core.response;
 
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.ProblemDetail;
@@ -54,12 +55,12 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 成功状态码
      */
-    public static final String SUCCESS = "A00000";
+    public static final String SUCCESS = BaseResultCode.SUCCESS.getCode();
 
     /**
-     * 失败状态码
+     * 失败状态码（复用 {@link BaseResultCode#UNKNOWN}，与错误码体系保持一致）。
      */
-    public static final String ERROR = "A99999";
+    public static final String ERROR = BaseResultCode.UNKNOWN.getCode();
 
     /**
      * 国际化消息 key
@@ -156,7 +157,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T> 数据类型
      * @return 成功消息
      * @since 1.5.0
+     * @deprecated 与 {@link #success()} 等价，统一使用 {@code success()} 系列保持风格一致。
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static <T> BaseResponse<T> ok() {
         return success();
     }
@@ -170,7 +173,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T>  数据类型
      * @return 成功消息
      * @since 1.5.0
+     * @deprecated 与 {@link #success(Object)} 等价，统一使用 {@code success()} 系列。
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static <T> BaseResponse<T> ok(T data) {
         return success(data);
     }
@@ -186,6 +191,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 成功消息
      * @since 1.5.0
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static <T> BaseResponse<T> ok(String msg, T data) {
         return success(msg, data);
     }
@@ -200,6 +206,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      * @since 1.5.0
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static <T> BaseResponse<T> fail(ResultCode resultCode) {
         return error(resultCode);
     }
@@ -215,6 +222,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      * @since 1.5.0
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static <T> BaseResponse<T> fail(ResultCode resultCode, String msg) {
         return error(resultCode, msg);
     }
@@ -230,6 +238,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      * @since 1.5.0
      */
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public static <T> BaseResponse<T> fail(String code, String msg) {
         return error(code, msg);
     }

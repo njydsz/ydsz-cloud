@@ -4,11 +4,27 @@
  * 从 accessStore 中拆分出纯令牌职责，与 main 应用的 useAuthStore（业务级登录/登出）
  * 明确区分：useTokenStore 只管令牌存取，业务 login/logout 逻辑在 useAuthStore 中。
  *
+ * P0-F2: 支持 HttpOnly Cookie 模式。当 `VITE_APP_AUTH_TOKEN_STORAGE=httpOnlyCookie` 时：
+ * - accessToken / refreshToken / expiresAt 不再持久化到 localStorage
+ * - 浏览器通过 HttpOnly Secure Cookie 自动携带凭据，前端无法读取
+ * - 仅 isLockScreen / lockScreenPassword 等非敏感 UI 状态继续持久化
+ *
  * @path comm\stores\src\modules\auth.ts
  * @author ydsz-team
  * @since 2.0.0
  */
 import { acceptHMRUpdate, defineStore } from 'pinia';
+
+/**
+ * P0-F2: 认证令牌存储模式（构建期常量）。
+ *
+ * - `'localStorage'`（默认）：令牌经 SecureLS 加密后存入 localStorage，向后兼容
+ * - `'httpOnlyCookie'`：令牌由后端通过 HttpOnly Secure Cookie 下发，前端不存储
+ *
+ * 通过 `VITE_APP_AUTH_TOKEN_STORAGE` 环境变量在构建期注入，不应在运行时修改。
+ */
+const authTokenStorage: string = import.meta.env.VITE_APP_AUTH_TOKEN_STORAGE ?? 'localStorage';
+const isHttpOnlyCookieMode = authTokenStorage === 'httpOnlyCookie';
 
 type AuthToken = null | string;
 
@@ -80,7 +96,11 @@ export const useTokenStore = defineStore('core-auth', {
     },
   },
   persist: {
-    pick: ['accessToken', 'refreshToken', 'isLockScreen', 'lockScreenPassword', 'expiresAt'],
+    // P0-F2: HttpOnly Cookie 模式下不持久化令牌凭据到 localStorage，
+    //        仅保留锁屏等非敏感 UI 状态的持久化
+    pick: isHttpOnlyCookieMode
+      ? ['isLockScreen', 'lockScreenPassword']
+      : ['accessToken', 'refreshToken', 'isLockScreen', 'lockScreenPassword', 'expiresAt'],
   },
   state: (): TokenState => ({
     accessToken: null,

@@ -30,7 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * <p><b>使用示例：</b></p>
  * <pre>{@code
  * // 生成 TraceId
- * String traceId = TraceIdGenerator.generate();  // 如 "a1b2c3d4e5f67890abcdef1234567890"
+ * String traceId = TraceIdGenerator.generateTraceId();  // 如 "a1b2c3d4e5f67890abcdef1234567890"
  *
  * // 生成 SpanId（8 bytes → 16 位十六进制）
  * String spanId = TraceIdGenerator.generateSpanId();
@@ -50,17 +50,6 @@ public final class TraceIdGenerator {
 
     private TraceIdGenerator() {
         throw new UnsupportedOperationException("Utility class");
-    }
-
-    /**
-     * 生成 32 位十六进制 TraceId（16 bytes 随机数）。
-     *
-     * <p>等效于 {@code generateTraceId()}，保持向后兼容的命名。</p>
-     *
-     * @return 32 位十六进制字符串
-     */
-    public static String generate() {
-        return generateTraceId();
     }
 
     /**

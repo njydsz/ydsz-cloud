@@ -86,31 +86,6 @@ public final class PageConstants {
         return properties != null ? properties.getMaxPageSize() : 1000;
     }
 
-    // ======================== 已废弃的 Setter（保留向后兼容，推荐使用 init()） ========================
-
-    /**
-     * @deprecated 请使用 {@link #init(CoreProperties)} 替代。
-     *             此方法保留仅为向后兼容，将在后续版本移除。
-     */
-    @Deprecated(since = "1.5.0", forRemoval = true)
-    public static void setDefaultPageSize(int defaultPageSize) {
-        // 创建一个临时的 CoreProperties 持有默认值和给定的 defaultPageSize
-        if (properties == null) {
-            properties = CoreProperties.temporary(defaultPageSize, 1000);
-        }
-    }
-
-    /**
-     * @deprecated 请使用 {@link #init(CoreProperties)} 替代。
-     *             此方法保留仅为向后兼容，将在后续版本移除。
-     */
-    @Deprecated(since = "1.5.0", forRemoval = true)
-    public static void setMaxPageSize(int maxPageSize) {
-        if (properties == null) {
-            properties = CoreProperties.temporary(20, maxPageSize);
-        }
-    }
-
     // ======================== 归一化工具方法 ========================
 
     /**

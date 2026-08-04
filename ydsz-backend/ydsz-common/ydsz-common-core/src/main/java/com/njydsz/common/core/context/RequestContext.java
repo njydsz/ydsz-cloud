@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * 请求上下文持有者
@@ -59,8 +60,8 @@ public final class RequestContext {
     public static final String KEY_USER_ID = "userId";
     /** 上下文键名：租户ID */
     public static final String KEY_TENANT_ID = "tenantId";
-    /** 上下文键名：链路追踪ID */
-    public static final String KEY_TRACE_ID = "traceId";
+    /** 上下文键名：链路追踪ID（值与 {@link HeaderConstants#MDC_TRACE_ID_KEY} 保持一致） */
+    public static final String KEY_TRACE_ID = HeaderConstants.MDC_TRACE_ID_KEY;
     /** 上下文键名：请求ID */
     public static final String KEY_REQUEST_ID = "requestId";
     /** 上下文键名：语言区域 */
@@ -394,7 +395,7 @@ public final class RequestContext {
      * RequestContext.builder()
      *         .userId("user123")
      *         .tenantId("tenant456")
-     *         .traceId(TraceIdGenerator.generate())
+     *         .traceId(TraceIdGenerator.generateTraceId())
      *         .language("zh-CN")
      *         .apply();
      * }</pre>

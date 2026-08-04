@@ -2,6 +2,11 @@
  * 共享 RequestClient 工厂 — 统一拦截器配置（successCode="A00000" + Bearer Token + refreshToken）
  *
  * 子应用调用 createSharedRequestClient() 即可获得与主应用一致的请求客户端。
+ *
+ * P0-F2: 支持 HttpOnly Cookie 模式。当 `VITE_APP_AUTH_TOKEN_STORAGE=httpOnlyCookie` 时：
+ * - 启用 `withCredentials: true`，让浏览器自动携带 HttpOnly Secure Cookie
+ * - 不再注入 `Authorization` 请求头（凭据由 Cookie 提供，前端无法读取）
+ * - refreshToken 逻辑由后端 Cookie 续期接管，前端不再主动刷新
  */
 import type { RequestClientOptions } from '@ydsz/request';
 
@@ -18,6 +23,14 @@ import { useAccessStore, useTokenStore } from '@ydsz/stores';
 import { ElMessage } from 'element-plus';
 
 import type { AuthApi } from './types';
+
+/**
+ * P0-F2: 认证令牌存储模式（构建期常量，与 auth.ts 保持一致）。
+ *
+ * @see comm/stores/src/modules/auth.ts 中的 isHttpOnlyCookieMode
+ */
+const isHttpOnlyCookieMode: boolean =
+  import.meta.env.VITE_APP_AUTH_TOKEN_STORAGE === 'httpOnlyCookie';
 
 /**
  * P1-6: 生成前端 TraceID（UUID v7 格式，时间排序友好）
@@ -54,6 +67,9 @@ export function createSharedRequestClient(
   const client = new RequestClient({
     ...options,
     baseURL: apiURL,
+    // P0-F2: HttpOnly Cookie 模式下启用跨域携带 Cookie，
+    //        让浏览器自动发送 HttpOnly Secure Cookie 给后端
+    withCredentials: isHttpOnlyCookieMode ? true : options?.withCredentials,
   });
 
   function formatToken(token: null | string) {
@@ -65,7 +81,11 @@ export function createSharedRequestClient(
     fulfilled: async (config) => {
       const tokenStore = useTokenStore();
 
-      config.headers.Authorization = formatToken(tokenStore.accessToken);
+      // P0-F2: HttpOnly Cookie 模式下不注入 Authorization 头，
+      //        凭据由浏览器通过 HttpOnly Cookie 自动携带
+      if (!isHttpOnlyCookieMode) {
+        config.headers.Authorization = formatToken(tokenStore.accessToken);
+      }
       config.headers['Accept-Language'] = preferences.app.locale;
       // P1-6: 生成前端 TraceID，与后端日志/链路追踪关联
       if (!config.headers['X-Trace-Id']) {
@@ -85,12 +105,14 @@ export function createSharedRequestClient(
   );
 
   // token过期的处理
+  // P0-F2: HttpOnly Cookie 模式下禁用前端 refreshToken 逻辑，
+  //        401 时直接走 doReAuthenticate（后端通过 Cookie 续期或返回 401 触发重新登录）
   client.addResponseInterceptor(
     authenticateResponseInterceptor({
       client,
       doReAuthenticate: onReAuthenticate,
       doRefreshToken: onRefreshToken,
-      enableRefreshToken: preferences.app.enableRefreshToken,
+      enableRefreshToken: isHttpOnlyCookieMode ? false : preferences.app.enableRefreshToken,
       formatToken,
     }),
   );
@@ -131,8 +153,14 @@ export function createSharedRequestClient(
 
 /**
  * 创建共享的 baseRequestClient（无拦截器，用于 refresh/logout 等不需拦截的请求）
+ *
+ * P0-F2: HttpOnly Cookie 模式下同样启用 withCredentials，
+ *        确保 logout 等请求能携带 Cookie 让后端清除凭据。
  */
 export function createSharedBaseClient() {
   const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
-  return new RequestClient({ baseURL: apiURL });
+  return new RequestClient({
+    baseURL: apiURL,
+    withCredentials: isHttpOnlyCookieMode ? true : undefined,
+  });
 }

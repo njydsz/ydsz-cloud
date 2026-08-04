@@ -23,7 +23,22 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * RocketMQ 事务消息本地事务监听器（P2-3）。
  *
- * <p>半消息发送成功后,RocketMQ 回调 {@link #executeLocalTransaction} 执行本地事务：
+ * <p><b>P0-5 修复说明：当前实现为"校验型事务消息"，非真正的事务消息。</b>
+ *
+ * <p>当前 {@link #executeLocalTransaction} 仅做发送前校验（通道启用 + 模板存在 + 接收人非空），
+ * 校验通过即 COMMIT。<b>不执行业务本地事务</b>（如创建订单、扣减库存等）。
+ * 这意味着消息投递与业务事务无关联，业务事务失败后消息已投递，可能造成数据不一致。
+ *
+ * <p><b>适用场景</b>：仅需发送前校验、不需要消息与业务事务强一致的场景。
+ *
+ * <p><b>不适用场景</b>：需要消息投递与业务事务强一致的场景。
+ * 此时应提供 {@code TransactionExecutor} 接口，业务侧实现：
+ * <ul>
+ *   <li>{@code executeLocalTransaction}：执行业务 SQL，成功后 COMMIT</li>
+ *   <li>{@code checkLocalTransaction}：查询业务表状态，决定 COMMIT/ROLLBACK</li>
+ * </ul>
+ *
+ * <p>半消息发送成功后,RocketMQ 回调 {@link #executeLocalTransaction} 执行校验：
  * <ol>
  *   <li>解析 MessageRequest</li>
  *   <li>校验通道启用 + 模板存在且 ENABLED</li>

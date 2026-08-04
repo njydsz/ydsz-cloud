@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +54,16 @@ public class RateLimitServiceImpl implements RateLimitService {
     /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
+    /**
+     * P0-5 修复：Redis 故障时的降级策略。
+     * <ul>
+     *   <li>{@code true}（默认）：fail-open，Redis 异常时放行，保证可用性</li>
+     *   <li>{@code false}：fail-closed，Redis 异常时拒绝，保证安全性（生产环境推荐）</li>
+     * </ul>
+     */
+    @Value("${ydsz.message.rate-limit.fail-open:true}")
+    private boolean failOpen;
+
     public RateLimitServiceImpl(ObjectProvider<RedisRateLimiter> rateLimiterProvider,
                                 RedisService redisService,
                                 PreferenceService preferenceService,
@@ -87,8 +98,13 @@ public class RateLimitServiceImpl implements RateLimitService {
             return rateLimiter.tryAcquireTokenBucket(
                     MessageConstants.RATE_LIMIT_KEY_PREFIX + key, permits, permits);
         } catch (Exception e) {
-            log.warn("[RateLimit] tryAcquire 降级放行: key={} err={}", key, e.getMessage(), e);
-            return true;
+            // P0-5 修复：根据 fail-open 配置决定降级策略
+            if (failOpen) {
+                log.warn("[RateLimit] tryAcquire 降级放行(fail-open): key={} err={}", key, e.getMessage(), e);
+                return true;
+            }
+            log.warn("[RateLimit] tryAcquire 降级拒绝(fail-closed): key={} err={}", key, e.getMessage(), e);
+            return false;
         }
     }
 
