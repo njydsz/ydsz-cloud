@@ -70,8 +70,9 @@ public final class ServletUtils {
      * 判断 remoteAddr 是否为可信代理。
      *
      * <p>可信条件：内网/回环地址，或显式配置的可信代理 IP。
+     * 包级可见（供同包 CookieUtils 等使用）。
      */
-    private static boolean isTrustedProxy(String remoteAddr) {
+    static boolean isTrustedProxy(String remoteAddr) {
         if (StringUtils.isBlank(remoteAddr)) {
             return false;
         }
@@ -122,7 +123,7 @@ public final class ServletUtils {
 
     private static String replaceTokenPrefix(String token) {
         if (StringUtils.isNotEmpty(token) && token.startsWith(TokenConstants.PREFIX)) {
-            return token.replaceFirst(TokenConstants.PREFIX, "").trim();
+            return token.substring(TokenConstants.PREFIX.length()).trim();
         }
         return token;
     }

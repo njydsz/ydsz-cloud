@@ -343,4 +343,40 @@ public class UrlUtils {
 
         return url;
     }
+
+    /**
+     * 判断 URL 的 host 是否为内网地址（SSRF 防护）。
+     *
+     * <p>用于服务端发起外部请求前判断目标地址是否指向内网，避免 SSRF。
+     * 复用 {@link IpAddrUtils#isInternalIp(String)} 判断 host 是否为内网/回环 IP。
+     * 注意：仅对 host 为字面量 IP 的场景生效，域名需调用方自行解析后再判断（防 DNS rebinding）。
+     *
+     * @param url 待判断的 URL
+     * @return true 表示 URL host 为内网/回环地址；URL 为空或 host 无法解析时返回 false
+     */
+    public static boolean isInternalUrl(String url) {
+        String host = getHost(url);
+        if (StringUtils.isEmpty(host)) {
+            return false;
+        }
+        return IpAddrUtils.isInternalIp(host);
+    }
+
+    /**
+     * 断言 URL 为安全的外部地址（SSRF 防护）。
+     *
+     * <p>用于服务端发起请求前拦截内网地址，防止 SSRF 攻击。当 URL 非 http/https 协议，
+     * 或 host 为内网/回环地址时抛出 {@link IllegalArgumentException}。
+     *
+     * @param url 待校验的 URL
+     * @throws IllegalArgumentException 当 URL 协议非法或指向内网地址时
+     */
+    public static void assertSafeExternalUrl(String url) {
+        if (!isHttpUrl(url)) {
+            throw new IllegalArgumentException("URL 必须为 http/https 协议: " + url);
+        }
+        if (isInternalUrl(url)) {
+            throw new IllegalArgumentException("URL 指向内网地址，疑似 SSRF 攻击: " + url);
+        }
+    }
 }

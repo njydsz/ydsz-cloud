@@ -79,4 +79,59 @@ public final class ModuleEventTypes {
 
     /** 数据导出审计（消费方: ydsz-system → 导出审计记录） */
     public static final String DATA_EXPORT_AUDIT = "DATA_EXPORT_AUDIT";
+
+    // ==================== 用户/权限事件（发布方: ydsz-userinfo） ====================
+
+    /** 用户创建（消费方: ydsz-message → 欢迎消息；ydsz-system → 默认角色初始化） */
+    public static final String USER_CREATED = "USER_CREATED";
+
+    /** 用户更新（消费方: 各模块 → 缓存刷新/审计） */
+    public static final String USER_UPDATED = "USER_UPDATED";
+
+    /** 用户删除（消费方: ydsz-message → 清理通知订阅；各模块 → 引用清理） */
+    public static final String USER_DELETED = "USER_DELETED";
+
+    /** 角色变更（消费方: ydsz-gateway → 权限缓存刷新） */
+    public static final String ROLE_CHANGED = "ROLE_CHANGED";
+
+    /** 组织/部门变更（消费方: ydsz-workflow → 审批人解析缓存刷新） */
+    public static final String DEPARTMENT_CHANGED = "DEPARTMENT_CHANGED";
+
+    // ==================== 项目事件（发布方: ydsz-project） ====================
+
+    /** 项目创建（消费方: ydsz-workflow → 立项流程联动） */
+    public static final String PROJECT_CREATED = "PROJECT_CREATED";
+
+    /** 项目状态变更（消费方: ydsz-message → 通知项目干系人） */
+    public static final String PROJECT_STATUS_CHANGED = "PROJECT_STATUS_CHANGED";
+
+    /** 项目立项审批通过（消费方: ydsz-project → 状态机推进；ydsz-workflow → 流程归档） */
+    public static final String PROJECT_INITIATION_APPROVED = "PROJECT_INITIATION_APPROVED";
+
+    /** 项目变更审批通过（消费方: ydsz-project → 变更生效；ydsz-message → 通知） */
+    public static final String PROJECT_CHANGE_APPROVED = "PROJECT_CHANGE_APPROVED";
+
+    // ==================== Agent 事件（发布方: ydsz-agent） ====================
+
+    /** Agent 执行启动（消费方: ydsz-message → 执行状态通知；ydsz-cronjob → 异步任务跟踪） */
+    public static final String AGENT_EXECUTION_STARTED = "AGENT_EXECUTION_STARTED";
+
+    /** Agent 执行完成（消费方: ydsz-message → 结果通知） */
+    public static final String AGENT_EXECUTION_COMPLETED = "AGENT_EXECUTION_COMPLETED";
+
+    /** Agent 执行失败（消费方: ydsz-message → 告警；ydsz-cronjob → 重试调度） */
+    public static final String AGENT_EXECUTION_FAILED = "AGENT_EXECUTION_FAILED";
+
+    // ==================== 规则事件（发布方: ydsz-literule） ====================
+
+    /** 规则发布（消费方: ydsz-literule → 规则缓存刷新；各模块 → 规则版本感知） */
+    public static final String RULE_PUBLISHED = "RULE_PUBLISHED";
+
+    /** 规则停用（消费方: ydsz-literule → 规则缓存清理） */
+    public static final String RULE_DISABLED = "RULE_DISABLED";
+
+    // ==================== 知识库事件（发布方: ydsz-nextwiki） ====================
+
+    /** 文档变更（消费方: ydsz-agent → RAG 索引增量更新；ydsz-search → 全文索引刷新） */
+    public static final String WIKI_DOCUMENT_CHANGED = "WIKI_DOCUMENT_CHANGED";
 }

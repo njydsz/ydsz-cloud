@@ -16,6 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+        <!-- P1-5: ydsz-common-domain 显式依赖（AgentStatusEnum/AgentDomainEvent 实现 BaseStatusEnum/DomainEvent） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-jdbc</artifactId>

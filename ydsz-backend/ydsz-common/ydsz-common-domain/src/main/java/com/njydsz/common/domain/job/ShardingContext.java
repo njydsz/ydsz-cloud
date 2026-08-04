@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.domain.job;
+package com.njydsz.common.domain.job;
 
 import lombok.Data;
 
