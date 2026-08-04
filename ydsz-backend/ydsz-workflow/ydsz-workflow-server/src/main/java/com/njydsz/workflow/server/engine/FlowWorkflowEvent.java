@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.domain.event.DomainEvent;
 
 import lombok.Getter;
@@ -50,8 +49,7 @@ public class FlowWorkflowEvent extends DomainEvent {
     public FlowWorkflowEvent(String eventType, String instanceId,
                              String taskId, Map<String, Object> data) {
         super(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
-              instanceId, "FlowInstance", 1,
-              RequestContext.getTenantId(), RequestContext.getUserId(), RequestContext.getTraceId(),
+              instanceId, "FlowInstance",
               Collections.emptyMap());
         this.taskId = taskId;
         this.data = data;

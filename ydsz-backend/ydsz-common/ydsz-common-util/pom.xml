@@ -39,24 +39,6 @@
             <artifactId>snakeyaml</artifactId>
         </dependency>
 
-        <!--user-agent (IpAddrUtils User-Agent 解析)-->
-        <dependency>
-            <groupId>nl.basjes.parse.useragent</groupId>
-            <artifactId>yauaa</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!--ip2region (IpAddrUtils IP 地址库)-->
-        <dependency>
-            <groupId>org.lionsoul</groupId>
-            <artifactId>ip2region</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!--监控相关 (TracerUtils SkyWalking 集成)-->
-        <dependency>
-            <groupId>org.apache.skywalking</groupId>
-            <artifactId>apm-toolkit-trace</artifactId>
-            <optional>true</optional>
-        </dependency>
         <!--slf4j-->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -80,18 +62,6 @@
             <artifactId>spring-boot-starter-validation</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--reactor-->
-        <dependency>
-            <artifactId>reactor-core</artifactId>
-            <groupId>io.projectreactor</groupId>
-            <optional>true</optional>
-        </dependency>
-        <!--spring-webflux (optional, for WebFluxUtils)-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webflux</artifactId>
-            <optional>true</optional>
-        </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
@@ -103,23 +73,10 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-core</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-
         <!-- Spring Security Crypto（BCryptPasswordEncoder, PwdUtils 使用） -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!-- mybatis-plus-core（SnowflakeUtils ID 生成） -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-core</artifactId>
             <optional>true</optional>
         </dependency>
 
@@ -135,13 +92,6 @@
             <artifactId>spring-boot-health</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- spring-boot-actuator (optional, for HealthIndicator) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-actuator</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>

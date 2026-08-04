@@ -58,11 +58,11 @@ public class IpAddrUtils {
             "^::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1\\d|[1-9]?|)\\d)\\.?\\b){4}$|" +
             "^([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1\\d|[1-9]?|)\\d)\\.?\\b){4}$");
 
-    /** IPv4 私有地址前缀（RFC 1918 + 回环） */
+    /** IPv4 私有地址前缀（RFC 1918 + 回环 + 链路本地 169.254.0.0/16） */
     private static final String[] PRIVATE_IPV4_PREFIXES = {
             "10.", "172.16.", "172.17.", "172.18.", "172.19.", "172.20.", "172.21.", "172.22.", "172.23.",
             "172.24.", "172.25.", "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
-            "192.168.", "127."
+            "192.168.", "127.", "169.254."
     };
 
     /** IPv6 私有/链路本地地址前缀 */
@@ -75,13 +75,14 @@ public class IpAddrUtils {
      * <p>依次检查 X-Forwarded-For、Proxy-Client-IP、WL-Proxy-Client-IP、X-Real-IP 等
      * 代理头，取第一个非 unknown 的 IP。IPv6 本地回环自动转换为 IPv4。
      *
-     * <p><b>安全提示：</b>本方法信任所有代理头，攻击者可伪造 X-Forwarded-For 绕过 IP 限制。
-     * 若部署在不可信代理后，请使用 {@link #getIpAddrWithTrustedProxies(HttpServletRequest, Set)}
-     * 配置可信代理 IP 白名单。
+     * <p><b>安全提示：</b>本方法无条件信任代理头，存在伪造风险，攻击者可伪造 X-Forwarded-For 绕过 IP 限制。
+     * 请使用 {@link #getIpAddrWithTrustedProxies(HttpServletRequest, Set)} 配置可信代理 IP 白名单。
      *
      * @param request HTTP 请求
      * @return 客户端 IP 地址，request 为 null 时返回 "unknown"
+     * @deprecated 本方法无条件信任代理头，存在伪造风险，请使用 {@link #getIpAddrWithTrustedProxies(HttpServletRequest, Set)}
      */
+    @Deprecated
     public static String getIpAddr(HttpServletRequest request) {
         if (request == null) {
             return UNKNOWN;
@@ -129,19 +130,27 @@ public class IpAddrUtils {
         }
         Set<String> trusted = trustedProxies == null ? Collections.emptySet() : trustedProxies;
         String xff = request.getHeader("x-forwarded-for");
-        if (!isUnknown(xff) && xff.indexOf(',') > 0) {
-            String[] parts = xff.split(",");
-            // 从右向左遍历：跳过可信代理，取第一个非可信 IP
-            for (int i = parts.length - 1; i >= 0; i--) {
-                String candidate = parts[i].trim();
+        if (!isUnknown(xff)) {
+            if (xff.indexOf(',') >= 0) {
+                String[] parts = xff.split(",");
+                // 从右向左遍历：跳过可信代理，取第一个非可信 IP
+                for (int i = parts.length - 1; i >= 0; i--) {
+                    String candidate = parts[i].trim();
+                    if (!isUnknown(candidate) && !trusted.contains(candidate)) {
+                        return LOCALHOST_IPV6.equals(candidate) ? LOCALHOST_IPV4 : candidate;
+                    }
+                }
+                // 全部为可信代理，取最左侧（原始客户端，可能被伪造，但已是最佳推断）
+                String first = parts[0].trim();
+                if (!isUnknown(first)) {
+                    return LOCALHOST_IPV6.equals(first) ? LOCALHOST_IPV4 : first;
+                }
+            } else {
+                // 单 IP 的 XFF（无逗号）：非空且非可信代理 IP 时直接用作客户端 IP
+                String candidate = xff.trim();
                 if (!isUnknown(candidate) && !trusted.contains(candidate)) {
                     return LOCALHOST_IPV6.equals(candidate) ? LOCALHOST_IPV4 : candidate;
                 }
-            }
-            // 全部为可信代理，取最左侧（原始客户端，可能被伪造，但已是最佳推断）
-            String first = parts[0].trim();
-            if (!isUnknown(first)) {
-                return LOCALHOST_IPV6.equals(first) ? LOCALHOST_IPV4 : first;
             }
         }
         String ip = request.getRemoteAddr();
@@ -292,7 +301,8 @@ public class IpAddrUtils {
      * 规范化 IPv6 地址（折叠连续冒号并转小写）。
      *
      * <p>将多个连续 {@code :} 折叠为单个并统一小写，便于作为缓存 key 或比对。
-     * 空串直接原样返回；不做完整合法性校验（校验见 {@link #validIpv6(String)}）。
+     * 空串直接原样返回；格式非法（未通过 {@link #validIpv6(String)}）时返回原值的小写化，
+     * 不调用 {@link InetAddress#getByName} 以避免触发 DNS 解析（SSRF / DNS rebinding 风险）。
      *
      * @param ipv6 原始 IPv6 字符串
      * @return 折叠小写后的 IPv6 字符串
@@ -300,6 +310,10 @@ public class IpAddrUtils {
     public static String normalizeIpv6(String ipv6) {
         if (StringUtils.isEmpty(ipv6)) {
             return ipv6;
+        }
+        // 前置格式校验，避免 InetAddress.getByName 触发 DNS 解析（SSRF / DNS rebinding 风险）
+        if (!validIpv6(ipv6)) {
+            return ipv6.trim().toLowerCase();
         }
         try {
             return InetAddress.getByName(ipv6).getHostAddress();
@@ -372,12 +386,19 @@ public class IpAddrUtils {
     /**
      * 判断 IPv6 是否在网段内（基于字节级掩码比较）。
      *
+     * <p>调用 {@link InetAddress#getByName} 前先用 {@link #validIpv6(String)} 校验格式，
+     * 避免非法输入触发 DNS 解析（SSRF / DNS rebinding 风险）。
+     *
      * @param ip        待判断的 IPv6 地址
      * @param networkIp 网段起始地址（网络地址）
      * @param prefix    前缀长度 [0, 128]
      * @return {@code true} 表示在网段内；解析异常返回 {@code false}
      */
     public static boolean isIpv6InRange(String ip, String networkIp, int prefix) {
+        // 前置格式校验，避免 InetAddress.getByName 触发 DNS 解析（SSRF / DNS rebinding 风险）
+        if (!validIpv6(ip) || !validIpv6(networkIp)) {
+            return false;
+        }
         try {
             byte[] ipBytes = InetAddress.getByName(ip).getAddress();
             byte[] networkBytes = InetAddress.getByName(networkIp).getAddress();

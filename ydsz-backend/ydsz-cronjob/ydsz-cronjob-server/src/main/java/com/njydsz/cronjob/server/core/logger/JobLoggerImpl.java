@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.server.core.logger;
 
+import com.njydsz.common.domain.job.JobExecutionContext;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
@@ -17,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 任务执行日志器实现（P0-2 在线日志白屏化）。
  *
  * <p>由 {@code DefaultTaskDispatcher} 在任务执行前手动 new（非 Spring Bean），
- * 绑定到 {@link com.njydsz.common.domain.job.JobLoggerHolder} 的 ThreadLocal。
+ * 绑定到 {@link com.njydsz.common.domain.job.JobExecutionContext} 的 ThreadLocal。
  *
  * <h3>实现要点</h3>
  * <ul>

@@ -3,6 +3,7 @@ package com.njydsz.common.util.security;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.KeyGenerator;
 
@@ -69,12 +70,26 @@ public class AesUtils {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
-     * 可配置的 AES 密钥（Hex 格式），为空时使用 initKey() 生成临时密钥
+     * 可配置的 AES 密钥（Hex 格式），未配置时为 null。
+     *
+     * <p>fail-fast 策略：未显式配置时 {@link #getConfiguredKey()} 将抛出
+     * {@link IllegalStateException}，避免静默生成临时密钥导致重启后已加密数据不可解密。
      */
     private static volatile String configuredKey;
 
     /**
+     * AesGcmCrypto 实例缓存，按 Hex 密钥字符串索引。
+     *
+     * <p>AesGcmCrypto 内部持有的 SecretKeySpec 与共享 SecureRandom 均可复用，
+     * 仅 Cipher 非线程安全需在每次 encrypt/decrypt 内部新建。
+     * 缓存避免每次加解密都重新执行 hex 解码 + SecretKeySpec 构造。
+     */
+    private static final ConcurrentHashMap<String, AesGcmCrypto> CRYPTO_CACHE = new ConcurrentHashMap<>();
+
+    /**
      * 注入配置的 AES 密钥（Hex 格式）
+     *
+     * <p>密钥变更时会清空 {@link #CRYPTO_CACHE}，确保旧密钥对应的缓存实例不会残留。
      *
      * @param hexKey Hex 格式的 AES 密钥，最小 32 字节（64 个 Hex 字符）推荐，兼容 16 字节
      */
@@ -84,18 +99,22 @@ public class AesUtils {
         }
         validateKey(hexKey);
         configuredKey = hexKey;
+        CRYPTO_CACHE.clear();
     }
 
     /**
-     * 获取配置的密钥，若未配置则自动生成 256 位安全随机密钥
+     * 获取配置的密钥。
+     *
+     * <p>fail-fast：若未通过 {@link #setConfiguredKey(String)} 配置密钥，直接抛出
+     * {@link IllegalStateException}，避免静默生成临时随机密钥——临时密钥在应用重启后会丢失，
+     * 导致所有已加密数据不可解密。
+     *
+     * @return 已配置的 Hex 格式 AES 密钥
+     * @throws IllegalStateException 未配置密钥时抛出
      */
     public static String getConfiguredKey() {
         if (configuredKey == null) {
-            synchronized (AesUtils.class) {
-                if (configuredKey == null) {
-                    configuredKey = initHexKey(DEFAULT_KEY_SIZE);
-                }
-            }
+            throw new IllegalStateException("AES 密钥未配置，请通过 ydsz.util.aes.key 配置或调用 setConfiguredKey");
         }
         return configuredKey;
     }
@@ -103,18 +122,29 @@ public class AesUtils {
     /**
      * 校验密钥强度，必须为 AES 标准长度（16/24/32 字节 = 32/48/64 个 Hex 字符）。
      *
-     * <p>与 {@link AesGcmCrypto#AesGcmCrypto(byte[])} 的严格校验保持一致，
-     * 避免传入非标准长度密钥时 AesUtils 通过校验但 AesGcmCrypto 抛异常。
+     * <p>统一委托 {@link AesGcmCrypto#validateKey(byte[])} 进行字节级校验，
+     * 避免本类与 AesGcmCrypto 维护两套长度校验口径。
+     *
+     * @param hexKey Hex 格式密钥
+     * @throws IllegalArgumentException hex 为 null/空白或长度非法时抛出
      */
     private static void validateKey(String hexKey) {
-        if (hexKey == null) {
+        if (StringUtils.isBlank(hexKey)) {
             throw new IllegalArgumentException("AES 密钥不能为空");
         }
-        int len = hexKey.length();
-        if (len != 32 && len != 48 && len != 64) {
-            throw new IllegalArgumentException(
-                    "AES 密钥长度必须为 16/24/32 字节（对应 32/48/64 个 Hex 字符），当前长度: " + len);
-        }
+        AesGcmCrypto.validateKey(hexToBytes(hexKey));
+    }
+
+    /**
+     * 获取（必要时创建并缓存）指定 Hex 密钥对应的 AesGcmCrypto 实例。
+     *
+     * <p>同一 Hex 密钥复用同一 AesGcmCrypto 实例，避免重复构造 SecretKeySpec。
+     *
+     * @param hexAesKey Hex 格式 AES 密钥
+     * @return 缓存的 AesGcmCrypto 实例
+     */
+    private static AesGcmCrypto getCrypto(String hexAesKey) {
+        return CRYPTO_CACHE.computeIfAbsent(hexAesKey, k -> new AesGcmCrypto(hexToBytes(k)));
     }
 
     /**
@@ -182,7 +212,7 @@ public class AesUtils {
      */
     public static String encrypt(String content, String hexAesKey) throws GeneralSecurityException {
         validateKey(hexAesKey);
-        AesGcmCrypto crypto = new AesGcmCrypto(hexToBytes(hexAesKey));
+        AesGcmCrypto crypto = getCrypto(hexAesKey);
         return crypto.encrypt(content);
     }
 
@@ -201,7 +231,7 @@ public class AesUtils {
      */
     public static String decrypt(String encryptedBase64, String hexAesKey) throws GeneralSecurityException {
         validateKey(hexAesKey);
-        AesGcmCrypto crypto = new AesGcmCrypto(hexToBytes(hexAesKey));
+        AesGcmCrypto crypto = getCrypto(hexAesKey);
         return crypto.decrypt(encryptedBase64);
     }
 

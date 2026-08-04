@@ -26,7 +26,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.domain.job.JobHandler;
 import com.njydsz.common.domain.job.JobLogger;
-import com.njydsz.common.domain.job.JobLoggerHolder;
+import com.njydsz.common.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
@@ -70,7 +70,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>超时: 抛出 RuntimeException，进程被强制销毁</li>
  * </ul>
  *
- * <p>执行过程中的 stdout 通过 {@link JobLoggerHolder} 写入在线日志器（如可用）。
+ * <p>执行过程中的 stdout 通过 {@link JobExecutionContext} 写入在线日志器（如可用）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -229,7 +229,7 @@ public class ScriptJobHandler implements JobHandler {
         Path scriptFile = resolveScriptFile(language, script);
         boolean isTempFile = !script.startsWith(FILE_PREFIX);
         // 捕获当前线程的 JobLogger，传递给 IO 读取线程（ThreadLocal 不跨线程）
-        JobLogger jobLogger = JobLoggerHolder.getLogger();
+        JobLogger jobLogger = JobExecutionContext.getLogger();
         try {
             List<String> command = buildCommand(language, scriptFile, args);
             log.info("[ScriptJobHandler] 执行脚本: language={} file={} args={} timeoutMs={}",
@@ -372,7 +372,7 @@ public class ScriptJobHandler implements JobHandler {
     /**
      * 异步读取输入流到 StringBuilder，可选写入在线日志器。
      *
-     * <p>由于 {@link JobLoggerHolder} 基于 {@link ThreadLocal}，子线程无法获取
+     * <p>由于 {@link JobExecutionContext} 基于 {@link ThreadLocal}，子线程无法获取
      * 主线程设置的 logger，因此通过参数显式传入主线程捕获的 {@code logger}。
      *
      * @param is       输入流
@@ -403,7 +403,7 @@ public class ScriptJobHandler implements JobHandler {
     /**
      * 将 stdout 行写入在线日志器（如可用）。
      *
-     * <p>使用显式传入的 logger，避免依赖 {@link JobLoggerHolder} 的 ThreadLocal
+     * <p>使用显式传入的 logger，避免依赖 {@link JobExecutionContext} 的 ThreadLocal
      * 在子线程中失效。
      *
      * @param line   日志行

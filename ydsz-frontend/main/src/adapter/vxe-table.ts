@@ -9,6 +9,7 @@ import type { VxeTableGridOptions } from '@ydsz/plugins/vxe-table';
 
 import { h } from 'vue';
 
+import { useAccess } from '@ydsz/access';
 import { setupYDSZVxeTable, useYDSZVxeGrid } from '@ydsz/plugins/vxe-table';
 
 import { ElButton, ElImage } from 'element-plus';
@@ -63,6 +64,27 @@ setupYDSZVxeTable({
           { size: 'small', link: true },
           { default: () => props?.text },
         );
+      },
+    });
+
+    // 字段级数据权限脱敏单元格：
+    // 用法 cellRender: { name: 'CellMask', props: { fieldKey: 'project.budget.amount' } }
+    // 根据 useAccess().getFieldPermission(fieldKey) 决定：
+    //   - 'hidden'：返回空 span（列应同时配合 visible:false 隐藏）
+    //   - 'mask'：返回脱敏后的文本（保留首末字符）
+    //   - 'read'：原样展示
+    vxeUI.renderer.add('CellMask', {
+      renderTableDefault(_renderOpts, params) {
+        const { column, row } = params;
+        const fieldKey = _renderOpts.props?.fieldKey ?? column.field;
+        const raw = row[column.field];
+        try {
+          const { applyFieldMask } = useAccess();
+          return h('span', null, applyFieldMask(fieldKey, raw));
+        } catch {
+          // Pinia 未初始化时降级为原值
+          return h('span', null, raw === null || raw === undefined ? '' : String(raw));
+        }
       },
     });
 

@@ -18,7 +18,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.domain.job.JobLogger;
-import com.njydsz.common.domain.job.JobLoggerHolder;
+import com.njydsz.common.domain.job.JobExecutionContext;
 import com.njydsz.common.domain.job.MapContext;
 import com.njydsz.common.domain.job.MapProcessor;
 import com.njydsz.common.domain.job.MapReduceProcessor;
@@ -477,7 +477,7 @@ public class MapTaskExecutor {
      *   <li>更新 TaskDO 状态为 RUNNING</li>
      *   <li>调用 {@link MapProcessor#process(MapContext)}</li>
      *   <li>更新 TaskDO 状态为 SUCCESS/FAILED（含 result/errorMessage）</li>
-     *   <li>通过 {@link JobLoggerHolder} 写入在线日志</li>
+     *   <li>通过 {@link JobExecutionContext} 写入在线日志</li>
      * </ol>
      *
      * <p>异常处理：捕获所有异常转为 {@link ProcessResult#failed}，不向上抛出，
@@ -526,12 +526,12 @@ public class MapTaskExecutor {
     }
 
     /**
-     * 写入任务开始日志到 {@link JobLoggerHolder}（在线日志白屏化）。
+     * 写入任务开始日志到 {@link JobExecutionContext}（在线日志白屏化）。
      *
      * @param context 执行上下文
      */
     private void logStartToJobLogger(MapContext context) {
-        JobLogger logger = JobLoggerHolder.getLogger();
+        JobLogger logger = JobExecutionContext.getLogger();
         if (logger == null) {
             return;
         }
@@ -540,13 +540,13 @@ public class MapTaskExecutor {
     }
 
     /**
-     * 写入任务结束日志到 {@link JobLoggerHolder}。
+     * 写入任务结束日志到 {@link JobExecutionContext}。
      *
      * @param context 执行上下文
      * @param result  处理结果
      */
     private void logEndToJobLogger(MapContext context, ProcessResult result) {
-        JobLogger logger = JobLoggerHolder.getLogger();
+        JobLogger logger = JobExecutionContext.getLogger();
         if (logger == null) {
             return;
         }

@@ -2,7 +2,6 @@ package com.njydsz.common.util.id;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -205,13 +204,17 @@ public final class SnowflakeUtils {
             long offset = lastTimestamp - timestamp;
             if (offset <= CLOCK_BACKWARD_TOLERANCE_MILLIS) {
                 log.warn("Clock moved backwards by {} ms, waiting to recover", offset);
-                LockSupport.parkNanos(offset * 1_000_000);
-                timestamp = timeGen();
-                if (timestamp < lastTimestamp) {
-                    long remainingOffset = lastTimestamp - timestamp;
-                    log.error("Clock still moved backwards after waiting, remaining offset: {} ms", remainingOffset);
-                    throw new ClockBackwardException(remainingOffset, lastTimestamp, timeGen());
+                // 循环等待到时间恢复或超时（100ms 上限），避免 parkNanos 提前唤醒导致时间仍 < lastTimestamp 直接抛异常
+                long deadlineNano = System.nanoTime() + 100_000_000L; // 100ms 超时
+                while (System.currentTimeMillis() < lastTimestamp) {
+                    if (System.nanoTime() > deadlineNano) {
+                        long remainingOffset = lastTimestamp - timeGen();
+                        log.error("Clock still moved backwards after waiting 100ms, remaining offset: {} ms", remainingOffset);
+                        throw new ClockBackwardException(remainingOffset, lastTimestamp, timeGen());
+                    }
+                    LockSupport.parkNanos(500_000L); // 0.5ms
                 }
+                timestamp = timeGen();
             } else {
                 log.error("Clock moved backwards by {} ms, exceeds tolerance {} ms", offset, CLOCK_BACKWARD_TOLERANCE_MILLIS);
                 throw new ClockBackwardException(offset, lastTimestamp, timeGen());
@@ -314,20 +317,19 @@ public final class SnowflakeUtils {
     }
 
     /**
-     * 获取单例实例（自动计算节点 ID）
+     * 获取单例实例
      *
-     * <p>若未通过 {@link #init(long, long)} 显式初始化，则自动计算 workerId 和 datacenterId 并创建实例。
-     * 已初始化则直接返回单例。
+     * <p>必须通过 {@link #init(long, long)} 或 {@link #getInstance(long, long)} 显式初始化，
+     * 或通过 {@code SnowflakeAutoConfiguration} 自动配置后调用。若未初始化直接抛出
+     * {@link IllegalStateException}，避免 Bean 在自动配置之前触发 {@link #nextIdLong()} 时
+     * 静默使用自动计算的 workerId，导致配置的 workerId 被忽略。
      *
      * @return SnowflakeUtils 单例实例
+     * @throws IllegalStateException 若未初始化
      */
     public static SnowflakeUtils getInstance() {
         if (INSTANCE == null) {
-            synchronized (SnowflakeUtils.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new SnowflakeUtils(computeWorkerId(), getDataCenterId());
-                }
-            }
+            throw new IllegalStateException("SnowflakeUtils 未初始化，请先调用 init() 或通过 SnowflakeAutoConfiguration 配置");
         }
         return INSTANCE;
     }
@@ -374,11 +376,25 @@ public final class SnowflakeUtils {
                 log.warn("配置的 WorkerId {} 格式无效，使用自动计算", configured);
             }
         }
+        // 容器化环境（K8s 常见）优先使用 HOSTNAME/INSTANCE_INDEX/POD_INDEX 哈希取模，
+        // 避免同主机多容器 IP 相同导致 workerId 冲突引发 ID 重复
+        String containerId = System.getenv("HOSTNAME");
+        if (containerId == null || containerId.isEmpty()) {
+            containerId = System.getenv("INSTANCE_INDEX");
+        }
+        if (containerId == null || containerId.isEmpty()) {
+            containerId = System.getenv("POD_INDEX");
+        }
+        if (containerId != null && !containerId.isEmpty()) {
+            String hash = DigestUtils.sha256Hex(containerId);
+            return Long.parseLong(hash.substring(0, 5), 16) % 32;
+        }
         try {
             String hostAddress = InetAddress.getLocalHost().getHostAddress();
             String hash = DigestUtils.sha256Hex(hostAddress);
             return Long.parseLong(hash.substring(0, 5), 16) % 32;
         } catch (UnknownHostException e) {
+            log.warn("无法获取本机主机地址，使用随机 workerId。容器化环境建议配置 WorkerIdRegistry 或 INSTANCE_INDEX 环境变量");
             return ThreadLocalRandom.current().nextLong(32);
         }
     }
@@ -414,56 +430,6 @@ public final class SnowflakeUtils {
         } catch (UnknownHostException e) {
             return ThreadLocalRandom.current().nextLong(32);
         }
-    }
-
-    /**
-     * 解析 ID 中的时间戳
-     *
-     * @param id ID
-     * @return 时间戳（毫秒）
-     */
-    public static long parseTimestamp(long id) {
-        return ((id >>> TIMESTAMP_LEFT_SHIFT) + EPOCH);
-    }
-
-    /**
-     * 解析 ID 中的工作节点 ID
-     *
-     * @param id ID
-     * @return 工作节点 ID
-     */
-    public static long parseWorkerId(long id) {
-        return (id >>> WORKER_ID_SHIFT) & MAX_WORKER_ID;
-    }
-
-    /**
-     * 解析 ID 中的数据中心 ID
-     *
-     * @param id ID
-     * @return 数据中心 ID
-     */
-    public static long parseDatacenterId(long id) {
-        return (id >>> DATACENTER_ID_SHIFT) & MAX_DATACENTER_ID;
-    }
-
-    /**
-     * 解析 ID 中的序列号
-     *
-     * @param id ID
-     * @return 序列号
-     */
-    public static long parseSequence(long id) {
-        return id & SEQUENCE_MASK;
-    }
-
-    /**
-     * 获取 ID 生成时间（Instant 格式）
-     *
-     * @param id ID
-     * @return Instant 对象
-     */
-    public static Instant parseInstant(long id) {
-        return Instant.ofEpochMilli(parseTimestamp(id));
     }
 
     /**
@@ -504,7 +470,8 @@ public final class SnowflakeUtils {
                 maxTimestamp = t;
             }
         }
-        return maxTimestamp == 0L ? EPOCH : maxTimestamp;
+        // 未生成过 ID 时（maxTimestamp == 0L）返回当前时间，避免健康检查时钟回拨检测失效
+        return maxTimestamp == 0L ? System.currentTimeMillis() : maxTimestamp;
     }
 
     /**

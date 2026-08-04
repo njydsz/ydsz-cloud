@@ -1,13 +1,10 @@
 package com.njydsz.system.domain.dto;
 
-import com.njydsz.common.domain.dto.BaseDTO;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -40,16 +37,14 @@ import lombok.experimental.SuperBuilder;
  * @author ydsz-team
  * @since 1.0.0
  *
- * @see com.njydsz.common.domain.dto.BaseDTO 父类（公共字段）
  * @see DictItemDTO 字典项 DTO
  * @see com.njydsz.system.domain.entity.DictType 字典类型实体
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @Schema(description = "字典类型创建/更新 DTO")
-public class DictTypeDTO extends BaseDTO {
+public class DictTypeDTO {
 
     @Schema(description = "主键 ID（更新时必填）")
     private String id;

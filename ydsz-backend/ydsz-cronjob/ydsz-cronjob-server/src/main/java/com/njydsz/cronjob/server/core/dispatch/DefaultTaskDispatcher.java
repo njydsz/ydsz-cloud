@@ -45,9 +45,8 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.scheduling.support.SimpleTriggerContext;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.domain.job.JobContextHolder;
+import com.njydsz.common.domain.job.JobExecutionContext;
 import com.njydsz.common.domain.job.JobHandler;
-import com.njydsz.common.domain.job.JobLoggerHolder;
 import com.njydsz.common.domain.job.ProcessResult;
 import com.njydsz.common.domain.job.ShardingContext;
 import com.njydsz.common.core.code.BaseResultCode;
@@ -596,13 +595,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
                 jobLogContentServiceProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
-        JobLoggerHolder.setLogger(jobLogger);
+        JobExecutionContext.setLogger(jobLogger);
         // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
         ShardingContext shardingCtx = new ShardingContext();
         shardingCtx.setJobId(job.getId());
         shardingCtx.setJobKey(job.getJobKey());
         shardingCtx.setLogId(log0.getId());
-        JobContextHolder.set(shardingCtx);
+        JobExecutionContext.setShardingContext(shardingCtx);
 
         // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
         recordExecutionStart(job.getTenantId());
@@ -653,7 +652,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             notifyTaskComplete();
 
             // P1-2: 清理任务上下文
-            JobContextHolder.clear();
+            JobExecutionContext.clear();
         }
         // P0-2: 刷新并清理在线日志器（在 finally 之后，不影响主流程）
         try {
@@ -662,7 +661,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             log.warn("[Dispatcher] 刷新在线日志失败(不影响主流程): key={} shard={} reason={}",
                     job.getJobKey(), shardIndex, e.getMessage());
         } finally {
-            JobLoggerHolder.clear();
+            JobExecutionContext.clear();
         }
         // P6-2: 记录分片执行指标
         recordJobMetrics(job, triggerType, success, log0);
@@ -810,7 +809,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * <ul>
      *   <li>{@code jobType=HTTP}: 返回 {@link HttpJobHandler}</li>
      *   <li>{@code jobType=GLUE}: 返回 {@link GlueJobHandler}
-     *       （通过 {@link JobContextHolder} 获取当前 jobId 加载 GLUE 代码）</li>
+     *       （通过 {@link JobExecutionContext} 获取当前 jobId 加载 GLUE 代码）</li>
      *   <li>{@code jobType=SHELL}: 返回 {@link ScriptJobHandler}
      *       （从 paramsJson 解析 language/script/args）</li>
      *   <li>{@code jobType=BEAN} 或 null: 按 handler 字段查找 Spring Bean（默认行为）</li>
@@ -838,7 +837,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             GlueJobHandler glueHandler =
                     glueJobHandlerProvider.getIfAvailable();
             if (glueHandler != null) {
-                // GLUE 任务从 JobContextHolder 读取 jobId 以加载对应代码
+                // GLUE 任务从 JobExecutionContext 读取 jobId 以加载对应代码
                 return glueHandler;
             }
             log.warn("[Dispatcher] GLUE 处理器未注册, 降级到 BEAN 模式: key={} handler={}",
@@ -943,13 +942,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
                 jobLogContentServiceProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
-        JobLoggerHolder.setLogger(jobLogger);
+        JobExecutionContext.setLogger(jobLogger);
 // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
 ShardingContext shardingCtx = new ShardingContext();
 shardingCtx.setJobId(job.getId());
 shardingCtx.setJobKey(job.getJobKey());
 shardingCtx.setLogId(log0.getId());
-JobContextHolder.set(shardingCtx);
+JobExecutionContext.setShardingContext(shardingCtx);
 
 // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
 recordExecutionStart(job.getTenantId());
@@ -1029,7 +1028,7 @@ try {
             notifyTaskComplete();
 
             // P1-2: 清理任务上下文
-            JobContextHolder.clear();
+            JobExecutionContext.clear();
         }
         // P0-2: 刷新并清理在线日志器（在 finally 之后，不影响主流程）
         try {
@@ -1038,7 +1037,7 @@ try {
             log.warn("[Dispatcher] 刷新在线日志失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
         } finally {
-            JobLoggerHolder.clear();
+            JobExecutionContext.clear();
         }
         // P6-2: 记录任务执行指标
         recordJobMetrics(job, triggerType, success, log0);

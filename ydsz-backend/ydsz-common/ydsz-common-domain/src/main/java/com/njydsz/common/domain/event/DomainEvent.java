@@ -11,8 +11,6 @@ import java.util.UUID;
 
 import org.springframework.context.ApplicationEvent;
 
-import com.njydsz.common.core.context.RequestContext;
-
 /**
  * 领域事件基类 — 模块间事件契约的基础。
  *
@@ -25,21 +23,23 @@ import com.njydsz.common.core.context.RequestContext;
  *   <li><b>已发生的事实：</b>领域事件描述的是"已经发生的事"，命名应使用过去时</li>
  *   <li><b>不可变性：</b>领域事件一旦创建，其状态不可改变</li>
  *   <li><b>业务含义：</b>领域事件应表达明确的业务语义，而非技术细节</li>
- *   <li><b>上下文感知：</b>自动携带租户、用户、追踪等上下文元数据</li>
  *   <li><b>跨模块契约：</b>所有跨模块事件均应继承本类，确保统一的元数据字段</li>
  * </ul>
+ *
+ * <p><b>上下文感知：</b>租户 / 用户 / 链路追踪等上下文不重复存放在事件内，
+ * 由 {@code RequestContext} / MDC 自动传透，事件仅保留业务语义字段。
+ * 如需持久化上下文（如 Outbox），由写入方在落库时从 RequestContext 解析。
  *
  * <p><b>P2-1</b>：本类现在继承 {@link ApplicationEvent}，使所有领域事件可直接被
  * Spring 事件系统消费。跨模块事件类型常量定义在 {@link ModuleEventTypes}。
  *
  * <p><b>创建方式：</b>
- * 推荐使用 Builder 模式创建领域事件，自动填充 eventId、occurredAt 和上下文元数据：
+ * 推荐使用 Builder 模式创建领域事件，自动填充 eventId、occurredAt：
  * <pre>{@code
  * DomainEvent event = DomainEvent.builder()
  *     .eventType("OrderCreated")
  *     .aggregateId("order-123")
  *     .aggregateType("Order")
- *     .version(1)
  *     .metadata("source", "API")
  *     .build();
  * }</pre>
@@ -52,7 +52,7 @@ import com.njydsz.common.core.context.RequestContext;
  *
  *     public OrderCreatedEvent(Long orderId, BigDecimal totalAmount) {
  *         super(UUID.randomUUID().toString(), LocalDateTime.now(), "OrderCreated",
- *               null, null, 1, null, null, null, Collections.emptyMap());
+ *               null, null, Collections.emptyMap());
  *         this.orderId = orderId;
  *         this.totalAmount = totalAmount;
  *     }
@@ -61,7 +61,9 @@ import com.njydsz.common.core.context.RequestContext;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
+ * @since 1.4.0 精简：移除 version / tenantId / userId / traceId 四个字段。
+ *              事件版本号无业务使用（非事件溯源）；上下文字段与 RequestContext 重复，
+ *              改由消费/落库方在需要时自行解析。
  */
 public class DomainEvent extends ApplicationEvent implements Serializable {
 
@@ -93,47 +95,22 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
     private final String aggregateType;
 
     /**
-     * 事件版本（用于事件溯源）
-     */
-    private final int version;
-
-    /**
-     * 租户ID（自动从 RequestContext 填充）
-     */
-    private final String tenantId;
-
-    /**
-     * 操作人ID（自动从 RequestContext 填充）
-     */
-    private final String userId;
-
-    /**
-     * 链路追踪ID（自动从 RequestContext 填充）
-     */
-    private final String traceId;
-
-    /**
      * 扩展元数据
      */
     private final Map<String, Object> metadata;
 
     /**
-     * 构造领域事件（全参数，包含上下文元数据）
+     * 构造领域事件（全参数）
      *
      * @param eventId       事件唯一标识
      * @param occurredAt    事件发生时间
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
      * @param aggregateType 聚合根类型
-     * @param version       事件版本
-     * @param tenantId      租户ID
-     * @param userId        操作人ID
-     * @param traceId       链路追踪ID
      * @param metadata      扩展元数据
      */
     public DomainEvent(String eventId, LocalDateTime occurredAt, String eventType,
-                       String aggregateId, String aggregateType, int version,
-                       String tenantId, String userId, String traceId,
+                       String aggregateId, String aggregateType,
                        Map<String, Object> metadata) {
         super(eventType);
         this.eventId = eventId;
@@ -141,10 +118,6 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
         this.eventType = eventType;
         this.aggregateId = aggregateId;
         this.aggregateType = aggregateType;
-        this.version = version;
-        this.tenantId = tenantId;
-        this.userId = userId;
-        this.traceId = traceId;
         this.metadata = metadata != null ? Collections.unmodifiableMap(new HashMap<>(metadata)) : Collections.emptyMap();
     }
 
@@ -175,22 +148,6 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
 
     public String getAggregateType() {
         return aggregateType;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public String getTraceId() {
-        return traceId;
     }
 
     /**
@@ -233,16 +190,15 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
     public String toString() {
         return String.format(
                 "DomainEvent{eventId='%s', occurredAt=%s, eventType='%s', aggregateId='%s', "
-                + "aggregateType='%s', version=%d, tenantId='%s', userId='%s', traceId='%s', metadata=%s}",
-                eventId, occurredAt, eventType, aggregateId, aggregateType,
-                version, tenantId, userId, traceId, metadata);
+                + "aggregateType='%s', metadata=%s}",
+                eventId, occurredAt, eventType, aggregateId, aggregateType, metadata);
     }
 
     /**
      * DomainEvent 构建器
      *
      * <p>提供链式调用方式创建不可变的领域事件。
-     * 默认自动填充 eventId、occurredAt 和上下文元数据。
+     * 默认自动填充 eventId、occurredAt。
      */
     public static class Builder {
         private String eventId;
@@ -250,10 +206,6 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
         private String eventType;
         private String aggregateId;
         private String aggregateType;
-        private int version = 1;
-        private String tenantId;
-        private String userId;
-        private String traceId;
         private final Map<String, Object> metadata = new HashMap<>();
 
         /**
@@ -326,53 +278,6 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
         }
 
         /**
-         * 设置事件版本号（事件溯源场景下的聚合根修订号）。
-         *
-         * <p>默认为 {@code 1}。同一聚合根的事件应单调递增，
-         * 消费端可据此做顺序校验与幂等去重。
-         *
-         * @param version 事件版本号，应为正整数
-         * @return 当前 Builder，便于链式调用
-         */
-        public Builder version(int version) {
-            this.version = version;
-            return this;
-        }
-
-        /**
-         * 设置租户ID（覆盖自动填充值）
-         *
-         * @param tenantId 租户ID
-         * @return 当前 Builder
-         */
-        public Builder tenantId(String tenantId) {
-            this.tenantId = tenantId;
-            return this;
-        }
-
-        /**
-         * 设置操作人ID（覆盖自动填充值）
-         *
-         * @param userId 操作人ID
-         * @return 当前 Builder
-         */
-        public Builder userId(String userId) {
-            this.userId = userId;
-            return this;
-        }
-
-        /**
-         * 设置链路追踪ID（覆盖自动填充值）
-         *
-         * @param traceId 链路追踪ID
-         * @return 当前 Builder
-         */
-        public Builder traceId(String traceId) {
-            this.traceId = traceId;
-            return this;
-        }
-
-        /**
          * 设置时间源，用于在单元测试中固定事件发生时间。
          *
          * <p>生产环境无需调用，默认使用 {@link Clock#systemDefaultZone()}。
@@ -421,8 +326,7 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
          * 构建领域事件实例。
          *
          * <p>组装 Builder 已设置的字段并自动填充缺失项：eventId 缺省时生成 UUID，
-         * occurredAt 缺省时取当前时钟时间；tenantId/userId/traceId 未显式设置时
-         * 从 {@link RequestContext} 自动填充。构建完成后事件不可变（metadata 为不可变 Map）。
+         * occurredAt 缺省时取当前时钟时间。构建完成后事件不可变（metadata 为不可变 Map）。
          *
          * @return 组装完成的领域事件
          * @throws IllegalArgumentException 当 eventType 为 null 或空字符串时抛出，
@@ -434,11 +338,7 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
             }
             String eid = eventId != null ? eventId : UUID.randomUUID().toString();
             LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now(clock);
-            String tid = tenantId != null ? tenantId : RequestContext.getTenantId();
-            String uid = userId != null ? userId : RequestContext.getUserId();
-            String trace = traceId != null ? traceId : RequestContext.getTraceId();
-            return new DomainEvent(eid, occurred, eventType, aggregateId, aggregateType,
-                                   version, tid, uid, trace, metadata);
+            return new DomainEvent(eid, occurred, eventType, aggregateId, aggregateType, metadata);
         }
     }
 }

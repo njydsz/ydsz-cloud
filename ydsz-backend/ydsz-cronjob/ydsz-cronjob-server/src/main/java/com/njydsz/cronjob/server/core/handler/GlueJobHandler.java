@@ -13,9 +13,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.domain.job.JobContextHolder;
+import com.njydsz.common.domain.job.JobExecutionContext;
 import com.njydsz.common.domain.job.JobHandler;
-import com.njydsz.common.domain.job.JobLoggerHolder;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
@@ -209,8 +208,8 @@ public class GlueJobHandler implements JobHandler {
                 "java.math.BigInteger",
                 "java.math.RoundingMode",
                 "com.njydsz.common.domain.job.JobHandler",
-                "com.njydsz.common.domain.job.JobContextHolder",
-                "com.njydsz.common.domain.job.JobLoggerHolder",
+                "com.njydsz.common.domain.job.JobExecutionContext",
+                "com.njydsz.common.domain.job.JobExecutionContext",
                 "com.njydsz.common.domain.job.ProcessResult"
         );
         customizer.setImportsWhitelist(importsWhitelist);
@@ -251,10 +250,10 @@ public class GlueJobHandler implements JobHandler {
 
     @Override
     public Object execute(String paramsJson) throws Exception {
-        // 从 JobContextHolder 获取当前 jobId
-        String jobId = JobContextHolder.get().getJobId();
+        // 从 JobExecutionContext 获取当前 jobId
+        String jobId = JobExecutionContext.getShardingContext().getJobId();
         if (!StringUtils.hasText(jobId)) {
-            throw new IllegalStateException("GLUE 任务执行上下文缺少 jobId，请确认 JobContextHolder 已正确设置");
+            throw new IllegalStateException("GLUE 任务执行上下文缺少 jobId，请确认 JobExecutionContext 已正确设置");
         }
 
         GlueCodeService glueCodeService = glueCodeServiceProvider.getIfAvailable();
@@ -436,7 +435,7 @@ public class GlueJobHandler implements JobHandler {
      */
     private void logToJobLogger(String format, Object... args) {
         try {
-            var logger = JobLoggerHolder.getLogger();
+            var logger = JobExecutionContext.getLogger();
             if (logger != null) {
                 logger.info(format, args);
             }

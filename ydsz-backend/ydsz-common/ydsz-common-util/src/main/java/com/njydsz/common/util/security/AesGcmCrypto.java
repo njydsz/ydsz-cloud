@@ -47,8 +47,29 @@ public class AesGcmCrypto {
 
     private static final int GCM_TAG_BYTES = GCM_TAG_LENGTH / 8;
 
+    /**
+     * 共享的线程安全 SecureRandom 实例（SecureRandom 本身是线程安全的）。
+     *
+     * <p>避免每个 AesGcmCrypto 实例都构造一个 SecureRandom，降低创建开销。
+     */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final SecretKeySpec keySpec;
-    private final SecureRandom random = new SecureRandom();
+
+    /**
+     * 校验 AES 密钥长度，必须为 16/24/32 字节。
+     *
+     * <p>该方法为 {@link AesUtils} 等上层调用方提供统一的字节级密钥校验入口，
+     * 避免出现 Hex 字符长度与字节长度两套校验口径不一致的问题。
+     *
+     * @param key 待校验密钥
+     * @throws IllegalArgumentException 当 key 为 null 或长度非 16/24/32 字节
+     */
+    public static void validateKey(byte[] key) {
+        if (key == null || (key.length != 16 && key.length != 24 && key.length != 32)) {
+            throw new IllegalArgumentException("AES key length must be 16/24/32 bytes");
+        }
+    }
 
     /**
      * 创建 AES-GCM 加密器
@@ -56,9 +77,7 @@ public class AesGcmCrypto {
      * @param key 主密钥（16/24/32 字节）
      */
     public AesGcmCrypto(byte[] key) {
-        if (key == null || (key.length != 16 && key.length != 24 && key.length != 32)) {
-            throw new IllegalArgumentException("AES key length must be 16/24/32 bytes");
-        }
+        validateKey(key);
         this.keySpec = new SecretKeySpec(key, KEY_ALG);
     }
 
@@ -119,7 +138,7 @@ public class AesGcmCrypto {
      */
     private byte[] generateRandomIv() {
         byte[] iv = new byte[IV_LENGTH];
-        random.nextBytes(iv);
+        SECURE_RANDOM.nextBytes(iv);
         return iv;
     }
 }

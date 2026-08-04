@@ -114,11 +114,14 @@ public class OutboxService {
                 }
             });
         }
-        if (event.getVersion() > 0) {
-            headers.put("_eventVersion", String.valueOf(event.getVersion()));
+        String userId = null;
+        try {
+            userId = RequestContext.getUserId();
+        } catch (NoClassDefFoundError | Exception ignored) {
+            // RequestContext 不可用
         }
-        if (event.getUserId() != null) {
-            headers.put("_userId", event.getUserId());
+        if (userId != null) {
+            headers.put("_userId", userId);
         }
 
         appendToOutbox(OutboxMessage.builder()
@@ -127,9 +130,7 @@ public class OutboxService {
                 .eventType(event.getEventType())
                 .payload(YdszJson.toJson(event))
                 .headers(headers)
-                .deduplicationId(event.getEventId())
-                .tenantId(event.getTenantId())
-                .traceId(event.getTraceId()));
+                .deduplicationId(event.getEventId()));
     }
 
     /**

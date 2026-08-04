@@ -83,11 +83,9 @@ public class UnifiedAlertEvent extends DomainEvent {
                              String sourceModule, String sourceId, String sourceRef,
                              String title, String content, String targetRole,
                              String targetUserIds, String pushChannels,
-                             LocalDateTime triggeredAt, String tenantId, String traceId,
-                             boolean recovery) {
+                             LocalDateTime triggeredAt, boolean recovery) {
         super(UUID.randomUUID().toString(), LocalDateTime.now(), ModuleEventTypes.UNIFIED_ALERT,
-              sourceId, sourceModule, 1,
-              tenantId, null, traceId,
+              sourceId, sourceModule,
               Collections.emptyMap());
         this.alertCode = alertCode;
         this.alertType = alertType;

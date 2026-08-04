@@ -30,6 +30,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>不可变模式：默认配置不可变，防止意外修改</li>
  *   <li>流式API：支持链式调用，提升代码可读性</li>
  *   <li>参数校验：内置参数校验，防止非法参数</li>
+ *   <li>排序结构化：排序项使用 {@link OrderItem} 对象而非字符串拼接，避免每次读取重复解析</li>
  * </ul>
  *
  * <p><b>与 {@link com.njydsz.common.core.request.PageRequest} 的区别：</b>
@@ -44,8 +45,7 @@ import lombok.experimental.SuperBuilder;
  *   <tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr>
  *   <tr><td>pageNum</td><td>Integer</td><td>1</td><td>当前页码，从1开始</td></tr>
  *   <tr><td>pageSize</td><td>Integer</td><td>{@link PageConstants#DEFAULT_PAGE_SIZE}</td><td>每页记录数</td></tr>
- *   <tr><td>orderItems</td><td>List&lt;String&gt;</td><td>[]</td><td>排序项列表</td></tr>
- *   <tr><td>ascending</td><td>Boolean</td><td>true</td><td>是否升序</td></tr>
+ *   <tr><td>orderItems</td><td>List&lt;OrderItem&gt;</td><td>[]</td><td>排序项列表（结构化）</td></tr>
  * </table>
  *
  * <p><b>使用示例：</b>
@@ -61,7 +61,8 @@ import lombok.experimental.SuperBuilder;
  *     .build();
  *
  * // 添加排序
- * query.addOrder("created_at", true);
+ * query.addOrder("created_at", true);          // 链式，结构化 OrderItem
+ * query.addDescOrder("updated_at");            // 便捷降序
  *
  * // 获取偏移量
  * int offset = query.getOffset();
@@ -69,7 +70,8 @@ import lombok.experimental.SuperBuilder;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @since 1.4.0 排序项由 List&lt;String&gt; 重构为 List&lt;OrderItem&gt;，旧 API 签名保持不变
+ *
  */
 @Data
 @SuperBuilder
@@ -116,18 +118,13 @@ public class PageQuery extends BaseQuery {
     private Integer pageSize = PageConstants.getDefaultPageSize();
 
     /**
-     * 排序字段列表
+     * 排序项列表（结构化 {@link OrderItem}）
      *
-     * <p>格式: column1 asc, column2 desc
-     * 支持多个排序项，按添加顺序依次排序。
-     * <p>注意：通过 {@link #addOrder(String, boolean)} 添加的排序项会经过安全校验，
-     * 直接通过 setter 设置的排序项时 {@link #getOrderSql()} 时也会进行二次校验）
-     *
-     * <p>ascending 字段继承自 {@link BaseQuery}。
-     * 本类通过覆写 {@link #setOrderBy(String)} 进行安全校验）
+     * <p>通过 {@link #addOrder(String, boolean)} / {@link #addAscOrder(String)} /
+     * {@link #addDescOrder(String)} 添加的排序项会经过 SQL 安全校验与白名单过滤。
      */
     @Builder.Default
-    private List<String> orderItems = new ArrayList<>();
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     /**
      * 允许排序的字段白名单
@@ -164,6 +161,18 @@ public class PageQuery extends BaseQuery {
             return true; // 未启用白名单，放过
         }
         return allowed.contains(column);
+    }
+
+    /**
+     * 校验排序列是否安全（正则 + 白名单）。
+     *
+     * @param column 列名
+     * @return 安全返回 true
+     */
+    private boolean isSafeColumn(String column) {
+        return column != null && !column.isBlank()
+                && SAFE_COLUMN_PATTERN.matcher(column).matches()
+                && isColumnAllowed(column);
     }
 
     /**
@@ -206,20 +215,16 @@ public class PageQuery extends BaseQuery {
     /**
      * 添加排序项
      *
-     * <p>将排序字段和方向添加到排序列表中。
+     * <p>将排序字段和方向添加到排序列表中。列名经过正则与白名单双重校验。
      *
      * @param column 字段
      * @param isAsc  是否升序，true表示升序，false表示降序
      * @return 当前对象，支持链式调用
      */
     public PageQuery addOrder(String column, boolean isAsc) {
-        if (orderItems == null) {
-            orderItems = new ArrayList<>();
-        }
-        if (column != null && !column.isBlank()
-                && SAFE_COLUMN_PATTERN.matcher(column).matches()
-                && isColumnAllowed(column)) {
-            orderItems.add(column + (isAsc ? " ASC" : " DESC"));
+        if (isSafeColumn(column)) {
+            ensureOrderItems();
+            orderItems.add(OrderItem.of(column, isAsc));
         }
         return this;
     }
@@ -245,56 +250,79 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置排序项列表（覆盖Lombok生成的setter）
+     * 批量添加排序项。
      *
-     * <p>对传入的每个排序项进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法项。
-     * 防止绕过 {@link #addOrder(String, boolean)} 直接注入恶意排序字段
-     * 如果启用与 {@link #allowedOrderByFields()} 白名单，不在白名单中的字段也会被过滤。
+     * <p>对每个排序项执行与 {@link #addOrder(String, boolean)} 相同的安全校验，
+     * 非法列名（未通过正则或白名单）将被静默忽略。
      *
-     * @param orderItems 排序项列表
+     * @param items 排序项（OrderItem 类型，允许 null 元素，自动跳过）
+     * @return 当前对象，支持链式调用
+     * @since 1.4.0
      */
-    public void setOrderItems(List<String> orderItems) {
-        if (orderItems == null || orderItems.isEmpty()) {
-            this.orderItems = new ArrayList<>();
-            return;
-        }
-        List<String> filtered = new ArrayList<>();
-        for (String item : orderItems) {
-            if (item == null || item.isBlank()) {
-                continue;
-            }
-            String trimmed = item.trim();
-            String column = trimmed.replaceAll("\\s+(ASC|DESC)$", "").trim();
-            if (SAFE_COLUMN_PATTERN.matcher(column).matches() && isColumnAllowed(column)) {
-                filtered.add(trimmed);
+    public PageQuery addOrders(OrderItem... items) {
+        if (items != null) {
+            ensureOrderItems();
+            for (OrderItem item : items) {
+                if (item != null && isSafeColumn(item.getColumn())) {
+                    this.orderItems.add(OrderItem.of(item.getColumn(),
+                            item.getDirection() == OrderItem.Direction.ASC));
+                }
             }
         }
-        this.orderItems = filtered;
+        return this;
     }
 
     /**
-     * 设置排序字符串（覆盖 Lombok 生成的 setter）
+     * 设置排序项列表（结构化）
      *
-     * <p>对传入的排序字符串进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法排序项。
-     * 防止直接注入恶意 SQL 排序字段。校验通过的排序项会被添加到 {@link #orderItems} 列表中。
+     * <p>对传入的每个排序项进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配
+     * 且通过 {@link #allowedOrderByFields()} 白名单的合法项。
+     *
+     * @param orderItems 排序项列表（OrderItem 类型）
+     * @return 当前对象，支持链式调用
+     */
+    public PageQuery setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = new ArrayList<>();
+        if (orderItems == null || orderItems.isEmpty()) {
+            return this;
+        }
+        for (OrderItem item : orderItems) {
+            if (item != null && isSafeColumn(item.getColumn())) {
+                this.orderItems.add(OrderItem.of(item.getColumn(), item.getDirection() == OrderItem.Direction.ASC));
+            }
+        }
+        return this;
+    }
+
+    /**
+     * 设置排序字符串（兼容旧格式）。
+     *
+     * <p>解析形如 {@code "field1 ASC, field2 DESC"} 的排序字符串，
+     * 仅保留通过 {@link #SAFE_COLUMN_PATTERN} 与 {@link #allowedOrderByFields()} 校验的合法项。
      *
      * @param orderBy 原始排序字符串，格式：field1 ASC, field2 DESC
+     * @deprecated 自 1.4.0 起推荐使用结构化 API {@link #addOrder(String, boolean)} /
+     *             {@link #addAscOrder(String)} / {@link #addDescOrder(String)} /
+     *             {@link #addOrders(OrderItem...)}，避免字符串解析歧义与注入面。
+     *             本方法保留用于兼容旧调用方，后续版本将移除。
      */
+    @Deprecated
     public void setOrderBy(String orderBy) {
         if (orderBy == null || orderBy.isBlank()) {
             this.orderItems = new ArrayList<>();
             return;
         }
-        String[] parts = orderBy.split(",");
-        List<String> safeParts = new ArrayList<>();
-        for (String part : parts) {
+        List<OrderItem> parsed = new ArrayList<>();
+        for (String part : orderBy.split(",")) {
             String trimmed = part.trim();
             String column = trimmed.replaceAll("\\s+(ASC|DESC)$", "").trim();
-            if (SAFE_COLUMN_PATTERN.matcher(column).matches() && isColumnAllowed(column)) {
-                safeParts.add(trimmed);
+            if (!isSafeColumn(column)) {
+                continue;
             }
+            OrderItem.Direction dir = OrderItem.Direction.of(trimmed.replaceFirst("^[^\\s]+\\s*", ""));
+            parsed.add(OrderItem.of(column, dir != OrderItem.Direction.DESC));
         }
-        this.orderItems = safeParts;
+        this.orderItems = parsed;
     }
 
     /**
@@ -426,7 +454,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 获取排序SQL片段
      *
-     * <p>生成可直接使用的 ORDER BY 子句。
+     * <p>基于结构化 {@link OrderItem} 列表直接拼接，零重复解析。
      *
      * @return ORDER BY 子句，如 "ORDER BY created_at DESC"
      */
@@ -436,11 +464,9 @@ public class PageQuery extends BaseQuery {
             return "";
         }
         List<String> safeItems = new ArrayList<>();
-        for (String item : orderItems) {
-            String trimmed = item.trim();
-            String column = trimmed.replaceAll("\\s+(ASC|DESC)$", "").trim();
-            if (SAFE_COLUMN_PATTERN.matcher(column).matches() && isColumnAllowed(column)) {
-                safeItems.add(trimmed);
+        for (OrderItem item : orderItems) {
+            if (item != null && isSafeColumn(item.getColumn())) {
+                safeItems.add(item.toSql());
             }
         }
         if (safeItems.isEmpty()) {
@@ -469,6 +495,15 @@ public class PageQuery extends BaseQuery {
     @JsonIgnore
     public int getOrderCount() {
         return orderItems != null ? orderItems.size() : 0;
+    }
+
+    /**
+     * 惰性初始化排序列表
+     */
+    private void ensureOrderItems() {
+        if (orderItems == null) {
+            orderItems = new ArrayList<>();
+        }
     }
 
     @Override

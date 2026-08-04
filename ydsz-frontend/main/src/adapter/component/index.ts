@@ -15,108 +15,45 @@ import { $t } from '@ydsz/locales';
 
 import { ElNotification } from 'element-plus';
 
-const ElButton = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/button/index'),
-    import('element-plus/es/components/button/style/css'),
-  ]).then(([res]) => res.ElButton),
-);
-const ElCheckbox = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/checkbox/index'),
-    import('element-plus/es/components/checkbox/style/css'),
-  ]).then(([res]) => res.ElCheckbox),
-);
-const ElCheckboxButton = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/checkbox/index'),
-    import('element-plus/es/components/checkbox-button/style/css'),
-  ]).then(([res]) => res.ElCheckboxButton),
-);
-const ElCheckboxGroup = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/checkbox/index'),
-    import('element-plus/es/components/checkbox-group/style/css'),
-  ]).then(([res]) => res.ElCheckboxGroup),
-);
-const ElDatePicker = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/date-picker/index'),
-    import('element-plus/es/components/date-picker/style/css'),
-  ]).then(([res]) => res.ElDatePicker),
-);
-const ElDivider = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/divider/index'),
-    import('element-plus/es/components/divider/style/css'),
-  ]).then(([res]) => res.ElDivider),
-);
-const ElInput = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/input/index'),
-    import('element-plus/es/components/input/style/css'),
-  ]).then(([res]) => res.ElInput),
-);
-const ElInputNumber = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/input-number/index'),
-    import('element-plus/es/components/input-number/style/css'),
-  ]).then(([res]) => res.ElInputNumber),
-);
-const ElRadio = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/radio/index'),
-    import('element-plus/es/components/radio/style/css'),
-  ]).then(([res]) => res.ElRadio),
-);
-const ElRadioButton = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/radio/index'),
-    import('element-plus/es/components/radio-button/style/css'),
-  ]).then(([res]) => res.ElRadioButton),
-);
-const ElRadioGroup = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/radio/index'),
-    import('element-plus/es/components/radio-group/style/css'),
-  ]).then(([res]) => res.ElRadioGroup),
-);
-const ElSelectV2 = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/select-v2/index'),
-    import('element-plus/es/components/select-v2/style/css'),
-  ]).then(([res]) => res.ElSelectV2),
-);
-const ElSpace = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/space/index'),
-    import('element-plus/es/components/space/style/css'),
-  ]).then(([res]) => res.ElSpace),
-);
-const ElSwitch = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/switch/index'),
-    import('element-plus/es/components/switch/style/css'),
-  ]).then(([res]) => res.ElSwitch),
-);
-const ElTimePicker = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/time-picker/index'),
-    import('element-plus/es/components/time-picker/style/css'),
-  ]).then(([res]) => res.ElTimePicker),
-);
-const ElTreeSelect = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/tree-select/index'),
-    import('element-plus/es/components/tree-select/style/css'),
-  ]).then(([res]) => res.ElTreeSelect),
-);
-const ElUpload = defineAsyncComponent(() =>
-  Promise.all([
-    import('element-plus/es/components/upload/index'),
-    import('element-plus/es/components/upload/style/css'),
-  ]).then(([res]) => res.ElUpload),
-);
+/**
+ * 创建 Element Plus 异步组件工厂。
+ *
+ * 统一处理组件逻辑与样式 CSS 的并行加载，消除 17 处重复的
+ * `Promise.all([import(comp), import(css)]).then(([res]) => res.ElXxx)` 模板。
+ *
+ * @param componentName - Element Plus 组件名（kebab-case，如 'button'、'input-number'）
+ * @param stylePath - 样式路径后缀（默认与 componentName 相同；如 'checkbox-button' 样式与 'checkbox' 逻辑分开）
+ * @returns 异步加载的 Element Plus 组件
+ */
+function createElAsyncComponent<T>(componentName: string, stylePath?: string): T {
+  const css = stylePath ?? componentName;
+  return defineAsyncComponent(() =>
+    Promise.all([
+      import(`element-plus/es/components/${componentName}/index`),
+      import(`element-plus/es/components/${css}/style/css`),
+    ]).then(([res]) => (res as { [key: string]: Component })[
+      `El${componentName.replace(/(^|-)([a-z])/g, (_, __, c: string) => c.toUpperCase())}`
+    ]),
+  ) as unknown as T;
+}
+
+const ElButton = createElAsyncComponent<Component>('button');
+const ElCheckbox = createElAsyncComponent<Component>('checkbox');
+const ElCheckboxButton = createElAsyncComponent<Component>('checkbox', 'checkbox-button');
+const ElCheckboxGroup = createElAsyncComponent<Component>('checkbox', 'checkbox-group');
+const ElDatePicker = createElAsyncComponent<Component>('date-picker');
+const ElDivider = createElAsyncComponent<Component>('divider');
+const ElInput = createElAsyncComponent<Component>('input');
+const ElInputNumber = createElAsyncComponent<Component>('input-number');
+const ElRadio = createElAsyncComponent<Component>('radio');
+const ElRadioButton = createElAsyncComponent<Component>('radio', 'radio-button');
+const ElRadioGroup = createElAsyncComponent<Component>('radio', 'radio-group');
+const ElSelectV2 = createElAsyncComponent<Component>('select-v2');
+const ElSpace = createElAsyncComponent<Component>('space');
+const ElSwitch = createElAsyncComponent<Component>('switch');
+const ElTimePicker = createElAsyncComponent<Component>('time-picker');
+const ElTreeSelect = createElAsyncComponent<Component>('tree-select');
+const ElUpload = createElAsyncComponent<Component>('upload');
 
 /**
  * 为业务组件包裹默认占位符与方法透传的高阶包装。

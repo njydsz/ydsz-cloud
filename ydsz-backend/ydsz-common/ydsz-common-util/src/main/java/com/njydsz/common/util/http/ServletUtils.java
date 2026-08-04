@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * Servlet 环境下的 HTTP 工具类
  *
  * <p>提供基于 Servlet API 的常用 Web 工具方法，
- * 仅在 Servlet 编程模型下可用。WebFlux 场景请使用 {@link WebFluxUtils}。
+ * 仅在 Servlet 编程模型下可用。
  *
  * @author ydsz-team
  * @since 1.0.0

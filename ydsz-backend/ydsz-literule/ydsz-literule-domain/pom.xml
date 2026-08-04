@@ -16,7 +16,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
-        <!-- P0-2: 移除死依赖 ydsz-common-domain（代码 0 引用，仅经 ydsz-common-jdbc 传递可用） -->
+        <!-- ydsz-common-domain: RuleStatusEnum implements BaseStatusEnum（真实使用，非死依赖） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>

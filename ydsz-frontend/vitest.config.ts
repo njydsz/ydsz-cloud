@@ -34,11 +34,14 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov', 'clover'],
       reportsDirectory: './coverage',
+      // Q1 目标阈值：branches/functions 70%、lines/statements 80%
+      // 后续阶段提升路线：Q2 → 80%/85%，Q3 → 85%/90%
       thresholds: {
-        branches: 60,
-        functions: 60,
-        lines: 70,
-        statements: 70,
+        perFile: true,
+        branches: 70,
+        functions: 70,
+        lines: 80,
+        statements: 80,
       },
     },
     environment: 'happy-dom',

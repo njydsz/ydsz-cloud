@@ -175,6 +175,9 @@ public class IOUtils {
     public static long copy(InputStream input, OutputStream output, int bufferSize) throws IOException {
         Objects.requireNonNull(input, "input cannot be null");
         Objects.requireNonNull(output, "output cannot be null");
+        if (bufferSize <= 0) {
+            throw new IllegalArgumentException("bufferSize 必须 > 0");
+        }
 
         byte[] buffer = new byte[bufferSize];
         long count = 0;
@@ -208,6 +211,9 @@ public class IOUtils {
         while ((n = inputChannel.read(buffer)) != EOF) {
             buffer.flip();
             outputChannel.write(buffer);
+            while (buffer.hasRemaining()) {
+                outputChannel.write(buffer);
+            }
             buffer.clear();
             count += n;
         }
@@ -238,6 +244,9 @@ public class IOUtils {
     public static long copy(Reader input, Writer output, int bufferSize) throws IOException {
         Objects.requireNonNull(input, "input cannot be null");
         Objects.requireNonNull(output, "output cannot be null");
+        if (bufferSize <= 0) {
+            throw new IllegalArgumentException("bufferSize 必须 > 0");
+        }
 
         char[] buffer = new char[bufferSize];
         long count = 0;
@@ -296,7 +305,7 @@ public class IOUtils {
      */
     public static byte[] toByteArray(InputStream input) throws IOException {
         Objects.requireNonNull(input, "input cannot be null");
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ByteArrayOutputStream output = new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
         copy(input, output);
         return output.toByteArray();
     }
@@ -381,9 +390,9 @@ public class IOUtils {
         if (buffer == null) {
             return EMPTY_BYTE_ARRAY;
         }
-        buffer.flip();
+        // 不破坏性修改入参 buffer 的 position/limit 状态，使用 duplicate 读取剩余字节
         byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
+        buffer.duplicate().get(bytes);
         return bytes;
     }
 
@@ -397,9 +406,9 @@ public class IOUtils {
     public static void write(ByteBuffer buffer, OutputStream output) throws IOException {
         Objects.requireNonNull(buffer, "buffer cannot be null");
         Objects.requireNonNull(output, "output cannot be null");
-        buffer.flip();
+        // 不破坏性修改入参 buffer 的 position/limit 状态，使用 duplicate 读取剩余字节
         byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
+        buffer.duplicate().get(bytes);
         output.write(bytes);
     }
 

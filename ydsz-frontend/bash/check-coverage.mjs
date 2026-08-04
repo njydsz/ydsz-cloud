@@ -17,12 +17,13 @@ const ROOT_DIR = join(import.meta.dirname, '..');
 const COVERAGE_DIR = join(ROOT_DIR, 'coverage');
 const COVERAGE_JSON = join(COVERAGE_DIR, 'coverage-summary.json');
 
-// 覆盖率阈值配置
+// 覆盖率阈值配置（Q1 目标：branches/functions 70%、lines/statements 80%）
+// 后续阶段提升路线：Q2 → 80%/85%，Q3 → 85%/90%
 const COVERAGE_THRESHOLDS = {
-  branches: 60,
-  functions: 60,
-  lines: 70,
-  statements: 70,
+  branches: 70,
+  functions: 70,
+  lines: 80,
+  statements: 80,
 };
 
 /**
