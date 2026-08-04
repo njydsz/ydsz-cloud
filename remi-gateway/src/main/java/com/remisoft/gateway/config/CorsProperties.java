@@ -18,7 +18,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   gateway:
  *     cors:
  *       allowed-origins:
- *         - https://pmis.example.com
+ *         - https://remi.example.com
  *         - https://*.example.com
  *       allowed-methods: GET,POST,PUT,DELETE,OPTIONS
  *       allowed-headers: "*"

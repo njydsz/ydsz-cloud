@@ -10,7 +10,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 
 /**
- * PMIS 项目全局架构约束规则（ArchUnit）。
+ * remi-cloud 项目全局架构约束规则（ArchUnit）。
  *
  * <p>通过 ArchUnit 在编译期强制执行架构约束，防止层级穿透和循环依赖。
  *
