@@ -1,0 +1,4 @@
+﻿
+[ERROR]   mvn <args> -rf :ydsz-common-json
+
+
