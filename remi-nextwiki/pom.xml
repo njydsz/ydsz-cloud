@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.remisoft</groupId>
+        <artifactId>remi-backend</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>remi-nextwiki</artifactId>
+    <packaging>pom</packaging>
+    <name>remi-nextwiki</name>
+    <description>网盘知识库服务 - 融合文件存储、文档解析、全文搜索、在线预览、版本控制、分享协作的一体化平台</description>
+    <modules>
+        <module>remi-nextwiki-api</module>
+        <module>remi-nextwiki-domain</module>
+        <module>remi-nextwiki-infra</module>
+        <module>remi-nextwiki-server</module>
+        <module>remi-nextwiki-web</module>
+    </modules>
+
+</project>

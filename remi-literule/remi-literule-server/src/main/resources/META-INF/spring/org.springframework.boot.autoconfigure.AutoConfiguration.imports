@@ -1,0 +1,2 @@
+com.remisoft.literule.server.config.LiteRuleAutoConfiguration
+com.remisoft.literule.server.distributed.DistributedAutoConfiguration

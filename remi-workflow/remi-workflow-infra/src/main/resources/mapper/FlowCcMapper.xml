@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.remisoft.workflow.infra.mapper.FlowCcMapper">
+
+    <!-- 基础列 -->
+    <sql id="Base_Column">
+        id, tenant_id, instance_id, task_id, node_code, node_name, flow_code, flow_name,
+        business_key, cc_user_id, cc_user_name, cc_type, trigger_user_id, trigger_user_name,
+        title, content, read_status, read_at, provider_trace_id, created_by, created_at,
+        updated_by, updated_at, deleted
+    </sql>
+
+    <!-- 查"抄送我的"（分页） -->
+    <select id="selectCcByUserPage" resultType="com.remisoft.workflow.domain.entity.FlowCc">
+        SELECT
+            <include refid="Base_Column"/>
+        FROM remi_flow_cc
+        WHERE tenant_id = #{tenantId}
+          AND cc_user_id = #{ccUserId}
+          AND deleted = 0
+          <if test="readStatus != null and readStatus != ''">
+              AND read_status = #{readStatus}
+          </if>
+          <if test="flowCode != null and flowCode != ''">
+              AND flow_code = #{flowCode}
+          </if>
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 统计"抄送我的"总数 -->
+    <select id="countCcByUser" resultType="long">
+        SELECT COUNT(1)
+        FROM remi_flow_cc
+        WHERE tenant_id = #{tenantId}
+          AND cc_user_id = #{ccUserId}
+          AND deleted = 0
+          <if test="readStatus != null and readStatus != ''">
+              AND read_status = #{readStatus}
+          </if>
+          <if test="flowCode != null and flowCode != ''">
+              AND flow_code = #{flowCode}
+          </if>
+    </select>
+
+    <!-- 统计"抄送我的"未读数 -->
+    <select id="countCcUnreadByUser" resultType="long">
+        SELECT COUNT(1)
+        FROM remi_flow_cc
+        WHERE tenant_id = #{tenantId}
+          AND cc_user_id = #{ccUserId}
+          AND deleted = 0
+          AND read_status = 'UNREAD'
+    </select>
+
+    <!-- P2-3: 全局未读抄送总数（Prometheus 指标） -->
+    <select id="countUnread" resultType="long">
+        SELECT COUNT(1)
+        FROM remi_flow_cc
+        WHERE deleted = 0
+          AND read_status = 'UNREAD'
+    </select>
+
+    <!-- 标记抄送为已读 -->
+    <update id="markRead">
+        UPDATE remi_flow_cc
+        SET read_status = 'READ',
+            read_at = #{readAt},
+            updated_at = #{readAt}
+        WHERE id = #{id}
+          AND cc_user_id = #{ccUserId}
+          AND deleted = 0
+          AND read_status = 'UNREAD'
+    </update>
+
+    <!-- 全部标记为已读 -->
+    <update id="markAllRead">
+        UPDATE remi_flow_cc
+        SET read_status = 'READ',
+            read_at = #{readAt},
+            updated_at = #{readAt}
+        WHERE tenant_id = #{tenantId}
+          AND cc_user_id = #{ccUserId}
+          AND deleted = 0
+          AND read_status = 'UNREAD'
+    </update>
+
+    <!-- 查实例的抄送列表 -->
+    <select id="selectByInstanceId" resultType="com.remisoft.workflow.domain.entity.FlowCc">
+        SELECT
+            <include refid="Base_Column"/>
+        FROM remi_flow_cc
+        WHERE tenant_id = #{tenantId}
+          AND instance_id = #{instanceId}
+          AND deleted = 0
+        ORDER BY created_at ASC
+    </select>
+</mapper>

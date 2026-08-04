@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.remisoft.nextwiki.infra.mapper.TrashItemMapper">
+
+    <resultMap id="TrashItemResult" type="com.remisoft.nextwiki.domain.entity.TrashItem">
+        <id column="id" property="id"/>
+        <result column="file_node_id" property="fileNodeId"/>
+        <result column="original_name" property="originalName"/>
+        <result column="original_path" property="originalPath"/>
+        <result column="original_parent_id" property="originalParentId"/>
+        <result column="node_type" property="nodeType"/>
+        <result column="size" property="size"/>
+        <result column="deleted_time" property="deletedTime"/>
+        <result column="purge_time" property="purgeTime"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="revision" property="revision"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="findByFileNodeId" resultMap="TrashItemResult">
+        SELECT * FROM nw_trash_item
+        WHERE file_node_id = #{fileNodeId} AND deleted = 0 AND status = 'in_trash'
+        LIMIT 1
+    </select>
+
+    <select id="findActiveTrash" resultMap="TrashItemResult">
+        SELECT * FROM nw_trash_item
+        WHERE created_by = #{userId} AND deleted = 0 AND status = 'in_trash'
+        ORDER BY deleted_time DESC
+    </select>
+
+    <select id="findExpiredItems" resultMap="TrashItemResult">
+        SELECT * FROM nw_trash_item
+        WHERE deleted = 0 AND status = 'in_trash' AND purge_time &lt; NOW()
+        ORDER BY purge_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countActiveTrash" resultType="int">
+        SELECT COUNT(*) FROM nw_trash_item
+        WHERE created_by = #{userId} AND deleted = 0 AND status = 'in_trash'
+    </select>
+
+    <update id="updateWithRevision">
+        UPDATE nw_trash_item
+        SET
+            file_node_id = #{trashItem.fileNodeId},
+            original_name = #{trashItem.originalName},
+            original_path = #{trashItem.originalPath},
+            original_parent_id = #{trashItem.originalParentId},
+            node_type = #{trashItem.nodeType},
+            size = #{trashItem.size},
+            deleted_time = #{trashItem.deletedTime},
+            purge_time = #{trashItem.purgeTime},
+            status = #{trashItem.status},
+            updated_by = #{trashItem.updatedBy},
+            updated_at = #{trashItem.updatedAt},
+            revision = revision + 1
+        WHERE id = #{trashItem.id}
+          AND deleted = 0
+          AND revision = #{trashItem.revision}
+    </update>
+
+</mapper>

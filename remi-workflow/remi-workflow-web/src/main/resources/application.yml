@@ -1,0 +1,63 @@
+# REMI 工作流服务本地配置
+# 公共配置（mybatis-plus.configuration / global-config / management / springdoc / datasource / redis）
+# 由 Nacos 共享配置 remi-common.yaml 提供，此处仅保留服务私有配置与 override
+
+# MyBatis-Plus override：在默认路径基础上追加 flow 子目录
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
+
+# P0-1: 统一线程池配置（remi-common-thread）
+remi:
+  thread:
+    enabled: true
+    pools:
+      flowQueue:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 256
+        thread-name-prefix: flow-queue-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 10
+  # P0-2: 事务性 Outbox 事件配置
+  event:
+    outbox:
+      enabled: true
+      table-name: remi_outbox
+      poll-interval-seconds: 5
+      batch-size: 100
+      max-retries: 5
+      fail-on-noop: false
+  # P0-2: 分布式事务配置（Seata AT 模式，默认关闭，TC 就绪后开启）
+  seata:
+    enabled: false
+    default-type: SEATA_AT
+  # P0-1: YdszJson ASM 预热（高频序列化 Bean，消除首次请求延迟尖峰）
+  # P2-3: 启用流式输出（流程定义/实例列表等大 JSON 响应使用 chunked encoding）
+  json:
+    # P1-1: 流程条件表达式涉及金额数值比较，必须开启 BigDecimal 精度模式
+    use-big-decimal: true
+    warmup-classes:
+      - com.remisoft.workflow.domain.entity.FlowDefinition
+      - com.remisoft.workflow.domain.entity.FlowInstance
+      - com.remisoft.workflow.domain.entity.FlowNode
+      - com.remisoft.workflow.domain.entity.FlowRunTask
+      - com.remisoft.workflow.domain.entity.FlowHisTask
+      - com.remisoft.workflow.domain.entity.FlowHisInstance
+      - com.remisoft.workflow.domain.entity.FlowTemplate
+      - com.remisoft.workflow.domain.entity.FlowAuditLog
+    streaming-enabled: true
+
+# Seata 客户端配置（TC 就绪后设置 seata.enabled=true 并取消注释）
+# seata:
+#   enabled: true
+#   application-id: ${spring.application.name}
+#   tx-service-group: remi_tx_group
+#   service:
+#     vgroup-mapping:
+#       remi_tx_group: default
+#     grouplist:
+#       default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+#   config:
+#     type: file
+#   registry:
+#     type: file

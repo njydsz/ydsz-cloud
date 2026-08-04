@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.remisoft</groupId>
+        <artifactId>remi-cronjob</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>remi-cronjob-server</artifactId>
+    <name>remi-cronjob-server</name>
+    <description>DDD Module</description>
+    <dependencies>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-cronjob-infra</artifactId>
+        </dependency>
+        <!-- common-web 传递引入: common-base(→core/util/exception), common-auth, common-safe, common-redis -->
+        <!-- common-jdbc 传递引入: common-domain -->
+        <!-- remi-common-domain: explicit declaration for direct usage (JobHandler/DAG/JobContext etc., was transitive via common-jdbc) -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-domain</artifactId>
+        </dependency>
+        <!-- common-feign 传递引入: spring-cloud-starter-openfeign -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-lock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-feign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-file</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-notify</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-queue</artifactId>
+        </dependency>
+        <!-- P0-2: 事务性 Outbox 事件模式 -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-event</artifactId>
+        </dependency>
+        <!-- P0-1: 统一线程池管理（替代手动 ThreadPoolExecutor 创建） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-thread</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-web</artifactId>
+        </dependency>
+        <!-- remi-common-core: explicit declaration for direct usage (was transitive via common-web) -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-core</artifactId>
+        </dependency>
+    
+        <dependency>
+            <groupId>com.remisoft</groupId>
+<artifactId>remi-message-api</artifactId>
+<version>${project.version}</version>
+</dependency>
+<!-- P1-3: 跨模块 Feign 客户端（用户信息查询、系统配置查询） -->
+<dependency>
+<groupId>com.remisoft</groupId>
+<artifactId>remi-userinfo-api</artifactId>
+<version>${project.version}</version>
+</dependency>
+<dependency>
+<groupId>com.remisoft</groupId>
+<artifactId>remi-system-api</artifactId>
+<version>${project.version}</version>
+</dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-excel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <!-- Redisson（RedissonLeaderElector 使用） -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+        </dependency>
+            <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-json</artifactId>
+        </dependency>
+        <!-- P0-1: 统一监控告警（Sentry SPI：ELK/Loki 日志推送 + 告警收敛 + SLA） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-sentry</artifactId>
+        </dependency>
+        <!-- P1-4: 缓存（任务配置缓存） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-cache</artifactId>
+        </dependency>
+        <!-- P1-4: 搜索 Provider SPI（任务日志搜索） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-search</artifactId>
+        </dependency>
+        <!-- P2-5: 统一 Excel 导入导出（已在上方引入，去重） -->
+        <!-- P0-2: 多租户隔离 -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-tenant</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-util</artifactId>
+        </dependency>
+</dependencies>
+</project>

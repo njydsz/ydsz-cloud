@@ -1,0 +1,4 @@
+com.remisoft.common.feign.config.FeignConfiguration
+com.remisoft.common.feign.monitor.FeignMetricsConfiguration
+com.remisoft.common.feign.circuitbreaker.Resilience4jFeignConfiguration
+com.remisoft.common.feign.assembler.NameAssemblerAutoConfiguration

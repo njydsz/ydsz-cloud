@@ -1,0 +1,94 @@
+{
+  "properties": [
+    {
+      "name": "remi.excel.read-buffer-size",
+      "type": "java.lang.Integer",
+      "description": "Read buffer size in bytes, default 8192.",
+      "defaultValue": 8192
+    },
+    {
+      "name": "remi.excel.write-buffer-size",
+      "type": "java.lang.Integer",
+      "description": "Write buffer size in bytes, default 8192.",
+      "defaultValue": 8192
+    },
+    {
+      "name": "remi.excel.default-date-format",
+      "type": "java.lang.String",
+      "description": "Default date format.",
+      "defaultValue": "yyyy-MM-dd HH:mm:ss"
+    },
+    {
+      "name": "remi.excel.default-number-format",
+      "type": "java.lang.String",
+      "description": "Default number format.",
+      "defaultValue": "#,##0.00"
+    },
+    {
+      "name": "remi.excel.automatic-trim",
+      "type": "java.lang.Boolean",
+      "description": "Auto trim strings.",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.excel.use-fast-reader",
+      "type": "java.lang.Boolean",
+      "description": "Use fast reader (zero POI).",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.excel.use-fast-writer",
+      "type": "java.lang.Boolean",
+      "description": "Use fast writer (zero POI).",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.excel.streaming-parse-threshold-mb",
+      "type": "java.lang.Integer",
+      "description": "Streaming parse threshold in MB.",
+      "defaultValue": 10
+    },
+    {
+      "name": "remi.excel.max-read-file-size-mb",
+      "type": "java.lang.Integer",
+      "description": "Max read file size in MB.",
+      "defaultValue": 100
+    },
+    {
+      "name": "remi.excel.max-write-file-size-mb",
+      "type": "java.lang.Integer",
+      "description": "Max write file size in MB.",
+      "defaultValue": 50
+    },
+    {
+      "name": "remi.excel.compression-level",
+      "type": "java.lang.Integer",
+      "description": "ZIP compression level.",
+      "defaultValue": 1
+    },
+    {
+      "name": "remi.excel.formula-injection-protection",
+      "type": "java.lang.Boolean",
+      "description": "Enable formula injection protection.",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.excel.strict-number-conversion",
+      "type": "java.lang.Boolean",
+      "description": "Strict number conversion.",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.excel.head-row-number",
+      "type": "java.lang.Integer",
+      "description": "Default head row number.",
+      "defaultValue": 1
+    },
+    {
+      "name": "remi.excel.write-cache-size",
+      "type": "java.lang.Integer",
+      "description": "SXSSF write cache size.",
+      "defaultValue": 100
+    }
+  ]
+}

@@ -11,29 +11,28 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.njydsz</groupId>
-    <artifactId>ydsz-backend</artifactId>
+    <groupId>com.remisoft</groupId>
+    <artifactId>remi-backend</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>ydsz-backend</name>
+    <name>remi-backend</name>
     <description>DDD Module</description>
 
     <modules>
-        <module>ydsz-common</module>
-        <module>ydsz-gateway</module>
-        <module>ydsz-literule</module>
-        <module>ydsz-userinfo</module>
-        <module>ydsz-system</module>
-        <module>ydsz-project</module>
-        <module>ydsz-message</module>
-        <module>ydsz-cronjob</module>
-        <module>ydsz-workflow</module>
-        <module>ydsz-nextwiki</module>
-        <module>ydsz-agent</module>
+        <module>remi-common</module>
+        <module>remi-gateway</module>
+        <module>remi-literule</module>
+        <module>remi-userinfo</module>
+        <module>remi-system</module>
+        <module>remi-message</module>
+        <module>remi-cronjob</module>
+        <module>remi-workflow</module>
+        <module>remi-nextwiki</module>
+        <module>remi-agent</module>
     </modules>
 
     <properties>
-        <!--ydsz-->
+        <!--remi-->
         <revision>1.0.0-SNAPSHOT</revision>
         <!--utf8-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -189,453 +188,453 @@
                 <version>${jmh.version}</version>
             </dependency>
 
-            <!-- 内部模块：ydsz-common 多模块拆分 -->
+            <!-- 内部模块：remi-common 多模块拆分 -->
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-core</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- common-core test-jar（AbstractIntegrationTest 基类，P1-7） -->
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-core</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-core</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-util</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-util</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-exception</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-exception</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-jdbc</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-jdbc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-redis</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-lock</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-lock</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-auth</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-auth</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-safe</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-safe</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-audit</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-audit</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-file</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-file</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-notify</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-notify</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-queue</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-queue</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-base</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-app</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-feign</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-feign</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-socket</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-socket</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-netty</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-netty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-cache</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-json</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-websocket</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-websocket</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-docs</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-docs</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-excel</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-excel</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-search</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-search</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-seata</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-seata</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-config</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-config</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-thread</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-thread</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-sentry</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-sentry</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-tenant</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-tenant</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-event</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-event</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-userinfo</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-userinfo</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-project</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-project</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-cronjob</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-cronjob</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-system</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-system</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-literule</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-literule</artifactId>
                 <version>${project.version}</version>
             </dependency>            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-message</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-message</artifactId>
                 <version>${project.version}</version>
             </dependency>
                         <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-workflow</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-workflow</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-nextwiki</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-nextwiki</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-agent</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-agent</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- DDD 子模块：api（Feign 门面） -->            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-system-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-system-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-userinfo-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-userinfo-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-cronjob-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-cronjob-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-message-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-message-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-project-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-project-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-literule-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-literule-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-workflow-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-workflow-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-nextwiki-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-nextwiki-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-agent-api</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-agent-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- DDD 子模块：domain -->            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-system-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-system-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-userinfo-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-userinfo-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-cronjob-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-cronjob-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-message-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-message-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-project-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-project-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-literule-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-literule-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-workflow-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-workflow-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-nextwiki-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-nextwiki-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-agent-domain</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-agent-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- DDD 子模块：infra -->            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-system-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-system-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-userinfo-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-userinfo-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-cronjob-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-cronjob-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-message-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-message-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-project-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-project-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-literule-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-literule-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-workflow-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-workflow-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-nextwiki-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-nextwiki-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-agent-infra</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-agent-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- DDD 子模块：server -->            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-system-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-system-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-userinfo-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-userinfo-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-cronjob-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-cronjob-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-message-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-message-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-project-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-project-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-literule-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-literule-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-workflow-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-workflow-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-nextwiki-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-nextwiki-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-agent-server</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-agent-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- DDD 子模块：web -->            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-system-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-system-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-userinfo-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-userinfo-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-cronjob-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-cronjob-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-message-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-message-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-project-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-project-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-literule-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-literule-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-workflow-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-workflow-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-nextwiki-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-nextwiki-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-agent-web</artifactId>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-agent-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1063,14 +1062,14 @@
             <!-- 以下依赖历史上在 requireUpperBoundDeps/dependencyConvergence exclude 列表中，
                  现通过 DM 统一锁定版本，消除多版本冲突后移除对应 exclude。 -->
 
-            <!-- Google Guava（ydsz-common 子模块 DM 同步管理，消除 33.4.8-jre vs 32.0.1-jre 多版本） -->
+            <!-- Google Guava（remi-common 子模块 DM 同步管理，消除 33.4.8-jre vs 32.0.1-jre 多版本） -->
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
             </dependency>
 
-            <!-- OkHttp（统一 ydsz-common 与传递依赖版本） -->
+            <!-- OkHttp（统一 remi-common 与传递依赖版本） -->
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
@@ -1262,11 +1261,11 @@
                         <rules>
                             <requireJavaVersion>
                                 <version>[21,)</version>
-                                <message>YDSZ 要求 JDK 21+，当前环境不满足。</message>
+                                <message>REMI 要求 JDK 21+，当前环境不满足。</message>
                             </requireJavaVersion>
                             <requireMavenVersion>
                                 <version>[3.9,)</version>
-                                <message>YDSZ 要求 Maven 3.9+，当前环境不满足。</message>
+                                <message>REMI 要求 Maven 3.9+，当前环境不满足。</message>
                             </requireMavenVersion>
                             <requireUpperBoundDeps>
                                 <excludes combine.children="append">
@@ -1331,7 +1330,7 @@
                             <bannedDependencies>
                                 <!--
                                     与 ArchUnit R29 对齐：禁止直接声明竞品 JSON 库依赖。
-                                    业务模块的 JSON 序列化统一使用 ydsz-common-json 的 YdszJson。
+                                    业务模块的 JSON 序列化统一使用 remi-common-json 的 YdszJson。
                                     jackson-databind 不在此全局 ban（公共模块有合理使用场景如第三方 SDK），
                                     由 ArchUnit R29 在编译期约束业务代码不直接 import com.fasterxml.jackson.*。
                                     hutool-all 不在此 ban（nextwiki/common-util 有合理 crypto.digest 使用），
@@ -1346,7 +1345,7 @@
                                     <exclude>com.googlecode.json-simple:json-simple</exclude>
                                 </excludes>
                                 <message>禁止直接声明 gson / hutool-json / org.json / json-simple 等竞品 JSON 库。
-                                    JSON 序列化统一使用 ydsz-common-json（YdszJson），与 ArchUnit R29 对齐。
+                                    JSON 序列化统一使用 remi-common-json（YdszJson），与 ArchUnit R29 对齐。
                                     公共模块如需 Jackson（第三方 SDK 依赖），声明为 optional 并通过 ArchUnit 白名单。
                                 </message>
                             </bannedDependencies>

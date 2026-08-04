@@ -1,0 +1,2 @@
+com.remisoft.nextwiki.server.config.AsyncConfig
+com.remisoft.nextwiki.server.metrics.NextwikiMetrics

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.remisoft.workflow.infra.mapper.FlowDmnRuleMapper">
+
+    <select id="selectEnabledByDecisionId" resultType="com.remisoft.workflow.domain.entity.FlowDmnRule">
+        SELECT * FROM remi_flow_dmn_rule
+        WHERE decision_id = #{decisionId}
+          AND enabled = 1
+          AND deleted = 0
+        ORDER BY rule_order ASC
+    </select>
+
+    <delete id="deleteByDecisionId">
+        DELETE FROM remi_flow_dmn_rule
+        WHERE decision_id = #{decisionId}
+    </delete>
+
+</mapper>

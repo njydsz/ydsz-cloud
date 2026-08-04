@@ -1,0 +1,33 @@
+package com.remisoft.message.infra.mapper.config;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.remisoft.message.domain.entity.config.MsgRouteRule;
+
+/**
+ * 消息路由规则 Mapper
+ *
+ * <p>对应数据表 <code>remi_msg_route_rule</code>。
+ * <p>路由规则按 (业务类型, 优先级, 渠道) 决定消息的发送渠道、模板、降级策略、限流配置。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_biz_channel — (业务类型+渠道) 唯一索引</li>
+ *   <li>idx_priority — 优先级排序索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
+ *
+ * @author remi-team
+ * @since 1.0.0
+ *
+ * @see com.remisoft.message.domain.entity.config.MsgRouteRule 路由规则实体
+ * @see com.remisoft.message.server.service.MsgRouteRuleService 路由规则 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
+ */
+@Mapper
+public interface MsgRouteRuleMapper extends BaseMapper<MsgRouteRule> {
+}

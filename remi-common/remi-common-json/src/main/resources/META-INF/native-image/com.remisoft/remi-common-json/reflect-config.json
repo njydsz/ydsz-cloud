@@ -1,0 +1,48 @@
+[
+  {
+    "name": "com.remisoft.common.json.internal.JsonConfig",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.remisoft.common.json.provider.SerializationProvider",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.remisoft.common.json.provider.DeserializationProvider",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.remisoft.common.json.serializer.SerializerRegistry",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.remisoft.common.json.serializer.JsonSerializer",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.remisoft.common.json.asm.AsmBeanCodecGenerator",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.remisoft.common.json.deserializer.JsonDeserializer",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.remisoft.common.json.type.TypeFactory",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.remisoft.common.json.module.JsonModuleRegistry",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  }
+]

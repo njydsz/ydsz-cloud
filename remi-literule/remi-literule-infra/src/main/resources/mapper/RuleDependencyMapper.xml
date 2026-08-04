@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.remisoft.literule.infra.mapper.RuleDependencyMapper">
+
+    <select id="selectByRuleCode" resultType="com.remisoft.literule.domain.entity.RuleDependency">
+        SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
+               description, tenant_id, created_by, created_at
+        FROM remi_rule_dependency
+        WHERE rule_code = #{ruleCode}
+        ORDER BY id ASC
+    </select>
+
+    <select id="selectByDependsOn" resultType="com.remisoft.literule.domain.entity.RuleDependency">
+        SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
+               description, tenant_id, created_by, created_at
+        FROM remi_rule_dependency
+        WHERE depends_on_rule_code = #{dependsOnRuleCode}
+        ORDER BY id ASC
+    </select>
+
+    <select id="selectCascadingByDependsOn" resultType="com.remisoft.literule.domain.entity.RuleDependency">
+        SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
+               description, tenant_id, created_by, created_at
+        FROM remi_rule_dependency
+        WHERE depends_on_rule_code = #{dependsOnRuleCode}
+          AND cascade_on_disable = TRUE
+    </select>
+
+    <delete id="deleteByRuleCode">
+        DELETE FROM remi_rule_dependency WHERE rule_code = #{ruleCode}
+    </delete>
+
+</mapper>

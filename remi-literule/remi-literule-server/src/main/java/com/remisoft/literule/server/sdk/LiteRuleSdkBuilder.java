@@ -1,0 +1,86 @@
+package com.remisoft.literule.server.sdk;
+
+import com.remisoft.literule.api.RuleEngine;
+import com.remisoft.literule.server.core.DefaultRuleEngine;
+import com.remisoft.literule.api.expr.ExpressionEvaluator;
+import com.remisoft.literule.server.expr.liteexpr.LiteExprEvaluator;
+
+/**
+ * LiteRuleSdk 构建器
+ *
+ * <p>链式构建 {@link LiteRuleSdk}，支持嵌入式（无 Spring）和 Spring 集成两种模式。
+ *
+ * <h3>嵌入式快速构建</h3>
+ * <pre>{@code
+ * LiteRuleSdk sdk = LiteRuleSdk.builder()
+ *     .tenantId("T001")
+ *     .environment("prod")
+ *     .build();
+ * }</pre>
+ *
+ * <h3>自定义引擎</h3>
+ * <pre>{@code
+ * LiteRuleSdk sdk = LiteRuleSdk.builder()
+ *     .ruleEngine(myEngine)
+ *     .evaluator(myEvaluator)
+ *     .build();
+ * }</pre>
+ *
+ * @since 1.0.0
+ * @author remi-team
+ */
+public class LiteRuleSdkBuilder {
+
+    private RuleEngine ruleEngine;
+    private ExpressionEvaluator evaluator;
+    private String tenantId = "1";
+    private String environment = "default";
+
+    /**
+     * 设置自定义规则引擎
+     */
+    public LiteRuleSdkBuilder ruleEngine(RuleEngine engine) {
+        this.ruleEngine = engine;
+        return this;
+    }
+
+    /**
+     * 设置自定义表达式求值器
+     */
+    public LiteRuleSdkBuilder evaluator(ExpressionEvaluator evaluator) {
+        this.evaluator = evaluator;
+        return this;
+    }
+
+    /**
+     * 设置租户 ID
+     */
+    public LiteRuleSdkBuilder tenantId(String tenantId) {
+        this.tenantId = tenantId;
+        return this;
+    }
+
+    /**
+     * 设置环境标识
+     */
+    public LiteRuleSdkBuilder environment(String environment) {
+        this.environment = environment;
+        return this;
+    }
+
+    /**
+     * 构建 LiteRuleSdk
+     *
+     * <p>如果未提供 RuleEngine，则自动创建 {@link DefaultRuleEngine}；
+     * 如果未提供 ExpressionEvaluator，则自动创建 {@link LiteExprEvaluator}。
+     */
+    public LiteRuleSdk build() {
+        if (evaluator == null) {
+            evaluator = new LiteExprEvaluator();
+        }
+        if (ruleEngine == null) {
+            ruleEngine = new DefaultRuleEngine();
+        }
+        return new LiteRuleSdk(ruleEngine, evaluator, tenantId, environment);
+    }
+}

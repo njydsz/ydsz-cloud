@@ -1,0 +1,67 @@
+package com.remisoft.workflow.infra.mapper;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.remisoft.workflow.domain.entity.FlowUser;
+
+/**
+ * 流程用户 Mapper
+ *
+ * <p>对应数据表 <code>remi_flow_user</code>，记录会签/或签场景下每个任务的处理人与处理状态。</p>
+ * <p>会签模式下多个 FlowUser 关联同一任务；或签模式下任何一个人处理完即视为任务完成。
+ *
+ * <p><b>主要索引：</b>
+ * <ul>
+ *   <li>uk_user_task — (taskId+userId) 唯一索引</li>
+ *   <li>idx_user_status — 用户+处理状态过滤索引</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ *
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
+ *
+ * @author remi-team
+ * @since 1.0.0
+ *
+ * @see com.remisoft.workflow.domain.entity.FlowUser 流程用户实体
+ * @see com.remisoft.workflow.server.service.FlowTaskService 待办 Service
+ * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
+ */
+@Mapper
+public interface FlowUserMapper extends BaseMapper<FlowUser> {
+
+    /**
+     * 查某 task 的所有用户
+     */
+    List<FlowUser> selectByTaskId(@Param("taskId") String taskId);
+
+    /**
+     * 标记用户已处理
+     */
+    int markProcessed(@Param("taskId") String taskId,
+                      @Param("userId") String userId,
+                      @Param("comment") String comment,
+                      @Param("processAt") LocalDateTime processAt);
+
+    /**
+     * 查某实例某节点未处理的用户（会签场景）
+     */
+    List<FlowUser> selectUnprocessedByInstanceAndNode(@Param("instanceId") String instanceId,
+                                                         @Param("nodeCode") String nodeCode);
+
+    /**
+     * 查某用户待办关联的任务 ID（通过 remi_flow_user 表）
+     */
+    List<Long> selectTaskIdsByUser(@Param("userId") String userId,
+                                   @Param("tenantId") String tenantId);
+
+    /**
+     * 批量插入
+     */
+    int batchInsert(@Param("list") List<FlowUser> list);
+}

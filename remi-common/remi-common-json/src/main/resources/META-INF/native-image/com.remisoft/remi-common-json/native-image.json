@@ -1,0 +1,12 @@
+{
+  "name": "remi-common-json",
+  "description": "YdszJson - High-performance JSON engine with ASM bytecode generation. GraalVM Native Image support is experimental: ASM bytecode generation is disabled at runtime via GraalVmDetector, and the engine falls back to reflection-based serialization. Application authors using Native Image must register their serializable Bean classes via reflect-config.json at the application level.",
+  "reflection": [],
+  "jni": [],
+  "proxy": [],
+  "resources": {
+    "includes": [
+      "META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports"
+    ]
+  }
+}

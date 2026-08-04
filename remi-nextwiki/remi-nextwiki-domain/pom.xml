@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.remisoft</groupId>
+        <artifactId>remi-nextwiki</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>remi-nextwiki-domain</artifactId>
+    <name>remi-nextwiki-domain</name>
+    <description>Domain Layer - 领域模型、领域服务、领域事件</description>
+    <dependencies>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-core</artifactId>
+        </dependency>
+        <!-- DDD: domain 层只依赖 common-domain（BaseEntity / PageResult），不依赖 infra 层的 common-jdbc / common-search -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-safe</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-json</artifactId>
+            <!-- P1-2: 为下游 server 模块提供传递依赖，领域对象序列化能力由 remi-common-json 提供 -->
+        </dependency>
+        <!-- MpBaseEntity 基类 -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
+        <!-- ==================== 测试依赖 ==================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

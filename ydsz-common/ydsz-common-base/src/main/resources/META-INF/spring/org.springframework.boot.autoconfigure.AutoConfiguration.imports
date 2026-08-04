@@ -1,6 +1,0 @@
-com.njydsz.common.base.config.BaseAutoConfiguration
-com.njydsz.common.base.config.DocAutoConfiguration
-com.njydsz.common.base.config.DocSecurityConfiguration
-com.njydsz.common.base.config.OpenApiAutoConfiguration
-com.njydsz.common.base.config.Knife4jAutoConfiguration
-com.njydsz.common.base.i18n.I18nAutoConfiguration

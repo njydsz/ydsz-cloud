@@ -1,0 +1,109 @@
+# =====================================================================
+#  REMI AI Agent 服务 bootstrap 配置
+#  --------------------------------------------------------------------
+#  端口：9008
+#  职责：LLM 对话/RAG/记忆/工具调用/PII 脱敏/护栏/Guardrail
+#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、LLM API
+#  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
+# =====================================================================
+
+server:
+  # HTTP 监听端口（按构建顺序 9/10）
+  port: 9008
+  max-http-request-header-size: 16KB
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: remi-agent
+  profiles:
+    # 默认 dev，可通过 -Dspring.profiles.active=dev|sit|uat|prod 或 ENV SPRING_PROFILES_ACTIVE 覆盖
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      # ---------- 服务注册 ----------
+      discovery:
+        enabled: true
+        register-enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:remi}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        metadata:
+          version: 1.0.0
+          port: 9008
+        ip-type: IPv4
+      # ---------- 配置中心 ----------
+      config:
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:remi}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        file-extension: yaml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: remi-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
+
+# ---------- Agent 模块特有配置 ----------
+remi:
+  # JSON 引擎配置（remi-common-json）
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    warmup-classes:
+      - com.remisoft.agent.api.dto.ChatMessage
+      - com.remisoft.agent.api.dto.ChatRequest
+      - com.remisoft.agent.api.dto.ToolCall
+      - com.remisoft.agent.api.dto.ToolDefinition
+      - com.remisoft.agent.api.dto.TokenUsage
+  agent:
+    enabled: true
+    llm:
+      default-provider: ${LLM_PROVIDER:openai}
+      default-model: ${LLM_MODEL:gpt-4o-mini}
+      api-key: ${LLM_API_KEY:}
+      base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
+      temperature: ${LLM_TEMPERATURE:0.7}
+      max-tokens: ${LLM_MAX_TOKENS:2048}
+      timeout-seconds: ${LLM_TIMEOUT:60}
+    memory:
+      ttl-hours: 24
+      max-messages: 20
+    rag:
+      enabled: ${RAG_ENABLED:false}
+      vector-store: ${RAG_VECTOR_STORE:memory}
+      embedding-model: ${EMBEDDING_MODEL:text-embedding-3-small}
+      embedding-api-key: ${EMBEDDING_API_KEY:}
+      embedding-base-url: ${EMBEDDING_BASE_URL:}
+      dimension: ${EMBEDDING_DIMENSION:1536}
+      chunk-size: 500
+      chunk-overlap: 50
+      top-k: 5
+      min-score: 0.7
+  # P0-1: 统一线程池配置（remi-common-thread）
+  thread:
+    enabled: true
+    pools:
+      agentDag:
+        type: VIRTUAL
+        thread-name-prefix: agent-dag-
+        await-termination-seconds: 30
+      agentHeartbeat:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: agent-heartbeat-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 10

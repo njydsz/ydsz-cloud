@@ -1,0 +1,69 @@
+{
+  "properties": [
+    {
+      "name": "remi.userinfo.token-ttl-seconds",
+      "type": "java.lang.Long",
+      "description": "Token 有效期（秒），默认 7200。",
+      "defaultValue": 7200
+    },
+    {
+      "name": "remi.userinfo.max-login-fail-count",
+      "type": "java.lang.Integer",
+      "description": "最大登录失败次数，超过后自动锁定账号。",
+      "defaultValue": 5
+    },
+    {
+      "name": "remi.userinfo.lock-duration-minutes",
+      "type": "java.lang.Integer",
+      "description": "账号锁定时长（分钟）。",
+      "defaultValue": 30
+    },
+    {
+      "name": "remi.userinfo.captcha-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用验证码校验。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.userinfo.captcha-ttl-seconds",
+      "type": "java.lang.Long",
+      "description": "验证码有效期（秒）。",
+      "defaultValue": 300
+    },
+    {
+      "name": "remi.userinfo.health-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用健康检查。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.userinfo.password-min-length",
+      "type": "java.lang.Integer",
+      "description": "密码最小长度。",
+      "defaultValue": 8
+    },
+    {
+      "name": "remi.userinfo.password-max-length",
+      "type": "java.lang.Integer",
+      "description": "密码最大长度。",
+      "defaultValue": 64
+    },
+    {
+      "name": "remi.userinfo.password-min-category-count",
+      "type": "java.lang.Integer",
+      "description": "密码最少字符种类数（大写字母/小写字母/数字/特殊字符）。",
+      "defaultValue": 3
+    },
+    {
+      "name": "remi.userinfo.bcrypt-strength",
+      "type": "java.lang.Integer",
+      "description": "BCrypt 加密强度（4-31），值越大越安全但越慢。",
+      "defaultValue": 10
+    },
+    {
+      "name": "remi.userinfo.oauth2-clients",
+      "type": "java.util.Map",
+      "description": "OAuth2 客户端注册表，key 为 clientId，value 包含 clientSecret 和 redirectUris。"
+    }
+  ]
+}

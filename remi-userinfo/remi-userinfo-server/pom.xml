@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.remisoft</groupId>
+        <artifactId>remi-userinfo</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>remi-userinfo-server</artifactId>
+    <name>remi-userinfo-server</name>
+    <description>Application Layer - Service + AuthService + OAuth2</description>
+    <dependencies>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-userinfo-infra</artifactId>
+        </dependency>
+        <!-- P2-3: 显式声明 common-util（LdapAuthenticationProvider 使用工具类） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-lock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-feign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-audit</artifactId>
+        </dependency>
+        <!-- P0-2: 事务性 Outbox 事件模式 -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-event</artifactId>
+        </dependency>
+        <!-- P1-4: 搜索 Provider SPI（用户/部门/角色搜索） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-search</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-web</artifactId>
+        </dependency>
+        <!-- remi-common-core: explicit declaration for direct usage (was transitive via common-web) -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-core</artifactId>
+        </dependency>
+    
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-auth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-excel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.whvcse</groupId>
+            <artifactId>easy-captcha</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+        </dependency>
+        <!-- P0-1: 统一监控告警（Sentry SPI：ELK/Loki 日志推送 + 告警收敛 + SLA） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-sentry</artifactId>
+        </dependency>
+        <!-- P2-2: 通知渠道（用户注册/密码修改/角色变更通知） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-notify</artifactId>
+        </dependency>
+        <!-- P2-3: 统一文件存储接入 -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-file</artifactId>
+        </dependency>
+        <!-- P1-2: 统一线程池管理（common-thread） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-thread</artifactId>
+        </dependency>
+        <!-- P0-2: 多租户隔离 -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-tenant</artifactId>
+        </dependency>
+        <!-- P0-1: 单元测试基础设施 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

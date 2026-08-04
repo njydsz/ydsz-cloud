@@ -1,0 +1,145 @@
+{
+  "groups": [
+    {
+      "name": "remi.json",
+      "type": "com.remisoft.common.json.spring.JsonProperties",
+      "description": "REMI 高性能 JSON 引擎配置项"
+    }
+  ],
+  "properties": [
+    {
+      "name": "remi.json.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 YdszJson 引擎（默认 true）。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.json.date-format",
+      "type": "java.lang.String",
+      "description": "全局日期格式（遵循 java.time.format.DateTimeFormatter 语法）。",
+      "defaultValue": "yyyy-MM-dd HH:mm:ss"
+    },
+    {
+      "name": "remi.json.naming-strategy",
+      "type": "com.remisoft.common.json.naming.PropertyNamingStrategy",
+      "description": "字段命名策略（LOWER_CAMEL_CASE / UPPER_CAMEL_CASE / SNAKE_CASE / KEBAB_CASE / LOWER_CASE）。",
+      "defaultValue": "LOWER_CAMEL_CASE"
+    },
+    {
+      "name": "remi.json.write-nulls",
+      "type": "java.lang.Boolean",
+      "description": "序列化时是否输出 null 值字段（默认 false 省略 null）。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.json.pretty-print",
+      "type": "java.lang.Boolean",
+      "description": "序列化时是否格式化输出（带缩进，默认 false 紧凑输出）。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.json.circular-reference-strategy",
+      "type": "java.lang.String",
+      "description": "循环引用处理策略（REF 写入引用标记 / IGNORE 跳过 / ERROR 抛异常）。",
+      "defaultValue": "REF"
+    },
+    {
+      "name": "remi.json.serialize-enum-using-ordinal",
+      "type": "java.lang.Boolean",
+      "description": "枚举是否使用 ordinal() 序列化（默认 false 使用 name()）。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.json.max-json-size",
+      "type": "java.lang.Long",
+      "description": "最大 JSON 大小（字节，默认 10MB；超出抛 JsonException）。",
+      "defaultValue": 10485760
+    },
+    {
+      "name": "remi.json.max-depth",
+      "type": "java.lang.Integer",
+      "description": "最大序列化/反序列化嵌套深度（防止栈溢出，默认 256）。",
+      "defaultValue": 256
+    },
+    {
+      "name": "remi.json.safe-mode",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全模式（AutoType 白名单检查防反序列化漏洞，默认 true）。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.json.monitoring-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用性能监控（通过 JsonMetricsCallback 上报 Micrometer，默认 true）。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.json.use-big-decimal",
+      "type": "java.lang.Boolean",
+      "description": "是否使用 BigDecimal 解析浮点数（金融场景精度保护，默认 false）。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.json.wrap-root-value",
+      "type": "java.lang.Boolean",
+      "description": "是否包裹根对象（配合 @JsonRootName 注解，默认 false）。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.json.fail-on-error",
+      "type": "java.lang.Boolean",
+      "description": "反序列化失败时是否抛出异常（默认 false 降级容错）。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.json.whitelist-packages",
+      "type": "java.util.List<java.lang.String>",
+      "description": "启动时扫描 @JsonClass 注解类的基础包列表，注册到 AutoTypeChecker 白名单。默认 [com.remisoft]。",
+      "defaultValue": ["com.remisoft"]
+    },
+    {
+      "name": "remi.json.streaming-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用流式输出（HTTP 响应使用 chunked transfer encoding，默认 false）。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.json.max-request-body-size",
+      "type": "java.lang.Long",
+      "description": "HTTP 请求体最大大小（字节，默认 10MB），超过将拒绝请求。",
+      "defaultValue": 10485760
+    },
+    {
+      "name": "remi.json.disable-jackson-auto-configuration",
+      "type": "java.lang.Boolean",
+      "description": "是否禁用 Spring Boot Jackson 自动配置（默认 false）。设为 true 后容器不再注册 ObjectMapper Bean。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.json.warmup-classes",
+      "type": "java.util.List<java.lang.String>",
+      "description": "启动时需要预热的类列表（全限定类名），提前生成 ASM 字节码避免首次请求延迟。",
+      "defaultValue": []
+    }
+  ],
+  "hints": [
+    {
+      "name": "remi.json.naming-strategy",
+      "values": [
+        { "value": "LOWER_CAMEL_CASE", "description": "首字母小写驼峰：userName" },
+        { "value": "UPPER_CAMEL_CASE", "description": "首字母大写驼峰：UserName" },
+        { "value": "SNAKE_CASE", "description": "下划线：user_name" },
+        { "value": "KEBAB_CASE", "description": "短横线：user-name" },
+        { "value": "LOWER_CASE", "description": "全小写：username" }
+      ]
+    },
+    {
+      "name": "remi.json.circular-reference-strategy",
+      "values": [
+        { "value": "REF", "description": "写入对象引用标记（$ref）" },
+        { "value": "IGNORE", "description": "跳过循环引用字段" },
+        { "value": "ERROR", "description": "检测到循环引用立即抛异常" }
+      ]
+    }
+  ]
+}

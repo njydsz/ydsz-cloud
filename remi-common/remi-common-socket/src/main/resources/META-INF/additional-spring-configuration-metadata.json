@@ -1,0 +1,220 @@
+{
+  "properties": [
+    {
+      "name": "remi.websocket.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 WebSocket 模块。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.websocket.endpoint",
+      "type": "java.lang.String",
+      "description": "WebSocket 端点路径。",
+      "defaultValue": "/ws"
+    },
+    {
+      "name": "remi.websocket.allowed-origin-patterns",
+      "type": "java.util.List<java.lang.String>",
+      "description": "允许的 Origin 模式列表。",
+      "defaultValue": ["*"]
+    },
+    {
+      "name": "remi.websocket.sock-js-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 SockJS 回退。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.websocket.message-size-limit",
+      "type": "java.lang.Integer",
+      "description": "最大消息大小（字节）。",
+      "defaultValue": 65536
+    },
+    {
+      "name": "remi.websocket.send-timeout-ms",
+      "type": "java.lang.Long",
+      "description": "消息发送超时（毫秒）。",
+      "defaultValue": 5000
+    },
+    {
+      "name": "remi.websocket.session-ttl-seconds",
+      "type": "java.lang.Long",
+      "description": "Session TTL（秒），心跳未续期时自动清理。",
+      "defaultValue": 3600
+    },
+    {
+      "name": "remi.websocket.heartbeat.server-interval",
+      "type": "java.lang.Long",
+      "description": "服务端心跳间隔（毫秒）。",
+      "defaultValue": 10000
+    },
+    {
+      "name": "remi.websocket.heartbeat.client-interval",
+      "type": "java.lang.Long",
+      "description": "客户端心跳间隔（毫秒）。",
+      "defaultValue": 10000
+    },
+    {
+      "name": "remi.websocket.heartbeat.stale-session-timeout",
+      "type": "java.lang.Long",
+      "description": "僵尸 Session 超时阈值（毫秒），超过此时间未收到心跳则清理。",
+      "defaultValue": 60000
+    },
+    {
+      "name": "remi.websocket.cluster.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用集群广播（Redis Pub/Sub）。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.websocket.cluster.channel",
+      "type": "java.lang.String",
+      "description": "Redis Channel 名称。",
+      "defaultValue": "remi:ws:cluster:push"
+    },
+    {
+      "name": "remi.websocket.offline.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用离线消息补偿。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.websocket.offline.max-cache",
+      "type": "java.lang.Integer",
+      "description": "Redis 缓存最大条数。",
+      "defaultValue": 100
+    },
+    {
+      "name": "remi.websocket.offline.ttl",
+      "type": "java.time.Duration",
+      "description": "缓存 TTL。",
+      "defaultValue": "30d"
+    },
+    {
+      "name": "remi.websocket.offline.db-persist-threshold",
+      "type": "java.lang.Integer",
+      "description": "Redis 溢出后的数据库持久化阈值。",
+      "defaultValue": 50
+    },
+    {
+      "name": "remi.websocket.rate-limit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用速率限制。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.websocket.rate-limit.max-per-user-per-minute",
+      "type": "java.lang.Integer",
+      "description": "每用户每分钟最大消息数。",
+      "defaultValue": 60
+    },
+    {
+      "name": "remi.websocket.rate-limit.max-per-ip-per-minute",
+      "type": "java.lang.Integer",
+      "description": "每 IP 每分钟最大消息数。",
+      "defaultValue": 300
+    },
+    {
+      "name": "remi.websocket.circuit-breaker.failure-rate-threshold",
+      "type": "java.lang.Double",
+      "description": "失败率阈值（0-1），超过则熔断。",
+      "defaultValue": 0.5
+    },
+    {
+      "name": "remi.websocket.circuit-breaker.sliding-window-size",
+      "type": "java.lang.Integer",
+      "description": "滑动窗口大小。",
+      "defaultValue": 20
+    },
+    {
+      "name": "remi.websocket.circuit-breaker.half-open-after",
+      "type": "java.time.Duration",
+      "description": "熔断后多久进入半开状态。",
+      "defaultValue": "30s"
+    },
+    {
+      "name": "remi.websocket.retry.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用消息重试。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.websocket.retry.max-retries",
+      "type": "java.lang.Integer",
+      "description": "最大重试次数。",
+      "defaultValue": 3
+    },
+    {
+      "name": "remi.websocket.retry.retry-delay",
+      "type": "java.time.Duration",
+      "description": "重试延迟。",
+      "defaultValue": "5s"
+    },
+    {
+      "name": "remi.websocket.retry.dead-letter-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用死信队列。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.websocket.ack.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 ACK 确认。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.websocket.ack.timeout",
+      "type": "java.time.Duration",
+      "description": "ACK 超时时间。",
+      "defaultValue": "30s"
+    },
+    {
+      "name": "remi.websocket.multi-device.policy",
+      "type": "java.lang.String",
+      "description": "多端登录策略：ALLOW_ALL / MUTEX / NEW_REPLACE_OLD。",
+      "defaultValue": "ALLOW_ALL"
+    },
+    {
+      "name": "remi.websocket.multi-device.max-sessions-per-user",
+      "type": "java.lang.Integer",
+      "description": "每用户最大并发 Session 数。",
+      "defaultValue": 5
+    },
+    {
+      "name": "remi.websocket.connection-limit.max-global-connections",
+      "type": "java.lang.Integer",
+      "description": "全局最大连接数。",
+      "defaultValue": 10000
+    },
+    {
+      "name": "remi.websocket.connection-limit.max-per-user-connections",
+      "type": "java.lang.Integer",
+      "description": "每用户最大连接数。",
+      "defaultValue": 5
+    },
+    {
+      "name": "remi.websocket.compression.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用消息压缩。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.websocket.compression.min-size",
+      "type": "java.lang.Integer",
+      "description": "触发压缩的最小消息大小（字节）。",
+      "defaultValue": 1024
+    },
+    {
+      "name": "remi.websocket.slow-connection.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用慢连接检测。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.websocket.slow-connection.threshold-ms",
+      "type": "java.lang.Long",
+      "description": "慢连接阈值（毫秒）。",
+      "defaultValue": 5000
+    }
+  ]
+}

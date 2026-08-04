@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.remisoft</groupId>
+        <artifactId>remi-backend</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>remi-common</artifactId>
+    <packaging>pom</packaging>
+    <name>remi-common</name>
+    <description>公共依赖聚合模块</description>
+
+    <properties>
+        <!-- remi-common 第三方依赖版本（父 POM 未管理的部分） -->
+        <commons-text.version>1.13.0</commons-text.version>
+        <commons-validator.version>1.9.0</commons-validator.version>
+        <commons-net.version>3.11.1</commons-net.version>
+        <guava.version>33.5.0-jre</guava.version>
+        <yauaa.version>7.32.0</yauaa.version>
+        <ip2region.version>2.7.0</ip2region.version>
+        <velocity.version>2.4.1</velocity.version>
+
+        <rocketmq-client.version>5.3.3</rocketmq-client.version>
+        <activemq.version>6.2.6</activemq.version>
+        <owasp-html-sanitizer.version>20240325.1</owasp-html-sanitizer.version>
+        <pdfbox.version>3.0.4</pdfbox.version>
+        <jsoup.version>1.18.3</jsoup.version>
+        <jsr305.version>3.0.2</jsr305.version>
+        <trace.version>8.13.0</trace.version>
+        <lombok-mapstruct.version>0.2.0</lombok-mapstruct.version>
+        <db2-jdbc.version>11.5.0.0</db2-jdbc.version>
+        <knife4j.version>4.5.0</knife4j.version>
+        <swagger.version>2.2.30</swagger.version>
+        <swagger-jakarta.version>2.2.47</swagger-jakarta.version>
+        <springdoc.version>3.0.3</springdoc.version>
+        <jetbrains-annotations.version>24.1.0</jetbrains-annotations.version>
+        <spotbugs-annotations.version>4.8.6</spotbugs-annotations.version>
+        <mybatis-starter.version>4.0.1</mybatis-starter.version>
+        <mybatis.version>3.5.19</mybatis.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
+        <commons-codec.version>1.21.0</commons-codec.version>
+        <commons-logging.version>1.3.5</commons-logging.version>
+        <dom4j.version>2.1.4</dom4j.version>
+        <jedis.version>5.2.0</jedis.version>
+        <kafka.version>4.1.1</kafka.version>
+        <rabbitmq.version>5.28.0</rabbitmq.version>
+        <mysql.version>9.7.0</mysql.version>
+        <ojdbc.version>23.26.2.0.0</ojdbc.version>
+        <mssql-jdbc.version>13.4.0.jre11</mssql-jdbc.version>
+        <h2.db.version>2.4.240</h2.db.version>
+        <okhttp3.version>4.12.0</okhttp3.version>
+        <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
+        <resilience4j.version>2.4.0</resilience4j.version>
+        <error-prone-annotations.version>2.49.0</error-prone-annotations.version>
+        <fastjson2.version>2.0.62</fastjson2.version>
+        <asm.version>9.7.1</asm.version>
+    </properties>
+
+    <modules>
+        <!-- L1 基础设施层 -->
+        <module>remi-common-json</module>
+        <module>remi-common-core</module>
+        <!-- L2 工具模块层 -->
+        <module>remi-common-util</module>
+        <!-- L3 基础服务层 -->
+        <module>remi-common-domain</module>
+        <module>remi-common-exception</module>
+        <!-- L4 基础数据层 -->
+        <module>remi-common-jdbc</module>
+        <module>remi-common-redis</module>
+        <module>remi-common-cache</module>
+        <module>remi-common-lock</module>
+        <module>remi-common-thread</module>
+        <module>remi-common-tenant</module>
+        <!-- L5 业务服务层 -->
+        <module>remi-common-auth</module>
+        <module>remi-common-safe</module>
+        <module>remi-common-feign</module>
+        <module>remi-common-audit</module>
+        <module>remi-common-notify</module>
+        <module>remi-common-queue</module>
+        <module>remi-common-event</module>
+        <module>remi-common-config</module>
+        <module>remi-common-seata</module>
+        <module>remi-common-socket</module>
+        <module>remi-common-netty</module>
+        <module>remi-common-file</module>
+        <module>remi-common-docs</module>
+        <module>remi-common-excel</module>
+        <module>remi-common-search</module>
+        <module>remi-common-sentry</module>
+        <!-- L6 应用层 -->
+        <module>remi-common-base</module>
+        <module>remi-common-web</module>
+        <module>remi-common-app</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- ==================== 内部模块 ==================== -->
+            <!-- L1 -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L2 -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-util</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L3 -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-exception</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L4 -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-jdbc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-redis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-lock</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-thread</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-tenant</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-cache</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L5 -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-auth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-safe</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-feign</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-audit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-notify</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-queue</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-event</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-config</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-seata</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-socket</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-netty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-docs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-json</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L6 基础设施层（REMI 特有） -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- ==================== 第三方依赖（父 POM 未管理部分） ==================== -->
+
+            <!-- ASM 字节码库 -->
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${asm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm-commons</artifactId>
+                <version>${asm.version}</version>
+            </dependency>
+
+            <!-- remi-common-excel -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-excel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- remi-common-search -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-search</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- remi-common-sentry -->
+            <dependency>
+                <groupId>com.remisoft</groupId>
+                <artifactId>remi-common-sentry</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- MyBatis（版本覆盖声明，必须在 Spring Boot BOM 之后声明才能生效） -->
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis-starter.version}</version>
+            </dependency>
+
+            <!-- hibernate-validator 版本覆盖 -->
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate-validator.version}</version>
+            </dependency>
+
+            <!-- commons-text 版本覆盖 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${commons-text.version}</version>
+            </dependency>
+
+            <!-- commons-lang3 版本覆盖 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+
+            <!-- commons-codec -->
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons-codec.version}</version>
+            </dependency>
+
+            <!-- commons-logging -->
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${commons-logging.version}</version>
+            </dependency>
+
+            <!-- commons-net -->
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${commons-net.version}</version>
+            </dependency>
+
+            <!-- commons-validator -->
+            <dependency>
+                <groupId>commons-validator</groupId>
+                <artifactId>commons-validator</artifactId>
+                <version>${commons-validator.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-collections</groupId>
+                        <artifactId>commons-collections</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- error_prone_annotations 版本覆盖 -->
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>${error-prone-annotations.version}</version>
+            </dependency>
+
+            <!-- dom4j -->
+            <dependency>
+                <groupId>org.dom4j</groupId>
+                <artifactId>dom4j</artifactId>
+                <version>${dom4j.version}</version>
+            </dependency>
+
+            <!-- tika-core 版本覆盖 -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-core</artifactId>
+                <version>${tika.version}</version>
+            </dependency>
+
+            <!-- jedis 版本覆盖 -->
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
+            </dependency>
+
+            <!-- guava -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <!-- jsr305 -->
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
+            </dependency>
+
+            <!-- okhttp3 -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>logging-interceptor</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+
+            <!-- yauaa (User-Agent 解析) -->
+            <dependency>
+                <groupId>nl.basjes.parse.useragent</groupId>
+                <artifactId>yauaa</artifactId>
+                <version>${yauaa.version}</version>
+            </dependency>
+
+            <!-- ip2region -->
+            <dependency>
+                <groupId>org.lionsoul</groupId>
+                <artifactId>ip2region</artifactId>
+                <version>${ip2region.version}</version>
+            </dependency>
+
+            <!-- SkyWalking apm-toolkit-trace -->
+            <dependency>
+                <groupId>org.apache.skywalking</groupId>
+                <artifactId>apm-toolkit-trace</artifactId>
+                <version>${trace.version}</version>
+            </dependency>
+
+            <!-- velocity -->
+            <dependency>
+                <groupId>org.apache.velocity</groupId>
+                <artifactId>velocity-engine-core</artifactId>
+                <version>${velocity.version}</version>
+            </dependency>
+
+
+
+            <!-- kafka-clients -->
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.version}</version>
+            </dependency>
+
+            <!-- rocketmq-client -->
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-client</artifactId>
+                <version>${rocketmq-client.version}</version>
+            </dependency>
+
+            <!-- activemq-client -->
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-client</artifactId>
+                <version>${activemq.version}</version>
+            </dependency>
+
+            <!-- rabbitmq amqp-client -->
+            <dependency>
+                <groupId>com.rabbitmq</groupId>
+                <artifactId>amqp-client</artifactId>
+                <version>${rabbitmq.version}</version>
+            </dependency>
+
+            <!-- OWASP HTML Sanitizer -->
+            <dependency>
+                <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+                <artifactId>owasp-java-html-sanitizer</artifactId>
+                <version>${owasp-html-sanitizer.version}</version>
+            </dependency>
+
+            <!-- Lombok (explicit version management for child modules) -->
+            <dependency>
+                <groupId>org.project.lombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
+            <!-- lombok-mapstruct-binding -->
+            <dependency>
+                <groupId>org.project.lombok</groupId>
+                <artifactId>lombok-mapstruct-binding</artifactId>
+                <version>${lombok-mapstruct.version}</version>
+            </dependency>
+
+            <!-- mapstruct-processor -->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+
+            <!-- mysql -->
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <!-- oracle -->
+            <dependency>
+                <groupId>com.oracle.database.jdbc</groupId>
+                <artifactId>ojdbc11</artifactId>
+                <version>${ojdbc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.database.nls</groupId>
+                <artifactId>orai18n</artifactId>
+                <version>${ojdbc.version}</version>
+            </dependency>
+
+            <!-- sqlserver -->
+            <dependency>
+                <groupId>com.microsoft.sqlserver</groupId>
+                <artifactId>mssql-jdbc</artifactId>
+                <version>${mssql-jdbc.version}</version>
+            </dependency>
+
+            <!-- db2 -->
+            <dependency>
+                <groupId>com.ibm.db2</groupId>
+                <artifactId>jcc</artifactId>
+                <version>${db2-jdbc.version}</version>
+            </dependency>
+
+            <!-- h2 -->
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.db.version}</version>
+            </dependency>
+
+            <!-- knife4j -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springdoc</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- swagger -->
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-core</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-models</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+
+            <!-- springdoc-openapi -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- easyexcel -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>easyexcel-core</artifactId>
+                <version>${easyexcel.version}</version>
+            </dependency>
+
+            <!-- fastjson2 版本覆盖 -->
+
+            <!-- resilience4j 版本覆盖 -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring6</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-reactor</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-micrometer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-framework-common</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-core</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-ratelimiter</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-retry</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bulkhead</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-timelimiter</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-consumer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+
+            <!-- jetbrains annotations -->
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>${jetbrains-annotations.version}</version>
+            </dependency>
+
+            <!-- spotbugs annotations -->
+            <dependency>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-annotations</artifactId>
+                <version>${spotbugs-annotations.version}</version>
+            </dependency>
+
+            <!-- swagger-annotations-jakarta 版本覆盖（springdoc 3.0.3 要求 2.2.47） -->
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-jakarta.version}</version>
+            </dependency>
+
+            <!-- jjwt-orgjson（remi-common auth 模块使用 orgjson 而非 jackson） -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-orgjson</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 所有子模块继承的公共依赖 -->
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <!--
+                SpotBugs 插件显式配置：覆盖父 POM 的 ${maven.multiModuleProjectDirectory} 变量解析。
+                父 POM 在 ydzs-common 聚合模块中构建时，${maven.multiModuleProjectDirectory}
+                会解析到 ydzs-common/ 目录而非 ydzs-backend/ 根目录，导致找不到 spotbugs-exclude.xml。
+                此处使用 ${project.basedir}/../ 显式回退到父目录，消除手动复制文件的耦合风险。
+            -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <configuration>
+                    <excludeFilterFile>${project.basedir}/../spotbugs-exclude.xml</excludeFilterFile>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

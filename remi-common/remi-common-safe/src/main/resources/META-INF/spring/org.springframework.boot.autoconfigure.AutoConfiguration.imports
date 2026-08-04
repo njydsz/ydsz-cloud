@@ -1,0 +1,4 @@
+com.remisoft.common.safe.config.SafeConfiguration
+com.remisoft.common.safe.xss.XssAutoConfiguration
+com.remisoft.common.safe.captcha.config.CaptchaAutoConfiguration
+com.remisoft.common.safe.ratelimit.config.RateLimitAutoConfiguration

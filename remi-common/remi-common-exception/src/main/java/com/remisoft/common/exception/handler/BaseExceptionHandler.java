@@ -1,0 +1,347 @@
+package com.remisoft.common.exception.handler;
+
+import java.io.StringWriter;
+import java.net.URI;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import com.remisoft.common.core.response.BaseResponse;
+import com.remisoft.common.exception.code.UnifiedExceptionCode;
+import com.remisoft.common.exception.config.ExceptionProperties;
+import com.remisoft.common.exception.core.ExceptionInfo;
+import com.remisoft.common.exception.custom.AbstractYdszException;
+import com.remisoft.common.exception.custom.BusinessException;
+import com.remisoft.common.exception.metrics.ExceptionMetrics;
+import com.remisoft.common.core.context.ProblemDetail;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 异常处理器抽象基类
+ *
+ * <p>提供通用的异常处理逻辑，子类只需实现特定的日志前缀和响应格式定制。
+ * 支持国际化消息、异常链追踪、差异化环境处理（开发/生产）、
+ * RFC 7807 ProblemDetail 输出格式切换、统一指标记录。
+ *
+ * @author remi-team
+ * @since 1.0.0
+ * @see BusinessException
+ * @see BaseResponse
+ * @see ProblemDetail
+ */
+@Slf4j
+public abstract class BaseExceptionHandler {
+
+    @Value("${spring.profiles.active:prod}")
+    private String activeProfile;
+
+    private ExceptionProperties properties;
+    private ExceptionMetrics exceptionMetrics;
+
+    /**
+     * 获取日志前缀，由子类实现以定制不同端的日志前缀
+     *
+     * @return 日志前缀字符串
+     */
+    protected abstract String getLogPrefix();
+
+    /**
+     * 设置异常模块配置属性（由 AutoConfiguration 注入）
+     */
+    protected void setExceptionProperties(ExceptionProperties properties) {
+        this.properties = properties;
+    }
+
+    /**
+     * 设置异常指标统计器（由 AutoConfiguration 注入）
+     */
+    protected void setExceptionMetrics(ExceptionMetrics exceptionMetrics) {
+        this.exceptionMetrics = exceptionMetrics;
+    }
+
+    /**
+     * 获取异常指标统计器
+     *
+     * @return 异常指标统计器；未注入时返回 null
+     */
+    protected ExceptionMetrics getExceptionMetrics() {
+        return exceptionMetrics;
+    }
+
+    /**
+     * 记录异常指标（统一入口，所有 handler 调用此方法）
+     *
+     * <p>如果异常指标统计器未注入或被禁用，此方法为空操作。
+     * 同时记录异常处理耗时（Timer 指标）。
+     *
+     * @param throwable 异常对象
+     */
+    protected void recordMetrics(Throwable throwable) {
+        long startTime = System.nanoTime();
+        try {
+            if (exceptionMetrics != null) {
+                exceptionMetrics.recordException(throwable);
+            }
+        } finally {
+            if (exceptionMetrics != null) {
+                long durationMs = (System.nanoTime() - startTime) / 1_000_000;
+                exceptionMetrics.recordHandlerDuration(durationMs, throwable);
+            }
+        }
+    }
+
+    /**
+     * 是否需要包含 ExceptionInfo 详细信息
+     *
+     * <p>开发/测试环境返回 true，生产环境返回 false。
+     * 也可通过 {@code remi.exception.include-stack-trace} 配置强制开启。
+     *
+     * @return true-包含详细信息，false-不包含
+     */
+    protected boolean includeExceptionInfo() {
+        boolean configFlag = properties != null && properties.isIncludeStackTrace();
+        return configFlag
+                || "dev".equalsIgnoreCase(activeProfile)
+                || "test".equalsIgnoreCase(activeProfile);
+    }
+
+    /**
+     * 是否使用 ProblemDetail (RFC 7807) 响应格式
+     *
+     * @return true-使用 ProblemDetail 格式，false-使用 BaseResponse 格式
+     */
+    protected boolean useProblemDetail() {
+        if (properties != null) {
+            return properties.getResponseFormat() == ExceptionProperties.ResponseFormat.PROBLEM_DETAIL;
+        }
+        return false;
+    }
+
+    /**
+     * 获取 ProblemDetail type URI 基础 URL
+     *
+     * @return 配置的基础 URL，未配置时返回 "about:blank"
+     */
+    protected String getProblemDetailTypeBaseUrl() {
+        if (properties != null && properties.getProblemDetailTypeBaseUrl() != null) {
+            return properties.getProblemDetailTypeBaseUrl();
+        }
+        return "about:blank";
+    }
+
+    /**
+     * 是否在 Micrometer 指标中包含异常 code tag
+     *
+     * @return true-包含高基数 code tag，false-不包含
+     */
+    protected boolean metricsIncludeCodeTag() {
+        return properties != null && properties.isMetricsIncludeCodeTag();
+    }
+
+    /**
+     * 获取根本原因的消息
+     */
+    protected static String getRootCauseMessage(Throwable throwable) {
+        if (throwable == null) {
+            return null;
+        }
+        Throwable root = throwable;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+        return root.getMessage();
+    }
+
+    /**
+     * 获取堆栈跟踪字符串
+     *
+     * <p>手动遍历 {@link Throwable#getStackTrace()} 写入内存字符串，
+     * 不使用 {@code printStackTrace()}（Checkstyle R3 规则禁止）。
+     */
+    protected static String getStackTraceString(Throwable throwable) {
+        if (throwable == null) {
+            return null;
+        }
+        StringWriter writer = new StringWriter(256);
+        Throwable current = throwable;
+        while (current != null) {
+            writer.write(current.toString());
+            writer.write(System.lineSeparator());
+            for (StackTraceElement element : current.getStackTrace()) {
+                writer.write("\tat ");
+                writer.write(element.toString());
+                writer.write(System.lineSeparator());
+            }
+            current = current.getCause();
+            if (current != null) {
+                writer.write("Caused by: ");
+            }
+        }
+        return writer.toString();
+    }
+
+    /**
+     * 判断是否为生产环境
+     *
+     * @return true-生产环境，false-非生产环境
+     */
+    protected boolean isProductionEnvironment() {
+        return "prod".equalsIgnoreCase(activeProfile) || "production".equalsIgnoreCase(activeProfile);
+    }
+
+    /**
+     * 构建异常信息对象
+     *
+     * @param throwable 异常对象
+     * @param path      请求路径
+     * @param traceId   追踪 ID（可为 null）
+     * @return 异常信息对象
+     */
+    protected ExceptionInfo buildExceptionInfo(Throwable throwable, String path, String traceId) {
+        ExceptionInfo info = new ExceptionInfo();
+        info.setPath(path);
+        if (traceId != null) {
+            info.setTraceId(traceId);
+        }
+        info.setTimestamp(LocalDateTime.now());
+
+        if (throwable instanceof AbstractYdszException) {
+            AbstractYdszException ex = (AbstractYdszException) throwable;
+            info.setCode(ex.getCode());
+            info.setKey(ex.getKey());
+            info.setMessage(ex.getMessage());
+            info.setHttpStatus(ex.getHttpStatus());
+            if (includeExceptionInfo()) {
+                Map<String, Object> details = new LinkedHashMap<>();
+                details.put("stackTrace", getStackTraceString(throwable));
+                if (ex.getExtData() instanceof Map<?, ?> rawMap) {
+                    rawMap.forEach((k, v) -> details.put(String.valueOf(k), v));
+                }
+                info.setDetails(details);
+            }
+        } else {
+            info.setCode(UnifiedExceptionCode.INTERNAL_ERROR.getCode());
+            info.setMessage(getRootCauseMessage(throwable));
+            info.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            if (includeExceptionInfo()) {
+                info.setDetails(Map.of("stackTrace", getStackTraceString(throwable)));
+            }
+        }
+
+        return info;
+    }
+
+    /**
+     * 构建 RFC 7807 ProblemDetail 对象
+     *
+     * @param throwable 异常对象
+     * @param path      请求路径
+     * @param traceId   追踪 ID（可为 null）
+     * @return ProblemDetail 对象
+     */
+    protected ProblemDetail buildProblemDetail(Throwable throwable, String path, String traceId) {
+        String baseUrl = getProblemDetailTypeBaseUrl();
+        ProblemDetail.ProblemDetailBuilder builder = ProblemDetail.builder()
+                .instance(path != null ? URI.create(path) : null)
+                .traceId(traceId)
+                .requestId(traceId)
+                .timestamp(Instant.now());
+
+        if (throwable instanceof AbstractYdszException) {
+            AbstractYdszException ex = (AbstractYdszException) throwable;
+            builder.type(URI.create(baseUrl + "/" + ex.getCategory().name().toLowerCase()))
+                    .title(ex.getClass().getSimpleName())
+                    .status(ex.getHttpStatus())
+                    .detail(ex.getMessage())
+                    .errorCode(ex.getCode());
+            if (ex.getExtData() instanceof Map<?, ?> rawMap) {
+                Map<String, Object> extMap = new LinkedHashMap<>();
+                rawMap.forEach((k, v) -> extMap.put(String.valueOf(k), v));
+                builder.extensions(extMap);
+            }
+        } else {
+            builder.type(URI.create(baseUrl + "/system"))
+                    .title("System Error")
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .detail(getRootCauseMessage(throwable))
+                    .errorCode(UnifiedExceptionCode.INTERNAL_ERROR.getCode());
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * 构建统一异常响应（根据配置自动选择 BaseResponse 或 ProblemDetail 格式）
+     *
+     * @param throwable 异常对象
+     * @param path      请求路径
+     * @param traceId   追踪 ID
+     * @return 响应对象（BaseResponse 或 ProblemDetail）
+     */
+    protected Object buildResponse(Throwable throwable, String path, String traceId) {
+        if (useProblemDetail()) {
+            return buildProblemDetail(throwable, path, traceId);
+        }
+        ExceptionInfo info = buildExceptionInfo(throwable, path, traceId);
+        if (throwable instanceof AbstractYdszException) {
+            AbstractYdszException ex = (AbstractYdszException) throwable;
+            return BaseResponse.error(ex.getCode(), ex.getMessage(),
+                    includeExceptionInfo() ? info : null);
+        }
+        return BaseResponse.error(
+                UnifiedExceptionCode.INTERNAL_ERROR.getCode(),
+                info.getMessage(),
+                includeExceptionInfo() ? info : null);
+    }
+
+    /**
+     * 构建 ResponseEntity（动态 HTTP 状态码）
+     *
+     * @param body      响应体
+     * @param throwable 异常对象
+     * @return ResponseEntity
+     */
+    protected ResponseEntity<Object> buildResponseEntity(Object body, Throwable throwable) {
+        int httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
+        if (throwable instanceof AbstractYdszException) {
+            httpStatus = ((AbstractYdszException) throwable).getHttpStatus();
+        }
+        return ResponseEntity.status(httpStatus).body(body);
+    }
+
+    /**
+     * 构建校验错误响应
+     *
+     * @param errorCode  异常码
+     * @param message    异常消息
+     * @param httpStatus HTTP 状态码
+     * @param path       请求路径
+     * @param throwable  原始异常
+     * @return 统一响应格式
+     */
+    protected BaseResponse<?> buildValidationErrorResponse(
+            UnifiedExceptionCode errorCode, String message, int httpStatus,
+            String path, Throwable throwable) {
+        log.error("{}校验异常 | 路径: {} | 消息: {}", getLogPrefix(), path, message, throwable);
+        recordMetrics(throwable);
+
+        ExceptionInfo info = new ExceptionInfo(
+                errorCode.getCode(),
+                errorCode.getKey(),
+                message,
+                httpStatus
+        );
+        info.setPath(path);
+        return BaseResponse.error(
+                errorCode.getCode(),
+                message,
+                includeExceptionInfo() ? info : null
+        );
+    }
+}

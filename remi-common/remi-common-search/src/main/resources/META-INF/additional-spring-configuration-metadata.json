@@ -1,0 +1,204 @@
+{
+  "properties": [
+    {
+      "name": "remi.search.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用搜索服务"
+    },
+    {
+      "name": "remi.search.primary",
+      "type": "java.lang.String",
+      "description": "主搜索引擎：pg / memory / es / redis / solr / opensearch"
+    },
+    {
+      "name": "remi.search.fallbacks",
+      "type": "java.util.List",
+      "description": "降级引擎链（按顺序尝试）"
+    },
+    {
+      "name": "remi.search.page-size",
+      "type": "java.lang.Integer",
+      "description": "默认每页大小"
+    },
+    {
+      "name": "remi.search.max-page-size",
+      "type": "java.lang.Integer",
+      "description": "每页最大大小（深分页保护）"
+    },
+    {
+      "name": "remi.search.max-page-depth",
+      "type": "java.lang.Integer",
+      "description": "最大翻页深度（offset 上限）"
+    },
+    {
+      "name": "remi.search.search-timeout",
+      "type": "java.lang.Integer",
+      "description": "搜索超时时间（秒）"
+    },
+    {
+      "name": "remi.search.suggest-limit",
+      "type": "java.lang.Integer",
+      "description": "搜索建议返回数量"
+    },
+    {
+      "name": "remi.search.highlight",
+      "type": "java.lang.Boolean",
+      "description": "是否启用高亮"
+    },
+    {
+      "name": "remi.search.fuzzy",
+      "type": "java.lang.Boolean",
+      "description": "是否启用模糊匹配"
+    },
+    {
+      "name": "remi.search.cache.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用搜索结果缓存"
+    },
+    {
+      "name": "remi.search.cache.ttl",
+      "type": "java.lang.Long",
+      "description": "缓存 TTL（秒）"
+    },
+    {
+      "name": "remi.search.cache.max-size",
+      "type": "java.lang.Long",
+      "description": "缓存最大条目数"
+    },
+    {
+      "name": "remi.search.circuit-breaker.failure-threshold",
+      "type": "java.lang.Integer",
+      "description": "熔断器失败阈值"
+    },
+    {
+      "name": "remi.search.circuit-breaker.wait-duration",
+      "type": "java.lang.Integer",
+      "description": "熔断器等待时间（秒）"
+    },
+    {
+      "name": "remi.search.circuit-breaker.half-open-requests",
+      "type": "java.lang.Integer",
+      "description": "半开状态探测请求数"
+    },
+    {
+      "name": "remi.search.index.batch-size",
+      "type": "java.lang.Integer",
+      "description": "批量索引大小"
+    },
+    {
+      "name": "remi.search.index.thread-pool-size",
+      "type": "java.lang.Integer",
+      "description": "索引/搜索线程池核心大小"
+    },
+    {
+      "name": "remi.search.index.max-retries",
+      "type": "java.lang.Integer",
+      "description": "索引同步最大重试次数"
+    },
+    {
+      "name": "remi.search.synonym.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用同义词搜索"
+    },
+    {
+      "name": "remi.search.synonym.file",
+      "type": "java.lang.String",
+      "description": "同义词词典文件路径"
+    },
+    {
+      "name": "remi.search.pinyin.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用拼音搜索"
+    },
+    {
+      "name": "remi.search.pinyin.file",
+      "type": "java.lang.String",
+      "description": "拼音词典文件路径"
+    },
+    {
+      "name": "remi.search.pg.search-config",
+      "type": "java.lang.String",
+      "description": "PG tsvector 搜索配置（search_zh / simple）"
+    },
+    {
+      "name": "remi.search.pg.index-table",
+      "type": "java.lang.String",
+      "description": "PG 索引表名"
+    },
+    {
+      "name": "remi.search.pg.field-weights.title",
+      "type": "java.lang.Double",
+      "description": "PG 标题字段权重"
+    },
+    {
+      "name": "remi.search.pg.field-weights.subtitle",
+      "type": "java.lang.Double",
+      "description": "PG 副标题字段权重"
+    },
+    {
+      "name": "remi.search.pg.field-weights.content",
+      "type": "java.lang.Double",
+      "description": "PG 内容字段权重"
+    },
+    {
+      "name": "remi.search.pg.field-weights.tags",
+      "type": "java.lang.Double",
+      "description": "PG 标签字段权重"
+    },
+    {
+      "name": "remi.search.pg.time-decay-days",
+      "type": "java.lang.Double",
+      "description": "PG 时间衰减半衰期（天），0 不衰减"
+    },
+    {
+      "name": "remi.search.es.host",
+      "type": "java.lang.String",
+      "description": "Elasticsearch 主机地址"
+    },
+    {
+      "name": "remi.search.es.port",
+      "type": "java.lang.Integer",
+      "description": "Elasticsearch 端口"
+    },
+    {
+      "name": "remi.search.es.index-name",
+      "type": "java.lang.String",
+      "description": "Elasticsearch 索引名"
+    },
+    {
+      "name": "remi.search.redis.index-name",
+      "type": "java.lang.String",
+      "description": "RediSearch 索引名"
+    },
+    {
+      "name": "remi.search.redis.key-prefix",
+      "type": "java.lang.String",
+      "description": "RediSearch 数据 key 前缀"
+    },
+    {
+      "name": "remi.search.solr.base-url",
+      "type": "java.lang.String",
+      "description": "Solr base URL"
+    },
+    {
+      "name": "remi.search.solr.core",
+      "type": "java.lang.String",
+      "description": "Solr core 名称"
+    },
+    {
+      "name": "remi.search.opensearch.host",
+      "type": "java.lang.String",
+      "description": "OpenSearch 主机地址"
+    },
+    {
+      "name": "remi.search.opensearch.port",
+      "type": "java.lang.Integer",
+      "description": "OpenSearch 端口"
+    },
+    {
+      "name": "remi.search.opensearch.index-name",
+      "type": "java.lang.String",
+      "description": "OpenSearch 索引名"
+    }
+  ]
+}
