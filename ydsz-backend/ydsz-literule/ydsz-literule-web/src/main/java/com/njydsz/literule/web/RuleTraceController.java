@@ -39,6 +39,8 @@ import com.njydsz.literule.server.config.RuleAdminService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.literule.domain.enums.LiteruleResultCode;
 
 /**
  * 规则执行追踪 Controller
@@ -117,13 +119,13 @@ public class RuleTraceController {
                 .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
 
         if (traces.isEmpty()) {
-            return BaseResponse.error("未找到 traceId=" + traceId + " 的执行记录");
+            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "未找到 traceId=" + traceId + " 的执行记录");
         }
 
         // 取第一条 trace 的 factsSnapshot 作为回放输入
         Map<String, Object> facts = traces.get(0).getFactsSnapshot();
         if (facts == null || facts.isEmpty()) {
-            return BaseResponse.error("traceId=" + traceId + " 的事实快照为空，无法回放");
+            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "traceId=" + traceId + " 的事实快照为空，无法回放");
         }
 
         // 用当前规则集重新评估
@@ -206,7 +208,7 @@ public class RuleTraceController {
         }
 
         if (startTimeStr == null || endTimeStr == null) {
-            return BaseResponse.error("startTime 和 endTime 不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "startTime 和 endTime 不能为空");
         }
 
         LocalDateTime startTime = LocalDateTime.parse(startTimeStr);
@@ -321,7 +323,7 @@ public class RuleTraceController {
         }
 
         if (conditionExpression == null || conditionExpression.isBlank()) {
-            return BaseResponse.error("conditionExpression 不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "conditionExpression 不能为空");
         }
 
         // 解析默认严重度
@@ -330,7 +332,7 @@ public class RuleTraceController {
             try {
                 defaultSeverity = RuleSeverity.valueOf(defaultSeverityStr);
             } catch (IllegalArgumentException e) {
-                return BaseResponse.error("非法的 defaultSeverity: " + defaultSeverityStr
+                return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "非法的 defaultSeverity: " + defaultSeverityStr
                         + "，合法值: INFO / YELLOW / RED");
             }
         }

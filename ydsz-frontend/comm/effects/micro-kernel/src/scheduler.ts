@@ -62,6 +62,23 @@ export interface AppInstance {
   /** 最近一次加载的性能指标（为监控提供数据） */
   loadMetrics: null | { duration: number; fromCache: boolean };
   error: null | string;
+  /** 最近一次激活的时间戳（用于 LRU 淘汰保活实例） */
+  lastActivatedAt: number;
+}
+
+/** 保活实例数上限（默认 5，超限按 LRU 淘汰最久未访问的子应用） */
+let maxKeepAliveApps = 5;
+
+/**
+ * 设置保活实例数上限。
+ *
+ * 频繁切换 9 个子应用时，keep-alive 会持续累积 DOM + Vue 实例 + Pinia store + ECharts 实例，
+ * 可能导致内存涨到 500MB+。设置上限后，超限的保活实例按 LRU 策略完整卸载释放内存。
+ *
+ * @param max - 最大保活实例数（设为 0 禁用 LRU 淘汰）
+ */
+export function setMaxKeepAliveApps(max: number): void {
+  maxKeepAliveApps = max;
 }
 
 const appInstances = new Map<string, AppInstance>();
@@ -80,6 +97,7 @@ export function createAppInstance(config: MicroAppConfig): AppInstance {
     sandboxType: 'snapshot', // 默认使用快照沙箱
     loadMetrics: null,
     error: null,
+    lastActivatedAt: 0,
   };
   appInstances.set(config.name, instance);
   return instance;
@@ -113,6 +131,7 @@ export async function activateApp(
     container.appendChild(instance.cachedRoot);
     instance.cachedParent = null;
     instance.status = 'MOUNTED';
+    instance.lastActivatedAt = Date.now();
     // 调用 activate 生命周期钩子
     if (instance.exports?.activate) {
       try {
@@ -166,6 +185,7 @@ export async function activateApp(
     await instance.exports.mount(mountProps);
     instance.status = 'MOUNTED';
     instance.error = null;
+    instance.lastActivatedAt = Date.now();
     logger.debug(`${config.name} mounted`);
   } catch (err) {
     // 挂载失败：退出对应的沙箱
@@ -211,6 +231,10 @@ export async function deactivateApp(instance: AppInstance): Promise<UnmountResul
         }
       }
       logger.debug(`${config.name} detached (keepAlive)`);
+
+      // LRU 淘汰：保活实例数超限时卸载最久未访问的子应用
+      evictKeepAliveIfNeeded();
+
       return { name: config.name, success: true };
     }
   }
@@ -272,5 +296,124 @@ export function setKeepAlive(name: string, keep: boolean): void {
   const instance = appInstances.get(name);
   if (instance) {
     instance.keepAlive = keep;
+  }
+}
+
+/**
+ * 统计当前处于 keep-alive 缓存状态（UNMOUNTED + keepAlive + cachedRoot 存在）的实例数。
+ */
+export function getKeepAliveCount(): number {
+  let count = 0;
+  for (const instance of appInstances.values()) {
+    if (instance.keepAlive && instance.status === 'UNMOUNTED' && instance.cachedRoot) {
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * LRU 淘汰：当保活实例数超过 maxKeepAliveApps 时，按 lastActivatedAt 升序完整卸载
+ * 最久未访问的子应用，释放 DOM + Vue 实例 + Pinia store + ECharts 等资源。
+ *
+ * 调用时机：deactivateApp keepAlive 摘除 DOM 之后。
+ * maxKeepAliveApps 为 0 时禁用淘汰。
+ */
+async function evictKeepAliveIfNeeded(): Promise<void> {
+  if (maxKeepAliveApps <= 0) return;
+
+  const cached: AppInstance[] = [];
+  for (const instance of appInstances.values()) {
+    if (instance.keepAlive && instance.status === 'UNMOUNTED' && instance.cachedRoot) {
+      cached.push(instance);
+    }
+  }
+
+  while (cached.length > maxKeepAliveApps) {
+    // 按 lastActivatedAt 升序排序，取最久未访问的
+    cached.sort((a, b) => a.lastActivatedAt - b.lastActivatedAt);
+    const victim = cached.shift()!;
+
+    logger.debug(
+      `LRU evicting keep-alive app "${victim.config.name}" ` +
+        `(cached=${cached.length + 1}, max=${maxKeepAliveApps})`,
+    );
+
+    // 完整卸载（非 keepAlive 方式），释放全部资源
+    victim.keepAlive = false;
+    try {
+      if (victim.exports) {
+        await victim.exports.unmount({
+          container: victim.cachedParent as HTMLElement || document.createElement('div'),
+          basename: victim.config.activeRule,
+        });
+      }
+    } catch (err) {
+      logger.error(`LRU evict unmount failed for "${victim.config.name}":`, err);
+    }
+
+    // 清理沙箱
+    if (victim.sandboxType === 'proxy' && victim.proxySandbox) {
+      victim.proxySandbox.cleanup();
+      victim.proxySandbox = null;
+    } else if (victim.sandbox) {
+      exitSandbox(victim.sandbox);
+      victim.sandbox = null;
+    }
+
+    removeStylesheets(victim.config.name);
+    victim.cachedRoot = null;
+    victim.cachedParent = null;
+    victim.exports = null;
+    victim.status = 'NOT_LOADED';
+    victim.error = null;
+  }
+}
+
+/**
+ * 内存压力检查：当 JS 堆内存超过阈值时强制卸载所有非活跃保活实例。
+ *
+ * 由外部（如 monitor 模块的定时巡检）调用，当 performance.memory.usedJSHeapSize
+ * 超过 thresholdMB 时触发紧急释放。
+ *
+ * @param thresholdMB - 内存阈值（MB），默认 500
+ */
+export async function evictAllKeepAliveOnMemoryPressure(thresholdMB = 500): Promise<void> {
+  const performance = (window as unknown as { performance?: { memory?: { usedJSHeapSize: number } } }).performance;
+  const usedMB = performance?.memory ? performance.memory.usedJSHeapSize / 1024 / 1024 : 0;
+
+  if (usedMB < thresholdMB) return;
+
+  logger.warn(
+    `Memory pressure detected (${usedMB.toFixed(0)}MB > ${thresholdMB}MB), evicting all keep-alive instances`,
+  );
+
+  for (const instance of appInstances.values()) {
+    if (instance.keepAlive && instance.status === 'UNMOUNTED' && instance.cachedRoot) {
+      instance.keepAlive = false;
+      try {
+        if (instance.exports) {
+          await instance.exports.unmount({
+            container: instance.cachedParent as HTMLElement || document.createElement('div'),
+            basename: instance.config.activeRule,
+          });
+        }
+      } catch {
+        // 静默
+      }
+      if (instance.sandbox) {
+        exitSandbox(instance.sandbox);
+        instance.sandbox = null;
+      }
+      if (instance.proxySandbox) {
+        instance.proxySandbox.cleanup();
+        instance.proxySandbox = null;
+      }
+      removeStylesheets(instance.config.name);
+      instance.cachedRoot = null;
+      instance.cachedParent = null;
+      instance.exports = null;
+      instance.status = 'NOT_LOADED';
+    }
   }
 }

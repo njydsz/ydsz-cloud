@@ -23,10 +23,10 @@ import java.util.jar.JarFile;
  *   <li>类加载：loadClass、getClass、getPrimitiveClass</li>
  *   <li>资源加载：getResource、getResourceAsStream、getResourceURL</li>
  *   <li>类路径：getClassPath、getClassPathRoot</li>
- *   <li>包扫描：getClassesInPpackage、scanClasses</li>
+ *   <li>包扫描：getClassesInPackage、scanClasses</li>
  *   <li>类判断：isPrimitive、isPrimitiveWrapper、isArray、isEnum</li>
  *   <li>类转换：primitiveToWrapper、wrapperToPrimitive、primitiveDefault</li>
- *   <li>类信息：getClassName、getShortClassName、getPpackageName</li>
+ *   <li>类信息：getClassName、getShortClassName、getPackageName</li>
  *   <li>类加载器：getDefaultClassLoader、setClassLoader、getClassLoader</li>
  * </ul>
  *
@@ -44,7 +44,7 @@ import java.util.jar.JarFile;
  */
 public class ClassUtils {
 
-    private static ClassLoader defaultClassLoader = ClassUtils.class.getClassLoader();
+    private static volatile ClassLoader defaultClassLoader = ClassUtils.class.getClassLoader();
 
     private ClassUtils() {
         throw new UnsupportedOperationException("ClassUtils is a utility class and cannot be instantiated");
@@ -99,10 +99,13 @@ public class ClassUtils {
             throw new IllegalArgumentException("Class name cannot be null or empty");
         }
 
+        // TCCL（线程上下文 ClassLoader）优先，符合 JDK ServiceLoader / Spring / Tomcat 标准
+        // 避免在容器（Tomcat/WebLogic）中加载到错误版本的类
+        ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         try {
-            return Class.forName(className, initialize, defaultClassLoader);
+            return Class.forName(className, initialize, tccl);
         } catch (ClassNotFoundException e) {
-            return Class.forName(className, initialize, Thread.currentThread().getContextClassLoader());
+            return Class.forName(className, initialize, defaultClassLoader);
         }
     }
 
@@ -278,7 +281,7 @@ public class ClassUtils {
     /**
      * 获取包名
      */
-    public static String getPpackageName(Class<?> clazz) {
+    public static String getPackageName(Class<?> clazz) {
         if (clazz == null) {
             return null;
         }
@@ -290,7 +293,7 @@ public class ClassUtils {
     /**
      * 获取包名（从类名）
      */
-    public static String getPpackageName(String className) {
+    public static String getPackageName(String className) {
         if (className == null || className.isEmpty()) {
             return null;
         }
@@ -366,85 +369,103 @@ public class ClassUtils {
     /**
      * 扫描包路径下的所有类
      */
-    public static Set<Class<?>> scanClasses(String ppackageName) {
-        return scanClasses(ppackageName, defaultClassLoader);
+    public static Set<Class<?>> scanClasses(String packageName) {
+        return scanClasses(packageName, defaultClassLoader);
     }
 
     /**
      * 扫描包路径下的所有类
      */
-    public static Set<Class<?>> scanClasses(String ppackageName, ClassLoader classLoader) {
+    public static Set<Class<?>> scanClasses(String packageName, ClassLoader classLoader) {
         Set<Class<?>> classes = new LinkedHashSet<>();
-        if (ppackageName == null || classLoader == null) {
+        if (packageName == null || classLoader == null) {
             return classes;
         }
 
-        String path = ppackageName.replace('.', '/');
+        String path = packageName.replace('.', '/');
         try {
             Enumeration<URL> resources = classLoader.getResources(path);
             while (resources.hasMoreElements()) {
                 URL resource = resources.nextElement();
                 String protocol = resource.getProtocol();
-                
+
                 if ("file".equals(protocol)) {
-                    classes.addAll(scanClassesFromFileSystem(resource.getFile(), ppackageName));
+                    classes.addAll(scanClassesFromFileSystem(resource.getFile(), packageName));
                 } else if ("jar".equals(protocol)) {
-                    classes.addAll(scanClassesFromJar(resource, ppackageName));
+                    classes.addAll(scanClassesFromJar(resource, packageName));
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to scan classes from ppackage: " + ppackageName, e);
+            throw new RuntimeException("Failed to scan classes from package: " + packageName, e);
         }
 
         return classes;
     }
 
-    private static Set<Class<?>> scanClassesFromFileSystem(String path, String ppackageName) {
+    private static Set<Class<?>> scanClassesFromFileSystem(String path, String packageName) {
         Set<Class<?>> classes = new LinkedHashSet<>();
         try {
             File dir = new File(path);
             if (!dir.exists() || !dir.isDirectory()) {
                 return classes;
             }
-
-            File[] files = dir.listFiles(file -> 
-                file.isFile() && file.getName().endsWith(".class") && !file.getName().contains("$")
-            );
-
-            if (files != null) {
-                for (File file : files) {
-                    String className = ppackageName + '.' + file.getName().substring(0, file.getName().length() - 6);
-                    try {
-                        classes.add(Class.forName(className, false, defaultClassLoader));
-                    } catch (ClassNotFoundException e) {
-                        // 忽略
-                    }
-                }
-            }
+            // 递归扫描子包，与 JavaDoc"扫描包路径下的所有类"语义一致
+            scanFileSystemRecursive(dir, packageName, classes);
         } catch (Exception e) {
             throw new RuntimeException("Failed to scan classes from file system", e);
         }
         return classes;
     }
 
-    private static Set<Class<?>> scanClassesFromJar(URL jarUrl, String ppackageName) {
+    private static void scanFileSystemRecursive(File dir, String packageName, Set<Class<?>> classes) {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            if (file.isFile() && file.getName().endsWith(".class") && !file.getName().contains("$")) {
+                String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
+                try {
+                    classes.add(Class.forName(className, false, defaultClassLoader));
+                } catch (ClassNotFoundException e) {
+                    // 忽略无法加载的类
+                }
+            } else if (file.isDirectory()) {
+                scanFileSystemRecursive(file, packageName + '.' + file.getName(), classes);
+            }
+        }
+    }
+
+    private static Set<Class<?>> scanClassesFromJar(URL jarUrl, String packageName) {
         Set<Class<?>> classes = new LinkedHashSet<>();
         try {
-            String jarPath = jarUrl.getPath().substring(5, jarUrl.getPath().indexOf('!'));
+            // 用 URI 解析 jar 路径，正确处理 Windows 盘符（file:/C:/...）和 URL 编码（空格 %20）
+            String jarPath;
+            try {
+                jarPath = new java.net.URI(jarUrl.getFile()).getPath();
+            } catch (java.net.URISyntaxException uriEx) {
+                // 降级：直接取 file: 后、! 前的部分
+                String file = jarUrl.getFile();
+                int bangIdx = file.indexOf('!');
+                jarPath = bangIdx >= 0 ? file.substring(0, bangIdx) : file;
+                if (jarPath.startsWith("file:")) {
+                    jarPath = jarPath.substring(5);
+                }
+            }
             try (JarFile jarFile = new JarFile(new File(jarPath))) {
                 Enumeration<JarEntry> entries = jarFile.entries();
-                String ppackagePath = ppackageName.replace('.', '/') + "/";
-                
+                String packagePath = packageName.replace('.', '/') + "/";
+
                 while (entries.hasMoreElements()) {
                     JarEntry entry = entries.nextElement();
                     String name = entry.getName();
-                    
-                    if (name.startsWith(ppackagePath) && name.endsWith(".class") && !name.contains("$")) {
+
+                    if (name.startsWith(packagePath) && name.endsWith(".class") && !name.contains("$")) {
                         String className = name.substring(0, name.length() - 6).replace('/', '.');
                         try {
                             classes.add(Class.forName(className, false, defaultClassLoader));
                         } catch (ClassNotFoundException e) {
-                            // 忽略
+                            // 忽略无法加载的类
                         }
                     }
                 }
@@ -458,7 +479,7 @@ public class ClassUtils {
     /**
      * 获取所有原始类型
      */
-    public static List<Class<?>> getAllPrimitive_types() {
+    public static List<Class<?>> getAllPrimitiveTypes() {
         return Arrays.asList(
             boolean.class, byte.class, char.class, short.class,
             int.class, long.class, float.class, double.class, void.class
@@ -468,7 +489,7 @@ public class ClassUtils {
     /**
      * 获取所有包装类型
      */
-    public static List<Class<?>> getAllPrimitiveWrapper_types() {
+    public static List<Class<?>> getAllPrimitiveWrapperTypes() {
         return Arrays.asList(
             Boolean.class, Byte.class, Character.class, Short.class,
             Integer.class, Long.class, Float.class, Double.class, Void.class

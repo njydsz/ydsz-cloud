@@ -28,6 +28,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.literule.domain.enums.LiteruleResultCode;
 
 /**
  * CEP 模式测试 Controller（P2-7）
@@ -99,12 +101,12 @@ public class CEPTestController {
     public BaseResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.error("CEP 引擎未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "CEP 引擎未启用");
         }
         try {
             Object patternObj = body.get("pattern");
             if (patternObj == null) {
-                return BaseResponse.error("pattern 不能为空");
+                return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "pattern 不能为空");
             }
             CEPPattern pattern = YdszJson.fromJson(YdszJson.toJson(patternObj), CEPPattern.class);
             if (pattern.getId() == null || pattern.getId().isBlank()) {
@@ -113,7 +115,7 @@ public class CEPTestController {
             String patternId = pattern.getId();
             Object eventsObj = body.get("events");
             if (!(eventsObj instanceof List<?> eventsList)) {
-                return BaseResponse.error("events 必须为数组");
+                return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "events 必须为数组");
             }
 
             // 注册临时模式
@@ -146,7 +148,7 @@ public class CEPTestController {
             return BaseResponse.success(result);
         } catch (Exception e) {
             log.warn("[CEP] 测试模式失败: {}", e.getMessage());
-            return BaseResponse.error("测试失败: " + e.getMessage());
+            return BaseResponse.error(LiteruleResultCode.RULE_EXPRESSION_INVALID, "测试失败: " + e.getMessage());
         }
     }
 

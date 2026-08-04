@@ -79,6 +79,14 @@ public class SnowflakeProperties {
     private String environmentVariableName = "YDSZ_SNOWFLAKE_WORKER_ID";
 
     /**
+     * WorkerId 租约时间（毫秒）
+     * <p>仅在使用 WorkerIdRegistry（分布式注册中心）时生效。
+     * <p>租约到期前一半时间点自动续约，未续约则 WorkerId 可被其他实例抢占。
+     * <p>默认值：300000（5 分钟）
+     */
+    private long leaseMillis = 300_000L;
+
+    /**
      * workerId 来源策略枚举
      */
     public enum WorkerIdSource {

@@ -26,6 +26,7 @@ import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.RateLimitProperties;
+import com.njydsz.common.core.code.BaseResultCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -399,7 +400,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                     exchange.getRequest().getURI().getPath());
         }
 
-        BaseResponse<Void> body = BaseResponse.error("429",
+        BaseResponse<Void> body = BaseResponse.error(BaseResultCode.RATE_LIMIT,
                 "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
         byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);

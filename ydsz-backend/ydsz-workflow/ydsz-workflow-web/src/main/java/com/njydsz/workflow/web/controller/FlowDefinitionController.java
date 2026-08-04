@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.code.BaseResultCode;
 /**
  * 流程定义部署与查询 Controller
  *
@@ -121,12 +122,12 @@ public class FlowDefinitionController {
             @RequestParam("file")
             MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            return BaseResponse.error("zip 文件不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "zip 文件不能为空");
         }
         try {
             return BaseResponse.success(definitionService.batchDeployFromZip(file.getBytes(), null));
         } catch (IOException e) {
-            return BaseResponse.error("读取 zip 文件失败: " + e.getMessage());
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "读取 zip 文件失败: " + e.getMessage());
         }
     }
 

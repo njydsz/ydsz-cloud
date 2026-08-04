@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
-import com.njydsz.common.exception.model.ProblemDetail;
+import com.njydsz.common.core.context.ProblemDetail;
 
 import java.net.URI;
 

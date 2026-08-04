@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.core.code.BaseResultCode;
 
 /**
  * 项目立项 Excel 导入导出 Controller。
@@ -89,12 +90,12 @@ public class ProjectExcelController {
     @PostMapping("/import")
     public BaseResponse<String> importExcel(@RequestParam("file") MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            return BaseResponse.error("文件不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "文件不能为空");
         }
 
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || !originalFilename.endsWith(".xlsx")) {
-            return BaseResponse.error("仅支持 .xlsx 格式文件");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "仅支持 .xlsx 格式文件");
         }
 
         List<ProjectInitiationExcelDTO> successList = new ArrayList<>();
@@ -131,7 +132,7 @@ public class ProjectExcelController {
                     });
         } catch (IOException e) {
             log.error("Excel 导入文件读取失败", e);
-            return BaseResponse.error("文件读取失败: " + e.getMessage());
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "文件读取失败: " + e.getMessage());
         }
 
         // TODO: 批量保存到数据库（通过 ProjectInitiationService.batchSave）

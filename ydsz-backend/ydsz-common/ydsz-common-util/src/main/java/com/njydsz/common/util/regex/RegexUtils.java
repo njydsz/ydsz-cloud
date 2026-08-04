@@ -92,13 +92,13 @@ public class RegexUtils {
     /**
      * 身份证 (18 位)
      */
-    public static final String ID_CARD = "^[1-9]\\d{5}[1-9]\\d{3}((0\\d)|(1[0-2]))(([0|1|2]\\d)|3[0-1])\\d{3}([0-9Xx])$";
+    public static final String ID_CARD = "^[1-9]\\d{5}[1-9]\\d{3}((0\\d)|(1[0-2]))(([012]\\d)|3[0-1])\\d{3}([0-9Xx])$";
     private static final Pattern P_ID_CARD = Pattern.compile(ID_CARD);
 
     /**
      * 身份证（15 位或 18 位）
      */
-    public static final String ID_CARD_ALL = "^[1-9]\\d{7}((0\\d)|(1[0-2]))(([0|1|2]\\d)|3[0-1])\\d{3}$|^[1-9]\\d{5}[1-9]\\d{3}((0\\d)|(1[0-2]))(([0|1|2]\\d)|3[0-1])\\d{3}([0-9Xx])$";
+    public static final String ID_CARD_ALL = "^[1-9]\\d{7}((0\\d)|(1[0-2]))(([012]\\d)|3[0-1])\\d{3}$|^[1-9]\\d{5}[1-9]\\d{3}((0\\d)|(1[0-2]))(([012]\\d)|3[0-1])\\d{3}([0-9Xx])$";
     private static final Pattern P_ID_CARD_ALL = Pattern.compile(ID_CARD_ALL);
 
     /**
@@ -720,7 +720,7 @@ public class RegexUtils {
         }
         Matcher matcher = getOrCompile(regex).matcher(input);
         if (matcher.find()) {
-            return matcher.replaceAll(replacementTemplate);
+            return matcher.replaceFirst(replacementTemplate);
         }
         return null;
     }
@@ -849,12 +849,7 @@ public class RegexUtils {
         if (input == null) {
             return 0;
         }
-        Matcher matcher = getOrCompile("[^\\x00-\\xff]").matcher(input);
-        int count = 0;
-        while (matcher.find()) {
-            count++;
-        }
-        return count;
+        return (int) input.codePoints().filter(cp -> cp > 0xFF).count();
     }
 
     // ==================== 分割方法 ====================

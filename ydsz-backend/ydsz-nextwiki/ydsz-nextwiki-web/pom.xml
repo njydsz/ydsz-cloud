@@ -20,6 +20,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
         </dependency>
+        <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+    
         <!-- P1-1: 审计模块（@EnableYdszAudit + @Audit AOP 切面） -->
         <dependency>
             <groupId>com.njydsz</groupId>

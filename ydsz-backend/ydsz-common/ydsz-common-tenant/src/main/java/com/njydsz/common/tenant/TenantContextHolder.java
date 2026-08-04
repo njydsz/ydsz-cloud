@@ -4,12 +4,19 @@ import com.alibaba.ttl.TransmittableThreadLocal;
 
 import java.util.List;
 import java.util.Collections;
+
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.core.constant.SystemConstants;
 /**
  * 租户上下文统一持有者。
  *
  * <p>基于 {@link TransmittableThreadLocal}，支持线程池场景自动传播。
  * <p>全项目唯一租户上下文入口，替代 {@code RequestContext.getTenantId()}
  * 和 {@code AuthInfoUtils.getTenantId()} 双路径获取。
+ *
+ * <p><b>v1.1.0 变更：</b>与 {@link RequestContext} 双向同步，
+ * {@code set()} 时同步写入 RequestContext，{@code getTenantId()} 时
+ * 回退查询 RequestContext，确保跨模块的租户一致性。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -47,6 +54,9 @@ public final class TenantContextHolder {
     /**
      * 设置当前线程的租户上下文。
      *
+     * <p>同时将租户 ID 同步写入 {@link RequestContext}，确保
+     * 其他模块通过 RequestContext 也能获取到正确的租户 ID。
+     *
      * @param context 租户上下文，null 等同于 clear
      */
     public static void set(TenantContext context) {
@@ -55,6 +65,10 @@ public final class TenantContextHolder {
             return;
         }
         HOLDER.set(context);
+        // 双向同步：写入 RequestContext，确保跨模块一致性
+        if (context.getTenantId() != null) {
+            RequestContext.setTenantId(context.getTenantId());
+        }
     }
 
     /**
@@ -69,11 +83,19 @@ public final class TenantContextHolder {
     /**
      * 获取当前租户 ID（便捷方法）。
      *
-     * @return 租户 ID，未设置返回 null
+     * <p>优先从本地上下文获取；如果本地上下文未设置，则回退到
+     * {@link RequestContext#getTenantId()}，确保跨模块一致性。
+     *
+     * @return 租户 ID；均未设置时回退返回 {@link SystemConstants#DEFAULT_TENANT_ID}
      */
     public static String getTenantId() {
         TenantContext context = HOLDER.get();
-        return context != null ? context.getTenantId() : null;
+        if (context != null && context.getTenantId() != null) {
+            return context.getTenantId();
+        }
+        // 回退到 RequestContext
+        String requestTenantId = RequestContext.getTenantId();
+        return requestTenantId != null ? requestTenantId : SystemConstants.DEFAULT_TENANT_ID;
     }
 
     /**

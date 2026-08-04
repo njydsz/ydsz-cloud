@@ -5,8 +5,11 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,6 +32,19 @@ public class IpAddrUtils {
     private static final String LOCALHOST_IPV6 = "0:0:0:0:0:0:0:1";
     /** IPv4 本地回环地址 */
     private static final String LOCALHOST_IPV4 = "127.0.0.1";
+    /** 代理头列表（按优先级从高到低），用于 getIpAddr 遍历 */
+    private static final List<String> PROXY_HEADERS = Collections.unmodifiableList(Arrays.asList(
+            "x-forwarded-for",
+            "Proxy-Client-IP",
+            "WL-Proxy-Client-IP",
+            "X-Real-IP",
+            "HTTP_X_FORWARDED_FOR",
+            "HTTP_X_FORWARDED",
+            "HTTP_X_CLUSTER_CLIENT_IP",
+            "HTTP_CLIENT_IP",
+            "HTTP_FORWARDED_FOR",
+            "HTTP_FORWARDED"
+    ));
     /** IPv4 正则校验模式 */
     private static final Pattern IPV4_PATTERN = Pattern.compile(
             "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$");
@@ -59,6 +75,10 @@ public class IpAddrUtils {
      * <p>依次检查 X-Forwarded-For、Proxy-Client-IP、WL-Proxy-Client-IP、X-Real-IP 等
      * 代理头，取第一个非 unknown 的 IP。IPv6 本地回环自动转换为 IPv4。
      *
+     * <p><b>安全提示：</b>本方法信任所有代理头，攻击者可伪造 X-Forwarded-For 绕过 IP 限制。
+     * 若部署在不可信代理后，请使用 {@link #getIpAddrWithTrustedProxies(HttpServletRequest, Set)}
+     * 配置可信代理 IP 白名单。
+     *
      * @param request HTTP 请求
      * @return 客户端 IP 地址，request 为 null 时返回 "unknown"
      */
@@ -66,33 +86,12 @@ public class IpAddrUtils {
         if (request == null) {
             return UNKNOWN;
         }
-        String ip = request.getHeader("x-forwarded-for");
-        if (isUnknown(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (isUnknown(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (isUnknown(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (isUnknown(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        }
-        if (isUnknown(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED");
-        }
-        if (isUnknown(ip)) {
-            ip = request.getHeader("HTTP_X_CLUSTER_CLIENT_IP");
-        }
-        if (isUnknown(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
-        }
-        if (isUnknown(ip)) {
-            ip = request.getHeader("HTTP_FORWARDED_FOR");
-        }
-        if (isUnknown(ip)) {
-            ip = request.getHeader("HTTP_FORWARDED");
+        String ip = UNKNOWN;
+        for (String header : PROXY_HEADERS) {
+            ip = request.getHeader(header);
+            if (!isUnknown(ip)) {
+                break;
+            }
         }
         if (isUnknown(ip)) {
             ip = request.getRemoteAddr();
@@ -103,6 +102,50 @@ public class IpAddrUtils {
         }
 
         return getMultistageReverseProxyIp(ip);
+    }
+
+    /**
+     * 从 HTTP 请求中获取客户端真实 IP 地址（基于可信代理白名单）。
+     *
+     * <p>从 X-Forwarded-For 头部最右侧（最可信的代理）向左遍历，跳过所有属于
+     * {@code trustedProxies} 的 IP，返回第一个非可信 IP 作为真实客户端 IP。
+     * 这是 Spring Security {@code ForwardedHeaderFilter} 推荐的安全做法，
+     * 可防止攻击者伪造 X-Forwarded-For 头绕过 IP 限制。
+     *
+     * <p>典型用法：
+     * <pre>{@code
+     * Set<String> trusted = Set.of("10.0.0.1", "10.0.0.2"); // 反向代理 IP
+     * String clientIp = IpAddrUtils.getIpAddrWithTrustedProxies(request, trusted);
+     * }</pre>
+     *
+     * @param request         HTTP 请求
+     * @param trustedProxies  可信代理 IP 集合（不可为 null）
+     * @return 客户端真实 IP；无 X-Forwarded-For 头或全部为可信代理时返回 remoteAddr
+     * @since 1.0.0
+     */
+    public static String getIpAddrWithTrustedProxies(HttpServletRequest request, Set<String> trustedProxies) {
+        if (request == null) {
+            return UNKNOWN;
+        }
+        Set<String> trusted = trustedProxies == null ? Collections.emptySet() : trustedProxies;
+        String xff = request.getHeader("x-forwarded-for");
+        if (!isUnknown(xff) && xff.indexOf(',') > 0) {
+            String[] parts = xff.split(",");
+            // 从右向左遍历：跳过可信代理，取第一个非可信 IP
+            for (int i = parts.length - 1; i >= 0; i--) {
+                String candidate = parts[i].trim();
+                if (!isUnknown(candidate) && !trusted.contains(candidate)) {
+                    return LOCALHOST_IPV6.equals(candidate) ? LOCALHOST_IPV4 : candidate;
+                }
+            }
+            // 全部为可信代理，取最左侧（原始客户端，可能被伪造，但已是最佳推断）
+            String first = parts[0].trim();
+            if (!isUnknown(first)) {
+                return LOCALHOST_IPV6.equals(first) ? LOCALHOST_IPV4 : first;
+            }
+        }
+        String ip = request.getRemoteAddr();
+        return LOCALHOST_IPV6.equals(ip) ? LOCALHOST_IPV4 : ip;
     }
 
     /**
@@ -124,6 +167,10 @@ public class IpAddrUtils {
     public static boolean isInternalIp(String ip) {
         if (isUnknown(ip) || LOCALHOST_IPV4.equals(ip)) {
             return true;
+        }
+        // 前置格式校验，避免 InetAddress.getByName 触发 DNS 解析（SSRF / DNS rebinding 风险）
+        if (!validIpv4(ip) && !validIpv6(ip)) {
+            return false;
         }
         try {
             InetAddress inetAddress = InetAddress.getByName(ip);
@@ -254,7 +301,12 @@ public class IpAddrUtils {
         if (StringUtils.isEmpty(ipv6)) {
             return ipv6;
         }
-        return ipv6.replaceAll("(?i)::+", ":").toLowerCase();
+        try {
+            return InetAddress.getByName(ipv6).getHostAddress();
+        } catch (UnknownHostException e) {
+            // 非法 IPv6 降级：仅做小写化与空白裁剪，保留原语义
+            return ipv6.trim().toLowerCase();
+        }
     }
 
     /**
@@ -300,9 +352,16 @@ public class IpAddrUtils {
      * @return {@code true} 表示在网段内；解析异常返回 {@code false}
      */
     public static boolean isIpv4InRange(String ip, String networkIp, int prefix) {
+        if (prefix < 0 || prefix > 32) {
+            return false;
+        }
         try {
             long ipLong = ipToLong(ip);
             long networkLong = ipToLong(networkIp);
+            // prefix=0 时掩码应为 0，所有 IPv4 均在网段内
+            if (prefix == 0) {
+                return true;
+            }
             long mask = 0xFFFFFFFFL << (32 - prefix);
             return (ipLong & mask) == (networkLong & mask);
         } catch (Exception e) {
@@ -390,14 +449,19 @@ public class IpAddrUtils {
         if (!validIpv4(netmask)) {
             throw new IllegalArgumentException("Invalid netmask: " + netmask);
         }
-        long mask = ipToLong(netmask);
+        long mask = ipToLong(netmask) & 0xFFFFFFFFL;
         int prefix = 0;
-        while ((mask & 0xFFFFFFFFL) != 0) {
-            if ((mask & 1) == 0) {
-                throw new IllegalArgumentException("Invalid netmask: " + netmask);
+        boolean foundZero = false;
+        // 从高位向低位扫描：1 必须连续，遇到 0 后不能再出现 1
+        for (int i = 31; i >= 0; i--) {
+            if ((mask & (1L << i)) != 0) {
+                if (foundZero) {
+                    throw new IllegalArgumentException("Invalid netmask: " + netmask);
+                }
+                prefix++;
+            } else {
+                foundZero = true;
             }
-            mask >>>= 1;
-            prefix++;
         }
         return prefix;
     }
@@ -416,7 +480,8 @@ public class IpAddrUtils {
         if (prefix < 0 || prefix > 32) {
             throw new IllegalArgumentException("Invalid prefix: " + prefix);
         }
-        long mask = (0xFFFFFFFFL << (32 - prefix)) & 0xFFFFFFFFL;
+        // prefix=0 时掩码为 0，特殊处理避免 long 移位 32 位无效的问题
+        long mask = prefix == 0 ? 0L : (0xFFFFFFFFL << (32 - prefix)) & 0xFFFFFFFFL;
         return longToIp(mask);
     }
 
@@ -435,8 +500,11 @@ public class IpAddrUtils {
         if (!validIpv4(ip)) {
             throw new IllegalArgumentException("Invalid IP: " + ip);
         }
+        if (prefix < 0 || prefix > 32) {
+            throw new IllegalArgumentException("Invalid prefix: " + prefix);
+        }
         long ipLong = ipToLong(ip);
-        long mask = 0xFFFFFFFFL << (32 - prefix);
+        long mask = prefix == 0 ? 0L : (0xFFFFFFFFL << (32 - prefix)) & 0xFFFFFFFFL;
         return longToIp(ipLong & mask);
     }
 
@@ -455,8 +523,11 @@ public class IpAddrUtils {
         if (!validIpv4(ip)) {
             throw new IllegalArgumentException("Invalid IP: " + ip);
         }
+        if (prefix < 0 || prefix > 32) {
+            throw new IllegalArgumentException("Invalid prefix: " + prefix);
+        }
         long ipLong = ipToLong(ip);
-        long mask = 0xFFFFFFFFL << (32 - prefix);
+        long mask = prefix == 0 ? 0L : (0xFFFFFFFFL << (32 - prefix)) & 0xFFFFFFFFL;
         long broadcast = (ipLong & mask) | (~mask & 0xFFFFFFFFL);
         return longToIp(broadcast);
     }
@@ -482,7 +553,8 @@ public class IpAddrUtils {
                 Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
                 while (addresses.hasMoreElements()) {
                     InetAddress addr = addresses.nextElement();
-                    if (!(addr instanceof Inet6Address) || !addr.isLinkLocalAddress()) {
+                    // 统一排除链路本地（IPv4 169.154.x.x / IPv6 fe80::）和回环地址
+                    if (!addr.isLinkLocalAddress() && !addr.isLoopbackAddress()) {
                         ips.add(addr.getHostAddress());
                     }
                 }

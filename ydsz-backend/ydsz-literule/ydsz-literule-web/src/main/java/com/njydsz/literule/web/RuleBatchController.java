@@ -33,6 +33,8 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.literule.domain.enums.LiteruleResultCode;
 
 /**
  * 规则批量操作 Controller
@@ -87,11 +89,11 @@ public class RuleBatchController {
                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return BaseResponse.error("规则不存在: " + ruleCode);
+            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
         }
         RuleStatus current = parseStatusSafely(def.getStatus());
         if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
-            return BaseResponse.error("当前状态 " + current.getDesc() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
+            return BaseResponse.error(LiteruleResultCode.RULE_STATUS_INVALID, "当前状态 " + current.getDesc() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
         }
         def.setStatus(RuleStatus.ARCHIVED.name());
         def.setEnabled(false);
@@ -174,7 +176,7 @@ public class RuleBatchController {
         Integer delta = dto.getDelta();
         // @NotEmpty + @NotNull 已校验非空；delta==0 需保留手动校验（JSR-303 无原生非零约束）
         if (delta == 0) {
-            return BaseResponse.error("delta 不能为 0");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "delta 不能为 0");
         }
         int success = 0;
         List<String> failed = new ArrayList<>();

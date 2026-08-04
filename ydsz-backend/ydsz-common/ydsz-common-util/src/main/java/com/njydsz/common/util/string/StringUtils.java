@@ -309,38 +309,44 @@ public class StringUtils {
     // ==================== 命名转换方法 ====================
 
     /**
-     * 下划线命名转驼峰命名
-     * <p>user_name -> userName</p>
-     * <p>User_Name -> UserName (保留原始大小写)</p>
-     * <p>USER_NAME -> UserName (全大写转首字母大写)</p>
+     * 下划线命名转驼峰命名。
+     *
+     * <p>规则：
+     * <ul>
+     *   <li>不含下划线的字符串（如已是驼峰的 {@code userName}）保持原样返回，避免误处理</li>
+     *   <li>含下划线的字符串：下划线后的首字母大写，其余字母小写化，首字段首字母小写</li>
+     * </ul>
+     *
+     * <p>示例：
+     * <pre>
+     * toCamelCase("user_name")   -> "userName"
+     * toCamelCase("USER_NAME")   -> "userName"
+     * toCamelCase("userName")    -> "userName"   （已驼峰，保持原样）
+     * toCamelCase("User_Name")   -> "userName"
+     * </pre>
+     *
+     * @param s 输入字符串
+     * @return 驼峰命名字符串；null 返回 null
      */
     public static String toCamelCase(String s) {
         if (s == null) {
             return null;
         }
-        // 不强制 toLowerCase，保留下划线后首字母大写即可
-        // 对于全大写场景（如 USER_NAME），先 toLowerCase 再处理
-        boolean hasUpperCase = false;
-        for (int i = 0; i < s.length(); i++) {
-            if (Character.isUpperCase(s.charAt(i))) {
-                hasUpperCase = true;
-                break;
-            }
-        }
-        if (hasUpperCase) {
-            s = s.toLowerCase();
+        // 仅当字符串包含下划线时才进行驼峰转换，避免误处理已是驼峰的字符串
+        if (s.indexOf(SEPARATOR) < 0) {
+            return s;
         }
         StringBuilder sb = new StringBuilder(s.length());
-        boolean upperCase = false;
+        boolean upperNext = false;
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             if (c == SEPARATOR) {
-                upperCase = true;
-            } else if (upperCase) {
+                upperNext = true;
+            } else if (upperNext) {
                 sb.append(Character.toUpperCase(c));
-                upperCase = false;
+                upperNext = false;
             } else {
-                sb.append(c);
+                sb.append(Character.toLowerCase(c));
             }
         }
         return sb.toString();
@@ -1553,7 +1559,15 @@ public class StringUtils {
     // ==================== 敏感词过滤方法 ====================
 
     /**
-     * 脱敏处理（保留前后缀）
+     * 脱敏处理（保留前后缀）。
+     *
+     * <p>当 {@code keepPrefix + keepSuffix >= len} 时，全部字符脱敏为 {@code *}，
+     * 避免因保留长度之和大于等于原文长度导致敏感信息全部保留。
+     *
+     * @param str        原始字符串
+     * @param keepPrefix 保留前缀字符数
+     * @param keepSuffix 保留后缀字符数
+     * @return 脱敏后的字符串
      */
     public static String maskSensitive(String str, int keepPrefix, int keepSuffix) {
         if (str == null || str.isEmpty()) {

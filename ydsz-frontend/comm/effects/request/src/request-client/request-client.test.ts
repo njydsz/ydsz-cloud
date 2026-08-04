@@ -9,6 +9,7 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { BusinessError } from './business-error';
 import { RequestClient } from './request-client';
 
 describe('requestClient', () => {
@@ -61,8 +62,9 @@ describe('requestClient', () => {
       await requestClient.get('/test/error');
       expect(true).toBe(false);
     } catch (error: any) {
-      expect(error.isAxiosError).toBe(true);
-      expect(error.message).toBe('Network Error');
+      // RequestClient 把无 response 的 axios 错误封装为 BusinessError
+      expect(error).toBeInstanceOf(BusinessError);
+      expect(error.name).toBe('BusinessError');
     }
   });
 
@@ -72,8 +74,10 @@ describe('requestClient', () => {
       await requestClient.get('/test/timeout');
       expect(true).toBe(false);
     } catch (error: any) {
-      expect(error.isAxiosError).toBe(true);
-      expect(error.code).toBe('ECONNABORTED');
+      // RequestClient 把 ECONNABORTED/ETIMEDOUT 封装为 BusinessError('请求超时', { statusCode: 408 })
+      expect(error).toBeInstanceOf(BusinessError);
+      expect(error.message).toBe('请求超时');
+      expect(error.statusCode).toBe(408);
     }
   });
 

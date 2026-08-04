@@ -23,6 +23,7 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
+import com.njydsz.common.core.code.BaseResultCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -147,7 +148,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-        BaseResponse<Void> body = BaseResponse.error("403", "error.IP_BLACKLISTED");
+        BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, "error.IP_BLACKLISTED");
         body.setTraceId(traceId);
         byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);

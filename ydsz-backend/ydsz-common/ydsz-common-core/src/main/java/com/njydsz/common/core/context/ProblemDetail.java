@@ -2,6 +2,8 @@ package com.njydsz.common.core.context;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.time.Instant;
+import java.util.Map;
 
 import com.njydsz.common.core.response.BaseResponse;
 import lombok.Data;
@@ -28,21 +30,30 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
  *   <li>{@code status} — HTTP 状态码（与 BaseResponse.code 互补）</li>
  *   <li>{@code detail} — 具体错误详情（包含实例特定信息）</li>
  *   <li>{@code instance} — 问题发生的 URI（通常为请求路径）</li>
+ *   <li>{@code traceId} — 链路追踪 ID（用于日志关联）</li>
+ *   <li>{@code requestId} — 请求 ID</li>
+ *   <li>{@code timestamp} — 错误时间戳</li>
+ *   <li>{@code errorCode} — 业务错误码</li>
+ *   <li>{@code extensions} — 扩展字段（附加信息）</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 构建 ProblemDetail
+ * // 方式1: 使用 of() 工厂方法
+ * ProblemDetail problem = ProblemDetail.of(BaseResultCode.VALIDATION_FAILED, "字段 'username' 不能为空");
+ *
+ * // 方式2: 通过 BaseResponse.errorWithDetail()
+ * return BaseResponse.errorWithDetail(BaseResultCode.NOT_FOUND, "用户不存在, ID: 12345");
+ *
+ * // 方式3: 使用 Builder
  * ProblemDetail problem = ProblemDetail.builder()
  *     .type(URI.create("https://errors.ydsz.com/validation"))
  *     .title("参数校验失败")
  *     .status(400)
  *     .detail("字段 'username' 不能为空")
  *     .instance(URI.create("/api/v1/users"))
+ *     .traceId("abc-123")
  *     .build();
- *
- * // 作为 BaseResponse.data 返回
- * return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, (Object) problem);
  * }</pre>
  *
  * @author ydsz-team
@@ -52,7 +63,7 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonPropertyOrder({"type", "title", "status", "detail", "instance"})
+@JsonPropertyOrder({"type", "title", "status", "detail", "instance", "errorCode", "traceId", "requestId", "timestamp"})
 public class ProblemDetail implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -98,6 +109,43 @@ public class ProblemDetail implements Serializable {
     private URI instance;
 
     /**
+     * 链路追踪 ID
+     *
+     * <p>用于日志关联和分布式追踪。
+     */
+    private String traceId;
+
+    /**
+     * 请求 ID
+     *
+     * <p>标识单次请求的唯一 ID。
+     */
+    private String requestId;
+
+    /**
+     * 错误时间戳
+     *
+     * <p>错误发生的 UTC 时间。
+     */
+    private Instant timestamp;
+
+    /**
+     * 业务错误码
+     *
+     * <p>业务系统自定义的错误码字符串。
+     */
+    private String errorCode;
+
+    /**
+     * 扩展字段
+     *
+     * <p>用于携带附加的上下文信息。
+     */
+    private Map<String, Object> extensions;
+
+    // ==================== 工厂方法 ====================
+
+    /**
      * 快速构建方法 — 使用 ResultCode 构建
      *
      * @param resultCode 结果码
@@ -110,6 +158,8 @@ public class ProblemDetail implements Serializable {
                 .title(resultCode.getMsg())
                 .status(resultCode.getHttpStatusCode())
                 .detail(detail)
+                .errorCode(resultCode.getCode())
+                .timestamp(Instant.now())
                 .build();
     }
 
@@ -128,6 +178,46 @@ public class ProblemDetail implements Serializable {
                 .status(resultCode.getHttpStatusCode())
                 .detail(detail)
                 .instance(instance)
+                .errorCode(resultCode.getCode())
+                .timestamp(Instant.now())
+                .build();
+    }
+
+    /**
+     * 快速构建方法 — 使用基本字段构建
+     *
+     * @param type   错误类型 URI 字符串
+     * @param title  错误标题
+     * @param status HTTP 状态码
+     * @param detail 错误详情
+     * @return ProblemDetail 实例
+     */
+    public static ProblemDetail of(String type, String title, int status, String detail) {
+        return ProblemDetail.builder()
+                .type(type != null ? URI.create(type) : null)
+                .title(title)
+                .status(status)
+                .detail(detail)
+                .timestamp(Instant.now())
+                .build();
+    }
+
+    /**
+     * 快速构建方法 — 使用 URI 类型构建
+     *
+     * @param type   错误类型 URI
+     * @param title  错误标题
+     * @param status HTTP 状态码
+     * @param detail 错误详情
+     * @return ProblemDetail 实例
+     */
+    public static ProblemDetail of(URI type, String title, int status, String detail) {
+        return ProblemDetail.builder()
+                .type(type)
+                .title(title)
+                .status(status)
+                .detail(detail)
+                .timestamp(Instant.now())
                 .build();
     }
 }

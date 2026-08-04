@@ -21,8 +21,6 @@
  * @since 3.0.0
  */
 
-import { createProxySandbox, type ProxySandboxInstance } from './proxy-sandbox';
-
 /** 沙箱实例：记录一个子应用在激活期间的全局副作用 */
 export interface SandboxInstance {
   /** mount 前的 window 键快照 */
@@ -38,6 +36,8 @@ export interface SandboxInstance {
   }>;
   /** 此应用创建的定时器 ID */
   timerIds: number[];
+  /** mount 前的 document.title 快照（子应用常修改标题，unmount 时需还原） */
+  documentTitleSnapshot: string;
 }
 
 /** 记录 addEventListener 原始方法的引用，用于恢复 */
@@ -54,8 +54,10 @@ let originalClearTimeout: typeof window.clearTimeout;
 let originalClearInterval: typeof window.clearInterval;
 /** 记录 requestAnimationFrame 原始方法 */
 let originalRequestAnimationFrame: typeof window.requestAnimationFrame;
-/** 记录 cancelAnimationFrame 原始方法 */
+/** 记录 requestAnimationFrame 原始方法 */
 let originalCancelAnimationFrame: typeof window.cancelAnimationFrame;
+/** 标记：定时器 API 是否已被代理（proxyGlobals 中按环境能力设置） */
+let timersProxied = false;
 
 /**
  * 沙箱栈：支持嵌套进入。栈顶为当前激活沙箱。
@@ -92,6 +94,7 @@ export function enterSandbox(): SandboxInstance {
     valueSnapshot,
     listeners: [],
     timerIds: [],
+    documentTitleSnapshot: document.title,
   };
 
   // 仅在栈为空（首个沙箱）时代理全局 API（幂等）
@@ -133,6 +136,11 @@ export function exitSandbox(sandbox: SandboxInstance): void {
         (window as Record<string, unknown>)[key] = original;
       }
     }
+  }
+
+  // 3.1 还原 document.title（子应用常通过 watchEffect 动态修改标题）
+  if (document.title !== sandbox.documentTitleSnapshot) {
+    document.title = sandbox.documentTitleSnapshot;
   }
 
   // 4. 从栈中移除指定沙箱（支持非栈顶退出）
@@ -200,7 +208,6 @@ function proxyGlobals(): void {
     originalClearInterval = window.clearInterval.bind(window);
     originalRequestAnimationFrame = window.requestAnimationFrame.bind(window);
     originalCancelAnimationFrame = window.cancelAnimationFrame.bind(window);
-
     window.setTimeout = function proxySetTimeout(
       handler: TimerHandler,
       timeout?: number,
@@ -257,6 +264,8 @@ function proxyGlobals(): void {
       }
       originalCancelAnimationFrame(id);
     };
+
+    timersProxied = true;
   }
 }
 
@@ -265,11 +274,15 @@ function restoreGlobals(): void {
   if (originalAddEventListener) {
     window.addEventListener = originalAddEventListener;
     window.removeEventListener = originalRemoveEventListener;
-    window.setTimeout = originalSetTimeout;
-    window.setInterval = originalSetInterval;
-    window.clearTimeout = originalClearTimeout;
-    window.clearInterval = originalClearInterval;
-    window.requestAnimationFrame = originalRequestAnimationFrame;
-    window.cancelAnimationFrame = originalCancelAnimationFrame;
+    // 仅还原实际被代理过的定时器 API（happy-dom 等环境可能跳过代理）
+    if (timersProxied) {
+      window.setTimeout = originalSetTimeout;
+      window.setInterval = originalSetInterval;
+      window.clearTimeout = originalClearTimeout;
+      window.clearInterval = originalClearInterval;
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+      window.cancelAnimationFrame = originalCancelAnimationFrame;
+      timersProxied = false;
+    }
   }
 }

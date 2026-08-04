@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.code.BaseResultCode;
 
 /**
  * 规则断点调试 Controller（P0-3 落地）
@@ -60,7 +61,7 @@ public class BreakpointController {
     public BaseResponse<Set<String>> listBreakpoints() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         return BaseResponse.success(hook.getBreakpoints());
     }
@@ -77,7 +78,7 @@ public class BreakpointController {
     public BaseResponse<Void> addBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         hook.addBreakpoint(ruleCode);
         log.info("[Breakpoint] 添加断点: ruleCode={}", ruleCode);
@@ -96,7 +97,7 @@ public class BreakpointController {
     public BaseResponse<Void> removeBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         hook.removeBreakpoint(ruleCode);
         log.info("[Breakpoint] 移除断点: ruleCode={}", ruleCode);
@@ -114,7 +115,7 @@ public class BreakpointController {
     public BaseResponse<Void> clearBreakpoints() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         hook.clearBreakpoints();
         log.info("[Breakpoint] 已清空全部断点");
@@ -133,7 +134,7 @@ public class BreakpointController {
     public BaseResponse<Boolean> resume(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         boolean ok = hook.resume(ruleCode);
         return BaseResponse.success(ok);
@@ -151,7 +152,7 @@ public class BreakpointController {
     public BaseResponse<Boolean> stepOver(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         boolean ok = hook.stepOver(ruleCode);
         return BaseResponse.success(ok);
@@ -166,7 +167,7 @@ public class BreakpointController {
     public BaseResponse<Set<String>> suspendedRules() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         return BaseResponse.success(hook.getSuspendedRules());
     }
@@ -180,7 +181,7 @@ public class BreakpointController {
     public BaseResponse<List<Map<String, Object>>> snapshots() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         return BaseResponse.success(hook.getSnapshots());
     }
@@ -196,7 +197,7 @@ public class BreakpointController {
     public BaseResponse<Void> clearSnapshots() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         hook.clearSnapshots();
         return BaseResponse.success();
@@ -211,7 +212,7 @@ public class BreakpointController {
     public BaseResponse<Map<String, Object>> status() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return BaseResponse.error("断点调试器未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "断点调试器未启用");
         }
         Map<String, Object> status = new LinkedHashMap<>();
         status.put("enabled", hook.isEnabled());

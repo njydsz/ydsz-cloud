@@ -19,7 +19,7 @@ import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.model.ProblemDetail;
+import com.njydsz.common.core.context.ProblemDetail;
 
 import lombok.extern.slf4j.Slf4j;
 

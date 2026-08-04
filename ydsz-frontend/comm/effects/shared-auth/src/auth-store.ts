@@ -26,8 +26,20 @@ import { $t } from './i18n-setup';
  * import { createSharedAuthStore } from '@ydsz/shared-auth';
  * export const useAuthStore = createSharedAuthStore();
  * ```
+ *
+ * 主应用可传入回调以扩展行为（如跨标签页广播）：
+ * ```ts
+ * export const useAuthStore = createSharedAuthStore({
+ *   onLogout: (redirect) => notifyCrossTab(CROSS_TAB_EVENTS.LOGOUT, { redirect }),
+ * });
+ * ```
+ *
+ * @param options - 可选回调，允许宿主在登录/登出等关键节点注入自定义逻辑
  */
-export function createSharedAuthStore() {
+export function createSharedAuthStore(options: {
+  /** 登出时回调（在 resetAllStores 之后、路由跳转之前触发） */
+  onLogout?: (redirect: boolean) => void;
+} = {}) {
   return defineStore('auth', () => {
     const accessStore = useAccessStore();
     const tokenStore = useTokenStore();
@@ -107,6 +119,9 @@ export function createSharedAuthStore() {
       }
       resetAllStores();
       tokenStore.setLoginExpired(false);
+
+      // 宿主回调（如跨标签页广播登出事件）
+      options.onLogout?.(redirect);
 
       await router.replace({
         path: LOGIN_PATH,

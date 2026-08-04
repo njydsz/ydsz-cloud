@@ -19,6 +19,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.literule.domain.vo.VariableDefinitionVO;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.literule.domain.enums.LiteruleResultCode;
 
 /**
  * 规则变量管理 Controller
@@ -70,7 +72,7 @@ public class RuleVariableAdminController {
     public BaseResponse<VariableDefinitionVO> get(@PathVariable String varName) {
         VariableDefinition def = variableRegistry.lookup(varName);
         if (def == null) {
-            return BaseResponse.error("变量不存在: " + varName);
+            return BaseResponse.error(LiteruleResultCode.VARIABLE_DEF_NOT_FOUND, "变量不存在: " + varName);
         }
         return BaseResponse.success(toVariableVO(def));
     }
@@ -86,7 +88,7 @@ public class RuleVariableAdminController {
     @PostMapping
     public BaseResponse<VariableDefinitionVO> save(@RequestBody VariableDefinition definition) {
         if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
-            return BaseResponse.error("变量定义及 name 不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "变量定义及 name 不能为空");
         }
         variableRegistry.register(definition);
         return BaseResponse.success(toVariableVO(variableRegistry.lookup(definition.getName())));

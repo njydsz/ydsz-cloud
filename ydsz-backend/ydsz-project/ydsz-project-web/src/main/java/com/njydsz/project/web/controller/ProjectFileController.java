@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.FileStorageVO;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.core.code.BaseResultCode;
 
 /**
  * 项目附件文件管理 Controller
@@ -96,12 +97,12 @@ public class ProjectFileController {
             @RequestParam("file") MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
-            return BaseResponse.error("文件不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "文件不能为空");
         }
 
         IFileStorage storage = getStorage();
         if (storage == null) {
-            return BaseResponse.error("文件存储服务未配置");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "文件存储服务未配置");
         }
 
         String originalFilename = file.getOriginalFilename();
@@ -153,7 +154,7 @@ public class ProjectFileController {
     public BaseResponse<String> delete(@PathVariable String objectName) {
         IFileStorage storage = getStorage();
         if (storage == null) {
-            return BaseResponse.error("文件存储服务未配置");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "文件存储服务未配置");
         }
         storage.delete(DEFAULT_BUCKET, objectName);
         log.info("[ProjectFileController] 文件删除成功: objectName={}", objectName);

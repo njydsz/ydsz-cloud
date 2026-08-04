@@ -1,165 +1,17 @@
 /**
  * auth Pinia 状态管理
  *
+ * 主应用 auth store：复用 @ydsz/shared-auth 的 createSharedAuthStore 工厂，
+ * 仅通过 onLogout 回调注入跨标签页广播能力，消除重复代码。
+ *
  * @path main\src\store\auth.ts
  * @author ydsz-team
  * @since 1.0.0
  */
-import type { Recordable, UserInfo } from '@ydsz/types';
+import { createSharedAuthStore } from '@ydsz/shared-auth';
 
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { CROSS_TAB_EVENTS, notifyCrossTab } from '#/hooks/use-cross-tab-sync';
 
-import { LOGIN_PATH } from '@ydsz/constants';
-import { preferences } from '@ydsz/preferences';
-import { resetAllStores, useAccessStore, useTokenStore, useUserStore } from '@ydsz/stores';
-
-import { ElNotification } from 'element-plus';
-import { defineStore } from 'pinia';
-
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
-import { $t } from '#/locales';
-import { notifyCrossTab, CROSS_TAB_EVENTS } from '#/hooks/use-cross-tab-sync';
-
-/**
- * 认证状态管理 Store。
- *
- * @remarks
- * 负责登录/登出、令牌刷新、用户信息与权限码的获取与缓存，
- * 组合 {@link useAccessStore}/{@link useTokenStore}/{@link useUserStore} 完成认证闭环。
- */
-export const useAuthStore = defineStore('auth', () => {
-  const accessStore = useAccessStore();
-  const tokenStore = useTokenStore();
-  const userStore = useUserStore();
-  const router = useRouter();
-
-  const loginLoading = ref(false);
-
-  /**
-   * 异步处理登录操作。
-   *
-   * 调用登录接口获取令牌与用户信息，写入访问/刷新令牌与权限码，成功后跳转首页或执行回调。
-   *
-   * @param params - 登录参数（用户名、密码、验证码等）
-   * @param onSuccess - 登录成功后的可选回调；不传则跳转首页
-   * @returns 登录得到的用户信息（失败时为 null）
-   */
-  async function authLogin(
-    params: Recordable<any>,
-    onSuccess?: () => Promise<void> | void,
-  ) {
-    let userInfo: null | UserInfo = null;
-    try {
-      loginLoading.value = true;
-      const loginResult = await loginApi(params);
-      const { accessToken, refreshToken, userInfo: loginUserInfo } = loginResult;
-
-      if (accessToken) {
-        tokenStore.setAccessToken(accessToken);
-        // 存储 refreshToken 用于后续刷新
-        if (refreshToken) {
-          tokenStore.setRefreshToken(refreshToken);
-        }
-        // 记录绝对过期时间戳，供会话超时预警使用（expiresIn 单位：秒）
-        if (typeof loginResult.expiresIn === 'number' && loginResult.expiresIn > 0) {
-          tokenStore.setExpiresAt(Date.now() + loginResult.expiresIn * 1000);
-        }
-
-        // 如果登录接口已返回用户信息，直接使用；否则调接口获取
-        if (loginUserInfo) {
-          userInfo = loginUserInfo as unknown as UserInfo;
-          userStore.setUserInfo(userInfo);
-        } else {
-          userInfo = await fetchUserInfo();
-        }
-
-        // 获取权限码
-        try {
-          const accessCodes = await getAccessCodesApi();
-          accessStore.setAccessCodes(accessCodes);
-        } catch {
-          // 权限码获取失败不阻塞登录
-          accessStore.setAccessCodes([]);
-        }
-
-        if (tokenStore.loginExpired) {
-          tokenStore.setLoginExpired(false);
-        } else {
-          onSuccess
-            ? await onSuccess?.()
-            : await router.push(
-                userInfo.homePath || preferences.app.defaultHomePath,
-              );
-        }
-
-        if (userInfo?.realName) {
-          ElNotification.success({
-            title: $t('authentication.loginSuccess'),
-            message: `${$t('authentication.loginSuccessDesc')}: ${userInfo.realName}`,
-            duration: 3000,
-          });
-        }
-      }
-    } finally {
-      loginLoading.value = false;
-    }
-
-    return {
-      userInfo,
-    };
-  }
-
-  /**
-   * 退出登录。
-   *
-   * 调用登出接口（失败不阻断），重置所有状态仓库并跳转登录页。
-   * 同时广播跨标签页事件，其它标签页收到后会同步登出（不再广播，避免回环）。
-   *
-   * @param redirect - 是否携带当前路径作为 redirect 参数跳转登录页
-   */
-  async function logout(redirect: boolean = true) {
-    try {
-      await logoutApi();
-    } catch {
-      // 不做任何处理
-    }
-    resetAllStores();
-    tokenStore.setLoginExpired(false);
-
-    // F6: 跨标签页广播登出事件（notifyCrossTab 内部有防回环保护）
-    notifyCrossTab(CROSS_TAB_EVENTS.LOGOUT, { redirect });
-
-    await router.replace({
-      path: LOGIN_PATH,
-      query: redirect
-        ? {
-            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
-          }
-        : {},
-    });
-  }
-
-  /**
-   * 拉取并设置当前登录用户信息。
-   *
-   * @returns 当前用户的基础信息
-   */
-  async function fetchUserInfo() {
-    const userInfo = await getUserInfoApi();
-    userStore.setUserInfo(userInfo);
-    return userInfo;
-  }
-
-  function $reset() {
-    loginLoading.value = false;
-  }
-
-  return {
-    $reset,
-    authLogin,
-    fetchUserInfo,
-    loginLoading,
-    logout,
-  };
+export const useAuthStore = createSharedAuthStore({
+  onLogout: (redirect) => notifyCrossTab(CROSS_TAB_EVENTS.LOGOUT, { redirect }),
 });

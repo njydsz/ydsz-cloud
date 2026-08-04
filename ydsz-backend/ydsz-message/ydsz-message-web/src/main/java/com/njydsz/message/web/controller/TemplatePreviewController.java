@@ -21,6 +21,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.message.domain.enums.MessageResultCode;
 
 /**
  * 模板预览（Template Preview）Controller。
@@ -86,7 +88,7 @@ public class TemplatePreviewController {
     @PostMapping("/by-code")
     public BaseResponse<Map<String, String>> previewByCode(@RequestBody PreviewRequest req) {
         if (req == null || !StringUtils.hasText(req.getTemplateCode())) {
-            return BaseResponse.error("模板编码不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "模板编码不能为空");
         }
         MsgTemplate template = templateService.loadByCodeAndChannel(
                 req.getTemplateCode(),
@@ -94,7 +96,7 @@ public class TemplatePreviewController {
                 StringUtils.hasText(req.getLocale()) ? req.getLocale() : "zh-CN",
                 TenantContext.getTenantId());
         if (template == null) {
-            return BaseResponse.error("模板不存在: " + req.getTemplateCode());
+            return BaseResponse.error(MessageResultCode.TEMPLATE_NOT_FOUND, "模板不存在: " + req.getTemplateCode());
         }
 
         Map<String, Object> params = req.getParams() == null ? new HashMap<>() : new HashMap<>(req.getParams());
@@ -131,7 +133,7 @@ public class TemplatePreviewController {
     @PostMapping("/raw")
     public BaseResponse<String> previewRaw(@RequestBody RawPreviewRequest req) {
         if (req == null || !StringUtils.hasText(req.getTemplate())) {
-            return BaseResponse.error("模板内容不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "模板内容不能为空");
         }
         Map<String, Object> params = req.getParams() == null ? new HashMap<>() : req.getParams();
         String rendered = templateEngine.render(req.getTemplate(), params);

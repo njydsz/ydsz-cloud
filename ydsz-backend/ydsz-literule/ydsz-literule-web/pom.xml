@@ -24,6 +24,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
         </dependency>
+        <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+    
         <!-- P1-2: 显式声明 JSON 引擎依赖，避免隐式传递依赖 -->
         <dependency>
             <groupId>com.njydsz</groupId>

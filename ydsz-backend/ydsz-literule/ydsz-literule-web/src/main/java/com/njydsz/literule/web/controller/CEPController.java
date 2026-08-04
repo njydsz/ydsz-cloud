@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.core.code.BaseResultCode;
 
 /**
  * CEP 复杂事件处理 Controller（P0-2）— 模式管理 / 事件投递 / 命中查询 / 引擎状态
@@ -144,7 +145,7 @@ public class CEPController {
     public BaseResponse<List<CEPPatternVO>> listPatterns() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.error("CEP 引擎未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "CEP 引擎未启用");
         }
         return BaseResponse.success(engine.listPatterns().stream().map(this::toPatternVO).toList());
     }
@@ -162,7 +163,7 @@ public class CEPController {
     public BaseResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.error("CEP 引擎未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "CEP 引擎未启用");
         }
         try {
             engine.registerPattern(pattern);
@@ -185,7 +186,7 @@ public class CEPController {
     public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.error("CEP 引擎未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "CEP 引擎未启用");
         }
         engine.unregisterPattern(patternId);
         return BaseResponse.success();
@@ -214,7 +215,7 @@ public class CEPController {
     public BaseResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.error("CEP 引擎未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "CEP 引擎未启用");
         }
         int hitsBefore = (int) engine.totalHits();
         CEPEvent event = toEvent(body);
@@ -239,7 +240,7 @@ public class CEPController {
     public BaseResponse<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.error("CEP 引擎未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "CEP 引擎未启用");
         }
         if (events == null || events.isEmpty()) {
             return BaseResponse.success(Map.of("fed", 0, "triggeredHits", 0));
@@ -275,7 +276,7 @@ public class CEPController {
     public BaseResponse<Map<String, Object>> stats() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.error("CEP 引擎未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "CEP 引擎未启用");
         }
         return BaseResponse.success(Map.of(
                 "patternCount", engine.patternCount(),

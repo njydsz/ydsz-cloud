@@ -1003,12 +1003,15 @@ public class MapUtils {
     // ==================== 其他高级操作 ====================
 
     /**
-     * 反转 Map（键值互换）
+     * 反转 Map（键值互换）。
+     *
+     * <p>当存在重复 value 时，保留<b>最后一个</b> key（按遍历顺序）。
+     * 若需要保留所有映射关系，请使用 {@link #invertToMulti(Map)}。
      *
      * @param map 源 Map
      * @param <K> 键类型
      * @param <V> 值类型
-     * @return 反转后的 Map
+     * @return 反转后的 Map；重复 value 会被合并
      */
     public static <K, V> Map<V, K> invert(Map<K, V> map) {
         if (isEmpty(map)) {
@@ -1017,8 +1020,31 @@ public class MapUtils {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getValue,
-                        Map.Entry::getKey
+                        Map.Entry::getKey,
+                        (existing, replacement) -> replacement
                 ));
+    }
+
+    /**
+     * 反转 Map 为多值映射（一个 value 对应多个 key）。
+     *
+     * <p>当原 Map 中存在重复 value 时，所有 key 都会被保留在 List 中。
+     *
+     * @param map 源 Map
+     * @param <K> 键类型
+     * @param <V> 值类型
+     * @return 反转后的多值 Map；入参为空返回空 Map
+     * @since 1.0.0
+     */
+    public static <K, V> Map<V, List<K>> invertToMulti(Map<K, V> map) {
+        if (isEmpty(map)) {
+            return newHashMap();
+        }
+        Map<V, List<K>> result = newHashMap();
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            result.computeIfAbsent(entry.getValue(), k -> new java.util.ArrayList<>()).add(entry.getKey());
+        }
+        return result;
     }
 
     /**

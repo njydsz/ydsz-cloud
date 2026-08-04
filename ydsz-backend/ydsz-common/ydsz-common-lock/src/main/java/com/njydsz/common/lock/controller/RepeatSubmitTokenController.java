@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 
@@ -66,7 +67,7 @@ public class RepeatSubmitTokenController {
             return BaseResponse.success(token);
         } catch (IllegalStateException e) {
             log.warn("[RepeatSubmit] 生成 Token 失败 | cause={}", e.getMessage());
-            return BaseResponse.error("401", "用户未登录，无法生成 Token");
+            return BaseResponse.error(BaseResultCode.UNAUTHORIZED, "用户未登录，无法生成 Token");
         }
     }
 }

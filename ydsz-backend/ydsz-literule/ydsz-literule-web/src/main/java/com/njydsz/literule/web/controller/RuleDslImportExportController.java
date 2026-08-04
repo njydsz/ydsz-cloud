@@ -30,6 +30,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.literule.domain.enums.LiteruleResultCode;
 
 /**
  * 规则 DSL 导入导出 Controller（P3-6 DSL 语言支持）
@@ -88,7 +90,7 @@ public class RuleDslImportExportController {
         String operator = (String) request.getOrDefault("operator", "SYSTEM");
 
         if (content == null || content.isBlank()) {
-            return BaseResponse.error("DSL 内容不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
         }
 
         try {
@@ -132,7 +134,7 @@ public class RuleDslImportExportController {
 
         } catch (Exception e) {
             log.warn("[DSL] 导入失败: {}", e.getMessage());
-            return BaseResponse.error("DSL 导入失败: " + e.getMessage());
+            return BaseResponse.error(LiteruleResultCode.DSL_PARSE_ERROR, "DSL 导入失败: " + e.getMessage());
         }
     }
 
@@ -156,7 +158,7 @@ public class RuleDslImportExportController {
         }
 
         if (allRules.isEmpty()) {
-            return BaseResponse.error("没有可导出的规则");
+            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "没有可导出的规则");
         }
 
         String yaml = RuleDslExporter.exportYaml(allRules, "exported-rules",
@@ -180,7 +182,7 @@ public class RuleDslImportExportController {
     public BaseResponse<Map<String, Object>> exportSingle(@PathVariable String ruleCode) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return BaseResponse.error("规则不存在: " + ruleCode);
+            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
         }
 
         String yaml = RuleDslExporter.exportSingleRule(def);

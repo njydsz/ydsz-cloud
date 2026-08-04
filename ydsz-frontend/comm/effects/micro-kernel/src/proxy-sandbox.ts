@@ -1,23 +1,28 @@
 /**
- * Proxy 沙箱 — 实现真正的运行时隔离
+ * Proxy 沙箱 — 基于 fakeWindow 的数据隔离层
  *
- * 与快照沙箱不同，Proxy 沙箱通过 Proxy 拦截所有对 window 的读写操作，
- * 使子应用在 mount 期间的所有全局修改都发生在 fakeWindow 上，
- * 而非真实的 window 对象，从而实现真正的运行时隔离。
+ * **ESM 边界声明（重要）**：
+ * 本项目子应用通过 ESM `dynamic import()` 加载，模块代码在全局作用域执行，
+ * ESM 严格模式禁止 `with` 语句，因此无法像 qiankun/Garfish 那样用
+ * `with(fakeWindow)` 包裹子应用代码来拦截顶层全局访问。
+ *
+ * 故 Proxy 沙箱在本项目中仅提供 `fakeWindow` 数据隔离层：
+ * - 子应用通过 `mountProps` 注入的 `fakeWindow` 可用于隔离数据写入
+ * - **不拦截**子应用模块顶层对 `window`/`globalThis` 的直接读写
+ * - 强隔离需求请使用快照沙箱（默认）+ ESLint `no-restricted-globals` 约束
  *
  * **适用场景**：
- * - 多个子应用可能同时激活（keep-alive 场景）
- * - 子应用在 mount 阶段就依赖被污染的全局状态
- * - 需要更强的隔离保证
+ * - 子应用在 mount 阶段需要独立的 fakeWindow 存储隔离数据
+ * - 不需要拦截模块顶层全局访问的场景
  *
  * **性能权衡**：
  * - Proxy 拦截有一定性能开销（通常在 1-5%）
- * - 某些第三方库可能依赖真实的 window 对象（如某些 polyfill）
  * - 建议在同源子应用集群中优先使用快照沙箱，仅在必要时启用 Proxy 沙箱
  *
  * **对标实现**：
- * - qiankun proxySandbox
- * - Garfish proxySandbox
+ * - qiankun proxySandbox（含 with 执行，UMD 场景）
+ * - Garfish proxySandbox（含 with 执行，UMD 场景）
+ * - 本项目因 ESM 路线不使用 with 执行，仅保留 fakeWindow 数据隔离
  *
  * @path comm/effects/micro-kernel/src/proxy-sandbox.ts
  * @author ydsz-team
@@ -206,29 +211,4 @@ export function createProxySandbox(appName: string): ProxySandboxInstance {
   };
 }
 
-/**
- * 在 Proxy 沙箱环境中执行代码
- *
- * 使用 with 语句将代码的执行上下文切换到 fakeWindow，
- * 使代码中所有对 window 的访问都被拦截。
- *
- * @param sandbox - Proxy 沙箱实例
- * @param fn - 要在沙箱中执行的函数
- * @returns 函数执行结果
- */
-export function runInProxySandbox<T>(
-  sandbox: ProxySandboxInstance,
-  fn: () => T,
-): T {
-  sandbox.activate();
 
-  // 使用 with 语句切换上下文
-  // eslint-disable-next-line no-with
-  with (sandbox.fakeWindow) {
-    try {
-      return fn();
-    } finally {
-      // 注意：不在这里 deactivate，由调用方控制生命周期
-    }
-  }
-}

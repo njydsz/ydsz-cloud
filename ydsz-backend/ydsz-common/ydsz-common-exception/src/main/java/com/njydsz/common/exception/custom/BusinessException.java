@@ -107,27 +107,56 @@ public class BusinessException extends AbstractYdszException {
      * 使用统一结果码构造业务异常（兼容 {@link ResultCode} 体系）
      *
      * <p>用于业务模块尚未迁移到 {@link ExceptionCode}，但已实现 {@link ResultCode} 的场景。
+     * 从 v1.1.0 起，当传入的 ResultCode 同时实现 ExceptionCode 时，会优先走
+     * {@link #BusinessException(ExceptionCode)} 构造函数以获得完整的 i18n 支持。
      * 消息回退为 {@link ResultCode#getMsg()}，避免缺少国际化消息时出现纯 key。
+     *
+     * <p><b>行为变更（v1.1.0）：</b>HTTP 状态码不再硬编码为 400，
+     * 而是尊重 ResultCode 声明的 {@link ResultCode#getHttpStatusCode()} 值。
      *
      * @param resultCode 统一结果码
      */
     public BusinessException(ResultCode resultCode) {
         super();
-        init(resultCode.getCode(), resultCode.getMsg(), new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        int httpStatus = resolveHttpStatus(resultCode);
+        init(resultCode.getCode(), resultCode.getMsg(), new Object[]{}, httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
     /**
      * 使用统一结果码和自定义消息构造业务异常
+     *
+     * <p><b>行为变更（v1.1.0）：</b>HTTP 状态码不再硬编码为 400，
+     * 而是尊重 ResultCode 声明的 {@link ResultCode#getHttpStatusCode()} 值。
      *
      * @param resultCode 统一结果码
      * @param message    自定义异常消息
      */
     public BusinessException(ResultCode resultCode, String message) {
         super(message);
-        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        int httpStatus = resolveHttpStatus(resultCode);
+        initDefaults(httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
         initFields(resultCode.getCode(), resultCode.getMsg(), new Object[]{});
         this.message = message;
         this.messageResolved = true;
+    }
+
+    /**
+     * 从 ResultCode 中解析 HTTP 状态码，优先使用显式声明的值，
+     * 回退到默认 400。
+     *
+     * @param resultCode 结果码
+     * @return HTTP 状态码
+     */
+    private static int resolveHttpStatus(ResultCode resultCode) {
+        try {
+            int status = resultCode.getHttpStatusCode();
+            if (status > 0) {
+                return status;
+            }
+        } catch (Exception ignored) {
+            // 防御性编程：任何异常都回退到默认值
+        }
+        return DEFAULT_HTTP_STATUS;
     }
 
     /**

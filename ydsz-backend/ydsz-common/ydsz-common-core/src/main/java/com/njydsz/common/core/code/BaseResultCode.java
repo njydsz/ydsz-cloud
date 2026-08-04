@@ -90,18 +90,38 @@ public enum BaseResultCode implements ResultCode {
     ACCOUNT_LOCKED("A20110", "账号已锁定", 423),
     SESSION_KICKED("A20111", "账号已在其他设备登录", 401),
 
-    // ==================== B3xxxx 用户/组织/人员 ====================
+    // ==================== B3xxxx 用户/组织/人员（已弃用，请使用对应业务模块的错误码） ====================
+    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#USER_NOT_FOUND} */
+    @Deprecated
     USER_NOT_FOUND("B30001", "用户不存在", 404),
+    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode} 中对应错误码 */
+    @Deprecated
     PASSWORD_INCORRECT("B30002", "密码错误", 401),
+    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#USER_DISABLED} */
+    @Deprecated
     USER_DISABLED("B30003", "用户已停用", 403),
+    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#USER_LOCKED} */
+    @Deprecated
     USER_LOCKED("B30004", "用户已被锁定", 423),
+    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#USERNAME_DUPLICATE} */
+    @Deprecated
     USERNAME_DUPLICATE("B30005", "用户名已存在", 409),
+    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#DEPARTMENT_NOT_FOUND} */
+    @Deprecated
     DEPARTMENT_NOT_FOUND("B30101", "部门不存在", 404),
+    /** @deprecated 请使用 {@code com.njydsz.userinfo.domain.enums.UserInfoResultCode#EMPLOYEE_NOT_FOUND} */
+    @Deprecated
     EMPLOYEE_NOT_FOUND("B30201", "员工不存在", 404),
 
-    // ==================== B7xxxx 工作流/审批 ====================
+    // ==================== B7xxxx 工作流/审批（已弃用，请使用对应业务模块的错误码） ====================
+    /** @deprecated 请使用 {@code com.njydsz.workflow.domain.enums.WorkflowResultCode} 中对应错误码 */
+    @Deprecated
     WORKFLOW_NOT_FOUND("B70001", "流程不存在", 404),
+    /** @deprecated 请使用 {@code com.njydsz.workflow.domain.enums.WorkflowResultCode} 中对应错误码 */
+    @Deprecated
     WORKFLOW_REJECT("B70002", "流程被驳回", 400),
+    /** @deprecated 请使用 {@code com.njydsz.workflow.domain.enums.WorkflowResultCode} 中对应错误码 */
+    @Deprecated
     WORKFLOW_NO_PERMISSION("B70003", "无审批权限", 403),
 
     // ==================== C9xxxx 系统/未知 ====================

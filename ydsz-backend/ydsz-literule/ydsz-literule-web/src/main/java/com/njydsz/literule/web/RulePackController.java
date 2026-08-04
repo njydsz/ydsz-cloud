@@ -38,6 +38,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.common.core.code.BaseResultCode;
 
 /**
  * 规则集市场 Controller
@@ -228,7 +229,7 @@ public class RulePackController {
             @RequestBody Map<String, Object> request) {
         RuleStressTestService svc = ruleStressTestServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.error("规则压测服务未启用");
+            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "规则压测服务未启用");
         }
         String ruleCode = (String) request.get("ruleCode");
         if (ruleCode != null && ruleCode.isBlank()) ruleCode = null;
@@ -247,7 +248,7 @@ public class RulePackController {
         int iterations = toInt(request.get("iterations"), 1000);
         int warmupIterations = toInt(request.get("warmupIterations"), 100);
         if (factsList == null || factsList.isEmpty()) {
-            return BaseResponse.error("factsList 不能为空");
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "factsList 不能为空");
         }
         return BaseResponse.success(svc.run(ruleCode, factsList, threads, iterations, warmupIterations));
     }

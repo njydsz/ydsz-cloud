@@ -6,4 +6,4 @@
  * @since 1.0.0
  */
 export * from './globals';
-export * from './ydsz';
+export * from './remi';

@@ -46,6 +46,8 @@ import com.njydsz.literule.server.version.RuleVersionDiffService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.literule.domain.enums.LiteruleResultCode;
 
 /**
  * 规则管理核心 Controller
@@ -185,7 +187,7 @@ public class RuleAdminController {
         RuleVersion newV = versions.stream().filter(v -> v.getVersion() == newVersion).findFirst().orElse(null);
 
         if (oldV == null || newV == null) {
-            return BaseResponse.error("版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
+            return BaseResponse.error(LiteruleResultCode.RULE_VERSION_NOT_FOUND, "版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
         }
 
         try {
@@ -195,7 +197,7 @@ public class RuleAdminController {
             return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(diffService.diff(oldDef, newDef)));
         } catch (Exception e) {
             log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}", ruleCode, oldVersion, newVersion, e);
-            return BaseResponse.error("版本 Diff 解析失败: " + e.getMessage());
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "版本 Diff 解析失败: " + e.getMessage());
         }
     }
 
@@ -333,7 +335,7 @@ public class RuleAdminController {
                                                       @Valid @RequestBody RuleABTestDTO dto) {
         RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);
         if (currentDef == null) {
-            return BaseResponse.error("规则不存在: " + ruleCode);
+            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
         }
 
         // 构建候选规则定义（基于当前规则，覆盖候选字段）

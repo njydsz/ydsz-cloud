@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
+import com.njydsz.common.core.code.BaseResultCode;
 
 /**
  * 规则审计日志查询接口（P3-5）
@@ -121,7 +122,7 @@ public class RuleAuditLogController {
             AuditAction auditAction = AuditAction.valueOf(action.toUpperCase());
             return BaseResponse.success(auditLogService.queryByAction(auditAction, limit).stream().map(this::toAuditLogVO).toList());
         } catch (IllegalArgumentException e) {
-            return BaseResponse.error("非法的操作类型: " + action
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "非法的操作类型: " + action
                     + "，合法值: CREATE / UPDATE / TOGGLE / STATUS_CHANGE / ROLLBACK / APPROVE / REJECT / IMPORT / EXPORT / DELETE / DRY_RUN / STRESS_TEST / REPLAY");
         }
     }
@@ -148,7 +149,7 @@ public class RuleAuditLogController {
             LocalDateTime end = LocalDateTime.parse(endTime);
             return BaseResponse.success(auditLogService.queryByTimeRange(start, end, limit).stream().map(this::toAuditLogVO).toList());
         } catch (Exception e) {
-            return BaseResponse.error("时间格式错误，请使用 ISO 格式（如 2026-07-01T00:00:00）: " + e.getMessage());
+            return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "时间格式错误，请使用 ISO 格式（如 2026-07-01T00:00:00）: " + e.getMessage());
         }
     }
 

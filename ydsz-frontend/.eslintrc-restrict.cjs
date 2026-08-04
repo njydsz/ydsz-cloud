@@ -105,5 +105,56 @@ module.exports = {
         ],
       },
     },
+
+    // ── 子应用禁止顶层直接写 window/globalThis（沙箱边界守卫）──
+    // ESM 微前端下 Proxy 沙箱无法拦截模块顶层全局写入，
+    // 配合快照沙箱 + 此 ESLint 规则约束子应用不污染全局。
+    {
+      files: ['apps/*/src/**/*.{ts,vue,tsx}'],
+      rules: {
+        'no-restricted-syntax': [
+          'warn',
+          {
+            // 禁止 window.xxx = yyy 形式的顶层全局写入
+            selector:
+              "ExpressionStatement > AssignmentExpression[left.type='MemberExpression'][left.object.name='window']",
+            message:
+              '禁止直接写 window 属性（微前端沙箱边界）。请使用模块级变量或 Pinia store 管理状态；如确需全局共享，请通过 @ydsz/micro-runtime 的 globalStateAPI 通信',
+          },
+          {
+            // 禁止 globalThis.xxx = yyy 形式的顶层全局写入
+            selector:
+              "ExpressionStatement > AssignmentExpression[left.type='MemberExpression'][left.object.name='globalThis']",
+            message:
+              '禁止直接写 globalThis 属性（微前端沙箱边界）。请使用模块级变量或 Pinia store 管理状态',
+          },
+        ],
+      },
+    },
+
+    // ── 子应用 api/*.ts 业务封装禁止直接用 requestClient，应走 sdkClient ──
+    // 除 sdk-client.ts / request.ts / index.ts / core/ 目录外，
+    // 业务 API 文件不得直接 import requestClient，须通过 #/api/sdk-client 的 apiClient 调用，
+    // 以保证与后端 OpenAPI 契约的类型安全对齐。warn 级别，不阻断现有代码。
+    {
+      files: ['apps/*/src/api/*.ts'],
+      excludedFiles: [
+        'apps/*/src/api/sdk-client.ts',
+        'apps/*/src/api/request.ts',
+        'apps/*/src/api/index.ts',
+      ],
+      rules: {
+        'no-restricted-syntax': [
+          'warn',
+          {
+            // 仅命中 import { requestClient } from '#/api/request' 中的 requestClient 说明符
+            selector:
+              "ImportDeclaration[source.value='#/api/request'] > ImportSpecifier[imported.name='requestClient']",
+            message:
+              '禁止直接从 #/api/request 导入 requestClient，请通过 #/api/sdk-client 导出的 apiClient 进行类型安全调用（schema 由 gen-api.mjs 自动生成）',
+          },
+        ],
+      },
+    },
   ],
 };
