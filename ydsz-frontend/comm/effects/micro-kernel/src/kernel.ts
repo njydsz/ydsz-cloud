@@ -475,6 +475,9 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       // 启动路由监听（含 history 补丁）
       routerSyncCleanup = startRouterSync(apps, options);
 
+      // P0-P2: 页面切到后台时自动释放保活实例，减少后台内存占用
+      visibilityCleanup = setupVisibilityAutoRelease();
+
       // === S1 修复：预加载只拉取 ESM 模块与样式，不执行 mount ===
       // loadApp 完成的资源会进入浏览器 HTTP / ESM 缓存，
       // 二次激活时仅差 mount 耗时，且不会篡改 activeAppName
@@ -568,6 +571,8 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
     async _stop() {
       routerSyncCleanup?.();
       routerSyncCleanup = null;
+      visibilityCleanup?.();
+      visibilityCleanup = null;
 
       for (const instance of getAllInstances()) {
         if (instance.status === 'MOUNTED') {
