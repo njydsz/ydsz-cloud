@@ -55,6 +55,8 @@ export {
   getErrorFallbackMessagesByLocale,
   setErrorFallbackMessages,
 } from './error-boundary';
+// v3.7.0: 三级降级决策 — 自动静默重试 / 占重试计数读写
+export { decideDegradationLevel, getRetryCount, getNextAutoRetryDelay, resetRetryCount, setRetryCount } from './error-boundary';
 export type { ManifestPluginOptions, ManifestPluginRoute } from './vite-plugin-manifest';
 export type { SandboxInstance } from './sandbox';
 export type { ProxySandboxInstance } from './proxy-sandbox';
@@ -67,3 +69,5 @@ export type { ErrorFallbackMessages } from './error-boundary';
 export type { LoadOptions, LoadResult, Manifest, ManifestRoute } from './loader';
 // v3.7.0: 远程注册表适配器 — 支持运行时拉取子应用配置
 export { clearRegistryCache, refreshRegistry, resolveAppEntry, resolveRegistry } from './registry-adapter';
+// v3.7.0: Speculation Rules API 集成 — 浏览器原生预取增强
+export { applyPrefetchBoost, injectSpeculationRules, isSpeculationRulesSupported, removeSpeculationRules } from './speculation-rules';

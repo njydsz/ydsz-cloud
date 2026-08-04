@@ -1,4 +1,4 @@
-package com.njydsz.gateway.filter;
+﻿package com.njydsz.gateway.filter;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,10 +18,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -120,7 +120,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         long startTime = System.currentTimeMillis();
         String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
         if (traceId == null || traceId.isBlank()) {
-            traceId = UUIDUtils.simpleUuid();
+            traceId = TraceIdGenerator.generateTraceId();
         }
 
         final String finalTraceId = traceId;
@@ -262,7 +262,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
      * @return 非 null 的 traceId
      */
     private String safeTraceId(String traceId) {
-        return traceId != null ? traceId : UUID.randomUUID().toString().replace("-", "");
+        return traceId != null ? traceId : TraceIdGenerator.generateTraceId();
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.gateway.filter;
+﻿package com.njydsz.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -21,11 +21,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.IpWhitelistProperties;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -204,7 +204,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
      */
     private Mono<Void> forbidden(ServerWebExchange exchange) {
         // 复用 TracerUtils 生成链路追踪 ID，便于日志关联
-        String traceId = UUIDUtils.simpleUuid();
+        String traceId = TraceIdGenerator.generateTraceId();
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);

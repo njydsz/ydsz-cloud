@@ -1,4 +1,4 @@
-package com.njydsz.gateway.config;
+﻿package com.njydsz.gateway.config;
 
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +17,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.util.id.UUIDUtils;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -94,7 +94,7 @@ public class GatewayErrorConfig {
 
             String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
             if (traceId == null || traceId.isBlank()) {
-                traceId = UUIDUtils.simpleUuid();
+                traceId = TraceIdGenerator.generateTraceId();
             }
 
             BaseResponse<Void> body = BaseResponse.error(String.valueOf(bizCode), message);

@@ -11,7 +11,6 @@ import com.njydsz.common.core.constant.HeaderConstants;
  * <ul>
  *   <li>令牌标识：Authentication、补充令牌标识</li>
  *   <li>令牌前缀：如 "ydsz" 用于标识系统</li>
- *   <li>回调URL参数名</li>
  * </ul>
  *
  * @author ydsz-team
@@ -35,9 +34,4 @@ public final class TokenConstants {
 
     /** 令牌前缀 */
     public static final String PREFIX = "ydsz";
-
-    // ==================== 回调URL参数常量 ====================
-
-    /** OAuth2回调地址参数名 */
-    public static final String REDIRECT_URL = "redirect_url";
 }

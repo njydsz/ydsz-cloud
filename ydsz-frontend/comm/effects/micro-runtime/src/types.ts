@@ -145,6 +145,18 @@ export interface StartOptions {
    */
   registry?: 'static' | 'remote' | 'auto';
   /**
+   * 预加载策略模式（v3.7.0 新增）。
+   *
+   * - `eager`：立即注入 Speculation Rules + 全量预加载，适用于高速网络桌面端
+   * - `lazy`（默认）：idle 时预加载 + 弱网跳过，节省带宽
+   * - `never`：不预加载（用户手动点击菜单访问）
+   *
+   * 未传入时内核取 `shouldPrefetchByStrategy('lazy')` 结果。
+   *
+   * @since 3.7.0
+   */
+  prefetchStrategy?: 'eager' | 'lazy' | 'never';
+  /**
    * 自定义注册表获取函数（覆盖默认 resolveRegistry）。
    *
    * 用于测试或需要自定义获取逻辑（如从不同端点、带鉴权）的场景。

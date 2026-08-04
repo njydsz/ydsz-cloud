@@ -29,7 +29,17 @@ import type {
 } from '@ydsz/micro-runtime';
 import { clearRegistryCache, resolveAppEntry, resolveRegistry } from './registry-adapter';
 
-import { clearDegraded, isDegraded, markDegraded, renderErrorFallback, resetRetryCount } from './error-boundary';
+import {
+  clearDegraded,
+  decideDegradationLevel,
+  getRetryCount,
+  getNextAutoRetryDelay,
+  isDegraded,
+  markDegraded,
+  renderErrorFallback,
+  resetRetryCount,
+  setRetryCount,
+} from './error-boundary';
 import {
   activateApp,
   createAppInstance,
@@ -46,6 +56,8 @@ import { getVersionManager } from './version-manager';
 import { getPreloadManager } from './preload-strategy';
 import { preloadManifest } from './link-hints';
 import { createLogger } from '@ydsz-core/shared/utils';
+import { applyPrefetchBoost, removeSpeculationRules } from './speculation-rules';
+import type { MicroAppEntry } from '@ydsz/micro-runtime';
 
 /** 模块级日志器 */
 const logger = createLogger('MicroKernel');
@@ -361,9 +373,33 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       window.dispatchEvent(new CustomEvent('micro-kernel:after-mount', { detail: { appName: config.name } }));
     } catch (err) {
       logger.error(`Failed to activate ${config.name}:`, err);
-      markDegraded(config.name);
-      // v3.1: onRetry 回调使「重试」按钮重新激活子应用而非整页刷新
-      renderErrorFallback(config, resolveContainer(config.container), () => switchToApp(config, options));
+
+      // === v3.7.0: 三级降级决策 ===
+      const level = decideDegradationLevel(config.name);
+
+      if (level === 'auto-retry') {
+        // 第一级：静默自动重试（不展示 UI，应对 CDN 偶发抖动）
+        const delay = getNextAutoRetryDelay(config.name);
+        // 递增重试计数器，防止无限自动重试（下次 decideDegradationLevel 将读到增加后的值）
+        setRetryCount(config.name, getRetryCount(config.name) + 1);
+        logger.info(`Auto-retry ${config.name} after ${Math.round(delay)}ms (silent)...`);
+        setTimeout(() => {
+          void switchToApp(config, options);
+        }, delay);
+        // 不派发 error 事件：骨架屏保持显示，等待自动重试结果
+        return;
+      }
+
+      if (level === 'show-ui') {
+        // 第二级：展示占位 UI，允许用户手动重试
+        renderErrorFallback(config, resolveContainer(config.container), () =>
+          switchToApp(config, options));
+      } else {
+        // 第三级：超限 → 标记降级 + 整页跳转兜底
+        markDegraded(config.name);
+        renderErrorFallback(config, resolveContainer(config.container), () =>
+          switchToApp(config, options));
+      }
 
       // 派发 error 事件，触发骨架屏隐藏
       window.dispatchEvent(new CustomEvent('micro-kernel:error', { detail: { appName: config.name, error: String(err) } }));
@@ -515,6 +551,27 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       // P0-P2: 页面切到后台时自动释放保活实例，减少后台内存占用
       visibilityCleanup = setupVisibilityAutoRelease();
 
+      // === v3.7.0: Speculation Rules API 预加载增强 ===
+      // prefetchStrategy 控制：eager / lazy(默认) / never
+      // 将 apps 映射为 MicroAppEntry 供 applyPrefetchBoost 使用
+      if (options?.prefetchStrategy !== 'never') {
+        const appEntries: MicroAppEntry[] = apps.map((a) => ({
+          name: a.name,
+          packageName: `@ydsz/${a.name}`,
+          activeRule: typeof a.activeRule === 'string' ? a.activeRule : `/${a.name}`,
+          redirect: typeof a.activeRule === 'string' ? `${a.activeRule}/` : `/${a.name}/`,
+          title: a.name,
+          icon: 'lucide:box',
+          order: 100,
+          devPort: 5601,
+          entry: a.entry,
+          skeletonType: 'default',
+          sandbox: a.sandbox,
+        }));
+        const boostResult = applyPrefetchBoost(appEntries, options?.prefetchStrategy ?? 'lazy');
+        logger.debug(`Prefetch boost: ${boostResult}`);
+      }
+
       // === S1 修复：预加载只拉取 ESM 模块与样式，不执行 mount ===
       // loadApp 完成的资源会进入浏览器 HTTP / ESM 缓存，
       // 二次激活时仅差 mount 耗时，且不会篡改 activeAppName
@@ -633,6 +690,8 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       // P0-A2: 重置 scheduler / loader 模块级状态，避免上一轮实例残留
       resetScheduler();
       clearManifestCache();
+      // v3.7.0: 清理已注入的 Speculation Rules
+      removeSpeculationRules();
 
       clearDegraded();
       logger.info('Stopped');

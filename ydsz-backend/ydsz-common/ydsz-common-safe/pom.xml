@@ -14,11 +14,6 @@
     </parent>
 
     <dependencies>
-        <!--公共依赖-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-core</artifactId>
-        </dependency>
         <!-- ydsz-common-json（YdszJson 引擎，替代 Jackson） -->
         <dependency>
             <groupId>com.njydsz</groupId>

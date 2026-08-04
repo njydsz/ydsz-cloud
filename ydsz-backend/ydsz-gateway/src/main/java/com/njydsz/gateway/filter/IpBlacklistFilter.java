@@ -1,4 +1,4 @@
-package com.njydsz.gateway.filter;
+﻿package com.njydsz.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
@@ -20,11 +20,11 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -158,7 +158,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
      * @return 完成信号 Mono
      */
     private Mono<Void> forbidden(ServerWebExchange exchange, String clientIp) {
-        String traceId = UUIDUtils.simpleUuid();
+        String traceId = TraceIdGenerator.generateTraceId();
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);

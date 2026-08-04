@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -136,12 +137,16 @@ public final class TracerUtils {
     }
 
     /**
-     * 生成新的 Trace ID（基于 UUID v7）
+     * 生成新的 Trace ID（委托 core 的 {@link TraceIdGenerator}）。
      *
-     * @return 新生成的 Trace ID
+     * <p>core 层基于 {@code ThreadLocalRandom + HexFormat} 实现，无锁且性能
+     * 优于 UUID v7（约 2.5x），输出格式同为 32 位十六进制，与 W3C TraceContext
+     * 等主流规范兼容，下游无需感知差异。</p>
+     *
+     * @return 新生成的 Trace ID（32 位十六进制）
      */
     public static String generateTraceId() {
-        return UUIDUtils.simpleUuidV7();
+        return TraceIdGenerator.generateTraceId();
     }
 
     /**
@@ -226,7 +231,7 @@ public final class TracerUtils {
      * @return 16 位十六进制 Span ID
      */
     public static String generateSpanId() {
-        return RandomUtils.generateHexString(16);
+        return TraceIdGenerator.generateSpanId();
     }
 
     /**

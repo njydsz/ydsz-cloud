@@ -1,4 +1,4 @@
-package com.njydsz.gateway.filter;
+﻿package com.njydsz.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -23,7 +23,6 @@ import org.springframework.web.server.ServerWebExchange;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
@@ -31,6 +30,7 @@ import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
 import com.njydsz.gateway.config.SecurityHeadersProperties;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -204,7 +204,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         // 避免多个过滤器各自生成独立 traceId 导致链路追踪断裂
         String existingTraceId = request.getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
         final String traceId = (existingTraceId != null && !existingTraceId.isBlank())
-                ? existingTraceId : UUIDUtils.simpleUuid();
+                ? existingTraceId : TraceIdGenerator.generateTraceId();
 
         // 统一写入 traceId 到响应头，确保所有响应（成功/失败/OPTIONS/白名单）都携带链路追踪 ID
         exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);

@@ -18,11 +18,6 @@
   </properties>
 
   <dependencies>
-    <!--common-core-->
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-core</artifactId>
-    </dependency>
     <!--common-util（传递引入 common-json、SLF4J 等）-->
     <dependency>
       <groupId>com.njydsz</groupId>

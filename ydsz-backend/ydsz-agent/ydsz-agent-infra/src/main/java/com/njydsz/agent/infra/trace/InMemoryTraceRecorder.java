@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
 
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     @Override
     public String startTrace(String conversationId, String agentId) {
         evictExpiredTraces();
-        String traceId = UUID.randomUUID().toString();
+        String traceId = TraceIdGenerator.generateTraceId();
         traces.put(traceId, new ArrayList<>());
         traceStatus.put(traceId, "RUNNING");
         traceMetas.put(traceId, new TraceMeta(traceId, conversationId, agentId, LocalDateTime.now()));

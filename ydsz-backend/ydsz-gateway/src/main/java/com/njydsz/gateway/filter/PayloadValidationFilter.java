@@ -1,4 +1,4 @@
-package com.njydsz.gateway.filter;
+﻿package com.njydsz.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 
@@ -17,9 +17,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -138,7 +138,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.BAD_REQUEST);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        String traceId = UUIDUtils.simpleUuid();
+        String traceId = TraceIdGenerator.generateTraceId();
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.BAD_REQUEST, message);
         body.setTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);

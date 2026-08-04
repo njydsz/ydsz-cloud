@@ -1,4 +1,4 @@
-package com.njydsz.gateway.filter;
+﻿package com.njydsz.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -19,9 +19,9 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -180,7 +180,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        String traceId = UUIDUtils.simpleUuid();
+        String traceId = TraceIdGenerator.generateTraceId();
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.UNAUTHORIZED, "API Key 缺失，请提供 X-API-Key 或 api_key 参数");
         body.setTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
@@ -200,7 +200,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        String traceId = UUIDUtils.simpleUuid();
+        String traceId = TraceIdGenerator.generateTraceId();
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, "API Key 无效");
         body.setTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);

@@ -1,4 +1,4 @@
-package com.njydsz.gateway.config;
+﻿package com.njydsz.gateway.config;
 
 import java.nio.charset.StandardCharsets;
 
@@ -18,7 +18,7 @@ import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.util.id.UUIDUtils;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +59,7 @@ public class GatewaySentinelConfig {
     @PostConstruct
     public void init() {
         BlockRequestHandler handler = (exchange, ex) -> {
-            String traceId = UUIDUtils.simpleUuid();
+            String traceId = TraceIdGenerator.generateTraceId();
 
             HttpStatus httpStatus;
             int bizCode;

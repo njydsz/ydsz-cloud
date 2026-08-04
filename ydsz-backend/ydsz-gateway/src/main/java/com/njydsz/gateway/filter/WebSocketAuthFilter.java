@@ -1,4 +1,4 @@
-package com.njydsz.gateway.filter;
+﻿package com.njydsz.gateway.filter;
 
 import java.util.Set;
 import java.util.UUID;
@@ -14,11 +14,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.auth.model.UserInfo;
-import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -156,7 +156,7 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
         String permsStr = "";
 
         // P0-9: traceId 统一由网关生成（不信任客户端传入的 X-Trace-Id）
-        String traceId = UUIDUtils.simpleUuid();
+        String traceId = TraceIdGenerator.generateTraceId();
 
         // P0-1 + P0-6: 生成 nonce 与签名（与 AuthGlobalFilter 一致）
         String nonce = UUID.randomUUID().toString().replace("-", "");

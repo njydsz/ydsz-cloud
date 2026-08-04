@@ -99,6 +99,28 @@ export {
   type DeleteFetcher,
 } from './composables/use-crud-table';
 
+// 大数据量下拉选择器
+export { default as VirtualSelect } from './components/virtual-select.vue';
+
+// 通用虚拟列表
+export { default as VirtualList } from './components/virtual-list.vue';
+
+// 用户操作引导组件
+export { default as AppTour } from './components/app-tour.vue';
+
+// 引导 composable
+export {
+  useAppTour,
+  type AppTourOptions,
+  type TourStep,
+} from './composables/use-app-tour';
+
+// 移动端响应式适配 composable
+export {
+  useResponsive,
+  type ResponsiveColumn,
+} from './composables/use-responsive';
+
 // ===== 统一适配器（消除 9 个子应用的重复代码） =====
 export {
   initSetupYDSZForm,

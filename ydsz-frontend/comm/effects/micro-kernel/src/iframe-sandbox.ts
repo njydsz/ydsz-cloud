@@ -70,6 +70,25 @@ export interface IframeSandboxInstance {
    * @returns 取消注册函数
    */
   onChildMessage: (handler: (payload: unknown) => void) => () => void;
+  /**
+   * 主应用调用子应用暴露的方法（RPC request-response 模式）。
+   *
+   * @since 3.6.1
+   * @param method - 子应用通过 __MICRO_REGISTER_API__ 注册的方法名
+   * @param args - 调用参数
+   * @returns 子应用返回值（支持 Promise）
+   */
+  callRpc: (method: string, args?: unknown[]) => Promise<unknown>;
+  /**
+   * 注册主应用 API，供子应用通过 __MICRO_CALL_MAIN__ 调用。
+   *
+   * @since 3.6.1
+   * @param handlers - method → 处理函数映射
+   * @returns 取消注册函数
+   */
+  registerMainApi: (
+    handlers: Record<string, (...args: any[]) => unknown>,
+  ) => () => void;
 }
 
 /** iframe 默认样式：撑满容器、无边框 */
@@ -91,10 +110,38 @@ const BRIDGE_MARK = '__MICRO_KERNEL_BRIDGE__';
  *
  * - `state-sync`：主 → 子，globalState 快照同步
  * - `state-set`：子 → 主，子应用调用 setGlobalState
+ * - `rpc-call`：主 → 子，RPC 调用（request-response 模式）
+ * - `rpc-result`：子 → 主，RPC 调用结果
  *
  * @since 3.6.0
  */
-type BridgeMessageType = 'state-set' | 'state-sync';
+type BridgeMessageType =
+  | 'state-set'
+  | 'state-sync'
+  | 'rpc-call'
+  | 'rpc-result';
+
+/** RPC 调用消息体 */
+interface RpcCallPayload {
+  /** 方法名（子应用在 iframe 中暴露） */
+  method: string;
+  /** 调用参数 */
+  args: unknown[];
+  /** 调用 ID，用于匹配响应 */
+  callId: string;
+}
+
+/** RPC 结果消息体 */
+interface RpcResultPayload {
+  /** 调用 ID（与请求一致） */
+  callId: string;
+  /** 是否成功 */
+  ok: boolean;
+  /** 返回值（ok=true 时） */
+  result?: unknown;
+  /** 错误信息（ok=false 时） */
+  error?: string;
+}
 
 /** 桥接消息结构 */
 interface BridgeMessage<T = unknown> {
@@ -123,9 +170,13 @@ function isBridgeMessage(data: unknown): data is BridgeMessage {
  * - 收到 `state-sync` 消息时，将 payload 写入 `window.__MICRO_GLOBAL_STATE__`
  * - 暴露 `window.__MICRO_SET_GLOBAL_STATE__(patch)` 供子应用调用，
  *   该方法通过 postMessage 回传 `state-set` 给主应用
+ * - 暴露 `window.__MICRO_CALL_MAIN__(method, args)`：子 → 主 RPC 调用（Promise 化）
+ * - 暴露 `window.__MICRO_REGISTER_API__(handlers)`：注册子应用 API，供主应用调用
+ * - 监听 `rpc-call` 消息：主 → 子 RPC 调用，匹配已注册的 handler 并回传结果
  *
  * 子应用代码通过 `mountProps.iframeWindow.__MICRO_GLOBAL_STATE__` 读取同步过来的状态，
- * 通过 `mountProps.iframeWindow.__MICRO_SET_GLOBAL_STATE__({ key: value })` 回写。
+ * 通过 `mountProps.iframeWindow.__MICRO_SET_GLOBAL_STATE__({ key: value })` 回写，
+ * 通过 `mountProps.iframeWindow.__MICRO_CALL_MAIN__('method', [args])` 调用主应用能力。
  *
  * @since 3.6.0
  * @param iframeWin - iframe 的 contentWindow
@@ -148,12 +199,87 @@ function injectBridgeScript(iframeWin: Window): void {
         }, '*');
       };
 
-      // 监听主应用发来的 state-sync 消息
+      // ===== RPC 协议 v3.6.1 增强 =====
+      // 子应用注册给主应用调用的 API 处理器
+      window.__MICRO_REGISTERED_API__ = {};
+      window.__MICRO_REGISTER_API__ = function(handlers) {
+        window.__MICRO_REGISTERED_API__ = handlers || {};
+      };
+
+      // 子应用 → 主应用 RPC 调用（返回 Promise）
+      var __rpcSeq__ = 0;
+      var __pendingCalls__ = {};
+      window.__MICRO_CALL_MAIN__ = function(method, args) {
+        return new Promise(function(resolve, reject) {
+          var callId = 'm' + (++__rpcSeq__);
+          __pendingCalls__[callId] = { resolve: resolve, reject: reject };
+          window.parent.postMessage({
+            ${BRIDGE_MARK}: true,
+            type: 'rpc-call',
+            payload: { method: method, args: args || [], callId: callId }
+          }, '*');
+        });
+      };
+
+      // 主 → 子 RPC 调用处理：执行后回传结果
+      window.__MICRO_EXECUTE_RPC__ = function(payload) {
+        var handler = window.__MICRO_REGISTERED_API__[payload.method];
+        var result;
+        var ok = true;
+        var error;
+        if (typeof handler !== 'function') {
+          ok = false;
+          error = 'RPC method not found: ' + payload.method;
+        } else {
+          try {
+            result = handler.apply(null, payload.args || []);
+          } catch (e) {
+            ok = false;
+            error = String(e && e.message || e);
+          }
+        }
+        // 支持 Promise 返回值
+        if (ok && result && typeof result.then === 'function') {
+          result.then(function(value) {
+            window.parent.postMessage({
+              ${BRIDGE_MARK}: true,
+              type: 'rpc-result',
+              payload: { callId: payload.callId, ok: true, result: value }
+            }, '*');
+          }).catch(function(err) {
+            window.parent.postMessage({
+              ${BRIDGE_MARK}: true,
+              type: 'rpc-result',
+              payload: { callId: payload.callId, ok: false, error: String(err && err.message || err) }
+            }, '*');
+          });
+          return;
+        }
+        window.parent.postMessage({
+          ${BRIDGE_MARK}: true,
+          type: 'rpc-result',
+          payload: { callId: payload.callId, ok: ok, result: result, error: error }
+        }, '*');
+      };
+
+      // 监听主应用发来的消息
       window.addEventListener('message', function(event) {
         var data = event.data;
         if (!data || data.${BRIDGE_MARK} !== true) return;
         if (data.type === 'state-sync') {
           window.__MICRO_GLOBAL_STATE__ = data.payload || {};
+        } else if (data.type === 'rpc-call') {
+          window.__MICRO_EXECUTE_RPC__(data.payload);
+        } else if (data.type === 'rpc-result') {
+          var pending = __pendingCalls__[data.payload.callId];
+          if (pending) {
+            delete __pendingCalls__[data.payload.callId];
+            if (data.payload.ok) {
+              pending.resolve(data.payload.result);
+            } else {
+              pending.reject(new Error(data.payload.error || 'RPC call failed'));
+            }
+          }
         }
       });
     })();
@@ -228,12 +354,22 @@ export function createIframeSandbox(
   // v3.6.0: 主侧消息处理器集合（子 → 主）
   const childMessageHandlers = new Set<(payload: unknown) => void>();
 
+  // v3.6.1: 主 → 子 RPC 待响应 Map（callId → resolve/reject）
+  const pendingRpcs = new Map<
+    string,
+    { resolve: (value: unknown) => void; reject: (error: Error) => void }
+  >();
+  // v3.6.1: 子 → 主 RPC 处理器（子应用可调用的主应用 API）
+  const mainApiHandlers: Record<string, (...args: any[]) => unknown> = {};
+
+  // v3.6.1: RPC 调用序号
+  let rpcSeq = 0;
+
   // 主侧监听 iframe 发来的消息（通过 postMessage 回传）
   const onMessage = (event: MessageEvent): void => {
     if (event.source !== contentWindow) return;
     const data = event.data;
     if (!isBridgeMessage(data)) return;
-    // 只转发 state-set 类型的消息（子 → 主）
     if (data.type === 'state-set') {
       for (const handler of childMessageHandlers) {
         try {
@@ -241,6 +377,51 @@ export function createIframeSandbox(
         } catch {
           // 单个 handler 异常不影响其他 handler
         }
+      }
+      return;
+    }
+    if (data.type === 'rpc-result') {
+      const payload = data.payload as RpcResultPayload;
+      const pending = pendingRpcs.get(payload.callId);
+      if (pending) {
+        pendingRpcs.delete(payload.callId);
+        if (payload.ok) {
+          pending.resolve(payload.result);
+        } else {
+          pending.reject(new Error(payload.error || 'RPC call failed'));
+        }
+      }
+      return;
+    }
+    if (data.type === 'rpc-call') {
+      // 子应用调用主应用 API
+      const payload = data.payload as RpcCallPayload;
+      const handler = mainApiHandlers[payload.method];
+      const respond = (ok: boolean, result?: unknown, error?: string) => {
+        const response: BridgeMessage = {
+          [BRIDGE_MARK]: true,
+          type: 'rpc-result',
+          payload: { callId: payload.callId, ok, result, error },
+        } as BridgeMessage;
+        contentWindow.postMessage(response, '*');
+      };
+      if (typeof handler !== 'function') {
+        respond(false, undefined, `RPC method not found: ${payload.method}`);
+        return;
+      }
+      try {
+        const result = handler(...payload.args);
+        if (result && typeof (result as Promise<unknown>).then === 'function') {
+          (result as Promise<unknown>)
+            .then((value) => respond(true, value))
+            .catch((err) =>
+              respond(false, undefined, String(err?.message || err)),
+            );
+        } else {
+          respond(true, result);
+        }
+      } catch (error) {
+        respond(false, undefined, String((error as Error)?.message || error));
       }
     }
   };
@@ -279,6 +460,12 @@ export function createIframeSandbox(
       window.removeEventListener('message', onMessage);
       childMessageHandlers.clear();
 
+      // v3.6.1: 清理待响应的 RPC 请求
+      for (const { reject } of pendingRpcs.values()) {
+        reject(new Error(`[IframeSandbox:${appName}] Sandbox closed`));
+      }
+      pendingRpcs.clear();
+
       // 清空 iframe 内容并移除
       try {
         contentDocument.write('');
@@ -309,6 +496,44 @@ export function createIframeSandbox(
       childMessageHandlers.add(handler);
       return () => {
         childMessageHandlers.delete(handler);
+      };
+    },
+
+    // v3.6.1: 主应用调用子应用 RPC 方法
+    async callRpc(method: string, args: unknown[] = []): Promise<unknown> {
+      if (cleaned || !contentWindow) {
+        throw new Error(`[IframeSandbox:${appName}] Sandbox is closed`);
+      }
+      const callId = `p${++rpcSeq}`;
+      const promise = new Promise<unknown>((resolve, reject) => {
+        pendingRpcs.set(callId, { resolve, reject });
+      });
+      const message: BridgeMessage = {
+        [BRIDGE_MARK]: true,
+        type: 'rpc-call',
+        payload: { method, args, callId } satisfies RpcCallPayload,
+      } as BridgeMessage;
+      contentWindow.postMessage(message, '*');
+      // 超时保护：30s 未响应视为失败
+      setTimeout(() => {
+        if (pendingRpcs.delete(callId)) {
+          reject(new Error(`[IframeSandbox:${appName}] RPC timeout: ${method}`));
+        }
+      }, 30_000);
+      return promise;
+    },
+
+    // v3.6.1: 注册主应用 API 供子应用调用
+    registerMainApi(
+      handlers: Record<string, (...args: any[]) => unknown>,
+    ): () => void {
+      for (const [method, handler] of Object.entries(handlers)) {
+        mainApiHandlers[method] = handler;
+      }
+      return () => {
+        for (const method of Object.keys(handlers)) {
+          delete mainApiHandlers[method];
+        }
       };
     },
   };
