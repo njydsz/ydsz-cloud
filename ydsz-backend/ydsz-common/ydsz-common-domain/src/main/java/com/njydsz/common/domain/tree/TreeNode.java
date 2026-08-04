@@ -104,7 +104,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      */
     @Builder.Default
     @Setter
-    private transient List<T> children = new ArrayList<>();
+    private List<T> children = new ArrayList<>();
 
     /**
      * 排序字段

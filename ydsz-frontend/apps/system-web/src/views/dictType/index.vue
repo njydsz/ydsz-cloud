@@ -3,7 +3,7 @@
  *
  * @path apps\system-web\src\views\dictType\index.vue
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.1.0
 -->
 <script lang="ts" setup>
 /**
@@ -17,8 +17,9 @@ import type { VxeGridProps } from '@ydsz/plugins/vxe-table';
 
 import { Page, useVbenModal } from '@ydsz/common-ui';
 
-import { ElButton, ElMessage, ElMessageBox, ElTag, h } from 'element-plus';
+import { ElButton, ElMessage, ElMessageBox, h } from 'element-plus';
 
+import { $t } from '#/locales';
 import { useYDSZVxeGrid } from '#/adapter/vxe-table';
 import {
   deleteDicttypeApi,
@@ -32,22 +33,22 @@ defineOptions({ name: 'DicttypeManagement' });
 
 const gridOptions: VxeGridProps<DicttypeApi.DicttypeVO> = {
   columns: [
-    { type: 'seq', width: 50, title: '序号' },
-    { field: 'typeCode', title: '类型编码', width: 150 },
-    { field: 'typeName', title: '类型名称', width: 150 },
-    { field: 'remark', title: '备注', width: 200 },
-    { field: 'status', title: '状态', width: 80 },
-    { field: 'createTime', title: '创建时间', width: 160 },
+    { type: 'seq', width: 50, title: $t('page.common.seq') },
+    { field: 'typeCode', title: $t('business.typeCode'), width: 150 },
+    { field: 'typeName', title: $t('business.typeName'), width: 150 },
+    { field: 'remark', title: $t('business.description'), width: 200 },
+    { field: 'status', title: $t('business.status'), width: 80 },
+    { field: 'createTime', title: $t('business.createTime'), width: 160 },
     {
       field: 'action',
-      title: '操作',
+      title: $t('business.action'),
       width: 160,
       fixed: 'right',
       slots: {
         default: ({ row }) => {
           return h('div', { class: 'flex gap-1' }, [
-            h(ElButton, { size: 'small', link: true, type: 'primary', onClick: () => handleEdit(row) }, () => '编辑'),
-            h(ElButton, { size: 'small', link: true, type: 'danger', onClick: () => handleDelete(row) }, () => '删除'),
+            h(ElButton, { size: 'small', link: true, type: 'primary', onClick: () => handleEdit(row) }, () => $t('business.edit')),
+            h(ElButton, { size: 'small', link: true, type: 'danger', onClick: () => handleDelete(row) }, () => $t('business.delete')),
           ]);
         },
       },
@@ -70,8 +71,8 @@ const gridOptions: VxeGridProps<DicttypeApi.DicttypeVO> = {
   formConfig: {
     enabled: true,
     items: [
-      { field: 'typeName', title: '类型名称', itemRender: { name: 'Input', props: { placeholder: '类型名称' } } },
-      { field: 'typeCode', title: '类型编码', itemRender: { name: 'Input', props: { placeholder: '类型编码' } } },
+      { field: 'typeName', title: $t('business.typeName'), itemRender: { name: 'Input', props: { placeholder: $t('business.typeName') } } },
+      { field: 'typeCode', title: $t('business.typeCode'), itemRender: { name: 'Input', props: { placeholder: $t('business.typeCode') } } },
     ],
   },
 };
@@ -91,9 +92,9 @@ function handleEdit(row: DicttypeApi.DicttypeVO) {
 
 async function handleDelete(row: DicttypeApi.DicttypeVO) {
   try {
-    await ElMessageBox.confirm(`确定删除「${row.typeName}」吗？`, '删除确认', { type: 'warning' });
+    await ElMessageBox.confirm($t('business.confirmDeleteName', [row.typeName]), $t('page.common.deleteConfirm'), { type: 'warning' });
     await deleteDicttypeApi(row.id);
-    ElMessage.success('删除成功');
+    ElMessage.success($t('business.operationSuccess'));
     gridApi.query();
   } catch {
     // cancelled
@@ -103,9 +104,9 @@ async function handleDelete(row: DicttypeApi.DicttypeVO) {
 
 <template>
   <Page auto-content-height>
-    <Grid table-title="字典类型">
+    <Grid :table-title="$t('page.dictType')">
       <template #toolbar-tools>
-        <ElButton type="primary" @click="handleAdd">新增</ElButton>
+        <ElButton type="primary" @click="handleAdd">{{ $t('business.create') }}</ElButton>
       </template>
     </Grid>
     <DicttypeFormModal @success="gridApi.query()" />

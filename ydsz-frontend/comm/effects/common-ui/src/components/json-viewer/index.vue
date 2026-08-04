@@ -118,6 +118,6 @@ const bindProps = computed<Recordable<any>>(() => {
     </template>
   </VueJsonViewer>
 </template>
-<style lang="scss">
+<style lang="scss" scoped>
 @use './style.scss';
 </style>

@@ -1,6 +1,7 @@
 package com.njydsz.common.domain.query;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 import com.njydsz.common.domain.query.OrderItem.Direction;
 
@@ -53,7 +54,7 @@ public class OrderItem implements Serializable {
             if (value == null || value.isBlank()) {
                 return null;
             }
-            String upper = value.trim().toUpperCase();
+            String upper = value.trim().toUpperCase(Locale.ROOT);
             return switch (upper) {
                 case "ASC" -> ASC;
                 case "DESC" -> DESC;

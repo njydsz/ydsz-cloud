@@ -111,9 +111,9 @@ const handleLogin = () => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .dingding-qrcode-login-modal {
-  .relative {
+  :deep(.relative) {
     padding: 0 !important;
   }
 }

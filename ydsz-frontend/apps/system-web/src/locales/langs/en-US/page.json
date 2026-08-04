@@ -4,5 +4,9 @@
   "dictType": "Dict Type",
   "dictItem": "Dict Item",
   "variable": "Variable",
-  "appInfo": "App Info"
+  "appInfo": "App Info",
+  "common": {
+    "seq": "#",
+    "deleteConfirm": "Confirm Delete"
+  }
 }

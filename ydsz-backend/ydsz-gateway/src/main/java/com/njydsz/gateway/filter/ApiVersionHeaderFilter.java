@@ -63,7 +63,7 @@ public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
                 Matcher matcher = VERSION_PATTERN.matcher(path);
                 if (matcher.find()) {
                     ServerHttpResponse response = exchange.getResponse();
-                    if (!response.getHeaders().containsKey(HEADER_API_VERSION)) {
+                    if (!response.getHeaders().containsHeader(HEADER_API_VERSION)) {
                         response.getHeaders().set(HEADER_API_VERSION, "v" + matcher.group("ver"));
                     }
                 }

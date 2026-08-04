@@ -71,3 +71,14 @@ export type { LoadOptions, LoadResult, Manifest, ManifestRoute } from './loader'
 export { clearRegistryCache, refreshRegistry, resolveAppEntry, resolveRegistry } from './registry-adapter';
 // v3.7.0: Speculation Rules API 集成 — 浏览器原生预取增强
 export { applyPrefetchBoost, injectSpeculationRules, isSpeculationRulesSupported, removeSpeculationRules } from './speculation-rules';
+// v3.7.0: 子应用点对点通信 — request/response + fire-and-forget
+export {
+  clearPendingRequests,
+  registerAppMessageHandler,
+  sendMessage,
+  sendRequest,
+  startMessageListener,
+} from './message-broker';
+export type { MicroMessage, MessageHandler } from './message-broker';
+// v3.7.0: DevTools 管理面板（开发态可视化工具）
+export { enableMicroDevTools, toggleMicroDevTools, destroyMicroDevTools } from './devtools-panel';

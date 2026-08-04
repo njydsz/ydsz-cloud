@@ -4,5 +4,9 @@
   "dictType": "字典类型",
   "dictItem": "字典项",
   "variable": "系统变量",
-  "appInfo": "应用注册"
+  "appInfo": "应用注册",
+  "common": {
+    "seq": "序号",
+    "deleteConfirm": "删除确认"
+  }
 }

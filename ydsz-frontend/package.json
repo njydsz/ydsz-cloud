@@ -27,6 +27,8 @@
     "build:nextwiki": "pnpm run build --filter=@ydsz/nextwiki-web",
     "build:literule": "pnpm run build --filter=@ydsz/literule-web",
     "build:agent": "pnpm run build --filter=@ydsz/agent-web",
+    "bundle-size": "node ./bash/check-bundle-size.mjs",
+    "bundle-size:baseline": "node ./bash/check-bundle-size.mjs --baseline",
     "check": "pnpm run check:circular && pnpm run check:dep && pnpm run check:type && pnpm run check:contract && pnpm check:cspell",
     "check:circular": "vsh check-circular --fail",
     "check:contract": "node ./bash/gen-api.mjs --check",

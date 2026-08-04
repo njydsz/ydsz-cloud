@@ -12,7 +12,7 @@
  * 适用于选项 > 1000 条的 select 场景（如部门/用户/字典超大数据集）。
  * 若数据量小，直接使用 element-plus 原生 el-select 即可。
  */
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import { ElSelectV2 } from 'element-plus';
 
@@ -74,7 +74,6 @@ function handleUpdate(value: string | number | (string | number)[]) {
 }
 
 // 同步外部 options 变化
-import { watch } from 'vue';
 watch(
   () => props.options,
   (val) => {

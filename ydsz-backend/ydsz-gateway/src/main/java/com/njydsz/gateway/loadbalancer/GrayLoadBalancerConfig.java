@@ -1,5 +1,7 @@
 package com.njydsz.gateway.loadbalancer;
 
+import java.util.function.BiFunction;
+
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClients;
@@ -10,8 +12,10 @@ import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 /**
  * 灰度负载均衡器配置
@@ -73,20 +77,36 @@ public class GrayLoadBalancerConfig {
      * 探活路径默认 {@code /actuator/health}。连续失败实例从候选列表中剔除，
      * 故障发现延迟从 Nacos 心跳（15s）缩短到探活周期级别。
      *
+     * <p>说明：spring-cloud-loadbalancer 5.0.2 无静态 {@code decorator} 工厂方法，
+     * 改为手动构造并注入 HTTP 探活函数（GET /actuator/health，2xx 视为存活；
+     * 探活异常视为不可用，fail-open 语义）。
+     *
      * @param discoveryClient Nacos 服务发现客户端
      * @param environment     子上下文环境
+     * @param factory         负载均衡客户端工厂（探活周期配置读取）
      * @return 健康检查装饰后的实例列表供给者
      */
     @Bean
     ServiceInstanceListSupplier serviceInstanceListSupplier(
-            DiscoveryClient discoveryClient, Environment environment) {
+            DiscoveryClient discoveryClient, Environment environment,
+            LoadBalancerClientFactory factory) {
         // 基类供给者：从 Nacos 拉取服务实例
         ServiceInstanceListSupplier base =
                 new org.springframework.cloud.loadbalancer.core.DiscoveryClientServiceInstanceListSupplier(
                         discoveryClient, environment);
-        // 健康检查装饰器（fail-open 语义，探活失败仅剔除该实例）
+
+        // HTTP 探活函数：GET http://{instance}/{path}，2xx 视为存活
+        WebClient webClient = WebClient.builder()
+                .codecs(c -> c.defaultCodecs().maxInMemorySize(8 * 1024))
+                .build();
+        BiFunction<ServiceInstance, String, Mono<Boolean>> healthChecker =
+                (instance, path) -> webClient.get()
+                        .uri(instance.getUri().toString() + path)
+                        .exchangeToMono(resp -> Mono.just(resp.statusCode().is2xxSuccessful()))
+                        .onErrorReturn(false);
+
         ServiceInstanceListSupplier withHealthCheck =
-                HealthCheckServiceInstanceListSupplier.decorator(base, environment);
+                new HealthCheckServiceInstanceListSupplier(base, factory, healthChecker);
         log.info("[GrayLB] 已启用主动健康检查（间隔 {}ms，探活路径 /actuator/health）",
                 environment.getProperty("spring.cloud.loadbalancer.health-check.interval", "25000"));
         return withHealthCheck;

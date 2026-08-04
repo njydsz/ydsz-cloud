@@ -58,6 +58,14 @@ import { preloadManifest } from './link-hints';
 import { createLogger } from '@ydsz-core/shared/utils';
 import { applyPrefetchBoost, removeSpeculationRules } from './speculation-rules';
 import type { MicroAppEntry } from '@ydsz/micro-runtime';
+import { createNamespacedGlobalStateWrapper } from '@ydsz/micro-runtime/namespaced-state';
+import {
+  clearPendingRequests,
+  registerAppMessageHandler,
+  sendMessage,
+  sendRequest,
+  startMessageListener,
+} from './message-broker';
 
 /** 模块级日志器 */
 const logger = createLogger('MicroKernel');
@@ -318,9 +326,19 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
     const instance = getAppInstance(config.name) || createAppInstance(config);
 
     // === globalState 注入：子应用 mountProps 中注入跨应用通信 API ===
+    // v3.7.0: 注入带命名空间能力的 globalState（useNamespace(scope) 可获取隔离空间）
+    const enhancedGlobalState = createNamespacedGlobalStateWrapper(globalStateAPI);
     config.props = {
       ...config.props,
-      _globalState: globalStateAPI,
+      _globalState: enhancedGlobalState,
+      // v3.7.0: 注入点对点消息通信 API 到子应用 mountProps
+      _messageBus: {
+        sendMessage: (action: string, payload?: unknown) => sendMessage(config.name, action, payload),
+        sendRequest: <R = unknown>(action: string, payload?: unknown, timeout?: number) =>
+          sendRequest(config.name, action, payload, timeout) as Promise<R>,
+        registerHandler: <T = unknown, R = unknown>(handler: (msg: { action: string; payload: T; from: string }) => R | Promise<R>) =>
+          registerAppMessageHandler(config.name, (msg) => handler({ action: msg.action, payload: msg.payload as T, from: msg.from })),
+      },
     };
 
     // 派发 before-load 事件，触发骨架屏显示
@@ -551,6 +569,11 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       // P0-P2: 页面切到后台时自动释放保活实例，减少后台内存占用
       visibilityCleanup = setupVisibilityAutoRelease();
 
+      // === v3.7.0: 启动全局消息监听（子应用点对点通信） ===
+      startMessageListener((msg) => {
+        logger.debug(`Message from ${msg.from} → ${msg.to}: ${msg.action}`);
+      });
+
       // === v3.7.0: Speculation Rules API 预加载增强 ===
       // prefetchStrategy 控制：eager / lazy(默认) / never
       // 将 apps 映射为 MicroAppEntry 供 applyPrefetchBoost 使用
@@ -661,6 +684,50 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       return activeAppName;
     },
 
+    // === v3.7.0: 子应用点对点通信 API ===
+
+    /**
+     * 向指定子应用发送消息（fire-and-forget）。
+     *
+     * @param appName - 目标子应用名
+     * @param action - 业务 action
+     * @param payload - 业务数据
+     * @returns 消息 id（用于调试跟踪）
+     */
+    sendToApp(appName: string, action: string, payload?: unknown): string {
+      return sendMessage(appName, action, payload);
+    },
+
+    /**
+     * 向指定子应用发送请求并await响应。
+     *
+     * @param appName - 目标子应用名
+     * @param action - 业务 action
+     * @param payload - 业务数据
+     * @param timeout - 超时（ms），默认 10000
+     * @returns 子应用响应数据
+     */
+    sendRequestToApp<T = unknown, R = unknown>(
+      appName: string,
+      action: string,
+      payload?: T,
+      timeout?: number,
+    ): Promise<R> {
+      return sendRequest(appName, action, payload, timeout);
+    },
+
+    /**
+     * 注册全局消息监听器（供主应用代码接收来自子应用的消息）。
+     *
+     * @param handler - 收到消息时回调
+     * @returns 取消监听函数
+     */
+    onAppMessage(handler: (message: { from: string; action: string; payload: unknown; correlationId: string }) => void): () => void {
+      return startMessageListener((msg) => {
+        handler({ from: msg.from, action: msg.action, payload: msg.payload, correlationId: msg.correlationId });
+      });
+    },
+
     /** 内部停止方法：清理所有注册，用于 HMR / 测试环境重启 */
     async _stop() {
       routerSyncCleanup?.();
@@ -692,6 +759,8 @@ export function createKernel(): MicroRuntime & { _stop: () => Promise<void> } {
       clearManifestCache();
       // v3.7.0: 清理已注入的 Speculation Rules
       removeSpeculationRules();
+      // v3.7.0: 清理消息通信 pending 请求
+      clearPendingRequests();
 
       clearDegraded();
       logger.info('Stopped');

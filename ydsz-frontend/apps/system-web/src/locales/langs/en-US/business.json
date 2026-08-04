@@ -17,5 +17,9 @@
   "edit": "Edit",
   "delete": "Delete",
   "confirmDelete": "Confirm delete?",
-  "operationSuccess": "Success"
+  "confirmDeleteName": "Delete \"{0}\" ?",
+  "operationSuccess": "Success",
+  "status": "Status",
+  "createTime": "Created At",
+  "action": "Actions"
 }
