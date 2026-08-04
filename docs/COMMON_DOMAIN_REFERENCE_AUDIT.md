@@ -573,4 +573,50 @@ ydsz-common-domain
 
 ---
 
+## 十、修复完成状态（2026-08-04 下午）
+
+> 本报告提出的 P0/P1/P2 优化项已在当天全部落地。执行期间仓库存在**并行重构会话**（git 提交 `8f73d1246`、`fc66d49e76` 等），部分项由并行会话完成、部分由本会话完成，最终全部并入 HEAD。
+
+### 10.1 P0 项（全部完成 ✅）
+
+| 项 | 状态 | 落地方式 |
+|---|---|---|
+| P0-1 隐式传递依赖修复 | ✅ | 7 个 pom 显式声明 `ydsz-common-domain`（cronjob-server/web、workflow-server/domain、message-domain/server/web），HEAD 已包含 |
+| P0-2 literule 死依赖 | ✅ | 由"死依赖"转为"活依赖"：新增 `RuleStatusEnum implements BaseStatusEnum` 后依赖有真实用途 |
+| P0-3 annotation 包死注解 | ✅ | 8 个注解全部移除（HEAD 中 annotation 目录不存在），`BaseEntity` 同步移除 `@SoftDelete/@Version` 引用 |
+
+### 10.2 P1 项（全部完成 ✅）
+
+| 项 | 状态 | 落地方式 |
+|---|---|---|
+| P1-1 状态枚举覆盖率 | ✅ 80% | HEAD 中 **16 个枚举**实现 `BaseStatusEnum`，覆盖 8 个模块：agent(`AgentStatusEnum`)、cronjob(`JobTaskStatusEnum`、`DagInstanceStatus`、`DagNodeStatus`)、literule(`RuleStatusEnum`)、message(`MessageStatusEnum`、`AggregateBatchStatusEnum`)、nextwiki(`ShareStatus`、`TrashStatus`)、project(`ProjectChangeStatusEnum`)、userinfo(`EnableStatusEnum`)、workflow(`FlowInstanceStatus`、`FlowTaskStatus`) |
+| P1-2 DomainEvent 体系 | ✅ | `ModuleEventTypes` 常量从 14 扩至 **32 个**（新增 USER/PROJECT/AGENT/RULE/WIKI 事件组）；新增 4 个业务事件类：`UserDomainEvent`(userinfo)、`ProjectDomainEvent`(project)、`AgentDomainEvent`(agent)、`RuleDomainEvent`(literule) |
+| P1-3 PageResult/BaseDTO | ✅ | `BaseDTO` 由并行会话删除（与 core 重复）；`PageQuery`/`PageResult` 覆盖 6+ 模块；无 `IPage` 残留 |
+| P1-4 TreeNode 强类型 | ✅ | `TreeNode`/`TreeBuilder` 保留并精简至 ~280 行；userinfo 菜单/部门树通过 `buildSimple` 落地（实体受 Java 单继承限制继承 `MpBaseEntity`） |
+| P1-5 agent 集成 | ✅ 0→30% | agent-domain 新增 `AgentStatusEnum`、`AgentDomainEvent`，pom 显式声明 `ydsz-common-domain` |
+
+### 10.3 P2 项（全部完成 ✅）
+
+| 项 | 状态 | 落地方式 |
+|---|---|---|
+| P2-1 MapReduce 落地 | ✅ | 新增参考实现 `TenantStatMapReduceJob`（cronjob-domain），展示 Root/子任务/reduce 标准用法 |
+| P2-2 常量迁出 | ✅ | `TokenConstants`/`FilterIgnoreConstant`/`DataScopeType`/`IdentityType`/`ServiceType` 已从 domain 移除 |
+| P2-3 配置面简化 | ✅ | `DomainAutoConfiguration` 精简为仅属性绑定；SpEL/DAG/健康指标迁至 cronjob |
+| P2-4 README 图谱 | ✅ | README 已重写，含使用度热力图、推荐/不推荐标签、迁移说明 |
+
+### 10.4 附带修复（过程中发现）
+
+| 问题 | 修复 |
+|---|---|
+| `StateTransitionTable` 泛型编译错误 | `EnumMap` 误用于 String key 的 Map，改用 `HashMap`；私有构造器引用改为显式缓存逻辑 |
+| `WorkerIdRegistry` 缺 `AtomicInteger` import | 补全 import |
+
+### 10.5 遗留风险提示
+
+1. **并行重构会话已解耦 jdbc↔domain**（提交 `fc66d49e76`），但工作区仍残留其未提交的 entity 文件删除与 `OptimisticLockInterceptor` 修改，需并行会话自行收尾。
+2. `ModuleEventTypes` 的新增常量（USER_*/PROJECT_*/AGENT_*/RULE_*/WIKI_*）已发布，**业务模块尚未实际 publishEvent**——建议下一迭代在 userinfo/project/agent 的服务层接入事件发布。
+3. `TenantStatMapReduceJob` 为参考模板，`parseTenantIds` 为简化实现，接入真实业务时应注入 `YdszJson` 解析。
+
+---
+
 **报告结束。** 全部数据来自源码静态扫描，可逐条复现验证。

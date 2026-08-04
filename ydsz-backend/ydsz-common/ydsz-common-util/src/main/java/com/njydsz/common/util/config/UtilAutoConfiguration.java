@@ -20,7 +20,7 @@ import com.njydsz.common.util.spring.SpringContextHolder;
  * <ul>
  *   <li>{@link SpringContextHolder} — ApplicationContext 静态持有者</li>
  *   <li>{@link SnowflakeHealthIndicator} — Snowflake ID 生成器健康检查（仅 actuator 在 classpath 时注册）</li>
- *   <li>{@link UtilHealthIndicator} — 工具模块健康检查（Snowflake 状态、JVM 内存指标，仅 actuator 在 classpath 时注册）</li>
+ *   <li>{@link UtilHealthIndicator} — 工具模块健康检查（JVM 内存指标，仅 actuator 在 classpath 时注册）</li>
  * </ul>
  *
  * <p>所有工具 Bean 均为无状态、线程安全，可直接注入使用。
@@ -81,7 +81,7 @@ public class UtilAutoConfiguration {
         /**
          * 注册 UtilHealthIndicator Bean
          *
-         * <p>工具模块健康检查（SnowflakeUtils 状态、JVM 内存指标等），
+         * <p>工具模块健康检查（JVM 内存指标），
          * 实现 Spring HealthIndicator 接口，通过 /actuator/health 端点暴露。
          *
          * @return UtilHealthIndicator 实例

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const base = 'D:/Code/ydsz/ydsz-pmis/ydsz-frontend';
+const base = path.resolve(__dirname, '..');
 
 // Read catalog from pnpm-workspace.yaml
 const yaml = fs.readFileSync(path.join(base, 'pnpm-workspace.yaml'), 'utf-8');

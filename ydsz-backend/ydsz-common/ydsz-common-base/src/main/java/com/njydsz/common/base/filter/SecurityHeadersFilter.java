@@ -12,7 +12,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.base.config.BaseSecurityHeadersProperties;
-import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.util.http.UrlPathUtils;
 
 /**
  * 安全响应头过滤器

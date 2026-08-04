@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.util.http.ServletUtils;
+
 /**
  * 内部 API IP 白名单过滤器
  *
@@ -39,12 +41,8 @@ import lombok.extern.slf4j.Slf4j;
  *       - 192.168.1.100   # 运维办公网
  * </pre>
  *
- * <p><b>客户端 IP 解析：</b>
- * <ol>
- *   <li>优先取 {@code X-Forwarded-For} 头的<b>第一个</b> IP（最原始的客户端 IP）</li>
- *   <li>次选 {@code X-Real-IP} 头（Nginx 反向代理设置）</li>
- *   <li>最后取 {@link HttpServletRequest#getRemoteAddr()}</li>
- * </ol>
+ * <p><b>客户端 IP 解析：</b>委托 {@link com.njydsz.common.util.http.ServletUtils#getClientIp(HttpServletRequest)}
+ * 统一解析（含 X-Forwarded-For / X-Real-IP / RemoteAddr 多级回退与防伪造校验）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -117,23 +115,14 @@ public class InternalApiIpFilter {
     /**
      * 获取客户端真实 IP（考虑反向代理）
      *
-     * <p>解析顺序：{@code X-Forwarded-For}（取第一个） → {@code X-Real-IP} → {@code request.getRemoteAddr()}。
-     * <p><b>注意：</b>当前实现仅支持<b>精确匹配</b>，不支持 CIDR / 通配符。
+     * <p>委托 {@link ServletUtils#getClientIp(HttpServletRequest)} 统一解析。
+     * <p><b>注意：</b>当前白名单仅支持<b>精确匹配</b>，不支持 CIDR / 通配符。
      * 若需要网段匹配，建议引入 {@code IPAddressString} 等工具库扩展。
      *
      * @param request HTTP 请求
      * @return 客户端 IP 字符串
      */
     private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip != null && !ip.isBlank()) {
-            // X-Forwarded-For 可能包含多个 IP（多层代理），取第一个（最原始的客户端 IP）
-            return ip.split(",")[0].trim();
-        }
-        ip = request.getHeader("X-Real-IP");
-        if (ip != null && !ip.isBlank()) {
-            return ip.trim();
-        }
-        return request.getRemoteAddr();
+        return ServletUtils.getClientIp(request);
     }
 }

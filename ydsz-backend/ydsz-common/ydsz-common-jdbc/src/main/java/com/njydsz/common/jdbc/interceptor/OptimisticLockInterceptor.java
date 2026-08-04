@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import com.njydsz.common.domain.entity.BaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -159,7 +159,7 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
             case INSERT:
             case UPDATE:
                 if (!isBaseEntityParameter(ms)) {
-                    log.debug("OptimisticLockInterceptor: 跳过非 BaseEntity 类型参数的 SQL 处理, commandType={}", sct);
+                    log.debug("OptimisticLockInterceptor: 跳过非 MpBaseEntity 类型参数的 SQL 处理, commandType={}", sct);
                     return;
                 }
                 processIntercept(sh);
@@ -170,10 +170,10 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
     }
 
     /**
-     * 检查参数对象是否为 BaseEntity 类型
+     * 检查参数对象是否为 MpBaseEntity 类型
      *
      * @param ms MappedStatement 实例
-     * @return 如果参数是 BaseEntity 类型返回 true
+     * @return 如果参数是 MpBaseEntity 类型返回 true
      */
     private boolean isBaseEntityParameter(MappedStatement ms) {
         try {
@@ -181,7 +181,7 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
             if (parameterType == null) {
                 return false;
             }
-            return BaseEntity.class.isAssignableFrom(parameterType);
+            return MpBaseEntity.class.isAssignableFrom(parameterType);
         } catch (Exception e) {
             log.warn("OptimisticLockInterceptor: 获取参数类型失败，跳过乐观锁处理, error={}", e.getMessage());
             return false;

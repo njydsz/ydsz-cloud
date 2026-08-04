@@ -18,7 +18,8 @@ import com.njydsz.common.auth.security.RateLimiter;
 import com.njydsz.common.core.constant.FilterIgnoreConstant;
 import com.njydsz.common.util.auth.AuthInfo;
 import com.njydsz.common.util.auth.RequestHolder;
-import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.util.http.ServletUtils;
+import com.njydsz.common.util.http.UrlPathUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,7 +81,7 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         }
         // 限流检查（如果启用）
         if (rateLimiter != null) {
-            String clientIp = request.getRemoteAddr();
+            String clientIp = ServletUtils.getClientIp(request);
             if (!rateLimiter.tryAcquire(clientIp)) {
                 log.warn("{}[限流] IP: {}, 请求路径: {}", getLogPrefix(), clientIp, servletPath);
                 response.sendError(429, "Rate limit exceeded");

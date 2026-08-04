@@ -85,12 +85,30 @@ public final class ServletUtils {
     }
 
     /**
+     * 判断当前请求的直连对端是否为可信代理（用于校验转发头可信度）。
+     *
+     * <p>可信条件：{@code request.getRemoteAddr()} 为内网/回环地址，
+     * 或命中通过 {@link #setTrustedProxies(Set)} 配置的代理 IP。
+     * 用于 CookieUtils 等组件在读取 X-Forwarded-Proto 等转发头前校验来源可信度，防止客户端伪造。
+     *
+     * @param request HTTP 请求
+     * @return true 表示直连对端为可信代理；request 为 null 时返回 false
+     */
+    public static boolean isTrustedProxy(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+        return isTrustedProxy(request.getRemoteAddr());
+    }
+
+    /**
      * 获取当前请求的 HttpServletRequest (仅限 Servlet 环境)
      */
     public static HttpServletRequest getRequest() {
         try {
             return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        } catch (Exception e) {
+        } catch (IllegalStateException | NullPointerException e) {
+            // IllegalStateException: RequestContextHolder 未绑定；NullPointerException: 无请求上下文
             return null;
         }
     }
@@ -264,8 +282,7 @@ public final class ServletUtils {
      * 获取客户端真实 IP 地址（防伪造）。
      *
      * <p>支持多层代理场景，按优先级依次检查以下 Header：
-     * X-Real-IP → X-Forwarded-For → Proxy-Client-IP → WL-Proxy-Client-IP
-     * → HTTP_CLIENT_IP → HTTP_X_FORWARDED_FOR → RemoteAddr
+     * X-Real-IP → X-Forwarded-For → Proxy-Client-IP → WL-Proxy-Client-IP → RemoteAddr
      *
      * <p><b>安全说明（防伪造）</b>：仅在 {@code request.getRemoteAddr()} 为可信代理
      * （内网/回环地址，或通过 {@link #setTrustedProxies(Set)} 显式配置的代理 IP）时，
@@ -305,16 +322,6 @@ public final class ServletUtils {
         }
 
         ip = request.getHeader("WL-Proxy-Client-IP");
-        if (isValidIp(ip)) {
-            return ip;
-        }
-
-        ip = request.getHeader("HTTP_CLIENT_IP");
-        if (isValidIp(ip)) {
-            return ip;
-        }
-
-        ip = request.getHeader("HTTP_X_FORWARDED_FOR");
         if (isValidIp(ip)) {
             return ip;
         }

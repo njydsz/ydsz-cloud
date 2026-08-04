@@ -130,5 +130,9 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
 </dependencies>
 </project>

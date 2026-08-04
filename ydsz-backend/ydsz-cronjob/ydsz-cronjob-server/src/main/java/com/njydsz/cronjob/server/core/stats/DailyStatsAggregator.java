@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.njydsz.common.util.id.SnowflakeUtils;
 import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
 import com.njydsz.cronjob.infra.mapper.log.JobDailyStatsMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -138,7 +138,7 @@ public class DailyStatsAggregator {
      */
     private JobDailyStats toStats(Map<String, Object> row, LocalDate statsDate) {
         JobDailyStats stats = new JobDailyStats();
-        stats.setId(IdWorker.getIdStr());
+        stats.setId(SnowflakeUtils.nextIdStr());
         stats.setJobId((String) row.get("job_id"));
         stats.setJobKey((String) row.get("job_key"));
         stats.setStatsDate(statsDate);

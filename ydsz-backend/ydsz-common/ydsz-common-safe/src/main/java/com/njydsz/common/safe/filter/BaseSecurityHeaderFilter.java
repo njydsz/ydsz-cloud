@@ -12,7 +12,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
-import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.util.http.UrlPathUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

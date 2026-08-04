@@ -23,7 +23,7 @@ import com.njydsz.common.safe.config.CsrfProperties;
 import com.njydsz.common.safe.config.CsrfProperties.CsrfMode;
 import com.njydsz.common.safe.csrf.CsrfToken;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
-import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.util.http.UrlPathUtils;
 import java.security.SecureRandom;
 import java.util.Base64;
 

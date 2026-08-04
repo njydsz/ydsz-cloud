@@ -26,6 +26,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.util.ClientIpResolver;
+import com.njydsz.common.util.http.ServletUtils;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
@@ -391,8 +392,8 @@ public class DownloadController {
     /**
      * 解析客户端真实 IP（多级降级）。
      *
-     * <p>优先使用 common-safe 模块的 {@link ClientIpResolver}，若不可用则降级为本地解析：
-     * 1) {@code X-Forwarded-For} 头第一项；2) {@code X-Real-IP} 头；3) {@code request.getRemoteAddr()}。
+     * <p>优先使用 common-safe 模块的 {@link ClientIpResolver}，若不可用则降级为
+     * {@link ServletUtils#getClientIp(HttpServletRequest)} 统一解析。
      *
      * @param request HTTP 请求
      * @return 客户端 IP
@@ -402,15 +403,8 @@ public class DownloadController {
         if (clientIpResolver != null) {
             return ClientIpResolver.getClientIp(request);
         }
-        // 降级到本地解析
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty()) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (ip == null || ip.isEmpty()) {
-            ip = request.getRemoteAddr();
-        }
-        return ip != null && ip.contains(",") ? ip.split(",")[0].trim() : ip;
+        // 降级到 ServletUtils 统一解析
+        return ServletUtils.getClientIp(request);
     }
 
     /**

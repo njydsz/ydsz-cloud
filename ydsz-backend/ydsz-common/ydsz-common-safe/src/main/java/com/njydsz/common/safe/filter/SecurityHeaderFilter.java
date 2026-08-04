@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
-import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.util.http.UrlPathUtils;
 /**
  * 安全响应头过滤器
  *

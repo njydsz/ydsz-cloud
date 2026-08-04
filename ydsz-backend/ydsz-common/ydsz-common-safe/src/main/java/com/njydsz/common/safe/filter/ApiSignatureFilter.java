@@ -31,7 +31,7 @@ import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.crypto.NonceCache;
-import com.njydsz.common.safe.util.ClientIpResolver;import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.safe.util.ClientIpResolver;import com.njydsz.common.util.http.UrlPathUtils;
 
 /**
  * API 签名验证过滤器

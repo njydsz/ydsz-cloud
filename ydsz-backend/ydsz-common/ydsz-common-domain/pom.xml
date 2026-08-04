@@ -18,7 +18,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
-        <!--ydsz-common-json（BaseEntity/BaseVO 使用 YdszJsonFormat/YdszJsonField 注解）-->
+        <!--ydsz-common-json（PageQuery/TreeNode 使用 JsonIgnore 注解）-->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
@@ -29,36 +29,15 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!--jakarta-validation-->
+        <!--jakarta-validation（PageQuery 参数校验）-->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
-        <!--mybatis-plus-annotation（Base 等 Entity 注解）-->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-annotation</artifactId>
-        </dependency>
-        <!--spring-tx（事务后发布领域事件）-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
-        </dependency>
-        <!--spring-context（ApplicationEventPublisher）-->
+        <!--spring-context（ApplicationEventPublisher / DomainEvent 继承 ApplicationEvent）-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-        </dependency>
-        <!--caffeine（SpEL 表达式解析缓存，版本由 spring-boot-dependencies BOM 管理）-->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
-        <!--spring-boot-health（DomainHealthIndicator，可选）-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-health</artifactId>
-            <optional>true</optional>
         </dependency>
         <!--test-->
         <dependency>

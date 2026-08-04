@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.service.UserAccountService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.njydsz.common.util.id.SnowflakeUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -329,7 +329,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         List<UserRole> list = new ArrayList<>(roleIds.size());
         for (String roleId : roleIds) {
             UserRole ur = new UserRole();
-            ur.setId(IdWorker.getIdStr());
+            ur.setId(SnowflakeUtils.nextIdStr());
             ur.setUserId(userId);
             ur.setRoleId(roleId);
             ur.setTenantId(entity.getTenantId());

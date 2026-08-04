@@ -28,7 +28,7 @@ import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.service.RoleService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.njydsz.common.util.id.SnowflakeUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -234,7 +234,7 @@ public class RoleServiceImpl implements RoleService {
         List<RolePermission> list = new ArrayList<>(permissionIds.size());
         for (String permId : permissionIds) {
             RolePermission rp = new RolePermission();
-            rp.setId(IdWorker.getIdStr());
+            rp.setId(SnowflakeUtils.nextIdStr());
             rp.setRoleId(roleId);
             rp.setPermissionId(permId);
             rp.setTenantId(role.getTenantId());

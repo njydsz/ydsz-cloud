@@ -24,7 +24,7 @@ import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.common.safe.xss.EscapeUtils;
 import com.njydsz.common.safe.util.ClientIpResolver;
-import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.util.http.UrlPathUtils;
 
 /**
  * XSS 安全防护过滤器

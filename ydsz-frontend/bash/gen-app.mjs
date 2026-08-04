@@ -591,3 +591,5 @@ console.info(`    order: 109,  // TODO: 调整排序权重`);
 console.info(`    devPort: ${port},`);
 console.info(`  },`);
 console.info(`\n然后运行 pnpm install 安装新包依赖。`);
+console.info(`\n完成注册表追加后，请同步 nginx 配置：`);
+console.info(`  pnpm run gen:nginx`);

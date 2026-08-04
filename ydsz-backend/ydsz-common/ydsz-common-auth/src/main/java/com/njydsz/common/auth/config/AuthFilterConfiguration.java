@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import com.njydsz.common.core.constant.FilterIgnoreConstant;
-import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.util.http.UrlPathUtils;
 
 /**
  * 认证过滤器配置。

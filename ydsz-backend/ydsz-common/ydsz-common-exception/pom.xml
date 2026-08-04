@@ -24,6 +24,12 @@
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
 
+        <!-- ydsz-common-util 通用工具模块，提供 SpringContextHolder -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>

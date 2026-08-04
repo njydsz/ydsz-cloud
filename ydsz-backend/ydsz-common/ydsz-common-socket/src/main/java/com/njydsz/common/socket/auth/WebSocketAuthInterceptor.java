@@ -15,6 +15,7 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
+import com.njydsz.common.util.http.ServletUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,8 +72,16 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
         // 审计连接建立（P2-5）
         if (auditService != null) {
-            String remoteIp = request.getRemoteAddress() != null
-                    ? request.getRemoteAddress().getAddress().getHostAddress() : "unknown";
+            // WebSocket 握手请求为 ServerHttpRequest；当底层为 Servlet 栈（ServletServerHttpRequest）时，
+            // 委托 ServletUtils.getClientIp 统一解析（含 X-Forwarded-For 等代理头回退）；
+            // 否则回退到原始 TCP 远端地址
+            String remoteIp;
+            if (request instanceof ServletServerHttpRequest servletRequest) {
+                remoteIp = ServletUtils.getClientIp(servletRequest.getServletRequest());
+            } else {
+                remoteIp = request.getRemoteAddress() != null
+                        ? request.getRemoteAddress().getAddress().getHostAddress() : "unknown";
+            }
             auditService.auditConnect(userInfo.getUserId(), null, remoteIp);
         }
         return true;

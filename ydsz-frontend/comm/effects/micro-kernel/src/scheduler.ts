@@ -19,6 +19,8 @@ import { enterSandbox, exitSandbox } from './sandbox';
 import type { SandboxInstance } from './sandbox';
 import { createProxySandbox } from './proxy-sandbox';
 import type { ProxySandboxInstance } from './proxy-sandbox';
+import { createIframeSandbox } from './iframe-sandbox';
+import type { IframeSandboxInstance } from './iframe-sandbox';
 import { createLogger } from '@ydsz-core/shared/utils';
 
 /** 模块级日志器（生命周期事件默认 debug 级别，避免生产噪音） */
@@ -40,8 +42,8 @@ function resolveContainer(container: string | HTMLElement): HTMLElement | null {
 /** 子应用生命周期状态：未加载 / 加载中 / 已加载 / 已挂载 / 已卸载 */
 export type AppStatus = 'NOT_LOADED' | 'LOADING' | 'LOADED' | 'MOUNTED' | 'UNMOUNTED';
 
-/** 沙箱类型：snapshot（默认，性能好）| proxy（隔离强，性能略低） */
-export type SandboxType = 'snapshot' | 'proxy';
+/** 沙箱类型：snapshot（默认，性能好）| proxy（隔离强，性能略低）| iframe（CSS+DOM 强隔离兜底） */
+export type SandboxType = 'snapshot' | 'proxy' | 'iframe';
 
 /** 单个子应用在调度器中的运行时实例，含配置、生命周期导出、状态与保活缓存 */
 export interface AppInstance {
@@ -56,8 +58,10 @@ export interface AppInstance {
   /** 快照沙箱实例（mount 时创建，unmount 时销毁；keepAlive 时保留） */
   sandbox: null | SandboxInstance;
   /** Proxy 沙箱实例（当 sandboxType 为 'proxy' 时使用） */
-  proxySandbox: null | import('./proxy-sandbox').ProxySandboxInstance;
-  /** 沙箱类型：snapshot（默认）| proxy */
+  proxySandbox: null | ProxySandboxInstance;
+  /** iframe 沙箱实例（当 sandboxType 为 'iframe' 时使用） */
+  iframeSandbox: null | IframeSandboxInstance;
+  /** 沙箱类型：snapshot（默认）| proxy | iframe */
   sandboxType: SandboxType;
   /** 最近一次加载的性能指标（为监控提供数据） */
   loadMetrics: null | { duration: number; fromCache: boolean };
@@ -101,6 +105,7 @@ export function createAppInstance(config: MicroAppConfig): AppInstance {
     cachedParent: null,
     sandbox: null,
     proxySandbox: null,
+    iframeSandbox: null,
     sandboxType: 'snapshot', // 默认使用快照沙箱
     loadMetrics: null,
     error: null,
@@ -198,6 +203,15 @@ export async function activateApp(
     instance.proxySandbox = createProxySandbox(config.name);
     instance.proxySandbox.activate();
     logger.debug(`${config.name} entered proxy sandbox`);
+  } else if (instance.sandboxType === 'iframe') {
+    // iframe 沙箱：在主容器内创建 iframe，子应用挂载到 iframe document
+    instance.iframeSandbox = createIframeSandbox(config.name, container);
+    instance.iframeSandbox.activate();
+    // 将 mountProps 的容器指向 iframe 内的挂载容器
+    if (instance.iframeSandbox.container) {
+      mountProps.container = instance.iframeSandbox.container;
+    }
+    logger.debug(`${config.name} entered iframe sandbox`);
   } else {
     // 快照沙箱（默认）：进入快照沙箱
     instance.sandbox = enterSandbox();
@@ -218,6 +232,9 @@ export async function activateApp(
     if (instance.sandboxType === 'proxy' && instance.proxySandbox) {
       instance.proxySandbox.cleanup();
       instance.proxySandbox = null;
+    } else if (instance.sandboxType === 'iframe' && instance.iframeSandbox) {
+      instance.iframeSandbox.cleanup();
+      instance.iframeSandbox = null;
     } else if (instance.sandbox) {
       exitSandbox(instance.sandbox);
       instance.sandbox = null;

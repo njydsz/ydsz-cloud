@@ -184,13 +184,16 @@ public class MapUtils {
      * <p>入参为 null / 非 List 时返回空 List（不抛异常）。
      * 元素类型不匹配时跳过该元素（不抛 ClassCastException）。
      *
+     * <p>返回的 List 始终为可变 {@link ArrayList}（包括空 List 情况），
+     * 调用方可以安全地进行增删操作。
+     *
      * @param obj     原始对象
      * @param element 元素类型
-     * @return 类型安全的 List
+     * @return 类型安全的可变 List
      */
     public static <T> List<T> safeCastList(Object obj, Class<T> element) {
         if (!(obj instanceof List<?> raw)) {
-            return List.of();
+            return new ArrayList<>();
         }
         List<T> result = new ArrayList<>(raw.size());
         for (Object item : raw) {
@@ -302,8 +305,12 @@ public class MapUtils {
     /**
      * 转换为 Boolean
      *
+     * <p>识别的真值：{@code "true"}、{@code "1"}、{@code "yes"}（大小写不敏感）。
+     * <p>识别的假值：{@code "false"}、{@code "0"}、{@code "no"}（大小写不敏感）。
+     * <p>其他值（包括无法解析的字符串）返回 {@code null}，以便调用方区分「假值」与「不可解析」。
+     *
      * @param value 值
-     * @return Boolean 值，转换失败返回 null
+     * @return Boolean 值，不可解析返回 null
      */
     private static Boolean toBoolean(Object value) {
         if (value == null) {
@@ -313,6 +320,12 @@ public class MapUtils {
             return (Boolean) value;
         }
         String str = value.toString().toLowerCase();
-        return "true".equals(str) || "1".equals(str) || "yes".equals(str);
+        if ("true".equals(str) || "1".equals(str) || "yes".equals(str)) {
+            return Boolean.TRUE;
+        }
+        if ("false".equals(str) || "0".equals(str) || "no".equals(str)) {
+            return Boolean.FALSE;
+        }
+        return null;
     }
 }

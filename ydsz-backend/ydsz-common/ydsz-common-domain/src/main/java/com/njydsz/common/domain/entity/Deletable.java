@@ -11,7 +11,7 @@ package com.njydsz.common.domain.entity;
  * @since 1.0.0
  *
  */
-public interface SoftDeletable {
+public interface Deletable {
 
     /**
      * 获取逻辑删除标识

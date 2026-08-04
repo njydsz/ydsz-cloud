@@ -17,6 +17,7 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.common.safe.ratelimit.model.RateLimitContext;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
+import com.njydsz.common.util.http.ServletUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -170,11 +171,7 @@ public class RateLimitAspect {
         try {
             HttpServletRequest request = currentRequest();
             if (request == null) return null;
-            String ip = request.getHeader("X-Forwarded-For");
-            if (ip != null && !ip.isEmpty()) {
-                return ip.split(",")[0].trim();
-            }
-            return request.getRemoteAddr();
+            return ServletUtils.getClientIp(request);
         } catch (Exception ex) {
             return null;
         }

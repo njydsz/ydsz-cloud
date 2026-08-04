@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.domain.job;
 
 import com.njydsz.common.domain.job.JobLogger;
+import com.njydsz.common.domain.job.ShardingContext;
 
 /**
  * 任务执行上下文持有者（ThreadLocal 合并版）。

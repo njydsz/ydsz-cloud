@@ -21,7 +21,7 @@ import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.common.safe.ip.IpAccessService;
 import com.njydsz.common.safe.util.ClientIpResolver;
-import com.njydsz.common.util.url.UrlPathUtils;
+import com.njydsz.common.util.http.UrlPathUtils;
 
 import java.util.ArrayList;
 /**

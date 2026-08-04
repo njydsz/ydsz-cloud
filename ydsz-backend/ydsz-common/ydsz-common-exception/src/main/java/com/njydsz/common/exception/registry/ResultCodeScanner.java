@@ -5,13 +5,12 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
+import com.njydsz.common.util.spring.SpringContextHolder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,14 +26,13 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class ResultCodeScanner implements ApplicationContextAware {
+public class ResultCodeScanner {
 
     private static final String SCAN_PATTERN = "classpath*:com/njydsz/**/*.class";
 
     private final ResultCodeRegistry registry;
     private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(YdszResultCode.class);
     private final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
-    private ApplicationContext applicationContext;
 
     /**
      * 构造扫描器。
@@ -45,18 +43,13 @@ public class ResultCodeScanner implements ApplicationContextAware {
         this.registry = registry;
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
     /**
      * 应用就绪后执行扫描注册。
      */
     @EventListener(ApplicationReadyEvent.class)
     public void scanAndRegister() {
         try {
-            MetadataReaderFactory readerFactory = applicationContext
+            MetadataReaderFactory readerFactory = SpringContextHolder
                     .getBean(MetadataReaderFactory.class);
             var resources = resourceResolver.getResources(SCAN_PATTERN);
             int registeredCount = 0;

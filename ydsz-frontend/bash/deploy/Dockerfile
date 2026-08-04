@@ -55,6 +55,7 @@ COPY --from=builder /app/apps/agent-web/dist /usr/share/nginx/html/ydsz-agent-we
 
 # Copy nginx configuration
 COPY bash/deploy/nginx.conf /etc/nginx/nginx.conf
+COPY bash/deploy/nginx-sub-apps.conf /etc/nginx/nginx-sub-apps.conf
 
 EXPOSE 8080
 

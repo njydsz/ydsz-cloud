@@ -9,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import com.njydsz.common.json.YdszJson;
@@ -46,7 +44,7 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class ToolAnnotationScanner implements BeanPostProcessor, ApplicationContextAware {
+public class ToolAnnotationScanner implements BeanPostProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ToolAnnotationScanner.class);
 
@@ -216,10 +214,5 @@ public class ToolAnnotationScanner implements BeanPostProcessor, ApplicationCont
         if (targetType == byte.class) return (byte) 0;
         if (targetType == char.class) return '\0';
         return null;
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        // ApplicationContext 可用于后续扩展（如按名称查找 Bean）
     }
 }

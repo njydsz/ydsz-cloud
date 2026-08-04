@@ -319,7 +319,7 @@ public final class SnowflakeUtils {
     /**
      * 获取单例实例
      *
-     * <p>必须通过 {@link #init(long, long)} 或 {@link #getInstance(long, long)} 显式初始化，
+     * <p>必须通过 {@link #init(long, long)} 显式初始化，
      * 或通过 {@code SnowflakeAutoConfiguration} 自动配置后调用。若未初始化直接抛出
      * {@link IllegalStateException}，避免 Bean 在自动配置之前触发 {@link #nextIdLong()} 时
      * 静默使用自动计算的 workerId，导致配置的 workerId 被忽略。
@@ -332,23 +332,6 @@ public final class SnowflakeUtils {
             throw new IllegalStateException("SnowflakeUtils 未初始化，请先调用 init() 或通过 SnowflakeAutoConfiguration 配置");
         }
         return INSTANCE;
-    }
-
-    /**
-     * 获取单例实例（自定义节点 ID）
-     *
-     * @param workerId     工作节点 ID
-     * @param datacenterId 数据中心 ID
-     * @return SnowflakeUtils 实例
-     */
-    public static SnowflakeUtils getInstance(long workerId, long datacenterId) {
-        synchronized (SnowflakeUtils.class) {
-            if (INSTANCE != null) {
-                throw new IllegalStateException("SnowflakeUtils has already been initialized");
-            }
-            INSTANCE = new SnowflakeUtils(workerId, datacenterId);
-            return INSTANCE;
-        }
     }
 
     /**

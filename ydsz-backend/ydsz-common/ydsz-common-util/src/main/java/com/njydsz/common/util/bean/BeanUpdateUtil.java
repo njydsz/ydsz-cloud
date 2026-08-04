@@ -43,6 +43,7 @@ import org.springframework.beans.BeanUtils;
 public final class BeanUpdateUtil {
 
     private BeanUpdateUtil() {
+        throw new UnsupportedOperationException("工具类不可实例化");
     }
 
     /**

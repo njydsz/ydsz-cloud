@@ -1,8 +1,5 @@
 package com.njydsz.common.util.health;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
@@ -69,27 +66,4 @@ public class UtilHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * 执行健康检查（向后兼容方法）
-     *
-     * @return 健康检查结果 Map，包含 status 和详细信息
-     */
-    public Map<String, Object> checkHealth() {
-        Health health = health();
-        Map<String, Object> result = new LinkedHashMap<>();
-        String status = health.getStatus().getCode();
-        result.put("status", status.toUpperCase());
-        result.put("details", health.getDetails());
-        return result;
-    }
-
-    /**
-     * 检查是否健康（向后兼容方法）
-     *
-     * @return 健康返回 true，不健康返回 false
-     */
-    public boolean isHealthy() {
-        Health health = health();
-        return "UP".equalsIgnoreCase(health.getStatus().getCode());
-    }
 }
