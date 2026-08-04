@@ -1,5 +1,6 @@
 package com.njydsz.common.core.config;
 
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -19,6 +20,9 @@ import com.njydsz.common.core.response.BaseResponse;
  *
  * <p>当 Spring {@link MessageSource} 可用时，自动注册 {@link SpringMessageResolver}
  * 并绑定到 {@link BaseResponse}，使响应消息支持国际化。</p>
+ *
+ * <p>当 Spring Boot Actuator 的 {@link HealthIndicator} 在 classpath 可用时，
+ * 自动注册 {@link CoreHealthIndicator} 暴露 Core 模块运行状态。</p>
  *
  * <p><b>启用条件：</b>当 {@code ydsz.core.enabled=true} 时生效（默认启用）。</p>
  *
@@ -54,6 +58,18 @@ public class CoreAutoConfiguration {
     @Bean
     PageConstantsInitializer pageConstantsInitializer(CoreProperties properties) {
         return new PageConstantsInitializer(properties);
+    }
+
+    /**
+     * 注册 Core 模块健康检查指示器。
+     *
+     * <p>当 classpath 上存在 Spring Boot Actuator 的 {@link HealthIndicator} 时生效，
+     * 暴露国际化解析器状态、分页配置等运行时信息。</p>
+     */
+    @Bean
+    @ConditionalOnClass(HealthIndicator.class)
+    public CoreHealthIndicator coreHealthIndicator(CoreProperties properties) {
+        return new CoreHealthIndicator(properties);
     }
 
     static class PageConstantsInitializer implements org.springframework.beans.factory.SmartInitializingSingleton {

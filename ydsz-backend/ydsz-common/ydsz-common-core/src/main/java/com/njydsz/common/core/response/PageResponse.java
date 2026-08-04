@@ -139,9 +139,39 @@ public class PageResponse<T> extends BaseResponse<T> {
     }
 
     /**
+     * 创建成功分页响应，并在响应中标记分页参数是否被归一化。
+     *
+     * <p>当客户端传入的 {@code rawPageSize} 被 {@link PageConstants} 归一化（截断为上限或替换为默认值）
+     * 时，响应 {@code extensions} 中添加 {@code "pageSizeNormalized": true} 标记，
+     * 便于前端/调试时识别分页参数被框架调整。</p>
+     *
+     * @param total         总记录数
+     * @param pageNum       当前页码
+     * @param pageSize      归一化后的每页记录数
+     * @param rawPageSize   客户端传入的原始每页记录数（用于判断是否发生归一化）
+     * @param data          分页数据
+     * @param <T>           数据类型
+     * @return 携带归一化标记的成功分页响应
+     * @since 1.7.0
+     */
+    public static <T> PageResponse<T> successWithNormalization(Long total, Long pageNum, Long pageSize, Integer rawPageSize, T data) {
+        PageResponse<T> response = success(total, pageNum, pageSize, data);
+        PageConstants.NormalizeResult result = PageConstants.normalizePageSizeWithResult(rawPageSize);
+        if (result.isAdjusted()) {
+            response.putExtension("pageSizeNormalized", true);
+            response.putExtension("requestedPageSize", rawPageSize);
+        }
+        return response;
+    }
+
+    /**
      * 创建成功分页响应（便捷重载，接收基本类型）
      *
-     * <p>适用于 MyBatis-Plus {@code IPage} 等返回 {@code long} / {@code int} 基本类型的场景。
+     * <p>适用于 MyBatis-Plus {@code IPage} 等返回 {@code long} / {@code int} 基本类型的场景。</p>
+     *
+     * <p><b>注意：</b>此方法在 core 模块中仅为向后兼容保留。
+     * 新代码建议在 web 层定义 {@code PageResponse} 的子类或扩展方法，
+     * 以便进一步封装框架特定的分页适配逻辑。</p>
      *
      * @param total    总记录数
      * @param pageNum  当前页码
@@ -149,7 +179,11 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @param data     分页数据
      * @param <T>      数据类型
      * @return 成功分页响应
+     * @deprecated 此方法在 v1.7.0 标记为待下沉，建议在 web 层封装适配。
+     *             调用 {@link #success(Long, Long, Long, Object)} 替代，显式装箱参数。
+     * @since 1.0.0
      */
+    @Deprecated
     public static <T> PageResponse<T> success(long total, int pageNum, int pageSize, T data) {
         return success((long) total, (long) pageNum, (long) pageSize, data);
     }

@@ -74,11 +74,11 @@
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
-| `CoreAutoConfiguration` | `ydsz.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`PageConstantsInitializer`（分页配置运行时同步） |
+| `CoreAutoConfiguration` | `ydsz.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`PageConstantsInitializer`（分页配置运行时同步）、`CoreHealthIndicator`（健康检查，需 Actuator） |
 
 | 属性类 | 前缀 | 说明 |
 |---|---|---|
-| `CoreProperties` | `ydsz.core` | 分页配置（`maxPageSize` / `defaultPageSize`，带 `@Min` / `@Max` 校验） |
+| `CoreProperties` | `ydsz.core` | 分页配置（`maxPageSize` / `defaultPageSize`，带 `@Min` / `@Max` 校验）、租户 MDC 过滤器优先级 |
 
 ## 接入方式
 
@@ -242,6 +242,21 @@ String traceId = TraceIdGenerator.generate();
 
 ## 变更记录
 
+- **v1.7.0**（2026-08-04）：
+  - **BREAKING**：移除已废弃的 `setResolver()` 和带 `Class<T>` 参数的 `errorWithDetail()` 重载版本
+  - 新增 `UNKNOWN_CODE` 常量（语义优于 `ERROR`），标记 `ERROR` 常量为 `@Deprecated`
+  - 新增 `CoreHealthIndicator` 健康检查指示器
+  - 新增 `RequestContext.getOrDefault()` 类型安全默认值获取方法
+  - 新增 `RequestContext.Builder.set()/setAll()` 开放式扩展方法
+  - 新增 `CleanupGuard newCleanupGuard(Duration)` TTL 泄漏检测
+  - 新增 `RequestContext.view()` 零拷贝实时视图
+  - 新增 `PageConstants.normalizePageSizeWithResult()` 归一化结果封装
+  - 新增 `PageResponse.successWithNormalization()` 分页归一化响应标记
+  - `ContextKey.equals/hashCode` 加入 `type` 维度，修复类型混用隐患
+  - 清理 `native-image.properties` 中的幽灵引用 `FilterIgnoreProperties`
+  - 修正 `DEFAULT_TENANT_ID` 文档不一致（代码="0"，旧文档错误写为"1"）
+  - `BaseResponse.setResolverIfAbsent()` 增加重复设置调试日志
+  - `BaseResponse.extractResultCode()` 反射失败时增加 DEBUG 日志
 - **v1.2.0**（2026-08-03）：对齐代码重构 README，删除 12 个不属于本模块的"幽灵类"描述；`ResultCode` 移除前缀推断 default 实现，`BaseResultCode` 显式声明 HTTP 状态码；删除无调用方的 `BaseResponse.error(String msg, T data)` 重载；删除重复的 `sensitive` 包（由 `ydsz-common-safe` 统一提供脱敏能力）；清理配置元数据幽灵项
 - **v1.1.1**（2026-08-03）：移除 Snowflake 策略（`SnowflakeTraceIdSupplier` / `TraceIdSupplier` / `TraceAutoConfiguration` / `id-type` 配置），统一 UUID TraceId；删除零消费死代码 `TraceConstants` / `SecurityConstants`（合并到 `HeaderConstants`）；`HeaderConstants.X_REQUEST_ID` 重命名为 `X_TRACE_ID`
 - **v1.1.0**（2026-08-03）：新增敏感数据脱敏能力（`sensitive` 包）、TraceId 传播工具（`TraceIdPropagation`）、分页归一化方法（`PageConstants.normalizePageSize/normalizePageNum/calcOffset`）、`ResultCode` 前缀推断 HTTP 状态码默认实现；移除无消费方的 `metrics` 包（`CoreMetrics` / `CoreMetricsCallback`）；`FilterIgnoreProperties` 统一为"合并 + replace-builtin 开关"策略；`RequestContext` 改为懒初始化；修复 `SnowflakeTraceIdSupplier.toHex16` 输出反转 Bug；补齐 157 个单元测试

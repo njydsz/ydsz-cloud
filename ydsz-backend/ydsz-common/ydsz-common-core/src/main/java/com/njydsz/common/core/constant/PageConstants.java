@@ -160,6 +160,48 @@ public final class PageConstants {
     }
 
     /**
+     * 标准化页大小并返回是否被归一化的结果。
+     *
+     * <p>与 {@link #normalizePageSize(Integer)} 语义一致，但额外返回归一化是否发生，
+     * 便于调用方在响应中标记"分页参数已被框架调整"。</p>
+     *
+     * @param pageSize 原始页大小（可为 null）
+     * @return 包含归一化结果和是否被调整标记的 NormalizeResult
+     * @since 1.7.0
+     */
+    public static NormalizeResult normalizePageSizeWithResult(Integer pageSize) {
+        int raw = (pageSize == null || pageSize < 1) ? 0 : pageSize;
+        int normalized = normalizePageSize(pageSize);
+        boolean adjusted = raw != normalized;
+        return new NormalizeResult(normalized, adjusted);
+    }
+
+    /**
+     * 归一化结果封装。
+     *
+     * @since 1.7.0
+     */
+    public static final class NormalizeResult {
+        private final int value;
+        private final boolean adjusted;
+
+        private NormalizeResult(int value, boolean adjusted) {
+            this.value = value;
+            this.adjusted = adjusted;
+        }
+
+        /** 获取归一化后的值。 */
+        public int getValue() {
+            return value;
+        }
+
+        /** 判断是否发生了归一化调整（原始值被截断或替换）。 */
+        public boolean isAdjusted() {
+            return adjusted;
+        }
+    }
+
+    /**
      * 标准化页码。
      *
      * <p>统一页码的归一化规则：
