@@ -1,5 +1,7 @@
 package com.njydsz.common.core.constant;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.njydsz.common.core.config.CoreProperties;
 
 /**
@@ -51,18 +53,29 @@ public final class PageConstants {
     // ======================== 运行时值（由 CoreAutoConfiguration 注入） ========================
 
     /**
-     * 运行时配置引用。{@code null} 表示尚未初始化。
+     * 运行时配置引用（AtomicReference 保证线程安全和一次性设置）。
+     *
+     * <p>启动后由 {@code CoreAutoConfiguration} 注入，采用一次性设置语义，
+     * 确保分页配置在应用生命周期内不可变。</p>
      */
-    private static volatile CoreProperties properties;
+    private static final AtomicReference<CoreProperties> PROPERTIES = new AtomicReference<>();
 
     /**
      * 注入运行时配置。由 {@code CoreAutoConfiguration} 在启动时调用。
      *
+     * <p>采用一次性设置语义，重复调用将抛出 IllegalStateException。</p>
+     *
      * @param coreProperties 已校验通过的 CoreProperties 实例
-     * @since 1.5.0
+     * @throws IllegalStateException 如果配置已被初始化
+     * @since 1.6.0
      */
     public static void init(CoreProperties coreProperties) {
-        properties = coreProperties;
+        if (coreProperties == null) {
+            throw new IllegalArgumentException("CoreProperties must not be null");
+        }
+        if (!PROPERTIES.compareAndSet(null, coreProperties)) {
+            throw new IllegalStateException("PageConstants already initialized");
+        }
     }
 
     /**
@@ -71,7 +84,8 @@ public final class PageConstants {
      * @return 运行时配置的默认每页记录数；未初始化时回退到 {@link #DEFAULT_PAGE_SIZE}
      */
     public static int getDefaultPageSize() {
-        return properties != null ? properties.getDefaultPageSize() : DEFAULT_PAGE_SIZE;
+        CoreProperties p = PROPERTIES.get();
+        return p != null ? p.getDefaultPageSize() : DEFAULT_PAGE_SIZE;
     }
 
     /**
@@ -80,7 +94,8 @@ public final class PageConstants {
      * @return 运行时配置的最大每页记录数；未初始化时回退到 1000
      */
     public static int getMaxPageSize() {
-        return properties != null ? properties.getMaxPageSize() : 1000;
+        CoreProperties p = PROPERTIES.get();
+        return p != null ? p.getMaxPageSize() : 1000;
     }
 
     // ======================== 归一化工具方法 ========================

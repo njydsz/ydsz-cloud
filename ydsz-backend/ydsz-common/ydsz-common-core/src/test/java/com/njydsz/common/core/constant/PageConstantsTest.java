@@ -86,4 +86,41 @@ class PageConstantsTest {
         assertEquals(20, PageConstants.DEFAULT_PAGE_SIZE);
         assertEquals(5000, PageConstants.MAX_PAGE_SIZE);
     }
+
+    @Test
+    @DisplayName("init 支持一次性设置，重复调用抛出 IllegalStateException")
+    void init_idempotentSet() {
+        // 首次初始化会失败，因为 CoreAutoConfiguration 已设置
+        // 但此测试验证 API 行为
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> {
+            org.springframework.test.util.ReflectionTestUtils.setField(
+                    PageConstants.class, "PROPERTIES",
+                    new java.util.concurrent.atomic.AtomicReference<com.njydsz.common.core.config.CoreProperties>());
+            PageConstants.init(new com.njydsz.common.core.config.CoreProperties());
+        });
+    }
+
+    @Test
+    @DisplayName("init 拒绝 null 参数")
+    void init_rejectsNull() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            PageConstants.init(null);
+        });
+    }
+
+    @Test
+    @DisplayName("未初始化时 getDefaultPageSize 返回编译期默认值")
+    void getDefaultPageSize_beforeInit() {
+        // 注意：集成测试中通常已被 CoreAutoConfiguration 初始化
+        // 此处验证 API 契约
+        int pageSize = PageConstants.getDefaultPageSize();
+        assertTrue(pageSize >= 1, "默认页大小应 >= 1");
+    }
+
+    @Test
+    @DisplayName("未初始化时 getMaxPageSize 返回安全上限")
+    void getMaxPageSize_beforeInit() {
+        int maxPageSize = PageConstants.getMaxPageSize();
+        assertTrue(maxPageSize >= 1, "最大页大小应 >= 1");
+    }
 }

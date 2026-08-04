@@ -12,6 +12,7 @@ import org.slf4j.MDC;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicReference;
 /**
  * 统一API返回结果封装类
  *
@@ -244,20 +245,40 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 消息解析器实例（volatile 保证多线程可见性）
+     * 国际化消息解析器实例（AtomicReference 保证线程安全和一次性设置）。
+     *
+     * <p>采用一次性设置语义：启动时由 {@code CoreAutoConfiguration} 注入，
+     * 后续不可修改，消除全局可变状态的线程安全隐患。</p>
      */
-    private static volatile MessageResolver resolver;
+    private static final AtomicReference<MessageResolver> RESOLVER = new AtomicReference<>();
 
     /**
-     * 设置全局消息解析器（可覆盖）
+     * 一次性设置全局消息解析器（仅首次调用生效）。
      *
-     * <p>由上层应用（如 Spring Boot 启动类或配置类）调用，注入国际化解析实现。
-     * 后续调用将覆盖之前设置的解析器，以最后一次设置为准。
+     * <p>由 {@code CoreAutoConfiguration} 在应用启动时调用。
+     * 由于采用一次性设置语义，重复调用不会覆盖已有解析器，
+     * 确保 i18n 解析行为在应用生命周期内保持一致。</p>
      *
      * @param resolver 消息解析器实现
+     * @return true=设置成功（首次），false=已存在解析器（忽略）
+     * @since 1.6.0
      */
+    public static boolean setResolverIfAbsent(MessageResolver resolver) {
+        return RESOLVER.compareAndSet(null, resolver);
+    }
+
+    /**
+     * 设置全局消息解析器（已废弃）。
+     *
+     * <p>仅为向后兼容保留，新代码请使用 {@link #setResolverIfAbsent(MessageResolver)}。
+     * 注意：此方法会覆盖已有解析器，可能导致 i18n 行为在运行期发生变化。</p>
+     *
+     * @param resolver 消息解析器实现
+     * @deprecated 使用 {@link #setResolverIfAbsent(MessageResolver)} 替代
+     */
+    @Deprecated
     public static void setResolver(MessageResolver resolver) {
-        BaseResponse.resolver = resolver;
+        RESOLVER.set(resolver);
     }
 
     /**
@@ -268,7 +289,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 解析后的消息内容
      */
     protected static String resolveMessage(String key, String defaultValue) {
-        MessageResolver currentResolver = resolver;
+        MessageResolver currentResolver = RESOLVER.get();
         if (currentResolver != null) {
             String result = currentResolver.resolve(key, defaultValue);
             return result != null ? result : defaultValue;
@@ -282,7 +303,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 已注册返回 true，否则返回 false
      */
     public static boolean isResolverRegistered() {
-        return resolver != null;
+        return RESOLVER.get() != null;
     }
 
     /**
@@ -316,34 +337,85 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      *
      * <p>将标准化的错误详情封装到 {@link ProblemDetail} 中作为 data 返回，
      * 便于前端和第三方系统按 RFC 7807 规范处理错误。
+     * 返回类型明确为 {@code BaseResponse<ProblemDetail>}，无需类型强转。</p>
      *
      * @param resultCode 结果码
      * @param detail     错误详情（实例特定信息）
-     * @param <T>        数据类型
-     * @return 携带 ProblemDetail 的失败消息
-     * @since 1.1.0
+     * @return 携带 {@link ProblemDetail} 的失败消息
+     * @since 1.6.0
      * @see ProblemDetail
      */
-    @SuppressWarnings("unchecked")
-    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail) {
+    public static BaseResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail);
-        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), (T) problem);
+        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
     }
 
     /**
      * 返回携带 RFC 7807 Problem Details 的失败消息（含请求路径）
      *
+     * <p>返回类型明确为 {@code BaseResponse<ProblemDetail>}，调用方无需强转。</p>
+     *
      * @param resultCode 结果码
      * @param detail     错误详情
      * @param instance   请求路径 URI
+     * @return 携带 {@link ProblemDetail} 的失败消息
+     * @since 1.6.0
+     */
+    public static BaseResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail, URI instance) {
+        ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
+        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
+    }
+
+    /**
+     * 返回携带 RFC 7807 Problem Details 的失败消息（泛型兼容版本）。
+     *
+     * <p>仅为向后兼容旧版 API 保留，新代码请使用 {@link #errorWithDetail(ResultCode, String)}。
+     * 此方法仅在类型匹配时工作，否则抛出 ClassCastException。</p>
+     *
+     * @param resultCode 结果码
+     * @param detail     错误详情（实例特定信息）
+     * @param type       期望的返回数据类型（必须为 ProblemDetail.class）
      * @param <T>        数据类型
      * @return 携带 ProblemDetail 的失败消息
+     * @deprecated 使用 {@link #errorWithDetail(ResultCode, String)} 替代，返回类型更明确
      * @since 1.1.0
      */
-    @SuppressWarnings("unchecked")
-    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, URI instance) {
+    @Deprecated
+    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, Class<T> type) {
+        ProblemDetail problem = ProblemDetail.of(resultCode, detail);
+        if (!type.isInstance(problem)) {
+            throw new ClassCastException("Expected " + type.getName() + " but got " + problem.getClass().getName());
+        }
+        @SuppressWarnings("unchecked")
+        BaseResponse<T> response = (BaseResponse<T>) of(
+                resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
+        return response;
+    }
+
+    /**
+     * 返回携带 RFC 7807 Problem Details 的失败消息（含请求路径，泛型兼容版本）。
+     *
+     * <p>仅为向后兼容保留，新代码请使用 {@link #errorWithDetail(ResultCode, String, URI)}。</p>
+     *
+     * @param resultCode 结果码
+     * @param detail     错误详情
+     * @param instance   请求路径 URI
+     * @param type       期望的返回数据类型（必须为 ProblemDetail.class）
+     * @param <T>        数据类型
+     * @return 携带 ProblemDetail 的失败消息
+     * @deprecated 使用 {@link #errorWithDetail(ResultCode, String, URI)} 替代，返回类型更明确
+     * @since 1.1.0
+     */
+    @Deprecated
+    public static <T> BaseResponse<T> errorWithDetail(ResultCode resultCode, String detail, URI instance, Class<T> type) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
-        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), (T) problem);
+        if (!type.isInstance(problem)) {
+            throw new ClassCastException("Expected " + type.getName() + " but got " + problem.getClass().getName());
+        }
+        @SuppressWarnings("unchecked")
+        BaseResponse<T> response = (BaseResponse<T>) of(
+                resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
+        return response;
     }
 
     /**

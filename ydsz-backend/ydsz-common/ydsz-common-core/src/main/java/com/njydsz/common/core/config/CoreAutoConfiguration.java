@@ -33,7 +33,8 @@ public class CoreAutoConfiguration {
     /**
      * 注册 Spring 国际化消息解析器并绑定到 {@link BaseResponse}。
      *
-     * <p>当 classpath 上存在 {@link MessageSource} 且容器中有对应 Bean 时生效。</p>
+     * <p>当 classpath 上存在 {@link MessageSource} 且容器中有对应 Bean 时生效。
+     * 采用一次性设置语义，确保解析器在应用生命周期内不可变。</p>
      *
      * @param messageSource Spring 消息源
      * @return SpringMessageResolver 实例
@@ -43,7 +44,7 @@ public class CoreAutoConfiguration {
     @ConditionalOnBean(MessageSource.class)
     public SpringMessageResolver springMessageResolver(MessageSource messageSource) {
         SpringMessageResolver resolver = new SpringMessageResolver(messageSource);
-        BaseResponse.setResolver(resolver);
+        BaseResponse.setResolverIfAbsent(resolver);
         return resolver;
     }
 

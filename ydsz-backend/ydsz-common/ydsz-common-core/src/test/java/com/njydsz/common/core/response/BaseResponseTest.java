@@ -33,6 +33,7 @@ class BaseResponseTest {
     @AfterEach
     void tearDown() {
         MDC.clear();
+        // 使用 deprecated 的 setResolver 清理测试状态（仅测试场景使用）
         BaseResponse.setResolver(null);
     }
 
@@ -181,7 +182,27 @@ class BaseResponseTest {
     }
 
     @Test
-    @DisplayName("errorWithDetail 返回携带 RFC 7807 ProblemDetail 的响应")
+    @DisplayName("setResolverIfAbsent 首次设置返回 true，重复设置返回 false")
+    void setResolverIfAbsent_idempotent() {
+        // 清理已有状态
+        BaseResponse.setResolver(null);
+
+        BaseResponse.MessageResolver first = (key, defaultValue) -> "first-" + key;
+        BaseResponse.MessageResolver second = (key, defaultValue) -> "second-" + key;
+
+        assertTrue(BaseResponse.setResolverIfAbsent(first));
+        assertFalse(BaseResponse.setResolverIfAbsent(second));
+
+        // 验证第一个解析器生效
+        BaseResponse<Void> resp = BaseResponse.success();
+        assertTrue(resp.getMsg().startsWith("first-"));
+
+        // 清理
+        BaseResponse.setResolver(null);
+    }
+
+    @Test
+    @DisplayName("errorWithDetail 返回携带 RFC 7807 ProblemDetail 的响应（类型安全）")
     void errorWithDetail_problemDetail() {
         BaseResponse<ProblemDetail> resp = BaseResponse.errorWithDetail(
                 BaseResultCode.NOT_FOUND, "订单不存在");
@@ -199,6 +220,26 @@ class BaseResponseTest {
         BaseResponse<ProblemDetail> resp = BaseResponse.errorWithDetail(
                 BaseResultCode.NOT_FOUND, "订单不存在", URI.create("/api/v1/orders/123"));
         assertEquals("/api/v1/orders/123", resp.getData().getInstance().toString());
+    }
+
+    @Test
+    @DisplayName("errorWithDetail 泛型兼容版本（向后兼容）")
+    void errorWithDetail_legacyCompatibility() {
+        @SuppressWarnings("deprecation")
+        BaseResponse<ProblemDetail> resp = BaseResponse.errorWithDetail(
+                BaseResultCode.NOT_FOUND, "订单不存在", ProblemDetail.class);
+        assertEquals("A10101", resp.getCode());
+        assertEquals("订单不存在", resp.getData().getDetail());
+    }
+
+    @Test
+    @DisplayName("errorWithDetail 泛型兼容版本拒绝错误类型")
+    void errorWithDetail_rejectsWrongType() {
+        @SuppressWarnings("deprecation")
+        BaseResponseTest self = this;
+        org.junit.jupiter.api.Assertions.assertThrows(ClassCastException.class, () -> {
+            BaseResponse.errorWithDetail(BaseResultCode.NOT_FOUND, "test", String.class);
+        }, "应抛出 ClassCastException 当类型不匹配时");
     }
 
     @Test
