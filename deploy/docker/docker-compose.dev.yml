@@ -1,0 +1,263 @@
+# =====================================================================
+#  YDSZ 本地开发环境 Docker Compose
+#  --------------------------------------------------------------------
+#  一键启动所有基础设施服务
+#
+#  启动命令:
+#    docker compose -f deploy/docker/docker-compose.dev.yml up -d
+#
+#  停止命令:
+#    docker compose -f deploy/docker/docker-compose.dev.yml down
+#
+#  完全重置（删除数据）:
+#    docker compose -f deploy/docker/docker-compose.dev.yml down -v
+# =====================================================================
+
+version: '3.9'
+
+services:
+  # =====================================================================
+  #  PostgreSQL 18 + pgvector
+  # =====================================================================
+  postgres:
+    image: pgvector/pgvector:pg18
+    container_name: ydsz-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ydsz_pmis
+      POSTGRES_USER: ydsz
+      POSTGRES_PASSWORD: ydsz123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      TZ: Asia/Shanghai
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../sql/schema:/docker-entrypoint-initdb.d/:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ydsz -d ydsz_pmis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  Redis 8
+  # =====================================================================
+  redis:
+    image: redis:8-alpine
+    container_name: ydsz-redis
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ydsz123
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "ydsz123", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  Nacos 2.3.2（配置中心 + 服务发现）
+  # =====================================================================
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    container_name: ydsz-nacos
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: ""
+      NACOS_AUTH_IDENTITY_KEY: serverIdentity
+      NACOS_AUTH_IDENTITY_VALUE: security
+      NACOS_AUTH_TOKEN: SecretKey012345678901234567890123456789012345678901234567890123456789
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8848/nacos/ || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  MinIO（文件存储）
+  # =====================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: ydsz-minio
+    ports:
+      - "9100:9000"
+      - "9101:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  MinIO Bucket 初始化
+  # =====================================================================
+  minio-init:
+    image: minio/mc:latest
+    container_name: ydsz-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb local/ydsz-files --ignore-existing;
+      mc mb local/ydsz-exports --ignore-existing;
+      mc anonymous set download local/ydsz-files;
+      echo 'MinIO buckets initialized';
+      "
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  RocketMQ NameServer
+  # =====================================================================
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.3
+    container_name: ydsz-rocketmq-namesrv
+    ports:
+      - "9876:9876"
+    command: sh mqnamesrv
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  RocketMQ Broker
+  # =====================================================================
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.3
+    container_name: ydsz-rocketmq-broker
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+      - "10912:10912"
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+    command: >
+      sh mqbroker -c /home/rocketmq/rocketmq-5.3.3/conf/broker.conf
+    depends_on:
+      - rocketmq-namesrv
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  OpenTelemetry Collector（链路追踪）
+  # =====================================================================
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: ydsz-otel
+    ports:
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+      - "8889:8889"    # Prometheus exporter
+    volumes:
+      - ../backend/deploy/observability/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  Jaeger（链路追踪 UI）
+  # =====================================================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: ydsz-jaeger
+    ports:
+      - "16686:16686"   # UI
+      - "14250:14250"   # gRPC
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  Prometheus（指标采集）
+  # =====================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ydsz-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../backend/deploy/observability/prometheus-rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+  # =====================================================================
+  #  Grafana（监控可视化）
+  # =====================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ydsz-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../backend/deploy/observability/grafana-dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - ydsz-net
+
+# =====================================================================
+#  数据卷
+# =====================================================================
+volumes:
+  postgres_data:
+    name: ydsz-postgres-data
+  redis_data:
+    name: ydsz-redis-data
+  minio_data:
+    name: ydsz-minio-data
+  prometheus_data:
+    name: ydsz-prometheus-data
+  grafana_data:
+    name: ydsz-grafana-data
+
+# =====================================================================
+#  网络
+# =====================================================================
+networks:
+  ydsz-net:
+    name: ydsz-network
+    driver: bridge

@@ -1,0 +1,105 @@
+# =============================================================================
+#  YDSZ · Prometheus 告警规则（P1-5）
+# -----------------------------------------------------------------------------
+#  用法：将本文件挂载到 Prometheus 的 rules 目录，并在 prometheus.yml 中引用：
+#    rule_files:
+#      - "/etc/prometheus/rules/*.yml"
+#
+#  告警分组策略：
+#    - 基础设施组（Redis/DB/服务存活）
+#    - 网关组（5xx 突增/限流/熔断）
+#    - 业务组（立项失败/审批超时/消息积压）
+#    - 性能组（P99 延迟/慢 SQL）
+# =============================================================================
+groups:
+  # ==================== 基础设施可用性 ====================
+  - name: ydsz-infra
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务 {{ $labels.job }} 不可用"
+          description: "Prometheus 无法抓取 {{ $labels.job }} 指标超过 2 分钟"
+
+      - alert: HighErrorRate5xx
+        expr: |
+          sum(rate(ydsz_gateway_request_total{status=~"5.."}[5m]))
+          / sum(rate(ydsz_gateway_request_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "网关 5xx 错误率超过 5%"
+          description: "当前 5xx 占比: {{ $value | humanizePercentage }}，持续 5 分钟"
+
+      - alert: GatewayJwtValidationSlow
+        expr: histogram_quantile(0.99, sum(rate(ydsz_gateway_jwt_validation_duration_seconds_bucket[5m])) by (le)) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JWT 校验 P99 超过 100ms"
+          description: "JWT 校验耗时异常，可能存在缓存击穿或密钥轮换问题"
+
+  # ==================== 限流与降级 ====================
+  - name: ydsz-ratelimit
+    rules:
+      - alert: RateLimitFallbackActive
+        expr: rate(ydsz_gateway_ratelimit_fallback_total[5m]) > 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "网关限流降级中"
+          description: "Redis 不可用导致限流降级到本地兜底，请检查 Redis 集群"
+
+      - alert: RateLimitTriggeredHigh
+        expr: rate(ydsz_gateway_ratelimit_triggered_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "限流触发频繁"
+          description: "5 分钟内限流触发 {{ $value | humanize }} 次/秒，疑似攻击或业务高峰"
+
+      - alert: CircuitBreakerOpen
+        expr: ydsz_gateway_circuit_breaker_state == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "熔断器已打开"
+          description: "路由 {{ $labels.route }} 熔断，下游服务可能存在故障"
+
+  # ==================== 业务健康 ====================
+  - name: ydsz-business
+    rules:
+      - alert: JvmMemoryHigh
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.job }} 堆内存超过 85%"
+          description: "持续 10 分钟高内存，请检查是否存在内存泄漏或流量突增"
+
+      - alert: HighDbConnectionUsage
+        expr: jdbc_connections_active / jdbc_connections_max > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "数据库连接池使用率超过 80%"
+          description: "连接池接近耗尽，请检查慢查询或连接泄漏"
+
+      - alert: ThreadPoolExhausted
+        expr: executor_queue_size > 1000
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "线程池队列积压"
+          description: "{{ $labels.job }} 线程池队列积压超过 1000，可能存在阻塞"
