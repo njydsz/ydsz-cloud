@@ -1,16 +1,14 @@
 package com.njydsz.common.domain.query;
 
-import static lombok.AccessLevel.PROTECTED;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-import com.njydsz.common.domain.enums.BaseStatusEnum;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import static lombok.AccessLevel.PROTECTED;
 
 /**
  * 查询对象基类型
@@ -158,7 +156,6 @@ public class BaseQuery implements Serializable {
      * 从枚举设置状态过滤
      *
      * <p>将枚举名称设置为 status 字段值。
-     * 推荐使用实现了 {@link BaseStatusEnum} 的枚举类型，以获得状态流转校验能力。
      *
      * @param statusEnum 状态枚举
      * @since 1.2.0

@@ -21,6 +21,10 @@ import { useTokenStore } from '@ydsz/stores';
 import { ElMessageBox, ElMessage } from 'element-plus';
 
 import { refreshTokenApi } from '#/api/core/auth';
+import {
+  CROSS_TAB_EVENTS,
+  notifyCrossTab,
+} from '#/hooks/use-cross-tab-sync';
 import { $t } from '#/locales';
 
 /** 提前多久开始预警（5 分钟） */
@@ -57,12 +61,21 @@ export function useSessionExpiryWarning(): void {
         | { accessToken?: string; expiresIn?: number }
         | undefined;
       const newToken = data?.accessToken;
+      let newExpiresAt: null | number = null;
       if (typeof newToken === 'string') {
         tokenStore.setAccessToken(newToken);
       }
       // doRefreshToken 回调中也会更新 expiresAt，这里同步兜底
       if (typeof data?.expiresIn === 'number' && data.expiresIn > 0) {
-        tokenStore.setExpiresAt(Date.now() + data.expiresIn * 1000);
+        newExpiresAt = Date.now() + data.expiresIn * 1000;
+        tokenStore.setExpiresAt(newExpiresAt);
+      }
+      // D4: 广播 token 刷新成功事件到其它标签页
+      if (typeof newToken === 'string') {
+        notifyCrossTab(CROSS_TAB_EVENTS.TOKEN_REFRESHED, {
+          accessToken: newToken,
+          expiresAt: newExpiresAt,
+        });
       }
       ElMessage.success($t('authentication.renewSuccess'));
       return true;

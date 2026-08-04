@@ -99,18 +99,20 @@
         <prometheus.version>1.7.0</prometheus.version>
 
         <!-- 质量与安全扫描（P0-3：CI 质量门禁） -->
-        <!-- 默认 false 由 CI 显式启用；本地构建可 -DskipDependencyCheck=true 跳过以加速 -->
-        <skipDependencyCheck>false</skipDependencyCheck>
+        <!-- 本地默认跳过以加速开发；CI 通过 -DskipDependencyCheck=false 启用 -->
+        <skipDependencyCheck>true</skipDependencyCheck>
 
         <!-- Maven Enforcer（P2-8：构建规则约束） -->
         <enforcer.version>3.5.0</enforcer.version>
         <skipEnforcer>false</skipEnforcer>
 
         <!-- JaCoCo 覆盖率（P1-5：单元测试覆盖率采集与报告）
-             项目已移除全部单元测试（2026-07），覆盖率采集与阈值检查均全局禁用。详见 coding-standards.md Section 4
+             项目已恢复单元测试（105+ 测试类分布于 common-json/cache/queue/literule/agent/message 等模块）。
+             本地构建默认跳过覆盖率采集以加速开发；CI 通过 -DskipJacoco=false -DskipJacocoCheck=false 启用。
              用法：
-               mvn verify                          — 生成各模块 target/site/jacoco 报告
-               mvn verify -DskipJacocoCheck=false  — 启用覆盖率阈值检查（CI 集成）
+               mvn verify                                            — 本地构建（跳过覆盖率）
+               mvn verify -DskipJacoco=false                         — 生成各模块 target/site/jacoco 报告
+               mvn verify -DskipJacoco=false -DskipJacocoCheck=false — 启用覆盖率阈值检查（CI 集成）
         -->
         <jacoco.version>0.8.13</jacoco.version>
         <skipJacoco>true</skipJacoco>
@@ -1412,30 +1414,51 @@
             </plugins>
         </pluginManagement>
 
-        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则（所有子模块继承生效） JaCoCo 覆盖率已全局禁用（skipJacoco=true），不再在此激活 -->
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-            </plugin>
-            <!-- Surefire 单元测试：解决 Windows + JDK 21 下 Boot Manifest-JAR 绝对路径校验失败
-                 报错：Boot Manifest-JAR contains absolute paths in classpath ... 'other' has different root
-                 根因：JDK 9+ 默认拒绝 Manifest Class-Path 中的绝对路径
-                 方案：通过 -Djdk.net.URLClassPath.disableClassPathURLCheck=true 关闭校验
-                 @{argLine} 占位符确保 JaCoCo prepare-agent 注入的 javaagent 参数不被覆盖（JaCoCo 已禁用，保留占位符不影响）
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true @{argLine}</argLine>
-                </configuration>
-            </plugin>
-        </plugins>
+        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + 质量门禁（所有子模块继承生效）
+         CheckStyle / SpotBugs 每次 build 强制执行；JaCoCo / OWASP dependency-check 默认跳过，CI 通过参数启用 -->
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+        </plugin>
+        <!-- Surefire 单元测试：解决 Windows + JDK 21 下 Boot Manifest-JAR 绝对路径校验失败
+             报错：Boot Manifest-JAR contains absolute paths in classpath ... 'other' has different root
+             根因：JDK 9+ 默认拒绝 Manifest Class-Path 中的绝对路径
+             方案：通过 -Djdk.net.URLClassPath.disableClassPathURLCheck=true 关闭校验
+             @{argLine} 占位符确保 JaCoCo prepare-agent 注入的 javaagent 参数不被覆盖（JaCoCo 已禁用，保留占位符不影响）
+        -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+                <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true @{argLine}</argLine>
+            </configuration>
+        </plugin>
+        <!-- CheckStyle：代码质量规则（每次 build 强制执行，配置见 pluginManagement） -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+        </plugin>
+        <!-- SpotBugs：安全漏洞与代码缺陷检测（每次 build 强制执行，配置见 pluginManagement） -->
+        <plugin>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+        </plugin>
+        <!-- JaCoCo：覆盖率采集（本地默认跳过 skipJacoco=true，CI 通过 -DskipJacoco=false 启用） -->
+        <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+        </plugin>
+        <!-- OWASP dependency-check：依赖漏洞扫描（本地默认跳过 skipDependencyCheck=true，CI 通过 -DskipDependencyCheck=false 启用） -->
+        <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+        </plugin>
+    </plugins>
     </build>
 
     <repositories>

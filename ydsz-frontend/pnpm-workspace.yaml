@@ -166,7 +166,9 @@ catalog:
   vite: ^6.3.5
   vite-plugin-compression: ^0.5.1
   vite-plugin-dts: ^4.5.4
+  vite-plugin-font: ^5.1.2
   vite-plugin-html: ^3.2.2
+  vite-plugin-imagemin: ^0.6.1
   vite-plugin-lazy-import: ^1.0.7
   vite-plugin-pwa: ^1.0.1
   vite-plugin-vue-devtools: ^7.7.7

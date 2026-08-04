@@ -10,8 +10,10 @@ import type { RequestClientOptions } from '@ydsz/request';
 import { preferences } from '@ydsz/preferences';
 import { useAccessStore, useTokenStore } from '@ydsz/stores';
 import {
+  CROSS_TAB_EVENTS,
   createSharedBaseClient,
   createSharedRequestClient,
+  notifyCrossTab,
 } from '@ydsz/shared-auth';
 
 import { useAuthStore } from '#/store/auth';
@@ -60,13 +62,23 @@ async function doRefreshToken() {
   }
   const resp = await refreshTokenApi(refreshToken);
   const newToken = resp.data?.accessToken || resp.data as unknown as string;
+  let newExpiresAt: null | number = null;
   if (typeof newToken === 'string') {
     tokenStore.setAccessToken(newToken);
   }
   // 续期后同步刷新绝对过期时间戳（供会话超时预警使用）
   const expiresIn = (resp.data as { expiresIn?: number } | undefined)?.expiresIn;
   if (typeof expiresIn === 'number' && expiresIn > 0) {
-    tokenStore.setExpiresAt(Date.now() + expiresIn * 1000);
+    newExpiresAt = Date.now() + expiresIn * 1000;
+    tokenStore.setExpiresAt(newExpiresAt);
+  }
+  // D4: 广播 token 刷新成功事件到其它标签页，
+  //     避免其它标签页同时 401 时重复刷新导致 refreshToken 竞态
+  if (typeof newToken === 'string') {
+    notifyCrossTab(CROSS_TAB_EVENTS.TOKEN_REFRESHED, {
+      accessToken: newToken,
+      expiresAt: newExpiresAt,
+    });
   }
   return newToken;
 }

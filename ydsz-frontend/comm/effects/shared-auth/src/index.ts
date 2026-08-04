@@ -55,6 +55,19 @@ export {
 } from './create-sub-app';
 
 export {
+  type CreateSubAppI18nOptions,
+  type SubAppI18nInstance,
+  createSubAppI18n,
+} from './i18n-setup';
+
+export {
+  type TokenRefreshedPayload,
+  CROSS_TAB_CHANNEL,
+  CROSS_TAB_EVENTS,
+  notifyCrossTab,
+} from './cross-tab';
+
+export {
   createSubAppRouterGuard,
   initRoutes,
   setupAuthGuard,

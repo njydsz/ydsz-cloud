@@ -39,6 +39,20 @@ vi.mock('@ydsz/stores', () => ({
 
 vi.mock('@ydsz/locales', () => ({
   $t: (key: string) => key,
+  loadLocalesMapFromDir: (
+    _pattern: RegExp,
+    modules: Record<string, () => Promise<unknown>>,
+  ) => ({
+    'zh-CN': async () => ({ default: (await modules['./langs/zh-CN/page.json']?.())?.default }),
+    'en-US': async () => ({ default: (await modules['./langs/en-US/page.json']?.())?.default }),
+  }),
+  setupI18n: vi.fn(async (_app: unknown, _opts?: unknown) => {}),
+}));
+
+vi.mock('dayjs', () => ({
+  default: {
+    locale: vi.fn(),
+  },
 }));
 
 vi.mock('element-plus', () => ({
@@ -145,5 +159,37 @@ describe('@ydsz/shared-auth auth-store', () => {
   it('should export createSharedAuthStore function', async () => {
     const { createSharedAuthStore } = await import('../src/auth-store');
     expect(typeof createSharedAuthStore).toBe('function');
+  });
+});
+
+describe('@ydsz/shared-auth createSubAppI18n', () => {
+  it('should return $t, elementLocale, setupI18n', async () => {
+    const { createSubAppI18n } = await import('../src/i18n-setup');
+
+    const modules = {
+      './langs/zh-CN/page.json': () => Promise.resolve({ default: { title: '页面' } }),
+      './langs/en-US/page.json': () => Promise.resolve({ default: { title: 'Page' } }),
+    };
+
+    const instance = createSubAppI18n({ modules });
+
+    expect(typeof instance.$t).toBe('function');
+    expect(instance.elementLocale).toBeDefined();
+    expect(typeof instance.setupI18n).toBe('function');
+  });
+
+  it('should accept custom pattern', async () => {
+    const { createSubAppI18n } = await import('../src/i18n-setup');
+
+    const modules = {
+      './langs/zh-CN/page.json': () => Promise.resolve({ default: {} }),
+    };
+
+    const instance = createSubAppI18n({
+      modules,
+      pattern: /\.\/langs\/([^/]+)\/(.*)\.json$/,
+    });
+
+    expect(instance.elementLocale).toBeDefined();
   });
 });

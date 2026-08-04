@@ -12,6 +12,13 @@ export { enterSandbox, exitSandbox } from './sandbox';
 export { createProxySandbox } from './proxy-sandbox';
 export { createIframeSandbox } from './iframe-sandbox';
 export { getVersionManager, resetVersionManager } from './version-manager';
+// v3.5 (C4): 资源预连接与模块预加载提示
+export {
+  clearLinkHints,
+  injectModulePreload,
+  injectPreconnect,
+  preloadAppAssets,
+} from './link-hints';
 // v3.4: 公开预加载策略工厂，供主应用按需注册 frequency 策略
 export {
   createFrequencyPreloadStrategy,

@@ -14,6 +14,9 @@
     <!-- 由 vite 注入 VITE_APP_TITLE 变量，在 .env 文件内配置 -->
     <title><%= VITE_APP_TITLE %></title>
     <link rel="icon" href="/favicon.ico" />
+    <!-- C4: preconnect 外部资源域，减少首请求延迟 -->
+    <link rel="preconnect" href="https://hm.baidu.com" crossorigin />
+    <link rel="dns-prefetch" href="https://hm.baidu.com" />
     <script>
       // 生产环境下注入百度统计
       if (window._YDSZ_ADMIN_PRO_APP_CONF_) {

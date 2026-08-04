@@ -16,6 +16,7 @@
 import type { LifecycleExports, MicroAppConfig } from '@ydsz/micro-runtime';
 import { createLogger } from '@ydsz-core/shared/utils';
 import { retryOperation, calculateRetryDelay } from '@ydsz-core/shared/utils/retry';
+import { injectModulePreload, preloadAppAssets } from './link-hints';
 
 /** 模块级日志器（重试等运维信息走 debug，避免生产噪音） */
 const logger = createLogger('MicroKernel');
@@ -123,6 +124,8 @@ export async function loadApp(
   // === M4 修复：Dev 模式直接 import 子应用 dev server 入口，跳过 manifest ===
   if (isDev) {
     const entryUrl = `${config.entry.replace(/\/$/, '')}/src/main.ts`;
+    // C4: dev 模式也注入 modulepreload，提前建立与 dev server 的连接
+    injectModulePreload(entryUrl);
     const mod = await importWithRetry(entryUrl, { timeout, retries, retryBaseDelay, extSignal });
     assertLifecycle(mod, config.name);
     return {
@@ -139,6 +142,10 @@ export async function loadApp(
     { timeout, retries, retryBaseDelay },
     `manifest for ${config.name}`,
   );
+
+  // C4: 在 dynamic import 前注入 preconnect + modulepreload 提示，
+  //     让浏览器提前建立连接并预取 ESM 模块及其静态依赖
+  preloadAppAssets(config.entry, manifest);
 
   // 注入样式（标记 data-micro-kernel-app，卸载时一键移除）
   injectStylesheets(manifest.css, manifest.name);

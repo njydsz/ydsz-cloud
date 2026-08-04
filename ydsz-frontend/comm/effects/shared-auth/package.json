@@ -18,6 +18,7 @@
     "@ydsz/stores": "workspace:*",
     "@ydsz/types": "workspace:*",
     "@ydsz/utils": "workspace:*",
+    "dayjs": "catalog:",
     "element-plus": "catalog:",
     "openapi-fetch": "^0.17.0",
     "pinia": "catalog:",

@@ -498,40 +498,18 @@ fs.writeFileSync(path.join(appDir, 'src', 'router', 'routes', 'core.ts'), routes
 
 // ==================== src/locales/index.ts ====================
 
-const localesIndexTs = `import type { App } from 'vue';
+const localesIndexTs = `/**
+ * 国际化配置入口 — 通过 @ydsz/shared-auth 的 createSubAppI18n 工厂装配。
+ *
+ * @path apps/${name}/src/locales/index.ts
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+import { createSubAppI18n } from '@ydsz/shared-auth';
 
-import { loadLocalesMapFromDir, setupI18n as coreSetupI18n, $t } from '@ydsz/locales';
+const modules = import.meta.glob('./langs/**/*.json');
 
-import dayjs from 'dayjs';
-import 'dayjs/locale/zh-cn';
-
-const appLocales = import.meta.glob('./langs/**/*.json');
-
-const messageMap = loadLocalesMapFromDir(appLocales);
-
-async function loadMessages(lang: string) {
-  const appMessages = messageMap[lang]?.default ?? {};
-
-  // Element Plus 与 dayjs 多语言
-  let elementLocale;
-  if (lang === 'zh-CN') {
-    elementLocale = (await import('element-plus/es/locale/lang/zh-cn')).default;
-    dayjs.locale('zh-cn');
-  } else {
-    elementLocale = (await import('element-plus/es/locale/lang/en')).default;
-    dayjs.locale('en');
-  }
-
-  return { ...appMessages, elementLocale };
-}
-
-export async function setupI18n(app: App) {
-  await coreSetupI18n(app, loadMessages);
-}
-
-export { $t };
-
-export let elementLocale: any;
+export const { $t, elementLocale, setupI18n } = createSubAppI18n({ modules });
 `;
 
 fs.writeFileSync(path.join(appDir, 'src', 'locales', 'index.ts'), localesIndexTs);

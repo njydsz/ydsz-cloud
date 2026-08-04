@@ -1,157 +1,105 @@
 package com.njydsz.common.domain.entity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 
-import com.njydsz.common.domain.annotation.SoftDelete;
-import com.njydsz.common.domain.annotation.Version;
-import com.njydsz.common.domain.event.DomainEvent;
+import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonIgnore;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 基础实体。
+ * 领域基础实体（扁平化、纯领域，不依赖 MyBatis-Plus）。
  *
- * <p>继承自 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本和逻辑删除标识（0 表示未删除）。
- * 这是系统中最常用的实体基类，适用于大多数业务实体。
+ * <p>系统统一的业务实体基类，包含主键、审计字段、乐观锁版本、逻辑删除、状态、租户标识等全部通用列。
+ * 业务实体直接继承此类即可获得完整的通用字段，无需多层继承。
  *
- * <p><b>核心特性：</b>
+ * <p><b>纯领域设计：</b>本类不携带任何 MyBatis-Plus 注解，持久化行为全部由 common-jdbc 的
+ * SQL 拦截器在 SQL 层完成，实体本身保持领域纯净：
+ * <ul>
+ *   <li>审计字段填充（createdBy/createdAt/updatedBy/updatedAt）：由 {@code CombinedFieldFillInterceptor} 处理</li>
+ *   <li>乐观锁（revision）：由 {@code OptimisticLockInterceptor} 处理</li>
+ *   <li>逻辑删除（deleted）：由 {@code LogicalDeleteInterceptor} 处理</li>
+ *   <li>列名映射：依赖 MP 全局 {@code map-underscore-to-camel-case}</li>
+ *   <li>主键生成：依赖 MP 全局 {@code id-type=ASSIGN_ID}（雪花算法）</li>
+ * </ul>
+ *
+ * <p><b>字段说明：</b>
  * <table>
- *   <tr><th>特性</th><th>字段</th><th>说明</th></tr>
- *   <tr><td>审计字段</td><td>createdBy/createdAt/updatedBy/updatedAt</td><td>追踪数据变更</td></tr>
- *   <tr><td>乐观锁</td><td>revision</td><td>并发控制，防止更新冲突</td></tr>
- *   <tr><td>逻辑删除</td><td>deleted</td><td>软删除，数据可恢复</td></tr>
- *   <tr><td>状态标识</td><td>status</td><td>业务状态启用/禁用</td></tr>
- *   <tr><td>领域事件</td><td>domainEvents</td><td>可选的领域事件列表</td></tr>
+ *   <tr><th>字段</th><th>列名</th><th>说明</th></tr>
+ *   <tr><td>id</td><td>id</td><td>主键，雪花算法生成</td></tr>
+ *   <tr><td>createdBy</td><td>created_by</td><td>创建人ID，INSERT 自动填充</td></tr>
+ *   <tr><td>createdAt</td><td>created_at</td><td>创建时间，INSERT 自动填充</td></tr>
+ *   <tr><td>updatedBy</td><td>updated_by</td><td>更新人ID，INSERT/UPDATE 自动填充</td></tr>
+ *   <tr><td>updatedAt</td><td>updated_at</td><td>更新时间，INSERT/UPDATE 自动填充</td></tr>
+ *   <tr><td>revision</td><td>revision</td><td>乐观锁版本号，每次更新 +1</td></tr>
+ *   <tr><td>deleted</td><td>deleted</td><td>逻辑删除标识（0=未删除，1=已删除）</td></tr>
+ *   <tr><td>status</td><td>status</td><td>业务状态标识，子类可覆盖为枚举</td></tr>
+ *   <tr><td>tenantId</td><td>tenant_id</td><td>租户ID，多租户隔离</td></tr>
  * </table>
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * &#64;Data
- * &#64;EqualsAndHashCode(callSuper = true)
- * public class User extends BaseEntity<Long> {
- *
- *     private String username;
- *
- *     private String email;
- *
- *     private String phone;
- *
- *     private String status;
- *
- *     public void changeEmail(String newEmail) {
- *         String oldEmail = this.email;
- *         this.email = newEmail;
- *         registerEvent(new EmailChangedEvent(this.getId(), oldEmail, newEmail));
- *     }
- * }
- * }</pre>
  *
  * @param <T> 主键ID类型，支持 Long、String、UUID 等
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.3.0 简化：移除 AggregateRoot/RootEntity 接口，内联事件管理
+ * @since 1.4.0 扁平化：合并 BaseIdEntity/BaseAuditEntity，移除 domainEvents，纯领域无 MP 注解
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@SoftDelete
-public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T>
-        implements Versionable, Deletable {
+public class BaseEntity<T extends Serializable> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 领域事件列表（瞬态，不参与序列化与持久化）
-     *
-     * <p>可在实体中通过 {@code registerEvent} 注册领域事件，由业务层统一发布。
-     * 默认实现为空列表；无事件时避免空指针。
-     */
-    @lombok.Getter(lombok.AccessLevel.NONE)
-    @lombok.Setter(lombok.AccessLevel.NONE)
-    private transient List<DomainEvent> domainEvents;
+    /** 主键ID（雪花算法，由 MP 全局 id-type=ASSIGN_ID 生成） */
+    private T id;
+
+    /** 创建人ID（INSERT 时由 CombinedFieldFillInterceptor 自动填充） */
+    private String createdBy;
+
+    /** 创建时间（INSERT 时由 CombinedFieldFillInterceptor 自动填充） */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    /** 更新人ID（INSERT/UPDATE 时由 CombinedFieldFillInterceptor 自动填充） */
+    private String updatedBy;
+
+    /** 更新时间（INSERT/UPDATE 时由 CombinedFieldFillInterceptor 自动填充） */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
 
     /**
-     * 乐观锁版本
-     *
-     * <p>用于并发控制，原理：
-     * <ul>
-     *   <li>每次更新时自动递增（+1）。</li>
-     *   <li>更新 SQL 包含 WHERE 条件：revision = oldRevision</li>
-     *   <li>若影响行数为0，说明版本已变化，抛出乐观锁异常</li>
-     * </ul>
-     *
-     * @see Version
+     * 乐观锁版本号
+     * <p>每次更新时自动递增（+1），由 {@code OptimisticLockInterceptor} 处理。
      */
-    @Version
     @Builder.Default
     private Integer revision = 0;
 
     /**
      * 逻辑删除标识
-     *
-     * <p>用于实现软删除，原理：
-     * <ul>
-     *   <li>删除操作变为 UPDATE 设置 deleted = 1</li>
-     *   <li>查询操作自动添加 WHERE deleted = 0 条件</li>
-     *   <li>数据可恢复，适合重要业务数据</li>
-     * </ul>
+     * <p>0=未删除，1=已删除。删除操作转为 UPDATE，查询自动追加 WHERE deleted=0，
+     * 由 {@code LogicalDeleteInterceptor} 处理。
      */
     @JsonIgnore
     private Integer deleted;
 
     /**
-     * 状态标识
-     *
-     * <p>用于标识实体的业务状态，子类可按需覆盖为具体业务状态枚举值。
-     * 默认值为空，由各子类根据业务语义自行定义。
+     * 业务状态标识
+     * <p>子类可按需覆盖为具体业务状态枚举值，默认值为空。
      */
     private String status;
 
-    // ==================== 领域事件管理 ====================
-
     /**
-     * 注册领域事件
-     *
-     * @param event 领域事件
-     * @since 1.3.0 从 AggregateRoot 接口简化为内联方法
+     * 租户ID
+     * <p>多租户隔离字段，由租户拦截器自动注入 WHERE 条件和 INSERT 填充。
+     * 单租户模式下默认值 "1"。对外 API 不暴露。
      */
-    public void registerEvent(DomainEvent event) {
-        getDomainEvents().add(event);
-    }
-
-    /**
-     * 获取已注册的领域事件
-     *
-     * @return 领域事件列表
-     * @since 1.3.0 从 AggregateRoot 接口简化为内联方法
-     */
-    public List<DomainEvent> getDomainEvents() {
-        if (domainEvents == null) {
-            domainEvents = new ArrayList<>();
-        }
-        return domainEvents;
-    }
-
-    /**
-     * 清空已注册的领域事件
-     *
-     * @since 1.3.0 从 AggregateRoot 接口简化为内联方法
-     */
-    public void clearDomainEvents() {
-        if (domainEvents != null) {
-            domainEvents.clear();
-        }
-    }
+    @JsonIgnore
+    private String tenantId;
 }

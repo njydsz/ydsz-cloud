@@ -1,0 +1,98 @@
+# Argo Rollouts 灰度发布清单
+#
+# 替代原 Deployment 的 RollingUpdate 策略，支持金丝雀灰度发布。
+# 前置条件：集群已安装 Argo Rollouts controller（https://argoproj.github.io/rollouts/）
+#
+# 使用方式：
+#   kubectl apply -f deploy/k8s/frontend-rollout.yaml
+#   kubectl argo rollouts get rollout ydsz-frontend --watch
+#
+# 灰度流程：
+#   1. 新版本 Pod 启动，5% 流量导入（canary）
+#   2. 暂停 2 分钟观察监控指标与用户反馈
+#   3. 逐步放大到 25% → 50% → 100%
+#   4. 任一阶段可通过 `kubectl argo rollouts abort ydsz-frontend` 回滚
+#
+# 注意：部署此 Rollout 后，需删除原 frontend-deployment.yaml 中的 Deployment
+#       （Service / Ingress / HPA 保持不变，Rollout 会接管 Pod 管理）
+#
+# @path deploy/k8s/frontend-rollout.yaml
+# @author ydsz-team
+# @since 1.0.0
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ydsz-frontend
+  labels:
+    app: ydsz-frontend
+    component: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ydsz-frontend
+  strategy:
+    canary:
+      canaryService: ydsz-frontend-canary
+      stableService: ydsz-frontend-stable
+      trafficRouting:
+        nginx:
+          stableIngress: ydsz-frontend
+      steps:
+        # 1. 5% 灰度，暂停 2 分钟观察
+        - setWeight: 5
+        - pause: { duration: 2m }
+        # 2. 25% 灰度，暂停 2 分钟
+        - setWeight: 25
+        - pause: { duration: 2m }
+        # 3. 50% 灰度，暂停 3 分钟
+        - setWeight: 50
+        - pause: { duration: 3m }
+        # 4. 全量发布
+        - setWeight: 100
+  template:
+    metadata:
+      labels:
+        app: ydsz-frontend
+        component: web
+    spec:
+      containers:
+        - name: frontend
+          image: registry.cn-hangzhou.aliyuncs.com/ydsz-pmis/frontend:latest
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          # 浅探针：nginx 静态返回，验证 Pod 就绪
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # 深探针：检查后端网关连通性，确保前端能真正服务
+          readinessProbe:
+            httpGet:
+              path: /health/deep
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - "nginx -s quit && sleep 5"
+      terminationGracePeriodSeconds: 30

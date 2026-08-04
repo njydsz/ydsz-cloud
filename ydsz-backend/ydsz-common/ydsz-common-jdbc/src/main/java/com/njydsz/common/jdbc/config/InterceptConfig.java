@@ -38,9 +38,11 @@ public class InterceptConfig {
     /**
      * 是否启用拦截
      *
-     * <p>默认值为 false，需要设置为 true 才生效。</p>
+     * <p>默认值为 true（自 1.4.0 BaseEntity 纯领域化后，实体不再携带 {@code @TableField(fill)}
+     * 注解，{@code MyMetaObjectHandler} 不再触发，审计字段填充改由 {@code CombinedFieldFillInterceptor}
+     * 在 SQL 层接管，故默认启用以保证填充生效）。</p>
      */
-    private Boolean enabled = false;
+    private Boolean enabled = true;
 
     /**
      * 目标表集合
