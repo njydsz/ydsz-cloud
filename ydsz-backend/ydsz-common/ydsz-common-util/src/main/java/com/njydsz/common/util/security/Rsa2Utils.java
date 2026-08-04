@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -12,6 +13,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.RSAKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -80,14 +82,20 @@ public class Rsa2Utils {
     public static final int DEFAULT_KEY_SIZE = 2048;
 
     /**
-     * RSA 最大加密字节数（OAEPWithSHA-256: 密钥长度/8 - 2*32 - 2）
+     * OAEP 填充开销字节数：2 * SHA-256 哈希长度(32) + 2 = 66
+     * <p>最大加密块 = keySizeBytes - 66
      */
-    private static final int MAX_ENCRYPT_BLOCK_2048 = 190;
+    private static final int OAEP_OVERHEAD_BYTES = 66;
 
     /**
-     * RSA 最大解密字节数（密钥长度/8）
+     * 默认最大加密块（2048 位密钥），用于无密钥对象时的回退
      */
-    private static final int MAX_DECRYPT_BLOCK_2048 = 256;
+    private static final int DEFAULT_MAX_ENCRYPT_BLOCK = 190;
+
+    /**
+     * 默认最大解密块（2048 位密钥），用于无密钥对象时的回退
+     */
+    private static final int DEFAULT_MAX_DECRYPT_BLOCK = 256;
 
     /**
      * 共享的线程安全 SecureRandom 实例（KeyPairGenerator 显式传入，避免使用 JDK 默认 StrongRandom）
@@ -150,16 +158,18 @@ public class Rsa2Utils {
 
     /**
      * 公钥加密（支持分段加密，突破长度限制）
+     *
+     * <p>分段大小根据实际密钥长度动态计算，兼容 2048/3072/4096 位密钥。
      */
     public static String encryptByPublicKey(String data, String publicKey) {
         try {
             PublicKey pubKey = loadPublicKey(publicKey);
             Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
             cipher.init(Cipher.ENCRYPT_MODE, pubKey);
-            
+
             byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
-            int maxBlock = MAX_ENCRYPT_BLOCK_2048;
-            
+            int maxBlock = getMaxEncryptBlock(pubKey);
+
             byte[] encryptedBytes = doFinal(cipher, dataBytes, maxBlock);
             return Base64.getEncoder().encodeToString(encryptedBytes);
         } catch (Exception e) {
@@ -169,16 +179,18 @@ public class Rsa2Utils {
 
     /**
      * 私钥解密（支持分段解密）
+     *
+     * <p>分段大小根据实际密钥长度动态计算，兼容 2048/3072/4096 位密钥。
      */
     public static String decryptByPrivateKey(String data, String privateKey) {
         try {
             PrivateKey priKey = loadPrivateKey(privateKey);
             Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
             cipher.init(Cipher.DECRYPT_MODE, priKey);
-            
+
             byte[] dataBytes = Base64.getDecoder().decode(data);
-            int maxBlock = MAX_DECRYPT_BLOCK_2048;
-            
+            int maxBlock = getMaxDecryptBlock(priKey);
+
             byte[] decryptedBytes = doFinal(cipher, dataBytes, maxBlock);
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
@@ -187,17 +199,28 @@ public class Rsa2Utils {
     }
 
     /**
-     * 私钥加密（用于签名场景）
+     * 私钥加密
+     *
+     * <p><b>已废弃</b>：使用 RSA 私钥加密在密码学上不正确，混淆了「加密」与「签名」语义。
+     * RSA 私钥操作的正确用途是签名，请使用 {@link #sign(String, String)} 代替。
+     *
+     * <p>保留该方法仅为兼容旧版调用方，后续版本将移除。
+     *
+     * @param data       原始数据
+     * @param privateKey 私钥（Base64 编码）
+     * @return 加密后的 Base64 字符串
+     * @deprecated 使用 {@link #sign(String, String)} 进行签名，不应使用私钥加密
      */
+    @Deprecated
     public static String encryptByPrivateKey(String data, String privateKey) {
         try {
             PrivateKey priKey = loadPrivateKey(privateKey);
             Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
             cipher.init(Cipher.ENCRYPT_MODE, priKey);
-            
+
             byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
-            int maxBlock = MAX_ENCRYPT_BLOCK_2048;
-            
+            int maxBlock = getMaxEncryptBlock(priKey);
+
             byte[] encryptedBytes = doFinal(cipher, dataBytes, maxBlock);
             return Base64.getEncoder().encodeToString(encryptedBytes);
         } catch (Exception e) {
@@ -206,22 +229,64 @@ public class Rsa2Utils {
     }
 
     /**
-     * 公钥解密（用于验证签名场景）
+     * 公钥解密
+     *
+     * <p><b>已废弃</b>：与 {@link #encryptByPrivateKey(String, String)} 配套，
+     * 用于解密私钥「加密」的数据。由于私钥加密本身不正确，此方法同样不推荐使用。
+     * 验签请使用 {@link #verify(String, String, String)}。
+     *
+     * @param data      加密数据（Base64 编码）
+     * @param publicKey 公钥（Base64 编码）
+     * @return 解密后的原始字符串
+     * @deprecated 使用 {@link #verify(String, String, String)} 进行验签
      */
+    @Deprecated
     public static String decryptByPublicKey(String data, String publicKey) {
         try {
             PublicKey pubKey = loadPublicKey(publicKey);
             Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
             cipher.init(Cipher.DECRYPT_MODE, pubKey);
-            
+
             byte[] dataBytes = Base64.getDecoder().decode(data);
-            int maxBlock = MAX_DECRYPT_BLOCK_2048;
-            
+            int maxBlock = getMaxDecryptBlock(pubKey);
+
             byte[] decryptedBytes = doFinal(cipher, dataBytes, maxBlock);
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("RSA 公钥解密失败：" + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 根据密钥长度动态计算最大加密块
+     *
+     * <p>OAEPWithSHA-256AndMGF1Padding 填充开销 = 2 * 32 + 2 = 66 字节。
+     * 最大加密块 = keySizeBytes - 66。
+     *
+     * @param key RSA 密钥
+     * @return 最大加密块字节数
+     */
+    private static int getMaxEncryptBlock(Key key) {
+        if (key instanceof RSAKey rsaKey) {
+            int keySizeBytes = rsaKey.getModulus().bitLength() / 8;
+            return keySizeBytes - OAEP_OVERHEAD_BYTES;
+        }
+        return DEFAULT_MAX_ENCRYPT_BLOCK;
+    }
+
+    /**
+     * 根据密钥长度动态计算最大解密块
+     *
+     * <p>最大解密块 = keySizeBytes（密文块长度等于密钥长度字节）。
+     *
+     * @param key RSA 密钥
+     * @return 最大解密块字节数
+     */
+    private static int getMaxDecryptBlock(Key key) {
+        if (key instanceof RSAKey rsaKey) {
+            return rsaKey.getModulus().bitLength() / 8;
+        }
+        return DEFAULT_MAX_DECRYPT_BLOCK;
     }
 
     /**

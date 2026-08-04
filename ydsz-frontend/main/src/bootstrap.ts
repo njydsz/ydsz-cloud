@@ -106,8 +106,14 @@ function registerMicroRuntime() {
   });
 
   // 6. 启动：micro-kernel 内建 prefetch 预热高频应用
+  // 预加载应用清单优先从环境变量 VITE_PREFETCH_APPS 读取（逗号分隔），
+  // 未配置时回退到默认的 userinfo-web / project-web
+  const prefetchApps = import.meta.env.VITE_PREFETCH_APPS
+    ? import.meta.env.VITE_PREFETCH_APPS.split(',').map((s) => s.trim())
+    : ['userinfo-web', 'project-web'];
+
   microRuntime.start({
-    prefetch: (app) => ['userinfo-web', 'project-web'].includes(app.name),
+    prefetch: (app) => prefetchApps.includes(app.name),
   });
 }
 

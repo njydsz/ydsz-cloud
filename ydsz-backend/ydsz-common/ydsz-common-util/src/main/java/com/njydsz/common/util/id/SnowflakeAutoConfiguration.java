@@ -2,8 +2,10 @@ package com.njydsz.common.util.id;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,16 +36,31 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.util.snowflake", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(SnowflakeProperties.class)
-public class SnowflakeAutoConfiguration {
+public class SnowflakeAutoConfiguration implements DisposableBean {
 
     private static final long MAX_WORKER_ID = SnowflakeUtils.getMaxWorkerId();
     private static final long MAX_DATACENTER_ID = SnowflakeUtils.getMaxDatacenterId();
+
+    /** 数据中心环境变量名（与 workerId 命名风格统一：YDSZ_SNOWFLAKE_*） */
+    private static final String DATACENTER_ENV_VAR = "YDSZ_SNOWFLAKE_DATACENTER_ID";
+
+    /** 注册中心句柄，应用关闭时用于释放 WorkerId（可能为 null） */
+    private WorkerIdRegistry registry;
+    /** 当前节点 IP，用于注册中心标识 */
+    private String registryNodeIp;
+    /** 从注册中心获取的 WorkerId，应用关闭时用于释放 */
+    private long registryWorkerId;
+    /** 心跳调度器，应用关闭时需 shutdown */
+    private ScheduledExecutorService heartbeatScheduler;
 
     /**
      * 自动配置 Snowflake ID 生成器
      *
      * <p>根据配置自动解析 workerId 和 datacenterId，并初始化 SnowflakeUtils。
      * 支持多种 workerId 来源策略：分布式注册中心 > 环境变量 > 配置文件 > 实例索引。
+     *
+     * <p>当使用分布式注册中心获取 WorkerId 时，会自动启动心跳续约任务，
+     * 避免租约过期导致 WorkerId 被回收引发 ID 冲突。
      *
      * @param properties Snowflake 配置属性
      * @param environment Spring 环境
@@ -52,7 +69,7 @@ public class SnowflakeAutoConfiguration {
     public SnowflakeAutoConfiguration(SnowflakeProperties properties, Environment environment,
                                       ObjectProvider<WorkerIdRegistry> workerIdRegistryProvider) {
         try {
-            WorkerIdRegistry registry = workerIdRegistryProvider.getIfAvailable();
+            registry = workerIdRegistryProvider.getIfAvailable();
             long workerId = resolveWorkerId(properties, environment, registry);
             long datacenterId = resolveDatacenterId(properties, environment);
             SnowflakeUtils.init(workerId, datacenterId);
@@ -61,6 +78,29 @@ public class SnowflakeAutoConfiguration {
                     registry != null ? registry.type() : "none");
         } catch (IllegalStateException e) {
             log.debug("SnowflakeUtils already initialized manually, skipping auto-configuration: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 应用关闭时释放注册中心资源
+     *
+     * <p>停止心跳调度器并通知注册中心释放 WorkerId，避免租约残留。
+     */
+    @Override
+    public void destroy() {
+        if (heartbeatScheduler != null) {
+            heartbeatScheduler.shutdownNow();
+            log.info("Snowflake heartbeat scheduler shut down for workerId {}", registryWorkerId);
+        }
+        if (registry != null && registryNodeIp != null) {
+            try {
+                registry.release(registryWorkerId, registryNodeIp);
+                log.info("WorkerId {} released from registry {} for node {}",
+                        registryWorkerId, registry.type(), registryNodeIp);
+            } catch (Exception e) {
+                log.warn("Failed to release workerId {} from registry: {}",
+                        registryWorkerId, e.getMessage());
+            }
         }
     }
 
@@ -74,8 +114,14 @@ public class SnowflakeAutoConfiguration {
         if (registry != null) {
             try {
                 String nodeIp = InetAddress.getLocalHost().getHostAddress();
-                long workerId = registry.acquire(nodeIp, 300_000L);
-                log.info("WorkerId {} acquired from registry {} for node {}", workerId, registry.type(), nodeIp);
+                long leaseMillis = properties.getLeaseMillis();
+                long workerId = registry.acquire(nodeIp, leaseMillis);
+                // 启动心跳续约，避免租约过期导致 WorkerId 被回收引发 ID 冲突
+                registryNodeIp = nodeIp;
+                registryWorkerId = workerId;
+                heartbeatScheduler = registry.startHeartbeat(workerId, nodeIp, leaseMillis);
+                log.info("WorkerId {} acquired from registry {} for node {}, heartbeat started (lease={}ms)",
+                        workerId, registry.type(), nodeIp, leaseMillis);
                 return validateWorkerId(workerId);
             } catch (Exception e) {
                 log.warn("Failed to acquire workerId from registry {}, falling back to configured strategy: {}",
@@ -162,7 +208,7 @@ public class SnowflakeAutoConfiguration {
             return datacenterId;
         }
 
-        String dcEnv = System.getenv("SNOWFLAKE_DATACENTER_ID");
+        String dcEnv = System.getenv(DATACENTER_ENV_VAR);
         if (dcEnv != null && !dcEnv.isEmpty()) {
             try {
                 long id = Long.parseLong(dcEnv);

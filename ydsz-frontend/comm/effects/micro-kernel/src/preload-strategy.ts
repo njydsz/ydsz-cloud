@@ -41,6 +41,83 @@ export type PreloadPriority = 'high' | 'medium' | 'low';
 /** 预加载策略类型 */
 export type PreloadStrategy = 'idle' | 'hover' | 'visibility' | 'route' | 'manual' | 'permission' | 'frequency';
 
+/**
+ * 预加载模式（prefetchStrategy）。
+ *
+ * 与上面按触发时机划分的 PreloadStrategy（idle/hover/visibility/...）正交，
+ * prefetchStrategy 控制的是"是否预加载"以及"何时预加载"的高层语义：
+ * - `eager`：立即预加载（忽略 idle 调度与网络条件），即当前默认行为
+ * - `lazy`：仅 idle 时预加载，弱网（slow-2g/2g/3g 或 saveData）时不预加载
+ * - `never`：不预加载
+ *
+ * 配合 `shouldPrefetchByStrategy()` 在 kernel.ts 的 start() 预加载分支复用
+ * 既有的网络条件感知逻辑（shouldSkipPrefetchDueToNetwork）。
+ */
+export type PrefetchStrategy = 'eager' | 'lazy' | 'never';
+
+/** PrefetchStrategy 配置项（用于 start options 与运行时复用） */
+export interface PrefetchStrategyConfig {
+  /** 预加载模式，默认 'lazy' */
+  prefetchStrategy?: PrefetchStrategy;
+}
+
+/**
+ * 网络条件感知 — 判断当前是否处于弱网/省流量环境。
+ *
+ * 依据 Network Information API（navigator.connection）：
+ *   - effectiveType 为 slow-2g / 2g / 3g 视为慢速网络
+ *   - saveData 为 true 表示用户开启省流量模式
+ *
+ * 任一命中即视为弱网。浏览器不支持 Network Information API 时返回 false。
+ *
+ * 注意：与 kernel.ts 中 `shouldSkipPrefetchDueToNetwork` 语义一致，
+ * 此处导出便于 preload-strategy 在 lazy 模式下复用，避免逻辑重复。
+ */
+export function isSlowNetwork(): boolean {
+  const nav = navigator as Navigator & {
+    connection?: {
+      effectiveType?: string;
+      saveData?: boolean;
+    };
+  };
+  const conn = nav.connection;
+  if (!conn) return false;
+
+  if (conn.saveData === true) return true;
+
+  const effectiveType = conn.effectiveType;
+  if (
+    effectiveType === 'slow-2g' ||
+    effectiveType === '2g' ||
+    effectiveType === '3g'
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * 根据 prefetchStrategy 判定是否应执行预加载。
+ *
+ * - `eager`：始终返回 true（立即预加载，不感知网络）
+ * - `lazy`：弱网时返回 false，否则返回 true（交由调用方再走 idle 调度）
+ * - `never`：始终返回 false
+ *
+ * 未传入时按 `lazy` 处理，与既有 P2 网络条件感知默认行为保持一致。
+ */
+export function shouldPrefetchByStrategy(strategy?: PrefetchStrategy): boolean {
+  switch (strategy ?? 'lazy') {
+    case 'eager':
+      return true;
+    case 'never':
+      return false;
+    case 'lazy':
+    default:
+      return !isSlowNetwork();
+  }
+}
+
 /** 预加载策略配置 */
 export interface PreloadStrategyOptions {
   /** 策略类型 */

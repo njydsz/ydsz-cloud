@@ -387,7 +387,7 @@ public final class SnowflakeUtils {
      * 计算数据中心 ID，支持通过系统属性或环境变量覆盖
      * <ul>
      *   <li>系统属性：ydsz.snowflake.datacenterId</li>
-     *   <li>环境变量：SNOWFLAKE_DATACENTER_ID</li>
+     *   <li>环境变量：YDSZ_SNOWFLAKE_DATACENTER_ID（与 workerId 命名风格统一）</li>
      *   <li>默认：通过主机名哈希自动计算</li>
      * </ul>
      *
@@ -395,7 +395,7 @@ public final class SnowflakeUtils {
      */
     private static long getDataCenterId() {
         String configured = System.getProperty("ydsz.snowflake.datacenterId",
-                System.getenv("SNOWFLAKE_DATACENTER_ID"));
+                System.getenv("YDSZ_SNOWFLAKE_DATACENTER_ID"));
         if (configured != null && !configured.isEmpty()) {
             try {
                 long id = Long.parseLong(configured);

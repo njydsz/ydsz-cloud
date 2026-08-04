@@ -162,6 +162,37 @@ export type { paths, components, operations } from './schema';
         writeFileSync(clientPath, clientContent);
         console.log(`  ✓ index.ts (client)`);
       }
+
+      // 4.1 生成 sdk-client.ts 骨架（业务侧类型安全客户端入口，提交至 git；可手动扩展便捷封装）
+      //     仅在文件不存在时创建，避免覆盖手动添加的便捷封装（如 getUsers 等业务函数）。
+      const sdkClientPath = join(outDir, '..', 'sdk-client.ts');
+      if (!existsSync(sdkClientPath)) {
+        const sdkClientContent = `/**
+ * ${name} OpenAPI SDK 客户端
+ *
+ * 类型安全调用，复用 requestClient 的拦截器链。
+ * schema.d.ts 由 gen-api.mjs 自动生成，请勿手动编辑。
+ *
+ * @path apps/${name}-web/src/api/sdk-client.ts
+ * @since 1.0.0
+ */
+
+import { createOpenApiClient } from '@ydsz/shared-auth';
+import type { paths } from './sdk/schema';
+
+/**
+ * ${name} 类型安全 API 客户端
+ *
+ * baseUrl 从服务名推导：/api/${name}
+ * 此文件为自动生成的骨架，可手动添加便捷封装（如 getXxx 等业务函数）。
+ */
+export const apiClient = createOpenApiClient<paths>({
+  baseUrl: '/api/${name}',
+});
+`;
+        writeFileSync(sdkClientPath, sdkClientContent);
+        console.log(`  ✓ sdk-client.ts (skeleton)`);
+      }
     } catch {
       console.log(`  ! openapi-typescript 未安装，仅输出 spec raw。运行 pnpm add -D -w openapi-typescript`);
     }

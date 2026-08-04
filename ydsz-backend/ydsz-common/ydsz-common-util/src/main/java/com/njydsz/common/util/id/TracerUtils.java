@@ -219,10 +219,14 @@ public final class TracerUtils {
     /**
      * 生成新的 Span ID
      *
-     * @return Span ID
+     * <p>生成 16 位十六进制字符串（64 位），与 W3C Trace Context、B3、SkyWalking 等
+     * 主流链路追踪规范的 Span ID 格式一致。4 位数字 Span ID 仅 10,000 种取值，
+     * 在高并发场景下碰撞概率极高，无法满足分布式追踪需求。
+     *
+     * @return 16 位十六进制 Span ID
      */
     public static String generateSpanId() {
-        return RandomUtils.generateNumberString(4);
+        return RandomUtils.generateHexString(16);
     }
 
     /**
@@ -275,7 +279,8 @@ public final class TracerUtils {
     /**
      * 执行带追踪上下文的可运行对象
      * <p>
-     * 自动设置和清理追踪上下文。
+     * 自动设置和清理追踪上下文。执行完成后恢复原有的 traceId、spanId、parentSpanId，
+     * 避免被调用方在 runnable 内创建子 Span 后污染调用方上下文。
      * </p>
      *
      * @param traceId Trace ID
@@ -283,6 +288,8 @@ public final class TracerUtils {
      */
     public static void runWithTrace(String traceId, Runnable runnable) {
         String originalTraceId = getTraceId();
+        String originalSpanId = getSpanId();
+        String originalParentSpanId = getParentSpanId();
         try {
             setTraceId(traceId);
             runnable.run();
@@ -290,7 +297,17 @@ public final class TracerUtils {
             if (StringUtils.isNotEmpty(originalTraceId)) {
                 setTraceId(originalTraceId);
             } else {
-                clear();
+                MDC.remove(TRACE_ID_NAME);
+            }
+            if (StringUtils.isNotEmpty(originalSpanId)) {
+                MDC.put(SPAN_ID_NAME, originalSpanId);
+            } else {
+                MDC.remove(SPAN_ID_NAME);
+            }
+            if (StringUtils.isNotEmpty(originalParentSpanId)) {
+                MDC.put(PARENT_SPAN_ID_NAME, originalParentSpanId);
+            } else {
+                MDC.remove(PARENT_SPAN_ID_NAME);
             }
         }
     }
