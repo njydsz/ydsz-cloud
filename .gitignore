@@ -1,0 +1,72 @@
+# ===== Maven 构建产物 =====
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+*.log
+*.log.*
+
+# ===== IDE 配置 =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+*.launch
+
+# ===== 本地/个人环境配置 =====
+*.local.*
+application-local.yml
+application-local.yaml
+application-local.properties
+application-dev-local.yml
+bootstrap-local.yml
+*.orig
+
+# ===== 操作系统文件 =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+
+# ===== 临时文件 =====
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.idea_modules/
+
+# ===== 测试/覆盖率产物 =====
+coverage/
+htmlReport/
+*.exec
+*.ec
+*.jacoco
+
+# ===== 敏感文件（密钥/证书） =====
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.cer
+*.crt
+
+# ===== 本项目工作助手记忆（不入库） =====
+.workbuddy/
+
+# ===== Node 前端产物（如有） =====
+node_modules/
+dist/
