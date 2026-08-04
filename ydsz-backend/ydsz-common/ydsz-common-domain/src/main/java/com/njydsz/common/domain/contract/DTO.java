@@ -1,4 +1,4 @@
-package com.njydsz.common.core.contract;
+package com.njydsz.common.domain.contract;
 
 import java.io.Serializable;
 
@@ -19,7 +19,6 @@ import java.io.Serializable;
  * @see VO
  * @see Command
  * @see Query
- * @see Event
  */
 public interface DTO extends Serializable {
 }

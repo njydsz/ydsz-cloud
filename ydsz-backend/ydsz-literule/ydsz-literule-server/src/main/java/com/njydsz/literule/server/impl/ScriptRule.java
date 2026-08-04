@@ -383,6 +383,9 @@ public class ScriptRule implements Rule {
      *   <li>禁用方法调用黑名单：exec/exit/forName/loadClass/getRuntime 等</li>
      * </ul>
      *
+     * <p>P0-4 修复：SecureASTCustomizer 不可用或应用失败时改为 fail-closed（拒绝执行），
+     * 不再降级为仅正则黑名单（正则可被 Unicode 转义、字节构造等手法绕过）。
+     *
      * @param engine Groovy ScriptEngine
      */
     private static void applyGroovySecureCustomizer(ScriptEngine engine) {
@@ -392,7 +395,7 @@ public class ScriptRule implements Rule {
                     "org.codehaus.groovy.control.customizers.SecureASTCustomizer", false,
                     ScriptRule.class.getClassLoader());
             Object customizer = customizerClass.getDeclaredConstructor().newInstance();
-            // 禁用 imports
+            // 禁用 imports（白名单为空 = 禁止所有 import）
             customizerClass.getMethod("setImportsWhitelist", List.class)
                     .invoke(customizer, Collections.emptyList());
             // 禁用 static imports
@@ -406,6 +409,29 @@ public class ScriptRule implements Rule {
                     Boolean.class, Number.class, List.class, Map.class);
             customizerClass.getMethod("setReceiversWhiteList", List.class)
                     .invoke(customizer, receivers);
+            // P0-4 增强：方法调用黑名单（拦截危险方法调用）
+            List<String> methodBlacklist = List.of(
+                    "exit", "exec", "getRuntime", "forName", "loadClass",
+                    "invoke", "newInstance", "getMethod", "getDeclaredMethod",
+                    "getField", "getDeclaredField", "setAccessible",
+                    "connect", "openConnection", "openStream", "read", "write",
+                    "delete", "createNewFile", "mkdir", "renameTo",
+                    "getSystemProperty", "getProperty", "setProperty",
+                    "sleep", "interrupt", "stop", "suspend", "resume",
+                    "setSecurityManager", "getSecurityManager",
+                    "defineClass", "definePackage");
+            try {
+                customizerClass.getMethod("setMethodCallBlacklist", List.class)
+                        .invoke(customizer, methodBlacklist);
+            } catch (NoSuchMethodException nsme) {
+                // 某些 Groovy 版本方法名不同，尝试 setMethodCallsBlacklist
+                try {
+                    customizerClass.getMethod("setMethodCallsBlacklist", List.class)
+                            .invoke(customizer, methodBlacklist);
+                } catch (NoSuchMethodException ignored) {
+                    log.debug("[ScriptRule] setMethodCallBlacklist 不可用，跳过方法调用黑名单（imports/receivers 白名单仍生效）");
+                }
+            }
             // 应用到 GroovyScriptEngineImpl 的 CompilerConfiguration
             // GroovyScriptEngineImpl 暴露 CompilerConfiguration 通过 setConfiguration
             Field confField = engine.getClass().getDeclaredField("conf");
@@ -421,10 +447,11 @@ public class ScriptRule implements Rule {
                     Class.forName("org.codehaus.groovy.control.customizers.CompilationCustomizer"))
                     .invoke(config, customizer);
         } catch (ClassNotFoundException e) {
-            // Groovy SecureASTCustomizer 不在 classpath（非 Groovy 环境），跳过
-            log.debug("[ScriptRule] Groovy SecureASTCustomizer 不可用，仅使用正则黑名单");
+            // P0-4 修复：fail-closed，拒绝执行而非降级
+            throw new SecurityException("Groovy SecureASTCustomizer 不可用，拒绝执行脚本（fail-closed）: " + e.getMessage(), e);
         } catch (Exception e) {
-            log.warn("[ScriptRule] 应用 Groovy SecureASTCustomizer 失败，仅使用正则黑名单: {}", e.getMessage());
+            // P0-4 修复：fail-closed，拒绝执行而非降级
+            throw new SecurityException("应用 Groovy SecureASTCustomizer 失败，拒绝执行脚本（fail-closed）: " + e.getMessage(), e);
         }
     }
 
@@ -446,14 +473,32 @@ public class ScriptRule implements Rule {
         "\\$\\{[^}]*['\"](?:Sy|Sys|Syst|Syste|System)['\"]"
     );
 
+    /** P0-4 增强：Unicode 转义绕过检测（如 \u0053ystem.exit(0) → System.exit(0)） */
+    private static final Pattern UNICODE_ESCAPE_PATTERN = Pattern.compile(
+        "\\\\u00[0-4][0-9A-Fa-f]"
+    );
+
+    /** P0-4 增强：八进制转义绕过检测（如 \123 表示 'S'） */
+    private static final Pattern OCTAL_ESCAPE_PATTERN = Pattern.compile(
+        "\\\\[0-3][0-7]{2}"
+    );
+
+    /** P0-4 增强：字节构造绕过检测（如 new String(new byte[]{83,121,...}) 构造 "System"） */
+    private static final Pattern BYTE_CONSTRUCT_PATTERN = Pattern.compile(
+        "new\\s+String\\s*\\(\\s*new\\s+byte\\s*\\[\\s*\\]"
+    );
+
     /**
      * 检查脚本安全性（沙箱模式下调用）
      *
-     * <p>P2-9 增强三层防御：
+     * <p>P0-4 增强为六层防御：
      * <ol>
      *   <li>正则黑名单：拦截危险 API 调用</li>
      *   <li>字符串拼接绕过检测：拦截 "Sy"+"stem" 式拼接</li>
      *   <li>Groovy GString 插值绕过检测：拦截 ${...} 动态拼接</li>
+     *   <li>Unicode 转义绕过检测：拦截 \u0053 式 ASCII 转义</li>
+     *   <li>八进制转义绕过检测：拦截 \123 式八进制转义</li>
+     *   <li>字节构造绕过检测：拦截 new String(new byte[]{...}) 式构造</li>
      * </ol>
      *
      * @param script 脚本内容
@@ -476,6 +521,24 @@ public class ScriptRule implements Rule {
         if (gstringMatcher.find()) {
             throw new SecurityException("脚本检测到 GString 插值绕过尝试: " + gstringMatcher.group()
                     + "（沙箱模式禁止动态拼接危险 API 类名）");
+        }
+        // P0-4 增强：检测 Unicode 转义绕过尝试
+        Matcher unicodeMatcher = UNICODE_ESCAPE_PATTERN.matcher(script);
+        if (unicodeMatcher.find()) {
+            throw new SecurityException("脚本检测到 Unicode 转义: " + unicodeMatcher.group()
+                    + "（沙箱模式禁止使用 Unicode 转义绕过类名检测）");
+        }
+        // P0-4 增强：检测八进制转义绕过尝试
+        Matcher octalMatcher = OCTAL_ESCAPE_PATTERN.matcher(script);
+        if (octalMatcher.find()) {
+            throw new SecurityException("脚本检测到八进制转义: " + octalMatcher.group()
+                    + "（沙箱模式禁止使用八进制转义绕过类名检测）");
+        }
+        // P0-4 增强：检测字节构造绕过尝试
+        Matcher byteMatcher = BYTE_CONSTRUCT_PATTERN.matcher(script);
+        if (byteMatcher.find()) {
+            throw new SecurityException("脚本检测到字节构造: " + byteMatcher.group()
+                    + "（沙箱模式禁止使用 new String(new byte[]{...}) 绕过类名检测）");
         }
     }
 

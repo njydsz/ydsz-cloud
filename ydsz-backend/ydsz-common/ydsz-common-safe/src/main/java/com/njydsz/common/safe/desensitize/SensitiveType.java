@@ -1,7 +1,7 @@
-package com.njydsz.common.core.annotation;
+package com.njydsz.common.safe.desensitize;
 
 /**
- * 敏感数据类型枚举。
+ * 敏感数据类型枚举（字段级脱敏类型）。
  *
  * <p>定义系统支持的脱敏类型及其对应的格式化规则。
  * 新增类型只需在此枚举中添加即可，无需修改脱敏器逻辑。</p>
@@ -9,6 +9,7 @@ package com.njydsz.common.core.annotation;
  * @author ydsz-team
  * @since 1.5.0
  * @see Sensitive
+ * @see SensitiveUtils
  */
 public enum SensitiveType {
 
@@ -63,18 +64,15 @@ public enum SensitiveType {
 
     private final int prefixKeep;
     private final int suffixKeep;
-    private final boolean isCustom;
 
     SensitiveType() {
         this.prefixKeep = 0;
         this.suffixKeep = 0;
-        this.isCustom = false;
     }
 
     SensitiveType(int prefixKeep, int suffixKeep) {
         this.prefixKeep = prefixKeep;
         this.suffixKeep = suffixKeep;
-        this.isCustom = false;
     }
 
     /**
@@ -96,7 +94,7 @@ public enum SensitiveType {
      * <p>自定义类型的前缀/后缀保留数由 {@link Sensitive} 注解中的参数决定。</p>
      */
     public boolean isCustom() {
-        return isCustom;
+        return this == CUSTOM;
     }
 
     /**

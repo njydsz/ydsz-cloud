@@ -1,10 +1,13 @@
-package com.njydsz.common.core.annotation;
+package com.njydsz.common.safe.desensitize;
 
 /**
- * 敏感数据脱敏工具类。
+ * 敏感数据脱敏工具类（字段级）。
  *
  * <p>提供各种类型的脱敏策略实现，纯 JDK 实现，无任何外部依赖。
- * 既可用于 Jackson 序列化拦截，也可在日志输出、审计记录等场景中直接调用。</p>
+ * 既可用于 JSON 序列化拦截，也可在日志输出、审计记录等场景中直接调用。</p>
+ *
+ * <p>与 {@link ColumnDesensitizationRule}（列级正则脱敏）互补：
+ * 本工具类面向字段级（编程式），列级规则面向数据库结果集。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>{@code
@@ -25,7 +28,6 @@ package com.njydsz.common.core.annotation;
 public final class SensitiveUtils {
 
     private static final char MASK_CHAR = '*';
-    private static final int MIN_MASK_LENGTH = 4;
 
     private SensitiveUtils() {
         throw new UnsupportedOperationException("Utility class");
@@ -87,7 +89,7 @@ public final class SensitiveUtils {
         }
         StringBuilder sb = new StringBuilder(length);
         sb.append(value, 0, prefixKeep);
-        sb.append(String.valueOf(MASK_CHAR).repeat(Math.max(maskLength, MIN_MASK_LENGTH)));
+        sb.append(String.valueOf(MASK_CHAR).repeat(Math.max(maskLength, 1)));
         sb.append(value, length - suffixKeep, length);
         return sb.toString();
     }

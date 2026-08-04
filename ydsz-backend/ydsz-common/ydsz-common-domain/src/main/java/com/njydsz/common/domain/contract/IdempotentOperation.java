@@ -1,4 +1,4 @@
-package com.njydsz.common.core.contract;
+package com.njydsz.common.domain.contract;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 

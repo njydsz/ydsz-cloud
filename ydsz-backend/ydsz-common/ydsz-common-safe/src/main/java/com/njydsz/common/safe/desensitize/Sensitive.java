@@ -1,4 +1,4 @@
-package com.njydsz.common.core.annotation;
+package com.njydsz.common.safe.desensitize;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -7,10 +7,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 敏感数据标记注解。
+ * 敏感数据标记注解（字段级脱敏）。
  *
- * <p>标记在字段上，指示该字段包含敏感信息，需要在日志输出、JSON 序列化等场景中
- * 自动脱敏处理。配合 Jackson 序列化器 {@code SensitiveDataSerializer} 使用。</p>
+ * <p>标记在 DTO/VO 字段上，指示该字段包含敏感信息，需要在 JSON 序列化、日志输出等
+ * 场景中自动脱敏处理。配合 {@link SensitiveUtils} 或 Jackson 序列化器使用。</p>
+ *
+ * <p>与 {@link ColumnDesensitizationRule}（列级脱敏，数据库结果集脱敏）互补：
+ * 本注解面向字段级（对象序列化），列级脱敏面向 SQL 查询结果。</p>
  *
  * <h3>支持的脱敏类型</h3>
  * <table>
@@ -40,6 +43,8 @@ import java.lang.annotation.Target;
  * @author ydsz-team
  * @since 1.5.0
  * @see SensitiveType
+ * @see SensitiveUtils
+ * @see ColumnDesensitizationRule
  */
 @Documented
 @Target(ElementType.FIELD)

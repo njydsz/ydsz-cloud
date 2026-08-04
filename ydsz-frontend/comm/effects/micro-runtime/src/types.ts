@@ -12,6 +12,19 @@
 /** 子应用激活规则类型 */
 export type ActiveRule = string | RegExp | ((path: string) => boolean);
 
+/**
+ * 沙箱类型。
+ *
+ * - `snapshot`（默认）：快照沙箱，性能最佳，仅防意外污染 window。
+ * - `proxy`：Proxy fakeWindow 数据隔离层，子应用通过 mountProps.fakeWindow 可读写隔离数据。
+ *   注意 ESM 路线无法用 with 拦截顶层全局访问，详见 proxy-sandbox.ts 边界声明。
+ * - `iframe`：iframe 强隔离（CSS + DOM + window），适用于全局样式冲突的子应用兜底。
+ *   跨 realm 通信通过内置 postMessage 桥接 globalState，无需业务侧处理。
+ *
+ * @since 3.6.0
+ */
+export type SandboxType = 'snapshot' | 'proxy' | 'iframe';
+
 /** 子应用注册配置（对齐现有 main/src/qiankun/index.ts microApps） */
 export interface MicroAppConfig {
   /** 应用唯一标识（如 'project-web'） */
@@ -33,12 +46,39 @@ export interface MicroAppConfig {
   activeRule: ActiveRule;
   /** 自定义 props（注入子应用 mount 参数） */
   props?: Record<string, unknown>;
+  /**
+   * 沙箱类型（v3.6.0 对外开放，未配置时默认 'snapshot'）。
+   *
+   * 业务侧可在 micro-apps.config.ts 注册表中按子应用指定沙箱类型，
+   * 例如对全局样式冲突的子应用设置 `sandbox: 'iframe'`。
+   *
+   * @since 3.6.0
+   */
+  sandbox?: SandboxType;
 }
 
 /** 子应用挂载参数（与 qiankun mountProps 对齐语义） */
 export interface MountProps {
   container: HTMLElement;
   basename: string;
+  /**
+   * Proxy 沙箱注入的 fakeWindow（仅当 sandboxType='proxy' 时存在）。
+   *
+   * 子应用可通过此对象读写隔离的全局数据，避免直接污染主 window。
+   * 未启用 proxy 沙箱时为 undefined，子应用应回退到 window。
+   *
+   * @since 3.6.0
+   */
+  fakeWindow?: Record<string, unknown>;
+  /**
+   * iframe 沙箱注入的 contentWindow（仅当 sandboxType='iframe' 时存在）。
+   *
+   * 子应用如需直接操作 iframe 内的 document/window，可通过此引用访问。
+   * 跨 realm 通信（globalState）已由内核内置 postMessage 桥接，业务侧通常无需直接使用。
+   *
+   * @since 3.6.0
+   */
+  iframeWindow?: Window;
   /** 主应用注入的自定义 props */
   [key: string]: unknown;
 }

@@ -34,7 +34,7 @@ import com.njydsz.common.cache.builder.CacheType;
  * <p>运行方式：
  *
  * <pre>
- * mvn compile -pl ydsz-common/ydsz-common-cache
+ * mvn test-compile -pl ydsz-common/ydsz-common-cache
  * java -jar target/benchmarks.jar CacheBenchmark -wi 3 -i 5 -f 1
  * </pre>
  *
