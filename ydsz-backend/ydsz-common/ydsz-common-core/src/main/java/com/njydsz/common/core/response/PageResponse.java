@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
@@ -154,20 +155,6 @@ public class PageResponse<T> extends BaseResponse<T> {
     }
 
     /**
-     * 创建成功分页响应（数据在前，便于流式 API 调用）
-     *
-     * @param data     分页数据
-     * @param total    总记录数
-     * @param pageNum  当前页码
-     * @param pageSize 每页记录数
-     * @param <T>      数据类型
-     * @return 成功分页响应
-     */
-    public static <T> PageResponse<T> success(T data, long total, int pageNum, int pageSize) {
-        return success(total, pageNum, pageSize, data);
-    }
-
-    /**
      * 创建失败分页响应
      *
      * @param code 错误码
@@ -187,7 +174,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @return 失败分页响应
      */
     public static <T> PageResponse<T> fail(String msg) {
-        return fail(BaseResponse.ERROR, msg);
+        return fail(BaseResultCode.UNKNOWN.getCode(), msg);
     }
 
     /**

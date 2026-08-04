@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.expression.spel.support.SimpleEvaluationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -115,7 +115,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
             // 检查条件表达式
             if (StringUtils.hasText(node.getCondition())) {
                 try {
-                    StandardEvaluationContext ctx = new StandardEvaluationContext();
+                    // P0-5 修复：使用 SimpleEvaluationContext 防止 SpEL 注入
+                    // 禁止 T(...) 类型引用、new 构造、方法调用，仅允许只读数据绑定
+                    SimpleEvaluationContext ctx = SimpleEvaluationContext.forReadOnlyDataBinding()
+                            .withRootObject(nodeSuccess)
+                            .build();
                     ctx.setVariable("nodeSuccess", nodeSuccess);
                     ctx.setVariable("nodeResults", nodeResults);
                     Expression expr = SPEL_PARSER.parseExpression(node.getCondition());

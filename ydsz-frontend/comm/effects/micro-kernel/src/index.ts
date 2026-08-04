@@ -44,9 +44,12 @@ export {
   getAppInstance,
   getKeepAliveCount,
   setMaxKeepAliveApps,
+  setupVisibilityAutoRelease,
 } from './scheduler';
 // v3.6.0: 公开 GlobalStateBridge 类型，供外部扩展沙箱时使用
 export type { GlobalStateBridge } from './scheduler';
+// P0-P2: 公开 DeactivateResult 类型，供调用方感知 LRU 淘汰
+export type { DeactivateResult } from './scheduler';
 // v3.3: 公开 error-boundary i18n helpers，主应用可运行时切换降级 UI 文案语言
 export {
   getErrorFallbackMessagesByLocale,
