@@ -6,7 +6,7 @@ import java.util.Base64;
 
 import javax.crypto.KeyGenerator;
 
-import com.njydsz.common.util.bytes.HexUtils;
+import java.util.HexFormat;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -147,17 +147,22 @@ public class AesUtils {
     }
 
     /**
-     * 字节数组转十六进制字符串（委托给 HexUtils 实现）
+     * 字节数组转十六进制字符串
      */
     public static String bytesToHex(byte[] bytes) {
-        return HexUtils.bytesToHex(bytes);
+        return HexFormat.of().formatHex(bytes);
     }
 
     /**
-     * 十六进制字符串转字节数组（委托给 HexUtils 实现）
+     * 十六进制字符串转字节数组
+     *
+     * @throws IllegalArgumentException 当 hex 为 null 或长度为奇数时
      */
     public static byte[] hexToBytes(String hex) {
-        return HexUtils.hexToBytes(hex);
+        if (hex == null || hex.length() % 2 != 0) {
+            throw new IllegalArgumentException("Hex string must not be null and must have even length");
+        }
+        return HexFormat.of().parseHex(hex);
     }
 
     // ==================== GCM 模式（默认推荐） ====================

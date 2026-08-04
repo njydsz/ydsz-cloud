@@ -948,28 +948,31 @@ public class CollectionUtils {
     /**
      * 获取集合的子列表
      *
+     * <p>返回 <b>副本</b>（new ArrayList），而非 List.subList 的视图，
+     * 避免视图陷阱（原列表修改导致子列表 ConcurrentModificationException）。
+     *
      * @param collection 待切片的集合
      * @param fromIndex  起始索引（包含）
      * @param toIndex    结束索引（不包含）
      * @param <T>        元素类型
-     * @return 子列表
+     * @return 子列表（副本）
      */
     public static <T> List<T> subList(Collection<T> collection, int fromIndex, int toIndex) {
         if (isEmpty(collection)) {
             return Collections.emptyList();
         }
+        if (fromIndex < 0) {
+            fromIndex = 0;
+        }
         if (collection instanceof List) {
             List<T> list = (List<T>) collection;
-            if (fromIndex < 0) {
-                fromIndex = 0;
-            }
             if (toIndex > list.size()) {
                 toIndex = list.size();
             }
             if (fromIndex >= toIndex) {
                 return Collections.emptyList();
             }
-            return list.subList(fromIndex, toIndex);
+            return new ArrayList<>(list.subList(fromIndex, toIndex));
         }
         return collection.stream().skip(fromIndex).limit(toIndex - fromIndex).collect(Collectors.toList());
     }

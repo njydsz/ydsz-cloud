@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.njydsz.common.util.bytes.HexUtils;
+import java.util.HexFormat;
 
 /**
  * 用户密码安全工具类（纯 JDK 实现 + Spring Security BCrypt）
@@ -67,7 +67,7 @@ public class PwdUtils {
         }
         byte[] randomBytes = new byte[16];
         new SecureRandom().nextBytes(randomBytes);
-        String generated = HexUtils.bytesToHex(randomBytes);
+        String generated = HexFormat.of().formatHex(randomBytes);
         System.getLogger(PwdUtils.class.getName()).log(System.Logger.Level.WARNING,
                 "未配置默认密码(ydsz.default.password/YDSZ_DEFAULT_PASSWORD)，已随机生成");
         return generated;
@@ -143,9 +143,9 @@ public class PwdUtils {
             throw new IllegalArgumentException("Password must not be empty");
         }
         
-        byte[] salt = HexUtils.hexToBytes(saltHex);
+        byte[] salt = HexFormat.of().parseHex(saltHex);
         byte[] hash = DigestUtils.pbkdf2(password, salt, iterations, 256);
-        return saltHex + ":" + iterations + ":" + HexUtils.bytesToHex(hash);
+        return saltHex + ":" + iterations + ":" + HexFormat.of().formatHex(hash);
     }
 
     /**
@@ -193,9 +193,9 @@ public class PwdUtils {
             int iterations = Integer.parseInt(parts[1]);
             String expectedHash = parts[2];
             
-            byte[] salt = HexUtils.hexToBytes(saltHex);
+            byte[] salt = HexFormat.of().parseHex(saltHex);
             byte[] actualHash = DigestUtils.pbkdf2(password.toCharArray(), salt, iterations, 256);
-            String actualHashHex = HexUtils.bytesToHex(actualHash);
+            String actualHashHex = HexFormat.of().formatHex(actualHash);
             
             return MessageDigest.isEqual(
                 expectedHash.getBytes(StandardCharsets.UTF_8),

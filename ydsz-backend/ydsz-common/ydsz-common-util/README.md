@@ -241,7 +241,7 @@ boolean valid = PwdUtils.matches("userPassword123", hashed);
 
 ```java
 import com.njydsz.common.util.bean.BeanCopyUtils;
-import com.njydsz.common.util.BeanUpdateUtil;
+import com.njydsz.common.util.bean.BeanUpdateUtil;
 
 // 全量拷贝
 BeanCopyUtils.copyProperties(source, target);

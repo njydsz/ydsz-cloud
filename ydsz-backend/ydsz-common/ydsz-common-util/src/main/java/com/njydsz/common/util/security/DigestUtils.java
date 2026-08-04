@@ -13,7 +13,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.njydsz.common.util.bytes.HexUtils;
+import java.util.HexFormat;
 
 /**
  * 不可逆加密工具类（纯 JDK 实现，零第三方依赖）
@@ -73,7 +73,7 @@ public class DigestUtils {
      * @return Hex 编码的盐值字符串
      */
     public static String genSaltHex(int numBytes) {
-        return HexUtils.bytesToHex(genSalt(numBytes));
+        return HexFormat.of().formatHex(genSalt(numBytes));
     }
 
     /**
@@ -143,7 +143,7 @@ public class DigestUtils {
      * 计算 SHA-256 散列（Hex 格式）
  */
     public static String sha256Hex(byte[] input) {
-        return HexUtils.bytesToHex(sha256(input));
+        return HexFormat.of().formatHex(sha256(input));
     }
 
     /**
@@ -167,7 +167,7 @@ public class DigestUtils {
      * 计算 SHA-512 散列（Hex 格式）
  */
     public static String sha512Hex(byte[] input) {
-        return HexUtils.bytesToHex(sha512(input));
+        return HexFormat.of().formatHex(sha512(input));
     }
 
     /**
@@ -198,7 +198,7 @@ public class DigestUtils {
      * 计算 HMAC-SHA256（Hex 格式）
  */
     public static String hmacSha256Hex(byte[] input, byte[] key) {
-        return HexUtils.bytesToHex(hmacSha256(input, key));
+        return HexFormat.of().formatHex(hmacSha256(input, key));
     }
 
     /**
@@ -231,7 +231,7 @@ public class DigestUtils {
      * PBKDF2 密钥派生（Hex 格式）
  */
     public static String pbkdf2Hex(char[] password, byte[] salt, int iterations, int keyLength) {
-        return HexUtils.bytesToHex(pbkdf2(password, salt, iterations, keyLength));
+        return HexFormat.of().formatHex(pbkdf2(password, salt, iterations, keyLength));
     }
 
     /**
@@ -252,8 +252,8 @@ public class DigestUtils {
             return false;
         }
         try {
-            byte[] expected = HexUtils.hexToBytes(expectedHex);
-            byte[] actual = HexUtils.hexToBytes(actualHex);
+            byte[] expected = HexFormat.of().parseHex(expectedHex);
+            byte[] actual = HexFormat.of().parseHex(actualHex);
             return verifyDigest(expected, actual);
         } catch (Exception e) {
             return false;

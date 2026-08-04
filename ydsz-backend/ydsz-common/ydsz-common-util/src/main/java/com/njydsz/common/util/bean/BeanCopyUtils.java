@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 
-import com.njydsz.common.util.BeanUpdateUtil;
+import com.njydsz.common.util.bean.BeanUpdateUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -237,7 +237,7 @@ public class BeanCopyUtils {
     /**
      * 忽略 null 值的拷贝实现
      *
-     * <p>委托给 {@link com.njydsz.common.util.BeanUpdateUtil#copyNonNull} 统一实现，
+     * <p>委托给 {@link com.njydsz.common.util.bean.BeanUpdateUtil#copyNonNull} 统一实现，
      * 消除两个工具类之间的功能重叠。BeanUpdateUtil 是「PATCH 语义部分更新」的单一职责入口。
      */
     private static void copyPropertiesWithIgnoreNull(Object source, Object target) {

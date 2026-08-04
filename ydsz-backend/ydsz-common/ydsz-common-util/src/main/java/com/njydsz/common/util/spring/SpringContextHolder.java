@@ -1,7 +1,10 @@
 package com.njydsz.common.util.spring;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -12,7 +15,7 @@ import org.springframework.core.annotation.Order;
  * Spring 上下文持有者
  *
  * <p>提供全局静态方法和实例方法访问 Spring ApplicationContext，
- * 支持通过实现 ApplicationContextAware 自动初始化。
+ * 支持通过实现 {@link ApplicationContextAware} 自动初始化。
  *
  * <p>本类不标注 {@code @Component}，统一在 {@link com.njydsz.common.util.config.UtilAutoConfiguration}
  * 中以 {@code @Bean} 注册，避免组件扫描与 AutoConfiguration 双重注册冲突。
@@ -57,14 +60,31 @@ import org.springframework.core.annotation.Order;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ *
  */
 @Order(Integer.MIN_VALUE)
 public class SpringContextHolder implements ApplicationContextAware {
 
+    /** Spring 应用上下文 */
+    private static volatile ApplicationContext applicationContext;
+
+    /** 线程锁（用于 setApplicationContext 的双重检查） */
+    private static final Lock LOCK = new ReentrantLock();
+
+    // ==================== ApplicationContextAware 实现 ====================
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        SpringBeanUtils.setApplicationContext(applicationContext);
+        if (SpringContextHolder.applicationContext == null) {
+            LOCK.lock();
+            try {
+                if (SpringContextHolder.applicationContext == null) {
+                    SpringContextHolder.applicationContext = applicationContext;
+                }
+            } finally {
+                LOCK.unlock();
+            }
+        }
     }
 
     // ==================== 实例方法（支持注入使用） ====================
@@ -79,7 +99,7 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     public Object getBeanInstance(String name) {
         Objects.requireNonNull(name, "Bean 名称不能为空");
-        return SpringBeanUtils.getBean(name);
+        return getBean(name);
     }
 
     /**
@@ -93,7 +113,7 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     public <T> T getBeanInstance(Class<T> clazz) {
         Objects.requireNonNull(clazz, "Bean 类型不能为空");
-        return SpringBeanUtils.getBean(clazz);
+        return getBean(clazz);
     }
 
     /**
@@ -109,7 +129,7 @@ public class SpringContextHolder implements ApplicationContextAware {
     public <T> T getBeanInstance(String name, Class<T> clazz) {
         Objects.requireNonNull(name, "Bean 名称不能为空");
         Objects.requireNonNull(clazz, "Bean 类型不能为空");
-        return SpringBeanUtils.getBean(name, clazz);
+        return getBean(name, clazz);
     }
 
     /**
@@ -123,66 +143,22 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     public <T> Map<String, T> getBeansOfTypeInstance(Class<T> clazz) {
         Objects.requireNonNull(clazz, "Bean 类型不能为空");
-        return SpringBeanUtils.getBeansOfType(clazz);
+        return getBeansOfType(clazz);
     }
 
-    // ==================== 静态方法（向后兼容） ====================
+    // ==================== 静态方法 ====================
 
     /**
-     * 根据名称获取 Bean
+     * 获取 Spring ApplicationContext
      *
-     * @param name Bean 名称
-     * @return Bean 实例
-     * @throws NullPointerException     如果 Bean 名称为空
-     * @throws IllegalStateException    如果 ApplicationContext 未初始化
+     * @return ApplicationContext 实例
+     * @throws IllegalStateException 如果 ApplicationContext 未初始化
      */
-    public static Object getBean(String name) {
-        Objects.requireNonNull(name, "Bean 名称不能为空");
-        return SpringBeanUtils.getBean(name);
-    }
-
-    /**
-     * 根据类型获取 Bean
-     *
-     * @param clazz Bean 类型
-     * @param <T>   Bean 类型
-     * @return Bean 实例
-     * @throws NullPointerException     如果 Bean 类型为空
-     * @throws IllegalStateException    如果 ApplicationContext 未初始化
-     */
-    public static <T> T getBean(Class<T> clazz) {
-        Objects.requireNonNull(clazz, "Bean 类型不能为空");
-        return SpringBeanUtils.getBean(clazz);
-    }
-
-    /**
-     * 根据名称和类型获取 Bean
-     *
-     * @param name  Bean 名称
-     * @param clazz Bean 类型
-     * @param <T>   Bean 类型
-     * @return Bean 实例
-     * @throws NullPointerException     如果 Bean 名称或类型为空
-     * @throws IllegalStateException    如果 ApplicationContext 未初始化
-     */
-    public static <T> T getBean(String name, Class<T> clazz) {
-        Objects.requireNonNull(name, "Bean 名称不能为空");
-        Objects.requireNonNull(clazz, "Bean 类型不能为空");
-        return SpringBeanUtils.getBean(name, clazz);
-    }
-
-    /**
-     * 获取所有指定类型的 Bean
-     *
-     * @param clazz Bean 类型
-     * @param <T>   Bean 类型
-     * @return Bean 映射，key 为 Bean 名称，value 为 Bean 实例
-     * @throws NullPointerException     如果 Bean 类型为空
-     * @throws IllegalStateException    如果 ApplicationContext 未初始化
-     */
-    public static <T> Map<String, T> getBeansOfType(Class<T> clazz) {
-        Objects.requireNonNull(clazz, "Bean 类型不能为空");
-        return SpringBeanUtils.getBeansOfType(clazz);
+    public static ApplicationContext getApplicationContext() {
+        if (applicationContext == null) {
+            throw new IllegalStateException("ApplicationContext 未初始化，请在 Spring 容器中初始化");
+        }
+        return applicationContext;
     }
 
     /**
@@ -191,6 +167,163 @@ public class SpringContextHolder implements ApplicationContextAware {
      * @return 如果已初始化返回 true，否则返回 false
      */
     public static boolean isInitialized() {
-        return SpringBeanUtils.getApplicationContextInternal() != null;
+        return applicationContext != null;
+    }
+
+    /**
+     * 根据名称获取 Bean
+     *
+     * @param name Bean 名称
+     * @return Bean 实例
+     * @throws IllegalArgumentException 如果 Bean 名称为空
+     * @throws IllegalStateException 如果 ApplicationContext 未初始化
+     */
+    public static Object getBean(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bean 名称不能为空");
+        }
+        ApplicationContext ctx = applicationContext;
+        if (ctx == null) {
+            throw new IllegalStateException("ApplicationContext 未初始化");
+        }
+        return ctx.getBean(name);
+    }
+
+    /**
+     * 根据类型获取 Bean
+     *
+     * @param clazz Bean 类型
+     * @param <T> Bean 类型
+     * @return Bean 实例
+     * @throws IllegalArgumentException 如果 Bean 类型为空
+     * @throws IllegalStateException 如果 ApplicationContext 未初始化
+     */
+    public static <T> T getBean(Class<T> clazz) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Bean 类型不能为空");
+        }
+        ApplicationContext ctx = applicationContext;
+        if (ctx == null) {
+            throw new IllegalStateException("ApplicationContext 未初始化");
+        }
+        return ctx.getBean(clazz);
+    }
+
+    /**
+     * 根据名称和类型获取 Bean
+     *
+     * @param name Bean 名称
+     * @param clazz Bean 类型
+     * @param <T> Bean 类型
+     * @return Bean 实例
+     * @throws IllegalArgumentException 如果 Bean 名称或类型为空
+     * @throws IllegalStateException 如果 ApplicationContext 未初始化
+     */
+    public static <T> T getBean(String name, Class<T> clazz) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bean 名称不能为空");
+        }
+        if (clazz == null) {
+            throw new IllegalArgumentException("Bean 类型不能为空");
+        }
+        ApplicationContext ctx = applicationContext;
+        if (ctx == null) {
+            throw new IllegalStateException("ApplicationContext 未初始化");
+        }
+        return ctx.getBean(name, clazz);
+    }
+
+    /**
+     * 获取所有指定类型的 Bean
+     *
+     * @param clazz Bean 类型
+     * @param <T> Bean 类型
+     * @return Bean 映射，key 为 Bean 名称，value 为 Bean 实例
+     * @throws IllegalArgumentException 如果 Bean 类型为空
+     * @throws IllegalStateException 如果 ApplicationContext 未初始化
+     */
+    public static <T> Map<String, T> getBeansOfType(Class<T> clazz) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Bean 类型不能为空");
+        }
+        ApplicationContext ctx = applicationContext;
+        if (ctx == null) {
+            throw new IllegalStateException("ApplicationContext 未初始化");
+        }
+        return ctx.getBeansOfType(clazz);
+    }
+
+    /**
+     * 获取所有带有指定注解的 Bean
+     *
+     * @param annotationType 注解类型
+     * @return Bean 映射，key 为 Bean 名称，value 为 Bean 实例
+     * @throws IllegalArgumentException 如果注解类型为空
+     * @throws IllegalStateException 如果 ApplicationContext 未初始化
+     */
+    public static Map<String, Object> getBeansWithAnnotation(Class<? extends Annotation> annotationType) {
+        if (annotationType == null) {
+            throw new IllegalArgumentException("注解类型不能为空");
+        }
+        ApplicationContext ctx = applicationContext;
+        if (ctx == null) {
+            throw new IllegalStateException("ApplicationContext 未初始化");
+        }
+        return ctx.getBeansWithAnnotation(annotationType);
+    }
+
+    /**
+     * 检查容器中是否包含指定名称的 Bean
+     *
+     * @param name Bean 名称
+     * @return 如果包含返回 true，否则返回 false
+     */
+    public static boolean containsBean(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+        ApplicationContext ctx = applicationContext;
+        if (ctx == null) {
+            return false;
+        }
+        return ctx.containsBean(name);
+    }
+
+    /**
+     * 检查容器中是否包含指定类型的 Bean
+     *
+     * @param clazz Bean 类型
+     * @param <T> Bean 类型
+     * @return 如果包含返回 true，否则返回 false
+     */
+    public static <T> boolean containsBean(Class<T> clazz) {
+        if (clazz == null) {
+            return false;
+        }
+        try {
+            getBean(clazz);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 获取指定名称的 Bean 的类型
+     *
+     * @param name Bean 名称
+     * @return Bean 类型
+     * @throws IllegalArgumentException 如果 Bean 名称为空
+     * @throws IllegalStateException 如果 ApplicationContext 未初始化
+     */
+    public static Class<?> getType(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bean 名称不能为空");
+        }
+        ApplicationContext ctx = applicationContext;
+        if (ctx == null) {
+            throw new IllegalStateException("ApplicationContext 未初始化");
+        }
+        return ctx.getType(name);
     }
 }

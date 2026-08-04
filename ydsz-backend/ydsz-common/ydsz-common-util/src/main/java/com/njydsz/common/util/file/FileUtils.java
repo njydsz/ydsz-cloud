@@ -4,10 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -34,7 +35,7 @@ import java.util.Objects;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.njydsz.common.util.bytes.HexUtils;
+import java.util.HexFormat;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -707,7 +708,7 @@ public class FileUtils {
         
         try (InputStream is = Files.newInputStream(path)) {
             byte[] hash = DigestUtils.digest(is, algorithm);
-            return HexUtils.bytesToHex(hash);
+            return HexFormat.of().formatHex(hash);
         } catch (IOException e) {
             log.error("FileUtils -> calculateHash error for path {}: {}", filePath, e.getMessage());
             return StringUtils.EMPTY;
@@ -731,7 +732,7 @@ public class FileUtils {
         
         try {
             byte[] hash = DigestUtils.digest(data, algorithm, null, 1);
-            return HexUtils.bytesToHex(hash);
+            return HexFormat.of().formatHex(hash);
         } catch (Exception e) {
             log.error("FileUtils -> calculateHash error: {}", e.getMessage());
             return StringUtils.EMPTY;
@@ -993,16 +994,20 @@ public class FileUtils {
      */
     public static void downloadFile(String url, String path, HttpServletResponse response,
                                     int connectTimeoutMs, int readTimeoutMs) {
-        HttpURLConnection conn = null;
         try {
-            URL httpUrl = URI.create(url).toURL();
-            conn = (HttpURLConnection) httpUrl.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(connectTimeoutMs);
-            conn.setReadTimeout(readTimeoutMs);
-            conn.setDoInput(true);
-            conn.setUseCaches(false);
-            conn.connect();
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofMillis(connectTimeoutMs))
+                    .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(java.time.Duration.ofMillis(readTimeoutMs))
+                    .GET()
+                    .build();
+
+            HttpResponse<InputStream> resp = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            if (resp.statusCode() != 200) {
+                throw new IOException("HTTP 响应码：" + resp.statusCode());
+            }
 
             byte[] buffer = new byte[4096];
             int len;
@@ -1016,7 +1021,7 @@ public class FileUtils {
             String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
             response.setHeader("Content-Disposition",
                     "attachment;filename=\"" + encodedFileName + "\";filename*=UTF-8''" + encodedFileName);
-            try (InputStream in = conn.getInputStream();
+            try (InputStream in = resp.body();
                  ServletOutputStream out = response.getOutputStream()) {
                 while ((len = in.read(buffer)) != -1) {
                     out.write(buffer, 0, len);
@@ -1026,10 +1031,6 @@ public class FileUtils {
         } catch (Exception e) {
             log.error("FileUtils -> downloadFile failed for url {}: {}", url, e.getMessage(), e);
             throw new RuntimeException("文件下载失败：" + url, e);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
         }
     }
 
@@ -1044,31 +1045,32 @@ public class FileUtils {
         if (StringUtils.isBlank(url) || StringUtils.isBlank(targetPath)) {
             throw new IllegalArgumentException("URL 和目标路径不能为空");
         }
-        
+
         mkdirsForFile(targetPath);
 
-        URL httpUrl = URI.create(url).toURL();
-        HttpURLConnection conn = null;
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(java.time.Duration.ofMillis(timeoutMillis))
+                .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(java.time.Duration.ofMillis(timeoutMillis))
+                .GET()
+                .build();
+
+        HttpResponse<InputStream> resp;
         try {
-            conn = (HttpURLConnection) httpUrl.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout((int) Math.min(timeoutMillis, Integer.MAX_VALUE));
-            conn.setReadTimeout((int) Math.min(timeoutMillis, Integer.MAX_VALUE));
-            conn.connect();
+            resp = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("下载被中断：" + url, e);
+        }
+        if (resp.statusCode() != 200) {
+            throw new IOException("HTTP 响应码：" + resp.statusCode());
+        }
 
-            int responseCode = conn.getResponseCode();
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                throw new IOException("HTTP 响应码：" + responseCode);
-            }
-
-            // 使用 NIO Files.copy 替代 FileOutputStream，自动管理资源
-            try (InputStream in = conn.getInputStream()) {
-                Files.copy(in, Paths.get(targetPath), StandardCopyOption.REPLACE_EXISTING);
-            }
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
+        // 使用 NIO Files.copy 替代 FileOutputStream，自动管理资源
+        try (InputStream in = resp.body()) {
+            Files.copy(in, Paths.get(targetPath), StandardCopyOption.REPLACE_EXISTING);
         }
     }
 }

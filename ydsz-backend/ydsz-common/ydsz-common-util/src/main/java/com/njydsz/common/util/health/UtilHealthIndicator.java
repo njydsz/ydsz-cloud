@@ -6,8 +6,6 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.util.id.SnowflakeUtils;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -18,15 +16,16 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>检查内容：
  * <ul>
- *   <li>SnowflakeUtils 初始化状态（workerId / datacenterId / lastTimestamp）</li>
  *   <li>JVM 运行时基础指标（内存使用率）</li>
  * </ul>
+ *
+ * <p>Snowflake 相关健康检查由 {@link com.njydsz.common.util.id.SnowflakeHealthIndicator}
+ * 独立负责，本类不再重复暴露 workerId/datacenterId/lastTimestamp，避免冗余。
  *
  * <p>健康状态映射：
  * <ul>
  *   <li>无异常 → UP</li>
  *   <li>有警告（内存使用率 >85%）→ UP（带详情）</li>
- *   <li>有严重异常（SnowflakeUtils 未初始化）→ DOWN</li>
  * </ul>
  *
  * @author ydsz-team
@@ -41,10 +40,7 @@ public class UtilHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         Health.Builder builder = Health.up();
-        boolean hasCritical = collectHealthDetails(builder);
-        if (hasCritical) {
-            builder.down();
-        }
+        collectHealthDetails(builder);
         return builder.build();
     }
 
@@ -52,26 +48,9 @@ public class UtilHealthIndicator implements HealthIndicator {
      * 收集健康检查详情到 Health.Builder
      *
      * @param builder Health.Builder
-     * @return true 表示有严重异常（应标记为 DOWN）
      */
-    private boolean collectHealthDetails(Health.Builder builder) {
-        boolean hasCritical = false;
-
-        // 1. SnowflakeUtils 检查
-        try {
-            SnowflakeUtils instance = SnowflakeUtils.getInstance();
-            builder.withDetail("snowflake.initialized", true);
-            builder.withDetail("snowflake.workerId", instance.getWorkerId());
-            builder.withDetail("snowflake.datacenterId", instance.getDatacenterId());
-            builder.withDetail("snowflake.lastTimestamp", instance.getLastTimestamp());
-        } catch (Exception e) {
-            log.warn("SnowflakeUtils health check failed: {}", e.getMessage());
-            builder.withDetail("snowflake.initialized", false);
-            builder.withDetail("snowflake.error", e.getMessage());
-            hasCritical = true;
-        }
-
-        // 2. JVM 运行时基础指标
+    private void collectHealthDetails(Health.Builder builder) {
+        // JVM 运行时基础指标
         try {
             Runtime runtime = Runtime.getRuntime();
             long maxMemory = runtime.maxMemory();
@@ -88,8 +67,6 @@ public class UtilHealthIndicator implements HealthIndicator {
             log.warn("JVM health check failed: {}", e.getMessage());
             builder.withDetail("jvm.error", e.getMessage());
         }
-
-        return hasCritical;
     }
 
     /**

@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 
 import com.njydsz.common.util.auth.AuthInfoUtils;
-import com.njydsz.common.util.spring.SpringBeanUtils;
+import com.njydsz.common.util.spring.SpringContextHolder;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -112,7 +112,7 @@ public class MessageUtils {
         }
 
         try {
-            Object messageSource = SpringBeanUtils.getBean("messageSource");
+            Object messageSource = SpringContextHolder.getBean("messageSource");
             if (messageSource == null) {
                 logger.warn("MessageSource bean not found");
                 return key;
@@ -139,7 +139,7 @@ public class MessageUtils {
         }
 
         try {
-            Object messageSource = SpringBeanUtils.getBean("messageSource");
+            Object messageSource = SpringContextHolder.getBean("messageSource");
             if (messageSource == null) {
                 logger.warn("MessageSource bean not found");
                 return defaultMsg;

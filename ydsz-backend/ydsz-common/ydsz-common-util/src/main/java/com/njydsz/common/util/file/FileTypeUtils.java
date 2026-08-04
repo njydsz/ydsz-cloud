@@ -49,39 +49,37 @@ public class FileTypeUtils {
         FILE_TYPE_MAP.put("47494638", "gif");
         FILE_TYPE_MAP.put("424D", "bmp");
         FILE_TYPE_MAP.put("00000100", "ico");
-        FILE_TYPE_MAP.put("52494646", "webp"); // RIFF 容器
-        
+        // RIFF 容器（webp/avi/wav）通过 RIFF 子类型区分，见 getFileExtendName 中的特殊处理
+
         // PDF
         FILE_TYPE_MAP.put("25504446", "pdf");
-        
+
         // 压缩文件
         FILE_TYPE_MAP.put("504B0304", "zip");
         FILE_TYPE_MAP.put("52617221", "rar");
         FILE_TYPE_MAP.put("1F8B08", "gz");
         FILE_TYPE_MAP.put("FD377A585A00", "xz");
         FILE_TYPE_MAP.put("377ABCAF271C", "7z");
-        
+
         // 文档
         FILE_TYPE_MAP.put("D0CF11E0", "xls"); // OLE 格式
         FILE_TYPE_MAP.put("504B030414000600", "docx");
         FILE_TYPE_MAP.put("504B030414000600", "xlsx");
         FILE_TYPE_MAP.put("504B030414000600", "pptx");
-        
+
         // 视频
         FILE_TYPE_MAP.put("0000001866747970", "mp4");
         FILE_TYPE_MAP.put("0000002066747970", "mp4");
         FILE_TYPE_MAP.put("1A45DFA3", "mkv");
         FILE_TYPE_MAP.put("0000001C66747970", "3gp");
         FILE_TYPE_MAP.put("464C5601", "flv");
-        FILE_TYPE_MAP.put("52494646", "avi"); // RIFF 容器
-        
+
         // 音频
         FILE_TYPE_MAP.put("494433", "mp3"); // ID3 tag
         FILE_TYPE_MAP.put("FFF1", "aac");
         FILE_TYPE_MAP.put("664C6143", "flac");
         FILE_TYPE_MAP.put("61696666", "aiff");
-        FILE_TYPE_MAP.put("52494646", "wav"); // RIFF 容器
-        
+
         // 可执行文件
         FILE_TYPE_MAP.put("4D5A", "exe");
         FILE_TYPE_MAP.put("7F454C46", "elf"); // Linux 可执行文件
@@ -155,14 +153,29 @@ public class FileTypeUtils {
             return "UNKNOWN";
         }
         String hex = bytesToHexString(fileBytes, Math.min(fileBytes.length, 12));
-        
+
+        // RIFF 容器特殊处理：webp/avi/wav 共用 "52494646" (RIFF) 魔数，
+        // 需通过 bytes 8-11 的子类型区分：
+        //   "57454250" = WEBP (webp)
+        //   "41564920" = AVI  (avi)
+        //   "57415645" = WAVE (wav)
+        if (hex.startsWith("52494646") && hex.length() >= 24) {
+            String riffType = hex.substring(16, 24);
+            switch (riffType) {
+                case "57454250": return "webp";
+                case "41564920": return "avi";
+                case "57415645": return "wav";
+                default: return "UNKNOWN";
+            }
+        }
+
         for (Map.Entry<String, String> entry : FILE_TYPE_MAP.entrySet()) {
             String magicNumber = entry.getKey();
             if (hex.startsWith(magicNumber)) {
                 return entry.getValue();
             }
         }
-        
+
         return "UNKNOWN";
     }
 

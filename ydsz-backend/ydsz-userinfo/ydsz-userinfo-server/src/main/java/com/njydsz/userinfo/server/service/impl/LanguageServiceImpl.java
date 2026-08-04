@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.BeanUpdateUtil;
+import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
 import com.njydsz.userinfo.domain.dto.put.LanguagePutDTO;

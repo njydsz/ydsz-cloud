@@ -57,24 +57,12 @@
             <artifactId>apm-toolkit-trace</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- commons-lang3 (StringUtils 等基础工具) -->
-        <dependency>
-            <artifactId>commons-lang3</artifactId>
-            <groupId>org.apache.commons</groupId>
-            <optional>true</optional>
-        </dependency>
-        <!-- commons-io (FileUtils/IOUtils) -->
-        <dependency>
-            <artifactId>commons-io</artifactId>
-            <groupId>commons-io</groupId>
-            <optional>true</optional>
-        </dependency>
         <!--slf4j-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <!--transmittable-thread-local (ContextPropagationUtils)-->
+        <!--transmittable-thread-local (RequestHolder AuthInfo 跨线程传递)-->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>

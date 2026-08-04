@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.BeanUpdateUtil;
+import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
 import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
