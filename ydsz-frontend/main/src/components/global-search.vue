@@ -1,188 +1,198 @@
-<!--
- * global-search 通用组件
- *
- * @path main\src\components\global-search.vue
- * @author ydsz-team
- * @since 1.0.0
--->
-<script lang="ts" setup>
-import type { SearchApi } from '#/api/core/search';
-
-import { ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-
-import { Search } from '@element-plus/icons-vue';
-import {
-  ElDialog,
-  ElEmpty,
-  ElIcon,
-  ElInput,
-  ElLink,
-  ElTag,
-} from 'element-plus';
-
-import { globalSearchApi, searchSuggestApi } from '#/api/core/search';
-
-const router = useRouter();
-
-/** 搜索弹窗显隐（v-model:visible） */
-const visible = defineModel<boolean>('visible', { default: false });
-
-const keyword = ref('');
-const loading = ref(false);
-const results = ref<SearchApi.SearchResultItem[]>([]);
-const suggestions = ref<string[]>([]);
-
-let searchTimer: null | ReturnType<typeof setTimeout> = null;
-
-watch(keyword, (val) => {
-  if (searchTimer) clearTimeout(searchTimer);
-  if (!val || val.trim().length < 2) {
-    results.value = [];
-    suggestions.value = [];
-    return;
-  }
-
-  searchTimer = setTimeout(async () => {
-    loading.value = true;
-    try {
-      // 获取搜索建议
-      searchSuggestApi(val.trim()).then((s) => {
-        suggestions.value = s || [];
-      });
-
-      // 执行搜索
-      const res = await globalSearchApi({
-        keyword: val.trim(),
-        pageNum: 1,
-        pageSize: 20,
-      });
-      results.value = res.items || [];
-    } catch {
-      results.value = [];
-    } finally {
-      loading.value = false;
-    }
-  }, 300);
-});
-
-function handleSelectResult(item: SearchApi.SearchResultItem) {
-  if (item.url) {
-    router.push(item.url);
-  }
-  visible.value = false;
-  keyword.value = '';
-  results.value = [];
-}
-
-function handleSuggestion(suggestion: string) {
-  keyword.value = suggestion;
-}
-
-// 全局快捷键 Ctrl+K / Cmd+K
-function handleKeydown(e: KeyboardEvent) {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-    e.preventDefault();
-    visible.value = true;
-  }
-  if (e.key === 'Escape') {
-    visible.value = false;
-  }
-}
-
-if (typeof window !== 'undefined') {
-  window.addEventListener('keydown', handleKeydown);
-}
-
-/** 模块标识到标签颜色的映射，用于结果列表中模块标签着色 */
-const moduleColorMap: Record<string, string> = {
-  project: 'primary',
-  workflow: 'success',
-  message: 'warning',
-  userinfo: 'info',
-  system: 'danger',
-  nextwiki: 'primary',
-  literule: 'success',
-  cronjob: 'warning',
-  agent: 'info',
-};
-</script>
-
 <template>
-  <ElDialog
-    v-model="visible"
-    title="全局搜索"
-    width="640px"
-    :show-close="true"
-    append-to-body
-    class="global-search-dialog"
-  >
-    <ElInput
-      v-model="keyword"
-      placeholder="搜索项目、合同、任务、文件、规则...（Ctrl+K）"
-      size="large"
-      clearable
-      :prefix-icon="Search"
-    />
-    <div class="mt-3 max-h-[400px] overflow-y-auto">
-      <!-- 搜索建议 -->
-      <div
-        v-if="suggestions.length > 0 && results.length === 0 && !loading"
-        class="mb-3"
-      >
-        <div class="mb-2 text-xs text-gray-400">搜索建议</div>
-        <div class="flex flex-wrap gap-2">
-          <ElTag
-            v-for="s in suggestions"
-            :key="s"
-            class="cursor-pointer"
-            effect="plain"
-            @click="handleSuggestion(s)"
-          >
-            {{ s }}
-          </ElTag>
-        </div>
-      </div>
-
-      <!-- 搜索结果 -->
-      <div v-if="loading" class="py-8 text-center text-gray-400">
-        搜索中...
-      </div>
-
-      <ElEmpty
-        v-else-if="results.length === 0 && keyword.trim().length >= 2"
-        description="未找到相关结果"
-      />
-
-      <div v-else class="space-y-2">
-        <div
-          v-for="item in results"
-          :key="item.id"
-          class="cursor-pointer rounded-lg border border-gray-100 p-3 transition-colors hover:border-blue-300 hover:bg-blue-50"
-          @click="handleSelectResult(item)"
-        >
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-gray-800">{{ item.title }}</span>
-            <ElTag
-              :type="moduleColorMap[item.module] || 'info'"
-              size="small"
-            >
-              {{ item.module }}
-            </ElTag>
-          </div>
-          <div
-            v-if="item.snippet"
-            class="mt-1 text-sm text-gray-500 line-clamp-2"
-            v-safe-html="item.highlight || item.snippet"
+  <Transition name="search-modal">
+    <div
+      v-if="visible"
+      class="gs-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="全局搜索"
+      @click.self="close"
+      @keydown.esc="close"
+    >
+      <div class="gs-panel" role="search">
+        <!-- 输入框 -->
+        <div class="gs-input-wrap">
+          <LucideIcon name="lucide:search" :size="18" class="gs-icon" />
+          <input
+            ref="inputRef"
+            v-model="query"
+            class="gs-input"
+            :placeholder="placeholder"
+            aria-label="搜索"
+            @keydown.enter="handleEnter"
+            @keydown.up.prevent="navigate(-1)"
+            @keydown.down.prevent="navigate(1)"
           />
+          <kbd class="gs-kbd">Esc</kbd>
+        </div>
+
+        <!-- 结果列表 -->
+        <div class="gs-results" role="listbox">
+          <template v-if="results.length">
+            <button
+              v-for="(item, idx) in results"
+              :key="item.id"
+              class="gs-item"
+              :class="{ 'is-active': idx === activeIndex }"
+              role="option"
+              :aria-selected="idx === activeIndex"
+              @click="goTo(item)"
+              @mouseenter="activeIndex = idx"
+            >
+              <LucideIcon :name="item.icon || 'lucide:file'" :size="14" class="gs-item-icon" />
+              <div class="gs-item-body">
+                <span class="gs-item-title" v-html="item.highlightedTitle || item.title"></span>
+                <span class="gs-item-desc" v-if="item.description">{{ item.description }}</span>
+              </div>
+              <span class="gs-app-badge" :class="`is-${item.appName}`">{{ item.appLabel }}</span>
+            </button>
+          </template>
+          <div v-else-if="query.length" class="gs-empty">未找到匹配项</div>
+          <div v-else class="gs-tips">
+            <span>↑↓ 选择</span><span>↵ 跳转</span><span>Esc 关闭</span>
+          </div>
         </div>
       </div>
     </div>
-  </ElDialog>
+  </Transition>
 </template>
 
-<style scoped>
-.global-search-dialog :deep(.el-dialog__body) {
-  padding: 16px 20px;
+<script setup lang="ts">
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, defineModel } from 'vue';
+import type { SearchItem } from '@/hooks/use-global-search';
+import { registerKeyboard } from '@/hooks/use-global-shortcut';
+import LucideIcon from '@/components/lucide-icon.vue';
+
+/** 受控显隐 */
+const props = defineProps<{ items: SearchItem[]; appNameLabels?: Record<string, string> }>();
+const visible = defineModel<boolean>('visible', { required: true });
+
+const query = ref('');
+const activeIndex = ref(0);
+const inputRef = ref<HTMLInputElement | null>(null);
+const placeholder = '搜索菜单、功能、操作... (⌘K)';
+
+/** 搜索结果过滤 */
+const results = computed(() => {
+  const q = query.value.trim().toLowerCase();
+  if (!q) return [];
+  return props.items
+    .map((item) => {
+      const titleIdx = item.title.toLowerCase().indexOf(q);
+      const descIdx = item.description?.toLowerCase().indexOf(q) ?? -1;
+      if (titleIdx < 0 && descIdx < 0) return null;
+      const qIdx = titleIdx >= 0 ? titleIdx : descIdx;
+      const highlightedTitle =
+        item.title.slice(0, qIdx) +
+        `<mark>${item.title.slice(qIdx, qIdx + q.length)}</mark>` +
+        item.title.slice(qIdx + q.length);
+      return { ...item, highlightedTitle };
+    })
+    .filter((x): x is SearchItem & { highlightedTitle: string } => x !== null)
+    .slice(0, 30);
+});
+
+watch(visible, async (v) => {
+  if (v) {
+    await nextTick();
+    inputRef.value?.focus();
+    query.value = '';
+    activeIndex.value = 0;
+  }
+});
+
+watch(query, () => { activeIndex.value = 0; });
+
+function navigate(dir: number) {
+  const len = results.value.length;
+  if (!len) return;
+  activeIndex.value = (activeIndex.value + dir + len) % len;
 }
+
+function handleEnter() {
+  const item = results.value[activeIndex.value];
+  if (item) goTo(item);
+}
+
+function goTo(item: SearchItem) {
+  close();
+  if (item.onClick) item.onClick();
+  else if (item.path) emitRouterPush(item.path);
+}
+
+function emitRouterPush(path: string) {
+  window.dispatchEvent(new CustomEvent('micro-kernel:navigate', { detail: { path } }));
+}
+
+function close() {
+  visible.value = false;
+}
+
+function handler(e: KeyboardEvent) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    visible.value = !visible.value;
+  }
+}
+
+onMounted(() => registerKeyboard('cmd+k', handler));
+onUnmounted(() => {});
+</script>
+
+<style scoped>
+.gs-overlay {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; align-items: flex-start; justify-content: center; padding-top: 15vh;
+  background: rgba(0, 0, 0, 0.4);
+}
+.gs-panel {
+  width: 560px; max-width: 90vw;
+  background: var(--el-bg-color, #fff);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+.gs-input-wrap {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+.gs-icon { color: var(--el-text-color-placeholder); }
+.gs-input {
+  flex: 1; border: none; outline: none;
+  font-size: 15px; background: transparent;
+  color: var(--el-text-color-primary);
+}
+.gs-kbd {
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
+  background: var(--el-fill-color-light);
+  border-radius: 4px;
+  border: 1px solid var(--el-border-color);
+}
+.gs-results { max-height: 420px; overflow-y: auto; padding: 8px 0; }
+.gs-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none; background: transparent; width: 100%; text-align: left;
+  border-bottom: 1px solid var(--el-border-color-extra-light);
+}
+.gs-item:last-child { border-bottom: none; }
+.gs-item.is-active, .gs-item:hover { background: var(--el-fill-color-light); }
+.gs-item-icon { color: var(--el-text-color-placeholder); }
+.gs-item-body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gs-item-title { font-size: 13px; color: var(--el-text-color-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-item-title :deep(mark) { background: var(--el-color-primary-light-8); color: var(--el-color-primary); border-radius: 2px; padding: 0 2px; }
+.gs-item-desc { font-size: 11px; color: var(--el-text-color-secondary); }
+.gs-app-badge {
+  padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; background: var(--el-fill-color-light);
+  color: var(--el-text-color-regular); white-space: nowrap;
+}
+.gs-empty, .gs-tips { text-align: center; padding: 20px; font-size: 12px; color: var(--el-text-color-placeholder); }
+.gs-tips { display: flex; gap: 16px; justify-content: center; }
+.search-modal-enter-active, .search-modal-leave-active { transition: opacity 0.15s ease; }
+.search-modal-enter-from, .search-modal-leave-to { opacity: 0; }
 </style>

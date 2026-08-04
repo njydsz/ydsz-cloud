@@ -4,6 +4,7 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.ProblemDetail;
+import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,7 +13,10 @@ import org.slf4j.MDC;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * 统一API返回结果封装类
  *
@@ -46,7 +50,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
-@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "extensions"})
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -99,6 +104,16 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * 链路追踪 ID
      */
     private String traceId;
+
+    /**
+     * 扩展字段（可选）。
+     *
+     * <p>用于携带额外的上下文信息，如 requestId、debugInfo、cost 等。
+     * 为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 控制）。</p>
+     *
+     * @since 1.6.0
+     */
+    private Map<String, Object> extensions;
 
     /**
      * 默认构造函数
@@ -562,4 +577,83 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         return !isSuccess();
     }
 
+    // ======================== 扩展字段操作 ========================
+
+    /**
+     * 添加扩展字段（链式调用）。
+     *
+     * <p>用于携带额外的上下文信息，如 requestId、debugInfo、cost 等。
+     * 示例：{@code return BaseResponse.success(data).putExtension("requestId", "req-123");}</p>
+     *
+     * @param key   扩展键
+     * @param value 扩展值
+     * @return 当前响应对象（支持链式调用）
+     * @since 1.6.0
+     */
+    public BaseResponse<T> putExtension(String key, Object value) {
+        if (key == null || key.isEmpty()) {
+            throw new IllegalArgumentException("extension key must not be null or empty");
+        }
+        if (this.extensions == null) {
+            this.extensions = new HashMap<>();
+        }
+        this.extensions.put(key, value);
+        return this;
+    }
+
+    /**
+     * 批量添加扩展字段（链式调用）。
+     *
+     * @param exts 扩展键值对（可为 null）
+     * @return 当前响应对象（支持链式调用）
+     * @since 1.6.0
+     */
+    public BaseResponse<T> putExtensions(Map<String, Object> exts) {
+        if (exts != null && !exts.isEmpty()) {
+            if (this.extensions == null) {
+                this.extensions = new HashMap<>();
+            }
+            this.extensions.putAll(exts);
+        }
+        return this;
+    }
+
+    /**
+     * 获取扩展字段。
+     *
+     * @param key 扩展键
+     * @return 扩展值；不存在返回 null
+     * @since 1.6.0
+     */
+    public Object getExtension(String key) {
+        return this.extensions != null ? this.extensions.get(key) : null;
+    }
+
+    /**
+     * 移除扩展字段（链式调用）。
+     *
+     * @param key 扩展键
+     * @return 当前响应对象（支持链式调用）
+     * @since 1.6.0
+     */
+    public BaseResponse<T> removeExtension(String key) {
+        if (this.extensions != null) {
+            this.extensions.remove(key);
+            // 如果移除后为 null，清理 Map 以节省内存并避免序列化
+            if (this.extensions.isEmpty()) {
+                this.extensions = null;
+            }
+        }
+        return this;
+    }
+
+    /**
+     * 判断是否有任何扩展字段。
+     *
+     * @return 存在扩展字段返回 true；否则返回 false
+     * @since 1.6.0
+     */
+    public boolean hasExtensions() {
+        return this.extensions != null && !this.extensions.isEmpty();
+    }
 }

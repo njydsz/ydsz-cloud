@@ -1369,7 +1369,14 @@
                 <!-- JaCoCo 覆盖率（P1-5：单元测试覆盖率采集与报告）
                      - prepare-agent：注入 JaCoCo runtime agent 到 surefire/failsafe
                      - report：生成 HTML/XML 覆盖率报告到 target/site/jacoco
-                     - check：覆盖率阈值检查（项目已全局禁用，详见 coding-standards.md Section 4）
+                     - check：覆盖率阈值检查（分级策略见下方说明）
+
+                     分级策略：
+                       - BUNDLE 级：全项目基线 Line >= 60% / Branch >= 50%
+                       - 核心模块（可在子模块 pom.xml 中 override jacoco.line.coverage / jacoco.branch.coverage）：
+                           L1 基础库（json/cache/lock/core）：Line >= 80% / Branch >= 70%
+                           核心业务模块（project/workflow/message）：Line >= 75% / Branch >= 60%
+                           辅助业务模块（literule/agent/nextwiki/cronjob/system）：Line >= 65% / Branch >= 55%
                 -->
                 <plugin>
                     <groupId>org.jacoco</groupId>

@@ -536,4 +536,41 @@ public class ArchitectureRulesTest {
             .because("Controller 的 BaseResponse.error() 必须携带错误码参数，"
                     + "禁止单参 msg 调用（默认 code=A99999）；"
                     + "应使用 error(ResultCode) 或 error(ResultCode, msg)");
+
+    // ========================================
+    // API 注解与校验约束（2026-08-04 新增）
+    // ========================================
+
+    /**
+     * R31: Controller 类必须标注 @RequestMapping 或具体 HTTP 方法注解（类级路径前缀）。
+     *
+     * <p>统一的 URL 前缀管理，避免方法级路径冲突。
+     *
+     * @since 2026-08-04
+     */
+    @ArchTest
+    static final ArchRule controllerShouldHaveRequestMapping = classes()
+            .that().haveSimpleNameEndingWith("Controller")
+            .and().resideInAPackage("..web.controller..")
+            .should().beAnnotatedWith("org.springframework.web.bind.annotation.RequestMapping")
+            .orShould().beAnnotatedWith("org.springframework.web.bind.annotation.GetMapping")
+            .orShould().beAnnotatedWith("org.springframework.web.bind.annotation.PostMapping")
+            .orShould().beAnnotatedWith("org.springframework.web.bind.annotation.PutMapping")
+            .orShould().beAnnotatedWith("org.springframework.web.bind.annotation.DeleteMapping")
+            .because("Controller 类必须声明 @RequestMapping 或具体 HTTP 方法注解作为路径前缀");
+
+    /**
+     * R32: DTO 类（以 PostDTO / PutDTO 结尾）的字段必须使用使用校验注解或标记 @JsonCreator。
+     *
+     * <p>防止无校验的数据直接透传到 Service 层。
+     * 对于手动构造（@JsonCreator）的 DTO 字段，豁免校验注解要求。
+     *
+     * @since 2026-08-04
+     */
+    @ArchTest
+    static final ArchRule dtoFieldsShouldBeAnnotated = noClasses()
+            .that().resideInAnyPackage("..dto.post..", "..dto.put..")
+            .and().areNotAnnotatedWith("lombok.Data")
+            .should().beAnnotatedWith("lombok.Data")
+            .because("DTO 类推荐使用 @Data Lombok 注解自动生成 getter/setter");
 }

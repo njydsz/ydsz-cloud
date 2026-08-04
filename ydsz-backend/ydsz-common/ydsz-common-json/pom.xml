@@ -20,6 +20,9 @@
         <jmh.version>1.37</jmh.version>
         <!-- JaCoCo 已全局禁用，提供默认空值避免 @{argLine} 占位符未解析 -->
         <argLine></argLine>
+        <!-- L1 基础库阈值要求：Line >= 80%, Branch >= 70% -->
+        <jacoco.line.coverage>0.80</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.70</jacoco.branch.coverage>
     </properties>
 
     <dependencies>

@@ -1,0 +1,2 @@
+The JAVA_HOME environment variable is not defined correctly,
+this environment variable is needed to run this program.
