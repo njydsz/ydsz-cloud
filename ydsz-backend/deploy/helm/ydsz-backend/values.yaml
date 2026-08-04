@@ -85,3 +85,56 @@ hpa:
   minReplicas: 3
   maxReplicas: 10
   cpuUtilization: 70
+
+# --- Prometheus Operator ServiceMonitor ---
+serviceMonitor:
+  enabled: false
+  port: "http-actuator"       # 对齐 Service 命名端口
+  path: "/actuator/prometheus"
+  interval: "15s"
+  scrapeTimeout: "10s"
+  additionalLabels: {}
+
+# --- Loki 日志聚合（单副本 StatefulSet） ---
+loki:
+  enabled: false
+  image:
+    repository: grafana/loki
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3100
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+  config:
+    retention_period: 168h       # 7 天
+    max_query_lookback: 168h
+    auth_enabled: false
+
+# --- Promtail 日志采集（DaemonSet） ---
+promtail:
+  enabled: false
+  image:
+    repository: grafana/promtail
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  lokiUrl: "http://loki:3100/loki/api/v1/push"
+  logPath: "/var/log/ydsz-*.log"         # 应用日志路径
+  extraLogPaths: []                      # 额外日志路径
+  pipeline:
+    format: json                         # json | plain

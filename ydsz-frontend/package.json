@@ -70,6 +70,7 @@
     "test:contract": "vitest run --config vitest.config.ts --include **/*.contract.spec.ts --reporter=verbose",
     "test:coverage:check": "node ./bash/check-coverage.mjs",
     "test:e2e": "turbo run test:e2e",
+    "test:a11y": "playwright test accessibility.spec.ts --config=playwright.config.ts",
     "test:perf": "lhci autorun --config=./lighthouserc.js",
     "test:perf:collect": "lhci collect --config=./lighthouserc.js",
     "test:perf:assert": "lhci assert --config=./lighthouserc.js",

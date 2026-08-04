@@ -1,0 +1,54 @@
+# =============================================================================
+#  YDSZ · Prometheus Operator ServiceMonitor 模板
+# -----------------------------------------------------------------------------
+#  用途：让 Prometheus Operator 自动发现并抓取 ydsz 系列服务指标
+#
+#  前提：集群已安装 Prometheus Operator（kube-prometheus-stack 等 CRD 已注册）
+#
+#  占位符（envsubst 渲染）：
+#    ${SERVICE_NAME}  服务名（如 ydsz-gateway / ydsz-project）
+#    ${NAMESPACE}     部署命名空间（如 ydsz-prod / default）
+#
+#  渲染示例：
+#    export SERVICE_NAME=ydsz-gateway NAMESPACE=ydsz-prod
+#    envsubst < servicemonitor-template.yaml | kubectl apply -f -
+#
+#  注解注入方式（Pod 级别，与 kubernetes_sd_configs 联动）：
+#    metadata:
+#      annotations:
+#        prometheus.io/scrape: "true"
+#        prometheus.io/port: "8080"
+#        prometheus.io/path: "/actuator/prometheus"
+#
+#  @path deploy/k8s/servicemonitor-template.yaml
+#  @author ydsz-team
+#  @since 1.0.0
+# =============================================================================
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: ${SERVICE_NAME}
+    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/managed-by: prometheus-operator
+spec:
+  # 选择 app.kubernetes.io/part-of=ydsz-pmis 的所有服务
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: ydsz-pmis
+  # 命名空间选择：当前 namespace，可根据需要放宽
+  namespaceSelector:
+    matchNames:
+      - ${NAMESPACE}
+  endpoints:
+    - port: http-actuator          # 对齐 Service 中 metrics 端口的命名端口
+      path: /actuator/prometheus
+      interval: 15s
+      scrapeTimeout: 10s
+      honorLabels: true
+      # 可选：配置TLS/mTLS
+      # scheme: https
+      # tlsConfig:
+      #   insecureSkipVerify: true

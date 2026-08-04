@@ -1,9 +1,13 @@
 # =============================================================================
-#  YDSZ · 可观测性栈一键部署（链路追踪端到端打通 P1-4）
+#  YDSZ · 可观测性栈一键部署（Metrics + Traces + Logs 三支柱完整栈）
 # -----------------------------------------------------------------------------
-#  部署链路：微服务(OTel Agent) --OTLP--> otel-collector --batch--> Jaeger
-#                                             \--metrics--> Prometheus
-#  可视化：Jaeger（Trace 查询）+ Grafana（Dashboard/告警）
+#  部署链路：
+#   Metrics  : 微服务(Micrometer) --> Prometheus --> Grafana
+#   Traces   : 微服务(OTel Agent) --OTLP--> otel-collector --batch--> Jaeger
+#   Logs     : 微服务(JSON log) --> Promtail --> Loki --> Grafana
+#  关联能力 : Loki trace_uid 字段与 Jaeger 实现 log↔trace 串联
+#
+#  可视化：Jaeger（Trace 查询）+ Grafana（Dashboard/告警/Logs Explorer）
 #
 #  用法：
 #    docker compose -f deploy/observability/docker-compose.observability.yaml up -d
@@ -12,9 +16,14 @@
 #    Jaeger UI      http://localhost:16686
 #    Grafana        http://localhost:3000   (admin/admin123)
 #    Prometheus     http://localhost:9090
+#    Loki           http://localhost:3100
 #    OTel Collector http://localhost:4317 (gRPC) / 4318 (HTTP)
 #
-#  微服务连接：应用只需设置 OTEL_EXPORTER_OTLP_ENDPOINT=http://<本机IP>:4317
+#  微服务连接（容器内/同 compose 网络）：
+#    Metrics (Pod annotation): prometheus.io/scrape=true
+#    Traces  : OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+#    Logs    : 应用输出 JSON 日志到 /var/log/ydsz-*.log
+#              （Spring Boot + logback-json-classic 默认路径）
 # =============================================================================
 version: "3.9"
 
@@ -31,6 +40,8 @@ services:
       - "4317:4317"     # OTLP gRPC（直连 Jaeger 备选）
       - "4318:4318"     # OTLP HTTP
     restart: unless-stopped
+    networks:
+      - ydsz-observability
 
   # ---- OpenTelemetry Collector（统一接收/批处理/路由） ----
   otel-collector:
@@ -47,6 +58,8 @@ services:
     depends_on:
       - jaeger
     restart: unless-stopped
+    networks:
+      - ydsz-observability
 
   # ---- 指标后端 ----
   prometheus:
@@ -62,8 +75,10 @@ services:
     ports:
       - "9090:9090"
     restart: unless-stopped
+    networks:
+      - ydsz-observability
 
-  # ---- 可视化大盘 ----
+  # ---- 日志可视化大盘 ----
   grafana:
     image: grafana/grafana:11.1.0
     container_name: ydsz-grafana
@@ -79,8 +94,46 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+      - loki
     restart: unless-stopped
+    networks:
+      - ydsz-observability
+
+  # ---- Loki 日志聚合引擎 ----
+  loki:
+    image: grafana/loki:latest
+    container_name: ydsz-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/config.yaml
+    restart: unless-stopped
+    networks:
+      - ydsz-observability
+
+  # ---- Promtail 日志采集代理 ----
+  promtail:
+    image: grafana/promtail:latest
+    container_name: ydsz-promtail
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/log:/var/log:ro            # 挂载宿主机日志目录，读取 ydsz-*.log
+      - promtail-positions:/tmp/positions
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - ydsz-observability
 
 volumes:
   prometheus-data:
   grafana-data:
+  loki-data:
+  promtail-positions:
+
+networks:
+  ydsz-observability:
+    driver: bridge

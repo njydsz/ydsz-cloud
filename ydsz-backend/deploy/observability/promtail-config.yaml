@@ -1,0 +1,90 @@
+# Promtail 日志采集配置（YDSZ 微服务）
+# 读取宿主机 /var/log/ydsz-*.log 并通过 client 推送到 Loki
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+# 采集目标
+scrape_configs:
+  # YDSZ 微服务 JSON 日志采集
+  - job_name: ydsz-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: ydsz-logs
+          __path__: /var/log/ydsz-*.log
+    # JSON 日志结构化解析
+    pipeline_stages:
+      # 解析 JSON 格式日志
+      - json:
+          expressions:
+            level: level
+            message: message
+            logger: logger_name
+            thread: thread
+            trace_id: trace_id
+            span_id: span_id
+            service: service_name
+      # 从提取的字段生成标签
+      - labels:
+          level:
+          service:
+      # 时间戳解析
+      - timestamp:
+          source: timestamp
+          format: "2006-01-02T15:04:05.000Z07:00"   # ISO 8601
+          fallback_formats:
+            - "2006-01-02 15:04:05.000"
+            - "2006-01-02T15:04:05.000+08:00"
+      # 以 message 作为主内容
+      - output:
+          source: message
+
+  # 备选：采集 plain text 日志（非 JSON 场景）
+  - job_name: ydsz-logs-plain
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: ydsz-logs-plain
+          __path__: /var/log/ydsz-*-plain.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d{3})\s+(?P<level>\w+)\s+\[(?P<service>[^\]]*),\s*(?P<trace_id>[^,]*),\s*(?P<span_id>[^\]]*)\]\s+(?P<thread>\S+)\s+(?P<logger>\S+)\s+-\s+(?P<message>.*)$'
+      - labels:
+          level:
+          service:
+      - timestamp:
+          source: timestamp
+          format: "2006-01-02 15:04:05.000"
+      - output:
+          source: message
+
+  # 系统日志（容器运行时）
+  - job_name: varlog
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlog
+          __path__: /var/log/syslog
+
+# Loki 推送客户端
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    batchwait: 1s
+    batchsize: 102400
+    backoff_config:
+      min_period: 500ms
+      max_period: 5m
+      max_retries: 10
+    external_labels:
+      source: ydsz-promtail
+      environment: ${ENV:-development}
+
+# 文件位置记录（采集位点，避免重复）
+positions:
+  filename: /tmp/positions/positions.yaml

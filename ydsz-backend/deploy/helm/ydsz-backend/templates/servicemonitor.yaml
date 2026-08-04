@@ -1,0 +1,30 @@
+{{- /*
+  YDSZ · Prometheus Operator ServiceMonitor（可选安装）
+  前置条件：集群已部署 Prometheus Operator（CRD: servicemonitors.monitoring.coreos.com）
+  启用方式：helm install ... --set serviceMonitor.enabled=true
+*/ -}}
+{{- if .Values.serviceMonitor.enabled -}}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor" -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "ydsz-backend.fullname" . }}
+  labels:
+    {{- include "ydsz-backend.labels" . | nindent 4 }}
+  {{- with .Values.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "ydsz-backend.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.serviceMonitor.port | default "http-actuator" }}
+      path: {{ .Values.serviceMonitor.path | default "/actuator/prometheus" }}
+      interval: {{ .Values.serviceMonitor.interval | default "15s" }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout | default "10s" }}
+      honorLabels: true
+{{- else -}}
+{{- fail "ServiceMonitor CRD not found in cluster. Please install Prometheus Operator first or set serviceMonitor.enabled=false" }}
+{{- end -}}
+{{- end -}}

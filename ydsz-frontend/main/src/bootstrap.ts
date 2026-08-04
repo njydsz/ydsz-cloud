@@ -46,7 +46,9 @@ import { router, initRouterGuard } from './router';
 
 import {
   createKernel,
+  createRoutePreloadStrategy,
   getErrorFallbackMessagesByLocale,
+  getPreloadManager,
   getVersionManager,
   setErrorFallbackMessages,
 } from '@ydsz/micro-kernel';
@@ -203,6 +205,10 @@ function finishRuntimeSetup() {
     prefetch: (app) => prefetchApps.includes(app.name),
   });
 
+  // v4.0 P1-2: 注册路由预测预加载策略
+  // 基于马尔可夫链转移概率，在当前应用即将空闲时预测并预加载下一目标
+  registerRoutePreloadStrategy();
+
   // P3-1: 注册 per-app Tab 会话追踪
   // 每次路由跳转后，若目标路由属于某子应用，更新该子应用的会话状态
   // （打开路径集合 / 最后激活路径），驱动 useTabbarMicroSync 的保活/pin 决策
@@ -226,6 +232,53 @@ function getAppFromPathFromMap(path: string): null | string {
     }
   }
   return null;
+}
+
+/**
+ * 注册路由预测预加载策略（v4.0 P1-2）。
+ *
+ * 基于马尔可夫链模型，在浏览器空闲时预测并预加载用户最可能访问的下一子应用。
+ * 仅在非弱网、非省流量模式下运行，避免浪费带宽。
+ */
+function registerRoutePreloadStrategy(): void {
+  try {
+    const preloadManager = getPreloadManager();
+
+    // 收集所有已注册应用到路由预测策略
+    const apps = (microRuntime as any)?.getApps?.() || [];
+    if (!apps.length) return;
+
+    // 使用自动模式（_route_prediction_ 来源为“全局所有应用”，predict 会遍历已知转移对）
+    const strategy = createRoutePreloadStrategy(
+      apps,
+      undefined,
+      async (appName: string) => {
+        runtimeLogger.debug(`Route prediction preload triggered for ${appName}`);
+        // 触发 prefetch：仅下载模块不执行 mount
+        try {
+          await (microRuntime as any)?.prefetch?.(appName);
+        } catch (err) {
+          runtimeLogger.warn(`Route prediction prefetch failed for ${appName}: ${String(err)}`);
+        }
+      },
+      { minProbability: 0.15, maxPreloads: 2 },
+    );
+
+    preloadManager.registerStrategy('__route_prediction__', strategy);
+
+    // 在浏览器空闲时触发预测预加载
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => {
+        void preloadManager.triggerPreload('__route_prediction__');
+      }, { timeout: 3000 });
+    } else {
+      setTimeout(() => {
+        void preloadManager.triggerPreload('__route_prediction__');
+      }, 3000);
+    }
+  } catch (err) {
+    runtimeLogger.warn(`Route preload strategy registration skipped: ${String(err)}`);
+  }
 }
 
 /**
