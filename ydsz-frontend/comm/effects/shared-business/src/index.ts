@@ -121,6 +121,18 @@ export {
   type ResponsiveColumn,
 } from './composables/use-responsive';
 
+// 审批历史时间轴组件
+export { default as ApprovalTimeline } from './components/approval-timeline.vue';
+export type { ApprovalRecord } from './components/approval-timeline.vue';
+
+// 工作流设计器辅助 composable
+export {
+  useFlowDesigner,
+  type FlowCanvasControls,
+  type FlowDesignerOptions,
+  type FlowNode,
+} from './composables/use-flow-designer';
+
 // ===== 统一适配器（消除 9 个子应用的重复代码） =====
 export {
   initSetupYDSZForm,
