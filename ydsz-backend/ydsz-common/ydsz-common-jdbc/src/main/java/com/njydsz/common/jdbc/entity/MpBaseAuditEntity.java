@@ -6,22 +6,22 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.njydsz.common.json.annotation.JsonFormat;
-import com.njydsz.common.domain.entity.BaseAuditEntity;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
  * MyBatis-Plus 增强版审计基础实体
- * 
- * <p>继承 ydsz-common-domain 的 {@link BaseAuditEntity}，在审计字段上添加 MyBatis-Plus 字段映射与自动填充注解。
- * 
- * <p><b>业务模块应直接依赖 ydsz-common-jdbc 并使用此类</b>，而非 ydsz-common-domain 的 BaseAuditEntity。
- * 
+ *
+ * <p>包含审计字段（创建人/时间、更新人/时间），由 MyBatis-Plus 自动填充
+ * （{@link FieldFill#INSERT} / {@link FieldFill#INSERT_UPDATE}）。
+ *
+ * <p><b>v1.4.0</b>：不再继承 common-domain 的 BaseAuditEntity，字段内联自洽，
+ * 业务模块实体仅依赖 ydsz-common-jdbc 一个模块。
+ *
  * @param <T> 主键ID类型
  *
  * @author ydsz-team
@@ -31,8 +31,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(callSuper = false)
-public class MpBaseAuditEntity<T extends Serializable> extends BaseAuditEntity<T> {
+public class MpBaseAuditEntity<T extends Serializable> extends MpBaseIdEntity<T> {
 
     private static final long serialVersionUID = 1L;
 
@@ -65,5 +64,4 @@ public class MpBaseAuditEntity<T extends Serializable> extends BaseAuditEntity<T
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
-
 }

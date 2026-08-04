@@ -9,25 +9,27 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonIgnore;
-import com.njydsz.common.domain.entity.BaseEntity;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 /**
- * MyBatis-Plus 增强版基础实体
- * 
- * <p>在 ydsz-common-domain 的 {@link BaseEntity} 基础上，添加 MyBatis-Plus 注解，包括：
+ * MyBatis-Plus 增强版基础实体（业务实体统一基类）
+ *
+ * <p>包含主键、审计字段、乐观锁、逻辑删除、状态、租户标识等全部通用列：
  * <ul>
  *   <li>{@link TableId} — 主键 ID，使用雪花算法自动生成</li>
  *   <li>{@link TableField} + {@link FieldFill} — 审计字段自动填充（创建人/时间、更新人/时间）</li>
  *   <li>{@link TableField} — 乐观锁版本号字段映射（由自定义 OptimisticLockInterceptor 处理，不使用 @Version）</li>
  *   <li>{@link TableField} — 逻辑删除标识字段映射（由自定义 LogicalDeleteInterceptor 处理，不使用 @TableLogic）</li>
  *   <li>{@link TableField} — 状态标识字段映射</li>
+ *   <li>{@link TableField} — 租户标识字段映射（由租户拦截器处理）</li>
  * </ul>
- * 
- * <p><b>业务模块应直接依赖 ydsz-common-jdbc 并使用此类</b>，而非 ydsz-common-domain 的 BaseEntity。
- * 
+ *
+ * <p><b>v1.4.0</b>：不再继承 common-domain 的 BaseEntity，字段全部内联自洽；
+ * 领域事件列表（BaseEntity.domainEvents）因业务 0 使用而移除。
+ * 业务模块实体直接继承此类，仅依赖 ydsz-common-jdbc 一个模块。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * &#64;Data
@@ -35,10 +37,9 @@ import lombok.experimental.SuperBuilder;
  * public class User extends MpBaseEntity {
  *     private String username;
  *     private String email;
- *     private String phone;
  * }
  * }</pre>
- * 
+ *
  * @param <T> 主键ID类型
  *
  * @author ydsz-team
@@ -49,45 +50,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = true)
-public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
+public class MpBaseEntity<T extends Serializable> extends MpBaseAuditEntity<T> {
 
     private static final long serialVersionUID = 1L;
-
-    /**
-     * 主键ID，使用雪花算法自动生成
-     */
-    @TableId(type = IdType.ASSIGN_ID)
-    private T id;
-
-    /**
-     * 创建人ID
-     * <p>框架在 INSERT 操作时自动填充。
-     */
-    @TableField(value = "created_by", fill = FieldFill.INSERT)
-    private String createdBy;
-
-    /**
-     * 创建时间
-     * <p>框架在 INSERT 操作时自动填充。
-     */
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新人ID
-     * <p>框架在 INSERT/UPDATE 操作时自动填充。
-     */
-    @TableField(value = "updated_by", fill = FieldFill.INSERT_UPDATE)
-    private String updatedBy;
-
-    /**
-     * 更新时间
-     * <p>框架在 INSERT/UPDATE 操作时自动填充。
-     */
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;
 
     /**
      * 乐观锁版本号
@@ -133,5 +98,4 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
     @TableField("tenant_id")
     @JsonIgnore
     private String tenantId;
-
 }
