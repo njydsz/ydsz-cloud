@@ -18,12 +18,12 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.domain.job.JobLogger;
-import com.njydsz.common.domain.job.JobExecutionContext;
-import com.njydsz.common.domain.job.MapContext;
-import com.njydsz.common.domain.job.MapProcessor;
-import com.njydsz.common.domain.job.MapReduceProcessor;
-import com.njydsz.common.domain.job.MapTask;
-import com.njydsz.common.domain.job.ProcessResult;
+import com.njydsz.cronjob.domain.job.JobExecutionContext;
+import com.njydsz.cronjob.domain.job.MapContext;
+import com.njydsz.cronjob.domain.job.MapProcessor;
+import com.njydsz.cronjob.domain.job.MapReduceProcessor;
+import com.njydsz.cronjob.domain.job.MapTask;
+import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.Job;

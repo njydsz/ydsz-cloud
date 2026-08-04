@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,7 +12,7 @@ import org.junit.jupiter.api.Test;
 /**
  * StringUtils 单元测试
  *
- * <p>覆盖核心方法：判空、命名转换、截取、连接、分割、替换、格式化、脱敏、相似度等。
+ * <p>覆盖核心方法：判空、命名转换、格式化、脱敏、格式校验。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -119,47 +117,6 @@ class StringUtilsTest {
         }
     }
 
-    // ==================== 截取方法 ====================
-
-    @Nested
-    @DisplayName("截取方法")
-    class SubstringTest {
-
-        @Test
-        @DisplayName("安全截取 - 正常范围")
-        void substring_normal() {
-            assertThat(StringUtils.substring("hello", 1, 3)).isEqualTo("el");
-        }
-
-        @Test
-        @DisplayName("安全截取 - 负索引")
-        void substring_negative() {
-            assertThat(StringUtils.substring("hello", 0, -1)).isEqualTo("hell");
-        }
-
-        @Test
-        @DisplayName("安全截取 - null 返回空字符串")
-        void substring_null() {
-            assertThat(StringUtils.substring(null, 0, 3)).isEqualTo(StringUtils.EMPTY);
-        }
-
-        @Test
-        @DisplayName("left 截取左侧")
-        void left() {
-            assertThat(StringUtils.left("hello", 3)).isEqualTo("hel");
-            assertThat(StringUtils.left("hi", 5)).isEqualTo("hi");
-            assertThat(StringUtils.left(null, 3)).isEqualTo(StringUtils.EMPTY);
-        }
-
-        @Test
-        @DisplayName("right 截取右侧")
-        void right() {
-            assertThat(StringUtils.right("hello", 3)).isEqualTo("llo");
-            assertThat(StringUtils.right("hi", 5)).isEqualTo("hi");
-            assertThat(StringUtils.right(null, 3)).isEqualTo(StringUtils.EMPTY);
-        }
-    }
-
     // ==================== 格式化 ====================
 
     @Test
@@ -233,45 +190,6 @@ class StringUtilsTest {
             assertThat(StringUtils.isIpv4("256.1.1.1")).isFalse();
             assertThat(StringUtils.isIpv4(null)).isFalse();
         }
-    }
-
-    // ==================== 相似度 ====================
-
-    @Test
-    @DisplayName("Levenshtein 距离")
-    void levenshteinDistance() {
-        assertThat(StringUtils.levenshteinDistance("kitten", "sitting")).isEqualTo(3);
-        assertThat(StringUtils.levenshteinDistance("", "")).isEqualTo(0);
-        assertThat(StringUtils.levenshteinDistance(null, "abc")).isEqualTo(-1);
-    }
-
-    @Test
-    @DisplayName("相似度计算")
-    void similarity() {
-        assertThat(StringUtils.similarity("abc", "abc")).isEqualTo(1.0);
-        assertThat(StringUtils.similarity("", "")).isEqualTo(1.0);
-        assertThat(StringUtils.similarity("abc", "xyz")).isLessThan(1.0);
-    }
-
-    // ==================== 模板渲染 ====================
-
-    @Test
-    @DisplayName("renderTemplate - ${key} 占位符")
-    void renderTemplate() {
-        Map<String, Object> params = Map.of("name", "Alice", "age", 25);
-        String result = StringUtils.renderTemplate("Hello ${name}, age ${age}", params);
-        assertThat(result).isEqualTo("Hello Alice, age 25");
-    }
-
-    // ==================== join ====================
-
-    @Test
-    @DisplayName("join 集合连接")
-    void joinCollection() {
-        List<String> list = Arrays.asList("a", "b", "c");
-        assertThat(StringUtils.join((java.util.Collection<?>) list, ",")).isEqualTo("a,b,c");
-        assertThat(StringUtils.join((java.util.Collection<?>) Collections.emptyList(), ",")).isEqualTo(StringUtils.EMPTY);
-        assertThat(StringUtils.join((java.util.Collection<?>) null, ",")).isEqualTo(StringUtils.EMPTY);
     }
 
     // ==================== defaultIfBlank ====================

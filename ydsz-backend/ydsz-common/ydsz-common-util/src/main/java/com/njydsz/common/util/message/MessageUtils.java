@@ -119,18 +119,8 @@ public class MessageUtils {
         if (StringUtils.isBlank(key)) {
             return key;
         }
-
-        try {
-            Object messageSource = SpringContextHolder.getBean("messageSource");
-            if (messageSource == null) {
-                logger.warn("MessageSource bean not found");
-                return key;
-            }
-            return ((MessageSource) messageSource).getMessage(key, params, locale);
-        } catch (Exception e) {
-            logger.error("Get locale message error for key: {}", key, e);
-        }
-        return key;
+        // 统一语义：未找到时返回 key（即 defaultMsg = key），不依赖 catch 吞 NoSuchMessageException
+        return getMessage(locale, key, params, key);
     }
 
     /**
@@ -148,16 +138,42 @@ public class MessageUtils {
         }
 
         try {
-            Object messageSource = SpringContextHolder.getBean("messageSource");
+            MessageSource messageSource = resolveMessageSource();
             if (messageSource == null) {
-                logger.warn("MessageSource bean not found");
                 return defaultMsg;
             }
-            return ((MessageSource) messageSource).getMessage(key, params, defaultMsg, locale);
+            // 使用带 defaultMessage 的重载，未找到时返回 defaultMsg 而非抛 NoSuchMessageException
+            return messageSource.getMessage(key, params, defaultMsg, locale);
         } catch (Exception e) {
             logger.error("Get locale message error for key: {}", key, e);
         }
         return defaultMsg;
+    }
+
+    /**
+     * 解析并缓存 MessageSource
+     *
+     * <p>首次调用时通过类型安全重载 {@code getBean("messageSource", MessageSource.class)}
+     * 解析 Bean 并缓存，避免高频调用重复查询 BeanFactory。
+     * 解析失败时不缓存（返回 null），以便下次调用可重新尝试。
+     *
+     * @return MessageSource 实例，未找到或上下文未初始化时返回 null
+     */
+    private static MessageSource resolveMessageSource() {
+        MessageSource messageSource = cachedMessageSource;
+        if (messageSource != null) {
+            return messageSource;
+        }
+        try {
+            // 类型安全重载，避免强转；getBean 找不到时会抛 NoSuchBeanDefinitionException
+            messageSource = SpringContextHolder.getBean("messageSource", MessageSource.class);
+            // 仅缓存成功解析的实例，避免缓存"未找到"状态
+            cachedMessageSource = messageSource;
+            return messageSource;
+        } catch (Exception e) {
+            logger.warn("MessageSource bean not found", e);
+            return null;
+        }
     }
 
     /**
@@ -172,7 +188,8 @@ public class MessageUtils {
                 return Locale.getDefault();
             }
 
-            switch (userLanguage.toLowerCase()) {
+            // 使用 Locale.ROOT 避免土耳其语 locale bug（如 "I".toLowerCase() 在 tr 下变为 "ı"）
+            switch (userLanguage.toLowerCase(Locale.ROOT)) {
                 case "zh_cn":
                 case "zh-cn":
                 case "zh":

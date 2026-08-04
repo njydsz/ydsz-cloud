@@ -154,5 +154,12 @@
             <artifactId>spring-boot-health</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- 测试依赖（含 junit-jupiter、assertj-core） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

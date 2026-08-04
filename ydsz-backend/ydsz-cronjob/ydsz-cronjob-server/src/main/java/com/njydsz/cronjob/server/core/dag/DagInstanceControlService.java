@@ -9,8 +9,8 @@ import com.njydsz.common.json.YdszJson;
 
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.domain.dag.DagInstanceStatus;
-import com.njydsz.common.domain.dag.DagNodeStatus;
+import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
+import com.njydsz.cronjob.domain.dag.DagNodeStatus;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.domain.entity.job.Job;

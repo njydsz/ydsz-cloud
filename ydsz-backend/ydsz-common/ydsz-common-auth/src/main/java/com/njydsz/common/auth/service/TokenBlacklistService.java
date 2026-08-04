@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.security.TokenBlacklistBloomFilter;
-import com.njydsz.common.auth.util.AuthDigestUtils;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -80,7 +80,7 @@ public class TokenBlacklistService {
      * @return 形如 {@code auth:token:blacklist:<sha256-hex>} 的 Redis key
      */
     private String buildBlacklistKey(String token) {
-        return BLACKLIST_KEY_PREFIX + AuthDigestUtils.sha256Hex(token);
+        return BLACKLIST_KEY_PREFIX + DigestUtils.sha256Hex(token);
     }
 
     /**

@@ -1,10 +1,9 @@
 package com.njydsz.common.notify.signature;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 飞书回调签名验证工具。
@@ -20,8 +19,6 @@ import org.slf4j.LoggerFactory;
 public final class FeishuSignatureUtil {
 
     private static final Logger log = LoggerFactory.getLogger(FeishuSignatureUtil.class);
-
-    private static final String SHA_256 = "SHA-256";
 
     private FeishuSignatureUtil() {
     }
@@ -43,9 +40,7 @@ public final class FeishuSignatureUtil {
         }
         try {
             String data = str(timestamp) + str(nonce) + str(encrypt) + appSecret;
-            MessageDigest md = MessageDigest.getInstance(SHA_256);
-            byte[] digest = md.digest(data.getBytes(StandardCharsets.UTF_8));
-            String computed = toHexLower(digest);
+            String computed = DigestUtils.sha256Hex(data);
             return constantTimeEquals(computed, signature.toLowerCase());
         } catch (Exception e) {
             log.warn("[FeishuSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
@@ -55,16 +50,6 @@ public final class FeishuSignatureUtil {
 
     private static String str(String s) {
         return s == null ? "" : s;
-    }
-
-    private static String toHexLower(byte[] bytes) {
-        char[] hex = "0123456789abcdef".toCharArray();
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(hex[(b >> 4) & 0x0F]);
-            sb.append(hex[b & 0x0F]);
-        }
-        return sb.toString();
     }
 
     /**

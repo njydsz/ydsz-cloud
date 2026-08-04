@@ -1,4 +1,4 @@
-package com.njydsz.common.domain.job;
+package com.njydsz.cronjob.domain.job;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,10 +28,10 @@ public class MapContext {
     private String taskParams;
     /** 是否为 Root 任务 */
     private boolean root;
-    /** 子任务列表（初始容量 64，减少 MapReduce 大量子任务场景下的扩容开销） */
-    private List<MapTask> subTasks = new ArrayList<>(64);
-    /** 结果存储（初始容量 64，减少大量分片结果下的 rehash 开销） */
-    private Map<String, Object> results = new HashMap<>(64);
+    /** 子任务列表 */
+    private List<MapTask> subTasks = new ArrayList<>();
+    /** 结果存储 */
+    private Map<String, Object> results = new HashMap<>();
 
     /**
      * 添加子任务

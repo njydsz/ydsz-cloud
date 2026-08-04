@@ -2,7 +2,6 @@ package com.njydsz.common.util.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.SecureRandom;
 import java.util.regex.Pattern;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -46,31 +45,6 @@ public class PwdUtils {
      */
     private PwdUtils() {
         throw new UnsupportedOperationException("PwdUtils is a utility class and cannot be instantiated");
-    }
-
-    /**
-     * 默认密码（从系统属性或环境变量读取，禁止硬编码）
-     *
-     * <p>读取优先级：系统属性 {@code ydsz.default.password} > 环境变量 {@code YDSZ_DEFAULT_PASSWORD}
-     * <p>若均未配置，使用随机生成的强密码（每次启动不同，需通过日志获取）
-     */
-    private static final String DEFAULT_PASS = resolveDefaultPassword();
-
-    private static String resolveDefaultPassword() {
-        String password = System.getProperty("ydsz.default.password");
-        if (password != null && !password.isEmpty()) {
-            return password;
-        }
-        password = System.getenv("YDSZ_DEFAULT_PASSWORD");
-        if (password != null && !password.isEmpty()) {
-            return password;
-        }
-        byte[] randomBytes = new byte[16];
-        new SecureRandom().nextBytes(randomBytes);
-        String generated = HexFormat.of().formatHex(randomBytes);
-        System.getLogger(PwdUtils.class.getName()).log(System.Logger.Level.WARNING,
-                "未配置默认密码(ydsz.default.password/YDSZ_DEFAULT_PASSWORD)，已随机生成");
-        return generated;
     }
 
     /**

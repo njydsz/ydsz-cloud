@@ -147,23 +147,47 @@ public class Rsa2Utils {
     }
 
     /**
-     * 从 Base64 编码的公钥字符串加载 PublicKey
+     * 从 Base64 编码的公钥字符串加载 PublicKey。
+     *
+     * <p>解析结果按 Base64 字符串缓存，避免重复 Base64 解码与 KeyFactory 解析。
+     *
+     * @param publicKeyBase64 Base64 编码的公钥
+     * @return PublicKey 实例
+     * @throws GeneralSecurityException 密钥解析失败
      */
     public static PublicKey loadPublicKey(String publicKeyBase64) throws GeneralSecurityException {
+        Key cached = KEY_CACHE.get(publicKeyBase64);
+        if (cached instanceof PublicKey) {
+            return (PublicKey) cached;
+        }
         byte[] keyBytes = Base64.getDecoder().decode(publicKeyBase64);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePublic(keySpec);
+        PublicKey publicKey = keyFactory.generatePublic(keySpec);
+        KEY_CACHE.put(publicKeyBase64, publicKey);
+        return publicKey;
     }
 
     /**
-     * 从 Base64 编码的私钥字符串加载 PrivateKey
+     * 从 Base64 编码的私钥字符串加载 PrivateKey。
+     *
+     * <p>解析结果按 Base64 字符串缓存，避免重复 Base64 解码与 KeyFactory 解析。
+     *
+     * @param privateKeyBase64 Base64 编码的私钥
+     * @return PrivateKey 实例
+     * @throws GeneralSecurityException 密钥解析失败
      */
     public static PrivateKey loadPrivateKey(String privateKeyBase64) throws GeneralSecurityException {
+        Key cached = KEY_CACHE.get(privateKeyBase64);
+        if (cached instanceof PrivateKey) {
+            return (PrivateKey) cached;
+        }
         byte[] keyBytes = Base64.getDecoder().decode(privateKeyBase64);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePrivate(keySpec);
+        PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+        KEY_CACHE.put(privateKeyBase64, privateKey);
+        return privateKey;
     }
 
     /**
@@ -301,28 +325,30 @@ public class Rsa2Utils {
 
     /**
      * 分段加密/解密处理
+     *
+     * <p>使用 try-with-resources 管理 ByteArrayOutputStream，统一资源管理风格
+     *（ByteArrayOutputStream.close 实际为 no-op，但保持与其他 IO 资源一致的编码规范）。
      */
     private static byte[] doFinal(Cipher cipher, byte[] data, int maxBlock) throws GeneralSecurityException, IOException {
         int inputLen = data.length;
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int offSet = 0;
-        byte[] cache;
-        int i = 0;
-        
-        while (inputLen - offSet > 0) {
-            if (inputLen - offSet > maxBlock) {
-                cache = cipher.doFinal(data, offSet, maxBlock);
-            } else {
-                cache = cipher.doFinal(data, offSet, inputLen - offSet);
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            int offSet = 0;
+            byte[] cache;
+            int i = 0;
+
+            while (inputLen - offSet > 0) {
+                if (inputLen - offSet > maxBlock) {
+                    cache = cipher.doFinal(data, offSet, maxBlock);
+                } else {
+                    cache = cipher.doFinal(data, offSet, inputLen - offSet);
+                }
+                out.write(cache, 0, cache.length);
+                i++;
+                offSet = i * maxBlock;
             }
-            out.write(cache, 0, cache.length);
-            i++;
-            offSet = i * maxBlock;
+
+            return out.toByteArray();
         }
-        
-        byte[] resultBytes = out.toByteArray();
-        out.close();
-        return resultBytes;
     }
 
     /**

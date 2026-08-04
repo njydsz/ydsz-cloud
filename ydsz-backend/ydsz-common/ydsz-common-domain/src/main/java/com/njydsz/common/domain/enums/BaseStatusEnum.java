@@ -46,12 +46,11 @@ public interface BaseStatusEnum<E extends Enum<E>> {
      * 校验状态流转，非法时抛出异常。
      *
      * @param target 目标状态
-     * @throws IllegalStateException 当状态流转非法时
+     * @throws com.njydsz.common.domain.exception.StateTransitionException 当状态流转非法时
      */
     default void requireTransitTo(E target) {
         if (!canTransitTo(target)) {
-            throw new IllegalStateException(
-                    "非法状态流转: " + this + " -> " + target);
+            throw new com.njydsz.common.domain.exception.StateTransitionException(this, target);
         }
     }
 }

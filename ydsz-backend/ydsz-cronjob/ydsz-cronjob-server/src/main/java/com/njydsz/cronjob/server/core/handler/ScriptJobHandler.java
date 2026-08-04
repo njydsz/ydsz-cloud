@@ -26,7 +26,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.domain.job.JobHandler;
 import com.njydsz.common.domain.job.JobLogger;
-import com.njydsz.common.domain.job.JobExecutionContext;
+import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;

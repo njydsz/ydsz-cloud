@@ -212,7 +212,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
                         "// GLUE Groovy 模板\n" +
                         "// 实现 JobHandler 接口或定义 execute 方法\n" +
                         "import com.njydsz.common.domain.job.JobHandler\n" +
-                        "import com.njydsz.common.domain.job.ProcessResult\n" +
+                        "import com.njydsz.cronjob.domain.job.ProcessResult\n" +
                         "\n" +
                         "class MyJob implements JobHandler {\n" +
                         "    @Override\n" +

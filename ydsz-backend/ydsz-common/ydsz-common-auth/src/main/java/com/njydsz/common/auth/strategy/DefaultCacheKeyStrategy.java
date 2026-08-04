@@ -33,6 +33,6 @@ public class DefaultCacheKeyStrategy implements CacheKeyStrategy {
         // 使用 TreeSet 保证角色顺序一致性
         String rolesPart = String.join(",", new TreeSet<>(roleCodes));
         String raw = prefix + "|" + rolesPart;
-        return KEY_PREFIX + AuthDigestUtils.sha256Hex(raw);
+        return KEY_PREFIX + DigestUtils.sha256Hex(raw);
     }
 }

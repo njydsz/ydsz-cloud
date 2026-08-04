@@ -17,8 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.UUIDUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
@@ -120,7 +120,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         long startTime = System.currentTimeMillis();
         String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
         if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdGenerator.generate();
+            traceId = UUIDUtils.simpleUuid();
         }
 
         final String finalTraceId = traceId;

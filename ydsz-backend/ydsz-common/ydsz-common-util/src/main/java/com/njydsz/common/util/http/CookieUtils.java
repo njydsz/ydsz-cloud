@@ -206,11 +206,13 @@ public class CookieUtils {
 
     /**
      * 获取所有 cookie
+     *
+     * <p>返回不可变 Map，防止调用方意外修改内部结构。
      */
     public static Map<String, String> getAllCookies(HttpServletRequest request) {
         Map<String, String> cookieMap = new HashMap<>();
         if (request == null) {
-            return cookieMap;
+            return Collections.unmodifiableMap(cookieMap);
         }
 
         Cookie[] cookies = request.getCookies();
@@ -219,7 +221,7 @@ public class CookieUtils {
                 cookieMap.put(cookie.getName(), cookie.getValue());
             }
         }
-        return cookieMap;
+        return Collections.unmodifiableMap(cookieMap);
     }
 
     /**

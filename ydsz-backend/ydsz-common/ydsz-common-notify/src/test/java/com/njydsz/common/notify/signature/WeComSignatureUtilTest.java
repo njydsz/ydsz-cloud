@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.thirdparty;
+package com.njydsz.common.notify.signature;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

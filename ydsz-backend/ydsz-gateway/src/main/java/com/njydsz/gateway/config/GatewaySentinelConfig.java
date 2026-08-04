@@ -18,7 +18,7 @@ import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.util.id.UUIDUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,7 +52,7 @@ public class GatewaySentinelConfig {
     @PostConstruct
     public void init() {
         BlockRequestHandler handler = (exchange, ex) -> {
-            String traceId = TraceIdGenerator.generate();
+            String traceId = UUIDUtils.simpleUuid();
 
             HttpStatus httpStatus;
             int bizCode;

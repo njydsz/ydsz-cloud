@@ -1,9 +1,12 @@
 package com.njydsz.common.util.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.util.health.UtilHealthIndicator;
 import com.njydsz.common.util.id.SnowflakeHealthIndicator;
@@ -16,8 +19,8 @@ import com.njydsz.common.util.spring.SpringContextHolder;
  * <p>注册项目级工具 Bean：
  * <ul>
  *   <li>{@link SpringContextHolder} — ApplicationContext 静态持有者</li>
- *   <li>{@link SnowflakeHealthIndicator} — Snowflake ID 生成器健康检查</li>
- *   <li>{@link UtilHealthIndicator} — 工具模块健康检查（Snowflake 状态、JVM 内存指标）</li>
+ *   <li>{@link SnowflakeHealthIndicator} — Snowflake ID 生成器健康检查（仅 actuator 在 classpath 时注册）</li>
+ *   <li>{@link UtilHealthIndicator} — 工具模块健康检查（Snowflake 状态、JVM 内存指标，仅 actuator 在 classpath 时注册）</li>
  * </ul>
  *
  * <p>所有工具 Bean 均为无状态、线程安全，可直接注入使用。
@@ -45,31 +48,49 @@ public class UtilAutoConfiguration {
     }
 
     /**
-     * 注册 SnowflakeHealthIndicator Bean
+     * 健康检查相关 Bean 配置
      *
-     * <p>检查 Snowflake ID 生成器的健康状态（时钟回拨、workerId 有效性、ID 生成能力）。
-     * 不使用 @Component 注解，统一在 AutoConfiguration 中注册。
+     * <p>仅当 classpath 上存在 {@link org.springframework.boot.health.contributor.HealthIndicator}
+     * （即引入 spring-boot-actuator）时才加载，避免缺少 actuator 依赖时
+     * 因 {@link SnowflakeHealthIndicator} / {@link UtilHealthIndicator}
+     * 实现的接口类不存在而触发 {@code NoClassDefFoundError}。
      *
-     * @return SnowflakeHealthIndicator 实例
+     * <p>使用内部静态 @Configuration 类 + {@code @ConditionalOnClass} 是 Spring Boot
+     * 标准做法：通过 ASM 字节码分析评估条件，避免在条件不满足时触发相关类的加载。
      */
-    @Bean
-    @ConditionalOnMissingBean
-    public SnowflakeHealthIndicator snowflakeHealthIndicator() {
-        return new SnowflakeHealthIndicator();
-    }
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    static class HealthIndicatorConfiguration {
 
-    /**
-     * 注册 UtilHealthIndicator Bean
-     *
-     * <p>工具模块健康检查（SnowflakeUtils 状态、JVM 内存指标等），
-     * 实现 Spring HealthIndicator 接口，通过 /actuator/health 端点暴露。
-     *
-     * @return UtilHealthIndicator 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public UtilHealthIndicator utilHealthIndicator() {
-        return new UtilHealthIndicator();
+        /**
+         * 注册 SnowflakeHealthIndicator Bean
+         *
+         * <p>检查 Snowflake ID 生成器的健康状态（时钟回拨、workerId 有效性、ID 生成能力）。
+         * 仅在 {@code ydsz.util.snowflake.enabled=true}（或缺省，matchIfMissing=true）时注册，
+         * 避免在 Snowflake 被显式禁用时仍强制初始化该组件。
+         *
+         * @return SnowflakeHealthIndicator 实例
+         */
+        @Bean
+        @ConditionalOnMissingBean
+        @ConditionalOnProperty(prefix = "ydsz.util.snowflake", name = "enabled", matchIfMissing = true)
+        public SnowflakeHealthIndicator snowflakeHealthIndicator() {
+            return new SnowflakeHealthIndicator();
+        }
+
+        /**
+         * 注册 UtilHealthIndicator Bean
+         *
+         * <p>工具模块健康检查（SnowflakeUtils 状态、JVM 内存指标等），
+         * 实现 Spring HealthIndicator 接口，通过 /actuator/health 端点暴露。
+         *
+         * @return UtilHealthIndicator 实例
+         */
+        @Bean
+        @ConditionalOnMissingBean
+        public UtilHealthIndicator utilHealthIndicator() {
+            return new UtilHealthIndicator();
+        }
     }
 
 }

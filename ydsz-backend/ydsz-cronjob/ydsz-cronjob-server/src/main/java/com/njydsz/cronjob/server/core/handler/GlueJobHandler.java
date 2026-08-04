@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.domain.job.JobExecutionContext;
+import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.common.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
@@ -208,9 +208,9 @@ public class GlueJobHandler implements JobHandler {
                 "java.math.BigInteger",
                 "java.math.RoundingMode",
                 "com.njydsz.common.domain.job.JobHandler",
-                "com.njydsz.common.domain.job.JobExecutionContext",
-                "com.njydsz.common.domain.job.JobExecutionContext",
-                "com.njydsz.common.domain.job.ProcessResult"
+                "com.njydsz.cronjob.domain.job.JobExecutionContext",
+                "com.njydsz.cronjob.domain.job.JobExecutionContext",
+                "com.njydsz.cronjob.domain.job.ProcessResult"
         );
         customizer.setImportsWhitelist(importsWhitelist);
 

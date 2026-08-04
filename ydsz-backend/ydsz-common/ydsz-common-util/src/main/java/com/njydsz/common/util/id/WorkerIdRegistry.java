@@ -3,6 +3,7 @@ package com.njydsz.common.util.id;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * WorkerId 注册中心 SPI
