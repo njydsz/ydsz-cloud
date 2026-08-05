@@ -49,8 +49,6 @@
             <property name="ordered" value="true"/>
             <property name="separated" value="true"/>
             <property name="option" value="bottom"/>
-            <property name="sortStaticImportsSeparately" value="true"/>
-            <property name="useContainerQualified" value="true"/>
         </module>
         <module name="RedundantImport"/>
 

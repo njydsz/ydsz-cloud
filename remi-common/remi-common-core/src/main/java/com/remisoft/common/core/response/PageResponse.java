@@ -143,8 +143,15 @@ public class PageResponse<T> extends BaseResponse<T> {
      * 创建成功分页响应，并在响应中标记分页参数是否被归一化。
      *
      * <p>当客户端传入的 {@code rawPageSize} 被 {@link PageConstants} 归一化（截断为上限或替换为默认值）
-     * 时，响应 {@code extensions} 中添加 {@code "pageSizeNormalized": true} 标记，
-     * 便于前端/调试时识别分页参数被框架调整。</p>
+     * 时，响应 {@code extensions} 中添加以下调试信息，便于前端/调试时识别分页参数被框架调整：
+     * <ul>
+     *   <li>{@code pageSizeNormalized} — 是否发生归一化（true/false）</li>
+     *   <li>{@code requestedPageSize} — 客户端传入的原始值</li>
+     *   <li>{@code actualPageSize} — 实际生效的值（归一化后）</li>
+     *   <li>{@code maxPageSize} — 当前配置的最大页记录数上限</li>
+     *   <li>{@code defaultPageSize} — 当前配置的默认页记录数</li>
+     * </ul>
+     * </p>
      *
      * @param total         总记录数
      * @param pageNum       当前页码
@@ -153,16 +160,94 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @param data          分页数据
      * @param <T>           数据类型
      * @return 携带归一化标记的成功分页响应
-     * @since 1.7.0
+     * @since 2.0.0
      */
     public static <T> PageResponse<T> successWithNormalization(Long total, Long pageNum, Long pageSize, Integer rawPageSize, T data) {
         PageResponse<T> response = success(total, pageNum, pageSize, data);
         PageConstants.NormalizeResult result = PageConstants.normalizePageSizeWithResult(rawPageSize);
-        if (result.isAdjusted()) {
-            response.putExtension("pageSizeNormalized", true);
-            response.putExtension("requestedPageSize", rawPageSize);
-        }
+        // 始终携带归一化相关信息，便于调试
+        response.putExtension("pageSizeNormalized", result.isAdjusted());
+        response.putExtension("requestedPageSize", rawPageSize);
+        response.putExtension("actualPageSize", pageSize);
+        response.putExtension("maxPageSize", PageConstants.getMaxPageSize());
+        response.putExtension("defaultPageSize", PageConstants.getDefaultPageSize());
         return response;
+    }
+
+    /**
+     * 创建成功分页响应，携带完整的分页调试信息。
+     *
+     * <p>与 {@link #successWithNormalization} 类似，但额外归一化 {@code rawPageNum}，
+     * 适用于调用方同时传入原始 {@code pageNum} 和 {@code pageSize} 的场景。</p>
+     *
+     * @param total         总记录数
+     * @param pageNum       归一化后的当前页码
+     * @param pageSize      归一化后的每页记录数
+     * @param rawPageNum    客户端传入的原始页码（可为 null）
+     * @param rawPageSize   客户端传入的原始每页记录数（可为 null）
+     * @param data          分页数据
+     * @param <T>           数据类型
+     * @return 携带完整归一化信息的分页响应
+     * @since 2.0.0
+     */
+    public static <T> PageResponse<T> successWithFullNormalization(
+            Long total, Long pageNum, Long pageSize, Integer rawPageNum, Integer rawPageSize, T data) {
+        PageResponse<T> response = success(total, pageNum, pageSize, data);
+
+        // pageNum 归一化信息
+        NormalizeResultHolder pageNumResult = normalizePageNumWithResult(rawPageNum);
+        response.putExtension("pageNumNormalized", pageNumResult.isAdjusted());
+        response.putExtension("requestedPageNum", rawPageNum);
+        response.putExtension("actualPageNum", pageNum);
+
+        // pageSize 归一化信息
+        PageConstants.NormalizeResult pageSizeResult = PageConstants.normalizePageSizeWithResult(rawPageSize);
+        response.putExtension("pageSizeNormalized", pageSizeResult.isAdjusted());
+        response.putExtension("requestedPageSize", rawPageSize);
+        response.putExtension("actualPageSize", pageSize);
+
+        // 配置信息
+        response.putExtension("maxPageSize", PageConstants.getMaxPageSize());
+        response.putExtension("defaultPageSize", PageConstants.getDefaultPageSize());
+
+        return response;
+    }
+
+    /**
+     * 归一化页码并返回是否被归一化的结果。
+     *
+     * @param pageNum 原始页码（可为 null）
+     * @return 包含归一化结果和是否被调整标记的 NormalizeResultHolder
+     * @since 2.0.0
+     */
+    private static NormalizeResultHolder normalizePageNumWithResult(Integer pageNum) {
+        int raw = (pageNum == null || pageNum < 1) ? 0 : pageNum;
+        int normalized = PageConstants.normalizePageNum(pageNum);
+        boolean adjusted = raw != normalized;
+        return new NormalizeResultHolder(normalized, adjusted);
+    }
+
+    /**
+     * 归一化结果轻量级持有者（用于 PageResponse 内部）。
+     *
+     * @since 2.0.0
+     */
+    private static final class NormalizeResultHolder {
+        private final int value;
+        private final boolean adjusted;
+
+        NormalizeResultHolder(int value, boolean adjusted) {
+            this.value = value;
+            this.adjusted = adjusted;
+        }
+
+        int getValue() {
+            return value;
+        }
+
+        boolean isAdjusted() {
+            return adjusted;
+        }
     }
 
     /**

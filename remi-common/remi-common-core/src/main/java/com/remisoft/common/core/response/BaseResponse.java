@@ -262,53 +262,18 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         return of(code, msg, data);
     }
 
-    // ======================== 国际化兼容 API ========================
+    // ======================== 国际化 API ========================
 
     /**
-     * 国际化消息解析器接口。
+     * 检查国际化消息解析器是否已注册。
      *
-     * <p>保留此接口以维持向后兼容，新代码建议直接使用 {@link MessageResolverHolder.MessageResolver}。
-     *
-     * @deprecated 使用 {@link MessageResolverHolder.MessageResolver} 替代
-     */
-    @Deprecated
-    @FunctionalInterface
-    public interface MessageResolver extends MessageResolverHolder.MessageResolver {
-    }
-
-    /**
-     * 一次性设置全局消息解析器（仅首次调用生效）。
-     *
-     * <p>由 {@code CoreAutoConfiguration} 在应用启动时调用。
-     * 委托给 {@link MessageResolverHolder#setResolverIfAbsent} 实现。
-     *
-     * @param resolver 消息解析器实现（可为 {@link MessageResolver} 或 {@link MessageResolverHolder.MessageResolver}）
-     * @return true=设置成功（首次），false=已存在解析器（忽略）
-     * @since 1.6.0
-     */
-    public static boolean setResolverIfAbsent(MessageResolver resolver) {
-        return MessageResolverHolder.setResolverIfAbsent(resolver);
-    }
-
-    /**
-     * 检查国际化消息解析器是否已注册
+     * <p>委托给 {@link MessageResolverHolder#isResolverRegistered()} 实现。
      *
      * @return 已注册返回 true，否则返回 false
+     * @since 2.0.0
      */
     public static boolean isResolverRegistered() {
         return MessageResolverHolder.isResolverRegistered();
-    }
-
-    /**
-     * 测试辅助方法：清空已注册的消息解析器（仅用于单元测试）。
-     *
-     * <p><b>仅限测试使用。</b>调用后解析器恢复为未注册状态，
-     * 使各测试用例之间互不污染。
-     *
-     * @since 1.7.0
-     */
-    static void __testResetResolver() {
-        MessageResolverHolder.__testResetResolver();
     }
 
     // ======================== 错误码响应构建 ========================

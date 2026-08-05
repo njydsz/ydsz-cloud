@@ -156,17 +156,17 @@ class BaseResponseTest {
     }
 
     @Test
-    @DisplayName("设置 MessageResolver 后 success() 使用国际化消息")
+    @DisplayName("MessageResolverHolder 设置后 success() 使用国际化消息")
     void i18n_resolverApplied() {
-        BaseResponse.setResolverIfAbsent((key, defaultValue) -> "i18n-" + key);
+        MessageResolverHolder.setResolverIfAbsent((key, defaultValue) -> "i18n-" + key);
         BaseResponse<Void> resp = BaseResponse.success();
         assertEquals("i18n-response.success", resp.getMsg());
     }
 
     @Test
-    @DisplayName("MessageResolver 返回 null 时回退默认值")
+    @DisplayName("MessageResolverHolder 返回 null 时回退默认值")
     void i18n_resolverReturnsNull_fallbackToDefault() {
-        BaseResponse.setResolverIfAbsent((key, defaultValue) -> null);
+        MessageResolverHolder.setResolverIfAbsent((key, defaultValue) -> null);
         BaseResponse<Void> resp = BaseResponse.success();
         assertEquals("操作成功", resp.getMsg());
     }
@@ -174,24 +174,24 @@ class BaseResponseTest {
     @Test
     @DisplayName("未注册 resolver 时 isResolverRegistered 为 false")
     void i18n_notRegistered() {
-        assertFalse(BaseResponse.isResolverRegistered());
+        assertFalse(MessageResolverHolder.isResolverRegistered());
     }
 
     @Test
     @DisplayName("注册 resolver 后 isResolverRegistered 为 true")
     void i18n_registered() {
-        BaseResponse.setResolverIfAbsent((key, defaultValue) -> defaultValue);
-        assertTrue(BaseResponse.isResolverRegistered());
+        MessageResolverHolder.setResolverIfAbsent((key, defaultValue) -> defaultValue);
+        assertTrue(MessageResolverHolder.isResolverRegistered());
     }
 
     @Test
-    @DisplayName("setResolverIfAbsent 首次设置返回 true，重复设置返回 false")
+    @DisplayName("MessageResolverHolder.setResolverIfAbsent 首次设置返回 true，重复设置返回 false")
     void setResolverIfAbsent_idempotent() {
-        BaseResponse.MessageResolver first = (key, defaultValue) -> "first-" + key;
-        BaseResponse.MessageResolver second = (key, defaultValue) -> "second-" + key;
+        MessageResolverHolder.MessageResolver first = (key, defaultValue) -> "first-" + key;
+        MessageResolverHolder.MessageResolver second = (key, defaultValue) -> "second-" + key;
 
-        assertTrue(BaseResponse.setResolverIfAbsent(first));
-        assertFalse(BaseResponse.setResolverIfAbsent(second));
+        assertTrue(MessageResolverHolder.setResolverIfAbsent(first));
+        assertFalse(MessageResolverHolder.setResolverIfAbsent(second));
 
         // 验证第一个解析器生效
         BaseResponse<Void> resp = BaseResponse.success();

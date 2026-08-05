@@ -52,9 +52,8 @@ public class CoreAutoConfiguration {
     @ConditionalOnBean(MessageSource.class)
     public SpringMessageResolver springMessageResolver(MessageSource messageSource) {
         SpringMessageResolver resolver = new SpringMessageResolver(messageSource);
-        // 注册到新的 MessageResolverHolder（同时通过兼容层写入 BaseResponse 以保持向后兼容）
+        // 仅注册到 MessageResolverHolder（v2.0 起 BaseResponse 不再持有解析器引用）
         MessageResolverHolder.setResolverIfAbsent(resolver);
-        BaseResponse.setResolverIfAbsent(resolver);
         return resolver;
     }
 

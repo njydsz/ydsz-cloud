@@ -61,7 +61,7 @@ class CoreAutoConfigurationTest {
     }
 
     @Test
-    @DisplayName("存在 MessageSource 时注册 SpringMessageResolver 并绑定 BaseResponse")
+    @DisplayName("存在 MessageSource 时注册 SpringMessageResolver 并绑定到 MessageResolverHolder")
     void messageSource_registersResolver() {
         contextRunner
                 .withBean(ResourceBundleMessageSource.class, () -> {
@@ -72,7 +72,7 @@ class CoreAutoConfigurationTest {
                 })
                 .run(context -> {
                     assertThat(context).hasSingleBean(SpringMessageResolver.class);
-                    assertThat(BaseResponse.isResolverRegistered()).isTrue();
+                    assertThat(MessageResolverHolder.isResolverRegistered()).isTrue();
                     assertThat(BaseResponse.success().getMsg()).isNotBlank();
                 });
     }
