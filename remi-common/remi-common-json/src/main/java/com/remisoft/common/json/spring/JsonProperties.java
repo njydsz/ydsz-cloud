@@ -29,6 +29,7 @@ import jakarta.validation.constraints.NotNull;
  *     serialize-enum-using-ordinal: false
  *     max-json-size: 10485760
  *     max-depth: 256
+ *     max-generic-depth: 64
  *     safe-mode: true
  *     monitoring-enabled: false
  *     whitelist-packages:
@@ -71,6 +72,10 @@ public class JsonProperties {
     /** 最大序列化深度 */
     @Min(1)
     private int maxDepth = 256;
+
+    /** 泛型递归深度上限（防止嵌套泛型 StackOverflow，默认 64） */
+    @Min(1)
+    private int maxGenericDepth = 64;
 
     /** 是否启用安全模式（AutoType 白名单检查，默认开启） */
     private boolean safeMode = true;
@@ -222,6 +227,16 @@ public class JsonProperties {
 
     public void setMaxDepth(int maxDepth) {
         this.maxDepth = maxDepth;
+    }
+
+    // --- maxGenericDepth ---
+
+    public int getMaxGenericDepth() {
+        return maxGenericDepth;
+    }
+
+    public void setMaxGenericDepth(int maxGenericDepth) {
+        this.maxGenericDepth = maxGenericDepth;
     }
 
     // --- safeMode ---

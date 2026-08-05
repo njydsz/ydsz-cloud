@@ -47,6 +47,9 @@ public final class JSONReader {
     /** 默认最大数组元素数 */
     public static final int DEFAULT_MAX_ARRAY_SIZE = 10000;
 
+    /** 默认泛型递归深度上限（与 FastJSON2 默认 64 对齐） */
+    public static final int DEFAULT_MAX_GENERIC_DEPTH = 64;
+
     /**
      * 读取特性枚举
      */
@@ -233,6 +236,9 @@ public final class JSONReader {
     
     /** 最大嵌套深度（防止栈溢出攻击，默认 256） */
     private static volatile int maxDepth = DEFAULT_MAX_DEPTH;
+
+    /** 泛型递归深度上限（防止恶意嵌套泛型参数导致 StackOverflow，默认 64） */
+    private static volatile int maxGenericDepth = DEFAULT_MAX_GENERIC_DEPTH;
     
     /** ThreadLocal 读取器池（复用 JSONReader 实例和 char[] 缓冲区，避免 GC 开销） */
     private static final ThreadLocal<JSONReader> READER_POOL = new ThreadLocal<>();
@@ -298,6 +304,34 @@ public final class JSONReader {
      */
     public static int getMaxDepth() {
         return maxDepth;
+    }
+
+    /**
+     * 设置泛型递归深度上限（防止恶意嵌套泛型参数导致 StackOverflow）。
+     *
+     * <p>当 {@link com.remisoft.common.json.provider.DeserializationProvider}
+     * 递归解析泛型参数（ParameterizedType / GenericArrayType / WildcardType）超过此值时抛出
+     * {@link com.remisoft.common.json.exception.JsonDeserializationException}。
+     * 默认值 {@link #DEFAULT_MAX_GENERIC_DEPTH} = 64，与 FastJSON2 对齐。
+     *
+     * @param depth 泛型递归深度上限（必须 > 0）
+     * @since 1.0.0
+     */
+    public static void setMaxGenericDepth(int depth) {
+        if (depth <= 0) {
+            throw new IllegalArgumentException("maxGenericDepth must be > 0, got: " + depth);
+        }
+        JSONReader.maxGenericDepth = depth;
+    }
+
+    /**
+     * 获取当前泛型递归深度上限。
+     *
+     * @return 泛型递归深度上限
+     * @since 1.0.0
+     */
+    public static int getMaxGenericDepth() {
+        return maxGenericDepth;
     }
 
     /**

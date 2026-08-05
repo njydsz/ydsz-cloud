@@ -166,6 +166,17 @@ public final class DeserializationProvider {
     }
 
     /**
+     * 泛型反序列化递归深度计数器（ThreadLocal）。
+     *
+     * <p>防止恶意构造的嵌套泛型 JSON（如 {@code List<List<List<...>>>}）导致
+     * {@code deserializeToObject} 无限递归引发 StackOverflowError。
+     * 默认最大深度 64（对标 FastJSON2 maxTypeRecursionDepth=100），可通过
+     * {@link JSONReader#setMaxGenericDepth(int)} 调整。
+     */
+    private static final ThreadLocal<Integer> DESERIALIZE_DEPTH =
+        ThreadLocal.withInitial(() -> 0);
+
+    /**
      * @JsonDeserialize 自定义反序列化器缓存（Class -> JsonDeserializer 实例）。
      */
     private static final ConcurrentHashMap<Class<?>, JsonDeserializer<?>> CUSTOM_DESERIALIZER_CACHE =
@@ -430,6 +441,35 @@ public final class DeserializationProvider {
             return null;
         }
 
+        // 泛型递归深度保护：仅在非 Class 类型的泛型路径（ParameterizedType/GenericArrayType/WildcardType）中递增
+        boolean incrementDepth = !(type instanceof Class<?>);
+        if (incrementDepth) {
+            int currentDepth = DESERIALIZE_DEPTH.get();
+            int maxDepth = JSONReader.getMaxGenericDepth();
+            if (currentDepth >= maxDepth) {
+                throw new JsonDeserializationException(
+                    JsonDeserializationException.TYPE_MISMATCH,
+                    "Generic deserialization depth exceeded: " + currentDepth + " >= " + maxDepth
+                        + " (type: " + type + ")");
+            }
+            DESERIALIZE_DEPTH.set(currentDepth + 1);
+        }
+
+        try {
+            return deserializeToObjectInternal(json, type);
+        } finally {
+            if (incrementDepth) {
+                DESERIALIZE_DEPTH.set(DESERIALIZE_DEPTH.get() - 1);
+            }
+        }
+    }
+
+    /**
+     * 内部反序列化逻辑（实际委托给各类型分派）。
+     *
+     * <p>与 {@link #deserializeToObject(String, Type)} 分离，方便递归深度保护在入口处统一处理。
+     */
+    private static Object deserializeToObjectInternal(String json, Type type) {
         if (type instanceof Class<?> clazz) {
             AutoTypeChecker.checkType(clazz);
             Object result = deserializeValue(json, clazz);

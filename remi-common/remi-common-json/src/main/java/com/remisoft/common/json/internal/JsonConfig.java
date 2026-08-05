@@ -66,6 +66,8 @@ public final class JsonConfig implements Serializable {
 
     private volatile int maxDepth = 256;
 
+    private volatile int maxGenericDepth = 64;
+
     private volatile boolean useBigDecimal = false;
 
     /** 是否启用根名称包裹（配合 @JsonRootName 注解使用） */
@@ -184,6 +186,19 @@ public final class JsonConfig implements Serializable {
     }
 
     /**
+     * 获取泛型递归深度上限。
+     *
+     * <p>防止恶意构造的嵌套泛型类型（如 {@code List<List<List...>>}）导致
+     * {@link com.remisoft.common.json.provider.DeserializationProvider DeserializationProvider}
+     * 递归过深触发 StackOverflow。默认 64，与 FastJSON2 默认值对齐。
+     *
+     * @return 泛型递归深度上限
+     */
+    public int getMaxGenericDepth() {
+        return maxGenericDepth;
+    }
+
+    /**
      * 是否使用 BigDecimal 解析浮点数。
      *
      * <p>启用后，包含小数点的数字将被解析为 {@link java.math.BigDecimal}，
@@ -224,6 +239,7 @@ public final class JsonConfig implements Serializable {
         SerializationProvider.setUseBigDecimal(useBigDecimal);
         // 传播 maxDepth 到反序列化路径（JSONReader 全局配置）
         JSONReader.setMaxDepth(maxDepth);
+        JSONReader.setMaxGenericDepth(maxGenericDepth);
         // wrapRootValue 不需要传播到 SerializationContext，因为它在 serialize() 入口处检查
     }
 
@@ -240,6 +256,7 @@ public final class JsonConfig implements Serializable {
                 ", defaultDateFormat='" + defaultDateFormat + '\'' +
                 ", maxJsonSize=" + maxJsonSize +
                 ", maxDepth=" + maxDepth +
+                ", maxGenericDepth=" + maxGenericDepth +
                 ", useBigDecimal=" + useBigDecimal +
                 ", wrapRootValue=" + wrapRootValue +
                 '}';
@@ -289,6 +306,7 @@ public final class JsonConfig implements Serializable {
         private String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
         private long maxJsonSize = 10L * 1024 * 1024;
         private int maxDepth = 256;
+        private int maxGenericDepth = 64;
         private boolean useBigDecimal = false;
         private boolean wrapRootValue = false;
 
@@ -396,6 +414,16 @@ public final class JsonConfig implements Serializable {
         }
 
         /**
+         * 设置泛型递归深度上限。
+         *
+         * @param maxGenericDepth 最大深度，防止嵌套泛型参数递归过深导致栈溢出，默认 64
+         */
+        public Builder maxGenericDepth(int maxGenericDepth) {
+            this.maxGenericDepth = maxGenericDepth;
+            return this;
+        }
+
+        /**
          * 设置是否将浮点数解析为 BigDecimal 以保留精度。
          *
          * @param useBigDecimal {@code true} 启用（金融等高精度场景推荐）
@@ -433,6 +461,7 @@ public final class JsonConfig implements Serializable {
                 this.defaultDateFormat = config.defaultDateFormat;
                 this.maxJsonSize = config.maxJsonSize;
                 this.maxDepth = config.maxDepth;
+                this.maxGenericDepth = config.maxGenericDepth;
                 this.useBigDecimal = config.useBigDecimal;
                 this.wrapRootValue = config.wrapRootValue;
             }
@@ -456,6 +485,7 @@ public final class JsonConfig implements Serializable {
             config.defaultDateFormat = this.defaultDateFormat;
             config.maxJsonSize = this.maxJsonSize;
             config.maxDepth = this.maxDepth;
+            config.maxGenericDepth = this.maxGenericDepth;
             config.useBigDecimal = this.useBigDecimal;
             config.wrapRootValue = this.wrapRootValue;
             return config;

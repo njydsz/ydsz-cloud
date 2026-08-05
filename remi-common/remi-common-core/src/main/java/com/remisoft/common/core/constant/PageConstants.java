@@ -15,7 +15,7 @@ public final class PageConstants {
     /**
      * 归一化页大小（1 ~ MAX_PAGE_SIZE）。
      */
-    public static int normalizePageSize(Integer pageSize) {
+    public static int pageSize(Integer pageSize) {
         if (pageSize == null || pageSize < 1) {
             return DEFAULT_PAGE_SIZE;
         }
@@ -25,7 +25,7 @@ public final class PageConstants {
     /**
      * 归一化页码（<=1 视为第 1 页）。
      */
-    public static int normalizePageNum(Integer pageNum) {
+    public static int pageNum(Integer pageNum) {
         return (pageNum == null || pageNum < 1) ? DEFAULT_PAGE_NUM : pageNum;
     }
 
@@ -33,6 +33,6 @@ public final class PageConstants {
      * 计算 LIMIT offset。
      */
     public static long calcOffset(Integer pageNum, Integer pageSize) {
-        return (long) (normalizePageNum(pageNum) - 1) * normalizePageSize(pageSize);
+        return (long) (pageNum(pageNum) - 1) * pageSize(pageSize);
     }
 }

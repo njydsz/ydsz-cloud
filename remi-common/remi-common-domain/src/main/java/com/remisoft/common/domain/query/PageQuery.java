@@ -202,14 +202,14 @@ public class PageQuery extends BaseQuery {
     /**
      * 标准化页大小
      *
-     * <p>委托到 {@link PageConstants#normalizePageSize(Integer)}，
+     * <p>委托到 {@link PageConstants#pageSize(Integer)}，
      * 统一分页归一化规则。</p>
      *
      * @param pageSize 原始页大小
      * @return 标准化后的页大小
      */
     private static int normalizePageSize(Integer pageSize) {
-        return PageConstants.normalizePageSize(pageSize);
+        return PageConstants.pageSize(pageSize);
     }
 
     /**

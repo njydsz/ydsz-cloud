@@ -784,6 +784,7 @@ public class JsonMapper {
         private boolean wrapRootValue = JsonConfig.getInstance().isWrapRootValue();
         private long maxJsonSize = JsonConfig.getInstance().getMaxJsonSize();
         private int maxDepth = JsonConfig.getInstance().getMaxDepth();
+        private int maxGenericDepth = JsonConfig.getInstance().getMaxGenericDepth();
 
         private Builder() {
         }
@@ -899,6 +900,16 @@ public class JsonMapper {
         }
 
         /**
+         * 设置泛型递归深度上限。
+         *
+         * @param maxGenericDepth 最大深度，防止嵌套泛型参数递归过深导致栈溢出，默认 64
+         */
+        public Builder maxGenericDepth(int maxGenericDepth) {
+            this.maxGenericDepth = maxGenericDepth;
+            return this;
+        }
+
+        /**
          * 构建最终的 {@link JsonMapper} 实例。
          *
          * <p>将 Builder 上累积的全部配置项转换为 {@link JsonConfig}，
@@ -920,6 +931,7 @@ public class JsonMapper {
                 .wrapRootValue(wrapRootValue)
                 .maxJsonSize(maxJsonSize)
                 .maxDepth(maxDepth)
+                .maxGenericDepth(maxGenericDepth)
                 .build();
             JsonMapper mapper = new JsonMapper(config);
             mapper.configChanged();

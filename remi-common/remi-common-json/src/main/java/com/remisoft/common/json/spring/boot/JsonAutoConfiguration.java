@@ -211,6 +211,7 @@ public class JsonAutoConfiguration {
                     .circularReferenceStrategy(strategy)
                     .maxJsonSize(properties.getMaxJsonSize())
                     .maxDepth(properties.getMaxDepth())
+                    .maxGenericDepth(properties.getMaxGenericDepth())
                     .useBigDecimal(properties.isUseBigDecimal())
                     .wrapRootValue(properties.isWrapRootValue())
                     .failOnError(properties.isFailOnError())
