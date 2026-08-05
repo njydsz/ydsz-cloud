@@ -77,6 +77,90 @@ public final class RequestContext {
     /** 上下文键名：API 版本 */
     public static final String KEY_API_VERSION = "apiVersion";
 
+    // ==================== v1.9 扩展：统一上下文键（供 common 子模块共享） ====================
+
+    /**
+     * 上下文键名：认证信息（AuthInfo 实现）。
+     *
+     * <p>由认证模块 {@code AuthContext} 写入，供 Feign 拦截器、数据权限解析器等读取。
+     * 类型：{@code AuthInfo}（或其子类 {@code RemiAuthInfo}）。</p>
+     *
+     * @since 1.9.0
+     */
+    public static final String KEY_AUTH_INFO = "authInfo";
+
+    /**
+     * 上下文键名：登录用户（LoginUser）。
+     *
+     * <p>由认证模块 {@code AuthContext.setCurrent()} 写入。
+     * 类型：{@code LoginUser}。</p>
+     *
+     * @since 1.9.0
+     */
+    public static final String KEY_LOGIN_USER = "loginUser";
+
+    /**
+     * 上下文键名：租户上下文（TenantContext）。
+     *
+     * <p>由 {@code TenantContextHolder.set()} 写入。
+     * 包含租户 ID、是否系统租户、是否超级管理员、JWT claims 等完整信息。
+     * 类型：{@code TenantContext}。</p>
+     *
+     * @since 1.9.0
+     */
+    public static final String KEY_TENANT_CONTEXT = "tenantContext";
+
+    /**
+     * 上下文键名：列权限信息（ColumnPermissionInfo）。
+     *
+     * <p>由列权限切面写入，供 SQL 拦截器读取字段级权限。
+     * 类型：{@code ColumnPermissionInfo}。</p>
+     *
+     * @since 1.9.0
+     */
+    public static final String KEY_COLUMN_PERMISSION = "columnPermission";
+
+    /**
+     * 上下文键名：审计上下文数据（AuditContextData）。
+     *
+     * <p>由审计切面写入，记录请求耗时、URL、业务流水号等审计信息。
+     * 类型：{@code AuditContextData}。</p>
+     *
+     * @since 1.9.0
+     */
+    public static final String KEY_AUDIT_DATA = "auditData";
+
+    /**
+     * 上下文键名：HTTP 请求对象（HttpServletRequest）。
+     *
+     * <p>由认证 Filter 写入，供非 Controller 层获取请求信息。
+     * 类型：{@code HttpServletRequest}。</p>
+     *
+     * @since 1.9.0
+     */
+    public static final String KEY_HTTP_REQUEST = "httpRequest";
+
+    /**
+     * 上下文键名：额外请求头（Extra Headers）。
+     *
+     * <p>用于数据权限场景下的虚拟请求头存储。
+     * 类型：{@code Map<String, String>}。</p>
+     *
+     * @since 1.9.0
+     */
+    public static final String KEY_EXTRA_HEADERS = "extraHeaders";
+
+    /**
+     * 上下文键名：请求级缓存的用户信息 Map。
+     *
+     * <p>由 RbacPermissionEvaluator.loadCurrentUserInfo() 首次加载后写入，
+     * 供同一请求内多次权限校验复用，避免反复 Redis 调用。
+     * 类型：{@code Map<String, Object>}。</p>
+     *
+     * @since 1.9.0
+     */
+    public static final String KEY_CACHED_USER_INFO_MAP = "cachedUserInfoMap";
+
     /**
      * 请求上下文存储（懒初始化）。
      *

@@ -57,18 +57,11 @@ public final class JsonCacheStats {
      *
      * @return 已生成的动态类数量，或 -1 表示已降级
      */
-    public static int getAsmGeneratedCount() {
+    public static long getAsmGeneratedCount() {
         if (getAsmLevel() == AsmBeanCodecGenerator.AsmLevel.REFLECTION) {
             return -1;
         }
-        String stats = AsmBeanCodecGenerator.getAsmStats();
-        // 解析 "Generated: 123/10000" 格式
-        try {
-            String generatedPart = stats.split("Generated: ")[1].split("/")[0];
-            return Integer.parseInt(generatedPart.trim());
-        } catch (Exception e) {
-            return -1;
-        }
+        return AsmCodecCache.getAsmClassCount();
     }
 
     /**
