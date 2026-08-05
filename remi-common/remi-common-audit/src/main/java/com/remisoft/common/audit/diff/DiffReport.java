@@ -19,7 +19,7 @@ import lombok.Getter;
  * <ul>
  *   <li>{@link #toJson()} 使用 RemiJson 引擎序列化，替代手动 StringBuilder</li>
  *   <li>{@link #toJsonPatch()} 输出 RFC 6902 JsonPatch 格式</li>
- *   <li>{@link #queryByPointer(String)} 使用 JsonPointer 定位特定字段变更</li>
+ *   <li>{@link #queryByPointer(String)} 使用 JSON Pointer 定位特定字段变更</li>
  * </ul>
  *
  * @author remi-team
@@ -119,7 +119,7 @@ public class DiffReport implements Serializable {
      * // 获取字段名为 "username" 的旧值（需先找到索引）
      * </pre>
      *
-     * @param pointer JsonPointer 路径（如 {@code "/0/new"}、{@code "/1/old"}）
+     * @param pointer JSON Pointer 路径（如 {@code "/0/new"}、{@code "/1/old"}）
      * @return 路径对应的值字符串，路径不存在返回 {@code null}
      */
     public String queryByPointer(String pointer) {

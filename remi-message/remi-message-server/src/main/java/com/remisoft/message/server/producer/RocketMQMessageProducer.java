@@ -38,8 +38,6 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
 
     public RocketMQMessageProducer(RocketMQTemplate rocketMQTemplate) {
         this.rocketMQTemplate = rocketMQTemplate;
-        // 预热 ASM 序列化器，避免首次请求时的类型推断开销
-        RemiJson.warmup(MessageRequest.class);
     }
 
     /** P1-6: 优先级 → RocketMQ Tag 映射 */

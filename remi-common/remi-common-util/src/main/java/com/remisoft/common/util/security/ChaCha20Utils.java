@@ -81,17 +81,15 @@ public class ChaCha20Utils {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
-     * Cipher 实例缓存（ThreadLocal 池化）。
+     * Cipher 实例缓存（ThreadLocal 池化，委托 {@link JcaCipherPool} 统一管理）。
      *
-     * <p>ChaCha20-Poly1305 Cipher 非线程安全，通过 ThreadLocal 复用避免频繁创建。
+     * <p>统一池化后消除与 AesGcmCrypto、Sm2Utils 等类的重复 ThreadLocal 代码。
+     *
+     * @since 2.0.0
      */
-    private static final ThreadLocal<Cipher> CIPHER_CACHE = ThreadLocal.withInitial(() -> {
-        try {
-            return Cipher.getInstance(ALGORITHM);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-            throw new IllegalStateException("ChaCha20-Poly1305 not supported (requires JDK 12+)", e);
-        }
-    });
+    private static Cipher acquireCipher() {
+        return JcaCipherPool.acquireChaCha20Cipher();
+    }
 
     /**
      * 私有构造器，工具类不允许实例化。
@@ -231,7 +229,7 @@ public class ChaCha20Utils {
      */
     public static byte[] encrypt(byte[] plaintext, Key key, IvParameterSpec nonce, byte[] aad) {
         try {
-            Cipher cipher = CIPHER_CACHE.get();
+            Cipher cipher = acquireCipher();
             cipher.init(Cipher.ENCRYPT_MODE, key, nonce);
             if (aad != null && aad.length > 0) {
                 cipher.updateAAD(aad);
@@ -304,7 +302,7 @@ public class ChaCha20Utils {
      */
     public static byte[] decrypt(byte[] ciphertext, Key key, IvParameterSpec nonce, byte[] aad) {
         try {
-            Cipher cipher = CIPHER_CACHE.get();
+            Cipher cipher = acquireCipher();
             cipher.init(Cipher.DECRYPT_MODE, key, nonce);
             if (aad != null && aad.length > 0) {
                 cipher.updateAAD(aad);

@@ -84,25 +84,26 @@ public final class Sm2Utils {
     /** 加密算法（BouncyCastle SM2 JCA 支持） */
     private static final String ENCRYPT_ALGORITHM = "SM2";
 
-    /** 加密 Cipher ThreadLocal 池化 */
-    private static final ThreadLocal<Cipher> ENCRYPT_CIPHER = ThreadLocal.withInitial(() -> {
-        try {
-            return Cipher.getInstance(ENCRYPT_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
-        } catch (Exception e) {
-            throw new IllegalStateException(
-                    "SM2 encryption not available, ensure bcprov-jdk18on is on classpath", e);
-        }
-    });
+    /**
+     * 加密 Cipher ThreadLocal 池化（委托 {@link JcaCipherPool} 统一管理）。
+     *
+     * <p>统一池化管理后，消除与 AesGcmCrypto、ChaCha20Utils 等类的重复代码。
+     *
+     * @since 2.0.0 迁移至 JcaCipherPool
+     */
+    private static Cipher acquireEncryptCipher() {
+        return JcaCipherPool.acquireSm2EncryptCipher();
+    }
 
-    /** 签名 Signature ThreadLocal 池化 */
-    private static final ThreadLocal<Signature> SIGNATURE = ThreadLocal.withInitial(() -> {
-        try {
-            return Signature.getInstance(SIGN_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
-        } catch (Exception e) {
-            throw new IllegalStateException(
-                    "SM3withSM2 signature not available, ensure bcprov-jdk18on is on classpath", e);
-        }
-    });
+    /**
+     * 签名 Signature ThreadLocal 池化（委托 {@link JcaCipherPool} 统一管理）。
+     *
+     * @return 本线程的 SM3withSM2 Signature 实例
+     * @since 2.0.0 迁移至 JcaCipherPool
+     */
+    private static Signature acquireSignature() {
+        return JcaCipherPool.acquireSm2Signature();
+    }
 
     /** 共享的 SecureRandom */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -285,7 +286,7 @@ public final class Sm2Utils {
         Objects.requireNonNull(content, "content must not be null");
         Objects.requireNonNull(publicKey, "publicKey must not be null");
         try {
-            Cipher cipher = ENCRYPT_CIPHER.get();
+            Cipher cipher = acquireEncryptCipher();
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
             return cipher.doFinal(content);
         } catch (GeneralSecurityException e) {
@@ -317,7 +318,7 @@ public final class Sm2Utils {
         Objects.requireNonNull(ciphertext, "ciphertext must not be null");
         Objects.requireNonNull(privateKey, "privateKey must not be null");
         try {
-            Cipher cipher = ENCRYPT_CIPHER.get();
+            Cipher cipher = acquireEncryptCipher();
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             return cipher.doFinal(ciphertext);
         } catch (GeneralSecurityException e) {
@@ -353,7 +354,7 @@ public final class Sm2Utils {
         Objects.requireNonNull(content, "content must not be null");
         Objects.requireNonNull(privateKey, "privateKey must not be null");
         try {
-            Signature sig = SIGNATURE.get();
+            Signature sig = acquireSignature();
             sig.initSign(privateKey);
             sig.update(content);
             return sig.sign();
@@ -389,7 +390,7 @@ public final class Sm2Utils {
         Objects.requireNonNull(signature, "signature must not be null");
         Objects.requireNonNull(publicKey, "publicKey must not be null");
         try {
-            Signature sig = SIGNATURE.get();
+            Signature sig = acquireSignature();
             sig.initVerify(publicKey);
             sig.update(content);
             return sig.verify(signature);

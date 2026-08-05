@@ -48,26 +48,15 @@ public class AesGcmCrypto {
     private static final int GCM_TAG_BYTES = GCM_TAG_LENGTH / 8;
 
     /**
-     * GCM Cipher 实例缓存（按算法字符串索引，ThreadLocal 池化）。
-     *
-     * <p>每次 Cipher.getInstance() 开销较大（Provider 查找 + 算法初始化），
-     * 通过 ThreadLocal 池化复用 Cipher 实例，每次使用后 reset 为 INIT 状态。
-     *
-     * <p>注意：Cipher 对象非线程安全，因此不能跨线程共享，ThreadLocal 是合适的粒度。
-     */
-    private static final ThreadLocal<Cipher> CIPHER_POOL = ThreadLocal.withInitial(() -> {
-        try {
-            return Cipher.getInstance(TRANSFORM);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to initialize AES-GCM Cipher", e);
-        }
-    });
-
-    /**
      * 获取本线程的 Cipher 实例。
+     *
+     * <p>委托至统一 {@link JcaCipherPool} 池化逻辑，消除 ThreadLocal 重复代码。
+     *
+     * @return 本线程的 AES-GCM Cipher 实例
+     * @since 2.0.0 迁移至统一的 JcaCipherPool
      */
     private static Cipher acquireCipher() {
-        return CIPHER_POOL.get();
+        return JcaCipherPool.acquireAesGcmCipher();
     }
 
     /**

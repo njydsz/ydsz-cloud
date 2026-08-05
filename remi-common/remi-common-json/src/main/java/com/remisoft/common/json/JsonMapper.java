@@ -797,21 +797,6 @@ public class JsonMapper {
         return toJson(obj, true);
     }
 
-    // ==================== ASM 预热 ====================
-
-    /**
-     * 预热 ASM 序列化器/反序列化器。
-     *
-     * <p>在应用启动时调用，提前为指定类型生成 ASM 字节码，
-     * 避免首次请求时的延迟尖峰。</p>
-     *
-     * @param classes 需要预热的类型列表
-     * @since 1.0.0
-     */
-    public void warmup(Class<?>... classes) {
-        RemiJson.warmup(classes);
-    }
-
     // ==================== 字段排除（列权限） ====================
 
     /**
@@ -879,11 +864,11 @@ public class JsonMapper {
     }
 
     /**
-     * 允许抛出受检异常的函数式接口。
+     * 允许延迟执行的函数式接口（原指标监控包装的参数类型）。
      */
     @FunctionalInterface
     private interface ThrowingSupplier<T> {
-        T get() throws Exception;
+        T get();
     }
 
     /**
