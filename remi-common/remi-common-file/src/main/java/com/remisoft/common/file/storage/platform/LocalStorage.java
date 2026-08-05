@@ -30,7 +30,7 @@ import com.remisoft.common.file.domain.ObjectMetadata;
 import com.remisoft.common.file.domain.PolicyResult;
 import com.remisoft.common.file.exception.FileExceptionCode;
 import com.remisoft.common.file.storage.AbstractFileStorage;
-import com.remisoft.common.util.io.IOUtils;
+import org.apache.commons.io.IOUtils;
 import com.remisoft.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;

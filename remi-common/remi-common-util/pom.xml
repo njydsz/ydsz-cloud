@@ -69,6 +69,11 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Apache Commons IO（替代自定义 IOUtils/FileUtils） -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
         <!-- Spring Security Crypto（BCryptPasswordEncoder, PwdUtils 使用） -->
         <dependency>
             <groupId>org.springframework.security</groupId>
