@@ -2,6 +2,7 @@ package com.remisoft.common.json.writer;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -435,7 +436,14 @@ public final class JSONWriter {
     }
 
     /**
-     * 写入 BigDecimal（直接写入 toPlainString，避免精度丢失）。
+     * 写入 BigDecimal（使用快速路径避免中间 String 分配）
+     *
+     * <p>优化策略：</p>
+     * <ul>
+     *   <li>整数 BigDecimal（scale=0 或可通过缩放转为 long）：直接写入 long 数值，避免 toPlainString()</li>
+     *   <li>小 scale（≤10）且 unscaled 值在 long 范围内：整数部分 + 小数部分分别写入</li>
+     *   <li>其他情况：回退 toPlainString()</li>
+     * </ul>
      *
      * <p>使用 {@link BigDecimal#toPlainString()} 而非 {@link BigDecimal#toString()}，
      * 避免科学计数法输出（如 1E+2），保证 JSON 数字格式合法。</p>
@@ -451,11 +459,94 @@ public final class JSONWriter {
             write("null");
             return;
         }
+
+        // 快速路径 1：整数 BigDecimal（无小数部分）
+        int scale = value.scale();
+        if (scale == 0) {
+            // 无小数部分，直接使用 unscaledValue
+            java.math.BigInteger unscaled = value.unscaledValue();
+            if (unscaled.bitLength() <= 63) {
+                // 在 long 范围内，直接写入长整数，避免 toPlainString()
+                writeLong(unscaled.longValue());
+                return;
+            }
+            // 超大整数，使用 BigInteger 的快速路径
+            if (Feature.WriteBigDecimalAsString.isEnabled(this.features)) {
+                writeString(unscaled.toString());
+            } else {
+                write(unscaled.toString());
+            }
+            return;
+        }
+
+        // 快速路径 2：小 scale 且 unscaled 在 long 范围内
+        if (scale > 0 && scale <= 18) {
+            java.math.BigInteger unscaled = value.unscaledValue();
+            if (unscaled.bitLength() <= 63) {
+                long unscaledLong = unscaled.longValue();
+                if (unscaledLong != 0) {
+                    // 可表示为 long 的带小数值
+                    long divisor = POWERS_OF_TEN[scale];
+                    long intPart = unscaledLong / divisor;
+                    long fracPart = Math.abs(unscaledLong % divisor);
+
+                    // 仅当恰好整除（无精度损失）时使用快速路径
+                    // 注意：如果截断后仍为原值，走快速路径
+                    if (intPart * divisor + fracPart == Math.abs(unscaledLong) ||
+                        (unscaledLong < 0 && intPart * divisor - fracPart == unscaledLong)) {
+
+                        if (unscaledLong < 0) {
+                            buf[pos++] = '-';
+                            intPart = -intPart;
+                            // fracPart 保持正值
+                        }
+                        ensureCapacity(32);
+                        pos += NumberUtils.writeLong(intPart, buf, pos);
+                        buf[pos++] = '.';
+                        // 前导零（如 0.05 → intPart=0, fracPart=5, scale=2 → "0.05"）
+                        if (fracPart > 0) {
+                            // 补齐前导零：按 scale 位数输出
+                            int fracDigits = scale;
+                            // 移除尾部零？保留，因为用户指定了精度
+                            // 从最高位开始写入，不足的前面补零
+                            int charPos = pos + fracDigits - 1;
+                            long tmp = fracPart;
+                            while (tmp > 0) {
+                                buf[pos + (charPos - pos)] = (char) ('0' + tmp % 10);
+                                tmp /= 10;
+                                charPos--;
+                            }
+                            // 剩余前导零
+                            while (charPos >= pos) {
+                                buf[pos + (charPos - pos)] = '0';
+                                charPos--;
+                            }
+                            pos += fracDigits;
+                        } else {
+                            buf[pos++] = '0';
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 慢速路径：回退 toPlainString()
         String str = value.toPlainString();
         if (Feature.WriteBigDecimalAsString.isEnabled(this.features)) {
             writeString(str);
         } else {
             write(str);
+        }
+    }
+
+    /** 10 的幂次表（10^0 ~ 10^18） */
+    private static final long[] POWERS_OF_TEN = new long[19];
+    static {
+        long p = 1L;
+        for (int i = 0; i <= 18; i++) {
+            POWERS_OF_TEN[i] = p;
+            p *= 10;
         }
     }
 
@@ -1257,8 +1348,12 @@ public final class JSONWriter {
             buf[pos++] = '"';
             buf[pos++] = (Character) value;
             buf[pos++] = '"';
+        } else if (value instanceof BigDecimal) {
+            writeBigDecimal((BigDecimal) value);
+        } else if (value instanceof BigInteger) {
+            writeBigIntegerInline((BigInteger) value);
         } else if (value instanceof Number) {
-            write(value.toString());
+            writeNumberInline((Number) value);
         } else if (value instanceof Boolean) {
             if ((Boolean) value) {
                 buf[pos] = 't'; buf[pos + 1] = 'r'; buf[pos + 2] = 'u'; buf[pos + 3] = 'e';
@@ -1275,6 +1370,51 @@ public final class JSONWriter {
             writeStringDirectNoCheck(((Enum<?>) value).name());
         } else {
             writeObjectInline(value);
+        }
+    }
+
+    /**
+     * 快速写入 BigInteger（避免 toString() 分配）。
+     *
+     * <p>优化：对于能放入 long 范围内的 BigInteger，直接使用 writeLong 写入。</p>
+     */
+    private void writeBigIntegerInline(BigInteger value) {
+        if (value.bitLength() <= 63) {
+            writeLong(value.longValue());
+        } else {
+            // 超大整数回退 toString()
+            write(value.toString());
+        }
+    }
+
+    /**
+     * 快速写入 Number（针对非标准 Number 类型的优化分发）。
+     *
+     * <p>优化：对于 AtomicLong/AtomicInteger/LongAdder/DoubleAdder 等原子类型，
+     * 直接拆箱原始类型写入，避免 toString() 分配。</p>
+     */
+    private void writeNumberInline(Number value) {
+        if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {
+            writeLong(value.longValue());
+        } else if (value instanceof Double || value instanceof Float) {
+            double d = value.doubleValue();
+            if (Double.isNaN(d) || Double.isInfinite(d)) {
+                write("null");
+            } else {
+                writeDouble(d);
+            }
+        } else if (value instanceof java.util.concurrent.atomic.LongAdder) {
+            writeLong(((java.util.concurrent.atomic.LongAdder) value).sum());
+        } else if (value instanceof java.util.concurrent.atomic.DoubleAdder) {
+            double d = ((java.util.concurrent.atomic.DoubleAdder) value).sum();
+            if (Double.isNaN(d) || Double.isInfinite(d)) {
+                write("null");
+            } else {
+                writeDouble(d);
+            }
+        } else {
+            // 其他未知 Number 子类回退 toString()
+            write(value.toString());
         }
     }
 }

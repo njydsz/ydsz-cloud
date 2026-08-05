@@ -5,23 +5,27 @@ import com.remisoft.common.exception.code.ResultCode;
 /**
  * 异常码接口
  *
- * <p>继承 {@link ResultCode}，统一双轨错误码体系。
- * 所有业务异常码枚举都应实现此接口，以保证统一的访问方式。
+ * <p>继承 {@link ResultCode}（异常模块）与 {@code com.remisoft.common.core.code.ResultCode}（核心模块），
+ * 统一双轨错误码体系：业务异常码枚举实现本接口后，既可用于异常抛出链路
+ * （{@code throw new BusinessException(code)}），也可直接作为
+ * {@code BaseResponse.error(code, msg)} 的响应码（v1.1.0 起支持）。
  * 设计为接口而非抽象类，可以让不同业务模块定义自己的异常码枚举，
  * 同时保持访问方式的一致性。
  *
  * <p><b>实现规范：</b>
  * <ul>
  *   <li>枚举类需要实现 getCode() 和 getKey() 方法</li>
- *   <li>code：业务错误码，字符串类型，如 "A01001"</li>
+ *   <li>code：业务错误码，字符串类型，如 "B93001"</li>
  *   <li>key：国际化消息键，对应 messages.properties 中的键</li>
  * </ul>
  *
- * <h3>与 ResultCode 的桥接（v1.1.0 统一双轨体系）</h3>
+ * <h3>与两套 ResultCode 的桥接（v1.1.0 统一双轨体系）</h3>
  * <ul>
  *   <li>{@link #getMsg()} → 委托给 {@link #getKey()}，无 i18n 时回退显示 key</li>
  *   <li>{@link #getMessageKey()} → 委托给 {@link #getKey()}，用于 BaseResponse 的 i18n 链路</li>
  *   <li>{@link #getHttpStatusCode()} → 委托给 {@link #getHttpStatus()}，桥接命名差异</li>
+ *   <li>同时继承 {@code com.remisoft.common.core.code.ResultCode}，使枚举可直接传入
+ *       {@link com.remisoft.common.core.response.BaseResponse#error(com.remisoft.common.core.code.ResultCode)}</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
@@ -50,7 +54,7 @@ import com.remisoft.common.exception.code.ResultCode;
  * @see ResultCode
  * @see UnifiedExceptionCode
  */
-public interface ExceptionCode extends ResultCode {
+public interface ExceptionCode extends ResultCode, com.remisoft.common.core.code.ResultCode {
 
     /**
      * 获取异常码

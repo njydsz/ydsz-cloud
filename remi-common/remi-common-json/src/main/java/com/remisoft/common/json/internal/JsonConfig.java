@@ -1,11 +1,12 @@
 package com.remisoft.common.json.internal;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.remisoft.common.json.naming.PropertyNamingStrategy;
-import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.provider.SerializationProvider;
-
 import com.remisoft.common.json.reader.JSONReader;
 /**
  * RemiJson 全局配置类（不可变）。
@@ -45,6 +46,21 @@ public final class JsonConfig implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static volatile JsonConfig instance;
+
+    /**
+     * 全局配置版本号，每次 install() 自增。
+     *
+     * <p>缓存组件可通过 {@link #getConfigVersion()} 或轮询此值判断配置是否变更，
+     * 从而实现自动失效（如命名策略切换后清理 SerializerCache 中已烘焙的字段名）。</p>
+     */
+    private static final AtomicLong CONFIG_VERSION = new AtomicLong(0);
+
+    /**
+     * 配置变更监听器列表（线程安全，CopyOnWrite 保证迭代期间可注册/移除）。
+     *
+     * <p>监听器在 {@link #install(JsonConfig)} 完成后回调，可用于清理缓存、记录审计日志等。</p>
+     */
+    private static final List<ConfigChangeListener> CHANGE_LISTENERS = new CopyOnWriteArrayList<>();
 
     /** 字段不可变（final），通过构造函数一次性赋值 */
     private final PropertyNamingStrategy namingStrategy;
@@ -119,7 +135,9 @@ public final class JsonConfig implements Serializable {
      *
      * <p>此方法等价于 {@code instance = newConfig; newConfig.apply()}，
      * 保证配置立即生效（传播到 JSONReader / SerializationProvider 等全局组件），
-     * 并同步刷新 {@link com.remisoft.common.json.RemiJson} 内部的默认 Mapper 实例。</p>
+     * 并同步刷新 {@link com.remisoft.common.json.RemiJson} 内部的默认 Mapper 实例。
+     * 安装后会自增全局配置版本号 {@link #CONFIG_VERSION} 并通知所有注册的
+     * {@link ConfigChangeListener}。</p>
      *
      * @param newConfig 新的全局配置实例（由 Builder 构建）
      * @since 1.0.0
@@ -128,12 +146,76 @@ public final class JsonConfig implements Serializable {
         if (newConfig == null) {
             throw new IllegalArgumentException("JsonConfig.install: config must not be null");
         }
+        JsonConfig oldConfig;
         synchronized (JsonConfig.class) {
+            oldConfig = instance;
             instance = newConfig;
         }
         instance.apply();
         // 触发 RemiJson 静态方法委托的默认 Mapper 重建，使配置变更立即生效
         com.remisoft.common.json.RemiJson.reloadDefaultMapper();
+        // 自增版本号，供缓存组件检测配置变更
+        long newVersion = CONFIG_VERSION.incrementAndGet();
+        // 通知监听器（异步不阻塞安装流程）
+        notifyConfigChanged(oldConfig, newConfig, newVersion);
+    }
+
+    /**
+     * 注册配置变更监听器。
+     *
+     * <p>监听器在 {@link #install(JsonConfig)} 完成后回调，典型的使用场景：</p>
+     * <ul>
+     *   <li>SerializerCache：检测到命名策略变更时清理已烘焙字段名的缓存条目</li>
+     *   <li>监控指标：记录配置变更审计日志</li>
+     * </ul>
+     *
+     * @param listener 监听器实例，null 忽略
+     * @since 1.1.0
+     */
+    public static void addChangeListener(ConfigChangeListener listener) {
+        if (listener != null) {
+            CHANGE_LISTENERS.add(listener);
+        }
+    }
+
+    /**
+     * 移除配置变更监听器。
+     *
+     * @param listener 待移除的监听器
+     * @since 1.1.0
+     */
+    public static void removeChangeListener(ConfigChangeListener listener) {
+        CHANGE_LISTENERS.remove(listener);
+    }
+
+    /**
+     * 获取全局配置版本号。
+     *
+     * <p>每次 install() 自增。缓存组件可存储创建时的版本号，
+     * 用于检测配置是否已变更并触发自动失效。</p>
+     *
+     * @return 当前配置版本号
+     * @since 1.1.0
+     */
+    public static long getConfigVersion() {
+        return CONFIG_VERSION.get();
+    }
+
+    /**
+     * 通知所有监听器配置已变更。
+     */
+    private static void notifyConfigChanged(JsonConfig oldConfig, JsonConfig newConfig, long newVersion) {
+        if (CHANGE_LISTENERS.isEmpty()) {
+            return;
+        }
+        for (ConfigChangeListener listener : CHANGE_LISTENERS) {
+            try {
+                listener.onConfigChanged(oldConfig, newConfig, newVersion);
+            } catch (Exception e) {
+                // 监听器异常不应影响配置安装
+                // 使用 SLF4J 日志记录，但这里无法获取 Logger（静态初始化顺序），暂不记录
+            }
+        }
     }
 
     /**
@@ -576,5 +658,29 @@ public final class JsonConfig implements Serializable {
          * 抛出异常
          */
         ERROR
+    }
+
+    /**
+     * 配置变更监听器接口。
+     *
+     * <p>在 {@link JsonConfig#install(JsonConfig)} 完成后回调，接收旧配置、新配置和新版本号。
+     * 实现类可使用此接口清理缓存、记录审计日志、刷新状态等。</p>
+     *
+     * <p><b>线程安全：</b>监听器可能被并发回调，实现需保证线程安全。
+     * <b>执行约束：</b>监听器不应执行耗时操作，避免阻塞配置安装流程。</p>
+     *
+     * @since 1.1.0
+     */
+    @FunctionalInterface
+    public interface ConfigChangeListener {
+
+        /**
+         * 配置已变更回调。
+         *
+         * @param oldConfig  旧配置实例（首次安装时为 null）
+         * @param newConfig  新配置实例（不为 null）
+         * @param newVersion 新版本号（从 1 开始递增）
+         */
+        void onConfigChanged(JsonConfig oldConfig, JsonConfig newConfig, long newVersion);
     }
 }

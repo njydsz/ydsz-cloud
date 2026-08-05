@@ -1,8 +1,12 @@
 package com.remisoft.common.json.autotype;
 
 import java.time.Duration;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.remisoft.common.json.exception.JsonDeserializationException;
 
@@ -103,9 +107,14 @@ public final class AutoTypeChecker {
     private static final int TYPE_CHECK_CACHE_MAX = 4096;
 
     /**
-     * 类型检查结果缓存（className -> 是否允许反序列化），使用 ConcurrentHashMap 实现高并发无锁读写。
+     * 类型检查结果缓存（className -> 是否允许反序列化），使用有界 LRU 淘汰策略。
+     *
+     * <p>原有实现使用 ConcurrentHashMap + 超容量全量 clear()，存在缓存雪崩风险：
+     * 全局清空后大量并发请求同时重新计算，导致 CPU 尖峰和瞬时延迟抖动。
+     * 现改用 {@link BoundedLruCache} 实现真正的 LRU 逐出，仅淘汰最久未访问的单个条目，
+     * 从根本上消除雪崩风险。</p>
      */
-    private static final ConcurrentHashMap<String, Boolean> TYPE_CHECK_CACHE = new ConcurrentHashMap<>(256);
+    private static final BoundedLruCache<String, Boolean> TYPE_CHECK_CACHE = new BoundedLruCache<>(TYPE_CHECK_CACHE_MAX);
 
     static {
         initBuiltinWhitelist();
@@ -430,8 +439,8 @@ public final class AutoTypeChecker {
      * 判断类型是否允许反序列化
      *
      * <p>使用 {@link #TYPE_CHECK_CACHE} 缓存检查结果，避免每次反序列化都重复扫描
-     * 黑白名单集合。当缓存超出容量时全量清空（近似 LRU），当白名单/黑名单动态变更时，
-     * 相关 mutator 方法会自动清除缓存。</p>
+     * 黑白名单集合。缓存使用有界 LRU 淘汰策略，当容量达到上限时逐出最久未访问的单个条目。
+     * 白名单/黑名单动态变更时，相关 mutator 方法会自动清除缓存。</p>
      *
      * @param className 待检查的类全限定名
      * @return 是否允许
@@ -440,13 +449,14 @@ public final class AutoTypeChecker {
         if (className == null || className.isEmpty()) {
             return true;
         }
-        return TYPE_CHECK_CACHE.computeIfAbsent(className, k -> {
-            boolean r = computeTypeAllowed(k);
-            if (TYPE_CHECK_CACHE.size() > TYPE_CHECK_CACHE_MAX) {
-                TYPE_CHECK_CACHE.clear();
-            }
-            return r;
-        });
+        Boolean cached = TYPE_CHECK_CACHE.get(className);
+        if (cached != null) {
+            return cached;
+        }
+        // 缓存未命中：计算并放入
+        boolean allowed = computeTypeAllowed(className);
+        TYPE_CHECK_CACHE.put(className, allowed);
+        return allowed;
     }
 
     /**
@@ -542,7 +552,8 @@ public final class AutoTypeChecker {
     /**
      * 显式将类型加入白名单
      *
-     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 重新计算</p>
+     * <p>仅移除该 className 的缓存条目（而非全量清空），保留其他有效缓存项，
+     * 确保后续 {@link #isTypeAllowed(String)} 重新计算该类。</p>
      *
      * @param className 类全限定名
      */
@@ -551,25 +562,25 @@ public final class AutoTypeChecker {
             throw new IllegalArgumentException("className must not be null or empty");
         }
         EXPLICIT_WHITELIST.add(className);
-        TYPE_CHECK_CACHE.clear();
+        TYPE_CHECK_CACHE.remove(className);
     }
 
     /**
      * 从白名单中移除类型
      *
-     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 重新计算</p>
+     * <p>仅移除该 className 的缓存条目（而非全量清空），保留其他有效缓存项。</p>
      *
      * @param className 类全限定名
      */
     public static void removeFromWhitelist(String className) {
         EXPLICIT_WHITELIST.remove(className);
-        TYPE_CHECK_CACHE.clear();
+        TYPE_CHECK_CACHE.remove(className);
     }
 
     /**
      * 将类型加入黑名单（即使 SafeMode=false 也会拒绝）
      *
-     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 重新计算</p>
+     * <p>全量清空缓存，因为黑名单变更对所有类生效，任何缓存的允许结果都可能失效。</p>
      *
      * @param className 类全限定名
      */
@@ -584,7 +595,7 @@ public final class AutoTypeChecker {
     /**
      * 从黑名单中移除类型
      *
-     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 重新计算</p>
+     * <p>全量清空缓存，因为黑名单变更对所有类生效。</p>
      *
      * @param className 类全限定名
      */
@@ -622,7 +633,8 @@ public final class AutoTypeChecker {
     /**
      * 设置安全模式
      *
-     * <p>变更后自动清除类型检查缓存，确保后续 {@link #isTypeAllowed(String)} 按新模式重新计算</p>
+     * <p>全量清空缓存，因为 SafeMode 变更改变所有非内置类的判定结果（true 时仅白名单允许，
+     * false 时仅黑名单拒绝），缓存一致性必须通过全量刷新保证。</p>
      *
      * @param enabled true=启用安全模式（推荐），false=关闭安全模式
      */
@@ -679,7 +691,7 @@ public final class AutoTypeChecker {
      * 注册白名单包前缀（包级通配符回退匹配）。
      *
      * <p>注册后，所有以该前缀开头的类名都将被允许反序列化。
-     * 变更后自动清除类型检查缓存。</p>
+     * 变更后自动清除类型检查缓存（因为包前缀匹配会影响大量类的判定结果）。</p>
      *
      * @param packageName 包名前缀（如 {@code com.remisoft}）
      */
@@ -688,6 +700,16 @@ public final class AutoTypeChecker {
             WHITELIST_PACKAGE_PREFIXES.add(packageName);
             TYPE_CHECK_CACHE.clear();
         }
+    }
+
+    /**
+     * 获取当前类型检查缓存的大小。
+     *
+     * @return 缓存条目数
+     * @since 1.1.0
+     */
+    public static int getTypeCheckCacheSize() {
+        return TYPE_CHECK_CACHE.size();
     }
 
     /**
@@ -710,5 +732,105 @@ public final class AutoTypeChecker {
         EXPLICIT_BLACKLIST.clear();
         WHITELIST_PACKAGE_PREFIXES.clear();
         safeMode = true;
+    }
+
+    /**
+     * 有界 LRU 缓存，基于 {@link LinkedHashMap} 的访问顺序模式实现。
+     *
+     * <p>线程安全：所有公共方法使用内置锁。读操作（{@link #get}）仅在读到非 null 值时无需加锁，
+     * 写操作（{@link #put}、{@link #remove}、{@link #clear}）全局加锁保证 LRU 顺序一致性。</p>
+     *
+     * <p>相比 {@link ConcurrentHashMap}，本实现严格保证容量上限，当新元素插入导致容量溢出时，
+     * 仅淘汰最久未访问的单个条目，避免全局清空的缓存雪崩风险。</p>
+     *
+     * @param <K> 键类型
+     * @param <V> 值类型
+     * @since 1.1.0
+     */
+    private static final class BoundedLruCache<K, V> {
+
+        /** 访问顺序 LinkedHashMap（非线程安全，外部同步） */
+        private final LinkedHashMap<K, V> map;
+
+        /** 缓存容量上限 */
+        private final int maxSize;
+
+        /**
+         * 创建有界 LRU 缓存。
+         *
+         * @param maxSize 容量上限（必须 > 0）
+         */
+        BoundedLruCache(int maxSize) {
+            if (maxSize <= 0) {
+                throw new IllegalArgumentException("maxSize must be > 0, got: " + maxSize);
+            }
+            // accessOrder=true: 按访问顺序排列，最久未访问的元素在链表头部
+            this.map = new LinkedHashMap<>(Math.min(maxSize, 256), 0.75f, true);
+            this.maxSize = maxSize;
+        }
+
+        /**
+         * 获取缓存值，并将该条目标记为最近访问。
+         *
+         * @param key 键
+         * @return 值，不存在返回 {@code null}
+         */
+        V get(K key) {
+            synchronized (map) {
+                return map.get(key);
+            }
+        }
+
+        /**
+         * 放入缓存，如果容量溢出则淘汰最久未访问的条目。
+         *
+         * @param key   键
+         * @param value 值
+         */
+        void put(K key, V value) {
+            synchronized (map) {
+                map.put(key, value);
+                // 容量溢出时淘汰最久未访问的元素（accessOrder=true 时链表头部即最旧）
+                if (map.size() > maxSize) {
+                    Iterator<Map.Entry<K, V>> it = map.entrySet().iterator();
+                    if (it.hasNext()) {
+                        it.next();
+                        it.remove();
+                    }
+                }
+            }
+        }
+
+        /**
+         * 移除指定键的缓存条目。
+         *
+         * @param key 键
+         * @return 被移除的值，不存在返回 {@code null}
+         */
+        V remove(K key) {
+            synchronized (map) {
+                return map.remove(key);
+            }
+        }
+
+        /**
+         * 清空所有缓存条目。
+         */
+        void clear() {
+            synchronized (map) {
+                map.clear();
+            }
+        }
+
+        /**
+         * 当前缓存条目数。
+         *
+         * @return 缓存大小
+         */
+        int size() {
+            synchronized (map) {
+                return map.size();
+            }
+        }
     }
 }

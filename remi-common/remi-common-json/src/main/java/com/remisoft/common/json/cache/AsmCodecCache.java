@@ -1,9 +1,12 @@
 package com.remisoft.common.json.cache;
 
 import java.lang.ref.SoftReference;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,21 +16,28 @@ import com.remisoft.common.json.asm.AsmDeserializer;
 import com.remisoft.common.json.asm.AsmSerializer;
 import com.remisoft.common.json.writer.JSONWriter;
 
-/**
- * ASM 序列化器/反序列化器缓存
- * 
- * <p>缓存 ASM 生成的专用序列化器和反序列化器，避免重复生成字节码。</p>
- * 
- * <p><b>工作原理：</b></p>
- * <ul>
- *   <li>首次使用时为 Bean 类生成专用序列化器、反序列化器。</li>
- *   <li>生成后的类缓存在 ConcurrentHashMap 。</li>
- *   <li>后续使用直接从缓存获取，零开销</li>
- * </ul>
- * 
- * @author remi-team
- * @since 1.0.0
- */
+    /**
+     * ASM 序列化器/反序列化器缓存
+     *
+     * <p>缓存 ASM 生成的专用序列化器和反序列化器，避免重复生成字节码。</p>
+     *
+     * <p><b>工作原理：</b></p>
+     * <ul>
+     *   <li>首次使用时为 Bean 类生成专用序列化器、反序列化器。</li>
+     *   <li>生成后的类缓存在 ConcurrentHashMap 。</li>
+     *   <li>后续使用直接从缓存获取，零开销</li>
+     * </ul>
+     *
+     * <p><b>Metaspace 压力保护（P0-3，2026-08-05）：</b></p>
+     * <ul>
+     *   <li>总 ASM 类数上限：通过 {@code -Dremi.json.asm.max-classes=N} 配置，默认 {@value #DEFAULT_MAX_ASM_CLASSES}。</li>
+     *   <li>动态类（CGLIB/Groovy 代理）自动跳过 ASM 生成，走反射降级路径。</li>
+     *   <li>达到上限后新类型自动降级为反射模式，避免 Metaspace OOM。</li>
+     * </ul>
+     *
+     * @author remi-team
+     * @since 1.0.0
+     */
 public final class AsmCodecCache {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AsmCodecCache.class);
@@ -35,6 +45,155 @@ public final class AsmCodecCache {
     private static final int DEFAULT_MAX_SIZE = 1024;
 
     private static final int FAILED_CACHE_MAX_SIZE = 256;
+
+    /**
+     * ASM 生成类的总数上限（序列化器 + 反序列化器）。
+     *
+     * <p>通过系统属性 {@code remi.json.asm.max-classes} 配置。
+     * 达到上限后新类型自动降级为反射模式，避免 Metaspace OOM。
+     */
+    private static final int DEFAULT_MAX_ASM_CLASSES = 2048;
+
+    /** 当前 ASM 生成类的总数（包含序列化器和反序列化器） */
+    private static final AtomicLong ASM_CLASS_COUNT = new AtomicLong(0);
+
+    /** ASM 降级为反射的次数（达到上限后触发） */
+    private static final LongAdder ASM_DOWNGRADE_DUE_TO_LIMIT = new LongAdder();
+
+    /** 动态类跳过 ASM 生成的次数（CGLIB/Groovy 代理等） */
+    private static final LongAdder ASM_SKIPPED_DYNAMIC_CLASS = new LongAdder();
+
+    /** ASM 类总数上限（从系统属性读取，默认 DEFAULT_MAX_ASM_CLASSES） */
+    private static final int MAX_ASM_CLASSES = initMaxAsmClasses();
+
+    /** 动态类名特征集合（包名前缀或类名模式），命中则跳过 ASM 生成 */
+    private static final Set<String> DYNAMIC_CLASS_PREFIXES = Set.of(
+        "net.sf.cglib.",           // CGLIB 代理
+        "org.springframework.cglib.",
+        "javassist.",              // Javassist
+        "org.codehaus.groovy.",    // Groovy
+        "sun.proxy.",              // JDK 动态代理
+        "com.sun.proxy.",
+        "org.springframework.aop.", // Spring AOP 代理
+        "org.springframework.transaction.interceptor."
+    );
+
+    /**
+     * 从系统属性初始化 ASM 类总数上限。
+     */
+    private static int initMaxAsmClasses() {
+        String prop = System.getProperty("remi.json.asm.max-classes");
+        if (prop != null) {
+            try {
+                int value = Integer.parseInt(prop);
+                if (value > 0) {
+                    LOGGER.info("ASM max classes limit configured via system property: {}", value);
+                    return value;
+                }
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Invalid remi.json.asm.max-classes value: {}, using default: {}",
+                    prop, DEFAULT_MAX_ASM_CLASSES);
+            }
+        }
+        return DEFAULT_MAX_ASM_CLASSES;
+    }
+
+    /**
+     * 判断是否为动态生成的类（CGLIB/Groovy/Javassist 代理等），此类跳过 ASM 生成。
+     *
+     * @param beanType 待检测的类
+     * @return true 如果是动态类
+     */
+    private static boolean isDynamicClass(Class<?> beanType) {
+        String name = beanType.getName();
+        for (String prefix : DYNAMIC_CLASS_PREFIXES) {
+            if (name.startsWith(prefix)) {
+                return true;
+            }
+        }
+        // 检测 $$ 命名模式（CGLIB、Hibernate、ByteBuddy 等常用）
+        if (name.contains("$$")) {
+            return true;
+        }
+        // 检测 ByteBuddy 代理命名模式
+        if (name.contains("$ByteBuddy$") || name.contains("$$ByteBuddy$$")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 检查是否可以生成新的 ASM 类。
+     *
+     * @param beanType 待生成 ASM 的类
+     * @return true 如果允许生成 ASM
+     */
+    private static boolean canGenerateAsm(Class<?> beanType) {
+        // 动态类跳过 ASM
+        if (isDynamicClass(beanType)) {
+            ASM_SKIPPED_DYNAMIC_CLASS.increment();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Skip ASM for dynamic class: {}", beanType.getName());
+            }
+            return false;
+        }
+        // 检查总数上限
+        long current = ASM_CLASS_COUNT.get();
+        if (current >= MAX_ASM_CLASSES) {
+            ASM_DOWNGRADE_DUE_TO_LIMIT.increment();
+            LOGGER.warn("ASM class count reached limit {}/{}, falling back to reflection for: {}",
+                current, MAX_ASM_CLASSES, beanType.getName());
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 通知 ASM 类已生成（增加计数）。
+     */
+    private static void onAsmClassGenerated() {
+        ASM_CLASS_COUNT.incrementAndGet();
+    }
+
+    /**
+     * 获取当前 ASM 类总数。
+     *
+     * @return ASM 序列化器 + 反序列化器总数
+     * @since 1.1.0
+     */
+    public static long getAsmClassCount() {
+        return ASM_CLASS_COUNT.get();
+    }
+
+    /**
+     * 获取 ASM 类总数上限。
+     *
+     * @return ASM 类上限
+     * @since 1.1.0
+     */
+    public static int getMaxAsmClasses() {
+        return MAX_ASM_CLASSES;
+    }
+
+    /**
+     * 获取因达到上限导致 ASM 降级的次数。
+     *
+     * @return 降级次数
+     * @since 1.1.0
+     */
+    public static long getAsmDowngradeCount() {
+        return ASM_DOWNGRADE_DUE_TO_LIMIT.sum();
+    }
+
+    /**
+     * 获取动态类跳过 ASM 的次数。
+     *
+     * @return 跳过次数
+     * @since 1.1.0
+     */
+    public static long getAsmSkippedDynamicCount() {
+        return ASM_SKIPPED_DYNAMIC_CLASS.sum();
+    }
 
     /**
      * L1 缓存尺寸（强引用，保护最热条目永不 GC 回收）。
@@ -378,10 +537,16 @@ public final class AsmCodecCache {
             return null;
         }
 
+        // P0-3: ASM Metaspace 压力控制 — 检查是否可生成
+        if (!canGenerateAsm(beanType)) {
+            return null;
+        }
+
         try {
             Class<? extends AsmSerializer<T>> asmClass = AsmBeanCodecGenerator.generateSerializer(beanType);
             AsmSerializer<T> serializer = asmClass.getDeclaredConstructor().newInstance();
             SERIALIZER_CACHE.put(beanType, serializer);
+            onAsmClassGenerated();
             return serializer;
         } catch (Exception e) {
             LOGGER.warn("ASM serializer generation failed for {}, falling back to reflection", beanType.getName(), e);
@@ -413,10 +578,16 @@ public final class AsmCodecCache {
             return null;
         }
 
+        // P0-3: ASM Metaspace 压力控制 — 检查是否可生成
+        if (!canGenerateAsm(beanType)) {
+            return null;
+        }
+
         try {
             Class<? extends AsmSerializer<?>> asmClass = AsmBeanCodecGenerator.generateSerializerForType(beanType);
             AsmSerializer<?> serializer = asmClass.getDeclaredConstructor().newInstance();
             SERIALIZER_CACHE.put(beanType, serializer);
+            onAsmClassGenerated();
             return serializer;
         } catch (Exception e) {
             LOGGER.warn("ASM serializer generation failed for {}, falling back to reflection", beanType.getName(), e);
@@ -498,10 +669,16 @@ public final class AsmCodecCache {
             return null;
         }
 
+        // P0-3: ASM Metaspace 压力控制 — 检查是否可生成
+        if (!canGenerateAsm(beanType)) {
+            return null;
+        }
+
         try {
             Class<? extends AsmDeserializer<T>> asmClass = AsmBeanCodecGenerator.generateDeserializer(beanType);
             AsmDeserializer<T> deserializer = asmClass.getDeclaredConstructor().newInstance();
             DESERIALIZER_CACHE.put(beanType, deserializer);
+            onAsmClassGenerated();
             return deserializer;
         } catch (Exception e) {
             DESERIALIZER_FAILED.put(beanType, Boolean.TRUE);
@@ -532,10 +709,16 @@ public final class AsmCodecCache {
             return null;
         }
 
+        // P0-3: ASM Metaspace 压力控制 — 检查是否可生成
+        if (!canGenerateAsm(beanType)) {
+            return null;
+        }
+
         try {
             Class<? extends AsmDeserializer<?>> asmClass = AsmBeanCodecGenerator.generateDeserializerForType(beanType);
             AsmDeserializer<?> deserializer = asmClass.getDeclaredConstructor().newInstance();
             DESERIALIZER_CACHE.put(beanType, deserializer);
+            onAsmClassGenerated();
             return deserializer;
         } catch (Exception e) {
             DESERIALIZER_FAILED.put(beanType, Boolean.TRUE);
@@ -561,13 +744,19 @@ public final class AsmCodecCache {
      */
     public static String getCacheSize() {
         return String.format(
-            "SerializerCache[L1=%d, L2=%d], DeserializerCache[L1=%d, L2=%d], SerializerFailed: %d, DeserializerFailed: %d",
+            "SerializerCache[L1=%d, L2=%d], DeserializerCache[L1=%d, L2=%d], "
+            + "SerializerFailed: %d, DeserializerFailed: %d, "
+            + "ASM[classCount=%d/%d, downgrades=%d, skippedDynamic=%d]",
             SERIALIZER_CACHE.l1Size(),
             SERIALIZER_CACHE.l2Size(),
             DESERIALIZER_CACHE.l1Size(),
             DESERIALIZER_CACHE.l2Size(),
             SERIALIZER_FAILED.size(),
-            DESERIALIZER_FAILED.size()
+            DESERIALIZER_FAILED.size(),
+            ASM_CLASS_COUNT.get(),
+            MAX_ASM_CLASSES,
+            ASM_DOWNGRADE_DUE_TO_LIMIT.sum(),
+            ASM_SKIPPED_DYNAMIC_CLASS.sum()
         );
     }
 
@@ -681,7 +870,11 @@ public final class AsmCodecCache {
         return new CacheStats(
             serSize, deserSize,
             serHits, serMisses, deserHits, deserMisses,
-            serHitRate, deserHitRate
+            serHitRate, deserHitRate,
+            ASM_CLASS_COUNT.get(),
+            MAX_ASM_CLASSES,
+            ASM_DOWNGRADE_DUE_TO_LIMIT.sum(),
+            ASM_SKIPPED_DYNAMIC_CLASS.sum()
         );
     }
 
@@ -706,7 +899,11 @@ public final class AsmCodecCache {
      * @param deserializerMisses   反序列化器缓存未命中次数
      * @param serializerHitRate    序列化器真实命中率 (0.0 ~ 1.0)
      * @param deserializerHitRate  反序列化器真实命中率 (0.0 ~ 1.0)
-     * @since 1.0.0
+     * @param asmClassCount        当前 ASM 生成的类总数
+     * @param maxAsmClasses         ASM 类上限（可配置）
+     * @param asmDowngradeDueToLimit 因达到上限导致 ASM 降级的次数
+     * @param asmSkippedDynamicClass 动态类跳过 ASM 的次数
+     * @since 1.1.0
      */
     public record CacheStats(
         int serializerCount,
@@ -716,7 +913,11 @@ public final class AsmCodecCache {
         long deserializerHits,
         long deserializerMisses,
         double serializerHitRate,
-        double deserializerHitRate
+        double deserializerHitRate,
+        long asmClassCount,
+        int maxAsmClasses,
+        long asmDowngradeDueToLimit,
+        long asmSkippedDynamicClass
     ) {
     }
 }
