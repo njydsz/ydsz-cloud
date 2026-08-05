@@ -1,4 +1,4 @@
-package com.remisoft.common.util.security;
+package com.remisoft.common.util.security.password;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -45,7 +45,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
     public static final DefaultPasswordStrengthChecker INSTANCE = new DefaultPasswordStrengthChecker();
 
     /** Bundle 基础名，用于国际化消息查找 */
-    private static final String BUNDLE_BASE = "com.remisoft.common.util.security.messages";
+    private static final String BUNDLE_BASE = "com.remisoft.common.util.security.password.messages";
 
     /** 已知常见弱密码集合（前 100 常见密码子集）。 */
     private static final Set<String> COMMON_WEAK_PASSWORDS = Set.of(

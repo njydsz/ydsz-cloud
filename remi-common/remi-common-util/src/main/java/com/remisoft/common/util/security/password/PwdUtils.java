@@ -1,4 +1,4 @@
-package com.remisoft.common.util.security;
+package com.remisoft.common.util.security.password;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.remisoft.common.util.security.PasswordStrengthChecker.PasswordStrengthLevel;
+import com.remisoft.common.util.security.DigestUtils;
 
 /**
  * 用户密码安全工具类（纯 JDK 实现 + Spring Security BCrypt）
@@ -36,7 +36,7 @@ public class PwdUtils {
      *
      * <p>本枚举兼容 1.x {@code WEAK/MEDIUM/STRONG} 三档评分逻辑。
      * 2.x 新增 SPI 接口 {@link PasswordStrengthChecker} 提供更细粒度的
-     * {@link PasswordStrengthLevel} 五档评分与国际化提示。
+     * {@link PasswordStrengthChecker.PasswordStrengthLevel} 五档评分与国际化提示。
      */
     public enum PasswordStrength {
         /** 弱密码 */
@@ -123,7 +123,7 @@ public class PwdUtils {
         if (password == null || password.length == 0) {
             throw new IllegalArgumentException("Password must not be empty");
         }
-        
+
         byte[] salt = HexFormat.of().parseHex(saltHex);
         byte[] hash = DigestUtils.pbkdf2(password, salt, iterations, 256);
         return saltHex + ":" + iterations + ":" + HexFormat.of().formatHex(hash);
@@ -148,7 +148,7 @@ public class PwdUtils {
         if (password == null || password.length == 0) {
             throw new IllegalArgumentException("Password must not be empty");
         }
-        
+
         String saltHex = DigestUtils.genSaltHex(DEFAULT_SALT_LENGTH);
         return encodePBKDF2(password, saltHex, iterations);
     }
@@ -163,12 +163,12 @@ public class PwdUtils {
         if (password == null || password.isEmpty() || encodedPassword == null || encodedPassword.isEmpty()) {
             return false;
         }
-        
+
         String[] parts = encodedPassword.split(":");
         if (parts.length != 3) {
             return false;
         }
-        
+
         try {
             String saltHex = parts[0];
             int iterations = Integer.parseInt(parts[1]);
@@ -178,11 +178,11 @@ public class PwdUtils {
                 throw new IllegalArgumentException("iterations 超出允许范围 [1, 10000000]");
             }
             String expectedHash = parts[2];
-            
+
             byte[] salt = HexFormat.of().parseHex(saltHex);
             byte[] actualHash = DigestUtils.pbkdf2(password.toCharArray(), salt, iterations, 256);
             String actualHashHex = HexFormat.of().formatHex(actualHash);
-            
+
             return MessageDigest.isEqual(
                 expectedHash.getBytes(StandardCharsets.UTF_8),
                 actualHashHex.getBytes(StandardCharsets.UTF_8)
@@ -212,9 +212,8 @@ public class PwdUtils {
     /**
      * 密码强度检查器（ServiceLoader SPI 懒加载）。
      *
-     * <p>通过 {@code META-INF/services/com.remisoft.common.util.security.PasswordStrengthChecker}
+     * <p>通过 {@code META-INF/services/com.remisoft.common.util.security.password.PasswordStrengthChecker}
      * 注册的自定义实现，可被第三方覆盖以适配企业密码策略。
-     * 若无 SPI 注册，内部使用 {@link DefaultPasswordStrengthChecker}。
      */
     private static volatile PasswordStrengthChecker strengthChecker;
 
@@ -253,7 +252,7 @@ public class PwdUtils {
      * 检查密码强度（兼容 1.x 三档枚举）。
      *
      * <p>内部委托给 SPI {@link #getPasswordStrengthChecker()} 获取评分结果，
-     * 并映射到新五档 {@link PasswordStrengthLevel} 到旧三档 {@link PasswordStrength}：
+     * 并映射到新五档 {@link PasswordStrengthChecker.PasswordStrengthLevel} 到旧三档 {@link PasswordStrength}：
      * <ul>
      *   <li>VERY_WEAK / WEAK → WEAK</li>
      *   <li>MEDIUM → MEDIUM</li>
@@ -265,10 +264,11 @@ public class PwdUtils {
      */
     public static PasswordStrength checkPasswordStrength(String password) {
         PasswordStrengthChecker checker = getPasswordStrengthChecker();
-        PasswordStrengthLevel level = checker.check(password);
-        if (level == PasswordStrengthLevel.STRONG || level == PasswordStrengthLevel.VERY_STRONG) {
+        PasswordStrengthChecker.PasswordStrengthLevel level = checker.check(password);
+        if (level == PasswordStrengthChecker.PasswordStrengthLevel.STRONG
+                || level == PasswordStrengthChecker.PasswordStrengthLevel.VERY_STRONG) {
             return PasswordStrength.STRONG;
-        } else if (level == PasswordStrengthLevel.MEDIUM) {
+        } else if (level == PasswordStrengthChecker.PasswordStrengthLevel.MEDIUM) {
             return PasswordStrength.MEDIUM;
         }
         return PasswordStrength.WEAK;
@@ -276,7 +276,7 @@ public class PwdUtils {
 
     /**
      * 检查密码强度（五档精细评分，返回新 API Level 枚举）。
-         *
+     *
      * <p>2.x 新增方法，建议新代码调用本方法替代旧三档 {@link #checkPasswordStrength(String)}。
      * 内部委托给 SPI {@link #getPasswordStrengthChecker()}。
      *
@@ -284,7 +284,7 @@ public class PwdUtils {
      * @return 密码强度级别；null 或空串返回 VERY_WEAK
      * @since 1.3.0
      */
-    public static PasswordStrengthLevel checkPasswordStrengthLevel(String password) {
+    public static PasswordStrengthChecker.PasswordStrengthLevel checkPasswordStrengthLevel(String password) {
         return getPasswordStrengthChecker().check(password);
     }
 
@@ -297,7 +297,7 @@ public class PwdUtils {
      * @since 1.3.0
      */
     public static String describePasswordStrength(String password, Locale locale) {
-        PasswordStrengthLevel level = getPasswordStrengthChecker().check(password);
+        PasswordStrengthChecker.PasswordStrengthLevel level = getPasswordStrengthChecker().check(password);
         return getPasswordStrengthChecker().describe(level, locale);
     }
 

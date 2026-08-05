@@ -1,4 +1,4 @@
-package com.remisoft.common.util.security;
+package com.remisoft.common.util.security.password;
 
 import java.util.Locale;
 
@@ -17,7 +17,7 @@ import java.util.Locale;
  * </ul>
  *
  * <p><b>接入方式：</b>
- * 在 {@code META-INF/services/com.remisoft.common.util.security.PasswordStrengthChecker}
+ * 在 {@code META-INF/services/com.remisoft.common.util.security.password.PasswordStrengthChecker}
  * 文件中填写实现类的全限定名（每行一个）。Utils 模块默认提供 {@link DefaultPasswordStrengthChecker}，
  * 业务方提供自己的实现后会自动覆盖默认实现。
  *
@@ -38,7 +38,7 @@ import java.util.Locale;
  *     public String describe(PasswordStrengthLevel level, Locale locale) { ... }
  * }
  *
- * // 2. 注册服务（src/main/resources/META-INF/services/...PasswordStrengthChecker 文件）
+ * // 2. 注册服务（src/main/resources/META-INF/services/...password.PasswordStrengthChecker 文件）
  * com.example.MyPasswordChecker
  *
  * // 3. 使用（自动发现自定义实现）
