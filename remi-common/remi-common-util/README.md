@@ -18,9 +18,8 @@
 
 | 类 | 说明 |
 |---|---|
-| `SnowflakeUtils` | 雪花算法 ID 生成器（分片 CAS 优化、时钟回拨容忍、workerId 自动分配），单例静态工具类 |
+| `SnowflakeUtils` | 雪花算法 ID 生成器（CAS 无锁、时钟回拨容忍、workerId 自动分配），单例静态工具类 |
 | `WorkerIdRegistry` | WorkerId 注册中心 SPI（支持 Redis/Zookeeper/ETCD 等），含心跳续约机制 |
-| `UUIDUtils` | UUID 工具（带连字符 / 不带连字符 / UUID v7） |
 | `RandomUtils` | 安全随机数工具（基于 `SecureRandom`） |
 | `TracerUtils` | 分布式链路追踪工具（SkyWalking 反射集成，无编译期硬依赖） |
 
@@ -69,11 +68,9 @@
 
 | 类 | 说明 |
 |---|---|
-| `FileUtils` | 文件读写 / 复制 / 删除 / 目录遍历（NIO Path API，资源自动管理） |
 | `FileTypeUtils` | 文件类型检测（扩展名 + Magic Number） |
 | `FileValidator` | 文件校验（大小 / 类型 / 文件名安全） |
 | `ImageUtils` | 图片处理（缩放 / 水印 / 格式转换） |
-| `IOUtils` | 流读写 / 关闭 / Base64 转换 |
 | `MediaType` | 媒体类型常量 |
 
 ### 8. 集合与对象（collection / array / object / bean 包）
@@ -111,7 +108,6 @@
 | `YamlUtils` | YAML 解析工具（基于 snakeyaml） |
 | `CursorHelper` | 游标分页编码 / 解码（Keyset Pagination） |
 | `HashUtils` | 非加密哈希（CRC32 / MurmurHash32 / Base62 编码解码） |
-| `ClassUtils` | 类加载器工具 |
 | `ExceptionUtils` | 异常堆栈转字符串 |
 | `IpAddrUtils` / `IpInfoUtils` | IP 地址工具（基于 ip2region） |
 | `MessageUtils` | 国际化消息工具 |
@@ -121,14 +117,13 @@
 
 | 类 | 说明 |
 |---|---|
-| `UtilHealthIndicator` | 工具模块健康检查（Snowflake 状态、JVM 内存） |
 | `SnowflakeHealthIndicator` | Snowflake ID 生成器健康检查（时钟回拨、workerId、ID 生成验证、分片数） |
 
 ### 13. 自动配置（config 包）
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
-| `UtilAutoConfiguration` | 总是激活 | `SpringContextHolder`、`SnowflakeHealthIndicator`、`UtilHealthIndicator` |
+| `UtilAutoConfiguration` | 总是激活 | `SpringContextHolder`、`SnowflakeHealthIndicator` |
 | `SnowflakeAutoConfiguration` | `remi.util.snowflake.enabled=true`（默认启用） | 构造期自动初始化 `SnowflakeUtils` |
 
 | 属性类 | 前缀 | 说明 |
@@ -296,14 +291,9 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
 |---|---|---|
 | `/actuator/health` | Util 模块健康检查作为整体 health 端点的一部分 | `spring-boot-health` 在类路径 |
 
-**`UtilHealthIndicator` 暴露信息**：
-
-- `snowflake.initialized` / `snowflake.workerId` / `snowflake.datacenterId` / `snowflake.lastTimestamp` — SnowflakeUtils 初始化状态
-- `jvm.availableProcessors` / `jvm.maxMemoryMB` / `jvm.usedMemoryMB` / `jvm.memoryUsagePercent` / `jvm.memoryWarning` — JVM 运行时基础指标
-
 **`SnowflakeHealthIndicator` 暴露信息**：
 
-- `workerId` / `datacenterId` / `shardCount` / `lastTimestamp` / `currentTimestamp`
+- `workerId` / `datacenterId` / `lastTimestamp` / `currentTimestamp`
 
 **健康状态规则**：
 
@@ -314,14 +304,15 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
 ## 注意事项
 
 1. **零依赖原则**：核心工具不依赖 Spring，可选依赖（SkyWalking、ip2region、yauaa、Micrometer、Hutool、BouncyCastle、Spring Security Crypto、MyBatis-Plus Core、TransmittableThreadLocal、Spring Web/WebFlux）按需引入，未引入时对应工具类调用会降级或抛出 `NoClassDefFoundError`。
-2. **AES 安全规范**：默认使用 AES-256-GCM 模式（认证加密 AEAD），每次加密生成随机 12 字节 IV；密钥通过 `setConfiguredKey()` 注入或环境变量配置，禁止硬编码。`AesUtils` 兼容 ECB/CBC 旧密文解密，但新加密一律走 GCM。
-3. **密码哈希规范**：BCrypt strength=12（OWASP 推荐至少 10），PBKDF2 600000 次迭代（OWASP 2023 推荐），所有密码验证使用 `MessageDigest.isEqual()` 常量时间比较防止时序攻击。
-4. **SnowflakeUtils 单例初始化**：通过 `SnowflakeUtils.init(workerId, datacenterId)` 初始化，重复调用抛出 `IllegalStateException`。自动配置捕获此异常并跳过（用于手动初始化场景）。时钟回拨容忍 5ms 以内直接等待，超过 5 秒抛出 `ClockBackwardException`。
-5. **BeanCopyUtils 使用规范**：基于 Spring BeanUtils 委托实现，深拷贝请使用 JSON 序列化/反序列化或 `Cloneable`。
-6. **ContextPropagationUtils 性能优化**：MDC 传播使用控制字符（`\u0001` / `\u0002`）编码替代 JSON 序列化，零解析开销。自定义上下文通过 `registerContextProvider()` 注册。
-7. **ExecutorUtils 线程池规范**：统一线程名前缀 `remi-`，有界队列 + `CallerRunsPolicy` 防止 OOM，支持 VirtualThread（JDK 21+）。
-8. **路径安全**：`FileUtils.isSafePath()` / `checkAllowDownload()` 防止路径遍历攻击，禁止 `..` 跨目录访问。
-9. **ip2region 离线库**：`IpAddrUtils` 依赖 `ip2region.xdb` 离线数据库（位于 `src/main/resources`），首次调用时加载到内存。
+2. **AES 安全规范**：默认使用 AES-256-GCM 模式（认证加密 AEAD），每次加密生成随机 12 字节 IV；密钥由调用方通过参数传入，禁止硬编码。
+3. **可选的实例化用法**：对于高频调用场景，可直接使用 {@link AesGcmCrypto} 实例避免重复创建。
+4. **密码哈希规范**：BCrypt strength=12（OWASP 推荐至少 10），PBKDF2 600000 次迭代（OWASP 2023 推荐），所有密码验证使用 `MessageDigest.isEqual()` 常量时间比较防止时序攻击。
+5. **SnowflakeUtils 单例初始化**：通过 `SnowflakeUtils.init(workerId, datacenterId)` 初始化，重复调用抛出 `IllegalStateException`。自动配置捕获此异常并跳过（用于手动初始化场景）。时钟回拨容忍 5ms 以内直接等待，超过 5 秒抛出 `ClockBackwardException`。
+6. **BeanCopyUtils 使用规范**：基于 Spring BeanUtils 委托实现，深拷贝请使用 JSON 序列化/反序列化或 `Cloneable`。
+7. **ContextPropagationUtils 性能优化**：MDC 传播使用控制字符（`\u0001` / `\u0002`）编码替代 JSON 序列化，零解析开销。自定义上下文通过 `registerContextProvider()` 注册。
+8. **ExecutorUtils 线程池规范**：统一线程名前缀 `remi-`，有界队列 + `CallerRunsPolicy` 防止 OOM，支持 VirtualThread（JDK 21+）。
+9. **路径安全**：使用 NIO.2 路径校验防止路径遍历攻击，禁止 `..` 跨目录访问。
+10. **ip2region 离线库**：`IpAddrUtils` 依赖 `ip2region.xdb` 离线数据库（位于 `src/main/resources`），首次调用时加载到内存。
 
 ## 变更记录
 

@@ -1,0 +1,41 @@
+﻿[INFO] Building remi-common-lock 1.0.0-SNAPSHOT                         [16/81]
+[INFO]   from remi-common\remi-common-lock\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ remi-common-lock ---
+[INFO] Deleting D:\Code\open\remi-cloud\remi-common\remi-common-lock\target
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ remi-common-lock ---
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ remi-common-lock ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 36 source files with javac [debug parameters release 21] to target\classes
+[INFO] -------------------------------------------------------------
+[WARNING] COMPILATION WARNING : 
+[INFO] -------------------------------------------------------------
+[WARNING] 鏈煡鐨勬灇涓惧父閲?com.remisoft.common.json.annotation.JsonInclude.Include.NON_NULL
+  鍘熷洜: 鎵句笉鍒癱om.remisoft.common.json.annotation.JsonInclude$Include鐨勭被鏂囦欢
+[WARNING] 鏈煡鐨勬灇涓惧父閲?com.remisoft.common.json.annotation.JsonInclude.Include.NON_NULL
+  鍘熷洜: 鎵句笉鍒癱om.remisoft.common.json.annotation.JsonInclude$Include鐨勭被鏂囦欢
+[WARNING] 鏈煡鐨勬灇涓惧父閲?com.remisoft.common.json.annotation.JsonInclude.Include.NON_NULL
+  鍘熷洜: 鎵句笉鍒癱om.remisoft.common.json.annotation.JsonInclude$Include鐨勭被鏂囦欢
+[WARNING] 鏈煡鐨勬灇涓惧父閲?com.remisoft.common.json.annotation.JsonInclude.Include.NON_NULL
+  鍘熷洜: 鎵句笉鍒癱om.remisoft.common.json.annotation.JsonInclude$Include鐨勭被鏂囦欢
+[INFO] 4 warnings 
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /D:/Code/open/remi-cloud/remi-common/remi-common-lock/src/main/java/com/remisoft/common/lock/metrics/LockMetricsExporter.java:[7,32] 鎵句笉鍒扮鍙?  绗﹀彿:   绫?RemiJson
+  浣嶇疆: 绋嬪簭鍖?com.remisoft.common.json
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for remi-cloud 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] remi-cloud ......................................... SUCCESS [  0.200 s]
+[INFO] remi-common ........................................ SUCCESS [  0.008 s]
+[INFO] remi-common-json ................................... SUCCESS [ 15.468 s]
+[INFO] remi-common-core ................................... SUCCESS [  6.533 s]

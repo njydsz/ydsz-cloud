@@ -14,7 +14,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 
-import com.remisoft.common.util.classloader.ClassUtils;
+import org.springframework.util.ClassUtils;
 
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.ReadFrom;

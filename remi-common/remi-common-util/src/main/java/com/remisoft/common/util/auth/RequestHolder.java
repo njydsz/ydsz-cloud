@@ -59,6 +59,7 @@ public class RequestHolder {
      * HTTP 请求对象 ThreadLocal，存储原始 HttpServletRequest 供非 Controller 层使用。
      */
     private static final ThreadLocal<HttpServletRequest> requestHolder = new TransmittableThreadLocal<>();
+
     /**
      * 额外 header（虚拟请求头）。
      *
@@ -71,16 +72,6 @@ public class RequestHolder {
     private static final ThreadLocal<Map<String, String>> extraHeadersHolder = new TransmittableThreadLocal<>();
 
     /**
-     * 请求初始化标记：add() 时置为 true，remove() 时置为 false。
-     *
-     * <p><b>使用普通 {@link ThreadLocal} 而非 {@link TransmittableThreadLocal}</b>：
-     * 该标记仅用于检测同一物理线程的复用（上一个请求是否已 remove），
-     * 不应透传到线程池子线程，否则子线程会继承父线程的 {@code true} 并在
-     * 调用 {@link #add(AuthInfo)} 时产生误报。
-     */
-    private static final ThreadLocal<Boolean> initialized = new ThreadLocal<>();
-
-    /**
      * 写入认证信息到当前线程上下文。
      *
      * <p>写入前检测线程复用：若上一个请求未调用 {@link #remove()} 清理，
@@ -89,11 +80,10 @@ public class RequestHolder {
      * @param authInfo 认证信息，不允许为 null
      */
     public static void add(AuthInfo authInfo) {
-        if (initialized.get() != null && initialized.get()) {
+        if (authInfoHolder.get() != null) {
             log.warn("RequestHolder -> 线程复用检测: 上一个请求的上下文未被清理，已强制清理");
             remove();
         }
-        initialized.set(true);
         authInfoHolder.set(authInfo);
     }
 
@@ -231,7 +221,7 @@ public class RequestHolder {
     /**
      * 对额外请求头创建可变快照副本。
      *
-     * <p>用于跨线程传递上下文：在父线程快照，在子线程通过 {@link #restoreExtraHeaders} 恢复。
+     * <p>用于 AOP 场景：在切面中临时修改上下文，执行完毕后通过 {@link #restoreExtraHeaders} 恢复。
      *
      * @return 可变 Map 副本；无数据时返回空 Map
      */
@@ -246,7 +236,9 @@ public class RequestHolder {
     /**
      * 恢复 extra headers 快照。
      *
-     * <p>用于 AOP/拦截器在本线程临时写入上下文后，确保调用链结束不泄露到后续逻辑。
+     * <p>与 {@link #snapshotExtraHeaders} 配对使用，用于 AOP 切面中确保调用链结束不泄露到后续逻辑。
+     *
+     * @param snapshot 快照 Map（null 或空时清除 extra headers）
      */
     public static void restoreExtraHeaders(Map<String, String> snapshot) {
         if (snapshot == null || snapshot.isEmpty()) {
@@ -257,132 +249,13 @@ public class RequestHolder {
     }
 
     /**
-     * 以指定认证信息执行任务，执行完毕后恢复原有上下文。
+     * 释放资源（必须在请求结束时调用，防止内存泄漏）。
      *
-     * <p>典型场景：内部定时任务、回调等需要以系统身份执行、执行完毕后恢复用户上下文。
-     * 避免手动 set/remove 容易遗漏清理导致上下文泄露。
-     *
-     * <pre>{@code
-     * RequestHolder.withContext(systemAuth, () -> {
-     *     // 以系统身份执行的逻辑
-     * });
-     * // 此处上下文已恢复为调用前状态
-     * }</pre>
-     *
-     * @param authInfo 临时认证信息；为 null 时清除当前认证上下文
-     * @param runnable 待执行任务
-     * @since 1.0.0
-     */
-    public static void withContext(AuthInfo authInfo, Runnable runnable) {
-        AuthInfo originalAuth = authInfoHolder.get();
-        Boolean originalInitialized = initialized.get();
-        try {
-            if (authInfo != null) {
-                authInfoHolder.set(authInfo);
-                initialized.set(true);
-            } else {
-                authInfoHolder.remove();
-                initialized.remove();
-            }
-            runnable.run();
-        } finally {
-            if (originalAuth != null) {
-                authInfoHolder.set(originalAuth);
-            } else {
-                authInfoHolder.remove();
-            }
-            if (Boolean.TRUE.equals(originalInitialized)) {
-                initialized.set(true);
-            } else {
-                initialized.remove();
-            }
-        }
-    }
-
-    /**
-     * 对当前线程的完整上下文创建不可变快照。
-     *
-     * <p>涵盖 authInfo、HttpServletRequest、extra headers 及 initialized 标记，
-     * 用于跨线程完整上下文透传（例如线程池提交任务前快照、子线程中恢复）。
-     *
-     * @return 完整上下文快照
-     * @since 1.4.0
-     */
-    public static ContextSnapshot snapshot() {
-        return new ContextSnapshot(
-                authInfoHolder.get(),
-                requestHolder.get(),
-                snapshotExtraHeaders(),
-                initialized.get()
-        );
-    }
-
-    /**
-     * 恢复完整上下文快照到当前线程。
-     *
-     * <p>与 {@link #snapshot()} 配对使用，将快照中的所有上下文恢复。
-     * 适合在线程池子线程中恢复父线程上下文。
-     *
-     * @param snapshot 上下文快照（null 时无操作）
-     * @since 1.4.0
-     */
-    public static void restore(ContextSnapshot snapshot) {
-        if (snapshot == null) {
-            return;
-        }
-        if (snapshot.authInfo != null) {
-            authInfoHolder.set(snapshot.authInfo);
-        } else {
-            authInfoHolder.remove();
-        }
-        if (snapshot.request != null) {
-            requestHolder.set(snapshot.request);
-        } else {
-            requestHolder.remove();
-        }
-        restoreExtraHeaders(snapshot.extraHeaders);
-        if (Boolean.TRUE.equals(snapshot.initialized)) {
-            initialized.set(true);
-        } else {
-            initialized.remove();
-        }
-    }
-
-    /**
-     * 完整上下文快照，包含 authInfo、request、extraHeaders 和 initialized 标记。
-     *
-     * <p>用于跨线程传递完整请求上下文。所有字段均为不可变快照，
-     * 确保快照创建后不受原始线程后续修改的影响。
-     *
-     * @since 1.4.0
-     */
-    public static final class ContextSnapshot {
-        private final AuthInfo authInfo;
-        private final HttpServletRequest request;
-        private final Map<String, String> extraHeaders;
-        private final Boolean initialized;
-
-        ContextSnapshot(AuthInfo authInfo, HttpServletRequest request,
-                        Map<String, String> extraHeaders, Boolean initialized) {
-            this.authInfo = authInfo;
-            this.request = request;
-            this.extraHeaders = extraHeaders;
-            this.initialized = initialized;
-        }
-
-        public AuthInfo getAuthInfo() { return authInfo; }
-        public HttpServletRequest getRequest() { return request; }
-        public Map<String, String> getExtraHeaders() { return extraHeaders; }
-        public Boolean getInitialized() { return initialized; }
-    }
-
-    /**
-     * 释放资源 (必须在请求结束时调用，防止内存泄漏)
+     * <p>所有 Filter / Interceptor 必须在 finally 块中调用本方法。
      */
     public static void remove() {
         authInfoHolder.remove();
         requestHolder.remove();
         extraHeadersHolder.remove();
-        initialized.remove();
     }
 }

@@ -1,0 +1,3 @@
+﻿[INFO] Building remi-common-json 1.0.0-SNAPSHOT                          [3/81]
+[INFO] remi-common-json ................................... SUCCESS [ 15.468 s]
+[INFO] BUILD FAILURE

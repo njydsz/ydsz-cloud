@@ -2,26 +2,33 @@ package com.remisoft.common.util.security;
 
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.crypto.KeyGenerator;
-
 import java.util.HexFormat;
-import com.remisoft.common.util.string.StringUtils;
 
 /**
- * AES 加密解密工具类
+ * AES 加密工具类（轻量静态工具）
  *
- * <p>提供全面的 AES 对称加密解密功能，纯 JDK 实现，零第三方依赖。
+ * <p>提供 AES-GCM 对称加密解密、密钥生成、Base64/Hex 编解码能力。
+ * 纯 JDK 实现，零第三方依赖。
  *
  * <p><b>核心特性：</b>
  * <ul>
- *   <li><b>GCM 模式（默认推荐）</b>：encrypt/decrypt 默认使用 AES-GCM，提供认证加密（AEAD）</li>
- *   <li><b>自动 IV 生成</b>：使用 SecureRandom 生成 12 字节随机 IV</li>
- *   <li><b>256 位密钥</b>：默认生成 256 位强密钥</li>
+ *   <li><b>GCM 模式</b>：encrypt/decrypt 使用 AES-256-GCM，提供认证加密（AEAD）</li>
+ *   <li><b>自动生成 IV</b>：每次加密生成全新的 12 字节随机 IV</li>
+ *   <li><b>256 位密钥</b>：默认密钥长度 256 位</li>
  *   <li><b>Hex/Base64 编码</b>：支持两种输出格式</li>
  * </ul>
+ *
+ * <p><b>使用示例：</b>
+ * <pre>{@code
+ * // 生成密钥（256 位 Hex）
+ * String hexKey = AesUtils.initHexKey();
+ *
+ * // 加密（GCM 模式）
+ * String ciphertext = AesUtils.encrypt("Hello World", hexKey);
+ *
+ * // 解密（GCM 模式）
+ * String plaintext = AesUtils.decrypt(ciphertext, hexKey);
+ * }</pre>
  *
  * <p><b>安全说明：</b>
  * <ul>
@@ -29,149 +36,62 @@ import com.remisoft.common.util.string.StringUtils;
  *   <li>密钥请使用安全的方式存储和传输，切勿硬编码在代码中</li>
  * </ul>
  *
- * <p><b>使用示例：</b>
- * <pre>
- * // 生成密钥（256 位）
- * String hexKey = AesUtils.initHexKey();
- *
- * // 加密（GCM 模式，自动生成随机 IV）
- * String ciphertext = AesUtils.encrypt("Hello World", hexKey);
- *
- * // 解密（GCM 模式）
- * String plaintext = AesUtils.decrypt(ciphertext, hexKey);
- * </pre>
- *
  * @author remi-team
  * @since 1.0.0
- * 
  */
-public class AesUtils {
+public final class AesUtils {
 
-    /**
-     * 私有构造函数，防止外部实例化
-     */
-    private AesUtils() {
-        throw new UnsupportedOperationException("AesUtils 是工具类，不允许被实例化");
-    }
-
-    /**
-     * AES 密钥算法类型
-     */
+    /** AES 密钥算法类型 */
     public static final String KEY_ALGORITHM = "AES";
 
-    /**
-     * 默认密钥位长度（256 位，AES-256）
-     */
+    /** 默认密钥位长度（256 位，AES-256） */
     public static final int DEFAULT_KEY_SIZE = 256;
 
-    /**
-     * 共享的线程安全 SecureRandom 实例（SecureRandom 本身是线程安全的）
-     */
+    /** 共享的线程安全 SecureRandom 实例 */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    /**
-     * 可配置的 AES 密钥（Hex 格式），未配置时为 null。
-     *
-     * <p>fail-fast 策略：未显式配置时 {@link #getConfiguredKey()} 将抛出
-     * {@link IllegalStateException}，避免静默生成临时密钥导致重启后已加密数据不可解密。
-     */
-    private static volatile String configuredKey;
+    private AesUtils() {
+        throw new UnsupportedOperationException("AesUtils is a utility class");
+    }
+
+    // ==================== 加解密 ====================
 
     /**
-     * 配置密钥对应的 AesGcmCrypto 实例（原子引用，与 {@link #configuredKey} 同步发布）。
+     * AES-GCM 加密
      *
-     * <p>使用 AtomicReference 保证密钥字符串 + Crypto 实例的原子性更新，
-     * 消除 volatile 写 + ConcurrentHashMap.clear() 之间的竞态窗口。
+     * <p>使用 AES-256-GCM 模式，自动生成 12 字节随机 IV。
+     * 密文格式：Base64(IV(12 字节) + 密文 + GCM 认证标签)。
+     *
+     * @param content   明文内容（不可为 null）
+     * @param hexAesKey Hex 格式的 AES 密钥（32/48/64 个 Hex 字符）
+     * @return Base64 编码的密文
+     * @throws IllegalArgumentException 密钥格式非法
+     * @throws IllegalStateException    加密失败
      */
-    private static final AtomicReference<AesGcmCrypto> configuredCryptoRef = new AtomicReference<>();
-
-    /**
-     * 非配置密钥对应的 AesGcmCrypto 实例缓存，按 Hex 密钥字符串索引。
-     *
-     * <p>AesGcmCrypto 内部持有的 SecretKeySpec 与共享 SecureRandom 均可复用，
-     * 仅 Cipher 非线程安全需在每次 encrypt/decrypt 内部新建。
-     * 缓存避免每次加解密都重新执行 hex 解码 + SecretKeySpec 构造。
-     *
-     * <p>注意：本缓存仅存储未通过 {@link #setConfiguredKey(String)} 显式配置的多密钥实例。
-     * 配置密钥的实例由 {@link #configuredCryptoRef} 原子持有，不进入此缓存。
-     */
-    private static final ConcurrentHashMap<String, AesGcmCrypto> CRYPTO_CACHE = new ConcurrentHashMap<>();
-
-    /**
-     * 注入配置的 AES 密钥（Hex 格式）
-     *
-     * <p>原子性保证：密钥 Crypto 实例通过 {@link AtomicReference#set} 同步发布，
-     * 加密/解密线程始终看到完整的「密钥字符串 + Crypto 实例」组合，
-     * 消除旧实现中 volatile 写 + ConcurrentHashMap.clear() 分离导致的竞态窗口。
-     *
-     * @param hexKey Hex 格式的 AES 密钥，最小 32 字节（64 个 Hex 字符）推荐，兼容 16 字节
-     */
-    public static void setConfiguredKey(String hexKey) {
-        if (StringUtils.isBlank(hexKey)) {
-            throw new IllegalArgumentException("AES 密钥不能为空");
-        }
-        validateKey(hexKey);
-        AesGcmCrypto crypto = new AesGcmCrypto(hexToBytes(hexKey));
-        configuredKey = hexKey;
-        configuredCryptoRef.set(crypto);
+    public static String encrypt(String content, String hexAesKey) {
+        return new AesGcmCrypto(hexToBytes(hexAesKey)).encrypt(content);
     }
 
     /**
-     * 获取配置的密钥。
+     * AES-GCM 解密
      *
-     * <p>fail-fast：若未通过 {@link #setConfiguredKey(String)} 配置密钥，直接抛出
-     * {@link IllegalStateException}，避免静默生成临时随机密钥——临时密钥在应用重启后会丢失，
-     * 导致所有已加密数据不可解密。
+     * <p>自动从密文中提取 IV 进行解密。
+     * GCM 模式提供认证，若密文被篡改将抛出异常。
      *
-     * @return 已配置的 Hex 格式 AES 密钥
-     * @throws IllegalStateException 未配置密钥时抛出
+     * @param encryptedBase64 Base64 编码的密文
+     * @param hexAesKey       Hex 格式的 AES 密钥
+     * @return 解密后的明文
+     * @throws IllegalArgumentException 密钥格式非法或密文格式非法
+     * @throws IllegalStateException    解密失败或密文被篡改
      */
-    public static String getConfiguredKey() {
-        if (configuredKey == null) {
-            throw new IllegalStateException("AES 密钥未配置，请通过 remi.util.aes.key 配置或调用 setConfiguredKey");
-        }
-        return configuredKey;
+    public static String decrypt(String encryptedBase64, String hexAesKey) {
+        return new AesGcmCrypto(hexToBytes(hexAesKey)).decrypt(encryptedBase64);
     }
 
-    /**
-     * 校验密钥强度，必须为 AES 标准长度（16/24/32 字节 = 32/48/64 个 Hex 字符）。
-     *
-     * <p>统一委托 {@link AesGcmCrypto#validateKey(byte[])} 进行字节级校验，
-     * 避免本类与 AesGcmCrypto 维护两套长度校验口径。
-     *
-     * @param hexKey Hex 格式密钥
-     * @throws IllegalArgumentException hex 为 null/空白或长度非法时抛出
-     */
-    private static void validateKey(String hexKey) {
-        if (StringUtils.isBlank(hexKey)) {
-            throw new IllegalArgumentException("AES 密钥不能为空");
-        }
-        AesGcmCrypto.validateKey(hexToBytes(hexKey));
-    }
+    // ==================== 密钥生成 ====================
 
     /**
-     * 获取（必要时创建并缓存）指定 Hex 密钥对应的 AesGcmCrypto 实例。
-     *
-     * <p>优先从配置密钥的原子引用中获取（零缓存查找），
-     * 若未命中则从多密钥缓存 {@link #CRYPTO_CACHE} 中获取或创建。
-     *
-     * @param hexAesKey Hex 格式 AES 密钥
-     * @return 缓存的 AesGcmCrypto 实例
-     */
-    private static AesGcmCrypto getCrypto(String hexAesKey) {
-        // 优先命中配置密钥的快速路径（无 ConcurrentHashMap 查找开销）
-        if (configuredKey != null && configuredKey.equals(hexAesKey)) {
-            AesGcmCrypto configured = configuredCryptoRef.get();
-            if (configured != null) {
-                return configured;
-            }
-        }
-        // 非配置密钥走缓存路径
-        return CRYPTO_CACHE.computeIfAbsent(hexAesKey, k -> new AesGcmCrypto(hexToBytes(k)));
-    }
-
-    /**
-     * 生成安全的随机 AES 密钥（256 位，推荐用于生产环境）
+     * 生成安全的随机 AES 密钥（Base64 编码）
      *
      * @return Base64 编码的安全随机密钥
      */
@@ -180,7 +100,60 @@ public class AesUtils {
     }
 
     /**
+     * 生成 Hex 格式默认长度（256 位）的随机密钥
+     *
+     * @return Hex 格式密钥
+     */
+    public static String initHexKey() {
+        return bytesToHex(initKey(DEFAULT_KEY_SIZE));
+    }
+
+    /**
+     * 生成指定长度的 Hex 格式随机密钥
+     *
+     * @param keySize 密钥位数，支持 128/192/256
+     * @return Hex 格式密钥
+     */
+    public static String initHexKey(int keySize) {
+        return bytesToHex(initKey(keySize));
+    }
+
+    /**
+     * 生成默认长度（256 位）的随机密钥
+     *
+     * @return 密钥字节数组
+     */
+    public static byte[] initKey() {
+        return initKey(DEFAULT_KEY_SIZE);
+    }
+
+    /**
+     * 生成指定长度的密钥
+     *
+     * @param keySize 密钥位数，支持 128/192/256
+     * @return 密钥字节数组
+     * @throws IllegalArgumentException keySize 非法时抛出
+     */
+    public static byte[] initKey(int keySize) {
+        if (keySize != 128 && keySize != 192 && keySize != 256) {
+            throw new IllegalArgumentException("error keySize: " + keySize + ", must be 128, 192, or 256");
+        }
+        try {
+            javax.crypto.KeyGenerator keyGen = javax.crypto.KeyGenerator.getInstance(KEY_ALGORITHM);
+            keyGen.init(keySize, SECURE_RANDOM);
+            return keyGen.generateKey().getEncoded();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to generate AES key", e);
+        }
+    }
+
+    // ==================== 编码转换 ====================
+
+    /**
      * 字节数组 Base64 编码
+     *
+     * @param bytes 字节数组
+     * @return Base64 字符串，输入 null 返回 null
      */
     public static String base64Encode(byte[] bytes) {
         if (bytes == null) {
@@ -191,6 +164,9 @@ public class AesUtils {
 
     /**
      * Base64 字符串解码为字节数组
+     *
+     * @param base64Code Base64 字符串
+     * @return 字节数组，输入 null 返回 null
      */
     public static byte[] base64Decode(String base64Code) {
         if (base64Code == null) {
@@ -201,6 +177,9 @@ public class AesUtils {
 
     /**
      * 字节数组转十六进制字符串
+     *
+     * @param bytes 字节数组
+     * @return Hex 字符串
      */
     public static String bytesToHex(byte[] bytes) {
         return HexFormat.of().formatHex(bytes);
@@ -209,96 +188,14 @@ public class AesUtils {
     /**
      * 十六进制字符串转字节数组
      *
-     * @throws IllegalArgumentException 当 hex 为 null 或长度为奇数时
+     * @param hex Hex 字符串
+     * @return 字节数组
+     * @throws IllegalArgumentException 当 hex 为 null 或长度为奇数
      */
     public static byte[] hexToBytes(String hex) {
         if (hex == null || hex.length() % 2 != 0) {
             throw new IllegalArgumentException("Hex string must not be null and must have even length");
         }
         return HexFormat.of().parseHex(hex);
-    }
-
-    // ==================== GCM 模式（默认推荐） ====================
-
-    /**
-     * AES 加密（默认 GCM 模式）
-     *
-     * <p>使用 AES-256-GCM 模式，自动生成 12 字节随机 IV。
-     * 密文格式：Base64(IV(12字节) + 密文 + GCM 认证标签)。</p>
-     *
-     * <p>实现委托给 {@link AesGcmCrypto}，消除重复的 GCM 加密逻辑。</p>
-     *
-     * @param content   明文内容
-     * @param hexAesKey Hex 格式的 AES 密钥（调用前会通过 {@link #validateKey(String)} 校验）
-     * @return Base64 编码的密文
-     * @throws IllegalArgumentException 密钥格式非法（非 32/48/64 个 Hex 字符或 null/空白）
-     * @throws IllegalStateException    加密算法不可用或 Encrypt 失败
-     */
-    public static String encrypt(String content, String hexAesKey) {
-        validateKey(hexAesKey);
-        AesGcmCrypto crypto = getCrypto(hexAesKey);
-        return crypto.encrypt(content);
-    }
-
-    /**
-     * AES 解密（默认 GCM 模式）
-     *
-     * <p>自动从密文中提取 IV 进行解密。
-     * GCM 模式提供认证，若密文被篡改将抛出异常。</p>
-     *
-     * <p>实现委托给 {@link AesGcmCrypto}，消除重复的 GCM 解密逻辑。</p>
-     *
-     * @param encryptedBase64 Base64 编码的密文
-     * @param hexAesKey       Hex 格式的 AES 密钥
-     * @return 解密后的明文
-     * @throws IllegalArgumentException    密钥格式非法（非 32/48/64 个 Hex 字符或 null/空白）
-     * @throws IllegalStateException       解密算法不可用或密文被篡改导致认证失败
-     * @throws IllegalArgumentException    密文格式非法（Base64 解码失败等）
-     */
-    public static String decrypt(String encryptedBase64, String hexAesKey) {
-        validateKey(hexAesKey);
-        AesGcmCrypto crypto = getCrypto(hexAesKey);
-        return crypto.decrypt(encryptedBase64);
-    }
-
-    // ==================== 密钥生成 ====================
-
-    /**
-     * 生成 Hex 格式默认长度（256 位）的随机密钥
-     */
-    public static String initHexKey() {
-        return bytesToHex(initKey(DEFAULT_KEY_SIZE));
-    }
-
-    /**
-     * 生成默认长度（256 位）的随机密钥
-     */
-    public static byte[] initKey() {
-        return initKey(DEFAULT_KEY_SIZE);
-    }
-
-    /**
-     * 生成指定长度的密钥
-     *
-     * @param keySize 密钥位数，支持 128/192/256
-     */
-    public static byte[] initKey(int keySize) {
-        if (keySize != 128 && keySize != 192 && keySize != 256) {
-            throw new IllegalArgumentException("error keySize: " + keySize + ", must be 128, 192, or 256");
-        }
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance(KEY_ALGORITHM);
-            keyGen.init(keySize, SECURE_RANDOM);
-            return keyGen.generateKey().getEncoded();
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to generate AES key", e);
-        }
-    }
-
-    /**
-     * 生成指定长度的 Hex 格式随机密钥
-     */
-    public static String initHexKey(int keySize) {
-        return bytesToHex(initKey(keySize));
     }
 }

@@ -1,0 +1,28 @@
+﻿[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /D:/Code/open/remi-cloud/remi-common/remi-common-lock/src/main/java/com/remisoft/common/lock/metrics/LockMetricsExporter.java:[7,32] 鎵句笉鍒扮鍙?  绗﹀彿:   绫?RemiJson
+  浣嶇疆: 绋嬪簭鍖?com.remisoft.common.json
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for remi-cloud 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] remi-cloud ......................................... SUCCESS [  0.200 s]
+[INFO] remi-common ........................................ SUCCESS [  0.008 s]
+[INFO] remi-common-json ................................... SUCCESS [ 15.468 s]
+[INFO] remi-common-core ................................... SUCCESS [  6.533 s]
+[INFO] remi-common-domain ................................. SUCCESS [  6.042 s]
+[INFO] remi-common-util ................................... SUCCESS [  9.266 s]
+[INFO] remi-common-exception .............................. SUCCESS [  9.033 s]
+[INFO] remi-common-jdbc ................................... SUCCESS [ 11.017 s]
+[INFO] remi-common-redis .................................. SUCCESS [  9.569 s]
+[INFO] remi-common-cache .................................. SUCCESS [ 13.697 s]
+[INFO] remi-common-feign .................................. SUCCESS [  9.045 s]
+[INFO] remi-common-thread ................................. SUCCESS [  4.041 s]
+[INFO] remi-common-tenant ................................. SUCCESS [  6.779 s]
+[INFO] remi-common-safe ................................... SUCCESS [ 20.216 s]
+[INFO] remi-common-auth ................................... SUCCESS [ 14.515 s]
+[INFO] remi-common-lock ................................... FAILURE [  9.351 s]
+[INFO] remi-common-audit .................................. SKIPPED
+[INFO] remi-common-event .................................. SKIPPED
+[INFO] remi-common-notify ................................. SKIPPED
