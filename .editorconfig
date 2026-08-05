@@ -1,0 +1,28 @@
+# EditorConfig: 统一各编辑器（IntelliJ / VS Code / Sublime 等）的文件编码与缩进
+# 防止在中文 Windows（默认 GBK）环境下，UTF-8 配置/源码文件被误读为乱码
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Java / XML / properties：4 空格缩进
+[*.java]
+indent_style = space
+indent_size = 4
+
+[*.{xml,properties,json}]
+indent_style = space
+indent_size = 4
+
+# YAML：2 空格缩进
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown 不做尾随空白清理（表格/换行需要）
+[*.md]
+trim_trailing_whitespace = false

@@ -102,7 +102,7 @@ public final class RequestContext {
                  * 避免父线程与子线程共享同一 HashMap 导致并发修改异常。
                  */
                 @Override
-                protected Map<String, Object> copy(Map<String, Object> parentValue) {
+                public Map<String, Object> copy(Map<String, Object> parentValue) {
                     return parentValue == null ? null : new HashMap<>(parentValue);
                 }
             };

@@ -2,8 +2,6 @@ package com.remisoft.common.core.code;
 
 
 import com.remisoft.common.core.response.BaseResponse;
-import org.springframework.core.retry.RetryPolicy;
-
 /**
  * 标准结果码枚举
  *
@@ -49,7 +47,7 @@ public enum BaseResultCode implements ResultCode {
     /** HTTP 方法不允许 */
     METHOD_NOT_ALLOWED("A10004", "请求方法不允许", 405),
     /** 不支持的媒体类型 */
-    UNSUPPORTED_MEDIA_TYPE("A10005", "不支持的媒体类型", 400),
+    UNSUPPORTED_MEDIA_TYPE("A10005", "不支持的媒体类型", 415),
 
     /** 资源不存在 */
     NOT_FOUND("A10101", "资源不存在", 404),
@@ -99,7 +97,7 @@ public enum BaseResultCode implements ResultCode {
     /** 功能已禁用 */
     FEATURE_DISABLED("B20002", "功能已禁用", 409),
     /** 熔断器已开启 */
-    CIRCUIT_BREAKER_OPEN("B20003", "熔断器已开启，请稍后重试", 500),
+    CIRCUIT_BREAKER_OPEN("B20003", "熔断器已开启，请稍后重试", 503),
 
     // ============================== 第三方服务 (C105xx~C107xx) ==============================
     /** 第三方服务异常 */

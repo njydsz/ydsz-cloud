@@ -3,7 +3,6 @@ package com.remisoft.common.core.config;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
@@ -32,16 +31,16 @@ import com.remisoft.common.core.response.BaseResponse;
 public class CoreAutoConfiguration {
 
     /**
-     * 注册 Spring 国际化消息解析器并绑定到 {@link BaseResponse}。
+     * 注册 SpringMessageResolver 并注入到 BaseResponse。
      *
-     * <p>当 classpath 上存在 {@link MessageSource} 且容器中有对应 Bean 时生效。
-     * 采用一次性设置语义，确保解析器在应用生命周期内不可变。</p>
+     * <p>通过静态持有方式使统一的国际化解析能力在任意位置可用
+     * （包括非 Spring Bean 中的静态工厂方法）。
+     * 仅当容器中存在 MessageSource Bean 时生效（如 starter 模块配置了 MessageSource）。</p>
      *
      * @param messageSource Spring 消息源
      * @return SpringMessageResolver 实例
      */
     @Bean
-    @ConditionalOnClass(MessageSource.class)
     @ConditionalOnBean(MessageSource.class)
     public SpringMessageResolver springMessageResolver(MessageSource messageSource) {
         SpringMessageResolver resolver = new SpringMessageResolver(messageSource);

@@ -6,22 +6,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * 过滤器忽略常量类
+ * 过滤器忽略常量类（通用 URL 模式）
  *
- * <p>定义了过滤器需要忽略的 URL 模式和服务名称，用于：
+ * <p>定义了过滤器需要忽略的 URL 模式，用于：
  * <ul>
  *   <li>公共资源过滤：CSS、JS、图片、字体等静态资源</li>
  *   <li>API 文档过滤：Swagger、OpenAPI 等文档页面</li>
- *   <li>认证过滤器忽略的服务名称（网关/SSO 等中转服务）</li>
  *   <li>安全相关的排除 URL（登录、认证、验证码等）</li>
  * </ul>
  *
- * <p><b>注意：</b>认证过滤器忽略服务名的默认值硬编码在此处。
- * 建议通过配置文件 {@code remi.core.filter-ignore.auth-filter-ignore-service-names} 覆盖，
- * 避免新增/移除 web 模块时修改 core 模块代码。
+ * <p><b>注意：</b>此常量类仅包含通用 URL 模式，不包含业务特定的服务名列表。
+ * 服务名白名单等各模块自定义业务配置请在对应模块（如 remi-common-auth / remi-common-web）中定义，
+ * 通过配置文件注入，避免 core 模块承载业务特定信息。</p>
  *
- * <p><b>线程安全性：</b>所有常量集合均为不可变 Set（{@link Collections#unmodifiableSet(Set)}），
- * 多线程并发访问安全。</p>
+ * <p><b>线程安全性：</b>所有常量集合均为不可变 Set，多线程并发访问安全。</p>
  *
  * @author remi-team
  * @since 1.0.0
@@ -32,7 +30,7 @@ public final class FilterIgnoreConstant {
         throw new UnsupportedOperationException("FilterIgnoreConstant is a utility class and cannot be instantiated");
     }
 
-    /** 默认全部忽略的URL模式 */
+    /** 默认全部忽略的 URL 模式（静态资源 + 文档 + 系统端点） */
     private static final Set<String> COMMON_IGNORE_URL = Collections.unmodifiableSet(Set.of(
             "/**/css/**",
             "/**/js/**",
@@ -53,20 +51,6 @@ public final class FilterIgnoreConstant {
             "/**/actuator/**"
     ));
 
-    /** 认证过滤器忽略的服务名称 */
-    private static final Set<String> AUTH_FILTER_IGNORE_SERVICE_NAME = Collections.unmodifiableSet(Set.of(
-            "remi-gateway",
-            "remi-system-web",
-            "remi-userinfo-web",
-            "remi-message-web",
-            "remi-cronjob-web",
-            "remi-agent-web",
-            "remi-nextwiki-web",
-            "remi-literule-web",
-            "remi-workflow-web",
-            "remi-project-web"
-    ));
-
     /** 安全相关的排除URL模式（登录、认证、验证码等） */
     private static final Set<String> SECURITY_EXCLUDE_URL = Collections.unmodifiableSet(Set.of(
             "/login",
@@ -81,18 +65,18 @@ public final class FilterIgnoreConstant {
     ).collect(Collectors.toUnmodifiableSet());
 
     /**
-     * 获取过滤器忽略的URL模式集合
+     * 获取过滤器忽略的 URL 模式集合
      *
-     * @return URL模式集合
+     * @return URL 模式集合（不可变）
      */
     public static Set<String> getCommonIgnoreUrls() {
         return COMMON_IGNORE_URL;
     }
 
     /**
-     * 获取安全相关的排除URL模式集合
+     * 获取安全相关的排除 URL 模式集合
      *
-     * @return 安全排除URL模式集合
+     * @return 安全排除 URL 模式集合（不可变）
      */
     public static Set<String> getSecurityExcludeUrls() {
         return SECURITY_EXCLUDE_URL;
@@ -101,18 +85,9 @@ public final class FilterIgnoreConstant {
     /**
      * 获取全部排除路径（公共静态资源 + 安全排除路径）
      *
-     * @return 全部排除路径集合
+     * @return 全部排除路径集合（不可变）
      */
     public static Set<String> getAllExcludeUrls() {
         return ALL_EXCLUDE_URLS;
-    }
-
-    /**
-     * 获取认证过滤器忽略的服务名称集合
-     *
-     * @return 服务名称集合
-     */
-    public static Set<String> getAuthFilterIgnoreServiceNames() {
-        return AUTH_FILTER_IGNORE_SERVICE_NAME;
     }
 }

@@ -217,7 +217,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      */
     public static <T> BaseResponse<T> error() {
-        return of(ERROR, resolveMessage(MSG_OPERATION_FAIL, "操作失败"), null);
+        return of(UNKNOWN_CODE, resolveMessage(MSG_OPERATION_FAIL, "操作失败"), null);
     }
 
     /**
@@ -228,7 +228,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      */
     public static <T> BaseResponse<T> error(String msg) {
-        return of(ERROR, msg, null);
+        return of(UNKNOWN_CODE, msg, null);
     }
 
     /**
@@ -351,59 +351,16 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 从异常中提取 ResultCode。
+     * 通过异常提取 ResultCode（仅在异常本身实现 {@link ResultCode} 接口时支持）。
      *
-     * <p>支持以下场景：
-     * <ul>
-     *   <li>异常本身实现了 {@link ResultCode} 接口</li>
-     *   <li>异常持有 resultCause 字段（通过反射检测，兼容 remi-common-exception 模块）</li>
-     * </ul>
+     * <p>异常模块（remi-common-exception）应通过其他方式提取，
+     * 避免在此核心类中引入反射和跨模块耦合。</p>
      *
      * @param throwable 异常对象
-     * @return 提取到的 ResultCode；无法提取时返回 null
+     * @return 若异常本身是 ResultCode，返回该 ResultCode；否则返回 null
      */
     private static ResultCode extractResultCode(Throwable throwable) {
-        if (throwable instanceof ResultCode) {
-            return (ResultCode) throwable;
-        }
-
-        // 尝试通过反射获取异常中的 resultCode/code 字段（兼容 exception 模块的 AbstractremiException）
-        try {
-            java.lang.reflect.Field codeField = findField(throwable.getClass(), "resultCode");
-            if (codeField != null) {
-                codeField.setAccessible(true);
-                Object value = codeField.get(throwable);
-                if (value instanceof ResultCode) {
-                    return (ResultCode) value;
-                }
-            }
-        } catch (Exception ignored) {
-            // 反射失败时输出 DEBUG 日志，便于 SECURITY 模式下排查
-            org.slf4j.LoggerFactory.getLogger(BaseResponse.class)
-                    .debug("Failed to extract ResultCode from exception {} via reflection: {}",
-                            throwable.getClass().getName(), ignored.getMessage());
-        }
-
-        return null;
-    }
-
-    /**
-     * 在类层次结构中查找指定字段（包括父类）。
-     *
-     * @param clazz     起始类
-     * @param fieldName 字段名
-     * @return 找到的字段；未找到返回 null
-     */
-    private static java.lang.reflect.Field findField(Class<?> clazz, String fieldName) {
-        Class<?> current = clazz;
-        while (current != null && current != Object.class) {
-            try {
-                return current.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                current = current.getSuperclass();
-            }
-        }
-        return null;
+        return (throwable instanceof ResultCode) ? (ResultCode) throwable : null;
     }
 
     /**

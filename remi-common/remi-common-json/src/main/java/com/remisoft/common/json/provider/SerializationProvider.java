@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.json.annotation.JsonSerialize;
+import com.remisoft.common.json.internal.JsonConfig;
 import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.serializer.JsonSerializer;
@@ -126,6 +127,9 @@ public final class SerializationProvider {
 
         /** 字段命名策略（PropertyNamingStrategy） */
         public PropertyNamingStrategy namingStrategy;
+
+        /** 当前序列化深度（防止 StackOverflow 的安全网） */
+        public int serializationDepth;
 
         private SerializationContext() {
             // 仅内部创建
@@ -616,6 +620,16 @@ public final class SerializationProvider {
 
         SerializationContext ctx = SerializationContext.CONTEXT.get();
 
+        // 序列化深度安全网：超过阈值时抛出受控异常，替代 StackOverflowError
+        int maxDepth = JsonConfig.getInstance().getMaxDepth();
+        if (++ctx.serializationDepth > maxDepth) {
+            ctx.serializationDepth--;
+            throw new JsonSerializationException(
+                JsonSerializationException.SERIALIZATION_ERROR,
+                "Serialization depth exceeded maximum (" + maxDepth + "): "
+                + "object graph too deep or contains circular references");
+        }
+
         // 循环引用检测（仅对 Bean 类型，不含基本类型/Collection/Map/String/Number/Boolean）
         Class<?> clazz = obj.getClass();
         boolean isBeanType = !clazz.isPrimitive() && !clazz.isArray()
@@ -625,12 +639,15 @@ public final class SerializationProvider {
             && !(obj instanceof Enum);
 
         Set<Object> objects = ctx.serializingObjects;
+        // 确保 serializingObjects 使用 identity-based 比较（检测循环引用的核心）
         if (isBeanType) {
             if (objects.contains(obj)) {
                 String strategy = ctx.circularRefStrategy;
                 if (strategy == null) strategy = "REF";
                 switch (strategy) {
                     case "ERROR":
+                        // 回滚深度计数并抛出受控异常（非 StackOverflowError）
+                        ctx.serializationDepth--;
                         throw new JsonSerializationException(
                             JsonSerializationException.SERIALIZATION_ERROR,
                             "Circular reference detected: " + clazz.getName());
@@ -667,12 +684,20 @@ public final class SerializationProvider {
             return sb.toString();
         } catch (JsonSerializationException e) {
             throw e;
+        } catch (StackOverflowError e) {
+            // ASM 字节码序列化路径可能绕过 serialize() 递归检测，
+            // 在顶层捕获 StackOverflowError 并转换为有意义的异常
+            throw new JsonSerializationException(
+                JsonSerializationException.SERIALIZATION_ERROR,
+                "Stack overflow during serialization: object graph too deep or circular reference", e);
         } catch (Exception e) {
             throw wrapSerializationException(obj, e);
         } finally {
             if (isBeanType) {
                 objects.remove(obj);
             }
+            // 回滚深度计数
+            ctx.serializationDepth--;
         }
     }
 

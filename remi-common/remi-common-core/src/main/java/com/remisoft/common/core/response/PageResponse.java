@@ -239,7 +239,9 @@ public class PageResponse<T> extends BaseResponse<T> {
      */
     public static <T> PageResponse<T> empty() {
         return success(0L, 1L, (long) PageConstants.getDefaultPageSize(), null);
-    }    /**
+    }
+
+    /**
      * 是否有下一页
      *
      * @return 有下一页返回true，否则返回false

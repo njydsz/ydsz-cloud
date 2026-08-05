@@ -4,41 +4,30 @@ import java.util.HexFormat;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * TraceId 生成器（基于 ThreadLocalRandom + HexFormat + ThreadLocal 缓冲区重用）。
+ * TraceId 生成器（基于 ThreadLocalRandom + HexFormat）。
  *
- * <p>使用 {@link ThreadLocalRandom}（线程本地伪随机数，无锁竞争）生成 16 字节随机数，
- * 经 {@link HexFormat} 格式化为 32 位小写十六进制字符串，保证分布式环境下高概率全局唯一。</p>
+ * <p>使用 {@link ThreadLocalRandom}（线程本地伪随机数，无锁竞争）生成随机字节，
+ * 经 {@link HexFormat} 格式化为小写十六进制字符串，保证分布式环境下高概率全局唯一。</p>
  *
- * <h3>性能对比（JDK 21，JMH 基准测试参考）</h3>
- * <table>
- *   <tr><th>实现</th><th>100 万次生成耗时</th><th>说明</th></tr>
- *   <tr><td>UUID.randomUUID()</td><td>~300 ms</td><td>SecureRandom 每次获取熵，高并发瓶颈</td></tr>
- *   <tr><td>NanoId</td><td>~180 ms</td><td>需引入外部依赖</td></tr>
- *   <tr><td><b>ThreadLocalRandom</b></td><td><b>~120 ms</b></td><td><b>零依赖，线程本地无锁</b></td></tr>
- * </table>
+ * <p>设计采用纯函数式风格：每次调用直接分配 byte 数组。
+ * 在现代 JVM（ZGC/Shenandoah）下，16 字节的 TLAB 分配几乎零成本，
+ * 无需 ThreadLocal 缓冲区增加的复杂度和生命周期管理负担。</p>
+ *
+ * <h3>性能对比（JDK 21）</h3>
+ * <ul>
+ *   <li>UUID.randomUUID() — SecureRandom 每次获取熵，高并发瓶颈</li>
+ *   <li>{@link ThreadLocalRandom} — 线程本地无锁，约 2.5x 于 UUID，零依赖</li>
+ * </ul>
  *
  * <h3>安全性说明</h3>
  * <p>TraceId 用于日志关联和链路追踪，非密码学用途。{@link ThreadLocalRandom} 满足"
- * 高概率全局唯一"的要求，碰撞概率约 2^-128（远低于业务可接受阈值）。</p>
+ * 高概率全局唯一"的要求，碰撞概率约 2^-128。</p>
  *
  * <p><b>线程安全：</b>{@link ThreadLocalRandom} 线程本地，天然线程安全。</p>
  *
  * <h3>W3C TraceContext 支持</h3>
- * <p>同时提供符合 W3C Trace Context 标准的 spanId 生成和 traceparent header 构建方法，
+ * <p>提供符合 W3C Trace Context 标准的 spanId 生成和 traceparent header 构建方法，
  * 便于对接 SkyWalking/Jaeger/Zipkin 等主流链路追踪系统。</p>
- *
- * <p><b>使用示例：</b></p>
- * <pre>{@code
- * // 生成 TraceId
- * String traceId = TraceIdGenerator.generateTraceId();  // 如 "a1b2c3d4e5f67890abcdef1234567890"
- *
- * // 生成 SpanId（8 bytes → 16 位十六进制）
- * String spanId = TraceIdGenerator.generateSpanId();
- *
- * // 生成 W3C traceparent header
- * String traceparent = TraceIdGenerator.traceparentHeader();
- * // "00-a1b2c3d4e5f67890abcdef1234567890-e5f67890abcdef12-01"
- * }</pre>
  *
  * @author remi-team
  * @since 1.0.0
@@ -47,17 +36,6 @@ public final class TraceIdGenerator {
 
     private static final int TRACE_ID_BYTES = 16;
     private static final int SPAN_ID_BYTES = 8;
-
-    /**
-     * 线程本地的 TraceId 缓冲区（16 bytes），避免每次分配新数组。
-     * <p>使用 ThreadLocal 确保每个线程独立缓冲，无并发竞争。</p>
-     */
-    private static final ThreadLocal<byte[]> TRACE_ID_BUFFER = ThreadLocal.withInitial(() -> new byte[TRACE_ID_BYTES]);
-
-    /**
-     * 线程本地的 SpanId 缓冲区（8 bytes），避免每次分配新数组。
-     */
-    private static final ThreadLocal<byte[]> SPAN_ID_BUFFER = ThreadLocal.withInitial(() -> new byte[SPAN_ID_BYTES]);
 
     /**
      * 共享的 HexFormat 实例（线程安全，可重用）。
@@ -69,19 +47,15 @@ public final class TraceIdGenerator {
     }
 
     /**
-     * 生成 32 位十六进制 TraceId。
+     * 生成 32 位十六进制 TraceId（16 bytes 随机数）。
      *
-     * <p>使用 16 bytes 随机数生成，比 UUID 方案更快（约 2.5x 性能提升），
-     * 输出格式与旧版兼容（32 位小写十六进制字符串）。</p>
-     *
-     * <p>性能优化：使用 ThreadLocal 缓冲区重用 byte 数组，
-     * 减少高并发场景下的 GC 压力。</p>
+     * <p>输出格式与旧版兼容（32 位小写十六进制字符串）。</p>
      *
      * @return 32 位十六进制字符串
      * @since 1.5.0
      */
     public static String generateTraceId() {
-        byte[] bytes = TRACE_ID_BUFFER.get();
+        byte[] bytes = new byte[TRACE_ID_BYTES];
         ThreadLocalRandom.current().nextBytes(bytes);
         return HEX_FORMAT.formatHex(bytes);
     }
@@ -89,17 +63,13 @@ public final class TraceIdGenerator {
     /**
      * 生成 16 位十六进制 SpanId（8 bytes 随机数）。
      *
-     * <p>SpanId 用于标识一次分布式调用中的单个操作。
-     * 长度为 8 bytes（16 位十六进制），符合 W3C Trace Context 规范。</p>
-     *
-     * <p>性能优化：使用 ThreadLocal 缓冲区重用 byte 数组，
-     * 减少高并发场景下的 GC 压力。</p>
+     * <p>SpanId 用于标识一次分布式调用中的单个操作，符合 W3C Trace Context 规范。</p>
      *
      * @return 16 位十六进制字符串
      * @since 1.5.0
      */
     public static String generateSpanId() {
-        byte[] bytes = SPAN_ID_BUFFER.get();
+        byte[] bytes = new byte[SPAN_ID_BYTES];
         ThreadLocalRandom.current().nextBytes(bytes);
         return HEX_FORMAT.formatHex(bytes);
     }

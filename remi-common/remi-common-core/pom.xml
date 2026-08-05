@@ -39,12 +39,32 @@
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>
         </dependency>
-        <!-- spring-boot-health（CoreHealthIndicator 使用 org.springframework.boot.health.contributor.Health / HealthIndicator。
-             Spring Boot 4.x 将 health 相关类从 spring-boot-actuator 拆分至独立模块 spring-boot-health。
-             optional：仅编译期需要，运行时由接入方 starter 提供） -->
+        <!-- spring-boot-health（Spring Boot 4.x 独立模块，提供 Health / HealthIndicator 接口）
+             CoreHealthIndicator 使用 optional：仅编译期需要，运行时由接入方 starter 提供 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot（提供 spring-core、spring-context、spring-beans 等核心 API）
+             CoreAutoConfiguration / CoreProperties / SpringMessageResolver 直接使用这些包 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot-autoconfigure（提供 @AutoConfiguration、@ConditionalOnXxx 等注册机制）
+             CoreAutoConfiguration 直接使用注解和条件 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- jakarta.validation-api（提供 @Min、@Max、@AssertTrue 校验注解）
+             CoreProperties 字段级校验直接使用 -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
             <optional>true</optional>
         </dependency>
         <!-- Test -->

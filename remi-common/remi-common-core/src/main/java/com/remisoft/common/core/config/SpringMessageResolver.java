@@ -2,6 +2,7 @@ package com.remisoft.common.core.config;
 
 import com.remisoft.common.core.response.BaseResponse;
 import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.Locale;
@@ -52,11 +53,12 @@ public class SpringMessageResolver implements BaseResponse.MessageResolver {
         if (key == null || key.isEmpty()) {
             return defaultValue;
         }
+        Locale locale = LocaleContextHolder.getLocale();
         try {
-            Locale locale = LocaleContextHolder.getLocale();
-            String message = messageSource.getMessage(key, null, locale);
-            return message != null ? message : defaultValue;
-        } catch (Exception e) {
+            // 使用非抛异常的重载：key 不存在时直接返回 defaultMessage，避免异常构造成本
+            return messageSource.getMessage(key, null, defaultValue, locale);
+        } catch (NoSuchMessageException e) {
+            // 防御性兜底：理论上 getMessage 三参数重载不会抛，但 MessageSource 实现可能不一致
             return defaultValue;
         }
     }

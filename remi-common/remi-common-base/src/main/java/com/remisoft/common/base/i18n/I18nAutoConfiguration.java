@@ -22,8 +22,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>消息资源文件位于 classpath:i18n/ 目录：
  * <ul>
- *   <li>{@code messages_zh_CN.properties} — 简体中文</li>
- *   <li>{@code messages_en_US.properties} — English</li>
+ *   <li>{@code i18n/messages*.properties} — 通用消息（common-base）</li>
+ *   <li>{@code i18n/core/messages*.properties} — 核心错误码消息（common-core）</li>
+ *   <li>{@code i18n/file-messages*.properties} — 文件存储消息（common-file）</li>
  * </ul>
  *
  * <p>前端通过 {@code Accept-Language} 请求头指定语言，后端通过
@@ -46,11 +47,12 @@ public class I18nAutoConfiguration {
     @ConditionalOnMissingBean(MessageSource.class)
     public MessageSource messageSource() {
         ResourceBundleMessageSource source = new ResourceBundleMessageSource();
-        source.setBasenames("i18n/messages");
+        // 覆盖全部消息包：base(common)/core(错误码)/file(文件存储)
+        source.setBasenames("i18n/messages", "i18n/core/messages", "i18n/file-messages");
         source.setDefaultEncoding("UTF-8");
         source.setUseCodeAsDefaultMessage(true);
         source.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
-        log.info("[I18nAutoConfiguration] MessageSource bean registered, basenames=i18n/messages");
+        log.info("[I18nAutoConfiguration] MessageSource bean registered, basenames=i18n/messages,i18n/core/messages,i18n/file-messages");
         return source;
     }
 
