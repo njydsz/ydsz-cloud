@@ -167,30 +167,6 @@ public class PageResponse<T> extends BaseResponse<T> {
     }
 
     /**
-     * 创建成功分页响应（便捷重载，接收基本类型）
-     *
-     * <p>适用于 MyBatis-Plus {@code IPage} 等返回 {@code long} / {@code int} 基本类型的场景。</p>
-     *
-     * <p><b>注意：</b>此方法在 core 模块中仅为向后兼容保留。
-     * 新代码建议在 web 层定义 {@code PageResponse} 的子类或扩展方法，
-     * 以便进一步封装框架特定的分页适配逻辑。</p>
-     *
-     * @param total    总记录数
-     * @param pageNum  当前页码
-     * @param pageSize 每页记录数
-     * @param data     分页数据
-     * @param <T>      数据类型
-     * @return 成功分页响应
-     * @deprecated 此方法在 v1.7.0 标记为待下沉，建议在 web 层封装适配。
-     *             调用 {@link #success(Long, Long, Long, Object)} 替代，显式装箱参数。
-     * @since 1.0.0
-     */
-    @Deprecated
-    public static <T> PageResponse<T> success(long total, int pageNum, int pageSize, T data) {
-        return success((long) total, (long) pageNum, (long) pageSize, data);
-    }
-
-    /**
      * 创建失败分页响应
      *
      * @param code 错误码

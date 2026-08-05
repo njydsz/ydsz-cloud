@@ -7,20 +7,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.CharArrayWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputFilter;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.Reader;
-import java.io.Serializable;
 import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
@@ -28,7 +23,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -57,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  *       已拆分至 {@link FileUtils}</li>
  *   <li>TeeStream 已提取为独立类 {@link TeeOutputStream}</li>
  *   <li>LimitStream 已提取为独立类 {@link LimitInputStream}</li>
- *   <li>对象序列化方法已废弃，推荐使用 {@code com.remisoft.common.json.RemiJson}</li>
+ *   <li>对象序列化方法已移除，序列化请使用 {@code com.remisoft.common.json.RemiJson}</li>
  * </ul>
  *
  * <p><b>相比 Apache Commons IO / Hutool 的增强：</b></p>
@@ -133,25 +127,47 @@ public class IOUtils {
      *
      * <p>同一线程内 copy 调用复用同一缓冲区，减少 GC 压力。缓冲区大小固定为
      * {@link #DEFAULT_BUFFER_SIZE}（8KB），平衡内存占用与吞吐量。
+     *
+     * <p><b>虚拟线程兼容说明：</b>
+     * 在 JDK 21+ 虚拟线程场景下，每个虚拟线程都拥有独立的 ThreadLocal 条目。
+     * {@link #acquireBuffer()} 方法检测当前是否为虚拟线程：
+     * <ul>
+     *   <li>平台线程：使用 ThreadLocal 池化复用（零分配）</li>
+     *   <li>虚拟线程：每次分配新数组（避免百万级虚拟线程导致 OOM），不缓存</li>
+     * </ul>
      */
     private static final ThreadLocal<byte[]> BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[DEFAULT_BUFFER_SIZE]);
 
     /**
-     * 反序列化安全过滤器，仅允许 JDK 基础类型和 {@code com.remisoft.**} 包下的类。
-     *
-     * <p><b>与 AutoTypeChecker 的关系：</b>
-     * 本过滤器面向 IOUtils 的<b>通用</b>反序列化场景，使用模块/包前缀模式（JDK 9+），
-     * 允许所有业务类（{@code com.remisoft.**}）；而 {@code AutoTypeChecker} 面向 JSON AutoType
-     * 与缓存导入等<b>特定</b>场景，使用类名精确白名单（更严格）。
-     * 两套机制独立维护，避免通用工具被过严的白名单限制。
-     *
-     * <p>如需更严格的反序列化白名单，请使用
-     * {@link com.remisoft.common.json.autotype.SafeObjectInputFilter}。
+     * 标记是否已检测过虚拟线程支持（用于热点路径性能优化）。
      */
-    private static final ObjectInputFilter DESERIALIZE_FILTER = ObjectInputFilter.Config.createFilter(
-        "java.base/java.lang.*;java.base/java.util.*;java.base/java.time.*;java.base/java.math.*;"
-        + "java.base/java.io.Serializable;com.remisoft.**;!*"
-    );
+    private static final boolean IS_VIRTUAL_THREAD_SUPPORTED;
+
+    static {
+        boolean vtSupported = false;
+        try {
+            Thread.ofVirtual();
+            vtSupported = true;
+        } catch (Exception | Error ignored) {
+            // 当前 JVM 不支持虚拟线程
+        }
+        IS_VIRTUAL_THREAD_SUPPORTED = vtSupported;
+    }
+
+    /**
+     * 获取 IO 缓冲区。
+     *
+     * <p>平台线程从 ThreadLocal 缓冲池获取（零分配）；
+     * 虚拟线程每次分配新数组，避免虚拟线程数过多时 ThreadLocal 条目膨胀导致 OOM。
+     *
+     * @return 大小为 {@link #DEFAULT_BUFFER_SIZE} 的字节数组
+     */
+    private static byte[] acquireBuffer() {
+        if (IS_VIRTUAL_THREAD_SUPPORTED && Thread.currentThread().isVirtual()) {
+            return new byte[DEFAULT_BUFFER_SIZE];
+        }
+        return BUFFER_POOL.get();
+    }
 
     // ==================== 流复制方法 ====================
 
@@ -170,7 +186,7 @@ public class IOUtils {
         Objects.requireNonNull(input, "input cannot be null");
         Objects.requireNonNull(output, "output cannot be null");
 
-        byte[] buffer = BUFFER_POOL.get();
+        byte[] buffer = acquireBuffer();
         long count = 0;
         int n;
         while ((n = input.read(buffer)) != EOF) {
@@ -529,179 +545,6 @@ public class IOUtils {
         return writer.toString();
     }
 
-    // ==================== 对象序列化与反序列化（已废弃） ====================
-
-    /**
-     * 序列化对象到 OutputStream。
-     *
-     * <p>Java 原生序列化（ObjectOutputStream）存在安全风险：反序列化不可信数据可触发远程代码执行，
-     * 且序列化格式冗余大、跨语言兼容性差。
-     *
-     * @param obj    要序列化的对象
-     * @param output 输出流
-     * @throws IOException IO 异常
-     * @deprecated 自 1.3.0 起废弃，推荐使用 {@code com.remisoft.common.json.RemiJson.serialize(obj)} 替代，
-     *             JSON 序列化更安全、可读、跨语言兼容。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static void serialize(Serializable obj, OutputStream output) throws IOException {
-        Objects.requireNonNull(obj, "obj cannot be null");
-        Objects.requireNonNull(output, "output cannot be null");
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(output)) {
-            oos.writeObject(obj);
-            oos.flush();
-        }
-    }
-
-    /**
-     * 从 InputStream 反序列化对象。
-     *
-     * @param input 输入流
-     * @param <T>   对象类型
-     * @return 反序列化的对象
-     * @throws IOException            IO 异常
-     * @throws ClassNotFoundException 类未找到异常
-     *
-     * @deprecated 自 1.3.0 起废弃，推荐使用 {@code RemiJson.deserialize(input, clazz)} 替代。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static <T> T deserialize(InputStream input) throws IOException, ClassNotFoundException {
-        Objects.requireNonNull(input, "input cannot be null");
-
-        try (ObjectInputStream ois = new ObjectInputStream(input)) {
-            ois.setObjectInputFilter(DESERIALIZE_FILTER);
-            return castObject(ois.readObject());
-        }
-    }
-
-    /** 内部辅助方法：安全转换反序列化对象到泛型类型 T
-     *
-     * @deprecated 随 deserialize 方法一并废弃。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    private static <T> T castObject(Object obj) {
-        return (T) obj;
-    }
-
-    /**
-     * 序列化对象到 byte 数组。
-     *
-     * @param obj 要序列化的对象
-     * @return 字节数组
-     * @throws IOException IO 异常
-     *
-     * @deprecated 自 1.3.0 起废弃，推荐使用 {@code RemiJson.serialize(obj).getBytes(StandardCharsets.UTF_8)} 替代。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static byte[] serializeToByteArray(Serializable obj) throws IOException {
-        Objects.requireNonNull(obj, "obj cannot be null");
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        serialize(obj, baos);
-        return baos.toByteArray();
-    }
-
-    /**
-     * 从 byte 数组反序列化对象。
-     *
-     * @param data 字节数组
-     * @param <T>  对象类型
-     * @return 反序列化的对象
-     * @throws IOException            IO 异常
-     * @throws ClassNotFoundException 类未找到异常
-     *
-     * @deprecated 自 1.3.0 起废弃，推荐使用 {@code RemiJson.deserialize(new String(data, StandardCharsets.UTF_8), clazz)} 替代。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static <T> T deserializeFromByteArray(byte[] data) throws IOException, ClassNotFoundException {
-        Objects.requireNonNull(data, "data cannot be null");
-        ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        try (ObjectInputStream ois = new ObjectInputStream(bais)) {
-            ois.setObjectInputFilter(DESERIALIZE_FILTER);
-            return castObject(ois.readObject());
-        }
-    }
-
-    // ==================== 文件操作（已拆分至 FileUtils） ====================
-
-    /**
-     * 使用 FileChannel 复制文件（高性能）。
-     *
-     * @param sourceFile 源文件
-     * @param destFile   目标文件
-     * @throws IOException IO 异常
-     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#copyFileFast(File, File)}。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static void copyFileFast(File sourceFile, File destFile) throws IOException {
-        FileUtils.copyFileFast(sourceFile, destFile);
-    }
-
-    /**
-     * 使用 FileChannel 复制文件（Path 版本）。
-     *
-     * @param source 源文件路径
-     * @param dest   目标文件路径
-     * @throws IOException IO 异常
-     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#copyFileFast(Path, Path)}。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static void copyFileFast(Path source, Path dest) throws IOException {
-        FileUtils.copyFileFast(source, dest);
-    }
-
-    /**
-     * 使用 FileChannel 复制文件（字符串路径版本）。
-     *
-     * @param sourcePath 源文件路径
-     * @param destPath   目标文件路径
-     * @throws IOException IO 异常
-     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#copyFileFast(String, String)}。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static void copyFileFast(String sourcePath, String destPath) throws IOException {
-        FileUtils.copyFileFast(sourcePath, destPath);
-    }
-
-    /**
-     * 使用 MappedByteBuffer 复制大文件（超高性能）。
-     *
-     * @param sourceFile 源文件
-     * @param destFile   目标文件
-     * @throws IOException IO 异常
-     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#copyFileMapped(File, File)}。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static void copyFileMapped(File sourceFile, File destFile) throws IOException {
-        FileUtils.copyFileMapped(sourceFile, destFile);
-    }
-
-    /**
-     * 读取文件所有字节到 byte 数组（NIO 版本）。
-     *
-     * @param file 文件
-     * @return 字节数组
-     * @throws IOException IO 异常
-     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#readFileToByteArray(File)}。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static byte[] readFileToByteArray(File file) throws IOException {
-        return FileUtils.readFileToByteArray(file);
-    }
-
-    /**
-     * 将 byte 数组写入文件（NIO 版本）。
-     *
-     * @param data 字节数组
-     * @param file 文件
-     * @throws IOException IO 异常
-     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#writeByteArrayToFile(byte[], File)}。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static void writeByteArrayToFile(byte[] data, File file) throws IOException {
-        FileUtils.writeByteArrayToFile(data, file);
-    }
-
     // ==================== 流包装与装饰 ====================
 
     /**
@@ -857,32 +700,6 @@ public class IOUtils {
     }
 
     // ==================== 特殊流操作（已拆分至独立类） ====================
-
-    /**
-     * 一流双写输出流。
-     *
-     * @param output1 第一个输出流
-     * @param output2 第二个输出流
-     * @return TeeOutputStream 实例
-     * @deprecated 自 1.3.0 起推荐直接使用 {@link TeeOutputStream} 构造器。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static TeeOutputStream tee(OutputStream output1, OutputStream output2) {
-        return new TeeOutputStream(output1, output2);
-    }
-
-    /**
-     * 限制读取字节数的输入流。
-     *
-     * @param input 原始输入流
-     * @param limit 最大读取字节数
-     * @return LimitInputStream 实例
-     * @deprecated 自 1.3.0 起推荐直接使用 {@link LimitInputStream} 构造器。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static LimitInputStream limit(InputStream input, long limit) {
-        return new LimitInputStream(input, limit);
-    }
 
     /**
      * 创建管道流对

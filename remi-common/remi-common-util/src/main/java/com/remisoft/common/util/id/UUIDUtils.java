@@ -3,7 +3,6 @@ package com.remisoft.common.util.id;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.UUID;
 
 /**
@@ -174,96 +173,6 @@ public final class UUIDUtils {
         encodeTime(timestamp, result);
         encodeRandom(randomBytes, result);
         return new String(result);
-    }
-
-    /**
-     * 生成 NanoID（更短的唯一标识符）
-     * <p>
-     * NanoID 特点：
-     * 1. 默认 21 个字符
-     * 2. URL 安全字符集
-     * 3. 无状态生成
-     * </p>
-     *
-     * @return NanoID 字符串
-     *
-     * @deprecated 存在模偏问题（字符集长度 64 虽为 2 的幂，但实现中 {@code bytes[i] & 63}
-     *             直接按字节低 6 位索引，对于非 2 幂长度字符集会放大偏差）。
-     *             推荐使用 {@link RandomUtils#generateSecureString(int)} 替代，
-     *             后者直接从 SecureRandom 逐字符采样且无 Base64 截断熵损失。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static String nanoId() {
-        return nanoId(21);
-    }
-
-    /**
-     * 生成指定长度的 NanoID
-     *
-     * @param size ID 长度
-     * @return NanoID 字符串
-     *
-     * @deprecated 同 {@link #nanoId()}，推荐使用 {@link RandomUtils#generateSecureString(int)} 替代。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static String nanoId(int size) {
-        if (size <= 0) {
-            return "";
-        }
-        String alphabet = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        char[] id = new char[size];
-        byte[] bytes = new byte[size];
-        SECURE_RANDOM.nextBytes(bytes);
-        for (int i = 0; i < size; i++) {
-            id[i] = alphabet.charAt(bytes[i] & (alphabet.length() - 1));
-        }
-        return new String(id);
-    }
-
-    /**
-     * 生成压缩的 Base64 UUID（22 个字符）
-     * <p>
-     * 将 128 位 UUID 编码为 URL 安全的 Base64 格式，
-     * 长度从 32 位压缩到 22 位，节省存储空间。
-     * </p>
-     * <p>
-     * 实际节省有限：数据库中 UUID 应存为 BINARY(16)，而非字符类型；
-     * 字符存储场景下 {@link #simpleUuid()} 已是 32 位可读 Hex。
-     * Base64 编码引入大小写敏感与 URL 转义问题，兼容性不如 Hex。
-     * </p>
-     *
-     * @return 22 位 Base64 编码的 UUID
-     *
-     * @deprecated 存储场景建议直接用 {@code BINARY(16)} + {@link #toBytes(UUID)}；
-     *             字符场景建议 {@link #simpleUuid()} 或 {@link #simpleUuidV7()}。
-     *             如有 URL 短 ID 需求，推荐 {@link RandomUtils#generateSecureString(int)}。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static String compressedUuid() {
-        UUID uuid = UUID.randomUUID();
-        byte[] bytes = new byte[16];
-        ByteBuffer bb = ByteBuffer.wrap(bytes);
-        bb.putLong(uuid.getMostSignificantBits());
-        bb.putLong(uuid.getLeastSignificantBits());
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
-
-    /**
-     * 生成压缩的 Base64 UUID v7（22 个字符）
-     *
-     * @return 22 位 Base64 编码的 UUID v7
-     *
-     * @deprecated 同 {@link #compressedUuid()}，推荐使用 {@link #simpleUuidV7()}（32 位可读 Hex）
-     *             或 {@code BINARY(16)} + {@link #toBytes(UUID)} 存储方案替代。
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public static String compressedUuidV7() {
-        UUID uuid = uuidV7();
-        byte[] bytes = new byte[16];
-        ByteBuffer bb = ByteBuffer.wrap(bytes);
-        bb.putLong(uuid.getMostSignificantBits());
-        bb.putLong(uuid.getLeastSignificantBits());
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
     /**

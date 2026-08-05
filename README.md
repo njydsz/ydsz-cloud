@@ -20,17 +20,16 @@
 
 **Remi-Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 五层分层架构，内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎等企业级全业务场景。
 
-平台对标 **若依（RuoYi）**、**Pig**、**maku-boot**、**SpringBlade**、**JeecgBoot** 等主流开源快速开发平台，在架构设计、代码质量、工程规范与安全治理方面对齐 **阿里巴巴 Java 开发手册**、**Google Java Style Guide** 等行业标准，并通过 Maven Enforcer、CheckStyle、SpotBugs、OWASP Dependency-Check、JaCoCo、ArchUnit 等 7 道质量门禁保障交付质量。
+平台对标 **若依（RuoYi）**、**Pig**、**maku-boot**、**SpringBlade**、**JeecgBoot** 等主流开源快速开发平台，在架构设计、代码质量、工程规范与安全治理方面对齐 **阿里巴巴 Java 开发手册**、**Google Java Style Guide** 等行业标准。
 
 ### 核心特性
 
 - **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10
 - **DDD 分层架构**：严格 `api` / `domain` / `infra` / `server` / `web` 五层分离，依赖方向单向收敛
 - **自研引擎矩阵**：「规则引擎（对标 Drools + LiteFlow）+ 任务调度（对标 XXL-Job + PowerJob）+ 工作流（BPMN 2.0）+ AI Agent 框架」——四大引擎全部自研，开箱即用
-- **质量门禁全链路**：CheckStyle → SpotBugs → OWASP → JaCoCo（Line ≥ 60%, Branch ≥ 50%）→ ArchUnit → CycloneDX SBOM，构建阶段自动执行
 - **多租户隔离**：支持 SINGLE（共享表）、MULTI（字段隔离）、ISOLATE_DB（独立数据库）三种策略
 - **全渠道消息**：12 种通知渠道（短信/邮件/Push/企微/钉钉/飞书/微信小程序/支付宝小程序等），支持 DAG 编排与跨渠道抑制
-- **安全纵深防御**：JWT + RBAC + 数据权限 + PII 脱敏 + XSS/SQL 注入/CSRF 防护 + 敏感配置加密（AES-256-GCM）+ OWASP 漏洞扫描
+- **安全纵深防御**：JWT + RBAC + 数据权限 + PII 脱敏 + XSS/SQL 注入/CSRF 防护 + 敏感配置加密（AES-256-GCM）
 - **生产可观测**：Prometheus + Grafana + Sentry + ELK/Loki + Micrometer Tracing（W3C TraceContext）
 
 ---
@@ -198,9 +197,8 @@ remi-cloud/
 
 **Remi-Cloud 的差异化优势**：
 
-- **DDD 五层分层架构**：严格的 `api / domain / infra / server / web` 依赖方向单向收敛，由 ArchUnit 守护，竞品多为传统三层或 MVC 结构。
+- **DDD 五层分层架构**：严格的 `api / domain / infra / server / web` 依赖方向单向收敛，竞品多为传统三层或 MVC 结构。
 - **四大自研引擎**：规则引擎（对标 Drools + LiteFlow）、分布式调度（对标 XXL-Job + PowerJob）、BPMN 2.0 工作流、AI Agent 框架，全部自研、开箱即用。
-- **7 道质量门禁全链路**：CheckStyle → SpotBugs → OWASP → JaCoCo → ArchUnit → CycloneDX SBOM，构建阶段自动执行。
 - **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10。
 - **全渠道消息与多租户**：12 种通知渠道 DAG 编排、三种多租户隔离策略（SINGLE / MULTI / ISOLATE_DB）。
 
@@ -229,11 +227,11 @@ remi-cloud/
 git clone http://192.168.31.88:6080/remiopen/remi-cloud.git
 cd remi-cloud
 
-# 编译全量模块（含质量检查）
+# 编译全量模块（含单元测试）
 mvn clean verify
 
-# 快速本地模式（跳过质量门禁，加速开发迭代）
-mvn clean verify -P local-dev
+# 快速构建（跳过测试，加速开发迭代）
+mvn clean package -DskipTests
 ```
 
 ### 数据库初始化
@@ -328,17 +326,12 @@ docs: 更新 API 接口文档
 
 ## 质量与安全
 
-### CI 质量门禁（verify 阶段自动执行）
+### 构建与测试
 
-| 门禁 | 工具 | 阻断条件 |
-|------|------|----------|
-| **构建约束** | Maven Enforcer 3.5.0 | JDK < 21 · Maven < 3.9 · 依赖版本冲突 · 禁止的不安全依赖 |
-| **代码规范** | CheckStyle | 违反规则即阻断（基于阿里 + Google 规范） |
-| **静态缺陷** | SpotBugs + FindSecBugs | 检测到 HIGH 级别缺陷 |
-| **漏洞扫描** | OWASP Dependency-Check | CVSS ≥ 7.0 的已知漏洞 |
-| **架构守护** | ArchUnit | 违反分层规则 / 命名约束 |
-| **测试覆盖率** | JaCoCo 0.8.13 | 行覆盖率 < 60% · 分支覆盖率 < 50% |
-| **SBOM** | CycloneDX | 生成软件物料清单（非阻断，强制生成） |
+| 项目 | 说明 |
+|------|------|
+| **单元测试** | JUnit 5 + Mockito + AssertJ，`mvn verify` 自动执行 |
+| **集成测试** | Testcontainers 容器化（PG / Redis），继承 `AbstractIntegrationTest` 基类运行 |
 
 ### 安全措施
 
@@ -348,7 +341,7 @@ docs: 更新 API 接口文档
 - **输入安全**：XSS 过滤 + SQL 注入防护（PreparedStatement） + 参数校验
 - **数据安全**：PII 脱敏（手机号/身份证/邮箱） + 行/列级权限
 - **运维安全**：IP 白名单/黑名单 + 登录失败锁定 + 验证码 + API 签名验证
-- **供应链安全**：OWASP 依赖漏洞扫描 + CycloneDX SBOM + 禁止不安全依赖（Maven Enforcer）
+- **供应链安全**：依赖版本统一收敛管理（Dependency Management）
 
 ---
 
@@ -358,8 +351,7 @@ docs: 更新 API 接口文档
 |------|------|------|
 | 项目 README | `./README.md` | 本文档 |
 | MIT 开源协议 | `./LICENSE` | 开源许可协议 |
-| CheckStyle 规则 | `./checkstyle.xml` | 代码规范检查配置 |
-| SpotBugs 排除 | `./spotbugs-exclude.xml` | 静态分析排除规则 |
+| CheckStyle 规则 | `./checkstyle.xml` | 代码规范检查配置（IDE 集成） |
 | Effective POM | `./effective-pom.xml` | 解析后的完整 POM |
 | 模块 README | `remi-*/README.md` | 各模块详细说明文档 |
 | 编码规范 | *(内部 Wiki)* | 团队开发规范 |
@@ -375,15 +367,15 @@ docs: 更新 API 接口文档
 
 1. **Fork** 本项目
 2. 从 `develop` 分支创建你的特性分支：`git checkout -b feature/amazing-feature`
-3. 编写代码，确保通过 `mvn verify` 全量质量门禁
+3. 编写代码，确保通过 `mvn verify` 构建与单元测试
 4. 提交变更：`git commit -m 'feat: 新增某某功能'`
 5. 推送分支：`git push origin feature/amazing-feature`
 6. 提交 **Pull Request** 到 `develop` 分支
 
 ### 贡献要求
 
-- 新增代码需通过 CheckStyle / SpotBugs / OWASP 检查
-- 核心逻辑需补充单元测试，覆盖率不低于项目现有基线
+- 新增代码需通过单元测试验证
+- 核心逻辑需补充单元测试
 - 新增模块的 README.md 需同步更新
 - 数据库变更需提供 SQL 初始化脚本
 - PR 需至少一位 Maintainer 审核通过

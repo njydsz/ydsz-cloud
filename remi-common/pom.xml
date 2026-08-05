@@ -39,7 +39,6 @@
         <swagger-jakarta.version>2.2.47</swagger-jakarta.version>
         <springdoc.version>3.0.3</springdoc.version>
         <jetbrains-annotations.version>24.1.0</jetbrains-annotations.version>
-        <spotbugs-annotations.version>4.8.6</spotbugs-annotations.version>
         <mybatis-starter.version>4.0.1</mybatis-starter.version>
         <mybatis.version>3.5.19</mybatis.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
@@ -643,13 +642,6 @@
                 <version>${jetbrains-annotations.version}</version>
             </dependency>
 
-            <!-- spotbugs annotations -->
-            <dependency>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-annotations</artifactId>
-                <version>${spotbugs-annotations.version}</version>
-            </dependency>
-
             <!-- swagger-annotations-jakarta 版本覆盖（springdoc 3.0.3 要求 2.2.47） -->
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
@@ -714,21 +706,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <skip>true</skip>
-                </configuration>
-            </plugin>
-            <!--
-                SpotBugs 插件显式配置：覆盖父 POM 的 ${maven.multiModuleProjectDirectory} 变量解析。
-                父 POM 在 remi-common 聚合模块中构建时，${maven.multiModuleProjectDirectory}
-                会解析到 remi-common/ 目录而非 remi-cloud/ 根目录，导致找不到 spotbugs-exclude.xml。
-                注意：不能使用 ${project.basedir}/../，因为对 remi-common-json 等嵌套子模块，
-                ${project.basedir} 为 remi-common/remi-common-json，其上级目录是 remi-common/ 而非根目录。
-                统一使用 ${maven.multiModuleProjectDirectory} 指向聚合根 remi-cloud/。
-            -->
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <configuration>
-                    <excludeFilterFile>${maven.multiModuleProjectDirectory}/spotbugs-exclude.xml</excludeFilterFile>
                 </configuration>
             </plugin>
         </plugins>

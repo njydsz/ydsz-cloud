@@ -2,6 +2,7 @@ package com.remisoft.system.server.config;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.remisoft.common.util.http.ServletUtils;
+import com.remisoft.common.util.ip.IpAddrUtils;
 
 /**
  * 内部 API IP 白名单过滤器
@@ -41,8 +42,8 @@ import com.remisoft.common.util.http.ServletUtils;
  *       - 192.168.1.100   # 运维办公网
  * </pre>
  *
- * <p><b>客户端 IP 解析：</b>委托 {@link com.remisoft.common.util.http.ServletUtils#getClientIp(HttpServletRequest)}
- * 统一解析（含 X-Forwarded-For / X-Real-IP / RemoteAddr 多级回退与防伪造校验）。
+ * <p><b>客户端 IP 解析：</b>委托 {@link com.remisoft.common.util.ip.IpAddrUtils#getIpAddrWithTrustedProxies(HttpServletRequest, java.util.Set)}
+ * 统一解析（含 X-Forwarded-For / RemoteAddr 多级回退与防伪造校验）。
  *
  * @author remi-team
  * @since 1.0.0
@@ -115,7 +116,7 @@ public class InternalApiIpFilter {
     /**
      * 获取客户端真实 IP（考虑反向代理）
      *
-     * <p>委托 {@link ServletUtils#getClientIp(HttpServletRequest)} 统一解析。
+     * <p>委托 {@link IpAddrUtils#getIpAddrWithTrustedProxies(HttpServletRequest, java.util.Set)} 统一解析。
      * <p><b>注意：</b>当前白名单仅支持<b>精确匹配</b>，不支持 CIDR / 通配符。
      * 若需要网段匹配，建议引入 {@code IPAddressString} 等工具库扩展。
      *
@@ -123,6 +124,6 @@ public class InternalApiIpFilter {
      * @return 客户端 IP 字符串
      */
     private String getClientIp(HttpServletRequest request) {
-        return ServletUtils.getClientIp(request);
+        return IpAddrUtils.getIpAddrWithTrustedProxies(request, Set.of());
     }
 }

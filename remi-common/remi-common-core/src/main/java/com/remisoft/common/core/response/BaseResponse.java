@@ -71,14 +71,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     public static final String UNKNOWN_CODE = BaseResultCode.UNKNOWN.getCode();
 
     /**
-     * 失败状态码（复用 {@link BaseResultCode#UNKNOWN}，与错误码体系保持一致）。
-     *
-     * @deprecated 使用 {@link #UNKNOWN_CODE} 替代，语义更明确
-     */
-    @Deprecated
-    public static final String ERROR = UNKNOWN_CODE;
-
-    /**
      * 国际化消息 key
      */
     public static final String MSG_OPERATION_SUCCESS = "response.success";

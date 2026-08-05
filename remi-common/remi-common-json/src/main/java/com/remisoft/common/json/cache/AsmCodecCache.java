@@ -718,12 +718,5 @@ public final class AsmCodecCache {
         double serializerHitRate,
         double deserializerHitRate
     ) {
-        /**
-         * @deprecated 使用 {@link #serializerHitRate()} 或 {@link #deserializerHitRate()} 替代
-         */
-        @Deprecated
-        public double estimatedHitRate() {
-            return (serializerHitRate + deserializerHitRate) / 2.0;
-        }
     }
 }

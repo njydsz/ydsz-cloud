@@ -1,6 +1,7 @@
 package com.remisoft.common.socket.auth;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
@@ -15,7 +16,7 @@ import com.remisoft.common.auth.token.TokenService;
 import com.remisoft.common.socket.audit.WebSocketAuditService;
 import com.remisoft.common.socket.constant.WebSocketConstants;
 import com.remisoft.common.socket.ratelimit.ConnectionLimiter;
-import com.remisoft.common.util.http.ServletUtils;
+import com.remisoft.common.util.ip.IpAddrUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,11 +74,11 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         // 审计连接建立（P2-5）
         if (auditService != null) {
             // WebSocket 握手请求为 ServerHttpRequest；当底层为 Servlet 栈（ServletServerHttpRequest）时，
-            // 委托 ServletUtils.getClientIp 统一解析（含 X-Forwarded-For 等代理头回退）；
+            // 委托 IpAddrUtils.getIpAddrWithTrustedProxies 统一解析（含 X-Forwarded-For 等代理头回退）；
             // 否则回退到原始 TCP 远端地址
             String remoteIp;
             if (request instanceof ServletServerHttpRequest servletRequest) {
-                remoteIp = ServletUtils.getClientIp(servletRequest.getServletRequest());
+                remoteIp = IpAddrUtils.getIpAddrWithTrustedProxies(servletRequest.getServletRequest(), Set.of());
             } else {
                 remoteIp = request.getRemoteAddress() != null
                         ? request.getRemoteAddress().getAddress().getHostAddress() : "unknown";

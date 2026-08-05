@@ -1,5 +1,6 @@
 package com.remisoft.common.base.interceptor;
 
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +13,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.remisoft.common.base.config.BaseTraceProperties;
-import com.remisoft.common.util.http.ServletUtils;
+import com.remisoft.common.util.ip.IpAddrUtils;
 import com.remisoft.common.util.string.StringUtils;
 
 /**
@@ -142,14 +143,14 @@ public abstract class BaseRequestLogInterceptor implements HandlerInterceptor, R
     /**
      * 获取客户端 IP 地址。
      *
-     * <p>委托 {@link ServletUtils#getClientIp} 解析，由 ServletUtils 决定
+     * <p>委托 {@link IpAddrUtils#getIpAddrWithTrustedProxies} 解析，由 IpAddrUtils 决定
      * X-Forwarded-For 等代理头与 remoteAddr 的取数优先级。
      *
      * @param request HTTP 请求，不可为 {@code null}
-     * @return 客户端 IP 地址；无法解析时返回 ServletUtils 约定的占位值
+     * @return 客户端 IP 地址；无法解析时返回 IpAddrUtils 约定的占位值
      */
     protected String getClientIp(HttpServletRequest request) {
-        return ServletUtils.getClientIp(request);
+        return IpAddrUtils.getIpAddrWithTrustedProxies(request, Set.of());
     }
 
     /**

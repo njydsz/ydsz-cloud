@@ -75,7 +75,15 @@ public class FileUtils {
              FileOutputStream fos = new FileOutputStream(destFile);
              FileChannel sourceChannel = fis.getChannel();
              FileChannel destChannel = fos.getChannel()) {
-            sourceChannel.transferTo(0, sourceChannel.size(), destChannel);
+            long position = 0;
+            long size = sourceChannel.size();
+            while (position < size) {
+                long transferred = sourceChannel.transferTo(position, size - position, destChannel);
+                if (transferred <= 0) {
+                    throw new IOException("transferTo transferred 0 bytes, possible EOF or kernel issue");
+                }
+                position += transferred;
+            }
         }
     }
 
@@ -102,7 +110,15 @@ public class FileUtils {
         try (FileChannel sourceChannel = FileChannel.open(source, StandardOpenOption.READ);
              FileChannel destChannel = FileChannel.open(dest, StandardOpenOption.CREATE,
                      StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            sourceChannel.transferTo(0, sourceChannel.size(), destChannel);
+            long position = 0;
+            long size = sourceChannel.size();
+            while (position < size) {
+                long transferred = sourceChannel.transferTo(position, size - position, destChannel);
+                if (transferred <= 0) {
+                    throw new IOException("transferTo transferred 0 bytes, possible EOF or kernel issue");
+                }
+                position += transferred;
+            }
         }
     }
 

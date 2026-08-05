@@ -48,6 +48,29 @@ public class AesGcmCrypto {
     private static final int GCM_TAG_BYTES = GCM_TAG_LENGTH / 8;
 
     /**
+     * GCM Cipher 实例缓存（按算法字符串索引，ThreadLocal 池化）。
+     *
+     * <p>每次 Cipher.getInstance() 开销较大（Provider 查找 + 算法初始化），
+     * 通过 ThreadLocal 池化复用 Cipher 实例，每次使用后 reset 为 INIT 状态。
+     *
+     * <p>注意：Cipher 对象非线程安全，因此不能跨线程共享，ThreadLocal 是合适的粒度。
+     */
+    private static final ThreadLocal<Cipher> CIPHER_POOL = ThreadLocal.withInitial(() -> {
+        try {
+            return Cipher.getInstance(TRANSFORM);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to initialize AES-GCM Cipher", e);
+        }
+    });
+
+    /**
+     * 获取本线程的 Cipher 实例。
+     */
+    private static Cipher acquireCipher() {
+        return CIPHER_POOL.get();
+    }
+
+    /**
      * 共享的线程安全 SecureRandom 实例（SecureRandom 本身是线程安全的）。
      *
      * <p>避免每个 AesGcmCrypto 实例都构造一个 SecureRandom，降低创建开销。
@@ -91,11 +114,32 @@ public class AesGcmCrypto {
      * @return Base64 编码的密文（IV || ciphertext+tag）
      */
     public String encrypt(String plaintext) {
+        return encrypt(plaintext, null);
+    }
+
+    /**
+     * 加密并返回 Base64 字符串（支持 AAD）
+     *
+     * <p>每次加密生成全新的随机 IV，确保 GCM 安全性。
+     * IV 拼接在密文头部，解密时自动提取。</p>
+     *
+     * <p>AAD（Additional Authenticated Data）用于将上下文（如用户 ID、请求 ID）
+     * 绑定到密文中，防止密文在不同上下文中被重放。
+     * AAD 不加密仅认证，解密时需传入相同的 AAD。</p>
+     *
+     * @param plaintext 明文
+     * @param aad       附加认证数据（可为 null，表示无 AAD）
+     * @return Base64 编码的密文（IV || ciphertext+tag）
+     */
+    public String encrypt(String plaintext, byte[] aad) {
         Objects.requireNonNull(plaintext, "plaintext must not be null");
         byte[] iv = generateRandomIv();
         try {
-            Cipher cipher = Cipher.getInstance(TRANSFORM);
+            Cipher cipher = acquireCipher();
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+            if (aad != null && aad.length > 0) {
+                cipher.updateAAD(aad);
+            }
             byte[] ct = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
             byte[] combined = ByteBuffer.allocate(iv.length + ct.length).put(iv).put(ct).array();
             return Base64.getEncoder().encodeToString(combined);
@@ -110,6 +154,17 @@ public class AesGcmCrypto {
      * @return 明文
      */
     public String decrypt(String base64Ciphertext) {
+        return decrypt(base64Ciphertext, null);
+    }
+
+    /**
+     * 解密 Base64 密文（支持 AAD）
+     *
+     * @param base64Ciphertext Base64 编码的密文
+     * @param aad              附加认证数据（需与加密时传入的一致，可为 null）
+     * @return 明文
+     */
+    public String decrypt(String base64Ciphertext, byte[] aad) {
         Objects.requireNonNull(base64Ciphertext, "ciphertext must not be null");
         byte[] combined = Base64.getDecoder().decode(base64Ciphertext);
         if (combined.length < IV_LENGTH + GCM_TAG_BYTES) {
@@ -120,8 +175,11 @@ public class AesGcmCrypto {
         System.arraycopy(combined, 0, iv, 0, IV_LENGTH);
         System.arraycopy(combined, IV_LENGTH, ct, 0, ct.length);
         try {
-            Cipher cipher = Cipher.getInstance(TRANSFORM);
+            Cipher cipher = acquireCipher();
             cipher.init(Cipher.DECRYPT_MODE, keySpec, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+            if (aad != null && aad.length > 0) {
+                cipher.updateAAD(aad);
+            }
             byte[] pt = cipher.doFinal(ct);
             return new String(pt, StandardCharsets.UTF_8);
         } catch (Exception e) {

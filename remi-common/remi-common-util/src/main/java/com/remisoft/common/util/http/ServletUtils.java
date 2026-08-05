@@ -294,61 +294,6 @@ public final class ServletUtils {
     }
 
     /**
-     * 获取客户端真实 IP 地址（防伪造）。
-     *
-     * <p>支持多层代理场景，按优先级依次检查以下 Header：
-     * X-Real-IP → X-Forwarded-For → Proxy-Client-IP → WL-Proxy-Client-IP → RemoteAddr
-     *
-     * <p><b>安全说明（防伪造）</b>：仅在 {@code request.getRemoteAddr()} 为可信代理
-     * （内网/回环地址，或通过 {@link #setTrustedProxies(Set)} 显式配置的代理 IP）时，
-     * 才信任上述转发头；否则直接返回 RemoteAddr，防止客户端通过伪造 Header 绕过 IP 鉴权。
-     *
-     * <p>当 X-Forwarded-For 包含多个 IP 时，取第一个（最左侧为真实客户端 IP）。
-     * 当所有 Header 均无效时，返回 RemoteAddr。
-     *
-     * @param request HTTP 请求
-     * @return 客户端 IP，不会返回 null
-     */
-    public static String getClientIp(HttpServletRequest request) {
-        if (request == null) {
-            return "0.0.0.0";
-        }
-
-        String remoteAddr = request.getRemoteAddr();
-        // 防伪造：仅当直连对端为可信代理时才信任转发头
-        if (!isTrustedProxy(remoteAddr)) {
-            return remoteAddr != null ? remoteAddr : "0.0.0.0";
-        }
-
-        String ip = request.getHeader("X-Real-IP");
-        if (isValidIp(ip)) {
-            return ip;
-        }
-
-        ip = request.getHeader(HeaderConstants.X_FORWARDED_FOR);
-        if (isValidIp(ip)) {
-            int index = ip.indexOf(',');
-            return index != -1 ? ip.substring(0, index).trim() : ip.trim();
-        }
-
-        ip = request.getHeader("Proxy-Client-IP");
-        if (isValidIp(ip)) {
-            return ip;
-        }
-
-        ip = request.getHeader("WL-Proxy-Client-IP");
-        if (isValidIp(ip)) {
-            return ip;
-        }
-
-        return remoteAddr != null ? remoteAddr : "0.0.0.0";
-    }
-
-    private static boolean isValidIp(String ip) {
-        return ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip);
-    }
-
-    /**
      * 获取请求方法
      */
     public static String getMethod(HttpServletRequest request) {

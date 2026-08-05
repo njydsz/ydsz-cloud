@@ -151,6 +151,73 @@ public final class SnowflakeUtils {
     }
 
     /**
+     * 生成一批唯一 ID（批量优化版）
+     *
+     * <p>适用于批量插入场景（如 Bulk Insert），在一次 CAS 循环中连续生成 count 个 ID，
+     * 比循环调用 {@link #nextId()} 减少 count 倍 CAS 竞争。
+     *
+     * <p><b>性能说明：</b>
+     * <ul>
+     *   <li>单次调用消耗一个 CAS（验证时间戳 + 分配连续序列段），显著优于单次生成</li>
+     *   <li>返回数组长度等于 count，调用方无需再对 ID 去重（同一分片序列号不重复）</li>
+     * </ul>
+     *
+     * @param count 生成数量（1 ~ 4096，超出范围时自动裁剪）
+     * @return count 长度的 ID 数组
+     * @throws IllegalArgumentException 当 count < 1 时抛出
+     * @since 1.4.0
+     */
+    public long[] nextIds(int count) {
+        if (count < 1) {
+            throw new IllegalArgumentException("count must be >= 1, got: " + count);
+        }
+        // 单次生成退化为 nextId() 避免 CAS 循环开销
+        if (count == 1) {
+            return new long[] { nextId() };
+        }
+
+        count = Math.min(count, (int) SEQUENCE_MASK + 1); // 上限 4096
+        int shardIndex = (int) (Thread.currentThread().threadId() & shardMask);
+        AtomicLong shardState = shardStates[shardIndex];
+        long[] ids = new long[count];
+
+        for (; ; ) {
+            long currentState = shardState.get();
+            long lastTimestamp = extractTimestamp(currentState);
+            long startSequence = extractSequence(currentState);
+            long timestamp = resolveTimestamp(lastTimestamp);
+
+            // 如果 startSequence 是 shardIndex 位置（分片首次分配），需要跳过 shardIndex
+            // 否则批量生成可能覆盖 shardIndex 分片的起始序列号
+            long nextSequence;
+            if (timestamp == lastTimestamp) {
+                nextSequence = startSequence + shardCount;
+            } else {
+                nextSequence = shardIndex;
+            }
+
+            // 检查是否有足够空间分配 count 个序列号
+            long maxSequence = nextSequence + (long) count * shardCount - 1;
+            if (maxSequence > SEQUENCE_MASK) {
+                // 空间不够，等待下一毫秒
+                timestamp = tilNextMillis(lastTimestamp);
+                nextSequence = shardIndex;
+            }
+
+            // 在单个 CAS 中一次分配 count 个序列号段
+            long endSequence = nextSequence + (long) count * shardCount;
+            long nextState = packState(timestamp, endSequence - shardCount);
+            if (shardState.compareAndSet(currentState, nextState)) {
+                // CAS 成功，按 count 个序列号组装 ID
+                for (int i = 0; i < count; i++) {
+                    ids[i] = composeId(timestamp, nextSequence + (long) i * shardCount);
+                }
+                return ids;
+            }
+        }
+    }
+
+    /**
      * 等待下一毫秒
      *
      * <p>当序列号耗尽时调用，等待到下一毫秒以重置序列号。

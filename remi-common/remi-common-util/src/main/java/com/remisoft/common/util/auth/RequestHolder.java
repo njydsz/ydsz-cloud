@@ -64,6 +64,9 @@ public class RequestHolder {
      *
      * <p>用途：补齐真实 HttpServletRequest.getHeader(...) 不可用或不完整时的上下文透传。
      * 典型用于数据权限：X-Data-Scope/X-Company-Ids/X-Dept-Ids/X-Visible-Columns 等。
+     *
+     * <p>使用 {@link TransmittableThreadLocal} 确保线程池场景下 extra headers 也能透传，
+     * 与 authInfoHolder/requestHolder 行为一致。
      */
     private static final ThreadLocal<Map<String, String>> extraHeadersHolder = new TransmittableThreadLocal<>();
 
@@ -294,6 +297,83 @@ public class RequestHolder {
                 initialized.remove();
             }
         }
+    }
+
+    /**
+     * 对当前线程的完整上下文创建不可变快照。
+     *
+     * <p>涵盖 authInfo、HttpServletRequest、extra headers 及 initialized 标记，
+     * 用于跨线程完整上下文透传（例如线程池提交任务前快照、子线程中恢复）。
+     *
+     * @return 完整上下文快照
+     * @since 1.4.0
+     */
+    public static ContextSnapshot snapshot() {
+        return new ContextSnapshot(
+                authInfoHolder.get(),
+                requestHolder.get(),
+                snapshotExtraHeaders(),
+                initialized.get()
+        );
+    }
+
+    /**
+     * 恢复完整上下文快照到当前线程。
+     *
+     * <p>与 {@link #snapshot()} 配对使用，将快照中的所有上下文恢复。
+     * 适合在线程池子线程中恢复父线程上下文。
+     *
+     * @param snapshot 上下文快照（null 时无操作）
+     * @since 1.4.0
+     */
+    public static void restore(ContextSnapshot snapshot) {
+        if (snapshot == null) {
+            return;
+        }
+        if (snapshot.authInfo != null) {
+            authInfoHolder.set(snapshot.authInfo);
+        } else {
+            authInfoHolder.remove();
+        }
+        if (snapshot.request != null) {
+            requestHolder.set(snapshot.request);
+        } else {
+            requestHolder.remove();
+        }
+        restoreExtraHeaders(snapshot.extraHeaders);
+        if (Boolean.TRUE.equals(snapshot.initialized)) {
+            initialized.set(true);
+        } else {
+            initialized.remove();
+        }
+    }
+
+    /**
+     * 完整上下文快照，包含 authInfo、request、extraHeaders 和 initialized 标记。
+     *
+     * <p>用于跨线程传递完整请求上下文。所有字段均为不可变快照，
+     * 确保快照创建后不受原始线程后续修改的影响。
+     *
+     * @since 1.4.0
+     */
+    public static final class ContextSnapshot {
+        private final AuthInfo authInfo;
+        private final HttpServletRequest request;
+        private final Map<String, String> extraHeaders;
+        private final Boolean initialized;
+
+        ContextSnapshot(AuthInfo authInfo, HttpServletRequest request,
+                        Map<String, String> extraHeaders, Boolean initialized) {
+            this.authInfo = authInfo;
+            this.request = request;
+            this.extraHeaders = extraHeaders;
+            this.initialized = initialized;
+        }
+
+        public AuthInfo getAuthInfo() { return authInfo; }
+        public HttpServletRequest getRequest() { return request; }
+        public Map<String, String> getExtraHeaders() { return extraHeaders; }
+        public Boolean getInitialized() { return initialized; }
     }
 
     /**

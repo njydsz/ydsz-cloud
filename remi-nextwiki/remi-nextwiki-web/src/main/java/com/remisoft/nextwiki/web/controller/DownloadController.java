@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -26,7 +27,7 @@ import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.file.storage.IFileStorage;
 import com.remisoft.common.permission.PermissionCodes;
 import com.remisoft.common.safe.util.ClientIpResolver;
-import com.remisoft.common.util.http.ServletUtils;
+import com.remisoft.common.util.ip.IpAddrUtils;
 import com.remisoft.nextwiki.domain.entity.FileNode;
 import com.remisoft.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.remisoft.nextwiki.server.health.NextwikiHealthIndicator;
@@ -393,7 +394,7 @@ public class DownloadController {
      * 解析客户端真实 IP（多级降级）。
      *
      * <p>优先使用 common-safe 模块的 {@link ClientIpResolver}，若不可用则降级为
-     * {@link ServletUtils#getClientIp(HttpServletRequest)} 统一解析。
+     * {@link IpAddrUtils#getIpAddrWithTrustedProxies(HttpServletRequest, Set)} 统一解析。
      *
      * @param request HTTP 请求
      * @return 客户端 IP
@@ -403,8 +404,8 @@ public class DownloadController {
         if (clientIpResolver != null) {
             return ClientIpResolver.getClientIp(request);
         }
-        // 降级到 ServletUtils 统一解析
-        return ServletUtils.getClientIp(request);
+        // 降级到 IpAddrUtils 统一解析
+        return IpAddrUtils.getIpAddrWithTrustedProxies(request, Set.of());
     }
 
     /**

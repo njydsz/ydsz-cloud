@@ -804,17 +804,9 @@ public class RemiJson {
             double deserializerHitRate,
             int maxDepth,
             int maxGenericDepth,
-            long maxJsonSize,
-            boolean safeMode
+        long maxJsonSize,
+        boolean safeMode
     ) {
-        /**
-         * @deprecated 使用 {@link #serializerHitRate()} 或 {@link #deserializerHitRate()} 替代
-         */
-        @Deprecated
-        public double asmCacheHitRate() {
-            return (serializerHitRate + deserializerHitRate) / 2.0;
-        }
-
         @Override
         public String toString() {
             return "JsonStats{" +
