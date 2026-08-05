@@ -7,7 +7,7 @@ import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
-import com.remisoft.common.exception.registry.YdszResultCode;
+import com.remisoft.common.exception.registry.RemiResultCode;
 
 /**
  * AI 智能体模块异常码枚举。
@@ -28,7 +28,7 @@ import com.remisoft.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "agent", description = "AI Agent")
+@RemiResultCode(module = "agent", description = "AI Agent")
 public enum AgentResultCode implements ExceptionCode {
 
     // ==================== B94001-B94099 Agent 定义/执行 ====================

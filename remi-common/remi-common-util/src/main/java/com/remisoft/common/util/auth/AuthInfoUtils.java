@@ -34,7 +34,7 @@ import com.remisoft.common.domain.enums.IdentityType;
  * </ul>
  *
  * @see AuthInfo
- * @see YdszAuthInfo
+ * @see RemiAuthInfo
  * @see RequestHolder
  *
  * @author remi-team
@@ -165,7 +165,7 @@ public class AuthInfoUtils {
      * 
      */
     public static Set<String> getHasPermissionCompanyIds() {
-        YdszAuthInfo auth = getYdszAuthInfo();
+        RemiAuthInfo auth = getRemiAuthInfo();
         return (auth != null && auth.getHasPermissionCompanyIds() != null)
                 ? auth.getHasPermissionCompanyIds() : Collections.emptySet();
     }
@@ -181,7 +181,7 @@ public class AuthInfoUtils {
      * 
      */
     public static Set<String> getHasPermissionDeptIds() {
-        YdszAuthInfo auth = getYdszAuthInfo();
+        RemiAuthInfo auth = getRemiAuthInfo();
         return (auth != null && auth.getHasPermissionDeptIds() != null)
                 ? auth.getHasPermissionDeptIds() : Collections.emptySet();
     }
@@ -197,7 +197,7 @@ public class AuthInfoUtils {
      * 
      */
     public static Set<String> getHasPermissionProjectIds() {
-        YdszAuthInfo auth = getYdszAuthInfo();
+        RemiAuthInfo auth = getRemiAuthInfo();
         return (auth != null && auth.getHasPermissionProjectIds() != null)
                 ? auth.getHasPermissionProjectIds() : Collections.emptySet();
     }
@@ -213,7 +213,7 @@ public class AuthInfoUtils {
      * 
      */
     public static Set<String> getHasPermissionRegionIds() {
-        YdszAuthInfo auth = getYdszAuthInfo();
+        RemiAuthInfo auth = getRemiAuthInfo();
         return (auth != null && auth.getHasPermissionRegionIds() != null)
                 ? auth.getHasPermissionRegionIds() : Collections.emptySet();
     }
@@ -221,16 +221,16 @@ public class AuthInfoUtils {
     /**
      * 获取公司级认证信息。
      *
-     * <p>类型转换为 YdszAuthInfo，以访问行级权限维度ID集合（companyIds/deptIds/projectIds/regionIds）。
+     * <p>类型转换为 RemiAuthInfo，以访问行级权限维度ID集合（companyIds/deptIds/projectIds/regionIds）。
      *
-     * @return YdszAuthInfo；若非该类型或未写入则返回 null
-     * @see YdszAuthInfo
+     * @return RemiAuthInfo；若非该类型或未写入则返回 null
+     * @see RemiAuthInfo
      * @author remi-team
      * @since 1.0.0
      * 
      */
-    public static YdszAuthInfo getYdszAuthInfo() {
-        return RequestHolder.getYdszAuthInfo();
+    public static RemiAuthInfo getRemiAuthInfo() {
+        return RequestHolder.getRemiAuthInfo();
     }
 
     /**

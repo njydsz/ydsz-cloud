@@ -1,2 +1,2 @@
-com.remisoft.common.cache.spring.YdszCacheAutoConfiguration
+com.remisoft.common.cache.spring.RemiCacheAutoConfiguration
 com.remisoft.common.cache.metrics.CacheMetricsAutoConfiguration

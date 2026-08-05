@@ -145,7 +145,7 @@
 
 | 注解 | 说明 |
 |---|---|
-| `@EnableYdszNotify` | 通知模块自动装配入口，`@Import(NotifyConfiguration.class)` |
+| `@EnableRemiNotify` | 通知模块自动装配入口，`@Import(NotifyConfiguration.class)` |
 
 ## 接入方式
 
@@ -160,15 +160,15 @@
 
 ### 2. 启用通知模块
 
-在启动类或配置类上标注 `@EnableYdszNotify`：
+在启动类或配置类上标注 `@EnableRemiNotify`：
 
 ```java
-import com.remisoft.common.notify.annotation.EnableYdszNotify;
+import com.remisoft.common.notify.annotation.EnableRemiNotify;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EnableYdszNotify
+@EnableRemiNotify
 public class MyApplication {
     public static void main(String[] args) {
         SpringApplication.run(MyApplication.class, args);
@@ -176,7 +176,7 @@ public class MyApplication {
 }
 ```
 
-> `NotifyConfiguration` 默认 `matchIfMissing = true`，未显式标注 `@EnableYdszNotify` 且类路径存在 `httpclient5` 时也会自动装配。建议显式标注以提升可读性。
+> `NotifyConfiguration` 默认 `matchIfMissing = true`，未显式标注 `@EnableRemiNotify` 且类路径存在 `httpclient5` 时也会自动装配。建议显式标注以提升可读性。
 
 ### 3. 注入 NotifyService 或 NotifyHelper
 

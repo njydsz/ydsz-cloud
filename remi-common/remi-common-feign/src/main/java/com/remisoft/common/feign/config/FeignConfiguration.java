@@ -19,8 +19,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import com.remisoft.common.feign.aspect.FeignRequestInterceptor;
-import com.remisoft.common.feign.aspect.YdszFeignErrorDecoder;
-import com.remisoft.common.feign.aspect.YdszFeignLogger;
+import com.remisoft.common.feign.aspect.RemiFeignErrorDecoder;
+import com.remisoft.common.feign.aspect.RemiFeignLogger;
 import com.remisoft.common.feign.circuitbreaker.CircuitBreakerStatePersistence;
 import com.remisoft.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
 import com.remisoft.common.feign.codec.JsonDecoder;
@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 /**
- * YdszFeign 自动配置类。
+ * RemiFeign 自动配置类。
  *
  * <p>提供 Feign 客户端的全局默认配置，包括：
  * <ul>
@@ -71,7 +71,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  *
  * @see FeignProperties
  * @see FeignRequestInterceptor
- * @see YdszFeignErrorDecoder
+ * @see RemiFeignErrorDecoder
  */
 @Slf4j
 @AutoConfiguration
@@ -81,17 +81,17 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 public class FeignConfiguration {
 
     /**
-     * 创建 YdszFeign 日志处理器。
+     * 创建 RemiFeign 日志处理器。
      * <p>
      * 相比 Feign 默认日志处理器，提供了更丰富的上下文信息，
      * 包括请求耗时、响应状态等，便于问题排查。
      *
-     * @return YdszFeignLogger 实例
+     * @return RemiFeignLogger 实例
      */
     @Bean
     @ConditionalOnMissingBean
     public Logger feignLogger() {
-        return new YdszFeignLogger();
+        return new RemiFeignLogger();
     }
 
     /**
@@ -149,7 +149,7 @@ public class FeignConfiguration {
     @Bean
     @ConditionalOnMissingBean(ErrorDecoder.class)
     public ErrorDecoder errorDecoder(FeignProperties feignProperties) {
-        return new YdszFeignErrorDecoder(feignProperties);
+        return new RemiFeignErrorDecoder(feignProperties);
     }
 
     /**

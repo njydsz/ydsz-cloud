@@ -43,25 +43,25 @@ import com.remisoft.common.cache.support.Weigher;
  *
  * <pre>{@code
  * // 简单缓存（默认 TINYLFU）
- * Cache<String, User> cache = YdszCache.newBuilder()
+ * Cache<String, User> cache = RemiCache.newBuilder()
  *     .maximumSize(1000)
  *     .build();
  *
  * // LRU 缓存
- * Cache<String, User> lruCache = YdszCache.newBuilder()
+ * Cache<String, User> lruCache = RemiCache.newBuilder()
  *     .type(CacheType.LRU)
  *     .maximumSize(1000)
  *     .build();
  *
  * // 带写穿透的高性能缓存
- * Cache<String, User> writeThroughCache = YdszCache.newBuilder()
+ * Cache<String, User> writeThroughCache = RemiCache.newBuilder()
  *     .type(CacheType.STRIPED)
  *     .maximumSize(10000)
  *     .writer(userCacheWriter)
  *     .build();
  *
  * // 自动加载缓存
- * LoadingCache<String, User> loadingCache = YdszCache.newBuilder()
+ * LoadingCache<String, User> loadingCache = RemiCache.newBuilder()
  *     .type(CacheType.ENHANCED_LOADING)
  *     .maximumSize(10000)
  *     .refreshAfterWrite(5, TimeUnit.MINUTES)
@@ -182,7 +182,7 @@ public final class CacheBuilder<K, V> {
   /** 软引用值标志（与 type 正交，不覆盖 type） */
   private boolean softValuesFlag = false;
 
-  /** 私有构造函数，通过 YdszCache.newBuilder() 创建 */
+  /** 私有构造函数，通过 RemiCache.newBuilder() 创建 */
   private CacheBuilder() {}
 
   /**

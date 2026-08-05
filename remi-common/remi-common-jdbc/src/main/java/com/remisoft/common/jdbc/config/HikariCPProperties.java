@@ -93,7 +93,7 @@ public class HikariCPProperties {
     /**
      * 连接池名称（用于日志和监控）
      */
-    private String poolName = "YdszHikariCP-Pool";
+    private String poolName = "RemiHikariCP-Pool";
 
     /**
      * 是否注册 MBeans 用于 JMX 监控

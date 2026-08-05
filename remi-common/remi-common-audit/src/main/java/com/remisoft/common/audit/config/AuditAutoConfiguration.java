@@ -45,7 +45,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 /**
  * 审计模块自动配置
  * <p>
- * 通过 {@code @EnableYdszAudit} 启用审计模块后，自动注册以下核心 Bean：
+ * 通过 {@code @EnableRemiAudit} 启用审计模块后，自动注册以下核心 Bean：
  * <ul>
  *   <li>{@link AuditAspect}：审计切面，拦截 {@link com.remisoft.common.audit.annotation.Audit} 注解</li>
  *   <li>{@link AuditTemplateProcessor}：SpEL 模板解析器</li>

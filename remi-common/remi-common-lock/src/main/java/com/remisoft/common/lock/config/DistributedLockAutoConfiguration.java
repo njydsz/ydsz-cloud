@@ -23,7 +23,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import com.remisoft.common.lock.aspect.DistributedScheduledAspect;
 import com.remisoft.common.lock.aspect.IdempotentAspect;
 import com.remisoft.common.lock.aspect.RepeatSubmitAspect;
-import com.remisoft.common.lock.aspect.YdszDistributedLockAspect;
+import com.remisoft.common.lock.aspect.RemiDistributedLockAspect;
 import com.remisoft.common.lock.health.LockHealthIndicator;
 import com.remisoft.common.lock.idempotent.IdempotentStrategy;
 import com.remisoft.common.lock.idempotent.RedisIdempotentStrategy;
@@ -120,9 +120,9 @@ public class DistributedLockAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public YdszDistributedLockAspect distributedLockAspect(LockStrategy lockStrategy, LockMetrics lockMetrics,
+    public RemiDistributedLockAspect distributedLockAspect(LockStrategy lockStrategy, LockMetrics lockMetrics,
                                                            LockProperties lockProperties) {
-        YdszDistributedLockAspect aspect = new YdszDistributedLockAspect(lockStrategy, lockProperties.isFallbackEnabled());
+        RemiDistributedLockAspect aspect = new RemiDistributedLockAspect(lockStrategy, lockProperties.isFallbackEnabled());
         aspect.setLockMetrics(lockMetrics);
         return aspect;
     }

@@ -44,7 +44,7 @@ public final class OtelResources {
     /**
      * 创建 REMI 标准 Resource
      */
-    public static Resource create(YdszResourceConfig config) {
+    public static Resource create(RemiResourceConfig config) {
         try {
             AttributesBuilder attrs = Attributes.builder();
 
@@ -109,7 +109,7 @@ public final class OtelResources {
      * 使用默认配置创建
      */
     public static Resource createDefault(String serviceName) {
-        return create(YdszResourceConfig.builder().serviceName(serviceName).build());
+        return create(RemiResourceConfig.builder().serviceName(serviceName).build());
     }
 
     // ============================================================================
@@ -118,7 +118,7 @@ public final class OtelResources {
 
     @Data
     @Builder
-    public static class YdszResourceConfig {
+    public static class RemiResourceConfig {
         /** 服务名 */
         @Builder.Default
         private String serviceName = "remi-unknown";

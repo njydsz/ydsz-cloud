@@ -59,7 +59,7 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.remisoft.common.exception.custom.AbstractYdszException",
+    "name": "com.remisoft.common.exception.custom.AbstractRemiException",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
@@ -79,7 +79,7 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.remisoft.common.exception.custom.YdszSecurityException",
+    "name": "com.remisoft.common.exception.custom.RemiSecurityException",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },

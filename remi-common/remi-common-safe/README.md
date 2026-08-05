@@ -163,7 +163,7 @@
 |---|---|
 | `ClientIpResolver` | 统一客户端 IP 解析（多级代理 + 内网判断） |
 | `CachedBodyHttpServletRequestWrapper` | 请求体缓存包装器（多次读取） |
-| `@EnableYdszSafe` | 启用 remi 安全模块自动装配（显式开启所有过滤器和 AOP 切面） |
+| `@EnableRemiSafe` | 启用 remi 安全模块自动装配（显式开启所有过滤器和 AOP 切面） |
 
 ## 接入方式
 
@@ -200,15 +200,15 @@ remi:
 
 ### 3. 代码启用
 
-在 Spring Boot 主类上添加 `@EnableYdszSafe` 注解即可启用安全模块自动装配：
+在 Spring Boot 主类上添加 `@EnableRemiSafe` 注解即可启用安全模块自动装配：
 
 ```java
-import com.remisoft.common.safe.annotation.EnableYdszSafe;
+import com.remisoft.common.safe.annotation.EnableRemiSafe;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EnableYdszSafe
+@EnableRemiSafe
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

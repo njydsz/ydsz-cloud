@@ -11,7 +11,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.queue.constant.YdszMessageTopics;
+import com.remisoft.common.queue.constant.RemiMessageTopics;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.util.id.SnowflakeUtils;
 import com.remisoft.common.json.RemiJson;
@@ -49,7 +49,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
     private static final String TAG_LOW = "LOW";
 
     /**
-     * 同步发送消息到 {@link YdszMessageTopics#TOPIC_MESSAGE}。
+     * 同步发送消息到 {@link RemiMessageTopics#TOPIC_MESSAGE}。
      *
      * @param req 消息请求
      * @return RocketMQ 消息 ID
@@ -136,7 +136,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
     private String buildDestination(MessageRequest req) {
         String priority = req.getPriority();
         String tag = resolvePriorityTag(priority);
-        return YdszMessageTopics.TOPIC_MESSAGE + ":" + tag;
+        return RemiMessageTopics.TOPIC_MESSAGE + ":" + tag;
     }
 
     /**

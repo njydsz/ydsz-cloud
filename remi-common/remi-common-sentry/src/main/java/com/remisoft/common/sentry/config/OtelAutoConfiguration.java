@@ -9,8 +9,8 @@ import com.remisoft.common.sentry.tracing.otel.OtelResources;
 import com.remisoft.common.sentry.tracing.otel.OtelSamplers;
 import com.remisoft.common.sentry.tracing.otel.OtelSdkBuilder;
 import com.remisoft.common.sentry.tracing.otel.TailSamplingSpanProcessor;
-import com.remisoft.common.sentry.tracing.otel.YdszOpenTelemetry;
-import com.remisoft.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
+import com.remisoft.common.sentry.tracing.otel.RemiOpenTelemetry;
+import com.remisoft.common.sentry.tracing.otel.RemiSpanEnrichmentProcessor;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>当 remi.sentry.tracing.otel.enabled=true 时激活，根据配置自动构建 OTel SDK 并
  * 注册到 GlobalOpenTelemetry。同时按需注册：
  * <ul>
- *   <li>{@link YdszSpanEnrichmentProcessor}：自动注入 REMI 业务属性</li>
+ *   <li>{@link RemiSpanEnrichmentProcessor}：自动注入 REMI 业务属性</li>
  *   <li>{@link TailSamplingSpanProcessor}：尾部采样（错误/慢请求/灰度100%采集）</li>
  *   <li>{@link ErrorEventSpanProcessor}：错误/慢 Span 事件发布</li>
  * </ul>
@@ -117,7 +117,7 @@ public class OtelAutoConfiguration {
     }
 
     /**
-     * 兜底提供 {@link OpenTelemetry} 实例，来源于 {@link YdszOpenTelemetry} 持有的全局单例。
+     * 兜底提供 {@link OpenTelemetry} 实例，来源于 {@link RemiOpenTelemetry} 持有的全局单例。
      *
      * <p>仅当容器中不存在名为 {@code remiOtelOpenTelemetry} 的 Bean 时生效，避免与
      * opentelemetry-spring-boot-starter 等第三方自动配置冲突。若 SDK 尚未通过
@@ -128,7 +128,7 @@ public class OtelAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "remiOtelOpenTelemetry")
     public OpenTelemetry remiOtelOpenTelemetry() {
-        return YdszOpenTelemetry.openTelemetry();
+        return RemiOpenTelemetry.openTelemetry();
     }
 
     /**
@@ -160,7 +160,7 @@ public class OtelAutoConfiguration {
             SentryProperties.OtelConfig otelConfig = tracingConfig.getOtel();
 
             // 1) Resource
-            Resource resource = OtelResources.create(OtelResources.YdszResourceConfig.builder()
+            Resource resource = OtelResources.create(OtelResources.RemiResourceConfig.builder()
                     .serviceName(otelConfig.getServiceName() != null
                             ? otelConfig.getServiceName() : sentryProperties.getAppName())
                     .serviceVersion(otelConfig.getServiceVersion() != null
@@ -181,8 +181,8 @@ public class OtelAutoConfiguration {
 
             // 3.1) REMI 自动注入
             if (otelConfig.isEnrichmentEnabled()) {
-                builder.addProcessor(new YdszSpanEnrichmentProcessor(
-                        YdszSpanEnrichmentProcessor.EnrichmentConfig.builder()
+                builder.addProcessor(new RemiSpanEnrichmentProcessor(
+                        RemiSpanEnrichmentProcessor.EnrichmentConfig.builder()
                                 .enabled(true)
                                 .sources(otelConfig.getEnrichmentSources())
                                 .build()));

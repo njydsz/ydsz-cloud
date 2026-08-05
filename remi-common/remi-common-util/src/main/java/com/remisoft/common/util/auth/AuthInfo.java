@@ -19,9 +19,9 @@ import com.remisoft.common.domain.enums.IdentityType;
  * </ul>
  *
  * <p>实现类应通过 {@link RequestHolder} 写入 ThreadLocal，供全链路下游读取。
- * 推荐使用实现类 {@link YdszAuthInfo}。
+ * 推荐使用实现类 {@link RemiAuthInfo}。
  *
- * @see YdszAuthInfo
+ * @see RemiAuthInfo
  * @see RequestHolder
  * @see AuthInfoUtils
  *

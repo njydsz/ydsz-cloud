@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.queue.constant.YdszMessageTopics;
+import com.remisoft.common.queue.constant.RemiMessageTopics;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.queue.domain.QueueMessage;
 import com.remisoft.common.queue.enums.QueueType;
@@ -53,8 +53,8 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
         }
         IMessageQueue queue = provider.createMessageQueue(
                 QueueType.ROCKET);
-        this.publisher = queue.createPublisher(YdszMessageTopics.TOPIC_MESSAGE);
-        log.info("[CommonQueueMQ] 使用 common-queue 抽象发送消息, topic={}", YdszMessageTopics.TOPIC_MESSAGE);
+        this.publisher = queue.createPublisher(RemiMessageTopics.TOPIC_MESSAGE);
+        log.info("[CommonQueueMQ] 使用 common-queue 抽象发送消息, topic={}", RemiMessageTopics.TOPIC_MESSAGE);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
         QueueMessage message = QueueMessage.of(payload);
         message.addHeader("messageId", req.getMessageId());
         message.addHeader("channel", req.getChannel());
-        message.addHeader("topic", YdszMessageTopics.TOPIC_MESSAGE);
+        message.addHeader("topic", RemiMessageTopics.TOPIC_MESSAGE);
         publisher.publish(message);
         log.info("[CommonQueueMQ] syncSend OK: messageId={} channel={}", req.getMessageId(), req.getChannel());
         return req.getMessageId();

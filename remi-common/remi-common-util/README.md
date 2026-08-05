@@ -100,7 +100,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `AuthInfo` / `YdszAuthInfo` | 认证信息载体接口与实现 |
+| `AuthInfo` / `RemiAuthInfo` | 认证信息载体接口与实现 |
 | `AuthInfoUtils` | 认证信息工具 |
 | `RequestHolder` | 请求持有者（Servlet Request 静态访问） |
 

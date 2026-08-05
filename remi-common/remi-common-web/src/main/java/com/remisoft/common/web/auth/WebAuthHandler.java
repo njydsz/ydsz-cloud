@@ -3,7 +3,7 @@ package com.remisoft.common.web.auth;
 import org.springframework.stereotype.Component;
 
 import com.remisoft.common.auth.handler.AbstractAuthHandler;
-import com.remisoft.common.util.auth.YdszAuthInfo;
+import com.remisoft.common.util.auth.RemiAuthInfo;
 
 /**
  * Web 端认证信息处理器
@@ -21,7 +21,7 @@ import com.remisoft.common.util.auth.YdszAuthInfo;
 public class WebAuthHandler extends AbstractAuthHandler {
 
     @Override
-    protected YdszAuthInfo createAuthInfo() {
+    protected RemiAuthInfo createAuthInfo() {
         return new WebAuthInfo();
     }
 }

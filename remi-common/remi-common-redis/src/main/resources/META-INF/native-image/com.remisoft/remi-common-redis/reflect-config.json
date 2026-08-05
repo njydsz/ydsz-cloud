@@ -1,6 +1,6 @@
 [
   {
-    "name": "com.remisoft.common.redis.serializer.YdszJsonRedisSerializer",
+    "name": "com.remisoft.common.redis.serializer.RemiJsonRedisSerializer",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true
   },

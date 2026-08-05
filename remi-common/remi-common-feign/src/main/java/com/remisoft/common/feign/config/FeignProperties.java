@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * YdszFeign 模块配置属性类。
+ * RemiFeign 模块配置属性类。
  *
  * <p>提供对 Feign 客户端各项行为的细粒度配置控制：
  * <ul>

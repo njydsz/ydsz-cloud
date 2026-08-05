@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.remisoft.common.auth.model.UserInfo;
 import com.remisoft.common.auth.token.TokenService;
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.safe.sensitive.SensitiveUtil;
@@ -126,7 +126,7 @@ public class CachedJwtValidator {
         this.gatewayMetrics = gatewayMetrics;
         this.redisTemplate = redisTemplateProvider.getIfAvailable();
         this.messageListenerContainer = listenerContainerProvider.getIfAvailable();
-        this.claimsCache = YdszCache.<String, Optional<UserInfo>>newBuilder()
+        this.claimsCache = RemiCache.<String, Optional<UserInfo>>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(CACHE_TTL_SECONDS, TimeUnit.SECONDS)
                 .maximumSize(CACHE_MAX_SIZE)

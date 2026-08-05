@@ -32,7 +32,7 @@ class ExceptionMetricsTest {
     }
 
     @Test
-    @DisplayName("recordException() 正确记录 AbstractYdszException 的 tag")
+    @DisplayName("recordException() 正确记录 AbstractRemiException 的 tag")
     void testRecordBusinessException() {
         BusinessException ex = new BusinessException(UnifiedExceptionCode.NOT_FOUND);
         exceptionMetrics.recordException(ex);
@@ -46,7 +46,7 @@ class ExceptionMetricsTest {
     }
 
     @Test
-    @DisplayName("recordException() 记录非 AbstractYdszException 时 tag 为 UNKNOWN/N/A")
+    @DisplayName("recordException() 记录非 AbstractRemiException 时 tag 为 UNKNOWN/N/A")
     void testRecordGenericException() {
         RuntimeException ex = new RuntimeException("something went wrong");
         exceptionMetrics.recordException(ex);

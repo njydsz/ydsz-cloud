@@ -4,7 +4,7 @@ import com.remisoft.common.auth.config.AuthProperties;
 import com.remisoft.common.auth.model.ColumnScopeInfo;
 import com.remisoft.common.auth.service.ColumnPermissionResolver;
 import com.remisoft.common.auth.service.RbacUserInfoService;
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.cache.listener.RemovalCause;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * @since 1.0.0
  * 
  * @see ColumnPermissionResolver
- * @see YdszCache
+ * @see RemiCache
  */
 public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolver {
 
@@ -63,9 +63,9 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     private Cache<String, ColumnScopeInfo> buildCache() {
         Integer ttlSeconds = properties.getRoleColumnCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return YdszCache.<String, ColumnScopeInfo>newBuilder().build();
+            return RemiCache.<String, ColumnScopeInfo>newBuilder().build();
         }
-        return YdszCache.<String, ColumnScopeInfo>newBuilder()
+        return RemiCache.<String, ColumnScopeInfo>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, ColumnScopeInfo value, RemovalCause cause) -> {

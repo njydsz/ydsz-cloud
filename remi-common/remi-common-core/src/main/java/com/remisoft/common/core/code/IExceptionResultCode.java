@@ -18,7 +18,7 @@ package com.remisoft.common.core.code;
  *
  * <p><b>典型实现：</b></p>
  * <pre>{@code
- * public abstract class AbstractYdszException extends RuntimeException implements IExceptionResultCode {
+ * public abstract class AbstractRemiException extends RuntimeException implements IExceptionResultCode {
  *     private final ResultCode resultCode;
  *
  *     {@literal @}Override

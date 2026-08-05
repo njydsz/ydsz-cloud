@@ -35,7 +35,7 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-json</artifactId>
         </dependency>
-        <!-- P1-1: 审计模块（@EnableYdszAudit + @Audit AOP 切面） -->
+        <!-- P1-1: 审计模块（@EnableRemiAudit + @Audit AOP 切面） -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-audit</artifactId>

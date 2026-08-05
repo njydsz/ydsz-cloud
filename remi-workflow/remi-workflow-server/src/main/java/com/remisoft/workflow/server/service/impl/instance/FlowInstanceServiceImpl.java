@@ -30,7 +30,7 @@ import com.remisoft.common.event.service.OutboxService;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.assembler.NameAssembler;
 import com.remisoft.common.feign.assembler.NameType;
-import com.remisoft.common.lock.annotation.YdszDistributedLock;
+import com.remisoft.common.lock.annotation.RemiDistributedLock;
 import com.remisoft.common.security.DataScopeHelper;
 import com.remisoft.common.security.LoginUser;
 import com.remisoft.common.json.RemiJson;
@@ -104,7 +104,7 @@ import org.slf4j.MDC;
  * <p><b>并发控制：</b>
  * <ul>
  *   <li>悲观锁：{@link #start} 通过 {@code SELECT ... FOR UPDATE} 锁住业务行，避免同 business 并发启动</li>
- *   <li>分布式锁：{@link YdszDistributedLock} 注解保护关键操作（如「同发起人同时只能有一个流程」）</li>
+ *   <li>分布式锁：{@link RemiDistributedLock} 注解保护关键操作（如「同发起人同时只能有一个流程」）</li>
  *   <li>乐观锁：{@link FlowInstance} 继承 {@code revision} 字段，并发更新自动重试</li>
  * </ul>
  *
@@ -377,7 +377,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void terminate(String instanceId, String reason) {
         FlowInstance instance = getByIdOrThrow(instanceId);
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
@@ -471,7 +471,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void suspend(String instanceId) {
         FlowInstance instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
@@ -495,7 +495,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void activate(String instanceId) {
         FlowInstance instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.SUSPENDED.name().equals(instance.getFlowStatus())) {
@@ -519,7 +519,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void complete(String instanceId, String endNodeCode) {
         FlowInstance instance = getByIdOrThrow(instanceId);
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
@@ -600,7 +600,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public boolean recall(String instanceId, String initiatorId) {
         FlowInstance instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可撤回
@@ -681,7 +681,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public boolean recall(String instanceId, String initiatorId, String targetNodeCode) {
         // 向后兼容：targetNodeCode 为空时降级到原有 recall
         if (!StringUtils.hasText(targetNodeCode)) {
@@ -767,7 +767,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public boolean rollback(String instanceId, String operatorId, String reason, int maxRollbackDays) {
         FlowInstance instance = getByIdOrThrow(instanceId);
 
@@ -1595,7 +1595,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public String resubmit(String instanceId, String initiatorId,
                            Map<String, Object> variables, String comment) {
         FlowInstance instance = getByIdOrThrow(instanceId);
@@ -1658,7 +1658,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    @RemiDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public String resubmit(String instanceId, String initiatorId,
                            Map<String, Object> variables, String comment, String redoMode) {
         String mode = (redoMode == null || redoMode.isBlank()) ? "RESTART" : redoMode.toUpperCase();

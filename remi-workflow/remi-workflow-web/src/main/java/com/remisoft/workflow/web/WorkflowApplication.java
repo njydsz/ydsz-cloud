@@ -6,10 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.remisoft.common.audit.annotation.EnableYdszAudit;
-import com.remisoft.common.auth.annotation.EnableYdszAuth;
-import com.remisoft.common.feign.annotation.EnableYdszFeign;
-import com.remisoft.common.safe.annotation.EnableYdszSafe;
+import com.remisoft.common.audit.annotation.EnableRemiAudit;
+import com.remisoft.common.auth.annotation.EnableRemiAuth;
+import com.remisoft.common.feign.annotation.EnableRemiFeign;
+import com.remisoft.common.safe.annotation.EnableRemiSafe;
 
 /**
  * 工作流服务启动类
@@ -29,10 +29,10 @@ import com.remisoft.common.safe.annotation.EnableYdszSafe;
  */
 @SpringBootApplication(scanBasePackages = {"com.remisoft.workflow", "com.remisoft.common", "com.remisoft.literule"})
 @EnableDiscoveryClient
-@EnableYdszAudit
-@EnableYdszAuth
-@EnableYdszSafe
-@EnableYdszFeign(basePackages = {"com.remisoft.workflow.api", "com.remisoft.common.feign", "com.remisoft.userinfo.api", "com.remisoft.literule.api", "com.remisoft.system.api", "com.remisoft.agent.api"})
+@EnableRemiAudit
+@EnableRemiAuth
+@EnableRemiSafe
+@EnableRemiFeign(basePackages = {"com.remisoft.workflow.api", "com.remisoft.common.feign", "com.remisoft.userinfo.api", "com.remisoft.literule.api", "com.remisoft.system.api", "com.remisoft.agent.api"})
 @MapperScan({"com.remisoft.workflow.infra.mapper", "com.remisoft.literule.infra.mapper"})
 @EnableScheduling
 public class WorkflowApplication {

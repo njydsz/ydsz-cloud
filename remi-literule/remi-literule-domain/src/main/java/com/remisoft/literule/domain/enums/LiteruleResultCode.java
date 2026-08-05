@@ -6,7 +6,7 @@ import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.remisoft.common.exception.registry.YdszResultCode;
+import com.remisoft.common.exception.registry.RemiResultCode;
 
 /**
  * 轻量规则引擎模块异常码枚举。
@@ -26,7 +26,7 @@ import com.remisoft.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "literule", description = "规则引擎")
+@RemiResultCode(module = "literule", description = "规则引擎")
 public enum LiteruleResultCode implements ExceptionCode {
 
     // ==================== B93001-B93099 规则定义 ====================

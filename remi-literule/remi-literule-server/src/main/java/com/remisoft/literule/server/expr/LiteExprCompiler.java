@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 
@@ -48,7 +48,7 @@ public class LiteExprCompiler {
      *   <li>线程安全，{@code get(key, mapper)} 原子加载，避免 {@code computeIfAbsent} 的重入陷阱</li>
      * </ul>
      */
-    private final Cache<String, ExprNode> cache = YdszCache.<String, ExprNode>newBuilder()
+    private final Cache<String, ExprNode> cache = RemiCache.<String, ExprNode>newBuilder()
             .type(CacheType.STRIPED)
             .maximumSize(MAX_CACHE_SIZE)
             .expireAfterAccess(CACHE_EXPIRE_HOURS, TimeUnit.HOURS)

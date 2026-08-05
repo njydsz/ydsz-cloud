@@ -51,14 +51,14 @@
 
 | 类 | 说明 |
 |---|---|
-| `YdszOpenTelemetry` | OTel SDK 入口 |
+| `RemiOpenTelemetry` | OTel SDK 入口 |
 | `OtelSdkBuilder` | SDK 构建器 |
 | `OtelResources` | Resource 属性构建（service.name / namespace / instance.id / version） |
 | `OtelSamplers` | 采样器工厂（always-on / always-off / ratio / parent-based / composite） |
 | `OtelExporterFactory` | Exporter 工厂 |
 | `OtelSemConv` | 语义约定常量 |
-| `YdszSpan` | Span 包装器 |
-| `YdszSpanEnrichmentProcessor` | Span 属性自动注入（MDC / RequestContext / env） |
+| `RemiSpan` | Span 包装器 |
+| `RemiSpanEnrichmentProcessor` | Span 属性自动注入（MDC / RequestContext / env） |
 | `ErrorEventSpanProcessor` | 错误事件 Span 处理器 |
 | `TailSamplingSpanProcessor` | 尾部采样处理器（错误 100% / 慢请求 100% / 灰度标签 100% / 压测 100% / 其他按 ratio） |
 

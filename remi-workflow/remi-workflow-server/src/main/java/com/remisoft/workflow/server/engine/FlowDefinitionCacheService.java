@@ -13,7 +13,7 @@ import com.remisoft.common.json.RemiJson;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.security.TenantContext;
@@ -79,17 +79,17 @@ public class FlowDefinitionCacheService {
         this.flowNodeMapper = flowNodeMapper;
         this.flowSkipMapper = flowSkipMapper;
         this.broadcaster = broadcaster;
-        this.nodeCache = YdszCache.<String, List<FlowNode>>newBuilder()
+        this.nodeCache = RemiCache.<String, List<FlowNode>>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
                 .build();
-        this.skipCache = YdszCache.<String, List<FlowSkip>>newBuilder()
+        this.skipCache = RemiCache.<String, List<FlowSkip>>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
                 .build();
-        this.skipSourceRefIndexCache = YdszCache.<String, Map<String, List<FlowSkip>>>newBuilder()
+        this.skipSourceRefIndexCache = RemiCache.<String, Map<String, List<FlowSkip>>>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)

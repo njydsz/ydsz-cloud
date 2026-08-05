@@ -23,10 +23,10 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>降级策略：</b>当 {@code LockStrategy} Bean 不存在时（构造器传入 null），
  * 直接执行任务不做加锁，保证单节点/测试环境功能可用。
  *
- * <p>与 {@link YdszDistributedLockAspect} 的区别：
+ * <p>与 {@link RemiDistributedLockAspect} 的区别：
  * <ul>
  *   <li>本切面针对 {@code @Scheduled} 定时任务，获取锁失败时<b>跳过</b>执行（不抛异常）</li>
- *   <li>{@link YdszDistributedLockAspect} 针对业务方法，获取锁失败时<b>抛异常</b>或重试</li>
+ *   <li>{@link RemiDistributedLockAspect} 针对业务方法，获取锁失败时<b>抛异常</b>或重试</li>
  * </ul>
  *
  * @author remi-team

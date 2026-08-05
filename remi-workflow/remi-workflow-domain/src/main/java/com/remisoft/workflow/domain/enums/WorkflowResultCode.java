@@ -7,7 +7,7 @@ import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
-import com.remisoft.common.exception.registry.YdszResultCode;
+import com.remisoft.common.exception.registry.RemiResultCode;
 
 /**
  * 工作流模块异常码枚举。
@@ -29,7 +29,7 @@ import com.remisoft.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "workflow", description = "工作流")
+@RemiResultCode(module = "workflow", description = "工作流")
 public enum WorkflowResultCode implements ExceptionCode {
 
     // ==================== B70001-B70099 流程模板/定义 ====================

@@ -15,7 +15,7 @@ package com.remisoft.common.core.constant;
  *
  * <p>与各模块对应关系：
  * <ul>
- *   <li>remi-common-web：解析请求头，构建 YdszAuthInfo</li>
+ *   <li>remi-common-web：解析请求头，构建 RemiAuthInfo</li>
  *   <li>remi-common-auth：{@code @RbacDataScope} 切面写入 extra headers</li>
  *   <li>remi-common-feign：透传请求头到下游服务</li>
  *   <li>remi-common-jdbc：SQL 拦截器读取并改写 SQL</li>

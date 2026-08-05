@@ -15,7 +15,7 @@ import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.config.ExceptionProperties;
 import com.remisoft.common.exception.core.ExceptionInfo;
-import com.remisoft.common.exception.custom.AbstractYdszException;
+import com.remisoft.common.exception.custom.AbstractRemiException;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.exception.metrics.ExceptionMetrics;
 import com.remisoft.common.core.context.ProblemDetail;
@@ -211,8 +211,8 @@ public abstract class BaseExceptionHandler {
         }
         info.setTimestamp(LocalDateTime.now());
 
-        if (throwable instanceof AbstractYdszException) {
-            AbstractYdszException ex = (AbstractYdszException) throwable;
+        if (throwable instanceof AbstractRemiException) {
+            AbstractRemiException ex = (AbstractRemiException) throwable;
             info.setCode(ex.getCode());
             info.setKey(ex.getKey());
             info.setMessage(ex.getMessage());
@@ -253,8 +253,8 @@ public abstract class BaseExceptionHandler {
                 .requestId(traceId)
                 .timestamp(Instant.now());
 
-        if (throwable instanceof AbstractYdszException) {
-            AbstractYdszException ex = (AbstractYdszException) throwable;
+        if (throwable instanceof AbstractRemiException) {
+            AbstractRemiException ex = (AbstractRemiException) throwable;
             builder.type(URI.create(baseUrl + "/" + ex.getCategory().name().toLowerCase()))
                     .title(ex.getClass().getSimpleName())
                     .status(ex.getHttpStatus())
@@ -289,8 +289,8 @@ public abstract class BaseExceptionHandler {
             return buildProblemDetail(throwable, path, traceId);
         }
         ExceptionInfo info = buildExceptionInfo(throwable, path, traceId);
-        if (throwable instanceof AbstractYdszException) {
-            AbstractYdszException ex = (AbstractYdszException) throwable;
+        if (throwable instanceof AbstractRemiException) {
+            AbstractRemiException ex = (AbstractRemiException) throwable;
             return BaseResponse.error(ex.getCode(), ex.getMessage(),
                     includeExceptionInfo() ? info : null);
         }
@@ -309,8 +309,8 @@ public abstract class BaseExceptionHandler {
      */
     protected ResponseEntity<Object> buildResponseEntity(Object body, Throwable throwable) {
         int httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        if (throwable instanceof AbstractYdszException) {
-            httpStatus = ((AbstractYdszException) throwable).getHttpStatus();
+        if (throwable instanceof AbstractRemiException) {
+            httpStatus = ((AbstractRemiException) throwable).getHttpStatus();
         }
         return ResponseEntity.status(httpStatus).body(body);
     }

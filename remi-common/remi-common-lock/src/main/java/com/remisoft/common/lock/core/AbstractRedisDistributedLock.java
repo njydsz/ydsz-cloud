@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.lock.annotation.LockType;
@@ -102,7 +102,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * 彻底避免线程池复用场景下的内存泄漏。
      * <p>缓存键格式：{@code threadId:lockKey}，确保不同线程的 clientId 互不干扰。
      */
-    private final Cache<String, String> clientIdCache = YdszCache.<String, String>newBuilder()
+    private final Cache<String, String> clientIdCache = RemiCache.<String, String>newBuilder()
             .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
@@ -112,7 +112,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * 锁租约时间缓存，key 为 {@code threadId:lockKey}，value 为租约时间（毫秒）
      * <p>使用 remi-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理。
      */
-    private final Cache<String, Long> leaseTimeCache = YdszCache.<String, Long>newBuilder()
+    private final Cache<String, Long> leaseTimeCache = RemiCache.<String, Long>newBuilder()
             .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)

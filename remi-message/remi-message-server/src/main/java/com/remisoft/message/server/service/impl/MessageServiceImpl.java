@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.remisoft.common.queue.constant.YdszMessageTopics;
+import com.remisoft.common.queue.constant.RemiMessageTopics;
 import com.remisoft.common.core.constant.SystemConstants;
 import com.remisoft.common.core.constant.PageConstants;
 import com.remisoft.common.core.code.BaseResultCode;
@@ -1091,7 +1091,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setTraceId(TracerUtils.getOrCreateTraceId());
         logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
         logDO.setTenantId(TenantContext.getTenantId());
-        logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
+        logDO.setTopic(RemiMessageTopics.TOPIC_MESSAGE);
         try {
             msgLogMapper.insert(logDO);
             log.info("[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());

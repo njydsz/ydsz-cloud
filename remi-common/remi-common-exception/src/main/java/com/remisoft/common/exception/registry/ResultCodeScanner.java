@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 错误码自动扫描注册器。
  *
- * <p>启动时扫描 classpath 中所有标注 {@link YdszResultCode} 注解的枚举类，
+ * <p>启动时扫描 classpath 中所有标注 {@link RemiResultCode} 注解的枚举类，
  * 将其注册到 {@link ResultCodeRegistry} 全局注册表。
  *
  * <p>扫描范围见 {@value #SCAN_PATTERN}，覆盖所有业务模块。
@@ -31,7 +31,7 @@ public class ResultCodeScanner {
     private static final String SCAN_PATTERN = "classpath*:com/remisoft/**/*.class";
 
     private final ResultCodeRegistry registry;
-    private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(YdszResultCode.class);
+    private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(RemiResultCode.class);
     private final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
 
     /**
@@ -61,11 +61,11 @@ public class ResultCodeScanner {
                 try {
                     MetadataReader reader = readerFactory.getMetadataReader(resource);
                     String className = reader.getClassMetadata().getClassName();
-                    if (!reader.getAnnotationMetadata().hasAnnotation(YdszResultCode.class.getName())) {
+                    if (!reader.getAnnotationMetadata().hasAnnotation(RemiResultCode.class.getName())) {
                         continue;
                     }
                     var annotationAttrs = reader.getAnnotationMetadata()
-                            .getAnnotationAttributes(YdszResultCode.class.getName());
+                            .getAnnotationAttributes(RemiResultCode.class.getName());
                     if (annotationAttrs == null) {
                         continue;
                     }

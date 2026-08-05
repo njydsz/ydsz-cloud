@@ -22,11 +22,11 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import lombok.RequiredArgsConstructor;
 
-import com.remisoft.common.redis.annotation.YdszCacheableAspect;
+import com.remisoft.common.redis.annotation.RemiCacheableAspect;
 import com.remisoft.common.redis.health.RedisHealthIndicator;
 import com.remisoft.common.redis.interceptor.RedisRetryInterceptor;
 import com.remisoft.common.redis.metrics.RedisMetricsCollector;
-import com.remisoft.common.redis.serializer.YdszJsonRedisSerializer;
+import com.remisoft.common.redis.serializer.RemiJsonRedisSerializer;
 import com.remisoft.common.redis.service.RedisBloomFilter;
 import com.remisoft.common.redis.service.RedisCacheGuard;
 import com.remisoft.common.redis.service.RedisDelayedQueue;
@@ -145,13 +145,13 @@ public class RedisConfiguration {
      *     serializer: remi-json
      * }</pre>
      *
-     * @return YdszJsonRedisSerializer 实例
+     * @return RemiJsonRedisSerializer 实例
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(name = "remi.redis.serializer", havingValue = "remi-json", matchIfMissing = true)
-    public YdszJsonRedisSerializer remiJsonRedisSerializer() {
-        return new YdszJsonRedisSerializer(Object.class);
+    public RemiJsonRedisSerializer remiJsonRedisSerializer() {
+        return new RemiJsonRedisSerializer(Object.class);
     }
 
     /**
@@ -248,15 +248,15 @@ public class RedisConfiguration {
     }
 
     /**
-     * 注册 YdszCacheable 注解切面
+     * 注册 RemiCacheable 注解切面
      *
      * @param redisService Redis 服务
-     * @return YdszCacheableAspect 实例
+     * @return RemiCacheableAspect 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public YdszCacheableAspect remiCacheableAspect(RedisService redisService) {
-        return new YdszCacheableAspect(redisService);
+    public RemiCacheableAspect remiCacheableAspect(RedisService redisService) {
+        return new RemiCacheableAspect(redisService);
     }
 
     /**

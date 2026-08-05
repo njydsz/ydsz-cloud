@@ -10,7 +10,7 @@ import com.remisoft.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.remisoft.common.queue.constant.YdszMessageTopics;
+import com.remisoft.common.queue.constant.RemiMessageTopics;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.security.TenantContext;
 import com.remisoft.common.json.RemiJson;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * RocketMQ 死信队列消费者。
  *
- * <p>监听 {@link YdszMessageTopics#DLQ_MESSAGE},将重试耗尽的消息落库 status=DEAD,
+ * <p>监听 {@link RemiMessageTopics#DLQ_MESSAGE},将重试耗尽的消息落库 status=DEAD,
  * 不抛出异常避免 DLQ 循环重投。
  *
  * <p>幂等去重:Redis SET NX EX 防止 rebalance 重投导致重复处理;
@@ -41,8 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.apache.rocketmq.spring.annotation.RocketMQMessageListener")
 @ConditionalOnProperty(prefix = "rocketmq.consumer", name = "enabled", havingValue = "true", matchIfMissing = false)
 @RocketMQMessageListener(
-        topic = YdszMessageTopics.DLQ_MESSAGE,
-        consumerGroup = YdszMessageTopics.GROUP_DLQ_MESSAGE,
+        topic = RemiMessageTopics.DLQ_MESSAGE,
+        consumerGroup = RemiMessageTopics.GROUP_DLQ_MESSAGE,
         selectorExpression = "*",
         maxReconsumeTimes = 1
 )

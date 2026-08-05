@@ -15,7 +15,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.literule.api.RuleDefinition;
@@ -124,12 +124,12 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
         // L2 启用条件：RedissonClient 非空 且 配置启用 L2
         this.redissonClient = (redissonClient != null && cacheConfig.isL2Enabled()) ? redissonClient : null;
         this.cacheConfig = cacheConfig;
-        this.listCache = YdszCache.<String, List<RuleDefinition>>newBuilder()
+        this.listCache = RemiCache.<String, List<RuleDefinition>>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())
                 .build();
-        this.singleCache = YdszCache.<String, RuleDefinition>newBuilder()
+        this.singleCache = RemiCache.<String, RuleDefinition>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())

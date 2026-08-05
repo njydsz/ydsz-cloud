@@ -6,10 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.remisoft.common.audit.annotation.EnableYdszAudit;
-import com.remisoft.common.auth.annotation.EnableYdszAuth;
-import com.remisoft.common.feign.annotation.EnableYdszFeign;
-import com.remisoft.common.safe.annotation.EnableYdszSafe;
+import com.remisoft.common.audit.annotation.EnableRemiAudit;
+import com.remisoft.common.auth.annotation.EnableRemiAuth;
+import com.remisoft.common.feign.annotation.EnableRemiFeign;
+import com.remisoft.common.safe.annotation.EnableRemiSafe;
 
 /**
  * 定时任务调度服务启动类
@@ -19,10 +19,10 @@ import com.remisoft.common.safe.annotation.EnableYdszSafe;
  */
 @SpringBootApplication(scanBasePackages = {"com.remisoft.cronjob", "com.remisoft.common"})
 @EnableDiscoveryClient
-@EnableYdszAuth
-@EnableYdszSafe
-@EnableYdszAudit
-@EnableYdszFeign(basePackages = {"com.remisoft.cronjob.api", "com.remisoft.common.feign", "com.remisoft.userinfo.api", "com.remisoft.system.api"})
+@EnableRemiAuth
+@EnableRemiSafe
+@EnableRemiAudit
+@EnableRemiFeign(basePackages = {"com.remisoft.cronjob.api", "com.remisoft.common.feign", "com.remisoft.userinfo.api", "com.remisoft.system.api"})
 @EnableScheduling
 @MapperScan("com.remisoft.cronjob.infra.mapper")
 public class CronjobApplication {

@@ -7,7 +7,7 @@ import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
-import com.remisoft.common.exception.registry.YdszResultCode;
+import com.remisoft.common.exception.registry.RemiResultCode;
 
 /**
  * 用户信息中心模块异常码枚举。
@@ -35,7 +35,7 @@ import com.remisoft.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "userinfo", description = "用户中心")
+@RemiResultCode(module = "userinfo", description = "用户中心")
 public enum UserInfoResultCode implements ExceptionCode {
 
     // ==================== B30xxx 用户/认证 ====================

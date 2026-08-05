@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import com.remisoft.common.core.code.BaseResultCode;
+import com.remisoft.common.core.code.IExceptionResultCode;
+import com.remisoft.common.core.code.ResultCode;
 import com.remisoft.common.core.constant.HeaderConstants;
 
 /**
@@ -33,6 +35,8 @@ class BaseResponseTest {
     @AfterEach
     void tearDown() {
         MDC.clear();
+        // 清理 BaseResponse 静态 RESOLVER，防止测试间状态污染
+        BaseResponse.__testResetResolver();
     }
 
     @Test
@@ -243,5 +247,89 @@ class BaseResponseTest {
     void constants_consistent() {
         assertEquals(BaseResultCode.SUCCESS.getCode(), BaseResponse.SUCCESS);
         assertNotEquals(BaseResponse.SUCCESS, BaseResponse.UNKNOWN_CODE);
+    }
+
+    // ===================== 1.7.0 新增功能测试 =====================
+
+    @Test
+    @DisplayName("[1.7.0] error(Throwable) 通过 IExceptionResultCode 桥接提取 ResultCode 并自动注入 traceId")
+    void error_throwable_bridgeWithIExceptionResultCode() {
+        FakeException ex = new FakeException("具体错误信息");
+
+        BaseResponse<ProblemDetail> resp = BaseResponse.error(ex, URI.create("/api/v1/orders/123"));
+
+        assertEquals("A10101", resp.getCode());
+        assertEquals(404, resp.getData().getStatus());
+        assertEquals("具体错误信息", resp.getData().getDetail());
+        assertEquals("/api/v1/orders/123", resp.getData().getInstance().toString());
+        // traceId 自动从 MDC 注入
+        assertEquals("test-trace-001", resp.getData().getTraceId());
+    }
+
+    @Test
+    @DisplayName("[1.7.0] error(Throwable) 对未实现 IExceptionResultCode 的异常回退到 UNKNOWN")
+    void error_throwable_fallbackToUnknown() {
+        RuntimeException ex = new RuntimeException("未知错误");
+
+        BaseResponse<ProblemDetail> resp = BaseResponse.error(ex);
+
+        assertEquals(BaseResultCode.UNKNOWN.getCode(), resp.getCode());
+        assertEquals(500, resp.getData().getStatus());
+        assertEquals("未知错误", resp.getData().getDetail());
+        assertEquals("test-trace-001", resp.getData().getTraceId());
+    }
+
+    @Test
+    @DisplayName("[1.7.0] errorWithDetail 自动注入 traceId 到 ProblemDetail")
+    void errorWithDetail_traceIdAutoInjected() {
+        BaseResponse<ProblemDetail> resp = BaseResponse.errorWithDetail(
+                BaseResultCode.BAD_REQUEST, "参数格式错误");
+
+        assertEquals("test-trace-001", resp.getData().getTraceId());
+    }
+
+    @Test
+    @DisplayName("[1.7.0] errorWithDetail 在 MDC 清空时不强制覆盖 traceId")
+    void errorWithDetail_noTraceId_whenMdcEmpty() {
+        MDC.clear();
+        BaseResponse<ProblemDetail> resp = BaseResponse.errorWithDetail(
+                BaseResultCode.BAD_REQUEST, "参数格式错误");
+
+        assertNull(resp.getData().getTraceId());
+    }
+
+    @Test
+    @DisplayName("[1.7.0] ProblemDetail 类级 @JsonInclude(NON_NULL) 已注册")
+    void problemDetail_classAnnotationRegistered() {
+        var ann = com.remisoft.common.core.context.ProblemDetail.class
+                .getAnnotation(com.remisoft.common.json.annotation.JsonInclude.class);
+        assertNotNull(ann, "ProblemDetail 需标注 @JsonInclude(NON_NULL)");
+        assertEquals(com.remisoft.common.json.annotation.JsonInclude.Include.NON_NULL, ann.value());
+    }
+
+    @Test
+    @DisplayName("[1.7.0] error(Throwable, null) 与 error(Throwable) 行为一致")
+    void error_throwable_nullInstance_equals_noArgOverload() {
+        RuntimeException ex = new RuntimeException("oops");
+        BaseResponse<ProblemDetail> r1 = BaseResponse.error(ex);
+        BaseResponse<ProblemDetail> r2 = BaseResponse.error(ex, null);
+        assertEquals(r1.getCode(), r2.getCode());
+        assertEquals(r1.getData().getStatus(), r2.getData().getStatus());
+        assertEquals(r1.getData().getTraceId(), r2.getData().getTraceId());
+    }
+
+    /**
+     * 测试用异常：仅实现 IExceptionResultCode 接口，未实现 ResultCode，
+     * 用于验证 P0-1 反射移除后的新桥接路径。
+     */
+    private static class FakeException extends RuntimeException implements IExceptionResultCode {
+        FakeException(String message) {
+            super(message);
+        }
+
+        @Override
+        public ResultCode resultCode() {
+            return BaseResultCode.NOT_FOUND;
+        }
     }
 }

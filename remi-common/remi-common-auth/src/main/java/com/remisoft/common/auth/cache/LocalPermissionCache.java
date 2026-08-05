@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.cache.listener.RemovalCause;
@@ -46,7 +46,7 @@ public class LocalPermissionCache<V> {
      * @param expireMinutes  过期时间（分钟）
      */
     public LocalPermissionCache(String cacheName, long expireMinutes) {
-        this.cache = YdszCache.<String, V>newBuilder()
+        this.cache = RemiCache.<String, V>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(expireMinutes, TimeUnit.MINUTES)
                 .removalListener((String key, V value, RemovalCause cause) -> {

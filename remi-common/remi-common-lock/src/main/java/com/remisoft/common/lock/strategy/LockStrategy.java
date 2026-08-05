@@ -55,7 +55,7 @@ public interface LockStrategy {
     /**
      * 停止指定锁键的看门狗续期
      *
-     * <p>当 {@code @YdszDistributedLock(autoRenew = false)} 时调用，
+     * <p>当 {@code @RemiDistributedLock(autoRenew = false)} 时调用，
      * 停止看门狗对指定锁的续期任务。
      *
      * @param lockKey 锁的键（用户传入的原始键）

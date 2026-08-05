@@ -245,7 +245,7 @@ remi:
 import com.remisoft.common.auth.handler.AbstractAuthHandler;
 import com.remisoft.common.auth.model.AuthenticationProvider;
 import com.remisoft.common.app.auth.AppAuthInfo;
-import com.remisoft.common.util.auth.YdszAuthInfo;
+import com.remisoft.common.util.auth.RemiAuthInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -259,7 +259,7 @@ public class CustomAuthConfiguration {
     public AbstractAuthHandler customAppAuthHandler() {
         return new AbstractAuthHandler() {
             @Override
-            protected YdszAuthInfo createAuthInfo() {
+            protected RemiAuthInfo createAuthInfo() {
                 return new AppAuthInfo();
             }
             // 自定义解析逻辑（如从 X-App-Token 头解析）
@@ -271,7 +271,7 @@ public class CustomAuthConfiguration {
     public AuthenticationProvider authenticationProvider() {
         return new AuthenticationProvider() {
             @Override
-            public YdszAuthInfo authenticate(HttpServletRequest request,
+            public RemiAuthInfo authenticate(HttpServletRequest request,
                                               HttpServletResponse response) {
                 // 自定义认证逻辑（如调用 SSO、JWT 校验等）
                 AppAuthInfo info = new AppAuthInfo();

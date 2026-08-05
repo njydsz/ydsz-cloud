@@ -89,8 +89,8 @@
 
 | 类 | 说明 |
 |---|---|
-| `YdszFeignLogger` | Feign 日志器（结构化日志 + traceId） |
-| `YdszFeignErrorDecoder` | 统一错误解码器（HTTP 状态码 → 业务异常映射） |
+| `RemiFeignLogger` | Feign 日志器（结构化日志 + traceId） |
+| `RemiFeignErrorDecoder` | 统一错误解码器（HTTP 状态码 → 业务异常映射） |
 | `OpenFeignException` | Feign 通用异常 |
 | `NotFoundException` | 404 资源未找到异常 |
 | `BadRequestException` | 400 参数错误异常 |
@@ -114,7 +114,7 @@
 
 | 注解 | 说明 |
 |---|---|
-| `@EnableYdszFeign` | 启用 remi Feign 增强自动装配（封装 `@EnableFeignClients`，默认扫描 `com.remisoft`） |
+| `@EnableRemiFeign` | 启用 remi Feign 增强自动装配（封装 `@EnableFeignClients`，默认扫描 `com.remisoft`） |
 
 ## 接入方式
 
@@ -152,15 +152,15 @@ remi:
 
 ### 3. 代码启用
 
-在 Spring Boot 主类上添加 `@EnableYdszFeign` 注解即可启用 Feign 增强自动装配：
+在 Spring Boot 主类上添加 `@EnableRemiFeign` 注解即可启用 Feign 增强自动装配：
 
 ```java
-import com.remisoft.common.feign.annotation.EnableYdszFeign;
+import com.remisoft.common.feign.annotation.EnableRemiFeign;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EnableYdszFeign(basePackages = "com.remisoft.order.client")
+@EnableRemiFeign(basePackages = "com.remisoft.order.client")
 public class OrderApplication {
     public static void main(String[] args) {
         SpringApplication.run(OrderApplication.class, args);

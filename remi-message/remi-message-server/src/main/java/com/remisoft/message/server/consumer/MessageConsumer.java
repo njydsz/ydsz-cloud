@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.util.StringUtils;
-import com.remisoft.common.queue.constant.YdszMessageTopics;
+import com.remisoft.common.queue.constant.RemiMessageTopics;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.security.TenantContext;
@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * RocketMQ 消息消费端。
  *
- * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE},基于 Redis SET NX EX 实现消费端幂等防重。
+ * <p>监听 {@link RemiMessageTopics#TOPIC_MESSAGE},基于 Redis SET NX EX 实现消费端幂等防重。
  * 异常处理:SysException 保留锁并落库 FAILED 不重投;系统异常释放锁(Lua 安全释放)并抛出触发重投。
  *
  * @author remi-team
@@ -54,8 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.apache.rocketmq.spring.annotation.RocketMQMessageListener")
 @ConditionalOnProperty(prefix = "rocketmq.consumer", name = "enabled", havingValue = "true", matchIfMissing = false)
 @RocketMQMessageListener(
-        topic = YdszMessageTopics.TOPIC_MESSAGE,
-        consumerGroup = YdszMessageTopics.GROUP_MESSAGE,
+        topic = RemiMessageTopics.TOPIC_MESSAGE,
+        consumerGroup = RemiMessageTopics.GROUP_MESSAGE,
         selectorExpression = "*",
         maxReconsumeTimes = 3,
         consumeMode = ConsumeMode.ORDERLY
@@ -220,7 +220,7 @@ public class MessageConsumer implements RocketMQListener<String> {
             logDO.setStatus(MessageStatusEnum.FAILED.name());
             logDO.setErrorMessage(errorMessage);
             logDO.setMsgId(msgId);
-            logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
+            logDO.setTopic(RemiMessageTopics.TOPIC_MESSAGE);
             logDO.setReconsumeTimes(0);
             logDO.setTenantId(TenantContext.getTenantId());
             msgLogMapper.insert(logDO);

@@ -56,7 +56,7 @@ public class CoreMetrics {
     private final Counter responseCounter;
     private final Timer contextHoldTimeTimer;
 
-    CoreMetrics(MeterRegistry registry) {
+    public CoreMetrics(MeterRegistry registry) {
         this.registry = registry;
         this.responseCounter = Counter.builder(RESPONSE_COUNT)
                 .description("Core API response count grouped by result code prefix (A/B/C/U)")

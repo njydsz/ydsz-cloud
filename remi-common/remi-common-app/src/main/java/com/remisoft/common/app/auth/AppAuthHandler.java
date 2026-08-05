@@ -1,7 +1,7 @@
 package com.remisoft.common.app.auth;
 
 import com.remisoft.common.auth.handler.AbstractAuthHandler;
-import com.remisoft.common.util.auth.YdszAuthInfo;
+import com.remisoft.common.util.auth.RemiAuthInfo;
 
 /**
  * App 端认证信息处理器
@@ -29,7 +29,7 @@ public class AppAuthHandler extends AbstractAuthHandler {
      * @return 新的 {@link AppAuthInfo} 实例
      */
     @Override
-    protected YdszAuthInfo createAuthInfo() {
+    protected RemiAuthInfo createAuthInfo() {
         return new AppAuthInfo();
     }
 }

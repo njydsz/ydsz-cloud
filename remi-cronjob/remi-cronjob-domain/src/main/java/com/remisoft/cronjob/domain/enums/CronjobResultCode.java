@@ -7,7 +7,7 @@ import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
-import com.remisoft.common.exception.registry.YdszResultCode;
+import com.remisoft.common.exception.registry.RemiResultCode;
 
 /**
  * 定时任务调度模块异常码枚举。
@@ -27,7 +27,7 @@ import com.remisoft.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "cronjob", description = "定时任务")
+@RemiResultCode(module = "cronjob", description = "定时任务")
 public enum CronjobResultCode implements ExceptionCode {
 
     // ==================== B92001-B92099 任务 ====================

@@ -166,7 +166,7 @@ public final class OtelSamplers {
 
         @Override
         public String getDescription() {
-            return "YdszCompositeSampler{defaultRatio=" + config.getDefaultRatio() + "}";
+            return "RemiCompositeSampler{defaultRatio=" + config.getDefaultRatio() + "}";
         }
 
         /**

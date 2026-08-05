@@ -11,6 +11,7 @@ target/
 *.rar
 *.log
 *.log.*
+*.bak
 
 # ===== IDE 配置 =====
 .idea/

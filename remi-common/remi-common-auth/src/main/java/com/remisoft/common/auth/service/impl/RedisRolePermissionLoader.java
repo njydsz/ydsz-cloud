@@ -21,7 +21,7 @@ import com.remisoft.common.auth.event.PermissionChangeNotifier;
 import com.remisoft.common.auth.hierarchy.PermissionHierarchy;
 import com.remisoft.common.auth.model.RolePermissions;
 import com.remisoft.common.auth.service.RolePermissionLoader;
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.cache.listener.RemovalCause;
@@ -55,7 +55,7 @@ import com.remisoft.common.util.string.StringUtils;
  * @since 1.0.0
  * 
  * @see RolePermissionLoader
- * @see YdszCache
+ * @see RemiCache
  */
 public class RedisRolePermissionLoader implements RolePermissionLoader {
 
@@ -115,9 +115,9 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     private Cache<String, RolePermissions> buildCache() {
         Integer ttlSeconds = properties.getRolePermissionCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return YdszCache.<String, RolePermissions>newBuilder().build();
+            return RemiCache.<String, RolePermissions>newBuilder().build();
         }
-        return YdszCache.<String, RolePermissions>newBuilder()
+        return RemiCache.<String, RolePermissions>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, RolePermissions value, RemovalCause cause) -> {

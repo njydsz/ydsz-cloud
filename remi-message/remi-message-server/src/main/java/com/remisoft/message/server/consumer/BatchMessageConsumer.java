@@ -11,7 +11,7 @@ import com.remisoft.common.lock.idempotent.IdempotentStrategy;
 import com.remisoft.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
-import com.remisoft.common.queue.constant.YdszMessageTopics;
+import com.remisoft.common.queue.constant.RemiMessageTopics;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.service.core.MessageService;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * P1-11: 批量消息消费者。
  *
- * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE_BATCH} Topic，
+ * <p>监听 {@link RemiMessageTopics#TOPIC_MESSAGE_BATCH} Topic，
  * 批量消费消息（单次拉取多条，统一处理），提升消费吞吐量。
  *
  * <p>适用场景：
@@ -45,8 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(prefix = "rocketmq.consumer", name = "batch-enabled", havingValue = "true",
         matchIfMissing = false)
 @RocketMQMessageListener(
-        topic = YdszMessageTopics.TOPIC_MESSAGE_BATCH,
-        consumerGroup = YdszMessageTopics.GROUP_MESSAGE_BATCH,
+        topic = RemiMessageTopics.TOPIC_MESSAGE_BATCH,
+        consumerGroup = RemiMessageTopics.GROUP_MESSAGE_BATCH,
         selectorExpression = "*",
         maxReconsumeTimes = 3,
         consumeMode = ConsumeMode.CONCURRENTLY

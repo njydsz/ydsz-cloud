@@ -47,7 +47,7 @@ import com.remisoft.common.jdbc.entity.MpBaseEntity;
  *
  * @see com.remisoft.workflow.domain.enums.FlowInstanceStatus 实例状态枚举
  * @see com.remisoft.workflow.domain.entity.FlowHisInstance 历史实例实体
- * @see com.remisoft.workflow.server.facade.YdszWorkflowFacade 流程引擎门面
+ * @see com.remisoft.workflow.server.facade.RemiWorkflowFacade 流程引擎门面
  */
 @Data
 @SuperBuilder

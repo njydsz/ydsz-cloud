@@ -31,7 +31,7 @@ import com.remisoft.common.json.naming.PropertyNamingStrategy;
 import io.micrometer.core.instrument.MeterRegistry;
 
 /**
- * Ydsz JSON 自动配置。
+ * Remi JSON 自动配置。
  *
  * <p>注册全局 {@code RemiJson} Bean（自研 JSON 引擎，非 Jackson 封装），支持 Long 转 String、日期格式化、
  *

@@ -42,7 +42,7 @@ L6 应用层     → remi-common-base, remi-common-web, remi-common-app
 | L3 | [common-exception](remi-common-exception/README.md) | 统一异常体系、错误码管理、ProblemDetail (RFC 7807)、i18n、异常构建器 |
 | L4 | [common-jdbc](remi-common-jdbc/README.md) | MyBatis-Plus 增强、动态数据源、行/列权限、逻辑删除、乐观锁、租户隔离、字段填充 |
 | L4 | [common-redis](remi-common-redis/README.md) | Redis 6 种 ops + 9 种高级 ops、布隆过滤器、延迟队列、限流、缓存击穿防护 |
-| L4 | [common-lock](remi-common-lock/README.md) | 分布式锁（4 种实现）、@Idempotent 幂等、@YdszDistributedLock、WatchDog、读写锁、信号量 |
+| L4 | [common-lock](remi-common-lock/README.md) | 分布式锁（4 种实现）、@Idempotent 幂等、@RemiDistributedLock、WatchDog、读写锁、信号量 |
 | L4 | [common-cache](remi-common-cache/README.md) | 高性能多策略本地缓存框架（Window-TinyLFU/LRU/LFU/TTL/MultiLevel）、三防、熔断降级 |
 | L4 | [common-thread](remi-common-thread/README.md) | 共享线程池自动配置、线程池监控、健康检查 |
 | L4 | [common-tenant](remi-common-tenant/README.md) | 多租户隔离（SINGLE/MULTI/ISOLATE_DB）、SQL 改写、全链路上下文传播、租户限流/审计/指标 |

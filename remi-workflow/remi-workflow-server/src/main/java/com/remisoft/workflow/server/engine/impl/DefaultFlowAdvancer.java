@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.lock.annotation.YdszDistributedLock;
+import com.remisoft.common.lock.annotation.RemiDistributedLock;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.dto.FlowInstanceViewDTO;
 import com.remisoft.workflow.domain.entity.FlowInstance;
@@ -118,7 +118,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      *                      流程定义缺少开始节点时抛出，错误码 {@link BaseResultCode#INTERNAL_ERROR}
      */
     @Override
-    @YdszDistributedLock(key = "'flow:instance:op:' + #{#instanceId}", waitTime = 5, leaseTime = 60,
+    @RemiDistributedLock(key = "'flow:instance:op:' + #{#instanceId}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
     public FlowInstanceViewDTO start(String instanceId) {
         FlowInstance instance = instanceService.getById(instanceId);
@@ -196,7 +196,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      *                      REJECT 无法推导出回退目标时抛出，错误码 {@link BaseResultCode#BAD_REQUEST}
      */
     @Override
-    @YdszDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
+    @RemiDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
     public List<FlowNode> advance(FlowInstance currentInstance,
                                      String currentNodeCode,
@@ -309,7 +309,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      * 单节点退回（targetNodeCodes 为空或单元素）降级到原 advance 逻辑。
      */
     @Override
-    @YdszDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
+    @RemiDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
     public List<FlowNode> advanceMulti(FlowInstance currentInstance,
                                           String currentNodeCode,

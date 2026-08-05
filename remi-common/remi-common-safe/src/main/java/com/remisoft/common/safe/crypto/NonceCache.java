@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.cache.listener.RemovalCause;
@@ -88,7 +88,7 @@ public class NonceCache {
      */
     public NonceCache(long expireSeconds, long maxSize) {
         this.expireSeconds = expireSeconds;
-        this.cache = YdszCache.<String, Long>newBuilder()
+        this.cache = RemiCache.<String, Long>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
                 .maximumSize(maxSize)

@@ -90,19 +90,19 @@
 
 | 注解 / 类 | 说明 |
 |---|---|
-| `@YdszCacheable` | remi 分布式缓存注解（增强 Spring `@Cacheable`） |
-| `@YdszCachePut` | 缓存更新注解 |
-| `@YdszCacheEvict` | 缓存清除注解 |
-| `YdszCacheableAspect` | 缓存切面实现（SpEL 解析 + 分布式锁防击穿 + 空值缓存防穿透 + 随机 TTL 防雪崩） |
+| `@RemiCacheable` | remi 分布式缓存注解（增强 Spring `@Cacheable`） |
+| `@RemiCachePut` | 缓存更新注解 |
+| `@RemiCacheEvict` | 缓存清除注解 |
+| `RemiCacheableAspect` | 缓存切面实现（SpEL 解析 + 分布式锁防击穿 + 空值缓存防穿透 + 随机 TTL 防雪崩） |
 | `RedisRetryInterceptor` | Redis 操作重试拦截器（指数退避，默认仅读操作重试） |
 
-`@YdszCacheable` 增强项：自定义 TTL、空值缓存防穿透（默认 60s）、分布式互斥锁防击穿、随机过期防雪崩。
+`@RemiCacheable` 增强项：自定义 TTL、空值缓存防穿透（默认 60s）、分布式互斥锁防击穿、随机过期防雪崩。
 
 ### 8. 序列化与 Key 管理
 
 | 类 | 说明 |
 |---|---|
-| `YdszJsonRedisSerializer` | 基于 RemiJson 的高性能 Redis 序列化器（支持 Java 8 时间类型） |
+| `RemiJsonRedisSerializer` | 基于 RemiJson 的高性能 Redis 序列化器（支持 Java 8 时间类型） |
 | `RedisKeyPrefixProvider` | Key 前缀提供者接口（业务模块实现，统一 Key 命名规范） |
 | `TenantRedisKeyPrefixer` | 租户级 Redis Key 前缀器（格式 `{tenantId}:{originalKey}`，超级管理员不添加前缀） |
 | `RedisKeysEnum` | Redis Key 模板枚举管理（统一 `remi:` 前缀，模板化 `{}` 占位符，分组管理 + 默认 TTL） |
@@ -282,9 +282,9 @@ DelayedTask task = delayedQueue.poll("order:pay:timeout", Duration.ofSeconds(5))
 ### 4. 注解驱动缓存
 
 ```java
-import com.remisoft.common.redis.annotation.YdszCacheable;
+import com.remisoft.common.redis.annotation.RemiCacheable;
 
-@YdszCacheable(key = "'user:' + #userId", ttl = 300)
+@RemiCacheable(key = "'user:' + #userId", ttl = 300)
 public User getUserById(Long userId) {
     return userMapper.selectById(userId);
 }

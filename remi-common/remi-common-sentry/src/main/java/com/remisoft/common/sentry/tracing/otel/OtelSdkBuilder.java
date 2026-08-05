@@ -41,7 +41,7 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
  *     .resource(OtelResources.createDefault("remi-order"))
  *     .sampler(OtelSamplers.parentBased(0.1))
  *     .addProcessor(new TailSamplingSpanProcessor(0.05, samplingRules))
- *     .addProcessor(new YdszSpanEnrichmentProcessor(...))
+ *     .addProcessor(new RemiSpanEnrichmentProcessor(...))
  *     .exporter(otlpExporter)
  *     .build();
  * }</pre>

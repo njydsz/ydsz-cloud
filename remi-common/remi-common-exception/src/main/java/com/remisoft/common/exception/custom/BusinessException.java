@@ -43,7 +43,7 @@ import lombok.ToString;
  * @see ExceptionCategory#BUSINESS
  */
 @ToString(callSuper = true)
-public class BusinessException extends AbstractYdszException {
+public class BusinessException extends AbstractRemiException {
 
     private static final long serialVersionUID = 1L;
 
@@ -317,7 +317,7 @@ public class BusinessException extends AbstractYdszException {
     /**
      * 业务异常构建器，预置默认的错误码、HTTP状态码、级别和分类
      */
-    public static class BusinessExceptionBuilder extends YdszExceptionBuilder<BusinessException, BusinessExceptionBuilder> {
+    public static class BusinessExceptionBuilder extends RemiExceptionBuilder<BusinessException, BusinessExceptionBuilder> {
 
         @Override
         protected BusinessExceptionBuilder self() {

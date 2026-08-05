@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import com.remisoft.common.auth.util.PermissionUtils;
 import com.remisoft.common.util.auth.AuthInfo;
-import com.remisoft.common.util.auth.YdszAuthInfo;
+import com.remisoft.common.util.auth.RemiAuthInfo;
 import com.remisoft.common.util.string.StringUtils;
 
 /**
@@ -43,7 +43,7 @@ public abstract class AbstractAuthHandler implements AuthHandler {
      *
      * @return 空的 AuthInfo 实例
      */
-    protected abstract YdszAuthInfo createAuthInfo();
+    protected abstract RemiAuthInfo createAuthInfo();
 
     /**
      * 解析请求头并构建认证信息（模板方法）
@@ -59,20 +59,20 @@ public abstract class AbstractAuthHandler implements AuthHandler {
         ParsedAuthHeaders h = ParsedAuthHeaders.parse(request, this);
 
         AuthInfo info = createAuthInfo();
-        if (info instanceof YdszAuthInfo YdszAuthInfo) {
-            YdszAuthInfo.setUserLanguage(h.getLanguage());
-            YdszAuthInfo.setDistinctId(h.getDistinctId());
-            YdszAuthInfo.setAccessToken(h.getAuthToken());
-            YdszAuthInfo.setDataScope(h.getDataScope());
-            YdszAuthInfo.setHasPermissionCompanyIds(h.getCompanyIds());
-            YdszAuthInfo.setHasPermissionDeptIds(h.getDeptIds());
-            YdszAuthInfo.setUniqueId(h.getUserId());
-            YdszAuthInfo.setTenantId(h.getTenantId());
-            YdszAuthInfo.setHasPermissionProjectIds(h.getProjectIds());
-            YdszAuthInfo.setHasPermissionRegionIds(h.getRegionIds());
-            YdszAuthInfo.setRequestSource(h.getRequestSource());
-            YdszAuthInfo.setVisibleColumnsByTable(h.getVisibleColumns());
-            YdszAuthInfo.setEditableColumnsByTable(h.getEditableColumns());
+        if (info instanceof RemiAuthInfo RemiAuthInfo) {
+            RemiAuthInfo.setUserLanguage(h.getLanguage());
+            RemiAuthInfo.setDistinctId(h.getDistinctId());
+            RemiAuthInfo.setAccessToken(h.getAuthToken());
+            RemiAuthInfo.setDataScope(h.getDataScope());
+            RemiAuthInfo.setHasPermissionCompanyIds(h.getCompanyIds());
+            RemiAuthInfo.setHasPermissionDeptIds(h.getDeptIds());
+            RemiAuthInfo.setUniqueId(h.getUserId());
+            RemiAuthInfo.setTenantId(h.getTenantId());
+            RemiAuthInfo.setHasPermissionProjectIds(h.getProjectIds());
+            RemiAuthInfo.setHasPermissionRegionIds(h.getRegionIds());
+            RemiAuthInfo.setRequestSource(h.getRequestSource());
+            RemiAuthInfo.setVisibleColumnsByTable(h.getVisibleColumns());
+            RemiAuthInfo.setEditableColumnsByTable(h.getEditableColumns());
         }
 
         return info;

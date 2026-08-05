@@ -5,10 +5,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
-import com.remisoft.common.audit.annotation.EnableYdszAudit;
-import com.remisoft.common.auth.annotation.EnableYdszAuth;
-import com.remisoft.common.feign.annotation.EnableYdszFeign;
-import com.remisoft.common.safe.annotation.EnableYdszSafe;
+import com.remisoft.common.audit.annotation.EnableRemiAudit;
+import com.remisoft.common.auth.annotation.EnableRemiAuth;
+import com.remisoft.common.feign.annotation.EnableRemiFeign;
+import com.remisoft.common.safe.annotation.EnableRemiSafe;
 
 /**
  * AI Agent 智能体服务启动类
@@ -20,10 +20,10 @@ import com.remisoft.common.safe.annotation.EnableYdszSafe;
  */
 @SpringBootApplication(scanBasePackages = {"com.remisoft.agent", "com.remisoft.common"})
 @EnableDiscoveryClient
-@EnableYdszAuth
-@EnableYdszSafe
-@EnableYdszAudit
-@EnableYdszFeign(basePackages = {"com.remisoft.agent.api", "com.remisoft.common.feign", "com.remisoft.project.api", "com.remisoft.userinfo.api", "com.remisoft.nextwiki.api"})
+@EnableRemiAuth
+@EnableRemiSafe
+@EnableRemiAudit
+@EnableRemiFeign(basePackages = {"com.remisoft.agent.api", "com.remisoft.common.feign", "com.remisoft.project.api", "com.remisoft.userinfo.api", "com.remisoft.nextwiki.api"})
 @MapperScan("com.remisoft.agent.infra.mapper")
 public class AgentApplication {
 

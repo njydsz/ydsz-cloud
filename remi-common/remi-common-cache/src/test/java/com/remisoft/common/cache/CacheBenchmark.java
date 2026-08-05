@@ -20,7 +20,7 @@ import com.remisoft.common.cache.builder.CacheBuilder;
 import com.remisoft.common.cache.builder.CacheType;
 
 /**
- * YdszCache JMH 性能基准测试套件
+ * RemiCache JMH 性能基准测试套件
  *
  * <p>覆盖场景：
  *

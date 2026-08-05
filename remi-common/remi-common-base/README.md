@@ -101,7 +101,7 @@
 |---|---|
 | `BaseFilterOrders` | 横切点执行顺序常量，定义 Filter/Interceptor/Advice 的 `order` 值；所有数字与 `docs/BASE_INTERCEPTOR_ORDER.md` 保持一致，修改前需先更新文档 |
 | `DocConstants` | OpenAPI 文档常量，集中维护 `OPENAPI_VERSION`（3.0.3）、`DEFAULT_API_DOCS_PATH`、`DEFAULT_KNIFE4J_PATH`、`DEFAULT_GROUP_NAME`、`DEFAULT_API_VERSION`（1.0.0）、格式标识、配置属性前缀等 |
-| `BaseAuthInfo` | 认证上下文信息抽象基类（继承 `YdszAuthInfo`），子类覆盖 `getServiceTypeCode()` 返回具体服务类型编码（"WEB"/"APP"/"API"），用于业务层区分请求来源 |
+| `BaseAuthInfo` | 认证上下文信息抽象基类（继承 `RemiAuthInfo`），子类覆盖 `getServiceTypeCode()` 返回具体服务类型编码（"WEB"/"APP"/"API"），用于业务层区分请求来源 |
 
 ### 横切点执行顺序
 

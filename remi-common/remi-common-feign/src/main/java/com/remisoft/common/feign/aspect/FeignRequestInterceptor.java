@@ -25,7 +25,7 @@ import feign.RequestInterceptor;
 import feign.RequestTemplate;
 
 /**
- * YdszFeign 远程调用请求拦截器——数据权限全链路透传。
+ * RemiFeign 远程调用请求拦截器——数据权限全链路透传。
  *
  * <p>在发起 Feign 远程调用前，将当前请求上下文中积累的数据权限信息
  *（行级维度ID + 列级权限规则）透传到下游服务请求头中，保证权限上下文在微服务链路中不丢失。

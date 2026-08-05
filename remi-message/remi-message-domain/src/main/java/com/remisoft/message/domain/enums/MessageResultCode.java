@@ -3,7 +3,7 @@ package com.remisoft.message.domain.enums;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.remisoft.common.exception.annotation.YdszResultCode;
+import com.remisoft.common.exception.annotation.RemiResultCode;
 import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 
@@ -28,7 +28,7 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "message", description = "消息中心")
+@RemiResultCode(module = "message", description = "消息中心")
 public enum MessageResultCode implements ExceptionCode {
 
     // ==================== B91001-B91099 模板 ====================

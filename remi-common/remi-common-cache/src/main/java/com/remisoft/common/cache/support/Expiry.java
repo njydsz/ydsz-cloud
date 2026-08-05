@@ -13,7 +13,7 @@ package com.remisoft.common.cache.support;
  *     return value.isHot() ? TimeUnit.MINUTES.toNanos(5) : TimeUnit.HOURS.toNanos(1);
  * };
  *
- * Cache<String, Data> cache = YdszCache.newBuilder()
+ * Cache<String, Data> cache = RemiCache.newBuilder()
  *     .expireAfter(expiry)
  *     .maximumSize(10000)
  *     .build();

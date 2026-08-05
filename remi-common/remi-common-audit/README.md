@@ -21,7 +21,7 @@
 | 注解 | 说明 |
 |---|---|
 | `@Audit` | 操作审计注解（记录方法调用 / 参数 / 返回值 / 异常，支持 SpEL 描述、参数排除、同步异步切换） |
-| `@EnableYdszAudit` | 审计开关 + 自动装配入口（`@Import(AuditAutoConfiguration.class)`） |
+| `@EnableRemiAudit` | 审计开关 + 自动装配入口（`@Import(AuditAutoConfiguration.class)`） |
 
 ### 2. AOP 切面与模板
 
@@ -137,15 +137,15 @@ remi:
 
 ### 3. 代码启用
 
-在 Spring Boot 主类上添加 `@EnableYdszAudit` 注解即可启用审计模块自动装配：
+在 Spring Boot 主类上添加 `@EnableRemiAudit` 注解即可启用审计模块自动装配：
 
 ```java
-import com.remisoft.common.audit.annotation.EnableYdszAudit;
+import com.remisoft.common.audit.annotation.EnableRemiAudit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EnableYdszAudit
+@EnableRemiAudit
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

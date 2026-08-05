@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 全局错误码注册中心。
  *
- * <p>P2-4: 启动时扫描所有 {@link YdszResultCode} 注解的枚举类，
+ * <p>P2-4: 启动时扫描所有 {@link RemiResultCode} 注解的枚举类，
  * 注册到全局注册表，供前端查询错误码含义和运维诊断。
  *
  * <h3>注册内容</h3>

@@ -25,7 +25,7 @@
 | `AsyncCache` | 异步缓存接口，返回 `CompletableFuture` |
 | `CacheBuilder` | 流畅构建器（参考 Caffeine/Guava），链式配置容量、过期、权重、loader、writer 等 |
 | `CacheType` | 缓存类型枚举：LRU / LFU / TINYLFU / WEIGHTED / CONCURRENT / STRIPED / ENHANCED_LOADING |
-| `YdszCache` | 工具类入口，`YdszCache.newBuilder()` 创建 `CacheBuilder` |
+| `RemiCache` | 工具类入口，`RemiCache.newBuilder()` 创建 `CacheBuilder` |
 | `LRUCache` | 最近最少使用淘汰策略，热点数据场景 |
 | `LFUCache` | 最不经常使用淘汰策略，访问频率差异大的场景（含 `FrequencySketch` 频率草图） |
 | `WindowTinyLFUCache` | Window-TinyLFU 算法（参考 Caffeine），命中率最优，通用场景默认 |
@@ -85,7 +85,7 @@
 | `CacheStats` | 缓存统计信息（hitCount / missCount / evictionCount / loadDuration） |
 | `CacheMeterBinder` | Micrometer `MeterBinder` 实现，注册 Gauge / FunctionCounter / FunctionTimer / Timer（P50/P90/P99 分位数） |
 | `CacheMetricsCollector` | 指标收集器 |
-| `CacheMetricsAutoConfiguration` | 自动配置，Micrometer + `YdszCacheManager` 可用时自动注册；含 `CacheMetricsRegistrar` 支持运行时动态注册新缓存 |
+| `CacheMetricsAutoConfiguration` | 自动配置，Micrometer + `RemiCacheManager` 可用时自动注册；含 `CacheMetricsRegistrar` 支持运行时动态注册新缓存 |
 | `PaddedStatsCounter` | 缓存行填充统计计数器，避免 false sharing |
 
 注册的 Micrometer 指标：
@@ -148,10 +148,10 @@
 
 | 类 | 说明 |
 |---|---|
-| `YdszCacheManager` | Spring `CacheManager` 实现，支持 per-cache 独立配置；实现 `DisposableBean` 在容器关闭时清理 `EnhancedLoadingCache` 实例与共享线程池 |
-| `SpringYdszCache` | Spring `Cache` 接口实现，包装底层 `YdszCache` |
-| `YdszCacheProperties` | 配置属性（`remi.cache.*`），支持全局默认 + per-cache 覆盖 |
-| `YdszCacheAutoConfiguration` | Spring Boot 自动配置 |
+| `RemiCacheManager` | Spring `CacheManager` 实现，支持 per-cache 独立配置；实现 `DisposableBean` 在容器关闭时清理 `EnhancedLoadingCache` 实例与共享线程池 |
+| `SpringRemiCache` | Spring `Cache` 接口实现，包装底层 `RemiCache` |
+| `RemiCacheProperties` | 配置属性（`remi.cache.*`），支持全局默认 + per-cache 覆盖 |
+| `RemiCacheAutoConfiguration` | Spring Boot 自动配置 |
 
 ## 接入方式
 
@@ -199,11 +199,11 @@ remi:
 ### 3. 直接使用（脱离 Spring）
 
 ```java
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 
-Cache<String, User> cache = YdszCache.newBuilder()
+Cache<String, User> cache = RemiCache.newBuilder()
         .type(CacheType.TINYLFU)
         .maximumSize(10_000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -268,7 +268,7 @@ public class UserService {
 }
 ```
 
-### 2. YdszCache 注解驱动
+### 2. RemiCache 注解驱动
 
 ```java
 import com.remisoft.common.cache.annotation.Cached;
@@ -298,10 +298,10 @@ public class ConfigService {
 import com.remisoft.common.cache.multilevel.MultiLevelCache;
 import com.remisoft.common.cache.multilevel.RedisCacheAdapter;
 import com.remisoft.common.cache.resilience.Resilience4jCacheDecorator;
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.builder.CacheType;
 
-Cache<String, User> l1 = YdszCache.newBuilder()
+Cache<String, User> l1 = RemiCache.newBuilder()
         .type(CacheType.TINYLFU)
         .maximumSize(10_000)
         .build();
@@ -323,12 +323,12 @@ User cached = multiLevel.getIfPresent("user:1");
 
 ```java
 import com.remisoft.common.cache.support.CacheWriter;
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.builder.CacheType;
 
 CacheWriter<String, User> writer = (key, value) -> userRepo.save(value);
 
-Cache<String, User> cache = YdszCache.newBuilder()
+Cache<String, User> cache = RemiCache.newBuilder()
         .type(CacheType.STRIPED)
         .maximumSize(10_000)
         .writer(writer)
@@ -369,7 +369,7 @@ CacheExportImport.exportCacheToText(cache, "/tmp/cache.txt");
 
 | 端点 | 说明 | 触发条件 |
 |---|---|---|
-| `/actuator/health/cache` | Spring Cache 健康检查（包装 `YdszCacheManager` 中所有缓存） | `spring-boot-health` 在 classpath 且 `remi.cache.health-check.enabled=true` |
+| `/actuator/health/cache` | Spring Cache 健康检查（包装 `RemiCacheManager` 中所有缓存） | `spring-boot-health` 在 classpath 且 `remi.cache.health-check.enabled=true` |
 | `CacheHealthIndicator.health()` | 编程式健康检查（直接调用） | 任何场景 |
 
 健康检查暴露信息（每个缓存）：
@@ -396,11 +396,11 @@ CacheExportImport.exportCacheToText(cache, "/tmp/cache.txt");
 1. **三防 per-cache 隔离**：`CacheProtectionGuard` 与 `NullValueGuard` 使用 `WeakHashMap` 关联 Cache 实例，避免跨缓存锁竞争与内存泄漏；Cache 实例 GC 后状态自动清理。
 2. **空值占位随机过期**：`getWithProtection` 的 `minExpireMs` 与 `maxExpireMs` 必须为正数且 `maxExpireMs >= minExpireMs`，空值占位在区间内随机过期以防雪崩。
 3. **多级缓存一致性**：L1 跨节点一致性依赖 `CacheInvalidationBroadcaster`（默认 Redis Pub/Sub），未配置广播器时各节点 L1 独立，仅保证最终一致。
-4. **线程池生命周期**：`CacheThreadPoolManager` 由 Spring 管理（`YdszCacheAutoConfiguration` 注册为 Bean 并调用 `setInstance`），容器关闭时通过 `DisposableBean` 自动清理；脱离 Spring 使用时需手动调用 `CacheThreadPoolManager.getInstance().shutdown()`。
+4. **线程池生命周期**：`CacheThreadPoolManager` 由 Spring 管理（`RemiCacheAutoConfiguration` 注册为 Bean 并调用 `setInstance`），容器关闭时通过 `DisposableBean` 自动清理；脱离 Spring 使用时需手动调用 `CacheThreadPoolManager.getInstance().shutdown()`。
 5. **反序列化白名单**：`CacheExportImport` 反序列化白名单统一委托 `SafeObjectInputFilter`，业务自定义类型需通过 `AutoTypeChecker.addToWhitelist()` 显式注册，否则导入会抛 `InvalidClassException`。
 6. **Resilience4j 可选**：`Resilience4jCacheDecorator` 需 classpath 中存在 `resilience4j-circuitbreaker`，未引入时直接使用底层 `Cache` 即可。
 7. **注解切面可选**：`@Cached` / `@CacheInvalidate` / `@CacheRefresh` 需 classpath 中存在 AspectJ Weaver，可通过 `remi.cache.annotation.enabled=false` 关闭。
-8. **Spring Cache 兼容**：`YdszCacheManager` 同时支持 Spring 标准 `@Cacheable` / `@CacheEvict` 注解与 YdszCache 自定义注解，两者可混用但同一方法不应同时标注。
+8. **Spring Cache 兼容**：`RemiCacheManager` 同时支持 Spring 标准 `@Cacheable` / `@CacheEvict` 注解与 RemiCache 自定义注解，两者可混用但同一方法不应同时标注。
 
 ## 变更记录
 

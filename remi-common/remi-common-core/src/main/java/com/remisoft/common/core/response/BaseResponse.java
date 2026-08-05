@@ -302,6 +302,19 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
+     * 测试辅助方法：清空已注册的消息解析器（仅用于单元测试）。
+     *
+     * <p><b>仅限测试使用。</b>调用后 RESOLVER 恢复为未注册状态，
+     * 使各测试用例之间互不污染。生产代码不应调用此方法，
+     * 以免破坏一次性设置语义。</p>
+     *
+     * @since 1.7.0
+     */
+    static void __testResetResolver() {
+        RESOLVER.set(null);
+    }
+
+    /**
      * 解析国际化消息，若未设置解析器则返回默认值
      *
      * @param key 国际化消息 key
@@ -445,7 +458,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * </ul>
      *
      * <p><b>异常模块适配指引：</b> {@code remi-common-exception} 模块中的
-     * {@code AbstractYdszException} 需实现 {@link IExceptionResultCode}，
+     * {@code AbstractRemiException} 需实现 {@link IExceptionResultCode}，
      * 提供 {@code resultCode()} 实现，即可与本类无缝协作。</p>
      *
      * @param throwable 异常对象

@@ -1,6 +1,6 @@
 package com.remisoft.common.event.api;
 
-import com.remisoft.common.exception.custom.AbstractYdszException;
+import com.remisoft.common.exception.custom.AbstractRemiException;
 
 /**
  * 领域事件构建异常。
@@ -9,13 +9,13 @@ import com.remisoft.common.exception.custom.AbstractYdszException;
  *
  * <p><b>继承说明：</b>统一异常体系已收敛至 {@code remi-common-exception}，
  * 原 {@code com.remisoft.common.domain.exception.DomainException} 已废弃移除，
- * 本类改继承 {@link AbstractYdszException}。
+ * 本类改继承 {@link AbstractRemiException}。
  *
  * @author remi-team
  * @since 1.4.0
  * @since 1.5.0 由 common-domain 迁入 common-event，与 DomainEvent 同包
  */
-public class EventBuildException extends AbstractYdszException {
+public class EventBuildException extends AbstractRemiException {
 
     private static final long serialVersionUID = 1L;
 

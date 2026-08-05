@@ -124,7 +124,7 @@
 | `FileProperties` | 文件存储主配置属性（`remi.file.*`） |
 | `FileUploadProperties` | 分片上传配置属性（`remi.file.upload.*`） |
 | `FileLifecycleProperties` | 生命周期配置属性（`remi.file.lifecycle.*`） |
-| `@EnableYdszFile` | 模块启用注解，`@Import(FileConfiguration.class)` |
+| `@EnableRemiFile` | 模块启用注解，`@Import(FileConfiguration.class)` |
 
 ## 接入方式
 
@@ -156,10 +156,10 @@ remi:
 ```java
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import com.remisoft.common.file.annotation.EnableYdszFile;
+import com.remisoft.common.file.annotation.EnableRemiFile;
 
 @SpringBootApplication
-@EnableYdszFile
+@EnableRemiFile
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -167,7 +167,7 @@ public class Application {
 }
 ```
 
-> 未标注 `@EnableYdszFile` 时，`FileConfiguration` 仍会通过 Spring Boot 自动装配机制注册（`@AutoConfiguration` + `@ConditionalOnProperty`），注解仅作显式启用声明。
+> 未标注 `@EnableRemiFile` 时，`FileConfiguration` 仍会通过 Spring Boot 自动装配机制注册（`@AutoConfiguration` + `@ConditionalOnProperty`），注解仅作显式启用声明。
 
 ## 配置项
 

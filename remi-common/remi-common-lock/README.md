@@ -2,7 +2,7 @@
 
 > 分布式锁与防重提交公共模块（L4 基础数据层）
 
-REMI 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量、WatchDog 自动续期、锁泄漏检测、`@Idempotent` 幂等、`@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`@YdszDistributedLock` 声明式锁、降级策略。
+REMI 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量、WatchDog 自动续期、锁泄漏检测、`@Idempotent` 幂等、`@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`@RemiDistributedLock` 声明式锁、降级策略。
 
 ## 模块定位
 
@@ -141,7 +141,7 @@ REMI 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 
 | 注解 / 枚举 | 说明 |
 |---|---|
-| `@YdszDistributedLock` | 分布式锁注解（key / lockType / waitTime / leaseTime / autoRenew / retryCount） |
+| `@RemiDistributedLock` | 分布式锁注解（key / lockType / waitTime / leaseTime / autoRenew / retryCount） |
 | `LockType` | 锁类型枚举（REENTRANT / FAIR / READ_WRITE / SEMAPHORE） |
 
 ### 10. 指标与健康检查
@@ -200,7 +200,7 @@ remi:
 | `LockMetrics` | 模块启用 |
 | `LockWatchDog` | 模块启用 |
 | `DefaultLockStrategy` | 模块启用 |
-| `YdszDistributedLockAspect` | 模块启用 |
+| `RemiDistributedLockAspect` | 模块启用 |
 | `RedisIdempotentStrategy` | 模块启用 |
 | `IdempotentAspect` | 模块启用 |
 | `RepeatSubmitTokenService` | 模块启用 |
@@ -237,9 +237,9 @@ remi:
 ### 1. 注解式分布式锁
 
 ```java
-import com.remisoft.common.lock.annotation.YdszDistributedLock;
+import com.remisoft.common.lock.annotation.RemiDistributedLock;
 
-@YdszDistributedLock(key = "'order:' + #orderId", waitTime = 3, leaseTime = 30)
+@RemiDistributedLock(key = "'order:' + #orderId", waitTime = 3, leaseTime = 30)
 public Order getOrder(Long orderId) {
     // 业务逻辑
 }
@@ -383,7 +383,7 @@ Redis 不可用时健康检查返回 DOWN，触发降级策略（若 `fallback-e
 1. **防重提交需 Web 环境**：`RepeatSubmitTokenController` 仅在 Servlet Web 环境且 `RepeatSubmitTokenService` Bean 存在时装配；纯后台批处理服务不会暴露 Token 接口。
 2. **防重提交需登录上下文**：`RepeatSubmitTokenService` 通过 `AuthContext` 获取当前登录用户 ID，消费方需引入 `remi-common-auth` 并完成登录鉴权。
 3. **分布式调度降级**：`@DistributedScheduled` 在 `LockStrategy` 不可用时不加锁直接执行，单节点 / 测试环境无需额外配置。
-4. **看门狗与 leaseTime**：`@YdszDistributedLock(autoRenew = false)` 时不会启动续期任务，锁将在 `leaseTime` 到期后自动释放，适用于快速完成的操作。
+4. **看门狗与 leaseTime**：`@RemiDistributedLock(autoRenew = false)` 时不会启动续期任务，锁将在 `leaseTime` 到期后自动释放，适用于快速完成的操作。
 5. **锁键命名空间**：设置 `remi.lock.namespace` 后，锁键自动添加前缀 `${namespace}:lock:${userKey}`，多应用共享 Redis 时务必配置以避免锁键冲突。
 6. **锁键校验**：用户通过 SpEL 传入的 lockKey 应通过 `LockKeyValidator.validate` 校验，防止超长或包含控制字符的键影响 Redis 性能与日志可读性。
 7. **最大续期限制**：WatchDog 默认续期 100 次后停止，锁自动过期。若业务执行时间可能超长，需调大 `max-renew-times` 或拆分任务。

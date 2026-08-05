@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.remisoft.common.auth.config.AuthProperties;
 import com.remisoft.common.auth.model.UserInfo;
 import com.remisoft.common.auth.service.RbacUserInfoService;
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.json.RemiJson;
@@ -63,7 +63,7 @@ public class ColumnDesensitizationService {
         this.redisService = redisService;
         this.properties = properties;
         this.userInfoService = userInfoService;
-        this.cache = YdszCache.<String, ColumnDesensitizationContext>newBuilder()
+        this.cache = RemiCache.<String, ColumnDesensitizationContext>newBuilder()
                 .type(CacheType.STRIPED)
                 .maximumSize(properties.getDesensitizeCacheMaxSize())
                 .expireAfterWrite(properties.getDesensitizeCacheTtlSeconds(), TimeUnit.SECONDS)

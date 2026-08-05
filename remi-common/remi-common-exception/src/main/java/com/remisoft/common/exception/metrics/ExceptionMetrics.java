@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.remisoft.common.exception.custom.AbstractYdszException;
+import com.remisoft.common.exception.custom.AbstractRemiException;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -128,8 +128,8 @@ public class ExceptionMetrics {
             String category = "UNKNOWN";
             String code = "N/A";
 
-            if (throwable instanceof AbstractYdszException) {
-                AbstractYdszException ex = (AbstractYdszException) throwable;
+            if (throwable instanceof AbstractRemiException) {
+                AbstractRemiException ex = (AbstractRemiException) throwable;
                 if (ex.getLevel() != null) {
                     level = ex.getLevel().name();
                 }
@@ -191,8 +191,8 @@ public class ExceptionMetrics {
             String category = "UNKNOWN";
             String code = "N/A";
 
-            if (throwable instanceof AbstractYdszException) {
-                AbstractYdszException ex = (AbstractYdszException) throwable;
+            if (throwable instanceof AbstractRemiException) {
+                AbstractRemiException ex = (AbstractRemiException) throwable;
                 if (ex.getLevel() != null) {
                     level = ex.getLevel().name();
                 }

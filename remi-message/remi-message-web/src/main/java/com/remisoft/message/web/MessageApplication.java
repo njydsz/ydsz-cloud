@@ -7,10 +7,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.remisoft.common.audit.annotation.EnableYdszAudit;
-import com.remisoft.common.auth.annotation.EnableYdszAuth;
-import com.remisoft.common.feign.annotation.EnableYdszFeign;
-import com.remisoft.common.safe.annotation.EnableYdszSafe;
+import com.remisoft.common.audit.annotation.EnableRemiAudit;
+import com.remisoft.common.auth.annotation.EnableRemiAuth;
+import com.remisoft.common.feign.annotation.EnableRemiFeign;
+import com.remisoft.common.safe.annotation.EnableRemiSafe;
 
 /**
  * 消息通知引擎启动类（独立自研 - 大厂级统一通知中心）
@@ -40,10 +40,10 @@ import com.remisoft.common.safe.annotation.EnableYdszSafe;
         "com.remisoft.common"
 })
 @EnableDiscoveryClient
-@EnableYdszAuth
-@EnableYdszSafe
-@EnableYdszAudit
-@EnableYdszFeign(basePackages = {"com.remisoft.message.api", "com.remisoft.common.feign", "com.remisoft.agent.api"})
+@EnableRemiAuth
+@EnableRemiSafe
+@EnableRemiAudit
+@EnableRemiFeign(basePackages = {"com.remisoft.message.api", "com.remisoft.common.feign", "com.remisoft.agent.api"})
 @MapperScan("com.remisoft.message.infra.mapper")
 @EnableAsync
 @EnableScheduling

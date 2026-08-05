@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
  * 缓存注解 — 声明式缓存写入
  *
  * <p>标注在方法上，表示方法的返回值应被缓存。 类似 Spring Cache 的 @Cacheable 但支持更多
- * YdszCache 特有配置。
+ * RemiCache 特有配置。
  *
  * <p>使用示例：
  *

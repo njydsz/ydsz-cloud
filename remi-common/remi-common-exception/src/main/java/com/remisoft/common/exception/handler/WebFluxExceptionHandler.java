@@ -18,7 +18,7 @@ import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.config.ExceptionProperties;
 import com.remisoft.common.exception.core.ExceptionInfo;
-import com.remisoft.common.exception.custom.AbstractYdszException;
+import com.remisoft.common.exception.custom.AbstractRemiException;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.exception.metrics.ExceptionMetrics;
@@ -119,10 +119,10 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 处理其他 REMI 异常（兜底，捕获所有 AbstractYdszException 子类）
+     * 处理其他 REMI 异常（兜底，捕获所有 AbstractRemiException 子类）
      */
-    @ExceptionHandler(AbstractYdszException.class)
-    public Object handleAbstractYdszException(AbstractYdszException e, ServerWebExchange exchange) {
+    @ExceptionHandler(AbstractRemiException.class)
+    public Object handleAbstractRemiException(AbstractRemiException e, ServerWebExchange exchange) {
         recordMetrics(e);
         log.warn("{}异常 | 路径: {} | 错误码: {} | 消息: {} | 类型: {}",
                 getLogPrefix(), exchange.getRequest().getPath().value(), e.getCode(), e.getMessage(),

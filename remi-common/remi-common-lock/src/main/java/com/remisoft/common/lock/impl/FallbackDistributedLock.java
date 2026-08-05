@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.lock.core.DistributedLocker;
@@ -67,7 +67,7 @@ public class FallbackDistributedLock implements DistributedLocker {
     /**
      * 本地锁映射表（使用 remi-common-cache，自动过期清理，防止内存泄漏）
      */
-    private final Cache<String, ReentrantLock> localLocks = YdszCache.<String, ReentrantLock>newBuilder()
+    private final Cache<String, ReentrantLock> localLocks = RemiCache.<String, ReentrantLock>newBuilder()
             .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10000)

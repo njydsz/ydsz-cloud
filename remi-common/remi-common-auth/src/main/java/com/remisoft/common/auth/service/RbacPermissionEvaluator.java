@@ -23,7 +23,7 @@ import com.remisoft.common.auth.model.RolePermissions;
 import com.remisoft.common.auth.strategy.CacheKeyStrategy;
 import com.remisoft.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.remisoft.common.auth.util.PermissionUtils;
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.exception.custom.BusinessException;
@@ -100,7 +100,7 @@ public class RbacPermissionEvaluator {
         this.properties = properties;
         this.userInfoService = userInfoService;
         this.rolePermissionLoader = rolePermissionLoader;
-        this.rolePermissionsCache = YdszCache.<String, RolePermissions>newBuilder()
+        this.rolePermissionsCache = RemiCache.<String, RolePermissions>newBuilder()
                 .type(CacheType.STRIPED)
                 .maximumSize(1000)
                 .expireAfterWrite(resolvePermissionCacheTtlSeconds(), TimeUnit.SECONDS)

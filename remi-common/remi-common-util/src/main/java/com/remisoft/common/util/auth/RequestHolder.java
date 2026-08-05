@@ -138,12 +138,12 @@ public class RequestHolder {
     /**
      * 获取 remi 统一认证上下文信息。
      *
-     * <p>快捷方法，等价于 {@code getAuthInfo(YdszAuthInfo.class)}。
+     * <p>快捷方法，等价于 {@code getAuthInfo(RemiAuthInfo.class)}。
      *
-     * @return YdszAuthInfo 实例；非该类型或未写入时返回 null
+     * @return RemiAuthInfo 实例；非该类型或未写入时返回 null
      */
-    public static YdszAuthInfo getYdszAuthInfo() {
-        return getAuthInfo(YdszAuthInfo.class);
+    public static RemiAuthInfo getRemiAuthInfo() {
+        return getAuthInfo(RemiAuthInfo.class);
     }
 
     /**

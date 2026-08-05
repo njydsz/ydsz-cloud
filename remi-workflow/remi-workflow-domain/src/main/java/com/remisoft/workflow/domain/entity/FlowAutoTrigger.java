@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
  * </ul>
  *
  * <p><b>触发时机：</b>由 {@code FlowAutoTriggerListener} 监听 {@link FlowInstance} 终态事件，
- * 按 {@code sortOrder} 升序依次匹配，匹配成功则调用 {@code YdszWorkflowFacade.start} 启动目标流程。
+ * 按 {@code sortOrder} 升序依次匹配，匹配成功则调用 {@code RemiWorkflowFacade.start} 启动目标流程。
  *
  * <p><b>条件表达式（{@code conditionExpression}）：</b>Aviator 语法，可访问源实例变量，
  * 如 {@code amount > 100000 && projectType == "INFRA"}，为空则无条件触发。

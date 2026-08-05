@@ -162,7 +162,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（继承 `AbstractGenericHttpMessageConverter`，支持泛型类型 `@RequestBody List<User>`、`@YdszJsonView`、`streamingEnabled` / `maxRequestBodySize` 配置） |
+| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（继承 `AbstractGenericHttpMessageConverter`，支持泛型类型 `@RequestBody List<User>`、`@JsonView`、`streamingEnabled` / `maxRequestBodySize` 配置） |
 | `JsonReactiveUtils` | WebFlux 响应式编码工具 |
 | `JsonWarmupRunner` | ASM 预热 Runner（应用启动后异步预热高频序列化 Bean 的 ASM 字节码） |
 | `JsonProperties` | 配置属性类（`remi.json.*`） |
@@ -416,7 +416,7 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 ## 注意事项
 
 1. **零外部 JSON 库依赖**：本模块纯 Java 实现，不引入 Jackson / FastJSON / Gson。`jackson-annotations` 仅作为 `optional` 编译期依赖（消除 Spring Boot 4.x 依赖中的 Jackson 注解警告），运行期不强制。
-2. **ASM 字节码生成与 GraalVM 兼容**：热路径生成字节码避免反射开销；`GraalVmDetector` 检测 Native Image 环境后自动降级为反射 + MethodHandle 路径，`AutoTypeWhitelistScanner` 启动时扫描 `@YdszJsonClass` 注解类注册白名单。
+2. **ASM 字节码生成与 GraalVM 兼容**：热路径生成字节码避免反射开销；`GraalVmDetector` 检测 Native Image 环境后自动降级为反射 + MethodHandle 路径，`AutoTypeWhitelistScanner` 启动时扫描 `@JsonClass` 注解类注册白名单。
 3. **AutoType 安全模式**：默认开启 `safe-mode=true`，防止反序列化漏洞。`AutoTypeChecker` 支持包前缀白名单回退匹配，`TYPE_CHECK_CACHE` 为 LRU 有界缓存（max 4096）避免内存泄漏。
 4. **BigDecimal 精度模式**：`use-big-decimal=true` 启用 BigDecimal 解析路径（金融场景精度保护），默认 `false` 走 Double 路径（性能更高）。
 5. **ASM 预热**：`warmup-classes` 配置项指定启动时预热的类列表，`JsonWarmupRunner` 在应用启动后异步预生成 ASM 字节码，避免首次请求延迟尖峰。也可通过 `RemiJson.warmup(Class...)` 手动触发。
@@ -435,11 +435,11 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
 - **v1.0.0**（2026-08-02）：基于源码核对修正文档与代码不一致：
-  - 删除不存在的 `@YdszJsonField` 注解（代码中未实现，仅在 `@JsonProperty`/`@JsonIgnore`/`@JsonFormat` 的 Javadoc `{@link}` 中残留无效引用）
-  - 删除不存在的 `@YdszJsonFormat` 注解（实际格式化注解为 `@JsonFormat`，Jackson 兼容）
+  - 删除不存在的 `@RemiJsonField` 注解（代码中未实现，仅在 `@JsonProperty`/`@JsonIgnore`/`@JsonFormat` 的 Javadoc `{@link}` 中残留无效引用）
+  - 删除不存在的 `@RemiJsonFormat` 注解（实际格式化注解为 `@JsonFormat`，Jackson 兼容）
   - `SchemaValidator` → `JsonSchemaValidator`（类名修正，影响 Section 9 与使用示例 3）
   - 使用示例 4 import 包名 `com.njdsz` → `com.remisoft`（拼写错误）
-  - 补全 `@YdszJsonClass` 类级配置能力说明（ordering/ignores/includes/naming/seeAlso/features 等 14 项属性）
+  - 补全 `@JsonClass` 类级配置能力说明（ordering/ignores/includes/naming/seeAlso/features 等 14 项属性）
   - 标注 `JsonSchema` 的 `@Experimental` 状态
   - 补全 `JsonSchema` 静态工厂方法列表与 `JsonPath` 支持的 7 种路径表达式
 - **v1.0.0**（2026-08-03）：架构优化与 Bug 修复（P0-P2）：

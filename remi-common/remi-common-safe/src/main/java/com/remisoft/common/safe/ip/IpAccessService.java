@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.redis.service.RedisService;
@@ -55,7 +55,7 @@ public class IpAccessService {
         this.properties = properties;
         this.redisService = redisService;
 
-        this.blacklistCache = YdszCache.<String, Boolean>newBuilder()
+        this.blacklistCache = RemiCache.<String, Boolean>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(properties.getLocalCacheTtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(properties.getLocalCacheSize())

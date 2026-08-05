@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.exception.custom.BusinessException;
@@ -40,7 +40,7 @@ public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {
 
     public InMemoryCsrfTokenRepository(long expirationSeconds) {
         this.expirationSeconds = expirationSeconds;
-        this.tokenCache = YdszCache.<String, CsrfToken>newBuilder()
+        this.tokenCache = RemiCache.<String, CsrfToken>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(expirationSeconds * 2L, TimeUnit.SECONDS)
                 .build();

@@ -20,17 +20,17 @@
 
 | 类 | 说明 |
 |---|---|
-| `AbstractYdszException` | REMI 异常抽象基类（错误码 + i18n 消息 + 扩展数据 + 链路追踪），懒加载消息解析（DCL 线程安全） |
+| `AbstractRemiException` | REMI 异常抽象基类（错误码 + i18n 消息 + 扩展数据 + 链路追踪），懒加载消息解析（DCL 线程安全） |
 | `BusinessException` | 业务异常（默认 HTTP 400 / ERROR / BUSINESS），支持链式 `data()` 附加数据 |
 | `SysException` | 系统异常（默认 HTTP 500 / ERROR / SYSTEM），用于基础设施故障类异常 |
-| `YdszExceptionBuilder` | 异常构建器抽象基类（CRTP 模式，类型安全的链式构建） |
+| `RemiExceptionBuilder` | 异常构建器抽象基类（CRTP 模式，类型安全的链式构建） |
 | `ExceptionInfo` | 异常响应信息封装类（code / key / message / details / path / traceId / httpStatus） |
 
 异常层级设计：
 
 ```
 RuntimeException
-  └─ AbstractYdszException            ← REMI 异常抽象基类
+  └─ AbstractRemiException            ← REMI 异常抽象基类
        ├─ BusinessException             ← 业务异常（HTTP 4xx，可预期）
        └─ SysException                  ← 系统异常（HTTP 5xx，不可预期）
 ```
@@ -59,8 +59,8 @@ RuntimeException
 
 | 类 | 说明 |
 |---|---|
-| `YdszResultCode` | 模块错误码注解（标记在枚举类上，声明 `module` 与 `description`） |
-| `ResultCodeScanner` | 启动时扫描 `classpath*:com/remisoft/**/*.class` 中所有 `@YdszResultCode` 标注的枚举类，注册到双注册中心 |
+| `RemiResultCode` | 模块错误码注解（标记在枚举类上，声明 `module` 与 `description`） |
+| `ResultCodeScanner` | 启动时扫描 `classpath*:com/remisoft/**/*.class` 中所有 `@RemiResultCode` 标注的枚举类，注册到双注册中心 |
 | `ResultCodeRegistry` | 错误码文档注册表（按模块分组，供 Actuator 端点展示） |
 
 扫描器在 `ApplicationReadyEvent` 时确定性扫描注册，同时注册到 `ResultCodeRegistry`（文档端点）与 `ExceptionCodeRegistry`（反查 API），确保所有错误码在应用就绪后被注册。
@@ -103,7 +103,7 @@ traceId 提取优先级：`MDC.get("traceId")` → Request Header `X-Trace-Id` �
 
 | 类 | 说明 |
 |---|---|
-| `I18nConfiguration` | 国际化核心配置，桥接 `MessageSource` 到 `AbstractYdszException`（注入消息解析器） |
+| `I18nConfiguration` | 国际化核心配置，桥接 `MessageSource` 到 `AbstractRemiException`（注入消息解析器） |
 | `WebI18nConfiguration` | Web 端国际化配置（`LocaleResolver` + `LocaleChangeInterceptor`），仅在 spring-webmvc 在类路径时装配 |
 | `I18nProperties` | i18n 配置属性（`remi.i18n.*`） |
 
@@ -243,9 +243,9 @@ throw new SysException(UnifiedExceptionCode.DATABASE_ERROR, cause)
 
 ```java
 import com.remisoft.common.exception.enums.ExceptionCode;
-import com.remisoft.common.exception.registry.YdszResultCode;
+import com.remisoft.common.exception.registry.RemiResultCode;
 
-@YdszResultCode(module = "user", description = "用户中心错误码")
+@RemiResultCode(module = "user", description = "用户中心错误码")
 public enum UserExceptionCode implements ExceptionCode {
     USER_NOT_FOUND("U10001", "user.not.found", 404),
     USER_ALREADY_EXISTS("U10002", "user.already.exists", 409);
@@ -300,7 +300,7 @@ remi:
 | `ExceptionCode` | 异常码接口，业务模块实现该接口定义自己的错误码枚举 | `UnifiedExceptionCode`（内置）+ 业务模块自定义枚举 |
 | `ExceptionCategory` | 异常分类 SPI，5 大主分类 + 5 个细分场景 | 框架内置枚举 |
 | `ExceptionLevel` | 异常级别 SPI，INFO / WARN / ERROR / FATAL | 框架内置枚举 |
-| `YdszResultCode` | 模块错误码注解，标记需要自动扫描注册的枚举类 | 业务模块自定义枚举 |
+| `RemiResultCode` | 模块错误码注解，标记需要自动扫描注册的枚举类 | 业务模块自定义枚举 |
 | `BaseExceptionHandler` | 异常处理器抽象基类，业务可继承扩展自定义异常处理逻辑 | `MvcExceptionHandler` / `WebFluxExceptionHandler` / `JdbcExceptionHandler` / `ValidationExceptionHandler` |
 
 ## 健康检查
@@ -322,10 +322,10 @@ remi:
 
 ## 注意事项
 
-1. **仅两个具体异常类**：业务模块不应继承 `AbstractYdszException` 创建新的异常子类，应直接使用 `BusinessException` 或 `SysException`，通过 `ExceptionCategory` 区分场景。
+1. **仅两个具体异常类**：业务模块不应继承 `AbstractRemiException` 创建新的异常子类，应直接使用 `BusinessException` 或 `SysException`，通过 `ExceptionCategory` 区分场景。
 2. **i18n fail-fast 校验**：启动时会校验所有已注册 `ExceptionCode` 的 i18n key 是否可解析，缺失会阻止应用启动。可通过 `remi.i18n.validate-on-startup=false` 关闭（不推荐）。
 3. **高基数 code tag 治理**：`metrics-include-code-tag` 默认关闭，仅在错误码数量可控且需要按 code 维度查询时显式开启，避免 Prometheus 指标爆炸。
-4. **懒加载消息解析**：异常抛出时只存储 i18n key + params，`getMessage()` 调用时才解析。消息解析器由 `I18nConfiguration` 通过 `AbstractYdszException.setMessageResolver()` 静态注入，未注入时降级返回 key。
+4. **懒加载消息解析**：异常抛出时只存储 i18n key + params，`getMessage()` 调用时才解析。消息解析器由 `I18nConfiguration` 通过 `AbstractRemiException.setMessageResolver()` 静态注入，未注入时降级返回 key。
 5. **错误码注册模式**：`ExceptionCodeRegistry.register()` 宽松模式（重复注册保留首次值 + warn 日志）；`registerStrict()` 严格模式（重复注册 fail-fast 抛 `IllegalStateException`），跨模块冲突时建议使用严格模式。
 6. **traceId 提取降级链**：所有异常处理器统一从 SLF4J MDC 提取 traceId，降级到 Request Header `X-Trace-Id` → `X-Request-Id`，由 common-core 的 `TraceIdGenerator` 注入 MDC。
 7. **ProblemDetail type URI**：`problem-detail-type-base-url` 默认 `about:blank`，配置后会拼接 `/{category}` 作为 type URI，如 `https://api.example.com/errors/business`。

@@ -3,9 +3,9 @@ package com.remisoft.common.core.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.boot.health.contributor.Status;
 
 import com.remisoft.common.core.constant.PageConstants;
 import com.remisoft.common.core.response.BaseResponse;

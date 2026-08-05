@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 
-import com.remisoft.common.cache.spring.YdszCacheManager;
-import com.remisoft.common.cache.spring.SpringYdszCache;
+import com.remisoft.common.cache.spring.RemiCacheManager;
+import com.remisoft.common.cache.spring.SpringRemiCache;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
@@ -20,7 +20,7 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 /**
  * 缓存可观测性自动配置
  *
- * <p>当 classpath 中存在 Micrometer 和 YdszCacheManager 时， 自动为每个缓存注册 {@link CacheMeterBinder} 指标（含
+ * <p>当 classpath 中存在 Micrometer 和 RemiCacheManager 时， 自动为每个缓存注册 {@link CacheMeterBinder} 指标（含
  * P50/P90/P99 分位数 Timer）。
  *
  * <p>动态绑定：实现 {@link SmartInitializingSingleton}，在所有单例 Bean 初始化完成后绑定已有缓存的指标，
@@ -46,16 +46,16 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  */
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)
-@ConditionalOnBean({MeterRegistry.class, YdszCacheManager.class})
+@ConditionalOnBean({MeterRegistry.class, RemiCacheManager.class})
 public class CacheMetricsAutoConfiguration {
 
   /**
-   * 注册缓存指标绑定器，将 YdszCacheManager 管理的缓存暴露为 Micrometer 指标。
+   * 注册缓存指标绑定器，将 RemiCacheManager 管理的缓存暴露为 Micrometer 指标。
    *
    * <p>由于用户在运行时可能动态创建新缓存，普通静态绑定无法覆盖，故返回 {@link CacheMetricsRegistrar}
    * 这一 {@link SmartInitializingSingleton}：它在所有单例 Bean 就绪后被动绑定已存在缓存，并对外提供
    * {@code registerCache} 供运行时动态注册。仅在 classpath 同时存在 {@code MeterRegistry} 与
-   * {@code YdszCacheManager} 时装配（见类级 {@code @ConditionalOnBean}），缺失监控依赖时整体不生效，
+   * {@code RemiCacheManager} 时装配（见类级 {@code @ConditionalOnBean}），缺失监控依赖时整体不生效，
    * 不影响缓存本身功能。
    *
    * @param cacheManager 缓存管理器，由 Spring 容器注入，不会为 null
@@ -64,7 +64,7 @@ public class CacheMetricsAutoConfiguration {
    */
   @Bean
   public CacheMetricsRegistrar cacheMetricsRegistrar(
-      YdszCacheManager cacheManager, MeterRegistry meterRegistry) {
+      RemiCacheManager cacheManager, MeterRegistry meterRegistry) {
     return new CacheMetricsRegistrar(cacheManager, meterRegistry);
   }
 
@@ -75,11 +75,11 @@ public class CacheMetricsAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(CacheMetricsRegistrar.class);
 
-    private final YdszCacheManager cacheManager;
+    private final RemiCacheManager cacheManager;
     private final MeterRegistry meterRegistry;
     private final Set<String> registeredCacheNames = ConcurrentHashMap.newKeySet();
 
-    CacheMetricsRegistrar(YdszCacheManager cacheManager, MeterRegistry meterRegistry) {
+    CacheMetricsRegistrar(RemiCacheManager cacheManager, MeterRegistry meterRegistry) {
       this.cacheManager = cacheManager;
       this.meterRegistry = meterRegistry;
     }
@@ -109,7 +109,7 @@ public class CacheMetricsAutoConfiguration {
       if (registeredCacheNames.contains(cacheName)) {
         return;
       }
-      SpringYdszCache springCache = cacheManager.getCache(cacheName);
+      SpringRemiCache springCache = cacheManager.getCache(cacheName);
       if (springCache == null) {
         return;
       }

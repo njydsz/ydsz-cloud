@@ -22,7 +22,7 @@ import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
-import com.remisoft.common.exception.custom.AbstractYdszException;
+import com.remisoft.common.exception.custom.AbstractRemiException;
 import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>{@link MessageSource} 多环境适配：开发环境实时加载，生产环境缓存</li>
  *   <li>{@link Validator} 关联 Hibernate Validator 与 i18n 消息</li>
- *   <li>异常模块的 {@link AbstractYdszException#setMessageResolver} 注入</li>
+ *   <li>异常模块的 {@link AbstractRemiException#setMessageResolver} 注入</li>
  * </ul>
  *
  * <p>Web MVC 相关（LocaleResolver/LocaleChangeInterceptor）由 {@link WebI18nConfiguration} 条件装配，
@@ -80,7 +80,7 @@ public class I18nConfiguration {
     /**
      * 在 Bean 初始化完成后注入异常消息国际化解析器。
      *
-     * <p>将 Spring {@link MessageSource} 桥接到 {@link AbstractYdszException}，
+     * <p>将 Spring {@link MessageSource} 桥接到 {@link AbstractRemiException}，
      * 使异常被抛出时只存储 i18n key + 参数，
      * 在 {@code getMessage()} 被调用时才懒加载解析为本地化消息。
      *
@@ -93,7 +93,7 @@ public class I18nConfiguration {
             log.warn("MessageSource 未找到，异常消息将降级为返回 i18n key");
             return;
         }
-        AbstractYdszException.setMessageResolver(
+        AbstractRemiException.setMessageResolver(
                 (key, params) -> messageSource.getMessage(key, params, key, LocaleContextHolder.getLocale())
         );
         log.info("异常消息国际化解析器已注入 | MessageSource: {}", messageSource.getClass().getSimpleName());

@@ -31,7 +31,7 @@ import lombok.ToString;
  * @see ExceptionCategory#SYSTEM
  */
 @ToString(callSuper = true)
-public class SysException extends AbstractYdszException {
+public class SysException extends AbstractRemiException {
 
     private static final long serialVersionUID = 1L;
 
@@ -267,7 +267,7 @@ public class SysException extends AbstractYdszException {
     /**
      * 系统异常构建器，预置默认的错误码、HTTP状态码、级别和分类
      */
-    public static class SysExceptionBuilder extends YdszExceptionBuilder<SysException, SysExceptionBuilder> {
+    public static class SysExceptionBuilder extends RemiExceptionBuilder<SysException, SysExceptionBuilder> {
 
         @Override
         protected SysExceptionBuilder self() {

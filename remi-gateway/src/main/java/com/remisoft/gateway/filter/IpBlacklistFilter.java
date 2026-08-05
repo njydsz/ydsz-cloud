@@ -16,7 +16,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.core.response.BaseResponse;
@@ -75,7 +75,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
     private static final long LOCAL_CACHE_MAX_SIZE = 50_000;
 
     /** L1 本地缓存：IP → 是否在黑名单中 */
-    private final Cache<String, Boolean> localCache = YdszCache.<String, Boolean>newBuilder()
+    private final Cache<String, Boolean> localCache = RemiCache.<String, Boolean>newBuilder()
             .type(CacheType.STRIPED)
             .expireAfterWrite(LOCAL_CACHE_TTL_SECONDS, TimeUnit.SECONDS)
             .maximumSize(LOCAL_CACHE_MAX_SIZE)

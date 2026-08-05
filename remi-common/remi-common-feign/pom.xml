@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>remi-common-feign</artifactId>
     <name>remi-common-feign</name>
-    <description>YdszFeign - 企业级 OpenFeign 统一增强模块</description>
+    <description>RemiFeign - 企业级 OpenFeign 统一增强模块</description>
 
     <parent>
         <groupId>com.remisoft</groupId>

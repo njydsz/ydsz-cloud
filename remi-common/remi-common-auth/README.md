@@ -34,7 +34,7 @@ REMI 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 | `@AuthColPermission` | `AuthColPermissionAspect` | 列级字段权限 |
 | `@DataScope` | — | 数据范围注解（部门/用户字段过滤，配合 JDBC SQL 拦截器） |
 | `@PermissionMode`（新增） | — | 权限校验模式枚举（`AND` 全部满足 / `OR` 任一满足） |
-| `@EnableYdszAuth`（新增） | — | 启用认证注解，`@Import` 导入 `AuthConfiguration` + `AuthFilterConfiguration` |
+| `@EnableRemiAuth`（新增） | — | 启用认证注解，`@Import` 导入 `AuthConfiguration` + `AuthFilterConfiguration` |
 
 ### 3. 切面
 
@@ -209,16 +209,16 @@ REMI 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 
 ### 2. 启用认证
 
-在 Spring Boot 主类上添加 `@EnableYdszAuth`，自动装配 RBAC 权限、数据权限、列级权限等能力：
+在 Spring Boot 主类上添加 `@EnableRemiAuth`，自动装配 RBAC 权限、数据权限、列级权限等能力：
 
 ```java
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import com.remisoft.common.auth.annotation.EnableYdszAuth;
+import com.remisoft.common.auth.annotation.EnableRemiAuth;
 
 @SpringBootApplication
-@EnableYdszAuth
+@EnableRemiAuth
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -463,4 +463,4 @@ remi:
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：补全 `@PermissionMode`/`@EnableYdszAuth`、响应式 Token 黑名单（`ReactiveTokenBlacklistService`）、布隆过滤器（`TokenBlacklistBloomFilter`）、权限层级（`PermissionHierarchy`）、权限预检（`PermissionPreCheck`/`PermissionPreChecker`/`PermissionCheckResult`）、列权限签名（`AuthColPermissionSigner`/`AuthDigestUtils`）、指标（`AuthMetrics`/`AuthMetricsCollector`/`PermissionMetrics`）、租户上下文（`TenantContextHolderImpl`）、工具与国际化（`AccessTokenUtils`/`PermissionMerger`/`PermissionUtils`/`PermissionMessageResolver`）、预热（`PermissionWarmUpInitializer`）等章节。
+- **v1.0.0**（2026-08-02）：补全 `@PermissionMode`/`@EnableRemiAuth`、响应式 Token 黑名单（`ReactiveTokenBlacklistService`）、布隆过滤器（`TokenBlacklistBloomFilter`）、权限层级（`PermissionHierarchy`）、权限预检（`PermissionPreCheck`/`PermissionPreChecker`/`PermissionCheckResult`）、列权限签名（`AuthColPermissionSigner`/`AuthDigestUtils`）、指标（`AuthMetrics`/`AuthMetricsCollector`/`PermissionMetrics`）、租户上下文（`TenantContextHolderImpl`）、工具与国际化（`AccessTokenUtils`/`PermissionMerger`/`PermissionUtils`/`PermissionMessageResolver`）、预热（`PermissionWarmUpInitializer`）等章节。

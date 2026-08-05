@@ -11,7 +11,7 @@ import com.remisoft.common.auth.config.AuthProperties;
 import com.remisoft.common.auth.model.DataScopeInfo;
 import com.remisoft.common.auth.service.DataPermissionResolver;
 import com.remisoft.common.auth.service.RbacUserInfoService;
-import com.remisoft.common.cache.YdszCache;
+import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.cache.listener.RemovalCause;
@@ -58,7 +58,7 @@ import com.remisoft.common.util.string.StringUtils;
  * 
  * @see DataPermissionResolver
  * @see DataScopeInfo
- * @see YdszCache
+ * @see RemiCache
  */
 public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
 
@@ -79,9 +79,9 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
     private Cache<String, DataScopeInfo> buildCache() {
         Integer ttlSeconds = properties.getRoleDataCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return YdszCache.<String, DataScopeInfo>newBuilder().build();
+            return RemiCache.<String, DataScopeInfo>newBuilder().build();
         }
-        return YdszCache.<String, DataScopeInfo>newBuilder()
+        return RemiCache.<String, DataScopeInfo>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, DataScopeInfo value, RemovalCause cause) -> {
