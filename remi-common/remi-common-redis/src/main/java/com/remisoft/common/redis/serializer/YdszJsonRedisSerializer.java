@@ -8,20 +8,20 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.type.JsonType;
 
 /**
- * YdszJson 版本的 Redis 序列化工具类
+ * RemiJson 版本的 Redis 序列化工具类
  *
- * <p>提供基于 {@link YdszJson} 的高性能序列化实现，用于 Redis 值的序列化/反序列化。
- * 统一使用 remi-common-json 中的 YdszJson 引擎，确保全项目 JSON 处理的一致性。
+ * <p>提供基于 {@link RemiJson} 的高性能序列化实现，用于 Redis 值的序列化/反序列化。
+ * 统一使用 remi-common-json 中的 RemiJson 引擎，确保全项目 JSON 处理的一致性。
  *
  * <p><b>主要功能：</b>
  * <ul>
- *   <li>对象序列化为 JSON 字节数组（通过 YdszJson.toJsonBytes）</li>
- *   <li>JSON 字节数组反序列化为对象（通过 YdszJson.fromJsonBytes）</li>
- *   <li>支持 Java 8 时间类型（由 YdszJson 内部处理）</li>
+ *   <li>对象序列化为 JSON 字节数组（通过 RemiJson.toJsonBytes）</li>
+ *   <li>JSON 字节数组反序列化为对象（通过 RemiJson.fromJsonBytes）</li>
+ *   <li>支持 Java 8 时间类型（由 RemiJson 内部处理）</li>
  *   <li>支持复杂对象嵌套</li>
  *   <li>支持泛型类型（如 {@code List<User>}、{@code Map<String, Object>}）</li>
  * </ul>
@@ -83,7 +83,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
     /**
      * 序列化对象
      *
-     * <p>使用 {@link YdszJson#toJsonBytes(Object)} 将对象转换为 JSON 字节数组。
+     * <p>使用 {@link RemiJson#toJsonBytes(Object)} 将对象转换为 JSON 字节数组。
      *
      * @param t 要序列化的对象
      * @return 序列化后的字节数组
@@ -95,7 +95,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
             return new byte[0];
         }
         try {
-            return YdszJson.toJsonBytes(t);
+            return RemiJson.toJsonBytes(t);
         } catch (Exception e) {
             throw new SerializationException("Redis对象序列化失败", e);
         }
@@ -104,7 +104,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
     /**
      * 反序列化字节数组
      *
-     * <p>使用 {@link YdszJson#fromJsonBytes(byte[], Class)} 将字节数组反序列化为对象。
+     * <p>使用 {@link RemiJson#fromJsonBytes(byte[], Class)} 将字节数组反序列化为对象。
      *
      * @param bytes 序列化后的字节数组
      * @return 反序列化后的对象
@@ -118,9 +118,9 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
         }
         try {
             if (typeRef != null) {
-                return YdszJson.fromJsonBytes(bytes, typeRef);
+                return RemiJson.fromJsonBytes(bytes, typeRef);
             }
-            return YdszJson.fromJsonBytes(bytes, clazz);
+            return RemiJson.fromJsonBytes(bytes, clazz);
         } catch (Exception e) {
             throw new SerializationException("Redis对象反序列化失败", e);
         }

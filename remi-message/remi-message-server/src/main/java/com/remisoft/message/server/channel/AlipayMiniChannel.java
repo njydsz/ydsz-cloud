@@ -20,7 +20,7 @@ import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.json.type.JsonType;
 import com.remisoft.common.util.id.SnowflakeUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.MessageProperties;
 
@@ -87,7 +87,7 @@ public class AlipayMiniChannel implements MessageChannel {
                     data.put(entry.getKey(),
                             entry.getValue() == null ? "" : String.valueOf(entry.getValue()));
                 }
-                bizContent.put("data", YdszJson.toJson(data));
+                bizContent.put("data", RemiJson.toJson(data));
             }
 
             Map<String, Object> params = new HashMap<>();
@@ -98,7 +98,7 @@ public class AlipayMiniChannel implements MessageChannel {
             params.put("timestamp", LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             params.put("version", "1.0");
-            params.put("biz_content", YdszJson.toJson(bizContent));
+            params.put("biz_content", RemiJson.toJson(bizContent));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -120,7 +120,7 @@ public class AlipayMiniChannel implements MessageChannel {
             String respBody = resp.getBody();
 
             // 解析响应（支付宝返回 JSON）
-            Map<String, Object> result = YdszJson.toObject(respBody, new JsonType<Map<String, Object>>() {});
+            Map<String, Object> result = RemiJson.toObject(respBody, new JsonType<Map<String, Object>>() {});
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
                 if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {

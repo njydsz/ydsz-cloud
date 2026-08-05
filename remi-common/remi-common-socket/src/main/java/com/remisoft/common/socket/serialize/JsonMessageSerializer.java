@@ -1,13 +1,13 @@
 package com.remisoft.common.socket.serialize;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * JSON 消息序列化器默认实现（P3-5）。
  *
- * <p>使用项目统一的 {@link YdszJson} 引擎进行序列化/反序列化。
+ * <p>使用项目统一的 {@link RemiJson} 引擎进行序列化/反序列化。
  *
  * @author remi-team
  * @since 1.0.0
@@ -24,7 +24,7 @@ public class JsonMessageSerializer implements MessageSerializer {
             return s;
         }
         try {
-            return YdszJson.toJson(payload);
+            return RemiJson.toJson(payload);
         } catch (Exception e) {
             log.warn("[WS-Serialize] 序列化失败, 降级 toString: {}", e.getMessage());
             return String.valueOf(payload);

@@ -2,7 +2,7 @@ package com.remisoft.common.socket.cluster;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.socket.config.WebSocketProperties;
 import com.remisoft.common.socket.resilience.WebSocketCircuitBreaker;
 import com.remisoft.common.socket.trace.WebSocketTraceContext;
@@ -51,7 +51,7 @@ public class WebSocketClusterPublisher {
     }
 
     private boolean doPublish(WebSocketClusterMessage message) {
-        String json = YdszJson.toJson(message);
+        String json = RemiJson.toJson(message);
         String channel = properties.getCluster().getChannel();
         redisTemplate.convertAndSend(channel, json);
         log.debug("[WS-Cluster] 发布集群推送: type={} userId={} topic={} traceId={}",

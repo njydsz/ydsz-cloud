@@ -17,7 +17,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.file.config.FileProperties;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.file.config.FileUploadProperties;
 import com.remisoft.common.file.constant.FileConstant;
 import com.remisoft.common.file.domain.ChunkedUploadResult;
@@ -495,7 +495,7 @@ public class MinioStorage extends AbstractFileStorage {
                     "conditions", List.of(
                             List.of("starts-with", "$key", resolvedPrefix),
                             List.of("eq", "$bucket", resolvedBucket)));
-            String policyJson = YdszJson.toJson(policyMap);
+            String policyJson = RemiJson.toJson(policyMap);
 
             String policyBase64 = Base64.getEncoder().encodeToString(policyJson.getBytes(StandardCharsets.UTF_8));
 

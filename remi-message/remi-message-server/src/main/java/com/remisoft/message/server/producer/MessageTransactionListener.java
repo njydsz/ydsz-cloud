@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.security.TenantContext;
 import com.remisoft.common.json.JsonMapper;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.entity.template.MsgTemplate;
 import com.remisoft.message.server.channel.ChannelRouter;
 import com.remisoft.message.server.service.template.TemplateService;
@@ -132,7 +132,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         }
         Object payload = message.getPayload();
         if (payload instanceof String str) {
-            return YdszJson.toObject(str, MessageRequest.class);
+            return RemiJson.toObject(str, MessageRequest.class);
         }
         try {
             return JsonMapper.getDefault().convertValue(payload, MessageRequest.class);

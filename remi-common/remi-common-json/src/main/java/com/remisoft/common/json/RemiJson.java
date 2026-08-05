@@ -24,7 +24,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 /**
- * YdszJson - 超高性能 JSON 工具类（深度优化版）
+ * RemiJson - 超高性能 JSON 工具类（深度优化版）
  *
  * <p>提供高性能、功能丰富的 JSON 序列化和反序列化功能，纯 Java 实现，无需额外依赖。</p>
  * 
@@ -56,10 +56,10 @@ import java.util.*;
  * @author remi-team
  * @since 1.0.0
  */
-public class YdszJson {
+public class RemiJson {
 
-    private YdszJson() {
-        throw new UnsupportedOperationException("YdszJson is a utility class and cannot be instantiated");
+    private RemiJson() {
+        throw new UnsupportedOperationException("RemiJson is a utility class and cannot be instantiated");
     }
 
     // ==================== 指标监控钩子 ====================
@@ -75,7 +75,7 @@ public class YdszJson {
      * @param callback 指标回调实例，null 表示关闭监控
      */
     public static void setMetricsCallback(JsonMetricsCallback callback) {
-        YdszJson.metricsCallback = callback;
+        RemiJson.metricsCallback = callback;
     }
 
     /**
@@ -357,7 +357,7 @@ public class YdszJson {
     }
 
     /**
-     * 获取已注册的自定义序列化器（来自 {@code YdszJson.register(...)} 或 {@code JsonModule} 模块）。
+     * 获取已注册的自定义序列化器（来自 {@code RemiJson.register(...)} 或 {@code JsonModule} 模块）。
      *
      * <p>供序列化 Provider 在 {@code @JsonSerialize} 注解快速路径之后回退查询。
      * 历史实现中该方法虽存在但未被 Provider 实际调用，导致模块注册机制形同虚设；
@@ -374,7 +374,7 @@ public class YdszJson {
     }
 
     /**
-     * 获取已注册的自定义反序列化器（来自 {@code YdszJson.register(...)} 或 {@code JsonModule} 模块）。
+     * 获取已注册的自定义反序列化器（来自 {@code RemiJson.register(...)} 或 {@code JsonModule} 模块）。
      *
      * @param clazz 目标类型
      * @param <T> 类型参数
@@ -470,7 +470,7 @@ public class YdszJson {
     /**
      * 将对象序列化为 JsonNode 树。
      *
-     * <p>与 {@link JsonMapper#valueToTree(Object)} 语义一致，可直接使用 YdszJson 静态入口调用。</p>
+     * <p>与 {@link JsonMapper#valueToTree(Object)} 语义一致，可直接使用 RemiJson 静态入口调用。</p>
      *
      * @param obj 要序列化的对象
      * @return JsonNode 树

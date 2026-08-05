@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.entity.FlowHisTask;
 import com.remisoft.workflow.domain.entity.FlowInstance;
 import com.remisoft.workflow.infra.mapper.FlowHisTaskMapper;
@@ -235,7 +235,7 @@ public class FlowExportServiceImpl implements FlowExportService {
             return new LinkedHashMap<>();
         }
         try {
-            Map<String, Object> map = YdszJson.parseMap(json);
+            Map<String, Object> map = RemiJson.parseMap(json);
             return map != null ? map : new LinkedHashMap<>();
         } catch (Exception e) {
             log.warn("[Export] 变量解析失败: {}", e.getMessage());

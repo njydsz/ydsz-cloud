@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * YdszJson 配置属性。
+ * RemiJson 配置属性。
  *
  * <p>支持通过 YAML 配置文件控制 JSON 序列化/反序列化的全局参数。
  *
@@ -42,7 +42,7 @@ import jakarta.validation.constraints.NotNull;
 @Validated
 public class JsonProperties {
 
-    /** 是否启用 YdszJson */
+    /** 是否启用 RemiJson */
     private boolean enabled = true;
 
     /** 全局日期格式 */

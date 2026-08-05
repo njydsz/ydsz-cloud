@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.collection.MapUtils;
 import com.remisoft.workflow.domain.entity.FlowDmnDecision;
 import com.remisoft.workflow.domain.entity.FlowDmnRule;
@@ -586,7 +586,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             return Collections.emptyList();
         }
         try {
-            List<?> list = YdszJson.parseArray(json);
+            List<?> list = RemiJson.parseArray(json);
             if (list == null) {
                 return Collections.emptyList();
             }
@@ -608,7 +608,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             return Collections.emptyList();
         }
         try {
-            List<?> list = YdszJson.parseArray(json);
+            List<?> list = RemiJson.parseArray(json);
             if (list == null) {
                 return Collections.emptyList();
             }

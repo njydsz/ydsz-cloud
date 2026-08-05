@@ -3,7 +3,7 @@ package com.remisoft.workflow.server.job;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.stereotype.Component;
 
@@ -88,7 +88,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private Integer parseInteger(String json, String key) {
         if (json == null || json.isBlank()) return null;
         try {
-            Map<String, Object> obj = YdszJson.parseMap(json);
+            Map<String, Object> obj = RemiJson.parseMap(json);
             if (obj == null) return null;
             Object raw = obj.get(key);
             Integer v = raw instanceof Number n ? n.intValue() : null;
@@ -102,7 +102,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private Long parseLong(String json, String key) {
         if (json == null || json.isBlank()) return null;
         try {
-            Map<String, Object> obj = YdszJson.parseMap(json);
+            Map<String, Object> obj = RemiJson.parseMap(json);
             if (obj == null) return null;
             Object raw = obj.get(key);
             Long v = raw instanceof Number n ? n.longValue() : null;

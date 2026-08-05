@@ -26,7 +26,7 @@ import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.security.TenantContext;
 import com.remisoft.common.util.id.SnowflakeUtils;
 import com.remisoft.common.util.id.TracerUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.constant.MessageConstants;
 import com.remisoft.message.domain.dto.batch.BatchSendResult;
 import com.remisoft.message.domain.dto.core.MessageLogQueryDTO;
@@ -474,7 +474,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setBizId(request.getBizId());
         logDO.setReceiver(ctx.receiver);
         logDO.setTemplateCode(ctx.templateCode);
-        logDO.setTemplateParams(YdszJson.toJson(request.getParams()));
+        logDO.setTemplateParams(RemiJson.toJson(request.getParams()));
         logDO.setContent(rendered.content);
         logDO.setStatus(MessageStatusEnum.PENDING.name());
         logDO.setPriority(resolvePriority(request));

@@ -17,7 +17,7 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.literule.server.cep.CEPEngine;
 import com.remisoft.literule.server.cep.CEPEvent;
@@ -108,7 +108,7 @@ public class CEPTestController {
             if (patternObj == null) {
                 return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "pattern 不能为空");
             }
-            CEPPattern pattern = YdszJson.fromJson(YdszJson.toJson(patternObj), CEPPattern.class);
+            CEPPattern pattern = RemiJson.fromJson(RemiJson.toJson(patternObj), CEPPattern.class);
             if (pattern.getId() == null || pattern.getId().isBlank()) {
                 pattern.setId("TEST_TMP_" + System.nanoTime());
             }

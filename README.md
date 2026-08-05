@@ -115,7 +115,7 @@ graph TB
 | **认证鉴权** | jjwt | 0.12.6 | JWT Token |
 | **文档 & API** | SpringDoc + Knife4j | 3.0.3 / 4.5.0 | OpenAPI 3.0 文档 |
 | **对象映射** | MapStruct | 1.6.3 | 编译期代码生成 |
-| **JSON** | fastjson2 | 2.0.62 | ASM 字节码增强 |
+| **JSON** | remi-common-json<br/>（RemiJson） | 自研 | 零外部依赖 · ASM 字节码 · SIMD 向量化 |
 | **监控** | Micrometer + Prometheus + Sentry | — | 指标采集 / 异常追踪 |
 | **日志** | Logback + Logstash Encoder | 7.4 | JSON 格式日志输出 |
 

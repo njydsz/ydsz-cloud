@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,12 +128,12 @@ public class RedisConversationMemory implements ConversationMemory {
             sm.promptTokens = message.getTokenUsage().getPromptTokens();
             sm.completionTokens = message.getTokenUsage().getCompletionTokens();
         }
-        return YdszJson.toJson(sm);
+        return RemiJson.toJson(sm);
     }
 
     private ChatMessage deserializeMessage(String json) {
         try {
-            SerializedMessage sm = YdszJson.toObject(json, SerializedMessage.class);
+            SerializedMessage sm = RemiJson.toObject(json, SerializedMessage.class);
             MessageRole role = MessageRole.valueOf(sm.role);
             TokenUsage usage = null;
             if (sm.promptTokens > 0 || sm.completionTokens > 0) {

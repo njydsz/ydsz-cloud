@@ -15,7 +15,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * 消息分发器 — 基于 {@link MessageHandler} 注解自动路由消息到处理方法。
@@ -103,7 +103,7 @@ public class MessageDispatcher extends ChannelInboundHandlerAdapter {
         String json = buf.toString(CharsetUtil.UTF_8);
         Map<String, Object> data;
         try {
-            data = YdszJson.parseMap(json);
+            data = RemiJson.parseMap(json);
         } catch (Exception e) {
             log.warn("[Netty-Dispatcher] 消息解析失败: {}", e.getMessage());
             super.channelRead(ctx, msg);

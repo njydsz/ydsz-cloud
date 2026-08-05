@@ -13,7 +13,7 @@
     <artifactId>remi-common-json</artifactId>
     <packaging>jar</packaging>
     <name>remi-common-json</name>
-    <description>REMI 公共依赖 - 高性能 JSON 序列化/反序列化引擎（YdszJson，零外部 JSON 库依赖）</description>
+    <description>REMI 公共依赖 - 高性能 JSON 序列化/反序列化引擎（RemiJson，零外部 JSON 库依赖）</description>
 
     <properties>
         <asm.version>9.9</asm.version>
@@ -99,7 +99,7 @@
             Jackson annotations（optional，编译期可见，运行期不强制）
             spring-boot 4.x 的 spring-boot-health / spring-boot-actuator / spring-web 7.0.x
             的 class 文件字节码中带有 @JsonInclude 等 Jackson 注解。本模块刻意不强制依赖
-            Jackson 引擎（用 Ydsz YdszJson 替代），但需要 Jackson annotations jar 提供
+            Jackson 引擎（用 Ydsz RemiJson 替代），但需要 Jackson annotations jar 提供
             注解 class 文件供 javac 在读取这些依赖 class 时解析，否则会持续报
             "未知的枚举常量 com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY"
             警告。声明为 optional 即可在编译期消除警告，又不强制本模块使用者必须引入 Jackson 核心。
@@ -182,7 +182,7 @@
                         </executions>
                         <configuration>
                             <imageName>remi-common-json</imageName>
-                            <mainClass>com.remisoft.common.json.YdszJson</mainClass>
+                            <mainClass>com.remisoft.common.json.RemiJson</mainClass>
                             <buildArgs>
                                 <buildArg>--no-fallback</buildArg>
                                 <buildArg>--verbose</buildArg>

@@ -87,7 +87,7 @@ class JsonPathTest {
 
     @Test
     void getWithObjectInput() {
-        java.util.Map<String, Object> obj = YdszJson.parseMap(JSON);
+        java.util.Map<String, Object> obj = RemiJson.parseMap(JSON);
         Object name = JsonPath.get(obj, "$.user.name");
         assertEquals("Alice", name);
     }

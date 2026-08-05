@@ -20,7 +20,7 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.literule.api.RuleDefinition;
 import com.remisoft.literule.api.dto.RuleImportDTO;
@@ -174,7 +174,7 @@ public class RuleImportExportController {
                     skipped++;
                     continue;
                 }
-                RuleDefinition def = YdszJson.fromJson(YdszJson.toJson(ruleMap), RuleDefinition.class);
+                RuleDefinition def = RemiJson.fromJson(RemiJson.toJson(ruleMap), RuleDefinition.class);
                 // 导入时重置版本和状态
                 def.setVersion(1);
                 def.setStatus("DRAFT");

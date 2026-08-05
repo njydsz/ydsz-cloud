@@ -83,7 +83,7 @@ public class AgentAutoConfiguration {
      */
     @Bean
     public AgentJsonModule agentJsonModule() {
-        // P1-1：注册 Agent 领域模型的 YdszJson 自定义序列化器/反序列化器。
+        // P1-1：注册 Agent 领域模型的 RemiJson 自定义序列化器/反序列化器。
         // 由 JsonAutoConfiguration.JsonConfigBean 自动发现并加入 JsonModuleRegistrar，
         // 使 ChatRequest/ChatMessage/ToolCall/ToolDefinition/TokenUsage 在全局 toJson/toObject
         // 路径中统一产出 OpenAI 契约形状（替代 OpenAiCompatibleClient 手工拼装）。

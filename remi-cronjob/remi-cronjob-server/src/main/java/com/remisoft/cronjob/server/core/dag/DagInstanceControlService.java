@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.stereotype.Service;
 
@@ -317,7 +317,7 @@ public class DagInstanceControlService {
             if (jobKey.equals(node.getJobKey())
                     && DagNodeStatus.WAITING_FOR_APPROVAL.name().equals(node.getNodeStatus())) {
                 DagNodeStatus newStatus = approved ? DagNodeStatus.SUCCESS : DagNodeStatus.APPROVAL_REJECTED;
-                String resultJson = comment != null ? YdszJson.toJson(Map.of("comment", comment)) : null;
+                String resultJson = comment != null ? RemiJson.toJson(Map.of("comment", comment)) : null;
                 dagNodeInstanceMapper.markFinished(node.getId(),
                         newStatus.name(), LocalDateTime.now(), 0, null,
                         approved ? "审批通过" : "审批拒绝", resultJson);

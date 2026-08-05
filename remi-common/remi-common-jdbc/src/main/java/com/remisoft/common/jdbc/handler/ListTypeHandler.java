@@ -9,7 +9,7 @@ import java.util.List;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * List 类型 JSON 转换处理器
@@ -71,7 +71,7 @@ public class ListTypeHandler extends BaseTypeHandler<List<Object>> {
      */
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, List<Object> parameter, JdbcType jdbcType) throws SQLException {
-        ps.setString(i, YdszJson.toJson(parameter));
+        ps.setString(i, RemiJson.toJson(parameter));
     }
 
     /**
@@ -124,6 +124,6 @@ public class ListTypeHandler extends BaseTypeHandler<List<Object>> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return YdszJson.parseArray(json, Object.class);
+        return RemiJson.parseArray(json, Object.class);
     }
 }

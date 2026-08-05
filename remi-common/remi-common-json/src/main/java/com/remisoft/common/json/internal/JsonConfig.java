@@ -8,7 +8,7 @@ import com.remisoft.common.json.provider.SerializationProvider;
 
 import com.remisoft.common.json.reader.JSONReader;
 /**
- * YdszJson 全局配置类
+ * RemiJson 全局配置类
  *
  * <p><b>内部 API：</b>此类主要供 {@code JsonAutoConfiguration} 和框架内部使用。
  * 业务代码请通过 {@code remi.json.*} 配置属性调整 JSON 行为，不要直接操作 JsonConfig。</p>

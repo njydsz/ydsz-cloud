@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 
 
@@ -496,7 +496,7 @@ public class FlowFormValidator {
             return null;
         }
         try {
-            return YdszJson.toObject(json, FlowFormSchema.class);
+            return RemiJson.toObject(json, FlowFormSchema.class);
         } catch (Exception e) {
             log.warn("[FormValidator] 解析表单 Schema 失败: {} err={}", json, e.getMessage());
             return null;

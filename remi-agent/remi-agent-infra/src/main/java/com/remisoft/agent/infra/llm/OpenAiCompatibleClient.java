@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.JsonMapper;
 import com.remisoft.common.json.naming.PropertyNamingStrategy;
 import com.remisoft.common.json.tree.ArrayNode;
@@ -276,7 +276,7 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     private ChatResponse parseResponse(String json) {
-        ObjectNode obj = (ObjectNode) YdszJson.readTree(json);
+        ObjectNode obj = (ObjectNode) RemiJson.readTree(json);
         String id = obj.get("id").asText();
         String model = obj.get("model").asText();
         ArrayNode choices = (ArrayNode) obj.get("choices");
@@ -297,7 +297,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                 ObjectNode function = (ObjectNode) call.get("function");
                 String name = function.get("name").asText();
                 String argsStr = function.get("arguments").asText();
-                Map<String, Object> args = YdszJson.toObject(argsStr, Map.class);
+                Map<String, Object> args = RemiJson.toObject(argsStr, Map.class);
                 toolCalls.add(new ToolCall(callId, name, args));
             }
         }
@@ -319,7 +319,7 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     private ChatChunk parseChunk(String data) {
         try {
-            ObjectNode obj = (ObjectNode) YdszJson.readTree(data);
+            ObjectNode obj = (ObjectNode) RemiJson.readTree(data);
             String id = obj.get("id").asText();
             String model = obj.get("model").asText();
             ArrayNode choices = (ArrayNode) obj.get("choices");

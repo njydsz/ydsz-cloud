@@ -51,8 +51,8 @@ class AsmFieldTypeTest {
         bean.setByteVal((byte) 3);
         bean.setByteBox(Byte.valueOf((byte) 5));
 
-        String json = YdszJson.toJson(bean);
-        AllTypesBean back = YdszJson.toObject(json, AllTypesBean.class);
+        String json = RemiJson.toJson(bean);
+        AllTypesBean back = RemiJson.toObject(json, AllTypesBean.class);
 
         assertEquals("hello", back.getStringVal());
         assertEquals(42, back.getIntVal());
@@ -77,8 +77,8 @@ class AsmFieldTypeTest {
         bean.setCharVal('A');
         bean.setCharBox(Character.valueOf('Z'));
 
-        String json = YdszJson.toJson(bean);
-        CharBean back = YdszJson.toObject(json, CharBean.class);
+        String json = RemiJson.toJson(bean);
+        CharBean back = RemiJson.toObject(json, CharBean.class);
 
         assertEquals('A', back.getCharVal());
         assertEquals(Character.valueOf('Z'), back.getCharBox());
@@ -91,8 +91,8 @@ class AsmFieldTypeTest {
         bean.setLocalDate(LocalDate.of(2026, 8, 3));
         bean.setDate(new Date(1738000000000L));
 
-        String json = YdszJson.toJson(bean);
-        DateTimeBean back = YdszJson.toObject(json, DateTimeBean.class);
+        String json = RemiJson.toJson(bean);
+        DateTimeBean back = RemiJson.toObject(json, DateTimeBean.class);
 
         assertEquals(LocalDateTime.of(2026, 8, 3, 14, 30, 0), back.getLocalDateTime());
         assertEquals(LocalDate.of(2026, 8, 3), back.getLocalDate());
@@ -110,8 +110,8 @@ class AsmFieldTypeTest {
         bean.setMap(map);
         bean.setIntList(Arrays.asList(10, 20, 30));
 
-        String json = YdszJson.toJson(bean);
-        CollectionMapBean back = YdszJson.toObject(json, CollectionMapBean.class);
+        String json = RemiJson.toJson(bean);
+        CollectionMapBean back = RemiJson.toObject(json, CollectionMapBean.class);
 
         assertEquals(Arrays.asList("a", "b", "c"), back.getList());
         assertNotNull(back.getSet());
@@ -130,8 +130,8 @@ class AsmFieldTypeTest {
         child.setValue(99);
         bean.setChild(child);
 
-        String json = YdszJson.toJson(bean);
-        NestedParentBean back = YdszJson.toObject(json, NestedParentBean.class);
+        String json = RemiJson.toJson(bean);
+        NestedParentBean back = RemiJson.toObject(json, NestedParentBean.class);
 
         assertEquals(1, back.getId());
         assertNotNull(back.getChild());
@@ -146,8 +146,8 @@ class AsmFieldTypeTest {
         bean.setIntBox(null);
         bean.setLongBox(null);
 
-        String json = YdszJson.toJson(bean);
-        AllTypesBean back = YdszJson.toObject(json, AllTypesBean.class);
+        String json = RemiJson.toJson(bean);
+        AllTypesBean back = RemiJson.toObject(json, AllTypesBean.class);
 
         assertNull(back.getStringVal());
         assertNull(back.getIntBox());

@@ -26,7 +26,7 @@ import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.file.domain.FileStorage;
 import com.remisoft.common.file.storage.IFileStorage;
 import com.remisoft.common.file.storage.IFileStorageProvider;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.nextwiki.domain.entity.FileNode;
 import com.remisoft.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.remisoft.nextwiki.domain.event.FileOperatedEvent;
@@ -599,7 +599,7 @@ public class ChunkUploadApplicationService {
     }
 
     /**
-     * 分片上传会话（Redis 存储，P0-R4: 改用 YdszJson 序列化替代管道符分隔）。
+     * 分片上传会话（Redis 存储，P0-R4: 改用 RemiJson 序列化替代管道符分隔）。
      * <p>会话承载一次分片上传的全部上下文，TTL 由 {@link #SESSION_TTL} 控制，过期即视为放弃。
      */
     @Data
@@ -620,11 +620,11 @@ public class ChunkUploadApplicationService {
         private String createdAt;
 
         String toJson() {
-            return YdszJson.toJson(this);
+            return RemiJson.toJson(this);
         }
 
         static ChunkUploadSession fromJson(String json) {
-            return YdszJson.fromJson(json, ChunkUploadSession.class);
+            return RemiJson.fromJson(json, ChunkUploadSession.class);
         }
     }
 }

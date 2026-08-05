@@ -20,7 +20,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `JsonEncoder` | 统一 JSON 编码器（基于 YdszJson） |
+| `JsonEncoder` | 统一 JSON 编码器（基于 RemiJson） |
 | `JsonDecoder` | 统一 JSON 解码器 |
 | `ResponseUnwrapDecoder` | 响应解包解码器（自动提取 `BaseResponse.data`） |
 

@@ -3,7 +3,7 @@ package com.remisoft.workflow.server.form;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.schema.JsonSchemaValidator;
 import com.remisoft.common.json.schema.ValidationResult;
 import com.remisoft.common.json.schema.JsonSchema;
@@ -52,7 +52,7 @@ public class FlowFormEngineService {
             return null;
         }
         try {
-            Map<String, Object> extJson = YdszJson.parseMap(nodeExt);
+            Map<String, Object> extJson = RemiJson.parseMap(nodeExt);
             if (extJson == null) {
                 return null;
             }

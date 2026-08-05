@@ -1,6 +1,6 @@
 package com.remisoft.common.feign.codec;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * 基于 Jackson 的 Feign JSON 编码器。
  *
- * <p>使用 {@link YdszJson} 作为 JSON 序列化实现，提供统一的 JSON 编码能力。
+ * <p>使用 {@link RemiJson} 作为 JSON 序列化实现，提供统一的 JSON 编码能力。
  *
  * @author remi-team
  * @since 1.0.0
@@ -40,7 +40,7 @@ public class JsonEncoder implements Encoder {
         }
 
         try {
-            String json = YdszJson.toJson(object);
+            String json = RemiJson.toJson(object);
             requestTemplate.body(json.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
             requestTemplate.header("Content-Type", CONTENT_TYPE);
         } catch (Exception e) {

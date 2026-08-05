@@ -11,7 +11,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.sentry.domain.LogEvent;
 import com.remisoft.common.sentry.resilience.CircuitBreaker;
 import com.remisoft.common.sentry.spi.LogPublisher;
@@ -127,7 +127,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
                         "values", new Object[][]{{timestampNs, logLine}}
                 )
         });
-        return YdszJson.toJson(payload);
+        return RemiJson.toJson(payload);
     }
 
     @Override
@@ -178,7 +178,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
         labels.put("level", events.get(0).getLevel() != null ? events.get(0).getLevel().name() : "INFO");
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("streams", new Object[]{ Map.of("stream", labels, "values", values) });
-        return YdszJson.toJson(payload);
+        return RemiJson.toJson(payload);
     }
 
         @Override

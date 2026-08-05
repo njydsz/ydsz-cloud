@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.remisoft.common.base.config.DocProperties;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.type.JsonType;
 import com.remisoft.common.util.yaml.YamlUtils;
 
@@ -189,7 +189,7 @@ public abstract class AbstractDocExporter implements DocExporter {
         String description = docProperties.getInfo().getDescription();
 
         try {
-            Map<String, Object> root = YdszJson.toObject(apiDocs, new JsonType<Map<String, Object>>() {});
+            Map<String, Object> root = RemiJson.toObject(apiDocs, new JsonType<Map<String, Object>>() {});
             Map<String, Object> info = asMap(root.get("info"));
             if (info != null) {
                 if (info.containsKey("title")) {
@@ -246,7 +246,7 @@ public abstract class AbstractDocExporter implements DocExporter {
      */
     protected Map<String, Object> parseOpenApiJson(String apiDocs) {
         try {
-            return YdszJson.toObject(apiDocs, new JsonType<Map<String, Object>>() {});
+            return RemiJson.toObject(apiDocs, new JsonType<Map<String, Object>>() {});
         } catch (Exception e) {
             logger.warn("解析 OpenAPI 文档失败: {}", e.getMessage());
             return new LinkedHashMap<>();

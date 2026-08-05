@@ -15,7 +15,7 @@ import com.remisoft.common.queue.enums.QueueType;
 import com.remisoft.common.queue.queue.IMessageQueue;
 import com.remisoft.common.queue.queue.IMessageQueueProvider;
 import com.remisoft.common.queue.service.IMessagePublisher;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.server.engine.FlowEventContext;
 import com.remisoft.workflow.server.engine.FlowWorkflowEvent;
 
@@ -99,7 +99,7 @@ public class FlowQueuePublisher {
             payload.put("taskId", event.getTaskId());
             payload.put("data", event.getData());
 
-            QueueMessage message = QueueMessage.of(YdszJson.toJson(payload));
+            QueueMessage message = QueueMessage.of(RemiJson.toJson(payload));
             message.addHeader("eventType", event.getEventType());
             message.addHeader("instanceId", event.getInstanceId());
             message.addHeader("source", "workflow");
@@ -136,7 +136,7 @@ public class FlowQueuePublisher {
             payload.put("tenantId", ctx.getTenantId());
             payload.put("traceId", ctx.getTraceId());
 
-            QueueMessage message = QueueMessage.of(YdszJson.toJson(payload));
+            QueueMessage message = QueueMessage.of(RemiJson.toJson(payload));
             message.addHeader("eventType", eventType);
             message.addHeader("instanceId", ctx.getInstanceId());
             message.addHeader("operatorId", ctx.getOperatorId());
@@ -179,7 +179,7 @@ public class FlowQueuePublisher {
             payload.put("eventType", eventType);
             payload.putAll(data);
 
-            QueueMessage message = QueueMessage.of(YdszJson.toJson(payload));
+            QueueMessage message = QueueMessage.of(RemiJson.toJson(payload));
             message.addHeader("eventType", eventType);
             message.addHeader("source", "workflow");
             // 透传 instanceId/initiationId 便于消费者做消息路由

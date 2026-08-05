@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>子类提供具体的 {@link BaseCorsProperties} 和 {@link BaseTraceProperties} 实现，
  * 以及注册自己的拦截器和过滤器 Bean。
  *
- * <p>JSON 序列化统一使用 YdszJson 引擎（通过 remi-common-json 的 JsonHttpMessageConverter 自动注册）。
+ * <p>JSON 序列化统一使用 RemiJson 引擎（通过 remi-common-json 的 JsonHttpMessageConverter 自动注册）。
  *
  * @author remi-team
  * @since 1.0.0

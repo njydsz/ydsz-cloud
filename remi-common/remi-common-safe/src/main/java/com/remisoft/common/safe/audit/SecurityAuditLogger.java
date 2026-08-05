@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.safe.alert.SecurityEvent;
 
 import java.util.HashMap;
@@ -65,7 +65,7 @@ public class SecurityAuditLogger {
                 "payload", event.getAttackPayload() != null ? event.getAttackPayload() : ""
         );
 
-        auditLog.warn(YdszJson.toJson(logEntry));
+        auditLog.warn(RemiJson.toJson(logEntry));
     }
 
     /**
@@ -89,6 +89,6 @@ public class SecurityAuditLogger {
             logEntry.put("details", details);
         }
 
-        auditLog.info(YdszJson.toJson(logEntry));
+        auditLog.info(RemiJson.toJson(logEntry));
     }
 }

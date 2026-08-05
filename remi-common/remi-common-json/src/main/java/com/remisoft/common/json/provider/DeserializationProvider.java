@@ -21,16 +21,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.annotation.JsonDeserialize;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.deserializer.JsonDeserializer;
 import com.remisoft.common.json.exception.JsonDeserializationException;
 import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.reader.JSONReader;
 
 /**
- * YdszJson 反序列化提供者（零拷贝优化版）
+ * RemiJson 反序列化提供者（零拷贝优化版）
  *
- * <p>架构层级：YdszJson => Provider => Parser</p>
+ * <p>架构层级：RemiJson => Provider => Parser</p>
  *
  * <p><b>核心优化：</b></p>
  * <ul>
@@ -264,8 +264,8 @@ public final class DeserializationProvider {
             // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
             Object customDeserializer = getCustomDeserializer(clazz);
             if (customDeserializer == null) {
-                // 模块注册 / 全局注册 快速路径：JsonModule.SpringFactory 或 YdszJson.register(...) 注册的反序列化器
-                customDeserializer = YdszJson.getRegisteredDeserializer(clazz);
+                // 模块注册 / 全局注册 快速路径：JsonModule.SpringFactory 或 RemiJson.register(...) 注册的反序列化器
+                customDeserializer = RemiJson.getRegisteredDeserializer(clazz);
             }
             if (customDeserializer != null) {
                 Object result = invokeCustomDeserializer(customDeserializer, json, clazz);

@@ -12,7 +12,7 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.entity.FlowNode;
 import com.remisoft.workflow.domain.entity.FlowSkip;
 import com.remisoft.workflow.domain.enums.FlowNodeType;
@@ -204,7 +204,7 @@ public class FlowGraphValidator {
         // 优先从 ext JSON 的 sourceRef 字段获取
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
+                Map<String, Object> ext = RemiJson.parseMap(skip.getExt());
                 if (ext != null) {
                     Object src = ext.get("sourceRef");
                     if (src != null) {

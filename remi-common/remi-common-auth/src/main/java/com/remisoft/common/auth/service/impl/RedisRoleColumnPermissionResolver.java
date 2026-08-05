@@ -8,7 +8,7 @@ import com.remisoft.common.cache.YdszCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.cache.listener.RemovalCause;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.JsonNode;
 import com.remisoft.common.json.tree.ObjectNode;
 import com.remisoft.common.redis.service.ops.RedisStringOps;
@@ -146,7 +146,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
             return ColumnScopeInfo.empty();
         }
         try {
-            JsonNode node = YdszJson.readTree(json);
+            JsonNode node = RemiJson.readTree(json);
             if (node == null || node.isNull() || node.isMissing()) {
                 return ColumnScopeInfo.empty();
             }

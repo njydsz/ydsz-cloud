@@ -44,7 +44,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
  *   <li>R26: @Scheduled 定时任务必须使用 @DistributedScheduled 注解（集群安全）</li>
  *   <li>R27: HealthIndicator 不允许使用 @Component 注解（应通过 @Bean 注册）</li>
  *   <li>R28: 禁止使用 Executors.newFixedThreadPool/newCachedThreadPool（应通过 common-thread 统一管理；ScheduledExecutorService 变体因调度需求豁免）</li>
- *   <li>R29: 禁止使用外部 JSON 库（全仓库统一使用 YdszJson）</li>
+ *   <li>R29: 禁止使用外部 JSON 库（全仓库统一使用 RemiJson）</li>
  *   <li>R30: Controller 中 BaseResponse.error() 禁止无 error code 的单参调用（防止前端收到 A99999 盲盒）</li>
  * </ul>
  *
@@ -467,7 +467,7 @@ public class ArchitectureRulesTest {
     /**
      * R29: 禁止使用外部 JSON 库（Jackson/Fastjson/Gson）。
      *
-     * <p>全仓库必须统一使用 {@code YdszJson}（remi-common-json 模块）作为唯一 JSON 底座。
+     * <p>全仓库必须统一使用 {@code RemiJson}（remi-common-json 模块）作为唯一 JSON 底座。
      * 禁止直接依赖以下外部 JSON 库的 API：
      * <ul>
      *   <li>{@code com.fasterxml.jackson.core}（ObjectMapper / JsonNode 等）</li>
@@ -497,7 +497,7 @@ public class ArchitectureRulesTest {
                     "com.fasterxml.jackson.databind..",
                     "com.alibaba.fastjson..",
                     "com.google.gson..")
-            .because("全仓库必须统一使用 YdszJson（remi-common-json），"
+            .because("全仓库必须统一使用 RemiJson（remi-common-json），"
                     + "禁止直接依赖 Jackson/Fastjson/Gson 等外部 JSON 库");
 
     // ========================================

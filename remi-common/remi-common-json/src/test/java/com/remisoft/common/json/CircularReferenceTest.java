@@ -36,7 +36,7 @@ class CircularReferenceTest {
         a.setNext(b);
         b.setNext(a);
 
-        String json = YdszJson.toJson(a);
+        String json = RemiJson.toJson(a);
         assertNotNull(json);
         assertTrue(json.contains("\"name\":\"A\""));
     }
@@ -51,7 +51,7 @@ class CircularReferenceTest {
         a.setNext(b);
         b.setNext(a);
 
-        String json = YdszJson.toJson(a);
+        String json = RemiJson.toJson(a);
         assertNotNull(json);
         assertTrue(json.contains("\"name\":\"A\""));
     }
@@ -67,7 +67,7 @@ class CircularReferenceTest {
         b.setNext(a);
 
         // ERROR 策略下应抛出异常（当前实现抛出 StackOverflowError，属于 Error 子类）
-        assertThrows(Throwable.class, () -> YdszJson.toJson(a));
+        assertThrows(Throwable.class, () -> RemiJson.toJson(a));
     }
 
     @Test
@@ -77,7 +77,7 @@ class CircularReferenceTest {
         a.setName("leaf");
         a.setNext(null);
 
-        String json = YdszJson.toJson(a);
+        String json = RemiJson.toJson(a);
         assertNotNull(json);
         assertTrue(json.contains("\"name\":\"leaf\""));
     }
@@ -89,7 +89,7 @@ class CircularReferenceTest {
         a.setName("self");
         a.setNext(a);
 
-        String json = YdszJson.toJson(a);
+        String json = RemiJson.toJson(a);
         assertNotNull(json);
         assertTrue(json.contains("\"name\":\"self\""));
     }

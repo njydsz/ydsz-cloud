@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ArrayNode;
 import com.remisoft.common.json.tree.JsonNode;
 import com.remisoft.common.json.tree.ObjectNode;
@@ -112,7 +112,7 @@ public class ScriptJobHandler implements JobHandler {
             throw new IllegalArgumentException("SHELL 任务参数(paramsJson)为空");
         }
 
-        ObjectNode params = YdszJson.parseObject(paramsJson);
+        ObjectNode params = RemiJson.parseObject(paramsJson);
         String language = params.getString("language");
         if (!StringUtils.hasText(language)) {
             throw new IllegalArgumentException("SHELL 任务参数缺少 language（shell/python）");

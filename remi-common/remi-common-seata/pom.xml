@@ -24,7 +24,7 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-core</artifactId>
         </dependency>
-        <!-- remi-common-json（RedisTccTransactionLogStore 使用 YdszJson，显式声明避免传递依赖） -->
+        <!-- remi-common-json（RedisTccTransactionLogStore 使用 RemiJson，显式声明避免传递依赖） -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-json</artifactId>
@@ -86,7 +86,7 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- TccTransactionLog JSON 序列化使用 remi-common-json 的 YdszJson，无需 jackson-databind -->
+        <!-- TccTransactionLog JSON 序列化使用 remi-common-json 的 RemiJson，无需 jackson-databind -->
         <!-- spring-web (optional, for XID servlet filter) -->
         <dependency>
             <groupId>org.springframework</groupId>

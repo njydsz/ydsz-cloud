@@ -8,7 +8,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.JsonNode;
 import com.remisoft.common.json.tree.ObjectNode;
 import com.remisoft.common.json.schema.JsonSchema;
@@ -115,7 +115,7 @@ public class HttpJobHandler implements JobHandler {
             throw new IllegalArgumentException("HTTP 任务参数(paramsJson)为空");
         }
 
-        ObjectNode params = YdszJson.parseObject(paramsJson);
+        ObjectNode params = RemiJson.parseObject(paramsJson);
 
         // P2-1: JsonSchema 参数结构校验（试点验证自研 schema 引擎）
         List<String> schemaErrors = validateParams((Map<String, Object>) params.asValue());

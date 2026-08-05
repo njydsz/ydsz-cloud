@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +42,7 @@ public class TemplateVariableValidator {
             return List.of();
         }
         try {
-            return YdszJson.parseArray(variableDefs, TemplateVariableDef.class);
+            return RemiJson.parseArray(variableDefs, TemplateVariableDef.class);
         } catch (Exception e) {
             log.warn("[VariableValidator] 变量定义解析失败,跳过校验: {}", e.getMessage(), e);
             return List.of();
@@ -153,7 +153,7 @@ public class TemplateVariableValidator {
                 case LIST -> {
                     if (!(value instanceof List) && !(value instanceof String[])) {
                         // 尝试 JSON 解析
-                        YdszJson.parseArray(value.toString());
+                        RemiJson.parseArray(value.toString());
                     }
                 }
             }

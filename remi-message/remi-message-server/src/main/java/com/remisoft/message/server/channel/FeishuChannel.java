@@ -23,7 +23,7 @@ import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.util.id.SnowflakeUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.ChannelProperties;
 
@@ -110,13 +110,13 @@ public class FeishuChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(YdszJson.toJson(payload))
+                    .body(RemiJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = YdszJson.parseMap(response.getBody());
+                Map<String, Object> body = RemiJson.parseMap(response.getBody());
                 // 飞书 v2 hook 返回 {"code":0,"msg":"success"}，0 表示成功
                 int code = ((Number) body.getOrDefault("code", -1)).intValue();
                 if (code == 0) {

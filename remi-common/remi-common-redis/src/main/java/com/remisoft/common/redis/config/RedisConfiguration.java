@@ -55,7 +55,7 @@ import com.remisoft.common.redis.service.ops.RedisTransactionOps;
  *
  * <p><b>主要功能：</b>
  * <ul>
- *   <li>使用 YdszJson 作为高性能序列化器</li>
+ *   <li>使用 RemiJson 作为高性能序列化器</li>
  *   <li>支持连接池配置（commons-pool2）</li>
  *   <li>支持 SSL 配置</li>
  *   <li>客户端自动选择（通过 remi.redis.client.type 配置）</li>
@@ -132,10 +132,10 @@ public class RedisConfiguration {
     }
 
     /**
-     * 创建 YdszJson 序列化器（默认）
+     * 创建 RemiJson 序列化器（默认）
      *
      * <p>当 {@code remi.redis.serializer=remi-json} 或未配置时启用。
-     * 使用 YdszJson 作为 Redis 值的序列化引擎，
+     * 使用 RemiJson 作为 Redis 值的序列化引擎，
      * 支持 Java 8 时间类型。
      *
      * <p><b>配置示例：</b>
@@ -160,7 +160,7 @@ public class RedisConfiguration {
      * <p>配置序列化方式：
      * <ul>
      *   <li>Key：使用 StringRedisSerializer，确保可读性</li>
-     * <li>Value：根据 {@code remi.redis.serializer} 配置选择序列化器（默认 YdszJson）</li>
+     * <li>Value：根据 {@code remi.redis.serializer} 配置选择序列化器（默认 RemiJson）</li>
      *   <li>Hash Key：使用 StringRedisSerializer</li>
      *   <li>Hash Value：使用与 Value 相同的序列化器</li>
      * </ul>

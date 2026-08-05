@@ -50,7 +50,7 @@
             <artifactId>remi-common-redis</artifactId>
         </dependency>
 
-        <!-- JSON 序列化统一使用 remi-common-json 的 YdszJson 引擎 -->
+        <!-- JSON 序列化统一使用 remi-common-json 的 RemiJson 引擎 -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-json</artifactId>

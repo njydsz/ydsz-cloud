@@ -8,7 +8,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ObjectNode;
 
 import org.springframework.stereotype.Component;
@@ -66,7 +66,7 @@ public class CrossClusterDispatcher {
             return null;
         }
         String url = baseUrl + "/cronjob/internal/execute";
-        String requestBody = YdszJson.toJson(request);
+        String requestBody = RemiJson.toJson(request);
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -77,7 +77,7 @@ public class CrossClusterDispatcher {
                     .build();
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                ObjectNode json = YdszJson.parseObject(response.body());
+                ObjectNode json = RemiJson.parseObject(response.body());
                 int code = json.getIntegerOrDefault("code", -1);
                 if (code == 0) {
                     String logId = json.getString("data");

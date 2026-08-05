@@ -22,7 +22,7 @@ import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
 import com.remisoft.common.file.domain.FileStorage;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.lock.annotation.LockType;
 import com.remisoft.common.lock.core.DistributedLocker;
 import com.remisoft.common.lock.strategy.LockStrategy;
@@ -674,7 +674,7 @@ public class FileApplicationService {
         }
         try {
             outboxService.appendToOutbox("FileNode", aggregateId, eventType,
-                    YdszJson.toJson(payload));
+                    RemiJson.toJson(payload));
         } catch (Exception e) {
             log.warn("Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());

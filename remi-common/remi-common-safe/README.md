@@ -29,7 +29,7 @@
 | `HTMLFilter` | HTML 标签过滤器 |
 | `EscapeUtils` | HTML / JS / CSS / URL / XML 转义工具 |
 | `XssValidator` / `@Xss` | 参数校验器与注解 |
-| `SafeJsonModule` | YdszJson 模块注册 |
+| `SafeJsonModule` | RemiJson 模块注册 |
 
 ### 2. SQL 注入防护
 

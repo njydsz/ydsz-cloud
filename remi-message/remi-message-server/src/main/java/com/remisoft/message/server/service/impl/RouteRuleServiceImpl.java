@@ -20,7 +20,7 @@ import com.remisoft.common.domain.query.PageQuery;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.security.TenantContext;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.constant.MessageConstants;
 import com.remisoft.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.remisoft.message.domain.entity.config.MsgRouteRule;
@@ -236,7 +236,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         try {
             String json = redisService.get(MessageConstants.ROUTE_RULE_CACHE_KEY, String.class);
             if (StringUtils.hasText(json)) {
-                List<MsgRouteRule> cached = YdszJson.parseArray(json, MsgRouteRule.class);
+                List<MsgRouteRule> cached = RemiJson.parseArray(json, MsgRouteRule.class);
                 if (cached != null) {
                     return cached;
                 }
@@ -249,7 +249,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 .orderByAsc(MsgRouteRule::getPriority));
         try {
             redisService.set(
-                    MessageConstants.ROUTE_RULE_CACHE_KEY, YdszJson.toJson(rules),
+                    MessageConstants.ROUTE_RULE_CACHE_KEY, RemiJson.toJson(rules),
                     CACHE_TTL);
         } catch (Exception e) {
             log.warn("[RouteRule] 缓存回填失败: {}", e.getMessage(), e);

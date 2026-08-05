@@ -31,7 +31,7 @@
 |---|---|
 | `LengthFieldFrameDecoder` | Length Field 拆包器，解决 TCP 粘包/半包问题（默认最大帧 1MB） |
 | `LengthFieldCodec` | Length Field 编解码组合（Decoder + LengthFieldPrepender 一站式），协议格式：4 字节长度 + Payload |
-| `JsonMessageCodec<T>` | JSON 消息编解码器，基于 `YdszJson` |
+| `JsonMessageCodec<T>` | JSON 消息编解码器，基于 `RemiJson` |
 
 协议格式：
 

@@ -25,7 +25,7 @@ import com.remisoft.common.queue.constant.YdszMessageTopics;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.security.TenantContext;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.constant.MessageConstants;
 import com.remisoft.message.domain.entity.core.MsgLog;
 import com.remisoft.message.domain.enums.core.MessageStatusEnum;
@@ -116,7 +116,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         body = MessageCompressor.decompressIfNeeded(body);
         MessageRequest request;
         try {
-            request = YdszJson.toObject(body, MessageRequest.class);
+            request = RemiJson.toObject(body, MessageRequest.class);
         } catch (Exception e) {
             log.error("[MessageConsumer] 解析失败: body={} err={}", body, e.getMessage(), e);
             return;

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +83,7 @@ public class PgVectorStore implements VectorStore {
                     metadata = EXCLUDED.metadata
                 """;
         String embeddingStr = chunk.hasEmbedding() ? vectorToString(chunk.getEmbedding()) : null;
-        String metadataJson = YdszJson.toJson(chunk.getMetadata());
+        String metadataJson = RemiJson.toJson(chunk.getMetadata());
         jdbcTemplate.update(sql,
                 chunk.getId(),
                 chunk.getDocumentId(),
@@ -136,7 +136,7 @@ public class PgVectorStore implements VectorStore {
                         Map<String, Object> metadata = new HashMap<>();
                         String metadataJson = rs.getString("metadata");
                         if (metadataJson != null && !metadataJson.isBlank()) {
-                            metadata = YdszJson.toObject(metadataJson, Map.class);
+                            metadata = RemiJson.toObject(metadataJson, Map.class);
                         }
                         return new TextChunk(
                                 rs.getString("id"),

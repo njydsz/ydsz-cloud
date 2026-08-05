@@ -3,13 +3,13 @@ package com.remisoft.common.json.parser;
 import java.math.BigDecimal;
 import java.util.*;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.exception.JsonDeserializationException;
 
 /**
- * YdszJson 底层 JSON 解析器（零依赖，JIT + 循环展开 优化版）
+ * RemiJson 底层 JSON 解析器（零依赖，JIT + 循环展开 优化版）
  * 
- * <p>直接解析 JSON 字符串为 Map/List 结构，不依赖 YdszJson。</p>
+ * <p>直接解析 JSON 字符串为 Map/List 结构，不依赖 RemiJson。</p>
  * 
  * <p><b>JIT 优化：</b></p>
  * <ul>
@@ -1252,10 +1252,10 @@ public final class JsonParserUtil {
             if (map == null) return null;
             return clazz.cast(map);
         }
-        // 非 Map 类型：解析为 Map 后委托 YdszJson 反序列化为目标 Bean
+        // 非 Map 类型：解析为 Map 后委托 RemiJson 反序列化为目标 Bean
         Map<String, Object> map = parseObject(json);
         if (map == null) return null;
-        return YdszJson.toObject(
-            YdszJson.toJson(map), clazz);
+        return RemiJson.toObject(
+            RemiJson.toJson(map), clazz);
     }
 }

@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.util.id.SnowflakeUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.service.receipt.ReadReceiptService;
 
@@ -151,7 +151,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addAttachments(MimeMessageHelper helper, String attachmentsJson) {
         try {
-            var attachments = YdszJson.parseArrayNode(attachmentsJson);
+            var attachments = RemiJson.parseArrayNode(attachmentsJson);
             for (int i = 0; i < attachments.size(); i++) {
                 var item = attachments.getJSONObject(i);
                 String name = item.getString("name");
@@ -176,7 +176,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addInlineImages(MimeMessageHelper helper, String inlineJson) {
         try {
-            var images = YdszJson.parseArrayNode(inlineJson);
+            var images = RemiJson.parseArrayNode(inlineJson);
             for (int i = 0; i < images.size(); i++) {
                 var item = images.getJSONObject(i);
                 String cid = item.getString("cid");

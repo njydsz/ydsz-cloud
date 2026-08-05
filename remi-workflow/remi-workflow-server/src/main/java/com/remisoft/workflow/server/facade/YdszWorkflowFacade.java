@@ -1,6 +1,6 @@
 package com.remisoft.workflow.server.facade;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.collection.MapUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -675,7 +675,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
                 continue;
             }
             try {
-                Map<String, Object> parsed = YdszJson.parseMap(coord);
+                Map<String, Object> parsed = RemiJson.parseMap(coord);
                 if (parsed != null && !parsed.isEmpty()) {
                     result.put(n.getNodeCode(), parsed);
                 }

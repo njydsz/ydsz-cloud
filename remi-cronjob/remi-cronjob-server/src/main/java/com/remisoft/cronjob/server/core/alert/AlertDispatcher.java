@@ -10,7 +10,7 @@ import java.util.Map;
 
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ArrayNode;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -269,7 +269,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            ArrayNode array = YdszJson.parseArrayNode(channelsJson);
+            ArrayNode array = RemiJson.parseArrayNode(channelsJson);
             List<AlertChannel> channels = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 AlertChannel channel = AlertChannel.parse(array.getString(i));
@@ -296,7 +296,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            ArrayNode array = YdszJson.parseArrayNode(receiversJson);
+            ArrayNode array = RemiJson.parseArrayNode(receiversJson);
             List<String> receivers = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 String receiver = array.getString(i);
@@ -525,7 +525,7 @@ public class AlertDispatcher {
             return "INAPP";
         }
         try {
-            ArrayNode array = YdszJson.parseArrayNode(channelsJson);
+            ArrayNode array = RemiJson.parseArrayNode(channelsJson);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < array.size(); i++) {
                 if (i > 0) {
@@ -558,7 +558,7 @@ public class AlertDispatcher {
                 array.add(trimmed);
             }
         }
-        return YdszJson.toJson(array);
+        return RemiJson.toJson(array);
     }
 
     /**
@@ -571,7 +571,7 @@ public class AlertDispatcher {
         }
         try {
             outboxService.appendToOutbox("Job", aggregateId, eventType,
-                    YdszJson.toJson(payload));
+                    RemiJson.toJson(payload));
         } catch (Exception e) {
             log.warn("[AlertDispatcher] Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());

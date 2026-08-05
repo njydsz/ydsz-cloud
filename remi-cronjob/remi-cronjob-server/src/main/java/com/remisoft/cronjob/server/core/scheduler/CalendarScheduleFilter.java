@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ArrayNode;
 import com.remisoft.common.json.tree.ObjectNode;
 
@@ -109,7 +109,7 @@ public class CalendarScheduleFilter {
             return Set.of();
         }
         try {
-            ObjectNode params = YdszJson.parseObject(paramsJson);
+            ObjectNode params = RemiJson.parseObject(paramsJson);
             ArrayNode holidaysArr = params.getJSONArray("holidays");
             if (holidaysArr == null || holidaysArr.isEmpty()) {
                 return Set.of();
@@ -140,7 +140,7 @@ public class CalendarScheduleFilter {
             return DEFAULT_CALENDAR_TYPE;
         }
         try {
-            ObjectNode params = YdszJson.parseObject(paramsJson);
+            ObjectNode params = RemiJson.parseObject(paramsJson);
             String type = params.getString("calendarType");
             return type != null ? type.toUpperCase() : DEFAULT_CALENDAR_TYPE;
         } catch (Exception e) {

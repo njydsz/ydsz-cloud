@@ -19,7 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * Webhook 投递器默认实现。
@@ -77,7 +77,7 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
         if (matched.isEmpty()) {
             return;
         }
-        String jsonPayload = YdszJson.toJson(payload);
+        String jsonPayload = RemiJson.toJson(payload);
         for (WebhookSubscription sub : matched) {
             dispatchWithRetry(sub, eventType, jsonPayload);
         }

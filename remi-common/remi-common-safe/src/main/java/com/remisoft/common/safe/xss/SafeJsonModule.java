@@ -7,10 +7,10 @@ import com.remisoft.common.json.module.ModuleDeserializerRegistry;
 import com.remisoft.common.json.module.JsonModule;
 
 /**
- * Safe 模块 YdszJson SPI 注册。
+ * Safe 模块 RemiJson SPI 注册。
  *
  * <p>实现 {@link JsonModule.SpringFactory} 接口，通过 Spring Boot 自动装配机制
- * 将 {@link XssStringDeserializer} 注册到 YdszJson 引擎，替代手动 {@code YdszJson.register()} 调用。
+ * 将 {@link XssStringDeserializer} 注册到 RemiJson 引擎，替代手动 {@code RemiJson.register()} 调用。
  *
  * <p>由 {@link XssAutoConfiguration} 声明为 {@code @Bean}，当
  * {@code remi.safe.xss.enabled=true} 时自动生效。

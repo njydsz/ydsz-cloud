@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.json.annotation.JsonSerialize;
 import com.remisoft.common.json.parser.JsonParserUtil;
@@ -25,9 +25,9 @@ import com.remisoft.common.json.writer.BeanSerializer;
 import com.remisoft.common.json.writer.JSONWriter;
 
 /**
- * YdszJson 序列化提供者（架构层）
+ * RemiJson 序列化提供者（架构层）
  *
- * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
+ * <p>架构层级：RemiJson => Engine => Provider => Parser</p>
  *
  * <p><b>ThreadLocal 清理机制：</b></p>
  * <ul>
@@ -443,8 +443,8 @@ public final class SerializationProvider {
         // @JsonSerialize 快速路径：如果类有 @JsonSerialize 注解，使用自定义序列化器
         Object customSerializer = getCustomSerializer(obj.getClass());
         if (customSerializer == null) {
-            // 模块注册 / 全局注册 快速路径：JsonModule.SpringFactory 或 YdszJson.register(...) 注册的序列化器
-            customSerializer = YdszJson.getRegisteredSerializer(obj.getClass());
+            // 模块注册 / 全局注册 快速路径：JsonModule.SpringFactory 或 RemiJson.register(...) 注册的序列化器
+            customSerializer = RemiJson.getRegisteredSerializer(obj.getClass());
         }
         if (customSerializer != null) {
             return invokeCustomSerializer(customSerializer, obj);
@@ -1118,7 +1118,7 @@ public final class SerializationProvider {
      *
      * <p><b>namingStrategy 说明：</b>命名策略存放在 {@link FieldMetadataLoader#NAMING_STRATEGY}
      * 这个独立 ThreadLocal 中（不在 SerializationContext 内）。此前快照未保存它，
-     * 导致 {@code YdszJson.toJson(obj, config)} 用不同命名策略序列化后未回滚，
+     * 导致 {@code RemiJson.toJson(obj, config)} 用不同命名策略序列化后未回滚，
      * 后续默认调用仍使用旧命名策略（配置泄漏）。现已补全。</p>
      *
      * <p><b>useBigDecimal 说明（P0-2 并发安全修复，2026-08-04）：</b>useBigDecimal

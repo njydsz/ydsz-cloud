@@ -14,7 +14,7 @@
     </parent>
 
     <dependencies>
-        <!-- remi-common-json（YdszJson 引擎，替代 Jackson） -->
+        <!-- remi-common-json（RemiJson 引擎，替代 Jackson） -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-json</artifactId>

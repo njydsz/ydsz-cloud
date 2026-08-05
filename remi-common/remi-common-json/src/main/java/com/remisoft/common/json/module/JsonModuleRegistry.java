@@ -11,7 +11,7 @@ import com.remisoft.common.json.deserializer.JsonDeserializer;
 import com.remisoft.common.json.serializer.JsonSerializer;
 
 /**
- * YdszJson 模块注册中心
+ * RemiJson 模块注册中心
  *
  * <p>核心模块管理类，负责模块的注册、排序和查询。
  *
@@ -90,7 +90,7 @@ public final class JsonModuleRegistry {
             }
             modules.add(module);
             sortModulesByPriority();
-            log.info("Registered YdszJson module: {} (priority={})", module.getModuleName(), module.getPriority());
+            log.info("Registered RemiJson module: {} (priority={})", module.getModuleName(), module.getPriority());
         }
     }
 
@@ -119,7 +119,7 @@ public final class JsonModuleRegistry {
         if (springFactories == null || springFactories.isEmpty()) {
             return;
         }
-        log.info("Discovering {} YdszJson Spring Factory modules", springFactories.size());
+        log.info("Discovering {} RemiJson Spring Factory modules", springFactories.size());
         registerModules(springFactories);
     }
 

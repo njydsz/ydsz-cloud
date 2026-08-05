@@ -41,18 +41,18 @@ import java.lang.annotation.Target;
  * }
  *
  * // 序列化 - 列表视图
- * String json = YdszJson.toJson(user, UserViews.List.class);
+ * String json = RemiJson.toJson(user, UserViews.List.class);
  * // 输出：{"id":1,"name":"John"}
  *
  * // 序列化 - 详情视图
- * String json = YdszJson.toJson(user, UserViews.Detail.class);
+ * String json = RemiJson.toJson(user, UserViews.Detail.class);
  * // 输出：{"id":1,"name":"John","email":"john@example.com","phone":"1234567890"}
  * </pre>
  *
  * <p><b>规范建议（R8）：</b>列表/详情接口的字段裁剪应统一使用 {@code @JsonView} +
- * {@code YdszJson.toJson(obj, ViewClass.class)}，<b>禁止</b>为不同视图创建多个 DTO 投影类。
+ * {@code RemiJson.toJson(obj, ViewClass.class)}，<b>禁止</b>为不同视图创建多个 DTO 投影类。
  * 视图类应集中定义在 domain 模块的 {@code XxxViews} 中（如 {@code FlowViews.Summary}），
- * Controller 层通过 {@code @JsonView(ViewClass.class)} 或手动调用 {@code YdszJson.toJson} 指定视图。
+ * Controller 层通过 {@code @JsonView(ViewClass.class)} 或手动调用 {@code RemiJson.toJson} 指定视图。
  *
  * @author remi-team
  * @since 1.0.0

@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.dto.FlowTaskOperateDTO;
 import com.remisoft.workflow.domain.entity.FlowNode;
 import com.remisoft.workflow.domain.entity.FlowRunTask;
@@ -122,7 +122,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = YdszJson.parseMap(slaConfigJson);
+            Map<String, Object> map = RemiJson.parseMap(slaConfigJson);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[FlowSla] 解析 slaConfig 失败: {} err={}", slaConfigJson, e.getMessage());

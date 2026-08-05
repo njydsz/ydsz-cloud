@@ -3,14 +3,14 @@ package com.remisoft.common.sentry.logging;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.sentry.domain.LogEvent;
 
 /**
  * LogEvent JSON 序列化器
  *
  * <p>将 LogEvent 序列化为结构化 JSON 字符串，兼容 LogstashEncoder 格式。
- * 底层委托 {@link YdszJson} 统一 JSON 引擎。
+ * 底层委托 {@link RemiJson} 统一 JSON 引擎。
  *
  * @author remi-team
  * @since 1.0.0
@@ -48,7 +48,7 @@ public final class LogEventSerializer {
             }
         }
 
-        return YdszJson.toJson(map);
+        return RemiJson.toJson(map);
     }
 
     private static void putIfNotNull(Map<String, Object> map, String key, String value) {

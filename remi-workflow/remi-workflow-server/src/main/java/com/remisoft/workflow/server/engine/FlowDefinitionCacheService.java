@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -288,7 +288,7 @@ public class FlowDefinitionCacheService {
             return null;
         }
         try {
-            Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
+            Map<String, Object> extJson = RemiJson.parseMap(skip.getExt());
             return extJson == null ? null : MapUtils.getString(extJson, "sourceRef");
         } catch (Exception e) {
             log.warn("[FlowCache] 解析 skip.ext 失败: skipId={} err={}",

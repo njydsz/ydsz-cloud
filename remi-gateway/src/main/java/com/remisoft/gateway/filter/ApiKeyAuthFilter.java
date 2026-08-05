@@ -3,7 +3,7 @@ package com.remisoft.gateway.filter;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -185,7 +185,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         body.setTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
         log.warn("[ApiKeyAuth] API Key 缺失 path={}", exchange.getRequest().getURI().getPath());
@@ -205,7 +205,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         body.setTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
         log.warn("[ApiKeyAuth] API Key 无效 key={} path={}",

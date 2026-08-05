@@ -2,7 +2,7 @@ package com.remisoft.cronjob.server.core.config;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ObjectNode;
 
 import org.springframework.stereotype.Component;
@@ -84,7 +84,7 @@ public class ThreadPoolHotUpdateListener {
      */
     private ObjectNode parseConfig(String configInfo) {
         try {
-            ObjectNode root = YdszJson.parseObject(configInfo);
+            ObjectNode root = RemiJson.parseObject(configInfo);
             // 尝试 remi.cronjob.executor 路径
             ObjectNode remi = root.getJSONObject("remi");
             if (remi != null) {

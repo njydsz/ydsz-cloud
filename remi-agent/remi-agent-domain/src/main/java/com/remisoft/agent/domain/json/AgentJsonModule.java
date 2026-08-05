@@ -10,11 +10,11 @@ import com.remisoft.agent.domain.model.ToolDefinition;
 import com.remisoft.agent.domain.model.TokenUsage;
 
 /**
- * Agent 模块 YdszJson SPI 注册。
+ * Agent 模块 RemiJson SPI 注册。
  *
  * <p>通过 {@link JsonModule.SpringFactory} 机制将 Agent 领域模型
  * （{@link ChatRequest} / {@link ChatMessage} / {@link ToolCall} / {@link ToolDefinition} / {@link TokenUsage}）
- * 的自定义序列化器（与部分反序列化器）注册到 YdszJson 引擎，使 LLM API 的 JSON 形状
+ * 的自定义序列化器（与部分反序列化器）注册到 RemiJson 引擎，使 LLM API 的 JSON 形状
  * （snake_case、role 用 API 枚举值、tool_calls 结构、arguments 为 JSON 字符串）在全局
  * {@code toJson/toObject} 路径中统一产出，替代 {@code OpenAiCompatibleClient} 中手工拼装请求体的冗余代码。</p>
  *

@@ -31,7 +31,7 @@ import java.lang.annotation.*;
  * }
  * }</pre>
  *
- * <p><b>配合 YdszJson 使用：</b>
+ * <p><b>配合 RemiJson 使用：</b>
  * <pre>{@code
  * // 使用 SensitiveDataSerializer（remi JsonSerializer），通过 SafeJsonModule 自动注册
  * public class UserVO {

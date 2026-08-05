@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.remisoft.common.auth.model.UserInfo;
 import com.remisoft.common.auth.token.TokenService;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.redis.service.ops.RedisStringOps;
 import com.remisoft.userinfo.domain.enums.UserInfoResultCode;
 import com.remisoft.common.exception.custom.BusinessException;
@@ -126,7 +126,7 @@ public class OAuth2Controller {
             throw new BusinessException(UserInfoResultCode.OAUTH2_REDIRECT_URI_MISMATCH);
         }
 
-        // 4. 使用 YdszJson 序列化授权码上下文（含 tenantId），Redis 存储 5 分钟
+        // 4. 使用 RemiJson 序列化授权码上下文（含 tenantId），Redis 存储 5 分钟
         String code = UUID.randomUUID().toString().replace("-", "");
         Map<String, String> contextMap = new HashMap<>();
         contextMap.put("clientId", clientId);
@@ -134,7 +134,7 @@ public class OAuth2Controller {
         contextMap.put("username", userInfo.getUsername());
         contextMap.put("tenantId", userInfo.getTenantId() != null ? userInfo.getTenantId() : "1");
         contextMap.put("redirectUri", redirectUri);
-        String context = YdszJson.toJson(contextMap);
+        String context = RemiJson.toJson(contextMap);
         redisStringOps.set(CODE_KEY_PREFIX + code, context, CODE_TTL_SECONDS);
         log.info("OAuth2 authorize: clientId={}, userId={}, code={}", clientId, userInfo.getUserId(), code);
         return BaseResponse.success(code);
@@ -180,7 +180,7 @@ public class OAuth2Controller {
 
         Map<String, Object> context;
         try {
-            context = YdszJson.parseMap(storedContext);
+            context = RemiJson.parseMap(storedContext);
         } catch (Exception e) {
             log.error("Failed to parse OAuth2 code context", e);
             throw new BusinessException(UserInfoResultCode.OAUTH2_CODE_INVALID);

@@ -35,7 +35,7 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-workflow-api</artifactId>
         </dependency>
-        <!-- remi-common-json（FlowDesignerController 等使用 YdszJson，显式声明避免传递依赖） -->
+        <!-- remi-common-json（FlowDesignerController 等使用 RemiJson，显式声明避免传递依赖） -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-json</artifactId>

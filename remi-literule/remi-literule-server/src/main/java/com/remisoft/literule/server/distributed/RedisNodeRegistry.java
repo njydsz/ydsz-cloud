@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
@@ -65,7 +65,7 @@ public class RedisNodeRegistry implements NodeRegistry {
         node.setLastHeartbeatAt(System.currentTimeMillis());
         try {
             RMap<String, String> map = redissonClient.getMap(NODES_KEY);
-            map.put(node.getNodeId(), YdszJson.toJson(node));
+            map.put(node.getNodeId(), RemiJson.toJson(node));
             log.info("[Distributed-Redis] 节点已注册: {}", node.getNodeId());
         } catch (Exception e) {
             log.warn("[Distributed-Redis] 节点注册失败: {}", e.getMessage());
@@ -91,10 +91,10 @@ public class RedisNodeRegistry implements NodeRegistry {
             RMap<String, String> map = redissonClient.getMap(NODES_KEY);
             String json = map.get(nodeId);
             if (json != null) {
-                ClusterNode node = YdszJson.toObject(json, ClusterNode.class);
+                ClusterNode node = RemiJson.toObject(json, ClusterNode.class);
                 if (node != null) {
                     node.setLastHeartbeatAt(System.currentTimeMillis());
-                    map.put(nodeId, YdszJson.toJson(node));
+                    map.put(nodeId, RemiJson.toJson(node));
                 }
             }
         } catch (Exception e) {
@@ -112,7 +112,7 @@ public class RedisNodeRegistry implements NodeRegistry {
 
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
-                    ClusterNode node = YdszJson.fromJson(entry.getValue(), ClusterNode.class);
+                    ClusterNode node = RemiJson.fromJson(entry.getValue(), ClusterNode.class);
                     if (node == null || node.getNodeId() == null) {
                         deadNodeIds.add(entry.getKey());
                         continue;
@@ -166,7 +166,7 @@ public class RedisNodeRegistry implements NodeRegistry {
 
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
-                    ClusterNode node = YdszJson.fromJson(entry.getValue(), ClusterNode.class);
+                    ClusterNode node = RemiJson.fromJson(entry.getValue(), ClusterNode.class);
                     if (node == null || !node.isAlive(now, heartbeatTimeoutMs)) {
                         deadNodeIds.add(entry.getKey());
                     }

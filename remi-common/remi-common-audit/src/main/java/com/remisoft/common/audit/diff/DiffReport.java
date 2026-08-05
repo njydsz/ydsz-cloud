@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.pointer.JsonPointer;
 
 import lombok.Getter;
@@ -17,7 +17,7 @@ import lombok.Getter;
  *
  * <p><b>P3-1/P3-4 增强：</b>
  * <ul>
- *   <li>{@link #toJson()} 使用 YdszJson 引擎序列化，替代手动 StringBuilder</li>
+ *   <li>{@link #toJson()} 使用 RemiJson 引擎序列化，替代手动 StringBuilder</li>
  *   <li>{@link #toJsonPatch()} 输出 RFC 6902 JsonPatch 格式</li>
  *   <li>{@link #queryByPointer(String)} 使用 JsonPointer 定位特定字段变更</li>
  * </ul>
@@ -65,7 +65,7 @@ public class DiffReport implements Serializable {
      *
      * <p>格式：[{@code "field":"username","label":"用户名","old":"张三","new":"李四","sensitive":false}]
      *
-     * <p>P3-1: 使用 YdszJson 引擎序列化，替代手动 StringBuilder 拼接。
+     * <p>P3-1: 使用 RemiJson 引擎序列化，替代手动 StringBuilder 拼接。
      *
      * @return JSON 字符串
      */
@@ -73,7 +73,7 @@ public class DiffReport implements Serializable {
         if (diffs.isEmpty()) {
             return "[]";
         }
-        return YdszJson.toJson(diffs);
+        return RemiJson.toJson(diffs);
     }
 
     /**
@@ -102,7 +102,7 @@ public class DiffReport implements Serializable {
                     return op;
                 })
                 .collect(Collectors.toList());
-        return YdszJson.toJson(patchOps);
+        return RemiJson.toJson(patchOps);
     }
 
     /**

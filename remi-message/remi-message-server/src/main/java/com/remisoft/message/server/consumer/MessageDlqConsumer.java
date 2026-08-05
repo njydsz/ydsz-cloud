@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.remisoft.common.queue.constant.YdszMessageTopics;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.security.TenantContext;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.entity.core.MsgLog;
 import com.remisoft.message.domain.enums.core.MessageStatusEnum;
 import com.remisoft.message.infra.mapper.core.MsgLogMapper;
@@ -81,7 +81,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
             MessageRequest request = null;
             try {
-                request = YdszJson.toObject(body, MessageRequest.class);
+                request = RemiJson.toObject(body, MessageRequest.class);
             } catch (Exception e) {
                 log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage(), e);
             }

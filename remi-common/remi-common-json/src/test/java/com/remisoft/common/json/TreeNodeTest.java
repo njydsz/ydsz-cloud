@@ -189,7 +189,7 @@ class TreeNodeTest {
 
     @Test
     void objectNodeParseFromJson() {
-        ObjectNode node = YdszJson.parseObject("{\"name\":\"Alice\",\"age\":30}");
+        ObjectNode node = RemiJson.parseObject("{\"name\":\"Alice\",\"age\":30}");
         assertNotNull(node);
         assertEquals("Alice", node.getString("name"));
         assertEquals(30, node.getIntValue("age"));
@@ -277,7 +277,7 @@ class TreeNodeTest {
 
     @Test
     void arrayNodeParseFromJson() {
-        ArrayNode arr = YdszJson.parseArrayNode("[1,2,3]");
+        ArrayNode arr = RemiJson.parseArrayNode("[1,2,3]");
         assertNotNull(arr);
         assertEquals(3, arr.size());
         assertEquals(1, arr.getIntValue(0));

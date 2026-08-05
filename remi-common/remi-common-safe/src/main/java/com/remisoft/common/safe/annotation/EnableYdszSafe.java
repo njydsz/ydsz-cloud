@@ -18,7 +18,7 @@ import com.remisoft.common.safe.config.SafeConfiguration;
  *   <li>XSS 跨站脚本攻击防护（基于 OWASP Java HTML Sanitizer + 可配置策略）</li>
  *   <li>CSRF 跨站请求伪造防护（Synchronizer Token / Double Submit Cookie 双模式）</li>
  *   <li>安全响应头配置（CSP / HSTS / X-Frame-Options 等）</li>
- *   <li>敏感数据脱敏（基于 YdszJson 序列化器 + 角色白名单）</li>
+ *   <li>敏感数据脱敏（基于 RemiJson 序列化器 + 角色白名单）</li>
  *   <li>SQL 注入防护（基于过滤器正则拦截 + 运行时热更新）</li>
  *   <li>限流防护（令牌桶 / 滑动窗口 + @RateLimit AOP + 多维度）</li>
  *   <li>IP 黑白名单访问控制（CIDR 网段 + 自动封禁）</li>

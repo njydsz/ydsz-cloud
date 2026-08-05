@@ -11,7 +11,7 @@ import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.file.domain.UploadCheckpoint;
 import com.remisoft.common.file.exception.FileExceptionCode;
 import com.remisoft.common.file.storage.IFileStorage.PartInfo;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +66,7 @@ public class DefaultCheckpointService implements CheckpointService {
             return;
         }
         try {
-            String json = YdszJson.toJson(checkpoint);
+            String json = RemiJson.toJson(checkpoint);
             checkpointStore.save(checkpoint.getBucketName(), checkpoint.getObjectName(), json, checkpointTtlSeconds);
         } catch (Exception e) {
             log.warn("[Storage] saveCheckpoint failed, bucket={}, object={}, message={}",
@@ -79,7 +79,7 @@ public class DefaultCheckpointService implements CheckpointService {
         try {
             String json = checkpointStore.get(bucketName, objectName);
             if (json != null) {
-                return YdszJson.toObject(json, UploadCheckpoint.class);
+                return RemiJson.toObject(json, UploadCheckpoint.class);
             }
         } catch (Exception e) {
             log.warn("[Storage] loadCheckpoint failed, bucket={}, object={}, message={}",

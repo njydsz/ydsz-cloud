@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -458,7 +458,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.RATE_LIMIT,
                 "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
-        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
         log.info("[RateLimit] 限流触发: dimension={} identity={} path={} reset={}s",

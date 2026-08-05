@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 /**
  * Jackson 兼容注解：指定 JSON 属性名称。
  *
- * <p>等价于字段级 {@code value} 属性。当项目中同时存在 Jackson 和 YdszJson
+ * <p>等价于字段级 {@code value} 属性。当项目中同时存在 Jackson 和 RemiJson
  * 时，可使用此注解替代 {@code @JsonProperty(com.fasterxml.jackson.annotation.JsonProperty)}，
  * 避免引入 Jackson 依赖。</p>
  *

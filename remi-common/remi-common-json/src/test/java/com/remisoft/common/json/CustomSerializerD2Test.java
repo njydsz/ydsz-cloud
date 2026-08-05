@@ -20,7 +20,7 @@ class CustomSerializerD2Test {
     @Test
     void customSerializerNewInterfaceIsInvoked() {
         MoneyBean money = new MoneyBean(12345L); // 123.45
-        String json = YdszJson.toJson(money);
+        String json = RemiJson.toJson(money);
         // 自定义序列化器输出为 JSON 字符串 "123.45"
         assertEquals("\"123.45\"", json,
             () -> "custom serializer (new JSONWriter interface) should format cents, got: " + json);
@@ -32,7 +32,7 @@ class CustomSerializerD2Test {
     @Test
     void customSerializerHandlesZero() {
         MoneyBean money = new MoneyBean(0L);
-        String json = YdszJson.toJson(money);
+        String json = RemiJson.toJson(money);
         assertEquals("\"0.00\"", json);
     }
 
@@ -42,7 +42,7 @@ class CustomSerializerD2Test {
     @Test
     void customSerializerHandlesNegative() {
         MoneyBean money = new MoneyBean(-50L); // -0.50
-        String json = YdszJson.toJson(money);
+        String json = RemiJson.toJson(money);
         assertTrue(json.contains("0.50"), () -> "got: " + json);
     }
 

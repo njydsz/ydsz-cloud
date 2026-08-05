@@ -1,9 +1,9 @@
 package com.remisoft.common.json.exception;
 
 /**
- * YdszJson 异常基类（参考 Jackson 的 JsonProcessingException）
+ * RemiJson 异常基类（参考 Jackson 的 JsonProcessingException）
  * 
- * <p>所有 YdszJson 相关异常的基类。</p>
+ * <p>所有 RemiJson 相关异常的基类。</p>
  * 
  * @author remi-team
  * @since 1.0.0

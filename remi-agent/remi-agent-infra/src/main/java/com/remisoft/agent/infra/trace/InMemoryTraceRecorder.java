@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.remisoft.common.core.trace.TraceIdGenerator;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +59,8 @@ public class InMemoryTraceRecorder implements TraceRecorder {
             traces.put(traceId, steps);
         }
         int index = steps.size();
-        String inputJson = input != null ? YdszJson.toJson(input) : null;
-        String outputJson = output != null ? YdszJson.toJson(output) : null;
+        String inputJson = input != null ? RemiJson.toJson(input) : null;
+        String outputJson = output != null ? RemiJson.toJson(output) : null;
         steps.add(new TraceStep(traceId, index, stepType, content,
                 inputJson, outputJson, durationMs, LocalDateTime.now()));
         log.debug("[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms",

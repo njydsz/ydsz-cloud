@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -365,7 +365,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         if (variableJson == null || variableJson.isBlank()) {
             return new HashMap<>();
         }
-        Map<String, Object> map = YdszJson.parseMap(variableJson);
+        Map<String, Object> map = RemiJson.parseMap(variableJson);
         return map == null ? new HashMap<>() : map;
     }
 

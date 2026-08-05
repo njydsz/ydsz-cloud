@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ArrayNode;
 import com.remisoft.common.json.tree.JsonNode;
 import com.remisoft.common.json.tree.ObjectNode;
@@ -134,15 +134,15 @@ public final class SensitiveFieldMask {
             return obj;
         }
         try {
-            String json = YdszJson.toJson(obj);
+            String json = RemiJson.toJson(obj);
             Class<?> clazz = obj.getClass();
             // Collection/Map 类型使用 parseArray/parseObject 保持泛型兼容
             if (Collection.class.isAssignableFrom(clazz)) {
-                return YdszJson.parseArray(json, Object.class);
+                return RemiJson.parseArray(json, Object.class);
             } else if (Map.class.isAssignableFrom(clazz)) {
-                return YdszJson.toObject(json, HashMap.class);
+                return RemiJson.toObject(json, HashMap.class);
             }
-            return YdszJson.toObject(json, (Class) clazz);
+            return RemiJson.toObject(json, (Class) clazz);
         } catch (Exception e) {
             // 深拷贝失败时降级返回原对象
             log.debug("[SensitiveFieldMask] 深拷贝失败，降级返回原对象: {}", e.getMessage());
@@ -162,10 +162,10 @@ public final class SensitiveFieldMask {
             return json;
         }
         try {
-            // Use YdszJson static methods (YdszJson engine)
-            JsonNode parsed = YdszJson.readTree(json);
+            // Use RemiJson static methods (RemiJson engine)
+            JsonNode parsed = RemiJson.readTree(json);
             maskJsonObject(parsed, patterns, new HashSet<>());
-            return YdszJson.toJson(parsed);
+            return RemiJson.toJson(parsed);
         } catch (Exception e) {
             // 解析失败时降级返回原始 JSON
             log.debug("[SensitiveFieldMask] JSON解析失败，降级返回原始JSON: {}", e.getMessage());

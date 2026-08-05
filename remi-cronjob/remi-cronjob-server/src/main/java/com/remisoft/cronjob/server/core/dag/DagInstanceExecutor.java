@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ObjectNode;
 
 import org.springframework.context.event.EventListener;
@@ -1077,13 +1077,13 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             // 构造待合并的 JSON 片段: {"jobKey": <nodeResult>}
             Object parsed;
             try {
-                parsed = YdszJson.parseObject(nodeResultJson);
+                parsed = RemiJson.parseObject(nodeResultJson);
             } catch (Exception parseEx) {
                 parsed = nodeResultJson;
             }
             ObjectNode mergeFragment = new ObjectNode();
             mergeFragment.put(jobKey, parsed);
-            String mergeJson = YdszJson.toJson(mergeFragment);
+            String mergeJson = RemiJson.toJson(mergeFragment);
 
             // 使用 PostgreSQL jsonb || 原子合并，消除 read-modify-write 竞态
             dagInstanceMapper.mergeContextAtomic(dagInstanceId, mergeJson);
@@ -1103,7 +1103,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             return new ObjectNode();
         }
         try {
-            ObjectNode parsed = YdszJson.parseObject(contextJson);
+            ObjectNode parsed = RemiJson.parseObject(contextJson);
             if (parsed != null) {
                 return parsed;
             }

@@ -15,7 +15,7 @@ import org.springframework.web.client.RestClient;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.util.id.SnowflakeUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.ChannelProperties;
 
@@ -98,7 +98,7 @@ public class WebhookChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(YdszJson.toJson(payload))
+                    .body(RemiJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             int statusCode = response.getStatusCode().value();

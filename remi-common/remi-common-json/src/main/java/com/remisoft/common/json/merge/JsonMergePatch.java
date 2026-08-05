@@ -3,7 +3,7 @@ package com.remisoft.common.json.merge;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.parser.JsonParserUtil;
 
 import com.remisoft.common.json.annotation.Experimental;
@@ -66,7 +66,7 @@ public final class JsonMergePatch {
         Object patchObj = JsonParserUtil.parse(patch);
 
         Object result = merge(targetObj, patchObj);
-        return YdszJson.toJson(result);
+        return RemiJson.toJson(result);
     }
 
     /**
@@ -131,7 +131,7 @@ public final class JsonMergePatch {
         Object targetObj = JsonParserUtil.parse(target);
 
         Object diffObj = diffInternal(sourceObj, targetObj);
-        return YdszJson.toJson(diffObj);
+        return RemiJson.toJson(diffObj);
     }
 
     

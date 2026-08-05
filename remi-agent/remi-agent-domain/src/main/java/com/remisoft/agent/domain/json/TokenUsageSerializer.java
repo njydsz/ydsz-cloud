@@ -5,7 +5,7 @@ import com.remisoft.common.json.writer.JSONWriter;
 import com.remisoft.agent.domain.model.TokenUsage;
 
 /**
- * {@link TokenUsage} 的 YdszJson 自定义序列化器（JsonModule SPI 落地 + OpenAI usage 形状）。
+ * {@link TokenUsage} 的 RemiJson 自定义序列化器（JsonModule SPI 落地 + OpenAI usage 形状）。
  *
  * <p>对标 OpenAI Chat Completions 响应中的 {@code usage} 字段（snake_case）：
  * {@code {"prompt_tokens":..,"completion_tokens":..,"total_tokens":..}}。

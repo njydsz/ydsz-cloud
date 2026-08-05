@@ -37,7 +37,7 @@ import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.safe.desensitize.ColumnDesensitizationContext;
 import com.remisoft.common.safe.desensitize.ColumnDesensitizationExecutor;
 import com.remisoft.common.json.JsonMapper;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.auth.AuthInfoUtils;
 import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.string.StringUtils;
@@ -237,7 +237,7 @@ public class AuthColPermissionAspect {
         // 使用 JsonMapper 序列化时排除字段 + 反序列化回原始类型
         try {
             String json = jsonMapper.toJsonExcludeFields(returnValue, excludedFields);
-            return YdszJson.toObject(json, returnValue.getClass());
+            return RemiJson.toObject(json, returnValue.getClass());
         } catch (Exception e) {
             log.warn("列权限序列化过滤失败，降级到反射过滤: {}", e.getMessage());
             // 降级：仍然使用反射方式过滤

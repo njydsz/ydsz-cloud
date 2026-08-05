@@ -21,7 +21,7 @@ import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.dto.FlowTaskOperateDTO;
 import com.remisoft.workflow.domain.entity.FlowInstance;
 import com.remisoft.workflow.domain.entity.FlowNode;
@@ -208,7 +208,7 @@ public class FlowTaskRejectService {
             outboxService.appendToOutbox(
                     "FlowInstance", instance.getId(),
                     StandardEventTypes.FLOW_INSTANCE_REJECTED,
-                    YdszJson.toJson(payload));
+                    RemiJson.toJson(payload));
         } catch (Exception e) {
             log.warn("[Flow] 发布 REJECTED Outbox 事件失败: instanceId={} err={}",
                     instance.getId(), e.getMessage());
@@ -286,7 +286,7 @@ public class FlowTaskRejectService {
             return extra == null ? Collections.emptyMap() : extra;
         }
         try {
-            Map<String, Object> base = YdszJson.parseMap(instance.getVariable());
+            Map<String, Object> base = RemiJson.parseMap(instance.getVariable());
             if (extra != null && !extra.isEmpty()) {
                 base.putAll(extra);
             }

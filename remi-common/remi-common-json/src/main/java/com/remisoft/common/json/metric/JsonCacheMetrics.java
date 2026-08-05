@@ -9,7 +9,7 @@ import com.remisoft.common.json.cache.BeanSerializerCache;
 import com.remisoft.common.json.cache.JsonCacheStats;
 
 /**
- * YdszJson 缓存指标 Micrometer 绑定器。
+ * RemiJson 缓存指标 Micrometer 绑定器。
  *
  * <p>将 JSON 引擎内部缓存统计信息暴露为 Micrometer 指标，
  * 供 Prometheus / Grafana 监控使用。</p>

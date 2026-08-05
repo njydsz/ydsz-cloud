@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +59,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
         }
         try {
             String key = buildKey(uploadId);
-            String json = YdszJson.toJson(context);
+            String json = RemiJson.toJson(context);
             stringRedisTemplate.opsForValue().set(key, json, Duration.ofSeconds(ttlSeconds));
         } catch (Exception e) {
             log.warn("[Storage] RedisMultipartContextStore save failed, uploadId={}, message={}",
@@ -84,7 +84,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
             if (json == null) {
                 return null;
             }
-            return YdszJson.toObject(json, MultipartContextData.class);
+            return RemiJson.toObject(json, MultipartContextData.class);
         } catch (Exception e) {
             log.warn("[Storage] RedisMultipartContextStore get failed, uploadId={}, message={}",
                     uploadId, e.getMessage());
@@ -130,7 +130,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                     String json = values.get(i);
                     if (json != null) {
                         String uploadId = extractUploadId(keys.get(i));
-                        MultipartContextData context = YdszJson.toObject(json, MultipartContextData.class);
+                        MultipartContextData context = RemiJson.toObject(json, MultipartContextData.class);
                         result.put(uploadId, context);
                     }
                 }
@@ -164,7 +164,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                 String json = values.get(i);
                 if (json != null) {
                     try {
-                        MultipartContextData context = YdszJson.toObject(json, MultipartContextData.class);
+                        MultipartContextData context = RemiJson.toObject(json, MultipartContextData.class);
                         if (context != null && context.lastAccessTime() < cutoffTime) {
                             expiredKeys.add(keys.get(i));
                         }

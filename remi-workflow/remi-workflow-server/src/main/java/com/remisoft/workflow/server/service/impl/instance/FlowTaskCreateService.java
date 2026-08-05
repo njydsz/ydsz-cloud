@@ -18,7 +18,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.collection.MapUtils;
 import com.remisoft.workflow.domain.dto.FlowAssigneeDTO;
 import com.remisoft.workflow.domain.dto.FlowTaskOperateDTO;
@@ -436,7 +436,7 @@ public class FlowTaskCreateService {
         }
         Map<String, Object> extConfig;
         try {
-            extConfig = YdszJson.parseMap(node.getExt());
+            extConfig = RemiJson.parseMap(node.getExt());
         } catch (Exception e) {
             return;
         }
@@ -1082,7 +1082,7 @@ public class FlowTaskCreateService {
     private FlowPerformType resolvePerformType(FlowNode node) {
         if (node.getExt() != null) {
             try {
-                Map<?, ?> ext = YdszJson.parseMap(node.getExt());
+                Map<?, ?> ext = RemiJson.parseMap(node.getExt());
                 Object ptObj = ext.get("performType");
                 if (ptObj instanceof String pt) {
                     return FlowPerformType.valueOf(pt);
@@ -1449,7 +1449,7 @@ public class FlowTaskCreateService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = YdszJson.parseMap(ext);
+            Map<String, Object> map = RemiJson.parseMap(ext);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[Flow] 解析 node.ext JSON 失败: err={}", e.getMessage());

@@ -20,7 +20,7 @@ import com.remisoft.common.cache.YdszCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.gateway.config.GatewayConstants;
 import com.remisoft.gateway.config.GatewayIpUtils;
 import com.remisoft.common.core.code.BaseResultCode;
@@ -166,7 +166,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, "error.IP_BLACKLISTED");
         body.setTraceId(traceId);
-        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }

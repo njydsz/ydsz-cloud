@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * JSON 对象节点
@@ -511,7 +511,7 @@ public final class ObjectNode extends JsonNode {
         if (node == null || node.isNull() || node.isMissing()) {
             return null;
         }
-        return YdszJson.toObject(node.toString(), clazz);
+        return RemiJson.toObject(node.toString(), clazz);
     }
 
     /**

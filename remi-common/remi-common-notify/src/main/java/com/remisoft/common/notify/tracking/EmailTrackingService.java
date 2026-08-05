@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.notify.config.NotifyProperties;
 
 /**
@@ -322,6 +322,6 @@ public class EmailTrackingService {
 		if (metadata != null && !metadata.isEmpty()) {
 			eventMap.put("metadata", metadata);
 		}
-		return YdszJson.toJson(eventMap);
+		return RemiJson.toJson(eventMap);
 	}
 }

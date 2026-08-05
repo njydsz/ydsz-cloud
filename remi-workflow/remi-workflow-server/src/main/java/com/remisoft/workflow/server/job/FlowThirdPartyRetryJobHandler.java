@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.remisoft.cronjob.domain.job.JobHandler;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.server.config.FlowProperties;
 import com.remisoft.workflow.server.engine.FlowClusterLockHelper;
 import com.remisoft.workflow.server.service.FlowThirdPartyRetryService;
@@ -127,7 +127,7 @@ public class FlowThirdPartyRetryJobHandler implements JobHandler {
             return defaultValue;
         }
         try {
-            Map<String, Object> obj = YdszJson.parseMap(paramsJson);
+            Map<String, Object> obj = RemiJson.parseMap(paramsJson);
             if (obj == null) {
                 return defaultValue;
             }

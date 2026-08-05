@@ -18,7 +18,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.remisoft.common.core.constant.TokenConstants;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.ip.IpAddrUtils;
 import com.remisoft.common.util.string.StringUtils;
 
@@ -167,7 +167,7 @@ public final class ServletUtils {
         if (object == null) {
             return;
         }
-        renderString(response, YdszJson.toJson(object));
+        renderString(response, RemiJson.toJson(object));
     }
 
     /**

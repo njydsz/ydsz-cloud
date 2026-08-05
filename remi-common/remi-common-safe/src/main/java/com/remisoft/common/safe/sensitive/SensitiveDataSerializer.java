@@ -1,13 +1,13 @@
 package com.remisoft.common.safe.sensitive;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.serializer.JsonSerializer;
 import com.remisoft.common.json.writer.JSONWriter;
 
 /**
- * 敏感数据脱敏序列化器（基于 YdszJson 引擎）
+ * 敏感数据脱敏序列化器（基于 RemiJson 引擎）
  *
- * <p>实现 YdszJson {@link JsonSerializer}，在序列化 JSON 时自动对
+ * <p>实现 RemiJson {@link JsonSerializer}，在序列化 JSON 时自动对
  * 标注了 {@link SensitiveData} 注解的字段进行脱敏处理。
  *
  * <p><b>使用方式：</b>
@@ -19,8 +19,8 @@ import com.remisoft.common.json.writer.JSONWriter;
  * }</pre>
  *
  * <p><b>注册方式：</b>通过 {@link com.remisoft.common.safe.xss.SafeJsonModule}（实现
- * {@link com.remisoft.common.json.module.JsonModule.SpringFactory}）自动注册到 YdszJson 引擎，
- * 禁止在业务代码中散落调用 {@code YdszJson.register()}。
+ * {@link com.remisoft.common.json.module.JsonModule.SpringFactory}）自动注册到 RemiJson 引擎，
+ * 禁止在业务代码中散落调用 {@code RemiJson.register()}。
  *
  * <p><b>注意事项：</b>
  * <ul>
@@ -53,7 +53,7 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
 
         // 先脱敏处理，再序列化
         Object desensitized = SensitiveDataProcessor.process(value);
-        out.write(YdszJson.toJson(desensitized));
+        out.write(RemiJson.toJson(desensitized));
     }
 
     /**
@@ -67,7 +67,7 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
             return "null";
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
-        return YdszJson.toJson(desensitized);
+        return RemiJson.toJson(desensitized);
     }
 
     /**
@@ -83,9 +83,9 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
         if (pretty) {
-            return YdszJson.format(desensitized);
+            return RemiJson.format(desensitized);
         }
-        return YdszJson.toJson(desensitized);
+        return RemiJson.toJson(desensitized);
     }
 
     /**
@@ -97,6 +97,6 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
      * @return 对象
      */
     public static <T> T deserialize(String json, Class<T> clazz) {
-        return YdszJson.toObject(json, clazz);
+        return RemiJson.toObject(json, clazz);
     }
 }

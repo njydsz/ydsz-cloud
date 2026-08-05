@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.remisoft.common.security.TenantContext;
 import com.remisoft.common.util.id.TracerUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.entity.config.MsgTrace;
 import com.remisoft.message.domain.entity.config.MsgTrace.Node;
 import com.remisoft.message.infra.mapper.config.MsgTraceMapper;
@@ -57,7 +57,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
             trace.setEventAt(LocalDateTime.now());
             trace.setTenantId(TenantContext.getTenantId());
             if (extra != null && !extra.isEmpty()) {
-                trace.setExtra(YdszJson.toJson(extra));
+                trace.setExtra(RemiJson.toJson(extra));
             }
             msgTraceMapper.insert(trace);
             log.debug("[Trace] 记录轨迹: msgId={} node={} status={}", msgId, node, status);

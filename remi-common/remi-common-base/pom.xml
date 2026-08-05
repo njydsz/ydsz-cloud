@@ -38,7 +38,7 @@
             <artifactId>remi-common-exception</artifactId>
         </dependency>
 
-        <!-- 公共 JSON 模块（直接使用 YdszJson，显式声明） -->
+        <!-- 公共 JSON 模块（直接使用 RemiJson，显式声明） -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-json</artifactId>

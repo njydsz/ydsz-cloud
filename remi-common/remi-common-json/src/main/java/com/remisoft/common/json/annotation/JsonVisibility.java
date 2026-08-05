@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * Bean 属性可见性注解
  *
- * <p>用于控制哪些字段/方法在序列化/反序列化时可见，是 YdszJson 原生的可见性控制注解。</p>
+ * <p>用于控制哪些字段/方法在序列化/反序列化时可见，是 RemiJson 原生的可见性控制注解。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>

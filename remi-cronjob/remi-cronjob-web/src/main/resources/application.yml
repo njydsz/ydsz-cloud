@@ -23,7 +23,7 @@ remi:
         thread-name-prefix: remi-job-dispatch-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 15
-  # P0-1: YdszJson ASM 预热（DAG 编解码/任务调度高频序列化 Bean）
+  # P0-1: RemiJson ASM 预热（DAG 编解码/任务调度高频序列化 Bean）
   json:
     enabled: true
     monitoring-enabled: true

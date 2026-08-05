@@ -26,17 +26,17 @@ import com.remisoft.common.json.type.JsonType;
 import com.remisoft.common.json.type.TypeFactory;
 
 /**
- * YdszJson 实例化 Mapper（对标 Jackson ObjectMapper）
+ * RemiJson 实例化 Mapper（对标 Jackson ObjectMapper）
  *
  * <p>提供实例化的 JSON 序列化/反序列化能力，每个实例持有独立的 {@link JsonConfig} 配置副本，
  * 允许在同一 JVM 中创建多个不同配置的 Mapper 实例，互不干扰。
  *
- * <p><b>与 {@link YdszJson} 的关系：</b></p>
+ * <p><b>与 {@link RemiJson} 的关系：</b></p>
  * <ul>
- *   <li>{@code YdszJson} 静态方法委托给内部默认 {@code JsonMapper} 实例，保持向后兼容</li>
+ *   <li>{@code RemiJson} 静态方法委托给内部默认 {@code JsonMapper} 实例，保持向后兼容</li>
  *   <li>需要独立配置的场景应创建新的 {@code JsonMapper} 实例</li>
  *   <li>{@link #copy()} 方法创建配置副本，修改不影响原实例</li>
- *   <li>所有操作均纳入 {@link JsonMetricsCallback} 指标监控（与 YdszJson 静态方法一致）</li>
+ *   <li>所有操作均纳入 {@link JsonMetricsCallback} 指标监控（与 RemiJson 静态方法一致）</li>
  * </ul>
  *
  * <p><b>使用示例：</b></p>
@@ -70,7 +70,7 @@ import com.remisoft.common.json.type.TypeFactory;
  */
 public class JsonMapper {
 
-    /** 默认单例实例（YdszJson 静态方法委托给此实例） */
+    /** 默认单例实例（RemiJson 静态方法委托给此实例） */
     private static final JsonMapper DEFAULT = new JsonMapper();
 
     /** 此 Mapper 实例的配置（独立副本） */
@@ -649,7 +649,7 @@ public class JsonMapper {
      * @since 1.0.0
      */
     public void warmup(Class<?>... classes) {
-        YdszJson.warmup(classes);
+        RemiJson.warmup(classes);
     }
 
     // ==================== 字段排除（列权限） ====================
@@ -695,14 +695,14 @@ public class JsonMapper {
      * 序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
      */
     private static <T> T recordSerialize(MetricsHelper.ThrowingSupplier<T> supplier) {
-        return MetricsHelper.recordSerialize(supplier, YdszJson.getMetricsCallback());
+        return MetricsHelper.recordSerialize(supplier, RemiJson.getMetricsCallback());
     }
 
     /**
      * 反序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
      */
     private static <T> T recordDeserialize(MetricsHelper.ThrowingSupplier<T> supplier) {
-        return MetricsHelper.recordDeserialize(supplier, YdszJson.getMetricsCallback());
+        return MetricsHelper.recordDeserialize(supplier, RemiJson.getMetricsCallback());
     }
 
     /**

@@ -1,12 +1,12 @@
 package com.remisoft.agent.domain.json;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.serializer.JsonSerializer;
 import com.remisoft.common.json.writer.JSONWriter;
 import com.remisoft.agent.domain.model.ChatRequest;
 
 /**
- * {@link ChatRequest} 的 YdszJson 自定义序列化器（JsonModule SPI 落地 + OpenAI 请求体形状）。
+ * {@link ChatRequest} 的 RemiJson 自定义序列化器（JsonModule SPI 落地 + OpenAI 请求体形状）。
  *
  * <p>产出 OpenAI Chat Completions 请求体（snake_case）：
  * {@code {"model":..,"temperature":..,"max_tokens":..,"top_p":..,"stream":..,"stop"?:[..],"messages":[..],"tools"?:[..],"tool_choice"?:..}}。
@@ -39,13 +39,13 @@ public class ChatRequestSerializer implements JsonSerializer<ChatRequest> {
         out.write(req.isStream() ? "true" : "false");
         if (!req.getStop().isEmpty()) {
             out.write(",\"stop\":");
-            out.write(YdszJson.toJson(req.getStop()));
+            out.write(RemiJson.toJson(req.getStop()));
         }
         out.write(",\"messages\":");
-        out.write(YdszJson.toJson(req.getMessages()));
+        out.write(RemiJson.toJson(req.getMessages()));
         if (!req.getTools().isEmpty()) {
             out.write(",\"tools\":");
-            out.write(YdszJson.toJson(req.getTools()));
+            out.write(RemiJson.toJson(req.getTools()));
         }
         if (req.getToolChoice() != null) {
             out.write(",\"tool_choice\":");

@@ -32,8 +32,8 @@ class YdszJsonBasicTest {
         TestBean u = new TestBean();
         u.setId(7);
         u.setName("bob");
-        String json = YdszJson.toJson(u);
-        TestBean back = YdszJson.toObject(json, TestBean.class);
+        String json = RemiJson.toJson(u);
+        TestBean back = RemiJson.toObject(json, TestBean.class);
         assertNotNull(back);
         assertEquals(7, back.getId());
         assertEquals("bob", back.getName());
@@ -41,24 +41,24 @@ class YdszJsonBasicTest {
 
     @Test
     void parseMapAndList() {
-        Map<String, Object> m = YdszJson.parseMap("{\"a\":1,\"b\":\"x\"}");
+        Map<String, Object> m = RemiJson.parseMap("{\"a\":1,\"b\":\"x\"}");
         assertEquals(1, ((Number) m.get("a")).intValue());
         assertEquals("x", m.get("b"));
-        List<Object> l = YdszJson.parseArray("[1,2,3]");
+        List<Object> l = RemiJson.parseArray("[1,2,3]");
         assertEquals(3, l.size());
     }
 
     @Test
     void nullAndBooleanRoundTrip() {
-        assertEquals("null", YdszJson.toJson(null));
-        assertTrue(YdszJson.toObject("true", Boolean.class));
-        assertEquals(42, (int) YdszJson.toObject("42", Integer.class));
+        assertEquals("null", RemiJson.toJson(null));
+        assertTrue(RemiJson.toObject("true", Boolean.class));
+        assertEquals(42, (int) RemiJson.toObject("42", Integer.class));
     }
 
     @Test
     void nestedStructure() {
         String json = "{\"user\":{\"id\":5,\"name\":\"zoe\"},\"tags\":[\"a\",\"b\"]}";
-        Map<String, Object> m = YdszJson.parseMap(json);
+        Map<String, Object> m = RemiJson.parseMap(json);
         @SuppressWarnings("unchecked")
         Map<String, Object> user = (Map<String, Object>) m.get("user");
         assertEquals(5, ((Number) user.get("id")).intValue());

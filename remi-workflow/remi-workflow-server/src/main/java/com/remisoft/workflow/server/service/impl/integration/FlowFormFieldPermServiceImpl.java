@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.server.service.FlowFormFieldPermService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +104,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> raw = YdszJson.parseMap(formFieldsConfig);
+            Map<String, Object> raw = RemiJson.parseMap(formFieldsConfig);
             if (raw == null || raw.isEmpty()) {
                 return Collections.emptyMap();
             }

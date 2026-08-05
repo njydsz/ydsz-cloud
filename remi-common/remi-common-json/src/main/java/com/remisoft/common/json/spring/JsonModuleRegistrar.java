@@ -9,7 +9,7 @@ import com.remisoft.common.json.module.JsonModule;
 import com.remisoft.common.json.module.JsonModuleRegistry;
 
 /**
- * YdszJson 模块注册器。
+ * RemiJson 模块注册器。
  *
  * <p>自动发现所有实现 {@link JsonModule.SpringFactory} 接口的 Bean 并注册到
  * {@link JsonModuleRegistry}。
@@ -32,16 +32,16 @@ public class JsonModuleRegistrar {
      */
     public void register() {
         if (springModules != null && !springModules.isEmpty()) {
-            log.info("发现 {} 个 YdszJson Spring Factory 模块", springModules.size());
+            log.info("发现 {} 个 RemiJson Spring Factory 模块", springModules.size());
             JsonModuleRegistry registry = JsonModuleRegistry.getInstance();
             registry.registerSpringFactories(springModules);
             registry.initialize();
-            log.info("YdszJson 模块注册完成 | 模块数量={} | 序列化器={} | 反序列化器={}",
+            log.info("RemiJson 模块注册完成 | 模块数量={} | 序列化器={} | 反序列化器={}",
                     registry.getModuleCount(),
                     registry.getSerializerCount(),
                     registry.getDeserializerCount());
         } else {
-            log.debug("未发现 YdszJson Spring Factory 模块");
+            log.debug("未发现 RemiJson Spring Factory 模块");
         }
     }
 }

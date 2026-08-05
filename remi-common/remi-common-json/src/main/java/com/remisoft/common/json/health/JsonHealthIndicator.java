@@ -9,9 +9,9 @@ import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.internal.JsonConfig;
 
 /**
- * YdszJson 健康检查指标。
+ * RemiJson 健康检查指标。
  *
- * <p>检查 YdszJson 引擎的运行状态：
+ * <p>检查 RemiJson 引擎的运行状态：
  * <ul>
  *   <li>AutoType SafeMode 是否开启（安全关键）</li>
  *   <li>GraalVM Native Image 检测 + ASM 可用状态（兼容性）</li>

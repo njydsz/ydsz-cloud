@@ -24,7 +24,7 @@
             <artifactId>remi-common-util</artifactId>
         </dependency>
 
-        <!-- YdszJson 统一 JSON 引擎 -->
+        <!-- RemiJson 统一 JSON 引擎 -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-json</artifactId>

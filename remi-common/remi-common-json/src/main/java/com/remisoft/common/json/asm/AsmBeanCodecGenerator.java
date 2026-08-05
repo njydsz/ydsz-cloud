@@ -35,7 +35,7 @@ import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.reader.BeanReader;
 import com.remisoft.common.json.reader.JSONReader;
@@ -135,7 +135,7 @@ public final class AsmBeanCodecGenerator {
             if (asmSerializer != null) {
                 AsmCodecCache.trySerialize(obj, writer);
             } else {
-                String json = YdszJson.toJson(obj);
+                String json = RemiJson.toJson(obj);
                 writer.write(json);
             }
         } catch (Exception e) {

@@ -1,6 +1,6 @@
 package com.remisoft.common.feign.codec;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * 基于 Jackson 的 Feign JSON 解码器。
  *
- * <p>使用 {@link YdszJson} 作为 JSON 反序列化实现，提供统一的 JSON 解码能力。
+ * <p>使用 {@link RemiJson} 作为 JSON 反序列化实现，提供统一的 JSON 解码能力。
  *
  * <p>支持的返回类型：
  * <ul>
@@ -144,7 +144,7 @@ public class JsonDecoder implements Decoder {
      */
     private Object decodeBody(String body, Type type, Response response) {
         try {
-            return YdszJson.toObject(body, type);
+            return RemiJson.toObject(body, type);
         } catch (Exception e) {
             LOG.warn("JSON 解码失败, 类型: {}, 错误: {}", type, e.getMessage());
             throw new DecodeException(500, "JSON 解码失败: " + e.getMessage(), response.request(), e);

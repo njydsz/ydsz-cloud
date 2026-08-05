@@ -15,7 +15,7 @@ import com.remisoft.common.queue.queue.IMessageQueue;
 import com.remisoft.common.queue.queue.IMessageQueueProvider;
 import com.remisoft.common.queue.service.IMessagePublisher;
 import com.remisoft.common.util.id.SnowflakeUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +63,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = YdszJson.toJson(req);
+        String payload = RemiJson.toJson(req);
         QueueMessage message = QueueMessage.of(payload);
         message.addHeader("messageId", req.getMessageId());
         message.addHeader("channel", req.getChannel());

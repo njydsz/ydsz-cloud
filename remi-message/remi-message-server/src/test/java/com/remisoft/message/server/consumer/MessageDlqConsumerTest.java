@@ -23,7 +23,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.remisoft.common.feign.MessageRequest;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.entity.core.MsgLog;
 import com.remisoft.message.infra.mapper.core.MsgLogMapper;
 import com.remisoft.message.server.metric.MessageMetrics;
@@ -77,7 +77,7 @@ class MessageDlqConsumerTest {
             when(valueOps.setIfAbsent(eq("remi:msg:dlq:idempotent:mq-1"), eq("1"),
                     any(Duration.class))).thenReturn(true);
             when(msgLogMapper.update(eq(null), any(LambdaUpdateWrapper.class))).thenReturn(0);
-            MessageExt msg = buildMessage("mq-1", 3, YdszJson.toJson(new MessageRequest()));
+            MessageExt msg = buildMessage("mq-1", 3, RemiJson.toJson(new MessageRequest()));
 
             consumer.onMessage(msg);
 
@@ -126,7 +126,7 @@ class MessageDlqConsumerTest {
             MessageRequest req = new MessageRequest();
             req.setMessageId("biz-msg-001");
             req.setChannel("SMS");
-            MessageExt msg = buildMessage("mq-1", 3, YdszJson.toJson(req));
+            MessageExt msg = buildMessage("mq-1", 3, RemiJson.toJson(req));
 
             consumer.onMessage(msg);
 
@@ -144,7 +144,7 @@ class MessageDlqConsumerTest {
             MessageRequest req = new MessageRequest();
             req.setMessageId("biz-msg-002");
             req.setChannel("EMAIL");
-            MessageExt msg = buildMessage("mq-2", 5, YdszJson.toJson(req));
+            MessageExt msg = buildMessage("mq-2", 5, RemiJson.toJson(req));
 
             consumer.onMessage(msg);
 

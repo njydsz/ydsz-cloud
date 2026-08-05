@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 /**
  * Jackson 兼容注解：标记字段在序列化/反序列化时被忽略。
  *
- * <p>当项目中同时存在 Jackson 和 YdszJson 时，可使用此注解替代
+ * <p>当项目中同时存在 Jackson 和 RemiJson 时，可使用此注解替代
  * {@code @JsonIgnore(com.fasterxml.jackson.annotation.JsonIgnore)}，
  * 避免引入 Jackson 依赖。</p>
  *

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * JSON 数组节点
@@ -469,7 +469,7 @@ public final class ArrayNode extends JsonNode {
         if (node.isMissing() || node.isNull()) {
             return null;
         }
-        return YdszJson.toObject(node.toString(), clazz);
+        return RemiJson.toObject(node.toString(), clazz);
     }
 
     // ==================== List-like 查询 ====================

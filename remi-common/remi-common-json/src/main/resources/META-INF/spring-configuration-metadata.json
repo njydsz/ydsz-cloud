@@ -10,7 +10,7 @@
     {
       "name": "remi.json.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用 YdszJson 引擎（默认 true）。",
+      "description": "是否启用 RemiJson 引擎（默认 true）。",
       "defaultValue": true
     },
     {

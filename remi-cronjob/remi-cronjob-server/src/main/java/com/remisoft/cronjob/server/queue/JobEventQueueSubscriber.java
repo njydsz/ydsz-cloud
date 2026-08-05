@@ -12,7 +12,7 @@ import com.remisoft.common.queue.enums.QueueType;
 import com.remisoft.common.queue.queue.IMessageQueue;
 import com.remisoft.common.queue.queue.IMessageQueueProvider;
 import com.remisoft.common.queue.service.IMessageSubscriber;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.cronjob.server.core.EventDrivenScheduler;
 
 import lombok.RequiredArgsConstructor;
@@ -82,7 +82,7 @@ public class JobEventQueueSubscriber {
             return;
         }
         try {
-            Map<String, Object> payload = YdszJson.fromJsonToMap(message.getBody(), String.class, Object.class);
+            Map<String, Object> payload = RemiJson.fromJsonToMap(message.getBody(), String.class, Object.class);
             String jobKey = payload.get("jobKey") == null ? null : String.valueOf(payload.get("jobKey"));
             String msgId = payload.get("msgId") == null ? null : String.valueOf(payload.get("msgId"));
             String payloadStr = payload.get("payload") == null ? null : String.valueOf(payload.get("payload"));

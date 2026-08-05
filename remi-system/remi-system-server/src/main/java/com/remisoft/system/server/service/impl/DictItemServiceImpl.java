@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.system.domain.dto.DictItemDTO;
 import com.remisoft.system.domain.entity.DictItem;
 import com.remisoft.system.domain.vo.DictItemVO;
@@ -167,14 +167,14 @@ public class DictItemServiceImpl implements DictItemService {
                     return null;
                 }
                 metrics.recordDictCacheHit();
-                return YdszJson.toObject(cached, DictItemVO.class);
+                return RemiJson.toObject(cached, DictItemVO.class);
             }
             metrics.recordDictCacheMiss();
             DictItem entity = mapper.selectByTypeAndCode(typeCode, itemCode);
             DictItemVO vo = SystemConverter.INSTANT.entityToVO(entity);
             Duration ttl = getCacheTtl();
             if (vo != null) {
-                redisService.set(cacheKey, YdszJson.toJson(vo), ttl);
+                redisService.set(cacheKey, RemiJson.toJson(vo), ttl);
             } else {
                 // 缓存空值防穿透，短 TTL
                 redisService.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
@@ -209,12 +209,12 @@ public class DictItemServiceImpl implements DictItemService {
             String cached = redisService.get(cacheKey, String.class);
             if (cached != null) {
                 metrics.recordDictCacheHit();
-                return YdszJson.parseArray(cached, DictItemVO.class);
+                return RemiJson.parseArray(cached, DictItemVO.class);
             }
             metrics.recordDictCacheMiss();
             List<DictItem> entities = mapper.listEnabledByTypeCode(typeCode);
             List<DictItemVO> vos = entities.stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
-            redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
+            redisService.set(cacheKey, RemiJson.toJson(vos), getCacheTtl());
             return vos;
         } finally {
             metrics.recordDictQuery(System.nanoTime() - start);
@@ -393,7 +393,7 @@ public class DictItemServiceImpl implements DictItemService {
             return;
         }
         List<DictItem> snapshot = mapper.listEnabledByTypeCode(typeCode);
-        String snapshotJson = YdszJson.toJson(snapshot);
+        String snapshotJson = RemiJson.toJson(snapshot);
         dictVersionService.createVersion(typeCode,
                 "v" + System.currentTimeMillis(), changeLog, snapshotJson);
     }

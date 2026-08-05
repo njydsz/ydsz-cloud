@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import com.remisoft.literule.api.RuleDefinition;
 
@@ -188,7 +188,7 @@ public class NacosRuleSource implements RuleSource {
             return List.of();
         }
         try {
-            return YdszJson.parseArray(json, RuleDefinition.class);
+            return RemiJson.parseArray(json, RuleDefinition.class);
         } catch (Exception e) {
             log.error("[NacosRuleSource] JSON 解析失败: {}", e.getMessage());
             return List.of();

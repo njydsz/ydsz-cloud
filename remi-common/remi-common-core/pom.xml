@@ -74,10 +74,22 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Spring Boot Health（optional, CoreHealthIndicator 需要） -->
+        <!-- Spring Boot Health (optional, CoreHealthIndicator 需要) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Spring Boot Actuator (optional, CoreHealthIndicator 实现 HealthIndicator 接口) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Micrometer Core（optional, CoreResponseMetrics 指标注册需要；由 Spring Boot Actuator BOM 管理版本） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
         <!-- Test -->

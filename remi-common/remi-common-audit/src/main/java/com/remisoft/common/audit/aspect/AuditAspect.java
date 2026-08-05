@@ -36,7 +36,7 @@ import com.remisoft.common.audit.mask.SensitiveFieldMask;
 import com.remisoft.common.audit.template.AuditTemplateProcessor;
 import com.remisoft.common.util.id.SnowflakeUtils;
 import com.remisoft.common.util.ip.IpAddrUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.string.StringUtils;
 /**
  * 审计日志切面
@@ -315,7 +315,7 @@ public class AuditAspect {
 
         if (audit.recordResponse() && properties.isRecordResponse() && result != null) {
             try {
-                String responseJson = YdszJson.toJson(result);
+                String responseJson = RemiJson.toJson(result);
                 responseJson = truncateWithWarning(responseJson, DEFAULT_MAX_SERIALIZE_LENGTH, "响应结果");
                 String maskedResponse = maskSensitiveJson(responseJson, sensitiveParams);
                 auditLog.setResponseResult(maskedResponse);
@@ -429,7 +429,7 @@ public class AuditAspect {
 
     /**
      * 安全 JSON 序列化（防 StackOverflow）
-     * <p>使用 YdszJson 序列化对象，当对象存在循环引用或嵌套过深导致 StackOverflowError 时，
+     * <p>使用 RemiJson 序列化对象，当对象存在循环引用或嵌套过深导致 StackOverflowError 时，
      * 返回截断占位 JSON 而非抛出异常。
      *
      * @param obj 待序列化对象
@@ -437,7 +437,7 @@ public class AuditAspect {
      */
     private String serializeSafely(Object obj) {
         try {
-            return YdszJson.toJson(obj);
+            return RemiJson.toJson(obj);
         } catch (StackOverflowError e) {
             log.warn("【审计切面】参数序列化发生 StackOverflow，已返回占位 JSON（建议检查对象循环引用）");
             return "{\"_truncated\": true, \"_reason\": \"depth limit exceeded (" + DEFAULT_MAX_SERIALIZE_DEPTH + " levels)\"}";

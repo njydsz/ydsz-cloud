@@ -1,6 +1,6 @@
 package com.remisoft.common.notify.channel;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.JsonNode;
 import com.remisoft.common.notify.core.NotifySendResult;
 import com.remisoft.common.notify.enums.NotifyChannel;
@@ -76,13 +76,13 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 							"content", "### " + title + "\n" + content
 					)
 			);
-			String json = YdszJson.toJson(body);
+			String json = RemiJson.toJson(body);
 			String response = restTemplate.postForObject(webhook, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
 
 			// 校验企业微信响应 errcode
 			if (response != null && !response.isEmpty()) {
 				try {
-					JsonNode respJson = YdszJson.readTree(response);
+					JsonNode respJson = RemiJson.readTree(response);
 					int errcode = respJson.has("errcode") ? respJson.get("errcode").asInt(-1) : -1;
 					if (errcode != 0) {
 						String errmsg = respJson.has("errmsg") ? respJson.get("errmsg").asText() : "";

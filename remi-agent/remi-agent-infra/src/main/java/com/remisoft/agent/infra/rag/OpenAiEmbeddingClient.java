@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ArrayNode;
 import com.remisoft.common.json.tree.ObjectNode;
 
@@ -66,7 +66,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
         try {
             String responseJson = restClient.post()
                     .uri("/embeddings")
-                    .body(YdszJson.toJson(body))
+                    .body(RemiJson.toJson(body))
                     .retrieve()
                     .body(String.class);
             return parseEmbeddings(responseJson);
@@ -88,7 +88,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
     }
 
     private List<List<Float>> parseEmbeddings(String json) {
-        ObjectNode obj = YdszJson.parseObject(json);
+        ObjectNode obj = RemiJson.parseObject(json);
         ArrayNode data = obj.getJSONArray("data");
         if (data == null || data.isEmpty()) {
             throw new LlmException("Embedding 响应无 data", LlmException.ErrorType.INVALID_RESPONSE);

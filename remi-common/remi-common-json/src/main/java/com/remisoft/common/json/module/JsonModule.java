@@ -1,7 +1,7 @@
 package com.remisoft.common.json.module;
 
 /**
- * YdszJson 模块接口
+ * RemiJson 模块接口
  *
  * <p>参考 Jackson Module 设计，提供可插拔的序列化/反序列化扩展机制。
  *
@@ -43,7 +43,7 @@ package com.remisoft.common.json.module;
  * <p><b>规范要求（R6）：</b>每个业务模块若有自定义序列化需求，必须实现
  * {@code XxxJsonModule extends JsonModule} 并通过 {@code @Component} 注册为 Spring Bean，
  * 由 {@link com.remisoft.common.json.spring.JsonModuleRegistrar} 自动发现并注册到引擎。
- * <b>禁止</b>在业务代码中散落调用 {@code YdszJson.register()}，所有自定义序列化器/反序列化器
+ * <b>禁止</b>在业务代码中散落调用 {@code RemiJson.register()}，所有自定义序列化器/反序列化器
  * 必须通过 JsonModule 收敛，确保可发现、可治理、可测试。
  *
  * @author remi-team

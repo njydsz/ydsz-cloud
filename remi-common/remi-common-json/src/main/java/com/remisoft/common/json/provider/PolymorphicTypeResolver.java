@@ -28,7 +28,7 @@ import com.remisoft.common.json.autotype.AutoTypeChecker;
  *
  * // 反序列化
  * String json = "{\"type\":\"dog\",\"name\":\"Buddy\"}";
- * Animal animal = YdszJson.toObject(json, Animal.class);
+ * Animal animal = RemiJson.toObject(json, Animal.class);
  * // animal 是 Dog 实例
  * </pre>
  *

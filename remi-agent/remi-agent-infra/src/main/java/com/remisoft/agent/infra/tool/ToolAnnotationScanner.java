@@ -11,7 +11,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.agent.domain.model.ToolDefinition;
 import com.remisoft.agent.domain.tool.Tool;
 import com.remisoft.agent.domain.tool.ToolExecutor;
@@ -91,7 +91,7 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
             if (result instanceof String str) {
                 return str;
             }
-            return YdszJson.toJson(result);
+            return RemiJson.toJson(result);
         };
 
         ToolRegistration registration = new ToolRegistration(definition, executor);

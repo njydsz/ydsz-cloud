@@ -14,7 +14,7 @@ import java.util.Set;
 import com.remisoft.common.event.model.DatabaseDialect;
 import com.remisoft.common.event.model.OutboxMessage;
 import com.remisoft.common.event.model.OutboxStatus;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.exception.JsonException;
 import com.remisoft.common.json.type.JsonType;
 
@@ -300,7 +300,7 @@ public class OutboxRepository {
             return null;
         }
         try {
-            return YdszJson.toJson(headers);
+            return RemiJson.toJson(headers);
         } catch (JsonException e) {
             log.warn("Failed to serialize headers", e);
             return null;
@@ -318,7 +318,7 @@ public class OutboxRepository {
             return Map.of();
         }
         try {
-            return YdszJson.fromJson(json, MAP_TYPE);
+            return RemiJson.fromJson(json, MAP_TYPE);
         } catch (JsonException e) {
             log.warn("Failed to deserialize headers: {}", json, e);
             return Map.of();

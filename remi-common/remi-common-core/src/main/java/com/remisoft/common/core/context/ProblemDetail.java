@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import com.remisoft.common.core.code.ResultCode;
+import com.remisoft.common.json.annotation.JsonInclude;
 import com.remisoft.common.json.annotation.JsonPropertyOrder;
 
 /**
@@ -63,6 +64,7 @@ import com.remisoft.common.json.annotation.JsonPropertyOrder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"type", "title", "status", "detail", "instance", "errorCode", "traceId", "requestId", "timestamp"})
 public class ProblemDetail implements Serializable {
 

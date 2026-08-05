@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.WorkflowFacade;
 import com.remisoft.workflow.domain.dto.FlowStartProcessDTO;
 import com.remisoft.workflow.domain.entity.FlowDefinition;
@@ -381,7 +381,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             return null;
         }
         try {
-            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+            Map<String, Object> ext = RemiJson.parseMap(node.getExt());
             if (ext == null) return null;
             Object v = ext.get("callActivityFlowCode");
             if (v == null) {
@@ -402,7 +402,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             return null;
         }
         try {
-            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+            Map<String, Object> ext = RemiJson.parseMap(node.getExt());
             if (ext == null) return null;
             Object v = ext.get("subProcessTimeout");
             if (v == null) {
@@ -484,7 +484,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             return new HashMap<>();
         }
         try {
-            Map<String, Object> map = YdszJson.parseMap(variableJson);
+            Map<String, Object> map = RemiJson.parseMap(variableJson);
             return map == null ? new HashMap<>() : map;
         } catch (Exception e) {
             return new HashMap<>();

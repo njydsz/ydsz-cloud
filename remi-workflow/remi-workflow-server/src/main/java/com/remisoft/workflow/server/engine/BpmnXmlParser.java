@@ -1,6 +1,6 @@
 package com.remisoft.workflow.server.engine;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -236,7 +236,7 @@ public class BpmnXmlParser {
         if ("eventbasedgateway".equals(normalized) || "complexgateway".equals(normalized)) {
             Map<String, Object> extMap = readOrInitExt(node);
             extMap.put("gatewayType", "eventbasedgateway".equals(normalized) ? "EVENT_BASED" : "COMPLEX");
-            node.setExt(YdszJson.toJson(extMap));
+            node.setExt(RemiJson.toJson(extMap));
             log.info("[BpmnXmlParser] {} 映射为 {} 类型 + ext.gatewayType 标记，nodeCode={}",
                     localName, node.getNodeType() == FlowNodeType.CONDITION.getCode() ? "CONDITION" : "INCLUSIVE",
                     node.getNodeCode());
@@ -308,7 +308,7 @@ public class BpmnXmlParser {
                 }
             }
             node.setPermissionFlag(perm.toString());
-            node.setExt(YdszJson.toJson(Map.of("candidateUsers", candidateUsers)));
+            node.setExt(RemiJson.toJson(Map.of("candidateUsers", candidateUsers)));
         } else if (candidateGroups != null && !candidateGroups.isBlank()) {
             // P2-15: 候选组同样支持多组逗号分隔，全部写入 permissionFlag
             String[] groups = candidateGroups.split(",");
@@ -324,7 +324,7 @@ public class BpmnXmlParser {
                 }
             }
             node.setPermissionFlag(perm.toString());
-            node.setExt(YdszJson.toJson(Map.of("candidateGroups", candidateGroups)));
+            node.setExt(RemiJson.toJson(Map.of("candidateGroups", candidateGroups)));
         }
 
         // P0-4: 会签类型与扩展字段
@@ -394,12 +394,12 @@ public class BpmnXmlParser {
         // P0-4: 通用 extensionElements（用户自定义键值对）
         parseExtensionElements(elem, ext);
 
-        node.setExt(YdszJson.toJson(ext));
+        node.setExt(RemiJson.toJson(ext));
 
         // 处理 userTask 的多实例特性（会签）
         if ("userTask".equalsIgnoreCase(localName)) {
             parseMultiInstance(elem, node, ext);
-            node.setExt(YdszJson.toJson(ext));
+            node.setExt(RemiJson.toJson(ext));
         }
         return node;
     }
@@ -590,7 +590,7 @@ public class BpmnXmlParser {
         if (priority != null && !priority.isBlank()) {
             ext.put("priority", priority.trim());
         }
-        skip.setExt(YdszJson.toJson(ext));
+        skip.setExt(RemiJson.toJson(ext));
         // nextNodeCode 暂存 targetRef，定义模型转换时会再赋
         skip.setNextNodeCode(targetRef);
         // 解析条件表达式
@@ -654,7 +654,7 @@ public class BpmnXmlParser {
         String ext = node.getExt();
         if (ext != null && !ext.isBlank() && !"{}".equals(ext.trim())) {
             try {
-                Map<String, Object> parsed = YdszJson.parseMap(ext);
+                Map<String, Object> parsed = RemiJson.parseMap(ext);
                 if (parsed != null) {
                     map.putAll(parsed);
                 }

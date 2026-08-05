@@ -20,7 +20,7 @@ import com.remisoft.common.json.testbean.NamingBean;
 /**
  * 综合 JMH 性能基准（P1-3）
  *
- * <p>覆盖 YdszJson 引擎的核心性能维度：</p>
+ * <p>覆盖 RemiJson 引擎的核心性能维度：</p>
  * <ul>
  *   <li>序列化性能（简单 Bean、注解 Bean、浮点精度、命名策略）</li>
  *   <li>反序列化性能（Map 解析、复杂嵌套 Bean）</li>

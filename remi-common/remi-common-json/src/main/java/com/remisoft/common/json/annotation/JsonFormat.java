@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 /**
  * Jackson 兼容注解：指定日期/数字的序列化格式。
  *
- * <p>指定字段序列化/反序列化时的格式模式。当项目中同时存在 Jackson 和 YdszJson
+ * <p>指定字段序列化/反序列化时的格式模式。当项目中同时存在 Jackson 和 RemiJson
  * 时，可使用此注解替代 {@code @JsonFormat(com.fasterxml.jackson.annotation.JsonFormat)}，
  * 避免引入 Jackson 依赖。</p>
  *

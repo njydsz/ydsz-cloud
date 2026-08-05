@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
- * YdszJson ASM 预热 Runner。
+ * RemiJson ASM 预热 Runner。
  *
  * <p>在 Spring Boot 应用启动后，根据 {@link JsonProperties#getWarmupClasses()}
  * 配置的类列表，异步执行 ASM 字节码预热，避免首次请求时的延迟尖峰。
@@ -44,9 +44,9 @@ public class JsonWarmupRunner implements ApplicationRunner {
             try {
                 classes.add(Class.forName(className));
             } catch (ClassNotFoundException e) {
-                log.warn("[YdszJson] 预热类未找到，跳过: {}", className);
+                log.warn("[RemiJson] 预热类未找到，跳过: {}", className);
             } catch (Throwable t) {
-                log.warn("[YdszJson] 加载预热类失败，跳过: {} - {}", className, t.getMessage());
+                log.warn("[RemiJson] 加载预热类失败，跳过: {} - {}", className, t.getMessage());
             }
         }
 
@@ -54,14 +54,14 @@ public class JsonWarmupRunner implements ApplicationRunner {
             return;
         }
 
-        log.info("[YdszJson] 开始 ASM 预热，共 {} 个类", classes.size());
+        log.info("[RemiJson] 开始 ASM 预热，共 {} 个类", classes.size());
         long start = System.currentTimeMillis();
         try {
-            YdszJson.warmup(classes.toArray(new Class<?>[0]));
+            RemiJson.warmup(classes.toArray(new Class<?>[0]));
         } catch (Exception e) {
-            log.warn("[YdszJson] ASM 预热过程中发生异常（不影响应用启动）: {}", e.getMessage());
+            log.warn("[RemiJson] ASM 预热过程中发生异常（不影响应用启动）: {}", e.getMessage());
         }
         long elapsed = System.currentTimeMillis() - start;
-        log.info("[YdszJson] ASM 预热完成，耗时 {}ms", elapsed);
+        log.info("[RemiJson] ASM 预热完成，耗时 {}ms", elapsed);
     }
 }

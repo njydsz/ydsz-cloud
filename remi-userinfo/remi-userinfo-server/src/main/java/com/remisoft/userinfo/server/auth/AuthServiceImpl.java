@@ -29,7 +29,7 @@ import com.remisoft.userinfo.infra.mapper.RoleMapper;
 import com.remisoft.userinfo.infra.mapper.UserAccountMapper;
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.userinfo.infra.mapper.UserRoleMapper;
 import com.remisoft.userinfo.server.config.UserInfoProperties;
 import com.remisoft.userinfo.server.metrics.UserInfoMetrics;
@@ -310,7 +310,7 @@ public class AuthServiceImpl implements AuthService {
         }
         try {
             outboxService.appendToOutbox("UserAccount", aggregateId, eventType,
-                    YdszJson.toJson(payload));
+                    RemiJson.toJson(payload));
         } catch (Exception e) {
             log.warn("Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());

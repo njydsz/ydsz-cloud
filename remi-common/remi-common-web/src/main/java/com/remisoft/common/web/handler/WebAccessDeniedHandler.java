@@ -14,7 +14,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCode;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.message.MessageUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +52,6 @@ public class WebAccessDeniedHandler implements AccessDeniedHandler {
         String message = MessageUtils.getMessage(errorCode.getKey(), errorCode.getKey());
 
         BaseResponse<?> body = BaseResponse.error(errorCode.getCode(), message);
-        response.getWriter().write(YdszJson.toJson(body));
+        response.getWriter().write(RemiJson.toJson(body));
     }
 }

@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.collection.MapUtils;
 import com.remisoft.message.domain.entity.template.MsgTemplate;
 import com.remisoft.message.server.config.MessageProperties;
@@ -103,7 +103,7 @@ public class GetuiPushProvider implements PushProvider {
                     "body", request.getContent() == null ? "" : request.getContent())));
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
             ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
-            Map<String, Object> json = YdszJson.parseMap(resp.getBody());
+            Map<String, Object> json = RemiJson.parseMap(resp.getBody());
             String code = MapUtils.getString(json, "code");
             if ("10000".equals(code)) {
                 String taskId = MapUtils.getString(json, "data");
@@ -153,7 +153,7 @@ public class GetuiPushProvider implements PushProvider {
             body.put("timestamp", timestamp);
             body.put("appkey", config.getAppKey());
             ResponseEntity<String> resp = restTemplate.postForEntity(url, body, String.class);
-            Map<String, Object> json = YdszJson.parseMap(resp.getBody());
+            Map<String, Object> json = RemiJson.parseMap(resp.getBody());
             if ("10000".equals(MapUtils.getString(json, "code"))) {
                 Map<String, Object> data = MapUtils.safeCastMap(json.get("data"));
                 cachedToken = MapUtils.getString(data, "token");

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ArrayNode;
 import com.remisoft.common.json.tree.ObjectNode;
 
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>负责 {@link DagDefinition} 与 JSON 字符串之间的转换，
  * 存储/读取 {@code JobDag.dagDefinition} 字段。
  *
- * <p>使用 YdszJson 手动解析，避免 record 反序列化兼容性问题，
+ * <p>使用 RemiJson 手动解析，避免 record 反序列化兼容性问题，
  * 并提供校验（节点 jobKey 唯一、边的 from/to 必须存在于节点列表）。
  *
  * @author remi-team
@@ -75,7 +75,7 @@ public class DagDefinitionCodec {
         }
         root.put("nodes", nodesArr);
         root.put("edges", edgesArr);
-        return YdszJson.toJson(root);
+        return RemiJson.toJson(root);
     }
 
     /**
@@ -91,7 +91,7 @@ public class DagDefinitionCodec {
         }
         ObjectNode root;
         try {
-            root = YdszJson.parseObject(json);
+            root = RemiJson.parseObject(json);
         } catch (Exception e) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_invalid");
         }

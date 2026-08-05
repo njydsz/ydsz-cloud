@@ -54,7 +54,7 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-audit</artifactId>
         </dependency>
-        <!-- remi-common-json（OAuth2Controller 使用 YdszJson，显式声明避免传递依赖） -->
+        <!-- remi-common-json（OAuth2Controller 使用 RemiJson，显式声明避免传递依赖） -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-json</artifactId>

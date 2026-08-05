@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,7 +69,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         JobHistory history = new JobHistory();
         history.setJobId(job.getId());
         history.setVersion(job.getVersion());
-        history.setSnapshot(YdszJson.toJson(job));
+        history.setSnapshot(RemiJson.toJson(job));
         history.setChangeType("UPDATE");
         history.setJobName(job.getJobName());
         history.setJobKey(job.getJobKey());
@@ -97,8 +97,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             history.setJobId(referenceJob.getId());
             history.setVersion(referenceJob.getVersion() != null ? referenceJob.getVersion() : 1);
             history.setChangeType(changeType);
-            history.setSnapshot(afterJob != null ? YdszJson.toJson(afterJob) : null);
-            history.setBeforeSnapshot(beforeJob != null ? YdszJson.toJson(beforeJob) : null);
+            history.setSnapshot(afterJob != null ? RemiJson.toJson(afterJob) : null);
+            history.setBeforeSnapshot(beforeJob != null ? RemiJson.toJson(beforeJob) : null);
             history.setChangeRemark(changeRemark);
             // 冗余字段从 afterJob 取（DELETE 时从 beforeJob 取；referenceJob 已保证非 null）
             Job displayJob = referenceJob;
@@ -153,7 +153,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_history_version_not_found");
         }
         // 反序列化快照为 Job
-        Job snapshotJob = YdszJson.toObject(targetHistory.getSnapshot(), Job.class);
+        Job snapshotJob = RemiJson.toObject(targetHistory.getSnapshot(), Job.class);
         // 查询当前任务（用于保留统计字段等）
         Job currentJob = jobMapper.selectById(jobId);
         if (currentJob == null) {
@@ -195,8 +195,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         if (h1 == null || h2 == null) {
             return Collections.emptyList();
         }
-        Job job1 = YdszJson.toObject(h1.getSnapshot(), Job.class);
-        Job job2 = YdszJson.toObject(h2.getSnapshot(), Job.class);
+        Job job1 = RemiJson.toObject(h1.getSnapshot(), Job.class);
+        Job job2 = RemiJson.toObject(h2.getSnapshot(), Job.class);
         return diffFields(job1, job2);
     }
 
@@ -224,8 +224,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
      */
     private List<Map<String, Object>> diffFields(Job job1, Job job2) {
         List<Map<String, Object>> diffs = new ArrayList<>();
-        Map<String, Object> snapshot1 = YdszJson.parseMap(YdszJson.toJson(job1));
-        Map<String, Object> snapshot2 = YdszJson.parseMap(YdszJson.toJson(job2));
+        Map<String, Object> snapshot1 = RemiJson.parseMap(RemiJson.toJson(job1));
+        Map<String, Object> snapshot2 = RemiJson.parseMap(RemiJson.toJson(job2));
         for (String field : COMPARE_FIELDS) {
             Object oldValue = snapshot1.get(field);
             Object newValue = snapshot2.get(field);

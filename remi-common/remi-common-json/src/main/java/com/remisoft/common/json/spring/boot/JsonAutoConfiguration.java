@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.autotype.AutoTypeWhitelistScanner;
 import com.remisoft.common.json.internal.JsonConfig;
@@ -33,13 +33,13 @@ import io.micrometer.core.instrument.MeterRegistry;
 /**
  * Ydsz JSON 自动配置。
  *
- * <p>注册全局 {@code YdszJson} Bean（自研 JSON 引擎，非 Jackson 封装），支持 Long 转 String、日期格式化、
+ * <p>注册全局 {@code RemiJson} Bean（自研 JSON 引擎，非 Jackson 封装），支持 Long 转 String、日期格式化、
  *
  * <p>脱敏字段、未知字段忽略、BigDecimal 精度等统一序列化策略。
  *
  * <p><b>与 Spring Boot Jackson 的关系（双引擎格局）：</b>
  * 本配置通过 {@code @AutoConfigureBefore} 声明在 {@code JacksonAutoConfiguration} 之前加载，
- * 并通过 {@code @ConditionalOnMissingBean} 占位 HTTP 消息转换器，使业务 REST 接口走 YdszJson。
+ * 并通过 {@code @ConditionalOnMissingBean} 占位 HTTP 消息转换器，使业务 REST 接口走 RemiJson。
  * 但 Spring Boot 默认仍会注册 {@code ObjectMapper} Bean，供 Actuator 部分端点、
  * Spring Data Redis 默认序列化器等 Spring 内部组件使用，构成"可控并存"的双引擎格局。
  *
@@ -62,11 +62,11 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class JsonAutoConfiguration {
 
     /**
-     * YdszJson 核心配置（初始化全局配置 + 模块注册）。
+     * RemiJson 核心配置（初始化全局配置 + 模块注册）。
      *
-     * @param properties YdszJson 配置属性
+     * @param properties RemiJson 配置属性
      * @param springModules 所有实现 SpringFactory 接口的 JsonModule（可为空）
-     * @return YdszJson 配置 Bean
+     * @return RemiJson 配置 Bean
      */
     @Bean
     @ConditionalOnMissingBean
@@ -78,7 +78,7 @@ public class JsonAutoConfiguration {
     /**
      * HTTP 消息转换器（注册到 Spring MVC）。
      *
-     * @return YdszJson HTTP 消息转换器
+     * @return RemiJson HTTP 消息转换器
      */
     @Bean
     @ConditionalOnMissingBean(JsonHttpMessageConverter.class)
@@ -91,7 +91,7 @@ public class JsonAutoConfiguration {
     }
 
     /**
-     * YdszJson 指标监控（Micrometer），并绑定到 YdszJson 引擎。
+     * RemiJson 指标监控（Micrometer），并绑定到 RemiJson 引擎。
      */
     @Bean
     @ConditionalOnMissingBean
@@ -100,7 +100,7 @@ public class JsonAutoConfiguration {
     public JsonMetrics remiJsonMetrics(
             ObjectProvider<MeterRegistry> meterRegistryProvider) {
         JsonMetrics metrics = new JsonMetrics(meterRegistryProvider.getIfAvailable());
-        YdszJson.setMetricsCallback(metrics);
+        RemiJson.setMetricsCallback(metrics);
 
         // 绑定缓存统计指标到 MeterRegistry
         MeterRegistry registry = meterRegistryProvider.getIfAvailable();
@@ -112,7 +112,7 @@ public class JsonAutoConfiguration {
     }
 
     /**
-     * YdszJson 健康检查指标。
+     * RemiJson 健康检查指标。
      */
     @Bean
     @ConditionalOnMissingBean
@@ -124,7 +124,7 @@ public class JsonAutoConfiguration {
     /**
      * ASM 预热 Runner — 应用启动后异步预热高频序列化 Bean 的 ASM 字节码。
      *
-     * @param properties YdszJson 配置属性
+     * @param properties RemiJson 配置属性
      * @return 预热 Runner
      */
     @Bean
@@ -165,7 +165,7 @@ public class JsonAutoConfiguration {
     }
 
     /**
-     * YdszJson 配置 Bean。
+     * RemiJson 配置 Bean。
      *
      * <p>使用 {@code @PostConstruct} 在依赖注入完成后初始化全局配置，
      * 确保所有 {@code JsonModule} Bean 已就绪后再注册到 {@link JsonModuleRegistrar}。</p>
@@ -182,7 +182,7 @@ public class JsonAutoConfiguration {
         }
 
         /**
-         * 在 Bean 依赖注入完成后初始化全局 YdszJson 配置。
+         * 在 Bean 依赖注入完成后初始化全局 RemiJson 配置。
          *
          * <p>使用 {@code @PostConstruct} 而非构造函数初始化的优势：
          * <ul>

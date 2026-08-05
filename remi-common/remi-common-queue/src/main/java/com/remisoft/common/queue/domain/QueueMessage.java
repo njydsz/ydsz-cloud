@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.queue.compress.MessageCompressor;
 import com.remisoft.common.util.id.TracerUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.string.StringUtils;
 
 import lombok.AllArgsConstructor;
@@ -230,7 +230,7 @@ public class QueueMessage implements Serializable {
         if (message.getExpireMillis() == null) {
             message.setExpireMillis(0L);
         }
-        return MessageCompressor.compressIfNeeded(YdszJson.toJson(message), COMPRESS_THRESHOLD);
+        return MessageCompressor.compressIfNeeded(RemiJson.toJson(message), COMPRESS_THRESHOLD);
     }
 
     /**
@@ -252,7 +252,7 @@ public class QueueMessage implements Serializable {
                     "消息 payload 超过最大长度限制: " + payload.length() + " > " + MAX_PAYLOAD_LENGTH);
         }
         try {
-            QueueMessage message = YdszJson.toObject(payload, QueueMessage.class);
+            QueueMessage message = RemiJson.toObject(payload, QueueMessage.class);
             // 反序列化返回 null 或 body 为 null（非 JSON 字符串被宽松解析）时，降级为以 payload 为 body
             if (message == null || message.getBody() == null) {
                 return QueueMessage.of(payload);

@@ -2,7 +2,7 @@ package com.remisoft.common.socket.push;
 
 import java.util.List;
 import java.util.Map;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import java.util.UUID;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -516,7 +516,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         if (ttlSeconds <= 0) {
             return payloadJson;
         }
-        return YdszJson.toJson(Map.of("_ttlSeconds", ttlSeconds,
+        return RemiJson.toJson(Map.of("_ttlSeconds", ttlSeconds,
                 "_expireAt", System.currentTimeMillis() + ttlSeconds * 1000,
                 "data", payloadJson));
     }

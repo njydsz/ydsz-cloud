@@ -12,7 +12,7 @@ import com.remisoft.common.auth.service.RbacUserInfoService;
 import com.remisoft.common.cache.YdszCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.redis.service.RedisService;
 import com.remisoft.common.safe.desensitize.ColumnDesensitizationContext;
 import com.remisoft.common.safe.desensitize.ColumnDesensitizationRule;
@@ -165,8 +165,8 @@ public class ColumnDesensitizationService {
 
     private void parseAndMergeRules(String json, ColumnDesensitizationContext context) {
         try {
-            // Use YdszJson static methods (YdszJson engine)
-            JsonNode root = YdszJson.readTree(json);
+            // Use RemiJson static methods (RemiJson engine)
+            JsonNode root = RemiJson.readTree(json);
             if (root == null || root.isMissing()) {
                 return;
             }

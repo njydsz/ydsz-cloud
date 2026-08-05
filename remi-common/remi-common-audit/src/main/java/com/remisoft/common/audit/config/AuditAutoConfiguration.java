@@ -150,7 +150,7 @@ public class AuditAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(AuditAspect.class)
-    @ConditionalOnClass(name = "com.remisoft.common.json.YdszJson")
+    @ConditionalOnClass(name = "com.remisoft.common.json.RemiJson")
     public AuditAspect auditAspect(ApplicationEventPublisher eventPublisher, AuditProperties properties, AuditTemplateProcessor templateProcessor) {
         log.info("初始化审计日志切面: AuditAspect, 存储策略={}", properties.getStorageType());
         return new AuditAspect(eventPublisher, properties, templateProcessor);
@@ -203,7 +203,7 @@ public class AuditAutoConfiguration {
     @ConditionalOnMissingBean(AuditRecorder.class)
     @ConditionalOnProperty(prefix = "remi.audit", name = "async", havingValue = "true", matchIfMissing = true)
     @ConditionalOnBean(DataSource.class)
-    @ConditionalOnClass(name = "com.remisoft.common.json.YdszJson")
+    @ConditionalOnClass(name = "com.remisoft.common.json.RemiJson")
     public AuditRecorder asyncAuditRecorder(DataSource dataSource, AuditProperties properties,
                                             TableShardingStrategy shardingStrategy) {
         String baseTableName = properties.getShardingBaseTableName();

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.workflow.server.service.FlowConditionExprService;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -161,7 +161,7 @@ public class FlowConditionExprController {
         String expression = body.get("expression") instanceof String s ? s : null;
         String engine = body.get("engine") instanceof String s ? s : "AVIATOR";
         Map<String, Object> variables = body.get("variables") instanceof Map<?, ?> m
-                ? YdszJson.toStringObjectMap(m) : Map.of();
+                ? RemiJson.toStringObjectMap(m) : Map.of();
         return BaseResponse.success(conditionExprService.previewExpression(expression, variables, engine));
     }
 

@@ -1330,7 +1330,7 @@
                             <bannedDependencies>
                                 <!--
                                     与 ArchUnit R29 对齐：禁止直接声明竞品 JSON 库依赖。
-                                    业务模块的 JSON 序列化统一使用 remi-common-json 的 YdszJson。
+                                    业务模块的 JSON 序列化统一使用 remi-common-json 的 RemiJson。
                                     jackson-databind 不在此全局 ban（公共模块有合理使用场景如第三方 SDK），
                                     由 ArchUnit R29 在编译期约束业务代码不直接 import com.fasterxml.jackson.*。
                                     hutool-all 不在此 ban（nextwiki/common-util 有合理 crypto.digest 使用），
@@ -1345,7 +1345,7 @@
                                     <exclude>com.googlecode.json-simple:json-simple</exclude>
                                 </excludes>
                                 <message>禁止直接声明 gson / hutool-json / org.json / json-simple 等竞品 JSON 库。
-                                    JSON 序列化统一使用 remi-common-json（YdszJson），与 ArchUnit R29 对齐。
+                                    JSON 序列化统一使用 remi-common-json（RemiJson），与 ArchUnit R29 对齐。
                                     公共模块如需 Jackson（第三方 SDK 依赖），声明为 optional 并通过 ArchUnit 白名单。
                                 </message>
                             </bannedDependencies>

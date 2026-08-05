@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ObjectNode;
 
 import org.springframework.cache.annotation.CacheEvict;
@@ -250,7 +250,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 for (FlowNode n : nodes) {
                     BpmnModel.NodeCoordinate coord = nodeCoords.get(n.getNodeCode());
                     if (coord != null) {
-                        n.setCoordinate(YdszJson.toJson(Map.of(
+                        n.setCoordinate(RemiJson.toJson(Map.of(
                                 "x", coord.getX(),
                                 "y", coord.getY(),
                                 "width", coord.getWidth(),
@@ -294,7 +294,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                             ? s.getSkipType() : FlowSkipType.PASS.name());
                     skip.setSkipCondition(s.getSkipCondition());
                     skip.setNextNodeCode(s.getToNodeCode());
-                    skip.setExt(YdszJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
+                    skip.setExt(RemiJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
                     skips.add(skip);
                 }
             }
@@ -845,7 +845,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                                 ? s.getSkipType() : FlowSkipType.PASS.name());
                         skip.setSkipCondition(s.getSkipCondition());
                         skip.setNextNodeCode(s.getToNodeCode());
-                        skip.setExt(YdszJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
+                        skip.setExt(RemiJson.toJson(Map.of("sourceRef", s.getFromNodeCode())));
                         skips.add(skip);
                     }
                 }
@@ -892,7 +892,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (detail == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
-        return YdszJson.toJson(detail);
+        return RemiJson.toJson(detail);
     }
 
     /**
@@ -921,7 +921,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         Map<String, Object> root;
         try {
-            root = YdszJson.parseMap(json);
+            root = RemiJson.parseMap(json);
         } catch (Exception e) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "JSON 解析失败: " + e.getMessage());
         }
@@ -983,7 +983,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String ext = MapUtils.getString(s, "ext");
                 if (StringUtils.hasText(ext)) {
                     try {
-                        ObjectNode extNode = YdszJson.parseObject(ext);
+                        ObjectNode extNode = RemiJson.parseObject(ext);
                         skip.setFromNodeCode(extNode != null ? extNode.getString("sourceRef") : null);
                     } catch (Exception e) {
                         log.warn("[Flow] 导入跳转 ext 解析失败: skipName={} err={}",
@@ -1032,7 +1032,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String source = null;
                 if (StringUtils.hasText(skip.getExt())) {
                     try {
-                        ObjectNode extNode = YdszJson.parseObject(skip.getExt());
+                        ObjectNode extNode = RemiJson.parseObject(skip.getExt());
                         source = extNode != null ? extNode.getString("sourceRef") : null;
                     } catch (Exception e) { log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e); }
                 }
@@ -1089,7 +1089,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 Object coord = nodeData.get("coordinate");
                 if (coord != null) {
                     String coordStr = coord instanceof String
-                            ? (String) coord : YdszJson.toJson(coord);
+                            ? (String) coord : RemiJson.toJson(coord);
                     FlowNode nodeForCoord = nodeMapper.selectByCode(definitionId, nodeCode);
                     if (nodeForCoord != null) {
                         nodeForCoord.setCoordinate(coordStr);
@@ -1108,7 +1108,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                         }
                         Object ext = nodeData.get("ext");
                         if (ext != null) {
-                            node.setExt(ext instanceof String ? (String) ext : YdszJson.toJson(ext));
+                            node.setExt(ext instanceof String ? (String) ext : RemiJson.toJson(ext));
                         }
                         nodeMapper.updateById(node);
                     }
@@ -1475,7 +1475,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
+                Map<String, Object> extJson = RemiJson.parseMap(skip.getExt());
                 sourceRef = MapUtils.getString(extJson, "sourceRef");
             } catch (Exception ignored) {
                 // ignore parse error
@@ -1494,7 +1494,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
+                Map<String, Object> extJson = RemiJson.parseMap(skip.getExt());
                 sourceRef = MapUtils.getString(extJson, "sourceRef");
             } catch (Exception ignored) {
                 // ignore

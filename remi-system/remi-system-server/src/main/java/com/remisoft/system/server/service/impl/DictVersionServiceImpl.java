@@ -63,7 +63,7 @@ import com.remisoft.system.domain.converter.SystemConverter;
  *     "user_status",
  *     "v" + System.currentTimeMillis(),
  *     "新增【离职】状态",
- *     YdszJson.toJson(snapshotBeforeChange)
+ *     RemiJson.toJson(snapshotBeforeChange)
  * );
  *
  * // 查询某字典的所有历史版本

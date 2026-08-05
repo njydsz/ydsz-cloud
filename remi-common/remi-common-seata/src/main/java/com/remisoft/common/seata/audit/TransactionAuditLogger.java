@@ -7,7 +7,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.seata.api.TransactionType;
 
 /**
@@ -62,7 +62,7 @@ public class TransactionAuditLogger {
         if (error != null) {
             audit.put("error", error);
         }
-        auditLog.info(YdszJson.toJson(audit));
+        auditLog.info(RemiJson.toJson(audit));
     }
 
     /**

@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,7 +66,7 @@ public class NullValueCacheHelper {
                 return null;
             }
             try {
-                return YdszJson.toObject(cached, clazz);
+                return RemiJson.toObject(cached, clazz);
             } catch (Exception e) {
                 log.warn("【NullValueCacheHelper】反序列化失败，将回源加载 | key={} | targetClass={} | error={}",
                         key, clazz.getName(), e.getMessage());
@@ -79,7 +79,7 @@ public class NullValueCacheHelper {
             // 设置较短 TTL（5 分钟），防止 null 值长期占用缓存
             cache.opsForValue().setIfAbsent(key, NULL_VALUE_PLACEHOLDER, Duration.ofMinutes(5));
         } else {
-            cache.opsForValue().set(key, YdszJson.toJson(value), ttl);
+            cache.opsForValue().set(key, RemiJson.toJson(value), ttl);
         }
         return value;
     }

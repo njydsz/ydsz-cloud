@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.remisoft.workflow.domain.entity.FlowThirdPartyAccount;
 import com.remisoft.workflow.domain.entity.FlowThirdPartyLog;
@@ -288,7 +288,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
             return null;
         }
         try {
-            return YdszJson.parseMap(callbackData);
+            return RemiJson.parseMap(callbackData);
         } catch (Exception e) {
             log.warn("[ThirdPartyRetry] callbackData 解析失败: {} err={}",
                     callbackData.length() > 200 ? callbackData.substring(0, 200) + "..." : callbackData,

@@ -102,7 +102,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `YdszJsonRedisSerializer` | 基于 YdszJson 的高性能 Redis 序列化器（支持 Java 8 时间类型） |
+| `YdszJsonRedisSerializer` | 基于 RemiJson 的高性能 Redis 序列化器（支持 Java 8 时间类型） |
 | `RedisKeyPrefixProvider` | Key 前缀提供者接口（业务模块实现，统一 Key 命名规范） |
 | `TenantRedisKeyPrefixer` | 租户级 Redis Key 前缀器（格式 `{tenantId}:{originalKey}`，超级管理员不添加前缀） |
 | `RedisKeysEnum` | Redis Key 模板枚举管理（统一 `remi:` 前缀，模板化 `{}` 占位符，分组管理 + 默认 TTL） |

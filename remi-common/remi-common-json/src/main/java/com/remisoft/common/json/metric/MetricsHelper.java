@@ -5,7 +5,7 @@ import com.remisoft.common.json.exception.JsonException;
 /**
  * 指标监控包装工具（统一序列化/反序列化的指标记录逻辑）。
  *
- * <p>提取自 {@link com.remisoft.common.json.YdszJson} 和
+ * <p>提取自 {@link com.remisoft.common.json.RemiJson} 和
  * {@link com.remisoft.common.json.JsonMapper} 中重复的 recordSerialize/recordDeserialize 逻辑，
  * 消除约 100 行重复代码。</p>
  *

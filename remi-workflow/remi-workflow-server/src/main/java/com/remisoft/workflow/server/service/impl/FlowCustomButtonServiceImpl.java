@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -130,14 +130,14 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         }
         // 读取现有 ext JSON
         Map<String, Object> extJson = StringUtils.hasText(node.getExt())
-                ? YdszJson.parseMap(node.getExt()) : new LinkedHashMap<>();
+                ? RemiJson.parseMap(node.getExt()) : new LinkedHashMap<>();
         // 写入 customButtons
         if (buttons == null || buttons.isEmpty()) {
             extJson.remove("customButtons");
         } else {
             extJson.put("customButtons", buttons);
         }
-        node.setExt(YdszJson.toJson(extJson));
+        node.setExt(RemiJson.toJson(extJson));
         nodeMapper.updateById(node);
         // 失效缓存
         definitionCacheService.evict(definitionId);
@@ -250,7 +250,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
             return List.of();
         }
         try {
-            Map<String, Object> ext = YdszJson.parseMap(extJson);
+            Map<String, Object> ext = RemiJson.parseMap(extJson);
             Object buttons = ext.get("customButtons");
             if (buttons == null) {
                 return List.of();

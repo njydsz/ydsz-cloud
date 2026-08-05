@@ -17,7 +17,7 @@ import org.springframework.web.client.RestClient;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.util.id.SnowflakeUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.ChannelProperties;
 
@@ -103,13 +103,13 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(url)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(YdszJson.toJson(payload))
+                    .body(RemiJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = YdszJson.parseMap(response.getBody());
+                Map<String, Object> body = RemiJson.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     log.info("[DINGTALK_WORK] 发送成功: receiver={}", receiver);
@@ -140,7 +140,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
                     + "&appsecret=" + cfg.getAppSecret();
             ResponseEntity<String> response = restClient.get().uri(url).retrieve().toEntity(String.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = YdszJson.parseMap(response.getBody());
+                Map<String, Object> body = RemiJson.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     String token = (String) body.get("access_token");

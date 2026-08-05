@@ -5,11 +5,11 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import com.remisoft.common.json.provider.SerializationProvider;
 /**
- * YdszJson Reactive 工具类（用于 WebFlux 响应式场景）。
+ * RemiJson Reactive 工具类（用于 WebFlux 响应式场景）。
  *
  * <p>提供将对象序列化为 {@link DataBuffer} 的工具方法，
  * 供 WebFlux 应用在自定义 Encoder 或 Handler 中直接调用。</p>
@@ -40,7 +40,7 @@ public final class JsonReactiveUtils {
      * @return 包含 JSON UTF-8 字节的 DataBuffer
      */
     public static DataBuffer encode(Object obj, DataBufferFactory bufferFactory) {
-        byte[] bytes = YdszJson.toJsonBytes(obj);
+        byte[] bytes = RemiJson.toJsonBytes(obj);
         DataBuffer buffer = bufferFactory.allocateBuffer(bytes.length);
         buffer.write(bytes, 0, bytes.length);
         return buffer;

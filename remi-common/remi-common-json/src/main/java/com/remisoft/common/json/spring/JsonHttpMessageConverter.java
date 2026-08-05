@@ -17,12 +17,12 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.util.StreamUtils;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.provider.DeserializationProvider;
 import com.remisoft.common.json.provider.SerializationProvider;
 
 /**
- * YdszJson HTTP 消息转换器。
+ * RemiJson HTTP 消息转换器。
  *
  * <p>通用 JSON 消息转换器，支持所有 Java 对象类型的 JSON 序列化/反序列化。
  * 自动注册到 Spring MVC 的 {@code HttpMessageConverter} 链中。
@@ -43,8 +43,8 @@ import com.remisoft.common.json.provider.SerializationProvider;
  *
  * <p><b>流式模式说明：</b></p>
  * <p>启用流式模式后，响应将使用 HTTP chunked transfer encoding（不设置 Content-Length）。
- * 适用场景：大响应体（如导出、批量查询），可降低内存峰值。注意：YdszJson 内部序列化链
- * 仍以 byte[] 形式生成 JSON，真正的零内存流式输出需要后续重构 YdszJson 序列化链。
+ * 适用场景：大响应体（如导出、批量查询），可降低内存峰值。注意：RemiJson 内部序列化链
+ * 仍以 byte[] 形式生成 JSON，真正的零内存流式输出需要后续重构 RemiJson 序列化链。
  * 当前实现已将 byte[] 直接写入 OutputStream，避免了 byte[] 在 Converter 层再次拷贝。</p>
  *
  * @author remi-team
@@ -186,7 +186,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
             }
             // 非 ParameterizedType 退回常规路径
             Class<?> rawClass = type instanceof Class<?> c ? c : Object.class;
-            return YdszJson.fromJsonBytes(body, rawClass);
+            return RemiJson.fromJsonBytes(body, rawClass);
         } catch (Exception e) {
             if (e instanceof IOException) throw (IOException) e;
             throw new HttpMessageNotReadableException("JSON 解析失败：" + e.getMessage(), e, inputMessage);
@@ -264,7 +264,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
             bytes = SerializationProvider.serializeWithView(value, viewClass)
                     .getBytes(StandardCharsets.UTF_8);
         } else {
-            bytes = YdszJson.toJsonBytes(value);
+            bytes = RemiJson.toJsonBytes(value);
         }
         // 设置 Content-Length，避免 HTTP chunked 编码开销
         outputMessage.getHeaders().setContentLength(bytes.length);
@@ -291,7 +291,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
             StreamUtils.copy(json, StandardCharsets.UTF_8, out);
         } else {
             // 普通场景：直接序列化到 OutputStream
-            YdszJson.toJson(value, out);
+            RemiJson.toJson(value, out);
         }
     }
 

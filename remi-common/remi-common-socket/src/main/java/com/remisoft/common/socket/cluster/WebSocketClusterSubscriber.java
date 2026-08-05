@@ -4,7 +4,7 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.socket.compress.MessageCompressor;
 import com.remisoft.common.socket.constant.WebSocketConstants;
 import com.remisoft.common.socket.trace.WebSocketTraceContext;
@@ -43,7 +43,7 @@ public class WebSocketClusterSubscriber implements MessageListener {
         String body = new String(message.getBody());
         WebSocketClusterMessage clusterMsg;
         try {
-            clusterMsg = YdszJson.toObject(body, WebSocketClusterMessage.class);
+            clusterMsg = RemiJson.toObject(body, WebSocketClusterMessage.class);
         } catch (Exception e) {
             log.warn("[WS-Cluster] 消息解析失败,跳过: err={}", e.getMessage());
             return;

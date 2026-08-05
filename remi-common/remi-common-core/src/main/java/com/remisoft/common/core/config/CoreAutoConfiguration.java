@@ -10,7 +10,10 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.remisoft.common.core.constant.PageConstants;
+import com.remisoft.common.core.metrics.CoreMetrics;
 import com.remisoft.common.core.response.BaseResponse;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * Core 模块自动配置类。
@@ -70,6 +73,20 @@ public class CoreAutoConfiguration {
     @ConditionalOnClass(HealthIndicator.class)
     public CoreHealthIndicator coreHealthIndicator(CoreProperties properties) {
         return new CoreHealthIndicator(properties);
+    }
+
+    /**
+     * 注册 Core 模块 Micrometer 指标（当 MeterRegistry Bean 可用时）。
+     *
+     * <p>仅当 classpath 上存在 {@link MeterRegistry} 且容器中有对应 Bean 时生效。
+     * 注册 {@link CoreMetrics} 单例，业务过滤器可通过静态方法
+     * {@link CoreMetrics#incrementResponse(String)} / {@link CoreMetrics#recordHoldTime(java.time.Duration)}
+     * 上报请求级指标，无 Micrometer 时为 no-op。</p>
+     */
+    @Bean
+    @ConditionalOnBean(MeterRegistry.class)
+    public CoreMetrics coreMetrics(MeterRegistry registry) {
+        return new CoreMetrics(registry);
     }
 
     static class PageConstantsInitializer implements org.springframework.beans.factory.SmartInitializingSingleton {

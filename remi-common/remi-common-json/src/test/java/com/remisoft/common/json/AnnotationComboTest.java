@@ -36,22 +36,22 @@ class AnnotationComboTest {
         AnnotationBean bean = new AnnotationBean();
         bean.setId(42L);
 
-        String json = YdszJson.toJson(bean);
+        String json = RemiJson.toJson(bean);
         assertTrue(json.contains("\"uid\""), "field 'id' should be serialized as 'uid'");
     }
 
     @Test
     void jsonPropertyRenamesFieldOnDeserialize() {
-        AnnotationBean bean = YdszJson.toObject("{\"uid\":99}", AnnotationBean.class);
+        AnnotationBean bean = RemiJson.toObject("{\"uid\":99}", AnnotationBean.class);
         assertEquals(99L, bean.getId());
     }
 
     @Test
     void jsonAliasAcceptsAlternativeNames() {
-        AnnotationBean bean = YdszJson.toObject("{\"fullName\":\"Alice\"}", AnnotationBean.class);
+        AnnotationBean bean = RemiJson.toObject("{\"fullName\":\"Alice\"}", AnnotationBean.class);
         assertEquals("Alice", bean.getName());
 
-        AnnotationBean bean2 = YdszJson.toObject("{\"displayName\":\"Bob\"}", AnnotationBean.class);
+        AnnotationBean bean2 = RemiJson.toObject("{\"displayName\":\"Bob\"}", AnnotationBean.class);
         assertEquals("Bob", bean2.getName());
     }
 
@@ -61,7 +61,7 @@ class AnnotationComboTest {
         bean.setId(1L);
         bean.setPassword("secret123");
 
-        String json = YdszJson.toJson(bean);
+        String json = RemiJson.toJson(bean);
         assertFalse(json.contains("password"), "password field should be ignored");
         assertFalse(json.contains("secret123"), "password value should not appear");
     }
@@ -72,7 +72,7 @@ class AnnotationComboTest {
         bean.setId(1L);
         bean.setBirthday(LocalDate.of(2026, 8, 3));
 
-        String json = YdszJson.toJson(bean);
+        String json = RemiJson.toJson(bean);
         assertTrue(json.contains("\"birthday\":\"2026-08-03\""),
             "birthday should be formatted as yyyy-MM-dd");
     }
@@ -83,7 +83,7 @@ class AnnotationComboTest {
         bean.setId(1L);
         bean.setOptionalField(null);
 
-        String json = YdszJson.toJson(bean);
+        String json = RemiJson.toJson(bean);
         assertFalse(json.contains("optionalField"), "null optionalField should be omitted");
     }
 
@@ -93,7 +93,7 @@ class AnnotationComboTest {
         bean.setId(1L);
         bean.setNonEmptyField("");
 
-        String json = YdszJson.toJson(bean);
+        String json = RemiJson.toJson(bean);
         assertFalse(json.contains("nonEmptyField"), "empty nonEmptyField should be omitted");
     }
 
@@ -104,7 +104,7 @@ class AnnotationComboTest {
         bean.setName("test");
         bean.setScore(100);
 
-        String json = YdszJson.toJson(bean);
+        String json = RemiJson.toJson(bean);
         int idIdx = json.indexOf("\"uid\"");
         int nameIdx = json.indexOf("\"name\"");
         int scoreIdx = json.indexOf("\"score\"");
@@ -119,7 +119,7 @@ class AnnotationComboTest {
         bean.setId(1L);
         bean.setInternalField("hidden");
 
-        String json = YdszJson.toJson(bean);
+        String json = RemiJson.toJson(bean);
         assertFalse(json.contains("internalField"), "internalField should be excluded by @JsonIgnoreProperties");
     }
 
@@ -133,8 +133,8 @@ class AnnotationComboTest {
         bean.setPublicInfo("public-data");
         bean.setInternalInfo("internal-data");
 
-        String json = YdszJson.toJson(bean);
-        AnnotationBean back = YdszJson.toObject(json, AnnotationBean.class);
+        String json = RemiJson.toJson(bean);
+        AnnotationBean back = RemiJson.toObject(json, AnnotationBean.class);
 
         assertEquals(1L, back.getId());
         assertEquals("Alice", back.getName());

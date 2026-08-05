@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.remisoft.common.queue.constant.YdszMessageTopics;
 import com.remisoft.common.feign.MessageRequest;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.service.core.MessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -71,12 +71,12 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
         }
         List<MessageRequest> requests;
         try {
-            requests = YdszJson.parseArray(body, MessageRequest.class);
+            requests = RemiJson.parseArray(body, MessageRequest.class);
         } catch (Exception e) {
             log.error("[BatchConsumer] 批量消息解析失败,尝试单条解析: err={}", e.getMessage(), e);
             // 降级：尝试作为单条消息处理
             try {
-                MessageRequest single = YdszJson.toObject(body, MessageRequest.class);
+                MessageRequest single = RemiJson.toObject(body, MessageRequest.class);
                 if (single != null) {
                     requests = List.of(single);
                 } else {

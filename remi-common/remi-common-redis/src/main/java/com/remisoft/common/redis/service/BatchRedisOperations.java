@@ -13,7 +13,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 
 import com.remisoft.common.redis.cluster.ClusterSlotUtil;
 import com.remisoft.common.util.collection.CollectionUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * 批量 Redis 操作接口
@@ -107,8 +107,8 @@ public interface BatchRedisOperations {
                 result.add(clazz.cast(value));
             } else {
                     try {
-                        String json = YdszJson.toJson(value);
-                        T converted = YdszJson.toObject(json, clazz);
+                        String json = RemiJson.toJson(value);
+                        T converted = RemiJson.toObject(json, clazz);
                         result.add(converted);
                     } catch (Exception e) {
                         log.error("mgetObjects JSON转换失败, key index: {}", result.size(), e);

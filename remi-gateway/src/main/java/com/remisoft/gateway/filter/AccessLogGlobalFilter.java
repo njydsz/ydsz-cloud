@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.gateway.config.GatewayConstants;
 import com.remisoft.gateway.config.GatewayIpUtils;
 import com.remisoft.gateway.config.GatewayMetrics;
@@ -182,7 +182,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         logData.put("userId", userId != null ? userId : "-");
         logData.put("userAgent", userAgent != null ? userAgent : "-");
 
-        String jsonLog = YdszJson.toJson(logData);
+        String jsonLog = RemiJson.toJson(logData);
 
         if (status >= 500) {
             log.error(jsonLog);

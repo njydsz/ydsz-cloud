@@ -28,7 +28,7 @@ import com.remisoft.agent.server.metrics.AgentMetrics;
 import com.remisoft.agent.server.metrics.AgentRuntimeMetrics;
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * 对话服务
@@ -386,7 +386,7 @@ public class ChatService {
         }
         try {
             outboxService.appendToOutbox("Conversation", aggregateId, eventType,
-                    YdszJson.toJson(payload));
+                    RemiJson.toJson(payload));
         } catch (Exception e) {
             log.warn("[Chat] Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());

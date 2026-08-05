@@ -15,7 +15,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * 全局响应包装基类（Web/App 共享）
@@ -70,7 +70,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
             response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
             BaseResponse<String> result = wrapStringBody((String) body);
             try {
-                return YdszJson.toJson(result);
+                return RemiJson.toJson(result);
             } catch (Exception e) {
                 return result;
             }

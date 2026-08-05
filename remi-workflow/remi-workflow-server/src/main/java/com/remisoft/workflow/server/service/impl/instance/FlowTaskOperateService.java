@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.dto.FlowTaskOperateDTO;
 import com.remisoft.workflow.domain.entity.FlowHisTask;
 import com.remisoft.workflow.domain.entity.FlowInstance;
@@ -324,7 +324,7 @@ public class FlowTaskOperateService {
             return extra == null ? Collections.emptyMap() : extra;
         }
         try {
-            Map<String, Object> base = YdszJson.parseMap(instance.getVariable());
+            Map<String, Object> base = RemiJson.parseMap(instance.getVariable());
             if (extra != null && !extra.isEmpty()) {
                 base.putAll(extra);
             }
@@ -342,7 +342,7 @@ public class FlowTaskOperateService {
             return Collections.emptyMap();
         }
         try {
-            return YdszJson.parseMap(ext);
+            return RemiJson.parseMap(ext);
         } catch (Exception e) {
             log.warn("[Flow] 解析节点 ext 配置失败: err={}", e.getMessage());
             return Collections.emptyMap();

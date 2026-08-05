@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -95,7 +95,7 @@ public final class RuleDslParser {
         if (jsonContent == null || jsonContent.isBlank()) {
             return emptyDsl();
         }
-        Map<String, Object> raw = YdszJson.parseMap(jsonContent);
+        Map<String, Object> raw = RemiJson.parseMap(jsonContent);
         if (raw == null || raw.isEmpty()) {
             return emptyDsl();
         }

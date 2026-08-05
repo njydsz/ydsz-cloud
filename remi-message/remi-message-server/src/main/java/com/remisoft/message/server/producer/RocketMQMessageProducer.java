@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 import com.remisoft.common.queue.constant.YdszMessageTopics;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.util.id.SnowflakeUtils;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.util.MessageCompressor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
     public RocketMQMessageProducer(RocketMQTemplate rocketMQTemplate) {
         this.rocketMQTemplate = rocketMQTemplate;
         // 预热 ASM 序列化器，避免首次请求时的类型推断开销
-        YdszJson.warmup(MessageRequest.class);
+        RemiJson.warmup(MessageRequest.class);
     }
 
     /** P1-6: 优先级 → RocketMQ Tag 映射 */
@@ -60,7 +60,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(RemiJson.toJson(req));
         String destination = buildDestination(req);
         SendResult result;
         try {
@@ -90,7 +90,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(RemiJson.toJson(req));
         String destination = buildDestination(req);
         try {
             rocketMQTemplate.asyncSend(destination, payload, new SendCallback() {
@@ -173,7 +173,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(RemiJson.toJson(req));
         try {
             TransactionSendResult result =
                     rocketMQTemplate.sendMessageInTransaction(

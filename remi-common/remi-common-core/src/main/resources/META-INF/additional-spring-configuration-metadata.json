@@ -2,34 +2,50 @@
   "groups": [
     {
       "name": "remi.core",
-      "description": "REMI Core 模块配置组，包含分页、MDC 过滤器等核心配置。",
+      "description": "REMI Core 模块配置组，包含分页、MDC 过滤器、核心开关配置。",
       "type": "com.remisoft.common.core.config.CoreProperties"
+    },
+    {
+      "name": "remi.core.filter-ignore",
+      "description": "认证过滤器忽略列表配置，允许覆盖/追加默认忽略的服务名称。",
+      "type": "com.remisoft.common.core.config.FilterIgnoreProperties"
     }
   ],
   "properties": [
     {
       "name": "remi.core.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用 Core 模块自动配置（消息解析器、分页配置同步）。",
+      "description": "是否启用 Core 模块自动配置（i18n 解析器、分页配置同步、Micrometer 指标注册）。禁用后所有运行时注入回退到编译期默认值。",
       "defaultValue": true
     },
     {
       "name": "remi.core.max-page-size",
       "type": "java.lang.Integer",
-      "description": "最大每页记录数上限（1-5000），防止一次性拉取过多数据导致性能问题。运行时通过 PageConstants.getMaxPageSize() 获取。",
+      "description": "运行时最大每页记录数上限（1-5000），防止一次性拉取过多数据导致内存或性能问题。须满足 max-page-size >= default-page-size（JSR-303 交叉校验）。",
       "defaultValue": 1000
     },
     {
       "name": "remi.core.default-page-size",
       "type": "java.lang.Integer",
-      "description": "默认每页记录数（≥1），分页查询未指定 pageSize 时使用。运行时通过 PageConstants.getDefaultPageSize() 获取。",
+      "description": "运行时默认每页记录数（>=1），分页查询未指定 pageSize 时使用。必须小于等于 max-page-size。",
       "defaultValue": 20
     },
     {
       "name": "remi.core.tenant-mdc-filter-order",
       "type": "java.lang.Integer",
-      "description": "租户 MDC 过滤器优先级（FilterRegistrationBean order），默认为 HIGHEST_PRECEDENCE + 100。",
+      "description": "租户 MDC 过滤器注册顺序（FilterRegistrationBean order 值），默认为 HIGHEST_PRECEDENCE + 100，确保租户信息在业务过滤器之前写入 MDC。",
       "defaultValue": -2147483647
+    },
+    {
+      "name": "remi.core.filter-ignore.override-mode",
+      "type": "java.lang.Boolean",
+      "description": "是否开启'替换模式'。默认 false（合并模式，与 core 默认忽略列表合并）；true 则完全替换默认集合。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.core.filter-ignore.auth-filter-ignore-service-names",
+      "type": "java.util.List<java.lang.String>",
+      "description": "认证过滤器忽略的服务名称列表。新增或替换跳过认证的 web 模块名称（如 remi-invoice-web、remi-report-web）。"
     }
   ]
 }

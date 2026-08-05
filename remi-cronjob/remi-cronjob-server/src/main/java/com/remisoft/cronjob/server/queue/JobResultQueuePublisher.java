@@ -15,7 +15,7 @@ import com.remisoft.common.queue.enums.QueueType;
 import com.remisoft.common.queue.queue.IMessageQueue;
 import com.remisoft.common.queue.queue.IMessageQueueProvider;
 import com.remisoft.common.queue.service.IMessagePublisher;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.cronjob.server.core.TaskCompletedEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -94,7 +94,7 @@ public class JobResultQueuePublisher {
             payload.put("success", event.success());
             payload.put("logId", event.logId());
 
-            QueueMessage message = QueueMessage.of(YdszJson.toJson(payload));
+            QueueMessage message = QueueMessage.of(RemiJson.toJson(payload));
             message.addHeader("jobKey", event.jobKey());
             message.addHeader("success", String.valueOf(event.success()));
             message.addHeader("source", "cronjob");

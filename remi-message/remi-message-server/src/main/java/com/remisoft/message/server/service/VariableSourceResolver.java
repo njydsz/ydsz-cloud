@@ -15,7 +15,7 @@ import org.springframework.web.client.RestClient;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.remisoft.common.security.TenantContext;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.entity.config.MsgVariableSource;
 import com.remisoft.message.infra.mapper.config.MsgVariableSourceMapper;
 
@@ -110,7 +110,7 @@ public class VariableSourceResolver {
                     + ":" + (context == null ? "" : context.hashCode());
             String cached = redisService.get(cacheKey, String.class);
             if (StringUtils.hasText(cached)) {
-                return YdszJson.toObject(cached, Object.class);
+                return RemiJson.toObject(cached, Object.class);
             }
         }
 
@@ -127,7 +127,7 @@ public class VariableSourceResolver {
 
         // 缓存写入
         if (value != null && cacheKey != null) {
-            redisService.set(cacheKey, YdszJson.toJson(value),
+            redisService.set(cacheKey, RemiJson.toJson(value),
                     Duration.ofSeconds(source.getCacheTtl()));
         }
         return value;
@@ -195,7 +195,7 @@ public class VariableSourceResolver {
             RestClient client = RestClient.create();
             String body = client.get().uri(resolvedUrl).retrieve().body(String.class);
             if (StringUtils.hasText(body)) {
-                return YdszJson.toObject(body, Object.class);
+                return RemiJson.toObject(body, Object.class);
             }
         } catch (Exception e) {
             log.warn("[VariableSource] HTTP 解析失败: url={} err={}", url, e.getMessage(), e);

@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.search.api.SearchHit;
 import com.remisoft.common.search.api.SearchRequest;
 import com.remisoft.common.search.api.SearchResponse;
@@ -156,7 +156,7 @@ public class ElasticsearchSearchStrategy implements SearchStrategy, IndexStrateg
         map.put("tenant_id", doc.getTenantId() != null ? doc.getTenantId() : "");
         map.put("created_by", doc.getCreatedBy() != null ? doc.getCreatedBy() : "");
         map.put("updated_by", doc.getUpdatedBy() != null ? doc.getUpdatedBy() : "");
-        return YdszJson.toJson(map);
+        return RemiJson.toJson(map);
     }
 
     private SearchResponse searchInMemory(SearchRequest request) {

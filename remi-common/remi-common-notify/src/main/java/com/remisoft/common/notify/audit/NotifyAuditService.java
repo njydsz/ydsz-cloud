@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.notify.core.NotifySendResult;
 import com.remisoft.common.notify.core.NotifyTraceContext;
 import com.remisoft.common.notify.enums.NotifyChannel;
@@ -73,7 +73,7 @@ public class NotifyAuditService {
         }
         auditEntry.put("title_hash", hashTitle(title));
 
-        AUDIT_LOG.info(YdszJson.toJson(auditEntry));
+        AUDIT_LOG.info(RemiJson.toJson(auditEntry));
     }
 
     /**

@@ -3,13 +3,13 @@ package com.remisoft.common.util.yaml;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.exception.JsonException;
 
 /**
  * 统一 YAML 转换工具类（基于 SnakeYAML）
  *
- * <p>提供 JSON 与 YAML 格式之间的双向转换，复用 {@link YdszJson} 的 JSON
+ * <p>提供 JSON 与 YAML 格式之间的双向转换，复用 {@link RemiJson} 的 JSON
  * 解析/序列化能力，保持日期格式、未知字段处理等行为一致。
  *
  * <p><b>线程安全说明：</b>SnakeYAML 官方明确 {@link Yaml} 实例非线程安全，
@@ -54,7 +54,7 @@ public final class YamlUtils {
             return null;
         }
         try {
-            Object parsed = YdszJson.parseMap(json);
+            Object parsed = RemiJson.parseMap(json);
             // Yaml 非线程安全，每次调用创建新实例
             return new Yaml(DUMPER_OPTIONS).dump(parsed);
         } catch (Exception e) {
@@ -76,7 +76,7 @@ public final class YamlUtils {
         try {
             // Yaml 非线程安全，每次调用创建新实例
             Object parsed = new Yaml(DUMPER_OPTIONS).load(yaml);
-            return YdszJson.toJson(parsed);
+            return RemiJson.toJson(parsed);
         } catch (Exception e) {
             throw new JsonException("YAML转JSON失败: " + e.getMessage(), e);
         }

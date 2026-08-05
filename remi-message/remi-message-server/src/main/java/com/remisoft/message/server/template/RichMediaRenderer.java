@@ -5,7 +5,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.dto.core.RichMediaContent;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +50,8 @@ public class RichMediaRenderer {
             if (raw instanceof RichMediaContent) {
                 return (RichMediaContent) raw;
             }
-            String json = raw instanceof String ? (String) raw : YdszJson.toJson(raw);
-            return YdszJson.toObject(json, RichMediaContent.class);
+            String json = raw instanceof String ? (String) raw : RemiJson.toJson(raw);
+            return RemiJson.toObject(json, RichMediaContent.class);
         } catch (Exception e) {
             log.warn("[RichMediaRenderer] 解析富媒体内容失败: {}", e.getMessage(), e);
             return null;

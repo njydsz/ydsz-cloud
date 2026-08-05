@@ -6,7 +6,7 @@
     "queryAllPublicMethods": true
   },
   {
-    "name": "com.remisoft.common.json.YdszJson",
+    "name": "com.remisoft.common.json.RemiJson",
     "queryAllDeclaredMethods": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true

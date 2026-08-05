@@ -22,7 +22,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.search.api.SearchAggregation;
 import com.remisoft.common.search.api.SearchFilter;
 import com.remisoft.common.search.api.SearchHit;
@@ -265,8 +265,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                     """.formatted(indexTable);
 
             String searchableText = buildSearchableText(document);
-            String tagsJson = YdszJson.toJson(document.getTags() != null ? document.getTags() : Collections.emptyList());
-            String metadataJson = YdszJson.toJson(document.getMetadata() != null ? document.getMetadata() : Collections.emptyMap());
+            String tagsJson = RemiJson.toJson(document.getTags() != null ? document.getTags() : Collections.emptyList());
+            String metadataJson = RemiJson.toJson(document.getMetadata() != null ? document.getMetadata() : Collections.emptyMap());
 
             jdbcTemplate.update(sql,
                     document.getId(), document.getType(), document.getTitle(), document.getSubtitle(),
@@ -302,8 +302,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             try {
                 jdbcTemplate.batchUpdate(sql, batch, batch.size(), (ps, doc) -> {
                     String searchableText = buildSearchableText(doc);
-                    String tagsJson = YdszJson.toJson(doc.getTags() != null ? doc.getTags() : Collections.emptyList());
-                    String metadataJson = YdszJson.toJson(doc.getMetadata() != null ? doc.getMetadata() : Collections.emptyMap());
+                    String tagsJson = RemiJson.toJson(doc.getTags() != null ? doc.getTags() : Collections.emptyList());
+                    String metadataJson = RemiJson.toJson(doc.getMetadata() != null ? doc.getMetadata() : Collections.emptyMap());
                     ps.setString(1, doc.getId());
                     ps.setString(2, doc.getType());
                     ps.setString(3, doc.getTitle());
@@ -743,7 +743,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             try {
                 String tagsJson = rs.getString("tags");
                 if (tagsJson != null && !tagsJson.isBlank() && !tagsJson.equals("[]")) {
-                    List<String> tags = YdszJson.parseArray(tagsJson, String.class);
+                    List<String> tags = RemiJson.parseArray(tagsJson, String.class);
                     if (tags != null && !tags.isEmpty()) hit.setTags(tags);
                 }
             } catch (SQLException ignored) {

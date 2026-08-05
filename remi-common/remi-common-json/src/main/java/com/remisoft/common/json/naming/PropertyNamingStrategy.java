@@ -26,7 +26,7 @@ import java.io.Serializable;
  * // 序列化结果：{"user_name":"John"}
  * User user = new User();
  * user.setUserName("John");
- * String json = YdszJson.toJson(user);
+ * String json = RemiJson.toJson(user);
  * </pre>
  * 
  * @author remi-team

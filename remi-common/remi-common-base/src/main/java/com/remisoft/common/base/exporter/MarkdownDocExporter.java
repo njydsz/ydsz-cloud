@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Conditional;
 
 import com.remisoft.common.base.config.DocProperties;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * 多格式文档导出器实现（Markdown 增强版）
@@ -184,7 +184,7 @@ public class MarkdownDocExporter extends AbstractDocExporter {
                 Map<String, Object> schema = jsonContent != null ? asMap(jsonContent.get("schema")) : null;
                 if (schema != null) {
                     md.append("```json\n");
-                    md.append(YdszJson.format(schema));
+                    md.append(RemiJson.format(schema));
                     md.append("\n```\n\n");
                 }
             }

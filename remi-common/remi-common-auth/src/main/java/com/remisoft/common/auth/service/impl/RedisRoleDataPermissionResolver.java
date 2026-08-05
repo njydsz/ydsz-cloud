@@ -16,7 +16,7 @@ import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.cache.listener.RemovalCause;
 import com.remisoft.common.domain.enums.DataScopeType;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ArrayNode;
 import com.remisoft.common.json.tree.JsonNode;
 import com.remisoft.common.json.tree.ObjectNode;
@@ -225,7 +225,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             return null;
         }
         try {
-            JsonNode node = YdszJson.readTree(json);
+            JsonNode node = RemiJson.readTree(json);
             if (node == null || node.isNull()) {
                 return null;
             }

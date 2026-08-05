@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.remisoft.common.seata.api.TccBranchStatus;
 import com.remisoft.common.seata.api.TccTransactionLog;
 import com.remisoft.common.seata.api.TccTransactionLogStore;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -243,7 +243,7 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
      */
     public void saveContextSnapshot(String xid, String branchId, Map<String, Object> context) {
         String key = buildKey(xid, branchId);
-        String json = YdszJson.toJson(context);
+        String json = RemiJson.toJson(context);
         redisTemplate.opsForHash().put(key, FIELD_CTX_SNAPSHOT, json);
     }
 

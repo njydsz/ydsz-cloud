@@ -20,7 +20,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `YdszJson` | JSON 统一入口（静态工具类），提供 `toJson` / `toObject` / `parseMap` / `parseArray` / `fromJson` / `readTree` / `valueToTree` / `warmup` 等方法 |
+| `RemiJson` | JSON 统一入口（静态工具类），提供 `toJson` / `toObject` / `parseMap` / `parseArray` / `fromJson` / `readTree` / `valueToTree` / `warmup` 等方法 |
 | `JsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper），支持 `builder()` 链式 Builder、独立配置副本、`readerFor(Class)` / `writerFor(Class)` 绑定型读写器、`convertValue` / `treeToValue` 等 |
 | `JsonReader<T>` | 绑定型 JSON 读取器（对标 Jackson ObjectReader），绑定目标类型后可重复使用 |
 | `JsonWriter<T>` | 绑定型 JSON 写入器（对标 Jackson ObjectWriter），绑定 Mapper 配置后可重复使用 |
@@ -109,7 +109,7 @@
 |---|---|
 | `@JsonClass` | 类级配置（字段排序 `ordering` / 忽略字段 `ignores` / 包含字段 `includes` / 命名策略 `naming` / 输出 null `writeNulls` / 输出类名 `writeClassName` / 日期格式 `dateFormat` / 枚举序号 `serializeEnumUsingOrdinal` / 多态 `typeKey`+`seeAlso`+`seeAlsoNames`+`autoType`；同时作为 AutoType 白名单扫描标记） |
 | `@JsonPropertyOrder` | 类级字段排序（指定顺序数组 `{"id","name"}` 或 `alphabetic=true` 字母序） |
-| `@JsonView` | 视图过滤（配合 `YdszJson.toJson(obj, ViewClass.class)` 使用） |
+| `@JsonView` | 视图过滤（配合 `RemiJson.toJson(obj, ViewClass.class)` 使用） |
 | `@JsonNaming` | 类级命名策略 |
 | `@JsonIgnoreProperties` | 类级字段忽略 |
 | `@JsonRootName` | 根名称包裹（配合 `remi.json.wrap-root-value=true`） |
@@ -172,7 +172,7 @@
 | 类 | 说明 |
 |---|---|
 | `MetricsHelper` | 指标监控包装（统一序列化/反序列化指标记录，null 短路优化） |
-| `JsonMetrics` | Micrometer 指标实现（自动绑定到 `YdszJson.setMetricsCallback`） |
+| `JsonMetrics` | Micrometer 指标实现（自动绑定到 `RemiJson.setMetricsCallback`） |
 | `JsonMetricsCallback` | 指标回调 SPI 接口 |
 | `JsonCacheMetrics` | 缓存指标（绑定到 MeterRegistry） |
 
@@ -188,7 +188,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `JsonHealthIndicator` | YdszJson 引擎健康检查，暴露 AutoType SafeMode、配置项、ASM 缓存统计、ThreadLocal 内存估算等 |
+| `JsonHealthIndicator` | RemiJson 引擎健康检查，暴露 AutoType SafeMode、配置项、ASM 缓存统计、ThreadLocal 内存估算等 |
 
 ### 15. 自动配置（spring.boot 包）
 
@@ -236,13 +236,13 @@ remi:
 ### 3. 基础使用
 
 ```java
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 // 序列化
-String json = YdszJson.toJson(obj);
+String json = RemiJson.toJson(obj);
 
 // 反序列化
-User user = YdszJson.toObject(json, User.class);
+User user = RemiJson.toObject(json, User.class);
 
 // Spring MVC Controller 自动使用 JsonHttpMessageConverter
 @RestController
@@ -282,26 +282,26 @@ public class UserController {
 ### 1. 基本序列化/反序列化
 
 ```java
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 // 序列化
-String json = YdszJson.toJson(user);
+String json = RemiJson.toJson(user);
 
 // 反序列化
-User user = YdszJson.toObject(json, User.class);
+User user = RemiJson.toObject(json, User.class);
 
 // 树操作（Map 形式）
-Map<String, Object> root = YdszJson.parseMap(json);
+Map<String, Object> root = RemiJson.parseMap(json);
 String name = (String) root.get("name");
 
 // 流式序列化（写入 Writer，避免中间 String）
-YdszJson.toJson(obj, new StringWriter());
+RemiJson.toJson(obj, new StringWriter());
 
 // 从 InputStream 反序列化
-User user2 = YdszJson.toObject(inputStream, User.class);
+User user2 = RemiJson.toObject(inputStream, User.class);
 
 // fromJson 别名（与 toJson 对称）
-User user3 = YdszJson.fromJson(json, User.class);
+User user3 = RemiJson.fromJson(json, User.class);
 ```
 
 ### 2. JsonMapper Builder API
@@ -419,7 +419,7 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 2. **ASM 字节码生成与 GraalVM 兼容**：热路径生成字节码避免反射开销；`GraalVmDetector` 检测 Native Image 环境后自动降级为反射 + MethodHandle 路径，`AutoTypeWhitelistScanner` 启动时扫描 `@YdszJsonClass` 注解类注册白名单。
 3. **AutoType 安全模式**：默认开启 `safe-mode=true`，防止反序列化漏洞。`AutoTypeChecker` 支持包前缀白名单回退匹配，`TYPE_CHECK_CACHE` 为 LRU 有界缓存（max 4096）避免内存泄漏。
 4. **BigDecimal 精度模式**：`use-big-decimal=true` 启用 BigDecimal 解析路径（金融场景精度保护），默认 `false` 走 Double 路径（性能更高）。
-5. **ASM 预热**：`warmup-classes` 配置项指定启动时预热的类列表，`JsonWarmupRunner` 在应用启动后异步预生成 ASM 字节码，避免首次请求延迟尖峰。也可通过 `YdszJson.warmup(Class...)` 手动触发。
+5. **ASM 预热**：`warmup-classes` 配置项指定启动时预热的类列表，`JsonWarmupRunner` 在应用启动后异步预生成 ASM 字节码，避免首次请求延迟尖峰。也可通过 `RemiJson.warmup(Class...)` 手动触发。
 6. **Spring MVC 泛型类型支持**：`JsonHttpMessageConverter` 继承 `AbstractGenericHttpMessageConverter`，正确支持 `@RequestBody List<User>` 等泛型类型反序列化。
 7. **Jackson 迁移**：`@JsonProperty` / `@JsonIgnore` / `@JsonFormat` / `@JsonInclude` 等 Jackson 兼容注解无需修改即可使用。迁移步骤：`ObjectMapper` → `JsonMapper`，`readValue/readTree/writeValueAsString` → `toObject/readTree/toJson`，`ObjectReader/ObjectWriter` → `JsonReader/JsonWriter`。
    - **迁移注意事项**：
@@ -445,7 +445,7 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 - **v1.0.0**（2026-08-03）：架构优化与 Bug 修复（P0-P2）：
   - **[P0-A1]** 修复 `JsonMapper.restoreConfig` 无限递归导致 `StackOverflowError`（`new JsonMapper().toJson(obj)` 必崩）
   - **[P0-A2]** 移除 `JsonMapper.configApplied` 跨线程误共享优化，改为每次序列化 apply/restore，确保共享 Mapper 多线程配置隔离
-  - **[P0-A3]** `ThreadLocalSnapshot` 补全 `namingStrategy` 回滚，修复 `YdszJson.toJson(obj, config)` 单次配置泄漏
+  - **[P0-A3]** `ThreadLocalSnapshot` 补全 `namingStrategy` 回滚，修复 `RemiJson.toJson(obj, config)` 单次配置泄漏
   - **[P1-D1]** 删除死代码 `provider/JsonWriter`（含 10000 元素静态数组残留）
   - **[P1-D2]** 删除已 `@Deprecated(forRemoval=true)` 的 `api.JsonSerializer`/`api.JsonDeserializer`，`SerializationProvider.invokeCustomSerializer` 简化为单一调用路径（移除 `Method` 反射双判）
   - **[P1-E1]** 补 16 项 P0/D2 回归测试（`JsonMapperP0RegressionTest` / `CustomSerializerD2Test`）；修复 `pom.xml` 缺失 `<argLine>` 导致测试 fork 启动崩溃

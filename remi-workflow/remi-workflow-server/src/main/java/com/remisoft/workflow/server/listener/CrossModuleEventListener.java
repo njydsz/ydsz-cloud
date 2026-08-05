@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.remisoft.common.event.model.OutboxMessage;
 import com.remisoft.common.event.model.StandardEventTypes;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.server.service.FlowTaskTransferService;
 
 import lombok.RequiredArgsConstructor;
@@ -46,7 +46,7 @@ public class CrossModuleEventListener {
         log.info("[CrossModuleEventListener] 接收项目立项创建事件: projectId={}",
                 message.getAggregateId());
         try {
-            var payload = YdszJson.parseMap(message.getPayload());
+            var payload = RemiJson.parseMap(message.getPayload());
             String projectId = message.getAggregateId();
             String projectName = payload.getOrDefault("projectName", "").toString();
             String managerId = payload.getOrDefault("managerId", "").toString();
@@ -72,7 +72,7 @@ public class CrossModuleEventListener {
                 message.getAggregateId());
         try {
             String userId = message.getAggregateId();
-            var payload = YdszJson.parseMap(message.getPayload());
+            var payload = RemiJson.parseMap(message.getPayload());
             String transferToUserId = payload.getOrDefault("transferToUserId", "").toString();
             flowTaskTransferService.transferTasksByUserDisable(userId, transferToUserId);
         } catch (Exception e) {
@@ -95,7 +95,7 @@ public class CrossModuleEventListener {
         log.info("[CrossModuleEventListener] 接收组织架构变更事件: aggregateId={}",
                 message.getAggregateId());
         try {
-            var payload = YdszJson.parseMap(message.getPayload());
+            var payload = RemiJson.parseMap(message.getPayload());
             String deptId = payload.getOrDefault("deptId", "").toString();
             String changeType = payload.getOrDefault("changeType", "").toString();
             flowTaskTransferService.adjustApproversByOrgChange(deptId, changeType);

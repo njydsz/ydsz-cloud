@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ObjectNode;
 
 import org.springframework.stereotype.Component;
@@ -52,7 +52,7 @@ public class BillableUtilizationJobHandler implements JobHandler {
 
         if (paramsJson != null && !paramsJson.isBlank()) {
             try {
-                ObjectNode obj = YdszJson.parseObject(paramsJson);
+                ObjectNode obj = RemiJson.parseObject(paramsJson);
                 if (obj != null) {
                     period = obj.getString("period");
                     recomputeAll = Boolean.TRUE.equals(obj.getBoolean("recomputeAll"));

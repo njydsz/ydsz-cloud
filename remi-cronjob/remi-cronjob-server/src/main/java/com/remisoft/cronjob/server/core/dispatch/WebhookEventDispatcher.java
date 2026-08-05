@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ObjectNode;
 
 import javax.crypto.Mac;
@@ -107,7 +107,7 @@ public class WebhookEventDispatcher {
 
             // 添加自定义请求头
             if (webhook.getHeaders() != null && !webhook.getHeaders().isBlank()) {
-                ObjectNode headers = YdszJson.parseObject(webhook.getHeaders());
+                ObjectNode headers = RemiJson.parseObject(webhook.getHeaders());
                 for (String key : headers.keySet()) {
                     builder.header(key, headers.getString(key));
                 }
@@ -115,11 +115,11 @@ public class WebhookEventDispatcher {
 
             // 添加签名头（如有密钥）
             if (webhook.getSecret() != null && !webhook.getSecret().isBlank()) {
-                String signature = computeSignature(YdszJson.toJson(body), webhook.getSecret());
+                String signature = computeSignature(RemiJson.toJson(body), webhook.getSecret());
                 builder.header("X-Webhook-Signature", signature);
             }
 
-            HttpRequest request = builder.method(method, HttpRequest.BodyPublishers.ofString(YdszJson.toJson(body))).build();
+            HttpRequest request = builder.method(method, HttpRequest.BodyPublishers.ofString(RemiJson.toJson(body))).build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {

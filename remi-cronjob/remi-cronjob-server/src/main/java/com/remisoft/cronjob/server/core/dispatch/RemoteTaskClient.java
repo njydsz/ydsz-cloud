@@ -8,7 +8,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ObjectNode;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -92,7 +92,7 @@ public class RemoteTaskClient {
             return null;
         }
         String url = buildUrl(node.getHost(), node.getPort());
-        String requestBody = YdszJson.toJson(request);
+        String requestBody = RemiJson.toJson(request);
         CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
 
         try {
@@ -142,7 +142,7 @@ public class RemoteTaskClient {
             return null;
         }
         String url = buildSubTaskUrl(node.getHost(), node.getPort());
-        String requestBody = YdszJson.toJson(request);
+        String requestBody = RemiJson.toJson(request);
         CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
 
         try {
@@ -195,7 +195,7 @@ public class RemoteTaskClient {
             return null;
         }
         try {
-            ObjectNode json = YdszJson.parseObject(body);
+            ObjectNode json = RemiJson.parseObject(body);
             int code = json.getIntegerOrDefault("code", -1);
             if (code != 0) {
                 log.warn("[RemoteClient] 子任务远程执行业务失败: code={} message={}",
@@ -204,7 +204,7 @@ public class RemoteTaskClient {
             }
             // data 是子任务执行结果对象（含 success/result/errorMessage）
             Object data = json.get("data");
-            return data == null ? null : YdszJson.toJson(data);
+            return data == null ? null : RemiJson.toJson(data);
         } catch (Exception e) {
             log.warn("[RemoteClient] 子任务响应解析失败: body={} reason={}",
                     body.length() > 200 ? body.substring(0, 200) : body, e.getMessage());
@@ -233,7 +233,7 @@ public class RemoteTaskClient {
             return null;
         }
         try {
-            ObjectNode json = YdszJson.parseObject(body);
+            ObjectNode json = RemiJson.parseObject(body);
             int code = json.getIntegerOrDefault("code", -1);
             if (code != 0) {
                 log.warn("[RemoteClient] 远程执行业务失败: code={} message={}",

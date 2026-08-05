@@ -58,11 +58,11 @@ class AsmEnabledTest {
         TestBean bean = new TestBean();
         bean.setId(42);
         bean.setName("alice");
-        String json = YdszJson.toJson(bean);
+        String json = RemiJson.toJson(bean);
         assertTrue(json.contains("\"id\":42"));
         assertTrue(json.contains("\"name\":\"alice\""));
 
-        TestBean back = YdszJson.toObject(json, TestBean.class);
+        TestBean back = RemiJson.toObject(json, TestBean.class);
         assertNotNull(back);
         assertEquals(42, back.getId());
         assertEquals("alice", back.getName());

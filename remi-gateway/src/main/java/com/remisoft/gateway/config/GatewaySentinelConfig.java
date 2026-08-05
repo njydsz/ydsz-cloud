@@ -2,7 +2,7 @@ package com.remisoft.gateway.config;
 
 import java.nio.charset.StandardCharsets;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import jakarta.annotation.PostConstruct;
 
@@ -104,7 +104,7 @@ public class GatewaySentinelConfig {
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE + ";charset=" + StandardCharsets.UTF_8)
                     .header(GatewayConstants.HEADER_TRACE_ID, traceId)
-                    .bodyValue(YdszJson.toJson(body));
+                    .bodyValue(RemiJson.toJson(body));
         };
         GatewayCallbackManager.setBlockHandler(handler);
 

@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.entity.FlowEventSubscription;
 import com.remisoft.workflow.domain.entity.FlowInstance;
 import com.remisoft.workflow.domain.entity.FlowNode;
@@ -249,7 +249,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
             return false;
         }
         try {
-            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+            Map<String, Object> ext = RemiJson.parseMap(node.getExt());
             return ext != null && Boolean.TRUE.equals(ext.get("eventCatch"));
         } catch (Exception e) {
             log.warn("[FlowEventSubscriptionServiceImpl] 节点 ext 解析失败，视为未配置事件捕获: {}", e.getMessage());
@@ -288,10 +288,10 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         Map<String, Object> variables = parseVariables(instance.getVariable());
         if (StringUtils.hasText(payload)) {
             try {
-                Map<String, Object> payloadMap = YdszJson.parseMap(payload);
+                Map<String, Object> payloadMap = RemiJson.parseMap(payload);
                 if (payloadMap != null) {
                     variables.putAll(payloadMap);
-                    instanceMapper.updateVariable(instance.getId(), YdszJson.toJson(variables));
+                    instanceMapper.updateVariable(instance.getId(), RemiJson.toJson(variables));
                 }
             } catch (Exception e) {
                 log.warn("[Flow] payload 解析失败，忽略: subId={} err={}", sub.getId(), e.getMessage());
@@ -347,7 +347,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
             return Collections.emptyMap();
         }
         try {
-            return YdszJson.parseMap(node.getExt());
+            return RemiJson.parseMap(node.getExt());
         } catch (Exception e) {
             return Collections.emptyMap();
         }
@@ -372,7 +372,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
             return new HashMap<>();
         }
         try {
-            Map<String, Object> m = YdszJson.parseMap(variableJson);
+            Map<String, Object> m = RemiJson.parseMap(variableJson);
             return m != null ? m : new HashMap<>();
         } catch (Exception e) {
             return new HashMap<>();

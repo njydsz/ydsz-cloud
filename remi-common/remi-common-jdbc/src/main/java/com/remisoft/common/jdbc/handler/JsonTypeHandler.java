@@ -9,13 +9,13 @@ import java.sql.Types;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * JSON 类型转换处理器
  *
  * <p>实现 MyBatis {@link BaseTypeHandler} 接口，提供 Java 对象与 JSON 字符串之间的双向转换能力。
- * 底层使用项目统一的 {@link YdszJson} 引擎（零外部 JSON 库依赖），替代 MyBatis-Plus 自带的
+ * 底层使用项目统一的 {@link RemiJson} 引擎（零外部 JSON 库依赖），替代 MyBatis-Plus 自带的
  * {@code JacksonTypeHandler}，避免引入 Jackson 运行时依赖，保证全链路 JSON 引擎一致性。</p>
  *
  * <h2>数据库兼容性</h2>
@@ -160,7 +160,7 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
         if (parameter == null) {
             return null;
         }
-        return YdszJson.toJson(parameter);
+        return RemiJson.toJson(parameter);
     }
 
     /**
@@ -173,6 +173,6 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return YdszJson.toObject(json, type);
+        return RemiJson.toObject(json, type);
     }
 }

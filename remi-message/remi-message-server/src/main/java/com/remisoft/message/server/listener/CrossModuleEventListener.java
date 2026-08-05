@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.remisoft.common.event.model.OutboxMessage;
 import com.remisoft.common.event.model.StandardEventTypes;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.notify.core.NotifyService;
 import com.remisoft.common.notify.core.NotifyRequest;
 import com.remisoft.common.notify.enums.NotifyChannel;
@@ -101,7 +101,7 @@ public class CrossModuleEventListener {
         log.info("[CrossModuleEventListener] 接收流程审批通过事件: aggregateId={}",
                 message.getAggregateId());
         try {
-            var payload = YdszJson.parseMap(message.getPayload());
+            var payload = RemiJson.parseMap(message.getPayload());
             String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
             String initiatorId = payload.getOrDefault("initiatorId", "").toString();
             NotifyRequest request = NotifyRequest.of(
@@ -132,7 +132,7 @@ public class CrossModuleEventListener {
         log.info("[CrossModuleEventListener] 接收流程审批驳回事件: aggregateId={}",
                 message.getAggregateId());
         try {
-            var payload = YdszJson.parseMap(message.getPayload());
+            var payload = RemiJson.parseMap(message.getPayload());
             String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
             String initiatorId = payload.getOrDefault("initiatorId", "").toString();
             String rejectReason = payload.getOrDefault("rejectReason", "未提供原因").toString();
@@ -163,7 +163,7 @@ public class CrossModuleEventListener {
         log.info("[CrossModuleEventListener] 接收流程终止事件: aggregateId={}",
                 message.getAggregateId());
         try {
-            var payload = YdszJson.parseMap(message.getPayload());
+            var payload = RemiJson.parseMap(message.getPayload());
             String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
             String reason = payload.getOrDefault("reason", "管理员终止").toString();
             NotifyRequest request = NotifyRequest.of(
@@ -191,7 +191,7 @@ public class CrossModuleEventListener {
         log.info("[CrossModuleEventListener] 接收项目立项审批通过事件: aggregateId={}",
                 message.getAggregateId());
         try {
-            var payload = YdszJson.parseMap(message.getPayload());
+            var payload = RemiJson.parseMap(message.getPayload());
             String projectName = payload.getOrDefault("projectName", "未命名项目").toString();
             String managerId = payload.getOrDefault("managerId", "").toString();
             NotifyRequest request = NotifyRequest.of(
@@ -219,7 +219,7 @@ public class CrossModuleEventListener {
         log.info("[CrossModuleEventListener] 接收合同签订事件: aggregateId={}",
                 message.getAggregateId());
         try {
-            var payload = YdszJson.parseMap(message.getPayload());
+            var payload = RemiJson.parseMap(message.getPayload());
             String contractName = payload.getOrDefault("contractName", "未命名合同").toString();
             NotifyRequest request = NotifyRequest.of(
                     NotifyChannel.INSITE, null,

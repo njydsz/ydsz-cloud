@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -618,7 +618,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             ctx.setLogId(log0.getId());
             result = handler.execute(job.getParamsJson(), ctx);
             success = true;
-            log0.setResultJson(result == null ? null : YdszJson.toJson(result));
+            log0.setResultJson(result == null ? null : RemiJson.toJson(result));
         } catch (Exception e) {
             log.error("[Dispatcher] 分片任务执行失败: key={} shard={} reason={}",
                     job.getJobKey(), shardIndex, e.getMessage(), e);
@@ -967,7 +967,7 @@ try {
                     ProcessResult mapResult = mapExecutor.executeMapJob(job, log0, triggerType);
                     success = mapResult.isSuccess();
                     result = mapResult.isSuccess() ? mapResult.getResult() : null;
-                    log0.setResultJson(result == null ? null : YdszJson.toJson(result));
+                    log0.setResultJson(result == null ? null : RemiJson.toJson(result));
                     if (!success) {
                         log0.setErrorMessage(mapResult.getErrorMessage());
                     }
@@ -977,13 +977,13 @@ try {
                     JobHandler handler = resolveHandler(job);
                     result = handler.execute(job.getParamsJson());
                     success = true;
-                    log0.setResultJson(result == null ? null : YdszJson.toJson(result));
+                    log0.setResultJson(result == null ? null : RemiJson.toJson(result));
                 }
             } else {
                 JobHandler handler = resolveHandler(job);
                 result = handler.execute(job.getParamsJson());
                 success = true;
-                log0.setResultJson(result == null ? null : YdszJson.toJson(result));
+                log0.setResultJson(result == null ? null : RemiJson.toJson(result));
             }
         } catch (Exception e) {
             log.error("[Dispatcher] 任务执行失败: key={} handler={} reason={}",
@@ -1190,7 +1190,7 @@ try {
             outboxService.appendToOutbox(
                     "JobLog", log0.getId(),
                     StandardEventTypes.JOB_EXECUTION_FAILED,
-                    YdszJson.toJson(payload));
+                    RemiJson.toJson(payload));
         } catch (Exception e) {
             log.warn("[Dispatcher] 发布 JOB_EXECUTION_FAILED Outbox 事件失败: jobKey={} reason={}",
                     job.getJobKey(), e.getMessage());

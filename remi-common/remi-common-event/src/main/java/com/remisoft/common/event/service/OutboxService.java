@@ -23,7 +23,7 @@ import com.remisoft.common.event.gateway.EventPublishGateway;
 import com.remisoft.common.event.model.OutboxMessage;
 import com.remisoft.common.event.model.OutboxStatus;
 import com.remisoft.common.event.repository.OutboxRepository;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 /**
  * Outbox 写入服务
@@ -128,7 +128,7 @@ public class OutboxService {
                 .aggregateType(event.getAggregateType())
                 .aggregateId(event.getAggregateId())
                 .eventType(event.getEventType())
-                .payload(YdszJson.toJson(event))
+                .payload(RemiJson.toJson(event))
                 .headers(headers)
                 .deduplicationId(event.getEventId()));
     }

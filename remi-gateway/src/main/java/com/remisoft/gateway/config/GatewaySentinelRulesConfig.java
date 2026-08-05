@@ -19,7 +19,7 @@ import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.alibaba.csp.sentinel.slots.system.SystemRule;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 import com.alibaba.nacos.api.PropertyKeyConst;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -197,13 +197,13 @@ public class GatewaySentinelRulesConfig {
         nacosProps.put(PropertyKeyConst.NAMESPACE, namespace);
 
         // 熔断降级规则数据源
-        Converter<String, List<DegradeRule>> degradeConverter = source -> YdszJson.parseArray(source, DegradeRule.class);
+        Converter<String, List<DegradeRule>> degradeConverter = source -> RemiJson.parseArray(source, DegradeRule.class);
         ReadableDataSource<String, List<DegradeRule>> degradeDs = new NacosDataSource<>(
                 nacosProps, ruleGroup, degradeRuleDataId, degradeConverter);
         DegradeRuleManager.register2Property(degradeDs.getProperty());
 
         // 系统保护规则数据源
-        Converter<String, List<SystemRule>> systemConverter = source -> YdszJson.parseArray(source, SystemRule.class);
+        Converter<String, List<SystemRule>> systemConverter = source -> RemiJson.parseArray(source, SystemRule.class);
         ReadableDataSource<String, List<SystemRule>> systemDs = new NacosDataSource<>(
                 nacosProps, ruleGroup, systemRuleDataId, systemConverter);
         SystemRuleManager.register2Property(systemDs.getProperty());

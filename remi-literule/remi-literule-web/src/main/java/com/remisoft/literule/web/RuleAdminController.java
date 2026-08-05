@@ -22,7 +22,7 @@ import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.literule.domain.converter.LiteruleConverter;
 import com.remisoft.literule.api.RuleDefinition;
@@ -191,8 +191,8 @@ public class RuleAdminController {
         }
 
         try {
-            RuleDefinition oldDef = YdszJson.toObject(oldV.getDefinitionJson(), RuleDefinition.class);
-            RuleDefinition newDef = YdszJson.toObject(newV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition oldDef = RemiJson.toObject(oldV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition newDef = RemiJson.toObject(newV.getDefinitionJson(), RuleDefinition.class);
             RuleVersionDiffService diffService = new RuleVersionDiffService();
             return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(diffService.diff(oldDef, newDef)));
         } catch (Exception e) {

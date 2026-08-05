@@ -4,9 +4,9 @@ import com.remisoft.common.json.asm.AsmBeanCodecGenerator;
 import com.remisoft.common.json.provider.SerializationContext;
 
 /**
- * YdszJson 缓存统计信息。
+ * RemiJson 缓存统计信息。
  *
- * <p>统一暴露 YdszJson 内部各缓存的运行时统计信息，
+ * <p>统一暴露 RemiJson 内部各缓存的运行时统计信息，
  * 供 Actuator HealthIndicator / Metrics / 日志诊断使用。
  *
  * <p><b>统计范围：</b>
@@ -34,7 +34,7 @@ public final class JsonCacheStats {
      */
     public static String getStats() {
         StringBuilder sb = new StringBuilder(512);
-        sb.append("=== YdszJson Cache Stats ===\n");
+        sb.append("=== RemiJson Cache Stats ===\n");
         sb.append("  ASM: ").append(AsmBeanCodecGenerator.getAsmStats()).append('\n');
         sb.append("  ASM Codec Cache: ").append(AsmCodecCache.getCacheSize()).append('\n');
         sb.append("  BeanSerializer Cache: ").append(BeanSerializerCache.size()).append('\n');

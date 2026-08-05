@@ -348,7 +348,7 @@ eventPublisher.publishEvent(
 
 1. **存储降级**：classpath 中无 `DataSource` 时，`AuditStorage` 自动降级为 `DefaultAuditStorage`（控制台输出），生产环境务必配置 JDBC 存储。
 2. **Disruptor 优先**：classpath 中存在 `com.lmax.disruptor.Disruptor`（optional 依赖）时，自动优先使用 `DisruptorAuditRecorder`（无锁环形缓冲区），否则降级为 `AsyncAuditRecorder`（LinkedBlockingQueue）。
-3. **异步记录器需 DataSource + YdszJson**：`asyncAuditRecorder` Bean 要求 classpath 存在 `DataSource` 和 `com.remisoft.common.json.YdszJson`，否则降级为 `DefaultAuditRecorder`（同步）。
+3. **异步记录器需 DataSource + RemiJson**：`asyncAuditRecorder` Bean 要求 classpath 存在 `DataSource` 和 `com.remisoft.common.json.RemiJson`，否则降级为 `DefaultAuditRecorder`（同步）。
 4. **分表键固定为时间戳**：分表策略根据操作时间计算目标表名，跨分表查询走 `getTableNamesInRange` 枚举后 UNION ALL 合并。
 5. **敏感参数双维度脱敏**：`AuditProperties.sensitiveParams`（参数名维度）+ `@MaskField`（字段名维度）共同生效，默认覆盖 password / token / secret / apiKey / privateKey 等 11 个常见敏感词。
 6. **优雅停机**：`AuditAutoConfiguration` 通过 `@PreDestroy` 调用 `AsyncAuditRecorder.shutdown()`，确保队列中剩余日志全部写入；超时由 `async-shutdown-timeout` 控制。

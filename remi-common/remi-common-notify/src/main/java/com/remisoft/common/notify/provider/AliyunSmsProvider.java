@@ -12,7 +12,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.JsonNode;
 import com.remisoft.common.notify.channel.NotifyChannelStrategy;
 
@@ -77,7 +77,7 @@ public class AliyunSmsProvider implements SmsProvider {
             body.put("templateCode", templateCode);
             body.put("templateParam", templateParams != null ? templateParams : Map.of());
 
-            String json = YdszJson.toJson(body);
+            String json = RemiJson.toJson(body);
             HttpHeaders headers = jsonHeaders();
             headers.set("Authorization", buildAuthorization(json));
 
@@ -138,7 +138,7 @@ public class AliyunSmsProvider implements SmsProvider {
             return SmsSendResult.success("sent");
         }
         try {
-            JsonNode json = YdszJson.readTree(response);
+            JsonNode json = RemiJson.readTree(response);
             String code = json.has("code") ? json.get("code").asText() : null;
             if ("0".equals(code) || "OK".equals(code) || "SUCCESS".equals(code)) {
                 String messageId = json.has("messageId") ? json.get("messageId").asText() : "sent";

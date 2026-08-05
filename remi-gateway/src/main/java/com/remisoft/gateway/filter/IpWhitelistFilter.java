@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -212,7 +212,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, "error.IP_FORBIDDEN");
         body.setTraceId(traceId);
-        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }

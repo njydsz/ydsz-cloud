@@ -9,7 +9,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.remisoft.cronjob.domain.job.JobHandler;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.workflow.domain.entity.FlowInstance;
 import com.remisoft.workflow.domain.entity.FlowRunTask;
 import com.remisoft.workflow.domain.enums.FlowInstanceStatus;
@@ -242,7 +242,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
             return null;
         }
         try {
-            Map<String, Object> obj = YdszJson.parseMap(paramsJson);
+            Map<String, Object> obj = RemiJson.parseMap(paramsJson);
             if (obj == null) {
                 return null;
             }

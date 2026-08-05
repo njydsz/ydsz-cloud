@@ -11,7 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
 /**
- * YdszJson 指标监控配置。
+ * RemiJson 指标监控配置。
  *
  * <p>当 classpath 存在 Micrometer {@link MeterRegistry} 时自动生效，
  * 提供序列化/反序列化的性能指标收集。
@@ -52,26 +52,26 @@ public class JsonMetrics implements JsonMetricsCallback {
         this.meterRegistry = meterRegistry;
         if (meterRegistry != null) {
             this.serializeTimer = Timer.builder("remi.json.serialize.duration")
-                    .description("YdszJson serialization duration")
+                    .description("RemiJson serialization duration")
                     .publishPercentiles(0.5, 0.9, 0.99)
                     .register(meterRegistry);
             this.deserializeTimer = Timer.builder("remi.json.deserialize.duration")
-                    .description("YdszJson deserialization duration")
+                    .description("RemiJson deserialization duration")
                     .publishPercentiles(0.5, 0.9, 0.99)
                     .register(meterRegistry);
             this.serializeSuccessCounter = Counter.builder("remi.json.serialize.success")
-                    .description("YdszJson serialization success count")
+                    .description("RemiJson serialization success count")
                     .register(meterRegistry);
             this.serializeFailureCounter = Counter.builder("remi.json.serialize.failure")
-                    .description("YdszJson serialization failure count")
+                    .description("RemiJson serialization failure count")
                     .register(meterRegistry);
             this.deserializeFailureCounter = Counter.builder("remi.json.deserialize.failure")
-                    .description("YdszJson deserialization failure count")
+                    .description("RemiJson deserialization failure count")
                     .register(meterRegistry);
             this.deserializeSuccessCounter = Counter.builder("remi.json.deserialize.success")
-                    .description("YdszJson deserialization success count")
+                    .description("RemiJson deserialization success count")
                     .register(meterRegistry);
-            log.info("[YdszJson] 注册 Micrometer 指标监控");
+            log.info("[RemiJson] 注册 Micrometer 指标监控");
         } else {
             this.serializeTimer = null;
             this.deserializeTimer = null;
@@ -79,7 +79,7 @@ public class JsonMetrics implements JsonMetricsCallback {
             this.serializeFailureCounter = null;
             this.deserializeSuccessCounter = null;
             this.deserializeFailureCounter = null;
-            log.debug("[YdszJson] MeterRegistry 不存在，跳过指标监控注册");
+            log.debug("[RemiJson] MeterRegistry 不存在，跳过指标监控注册");
         }
     }
 

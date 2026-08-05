@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -215,7 +215,7 @@ public class MapTaskExecutor {
                     ProcessResult r = subTaskResults.get(i);
                     if (r != null && r.getResult() != null) {
                         try {
-                            ObjectNode resultMap = YdszJson.parseObject(r.getResult());
+                            ObjectNode resultMap = RemiJson.parseObject(r.getResult());
                             if (resultMap != null) {
                                 resultMap.entrySet().forEach(e ->
                                         subContext.getResults().put(e.getKey(), e.getValue().asValue()));
@@ -409,7 +409,7 @@ public class MapTaskExecutor {
                 result = ProcessResult.failed("远程派发失败: 响应为空");
             } else {
                 // ProcessResult 使用 final 字段，手动解析避免反射问题
-                ObjectNode jsonObj = YdszJson.parseObject(responseJson);
+                ObjectNode jsonObj = RemiJson.parseObject(responseJson);
                 boolean success = jsonObj.getBooleanValue("success");
                 String res = jsonObj.getString("result");
                 String errMsg = jsonObj.getString("errorMessage");

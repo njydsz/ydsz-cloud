@@ -2,7 +2,7 @@ package com.remisoft.gateway.config;
 
 import com.alibaba.cloud.nacos.NacosConfigManager;
 import com.alibaba.nacos.api.config.listener.Listener;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.type.JsonType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
@@ -155,7 +155,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                 return;
             }
 
-            List<RouteDefinition> routes = YdszJson.fromJson(config,
+            List<RouteDefinition> routes = RemiJson.fromJson(config,
                     new JsonType<List<RouteDefinition>>() {});
             if (routes == null) {
                 routes = Collections.emptyList();

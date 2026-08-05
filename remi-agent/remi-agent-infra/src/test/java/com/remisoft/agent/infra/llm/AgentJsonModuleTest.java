@@ -11,7 +11,7 @@ import com.remisoft.agent.domain.model.ChatMessage;
 import com.remisoft.agent.domain.model.ChatRequest;
 import com.remisoft.agent.domain.model.ToolCall;
 import com.remisoft.agent.domain.model.TokenUsage;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.module.JsonModuleRegistry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,7 +43,7 @@ class AgentJsonModuleTest {
     @Test
     void chatMessage_serializesToOpenAiShape_excludesInternalFields() {
         ChatMessage msg = ChatMessage.user("hello", "conv-1");
-        String json = YdszJson.toJson(msg);
+        String json = RemiJson.toJson(msg);
 
         assertTrue(json.contains("\"role\":\"user\""), "role 应为 API 枚举值 user");
         assertTrue(json.contains("\"content\":\"hello\""), "content 应输出");
@@ -54,7 +54,7 @@ class AgentJsonModuleTest {
     @Test
     void toolCall_serializesArgumentsAsJsonString() {
         ToolCall tc = new ToolCall("call-1", "getWeather", Map.of("city", "Beijing"));
-        String json = YdszJson.toJson(tc);
+        String json = RemiJson.toJson(tc);
 
         assertTrue(json.contains("\"type\":\"function\""), "type 应为 function");
         assertTrue(json.contains("\"name\":\"getWeather\""), "function.name 应输出");
@@ -72,7 +72,7 @@ class AgentJsonModuleTest {
                 .temperature(0.7)
                 .maxTokens(2048)
                 .build();
-        String json = YdszJson.toJson(req);
+        String json = RemiJson.toJson(req);
 
         assertTrue(json.contains("\"model\":\"gpt-4o\""), "model 应输出");
         assertTrue(json.contains("\"max_tokens\":2048"), "max_tokens 应为 snake_case");
@@ -83,7 +83,7 @@ class AgentJsonModuleTest {
     @Test
     void tokenUsage_roundTripViaNewDeserializerInterface() {
         String json = "{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30}";
-        TokenUsage usage = YdszJson.toObject(json, TokenUsage.class);
+        TokenUsage usage = RemiJson.toObject(json, TokenUsage.class);
 
         assertEquals(10, usage.getPromptTokens());
         assertEquals(20, usage.getCompletionTokens());
@@ -95,7 +95,7 @@ class AgentJsonModuleTest {
         String json = "{\"id\":\"call-1\",\"type\":\"function\","
                 + "\"function\":{\"name\":\"getWeather\","
                 + "\"arguments\":\"{\\\"city\\\":\\\"Beijing\\\"}\"}}";
-        ToolCall tc = YdszJson.toObject(json, ToolCall.class);
+        ToolCall tc = RemiJson.toObject(json, ToolCall.class);
 
         assertEquals("call-1", tc.getId());
         assertEquals("getWeather", tc.getName());

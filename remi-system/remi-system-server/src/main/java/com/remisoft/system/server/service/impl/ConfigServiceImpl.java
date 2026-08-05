@@ -18,7 +18,7 @@ import com.remisoft.common.auth.annotation.DataScope;
 import com.remisoft.common.domain.query.PageResult;
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.redis.service.RedisService;
 import com.remisoft.common.search.sync.SearchIndexEventBridge;
 import com.remisoft.system.domain.dto.ConfigDTO;
@@ -226,7 +226,7 @@ public class ConfigServiceImpl implements ConfigService {
         String cached = redisService.get(cacheKey, String.class);
         if (cached != null) {
             metrics.recordConfigCacheHit();
-            return YdszJson.parseArray(cached, ConfigVO.class);
+            return RemiJson.parseArray(cached, ConfigVO.class);
         }
         metrics.recordConfigCacheMiss();
         QueryWrapper<Config> wrapper = new QueryWrapper<>();
@@ -235,7 +235,7 @@ public class ConfigServiceImpl implements ConfigService {
                 .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
+        redisService.set(cacheKey, RemiJson.toJson(vos), getCacheTtl());
         return vos;
     }
 
@@ -245,7 +245,7 @@ public class ConfigServiceImpl implements ConfigService {
         String cached = redisService.get(CACHE_PUBLIC_KEY, String.class);
         if (cached != null) {
             metrics.recordConfigCacheHit();
-            return YdszJson.parseArray(cached, ConfigVO.class);
+            return RemiJson.parseArray(cached, ConfigVO.class);
         }
         metrics.recordConfigCacheMiss();
         QueryWrapper<Config> wrapper = new QueryWrapper<>();
@@ -254,7 +254,7 @@ public class ConfigServiceImpl implements ConfigService {
                 .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        redisService.set(CACHE_PUBLIC_KEY, YdszJson.toJson(vos), getCacheTtl());
+        redisService.set(CACHE_PUBLIC_KEY, RemiJson.toJson(vos), getCacheTtl());
         return vos;
     }
 
@@ -370,7 +370,7 @@ public class ConfigServiceImpl implements ConfigService {
                 }
                 outboxService.appendToOutbox(
                         "Config", null, StandardEventTypes.CONFIG_CHANGED,
-                        YdszJson.toJson(payload));
+                        RemiJson.toJson(payload));
             } catch (Exception e) {
                 log.warn("Failed to publish CONFIG_CHANGED event: error={}", e.getMessage());
             }

@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.remisoft.agent.domain.agent.AgentDefinition;
 import com.remisoft.agent.domain.entity.AgentDefinitionDO;
 import com.remisoft.agent.infra.mapper.AgentDefinitionMapper;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -135,7 +135,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         }
         List<String> tools = new ArrayList<>();
         if (entity.getToolNames() != null && !entity.getToolNames().isBlank()) {
-            List<Object> parsed = YdszJson.parseArray(entity.getToolNames());
+            List<Object> parsed = RemiJson.parseArray(entity.getToolNames());
             for (Object t : parsed) {
                 tools.add(String.valueOf(t));
             }
@@ -149,7 +149,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         // 推理最大迭代次数默认 10，限制 ReAct 循环次数防止无限调用工具/超支
         int maxIterations = 10;
         if (entity.getModelConfig() != null && !entity.getModelConfig().isBlank()) {
-            Map<String, Object> config = YdszJson.parseMap(entity.getModelConfig());
+            Map<String, Object> config = RemiJson.parseMap(entity.getModelConfig());
             modelId = (String) config.get("modelId");
             Object mi = config.get("maxIterations");
             if (mi instanceof Number num) {

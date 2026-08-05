@@ -6,10 +6,10 @@ package com.remisoft.workflow.domain.vo;
  * <p>使用方式：
  * <pre>
  * // 列表接口 — 仅返回 Summary 字段（id, flowCode, flowName, category, version, status）
- * String json = YdszJson.toJson(def, FlowViews.Summary.class);
+ * String json = RemiJson.toJson(def, FlowViews.Summary.class);
  *
  * // 详情接口 — 返回 Summary + Detail 字段（含 ext, listener, canary 等）
- * String json = YdszJson.toJson(def, FlowViews.Detail.class);
+ * String json = RemiJson.toJson(def, FlowViews.Detail.class);
  * </pre>
  *
  * @author remi-team

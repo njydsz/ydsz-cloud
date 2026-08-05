@@ -15,7 +15,7 @@ import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.entity.core.MsgLog;
 import com.remisoft.message.server.config.MessageProperties;
 import com.remisoft.message.server.metric.MessageMetrics;
@@ -218,7 +218,7 @@ public class ChannelRouter {
         String templateParams = logDO.getTemplateParams();
         if (templateParams != null && !templateParams.isBlank()) {
             try {
-                request.setParams(YdszJson.fromJsonToMap(templateParams, String.class, Object.class));
+                request.setParams(RemiJson.fromJsonToMap(templateParams, String.class, Object.class));
             } catch (Exception e) {
                 log.warn("[ChannelRouter] templateParams 解析失败,忽略: msgId={}, err={}",
                         logDO.getMsgId(), e.getMessage());

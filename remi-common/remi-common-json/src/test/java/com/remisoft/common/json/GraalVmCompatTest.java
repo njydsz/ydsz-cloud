@@ -85,7 +85,7 @@ class GraalVmCompatTest {
         TestBean asmBean = new TestBean();
         asmBean.setId(100);
         asmBean.setName("asm-baseline");
-        String asmJson = YdszJson.toJson(asmBean);
+        String asmJson = RemiJson.toJson(asmBean);
         AsmCodecCache.clearCache();
 
         // 模拟 ASM 不可用（等同于 GraalVM Native Image 中的行为）
@@ -99,13 +99,13 @@ class GraalVmCompatTest {
         TestBean reflectionBean = new TestBean();
         reflectionBean.setId(100);
         reflectionBean.setName("asm-baseline");
-        String reflectionJson = YdszJson.toJson(reflectionBean);
+        String reflectionJson = RemiJson.toJson(reflectionBean);
 
         // 两路径输出的 JSON 应一致（字段顺序、值均相同）
         assertEquals(asmJson, reflectionJson,
             "反射路径与 ASM 路径的序列化结果必须一致");
 
-        TestBean back = YdszJson.toObject(reflectionJson, TestBean.class);
+        TestBean back = RemiJson.toObject(reflectionJson, TestBean.class);
         assertNotNull(back, "反射路径反序列化结果不能为 null");
         assertEquals(100, back.getId(), "反射路径 id 必须正确");
         assertEquals("asm-baseline", back.getName(), "反射路径 name 必须正确");

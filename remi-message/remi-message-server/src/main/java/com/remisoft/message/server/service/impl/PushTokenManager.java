@@ -8,7 +8,7 @@ import java.util.Set;
 import com.remisoft.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +60,7 @@ public class PushTokenManager {
         Map<String, String> tokenInfo = new HashMap<>();
         tokenInfo.put("token", token);
         tokenInfo.put("platform", platform != null ? platform : "UNKNOWN");
-        redisService.hSet(key, deviceId, YdszJson.toJson(tokenInfo));
+        redisService.hSet(key, deviceId, RemiJson.toJson(tokenInfo));
         redisService.expire(key, Duration.ofDays(TOKEN_TTL_DAYS));
         redisService.sRem(INVALID_KEY_PREFIX + userId, token);
         log.info("[PushToken] Token 注册: userId={} deviceId={} platform={}", userId, deviceId, platform);
@@ -83,7 +83,7 @@ public class PushTokenManager {
         raw.forEach((deviceId, tokenInfoJson) -> {
             // OD-6: 从 JSON 解析 token 和 platform
             try {
-                Map<String, Object> info = YdszJson.fromJsonToMap(String.valueOf(tokenInfoJson), String.class, Object.class);
+                Map<String, Object> info = RemiJson.fromJsonToMap(String.valueOf(tokenInfoJson), String.class, Object.class);
                 String token = info.get("token") != null ? String.valueOf(info.get("token")) : "";
                 if (invalidTokens == null || !invalidTokens.contains(token)) {
                     result.put(deviceId.toString(), String.valueOf(tokenInfoJson));

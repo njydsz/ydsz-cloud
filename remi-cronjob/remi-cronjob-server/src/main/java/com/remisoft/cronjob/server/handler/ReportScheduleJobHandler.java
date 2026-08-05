@@ -3,7 +3,7 @@ package com.remisoft.cronjob.server.handler;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ObjectNode;
 
 import org.springframework.stereotype.Component;
@@ -87,7 +87,7 @@ public class ReportScheduleJobHandler implements JobHandler {
         // 尝试 JSON 解析 {"type":"DAILY"}
         if (trimmed.startsWith("{")) {
             try {
-                ObjectNode obj = YdszJson.parseObject(trimmed);
+                ObjectNode obj = RemiJson.parseObject(trimmed);
                 if (obj != null && obj.containsKey("type")) {
                     return obj.getString("type");
                 }

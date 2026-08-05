@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.asm.AsmSerializer;
 import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.number.NumberUtils;
@@ -1079,7 +1079,7 @@ public final class JSONWriter {
                 cachedSerializer = serializer;
                 AsmCodecCache.serializeWithSerializer(serializer, item, this);
             } else {
-                write(YdszJson.toJson(item));
+                write(RemiJson.toJson(item));
             }
         }
         return cachedSerializer;
@@ -1177,7 +1177,7 @@ public final class JSONWriter {
     }
 
     /**
-     * 内联写入对象值（不调用 YdszJson.toJson）
+     * 内联写入对象值（不调用 RemiJson.toJson）
      */
     /**
      * 内联写入对象值（使用类型代码缓存，避免重复 instanceof 检查）
@@ -1201,12 +1201,12 @@ public final class JSONWriter {
         } else if (obj instanceof Map) {
             writeMap((Map<?, ?>) obj);
         } else {
-            write(YdszJson.toJson(obj));
+            write(RemiJson.toJson(obj));
         }
     }
 
     /**
-     * 内联写入值（不调用 YdszJson.toJson）
+     * 内联写入值（不调用 RemiJson.toJson）
      */
     void writeValueInline(Object value) {
         if (value == null) {

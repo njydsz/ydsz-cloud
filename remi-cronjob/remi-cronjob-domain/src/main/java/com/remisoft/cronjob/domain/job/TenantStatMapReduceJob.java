@@ -69,7 +69,7 @@ public class TenantStatMapReduceJob implements MapReduceProcessor {
         if (paramsJson == null || paramsJson.isBlank()) {
             return new String[0];
         }
-        // 简化解析：实际项目可注入 YdszJson 解析；此处仅做演示兜底
+        // 简化解析：实际项目可注入 RemiJson 解析；此处仅做演示兜底
         String trimmed = paramsJson.trim();
         if (!trimmed.startsWith("[")) {
             return new String[0];

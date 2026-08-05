@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>覆盖 {@link SerializationProvider} / {@link DeserializationProvider} /
  * {@link JSONReader} / {@link JSONWriter} / {@link JsonParserUtil} 五大核心组件，
- * 独立于 {@link YdszJson} / {@link JsonMapper} 高层 API，验证底层正确性。</p>
+ * 独立于 {@link RemiJson} / {@link JsonMapper} 高层 API，验证底层正确性。</p>
  */
 class CoreEngineTest {
 

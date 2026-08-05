@@ -13,7 +13,7 @@ import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.domain.query.PageQuery;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.security.TenantContext;
-import com.remisoft.common.json.YdszJson;
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.dto.canary.CanaryUpsertDTO;
 import com.remisoft.message.domain.entity.canary.MsgCanary;
 import com.remisoft.message.infra.mapper.canary.MsgCanaryMapper;
@@ -139,6 +139,6 @@ public class CanaryServiceImpl implements CanaryService {
         for (int i = 0; i < count; i++) {
             buckets.add(i);
         }
-        return YdszJson.toJson(buckets);
+        return RemiJson.toJson(buckets);
     }
 }
