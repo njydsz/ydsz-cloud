@@ -66,6 +66,6 @@ public final class TenantContext {
      * 清除当前线程的租户 ID
      */
     public static void clear() {
-        RequestContext.remove(RequestContext.KEY_TENANT_ID);
+        RequestContext.setTenantId(null);
     }
 }

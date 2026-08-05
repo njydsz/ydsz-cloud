@@ -1,5 +1,6 @@
 package com.remisoft.gateway.config;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +40,7 @@ public final class PathGuard {
             GatewayConstants.HEADER_INTERNAL_TS,
             GatewayConstants.HEADER_INTERNAL_NONCE,
             GatewayConstants.HEADER_TENANT_ID,
-            "X-Forwarded-For",
+            HeaderConstants.X_FORWARDED_FOR,
             "X-Real-IP"
     );
 

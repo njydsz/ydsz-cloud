@@ -74,7 +74,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
                 UnifiedExceptionCode.DATABASE_ERROR.getKey(), LocaleContextHolder.getLocale());
         info.setMessage(message != null ? message : UnifiedExceptionCode.DATABASE_ERROR.getKey());
 
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.DATABASE_ERROR.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
@@ -89,7 +89,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     private String extractTraceId(HttpServletRequest request) {
         String traceId = MDC.get("traceId");
         if (traceId == null) {
-            traceId = request.getHeader("X-Trace-Id");
+            traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
         }
         if (traceId == null) {
             traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);

@@ -115,7 +115,7 @@ public class PageQuery extends BaseQuery {
     @Min(value = 1, message = "pageSize最小值为1")
     @Max(value = PageConstants.MAX_PAGE_SIZE, message = "pageSize最大值为" + PageConstants.MAX_PAGE_SIZE)
     @Builder.Default
-    private Integer pageSize = PageConstants.getDefaultPageSize();
+    private Integer pageSize = PageConstants.DEFAULT_PAGE_SIZE;
 
     /**
      * 排序项列表（结构化 {@link OrderItem}）
@@ -196,7 +196,7 @@ public class PageQuery extends BaseQuery {
      * @return 分页查询对象
      */
     public static PageQuery of(Integer pageNum) {
-        return of(pageNum, PageConstants.getDefaultPageSize());
+        return of(pageNum, PageConstants.DEFAULT_PAGE_SIZE);
     }
 
     /**

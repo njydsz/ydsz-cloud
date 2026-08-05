@@ -82,7 +82,7 @@ public class AggregateServiceImpl implements AggregateService {
         try {
             lockValue = distributedLocker.tryLock(lockKey, 3, 10, TimeUnit.SECONDS);
             if (lockValue == null) {
-                throw new SysException(BaseResultCode.RESOURCE_LOCKED, "获取聚合锁失败: " + group);
+                throw new SysException(BaseResultCode.BAD_REQUEST, "获取聚合锁失败: " + group);
             }
             // 查 PENDING 批次
             MsgAggregate batch = msgAggregateMapper.selectOne(new LambdaQueryWrapper<MsgAggregate>()
@@ -113,7 +113,7 @@ public class AggregateServiceImpl implements AggregateService {
             return entity;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new SysException(BaseResultCode.RESOURCE_LOCKED, "聚合锁等待中断");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "聚合锁等待中断");
         } finally {
             if (lockValue != null) {
                 distributedLocker.unlock(lockKey, lockValue);
@@ -168,7 +168,7 @@ public class AggregateServiceImpl implements AggregateService {
     public Page<MsgAggregate> page(PageQuery query) {
         Page<MsgAggregate> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
-                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.getMaxPageSize()));
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         return msgAggregateMapper.selectPage(page, new LambdaQueryWrapper<MsgAggregate>()
                 .orderByDesc(MsgAggregate::getCreatedAt));
     }

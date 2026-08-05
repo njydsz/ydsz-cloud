@@ -4,7 +4,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
 
-import com.remisoft.common.core.code.ResultCode;
+import com.remisoft.common.core.code.BaseResultCode;
+import com.remisoft.common.exception.code.ResultCode;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.core.ExceptionInfo;
 import com.remisoft.common.exception.enums.ExceptionCategory;
@@ -138,6 +139,20 @@ public class BusinessException extends AbstractRemiException {
         initFields(resultCode.getCode(), resultCode.getMsg(), new Object[]{});
         this.message = message;
         this.messageResolved = true;
+    }
+
+    /**
+     * 使用 {@link BaseResultCode} 构造业务异常。
+     *
+     * <p>remi-common-core 精简后 {@code BaseResultCode} 不再实现 {@link ResultCode} 接口，
+     * 此重载用于兼容业务模块中以 BaseResultCode 作为错误码的调用方式。
+     *
+     * @param resultCode 基础结果码
+     */
+    public BusinessException(BaseResultCode resultCode) {
+        super();
+        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
+             resultCode.getHttpStatusCode(), DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
     /**

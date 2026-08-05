@@ -79,7 +79,7 @@ public class TemplateServiceImpl implements TemplateService {
                 .eq(MsgTemplate::getTenantId, tenantId)
                 .last("LIMIT 1"));
         if (existing != null) {
-            throw new SysException(BaseResultCode.DUPLICATE_KEY, "模板已存在: " + dto.getTemplateCode() + "/" + locale);
+            throw new SysException(BaseResultCode.BAD_REQUEST, "模板已存在: " + dto.getTemplateCode() + "/" + locale);
         }
         MsgTemplate entity = new MsgTemplate();
         entity.setTemplateCode(dto.getTemplateCode());
@@ -201,7 +201,7 @@ public class TemplateServiceImpl implements TemplateService {
     public Page<MsgTemplate> page(TemplateQueryDTO query) {
         Page<MsgTemplate> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
-                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.getMaxPageSize()));
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<MsgTemplate> w = new LambdaQueryWrapper<>();
         if (query != null) {
             w.eq(StringUtils.hasText(query.getTemplateCode()), MsgTemplate::getTemplateCode, query.getTemplateCode());
@@ -278,7 +278,7 @@ public class TemplateServiceImpl implements TemplateService {
         TemplateAuditStatusEnum current = parseAuditStatus(entity.getAuditStatus());
         TemplateAuditStatusEnum target = parseAuditStatus(dto.getAuditStatus());
         if (!canTransitAudit(current, target)) {
-            throw new SysException(BaseResultCode.BIZ_ERROR,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "非法审核状态流转: " + current + " -> " + target);
         }
         entity.setAuditStatus(target.name());
@@ -342,7 +342,7 @@ public class TemplateServiceImpl implements TemplateService {
         try {
             return TemplateAuditStatusEnum.valueOf(value);
         } catch (Exception e) {
-            throw new SysException(BaseResultCode.BIZ_ERROR, "非法审核状态: " + value);
+            throw new SysException(BaseResultCode.BAD_REQUEST, "非法审核状态: " + value);
         }
     }
 }

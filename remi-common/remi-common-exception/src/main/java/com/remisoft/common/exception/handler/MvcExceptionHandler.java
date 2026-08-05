@@ -22,7 +22,6 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.remisoft.common.core.constant.HeaderConstants;
-import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.config.ExceptionProperties;
@@ -126,7 +125,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
             return buildResponseEntity(buildProblemDetail(e, request.getRequestURI(), traceId), e);
         }
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), traceId);
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return errorResponse(e.getCode(), e.getMessage(), info);
     }
 
     /**
@@ -177,7 +176,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 HttpStatus.BAD_REQUEST.value()
         );
         info.setPath(request.getRequestURI());
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.INVALID_REQUEST_FORMAT.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
@@ -265,7 +264,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 HttpStatus.CONTENT_TOO_LARGE.value()
         );
         info.setPath(request.getRequestURI());
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
@@ -291,7 +290,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 HttpStatus.NOT_FOUND.value()
         );
         info.setPath(request.getRequestURI());
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.RESOURCE_NOT_FOUND.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
@@ -315,7 +314,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 HttpStatus.BAD_REQUEST.value()
         );
         info.setPath(request.getRequestURI());
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(),
                 e.getMessage(),
                 includeExceptionInfo() ? info : null
@@ -342,7 +341,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
         info.setMessage(message);
 
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
@@ -366,7 +365,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
         info.setMessage(message);
 
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
@@ -388,7 +387,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
 
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
                 message,
                 includeExceptionInfo() ? info : null

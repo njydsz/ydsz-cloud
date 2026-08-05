@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.core.ExceptionInfo;
@@ -69,6 +70,26 @@ public class ValidationExceptionHandler {
     }
 
     /**
+     * 构建统一错误响应（{@link BaseResponse} 格式）。
+     *
+     * <p>remi-common-core 精简后移除了三参数 {@code BaseResponse.error(code, msg, data)} 静态方法，
+     * 此处统一通过 {@link BaseResponse#builder()} 构建。
+     *
+     * @param code 错误码
+     * @param msg  错误消息
+     * @param data 附加数据（可为 null，由 {@code @JsonInclude(NON_NULL)} 决定是否序列化）
+     * @return 统一错误响应
+     */
+    private static <T> BaseResponse<T> buildErrorResponse(String code, String msg, T data) {
+        return BaseResponse.<T>builder()
+                .code(code)
+                .msg(msg)
+                .data(data)
+                .timestamp(System.currentTimeMillis())
+                .build();
+    }
+
+    /**
      * 提取约束违反异常的错误消息
      */
     private String extractConstraintViolationMessages(ConstraintViolationException e) {
@@ -97,7 +118,7 @@ public class ValidationExceptionHandler {
         recordMetrics(e);
         String message = extractConstraintViolationMessages(e);
         ExceptionInfo info = buildExceptionInfo(message, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
+        return buildErrorResponse(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
     }
 
     /**
@@ -110,7 +131,7 @@ public class ValidationExceptionHandler {
         recordMetrics(e);
         String message = extractBindingResultMessages(e.getBindingResult());
         ExceptionInfo info = buildExceptionInfo(message, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
+        return buildErrorResponse(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
     }
 
     /**
@@ -122,7 +143,7 @@ public class ValidationExceptionHandler {
         recordMetrics(e);
         String message = extractBindingResultMessages(e.getBindingResult());
         ExceptionInfo info = buildExceptionInfo(message, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
+        return buildErrorResponse(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message, info);
     }
 
     /**
@@ -133,7 +154,7 @@ public class ValidationExceptionHandler {
     private String extractTraceId(HttpServletRequest request) {
         String traceId = MDC.get("traceId");
         if (traceId == null) {
-            traceId = request.getHeader("X-Trace-Id");
+            traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
         }
         if (traceId == null) {
             traceId = request.getHeader("X-Request-Id");

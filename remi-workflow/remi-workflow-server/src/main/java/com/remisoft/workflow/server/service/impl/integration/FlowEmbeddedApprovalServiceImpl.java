@@ -203,7 +203,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_b72e8598");
         }
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BIZ_ERROR, "error.workflow.msg_8243ec9a");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_8243ec9a");
         }
 
         switch (action) {
@@ -254,7 +254,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             case "WITHDRAW": {
                 boolean ok = instanceService.recall(instance.getId(), dto.getUserId());
                 if (!ok) {
-                    throw new SysException(BaseResultCode.BIZ_ERROR,
+                    throw new SysException(BaseResultCode.BAD_REQUEST,
                             "error.workflow.msg_ad7c50c2");
                 }
                 break;

@@ -10,7 +10,7 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.remisoft.common.core.config.MessageResolverHolder;
+import com.remisoft.common.base.i18n.MessageResolverHolder;
 import com.remisoft.common.core.constant.PageConstants;
 
 /**
@@ -22,14 +22,13 @@ import com.remisoft.common.core.constant.PageConstants;
  *   <li><b>pid / uptime / startedAt</b> — JVM 进程信息</li>
  *   <li><b>activeThreads / threadPeak</b> — 线程池健康信号</li>
  *   <li><b>i18nResolverRegistered</b> — 国际化解析器是否已注册</li>
- *   <li><b>pageConstantsInitialized</b> — 分页配置运行时状态</li>
+ *   <li><b>pageConstantsInitialized</b> — 分页配置常量是否可用</li>
  *   <li><b>moduleVersion</b> — 模块版本号</li>
  * </ul>
  *
  * <p><b>状态说明：</b></p>
  * <ul>
- *   <li>{@code UP} — 国际化解析器已注册、分页配置已注入运行时值</li>
- *   <li>{@code UNKNOWN} — 分页配置未由 CoreAutoConfiguration 注入（回退编译期默认值）</li>
+ *   <li>{@code UP} — 核心模块就绪</li>
  * </ul>
  *
  * @author remi-team
@@ -68,24 +67,15 @@ public class CoreHealthIndicator implements HealthIndicator {
         details.put("threadPeak", threadBean.getPeakThreadCount());
         details.put("daemonThreads", threadBean.getDaemonThreadCount());
 
-        // ========== Core 运行时状态（v2.1.0 新增） ==========
+        // ========== Core 运行时状态 ==========
         details.put("moduleVersion", moduleVersion);
         details.put("i18nResolverRegistered", MessageResolverHolder.isResolverRegistered());
-        details.put("pageConstantsInitialized", PageConstants.isInitialized());
+        // remi-common-core 精简后分页配置不再支持运行时注入，直接报告编译期常量
+        details.put("pageConstantsInitialized", true);
 
         // ========== 分页配置状态 ==========
-        details.put("maxPageSize", PageConstants.getMaxPageSize());
-        details.put("defaultPageSize", PageConstants.getDefaultPageSize());
-
-        // 检测 PageConstants 是否已由 CoreAutoConfiguration 注入运行时配置
-        if (!PageConstants.isInitialized()) {
-            return Health.unknown()
-                    .withDetails(details)
-                    .withDetail("warning", "PageConstants not initialized by CoreAutoConfiguration; "
-                            + "falling back to compile-time defaults. "
-                            + "Check remi.core.enabled or context loader configuration.")
-                    .build();
-        }
+        details.put("maxPageSize", PageConstants.MAX_PAGE_SIZE);
+        details.put("defaultPageSize", PageConstants.DEFAULT_PAGE_SIZE);
 
         return Health.up()
                 .withDetails(details)

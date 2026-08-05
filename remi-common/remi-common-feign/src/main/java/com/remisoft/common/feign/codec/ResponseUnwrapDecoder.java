@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.IResponse;
 
 import feign.Response;
 import feign.codec.DecodeException;
@@ -17,7 +16,7 @@ import feign.codec.Decoder;
 /**
  * Feign 响应自动解包解码器
  *
- * <p>自动解包 {@link IResponse} / {@link BaseResponse} 类型的响应，
+ * <p>自动解包 {@link BaseResponse} / {@link BaseResponse} 类型的响应，
  * 直接返回内部 data 字段，简化 Feign 客户端接口定义。
  *
  * <p><b>使用场景：</b>
@@ -33,15 +32,15 @@ import feign.codec.Decoder;
  *     @GetMapping("/users/{id}")
  *     User getUser(@PathVariable("id") Long id);
  *
- *     // 如果需要完整响应，仍可使用 IResponse<User>
+ *     // 如果需要完整响应，仍可使用 BaseResponse<User>
  *     @GetMapping("/users/{id}")
- *     IResponse<User> getUserWithWrapper(@PathVariable("id") Long id);
+ *     BaseResponse<User> getUserWithWrapper(@PathVariable("id") Long id);
  * }
  * }</pre>
  *
  * <p><b>解包规则：</b>
  * <ul>
- *   <li>目标类型为 {@link IResponse} 或其子类 → 不解包，返回完整响应</li>
+ *   <li>目标类型为 {@link BaseResponse} 或其子类 → 不解包，返回完整响应</li>
  *   <li>目标类型为普通业务类型 → 先反序列化为 {@link BaseResponse}，再提取 data</li>
  *   <li>响应 code 不等于成功码 → 抛出 {@link FeignBusinessException}</li>
  * </ul>
@@ -76,10 +75,10 @@ public class ResponseUnwrapDecoder implements Decoder {
 
     @Override
     public Object decode(Response response, Type type) throws IOException, DecodeException {
-        // 1. 判断目标类型是否为 IResponse 或其子类
+        // 1. 判断目标类型是否为 BaseResponse 或其子类
         if (isResponseType(type)) {
-            // 目标类型是 IResponse，不解包，直接解码
-            log.debug("目标类型为 IResponse，不解包: {}", type);
+            // 目标类型是 BaseResponse，不解包，直接解码
+            log.debug("目标类型为 BaseResponse，不解包: {}", type);
             return delegate.decode(response, type);
         }
 
@@ -92,8 +91,8 @@ public class ResponseUnwrapDecoder implements Decoder {
             return null;
         }
 
-        if (decoded instanceof IResponse) {
-            IResponse<?> wrapper = (IResponse<?>) decoded;
+        if (decoded instanceof BaseResponse) {
+            BaseResponse<?> wrapper = (BaseResponse<?>) decoded;
 
             // 检查响应码
             if (!isSuccess(wrapper)) {
@@ -109,26 +108,26 @@ public class ResponseUnwrapDecoder implements Decoder {
             return data;
         }
 
-        // 4. 解码结果不是 IResponse，直接返回
-        log.debug("解码结果非 IResponse，直接返回: {}", decoded.getClass());
+        // 4. 解码结果不是 BaseResponse，直接返回
+        log.debug("解码结果非 BaseResponse，直接返回: {}", decoded.getClass());
         return decoded;
     }
 
     /**
-     * 判断目标类型是否为 IResponse 或其子类
+     * 判断目标类型是否为 BaseResponse 或其子类
      *
      * @param type 目标类型
-     * @return true 表示是 IResponse 类型
+     * @return true 表示是 BaseResponse 类型
      */
     private boolean isResponseType(Type type) {
         if (type instanceof Class) {
             Class<?> clazz = (Class<?>) type;
-            return IResponse.class.isAssignableFrom(clazz);
+            return BaseResponse.class.isAssignableFrom(clazz);
         }
         if (type instanceof ParameterizedType) {
             Type rawType = ((ParameterizedType) type).getRawType();
             if (rawType instanceof Class) {
-                return IResponse.class.isAssignableFrom((Class<?>) rawType);
+                return BaseResponse.class.isAssignableFrom((Class<?>) rawType);
             }
         }
         return false;
@@ -165,7 +164,7 @@ public class ResponseUnwrapDecoder implements Decoder {
      * @param response 响应对象
      * @return true 表示成功
      */
-    private boolean isSuccess(IResponse<?> response) {
+    private boolean isSuccess(BaseResponse<?> response) {
         return response.isSuccess();
     }
 

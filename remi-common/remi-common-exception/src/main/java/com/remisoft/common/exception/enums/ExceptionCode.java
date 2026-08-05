@@ -1,6 +1,6 @@
 package com.remisoft.common.exception.enums;
 
-import com.remisoft.common.core.code.ResultCode;
+import com.remisoft.common.exception.code.ResultCode;
 
 /**
  * 异常码接口

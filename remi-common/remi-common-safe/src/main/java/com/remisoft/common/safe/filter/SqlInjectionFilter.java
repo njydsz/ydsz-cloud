@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.safe.alert.SecurityEvent;
 import com.remisoft.common.safe.alert.SecurityEventPublisher;
 import com.remisoft.common.safe.alert.SecurityEventType;
@@ -281,7 +282,7 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
         }
 
         // 检测关键请求头
-        String[] headersToCheck = {"User-Agent", "Referer", "X-Forwarded-For"};
+        String[] headersToCheck = {"User-Agent", "Referer", HeaderConstants.X_FORWARDED_FOR};
         for (String headerName : headersToCheck) {
             String headerValue = request.getHeader(headerName);
             if (StringUtils.hasText(headerValue) && sqlInjectionPattern.matcher(headerValue).find()) {

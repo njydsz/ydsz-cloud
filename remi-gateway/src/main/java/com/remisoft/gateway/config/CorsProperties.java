@@ -1,5 +1,6 @@
 package com.remisoft.gateway.config;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class CorsProperties {
 
     /** 暴露给浏览器 JS 的响应头 */
     private List<String> exposedHeaders = new ArrayList<>(List.of(
-            "X-Trace-Id",
+            HeaderConstants.TRACE_ID_HEADER,
             "X-Request-Id",
             "X-RateLimit-Limit",
             "X-RateLimit-Remaining",

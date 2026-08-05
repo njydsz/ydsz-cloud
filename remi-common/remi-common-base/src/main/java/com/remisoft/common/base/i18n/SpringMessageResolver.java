@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
-import com.remisoft.common.core.config.MessageResolverHolder;
+import com.remisoft.common.base.i18n.MessageResolverHolder;
 
 /**
  * Spring MessageSource 适配器，将 Spring 国际化机制桥接到框架统一的 {@link MessageResolverHolder.MessageResolver} SPI。

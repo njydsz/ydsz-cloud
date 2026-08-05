@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 
 import com.remisoft.common.core.response.BaseResponse;
@@ -18,7 +20,6 @@ import com.remisoft.common.exception.core.ExceptionInfo;
 import com.remisoft.common.exception.custom.AbstractRemiException;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.exception.metrics.ExceptionMetrics;
-import com.remisoft.common.core.context.ProblemDetail;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -238,7 +239,11 @@ public abstract class BaseExceptionHandler {
     }
 
     /**
-     * 构建 RFC 7807 ProblemDetail 对象
+     * 构建 RFC 7807 ProblemDetail 对象（基于 Spring 标准实现）。
+     *
+     * <p>remi-common-core 精简后不再提供自定义 ProblemDetail，
+     * 改用 Spring {@link org.springframework.http.ProblemDetail}，
+     * traceId / requestId / errorCode 等扩展字段通过 {@code setProperty} 输出。
      *
      * @param throwable 异常对象
      * @param path      请求路径
@@ -247,33 +252,55 @@ public abstract class BaseExceptionHandler {
      */
     protected ProblemDetail buildProblemDetail(Throwable throwable, String path, String traceId) {
         String baseUrl = getProblemDetailTypeBaseUrl();
-        ProblemDetail.ProblemDetailBuilder builder = ProblemDetail.builder()
-                .instance(path != null ? URI.create(path) : null)
-                .traceId(traceId)
-                .requestId(traceId)
-                .timestamp(Instant.now());
+        ProblemDetail problem;
 
         if (throwable instanceof AbstractRemiException) {
             AbstractRemiException ex = (AbstractRemiException) throwable;
-            builder.type(URI.create(baseUrl + "/" + ex.getCategory().name().toLowerCase()))
-                    .title(ex.getClass().getSimpleName())
-                    .status(ex.getHttpStatus())
-                    .detail(ex.getMessage())
-                    .errorCode(ex.getCode());
+            problem = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(ex.getHttpStatus()), ex.getMessage());
+            problem.setTitle(ex.getClass().getSimpleName());
+            problem.setType(URI.create(baseUrl + "/" + ex.getCategory().name().toLowerCase()));
+            problem.setProperty("errorCode", ex.getCode());
+            if (path != null) {
+                problem.setInstance(URI.create(path));
+            }
             if (ex.getExtData() instanceof Map<?, ?> rawMap) {
-                Map<String, Object> extMap = new LinkedHashMap<>();
-                rawMap.forEach((k, v) -> extMap.put(String.valueOf(k), v));
-                builder.extensions(extMap);
+                rawMap.forEach((k, v) -> problem.setProperty(String.valueOf(k), v));
             }
         } else {
-            builder.type(URI.create(baseUrl + "/system"))
-                    .title("System Error")
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .detail(getRootCauseMessage(throwable))
-                    .errorCode(UnifiedExceptionCode.INTERNAL_ERROR.getCode());
+            problem = ProblemDetail.forStatusAndDetail(
+                    HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), getRootCauseMessage(throwable));
+            problem.setTitle("System Error");
+            problem.setType(URI.create(baseUrl + "/system"));
+            problem.setProperty("errorCode", UnifiedExceptionCode.INTERNAL_ERROR.getCode());
+            if (path != null) {
+                problem.setInstance(URI.create(path));
+            }
         }
 
-        return builder.build();
+        problem.setProperty("traceId", traceId);
+        problem.setProperty("requestId", traceId);
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+    /**
+     * 构建统一错误响应（{@link BaseResponse} 格式，兼容 {@code BaseResponse.error(code, msg, data)} 旧语义）。
+     *
+     * <p>remi-common-core 精简后移除了三参数 {@code error} 静态方法，
+     * 此处统一通过 {@link BaseResponse#builder()} 构建，保持各 handler 输出结构一致。
+     *
+     * @param code 错误码
+     * @param msg  错误消息
+     * @param data 附加数据（可为 null，由 {@code @JsonInclude(NON_NULL)} 决定是否序列化）
+     * @return 统一错误响应
+     */
+    protected static <T> BaseResponse<T> errorResponse(String code, String msg, T data) {
+        return BaseResponse.<T>builder()
+                .code(code)
+                .msg(msg)
+                .data(data)
+                .timestamp(System.currentTimeMillis())
+                .build();
     }
 
     /**
@@ -291,10 +318,10 @@ public abstract class BaseExceptionHandler {
         ExceptionInfo info = buildExceptionInfo(throwable, path, traceId);
         if (throwable instanceof AbstractRemiException) {
             AbstractRemiException ex = (AbstractRemiException) throwable;
-            return BaseResponse.error(ex.getCode(), ex.getMessage(),
+            return errorResponse(ex.getCode(), ex.getMessage(),
                     includeExceptionInfo() ? info : null);
         }
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.INTERNAL_ERROR.getCode(),
                 info.getMessage(),
                 includeExceptionInfo() ? info : null);
@@ -338,7 +365,7 @@ public abstract class BaseExceptionHandler {
                 httpStatus
         );
         info.setPath(path);
-        return BaseResponse.error(
+        return errorResponse(
                 errorCode.getCode(),
                 message,
                 includeExceptionInfo() ? info : null

@@ -110,21 +110,17 @@ public class RemiSpanEnrichmentProcessor implements SpanProcessor {
     }
 
     /**
-     * 从 RequestContext 注入属性（通过 ThreadLocal 反射调用，避免强依赖 common-core）
+     * 从 RequestContext 注入属性（通过静态方法反射调用，避免强依赖 common-core）
      */
     private void applyRequestContext(ReadWriteSpan span) {
-        // 延迟加载：通过类名反射获取 RequestContext.currentUser() 等
+        // 延迟加载：通过类名反射调用 RequestContext 的静态方法
         try {
             Class<?> ctxClass = Class.forName("com.remisoft.common.core.context.RequestContext");
-            Object ctx = ctxClass.getMethod("current").invoke(null);
-            if (ctx == null) {
-                return;
-            }
-            Object tenantId = ctxClass.getMethod("getTenantId").invoke(ctx);
+            Object tenantId = ctxClass.getMethod("getTenantId").invoke(null);
             if (tenantId != null) {
                 span.setAttribute(OtelSemConv.REMI_TENANT_ID, tenantId.toString());
             }
-            Object userId = ctxClass.getMethod("getUserId").invoke(ctx);
+            Object userId = ctxClass.getMethod("getUserId").invoke(null);
             if (userId != null) {
                 span.setAttribute(OtelSemConv.REMI_USER_ID, userId.toString());
             }

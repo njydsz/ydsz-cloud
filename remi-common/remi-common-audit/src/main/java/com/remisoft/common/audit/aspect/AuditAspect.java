@@ -25,6 +25,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.config.AuditProperties;
 import com.remisoft.common.audit.context.AuditContext;
@@ -235,7 +236,7 @@ public class AuditAspect {
             context.setUri(request.getRequestURI());
             context.setHttpMethod(request.getMethod());
             context.setIpAddress(IpAddrUtils.getIpAddrWithTrustedProxies(request, java.util.Collections.emptySet()));
-            context.setToken(request.getHeader("X-Access-Token"));
+            context.setToken(request.getHeader(HeaderConstants.X_ACCESS_TOKEN));
             context.setBusinessNo(request.getHeader("X-Business-No"));
 
             // 启用 IP 归属地解析时，记录 IP 地址（实际解析需要外部服务）
@@ -255,7 +256,7 @@ public class AuditAspect {
             }
 
             // 记录 TraceId（如果存在）
-            String traceId = request.getHeader("X-Trace-Id");
+            String traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
             if (StringUtils.isNotBlank(traceId)) {
                 context.putExtra("traceId", traceId);
             }

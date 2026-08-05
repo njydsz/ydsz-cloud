@@ -87,7 +87,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     @Override
     public MsgSubscription unsubscribeByToken(String token) {
         if (!messageProperties.getUnsubscribe().isEnabled()) {
-            throw new SysException(BaseResultCode.BIZ_ERROR, "退订中心已关闭");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "退订中心已关闭");
         }
         UnsubscribeTokenPayload payload = unsubscribeTokenUtil.parseAndVerify(token);
         log.info("[Unsubscribe] token 退订: user={} topic={} channel={}",
@@ -108,7 +108,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
         }
         Page<MsgSubscription> page = new Page<>(
                 query.getPageNum(),
-                Math.min(query.getPageSize(), PageConstants.getMaxPageSize()));
+                Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<MsgSubscription> w = new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getStatus, SubscriptionStatusEnum.UNSUBSCRIBED.name())
                 .eq(StringUtils.hasText(query.getUserId()), MsgSubscription::getUserId, query.getUserId())

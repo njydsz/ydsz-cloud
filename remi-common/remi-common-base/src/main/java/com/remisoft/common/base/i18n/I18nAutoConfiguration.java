@@ -10,7 +10,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
-import com.remisoft.common.core.config.MessageResolverHolder;
+import com.remisoft.common.base.i18n.MessageResolverHolder;
 
 import lombok.extern.slf4j.Slf4j;
 

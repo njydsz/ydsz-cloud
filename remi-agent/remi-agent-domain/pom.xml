@@ -16,6 +16,11 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-core</artifactId>
         </dependency>
+        <!-- remi-common-exception（错误码枚举实现 ExceptionCode 接口） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-exception</artifactId>
+        </dependency>
         <!-- P1-5: remi-common-domain 显式依赖（AgentStatusEnum/AgentDomainEvent 实现 BaseStatusEnum/DomainEvent） -->
         <dependency>
             <groupId>com.remisoft</groupId>

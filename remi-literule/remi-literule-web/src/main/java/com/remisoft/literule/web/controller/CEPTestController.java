@@ -101,7 +101,7 @@ public class CEPTestController {
     public BaseResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "CEP 引擎未启用");
+            return BaseResponse.error(BaseResultCode.FORBIDDEN, "CEP 引擎未启用");
         }
         try {
             Object patternObj = body.get("pattern");

@@ -10,7 +10,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 
-import com.remisoft.common.core.config.CoreProperties;
 import com.remisoft.common.web.filter.TenantMdcFilter;
 
 import jakarta.servlet.Filter;
@@ -30,6 +29,11 @@ import jakarta.servlet.Filter;
 public class WebCoreAutoConfiguration {
 
     /**
+     * 租户 MDC 过滤器默认顺序（原 CoreProperties 默认值，remi-common-core 精简后改为常量）。
+     */
+    private static final int DEFAULT_TENANT_MDC_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 100;
+
+    /**
      * 注册租户 MDC 过滤器，将 tenantId/userId/traceId 写入 SLF4J MDC。
      *
      * @return FilterRegistrationBean
@@ -38,10 +42,10 @@ public class WebCoreAutoConfiguration {
     @ConditionalOnClass(Filter.class)
     @ConditionalOnMissingBean(name = "tenantMdcFilter")
     @ConditionalOnProperty(prefix = "remi.core.tenant-mdc-filter", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public FilterRegistrationBean<TenantMdcFilter> tenantMdcFilter(CoreProperties properties) {
+    public FilterRegistrationBean<TenantMdcFilter> tenantMdcFilter() {
         FilterRegistrationBean<TenantMdcFilter> registration =
                 new FilterRegistrationBean<>(new TenantMdcFilter());
-        registration.setOrder(properties.getTenantMdcFilterOrder());
+        registration.setOrder(DEFAULT_TENANT_MDC_FILTER_ORDER);
         registration.setName("tenantMdcFilter");
         return registration;
     }

@@ -1,5 +1,6 @@
 package com.remisoft.common.tenant.config;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -108,7 +109,7 @@ public class TenantProperties {
      *
      * <p>当 {@link #tenantFields} 为空时，从此 header 获取值。
      */
-    private String defaultHeader = "X-Tenant-Id";
+    private String defaultHeader = HeaderConstants.X_TENANT_ID;
 
     /**
      * 超级管理员租户 ID（默认 "0"）。

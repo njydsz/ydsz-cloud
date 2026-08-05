@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.json.RemiJson;
 
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -182,7 +183,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
         String clientIp = extractClientIp(request);
         String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
-        String tenantId = request.getHeaders().getFirst("X-Tenant-Id");
+        String tenantId = request.getHeaders().getFirst(HeaderConstants.X_TENANT_ID);
 
         // P2-5: 三维度并行检查，避免嵌套 flatMap 回调地狱
         Mono<RateLimitResult> ipLimit = checkRateLimit("IP", clientIp,

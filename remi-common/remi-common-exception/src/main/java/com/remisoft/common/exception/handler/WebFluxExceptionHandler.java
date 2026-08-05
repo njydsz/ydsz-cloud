@@ -160,7 +160,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
         info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
 
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
                 info.getMessage(),
                 includeExceptionInfo() ? info : null);
@@ -179,7 +179,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
         info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
 
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
                 info.getMessage(),
                 includeExceptionInfo() ? info : null);
@@ -197,7 +197,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
         ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
 
-        return BaseResponse.error(
+        return errorResponse(
                 UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
                 info.getMessage(),
                 includeExceptionInfo() ? info : null);

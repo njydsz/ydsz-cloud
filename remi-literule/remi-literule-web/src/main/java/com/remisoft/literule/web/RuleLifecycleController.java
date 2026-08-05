@@ -225,7 +225,7 @@ public class RuleLifecycleController {
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "多级审批流服务未启用");
+            return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
         }
         String flowCode = dto == null ? null : dto.getFlowCode();
         return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(svc.submitForReview(ruleCode, flowCode, operator)));
@@ -251,7 +251,7 @@ public class RuleLifecycleController {
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "多级审批流服务未启用");
+            return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
         }
         String comment = dto.getComment() == null ? "" : dto.getComment();
         return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(svc.approve(ruleCode, operator, comment)));
@@ -276,7 +276,7 @@ public class RuleLifecycleController {
                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "多级审批流服务未启用");
+            return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
         }
         return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(svc.reject(ruleCode, operator, dto.getReason())));
     }
@@ -300,7 +300,7 @@ public class RuleLifecycleController {
                                             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "多级审批流服务未启用");
+            return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
         }
         String comment = dto.getComment() == null ? "" : dto.getComment();
         return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(svc.delegate(ruleCode, operator, dto.getDelegatedTo(), comment)));
@@ -353,7 +353,7 @@ public class RuleLifecycleController {
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "多级审批流服务未启用");
+            return BaseResponse.error(BaseResultCode.FORBIDDEN, "多级审批流服务未启用");
         }
         return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(svc.cancelReview(ruleCode, operator)));
     }

@@ -142,13 +142,13 @@ public class RecallServiceImpl implements RecallService {
             long minutesElapsed = Duration.between(
                     logDO.getCreatedAt(), LocalDateTime.now()).toMinutes();
             if (minutesElapsed > RECALL_WINDOW_MINUTES) {
-                throw new SysException(BaseResultCode.BIZ_ERROR,
+                throw new SysException(BaseResultCode.BAD_REQUEST,
                         "消息发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤回");
             }
         }
         // 校验是否已撤回
         if (RecallStatusEnum.RECALLED.name().equals(logDO.getRecallStatus())) {
-            throw new SysException(BaseResultCode.BIZ_ERROR, "消息已撤回，无需重复操作");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "消息已撤回，无需重复操作");
         }
         // 执行撤回
         logDO.setRecallStatus(RecallStatusEnum.RECALLED.name());

@@ -72,7 +72,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 .eq(MsgRouteRule::getTenantId, TenantContext.getTenantId())
                 .last("LIMIT 1"));
         if (existing != null) {
-            throw new SysException(BaseResultCode.DUPLICATE_KEY, "规则编码已存在: " + dto.getRuleCode());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "规则编码已存在: " + dto.getRuleCode());
         }
         MsgRouteRule entity = toEntity(dto);
         msgRouteRuleMapper.insert(entity);
@@ -173,7 +173,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     public Page<MsgRouteRule> page(PageQuery query) {
         Page<MsgRouteRule> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
-                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.getMaxPageSize()));
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         return msgRouteRuleMapper.selectPage(page, new LambdaQueryWrapper<MsgRouteRule>()
                 .orderByAsc(MsgRouteRule::getSortOrder)
                 .orderByDesc(MsgRouteRule::getCreatedAt));

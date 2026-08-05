@@ -17,7 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.remisoft.common.core.constant.TokenConstants;
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.ip.IpAddrUtils;
 import com.remisoft.common.util.string.StringUtils;
@@ -36,6 +36,21 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public final class ServletUtils {
+
+    /**
+     * 标准 HTTP 授权头名称。
+     *
+     * <p>原 {@code TokenConstants.AUTHENTICATION}（remi-common-core 精简后移除），
+     * 此处直接定义本地常量。
+     */
+    private static final String AUTHENTICATION_HEADER = "Authorization";
+
+    /**
+     * 访问令牌前缀（用于剥离 Bearer 式前缀）。
+     *
+     * <p>原 {@code TokenConstants.PREFIX}（remi-common-core 精简后移除）。
+     */
+    private static final String TOKEN_PREFIX = "remi";
 
     /**
      * 可信代理 IP 集合（精确 IP 匹配）。
@@ -132,16 +147,16 @@ public final class ServletUtils {
         if (request == null) {
             return null;
         }
-        String token = request.getHeader(TokenConstants.SUPPLY_AUTHORIZATION);
+        String token = request.getHeader(HeaderConstants.X_ACCESS_TOKEN);
         if (StringUtils.isEmpty(token)) {
-            token = request.getHeader(TokenConstants.AUTHENTICATION);
+            token = request.getHeader(AUTHENTICATION_HEADER);
         }
         return replaceTokenPrefix(token);
     }
 
     private static String replaceTokenPrefix(String token) {
-        if (StringUtils.isNotEmpty(token) && token.startsWith(TokenConstants.PREFIX)) {
-            return token.substring(TokenConstants.PREFIX.length()).trim();
+        if (StringUtils.isNotEmpty(token) && token.startsWith(TOKEN_PREFIX)) {
+            return token.substring(TOKEN_PREFIX.length()).trim();
         }
         return token;
     }
@@ -310,7 +325,7 @@ public final class ServletUtils {
             return ip;
         }
 
-        ip = request.getHeader("X-Forwarded-For");
+        ip = request.getHeader(HeaderConstants.X_FORWARDED_FOR);
         if (isValidIp(ip)) {
             int index = ip.indexOf(',');
             return index != -1 ? ip.substring(0, index).trim() : ip.trim();

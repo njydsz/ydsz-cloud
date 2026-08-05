@@ -1,6 +1,7 @@
 package com.remisoft.workflow.server.service.impl.notification;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -182,7 +183,7 @@ public class FlowCcServiceImpl implements FlowCcService {
                 return List.of();
             }
             int page = (int) Math.max(query.getPageNum(), 1);
-            int size = (int) Math.min(Math.max(query.getPageSize(), 1), PageConstants.getMaxPageSize());
+            int size = (int) Math.min(Math.max(query.getPageSize(), 1), PageConstants.MAX_PAGE_SIZE);
             int offset = (page - 1) * size;
             return ccMapper.selectCcByUserPage(tenantId, userId,
                     query.getReadStatus(), query.getFlowCode(), offset, size);
@@ -235,10 +236,10 @@ public class FlowCcServiceImpl implements FlowCcService {
                                                    String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
-                return PageResponse.empty();
+                return PageResponse.success(0L, 0L, 0L, Collections.emptyList());
             }
             int page = Math.max(pageNo, 1);
-            int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.getMaxPageSize());
+            int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
             int offset = (page - 1) * size;
 
             List<FlowCc> list = ccMapper.selectCcByUserPage(tenantId, userId,
@@ -247,7 +248,7 @@ public class FlowCcServiceImpl implements FlowCcService {
             return PageResponse.success(total, (long) page, (long) size, list);
         } catch (Exception e) {
             log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
-            return PageResponse.empty();
+            return PageResponse.success(0L, 0L, 0L, Collections.emptyList());
         }
     }
 

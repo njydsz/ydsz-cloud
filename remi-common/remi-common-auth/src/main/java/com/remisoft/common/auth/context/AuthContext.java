@@ -45,19 +45,18 @@ public final class AuthContext {
     /**
      * 设置当前登录用户
      *
-     * <p>同时同步关键信息到 {@link RequestContext}，便于跨模块统一访问。
+     * <p>同步关键信息（userId/tenantId）到 {@link RequestContext}，便于跨模块统一访问。
+     * remi-common-core 精简后 {@link RequestContext} 仅保留固定字段，
+     * username/realName/deptId 等扩展信息可通过 {@link #getCurrentOrNull()} 直接获取。
      *
      * @param user 登录用户
      */
     public static void setCurrent(LoginUser user) {
         ContextData data = getOrCreate();
         data.loginUser = user;
-        // 同步关键信息到 RequestContext
+        // 同步关键信息到 RequestContext（仅同步 RequestContext 支持的固定字段）
         if (user != null) {
             RequestContext.setUserId(user.getUserId());
-            RequestContext.put("username", user.getUsername());
-            RequestContext.put("realName", user.getRealName());
-            RequestContext.put("deptId", user.getDeptId());
             if (user.getTenantId() != null) {
                 RequestContext.setTenantId(user.getTenantId());
             }

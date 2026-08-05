@@ -3,6 +3,7 @@ package com.remisoft.common.tenant.feign;
 import java.util.List;
 import java.util.Map;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.tenant.TenantContext;
 import com.remisoft.common.tenant.TenantContextHolder;
 
@@ -29,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TenantContextFeignInterceptor implements RequestInterceptor {
 
     private static final String HEADER_PREFIX = "X-Tenant-";
-    private static final String HEADER_TENANT_ID = "X-Tenant-Id";
+    private static final String HEADER_TENANT_ID = HeaderConstants.X_TENANT_ID;
 
     @Override
     public void apply(RequestTemplate template) {

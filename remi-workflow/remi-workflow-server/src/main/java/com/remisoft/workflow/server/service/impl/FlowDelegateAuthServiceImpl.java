@@ -389,7 +389,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(readOnly = true)
     public PageResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
         if (delegateUserId == null) {
-            return (PageResponse) PageResponse.success(null);
+            return (PageResponse) PageResponse.success(0L, 0L, 0L, null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
@@ -417,7 +417,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(readOnly = true)
     public PageResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
         if (ownerUserId == null) {
-            return (PageResponse) PageResponse.success(null);
+            return (PageResponse) PageResponse.success(0L, 0L, 0L, null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;

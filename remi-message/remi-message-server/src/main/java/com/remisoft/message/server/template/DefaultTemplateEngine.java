@@ -117,11 +117,11 @@ public class DefaultTemplateEngine implements TemplateEngine {
         for (String key : requiredKeys) {
             Object value = resolve(params, key);
             if (value == null) {
-                throw new SysException(BaseResultCode.MISSING_PARAMETER,
+                throw new SysException(BaseResultCode.BAD_REQUEST,
                         "模板必填参数缺失: " + key);
             }
             if (value instanceof String s && s.isBlank()) {
-                throw new SysException(BaseResultCode.MISSING_PARAMETER,
+                throw new SysException(BaseResultCode.BAD_REQUEST,
                         "模板必填参数为空: " + key);
             }
         }

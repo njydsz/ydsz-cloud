@@ -173,12 +173,17 @@ public class AuditContext {
         }
 
         /**
-         * 获取操作人姓名（从 {@link RequestContext} 透传）
+         * 获取操作人姓名。
          *
-         * @return 操作人姓名
+         * <p>remi-common-core 精简后 {@link RequestContext} 不再支持自定义字段透传
+         * （原通过 {@code RequestContext.put("username", ...)} 写入、此处读取），
+         * 返回 {@code null}，避免引入对认证模块的强依赖。
+         * 如需操作人姓名，可通过认证模块的 {@code AuthContext.getUsername()} 获取。
+         *
+         * @return 操作人姓名；无法获取时返回 null
          */
         public String getOperatorName() {
-            return (String) RequestContext.get("userName");
+            return null;
         }
 
         public Long getStartTime() {

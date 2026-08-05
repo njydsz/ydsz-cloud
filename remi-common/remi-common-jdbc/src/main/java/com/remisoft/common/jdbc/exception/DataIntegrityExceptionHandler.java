@@ -105,11 +105,12 @@ public class DataIntegrityExceptionHandler {
                 HttpStatus.CONFLICT.value()
         );
         info.setPath(request.getRequestURI());
-        return BaseResponse.error(
-                UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode(),
-                message,
-                info
-        );
+        return BaseResponse.<ExceptionInfo>builder()
+                .code(UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode())
+                .msg(message)
+                .data(info)
+                .timestamp(System.currentTimeMillis())
+                .build();
     }
 
     /**

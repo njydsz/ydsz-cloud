@@ -1,5 +1,6 @@
 package com.remisoft.common.safe.util;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.util.StringUtils;
@@ -57,7 +58,7 @@ public final class ClientIpResolver {
         }
         return resolveFromHeaders(
                 request.getRemoteAddr(),
-                request.getHeader("X-Forwarded-For"),
+                request.getHeader(HeaderConstants.X_FORWARDED_FOR),
                 request.getHeader("X-Real-IP"));
     }
 

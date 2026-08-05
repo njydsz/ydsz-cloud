@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.http.server.reactive.ServerHttpRequest;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.safe.util.ClientIpResolver;
 
 /**
@@ -32,7 +33,7 @@ public final class GatewayIpUtils {
     private static final String DEFAULT_IP = "0.0.0.0";
 
     /** 可信代理头：X-Forwarded-For */
-    private static final String HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
+    private static final String HEADER_X_FORWARDED_FOR = HeaderConstants.X_FORWARDED_FOR;
     /** 可信代理头：X-Real-IP */
     private static final String HEADER_X_REAL_IP = "X-Real-IP";
 

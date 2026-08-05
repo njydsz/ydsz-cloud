@@ -81,7 +81,7 @@ public class JobDagServiceImpl implements JobDagService {
     public String createDag(JobDagSaveDTO dto) {
         // 校验 dagKey 唯一性
         if (jobDagMapper.selectByDagKey(dto.getDagKey()) != null) {
-            throw new SysException(BaseResultCode.DUPLICATE_KEY,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_already_exists", dto.getDagKey());
         }
         // 校验 DAG 定义（结构 + 环检测）
@@ -129,7 +129,7 @@ public class JobDagServiceImpl implements JobDagService {
         // 校验 dagKey 唯一性（排除自身）
         JobDag byKey = jobDagMapper.selectByDagKey(dto.getDagKey());
         if (byKey != null && !dagId.equals(byKey.getId())) {
-            throw new SysException(BaseResultCode.DUPLICATE_KEY,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_already_exists", dto.getDagKey());
         }
         // 校验 DAG 定义
@@ -275,7 +275,7 @@ public class JobDagServiceImpl implements JobDagService {
         if (maxConcurrent > 0) {
             int active = jobDagInstanceMapper.countActiveInstances(dag.getId());
             if (active >= maxConcurrent) {
-                throw new SysException(BaseResultCode.BIZ_ERROR,
+                throw new SysException(BaseResultCode.BAD_REQUEST,
                         "error.cronjob.msg_dag_concurrent_limit", maxConcurrent);
             }
         }

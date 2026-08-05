@@ -16,6 +16,11 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-core</artifactId>
         </dependency>
+        <!-- remi-common-exception（错误码枚举实现 ExceptionCode 接口） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-exception</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-jdbc</artifactId>

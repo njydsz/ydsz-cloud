@@ -189,7 +189,7 @@ public class RuleDecisionTableController {
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "决策表管理服务未启用");
+            return BaseResponse.error(BaseResultCode.FORBIDDEN, "决策表管理服务未启用");
         }
         if (file == null || file.isEmpty()) {
             return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "上传文件不能为空");

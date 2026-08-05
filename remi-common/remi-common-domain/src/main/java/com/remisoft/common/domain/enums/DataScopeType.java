@@ -3,7 +3,6 @@ package com.remisoft.common.domain.enums;
 import java.util.Map;
 
 import com.remisoft.common.core.constant.HeaderConstants;
-import com.remisoft.common.core.constant.TokenConstants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

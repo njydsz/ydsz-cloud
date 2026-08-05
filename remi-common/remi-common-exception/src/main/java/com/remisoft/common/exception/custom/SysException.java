@@ -2,7 +2,8 @@ package com.remisoft.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 
-import com.remisoft.common.core.code.ResultCode;
+import com.remisoft.common.core.code.BaseResultCode;
+import com.remisoft.common.exception.code.ResultCode;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.core.ExceptionInfo;
 import com.remisoft.common.exception.enums.ExceptionCategory;
@@ -193,6 +194,48 @@ public class SysException extends AbstractRemiException {
         init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
              HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
         setMessage(message);
+    }
+
+    // ==================== BaseResultCode 重载（remi-common-core 精简适配） ====================
+
+    /**
+     * 使用 {@link BaseResultCode} 构造系统异常。
+     *
+     * <p>remi-common-core 精简后 {@code BaseResultCode} 不再实现 {@link ResultCode} 接口，
+     * 此重载用于兼容业务模块中以 BaseResultCode 作为错误码的调用方式。
+     *
+     * @param resultCode 基础结果码
+     */
+    public SysException(BaseResultCode resultCode) {
+        super();
+        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
+             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
+    }
+
+    /**
+     * 使用 {@link BaseResultCode} 和自定义消息构造系统异常。
+     *
+     * @param resultCode 基础结果码
+     * @param message    自定义消息
+     */
+    public SysException(BaseResultCode resultCode, String message) {
+        super(message);
+        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
+             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
+        setMessage(message);
+    }
+
+    /**
+     * 使用 {@link BaseResultCode}、消息 key 和可变参数构造系统异常。
+     *
+     * @param resultCode 基础结果码
+     * @param key        国际化消息 key
+     * @param params     消息参数（可变参数）
+     */
+    public SysException(BaseResultCode resultCode, String key, Object... params) {
+        super();
+        init(resultCode.getCode(), key, params,
+             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     /**

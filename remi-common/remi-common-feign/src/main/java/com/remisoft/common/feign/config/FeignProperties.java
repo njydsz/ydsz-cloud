@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.util.string.StringUtils;
 
 import feign.Logger;
@@ -77,18 +78,18 @@ public class FeignProperties {
     private static final String X_USER_LANGUAGE = "X-User-Language";
     private static final String X_DISTINCT_ID = "X-Distinct-Id";
     private static final String X_IDENTITY_TYPE = "X-Identity-Type";
-    private static final String X_ACCESS_TOKEN = "X-Access-Token";
+    private static final String X_ACCESS_TOKEN = HeaderConstants.X_ACCESS_TOKEN;
     private static final String X_DATA_SCOPE = "X-Data-Scope";
     private static final String X_COMPANY_IDS = "X-Company-Ids";
     private static final String X_DEPT_IDS = "X-Dept-Ids";
-    private static final String X_UNIQUE_ID = "X-Unique-Id";
-    private static final String X_TENANT_ID = "X-Tenant-Id";
+    private static final String X_UNIQUE_ID = HeaderConstants.X_UNIQUE_ID;
+    private static final String X_TENANT_ID = HeaderConstants.X_TENANT_ID;
     private static final String X_PROJECT_IDS = "X-Project-Ids";
     private static final String X_REGION_IDS = "X-Region-Ids";
     private static final String X_VISIBLE_COLUMNS = "X-Visible-Columns";
     private static final String X_EDITABLE_COLUMNS = "X-Editable-Columns";
     private static final String X_REQUEST_SOURCE = "X-Request-Source";
-    private static final String X_FORWARDED_FOR = "X-Forwarded-For";
+    private static final String X_FORWARDED_FOR = HeaderConstants.X_FORWARDED_FOR;
 
     /**
      * 模块总开关。

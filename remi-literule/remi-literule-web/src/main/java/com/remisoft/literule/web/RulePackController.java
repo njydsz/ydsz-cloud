@@ -229,7 +229,7 @@ public class RulePackController {
             @RequestBody Map<String, Object> request) {
         RuleStressTestService svc = ruleStressTestServiceProvider.getIfAvailable();
         if (svc == null) {
-            return BaseResponse.error(BaseResultCode.FEATURE_DISABLED, "规则压测服务未启用");
+            return BaseResponse.error(BaseResultCode.FORBIDDEN, "规则压测服务未启用");
         }
         String ruleCode = (String) request.get("ruleCode");
         if (ruleCode != null && ruleCode.isBlank()) ruleCode = null;

@@ -253,7 +253,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
         validate(job);
         if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
-            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640", job.getJobKey());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_7e5ef640", job.getJobKey());
         }
         if (job.getStatus() == null) {
             job.setStatus("NORMAL");

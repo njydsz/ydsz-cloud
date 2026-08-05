@@ -45,11 +45,14 @@ public class AppGlobalResponseAdvice extends BaseGlobalResponseAdvice {
      * <p>App 端约定业务成功时直接使用原始字符串作为业务消息字段，
      * 业务码统一为 {@code SUCCESS}。
      *
+     * <p>remi-common-core 精简后移除了 {@code successMsg} 静态方法，
+     * 此处通过 {@link BaseResponse#success(String, Object)}（msg + data）实现等价语义。
+     *
      * @param body Controller 原始返回的字符串
      * @return 包装后的标准响应
      */
     @Override
     protected BaseResponse<String> wrapStringBody(String body) {
-        return BaseResponse.successMsg(body);
+        return BaseResponse.success(body, null);
     }
 }

@@ -3,6 +3,7 @@ package com.remisoft.system.web.controller;
 import java.util.Arrays;
 import java.util.List;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
@@ -103,7 +104,7 @@ public class GlobalSearchController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize,
             @RequestHeader(value = "X-User-Id", required = false) String userId,
-            @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @RequestHeader(value = HeaderConstants.X_TENANT_ID, required = false) String tenantId,
             @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader,
             @RequestHeader(value = "X-User-Dept", required = false) String deptId,
             @RequestHeader(value = "X-User-Admin", required = false) String adminHeader,

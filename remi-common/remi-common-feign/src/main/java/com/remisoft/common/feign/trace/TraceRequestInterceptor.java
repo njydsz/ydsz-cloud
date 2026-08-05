@@ -1,5 +1,6 @@
 package com.remisoft.common.feign.trace;
 
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.util.id.TracerUtils;
 import com.remisoft.common.util.string.StringUtils;
 
@@ -34,7 +35,7 @@ import feign.RequestTemplate;
 public class TraceRequestInterceptor implements RequestInterceptor {
 
     /** 追踪 ID 请求头名称（兼容旧系统） */
-    private static final String HEADER_TRACE_ID = "X-Trace-Id";
+    private static final String HEADER_TRACE_ID = HeaderConstants.TRACE_ID_HEADER;
     /** Span ID 请求头名称 */
     private static final String HEADER_SPAN_ID = "X-Span-Id";
     /** 父 Span ID 请求头名称 */

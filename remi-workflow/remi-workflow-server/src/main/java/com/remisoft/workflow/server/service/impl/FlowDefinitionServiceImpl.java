@@ -214,7 +214,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         FlowDefinition existing = definitionMapper.selectPublished(
                 dto.getFlowCode(), version, tenantId);
         if (existing != null) {
-            throw new SysException(BaseResultCode.DUPLICATE_KEY,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "流程定义已存在: code=" + dto.getFlowCode() + " version=" + version);
         }
 
@@ -1685,11 +1685,11 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 }
             }
             // 锁被他人持有且未超时
-            throw new SysException(BaseResultCode.RESOURCE_CONFLICT,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_f8a9b0c1", holder);
         }
         // 走到这里说明是并发 version 变化导致，按并发冲突处理
-        throw new SysException(BaseResultCode.RESOURCE_CONFLICT,
+        throw new SysException(BaseResultCode.BAD_REQUEST,
                 "error.workflow.msg_a9b0c1d2");
     }
 
