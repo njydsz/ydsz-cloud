@@ -411,7 +411,7 @@ public class PageQuery extends BaseQuery {
      * 判断是否有下一页
      *
      * <p>此方法需要结合总记录数使用。
-     * 通常。PageResponse 中配合total 字段使用。
+     * 通常。BaseResponse.extensions 中配合 total 字段使用。
      *
      * @param total 总记录数
      * @return 有下一页返回true

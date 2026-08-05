@@ -15,7 +15,7 @@
 - [数据结构](#数据结构)
 - [RequestContext](#requestcontext)
 - [链路追踪](#链路追踪)
-- [PageResponse](#pageresponse)
+- [BaseResponse (分页场景)](#pageresponse)
 - [Header Constants](#header-constants)
 - [国际化消息](#国际化消息)
 - [Spring Boot 自动配置](#spring-boot-自动配置)
@@ -72,18 +72,23 @@ if (response.isSuccess()) { ... }
 ### 3. 分页场景
 
 ```java
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 
-// 标准分页构造
-PageResponse<List<User>> resp = PageResponse.success(total, pageNum, pageSize, users);
+// 标准分页构造（将分页元数据放入 data 或 extensions）
+BaseResponse<List<User>> resp = BaseResponse.success("查询成功", users);
+resp.getExtensions().put("total", total);
+resp.getExtensions().put("pageNum", pageNum);
+resp.getExtensions().put("pageSize", pageSize);
 
-// 空分页
-PageResponse<List<User>> empty = PageResponse.empty();
+// 无数据成功响应
+BaseResponse<List<User>> empty = BaseResponse.success();
 
-// 带归一化标记的分页（前台展示提示 size 被调整过时）
-PageResponse<List<User>> normalized =
-    PageResponse.successWithNormalization(total, pageNum, pageSize, rawPageSize, users);
+// 判断请求是否成功
+if (response.isSuccess()) { ... }
 ```
+
+> **注意**：如需专用分页响应类型，可使用 {@link com.remisoft.common.core.response.PageResponse}（已标记为
+> `@Deprecated`，推荐直接构造 BaseResponse 并将分页元数据放入 extensions）。
 
 ### 4. 请求上下文
 
@@ -170,7 +175,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | 包 | 类 | 职责 |
 |---|---|---|
 | `response` | `BaseResponse<T>` | 统一 API 响应封装（code/msg/data/timestamp/traceId/extensions），使用 `@JsonInclude(NON_NULL)` 控制空值序列化 |
-| `response` | `PageResponse<T>` | 分页响应，继承 BaseResponse，扩展 total/pageNum/pageSize/pages 字段；支持归一化标记扩展 |
+| `response` | ~~`PageResponse<T>`~~ | （已弃用）分页响应，推荐使用 `BaseResponse` 并将分页元数据放入 extensions |
 | `response` | `IResponse<T>` | 统一响应接口，定义 code/msg/data/success/traceId/timestamp 标准契约 |
 | `code` | `BaseResultCode` | 系统通用结果码枚举（45 个），携带 code/msg/httpStatus 三元组 |
 | `code` | `ResultCode` | 结果码接口，业务模块自定义错误码应实现此接口 |
@@ -216,9 +221,11 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 序列化顺序：`code` → `msg` → `data` → `traceId` → `timestamp` → `extensions`（由 `@JsonPropertyOrder` 控制）。
 
-### PageResponse\<T\>
+### ~~PageResponse\<T\>~~（已弃用）
 
-继承 `BaseResponse`，新增分页元数据：
+> 已标记 `@Deprecated`，推荐将分页元数据放入 `BaseResponse.extensions` 中替代。
+
+~~继承 `BaseResponse`，新增分页元数据：~~
 
 ```json
 {
@@ -474,35 +481,21 @@ String traceId2 = TraceIdPropagation.currentTraceIdOrCreate();
 
 ## PageResponse
 
+> **已弃用**：`PageResponse` 已标记为 `@Deprecated`。推荐使用 `BaseResponse` 并将分页元数据（total、pageNum、pageSize、pages）放入 `extensions` 中。
+> 下一版本将移除 `PageResponse`，请尽快迁移至 `BaseResponse`。
+
+（以下为兼容性保留的 API 参考，不推荐在新代码中使用。）
+
 ### 静态工厂方法
 
 ```java
 // 标准分页
+@SuppressWarnings("deprecation")
 PageResponse<List<User>> resp = PageResponse.success(total, pageNum, pageSize, users);
 
-// 分页（带归一化标记到 extensions）
-PageResponse<List<User>> normalized =
-    PageResponse.successWithNormalization(total, pageNum, pageSize, rawPageSize, users);
-
 // 空分页（total=0, defaultPageSize, null data）
+@SuppressWarnings("deprecation")
 PageResponse<List<User>> empty = PageResponse.empty();
-
-// 失败分页
-PageResponse<List<User>> fail = PageResponse.fail(BaseResultCode.UNKNOWN.getCode(), "查询失败");
-
-// 通用构造
-PageResponse<List<User>> of = PageResponse.of(code, msg, total, pageNum, pageSize, data);
-
-// 向后兼容（已弃用）
-@Deprecated
-PageResponse<List<User>> legacy = PageResponse.success(100L, 1, 20, users); // int 参数重载
-```
-
-### 辅助方法
-
-```java
-boolean more = resp.hasNext();       // 是否有下一页
-boolean prev = resp.hasPrevious();   // 是否有上一页
 ```
 
 ---
@@ -635,7 +628,7 @@ META-INF/native-image/com.remisoft/remi-common-core/native-image.properties
 | 类 | 说明 |
 |---|---|
 | `BaseResponse` | 统一响应体（含构造函数、所有字段） |
-| `PageResponse` | 分页响应体 |
+| ~~`PageResponse`~~ | （已弃用）分页响应体 |
 | `IResponse` | 响应接口 |
 | `CoreProperties` | 核心配置属性类 |
 | `CoreAutoConfiguration` | Spring Boot 自动配置入口 |
@@ -737,7 +730,7 @@ META-INF/native-image/com.remisoft/remi-common-core/native-image.properties
 
 3. **HeaderConstants 是单一常量类**：项目中所有自定义 HTTP header 常量统一在 `HeaderConstants` 类中定义，按功能域分段注释。
 
-4. **序列化注解来源**：`BaseResponse` 和 `PageResponse` 上的 `@JsonInclude` 和 `@JsonPropertyOrder` 来自 `remi-common-json` 模块，非 Jackson 原生注解。引入 `remi-common-core` 时会自动传递依赖 `remi-common-json`。
+4. **序列化注解来源**：`BaseResponse`（及已弃用的 `PageResponse`）上的 `@JsonInclude` 和 `@JsonPropertyOrder` 来自 `remi-common-json` 模块，非 Jackson 原生注解。引入 `remi-common-core` 时会自动传递依赖 `remi-common-json`。
 
 5. **native-image 兼容性**：使用 GraalVM native-image 编译时，确保 `native-image.properties` 中配置的反射白名单覆盖了所有运行时需反射访问的类。
 
@@ -755,5 +748,5 @@ META-INF/native-image/com.remisoft/remi-common-core/native-image.properties
 
 - **RFC 9457 ProblemDetail**：新增 ProblemDetail 类，提供符合 RFC 9457 标准的错误响应格式（type/title/status/detail/instance 等）。保留 i18n 素材先行的做法，后续同步实现类。
 - **SpanContext 完整版**：新增基于 record 的 immutable Span 上下文四元组，提供 W3C/B3/SkyWalking 协议互转能力。当前仅有 TraceIdGenerator 提供 traceId/spanId 生成与 traceparent 构建。
-- **IPageResult 桥接**：新增 `IPageResult` 接口，让 domain 层 `PageResult` 可实现该接口，配合 `PageResponse.from(IPageResult)` 一行代码完成分页桥接。
+- **IPageResult 桥接**（规划中，随 `PageResponse` 弃用而优先级降低）：新增 `IPageResult` 接口，让 domain 层 `PageResult` 可实现该接口，配合 BaseResponse 分页元数据简化分页桥接。
 - **filter/MDC 自动桥接配置**：通过 `remi.core.filter-ignore.*` 暴露过滤器忽略 URL 的白名单配置，取代当前硬编码在 `FilterIgnoreConstant` 中的默认值（后续优化方向）。

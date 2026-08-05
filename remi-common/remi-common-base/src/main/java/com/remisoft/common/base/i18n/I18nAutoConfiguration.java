@@ -60,7 +60,7 @@ public class I18nAutoConfiguration {
      * 注册 SpringMessageResolver 并绑定到框架统一的 MessageResolverHolder SPI。
      *
      * <p>将 Spring MessageSource 适配为框架的国际化消息解析器，
-     * 使响应消息（BaseResponse/PageResponse）支持 i18n。</p>
+     * 使响应消息（BaseResponse）支持 i18n。</p>
      *
      * <p>当 classpath 上存在 {@link MessageSource} 且容器中有对应 Bean 时生效。
      * 采用一次性设置语义，确保解析器在应用生命周期内不可变。</p>

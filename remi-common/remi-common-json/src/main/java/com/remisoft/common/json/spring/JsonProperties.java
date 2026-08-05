@@ -106,6 +106,9 @@ public class JsonProperties {
     /** HTTP 请求体最大大小（字节，默认 10MB） */
     private long maxRequestBodySize = 10L * 1024 * 1024;
 
+    /** 是否启用 ASM 预热（默认 false，需显式开启） */
+    private boolean warmupEnabled = false;
+
     /**
      * 是否禁用 Spring Boot Jackson 自动配置。
      *
@@ -298,6 +301,16 @@ public class JsonProperties {
 
     public void setMaxRequestBodySize(long maxRequestBodySize) {
         this.maxRequestBodySize = maxRequestBodySize;
+    }
+
+    // --- warmupEnabled ---
+
+    public boolean isWarmupEnabled() {
+        return warmupEnabled;
+    }
+
+    public void setWarmupEnabled(boolean warmupEnabled) {
+        this.warmupEnabled = warmupEnabled;
     }
 
     // --- disableJacksonAutoConfiguration ---

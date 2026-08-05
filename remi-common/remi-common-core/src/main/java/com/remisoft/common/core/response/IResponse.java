@@ -18,7 +18,6 @@ package com.remisoft.common.core.response;
  * <p><b>实现类：</b>
  * <ul>
  *   <li>{@link BaseResponse} - 通用响应实现</li>
- *   <li>{@link PageResponse} - 分页响应实现</li>
  * </ul>
  *
  * @param <T> 数据类型
@@ -27,7 +26,6 @@ package com.remisoft.common.core.response;
  * @since 1.0.0
  * 
  * @see BaseResponse
- * @see PageResponse
  */
 public interface IResponse<T> {
 

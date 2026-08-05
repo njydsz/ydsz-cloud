@@ -289,6 +289,10 @@ public final class AuthContext {
      */
     public static void clear() {
         CONTEXT.remove();
+        // 同步清理 RequestContext 中的登录用户信息，避免跨模块数据泄漏
+        RequestContext.remove(RequestContext.KEY_LOGIN_USER);
+        RequestContext.remove(RequestContext.KEY_USER_ID);
+        RequestContext.remove(RequestContext.KEY_TENANT_ID);
     }
 
     // ==================== 内部方法 ====================
