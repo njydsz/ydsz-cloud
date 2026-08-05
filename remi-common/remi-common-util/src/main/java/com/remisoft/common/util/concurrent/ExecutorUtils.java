@@ -158,23 +158,84 @@ public class ExecutorUtils {
     // ==================== VirtualThread 支持 ====================
 
     /**
-     * 创建 VirtualThread 线程池（Java 21+，IO 密集型场景）
+     * 创建 VirtualThread 线程池（Java 21+，IO 密集型场景）。
      *
      * <p>适用于大量 IO 操作场景，如 HTTP 请求、数据库查询等。
-     * 若当前 JVM 不支持 VirtualThread，则回退到缓存线程池。</p>
+     * VirtualThread 由 JVM 调度，可创建数百万个而不会耗尽系统线程资源。
+     *
+     * <p><b>与 {@link #newPlatformThreadExecutor()} 的区别：</b>
+     * VirtualThread 不支持线程局部变量池化（{@code ThreadLocal}）的高频修改，
+     * 且不支持 {@code synchronized} 块中的无限阻塞（可能导致 carrier thread pinning）。
+     * 如无明确需求，建议使用 {@link #newPlatformThreadExecutor()}。
+     *
+     * @return VirtualThread 每任务一线程执行器
+     * @throws UnsupportedOperationException 当前 JVM 不支持 VirtualThread 时抛出
      */
     public static ExecutorService newVirtualThreadExecutor() {
         return newVirtualThreadExecutor(null);
     }
 
     /**
-     * 创建 VirtualThread 线程池（Java 21+，IO 密集型场景）
+     * 创建 VirtualThread 线程池（Java 21+，IO 密集型场景）。
      *
-     * @param threadNamePrefix 线程名前缀
+     * <p><b>显式 API（无静默回退）：</b>若当前 JVM 不支持 VirtualThread 将直接抛出异常，
+     * 避免运行时才发现性能特征与预期不符。如需自动回退请使用 {@link #newCacheThreadPoolCompat()}。
+     *
+     * @param threadNamePrefix 线程名前缀（不含序号）
+     * @return VirtualThread 每任务一线程执行器
+     * @throws UnsupportedOperationException 当前 JVM 不支持 VirtualThread 时抛出
      */
     public static ExecutorService newVirtualThreadExecutor(String threadNamePrefix) {
+        if (!isVirtualThreadSupported()) {
+            throw new UnsupportedOperationException(
+                    "VirtualThread 需要 Java 21+，当前 JVM 版本不支持。请降级使用 newPlatformThreadExecutor() 或 newCacheThreadPoolCompat()");
+        }
+        String name = threadNamePrefix != null ? threadNamePrefix : "virtual-";
+        ThreadFactory factory = Thread.ofVirtual()
+                .name(name, 0)
+                .uncaughtExceptionHandler(ExecutorUtils::handleUncaughtException)
+                .factory();
+        return Executors.newThreadPerTaskExecutor(factory);
+    }
+
+    /**
+     * 创建显式平台线程线程池（非 VirtualThread）。
+     *
+     * <p>明确表达"使用 OS 线程"的意图，与 {@link #newVirtualThreadExecutor()} 互补。
+     * 底层实现为缓存线程池（核心 0、最大 {@link #DEFAULT_MAX_POOL_SIZE}、60s 空闲回收），
+     * 适合 CPU 密集型或混合负载场景。
+     *
+     * @return 平台线程执行器
+     */
+    public static ExecutorService newPlatformThreadExecutor() {
+        return newPlatformThreadExecutor(null);
+    }
+
+    /**
+     * 创建显式平台线程线程池（非 VirtualThread）。
+     *
+     * @param threadNamePrefix 线程名前缀
+     * @return 平台线程执行器
+     */
+    public static ExecutorService newPlatformThreadExecutor(String threadNamePrefix) {
+        return newCachedThreadPool(threadNamePrefix);
+    }
+
+    /**
+     * 自动选择最优线程池实现的兼容 API（VirtualThread 不可用时静默回退到缓存线程池）。
+     *
+     * <p>保留旧版行为：优先尝试 VirtualThread，失败时回退。
+     * 新项目建议直接使用 {@link #newVirtualThreadExecutor()} 或 {@link #newPlatformThreadExecutor()}，
+     * 通过异常明确部署环境约束。
+     *
+     * @return VirtualThread 或缓存线程池实现
+     * @deprecated 自 1.3.0 起建议使用 {@link #newVirtualThreadExecutor()}（显式 VT）或
+     *             {@link #newPlatformThreadExecutor()}（显式平台线程），避免静默回退掩盖部署环境约束。
+     */
+    @Deprecated(since = "1.3.0", forRemoval = true)
+    public static ExecutorService newCacheThreadPoolCompat() {
         try {
-            String name = threadNamePrefix != null ? threadNamePrefix : "virtual-";
+            String name = "virtual-";
             ThreadFactory factory = Thread.ofVirtual()
                     .name(name, 0)
                     .uncaughtExceptionHandler(ExecutorUtils::handleUncaughtException)
@@ -182,12 +243,16 @@ public class ExecutorUtils {
             return Executors.newThreadPerTaskExecutor(factory);
         } catch (Exception | Error e) {
             log.warn("VirtualThread not supported, fallback to cached thread pool: {}", e.getMessage());
-            return newCachedThreadPool(threadNamePrefix);
+            return newCachedThreadPool(null);
         }
     }
 
     /**
-     * 判断当前 JVM 是否支持 VirtualThread
+     * 判断当前 JVM 是否支持 VirtualThread。
+     *
+     * <p>通过尝试构造一个 VirtualThread 来探测，无副作用（线程不会启动）。
+     *
+     * @return 当前 JVM 支持 VirtualThread 返回 true
      */
     public static boolean isVirtualThreadSupported() {
         try {

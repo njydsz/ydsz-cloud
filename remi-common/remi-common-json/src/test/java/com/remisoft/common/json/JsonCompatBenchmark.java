@@ -14,14 +14,15 @@ import com.alibaba.fastjson2.JSON;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * JSON 跨库性能对比基准（对标互联网大厂性能基线）。
  *
- * <p>在同一环境下对比 RemiJson vs Jackson vs Fastjson2 vs Gson，
- * 覆盖简单 Bean、嵌套 Bean、Map/List 解析、流式写等场景。</p>
+ * <p>在同一环境下对比 RemiJson vs Jackson vs Fastjson2，
+ * 覆盖简单 Bean、嵌套 Bean、Map/List 解析、格式化输出等场景。</p>
+ *
+ * <p>注：Gson / Hutool-JSON / org.json / json-simple 被 ArchUnit R29 + Enforcer BannedDependencies
+ * 全局禁止直接声明，故竞品对比基准仅对比 Jackson（optional）和 Fastjson2（独立 groupId 不受限）。</p>
  *
  * <p>运行方式：</p>
  * <pre>
@@ -74,13 +75,10 @@ public class JsonCompatBenchmark {
 
     private ObjectMapper jacksonMapper;
     private ObjectMapper jacksonPrettyMapper;
-    private Gson gson;
-    private Gson gsonPretty;
 
     private SimpleBean simpleBean;
     private String simpleJson;
     private List<SimpleBean> beanList;
-    private String listJson;
     private Map<String, Object> mapData;
     private String mapJson;
 
@@ -95,10 +93,6 @@ public class JsonCompatBenchmark {
         jacksonPrettyMapper.registerModule(new JavaTimeModule());
         jacksonPrettyMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         jacksonPrettyMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-        // Gson 初始化
-        gson = new Gson();
-        gsonPretty = new GsonBuilder().setPrettyPrinting().create();
 
         // 准备测试数据
         simpleBean = new SimpleBean(42, "Alice", 3.14159, true, 1700000000000L);
@@ -119,17 +113,17 @@ public class JsonCompatBenchmark {
         // 预热所有引擎（填充缓存、JIT 内联）
         for (int i = 0; i < 5; i++) {
             RemiJson.toJson(simpleBean);
-            jacksonMapper.writeValueAsString(simpleBean);
+            try {
+                jacksonMapper.writeValueAsString(simpleBean);
+            } catch (Exception ignored) {}
             JSON.toJSONString(simpleBean);
-            gson.toJson(simpleBean);
         }
 
-        System.out.println("===== 基准测试环境 =====");
+        System.out.println("===== 跨库基准测试环境 =====");
         System.out.println("RemiJson  : ASM=" + RemiJson.isAsmAvailable() + ", nativeImage=" + RemiJson.isNativeImage());
         System.out.println("Jackson   : " + jacksonMapper.version());
         System.out.println("Fastjson2 : " + JSON.VERSION);
-        System.out.println("Gson      : 2.11.0");
-        System.out.println("========================");
+        System.out.println("==============================");
     }
 
     // ==================== 简单 Bean 序列化 ====================
@@ -149,11 +143,6 @@ public class JsonCompatBenchmark {
         bh.consume(JSON.toJSONString(simpleBean));
     }
 
-    @Benchmark
-    public void gson_serializeSimple(Blackhole bh) {
-        bh.consume(gson.toJson(simpleBean));
-    }
-
     // ==================== 简单 Bean 反序列化 ====================
 
     @Benchmark
@@ -171,12 +160,7 @@ public class JsonCompatBenchmark {
         bh.consume(JSON.parseObject(simpleJson, SimpleBean.class));
     }
 
-    @Benchmark
-    public void gson_deserializeSimple(Blackhole bh) {
-        bh.consume(gson.fromJson(simpleJson, SimpleBean.class));
-    }
-
-    // ==================== List 序列化 ====================
+    // ==================== List 序列化（100 条） ====================
 
     @Benchmark
     public void remiJson_serializeList(Blackhole bh) {
@@ -191,11 +175,6 @@ public class JsonCompatBenchmark {
     @Benchmark
     public void fastjson2_serializeList(Blackhole bh) {
         bh.consume(JSON.toJSONString(beanList));
-    }
-
-    @Benchmark
-    public void gson_serializeList(Blackhole bh) {
-        bh.consume(gson.toJson(beanList));
     }
 
     // ==================== Map 反序列化 ====================
@@ -215,11 +194,6 @@ public class JsonCompatBenchmark {
         bh.consume(JSON.parseObject(mapJson, Map.class));
     }
 
-    @Benchmark
-    public void gson_deserializeMap(Blackhole bh) {
-        bh.consume(gson.fromJson(mapJson, Map.class));
-    }
-
     // ==================== 格式化输出 ====================
 
     @Benchmark
@@ -232,9 +206,21 @@ public class JsonCompatBenchmark {
         bh.consume(jacksonPrettyMapper.writeValueAsString(simpleBean));
     }
 
+    // ==================== byte[] 直接写入测试 ====================
+
     @Benchmark
-    public void gson_serializePretty(Blackhole bh) {
-        bh.consume(gsonPretty.toJson(simpleBean));
+    public void remiJson_serializeToBytes(Blackhole bh) {
+        bh.consume(RemiJson.toJsonBytes(simpleBean));
+    }
+
+    @Benchmark
+    public void jackson_serializeToBytes(Blackhole bh) throws Exception {
+        bh.consume(jacksonMapper.writeValueAsBytes(simpleBean));
+    }
+
+    @Benchmark
+    public void fastjson2_serializeToBytes(Blackhole bh) {
+        bh.consume(JSON.toJSONBytes(simpleBean));
     }
 
     // ==================== main 方法 ====================

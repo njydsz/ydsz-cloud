@@ -2,6 +2,8 @@ package com.remisoft.common.util.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Locale;
+import java.util.ServiceLoader;
 import java.util.regex.Pattern;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,6 +32,10 @@ public class PwdUtils {
 
     /**
      * 密码强度枚举
+     *
+     * <p>本枚举兼容 1.x {@code WEAK/MEDIUM/STRONG} 三档评分逻辑。
+     * 2.x 新增 SPI 接口 {@link PasswordStrengthChecker} 提供更细粒度的
+     * {@link PasswordStrengthLevel} 五档评分与国际化提示。
      */
     public enum PasswordStrength {
         /** 弱密码 */
@@ -203,42 +209,107 @@ public class PwdUtils {
     }
 
     /**
-     * 检查密码强度
+     * 密码强度检查器（ServiceLoader SPI 懒加载）。
+     *
+     * <p>通过 {@code META-INF/services/com.remisoft.common.util.security.PasswordStrengthChecker}
+     * 注册的自定义实现，可被第三方覆盖以适配企业密码策略。
+     * 若无 SPI 注册，内部使用 {@link DefaultPasswordStrengthChecker}。
+     */
+    private static volatile PasswordStrengthChecker strengthChecker;
+
+    /**
+     * 获取密码强度检查器实例。
+     *
+     * <p>优先通过 {@link ServiceLoader} 发现自定义注册实现；
+     * 若未注册则返回 {@link DefaultPasswordStrengthChecker} 单例。
+     * 结果被缓存为 volatile 字段，ServiceLoader 开销仅首次加载发生。
+     *
+     * @return 密码强度检查器（不为 null）
+     */
+    public static PasswordStrengthChecker getPasswordStrengthChecker() {
+        PasswordStrengthChecker checker = strengthChecker;
+        if (checker == null) {
+            synchronized (PwdUtils.class) {
+                checker = strengthChecker;
+                if (checker == null) {
+                    ServiceLoader<PasswordStrengthChecker> loader =
+                            ServiceLoader.load(PasswordStrengthChecker.class);
+                    PasswordStrengthChecker found = null;
+                    for (PasswordStrengthChecker impl : loader) {
+                        found = impl;
+                        break; // 取第一个注册实现
+                    }
+                    strengthChecker = checker = (found != null)
+                            ? found
+                            : DefaultPasswordStrengthChecker.INSTANCE;
+                }
+            }
+        }
+        return checker;
+    }
+
+    /**
+     * 检查密码强度（兼容 1.x 三档枚举）。
+     *
+     * <p>内部委托给 SPI {@link #getPasswordStrengthChecker()} 获取评分结果，
+     * 并映射到新五档 {@link PasswordStrengthLevel} 到旧三档 {@link PasswordStrength}：
+     * <ul>
+     *   <li>VERY_WEAK / WEAK → WEAK</li>
+     *   <li>MEDIUM → MEDIUM</li>
+     *   <li>STRONG / VERY_STRONG → STRONG</li>
+     * </ul>
+     *
      * @param password 密码
-     * @return 密码强度枚举（WEAK/MEDIUM/STRONG）
+     * @return 密码强度枚举（WEAK/MEDIUM/STRONG），null/空串返回 WEAK
      */
     public static PasswordStrength checkPasswordStrength(String password) {
-        if (password == null || password.isEmpty()) {
-            return PasswordStrength.WEAK;
-        }
-        
-        int length = password.length();
-        boolean hasLower = false;
-        boolean hasUpper = false;
-        boolean hasDigit = false;
-        boolean hasSpecial = false;
-        
-        for (char c : password.toCharArray()) {
-            if (Character.isLowerCase(c)) hasLower = true;
-            else if (Character.isUpperCase(c)) hasUpper = true;
-            else if (Character.isDigit(c)) hasDigit = true;
-            else hasSpecial = true;
-        }
-        
-        int score = 0;
-        if (length >= 8) score++;
-        if (length >= 12) score++;
-        if (length >= 16) score++;
-        if (hasLower && hasUpper) score++;
-        if (hasDigit) score++;
-        if (hasSpecial) score++;
-        
-        if (score >= 5) {
+        PasswordStrengthChecker checker = getPasswordStrengthChecker();
+        PasswordStrengthLevel level = checker.check(password);
+        if (level == PasswordStrengthLevel.STRONG || level == PasswordStrengthLevel.VERY_STRONG) {
             return PasswordStrength.STRONG;
-        } else if (score >= 3) {
+        } else if (level == PasswordStrengthLevel.MEDIUM) {
             return PasswordStrength.MEDIUM;
-        } else {
-            return PasswordStrength.WEAK;
         }
+        return PasswordStrength.WEAK;
     }
+
+    /**
+     * 检查密码强度（五档精细评分，返回新 API Level 枚举）。
+         *
+     * <p>2.x 新增方法，建议新代码调用本方法替代旧三档 {@link #checkPasswordStrength(String)}。
+     * 内部委托给 SPI {@link #getPasswordStrengthChecker()}。
+     *
+     * @param password 密码（可为 null）
+     * @return 密码强度级别；null 或空串返回 VERY_WEAK
+     * @since 1.3.0
+     */
+    public static PasswordStrengthLevel checkPasswordStrengthLevel(String password) {
+        return getPasswordStrengthChecker().check(password);
+    }
+
+    /**
+     * 获取密码强度描述（国际化支持）。
+     *
+     * @param password 密码
+     * @param locale   语言区域（{@link Locale#CHINESE} / {@link Locale#ENGLISH} 等）
+     * @return 本地化描述字符串（弱/中等/强 等）
+     * @since 1.3.0
+     */
+    public static String describePasswordStrength(String password, Locale locale) {
+        PasswordStrengthLevel level = getPasswordStrengthChecker().check(password);
+        return getPasswordStrengthChecker().describe(level, locale);
+    }
+
+    /**
+     * 获取密码改进建议（国际化支持）。
+     *
+     * @param password 当前密码（可为 null）
+     * @param locale   语言区域
+     * @return 建议文本（可能为空；不会返回 null）
+     * @since 1.3.0
+     */
+    public static String suggestPasswordImprovement(String password, Locale locale) {
+        return getPasswordStrengthChecker().suggest(password, locale);
+    }
+
 }

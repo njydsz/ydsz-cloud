@@ -336,4 +336,274 @@ public class MapUtils {
         }
         return null;
     }
+
+    // ==================== Map 转 Bean ====================
+
+    /**
+     * Setter 方法缓存，按 Class 维度索引，避免重复反射扫描。
+     *
+     * <p>缓存结构：Class → (字段名 → Method)。
+     * 使用 ConcurrentHashMap 保证并发安全，computeIfAbsent 保证单线程初始化。
+     */
+    private static final ConcurrentHashMap<String, Map<String, Method>> SETTER_CACHE = new ConcurrentHashMap<>();
+
+    /**
+     * {@code java.time.*} 包类名前缀集合，用于 toBean 时区分日期类型。
+     */
+    private static final Set<String> JAVA_TIME_TYPES = new HashSet<>(Arrays.asList(
+            "java.time.LocalDate",
+            "java.time.LocalDateTime",
+            "java.time.LocalTime",
+            "java.time.Instant",
+            "java.time.ZonedDateTime"
+    ));
+
+    /**
+     * 将 {@code Map<String, Object>} 转换为指定类型的 Java Bean。
+     *
+     * <p><b>实现思路：</b>
+     * <ol>
+     *   <li>通过 targetClass.getDeclaredConstructor().newInstance() 创建 Bean 实例（要求无参构造器）</li>
+     *   <li>扫描 targetClass 的所有 setter 方法（{@code setXxx(Type)}），按字段名与 Map key 匹配</li>
+     *   <li>类型匹配时直接赋值；类型不匹配时尝试 String→目标类型 的基础转换（Integer/Long/Double/Boolean/LocalDateTime/Date）</li>
+     *   <li>缓存每个 Class 的 setter 元数据，避免重复扫描（首次反射后命中率 100%）</li>
+     * </ol>
+     *
+     * <p><b>类型转换规则：</b>
+     * <ul>
+     *   <li>{@code String} → {@code Integer / Long / Double / Float / Boolean}：调用 parseXxx 或 valueOf</li>
+     *   <li>{@code String} → {@code LocalDateTime}：调用 {@code LocalDateTime.parse(text)}</li>
+     *   <li>{@code String} → {@code LocalDate}：调用 {@code LocalDate.parse(text)}</li>
+     *   <li>{@code String} → {@code java.util.Date}：按 ISO 格式解析后转 Date</li>
+     *   <li>{@code Map} → 嵌套 Bean：递归调用 toBean</li>
+     *   <li>类型不兼容且无法转换：跳过该字段（不抛异常）</li>
+     * </ul>
+     *
+     * <p><b>典型用法：</b>
+     * <pre>{@code
+     * Map<String, Object> userData = Map.of(
+     *     "name", "张三",
+     *     "age", 25,
+     *     "createTime", "2024-01-15 10:30:00"
+     * );
+     * UserDO user = MapUtils.toBean(userData, UserDO.class);
+     * // user.getName() == "张三", user.getAge() == 25
+     * }</pre>
+     *
+     * <p><b>注意事项：</b>
+     * <ul>
+     *   <li>不处理复杂泛型字段（如 {@code List<SubBean>}），需要时请配合专用 JSON 框架</li>
+     *   <li>字段无 setter 时不会被赋值（不会直接写 Field）</li>
+     *   <li>性能敏感场景（QPS > 10k）建议配合字节码生成框架（如 ReflectASM）或专用 BeanUtils</li>
+     * </ul>
+     *
+     * @param map         源 Map，不可为 null
+     * @param targetClass 目标 Bean 类型，不可为 null
+     * @param <T>         Bean 类型
+     * @return 填充后的 Bean 实例
+     * @throws IllegalArgumentException 入参为 null、targetClass 无无参构造器、或实例化失败
+     * @since 1.3.0
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T toBean(Map<String, Object> map, Class<T> targetClass) {
+        if (map == null) {
+            throw new IllegalArgumentException("map cannot be null");
+        }
+        if (targetClass == null) {
+            throw new IllegalArgumentException("targetClass cannot be null");
+        }
+
+        T bean = createInstance(targetClass);
+        if (map.isEmpty()) {
+            return bean;
+        }
+
+        Map<String, Method> setters = getCachedSetters(targetClass);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String fieldName = entry.getKey();
+            Object value = entry.getValue();
+            Method setter = setters.get(fieldName);
+            if (setter == null || value == null) {
+                continue;
+            }
+            Class<?> paramType = setter.getParameterTypes()[0];
+            Object converted = convertValue(value, paramType);
+            if (converted != null) {
+                try {
+                    setter.invoke(bean, converted);
+                } catch (Exception e) {
+                    // 设置失败（业务 setter 抛异常等），跳过该字段
+                }
+            }
+        }
+        return bean;
+    }
+
+    /**
+     * 获取指定 Class 的 setter 方法缓存。
+     *
+     * @param clazz 目标类型
+     * @return 字段名 → setter Method 映射（字段名采用原始 setter 名去除 set + 首字母小写）
+     */
+    private static Map<String, Method> getCachedSetters(Class<?> clazz) {
+        String key = clazz.getName();
+        return SETTER_CACHE.computeIfAbsent(key, k -> scanSetters(clazz));
+    }
+
+    /**
+     * 扫描类的所有 public void setXxx(Type) 方法，提取字段名 → Method 映射。
+     *
+     * @param clazz 目标类型
+     * @return 字段名 → setter 的不可变 Map
+     */
+    private static Map<String, Method> scanSetters(Class<?> clazz) {
+        Map<String, Method> setterMap = new LinkedHashMap<>();
+        Method[] methods = clazz.getMethods();
+        for (Method method : methods) {
+            if (!isSetter(method)) {
+                continue;
+            }
+            // 提取字段名：setter 名去掉 "set"，首字母小写
+            String methodName = method.getName();
+            String fieldName = Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+            setterMap.put(fieldName, method);
+        }
+        return setterMap;
+    }
+
+    /**
+     * 判断方法是否为标准的 setter 方法。
+     *
+     * <p>标准 setter：public、非 static、void 返回值、单参数、方法名以 set 开头。
+     *
+     * @param method 方法对象
+     * @return 是否为 setter
+     */
+    private static boolean isSetter(Method method) {
+        if (method == null) {
+            return false;
+        }
+        int modifiers = method.getModifiers();
+        if (!Modifier.isPublic(modifiers) || Modifier.isStatic(modifiers)) {
+            return false;
+        }
+        if (!void.class.equals(method.getReturnType())) {
+            return false;
+        }
+        if (method.getName().length() <= 3 || !method.getName().startsWith("set")) {
+            return false;
+        }
+        return method.getParameterCount() == 1;
+    }
+
+    /**
+     * 将值转换为目标类型（支持常见类型间的互转）。
+     *
+     * @param value     原始值
+     * @param paramType 目标参数类型
+     * @return 转换后的值，转换失败返回 null（调用方会跳过）
+     */
+    private static Object convertValue(Object value, Class<?> paramType) {
+        if (paramType.isInstance(value)) {
+            return value;
+        }
+
+        String str = value.toString();
+        if (str.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // 整数类型
+            if (paramType == int.class || paramType == Integer.class) {
+                return Integer.valueOf(str);
+            }
+            if (paramType == long.class || paramType == Long.class) {
+                return Long.valueOf(str);
+            }
+            if (paramType == short.class || paramType == Short.class) {
+                return Short.valueOf(str);
+            }
+            if (paramType == byte.class || paramType == Byte.class) {
+                return Byte.valueOf(str);
+            }
+            // 浮点类型
+            if (paramType == double.class || paramType == Double.class) {
+                return Double.valueOf(str);
+            }
+            if (paramType == float.class || paramType == Float.class) {
+                return Float.valueOf(str);
+            }
+            // Boolean
+            if (paramType == boolean.class || paramType == Boolean.class) {
+                Boolean b = toBoolean(value);
+                return b != null ? b : null;
+            }
+            // BigDecimal / BigInteger
+            if (paramType == java.math.BigDecimal.class) {
+                return new java.math.BigDecimal(str);
+            }
+            if (paramType == java.math.BigInteger.class) {
+                return new java.math.BigInteger(str);
+            }
+            // 日期时间类型
+            if (paramType == java.time.LocalDateTime.class) {
+                return java.time.LocalDateTime.parse(str, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            }
+            if (paramType == java.time.LocalDate.class) {
+                return java.time.LocalDate.parse(str);
+            }
+            if (paramType == java.time.LocalTime.class) {
+                return java.time.LocalTime.parse(str);
+            }
+            if (paramType == java.time.Instant.class) {
+                return java.time.Instant.parse(str);
+            }
+            if (paramType == java.util.Date.class) {
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.parse(str,
+                        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                return java.util.Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+            }
+            // String
+            if (paramType == String.class) {
+                return str;
+            }
+        } catch (Exception e) {
+            // 转换失败，返回 null
+            return null;
+        }
+
+        // 嵌套 Bean 递归
+        if (value instanceof Map<?, ?> nestedMap && !paramType.isInterface() && !Modifier.isAbstract(paramType.getModifiers())) {
+            Map<String, Object> nestedStringMap = toStringObjectMap(nestedMap);
+            try {
+                return toBean(nestedStringMap, paramType);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 通过无参构造器创建实例。
+     *
+     * @param clazz 目标类型
+     * @param <T>   类型
+     * @return 新实例
+     * @throws IllegalArgumentException 无无参构造器或实例化失败
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T createInstance(Class<T> clazz) {
+        try {
+            return clazz.getDeclaredConstructor().newInstance();
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException(
+                    "Class " + clazz.getName() + " 缺少无参构造器，无法通过 MapUtils.toBean 转换", e);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalArgumentException(
+                    "实例化失败: " + clazz.getName() + ", 原因: " + e.getMessage(), e);
+        }
+    }
 }

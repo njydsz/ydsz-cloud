@@ -39,6 +39,14 @@
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>
         </dependency>
+        <!-- spring-boot-health（CoreHealthIndicator 使用 org.springframework.boot.health.contributor.Health / HealthIndicator。
+             Spring Boot 4.x 将 health 相关类从 spring-boot-actuator 拆分至独立模块 spring-boot-health。
+             optional：仅编译期需要，运行时由接入方 starter 提供） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
