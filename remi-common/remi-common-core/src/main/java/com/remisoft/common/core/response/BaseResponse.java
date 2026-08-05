@@ -1,5 +1,6 @@
 package com.remisoft.common.core.response;
 
+import com.remisoft.common.core.adapter.ExceptionToResultCodeAdapter;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.core.code.IExceptionResultCode;
 import com.remisoft.common.core.code.ResultCode;
@@ -74,9 +75,12 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 失败状态码（复用 {@link BaseResultCode#UNKNOWN}，与错误码体系保持一致）。
      *
-     * @deprecated 使用 {@link #UNKNOWN_CODE} 替代，语义更明确
+     * <p>自 1.7.0 起废弃，将在 3.0.0 版本移除。统一使用 {@link #UNKNOWN_CODE}。</p>
+     *
+     * @deprecated 自 1.7.0 起废弃，将在 3.0.0 移除。替代方案：{@link #UNKNOWN_CODE}
+     * @since 1.0.0
      */
-    @Deprecated
+    @Deprecated(forRemoval = true, since = "1.7.0")
     public static final String ERROR = UNKNOWN_CODE;
 
     /**
@@ -340,27 +344,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @see IExceptionResultCode
      */
     public static BaseResponse<ProblemDetail> error(Throwable throwable, URI instance) {
-        if (throwable == null) {
-            return errorWithDetail(BaseResultCode.UNKNOWN, "未知错误", instance);
-        }
-
-        String detail = throwable.getMessage();
-        if (detail == null || detail.isEmpty()) {
-            detail = throwable.getClass().getSimpleName();
-        }
-
-        // 尝试从异常中提取 ResultCode（优先 ResultCode 接口，其次 IExceptionResultCode 桥接）
-        ResultCode resultCode = extractResultCode(throwable);
-        if (resultCode != null) {
-            // 使用 ProblemDetail.of() 工厂方法，减少模板代码并确保字段填充一致
-            ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
-            autoFillTraceIdFromMdc(problem);
-            return of(resultCode.getCode(),
-                    MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
-        }
-
-        // 默认使用 UNKNOWN
-        return errorWithDetail(BaseResultCode.UNKNOWN, detail, instance);
+        return ExceptionToResultCodeAdapter.toErrorResponse(throwable, instance);
     }
 
     /**
@@ -372,7 +356,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @see #error(Throwable, URI)
      */
     public static BaseResponse<ProblemDetail> error(Throwable throwable) {
-        return error(throwable, null);
+        return ExceptionToResultCodeAdapter.toErrorResponse(throwable);
     }
 
     /**
@@ -390,14 +374,8 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 提取到的 ResultCode；无法提取时返回 null
      * @since 1.7.0
      */
-    private static ResultCode extractResultCode(Throwable throwable) {
-        if (throwable instanceof ResultCode resultCode) {
-            return resultCode;
-        }
-        if (throwable instanceof IExceptionResultCode exceptionWithCode) {
-            return exceptionWithCode.resultCode();
-        }
-        return null;
+    static BaseResponse<ProblemDetail> unknownErrorResponse(String detail, URI instance) {
+        return errorWithDetail(BaseResultCode.UNKNOWN, detail, instance);
     }
 
     /**
