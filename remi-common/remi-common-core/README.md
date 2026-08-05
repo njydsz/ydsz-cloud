@@ -31,6 +31,7 @@
 |---|---|
 | `ResultCode` | 结果码接口，定义 `getCode()` / `getMsg()` / `getMessageKey()`（默认返回 `"error." + 枚举名`，用于 i18n）/ `getHttpStatusCode()` |
 | `BaseResultCode` | 标准结果码枚举（实现 ResultCode），共 56 个错误码，按段位规划，每个枚举显式声明 HTTP 状态码 |
+| `IExceptionResultCode` | 异常模块桥接契约接口（1.7.0 新增）。异常实现 `resultCode()` 方法后即可通过 `BaseResponse.error(Throwable)` 提取错误码，无需反射探测。用于 core 与 exception 模块之间的解耦桥接 |
 
 **错误码段位规划**：
 
@@ -53,6 +54,7 @@
 | 类 | 说明 |
 |---|---|
 | `RequestContext` | 基于 `TransmittableThreadLocal` 的请求上下文，支持 `userId` / `tenantId` / `traceId` / `requestId` / `language` / `tenantIsolationSkipped` / 自定义属性。提供 `runAndClear()` / `newCleanupGuard()` 等自动清理模式 |
+| `ContextKeys` | 预定义上下文键常量库（1.7.0 新增）。`USER_ID` / `TENANT_ID` / `TRACE_ID` / `REQUEST_ID` / `LANGUAGE` / `TENANT_ISOLATION_SKIPPED` 六个强类型常量，避免业务代码裸字符串 |
 | `ProblemDetail` | RFC 7807 标准错误详情载体（详见 response 包） |
 
 ### 4. TraceId 生成与传播（trace 包）
@@ -74,11 +76,17 @@
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
-| `CoreAutoConfiguration` | `remi.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`PageConstantsInitializer`（分页配置运行时同步）、`CoreHealthIndicator`（健康检查，需 Actuator） |
+| `CoreAutoConfiguration` | `remi.core.enabled=true`（默认启用） | `SpringMessageResolver`（i18n 消息解析器）、`PageConstantsInitializer`（分页配置运行时同步）、`CoreHealthIndicator`（健康检查，需 Actuator）、`CoreMetrics`（1.7.0 新增，Micrometer 响应指标，需 MeterRegistry Bean） |
 
 | 属性类 | 前缀 | 说明 |
 |---|---|---|
 | `CoreProperties` | `remi.core` | 分页配置（`maxPageSize` / `defaultPageSize`，带 `@Min` / `@Max` 校验）、租户 MDC 过滤器优先级 |
+| `FilterIgnoreProperties` | `remi.core.filter-ignore`（1.7.0 新增） | 网关过滤器放行路径配置：`overrideMode`（false=合并、true=覆盖内置名单，默认 false）、`authFilterIgnoreServiceNames`（待放行服务名列表） |
+
+| 指标运营包 | 说明 |
+|---|---|
+| `CoreMetrics` | Micrometer 指标注册器（1.7.0 新增）。提供 `incrementResponse(resultCodePrefix)` 记录响应码计数（含 `result_code_prefix` + `success` tags）、`recordHoldTime(Duration)` 记录请求上下文驻留时长；Micrometer no-bea 时自动 no-op |
+| `CoreHealthIndicator` | Spring Boot 4.1.0 `org.springframework.boot.health.contributor.HealthIndicator` 迁移后的健康指示器；`PageConstants.isInitialized()` 未初始化返回 UNKNOWN，避免误报 DOWN |
 
 ## 接入方式
 
@@ -128,6 +136,16 @@ return BaseResponse.errorWithDetail(BaseResultCode.NOT_FOUND, "订单不存在")
 > 所有配置项已通过 `additional-spring-configuration-metadata.json` 注册，IDE 自动补全支持，包含 `groups` 分组和详细描述。
 
 ## 使用示例
+
+### 1.7.0 新增特性概览
+
+1. **异常→响应桥接**：新增 `IExceptionResultCode` 契约接口，异常实现 `resultCode()` 后通过 `BaseResponse.error(ex)` 自动提取错误码。旧的反射探测移除，性能从 O(classDepth) 降至 O(1) 且消除 `setAccessible(true)` 安全风险。
+2. **链路追踪贯通**：所有错误响应构建路径（`errorWithDetail`、`error(Throwable, URI)`）自动从 MDC 注入当前 `traceId`，关联日志与响应。
+3. **ProblemDetail 序列化瘦身**：`ProblemDetail` 类级 `@JsonInclude(NON_NULL)` 抑制 null 字段输出，约减响应体积。
+4. **分页配置健康检查**：`CoreHealthIndicator` 增加 `PageConstants.isInitialized()` 回退检测，未注入运行时值返回 UNKNOWN 而非误判 DOWN。
+5. **过滤器自定义放行**：新增 `FilterIgnoreProperties` 配置类（含 `overrideMode` 开关），让网关可追加或完整替换过滤器放行服务名单。
+6. **Micrometer 响应指标**：新增 `CoreMetrics` 静态门面，业务过滤器可无门槛上报计数 / 驻留时长。
+7. **强类型上下文键**：新增 `ContextKeys` 预定义常量，消除 `RequestContext.get("userId")` 类散串字符串。
 
 ### 1. 统一响应返回
 
@@ -242,21 +260,21 @@ String traceId = TraceIdGenerator.generate();
 
 ## 变更记录
 
-- **v1.7.0**（2026-08-04）：
-  - **BREAKING**：移除已废弃的 `setResolver()` 和带 `Class<T>` 参数的 `errorWithDetail()` 重载版本
-  - 新增 `UNKNOWN_CODE` 常量（语义优于 `ERROR`），标记 `ERROR` 常量为 `@Deprecated`
-  - 新增 `CoreHealthIndicator` 健康检查指示器
-  - 新增 `RequestContext.getOrDefault()` 类型安全默认值获取方法
-  - 新增 `RequestContext.Builder.set()/setAll()` 开放式扩展方法
-  - 新增 `CleanupGuard newCleanupGuard(Duration)` TTL 泄漏检测
-  - 新增 `RequestContext.view()` 零拷贝实时视图
-  - 新增 `PageConstants.normalizePageSizeWithResult()` 归一化结果封装
-  - 新增 `PageResponse.successWithNormalization()` 分页归一化响应标记
-  - `ContextKey.equals/hashCode` 加入 `type` 维度，修复类型混用隐患
-  - 清理 `native-image.properties` 中的幽灵引用 `FilterIgnoreProperties`
-  - 修正 `DEFAULT_TENANT_ID` 文档不一致（代码="0"，旧文档错误写为"1"）
-  - `BaseResponse.setResolverIfAbsent()` 增加重复设置调试日志
-  - `BaseResponse.extractResultCode()` 反射失败时增加 DEBUG 日志
+- **v1.7.0**（2026-08-05）：对标 5 大竞品规范落地质量 + 性能 + 体验的系统性优化
+  - **BREAKING**（接 v1.7.0 2026-08-04）：移除已废弃的 `setResolver()` 和带 `Class<T>` 参数的 `errorWithDetail()` 重载版本
+  - 新增 `IExceptionResultCode` 契约接口，桥接异常 → 响应码（消除反射探测，性能提升 + 安全性提升）
+  - 新增 `ContextKeys` 强类型上下文常量库（`USER_ID` / `TENANT_ID` / `TRACE_ID` / `REQUEST_ID` / `LANGUAGE` / `TENANT_ISOLATION_SKIPPED`）
+  - 新增 `FilterIgnoreProperties` 配置类（`overrideMode` + `authFilterIgnoreServiceNames`），由 `CoreAutoConfiguration` 注册 Bean
+  - 新增 `CoreMetrics` Micrometer 指标门面（`incrementResponse` / `recordHoldTime`），无依赖时自动 no-op
+  - `CoreHealthIndicator` 增加 `PageConstants.isInitialized()` 回退检测（返回 `UNKNOWN` 非 `DOWN`）
+  - `BaseResponse` 所有错误响应构建路径自动注入 MDC traceId（链路追踪贯通）
+  - `ProblemDetail` 类级 `@JsonInclude(NON_NULL)` 抑制 null 字段输出
+  - 清理：移除旧 `RESOLVER.findField()` 反射路径、移除 `CoreHealthIndicator` 内部 `PageConstantsRuntimeInfo` 类
+  - 补充 `additional-spring-configuration-metadata.json` 配置描述（`remi.core` + `remi.core.filter-ignore` 双分组）
+  - 新增 `micrometer-core`、`spring-boot-actuator` 为 optional 依赖（按需激活）
+  - **异常模块桥接**：`remi-common-exception` 的 `AbstractRemiException` 实现 `IExceptionResultCode`，对齐全仓异常类体系；遗留 `AbstractYdszException` 无子类为死码，不作改动
+  - **单元测试治理**：`BaseResponseTest` 添加 `@AfterEach` 清理 `RESOLVER` 静态状态（修复 pre-existing 4 个 flake）；新增 6 个桥接/traceId/注解测试覆盖 1.7.0 新特性
+- **v1.6.0**（2026-08-04）：基于竞品与互联网大厂规范的第一波规范化：`UNKNOWN_CODE`、`CoreHealthIndicator`、`RequestContext` Builder / `view()` / `newCleanupGuard(Duration)`、`PageConstants.normalizePageSizeWithResult()`、`PageResponse.successWithNormalization()`、`ContextKey` 修复、修正 `DEFAULT_TENANT_ID` 文档、`setResolverIfAbsent()` 调试日志、`BaseResponse.extractResultCode()` 反射失败 DEBUG 日志
 - **v1.2.0**（2026-08-03）：对齐代码重构 README，删除 12 个不属于本模块的"幽灵类"描述；`ResultCode` 移除前缀推断 default 实现，`BaseResultCode` 显式声明 HTTP 状态码；删除无调用方的 `BaseResponse.error(String msg, T data)` 重载；删除重复的 `sensitive` 包（由 `remi-common-safe` 统一提供脱敏能力）；清理配置元数据幽灵项
 - **v1.1.1**（2026-08-03）：移除 Snowflake 策略（`SnowflakeTraceIdSupplier` / `TraceIdSupplier` / `TraceAutoConfiguration` / `id-type` 配置），统一 UUID TraceId；删除零消费死代码 `TraceConstants` / `SecurityConstants`（合并到 `HeaderConstants`）；`HeaderConstants.X_REQUEST_ID` 重命名为 `X_TRACE_ID`
 - **v1.1.0**（2026-08-03）：新增敏感数据脱敏能力（`sensitive` 包）、TraceId 传播工具（`TraceIdPropagation`）、分页归一化方法（`PageConstants.normalizePageSize/normalizePageNum/calcOffset`）、`ResultCode` 前缀推断 HTTP 状态码默认实现；移除无消费方的 `metrics` 包（`CoreMetrics` / `CoreMetricsCallback`）；`FilterIgnoreProperties` 统一为"合并 + replace-builtin 开关"策略；`RequestContext` 改为懒初始化；修复 `SnowflakeTraceIdSupplier.toHex16` 输出反转 Bug；补齐 157 个单元测试
