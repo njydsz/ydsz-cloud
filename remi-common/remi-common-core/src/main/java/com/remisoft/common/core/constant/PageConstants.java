@@ -79,6 +79,23 @@ public final class PageConstants {
     }
 
     /**
+     * 检查运行时配置是否已注入。
+     *
+     * <p>当 {@link com.remisoft.common.core.config.CoreAutoConfiguration} 未激活
+     * （例如 {@code remi.core.enabled=false} 或 core 模块未在当前上下文加载）时，
+     * 本方法返回 {@code false}。健康检查和生产监控可据此发现配置缺失问题，
+     * 避免 {@link #getMaxPageSize()} / {@link #getDefaultPageSize()} 静默回退到默认值，
+     * 导致排查时误以为配置已生效。</p>
+     *
+     * @return true=运行时配置已注入；false=未注入（回退到编译期常量或硬编码默认值）
+     * @since 1.7.0
+     * @see com.remisoft.common.core.config.CoreHealthIndicator
+     */
+    public static boolean isInitialized() {
+        return PROPERTIES.get() != null;
+    }
+
+    /**
      * 获取运行时默认每页记录数。
      *
      * @return 运行时配置的默认每页记录数；未初始化时回退到 {@link #DEFAULT_PAGE_SIZE}

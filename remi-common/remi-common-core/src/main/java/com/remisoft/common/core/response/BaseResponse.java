@@ -1,6 +1,7 @@
 package com.remisoft.common.core.response;
 
 import com.remisoft.common.core.code.BaseResultCode;
+import com.remisoft.common.core.code.IExceptionResultCode;
 import com.remisoft.common.core.code.ResultCode;
 import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.core.context.ProblemDetail;
@@ -358,12 +359,13 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * 符合 RFC 7807 规范的 {@link ProblemDetail} 响应。</p>
      *
      * <p>处理逻辑：
-     * <ul>
-     *   <li>如果异常实现了 {@link ResultCode} 接口（或包含 getCode/getMsg 方法），
-     *       优先使用其错误码和 HTTP 状态码</li>
-     *   <li>如果异常是标准 RuntimeException，使用 UNKNOWN 错误码</li>
-     *   <li>异常消息作为 ProblemDetail.detail 返回</li>
-     * </ul>
+     * <ol>
+     *   <li>如果异常实现了 {@link ResultCode} 接口，直接使用其错误码和 HTTP 状态码</li>
+     *   <li>如果异常实现了 {@link IExceptionResultCode} 接口，通过 {@link IExceptionResultCode#resultCode()} 获取</li>
+     *   <li>如果以上都不满足，回退到 {@link BaseResultCode#UNKNOWN} 错误码</li>
+     *   <li>异常消息作为 {@code ProblemDetail.detail} 返回；请求路径作为 {@code instance}</li>
+     *   <li>自动从 MDC 中注入当前线程的 {@code traceId}，保证错误响应可被链路追踪系统关联</li>
+     * </ol>
      *
      * <p><b>使用示例：</b>
      * <pre>{@code
@@ -378,9 +380,10 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      *
      * @param throwable 异常对象
      * @param instance  请求路径 URI（可为 null）
-     * @return 携带 {@link ProblemDetail} 的错误响应
+     * @return 携带 {@link ProblemDetail} 的错误响应（traceId 已自动从 MDC 注入）
      * @since 1.6.0
      * @see ProblemDetail
+     * @see IExceptionResultCode
      */
     public static BaseResponse<ProblemDetail> error(Throwable throwable, URI instance) {
         if (throwable == null) {
@@ -392,7 +395,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
             detail = throwable.getClass().getSimpleName();
         }
 
-        // 尝试从异常中提取 ResultCode
+        // 尝试从异常中提取 ResultCode（优先 ResultCode 接口，其次 IExceptionResultCode 桥接）
         ResultCode resultCode = extractResultCode(throwable);
         if (resultCode != null) {
             ProblemDetail problem = ProblemDetail.builder()
@@ -404,6 +407,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
                     .errorCode(resultCode.getCode())
                     .timestamp(java.time.Instant.now())
                     .build();
+            autoFillTraceIdFromMdc(problem);
             return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
         }
 
@@ -424,57 +428,36 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 从异常中提取 ResultCode。
+     * 从异常中提取 ResultCode（接口桥接方式，无反射开销）。
      *
-     * <p>支持以下场景：
+     * <p>支持以下场景（按优先级）：
+     * <ol>
+     *   <li>异常本身实现了 {@link ResultCode} 接口 —— 直接强转</li>
+     *   <li>异常实现了 {@link IExceptionResultCode} 接口 —— 调用 {@link IExceptionResultCode#resultCode()}</li>
+     * </ol>
+     *
+     * <p>对未实现上述接口的异常返回 {@code null}，调用方应回退到 UNKNOWN。
+     * 此方法与旧版反射实现行为等价，但消除了：
      * <ul>
-     *   <li>异常本身实现了 {@link ResultCode} 接口</li>
-     *   <li>异常持有 resultCause 字段（通过反射检测，兼容 remi-common-exception 模块）</li>
+     *   <li>core 层对 exception 模块字段名的隐式耦合</li>
+     *   <li>{@code setAccessible(true)} 的安全风险</li>
+     *   <li>跨类层次遍历的性能开销（O(1) vs O(classDepth)）</li>
      * </ul>
+     *
+     * <p><b>异常模块适配指引：</b> {@code remi-common-exception} 模块中的
+     * {@code AbstractYdszException} 需实现 {@link IExceptionResultCode}，
+     * 提供 {@code resultCode()} 实现，即可与本类无缝协作。</p>
      *
      * @param throwable 异常对象
      * @return 提取到的 ResultCode；无法提取时返回 null
+     * @since 1.7.0
      */
     private static ResultCode extractResultCode(Throwable throwable) {
-        if (throwable instanceof ResultCode) {
-            return (ResultCode) throwable;
+        if (throwable instanceof ResultCode resultCode) {
+            return resultCode;
         }
-
-        // 尝试通过反射获取异常中的 resultCode/code 字段（兼容 exception 模块的 AbstractYdszException）
-        try {
-            java.lang.reflect.Field codeField = findField(throwable.getClass(), "resultCode");
-            if (codeField != null) {
-                codeField.setAccessible(true);
-                Object value = codeField.get(throwable);
-                if (value instanceof ResultCode) {
-                    return (ResultCode) value;
-                }
-            }
-        } catch (Exception ignored) {
-            // 反射失败时输出 DEBUG 日志，便于 SECURITY 模式下排查
-            org.slf4j.LoggerFactory.getLogger(BaseResponse.class)
-                    .debug("Failed to extract ResultCode from exception {} via reflection: {}",
-                            throwable.getClass().getName(), ignored.getMessage());
-        }
-
-        return null;
-    }
-
-    /**
-     * 在类层次结构中查找指定字段（包括父类）。
-     *
-     * @param clazz     起始类
-     * @param fieldName 字段名
-     * @return 找到的字段；未找到返回 null
-     */
-    private static java.lang.reflect.Field findField(Class<?> clazz, String fieldName) {
-        Class<?> current = clazz;
-        while (current != null && current != Object.class) {
-            try {
-                return current.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                current = current.getSuperclass();
-            }
+        if (throwable instanceof IExceptionResultCode exceptionWithCode) {
+            return exceptionWithCode.resultCode();
         }
         return null;
     }
@@ -494,6 +477,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public static BaseResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail);
+        autoFillTraceIdFromMdc(problem);
         return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
     }
 
@@ -510,7 +494,25 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public static BaseResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail, URI instance) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
+        autoFillTraceIdFromMdc(problem);
         return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
+    }
+
+    /**
+     * 从 MDC 中提取当前线程的 traceId 并注入 ProblemDetail。
+     *
+     * <p>若 MDC 中无有效 traceId，则不修改 ProblemDetail，避免覆盖 Builder 设置的 traceId。
+     * 所有错误响应构建路径（{@link #error(Throwable, URI)}、{@link #errorWithDetail}）
+     * 均调用此方法，保证链路追踪贯穿整个错误响应链路。</p>
+     *
+     * @param problem 待注入的 ProblemDetail 实例（不可为 null）
+     * @since 1.7.0
+     */
+    private static void autoFillTraceIdFromMdc(ProblemDetail problem) {
+        String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+        if (traceId != null && !traceId.isBlank()) {
+            problem.setTraceId(traceId);
+        }
     }
 
     /**
