@@ -1,5 +1,8 @@
 package com.remisoft.common.json;
 
+import com.remisoft.common.json.asm.AsmBeanCodecGenerator;
+import com.remisoft.common.json.asm.GraalVmDetector;
+import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.internal.JsonConfig;
 import com.remisoft.common.json.deserializer.JsonDeserializer;
@@ -693,6 +696,108 @@ public class RemiJson {
         if (byteLength > maxSize) {
             throw new JsonException(
                     "JSON size exceeds limit: " + byteLength + " > " + maxSize);
+        }
+    }
+
+    // ==================== 运行时查询 API ====================
+
+    /**
+     * 检测当前是否运行在 GraalVM Native Image 中。
+     *
+     * <p>在 Native Image 中 ASM 字节码生成不可用，序列化会自动降级为反射模式。
+     * 业务代码可以此判断是否需要预热关键路径或开启兼容策略。</p>
+     *
+     * @return true 如果运行在 GraalVM Native Image 中
+     * @since 1.0.0
+     */
+    public static boolean isNativeImage() {
+        return GraalVmDetector.isInNativeImage();
+    }
+
+    /**
+     * 检查 ASM 字节码生成是否可用。
+     *
+     * <p>ASM 可用时序列化/反序列化走高性能字节码路径（50x 反射性能），
+     * 不可用时（GraalVM Native Image 或显式禁用）自动降级为反射。</p>
+     *
+     * @return true 如果 ASM 字节码生成可用
+     * @since 1.0.0
+     */
+    public static boolean isAsmAvailable() {
+        return AsmBeanCodecGenerator.isAsmAvailable();
+    }
+
+    /**
+     * 获取 RemiJson 运行时统计快照。
+     *
+     * <p>返回的统计信息可用于监控大盘、告警和业务自检，包含：</p>
+     * <ul>
+     *   <li>ASM 降级次数 - 反映 ASM 不可用的累计频次</li>
+     *   <li>ASM 缓存命中率 - 反映序列器/反序列器缓存效率</li>
+     *   <li>当前序列化配置摘要 - maxDepth、maxJsonSize、safeMode 等安全关键配置</li>
+     * </ul>
+     *
+     * @return 运行时统计信息
+     * @since 1.0.0
+     */
+    public static JsonStats getStats() {
+        JsonConfig config = JsonConfig.getInstance();
+        AsmCodecCache.CacheStats cacheStats = AsmCodecCache.getCacheStats();
+        return new JsonStats(
+                GraalVmDetector.isInNativeImage(),
+                AsmBeanCodecGenerator.isAsmAvailable(),
+                SerializationProvider.getAsmDowngradeCount(),
+                cacheStats.serializerCount(),
+                cacheStats.deserializerCount(),
+                cacheStats.estimatedHitRate(),
+                config.getMaxDepth(),
+                config.getMaxGenericDepth(),
+                config.getMaxJsonSize(),
+                AutoTypeChecker.isSafeMode()
+        );
+    }
+
+    /**
+     * RemiJson 运行时统计信息。
+     *
+     * @param nativeImage       是否在 GraalVM Native Image 中运行
+     * @param asmAvailable      ASM 字节码生成是否可用
+     * @param asmDowngradeCount ASM 降级为反射的累计次数
+     * @param serializerCount   ASM 序列化器缓存条目数
+     * @param deserializerCount ASM 反序列化器缓存条目数
+     * @param asmCacheHitRate   ASM 缓存估算命中率 (0.0 ~ 1.0)
+     * @param maxDepth          当前最大 JSON 嵌套深度
+     * @param maxGenericDepth   当前泛型递归深度上限
+     * @param maxJsonSize       当前最大 JSON 大小限制（字节）
+     * @param safeMode          AutoType 安全模式是否开启
+     * @since 1.0.0
+     */
+    public record JsonStats(
+            boolean nativeImage,
+            boolean asmAvailable,
+            long asmDowngradeCount,
+            int serializerCount,
+            int deserializerCount,
+            double asmCacheHitRate,
+            int maxDepth,
+            int maxGenericDepth,
+            long maxJsonSize,
+            boolean safeMode
+    ) {
+        @Override
+        public String toString() {
+            return "JsonStats{" +
+                    "nativeImage=" + nativeImage +
+                    ", asmAvailable=" + asmAvailable +
+                    ", asmDowngradeCount=" + asmDowngradeCount +
+                    ", serializerCount=" + serializerCount +
+                    ", deserializerCount=" + deserializerCount +
+                    ", asmCacheHitRate=" + String.format("%.4f", asmCacheHitRate) +
+                    ", maxDepth=" + maxDepth +
+                    ", maxGenericDepth=" + maxGenericDepth +
+                    ", maxJsonSize=" + maxJsonSize +
+                    ", safeMode=" + safeMode +
+                    '}';
         }
     }
 }

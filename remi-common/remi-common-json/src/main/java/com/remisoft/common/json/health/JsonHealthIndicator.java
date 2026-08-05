@@ -7,6 +7,7 @@ import com.remisoft.common.json.asm.AsmBeanCodecGenerator;
 import com.remisoft.common.json.asm.GraalVmDetector;
 import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.internal.JsonConfig;
+import com.remisoft.common.json.provider.SerializationProvider;
 
 /**
  * RemiJson 健康检查指标。
@@ -32,11 +33,14 @@ public class JsonHealthIndicator implements HealthIndicator {
         builder.withDetail("safeMode", safeMode);
         builder.withDetail("namingStrategy", config.getNamingStrategy());
         builder.withDetail("maxJsonSize", config.getMaxJsonSize());
+        // 反序列化深度限制（新增泛型递归深度上限，P0 已实施）
         builder.withDetail("maxDepth", config.getMaxDepth());
+        builder.withDetail("maxGenericDepth", config.getMaxGenericDepth());
 
-        // GraalVM 兼容性状态
+        // ASM 运行时状态
         builder.withDetail("graalVmNativeImage", GraalVmDetector.isInNativeImage());
         builder.withDetail("asmAvailable", AsmBeanCodecGenerator.isAsmAvailable());
+        builder.withDetail("asmDowngradeCount", SerializationProvider.getAsmDowngradeCount());
 
         if (!safeMode) {
             builder.withDetail("warning", "AutoType SafeMode is disabled; RCE risk exists. "

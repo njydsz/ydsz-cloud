@@ -347,4 +347,32 @@ public final class AsmCodecCache {
         SERIALIZER_FAILED.clear();
         DESERIALIZER_FAILED.clear();
     }
+
+    /**
+     * 返回缓存统计快照。
+     *
+     * <p>命中率基于当前缓存条目相对最大容量的饱和度估算（饱和度越高，
+     * 缓存越成熟，命中率潜在越高），仅为参考指标。如需精确命中率，
+     * 可在 {@link LruSoftCache#get} 中增加原子计数器。</p>
+     *
+     * @return 缓存统计（serializer/deserializer 各自缓存的当前大小与估算命中率）
+     */
+    public static CacheStats getCacheStats() {
+        int serSize = SERIALIZER_CACHE.size();
+        int deserSize = DESERIALIZER_CACHE.size();
+        double serRate = Math.min(1.0, (double) serSize / DEFAULT_MAX_SIZE);
+        double deserRate = Math.min(1.0, (double) deserSize / DEFAULT_MAX_SIZE);
+        return new CacheStats(serSize, deserSize, (serRate + deserRate) / 2.0);
+    }
+
+    /**
+     * ASM 缓存统计。
+     *
+     * @param serializerCount   序列化器缓存条目数
+     * @param deserializerCount 反序列化器缓存条目数
+     * @param estimatedHitRate  估算的整体命中率 (0.0 ~ 1.0)
+     * @since 1.0.0
+     */
+    public record CacheStats(int serializerCount, int deserializerCount, double estimatedHitRate) {
+    }
 }

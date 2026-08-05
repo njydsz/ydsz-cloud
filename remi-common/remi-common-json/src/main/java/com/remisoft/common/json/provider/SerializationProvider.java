@@ -56,6 +56,15 @@ public final class SerializationProvider {
     /** StringBuilder 池最大容量*/
     private static final int MAX_SB_CAPACITY = 65536;
 
+    /**
+     * 获取 ASM 降级计数（运行时通过健康检查/监控暴露）。
+     *
+     * @return ASM 降级为反射序列化的累计次数
+     */
+    public static long getAsmDowngradeCount() {
+        return ASM_DOWNGRADE_COUNT.get();
+    }
+
     /** 小 JSON StringBuilder 初始容量（适合简单 Bean）*/
     private static final int SMALL_SB_CAPACITY = 1024;
 
