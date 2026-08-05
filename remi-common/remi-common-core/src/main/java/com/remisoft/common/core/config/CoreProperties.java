@@ -1,236 +1,61 @@
 package com.remisoft.common.core.config;
 
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.Ordered;
+import org.springframework.validation.annotation.Validated;
+
+import lombok.Data;
 
 /**
- * Remi Core 模块配置属性
+ * Core 模块配置属性。
  *
- * <p>对应配置前缀 {@code remi.core}，提供分页、上下文、响应等核心能力的运行时参数绑定。
+ * <p>仅包含分页相关的核心配置。所有配置项均通过 JSR-303 校验注解
+ * 进行启动时校验，配置非法时应用启动失败（fail-fast）。
  *
- * <h3>配置示例：</h3>
+ * <p><b>使用示例：</b></p>
  * <pre>{@code
  * remi:
  *   core:
- *     page:
- *       max-page-size: 1000
- *       default-page-size: 20
- *     response:
- *       include-timestamp: true
- *       rfc9457:
- *         enabled: false
- *     context:
- *       mdc:
- *         enabled: true
+ *     enabled: true
+ *     max-page-size: 1000        # 1-5000
+ *     default-page-size: 20      # 1-5000
  * }</pre>
  *
  * @author remi-team
- * @since 1.8.0
+ * @since 1.0.0
  */
+@Data
 @ConfigurationProperties(prefix = "remi.core")
+@Validated
 public class CoreProperties {
 
-    /**
-     * 分页相关配置
-     */
-    private final Page page = new Page();
+    /** 最大每页记录数上限（1-5000），防止一次性拉取过多数据导致性能问题 */
+    @Min(1)
+    @Max(5000)
+    private int maxPageSize = 1000;
+
+    /** 默认每页记录数（≥1），分页查询未指定 pageSize 时使用 */
+    @Min(1)
+    @Max(5000)
+    private int defaultPageSize = 20;
+
+    /** 租户 MDC 过滤器优先级，默认高于业务过滤器 */
+    private int tenantMdcFilterOrder = Ordered.HIGHEST_PRECEDENCE + 100;
 
     /**
-     * 响应相关配置
+     * 交叉校验：默认每页记录数不能超过最大每页记录数上限。
+     *
+     * <p>避免出现 {@code default-page-size > max-page-size} 的非法组合，
+     * 否则归一化逻辑会将默认值截断到上限，产生反直觉行为。</p>
+     *
+     * @return true=配置合法
      */
-    private final Response response = new Response();
-
-    /**
-     * 请求上下文相关配置
-     */
-    private final Context context = new Context();
-
-    public Page getPage() {
-        return page;
-    }
-
-    public Response getResponse() {
-        return response;
-    }
-
-    public Context getContext() {
-        return context;
-    }
-
-    /**
-     * 分页配置
-     */
-    public static class Page {
-
-        /**
-         * 默认每页记录数
-         */
-        private int defaultPageSize = 20;
-
-        /**
-         * 默认页码
-         */
-        private int defaultPageNum = 1;
-
-        /**
-         * 允许的最大每页记录数（防御深度分页攻击）
-         */
-        private int maxPageSize = 1000;
-
-        public int getDefaultPageSize() {
-            return defaultPageSize;
-        }
-
-        public void setDefaultPageSize(int defaultPageSize) {
-            this.defaultPageSize = defaultPageSize;
-        }
-
-        public int getDefaultPageNum() {
-            return defaultPageNum;
-        }
-
-        public void setDefaultPageNum(int defaultPageNum) {
-            this.defaultPageNum = defaultPageNum;
-        }
-
-        public int getMaxPageSize() {
-            return maxPageSize;
-        }
-
-        public void setMaxPageSize(int maxPageSize) {
-            this.maxPageSize = maxPageSize;
-        }
-    }
-
-    /**
-     * 响应配置
-     */
-    public static class Response {
-
-        /**
-         * 是否在响应体中自动包含 timestamp（默认 true）
-         */
-        private boolean includeTimestamp = true;
-
-        /**
-         * RFC 9457 Problem Detail 支持
-         */
-        private final Rfc9457 rfc9457 = new Rfc9457();
-
-        public boolean isIncludeTimestamp() {
-            return includeTimestamp;
-        }
-
-        public void setIncludeTimestamp(boolean includeTimestamp) {
-            this.includeTimestamp = includeTimestamp;
-        }
-
-        public Rfc9457 getRfc9457() {
-            return rfc9457;
-        }
-
-        /**
-         * RFC 9457 Problem Detail 配置
-         */
-        public static class Rfc9457 {
-
-            /**
-             * 是否启用 RFC 9457 响应格式（默认 false，保持向后兼容）
-             */
-            private boolean enabled = false;
-
-            /**
-             * Problem Detail 的 type URI 前缀
-             */
-            private String typeUriPrefix = "https://docs.remisoft.com/problems";
-
-            public boolean isEnabled() {
-                return enabled;
-            }
-
-            public void setEnabled(boolean enabled) {
-                this.enabled = enabled;
-            }
-
-            public String getTypeUriPrefix() {
-                return typeUriPrefix;
-            }
-
-            public void setTypeUriPrefix(String typeUriPrefix) {
-                this.typeUriPrefix = typeUriPrefix;
-            }
-        }
-    }
-
-    /**
-     * 请求上下文配置
-     */
-    public static class Context {
-
-        /**
-         * MDC 桥接配置
-         */
-        private final Mdc mdc = new Mdc();
-
-        public Mdc getMdc() {
-            return mdc;
-        }
-
-        /**
-         * MDC 配置
-         */
-        public static class Mdc {
-
-            /**
-             * 是否启用 RequestContext 与 MDC 的自动桥接
-             */
-            private boolean enabled = true;
-
-            /**
-             * MDC 中 tenantId 的键名
-             */
-            private String tenantIdKey = "tenantId";
-
-            /**
-             * MDC 中 userId 的键名
-             */
-            private String userIdKey = "userId";
-
-            /**
-             * MDC 中 traceId 的键名
-             */
-            private String traceIdKey = "traceId";
-
-            public boolean isEnabled() {
-                return enabled;
-            }
-
-            public void setEnabled(boolean enabled) {
-                this.enabled = enabled;
-            }
-
-            public String getTenantIdKey() {
-                return tenantIdKey;
-            }
-
-            public void setTenantIdKey(String tenantIdKey) {
-                this.tenantIdKey = tenantIdKey;
-            }
-
-            public String getUserIdKey() {
-                return userIdKey;
-            }
-
-            public void setUserIdKey(String userIdKey) {
-                this.userIdKey = userIdKey;
-            }
-
-            public String getTraceIdKey() {
-                return traceIdKey;
-            }
-
-            public void setTraceIdKey(String traceIdKey) {
-                this.traceIdKey = traceIdKey;
-            }
-        }
+    @AssertTrue(message = "default-page-size must be <= max-page-size")
+    public boolean isPaginationRangeValid() {
+        return defaultPageSize <= maxPageSize;
     }
 }
