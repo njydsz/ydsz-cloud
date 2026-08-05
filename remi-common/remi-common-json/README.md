@@ -276,6 +276,7 @@ public class UserController {
 | `remi.json.streaming-enabled` | false | 是否启用流式输出（HTTP 响应使用 chunked transfer encoding） |
 | `remi.json.max-request-body-size` | 10485760 | HTTP 请求体最大大小（字节，默认 10MB） |
 | `remi.json.warmup-classes` | `[]` | 启动时预热的类列表（全限定类名） |
+| `remi.json.disable-jackson-auto-configuration` | `true` | 是否禁用 Spring Boot Jackson 自动配置。默认 true，全仓库统一使用 RemiJson。设置为 false 可恢复 Jackson 共存 |
 
 ## 使用示例
 

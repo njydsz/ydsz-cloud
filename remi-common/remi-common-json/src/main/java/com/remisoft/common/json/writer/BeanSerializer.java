@@ -83,22 +83,25 @@ public final class BeanSerializer {
      * 字段写入器
      */
     public static final class FieldWriter {
-        
+
         /** 字段访问器 */
         public final MethodHandle getter;
-        
+
+        /** Java 字段名（用于异常路径追踪） */
+        public final String fieldName;
+
         /** JSON 键名（含引号和冒号） */
         public final String jsonKey;
-        
+
         /** JSON 键名长度 */
         public final int jsonKeyLen;
-        
+
         /** 字段类型 */
         public final Class<?> type;
-        
+
         /** 类型代码 */
         public final int typeCode;
-        
+
         /**
          * 构造字段写入器
          *
@@ -106,6 +109,7 @@ public final class BeanSerializer {
          */
         public FieldWriter(FieldMeta meta) {
             this.getter = meta.getter;
+            this.fieldName = meta.name;
             this.jsonKey = meta.jsonKey;
             this.jsonKeyLen = meta.jsonKey.length();
             this.type = meta.type;
@@ -244,13 +248,19 @@ public final class BeanSerializer {
                         buf[pos++] = ',';
                     }
                     first = false;
-                    
+
                     int keyLen = field.jsonKeyLen;
                     field.jsonKey.getChars(0, keyLen, buf, pos);
                     pos += keyLen;
-                    
+
                     writer.pos = pos;
-                    writer.writeValueInline(value);
+                    // 字段路径追踪：writeValueInline 可能递归进入子 Bean
+                    SerializationProvider.pushFieldPath(field.fieldName);
+                    try {
+                        writer.writeValueInline(value);
+                    } finally {
+                        SerializationProvider.popFieldPath();
+                    }
                     pos = writer.pos;
                     break;
             }

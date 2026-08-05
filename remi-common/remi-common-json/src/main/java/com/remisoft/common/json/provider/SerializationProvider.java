@@ -56,15 +56,6 @@ public final class SerializationProvider {
     /** StringBuilder 池最大容量*/
     private static final int MAX_SB_CAPACITY = 65536;
 
-    /**
-     * 获取 ASM 降级计数（运行时通过健康检查/监控暴露）。
-     *
-     * @return ASM 降级为反射序列化的累计次数
-     */
-    public static long getAsmDowngradeCount() {
-        return ASM_DOWNGRADE_COUNT.get();
-    }
-
     /** 小 JSON StringBuilder 初始容量（适合简单 Bean）*/
     private static final int SMALL_SB_CAPACITY = 1024;
 
@@ -80,6 +71,57 @@ public final class SerializationProvider {
      * circularRefStrategy、serializeEnumUsingOrdinal 等 11 个原 ThreadLocal 字段）
      * 已合并到 {@link SerializationContext#CONTEXT} 单一 ThreadLocal 中。
      */
+
+    /**
+     * 序列化字段路径栈（ThreadLocal）。
+     *
+     * <p>序列化 Bean 中嵌套对象时，栈中保存从根对象到当前对象经过的字段名。
+     * 序列化异常抛出时，可读取此栈拼出 {@code user.address.street} 样式的路径，
+     * 大幅降低排障成本。对标 Jackson {@code JsonMappingException.getPath()}。</p>
+     */
+    private static final ThreadLocal<Deque<String>> FIELD_PATH_STACK =
+        ThreadLocal.withInitial(ArrayDeque::new);
+
+    /**
+     * 压入字段名（序列化进入嵌套对象前调用）。
+     *
+     * @param fieldName 字段名（Java 字段名，非 JSON key）
+     */
+    public static void pushFieldPath(String fieldName) {
+        if (fieldName != null && !fieldName.isEmpty()) {
+            FIELD_PATH_STACK.get().addLast(fieldName);
+        }
+    }
+
+    /**
+     * 弹出字段名（序列化退出嵌套对象后调用）。
+     */
+    public static void popFieldPath() {
+        Deque<String> stack = FIELD_PATH_STACK.get();
+        if (!stack.isEmpty()) {
+            stack.pollLast();
+        }
+    }
+
+    /**
+     * 读取当前字段路径（序列化异常时调用）。
+     *
+     * @return 点分路径字符串，无路径时返回空字符串
+     */
+    public static String getCurrentFieldPath() {
+        Deque<String> stack = FIELD_PATH_STACK.get();
+        if (stack.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(128);
+        boolean first = true;
+        for (String segment : stack) {
+            if (!first) sb.append('.');
+            sb.append(segment);
+            first = false;
+        }
+        return sb.toString();
+    }
 
     /** Bean 序列化信息双层缓存（Class -> 命名策略 -> BeanSerializerInfo，v4.0.0 添加策略维度修复并发隔离） */
     private static final ConcurrentMap<Class<?>, ConcurrentMap<PropertyNamingStrategy, BeanSerializerInfo>> BEAN_SERIALIZER_INFO_CACHE =
@@ -1104,13 +1146,24 @@ public final class SerializationProvider {
      */
     private static JsonSerializationException wrapSerializationException(Object obj, Exception e) {
         if (e instanceof JsonSerializationException jse) {
+            // 附加字段路径信息（若存在）
+            String path = getCurrentFieldPath();
+            if (!path.isEmpty()) {
+                jse.setFieldPath(path);
+            }
             return jse;
         }
-        return new JsonSerializationException(
-            JsonSerializationException.SERIALIZATION_ERROR,
-            "Serialization failed for " + obj.getClass().getName() + ": " + e.getMessage(),
-            e
-        );
+        // 携带字段路径的异常增强给排障带来极大便利
+        String path = getCurrentFieldPath();
+        String message = "Serialization failed for " + obj.getClass().getName()
+            + (path.isEmpty() ? "" : " at path '" + path + "'")
+            + ": " + e.getMessage();
+        JsonSerializationException wrapped = new JsonSerializationException(
+            JsonSerializationException.SERIALIZATION_ERROR, message, e);
+        if (!path.isEmpty()) {
+            wrapped.setFieldPath(path);
+        }
+        return wrapped;
     }
 
     /**

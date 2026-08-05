@@ -12,9 +12,9 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.util.StringUtils;
 
 /**
- * 按需排除 Spring Boot Jackson 自动配置。
+ * 默认排除 Spring Boot Jackson 自动配置，全仓库统一使用 RemiJson。
  *
- * <p>当 {@code remi.json.disable-jackson-auto-configuration=true} 时，
+ * <p>当 {@code remi.json.disable-jackson-auto-configuration} 未显式设置为 {@code false} 时，
  * 将 {@code org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration}
  * 加入 {@code spring.autoconfigure.exclude}，使 Spring 容器不再注册 {@code ObjectMapper} Bean。
  *
@@ -24,9 +24,7 @@ import org.springframework.util.StringUtils;
  * <p>实现方式：通过添加高优先级 {@link MapPropertySource} 覆盖
  * {@code spring.autoconfigure.exclude} 属性，合并已有值与 Jackson 排除项。
  *
- * <p><b>风险提示：</b>禁用 Jackson 自动配置后，依赖 {@code ObjectMapper} 的 Spring 内部组件
- * （Actuator 部分端点、Spring Data Redis 默认序列化器等）可能降级或需额外适配。
- * 建议仅在确认无 Jackson 依赖后启用。
+ * <p>如需恢复 Jackson 共存，可在配置文件中显式设置 {@code remi.json.disable-jackson-auto-configuration=false}。
  *
  * @author remi-team
  * @since 1.0.0
@@ -41,7 +39,7 @@ public class JacksonExclusionEnvironmentPostProcessor implements EnvironmentPost
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        if (!Boolean.TRUE.equals(environment.getProperty(PROPERTY_NAME, Boolean.class, Boolean.FALSE))) {
+        if (!Boolean.TRUE.equals(environment.getProperty(PROPERTY_NAME, Boolean.class, Boolean.TRUE))) {
             return;
         }
 

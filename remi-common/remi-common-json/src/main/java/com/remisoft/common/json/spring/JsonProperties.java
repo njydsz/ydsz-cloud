@@ -110,17 +110,16 @@ public class JsonProperties {
     /**
      * 是否禁用 Spring Boot Jackson 自动配置。
      *
-     * <p>默认 false（保守，保持 Spring 生态兼容性）。设置为 true 后，
+     * <p>默认 true，全仓库统一使用 RemiJson 作为唯一 JSON 底座。
      * {@code JacksonAutoConfiguration} 将被加入 {@code spring.autoconfigure.exclude}，
      * Spring 容器中不再注册 {@code ObjectMapper} Bean。
      *
-     * <p><b>注意：</b>禁用后依赖 {@code ObjectMapper} 的 Spring 内部组件
-     * （如 Actuator 部分端点、Spring Data Redis 默认序列化器等）可能降级或需额外适配。
-     * 建议仅在确认无 Jackson 依赖后启用，并配合 {@code remi.json.enabled=true} 使用。
+     * <p>设置为 false 可恢复 Spring Boot 默认行为，适用于需要与 Jackson 生态组件
+     * 共存或排查序列化兼容问题的场景。
      *
      * @since 1.0.0
      */
-    private boolean disableJacksonAutoConfiguration = false;
+    private boolean disableJacksonAutoConfiguration = true;
 
     /**
      * 启动时需要预热的类列表（全限定类名）。

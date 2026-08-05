@@ -112,8 +112,8 @@
     {
       "name": "remi.json.disable-jackson-auto-configuration",
       "type": "java.lang.Boolean",
-      "description": "是否禁用 Spring Boot Jackson 自动配置（默认 false）。设为 true 后容器不再注册 ObjectMapper Bean。",
-      "defaultValue": false
+      "description": "是否禁用 Spring Boot Jackson 自动配置（默认 true）。全仓库统一使用 RemiJson，容器不再注册 ObjectMapper Bean。",
+      "defaultValue": true
     },
     {
       "name": "remi.json.warmup-classes",

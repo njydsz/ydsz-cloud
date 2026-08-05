@@ -34,19 +34,19 @@ import io.micrometer.core.instrument.MeterRegistry;
  * Remi JSON 自动配置。
  *
  * <p>注册全局 {@code RemiJson} Bean（自研 JSON 引擎，非 Jackson 封装），支持 Long 转 String、日期格式化、
+ * 脱敏字段、未知字段忽略、BigDecimal 精度等统一序列化策略。
  *
- * <p>脱敏字段、未知字段忽略、BigDecimal 精度等统一序列化策略。
- *
- * <p><b>与 Spring Boot Jackson 的关系（双引擎格局）：</b>
+ * <p><b>与 Spring Boot Jackson 的关系（默认单引擎策略）：</b>
  * 本配置通过 {@code @AutoConfigureBefore} 声明在 {@code JacksonAutoConfiguration} 之前加载，
  * 并通过 {@code @ConditionalOnMissingBean} 占位 HTTP 消息转换器，使业务 REST 接口走 RemiJson。
- * 但 Spring Boot 默认仍会注册 {@code ObjectMapper} Bean，供 Actuator 部分端点、
- * Spring Data Redis 默认序列化器等 Spring 内部组件使用，构成"可控并存"的双引擎格局。
+ * 同时，{@link JacksonExclusionEnvironmentPostProcessor} 默认将
+ * {@code JacksonAutoConfiguration} 加入 {@code spring.autoconfigure.exclude}，
+ * 使 Spring 容器不再注册 {@code ObjectMapper} Bean，实现全仓库统一使用 RemiJson。
  *
- * <p>如需彻底统一为单引擎，可设置 {@code remi.json.disable-jackson-auto-configuration=true}，
- * 由 {@link JacksonExclusionEnvironmentPostProcessor} 在启动早期将
- * {@code JacksonAutoConfiguration} 加入 {@code spring.autoconfigure.exclude}。
- * <b>注意：</b>禁用后需评估 Spring 生态内部依赖 {@code ObjectMapper} 的能力是否受影响。
+ * <p>如需恢复 Spring Boot 默认的 Jackson 共存行为，可在配置文件中设置
+ * {@code remi.json.disable-jackson-auto-configuration=false}，此时 Spring Boot
+ * 仍会注册 {@code ObjectMapper} Bean 供 Actuator 部分端点等 Spring 内部组件使用，
+ * 构成"可控并存"的双引擎格局。
  *
  * @author remi-team
  * @since 1.0.0
@@ -193,8 +193,7 @@ public class JsonAutoConfiguration {
          */
         @PostConstruct
         public void init() {
-            // 使用 Builder 模式构建配置（推荐方式，避免 setter 链式调用）
-            // 兼容期仍使用 getInstance() 单例，后续版本将改为 setInstance(builder().build())
+            // 使用 Builder 模式构建配置（推荐方式，构建后不可变，通过 install() 安装到全局单例）
             JsonConfig.CircularReferenceStrategy strategy;
             try {
                 strategy = JsonConfig.CircularReferenceStrategy.valueOf(
@@ -202,7 +201,7 @@ public class JsonAutoConfiguration {
             } catch (IllegalArgumentException e) {
                 strategy = JsonConfig.CircularReferenceStrategy.REF;
             }
-            JsonConfig config = JsonConfig.builder()
+            JsonConfig newConfig = JsonConfig.builder()
                     .dateFormat(properties.getDateFormat())
                     .namingStrategy(properties.getNamingStrategy())
                     .writeNulls(properties.isWriteNulls())
@@ -216,7 +215,8 @@ public class JsonAutoConfiguration {
                     .wrapRootValue(properties.isWrapRootValue())
                     .failOnError(properties.isFailOnError())
                     .build();
-            config.apply();
+            // 安装为全局不可变配置实例，后续修改必须走 install(newConfig)
+            JsonConfig.install(newConfig);
 
             // 安全模式设置
             AutoTypeChecker.setSafeMode(properties.isSafeMode());

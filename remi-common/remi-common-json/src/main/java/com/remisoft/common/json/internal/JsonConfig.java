@@ -77,10 +77,33 @@ public final class JsonConfig implements Serializable {
     }
 
     /**
+     * 替代 {@link #getInstance()} 并一次性安装配置到全局单例（原子替换）。
+     *
+     * <p>标榜"构建后不可变"：外部通过 {@code JsonConfig.builder().build()} 构建完整配置后，
+     * 调用此方法原子替换全局单例，后续只读不修改。
+     * 如确需修改配置，请重新构建新的 {@link JsonConfig} 并再次调用 {@code install(newConfig)}。</p>
+     *
+     * <p>此方法等价于 {@code instance = newConfig; newConfig.apply()}，
+     * 保证配置立即生效（传播到 JSONReader / SerializationProvider 等全局组件）。</p>
+     *
+     * @param newConfig 新的全局配置实例（由 Builder 构建）
+     * @since 1.0.0
+     */
+    public static void install(JsonConfig newConfig) {
+        if (newConfig == null) {
+            throw new IllegalArgumentException("JsonConfig.install: config must not be null");
+        }
+        synchronized (JsonConfig.class) {
+            instance = newConfig;
+        }
+        instance.apply();
+    }
+
+    /**
      * 获取配置实例（单例）
      *
-     * <p>全局单例配置，由 Spring {@code remi.json.*} 属性初始化。
-     * 业务代码请通过 {@code JsonMapper.builder()} 创建独立配置的 Mapper 实例。</p>
+     * <p><b>推荐用法：</b>业务代码只读获取配置。如需修改全局配置，请使用
+     * {@link #install(JsonConfig)} 替换为新的不可变实例。</p>
      *
      * @return JsonConfig 实例
      */
