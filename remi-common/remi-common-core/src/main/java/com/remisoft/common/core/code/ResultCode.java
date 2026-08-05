@@ -83,4 +83,25 @@ public interface ResultCode {
      * @return 对应的 HTTP 状态码
      */
     int getHttpStatusCode();
+
+    /**
+     * 获取结果码所属的业务域。
+     *
+     * <p>用于错误码的分类统计和多租户场景下的域隔离。
+     * 预定义的域标识建议：
+     * <ul>
+     *   <li>{@code "system"} — 系统级错误（默认值）</li>
+     *   <li>{@code "user"} — 用户模块</li>
+     *   <li>{@code "order"} — 订单模块</li>
+     *   <li>{@code "workflow"} — 工作流模块</li>
+     * </ul>
+     *
+     * <p>默认实现返回 {@code "system"}，业务模块枚举可覆盖此方法返回自定义域标识。
+     *
+     * @return 业务域标识字符串，不可为 null
+     * @since 2.0.0
+     */
+    default String getDomain() {
+        return "system";
+    }
 }

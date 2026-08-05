@@ -10,7 +10,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.remisoft.common.core.constant.PageConstants;
-import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.metrics.FrameworkMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -22,8 +21,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * 使 {@code remi.core.*} 配置项在 IDE 中获得自动补全和类型校验支持。</p>
  *
  * <p>当 Spring {@link MessageSource} 可用时，自动注册 {@link SpringMessageResolver}
- * 并绑定到 {@link MessageResolverHolder}（或向后兼容的 {@link BaseResponse}），
- * 使响应消息支持国际化。</p>
+ * 并绑定到 {@link MessageResolverHolder}，使响应消息支持国际化。</p>
  *
  * <p>当 Spring Boot Actuator 的 {@link HealthIndicator} 在 classpath 可用时，
  * 自动注册 {@link CoreHealthIndicator} 暴露 Core 模块运行状态。</p>

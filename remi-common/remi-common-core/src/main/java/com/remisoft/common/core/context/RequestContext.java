@@ -89,6 +89,27 @@ public final class RequestContext {
                 }
             };
 
+    /**
+     * 跨服务传播的元数据存储（懒初始化）。
+     *
+     * <p>专用于存储需要在服务间透传的用户自定义键值对（如 {@code appId}、{@code businessLine} 等）。
+     * 与 {@link #CONTEXT_HOLDER} 中的内置上下文键分离，语义更清晰，
+     * 且可根据需要独立控制是否参与传播。</p>
+     *
+     * <p>使用独立的 TTL 持有者，确保清理主上下文时 metadata 也同步清理。</p>
+     *
+     * @since 2.0.0
+     * @see #putMetadata(String, String)
+     * @see #exportMetadata()
+     */
+    private static final ThreadLocal<Map<String, String>> METADATA_HOLDER =
+            new TransmittableThreadLocal<Map<String, String>>() {
+                @Override
+                protected Map<String, String> initialValue() {
+                    return null; // 懒初始化
+                }
+            };
+
     private RequestContext() {
         throw new UnsupportedOperationException("Utility class");
     }
@@ -318,12 +339,14 @@ public final class RequestContext {
     }
 
     /**
-     * 清空当前线程的上下文
+     * 清空当前线程的上下文和元数据。
      *
-     * <p><b>重要：</b>必须在请求结束时调用此方法，防止 ThreadLocal 内存泄漏</p>
+     * <p><b>重要：</b>必须在请求结束时调用此方法，防止 ThreadLocal 内存泄漏。
+     * 同时清理主上下文和 {@link #METADATA_HOLDER} 中的元数据。</p>
      */
     public static void clear() {
         CONTEXT_HOLDER.remove();
+        METADATA_HOLDER.remove();
     }
 
     /**
@@ -374,6 +397,140 @@ public final class RequestContext {
             return java.util.Collections.emptyMap();
         }
         return java.util.Collections.unmodifiableMap(holder);
+    }
+
+    // ======================== 跨服务元数据传播（v2.0 新增） ========================
+
+    /**
+     * 设置跨服务传播的元数据键值对。
+     *
+     * <p>专用于存储需要在服务间透传的用户自定义数据（如 {@code appId}、{@code businessLine} 等）。
+     * 与主上下文键分离，语义更清晰，且不会与内置上下文键冲突。</p>
+     *
+     * <p>使用场景：注入下游服务透传信息，如多租户场景下的 {@code X-App-Id}、
+     * 场景链追踪的 {@code X-Scenario-Code} 等。对应的值可通过
+     * {@link #exportMetadata()} 导出为 HTTP 请求头键值对。</p>
+     *
+     * @param key   元数据键（不可为 null 或空）
+     * @param value 元数据值（null 等同于移除该键）
+     * @since 2.0.0
+     * @see #exportMetadata()
+     */
+    public static void putMetadata(String key, String value) {
+        if (key == null || key.isEmpty()) {
+            throw new IllegalArgumentException("metadata key must not be null or empty");
+        }
+        if (value == null) {
+            removeMetadata(key);
+            return;
+        }
+        Map<String, String> holder = METADATA_HOLDER.get();
+        if (holder == null) {
+            holder = new HashMap<>(4);
+            METADATA_HOLDER.set(holder);
+        }
+        holder.put(key, value);
+    }
+
+    /**
+     * 获取元数据值。
+     *
+     * @param key 元数据键
+     * @return 元数据值；不存在时返回 null
+     * @since 2.0.0
+     */
+    public static String getMetadata(String key) {
+        Map<String, String> holder = METADATA_HOLDER.get();
+        return holder != null ? holder.get(key) : null;
+    }
+
+    /**
+     * 获取所有跨服务传播的元数据（只读视图）。
+     *
+     * @return 当前线程的元数据 Map；未初始化时返回空 Map
+     * @since 2.0.0
+     */
+    public static Map<String, String> getMetadata() {
+        Map<String, String> holder = METADATA_HOLDER.get();
+        if (holder == null || holder.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return Collections.unmodifiableMap(holder);
+    }
+
+    /**
+     * 移除元数据键值对。
+     *
+     * @param key 元数据键
+     * @since 2.0.0
+     */
+    public static void removeMetadata(String key) {
+        Map<String, String> holder = METADATA_HOLDER.get();
+        if (holder != null) {
+            holder.remove(key);
+        }
+    }
+
+    /**
+     * 导出所有元数据为 HTTP 请求头键值对。
+     *
+     * <p>用于下游 HTTP 调用时将元数据注入请求头（如 Feign 拦截器、RestTemplate 拦截器）。
+     * 返回的 Map 是新的副本，修改不影响原 metadata。</p>
+     *
+     * <p><b>使用示例（Feign 拦截器）：</b></p>
+     * <pre>{@code
+     * public class MetadataPropagationInterceptor implements RequestInterceptor {
+     *     @Override
+     *     public void apply(RequestTemplate template) {
+     *         RequestContext.exportMetadata().forEach(template::header);
+     *     }
+     * }
+     * }</pre>
+     *
+     * @return 包含所有元数据的 Map；无元数据时返回空 Map
+     * @since 2.0.0
+     * @see #putMetadata(String, String)
+     */
+    public static Map<String, String> exportMetadata() {
+        Map<String, String> holder = METADATA_HOLDER.get();
+        if (holder == null || holder.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return new HashMap<>(holder);
+    }
+
+    /**
+     * 从 HTTP 请求头导入元数据。
+     *
+     * <p>在请求入口（如网关、过滤器）调用，将上游传递的元数据导入当前线程，
+     * 供下游处理和业务逻辑使用。</p>
+     *
+     * <p><b>使用示例：</b></p>
+     * <pre>{@code
+     * // 在入口过滤器中注入上游元数据
+     * Enumeration<String> metadataHeaders = request.getHeaders("X-Metadata-");
+     * Map<String, String> imported = new HashMap<>();
+     * while (metadataHeaders.hasMoreElements()) {
+     *     String key = metadataHeaders.nextElement();
+     *     imported.put(key.substring("X-Metadata-".length()), request.getHeader(key));
+     * }
+     * RequestContext.importMetadata(imported);
+     * }</pre>
+     *
+     * @param metadata 要导入的元数据 Map（可为 null 或空）
+     * @since 2.0.0
+     * @see #exportMetadata()
+     */
+    public static void importMetadata(Map<String, String> metadata) {
+        if (metadata == null || metadata.isEmpty()) {
+            return;
+        }
+        Map<String, String> holder = METADATA_HOLDER.get();
+        if (holder == null) {
+            holder = new HashMap<>(metadata.size());
+            METADATA_HOLDER.set(holder);
+        }
+        holder.putAll(metadata);
     }
 
     /**

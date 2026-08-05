@@ -256,6 +256,16 @@ public final class HeaderConstants {
     public static final String MDC_TRACE_ID_KEY = "traceId";
 
     /**
+     * RequestId 在 SLF4J MDC 中的 key 名称。
+     *
+     * <p>日志框架通过此 key 从 MDC 中提取 requestId 注入日志输出格式。
+     * requestId 用于标识单次入口请求，区别于贯通多个服务的 traceId。
+     *
+     * @since 2.0.0
+     */
+    public static final String MDC_REQUEST_ID_KEY = "requestId";
+
+    /**
      * W3C Trace Context 标准的 traceparent header 名称。
      *
      * <p>格式：{@code 00-{traceId}-{spanId}-01}，用于对接 SkyWalking/Jaeger/Zipkin

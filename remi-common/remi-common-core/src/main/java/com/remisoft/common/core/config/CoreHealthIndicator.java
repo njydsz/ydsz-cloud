@@ -1,5 +1,7 @@
 package com.remisoft.common.core.config;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,7 +10,6 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.health.contributor.Status;
 
 import com.remisoft.common.core.constant.PageConstants;
-import com.remisoft.common.core.response.BaseResponse;
 
 /**
  * Core 模块健康检查指示器。
@@ -53,19 +54,24 @@ public class CoreHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        Map<String, Object> details = new HashMap<>(4);
+        Map<String, Object> details = new HashMap<>(8);
 
-        // 国际化解析器注册状态
-        boolean resolverRegistered = BaseResponse.isResolverRegistered();
+        // ========== 国际化状态 ==========
+        boolean resolverRegistered = MessageResolverHolder.isResolverRegistered();
         details.put("i18nResolverRegistered", resolverRegistered);
 
-        // 分页配置状态
+        // ========== 分页配置状态 ==========
         details.put("maxPageSize", PageConstants.getMaxPageSize());
         details.put("defaultPageSize", PageConstants.getDefaultPageSize());
+        details.put("pageConstantsInitialized", PageConstants.isInitialized());
 
         // 配置范围合理性
         boolean configValid = properties.getMaxPageSize() >= properties.getDefaultPageSize();
         details.put("paginationConfigValid", configValid);
+
+        // ========== 运行时信息（v2.0 新增） ==========
+        details.put("moduleVersion", getModuleVersion());
+        details.put("uptimeSeconds", getUptimeSeconds());
 
         if (!configValid) {
             return Health.down()
@@ -76,7 +82,6 @@ public class CoreHealthIndicator implements HealthIndicator {
 
         // 检测 PageConstants 是否已由 CoreAutoConfiguration 注入运行时配置
         boolean pageConstantsInitialized = PageConstants.isInitialized();
-        details.put("pageConstantsInitialized", pageConstantsInitialized);
         if (!pageConstantsInitialized) {
             return new Health.Builder(Status.UNKNOWN, details)
                     .withDetail("warning", "PageConstants not initialized by CoreAutoConfiguration; "
@@ -88,5 +93,28 @@ public class CoreHealthIndicator implements HealthIndicator {
         return Health.up()
                 .withDetails(details)
                 .build();
+    }
+
+    /**
+     * 获取模块版本号。
+     *
+     * <p>从 JAR 包 MANIFEST.MF 中读取 Implementation-Version，
+     * 若无法读取则返回 "unknown"。
+     *
+     * @return 模块版本号
+     */
+    private String getModuleVersion() {
+        String version = CoreHealthIndicator.class.getPackage().getImplementationVersion();
+        return version != null ? version : "unknown";
+    }
+
+    /**
+     * 获取应用运行时间（秒）。
+     *
+     * @return 应用运行时间，单位秒
+     */
+    private long getUptimeSeconds() {
+        RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        return runtimeMXBean.getUptime() / 1000;
     }
 }

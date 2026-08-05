@@ -445,17 +445,24 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 从 MDC 中提取当前线程的 traceId 并注入 ProblemDetail。
+     * 从 MDC 中提取当前线程的 traceId 和 requestId 并注入 ProblemDetail。
      *
-     * <p>若 MDC 中无有效 traceId，则不修改 ProblemDetail，避免覆盖 Builder 设置的 traceId。
+     * <p>若 MDC 中无有效值，则不修改 ProblemDetail 对应字段，避免覆盖 Builder 设置的值。
+     * traceId 用于贯通多个服务的链路追踪，requestId 用于标识单次入口请求。</p>
      *
      * @param problem 待注入的 ProblemDetail 实例（不可为 null）
-     * @since 1.7.0
+     * @since 2.0.0
      */
     private static void autoFillTraceIdFromMdc(ProblemDetail problem) {
+        // 自动注入 traceId
         String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         if (traceId != null && !traceId.isBlank()) {
             problem.setTraceId(traceId);
+        }
+        // 自动注入 requestId（v2.0 新增）
+        String requestId = MDC.get(HeaderConstants.MDC_REQUEST_ID_KEY);
+        if (requestId != null && !requestId.isBlank()) {
+            problem.setRequestId(requestId);
         }
     }
 
