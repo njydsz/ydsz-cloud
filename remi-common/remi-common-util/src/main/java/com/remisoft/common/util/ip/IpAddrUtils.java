@@ -1,10 +1,8 @@
 package com.remisoft.common.util.ip;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
-import com.remisoft.common.util.ip.IpValidator.IpType;
 import com.remisoft.common.util.string.StringUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link NetworkInterfaceUtils} — 本机网络接口枚举（host IP、host name、local IPs）</li>
  * </ul>
  *
- * <p>本类保留 HTTP 请求 IP 解析等 Web 层专有方法，其余方法标记 {@code @Deprecated} 并委托到上述新类。
+ * <p>本类仅保留 HTTP 请求 IP 解析等 Web 层专有方法，通用 IP 能力请直接使用上述新类。
  *
  * @author remi-team
  * @since 1.0.0
@@ -134,177 +132,6 @@ public class IpAddrUtils {
         }
         String ip = request.getRemoteAddr();
         return LOCALHOST_IPV6.equals(ip) ? LOCALHOST_IPV4 : ip;
-    }
-
-    // ===================== 委托到 IpValidator（@Deprecated since 1.4.0）===========
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#validIp(String)}     */
-    @Deprecated(since = "1.4.0")
-    public static boolean validIp(String ip) {
-        return IpValidator.validIp(ip);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#validIpv4(String)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static boolean validIpv4(String ip) {
-        return IpValidator.validIpv4(ip);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#validIpv6(String)}     */
-    @Deprecated(since = "1.4.0")
-    public static boolean validIpv6(String ip) {
-        return IpValidator.validIpv6(ip);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#isInternalIp(String)}     */
-    @Deprecated(since = "1.4.0")
-    public static boolean isInternalIp(String ip) {
-        return IpValidator.isInternalIp(ip);
-    }
-
-    /**
-     * 判断 IP 是否为内网地址（委托 {@link #isInternalIp}）。
-     *
-     * @param ip IP 地址
-     * @return true 表示为内网地址
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#isInternalIp(String)}     */
-    @Deprecated(since = "1.4.0")
-    public static boolean internalIp(String ip) {
-        return isInternalIp(ip);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#isPrivateIp(String)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static boolean isPrivateIp(String ip) {
-        return IpValidator.isPrivateIp(ip);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#normalizeIp(String)}     */
-    @Deprecated(since = "1.4.0")
-    public static String normalizeIp(String ip) {
-        return IpValidator.normalizeIp(ip);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#normalizeIpv6(String)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static String normalizeIpv6(String ipv6) {
-        return IpValidator.normalizeIpv6(ipv6);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link IpValidator#getIpType(String)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static IpType getIpType(String ip) {
-        return IpValidator.getIpType(ip);
-    }
-
-    // ==================== 委托到 CidrUtils（@Deprecated since 1.4.0）====================
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#isInRange(String, String)}     */
-    @Deprecated(since = "1.4.0")
-    public static boolean isInRange(String ip, String cidr) {
-        return CidrUtils.isInRange(ip, cidr);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#isIpv4InRange(String, String, int)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static boolean isIpv4InRange(String ip, String networkIp, int prefix) {
-        return CidrUtils.isIpv4InRange(ip, networkIp, prefix);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#isIpv6InRange(String, String, int)}     */
-    @Deprecated(since = "1.4.0")
-    public static boolean isIpv6InRange(String ip, String networkIp, int prefix) {
-        return CidrUtils.isIpv6InRange(ip, networkIp, prefix);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#ipToLong(String)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static long ipToLong(String ip) {
-        return CidrUtils.ipToLong(ip);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#longToIp(long)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static String longToIp(long ipLong) {
-        return CidrUtils.longToIp(ipLong);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#getPrefixLength(String)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static int getPrefixLength(String netmask) {
-        return CidrUtils.getPrefixLength(netmask);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#getNetmaskFromPrefix(int)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static String getNetmaskFromPrefix(int prefix) {
-        return CidrUtils.getNetmaskFromPrefix(prefix);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#getNetworkAddress(String, int)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static String getNetworkAddress(String ip, int prefix) {
-        return CidrUtils.getNetworkAddress(ip, prefix);
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link CidrUtils#getBroadcastAddress(String, int)}
-     */
-    @Deprecated(since = "1.4.0")
-    public static String getBroadcastAddress(String ip, int prefix) {
-        return CidrUtils.getBroadcastAddress(ip, prefix);
-    }
-
-    // ==================== 委托到 NetworkInterfaceUtils（@Deprecated since 1.4.0）====================
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link NetworkInterfaceUtils#getHostIp()}
-     */
-    @Deprecated(since = "1.4.0")
-    public static String getHostIp() {
-        return NetworkInterfaceUtils.getHostIp();
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link NetworkInterfaceUtils#getHostName()}
-     */
-    @Deprecated(since = "1.4.0")
-    public static String getHostName() {
-        return NetworkInterfaceUtils.getHostName();
-    }
-
-    /**
-     * @deprecated 自 1.4.0 起改用 {@link NetworkInterfaceUtils#listLocalIps()}
-     */
-    @Deprecated(since = "1.4.0")
-    public static List<String> listLocalIps() {
-        return NetworkInterfaceUtils.listLocalIps();
     }
 
     // ==================== 风控语义方法（保留在本类）====================

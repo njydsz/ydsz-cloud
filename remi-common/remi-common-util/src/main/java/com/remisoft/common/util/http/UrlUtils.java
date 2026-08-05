@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import com.remisoft.common.util.ip.IpAddrUtils;
+import com.remisoft.common.util.ip.IpValidator;
 import com.remisoft.common.util.string.StringUtils;
 
 /**
@@ -425,7 +425,7 @@ public class UrlUtils {
         if (StringUtils.isEmpty(host)) {
             return false;
         }
-        return IpAddrUtils.isInternalIp(host);
+        return IpValidator.isInternalIp(host);
     }
 
     /**

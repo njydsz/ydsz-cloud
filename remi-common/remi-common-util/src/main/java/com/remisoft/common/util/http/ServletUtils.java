@@ -19,7 +19,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.json.RemiJson;
-import com.remisoft.common.util.ip.IpAddrUtils;
+import com.remisoft.common.util.ip.IpValidator;
 import com.remisoft.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -92,7 +92,7 @@ public final class ServletUtils {
             return false;
         }
         // 内网/回环地址始终可信（RFC 1918 + 127.0.0.0/8 + ::1）
-        if (IpAddrUtils.isInternalIp(remoteAddr)) {
+        if (IpValidator.isInternalIp(remoteAddr)) {
             return true;
         }
         // 显式配置的可信代理（如 SLB 公网出口 IP）
