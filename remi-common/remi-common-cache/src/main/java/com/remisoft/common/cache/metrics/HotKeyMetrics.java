@@ -68,7 +68,7 @@ public class HotKeyMetrics<K> implements MeterBinder, AutoCloseable {
   private volatile long snapshotIntervalSeconds;
 
   /** 快照周期内的最新 Top-K 列表（volatile 立即可见） */
-  private volatile List<HotKeyEntry> latestTopK = List.of();
+  private volatile List<HotKeyEntry<K>> latestTopK = List.of();
 
   /** 注册中心 */
   private MeterRegistry registry;
@@ -157,16 +157,16 @@ public class HotKeyMetrics<K> implements MeterBinder, AutoCloseable {
       return;
     }
     try {
-      List<HotKeyEntry> top = tracker.snapshotAndGetTopK(this.topK);
+      List<HotKeyEntry<K>> top = tracker.snapshotAndGetTopK(this.topK);
       this.latestTopK = top;
       ConcurrentHashMap<String, Boolean> activeKeys = new ConcurrentHashMap<>();
-      for (HotKeyEntry entry : top) {
+      for (HotKeyEntry<K> entry : top) {
         String safeKey = sanitizeKeyLabel(entry.key());
         String meterKey = safeKey + "#" + entry.rank();
         activeKeys.put(meterKey, Boolean.TRUE);
         if (!registeredGauges.containsKey(meterKey)) {
           Meter gauge = Gauge.builder("cache.hotkey.frequency",
-                  (HotKeyEntry) entry, e -> (double) e.estimatedFrequency())
+                  entry, e -> (double) e.estimatedFrequency())
               .tags(Tags.of(
                   "cache_name", cacheName,
                   "key", safeKey,
@@ -178,7 +178,7 @@ public class HotKeyMetrics<K> implements MeterBinder, AutoCloseable {
           // Gauge 绑定的是不可变 entry 快照；移除旧引用重新绑定以刷新数值
           registry.remove(registeredGauges.remove(meterKey));
           Meter gauge = Gauge.builder("cache.hotkey.frequency",
-                  (HotKeyEntry) entry, e -> (double) e.estimatedFrequency())
+                  entry, e -> (double) e.estimatedFrequency())
               .tags(Tags.of(
                   "cache_name", cacheName,
                   "key", safeKey,

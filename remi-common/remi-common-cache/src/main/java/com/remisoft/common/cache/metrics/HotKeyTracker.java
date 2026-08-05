@@ -149,7 +149,7 @@ public class HotKeyTracker<K> {
    * @param k 期望返回的最大条目数，必须为正数
    * @return Top-K 热点列表（按频率降序排列；无任何访问时返回空列表）
    */
-  public List<HotKeyEntry> snapshotAndGetTopK(int k) {
+  public List<HotKeyEntry<K>> snapshotAndGetTopK(int k) {
     if (k <= 0) {
       k = DEFAULT_TOP_K;
     }
@@ -160,7 +160,7 @@ public class HotKeyTracker<K> {
     }
     // 构建 (key, count) 列表 — 不做全量排序，用优先队列 O(n log k) 保留 Top-K
     // 简单场景直接全量排序即可（n ≤ maxLocalKeys ≤ 10K）
-    List<HotKeyEntry> entries = new ArrayList<>();
+    List<HotKeyEntry<K>> entries = new ArrayList<>();
     int rank = 1;
     for (K key : keySet) {
       LongAdder adder = localCounters.get(key);
@@ -171,8 +171,8 @@ public class HotKeyTracker<K> {
         }
       }
     }
-    entries.sort(Comparator.comparingInt(HotKeyEntry::estimatedFrequency).reversed());
-    List<HotKeyEntry> topK = entries.subList(0, Math.min(k, entries.size()));
+    entries.sort(Comparator.comparingInt(HotKeyEntry<K>::estimatedFrequency).reversed());
+    List<HotKeyEntry<K>> topK = entries.subList(0, Math.min(k, entries.size()));
     // 清除已快照的计数器，下一个窗口重新开始
     localCounters.clear();
     return List.copyOf(topK);
