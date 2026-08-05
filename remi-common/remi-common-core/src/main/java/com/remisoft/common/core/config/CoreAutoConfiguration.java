@@ -80,17 +80,19 @@ public class CoreAutoConfiguration {
     }
 
     /**
-     * 注册 Core 模块 Micrometer 指标（当 MeterRegistry Bean 可用时）。
+     * 注册 Core 模块 Micrometer 指标 accessor（当 MeterRegistry Bean 可用时）。
      *
      * <p>仅当 classpath 上存在 {@link MeterRegistry} 且容器中有对应 Bean 时生效。
-     * 注册 {@link CoreMetrics} 单例，业务过滤器可通过静态方法
+     * 通过 {@link CoreMetrics#registerAccessor(MetricsAccessor)} 注册 Micrometer 后端，
+     * 业务过滤器可通过静态方法
      * {@link CoreMetrics#incrementResponse(String)} / {@link CoreMetrics#recordHoldTime(java.time.Duration)}
      * 上报请求级指标，无 Micrometer 时为 no-op。</p>
      */
     @Bean
     @ConditionalOnBean(MeterRegistry.class)
-    public CoreMetrics coreMetrics(MeterRegistry registry) {
-        return new CoreMetrics(registry);
+    Object coreMetricsAccessor(MeterRegistry registry) {
+        CoreMetrics.registerAccessor(CoreMetrics.createAccessor(registry));
+        return new Object();
     }
 
     static class PageConstantsInitializer implements org.springframework.beans.factory.SmartInitializingSingleton {

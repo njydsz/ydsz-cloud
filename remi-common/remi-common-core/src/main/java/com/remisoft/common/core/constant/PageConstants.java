@@ -79,6 +79,18 @@ public final class PageConstants {
     }
 
     /**
+     * 重置运行时配置（仅供测试使用）。
+     *
+     * <p>清除已注入的 CoreProperties，使 {@link #isInitialized()} 返回 false。
+     * 用于测试隔离，避免不同测试方法间的状态污染。</p>
+     *
+     * @since 1.8.0
+     */
+    public static void __testReset() {
+        PROPERTIES.set(null);
+    }
+
+    /**
      * 检查运行时配置是否已注入。
      *
      * <p>当 {@link com.remisoft.common.core.config.CoreAutoConfiguration} 未激活
@@ -108,11 +120,11 @@ public final class PageConstants {
     /**
      * 获取运行时最大每页记录数。
      *
-     * @return 运行时配置的最大每页记录数；未初始化时回退到 1000
+     * @return 运行时配置的最大每页记录数；未初始化时回退到 {@link #MAX_PAGE_SIZE}
      */
     public static int getMaxPageSize() {
         CoreProperties p = PROPERTIES.get();
-        return p != null ? p.getMaxPageSize() : 1000;
+        return p != null ? p.getMaxPageSize() : MAX_PAGE_SIZE;
     }
 
     // ======================== 归一化工具方法 ========================

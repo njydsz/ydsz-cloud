@@ -29,7 +29,8 @@ class CoreAutoConfigurationTest {
 
     @AfterEach
     void tearDown() {
-        // 静态状态由 Spring 容器管理，测试通过 ApplicationContextRunner 隔离
+        // 重置 PageConstants 静态状态，避免不同测试方法间的状态污染
+        PageConstants.__testReset();
     }
 
     @Test

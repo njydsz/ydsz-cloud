@@ -11,6 +11,8 @@ import com.remisoft.common.core.constant.PageConstants;
 import com.remisoft.common.json.annotation.JsonInclude;
 import com.remisoft.common.json.annotation.JsonPropertyOrder;
 
+import static com.remisoft.common.core.response.MessageResolverHolder.resolveMessage;
+
 /**
  * 分页响应结果封装类
  *

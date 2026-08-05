@@ -109,6 +109,7 @@ class ProblemDetailTest {
                 .traceId("trace-001")
                 .requestId("req-001")
                 .errorCode("E00001")
+                .timestamp(Instant.now())
                 .extensions(extensions)
                 .build();
 
