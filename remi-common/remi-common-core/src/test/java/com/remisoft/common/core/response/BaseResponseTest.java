@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.net.URI;
 
 import com.remisoft.common.core.context.ProblemDetail;
-import com.remisoft.common.core.response.MessageResolverHolder;
+import com.remisoft.common.core.config.MessageResolverHolder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

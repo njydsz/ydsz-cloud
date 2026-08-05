@@ -11,7 +11,6 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 import com.remisoft.common.core.constant.PageConstants;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.MessageResolverHolder;
 
 /**
  * {@link CoreAutoConfiguration} 自动装配集成测试。

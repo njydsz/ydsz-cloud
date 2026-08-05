@@ -4,11 +4,6 @@
       "name": "remi.core",
       "description": "REMI Core 模块配置组，包含分页、MDC 过滤器、核心开关配置。",
       "type": "com.remisoft.common.core.config.CoreProperties"
-    },
-    {
-      "name": "remi.core.filter-ignore",
-      "description": "认证过滤器忽略列表配置，允许覆盖/追加默认忽略的服务名称。",
-      "type": "com.remisoft.common.core.config.FilterIgnoreProperties"
     }
   ],
   "properties": [
@@ -35,17 +30,6 @@
       "type": "java.lang.Integer",
       "description": "租户 MDC 过滤器注册顺序（FilterRegistrationBean order 值），默认为 HIGHEST_PRECEDENCE + 100，确保租户信息在业务过滤器之前写入 MDC。",
       "defaultValue": -2147483647
-    },
-    {
-      "name": "remi.core.filter-ignore.override-mode",
-      "type": "java.lang.Boolean",
-      "description": "是否开启'替换模式'。默认 false（合并模式，与 core 默认忽略列表合并）；true 则完全替换默认集合。",
-      "defaultValue": false
-    },
-    {
-      "name": "remi.core.filter-ignore.auth-filter-ignore-service-names",
-      "type": "java.util.List<java.lang.String>",
-      "description": "认证过滤器忽略的服务名称列表。新增或替换跳过认证的 web 模块名称（如 remi-invoice-web、remi-report-web）。"
     }
   ]
 }

@@ -3,6 +3,7 @@ package com.remisoft.common.core.response;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.core.code.IExceptionResultCode;
 import com.remisoft.common.core.code.ResultCode;
+import com.remisoft.common.core.config.MessageResolverHolder;
 import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.core.context.ProblemDetail;
 import com.remisoft.common.json.annotation.JsonInclude;

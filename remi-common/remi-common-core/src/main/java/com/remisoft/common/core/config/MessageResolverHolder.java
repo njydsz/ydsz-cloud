@@ -1,4 +1,6 @@
-package com.remisoft.common.core.response;
+package com.remisoft.common.core.config;
+
+import com.remisoft.common.core.response.BaseResponse;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -86,13 +88,13 @@ public final class MessageResolverHolder {
     /**
      * 解析国际化消息，若未设置解析器则返回默认值。
      *
-     * <p>包级可见，仅供 response 包内的类使用。
+     * <p>供 response 包中的 BaseResponse 和 PageResponse 类使用。
      *
      * @param key          国际化消息 key
      * @param defaultValue 默认消息文本
      * @return 解析后的消息内容
      */
-    static String resolveMessage(String key, String defaultValue) {
+    public static String resolveMessage(String key, String defaultValue) {
         MessageResolver currentResolver = RESOLVER.get();
         if (currentResolver != null) {
             String result = currentResolver.resolve(key, defaultValue);

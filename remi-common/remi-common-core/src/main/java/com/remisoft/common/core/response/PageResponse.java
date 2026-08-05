@@ -7,11 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.remisoft.common.core.code.BaseResultCode;
+import com.remisoft.common.core.config.MessageResolverHolder;
 import com.remisoft.common.core.constant.PageConstants;
 import com.remisoft.common.json.annotation.JsonInclude;
 import com.remisoft.common.json.annotation.JsonPropertyOrder;
-
-import static com.remisoft.common.core.response.MessageResolverHolder.resolveMessage;
 
 /**
  * 分页响应结果封装类
@@ -137,7 +136,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @return 成功分页响应
      */
     public static <T> PageResponse<T> success(Long total, Long pageNum, Long pageSize, T data) {
-        return of(BaseResponse.SUCCESS, resolveMessage(BaseResponse.MSG_OPERATION_SUCCESS, "操作成功"), total, pageNum, pageSize, data);
+        return of(BaseResponse.SUCCESS, MessageResolverHolder.resolveMessage(BaseResponse.MSG_OPERATION_SUCCESS, "操作成功"), total, pageNum, pageSize, data);
     }
 
     /**
