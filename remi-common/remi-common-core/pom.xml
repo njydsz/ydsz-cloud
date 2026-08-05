@@ -13,10 +13,7 @@
     <name>remi-common-core</name>
     <description>minimal core — response model, request context, trace ID, constants, enums</description>
 
-    <properties>
-        <argLine></argLine>
-    </properties>
-
+    
     <dependencies>
         <!-- Lombok -->
         <dependency>

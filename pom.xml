@@ -1053,14 +1053,14 @@
                 <version>${okio.version}</version>
             </dependency>
 
-            <!-- Gson（Spring Boot BOM 已管理 2.13.2，显式声明确保 enforcer 版本收敛） -->
+            <!-- Gson（Spring Boot BOM 已管理 2.13.2，显式声明确保版本收敛） -->
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
             </dependency>
 
-            <!-- gRPC（Spring Boot BOM 已管理 1.80.0，显式声明确保 enforcer 版本收敛） -->
+            <!-- gRPC（Spring Boot BOM 已管理 1.80.0，显式声明确保版本收敛） -->
             <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-netty-shaded</artifactId>

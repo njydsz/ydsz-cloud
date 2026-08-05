@@ -153,9 +153,5 @@
         </dependency>
 </dependencies>
 
-    <properties>
-        <!-- JaCoCo 已全局禁用，提供默认空值避免 @{argLine} 占位符未解析 -->
-        <argLine></argLine>
-    </properties>
-
+    
 </project>

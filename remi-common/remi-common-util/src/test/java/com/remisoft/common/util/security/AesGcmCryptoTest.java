@@ -182,4 +182,74 @@ class AesGcmCryptoTest {
                     .isInstanceOf(NullPointerException.class);
         }
     }
+
+    @Nested
+    @DisplayName("AAD 认证加密")
+    /**
+     * 测试分组：AAD 认证加密
+     */
+    class AadAuthenticatedEncryption {
+
+        @Test
+        @DisplayName("AAD 加解密往返一致")
+        void aadRoundtrip() {
+            AesGcmCrypto crypto = new AesGcmCrypto(genKey(32));
+            byte[] aad = "request-id=abc-123".getBytes(StandardCharsets.UTF_8);
+            String ct = crypto.encrypt("sensitive-data", aad);
+            assertThat(crypto.decrypt(ct, aad)).isEqualTo("sensitive-data");
+        }
+
+        @Test
+        @DisplayName("AAD 不匹配应解密失败")
+        void aadMismatchShouldFail() {
+            AesGcmCrypto crypto = new AesGcmCrypto(genKey(32));
+            byte[] aadEncrypt = "user-id=42".getBytes(StandardCharsets.UTF_8);
+            byte[] aadDecrypt = "user-id=99".getBytes(StandardCharsets.UTF_8);
+            String ct = crypto.encrypt("sensitive-data", aadEncrypt);
+            assertThatThrownBy(() -> crypto.decrypt(ct, aadDecrypt))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("AES-GCM decryption failed");
+        }
+
+        @Test
+        @DisplayName("AAD 加密 -> 无 AAD 解密应失败")
+        void aadEncryptedWithoutAadDecryptShouldFail() {
+            AesGcmCrypto crypto = new AesGcmCrypto(genKey(32));
+            byte[] aad = "context".getBytes(StandardCharsets.UTF_8);
+            String ct = crypto.encrypt("data", aad);
+            assertThatThrownBy(() -> crypto.decrypt(ct))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("AES-GCM decryption failed");
+        }
+
+        @Test
+        @DisplayName("无 AAD 加密 -> AAD 解密应失败")
+        void noAadEncryptWithAadDecryptShouldFail() {
+            AesGcmCrypto crypto = new AesGcmCrypto(genKey(32));
+            String ct = crypto.encrypt("data");
+            assertThatThrownBy(() -> crypto.decrypt(ct, "extra".getBytes(StandardCharsets.UTF_8)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("AES-GCM decryption failed");
+        }
+
+        @Test
+        @DisplayName("空 AAD 等价于无 AAD")
+        void emptyAadEqualsNoAad() {
+            AesGcmCrypto crypto = new AesGcmCrypto(genKey(32));
+            String ctWithEmptyAad = crypto.encrypt("data", new byte[0]);
+            String ctWithoutAad = crypto.encrypt("data");
+            assertThat(crypto.decrypt(ctWithEmptyAad)).isEqualTo("data");
+            assertThat(crypto.decrypt(ctWithoutAad)).isEqualTo("data");
+        }
+
+        @Test
+        @DisplayName("大 AAD（1KB）加解密一致")
+        void largeAadRoundtrip() {
+            AesGcmCrypto crypto = new AesGcmCrypto(genKey(32));
+            byte[] largeAad = new byte[1024];
+            new SecureRandom().nextBytes(largeAad);
+            String ct = crypto.encrypt("payload", largeAad);
+            assertThat(crypto.decrypt(ct, largeAad)).isEqualTo("payload");
+        }
+    }
 }

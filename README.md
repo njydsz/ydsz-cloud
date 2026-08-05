@@ -294,12 +294,10 @@ remi-{module}/
 
 ### 代码规范
 
-项目遵循以下编码标准，并通过 CheckStyle 自动检查：
+项目遵循以下编码标准：
 
 - **阿里巴巴 Java 开发手册（泰山版）** —— Java 代码规范基线
 - **Google Java Style Guide** —— 补充格式化规则
-- **SpotBugs + FindSecBugs** —— 静态缺陷与安全模式检测
-- **ArchUnit** —— 分层架构守护（禁止跨层依赖、命名约束）
 
 ### 提交规范
 
@@ -351,7 +349,6 @@ docs: 更新 API 接口文档
 |------|------|------|
 | 项目 README | `./README.md` | 本文档 |
 | MIT 开源协议 | `./LICENSE` | 开源许可协议 |
-| CheckStyle 规则 | `./checkstyle.xml` | 代码规范检查配置（IDE 集成） |
 | Effective POM | `./effective-pom.xml` | 解析后的完整 POM |
 | 模块 README | `remi-*/README.md` | 各模块详细说明文档 |
 | 编码规范 | *(内部 Wiki)* | 团队开发规范 |

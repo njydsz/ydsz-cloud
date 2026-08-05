@@ -144,4 +144,80 @@ class SnowflakeUtilsTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("未初始化");
     }
+
+    @Test
+    @DisplayName("nextIds 批量生成 100 个 ID 全局唯一")
+    void nextIdsBatchShouldBeUnique() throws Exception {
+        resetInstance();
+        SnowflakeUtils.init(3L, 5L);
+        long[] ids = SnowflakeUtils.nextIds(100);
+        assertThat(ids).hasSize(100);
+        Set<Long> set = new HashSet<>(ids.length);
+        for (long id : ids) {
+            assertThat(set.add(id)).as("duplicate id: %d", id).isTrue();
+        }
+    }
+
+    @Test
+    @DisplayName("nextIds 批量生成 ID 单调递增")
+    void nextIdsShouldBeMonotonic() throws Exception {
+        resetInstance();
+        SnowflakeUtils.init(7L, 3L);
+        long[] ids = SnowflakeUtils.nextIds(200);
+        for (int i = 1; i < ids.length; i++) {
+            assertThat(ids[i]).isGreaterThan(ids[i - 1]);
+        }
+    }
+
+    @Test
+    @DisplayName("nextIds count=1 退化为单次生成，值合法")
+    void nextIdsSingleDegradation() throws Exception {
+        resetInstance();
+        SnowflakeUtils.init(1L, 1L);
+        long[] ids = SnowflakeUtils.nextIds(1);
+        assertThat(ids).hasSize(1);
+        assertThat(ids[0]).isPositive();
+    }
+
+    @Test
+    @DisplayName("nextIds count=0 抛 IllegalArgumentException")
+    void nextIdsZeroShouldThrow() throws Exception {
+        resetInstance();
+        SnowflakeUtils.init(1L, 1L);
+        assertThatThrownBy(() -> SnowflakeUtils.nextIds(0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("count must be >= 1");
+    }
+
+    @Test
+    @DisplayName("nextIds count=负值抛 IllegalArgumentException")
+    void nextIdsNegativeShouldThrow() throws Exception {
+        resetInstance();
+        SnowflakeUtils.init(1L, 1L);
+        assertThatThrownBy(() -> SnowflakeUtils.nextIds(-5))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("count must be >= 1");
+    }
+
+    @Test
+    @DisplayName("nextIds count=4096 上限正常生成")
+    void nextIdsMaxBatchSize() throws Exception {
+        resetInstance();
+        SnowflakeUtils.init(1L, 1L);
+        long[] ids = SnowflakeUtils.nextIds(4096);
+        assertThat(ids).hasSize(4096);
+        Set<Long> set = new HashSet<>(ids.length);
+        for (long id : ids) {
+            assertThat(set.add(id)).as("duplicate id").isTrue();
+        }
+    }
+
+    @Test
+    @DisplayName("nextIds count>4096 自动裁剪到 4096")
+    void nextIdsExceedsMaxShouldClamp() throws Exception {
+        resetInstance();
+        SnowflakeUtils.init(1L, 1L);
+        long[] ids = SnowflakeUtils.nextIds(5000);
+        assertThat(ids).hasSize(4096);
+    }
 }

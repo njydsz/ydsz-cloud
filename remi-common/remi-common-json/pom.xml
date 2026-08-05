@@ -18,11 +18,6 @@
     <properties>
         <asm.version>9.9</asm.version>
         <jmh.version>1.37</jmh.version>
-        <!-- JaCoCo 已全局禁用，提供默认空值避免 @{argLine} 占位符未解析 -->
-        <argLine></argLine>
-        <!-- L1 基础库阈值要求：Line >= 80%, Branch >= 70% -->
-        <jacoco.line.coverage>0.80</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.70</jacoco.branch.coverage>
     </properties>
 
     <dependencies>
@@ -147,8 +142,7 @@
 
         <!-- JMH Benchmark 对比基库（test scope，不与生产代码绑定） -->
         <!--
-            注：Gson / Hutool-JSON / org.json / json-simple 被 ArchUnit R29 + Enforcer BannedDependencies
-            全局禁止直接声明（搜索深度仅限直接依赖，searchTransitive=false）。
+            注：Gson / Hutool-JSON / org.json / json-simple 历史上禁止直接声明（统一 JSON 能力收敛到 RemiJson），
             竞品对比基准测试仅保留 Jackson（optional）和 Fastjson2（独立 groupId 不受限）。
         -->
         <dependency>

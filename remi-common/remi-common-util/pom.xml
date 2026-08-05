@@ -13,11 +13,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <properties>
-        <!-- JaCoCo 已全局禁用，提供默认空值避免 @{argLine} 占位符未解析 -->
-        <argLine></argLine>
-    </properties>
-
+    
     <dependencies>
         <!--common-core-->
         <dependency>

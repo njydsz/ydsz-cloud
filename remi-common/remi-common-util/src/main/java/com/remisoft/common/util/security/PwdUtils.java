@@ -2,13 +2,14 @@ package com.remisoft.common.util.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.Locale;
 import java.util.ServiceLoader;
 import java.util.regex.Pattern;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import java.util.HexFormat;
+import com.remisoft.common.util.security.PasswordStrengthChecker.PasswordStrengthLevel;
 
 /**
  * 用户密码安全工具类（纯 JDK 实现 + Spring Security BCrypt）
