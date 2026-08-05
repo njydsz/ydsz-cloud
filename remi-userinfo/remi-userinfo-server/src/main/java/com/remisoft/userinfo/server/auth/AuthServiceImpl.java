@@ -236,7 +236,7 @@ public class AuthServiceImpl implements AuthService {
     public LoginVO refresh(String refreshToken) {
         String newAccessToken = tokenService.refreshAccessToken(refreshToken);
         if (newAccessToken == null) {
-            throw new BusinessException(BaseResultCode.TOKEN_EXPIRED);
+            throw new BusinessException(BaseResultCode.UNAUTHORIZED);
         }
         LoginVO result = new LoginVO();
         result.setAccessToken(newAccessToken);

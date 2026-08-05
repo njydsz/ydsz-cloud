@@ -8,7 +8,7 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.remisoft.common.web.config.FilterIgnoreConstant;
+import com.remisoft.common.auth.constant.FilterIgnoreConstants;
 
 /**
  * {@link FilterIgnoreProperties} 单元测试
@@ -25,11 +25,11 @@ class FilterIgnorePropertiesTest {
     @DisplayName("默认（未配置）时返回内置默认值")
     void defaults_useBuiltin() {
         FilterIgnoreProperties props = new FilterIgnoreProperties();
-        assertEquals(FilterIgnoreConstant.getCommonIgnoreUrls(),
+        assertEquals(FilterIgnoreConstants.getCommonIgnoreUrls(),
                 props.getMergedCommonIgnoreUrls());
-        assertEquals(FilterIgnoreConstant.getSecurityExcludeUrls(),
+        assertEquals(FilterIgnoreConstants.getSecurityExcludeUrls(),
                 props.getMergedSecurityExcludeUrls());
-        assertEquals(FilterIgnoreConstant.getAuthFilterIgnoreServiceNames(),
+        assertEquals(FilterIgnoreConstants.getAuthFilterIgnoreServiceNames(),
                 props.getResolvedAuthFilterIgnoreServiceNames());
     }
 
@@ -40,9 +40,9 @@ class FilterIgnorePropertiesTest {
         props.setCommonIgnoreUrls(List.of("/custom/**"));
         Set<String> merged = props.getMergedCommonIgnoreUrls();
         assertTrue(merged.contains("/custom/**"));
-        assertTrue(merged.containsAll(FilterIgnoreConstant.getCommonIgnoreUrls()));
+        assertTrue(merged.containsAll(FilterIgnoreConstants.getCommonIgnoreUrls()));
         // 去重
-        assertEquals(FilterIgnoreConstant.getCommonIgnoreUrls().size() + 1, merged.size());
+        assertEquals(FilterIgnoreConstants.getCommonIgnoreUrls().size() + 1, merged.size());
     }
 
     @Test
@@ -72,7 +72,7 @@ class FilterIgnorePropertiesTest {
         props.setSecurityExcludeUrls(List.of("/health/**"));
         Set<String> merged = props.getMergedSecurityExcludeUrls();
         assertTrue(merged.contains("/health/**"));
-        assertTrue(merged.containsAll(FilterIgnoreConstant.getSecurityExcludeUrls()));
+        assertTrue(merged.containsAll(FilterIgnoreConstants.getSecurityExcludeUrls()));
     }
 
     @Test
@@ -82,7 +82,7 @@ class FilterIgnorePropertiesTest {
         props.setAuthFilterIgnoreServiceNames(List.of("remi-custom-web"));
         Set<String> resolved = props.getResolvedAuthFilterIgnoreServiceNames();
         assertTrue(resolved.contains("remi-custom-web"));
-        assertTrue(resolved.containsAll(FilterIgnoreConstant.getAuthFilterIgnoreServiceNames()));
+        assertTrue(resolved.containsAll(FilterIgnoreConstants.getAuthFilterIgnoreServiceNames()));
     }
 
     @Test
@@ -92,6 +92,6 @@ class FilterIgnorePropertiesTest {
         Set<String> merged = props.getMergedCommonIgnoreUrls();
         // 修改返回的集合不会污染内置常量
         merged.clear();
-        assertFalse(FilterIgnoreConstant.getCommonIgnoreUrls().isEmpty());
+        assertFalse(FilterIgnoreConstants.getCommonIgnoreUrls().isEmpty());
     }
 }
