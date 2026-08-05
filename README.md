@@ -18,9 +18,9 @@
 
 ## 项目简介
 
-**Remi-Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 五层分层架构，内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共基础库），覆盖用户认证、系统管理、工作流引擎、消息通知、分布式任务调度、规则引擎、网盘知识库、AI 智能体等企业级业务场景。
+**Remi-Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 五层分层架构，内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎等企业级全业务场景。
 
-平台对标 **若依（RuoYi）**、**Pig**、**maku-boot**、**SpringBlade**、**JeecgBoot** 等主流开源快速开发平台（详见 [对标竞品](#对标竞品)），在架构设计、代码质量、工程规范与安全治理方面对齐 **阿里巴巴 Java 开发手册**、**Google Java Style Guide** 等行业标准，并通过 Maven Enforcer、CheckStyle、SpotBugs、OWASP Dependency-Check、JaCoCo、ArchUnit 等 7 道质量门禁保障交付质量。
+平台对标 **若依（RuoYi）**、**Pig**、**maku-boot**、**SpringBlade**、**JeecgBoot** 等主流开源快速开发平台，在架构设计、代码质量、工程规范与安全治理方面对齐 **阿里巴巴 Java 开发手册**、**Google Java Style Guide** 等行业标准，并通过 Maven Enforcer、CheckStyle、SpotBugs、OWASP Dependency-Check、JaCoCo、ArchUnit 等 7 道质量门禁保障交付质量。
 
 ### 核心特性
 
