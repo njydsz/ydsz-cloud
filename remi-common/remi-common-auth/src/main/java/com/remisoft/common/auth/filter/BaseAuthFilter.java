@@ -12,10 +12,11 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.remisoft.common.auth.config.AuthFilterConfiguration;
+import com.remisoft.common.auth.config.AuthFilterIgnoreProperties;
+import com.remisoft.common.auth.constant.FilterIgnoreConstants;
 import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.auth.security.CsrfTokenValidator;
 import com.remisoft.common.auth.security.RateLimiter;
-import com.remisoft.common.core.constant.FilterIgnoreConstant;
 import com.remisoft.common.util.auth.AuthInfo;
 import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.http.ServletUtils;
@@ -183,7 +184,7 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
     /**
      * 判断指定应用名是否被配置为整体跳过认证。
      *
-     * <p>匹配 {@link FilterIgnoreConstant#getAuthFilterIgnoreServiceNames()} 中的服务名白名单。
+     * <p>匹配 {@link FilterIgnoreConstants#getAuthFilterIgnoreServiceNames()} 中的服务名白名单。
      * {@code appName} 为 {@code null} 时直接返回 {@code false}（不跳过）。</p>
      *
      * @param appName 应用名，允许为 {@code null}
@@ -193,6 +194,6 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         if (appName == null) {
             return false;
         }
-        return FilterIgnoreConstant.getAuthFilterIgnoreServiceNames().contains(appName);
+        return FilterIgnoreConstants.getAuthFilterIgnoreServiceNames().contains(appName);
     }
 }

@@ -106,7 +106,7 @@ public final class MessageResolverHolder {
      *
      * <p><b>仅限测试使用。</b>
      */
-    static void __testResetResolver() {
+    public static void __testResetResolver() {
         RESOLVER.set(null);
     }
 }

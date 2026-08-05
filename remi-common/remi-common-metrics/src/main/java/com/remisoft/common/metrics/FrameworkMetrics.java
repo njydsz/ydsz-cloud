@@ -1,32 +1,37 @@
-package com.remisoft.common.core.metrics;
+package com.remisoft.common.metrics;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
 /**
- * Micrometer 指标门面，上报响应统计与请求耗时。
+ * 框架内部 Micrometer 指标门面。
  *
- * <p><b>设计理念：</b>通过 {@link MetricsAccessor} 接口提供可扩展的后端实现，
- * 静态门面方法委托给内部 accessor，无需全局 volatile 单例即可支持静态调用上下文。</p>
+ * <p><b>仅供框架内部使用</b>（过滤器、拦截器等基础设施）。
+ * 业务模块请使用 {@code remi-common-sentry} 中的 {@code MetricsCollector} SPI。</p>
+ *
+ * <p>上报两类指标：
+ * <ul>
+ *   <li>{@code remi.response.total} — 按 response_code 分组的响应计数（Counter）</li>
+ *   <li>{@code remi.request.hold_time} — 请求上下文持有时间（Timer，含 p50/p95/p99 百分位）</li>
+ * </ul>
  *
  * <p><b>两种使用方式：</b></p>
  * <ul>
- *   <li><b>静态方法（向后兼容）：</b>委托给内部 MetricsAccessor，Micrometer 不可用时为 no-op</li>
+ *   <li><b>静态方法（向后兼容）：</b>委托给内部 MetricsAccessor，
+ *       Micrometer 不可用时为 no-op</li>
  *   <li><b>DI 使用：</b>通过 Spring 容器注入 {@code MetricsAccessor} 实例，
  *       适用于需要模拟测试或自定义后端的场景</li>
  * </ul>
  *
- * <p><b>示例：</b></p>
  * <pre>{@code
  * // 静态方式（默认）
- * CoreMetrics.incrementResponse("A00000");
- * CoreMetrics.recordHoldTime(Duration.ofMillis(50));
+ * FrameworkMetrics.incrementResponse("A00000");
+ * FrameworkMetrics.recordHoldTime(Duration.ofMillis(50));
  *
  * // DI 方式（可选）
  * @Autowired
@@ -35,10 +40,11 @@ import io.micrometer.core.instrument.Timer;
  *
  * @author remi-team
  * @since 1.0.0
+ * @see MetricsAccessor
  */
-public final class CoreMetrics {
+public final class FrameworkMetrics {
 
-    private CoreMetrics() {
+    private FrameworkMetrics() {
     }
 
     /**
@@ -96,7 +102,7 @@ public final class CoreMetrics {
         }
         MetricsAccessor previous = accessor;
         if (previous != MetricsAccessor.NO_OP) {
-            LoggerFactory.getLogger(CoreMetrics.class)
+            LoggerFactory.getLogger(FrameworkMetrics.class)
                     .warn("MetricsAccessor already registered, ignoring subsequent registration. "
                             + "Previous: {}, new: {}", previous.getClass().getName(),
                             newAccessor.getClass().getName());
@@ -108,7 +114,7 @@ public final class CoreMetrics {
     /**
      * 重置 accessor 为 no-op 状态（仅用于测试）。
      */
-    static void __testResetAccessor() {
+    public static void __testResetAccessor() {
         accessor = MetricsAccessor.NO_OP;
     }
 
@@ -129,7 +135,7 @@ public final class CoreMetrics {
     /**
      * 上报一次请求上下文的持有时间。
      *
-     * <p>由过滤器的 finally 块在关闭 {@link com.remisoft.common.core.context.RequestContext.CleanupGuard} 调用。
+     * <p>由过滤器的 finally 块在关闭请求上下文时调用。
      * 若 Micrometer 不可用，则为 no-op。</p>
      *
      * @param holdTime 上下文持有时间（不为 null）
@@ -156,8 +162,6 @@ public final class CoreMetrics {
      */
     private static final class MicrometerMetricsAccessor implements MetricsAccessor {
 
-        private static final Logger log = LoggerFactory.getLogger(MicrometerMetricsAccessor.class);
-
         private final MeterRegistry registry;
 
         MicrometerMetricsAccessor(MeterRegistry registry) {
@@ -170,7 +174,8 @@ public final class CoreMetrics {
                 registry.counter("remi.response.total",
                         "response_code", responseCode).increment();
             } catch (Exception e) {
-                log.warn("Failed to increment response counter for code={}: {}", responseCode, e.getMessage());
+                LoggerFactory.getLogger(MicrometerMetricsAccessor.class)
+                        .warn("Failed to increment response counter for code={}: {}", responseCode, e.getMessage());
             }
         }
 
@@ -182,8 +187,10 @@ public final class CoreMetrics {
                         .register(registry)
                         .record(holdTime.toNanos(), TimeUnit.NANOSECONDS);
             } catch (Exception e) {
-                log.warn("Failed to record hold time: {}", e.getMessage());
+                LoggerFactory.getLogger(MicrometerMetricsAccessor.class)
+                        .warn("Failed to record hold time: {}", e.getMessage());
             }
         }
     }
+
 }

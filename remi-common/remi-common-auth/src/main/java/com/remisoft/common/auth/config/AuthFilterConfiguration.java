@@ -7,7 +7,8 @@ import java.util.Set;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-import com.remisoft.common.core.constant.FilterIgnoreConstant;
+import com.remisoft.common.auth.config.AuthFilterIgnoreProperties;
+import com.remisoft.common.auth.constant.FilterIgnoreConstants;
 import com.remisoft.common.util.http.UrlPathUtils;
 
 /**
@@ -142,7 +143,7 @@ public class AuthFilterConfiguration {
      */
     public Set<String> getAllIgnoreUrls() {
         Set<String> allUrls = new HashSet<>();
-        allUrls.addAll(FilterIgnoreConstant.getCommonIgnoreUrls());
+        allUrls.addAll(FilterIgnoreConstants.getCommonIgnoreUrls());
         allUrls.addAll(properties.getCommonIgnoreUrl());
         allUrls.addAll(properties.getGatewayIgnoreUrl());
         allUrls.addAll(properties.getCustomIgnoreUrl());
@@ -155,7 +156,7 @@ public class AuthFilterConfiguration {
      * @return 如果应该忽略返回 true，否则返回 false
      */
     public boolean shouldIgnoreUrl(String url) {
-        return UrlPathUtils.isIgnoreUrl(FilterIgnoreConstant.getCommonIgnoreUrls(), url) ||
+        return UrlPathUtils.isIgnoreUrl(FilterIgnoreConstants.getCommonIgnoreUrls(), url) ||
                 UrlPathUtils.isIgnoreUrl(properties.getCommonIgnoreUrl(), url) ||
                 UrlPathUtils.isIgnoreUrl(properties.getGatewayIgnoreUrl(), url) ||
                 UrlPathUtils.isIgnoreUrl(properties.getCustomIgnoreUrl(), url);

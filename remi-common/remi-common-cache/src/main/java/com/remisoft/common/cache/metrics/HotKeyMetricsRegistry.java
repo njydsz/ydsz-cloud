@@ -69,7 +69,7 @@ public class HotKeyMetricsRegistry {
   @SuppressWarnings("unchecked")
   public <K> java.util.Optional<HotKeyMetrics<K>> find(String cacheName) {
     HotKeyMetrics<?> m = metrics.get(cacheName);
-    return m == null ? java.util.Optional.empty() : java.util.Optional.of((HotKeyMetrics<K>) m;
+    return m == null ? java.util.Optional.empty() : java.util.Optional.of((HotKeyMetrics<K>) m);
   }
 
   /**

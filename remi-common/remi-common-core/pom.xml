@@ -30,6 +30,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
+        <!-- Framework metrics (依赖传递 SLF4J + Micrometer) -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-metrics</artifactId>
+        </dependency>
         <!-- Jakarta Validation API -->
         <dependency>
             <groupId>jakarta.validation</groupId>
@@ -86,7 +91,7 @@
             <artifactId>spring-boot-actuator</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Micrometer Core（optional, CoreResponseMetrics 指标注册需要；由 Spring Boot Actuator BOM 管理版本） -->
+        <!-- Micrometer Core（optional, FrameworkMetrics 指标注册需要） -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>

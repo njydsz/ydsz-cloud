@@ -11,6 +11,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 import com.remisoft.common.core.constant.PageConstants;
 import com.remisoft.common.core.response.BaseResponse;
+import com.remisoft.common.core.response.MessageResolverHolder;
 
 /**
  * {@link CoreAutoConfiguration} 自动装配集成测试。
@@ -29,8 +30,9 @@ class CoreAutoConfigurationTest {
 
     @AfterEach
     void tearDown() {
-        // 重置 PageConstants 静态状态，避免不同测试方法间的状态污染
+        // 重置静态状态，避免不同测试方法间的状态污染
         PageConstants.__testReset();
+        MessageResolverHolder.__testResetResolver();
     }
 
     @Test

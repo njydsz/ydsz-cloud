@@ -52,10 +52,10 @@ public class HotKeyTracker<K> {
    * <p>不可变值对象，用于 {@link #snapshotAndGetTopK(int)} 返回。
    *
    * @param key 缓存 key
-   * @param estimatedFrequency 频率估计值（4-bit Count-Min Sketch 返回 [0, 15]，退化计数器无上限）
-   * @param rank 在 Top-K 中的排名（1-based，1 = 最热）
+   * @param estimatedFrequency 频率估计值
+   * @param rank 在 Top-K 中的排名
    */
-  public record HotKeyEntry(K key, int estimatedFrequency, int rank) {}
+  public record HotKeyEntry<K>(K key, int estimatedFrequency, int rank) {}
 
   /**
    * key → 本地近似频率计数器，仅在不感知底层 FrequencySketch 时使用。

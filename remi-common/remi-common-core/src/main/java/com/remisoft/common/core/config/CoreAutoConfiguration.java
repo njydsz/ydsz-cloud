@@ -10,9 +10,9 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.remisoft.common.core.constant.PageConstants;
-import com.remisoft.common.core.metrics.CoreMetrics;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.core.response.MessageResolverHolder;
+import com.remisoft.common.metrics.FrameworkMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -36,7 +36,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "remi.core", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties({CoreProperties.class, FilterIgnoreProperties.class})
+@EnableConfigurationProperties(CoreProperties.class)
 public class CoreAutoConfiguration {
 
     /**
@@ -80,18 +80,18 @@ public class CoreAutoConfiguration {
     }
 
     /**
-     * 注册 Core 模块 Micrometer 指标 accessor（当 MeterRegistry Bean 可用时）。
+     * 注册框架 Micrometer 指标 accessor（当 MeterRegistry Bean 可用时）。
      *
      * <p>仅当 classpath 上存在 {@link MeterRegistry} 且容器中有对应 Bean 时生效。
-     * 通过 {@link CoreMetrics#registerAccessor(MetricsAccessor)} 注册 Micrometer 后端，
-     * 业务过滤器可通过静态方法
-     * {@link CoreMetrics#incrementResponse(String)} / {@link CoreMetrics#recordHoldTime(java.time.Duration)}
+     * 通过 {@link FrameworkMetrics#registerAccessor(FrameworkMetrics.MetricsAccessor)} 注册 Micrometer 后端，
+     * 框架内部过滤器可通过静态方法
+     * {@link FrameworkMetrics#incrementResponse(String)} / {@link FrameworkMetrics#recordHoldTime(java.time.Duration)}
      * 上报请求级指标，无 Micrometer 时为 no-op。</p>
      */
     @Bean
     @ConditionalOnBean(MeterRegistry.class)
-    Object coreMetricsAccessor(MeterRegistry registry) {
-        CoreMetrics.registerAccessor(CoreMetrics.createAccessor(registry));
+    Object frameworkMetricsAccessor(MeterRegistry registry) {
+        FrameworkMetrics.registerAccessor(FrameworkMetrics.createAccessor(registry));
         return new Object();
     }
 

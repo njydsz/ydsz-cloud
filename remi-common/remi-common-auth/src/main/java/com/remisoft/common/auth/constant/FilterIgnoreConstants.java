@@ -1,4 +1,4 @@
-package com.remisoft.common.core.constant;
+package com.remisoft.common.auth.constant;
 
 import java.util.Collections;
 import java.util.Set;
@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * 过滤器忽略常量类
+ * 认证过滤器忽略路径常量。
  *
  * <p>定义了过滤器需要忽略的 URL 模式和服务名称，用于：
  * <ul>
@@ -16,11 +16,11 @@ import java.util.stream.Stream;
  *   <li>安全相关的排除 URL（登录、认证、验证码等）</li>
  * </ul>
  *
- * <p><b>注意：</b>认证过滤器忽略服务名的默认值硬编码在此处。
- * 建议通过配置文件 {@code remi.core.filter-ignore.auth-filter-ignore-service-names} 覆盖，
- * 避免新增/移除 web 模块时修改 core 模块代码。
- * 通过 {@link com.remisoft.common.core.config.FilterIgnoreProperties#getResolvedAuthFilterIgnoreServiceNames()}
- * 获取配置覆盖后的值。
+ * <p><b>注意：</b>默认值硬编码在此处。建议通过配置文件
+ * {@code remi.auth.filter-ignore.auth-filter-ignore-service-names} 覆盖，
+ * 避免新增/移除 web 模块时修改代码。
+ * 通过 {@link com.remisoft.common.auth.config.AuthFilterIgnoreProperties#getResolvedAuthFilterIgnoreServiceNames()}
+ * 获取配置覆盖后的值。</p>
  *
  * <p><b>线程安全性：</b>所有常量集合均为不可变 Set（{@link Collections#unmodifiableSet(Set)}），
  * 多线程并发访问安全。</p>
@@ -28,10 +28,10 @@ import java.util.stream.Stream;
  * @author remi-team
  * @since 1.0.0
  */
-public final class FilterIgnoreConstant {
+public final class FilterIgnoreConstants {
 
-    private FilterIgnoreConstant() {
-        throw new UnsupportedOperationException("FilterIgnoreConstant is a utility class and cannot be instantiated");
+    private FilterIgnoreConstants() {
+        throw new UnsupportedOperationException("Utility class");
     }
 
     /** 默认全部忽略的URL模式 */

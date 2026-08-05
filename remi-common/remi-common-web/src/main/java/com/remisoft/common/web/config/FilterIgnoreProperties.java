@@ -7,14 +7,15 @@ import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import com.remisoft.common.core.constant.FilterIgnoreConstant;
+import com.remisoft.common.auth.config.AuthFilterIgnoreProperties;
+import com.remisoft.common.auth.constant.FilterIgnoreConstants;
 
 import lombok.Data;
 
 /**
  * 过滤器忽略路径配置属性。
  *
- * <p>允许通过配置文件覆盖或扩展 {@link FilterIgnoreConstant} 中的默认忽略规则。
+ * <p>允许通过配置文件覆盖或扩展 {@link FilterIgnoreConstants} 中的默认忽略规则。
  * 默认与内置默认值<b>合并</b>；设置 {@link #isReplaceBuiltin()} 为 {@code true}
  * 时改为<b>整体替换</b>内置默认值。</p>
  *
@@ -65,7 +66,7 @@ public class FilterIgnoreProperties {
         if (replaceBuiltin) {
             return new LinkedHashSet<>(commonIgnoreUrls);
         }
-        Set<String> merged = new LinkedHashSet<>(FilterIgnoreConstant.getCommonIgnoreUrls());
+        Set<String> merged = new LinkedHashSet<>(FilterIgnoreConstants.getCommonIgnoreUrls());
         merged.addAll(commonIgnoreUrls);
         return merged;
     }
@@ -81,7 +82,7 @@ public class FilterIgnoreProperties {
         if (replaceBuiltin) {
             return new LinkedHashSet<>(securityExcludeUrls);
         }
-        Set<String> merged = new LinkedHashSet<>(FilterIgnoreConstant.getSecurityExcludeUrls());
+        Set<String> merged = new LinkedHashSet<>(FilterIgnoreConstants.getSecurityExcludeUrls());
         merged.addAll(securityExcludeUrls);
         return merged;
     }
@@ -97,7 +98,7 @@ public class FilterIgnoreProperties {
     public Set<String> getResolvedAuthFilterIgnoreServiceNames() {
         Set<String> result = new LinkedHashSet<>();
         if (!replaceBuiltin) {
-            result.addAll(FilterIgnoreConstant.getAuthFilterIgnoreServiceNames());
+            result.addAll(FilterIgnoreConstants.getAuthFilterIgnoreServiceNames());
         }
         result.addAll(authFilterIgnoreServiceNames);
         return result;
