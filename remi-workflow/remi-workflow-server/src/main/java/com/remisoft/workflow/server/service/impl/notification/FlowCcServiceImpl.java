@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.remisoft.common.core.constant.PageConstants;
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.util.id.TracerUtils;
 import com.remisoft.workflow.domain.dto.FlowCcQueryDTO;
 import com.remisoft.workflow.domain.entity.FlowCc;
@@ -232,11 +232,11 @@ public class FlowCcServiceImpl implements FlowCcService {
      */
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<List<FlowCc>> listCcByUser(String userId, String readStatus, String flowCode,
+    public BaseResponse<List<FlowCc>> listCcByUser(String userId, String readStatus, String flowCode,
                                                    String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
-                return PageResponse.success(0L, 0L, 0L, Collections.emptyList());
+                return BaseResponse.successPage(0L, 0L, 0L, Collections.emptyList());
             }
             int page = Math.max(pageNo, 1);
             int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
@@ -245,10 +245,10 @@ public class FlowCcServiceImpl implements FlowCcService {
             List<FlowCc> list = ccMapper.selectCcByUserPage(tenantId, userId,
                     readStatus, flowCode, offset, size);
             long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
-            return PageResponse.success(total, (long) page, (long) size, list);
+            return BaseResponse.successPage(total, (long) page, (long) size, list);
         } catch (Exception e) {
             log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
-            return PageResponse.success(0L, 0L, 0L, Collections.emptyList());
+            return BaseResponse.successPage(0L, 0L, 0L, Collections.emptyList());
         }
     }
 

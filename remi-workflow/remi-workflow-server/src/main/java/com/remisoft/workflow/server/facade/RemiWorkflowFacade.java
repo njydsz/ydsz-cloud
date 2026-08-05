@@ -12,7 +12,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.remisoft.common.auth.context.AuthContext;
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.WorkflowFacade;
 import com.remisoft.workflow.domain.dto.FlowInstanceViewDTO;
 import com.remisoft.workflow.domain.dto.FlowStartProcessDTO;
@@ -115,7 +115,7 @@ public class RemiWorkflowFacade implements WorkflowFacade {
     @Override
     public List<Map<String, Object>> listTodoTasks(String userId, int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        PageResponse<FlowRunTask> pageResult = taskService.listTodoByAssigneePage(
+        BaseResponse<FlowRunTask> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
         List<FlowRunTask> list = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         return list.stream().map(this::toMap).toList();
@@ -125,7 +125,7 @@ public class RemiWorkflowFacade implements WorkflowFacade {
     public List<Map<String, Object>> listDoneTasks(String userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        PageResponse<FlowRunTask> pageResult = taskService.listDoneByAssigneePage(
+        BaseResponse<FlowRunTask> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
         List<FlowRunTask> list = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         return list.stream().map(this::toMap).toList();
@@ -142,15 +142,15 @@ public class RemiWorkflowFacade implements WorkflowFacade {
      * <p>P0-2 修复：返回 {@link PageResult}，保留 total / page / size，避免前端假分页。
      */
     @Override
-    public PageResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
+    public BaseResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
                                                             LocalDateTime startTime, LocalDateTime endTime,
                                                             int page, int size) {
-        PageResponse<FlowInstance> pageResult = instanceService.page(
+        BaseResponse<FlowInstance> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContext.getTenantIdOrDefault("1"), page, size);
         List<FlowInstance> dataList = MapUtils.safeCastList(pageResult.getData(), FlowInstance.class);
         List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
-        return (PageResponse<Map<String, Object>>) (PageResponse<?>) PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
+        return BaseResponse.successPage(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
 
     @Override
@@ -225,7 +225,7 @@ public class RemiWorkflowFacade implements WorkflowFacade {
     @Override
     public int passAllTodoTasks(String userId, String comment) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        PageResponse<FlowRunTask> pageResult = taskService.listTodoByAssigneePage(
+        BaseResponse<FlowRunTask> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
         List<FlowRunTask> todos = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         if (todos.isEmpty()) {

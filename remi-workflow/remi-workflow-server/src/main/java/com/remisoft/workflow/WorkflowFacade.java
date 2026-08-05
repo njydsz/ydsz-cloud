@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.domain.dto.FlowInstanceViewDTO;
 import com.remisoft.workflow.domain.dto.FlowStartProcessDTO;
 import com.remisoft.workflow.domain.dto.FlowTaskOperateDTO;
@@ -138,7 +138,7 @@ public interface WorkflowFacade {
      * @param size         每页大小
      * @return 分页实例 Map 列表
      */
-    PageResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
+    BaseResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
                                                      LocalDateTime startTime,
                                                      LocalDateTime endTime,
                                                      int page, int size);

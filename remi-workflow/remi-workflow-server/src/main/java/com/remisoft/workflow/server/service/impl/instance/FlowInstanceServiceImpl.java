@@ -23,7 +23,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.auth.annotation.DataScope;
 import com.remisoft.common.auth.context.AuthContext;
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
@@ -850,7 +850,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Override
     @Transactional(readOnly = true)
     @DataScope(deptAlias = "", userAlias = "", userColumn = "initiator_id")
-    public PageResponse<FlowInstance> page(String businessType, String initiatorId, String flowStatus,
+    public BaseResponse<FlowInstance> page(String businessType, String initiatorId, String flowStatus,
                                            LocalDateTime startTime, LocalDateTime endTime,
                                            String tenantId, int pageNo, int pageSize) {
         // P2-23: 真分页（SQL LIMIT/OFFSET），支持多维度过滤
@@ -870,7 +870,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 dataScopeFilter, offset, safeSize);
         long total = instanceMapper.countPage(
                 businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
-        return (PageResponse) PageResponse.success(total, (long) safePage, (long) safeSize, list);
+        return BaseResponse.successPage(total, (long) safePage, (long) safeSize, list);
     }
 
     // ============================== P2-24: 流程变量读写 ==============================

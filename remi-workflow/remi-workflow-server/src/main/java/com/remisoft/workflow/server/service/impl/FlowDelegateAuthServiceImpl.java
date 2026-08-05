@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.remisoft.common.auth.context.AuthContext;
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.util.id.TracerUtils;
@@ -387,9 +387,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
      */
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
+    public BaseResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
         if (delegateUserId == null) {
-            return (PageResponse) PageResponse.success(0L, 0L, 0L, null);
+            return BaseResponse.successPage(0L, 0L, 0L, null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
@@ -399,7 +399,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                 .orderByDesc(FlowAuditLog::getCreatedAt)
                 .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLog> list = auditLogMapper.selectList(wrapper);
-        return (PageResponse) PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
+        return BaseResponse.successPage((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
     /**
@@ -415,9 +415,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
      */
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
+    public BaseResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
         if (ownerUserId == null) {
-            return (PageResponse) PageResponse.success(0L, 0L, 0L, null);
+            return BaseResponse.successPage(0L, 0L, 0L, null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
@@ -427,7 +427,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                 .orderByDesc(FlowAuditLog::getCreatedAt)
                 .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLog> list = auditLogMapper.selectList(wrapper);
-        return (PageResponse) PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
+        return BaseResponse.successPage((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
     // ==================== P1-7: 链式解析代理人 ====================
