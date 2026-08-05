@@ -5,6 +5,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 /**
  * JSON Schema 验证器
  *
@@ -215,6 +218,100 @@ public final class JsonSchemaValidator {
                 result.addError(path + ": String does not match pattern '" + patternStr + "'");
             }
         }
+
+        // 格式校验（JSON Schema Draft 07 format 关键字）
+        if (schema.getFormat() != null && !schema.getFormat().isEmpty()) {
+            validateFormat(schema.getFormat(), str, result, path);
+        }
+    }
+
+    /**
+     * 校验字符串格式（JSON Schema Draft 07 内置格式）。
+     *
+     * <p>委托各私有方法，按 format 名称分发到对应校验器。
+     * 遇到未知 format 时按宽松处理：仅记录警告，不作为错误（符合规范的非强制要求精神）。</p>
+     */
+    private static void validateFormat(String format, String value, ValidationResult result, String path) {
+        boolean valid;
+        switch (format) {
+            case "date-time": valid = isValidDateTime(value); break;
+            case "date":       valid = isValidDate(value); break;
+            case "time":       valid = isValidTime(value); break;
+            case "email":
+            case "idn-email":   valid = isValidEmail(value); break;
+            case "uri":
+            case "uri-reference": valid = isValidUri(value); break;
+            case "uuid":        valid = isValidUuid(value); break;
+            case "hostname":    valid = isValidHostname(value); break;
+            case "ipv4":        valid = isValidIpv4(value); break;
+            case "ipv6":        valid = isValidIpv6(value); break;
+            case "regex":       valid = isValidRegex(value); break;
+            default:
+                // 未知 format：不强制报错（规范为注解型格式），保持向前兼容
+                return;
+        }
+        if (!valid) {
+            result.addError(path + ": String value '" + value + "' does not match format '" + format + "'");
+        }
+    }
+
+    private static boolean isValidDateTime(String value) {
+        // ISO-8601 简化校验：yyyy-MM-dd'T'HH:mm:ss(.sss)?(Z|+HH:MM)?
+        return value.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})");
+    }
+
+    private static boolean isValidDate(String value) {
+        return value.matches("^\\d{4}-\\d{2}-\\d{2}");
+    }
+
+    private static boolean isValidTime(String value) {
+        return value.matches("^\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})?");
+    }
+
+    private static boolean isValidEmail(String value) {
+        // RFC 5322 简化校验：local@domain
+        return value.matches("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$");
+    }
+
+    private static boolean isValidUri(String value) {
+        try {
+            URI uri = new URI(value);
+            return uri.getScheme() != null;
+        } catch (URISyntaxException e) {
+            return false;
+        }
+    }
+
+    private static boolean isValidUuid(String value) {
+        return value.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+    }
+
+    private static boolean isValidHostname(String value) {
+        if (value.length() > 253) return false;
+        return value.matches("^([a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?\\.)*[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?$");
+    }
+
+    private static boolean isValidIpv4(String value) {
+        return value.matches("^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$");
+    }
+
+    private static boolean isValidIpv6(String value) {
+        // IPv6 简化校验：8 组或 :: 压缩格式
+        return value.matches("^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$")
+            || value.matches("^([0-9a-fA-F]{1,4}:){1,7}:$")
+            || value.matches("^::([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$")
+            || value.matches("^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$")
+            || value.matches("^::$")
+            || value.toLowerCase().equals("::1");
+    }
+
+    private static boolean isValidRegex(String value) {
+        try {
+            Pattern.compile(value);
+            return true;
+        } catch (java.util.regex.PatternSyntaxException e) {
+            return false;
+        }
     }
 
     /**
@@ -332,6 +429,34 @@ public final class JsonSchemaValidator {
                     validateType((JsonSchema) additionalProperties, value, result, propPath);
                 }
                 // additionalProperties == null 或 true → 允许任意额外属性，不做校验
+            }
+        }
+
+        // dependentRequired 属性存在性依赖校验
+        if (schema.getDependentRequired() != null) {
+            for (Map.Entry<String, List<String>> entry : schema.getDependentRequired().entrySet()) {
+                if (obj.containsKey(entry.getKey())) {
+                    for (String requiredDep : entry.getValue()) {
+                        if (!obj.containsKey(requiredDep)) {
+                            result.addError(path + ": Because '" + entry.getKey() + "' is present, '"
+                                + requiredDep + "' is also required");
+                        }
+                    }
+                }
+            }
+        }
+
+        // dependentSchemas 条件 Schema 约束校验
+        if (schema.getDependentSchemas() != null) {
+            for (Map.Entry<String, JsonSchema> entry : schema.getDependentSchemas().entrySet()) {
+                if (obj.containsKey(entry.getKey())) {
+                    ValidationResult depResult = new ValidationResult(true);
+                    validateType(entry.getValue(), obj, depResult, path + "/dependentSchemas/" + entry.getKey());
+                    if (!depResult.isValid()) {
+                        result.addError(path + ": Property '" + entry.getKey() + "' is present, "
+                            + "but dependent schema validation failed: " + depResult.getErrors());
+                    }
+                }
             }
         }
     }

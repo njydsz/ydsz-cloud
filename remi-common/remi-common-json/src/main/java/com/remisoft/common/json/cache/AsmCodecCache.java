@@ -35,11 +35,27 @@ public final class AsmCodecCache {
 
     private static final int FAILED_CACHE_MAX_SIZE = 256;
 
-    private static final LruSoftCache<AsmSerializer<?>> SERIALIZER_CACHE = 
-        new LruSoftCache<>(DEFAULT_MAX_SIZE);
+    /**
+     * L1 缓存尺寸（强引用，保护最热条目永不 GC 回收）。
+     *
+     * <p>经验值：64 足以覆盖绝大多数业务系统的热点 Bean 类型（Controller/DTO
+     * 通常不超过 30 种），在保证零 GC 抖动的同时控制强引用内存开销。</p>
+     */
+    private static final int L1_STRONG_SIZE = 64;
 
-    private static final LruSoftCache<AsmDeserializer<?>> DESERIALIZER_CACHE = 
-        new LruSoftCache<>(DEFAULT_MAX_SIZE);
+    /**
+     * L2 缓存尺寸（软引用，作为溢出层）。
+     *
+     * <p>仍保留 1024 以满足超多 Bean 类型场景（如动态生成的 DTO），
+     * GC 压力下优先回收 L2 中的冷条目而非 L1 热条目。</p>
+     */
+    private static final int L2_SOFT_SIZE = DEFAULT_MAX_SIZE;
+
+    private static final TieredCodecCache<AsmSerializer<?>> SERIALIZER_CACHE =
+        new TieredCodecCache<>(L1_STRONG_SIZE, L2_SOFT_SIZE);
+
+    private static final TieredCodecCache<AsmDeserializer<?>> DESERIALIZER_CACHE =
+        new TieredCodecCache<>(L1_STRONG_SIZE, L2_SOFT_SIZE);
 
     private static final LruCache<Boolean> SERIALIZER_FAILED = 
         new LruCache<>(FAILED_CACHE_MAX_SIZE);
@@ -48,90 +64,221 @@ public final class AsmCodecCache {
         new LruCache<>(FAILED_CACHE_MAX_SIZE);
 
     /**
-     * 基于 ConcurrentHashMap + 原子淘汰策略的高并发软引用缓存。
+     * 缓存分层结果码。
      *
-     * <p>替代之前 synchronizedMap + LinkedHashMap 方案：</p>
+     * <p>标识一次 {@code get} 操作命中的层级或未命中，可供监控埋点使用。</p>
+     */
+    enum HitTier {
+        /** L1 强引用缓存命中（最热数据） */
+        L1_HIT,
+        /** L2 软引用缓存命中（被重新提升到 L1 后返回） */
+        L2_HIT,
+        /** 两层均未命中 */
+        MISS
+    }
+
+    /**
+     * 双层缓存（L1 强引用 + L2 软引用），专为减少 GC 抖动设计。
+     *
+     * <p><b>架构动机：</b></p>
+     * 纯 SoftRef 缓存在 GC 压力下会被一次性全部回收，引发缓存雪崩：
+     * 大量未命中 → 集中重建 ASM 字节码 → CPU 尖峰 + 瞬时堆增长 → 再次 GC → 震荡。
+     * 通过 L1 强引用层保护最热的 {@code l1Size} 个条目，
+     * 永远不会被 GC 提前回收，从根本上消除抖动。
+     *
+     * <p><b>两层职责：</b></p>
      * <ul>
-     *   <li>get 操作：无锁（ConcurrentHashMap 分段锁），高并发读性能提升 3-5x</li>
-     *   <li>put 操作：仅锁住单个 Segment，不阻塞其他 Segment 的读写</li>
-     *   <li>LRU 近似：通过 {@link #accessOrder} 队列记录访问顺序，超过阈值时异步或同步淘汰</li>
-     *   <li>软引用：允许 GC 在内存压力下提前回收，防止 OOM</li>
+     *   <li>L1 (strong)：小容量强引用缓存，保存最热的 Bean 序列化器/反序列化器。
+     *       命中 L1 等价于过去纯强引用方案的性能与稳定性。</li>
+     *   <li>L2 (soft)：大容量软引用缓存，作为溢出层，收容 L1 淘汰的条目。
+     *       GC 紧张时允许回收，但回收是渐进的（LRU 队尾最久未访问优先），
+     *       不会出现雪崩式集体失效。</li>
      * </ul>
      *
-     * <p><b>线程安全：</b>所有操作均为线程安全，无需外部同步。</p>
+     * <p><b>晋升/淘汰策略：</b></p>
+     * <ul>
+     *   <li>get：L1 miss → 查 L2。若 L2-hit 且条目仍存活，则晋升回 L1。</li>
+     *   <li>put：入 L1。L1 溢出则队首降级到 L2；L2 溢出则队首逐出。</li>
+     * </ul>
+     *
+     * <p><b>线程安全：</b>所有操作均基于 ConcurrentHashMap + AtomicInteger，无需外部同步。</p>
      *
      * @param <T> 缓存值类型
      * @since 1.1.0
      */
-    static class LruSoftCache<T> {
-        private final int maxSize;
-        private final ConcurrentHashMap<Class<?>, SoftReference<T>> map;
-        /** 访问顺序队列（仅用于 LRU 淘汰参考，允许近似） */
-        private final ConcurrentLinkedDeque<Class<?>> accessOrder = new ConcurrentLinkedDeque<>();
-        /** 实际条目的原子计数（避免 ConcurrentHashMap.size() 的全表扫描开销） */
-        private final java.util.concurrent.atomic.AtomicInteger size = new AtomicInteger(0);
+    static class TieredCodecCache<T> {
+        /** L1 强引用最大条目数（建议 64 ~ 256） */
+        private final int l1MaxSize;
+        /** L2 软引用最大条目数 */
+        private final int l2MaxSize;
 
-        LruSoftCache(int maxSize) {
-            this.maxSize = maxSize;
-            this.map = new ConcurrentHashMap<>(maxSize, 0.75f, 64);
+        /** L1 强引用存储（最热条目） */
+        private final ConcurrentHashMap<Class<?>, T> l1;
+        /** L2 软引用存储（溢出层） */
+        private final ConcurrentHashMap<Class<?>, SoftReference<T>> l2;
+
+        /** L1 访问顺序队列 */
+        private final ConcurrentLinkedDeque<Class<?>> l1Access = new ConcurrentLinkedDeque<>();
+        /** L2 访问顺序队列 */
+        private final ConcurrentLinkedDeque<Class<?>> l2Access = new ConcurrentLinkedDeque<>();
+
+        /** L1 原子计数 */
+        private final java.util.concurrent.atomic.AtomicInteger l1Size = new AtomicInteger(0);
+        /** L2 原子计数 */
+        private final java.util.concurrent.atomic.AtomicInteger l2Size = new AtomicInteger(0);
+
+        TieredCodecCache(int l1MaxSize, int l2MaxSize) {
+            this.l1MaxSize = l1MaxSize;
+            this.l2MaxSize = l2MaxSize;
+            this.l1 = new ConcurrentHashMap<>(l1MaxSize, 0.75f, 32);
+            this.l2 = new ConcurrentHashMap<>(l2MaxSize, 0.75f, 64);
         }
 
+        /**
+         * 查找条目，L1 → L2 顺序，L2 命中时晋升到 L1。
+         *
+         * @return 命中的条目，或 {@code null}
+         */
         T get(Class<?> key) {
-            SoftReference<T> ref = map.get(key);
-            if (ref == null) return null;
-            T value = ref.get();
-            if (value == null) {
-                // SoftReference 已被 GC 回收，移除过期条目
-                map.remove(key, ref);
-                size.decrementAndGet();
+            // L1（强引用，GC 安全，最热条目始终存活）
+            T l1Val = l1.get(key);
+            if (l1Val != null) {
+                recordL1Access(key);
+                return l1Val;
+            }
+            // L2（软引用，可能已被 GC 回收）
+            SoftReference<T> l2Ref = l2.get(key);
+            if (l2Ref == null) return null;
+            T l2Val = l2Ref.get();
+            if (l2Val == null) {
+                // SoftReference 已被 GC，移除过期条目
+                l2.remove(key, l2Ref);
+                l2Size.decrementAndGet();
                 return null;
             }
-            // 异步更新访问顺序（不影响热点路径性能）
-            recordAccess(key);
-            return value;
+            // L2 命中 → 晋升回 L1
+            promoteToL1(key, l2Val);
+            return l2Val;
         }
 
+        /**
+         * 存入条目：仅入 L1（强引用层），L1 溢出时最久未访问条目降级到 L2。
+         *
+         * <p>L2 只通过 {@link #demoteL1ToL2} 被动填充（即 L1 淘汰），
+         * 不存在"同写两层"的冗余，两层职责明确：L1 为热路径，L2 为冷备份。</p>
+         */
         void put(Class<?> key, T value) {
-            SoftReference<T> previous = map.put(key, new SoftReference<>(value));
-            if (previous == null || previous.get() == null) {
-                size.incrementAndGet();
+            T previousL1 = l1.put(key, value);
+            if (previousL1 == null) {
+                l1Size.incrementAndGet();
             }
-            recordAccess(key);
-            // 惰性淘汰：超过阈值时触发清理
-            evictIfNeeded();
+            recordL1Access(key);
+
+            // L1 溢出 → 降级最久未访问条目到 L2
+            demoteL1ToL2();
+        }
+
+        /**
+         * 将条目从 L2 晋升到 L1。
+         */
+        private void promoteToL1(Class<?> key, T value) {
+            l1.put(key, value);
+            l1Size.incrementAndGet();
+            recordL1Access(key);
+            // 从 L2 移除（避免重复存在）
+            SoftReference<T> removedL2 = l2.remove(key);
+            if (removedL2 != null) {
+                l2Size.decrementAndGet();
+                l2Access.remove(key);
+            }
+            // 晋升可能引发 L1 溢出
+            demoteL1ToL2();
+        }
+
+        /**
+         * L1 超出容量时，把最久未访问的条目降级到 L2。
+         */
+        private void demoteL1ToL2() {
+            while (l1Size.get() > l1MaxSize) {
+                Class<?> eldest = l1Access.pollFirst();
+                if (eldest == null) break;
+                T evicted = l1.remove(eldest);
+                if (evicted == null) continue;
+                l1Size.decrementAndGet();
+                // 降级到 L2（L2 的 put 在方法外层统一处理，这里只需尝试）
+                SoftReference<T> previousL2 = l2.put(eldest, new SoftReference<>(evicted));
+                if (previousL2 == null || previousL2.get() == null) {
+                    // 若 L2 中原本没有此条目（条目首次被降级），增加计数
+                    // 否则是刷新已有活条目，计数不变
+                    l2Size.incrementAndGet();
+                }
+                recordL2Access(eldest);
+                evictL2IfNeeded();
+                break; // 每次 demote 一条即可
+            }
         }
 
         void clear() {
-            map.clear();
-            accessOrder.clear();
-            size.set(0);
+            l1.clear();
+            l2.clear();
+            l1Access.clear();
+            l2Access.clear();
+            l1Size.set(0);
+            l2Size.set(0);
         }
 
+        /**
+         * 返回缓存条目近似总数（L1 + L2 的弱一致快照）。
+         *
+         * <p>由于并发操作，结果仅供监控参考，非精确值。
+         */
         int size() {
-            return Math.max(0, size.get());
+            return Math.max(0, l1Size.get() + l2Size.get());
         }
 
         /**
-         * 记录访问顺序（移到队尾，最久未访问的留在队首）。
-         * 非精确 LRU，但能有效支持淘汰策略。
+         * 返回 L1 层条目数（强引用保护的最热条目）。
          */
-        private void recordAccess(Class<?> key) {
-            accessOrder.remove(key);
-            accessOrder.addLast(key);
+        int l1Size() {
+            return Math.max(0, l1Size.get());
         }
 
         /**
-         * 超过 maxSize 时，从队首淘汰最久未访问的条目。
-         * 仅由 put 操作触发，保证不会无限增长。
+         * 返回 L2 近似条目数（软引用，部分条目可能已被 GC 回收但尚未清理）。
          */
-        private void evictIfNeeded() {
-            while (size.get() > maxSize) {
-                Class<?> eldest = accessOrder.pollFirst();
+        int l2Size() {
+            return Math.max(0, l2Size.get());
+        }
+
+        /**
+         * 返回 L2 中实际存活的条目数（精确但 O(n)，仅用于低频监控）。
+         */
+        int l2LiveSize() {
+            int total = 0;
+            for (SoftReference<T> ref : l2.values()) {
+                if (ref != null && ref.get() != null) ++total;
+            }
+            return total;
+        }
+
+        private void recordL1Access(Class<?> key) {
+            l1Access.remove(key);
+            l1Access.addLast(key);
+        }
+
+        private void recordL2Access(Class<?> key) {
+            l2Access.remove(key);
+            l2Access.addLast(key);
+        }
+
+        private void evictL2IfNeeded() {
+            while (l2Size.get() > l2MaxSize) {
+                Class<?> eldest = l2Access.pollFirst();
                 if (eldest == null) break;
-                if (map.remove(eldest) != null) {
-                    size.decrementAndGet();
+                SoftReference<T> removed = l2.remove(eldest);
+                if (removed != null) {
+                    l2Size.decrementAndGet();
                 }
-                // 若 map.remove 返回 null，说明该条目已被其他线程移除，继续循环尝试
             }
         }
     }
@@ -139,7 +286,7 @@ public final class AsmCodecCache {
     /**
      * 基于 ConcurrentHashMap 的高并发强引用 LRU 缓存。
      *
-     * <p>使用与 {@link LruSoftCache} 相同的高并发策略，但持有强引用。
+     * <p>使用与 {@link TieredCodecCache} 相同的高并发策略，但仅持有强引用（无软引用层）。
      * 适用于缓存失效成本较低或条目生命周期较短的场景。</p>
      *
      * <p><b>线程安全：</b>所有操作均为线程安全，无需外部同步。</p>
@@ -413,12 +560,42 @@ public final class AsmCodecCache {
      */
     public static String getCacheSize() {
         return String.format(
-            "SerializerCache: %d, DeserializerCache: %d, SerializerFailed: %d, DeserializerFailed: %d",
-            SERIALIZER_CACHE.size(),
-            DESERIALIZER_CACHE.size(),
+            "SerializerCache[L1=%d, L2=%d], DeserializerCache[L1=%d, L2=%d], SerializerFailed: %d, DeserializerFailed: %d",
+            SERIALIZER_CACHE.l1Size(),
+            SERIALIZER_CACHE.l2Size(),
+            DESERIALIZER_CACHE.l1Size(),
+            DESERIALIZER_CACHE.l2Size(),
             SERIALIZER_FAILED.size(),
             DESERIALIZER_FAILED.size()
         );
+    }
+
+    /**
+     * @return 序列化器 L1（强引用）缓存大小
+     */
+    public static int serializerL1Size() {
+        return SERIALIZER_CACHE.l1Size();
+    }
+
+    /**
+     * @return 序列化器 L2（软引用）缓存大小
+     */
+    public static int serializerL2Size() {
+        return SERIALIZER_CACHE.l2Size();
+    }
+
+    /**
+     * @return 反序列化器 L1（强引用）缓存大小
+     */
+    public static int deserializerL1Size() {
+        return DESERIALIZER_CACHE.l1Size();
+    }
+
+    /**
+     * @return 反序列化器 L2（软引用）缓存大小
+     */
+    public static int deserializerL2Size() {
+        return DESERIALIZER_CACHE.l2Size();
     }
 
     /**

@@ -66,6 +66,8 @@ public final class JsonSchema {
     private Integer minLength;
     private Integer maxLength;
     private String pattern;
+    /** 字符串格式约束（JSON Schema Draft 07 format） */
+    private String format;
 
     /** 数字约束 */
     private Double minimum;
@@ -109,6 +111,12 @@ public final class JsonSchema {
 
     /** definitions 定义：可复用的命名 Schema 集合 */
     private Map<String, JsonSchema> definitions;
+
+    /** dependentRequired：属性存在时的必填依赖（JSON Schema Draft 2019-09） */
+    private Map<String, List<String>> dependentRequired;
+
+    /** dependentSchemas：属性存在时的 Schema 依赖（JSON Schema Draft 2019-09） */
+    private Map<String, JsonSchema> dependentSchemas;
 
     /**
      * 构造函数
@@ -229,6 +237,22 @@ public final class JsonSchema {
      */
     public JsonSchema pattern(String pattern) {
         this.pattern = pattern;
+        return this;
+    }
+
+    /**
+     * 设置字符串格式约束（JSON Schema Draft 07 format 关键字）。
+     *
+     * <p>内置支持格式：{@code date-time}、{@code date}、{@code time}、{@code email}、
+     * {@code idn-email}、{@code uri}、{@code uri-reference}、{@code uuid}、{@code hostname}、
+     * {@code ipv4}、{@code ipv6}、{@code regex}。</p>
+     *
+     * @param format 格式标识符（如 "email"、"date-time"）
+     * @return 当前 JsonSchema 实例（链式调用)
+     * @since 1.0.0
+     */
+    public JsonSchema format(String format) {
+        this.format = format;
         return this;
     }
 
@@ -404,6 +428,38 @@ public final class JsonSchema {
      */
     public JsonSchema constValue(Object constValue) {
         this.constValue = constValue;
+        return this;
+    }
+
+    /**
+     * 添加 dependentRequired 依赖（JSON Schema Draft 2019-09）。
+     *
+     * <p>若对象中存在 {@code property} 属性，则 {@code dependencies} 中的属性必须同时存在。</p>
+     *
+     * @param property   依赖来源属性
+     * @param dependencies 被依赖的必填属性列表
+     * @return 当前 JsonSchema 实例（链式调用)
+     * @since 1.0.0
+     */
+    public JsonSchema dependentRequired(String property, String... dependencies) {
+        if (this.dependentRequired == null) { this.dependentRequired = new LinkedHashMap<>(); }
+        this.dependentRequired.put(property, Arrays.asList(dependencies));
+        return this;
+    }
+
+    /**
+     * 添加 dependentSchemas 依赖（JSON Schema Draft 2019-09）。
+     *
+     * <p>若对象中存在 {@code property} 属性，则整个对象必须满足 {@code schema} 约束。</p>
+     *
+     * @param property 依赖来源属性
+     * @param schema   条件满足时应用的 Schema
+     * @return 当前 JsonSchema 实例（链式调用)
+     * @since 1.0.0
+     */
+    public JsonSchema dependentSchemas(String property, JsonSchema schema) {
+        if (this.dependentSchemas == null) { this.dependentSchemas = new LinkedHashMap<>(); }
+        this.dependentSchemas.put(property, schema);
         return this;
     }
 
@@ -623,6 +679,12 @@ public final class JsonSchema {
         return this;
     }
     public Map<String, JsonSchema> getDefinitions() { return definitions; }
+
+    public String getFormat() { return format; }
+
+    public Map<String, List<String>> getDependentRequired() { return dependentRequired; }
+
+    public Map<String, JsonSchema> getDependentSchemas() { return dependentSchemas; }
 
     /**
      * 解析 $ref 引用，返回引用的 Schema，本地未找到返回 null。
