@@ -6,7 +6,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.slf4j.MDC;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.remisoft.common.core.constant.HeaderConstants;
@@ -72,6 +75,12 @@ public final class RequestContext {
     public static final String KEY_LANGUAGE = "language";
     /** 上下文键名：租户隔离跳过标记 */
     public static final String KEY_TENANT_ISOLATION_SKIPPED = "tenantIsolationSkipped";
+    /** 上下文键名：客户端 IP */
+    public static final String KEY_CLIENT_IP = "clientIp";
+    /** 上下文键名：请求来源（INTERNAL / OPEN_API / WEB_HOOK 等）*/
+    public static final String KEY_REQUEST_SOURCE = "requestSource";
+    /** 上下文键名：API 版本 */
+    public static final String KEY_API_VERSION = "apiVersion";
 
     /**
      * 请求上下文存储（懒初始化）。
@@ -209,6 +218,71 @@ public final class RequestContext {
     }
 
     /**
+     * 设置客户端 IP
+     *
+     * @param clientIp 客户端 IP 地址
+     * @since 1.8.0
+     */
+    public static void setClientIp(String clientIp) {
+        put(KEY_CLIENT_IP, clientIp);
+    }
+
+    /**
+     * 获取客户端 IP
+     *
+     * @return 客户端 IP，不存在时返回 null
+     * @since 1.8.0
+     */
+    public static String getClientIp() {
+        return (String) get(KEY_CLIENT_IP);
+    }
+
+    /**
+     * 设置请求来源
+     *
+     * <p>典型取值：{@code INTERNAL}（内部服务调用）、{@code OPEN_API}（开放接口）、
+     * {@code WEB_HOOK}（第三方回调）等。
+     *
+     * @param requestSource 请求来源标识
+     * @since 1.8.0
+     */
+    public static void setRequestSource(String requestSource) {
+        put(KEY_REQUEST_SOURCE, requestSource);
+    }
+
+    /**
+     * 获取请求来源
+     *
+     * @return 请求来源，不存在时返回 null
+     * @since 1.8.0
+     */
+    public static String getRequestSource() {
+        return (String) get(KEY_REQUEST_SOURCE);
+    }
+
+    /**
+     * 设置 API 版本号
+     *
+     * <p>用于 API 生命周期管理 (v1/v2/...) 与灰度分流场景。
+     *
+     * @param apiVersion API 版本号
+     * @since 1.8.0
+     */
+    public static void setApiVersion(String apiVersion) {
+        put(KEY_API_VERSION, apiVersion);
+    }
+
+    /**
+     * 获取 API 版本号
+     *
+     * @return API 版本号，不存在时返回 null
+     * @since 1.8.0
+     */
+    public static String getApiVersion() {
+        return (String) get(KEY_API_VERSION);
+    }
+
+    /**
      * 设置属性
      *
      * <p>首次调用时创建上下文 Map（懒初始化）。
@@ -327,6 +401,95 @@ public final class RequestContext {
     }
 
     /**
+     * 创建当前上下文的快照（不可变字符串 Map），用于跨线程传递。
+     *
+     * <p>快照是<b>防御性拷贝</b>：对快照的修改不会影响当前线程上下文。
+     * 配合 {@link #restore(Map)} 实现在子线程中恢复上下文（如异步任务、事件发布）。</p>
+     *
+     * @return 上下文的不可变快照；上下文为空时返回空 Map
+     * @since 1.8.0
+     */
+    public static Map<String, String> snapshot() {
+        Map<String, Object> holder = CONTEXT_HOLDER.get();
+        if (holder == null || holder.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> snapshot = new HashMap<>(holder.size());
+        for (Map.Entry<String, Object> entry : holder.entrySet()) {
+            Object value = entry.getValue();
+            snapshot.put(entry.getKey(), value == null ? null : value.toString());
+        }
+        return Collections.unmodifiableMap(snapshot);
+    }
+
+    /**
+     * 恢复上下文快照。
+     *
+     * <p>会用快照中的<b>全部键值</b>覆盖当前线程上下文（快照中不存在的 key 会被保留，
+     * 不会自动清除）。如需清空当前上下文再恢复，请调用方在执行前先 {@link #clear()}。</p>
+     *
+     * @param snapshot 通过 {@link #snapshot()} 获取的快照，可为 null（空操作）
+     * @since 1.8.0
+     */
+    public static void restore(Map<String, String> snapshot) {
+        if (snapshot == null || snapshot.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, String> entry : snapshot.entrySet()) {
+            if (entry.getValue() == null) {
+                remove(entry.getKey());
+            } else {
+                put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    /**
+     * 将当前上下文桥接到 SLF4J MDC。
+     *
+     * <p>桥接 tenantId / userId / traceId / requestId 四个常用字段，
+     * 使日志框架的 {@code %X{tenantId}} / %X{traceId}} 占位符生效。
+     * 一般在 Filter/Interceptor 入口与 {@link RequestContext} 赋值后调用一次。</p>
+     *
+     * <p><b>清理：</b>桥接写入的 MDC 条目由调用方在请求结束时通过 {@link #clearMdc()} 清理。
+     * 推荐使用 {@link #runWithCleanup(Runnable)} 工具方法，它会连同 {@link #clear()} 与 {@link #clearMdc()} 一并处理。</p>
+     *
+     * @since 1.8.0
+     * @see #clearMdc()
+     */
+    public static void bridgeToMdc() {
+        String tenantId = getTenantId();
+        if (tenantId != null) {
+            MDC.put(KEY_TENANT_ID, tenantId);
+        }
+        String userId = getUserId();
+        if (userId != null) {
+            MDC.put(KEY_USER_ID, userId);
+        }
+        String traceId = getTraceId();
+        if (traceId != null) {
+            MDC.put(KEY_TRACE_ID, traceId);
+        }
+        String requestId = getRequestId();
+        if (requestId != null) {
+            MDC.put(KEY_REQUEST_ID, requestId);
+        }
+    }
+
+    /**
+     * 清理由 {@link #bridgeToMdc()} 写入的 MDC 条目。
+     *
+     * @since 1.8.0
+     * @see #bridgeToMdc()
+     */
+    public static void clearMdc() {
+        MDC.remove(KEY_TENANT_ID);
+        MDC.remove(KEY_USER_ID);
+        MDC.remove(KEY_TRACE_ID);
+        MDC.remove(KEY_REQUEST_ID);
+    }
+
+    /**
      * 创建当前线程上下文的诊断快照。
      *
      * <p>返回当前线程上下文的<b>不可变浅拷贝</b>（Map 本身不可变，值为原引用），
@@ -374,6 +537,69 @@ public final class RequestContext {
             return Collections.emptyMap();
         }
         return Collections.unmodifiableMap(holder);
+    }
+
+    /**
+     * 在当前上下文中运行一段逻辑，并在执行后（无论是否抛异常）自动清理当前线程上下文与 MDC。
+     *
+     * <p>等价于：</p>
+     * <pre>{@code
+     * try (CleanupGuard ignored = newCleanupGuard()) {
+     *     task.run();
+     * }
+     * }</pre>
+     *
+     * <p>相比直接使用 {@link #newCleanupGuard()}，该方法会在清理阶段额外调用 {@link #clearMdc()}，
+     * 避免 {@link #bridgeToMdc()} 写入的 MDC 条目残留在复用线程上。</p>
+     *
+     * @param task 待执行逻辑
+     * @since 1.8.0
+     */
+    public static void runWithCleanup(Runnable task) {
+        try (CleanupGuard guard = newCleanupGuard()) {
+            task.run();
+        } finally {
+            clearMdc();
+        }
+    }
+
+    /**
+     * 在当前上下文中运行一段带返回值的逻辑，并在执行后（无论是否抛异常）自动清理上下文与 MDC。
+     *
+     * @param <T>  返回值类型
+     * @param supplier 待执行逻辑
+     * @return 逻辑返回值
+     * @since 1.8.0
+     */
+    public static <T> T supplyWithCleanup(java.util.function.Supplier<T> supplier) {
+        try (CleanupGuard guard = newCleanupGuard()) {
+            return supplier.get();
+        } finally {
+            clearMdc();
+        }
+    }
+
+    /**
+     * 在当前上下文中运行一段允许抛受检异常的逻辑，并在执行后（无论是否抛异常）自动清理上下文与 MDC。
+     *
+     * @param <T>  返回值类型
+     * @param callable 待执行逻辑（允许抛受检异常）
+     * @return 逻辑返回值
+     * @throws E callable 抛出的受检异常
+     * @since 1.8.0
+     */
+    public static <T, E extends Exception> T callWithCleanup(Callable<T> callable) throws E {
+        try (CleanupGuard guard = newCleanupGuard()) {
+            return callable.call();
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Exception e) {
+            @SuppressWarnings("unchecked")
+            E typed = (E) e;
+            throw typed;
+        } finally {
+            clearMdc();
+        }
     }
 
     /**

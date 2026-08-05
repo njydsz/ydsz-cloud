@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.json.annotation.JsonSerialize;
+import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.serializer.JsonSerializer;
 import com.remisoft.common.json.asm.AsmSerializer;
@@ -64,6 +65,112 @@ public final class SerializationProvider {
 
     /** 大 JSON StringBuilder 初始容量（适合大集合/复杂嵌套）*/
     private static final int LARGE_SB_CAPACITY = 16384;
+
+    /**
+     * 序列化上下文（对标 Jackson SerializerProvider）。
+     *
+     * <p>合并 11 个原独立 ThreadLocal 字段到单一对象，降低 ThreadLocal 粒度，
+     * 方便快照保存/恢复。通过 {@link #CONTEXT} ThreadLocal 访问。</p>
+     *
+     * @since 1.1.0
+     */
+    public static final class SerializationContext {
+
+        /** 线程级 Context 持有者（自动初始化默认实例） */
+        public static final ThreadLocal<SerializationContext> CONTEXT = ThreadLocal.withInitial(() -> {
+            SerializationContext ctx = new SerializationContext();
+            ctx.sbPool = new StringBuilder(SMALL_SB_CAPACITY);
+            ctx.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>());
+            ctx.fastWriterPool = new JSONWriter();
+            return ctx;
+        });
+
+        /** 是否输出 null 值字段 */
+        public boolean writeNulls;
+
+        /** 是否格式化输出 */
+        public boolean prettyPrint;
+
+        /** 循环引用处理策略（REF/IGNORE/ERROR） */
+        public String circularRefStrategy;
+
+        /** 枚举是否使用序号 */
+        public boolean serializeEnumUsingOrdinal;
+
+        /** 排除字段集合 */
+        public Set<String> excludedFields;
+
+        /** 日期格式 */
+        public String dateFormat;
+
+        /** 序列化失败时是否抛出异常 */
+        public boolean failOnError;
+
+        /** JSONWriter 实例池 */
+        public JSONWriter fastWriterPool;
+
+        /** 当前 JsonView 视图类 */
+        public Class<?> currentViewClass;
+
+        /** 当前正在序列化的对象集合（循环引用检测） */
+        public Set<Object> serializingObjects;
+
+        /** StringBuilder 实例池 */
+        public StringBuilder sbPool;
+
+        /** List 序列化 ASM 序列化器缓存（基于元素类型复用） */
+        public AsmSerializer<Object> cachedListSerializer;
+
+        /** List 元素类型缓存（与 cachedListSerializer 配对） */
+        public Class<?> cachedListElementClass;
+
+        /** 字段命名策略（PropertyNamingStrategy） */
+        public PropertyNamingStrategy namingStrategy;
+
+        private SerializationContext() {
+            // 仅内部创建
+        }
+
+        /**
+         * 清除当前线程的 SerializationContext。
+         */
+        public static void clear() {
+            CONTEXT.remove();
+        }
+
+        /**
+         * 从预计算运行时配置创建并初始化 SerializationContext。
+         *
+         * @param runtimeConfig 运行时配置
+         * @return 初始化后的 SerializationContext
+         */
+        public static SerializationContext from(JsonRuntimeConfig runtimeConfig) {
+            SerializationContext ctx = new SerializationContext();
+            ctx.writeNulls = runtimeConfig.writeNulls();
+            ctx.prettyPrint = runtimeConfig.prettyPrint();
+            ctx.circularRefStrategy = runtimeConfig.circularRefStrategy();
+            ctx.serializeEnumUsingOrdinal = runtimeConfig.serializeEnumUsingOrdinal();
+            ctx.dateFormat = runtimeConfig.dateFormat();
+            ctx.failOnError = runtimeConfig.failOnError();
+            ctx.fastWriterPool = new JSONWriter();
+            ctx.currentViewClass = null;
+            ctx.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>());
+            ctx.sbPool = new StringBuilder(SMALL_SB_CAPACITY);
+            ctx.cachedListSerializer = null;
+            ctx.cachedListElementClass = null;
+            ctx.namingStrategy = runtimeConfig.namingStrategy();
+            return ctx;
+        }
+
+        /**
+         * 获取当前线程的 SerializationContext（已由 ThreadLocal.withInitial 保证非空）。
+         *
+         * @return 当前线程的 SerializationContext
+         */
+        public static SerializationContext current() {
+            return CONTEXT.get();
+        }
+    }
 
     /**
      * 所有序列化上下文状态（含 StringBuilder 池、JSONWriter 池、循环引用检测集、

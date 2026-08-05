@@ -467,6 +467,66 @@ public final class SnowflakeUtils {
         return shardCount;
     }
 
+    // ==================== ID 反解析 ====================
+
+    /**
+     * 从 Snowflake ID 中提取生成时间戳（毫秒，UTC）。
+     *
+     * <p>常用于排查延迟问题或按时间范围过滤 ID。
+     *
+     * <pre>{@code
+     * long id = SnowflakeUtils.nextIdLong();
+     * long timestamp = SnowflakeUtils.parseTimestamp(id);
+     * // timestamp 为 2020-01-01 00:00:00 UTC 起的毫秒数
+     * }</pre>
+     *
+     * @param id Snowflake 算法生成的 64 位 ID
+     * @return 生成该 ID 时的毫秒时间戳（2020-01-01 00:00:00 UTC 起算）
+     * @since 1.3.0
+     */
+    public static long parseTimestamp(long id) {
+        return (id >> TIMESTAMP_LEFT_SHIFT) + EPOCH;
+    }
+
+    /**
+     * 从 Snowflake ID 中提取数据中心 ID。
+     *
+     * <p>常用于排查跨数据中心 ID 冲突、审计 ID 来源。
+     *
+     * @param id Snowflake 算法生成的 64 位 ID
+     * @return 数据中心 ID（0-31）
+     * @since 1.3.0
+     */
+    public static long parseDatacenterId(long id) {
+        return (id >> DATACENTER_ID_SHIFT) & MAX_DATACENTER_ID;
+    }
+
+    /**
+     * 从 Snowflake ID 中提取工作节点 ID。
+     *
+     * <p>常用于定位生成该 ID 的物理/逻辑节点，排查单点异常。
+     *
+     * @param id Snowflake 算法生成的 64 位 ID
+     * @return 工作节点 ID（0-31）
+     * @since 1.3.0
+     */
+    public static long parseWorkerId(long id) {
+        return (id >> WORKER_ID_SHIFT) & MAX_WORKER_ID;
+    }
+
+    /**
+     * 从 Snowflake ID 中提取同一毫秒内的序列号。
+     *
+     * <p>序列号反映同一节点、同一毫秒内的生成顺序，范围 0-4095。
+     *
+     * @param id Snowflake 算法生成的 64 位 ID
+     * @return 序列号（0-4095）
+     * @since 1.3.0
+     */
+    public static long parseSequence(long id) {
+        return id & SEQUENCE_MASK;
+    }
+
     /**
      * 重置单例实例（仅供测试使用）
      *

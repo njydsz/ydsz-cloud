@@ -2,6 +2,7 @@ package com.remisoft.common.core.code;
 
 
 import com.remisoft.common.core.response.BaseResponse;
+import org.springframework.core.retry.RetryPolicy;
 
 /**
  * 标准结果码枚举
@@ -27,15 +28,6 @@ import com.remisoft.common.core.response.BaseResponse;
  * <p>业务模块专用错误码（如 B3xxxx 用户/B4xxxx 项目/B7xxxx 工作流）已下沉至各模块
  * 的 {@code XXResultCode} 枚举中统一管理。
  * 业务模块自定义错误码请实现 {@link ResultCode} 接口，在各模块内自行定义。
- *
- * <p><b>快速检索：</b></p>
- * <ul>
- *   <li>{@link #fromCode(String)} — 按 code 字符串查找</li>
- *   <li>{@link #successCodes()} — 仅成功码</li>
- *   <li>{@link #authCodes()} — 认证/授权相关</li>
- *   <li>{@link #dbCodes()} — 数据库相关</li>
- *   <li>{@link #integrationCodes()} — 第三方集成相关</li>
- * </ul>
  *
  * @author remi-team
  * @since 1.0.0
@@ -72,12 +64,6 @@ public enum BaseResultCode implements ResultCode {
     SERVICE_UNAVAILABLE("B10202", "服务暂不可用", 503),
     /** 请求超时 */
     REQUEST_TIMEOUT("A10203", "请求超时", 408),
-
-    // ============================== 限流相关 (A103xx) ==============================
-    /** 请求频率超限 */
-    RATE_LIMIT("A10301", "请求频率超限", 429),
-    /** 租户配额超限 */
-    QUOTA_EXCEEDED("A10302", "租户配额超限", 429),
 
     // ============================== 数据库相关 (C104xx) ==============================
     /** 数据唯一性冲突 */

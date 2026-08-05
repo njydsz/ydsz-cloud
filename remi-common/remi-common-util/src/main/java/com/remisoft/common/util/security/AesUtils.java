@@ -4,6 +4,7 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.crypto.KeyGenerator;
 
@@ -78,18 +79,31 @@ public class AesUtils {
     private static volatile String configuredKey;
 
     /**
-     * AesGcmCrypto 实例缓存，按 Hex 密钥字符串索引。
+     * 配置密钥对应的 AesGcmCrypto 实例（原子引用，与 {@link #configuredKey} 同步发布）。
+     *
+     * <p>使用 AtomicReference 保证密钥字符串 + Crypto 实例的原子性更新，
+     * 消除 volatile 写 + ConcurrentHashMap.clear() 之间的竞态窗口。
+     */
+    private static final AtomicReference<AesGcmCrypto> configuredCryptoRef = new AtomicReference<>();
+
+    /**
+     * 非配置密钥对应的 AesGcmCrypto 实例缓存，按 Hex 密钥字符串索引。
      *
      * <p>AesGcmCrypto 内部持有的 SecretKeySpec 与共享 SecureRandom 均可复用，
      * 仅 Cipher 非线程安全需在每次 encrypt/decrypt 内部新建。
      * 缓存避免每次加解密都重新执行 hex 解码 + SecretKeySpec 构造。
+     *
+     * <p>注意：本缓存仅存储未通过 {@link #setConfiguredKey(String)} 显式配置的多密钥实例。
+     * 配置密钥的实例由 {@link #configuredCryptoRef} 原子持有，不进入此缓存。
      */
     private static final ConcurrentHashMap<String, AesGcmCrypto> CRYPTO_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 注入配置的 AES 密钥（Hex 格式）
      *
-     * <p>密钥变更时会清空 {@link #CRYPTO_CACHE}，确保旧密钥对应的缓存实例不会残留。
+     * <p>原子性保证：密钥 Crypto 实例通过 {@link AtomicReference#set} 同步发布，
+     * 加密/解密线程始终看到完整的「密钥字符串 + Crypto 实例」组合，
+     * 消除旧实现中 volatile 写 + ConcurrentHashMap.clear() 分离导致的竞态窗口。
      *
      * @param hexKey Hex 格式的 AES 密钥，最小 32 字节（64 个 Hex 字符）推荐，兼容 16 字节
      */
@@ -98,8 +112,9 @@ public class AesUtils {
             throw new IllegalArgumentException("AES 密钥不能为空");
         }
         validateKey(hexKey);
+        AesGcmCrypto crypto = new AesGcmCrypto(hexToBytes(hexKey));
         configuredKey = hexKey;
-        CRYPTO_CACHE.clear();
+        configuredCryptoRef.set(crypto);
     }
 
     /**
@@ -138,12 +153,21 @@ public class AesUtils {
     /**
      * 获取（必要时创建并缓存）指定 Hex 密钥对应的 AesGcmCrypto 实例。
      *
-     * <p>同一 Hex 密钥复用同一 AesGcmCrypto 实例，避免重复构造 SecretKeySpec。
+     * <p>优先从配置密钥的原子引用中获取（零缓存查找），
+     * 若未命中则从多密钥缓存 {@link #CRYPTO_CACHE} 中获取或创建。
      *
      * @param hexAesKey Hex 格式 AES 密钥
      * @return 缓存的 AesGcmCrypto 实例
      */
     private static AesGcmCrypto getCrypto(String hexAesKey) {
+        // 优先命中配置密钥的快速路径（无 ConcurrentHashMap 查找开销）
+        if (configuredKey != null && configuredKey.equals(hexAesKey)) {
+            AesGcmCrypto configured = configuredCryptoRef.get();
+            if (configured != null) {
+                return configured;
+            }
+        }
+        // 非配置密钥走缓存路径
         return CRYPTO_CACHE.computeIfAbsent(hexAesKey, k -> new AesGcmCrypto(hexToBytes(k)));
     }
 

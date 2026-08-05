@@ -8,8 +8,6 @@ import java.io.CharArrayWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,15 +24,11 @@ import java.io.Serializable;
 import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -51,12 +45,19 @@ import lombok.extern.slf4j.Slf4j;
  *   <li><b>流复制与转换：</b>支持 InputStream/OutputStream/Reader/Writer 之间的高效复制</li>
  *   <li><b>字节数组操作：</b>字节数组与流的相互转换、读取</li>
  *   <li><b>字符串操作：</b>字符串与流的相互转换、编码处理</li>
- *   <li><b>对象序列化：</b>对象的序列化与反序列化</li>
  *   <li><b>NIO 高性能操作：</b>FileChannel、MappedByteBuffer、DirectBuffer</li>
  *   <li><b>流包装与装饰：</b>BufferedStream、Datastream、自动关闭等</li>
  *   <li><b>资源安全管理：</b>静默关闭、异常处理、超时控制</li>
- *   <li><b>特殊流操作：</b>管道流、TeeStream（一流双写）、LimitStream</li>
- *   <li><b>文件链接操作：</b>文件拷贝、移动、合并等</li>
+ *   <li><b>特殊流操作：</b>管道流、TeeStream（一流双写）、LimitStream（自 1.3.0 起拆分至独立类）</li>
+ * </ul>
+ *
+ * <p><b>拆分说明（1.3.0）：</b></p>
+ * <ul>
+ *   <li>文件操作（copyFileFast、copyFileMapped、readFileToByteArray、writeByteArrayToFile）
+ *       已拆分至 {@link FileUtils}</li>
+ *   <li>TeeStream 已提取为独立类 {@link TeeOutputStream}</li>
+ *   <li>LimitStream 已提取为独立类 {@link LimitInputStream}</li>
+ *   <li>对象序列化方法已废弃，推荐使用 {@code com.remisoft.common.json.RemiJson}</li>
  * </ul>
  *
  * <p><b>相比 Apache Commons IO / Hutool 的增强：</b></p>
@@ -87,16 +88,12 @@ import lombok.extern.slf4j.Slf4j;
  * // 写入字符串到流
  * IOUtils.write("Hello World", outputStream, StandardCharsets.UTF_8);
  *
- * // 对象序列化
- * IOUtils.serialize(obj, new FileOutputStream("data.ser"));
- * Object obj = IOUtils.deserialize(new FileInputStream("data.ser"));
- *
  * // 一流双写（同时写入两个输出流）
- * TeeStream tee = new TeeStream(outputStream1, outputStream2);
+ * TeeOutputStream tee = new TeeOutputStream(outputStream1, outputStream2);
  * IOUtils.copy(inputStream, tee);
  *
  * // 限制读取字节数
- * LimitStream limited = new LimitStream(inputStream, 1024);
+ * LimitInputStream limited = new LimitInputStream(inputStream, 1024);
  * byte[] data = IOUtils.toByteArray(limited);
  * </pre>
  *
@@ -510,15 +507,21 @@ public class IOUtils {
         return writer.toString();
     }
 
-    // ==================== 对象序列化与反序列化 ====================
+    // ==================== 对象序列化与反序列化（已废弃） ====================
 
     /**
-     * 序列化对象到 OutputStream
+     * 序列化对象到 OutputStream。
+     *
+     * <p>Java 原生序列化（ObjectOutputStream）存在安全风险：反序列化不可信数据可触发远程代码执行，
+     * 且序列化格式冗余大、跨语言兼容性差。
      *
      * @param obj    要序列化的对象
      * @param output 输出流
      * @throws IOException IO 异常
+     * @deprecated 自 1.3.0 起废弃，推荐使用 {@code com.remisoft.common.json.RemiJson.serialize(obj)} 替代，
+     *             JSON 序列化更安全、可读、跨语言兼容。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static void serialize(Serializable obj, OutputStream output) throws IOException {
         Objects.requireNonNull(obj, "obj cannot be null");
         Objects.requireNonNull(output, "output cannot be null");
@@ -530,15 +533,17 @@ public class IOUtils {
     }
 
     /**
-     * 从 InputStream 反序列化对象
+     * 从 InputStream 反序列化对象。
      *
      * @param input 输入流
      * @param <T>   对象类型
      * @return 反序列化的对象
      * @throws IOException            IO 异常
      * @throws ClassNotFoundException 类未找到异常
+     *
+     * @deprecated 自 1.3.0 起废弃，推荐使用 {@code RemiJson.deserialize(input, clazz)} 替代。
      */
-    
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static <T> T deserialize(InputStream input) throws IOException, ClassNotFoundException {
         Objects.requireNonNull(input, "input cannot be null");
 
@@ -548,18 +553,25 @@ public class IOUtils {
         }
     }
 
-    /** 内部辅助方法：安全转换反序列化对象到泛型类型 T */
+    /** 内部辅助方法：安全转换反序列化对象到泛型类型 T
+     *
+     * @deprecated 随 deserialize 方法一并废弃。
+     */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     private static <T> T castObject(Object obj) {
         return (T) obj;
     }
 
     /**
-     * 序列化对象到 byte 数组
+     * 序列化对象到 byte 数组。
      *
      * @param obj 要序列化的对象
      * @return 字节数组
      * @throws IOException IO 异常
+     *
+     * @deprecated 自 1.3.0 起废弃，推荐使用 {@code RemiJson.serialize(obj).getBytes(StandardCharsets.UTF_8)} 替代。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static byte[] serializeToByteArray(Serializable obj) throws IOException {
         Objects.requireNonNull(obj, "obj cannot be null");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -568,15 +580,17 @@ public class IOUtils {
     }
 
     /**
-     * 从 byte 数组反序列化对象
+     * 从 byte 数组反序列化对象。
      *
      * @param data 字节数组
      * @param <T>  对象类型
      * @return 反序列化的对象
      * @throws IOException            IO 异常
      * @throws ClassNotFoundException 类未找到异常
+     *
+     * @deprecated 自 1.3.0 起废弃，推荐使用 {@code RemiJson.deserialize(new String(data, StandardCharsets.UTF_8), clazz)} 替代。
      */
-    
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static <T> T deserializeFromByteArray(byte[] data) throws IOException, ClassNotFoundException {
         Objects.requireNonNull(data, "data cannot be null");
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
@@ -586,169 +600,84 @@ public class IOUtils {
         }
     }
 
-    // ==================== NIO 高性能操作 ====================
+    // ==================== 文件操作（已拆分至 FileUtils） ====================
 
     /**
-     * 使用 FileChannel 复制文件（高性能）
+     * 使用 FileChannel 复制文件（高性能）。
      *
      * @param sourceFile 源文件
      * @param destFile   目标文件
      * @throws IOException IO 异常
+     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#copyFileFast(File, File)}。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static void copyFileFast(File sourceFile, File destFile) throws IOException {
-        Objects.requireNonNull(sourceFile, "sourceFile cannot be null");
-        Objects.requireNonNull(destFile, "destFile cannot be null");
-
-        if (!sourceFile.exists()) {
-            throw new IOException("Source file does not exist: " + sourceFile);
-        }
-
-        File parentDir = destFile.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            if (!parentDir.mkdirs()) {
-                throw new IOException("Failed to create parent directory: " + parentDir);
-            }
-        }
-
-        try (FileInputStream fis = new FileInputStream(sourceFile);
-             FileOutputStream fos = new FileOutputStream(destFile);
-             FileChannel sourceChannel = fis.getChannel();
-             FileChannel destChannel = fos.getChannel()) {
-            sourceChannel.transferTo(0, sourceChannel.size(), destChannel);
-        }
+        FileUtils.copyFileFast(sourceFile, destFile);
     }
 
     /**
-     * 使用 FileChannel 复制文件（Path 版本）
+     * 使用 FileChannel 复制文件（Path 版本）。
      *
      * @param source 源文件路径
      * @param dest   目标文件路径
      * @throws IOException IO 异常
+     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#copyFileFast(Path, Path)}。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static void copyFileFast(Path source, Path dest) throws IOException {
-        Objects.requireNonNull(source, "source cannot be null");
-        Objects.requireNonNull(dest, "dest cannot be null");
-
-        if (!Files.exists(source)) {
-            throw new IOException("Source file does not exist: " + source);
-        }
-
-        Path parentDir = dest.getParent();
-        if (parentDir != null && !Files.exists(parentDir)) {
-            Files.createDirectories(parentDir);
-        }
-
-        try (FileChannel sourceChannel = FileChannel.open(source, StandardOpenOption.READ);
-             FileChannel destChannel = FileChannel.open(dest, StandardOpenOption.CREATE,
-                     StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            sourceChannel.transferTo(0, sourceChannel.size(), destChannel);
-        }
+        FileUtils.copyFileFast(source, dest);
     }
 
     /**
-     * 使用 FileChannel 复制文件（字符串路径版本）
+     * 使用 FileChannel 复制文件（字符串路径版本）。
      *
      * @param sourcePath 源文件路径
      * @param destPath   目标文件路径
      * @throws IOException IO 异常
+     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#copyFileFast(String, String)}。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static void copyFileFast(String sourcePath, String destPath) throws IOException {
-        copyFileFast(Paths.get(sourcePath), Paths.get(destPath));
+        FileUtils.copyFileFast(sourcePath, destPath);
     }
 
     /**
-     * 使用 MappedByteBuffer 复制大文件（超高性能）
-     * 适合 GB 级别的大文件复制
-     *
-     * <p><b>已知限制：</b>MappedByteBuffer 由 GC 回收，JDK 无公开 API 主动 unmap。
-     * 在 Windows 下映射区域可能锁定源文件直至 GC 回收，导致文件无法立即删除/移动。
-     * 如需立即释放，建议改用 {@link #copyFileFast(File, File)}。</p>
+     * 使用 MappedByteBuffer 复制大文件（超高性能）。
      *
      * @param sourceFile 源文件
      * @param destFile   目标文件
      * @throws IOException IO 异常
+     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#copyFileMapped(File, File)}。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static void copyFileMapped(File sourceFile, File destFile) throws IOException {
-        Objects.requireNonNull(sourceFile, "sourceFile cannot be null");
-        Objects.requireNonNull(destFile, "destFile cannot be null");
-
-        if (!sourceFile.exists()) {
-            throw new IOException("Source file does not exist: " + sourceFile);
-        }
-
-        File parentDir = destFile.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            if (!parentDir.mkdirs()) {
-                throw new IOException("Failed to create parent directory: " + parentDir);
-            }
-        }
-
-        try (FileInputStream fis = new FileInputStream(sourceFile);
-             FileOutputStream fos = new FileOutputStream(destFile);
-             FileChannel sourceChannel = fis.getChannel();
-             FileChannel destChannel = fos.getChannel()) {
-            long size = sourceChannel.size();
-            long position = 0;
-            long maxMappingSize = Integer.MAX_VALUE - 1024 * 1024;
-
-            while (position < size) {
-                long mappingSize = Math.min(size - position, maxMappingSize);
-                destChannel.write(sourceChannel.map(FileChannel.MapMode.READ_ONLY, position, mappingSize));
-                position += mappingSize;
-            }
-        }
+        FileUtils.copyFileMapped(sourceFile, destFile);
     }
 
     /**
-     * 读取文件所有字节到 byte 数组（NIO 版本）
+     * 读取文件所有字节到 byte 数组（NIO 版本）。
      *
      * @param file 文件
      * @return 字节数组
      * @throws IOException IO 异常
+     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#readFileToByteArray(File)}。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static byte[] readFileToByteArray(File file) throws IOException {
-        Objects.requireNonNull(file, "file cannot be null");
-        if (!file.exists()) {
-            throw new IOException("File does not exist: " + file);
-        }
-
-        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
-            long fileSize = channel.size();
-            if (fileSize > Integer.MAX_VALUE) {
-                throw new IllegalArgumentException("文件过大，超过 2GB 限制");
-            }
-            ByteBuffer buffer = ByteBuffer.allocate((int) fileSize);
-            channel.read(buffer);
-            buffer.flip();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            return bytes;
-        }
+        return FileUtils.readFileToByteArray(file);
     }
 
     /**
-     * 将 byte 数组写入文件（NIO 版本）
+     * 将 byte 数组写入文件（NIO 版本）。
      *
      * @param data 字节数组
      * @param file 文件
      * @throws IOException IO 异常
+     * @deprecated 自 1.3.0 起拆分至 {@link FileUtils#writeByteArrayToFile(byte[], File)}。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static void writeByteArrayToFile(byte[] data, File file) throws IOException {
-        Objects.requireNonNull(data, "data cannot be null");
-        Objects.requireNonNull(file, "file cannot be null");
-
-        File parentDir = file.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            if (!parentDir.mkdirs()) {
-                throw new IOException("Failed to create parent directory: " + parentDir);
-            }
-        }
-
-        try (FileChannel channel = FileChannel.open(file.toPath(),
-                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            ByteBuffer buffer = ByteBuffer.wrap(data);
-            channel.write(buffer);
-        }
+        FileUtils.writeByteArrayToFile(data, file);
     }
 
     // ==================== 流包装与装饰 ====================
@@ -905,27 +834,30 @@ public class IOUtils {
         }
     }
 
-    // ==================== 特殊流操作 ====================
+    // ==================== 特殊流操作（已拆分至独立类） ====================
 
     /**
-     * 一流双写输出流（TeeStream）
-     * 将写入的数据同时复制到两个输出流
+     * 一流双写输出流。
      *
      * @param output1 第一个输出流
      * @param output2 第二个输出流
-     * @return TeeStream
+     * @return TeeOutputStream 实例
+     * @deprecated 自 1.3.0 起推荐直接使用 {@link TeeOutputStream} 构造器。
      */
-    public static TeeStream tee(OutputStream output1, OutputStream output2) {
-        return new TeeStream(output1, output2);
+    @Deprecated(since = "1.3.0", forRemoval = true)
+    public static TeeOutputStream tee(OutputStream output1, OutputStream output2) {
+        return new TeeOutputStream(output1, output2);
     }
 
     /**
-     * 限制读取字节数的输入流
+     * 限制读取字节数的输入流。
      *
      * @param input 原始输入流
      * @param limit 最大读取字节数
-     * @return LimitInputStream
+     * @return LimitInputStream 实例
+     * @deprecated 自 1.3.0 起推荐直接使用 {@link LimitInputStream} 构造器。
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static LimitInputStream limit(InputStream input, long limit) {
         return new LimitInputStream(input, limit);
     }
@@ -963,161 +895,4 @@ public class IOUtils {
         }
     }
 
-    // ==================== 内部静态类 ====================
-
-    /**
-     * TeeStream - 一流双写输出流
-     * 将写入的数据同时复制到两个输出流
-     * 参考：Unix tee 命令
-     */
-    public static class TeeStream extends OutputStream {
-        private final OutputStream output1;
-        private final OutputStream output2;
-
-        /**
-         * 构造 TeeStream
-         *
-         * @param output1 第一个输出流
-         * @param output2 第二个输出流
-         */
-        public TeeStream(OutputStream output1, OutputStream output2) {
-            this.output1 = Objects.requireNonNull(output1, "output1 cannot be null");
-            this.output2 = Objects.requireNonNull(output2, "output2 cannot be null");
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            output1.write(b);
-            output2.write(b);
-        }
-
-        @Override
-        public void write(byte[] b) throws IOException {
-            output1.write(b);
-            output2.write(b);
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            output1.write(b, off, len);
-            output2.write(b, off, len);
-        }
-
-        @Override
-        public void flush() throws IOException {
-            output1.flush();
-            output2.flush();
-        }
-
-        @Override
-        public void close() throws IOException {
-            try {
-                output1.close();
-            } finally {
-                output2.close();
-            }
-        }
-    }
-
-    /**
-     * LimitInputStream - 限制读取字节数的输入流
-     * 用于限制从底层流读取的最大字节数
-     */
-    public static class LimitInputStream extends InputStream {
-        private final InputStream input;
-        private long remaining;
-        private long mark = -1;
-
-        /**
-         * 构造 LimitInputStream
-         *
-         * @param input 原始输入流
-         * @param limit 最大读取字节数
-         */
-        public LimitInputStream(InputStream input, long limit) {
-            this.input = Objects.requireNonNull(input, "input cannot be null");
-            if (limit < 0) {
-                throw new IllegalArgumentException("limit cannot be negative");
-            }
-            this.remaining = limit;
-        }
-
-        @Override
-        public int read() throws IOException {
-            if (remaining <= 0) {
-                return EOF;
-            }
-            int b = input.read();
-            if (b != EOF) {
-                remaining--;
-            }
-            return b;
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            if (remaining <= 0) {
-                return EOF;
-            }
-            int toRead = (int) Math.min(len, remaining);
-            int bytesRead = input.read(b, off, toRead);
-            if (bytesRead > 0) {
-                remaining -= bytesRead;
-            }
-            return bytesRead;
-        }
-
-        @Override
-        public long skip(long n) throws IOException {
-            if (remaining <= 0) {
-                return 0;
-            }
-            long toSkip = Math.min(n, remaining);
-            long skipped = input.skip(toSkip);
-            remaining -= skipped;
-            return skipped;
-        }
-
-        @Override
-        public int available() throws IOException {
-            if (remaining <= 0) {
-                return 0;
-            }
-            return (int) Math.min(input.available(), remaining);
-        }
-
-        @Override
-        public synchronized void mark(int readlimit) {
-            mark = remaining;
-            input.mark(readlimit);
-        }
-
-        @Override
-        public synchronized void reset() throws IOException {
-            if (mark >= 0) {
-                remaining = mark;
-                mark = -1;
-            }
-            input.reset();
-        }
-
-        @Override
-        public boolean markSupported() {
-            return input.markSupported();
-        }
-
-        @Override
-        public void close() throws IOException {
-            input.close();
-        }
-
-        /**
-         * 获取剩余可读取字节数
-         *
-         * @return 剩余字节数
-         */
-        public long getRemaining() {
-            return remaining;
-        }
-    }
 }

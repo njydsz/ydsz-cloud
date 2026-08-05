@@ -1,5 +1,7 @@
 package com.remisoft.common.core.code;
 
+import org.springframework.core.retry.RetryPolicy;
+
 /**
  * 统一结果码接口
  *

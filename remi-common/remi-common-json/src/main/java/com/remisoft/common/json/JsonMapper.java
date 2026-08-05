@@ -20,6 +20,7 @@ import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.pointer.JsonPointer;
 import com.remisoft.common.json.provider.DeserializationProvider;
 import com.remisoft.common.json.provider.SerializationProvider;
+import com.remisoft.common.json.provider.SerializationProvider.SerializationContext;
 import com.remisoft.common.json.tree.JsonNode;
 import com.remisoft.common.json.tree.NullNode;
 import com.remisoft.common.json.tree.TreeConverter;
@@ -396,6 +397,51 @@ public class JsonMapper {
         SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
             return recordDeserialize(() -> DeserializationProvider.deserialize(json, typeRef.getType()));
+        } finally {
+            if (snapshot != null) restoreConfig(snapshot);
+        }
+    }
+
+    /**
+     * 反序列化 UTF-8 字节数组为指定类型。
+     *
+     * @param bytes JSON 字节数组（UTF-8 编码）
+     * @param clazz 目标类型
+     * @param <T>   类型参数
+     * @return 反序列化后的对象
+     * @since 1.1.0
+     */
+    public <T> T toObject(byte[] bytes, Class<T> clazz) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        validateJsonSizeBytes(bytes.length);
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        try {
+            return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, clazz));
+        } finally {
+            if (snapshot != null) restoreConfig(snapshot);
+        }
+    }
+
+    /**
+     * 反序列化 UTF-8 字节数组为泛型类型。
+     *
+     * @param bytes JSON 字节数组（UTF-8 编码）
+     * @param type  目标类型
+     * @param <T>   类型参数
+     * @return 反序列化后的对象
+     * @since 1.1.0
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T toObject(byte[] bytes, Type type) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        validateJsonSizeBytes(bytes.length);
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        try {
+            return recordDeserialize(() -> (T) DeserializationProvider.deserializeToObject(bytes, type));
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -789,6 +835,19 @@ public class JsonMapper {
         if (json.length() > maxSize) {
             throw new JsonException(
                 "JSON size exceeds limit: " + json.length() + " > " + maxSize);
+        }
+    }
+
+    /**
+     * 校验 JSON 字节数组大小是否超过全局限制。
+     *
+     * @param byteLength JSON 字节数组长度（字节）
+     */
+    private void validateJsonSizeBytes(int byteLength) {
+        long maxSize = config.getMaxJsonSize();
+        if (byteLength > maxSize) {
+            throw new JsonException(
+                "JSON size exceeds limit: " + byteLength + " > " + maxSize);
         }
     }
 

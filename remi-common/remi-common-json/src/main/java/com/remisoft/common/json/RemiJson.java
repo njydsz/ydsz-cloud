@@ -5,15 +5,15 @@ import com.remisoft.common.json.asm.GraalVmDetector;
 import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.internal.JsonConfig;
-import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.deserializer.JsonDeserializer;
 import com.remisoft.common.json.exception.JsonException;
 import com.remisoft.common.json.metric.JsonMetricsCallback;
 import com.remisoft.common.json.metric.MetricsHelper;
 import com.remisoft.common.json.module.JsonModuleRegistry;
+import com.remisoft.common.json.ndjson.NdjsonUtils;
 import com.remisoft.common.json.parser.JsonParserUtil;
-import com.remisoft.common.json.provider.DeserializationProvider;
 import com.remisoft.common.json.provider.SerializationProvider;
+import com.remisoft.common.json.reader.JSONReader;
 import com.remisoft.common.json.serializer.JsonSerializer;
 import com.remisoft.common.json.serializer.SerializerRegistry;
 import com.remisoft.common.json.tree.*;
@@ -91,7 +91,7 @@ public class RemiJson {
      *
      * @since 1.1.0
      */
-    static void reloadDefaultMapper() {
+    public static void reloadDefaultMapper() {
         defaultMapper = new JsonMapper(JsonConfig.getInstance());
     }
 
@@ -830,6 +830,114 @@ public class RemiJson {
                     ", maxJsonSize=" + maxJsonSize +
                     ", safeMode=" + safeMode +
                     '}';
+        }
+    }
+
+    // ==================== NDJSON (Newline Delimited JSON) ====================
+
+    /**
+     * 将 NDJSON 字符串解析为指定类型的 List。
+     *
+     * <p>每行应为一个完整 JSON 对象，空行自动跳过。适合处理日志导出、
+     * 数据流等场景（JSON Lines / NDJSON 格式，符合 RFC 7464）。</p>
+     *
+     * @param jsonl NDJSON 字符串（每行一个 JSON 对象）
+     * @param clazz 目标元素类型
+     * @param <T>   元素类型参数
+     * @return 解析后的 List，jsonl 为空时返回空 List
+     * @since 1.1.0
+     * @see NdjsonUtils
+     */
+    public static <T> List<T> readNdjson(String jsonl, Class<T> clazz) {
+        return NdjsonUtils.parse(jsonl, clazz);
+    }
+
+    /**
+     * 将 NDJSON 字符串解析为指定泛型类型的 List。
+     *
+     * @param jsonl   NDJSON 字符串
+     * @param typeRef 类型引用
+     * @param <T>     元素类型参数
+     * @return 解析后的 List
+     * @since 1.1.0
+     */
+    public static <T> List<T> readNdjson(String jsonl, JsonType<T> typeRef) {
+        return NdjsonUtils.parse(jsonl, typeRef);
+    }
+
+    /**
+     * 从 InputStream 流式解析 NDJSON（大文件友好）。
+     *
+     * <p>逐行读取并解析，避免将整个文件载入内存。
+     * 调用方负责关闭 Stream。</p>
+     *
+     * @param inputStream 输入流（UTF-8 编码）
+     * @param clazz       目标元素类型
+     * @param <T>         元素类型参数
+     * @return 元素流（需关闭以释放资源）
+     * @since 1.1.0
+     */
+    public static <T> java.util.stream.Stream<T> readNdjsonStream(InputStream inputStream, Class<T> clazz) {
+        return NdjsonUtils.parseStream(inputStream, clazz);
+    }
+
+    /**
+     * 将对象集合序列化为 NDJSON 格式并写入输出流。
+     *
+     * <p>每个对象单独一行，使用 LF 分隔。对标 Jackson 的 SequenceWriter
+     * 和 Fastjson2 的 writeJSONString(Iterable)。</p>
+     *
+     * @param objects 要序列化的对象集合
+     * @param out     输出流（UTF-8 编码）
+     * @param <T>     对象类型参数
+     * @since 1.1.0
+     */
+    public static <T> void writeNdjson(Iterable<T> objects, OutputStream out) {
+        NdjsonUtils.write(objects, out);
+    }
+
+    /**
+     * 将对象流序列化为 NDJSON 格式（低内存峰值）。
+     *
+     * @param objects 对象流
+     * @param out     输出流（UTF-8 编码）
+     * @param <T>     对象类型参数
+     * @since 1.1.0
+     */
+    public static <T> void writeNdjsonStream(java.util.stream.Stream<T> objects, OutputStream out) {
+        NdjsonUtils.writeStream(objects, out);
+    }
+
+    /**
+     * 验证字符串是否为合法 NDJSON（每行必须是合法 JSON）。
+     *
+     * @param jsonl 待验证字符串
+     * @return true 如果每行都是合法 JSON（或空行）
+     * @since 1.1.0
+     */
+    public static boolean isValidNdjson(String jsonl) {
+        return NdjsonUtils.isValidNdjson(jsonl);
+    }
+
+    /**
+     * 校验字符串是否为合法 JSON（解析成功即为合法）。
+     *
+     * <p>内部通过尝试解析实现，适合在校验场景使用，不抛出异常。</p>
+     *
+     * @param json 待校验字符串
+     * @return true 如果字符串为合法 JSON
+     * @since 1.1.0
+     */
+    public static boolean isValidJson(String json) {
+        if (json == null || json.isEmpty()) {
+            return false;
+        }
+        try {
+            JSONReader reader = new JSONReader(json);
+            reader.skipValue();
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 }
