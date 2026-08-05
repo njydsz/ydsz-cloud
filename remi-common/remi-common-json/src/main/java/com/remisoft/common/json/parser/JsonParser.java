@@ -339,6 +339,8 @@ public class JsonParser implements Closeable {
         if (currentToken == JsonToken.VALUE_NULL || currentToken == null) {
             return null;
         }
+        if (currentToken == JsonToken.VALUE_TRUE) return "true";
+        if (currentToken == JsonToken.VALUE_FALSE) return "false";
         return textValue != null ? textValue : currentToken.name();
     }
 
