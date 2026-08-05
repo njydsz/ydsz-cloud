@@ -82,8 +82,6 @@ public final class HeaderConstants {
     /**
      * 数据权限范围类型。
      *
-     * <p>用于决定行级数据权限按哪个维度生效，值为 {@link DataScopeType#getCode()}。
-     *
      * <p>配合维度ID类 header 使用：
      * <ul>
      *   <li>tenant：配合 {@link #X_TENANT_ID}</li>
@@ -105,8 +103,6 @@ public final class HeaderConstants {
      * 租户ID。
      *
      * <p>当数据权限范围为租户类型（TENANT）时，此 header 作为行级过滤条件。
-     *
-     * <p>对应 scope：{@link DataScopeType#TENANT}
      */
     public static final String X_TENANT_ID = "X-Tenant-Id";
 
@@ -114,8 +110,6 @@ public final class HeaderConstants {
      * 当前登录用户唯一标识。
      *
      * <p>当数据权限范围为用户类型（USER）时，此 header 作为行级过滤条件。
-     *
-     * <p>对应 scope：{@link DataScopeType#USER}
      */
     public static final String X_UNIQUE_ID = "X-Unique-Id";
 
@@ -125,8 +119,6 @@ public final class HeaderConstants {
      * <p>当数据权限范围为集团类型（GROUP）时，此 header 包含用户可访问的所有公司ID。
      *
      * <p>格式：逗号分隔（如 {@code 1001,1002}），也允许多 header 值合并。
-     *
-     * <p>对应 scope：{@link DataScopeType#GROUP}
      */
     public static final String X_COMPANY_IDS = "X-Company-Ids";
 
@@ -136,8 +128,6 @@ public final class HeaderConstants {
      * <p>当数据权限范围为公司/部门类型（COMPANY/DEPT）时，此 header 包含用户可访问的所有部门ID。
      *
      * <p>格式：逗号分隔（如 {@code 2001,2002}），也允许多 header 值合并。
-     *
-     * <p>对应 scope：{@link DataScopeType#COMPANY}、{@link DataScopeType#DEPT}
      */
     public static final String X_DEPT_IDS = "X-Dept-Ids";
 
@@ -147,8 +137,6 @@ public final class HeaderConstants {
      * <p>当数据权限范围为项目类型（PROJECT）时，此 header 包含用户可访问的所有项目ID。
      *
      * <p>格式：逗号分隔，也允许多 header 值合并。
-     *
-     * <p>对应 scope：{@link DataScopeType#PROJECT}
      */
     public static final String X_PROJECT_IDS = "X-Project-Ids";
 
@@ -158,8 +146,6 @@ public final class HeaderConstants {
      * <p>当数据权限范围为区域类型（REGION）时，此 header 包含用户可访问的所有区域ID。
      *
      * <p>格式：逗号分隔，也允许多 header 值合并。
-     *
-     * <p>对应 scope：{@link DataScopeType#REGION}
      */
     public static final String X_REGION_IDS = "X-Region-Ids";
 
@@ -172,8 +158,6 @@ public final class HeaderConstants {
      * <p><b>安全警告：</b>此 header 仅传递标识键，不直接传递 SQL 片段。
      * SQL 条件由服务端 Provider 生成，禁止将原始 SQL 通过 HTTP 请求传入，
      * 以防止 SQL 注入攻击。
-     *
-     * <p>对应 scope：{@link DataScopeType#CUSTOM}
      */
     public static final String X_CUSTOM_SQL_CONDITION = "X-Custom-Sql-Condition";
 
