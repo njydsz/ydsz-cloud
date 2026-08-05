@@ -31,7 +31,6 @@
 | `AesGcmCrypto` | AES-GCM 认证加密器（AEAD，每次随机 12 字节 IV，支持实例化使用） |
 | `Rsa2Utils` | RSA2 非对称加解密 + 签名验签（SHA256withRSA、OAEP 填充、分段加解密） |
 | `DigestUtils` | SHA-256 / MD5 / HMAC 摘要工具（常量时间比较、PBKDF2 密钥派生） |
-| `PwdUtils` | BCrypt（strength=12）/ PBKDF2（600000 次迭代，OWASP 2023）密码哈希 |
 
 ### 2.1 国密算法（security 包，依赖 bcprov-jdk18on）
 
@@ -40,6 +39,14 @@
 | `Sm2Utils` | SM2 椭圆曲线公钥密码（密钥对生成、加解密、签名验签，GM/T 0003-2012） |
 | `Sm3Utils` | SM3 密码杂凑算法（256 位摘要，GM/T 0004-2012） |
 | `Sm4Utils` | SM4 分组密码（128 位密钥，GCM/CBC 模式，GM/T 0002-2012） |
+
+### 2.2 密码哈希与强度（security.password 包）
+
+| 类 | 说明 |
+|---|---|
+| `PwdUtils` | BCrypt（strength=12）/ PBKDF2（600000 次迭代，OWASP 2023）密码哈希 |
+| `PasswordStrengthChecker` | 密码强度 SPI（ServiceLoader 扩展，支持业务自定义密码策略） |
+| `DefaultPasswordStrengthChecker` | 默认密码强度校验器（长度/多样性/连续重复扣分，中英文国际化） |
 
 > 国密工具类通过 JCA Provider = "BC" 委托给 BouncyCastle，运行时需 `bcprov-jdk18on` 在 classpath。在国密合规场景下，推荐使用 SM2/SM3/SM4 替代对应的 RSA/SHA/AES。
 
@@ -255,13 +262,17 @@ boolean ok = Sm2Utils.verify("重要数据", sig, sm2Kp.getPublic());
 ### 3. 密码哈希
 
 ```java
-import com.remisoft.common.util.security.PwdUtils;
+import com.remisoft.common.util.security.password.PwdUtils;
 
-// 加密密码（BCrypt，strength=12）
-String hashed = PwdUtils.encrypt("userPassword123");
+// 哈希密码（BCrypt，strength=12）
+String hashed = PwdUtils.hashPasswordBCrypt("userPassword123");
 
 // 验证密码
-boolean valid = PwdUtils.matches("userPassword123", hashed);
+boolean valid = PwdUtils.verifyPasswordBCrypt("userPassword123", hashed);
+
+// 密码强度校验（SPI，可自定义实现）
+var level = PwdUtils.checkPasswordStrengthLevel("abc123");
+String suggestion = PwdUtils.suggestPasswordImprovement("abc123", Locale.CHINESE);
 ```
 
 ### 4. Bean 拷贝与 PATCH 更新
