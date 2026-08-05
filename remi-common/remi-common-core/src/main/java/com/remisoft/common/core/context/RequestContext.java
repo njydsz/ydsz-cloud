@@ -79,45 +79,16 @@ public final class RequestContext {
 
     // ==================== v1.9 扩展：统一上下文键（供 common 子模块共享） ====================
 
-    /**
-     * 上下文键名：认证信息（AuthInfo 实现）。
-     *
-     * <p>由认证模块 {@code AuthContext} 写入，供 Feign 拦截器、数据权限解析器等读取。
-     * 类型：{@code AuthInfo}（或其子类 {@code RemiAuthInfo}）。</p>
-     *
-     * @since 1.9.0
-     */
+    /** 上下文键名：认证信息（{@link AuthInfo} 实现）。由认证模块写入。 @since 1.9.0 */
     public static final String KEY_AUTH_INFO = "authInfo";
 
-    /**
-     * 上下文键名：登录用户（LoginUser）。
-     *
-     * <p>由认证模块 {@code AuthContext.setCurrent()} 写入。
-     * 类型：{@code LoginUser}。</p>
-     *
-     * @since 1.9.0
-     */
+    /** 上下文键名：登录用户（{@link LoginUser}）。由认证模块写入。 @since 1.9.0 */
     public static final String KEY_LOGIN_USER = "loginUser";
 
-    /**
-     * 上下文键名：租户上下文（TenantContext）。
-     *
-     * <p>由 {@code TenantContextHolder.set()} 写入。
-     * 包含租户 ID、是否系统租户、是否超级管理员、JWT claims 等完整信息。
-     * 类型：{@code TenantContext}。</p>
-     *
-     * @since 1.9.0
-     */
+    /** 上下文键名：租户上下文（{@link TenantContext}）：租户ID/系统租户标识/isSkipIsolation。 @since 1.9.0 */
     public static final String KEY_TENANT_CONTEXT = "tenantContext";
 
-    /**
-     * 上下文键名：列权限信息（ColumnPermissionInfo）。
-     *
-     * <p>由列权限切面写入，供 SQL 拦截器读取字段级权限。
-     * 类型：{@code ColumnPermissionInfo}。</p>
-     *
-     * @since 1.9.0
-     */
+    /** 上下文键名：列权限信息（{@link ColumnPermissionInfo}）。由列权限切面写入。 @since 1.9.0 */
     public static final String KEY_COLUMN_PERMISSION = "columnPermission";
 
     /**
@@ -130,35 +101,13 @@ public final class RequestContext {
      */
     public static final String KEY_AUDIT_DATA = "auditData";
 
-    /**
-     * 上下文键名：HTTP 请求对象（HttpServletRequest）。
-     *
-     * <p>由认证 Filter 写入，供非 Controller 层获取请求信息。
-     * 类型：{@code HttpServletRequest}。</p>
-     *
-     * @since 1.9.0
-     */
+    /** 上下文键名：HTTP 请求对象（{@link jakarta.servlet.http.HttpServletRequest}）。由认证 Filter 写入。 @since 1.9.0 */
     public static final String KEY_HTTP_REQUEST = "httpRequest";
 
-    /**
-     * 上下文键名：额外请求头（Extra Headers）。
-     *
-     * <p>用于数据权限场景下的虚拟请求头存储。
-     * 类型：{@code Map<String, String>}。</p>
-     *
-     * @since 1.9.0
-     */
+    /** 上下文键名：额外请求头（{@code Map<String, String>}）。用于数据权限场景。 @since 1.9.0 */
     public static final String KEY_EXTRA_HEADERS = "extraHeaders";
 
-    /**
-     * 上下文键名：请求级缓存的用户信息 Map。
-     *
-     * <p>由 RbacPermissionEvaluator.loadCurrentUserInfo() 首次加载后写入，
-     * 供同一请求内多次权限校验复用，避免反复 Redis 调用。
-     * 类型：{@code Map<String, Object>}。</p>
-     *
-     * @since 1.9.0
-     */
+    /** 上下文键名：请求级缓存的用户信息 Map。避免同一请求反复 Redis 调用。 @since 1.9.0 */
     public static final String KEY_CACHED_USER_INFO_MAP = "cachedUserInfoMap";
 
     /**
@@ -486,6 +435,234 @@ public final class RequestContext {
      */
     public static void clear() {
         CONTEXT_HOLDER.remove();
+    }
+
+    // ======================== v1.9 业务层便捷方法 ========================
+
+    /**
+     * 写入认证信息到请求上下文。
+     *
+     * <p>由认证 Filter/Interceptor 调用，供后续 {@link #getAuthInfo()} 读取。</p>
+     *
+     * @param authInfo 认证信息（可为 null，等同于移除）
+     * @since 1.9.0
+     */
+    public static void setAuthInfo(Object authInfo) {
+        if (authInfo == null) {
+            remove(KEY_AUTH_INFO);
+        } else {
+            put(KEY_AUTH_INFO, authInfo);
+        }
+    }
+
+    /**
+     * 获取当前请求的认证信息。
+     *
+     * @return 认证信息（通常实现为 AuthInfo），不存在返回 null
+     * @since 1.9.0
+     */
+    public static Object getAuthInfo() {
+        return get(KEY_AUTH_INFO);
+    }
+
+    /**
+     * 获取当前请求的认证信息（类型安全版本）。
+     *
+     * @param type 期望类型
+     * @param <T> 类型参数
+     * @return 认证信息，不存在或类型不匹配返回 null
+     * @since 1.9.0
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T getAuthInfo(Class<T> type) {
+        Object authInfo = get(KEY_AUTH_INFO);
+        return type.isInstance(authInfo) ? (T) authInfo : null;
+    }
+
+    /**
+     * 写入登录用户信息（LoginUser）。
+     *
+     * @param loginUser 登录用户信息
+     * @since 1.9.0
+     */
+    public static void setLoginUser(Object loginUser) {
+        if (loginUser == null) {
+            remove(KEY_LOGIN_USER);
+        } else {
+            put(KEY_LOGIN_USER, loginUser);
+        }
+    }
+
+    /**
+     * 获取当前登录用户（LoginUser）。
+     *
+     * @return 登录用户，不存在返回 null
+     * @since 1.9.0
+     */
+    public static Object getLoginUser() {
+        return get(KEY_LOGIN_USER);
+    }
+
+    /**
+     * 获取当前登录用户（类型安全版本）。
+     *
+     * @param type 期望类型
+     * @param <T> 类型参数
+     * @return 登录用户，不存在或类型不匹配返回 null
+     * @since 1.9.0
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T getLoginUser(Class<T> type) {
+        Object loginUser = get(KEY_LOGIN_USER);
+        return type.isInstance(loginUser) ? (T) loginUser : null;
+    }
+
+    /**
+     * 写入租户上下文（TenantContext）。
+     *
+     * <p>写入后将同时更新 {@link #setTenantId(String)} 以确保一致性。</p>
+     *
+     * @param tenantContext 租户上下文，null 等同于移除
+     * @since 1.9.0
+     */
+    public static void setTenantContext(Object tenantContext) {
+        if (tenantContext == null) {
+            remove(KEY_TENANT_CONTEXT);
+        } else {
+            put(KEY_TENANT_CONTEXT, tenantContext);
+        }
+    }
+
+    /**
+     * 获取当前租户上下文（TenantContext）。
+     *
+     * @return 租户上下文，不存在返回 null
+     * @since 1.9.0
+     */
+    public static Object getTenantContext() {
+        return get(KEY_TENANT_CONTEXT);
+    }
+
+    /**
+     * 写入列权限信息。
+     *
+     * @param columnPermission 列权限信息
+     * @since 1.9.0
+     */
+    public static void setColumnPermission(Object columnPermission) {
+        if (columnPermission == null) {
+            remove(KEY_COLUMN_PERMISSION);
+        } else {
+            put(KEY_COLUMN_PERMISSION, columnPermission);
+        }
+    }
+
+    /**
+     * 获取当前列权限信息。
+     *
+     * @return 列权限信息，不存在返回 null
+     * @since 1.9.0
+     */
+    public static Object getColumnPermission() {
+        return get(KEY_COLUMN_PERMISSION);
+    }
+
+    /**
+     * 写入 HTTP 请求对象引用。
+     *
+     * <p>仅 Filter 层写入，供非 Controller 层（Service、Interceptor）读取请求信息。</p>
+     *
+     * @param request HTTP 请求对象
+     * @since 1.9.0
+     */
+    public static void setHttpRequest(Object request) {
+        put(KEY_HTTP_REQUEST, request);
+    }
+
+    /**
+     * 获取当前 HTTP 请求对象引用。
+     *
+     * @return HTTP 请求对象，不存在返回 null
+     * @since 1.9.0
+     */
+    public static Object getHttpRequest() {
+        return get(KEY_HTTP_REQUEST);
+    }
+
+    /**
+     * 写入一个数据权限相关的虚拟请求头。
+     *
+     * <p>由数据权限解析器写入，SQL 拦截器通过 {@link #getExtraHeader(String)} 读取。</p>
+     *
+     * @param key header 名（如 X-Data-Scope）
+     * @param value header 值
+     * @since 1.9.0
+     */
+    public static void putExtraHeader(String key, String value) {
+        Map<String, String> headers = (Map<String, String>) get(KEY_EXTRA_HEADERS);
+        if (headers == null) {
+            headers = new java.util.LinkedHashMap<>(4);
+            put(KEY_EXTRA_HEADERS, headers);
+        }
+        headers.put(key, value);
+    }
+
+    /**
+     * 获取一个数据权限相关的虚拟请求头。
+     *
+     * @param key header 名
+     * @return header 值，不存在返回 null
+     * @since 1.9.0
+     */
+    public static String getExtraHeader(String key) {
+        Object obj = get(KEY_EXTRA_HEADERS);
+        if (obj instanceof Map) {
+            return ((Map<String, String>) obj).get(key);
+        }
+        return null;
+    }
+
+    /**
+     * 获取全部虚拟请求头（用于 Feign 透传、SQL 拦截器）。
+     *
+     * @return 虚拟请求头 Map（不可变），不存在返回空 Map
+     * @since 1.9.0
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, String> getExtraHeaders() {
+        Object obj = get(KEY_EXTRA_HEADERS);
+        if (obj instanceof Map) {
+            return java.util.Collections.unmodifiableMap((Map<String, String>) obj);
+        }
+        return java.util.Collections.emptyMap();
+    }
+
+    /**
+     * 在当前请求上下文基础上，克隆一份请求级用户信息缓存 Map。
+     *
+     * <p>由 RbacPermissionEvaluator 在启动时调用一次写入，
+     * 供同一请求内多次权限校验复用，避免反复 Redis 调用。</p>
+     *
+     * @return 可变的缓存 Map
+     * @since 1.9.0
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> createCachedUserInfoMap() {
+        Map<String, Object> map = new java.util.LinkedHashMap<>(8);
+        put(KEY_CACHED_USER_INFO_MAP, map);
+        return map;
+    }
+
+    /**
+     * 获取请求级用户信息缓存 Map。
+     *
+     * @return 缓存 Map（可变），未创建返回 null
+     * @since 1.9.0
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> getCachedUserInfoMap() {
+        Object obj = get(KEY_CACHED_USER_INFO_MAP);
+        return (obj instanceof Map) ? (Map<String, Object>) obj : null;
     }
 
     /**

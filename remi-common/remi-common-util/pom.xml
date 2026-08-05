@@ -80,6 +80,12 @@
             <artifactId>spring-security-crypto</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- BouncyCastle（国密 SM2/SM3/SM4 算法支持） -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- Spring Boot AutoConfiguration -->
         <dependency>

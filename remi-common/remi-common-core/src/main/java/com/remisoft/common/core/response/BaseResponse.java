@@ -41,15 +41,14 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  * @see IResponse
- * @see PageResponse
  */
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "extensions"})
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "total", "pageNum", "pageSize", "extensions"})
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -117,6 +116,33 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @since 1.6.0
      */
     private Map<String, Object> extensions;
+
+    /**
+     * 总记录数（分页场景）
+     *
+     * <p>分页查询时返回符合条件的总记录数，非分页场景为 {@code null} 不序列化。</p>
+     *
+     * @since 1.9.0
+     */
+    private Long total;
+
+    /**
+     * 当前页码（分页场景）
+     *
+     * <p>分页查询时返回当前页码（从 1 开始），非分页场景为 {@code null} 不序列化。</p>
+     *
+     * @since 1.9.0
+     */
+    private Long pageNum;
+
+    /**
+     * 每页记录数（分页场景）
+     *
+     * <p>分页查询时返回每页大小，非分页场景为 {@code null} 不序列化。</p>
+     *
+     * @since 1.9.0
+     */
+    private Long pageSize;
 
     /**
      * 默认构造函数
@@ -355,6 +381,16 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
+     * 获取响应时间戳
+     *
+     * @return 响应时间戳（毫秒）
+     */
+    @Override
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    /**
      * 判断是否成功
      *
      * @return 成功返回 true，否则返回 false
@@ -371,6 +407,45 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public boolean isFailed() {
         return !isSuccess();
+    }
+
+    // ======================== 分页响应工厂方法 ========================
+
+    /**
+     * 返回分页成功响应。
+     *
+     * <p>适用于分页查询接口，自动填充总记录数、当前页码和每页大小，
+     * 返回结构包含 {@code total}、{@code pageNum}、{@code pageSize} 三个分页元字段。</p>
+     *
+     * @param total    总记录数
+     * @param pageNum  当前页码（从 1 开始）
+     * @param pageSize 每页记录数
+     * @param data     分页数据内容
+     * @param <T>      数据类型
+     * @return 分页成功响应
+     * @since 1.9.0
+     */
+    public static <T> BaseResponse<T> successPage(Long total, Long pageNum, Long pageSize, T data) {
+        BaseResponse<T> response = success(data);
+        response.setTotal(total);
+        response.setPageNum(pageNum);
+        response.setPageSize(pageSize);
+        return response;
+    }
+
+    /**
+     * 返回空分页响应（总记录数为 0）。
+     *
+     * <p>适用于分页查询无数据场景，data 为 {@code null}，total 固定为 0。</p>
+     *
+     * @param pageNum  当前页码
+     * @param pageSize 每页记录数
+     * @param <T>      数据类型
+     * @return 空分页响应
+     * @since 1.9.0
+     */
+    public static <T> BaseResponse<T> emptyPage(Long pageNum, Long pageSize) {
+        return successPage(0L, pageNum, pageSize, null);
     }
 
     // ======================== 扩展字段操作 ========================

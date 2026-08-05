@@ -27,11 +27,21 @@
 
 | 类 | 说明 |
 |---|---|
-| `AesUtils` | AES 对称加密（默认 GCM 模式，委托 `AesGcmCrypto` 实现，兼容 ECB/CBC 旧密文解密） |
+| `AesUtils` | AES 对称加密（默认 GCM 模式，委托 `AesGcmCrypto` 实现） |
 | `AesGcmCrypto` | AES-GCM 认证加密器（AEAD，每次随机 12 字节 IV，支持实例化使用） |
 | `Rsa2Utils` | RSA2 非对称加解密 + 签名验签（SHA256withRSA、OAEP 填充、分段加解密） |
 | `DigestUtils` | SHA-256 / MD5 / HMAC 摘要工具（常量时间比较、PBKDF2 密钥派生） |
 | `PwdUtils` | BCrypt（strength=12）/ PBKDF2（600000 次迭代，OWASP 2023）密码哈希 |
+
+### 2.1 国密算法（security 包，依赖 bcprov-jdk18on）
+
+| 类 | 说明 |
+|---|---|
+| `Sm2Utils` | SM2 椭圆曲线公钥密码（密钥对生成、加解密、签名验签，GM/T 0003-2012） |
+| `Sm3Utils` | SM3 密码杂凑算法（256 位摘要，GM/T 0004-2012） |
+| `Sm4Utils` | SM4 分组密码（128 位密钥，GCM/CBC 模式，GM/T 0002-2012） |
+
+> 国密工具类通过 JCA Provider = "BC" 委托给 BouncyCastle，运行时需 `bcprov-jdk18on` 在 classpath。在国密合规场景下，推荐使用 SM2/SM3/SM4 替代对应的 RSA/SHA/AES。
 
 ### 3. HTTP 工具（http 包）
 
@@ -219,6 +229,27 @@ AesGcmCrypto crypto = new AesGcmCrypto(key);
 
 String ciphertext = crypto.encrypt("敏感数据");
 String plaintext = crypto.decrypt(ciphertext);
+```
+
+### 2c. 国密算法（SM2/SM3/SM4）
+
+```java
+import com.remisoft.common.util.security.*;
+
+// SM4-GCM 加密
+String sm4Key = Sm4Utils.initHexKey();
+String ct = Sm4Utils.encryptGcm("敏感数据（国密）", sm4Key);
+String pt = Sm4Utils.decryptGcm(ct, sm4Key);
+
+// SM3 摘要
+String sm3Hash = Sm3Utils.digestHex("Hello SM3");
+
+// SM2 密钥对 + 加解密 + 签名验签
+KeyPair sm2Kp = Sm2Utils.generateKeyPair();
+String sm2Ct = Sm2Utils.encrypt("敏感数据", sm2Kp.getPublic());
+String sm2Pt = Sm2Utils.decrypt(sm2Ct, sm2Kp.getPrivate());
+String sig = Sm2Utils.sign("重要数据", sm2Kp.getPrivate());
+boolean ok = Sm2Utils.verify("重要数据", sig, sm2Kp.getPublic());
 ```
 
 ### 3. 密码哈希

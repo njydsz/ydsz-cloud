@@ -2,6 +2,7 @@ package com.remisoft.common.json;
 
 import com.remisoft.common.json.deserializer.JsonDeserializer;
 import com.remisoft.common.json.exception.JsonException;
+import com.remisoft.common.json.internal.JsonConfig;
 import com.remisoft.common.json.module.JsonModuleRegistry;
 import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.provider.SerializationProvider;
@@ -23,7 +24,7 @@ import java.util.*;
  * RemiJson - 超高性能 JSON 工具类（深度优化版）
  *
  * <p>提供高性能、功能丰富的 JSON 序列化和反序列化功能，纯 Java 实现，无需额外依赖。</p>
- * 
+ *
  * <p><b>核心特性：</b></p>
  * <ul>
  *   <li><b>零依赖</b>：纯 Java 实现，无需任何第三方库</li>
@@ -39,7 +40,7 @@ import java.util.*;
  *   <li><b>自定义序列化器</b>：支持注册自定义序列化/反序列化器</li>
  *   <li><b>命名策略</b>：支持 SNAKE_CASE、KEBAB_CASE 等多种命名策略</li>
  * </ul>
- * 
+ *
  * <p><b>核心优化技术：</b></p>
  * <ul>
  *   <li>递归下降解析器 - 直接解析 JSON 到对象字段</li>
@@ -48,7 +49,7 @@ import java.util.*;
  *   <li>对象池复用 - ThreadLocal 缓存</li>
  *   <li>JIT 友好设计 - 便于 JVM 内联优化</li>
  * </ul>
- * 
+ *
  * @author remi-team
  * @since 1.0.0
  */
@@ -88,10 +89,10 @@ public class RemiJson {
     }
 
     // ==================== 序列化入口方法 ====================
-    
+
     /**
      * 对象转 JSON 字符串
-     * 
+     *
      * @param obj 要序列化的对象
      * @return JSON 字符串
      */
@@ -114,7 +115,7 @@ public class RemiJson {
         }
         return defaultMapper.toJson(obj, true);
     }
-    
+
     /**
      * 对象转 JSON 字节数组（UTF-8 编码）
      *
@@ -129,12 +130,12 @@ public class RemiJson {
         }
         return defaultMapper.toJsonBytes(obj);
     }
-    
+
     // ==================== 反序列化入口方法 ====================
-    
+
     /**
      * JSON 字符串转对象
-     * 
+     *
      * @param json JSON 字符串
      * @param clazz 目标类型
      * @param <T> 类型参数
@@ -147,7 +148,7 @@ public class RemiJson {
         validateJsonSize(json);
         return defaultMapper.toObject(json, clazz);
     }
-    
+
     /**
      * JSON 字符串转对象（支持 JsonType）
      *
@@ -163,7 +164,7 @@ public class RemiJson {
         validateJsonSize(json);
         return defaultMapper.toObject(json, typeRef.getType());
     }
-    
+
     // ==================== 自定义序列化器注册 ====================
 
     /**
@@ -188,7 +189,7 @@ public class RemiJson {
         SerializerRegistry.getInstance().register(clazz, deserializer);
     }
 
-    
+
     static <T> JsonSerializer<T> getCustomSerializer(Class<T> clazz) {
         JsonSerializer<T> serializer = SerializerRegistry.getInstance().get(clazz);
         if (serializer != null) {
@@ -239,24 +240,6 @@ public class RemiJson {
 
     static boolean hasCustomDeserializer(Class<?> clazz) {
         return SerializerRegistry.getInstance().hasDeserializer(clazz) || JsonModuleRegistry.getInstance().hasDeserializer(clazz);
-    }
-
-    public static Map<String, Object> toStringObjectMap(Object obj) {
-        if (obj instanceof Map<?, ?> map) {
-            Map<String, Object> result = new LinkedHashMap<>(map.size());
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
-                result.put((String) entry.getKey(), entry.getValue());
-            }
-            return result;
-        }
-        return new LinkedHashMap<>();
-    }
-
-    private static List<Object> toObjectList(Object obj) {
-        if (obj instanceof List<?> list) {
-            return new ArrayList<>(list);
-        }
-        return new ArrayList<>();
     }
 
     // ==================== Tree Model API ====================
@@ -488,198 +471,6 @@ public class RemiJson {
             throw new JsonException(
                     "JSON size exceeds limit: " + byteLength + " > " + maxSize);
         }
-    }
-
-    // ==================== 运行时查询 API ====================
-
-    /**
-     * 检测当前是否运行在 GraalVM Native Image 中。
-     *
-     * <p>在 Native Image 中 ASM 字节码生成不可用，序列化会自动降级为反射模式。
-     * 业务代码可以此判断是否需要预热关键路径或开启兼容策略。</p>
-     *
-     * @return true 如果运行在 GraalVM Native Image 中
-     * @since 1.0.0
-     */
-    public static boolean isNativeImage() {
-        return GraalVmDetector.isInNativeImage();
-    }
-
-    /**
-     * 检查 ASM 字节码生成是否可用。
-     *
-     * <p>ASM 可用时序列化/反序列化走高性能字节码路径（50x 反射性能），
-     * 不可用时（GraalVM Native Image 或显式禁用）自动降级为反射。</p>
-     *
-     * @return true 如果 ASM 字节码生成可用
-     * @since 1.0.0
-     */
-    public static boolean isAsmAvailable() {
-        return AsmBeanCodecGenerator.isAsmAvailable();
-    }
-
-    /**
-     * 获取 RemiJson 运行时统计快照。
-     *
-     * <p>返回的统计信息可用于监控大盘、告警和业务自检，包含：</p>
-     * <ul>
-     *   <li>ASM 降级次数 - 反映 ASM 不可用的累计频次</li>
-     *   <li>ASM 缓存命中率 - 反映序列器/反序列器缓存效率</li>
-     *   <li>当前序列化配置摘要 - maxDepth、maxJsonSize、safeMode 等安全关键配置</li>
-     * </ul>
-     *
-     * @return 运行时统计信息
-     * @since 1.0.0
-     */
-    public static JsonStats getStats() {
-        JsonConfig config = JsonConfig.getInstance();
-        AsmCodecCache.CacheStats cacheStats = AsmCodecCache.getCacheStats();
-        return new JsonStats(
-                GraalVmDetector.isInNativeImage(),
-                AsmBeanCodecGenerator.isAsmAvailable(),
-                SerializationProvider.getAsmDowngradeCount(),
-                cacheStats.serializerCount(),
-                cacheStats.deserializerCount(),
-                cacheStats.serializerHitRate(),
-                cacheStats.deserializerHitRate(),
-                config.getMaxDepth(),
-                config.getMaxGenericDepth(),
-                config.getMaxJsonSize(),
-                AutoTypeChecker.isSafeMode()
-        );
-    }
-
-    /**
-     * RemiJson 运行时统计信息。
-     *
-     * @param nativeImage         是否在 GraalVM Native Image 中运行
-     * @param asmAvailable        ASM 字节码生成是否可用
-     * @param asmDowngradeCount   ASM 降级为反射的累计次数
-     * @param serializerCount     ASM 序列化器缓存条目数
-     * @param deserializerCount   ASM 反序列化器缓存条目数
-     * @param serializerHitRate   ASM 序列化器真实命中率 (0.0 ~ 1.0)
-     * @param deserializerHitRate ASM 反序列化器真实命中率 (0.0 ~ 1.0)
-     * @param maxDepth            当前最大 JSON 嵌套深度
-     * @param maxGenericDepth     当前泛型递归深度上限
-     * @param maxJsonSize         当前最大 JSON 大小限制（字节）
-     * @param safeMode            AutoType 安全模式是否开启
-     * @since 1.0.0
-     */
-    public record JsonStats(
-            boolean nativeImage,
-            boolean asmAvailable,
-            long asmDowngradeCount,
-            int serializerCount,
-            int deserializerCount,
-            double serializerHitRate,
-            double deserializerHitRate,
-            int maxDepth,
-            int maxGenericDepth,
-        long maxJsonSize,
-        boolean safeMode
-    ) {
-        @Override
-        public String toString() {
-            return "JsonStats{" +
-                    "nativeImage=" + nativeImage +
-                    ", asmAvailable=" + asmAvailable +
-                    ", asmDowngradeCount=" + asmDowngradeCount +
-                    ", serializerCount=" + serializerCount +
-                    ", deserializerCount=" + deserializerCount +
-                    ", serializerHitRate=" + String.format("%.4f", serializerHitRate) +
-                    ", deserializerHitRate=" + String.format("%.4f", deserializerHitRate) +
-                    ", maxDepth=" + maxDepth +
-                    ", maxGenericDepth=" + maxGenericDepth +
-                    ", maxJsonSize=" + maxJsonSize +
-                    ", safeMode=" + safeMode +
-                    '}';
-        }
-    }
-
-    // ==================== NDJSON (Newline Delimited JSON) ====================
-
-    /**
-     * 将 NDJSON 字符串解析为指定类型的 List。
-     *
-     * <p>每行应为一个完整 JSON 对象，空行自动跳过。适合处理日志导出、
-     * 数据流等场景（JSON Lines / NDJSON 格式，符合 RFC 7464）。</p>
-     *
-     * @param jsonl NDJSON 字符串（每行一个 JSON 对象）
-     * @param clazz 目标元素类型
-     * @param <T>   元素类型参数
-     * @return 解析后的 List，jsonl 为空时返回空 List
-     * @since 1.1.0
-     * @see NdjsonUtils
-     */
-    public static <T> List<T> readNdjson(String jsonl, Class<T> clazz) {
-        return NdjsonUtils.parse(jsonl, clazz);
-    }
-
-    /**
-     * 将 NDJSON 字符串解析为指定泛型类型的 List。
-     *
-     * @param jsonl   NDJSON 字符串
-     * @param typeRef 类型引用
-     * @param <T>     元素类型参数
-     * @return 解析后的 List
-     * @since 1.1.0
-     */
-    public static <T> List<T> readNdjson(String jsonl, JsonType<T> typeRef) {
-        return NdjsonUtils.parse(jsonl, typeRef);
-    }
-
-    /**
-     * 从 InputStream 流式解析 NDJSON（大文件友好）。
-     *
-     * <p>逐行读取并解析，避免将整个文件载入内存。
-     * 调用方负责关闭 Stream。</p>
-     *
-     * @param inputStream 输入流（UTF-8 编码）
-     * @param clazz       目标元素类型
-     * @param <T>         元素类型参数
-     * @return 元素流（需关闭以释放资源）
-     * @since 1.1.0
-     */
-    public static <T> java.util.stream.Stream<T> readNdjsonStream(InputStream inputStream, Class<T> clazz) {
-        return NdjsonUtils.parseStream(inputStream, clazz);
-    }
-
-    /**
-     * 将对象集合序列化为 NDJSON 格式并写入输出流。
-     *
-     * <p>每个对象单独一行，使用 LF 分隔。对标 Jackson 的 SequenceWriter
-     * 和 Fastjson2 的 writeJSONString(Iterable)。</p>
-     *
-     * @param objects 要序列化的对象集合
-     * @param out     输出流（UTF-8 编码）
-     * @param <T>     对象类型参数
-     * @since 1.1.0
-     */
-    public static <T> void writeNdjson(Iterable<T> objects, OutputStream out) {
-        NdjsonUtils.write(objects, out);
-    }
-
-    /**
-     * 将对象流序列化为 NDJSON 格式（低内存峰值）。
-     *
-     * @param objects 对象流
-     * @param out     输出流（UTF-8 编码）
-     * @param <T>     对象类型参数
-     * @since 1.1.0
-     */
-    public static <T> void writeNdjsonStream(java.util.stream.Stream<T> objects, OutputStream out) {
-        NdjsonUtils.writeStream(objects, out);
-    }
-
-    /**
-     * 验证字符串是否为合法 NDJSON（每行必须是合法 JSON）。
-     *
-     * @param jsonl 待验证字符串
-     * @return true 如果每行都是合法 JSON（或空行）
-     * @since 1.1.0
-     */
-    public static boolean isValidNdjson(String jsonl) {
-        return NdjsonUtils.isValidNdjson(jsonl);
     }
 
     /**

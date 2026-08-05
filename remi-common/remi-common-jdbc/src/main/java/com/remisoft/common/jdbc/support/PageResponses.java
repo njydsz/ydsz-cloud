@@ -4,16 +4,19 @@ import java.util.Collections;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 
 /**
  * MyBatis-Plus 分页结果转统一分页响应的转换工具。
  *
  * <p>将 MyBatis-Plus 的 {@link IPage} 分页查询结果转换为
- * {@link PageResponse} 统一响应体，避免各业务模块重复编写
- * {@code total / pageNum / pageSize / pages} 的样板转换代码。</p>
+ * {@link BaseResponse} 统一响应体，避免各业务模块重复编写
+ * {@code total / pageNum / pageSize} 的样板转换代码。
  *
- * <p><b>使用示例：</b></p>
+ * <p><b>返回值语义：</b>响应体包含 {@code total / pageNum / pageSize} 三个分页字段，
+ * data 字段携带当前页记录列表。
+ *
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * IPage<UserVO> page = userMapper.selectPage(query, pageParam);
  * return PageResponses.success(page);
@@ -25,7 +28,7 @@ import com.remisoft.common.core.response.PageResponse;
  *
  * @author remi-team
  * @since 1.1.0
- * @see PageResponse
+ * @see BaseResponse
  * @see IPage
  */
 public final class PageResponses {
@@ -37,21 +40,21 @@ public final class PageResponses {
     /**
      * 将 MyBatis-Plus 分页结果转换为成功分页响应。
      *
-     * <p>自动提取 total / pageNum / pageSize / pages，并携带记录列表。</p>
+     * <p>自动提取 total / pageNum / pageSize，并携带记录列表。</p>
      *
      * @param page MyBatis-Plus 分页结果（含记录、总数、页码信息）
      * @param <T>  记录类型
      * @return 成功分页响应
      */
-    public static <T> PageResponse<List<T>> success(IPage<T> page) {
+    public static <T> BaseResponse<List<T>> success(IPage<T> page) {
         if (page == null) {
-            return PageResponse.success(0L, 1L, 0L, Collections.emptyList());
+            return BaseResponse.emptyPage(1L, 0L);
         }
         long total = page.getTotal();
         long pageNum = page.getCurrent();
         long pageSize = page.getSize();
         List<T> records = page.getRecords() != null ? page.getRecords() : Collections.emptyList();
-        return PageResponse.success(total, pageNum, pageSize, records);
+        return BaseResponse.successPage(total, pageNum, pageSize, records);
     }
 
     /**
@@ -66,12 +69,12 @@ public final class PageResponses {
      * @param <T>      目标记录类型（如 VO）
      * @return 成功分页响应（records 为转换后的结果）
      */
-    public static <S, T> PageResponse<List<T>> success(IPage<S> page, java.util.function.Function<S, T> mapper) {
+    public static <S, T> BaseResponse<List<T>> success(IPage<S> page, java.util.function.Function<S, T> mapper) {
         if (page == null) {
-            return PageResponse.success(0L, 1L, 0L, Collections.emptyList());
+            return BaseResponse.emptyPage(1L, 0L);
         }
         List<S> records = page.getRecords() != null ? page.getRecords() : Collections.emptyList();
         List<T> mapped = records.stream().map(mapper).toList();
-        return PageResponse.success(page.getTotal(), page.getCurrent(), page.getSize(), mapped);
+        return BaseResponse.successPage(page.getTotal(), page.getCurrent(), page.getSize(), mapped);
     }
 }
