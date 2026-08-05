@@ -27,8 +27,6 @@ public class UrlUtils {
     private static final String FTP_PREFIX = "ftp://";
     /** 折叠连续斜杠的预编译正则（类加载时编译一次，避免每次调用重新编译） */
     private static final Pattern MULTI_SLASH_PATTERN = Pattern.compile("/+");
-    /** 修复协议部分双斜杠的预编译正则 */
-    private static final Pattern PROTOCOL_SLASH_PATTERN = Pattern.compile("^(https?):/([^/])");
 
     /**
      * 判断是否为 HTTP/HTTPS 协议
@@ -72,17 +70,54 @@ public class UrlUtils {
     }
 
     /**
-     * URL 编码 (UTF-8)
+     * URL 编码（application/x-www-form-urlencoded 格式）。
+     *
+     * <p>基于 {@link URLEncoder#encode(String, java.nio.charset.Charset)}，
+     * 空格编码为 {@code +}，适用于 HTML 表单参数。
+     *
+     * <p>若需要 RFC 3986 URI 编码（空格编码为 {@code %20}），
+     * 请使用 {@link #encodeUri(String)}。
+     *
+     * @param value 待编码字符串
+     * @return 编码后字符串，输入为 null 时返回 null
      */
-    public static String encode(String url) {
-        return url == null ? null : URLEncoder.encode(url, StandardCharsets.UTF_8);
+    public static String encode(String value) {
+        return value == null ? null : URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * URI 编码（RFC 3986 标准）。
+     *
+     * <p>与 {@link #encode(String)} 的区别：
+     * <ul>
+     *   <li>空格编码为 {@code %20}（而非 {@code +}），符合 RFC 3986</li>
+     *   <li>{@code *} 编码为 {@code %2A}（保留字符规范化）</li>
+     *   <li>{@code ~} 不编码（RFC 3986 允许的未保留字符）</li>
+     * </ul>
+     *
+     * <p>适用于编码 URI 路径段或查询参数值，不适用于 HTML 表单。
+     *
+     * @param value 待编码字符串
+     * @return 编码后字符串，输入为 null 时返回 null
+     */
+    public static String encodeUri(String value) {
+        if (value == null) {
+            return null;
+        }
+        return URLEncoder.encode(value, StandardCharsets.UTF_8)
+                .replace("+", "%20")
+                .replace("*", "%2A")
+                .replace("%7E", "~");
     }
 
     /**
      * URL 解码 (UTF-8)
+     *
+     * @param value 待解码字符串
+     * @return 解码后字符串，输入为 null 时返回 null
      */
-    public static String decode(String url) {
-        return url == null ? null : URLDecoder.decode(url, StandardCharsets.UTF_8);
+    public static String decode(String value) {
+        return value == null ? null : URLDecoder.decode(value, StandardCharsets.UTF_8);
     }
 
     /**
@@ -254,25 +289,56 @@ public class UrlUtils {
     }
 
     /**
-     * 规范化 URL（去除多余斜杠等）
+     * 规范化 URL（安全版本）。
+     *
+     * <p>执行以下规范化操作：
+     * <ul>
+     *   <li>将 Windows 反斜杠 {@code \} 替换为正斜杠 {@code /}</li>
+     *   <li>折叠路径中的连续斜杠（协议部分 {@code ://} 除外）</li>
+     *   <li>移除路径末尾的斜杠（根路径 {@code /} 除外）</li>
+     *   <li>处理协议相对 URL（{@code //example.com}）</li>
+     * </ul>
+     *
+     * <p><b>安全注意：</b>本方法不执行路径遍历解析（如 {@code ../}），
+     * 也不做协议/主机名大小写规范化。如需更完整的 RFC 3986 规范化，
+     * 请使用 {@link URI#normalize()}。
+     *
+     * @param url 待规范化 URL
+     * @return 规范化后的 URL，输入为空/空白时返回原值
      */
     public static String normalizeUrl(String url) {
         if (StringUtils.isEmpty(url)) {
             return url;
         }
-        
-        // 移除末尾的斜杠（如果是根路径则保留）
-        while (url.length() > 1 && url.endsWith("/")) {
-            url = url.substring(0, url.length() - 1);
-        }
-        
-        // 替换多个斜杠为一个（使用预编译 Pattern，避免每次调用重新编译正则）
-        url = MULTI_SLASH_PATTERN.matcher(url).replaceAll("/");
 
-        // 修复协议部分的双斜杠
-        url = PROTOCOL_SLASH_PATTERN.matcher(url).replaceAll("$1://$2");
-        
-        return url;
+        // 将 Windows 反斜杠替换为正斜杠
+        url = url.replace('\\', '/');
+
+        // 分割协议分隔符与路径部分，避免协议中的 // 被错误折叠
+        String prefix;
+        String path;
+        int protocolIdx = url.indexOf("://");
+        if (protocolIdx != -1) {
+            prefix = url.substring(0, protocolIdx + 3);
+            path = url.substring(protocolIdx + 3);
+        } else if (url.startsWith("//")) {
+            // 协议相对 URL：//example.com/path
+            prefix = "//";
+            path = url.substring(2);
+        } else {
+            prefix = "";
+            path = url;
+        }
+
+        // 折叠路径中的连续斜杠
+        path = MULTI_SLASH_PATTERN.matcher(path).replaceAll("/");
+
+        // 移除路径末尾的斜杠（根路径 "/" 除外）
+        while (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+
+        return prefix + path;
     }
 
     /**

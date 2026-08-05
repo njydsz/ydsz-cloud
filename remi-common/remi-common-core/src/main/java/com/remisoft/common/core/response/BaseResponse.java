@@ -399,23 +399,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 批量添加扩展字段（链式调用）。
-     *
-     * @param exts 扩展键值对（可为 null）
-     * @return 当前响应对象（支持链式调用）
-     * @since 1.6.0
-     */
-    public BaseResponse<T> putExtensions(Map<String, Object> exts) {
-        if (exts != null && !exts.isEmpty()) {
-            if (this.extensions == null) {
-                this.extensions = new HashMap<>();
-            }
-            this.extensions.putAll(exts);
-        }
-        return this;
-    }
-
-    /**
      * 获取扩展字段。
      *
      * @param key 扩展键
@@ -427,30 +410,15 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 移除扩展字段（链式调用）。
+     * 获取全部扩展字段（直接暴露内部 Map，供高级场景使用）。
      *
-     * @param key 扩展键
-     * @return 当前响应对象（支持链式调用）
-     * @since 1.6.0
-     */
-    public BaseResponse<T> removeExtension(String key) {
-        if (this.extensions != null) {
-            this.extensions.remove(key);
-            // 如果移除后为 null，清理 Map 以节省内存并避免序列化
-            if (this.extensions.isEmpty()) {
-                this.extensions = null;
-            }
-        }
-        return this;
-    }
-
-    /**
-     * 判断是否有任何扩展字段。
+     * <p>调用方可直接操作返回的 Map 实现批量添加、移除等定制逻辑，
+     * 避免为核心响应类引入过多的封装方法。</p>
      *
-     * @return 存在扩展字段返回 true；否则返回 false
-     * @since 1.6.0
+     * @return 扩展字段 Map（可能为 null 表示无扩展）
+     * @since 1.8.0
      */
-    public boolean hasExtensions() {
-        return this.extensions != null && !this.extensions.isEmpty();
+    public Map<String, Object> getExtensions() {
+        return this.extensions;
     }
 }
