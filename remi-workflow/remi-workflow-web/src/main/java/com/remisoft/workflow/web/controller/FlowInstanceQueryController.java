@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
 import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.permission.PermissionCodes;
 import com.remisoft.workflow.WorkflowFacade;
 import com.remisoft.workflow.domain.vo.FlowInstanceVO;
@@ -132,7 +131,7 @@ public class FlowInstanceQueryController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/page")
-    public BaseResponse<PageResponse<FlowInstanceVO>> instancePage(
+    public BaseResponse<List<FlowInstanceVO>> instancePage(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
@@ -142,8 +141,11 @@ public class FlowInstanceQueryController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(instanceService.page(businessType, initiatorId, flowStatus,
-                startTime, endTime, tid, pageNo, pageSize));
+        BaseResponse<FlowInstance> pageResult = instanceService.page(businessType, initiatorId, flowStatus,
+                startTime, endTime, tid, pageNo, pageSize);
+        List<FlowInstance> instances = pageResult.getData();
+        List<FlowInstanceVO> vos = WorkflowConverter.INSTANT.flowInstanceListToVO(instances);
+        return BaseResponse.successPage(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
     }
 
     /**
@@ -166,7 +168,7 @@ public class FlowInstanceQueryController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/my")
-    public BaseResponse<PageResponse<FlowInstanceVO>> instanceMy(
+    public BaseResponse<List<FlowInstanceVO>> instanceMy(
             @RequestParam(required = false) String flowCode,
             @RequestParam(required = false) String flowName,
             @RequestParam(required = false) String status,
@@ -174,9 +176,12 @@ public class FlowInstanceQueryController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        return BaseResponse.success(instanceService.page(null, AuthContext.getUserId(), status,
+        BaseResponse<FlowInstance> pageResult = instanceService.page(null, AuthContext.getUserId(), status,
                 startTime, endTime, AuthContext.getTenantIdOrDefault("1"),
-                pageNum, pageSize));
+                pageNum, pageSize);
+        List<FlowInstance> instances = pageResult.getData();
+        List<FlowInstanceVO> vos = WorkflowConverter.INSTANT.flowInstanceListToVO(instances);
+        return BaseResponse.successPage(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
     }
 
     /**
@@ -199,14 +204,14 @@ public class FlowInstanceQueryController {
      */
     @GetMapping("/instance/all")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-    public BaseResponse<PageResponse<Map<String, Object>>> instanceAll(
+    public BaseResponse<Map<String, Object>> instanceAll(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowStatus,
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime) {
-        return BaseResponse.success(workflowFacade.listAllInstances(businessType, flowStatus,
-                startTime, endTime, page, size));
+        return workflowFacade.listAllInstances(businessType, flowStatus,
+                startTime, endTime, page, size);
     }
 }

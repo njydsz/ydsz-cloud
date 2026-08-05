@@ -14,10 +14,8 @@ import java.util.Set;
 import com.remisoft.common.json.internal.JsonConfig;
 import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.exception.JsonException;
-import com.remisoft.common.json.metric.MetricsHelper;
 import com.remisoft.common.json.naming.PropertyNamingStrategy;
 import com.remisoft.common.json.parser.JsonParserUtil;
-import com.remisoft.common.json.pointer.JsonPointer;
 import com.remisoft.common.json.provider.DeserializationProvider;
 import com.remisoft.common.json.provider.SerializationProvider;
 import com.remisoft.common.json.provider.SerializationProvider.SerializationContext;
@@ -38,7 +36,6 @@ import com.remisoft.common.json.type.TypeFactory;
  *   <li>{@code RemiJson} 静态方法委托给内部默认 {@code JsonMapper} 实例，保持向后兼容</li>
  *   <li>需要独立配置的场景应创建新的 {@code JsonMapper} 实例</li>
  *   <li>{@link #copy()} 方法创建配置副本，修改不影响原实例</li>
- *   <li>所有操作均纳入 {@link JsonMetricsCallback} 指标监控（与 RemiJson 静态方法一致）</li>
  * </ul>
  *
  * <p><b>使用示例：</b></p>
@@ -659,13 +656,27 @@ public class JsonMapper {
     /**
      * 使用 JSON Pointer 获取值。
      *
+     * <p>基于 {@link #readTree} 解析后按 RFC 6901 路径定位（等价于 {@link JsonNode#path}）。
+     *
      * @param json    JSON 字符串
      * @param pointer JSON Pointer 路径
      * @return 指针指向的值
      * @since 1.0.0
      */
     public Object getByPointer(String json, String pointer) {
-        return new JsonPointer(pointer).evaluate(json);
+        if (json == null || pointer == null || pointer.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode node = readTree(json);
+            JsonNode target = node.path(pointer.startsWith("/") ? pointer.substring(1) : pointer);
+            if (target.isMissing() || target.isNull()) {
+                return null;
+            }
+            return target.asValue();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // ==================== 类型转换 API ====================
@@ -851,20 +862,28 @@ public class JsonMapper {
         }
     }
 
-    // ==================== 指标监控包装（委托给 MetricsHelper） ====================
+    // ==================== 操作包装 ====================
 
     /**
-     * 序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
+     * 执行序列化操作（原指标监控包装，指标模块已移除，直接执行）。
      */
-    private static <T> T recordSerialize(MetricsHelper.ThrowingSupplier<T> supplier) {
-        return MetricsHelper.recordSerialize(supplier, RemiJson.getMetricsCallback());
+    private static <T> T recordSerialize(ThrowingSupplier<T> supplier) {
+        return supplier.get();
     }
 
     /**
-     * 反序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
+     * 执行反序列化操作（原指标监控包装，指标模块已移除，直接执行）。
      */
-    private static <T> T recordDeserialize(MetricsHelper.ThrowingSupplier<T> supplier) {
-        return MetricsHelper.recordDeserialize(supplier, RemiJson.getMetricsCallback());
+    private static <T> T recordDeserialize(ThrowingSupplier<T> supplier) {
+        return supplier.get();
+    }
+
+    /**
+     * 允许抛出受检异常的函数式接口。
+     */
+    @FunctionalInterface
+    private interface ThrowingSupplier<T> {
+        T get() throws Exception;
     }
 
     /**

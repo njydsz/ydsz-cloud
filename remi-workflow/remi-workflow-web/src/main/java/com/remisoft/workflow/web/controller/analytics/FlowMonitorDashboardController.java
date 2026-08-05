@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
 import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.permission.PermissionCodes;
 import com.remisoft.workflow.domain.entity.FlowInstance;
 import com.remisoft.workflow.infra.mapper.FlowHisTaskMapper;
@@ -132,7 +131,7 @@ public class FlowMonitorDashboardController {
      */
     @GetMapping("/monitor/anomaly")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
-    public BaseResponse<PageResponse<List<Map<String, Object>>>> monitorAnomaly(
+    public BaseResponse<List<Map<String, Object>>> monitorAnomaly(
             @RequestParam(required = false) String anomalyType,
             @RequestParam(required = false) String warnLevel,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
@@ -172,7 +171,7 @@ public class FlowMonitorDashboardController {
         int to = Math.min(from + pageSize, total);
         List<Map<String, Object>> page = from < to ? all.subList(from, to) : new ArrayList<>();
 
-        return BaseResponse.success(PageResponse.success((long) total, (long) pageNum, (long) pageSize, page));
+        return BaseResponse.successPage((long) total, (long) pageNum, (long) pageSize, page);
     }
 
     /**

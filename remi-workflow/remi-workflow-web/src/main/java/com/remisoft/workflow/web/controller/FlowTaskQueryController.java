@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.workflow.WorkflowFacade;
 import com.remisoft.workflow.domain.converter.WorkflowConverter;
@@ -148,7 +147,7 @@ public class FlowTaskQueryController {
      * @return 统一响应结果，包含分页已办列表
      */
     @GetMapping("/task/done/search")
-    public BaseResponse<PageResponse<FlowRunTaskVO>> doneSearch(
+    public BaseResponse<List<FlowRunTaskVO>> doneSearch(
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowCode,
@@ -158,8 +157,11 @@ public class FlowTaskQueryController {
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
-                flowCode, startTime, endTime, tid, pageNo, pageSize));
+        BaseResponse<FlowRunTask> pageResult = taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
+                flowCode, startTime, endTime, tid, pageNo, pageSize);
+        List<FlowRunTask> tasks = pageResult.getData();
+        List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(tasks);
+        return BaseResponse.successPage(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
     }
 
     // ============== P2-31/32/33: 审计运营统计 ==============
