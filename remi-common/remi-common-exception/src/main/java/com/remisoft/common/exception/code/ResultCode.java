@@ -9,10 +9,21 @@ package com.remisoft.common.exception.code;
  * <p><b>迁移说明：</b>本接口原定义于 {@code remi-common-core}（v2.1.0 精简核心时移除），
  * 因错误码体系属于异常处理能力，迁移至 {@code remi-common-exception} 模块维护。
  *
+ * <h3>已弃用（since 当前版本）</h3>
+ * <p>已被 {@link com.remisoft.common.core.code.ResultCode} 统一替代。
+ * 历史作用是通过 {@link ExceptionCode} 桥接核心接口，现已由 {@link ExceptionCode}
+ * 直接继承 {@code com.remisoft.common.core.code.ResultCode} 完成统一。
+ * 本接口仅保留用于兼容尚未迁移的旧代码引用，<strong>新代码应直接使用</strong>
+ * {@code com.remisoft.common.core.code.ResultCode}，不经过本接口。
+ *
  * @author remi-team
  * @since 1.0.0
+ * @deprecated 已被 {@link com.remisoft.common.core.code.ResultCode} 统一替代，
+ *             请直接使用该接口
  * @see ExceptionCode
+ * @see com.remisoft.common.core.code.ResultCode
  */
+@Deprecated
 public interface ResultCode {
 
     /**

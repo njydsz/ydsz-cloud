@@ -1,12 +1,9 @@
 package com.remisoft.common.exception.enums;
 
-import com.remisoft.common.exception.code.ResultCode;
-
 /**
  * 异常码接口
  *
- * <p>继承 {@link ResultCode}（异常模块）与 {@code com.remisoft.common.core.code.ResultCode}（核心模块），
- * 统一双轨错误码体系：业务异常码枚举实现本接口后，既可用于异常抛出链路
+ * <p>统一错误码体系：业务异常码枚举实现本接口后，既可用于异常抛出链路
  * （{@code throw new BusinessException(code)}），也可直接作为
  * {@code BaseResponse.error(code, msg)} 的响应码（v1.1.0 起支持）。
  * 设计为接口而非抽象类，可以让不同业务模块定义自己的异常码枚举，
@@ -19,18 +16,18 @@ import com.remisoft.common.exception.code.ResultCode;
  *   <li>key：国际化消息键，对应 messages.properties 中的键</li>
  * </ul>
  *
- * <h3>与两套 ResultCode 的桥接（v1.1.0 统一双轨体系）</h3>
+ * <h3>与 {@code ResultCode} 的继承关系</h3>
  * <ul>
- *   <li>{@link #getMsg()} → 委托给 {@link #getKey()}，无 i18n 时回退显示 key</li>
- *   <li>{@link #getMessageKey()} → 委托给 {@link #getKey()}，用于 BaseResponse 的 i18n 链路</li>
- *   <li>{@link #getHttpStatusCode()} → 委托给 {@link #getHttpStatus()}，桥接命名差异</li>
- *   <li>同时继承 {@code com.remisoft.common.core.code.ResultCode}，使枚举可直接传入
- *       {@link com.remisoft.common.core.response.BaseResponse#error(com.remisoft.common.core.code.ResultCode)}</li>
+ *   <li>本接口直接继承 {@link com.remisoft.common.core.code.ResultCode}（核心模块），
+ *       移除历史上通过 {@code com.remisoft.common.exception.code.ResultCode} 桥接的双轨设计</li>
+ *   <li>{@link #getMsg()} 默认委托给 {@link #getKey()}，无 i18n 时回退显示 key</li>
+ *   <li>{@link #getMessageKey()} 默认委托给 {@link #getKey()}，用于 BaseResponse 的 i18n 链路</li>
+ *   <li>{@link #getHttpStatusCode()} 默认委托给 {@link #getHttpStatus()}，桥接命名差异</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 1. 定义错误码（同时兼容 ExceptionCode 和 ResultCode）
+ * // 1. 定义错误码（直接兼容 ExceptionCode 和 ResultCode）
  * public enum UserExceptionCode implements ExceptionCode {
  *     USER_NOT_FOUND("A01001", "user.not.found"),
  *     USER_ALREADY_EXISTS("A01002", "user.already.exists");
@@ -51,10 +48,10 @@ import com.remisoft.common.exception.code.ResultCode;
  *
  * @author remi-team
  * @since 1.0.0
- * @see ResultCode
+ * @see com.remisoft.common.core.code.ResultCode
  * @see UnifiedExceptionCode
  */
-public interface ExceptionCode extends ResultCode, com.remisoft.common.core.code.ResultCode {
+public interface ExceptionCode extends com.remisoft.common.core.code.ResultCode {
 
     /**
      * 获取异常码
