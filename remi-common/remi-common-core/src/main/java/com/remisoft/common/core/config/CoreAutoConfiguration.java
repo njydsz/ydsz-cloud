@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import com.remisoft.common.core.constant.PageConstants;
 import com.remisoft.common.core.metrics.CoreMetrics;
 import com.remisoft.common.core.response.BaseResponse;
+import com.remisoft.common.core.response.MessageResolverHolder;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -22,7 +23,8 @@ import io.micrometer.core.instrument.MeterRegistry;
  * 使 {@code remi.core.*} 配置项在 IDE 中获得自动补全和类型校验支持。</p>
  *
  * <p>当 Spring {@link MessageSource} 可用时，自动注册 {@link SpringMessageResolver}
- * 并绑定到 {@link BaseResponse}，使响应消息支持国际化。</p>
+ * 并绑定到 {@link MessageResolverHolder}（或向后兼容的 {@link BaseResponse}），
+ * 使响应消息支持国际化。</p>
  *
  * <p>当 Spring Boot Actuator 的 {@link HealthIndicator} 在 classpath 可用时，
  * 自动注册 {@link CoreHealthIndicator} 暴露 Core 模块运行状态。</p>
@@ -38,7 +40,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class CoreAutoConfiguration {
 
     /**
-     * 注册 Spring 国际化消息解析器并绑定到 {@link BaseResponse}。
+     * 注册 Spring 国际化消息解析器并绑定到 {@link MessageResolverHolder}。
      *
      * <p>当 classpath 上存在 {@link MessageSource} 且容器中有对应 Bean 时生效。
      * 采用一次性设置语义，确保解析器在应用生命周期内不可变。</p>
@@ -51,6 +53,8 @@ public class CoreAutoConfiguration {
     @ConditionalOnBean(MessageSource.class)
     public SpringMessageResolver springMessageResolver(MessageSource messageSource) {
         SpringMessageResolver resolver = new SpringMessageResolver(messageSource);
+        // 注册到新的 MessageResolverHolder（同时通过兼容层写入 BaseResponse 以保持向后兼容）
+        MessageResolverHolder.setResolverIfAbsent(resolver);
         BaseResponse.setResolverIfAbsent(resolver);
         return resolver;
     }

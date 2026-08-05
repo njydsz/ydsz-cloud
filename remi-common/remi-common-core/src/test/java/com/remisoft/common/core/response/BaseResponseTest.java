@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.net.URI;
 
 import com.remisoft.common.core.context.ProblemDetail;
+import com.remisoft.common.core.response.MessageResolverHolder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,8 +36,8 @@ class BaseResponseTest {
     @AfterEach
     void tearDown() {
         MDC.clear();
-        // 清理 BaseResponse 静态 RESOLVER，防止测试间状态污染
-        BaseResponse.__testResetResolver();
+        // 清理 MessageResolverHolder 静态 RESOLVER，防止测试间状态污染
+        MessageResolverHolder.__testResetResolver();
     }
 
     @Test

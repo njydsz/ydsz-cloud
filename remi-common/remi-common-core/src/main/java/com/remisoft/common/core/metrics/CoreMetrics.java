@@ -21,15 +21,28 @@ import io.micrometer.core.instrument.Timer;
  *       用于诊断 TTL 泄漏与慢请求</li>
  * </ul>
  *
- * <p><b>设计决策：</b></p>
+ * <p><b>设计决策（v1.8.0 重构）：</b></p>
  * <ul>
  *   <li>采用"注册即用"模式：Bean 构造时即向 {@link MeterRegistry} 注册指标，
  *       后续通过静态方法上报</li>
- *   <li>指标值由调用方（如全局异常处理过滤器）显式上报，本类不做隐式 Hook，
- *       避免与业务链路耦合</li>
+ *   <li>消除静态 volatile 实例（this 逃逸问题），改为通过 Spring DI 注入使用</li>
+ *   <li>提供静态 {@link #incrementResponse(String)} / {@link #recordHoldTime(Duration)} 方法
+ *       供无 DI 场景（如 Filter）使用，内部通过 {@link MetricsAccessor} 桥接</li>
  *   <li>仅在 Micrometer 位于 classpath 且存在 {@link MeterRegistry} Bean 时实例化，
  *       不影响在非 Spring 或纯 JDK 环境下使用 core 模块</li>
  * </ul>
+ *
+ * <p><b>使用方式：</b>
+ * <pre>{@code
+ * // 方式1：通过静态方法上报（Filter/非 Bean 场景）
+ * CoreMetrics.incrementResponse("A00000");
+ * CoreMetrics.recordHoldTime(Duration.ofMillis(100));
+ *
+ * // 方式2：通过依赖注入（推荐，便于测试）
+ * {@literal @}Autowired
+ * private CoreMetrics coreMetrics;
+ * coreMetrics.incrementResponse("A00000");
+ * }</pre>
  *
  * @author remi-team
  * @since 1.7.0
@@ -49,13 +62,45 @@ public class CoreMetrics {
     /** 标签键：是否成功（基于 code 是否为 A00000 判定） */
     private static final String TAG_SUCCESS = "success";
 
-    /** 单例引用（volatile 保证多线程可见性） */
-    private static volatile CoreMetrics instance;
+    /**
+     * 静态访问器（延迟初始化，测试时可重置）。
+     *
+     * <p>替代 volatile 静态实例，通过 {@link MetricsAccessor} 接口实现可测试性。
+     */
+    private static volatile MetricsAccessor accessor = MetricsAccessor.NO_OP;
+
+    /**
+     * 指标访问接口（支持 no-op 和正常实现）。
+     */
+    interface MetricsAccessor {
+        void incrementResponse(String responseCode);
+
+        void recordHoldTime(Duration holdTime);
+
+        MetricsAccessor NO_OP = new MetricsAccessor() {
+            @Override
+            public void incrementResponse(String responseCode) {
+                // no-op
+            }
+
+            @Override
+            public void recordHoldTime(Duration holdTime) {
+                // no-op
+            }
+        };
+    }
 
     private final MeterRegistry registry;
     private final Counter responseCounter;
     private final Timer contextHoldTimeTimer;
 
+    /**
+     * 构造 CoreMetrics 实例并注册到 MeterRegistry。
+     *
+     * <p>同时更新静态 accessor，使静态方法可用。
+     *
+     * @param registry Micrometer 指标注册表
+     */
     public CoreMetrics(MeterRegistry registry) {
         this.registry = registry;
         this.responseCounter = Counter.builder(RESPONSE_COUNT)
@@ -66,47 +111,79 @@ public class CoreMetrics {
                 .description("Request context hold time distribution, for diagnosing TTL leaks")
                 .tags(Tags.of("component", "remi-common-core"))
                 .register(registry);
-        instance = this;
+        // 更新 accessor（不再发布 this 的引用，避免 this 逃逸）
+        accessor = new MetricsAccessor() {
+            @Override
+            public void incrementResponse(String responseCode) {
+                CoreMetrics.this.doIncrementResponse(responseCode);
+            }
+
+            @Override
+            public void recordHoldTime(Duration holdTime) {
+                CoreMetrics.this.doRecordHoldTime(holdTime);
+            }
+        };
     }
 
     /**
-     * 上报一次响应结果。
+     * 上报一次响应结果（实例方法，供 DI 使用）。
      *
-     * <p>由全局异常处理过滤器在请求结束时调用，统计错误码段分布。
-     * 若当前 ApplicationContext 中未实例化本 Bean（Micrometer 不可用），
+     * @param responseCode 响应码字符串（如 A00000、C99999）
+     */
+    public void incrementResponse(String responseCode) {
+        doIncrementResponse(responseCode);
+    }
+
+    /**
+     * 上报一次请求上下文的持有时间（实例方法，供 DI 使用）。
+     *
+     * @param holdTime 上下文持有时间（不为 null）
+     */
+    public void recordHoldTime(Duration holdTime) {
+        doRecordHoldTime(holdTime);
+    }
+
+    /**
+     * 上报一次响应结果（静态方法，供非 DI 场景使用）。
+     *
+     * <p>若当前 ApplicationContext 中未实例化本 Bean（Micrometer 不可用），
      * 调用为无操作（no-op）。</p>
      *
      * @param responseCode 响应码字符串（如 A00000、C99999）
      */
     public static void incrementResponse(String responseCode) {
-        CoreMetrics m = instance;
-        if (m == null) {
-            return;
-        }
-        String prefix = extractPrefix(responseCode);
-        String success = isSuccessCode(responseCode) ? "true" : "false";
-        Counter.builder(RESPONSE_COUNT)
-                .tags(Tags.of(TAG_CODE_PREFIX, prefix, TAG_SUCCESS, success))
-                .register(m.registry)
-                .increment();
-        // also increment the base counter
-        m.responseCounter.increment();
+        accessor.incrementResponse(responseCode);
     }
 
     /**
-     * 上报一次请求上下文的持有时间。
+     * 上报一次请求上下文的持有时间（静态方法，供非 DI 场景使用）。
      *
-     * <p>由过滤器的 finally 块在关闭 {@link com.remisoft.common.core.context.RequestContext.CleanupGuard} 前后调用，
-     * 记录 distribution。若 Micrometer 不可用，则为 no-op。</p>
+     * <p>由过滤器的 finally 块在关闭 {@link com.remisoft.common.core.context.RequestContext.CleanupGuard} 调用。
+     * 若 Micrometer 不可用，则为 no-op。</p>
      *
      * @param holdTime 上下文持有时间（不为 null）
      */
     public static void recordHoldTime(Duration holdTime) {
-        CoreMetrics m = instance;
-        if (m == null || holdTime == null) {
-            return;
+        accessor.recordHoldTime(holdTime);
+    }
+
+    // ======================== 内部实现 ========================
+
+    private void doIncrementResponse(String responseCode) {
+        String prefix = extractPrefix(responseCode);
+        String success = isSuccessCode(responseCode) ? "true" : "false";
+        Counter.builder(RESPONSE_COUNT)
+                .tags(Tags.of(TAG_CODE_PREFIX, prefix, TAG_SUCCESS, success))
+                .register(registry)
+                .increment();
+        // also increment the base counter
+        responseCounter.increment();
+    }
+
+    private void doRecordHoldTime(Duration holdTime) {
+        if (holdTime != null) {
+            contextHoldTimeTimer.record(holdTime);
         }
-        m.contextHoldTimeTimer.record(holdTime);
     }
 
     /**
@@ -134,5 +211,14 @@ public class CoreMetrics {
      */
     private static boolean isSuccessCode(String code) {
         return "A00000".equals(code);
+    }
+
+    /**
+     * 测试辅助方法：重置 accessor（仅用于单元测试）。
+     *
+     * <p><b>仅限测试使用。</b>
+     */
+    static void __testResetAccessor() {
+        accessor = MetricsAccessor.NO_OP;
     }
 }

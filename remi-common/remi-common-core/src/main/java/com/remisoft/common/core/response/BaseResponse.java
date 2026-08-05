@@ -16,7 +16,6 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 统一API返回结果封装类
@@ -44,7 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  * @see IResponse
  * @see PageResponse
  */
@@ -66,7 +65,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * 未知错误状态码（复用 {@link BaseResultCode#UNKNOWN}，与错误码体系保持一致）。
      *
      * <p>该常量表示系统未知错误（C99999），用于与 {@link #SUCCESS} 进行反向校验场景。
-     * 命名明确区分"通用错误"与"未知错误"语义，避免与 {@code error()} 方法名混淆。
      *
      * @since 1.7.0
      */
@@ -172,7 +170,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 成功消息
      */
     public static <T> BaseResponse<T> success() {
-        return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), null);
+        return of(SUCCESS, MessageResolverHolder.resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), null);
     }
 
     /**
@@ -183,7 +181,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 成功消息
      */
     public static <T> BaseResponse<T> success(T data) {
-        return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), data);
+        return of(SUCCESS, MessageResolverHolder.resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), data);
     }
 
     /**
@@ -219,7 +217,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      */
     public static <T> BaseResponse<T> error() {
-        return of(ERROR, resolveMessage(MSG_OPERATION_FAIL, "操作失败"), null);
+        return of(ERROR, MessageResolverHolder.resolveMessage(MSG_OPERATION_FAIL, "操作失败"), null);
     }
 
     /**
@@ -246,88 +244,49 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 返回失败消息
+     * 返回失败消息（自定义数据）。
+     *
+     * <p><b>注意：</b>此方法已废弃，建议使用 {@link #of(String, String, Object)} 替代。
      *
      * @param code 错误码
-     * @param msg 消息内容
+     * @param msg  消息内容
      * @param data 数据内容
-     * @param <T> 数据类型
+     * @param <T>  数据类型
      * @return 失败消息
+     * @since 1.0.0
+     * @deprecated 使用 {@link #of(String, String, Object)} 替代，语义更明确
      */
+    @Deprecated
     public static <T> BaseResponse<T> error(String code, String msg, T data) {
         return of(code, msg, data);
     }
 
-    /**
-     * 国际化消息解析器接口
-     */
-    @FunctionalInterface
-    public interface MessageResolver {
-        /**
-         * 解析国际化消息
-         *
-         * @param key 国际化消息 key
-         * @param defaultValue 默认消息文本
-         * @return 解析后的消息内容
-         */
-        String resolve(String key, String defaultValue);
-    }
+    // ======================== 国际化兼容 API ========================
 
     /**
-     * 国际化消息解析器实例（AtomicReference 保证线程安全和一次性设置）。
+     * 国际化消息解析器接口。
      *
-     * <p>采用一次性设置语义：启动时由 {@code CoreAutoConfiguration} 注入，
-     * 后续不可修改，消除全局可变状态的线程安全隐患。</p>
+     * <p>保留此接口以维持向后兼容，新代码建议直接使用 {@link MessageResolverHolder.MessageResolver}。
+     *
+     * @deprecated 使用 {@link MessageResolverHolder.MessageResolver} 替代
      */
-    private static final AtomicReference<MessageResolver> RESOLVER = new AtomicReference<>();
+    @Deprecated
+    @FunctionalInterface
+    public interface MessageResolver extends MessageResolverHolder.MessageResolver {
+    }
 
     /**
      * 一次性设置全局消息解析器（仅首次调用生效）。
      *
      * <p>由 {@code CoreAutoConfiguration} 在应用启动时调用。
-     * 由于采用一次性设置语义，重复调用不会覆盖已有解析器，
-     * 确保 i18n 解析行为在应用生命周期内保持一致。</p>
+     * 委托给 {@link MessageResolverHolder#setResolverIfAbsent} 实现。
      *
-     * @param resolver 消息解析器实现
+     * @param resolver 消息解析器实现（可为 {@link MessageResolver} 或 {@link MessageResolverHolder.MessageResolver}）
      * @return true=设置成功（首次），false=已存在解析器（忽略）
      * @since 1.6.0
      */
     public static boolean setResolverIfAbsent(MessageResolver resolver) {
-        boolean success = RESOLVER.compareAndSet(null, resolver);
-        if (!success && resolver != null) {
-            org.slf4j.LoggerFactory.getLogger(BaseResponse.class)
-                    .debug("MessageResolver already registered, ignoring subsequent setResolverIfAbsent call");
-        }
-        return success;
-    }
-
-    /**
-     * 测试辅助方法：清空已注册的消息解析器（仅用于单元测试）。
-     *
-     * <p><b>仅限测试使用。</b>调用后 RESOLVER 恢复为未注册状态，
-     * 使各测试用例之间互不污染。生产代码不应调用此方法，
-     * 以免破坏一次性设置语义。</p>
-     *
-     * @since 1.7.0
-     */
-    static void __testResetResolver() {
-        RESOLVER.set(null);
-    }
-
-    /**
-     * 解析国际化消息，若未设置解析器则返回默认值
-     *
-     * @param key 国际化消息 key
-     * @param defaultValue 默认消息文本
-     * @return 解析后的消息内容
-     */
-    protected static String resolveMessage(String key, String defaultValue) {
-        MessageResolver currentResolver = RESOLVER.get();
-        if (currentResolver != null) {
-            String result = currentResolver.resolve(key, defaultValue);
-            return result != null ? result : defaultValue;
-        }
-        return defaultValue;
+        return MessageResolverHolder.setResolverIfAbsent(resolver);
     }
 
     /**
@@ -336,8 +295,22 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 已注册返回 true，否则返回 false
      */
     public static boolean isResolverRegistered() {
-        return RESOLVER.get() != null;
+        return MessageResolverHolder.isResolverRegistered();
     }
+
+    /**
+     * 测试辅助方法：清空已注册的消息解析器（仅用于单元测试）。
+     *
+     * <p><b>仅限测试使用。</b>调用后解析器恢复为未注册状态，
+     * 使各测试用例之间互不污染。
+     *
+     * @since 1.7.0
+     */
+    static void __testResetResolver() {
+        MessageResolverHolder.__testResetResolver();
+    }
+
+    // ======================== 错误码响应构建 ========================
 
     /**
      * 返回失败消息
@@ -350,7 +323,8 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      */
     public static <T> BaseResponse<T> error(ResultCode resultCode) {
-        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), null);
+        return of(resultCode.getCode(),
+                MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), null);
     }
 
     /**
@@ -421,7 +395,8 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
                     .timestamp(java.time.Instant.now())
                     .build();
             autoFillTraceIdFromMdc(problem);
-            return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
+            return of(resultCode.getCode(),
+                    MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
         }
 
         // 默认使用 UNKNOWN
@@ -450,16 +425,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * </ol>
      *
      * <p>对未实现上述接口的异常返回 {@code null}，调用方应回退到 UNKNOWN。
-     * 此方法与旧版反射实现行为等价，但消除了：
-     * <ul>
-     *   <li>core 层对 exception 模块字段名的隐式耦合</li>
-     *   <li>{@code setAccessible(true)} 的安全风险</li>
-     *   <li>跨类层次遍历的性能开销（O(1) vs O(classDepth)）</li>
-     * </ul>
-     *
-     * <p><b>异常模块适配指引：</b> {@code remi-common-exception} 模块中的
-     * {@code AbstractRemiException} 需实现 {@link IExceptionResultCode}，
-     * 提供 {@code resultCode()} 实现，即可与本类无缝协作。</p>
      *
      * @param throwable 异常对象
      * @return 提取到的 ResultCode；无法提取时返回 null
@@ -491,7 +456,8 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     public static BaseResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail);
         autoFillTraceIdFromMdc(problem);
-        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
+        return of(resultCode.getCode(),
+                MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
     }
 
     /**
@@ -508,15 +474,14 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     public static BaseResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail, URI instance) {
         ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
         autoFillTraceIdFromMdc(problem);
-        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
+        return of(resultCode.getCode(),
+                MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);
     }
 
     /**
      * 从 MDC 中提取当前线程的 traceId 并注入 ProblemDetail。
      *
      * <p>若 MDC 中无有效 traceId，则不修改 ProblemDetail，避免覆盖 Builder 设置的 traceId。
-     * 所有错误响应构建路径（{@link #error(Throwable, URI)}、{@link #errorWithDetail}）
-     * 均调用此方法，保证链路追踪贯穿整个错误响应链路。</p>
      *
      * @param problem 待注入的 ProblemDetail 实例（不可为 null）
      * @since 1.7.0
@@ -527,6 +492,8 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
             problem.setTraceId(traceId);
         }
     }
+
+    // ======================== 状态判断 ========================
 
     /**
      * 判断是否成功
