@@ -20,7 +20,7 @@
 
 **Remi-Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 五层分层架构，内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共基础库），覆盖用户认证、系统管理、工作流引擎、消息通知、分布式任务调度、规则引擎、网盘知识库、AI 智能体等企业级业务场景。
 
-平台对标 **若依（RuoYi）**、**Pig**、**Spring Cloud Alibaba** 等主流开源微服务项目，在架构设计、代码质量、工程规范与安全治理方面对齐 **阿里巴巴 Java 开发手册**、**Google Java Style Guide** 等行业标准，并通过 Maven Enforcer、CheckStyle、SpotBugs、OWASP Dependency-Check、JaCoCo、ArchUnit 等 7 道质量门禁保障交付质量。
+平台对标 **若依（RuoYi）**、**Pig**、**maku-boot**、**SpringBlade**、**JeecgBoot** 等主流开源快速开发平台（详见 [对标竞品](#对标竞品)），在架构设计、代码质量、工程规范与安全治理方面对齐 **阿里巴巴 Java 开发手册**、**Google Java Style Guide** 等行业标准，并通过 Maven Enforcer、CheckStyle、SpotBugs、OWASP Dependency-Check、JaCoCo、ArchUnit 等 7 道质量门禁保障交付质量。
 
 ### 核心特性
 
@@ -181,6 +181,30 @@ remi-cloud/
 | **remi-cronjob** | Leader 选举 · 多分区调度 · Cron + 固定频率 + 精准（时间轮） · 分片广播 · 故障转移 · DAG 编排 · 胶水代码编辑 · 自愈系统 |
 | **remi-literule** | 7 种规则类型 · 自研 LiteExpr 引擎（AST + 沙箱） · Caffeine L1 + Redis L2 缓存 · 热加载 · 版本 Diff + 回滚 · Dry-Run 仿真 · A/B 测试 · 规则市场 |
 | **remi-agent** | 5 种 Agent 执行器 · LLM Provider 抽象（OpenAI 兼容） · 同步/流式对话（SSE） · RAG · DAG 编排 · Tool Calling · 安全护栏（PII + Prompt 注入检测） |
+
+---
+
+## 对标竞品
+
+为明确 **Remi-Cloud** 在开源快速开发平台生态中的定位与差异化优势，确立以下 5 个主流项目作为长期对标竞品，用于持续跟踪其架构演进、功能特性与社区活跃度：
+
+| 竞品 | 一句话定位 | 架构形态 | 核心技术栈 | 开源协议 | 仓库地址 |
+|------|-----------|----------|------------|----------|----------|
+| **若依 RuoYi** | 轻量级权限管理系统，易读易懂、界面简洁美观 | 单体 / 前后端分离（另有独立微服务版 RuoYi-Cloud） | Spring Boot + MyBatis + Shiro（无重度依赖） | MIT | https://gitee.com/y_project/RuoYi |
+| **Pig** | 微服务 RBAC 权限管理（企业级快速开发平台） | 微服务（亦支持 `boot` 单体 profile） | Spring Boot 4.0 + Spring Cloud 2025 & Alibaba + Spring Authorization Server（OAuth2） | Apache 2.0 | https://gitee.com/log4j/pig |
+| **maku-boot** | 企业级低代码平台，符合信创需求 | 单体（组件化按需引入） | Spring Boot 4.0 + Spring Security 7.0 + MyBatis-Plus + Vue3 + Element-Plus | Apache 2.0 | https://gitee.com/makunet/maku-boot |
+| **SpringBlade** | 商业级微服务架构，面向 SaaS 多租户 | 微服务 | Spring Boot 4.1 + Spring Cloud 2025 + Java 21 + Nacos + Sentinel（遵循阿里编码规范） | Apache 2.0 | https://gitee.com/smallc/SpringBlade |
+| **JeecgBoot** | 企业级 AI 低代码平台（低代码 + 零代码 + BPM + AI） | 单体 / 微服务 | Spring Boot 4.1 + MyBatis-Plus + Shiro/JWT + Vue3 + Flowable + AI 应用平台 | Apache 2.0 | https://gitee.com/jeecg/JeecgBoot |
+
+**Remi-Cloud 的差异化优势**：
+
+- **DDD 五层分层架构**：严格的 `api / domain / infra / server / web` 依赖方向单向收敛，由 ArchUnit 守护，竞品多为传统三层或 MVC 结构。
+- **四大自研引擎**：规则引擎（对标 Drools + LiteFlow）、分布式调度（对标 XXL-Job + PowerJob）、BPMN 2.0 工作流、AI Agent 框架，全部自研、开箱即用。
+- **7 道质量门禁全链路**：CheckStyle → SpotBugs → OWASP → JaCoCo → ArchUnit → CycloneDX SBOM，构建阶段自动执行。
+- **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10。
+- **全渠道消息与多租户**：12 种通知渠道 DAG 编排、三种多租户隔离策略（SINGLE / MULTI / ISOLATE_DB）。
+
+> 说明：对标竞品用于产品定位与功能演进参考，不代表技术依赖或代码引用。
 
 ---
 
