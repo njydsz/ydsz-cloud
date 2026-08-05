@@ -10,7 +10,6 @@ package com.remisoft.common.feign;
  * <ul>
  *   <li>{@link #MESSAGE} — 消息中心（通知/短信/邮件/Webhook）</li>
  *   <li>{@link #WORKFLOW} — 工作流引擎（流程定义/实例/审批）</li>
- *   <li>{@link #PROJECT} — 项目管理（项目/资源/台账）</li>
  *   <li>{@link #SALES} — 商务销售（商机/合同/变更/模板）</li>
  *   <li>{@link #FINANCE} — 财务会计（发票/回款/费用/收入/利润/对账）</li>
  *   <li>{@link #AGENT} — AI Agent 服务（编排/工具/知识库）</li>
@@ -44,9 +43,6 @@ public final class FeignClientConstants {
 
     /** 工作流引擎服务名 */
     public static final String WORKFLOW = "remi-workflow";
-
-    /** 项目管理服务名（项目执行域 + 商务销售 + 财务会计,2026-07-16 合并） */
-    public static final String PROJECT = "remi-project";
 
     /** AI Agent 服务名 */
     public static final String AGENT = "remi-agent";
@@ -99,16 +95,6 @@ public final class FeignClientConstants {
 
     /** 按字典类型查询字典项列表 API 路径 */
     public static final String SYSTEM_PATH_DICT_LIST = "/api/internal/dict/list";
-
-    // ==================== 项目管理 URL 路径常量 ====================
-    // P3-3 TODO: remi-project 模块尚未创建 InternalApiController，
-    // 以下端点需在 project-web 中实现后才能正常调用
-
-    /** 按项目 ID 查询项目基本信息 API 路径 */
-    public static final String PROJECT_PATH_GET_BY_ID = "/api/internal/project/get";
-
-    /** 查询项目状态 API 路径 */
-    public static final String PROJECT_PATH_GET_STATUS = "/api/internal/project/status";
 
     // ==================== AI Agent URL 路径常量 ====================
     // P3-3 TODO: remi-agent 模块尚未创建 InternalApiController，

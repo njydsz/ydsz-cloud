@@ -79,9 +79,6 @@ public class RouteConfig {
                                 "/feign/**")
                         .uri("lb://remi-userinfo"))
                 // ===== 业务服务 =====
-                .route("remi-project", r -> r.path(
-                                "/api/v1/project/**")
-                        .uri("lb://remi-project"))
                 .route("remi-workflow", r -> r.path(
                                 "/api/v1/workflow/**")
                         .uri("lb://remi-workflow"))

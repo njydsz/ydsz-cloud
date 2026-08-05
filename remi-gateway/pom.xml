@@ -20,7 +20,7 @@
             （servlet 栈，会引入 spring-boot-starter-web/Tomcat 与 jakarta.servlet-api，造成双栈冲突）。
             按需挑选细粒度子模块：
               - common-core:    BaseResponse
-              - common-util:    UUIDUtils（traceId 生成）
+              - common-util:    SnowflakeUtils/RandomUtils（ID 生成）
               - common-exception: WebFluxExceptionHandler / ProblemDetail
               - common-auth:    UserInfo / TokenService / JwtTokenProvider（JWT 鉴权）
         -->

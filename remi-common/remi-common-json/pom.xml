@@ -16,7 +16,6 @@
     <description>REMI 公共依赖 - 高性能 JSON 序列化/反序列化引擎（RemiJson，零外部 JSON 库依赖）</description>
 
     <properties>
-        <asm.version>9.9</asm.version>
         <jmh.version>1.37</jmh.version>
     </properties>
 
@@ -31,14 +30,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- ASM 字节码优化（可选） -->
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>${asm.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -60,33 +51,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Reactive Streams API（WebFlux 响应式场景 JsonReactiveEncoder 使用，版本由 Spring Boot BOM 管理） -->
-        <dependency>
-            <groupId>org.reactivestreams</groupId>
-            <artifactId>reactive-streams</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Spring Boot Actuator（健康检查，optional） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-actuator</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!-- Spring Boot 4.x: health classes moved to health module -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-health</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Micrometer（指标监控，optional） -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
 
@@ -162,57 +126,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <!--
-        GraalVM Native Image 试点（P2） - 仅 development 阶段显式激活：
-        mvn native:compile -Pnative
-        详见 deploy/docs/GRAALVM_NATIVE_IMAGE_TRIAL.md
-    -->
-    <profiles>
-        <profile>
-            <id>native</id>
-            <properties>
-                <native-maven-plugin.version>0.10.6</native-maven-plugin.version>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                        <version>${native-maven-plugin.version}</version>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>test-native</id>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <phase>test</phase>
-                            </execution>
-                            <execution>
-                                <id>build-native</id>
-                                <goals>
-                                    <goal>compile-no-fork</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <imageName>remi-common-json</imageName>
-                            <mainClass>com.remisoft.common.json.RemiJson</mainClass>
-                            <buildArgs>
-                                <buildArg>--no-fallback</buildArg>
-                                <buildArg>--verbose</buildArg>
-                                <buildArg>-H:+ReportExceptionStackTraces</buildArg>
-                                <buildArg>-H:ReflectionConfigurationFiles=${project.basedir}/src/main/resources/META-INF/native-image/com.remisoft/remi-common-json/reflect-config.json</buildArg>
-                                <buildArg>-H:ResourceConfigurationFiles=${project.basedir}/src/main/resources/META-INF/native-image/com.remisoft/remi-common-json/resource-config.json</buildArg>
-                                <buildArg>-H:+InlineBeforeAnalysis</buildArg>
-                            </buildArgs>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

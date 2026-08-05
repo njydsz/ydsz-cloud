@@ -65,8 +65,7 @@ public final class FilterIgnoreConstants {
             "remi-agent-web",
             "remi-nextwiki-web",
             "remi-literule-web",
-            "remi-workflow-web",
-            "remi-project-web"
+            "remi-workflow-web"
     ));
 
     /** 安全相关的排除URL模式（登录、认证、验证码等） */

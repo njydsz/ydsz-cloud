@@ -97,12 +97,7 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-file</artifactId>
         </dependency>
-        <!-- P0-3: 跨模块 Feign 客户端（Agent 调用项目服务、用户信息查询） -->
-        <dependency>
-            <groupId>com.remisoft</groupId>
-            <artifactId>remi-project-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!-- P0-3: 跨模块 Feign 客户端（Agent 调用用户信息服务） -->
         <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-userinfo-api</artifactId>

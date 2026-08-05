@@ -23,7 +23,7 @@ import com.remisoft.common.safe.annotation.EnableRemiSafe;
 @EnableRemiAuth
 @EnableRemiSafe
 @EnableRemiAudit
-@EnableRemiFeign(basePackages = {"com.remisoft.agent.api", "com.remisoft.common.feign", "com.remisoft.project.api", "com.remisoft.userinfo.api", "com.remisoft.nextwiki.api"})
+@EnableRemiFeign(basePackages = {"com.remisoft.agent.api", "com.remisoft.common.feign", "com.remisoft.userinfo.api", "com.remisoft.nextwiki.api"})
 @MapperScan("com.remisoft.agent.infra.mapper")
 public class AgentApplication {
 

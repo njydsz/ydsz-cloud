@@ -72,8 +72,7 @@ public class AuthFilterIgnoreProperties {
             "remi-agent-web",
             "remi-nextwiki-web",
             "remi-literule-web",
-            "remi-workflow-web",
-            "remi-project-web"
+            "remi-workflow-web"
     );
 
     /**

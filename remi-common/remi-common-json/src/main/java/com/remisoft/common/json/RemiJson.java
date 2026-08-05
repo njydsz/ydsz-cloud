@@ -1,16 +1,8 @@
 package com.remisoft.common.json;
 
-import com.remisoft.common.json.asm.AsmBeanCodecGenerator;
-import com.remisoft.common.json.asm.GraalVmDetector;
-import com.remisoft.common.json.autotype.AutoTypeChecker;
-import com.remisoft.common.json.cache.AsmCodecCache;
-import com.remisoft.common.json.internal.JsonConfig;
 import com.remisoft.common.json.deserializer.JsonDeserializer;
 import com.remisoft.common.json.exception.JsonException;
-import com.remisoft.common.json.metric.JsonMetricsCallback;
-import com.remisoft.common.json.metric.MetricsHelper;
 import com.remisoft.common.json.module.JsonModuleRegistry;
-import com.remisoft.common.json.ndjson.NdjsonUtils;
 import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.provider.SerializationProvider;
 import com.remisoft.common.json.reader.JSONReader;
@@ -95,73 +87,6 @@ public class RemiJson {
         defaultMapper = new JsonMapper(JsonConfig.getInstance());
     }
 
-    // ==================== 指标监控钩子 ====================
-
-    /**
-     * 指标回调（可选，由 JsonAutoConfiguration 自动注入）
-     */
-    private static volatile JsonMetricsCallback metricsCallback;
-
-    /**
-     * 设置指标回调
-     *
-     * @param callback 指标回调实例，null 表示关闭监控
-     */
-    public static void setMetricsCallback(JsonMetricsCallback callback) {
-        RemiJson.metricsCallback = callback;
-    }
-
-    /**
-     * 获取当前指标回调
-     *
-     * @return 指标回调实例，未设置时返回 null
-     */
-    public static JsonMetricsCallback getMetricsCallback() {
-        return metricsCallback;
-    }
-
-    /**
-     * 可抛出受检异常的供应商接口。
-     *
-     * <p>仅用于 {@link #recordSerialize}/{@link #recordDeserialize} 内部包装，
-     * 允许指标采集操作向上抛出受检异常，由 {@link MetricsHelper} 统一转为
-     * {@link com.remisoft.common.json.exception.JsonException}。</p>
-     *
-     * @param <T> 生产值的类型
-     */
-    @FunctionalInterface
-    private interface ThrowingSupplier<T> {
-        /**
-         * 获取结果。
-         *
-         * @return 生产的值
-         * @throws Exception 获取过程中可能抛出的任意异常
-         */
-        T get() throws Exception;
-    }
-
-    /**
-     * 序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
-     *
-     * @param supplier 序列化操作
-     * @param <T> 返回类型
-     * @return 序列化结果
-     */
-    private static <T> T recordSerialize(ThrowingSupplier<T> supplier) {
-        return MetricsHelper.recordSerialize(supplier::get, metricsCallback);
-    }
-
-    /**
-     * 反序列化操作的指标监控包装（委托给 {@link MetricsHelper}）。
-     *
-     * @param supplier 反序列化操作
-     * @param <T> 返回类型
-     * @return 反序列化结果
-     */
-    private static <T> T recordDeserialize(ThrowingSupplier<T> supplier) {
-        return MetricsHelper.recordDeserialize(supplier::get, metricsCallback);
-    }
-    
     // ==================== 序列化入口方法 ====================
     
     /**
@@ -174,7 +99,7 @@ public class RemiJson {
         if (obj == null) {
             return "null";
         }
-        return recordSerialize(() -> defaultMapper.toJson(obj));
+        return defaultMapper.toJson(obj);
     }
 
     /**
@@ -187,7 +112,7 @@ public class RemiJson {
         if (obj == null) {
             return "null";
         }
-        return recordSerialize(() -> defaultMapper.toJson(obj, true));
+        return defaultMapper.toJson(obj, true);
     }
     
     /**
@@ -202,7 +127,7 @@ public class RemiJson {
         if (obj == null) {
             return new byte[]{'n', 'u', 'l', 'l'};
         }
-        return recordSerialize(() -> defaultMapper.toJsonBytes(obj));
+        return defaultMapper.toJsonBytes(obj);
     }
     
     // ==================== 反序列化入口方法 ====================
@@ -215,28 +140,12 @@ public class RemiJson {
      * @param <T> 类型参数
      * @return 反序列化后的对象
      */
-    public static <T> T toObject(String json, Class<T> clazz) {
+    public static <T> T fromJson(String json, Class<T> clazz) {
         if (json == null || json.isBlank()) {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> defaultMapper.toObject(json, clazz));
-    }
-    
-    /**
-     * JSON 字符串转对象（支持泛型）
-     *
-     * @param json JSON 字符串
-     * @param type 目标类型
-     * @param <T> 类型参数
-     * @return 反序列化后的对象
-     */
-    public static <T> T toObject(String json, Type type) {
-        if (json == null || json.isBlank()) {
-            return null;
-        }
-        validateJsonSize(json);
-        return recordDeserialize(() -> defaultMapper.toObject(json, type));
+        return defaultMapper.toObject(json, clazz);
     }
     
     /**
@@ -247,99 +156,14 @@ public class RemiJson {
      * @param <T> 类型参数
      * @return 反序列化后的对象
      */
-    public static <T> T toObject(String json, JsonType<T> typeRef) {
-        if (json == null || json.isBlank()) {
-            return null;
-        }
-        validateJsonSize(json);
-        return recordDeserialize(() -> defaultMapper.toObject(json, typeRef.getType()));
-    }
-    
-    /**
-     * JSON 字符串转 Map
-     * 
-     * @param json JSON 字符串
-     * @return Map 对象
-     */
-    
-    public static Map<String, Object> parseMap(String json) {
-        if (json == null || json.isBlank()) {
-            return null;
-        }
-        validateJsonSize(json);
-        return recordDeserialize(() -> {
-            Map<String, Object> result = defaultMapper.toObject(json, Map.class);
-            return toStringObjectMap(result);
-        });
-    }
-
-
-    /**
-     * 从 JSON 字符串反序列化为指定类型（与 {@link #toJson(Object)} 对称的 API）。
-     *
-     * @param json JSON 字符串
-     * @param clazz 目标类型
-     * @param <T> 类型参数
-     * @return 反序列化后的对象
-     * @since 1.0.0
-     */
-    public static <T> T fromJson(String json, Class<T> clazz) {
-        return toObject(json, clazz);
-    }
-
-    /**
-     * 从 JSON 字符串反序列化为指定泛型类型（与 {@link #toJson(Object)} 对称的 API）。
-     *
-     * @param json JSON 字符串
-     * @param typeRef 类型引用
-     * @param <T> 类型参数
-     * @return 反序列化后的对象
-     * @since 1.0.0
-     */
     public static <T> T fromJson(String json, JsonType<T> typeRef) {
-        return toObject(json, typeRef);
-    }
-    
-    /**
-     * JSON 字符串转 List
-     * 
-     * @param json JSON 字符串
-     * @param clazz 元素类型
-     * @param <T> 类型参数
-     * @return List 对象
-     */
-    
-    public static <T> List<T> parseArray(String json, Class<T> clazz) {
         if (json == null || json.isBlank()) {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> {
-        // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
-        Type type = TypeFactory.getInstance().constructCollectionType(List.class, clazz);
-        List<T> result = defaultMapper.toObject(json, type);
-        return result != null ? result : new ArrayList<>();
-        });
+        return defaultMapper.toObject(json, typeRef.getType());
     }
-
-    /**
-     * JSON 字符串转 List<Object>
-     * 
-     * @param json JSON 字符串
-     * @return List 对象
-     */
     
-    public static List<Object> parseArray(String json) {
-        if (json == null || json.isBlank()) {
-            return null;
-        }
-        validateJsonSize(json);
-        return recordDeserialize(() -> {
-            List<Object> result = defaultMapper.toObject(json, List.class);
-            return toObjectList(result);
-        });
-    }
-
     // ==================== 自定义序列化器注册 ====================
 
     /**
@@ -531,7 +355,7 @@ public class RemiJson {
             return null;
         }
         validateJsonSizeBytes(bytes.length);
-        return recordDeserialize(() -> defaultMapper.toObject(bytes, clazz));
+        return defaultMapper.toObject(bytes, clazz);
     }
 
     /**
@@ -547,33 +371,7 @@ public class RemiJson {
             return null;
         }
         validateJsonSizeBytes(bytes.length);
-        return recordDeserialize(() -> defaultMapper.toObject(bytes, typeRef.getType()));
-    }
-
-    /**
-     * JSON 字符串转类型安全 Map
-     *
-     * @param json       JSON 字符串
-     * @param keyClass   Map key 类型
-     * @param valueClass Map value 类型
-     * @param <K>        key 类型泛型
-     * @param <V>        value 类型泛型
-     * @return 反序列化 Map，json 为空时返回 null
-     */
-    public static <K, V> Map<K, V> fromJsonToMap(String json, Class<K> keyClass, Class<V> valueClass) {
-        if (json == null || json.isBlank()) {
-            return null;
-        }
-        validateJsonSize(json);
-        return recordDeserialize(() -> {
-            // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
-            Type mapType = TypeFactory.getInstance().constructMapType(Map.class, keyClass, valueClass);
-            Map<K, V> result = defaultMapper.toObject(json, mapType);
-            if (result != null) {
-                return result;
-            }
-            return new LinkedHashMap<>();
-        });
+        return defaultMapper.toObject(bytes, typeRef.getType());
     }
 
     // ==================== 流式 API ====================
@@ -654,33 +452,6 @@ public class RemiJson {
             return fromJsonBytes(bytes, typeRef);
         } catch (IOException e) {
             throw new JsonException("Failed to read from InputStream", e);
-        }
-    }
-
-    // ==================== ASM 预热 ====================
-
-    /**
-     * 预热 ASM 序列化器/反序列化器。
-     *
-     * <p>在应用启动时调用，提前为指定类型生成 ASM 字节码，
-     * 避免首次请求时的延迟尖峰。</p>
-     *
-     * @param classes 需要预热的类型列表
-     * @since 1.0.0
-     */
-    public static void warmup(Class<?>... classes) {
-        if (classes == null || classes.length == 0) {
-            return;
-        }
-        for (Class<?> clazz : classes) {
-            if (clazz == null) {
-                continue;
-            }
-            try {
-                AsmCodecCache.getOrCreateSerializerForType(clazz);
-            } catch (Exception ignored) {
-                // 预热失败不影响启动
-            }
         }
     }
 

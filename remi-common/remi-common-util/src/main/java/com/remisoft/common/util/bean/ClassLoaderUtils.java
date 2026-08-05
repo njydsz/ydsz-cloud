@@ -1,4 +1,4 @@
-package com.remisoft.common.util.classloader;
+package com.remisoft.common.util.bean;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -31,13 +31,13 @@ import java.util.List;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  */
-public class ClassUtils {
+public class ClassLoaderUtils {
 
-    private static volatile ClassLoader defaultClassLoader = ClassUtils.class.getClassLoader();
+    private static volatile ClassLoader defaultClassLoader = ClassLoaderUtils.class.getClassLoader();
 
-    private ClassUtils() {
+    private ClassLoaderUtils() {
         throw new UnsupportedOperationException("ClassUtils is a utility class and cannot be instantiated");
     }
 
@@ -183,7 +183,7 @@ public class ClassUtils {
     /**
      * 原始类型转包装类型
      */
-    
+
     public static Class<?> primitiveToWrapper(Class<?> clazz) {
         if (clazz == null || !clazz.isPrimitive()) {
             return clazz;

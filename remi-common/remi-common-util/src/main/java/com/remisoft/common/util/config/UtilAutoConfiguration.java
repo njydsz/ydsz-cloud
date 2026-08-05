@@ -8,7 +8,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.remisoft.common.util.health.UtilHealthIndicator;
 import com.remisoft.common.util.id.SnowflakeHealthIndicator;
 import com.remisoft.common.util.id.SnowflakeProperties;
 import com.remisoft.common.util.spring.SpringContextHolder;
@@ -20,7 +19,6 @@ import com.remisoft.common.util.spring.SpringContextHolder;
  * <ul>
  *   <li>{@link SpringContextHolder} — ApplicationContext 静态持有者</li>
  *   <li>{@link SnowflakeHealthIndicator} — Snowflake ID 生成器健康检查（仅 actuator 在 classpath 时注册）</li>
- *   <li>{@link UtilHealthIndicator} — 工具模块健康检查（JVM 内存指标，仅 actuator 在 classpath 时注册）</li>
  * </ul>
  *
  * <p>所有工具 Bean 均为无状态、线程安全，可直接注入使用。
@@ -48,12 +46,11 @@ public class UtilAutoConfiguration {
     }
 
     /**
-     * 健康检查相关 Bean 配置
+     * Snowflake ID 生成器健康检查 Bean
      *
      * <p>仅当 classpath 上存在 {@link org.springframework.boot.health.contributor.HealthIndicator}
      * （即引入 spring-boot-actuator）时才加载，避免缺少 actuator 依赖时
-     * 因 {@link SnowflakeHealthIndicator} / {@link UtilHealthIndicator}
-     * 实现的接口类不存在而触发 {@code NoClassDefFoundError}。
+     * 因 {@link SnowflakeHealthIndicator} 实现的接口类不存在而触发 {@code NoClassDefFoundError}。
      *
      * <p>使用内部静态 @Configuration 类 + {@code @ConditionalOnClass} 是 Spring Boot
      * 标准做法：通过 ASM 字节码分析评估条件，避免在条件不满足时触发相关类的加载。
@@ -76,20 +73,6 @@ public class UtilAutoConfiguration {
         @ConditionalOnProperty(prefix = "remi.util.snowflake", name = "enabled", matchIfMissing = true)
         public SnowflakeHealthIndicator snowflakeHealthIndicator() {
             return new SnowflakeHealthIndicator();
-        }
-
-        /**
-         * 注册 UtilHealthIndicator Bean
-         *
-         * <p>工具模块健康检查（JVM 内存指标），
-         * 实现 Spring HealthIndicator 接口，通过 /actuator/health 端点暴露。
-         *
-         * @return UtilHealthIndicator 实例
-         */
-        @Bean
-        @ConditionalOnMissingBean
-        public UtilHealthIndicator utilHealthIndicator() {
-            return new UtilHealthIndicator();
         }
     }
 

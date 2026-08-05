@@ -336,11 +336,6 @@
             </dependency>
             <dependency>
                 <groupId>com.remisoft</groupId>
-                <artifactId>remi-project</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.remisoft</groupId>
                 <artifactId>remi-cronjob</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -397,11 +392,6 @@
             
             <dependency>
                 <groupId>com.remisoft</groupId>
-                <artifactId>remi-project-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.remisoft</groupId>
                 <artifactId>remi-literule-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -442,11 +432,6 @@
                 <version>${project.version}</version>
             </dependency>
             
-            <dependency>
-                <groupId>com.remisoft</groupId>
-                <artifactId>remi-project-domain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.remisoft</groupId>
                 <artifactId>remi-literule-domain</artifactId>
@@ -491,11 +476,6 @@
             
             <dependency>
                 <groupId>com.remisoft</groupId>
-                <artifactId>remi-project-infra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.remisoft</groupId>
                 <artifactId>remi-literule-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -538,11 +518,6 @@
             
             <dependency>
                 <groupId>com.remisoft</groupId>
-                <artifactId>remi-project-server</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.remisoft</groupId>
                 <artifactId>remi-literule-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -583,11 +558,6 @@
                 <version>${project.version}</version>
             </dependency>
             
-            <dependency>
-                <groupId>com.remisoft</groupId>
-                <artifactId>remi-project-web</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.remisoft</groupId>
                 <artifactId>remi-literule-web</artifactId>

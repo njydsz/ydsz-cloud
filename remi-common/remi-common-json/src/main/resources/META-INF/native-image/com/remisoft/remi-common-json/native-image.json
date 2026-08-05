@@ -1,4 +1,0 @@
-{
-  "name": "remi-common-json",
-  "description": "RemiJson - High-performance JSON engine with ASM bytecode generation. GraalVM Native Image support: ASM bytecode generation is disabled at runtime via GraalVmDetector (com.remisoft.common.json.asm.GraalVmDetector#isInNativeImage), and the engine falls back to reflection-based serialization/deserialization. Library-internal classes (annotations, tree nodes, SPI interfaces, JsonConfig) are registered in reflect-config.json. Application authors must register their serializable Bean classes (fields, constructors, methods) via application-level reflect-config.json."
-}

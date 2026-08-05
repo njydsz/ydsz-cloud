@@ -25,7 +25,7 @@ import com.remisoft.common.safe.annotation.EnableRemiSafe;
 @EnableRemiAuth
 @EnableRemiAudit
 @EnableRemiSafe
-@EnableRemiFeign(basePackages = {"com.remisoft.system.api", "com.remisoft.common.feign", "com.remisoft.userinfo.api", "com.remisoft.project.api"})
+@EnableRemiFeign(basePackages = {"com.remisoft.system.api", "com.remisoft.common.feign", "com.remisoft.userinfo.api"})
 @MapperScan("com.remisoft.system.infra.mapper")
 @EnableScheduling
 public class SystemApplication {
