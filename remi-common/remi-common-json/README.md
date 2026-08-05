@@ -4,6 +4,18 @@
 
 纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 ASM 字节码生成、零拷贝反序列化、ThreadLocal 池优化等技术实现超高性能；通过 Jackson 兼容注解实现平滑迁移。
 
+## 最新变更（v1.0.0 优化汇总）
+
+本次对标互联网大厂研发规范，从架构、功能、性能、体验、过度设计五个维度完成专项优化：
+
+| 编号 | 优先级 | 变更项 | 状态 |
+|---|---|---|---|
+| P0-SO | P0 | **泛型递归深度保护**：新增 `max-generic-depth`（默认 64）防御恶意嵌套泛型 `List<List<...>>` 导致 StackOverflow | ✅ 已实施 |
+| P1-FP | P1 | **序列化异常字段路径追踪**：`JsonSerializationException` 新增 `fieldPath` 字段，异常消息输出 `at path 'user.address.street'` | ✅ 已实施 |
+| P1-HI | P1 | **JsonHealthIndicator 增强**：Actuator 健康检查新增 `maxGenericDepth`、`asmDowngradeCount` 运行时指标 | ✅ 已实施 |
+| P1-API | P1 | **RemiJson 运行时查询 API**：新增 `isNativeImage()` / `isAsmAvailable()` / `getStats()` 运行时工具方法 | ✅ 已实施 |
+| P1-IMM | P1 | **JsonConfig 构建后不可变**：新增 `install()` 方法替代旧 `setInstance` 模式，AutoConfig 走 Builder + install 不可变安装 | ✅ 已实施 |
+
 ## 模块定位
 
 | 属性 | 值 |
@@ -20,11 +32,9 @@
 
 | 类 | 说明 |
 |---|---|
-| `RemiJson` | JSON 统一入口（静态工具类），提供 `toJson` / `toObject` / `parseMap` / `parseArray` / `fromJson` / `readTree` / `valueToTree` / `warmup` 等方法 |
-| `JsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper），支持 `builder()` 链式 Builder、独立配置副本、`readerFor(Class)` / `writerFor(Class)` 绑定型读写器、`convertValue` / `treeToValue` 等 |
-| `JsonReader<T>` | 绑定型 JSON 读取器（对标 Jackson ObjectReader），绑定目标类型后可重复使用 |
-| `JsonWriter<T>` | 绑定型 JSON 写入器（对标 Jackson ObjectWriter），绑定 Mapper 配置后可重复使用 |
-| `JsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 根名称包裹 / 最大 JSON 大小 / 最大深度 / `builder()` / `copyOf()`） |
+| `RemiJson` | JSON 统一入口（静态工具类），提供 `toJson` / `toObject` / `parseMap` / `parseArray` / `fromJson` / `readTree` / `valueToTree` / `warmup` / `register` / `setGlobalConfig` / 运行时诊断 `isNativeImage()` / `isAsmAvailable()` / `getStats()` 等方法 |
+| `JsonMapper` | 实例化 Mapper（对标 Jackson ObjectMapper），支持 `builder()` 链式 Builder、独立配置副本、`convertValue` / `treeToValue` 等 |
+| `JsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 根名称包裹 / 最大 JSON 大小 / 最大深度 / 泛型递归深度上限 / `builder()` / `copyOf()` / `install()` 不可变安装） |
 
 ### 2. ASM 字节码加速（asm 包）
 
@@ -188,7 +198,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `JsonHealthIndicator` | RemiJson 引擎健康检查，暴露 AutoType SafeMode、配置项、ASM 缓存统计、ThreadLocal 内存估算等 |
+| `JsonHealthIndicator` | RemiJson 引擎健康检查，暴露 `safeMode`、`maxDepth`、`maxGenericDepth`、`graalVmNativeImage`、`asmAvailable`、`asmDowngradeCount`、`namingStrategy`、`maxJsonSize` 等完整运行时状态（可通过 Actuator `/actuator/health/remiJson` 端点查询） |
 
 ### 15. 自动配置（spring.boot 包）
 
@@ -269,14 +279,15 @@ public class UserController {
 | `remi.json.serialize-enum-using-ordinal` | false | 枚举是否使用序号序列化 |
 | `remi.json.circular-reference-strategy` | `REF` | 循环引用处理策略：`REF` / `IGNORE` / `ERROR` |
 | `remi.json.max-json-size` | 10485760 | JSON 最大长度（字节，默认 10MB） |
-| `remi.json.max-depth` | 256 | JSON 最大嵌套深度 |
+| `remi.json.max-depth` | 256 | JSON 最大嵌套深度（防栈溢出） |
+| `remi.json.max-generic-depth` | 64 | 泛型递归深度上限（防嵌套泛型 `List<List<...>>` 导致 StackOverflow，与 FastJSON2 对齐） |
 | `remi.json.safe-mode` | true | AutoType 安全检查模式（防反序列化漏洞） |
 | `remi.json.whitelist-packages` | `[com.remisoft]` | AutoType 白名单扫描包列表（支持通配符） |
 | `remi.json.monitoring-enabled` | true | 是否启用序列化/反序列化监控指标 |
 | `remi.json.streaming-enabled` | false | 是否启用流式输出（HTTP 响应使用 chunked transfer encoding） |
 | `remi.json.max-request-body-size` | 10485760 | HTTP 请求体最大大小（字节，默认 10MB） |
-| `remi.json.warmup-classes` | `[]` | 启动时预热的类列表（全限定类名） |
-| `remi.json.disable-jackson-auto-configuration` | `true` | 是否禁用 Spring Boot Jackson 自动配置。默认 true，全仓库统一使用 RemiJson。设置为 false 可恢复 Jackson 共存 |
+| `remi.json.warmup-classes` | `[]` | 启动时预热的类列表（全限定类名，预热 ASM 字节码避免首次请求延迟尖峰） |
+| `remi.json.disable-jackson-auto-configuration` | `false` | 是否禁用 Spring Boot Jackson 自动配置。默认 `false`（保守，保持双引擎生态）。设置为 true 可统一为 RemiJson 单引擎（需评估 Actuator/Spring Data Redis 等内部依赖） |
 
 ## 使用示例
 
@@ -431,26 +442,6 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 8. **ThreadLocal 池优化**：`SerializationContext` 合并 5+ ThreadLocal 为单一实例，降低内存碎片；`estimateThreadLocalMemory` 基于缓冲池容量动态计算，避免硬编码。
 9. **循环引用处理**：默认 `REF` 策略（自动检测并处理循环引用），可配置为 `IGNORE`（忽略）或 `ERROR`（抛出异常）。
 10. **流式输出**：`streaming-enabled=true` 启用 HTTP 响应 chunked transfer encoding，适用于大 JSON 响应场景。
-
-## 变更记录
-
-- **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
-- **v1.0.0**（2026-08-02）：基于源码核对修正文档与代码不一致：
-  - 删除不存在的 `@RemiJsonField` 注解（代码中未实现，仅在 `@JsonProperty`/`@JsonIgnore`/`@JsonFormat` 的 Javadoc `{@link}` 中残留无效引用）
-  - 删除不存在的 `@RemiJsonFormat` 注解（实际格式化注解为 `@JsonFormat`，Jackson 兼容）
-  - `SchemaValidator` → `JsonSchemaValidator`（类名修正，影响 Section 9 与使用示例 3）
-  - 使用示例 4 import 包名 `com.njdsz` → `com.remisoft`（拼写错误）
-  - 补全 `@JsonClass` 类级配置能力说明（ordering/ignores/includes/naming/seeAlso/features 等 14 项属性）
-  - 标注 `JsonSchema` 的 `@Experimental` 状态
-  - 补全 `JsonSchema` 静态工厂方法列表与 `JsonPath` 支持的 7 种路径表达式
-- **v1.0.0**（2026-08-03）：架构优化与 Bug 修复（P0-P2）：
-  - **[P0-A1]** 修复 `JsonMapper.restoreConfig` 无限递归导致 `StackOverflowError`（`new JsonMapper().toJson(obj)` 必崩）
-  - **[P0-A2]** 移除 `JsonMapper.configApplied` 跨线程误共享优化，改为每次序列化 apply/restore，确保共享 Mapper 多线程配置隔离
-  - **[P0-A3]** `ThreadLocalSnapshot` 补全 `namingStrategy` 回滚，修复 `RemiJson.toJson(obj, config)` 单次配置泄漏
-  - **[P1-D1]** 删除死代码 `provider/JsonWriter`（含 10000 元素静态数组残留）
-  - **[P1-D2]** 删除已 `@Deprecated(forRemoval=true)` 的 `api.JsonSerializer`/`api.JsonDeserializer`，`SerializationProvider.invokeCustomSerializer` 简化为单一调用路径（移除 `Method` 反射双判）
-  - **[P1-E1]** 补 16 项 P0/D2 回归测试（`JsonMapperP0RegressionTest` / `CustomSerializerD2Test`）；修复 `pom.xml` 缺失 `<argLine>` 导致测试 fork 启动崩溃
-  - **[功能]** `ValueWriter` 注解路径补 `SerializationProvider.isWriteNulls()` 判断，使 `JsonMapper.builder().writeNulls(true)` 对带 `@JsonClass` 的 Bean 生效
-  - **[P2-A5]** `JsonConfig` 不可变契约 Javadoc 如实表述；修正 `JsonMapper` 示例中不存在的 `setWriteNulls` 调用
-  - **[P2-E2/A4/ASM]** README "LRU" 表述修正为"近似 LRU"；补 Jackson 迁移注意事项（ThreadLocal 配置模型、命名策略缓存、writeNulls 生效范围、响应式限制）
-  - **[T2.3]** 删除 `patch/JsonPatch`（RFC 6902 实现无业务使用，保留 `JsonPointer`/`JsonMergePatch` 因有业务引用）；同步更新 README
+11. **配置不可变推荐**：自 v1.0.0 起 `JsonConfig.install(newConfig)` 替代旧 `setInstance` 模式。业务侧仍可通过 `JsonMapper.builder()` 创建独立配置副本（不影响全局单例）。`install()` 内部同步做 `instance = newConfig; instance.apply()`，确保可见性与一致性。
+12. **运行时诊断 API**：`RemiJson.isNativeImage()` / `isAsmAvailable()` / `getStats()` 可在启动早期或监控中快速诊断 ASM 降级、缓存命中和当前安全配置。`getStats()` 返回 `JsonStats` 记录类含 `nativeImage`、`asmAvailable`、`asmDowngradeCount`、`serializerCount`、`deserializerCount`、`asmCacheHitRate`、`maxDepth`、`maxGenericDepth`、`maxJsonSize`、`safeMode` 10 项指标。
+13. **序列化异常路径追踪**：`JsonSerializationException.getMessage()` 自动在消息末尾附加 `[fieldPath: user.address.street]`，可直接定位嵌套序列化失败根因。`getFieldPath()` 返回原始路径字符串，供日志框架归类。

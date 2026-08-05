@@ -32,6 +32,19 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- spring-boot-health（Spring Boot 4.x：Health/HealthIndicator 迁移至独立模块） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- micrometer-core（指标计量，原由 remi-common-core 传递） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+
         <!-- 内部依赖 -->
         <dependency>
             <groupId>com.remisoft</groupId>

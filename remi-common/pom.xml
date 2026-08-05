@@ -675,6 +675,37 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!--
+            spring-boot-autoconfigure：remi-common-core 精简后不再传递，
+            各子模块的 @AutoConfiguration / @ConditionalOn* 注解依赖此处显式声明。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <!-- jakarta.validation-api（参数校验注解） -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- jakarta.annotation-api（@PostConstruct / @PreDestroy 等） -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+        </dependency>
+
+        <!--
+            jakarta.servlet-api（provided：仅编译期需要，运行时由 Servlet 容器提供。
+            原由 remi-common-core 以 provided 传递，精简后此处显式声明。）
+        -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

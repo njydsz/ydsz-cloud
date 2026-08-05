@@ -64,5 +64,10 @@
             <artifactId>spring-boot-health</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- micrometer-core（指标计量，原由 remi-common-core 传递） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
     </dependencies>
 </project>
