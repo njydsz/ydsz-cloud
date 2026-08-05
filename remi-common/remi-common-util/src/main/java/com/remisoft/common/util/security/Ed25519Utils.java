@@ -23,42 +23,28 @@ import java.util.HexFormat;
  * <p>基于 RFC 8032 定义的 Ed25519 椭圆曲线签名算法，使用 Curve25519 配套曲线。
  * Ed25519 是现代主流签名方案，已被 TLS 1.3、WireGuard、SSH、OpenSSL 等广泛采用。
  *
- * <h2>核心能力</h2>
- * <ul>
- *   <li>密钥长度：256 位（32 字节私钥/公钥）</li>
- *   <li>签名长度：512 位（64 字节）</li>
- *   <li>算法：EdDSA over Curve25519（Edwards form）</li>
- *   <li>确定性签名：相同输入+密钥总是产生相同签名（无需随机数生成器，避免 nonce 重用攻击）</li>
- * </ul>
+ * <p><b>JDK 要求：JDK 15+（推荐 JDK 17+）</b>
  *
- * <h2>与 RSA/ECDSA 对比</h2>
+ * <p><b>与 RSA/ECDSA 对比</b>
  * <ul>
  *   <li>比 RSA-2048 签名快 10-30 倍，验签快 3-5 倍</li>
  *   <li>比 ECDSA 更安全（确定性算法消除 nonce 侧信道风险）</li>
  *   <li>签名短小（64 字节 vs RSA-2048 的 256 字节）</li>
- *   <li>私钥短小（32 字节 vs RSA-2048 的 256 字节）</li>
  * </ul>
  *
- * <h2>适用场景</h2>
+ * <p><b>安全说明</b>
  * <ul>
- *   <li>JWS (JSON Web Tokens) 的 EdDSA 算法</li>
- *   <li>SSH 密钥交换和主机认证</li>
- *   <li>TLS 1.3 客户端证书</li>
- *   <li>区块链、加密货币地址签名</li>
- *   <li>替代 RSA/ECDSA 的所有数字签名场景</li>
- * </ul>
- *
- * <h2>安全说明</h2>
- * <ul>
- *   <li>JDK 要求 JDK 15+（推荐 JDK 17+）</li>
  *   <li>私钥字节为 PKCS8 编码后的裸密钥部分</li>
  *   <li>公钥字节为 X509 编码后的裸密钥部分</li>
- *   <li>为确定性签名算法，不需要随机数（但 {@link SecureRandom} 在密钥生成时仍需使用）</li>
+ *   <li>为确定性签名算法，不需要随机数（但 {@link java.security.SecureRandom} 在密钥生成时仍需使用）</li>
  * </ul>
  *
  * @author remi-team
  * @since 1.4.0
+ * @deprecated 自 2.0.0 起，Ed25519 算法下沉至 remi-common-crypto-advanced 模块。
+ *             当前模块保留以兼容存量调用，v3.0 版本移除。新项目请使用标准数字签名方案。
  */
+@Deprecated(since = "2.0.0", forRemoval = false)
 public class Ed25519Utils {
 
     /**
@@ -93,7 +79,11 @@ public class Ed25519Utils {
 
     /**
      * Signature 实例缓存（ThreadLocal 池化）。
+     *
+     * @deprecated 自 2.0.0 起，委托 {@link JcaCipherPool#acquireSignature(String)} 统一管理。
+     *             Ed25519 算法本身标记为 {@link Deprecated}，建议迁移至 AES-GCM + ECDSA。
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     private static final ThreadLocal<Signature> SIGNATURE_CACHE = ThreadLocal.withInitial(() -> {
         try {
             return Signature.getInstance(ALGORITHM);
