@@ -1,9 +1,16 @@
 package com.remisoft.common.util.collection;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Map 工具类
@@ -18,6 +25,7 @@ import java.util.Map;
  *   <li>类型安全取值：getString / getInteger / getLong / getBoolean / getMap / getList</li>
  *   <li>JSON Map 归一化：toStringObjectMap / safeCastMap / safeCastList</li>
  *   <li>嵌套 JSON 解析：getListOfMaps / getMapFromList</li>
+ *   <li>Map 转 Bean：toBean（基于 setter 反射，适配常见 JSON 反序列化后的字段绑定）</li>
  * </ul>
  *
  * <p><b>不提供的能力（直接使用 JDK / Stream API）：</b>

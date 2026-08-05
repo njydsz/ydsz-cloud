@@ -11,8 +11,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.ndjson.NdjsonUtils;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +23,17 @@ import org.junit.jupiter.api.Test;
  * NDJSON（Newline Delimited JSON）工具类测试（使用已验证的 TestBean）。
  */
 class NdjsonUtilsTest {
+
+    @BeforeEach
+    void setUp() {
+        AutoTypeChecker.setSafeMode(false);
+    }
+
+    @AfterEach
+    void tearDown() {
+        AutoTypeChecker.setSafeMode(true);
+        com.remisoft.common.json.provider.SerializationProvider.SerializationContext.clear();
+    }
 
     // ==================== parse 测试 ====================
 

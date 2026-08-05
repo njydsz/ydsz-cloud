@@ -144,6 +144,29 @@
             <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- JMH Benchmark 对比基库（test scope，不与生产代码绑定） -->
+        <!--
+            注：Gson / Hutool-JSON / org.json / json-simple 被 ArchUnit R29 + Enforcer BannedDependencies
+            全局禁止直接声明（搜索深度仅限直接依赖，searchTransitive=false）。
+            竞品对比基准测试仅保留 Jackson（optional）和 Fastjson2（独立 groupId 不受限）。
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.57</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <!--
