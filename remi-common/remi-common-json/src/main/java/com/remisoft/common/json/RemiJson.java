@@ -5,6 +5,7 @@ import com.remisoft.common.json.asm.GraalVmDetector;
 import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.internal.JsonConfig;
+import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.deserializer.JsonDeserializer;
 import com.remisoft.common.json.exception.JsonException;
 import com.remisoft.common.json.metric.JsonMetricsCallback;
@@ -63,6 +64,35 @@ public class RemiJson {
 
     private RemiJson() {
         throw new UnsupportedOperationException("RemiJson is a utility class and cannot be instantiated");
+    }
+
+    /**
+     * 默认 JsonMapper 实例（持有全局配置）。
+     *
+     * <p>RemiJson 静态方法委托给此实例，确保：</p>
+     * <ul>
+     *   <li>配置通过 {@link JsonMapper#applyConfigIfNeeded()} 正确传播到 ThreadLocal</li>
+     *   <li>配置变更（通过 {@link JsonConfig#install(JsonConfig)}）自动生效</li>
+     *   <li>与实例化 {@code JsonMapper} API 共享相同代码路径（消除代码路径分叉）</li>
+     * </ul>
+     *
+     * <p>volatile 保证 {@link #reloadDefaultMapper()} 后的可见性。</p>
+     *
+     * @since 1.1.0
+     */
+    private static volatile JsonMapper defaultMapper = new JsonMapper();
+
+    /**
+     * 重新构建默认 JsonMapper 实例。
+     *
+     * <p>当通过 {@link JsonConfig#install(JsonConfig)} 变更全局配置后调用此方法，
+     * 使 RemiJson 静态方法立即使用新配置。
+     * 正常情况下无需显式调用——{@link JsonConfig#install(JsonConfig)} 内部会自动触发。</p>
+     *
+     * @since 1.1.0
+     */
+    static void reloadDefaultMapper() {
+        defaultMapper = new JsonMapper(JsonConfig.getInstance());
     }
 
     // ==================== 指标监控钩子 ====================
@@ -144,7 +174,7 @@ public class RemiJson {
         if (obj == null) {
             return "null";
         }
-        return recordSerialize(() -> SerializationProvider.serialize(obj));
+        return recordSerialize(() -> defaultMapper.toJson(obj));
     }
 
     /**
@@ -157,7 +187,7 @@ public class RemiJson {
         if (obj == null) {
             return "null";
         }
-        return recordSerialize(() -> SerializationProvider.format(obj));
+        return recordSerialize(() -> defaultMapper.toJson(obj, true));
     }
     
     /**
@@ -172,7 +202,7 @@ public class RemiJson {
         if (obj == null) {
             return new byte[]{'n', 'u', 'l', 'l'};
         }
-        return recordSerialize(() -> SerializationProvider.serializeToBytes(obj));
+        return recordSerialize(() -> defaultMapper.toJsonBytes(obj));
     }
     
     // ==================== 反序列化入口方法 ====================
@@ -190,7 +220,7 @@ public class RemiJson {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(json, clazz));
+        return recordDeserialize(() -> defaultMapper.toObject(json, clazz));
     }
     
     /**
@@ -206,7 +236,7 @@ public class RemiJson {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(json, type));
+        return recordDeserialize(() -> defaultMapper.toObject(json, type));
     }
     
     /**
@@ -222,7 +252,7 @@ public class RemiJson {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(json, typeRef.getType()));
+        return recordDeserialize(() -> defaultMapper.toObject(json, typeRef.getType()));
     }
     
     /**
@@ -238,7 +268,7 @@ public class RemiJson {
         }
         validateJsonSize(json);
         return recordDeserialize(() -> {
-            Object result = DeserializationProvider.deserialize(json, Map.class);
+            Map<String, Object> result = defaultMapper.toObject(json, Map.class);
             return toStringObjectMap(result);
         });
     }
@@ -287,16 +317,8 @@ public class RemiJson {
         return recordDeserialize(() -> {
         // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
         Type type = TypeFactory.getInstance().constructCollectionType(List.class, clazz);
-        Object result = DeserializationProvider.deserialize(json, type);
-        if (result instanceof List<?> list) {
-            // 优化：直接 unchecked cast 返回，消除 O(n) 拷贝。
-            // DeserializationProvider 内部已按 elementClass 生成了正确类型元素，
-            // 无需逐元素 Class.cast() 校验。
-            @SuppressWarnings("unchecked")
-            List<T> typedList = (List<T>) list;
-            return typedList;
-        }
-        return new ArrayList<>();
+        List<T> result = defaultMapper.toObject(json, type);
+        return result != null ? result : new ArrayList<>();
         });
     }
 
@@ -313,7 +335,7 @@ public class RemiJson {
         }
         validateJsonSize(json);
         return recordDeserialize(() -> {
-            Object result = DeserializationProvider.deserialize(json, List.class);
+            List<Object> result = defaultMapper.toObject(json, List.class);
             return toObjectList(result);
         });
     }
@@ -509,7 +531,7 @@ public class RemiJson {
             return null;
         }
         validateJsonSizeBytes(bytes.length);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, clazz));
+        return recordDeserialize(() -> defaultMapper.toObject(bytes, clazz));
     }
 
     /**
@@ -525,7 +547,7 @@ public class RemiJson {
             return null;
         }
         validateJsonSizeBytes(bytes.length);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, typeRef.getType()));
+        return recordDeserialize(() -> defaultMapper.toObject(bytes, typeRef.getType()));
     }
 
     /**
@@ -546,13 +568,9 @@ public class RemiJson {
         return recordDeserialize(() -> {
             // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
             Type mapType = TypeFactory.getInstance().constructMapType(Map.class, keyClass, valueClass);
-            Object result = DeserializationProvider.deserialize(json, mapType);
-            if (result instanceof Map<?, ?> map) {
-                Map<K, V> typedMap = new LinkedHashMap<>(map.size());
-                for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    typedMap.put(keyClass.cast(entry.getKey()), valueClass.cast(entry.getValue()));
-                }
-                return typedMap;
+            Map<K, V> result = defaultMapper.toObject(json, mapType);
+            if (result != null) {
+                return result;
             }
             return new LinkedHashMap<>();
         });
@@ -678,7 +696,8 @@ public class RemiJson {
         if (json == null) {
             return;
         }
-        long maxSize = JsonConfig.getInstance().getMaxJsonSize();
+        // 使用预计算运行时配置避免每次查询全局 JsonConfig
+        long maxSize = defaultMapper.getRuntimeConfig().maxJsonSize();
         if (json.length() > maxSize) {
             throw new JsonException(
                     "JSON size exceeds limit: " + json.length() + " > " + maxSize);
@@ -692,7 +711,8 @@ public class RemiJson {
      * @throws JsonException 如果超过最大 JSON 大小限制
      */
     static void validateJsonSizeBytes(int byteLength) {
-        long maxSize = JsonConfig.getInstance().getMaxJsonSize();
+        // 使用预计算运行时配置避免每次查询全局 JsonConfig
+        long maxSize = defaultMapper.getRuntimeConfig().maxJsonSize();
         if (byteLength > maxSize) {
             throw new JsonException(
                     "JSON size exceeds limit: " + byteLength + " > " + maxSize);

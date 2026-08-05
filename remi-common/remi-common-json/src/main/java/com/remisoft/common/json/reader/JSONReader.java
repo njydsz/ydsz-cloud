@@ -227,22 +227,34 @@ public final class JSONReader {
 
     /** 字符缓冲区（可变，支持 reset 复用） */
     char[] buf;
-    
+
     /** 当前读取位置 */
     int pos;
-    
+
     /** 有效数据长度 */
     int len;
-    
+
     /** 最大嵌套深度（防止栈溢出攻击，默认 256） */
     private static volatile int maxDepth = DEFAULT_MAX_DEPTH;
 
     /** 泛型递归深度上限（防止恶意嵌套泛型参数导致 StackOverflow，默认 64） */
     private static volatile int maxGenericDepth = DEFAULT_MAX_GENERIC_DEPTH;
-    
+
+    /**
+     * 实例级别的最大嵌套深度（非 null 时使用此值替代静态全局值，支持显式配置传递）。
+     *
+     * <p>为 null 时回退到静态 {@link #maxDepth}，保持向后兼容。</p>
+     */
+    private final Integer instanceMaxDepth;
+
+    /**
+     * 实例级别的泛型递归深度上限（非 null 时使用此值替代静态全局值）。
+     */
+    private final Integer instanceMaxGenericDepth;
+
     /** ThreadLocal 读取器池（复用 JSONReader 实例和 char[] 缓冲区，避免 GC 开销） */
     private static final ThreadLocal<JSONReader> READER_POOL = new ThreadLocal<>();
-    
+
     /**
      * 构造函数
      *
@@ -254,8 +266,10 @@ public final class JSONReader {
         this.buf = json.toCharArray();
         this.pos = 0;
         this.len = buf.length;
+        this.instanceMaxDepth = null;
+        this.instanceMaxGenericDepth = null;
     }
-    
+
     /**
      * 构造函数（char[] 模式）
      */
@@ -263,6 +277,49 @@ public final class JSONReader {
         this.buf = buf;
         this.pos = offset;
         this.len = offset + length;
+        this.instanceMaxDepth = null;
+        this.instanceMaxGenericDepth = null;
+    }
+
+    /**
+     * 构造函数（char[] 模式 + 显式深度配置）
+     *
+     * <p>通过传入预计算的深度限制，避免静态 volatile 字段读取和 ThreadLocal 查询。
+     * 当 {@code maxDepth} 或 {@code maxGenericDepth} 为 null 时回退到静态全局值。</p>
+     *
+     * @param buf              字符缓冲区
+     * @param offset           起始偏移
+     * @param length           有效长度
+     * @param maxDepth         最大嵌套深度（null 使用全局默认值）
+     * @param maxGenericDepth  泛型递归深度上限（null 使用全局默认值）
+     * @since 1.1.0
+     */
+    public JSONReader(char[] buf, int offset, int length, Integer maxDepth, Integer maxGenericDepth) {
+        this.buf = buf;
+        this.pos = offset;
+        this.len = offset + length;
+        this.instanceMaxDepth = maxDepth;
+        this.instanceMaxGenericDepth = maxGenericDepth;
+    }
+
+    /**
+     * 获取当前生效的最大嵌套深度（优先使用实例级别配置）。
+     *
+     * @return 最大嵌套深度
+     * @since 1.1.0
+     */
+    public int resolveMaxDepth() {
+        return instanceMaxDepth != null ? instanceMaxDepth : maxDepth;
+    }
+
+    /**
+     * 获取当前生效的泛型递归深度上限（优先使用实例级别配置）。
+     *
+     * @return 泛型递归深度上限
+     * @since 1.1.0
+     */
+    public int resolveMaxGenericDepth() {
+        return instanceMaxGenericDepth != null ? instanceMaxGenericDepth : maxGenericDepth;
     }
     
     /**

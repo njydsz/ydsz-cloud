@@ -197,7 +197,7 @@ public final class JSONWriter {
 
     /** 外部 StringBuilder（如果使用 StringBuilder 模式） */
     private StringBuilder externalSb;
-    
+
     /** 默认缓冲区大小 4KB */
     private static final int DEFAULT_BUF_SIZE = 4096;
 
@@ -206,33 +206,70 @@ public final class JSONWriter {
 
     /** 缓冲区重置时的最大保留容量（超过此容量则缩容，避免线程池中长期持有大缓冲区） */
     private static final int MAX_RESET_CAPACITY = 65536;
-    
+
     /**
      * 构造函数（使用默认缓冲区大小）
      */
     public JSONWriter() {
-        this(DEFAULT_BUF_SIZE);
+        this(DEFAULT_BUF_SIZE, 0L);
     }
-    
+
     /**
-     * 构造函数
-     * 
+     * 构造函数（指定缓冲区大小）
+     *
      * @param capacity 初始容量
      */
     public JSONWriter(int capacity) {
+        this(capacity, 0L);
+    }
+
+    /**
+     * 构造函数（指定缓冲区大小和预计算特性位）
+     *
+     * <p>通过传入预计算的 features 位掩码，避免运行时 ThreadLocal 查询开销。
+     * 参见 {@link #of(Feature...)} 或 {@link com.remisoft.common.json.internal.JsonRuntimeConfig}。</p>
+     *
+     * @param capacity 初始容量
+     * @param features 预计算的 Feature 位掩码（由调用方从 JsonRuntimeConfig 转换）
+     * @since 1.1.0
+     */
+    public JSONWriter(int capacity, long features) {
         this.buf = new char[capacity];
         this.pos = 0;
+        this.features = features;
     }
-    
+
+    /**
+     * 构造函数（使用默认缓冲区大小和预计算特性位）
+     *
+     * @param features 预计算的 Feature 位掩码
+     * @since 1.1.0
+     */
+    public JSONWriter(long features) {
+        this(DEFAULT_BUF_SIZE, features);
+    }
+
     /**
      * 构造函数（直接写入 StringBuilder，避免中间 char[] 转换）
-     * 
+     *
      * @param sb 外部 StringBuilder
      */
     public JSONWriter(StringBuilder sb) {
+        this(sb, 0L);
+    }
+
+    /**
+     * 构造函数（指定 StringBuilder 和预计算特性位）
+     *
+     * @param sb       外部 StringBuilder
+     * @param features 预计算的 Feature 位掩码
+     * @since 1.1.0
+     */
+    public JSONWriter(StringBuilder sb, long features) {
         this.externalSb = sb;
         this.buf = null;
         this.pos = 0;
+        this.features = features;
     }
     
     /**

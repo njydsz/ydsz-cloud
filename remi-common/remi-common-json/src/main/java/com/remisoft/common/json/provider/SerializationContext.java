@@ -1,6 +1,7 @@
 package com.remisoft.common.json.provider;
 
 import com.remisoft.common.json.asm.AsmSerializer;
+import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.naming.PropertyNamingStrategy;
 import com.remisoft.common.json.writer.JSONWriter;
 
@@ -11,24 +12,9 @@ import java.util.Set;
 /**
  * 序列化上下文（合并多个 ThreadLocal 为单一实例，减少 ThreadLocal 数量）。
  *
- * <p>将 SerializationProvider 中的 11 个独立 ThreadLocal 合并为单一
- * ThreadLocal&lt;SerializationContext&gt;，降低内存开销和 ThreadLocal 泄漏风险。</p>
- *
- * <p><b>合并的字段：</b></p>
- * <ul>
- *   <li>配置类（7个）：namingStrategy、writeNulls、prettyPrint、circularRefStrategy、
- *       serializeEnumUsingOrdinal、dateFormat、failOnError</li>
- *   <li>运行时状态（6个）：sbPool、fastWriterPool、serializingObjects、currentViewClass、
- *       cachedListSerializer、cachedListElementClass、excludedFields</li>
- * </ul>
- *
- * <p><b>使用方式：</b></p>
- * <pre><code>
- * SerializationContext ctx = SerializationContext.CONTEXT.get();
- * ctx.writeNulls = true;
- * // ... 序列化操作 ...
- * SerializationContext.CONTEXT.remove(); // 清理
- * </code></pre>
+ * <p>配置字段现在由 {@link JsonRuntimeConfig} 统一管理，SerializationContext 仅保留
+ * 序列化运行时状态（对象池、循环引用检测集等）。序列化入口应通过
+ * {@link #from(JsonRuntimeConfig)} 方法预填充配置字段，减少 ThreadLocal 写入次数。</p>
  *
  * @since 1.0.0
  * @author remi-team
@@ -39,7 +25,7 @@ public final class SerializationContext {
     static final ThreadLocal<SerializationContext> CONTEXT =
         ThreadLocal.withInitial(SerializationContext::new);
 
-    // ==================== 配置类字段（7个） ====================
+    // ==================== 配置类字段（7个，从 JsonRuntimeConfig 预填充） ====================
 
     /** 当前命名策略 */
     public PropertyNamingStrategy namingStrategy;
@@ -90,6 +76,28 @@ public final class SerializationContext {
      */
     public SerializationContext() {
         reset();
+    }
+
+    /**
+     * 从 {@link JsonRuntimeConfig} 创建预填充配置的上下文实例。
+     *
+     * <p>配置字段直接复制自运行时配置，无需再从 JsonConfig 或全局状态读取。
+     * 运行时状态初始化为默认值。</p>
+     *
+     * @param cfg 运行时配置（不可为 null）
+     * @return 预填充配置的上下文实例
+     * @since 1.1.0
+     */
+    public static SerializationContext from(JsonRuntimeConfig cfg) {
+        SerializationContext ctx = new SerializationContext();
+        ctx.namingStrategy = cfg.namingStrategy();
+        ctx.writeNulls = cfg.writeNulls();
+        ctx.prettyPrint = cfg.prettyPrint();
+        ctx.circularRefStrategy = cfg.circularRefStrategy();
+        ctx.serializeEnumUsingOrdinal = cfg.serializeEnumUsingOrdinal();
+        ctx.dateFormat = cfg.dateFormat();
+        ctx.failOnError = cfg.failOnError();
+        return ctx;
     }
 
     /**

@@ -8,7 +8,7 @@ import com.remisoft.common.json.provider.SerializationProvider;
 
 import com.remisoft.common.json.reader.JSONReader;
 /**
- * RemiJson 全局配置类
+ * RemiJson 全局配置类（不可变）。
  *
  * <p><b>内部 API：</b>此类主要供 {@code JsonAutoConfiguration} 和框架内部使用。
  * 业务代码请通过 {@code remi.json.*} 配置属性调整 JSON 行为，不要直接操作 JsonConfig。</p>
@@ -22,6 +22,11 @@ import com.remisoft.common.json.reader.JSONReader;
  *   <li>枚举序列化策略 - ordinal 或 name</li>
  * </ul>
  *
+ * <p><b>不可变设计：</b>所有字段均为 {@code final}，通过 Builder 一次性构建后不可修改。
+ * 如需修改配置，请通过 {@link Builder#from(JsonConfig) Builder.from()} 创建新实例，
+ * 或使用 {@link #install(JsonConfig)} 原子替换全局单例。
+ * 对标 Jackson {@code ObjectMapper} 实例级别的不可变语义。</p>
+ *
  * <p><b>Builder 模式（框架内部使用）：</b></p>
  * <pre>
  * // JsonAutoConfiguration 内部使用 Builder 创建配置
@@ -32,10 +37,6 @@ import com.remisoft.common.json.reader.JSONReader;
  * config.apply();
  * </pre>
  *
- * <p><b>线程安全：</b>所有可变字段均为 {@code volatile}，保证单字段读写的可见性。
- * Builder 构建的实例字段值在 {@code build()} 时一次性写入，之后不应再原地修改。
- * 如需"不可变"语义的强保证，请通过 Builder 重新构建新实例。</p>
- *
  * @author remi-team
  * @since 1.0.0
  */
@@ -45,35 +46,68 @@ public final class JsonConfig implements Serializable {
 
     private static volatile JsonConfig instance;
 
-    /** 所有可变字段均为 volatile，保证单字段读写的可见性与原子性 */
-    private volatile PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
+    /** 字段不可变（final），通过构造函数一次性赋值 */
+    private final PropertyNamingStrategy namingStrategy;
 
-    private volatile CircularReferenceStrategy circularReferenceStrategy = CircularReferenceStrategy.REF;
+    private final CircularReferenceStrategy circularReferenceStrategy;
 
-    private volatile boolean writeNulls = false;
+    private final boolean writeNulls;
 
-    private volatile String dateFormat = "";
+    private final String dateFormat;
 
-    private volatile boolean serializeEnumUsingOrdinal = false;
+    private final boolean serializeEnumUsingOrdinal;
 
-    private volatile boolean prettyPrint = false;
+    private final boolean prettyPrint;
 
-    private volatile boolean failOnError = false;
+    private final boolean failOnError;
 
-    private volatile String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
+    private final String defaultDateFormat;
 
-    private volatile long maxJsonSize = 10L * 1024 * 1024;
+    private final long maxJsonSize;
 
-    private volatile int maxDepth = 256;
+    private final int maxDepth;
 
-    private volatile int maxGenericDepth = 64;
+    private final int maxGenericDepth;
 
-    private volatile boolean useBigDecimal = false;
+    private final boolean useBigDecimal;
 
     /** 是否启用根名称包裹（配合 @JsonRootName 注解使用） */
-    private volatile boolean wrapRootValue = false;
+    private final boolean wrapRootValue;
 
-    private JsonConfig() {
+    /**
+     * 全参数构造函数（包可见，仅供 Builder 内部使用）。
+     *
+     * <p>所有字段通过此构造函数一次性写入，之后不可修改。
+     * 默认值由 {@link Builder} 预先填充。</p>
+     */
+    JsonConfig(
+            PropertyNamingStrategy namingStrategy,
+            CircularReferenceStrategy circularReferenceStrategy,
+            boolean writeNulls,
+            String dateFormat,
+            boolean serializeEnumUsingOrdinal,
+            boolean prettyPrint,
+            boolean failOnError,
+            String defaultDateFormat,
+            long maxJsonSize,
+            int maxDepth,
+            int maxGenericDepth,
+            boolean useBigDecimal,
+            boolean wrapRootValue
+    ) {
+        this.namingStrategy = namingStrategy;
+        this.circularReferenceStrategy = circularReferenceStrategy;
+        this.writeNulls = writeNulls;
+        this.dateFormat = dateFormat;
+        this.serializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
+        this.prettyPrint = prettyPrint;
+        this.failOnError = failOnError;
+        this.defaultDateFormat = defaultDateFormat;
+        this.maxJsonSize = maxJsonSize;
+        this.maxDepth = maxDepth;
+        this.maxGenericDepth = maxGenericDepth;
+        this.useBigDecimal = useBigDecimal;
+        this.wrapRootValue = wrapRootValue;
     }
 
     /**
@@ -84,7 +118,8 @@ public final class JsonConfig implements Serializable {
      * 如确需修改配置，请重新构建新的 {@link JsonConfig} 并再次调用 {@code install(newConfig)}。</p>
      *
      * <p>此方法等价于 {@code instance = newConfig; newConfig.apply()}，
-     * 保证配置立即生效（传播到 JSONReader / SerializationProvider 等全局组件）。</p>
+     * 保证配置立即生效（传播到 JSONReader / SerializationProvider 等全局组件），
+     * 并同步刷新 {@link com.remisoft.common.json.RemiJson} 内部的默认 Mapper 实例。</p>
      *
      * @param newConfig 新的全局配置实例（由 Builder 构建）
      * @since 1.0.0
@@ -97,6 +132,8 @@ public final class JsonConfig implements Serializable {
             instance = newConfig;
         }
         instance.apply();
+        // 触发 RemiJson 静态方法委托的默认 Mapper 重建，使配置变更立即生效
+        com.remisoft.common.json.RemiJson.reloadDefaultMapper();
     }
 
     /**
@@ -105,13 +142,13 @@ public final class JsonConfig implements Serializable {
      * <p><b>推荐用法：</b>业务代码只读获取配置。如需修改全局配置，请使用
      * {@link #install(JsonConfig)} 替换为新的不可变实例。</p>
      *
-     * @return JsonConfig 实例
+     * @return JsonConfig 实例（默认配置）
      */
     public static JsonConfig getInstance() {
         if (instance == null) {
             synchronized (JsonConfig.class) {
                 if (instance == null) {
-                    instance = new JsonConfig();
+                    instance = builder().build();
                 }
             }
         }
@@ -122,12 +159,12 @@ public final class JsonConfig implements Serializable {
      * 创建指定配置的独立副本（供 JsonMapper 实例使用）。
      *
      * @param config 源配置
-     * @return 独立副本
+     * @return 独立副本（默认配置，当 config 为 null 时）
      * @since 1.0.0
      */
     public static JsonConfig copyOf(JsonConfig config) {
         if (config == null) {
-            return new JsonConfig();
+            return builder().build();
         }
         return builder().from(config).build();
     }
@@ -469,24 +506,27 @@ public final class JsonConfig implements Serializable {
         /**
          * 从现有配置创建 Builder（用于修改已有配置）。
          *
+         * <p>通过 getter 读取源配置值，而非直接访问字段，
+         * 保持封装性并兼容未来的字段变更。</p>
+         *
          * @param config 源配置
          * @return 新的 Builder，预填充源配置的值
          */
         public Builder from(JsonConfig config) {
             if (config != null) {
-                this.namingStrategy = config.namingStrategy;
-                this.circularReferenceStrategy = config.circularReferenceStrategy;
-                this.writeNulls = config.writeNulls;
-                this.dateFormat = config.dateFormat;
-                this.serializeEnumUsingOrdinal = config.serializeEnumUsingOrdinal;
-                this.prettyPrint = config.prettyPrint;
-                this.failOnError = config.failOnError;
-                this.defaultDateFormat = config.defaultDateFormat;
-                this.maxJsonSize = config.maxJsonSize;
-                this.maxDepth = config.maxDepth;
-                this.maxGenericDepth = config.maxGenericDepth;
-                this.useBigDecimal = config.useBigDecimal;
-                this.wrapRootValue = config.wrapRootValue;
+                this.namingStrategy = config.getNamingStrategy();
+                this.circularReferenceStrategy = config.getCircularReferenceStrategy();
+                this.writeNulls = config.isWriteNulls();
+                this.dateFormat = config.getDateFormat();
+                this.serializeEnumUsingOrdinal = config.isSerializeEnumUsingOrdinal();
+                this.prettyPrint = config.isPrettyPrint();
+                this.failOnError = config.isFailOnError();
+                this.defaultDateFormat = config.getDefaultDateFormat();
+                this.maxJsonSize = config.getMaxJsonSize();
+                this.maxDepth = config.getMaxDepth();
+                this.maxGenericDepth = config.getMaxGenericDepth();
+                this.useBigDecimal = config.isUseBigDecimal();
+                this.wrapRootValue = config.isWrapRootValue();
             }
             return this;
         }
@@ -494,24 +534,27 @@ public final class JsonConfig implements Serializable {
         /**
          * 构建不可变的 JsonConfig 实例。
          *
-         * @return 新的 JsonConfig 实例
+         * <p>通过全参数构造函数一次性写入所有字段，构建后字段值不可修改。
+         * 线程安全，无锁可见性保证（final 字段语义）。</p>
+         *
+         * @return 新的不可变 JsonConfig 实例
          */
         public JsonConfig build() {
-            JsonConfig config = new JsonConfig();
-            config.namingStrategy = this.namingStrategy;
-            config.circularReferenceStrategy = this.circularReferenceStrategy;
-            config.writeNulls = this.writeNulls;
-            config.dateFormat = this.dateFormat;
-            config.serializeEnumUsingOrdinal = this.serializeEnumUsingOrdinal;
-            config.prettyPrint = this.prettyPrint;
-            config.failOnError = this.failOnError;
-            config.defaultDateFormat = this.defaultDateFormat;
-            config.maxJsonSize = this.maxJsonSize;
-            config.maxDepth = this.maxDepth;
-            config.maxGenericDepth = this.maxGenericDepth;
-            config.useBigDecimal = this.useBigDecimal;
-            config.wrapRootValue = this.wrapRootValue;
-            return config;
+            return new JsonConfig(
+                    this.namingStrategy,
+                    this.circularReferenceStrategy,
+                    this.writeNulls,
+                    this.dateFormat,
+                    this.serializeEnumUsingOrdinal,
+                    this.prettyPrint,
+                    this.failOnError,
+                    this.defaultDateFormat,
+                    this.maxJsonSize,
+                    this.maxDepth,
+                    this.maxGenericDepth,
+                    this.useBigDecimal,
+                    this.wrapRootValue
+            );
         }
     }
 

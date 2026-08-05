@@ -1138,6 +1138,37 @@ public final class SerializationProvider {
     // ==================== 内部辅助方法 ====================
 
     /**
+     * 创建带有自动诊断上下文的序列化异常。
+     *
+     * <p>自动从 {@link #FIELD_PATH_STACK} 捕获当前字段路径（如 "user.address.street"），
+     * 附加到异常中供排障使用。对标 Jackson {@code JsonMappingException.getPath()}。</p>
+     *
+     * <p>推荐在 catch 块中统一使用：</p>
+     * <pre>
+     * // 替代之前的多个 throw new JsonSerializationException(...) 调用点
+     * throw SerializationProvider.newSerializationException(
+     *     JsonSerializationException.SERIALIZATION_ERROR,
+     *     "Failed to write to OutputStream", e);
+     * </pre>
+     *
+     * @param errorCode 错误码（参见 {@link JsonSerializationException} 常量）
+     * @param message   错误消息（不含字段路径，方法自动附加）
+     * @param cause     原始异常（可为 null）
+     * @return 包含字段路径诊断信息的序列化异常
+     * @since 1.1.0
+     */
+    public static JsonSerializationException newSerializationException(
+            int errorCode, String message, Throwable cause) {
+        String path = getCurrentFieldPath();
+        String fullMessage = path.isEmpty() ? message : message + " (at path: " + path + ")";
+        JsonSerializationException ex = new JsonSerializationException(errorCode, fullMessage, cause);
+        if (!path.isEmpty()) {
+            ex.setFieldPath(path);
+        }
+        return ex;
+    }
+
+    /**
      * 包装序列化异常（消除 serialize() 和 serializeWithView() 中的重复异常处理代码）。
      *
      * @param obj 正在序列化的对象

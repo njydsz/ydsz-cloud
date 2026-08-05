@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.remisoft.common.json.internal.JsonConfig;
+import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.exception.JsonException;
 import com.remisoft.common.json.metric.MetricsHelper;
 import com.remisoft.common.json.naming.PropertyNamingStrategy;
@@ -73,8 +74,11 @@ public class JsonMapper {
     /** 默认单例实例（RemiJson 静态方法委托给此实例） */
     private static final JsonMapper DEFAULT = new JsonMapper();
 
-    /** 此 Mapper 实例的配置（独立副本） */
+    /** 此 Mapper 实例的配置（独立副本，不可变） */
     private final JsonConfig config;
+
+    /** 此 Mapper 实例的预计算运行时配置（从 config 派生，不可变快照） */
+    private final JsonRuntimeConfig runtimeConfig;
 
     /**
      * 创建默认配置的 Mapper 实例。
@@ -86,21 +90,47 @@ public class JsonMapper {
     /**
      * 创建指定配置的 Mapper 实例。
      *
-     * @param config 配置（会被复制为独立副本）
+     * @param config 配置（会被复制为独立副本，并生成预计算运行时配置）
      */
     public JsonMapper(JsonConfig config) {
         this.config = JsonConfig.copyOf(config);
+        this.runtimeConfig = JsonRuntimeConfig.from(this.config);
     }
 
     /**
-     * 获取此 Mapper 的配置对象（可直接修改，不影响全局配置）。
+     * 创建指定运行时配置的 Mapper 实例（内部使用，跳过 JsonConfig 转换）。
      *
-     * <p>修改配置后，下次序列化会自动重新应用到 ThreadLocal，无需额外通知。</p>
+     * @param config       源配置对象
+     * @param runtimeConfig 预计算运行时配置
+     */
+    private JsonMapper(JsonConfig config, JsonRuntimeConfig runtimeConfig) {
+        this.config = config;
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    /**
+     * 获取此 Mapper 的配置对象（只读）。
      *
-     * @return 配置对象
+     * <p>返回的 JsonConfig 为不可变实例，修改配置请通过 Builder 重新构建新 JsonMapper。</p>
+     *
+     * @return 配置对象（不可变）
      */
     public JsonConfig getConfig() {
         return config;
+    }
+
+    /**
+     * 获取此 Mapper 的预计算运行时配置（不可变快照）。
+     *
+     * <p>运行时配置是从 JsonConfig 派生的预计算对象，所有字段都是 final，
+     * 读取无锁无 ThreadLocal 开销。此配置作为序列化/反序列化操作的
+     * 配置传递源替代 ThreadLocal 配置字段。</p>
+     *
+     * @return 运行时配置（只读）
+     * @since 1.1.0
+     */
+    public JsonRuntimeConfig getRuntimeConfig() {
+        return runtimeConfig;
     }
 
     /**
@@ -120,10 +150,13 @@ public class JsonMapper {
     /**
      * 创建配置副本（独立实例，修改不影响原 Mapper）。
      *
+     * <p>新的 Mapper 实例共享相同的运行时配置（不可变，安全共享），
+     * 无需重新预计算。</p>
+     *
      * @return 新的 Mapper 实例
      */
     public JsonMapper copy() {
-        return new JsonMapper(this.config);
+        return new JsonMapper(this.config, this.runtimeConfig);
     }
 
     // ==================== 序列化方法 ====================
@@ -136,12 +169,52 @@ public class JsonMapper {
      * {@code ObjectMapper}（配置不可变 + 显式传递）的线程安全模型在 ThreadLocal
      * 实现下的等价做法。</p>
      *
+     * <p>优化：通过预计算的 {@link JsonRuntimeConfig} 快速填充 SerializationContext，
+     * 再调用 {@link JsonConfig#apply()} 传播到全局组件（JSONReader 深度限制等）。
+     * 后续 P0-5/P0-6 将逐步消除 ThreadLocal 依赖。</p>
+     *
      * @return ThreadLocalSnapshot（不为 null，需在 finally 中 restore）
      */
     private SerializationProvider.ThreadLocalSnapshot applyConfigIfNeeded() {
         SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+        // 1. 预计算配置快速填充当前线程的 SerializationContext
+        applyRuntimeConfig();
+        // 2. 传播到全局组件（JSONReader maxDepth、SerializationProvider 静态状态等）
         config.apply();
         return snapshot;
+    }
+
+    /**
+     * 将预计算运行时配置快速填充到当前线程的 ThreadLocal 上下文中。
+     *
+     * <p>目标是最终消除 ThreadLocal 依赖（P0-5/P0-6），当前作为过渡方案，
+     * 利用已预计算的 runtimeConfig 避免重复从 JsonConfig 读取。
+     *
+     * @since 1.1.0
+     */
+    private void applyRuntimeConfig() {
+        SerializationContext ctx = SerializationContext.CONTEXT.get();
+        // 使用预计算运行时配置快速填充配置字段
+        ctx.namingStrategy = runtimeConfig.namingStrategy();
+        ctx.writeNulls = runtimeConfig.writeNulls();
+        ctx.prettyPrint = runtimeConfig.prettyPrint();
+        ctx.circularRefStrategy = runtimeConfig.circularRefStrategy();
+        ctx.serializeEnumUsingOrdinal = runtimeConfig.serializeEnumUsingOrdinal();
+        ctx.dateFormat = runtimeConfig.dateFormat();
+        ctx.failOnError = runtimeConfig.failOnError();
+    }
+
+    /**
+     * 使用预计算运行时配置初始化当前线程的 SerializationContext（完整替换模式）。
+     *
+     * <p>通过 {@link SerializationContext#from(JsonRuntimeConfig)} 一次性创建并关联上下文，
+     * 避免逐个字段赋值。调用方需负责清理（使用现有清理机制）。</p>
+     *
+     * @since 1.1.0
+     */
+    static void installSerializationContext(JsonRuntimeConfig runtimeConfig) {
+        SerializationContext ctx = SerializationContext.from(runtimeConfig);
+        SerializationContext.CONTEXT.set(ctx);
     }
 
     /**
