@@ -6,6 +6,21 @@
 
 **RemiJson 的架构设计兼具 Jackson 的"配置不可变"哲学和 Fastjson2 的"静态入口便利"。** `RemiJson` 作为静态入口提供 `toJson` / `toObject` 等零配置开箱即用体验，与 FastJSON 的静态工具风格一脉相承；而底层 `JsonConfig` 采用 `final` 字段构建不可变配置，配合 `JsonMapper.copyOf()` 以"副本 + 不可变替换"方式替代运行期可变状态，实现与 Jackson 相同的线程安全语义。两层 API 共享同一委托链（`RemiJson` → `JsonMapper` → `Execution` → `Engine`），行为完全一致，用户可根据场景自由选择而无需担心序列化行为分歧。
 
+## 最新变更（v1.1.0 — 过度设计治理与健壮性补齐）
+
+本次对标互联网大厂研发规范，从过度设计治理、功能成熟度标注、测试覆盖、健康检查简化四个维度完成优化：
+
+| 编号 | 优先级 | 变更项 | 状态 |
+|---|---|---|---|
+| P2-FIX | P2 | **修复启动失败**：补充 `JsonHealthIndicator`、`JsonMetrics`、`JsonCacheMetrics`、`JsonWarmupRunner` 缺失的类（原 AutoConfiguration 引用但类不存在） | ✅ 已实施 |
+| P2-HI | P2 | **健康检查简化**：`JsonHealthIndicator` 从暴露 17+ 项内部指标收敛为 5 项关键指标（safeMode / namingStrategy / maxJsonSize / asmAvailable / registeredSerializers），详细指标走 Micrometer | ✅ 已实施 |
+| P4-MAT | P4 | **功能成熟度标签**：README 新增功能成熟度总览表（Stable / Beta / Experimental / Deprecated 四级标签），帮助用户判断功能可靠性 | ✅ 已实施 |
+| P4-ADR | P4 | **架构决策文档**：新增 `docs/ADR-001-json-engine-architecture.md`，记录自研引擎的设计选择、权衡与参考对标 | ✅ 已实施 |
+| P2-TEST | P2 | **核心测试补齐**：新增 `RemiJsonRoundTripTest`（序列化/反序列化 round-trip 测试）、`NamingStrategyTest`（命名策略转换测试）、`AutoTypeSecurityTest`（AutoType 安全门控测试） | ✅ 已实施 |
+| P2-WARM | P2 | **配置完善**：`JsonProperties` 新增 `warmupEnabled` 属性（默认 false），可控预热开关 | ✅ 已实施 |
+
+> **遗留计划**（P0 架构重构将在后续版本推进）：消除 ThreadLocal Snapshot 机制改为显式参数传递、合并 SerializerRegistry/JsonModuleRegistry 双轨注册。
+
 ## 最新变更（v1.0.0 优化汇总）
 
 本次对标互联网大厂研发规范，从架构、功能、性能、体验、过度设计五个维度完成专项优化：
@@ -27,6 +42,35 @@
 | **作用** | 提供高性能 JSON 序列化/反序列化、树模型、JSONPath、Schema 校验、JSON Patch/Merge Patch、Jackson 兼容注解、Spring MVC 集成等能力 |
 | **依赖** | Lombok；可选依赖 ASM、SLF4J、Spring Boot AutoConfigure、Spring Web、Reactive Streams、Spring Boot Actuator/Health、Micrometer、Jackson Annotations（编译期可见）、Jakarta Validation |
 | **版本** | 1.0.0 |
+
+## 功能成熟度总览
+
+> 以下标签标注每个功能域的 API 稳定性与生产就绪度：
+
+| 标签 | 含义 | 使用建议 |
+|---|---|---|
+| **Stable** | 生产就绪，API 稳定，向后兼容 | 放心在任何场景使用 |
+| **Beta** | 功能完整但 API 可能有调整 | 推荐使用，关注升级变更日志 |
+| **Experimental** | 实验性功能，API 可能破坏性变更 | 非关键路径使用，做好隔离层 |
+| **Deprecated** | 已废弃，将在下个主版本移除 | 停止使用，迁移到替代方案 |
+
+| 功能域 | 成熟度 | 备注 |
+|---|---|---|
+| 核心序列化/反序列化 | **Stable** | 含基本类型/嵌套对象/集合/泛型 |
+| ASM 字节码加速 | **Stable** | GraalVM 自动降级 |
+| 注解体系（@JsonProperty/@JsonIgnore/@JsonFormat/@JsonInclude 等常用注解） | **Stable** | 80%+ Jackson 兼容 |
+| Tree 模型（JsonNode/ObjectNode/ArrayNode） | **Stable** | |
+| 命名策略（SNAKE_CASE/KEBAB_CASE/LOWER_CASE） | **Stable** | |
+| AutoType 安全检查 | **Stable** | |
+| Spring Boot 集成（JsonAutoConfiguration/JsonHttpMessageConverter） | **Stable** | |
+| Module 系统（JsonModule SPI） | **Beta** | |
+| @JsonCreator/@JsonBuilder 构造器模式 | **Beta** | |
+| @JsonView 视图过滤 | **Beta** | |
+| @JsonUnwrapped / @JsonRawValue / @JsonAlias | **Experimental** | 使用频率低，API 可能调整 |
+| JSON Schema 校验 | **Experimental** | 标注 @Experimental |
+| JSON Path 查询 | **Experimental** | 标注 @Experimental |
+| JSON Merge Patch | **Experimental** | 标注 @Experimental |
+| JSON Pointer（RFC 6901） | **Experimental** | 实现完整但使用场景少 |
 
 ## 核心能力
 
@@ -412,15 +456,15 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 |---|---|---|
 | `/actuator/health` | JSON 模块健康检查作为整体 health 端点的一部分 | `spring-boot-health` 在类路径，`remi.json.enabled=true` |
 
-**`JsonHealthIndicator` 暴露信息**：
+**`JsonHealthIndicator` 暴露信息**（仅 5 项关键指标，详细指标通过 Micrometer 暴露）：
 
-- `safeMode` — AutoType 安全模式是否开启
-- `maxJsonSize` / `maxDepth` — JSON 大小与深度限制
-- `namingStrategy` / `circularReferenceStrategy` / `dateFormat` — 全局配置
-- `useBigDecimal` / `wrapRootValue` / `failOnError` / `serializeEnumUsingOrdinal` — 配置开关
-- `asmLevel` / `asmGeneratedCount` — ASM 字节码生成级别与数量
-- `serializerCacheSize` / `codecCacheSize` / `beanSerializerCacheSize` — 缓存统计
-- `threadLocalMemoryEstimate` — ThreadLocal 内存估算（字节）
+- `safeMode` — AutoType 安全模式是否开启（核心安全指标）
+- `namingStrategy` — 当前全局字段命名策略
+- `maxJsonSize` — 单次 JSON 处理大小限制（字节）
+- `asmAvailable` — ASM 字节码优化是否可用
+- `registeredSerializers` — 已注册的自定义序列化器数量
+
+> **注意**：详细指标（缓存命中率、序列化/反序列化计数等）通过 Micrometer `remi.json.*` 暴露给 Prometheus/Grafana，不通过 Health Endpoint。
 
 **健康状态规则**：
 
