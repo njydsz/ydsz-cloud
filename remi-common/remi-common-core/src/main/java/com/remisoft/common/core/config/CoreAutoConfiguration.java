@@ -31,7 +31,7 @@ import com.remisoft.common.core.response.BaseResponse;
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "remi.core", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(CoreProperties.class)
+@EnableConfigurationProperties({CoreProperties.class, FilterIgnoreProperties.class})
 public class CoreAutoConfiguration {
 
     /**
