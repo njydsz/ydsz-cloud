@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.remisoft.common.exception.code.IExceptionResultCode;
-import com.remisoft.common.exception.code.ResultCode;
+import com.remisoft.common.core.code.ResultCode;
 import com.remisoft.common.exception.core.ExceptionInfo;
 import com.remisoft.common.exception.enums.ExceptionCategory;
 import com.remisoft.common.exception.enums.ExceptionCode;

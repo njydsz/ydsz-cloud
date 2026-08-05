@@ -1,5 +1,7 @@
 package com.remisoft.common.exception.code;
 
+import com.remisoft.common.core.code.ResultCode;
+
 /**
  * 异常结果码桥接接口。
  *
@@ -11,8 +13,7 @@ package com.remisoft.common.exception.code;
  *
  * <p><b>类型说明：</b>{@link #resultCode()} 返回值的实际类型为
  * {@code com.remisoft.common.core.code.ResultCode} 的子类型（通常是 {@link ExceptionCode} 的枚举实现），
- * 本接口保留 {@link ResultCode} 返回类型以保持兼容性，新的调用方如需统一协议
- * 可直接转型为 {@code com.remisoft.common.core.code.ResultCode}。
+ * 调用方如需统一协议可直接使用 {@link ResultCode}（核心模块，统一接口）。
  *
  * @author remi-team
  * @since 1.0.0
@@ -23,8 +24,7 @@ public interface IExceptionResultCode {
     /**
      * 获取异常关联的结果码。
      *
-     * <p>返回值同时满足 {@link ResultCode}（异常模块，已弃用）与
- * {@code com.remisoft.common.core.code.ResultCode}（核心模块，统一接口）的契约。
+     * <p>返回值满足 {@link ResultCode}（核心模块，统一接口）的契约。
      *
      * @return 结果码，不可为 null
      */

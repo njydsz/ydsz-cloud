@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.http.HttpStatus;
 
 import com.remisoft.common.core.code.BaseResultCode;
-import com.remisoft.common.exception.code.ResultCode;
+import com.remisoft.common.core.code.ResultCode;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.core.ExceptionInfo;
 import com.remisoft.common.exception.enums.ExceptionCategory;
