@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -64,7 +66,6 @@ public class RemiJson {
      *
      * <p>RemiJson 静态方法委托给此实例，确保：</p>
      * <ul>
-     *   <li>配置通过 {@link JsonMapper#applyConfigIfNeeded()} 正确传播到 ThreadLocal</li>
      *   <li>配置变更（通过 {@link JsonConfig#install(JsonConfig)}）自动生效</li>
      *   <li>与实例化 {@code JsonMapper} API 共享相同代码路径（消除代码路径分叉）</li>
      * </ul>
@@ -435,6 +436,65 @@ public class RemiJson {
             return fromJsonBytes(bytes, typeRef);
         } catch (IOException e) {
             throw new JsonException("Failed to read from InputStream", e);
+        }
+    }
+
+    // ==================== 预热 ====================
+
+    /**
+     * 预热指定类型的序列化/反序列化缓存。
+     *
+     * <p>在应用启动时调用，提前为指定类型构建字段元数据、序列化器与反序列化器缓存，
+     * 避免首次请求时的延迟尖峰。预热失败不影响启动（内部吞掉异常）。</p>
+     *
+     * <p>注：原 ASM 字节码生成（AsmCodecCache）已随 {@code AsmCodecCache} 移除，
+     * 现改为通过一次真实的序列化/反序列化触发 {@code SerializationProvider} /
+     * {@code DeserializationProvider} 的元数据缓存构建，语义保持一致。</p>
+     *
+     * @param classes 需要预热的类型列表
+     * @since 1.0.0
+     */
+    public static void warmup(Class<?>... classes) {
+        if (classes == null || classes.length == 0) {
+            return;
+        }
+        for (Class<?> clazz : classes) {
+            if (clazz == null) {
+                continue;
+            }
+            try {
+                // 触发序列化侧缓存构建（字段元数据 / BeanSerializerInfo / BeanSerializer）
+                Object instance = createInstanceForWarmup(clazz);
+                if (instance != null) {
+                    defaultMapper.toJson(instance);
+                }
+            } catch (Exception ignored) {
+                // 预热失败不影响启动
+            }
+            try {
+                // 触发反序列化侧缓存构建（BeanReader / Creator 解析）
+                defaultMapper.toObject("{}", clazz);
+            } catch (Exception ignored) {
+                // 预热失败不影响启动
+            }
+        }
+    }
+
+    /**
+     * 为预热创建实例（仅支持无参构造的可实例化类型，否则返回 null）。
+     */
+    private static Object createInstanceForWarmup(Class<?> clazz) {
+        if (clazz.isInterface() || clazz.isEnum() || clazz.isArray()
+                || clazz.isPrimitive()
+                || Modifier.isAbstract(clazz.getModifiers())) {
+            return null;
+        }
+        try {
+            Constructor<?> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
+        } catch (Exception e) {
+            return null;
         }
     }
 

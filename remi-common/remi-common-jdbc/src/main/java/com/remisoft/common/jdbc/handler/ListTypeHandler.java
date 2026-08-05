@@ -9,7 +9,7 @@ import java.util.List;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
-import com.remisoft.common.json.RemiJson;
+import com.remisoft.common.json.parser.JsonParserUtil;
 
 /**
  * List 类型 JSON 转换处理器
@@ -124,6 +124,6 @@ public class ListTypeHandler extends BaseTypeHandler<List<Object>> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return RemiJson.parseArray(json, Object.class);
+        return JsonParserUtil.parseArray(json);
     }
 }

@@ -54,7 +54,7 @@ public final class YamlUtils {
             return null;
         }
         try {
-            Object parsed = RemiJson.parseMap(json);
+            Object parsed = com.remisoft.common.json.parser.JsonParserUtil.parseObject(json);
             // Yaml 非线程安全，每次调用创建新实例
             return new Yaml(DUMPER_OPTIONS).dump(parsed);
         } catch (Exception e) {

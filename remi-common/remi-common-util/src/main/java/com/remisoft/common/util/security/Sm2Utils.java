@@ -19,6 +19,7 @@ import java.util.Objects;
 import javax.crypto.Cipher;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.math.ec.ECPoint;
 
 import lombok.extern.slf4j.Slf4j;
 

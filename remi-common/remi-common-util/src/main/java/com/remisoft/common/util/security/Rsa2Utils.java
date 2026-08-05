@@ -30,15 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>基于 RSA + SHA-256 提供非对称加密、解密、数字签名与验签能力，纯 JDK 实现。
  *
- * <h2>核心能力</h2>
- * <ul>
- *   <li>密钥对生成：生成 2048/4096 位 RSA 密钥对</li>
- *   <li>公钥加密/私钥解密：使用 OAEP 填充方案，安全等级高于 PKCS1Padding</li>
- *   <li>私钥签名/公钥验签：SHA256withRSA 签名算法（RSA2）</li>
- *   <li>分段加解密：支持超长文本加解密，自动分块处理</li>
- * </ul>
- *
- * <h2>安全说明</h2>
+ * <p><b>安全说明</b>
  * <ul>
  *   <li>填充模式使用 OAEPWithSHA-256AndMGF1Padding，防止填充攻击</li>
  *   <li>建议密钥长度 ≥ 2048 位</li>
@@ -47,8 +39,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author remi-team
  * @since 1.0.0
+ * @deprecated 自 2.0.0 起，RSA2 算法下沉至 remi-common-crypto-advanced 模块。
+ *             国密合规场景请使用 SM2/SM3/SM4，非国密场景推荐 ECDSA。
  */
 @Slf4j
+@Deprecated(since = "2.0.0", forRemoval = false)
 public class Rsa2Utils {
 
     /**

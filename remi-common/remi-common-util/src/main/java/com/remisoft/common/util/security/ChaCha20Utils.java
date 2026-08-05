@@ -25,33 +25,22 @@ import lombok.extern.slf4j.Slf4j;
  * <p>基于 ISO/IEC 18033-4 和 RFC 8439 定义的 ChaCha20-Poly1305 组合算法，
  * 提供带关联数据（AEAD）认证的加密能力。
  *
- * <h2>核心能力</h2>
- * <ul>
- *   <li>密钥长度：256 位（32 字节，JDK 要求固定 256 位）</li>
- *   <li>Nonce 长度：96 位（12 字节，每次加密必须唯一）</li>
- *   <li>算法模式：ChaCha20-Poly1305（JDK 12+ 内置支持）</li>
- *   <li>可选：关联数据（AAD）认证</li>
- * </ul>
+ * <p><b>适用场景</b>：TLS 1.3 软件友好模式（无 AES-NI 硬件加速时优于 AES-GCM）、
+ * 移动端/嵌入式设备、VPN / WireGuard 协议族。
  *
- * <h2>适用场景</h2>
- * <ul>
- *   <li>TLS 1.3 软件友好模式（无 AES-NI 硬件加速时优于 AES-GCM）</li>
- *   <li>移动端/嵌入式设备（纯软件实现性能优异）</li>
- *   <li>VPN / WireGuard 协议族（现代加密协议首选）</li>
- *   <li>替代 AES-GCM 的场景（如在旧硬件无 AES 指令集时）</li>
- * </ul>
- *
- * <h2>安全说明</h2>
+ * <p><b>安全说明</b>
  * <ul>
  *   <li>密钥必须为 32 字节（256 位），使用 {@link #generateKeyHex()} 生成</li>
  *   <li>Nonce 必须每次加密唯一（{@code encrypt} 方法自动生成随机 12 字节 Nonce）</li>
- *   <li>Nonce 泄露不会破坏机密性，但会破坏完整性认证</li>
- *   <li>JDK 要求 JDK 12+（推荐 JDK 17+ 以获得完整能力）</li>
+ *   <li>JDK 要求 JDK 12+（推荐 JDK 17+）</li>
  * </ul>
  *
  * @author remi-team
  * @since 1.4.0
+ * @deprecated 自 2.0.0 起，ChaCha20 算法下沉至 remi-common-crypto-advanced 模块。
+ *             当前模块保留以兼容存量调用，v3.0 版本移除。新项目推荐使用 AES-GCM。
  */
+@Deprecated(since = "2.0.0", forRemoval = false)
 @Slf4j
 public class ChaCha20Utils {
 
@@ -313,8 +302,8 @@ public class ChaCha20Utils {
         } catch (InvalidAlgorithmParameterException e) {
             throw new IllegalArgumentException("Invalid ChaCha20 nonce: must be 12 bytes", e);
         } catch (AEADBadTagException e) {
-            // 认证失败（数据被篡改），抛出原始异常
-            throw e;
+            // 认证失败（数据被篡改），包装为运行时异常
+            throw new IllegalArgumentException("ChaCha20 authentication failed (data tampered)", e);
         } catch (IllegalBlockSizeException | BadPaddingException e) {
             throw new IllegalStateException("ChaCha20 decryption failed", e);
         }
