@@ -1,6 +1,8 @@
 package com.remisoft.common.core.config;
 
 import com.remisoft.common.core.config.MessageResolverHolder.MessageResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
@@ -36,6 +38,8 @@ import java.util.Locale;
  */
 public class SpringMessageResolver implements MessageResolver {
 
+    private static final Logger log = LoggerFactory.getLogger(SpringMessageResolver.class);
+
     private final MessageSource messageSource;
 
     /**
@@ -57,6 +61,9 @@ public class SpringMessageResolver implements MessageResolver {
             String message = messageSource.getMessage(key, null, locale);
             return message != null ? message : defaultValue;
         } catch (Exception e) {
+            // DEBUG 级别记录，不影响正常流程，便于排查 i18n 配置问题
+            log.debug("Failed to resolve i18n message for key '{}', locale '{}'. "
+                    + "Falling back to default value: {}", key, LocaleContextHolder.getLocale(), defaultValue, e);
             return defaultValue;
         }
     }

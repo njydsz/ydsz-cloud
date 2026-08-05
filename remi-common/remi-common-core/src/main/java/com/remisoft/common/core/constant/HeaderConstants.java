@@ -57,8 +57,6 @@ public final class HeaderConstants {
      * 身份类型。
      *
      * <p>用于区分公司用户、访客用户、remi用户等身份类型。
-     *
-    
      */
     public static final String X_IDENTITY_TYPE = "X-Identity-Type";
 
@@ -66,8 +64,6 @@ public final class HeaderConstants {
      * 服务类型。
      *
      * <p>用于区分请求来源服务类型（WEB_SERVICE / APP_SERVICE 等）。
-     *
-    
      */
     public static final String X_SERVICE_TYPE = "X-Service-Type";
 

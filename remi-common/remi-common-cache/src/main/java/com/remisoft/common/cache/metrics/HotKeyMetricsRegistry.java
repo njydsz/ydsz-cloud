@@ -77,7 +77,7 @@ public class HotKeyMetricsRegistry {
    */
   @SuppressWarnings("unchecked")
   public <K> java.util.Optional<HotKeyTracker<K>> findTracker(String cacheName) {
-    return find(cacheName).map(HotKeyMetrics::getTracker);
+    return find(cacheName).map(metrics -> (HotKeyTracker<K>) metrics.getTracker());
   }
 
   /**

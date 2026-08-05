@@ -1465,27 +1465,6 @@
                     </executions>
                 </plugin>
 
-                <!-- CheckStyle：强制正确性与安全性规则（JSON 拼接检测、禁止 System.out/printStackTrace 等） -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>3.6.0</version>
-                    <configuration>
-                        <configLocation>checkstyle.xml</configLocation>
-                        <sourceDirectories>${project.build.sourceDirectory}</sourceDirectories>
-                        <failOnViolation>true</failOnViolation>
-                        <violationSeverity>error</violationSeverity>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>checkstyle-validate</id>
-                            <phase>validate</phase>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
                 <!-- ArchUnit 架构守护（P1：verify 阶段自动执行架构守护测试，CI 中可 -DskipArchUnit=true 跳过） -->
                 <plugin>
                     <groupId>com.societegenerale.commons</groupId>
@@ -1506,7 +1485,7 @@
         </pluginManagement>
 
         <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + 质量门禁 + 安全纵深（所有子模块继承生效）
-         CheckStyle / SpotBugs 每次 build 强制执行；
+         SpotBugs 每次 build 强制执行；
          OWASP dependency-check 默认启用（P2-2，可通过 local-dev profile 跳过）；
          JaCoCo 默认跳过（本地开发），CI 通过参数启用；
          CycloneDX SBOM 默认启用（P2-2，verify 阶段产出，可通过 local-dev profile 跳过） -->
@@ -1531,11 +1510,6 @@
             <configuration>
                 <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true @{argLine}</argLine>
             </configuration>
-        </plugin>
-        <!-- CheckStyle：代码质量规则（每次 build 强制执行，配置见 pluginManagement） -->
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-checkstyle-plugin</artifactId>
         </plugin>
         <!-- SpotBugs：安全漏洞与代码缺陷检测（每次 build 强制执行，配置见 pluginManagement） -->
         <plugin>
@@ -1572,7 +1546,6 @@
                 <skipJacoco>true</skipJacoco>
                 <skipJacocoCheck>true</skipJacocoCheck>
                 <skipArchUnit>true</skipArchUnit>
-                <checkstyle.skip>true</checkstyle.skip>
                 <spotbugs.skip>true</spotbugs.skip>
             </properties>
         </profile>

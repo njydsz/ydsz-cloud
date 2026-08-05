@@ -218,7 +218,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      */
     public static <T> BaseResponse<T> error() {
-        return of(ERROR, MessageResolverHolder.resolveMessage(MSG_OPERATION_FAIL, "操作失败"), null);
+        return of(UNKNOWN_CODE, MessageResolverHolder.resolveMessage(MSG_OPERATION_FAIL, "操作失败"), null);
     }
 
     /**
@@ -229,7 +229,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 失败消息
      */
     public static <T> BaseResponse<T> error(String msg) {
-        return of(ERROR, msg, null);
+        return of(UNKNOWN_CODE, msg, null);
     }
 
     /**
@@ -258,6 +258,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @deprecated 使用 {@link #of(String, String, Object)} 替代，语义更明确
      */
     @Deprecated
+    @SuppressWarnings("unchecked")
     public static <T> BaseResponse<T> error(String code, String msg, T data) {
         return of(code, msg, data);
     }
@@ -351,15 +352,8 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         // 尝试从异常中提取 ResultCode（优先 ResultCode 接口，其次 IExceptionResultCode 桥接）
         ResultCode resultCode = extractResultCode(throwable);
         if (resultCode != null) {
-            ProblemDetail problem = ProblemDetail.builder()
-                    .type(URI.create(ProblemDetail.DEFAULT_TYPE_PREFIX + resultCode.getCode()))
-                    .title(resultCode.getMsg())
-                    .status(resultCode.getHttpStatusCode())
-                    .detail(detail)
-                    .instance(instance)
-                    .errorCode(resultCode.getCode())
-                    .timestamp(java.time.Instant.now())
-                    .build();
+            // 使用 ProblemDetail.of() 工厂方法，减少模板代码并确保字段填充一致
+            ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
             autoFillTraceIdFromMdc(problem);
             return of(resultCode.getCode(),
                     MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), problem);

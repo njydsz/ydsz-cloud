@@ -39,8 +39,9 @@ class BaseResultCodeTest {
             assertFalse(rc.getCode().isBlank(), "code must not be blank: " + rc.name());
             assertTrue(codes.add(rc.getCode()), "duplicate code: " + rc.getCode());
         }
-        // 46 个系统级错误码 + SUCCESS（已移除 B3xxxx/B7xxxx 业务模块错误码）
-        assertEquals(46, BaseResultCode.values().length);
+        // 47 个枚举值 = SUCCESS(1) + 错误码(46)（已移除 B3xxxx/B7xxxx 业务模块错误码）
+        // 注意：新增枚举值时必须同步更新此断言
+        assertEquals(47, BaseResultCode.values().length);
     }
 
     @Test

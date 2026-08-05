@@ -108,11 +108,29 @@ public enum OrderResultCode implements ResultCode {
 - `uptimeSeconds` — 应用运行时间
 - `pageConstantsInitialized` — 分页配置初始化状态
 
+## 代码质量审计修复记录（2026-08-05）
+
+### P1 高危修复
+1. **BaseResultCodeTest 枚举数量断言修复**：测试硬编码从 46 → 47（包含 SUCCESS 枚举值），防止新增枚举时 CI 失败
+2. **废弃 API 清理**：`BaseResponse.error()` 和 `error(String)` 内部从废弃常量 `ERROR` 改为 `UNKNOWN_CODE`
+3. **JavaDoc 格式修复**：`HeaderConstants` 中 `X_IDENTITY_TYPE` 和 `X_SERVICE_TYPE` 注释块格式问题修复
+
+### P2 优化改进
+1. **i18n 异常日志增强**：`SpringMessageResolver` 增加 DEBUG 级别异常日志，便于排查"为何消息未国际化"问题
+2. **集成测试 Docker 可用性前置检查**：`AbstractIntegrationTest` 增加 `isDockerAvailable()` 前置检查，本地无 Docker 时优雅降级而非硬失败
+3. **ProblemDetail 工厂方法统一**：`BaseResponse.error(Throwable, URI)` 内部改用 `ProblemDetail.of(resultCode, detail, instance)` 工厂方法，减少模板代码
+
+### P3 长期建议（待实施）
+- native-image 反射配置自动生成（使用 GraalVM Agent）
+- i18n 热加载能力
+- `extractResultCode()` 方法命名语义优化（→ `resolveResultCode()`）
+
 ## 版本特性速查
 
 | 版本 | 关键变更 |
 |---|---|
-| **v2.0.0** | 国际化入口统一；CursorResponse；RequestContext 元数据传播；ResultCode 业务域支持；健康检查增强 |
+| **v2.1.0** | 代码质量审计修复 P1+P2；废弃 API 清理；i18n 异常日志增强；集成测试 Docker 可用性检查 |
+| v2.0.0 | 国际化入口统一；CursorResponse；RequestContext 元数据传播；ResultCode 业务域支持；健康检查增强 |
 | v1.8.0 | 国际化逻辑抽取至 `MessageResolverHolder` |
 | v1.7.0 | `ContextKeys`、`CoreHealthIndicator`、`ProblemDetail` RFC 7807 |
 | v1.6.0 | `PageResponse.successWithNormalization()`、`PageConstants.normalizePageSizeWithResult()` |
