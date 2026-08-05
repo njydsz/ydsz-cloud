@@ -145,8 +145,11 @@ public final class AsmCodecCache {
     public static <T> AsmSerializer<T> getOrCreateSerializer(Class<T> beanType) {
         AsmSerializer<?> cached = SERIALIZER_CACHE.get(beanType);
         if (cached != null) {
+            recordSerializerHit();
             return castSerializer(cached);
         }
+
+        recordSerializerMiss();
 
         if (SERIALIZER_FAILED.containsKey(beanType)) {
             return null;
@@ -177,8 +180,11 @@ public final class AsmCodecCache {
     public static AsmSerializer<?> getOrCreateSerializerForType(Class<?> beanType) {
         AsmSerializer<?> cached = SERIALIZER_CACHE.get(beanType);
         if (cached != null) {
+            recordSerializerHit();
             return cached;
         }
+
+        recordSerializerMiss();
 
         if (SERIALIZER_FAILED.containsKey(beanType)) {
             return null;
@@ -259,8 +265,11 @@ public final class AsmCodecCache {
     public static <T> AsmDeserializer<T> getOrCreateDeserializer(Class<T> beanType) {
         AsmDeserializer<?> cached = DESERIALIZER_CACHE.get(beanType);
         if (cached != null) {
+            recordDeserializerHit();
             return castDeserializer(cached);
         }
+
+        recordDeserializerMiss();
 
         if (DESERIALIZER_FAILED.containsKey(beanType)) {
             return null;
@@ -290,8 +299,11 @@ public final class AsmCodecCache {
     public static AsmDeserializer<?> getOrCreateDeserializerForType(Class<?> beanType) {
         AsmDeserializer<?> cached = DESERIALIZER_CACHE.get(beanType);
         if (cached != null) {
+            recordDeserializerHit();
             return cached;
         }
+
+        recordDeserializerMiss();
 
         if (DESERIALIZER_FAILED.containsKey(beanType)) {
             return null;
@@ -348,31 +360,121 @@ public final class AsmCodecCache {
         DESERIALIZER_FAILED.clear();
     }
 
+    // ==================== 真实命中率计数 ====================
+
+    /** 序列化器缓存命中次数（使用 LongAdder 支持高并发无锁累加） */
+    private static final java.util.concurrent.atomic.LongAdder SERIALIZER_HITS =
+        new java.util.concurrent.atomic.LongAdder();
+
+    /** 序列化器缓存未命中次数 */
+    private static final java.util.concurrent.atomic.LongAdder SERIALIZER_MISSES =
+        new java.util.concurrent.atomic.LongAdder();
+
+    /** 反序列化器缓存命中次数 */
+    private static final java.util.concurrent.atomic.LongAdder DESERIALIZER_HITS =
+        new java.util.concurrent.atomic.LongAdder();
+
+    /** 反序列化器缓存未命中次数 */
+    private static final java.util.concurrent.atomic.LongAdder DESERIALIZER_MISSES =
+        new java.util.concurrent.atomic.LongAdder();
+
+    /**
+     * 记录序列化器缓存命中。
+     * 在 {@link #getOrCreateSerializer} 命中缓存时调用。
+     */
+    static void recordSerializerHit() {
+        SERIALIZER_HITS.increment();
+    }
+
+    /**
+     * 记录序列化器缓存未命中。
+     * 在 {@link #getOrCreateSerializer} 未命中缓存时调用。
+     */
+    static void recordSerializerMiss() {
+        SERIALIZER_MISSES.increment();
+    }
+
+    /**
+     * 记录反序列化器缓存命中。
+     */
+    static void recordDeserializerHit() {
+        DESERIALIZER_HITS.increment();
+    }
+
+    /**
+     * 记录反序列化器缓存未命中。
+     */
+    static void recordDeserializerMiss() {
+        DESERIALIZER_MISSES.increment();
+    }
+
     /**
      * 返回缓存统计快照。
      *
-     * <p>命中率基于当前缓存条目相对最大容量的饱和度估算（饱和度越高，
-     * 缓存越成熟，命中率潜在越高），仅为参考指标。如需精确命中率，
-     * 可在 {@link LruSoftCache#get} 中增加原子计数器。</p>
+     * <p>提供真实的 hit/miss 计数和精确的命中率计算，替代原来基于饱和度的估算方式。</p>
      *
-     * @return 缓存统计（serializer/deserializer 各自缓存的当前大小与估算命中率）
+     * @return 缓存统计（包含条目数、命中数、未命中数、真实命中率）
      */
     public static CacheStats getCacheStats() {
         int serSize = SERIALIZER_CACHE.size();
         int deserSize = DESERIALIZER_CACHE.size();
-        double serRate = Math.min(1.0, (double) serSize / DEFAULT_MAX_SIZE);
-        double deserRate = Math.min(1.0, (double) deserSize / DEFAULT_MAX_SIZE);
-        return new CacheStats(serSize, deserSize, (serRate + deserRate) / 2.0);
+        long serHits = SERIALIZER_HITS.sum();
+        long serMisses = SERIALIZER_MISSES.sum();
+        long deserHits = DESERIALIZER_HITS.sum();
+        long deserMisses = DESERIALIZER_MISSES.sum();
+
+        long serTotal = serHits + serMisses;
+        long deserTotal = deserHits + deserMisses;
+
+        double serHitRate = serTotal > 0 ? (double) serHits / serTotal : 0.0;
+        double deserHitRate = deserTotal > 0 ? (double) deserHits / deserTotal : 0.0;
+
+        return new CacheStats(
+            serSize, deserSize,
+            serHits, serMisses, deserHits, deserMisses,
+            serHitRate, deserHitRate
+        );
     }
 
     /**
-     * ASM 缓存统计。
+     * 重置所有命中率计数器（用于测试或统计周期清零）。
+     */
+    public static void resetHitCounters() {
+        SERIALIZER_HITS.reset();
+        SERIALIZER_MISSES.reset();
+        DESERIALIZER_HITS.reset();
+        DESERIALIZER_MISSES.reset();
+    }
+
+    /**
+     * ASM 缓存统计（包含真实命中率计数）。
      *
-     * @param serializerCount   序列化器缓存条目数
-     * @param deserializerCount 反序列化器缓存条目数
-     * @param estimatedHitRate  估算的整体命中率 (0.0 ~ 1.0)
+     * @param serializerCount      序列化器缓存条目数
+     * @param deserializerCount    反序列化器缓存条目数
+     * @param serializerHits       序列化器缓存命中次数
+     * @param serializerMisses     序列化器缓存未命中次数
+     * @param deserializerHits     反序列化器缓存命中次数
+     * @param deserializerMisses   反序列化器缓存未命中次数
+     * @param serializerHitRate    序列化器真实命中率 (0.0 ~ 1.0)
+     * @param deserializerHitRate  反序列化器真实命中率 (0.0 ~ 1.0)
      * @since 1.0.0
      */
-    public record CacheStats(int serializerCount, int deserializerCount, double estimatedHitRate) {
+    public record CacheStats(
+        int serializerCount,
+        int deserializerCount,
+        long serializerHits,
+        long serializerMisses,
+        long deserializerHits,
+        long deserializerMisses,
+        double serializerHitRate,
+        double deserializerHitRate
+    ) {
+        /**
+         * @deprecated 使用 {@link #serializerHitRate()} 或 {@link #deserializerHitRate()} 替代
+         */
+        @Deprecated
+        public double estimatedHitRate() {
+            return (serializerHitRate + deserializerHitRate) / 2.0;
+        }
     }
 }

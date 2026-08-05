@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 
 import com.remisoft.common.json.asm.AsmBeanCodecGenerator;
+import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.cache.BeanSerializerCache;
 import com.remisoft.common.json.cache.JsonCacheStats;
 
@@ -17,6 +18,9 @@ import com.remisoft.common.json.cache.JsonCacheStats;
  * <p><b>暴露指标：</b></p>
  * <ul>
  *   <li>{@code json.cache.serializer.size} - ASM 序列化器缓存大小</li>
+ *   <li>{@code json.cache.deserializer.size} - ASM 反序列化器缓存大小</li>
+ *   <li>{@code json.cache.serializer.hit_rate} - ASM 序列化器真实命中率 (0.0 ~ 1.0)</li>
+ *   <li>{@code json.cache.deserializer.hit_rate} - ASM 反序列化器真实命中率 (0.0 ~ 1.0)</li>
  *   <li>{@code json.cache.bean_serializer.size} - Bean 序列化器缓存大小</li>
  *   <li>{@code json.cache.asm.generated.count} - ASM 已生成类数量</li>
  *   <li>{@code json.cache.asm.level} - ASM 降级级别（0=ASM, 1=REFLECTION）</li>
@@ -49,6 +53,24 @@ public final class JsonCacheMetrics {
         Gauge.builder(METRIC_PREFIX + "serializer.size", () -> JsonCacheStats.getSerializerCacheSize())
                 .tags(tags)
                 .description("ASM serializer cache size")
+                .register(registry);
+
+        // ASM 反序列化器缓存大小
+        Gauge.builder(METRIC_PREFIX + "deserializer.size", () -> AsmCodecCache.getCacheStats().deserializerCount())
+                .tags(tags)
+                .description("ASM deserializer cache size")
+                .register(registry);
+
+        // ASM 序列化器真实命中率
+        Gauge.builder(METRIC_PREFIX + "serializer.hit_rate", () -> AsmCodecCache.getCacheStats().serializerHitRate())
+                .tags(tags)
+                .description("ASM serializer cache hit rate (0.0 ~ 1.0, based on real hit/miss counters)")
+                .register(registry);
+
+        // ASM 反序列化器真实命中率
+        Gauge.builder(METRIC_PREFIX + "deserializer.hit_rate", () -> AsmCodecCache.getCacheStats().deserializerHitRate())
+                .tags(tags)
+                .description("ASM deserializer cache hit rate (0.0 ~ 1.0, based on real hit/miss counters)")
                 .register(registry);
 
         // Bean 序列化器缓存大小

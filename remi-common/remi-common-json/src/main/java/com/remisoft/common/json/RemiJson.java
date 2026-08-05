@@ -749,7 +749,8 @@ public class RemiJson {
                 SerializationProvider.getAsmDowngradeCount(),
                 cacheStats.serializerCount(),
                 cacheStats.deserializerCount(),
-                cacheStats.estimatedHitRate(),
+                cacheStats.serializerHitRate(),
+                cacheStats.deserializerHitRate(),
                 config.getMaxDepth(),
                 config.getMaxGenericDepth(),
                 config.getMaxJsonSize(),
@@ -760,16 +761,17 @@ public class RemiJson {
     /**
      * RemiJson 运行时统计信息。
      *
-     * @param nativeImage       是否在 GraalVM Native Image 中运行
-     * @param asmAvailable      ASM 字节码生成是否可用
-     * @param asmDowngradeCount ASM 降级为反射的累计次数
-     * @param serializerCount   ASM 序列化器缓存条目数
-     * @param deserializerCount ASM 反序列化器缓存条目数
-     * @param asmCacheHitRate   ASM 缓存估算命中率 (0.0 ~ 1.0)
-     * @param maxDepth          当前最大 JSON 嵌套深度
-     * @param maxGenericDepth   当前泛型递归深度上限
-     * @param maxJsonSize       当前最大 JSON 大小限制（字节）
-     * @param safeMode          AutoType 安全模式是否开启
+     * @param nativeImage         是否在 GraalVM Native Image 中运行
+     * @param asmAvailable        ASM 字节码生成是否可用
+     * @param asmDowngradeCount   ASM 降级为反射的累计次数
+     * @param serializerCount     ASM 序列化器缓存条目数
+     * @param deserializerCount   ASM 反序列化器缓存条目数
+     * @param serializerHitRate   ASM 序列化器真实命中率 (0.0 ~ 1.0)
+     * @param deserializerHitRate ASM 反序列化器真实命中率 (0.0 ~ 1.0)
+     * @param maxDepth            当前最大 JSON 嵌套深度
+     * @param maxGenericDepth     当前泛型递归深度上限
+     * @param maxJsonSize         当前最大 JSON 大小限制（字节）
+     * @param safeMode            AutoType 安全模式是否开启
      * @since 1.0.0
      */
     public record JsonStats(
@@ -778,12 +780,21 @@ public class RemiJson {
             long asmDowngradeCount,
             int serializerCount,
             int deserializerCount,
-            double asmCacheHitRate,
+            double serializerHitRate,
+            double deserializerHitRate,
             int maxDepth,
             int maxGenericDepth,
             long maxJsonSize,
             boolean safeMode
     ) {
+        /**
+         * @deprecated 使用 {@link #serializerHitRate()} 或 {@link #deserializerHitRate()} 替代
+         */
+        @Deprecated
+        public double asmCacheHitRate() {
+            return (serializerHitRate + deserializerHitRate) / 2.0;
+        }
+
         @Override
         public String toString() {
             return "JsonStats{" +
@@ -792,7 +803,8 @@ public class RemiJson {
                     ", asmDowngradeCount=" + asmDowngradeCount +
                     ", serializerCount=" + serializerCount +
                     ", deserializerCount=" + deserializerCount +
-                    ", asmCacheHitRate=" + String.format("%.4f", asmCacheHitRate) +
+                    ", serializerHitRate=" + String.format("%.4f", serializerHitRate) +
+                    ", deserializerHitRate=" + String.format("%.4f", deserializerHitRate) +
                     ", maxDepth=" + maxDepth +
                     ", maxGenericDepth=" + maxGenericDepth +
                     ", maxJsonSize=" + maxJsonSize +
