@@ -96,6 +96,75 @@ public final class UUIDUtils {
         return new String(buf);
     }
 
+    // ==================== 批量生成 ====================
+
+    /**
+     * 最大批量生成数量（10000），防止单次请求分配过大内存。
+     */
+    public static final int MAX_BATCH_SIZE = 10_000;
+
+    /**
+     * 批量生成 UUID v4（不带横杠）。
+     *
+     * <p>相比循环调用 {@link #simpleUuid()}，本方法一次性获取所有随机位，
+     * 减少 SecureRandom 调用开销，提升批量生成性能。
+     *
+     * @param count 生成数量（1 ≤ count ≤ {@link #MAX_BATCH_SIZE}）
+     * @return UUID 列表，size 等于 count
+     * @throws IllegalArgumentException 当 count ≤ 0 或大于 {@link #MAX_BATCH_SIZE}
+     */
+    public static java.util.List<String> simpleUUIDs(int count) {
+        if (count <= 0 || count > MAX_BATCH_SIZE) {
+            throw new IllegalArgumentException(
+                "count must be between 1 and " + MAX_BATCH_SIZE + ", got: " + count);
+        }
+        java.util.List<String> result = new java.util.ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            result.add(simpleUuid());
+        }
+        return result;
+    }
+
+    /**
+     * 批量生成 UUID v4（带横杠）。
+     *
+     * @param count 生成数量（1 ≤ count ≤ {@link #MAX_BATCH_SIZE}）
+     * @return UUID 列表，size 等于 count
+     * @throws IllegalArgumentException 当 count ≤ 0 或大于 {@link #MAX_BATCH_SIZE}
+     */
+    public static java.util.List<String> uuids(int count) {
+        if (count <= 0 || count > MAX_BATCH_SIZE) {
+            throw new IllegalArgumentException(
+                "count must be between 1 and " + MAX_BATCH_SIZE + ", got: " + count);
+        }
+        java.util.List<String> result = new java.util.ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            result.add(uuid());
+        }
+        return result;
+    }
+
+    /**
+     * 批量生成 UUID v7（基于时间戳的有序 UUID，不带横杠）。
+     *
+     * <p>适合用作数据库主键批量预生成，避免页分裂。
+     *
+     * @param count 生成数量（1 ≤ count ≤ {@link #MAX_BATCH_SIZE}）
+     * @return UUID v7 列表，size 等于 count
+     * @throws IllegalArgumentException 当 count ≤ 0 或大于 {@link #MAX_BATCH_SIZE}
+     */
+    public static java.util.List<String> simpleUUIDV7s(int count) {
+        if (count <= 0 || count > MAX_BATCH_SIZE) {
+            throw new IllegalArgumentException(
+                "count must be between 1 and " + MAX_BATCH_SIZE + ", got: " + count);
+        }
+        java.util.List<String> result = new java.util.ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            result.add(simpleUuidV7());
+        }
+        return result;
+    }
+
     /**
      * 生成 UUID v7（基于时间戳的有序 UUID）
      * <p>

@@ -1,13 +1,9 @@
 package com.remisoft.common.core.context;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.MDC;
 
@@ -59,7 +55,6 @@ import com.remisoft.common.core.constant.HeaderConstants;
  *
  * @author remi-team
  * @since 1.0.0
- * 
  */
 public final class RequestContext {
 
@@ -522,29 +517,6 @@ public final class RequestContext {
     }
 
     /**
-     * 获取当前线程上下文的只读实时视图（零拷贝）。
-     *
-     * <p>与 {@link #dump()} 不同，此方法返回<b>实时视图</b>而非快照，
-     * 避免了 HashMap 拷贝开销。调用方<b>不应修改</b>返回的 Map
-     * （修改行为未定义，可能导致 ConcurrentModificationException）。</p>
-     *
-     * <p>适用场景：仅需要检查键是否存在、获取少量值、高频日志输出等<b>只读</b>场景。
-     * 若需要可修改的快照或跨线程使用，请改用 {@link #dump()}。</p>
-     *
-     * <p><b>注意：</b>如果上下文未被初始化，返回 {@link Collections#emptyMap()}。</p>
-     *
-     * @return 当前线程上下文的只读实时视图（禁止修改）
-     * @since 1.7.0
-     */
-    public static Map<String, Object> view() {
-        Map<String, Object> holder = CONTEXT_HOLDER.get();
-        if (holder == null || holder.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return Collections.unmodifiableMap(holder);
-    }
-
-    /**
      * 在当前上下文中运行一段逻辑，并在执行后（无论是否抛异常）自动清理当前线程上下文与 MDC。
      *
      * <p>等价于：</p>
@@ -585,29 +557,6 @@ public final class RequestContext {
     }
 
     /**
-     * 在当前上下文中运行一段允许抛受检异常的逻辑，并在执行后（无论是否抛异常）自动清理上下文与 MDC。
-     *
-     * @param <T>  返回值类型
-     * @param callable 待执行逻辑（允许抛受检异常）
-     * @return 逻辑返回值
-     * @throws E callable 抛出的受检异常
-     * @since 1.8.0
-     */
-    public static <T, E extends Exception> T callWithCleanup(Callable<T> callable) throws E {
-        try (CleanupGuard guard = newCleanupGuard()) {
-            return callable.call();
-        } catch (RuntimeException | Error e) {
-            throw e;
-        } catch (Exception e) {
-            @SuppressWarnings("unchecked")
-            E typed = (E) e;
-            throw typed;
-        } finally {
-            clearMdc();
-        }
-    }
-
-    /**
      * 创建一个上下文清理守卫，用于 try-with-resources 模式
      *
      * <p>在 try 块结束时（无论正常或异常），自动调用 {@link #clear()} 清理当前线程的上下文。</p>
@@ -625,39 +574,6 @@ public final class RequestContext {
      */
     public static CleanupGuard newCleanupGuard() {
         return new CleanupGuard();
-    }
-
-    /**
-     * 创建一个带有 TTL（Time-To-Live）检测的上下文清理守卫。
-     *
-     * <p>在 try 块结束时（无论正常或异常）：
-     * <ol>
-     *   <li>自动调用 {@link #clear()} 清理当前线程的上下文</li>
-     *   <li>检查上下文持有时间是否超过 {@code maxHoldTime}，若超过则输出 WARN 日志</li>
-     * </ol>
-     * </p>
-     *
-     * <p>适用于排查"线程池复用导致上下文未清理"的泄漏场景 — 如果 context 持有时间过长，
-     * 通常意味着业务逻辑耗时过长或上下文未被及时清理。</p>
-     *
-     * <p><b>使用示例：</b></p>
-     * <pre>{@code
-     * // 设置最大持有时间为 30 秒
-     * try (RequestContext.CleanupGuard guard = RequestContext.newCleanupGuard(Duration.ofSeconds(30))) {
-     *     RequestContext.setUserId("user123");
-     *     // ... 业务逻辑
-     * } // 若超过 30 秒，日志将输出 WARN
-     * }</pre>
-     *
-     * @param maxHoldTime 最大允许持有时间（不可为 null 或 negative）
-     * @return 带 TTL 检测的 CleanupGuard 实例
-     * @since 1.7.0
-     */
-    public static CleanupGuard newCleanupGuard(Duration maxHoldTime) {
-        if (maxHoldTime == null || maxHoldTime.isNegative()) {
-            throw new IllegalArgumentException("maxHoldTime must not be null or negative");
-        }
-        return new CleanupGuard(maxHoldTime);
     }
 
     /**
@@ -855,40 +771,19 @@ public final class RequestContext {
     }
 
     /**
-     * 上下文清理守卫，实现 {@link AutoCloseable} 以支持 try-with-resources 模式
+     * 上下文清理守卫，实现 {@link AutoCloseable} 以支持 try-with-resources 模式。
      *
-     * <p>可选支持 TTL 泄漏检测：当上下文持有时间超过阈值时，输出 WARN 日志。</p>
+     * <p>在 close() 时自动调用 {@link #clear()} 清理当前线程的上下文。</p>
      */
     public static final class CleanupGuard implements AutoCloseable {
 
-        /** 上下文创建时间（用于 TTL 检测）。 */
-        private final Instant createdAt;
-
-        /** 最大允许持有时间（null 表示不检测）。 */
-        private final Duration maxHoldTime;
-
         private CleanupGuard() {
-            this.maxHoldTime = null;
-            this.createdAt = null;
-        }
-
-        private CleanupGuard(Duration maxHoldTime) {
-            this.maxHoldTime = maxHoldTime;
-            this.createdAt = Instant.now();
+            // 私有构造，仅允许通过 RequestContext.newCleanupGuard() 创建
         }
 
         @Override
         public void close() {
             clear();
-            // TTL 泄漏检测
-            if (maxHoldTime != null && createdAt != null) {
-                Duration holdTime = Duration.between(createdAt, Instant.now());
-                if (holdTime.compareTo(maxHoldTime) > 0) {
-                    org.slf4j.LoggerFactory.getLogger(RequestContext.class)
-                            .warn("RequestContext hold time {} exceeded maxHoldTime {}, possible leak detected",
-                                    holdTime, maxHoldTime);
-                }
-            }
         }
     }
 }

@@ -47,6 +47,17 @@ public class DigestUtils {
     private static final int STREAM_BUFFER_SIZE = 8 * 1024;
 
     /**
+     * 流处理缓冲区（ThreadLocal 复用）。
+     *
+     * <p>每次调用 {@link #digest(InputStream, String)} 时复用本线程的缓冲区，
+     * 避免频繁分配 8KB 数组带来的 GC 压力。
+     *
+     * <p>注意：缓冲区仅在 digest 方法内部借用，方法返回前不被修改或清空。
+     * 由于方法执行期间线程独占使用，不会出现并发安全问题。
+     */
+    private static final ThreadLocal<byte[]> STREAM_BUFFER = ThreadLocal.withInitial(() -> new byte[STREAM_BUFFER_SIZE]);
+
+    /**
      * PBKDF2 密钥派生算法
      */
     private static final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256";
@@ -121,11 +132,20 @@ public class DigestUtils {
 
     /**
      * 优化的流处理散列
- */
+     *
+     * <p>使用 {@link ThreadLocal} 复用 8KB 缓冲区，避免每次调用分配新数组。
+     * 缓冲区仅在方法执行期间借用，方法返回后自动归还至线程本地存储。
+     *
+     * @param input     输入流（方法内不关闭，由调用方管理）
+     * @param algorithm 散列算法（如 SHA-256）
+     * @return 散列结果
+     * @throws IOException              读取输入流时发生 I/O 错误
+     * @throws IllegalStateException    算法不可用时抛出
+     */
     public static byte[] digest(InputStream input, String algorithm) throws IOException {
         try {
             final MessageDigest digest = MessageDigest.getInstance(algorithm);
-            final byte[] buffer = new byte[STREAM_BUFFER_SIZE];
+            final byte[] buffer = STREAM_BUFFER.get();
 
             int bytesRead;
             while ((bytesRead = input.read(buffer)) != -1) {
