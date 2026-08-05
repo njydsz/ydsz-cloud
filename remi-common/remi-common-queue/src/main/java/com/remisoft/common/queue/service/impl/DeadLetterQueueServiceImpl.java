@@ -108,7 +108,7 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
             return false;
         }
 
-        DeadLetterMessage dlqMessage = RemiJson.toObject(dlqMessageObj.toString(), DeadLetterMessage.class);
+        DeadLetterMessage dlqMessage = RemiJson.fromJson(dlqMessageObj.toString(), DeadLetterMessage.class);
         QueueMessage queueMessage = QueueMessage.fromPayload(dlqMessage.getMessageBody());
         if (queueMessage != null) {
             queueMessage.setRetryCount(currentRetryCount + 1);
@@ -166,7 +166,7 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
                 for (Map.Entry<Object, Object> entry : entries.entrySet()) {
                     String messageId = entry.getKey().toString();
                     try {
-                        DeadLetterMessage msg = RemiJson.toObject(entry.getValue().toString(), DeadLetterMessage.class);
+                        DeadLetterMessage msg = RemiJson.fromJson(entry.getValue().toString(), DeadLetterMessage.class);
                         if (msg != null && msg.getEnterTime() != null) {
                             LocalDateTime enterTime = LocalDateTime.parse(msg.getEnterTime(), formatter);
                             long ageMillis = now - enterTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();

@@ -132,7 +132,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         }
         Object payload = message.getPayload();
         if (payload instanceof String str) {
-            return RemiJson.toObject(str, MessageRequest.class);
+            return RemiJson.fromJson(str, MessageRequest.class);
         }
         try {
             return JsonMapper.getDefault().convertValue(payload, MessageRequest.class);

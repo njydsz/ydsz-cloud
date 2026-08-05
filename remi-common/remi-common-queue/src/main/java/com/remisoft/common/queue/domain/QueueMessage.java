@@ -252,7 +252,7 @@ public class QueueMessage implements Serializable {
                     "消息 payload 超过最大长度限制: " + payload.length() + " > " + MAX_PAYLOAD_LENGTH);
         }
         try {
-            QueueMessage message = RemiJson.toObject(payload, QueueMessage.class);
+            QueueMessage message = RemiJson.fromJson(payload, QueueMessage.class);
             // 反序列化返回 null 或 body 为 null（非 JSON 字符串被宽松解析）时，降级为以 payload 为 body
             if (message == null || message.getBody() == null) {
                 return QueueMessage.of(payload);

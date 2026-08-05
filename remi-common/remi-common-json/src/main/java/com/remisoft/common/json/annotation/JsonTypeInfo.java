@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * {"type":"dog","name":"Buddy","breed":"Labrador"}
  *
  * // 反序列化自动识别类型
- * Animal animal = RemiJson.toObject(json, Animal.class);
+ * Animal animal = RemiJson.fromJson(json, Animal.class);
  * // 返回 Dog 实例
  * </pre>
  *

@@ -120,7 +120,7 @@ public class AlipayMiniChannel implements MessageChannel {
             String respBody = resp.getBody();
 
             // 解析响应（支付宝返回 JSON）
-            Map<String, Object> result = RemiJson.toObject(respBody, new JsonType<Map<String, Object>>() {});
+            Map<String, Object> result = RemiJson.fromJson(respBody, new JsonType<Map<String, Object>>() {});
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
                 if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {

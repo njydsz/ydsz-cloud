@@ -254,7 +254,7 @@ import com.remisoft.common.json.RemiJson;
 String json = RemiJson.toJson(obj);
 
 // 反序列化
-User user = RemiJson.toObject(json, User.class);
+User user = RemiJson.fromJson(json, User.class);
 
 // Spring MVC Controller 自动使用 JsonHttpMessageConverter
 @RestController
@@ -302,7 +302,7 @@ import com.remisoft.common.json.RemiJson;
 String json = RemiJson.toJson(user);
 
 // 反序列化
-User user = RemiJson.toObject(json, User.class);
+User user = RemiJson.fromJson(json, User.class);
 
 // 树操作（Map 形式）
 Map<String, Object> root = RemiJson.parseMap(json);
@@ -312,7 +312,7 @@ String name = (String) root.get("name");
 RemiJson.toJson(obj, new StringWriter());
 
 // 从 InputStream 反序列化
-User user2 = RemiJson.toObject(inputStream, User.class);
+User user2 = RemiJson.fromJson(inputStream, User.class);
 
 // fromJson 别名（与 toJson 对称）
 User user3 = RemiJson.fromJson(json, User.class);

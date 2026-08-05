@@ -511,7 +511,7 @@ public final class ObjectNode extends JsonNode {
         if (node == null || node.isNull() || node.isMissing()) {
             return null;
         }
-        return RemiJson.toObject(node.toString(), clazz);
+        return RemiJson.fromJson(node.toString(), clazz);
     }
 
     /**

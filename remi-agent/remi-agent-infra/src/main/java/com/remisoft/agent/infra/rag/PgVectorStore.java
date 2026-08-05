@@ -136,7 +136,7 @@ public class PgVectorStore implements VectorStore {
                         Map<String, Object> metadata = new HashMap<>();
                         String metadataJson = rs.getString("metadata");
                         if (metadataJson != null && !metadataJson.isBlank()) {
-                            metadata = RemiJson.toObject(metadataJson, Map.class);
+                            metadata = RemiJson.fromJson(metadataJson, Map.class);
                         }
                         return new TextChunk(
                                 rs.getString("id"),

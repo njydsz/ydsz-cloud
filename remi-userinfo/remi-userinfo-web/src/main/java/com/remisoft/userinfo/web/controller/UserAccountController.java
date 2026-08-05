@@ -16,7 +16,6 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.userinfo.domain.dto.AssignRolesDTO;
 import com.remisoft.userinfo.domain.dto.ChangePasswordDTO;
@@ -86,11 +85,10 @@ public class UserAccountController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询用户列表")
-    public BaseResponse<PageResponse<List<UserAccountVO>>> page(@Valid UserAccountPageQueryDTO query) {
+    public BaseResponse<List<UserAccountVO>> page(@Valid UserAccountPageQueryDTO query) {
         Page<UserAccountVO> page = service.page(query);
-        PageResponse<List<UserAccountVO>> response = PageResponse.success(
+        return BaseResponse.successPage(
                 page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());
-        return BaseResponse.success(response);
     }
 
     /**

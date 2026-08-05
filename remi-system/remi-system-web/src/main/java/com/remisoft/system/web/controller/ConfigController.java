@@ -6,7 +6,6 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.domain.query.PageResult;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.safe.ratelimit.annotation.RateLimit;
@@ -73,12 +72,12 @@ public class ConfigController {
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
+    public BaseResponse<List<ConfigVO>> page(ConfigPageQuery query) {
         PageResult<ConfigVO> result = configService.page(query);
-        return PageResponse.success(
+        return BaseResponse.successPage(
                 result.getTotal(),
-                (long) result.getPageNum(),
-                (long) result.getPageSize(),
+                result.getPageNum(),
+                result.getPageSize(),
                 result.getRecords());
     }
 

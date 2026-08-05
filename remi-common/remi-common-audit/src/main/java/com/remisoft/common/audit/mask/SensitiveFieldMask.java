@@ -140,9 +140,9 @@ public final class SensitiveFieldMask {
             if (Collection.class.isAssignableFrom(clazz)) {
                 return RemiJson.parseArray(json, Object.class);
             } else if (Map.class.isAssignableFrom(clazz)) {
-                return RemiJson.toObject(json, HashMap.class);
+                return RemiJson.fromJson(json, HashMap.class);
             }
-            return RemiJson.toObject(json, (Class) clazz);
+            return RemiJson.fromJson(json, (Class) clazz);
         } catch (Exception e) {
             // 深拷贝失败时降级返回原对象
             log.debug("[SensitiveFieldMask] 深拷贝失败，降级返回原对象: {}", e.getMessage());

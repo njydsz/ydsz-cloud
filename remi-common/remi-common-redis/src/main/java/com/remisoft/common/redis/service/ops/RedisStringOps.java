@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -422,7 +422,7 @@ public class RedisStringOps {
         }
         try {
             String json = RemiJson.toJson(value);
-            return RemiJson.toObject(json, clazz);
+            return RemiJson.fromJson(json, clazz);
         } catch (Exception e) {
             log.error("【Redis】类型转换失败 | key={} | targetClass={} | error={}", key, clazz.getName(), e);
             return null;

@@ -116,7 +116,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         body = MessageCompressor.decompressIfNeeded(body);
         MessageRequest request;
         try {
-            request = RemiJson.toObject(body, MessageRequest.class);
+            request = RemiJson.fromJson(body, MessageRequest.class);
         } catch (Exception e) {
             log.error("[MessageConsumer] 解析失败: body={} err={}", body, e.getMessage(), e);
             return;

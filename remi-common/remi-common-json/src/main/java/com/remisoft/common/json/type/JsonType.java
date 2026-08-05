@@ -25,16 +25,16 @@ import java.lang.reflect.Type;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 传统方式（不安全）
- * List&lt;User&gt; users = (List&lt;User&gt;) RemiJson.toObject(json, List.class);
+ * List&lt;User&gt; users = (List&lt;User&gt;) RemiJson.fromJson(json, List.class);
  *
  * // 使用 JsonType（类型安全）
- * List&lt;User&gt; users = RemiJson.toObject(json, new JsonType&lt;List&lt;User&gt;&gt;() {});
+ * List&lt;User&gt; users = RemiJson.fromJson(json, new JsonType&lt;List&lt;User&gt;&gt;() {});
  *
  * // Map 泛型
- * Map&lt;String, User&gt; map = RemiJson.toObject(json, new JsonType&lt;Map&lt;String, User&gt;&gt;() {});
+ * Map&lt;String, User&gt; map = RemiJson.fromJson(json, new JsonType&lt;Map&lt;String, User&gt;&gt;() {});
  *
  * // 嵌套泛型
- * List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt; complex = RemiJson.toObject(json, new JsonType&lt;List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt;&gt;() {});
+ * List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt; complex = RemiJson.fromJson(json, new JsonType&lt;List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt;&gt;() {});
  * </pre>
  *
  * <p><b>实现原理：</b></p>

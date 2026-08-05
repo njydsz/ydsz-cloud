@@ -6,7 +6,6 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.domain.query.PageResult;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.safe.ratelimit.annotation.RateLimit;
@@ -86,12 +85,12 @@ public class LanguageController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询")
-    public PageResponse<List<LanguageVO>> page(LanguagePageQuery query) {
+    public BaseResponse<List<LanguageVO>> page(LanguagePageQuery query) {
         PageResult<LanguageVO> result = service.page(query);
-        return PageResponse.success(
+        return BaseResponse.successPage(
                 result.getTotal(),
-                (long) result.getPageNum(),
-                (long) result.getPageSize(),
+                result.getPageNum(),
+                result.getPageSize(),
                 result.getRecords());
     }
 

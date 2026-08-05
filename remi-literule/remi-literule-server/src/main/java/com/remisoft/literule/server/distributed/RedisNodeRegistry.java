@@ -91,7 +91,7 @@ public class RedisNodeRegistry implements NodeRegistry {
             RMap<String, String> map = redissonClient.getMap(NODES_KEY);
             String json = map.get(nodeId);
             if (json != null) {
-                ClusterNode node = RemiJson.toObject(json, ClusterNode.class);
+                ClusterNode node = RemiJson.fromJson(json, ClusterNode.class);
                 if (node != null) {
                     node.setLastHeartbeatAt(System.currentTimeMillis());
                     map.put(nodeId, RemiJson.toJson(node));

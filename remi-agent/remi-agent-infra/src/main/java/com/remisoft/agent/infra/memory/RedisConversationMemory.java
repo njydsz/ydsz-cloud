@@ -133,7 +133,7 @@ public class RedisConversationMemory implements ConversationMemory {
 
     private ChatMessage deserializeMessage(String json) {
         try {
-            SerializedMessage sm = RemiJson.toObject(json, SerializedMessage.class);
+            SerializedMessage sm = RemiJson.fromJson(json, SerializedMessage.class);
             MessageRole role = MessageRole.valueOf(sm.role);
             TokenUsage usage = null;
             if (sm.promptTokens > 0 || sm.completionTokens > 0) {

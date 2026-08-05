@@ -66,7 +66,7 @@ public class NullValueCacheHelper {
                 return null;
             }
             try {
-                return RemiJson.toObject(cached, clazz);
+                return RemiJson.fromJson(cached, clazz);
             } catch (Exception e) {
                 log.warn("【NullValueCacheHelper】反序列化失败，将回源加载 | key={} | targetClass={} | error={}",
                         key, clazz.getName(), e.getMessage());

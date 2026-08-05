@@ -21,7 +21,7 @@ public class TokenUsageDeserializer implements JsonDeserializer<TokenUsage> {
     @Override
     public TokenUsage deserialize(JSONReader in) {
         String raw = in.readRawValue();
-        Map<String, Object> m = RemiJson.toObject(raw, Map.class);
+        Map<String, Object> m = RemiJson.fromJson(raw, Map.class);
         int prompt = asInt(m.get("prompt_tokens"));
         int completion = asInt(m.get("completion_tokens"));
         return new TokenUsage(prompt, completion);

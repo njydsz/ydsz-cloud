@@ -69,7 +69,7 @@ import com.remisoft.common.util.string.StringUtils;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  * @see AuthColPermission
  * @see ColumnScopeInfo
  * @see ColumnScopeAware
@@ -237,7 +237,7 @@ public class AuthColPermissionAspect {
         // 使用 JsonMapper 序列化时排除字段 + 反序列化回原始类型
         try {
             String json = jsonMapper.toJsonExcludeFields(returnValue, excludedFields);
-            return RemiJson.toObject(json, returnValue.getClass());
+            return RemiJson.fromJson(json, returnValue.getClass());
         } catch (Exception e) {
             log.warn("列权限序列化过滤失败，降级到反射过滤: {}", e.getMessage());
             // 降级：仍然使用反射方式过滤

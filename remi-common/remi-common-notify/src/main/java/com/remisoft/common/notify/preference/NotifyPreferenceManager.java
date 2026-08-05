@@ -59,7 +59,7 @@ public class NotifyPreferenceManager {
 			try {
 				String json = redisTemplate.opsForValue().get(REDIS_KEY_PREFIX + userId);
 				if (json != null) {
-					NotifyPreference pref = RemiJson.toObject(json, NotifyPreference.class);
+					NotifyPreference pref = RemiJson.fromJson(json, NotifyPreference.class);
 					localCache.put(userId, pref);
 					return pref;
 				}

@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  * @see JsonEncoder
  */
 public class JsonDecoder implements Decoder {
@@ -144,7 +144,7 @@ public class JsonDecoder implements Decoder {
      */
     private Object decodeBody(String body, Type type, Response response) {
         try {
-            return RemiJson.toObject(body, type);
+            return RemiJson.fromJson(body, type);
         } catch (Exception e) {
             LOG.warn("JSON 解码失败, 类型: {}, 错误: {}", type, e.getMessage());
             throw new DecodeException(500, "JSON 解码失败: " + e.getMessage(), response.request(), e);

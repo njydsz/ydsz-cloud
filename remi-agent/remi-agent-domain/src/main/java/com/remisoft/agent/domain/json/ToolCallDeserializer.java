@@ -22,7 +22,7 @@ public class ToolCallDeserializer implements JsonDeserializer<ToolCall> {
     @SuppressWarnings("unchecked")
     public ToolCall deserialize(JSONReader in) {
         String raw = in.readRawValue();
-        Map<String, Object> m = RemiJson.toObject(raw, Map.class);
+        Map<String, Object> m = RemiJson.fromJson(raw, Map.class);
         String id = (String) m.get("id");
         Map<String, Object> function = m.get("function") instanceof Map
                 ? (Map<String, Object>) m.get("function") : null;
@@ -30,7 +30,7 @@ public class ToolCallDeserializer implements JsonDeserializer<ToolCall> {
         Object argsRaw = function != null ? function.get("arguments") : null;
         Map<String, Object> arguments;
         if (argsRaw instanceof String) {
-            arguments = RemiJson.toObject((String) argsRaw, Map.class);
+            arguments = RemiJson.fromJson((String) argsRaw, Map.class);
         } else if (argsRaw instanceof Map) {
             arguments = (Map<String, Object>) argsRaw;
         } else {

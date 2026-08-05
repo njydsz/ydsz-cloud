@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  */
 @Slf4j
 public class RedisMultipartContextStore implements MultipartContextStore {
@@ -84,7 +84,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
             if (json == null) {
                 return null;
             }
-            return RemiJson.toObject(json, MultipartContextData.class);
+            return RemiJson.fromJson(json, MultipartContextData.class);
         } catch (Exception e) {
             log.warn("[Storage] RedisMultipartContextStore get failed, uploadId={}, message={}",
                     uploadId, e.getMessage());
@@ -130,7 +130,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                     String json = values.get(i);
                     if (json != null) {
                         String uploadId = extractUploadId(keys.get(i));
-                        MultipartContextData context = RemiJson.toObject(json, MultipartContextData.class);
+                        MultipartContextData context = RemiJson.fromJson(json, MultipartContextData.class);
                         result.put(uploadId, context);
                     }
                 }
@@ -164,7 +164,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                 String json = values.get(i);
                 if (json != null) {
                     try {
-                        MultipartContextData context = RemiJson.toObject(json, MultipartContextData.class);
+                        MultipartContextData context = RemiJson.fromJson(json, MultipartContextData.class);
                         if (context != null && context.lastAccessTime() < cutoffTime) {
                             expiredKeys.add(keys.get(i));
                         }

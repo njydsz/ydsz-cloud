@@ -110,7 +110,7 @@ public class VariableSourceResolver {
                     + ":" + (context == null ? "" : context.hashCode());
             String cached = redisService.get(cacheKey, String.class);
             if (StringUtils.hasText(cached)) {
-                return RemiJson.toObject(cached, Object.class);
+                return RemiJson.fromJson(cached, Object.class);
             }
         }
 
@@ -195,7 +195,7 @@ public class VariableSourceResolver {
             RestClient client = RestClient.create();
             String body = client.get().uri(resolvedUrl).retrieve().body(String.class);
             if (StringUtils.hasText(body)) {
-                return RemiJson.toObject(body, Object.class);
+                return RemiJson.fromJson(body, Object.class);
             }
         } catch (Exception e) {
             log.warn("[VariableSource] HTTP 解析失败: url={} err={}", url, e.getMessage(), e);

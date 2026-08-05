@@ -469,7 +469,7 @@ public final class ArrayNode extends JsonNode {
         if (node.isMissing() || node.isNull()) {
             return null;
         }
-        return RemiJson.toObject(node.toString(), clazz);
+        return RemiJson.fromJson(node.toString(), clazz);
     }
 
     // ==================== List-like 查询 ====================

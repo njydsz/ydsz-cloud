@@ -95,7 +95,7 @@ public class RedisMessageTraceRecorder implements MessageTraceRecorder {
                 Object value = redisTemplate.opsForHash().get(hashKey, messageId);
                 if (value != null) {
                     try {
-                        MessageTrace trace = RemiJson.toObject(String.valueOf(value), MessageTrace.class);
+                        MessageTrace trace = RemiJson.fromJson(String.valueOf(value), MessageTrace.class);
                         if (trace != null) {
                             result.add(trace);
                         }
@@ -127,7 +127,7 @@ public class RedisMessageTraceRecorder implements MessageTraceRecorder {
             return entries.values().stream()
                     .map(v -> {
                         try {
-                            return RemiJson.toObject(String.valueOf(v), MessageTrace.class);
+                            return RemiJson.fromJson(String.valueOf(v), MessageTrace.class);
                         } catch (Exception e) {
                             log.warn("[MessageTrace] Redis 轨迹解析失败，traceId={}", traceId, e);
                             return null;

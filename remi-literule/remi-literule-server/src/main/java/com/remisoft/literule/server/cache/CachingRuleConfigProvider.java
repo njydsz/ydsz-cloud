@@ -289,7 +289,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
                         log.debug("[LiteRule-Cache] L2 命中 NULL 标记: {}", l2Key);
                         return L1_NULL_MARKER;
                     }
-                    RuleDefinition l2Value = RemiJson.toObject(json, RuleDefinition.class);
+                    RuleDefinition l2Value = RemiJson.fromJson(json, RuleDefinition.class);
                     if (l2Value != null) {
                         log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
                         return l2Value;

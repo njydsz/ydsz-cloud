@@ -62,7 +62,7 @@ public class RedisMessageRetryQueue implements MessageRetryQueue {
                 }
                 String json = tuple.getValue();
                 try {
-                    RetryableMessage msg = RemiJson.toObject(json, RetryableMessage.class);
+                    RetryableMessage msg = RemiJson.fromJson(json, RetryableMessage.class);
                     if (msg != null) {
                         expired.add(msg);
                         redisTemplate.opsForZSet().remove(RETRY_QUEUE_KEY, json);

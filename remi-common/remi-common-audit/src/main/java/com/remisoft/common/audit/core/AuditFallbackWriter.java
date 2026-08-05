@@ -145,7 +145,7 @@ public class AuditFallbackWriter {
                     .filter(line -> line != null && !line.trim().isEmpty())
                     .map(line -> {
                         try {
-                            return RemiJson.toObject(line.trim(), AuditLog.class);
+                            return RemiJson.fromJson(line.trim(), AuditLog.class);
                         } catch (Exception e) {
                             log.warn("【审计兜底】恢复日志行失败, file={}, error={}", file, e.getMessage());
                             return null;

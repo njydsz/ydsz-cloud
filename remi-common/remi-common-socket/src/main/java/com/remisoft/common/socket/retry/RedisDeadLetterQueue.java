@@ -55,7 +55,7 @@ public class RedisDeadLetterQueue implements DeadLetterQueue {
             List<RetryableMessage> result = new ArrayList<>(raw.size());
             for (String json : raw) {
                 try {
-                    result.add(RemiJson.toObject(json, RetryableMessage.class));
+                    result.add(RemiJson.fromJson(json, RetryableMessage.class));
                 } catch (Exception e) {
                     log.warn("[WS-DeadLetter] 死信解析失败: err={}", e.getMessage());
                 }

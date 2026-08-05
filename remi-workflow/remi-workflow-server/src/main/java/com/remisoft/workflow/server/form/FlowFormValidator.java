@@ -496,7 +496,7 @@ public class FlowFormValidator {
             return null;
         }
         try {
-            return RemiJson.toObject(json, FlowFormSchema.class);
+            return RemiJson.fromJson(json, FlowFormSchema.class);
         } catch (Exception e) {
             log.warn("[FormValidator] 解析表单 Schema 失败: {} err={}", json, e.getMessage());
             return null;

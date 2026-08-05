@@ -121,7 +121,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
     private void handleReceivedMessage(String msg) {
         if (msg == null || msg.isEmpty()) return;
         try {
-            BroadcastMessage message = RemiJson.toObject(msg, BroadcastMessage.class);
+            BroadcastMessage message = RemiJson.fromJson(msg, BroadcastMessage.class);
             if (message == null || message.getEvent() == null) {
                 return;
             }

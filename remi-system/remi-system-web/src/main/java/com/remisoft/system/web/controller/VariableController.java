@@ -21,7 +21,6 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.system.domain.dto.VariableDTO;
 import com.remisoft.system.domain.vo.VariableVO;
 import com.remisoft.system.server.service.VariableService;
@@ -81,13 +80,13 @@ public class VariableController {
      */
     @Operation(summary = "分页查询系统变量（支持搜索过滤）")
     @GetMapping("/page")
-    public PageResponse<List<VariableVO>> page(
+    public BaseResponse<List<VariableVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "变量键模糊搜索") @RequestParam(required = false) String variableKey,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         IPage<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
+        return BaseResponse.successPage(page.getTotal(), pageNum, pageSize, page.getRecords());
     }
 
     /**

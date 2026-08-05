@@ -167,7 +167,7 @@ public class DictItemServiceImpl implements DictItemService {
                     return null;
                 }
                 metrics.recordDictCacheHit();
-                return RemiJson.toObject(cached, DictItemVO.class);
+                return RemiJson.fromJson(cached, DictItemVO.class);
             }
             metrics.recordDictCacheMiss();
             DictItem entity = mapper.selectByTypeAndCode(typeCode, itemCode);

@@ -32,7 +32,7 @@ import com.remisoft.common.json.writer.JSONWriter;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  * @see SensitiveData
  * @see SensitiveType
  * @see SensitiveUtil
@@ -97,6 +97,6 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
      * @return 对象
      */
     public static <T> T deserialize(String json, Class<T> clazz) {
-        return RemiJson.toObject(json, clazz);
+        return RemiJson.fromJson(json, clazz);
     }
 }

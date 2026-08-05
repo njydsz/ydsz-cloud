@@ -108,7 +108,7 @@ public interface BatchRedisOperations {
             } else {
                     try {
                         String json = RemiJson.toJson(value);
-                        T converted = RemiJson.toObject(json, clazz);
+                        T converted = RemiJson.fromJson(json, clazz);
                         result.add(converted);
                     } catch (Exception e) {
                         log.error("mgetObjects JSON转换失败, key index: {}", result.size(), e);

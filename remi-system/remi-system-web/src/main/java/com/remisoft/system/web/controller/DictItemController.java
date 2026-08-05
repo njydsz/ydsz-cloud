@@ -21,7 +21,6 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.system.domain.dto.DictItemDTO;
 import com.remisoft.system.domain.vo.DictItemVO;
 import com.remisoft.system.server.service.DictItemService;
@@ -84,14 +83,14 @@ public class DictItemController {
      */
     @Operation(summary = "分页查询字典项（支持搜索过滤）")
     @GetMapping("/page")
-    public PageResponse<List<DictItemVO>> page(
+    public BaseResponse<List<DictItemVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "字典类型编码过滤") @RequestParam(required = false) String typeCode,
             @Parameter(description = "字典项编码模糊搜索") @RequestParam(required = false) String itemCode,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         IPage<DictItemVO> page = service.page(pageNum, pageSize, typeCode, itemCode, status);
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
+        return BaseResponse.successPage(page.getTotal(), pageNum, pageSize, page.getRecords());
     }
 
     /**

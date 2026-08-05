@@ -297,7 +297,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                 ObjectNode function = (ObjectNode) call.get("function");
                 String name = function.get("name").asText();
                 String argsStr = function.get("arguments").asText();
-                Map<String, Object> args = RemiJson.toObject(argsStr, Map.class);
+                Map<String, Object> args = RemiJson.fromJson(argsStr, Map.class);
                 toolCalls.add(new ToolCall(callId, name, args));
             }
         }

@@ -191,8 +191,8 @@ public class RuleAdminController {
         }
 
         try {
-            RuleDefinition oldDef = RemiJson.toObject(oldV.getDefinitionJson(), RuleDefinition.class);
-            RuleDefinition newDef = RemiJson.toObject(newV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition oldDef = RemiJson.fromJson(oldV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition newDef = RemiJson.fromJson(newV.getDefinitionJson(), RuleDefinition.class);
             RuleVersionDiffService diffService = new RuleVersionDiffService();
             return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(diffService.diff(oldDef, newDef)));
         } catch (Exception e) {

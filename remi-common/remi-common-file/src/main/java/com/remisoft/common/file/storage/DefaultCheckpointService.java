@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
  */
 @Slf4j
 public class DefaultCheckpointService implements CheckpointService {
@@ -79,7 +79,7 @@ public class DefaultCheckpointService implements CheckpointService {
         try {
             String json = checkpointStore.get(bucketName, objectName);
             if (json != null) {
-                return RemiJson.toObject(json, UploadCheckpoint.class);
+                return RemiJson.fromJson(json, UploadCheckpoint.class);
             }
         } catch (Exception e) {
             log.warn("[Storage] loadCheckpoint failed, bucket={}, object={}, message={}",

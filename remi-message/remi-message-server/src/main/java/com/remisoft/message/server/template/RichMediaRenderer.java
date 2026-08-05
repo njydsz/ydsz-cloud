@@ -51,7 +51,7 @@ public class RichMediaRenderer {
                 return (RichMediaContent) raw;
             }
             String json = raw instanceof String ? (String) raw : RemiJson.toJson(raw);
-            return RemiJson.toObject(json, RichMediaContent.class);
+            return RemiJson.fromJson(json, RichMediaContent.class);
         } catch (Exception e) {
             log.warn("[RichMediaRenderer] 解析富媒体内容失败: {}", e.getMessage(), e);
             return null;

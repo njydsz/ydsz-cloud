@@ -16,7 +16,6 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.userinfo.domain.dto.AssignPermissionsDTO;
 import com.remisoft.userinfo.domain.dto.RolePageQueryDTO;
@@ -88,10 +87,10 @@ public class RoleController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询角色列表")
-    public BaseResponse<PageResponse<List<RoleVO>>> page(@Valid RolePageQueryDTO query) {
+    public BaseResponse<List<RoleVO>> page(@Valid RolePageQueryDTO query) {
         Page<RoleVO> page = service.page(query);
-        return BaseResponse.success(PageResponse.success(
-                page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords()));
+        return BaseResponse.successPage(
+                page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());
     }
 
     /**

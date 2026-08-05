@@ -173,6 +173,6 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return RemiJson.toObject(json, type);
+        return RemiJson.fromJson(json, type);
     }
 }

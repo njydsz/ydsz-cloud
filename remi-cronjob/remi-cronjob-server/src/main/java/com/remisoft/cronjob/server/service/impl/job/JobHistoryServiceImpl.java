@@ -153,7 +153,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_history_version_not_found");
         }
         // 反序列化快照为 Job
-        Job snapshotJob = RemiJson.toObject(targetHistory.getSnapshot(), Job.class);
+        Job snapshotJob = RemiJson.fromJson(targetHistory.getSnapshot(), Job.class);
         // 查询当前任务（用于保留统计字段等）
         Job currentJob = jobMapper.selectById(jobId);
         if (currentJob == null) {
@@ -195,8 +195,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         if (h1 == null || h2 == null) {
             return Collections.emptyList();
         }
-        Job job1 = RemiJson.toObject(h1.getSnapshot(), Job.class);
-        Job job2 = RemiJson.toObject(h2.getSnapshot(), Job.class);
+        Job job1 = RemiJson.fromJson(h1.getSnapshot(), Job.class);
+        Job job2 = RemiJson.fromJson(h2.getSnapshot(), Job.class);
         return diffFields(job1, job2);
     }
 
