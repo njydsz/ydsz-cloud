@@ -372,7 +372,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      *
      * @param throwable 异常对象
      * @return 提取到的 ResultCode；无法提取时返回 null
-     * @since 1.7.0
+     * @since 2.1.0
      */
     static BaseResponse<ProblemDetail> unknownErrorResponse(String detail, URI instance) {
         return errorWithDetail(BaseResultCode.UNKNOWN, detail, instance);

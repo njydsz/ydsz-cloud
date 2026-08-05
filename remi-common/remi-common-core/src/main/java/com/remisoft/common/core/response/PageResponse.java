@@ -7,10 +7,15 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.remisoft.common.core.code.BaseResultCode;
+import com.remisoft.common.core.code.ResultCode;
 import com.remisoft.common.core.config.MessageResolverHolder;
+import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.core.constant.PageConstants;
+import com.remisoft.common.core.context.ProblemDetail;
 import com.remisoft.common.json.annotation.JsonInclude;
 import com.remisoft.common.json.annotation.JsonPropertyOrder;
+
+import java.net.URI;
 
 /**
  * 分页响应结果封装类
@@ -295,6 +300,107 @@ public class PageResponse<T> extends BaseResponse<T> {
      */
     public static <T> PageResponse<T> fail(String msg) {
         return fail(BaseResultCode.UNKNOWN.getCode(), msg);
+    }
+
+    // ============================== v2.1.0 新增错误响应方法 ==============================
+
+    /**
+     * 创建失败分页响应（使用 ResultCode）
+     *
+     * <p>与 {@link BaseResponse#error(ResultCode)} 对齐的分页特化版本。</p>
+     *
+     * @param resultCode 结果码
+     * @param <T>        数据类型
+     * @return 失败分页响应
+     * @since 2.1.0
+     * @see BaseResponse#error(ResultCode)
+     */
+    public static <T> PageResponse<T> error(ResultCode resultCode) {
+        return of(resultCode.getCode(),
+                MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()),
+                0L, 0L, 0L, null);
+    }
+
+    /**
+     * 创建失败分页响应（使用 ResultCode + 自定义消息）
+     *
+     * @param resultCode 结果码
+     * @param msg        自定义错误消息（覆盖 ResultCode 的默认消息）
+     * @param <T>        数据类型
+     * @return 失败分页响应
+     * @since 2.1.0
+     * @see BaseResponse#error(ResultCode, String)
+     */
+    public static <T> PageResponse<T> error(ResultCode resultCode, String msg) {
+        return of(resultCode.getCode(), msg, 0L, 0L, 0L, null);
+    }
+
+    /**
+     * 创建失败分页响应（使用错误码 + 消息）
+     *
+     * @param code 错误码
+     * @param msg  错误消息
+     * @param <T>  数据类型
+     * @return 失败分页响应
+     * @since 2.1.0
+     */
+    public static <T> PageResponse<T> error(String code, String msg) {
+        return of(code, msg, 0L, 0L, 0L, null);
+    }
+
+    /**
+     * 创建携带 RFC 7807 Problem Details 的失败分页响应
+     *
+     * <p>与 {@link BaseResponse#errorWithDetail(ResultCode, String)} 对齐的分页特化版本。</p>
+     *
+     * @param resultCode 结果码
+     * @param detail     错误详情
+     * @param <T>        数据类型
+     * @return 携带 ProblemDetail 的失败分页响应
+     * @since 2.1.0
+     * @see BaseResponse#errorWithDetail(ResultCode, String)
+     */
+    public static <T> PageResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail) {
+        ProblemDetail problem = ProblemDetail.of(resultCode, detail);
+        autoFillTraceIdFromMdc(problem);
+        return of(resultCode.getCode(),
+                MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()),
+                0L, 0L, 0L, problem);
+    }
+
+    /**
+     * 创建携带 RFC 7807 Problem Details 的失败分页响应（含请求路径）
+     *
+     * @param resultCode 结果码
+     * @param detail     错误详情
+     * @param instance   请求路径 URI
+     * @return 携带 ProblemDetail 的失败分页响应
+     * @since 2.1.0
+     * @see BaseResponse#errorWithDetail(ResultCode, String, URI)
+     */
+    public static <T> PageResponse<ProblemDetail> errorWithDetail(ResultCode resultCode, String detail, URI instance) {
+        ProblemDetail problem = ProblemDetail.of(resultCode, detail, instance);
+        autoFillTraceIdFromMdc(problem);
+        return of(resultCode.getCode(),
+                MessageResolverHolder.resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()),
+                0L, 0L, 0L, problem);
+    }
+
+    /**
+     * 从 MDC 中提取 traceId/requestId 并注入 ProblemDetail（与 BaseResponse 保持一致）
+     *
+     * @param problem 待注入的 ProblemDetail 实例
+     * @since 2.1.0
+     */
+    private static void autoFillTraceIdFromMdc(ProblemDetail problem) {
+        String traceId = org.slf4j.MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+        if (traceId != null && !traceId.isBlank()) {
+            problem.setTraceId(traceId);
+        }
+        String requestId = org.slf4j.MDC.get(HeaderConstants.MDC_REQUEST_ID_KEY);
+        if (requestId != null && !requestId.isBlank()) {
+            problem.setRequestId(requestId);
+        }
     }
 
     /**

@@ -789,16 +789,33 @@ public final class SerializationProvider {
 
         // 快速路径 1：Bean 类型直接使用 ASM 序列化器
         if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
-            try {
-                JSONWriter writer = ctx.fastWriterPool;
-                writer.reset();
-                if (AsmCodecCache.trySerialize(obj, writer)) {
-                    return writer;
-                }
-            } catch (Exception e) {
-                logAsmDowngrade(clazz, "serialization", e);
+            // 获取当前线程的命名策略
+            PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+            boolean isDefaultNaming = (strategy == null
+                || strategy == PropertyNamingStrategy.LOWER_CAMEL_CASE);
+
+            // 确保 SerializerCache 被填充（无论是否使用 ASM），
+            // 这样不同命名策略可以按 strategy 维度隔离缓存 FieldMeta[]
+            FieldMeta[] fields = SerializerCache.getFieldMeta(clazz, strategy);
+            if (fields == null) {
+                fields = FieldMetadataLoader.loadFields(clazz);
+                SerializerCache.putFieldMeta(clazz, strategy, fields);
             }
-            return null; // Bean 类型 ASM 失败，需回退到 StringBuilder 路径
+
+            // ASM 序列化器仅在生成时固化了 LOWER_CAMEL_CASE 命名字段名，
+            // 非默认命名策略必须回退到反射路径（tryBeanSerialize）以正确翻译字段名
+            if (isDefaultNaming) {
+                try {
+                    JSONWriter writer = ctx.fastWriterPool;
+                    writer.reset();
+                    if (AsmCodecCache.trySerialize(obj, writer)) {
+                        return writer;
+                    }
+                } catch (Exception e) {
+                    logAsmDowngrade(clazz, "serialization", e);
+                }
+            }
+            return null; // Bean 类型 ASM 失败或不使用 ASM，需回退到 StringBuilder 路径
         }
 
         // 快速路径 2：Collection 类型直接使用 JSONWriter
@@ -925,7 +942,7 @@ public final class SerializationProvider {
         writer.reset();
 
         BeanSerializer beanSerializer =
-            BeanSerializerCache.getOrCreate(clazz, fields);
+            BeanSerializerCache.getOrCreate(clazz, fields, strategy);
 
         beanSerializer.write(obj, writer);
         sb.append(writer.toString());

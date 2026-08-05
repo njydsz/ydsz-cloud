@@ -283,11 +283,11 @@ public final class RequestContext {
      * 清空当前线程的上下文和元数据。
      *
      * <p><b>重要：</b>必须在请求结束时调用此方法，防止 ThreadLocal 内存泄漏。
-     * 同时清理主上下文和 {@link #METADATA_HOLDER} 中的元数据。</p>
+     * 同时清理主上下文和 {@link RequestMetadata} 中的元数据。</p>
      */
     public static void clear() {
         CONTEXT_HOLDER.remove();
-        METADATA_HOLDER.remove();
+        RequestMetadata.clear();
     }
 
     /**
@@ -355,22 +355,15 @@ public final class RequestContext {
      * @param key   元数据键（不可为 null 或空）
      * @param value 元数据值（null 等同于移除该键）
      * @since 2.0.0
-     * @see #exportMetadata()
+     * @deprecated 自 2.1.0 起废弃，使用 {@link RequestMetadata#put(String, String)} 替代
+     * @see RequestMetadata#put(String, String)
      */
+    @Deprecated(since = "2.1.0")
     public static void putMetadata(String key, String value) {
         if (key == null || key.isEmpty()) {
             throw new IllegalArgumentException("metadata key must not be null or empty");
         }
-        if (value == null) {
-            removeMetadata(key);
-            return;
-        }
-        Map<String, String> holder = METADATA_HOLDER.get();
-        if (holder == null) {
-            holder = new HashMap<>(4);
-            METADATA_HOLDER.set(holder);
-        }
-        holder.put(key, value);
+        RequestMetadata.put(key, value);
     }
 
     /**
@@ -379,10 +372,11 @@ public final class RequestContext {
      * @param key 元数据键
      * @return 元数据值；不存在时返回 null
      * @since 2.0.0
+     * @deprecated 自 2.1.0 起废弃，使用 {@link RequestMetadata#get(String)} 替代
      */
+    @Deprecated(since = "2.1.0")
     public static String getMetadata(String key) {
-        Map<String, String> holder = METADATA_HOLDER.get();
-        return holder != null ? holder.get(key) : null;
+        return RequestMetadata.get(key);
     }
 
     /**
@@ -390,13 +384,11 @@ public final class RequestContext {
      *
      * @return 当前线程的元数据 Map；未初始化时返回空 Map
      * @since 2.0.0
+     * @deprecated 自 2.1.0 起废弃，使用 {@link RequestMetadata#export()} 替代
      */
+    @Deprecated(since = "2.1.0")
     public static Map<String, String> getMetadata() {
-        Map<String, String> holder = METADATA_HOLDER.get();
-        if (holder == null || holder.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return Collections.unmodifiableMap(holder);
+        return RequestMetadata.export();
     }
 
     /**
@@ -404,12 +396,12 @@ public final class RequestContext {
      *
      * @param key 元数据键
      * @since 2.0.0
+     * @deprecated 自 2.1.0 起废弃（无直接替代，因值为 String 类型时写入 null 即移除）
+     * @see RequestMetadata#put(String, String)
      */
+    @Deprecated(since = "2.1.0")
     public static void removeMetadata(String key) {
-        Map<String, String> holder = METADATA_HOLDER.get();
-        if (holder != null) {
-            holder.remove(key);
-        }
+        RequestMetadata.put(key, null);
     }
 
     /**
@@ -418,26 +410,14 @@ public final class RequestContext {
      * <p>用于下游 HTTP 调用时将元数据注入请求头（如 Feign 拦截器、RestTemplate 拦截器）。
      * 返回的 Map 是新的副本，修改不影响原 metadata。</p>
      *
-     * <p><b>使用示例（Feign 拦截器）：</b></p>
-     * <pre>{@code
-     * public class MetadataPropagationInterceptor implements RequestInterceptor {
-     *     @Override
-     *     public void apply(RequestTemplate template) {
-     *         RequestContext.exportMetadata().forEach(template::header);
-     *     }
-     * }
-     * }</pre>
-     *
      * @return 包含所有元数据的 Map；无元数据时返回空 Map
      * @since 2.0.0
-     * @see #putMetadata(String, String)
+     * @deprecated 自 2.1.0 起废弃，使用 {@link RequestMetadata#export()} 替代
+     * @see RequestMetadata#export()
      */
+    @Deprecated(since = "2.1.0")
     public static Map<String, String> exportMetadata() {
-        Map<String, String> holder = METADATA_HOLDER.get();
-        if (holder == null || holder.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return new HashMap<>(holder);
+        return RequestMetadata.export();
     }
 
     /**
@@ -446,32 +426,14 @@ public final class RequestContext {
      * <p>在请求入口（如网关、过滤器）调用，将上游传递的元数据导入当前线程，
      * 供下游处理和业务逻辑使用。</p>
      *
-     * <p><b>使用示例：</b></p>
-     * <pre>{@code
-     * // 在入口过滤器中注入上游元数据
-     * Enumeration<String> metadataHeaders = request.getHeaders("X-Metadata-");
-     * Map<String, String> imported = new HashMap<>();
-     * while (metadataHeaders.hasMoreElements()) {
-     *     String key = metadataHeaders.nextElement();
-     *     imported.put(key.substring("X-Metadata-".length()), request.getHeader(key));
-     * }
-     * RequestContext.importMetadata(imported);
-     * }</pre>
-     *
      * @param metadata 要导入的元数据 Map（可为 null 或空）
      * @since 2.0.0
-     * @see #exportMetadata()
+     * @deprecated 自 2.1.0 起废弃，使用 {@link RequestMetadata#importMetadata(Map)} 替代
+     * @see RequestMetadata#importMetadata(Map)
      */
+    @Deprecated(since = "2.1.0")
     public static void importMetadata(Map<String, String> metadata) {
-        if (metadata == null || metadata.isEmpty()) {
-            return;
-        }
-        Map<String, String> holder = METADATA_HOLDER.get();
-        if (holder == null) {
-            holder = new HashMap<>(metadata.size());
-            METADATA_HOLDER.set(holder);
-        }
-        holder.putAll(metadata);
+        RequestMetadata.importMetadata(metadata);
     }
 
     /**

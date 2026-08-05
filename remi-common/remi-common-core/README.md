@@ -44,13 +44,34 @@ return BaseResponse.error(BaseResultCode.NOT_FOUND);
 | `response` | `IResponse`, `BaseResponse`, `PageResponse`, `CursorResponse` | 统一 API 响应模型 |
 | `response` | `MessageResolverHolder` | 国际化消息解析 SPI |
 | `code` | `ResultCode`, `BaseResultCode`, `IExceptionResultCode` | 结果码体系 |
-| `context` | `RequestContext`, `ContextKeys`, `ProblemDetail` | 请求上下文、RFC 7807 |
+| `adapter` | `ExceptionToResultCodeAdapter` | 异常 → 错误码响应适配器（v2.1.0 新增） |
+| `context` | `RequestContext`, `RequestMetadata`, `ProblemDetail` | 请求上下文、跨服务元数据、RFC 7807 |
 | `trace` | `TraceIdGenerator`, `TraceIdPropagation` | 链路追踪 |
 | `constant` | `HeaderConstants`, `PageConstants`, `SystemConstants` | 全局常量 |
 | `config` | `CoreAutoConfiguration`, `CoreProperties` | 自动配置与属性绑定 |
 | `metrics` | `CoreHealthIndicator` | 健康检查与诊断 |
 
 ## v2.0 关键变更
+
+### 异常响应统一适配器（v2.1.0 新增）
+- **新增** `ExceptionToResultCodeAdapter` 类，统一处理异常到错误码响应的桥接逻辑
+- `BaseResponse.error(Throwable)` / `error(Throwable, URI)` 内部委托给适配器，职责更清晰
+- 异常适配逻辑可独立复用和测试
+
+### 请求上下文职责拆分（v2.1.0 新增）
+- **新增** `RequestMetadata` 类，承载跨服务元数据传播能力
+- `RequestContext` 中的元数据方法（`putMetadata/getMetadata/exportMetadata/importMetadata`）标记为 `@Deprecated`，委托给 `RequestMetadata`
+- `RequestContext.clear()` 自动同步清理 `RequestMetadata`
+
+### PageResponse 能力补全（v2.1.0 新增）
+- **新增** `error(ResultCode)` / `error(ResultCode, String)` / `errorWithDetail(...)` 系列方法
+- API 与 `BaseResponse` 对齐，消除分页场景的能力缺失
+
+### 架构精简
+- **移除** `ContextKey<T>` / `ContextKeys` 类型安全键抽象与 `RequestContext.STRING_KEY` 双轨制（死代码清理）
+- **移除** `ResultCode.getDomain()` 默认方法（无业务实现类覆盖）
+- **废弃** `ProblemDetail.of(String, String, int, String)` 和 `ProblemDetail.of(URI, String, int, String)` 工厂方法（使用 Builder 替代）
+- **废弃** `BaseResponse.ERROR` 常量（使用 `UNKNOWN_CODE` 替代，标记 `forRemoval = true`）
 
 ### 国际化入口统一
 - **移除** `BaseResponse.setResolverIfAbsent()`、`BaseResponse.MessageResolver` 等废弃 API
@@ -70,18 +91,22 @@ CursorResponse<List<Item>> resp = CursorResponse.success(items, "next-cursor-tok
 // 获取下一页时使用 resp.getNextCursor()
 ```
 
-### RequestContext 元数据传播
-新增跨服务元数据传播能力：
+### RequestContext 与 RequestMetadata
+- **v2.1.0** 新增 `RequestMetadata` 类，承载跨服务元数据传播能力
+- 旧 API `RequestContext.putMetadata()`/`exportMetadata()` 等标记为 `@Deprecated`，委托给 `RequestMetadata`
+- 推荐使用 `RequestMetadata.put()`、`RequestMetadata.export()` 等新 API
+- `RequestContext.clear()` 自动同步清理 `RequestMetadata`
+
 ```java
-// 设置元数据（将透传到下游服务）
-RequestContext.putMetadata("appId", "app-001");
-RequestContext.putMetadata("businessLine", "retail");
+// 设置元数据（将透传到下游服务）- 新 API
+RequestMetadata.put("appId", "app-001");
+RequestMetadata.put("businessLine", "retail");
 
-// 导出为 HTTP 请求头
-Map<String, String> headers = RequestContext.exportMetadata();
+// 导出为 HTTP 请求头 - 新 API
+Map<String, String> headers = RequestMetadata.export();
 
-// 从上游请求导入
-RequestContext.importMetadata(importedMetadata);
+// 从上游请求导入 - 新 API
+RequestMetadata.importMetadata(importedMetadata);
 ```
 
 ### ProblemDetail 自动注入增强
@@ -129,10 +154,10 @@ public enum OrderResultCode implements ResultCode {
 
 | 版本 | 关键变更 |
 |---|---|
-| **v2.1.0** | 代码质量审计修复 P1+P2；废弃 API 清理；i18n 异常日志增强；集成测试 Docker 可用性检查 |
-| v2.0.0 | 国际化入口统一；CursorResponse；RequestContext 元数据传播；ResultCode 业务域支持；健康检查增强 |
+| **v2.1.0** | 异常适配器独立（ExceptionToResultCodeAdapter）；请求上下文职责拆分（RequestMetadata）；PageResponse 能力补全；架构精简（移除 ContextKey 双轨制、ResultCode.getDomain） |
+| v2.0.0 | 国际化入口统一；CursorResponse；RequestContext 元数据传播；健康检查增强 |
 | v1.8.0 | 国际化逻辑抽取至 `MessageResolverHolder` |
-| v1.7.0 | `ContextKeys`、`CoreHealthIndicator`、`ProblemDetail` RFC 7807 |
+| v1.7.0 | `CoreHealthIndicator`、`ProblemDetail` RFC 7807 |
 | v1.6.0 | `PageResponse.successWithNormalization()`、`PageConstants.normalizePageSizeWithResult()` |
 | v1.5.0 | `TraceIdGenerator` W3C Trace Context 支持 |
 

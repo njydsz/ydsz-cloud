@@ -193,7 +193,10 @@ public class ProblemDetail implements Serializable {
      * @param status HTTP 状态码
      * @param detail 错误详情
      * @return ProblemDetail 实例
+     * @deprecated 自 2.1.0 起废弃，使用 {@link #builder()} Builder 替代
+     * @since 1.1.0
      */
+    @Deprecated
     public static ProblemDetail of(String type, String title, int status, String detail) {
         return ProblemDetail.builder()
                 .type(type != null ? URI.create(type) : null)
@@ -212,7 +215,10 @@ public class ProblemDetail implements Serializable {
      * @param status HTTP 状态码
      * @param detail 错误详情
      * @return ProblemDetail 实例
+     * @deprecated 自 2.1.0 起废弃，使用 {@link #builder()} Builder 替代
+     * @since 1.1.0
      */
+    @Deprecated
     public static ProblemDetail of(URI type, String title, int status, String detail) {
         return ProblemDetail.builder()
                 .type(type)

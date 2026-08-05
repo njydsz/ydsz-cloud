@@ -278,7 +278,12 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(json, clazz));
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        try {
+            return recordDeserialize(() -> DeserializationProvider.deserialize(json, clazz));
+        } finally {
+            if (snapshot != null) restoreConfig(snapshot);
+        }
     }
 
     /**
@@ -294,7 +299,12 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(json, type));
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        try {
+            return recordDeserialize(() -> DeserializationProvider.deserialize(json, type));
+        } finally {
+            if (snapshot != null) restoreConfig(snapshot);
+        }
     }
 
     /**
@@ -310,7 +320,12 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(json, typeRef.getType()));
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        try {
+            return recordDeserialize(() -> DeserializationProvider.deserialize(json, typeRef.getType()));
+        } finally {
+            if (snapshot != null) restoreConfig(snapshot);
+        }
     }
 
     /**
@@ -434,17 +449,22 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> {
-            Object result = DeserializationProvider.deserialize(json, Map.class);
-            if (result instanceof Map<?, ?> map) {
-                Map<String, Object> typedMap = new LinkedHashMap<>(map.size());
-                for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    typedMap.put((String) entry.getKey(), entry.getValue());
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        try {
+            return recordDeserialize(() -> {
+                Object result = DeserializationProvider.deserialize(json, Map.class);
+                if (result instanceof Map<?, ?> map) {
+                    Map<String, Object> typedMap = new LinkedHashMap<>(map.size());
+                    for (Map.Entry<?, ?> entry : map.entrySet()) {
+                        typedMap.put((String) entry.getKey(), entry.getValue());
+                    }
+                    return typedMap;
                 }
-                return typedMap;
-            }
-            return new LinkedHashMap<String, Object>();
-        });
+                return new LinkedHashMap<String, Object>();
+            });
+        } finally {
+            if (snapshot != null) restoreConfig(snapshot);
+        }
     }
 
     /**
@@ -460,16 +480,21 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
-        Object result = DeserializationProvider.deserialize(json,
-            TypeFactory.getInstance().constructCollectionType(List.class, elementClass));
-        if (result instanceof List<?> list) {
-            // 优化：直接 unchecked cast 返回，消除 O(n) 拷贝
-            @SuppressWarnings("unchecked")
-            List<T> typedList = (List<T>) list;
-            return typedList;
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        try {
+            // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
+            Object result = DeserializationProvider.deserialize(json,
+                TypeFactory.getInstance().constructCollectionType(List.class, elementClass));
+            if (result instanceof List<?> list) {
+                // 优化：直接 unchecked cast 返回，消除 O(n) 拷贝
+                @SuppressWarnings("unchecked")
+                List<T> typedList = (List<T>) list;
+                return typedList;
+            }
+            return new ArrayList<>();
+        } finally {
+            if (snapshot != null) restoreConfig(snapshot);
         }
-        return new ArrayList<>();
     }
 
     // ==================== 树模型 API ====================
@@ -623,7 +648,12 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        return recordDeserialize(() -> DeserializationProvider.deserialize(json, type));
+        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        try {
+            return recordDeserialize(() -> DeserializationProvider.deserialize(json, type));
+        } finally {
+            if (snapshot != null) restoreConfig(snapshot);
+        }
     }
 
     /**
