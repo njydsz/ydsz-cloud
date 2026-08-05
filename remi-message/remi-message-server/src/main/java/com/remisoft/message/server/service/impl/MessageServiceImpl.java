@@ -373,24 +373,24 @@ public class MessageServiceImpl implements MessageService {
         // ⑥ 限流 + 频率
         if (!rateLimitService.tryAcquire(buildRateLimitKey(ctx.channel, ctx.bizType), 1)) {
             messageMetrics.recordSend(ctx.channel, "FAILED", 0);
-            throw new SysException(BaseResultCode.RATE_LIMIT, "发送限流，请稍后重试");
+            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS, "发送限流，请稍后重试");
         }
         if (!rateLimitService.checkSendLimit(ctx.channel, ctx.receiver, ctx.templateCode,
                 TenantContext.getTenantId(), request.getPriority())) {
             messageMetrics.recordSend(ctx.channel, "RATE_LIMITED", 0);
-            throw new SysException(BaseResultCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
+            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS, "多维度限流：receiver/template/tenant 超限");
         }
         if (StringUtils.hasText(ctx.receiver)
                 && !rateLimitService.checkFrequency(ctx.receiver, ctx.channel, ctx.bizType)) {
             messageMetrics.recordSend(ctx.channel, "FAILED", 0);
-            throw new SysException(BaseResultCode.RATE_LIMIT, "发送频率超限");
+            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS, "发送频率超限");
         }
 
         // ⑥-4 P2-20: Sender 配额管理
         String senderId = StringUtils.hasText(ctx.bizType) ? ctx.bizType : SystemConstants.SYSTEM_USER_ID;
         if (!senderQuotaService.checkQuota(senderId, ctx.channel)) {
             messageMetrics.recordSend(ctx.channel, "QUOTA_EXCEEDED", 0);
-            throw new SysException(BaseResultCode.RATE_LIMIT, "发送方配额已用尽: senderId=" + senderId);
+            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS, "发送方配额已用尽: senderId=" + senderId);
         }
         return ctx;
     }

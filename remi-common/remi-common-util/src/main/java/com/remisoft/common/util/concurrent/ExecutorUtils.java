@@ -52,6 +52,113 @@ public class ExecutorUtils {
         throw new UnsupportedOperationException("ExecutorUtils is a utility class and cannot be instantiated");
     }
 
+    // ==================== ThreadPoolBuilder ====================
+
+    /**
+     * 线程池构建器（Builder 模式），用于替代冗长的 {@code newCustomThreadPool} 调用。
+     *
+     * <p>提供 Fluent API 逐步配置线程池参数，未设置的参数使用默认值。
+     *
+     * <p>使用示例：
+     * <pre>{@code
+     * ThreadPoolExecutor pool = ExecutorUtils.builder()
+     *     .corePoolSize(10)
+     *     .maxPoolSize(20)
+     *     .queueCapacity(512)
+     *     .threadNamePrefix("my-biz")
+     *     .daemon(true)
+     *     .build();
+     * }</pre>
+     */
+    public static ThreadPoolBuilder builder() {
+        return new ThreadPoolBuilder();
+    }
+
+    /**
+     * 线程池构建器。
+     */
+    public static final class ThreadPoolBuilder {
+        private int corePoolSize = CPU_CORES;
+        private int maximumPoolSize = DEFAULT_MAX_POOL_SIZE;
+        private long keepAliveTime = 60L;
+        private TimeUnit unit = TimeUnit.SECONDS;
+        private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
+        private BlockingQueueType queueType = BlockingQueueType.LINKED;
+        private String threadNamePrefix;
+        private boolean daemon;
+        private RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();
+
+        private ThreadPoolBuilder() {
+        }
+
+        public ThreadPoolBuilder corePoolSize(int corePoolSize) {
+            this.corePoolSize = corePoolSize;
+            return this;
+        }
+
+        public ThreadPoolBuilder maxPoolSize(int maximumPoolSize) {
+            this.maximumPoolSize = maximumPoolSize;
+            return this;
+        }
+
+        public ThreadPoolBuilder keepAliveTime(long keepAliveTime, TimeUnit unit) {
+            this.keepAliveTime = keepAliveTime;
+            this.unit = unit;
+            return this;
+        }
+
+        public ThreadPoolBuilder queueCapacity(int queueCapacity) {
+            this.queueCapacity = queueCapacity;
+            return this;
+        }
+
+        public ThreadPoolBuilder queueType(BlockingQueueType queueType) {
+            this.queueType = queueType;
+            return this;
+        }
+
+        public ThreadPoolBuilder threadNamePrefix(String threadNamePrefix) {
+            this.threadNamePrefix = threadNamePrefix;
+            return this;
+        }
+
+        public ThreadPoolBuilder daemon(boolean daemon) {
+            this.daemon = daemon;
+            return this;
+        }
+
+        public ThreadPoolBuilder rejectedHandler(RejectedExecutionHandler handler) {
+            this.handler = handler;
+            return this;
+        }
+
+        public ThreadPoolExecutor build() {
+            ThreadFactory tf = createThreadFactory(threadNamePrefix, daemon);
+            BlockingQueue<Runnable> queue = createQueue(queueType, queueCapacity);
+            return new ThreadPoolExecutor(
+                    corePoolSize, maximumPoolSize,
+                    keepAliveTime, unit,
+                    queue, tf, handler
+            );
+        }
+
+        private static BlockingQueue<Runnable> createQueue(BlockingQueueType type, int capacity) {
+            return switch (type) {
+                case LINKED -> new LinkedBlockingQueue<>(capacity);
+                case ARRAY -> new ArrayBlockingQueue<>(capacity);
+                case SYNCHRONOUS -> new SynchronousQueue<>();
+                case PRIORITY -> new PriorityBlockingQueue<>(capacity);
+            };
+        }
+    }
+
+    /**
+     * 阻塞队列类型枚举。
+     */
+    public enum BlockingQueueType {
+        LINKED, ARRAY, SYNCHRONOUS, PRIORITY
+    }
+
     // ==================== 常规线程池 ====================
 
     /**

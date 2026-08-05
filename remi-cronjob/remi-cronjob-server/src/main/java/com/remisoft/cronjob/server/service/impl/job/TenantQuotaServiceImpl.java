@@ -82,7 +82,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentCount = countJobsByTenant(tenantId);
         if (currentCount >= maxJobs) {
-            throw new SysException(BaseResultCode.RATE_LIMIT,
+            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS,
                     "error.cronjob.msg_quota_jobs_exceeded",
                     tenantId, currentCount, maxJobs);
         }
@@ -104,7 +104,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentConcurrent = getConcurrentCount(tenantId);
         if (currentConcurrent >= maxConcurrent) {
-            throw new SysException(BaseResultCode.RATE_LIMIT,
+            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS,
                     "error.cronjob.msg_quota_concurrent_exceeded",
                     tenantId, currentConcurrent, maxConcurrent);
         }
@@ -126,7 +126,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentDaily = getDailyCount(tenantId);
         if (currentDaily >= maxDaily) {
-            throw new SysException(BaseResultCode.RATE_LIMIT,
+            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS,
                     "error.cronjob.msg_quota_daily_exceeded",
                     tenantId, currentDaily, maxDaily);
         }

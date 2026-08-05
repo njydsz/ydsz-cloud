@@ -457,7 +457,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                     exchange.getRequest().getURI().getPath());
         }
 
-        BaseResponse<Void> body = BaseResponse.error(BaseResultCode.RATE_LIMIT,
+        BaseResponse<Void> body = BaseResponse.error(BaseResultCode.TOO_MANY_REQUESTS,
                 "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
         byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);

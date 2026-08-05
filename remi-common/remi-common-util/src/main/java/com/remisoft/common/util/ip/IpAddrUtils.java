@@ -42,9 +42,9 @@ public class IpAddrUtils {
     // ==================== HTTP 请求 IP 解析（本类独有）====================
 
     /**
-     * HTTP 请求中获取客户端真实 IP 地址（基于可信代理白名单）。
+     * 从 HTTP 请求中获取客户端真实 IP 地址（基于可信代理白名单）。
      *
-     * <p>X-Forwarded-For 头部最右侧（最可信的代理）向左遍历，跳过所有属于
+     * <p>从 X-Forwarded-For 头部最右侧（最可信的代理）向左遍历，跳过所有属于
      * {@code trustedProxies} 的 IP，返回第一个非可信 IP 作为真实客户端 IP。
      * 这是 Spring Security {@code ForwardedHeaderFilter} 推荐的安全做法，
      * 可防止攻击者伪造 X-Forwarded-For 头绕过 IP 限制。
@@ -100,6 +100,40 @@ public class IpAddrUtils {
      * @return true 表示为未知 IP     */
     private static boolean isUnknown(String ip) {
         return StringUtils.isEmpty(ip) || UNKNOWN.equalsIgnoreCase(ip);
+    }
+
+    /**
+     * 从 HTTP 请求中获取客户端真实 IP 地址（使用 {@code ServletUtils} 配置的可信代理）。
+     *
+     * <p>便捷方法，等价于调用 {@code getIpAddrWithTrustedProxies(request, ...)} 并传入
+     * {@code ServletUtils} 中配置的可信代理集合。适用于标准 Web 应用场景。
+     *
+     * @param request HTTP 请求
+     * @return 客户端真实 IP；request 为 null 时返回 "unknown"
+     */
+    public static String getIpAddr(HttpServletRequest request) {
+        if (request == null) {
+            return UNKNOWN;
+        }
+        // 通过 ServletUtils.isTrustedProxy 判断 remoteAddr 是否可信
+        // 如果直连对端可信，则尝试从 X-Forwarded-For 解析真实 IP
+        String xff = request.getHeader("x-forwarded-for");
+        if (!isUnknown(xff) && com.remisoft.common.util.http.ServletUtils.isTrustedProxy(request)) {
+            // 取 XFF 中最左侧的 IP（原始客户端）
+            if (xff.indexOf(',') >= 0) {
+                String first = xff.split(",")[0].trim();
+                if (!isUnknown(first)) {
+                    return LOCALHOST_IPV6.equals(first) ? LOCALHOST_IPV4 : first;
+                }
+            } else {
+                String candidate = xff.trim();
+                if (!isUnknown(candidate)) {
+                    return LOCALHOST_IPV6.equals(candidate) ? LOCALHOST_IPV4 : candidate;
+                }
+            }
+        }
+        String ip = request.getRemoteAddr();
+        return LOCALHOST_IPV6.equals(ip) ? LOCALHOST_IPV4 : ip;
     }
 
     // ===================== 委托到 IpValidator（@Deprecated since 1.4.0）===========

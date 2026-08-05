@@ -497,13 +497,73 @@ public class MapUtils {
     }
 
     /**
-     * 将值转换为目标类型（支持常见类型间的互转）。
+     * 将 {@code Map<String, Object>} 转换为指定类型的 Java Bean（可指定日期格式）。
      *
-     * @param value     原始值
-     * @param paramType 目标参数类型
-     * @return 转换后的值，转换失败返回 null（调用方会跳过）
+     * <p>与 {@link #toBean(Map, Class)} 行为完全一致，仅日期解析使用传入的
+     * {@code dateFormatter} 代替默认的 {@code "yyyy-MM-dd HH:mm:ss"} 格式。
+     *
+     * @param map           源 Map，不可为 null
+     * @param targetClass   目标 Bean 类型，不可为 null
+     * @param dateFormatter 日期时间格式（用于 LocalDateTime / Date 字段的解析），不可为 null
+     * @param <T>           Bean 类型
+     * @return 填充后的 Bean 实例
+     * @throws IllegalArgumentException 入参为 null 时抛出
+     * @since 1.4.0
      */
-    private static Object convertValue(Object value, Class<?> paramType) {
+    public static <T> T toBean(Map<String, Object> map, Class<T> targetClass,
+                               java.time.format.DateTimeFormatter dateFormatter) {
+        if (map == null) {
+            throw new IllegalArgumentException("map cannot be null");
+        }
+        if (targetClass == null) {
+            throw new IllegalArgumentException("targetClass cannot be null");
+        }
+        if (dateFormatter == null) {
+            throw new IllegalArgumentException("dateFormatter cannot be null");
+        }
+
+        T bean = createInstance(targetClass);
+        if (map.isEmpty()) {
+            return bean;
+        }
+
+        Map<String, Method> setters = getCachedSetters(targetClass);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String fieldName = entry.getKey();
+            Object value = entry.getValue();
+            Method setter = setters.get(fieldName);
+            if (setter == null || value == null) {
+                continue;
+            }
+            Class<?> paramType = setter.getParameterTypes()[0];
+            Object converted = convertValue(value, paramType, dateFormatter);
+            if (converted != null) {
+                try {
+                    setter.invoke(bean, converted);
+                } catch (Exception e) {
+                    // 设置失败，跳过该字段
+                }
+            }
+        }
+        return bean;
+    }
+
+    /**
+     * 默认日期时间格式：{@code yyyy-MM-dd HH:mm:ss}
+     */
+    private static final java.time.format.DateTimeFormatter DEFAULT_DATE_FORMATTER =
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    /**
+     * 将值转换为目标类型（支持常见类型间的互转，使用指定日期格式）。
+     *
+     * @param value         原始值
+     * @param paramType     目标参数类型
+     * @param dateFormatter 日期时间格式
+     * @return 转换后的值，转换失败返回 null
+     */
+    private static Object convertValue(Object value, Class<?> paramType,
+                                       java.time.format.DateTimeFormatter dateFormatter) {
         if (paramType.isInstance(value)) {
             return value;
         }
@@ -548,7 +608,7 @@ public class MapUtils {
             }
             // 日期时间类型
             if (paramType == java.time.LocalDateTime.class) {
-                return java.time.LocalDateTime.parse(str, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                return java.time.LocalDateTime.parse(str, dateFormatter);
             }
             if (paramType == java.time.LocalDate.class) {
                 return java.time.LocalDate.parse(str);
@@ -560,8 +620,7 @@ public class MapUtils {
                 return java.time.Instant.parse(str);
             }
             if (paramType == java.util.Date.class) {
-                java.time.LocalDateTime ldt = java.time.LocalDateTime.parse(str,
-                        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.parse(str, dateFormatter);
                 return java.util.Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant());
             }
             // String
@@ -569,7 +628,6 @@ public class MapUtils {
                 return str;
             }
         } catch (Exception e) {
-            // 转换失败，返回 null
             return null;
         }
 
@@ -577,13 +635,24 @@ public class MapUtils {
         if (value instanceof Map<?, ?> nestedMap && !paramType.isInterface() && !Modifier.isAbstract(paramType.getModifiers())) {
             Map<String, Object> nestedStringMap = toStringObjectMap(nestedMap);
             try {
-                return toBean(nestedStringMap, paramType);
+                return toBean(nestedStringMap, paramType, dateFormatter);
             } catch (Exception e) {
                 return null;
             }
         }
 
         return null;
+    }
+
+    /**
+     * 将值转换为目标类型（使用默认日期格式 {@code yyyy-MM-dd HH:mm:ss}）。
+     *
+     * @param value     原始值
+     * @param paramType 目标参数类型
+     * @return 转换后的值，转换失败返回 null（调用方会跳过）
+     */
+    private static Object convertValue(Object value, Class<?> paramType) {
+        return convertValue(value, paramType, DEFAULT_DATE_FORMATTER);
     }
 
     /**
