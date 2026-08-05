@@ -1,6 +1,5 @@
 package com.remisoft.common.util.security;
 
-import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
@@ -230,11 +229,12 @@ public class AesUtils {
      * <p>实现委托给 {@link AesGcmCrypto}，消除重复的 GCM 加密逻辑。</p>
      *
      * @param content   明文内容
-     * @param hexAesKey Hex 格式的 AES 密钥
+     * @param hexAesKey Hex 格式的 AES 密钥（调用前会通过 {@link #validateKey(String)} 校验）
      * @return Base64 编码的密文
-     * @throws GeneralSecurityException 加密异常
+     * @throws IllegalArgumentException 密钥格式非法（非 32/48/64 个 Hex 字符或 null/空白）
+     * @throws IllegalStateException    加密算法不可用或 Encrypt 失败
      */
-    public static String encrypt(String content, String hexAesKey) throws GeneralSecurityException {
+    public static String encrypt(String content, String hexAesKey) {
         validateKey(hexAesKey);
         AesGcmCrypto crypto = getCrypto(hexAesKey);
         return crypto.encrypt(content);
@@ -251,9 +251,11 @@ public class AesUtils {
      * @param encryptedBase64 Base64 编码的密文
      * @param hexAesKey       Hex 格式的 AES 密钥
      * @return 解密后的明文
-     * @throws GeneralSecurityException 解密异常（含认证失败）
+     * @throws IllegalArgumentException    密钥格式非法（非 32/48/64 个 Hex 字符或 null/空白）
+     * @throws IllegalStateException       解密算法不可用或密文被篡改导致认证失败
+     * @throws IllegalArgumentException    密文格式非法（Base64 解码失败等）
      */
-    public static String decrypt(String encryptedBase64, String hexAesKey) throws GeneralSecurityException {
+    public static String decrypt(String encryptedBase64, String hexAesKey) {
         validateKey(hexAesKey);
         AesGcmCrypto crypto = getCrypto(hexAesKey);
         return crypto.decrypt(encryptedBase64);
