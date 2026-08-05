@@ -3,11 +3,14 @@ package com.remisoft.common.base.i18n;
 import java.util.Locale;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
+
+import com.remisoft.common.core.config.MessageResolverHolder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,5 +52,29 @@ public class I18nAutoConfiguration {
         source.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
         log.info("[I18nAutoConfiguration] MessageSource bean registered, basenames=i18n/messages");
         return source;
+    }
+
+    /**
+     * 注册 SpringMessageResolver 并绑定到框架统一的 MessageResolverHolder SPI。
+     *
+     * <p>将 Spring MessageSource 适配为框架的国际化消息解析器，
+     * 使响应消息（BaseResponse/PageResponse）支持 i18n。</p>
+     *
+     * <p>当 classpath 上存在 {@link MessageSource} 且容器中有对应 Bean 时生效。
+     * 采用一次性设置语义，确保解析器在应用生命周期内不可变。</p>
+     *
+     * @param messageSource Spring 消息源
+     * @return SpringMessageResolver 实例
+     * @since 2.1.0
+     */
+    @Bean
+    @ConditionalOnClass(MessageSource.class)
+    @ConditionalOnBean(MessageSource.class)
+    @ConditionalOnMissingBean(SpringMessageResolver.class)
+    public SpringMessageResolver springMessageResolver(MessageSource messageSource) {
+        SpringMessageResolver resolver = new SpringMessageResolver(messageSource);
+        MessageResolverHolder.setResolverIfAbsent(resolver);
+        log.info("[I18nAutoConfiguration] SpringMessageResolver registered, bound to MessageResolverHolder");
+        return resolver;
     }
 }
