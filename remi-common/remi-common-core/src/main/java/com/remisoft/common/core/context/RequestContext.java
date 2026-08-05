@@ -90,11 +90,20 @@ public final class RequestContext {
      * 避免仅读取上下文（如仅调用 {@link #getUserId()} 判断）时无谓分配 HashMap。
      * 初始容量 8，适配内置 6 个键的典型场景。</p>
      */
-    private static final ThreadLocal<Map<String, Object>> CONTEXT_HOLDER =
+    private static final TransmittableThreadLocal<Map<String, Object>> CONTEXT_HOLDER =
             new TransmittableThreadLocal<Map<String, Object>>() {
                 @Override
                 protected Map<String, Object> initialValue() {
                     return null; // 懒初始化：首次 put 时才创建
+                }
+
+                /**
+                 * 传播上下文到子线程时创建防御性拷贝，
+                 * 避免父线程与子线程共享同一 HashMap 导致并发修改异常。
+                 */
+                @Override
+                protected Map<String, Object> copy(Map<String, Object> parentValue) {
+                    return parentValue == null ? null : new HashMap<>(parentValue);
                 }
             };
 
@@ -401,25 +410,21 @@ public final class RequestContext {
     }
 
     /**
-     * 创建当前上下文的快照（不可变字符串 Map），用于跨线程传递。
+     * 创建当前上下文的快照（不可变 Map），用于跨线程传递。
      *
-     * <p>快照是<b>防御性拷贝</b>：对快照的修改不会影响当前线程上下文。
+     * <p>快照是<b>防御性拷贝</b>：保留原始值类型（如 Boolean、Long），
+     * 对快照的修改不会影响当前线程上下文。
      * 配合 {@link #restore(Map)} 实现在子线程中恢复上下文（如异步任务、事件发布）。</p>
      *
      * @return 上下文的不可变快照；上下文为空时返回空 Map
      * @since 1.8.0
      */
-    public static Map<String, String> snapshot() {
+    public static Map<String, Object> snapshot() {
         Map<String, Object> holder = CONTEXT_HOLDER.get();
         if (holder == null || holder.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<String, String> snapshot = new HashMap<>(holder.size());
-        for (Map.Entry<String, Object> entry : holder.entrySet()) {
-            Object value = entry.getValue();
-            snapshot.put(entry.getKey(), value == null ? null : value.toString());
-        }
-        return Collections.unmodifiableMap(snapshot);
+        return Collections.unmodifiableMap(new HashMap<>(holder));
     }
 
     /**
@@ -431,11 +436,11 @@ public final class RequestContext {
      * @param snapshot 通过 {@link #snapshot()} 获取的快照，可为 null（空操作）
      * @since 1.8.0
      */
-    public static void restore(Map<String, String> snapshot) {
+    public static void restore(Map<String, Object> snapshot) {
         if (snapshot == null || snapshot.isEmpty()) {
             return;
         }
-        for (Map.Entry<String, String> entry : snapshot.entrySet()) {
+        for (Map.Entry<String, Object> entry : snapshot.entrySet()) {
             if (entry.getValue() == null) {
                 remove(entry.getKey());
             } else {

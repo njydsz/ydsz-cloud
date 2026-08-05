@@ -718,15 +718,17 @@
             </plugin>
             <!--
                 SpotBugs 插件显式配置：覆盖父 POM 的 ${maven.multiModuleProjectDirectory} 变量解析。
-                父 POM 在 ydzs-common 聚合模块中构建时，${maven.multiModuleProjectDirectory}
-                会解析到 ydzs-common/ 目录而非 ydzs-backend/ 根目录，导致找不到 spotbugs-exclude.xml。
-                此处使用 ${project.basedir}/../ 显式回退到父目录，消除手动复制文件的耦合风险。
+                父 POM 在 remi-common 聚合模块中构建时，${maven.multiModuleProjectDirectory}
+                会解析到 remi-common/ 目录而非 remi-cloud/ 根目录，导致找不到 spotbugs-exclude.xml。
+                注意：不能使用 ${project.basedir}/../，因为对 remi-common-json 等嵌套子模块，
+                ${project.basedir} 为 remi-common/remi-common-json，其上级目录是 remi-common/ 而非根目录。
+                统一使用 ${maven.multiModuleProjectDirectory} 指向聚合根 remi-cloud/。
             -->
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <configuration>
-                    <excludeFilterFile>${project.basedir}/../spotbugs-exclude.xml</excludeFilterFile>
+                    <excludeFilterFile>${maven.multiModuleProjectDirectory}/spotbugs-exclude.xml</excludeFilterFile>
                 </configuration>
             </plugin>
         </plugins>

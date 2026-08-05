@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    SpotBugs 全局排除规则（项目级）
+    用法：mvn spotbugs:check / 构建 verify 阶段自动执行
+    注意：此文件必须位于聚合根目录（remi-cloud/），
+    所有子模块通过 ${maven.multiModuleProjectDirectory}/spotbugs-exclude.xml 引用。
+-->
+<FindBugsFilter
+        xmlns="https://github.com/spotbugs/filter/3.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/master/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- ==================== 忽略规则说明 ====================
+         1. 测试代码：不参与生产缺陷判定
+         2. 生成代码：Lombok / MapStruct / 字节码生成产物
+         3. 已知无害模式：日志输出、序列化、TOCTOU 等
+    ======================================================== -->
+
+    <!-- 测试代码全部排除 -->
+    <Match>
+        <Source name="~.*/src/test/.*"/>
+    </Match>
+
+    <!-- Lombok 生成代码（getter/setter/builder/构造器） -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP, EI_EXPOSE_REP2, NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+        <Or>
+            <Source name="~.*\$\$.*\.class"/>
+        </Or>
+    </Match>
+
+    <!-- 领域枚举 / 常量类：不参与缺陷判定 -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP, EI_EXPOSE_REP2"/>
+        <Or>
+            <Class name="~.*\.enums\..*"/>
+            <Class name="~.*\.constant\..*"/>
+        </Or>
+    </Match>
+
+    <!-- 日志输出：无安全问题 -->
+    <Match>
+        <Bug pattern="SLF4J_FORMAT_SHOULD_BE_CONST"/>
+    </Match>
+
+    <!-- 序列化 / 反序列化相关已知模式 -->
+    <Match>
+        <Bug pattern="SE_BAD_FIELD, SE_BAD_FIELD_STORE, SE_TRANSIENT_FIELD_NOT_RESTORED"/>
+    </Match>
+
+    <!-- equals/hashCode 误报（Lombok @EqualsAndHashCode 生成） -->
+    <Match>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS, HE_EQUALS_USE_HASHCODE"/>
+        <Source name="~.*\.class"/>
+    </Match>
+
+</FindBugsFilter>
