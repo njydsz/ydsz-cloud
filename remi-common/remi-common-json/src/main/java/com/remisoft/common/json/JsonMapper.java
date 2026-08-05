@@ -863,6 +863,44 @@ public class JsonMapper {
         }
 
         /**
+         * 从现有 JsonMapper 创建 Builder（创建修改版的便捷方式）。
+         *
+         * <p>新的 Builder 预填充源 Mapper 的全部配置，可在此基础上修改部分配置后
+         * {@code build()} 创建新 Mapper。这是 {@link JsonMapper#copy()} 的增强版，
+         * 支持"复制并修改"模式：</p>
+         * <pre>
+         * // 将全局 Mapper 复制并调整为 SNAKE_CASE 命名
+         * JsonMapper snakeMapper = JsonMapper.builder()
+         *     .from(defaultMapper)
+         *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+         *     .build();
+         * </pre>
+         *
+         * @param mapper 源 JsonMapper 实例（不可为 null）
+         * @return 预填充源 Mapper 配置的 Builder 实例
+         * @since 1.1.0
+         */
+        public Builder from(JsonMapper mapper) {
+            if (mapper == null) {
+                throw new IllegalArgumentException("Builder.from: mapper must not be null");
+            }
+            JsonConfig cfg = mapper.getConfig();
+            this.namingStrategy = cfg.getNamingStrategy();
+            this.circularReferenceStrategy = cfg.getCircularReferenceStrategy();
+            this.writeNulls = cfg.isWriteNulls();
+            this.dateFormat = cfg.getDateFormat();
+            this.serializeEnumUsingOrdinal = cfg.isSerializeEnumUsingOrdinal();
+            this.prettyPrint = cfg.isPrettyPrint();
+            this.failOnError = cfg.isFailOnError();
+            this.useBigDecimal = cfg.isUseBigDecimal();
+            this.wrapRootValue = cfg.isWrapRootValue();
+            this.maxJsonSize = cfg.getMaxJsonSize();
+            this.maxDepth = cfg.getMaxDepth();
+            this.maxGenericDepth = cfg.getMaxGenericDepth();
+            return this;
+        }
+
+        /**
          * 设置字段命名策略。
          *
          * @param strategy 命名策略（如 SNAKE_CASE / LOWER_CAMEL_CASE），不可为 {@code null}

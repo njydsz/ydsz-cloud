@@ -17,8 +17,10 @@ import com.remisoft.common.json.cache.JsonCacheStats;
  *
  * <p><b>暴露指标：</b></p>
  * <ul>
- *   <li>{@code json.cache.serializer.size} - ASM 序列化器缓存大小</li>
- *   <li>{@code json.cache.deserializer.size} - ASM 反序列化器缓存大小</li>
+ *   <li>{@code json.cache.serializer.l1_size} - ASM 序列化器 L1 (强引用) 缓存大小</li>
+ *   <li>{@code json.cache.serializer.l2_size} - ASM 序列化器 L2 (软引用) 缓存大小</li>
+ *   <li>{@code json.cache.deserializer.l1_size} - ASM 反序列化器 L1 (强引用) 缓存大小</li>
+ *   <li>{@code json.cache.deserializer.l2_size} - ASM 反序列化器 L2 (软引用) 缓存大小</li>
  *   <li>{@code json.cache.serializer.hit_rate} - ASM 序列化器真实命中率 (0.0 ~ 1.0)</li>
  *   <li>{@code json.cache.deserializer.hit_rate} - ASM 反序列化器真实命中率 (0.0 ~ 1.0)</li>
  *   <li>{@code json.cache.bean_serializer.size} - Bean 序列化器缓存大小</li>
@@ -49,16 +51,28 @@ public final class JsonCacheMetrics {
 
         Tags tags = Tags.empty();
 
-        // ASM 序列化器缓存大小
-        Gauge.builder(METRIC_PREFIX + "serializer.size", () -> JsonCacheStats.getSerializerCacheSize())
+        // ASM 序列化器 L1 (强引用) 缓存大小
+        Gauge.builder(METRIC_PREFIX + "serializer.l1_size", AsmCodecCache::serializerL1Size)
                 .tags(tags)
-                .description("ASM serializer cache size")
+                .description("ASM serializer L1 (strong ref) cache size")
                 .register(registry);
 
-        // ASM 反序列化器缓存大小
-        Gauge.builder(METRIC_PREFIX + "deserializer.size", () -> AsmCodecCache.getCacheStats().deserializerCount())
+        // ASM 序列化器 L2 (软引用) 缓存大小
+        Gauge.builder(METRIC_PREFIX + "serializer.l2_size", AsmCodecCache::serializerL2Size)
                 .tags(tags)
-                .description("ASM deserializer cache size")
+                .description("ASM serializer L2 (soft ref) cache size")
+                .register(registry);
+
+        // ASM 反序列化器 L1 (强引用) 缓存大小
+        Gauge.builder(METRIC_PREFIX + "deserializer.l1_size", AsmCodecCache::deserializerL1Size)
+                .tags(tags)
+                .description("ASM deserializer L1 (strong ref) cache size")
+                .register(registry);
+
+        // ASM 反序列化器 L2 (软引用) 缓存大小
+        Gauge.builder(METRIC_PREFIX + "deserializer.l2_size", AsmCodecCache::deserializerL2Size)
+                .tags(tags)
+                .description("ASM deserializer L2 (soft ref) cache size")
                 .register(registry);
 
         // ASM 序列化器真实命中率

@@ -1,10 +1,10 @@
 # remi-common-core
 
-> REMI 公共底座核心模块（L1 基础设施层）— 统一响应模型、结果码、请求上下文、TraceId 生成、常量定义、国际化消息、Spring Boot 自动配置
+> REMI 公共底座核心模块（L1 基础设施层）— 统一响应模型、结果码、请求上下文、链路追踪、分页协议、国际化、Spring Boot 自动配置
 
-`remi-common-core` 是整个 REMI 平台的基石模块，提供最基础且被所有上层模块依赖的核心能力：统一 API 响应封装、业务结果码定义、请求上下文传播、链路追踪 ID 生成、全局常量、国际化消息资源、Spring Boot 自动配置与 GraalVM native-image 支持。
+`remi-common-core` 是整个 REMI 平台的基石模块，提供最基础且被所有上层模块依赖的核心能力：统一 API 响应封装、RFC 9457 Problem Detail 错误模型、业务结果码定义、请求级上下文传播、多协议链路追踪、分页响应桥接、全局常量、国际化消息资源、Spring Boot 自动配置与 GraalVM native-image 支持。
 
-**当前版本**：`1.0.0-SNAPSHOT`
+**当前版本**：`1.8.0+`
 
 ---
 
@@ -14,9 +14,9 @@
 - [核心组件](#核心组件)
 - [数据结构](#数据结构)
 - [RequestContext](#requestcontext)
-- [TraceIdGenerator](#traceidgenerator)
-- [PageConstants](#pageconstants)
-- [HeaderConstants](#headerconstants)
+- [SpanContext / TraceIdGenerator](#spantracecontext)
+- [PageResponse](#pageresponse)
+- [Header Constants](#header-constants)
 - [国际化消息](#国际化消息)
 - [Spring Boot 自动配置](#spring-boot-自动配置)
 - [GraalVM native-image 支持](#graalvm-native-image-支持)
@@ -68,59 +68,101 @@ return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "邮箱格式不正�
 if (response.isSuccess()) { ... }
 ```
 
-### 3. 分页场景
+### 3. RFC 9457 Problem Detail
 
 ```java
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.ProblemDetail;
 
-// 标准分页响应
-PageResponse<List<User>> resp = PageResponse.success(total, pageNum, pageSize, users);
+// 简单构造
+return ProblemDetail.badRequest("参数错误");
 
-// 错误响应
-PageResponse<List<User>> err = PageResponse.error(
-    BaseResultCode.INTERNAL_ERROR.getCode(),
-    BaseResultCode.INTERNAL_ERROR.getMsg()
-);
+// 自定义构造
+ProblemDetail problem = ProblemDetail.ofStatus(429)
+    .type("https://docs.remisoft.com/problems/rate-limit")
+    .title("请求频率超限")
+    .detail("请在 60 秒后重试")
+    .instance("/api/users")
+    .code("RATE_LIMIT")
+    .messageKey("error.RATE_LIMIT")
+    .extension("retryAfter", 60)
+    .build();
 ```
 
-### 4. 请求上下文
+### 4. 分页场景
+
+```java
+import com.remi.common.core.response.PageResponse;
+import com.remisoft.common.core.response.IPageResult;
+
+// 方式 1：从 domain 层 PageResult 桥接
+PageResult<UserDO> domainPage = userService.pageQuery(query);
+return PageResponse.from(domainPage);
+
+// 方式 2：类型安全桥接
+PageResponse<UserVO> resp = PageResponse.fromIPage(domainPage, UserVO.class);
+
+// 方式 3：传统构造
+PageResponse<List<User>> resp = PageResponse.success(total, pageNum, pageSize, users);
+```
+
+### 5. 请求上下文
 
 ```java
 import com.remisoft.common.core.context.RequestContext;
 
-// 设置当前用户
+// 防御性执行（推荐 —— 自动清理）
+RequestContext.runWithCleanup(() -> {
+    chain.doFilter(request, response);
+});
+
+// 手动设置与清理
 RequestContext.setUserId("user-123");
 RequestContext.setTenantId("tenant-001");
 RequestContext.setTraceId("abc123...");
 RequestContext.setLanguage("zh-CN");
+RequestContext.setClientIp("192.168.1.1");
+RequestContext.setRequestSource("OPEN_API");
+RequestContext.setApiVersion("v2");
 
 // 读取当前用户
 String userId = RequestContext.getUserId();
 
-// 请求结束清理（必须在 finally 或拦截器中调用）
+// 跨线程快照/恢复
+Map<String, String> snapshot = RequestContext.snapshot();
+executor.submit(() -> {
+    RequestContext.restore(snapshot);
+    // 子线程中可读取完整上下文
+});
+
+// 清理（请求结束）
 RequestContext.clear();
 ```
 
-### 5. TraceId 生成
+### 6. 链路追踪 (SpanContext)
 
 ```java
-import com.remisoft.common.core.trace.TraceIdGenerator;
+import com.remisoft.common.core.trace.SpanContext;
 
-// 生成 32 位十六进制 TraceId
-String traceId = TraceIdGenerator.generateTraceId();
+// 创建根 Span
+SpanContext root = SpanContext.newRoot();
+// 传递给下游 HTTP 调用
+httpRequest.header("traceparent", root.toTraceparent());
 
-// 生成 16 位十六进制 SpanId
-String spanId = TraceIdGenerator.generateSpanId();
+// 创建子 Span
+SpanContext child = root.newChild();
 
-// 生成 W3C Trace Context traceparent header 值
-String traceparent = TraceIdGenerator.traceparentHeader(traceId, spanId);
-// 输出格式: 00-{32位 traceId}-{16 位 spanId}-01
+// 解析上游 W3C traceparent
+SpanContext fromUpstream = SpanContext.fromTraceparent(request.getHeader("traceparent"));
 
-// 一步生成新的 traceId+spanId 并组合为 traceparent
-String traceparent = TraceIdGenerator.newTraceparent();
+// 使用 B3 协议 (Zipkin)
+String b3 = root.toB3Single();          // "traceId-spanId-1"
+SpanContext fromB3 = SpanContext.fromB3Single(b3);
+
+// SkyWalking 兼容
+String sw = root.toSkyWalking();        // "traceId.0.0.1"
 ```
 
-### 6. 分页参数归一化
+### 7. 分页参数归一化
 
 ```java
 import com.remisoft.common.core.constant.PageConstants;
@@ -128,7 +170,7 @@ import com.remisoft.common.core.constant.PageConstants;
 // 归一化页码（<=1 视为第 1 页）
 int safePageNum = PageConstants.pageNum(pageNum);
 
-// 归一化页大小（1 ~ MAX_PAGE_SIZE=5000）
+// 归一化页大小（1 ~ MAX_PAGE_SIZE）
 int safePageSize = PageConstants.pageSize(pageSize);
 
 // 计算 LIMIT offset
@@ -142,13 +184,23 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | 包 | 类 | 职责 |
 |---|---|---|
 | `response` | `BaseResponse<T>` | 统一 API 响应封装（code/msg/data/timestamp），使用 `@JsonInclude(NON_NULL)` 控制空值序列化 |
-| `response` | `PageResponse<T>` | 分页响应，继承 BaseResponse，扩展 total/pageNum/pageSize/pages 字段 |
+| `response` | `PageResponse<T>` | 分页响应，继承 BaseResponse，扩展 total/pageNum/pageSize/pages 字段；新增 `from(IPageResult)` 桥接 |
+| `response` | `ProblemDetail` | RFC 9457 Problem Detail 错误模型，支持 Builder 构造与扩展属性 |
+| `response` | `IPageResult` | 分页结果解耦接口，让 domain 层 `PageResult` 可不依赖 core 模块 |
 | `code` | `BaseResultCode` | 系统通用结果码枚举（SUCCESS/BAD_REQUEST/NOT_FOUND 等），携带 code/msg/httpStatus 三元组 |
-| `context` | `RequestContext` | 请求级上下文（基于 TransmittableThreadLocal，线程池安全） |
-| `trace` | `TraceIdGenerator` | TraceId/SpanId 生成，支持 W3C Trace Context 格式 |
-| `constant` | `HeaderConstants` | 全局 HTTP 请求头常量定义（认证、数据权限、列权限、链路追踪、网络信息） |
+| `context` | `RequestContext` | 请求级上下文（基于 TransmittableThreadLocal，线程池安全）；新增 typed accessor、防御性清理、快照/恢复 |
+| `context` | `RequestContextData` | 上下文数据载体（immutable record），支持 withXxx() 派生方法 |
+| `trace` | `TraceIdGenerator` | TraceId/SpanId 纯函数式生成器 |
+| `trace` | `SpanContext` | Span 上下文四元组（traceId+spanId+traceFlags+traceState），提供 W3C/B3/SkyWalking 协议互转 |
 | `constant` | `PageConstants` | 分页常量与归一化工具方法 |
 | `constant` | `SystemConstants` | 系统级常量（系统用户 ID、默认租户、默认语言等） |
+| `constant.header` | `AuthHeaders` | HTTP 认证/身份 header 常量 |
+| `constant.header` | `TraceHeaders` | HTTP 链路追踪 header 常量（含 W3C） |
+| `constant.header` | `NetworkHeaders` | HTTP 网络信息 header 常量 |
+| `constant.header` | `DataScopeHeaders` | HTTP 数据权限 header 常量 |
+| `constant.header` | `ColumnPermissionHeaders` | HTTP 列级权限 header 常量 |
+| `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，提供 `corePageConfig`、`coreResponseConfig`、`coreMessageSource` 三个 Bean |
+| `config` | `CoreProperties` | 配置属性绑定（@ConfigurationProperties("remi.core")） |
 
 ---
 
@@ -158,7 +210,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 ```json
 {
-  "code": "A00000",
+  "code": "SUCCESS",
   "msg": "ok",
   "data": {},
   "timestamp": 1722873600000
@@ -166,8 +218,8 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 ```
 
 | 字段 | 类型 | 说明 |
-|---|---|
-| `code` | `String` | 业务响应码（成功统一为 `A00000`） |
+|---|---|---|
+| `code` | `String` | 业务响应码（成功统一为 `SUCCESS`） |
 | `msg` | `String` | 响应消息 |
 | `data` | `T` | 业务数据（可为 null，使用 `@JsonInclude(NON_NULL)` 控制序列化） |
 | `timestamp` | `Long` | 响应时间戳（毫秒） |
@@ -180,7 +232,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 ```json
 {
-  "code": "A00000",
+  "code": "SUCCESS",
   "msg": "ok",
   "data": [],
   "timestamp": 1722873600000,
@@ -192,13 +244,40 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 ```
 
 | 字段 | 类型 | 说明 |
-|---|---|
+|---|---|---|
 | `total` | `Long` | 总记录数 |
 | `pageNum` | `Long` | 当前页码 |
 | `pageSize` | `Long` | 每页大小 |
 | `pages` | `Long` | 总页数（由 total 和 pageSize 计算得出） |
 
 序列化顺序：`code` → `msg` → `data` → `timestamp` → `total` → `pageNum` → `pageSize` → `pages`。
+
+### ProblemDetail (RFC 9457)
+
+```json
+{
+  "type": "https://docs.remisoft.com/problems/bad-request",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "参数错误",
+  "instance": "/api/users",
+  "code": "BAD_REQUEST",
+  "messageKey": "error.BAD_REQUEST",
+  "timestamp": "2026-08-05T21:00:00"
+}
+```
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `type` | `URI` | 问题类型 URI（应指向可读文档） |
+| `title` | `String` | 简短、人类可读的问题摘要 |
+| `status` | `int` | HTTP 状态码 |
+| `detail` | `String` | 针对本次问题的特定解释 |
+| `instance` | `URI` | 标识问题发生位置的 URI |
+| `code` | `String` | 应用层错误码（扩展字段） |
+| `messageKey` | `String` | i18n 消息键（扩展字段） |
+| `timestamp` | `LocalDateTime` | 问题发生时间戳 |
+| `extensions` | `Map<String, Object>` | RFC 9457 标准扩展属性 |
 
 ### BaseResultCode
 
@@ -226,13 +305,11 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 **自定义结果码**：业务模块应自行实现结果码枚举，不应直接修改 `BaseResultCode`。
 
-**国际化支持**：每个枚举值可通过 `getMessageKey()` 获取 i18n key（格式为 `error.{ENUM_NAME}`），配合 `messages.properties` 使用。
-
 ---
 
 ## RequestContext
 
-基于 `TransmittableThreadLocal`（阿里 TTL）实现的请求级上下文容器，确保线程池异步场景下上下文自动传播。
+基于 `TransmittableThreadLocal`（阿里 TTL）实现的请求级上下文容器，**新增 typed accessor 与防御性封装**。
 
 ### 可用上下文项
 
@@ -244,167 +321,141 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `requestId` | `String` | 单次入口请求 ID |
 | `language` | `String` | 用户语言偏好（如 zh-CN、en-US） |
 | `tenantIsolationSkipped` | `boolean` | 是否跳过租户隔离 |
+| `clientIp` | `String` | 客户端 IP 地址 |
+| `requestSource` | `String` | 请求来源（INTERNAL / OPEN_API / WEB_HOOK） |
+| `apiVersion` | `String` | API 版本号 |
 
-### 实现细节
-
-- 使用 `TransmittableThreadLocal<Context>` 存储，内部 Context 为私有静态内部类
-- `ctl()` 方法采用懒初始化模式：首次 get 时创建 Context 实例
-- `clear()` 调用 `CTL.remove()` 彻底清理 ThreadLocal 值
-
-### 使用建议
-
-- **写入时机**：在登录鉴权拦截器/过滤器中设置
-- **清理时机**：在响应处理结束阶段统一调用 `RequestContext.clear()`
-- **安全提示**：`RequestContext.clear()` 必须调用，否则会造成内存泄漏和上下文污染
-
----
-
-## TraceIdGenerator
-
-高性能 TraceId 生成器，基于 `ThreadLocalRandom` + ThreadLocal 字节缓冲（避免频繁内存分配）。
-
-### 核心方法
-
-| 方法 | 输出长度 | 说明 |
-|---|---|
-| `generateTraceId()` | 32 位十六进制 | 生成随机 TraceId |
-| `generateSpanId()` | 16 位十六进制 | 生成随机 SpanId |
-| `traceparentHeader(traceId, spanId)` | — | 组合为 W3C traceparent 格式 |
-| `newTraceparent()` | — | 一步生成新 traceId+spanId 并组合 |
-
-### 实现细节
-
-- `TRACE_BUF`：16 字节（128 位随机数 → 32 位十六进制）
-- `SPAN_BUF`：8 字节（64 位随机数 → 16 位十六进制）
-- 使用 `java.util.HexFormat`（Java 17+）进行十六进制编码，相比传统 `String.format` 或手写循环性能更优
-
-### W3C Trace Context 格式
+### 防御性清理（推荐）
 
 ```java
-// traceparent 格式
-00-{32位traceId}-{16位spanId}-01
-// 示例
-00-1a2b3c4d5e6f7890abcdef1234567890-1a2b3c4d5e6f7890-01
+// 自动在 finally 中清理
+RequestContext.runWithCleanup(() -> {
+    chain.doFilter(request, response);
+});
+
+// 或返回结果的场景
+return RequestContext.supplyWithCleanup(() -> processRequest(req));
 ```
 
-### 对应 HTTP Header
-
-| 常量名 | Header 名称 | 说明 |
-|---|---|---|
-| `HeaderConstants.TRACE_ID_HEADER` | `X-Trace-Id` | 自定义 TraceId 透传 Header |
-| `HeaderConstants.W3C_TRACEPARENT` | `traceparent` | W3C 标准 traceparent |
-| `HeaderConstants.W3C_TRACESTATE` | `tracestate` | W3C 标准 tracestate |
-| `HeaderConstants.MDC_TRACE_ID_KEY` | — | MDC key：`traceId` |
-| `HeaderConstants.MDC_REQUEST_ID_KEY` | — | MDC key：`requestId` |
-
----
-
-## PageConstants
-
-分页参数常量与归一化工具：
+### 快照与恢复（跨线程）
 
 ```java
-// 常量
-PageConstants.DEFAULT_PAGE_NUM  // 1
-PageConstants.DEFAULT_PAGE_SIZE   // 20
-PageConstants.MAX_PAGE_SIZE       // 5000
+// 创建快照
+Map<String, String> snapshot = RequestContext.snapshot();
 
-// 工具方法
-PageConstants.pageNum(pageNum)     // 归一化页码
-PageConstants.pageSize(pageSize)   // 归一化页大小（1~5000）
-PageConstants.calcOffset(pageNum, pageSize) // 计算 LIMIT offset
+// 子线程中恢复
+executor.submit(() -> {
+    RequestContext.restore(snapshot);
+    // 子线程可读取完整上下文
+});
 ```
 
-### 配置覆盖
+### MDC 桥接
 
-分页参数可通过 `application.yml` 运行时覆盖（需启用 `remi.core` 自动配置）：
-
-```yaml
-remi:
-  core:
-    max-page-size: 2000       # ｜ 运行时最大每页记录数（1-5000）
-    default-page-size: 10       # 运行时默认每页记录数
+```java
+// 请求入口：桥接上下文到 SLF4J MDC
+RequestContext.bridgeToMdc();
+// 此后日志中自动包含 tenantId/userId/traceId/requestId
 ```
 
 ---
 
-## HeaderConstants
+## SpanTraceContext
 
-全局 HTTP 请求头常量定义类，按功能域分为以下组：
+### SpanContext 与多协议互转
 
-### 认证/身份
+`SpanContext` 是基于 record 的 immutable 数据结构，封装 W3C Trace Context 四元组：
 
-| 常量 | Header 名称 | 说明 |
-|---|---|---|
-| `X_ACCESS_TOKEN` | `X-Access-Token` | 登录访问令牌 |
-| `X_USER_LANGUAGE` | `X-User-Language` | 用户系统语言 |
-| `X_DISTINCT_ID` | `X-Distinct-Id` | 用户设备唯一标识 |
-| `X_IDENTITY_TYPE` | `X-Identity-Type` | 身份类型（公司用户/访客/remi用户） |
-| `X_SERVICE_TYPE` | `X-Service-Type` | 请求来源服务类型 |
-| `IDEMPOTENCY_KEY` | `X-Idempotency-Key` | 幂等键（参考 Stripe API 设计） |
+```java
+// 1. 创建根 Span
+SpanContext root = SpanContext.newRoot();                           // 已采样
+SpanContext notSampled = SpanContext.newRoot(false);                 // 未采样
 
-### 数据权限
+// 2. 生成子 Span
+SpanContext child = root.newChild();                                 // 同 traceId，新 spanId
 
-| 常量 | Header 名称 | 说明 |
+// 3. 序列化 / 反序列化（W3C）
+String traceparent = root.toTraceparent();                           // "00-{traceId}-{spanId}-01"
+SpanContext fromW3C = SpanContext.fromTraceparent(traceparent);
+
+// 4. 序列化 / 反序列化（B3 / Zipkin）
+String b3 = root.toB3Single();                                       // "traceId-spanId-1"
+SpanContext fromB3 = SpanContext.fromB3Single(b3);
+
+// 5. SkyWalking 兼容
+String sw = root.toSkyWalking();                                    // "traceId.0.0.1"
+
+// 6. 状态管理
+SpanContext extended = root.withTraceStateEntry("tdm", "trace:abc");
+String tracestate = extended.toTracestate();                         // "tdm=trace:abc"
+```
+
+### TraceIdGenerator 纯函数式 API
+
+```java
+String traceId = TraceIdGenerator.generateTraceId();     // 32 位十六进制
+String spanId  = TraceIdGenerator.generateSpanId();      // 16 位十六进制
+String traceparent = TraceIdGenerator.newTraceparent();  // W3C 采样
+String notSampled = TraceIdGenerator.newTraceparent(false); // W3C 未采样
+```
+
+> **性能说明**：TraceIdGenerator 已回退为纯函数式实现。现代 JVM (ZGC/Shenandoah) 的 TLAB 分配在 32 字节以内对象上几乎零成本，无需 ThreadLocal 缓冲池。
+
+---
+
+## PageResponse
+
+### from(IPageResult) 工厂方法
+
+新增 `PageResponse.from(IPageResult)` 方法，一行代码完成 domain → API 层的分页桥接：
+
+```java
+// domain 层（remi-common-domain / 业务模块）
+public record PageResult<T>(List<T> records, long total, int pageNum, int pageSize) implements IPageResult {}
+
+// API 层
+PageResult<UserDO> domainPage = userService.pageQuery(query);
+PageResponse<UserDO> resp = PageResponse.from(domainPage);
+```
+
+`IPageResult` 接口定义在 core 模块，无需反向依赖。
+
+---
+
+## Header Constants
+
+HTTP header 常量按功能域拆分至 `com.remisoft.common.core.constant.header` 包：
+
+| 类 | 功能域 |
 |---|---|
-| `X_DATA_SCOPE` | `X-Data-Scope` | 数据权限范围类型（tenant/group/company/dept/user/project/region） |
-| `X_TENANT_ID` | `X-Tenant-Id` | 租户 ID |
-| `X_UNIQUE_ID` | `X-Unique-Id` | 当前登录用户唯一标识 |
-| `X_COMPANY_IDS` | `X-Company-Ids` | 公司 ID 集合（CSV） |
-| `X_DEPT_IDS` | `X-Dept-Ids` | 部门 ID 集合（CSV） |
-| `X_PROJECT_IDS` | `X-Project-Ids` | 项目 ID 集合（CSV） |
-| `X_REGION_IDS` | `X-Region-Ids` | 区域 ID 集合（CSV） |
-| `X_CUSTOM_SQL_CONDITION` | `X-Custom-Sql-Condition` | 自定义 SQL 条件标识键 |
+| `AuthHeaders` | 认证/身份 (X-Access-Token、X-Idempotency-Key 等) |
+| `TraceHeaders` | 链路追踪 (X-Trace-Id、W3C Trace Context、MDC 键) |
+| `NetworkHeaders` | 网络信息 (X-Request-Source、X-Forwarded-For、User-Agent 等) |
+| `DataScopeHeaders` | 数据权限 (X-Tenant-Id、X-Data-Scope 等) |
+| `ColumnPermissionHeaders` | 列级权限 (X-Visible-Columns、X-Col-Permission-Sign 等) |
 
-### 列级权限
-
-| 常量 | Header 名称 | 说明 |
-|---|---|
-| `X_VISIBLE_COLUMNS` | `X-Visible-Columns` | 表级可见列规则 |
-| `X_EDITABLE_COLUMNS` | `X-Editable-Columns` | 表级可编辑列规则 |
-| `X_COL_PERMISSION_SIGN` | `X-Col-Permission-Sign` | 列权限数据签名（HMAC-SHA256） |
-
-列规则格式：`table:col1,col2;table2:col3,col4`
-
-### 链路追踪
-
-| 常量 | Header 名称 | 说明 |
-|---|---|---|
-| `TRACE_ID_HEADER` | `X-Trace-Id` | 请求追踪 ID |
-| `W3C_TRACEPARENT` | `traceparent` | W3C Trace Context |
-| `W3C_TRACESTATE` | `tracestate` | W3C Trace Context 供应商扩展 |
-| `MDC_TRACE_ID_KEY` | — | SLF4J MDC key：`traceId` |
-| `MDC_REQUEST_ID_KEY` | — | SLF4J MDC key：`requestId` |
-
-### 网络信息
-
-| 常量 | Header 名称 | 说明 |
-|---|---|---|
-| `X_REQUEST_SOURCE` | `X-Request-Source` | 请求来源渠道（PC Web/H5/APP/小程序） |
-| `X_FORWARDED_FOR` | `X-Forwarded-For` | 客户端真实 IP（单值透传） |
+> **向后兼容**：原 `HeaderConstants` 类仍可使用，所有常量已标记为 `@deprecated` 并转发到对应细粒度类。新代码应直接引用具体类。
 
 ---
 
 ## 国际化消息
 
-`remi-common-core` 提供了基础的国际化消息资源文件，位于 `src/main/resources/i18n/`：
+`remi-common-core` 仅维护 core 模块**自身使用**的结果码消息资源，位于 `src/main/resources/i18n/core/`：
 
-- `messages.properties` — 默认（英文）消息
-- `messages_zh_CN.properties` — 简体中文消息
+- `i18n/core/messages.properties` — 默认（英文）消息
+- `i18n/core/messages_zh_CN.properties` — 简体中文消息
+- `i18n/core/` — 新增 `problem.*` key，支持 RFC 9457 Problem Detail 的 `type`/`title` 字段
 
 ### 消息 key 覆盖范围
 
 | 分类 | Key 前缀 | 说明 |
 |---|---|---|
 | 通用响应 | `response.*` | 操作成功/失败通用消息 |
-| 结果码 | `error.{ENUM_NAME}` | 与 `BaseResultCode` 枚举一一对应 |
-| 数据库 | `error.DB_*` | 数据库相关错误消息 |
-| 认证授权 | `error.A2*` | 认证/授权相关错误消息 |
-| 第三方 | `error.THIRD_PARTY_*` | 第三方服务错误消息 |
-| 系统状态 | `error.SYSTEM_*` | 系统维护/功能禁用等 |
-| 基础设施 | `error.CACHE_*`, `error.MQ_*` | 缓存/消息队列错误消息 |
+| 结果码 | `error.{ENUM_NAME}` | 与 `BaseResultCode` 枚举一一对应（仅 SUCCESS/BAD_REQUEST/NOT_FOUND 等） |
+| RFC 9457 | `problem.{ENUM_NAME}` | 问题类型 URI 和 title（type / title） |
+| RFC 9457 (中文) | `problem.{ENUM_NAME}.type/.title` | 中文对应翻译 |
 
-> 注：`messages_zh_CN.properties` 的完整内容请直接查看资源文件。
+> **设计原则**：业务模块错误码（DB_*、CACHE_*、MQ_*、PASSWORD_* 等）已下放至对应模块的 i18n 文件。
 
 ---
 
@@ -418,35 +469,65 @@ remi:
 com.remisoft.common.core.config.CoreAutoConfiguration
 ```
 
-> 注意：当前源代码中 `CoreAutoConfiguration` 及对应的 `CoreProperties` 配置类尚未实装。上述配置注册入口文件已就位，实装后即可生效。
+### 注入的 Bean
+
+| Bean 名称 | 类型 | 说明 |
+|---|---|---|
+| `corePageConfig` | `CorePageConfig` | 分页参数配置（可注入使用 defaultPageNum / defaultPageSize / maxPageSize） |
+| `coreResponseConfig` | `CoreResponseConfig` | 响应全局配置（includeTimestamp / rfc9457Enabled / rfc9457TypeUriPrefix） |
+| `coreMessageSource` | `MessageSource` | Core 模块独立 i18n（basenames=`classpath:i18n/core/messages`，不与业务 i18n 冲突） |
 
 ### 可配置属性（`remi.core.*`）
 
 | 属性 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
-| `remi.core.enabled` | `Boolean` | `true` | 是否启用 Core 模块自动配置（i18n 解析器、分页配置同步、Micrometer 指标注册） |
-| `remi.core.max-page-size` | `Integer` | `1000` | 运行时最大每页记录数上限（1-5000） |
-| `remi.core.default-page-size` | `Integer` | `20` | 运行时默认每页记录数 |
-| `remi.core.tenant-mdc-filter-order` | `Integer` | `Integer.MIN_VALUE + 100` | 租户 MDC 过滤器注册顺序 |
+| `remi.core.enabled` | `Boolean` | `true` | 是否启用 Core 模块自动配置 |
+| `remi.core.page.default-page-size` | `Integer` | `20` | 运行时默认每页记录数 |
+| `remi.core.page.default-page-num` | `Integer` | `1` | 运行时默认页码 |
+| `remi.core.page.max-page-size` | `Integer` | `1000` | 运行时最大每页记录数 |
+| `remi.core.response.include-timestamp` | `Boolean` | `true` | 是否在响应体中自动包含 timestamp |
+| `remi.core.response.rfc9457.enabled` | `Boolean` | `false` | 是否启用 RFC 9457 响应格式 |
+| `remi.core.response.rfc9457.type-uri-prefix` | `String` | `https://docs.remisoft.com/problems` | RFC 9457 type URI 前缀 |
+| `remi.core.context.mdc.enabled` | `Boolean` | `true` | 是否启用 RequestContext 与 MDC 的自动桥接 |
+| `remi.core.context.mdc.tenant-id-key` | `String` | `tenantId` | MDC 中 tenantId 的键名 |
+| `remi.core.context.mdc.user-id-key` | `String` | `userId` | MDC 中 userId 的键名 |
+| `remi.core.context.mdc.trace-id-key` | `String` | `traceId` | MDC 中 traceId 的键名 |
+
+### 配置示例
+
+```yaml
+remi:
+  core:
+    page:
+      max-page-size: 500
+      default-page-size: 25
+    response:
+      rfc9457:
+        enabled: true
+        type-uri-prefix: https://api.remisoft.com/problems
+```
 
 ---
 
 ## GraalVM native-image 支持
 
-`remi-common-core` 提供了 native-image 配置，支持 GraalVM 原生编译。配置文件位于：
+`remi-common-core` 提供了 native-image 反射配置。配置文件位于：
 
 ```
-META-INF/native-image/com.remisoft/remi-common-core/native-image.properties```
+META-INF/native-image/com.remisoft/remi-common-core/native-image.properties
+```
 
 ### 反射配置覆盖
 
 | 类 | 说明 |
 |---|---|
-| `BaseResponse` | 统一响应体（含无参构造、带参构造、code/msg/data/traceId/timestamp 字段）|
-| `PageResponse` | 分页响应体（含无参构造、全参构造、total/pageNum/pageSize/pages 字段）|
-| `ProblemDetail` | RFC 9457 Problem Details 模型（保留，当前源代码中未实装） |
+| `BaseResponse` | 统一响应体（code/msg/data/timestamp）|
+| `PageResponse` | 分页响应体（total/pageNum/pageSize/pages）|
+| `ProblemDetail` | RFC 9457 Problem Details 模型 |
 | `CoreProperties` | 核心配置属性类 |
-| `StringConcatFactory` | 兼容 native-image 下的字符串拼接 |
+| `CoreAutoConfiguration` | Spring Boot 自动配置入口 |
+| `CoreAutoConfiguration$CorePageConfig` | 分页配置 record |
+| `CoreAutoConfiguration$CoreResponseConfig` | 响应配置 record |
 
 ### 资源模式
 
@@ -456,6 +537,7 @@ META-INF/native-image/com.remisoft/remi-common-core/native-image.properties```
 | `META-INF/.*\.yml$` | 加载所有 yml 资源 |
 | `META-INF/.*\.json$` | 加载所有 json 资源 |
 | `META-INF/spring/.*$` | 加载 Spring 配置资源 |
+| `i18n/.*$` | 加载国际化资源 |
 
 ---
 
@@ -506,8 +588,8 @@ META-INF/native-image/com.remisoft/remi-common-core/native-image.properties```
 | 依赖 | 范围 | 用途 |
 |---|---|---|
 | `lombok` | provided | `@Data`、`@SuperBuilder`、`@NoArgsConstructor`、`@AllArgsConstructor` |
-| `slf4j-api` | compile | 日志门面（预留，当前模块无日志输出） |
-| `remi-common-json` | compile | 提供 `@JsonInclude`、`@JsonPropertyOrder` 注解，统一 JSON 序列化行为 |
+| `slf4j-api` | compile | 日志门面 |
+| `remi-common-json` | compile | 提供 `@JsonInclude`、`@JsonPropertyOrder` 注解 |
 | `transmittable-thread-local` | compile | 阿里 TTL，实现线程池上下文自动传播 |
 | `spring-boot-starter-test` | test | 单元测试框架 |
 
@@ -524,19 +606,22 @@ META-INF/native-image/com.remisoft/remi-common-core/native-image.properties```
 | 数据权限拦截 | `remi-common-jdbc` |
 | JSON 序列化 | `remi-common-json` |
 | 国际化扩展 | `remi-common-app` |
+| 分页领域模型 | `remi-common-domain` |
 
 ---
 
 ## 注意事项
 
-1. **RequestContext 必须显式清理**：请求结束必须调用 `clear()`，建议通过过滤器的 finally 块统一管理，否则会造成内存泄漏和上下文污染。
+1. **RequestContext 必须显式清理**：推荐使用 `RequestContext.runWithCleanup()` / `supplyWithCleanup()` / `callWithCleanup()`，它们会在 finally 中自动调用 `clear()`，防止内存泄漏和上下文污染。
 
 2. **业务模块自定义结果码**：不应直接修改 `BaseResultCode`，应在各自模块定义独立枚举，遵循码段约定（A=系统级、B=业务级、C=未知）。
 
-3. **数据权限上下文**：列级权限/行级权限依赖 `HeaderConstants` 中定义的 Header，需确保 Feign 透传和网关配置同步。
+3. **数据权限上下文**：列级权限/行级权限依赖 `DataScopeHeaders` 和 `ColumnPermissionHeaders` 中定义的常量。新代码推荐引用这些细粒度类而非聚合的 `HeaderConstants`。
 
 4. **序列化注解来源**：`BaseResponse` 和 `PageResponse` 上的 `@JsonInclude` 和 `@JsonPropertyOrder` 来自 `remi-common-json` 模块，非 Jackson 原生注解。引入 `remi-common-core` 时会自动传递依赖 `remi-common-json`。
 
 5. **native-image 兼容性**：使用 GraalVM native-image 编译时，确保 `native-image.properties` 中配置的反射白名单覆盖了所有运行时需反射访问的类。
 
-6. **TraceIdGenerator 线程安全**：使用 `ThreadLocal` 缓冲字节数组 + `ThreadLocalRandom` 生成随机数，无需外部同步，完全线程安全。
+6. **SpanContext 是 immutable**：使用 `withXxx()` 方法派生新对象而非修改原对象，天然线程安全。
+
+7. **i18n 资源物理隔离**：core 模块的 i18n 文件位于 `i18n/core/`，与业务模块 classpath 根的 `messages.properties` 互不冲突。如需扩展 core 的 i18n，在 `CoreAutoConfiguration.coreMessageSource()` 中添加新的 basenames 即可。

@@ -2,34 +2,102 @@
   "groups": [
     {
       "name": "remi.core",
-      "description": "REMI Core 模块配置组，包含分页、MDC 过滤器、核心开关配置。",
-      "type": "com.remisoft.common.core.config.CoreProperties"
+      "type": "com.remisoft.common.core.config.CoreProperties",
+      "description": "Remi Core 模块全局配置。提供分页参数、响应格式、上下文 MDC 桥接等核心能力的运行时参数绑定。"
+    },
+    {
+      "name": "remi.core.page",
+      "type": "com.remisoft.common.core.config.CoreProperties$Page",
+      "description": "分页参数配置。"
+    },
+    {
+      "name": "remi.core.response",
+      "type": "com.remisoft.common.core.config.CoreProperties$Response",
+      "description": "API 响应格式配置。"
+    },
+    {
+      "name": "remi.core.response.rfc9457",
+      "type": "com.remisoft.common.core.config.CoreProperties$Response$Rfc9457",
+      "description": "RFC 9457 Problem Detail 响应格式配置。"
+    },
+    {
+      "name": "remi.core.context",
+      "type": "com.remisoft.common.core.config.CoreProperties$Context",
+      "description": "请求上下文配置。"
+    },
+    {
+      "name": "remi.core.context.mdc",
+      "type": "com.remisoft.common.core.config.CoreProperties$Context$Mdc",
+      "description": "RequestContext 与 SLF4J MDC 的桥接配置。"
     }
   ],
   "properties": [
     {
       "name": "remi.core.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用 Core 模块自动配置（i18n 解析器、分页配置同步、Micrometer 指标注册）。禁用后所有运行时注入回退到编译期默认值。",
+      "description": "是否启用 remi-core 自动配置。默认 true，设为 false 可完全禁用。",
       "defaultValue": true
     },
     {
-      "name": "remi.core.max-page-size",
+      "name": "remi.core.page.default-page-size",
       "type": "java.lang.Integer",
-      "description": "运行时最大每页记录数上限（1-5000），防止一次性拉取过多数据导致内存或性能问题。须满足 max-page-size >= default-page-size（JSR-303 交叉校验）。",
-      "defaultValue": 1000
-    },
-    {
-      "name": "remi.core.default-page-size",
-      "type": "java.lang.Integer",
-      "description": "运行时默认每页记录数（>=1），分页查询未指定 pageSize 时使用。必须小于等于 max-page-size。",
+      "description": "默认每页记录数，用于分页查询未指定 pageSize 时。",
       "defaultValue": 20
     },
     {
-      "name": "remi.core.tenant-mdc-filter-order",
+      "name": "remi.core.page.default-page-num",
       "type": "java.lang.Integer",
-      "description": "租户 MDC 过滤器注册顺序（FilterRegistrationBean order 值），默认为 HIGHEST_PRECEDENCE + 100，确保租户信息在业务过滤器之前写入 MDC。",
-      "defaultValue": -2147483647
+      "description": "默认页码（从 1 开始），用于分页查询未指定 pageNum 时。",
+      "defaultValue": 1
+    },
+    {
+      "name": "remi.core.page.max-page-size",
+      "type": "java.lang.Integer",
+      "description": "允许的最大每页记录数（防御深度分页攻击）。",
+      "defaultValue": 1000
+    },
+    {
+      "name": "remi.core.response.include-timestamp",
+      "type": "java.lang.Boolean",
+      "description": "是否在响应体中自动包含 timestamp 字段。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.core.response.rfc9457.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 RFC 9457 Problem Detail 响应格式。设为 true 后错误响应将包含 type/title/instance 等标准字段。",
+      "defaultValue": false
+    },
+    {
+      "name": "remi.core.response.rfc9457.type-uri-prefix",
+      "type": "java.lang.String",
+      "description": "RFC 9457 Problem Detail 的 type URI 前缀。错误码将拼接在此前缀后构成完整的 type URI。",
+      "defaultValue": "https://docs.remisoft.com/problems"
+    },
+    {
+      "name": "remi.core.context.mdc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 RequestContext 与 SLF4J MDC 的自动桥接（日志中自动输出 tenantId/userId/traceId）。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.core.context.mdc.tenant-id-key",
+      "type": "java.lang.String",
+      "description": "MDC 中 tenantId 的键名。",
+      "defaultValue": "tenantId"
+    },
+    {
+      "name": "remi.core.context.mdc.user-id-key",
+      "type": "java.lang.String",
+      "description": "MDC 中 userId 的键名。",
+      "defaultValue": "userId"
+    },
+    {
+      "name": "remi.core.context.mdc.trace-id-key",
+      "type": "java.lang.String",
+      "description": "MDC 中 traceId 的键名。",
+      "defaultValue": "traceId"
     }
-  ]
+  ],
+  "hints": []
 }
