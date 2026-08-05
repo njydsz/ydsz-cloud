@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.remisoft.common.core.constant.PageConstants;
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.message.domain.dto.config.UnsubscribeQueryDTO;
@@ -102,7 +102,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
      * @return 分页结果
      */
     @Override
-    public PageResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query) {
+    public BaseResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query) {
         if (query == null) {
             query = new UnsubscribeQueryDTO();
         }
@@ -117,7 +117,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
                 .eq(StringUtils.hasText(query.getTenantId()), MsgSubscription::getTenantId, query.getTenantId())
                 .orderByDesc(MsgSubscription::getUnsubscribedAt);
         Page<MsgSubscription> result = msgSubscriptionMapper.selectPage(page, w);
-        return PageResponse.success(result.getTotal(), result.getCurrent(), result.getSize(), result.getRecords());
+        return BaseResponse.successPage(result.getTotal(), result.getCurrent(), result.getSize(), result.getRecords());
     }
 
     /**

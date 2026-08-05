@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
 import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
 import com.remisoft.workflow.domain.entity.FlowDelegateAuth;
@@ -208,11 +207,11 @@ public class FlowDelegateController {
      * @return 委派处理日志分页
      */
     @GetMapping("/delegateAuth/log/delegate")
-    public BaseResponse<PageResponse<?>> myDelegateLog(
+    public BaseResponse<?> myDelegateLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         String delegateUserId = AuthContext.getUserId();
-        return BaseResponse.success(delegateAuthService.listDelegateLog(delegateUserId, page, size));
+        return delegateAuthService.listDelegateLog(delegateUserId, page, size);
     }
 
     /**
@@ -223,10 +222,10 @@ public class FlowDelegateController {
      * @return 被代理任务日志分页
      */
     @GetMapping("/delegateAuth/log/owner")
-    public BaseResponse<PageResponse<?>> myOwnerLog(
+    public BaseResponse<?> myOwnerLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         String ownerUserId = AuthContext.getUserId();
-        return BaseResponse.success(delegateAuthService.listOwnerLog(ownerUserId, page, size));
+        return delegateAuthService.listOwnerLog(ownerUserId, page, size);
     }
 }

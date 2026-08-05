@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
 import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.lock.annotation.IdempotentExempt;
 import com.remisoft.common.permission.PermissionCodes;
@@ -81,13 +80,13 @@ public class FlowCcController {
     @PostMapping("/cc/page")
     @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pageCc'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
-    public BaseResponse<PageResponse<List<FlowCc>>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
+    public BaseResponse<List<FlowCc>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();
         int pageNo = query.getPageNum();
         int pageSize = query.getPageSize();
-        return BaseResponse.success(ccService.listCcByUser(userId, query.getReadStatus(),
-                query.getFlowCode(), tenantId, pageNo, pageSize));
+        return ccService.listCcByUser(userId, query.getReadStatus(),
+                query.getFlowCode(), tenantId, pageNo, pageSize);
     }
 
     /**

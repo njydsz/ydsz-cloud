@@ -2,7 +2,7 @@ package com.remisoft.message.server.service.config;
 
 import java.util.List;
 
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.remisoft.message.domain.entity.config.MsgSubscription;
 import com.remisoft.message.server.token.UnsubscribeTokenPayload;
@@ -53,7 +53,7 @@ public interface UnsubscribeService {
      * @param query 查询参数
      * @return 分页结果，仅包含 status=UNSUBSCRIBED 的记录
      */
-    PageResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query);
+    BaseResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query);
 
     /**
      * 恢复订阅（管理后台 / 用户自助）。
