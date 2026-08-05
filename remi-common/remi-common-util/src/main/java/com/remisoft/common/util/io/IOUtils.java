@@ -129,6 +129,14 @@ public class IOUtils {
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
     /**
+     * 缓冲区池（ThreadLocal 复用，避免每次 copy 热路径分配新数组）。
+     *
+     * <p>同一线程内 copy 调用复用同一缓冲区，减少 GC 压力。缓冲区大小固定为
+     * {@link #DEFAULT_BUFFER_SIZE}（8KB），平衡内存占用与吞吐量。
+     */
+    private static final ThreadLocal<byte[]> BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[DEFAULT_BUFFER_SIZE]);
+
+    /**
      * 反序列化安全过滤器，仅允许 JDK 基础类型和 {@code com.remisoft.**} 包下的类。
      *
      * <p><b>与 AutoTypeChecker 的关系：</b>
@@ -148,8 +156,10 @@ public class IOUtils {
     // ==================== 流复制方法 ====================
 
     /**
-     * 复制 InputStream 到 OutputStream
-     * 使用默认缓冲区大小（8KB）
+     * 复制 InputStream 到 OutputStream。
+     *
+     * <p>使用 {@link #DEFAULT_BUFFER_SIZE}（8KB）缓冲区，通过 {@link ThreadLocal} 缓冲区池复用，
+     * 减少每次调用分配新数组的 GC 开销。
      *
      * @param input  输入流
      * @param output 输出流
@@ -157,11 +167,23 @@ public class IOUtils {
      * @throws IOException IO 异常
      */
     public static long copy(InputStream input, OutputStream output) throws IOException {
-        return copy(input, output, DEFAULT_BUFFER_SIZE);
+        Objects.requireNonNull(input, "input cannot be null");
+        Objects.requireNonNull(output, "output cannot be null");
+
+        byte[] buffer = BUFFER_POOL.get();
+        long count = 0;
+        int n;
+        while ((n = input.read(buffer)) != EOF) {
+            output.write(buffer, 0, n);
+            count += n;
+        }
+        return count;
     }
 
     /**
-     * 复制 InputStream 到 OutputStream（指定缓冲区大小）
+     * 复制 InputStream 到 OutputStream（指定缓冲区大小）。
+     *
+     * <p>注意：指定非默认缓冲区大小不会使用缓冲区池，每次调用会分配新数组。
      *
      * @param input      输入流
      * @param output     输出流

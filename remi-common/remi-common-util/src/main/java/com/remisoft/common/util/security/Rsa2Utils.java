@@ -17,9 +17,10 @@ import java.security.interfaces.RSAKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.Cipher;
 
@@ -104,13 +105,36 @@ public class Rsa2Utils {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
-     * Key 解析结果缓存，以 Base64 密钥字符串为 key。
+     * Key 缓存最大条目数。
      *
-     * <p>loadPublicKey/loadPrivateKey 每次重新执行 Base64 解码 + KeyFactory.getInstance + 密钥解析开销较大，
-     * 缓存 PublicKey/PrivateKey 对象避免重复解析。ConcurrentHashMap 保证并发读写的线程安全。
-     * Key 对象本身不可变且线程安全，可被多个 Cipher/Signature 并发使用。
+     * <p>RSA 密钥对象解析开销较大（KeyFactory.getInstance + 密钥解析），缓存可避免重复计算。
+     * 默认 128 条足够覆盖绝大多数应用的多密钥场景（通常 < 10 对密钥）。
      */
-    private static final ConcurrentHashMap<String, Key> KEY_CACHE = new ConcurrentHashMap<>();
+    private static final int KEY_CACHE_MAX_SIZE = 128;
+
+    /**
+     * Key 解析结果缓存，以 Base64 密钥字符串为 key，LRU 淘汰策略。
+     *
+     * <p><b>设计思路：</b>
+     * <ul>
+     *   <li>使用 {@link LinkedHashMap}（accessOrder=true）实现 LRU 淘汰，超出 {@link #KEY_CACHE_MAX_SIZE} 时
+     *       自动移除最久未访问条目，避免无界增长 OOM 风险</li>
+     *   <li>外层使用 {@link Collections#synchronizedMap} 包装保证线程安全</li>
+     *   <li>loadPublicKey/loadPrivateKey 在同步块内执行 get + put，避免重复解析</li>
+     *   <li>Key 对象本身不可变且线程安全，可被多个 Cipher/Signature 并发使用</li>
+     * </ul>
+     */
+    private static final Map<String, Key> KEY_CACHE;
+
+    static {
+        LinkedHashMap<String, Key> lruMap = new LinkedHashMap<>(KEY_CACHE_MAX_SIZE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Key> eldest) {
+                return size() > KEY_CACHE_MAX_SIZE;
+            }
+        };
+        KEY_CACHE = Collections.synchronizedMap(lruMap);
+    }
 
     /**
      * 生成 RSA 密钥对
@@ -150,44 +174,50 @@ public class Rsa2Utils {
      * 从 Base64 编码的公钥字符串加载 PublicKey。
      *
      * <p>解析结果按 Base64 字符串缓存，避免重复 Base64 解码与 KeyFactory 解析。
+     * 缓存使用 LRU 淘汰策略，超出容量时自动移除最久未访问条目。
      *
      * @param publicKeyBase64 Base64 编码的公钥
      * @return PublicKey 实例
      * @throws GeneralSecurityException 密钥解析失败
      */
     public static PublicKey loadPublicKey(String publicKeyBase64) throws GeneralSecurityException {
-        Key cached = KEY_CACHE.get(publicKeyBase64);
-        if (cached instanceof PublicKey) {
-            return (PublicKey) cached;
+        synchronized (KEY_CACHE) {
+            Key cached = KEY_CACHE.get(publicKeyBase64);
+            if (cached instanceof PublicKey) {
+                return (PublicKey) cached;
+            }
+            byte[] keyBytes = Base64.getDecoder().decode(publicKeyBase64);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PublicKey publicKey = keyFactory.generatePublic(keySpec);
+            KEY_CACHE.put(publicKeyBase64, publicKey);
+            return publicKey;
         }
-        byte[] keyBytes = Base64.getDecoder().decode(publicKeyBase64);
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PublicKey publicKey = keyFactory.generatePublic(keySpec);
-        KEY_CACHE.put(publicKeyBase64, publicKey);
-        return publicKey;
     }
 
     /**
      * 从 Base64 编码的私钥字符串加载 PrivateKey。
      *
      * <p>解析结果按 Base64 字符串缓存，避免重复 Base64 解码与 KeyFactory 解析。
+     * 缓存使用 LRU 淘汰策略，超出容量时自动移除最久未访问条目。
      *
      * @param privateKeyBase64 Base64 编码的私钥
      * @return PrivateKey 实例
      * @throws GeneralSecurityException 密钥解析失败
      */
     public static PrivateKey loadPrivateKey(String privateKeyBase64) throws GeneralSecurityException {
-        Key cached = KEY_CACHE.get(privateKeyBase64);
-        if (cached instanceof PrivateKey) {
-            return (PrivateKey) cached;
+        synchronized (KEY_CACHE) {
+            Key cached = KEY_CACHE.get(privateKeyBase64);
+            if (cached instanceof PrivateKey) {
+                return (PrivateKey) cached;
+            }
+            byte[] keyBytes = Base64.getDecoder().decode(privateKeyBase64);
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+            KEY_CACHE.put(privateKeyBase64, privateKey);
+            return privateKey;
         }
-        byte[] keyBytes = Base64.getDecoder().decode(privateKeyBase64);
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
-        KEY_CACHE.put(privateKeyBase64, privateKey);
-        return privateKey;
     }
 
     /**

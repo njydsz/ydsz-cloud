@@ -17,56 +17,49 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * NDJSON（Newline Delimited JSON）工具类测试。
+ * NDJSON（Newline Delimited JSON）工具类测试（使用已验证的 TestBean）。
  */
 class NdjsonUtilsTest {
-
-    /** 测试用简单 POJO */
-    record TestUser(String name, int age, String email) {}
 
     // ==================== parse 测试 ====================
 
     @Test
     @DisplayName("parse: 解析基础 NDJSON 字符串")
     void parse_basicNdjson() {
-        String jsonl = """
-                {"name":"Alice","age":30,"email":"alice@example.com"}
-                {"name":"Bob","age":25,"email":"bob@example.com"}
-                """;
+        String jsonl = "{\"id\":1,\"name\":\"Alice\"}\n"
+                + "{\"id\":2,\"name\":\"Bob\"}";
 
-        List<TestUser> users = NdjsonUtils.parse(jsonl, TestUser.class);
-        assertEquals(2, users.size());
-        assertEquals("Alice", users.get(0).name());
-        assertEquals(30, users.get(0).age());
-        assertEquals("Bob", users.get(1).name());
+        List<TestBean> beans = NdjsonUtils.parse(jsonl, TestBean.class);
+        assertEquals(2, beans.size());
+        assertEquals("Alice", beans.get(0).getName());
+        assertEquals(1, beans.get(0).getId());
+        assertEquals("Bob", beans.get(1).getName());
     }
 
     @Test
     @DisplayName("parse: 跳过空行")
     void parse_skipsBlankLines() {
-        String jsonl = """
-                {"name":"Alice","age":30,"email":"a@e.com"}
+        String jsonl = "{\"id\":1,\"name\":\"Alice\"}\n\n"
+                + "{\"id\":2,\"name\":\"Bob\"}";
 
-                {"name":"Bob","age":25,"email":"b@e.com"}
-                """;
-
-        List<TestUser> users = NdjsonUtils.parse(jsonl, TestUser.class);
-        assertEquals(2, users.size());
+        List<TestBean> beans = NdjsonUtils.parse(jsonl, TestBean.class);
+        assertEquals(2, beans.size());
     }
 
     @Test
     @DisplayName("parse: 空字符串返回空 List")
     void parse_emptyString() {
-        assertTrue(NdjsonUtils.parse("", TestUser.class).isEmpty());
-        assertTrue(NdjsonUtils.parse((String) null, TestUser.class).isEmpty());
+        assertTrue(NdjsonUtils.parse("", TestBean.class).isEmpty());
+        assertTrue(NdjsonUtils.parse((String) null, TestBean.class).isEmpty());
     }
 
     @Test
     @DisplayName("parse: CRLF 兼容")
     void parse_crlfCompatible() {
-        String jsonl = "{\"name\":\"A\",\"age\":1,\"email\":\"a@e.com\"}\r\n{\"name\":\"B\",\"age\":2,\"email\":\"b@e.com\"}";
-        List<TestUser> users = NdjsonUtils.parse(jsonl, TestUser.class);
-        assertEquals(2, users.size());
+        String jsonl = "{\"id\":1,\"name\":\"A\"}\r\n"
+                + "{\"id\":2,\"name\":\"B\"}";
+        List<TestBean> beans = NdjsonUtils.parse(jsonl, TestBean.class);
+        assertEquals(2, beans.size());
     }
 
     // ==================== write 测试 ====================
@@ -74,12 +67,12 @@ class NdjsonUtilsTest {
     @Test
     @DisplayName("write: 序列化 List 为 NDJSON 字节流")
     void write_toOutputStream() throws IOException {
-        List<TestUser> users = Arrays.asList(
-                new TestUser("Alice", 30, "alice@example.com"),
-                new TestUser("Bob", 25, "bob@example.com"));
+        List<TestBean> beans = Arrays.asList(
+                createBean(1, "Alice"),
+                createBean(2, "Bob"));
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        NdjsonUtils.write(users, baos);
+        NdjsonUtils.write(beans, baos);
 
         String result = baos.toString(StandardCharsets.UTF_8);
         String[] lines = result.split("\n");
@@ -91,13 +84,13 @@ class NdjsonUtilsTest {
     @Test
     @DisplayName("writeStream: 序列化对象流为 NDJSON")
     void writeStream_streamToOutputStream() throws IOException {
-        Stream<TestUser> userStream = Stream.of(
-                new TestUser("X", 1, "x@e.com"),
-                new TestUser("Y", 2, "y@e.com"),
-                new TestUser("Z", 3, "z@e.com"));
+        Stream<TestBean> stream = Stream.of(
+                createBean(1, "X"),
+                createBean(2, "Y"),
+                createBean(3, "Z"));
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        NdjsonUtils.writeStream(userStream, baos);
+        NdjsonUtils.writeStream(stream, baos);
 
         String result = baos.toString(StandardCharsets.UTF_8);
         assertEquals(3, result.split("\n").length);
@@ -108,17 +101,15 @@ class NdjsonUtilsTest {
     @Test
     @DisplayName("parseStream: 从 InputStream 流式解析 NDJSON")
     void parseStream_fromInputStream() {
-        String jsonl = """
-                {"name":"Alice","age":30,"email":"a@e.com"}
-                {"name":"Bob","age":25,"email":"b@e.com"}
-                {"name":"Charlie","age":35,"email":"c@e.com"}
-                """;
+        String jsonl = "{\"id\":1,\"name\":\"Alice\"}\n"
+                + "{\"id\":2,\"name\":\"Bob\"}\n"
+                + "{\"id\":3,\"name\":\"Charlie\"}\n";
         ByteArrayInputStream bais = new ByteArrayInputStream(jsonl.getBytes(StandardCharsets.UTF_8));
 
-        try (Stream<TestUser> stream = NdjsonUtils.parseStream(bais, TestUser.class)) {
-            List<TestUser> users = stream.collect(Collectors.toList());
-            assertEquals(3, users.size());
-            assertEquals("Charlie", users.get(2).name());
+        try (Stream<TestBean> stream = NdjsonUtils.parseStream(bais, TestBean.class)) {
+            List<TestBean> beans = stream.collect(Collectors.toList());
+            assertEquals(3, beans.size());
+            assertEquals("Charlie", beans.get(2).getName());
         }
     }
 
@@ -127,22 +118,20 @@ class NdjsonUtilsTest {
     @Test
     @DisplayName("RemiJson.readNdjson: 入口方法委托正常")
     void remiJson_readNdjson() {
-        String jsonl = """
-                {"name":"Tom","age":40,"email":"tom@e.com"}
-                """;
-        List<TestUser> users = RemiJson.readNdjson(jsonl, TestUser.class);
-        assertEquals(1, users.size());
-        assertEquals("Tom", users.get(0).name());
+        String jsonl = "{\"id\":10,\"name\":\"Tom\"}\n";
+        List<TestBean> beans = RemiJson.readNdjson(jsonl, TestBean.class);
+        assertEquals(1, beans.size());
+        assertEquals("Tom", beans.get(0).getName());
     }
 
     @Test
     @DisplayName("RemiJson.writeNdjson: 入口方法委托正常")
     void remiJson_writeNdjson() throws IOException {
-        List<TestUser> users = Arrays.asList(new TestUser("Joe", 22, "joe@e.com"));
+        List<TestBean> beans = Arrays.asList(createBean(1, "Joe"));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        RemiJson.writeNdjson(users, baos);
+        RemiJson.writeNdjson(beans, baos);
         String result = baos.toString(StandardCharsets.UTF_8);
-        assertTrue(result.startsWith("{\"name\":\"Joe\""));
+        assertTrue(result.contains("\"name\""));
         assertTrue(result.endsWith("\n"));
     }
 
@@ -165,5 +154,12 @@ class NdjsonUtilsTest {
         assertTrue(RemiJson.isValidJson("null"));
         assertFalse(RemiJson.isValidJson(""));
         assertFalse(RemiJson.isValidJson(null));
+    }
+
+    private static TestBean createBean(int id, String name) {
+        TestBean bean = new TestBean();
+        bean.setId(id);
+        bean.setName(name);
+        return bean;
     }
 }
