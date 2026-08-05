@@ -65,7 +65,6 @@
         <!-- L1 基础设施层 -->
         <module>remi-common-json</module>
         <module>remi-common-core</module>
-        <module>remi-common-metrics</module>
         <!-- L2 工具模块层 -->
         <module>remi-common-util</module>
         <!-- L3 基础服务层 -->
