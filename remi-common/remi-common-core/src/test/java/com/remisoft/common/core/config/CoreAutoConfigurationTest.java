@@ -7,16 +7,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.context.support.ResourceBundleMessageSource;
 
 import com.remisoft.common.core.constant.PageConstants;
-import com.remisoft.common.core.response.BaseResponse;
 
 /**
  * {@link CoreAutoConfiguration} 自动装配集成测试。
  *
- * <p>覆盖：默认启用、显式开关、PageConstants 运行时同步、i18n resolver 注册、
- * 无 MessageSource 时优雅降级。
+ * <p>覆盖：默认启用、显式开关、PageConstants 运行时同步、
+ * i18n resolver 注册（v2.1.0 起由 remi-common-base 的 I18nAutoConfiguration 注册）。
  *
  * @author remi-team
  * @since 1.2.0
@@ -29,9 +27,7 @@ class CoreAutoConfigurationTest {
 
     @AfterEach
     void tearDown() {
-        // 重置静态状态，避免不同测试方法间的状态污染
         PageConstants.__testReset();
-        MessageResolverHolder.__testResetResolver();
     }
 
     @Test
@@ -43,7 +39,6 @@ class CoreAutoConfigurationTest {
                         "remi.core.default-page-size=50")
                 .run(context -> {
                     assertThat(context).hasSingleBean(CoreAutoConfiguration.PageConstantsInitializer.class);
-                    // SmartInitializingSingleton 在上下文刷新后同步
                     assertThat(PageConstants.getMaxPageSize()).isEqualTo(500);
                     assertThat(PageConstants.getDefaultPageSize()).isEqualTo(50);
                 });
@@ -52,38 +47,10 @@ class CoreAutoConfigurationTest {
     @Test
     @DisplayName("显式关闭 remi.core.enabled=false 时不注册任何 Bean")
     void disabled_noBeans() {
-        contextRunner
-                .withPropertyValues("remi.core.enabled=false")
+        contextRunner.withPropertyValues("remi.core.enabled=false")
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(CoreAutoConfiguration.PageConstantsInitializer.class);
-                    assertThat(context).doesNotHaveBean(SpringMessageResolver.class);
                 });
-    }
-
-    @Test
-    @DisplayName("存在 MessageSource 时注册 SpringMessageResolver 并绑定到 MessageResolverHolder")
-    void messageSource_registersResolver() {
-        contextRunner
-                .withBean(ResourceBundleMessageSource.class, () -> {
-                    ResourceBundleMessageSource source = new ResourceBundleMessageSource();
-                    source.setBasename("i18n/messages");
-                    source.setDefaultEncoding("UTF-8");
-                    return source;
-                })
-                .run(context -> {
-                    assertThat(context).hasSingleBean(SpringMessageResolver.class);
-                    assertThat(MessageResolverHolder.isResolverRegistered()).isTrue();
-                    assertThat(BaseResponse.success().getMsg()).isNotBlank();
-                });
-    }
-
-    @Test
-    @DisplayName("无 MessageSource 时不注册 resolver，BaseResponse 保持未绑定")
-    void noMessageSource_gracefulDegrade() {
-        contextRunner.run(context -> {
-            assertThat(context).doesNotHaveBean(SpringMessageResolver.class);
-            assertThat(BaseResponse.isResolverRegistered()).isFalse();
-        });
     }
 
     @Test
