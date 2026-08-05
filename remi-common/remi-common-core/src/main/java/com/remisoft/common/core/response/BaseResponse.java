@@ -11,7 +11,6 @@ import lombok.experimental.SuperBuilder;
 import org.slf4j.MDC;
 
 import java.io.Serializable;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
