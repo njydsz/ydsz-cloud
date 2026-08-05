@@ -2,7 +2,7 @@ package com.remisoft.workflow.server.service;
 
 import java.util.List;
 
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.domain.entity.FlowDelegateAuth;
 
 /**
@@ -78,12 +78,12 @@ public interface FlowDelegateAuthService {
     /**
      * 分页查询"我代理处理的日志"
      */
-    PageResponse<?> listDelegateLog(String delegateUserId, int page, int size);
+    BaseResponse<?> listDelegateLog(String delegateUserId, int page, int size);
 
     /**
      * 分页查询"我的被代理日志"
      */
-    PageResponse<?> listOwnerLog(String ownerUserId, int page, int size);
+    BaseResponse<?> listOwnerLog(String ownerUserId, int page, int size);
 
     /**
      * P1-7: 链式解析代理人

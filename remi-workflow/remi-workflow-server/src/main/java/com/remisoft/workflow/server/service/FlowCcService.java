@@ -3,7 +3,7 @@ package com.remisoft.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.domain.dto.FlowCcQueryDTO;
 import com.remisoft.workflow.domain.entity.FlowCc;
 import com.remisoft.workflow.domain.entity.FlowNode;
@@ -98,7 +98,7 @@ public interface FlowCcService {
      * @param pageSize   每页大小
      * @return 抄送记录分页
      */
-    PageResponse<List<FlowCc>> listCcByUser(String userId, String readStatus, String flowCode,
+    BaseResponse<List<FlowCc>> listCcByUser(String userId, String readStatus, String flowCode,
                                             String tenantId, int pageNo, int pageSize);
 
     /**

@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.domain.dto.FlowInstanceViewDTO;
 import com.remisoft.workflow.domain.dto.FlowTaskOperateDTO;
 import com.remisoft.workflow.domain.entity.FlowNode;
@@ -165,7 +165,7 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    PageResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
+    BaseResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                    int page, int size);
 
     /**
@@ -186,7 +186,7 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    PageResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
+    BaseResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                    int page, int size);
 
     /**
@@ -389,7 +389,7 @@ public interface FlowTaskService {
      * @param size         每页大小
      * @return 分页结果
      */
-    PageResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    BaseResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                        String flowCode, LocalDateTime startTime,
                                                        LocalDateTime endTime, String tenantId,
                                                        int page, int size);

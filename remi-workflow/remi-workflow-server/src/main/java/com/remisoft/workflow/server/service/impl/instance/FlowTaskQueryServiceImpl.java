@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.remisoft.common.auth.context.AuthContext;
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.jdbc.constant.DataSourceConstants;
 import com.remisoft.workflow.domain.dto.FlowInstanceViewDTO;
 import com.remisoft.workflow.domain.entity.FlowHisTask;
@@ -175,7 +175,7 @@ public class FlowTaskQueryServiceImpl {
     /**
      * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET）
      */
-    public PageResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
+    public BaseResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
@@ -184,13 +184,13 @@ public class FlowTaskQueryServiceImpl {
         int offset = (safePage - 1) * safeSize;
         List<FlowRunTask> list = taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
         long total = taskMapper.countTodoByAssignee(assigneeId, tid);
-        return (PageResponse) PageResponse.success(total, (long) safePage, (long) safeSize, list);
+        return BaseResponse.successPage(total, (long) safePage, (long) safeSize, list);
     }
 
     /**
      * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET）
      */
-    public PageResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
+    public BaseResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET） — 走历史表
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
@@ -203,13 +203,13 @@ public class FlowTaskQueryServiceImpl {
             list.add(hisToTask(his));
         }
         long total = hisTaskMapper.countDoneByAssignee(assigneeId, tid);
-        return (PageResponse) PageResponse.success(total, (long) safePage, (long) safeSize, list);
+        return BaseResponse.successPage(total, (long) safePage, (long) safeSize, list);
     }
 
     /**
      * P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET）
      */
-    public PageResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    public BaseResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, String tenantId,
                                                                int page, int size) {
@@ -225,7 +225,7 @@ public class FlowTaskQueryServiceImpl {
         }
         long total = hisTaskMapper.countDone(assigneeId, businessType, flowCode,
                 startTime, endTime, tid);
-        return (PageResponse) PageResponse.success(total, (long) safePage, (long) safeSize, list);
+        return BaseResponse.successPage(total, (long) safePage, (long) safeSize, list);
     }
 
     // ============================== 统计查询 ==============================

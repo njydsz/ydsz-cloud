@@ -32,7 +32,16 @@
 | `Rsa2Utils` | RSA2 非对称加解密 + 签名验签（SHA256withRSA、OAEP 填充、分段加解密） |
 | `DigestUtils` | SHA-256 / MD5 / HMAC 摘要工具（常量时间比较、PBKDF2 密钥派生） |
 
-### 2.1 国密算法（security 包，依赖 bcprov-jdk18on）
+### 2.1 国际主流算法（security 包，JDK 12+ / JDK 15+）
+
+| 类 | 说明 |
+|---|---|
+| `ChaCha20Utils` | ChaCha20-Poly1305 AEAD 对称加密（256 位密钥、96 位 Nonce，TLS 1.3 / WireGuard 首选，纯软件优于 AES-GCM） |
+| `Ed25519Utils` | Ed25519 签名算法（Curve25519、EdDSA、确定性签名、64 字节签名 / 32 字节密钥，比 RSA/ECDSA 更快更安全） |
+
+> JDK 要求：ChaCha20-Poly1305 需要 JDK 12+，Ed25519 需要 JDK 15+（推荐 JDK 17+）。在纯软件场景（无 AES-NI）ChaCha20 性能优于 AES-GCM；Ed25519 建议作为新项目的首选签名方案。
+
+### 2.2 国密算法（security 包，依赖 bcprov-jdk18on）
 
 | 类 | 说明 |
 |---|---|
@@ -40,7 +49,7 @@
 | `Sm3Utils` | SM3 密码杂凑算法（256 位摘要，GM/T 0004-2012） |
 | `Sm4Utils` | SM4 分组密码（128 位密钥，GCM/CBC 模式，GM/T 0002-2012） |
 
-### 2.2 密码哈希与强度（security.password 包）
+### 2.3 密码哈希与强度（security.password 包）
 
 | 类 | 说明 |
 |---|---|
@@ -238,6 +247,31 @@ String ciphertext = crypto.encrypt("敏感数据");
 String plaintext = crypto.decrypt(ciphertext);
 ```
 
+### 2b. 国际主流算法（ChaCha20 / Ed25519）
+
+```java
+import com.remisoft.common.util.security.ChaCha20Utils;
+import com.remisoft.common.util.security.Ed25519Utils;
+import java.security.KeyPair;
+
+// ChaCha20-Poly1305 AEAD 加密（自动生成 Nonce，Hex 编码输出）
+String keyHex = ChaCha20Utils.generateKeyHex();
+String ct = ChaCha20Utils.encryptHex("敏感数据", keyHex);
+String pt = ChaCha20Utils.decryptHex(ct, keyHex);
+String aad = "additional-data"; // 关联数据（可选）
+byte[] aadBytes = aad.getBytes();
+String ct2 = ChaCha20Utils.encryptHex("带 AAD 的数据", keyHex, aadBytes);
+String pt2 = ChaCha20Utils.decryptHex(ct2, keyHex, aadBytes);
+
+// Ed25519 签名与验签
+KeyPair edKp = Ed25519Utils.generateKeyPair();
+String sig = Ed25519Utils.signHex("重要合同", edKp.getPrivate());
+boolean ok = Ed25519Utils.verifyHex("重要合同", sig, edKp.getPublicKey());
+
+// Hex 格式密钥对
+Ed25519Utils.KeyPairHex hexKp = Ed25519Utils.generateKeyPairHex();
+```
+
 ### 2c. 国密算法（SM2/SM3/SM4）
 
 ```java
@@ -252,27 +286,27 @@ String pt = Sm4Utils.decryptGcm(ct, sm4Key);
 String sm3Hash = Sm3Utils.digestHex("Hello SM3");
 
 // SM2 密钥对 + 加解密 + 签名验签
-KeyPair sm2Kp = Sm2Utils.generateKeyPair();
+java.security.KeyPair sm2Kp = Sm2Utils.generateKeyPair();
 String sm2Ct = Sm2Utils.encrypt("敏感数据", sm2Kp.getPublic());
 String sm2Pt = Sm2Utils.decrypt(sm2Ct, sm2Kp.getPrivate());
-String sig = Sm2Utils.sign("重要数据", sm2Kp.getPrivate());
-boolean ok = Sm2Utils.verify("重要数据", sig, sm2Kp.getPublic());
+String sig2 = Sm2Utils.sign("重要数据", sm2Kp.getPrivate());
+boolean ok2 = Sm2Utils.verify("重要数据", sig2, sm2Kp.getPublic());
 ```
 
 ### 3. 密码哈希
 
 ```java
-import com.remisoft.common.util.security.password.PwdUtils;
+import com.remisoft.common.util.password.PwdUtils;
 
 // 哈希密码（BCrypt，strength=12）
 String hashed = PwdUtils.hashPasswordBCrypt("userPassword123");
 
-// 验证密码
-boolean valid = PwdUtils.verifyPasswordBCrypt("userPassword123", hashed);
+        // 验证密码
+        boolean valid = PwdUtils.verifyPasswordBCrypt("userPassword123", hashed);
 
-// 密码强度校验（SPI，可自定义实现）
-var level = PwdUtils.checkPasswordStrengthLevel("abc123");
-String suggestion = PwdUtils.suggestPasswordImprovement("abc123", Locale.CHINESE);
+        // 密码强度校验（SPI，可自定义实现）
+        var level = PwdUtils.checkPasswordStrengthLevel("abc123");
+        String suggestion = PwdUtils.suggestPasswordImprovement("abc123", Locale.CHINESE);
 ```
 
 ### 4. Bean 拷贝与 PATCH 更新

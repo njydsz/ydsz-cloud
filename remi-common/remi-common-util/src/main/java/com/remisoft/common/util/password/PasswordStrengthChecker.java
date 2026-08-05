@@ -1,4 +1,4 @@
-package com.remisoft.common.util.security.password;
+package com.remisoft.common.util.password;
 
 import java.util.Locale;
 

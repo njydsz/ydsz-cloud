@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.domain.dto.FlowInstanceViewDTO;
 import com.remisoft.workflow.domain.dto.FlowStartProcessDTO;
 import com.remisoft.workflow.domain.entity.FlowInstance;
@@ -264,7 +264,7 @@ public interface FlowInstanceService {
      * @param pageSize     每页大小
      * @return 分页结果
      */
-    PageResponse<FlowInstance> page(String businessType, String initiatorId, String flowStatus,
+    BaseResponse<FlowInstance> page(String businessType, String initiatorId, String flowStatus,
                                     LocalDateTime startTime, LocalDateTime endTime,
                                     String tenantId, int pageNo, int pageSize);
 

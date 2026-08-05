@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.remisoft.common.core.response.PageResponse;
+import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.RemiDistributedLock;
 import com.remisoft.workflow.domain.dto.FlowInstanceViewDTO;
 import com.remisoft.workflow.domain.dto.FlowTaskOperateDTO;
@@ -169,7 +169,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public PageResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
+    public BaseResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
     }
@@ -181,7 +181,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public PageResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
+    public BaseResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
     }
@@ -323,7 +323,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public PageResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    public BaseResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, String tenantId,
                                                                int page, int size) {
