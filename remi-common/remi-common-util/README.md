@@ -49,7 +49,7 @@
 | `Sm3Utils` | SM3 密码杂凑算法（256 位摘要，GM/T 0004-2012） |
 | `Sm4Utils` | SM4 分组密码（128 位密钥，GCM/CBC 模式，GM/T 0002-2012） |
 
-### 2.3 密码哈希与强度（security.password 包）
+### 2.3 密码哈希与强度（util.password 包，与 security 平级）
 
 | 类 | 说明 |
 |---|---|
@@ -301,12 +301,12 @@ import com.remisoft.common.util.password.PwdUtils;
 // 哈希密码（BCrypt，strength=12）
 String hashed = PwdUtils.hashPasswordBCrypt("userPassword123");
 
-        // 验证密码
-        boolean valid = PwdUtils.verifyPasswordBCrypt("userPassword123", hashed);
+// 验证密码
+boolean valid = PwdUtils.verifyPasswordBCrypt("userPassword123", hashed);
 
-        // 密码强度校验（SPI，可自定义实现）
-        var level = PwdUtils.checkPasswordStrengthLevel("abc123");
-        String suggestion = PwdUtils.suggestPasswordImprovement("abc123", Locale.CHINESE);
+// 密码强度校验（SPI，可自定义实现）
+var level = PwdUtils.checkPasswordStrengthLevel("abc123");
+String suggestion = PwdUtils.suggestPasswordImprovement("abc123", Locale.CHINESE);
 ```
 
 ### 4. Bean 拷贝与 PATCH 更新

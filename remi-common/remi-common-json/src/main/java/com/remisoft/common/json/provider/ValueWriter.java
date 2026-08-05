@@ -15,7 +15,6 @@ import java.util.UUID;
 
 import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.json.annotation.JsonView;
-import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.cache.FieldMeta;
 import com.remisoft.common.json.cache.SerializerCache;
 import com.remisoft.common.json.naming.PropertyNamingStrategy;
@@ -606,16 +605,6 @@ public final class ValueWriter {
      * </ul>
      */
     public static void writeBeanNoAnnotationOptimized(Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {
-        try {
-            JSONWriter writer = SerializationProvider.getFastWriterPool();
-            writer.reset();
-            if (AsmCodecCache.trySerialize(obj, writer)) {
-                sb.append(writer.toString());
-                return;
-            }
-        } catch (Exception e) {
-            LOGGER.debug("ASM serialization failed in fast path for {}: {}", clazz.getName(), e.getMessage());
-        }
         PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
         SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields, strategy);
 

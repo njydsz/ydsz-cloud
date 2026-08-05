@@ -4,7 +4,6 @@ import java.util.List;
 
 import jakarta.annotation.PostConstruct;
 
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -14,21 +13,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 
-import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.autotype.AutoTypeWhitelistScanner;
 import com.remisoft.common.json.internal.JsonConfig;
-import com.remisoft.common.json.health.JsonHealthIndicator;
-import com.remisoft.common.json.metric.JsonCacheMetrics;
-import com.remisoft.common.json.metric.JsonMetrics;
 import com.remisoft.common.json.module.JsonModule;
 import com.remisoft.common.json.spring.JsonHttpMessageConverter;
 import com.remisoft.common.json.spring.JsonModuleRegistrar;
-import com.remisoft.common.json.spring.JsonWarmupRunner;
 import com.remisoft.common.json.spring.JsonProperties;
 import com.remisoft.common.json.naming.PropertyNamingStrategy;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * Remi JSON 自动配置。
@@ -88,49 +80,6 @@ public class JsonAutoConfiguration {
         converter.setStreamingEnabled(properties.isStreamingEnabled());
         converter.setMaxRequestBodySize(properties.getMaxRequestBodySize());
         return converter;
-    }
-
-    /**
-     * RemiJson 指标监控（Micrometer），并绑定到 RemiJson 引擎。
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
-    @ConditionalOnProperty(prefix = "remi.json", name = "monitoring-enabled", havingValue = "true", matchIfMissing = true)
-    public JsonMetrics remiJsonMetrics(
-            ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        JsonMetrics metrics = new JsonMetrics(meterRegistryProvider.getIfAvailable());
-        RemiJson.setMetricsCallback(metrics);
-
-        // 绑定缓存统计指标到 MeterRegistry
-        MeterRegistry registry = meterRegistryProvider.getIfAvailable();
-        if (registry != null) {
-            JsonCacheMetrics.bindTo(registry);
-        }
-
-        return metrics;
-    }
-
-    /**
-     * RemiJson 健康检查指标。
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-    public JsonHealthIndicator remiJsonHealthIndicator() {
-        return new JsonHealthIndicator();
-    }
-
-    /**
-     * ASM 预热 Runner — 应用启动后异步预热高频序列化 Bean 的 ASM 字节码。
-     *
-     * @param properties RemiJson 配置属性
-     * @return 预热 Runner
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public JsonWarmupRunner remiJsonWarmupRunner(JsonProperties properties) {
-        return new JsonWarmupRunner(properties);
     }
 
     /**
@@ -228,9 +177,6 @@ public class JsonAutoConfiguration {
                 AutoTypeWhitelistScanner.scanAndRegister(
                         properties.getWhitelistPackages().toArray(new String[0]));
             }
-
-            // 监控开关由 remiJsonMetrics Bean 的 @ConditionalOnProperty(monitoring-enabled) 控制，
-            // 不再设置无人读取的 remi.json.monitoring system property。
 
             // 注册 Spring Factory 模块
             JsonModuleRegistrar registrar = new JsonModuleRegistrar(springModules);

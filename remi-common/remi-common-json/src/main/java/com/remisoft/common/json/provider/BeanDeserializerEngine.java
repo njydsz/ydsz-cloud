@@ -10,9 +10,6 @@ import java.util.Map;
 
 import com.remisoft.common.json.annotation.JsonBuilder;
 import com.remisoft.common.json.exception.JsonException;
-import com.remisoft.common.json.asm.AsmDeserializer;
-import com.remisoft.common.json.bytecode.ZeroCopyDeserializer;
-import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.util.JsonTypeUtils;
 import com.remisoft.common.json.reader.BeanReader;
@@ -26,26 +23,20 @@ import com.remisoft.common.json.reader.JSONReader;
  *
  * <h3>反序列化路径（优先级从高到低）</h3>
  * <ol>
- *   <li><b>ASM 字节码路径</b>：通过 {@link AsmCodecCache} 动态生成反序列化器，
- *       直接操作字段偏移量，无反射开销</li>
  *   <li><b>BeanReader 路径</b>：针对简单 Bean（字段全为基本类型）的轻量级反射读取</li>
  *   <li><b>@JsonCreator 路径</b>：通过注解标记的构造函数创建实例</li>
  *   <li><b>Builder 模式路径</b>：通过 {@code @JsonBuilder} 或自动检测内部 Builder</li>
- *   <li><b>ZeroCopyDeserializer 路径</b>：零拷贝 char[] 直接解析</li>
  *   <li><b>降级路径</b>：解析为 Map 或 List 返回</li>
  * </ol>
  *
  * <h3>列表反序列化</h3>
- * <p>列表场景额外提供基于 ASM 和 ZeroCopy 的批量反序列化，
- * 通过预估容量和跳过异常元素保证吞吐量。
+ * <p>列表场景通过预估容量和跳过异常元素保证吞吐量。
  *
  * @author remi-team
  * @since 1.0.0
- * @see AsmCodecCache
  * @see BeanReader
  * @see CreatorResolver
  * @see BuilderResolver
- * @see ZeroCopyDeserializer
  */
 @SuppressWarnings("deprecation")
 final class BeanDeserializerEngine {
@@ -71,7 +62,7 @@ final class BeanDeserializerEngine {
     /**
      * 零拷贝 Bean 反序列化（泛型版）。
      *
-     * <p>按多级降级策略依次尝试 ASM → BeanReader → Creator → Builder → ZeroCopy → Map 降级。
+     * <p>按多级降级策略依次尝试 BeanReader → Creator → Builder → Map 降级。
      * 每条路径失败后自动回退到下一条，确保最终能返回结果。
      *
      * @param json  JSON 字符串
@@ -85,28 +76,9 @@ final class BeanDeserializerEngine {
             return deserializeRecord(json, clazz);
         }
 
-        // ASM 优化路径：使用字节码生成的反序列化器
-        String trimmed = json.strip();
-        if (trimmed.startsWith("{") &&
-            !clazz.isAssignableFrom(List.class) &&
-            !clazz.isAssignableFrom(Map.class) &&
-            !clazz.isArray() &&
-            !clazz.isInterface()) {
-            try {
-                AsmDeserializer<T> asmDeserializer =
-                    AsmCodecCache.getOrCreateDeserializer(clazz);
-                if (asmDeserializer != null) {
-                    JSONReader reader =
-                        new JSONReader(json);
-                    return asmDeserializer.deserialize(reader);
-                }
-            } catch (Exception e) {
-                log.warn("ASM deserialization failed for {}, falling back to BeanReader", clazz.getName(), e);
-            }
-        }
-
         // BeanReader 路径：对所有非容器、非接口、非数组的 Bean 类型使用
         // BeanReader 已支持 short/byte/char/Date/LocalDateTime/LocalDate/枚举/嵌套 Bean/Collection/Map
+        String trimmed = json.strip();
         if (trimmed.startsWith("{") &&
             !clazz.isAssignableFrom(List.class) &&
             !clazz.isAssignableFrom(Map.class) &&
@@ -118,7 +90,7 @@ final class BeanDeserializerEngine {
                 BeanReader<T> beanReader = BeanReader.getOrCreate(clazz);
                 return beanReader.readObject(reader);
             } catch (Exception e) {
-                log.warn("BeanReader deserialization failed for {}, falling back to creator/builder/zerocopy", clazz.getName(), e);
+                log.warn("BeanReader deserialization failed for {}, falling back to creator/builder", clazz.getName(), e);
             }
         }
 
@@ -143,29 +115,23 @@ final class BeanDeserializerEngine {
             return BuilderResolver.deserializeWithInnerBuilder(json, clazz, innerBuilderClass, innerAnnotation);
         }
 
+        // 最终降级：解析为 Map / List 后转换
         try {
-            ZeroCopyDeserializer.BeanDeserializer deserializer =
-                ZeroCopyDeserializer.getDeserializer(clazz);
-            return clazz.cast(deserializer.deserialize(json));
-        } catch (Exception e) {
-            // ZeroCopy 失败时的回退路径：保留原始异常用于排障
-            try {
-                if (trimmed.startsWith("[")) {
-                    return clazz.cast(JsonParserUtil.parseArray(json));
-                } else {
-                    return clazz.cast(JsonParserUtil.parseObject(json));
-                }
-            } catch (ClassCastException fallbackEx) {
-                throw new JsonException(
-                    "Failed to deserialize " + clazz.getName() + ": " + e.getMessage(), e);
+            if (trimmed.startsWith("[")) {
+                return clazz.cast(JsonParserUtil.parseArray(json));
+            } else {
+                return clazz.cast(JsonParserUtil.parseObject(json));
             }
+        } catch (ClassCastException e) {
+            throw new JsonException(
+                "Failed to deserialize " + clazz.getName(), e);
         }
     }
 
     /**
      * 快速反序列化 Bean 列表。
      *
-     * <p>优先使用 ASM 反序列化器（批量解析性能最佳），失败时降级为 ZeroCopy 路径。
+     * <p>先整体解析为原始列表，再逐个元素按 Bean 反序列化路径转换。
      *
      * @param json          JSON 数组字符串
      * @param elementClass  列表元素类型
@@ -187,216 +153,41 @@ final class BeanDeserializerEngine {
             return result;
         }
 
-        // 优先使用 ASM 反序列化器
-        AsmDeserializer<E> asmDeserializer = null;
+        // 非容器类型的元素逐个走 Bean 反序列化路径
+        List<Object> rawItems;
         try {
-            asmDeserializer = AsmCodecCache.getOrCreateDeserializer(elementClass);
-        } catch (Exception ignored) {
-            log.warn("ASM deserializer creation failed for {}, falling back to BeanReader", elementClass.getName(), ignored);
+            rawItems = JsonParserUtil.parseArray(json);
+        } catch (Exception e) {
+            throw new JsonException(
+                "Failed to parse JSON array: " + e.getMessage(), e);
         }
-
-        if (asmDeserializer != null) {
-            return deserializeBeanListWithAsm(json, elementClass, asmDeserializer);
-        }
-
-        // 回退到 ZeroCopyDeserializer
-        return deserializeBeanListWithZeroCopy(json, elementClass);
-    }
-
-    /**
-     * 使用 ASM 反序列化器批量解析 JSON 数组。
-     *
-     * <p>使用 {@link JSONReader} 池化读取器，预估列表容量减少 ArrayList 扩容。
-     * 单个元素解析失败时跳过并填充 null，不中断整体解析。
-     *
-     * @param json            JSON 数组字符串
-     * @param elementClass    元素类型
-     * @param asmDeserializer ASM 反序列化器
-     * @param <E>             元素类型
-     * @return 反序列化后的列表
-     */
-    static <E> List<E> deserializeBeanListWithAsm(String json, Class<E> elementClass,
-            AsmDeserializer<E> asmDeserializer) {
-        JSONReader reader =
-            JSONReader.getPooledReader(json);
-
-        try {
-            reader.skipWhitespace();
-            if (reader.isEnd() || reader.readChar() != '[') {
-                return new ArrayList<>();
-            }
-
-            // 预估列表大小（基于 JSON 字符串长度），减少 ArrayList 扩容
-            int estimatedSize = Math.max(10, json.length() / 80);
-            List<E> result = new ArrayList<>(estimatedSize);
-
-            while (true) {
-                reader.skipWhitespace();
-                if (reader.isEnd()) break;
-
-                char c = reader.peekChar();
-                if (c == ']') {
-                    reader.readChar();
-                    break;
-                }
-                if (c == ',') {
-                    reader.readChar();
-                    continue;
-                }
-
-                if (reader.isNull()) {
-                    reader.readNull();
-                    result.add(null);
-                    continue;
-                }
-
-                try {
-                    E element = asmDeserializer.deserialize(reader);
-                    result.add(element);
-                } catch (Exception e) {
-                    log.warn("ASM element deserialization failed for {}, skipping element", elementClass.getName(), e);
-                    reader.skipValue();
-                    result.add(null);
-                }
-            }
-
-            return result;
-        } finally {
-            JSONReader.returnPooledReader(reader);
-        }
-    }
-
-    /**
-     * 使用 ZeroCopyDeserializer 批量解析 JSON 数组。
-     *
-     * <p>直接操作 char[] 避免字符串拷贝，通过大括号深度跟踪定位每个对象边界。
-     * ASM 不可用时的降级路径。
-     *
-     * @param json          JSON 数组字符串
-     * @param elementClass  元素类型
-     * @param <E>           元素类型
-     * @return 反序列化后的列表
-     */
-    static <E> List<E> deserializeBeanListWithZeroCopy(String json, Class<E> elementClass) {
-        char[] chars = json.toCharArray();
-        int len = chars.length;
-        int pos = 0;
-
-        while (pos < len && chars[pos] <= ' ') pos++;
-        if (pos >= len || chars[pos] != '[') {
-            return new ArrayList<>();
-        }
-        pos++;
-
-        List<E> result = new ArrayList<>();
-        ZeroCopyDeserializer.BeanDeserializer deserializer = null;
-        try {
-            deserializer = ZeroCopyDeserializer.getDeserializer(elementClass);
-        } catch (Exception ignored) {
-            log.warn("ZeroCopy deserializer creation failed for {}, falling back to manual parse", elementClass.getName(), ignored);
-        }
-
-        while (pos < len) {
-            while (pos < len && chars[pos] <= ' ') pos++;
-            if (pos >= len) break;
-
-            char c = chars[pos];
-            if (c == ']') break;
-            if (c == ',') { pos++; continue; }
-
-            if (c == 'n' && pos + 4 <= len && chars[pos+1] == 'u' && chars[pos+2] == 'l' && chars[pos+3] == 'l') {
+        List<E> result = new ArrayList<>(rawItems.size());
+        for (Object item : rawItems) {
+            if (item == null) {
                 result.add(null);
-                pos += 4;
-                continue;
+            } else {
+                result.add(deserializeBeanZeroCopy(SerializationProvider.serialize(item), elementClass));
             }
-
-            if (deserializer != null && c == '{') {
-                try {
-                    E element = elementClass.cast(deserializer.deserialize(chars, pos, len - pos));
-                    result.add(element);
-
-                    int depth = 0;
-                    while (pos < len) {
-                        char ch = chars[pos];
-                        if (ch == '{') depth++;
-                        else if (ch == '}') {
-                            depth--;
-                            if (depth == 0) { pos++; break; }
-                        } else if (ch == '"') {
-                            pos = skipStringValue(chars, pos, len);
-                            continue;
-                        }
-                        pos++;
-                    }
-                    continue;
-                } catch (Exception ignored) {
-                    log.warn("ZeroCopy element deserialization failed for {}, skipping element", elementClass.getName(), ignored);
-                }
-            }
-
-            int depth = 0;
-            while (pos < len) {
-                char ch = chars[pos];
-                if (ch == '{' || ch == '[') depth++;
-                else if (ch == '}' || ch == ']') {
-                    depth--;
-                    if (depth <= 0) { pos++; break; }
-                } else if (ch == '"') {
-                    pos = skipStringValue(chars, pos, len);
-                    continue;
-                } else if (ch == ',' && depth == 0) {
-                    break;
-                }
-                pos++;
-            }
-            result.add(null);
         }
-
         return result;
     }
 
     /**
      * 零拷贝解析 JSON 数组为 Object 列表。
      *
-     * <p>委托给 {@link ZeroCopyDeserializer#parseArrayChars}，失败时降级为 {@link JsonParserUtil#parseArray}。
+     * <p>委托给 {@link JsonParserUtil#parseArray}。
      *
      * @param json          JSON 数组字符串
-     * @param elementClass  元素类型（用于 ZeroCopy 类型推断）
+     * @param elementClass  元素类型（保留参数以兼容调用方签名）
      * @return 解析后的列表
      */
     static List<Object> deserializeArrayZeroCopy(String json, Class<?> elementClass) {
         try {
-            char[] chars = json.toCharArray();
-            return ZeroCopyDeserializer.parseArrayChars(chars, 0, chars.length, elementClass);
+            return JsonParserUtil.parseArray(json);
         } catch (Exception e) {
-            log.warn("ZeroCopy array deserialization failed for {}, falling back to JsonParserUtil", elementClass.getName(), e);
+            log.warn("Array deserialization failed for {}, falling back to JsonParserUtil", elementClass.getName(), e);
             return JsonParserUtil.parseArray(json);
         }
-    }
-
-    /**
-     * 安全跳过 JSON 字符串值（从开引号到闭引号）。
-     *
-     * <p>正确处理转义序列，包括 {@code \\"} （转义引号）和 {@code \\\\} （转义反斜杠），
-     * 避免字符串内的 {@code {} 或 {@code "} 干扰深度跟踪。
-     *
-     * @param chars JSON 字符数组
-     * @param startPos 开始位置（指向开引号）
-     * @param len 字符数组总长度
-     * @return 闭引号后的下一个位置
-     */
-    private static int skipStringValue(char[] chars, int startPos, int len) {
-        int pos = startPos + 1; // 跳过开引号
-        while (pos < len) {
-            if (chars[pos] == '\\') {
-                pos += 2; // 跳过转义符和被转义的字符
-            } else if (chars[pos] == '"') {
-                return pos + 1; // 返回闭引号后的位置
-            } else {
-                pos++;
-            }
-        }
-        return pos;
     }
 
     /**

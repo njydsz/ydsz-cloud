@@ -1,7 +1,6 @@
 package com.remisoft.common.json.spring;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -120,23 +119,6 @@ public class JsonProperties {
      * @since 1.0.0
      */
     private boolean disableJacksonAutoConfiguration = true;
-
-    /**
-     * 启动时需要预热的类列表（全限定类名）。
-     *
-     * <p>预热会在应用启动后异步执行，提前为指定类型生成 ASM 序列化/反序列化字节码，
-     * 避免首次请求时的延迟尖峰。仅填入高频序列化的核心 Bean 类即可。
-     *
-     * <p>配置示例：
-     * <pre>{@code
-     * remi:
-     *   json:
-     *     warmup-classes:
-     *       - com.remisoft.workflow.domain.entity.FlowDefinition
-     *       - com.remisoft.workflow.domain.entity.FlowInstance
-     * }</pre>
-     */
-    private List<String> warmupClasses = Collections.emptyList();
 
     // --- enabled ---
 
@@ -326,15 +308,5 @@ public class JsonProperties {
 
     public void setDisableJacksonAutoConfiguration(boolean disableJacksonAutoConfiguration) {
         this.disableJacksonAutoConfiguration = disableJacksonAutoConfiguration;
-    }
-
-    // --- warmupClasses ---
-
-    public List<String> getWarmupClasses() {
-        return warmupClasses;
-    }
-
-    public void setWarmupClasses(List<String> warmupClasses) {
-        this.warmupClasses = warmupClasses;
     }
 }

@@ -1,6 +1,5 @@
 package com.remisoft.common.json.provider;
 
-import com.remisoft.common.json.asm.AsmSerializer;
 import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.naming.PropertyNamingStrategy;
 import com.remisoft.common.json.writer.JSONWriter;
@@ -62,12 +61,6 @@ public final class SerializationContext {
     /** 当前视图类（用于字段过滤，ThreadLocal 传递上下文） */
     public Class<?> currentViewClass;
 
-    /** 最近使用的列表元素序列化器缓存（避免每次列表序列化都查找 ConcurrentHashMap） */
-    public AsmSerializer<Object> cachedListSerializer;
-
-    /** 最近使用的列表元素类型缓存（配合 cachedListSerializer 使用） */
-    public Class<?> cachedListElementClass;
-
     /** 需要排除的字段名集合（用于列权限等场景的字段级过滤） */
     public Set<String> excludedFields;
 
@@ -117,8 +110,6 @@ public final class SerializationContext {
         this.fastWriterPool = new JSONWriter(4096);
         this.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>(64));
         this.currentViewClass = null;
-        this.cachedListSerializer = null;
-        this.cachedListElementClass = null;
         this.excludedFields = null;
     }
 
@@ -126,7 +117,7 @@ public final class SerializationContext {
      * 仅清理运行时状态字段（保留配置），用于序列化完成后的状态清理。
      *
      * <p>清理以下字段：serializingObjects（循环引用检测集）、currentViewClass、
-     * cachedListSerializer、cachedListElementClass、excludedFields。
+     * excludedFields。
      * sbPool 和 fastWriterPool 会重置到初始容量以便复用。</p>
      */
     public void resetRuntimeState() {
@@ -134,9 +125,6 @@ public final class SerializationContext {
         this.serializingObjects.clear();
         // 重置视图类
         this.currentViewClass = null;
-        // 清理列表序列化器缓存
-        this.cachedListSerializer = null;
-        this.cachedListElementClass = null;
         // 清理排除字段集合
         this.excludedFields = null;
         // 重置 StringBuilder 容量（如果过大则缩容）

@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
 import com.remisoft.common.core.response.BaseResponse;
-import com.remisoft.common.core.response.PageResponse;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -137,7 +136,7 @@ public class UnsubscribeController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
     @GetMapping("/page")
     public BaseResponse<List<MsgSubscriptionVO>> page(UnsubscribeQueryDTO query) {
-        PageResponse<List<MsgSubscription>> page = unsubscribeService.pageUnsubscribed(query);
+        BaseResponse<List<MsgSubscription>> page = unsubscribeService.pageUnsubscribed(query);
         List<MsgSubscriptionVO> voList = MessageConverter.INSTANT.subscriptionListToVO(page.getData());
         return BaseResponse.successPage(page.getTotal(), page.getPageNum(), page.getPageSize(), voList);
     }

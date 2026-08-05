@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.remisoft.common.json.RemiJson;
-import com.remisoft.common.json.pointer.JsonPointer;
+import com.remisoft.common.json.tree.JsonNode;
 
 import lombok.Getter;
 
@@ -106,10 +106,10 @@ public class DiffReport implements Serializable {
     }
 
     /**
-     * P3-4: 使用 JsonPointer 定位特定字段的变更值。
+     * 使用 JSON Pointer 定位特定字段的变更值。
      *
-     * <p>从 {@link #toJson()} 生成的 JSON 数组中，通过 JsonPointer 路径
-     * 定位特定字段的新值或旧值。
+     * <p>从 {@link #toJson()} 生成的 JSON 数组中，通过 JSON Pointer 路径
+     * 定位特定字段的新值或旧值（基于 RemiJson 树解析实现，等价 RFC 6901）。
      *
      * <p>使用示例：
      * <pre>
@@ -128,8 +128,12 @@ public class DiffReport implements Serializable {
         }
         try {
             String json = toJson();
-            JsonPointer jp = new JsonPointer(pointer);
-            Object value = jp.evaluate(json);
+            JsonNode root = RemiJson.readTree(json);
+            JsonNode target = root.path(pointer.startsWith("/") ? pointer.substring(1) : pointer);
+            if (target.isMissing() || target.isNull()) {
+                return null;
+            }
+            Object value = target.asValue();
             return value == null ? null : String.valueOf(value);
         } catch (Exception e) {
             return null;

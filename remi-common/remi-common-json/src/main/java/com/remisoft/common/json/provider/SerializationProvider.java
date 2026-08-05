@@ -3,7 +3,6 @@ package com.remisoft.common.json.provider;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
@@ -16,8 +15,6 @@ import com.remisoft.common.json.internal.JsonConfig;
 import com.remisoft.common.json.internal.JsonRuntimeConfig;
 import com.remisoft.common.json.parser.JsonParserUtil;
 import com.remisoft.common.json.serializer.JsonSerializer;
-import com.remisoft.common.json.asm.AsmSerializer;
-import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.cache.BeanSerializerCache;
 import com.remisoft.common.json.cache.FieldMeta;
 import com.remisoft.common.json.cache.SerializerCache;
@@ -53,8 +50,6 @@ public final class SerializationProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SerializationProvider.class);
 
-    /** ASM 序列化降级计数器 */
-    private static final AtomicLong ASM_DOWNGRADE_COUNT = new AtomicLong(0);
     /** StringBuilder 池最大容量*/
     private static final int MAX_SB_CAPACITY = 65536;
 
@@ -119,12 +114,6 @@ public final class SerializationProvider {
         /** StringBuilder 实例池 */
         public StringBuilder sbPool;
 
-        /** List 序列化 ASM 序列化器缓存（基于元素类型复用） */
-        public AsmSerializer<Object> cachedListSerializer;
-
-        /** List 元素类型缓存（与 cachedListSerializer 配对） */
-        public Class<?> cachedListElementClass;
-
         /** 字段命名策略（PropertyNamingStrategy） */
         public PropertyNamingStrategy namingStrategy;
 
@@ -160,8 +149,6 @@ public final class SerializationProvider {
             ctx.currentViewClass = null;
             ctx.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>());
             ctx.sbPool = new StringBuilder(SMALL_SB_CAPACITY);
-            ctx.cachedListSerializer = null;
-            ctx.cachedListElementClass = null;
             ctx.namingStrategy = runtimeConfig.namingStrategy();
             return ctx;
         }
@@ -178,7 +165,7 @@ public final class SerializationProvider {
 
     /**
      * 所有序列化上下文状态（含 StringBuilder 池、JSONWriter 池、循环引用检测集、
-     * 视图类、列表序列化器缓存、排除字段集合、writeNulls、prettyPrint、
+     * 视图类、排除字段集合、writeNulls、prettyPrint、
      * circularRefStrategy、serializeEnumUsingOrdinal 等 11 个原 ThreadLocal 字段）
      * 已合并到 {@link SerializationContext#CONTEXT} 单一 ThreadLocal 中。
      */
@@ -533,16 +520,6 @@ public final class SerializationProvider {
      */
     public static void setSbPool(StringBuilder sb) {
         SerializationContext.CONTEXT.get().sbPool = sb;
-    }
-
-    /**
-     * 获取 ASM 降级总次数。
-     *
-     * @return ASM 序列化降级总次数
-     * @since 1.0.0
-     */
-    public static long getAsmDowngradeCount() {
-        return ASM_DOWNGRADE_COUNT.get();
     }
 
     /**
@@ -970,14 +947,12 @@ public final class SerializationProvider {
             return null;
         }
 
-        // 快速路径 1：Bean 类型直接使用 ASM 序列化器
+        // 快速路径 1：Bean 类型
         if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
             // 获取当前线程的命名策略
             PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
-            boolean isDefaultNaming = (strategy == null
-                || strategy == PropertyNamingStrategy.LOWER_CAMEL_CASE);
 
-            // 确保 SerializerCache 被填充（无论是否使用 ASM），
+            // 确保 SerializerCache 被填充（无论是否使用快速路径），
             // 这样不同命名策略可以按 strategy 维度隔离缓存 FieldMeta[]
             FieldMeta[] fields = SerializerCache.getFieldMeta(clazz, strategy);
             if (fields == null) {
@@ -985,20 +960,7 @@ public final class SerializationProvider {
                 SerializerCache.putFieldMeta(clazz, strategy, fields);
             }
 
-            // ASM 序列化器仅在生成时固化了 LOWER_CAMEL_CASE 命名字段名，
-            // 非默认命名策略必须回退到反射路径（tryBeanSerialize）以正确翻译字段名
-            if (isDefaultNaming) {
-                try {
-                    JSONWriter writer = ctx.fastWriterPool;
-                    writer.reset();
-                    if (AsmCodecCache.trySerialize(obj, writer)) {
-                        return writer;
-                    }
-                } catch (Exception e) {
-                    logAsmDowngrade(clazz, "serialization", e);
-                }
-            }
-            return null; // Bean 类型 ASM 失败或不使用 ASM，需回退到 StringBuilder 路径
+            return null; // Bean 类型需回退到 StringBuilder 路径（tryBeanSerialize）
         }
 
         // 快速路径 2：Collection 类型直接使用 JSONWriter
@@ -1008,31 +970,6 @@ public final class SerializationProvider {
             Collection<?> coll = (Collection<?>) obj;
             if (!coll.isEmpty()) {
                 writer.preAllocate(coll.size() * 64);
-                AsmSerializer<Object> serializer = ctx.cachedListSerializer;
-                if (serializer == null) {
-                    Object first = null;
-                    if (coll instanceof List) {
-                        first = ((List<?>) coll).get(0);
-                    } else {
-                        first = coll.iterator().next();
-                    }
-                    if (first != null) {
-                        try {
-                            AsmSerializer<?> rawSerializer = AsmCodecCache.getOrCreateSerializerForType(first.getClass());
-                            if (rawSerializer != null) {
-                                serializer = captureSerializer(rawSerializer);
-                                ctx.cachedListSerializer = serializer;
-                                ctx.cachedListElementClass = first.getClass();
-                            }
-                        } catch (Exception e) {
-                            // ASM 序列化器创建失败，回退到通用 Collection 写入
-                        }
-                    }
-                }
-                if (serializer != null) {
-                    writer.writeCollectionWithSerializer(coll, serializer);
-                    return writer;
-                }
             }
             writer.writeCollection(coll);
             return writer;
@@ -1182,10 +1119,6 @@ public final class SerializationProvider {
         return info;
     }
 
-    private static AsmSerializer<Object> captureSerializer(AsmSerializer<?> serializer) {
-        return (AsmSerializer<Object>) serializer;
-    }
-
     /**
      * @JsonSerialize 自定义序列化器缓存（Class -> JsonSerializer 实例）。
      */
@@ -1330,22 +1263,6 @@ public final class SerializationProvider {
     }
 
     /**
-     * ASM 序列化降级日志记录（统一逻辑，消除 3 处重复）。
-     *
-     * @param clazz  正在序列化的类
-     * @param phase  序列化阶段描述（如 "serialization"、"serialization (bytes)"、"fast-serialize"）
-     * @param e      异常
-     */
-    private static void logAsmDowngrade(Class<?> clazz, String phase, Exception e) {
-        long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
-        if (count <= 10 || count % 100 == 0) {
-            LOGGER.debug("ASM " + phase + " failed for " + clazz.getName()
-                    + ", falling back to reflection. Total downgrades: " + count
-                    + ", error: " + e.getMessage());
-        }
-    }
-
-    /**
      * ThreadLocal 快照（用于单次配置序列化的线程安全保存/恢复）。
      *
      * <p>使用 {@link SerializationContext} 合并多个 ThreadLocal 为单一实例，
@@ -1354,9 +1271,8 @@ public final class SerializationProvider {
      *
      * <p>注意：仅保存/恢复配置类字段（writeNulls、prettyPrint、circularRefStrategy、
      * serializeEnumUsingOrdinal、excludedFields、dateFormat、failOnError、namingStrategy），
-     * 不保存运行时状态字段（sbPool、fastWriterPool、serializingObjects、currentViewClass、
-     * cachedListSerializer、cachedListElementClass），因为运行时状态仅在单次
-     * 序列化调用内有意义。</p>
+     * 不保存运行时状态字段（sbPool、fastWriterPool、serializingObjects、currentViewClass），
+     * 因为运行时状态仅在单次序列化调用内有意义。</p>
      *
      * <p><b>namingStrategy 说明：</b>命名策略存放在 {@link FieldMetadataLoader#NAMING_STRATEGY}
      * 这个独立 ThreadLocal 中（不在 SerializationContext 内）。此前快照未保存它，

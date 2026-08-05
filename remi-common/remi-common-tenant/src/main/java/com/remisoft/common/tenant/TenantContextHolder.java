@@ -43,7 +43,9 @@ import com.remisoft.common.core.constant.SystemConstants;
  *
  * @author remi-team
  * @since 1.0.0
+ * @deprecated v1.9.0 起弃用，由 {@link com.remisoft.common.core.context.RequestContext} 统一替代
  */
+@Deprecated
 public final class TenantContextHolder {
 
     private static final ThreadLocal<TenantContext> HOLDER = new TransmittableThreadLocal<>();

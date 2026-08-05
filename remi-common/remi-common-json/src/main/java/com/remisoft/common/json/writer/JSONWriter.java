@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.remisoft.common.json.RemiJson;
-import com.remisoft.common.json.asm.AsmSerializer;
-import com.remisoft.common.json.cache.AsmCodecCache;
 import com.remisoft.common.json.number.NumberUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -1094,21 +1092,6 @@ public final class JSONWriter {
     }
 
     /**
-     * 写入集合到缓冲区（使用预解析序列化器，合并 setPosition + writeCollectionWithSerializer + getPosition）
-     *
-     * @param collection 集合对象
-     * @param serializer 预解析的元素序列化器
-     * @param pos 当前写入位置
-     * @return 写入后的新位置
-     */
-    public int writeCollectionWithSerializerToBuf(Collection<?> collection,
-            AsmSerializer<Object> serializer, int pos) {
-        this.pos = pos;
-        writeCollectionWithSerializer(collection, serializer);
-        return this.pos;
-    }
-
-    /**
      * 写入 Map 到缓冲区（合并 setPosition + writeMap + getPosition）
      *
      * @param map Map 对象
@@ -1122,11 +1105,10 @@ public final class JSONWriter {
     }
 
     /**
-     * 直接写入集合（优化版本，缓存序列化器避免每元素 ConcurrentHashMap 查找）
-     * 
-     * <p>信任缓存序列化器的类型一致性，跳过 item.getClass() 和类型比较开销</p>
+     * 直接写入集合
+     *
+     * <p>对 List 类型使用索引循环避免 Iterator 对象创建开销。</p>
      */
-    
     public void writeCollection(Collection<?> collection) {
         if (collection == null) {
             write("null");
@@ -1139,7 +1121,6 @@ public final class JSONWriter {
         }
 
         buf[pos++] = '[';
-        AsmSerializer<?> cachedSerializer = null;
 
         // 优化：对支持随机访问的 List 使用索引循环，避免 Iterator 对象创建开销
         // LinkedList 等非 RandomAccess 走 Iterator 路径，避免 O(N²) 退化
@@ -1149,8 +1130,7 @@ public final class JSONWriter {
                 if (i > 0) {
                     buf[pos++] = ',';
                 }
-                Object item = list.get(i);
-                cachedSerializer = writeCollectionElement(item, cachedSerializer);
+                writeValueInline(list.get(i));
             }
         } else {
             boolean first = true;
@@ -1159,112 +1139,9 @@ public final class JSONWriter {
                     buf[pos++] = ',';
                 }
                 first = false;
-                cachedSerializer = writeCollectionElement(item, cachedSerializer);
+                writeValueInline(item);
             }
         }
-        buf[pos++] = ']';
-    }
-
-    /**
-     * 写入集合中的单个元素（提取自 writeCollection，消除 List/非List 路径重复代码）。
-     *
-     * @param item            元素值
-     * @param cachedSerializer 缓存的 ASM 序列化器（可能为 null）
-     * @return 更新后的缓存序列化器
-     */
-    private AsmSerializer<?> writeCollectionElement(Object item, AsmSerializer<?> cachedSerializer) {
-        if (item == null) {
-            buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';
-            pos += 4;
-            return cachedSerializer;
-        }
-
-        if (cachedSerializer != null) {
-            AsmCodecCache.serializeWithSerializer(cachedSerializer, item, this);
-            return cachedSerializer;
-        }
-
-        if (item instanceof String) {
-            writeStringDirectNoCheck((String) item);
-        } else if (item instanceof Integer) {
-            writeInt(((Integer) item).intValue());
-        } else if (item instanceof Long) {
-            writeLong(((Long) item).longValue());
-        } else if (item instanceof Double) {
-            writeDouble(((Double) item).doubleValue());
-        } else if (item instanceof Float) {
-            writeFloat(((Float) item).floatValue());
-        } else if (item instanceof Boolean) {
-            write(((Boolean) item).booleanValue() ? "true" : "false");
-        } else if (item instanceof Collection) {
-            writeCollection((Collection<?>) item);
-        } else if (item instanceof Map) {
-            writeMap((Map<?, ?>) item);
-        } else {
-            AsmSerializer<?> serializer =
-                AsmCodecCache.getOrCreateSerializerForType(item.getClass());
-            if (serializer != null) {
-                cachedSerializer = serializer;
-                AsmCodecCache.serializeWithSerializer(serializer, item, this);
-            } else {
-                write(RemiJson.toJson(item));
-            }
-        }
-        return cachedSerializer;
-    }
-
-    /**
-     * 直接写入集合（使用预解析的序列化器，跳过每元素类型检查）
-     *
-     * <p>适用于集合元素类型已知的场景，消除 instanceof 判断和 ConcurrentHashMap 查找开销。</p>
-     * <p>直接操作 buf/pos 写入结构字符，消除 write(char) 的 externalSb + ensureCapacity 检查开销。</p>
-     * <p>对 List 类型使用索引循环避免 Iterator 对象创建开销。</p>
-     * <p>使用 serializeInline 跳过每个元素的 preAllocate 调用，外层已预分配足够容量。</p>
-     *
-     * @param collection 集合对象
-     * @param serializer 预解析的元素序列化器
-     */
-    public void writeCollectionWithSerializer(Collection<?> collection,
-            AsmSerializer<Object> serializer) {
-        if (collection == null) {
-            write("null");
-            return;
-        }
-
-        int size = collection.size();
-
-        buf[pos++] = '[';
-
-        if (collection instanceof List && (collection instanceof java.util.RandomAccess || size < 100)) {
-            List<?> list = (List<?>) collection;
-            for (int i = 0; i < size; i++) {
-                if (i > 0) {
-                    buf[pos++] = ',';
-                }
-                Object item = list.get(i);
-                if (item == null) {
-                    buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';
-                    pos += 4;
-                    continue;
-                }
-                serializer.serializeInline(item, this);
-            }
-        } else {
-            boolean first = true;
-            for (Object item : collection) {
-                if (!first) {
-                    buf[pos++] = ',';
-                }
-                first = false;
-                if (item == null) {
-                    buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';
-                    pos += 4;
-                    continue;
-                }
-                serializer.serializeInline(item, this);
-            }
-        }
-
         buf[pos++] = ']';
     }
 
@@ -1307,24 +1184,13 @@ public final class JSONWriter {
     /**
      * 内联写入对象值（不调用 RemiJson.toJson）
      */
-    /**
-     * 内联写入对象值（使用类型代码缓存，避免重复 instanceof 检查）
-     */
     private void writeObjectInline(Object obj) {
         if (obj == null) {
             write("null");
             return;
         }
 
-        Class<?> clazz = obj.getClass();
-        
-        // 快速路径：使用预计算的序列化器缓存
-        
-        AsmSerializer<?> serializer =
-            AsmCodecCache.getOrCreateSerializerForType(clazz);
-        if (serializer != null) {
-            AsmCodecCache.serializeWithSerializer(serializer, obj, this);
-        } else if (obj instanceof Collection) {
+        if (obj instanceof Collection) {
             writeCollection((Collection<?>) obj);
         } else if (obj instanceof Map) {
             writeMap((Map<?, ?>) obj);

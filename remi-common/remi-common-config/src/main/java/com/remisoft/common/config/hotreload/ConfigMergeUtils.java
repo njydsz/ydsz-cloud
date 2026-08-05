@@ -3,10 +3,12 @@ package com.remisoft.common.config.hotreload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.remisoft.common.json.merge.JsonMergePatch;
+import com.remisoft.common.json.RemiJson;
+import com.remisoft.common.json.tree.JsonNode;
+import com.remisoft.common.json.tree.ObjectNode;
 
 /**
- * 配置合并工具（P3-2: 基于 JsonMergePatch RFC 7396）
+ * 配置合并工具（基于 RFC 7396 JSON Merge Patch 语义）
  *
  * <p>提供 JSON 配置的深度合并能力，用于：
  * <ul>
@@ -57,7 +59,10 @@ public final class ConfigMergeUtils {
             return baseConfig;
         }
         try {
-            String result = JsonMergePatch.merge(baseConfig, overrideConfig);
+            JsonNode base = RemiJson.readTree(baseConfig);
+            JsonNode patch = RemiJson.readTree(overrideConfig);
+            JsonNode merged = mergePatch(base, patch);
+            String result = merged.toString();
             log.debug("[ConfigMerge] 配置合并完成: base keys={} → merged", baseConfig.length());
             return result;
         } catch (Exception e) {
@@ -82,6 +87,41 @@ public final class ConfigMergeUtils {
         String result = configs[0];
         for (int i = 1; i < configs.length; i++) {
             result = merge(result, configs[i]);
+        }
+        return result;
+    }
+
+    /**
+     * RFC 7396 JSON Merge Patch 核心算法。
+     *
+     * <ul>
+     *   <li>patch 为对象时：递归合并每个字段；字段值为 null 则从 target 删除</li>
+     *   <li>patch 为其他类型（标量/数组/null）：整体替换 target</li>
+     * </ul>
+     */
+    private static JsonNode mergePatch(JsonNode target, JsonNode patch) {
+        if (!patch.isObject()) {
+            return patch;
+        }
+        if (!target.isObject()) {
+            // target 不是对象时，patch 对象直接作为新对象开始累积
+            target = new ObjectNode();
+        }
+        ObjectNode result = new ObjectNode();
+        // 先复制 target 的所有字段
+        for (java.util.Map.Entry<String, JsonNode> entry : ((ObjectNode) target).entrySet()) {
+            result.set(entry.getKey(), entry.getValue());
+        }
+        // 应用 patch 字段
+        for (java.util.Map.Entry<String, JsonNode> entry : ((ObjectNode) patch).entrySet()) {
+            String key = entry.getKey();
+            JsonNode patchValue = entry.getValue();
+            if (patchValue.isNull()) {
+                result.remove(key);
+            } else {
+                JsonNode existing = result.get(key);
+                result.set(key, mergePatch(existing, patchValue));
+            }
         }
         return result;
     }

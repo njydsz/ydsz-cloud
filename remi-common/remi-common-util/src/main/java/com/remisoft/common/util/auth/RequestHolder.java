@@ -46,7 +46,9 @@ import lombok.extern.slf4j.Slf4j;
  * @see AuthInfoUtils
  * @author remi-team
  * @since 1.0.0
+ * @deprecated v1.9.0 起弃用，由 {@link com.remisoft.common.core.context.RequestContext} 统一替代
  */
+@Deprecated
 @Slf4j
 public class RequestHolder {
 

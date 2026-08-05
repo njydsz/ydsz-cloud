@@ -4,9 +4,7 @@ package com.remisoft.common.json.util;
  * JSON 类型判断工具类（统一 isSimpleType / getTypeCode 等重复实现）。
  *
  * <p>此前 {@code BeanDeserializerEngine.isSimpleType()}、
- * {@code AsmBeanCodecGenerator.isSimpleType()}、
- * {@code ZeroCopyDeserializer.FieldInfo.isSimpleField()} 三处独立实现了
- * 几乎相同的基本类型判断逻辑，此处统一为单一来源。</p>
+ * {@code BeanReader} 等处独立实现了几乎相同的基本类型判断逻辑，此处统一为单一来源。</p>
  *
  * @author remi-team
  * @since 1.0.0
@@ -20,8 +18,7 @@ public final class JsonTypeUtils {
     /**
      * 判断类型是否为基本类型或其包装类、String。
      *
-     * <p>统一替代 BeanDeserializerEngine、AsmBeanCodecGenerator、
-     * ZeroCopyDeserializer 中的三处重复实现。</p>
+     * <p>统一替代 BeanDeserializerEngine、BeanReader 等处的重复实现。</p>
      *
      * @param type 待判断的类型
      * @return 是基本类型返回 true
@@ -40,7 +37,7 @@ public final class JsonTypeUtils {
     }
 
     /**
-     * 获取类型码（统一 AsmBeanCodecGenerator 和 ZeroCopyDeserializer 的类型码体系）。
+     * 获取类型码。
      *
      * <ul>
      *   <li>1: int/Integer</li>

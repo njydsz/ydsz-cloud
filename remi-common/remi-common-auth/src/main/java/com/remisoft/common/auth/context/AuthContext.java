@@ -32,7 +32,9 @@ import com.remisoft.common.security.LoginUser;
  *
  * @author remi-team
  * @since 1.0.0
+ * @deprecated v1.9.0 起弃用，由 {@link com.remisoft.common.core.context.RequestContext} 统一替代
  */
+@Deprecated
 public final class AuthContext {
 
     private static final TransmittableThreadLocal<ContextData> CONTEXT = new TransmittableThreadLocal<>();
@@ -56,6 +58,7 @@ public final class AuthContext {
         data.loginUser = user;
         // 同步关键信息到 RequestContext（仅同步 RequestContext 支持的固定字段）
         if (user != null) {
+            RequestContext.setLoginUser(user);
             RequestContext.setUserId(user.getUserId());
             if (user.getTenantId() != null) {
                 RequestContext.setTenantId(user.getTenantId());

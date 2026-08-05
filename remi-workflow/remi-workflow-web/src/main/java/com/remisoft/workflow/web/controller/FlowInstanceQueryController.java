@@ -191,7 +191,7 @@ public class FlowInstanceQueryController {
      * 与 {@code /instance/page} 的区别：本端点语义为"管理员看全部"，强制不按 initiatorId 过滤，
      * 返回精简 Map 结构（避免泄露定义内部字段）。
      *
-     * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code PageResponse<Map>}，
+     * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code BaseResponse<Map>}，
      * 保留 total / page / size，避免前端假分页。
      *
      * @param page         页码

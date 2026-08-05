@@ -168,7 +168,7 @@ public class FlowCcServiceImpl implements FlowCcService {
      * 分页查询「抄送我的」列表
      *
      * <p>支持按 {@code readStatus}（{@code UNREAD/READ}）、{@code flowCode} 过滤，
-     * 返回按时间倒序的抄送记录。结果不封装为 {@link PageResponse}，由调用方组装分页信息。
+     * 返回按时间倒序的抄送记录。结果不封装为 {@link BaseResponse}，由调用方组装分页信息。
      *
      * @param tenantId 租户 ID
      * @param userId   当前用户 ID
@@ -216,10 +216,10 @@ public class FlowCcServiceImpl implements FlowCcService {
     }
 
     /**
-     * 分页查询「抄送我的」（封装为 {@link PageResponse}）
+     * 分页查询「抄送我的」（封装为 {@link BaseResponse}）
      *
      * <p>与 {@link #pageMyCc} + {@link #countMyCc} 组合等价，本方法在服务层一次性完成
-     * 「分页查询 + 总数统计 + 异常兜底 + PageResponse 封装」，
+     * 「分页查询 + 总数统计 + 异常兜底 + BaseResponse 封装」，
      * 减少 Controller 层胶水代码。
      *
      * @param userId     当前用户 ID
