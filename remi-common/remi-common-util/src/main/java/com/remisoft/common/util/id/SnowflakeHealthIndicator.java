@@ -1,10 +1,11 @@
 package com.remisoft.common.util.id;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 /**
- * Snowflake 健康检查指示器
+ * Snowflake 健康检查指示器。
  *
  * <p>检查 Snowflake ID 生成器的健康状态，包括：
  * <ul>
@@ -12,6 +13,9 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  *   <li>workerId 有效性</li>
  *   <li>Snowflake 状态健康检查（不调用 nextId，仅校验配置与时间戳）</li>
  * </ul>
+ *
+ * <p>自 2.0.0 起，通过构造器注入 {@link SnowflakeIdGenerator} Spring Bean，
+ * 不再依赖静态单例。Bean 不可用时（如禁用状态）返回健康状态 unknown。
  *
  * <p>通过 {@link UtilAutoConfiguration} 中 {@code @Bean} 注册，
  * 不使用 {@code @Component} 注解（项目规范：HealthIndicator 统一在 AutoConfiguration 中注册）。
@@ -21,24 +25,33 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  */
 public class SnowflakeHealthIndicator implements HealthIndicator {
 
+    private final ObjectProvider<SnowflakeIdGenerator> idGeneratorProvider;
+
     /**
-     * 默认构造器
+     * 构造器注入 {@link SnowflakeIdGenerator} Bean。
      *
-     * <p>不通过构造器注入 SnowflakeUtils（它是静态单例类，非 Spring Bean），
-     * 在 {@link #health()} 方法中通过 {@link SnowflakeUtils#getInstance()} 获取实例。
+     * <p>使用 ObjectProvider 实现可选依赖：当 Snowflake 被禁用（enabled=false）或
+     * Bean 不存在时，health 方法返回 unknown 而非报错。
+     *
+     * @param idGeneratorProvider SnowflakeIdGenerator Bean provider（可选）
      */
-    public SnowflakeHealthIndicator() {
-        // 无参构造器，SnowflakeUtils 通过静态 getInstance() 获取
+    public SnowflakeHealthIndicator(ObjectProvider<SnowflakeIdGenerator> idGeneratorProvider) {
+        this.idGeneratorProvider = idGeneratorProvider;
     }
 
     @Override
     public Health health() {
         try {
-            SnowflakeUtils snowflakeUtils = SnowflakeUtils.getInstance();
+            SnowflakeIdGenerator idGenerator = idGeneratorProvider.getIfAvailable();
+            if (idGenerator == null) {
+                return Health.unknown()
+                        .withDetail("reason", "SnowflakeIdGenerator bean not available (disabled or not configured)")
+                        .build();
+            }
 
-            // 检查 workerId 有效性（上界使用 SnowflakeUtils.getMaxWorkerId()，避免硬编码 31）
-            long workerId = snowflakeUtils.getWorkerId();
-            if (workerId < 0 || workerId > SnowflakeUtils.getMaxWorkerId()) {
+            // 检查 workerId 有效性
+            long workerId = idGenerator.getWorkerId();
+            if (workerId < 0 || workerId > SnowflakeIdGenerator.getMaxWorkerId()) {
                 return Health.down()
                         .withDetail("error", "Invalid workerId: " + workerId)
                         .build();
@@ -46,7 +59,7 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
 
             // 检查时钟状态（不调用 nextId()，避免健康检查消耗真实 ID）
             long currentTimestamp = System.currentTimeMillis();
-            long lastTimestamp = snowflakeUtils.getLastTimestamp();
+            long lastTimestamp = idGenerator.getLastTimestamp();
             if (currentTimestamp < lastTimestamp) {
                 long offset = lastTimestamp - currentTimestamp;
                 return Health.down()
@@ -57,7 +70,7 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
 
             return Health.up()
                     .withDetail("workerId", workerId)
-                    .withDetail("datacenterId", snowflakeUtils.getDatacenterId())
+                    .withDetail("datacenterId", idGenerator.getDatacenterId())
                     .withDetail("lastTimestamp", lastTimestamp)
                     .withDetail("currentTimestamp", currentTimestamp)
                     .build();

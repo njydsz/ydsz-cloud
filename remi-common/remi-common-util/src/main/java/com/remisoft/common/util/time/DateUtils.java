@@ -22,31 +22,21 @@ import java.util.Objects;
  * <p><b>线程安全说明：</b>{@link DateTimeFormatter} 实例是线程安全的（不可变），
  * 本类暴露的所有预定义 formatter 可多线程并发使用。
  *
- * <p><b>与 Hutool DateUtils / Apache Commons DateUtils 对标：</b>
- * <ul>
- *   <li>API 语义对齐 Hutool 的 {@code DateUtil.parse / DateUtil.format / DateUtil.beginOfDay} 等</li>
- *   <li>内部纯粹基于 {@code java.time}，不依赖废弃的 {@code java.util.Date} 运算 API</li>
- *   <li>额外提供 {@code Date ↔ LocalDateTime} 互转、时间戳与对象的转换等适配方法</li>
- * </ul>
- *
- * <pre>{@code
- * // 解析日期
- * LocalDate date = DateUtils.parseDate("2024-01-15");
- *
- * // 格式化
- * String text = DateUtils.format(LocalDateTime.now(), DateUtils.DATETIME);
- *
- * // 日期运算
- * LocalDateTime tomorrow = DateUtils.plusDays(LocalDateTime.now(), 1);
- *
- * // 起止时刻
- * LocalDateTime start = DateUtils.beginOfDay(LocalDate.now());
- * LocalDateTime end = DateUtils.endOfDay(LocalDate.now());
- * }</pre>
- *
  * @author remi-team
  * @since 1.3.0
+ * @deprecated 自 2.0.0 起废弃，推荐直接使用 JDK {@code java.time} API（v3.0 移除）：
+ *             <ul>
+ *               <li>解析：{@code LocalDate.parse("2024-01-15")} / {@code LocalDateTime.parse("2024-01-15 14:30:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}</li>
+ *               <li>格式化：{@code date.format(DateTimeFormatter.ISO_LOCAL_DATE)} / {@code dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}</li>
+ *               <li>运算：{@code dateTime.plusDays(1)} / {@code date.plusMonths(3)} / {@code dateTime.minusHours(2)}</li>
+ *               <li>起止：{@code date.atStartOfDay()} / {@code date.atTime(LocalTime.MAX)}</li>
+ *               <li>差值：{@code ChronoUnit.DAYS.between(start, end)} / {@code ChronoUnit.HOURS.between(start, end)}</li>
+ *               <li>Date互转：{@code date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()} /
+ *                            {@code Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant())}</li>
+ *             </ul>
+ *             JDK API 已足够强大，无需额外包装工具类。
  */
+@Deprecated(since = "2.0.0", forRemoval = false)
 public final class DateUtils {
 
     /** 私有构造器，工具类不允许实例化 */

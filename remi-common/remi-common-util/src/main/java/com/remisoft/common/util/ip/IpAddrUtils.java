@@ -113,10 +113,10 @@ public class IpAddrUtils {
         if (request == null) {
             return UNKNOWN;
         }
-        // 通过 ServletUtils.isTrustedProxy 判断 remoteAddr 是否可信
+        // 通过 ServletRequestUtils.isTrustedProxy 判断 remoteAddr 是否可信
         // 如果直连对端可信，则尝试从 X-Forwarded-For 解析真实 IP
         String xff = request.getHeader("x-forwarded-for");
-        if (!isUnknown(xff) && com.remisoft.common.util.http.ServletUtils.isTrustedProxy(request)) {
+        if (!isUnknown(xff) && com.remisoft.common.util.http.ServletRequestUtils.isTrustedProxy(request)) {
             // 取 XFF 中最左侧的 IP（原始客户端）
             if (xff.indexOf(',') >= 0) {
                 String first = xff.split(",")[0].trim();

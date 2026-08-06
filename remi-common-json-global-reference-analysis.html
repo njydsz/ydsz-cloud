@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>remi-common-json 全局引用分析报告</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --card-bg: #f8f9fa;
+    --border: #e0e0e0;
+    --text: #333333;
+    --text-secondary: #666666;
+    --accent: #2563eb;
+    --success: #16a34a;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --info: #0891b2;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+    max-width: 1100px; margin: 0 auto; padding: 40px 24px;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 8px; color: #111; }
+  h2 { font-size: 1.35rem; margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); color: #111; }
+  h3 { font-size: 1.1rem; margin: 24px 0 12px; color: #222; }
+  h4 { font-size: 1rem; margin: 16px 0 8px; color: #333; }
+  .meta { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin: 20px 0;
+  }
+  .summary-card {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; text-align: center;
+  }
+  .summary-card .num { font-size: 2rem; font-weight: 700; color: var(--accent); }
+  .summary-card .label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
+  table {
+    width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem;
+  }
+  th, td {
+    padding: 10px 14px; text-align: left; border: 1px solid var(--border);
+  }
+  th { background: #f0f4ff; font-weight: 600; white-space: nowrap; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem;
+    font-weight: 600; margin: 0 2px;
+  }
+  .tag-ok { background: #dcfce7; color: var(--success); }
+  .tag-warn { background: #fef3c7; color: var(--warning); }
+  .tag-err { background: #fee2e2; color: var(--danger); }
+  .tag-info { background: #e0f2fe; color: var(--info); }
+  .finding {
+    background: #fff; border-left: 4px solid var(--accent); border-radius: var(--radius);
+    padding: 14px 18px; margin: 12px 0; box-shadow: var(--shadow);
+  }
+  .finding.warn { border-left-color: var(--warning); }
+  .finding.err { border-left-color: var(--danger); }
+  .finding .title { font-weight: 700; margin-bottom: 4px; }
+  .finding .desc { color: var(--text-secondary); font-size: 0.9rem; }
+  .finding .loc { font-family: 'Consolas', 'Courier New', monospace; font-size: 0.82rem; background: #f5f5f5; padding: 2px 6px; border-radius: 3px; display: inline-block; margin: 4px 0; }
+  .heatmap-cell { text-align: center; font-weight: 600; }
+  .heatmap-p0 { background: #f0f0f0; color: #999; }
+  .heatmap-p1 { background: #e0f2fe; color: #0369a1; }
+  .heatmap-p2 { background: #bbf7d0; color: #15803d; }
+  .heatmap-p3 { background: #fde68a; color: #92400e; }
+  .heatmap-p4 { background: #fecaca; color: #b91c1c; }
+  .code-block {
+    background: #f5f5f5; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 16px; margin: 8px 0; font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.82rem; overflow-x: auto; white-space: pre;
+  }
+  .priority { font-weight: 700; padding: 2px 6px; border-radius: 3px; font-size: 0.8rem; }
+  .p0 { background: #fee2e2; color: #b91c1c; }
+  .p1 { background: #fef3c7; color: #92400e; }
+  .p2 { background: #e0f2fe; color: #0369a1; }
+  .p3 { background: #f3f4f6; color: #6b7280; }
+  .toc { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin: 20px 0; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ul { margin: 8px 0 0 20px; }
+  .toc li { margin: 4px 0; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  .recommendation {
+    background: #f0fdf4; border: 1px solid #86efac; border-left: 4px solid var(--success);
+    border-radius: var(--radius); padding: 14px 18px; margin: 12px 0;
+  }
+  .recommendation .title { font-weight: 700; color: var(--success); }
+  .recommendation .effort { font-size: 0.82rem; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<h1>🔍 remi-common-json 全局引用分析报告</h1>
+<div class="meta">
+  分析范围：remi-cloud 全项目 · 分析日期：2026-08-06 · 目标模块：remi-common-json
+</div>
+
+<div class="summary-grid">
+  <div class="summary-card"><div class="num">9/9</div><div class="label">业务模块接入率</div></div>
+  <div class="summary-card"><div class="num">19</div><div class="label">Maven 直接依赖子模块数</div></div>
+  <div class="summary-card"><div class="num">129</div><div class="label">使用 RemiJson 的源文件</div></div>
+  <div class="summary-card"><div class="num">0</div><div class="label">第三方 JSON 库残留</div></div>
+  <div class="summary-card"><div class="num">84+</div><div class="label">公共 API/类</div></div>
+  <div class="summary-card"><div class="num">8</div><div class="label">发现问题项</div></div>
+</div>
+
+<hr class="divider">
+
+<div class="toc">
+  <strong>📑 目录</strong>
+  <ul>
+    <li><a href="#s1">一、整体态势评估</a></li>
+    <li><a href="#s2">二、能力利用率热力图</a></li>
+    <li><a href="#s3">三、问题发现清单</a></li>
+    <li><a href="#s4">四、规范不统一问题</a></li>
+    <li><a href="#s5">五、优化建议（分阶段）</a></li>
+    <li><a href="#s6">六、总结与展望</a></li>
+  </ul>
+</div>
+
+<!-- ============ SECTION 1 ============ -->
+<h2 id="s1">一、整体态势评估</h2>
+
+<h3>1.1 正面结论</h3>
+
+<div class="finding">
+  <div class="title">✅ JSON 能力 100% 收敛于 remi-common-json</div>
+  <div class="desc">
+    全项目 9 个业务模块、19 个 Maven 子模块、129 个 Java 源文件统一使用 RemiJson。Java 源码中<b>零</b> com.fasterxml.jackson、com.google.gson、com.alibaba.fastjson、org.json 的直接引用。这是极高水平的依赖治理成果。
+  </div>
+</div>
+
+<div class="finding">
+  <div class="title">✅ 无重复造轮子</div>
+  <div class="desc">
+    全项目未发现任何命如 JsonUtils、GsonUtils、JacksonUtils 的独立 JSON 工具类。所有 JSON 相关封装（如 RemiJsonRedisSerializer、JsonEncoder/JsonDecoder）都是对 remi-common-json 引擎的合理适配，而非重新实现。
+  </div>
+</div>
+
+<div class="finding">
+  <div class="title">✅ 无手写 JSON 字符串拼接</div>
+  <div class="desc">
+    未发现任何 String.format("{\"key\":\"%s\"}", value) 或 StringBuilder 拼接 JSON 的模式。所有 JSON 操作均通过 API 完成，安全性高。
+  </div>
+</div>
+
+<div class="finding">
+  <div class="title">✅ 注解生态完全自闭环</div>
+  <div class="desc">
+    remi-common-json 内置 27 个 Jackson 兼容注解。全项目所有 @JsonProperty、@JsonIgnore、@JsonFormat、@JsonPropertyOrder 等注解均来自 com.remisoft.common.json.annotation 包，无任何 Jackson 注解引用。
+  </div>
+</div>
+
+<div class="finding">
+  <div class="title">✅ 第三方 JSON 库排除机制完善</div>
+  <div class="desc">
+    remi-common-feign（排除 OpenFeign/Resilience4j 传递的 Jackson）、remi-common-queue（排除 RocketMQ 传递的 fastjson/fastjson2）等模块通过 Maven exclusions 彻底阻断外部 JSON 库泄露。
+  </div>
+</div>
+
+<h3>1.2 核心不足</h3>
+
+<div class="finding warn">
+  <div class="title">⚠️ 高级能力利用率偏低</div>
+  <div class="desc">
+    remi-common-json 提供的 JSON Schema 验证、JsonView 视图过滤、JsonModule SPI 自定义序列化器、AutoType 安全检查等高级特性，仅被 1-2 个模块使用，存在显著的能力浪费。
+  </div>
+</div>
+
+<div class="finding warn">
+  <div class="title">⚠️ 使用模式不统一</div>
+  <div class="desc">
+    gateway 模块中反复使用 RemiJson.toJson(body).getBytes(UTF_8) 而非 RemiJson.toJsonBytes()；有模块使用 RemiJson 静态方法，有模块用 JsonMapper.getDefault()；缺少最佳实践指引。
+  </div>
+</div>
+
+<div class="finding err">
+  <div class="title">❌ 存在编译错误 Bug</div>
+  <div class="desc">
+    FlowConditionExprController.java:164 调用 RemiJson.toStringObjectMap()，但该方法为 private，应改为 MapUtils.toStringObjectMap()。
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ============ SECTION 2 ============ -->
+<h2 id="s2">二、remi-common-json 能力利用率热力图</h2>
+
+<p>以下热力图展示了各业务模块对 remi-common-json 各项公共能力的利用程度：</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>能力维度</th>
+      <th>agent</th>
+      <th>cronjob</th>
+      <th>gateway</th>
+      <th>literule</th>
+      <th>message</th>
+      <th>nextwiki</th>
+      <th>system</th>
+      <th>userinfo</th>
+      <th>workflow</th>
+      <th>利用率</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>RemiJson 基础 API</strong><br><small>(toJson/fromJson/parseMap)</small></td>
+      <td class="heatmap-cell heatmap-p3">高</td>
+      <td class="heatmap-cell heatmap-p3">高</td>
+      <td class="heatmap-cell heatmap-p2">中</td>
+      <td class="heatmap-cell heatmap-p3">高</td>
+      <td class="heatmap-cell heatmap-p4">极高</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p4">极高</td>
+      <td><strong>100%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>树模型 (ObjectNode/ArrayNode)</strong></td>
+      <td class="heatmap-cell heatmap-p2">中</td>
+      <td class="heatmap-cell heatmap-p4">极高</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td><strong>56%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>JsonMapper 实例化</strong></td>
+      <td class="heatmap-cell heatmap-p2">中</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td><strong>22%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>JsonType 泛型引用</strong></td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td><strong>33%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>JSON Schema 验证</strong></td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td><strong>22%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>@JsonView 视图过滤</strong></td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p1">低</td>
+      <td><strong>11%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>JsonModule SPI</strong></td>
+      <td class="heatmap-cell heatmap-p3">高</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td><strong>11%*</strong></td>
+    </tr>
+    <tr>
+      <td><strong>AutoType 安全检查</strong></td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td><strong>0%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>JsonProperties 配置</strong></td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td class="heatmap-cell heatmap-p0">无</td>
+      <td><strong>0%</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><small>* remi-common-safe 的 SafeJsonModule 也使用了 SPI，此处仅统计业务模块</small></p>
+
+<p><strong>核心发现：</strong>9 个业务模块中，4 个（nextwiki、system、userinfo、gateway）仅使用最基础的 RemiJson 静态 API。JsonView、JsonModule SPI、AutoType 等高级特性几乎未被业务模块采纳，存在明显的能力浪费。</p>
+
+<hr class="divider">
+
+<!-- ============ SECTION 3 ============ -->
+<h2 id="s3">三、问题发现清单</h2>
+
+<table>
+  <thead>
+    <tr><th>#</th><th>问题等级</th><th>问题类别</th><th>问题描述</th><th>影响范围</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td><td><span class="tag tag-err">🔴 Bug</span></td><td>编译错误</td>
+      <td>FlowConditionExprController 调用 private 方法 RemiJson.toStringObjectMap()</td>
+      <td>remi-workflow-web</td>
+    </tr>
+    <tr>
+      <td>2</td><td><span class="tag tag-warn">🟡 能力浪费</span></td><td>JSON Schema 未普及</td>
+      <td>自研 JsonSchema 引擎仅被 cronjob(HttpJobHandler) 和 workflow(FlowFormEngineService) 使用，其他模块的 HTTP 参数校验、配置校验等场景未接入</td>
+      <td>全项目</td>
+    </tr>
+    <tr>
+      <td>3</td><td><span class="tag tag-warn">🟡 能力浪费</span></td><td>AutoType 安全检查零使用</td>
+      <td>AutoTypeChecker 白名单/黑名单机制完全未被业务模块使用，反序列化安全防护未落地</td>
+      <td>全项目</td>
+    </tr>
+    <tr>
+      <td>4</td><td><span class="tag tag-warn">🟡 规范不统一</span></td>
+      <td>gateway 模块未使用 toJsonBytes</td>
+      <td>gateway 所有过滤器均使用 RemiJson.toJson(body).getBytes(UTF_8) 模式（12 处），应有 RemiJson.toJsonBytes() 更简洁</td>
+      <td>remi-gateway</td>
+    </tr>
+    <tr>
+      <td>5</td><td><span class="tag tag-warn">🟡 重复模式</span></td>
+      <td>toJson + fromJson 链式转换</td>
+      <td>literule 和 cronjob 中多次出现 RemiJson.fromJson(RemiJson.toJson(map), Class.class) 模式，应提供 convertValue 便捷方法</td>
+      <td>remi-literule, remi-cronjob</td>
+    </tr>
+    <tr>
+      <td>6</td><td><span class="tag tag-info">🔵 命名风格</span></td>
+      <td>getJSONObject/getJSONArray 命名</td>
+      <td>ObjectNode/ArrayNode 的 getJSONObject/getJSONArray 方法名带有 FastJSON2 风格，与模块整体命名风格（小驼峰）不一致</td>
+      <td>4 个模块</td>
+    </tr>
+    <tr>
+      <td>7</td><td><span class="tag tag-info">🔵 版本管理</span></td>
+      <td>fastjson2 测试依赖版本不一致</td>
+      <td>remi-common-json benchmark 中 fastjson2 硬编码 2.0.57，与根 pom 管理的 2.0.62 不一致</td>
+      <td>remi-common-json</td>
+    </tr>
+    <tr>
+      <td>8</td><td><span class="tag tag-info">🔵 最佳实践缺失</span></td>
+      <td>JsonMapper vs RemiJson 选择</td>
+      <td>无明确指引说明何时用 RemiJson 静态方法、何时用 JsonMapper 实例，部分代码混用</td>
+      <td>全项目</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr class="divider">
+
+<!-- ============ SECTION 4 ============ -->
+<h2 id="s4">四、规范不统一问题详析</h2>
+
+<h3>4.1 Gateway 模块：toJson() + .getBytes() 冗余模式</h3>
+<p class="desc">remi-gateway 共 12 个 Java 文件中出现以下模式，应统一替换为 RemiJson.toJsonBytes()：</p>
+
+<div class="code-block">// ❌ 当前模式（出现在 12 个文件中）
+byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+
+// ✅ 推荐替代
+byte[] bytes = RemiJson.toJsonBytes(body);</div>
+
+<h3>4.2 对象类型转换的多种写法</h3>
+<p class="desc">同样的 Map -> POJO 转换，项目中存在三种不同写法：</p>
+
+<div class="code-block">// 写法 A：toJson + fromJson 链式（literule, cronjob 中出现）
+RuleDefinition def = RemiJson.fromJson(RemiJson.toJson(ruleMap), RuleDefinition.class);
+
+// 写法 B：JsonMapper.convertValue（message 模块中使用）
+MessageRequest req = JsonMapper.getDefault().convertValue(arg, MessageRequest.class);
+
+// 写法 C：解析 Map 后手动 set（workflow 中大量出现）
+Map&lt;String, Object&gt; ext = RemiJson.parseMap(node.getExt());
+flow.setXxx((String) ext.get("xxx"));</div>
+
+<p class="desc"><strong>建议：</strong>提供 RemiJson.convertValue() 静态便捷方法并制定使用指引。</p>
+
+<h3>4.3 树 API 命名风格不一致</h3>
+<p class="desc">ObjectNode 同时提供了两种风格的 API：</p>
+
+<div class="code-block">// RemiJson 原生风格（小驼峰）
+ObjectNode obj = RemiJson.parseObject(json);
+String name = obj.getString("name");
+int age = obj.getIntValue("age");
+
+// FastJSON2 兼容风格
+ObjectNode child = obj.getJSONObject("child");  // "JSON" 全大写
+ArrayNode items = obj.getJSONArray("items");</div>
+
+<p class="desc">这两种风格混用降低了 API 的一致性。建议保留原生风格为主，将 getJSONObject/getJSONArray 标记为 @Deprecated 并引导迁移。</p>
+
+<hr class="divider">
+
+<!-- ============ SECTION 5 ============ -->
+<h2 id="s5">五、优化建议（分阶段可落地）</h2>
+
+<h3>阶段一：紧急修复（1-2 周）</h3>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p0">P0</span> 修复编译错误：FlowConditionExprController</div>
+  <div class="desc">
+    将 <span class="loc">remi-workflow-web/.../FlowConditionExprController.java:164</span> 的
+    <code>RemiJson.toStringObjectMap(m)</code> 改为 <code>MapUtils.toStringObjectMap(m)</code>。
+    或将 RemiJson.toStringObjectMap() 改为 public 并补充文档。
+  </div>
+  <div class="effort">预估工时：0.5h</div>
+</div>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p0">P0</span> 统一 Gateway 序列化模式</div>
+  <div class="desc">
+    将 remi-gateway 下 12 个文件中的 <code>RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8)</code>
+    全部替换为 <code>RemiJson.toJsonBytes(body)</code>。可编写 IDE 结构性查找替换脚本。
+  </div>
+  <div class="effort">预估工时：1h</div>
+</div>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p0">P0</span> 统一 fastjson2 测试依赖版本</div>
+  <div class="desc">
+    将 remi-common-json pom.xml 中硬编码的 fastjson2 2.0.57 改为 ${fastjson2.version} 引用根 POM 的 2.0.62。
+  </div>
+  <div class="effort">预估工时：0.25h</div>
+</div>
+
+<h3>阶段二：能力补齐 & 减少重复（2-4 周）</h3>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p1">P1</span> 新增 RemiJson.convertValue() 便捷方法</div>
+  <div class="desc">
+    在 RemiJson 中新增 <code>static &lt;T&gt; T convertValue(Object from, Class&lt;T&gt; toType)</code>
+    和 <code>static &lt;T&gt; T convertValue(Object from, JsonType&lt;T&gt; toType)</code>，内部委托给 JsonMapper.getDefault().convertValue()。
+    然后替换 literule、cronjob 等模块中的 toJson+fromJson 链式模式。
+  </div>
+  <div class="effort">预估工时：新增 API 2h + 批量替换 3h</div>
+</div>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p1">P1</span> 推广 JSON Schema 验证</div>
+  <div class="desc">
+    梳理各模块中存在的"手工 if-else 参数校验"代码，评估是否可迁移到 JsonSchema DSL。
+    优先试点：message 模块的发送参数校验、gateway 的 PayloadValidationFilter 请求体校验、
+    userinfo 的 OAuth2 回调参数校验。提供迁移示例和最佳实践文档。
+  </div>
+  <div class="effort">预估工时：调研 8h + 改造 16h</div>
+</div>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p1">P1</span> 完善 ObjectNode/ArrayNode API 风格</div>
+  <div class="desc">
+    新增 getChild/getChildren 等小驼峰命名的别名方法，将 getJSONObject/getJSONArray 标记为
+    @Deprecated 并注明替代方法。避免 API 风格混用问题继续扩散。
+  </div>
+  <div class="effort">预估工时：开发 4h + 迁移 4h</div>
+</div>
+
+<h3>阶段三：安全加固 & 规范建设（4-8 周）</h3>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p2">P2</span> 落地 AutoType 安全防护</div>
+  <div class="desc">
+    在 remi-common-json 的 AutoConfiguration 中默认开启 safeMode=true（仅允许 @JsonClass 标记的类）。
+    在 BaseEntity/DTO 等可序列化基类上添加 @JsonClass 注解。
+    在 remi-common-safe 的 SafeJsonModule 中注册黑名单（如 javax.sql.DataSource 等危险类）。
+  </div>
+  <div class="effort">预估工时：调研 4h + 实现 8h + 测试 4h</div>
+</div>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p2">P2</span> 制定 remi-common-json 使用规范文档</div>
+  <div class="desc">
+    输出 <code>JSON-USAGE-GUIDE.md</code> 放入 remi-common-json 模块，明确：
+    <ul>
+      <li>RemiJson vs JsonMapper 的选择场景（简单场景用 RemiJson，需要非全局配置用 JsonMapper.Builder）</li>
+      <li>树模型 vs POJO 序列化的选择（树模型用于动态结构，POJO 用于固定结构）</li>
+      <li>JsonType 泛型引用的正确用法（List、Map 等泛型反序列化）</li>
+      <li>convertValue vs toJson+fromJson 的选择</li>
+      <li>自定义序列化器/反序列化器的开发规范（必须通过 JsonModule SPI 注册）</li>
+      <li>JSON Schema 验证的推荐使用场景</li>
+      <li>安全最佳实践（AutoType 白名单、深度限制、大小限制）</li>
+    </ul>
+  </div>
+  <div class="effort">预估工时：编写文档 8h</div>
+</div>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p2">P2</span> 推广 @JsonView 视图过滤</div>
+  <div class="desc">
+    梳理各模块中存在的"列表接口返回全量字段"或"手动 DTO 裁剪"场景，评估是否可通过 @JsonView 替代。
+    在 BaseEntity 等基类上定义标准视图层级（如 Summary/Detail/Admin），形成团队规范。
+  </div>
+  <div class="effort">预估工时：调研 4h + 实施 12h</div>
+</div>
+
+<h3>阶段四：深层次优化（8-12 周）</h3>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p3">P3</span> cronjob DAG 编解码重构</div>
+  <div class="desc">
+    DagDefinitionCodec 中手工逐字段 put 构建 ObjectNode（50+ 行手工代码），可考虑用 @JsonProperty
+    等注解标记 DAG 实体类，让 RemiJson 引擎自动完成序列化。降低维护成本，减少手写 JSON 出错风险。
+  </div>
+  <div class="effort">预估工时：调研 4h + 重构 8h</div>
+</div>
+
+<div class="recommendation">
+  <div class="title"><span class="priority p3">P3</span> 统一 JsonProperties 配置化</div>
+  <div class="desc">
+    当前所有模块均使用 RemiJson 的默认配置。建议各模块根据自身场景（如是否需要 prettyPrint、是否需要 wrapRootValue）
+    通过 application.yml 的 remi.json.* 配置实现差异化。同时提供各模块的配置模板。
+  </div>
+  <div class="effort">预估工时：调研 4h + 配置 4h</div>
+</div>
+
+<hr class="divider">
+
+<!-- ============ SECTION 6 ============ -->
+<h2 id="s6">六、总结与展望</h2>
+
+<div class="finding">
+  <div class="title">📊 总体评价：优秀（A-级）</div>
+  <div class="desc">
+    remi-common-json 模块的整体接入率和依赖治理水平非常高——全项目 JSON 能力 100% 收敛，零第三方 JSON 库残留，
+    零手工字符串拼接，注解生态完全自闭环。这是一个非常成功的自研公共模块案例。
+  </div>
+</div>
+
+<p>核心改进方向聚焦于三个方面：</p>
+
+<ol style="margin-left: 20px; margin-top: 8px;">
+  <li><strong>补齐 API 短板：</strong>新增 convertValue() 便捷方法、统一 toJsonBytes() 使用、修正 API 命名风格，让开发者用得更顺手。</li>
+  <li><strong>释放高级能力价值：</strong>将 JSON Schema 验证、@JsonView 视图过滤、AutoType 安全防护从"demo 级试点"推广到"全项目标准实践"。</li>
+  <li><strong>建立规范体系：</strong>通过使用规范文档 + IDE 模板 + Code Review List，让新老开发者都能以一致的方式使用 remi-common-json。</li>
+</ol>
+
+<div class="badge-row" style="margin-top: 20px;">
+  <span class="tag tag-err">1 个紧急修复</span>
+  <span class="tag tag-warn">4 个重点优化</span>
+  <span class="tag tag-info">3 个长期完善</span>
+  <span class="tag tag-ok">预估总工时 ~80h</span>
+</div>
+
+<hr class="divider">
+<p style="text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+  remi-common-json 全局引用分析报告 · 2026-08-06 · 由 WorkBuddy 自动生成
+</p>
+
+</body>
+</html>

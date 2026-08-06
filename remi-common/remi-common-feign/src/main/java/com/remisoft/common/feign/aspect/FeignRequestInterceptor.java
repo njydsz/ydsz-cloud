@@ -16,7 +16,7 @@ import com.remisoft.common.domain.enums.IdentityType;
 import com.remisoft.common.feign.config.FeignProperties;
 import com.remisoft.common.util.auth.AuthInfoUtils;
 import com.remisoft.common.util.auth.RequestHolder;
-import com.remisoft.common.util.http.ServletUtils;
+import com.remisoft.common.util.http.RequestContextUtils;
 import com.remisoft.common.util.id.TracerUtils;
 import com.remisoft.common.util.ip.IpAddrUtils;
 import com.remisoft.common.util.string.StringUtils;
@@ -93,7 +93,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
             return;
         }
 
-        HttpServletRequest httpServletRequest = ServletUtils.getRequest();
+        HttpServletRequest httpServletRequest = RequestContextUtils.getRequest();
         if (httpServletRequest == null) {
             log.debug("非Web环境，无法获取Servlet请求上下文");
             httpServletRequest = RequestHolder.getCurrentRequest();
@@ -214,7 +214,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
         }
         if (headersToPropagate.contains(HeaderConstants.X_TENANT_ID)) {
             setHeaderIfAbsent(requestTemplate, HeaderConstants.X_TENANT_ID,
-                    resolveHeader(ServletUtils.getRequest(), HeaderConstants.X_TENANT_ID));
+                    resolveHeader(RequestContextUtils.getRequest(), HeaderConstants.X_TENANT_ID));
         }
         if (headersToPropagate.contains(HeaderConstants.X_PROJECT_IDS)) {
             if (scopeEnum == DataScopeType.PROJECT) {

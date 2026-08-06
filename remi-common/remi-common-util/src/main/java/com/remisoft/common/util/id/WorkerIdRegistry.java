@@ -1,24 +1,28 @@
 package com.remisoft.common.util.id;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
- * WorkerId 注册中心 SPI
+ * WorkerId 注册中心 SPI（简化版）。
  *
  * <p>用于分布式场景下 WorkerId 唯一分配，避免多实例 ID 冲突。
- * 实现可对接 Redis SETNX、Zookeeper 临时节点、ETCD、Nacos 等。</p>
+ * 实现可对接 Redis SETNX、Zookeeper 临时节点、ETCD、Nacos 等。
  *
- * <p><b>使用示例：</b></p>
+ * <h2>设计变更（2.0.0 简化）</h2>
+ * <ul>
+ *   <li>移除 heartbeat/release 方法：容器化部署场景下，Pod IP 哈希或 StatefulSet 序号更可靠</li>
+ *   <li>移除 startHeartbeat 默认方法：应用层心跳增加复杂度且无明确收益</li>
+ *   <li>仅保留 acquire 核心方法：获取一个可用的 WorkerId</li>
+ * </ul>
+ *
+ * <h2>使用示例</h2>
  * <pre>{@code
- * WorkerIdRegistry registry = new RedisWorkerIdRegistry(redisTemplate, "remi:snowflake:workerId");
- * long workerId = registry.acquire("192.168.1.1", 300_000L);
- * ScheduledExecutorService heartbeat = registry.startHeartbeat(workerId, "192.168.1.1", 300_000L);
- * // ... 应用关闭时
- * heartbeat.shutdown();
- * registry.release(workerId, "192.168.1.1");
+ * &#64;Component
+ * public class RedisWorkerIdRegistry implements WorkerIdRegistry {
+ *     &#64;Override
+ *     public long acquire(String nodeId) {
+ *         // 基于 Redis SETNX 或 Pod Index 获取 workerId
+ *         return resolvedWorkerId;
+ *     }
+ * }
  * }</pre>
  *
  * @author remi-team
@@ -27,106 +31,77 @@ import java.util.concurrent.atomic.AtomicInteger;
 public interface WorkerIdRegistry {
 
     /**
-     * 获取一个可用的 WorkerId
+     * 获取一个可用的 WorkerId。
      *
-     * @param nodeIp        节点 IP（用于标识）
-     * @param leaseMillis   租约时间（毫秒）
-     * @return WorkerId
-     * @throws IllegalStateException 当 WorkerId 资源耗尽时
+     * <p>调用方需保证同一 nodeId 多次调用返回相同 ID（幂等性）。
+     * 推荐实现：基于 nodeId 哈希取模、分布式锁 + 自增序号、或容器序号直接映射。
+     *
+     * @param nodeId 节点标识（通常为 Pod 名、IP 或主机名）
+     * @return WorkerId（0-31）
+     * @throws IllegalStateException 当 WorkerId 资源耗尽或分配失败时
      */
-    long acquire(String nodeIp, long leaseMillis);
+    long acquire(String nodeId);
 
     /**
-     * 心跳续约
+     * 注册中心类型标识。
      *
-     * @param workerId WorkerId
-     * @param nodeIp   节点 IP
-     * @return true 表示续约成功
-     */
-    boolean heartbeat(long workerId, String nodeIp);
-
-    /**
-     * 释放 WorkerId
-     *
-     * @param workerId WorkerId
-     * @param nodeIp   节点 IP
-     */
-    void release(long workerId, String nodeIp);
-
-    /**
-     * 启动定时心跳续约任务
-     *
-     * <p>在租约到期前一半的时间点自动续约，避免 WorkerId 因租约过期被回收。
-     * 调用方应持有返回的 ScheduledExecutorService 以便在应用关闭时停止。
-     *
-     * <p>心跳连续失败达到阈值（默认 3 次）时，记录 ERROR 日志并抛出
-     * {@link RuntimeException} 终止心跳调度，避免租约过期后 WorkerId 被抢占导致 ID 重复。
-     * 调用方应捕获并处理调度终止（如停止 ID 生成或重新获取 WorkerId）。
-     *
-     * @param workerId    WorkerId
-     * @param nodeIp      节点 IP
-     * @param leaseMillis 租约时间（毫秒）
-     * @return 管理心跳的 ScheduledExecutorService，调用方负责 shutdown
-     * @since 1.1.0
-     */
-    default ScheduledExecutorService startHeartbeat(
-            long workerId, String nodeIp, long leaseMillis) {
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
-                r -> {
-                    Thread t = new Thread(r, "snowflake-heartbeat-" + workerId);
-                    t.setDaemon(true);
-                    return t;
-                });
-        long heartbeatInterval = leaseMillis / 2;
-        // 心跳失败计数器：连续失败达到阈值后终止心跳调度，避免租约过期后 workerId 被抢占导致 ID 重复
-        final AtomicInteger heartbeatFailCount = new AtomicInteger(0);
-        final int heartbeatFailThreshold = 3;
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                if (heartbeat(workerId, nodeIp)) {
-                    heartbeatFailCount.set(0);
-                } else {
-                    int failCount = heartbeatFailCount.incrementAndGet();
-                    System.getLogger(WorkerIdRegistry.class.getName())
-                            .log(System.Logger.Level.WARNING,
-                                    "WorkerId heartbeat failed for {} on {}, fail count: {}, lease may expire",
-                                    workerId, nodeIp, failCount);
-                    if (failCount >= heartbeatFailThreshold) {
-                        System.getLogger(WorkerIdRegistry.class.getName())
-                                .log(System.Logger.Level.ERROR,
-                                        "WorkerId heartbeat failed {} consecutive times for {} on {}, terminating heartbeat to prevent ID duplication",
-                                        failCount, workerId, nodeIp);
-                        throw new RuntimeException("WorkerId heartbeat failed " + failCount
-                                + " consecutive times for " + workerId + " on " + nodeIp
-                                + ", terminating heartbeat to prevent ID duplication");
-                    }
-                }
-            } catch (RuntimeException e) {
-                // 重新抛出以终止 ScheduledExecutorService 调度
-                throw e;
-            } catch (Exception e) {
-                int failCount = heartbeatFailCount.incrementAndGet();
-                System.getLogger(WorkerIdRegistry.class.getName())
-                        .log(System.Logger.Level.WARNING,
-                                "WorkerId heartbeat error for {} on {}: {}, fail count: {}",
-                                workerId, nodeIp, e.getMessage(), failCount);
-                if (failCount >= heartbeatFailThreshold) {
-                    System.getLogger(WorkerIdRegistry.class.getName())
-                            .log(System.Logger.Level.ERROR,
-                                    "WorkerId heartbeat failed {} consecutive times for {} on {}, terminating heartbeat to prevent ID duplication",
-                                    failCount, workerId, nodeIp);
-                    throw new RuntimeException("WorkerId heartbeat failed " + failCount
-                            + " consecutive times for " + workerId + " on " + nodeIp, e);
-                }
-            }
-        }, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
-        return scheduler;
-    }
-
-    /**
-     * 注册中心类型
+     * @return 类型名称（如 "Redis"、"Zookeeper"、"ETCD"、"Nacos"）
      */
     default String type() {
         return getClass().getSimpleName();
+    }
+
+    // ==================== 已废弃方法（v3.0 移除） ====================
+
+    /**
+     * 心跳续约。
+     *
+     * <p><b>已废弃：</b>自 2.0.0 起移除应用层心跳机制。
+     * 容器化环境推荐使用 Pod Index 或 Downward API 直接获取序号，
+     * 传统部署推荐使用 ZooKeeper 临时节点自动续约。
+     *
+     * @param workerId WorkerId
+     * @param nodeId   节点 ID
+     * @return 永远返回 true（空操作）
+     * @deprecated 自 2.0.0 起废弃，v3.0 移除。请使用容器原生序号或分布式协调器临时节点。
+     */
+    @Deprecated(since = "2.0.0", forRemoval = false)
+    default boolean heartbeat(long workerId, String nodeId) {
+        // 空操作：应用层心跳已移除
+        return true;
+    }
+
+    /**
+     * 释放 WorkerId。
+     *
+     * <p><b>已废弃：</b>自 2.0.0 起移除显式释放逻辑。
+     * 容器编排平台（Kubernetes）的 StatefulSet 序号天然回收，无需应用层释放。
+     *
+     * @param workerId WorkerId
+     * @param nodeId   节点 ID
+     * @deprecated 自 2.0.0 起废弃，v3.0 移除。容器平台自动回收。
+     */
+    @Deprecated(since = "2.0.0", forRemoval = false)
+    default void release(long workerId, String nodeId) {
+        // 空操作：应用层释放已移除
+    }
+
+    /**
+     * 启动定时心跳续约任务。
+     *
+     * <p><b>已废弃：</b>自 2.0.0 起移除定时心跳。
+     * 容器化场景推荐使用 Kubernetes StatefulSet 或 Downward API。
+     *
+     * @param workerId    WorkerId
+     * @param nodeId      节点 ID
+     * @param leaseMillis 租约时间（已忽略）
+     * @return null（不再返回调度器）
+     * @deprecated 自 2.0.0 起废弃，v3.0 移陲。心跳线程带来的复杂度大于收益。
+     */
+    @Deprecated(since = "2.0.0", forRemoval = false)
+    default java.util.concurrent.ScheduledExecutorService startHeartbeat(
+            long workerId, String nodeId, long leaseMillis) {
+        // 空操作：心跳调度器已移除
+        return null;
     }
 }

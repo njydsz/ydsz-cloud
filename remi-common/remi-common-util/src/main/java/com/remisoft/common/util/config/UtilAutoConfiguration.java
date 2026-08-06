@@ -1,5 +1,6 @@
 package com.remisoft.common.util.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.remisoft.common.util.id.SnowflakeHealthIndicator;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.util.id.SnowflakeProperties;
 import com.remisoft.common.util.spring.SpringContextHolder;
 
@@ -71,8 +73,8 @@ public class UtilAutoConfiguration {
         @Bean
         @ConditionalOnMissingBean
         @ConditionalOnProperty(prefix = "remi.util.snowflake", name = "enabled", matchIfMissing = true)
-        public SnowflakeHealthIndicator snowflakeHealthIndicator() {
-            return new SnowflakeHealthIndicator();
+        public SnowflakeHealthIndicator snowflakeHealthIndicator(ObjectProvider<SnowflakeIdGenerator> idGeneratorProvider) {
+            return new SnowflakeHealthIndicator(idGeneratorProvider);
         }
     }
 

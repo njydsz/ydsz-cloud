@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
+import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.parser.JsonParserUtil;
 
 /**

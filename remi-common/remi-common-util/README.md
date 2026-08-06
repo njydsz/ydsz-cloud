@@ -18,8 +18,10 @@
 
 | 类 | 说明 |
 |---|---|
-| `SnowflakeUtils` | 雪花算法 ID 生成器（CAS 无锁、时钟回拨容忍、workerId 自动分配），单例静态工具类 |
-| `WorkerIdRegistry` | WorkerId 注册中心 SPI（支持 Redis/Zookeeper/ETCD 等），含心跳续约机制 |
+| `SnowflakeUtils` | 雪花算法 ID 生成器（CAS 无锁、时钟回拨容忍、workerId 自动分配），已拆分为 Spring Bean `SnowflakeIdGenerator`（静态层 2.0.0 起废弃） |
+| `SnowflakeIdGenerator` | Snowflake ID 生成器 Spring Bean（构造器注入 workerId/datacenterId，@Primary @ConditionalOnProperty 控制） |
+| `WorkerIdRegistry` | WorkerId 注册中心 SPI（2.0.0 起简化，移除心跳/release，仅保留 `acquire` 接口） |
+| `JcaCipherPool` | JCA Cipher/Signature ThreadLocal 统一池（消除 AesGcmCrypto/Sm2Utils/ChaCha20Utils/Ed25519Utils 中 4 处重复池化） |
 | `RandomUtils` | 安全随机数工具（基于 `SecureRandom`） |
 | `TracerUtils` | 分布式链路追踪工具（SkyWalking 反射集成，无编译期硬依赖） |
 
@@ -29,17 +31,18 @@
 |---|---|
 | `AesUtils` | AES 对称加密（默认 GCM 模式，委托 `AesGcmCrypto` 实现） |
 | `AesGcmCrypto` | AES-GCM 认证加密器（AEAD，每次随机 12 字节 IV，支持实例化使用） |
-| `Rsa2Utils` | RSA2 非对称加解密 + 签名验签（SHA256withRSA、OAEP 填充、分段加解密） |
+| `Rsa2Utils` | RSA2 非对称加解密 + 签名验签（SHA256withRSA、OAEP 填充、分段加解密；国密场景推荐 SM2/SM3/SM4 替代） |
 | `DigestUtils` | SHA-256 / MD5 / HMAC 摘要工具（常量时间比较、PBKDF2 密钥派生） |
 
 ### 2.1 国际主流算法（security 包，JDK 12+ / JDK 15+）
 
 | 类 | 说明 |
 |---|---|
-| `ChaCha20Utils` | ChaCha20-Poly1305 AEAD 对称加密（256 位密钥、96 位 Nonce，TLS 1.3 / WireGuard 首选，纯软件优于 AES-GCM） |
-| `Ed25519Utils` | Ed25519 签名算法（Curve25519、EdDSA、确定性签名、64 字节签名 / 32 字节密钥，比 RSA/ECDSA 更快更安全） |
+| `ChaCha20Utils` | ChaCha20-Poly1305 AEAD 对称加密（2.0.0 起标记废弃，256 位密钥、96 位 Nonce，纯软件优于 AES-GCM；可迁移至 remi-common-crypto-advanced） |
+| `Ed25519Utils` | Ed25519 签名算法（2.0.0 起标记废弃，Curve25519、EdDSA、确定性签名、64 字节签名 / 32 字节密钥；可迁移至 remi-common-crypto-advanced） |
 
-> JDK 要求：ChaCha20-Poly1305 需要 JDK 12+，Ed25519 需要 JDK 15+（推荐 JDK 17+）。在纯软件场景（无 AES-NI）ChaCha20 性能优于 AES-GCM；Ed25519 建议作为新项目的首选签名方案。
+> JDK 要求：ChaCha20-Poly1305 需要 JDK 12+，Ed25519 需要 JDK 15+（推荐 JDK 17+）。
+> **迁移建议：** ChaCha20/Ed25519 属于国际前沿算法，不在国密合规场景要求内，建议迁移至独立的 `remi-common-crypto-advanced` 模块，减少 `remi-common-util` 模块体积。
 
 ### 2.2 国密算法（security 包，依赖 bcprov-jdk18on）
 
@@ -63,10 +66,13 @@
 
 | 类 | 说明 |
 |---|---|
-| `ServletUtils` / `WebFluxUtils` | Servlet / WebFlux 请求工具 |
+| `ServletUtils` | Servlet 请求工具（2.0.0 起废弃，拆分为 ServletRequestUtils / HttpResponseUtils / HttpTokenUtils / RequestContextUtils） |
+| `ServletRequestUtils` | Servlet 请求解析（请求头/参数/URL、Ajax/JSON 判断、可信代理） |
+| `HttpResponseUtils` | 响应渲染（renderString / renderObject / renderJson / renderError） |
+| `HttpTokenUtils` | Token 提取与前缀剥离 |
+| `RequestContextUtils` | Spring RequestContextHolder 获取当前请求/响应 |
 | `CookieUtils` | Cookie 读写工具 |
-| `UrlUtils` | URL 解析与编码解码 |
-| `ResponseUtils` | HTTP 响应写入工具 |
+| `UrlUtils` / `UrlPathUtils` | URL 解析与路径工具 |
 
 ### 4. 并发与上下文（concurrent 包）
 
@@ -87,7 +93,8 @@
 
 | 类 | 说明 |
 |---|---|
-| `LocalDateTimeUtils` | 日期时间格式化 / 计算 / 比较 |
+| `DateUtils` | 日期时间工具（2.0.0 起废弃，推荐直接使用 JDK java.time API） |
+| `LocalDateTimeUtils` | 日期时间格式化 / 计算 / 比较工具 |
 | `NumberUtils` / `BigDecimalUtils` | 数字工具（精度计算 / 百分比 / 格式化） |
 
 ### 7. 文件与 IO（file / io 包）
@@ -392,4 +399,12 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
 
 ## 变更记录
 
+- **v2.0.0**（2026-08-06）：架构重构
+  - **加密模块**：ChaCha20Utils / Ed25519Utils / Rsa2Utils 标记废弃（@Deprecated since 2.0.0），推荐迁移至 remi-common-crypto-advanced 模块
+  - **JCA 池化**：新增 JcaCipherPool 统一池化 Cipher/Signature，消除 4 处重复 ThreadLocal 池化
+  - **Snowflake ID 生成**：静态单例 SnowflakeUtils 标记废弃，新增 Spring Bean SnowflakeIdGenerator（构造器注入、@Primary @ConditionalOnProperty）
+  - **WorkerIdRegistry 简化**：移除心跳/release/startHeartbeat 接口，保留核心 acquire 方法
+  - **ServletUtils 拆分**：拆分为 ServletRequestUtils / HttpResponseUtils / HttpTokenUtils / RequestContextUtils 四个单一职责类
+  - **DateUtils 废弃**：推荐直接使用 JDK java.time API
+  - **TrustedProxyConfiguration**：可信代理 IP 配置从静态全局变量改为 Spring Bean 注入方式
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

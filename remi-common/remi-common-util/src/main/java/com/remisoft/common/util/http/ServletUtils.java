@@ -1,28 +1,10 @@
 package com.remisoft.common.util.http;
 
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import com.remisoft.common.core.constant.HeaderConstants;
-import com.remisoft.common.json.RemiJson;
-import com.remisoft.common.util.ip.IpValidator;
-import com.remisoft.common.util.string.StringUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servlet 环境下的 HTTP 工具类
@@ -32,331 +14,273 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
+ * @deprecated 自 2.0.0 起废弃，拆分为以下四个单一职责类（v3.0 移除）：
+ *             <ul>
+ *               <li>{@link ServletRequestUtils} - 请求头/参数/属性解析、可信代理判断</li>
+ *               <li>{@link HttpResponseUtils} - 响应渲染（renderString/renderObject）</li>
+ *               <li>{@link HttpTokenUtils} - Token 提取与前缀剥离</li>
+ *               <li>{@link RequestContextUtils} - Spring RequestContextHolder 请求/响应获取</li>
+ *             </ul>
  */
-@Slf4j
+@Deprecated(since = "2.0.0", forRemoval = false)
 public final class ServletUtils {
-
-    /**
-     * 标准 HTTP 授权头名称。
-     *
-     * <p>原 {@code TokenConstants.AUTHENTICATION}（remi-common-core 精简后移除），
-     * 此处直接定义本地常量。
-     */
-    private static final String AUTHENTICATION_HEADER = "Authorization";
-
-    /**
-     * 访问令牌前缀（用于剥离 Bearer 式前缀）。
-     *
-     * <p>原 {@code TokenConstants.PREFIX}（remi-common-core 精简后移除）。
-     */
-    private static final String TOKEN_PREFIX = "remi";
-
-    /**
-     * 可信代理 IP 集合（精确 IP 匹配）。
-     *
-     * <p>仅当 {@code request.getRemoteAddr()} 命中此集合或为内网/回环地址时，
-     * 才信任 {@code X-Forwarded-For} / {@code X-Real-IP} 等代理头，防止客户端伪造。
-     *
-     * <p>默认规则：内网地址（RFC 1918 + 回环）始终可信；
-     * 额外精确 IP 可通过 {@link #setTrustedProxies(Set)} 配置（如反代 SLB 公网出口 IP）。
-     */
-    private static volatile Set<String> trustedProxies = Set.of();
 
     private ServletUtils() {
         throw new UnsupportedOperationException("Utility class");
     }
 
+    // ==================== 可信代理判断（委派） ====================
+
     /**
      * 配置可信代理 IP 集合（精确匹配，非 CIDR）。
      *
-     * <p>用于在反向代理或 SLB 公网出口场景下，仅信任来自已知代理的转发头。
-     * 内网地址（RFC 1918 + 回环）始终可信，无需显式配置。
-     *
-     * @param proxies 可信代理 IP 集合；null 或空集合表示仅信任内网/回环
+     * @deprecated 使用 {@link TrustedProxyConfiguration} Spring Bean 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static void setTrustedProxies(Set<String> proxies) {
-        trustedProxies = (proxies == null || proxies.isEmpty())
-                ? Set.of()
-                : Set.copyOf(proxies);
+        // 空操作：v2.0.0 起可信代理改为通过 Spring Bean 配置
     }
 
     /**
      * 判断 remoteAddr 是否为可信代理。
      *
-     * <p>可信条件：内网/回环地址，或显式配置的可信代理 IP。
-     * 包级可见（供同包 CookieUtils 等使用）。
+     * @deprecated 使用 {@link ServletRequestUtils#isTrustedProxy(String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     static boolean isTrustedProxy(String remoteAddr) {
-        if (StringUtils.isBlank(remoteAddr)) {
-            return false;
-        }
-        // 内网/回环地址始终可信（RFC 1918 + 127.0.0.0/8 + ::1）
-        if (IpValidator.isInternalIp(remoteAddr)) {
-            return true;
-        }
-        // 显式配置的可信代理（如 SLB 公网出口 IP）
-        return trustedProxies.contains(remoteAddr);
+        return ServletRequestUtils.isTrustedProxy(remoteAddr);
     }
 
     /**
-     * 判断当前请求的直连对端是否为可信代理（用于校验转发头可信度）。
+     * 判断当前请求的直连对端是否为可信代理。
      *
-     * <p>可信条件：{@code request.getRemoteAddr()} 为内网/回环地址，
-     * 或命中通过 {@link #setTrustedProxies(Set)} 配置的代理 IP。
-     * 用于 CookieUtils 等组件在读取 X-Forwarded-Proto 等转发头前校验来源可信度，防止客户端伪造。
-     *
-     * @param request HTTP 请求
-     * @return true 表示直连对端为可信代理；request 为 null 时返回 false
+     * @deprecated 使用 {@link ServletRequestUtils#isTrustedProxy(HttpServletRequest)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static boolean isTrustedProxy(HttpServletRequest request) {
-        if (request == null) {
-            return false;
-        }
-        return isTrustedProxy(request.getRemoteAddr());
+        return ServletRequestUtils.isTrustedProxy(request);
     }
 
+    // ==================== 请求上下文获取（委派） ====================
+
     /**
-     * 获取当前请求的 HttpServletRequest (仅限 Servlet 环境)
+     * 获取当前请求的 HttpServletRequest。
+     *
+     * @deprecated 使用 {@link RequestContextUtils#getRequest()} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static HttpServletRequest getRequest() {
-        try {
-            return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        } catch (IllegalStateException | NullPointerException e) {
-            // IllegalStateException: RequestContextHolder 未绑定；NullPointerException: 无请求上下文
-            return null;
-        }
+        return RequestContextUtils.getRequest();
     }
 
     /**
-     * 获取当前请求的 HttpServletResponse (仅限 Servlet 环境)
+     * 获取当前请求的 HttpServletResponse。
+     *
+     * @deprecated 使用 {@link RequestContextUtils#getResponse()} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static HttpServletResponse getResponse() {
-        try {
-            return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
-        } catch (Exception e) {
-            return null;
-        }
+        return RequestContextUtils.getResponse();
     }
 
+    // ==================== Token 提取（委派） ====================
+
     /**
-     * 获取请求头中的 Token
+     * 获取请求头中的 Token。
+     *
+     * @deprecated 使用 {@link HttpTokenUtils#getToken()} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String getToken() {
-        HttpServletRequest request = getRequest();
-        if (request == null) {
-            return null;
-        }
-        String token = request.getHeader(HeaderConstants.X_ACCESS_TOKEN);
-        if (StringUtils.isEmpty(token)) {
-            token = request.getHeader(AUTHENTICATION_HEADER);
-        }
-        return replaceTokenPrefix(token);
+        return HttpTokenUtils.getToken();
     }
 
-    private static String replaceTokenPrefix(String token) {
-        if (StringUtils.isNotEmpty(token) && token.startsWith(TOKEN_PREFIX)) {
-            return token.substring(TOKEN_PREFIX.length()).trim();
-        }
-        return token;
-    }
+    // ==================== 响应渲染（委派） ====================
 
     /**
-     * 将字符串渲染到客户端 (Servlet)
+     * 将字符串渲染到客户端。
+     *
+     * @deprecated 使用 {@link HttpResponseUtils#renderString(HttpServletResponse, String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static void renderString(HttpServletResponse response, String string) {
-        try {
-            response.setStatus(HttpStatus.OK.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().print(string);
-        } catch (IOException e) {
-            log.error("ServletUtils -> renderString error: {}", e.getMessage());
-        }
+        HttpResponseUtils.renderString(response, string);
     }
 
     /**
-     * 将对象渲染到客户端 (Servlet)
+     * 将对象渲染到客户端。
+     *
+     * @deprecated 使用 {@link HttpResponseUtils#renderObject(HttpServletResponse, Object)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static void renderObject(HttpServletResponse response, Object object) {
-        if (object == null) {
-            return;
-        }
-        renderString(response, RemiJson.toJson(object));
+        HttpResponseUtils.renderObject(response, object);
     }
 
+    // ==================== 请求头/参数解析（委派） ====================
+
     /**
-     * 获取所有请求头
+     * 获取所有请求头。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getHeaders(HttpServletRequest)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static Map<String, String> getHeaders(HttpServletRequest request) {
-        Map<String, String> map = new HashMap<>();
-        Enumeration<String> enumeration = request.getHeaderNames();
-        if (enumeration != null) {
-            while (enumeration.hasMoreElements()) {
-                String key = enumeration.nextElement();
-                String value = request.getHeader(key);
-                map.put(key, value);
-            }
-        }
-        return map;
+        return ServletRequestUtils.getHeaders(request);
     }
 
     /**
-     * 获取指定请求头
+     * 获取指定请求头。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getHeader(HttpServletRequest, String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String getHeader(HttpServletRequest request, String name) {
-        if (request == null || StringUtils.isEmpty(name)) {
-            return null;
-        }
-        return request.getHeader(name);
+        return ServletRequestUtils.getHeader(request, name);
     }
 
     /**
-     * 获取所有请求参数 (Servlet)
+     * 获取所有请求参数。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getParamMap(HttpServletRequest)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static Map<String, String> getParamMap(HttpServletRequest request) {
-        Map<String, String> params = new HashMap<>();
-        Enumeration<String> parameterNames = request.getParameterNames();
-        while (parameterNames.hasMoreElements()) {
-            String name = parameterNames.nextElement();
-            params.put(name, request.getParameter(name));
-        }
-        return params;
+        return ServletRequestUtils.getParamMap(request);
     }
 
     /**
-     * 获取指定请求参数
+     * 获取指定请求参数。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getParam(HttpServletRequest, String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String getParam(HttpServletRequest request, String name) {
-        if (request == null || StringUtils.isEmpty(name)) {
-            return null;
-        }
-        return request.getParameter(name);
+        return ServletRequestUtils.getParam(request, name);
     }
 
     /**
-     * 获取请求参数（带默认值）
+     * 获取请求参数（带默认值）。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getParam(HttpServletRequest, String, String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String getParam(HttpServletRequest request, String name, String defaultValue) {
-        String value = getParam(request, name);
-        return StringUtils.isEmpty(value) ? defaultValue : value;
+        return ServletRequestUtils.getParam(request, name, defaultValue);
     }
 
     /**
-     * 获取请求参数（转换为整数）
+     * 获取整数请求参数。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getIntParam(HttpServletRequest, String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static Integer getIntParam(HttpServletRequest request, String name) {
-        String value = getParam(request, name);
-        if (StringUtils.isEmpty(value)) {
-            return null;
-        }
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            log.warn("ServletUtils -> getIntParam error: {}", e.getMessage());
-            return null;
-        }
+        return ServletRequestUtils.getIntParam(request, name);
     }
 
     /**
-     * 获取请求参数（转换为整数，带默认值）
+     * 获取整数请求参数（带默认值）。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getIntParam(HttpServletRequest, String, Integer)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static Integer getIntParam(HttpServletRequest request, String name, Integer defaultValue) {
-        Integer value = getIntParam(request, name);
-        return value != null ? value : defaultValue;
+        return ServletRequestUtils.getIntParam(request, name, defaultValue);
     }
 
     /**
-     * 获取请求参数（转换为长整型）
+     * 获取长整型请求参数。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getLongParam(HttpServletRequest, String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static Long getLongParam(HttpServletRequest request, String name) {
-        String value = getParam(request, name);
-        if (StringUtils.isEmpty(value)) {
-            return null;
-        }
-        try {
-            return Long.parseLong(value);
-        } catch (NumberFormatException e) {
-            log.warn("ServletUtils -> getLongParam error: {}", e.getMessage());
-            return null;
-        }
+        return ServletRequestUtils.getLongParam(request, name);
     }
 
     /**
-     * 获取请求参数（转换为布尔型）
+     * 获取布尔型请求参数。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getBooleanParam(HttpServletRequest, String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static Boolean getBooleanParam(HttpServletRequest request, String name) {
-        String value = getParam(request, name);
-        if (StringUtils.isEmpty(value)) {
-            return null;
-        }
-        return Boolean.parseBoolean(value);
+        return ServletRequestUtils.getBooleanParam(request, name);
     }
 
+    // ==================== 请求属性（委派） ====================
+
     /**
-     * 获取请求方法
+     * 获取请求方法。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getMethod(HttpServletRequest)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String getMethod(HttpServletRequest request) {
-        if (request == null) {
-            return null;
-        }
-        return request.getMethod();
+        return ServletRequestUtils.getMethod(request);
     }
 
     /**
-     * 获取请求 URI
+     * 获取请求 URI。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getUri(HttpServletRequest)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String getUri(HttpServletRequest request) {
-        if (request == null) {
-            return null;
-        }
-        return request.getRequestURI();
+        return ServletRequestUtils.getUri(request);
     }
 
     /**
-     * 获取完整请求 URL
+     * 获取完整请求 URL。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#getRequestUrl(HttpServletRequest)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String getRequestUrl(HttpServletRequest request) {
-        if (request == null) {
-            return null;
-        }
-        return request.getRequestURL().toString();
+        return ServletRequestUtils.getRequestUrl(request);
     }
 
     /**
-     * 判断是否为 AJAX 请求
+     * 判断是否为 AJAX 请求。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#isAjaxRequest(HttpServletRequest)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static boolean isAjaxRequest(HttpServletRequest request) {
-        if (request == null) {
-            return false;
-        }
-        String header = request.getHeader("X-Requested-With");
-        return "XMLHttpRequest".equals(header);
+        return ServletRequestUtils.isAjaxRequest(request);
     }
 
     /**
-     * 判断是否为 JSON 请求
+     * 判断是否为 JSON 请求。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#isJsonRequest(HttpServletRequest)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static boolean isJsonRequest(HttpServletRequest request) {
-        if (request == null) {
-            return false;
-        }
-        String contentType = request.getContentType();
-        return StringUtils.isNotEmpty(contentType) &&
-               contentType.toLowerCase().contains(MediaType.APPLICATION_JSON_VALUE);
+        return ServletRequestUtils.isJsonRequest(request);
     }
 
+    // ==================== URL 编解码（委派） ====================
+
     /**
-     * URL 编码
+     * URL 编码。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#urlEncode(String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String urlEncode(String str) {
-        return URLEncoder.encode(str, StandardCharsets.UTF_8);
+        return ServletRequestUtils.urlEncode(str);
     }
 
     /**
-     * URL 解码
+     * URL 解码。
+     *
+     * @deprecated 使用 {@link ServletRequestUtils#urlDecode(String)} 替代
      */
+    @Deprecated(since = "2.0.0", forRemoval = false)
     public static String urlDecode(String str) {
-        return URLDecoder.decode(str, StandardCharsets.UTF_8);
+        return ServletRequestUtils.urlDecode(str);
     }
 }

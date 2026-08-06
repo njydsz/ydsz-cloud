@@ -256,7 +256,7 @@ public class CookieUtils {
             return false;
         }
         // 仅当直连对端为可信代理时，才信任 X-Forwarded-Proto 头，防止客户端伪造
-        if (ServletUtils.isTrustedProxy(request.getRemoteAddr())) {
+        if (ServletRequestUtils.isTrustedProxy(request.getRemoteAddr())) {
             String forwardedProto = request.getHeader("X-Forwarded-Proto");
             if ("https".equalsIgnoreCase(forwardedProto)) {
                 return true;

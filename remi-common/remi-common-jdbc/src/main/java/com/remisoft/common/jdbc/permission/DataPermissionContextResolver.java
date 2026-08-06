@@ -14,7 +14,7 @@ import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.domain.enums.DataScopeType;
 import com.remisoft.common.util.auth.AuthInfoUtils;
 import com.remisoft.common.util.auth.RequestHolder;
-import com.remisoft.common.util.http.ServletUtils;
+import com.remisoft.common.util.http.RequestContextUtils;
 import com.remisoft.common.util.string.StringUtils;
 
 /**
@@ -91,7 +91,7 @@ public class DataPermissionContextResolver {
      * @return 数据权限上下文；所有字段均不为 null（集合为空 Set/Map）
      */
     public DataPermissionContext resolve() {
-        HttpServletRequest request = ServletUtils.getRequest();
+        HttpServletRequest request = RequestContextUtils.getRequest();
         if (request == null) {
             request = RequestHolder.getCurrentRequest();
         }

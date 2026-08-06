@@ -2,11 +2,8 @@ package com.remisoft.common.util.id;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,19 +21,25 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>初始化优先级：</b>
  * <ol>
- *   <li>优先使用 Spring 容器中的配置</li>
- *   <li>若未显式调用 init，则自动从配置解析</li>
+ *   <li>优先使用 Spring 容器中的 {@link SnowflakeIdGenerator} Bean（推荐方式）</li>
+ *   <li>若未使用 SnowflakeIdGenerator Bean，则通过本配置类初始化静态兼容层</li>
  * </ol>
+ *
+ * <p>WorkerId 解析顺序：分布式注册中心 > 配置文件 > 环境变量 > 自动计算。
  *
  * @author remi-team
  * @since 1.0.0
- * 
+ *
+ * @deprecated 自 2.0.0 起简化，v3.0 移除。
+ *             WorkerId 解析现在由 {@link SnowflakeIdGenerator} 完成（Spring Bean 方式），
+ *             本配置类仅做兼容性过渡。
  */
+@Deprecated(since = "2.0.0", forRemoval = false)
 @Slf4j
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "remi.util.snowflake", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(SnowflakeProperties.class)
-public class SnowflakeAutoConfiguration implements DisposableBean {
+public class SnowflakeAutoConfiguration {
 
     private static final long MAX_WORKER_ID = SnowflakeUtils.getMaxWorkerId();
     private static final long MAX_DATACENTER_ID = SnowflakeUtils.getMaxDatacenterId();
@@ -44,90 +47,32 @@ public class SnowflakeAutoConfiguration implements DisposableBean {
     /** 数据中心环境变量名（与 workerId 命名风格统一：REMI_SNOWFLAKE_*） */
     private static final String DATACENTER_ENV_VAR = "REMI_SNOWFLAKE_DATACENTER_ID";
 
-    /** 注册中心句柄，应用关闭时用于释放 WorkerId（可能为 null） */
-    private WorkerIdRegistry registry;
-    /** 当前节点 IP，用于注册中心标识 */
-    private String registryNodeIp;
-    /** 从注册中心获取的 WorkerId，应用关闭时用于释放 */
-    private long registryWorkerId;
-    /** 心跳调度器，应用关闭时需 shutdown */
-    private ScheduledExecutorService heartbeatScheduler;
-
     /**
-     * 自动配置 Snowflake ID 生成器
+     * 自动配置 Snowflake ID 生成器（简化版）
      *
-     * <p>根据配置自动解析 workerId 和 datacenterId，并初始化 SnowflakeUtils。
-     * 支持多种 workerId 来源策略：分布式注册中心 > 环境变量 > 配置文件 > 实例索引。
-     *
-     * <p>当使用分布式注册中心获取 WorkerId 时，会自动启动心跳续约任务，
-     * 避免租约过期导致 WorkerId 被回收引发 ID 冲突。
+     * <p>仅作为兼容性过渡，推荐直接使用 {@link SnowflakeIdGenerator} Bean 方式。
      *
      * @param properties Snowflake 配置属性
      * @param environment Spring 环境
-     * @param workerIdRegistryProvider WorkerId 注册中心（可选）
      */
-    public SnowflakeAutoConfiguration(SnowflakeProperties properties, Environment environment,
-                                      ObjectProvider<WorkerIdRegistry> workerIdRegistryProvider) {
+    public SnowflakeAutoConfiguration(SnowflakeProperties properties, Environment environment) {
+        // 兼容旧版：通过静态方式初始化（如果 SnowflakeIdGenerator Bean 不存在）
         try {
-            registry = workerIdRegistryProvider.getIfAvailable();
-            long workerId = resolveWorkerId(properties, environment, registry);
+            long workerId = resolveWorkerId(properties, environment);
             long datacenterId = resolveDatacenterId(properties, environment);
             SnowflakeUtils.init(workerId, datacenterId);
-            log.info("SnowflakeUtils auto-configured. Worker ID: {}, Datacenter ID: {}, Source: {}, Registry: {}",
-                    workerId, datacenterId, properties.getWorkerIdSource(),
-                    registry != null ? registry.type() : "none");
+            log.info("SnowflakeUtils auto-configured (legacy mode). Worker ID: {}, Datacenter ID: {}, Source: {}",
+                    workerId, datacenterId, properties.getWorkerIdSource());
         } catch (IllegalStateException e) {
-            log.warn("SnowflakeUtils 已被提前初始化，配置无效，请检查是否存在 Bean 初始化顺序问题: {}", e.getMessage());
+            log.warn("SnowflakeUtils 已被提前初始化，配置无效: {}", e.getMessage());
         }
     }
 
     /**
-     * 应用关闭时释放注册中心资源
-     *
-     * <p>停止心跳调度器并通知注册中心释放 WorkerId，避免租约残留。
+     * 解析 workerId（不再依赖注册中心心跳机制）
      */
-    @Override
-    public void destroy() {
-        if (heartbeatScheduler != null) {
-            heartbeatScheduler.shutdownNow();
-            log.info("Snowflake heartbeat scheduler shut down for workerId {}", registryWorkerId);
-        }
-        if (registry != null && registryNodeIp != null) {
-            try {
-                registry.release(registryWorkerId, registryNodeIp);
-                log.info("WorkerId {} released from registry {} for node {}",
-                        registryWorkerId, registry.type(), registryNodeIp);
-            } catch (Exception e) {
-                log.warn("Failed to release workerId {} from registry: {}",
-                        registryWorkerId, e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * 解析 workerId
-     */
-    private long resolveWorkerId(SnowflakeProperties properties, Environment environment, WorkerIdRegistry registry) {
+    private long resolveWorkerId(SnowflakeProperties properties, Environment environment) {
         WorkerIdSource source = properties.getWorkerIdSource();
-
-        // 优先使用分布式注册中心获取 workerId
-        if (registry != null) {
-            try {
-                String nodeIp = InetAddress.getLocalHost().getHostAddress();
-                long leaseMillis = properties.getLeaseMillis();
-                long workerId = registry.acquire(nodeIp, leaseMillis);
-                // 启动心跳续约，避免租约过期导致 WorkerId 被回收引发 ID 冲突
-                registryNodeIp = nodeIp;
-                registryWorkerId = workerId;
-                heartbeatScheduler = registry.startHeartbeat(workerId, nodeIp, leaseMillis);
-                log.info("WorkerId {} acquired from registry {} for node {}, heartbeat started (lease={}ms)",
-                        workerId, registry.type(), nodeIp, leaseMillis);
-                return validateWorkerId(workerId);
-            } catch (Exception e) {
-                log.warn("Failed to acquire workerId from registry {}, falling back to configured strategy: {}",
-                        registry.type(), e.getMessage());
-            }
-        }
 
         return switch (source) {
             case CONFIG -> {

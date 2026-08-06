@@ -15,6 +15,7 @@ import org.springframework.core.convert.converter.Converter;
 
 import com.remisoft.common.json.autotype.AutoTypeChecker;
 import com.remisoft.common.json.autotype.AutoTypeWhitelistScanner;
+import com.remisoft.common.json.cache.BeanSerializerCache;
 import com.remisoft.common.json.internal.JsonConfig;
 import com.remisoft.common.json.module.JsonModule;
 import com.remisoft.common.json.spring.JsonHttpMessageConverter;
@@ -181,6 +182,29 @@ public class JsonAutoConfiguration {
             // 注册 Spring Factory 模块
             JsonModuleRegistrar registrar = new JsonModuleRegistrar(springModules);
             registrar.register();
+
+            // P2-FIX: 注册配置变更监听器，当命名策略/日期格式/枚举序列化方式等影响字段输出的配置变更时，
+            // 自动清空 BeanSerializerCache 中已烘焙的字段名缓存，使配置热更新真正生效。
+            // 背景：README 注意事项第 7 点明确指出"命名策略在字段元数据加载时缓存，后续切换对已缓存类无效"，
+            // 本修复通过 ConfigChangeListener 机制消除该隐性陷阱。
+            JsonConfig.addChangeListener((oldConfig, newConfig, newVersion) -> {
+                if (oldConfig == null) {
+                    return;
+                }
+                boolean needClear = false;
+                if (oldConfig.getNamingStrategy() != newConfig.getNamingStrategy()) {
+                    needClear = true;
+                }
+                if (!java.util.Objects.equals(oldConfig.getDateFormat(), newConfig.getDateFormat())) {
+                    needClear = true;
+                }
+                if (oldConfig.isSerializeEnumUsingOrdinal() != newConfig.isSerializeEnumUsingOrdinal()) {
+                    needClear = true;
+                }
+                if (needClear) {
+                    BeanSerializerCache.clear();
+                }
+            });
         }
     }
 }

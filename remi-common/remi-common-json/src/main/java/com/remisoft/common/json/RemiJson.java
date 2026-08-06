@@ -171,10 +171,17 @@ public class RemiJson {
     /**
      * 注册自定义序列化器
      *
+     * <p><b>已废弃：</b>推荐通过实现 {@link com.remisoft.common.json.module.JsonModule} 接口并标注 {@code @Component} 完成注册，
+     * 以获得 SPI 自动发现、优先级控制、模块化测试等能力。
+     *
+     * <p>保留本方法仅为兼容存量代码，新代码不应继续使用。
+     *
      * @param clazz 类型
      * @param serializer 序列化器
      * @param <T> 类型参数
+     * @deprecated 使用 {@code JsonModule} + {@code @Component} 替代（参见 {@code AgentJsonModule} 范例）
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static <T> void register(Class<T> clazz, JsonSerializer<T> serializer) {
         SerializerRegistry.getInstance().register(clazz, serializer);
     }
@@ -182,10 +189,17 @@ public class RemiJson {
     /**
      * 注册自定义反序列化器
      *
+     * <p><b>已废弃：</b>推荐通过实现 {@link com.remisoft.common.json.module.JsonModule} 接口并标注 {@code @Component} 完成注册，
+     * 以获得 SPI 自动发现、优先级控制、模块化测试等能力。
+     *
+     * <p>保留本方法仅为兼容存量代码，新代码不应继续使用。
+     *
      * @param clazz 类型
      * @param deserializer 反序列化器
      * @param <T> 类型参数
+     * @deprecated 使用 {@code JsonModule} + {@code @Component} 替代（参见 {@code AgentJsonModule} 范例）
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static <T> void register(Class<T> clazz, JsonDeserializer<T> deserializer) {
         SerializerRegistry.getInstance().register(clazz, deserializer);
     }
@@ -321,6 +335,123 @@ public class RemiJson {
         }
         String json = toJson(obj);
         return readTree(json);
+    }
+
+    // ==================== 类型安全 Map / List 便捷 API ====================
+
+    /**
+     * JSON 字符串转 Map（类型安全，key 为 String，value 为 Object）。
+     *
+     * @param json JSON 字符串
+     * @return Map 对象，json 为 null/blank 时返回 null
+     */
+    public static Map<String, Object> parseMap(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        Map<String, Object> result = defaultMapper.toObject(json, Map.class);
+        return toStringObjectMap(result);
+    }
+
+    /**
+     * JSON 字符串转 List（指定元素类型）。
+     *
+     * @param json  JSON 字符串
+     * @param clazz 元素类型
+     * @param <T>   元素类型泛型
+     * @return List 对象，json 为 null/blank 时返回 null
+     */
+    public static <T> List<T> parseArray(String json, Class<T> clazz) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
+        Type type = TypeFactory.getInstance().constructCollectionType(List.class, clazz);
+        List<T> result = defaultMapper.toObject(json, type);
+        return result != null ? result : new ArrayList<>();
+    }
+
+    /**
+     * JSON 字符串转 List（元素类型为 Object）。
+     *
+     * @param json JSON 字符串
+     * @return List 对象，json 为 null/blank 时返回 null
+     */
+    public static List<Object> parseArray(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        List<Object> result = defaultMapper.toObject(json, List.class);
+        return toObjectList(result);
+    }
+
+    /**
+     * 从 JSON 字符串反序列化为指定 key/value 类型的 Map。
+     *
+     * @param json       JSON 字符串
+     * @param keyClass   Map key 类型
+     * @param valueClass Map value 类型
+     * @param <K>        key 类型泛型
+     * @param <V>        value 类型泛型
+     * @return 反序列化 Map，json 为空时返回 null
+     */
+    public static <K, V> Map<K, V> fromJsonToMap(String json, Class<K> keyClass, Class<V> valueClass) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
+        Type mapType = TypeFactory.getInstance().constructMapType(Map.class, keyClass, valueClass);
+        Map<K, V> result = defaultMapper.toObject(json, mapType);
+        if (result != null) {
+            return result;
+        }
+        return new LinkedHashMap<>();
+    }
+
+    /**
+     * 将 Map 中嵌套的 List/Map 值转换为类型安全的 Object 表示（与旧版 parseMap 行为一致）。
+     */
+    private static Map<String, Object> toStringObjectMap(Map<String, Object> map) {
+        if (map == null) {
+            return null;
+        }
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Object value = entry.getValue();
+            if (value instanceof Map<?, ?> nestedMap) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> converted = toStringObjectMap((Map<String, Object>) nestedMap);
+                entry.setValue(converted);
+            } else if (value instanceof List<?> nestedList) {
+                entry.setValue(toObjectList(nestedList));
+            }
+        }
+        return map;
+    }
+
+    /**
+     * 将 List 中嵌套的 List/Map 值转换为类型安全的 Object 表示（与旧版 parseArray 行为一致）。
+     */
+    private static List<Object> toObjectList(List<?> list) {
+        if (list == null) {
+            return null;
+        }
+        List<Object> result = new ArrayList<>(list.size());
+        for (Object item : list) {
+            if (item instanceof Map<?, ?> nestedMap) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> converted = toStringObjectMap((Map<String, Object>) nestedMap);
+                result.add(converted);
+            } else if (item instanceof List<?> nestedList) {
+                result.add(toObjectList(nestedList));
+            } else {
+                result.add(item);
+            }
+        }
+        return result;
     }
 
 
