@@ -14,7 +14,7 @@ import org.springframework.web.client.RestClient;
 
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.ChannelProperties;
@@ -49,6 +49,9 @@ public class WebhookChannel implements MessageChannel {
     private static final String CHANNEL_TYPE = "WEBHOOK";
 
     /** 通道配置（提供 default-url / 超时） */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final ChannelProperties channelProperties;
 
     /** HTTP 客户端，在 {@link #init()} 中按配置超时构建 */
@@ -103,7 +106,7 @@ public class WebhookChannel implements MessageChannel {
                     .toEntity(String.class);
             int statusCode = response.getStatusCode().value();
             if (response.getStatusCode().is2xxSuccessful()) {
-                String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
+                String traceId = CHANNEL_TYPE + "-" + String.valueOf(snowflakeIdGenerator.nextId());
                 log.info("[WEBHOOK] 发送成功: url={} status={}", webhookUrl, statusCode);
                 return MessageResult.ok(CHANNEL_TYPE, traceId);
             }

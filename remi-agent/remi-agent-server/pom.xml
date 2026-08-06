@@ -33,6 +33,11 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-core</artifactId>
         </dependency>
+        <!-- remi-common-util: SnowflakeIdGenerator / StringUtils / TracerUtils（直接使用，避免隐式传递） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-util</artifactId>
+        </dependency>
     
         <dependency>
             <groupId>com.remisoft</groupId>

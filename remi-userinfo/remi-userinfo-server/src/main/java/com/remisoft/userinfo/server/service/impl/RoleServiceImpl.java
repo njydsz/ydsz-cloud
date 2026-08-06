@@ -28,7 +28,7 @@ import com.remisoft.userinfo.infra.mapper.UserRoleMapper;
 import com.remisoft.userinfo.server.service.RoleService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,6 +74,9 @@ import com.remisoft.userinfo.domain.converter.UserInfoConverter;
 public class RoleServiceImpl implements RoleService {
 
     /** 角色 Mapper */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final RoleMapper roleMapper;
     /** 角色-权限关联 Mapper */
     private final RolePermissionMapper rolePermissionMapper;
@@ -234,7 +237,7 @@ public class RoleServiceImpl implements RoleService {
         List<RolePermission> list = new ArrayList<>(permissionIds.size());
         for (String permId : permissionIds) {
             RolePermission rp = new RolePermission();
-            rp.setId(SnowflakeUtils.nextIdStr());
+            rp.setId(String.valueOf(snowflakeIdGenerator.nextId()));
             rp.setRoleId(roleId);
             rp.setPermissionId(permId);
             rp.setTenantId(role.getTenantId());

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Map;
 
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.json.tree.ArrayNode;
@@ -23,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>负责 {@link DagDefinition} 与 JSON 字符串之间的转换，
  * 存储/读取 {@code JobDag.dagDefinition} 字段。
  *
- * <p>使用 RemiJson 手动解析，避免 record 反序列化兼容性问题，
- * 并提供校验（节点 jobKey 唯一、边的 from/to 必须存在于节点列表）。
+ * <p>序列化使用 RemiJson POJO 自动序列化（record 字段已标记 @JsonProperty），
+ * 反序列化保留手工解析以支持结构校验和向后兼容，避免 record 构造函数兼容性问题。
  *
  * @author remi-team
  * @since 1.0.0
@@ -34,7 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 public class DagDefinitionCodec {
 
     /**
-     * 序列化 DAG 定义为 JSON 字符串。
+     * 序列化 DAG 定义为 JSON 字符串（使用 POJO 自动序列化）。
+     *
+     * <p>1.1.0 重构：DagNode/DagEdge 已添加 @JsonProperty 和 @JsonClass 注解，
+     * 直接委托 RemiJson 引擎完成序列化，消除 50+ 行手工树构建代码。</p>
      *
      * @param definition DAG 定义
      * @return JSON 字符串
@@ -43,39 +45,7 @@ public class DagDefinitionCodec {
         if (definition == null) {
             return null;
         }
-        ObjectNode root = new ObjectNode();
-        ArrayNode nodesArr = new ArrayNode();
-        for (DagNode node : definition.nodes()) {
-            ObjectNode n = new ObjectNode();
-            n.put("jobKey", node.jobKey());
-            n.put("jobId", node.jobId());
-            n.put("label", node.label());
-            n.put("x", node.x());
-            n.put("y", node.y());
-            n.put("paramsJson", node.paramsJson());
-            // P2-1: 节点类型扩展字段
-            n.put("nodeType", node.nodeType());
-            n.put("conditionExpression", node.conditionExpression());
-            n.put("loopCount", node.loopCount());
-            n.put("parallelBranches", node.parallelBranches());
-            // P1-5/P1-6: 子工作流/审批节点扩展字段
-            n.put("subWorkflowDagKey", node.subWorkflowDagKey());
-            n.put("approvalUsers", node.approvalUsers());
-            n.put("approvalTimeoutMinutes", node.approvalTimeoutMinutes());
-            nodesArr.add(n);
-        }
-        ArrayNode edgesArr = new ArrayNode();
-        for (DagEdge edge : definition.edges()) {
-            ObjectNode e = new ObjectNode();
-            e.put("from", edge.from());
-            e.put("to", edge.to());
-            e.put("failStrategy", edge.failStrategy());
-            e.put("condition", edge.condition());
-            edgesArr.add(e);
-        }
-        root.put("nodes", nodesArr);
-        root.put("edges", edgesArr);
-        return RemiJson.toJson(root);
+        return RemiJson.toJson(definition);
     }
 
     /**
@@ -101,12 +71,12 @@ public class DagDefinitionCodec {
 
         // 解析 nodes
         List<DagNode> nodes = new ArrayList<>();
-        ArrayNode nodesArr = root.getJSONArray("nodes");
+        ArrayNode nodesArr = root.getArrayNode("nodes");
         if (nodesArr == null || nodesArr.isEmpty()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
         }
         for (int i = 0; i < nodesArr.size(); i++) {
-            ObjectNode n = nodesArr.getJSONObject(i);
+            ObjectNode n = nodesArr.getObjectNode(i);
             String jobKey = n.getString("jobKey");
             if (jobKey == null || jobKey.isBlank()) {
                 throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
@@ -137,10 +107,10 @@ public class DagDefinitionCodec {
 
         // 解析 edges（可为空）
         List<DagEdge> edges = new ArrayList<>();
-        ArrayNode edgesArr = root.getJSONArray("edges");
+        ArrayNode edgesArr = root.getArrayNode("edges");
         if (edgesArr != null) {
             for (int i = 0; i < edgesArr.size(); i++) {
-                ObjectNode e = edgesArr.getJSONObject(i);
+                ObjectNode e = edgesArr.getObjectNode(i);
                 String from = e.getString("from");
                 String to = e.getString("to");
                 if (from == null || to == null) {

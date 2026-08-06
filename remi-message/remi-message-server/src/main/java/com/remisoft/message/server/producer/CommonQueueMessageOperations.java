@@ -14,7 +14,7 @@ import com.remisoft.common.queue.enums.QueueType;
 import com.remisoft.common.queue.queue.IMessageQueue;
 import com.remisoft.common.queue.queue.IMessageQueueProvider;
 import com.remisoft.common.queue.service.IMessagePublisher;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,13 +40,16 @@ import lombok.extern.slf4j.Slf4j;
 public class CommonQueueMessageOperations implements MessageQueueOperations {
 
     private final IMessagePublisher publisher;
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     /**
      * 构造方法，通过 {@link IMessageQueueProvider} 创建 publisher。
      *
      * @param queueProviderProvider common-queue 队列提供者
+     * @param snowflakeIdGenerator 分布式 ID 生成器
      */
-    public CommonQueueMessageOperations(ObjectProvider<IMessageQueueProvider> queueProviderProvider) {
+    public CommonQueueMessageOperations(ObjectProvider<IMessageQueueProvider> queueProviderProvider,
+                                        SnowflakeIdGenerator snowflakeIdGenerator) {
         IMessageQueueProvider provider = queueProviderProvider.getIfAvailable();
         if (provider == null) {
             throw new IllegalStateException("IMessageQueueProvider 未配置，无法使用 common-queue 抽象");
@@ -54,6 +57,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
         IMessageQueue queue = provider.createMessageQueue(
                 QueueType.ROCKET);
         this.publisher = queue.createPublisher(RemiMessageTopics.TOPIC_MESSAGE);
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
         log.info("[CommonQueueMQ] 使用 common-queue 抽象发送消息, topic={}", RemiMessageTopics.TOPIC_MESSAGE);
     }
 
@@ -87,7 +91,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
 
     private void ensureMessageId(MessageRequest req) {
         if (!StringUtils.hasText(req.getMessageId())) {
-            req.setMessageId(SnowflakeUtils.nextIdStr());
+            req.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
         }
     }
 }

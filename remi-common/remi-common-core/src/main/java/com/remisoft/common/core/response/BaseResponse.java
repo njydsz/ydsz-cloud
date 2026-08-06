@@ -3,6 +3,7 @@ package com.remisoft.common.core.response;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.core.code.ResultCode;
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.json.annotation.JsonInclude;
 import com.remisoft.common.json.annotation.JsonPropertyOrder;
 import lombok.Data;
@@ -49,6 +50,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "total", "pageNum", "pageSize", "extensions"})
+@JsonClass(description = "统一API响应基类，标记可安全反序列化")
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
     private static final long serialVersionUID = 1L;

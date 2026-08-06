@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.message.domain.dto.core.NotificationSendDTO;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.service.core.NotificationService;
@@ -44,6 +44,9 @@ public class InAppChannel implements MessageChannel {
     /** 通道类型 */
     private static final String CHANNEL_TYPE = "INAPP";
 
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final NotificationService notificationService;
 
     @Override
@@ -56,7 +59,7 @@ public class InAppChannel implements MessageChannel {
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
             return MessageResult.fail(CHANNEL_TYPE, "站内信接收人不能为空");
         }
-        String traceId = "INAPP-" + SnowflakeUtils.nextIdStr();
+        String traceId = "INAPP-" + String.valueOf(snowflakeIdGenerator.nextId());
         try {
             NotificationSendDTO dto = buildNotificationDTO(request);
             int count = notificationService.send(dto);

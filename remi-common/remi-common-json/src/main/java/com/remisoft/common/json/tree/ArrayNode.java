@@ -30,7 +30,7 @@ import com.remisoft.common.json.RemiJson;
  * // 获取元素
  * String first = array.getString(0);
  * int second = array.getIntValue(1);
- * ObjectNode sub = array.getJSONObject(2);
+ * ObjectNode sub = array.getObjectNode(2);
  * </pre>
  *
  * @author remi-team
@@ -433,8 +433,21 @@ public final class ArrayNode extends JsonNode {
      *
      * @param index 索引
      * @return ObjectNode 实例
+     * @deprecated 使用 {@link #getObjectNode(int)} 替代，命名风格更统一
      */
+    @Deprecated(since = "1.1.0")
     public ObjectNode getJSONObject(int index) {
+        return getObjectNode(index);
+    }
+
+    /**
+     * 获取嵌套对象节点（推荐使用的命名风格），越界或非对象返回 null。
+     *
+     * @param index 索引
+     * @return ObjectNode 实例
+     * @since 1.1.0
+     */
+    public ObjectNode getObjectNode(int index) {
         JsonNode node = get(index);
         if (node instanceof ObjectNode objNode) {
             return objNode;
@@ -447,8 +460,21 @@ public final class ArrayNode extends JsonNode {
      *
      * @param index 索引
      * @return ArrayNode 实例
+     * @deprecated 使用 {@link #getArrayNode(int)} 替代，命名风格更统一
      */
+    @Deprecated(since = "1.1.0")
     public ArrayNode getJSONArray(int index) {
+        return getArrayNode(index);
+    }
+
+    /**
+     * 获取嵌套数组节点（推荐使用的命名风格），越界或非数组返回 null。
+     *
+     * @param index 索引
+     * @return ArrayNode 实例
+     * @since 1.1.0
+     */
+    public ArrayNode getArrayNode(int index) {
         JsonNode node = get(index);
         if (node instanceof ArrayNode arrNode) {
             return arrNode;

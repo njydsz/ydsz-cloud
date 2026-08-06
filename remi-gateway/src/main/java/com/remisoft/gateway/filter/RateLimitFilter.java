@@ -459,7 +459,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.TOO_MANY_REQUESTS,
                 "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
-        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJsonBytes(body);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
         log.info("[RateLimit] 限流触发: dimension={} identity={} path={} reset={}s",

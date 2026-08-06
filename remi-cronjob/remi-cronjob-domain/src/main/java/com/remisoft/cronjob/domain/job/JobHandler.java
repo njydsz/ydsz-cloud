@@ -47,20 +47,8 @@ public interface JobHandler {
         if (paramsJson == null || paramsJson.isBlank()) {
             return JobHandler.class.getName() + ":empty";
         }
-        try {
-            java.security.MessageDigest digest =
-                    java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(paramsJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(hash.length * 2);
-            for (byte b : hash) {
-                sb.append(Character.forDigit((b >> 4) & 0xF, 16))
-                        .append(Character.forDigit(b & 0xF, 16));
-            }
-            return getClass().getName() + ":" + sb;
-        } catch (java.security.NoSuchAlgorithmException e) {
-            // SHA-256 在 JDK 中必定存在，此处仅防御性兜底
-            return getClass().getName() + ":" + Integer.toHexString(paramsJson.hashCode());
-        }
+        String hash = com.remisoft.common.util.security.DigestUtils.sha256Hex(paramsJson);
+        return getClass().getName() + ":" + hash;
     }
 
     /**

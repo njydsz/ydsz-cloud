@@ -1,7 +1,6 @@
 package com.remisoft.gateway.config;
 
 import java.net.ConnectException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
 import com.remisoft.common.json.RemiJson;
@@ -108,7 +107,7 @@ public class GatewayErrorConfig {
             exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
             exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-            byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = RemiJson.toJsonBytes(body);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
             return exchange.getResponse().writeWith(Mono.just(buffer));
         }

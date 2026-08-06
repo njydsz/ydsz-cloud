@@ -2,6 +2,9 @@ package com.remisoft.cronjob.server.core.dag;
 
 import java.util.Objects;
 
+import com.remisoft.common.json.annotation.JsonClass;
+import com.remisoft.common.json.annotation.JsonProperty;
+
 /**
  * DAG 节点定义（P2 DAG 增强 + P1-5/P1-6 子工作流/审批节点）。
  *
@@ -34,7 +37,8 @@ import java.util.Objects;
  * @author remi-team
  * @since 1.0.0
  */
-public record DagNode(String jobKey, String jobId, String label,
+@JsonClass(description = "DAG 节点定义，标记可安全反序列化")
+public record DagNode(@JsonProperty("jobKey") String jobKey, String jobId, String label,
                        int x, int y, String paramsJson,
                        String nodeType, String conditionExpression,
                        Integer loopCount, Integer parallelBranches,

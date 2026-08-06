@@ -2,6 +2,9 @@ package com.remisoft.cronjob.server.core.dag;
 
 import java.util.Objects;
 
+import com.remisoft.common.json.annotation.JsonClass;
+import com.remisoft.common.json.annotation.JsonProperty;
+
 /**
  * DAG 边定义（P2 DAG 增强）。
  *
@@ -19,7 +22,8 @@ import java.util.Objects;
  * @author remi-team
  * @since 1.0.0
  */
-public record DagEdge(String from, String to, String failStrategy, String condition) {
+@JsonClass(description = "DAG 边定义，标记可安全反序列化")
+public record DagEdge(@JsonProperty("from") String from, String to, String failStrategy, String condition) {
 
     /**
      * 紧凑构造器：校验 from / to 非空且不自环。

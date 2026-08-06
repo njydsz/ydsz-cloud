@@ -7,7 +7,7 @@ import com.remisoft.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.message.server.config.MessageProperties;
 import com.remisoft.message.server.service.receipt.ReadReceiptService;
 
@@ -40,6 +40,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ReadReceiptServiceImpl implements ReadReceiptService {
 
     /** Redis 模板（短链映射 / 已读状态） */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final RedisService redisService;
     /** P3-3.2: tracking / shortlink base-url 统一从 MessageProperties 读取 */
     private final MessageProperties messageProperties;
@@ -104,7 +107,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
         if (!StringUtils.hasText(originalUrl)) {
             return originalUrl;
         }
-        String code = SnowflakeUtils.nextIdStr();
+        String code = String.valueOf(snowflakeIdGenerator.nextId());
         String shortlinkBaseUrl = messageProperties.getShortlink().getBaseUrl();
         String shortUrl = shortlinkBaseUrl + "/s/" + code;
         try {

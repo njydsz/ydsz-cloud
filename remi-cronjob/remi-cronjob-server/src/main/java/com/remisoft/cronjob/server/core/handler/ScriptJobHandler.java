@@ -124,7 +124,7 @@ public class ScriptJobHandler implements JobHandler {
             throw new IllegalArgumentException("SHELL 任务参数缺少 script（脚本内容或路径）");
         }
 
-        List<String> args = parseArgs(params.getJSONArray("args"));
+        List<String> args = parseArgs(params.getArrayNode("args"));
         Long timeoutMs = params.getLong("timeoutMs");
         if (timeoutMs == null || timeoutMs < 0) {
             timeoutMs = DEFAULT_TIMEOUT_MS;

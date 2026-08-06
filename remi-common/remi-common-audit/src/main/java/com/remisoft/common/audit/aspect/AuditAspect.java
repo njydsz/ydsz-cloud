@@ -35,7 +35,7 @@ import com.remisoft.common.audit.enums.AuditStatus;
 import com.remisoft.common.audit.event.AuditEvent;
 import com.remisoft.common.audit.mask.SensitiveFieldMask;
 import com.remisoft.common.audit.template.AuditTemplateProcessor;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.util.ip.IpAddrUtils;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.string.StringUtils;
@@ -101,17 +101,23 @@ public class AuditAspect {
      */
     private final Set<String> sensitiveParams = new HashSet<>();
 
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     /**
      * 构造审计日志切面
      *
      * @param eventPublisher    Spring 事件发布器
      * @param properties        审计配置属性
      * @param templateProcessor SpEL 模板处理器
+     * @param snowflakeIdGenerator 分布式 ID 生成器
      */
-    public AuditAspect(ApplicationEventPublisher eventPublisher, AuditProperties properties, AuditTemplateProcessor templateProcessor) {
+    public AuditAspect(ApplicationEventPublisher eventPublisher, AuditProperties properties, AuditTemplateProcessor templateProcessor,
+                        SnowflakeIdGenerator snowflakeIdGenerator) {
         this.eventPublisher = eventPublisher;
         this.properties = properties;
         this.templateProcessor = templateProcessor;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
 
         if (properties.getSensitiveParams() != null) {
             this.sensitiveParams.addAll(Arrays.asList(properties.getSensitiveParams()));
@@ -283,7 +289,7 @@ public class AuditAspect {
                                    Object result, Throwable exception, long startTime) {
         AuditLog auditLog = new AuditLog();
 
-        auditLog.setId(SnowflakeUtils.nextIdStr());
+        auditLog.setId(String.valueOf(snowflakeIdGenerator.nextId()));
         auditLog.setAuditType(audit.type().getCode());
         auditLog.setAction(audit.action().getCode());
         auditLog.setStatus(exception != null ? AuditStatus.FAILURE.getCode() : AuditStatus.SUCCESS.getCode());

@@ -1,6 +1,5 @@
 package com.remisoft.gateway.filter;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
 
@@ -341,7 +340,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.BAD_REQUEST);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.BAD_REQUEST, "error.BAD_REQUEST");
-        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJsonBytes(body);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }
@@ -362,7 +361,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.UNAUTHORIZED, msg);
         body.setTraceId(traceId);
-        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJsonBytes(body);
 
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));

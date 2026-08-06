@@ -3,6 +3,7 @@ package com.remisoft.common.domain.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.json.annotation.JsonFormat;
 import com.remisoft.common.json.annotation.JsonIgnore;
 
@@ -49,6 +50,7 @@ import lombok.experimental.SuperBuilder;
  * @since 1.0.0
  * @since 1.4.0 扁平化：合并 BaseIdEntity/BaseAuditEntity，移除 domainEvents，纯领域无 MP 注解
  */
+@JsonClass(description = "领域实体基类，标记可安全反序列化")
 @Data
 @SuperBuilder
 @NoArgsConstructor

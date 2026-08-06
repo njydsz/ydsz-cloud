@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.MessageProperties;
 
@@ -54,13 +54,16 @@ public class WxMiniChannel implements MessageChannel {
     private final MessageProperties messageProperties;
     private final RestTemplate restTemplate;
     private final RedisService redisService;
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     public WxMiniChannel(MessageProperties messageProperties,
                          RestTemplate restTemplate,
-                         RedisService redisService) {
+                         RedisService redisService,
+                         SnowflakeIdGenerator snowflakeIdGenerator) {
         this.messageProperties = messageProperties;
         this.restTemplate = restTemplate;
         this.redisService = redisService;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     @Override
@@ -108,7 +111,7 @@ public class WxMiniChannel implements MessageChannel {
             Map<?, ?> resultBody = resp.getBody();
 
             if (resultBody != null && Integer.valueOf(0).equals(resultBody.get("errcode"))) {
-                String traceId = "WX_MINI-" + SnowflakeUtils.nextIdStr();
+                String traceId = "WX_MINI-" + String.valueOf(snowflakeIdGenerator.nextId());
                 log.info("[WxMiniChannel] 发送成功: receiver={} template={}",
                         request.getReceiver(), request.getTemplateCode());
                 return MessageResult.ok(CHANNEL_TYPE, traceId);
@@ -177,7 +180,7 @@ public class WxMiniChannel implements MessageChannel {
      * Mock 发送（开发环境降级）。
      */
     private MessageResult mockSend(MessageRequest request) {
-        String traceId = "WX_MINI-MOCK-" + SnowflakeUtils.nextIdStr();
+        String traceId = "WX_MINI-MOCK-" + String.valueOf(snowflakeIdGenerator.nextId());
         log.info("[WxMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
                 request.getReceiver(), request.getTemplateCode(), request.getContent());
         return MessageResult.ok(CHANNEL_TYPE, traceId);

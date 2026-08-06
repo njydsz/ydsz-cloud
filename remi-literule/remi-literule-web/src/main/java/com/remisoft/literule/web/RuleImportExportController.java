@@ -174,7 +174,7 @@ public class RuleImportExportController {
                     skipped++;
                     continue;
                 }
-                RuleDefinition def = RemiJson.fromJson(RemiJson.toJson(ruleMap), RuleDefinition.class);
+                RuleDefinition def = RemiJson.convertValue(ruleMap, RuleDefinition.class);
                 // 导入时重置版本和状态
                 def.setVersion(1);
                 def.setStatus("DRAFT");

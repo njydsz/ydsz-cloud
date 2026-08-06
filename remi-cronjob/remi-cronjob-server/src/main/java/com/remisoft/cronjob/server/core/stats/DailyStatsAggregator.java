@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.cronjob.domain.entity.log.JobDailyStats;
 import com.remisoft.cronjob.infra.mapper.log.JobDailyStatsMapper;
 import com.remisoft.cronjob.server.config.CronjobProperties;
@@ -44,6 +44,9 @@ import com.remisoft.common.lock.annotation.DistributedScheduled;
 @RequiredArgsConstructor
 @ConditionalOnBean(LeaderElector.class)
 public class DailyStatsAggregator {
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final JobDailyStatsMapper jobDailyStatsMapper;
     private final LeaderElector leaderElector;
@@ -138,7 +141,7 @@ public class DailyStatsAggregator {
      */
     private JobDailyStats toStats(Map<String, Object> row, LocalDate statsDate) {
         JobDailyStats stats = new JobDailyStats();
-        stats.setId(SnowflakeUtils.nextIdStr());
+        stats.setId(String.valueOf(snowflakeIdGenerator.nextId()));
         stats.setJobId((String) row.get("job_id"));
         stats.setJobKey((String) row.get("job_key"));
         stats.setStatsDate(statsDate);

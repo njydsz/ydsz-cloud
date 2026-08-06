@@ -22,7 +22,7 @@ import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.ChannelProperties;
@@ -61,6 +61,9 @@ public class FeishuChannel implements MessageChannel {
     /** 飞书机器人 Webhook URL 前缀（hook ID 拼接此后缀） */
     private static final String WEBHOOK_PREFIX =
             "https://open.feishu.cn/open-apis/bot/v2/hook/";
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     /** 通道配置（提供 default-hook / secret / 超时） */
     private final ChannelProperties channelProperties;
@@ -113,7 +116,7 @@ public class FeishuChannel implements MessageChannel {
                     .body(RemiJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
-            String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
+            String traceId = CHANNEL_TYPE + "-" + snowflakeIdGenerator.nextId();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> body = RemiJson.parseMap(response.getBody());

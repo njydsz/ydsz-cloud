@@ -1,15 +1,16 @@
 package com.remisoft.common.app.util;
 
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
+import com.remisoft.common.util.spring.SpringContextHolder;
 
 /**
  * 请求 ID 生成器
  *
- * <p>委托给 {@link SnowflakeUtils} 统一生成分布式唯一 ID，用于在过滤器链中标识单次请求。
+ * <p>委托给 {@link SnowflakeIdGenerator} 统一生成分布式唯一 ID，用于在过滤器链中标识单次请求。
  * 本类为工具类，禁止实例化。
  *
  * <p><b>线程安全性：</b>仅包含静态方法，无共享状态，线程安全；
- * 底层 {@link SnowflakeUtils} 在分布式部署中应正确配置 workerId 以避免 ID 冲突。
+ * 底层 {@link SnowflakeIdGenerator} 通过 {@link SpringContextHolder} 懒获取 Bean，无硬依赖。
  *
  * @author remi-team
  * @since 1.0.0
@@ -31,7 +32,7 @@ public final class RequestIdGenerator {
      * @return 唯一请求 ID（雪花算法生成的 long 值字符串）
      */
     public static String generateId() {
-        return String.valueOf(SnowflakeUtils.getInstance().nextId());
+        return String.valueOf(SpringContextHolder.getBean(SnowflakeIdGenerator.class).nextId());
     }
 
     /**
@@ -43,6 +44,6 @@ public final class RequestIdGenerator {
      * @return 形如 {@code prefix + snowflakeId} 的字符串
      */
     public static String generateId(String prefix) {
-        return prefix + SnowflakeUtils.getInstance().nextId();
+        return prefix + SpringContextHolder.getBean(SnowflakeIdGenerator.class).nextId();
     }
 }

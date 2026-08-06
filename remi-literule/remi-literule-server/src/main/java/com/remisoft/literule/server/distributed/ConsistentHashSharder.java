@@ -1,11 +1,11 @@
 package com.remisoft.literule.server.distributed;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.remisoft.common.util.security.DigestUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +40,6 @@ public class ConsistentHashSharder {
 
     /** 默认虚拟节点数 */
     public static final int DEFAULT_VNODES = 150;
-
-    /** MD5 算法名称 */
-    private static final String MD5 = "MD5";
 
     /** hash 环：hash值 → 物理节点（TreeMap 保证有序） */
     private volatile TreeMap<Long, ClusterNode> ring = new TreeMap<>();
@@ -162,20 +159,13 @@ public class ConsistentHashSharder {
     }
 
     private static long hash0(String key) {
-        try {
-            MessageDigest md = MessageDigest.getInstance(MD5);
-            byte[] digest = md.digest(key.getBytes(StandardCharsets.UTF_8));
-            long h = 0;
-            for (int i = 0; i < 8; i++) {
-                h <<= 8;
-                h |= (digest[i] & 0xFF);
-            }
-            return h & Long.MAX_VALUE;
-        } catch (NoSuchAlgorithmException e) {
-            // MD5 一定存在
-            log.warn("[ConsistentHashSharder] MD5 算法不可用，降级使用 hashCode key={}: {}", key, e.getMessage());
-            return key.hashCode() & Long.MAX_VALUE;
+        byte[] digest = DigestUtils.digest(key.getBytes(StandardCharsets.UTF_8), "MD5", null, 1);
+        long h = 0;
+        for (int i = 0; i < 8; i++) {
+            h <<= 8;
+            h |= (digest[i] & 0xFF);
         }
+        return h & Long.MAX_VALUE;
     }
 
     private String buildSignature(List<ClusterNode> nodes) {

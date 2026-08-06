@@ -1,6 +1,5 @@
 package com.remisoft.gateway.filter;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -212,7 +211,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, "error.IP_FORBIDDEN");
         body.setTraceId(traceId);
-        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJsonBytes(body);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }

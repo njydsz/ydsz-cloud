@@ -1,6 +1,5 @@
 package com.remisoft.gateway.filter;
 
-import java.nio.charset.StandardCharsets;
 
 import com.remisoft.common.json.RemiJson;
 
@@ -143,7 +142,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
         body.setTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-        byte[] bytes = RemiJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = RemiJson.toJsonBytes(body);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
         log.warn("[PayloadValidation] 请求体校验失败 path={} reason={}",

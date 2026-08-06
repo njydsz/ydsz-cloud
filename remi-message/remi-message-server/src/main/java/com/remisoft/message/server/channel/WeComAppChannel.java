@@ -16,7 +16,7 @@ import org.springframework.web.client.RestClient;
 
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.ChannelProperties;
@@ -49,6 +49,9 @@ public class WeComAppChannel implements MessageChannel {
     private static final String CHANNEL_TYPE = "WECOM_APP";
     private static final String TOKEN_CACHE_KEY_PREFIX = "remi:msg:wecom:app:access_token:";
     private static final Duration TOKEN_TTL = Duration.ofSeconds(7200);
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final ChannelProperties channelProperties;
     private final RedisService redisService;
@@ -106,7 +109,7 @@ public class WeComAppChannel implements MessageChannel {
                     .body(RemiJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
-            String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
+            String traceId = CHANNEL_TYPE + "-" + String.valueOf(snowflakeIdGenerator.nextId());
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> body = RemiJson.parseMap(response.getBody());

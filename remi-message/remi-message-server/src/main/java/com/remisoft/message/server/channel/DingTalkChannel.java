@@ -17,7 +17,7 @@ import org.springframework.web.client.RestClient;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.util.security.DigestUtils;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.ChannelProperties;
@@ -56,6 +56,9 @@ public class DingTalkChannel implements MessageChannel {
             "https://oapi.dingtalk.com/robot/send?access_token=";
 
     /** 通道配置（提供 default-token / secret / 超时） */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final ChannelProperties channelProperties;
 
     /** HTTP 客户端，在 {@link #init()} 中按配置超时构建 */
@@ -116,7 +119,7 @@ public class DingTalkChannel implements MessageChannel {
                     .body(RemiJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
-            String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
+            String traceId = CHANNEL_TYPE + "-" + String.valueOf(snowflakeIdGenerator.nextId());
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> body = RemiJson.parseMap(response.getBody());

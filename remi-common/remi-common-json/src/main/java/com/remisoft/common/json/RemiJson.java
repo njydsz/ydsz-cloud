@@ -257,6 +257,55 @@ public class RemiJson {
         return SerializerRegistry.getInstance().hasDeserializer(clazz) || JsonModuleRegistry.getInstance().hasDeserializer(clazz);
     }
 
+    // ==================== 类型转换 ====================
+
+    /**
+     * 将一个对象转换为指定类型的实例。
+     *
+     * <p>内部通过 JSON 序列化/反序列化实现，适用于 Map&lt;?, ?&gt; 到 POJO、对象深拷贝等场景。
+     * 推荐替代 {@code RemiJson.fromJson(RemiJson.toJson(obj), TargetClass.class)} 这种链式调用。</p>
+     *
+     * <p><b>典型用法：</b></p>
+     * <pre>{@code
+     * // Map 转 POJO
+     * User user = RemiJson.convertValue(userMap, User.class);
+     *
+     * // 泛型类型转换
+     * List<Order> orders = RemiJson.convertValue(rawData,
+     *         new JsonType<List<Order>>() {});
+     *
+     * // 对象深拷贝
+     * User copy = RemiJson.convertValue(original, User.class);
+     * }</pre>
+     *
+     * @param fromValue 源对象（可为 Map、POJO、基本类型等）
+     * @param toValueType 目标类型
+     * @param <T> 目标类型泛型
+     * @return 转换后的对象实例
+     * @throws JsonException 如果转换失败
+     * @since 1.1.0
+     */
+    public static <T> T convertValue(Object fromValue, Class<T> toValueType) {
+        return defaultMapper.convertValue(fromValue, toValueType);
+    }
+
+    /**
+     * 将一个对象转换为指定泛型类型的实例。
+     *
+     * <p>适用于带泛型参数的目标类型（如 {@code List<User>}、{@code Map<String, Order>}），
+     * 推荐使用 {@link JsonType} 匿名内部类传递完整的泛型信息。</p>
+     *
+     * @param fromValue      源对象
+     * @param toValueTypeRef 目标泛型类型引用
+     * @param <T>            目标类型泛型
+     * @return 转换后的对象实例
+     * @throws JsonException 如果转换失败
+     * @since 1.1.0
+     */
+    public static <T> T convertValue(Object fromValue, JsonType<T> toValueTypeRef) {
+        return defaultMapper.convertValue(fromValue, toValueTypeRef);
+    }
+
     // ==================== Tree Model API ====================
 
     /**

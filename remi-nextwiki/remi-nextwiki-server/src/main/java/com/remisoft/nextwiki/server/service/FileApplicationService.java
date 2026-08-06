@@ -2,7 +2,6 @@ package com.remisoft.nextwiki.server.service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -860,19 +859,8 @@ public class FileApplicationService {
         return filename.substring(dot + 1).toLowerCase();
     }
 
-    private String calculateSha256(InputStream inputStream) throws Exception {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] buffer = new byte[8192];
-        int len;
-        while ((len = inputStream.read(buffer)) != -1) {
-            digest.update(buffer, 0, len);
-        }
-        byte[] hash = digest.digest();
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hash) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
+    private String calculateSha256(InputStream inputStream) throws IOException {
+        return DigestUtils.sha256Hex(inputStream);
     }
 
     /**

@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.service.receipt.ReadReceiptService;
@@ -50,16 +50,22 @@ public class EmailChannel implements MessageChannel {
     /** P2-14: 已读回执服务（可选注入） */
     private final ReadReceiptService readReceiptService;
 
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     /**
      * 构造方法，邮件发送器与回执服务可选注入。
      *
      * @param mailSender        JavaMail 发送器
      * @param readReceiptService 已读回执服务（P2-14）
+     * @param snowflakeIdGenerator 分布式 ID 生成器
      */
     public EmailChannel(@Autowired(required = false) JavaMailSender mailSender,
-                        @Autowired(required = false) ReadReceiptService readReceiptService) {
+                        @Autowired(required = false) ReadReceiptService readReceiptService,
+                        SnowflakeIdGenerator snowflakeIdGenerator) {
         this.mailSender = mailSender;
         this.readReceiptService = readReceiptService;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     /**
@@ -132,7 +138,7 @@ public class EmailChannel implements MessageChannel {
                 msg.setText(content);
                 mailSender.send(msg);
             }
-            String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
+            String traceId = CHANNEL_TYPE + "-" + String.valueOf(snowflakeIdGenerator.nextId());
             log.info("[EMAIL] 发送成功: to={} subject={}", request.getReceiver(), subject);
             return MessageResult.ok(CHANNEL_TYPE, traceId);
         } catch (Exception e) {
@@ -153,7 +159,7 @@ public class EmailChannel implements MessageChannel {
         try {
             var attachments = RemiJson.parseArrayNode(attachmentsJson);
             for (int i = 0; i < attachments.size(); i++) {
-                var item = attachments.getJSONObject(i);
+                var item = attachments.getObjectNode(i);
                 String name = item.getString("name");
                 String data = item.getString("data");
                 if (StringUtils.hasText(name) && StringUtils.hasText(data)) {
@@ -178,7 +184,7 @@ public class EmailChannel implements MessageChannel {
         try {
             var images = RemiJson.parseArrayNode(inlineJson);
             for (int i = 0; i < images.size(); i++) {
-                var item = images.getJSONObject(i);
+                var item = images.getObjectNode(i);
                 String cid = item.getString("cid");
                 String data = item.getString("data");
                 if (StringUtils.hasText(cid) && StringUtils.hasText(data)) {

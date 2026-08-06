@@ -152,7 +152,7 @@ public class HttpJobHandler implements JobHandler {
         requestBuilder.timeout(timeout);
 
         // 设置请求头
-        ObjectNode headers = params.getJSONObject("headers");
+        ObjectNode headers = params.getObjectNode("headers");
         if (headers != null) {
             for (Map.Entry<String, JsonNode> entry : headers.entrySet()) {
                 if (entry.getValue() != null && !entry.getValue().isNull()) {

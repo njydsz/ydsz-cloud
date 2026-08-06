@@ -298,7 +298,12 @@ public class StringUtils {
      * @param keepPrefix 保留前缀字符数
      * @param keepSuffix 保留后缀字符数
      * @return 脱敏后的字符串
+     * @deprecated 自 2.1.0 起，脱敏能力已统一收口至
+     *             {@link com.remisoft.common.safe.desensitize.SensitiveUtils#mask(String, int, int)}。
+     *             新代码请使用 {@code SensitiveUtils.mask(value, prefixKeep, suffixKeep)} 替代。
+     *             标记废弃不代表立即移除，但未来版本会迁移调用方后清理。
      */
+    @Deprecated(since = "2.1.0", forRemoval = true)
     public static String maskSensitive(String str, int keepPrefix, int keepSuffix) {
         if (str == null || str.isEmpty()) {
             return str;
@@ -312,7 +317,13 @@ public class StringUtils {
 
     /**
      * 手机号脱敏（保留前 3 位和后 4 位）
+     *
+     * @deprecated 自 2.1.0 起，脱敏能力已统一收口至
+     *             {@link com.remisoft.common.safe.desensitize.SensitiveUtils}。
+     *             新代码请使用 {@code SensitiveUtils.mask(mobile, SensitiveType.MOBILE)} 替代。
+     *             此方法内部已委托给 SensitiveUtils 实现，行为保持一致。
      */
+    @Deprecated(since = "2.1.0", forRemoval = true)
     public static String maskMobile(String mobile) {
         if (mobile == null || mobile.length() != 11) {
             return mobile;
@@ -322,7 +333,13 @@ public class StringUtils {
 
     /**
      * 身份证号脱敏（保留前 6 位和后 4 位）
+     *
+     * @deprecated 自 2.1.0 起，脱敏能力已统一收口至
+     *             {@link com.remisoft.common.safe.desensitize.SensitiveUtils}。
+     *             新代码请使用 {@code SensitiveUtils.mask(idCard, SensitiveType.ID_CARD)} 替代。
+     *             此方法内部已委托给 SensitiveUtils 实现，行为保持一致。
      */
+    @Deprecated(since = "2.1.0", forRemoval = true)
     public static String maskIdCard(String idCard) {
         if (idCard == null || idCard.length() < 18) {
             return idCard;
@@ -334,7 +351,14 @@ public class StringUtils {
      * 邮箱脱敏（保留前 2 位和域名）
      *
      * <p>内联简单正则校验邮箱格式（原 isEmail 已移除，脱敏场景无需完整 RFC 校验）。
+     *
+     * @deprecated 自 2.1.0 起，脱敏能力已统一收口至
+     *             {@link com.remisoft.common.safe.desensitize.SensitiveUtils}。
+     *             新代码请使用 {@code SensitiveUtils.mask(email, SensitiveType.EMAIL)} 替代。
+     *             注意：SensitiveUtils.maskEmail 的规则略有不同（保留首字母+末字母+域名），
+     *             迁移时请确认是否符合业务预期。
      */
+    @Deprecated(since = "2.1.0", forRemoval = true)
     public static String maskEmail(String email) {
         if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
             return email;

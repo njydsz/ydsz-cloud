@@ -20,9 +20,22 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>本类仅保留 HTTP 请求 IP 解析等 Web 层专有方法，通用 IP 能力请直接使用上述新类。
  *
+ * <p><b>迁移指引（自 2.1.0 起）：</b>
+ * <ul>
+ *   <li>HTTP 请求 IP 解析：统一使用 {@link com.remisoft.common.safe.util.ClientIpResolver}</li>
+ *   <ul>
+ *     <li>{@code getIpAddr(request)} → {@code ClientIpResolver.getClientIp(request)}</li>
+ *     <li>{@code getIpAddrWithTrustedProxies(request, proxies)} → {@code ClientIpResolver.getClientIp(request)}</li>
+ *   </ul>
+ *   <li>可信代理判断：{@link com.remisoft.common.safe.util.ClientIpResolver#isTrustedProxy(String)}</li>
+ * </ul>
+ *
  * @author remi-team
  * @since 1.0.0
+ * @deprecated 自 2.1.0 起，HTTP 请求 IP 解析统一使用 {@link com.remisoft.common.safe.util.ClientIpResolver}。
+ *             通用 IP 校验/网段计算请使用 {@link IpValidator} / {@link CidrUtils} / {@link NetworkInterfaceUtils}。
  */
+@Deprecated
 @Slf4j
 public class IpAddrUtils {
 
@@ -57,7 +70,12 @@ public class IpAddrUtils {
      * @param trustedProxies  可信代理 IP 集合（不可为 null）
      * @return 客户端真实 IP；无 X-Forwarded-For 头或全部为可信代理时返回 remoteAddr
      * @since 1.0.0
+     * @deprecated 自 2.1.0 起，HTTP 客户端 IP 解析统一收口至
+     *             {@link com.remisoft.common.safe.util.ClientIpResolver#getClientIp(jakarta.servlet.http.HttpServletRequest)}。
+     *             新代码请直接使用 {@code ClientIpResolver.getClientIp(request)}，
+     *             它已内置可信代理校验，无需外部维护白名单。
      */
+    @Deprecated(since = "2.1.0", forRemoval = true)
     public static String getIpAddrWithTrustedProxies(HttpServletRequest request, Set<String> trustedProxies) {
         if (request == null) {
             return UNKNOWN;
@@ -108,7 +126,11 @@ public class IpAddrUtils {
      *
      * @param request HTTP 请求
      * @return 客户端真实 IP；request 为 null 时返回 "unknown"
+     * @deprecated 自 2.1.0 起，HTTP 客户端 IP 解析统一收口至
+     *             {@link com.remisoft.common.safe.util.ClientIpResolver#getClientIp(jakarta.servlet.http.HttpServletRequest)}。
+     *             新代码请直接使用 {@code ClientIpResolver.getClientIp(request)}。
      */
+    @Deprecated(since = "2.1.0", forRemoval = true)
     public static String getIpAddr(HttpServletRequest request) {
         if (request == null) {
             return UNKNOWN;

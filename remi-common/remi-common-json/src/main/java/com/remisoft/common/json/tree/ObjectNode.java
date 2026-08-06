@@ -31,7 +31,7 @@ import com.remisoft.common.json.RemiJson;
  * // 获取字段
  * String name = node.getString("name");
  * int age = node.getIntValue("age");
- * ObjectNode sub = node.getJSONObject("sub");
+ * ObjectNode sub = node.getObjectNode("sub");
  * </pre>
  *
  * @author remi-team
@@ -475,8 +475,21 @@ public final class ObjectNode extends JsonNode {
      *
      * @param name 字段名
      * @return ObjectNode 实例
+     * @deprecated 使用 {@link #getObjectNode(String)} 替代，命名风格更统一
      */
+    @Deprecated(since = "1.1.0")
     public ObjectNode getJSONObject(String name) {
+        return getObjectNode(name);
+    }
+
+    /**
+     * 获取嵌套对象节点（推荐使用的命名风格），不存在或非对象返回 null。
+     *
+     * @param name 字段名
+     * @return ObjectNode 实例
+     * @since 1.1.0
+     */
+    public ObjectNode getObjectNode(String name) {
         JsonNode node = fields.get(name);
         if (node instanceof ObjectNode objNode) {
             return objNode;
@@ -489,8 +502,21 @@ public final class ObjectNode extends JsonNode {
      *
      * @param name 字段名
      * @return ArrayNode 实例
+     * @deprecated 使用 {@link #getArrayNode(String)} 替代，命名风格更统一
      */
+    @Deprecated(since = "1.1.0")
     public ArrayNode getJSONArray(String name) {
+        return getArrayNode(name);
+    }
+
+    /**
+     * 获取嵌套数组节点（推荐使用的命名风格），不存在或非数组返回 null。
+     *
+     * @param name 字段名
+     * @return ArrayNode 实例
+     * @since 1.1.0
+     */
+    public ArrayNode getArrayNode(String name) {
         JsonNode node = fields.get(name);
         if (node instanceof ArrayNode arrNode) {
             return arrNode;

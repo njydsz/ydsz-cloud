@@ -35,7 +35,7 @@ import com.remisoft.userinfo.server.auth.PasswordPolicyValidator;
 import com.remisoft.userinfo.server.service.UserAccountService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +92,9 @@ import com.remisoft.userinfo.domain.converter.UserInfoConverter;
 public class UserAccountServiceImpl implements UserAccountService {
 
     /** 用户账号 Mapper */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final UserAccountMapper userAccountMapper;
     /** 用户-角色关联 Mapper */
     private final UserRoleMapper userRoleMapper;
@@ -329,7 +332,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         List<UserRole> list = new ArrayList<>(roleIds.size());
         for (String roleId : roleIds) {
             UserRole ur = new UserRole();
-            ur.setId(SnowflakeUtils.nextIdStr());
+            ur.setId(String.valueOf(snowflakeIdGenerator.nextId()));
             ur.setUserId(userId);
             ur.setRoleId(roleId);
             ur.setTenantId(entity.getTenantId());

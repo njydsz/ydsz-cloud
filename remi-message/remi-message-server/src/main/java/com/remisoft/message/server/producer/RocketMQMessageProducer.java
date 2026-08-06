@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.queue.constant.RemiMessageTopics;
 import com.remisoft.common.feign.MessageRequest;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.util.MessageCompressor;
 
@@ -35,9 +35,12 @@ import lombok.extern.slf4j.Slf4j;
 public class RocketMQMessageProducer implements MessageQueueOperations {
 
     private final RocketMQTemplate rocketMQTemplate;
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-    public RocketMQMessageProducer(RocketMQTemplate rocketMQTemplate) {
+    public RocketMQMessageProducer(RocketMQTemplate rocketMQTemplate,
+                                   SnowflakeIdGenerator snowflakeIdGenerator) {
         this.rocketMQTemplate = rocketMQTemplate;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     /** P1-6: 优先级 → RocketMQ Tag 映射 */
@@ -113,7 +116,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
 
     private void ensureMessageId(MessageRequest req) {
         if (!StringUtils.hasText(req.getMessageId())) {
-            req.setMessageId(SnowflakeUtils.nextIdStr());
+            req.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
         }
     }
 

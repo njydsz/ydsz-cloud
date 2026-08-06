@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -462,18 +461,7 @@ public class ChunkUploadApplicationService {
 
     private String calculateSha256(Path filePath) {
         try (InputStream is = Files.newInputStream(filePath)) {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] buffer = new byte[8192];
-            int len;
-            while ((len = is.read(buffer)) != -1) {
-                digest.update(buffer, 0, len);
-            }
-            byte[] hash = digest.digest();
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hash) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
+            return DigestUtils.sha256Hex(is);
         } catch (Exception e) {
             log.warn("[ChunkUploadApplicationService] SHA-256 计算失败: {}", e.getMessage());
             return null;

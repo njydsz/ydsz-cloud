@@ -21,7 +21,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.message.domain.dto.core.OrchestrationFlowDTO;
 import com.remisoft.message.domain.dto.core.OrchestrationNodeDTO;
 import com.remisoft.message.domain.dto.core.OrchestrationResultVO;
@@ -53,6 +53,9 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     private static final int MAX_RETRY = 3;
 
     /** 消息发送服务（节点执行时调用） */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final MessageService messageService;
 
     @Override
@@ -61,7 +64,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
             return new OrchestrationResultVO(null, "FAILED", 0, 0, 0, 0, Map.of(), "流程或节点为空");
         }
         String flowId = StringUtils.hasText(flow.getFlowId())
-                ? flow.getFlowId() : SnowflakeUtils.nextIdStr();
+                ? flow.getFlowId() : String.valueOf(snowflakeIdGenerator.nextId());
         log.info("[Orchestration] 流程开始: flowId={} nodes={}", flowId, flow.getNodes().size());
 
         // DAG 校验
@@ -189,7 +192,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                 request.setParams(node.getParams());
                 request.setBizType(flow.getBizType());
                 request.setBizId(flow.getBizId());
-                request.setMessageId(SnowflakeUtils.nextIdStr());
+                request.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
                 MessageResult result = messageService.send(request);
                 if (result != null && result.isSuccess()) {
                     nodeResults.put(node.getNodeId(), "SUCCESS: " + result.getProviderTraceId());

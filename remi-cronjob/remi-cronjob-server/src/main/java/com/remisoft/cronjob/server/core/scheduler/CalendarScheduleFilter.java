@@ -110,7 +110,7 @@ public class CalendarScheduleFilter {
         }
         try {
             ObjectNode params = RemiJson.parseObject(paramsJson);
-            ArrayNode holidaysArr = params.getJSONArray("holidays");
+            ArrayNode holidaysArr = params.getArrayNode("holidays");
             if (holidaysArr == null || holidaysArr.isEmpty()) {
                 return Set.of();
             }

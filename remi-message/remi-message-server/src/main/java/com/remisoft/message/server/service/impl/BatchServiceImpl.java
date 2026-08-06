@@ -14,7 +14,7 @@ import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.security.TenantContext;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.message.domain.dto.batch.BatchProgressVO;
 import com.remisoft.message.domain.dto.batch.BatchSendRequestDTO;
 import com.remisoft.message.domain.entity.batch.MsgBatch;
@@ -53,6 +53,9 @@ public class BatchServiceImpl implements BatchService {
     private static final int MAX_BATCH_SIZE = 10000;
 
     /** 批次记录 Mapper */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final MsgBatchMapper msgBatchMapper;
     /** 消息发送服务（逐条发送） */
     private final MessageService messageService;
@@ -75,7 +78,7 @@ public class BatchServiceImpl implements BatchService {
         }
         // 创建批次记录
         String batchId = StringUtils.hasText(dto.getBatchId())
-                ? dto.getBatchId() : SnowflakeUtils.nextIdStr();
+                ? dto.getBatchId() : String.valueOf(snowflakeIdGenerator.nextId());
         MsgBatch batch = new MsgBatch();
         batch.setBatchId(batchId);
         batch.setBatchName(dto.getBatchName());
@@ -229,7 +232,7 @@ public class BatchServiceImpl implements BatchService {
                 req.setReceiver(receiver.trim());
                 req.setParams(dto.getParams());
                 req.setBizType(dto.getBizType());
-                req.setMessageId(SnowflakeUtils.nextIdStr());
+                req.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
                 requests.add(req);
             }
         }

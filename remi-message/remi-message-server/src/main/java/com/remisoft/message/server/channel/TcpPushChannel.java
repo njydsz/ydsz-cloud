@@ -13,7 +13,7 @@ import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.netty.codec.LengthFieldFrameDecoder;
 import com.remisoft.common.netty.config.NettyProperties;
 import com.remisoft.common.netty.server.AbstractNettyServer;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 
@@ -64,14 +64,20 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     /** TCP 推送服务端口 */
     private final int pushPort;
 
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     /**
      * 构造 TCP 推送通道。
      *
      * @param properties Netty 配置
+     * @param snowflakeIdGenerator 分布式 ID 生成器
      */
-    public TcpPushChannel(NettyProperties properties) {
+    public TcpPushChannel(NettyProperties properties,
+                          SnowflakeIdGenerator snowflakeIdGenerator) {
         super(9123, properties);
         this.pushPort = 9123;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     @Override
@@ -95,7 +101,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
             return MessageResult.fail(CHANNEL_TYPE, "推送接收人不能为空");
         }
-        String traceId = "PUSH-" + SnowflakeUtils.nextIdStr();
+        String traceId = "PUSH-" + String.valueOf(snowflakeIdGenerator.nextId());
         String userId = request.getReceiver();
         ChannelHandlerContext ctx = userChannelMap.get(userId);
         if (ctx == null || !ctx.channel().isActive()) {

@@ -6,13 +6,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
-
-import javax.crypto.Mac;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-
 import java.util.HexFormat;
 
 /**
@@ -180,6 +175,25 @@ public class DigestUtils {
             return null;
         }
         return sha256Hex(input.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 计算流式 SHA-256 散列（Hex 格式）。
+     *
+     * <p>适用于大文件的流式 SHA-256 计算，复用 ThreadLocal 8KB 缓冲区。
+     * 返回之前会主动清理缓冲区，不会泄露文件内容。
+     *
+     * @param input 输入流（方法内不关闭，由调用方管理）
+     * @return 十六进制字符串
+     * @throws IOException 读取输入流时发生 I/O 错误
+     */
+    public static String sha256Hex(InputStream input) throws IOException {
+        byte[] hash = digest(input, "SHA-256");
+        String hex = HexFormat.of().formatHex(hash);
+        // 清空 ThreadLocal 缓冲区，避免文件数据残留
+        byte[] buffer = STREAM_BUFFER.get();
+        java.util.Arrays.fill(buffer, (byte) 0);
+        return hex;
     }
 
     /**

@@ -4,9 +4,10 @@ import org.springframework.stereotype.Component;
 
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.message.domain.entity.template.MsgTemplate;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -20,7 +21,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MockPushProvider implements PushProvider {
+
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     @Override
     public String providerType() {
@@ -29,7 +33,7 @@ public class MockPushProvider implements PushProvider {
 
     @Override
     public MessageResult send(MessageRequest request, MsgTemplate template) {
-        String traceId = "MOCK-PUSH-" + SnowflakeUtils.nextIdStr();
+        String traceId = "MOCK-PUSH-" + String.valueOf(snowflakeIdGenerator.nextId());
         log.info("[PUSH-MOCK] 推送 receiver={} content={}",
                 request.getReceiver(), request.getContent());
         return MessageResult.ok("PUSH", traceId);

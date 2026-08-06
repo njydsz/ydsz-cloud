@@ -24,7 +24,7 @@ import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.security.TenantContext;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.util.id.TracerUtils;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.domain.constant.MessageConstants;
@@ -93,6 +93,9 @@ import com.remisoft.common.event.service.OutboxService;
 public class MessageServiceImpl implements MessageService {
 
     /** 通道路由器（负责通道选择与消息分发） */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final ChannelRouter channelRouter;
     /** 模板引擎（变量占位符渲染） */
     private final TemplateEngine templateEngine;
@@ -486,7 +489,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setRetryCount(0);
         logDO.setTraceId(TracerUtils.getOrCreateTraceId());
         logDO.setMsgId(StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
-                : SnowflakeUtils.nextIdStr());
+                : String.valueOf(snowflakeIdGenerator.nextId()));
         logDO.setDedupKey(ctx.dedupKey);
         logDO.setParentMsgId(request.getParentMsgId());
         logDO.setScheduledAt(request.getScheduledAt());
@@ -1072,7 +1075,7 @@ public class MessageServiceImpl implements MessageService {
         }
         // 确保有 messageId
         if (!StringUtils.hasText(request.getMessageId())) {
-            request.setMessageId(SnowflakeUtils.nextIdStr());
+            request.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
         }
         // ① 先落库 PENDING（DB 是 Source of Truth）
         MsgLog logDO = new MsgLog();

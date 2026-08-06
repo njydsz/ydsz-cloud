@@ -86,26 +86,26 @@ public class ThreadPoolHotUpdateListener {
         try {
             ObjectNode root = RemiJson.parseObject(configInfo);
             // 尝试 remi.cronjob.executor 路径
-            ObjectNode remi = root.getJSONObject("remi");
+            ObjectNode remi = root.getObjectNode("remi");
             if (remi != null) {
-                ObjectNode cronjob = remi.getJSONObject("cronjob");
+                ObjectNode cronjob = remi.getObjectNode("cronjob");
                 if (cronjob != null) {
-                    ObjectNode executor = cronjob.getJSONObject("executor");
+                    ObjectNode executor = cronjob.getObjectNode("executor");
                     if (executor != null) {
                         return executor;
                     }
                 }
             }
             // 尝试直接 cronjob.executor 路径
-            ObjectNode cronjobDirect = root.getJSONObject("cronjob");
+            ObjectNode cronjobDirect = root.getObjectNode("cronjob");
             if (cronjobDirect != null) {
-                ObjectNode executor = cronjobDirect.getJSONObject("executor");
+                ObjectNode executor = cronjobDirect.getObjectNode("executor");
                 if (executor != null) {
                     return executor;
                 }
             }
             // 尝试直接 executor 路径
-            ObjectNode executorDirect = root.getJSONObject("executor");
+            ObjectNode executorDirect = root.getObjectNode("executor");
             if (executorDirect != null) {
                 return executorDirect;
             }

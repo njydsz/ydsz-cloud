@@ -22,6 +22,11 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-jdbc</artifactId>
         </dependency>
+        <!-- remi-common-util: StringUtils / DigestUtils / SnowflakeIdGenerator（直接使用，避免隐式传递） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-util</artifactId>
+        </dependency>
                 <dependency>
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-lock</artifactId>

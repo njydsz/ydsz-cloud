@@ -1,13 +1,13 @@
 package com.remisoft.message.server.channel.push;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import com.remisoft.common.util.security.DigestUtils;
 
 /**
  * 个推（GeTui）V2 API 签名工具。
  *
- * <p>签名算法：{@code SHA-256(appKey + timestamp + masterSecret)} 的十六进制小写串。
- * 纯静态方法，可独立单元测试，零外部依赖。
+ * <p>签名算法：{@code SHA-256(appKey + timestamp + masterSecret)} 的十六进制小写串，
+ * 委托给 {@link DigestUtils#sha256Hex(String)} 统一实现。
+ * 纯静态方法，可独立单元测试。
  *
  * @author remi-team
  * @since 1.0.0
@@ -27,26 +27,6 @@ public final class GetuiPushSigner {
      */
     public static String sign(String appKey, String timestamp, String masterSecret) {
         String raw = appKey + timestamp + masterSecret;
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(raw.getBytes(StandardCharsets.UTF_8));
-            return bytesToHex(digest);
-        } catch (Exception e) {
-            throw new IllegalStateException("个推签名计算失败: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 字节数组转十六进制小写串。
-     *
-     * @param bytes 字节数组
-     * @return 十六进制串
-     */
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
+        return DigestUtils.sha256Hex(raw);
     }
 }

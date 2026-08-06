@@ -19,7 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.json.type.JsonType;
-import com.remisoft.common.util.id.SnowflakeUtils;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.message.server.channel.MessageChannel;
 import com.remisoft.message.server.config.MessageProperties;
@@ -46,11 +46,14 @@ public class AlipayMiniChannel implements MessageChannel {
 
     private final MessageProperties messageProperties;
     private final RestTemplate restTemplate;
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     public AlipayMiniChannel(MessageProperties messageProperties,
-                             RestTemplate restTemplate) {
+                             RestTemplate restTemplate,
+                             SnowflakeIdGenerator snowflakeIdGenerator) {
         this.messageProperties = messageProperties;
         this.restTemplate = restTemplate;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     @Override
@@ -124,7 +127,7 @@ public class AlipayMiniChannel implements MessageChannel {
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
                 if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {
-                    String traceId = "ALIPAY_MINI-" + SnowflakeUtils.nextIdStr();
+                    String traceId = "ALIPAY_MINI-" + String.valueOf(snowflakeIdGenerator.nextId());
                     log.info("[AlipayMiniChannel] 发送成功: receiver={} template={}",
                             request.getReceiver(), request.getTemplateCode());
                     return MessageResult.ok(CHANNEL_TYPE, traceId);
@@ -148,7 +151,7 @@ public class AlipayMiniChannel implements MessageChannel {
      * Mock 发送（开发环境降级）。
      */
     private MessageResult mockSend(MessageRequest request) {
-        String traceId = "ALIPAY_MINI-MOCK-" + SnowflakeUtils.nextIdStr();
+        String traceId = "ALIPAY_MINI-MOCK-" + String.valueOf(snowflakeIdGenerator.nextId());
         log.info("[AlipayMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
                 request.getReceiver(), request.getTemplateCode(), request.getContent());
         return MessageResult.ok(CHANNEL_TYPE, traceId);

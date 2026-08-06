@@ -108,7 +108,7 @@ public class CEPTestController {
             if (patternObj == null) {
                 return BaseResponse.error(BaseResultCode.VALIDATION_FAILED, "pattern 不能为空");
             }
-            CEPPattern pattern = RemiJson.fromJson(RemiJson.toJson(patternObj), CEPPattern.class);
+            CEPPattern pattern = RemiJson.convertValue(patternObj, CEPPattern.class);
             if (pattern.getId() == null || pattern.getId().isBlank()) {
                 pattern.setId("TEST_TMP_" + System.nanoTime());
             }

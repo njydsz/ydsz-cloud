@@ -1,10 +1,13 @@
 package com.remisoft.common.safe.desensitize;
 
+import com.remisoft.common.util.string.StringUtils;
+
 /**
  * 敏感数据脱敏工具类（字段级）。
  *
- * <p>提供各种类型的脱敏策略实现，纯 JDK 实现，无任何外部依赖。
- * 既可用于 JSON 序列化拦截，也可在日志输出、审计记录等场景中直接调用。</p>
+ * <p>提供各种类型的脱敏策略实现。基础的手机号/身份证/邮箱脱敏委托给
+ * {@link StringUtils}（remi-common-util），本类提供更高层次的
+ * {@link SensitiveType} 枚举 API 以及姓名/地址/全掩码等 StringUtils 未覆盖的场景。</p>
  *
  * <p>与 {@link ColumnDesensitizationRule}（列级正则脱敏）互补：
  * 本工具类面向字段级（编程式），列级规则面向数据库结果集。</p>
@@ -24,6 +27,7 @@ package com.remisoft.common.safe.desensitize;
  * @since 1.5.0
  * @see Sensitive
  * @see SensitiveType
+ * @see StringUtils
  */
 public final class SensitiveUtils {
 
@@ -36,6 +40,9 @@ public final class SensitiveUtils {
     /**
      * 按指定脱敏类型对文本进行脱敏。
      *
+     * <p>MOBILE / ID_CARD / EMAIL 委托给 {@link StringUtils}（统一脱敏规则），
+     * BANK_CARD / NAME / ADDRESS / MASK_ALL 由本类实现。
+     *
      * @param value 原始文本（可为 null 或空字符串）
      * @param type  脱敏类型
      * @return 脱敏后的文本；输入为空时返回 null
@@ -45,12 +52,14 @@ public final class SensitiveUtils {
             return value;
         }
         return switch (type) {
-            case ID_CARD, MOBILE, BANK_CARD -> maskFixed(value, type.getPrefixKeep(), type.getSuffixKeep());
-            case EMAIL -> maskEmail(value);
+            case MOBILE -> StringUtils.maskMobile(value);
+            case ID_CARD -> StringUtils.maskIdCard(value);
+            case EMAIL -> StringUtils.maskEmail(value);
+            case BANK_CARD -> maskFixed(value, type.getPrefixKeep(), type.getSuffixKeep());
             case NAME -> maskName(value);
             case ADDRESS -> maskAddress(value);
             case MASK_ALL -> maskAll(value);
-            case CUSTOM -> value; // CUSTOM 由调用方通过 mask(value, prefixKeep, suffixKeep) 调用
+            case CUSTOM -> value;
         };
     }
 
@@ -75,11 +84,6 @@ public final class SensitiveUtils {
 
     /**
      * 固定前后保留位数脱敏。
-     *
-     * @param value      原始文本
-     * @param prefixKeep 头部保留字符数
-     * @param suffixKeep 尾部保留字符数
-     * @return 脱敏后的文本
      */
     private static String maskFixed(String value, int prefixKeep, int suffixKeep) {
         int length = value.length();
@@ -92,21 +96,6 @@ public final class SensitiveUtils {
         sb.append(String.valueOf(MASK_CHAR).repeat(Math.max(maskLength, 1)));
         sb.append(value, length - suffixKeep, length);
         return sb.toString();
-    }
-
-    /**
-     * 邮箱脱敏：保留首字母和末字母（@前）+ 完整域名。
-     */
-    private static String maskEmail(String email) {
-        int atIndex = email.indexOf('@');
-        if (atIndex <= 1) {
-            // 用户名太短，直接掩码
-            return MASK_CHAR + email.substring(atIndex);
-        }
-        String username = email.substring(0, atIndex);
-        String domain = email.substring(atIndex);
-        String masked = username.charAt(0) + "***" + username.charAt(username.length() - 1);
-        return masked + domain;
     }
 
     /**

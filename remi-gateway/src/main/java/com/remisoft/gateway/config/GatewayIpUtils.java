@@ -1,6 +1,5 @@
 package com.remisoft.gateway.config;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
@@ -8,6 +7,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 
 import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.safe.util.ClientIpResolver;
+import com.remisoft.common.util.ip.CidrUtils;
 
 /**
  * 网关 IP 工具类（WebFlux 响应式版本）
@@ -85,6 +85,8 @@ public final class GatewayIpUtils {
      * 检查 IP 是否在白名单中
      *
      * <p>支持精确匹配和 CIDR 表示法（如 192.168.1.0/24）。
+     * CIDR 匹配统一委托给 {@link CidrUtils#isInRange(String, String)}，
+     * 保证了与 remi-common-util 中其他 CIDR 使用场景行为一致。
      *
      * @param ip        客户端 IP
      * @param whitelist 白名单集合
@@ -101,9 +103,9 @@ public final class GatewayIpUtils {
             }
             String trimmed = entry.trim();
 
-            // CIDR 匹配
+            // CIDR 匹配：委托给 CidrUtils 统一实现
             if (trimmed.contains("/")) {
-                if (isInCidr(ip, trimmed)) {
+                if (CidrUtils.isInRange(ip, trimmed)) {
                     return true;
                 }
             } else if (trimmed.equals(ip)) {
@@ -112,49 +114,5 @@ public final class GatewayIpUtils {
             }
         }
         return false;
-    }
-
-    /**
-     * 检查 IP 是否在 CIDR 范围内
-     *
-     * @param ip   IP 地址
-     * @param cidr  CIDR 表示法（如 192.168.1.0/24）
-     * @return true 如果 IP 在 CIDR 范围内
-     */
-    private static boolean isInCidr(String ip, String cidr) {
-        try {
-            String[] parts = cidr.split("/");
-            if (parts.length != 2) {
-                return false;
-            }
-            String networkIp = parts[0];
-            int prefix = Integer.parseInt(parts[1]);
-
-            byte[] ipBytes = InetAddress.getByName(ip).getAddress();
-            byte[] networkBytes = InetAddress.getByName(networkIp).getAddress();
-
-            if (ipBytes.length != networkBytes.length) {
-                return false;
-            }
-
-            int totalBits = ipBytes.length * 8;
-            if (prefix < 0 || prefix > totalBits) {
-                return false;
-            }
-
-            for (int i = 0; i < ipBytes.length; i++) {
-                int bitsToCheck = Math.min(8, prefix - (i * 8));
-                if (bitsToCheck <= 0) {
-                    break;
-                }
-                int mask = 0xFF << (8 - bitsToCheck);
-                if ((ipBytes[i] & mask) != (networkBytes[i] & mask)) {
-                    return false;
-                }
-            }
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 }
