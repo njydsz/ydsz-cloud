@@ -17,6 +17,7 @@ import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
+import com.remisoft.common.exception.code.ErrorCodeTable;
 import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 
@@ -51,6 +52,7 @@ public class ResultCodeScanner {
     private static final String INDEX_PATTERN = "classpath*:" + INDEX_LOCATION;
 
     private final ResultCodeRegistry registry;
+    private final ErrorCodeTable errorCodeTable;
     private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(RemiResultCode.class);
     private final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
 
@@ -59,8 +61,18 @@ public class ResultCodeScanner {
      */
     private volatile MetadataReaderFactory metadataReaderFactory;
 
-    public ResultCodeScanner(ResultCodeRegistry registry) {
+    public ResultCodeScanner(ResultCodeRegistry registry, ErrorCodeTable errorCodeTable) {
         this.registry = registry;
+        this.errorCodeTable = errorCodeTable;
+    }
+
+    /**
+     * 兼容构造函数：不启用 ErrorCodeTable 桥接（ErrorCodeTable 不可用时回退）。
+     *
+     * @param registry ResultCodeRegistry 实例
+     */
+    public ResultCodeScanner(ResultCodeRegistry registry) {
+        this(registry, null);
     }
 
     /**
@@ -208,10 +220,11 @@ public class ResultCodeScanner {
 
     /**
      * 加载枚举类并注册所有错误码。     *
-     * <p>注册到两个注册中心：
+     * <p>注册到三个目的地（确保平滑迁移）：
      * <ul>
-     *   <li>{@link ResultCodeRegistry} — 供文档端点按模块分组展示</li>
-     *   <li>{@link ExceptionCodeRegistry} — 供 {@code lookup} 反查</li>
+     *   <li>{@link ErrorCodeTable} — 新的统一注册中心，供运行时反查和文档端点使用</li>
+     *   <li>{@link ResultCodeRegistry} — 历史模块注册表，兼容旧端点</li>
+     *   <li>{@link ExceptionCodeRegistry} — 兼容门面，委托 ErrorCodeTable</li>
      * </ul>
      */
     private void registerEnum(String module, String description, String className) {
@@ -226,9 +239,13 @@ public class ResultCodeScanner {
             for (Object constant : clazz.getEnumConstants()) {
                 ExceptionCode code = (ExceptionCode) constant;
                 registry.registerCode(module, code.getCode(), code.getKey(), ((Enum<?>) constant).name());
+                if (errorCodeTable != null) {
+                    errorCodeTable.registerModule(module, description);
+                    errorCodeTable.registerCode(module, code.getCode(), code.getKey(), ((Enum<?>) constant).name());
+                }
                 codeMap.put(code.getCode(), code);
             }
-            // 同步注册到 ExceptionCodeRegistry，确保 lookup 反查可用
+            // 同步注册到 ExceptionCodeRegistry（兼容门面，内部委托 ErrorCodeTable）
             ExceptionCodeRegistry.register(codeMap);
             log.debug("[ResultCodeScanner] 注册模块错误码: module={} codes={}", module, codeMap.size());
         } catch (Exception e) {

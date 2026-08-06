@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
+import com.remisoft.common.exception.code.ErrorCodeTable;
 import com.remisoft.common.exception.endpoint.ExceptionCodeDocEndpoint;
 import com.remisoft.common.exception.health.ExceptionHealthIndicator;
 import com.remisoft.common.exception.metrics.ExceptionMetrics;
@@ -67,11 +68,15 @@ public class RemiExceptionActuatorAutoConfiguration {
 
     /**
      * 创建错误码自动扫描注册器 Bean
+     *
+     * <p>注入 ErrorCodeTable 以同时注册到统一注册表。
      */
     @Bean
     @ConditionalOnMissingBean
-    public ResultCodeScanner resultCodeScanner(ResultCodeRegistry registry) {
-        return new ResultCodeScanner(registry);
+    public ResultCodeScanner resultCodeScanner(ResultCodeRegistry registry,
+                                               ObjectProvider<ErrorCodeTable> errorCodeTableProvider) {
+        ErrorCodeTable table = errorCodeTableProvider.getIfAvailable();
+        return new ResultCodeScanner(registry, table);
     }
 
     // ==================== 健康检查 ====================

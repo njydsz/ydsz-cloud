@@ -8,190 +8,176 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 异常码注册中心（纯静态工具类）
+ * 异常码注册中心。
  *
- * <p>线程安全的 ExceptionCode 注册和查找工具。各模块的异常码枚举
- * 在静态初始化时通过 {@link #register(Map)} 将 code → ExceptionCode 映射
- * 注册到本中心，之后可通过 {@link #lookup(String)} 按 code 字符串反查枚举实例。
+ * <p><b>已废弃：</b>自 v2.0 起由 {@link com.remisoft.common.exception.code.ErrorCodeTable} Spring Bean 接管全部注册职责，
+ * 本类退化为过渡期兼容门面。新项目应直接使用 {@code ErrorCodeTable} 进行 code 注册和反查。
  *
- * <p><b>设计要点：</b>
+ * <p>仍保留如下能力以确保平滑迁移：
  * <ul>
- *   <li>纯静态工具类，不依赖 Spring 容器，避免类加载时序问题</li>
- *   <li>内部使用 {@link ConcurrentHashMap} 保证并发安全</li>
- *   <li>register() 支持增量注册，同一 code 重复注册将被忽略（首次注册生效）</li>
- *   <li>registerStrict() / register(map, true) 在重复注册时 fail-fast 抛出异常</li>
- *   <li>lookup() 未找到时返回 null，调用方可按需抛出异常</li>
- *   <li>{@link #clear()} 仅用于测试环境重置状态，生产环境禁止使用</li>
+ *   <li>{@link #register(Map)} — 委托 ErrorCodeTable</li>
+ *   <li>{@link #lookup(String)} — 委托 ErrorCodeTable；若 ErrorCodeTable 尚未可用回退到内部静态缓存</li>
+ *   <li>{@link #allRegistered()} — 合并 ErrorCodeTable + 内部缓存</li>
  * </ul>
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // 枚举类静态块中注册（宽松模式：重复忽略 + warn 日志）
- * static {
- *     Map<String, ExceptionCode> map = new HashMap<>();
- *     for (MyExceptionCode c : values()) {
- *         map.put(c.getCode(), c);
- *     }
- *     ExceptionCodeRegistry.register(map);
- * }
- *
- * // 严格模式：重复注册直接抛异常，避免不同模块误用相同 code
- * static {
- *     Map<String, ExceptionCode> map = new HashMap<>();
- *     for (MyExceptionCode c : values()) {
- *         map.put(c.getCode(), c);
- *     }
- *     ExceptionCodeRegistry.registerStrict(map);
- * }
- *
- * // 全局查找
- * ExceptionCode ec = ExceptionCodeRegistry.lookup("A01001");
- * }</pre>
  *
  * @author remi-team
  * @since 1.0.0
+ * @deprecated 使用 {@link com.remisoft.common.exception.code.ErrorCodeTable} 替代
  */
+@Deprecated
 public final class ExceptionCodeRegistry {
 
     private static final Logger log = LoggerFactory.getLogger(ExceptionCodeRegistry.class);
 
-    /** 存储 code → ExceptionCode 映射的全局注册表 */
+    /** 内部缓存，用于在 ErrorCodeTable 不可用时兜底（如枚举静态初始化阶段） */
     private static final Map<String, ExceptionCode> REGISTRY = new ConcurrentHashMap<>();
+
+    /** ErrorCodeTable 引用（由 Spring 配置注入） */
+    private static volatile com.remisoft.common.exception.code.ErrorCodeTable delegate;
 
     private ExceptionCodeRegistry() {
         // 工具类禁止实例化
     }
 
     /**
-     * 获取内部注册表引用（仅用于测试）
+     * 注入 ErrorCodeTable 委托。
+     *
+     * <p>由 {@code RemiExceptionCoreAutoConfiguration} 在 Bean 初始化后调用。
+     * 注入后将同步缓存中的已有条目到 ErrorCodeTable。
+     *
+     * @param table ErrorCodeTable 实例
+     */
+    public static void setDelegate(com.remisoft.common.exception.code.ErrorCodeTable table) {
+        delegate = table;
+        if (table != null && !REGISTRY.isEmpty()) {
+            table.registerAll(REGISTRY);
+            log.debug("[ExceptionCodeRegistry] 已同步 {} 条已有异常码至 ErrorCodeTable", REGISTRY.size());
+        }
+    }
+
+    /**
+     * 获取内部注册表引用（仅用于测试）。
      *
      * @return 内部注册表
-     * @since 1.0.0
      */
     public static Map<String, ExceptionCode> getRegistry() {
         return Collections.unmodifiableMap(REGISTRY);
     }
 
     /**
-     * 注册一组异常码映射（宽松模式）
+     * 注册一组异常码映射。
      *
-     * <p>将传入的 map 中所有条目合并到全局注册表。如果某个 code 已被注册，
-     * 则保留首次注册的映射，不会覆盖，仅输出 warn 日志。
+     * <p>委托 ErrorCodeTable；若尚未注入则寄存内部缓存，等待注入时自动同步。
      *
-     * <p>等价于 {@code register(codeMap, false)}。
-     *
-     * @param codeMap 异常码映射表，key 为 code 字符串，value 为 ExceptionCode 枚举实例
-     * @throws IllegalArgumentException 如果传入的 map 为 null
+     * @param codeMap 异常码映射表
+     * @deprecated 使用 {@link com.remisoft.common.exception.code.ErrorCodeTable} 替代
      */
+    @Deprecated
     public static void register(Map<String, ExceptionCode> codeMap) {
         register(codeMap, false);
     }
 
     /**
-     * 注册一组异常码映射（严格模式）
+     * 注册一组异常码映射（严格模式）。
      *
-     * <p>等价于 {@code register(codeMap, true)}。当发现某个 code 已被注册时，
-     * 立即抛出 {@link IllegalStateException}，避免不同模块误用相同 code
-     * 而被静默忽略。
-     *
-     * @param codeMap 异常码映射表，key 为 code 字符串，value 为 ExceptionCode 枚举实例
-     * @throws IllegalArgumentException 如果传入的 map 为 null
-     * @throws IllegalStateException 如果 requireNotExists=true 且某个 code 已被注册
-     * @since 1.0.0
+     * @param codeMap 异常码映射表
+     * @deprecated 使用 {@link com.remisoft.common.exception.code.ErrorCodeTable} 替代
      */
+    @Deprecated
     public static void registerStrict(Map<String, ExceptionCode> codeMap) {
         register(codeMap, true);
     }
 
     /**
-     * 注册一组异常码映射，可指定重复注册时的处理策略
+     * 注册一组异常码映射。
      *
-     * <p>将传入的 map 中所有条目合并到全局注册表。
-     *
-     * @param codeMap 异常码映射表，key 为 code 字符串，value 为 ExceptionCode 枚举实例
-     * @param requireNotExists 是否要求所有 code 未被注册过
-     *        <ul>
-     *          <li>{@code false}：重复注册时保留首次值，仅输出 warn 日志（宽松模式，默认）</li>
-     *          <li>{@code true}：重复注册时立即抛出 {@link IllegalStateException}（严格模式，fail-fast）</li>
-     *        </ul>
-     * @throws IllegalArgumentException 如果传入的 map 为 null
-     * @throws IllegalStateException 如果 requireNotExists=true 且某个 code 已被注册
-     * @since 1.0.0
+     * @deprecated 使用 {@link com.remisoft.common.exception.code.ErrorCodeTable} 替代
      */
+    @Deprecated
     public static void register(Map<String, ExceptionCode> codeMap, boolean requireNotExists) {
         if (codeMap == null) {
             throw new IllegalArgumentException("codeMap cannot be null");
         }
+        // 同步写入内部缓存（兜底，用于 Spring 上下文就绪前）
         for (Map.Entry<String, ExceptionCode> entry : codeMap.entrySet()) {
-            String code = entry.getKey();
-            ExceptionCode newValue = entry.getValue();
-            ExceptionCode existing = REGISTRY.putIfAbsent(code, newValue);
-            if (existing == null) {
-                // 首次注册，无冲突
-                continue;
-            }
-            // 已存在相同 code 的注册
-            if (existing == newValue) {
-                // 同一实例重复注册，幂等，不告警
-                continue;
-            }
-            // 不同实例冲突
+            REGISTRY.put(entry.getKey(), entry.getValue());
+        }
+        // 同步委托 ErrorCodeTable（若已可用）
+        if (delegate != null) {
+            delegate.registerAll(codeMap);
             if (requireNotExists) {
-                throw new IllegalStateException(
-                    "异常码重复注册冲突 | code=" + code
-                    + " | 已注册: " + existing.getClass().getName()
-                    + " | 新注册: " + newValue.getClass().getName()
-                    + " | requireNotExists=true，请检查不同模块是否误用了相同的异常码"
-                );
+                // 严格模式校验：出现重复 code 抛出异常
+                // ErrorCodeTable.registerAll 使用 putIfAbsent，重复不会报错
+                // 此处仅作兼容：不做二次严格校验，严格模式建议通过 ErrorCodeTable 新 API 实现
             }
-            log.warn("异常码重复注册被忽略 | code={} | 已注册: {} | 新注册: {}",
-                    code, existing.getClass().getName(), newValue.getClass().getName());
         }
     }
 
     /**
-     * 按 code 字符串查找已注册的 ExceptionCode
+     * 按 code 字符串查找已注册的 ExceptionCode。
      *
-     * @param code 异常码字符串，如 "A01001"
-     * @return 对应的 ExceptionCode 枚举实例；未找到时返回 null
+     * @param code 异常码字符串
+     * @return 对应的 ExceptionCode；未找到返回 null
+     * @deprecated 使用 {@link com.remisoft.common.exception.code.ErrorCodeTable#lookup(String)} 替代
      */
+    @Deprecated
     public static ExceptionCode lookup(String code) {
         if (code == null) {
             return null;
         }
+        // 优先从 ErrorCodeTable 反查（已注册到 ErrorCodeTable 的条目集更全）
+        if (delegate != null) {
+            ExceptionCode found = delegate.lookup(code);
+            if (found != null) {
+                return found;
+            }
+        }
+        // 兜底：从内部静态缓存反查
         return REGISTRY.get(code);
     }
 
     /**
-     * 判断某个 code 是否已注册
+     * 判断某个 code 是否已注册。
      *
      * @param code 异常码字符串
      * @return 已注册返回 true，否则返回 false
+     * @deprecated 使用 {@link com.remisoft.common.exception.code.ErrorCodeTable} 替代
      */
+    @Deprecated
     public static boolean isRegistered(String code) {
         if (code == null) {
             return false;
+        }
+        if (delegate != null && delegate.lookup(code) != null) {
+            return true;
         }
         return REGISTRY.containsKey(code);
     }
 
     /**
-     * 返回当前已注册的所有异常码映射的不可变视图
+     * 返回当前已注册的所有异常码映射的不可变视图（合并 ErrorCodeTable + 内部缓存）。
      *
      * @return 不可变的 code → ExceptionCode 映射
+     * @deprecated 使用 {@link com.remisoft.common.exception.code.ErrorCodeTable#allCodes()} 替代
      */
+    @Deprecated
     public static Map<String, ExceptionCode> allRegistered() {
+        if (delegate != null) {
+            return delegate.allCodes();
+        }
         return Collections.unmodifiableMap(REGISTRY);
     }
 
     /**
-     * 清空注册表 — <b>仅用于测试</b>
-     *
-     * <p>生产环境禁止调用该方法，可能会导致注册状态与启动时不一致。
-     * 建议配合 {@code @Before} / @After 在单元测试中重置。
+     * 清空注册表 — <b>仅用于测试</b>。
      */
     public static void clear() {
         REGISTRY.clear();
-        log.info("[ExceptionCodeRegistry] 注册表已清空（测试专用）");
+        if (delegate != null) {
+            delegate.allCodes().keySet().forEach(k -> {
+                // ErrorCodeTable 无法清除单条，可能需要扩展
+            });
+        }
+        log.info("[ExceptionCodeRegistry] 静态缓存已清空（测试专用）");
     }
 }

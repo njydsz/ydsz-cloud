@@ -47,8 +47,13 @@ public abstract class AbstractRemiException extends RuntimeException implements 
     private static final Logger log = LoggerFactory.getLogger(AbstractRemiException.class);
 
     /**
-     * 由 RemiExceptionCoreAutoConfiguration 注入，用于异常消息国际化解析
+     * 由 RemiExceptionCoreAutoConfiguration 注入，用于异常消息国际化解析。
+     *
+     * <p><b>已废弃：</b>自 v2.0 起推荐由 Handler 层直接使用 {@link org.springframework.context.MessageSource}
+     * 在构建响应时解析 i18n，异常对象仅存储 key 不解析状态。
+     * 本方法保留用于向后兼容，新代码不应再调用。
      */
+    @Deprecated
     private static final AtomicReference<BiFunction<String, Object[], String>> MESSAGE_RESOLVER_HOLDER =
         new AtomicReference<>();
 
@@ -56,7 +61,9 @@ public abstract class AbstractRemiException extends RuntimeException implements 
      * 设置消息解析器（由异常模块配置类注入）
      *
      * @param resolver 消息解析函数 (key, params) -> resolved message
+     * @deprecated 自 v2.0 起废弃，推荐 Handler 层直接使用 MessageSource 解析
      */
+    @Deprecated
     public static void setMessageResolver(BiFunction<String, Object[], String> resolver) {
         MESSAGE_RESOLVER_HOLDER.set(resolver);
     }
@@ -65,7 +72,9 @@ public abstract class AbstractRemiException extends RuntimeException implements 
      * 获取当前消息解析器（用于测试验证）
      *
      * @return 当前消息解析函数
+     * @deprecated 自 v2.0 起废弃
      */
+    @Deprecated
     public static BiFunction<String, Object[], String> getMessageResolver() {
         return MESSAGE_RESOLVER_HOLDER.get();
     }
@@ -221,8 +230,14 @@ public abstract class AbstractRemiException extends RuntimeException implements 
     }
 
     /**
-     * 解析国际化消息（使用外部注入的 resolver）
+     * 解析国际化消息（使用外部注入的 resolver）。
+     *
+     * <p><b>已废弃：</b>自 v2.0 起推荐 Handler 层直接解析。
+     * 保留本方法以兼容现有通过 resolver 解析的路径。
+     *
+     * @deprecated 自 v2.0 起废弃，由 Handler-side i18n 解析替代
      */
+    @Deprecated
     protected static String resolveMessage(String key, Object[] params) {
         try {
             BiFunction<String, Object[], String> resolver = MESSAGE_RESOLVER_HOLDER.get();
