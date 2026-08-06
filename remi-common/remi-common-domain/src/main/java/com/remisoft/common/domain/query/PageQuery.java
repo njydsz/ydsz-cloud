@@ -4,8 +4,6 @@ import static lombok.AccessLevel.PROTECTED;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -20,59 +18,38 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
 /**
- * 分页查询参数封装类
+ * 分页查询参数封装类（v1.7.0 职责精简版）。
  *
- * <p>用于封装分页查询的请求参数，包括页码、页大小、排序信息和通用搜索条件
- * 支持通过 validation 注解进行参数校验，防止非法参数传入。
+ * <p>用于封装分页查询的请求参数，包括页码、页大小、排序信息和通用搜索条件。
  *
- * <p><b>设计原则：</b>
+ * <p><b>v1.7.0 职责变更：</b>参考互联网大厂规范（Spring Data Pageable、Axon Framework），
+ * 将 SQL 安全相关职责下沉至 {@code SafeQueryInnerInterceptor}：
  * <ul>
- *   <li>不可变模式：默认配置不可变，防止意外修改</li>
- *   <li>流式API：支持链式调用，提升代码可读性</li>
- *   <li>参数校验：内置参数校验，防止非法参数</li>
- *   <li>排序结构化：排序项使用 {@link OrderItem} 对象而非字符串拼接，避免每次读取重复解析</li>
+ *   <li>LIKE 转义 → 业务层/ResultMapper 处理</li>
+ *   <li>ORDER BY SQL 拼接 → {@code SafeQueryInnerInterceptor}</li>
+ *   <li>深度分页评估 → {@code SafeQueryInnerInterceptor}</li>
  * </ul>
  *
- * <p><b>与 {@link com.remisoft.common.core.request.PageRequest} 的区别：</b>
- * <ul>
- *   <li>{@code PageRequest} 位于 core 模块，用于HTTP API 层，分页字段为 {@code Long} 类型，与 MyBatis-Plus {@code Page<T>} 对齐</li>
- *   <li>{@code PageQuery} 位于 domain 模块，用于Service/Repository 层，分页字段为 {@code Integer} 类型，并集成搜索/过滤/排序白名单等业务能力</li>
- *   <li>两者共用 {@link PageConstants} 中的默认值与上限，避免出现不一致的分页约束</li>
- * </ul>
- *
- * <p><b>字段说明：</b>
- * <table>
- *   <tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr>
- *   <tr><td>pageNum</td><td>Integer</td><td>1</td><td>当前页码，从1开始</td></tr>
- *   <tr><td>pageSize</td><td>Integer</td><td>{@link PageConstants#DEFAULT_PAGE_SIZE}</td><td>每页记录数</td></tr>
- *   <tr><td>orderItems</td><td>List&lt;OrderItem&gt;</td><td>[]</td><td>排序项列表（结构化）</td></tr>
- * </table>
+ * <p>此类现在仅负责<b>承载查询参数</b>，遵循单一职责原则（SRP）。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 基础用法
- * PageQuery query = PageQuery.of(1, 10);
+ * // 通过 Factory 创建（推荐）
+ * @Autowired
+ * private PageQueryFactory pageQueryFactory;
+ * PageQuery query = pageQueryFactory.create(1, 10);
  *
- * // 链式调用
- * PageQuery query = PageQuery.builder()
- *     .pageNum(1)
- *     .pageSize(10)
- *     .searchKey("admin")
- *     .build();
- *
- * // 添加排序
- * query.addOrder("created_at", true);          // 链式，结构化 OrderItem
- * query.addDescOrder("updated_at");            // 便捷降序
- *
- * // 获取偏移量
- * int offset = query.getOffset();
+ * // 添加排序（正则校验由拦截器统一处理）
+ * query.addOrder("created_at", true);
+ * query.addDescOrder("updated_at");
  * }</pre>
  *
  * @author remi-team
  * @since 1.0.0
- * @since 1.4.0 排序项由 List&lt;String&gt; 重构为 List&lt;OrderItem&gt;，旧 API 签名保持不变
- *
+ * @since 1.7.0 职责精简：移除 SQL 安全处理逻辑，下沉至拦截器层
+ * @see PageQueryFactory
  */
 @Data
 @SuperBuilder
@@ -83,24 +60,14 @@ public class PageQuery extends BaseQuery {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 安全字段校验正则
-     */
-    private static final Pattern SAFE_COLUMN_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$");
-
-    /**
-     * 搜索关键字最大长度
+     * 搜索关键字最大长度（仅做截断，不做转义）。
      *
-     * <p>防止超长关键字导致性能问题或潜在攻击。
-     * 运行时可通过 {@link #setRuntimeProperties(DomainProperties)} 覆盖为配置值
-     * {@code remi.domain.page.max-search-key-length}。
+     * <p>v1.7.0 变更：移除 LIKE 转义逻辑，转义由业务层或 MyBatis ResultMapper 处理。
      */
     public static final int MAX_SEARCH_KEY_LENGTH = 200;
 
     /**
-     * 运行时配置引用（实例级，非静态）。
-     *
-     * <p>由 {@link com.remisoft.common.domain.query.PageQueryFactory} 在创建时注入，
-     * 或传统方式通过 {@link #setRuntimeProperties(DomainProperties)} 设置。
+     * 运行时配置引用（实例级，由 PageQueryFactory 注入）。
      *
      * @since 1.7.0
      */
@@ -110,9 +77,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 注入运行时配置（实例级）。
      *
-     * <p>由 {@link com.remisoft.common.domain.query.PageQueryFactory} 在创建 PageQuery 时调用。
-     *
-     * @param properties 已校验通过的 DomainProperties 实例
+     * @param properties 领域配置实例
      * @since 1.7.0
      */
     public void setRuntimeProperties(DomainProperties properties) {
@@ -120,7 +85,7 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取运行时配置（实例级）。
+     * 获取运行时配置。
      *
      * @return DomainProperties 配置实例，可能为 null
      * @since 1.7.0
@@ -130,25 +95,17 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取运行时分页配置（兼容传统静态注入方式）。
-     *
-     * <p>优先返回实例级配置，若未设置则尝试获取全局静态配置。
+     * 获取运行时分页配置（供拦截器使用）。
      *
      * @return DomainProperties 配置实例，可能为 null
      * @since 1.7.0
      */
     DomainProperties getProperties() {
-        if (runtimeProperties != null) {
-            return runtimeProperties;
-        }
-        return null;
+        return runtimeProperties;
     }
 
     /**
-     * 当前页码
-     *
-     * <p>从1开始计数，表示第几页数据。
-     * 最小值为1，小于1时自动修正为1。
+     * 当前页码（从1开始）。
      */
     @NotNull(message = "pageNum当前页不能为空")
     @Min(value = 1, message = "pageNum最小值为1")
@@ -156,11 +113,7 @@ public class PageQuery extends BaseQuery {
     private Integer pageNum = 1;
 
     /**
-     * 每页显示条数
-     *
-     * <p>控制每页返回的记录数量
-     * 建议设置上限，防止查询数据量过大。
-     * 最大值为 {@link PageConstants#MAX_PAGE_SIZE}。
+     * 每页显示条数。
      */
     @NotNull(message = "pageSize页大小不能为空")
     @Min(value = 1, message = "pageSize最小值为1")
@@ -169,40 +122,18 @@ public class PageQuery extends BaseQuery {
     private Integer pageSize = PageConstants.DEFAULT_PAGE_SIZE;
 
     /**
-     * 排序项列表（结构化 {@link OrderItem}）
-     *
-     * <p>通过 {@link #addOrder(String, boolean)} / {@link #addAscOrder(String)} /
-     * {@link #addDescOrder(String)} 添加的排序项会经过 SQL 安全校验与白名单过滤。
+     * 排序项列表（结构化 OrderItem）。
      */
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    // ======================== 游标/Seek 分页扩展（可选，向后兼容） ========================
-
     /**
-     * 游标分页游标值（可选）。
-     *
-     * <p>当非空时启用 seek 模式分页，返回游标之后（或之前）的 pageSize 条记录。
-     * 与传统的 offset 分页互斥，两者同时设置时以 cursor 优先。
-     *
-     * <p>典型实现语义（参考 GitHub/Twitter Cursor API）：
-     * <ul>
-     *   <li>基于主键递增：cursor 即上一页最后一条记录的 ID</li>
-     *   <li>基于时间分页：cursor 即上一页最后一条记录的排序字段值</li>
-     * </ul>
-     *
-     * <p>业务方需在 Service 层根据此值拼接 {@code WHERE id > cursor ORDER BY id ASC LIMIT pageSize}
-     * 语义的查询条件。
+     * 游标分页游标值（可选，启用 seek 模式）。
      */
     private String cursor;
 
     /**
      * 游标方向（默认 NEXT）。
-     *
-     * <ul>
-     *   <li>NEXT：请求游标之后的记录（翻页向下）</li>
-     *   <li>PREV：请求游标之前的记录（翻页向上）</li>
-     * </ul>
      */
     @Builder.Default
     private CursorDirection cursorDirection = CursorDirection.NEXT;
@@ -217,103 +148,18 @@ public class PageQuery extends BaseQuery {
         PREV
     }
 
-    /**
-     * 允许排序的字段白名单
-     *
-     * <p>业务方继承PageQuery 并重写此方法返回允许排序的字段列表，
-     * 不在白名单中的字段将被拒绝排序（即使通过正则校验也会被拦截）。
-     * 返回 null 或空集合表示不启用白名单校验（仅使用正则表达式校验）。
-     *
-     * <p><b>使用示例：</b>
-     * <pre>{@code
-     * public class UserPageQuery extends PageQuery {
-     *     @Override
-     *     protected Set<String> allowedOrderByFields() {
-     *         return Set.of("id", "username", "created_at", "updated_at");
-     *     }
-     * }
-     * }</pre>
-     *
-     * @return 允许排序的字段集合，默认返回null（不启用白名单）
-     */
-    protected Set<String> allowedOrderByFields() {
-        return null;
-    }
+    // ======================== 排序操作 ========================
 
     /**
-     * 校验字段是否在白名单。
+     * 添加排序项（不再做内联校验，安全由 SafeQueryInnerInterceptor 统一处理）。
      *
-     * @param column 字段
-     * @return 通过校验返回 true
-     */
-    private boolean isColumnAllowed(String column) {
-        Set<String> allowed = allowedOrderByFields();
-        if (allowed == null || allowed.isEmpty()) {
-            return true; // 未启用白名单，放过
-        }
-        return allowed.contains(column);
-    }
-
-    /**
-     * 校验排序列是否安全（正则 + 白名单）。
-     *
-     * @param column 列名
-     * @return 安全返回 true
-     */
-    private boolean isSafeColumn(String column) {
-        return column != null && !column.isBlank()
-                && SAFE_COLUMN_PATTERN.matcher(column).matches()
-                && isColumnAllowed(column);
-    }
-
-    /**
-     * 创建分页查询对象
-     *
-     * @param pageNum  当前页码
-     * @param pageSize 每页记录数
-     * @return 分页查询对象
-     */
-    public static PageQuery of(Integer pageNum, Integer pageSize) {
-        return PageQuery.builder()
-                .pageNum(pageNum != null && pageNum >= 1 ? pageNum : 1)
-                .pageSize(normalizePageSize(pageSize))
-                .build();
-    }
-
-    /**
-     * 创建分页查询对象（默认页大小。
-     *
-     * @param pageNum 当前页码
-     * @return 分页查询对象
-     */
-    public static PageQuery of(Integer pageNum) {
-        return of(pageNum, PageConstants.DEFAULT_PAGE_SIZE);
-    }
-
-    /**
-     * 标准化页大小
-     *
-     * <p>委托到 {@link PageConstants#normalizePageSize(Integer)}，
-     * 统一分页归一化规则。</p>
-     *
-     * @param pageSize 原始页大小
-     * @return 标准化后的页大小
-     */
-    private static int normalizePageSize(Integer pageSize) {
-        return PageConstants.normalizePageSize(pageSize);
-    }
-
-    /**
-     * 添加排序项
-     *
-     * <p>将排序字段和方向添加到排序列表中。列名经过正则与白名单双重校验。
-     *
-     * @param column 字段
-     * @param isAsc  是否升序，true表示升序，false表示降序
+     * @param column 字段名
+     * @param isAsc  是否升序
      * @return 当前对象，支持链式调用
+     * @since 1.7.0 移除内联校验逻辑
      */
     public PageQuery addOrder(String column, boolean isAsc) {
-        if (isSafeColumn(column)) {
+        if (column != null && !column.isBlank()) {
             ensureOrderItems();
             orderItems.add(OrderItem.of(column, isAsc));
         }
@@ -321,20 +167,14 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 添加升序排序项
-     *
-     * @param column 字段
-     * @return 当前对象，支持链式调用
+     * 添加升序排序项。
      */
     public PageQuery addAscOrder(String column) {
         return addOrder(column, true);
     }
 
     /**
-     * 添加降序排序项
-     *
-     * @param column 字段
-     * @return 当前对象，支持链式调用
+     * 添加降序排序项。
      */
     public PageQuery addDescOrder(String column) {
         return addOrder(column, false);
@@ -343,18 +183,14 @@ public class PageQuery extends BaseQuery {
     /**
      * 批量添加排序项。
      *
-     * <p>对每个排序项执行与 {@link #addOrder(String, boolean)} 相同的安全校验，
-     * 非法列名（未通过正则或白名单）将被静默忽略。
-     *
-     * @param items 排序项（OrderItem 类型，允许 null 元素，自动跳过）
+     * @param items 排序项数组
      * @return 当前对象，支持链式调用
-     * @since 1.4.0
      */
     public PageQuery addOrders(OrderItem... items) {
         if (items != null) {
             ensureOrderItems();
             for (OrderItem item : items) {
-                if (item != null && isSafeColumn(item.getColumn())) {
+                if (item != null && item.getColumn() != null) {
                     this.orderItems.add(OrderItem.of(item.getColumn(),
                             item.getDirection() == OrderItem.Direction.ASC));
                 }
@@ -364,61 +200,54 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置排序项列表（结构化）
-     *
-     * <p>对传入的每个排序项进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配
-     * 且通过 {@link #allowedOrderByFields()} 白名单的合法项。
-     *
-     * @param orderItems 排序项列表（OrderItem 类型）
-     * @return 当前对象，支持链式调用
+     * 设置排序项列表。
      */
     public PageQuery setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = new ArrayList<>();
-        if (orderItems == null || orderItems.isEmpty()) {
-            return this;
-        }
-        for (OrderItem item : orderItems) {
-            if (item != null && isSafeColumn(item.getColumn())) {
-                this.orderItems.add(OrderItem.of(item.getColumn(), item.getDirection() == OrderItem.Direction.ASC));
+        if (orderItems != null) {
+            for (OrderItem item : orderItems) {
+                if (item != null && item.getColumn() != null) {
+                    this.orderItems.add(OrderItem.of(item.getColumn(),
+                            item.getDirection() == OrderItem.Direction.ASC));
+                }
             }
         }
         return this;
     }
 
     /**
-     * 设置搜索关键字（覆盖Lombok生成的setter）
-     *
-     * <p>对搜索关键字进行安全处理。
-     * <ul>
-     *   <li>截断超长关键字，最大长与 {@link #MAX_SEARCH_KEY_LENGTH}</li>
-     *   <li>转义SQL LIKE通配符（%、_、\），防止通配符注入</li>
-     * </ul>
-     *
-     * @param searchKey 原始搜索关键字
+     * 清空排序项。
      */
-    public void setSearchKey(String searchKey) {
-        if (searchKey == null) {
-            super.setSearchKey(null);
-            return;
+    public PageQuery clearOrders() {
+        if (orderItems != null) {
+            orderItems.clear();
         }
-        String trimmed = searchKey.trim();
-        if (trimmed.length() > MAX_SEARCH_KEY_LENGTH) {
-            trimmed = trimmed.substring(0, MAX_SEARCH_KEY_LENGTH);
-        }
-        super.setSearchKey(trimmed
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_"));
+        return this;
     }
 
     /**
-     * 获取偏移量
+     * 获取排序项数量。
+     */
+    @JsonIgnore
+    public int getOrderCount() {
+        return orderItems != null ? orderItems.size() : 0;
+    }
+
+    /**
+     * 惰性初始化排序列表。
+     */
+    private void ensureOrderItems() {
+        if (orderItems == null) {
+            orderItems = new ArrayList<>();
+        }
+    }
+
+    // ======================== 分页计算 ========================
+
+    /**
+     * 获取偏移量（int 类型）。
      *
-     * <p>用于 MyBatis 分页查询。LIMIT offset, size。
-     * 计算公式：offset = (pageNum - 1) * pageSize
-     *
-     * @return 偏移量
-     * @throws ArithmeticException 当计算结果超过Integer.MAX_VALUE 时抛出
+     * @throws ArithmeticException 当计算结果超过 Integer.MAX_VALUE 时抛出
      */
     public int getOffset() {
         long offset = getOffsetLong();
@@ -431,38 +260,24 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取偏移量（long 类型，无溢出风险。
-     *
-     * <p>用于超大分页场景，避免int 溢出问题。
-     * 计算公式：offset = (pageNum - 1) * pageSize
-     *
-     * @return 偏移量（long 类型
+     * 获取偏移量（long 类型，无溢出风险）。
      */
     public long getOffsetLong() {
         if (pageNum == null || pageSize == null) {
             return 0L;
         }
-        // 委托 PageConstants 统一归一化（pageNum/pageSize 已非 null，此处安全）
         return PageConstants.calcOffset(pageNum, pageSize);
     }
 
     /**
-     * 获取实际每页大小
-     *
-     * <p>返回在有效范围内的页大小。
-     *
-     * @return 实际每页大小
+     * 获取实际每页大小。
      */
     public int getEffectivePageSize() {
-        return normalizePageSize(this.pageSize);
+        return PageConstants.normalizePageSize(this.pageSize);
     }
 
     /**
-     * 获取实际页码
-     *
-     * <p>返回在有效范围内的页码
-     *
-     * @return 实际页码
+     * 获取实际页码。
      */
     @JsonIgnore
     public int getEffectivePageNum() {
@@ -470,150 +285,39 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 计算起始行号
-     *
-     * <p>从1开始的行号，用于显示等场景。
-     *
-     * @return 起始行号
+     * 计算起始行号（从1开始）。
      */
     public int getStartRow() {
         return getOffset() + 1;
     }
 
     /**
-     * 计算结束行号
-     *
-     * @return 结束行号
+     * 计算结束行号。
      */
     public long getEndRow() {
         return getOffsetLong() + getEffectivePageSize();
     }
 
     /**
-     * 判断是否有上一页
-     *
-     * @return 有上一页返回true
+     * 判断是否有上一页。
      */
     public boolean hasPrevious() {
         return getEffectivePageNum() > 1;
     }
 
     /**
-     * 判断是否有下一页
-     *
-     * <p>此方法需要结合总记录数使用。
-     * 通常。BaseResponse.extensions 中配合 total 字段使用。
-     *
-     * @param total 总记录数
-     * @return 有下一页返回true
+     * 判断是否有下一页。
      */
     public boolean hasNext(long total) {
         return (long) getOffset() + getEffectivePageSize() < total;
     }
 
     /**
-     * 获取排序SQL片段
-     *
-     * <p>基于结构化 {@link OrderItem} 列表直接拼接，零重复解析。
-     *
-     * @return ORDER BY 子句，如 "ORDER BY created_at DESC"
-     */
-    @JsonIgnore
-    public String getOrderSql() {
-        if (orderItems == null || orderItems.isEmpty()) {
-            return "";
-        }
-        List<String> safeItems = new ArrayList<>();
-        for (OrderItem item : orderItems) {
-            if (item != null && isSafeColumn(item.getColumn())) {
-                safeItems.add(item.toSql());
-            }
-        }
-        if (safeItems.isEmpty()) {
-            return "";
-        }
-        return "ORDER BY " + String.join(", ", safeItems);
-    }
-
-    /**
-     * 清空排序项
-     *
-     * @return 当前对象，支持链式调用
-     */
-    public PageQuery clearOrders() {
-        if (orderItems != null) {
-            orderItems.clear();
-        }
-        return this;
-    }
-
-    /**
-     * 获取排序项数量
-     *
-     * @return 排序项数量
-     */
-    @JsonIgnore
-    public int getOrderCount() {
-        return orderItems != null ? orderItems.size() : 0;
-    }
-
-    /**
-     * 惰性初始化排序列表
-     */
-    private void ensureOrderItems() {
-        if (orderItems == null) {
-            orderItems = new ArrayList<>();
-        }
-    }
-
-    /**
      * 判断是否启用游标分页模式。
-     *
-     * @return cursor 非空时返回 true
      */
     @JsonIgnore
     public boolean isCursorBased() {
         return cursor != null && !cursor.isBlank();
-    }
-
-    // ======================== 深度分页风险评估（v1.6.0 对齐阿里规范） ========================
-
-    /**
-     * 评估当前分页查询的深度分页风险。
-     *
-     * <p>根据配置评估：
-     * <ul>
-     *   <li>{@link DeepPaginationRisk#SAFE}：offset 在安全范围内，可正常使用</li>
-     *   <li>{@link DeepPaginationRisk#WARN}：offset 超过警告阈值，应考虑改用游标分页</li>
-     *   <li>{@link DeepPaginationRisk#REJECT}：offset 超过拒绝阈值，应改用游标分页</li>
-     * </ul>
-     *
-     * <p><b>v1.7.0 变更：</b>此方法不再抛出异常，仅返回风险评估结果。
-     * 是否需要拦截由调用方根据业务场景决定。
-     *
-     * @return 风险评估结果
-     * @since 1.6.0
-     */
-    @JsonIgnore
-    public DeepPaginationRisk assessPaginationRisk() {
-        // 游标分页模式无深度分页问题
-        if (isCursorBased()) {
-            return DeepPaginationRisk.SAFE;
-        }
-        long offset = getOffsetLong();
-        DomainProperties props = getProperties();
-        if (props == null || props.getPage() == null) {
-            return DeepPaginationRisk.SAFE;
-        }
-        long rejectThreshold = props.getPage().getCursorRejectThreshold();
-        long warningThreshold = props.getPage().getCursorWarningThreshold();
-        if (offset >= rejectThreshold) {
-            return DeepPaginationRisk.REJECT;
-        }
-        if (offset >= warningThreshold) {
-            return DeepPaginationRisk.WARN;
-        }
-        return DeepPaginationRisk.SAFE;
     }
 
     @Override

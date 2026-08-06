@@ -84,9 +84,8 @@ public abstract class AbstractRemiException extends RuntimeException implements 
     protected ExceptionLevel level;
     protected ExceptionCategory category;
     protected transient LocalDateTime timestamp;
-    protected String path;
     /** 附加数据（通过 BusinessException.data() 设置） */
-    protected transient Object extData;
+    protected transient Map<String, Object> extData;
     /** 异常链上下文快照（透写入 details，供排查定位） */
     protected transient Map<String, String> snapshot;
 
@@ -212,7 +211,6 @@ public abstract class AbstractRemiException extends RuntimeException implements 
         info.setKey(this.key);
         info.setMessage(getMessage());
         info.setHttpStatus(this.httpStatus);
-        info.setPath(this.path);
         info.setTimestamp(this.timestamp);
         // 快照透写入 details（details 可枚举，方便前端 / 日志展示）
         if (this.snapshot != null && !this.snapshot.isEmpty()) {
@@ -254,6 +252,17 @@ public abstract class AbstractRemiException extends RuntimeException implements 
         return code;
     }
 
+    /**
+     * 设置错误码。
+     *
+     * <p><b>谨慎使用：</b>在 {@link #getMessage()} 懒加载解析后调用本方法，
+     * 会导致 {@code code} 字段与已缓存的 message 不一致。
+     * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
+     *
+     * @param code 异常码字符串
+     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.remisoft.common.exception.code.UnifiedExceptionCode} 枚举初始化
+     */
+    @Deprecated
     public void setCode(String code) {
         this.code = code;
     }
@@ -262,6 +271,17 @@ public abstract class AbstractRemiException extends RuntimeException implements 
         return key;
     }
 
+    /**
+     * 设置国际化消息键。
+     *
+     * <p><b>谨慎使用：</b>在 {@link #getMessage()} 懒加载解析后调用本方法，
+     * 会导致 {@code key} 字段与已缓存的 message 不一致。
+     * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
+     *
+     * @param key 国际化消息键
+     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.remisoft.common.exception.code.UnifiedExceptionCode} 枚举初始化
+     */
+    @Deprecated
     public void setKey(String key) {
         this.key = key;
     }
@@ -275,6 +295,17 @@ public abstract class AbstractRemiException extends RuntimeException implements 
         return params != null ? params.clone() : null;
     }
 
+    /**
+     * 设置国际化消息参数。
+     *
+     * <p><b>谨慎使用：</b>在 {@link #getMessage()} 懒加载解析后调用本方法，
+     * 会导致 {@code params} 字段与已缓存的 message 不一致。
+     * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
+     *
+     * @param params 消息格式化参数
+     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.remisoft.common.exception.code.UnifiedExceptionCode} 枚举初始化
+     */
+    @Deprecated
     public void setParams(Object[] params) {
         this.params = params;
     }
@@ -399,19 +430,11 @@ public abstract class AbstractRemiException extends RuntimeException implements 
         this.timestamp = timestamp;
     }
 
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public Object getExtData() {
+    public Map<String, Object> getExtData() {
         return extData;
     }
 
-    public void setExtData(Object extData) {
+    public void setExtData(Map<String, Object> extData) {
         this.extData = extData;
     }
 

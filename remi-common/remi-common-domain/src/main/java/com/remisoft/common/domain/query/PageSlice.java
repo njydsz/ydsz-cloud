@@ -15,36 +15,23 @@ import lombok.NoArgsConstructor;
 /**
  * 轻量分页结果（无 total count）。
  *
- * <p>适用于不需要总记录数的分页场景（如无限滚动、流式加载），
- * 相比 {@link PageResult} 省略了 count SQL 查询，降低数据库压力。
- *
- * <p>与 PageResult 的关系：Slice = Page - total - totalPages。
- * 设计参考 Spring Data 的 {@code Slice<T>} 接口。
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // Service 层
- * List<User> users = userMapper.selectList(query);
- * boolean hasNext = users.size() > query.getPageSize();
- * if (hasNext) {
- *     users = users.subList(0, query.getPageSize()); // 去掉多查的 1 条
- * }
- * return PageSlice.of(users, query.getPageNum(), query.getPageSize(), hasNext);
- *
- * // Controller 层
- * return BaseResponse.success(slice);
- * }</pre>
+ * <p>适用于不需要总记录数的分页场景（如无限滚动、流式加载）。
  *
  * @param <T> 数据类型
  * @author remi-team
  * @since 1.6.0
- * @see PageResult
- * @see CursorPage
+ * <p><b>v1.7.0 变更：</b>已合并至统一 {@link Slice} 类，此类仅作过渡兼容，将在 2.0.0 移除。
+ *
+ * @deprecated 1.7.0 使用 {@link Slice} 替代
+ * @see Slice 统一分页结果类
+ * @see PageResult 带 total 的分页结果
+ * @see CursorPage 游标分页结果
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonClass
+@Deprecated(since = "1.7.0", forRemoval = true)
 public class PageSlice<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;

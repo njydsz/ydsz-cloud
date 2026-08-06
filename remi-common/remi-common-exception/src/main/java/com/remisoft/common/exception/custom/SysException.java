@@ -1,5 +1,7 @@
 package com.remisoft.common.exception.custom;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 
 import com.remisoft.common.core.code.BaseResultCode;
@@ -179,15 +181,9 @@ public class SysException extends AbstractRemiException {
     /**
      * 系统异常构建器，预置默认的错误码、HTTP状态码、级别和分类
      */
-    public static class SysExceptionBuilder extends RemiExceptionBuilder<SysException, SysExceptionBuilder> {
-
-        @Override
-        protected SysExceptionBuilder self() {
-            return this;
-        }
+    public static class SysExceptionBuilder extends RemiExceptionBuilder<SysException> {
 
         public SysExceptionBuilder() {
-            super();
             this.code = DEFAULT_CODE;
             this.httpStatus = DEFAULT_HTTP_STATUS;
             this.level = DEFAULT_LEVEL;
@@ -204,7 +200,7 @@ public class SysException extends AbstractRemiException {
                 this.httpStatus = resultCode.getHttpStatusCode() > 0
                         ? resultCode.getHttpStatusCode() : DEFAULT_HTTP_STATUS;
             }
-            return self();
+            return this;
         }
 
         /**
@@ -217,13 +213,13 @@ public class SysException extends AbstractRemiException {
                 this.httpStatus = resultCode.getHttpStatusCode() > 0
                         ? resultCode.getHttpStatusCode() : DEFAULT_HTTP_STATUS;
             }
-            return self();
+            return this;
         }
 
         @Override
         protected SysException doBuild(String code, String key, Object[] params, int httpStatus,
                                        ExceptionLevel level, ExceptionCategory category,
-                                       Throwable cause, String path, Object extData, String message) {
+                                       Throwable cause, Map<String, Object> extData, String message) {
             SysException exception;
             if (cause != null) {
                 exception = new SysException();
@@ -236,7 +232,6 @@ public class SysException extends AbstractRemiException {
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);
             exception.setCategory(category);
-            exception.setPath(path);
             exception.setExtData(extData);
             return exception;
         }

@@ -1,5 +1,6 @@
 package com.remisoft.common.exception.custom;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
@@ -172,15 +173,9 @@ public class BusinessException extends AbstractRemiException {
     /**
      * 业务异常构建器，预置默认的错误码、HTTP状态码、级别和分类
      */
-    public static class BusinessExceptionBuilder extends RemiExceptionBuilder<BusinessException, BusinessExceptionBuilder> {
-
-        @Override
-        protected BusinessExceptionBuilder self() {
-            return this;
-        }
+    public static class BusinessExceptionBuilder extends RemiExceptionBuilder<BusinessException> {
 
         public BusinessExceptionBuilder() {
-            super();
             this.code = DEFAULT_CODE;
             this.httpStatus = DEFAULT_HTTP_STATUS;
             this.level = DEFAULT_LEVEL;
@@ -196,7 +191,7 @@ public class BusinessException extends AbstractRemiException {
                 this.key = resultCode.getMessageKey();
                 this.httpStatus = resultCode.getHttpStatusCode();
             }
-            return self();
+            return this;
         }
 
         /**
@@ -208,27 +203,29 @@ public class BusinessException extends AbstractRemiException {
                 this.key = resultCode.getMessageKey();
                 this.httpStatus = resultCode.getHttpStatusCode();
             }
-            return self();
+            return this;
         }
 
         /**
-         * 便捷方法：设置国际化消息参数
+         * 便捷方法：设置国际化消息参数（变长参数版）
+         *
+         * <p>覆盖基类的 {@code params(Object[])} 以提供变长参数调用方式。
          */
+        @Override
         public BusinessExceptionBuilder params(Object... params) {
             this.params = params;
-            return self();
+            return this;
         }
 
         @Override
         protected BusinessException doBuild(String code, String key, Object[] params, int httpStatus,
                                             ExceptionLevel level, ExceptionCategory category,
-                                            Throwable cause, String path, Object extData, String message) {
+                                            Throwable cause, Map<String, Object> extData, String message) {
             BusinessException exception = new BusinessException();
             exception.initFields(code, key, params);
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);
             exception.setCategory(category);
-            exception.setPath(path);
             exception.setExtData(extData);
             if (cause != null) {
                 exception.initCause(cause);

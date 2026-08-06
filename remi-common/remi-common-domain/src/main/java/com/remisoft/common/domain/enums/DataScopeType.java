@@ -12,38 +12,19 @@ import lombok.Getter;
  * 数据权限范围类型枚举。
  *
  * <p>定义系统中数据权限的维度类型，用于行级数据权限控制。
- * 支持租户、集团、公司、部门、用户、项目、区域等多种维度。
  *
- * <p><b>维度优先级（从高到低）：</b>
- * <ul>
- *   <li>CUSTOM(50) - 自定义 SQL</li>
- *   <li>GROUP(40) - 集团级别</li>
- *   <li>COMPANY(30) - 公司级别</li>
- *   <li>PROJECT(25) - 项目级别</li>
- *   <li>DEPT(20) - 部门级别</li>
- *   <li>REGION(15) - 区域级别</li>
- *   <li>TENANT(10) - 租户级别</li>
- *   <li>USER(5) - 用户级别</li>
- * </ul>
- *
- * <p><b>列名约定：</b>每个维度绑定一个数据库列名（如 {@code tenant_id}、{@code dept_id}），
- * 业务方可通过 {@link #getColumnName()} 获取列名，拼接 WHERE 条件。
- *
- * <p><b>接入方式：</b>
- * <ul>
- *   <li>SQL 拦截器：通过 {@link DataScopeEvaluator} 注入当前用户的数据权限范围</li>
- *   <li>AOP 切面：配合 {@code @RbacDataScope} 注解实现声明式数据权限</li>
- *   <li>Header 传递：客户端通过 HeaderConstants 中的 {@code X-Data-Scope} 传递</li>
- * </ul>
+ * <p><b>迁移计划（v1.7.0）：</b>
+ * 此枚举涉及数据权限评估（DataScopeEvaluator）属于基础设施层职责，
+ * 计划迁移至 {@code common-rbac} 或 {@code common-tenant} 模块。
  *
  * @author remi-team
  * @since 1.0.0
- * @since 1.5.0 增加 columnName、DataScopeEvaluator 接入点
+ * @deprecated 1.7.0 计划迁移至 common-rbac 模块，使用 {@code RbDataScopeType} 替代
  * @see HeaderConstants
- * @see DataScopeEvaluator
  */
 @Getter
 @AllArgsConstructor
+@Deprecated(since = "1.7.0", forRemoval = true)
 public enum DataScopeType implements TypeEnum<String> {
 
     /**

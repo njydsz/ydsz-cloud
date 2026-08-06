@@ -261,8 +261,8 @@ public abstract class BaseExceptionHandler {
             if (includeExceptionInfo()) {
                 Map<String, Object> details = new LinkedHashMap<>();
                 details.put("stackTrace", getStackTraceString(throwable));
-                if (ex.getExtData() instanceof Map<?, ?> rawMap) {
-                    rawMap.forEach((k, v) -> details.put(String.valueOf(k), v));
+                if (ex.getExtData() != null) {
+                    ex.getExtData().forEach((k, v) -> details.put(k, v));
                 }
                 info.setDetails(details);
             }
@@ -303,8 +303,8 @@ public abstract class BaseExceptionHandler {
             if (path != null) {
                 problem.setInstance(URI.create(path));
             }
-            if (ex.getExtData() instanceof Map<?, ?> rawMap) {
-                rawMap.forEach((k, v) -> problem.setProperty(String.valueOf(k), v));
+            if (ex.getExtData() != null) {
+                ex.getExtData().forEach((k, v) -> problem.setProperty(k, v));
             }
         } else {
             problem = ProblemDetail.forStatusAndDetail(

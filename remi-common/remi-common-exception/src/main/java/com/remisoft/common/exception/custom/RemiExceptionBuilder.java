@@ -11,12 +11,15 @@ import com.remisoft.common.exception.enums.ExceptionLevel;
  *
  * <p>提供通用的链式构建 API，子类只需实现 {@link #doBuild} 方法。
  *
- * @param <E> 异常类型
- * @param <B> 构建器类型（自引用）
+ * <p>采用简单泛型（单一类型参数 {@code T}），
+ * setter 基类方法返回 {@code RemiExceptionBuilder<T>}，
+ * 子类特有的便捷方法可直接返回子类类型以支持更灵活的链式调用。
+ *
+ * @param <T> 异常类型
  * @author remi-team
  * @since 1.0.0
  */
-public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B extends RemiExceptionBuilder<E, B>> {
+public abstract class RemiExceptionBuilder<T extends AbstractRemiException> {
 
     protected String code;
     protected String key;
@@ -25,22 +28,10 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
     protected ExceptionLevel level;
     protected ExceptionCategory category;
     protected Throwable cause;
-    protected String path;
-    protected Object extData;
+    protected Map<String, Object> extData;
     protected String message;
     /** 构建阶段暂存的快照键值对，build() 后写入异常实例 */
     protected transient Map<String, String> snapshotMap;
-
-    /**
-     * 返回构建器自身的具体类型实例，用于支撑 CRTP 泛型自引用。
-     *
-     * <p>所有链式方法均返回 {@code self()} 而非 {@code this}，
-     * 这样子类新增的构建方法在链式调用中不会被向上转型丢失。
-     * 实现体固定为 {@code return this;}，不得返回其他对象。
-     *
-     * @return 当前构建器实例（子类的具体类型），永不为 {@code null}
-     */
-    protected abstract B self();
 
     /**
      * 构建异常实例（由子类实现）
@@ -52,14 +43,13 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param level     异常级别
      * @param category  异常分类
      * @param cause     原始异常
-     * @param path      请求路径
      * @param extData   附加数据
      * @param message   自定义消息
      * @return 异常实例
      */
-    protected abstract E doBuild(String code, String key, Object[] params, int httpStatus,
+    protected abstract T doBuild(String code, String key, Object[] params, int httpStatus,
                                   ExceptionLevel level, ExceptionCategory category,
-                                  Throwable cause, String path, Object extData, String message);
+                                  Throwable cause, Map<String, Object> extData, String message);
 
     /**
      * 覆盖业务错误码。
@@ -70,9 +60,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param code 业务错误码，用于前端分支处理与错误聚合；传 {@code null} 会清空预置默认值
      * @return 当前构建器，便于链式调用
      */
-    public B code(String code) {
+    public RemiExceptionBuilder<T> code(String code) {
         this.code = code;
-        return self();
+        return this;
     }
 
     /**
@@ -84,9 +74,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param key i18n key，需在 {@code messages.properties} 中存在，否则解析结果回退为 key 本身
      * @return 当前构建器，便于链式调用
      */
-    public B key(String key) {
+    public RemiExceptionBuilder<T> key(String key) {
         this.key = key;
-        return self();
+        return this;
     }
 
     /**
@@ -98,9 +88,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param params 消息参数数组，可为 {@code null}，构建时会被归一化为空数组
      * @return 当前构建器，便于链式调用
      */
-    public B params(Object[] params) {
+    public RemiExceptionBuilder<T> params(Object[] params) {
         this.params = params;
-        return self();
+        return this;
     }
 
     /**
@@ -112,9 +102,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param httpStatus HTTP 状态码；传 0 将丢失子类预置默认值，需由上层兜底
      * @return 当前构建器，便于链式调用
      */
-    public B httpStatus(int httpStatus) {
+    public RemiExceptionBuilder<T> httpStatus(int httpStatus) {
         this.httpStatus = httpStatus;
-        return self();
+        return this;
     }
 
     /**
@@ -126,9 +116,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param level 异常级别；传 {@code null} 会清空子类预置默认值
      * @return 当前构建器，便于链式调用
      */
-    public B level(ExceptionLevel level) {
+    public RemiExceptionBuilder<T> level(ExceptionLevel level) {
         this.level = level;
-        return self();
+        return this;
     }
 
     /**
@@ -140,9 +130,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param category 异常分类；传 {@code null} 会清空子类预置默认值
      * @return 当前构建器，便于链式调用
      */
-    public B category(ExceptionCategory category) {
+    public RemiExceptionBuilder<T> category(ExceptionCategory category) {
         this.category = category;
-        return self();
+        return this;
     }
 
     /**
@@ -154,20 +144,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param cause 原始异常；为 {@code null} 时不建立异常链
      * @return 当前构建器，便于链式调用
      */
-    public B cause(Throwable cause) {
+    public RemiExceptionBuilder<T> cause(Throwable cause) {
         this.cause = cause;
-        return self();
-    }
-
-    /**
-     * 设置触发异常的请求路径。
-     *
-     * @param path 请求 URI；通常由全局异常处理器统一回填，业务代码一般无需显式设置
-     * @return 当前构建器，便于链式调用
-     */
-    public B path(String path) {
-        this.path = path;
-        return self();
+        return this;
     }
 
     /**
@@ -176,12 +155,12 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * <p>该数据不会自动写入异常响应体，需由上层显式读取后决定是否透出；
      * 请勿放入敏感信息，避免被日志或响应意外泄露。
      *
-     * @param extData 附加数据，可为任意对象，允许为 {@code null}
+     * @param extData 附加数据 Map，允许为 {@code null}
      * @return 当前构建器，便于链式调用
      */
-    public B extData(Object extData) {
+    public RemiExceptionBuilder<T> extData(Map<String, Object> extData) {
         this.extData = extData;
-        return self();
+        return this;
     }
 
     /**
@@ -195,9 +174,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param message 自定义消息文案，允许为 {@code null}
      * @return 当前构建器，便于链式调用
      */
-    public B message(String message) {
+    public RemiExceptionBuilder<T> message(String message) {
         this.message = message;
-        return self();
+        return this;
     }
 
     /**
@@ -220,12 +199,12 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param value 快照值（自动 {@code String.valueOf(value)} 转换），可为 {@code null}
      * @return 当前构建器，便于链式调用
      */
-    public B snapshot(String key, Object value) {
+    public RemiExceptionBuilder<T> snapshot(String key, Object value) {
         if (this.snapshotMap == null) {
             this.snapshotMap = new LinkedHashMap<>();
         }
         this.snapshotMap.put(key, value == null ? null : value.toString());
-        return self();
+        return this;
     }
 
     /**
@@ -237,9 +216,9 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @return 当前构建器，便于链式调用
      * @since 1.8.0
      */
-    public B snapshots(Map<String, ?> entries) {
+    public RemiExceptionBuilder<T> snapshots(Map<String, ?> entries) {
         if (entries == null || entries.isEmpty()) {
-            return self();
+            return this;
         }
         if (this.snapshotMap == null) {
             this.snapshotMap = new LinkedHashMap<>(entries.size());
@@ -248,7 +227,7 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
             Object val = e.getValue();
             this.snapshotMap.put(e.getKey(), val == null ? null : val.toString());
         }
-        return self();
+        return this;
     }
 
     /**
@@ -256,10 +235,10 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      *
      * @return 异常实例
      */
-    public E build() {
-        E exception = doBuild(
+    public T build() {
+        T exception = doBuild(
                 code, key, params, httpStatus, level, category,
-                cause, path, extData, message
+                cause, extData, message
         );
         // 暂存快照一次性写入异常实例
         if (this.snapshotMap != null && !this.snapshotMap.isEmpty()) {

@@ -14,21 +14,18 @@ import lombok.Getter;
  * 服务类型枚举定义
  *
  * <p>定义系统服务的类型，用于区分不同来源的请求。
- * 支持管理端（WEB）和移动端（APP）两种服务类型。
  *
- * <p><b>使用场景：</b>
- * <ul>
- *   <li>配合 HeaderConstants.X_SERVICE_TYPE 请求头使用</li>
- *   <li>区分不同服务的访问控制和路由</li>
- *   <li>服务间调用的权限验证</li>
- * </ul>
+ * <p><b>迁移计划（v1.7.0）：</b>
+ * 此枚举包含网关路由配置（pathPrefix），计划迁移至 {@code remi-gateway} 模块。
  *
  * @author remi-team
  * @since 1.0.0
+ * @deprecated 1.7.0 计划迁移至 remi-gateway 模块，使用 {@code GatewayServiceType} 替代
  * @see HeaderConstants
  */
 @Getter
 @AllArgsConstructor
+@Deprecated(since = "1.7.0", forRemoval = true)
 public enum ServiceType implements TypeEnum<String> {
 
     /**

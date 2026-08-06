@@ -1,7 +1,5 @@
 package com.remisoft.common.exception.metrics;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -88,13 +86,6 @@ public class ExceptionMetrics {
      */
     private volatile boolean includeCodeTag = false;
 
-    /**
-     * Tags 缓存：type|level|category → 预构建的 Tags 对象
-     *
-     * <p>缓存常用维度的 Tags 组合，避免每次记录异常时重新构造 Tag 数组。
-     */
-    private final Map<String, Tags> tagsCache = new ConcurrentHashMap<>();
-
     public ExceptionMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }
@@ -106,8 +97,6 @@ public class ExceptionMetrics {
      */
     public void setIncludeCodeTag(boolean includeCodeTag) {
         this.includeCodeTag = includeCodeTag;
-        // 切换时清空缓存，避免残留
-        tagsCache.clear();
     }
 
     /**
@@ -126,10 +115,6 @@ public class ExceptionMetrics {
      */
     public void setEnabled(boolean enabled) {
         this.enabled.set(enabled);
-        // 禁用时清空缓存
-        if (!enabled) {
-            tagsCache.clear();
-        }
     }
 
     /**
@@ -206,10 +191,10 @@ public class ExceptionMetrics {
     }
 
     /**
-     * 构建或从缓存获取 Tags 对象
+     * 构建 Tags 对象。
      *
-     * <p>缓存键格式：type|level|category
-     * 不含 code tag（高基数维度单独处理）
+     * <p>Micrometer 内置 Meter 缓存保证相同 tag 组合不会重复构建 Meter，
+     * 此处无需额外缓存层。
      */
     private Tags buildTags(Throwable throwable, String... extraTags) {
         String exceptionType = throwable.getClass().getSimpleName();
@@ -225,34 +210,17 @@ public class ExceptionMetrics {
             }
         }
 
-        // 无额外标签时使用缓存
-        if (extraTags == null || extraTags.length == 0) {
-            final String cacheKey = exceptionType + "|" + level + "|" + category;
-            final String type = exceptionType;
-            final String lvl = level;
-            final String cat = category;
-            Tags cached = tagsCache.get(cacheKey);
-            if (cached != null) {
-                return cached;
-            }
-            Tags fresh = Tags.of(
-                    Tag.of(TAG_TYPE, type),
-                    Tag.of(TAG_LEVEL, lvl),
-                    Tag.of(TAG_CATEGORY, cat)
-            );
-            tagsCache.put(cacheKey, fresh);
-            return fresh;
-        }
-
-        // 有额外标签时不缓存，直接构建
         Tags tags = Tags.of(
                 Tag.of(TAG_TYPE, exceptionType),
                 Tag.of(TAG_LEVEL, level),
                 Tag.of(TAG_CATEGORY, category)
         );
+
         // 追加额外标签
-        for (int i = 0; i + 1 < extraTags.length; i += 2) {
-            tags = tags.and(Tag.of(extraTags[i], extraTags[i + 1]));
+        if (extraTags != null) {
+            for (int i = 0; i + 1 < extraTags.length; i += 2) {
+                tags = tags.and(Tag.of(extraTags[i], extraTags[i + 1]));
+            }
         }
         return tags;
     }

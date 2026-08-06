@@ -10,7 +10,10 @@ import java.util.Map;
  * 身份类型枚举
  *
  * <p>定义系统中用户的身份类型，用于区分不同级别的用户访问权限。
- * 支持remi软件账号、集团公司账户、游客体验账号三种类型。
+ *
+ * <p><b>迁移计划（v1.7.0）：</b>
+ * 此枚举属于业务配置，计划迁移至 {@code remi-userinfo-api} 模块。
+ * 业务模块应定义自己的身份类型枚举，继承 {@link TypeEnum}。
  *
  * <p><b>使用场景：</b>
  * <ul>
@@ -21,10 +24,12 @@ import java.util.Map;
  *
  * @author remi-team
  * @since 1.0.0
+ * @deprecated 1.7.0 计划迁移至 remi-userinfo-api 模块，使用 {@code UserIdentityType} 替代
  * @see HeaderConstants
  */
 @Getter
 @AllArgsConstructor
+@Deprecated(since = "1.7.0", forRemoval = true)
 public enum IdentityType implements TypeEnum<String> {
 
     REMI("remisoft", "云顶数字账号"),

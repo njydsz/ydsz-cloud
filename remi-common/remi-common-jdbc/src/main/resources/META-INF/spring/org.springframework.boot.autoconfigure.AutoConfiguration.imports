@@ -2,6 +2,7 @@ com.remisoft.common.jdbc.config.MybatisPlusConfiguration
 com.remisoft.common.jdbc.config.MapperScanConfiguration
 com.remisoft.common.jdbc.config.HikariCPConfiguration
 com.remisoft.common.jdbc.config.SqlTraceAutoConfiguration
+com.remisoft.common.jdbc.config.SafeQueryAutoConfiguration
 com.remisoft.common.jdbc.config.ReadWriteSplittingAutoConfiguration
 com.remisoft.common.jdbc.config.DatabaseCircuitBreakerAutoConfiguration
 com.remisoft.common.jdbc.exception.DataIntegrityExceptionHandler

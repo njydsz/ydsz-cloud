@@ -109,6 +109,21 @@
       "name": "remi.jdbc.pagination.max-page-size",
       "type": "java.lang.Integer",
       "description": "分页最大页大小（默认 500）。"
+    },
+    {
+      "name": "remi.jdbc.safe-query.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全查询拦截，包括 ORDER BY 注入防护与深度分页检测（默认 true）。"
+    },
+    {
+      "name": "remi.jdbc.safe-query.strict-mode",
+      "type": "java.lang.Boolean",
+      "description": "严格模式（默认 false）。true: 非法排序字段抛出异常; false: 忽略非法排序字段并日志警告。"
+    },
+    {
+      "name": "remi.jdbc.safe-query.order-by-whitelist",
+      "type": "java.util.Set",
+      "description": "排序字段白名单（仅允许白名单中的字段参与排序，为空时使用正则校验）。"
     }
   ]
 }

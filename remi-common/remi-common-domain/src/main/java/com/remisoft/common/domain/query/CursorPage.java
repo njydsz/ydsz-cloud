@@ -12,33 +12,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 游标分页结果包装器（扩展传统 {@link PageResult}，添加游标元信息）。
+ * 游标分页结果包装器。
  *
  * <p>适用于无限滚动、信息流等场景，避免 offset 分页在大数据量下的性能劣化。
- * 与 {@link PageResult} 的关系：CursorPage = PageResult + hasNext + nextCursor。
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // Service 层组装
- * List<Feed> feeds = feedMapper.selectAfterCursor(query.getCursor(), query.getPageSize());
- * String nextCursor = feeds.isEmpty() ? null : encodeCursor(feeds.get(feeds.size() - 1));
- * CursorPage<Feed> page = CursorPage.of(feeds, nextCursor, feeds.size() >= query.getPageSize());
- *
- * // Controller 层返回
- * return CursorPage.of(feeds, nextCursor, hasMore);
- * }</pre>
  *
  * @param <T> 数据类型
  * @author remi-team
  * @since 1.5.0
- * @see PageResult
- * @see PageQuery#isCursorBased()
+ * <p><b>v1.7.0 变更：</b>已合并至统一 {@link Slice} 类，此类仅作过渡兼容，将在 2.0.0 移除。
+ *
+ * @deprecated 1.7.0 使用 {@link Slice} 替代
+ * @see Slice 统一分页结果类
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonClass
+@Deprecated(since = "1.7.0", forRemoval = true)
 public class CursorPage<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;

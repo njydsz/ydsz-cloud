@@ -1,11 +1,6 @@
 {
   "properties": [
     {
-      "name": "remi.domain.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用 domain 模块自动配置（默认 true）。"
-    },
-    {
       "name": "remi.domain.page.max-search-key-length",
       "type": "java.lang.Integer",
       "description": "搜索关键字最长长度（1~500，默认 200）。超长的 searchKey 将被截断到此长度。"
@@ -18,7 +13,7 @@
     {
       "name": "remi.domain.page.cursor-reject-threshold",
       "type": "java.lang.Long",
-      "description": "强制拒绝深度分页的 offset 阈值（默认 50000）。超过此值的 offset 分页将被直接拒绝，必须改用游标分页。"
+      "description": "强制拒绝深度分页的 offset 阈值（默认 50000）。超过此值的 offset 分页将被拦截器拒绝，必须改用游标分页。"
     },
     {
       "name": "remi.domain.tree.max-depth",
@@ -46,6 +41,13 @@
         { "value": 10, "description": "默认值（适合大多数树形结构）" },
         { "value": 20, "description": "深层树（如组织架构、行政区域）" }
       ]
+    }
+  ],
+  "deprecated": [
+    {
+      "name": "remi.domain.enabled",
+      "type": "java.lang.Boolean",
+      "reason": "v1.7.0 已移除。Domain 模块不再提供 enabled 开关，改为通过 Spring Boot 自动装配机制控制。"
     }
   ]
 }
