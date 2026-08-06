@@ -3,7 +3,6 @@ package com.remisoft.gateway.loadbalancer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -95,7 +94,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
         this.supplierProvider = supplierProvider;
         this.serviceId = serviceId;
         // 初始位置随机化,避免多实例启动时首轮都命中同一实例
-        this.position = new AtomicInteger(ThreadLocalRandom.current().nextInt(1000));
+        this.position = new AtomicInteger(RandomUtils.randomInt(1000));
     }
 
     /**
@@ -272,7 +271,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
         }
 
         // 加权随机选择
-        int random = ThreadLocalRandom.current().nextInt(totalWeight);
+        int random = RandomUtils.randomInt(totalWeight);
         int cumulative = 0;
         for (int i = 0; i < instances.size(); i++) {
             cumulative += weights[i];

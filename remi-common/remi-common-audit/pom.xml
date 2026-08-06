@@ -26,6 +26,11 @@
 
         <dependency>
             <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-safe</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.remisoft</groupId>
             <artifactId>remi-common-exception</artifactId>
         </dependency>
 

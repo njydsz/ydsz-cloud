@@ -18,11 +18,11 @@ import com.remisoft.common.domain.enums.IdentityType;
  *   <li>列级数据权限：表级可见列规则、可编辑列规则（基于角色/岗位）</li>
  * </ul>
  *
- * <p>实现类应通过 {@link RequestHolder} 写入 ThreadLocal，供全链路下游读取。
+ * <p>实现类应通过 {@link com.remisoft.common.core.context.RequestContext} 写入上下文，供全链路下游读取。
  * 推荐使用实现类 {@link RemiAuthInfo}。
  *
  * @see RemiAuthInfo
- * @see RequestHolder
+ * @see com.remisoft.common.core.context.RequestContext
  * @see AuthInfoUtils
  *
  * @author remi-team

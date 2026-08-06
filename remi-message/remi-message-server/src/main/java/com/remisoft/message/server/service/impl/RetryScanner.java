@@ -2,7 +2,6 @@ package com.remisoft.message.server.service.impl.core;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.remisoft.common.util.id.RandomUtils;
 import com.remisoft.common.lock.annotation.DistributedScheduled;
 import com.remisoft.message.domain.constant.MessageConstants;
 import com.remisoft.message.domain.entity.core.MsgLog;
@@ -147,7 +147,7 @@ public class RetryScanner {
                 logDO.setStatus(MessageStatusEnum.RETRY.name());
                 LocalDateTime nextRetry = retryStrategyResolver.calcNextRetryAt(newRetryCount, logDO.getChannel());
                 // GAP-7: 加入随机抖动因子（0~1s），避免多实例同时重试导致惊群效应
-                long jitterMs = ThreadLocalRandom.current().nextLong(0, 1000);
+                long jitterMs = RandomUtils.randomLong(0, 1000);
                 nextRetry = nextRetry.plusNanos(jitterMs * 1_000_000L);
                 logDO.setNextRetryAt(nextRetry);
                 msgLogMapper.updateById(logDO);

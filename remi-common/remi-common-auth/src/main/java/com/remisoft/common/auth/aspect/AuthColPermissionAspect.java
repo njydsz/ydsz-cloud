@@ -25,7 +25,6 @@ import org.springframework.util.ReflectionUtils;
 
 import com.remisoft.common.auth.annotation.AuthColPermission;
 import com.remisoft.common.auth.config.AuthProperties;
-import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.auth.desensitize.ColumnDesensitizationService;
 import com.remisoft.common.auth.model.ColumnPermission;
 import com.remisoft.common.auth.model.ColumnPermissionInfo;
@@ -34,12 +33,13 @@ import com.remisoft.common.auth.model.ColumnScopeInfo;
 import com.remisoft.common.auth.service.ColumnPermissionResolver;
 import com.remisoft.common.auth.util.AuthColPermissionSigner;
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.safe.desensitize.ColumnDesensitizationContext;
 import com.remisoft.common.safe.desensitize.ColumnDesensitizationExecutor;
 import com.remisoft.common.json.JsonMapper;
 import com.remisoft.common.json.RemiJson;
+import com.remisoft.common.util.auth.AuthInfo;
 import com.remisoft.common.util.auth.AuthInfoUtils;
-import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.string.StringUtils;
 
 /**
@@ -136,12 +136,12 @@ public class AuthColPermissionAspect {
         // SpEL 动态解析表名
         String resolvedTable = resolveTableIfSpel(ann.table, joinPoint);
 
-        Map<String, String> snapshot = RequestHolder.snapshotExtraHeaders();
+        Map<String, String> snapshot = new HashMap<>(RequestContext.getExtraHeaders());
         ColumnPermissionBundle bundle = buildColumnPermissionBundle(resolvedTable);
         boolean hasReturn = signature.getReturnType() != void.class;
 
         try {
-            AuthContext.setColumnPermission(bundle.permissionInfo);
+            RequestContext.setColumnPermission(bundle.permissionInfo);
             injectIntoArgs(joinPoint, ann, bundle.scopeInfo);
             applyExtraHeadersIfAbsent(bundle.scopeInfo);
 
@@ -154,8 +154,8 @@ public class AuthColPermissionAspect {
 
             return returnValue;
         } finally {
-            AuthContext.clear();
-            RequestHolder.restoreExtraHeaders(snapshot);
+            RequestContext.remove(RequestContext.KEY_COLUMN_PERMISSION);
+            restoreExtraHeaders(snapshot);
         }
     }
 
@@ -465,8 +465,8 @@ public class AuthColPermissionAspect {
             return ColumnDesensitizationContext.empty();
         }
         try {
-            String accessToken = RequestHolder.getAuthInfo() != null
-                    ? RequestHolder.getAuthInfo().getAccessToken()
+            String accessToken = RequestContext.getAuthInfo() != null
+                    ? ((AuthInfo) RequestContext.getAuthInfo()).getAccessToken()
                     : null;
             if (accessToken == null) {
                 return ColumnDesensitizationContext.empty();
@@ -480,7 +480,7 @@ public class AuthColPermissionAspect {
     }
 
     private Map<String, Set<String>> resolveRuleMap(String headerName, Map<String, Set<String>> authInfoRules) {
-        String raw = RequestHolder.getExtraHeader(headerName);
+        String raw = RequestContext.getExtraHeader(headerName);
         if (StringUtils.isBlank(raw)) {
             return normalizeRuleMap(authInfoRules);
         }
@@ -530,9 +530,9 @@ public class AuthColPermissionAspect {
             return;
         }
 
-        String visibleColumns = RequestHolder.getExtraHeader(HeaderConstants.X_VISIBLE_COLUMNS);
-        String editableColumns = RequestHolder.getExtraHeader(HeaderConstants.X_EDITABLE_COLUMNS);
-        String receivedSign = RequestHolder.getExtraHeader(HeaderConstants.X_COL_PERMISSION_SIGN);
+        String visibleColumns = RequestContext.getExtraHeader(HeaderConstants.X_VISIBLE_COLUMNS);
+        String editableColumns = RequestContext.getExtraHeader(HeaderConstants.X_EDITABLE_COLUMNS);
+        String receivedSign = RequestContext.getExtraHeader(HeaderConstants.X_COL_PERMISSION_SIGN);
 
         if (StringUtils.isBlank(visibleColumns) && StringUtils.isBlank(editableColumns)) {
             return;
@@ -545,7 +545,7 @@ public class AuthColPermissionAspect {
         if (StringUtils.isBlank(value)) {
             return;
         }
-        RequestHolder.putExtraHeader(headerName, value);
+        RequestContext.putExtraHeader(headerName, value);
     }
 
     private String serializeRuleMap(Map<String, Set<String>> rules) {
@@ -786,5 +786,19 @@ public class AuthColPermissionAspect {
             field.set(copy, value);
         }
         return copy;
+    }
+
+    /**
+     * 恢复 extra headers 快照（对应原 RequestHolder.restoreExtraHeaders 语义）。
+     *
+     * <p>先移除当前全部 extra headers，再逐条写回快照内容，避免上下文残留。
+     *
+     * @param snapshot extra headers 快照（可为空）
+     */
+    private static void restoreExtraHeaders(Map<String, String> snapshot) {
+        RequestContext.remove(RequestContext.KEY_EXTRA_HEADERS);
+        if (snapshot != null) {
+            snapshot.forEach(RequestContext::putExtraHeader);
+        }
     }
 }

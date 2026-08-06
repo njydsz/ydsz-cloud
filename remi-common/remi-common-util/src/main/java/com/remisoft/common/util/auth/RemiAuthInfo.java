@@ -14,7 +14,8 @@ import lombok.Data;
  * remi系统统一认证上下文信息抽象基类。
  *
  * <p>承载请求维度的全量身份与权限数据，在 {@link com.remisoft.common.web.filter.WebAuthFilter}
- * / {@link com.remisoft.common.app.filter.AppAuthFilter} 解析请求头后写入 {@link RequestHolder}，
+ * / {@link com.remisoft.common.app.filter.AppAuthFilter} 解析请求头后写入
+ * {@link com.remisoft.common.core.context.RequestContext}，
  * 供下游链路（SQL 拦截器、Feign 透传、数据权限切面等）随时获取。
  *
  * <p>设计说明：
@@ -46,7 +47,7 @@ import lombok.Data;
  *
  * @see {@link WebAuthInfo}
  * @see {@link AppAuthInfo}
- * @see RequestHolder
+ * @see com.remisoft.common.core.context.RequestContext
  * @see AuthInfoUtils
  *
  * @author remi-team

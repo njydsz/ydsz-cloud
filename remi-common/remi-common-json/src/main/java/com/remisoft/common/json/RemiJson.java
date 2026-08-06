@@ -168,42 +168,9 @@ public class RemiJson {
 
     // ==================== 自定义序列化器注册 ====================
 
-    /**
-     * 注册自定义序列化器
-     *
-     * <p><b>已废弃：</b>推荐通过实现 {@link com.remisoft.common.json.module.JsonModule} 接口并标注 {@code @Component} 完成注册，
-     * 以获得 SPI 自动发现、优先级控制、模块化测试等能力。
-     *
-     * <p>保留本方法仅为兼容存量代码，新代码不应继续使用。
-     *
-     * @param clazz 类型
-     * @param serializer 序列化器
-     * @param <T> 类型参数
-     * @deprecated 使用 {@code JsonModule} + {@code @Component} 替代（参见 {@code AgentJsonModule} 范例）
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static <T> void register(Class<T> clazz, JsonSerializer<T> serializer) {
-        SerializerRegistry.getInstance().register(clazz, serializer);
-    }
-
-    /**
-     * 注册自定义反序列化器
-     *
-     * <p><b>已废弃：</b>推荐通过实现 {@link com.remisoft.common.json.module.JsonModule} 接口并标注 {@code @Component} 完成注册，
-     * 以获得 SPI 自动发现、优先级控制、模块化测试等能力。
-     *
-     * <p>保留本方法仅为兼容存量代码，新代码不应继续使用。
-     *
-     * @param clazz 类型
-     * @param deserializer 反序列化器
-     * @param <T> 类型参数
-     * @deprecated 使用 {@code JsonModule} + {@code @Component} 替代（参见 {@code AgentJsonModule} 范例）
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public static <T> void register(Class<T> clazz, JsonDeserializer<T> deserializer) {
-        SerializerRegistry.getInstance().register(clazz, deserializer);
-    }
-
+    // 注意：历史版本提供 RemiJson.register(Class, JsonSerializer/JsonDeserializer) 静态注册方法，
+    // 自 1.1.0 起废弃并由 SerializerRegistry / JsonModule 替代，本方法已移除。
+    // 自定义序列化器/反序列化器请实现 JsonModule 接口并标注 @Component，由 SPI 自动发现注册。
 
     static <T> JsonSerializer<T> getCustomSerializer(Class<T> clazz) {
         JsonSerializer<T> serializer = SerializerRegistry.getInstance().get(clazz);
@@ -222,7 +189,7 @@ public class RemiJson {
     }
 
     /**
-     * 获取已注册的自定义序列化器（来自 {@code RemiJson.register(...)} 或 {@code JsonModule} 模块）。
+     * 获取已注册的自定义序列化器（来自 {@code SerializerRegistry} 或 {@code JsonModule} 模块）。
      *
      * <p>供序列化 Provider 在 {@code @JsonSerialize} 注解快速路径之后回退查询。
      * 历史实现中该方法虽存在但未被 Provider 实际调用，导致模块注册机制形同虚设；
@@ -239,7 +206,7 @@ public class RemiJson {
     }
 
     /**
-     * 获取已注册的自定义反序列化器（来自 {@code RemiJson.register(...)} 或 {@code JsonModule} 模块）。
+     * 获取已注册的自定义反序列化器（来自 {@code SerializerRegistry} 或 {@code JsonModule} 模块）。
      *
      * @param clazz 目标类型
      * @param <T> 类型参数

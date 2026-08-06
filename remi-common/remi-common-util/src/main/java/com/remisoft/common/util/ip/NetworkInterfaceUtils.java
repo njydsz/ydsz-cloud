@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * 本机网络接口枚举工具类。
  *
  * <p>提供本机 IP 地址、主机名的枚举和获取。
- * 从 {@link IpAddrUtils} 1.4.0 起拆分为独立类。
+ * 自 1.4.0 起从原 {@code IpAddrUtils} 拆分为独立类。
  *
  * @author remi-team
  * @since 1.4.0

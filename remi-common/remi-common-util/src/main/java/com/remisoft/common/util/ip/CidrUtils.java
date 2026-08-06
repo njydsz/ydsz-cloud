@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>提供 IPv4/IPv6 的 CIDR 网段判断、子网掩码转换、网络地址和广播地址计算。
  *
- * <p>从 {@link IpAddrUtils} 1.4.0 起拆分为独立类，聚焦于 CIDR 网段运算。
+ * <p>自 1.4.0 起从原 {@code IpAddrUtils} 拆分为独立类，聚焦于 CIDR 网段运算。
  *
  * @author remi-team
  * @since 1.4.0

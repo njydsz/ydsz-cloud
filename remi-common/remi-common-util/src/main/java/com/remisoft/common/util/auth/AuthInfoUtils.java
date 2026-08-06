@@ -4,13 +4,14 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.domain.enums.DataScopeType;
 import com.remisoft.common.domain.enums.IdentityType;
 
 /**
  * 认证信息快捷读取工具类。
  *
- * <p>封装 {@link RequestHolder#getAuthInfo()} 的常用读取逻辑，提供空值安全的快捷方法：
+ * <p>封装 {@link RequestContext#getAuthInfo()} 的常用读取逻辑，提供空值安全的快捷方法：
  * <ul>
  *   <li>基础身份：用户语言、访问令牌、用户ID、身份类型、服务类型</li>
  *   <li>行级数据权限：数据范围类型、租户ID</li>
@@ -35,7 +36,7 @@ import com.remisoft.common.domain.enums.IdentityType;
  *
  * @see AuthInfo
  * @see RemiAuthInfo
- * @see RequestHolder
+ * @see RequestContext
  *
  * @author remi-team
  * @since 1.0.0
@@ -52,10 +53,10 @@ public class AuthInfoUtils {
      * 获取当前线程的认证信息。
      *
      * @return AuthInfo 实例；若未写入则返回 null
-     * @see RequestHolder#getAuthInfo()
+     * @see RequestContext#getAuthInfo()
       */
     public static AuthInfo getAuthInfo() {
-        return RequestHolder.getAuthInfo();
+        return RequestContext.getAuthInfo(AuthInfo.class);
     }
 
     /**
@@ -230,7 +231,7 @@ public class AuthInfoUtils {
      * 
      */
     public static RemiAuthInfo getRemiAuthInfo() {
-        return RequestHolder.getRemiAuthInfo();
+        return RequestContext.getAuthInfo(RemiAuthInfo.class);
     }
 
     /**

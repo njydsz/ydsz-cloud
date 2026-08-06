@@ -14,13 +14,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.remisoft.common.auth.config.AuthFilterConfiguration;
 import com.remisoft.common.auth.config.AuthFilterIgnoreProperties;
 import com.remisoft.common.auth.constant.FilterIgnoreConstants;
-import com.remisoft.common.auth.context.AuthContext;
 import com.remisoft.common.auth.security.CsrfTokenValidator;
 import com.remisoft.common.auth.security.RateLimiter;
+import com.remisoft.common.core.context.RequestContext;
+import com.remisoft.common.safe.util.ClientIpResolver;
 import com.remisoft.common.util.auth.AuthInfo;
-import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.http.UrlPathUtils;
-import com.remisoft.common.util.ip.IpAddrUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>请求路径排除判断（白名单路径直接放行）</li>
  *   <li>限流检查（通过 {@link RateLimiter} 防止暴力请求）</li>
  *   <li>CSRF Token 校验（通过 {@link CsrfTokenValidator}）</li>
- *   <li>认证上下文 {@link AuthContext} 初始化和清理</li>
+ *   <li>认证上下文 {@link RequestContext} 初始化和清理</li>
  * </ul>
  *
  * <p>子类需实现 {@code doAuthFilter} 方法完成具体的 Token 解析和认证逻辑。
@@ -82,7 +81,7 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         }
         // 限流检查（如果启用）
         if (rateLimiter != null) {
-            String clientIp = IpAddrUtils.getIpAddrWithTrustedProxies(request, Set.of());
+            String clientIp = ClientIpResolver.getClientIp(request);
             if (!rateLimiter.tryAcquire(clientIp)) {
                 log.warn("{}[限流] IP: {}, 请求路径: {}", getLogPrefix(), clientIp, servletPath);
                 response.sendError(429, "Rate limit exceeded");
@@ -92,15 +91,13 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         long startTime = System.currentTimeMillis();
         AuthInfo authInfo = resolveAuthInfo(request, response);
         log.debug("{}请求路径: {}, 认证信息已写入上下文", getLogPrefix(), servletPath);
-        RequestHolder.add(authInfo);
-        RequestHolder.add(request);
+        RequestContext.setAuthInfo(authInfo);
+        RequestContext.setHttpRequest(request);
         try {
             filterChain.doFilter(request, response);
         } finally {
             // 清理所有 ThreadLocal 变量，防止在异步线程池场景下的上下文泄漏
-            RequestHolder.remove();
-            AuthContext.clear();
-            AuthContext.clear();
+            RequestContext.clear();
             doPostAuth(request, response, System.currentTimeMillis() - startTime);
         }
     }
@@ -127,7 +124,7 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
      * 解析并构造认证信息（由子类实现）。
      *
      * <p>子类需从请求中抽取凭证（如 Token 解析、签名验签）并构建 {@link AuthInfo}。
-     * 返回实例随后被写入 {@link RequestHolder} 与 {@link AuthContext}，供下游拦截器与切面使用。
+     * 返回实例随后被写入 {@link RequestContext}，供下游拦截器与切面使用。
      * 解析失败应直接抛出认证相关异常以中断请求。</p>
      *
      * @param request 当前 HTTP 请求

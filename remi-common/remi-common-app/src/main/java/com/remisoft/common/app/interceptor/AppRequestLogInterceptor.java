@@ -9,7 +9,7 @@ import com.remisoft.common.app.config.AppTraceProperties;
 import com.remisoft.common.app.util.RequestIdGenerator;
 import com.remisoft.common.base.interceptor.BaseRequestLogInterceptor;
 import com.remisoft.common.core.constant.HeaderConstants;
-import com.remisoft.common.util.auth.RequestHolder;
+import com.remisoft.common.core.context.RequestContext;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>继承 {@link BaseRequestLogInterceptor}，打印 App 请求的入参、耗时、状态码等日志。
  * 与管理端 / Web 端共享拦截器逻辑，差异在于 RequestId 的获取来源（优先从
- * {@link RequestHolder} 中复用上游写入的 RequestId）。
+ * {@link RequestContext} 中复用上游写入的 RequestId）。
  *
  * <p><b>注册方式：</b>由 {@code AppMvcConfiguration.addInterceptors()} 显式注册，
  * 执行顺序由 {@code .order(BaseFilterOrders.INTERCEPTOR_REQUEST_LOG)} 控制。
@@ -48,7 +48,7 @@ public class AppRequestLogInterceptor extends BaseRequestLogInterceptor {
     /**
      * 解析当前请求的 RequestId
      *
-     * <p>优先从 {@link RequestHolder} 中获取上游过滤器写入的值，缺失时调用
+     * <p>优先从 {@link RequestContext} 中获取上游过滤器写入的值，缺失时调用
      * {@link RequestIdGenerator#generateId()} 兜底生成。
      *
      * @param request 当前 HTTP 请求
@@ -56,7 +56,7 @@ public class AppRequestLogInterceptor extends BaseRequestLogInterceptor {
      */
     @Override
     public String resolveRequestId(HttpServletRequest request) {
-        String requestId = RequestHolder.getExtraHeader(REQUEST_ID_HEADER);
+        String requestId = RequestContext.getExtraHeader(REQUEST_ID_HEADER);
         if (requestId == null || requestId.isBlank()) {
             requestId = RequestIdGenerator.generateId();
         }

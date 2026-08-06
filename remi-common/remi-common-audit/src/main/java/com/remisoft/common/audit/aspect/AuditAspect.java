@@ -36,7 +36,7 @@ import com.remisoft.common.audit.event.AuditEvent;
 import com.remisoft.common.audit.mask.SensitiveFieldMask;
 import com.remisoft.common.audit.template.AuditTemplateProcessor;
 import com.remisoft.common.util.id.SnowflakeIdGenerator;
-import com.remisoft.common.util.ip.IpAddrUtils;
+import com.remisoft.common.safe.util.ClientIpResolver;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.string.StringUtils;
 /**
@@ -241,7 +241,7 @@ public class AuditAspect {
             context.setUrl(request.getRequestURL() != null ? request.getRequestURL().toString() : "");
             context.setUri(request.getRequestURI());
             context.setHttpMethod(request.getMethod());
-            context.setIpAddress(IpAddrUtils.getIpAddrWithTrustedProxies(request, java.util.Collections.emptySet()));
+            context.setIpAddress(ClientIpResolver.getClientIp(request));
             context.setToken(request.getHeader(HeaderConstants.X_ACCESS_TOKEN));
             context.setBusinessNo(request.getHeader("X-Business-No"));
 

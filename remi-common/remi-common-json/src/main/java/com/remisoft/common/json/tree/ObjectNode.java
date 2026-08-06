@@ -471,18 +471,6 @@ public final class ObjectNode extends JsonNode {
     }
 
     /**
-     * 获取嵌套对象节点，不存在或非对象返回 null。
-     *
-     * @param name 字段名
-     * @return ObjectNode 实例
-     * @deprecated 使用 {@link #getObjectNode(String)} 替代，命名风格更统一
-     */
-    @Deprecated(since = "1.1.0")
-    public ObjectNode getJSONObject(String name) {
-        return getObjectNode(name);
-    }
-
-    /**
      * 获取嵌套对象节点（推荐使用的命名风格），不存在或非对象返回 null。
      *
      * @param name 字段名
@@ -495,18 +483,6 @@ public final class ObjectNode extends JsonNode {
             return objNode;
         }
         return null;
-    }
-
-    /**
-     * 获取嵌套数组节点，不存在或非数组返回 null。
-     *
-     * @param name 字段名
-     * @return ArrayNode 实例
-     * @deprecated 使用 {@link #getArrayNode(String)} 替代，命名风格更统一
-     */
-    @Deprecated(since = "1.1.0")
-    public ArrayNode getJSONArray(String name) {
-        return getArrayNode(name);
     }
 
     /**

@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.remisoft.common.util.id.RandomUtils;
 import com.remisoft.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
@@ -161,7 +161,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
         int totalWeight = providers.stream()
                 .mapToInt(p -> weights.getOrDefault(p.providerType(), 1))
                 .sum();
-        int random = ThreadLocalRandom.current().nextInt(totalWeight);
+        int random = RandomUtils.randomInt(totalWeight);
         int cumulative = 0;
         for (SmsProvider p : providers) {
             cumulative += weights.getOrDefault(p.providerType(), 1);

@@ -10,7 +10,7 @@ import com.remisoft.common.util.string.StringUtils;
  * IP 地址格式校验与内网判断工具类。
  *
  * <p>聚焦于 IP 格式校验（IPv4/IPv6）、内网/私有地址判断、IP 类型识别。
- * 从 {@link IpAddrUtils} 1.4.0 起拆分为独立类。
+ * 自 1.4.0 起从原 {@code IpAddrUtils} 拆分为独立类。
  *
  * @author remi-team
  * @since 1.4.0

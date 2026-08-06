@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ThreadLocalRandom;
 
 import com.remisoft.literule.api.Rule;
 import com.remisoft.literule.api.RuleContext;
@@ -82,7 +81,7 @@ public class RuleCanaryRouter {
         // 2. 比例分桶：基于 traceId 哈希 + 随机扰动，保证稳定且均匀
         double ratio = Math.min(1.0, Math.max(0.0, definition.getCanaryRatio()));
         String traceId = context.getTraceId();
-        int hash = traceId == null ? ThreadLocalRandom.current().nextInt() : traceId.hashCode();
+        int hash = traceId == null ? (int) RandomUtils.randomLong() : traceId.hashCode();
         double bucket = ((hash & 0x7FFFFFFF) % 10000) / 10000.0;
         return bucket < ratio;
     }

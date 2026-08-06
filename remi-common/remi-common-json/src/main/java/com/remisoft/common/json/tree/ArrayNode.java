@@ -429,18 +429,6 @@ public final class ArrayNode extends JsonNode {
     }
 
     /**
-     * 获取嵌套对象节点，越界或非对象返回 null。
-     *
-     * @param index 索引
-     * @return ObjectNode 实例
-     * @deprecated 使用 {@link #getObjectNode(int)} 替代，命名风格更统一
-     */
-    @Deprecated(since = "1.1.0")
-    public ObjectNode getJSONObject(int index) {
-        return getObjectNode(index);
-    }
-
-    /**
      * 获取嵌套对象节点（推荐使用的命名风格），越界或非对象返回 null。
      *
      * @param index 索引
@@ -453,18 +441,6 @@ public final class ArrayNode extends JsonNode {
             return objNode;
         }
         return null;
-    }
-
-    /**
-     * 获取嵌套数组节点，越界或非数组返回 null。
-     *
-     * @param index 索引
-     * @return ArrayNode 实例
-     * @deprecated 使用 {@link #getArrayNode(int)} 替代，命名风格更统一
-     */
-    @Deprecated(since = "1.1.0")
-    public ArrayNode getJSONArray(int index) {
-        return getArrayNode(index);
     }
 
     /**

@@ -32,6 +32,12 @@
             <artifactId>remi-common-util</artifactId>
         </dependency>
 
+        <!-- 公共安全模块（ClientIpResolver 客户端 IP 解析） -->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-safe</artifactId>
+        </dependency>
+
         <!-- 公共异常模块 -->
         <dependency>
             <groupId>com.remisoft</groupId>

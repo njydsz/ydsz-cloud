@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -27,7 +26,6 @@ import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.file.storage.IFileStorage;
 import com.remisoft.common.permission.PermissionCodes;
 import com.remisoft.common.safe.util.ClientIpResolver;
-import com.remisoft.common.util.ip.IpAddrUtils;
 import com.remisoft.nextwiki.domain.entity.FileNode;
 import com.remisoft.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.remisoft.nextwiki.server.health.NextwikiHealthIndicator;
@@ -42,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.remisoft.common.lock.annotation.Idempotent;
 
 import com.remisoft.nextwiki.domain.repository.FileNodeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 /**
  * 文件下载 REST API Controller。
  *
@@ -106,10 +103,6 @@ public class DownloadController {
     private final NextwikiHealthIndicator healthIndicator;
     /** 文件节点仓储（用于文件夹子节点递归查询） */
     private final FileNodeRepository fileNodeRepository;
-
-    /** 客户端 IP 解析器（optional，可能不存在于所有部署环境） */
-    @Autowired(required = false)
-    private ClientIpResolver clientIpResolver;
 
     /**
      * 将指定文件夹递归打包为 ZIP 流式下载。
@@ -391,21 +384,15 @@ public class DownloadController {
     // ==================== 私有方法（HTTP 层处理） ====================
 
     /**
-     * 解析客户端真实 IP（多级降级）。
+     * 解析客户端真实 IP。
      *
-     * <p>优先使用 common-safe 模块的 {@link ClientIpResolver}，若不可用则降级为
-     * {@link IpAddrUtils#getIpAddrWithTrustedProxies(HttpServletRequest, Set)} 统一解析。
+     * <p>统一使用 common-safe 模块的 {@link ClientIpResolver} 解析。
      *
      * @param request HTTP 请求
      * @return 客户端 IP
      */
     private String getClientIp(HttpServletRequest request) {
-        // 优先使用 common-safe ClientIpResolver（如果 Bean 可用）
-        if (clientIpResolver != null) {
-            return ClientIpResolver.getClientIp(request);
-        }
-        // 降级到 IpAddrUtils 统一解析
-        return IpAddrUtils.getIpAddrWithTrustedProxies(request, Set.of());
+        return ClientIpResolver.getClientIp(request);
     }
 
     /**

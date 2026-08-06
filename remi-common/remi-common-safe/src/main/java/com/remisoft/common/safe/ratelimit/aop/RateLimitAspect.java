@@ -2,7 +2,6 @@ package com.remisoft.common.safe.ratelimit.aop;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -18,7 +17,7 @@ import com.remisoft.common.safe.ratelimit.enums.RateLimitDimension;
 import com.remisoft.common.safe.ratelimit.model.RateLimitContext;
 import com.remisoft.common.safe.ratelimit.model.RateLimitDecision;
 import com.remisoft.common.safe.ratelimit.model.RateLimitRule;
-import com.remisoft.common.util.ip.IpAddrUtils;
+import com.remisoft.common.safe.util.ClientIpResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -172,7 +171,7 @@ public class RateLimitAspect {
         try {
             HttpServletRequest request = currentRequest();
             if (request == null) return null;
-            return IpAddrUtils.getIpAddrWithTrustedProxies(request, Set.of());
+            return ClientIpResolver.getClientIp(request);
         } catch (Exception ex) {
             return null;
         }

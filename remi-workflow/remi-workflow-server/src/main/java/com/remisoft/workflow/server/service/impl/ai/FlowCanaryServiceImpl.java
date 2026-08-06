@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.remisoft.common.util.id.RandomUtils;
 import com.remisoft.common.json.RemiJson;
 
 import org.springframework.stereotype.Service;
@@ -427,7 +428,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
             strategy = CanaryStrategy.USER_HASH.name();
         }
         if (CanaryStrategy.RANDOM.name().equalsIgnoreCase(strategy)) {
-            return ThreadLocalRandom.current().nextInt(100) < percent;
+            return RandomUtils.randomInt(100) < percent;
         }
         if (CanaryStrategy.WHITELIST.name().equalsIgnoreCase(strategy)) {
             return true;

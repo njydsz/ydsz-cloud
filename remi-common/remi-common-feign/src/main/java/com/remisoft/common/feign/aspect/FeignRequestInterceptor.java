@@ -14,11 +14,11 @@ import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.domain.enums.DataScopeType;
 import com.remisoft.common.domain.enums.IdentityType;
 import com.remisoft.common.feign.config.FeignProperties;
+import com.remisoft.common.safe.util.ClientIpResolver;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.util.auth.AuthInfoUtils;
-import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.http.RequestContextUtils;
 import com.remisoft.common.util.id.TracerUtils;
-import com.remisoft.common.util.ip.IpAddrUtils;
 import com.remisoft.common.util.string.StringUtils;
 
 import feign.RequestInterceptor;
@@ -32,9 +32,9 @@ import feign.RequestTemplate;
  *
  * <p><b>透传信息来源（优先级从高到低）：</b>
  * <ol>
- *   <li>{@link AuthInfoUtils}（从 ThreadLocal RequestHolder 获取）</li>
+ *   <li>{@link AuthInfoUtils}（从 ThreadLocal RequestContext 获取）</li>
  *   <li>当前 HttpServletRequest Header（直接透传）</li>
- *   <li>RequestHolder extra headers（{@code @RbacDataScope} AOP 写入的虚拟请求头）</li>
+ *   <li>RequestContext extra headers（{@code @RbacDataScope} AOP 写入的虚拟请求头）</li>
  * </ol>
  *
  * <p><b>透传内容分两类：</b>
@@ -75,7 +75,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
      * <p><b>执行顺序：</b>
      * <ol>
      *   <li>检查 feign 透传功能是否启用</li>
-     *   <li>获取当前 HttpServletRequest（优先从 ServletUtils，其次从 RequestHolder）</li>
+     *   <li>获取当前 HttpServletRequest（优先从 ServletUtils，其次从 RequestContext）</li>
      *   <li>按配置的白名单透传基础身份类 header（X-Service-Type / X-User-Language / ...）</li>
      *   <li>透传行级权限相关 header（{@link #propagateDataPermissionHeaders}）</li>
      *   <li>透传列级权限相关 header（{@link #propagateColumnPermissionHeaders}）</li>
@@ -96,7 +96,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
         HttpServletRequest httpServletRequest = RequestContextUtils.getRequest();
         if (httpServletRequest == null) {
             log.debug("非Web环境，无法获取Servlet请求上下文");
-            httpServletRequest = RequestHolder.getCurrentRequest();
+            httpServletRequest = (HttpServletRequest) RequestContext.getHttpRequest();
         }
 
         Set<String> headersToPropagate = feignProperties.getPropagation().getHeaders();
@@ -163,7 +163,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
                 && !hasHeader(requestTemplate, HeaderConstants.X_FORWARDED_FOR)) {
             String forwardedFor = resolveHeader(httpServletRequest, HeaderConstants.X_FORWARDED_FOR);
             if (StringUtils.isEmpty(forwardedFor) && httpServletRequest != null) {
-                forwardedFor = IpAddrUtils.getIpAddrWithTrustedProxies(httpServletRequest, java.util.Collections.emptySet());
+                forwardedFor = ClientIpResolver.getClientIp(httpServletRequest);
             }
             setHeaderIfAbsent(requestTemplate, HeaderConstants.X_FORWARDED_FOR, forwardedFor);
         }
@@ -312,7 +312,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
     }
 
     /**
-     * 读取请求头，优先从 HttpServletRequest，兜底从 RequestHolder extra headers。
+     * 读取请求头，优先从 HttpServletRequest，兜底从 RequestContext extra headers。
      *
      * @param request    HttpServletRequest（可为 null）
      * @param headerName header 名称
@@ -325,7 +325,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
                 return value;
             }
         }
-        return RequestHolder.getExtraHeader(headerName);
+        return RequestContext.getExtraHeader(headerName);
     }
 
     /**

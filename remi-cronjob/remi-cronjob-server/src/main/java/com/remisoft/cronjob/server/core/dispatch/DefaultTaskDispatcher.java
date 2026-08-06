@@ -51,6 +51,7 @@ import com.remisoft.cronjob.domain.job.ProcessResult;
 import com.remisoft.cronjob.domain.job.ShardingContext;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
+import com.remisoft.common.util.id.RandomUtils;
 import com.remisoft.common.util.id.TracerUtils;
 import com.remisoft.cronjob.domain.entity.job.Job;
 import com.remisoft.cronjob.domain.entity.job.JobNode;
@@ -82,7 +83,6 @@ import com.remisoft.cronjob.server.service.log.JobLogContentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.ThreadLocalRandom;
 /**
  * 默认任务派发器：本地执行 + 分布式锁。
  *
@@ -870,7 +870,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (job.getCanaryRatio() != null && job.getCanaryRatio() > 0
                 && job.getCanaryHandler() != null && !job.getCanaryHandler().isBlank()) {
             int ratio = Math.min(100, Math.max(0, job.getCanaryRatio()));
-            if (ThreadLocalRandom.current().nextInt(100) < ratio) {
+            if (RandomUtils.randomInt(100) < ratio) {
                 log.info("[Dispatcher] 灰度路由命中: jobKey={} canaryHandler={} ratio={}%",
                         job.getJobKey(), job.getCanaryHandler(), ratio);
                 return job.getCanaryHandler();

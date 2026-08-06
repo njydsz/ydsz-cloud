@@ -12,15 +12,15 @@ import com.remisoft.common.auth.handler.AuthHandler;
 import com.remisoft.common.auth.metrics.AuthMetrics;
 import com.remisoft.common.auth.model.AuthenticationProvider;
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.util.auth.AuthInfo;
-import com.remisoft.common.util.auth.RequestHolder;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 移动端 App 认证过滤器
  *
- * <p>作为移动端请求的入口过滤器，负责解析请求头中的认证信息并写入 {@link RequestHolder} 上下文。
+ * <p>作为移动端请求的入口过滤器，负责解析请求头中的认证信息并写入 {@link RequestContext} 上下文。
  *
  * <p>认证策略解耦：
  * <ul>
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see AuthInfo
  * @see AuthenticationProvider
  * @see AuthMetrics
- * @see RequestHolder
+ * @see RequestContext
  */
 @Slf4j
 public class AppAuthFilter extends BaseAuthFilter {
@@ -81,7 +81,7 @@ public class AppAuthFilter extends BaseAuthFilter {
     /**
      * 鉴权前的预处理
      *
-     * <p>生成或复用当前请求的 RequestId，并写入 {@link RequestHolder} 上下文。
+     * <p>生成或复用当前请求的 RequestId，并写入 {@link RequestContext} 上下文。
      *
      * @param request  当前 HTTP 请求
      * @param response 当前 HTTP 响应
@@ -89,7 +89,7 @@ public class AppAuthFilter extends BaseAuthFilter {
     @Override
     protected void doPreAuth(HttpServletRequest request, HttpServletResponse response) {
         String requestId = generateOrGetRequestId(request);
-        RequestHolder.putExtraHeader(REQUEST_ID_HEADER, requestId);
+        RequestContext.putExtraHeader(REQUEST_ID_HEADER, requestId);
     }
 
     /**
