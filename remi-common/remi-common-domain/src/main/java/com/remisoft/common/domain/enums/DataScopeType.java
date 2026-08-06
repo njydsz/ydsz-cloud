@@ -13,13 +13,18 @@ import lombok.Getter;
  *
  * <p>定义系统中数据权限的维度类型，用于行级数据权限控制。
  *
- * <p><b>迁移计划（v1.7.0）：</b>
- * 此枚举涉及数据权限评估（DataScopeEvaluator）属于基础设施层职责，
+ * <p><b>迁移计划：</b>
+ * 此枚举涉及数据权限评估（DataScopeEvaluator），属于基础设施层职责，
  * 计划迁移至 {@code common-rbac} 或 {@code common-tenant} 模块。
+ * 现有引用模块：common-util、common-jdbc、common-auth、common-feign。
+ * 请这些模块在 1.9.0 之前完成迁移，使用本地定义的枚举替代。
+ *
+ * <p><b>注意：</b> {@link #toSqlFragment} 方法未使用参数化查询，存在 SQL 注入风险，
+ * 业务方应优先使用参数化查询或 {@code RowPermissionInnerInterceptor}。
  *
  * @author remi-team
  * @since 1.0.0
- * @deprecated 1.7.0 计划迁移至 common-rbac 模块，使用 {@code RbDataScopeType} 替代
+ * @deprecated 1.7.0 迁移至 common-rbac 模块，1.9.0 移除
  * @see HeaderConstants
  */
 @Getter

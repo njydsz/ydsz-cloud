@@ -11,21 +11,22 @@ import java.util.Map;
  *
  * <p>定义系统中用户的身份类型，用于区分不同级别的用户访问权限。
  *
- * <p><b>迁移计划（v1.7.0）：</b>
- * 此枚举属于业务配置，计划迁移至 {@code remi-userinfo-api} 模块。
- * 业务模块应定义自己的身份类型枚举，继承 {@link TypeEnum}。
+ * <p><b>迁移计划：</b>
+ * 此枚举计划迁移至 {@code remi-userinfo-api} 模块，由业务模块定义自己的身份类型枚举。
+ * 现有引用模块：common-util、common-feign。
+ * 请这些模块在 1.9.0 之前完成迁移，使用本地定义的枚举替代。
  *
  * <p><b>使用场景：</b>
  * <ul>
  *   <li>配合 HeaderConstants.X_IDENTITY_TYPE 请求头使用</li>
- *   <li>区分不同身份用户的访问控制和数据权限</li>
- *   <li>用户注册和登录时的身份验证</li>
+ *   <li>区分不同身份用户的访问权限</li>
  * </ul>
  *
  * @author remi-team
  * @since 1.0.0
- * @deprecated 1.7.0 计划迁移至 remi-userinfo-api 模块，使用 {@code UserIdentityType} 替代
+ * @deprecated 1.7.0 迁移至业务模块，1.9.0 移除
  * @see HeaderConstants
+ * @see TypeEnum 替代实现基类
  */
 @Getter
 @AllArgsConstructor

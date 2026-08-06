@@ -30,11 +30,14 @@ import static lombok.AccessLevel.PROTECTED;
  *   <tr><td>startDateTime</td><td>LocalDateTime</td><td>开始时间</td></tr>
  *   <tr><td>endDateTime</td><td>LocalDateTime</td><td>结束时间</td></tr>
  *   <tr><td>tenantId</td><td>String</td><td>租户ID</td></tr>
- *   <tr><td>ascending</td><td>Boolean</td><td>是否升序</td></tr>
  * </table>
+ *
+ * <p><b>v1.8.0 变更：</b>移除 {@code ascending} 字段，排序方向统一使用
+ * {@link OrderItem} 结构化表达（{@link PageQuery#addOrder(String, boolean)}）。
  *
  * @author remi-team
  * @since 1.0.0
+ * @since 1.8.0 移除 ascending 字段，统一使用 OrderItem
  *
  */
 @Data
@@ -84,18 +87,6 @@ public class BaseQuery implements Serializable {
      * 通常在 SaaS 应用中使用，确保不同租户的数据互不干扰。
      */
     private String tenantId;
-
-    /**
-     * 是否升序
-     *
-     * <p>控制排序方向，配合子类的排序项使用。
-     * <ul>
-     *   <li>true - 升序（ASC）</li>
-     *   <li>false - 降序（DESC）</li>
-     * </ul>
-     */
-    @Builder.Default
-    private Boolean ascending = true;
 
     /**
      * 判断是否有时间范围条件

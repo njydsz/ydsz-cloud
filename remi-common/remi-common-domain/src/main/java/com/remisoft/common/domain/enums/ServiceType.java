@@ -15,13 +15,16 @@ import lombok.Getter;
  *
  * <p>定义系统服务的类型，用于区分不同来源的请求。
  *
- * <p><b>迁移计划（v1.7.0）：</b>
+ * <p><b>迁移计划：</b>
  * 此枚举包含网关路由配置（pathPrefix），计划迁移至 {@code remi-gateway} 模块。
+ * 现有引用模块：common-util、common-web、common-app。
+ * 请这些模块在 1.9.0 之前完成迁移，使用本地定义的枚举替代。
  *
  * @author remi-team
  * @since 1.0.0
- * @deprecated 1.7.0 计划迁移至 remi-gateway 模块，使用 {@code GatewayServiceType} 替代
+ * @deprecated 1.7.0 迁移至 remi-gateway 模块，1.9.0 移除
  * @see HeaderConstants
+ * @see TypeEnum 替代实现基类
  */
 @Getter
 @AllArgsConstructor
@@ -108,7 +111,7 @@ public enum ServiceType implements TypeEnum<String> {
      * 检查编码是否有效
      *
      * @param code 服务类型编码
-     * @return 有效返回true，否则返回false
+     * @return 有效返回 true，否则返回 false
      */
     public static boolean isValidCode(String code) {
         return of(code) != null;
@@ -118,7 +121,7 @@ public enum ServiceType implements TypeEnum<String> {
      * 检查路径前缀是否有效
      *
      * @param pathPrefix 路径前缀
-     * @return 有效返回true，否则返回false
+     * @return 有效返回 true，否则返回 false
      */
     public static boolean isValidPathPrefix(String pathPrefix) {
         return pathPrefixOf(pathPrefix) != null;

@@ -22,31 +22,25 @@ import lombok.NoArgsConstructor;
  *   <li><b>Cursor 分页：</b>带 nextCursor/prevCursor，无 pageNum</li>
  * </ul>
  *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // Offset 分页
- * Slice<User> offsetSlice = Slice.of(users, 1, 20, hasNext);
- *
- * // Cursor 分页
- * Slice<User> cursorSlice = Slice.of(users, nextCursor, hasNext);
- *
- * // 类型转换
- * Slice<UserVO> voSlice = slice.convert(UserVO::new);
- * }</pre>
- *
- * <p><b>v1.7.0 变更：</b>合并 {@link PageSlice} 和 {@link CursorPage}，减少 API 表面积。
+ * <p><b>v1.8.0 变更：</b>因混合了输入参数（pageNum/pageSize）和输出状态（hasNext/nextCursor），
+ * 语义混乱，已拆分为：
+ * <ul>
+ *   <li>{@link SliceQuery} — 分页查询请求参数（输入）</li>
+ *   <li>{@link SliceResult} — 分页查询结果（输出）</li>
+ * </ul>
  *
  * @param <T> 数据类型
  * @author remi-team
  * @since 1.7.0
- * @see PageSlice
- * @see CursorPage
- * @see PageResult 传统分页（带 total）
+ * @deprecated 1.8.0 使用 {@link SliceQuery} + {@link SliceResult} 替代，2.0.0 移除
+ * @see SliceQuery
+ * @see SliceResult
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonClass
+@Deprecated(since = "1.8.0", forRemoval = true)
 public class Slice<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -213,8 +207,6 @@ public class Slice<T> implements Serializable {
         }
         return getStartRow() + records.size() - 1;
     }
-
-    // ======================== 便捷工厂方法（Collection → Slice） ========================
 
     /**
      * 从 Collection 创建空结果。

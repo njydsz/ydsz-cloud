@@ -138,16 +138,6 @@ public class PageQuery extends BaseQuery {
     @Builder.Default
     private CursorDirection cursorDirection = CursorDirection.NEXT;
 
-    /**
-     * 游标方向枚举。
-     */
-    public enum CursorDirection {
-        /** 游标之后 */
-        NEXT,
-        /** 游标之前 */
-        PREV
-    }
-
     // ======================== 排序操作 ========================
 
     /**
@@ -329,7 +319,6 @@ public class PageQuery extends BaseQuery {
                 ", cursor='" + cursor + '\'' +
                 ", cursorDirection=" + cursorDirection +
                 ", searchKey='" + getSearchKey() + '\'' +
-                ", ascending=" + getAscending() +
                 '}';
     }
 }

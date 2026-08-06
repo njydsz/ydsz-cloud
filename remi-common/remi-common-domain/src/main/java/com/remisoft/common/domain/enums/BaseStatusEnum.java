@@ -14,7 +14,7 @@ import java.util.Set;
  *
  * <p>所有业务状态枚举应实现此接口，复用 {@link #canTransitTo(Enum)} 状态流转校验，
  * 避免各模块重复定义状态机逻辑。配合 {@code StatusTransitionAspect} 或业务层
- * 显式调用 {@code canTransitTo} 实现状态变迁前置校验。
+ * 显式调用 {@code requireTransitTo} 实现状态变迁前置校验。
  *
  * <p>实现约定：
  * <ul>
@@ -23,12 +23,14 @@ import java.util.Set;
  *   <li>终态到任何其他状态返回 {@code false}</li>
  * </ul>
  *
- * <p>实现示例见 README「状态枚举实现」章节。
+ * <p>路径推导、下一跳查询等高级能力请使用独立工具类 {@link StateTransitionUtil}，
+ * 避免强制所有枚举实现完整状态空间。
  *
  * @param <E> 具体状态枚举类型
  * @author remi-team
  * @since 1.0.0
- * @since 1.6.0 增加 {@link #pathTo(Enum)} 状态流转路径推导与 {@link #successors()} 合法下一跳查询
+ * @since 1.6.0 增加路径推导与下一跳查询
+ * @since 1.8.0 pathTo/successors 标记废弃，推荐迁移至 StateTransitionUtil
  */
 public interface BaseStatusEnum<E extends Enum<E>> {
 
@@ -68,7 +70,7 @@ public interface BaseStatusEnum<E extends Enum<E>> {
      * 获取所有状态枚举值。
      *
      * <p>由实现类覆写，提供完整的状态集合。默认返回空列表，
-     * {@link #pathTo(Enum)} 和 {@link #successors()} 使用此方法获取完整状态空间。
+     * 已废弃的 {@link #pathTo(Enum)} 使用此方法获取完整状态空间。
      *
      * @return 所有状态枚举值列表（非 null）
      * @since 1.6.0
@@ -89,7 +91,9 @@ public interface BaseStatusEnum<E extends Enum<E>> {
      * @return 最短路径（含起始状态和目标状态），空列表表示不可达
      * @throws IllegalStateException 如果 {@link #allStates()} 返回空（实现类未覆写）
      * @since 1.6.0
+     * @deprecated 1.8.0 使用 {@link StateTransitionUtil#pathTo} 替代，不再强制实现 allStates()
      */
+    @Deprecated(since = "1.8.0", forRemoval = true)
     default List<E> pathTo(E target) {
         if (target == null) {
             return Collections.emptyList();
@@ -102,7 +106,8 @@ public interface BaseStatusEnum<E extends Enum<E>> {
         if (states.isEmpty()) {
             throw new IllegalStateException(
                 "pathTo() requires non-empty allStates() return value. " +
-                "Please override allStates() in enum " + this.getClass().getSimpleName());
+                "Please override allStates() in enum " + this.getClass().getSimpleName()
+                + " or migrate to StateTransitionUtil.pathTo()");
         }
 
         // BFS
@@ -128,7 +133,6 @@ public interface BaseStatusEnum<E extends Enum<E>> {
             }
 
             for (E next : states) {
-                // E extends Enum<E> 不含接口方法，需显式转换为 BaseStatusEnum
                 if (!visited.contains(next) && ((BaseStatusEnum<E>) current).canTransitTo(next)) {
                     visited.add(next);
                     parentMap.put(next, current);
@@ -147,7 +151,9 @@ public interface BaseStatusEnum<E extends Enum<E>> {
      *
      * @return 合法下一跳状态集合（非 null，可能为空）
      * @since 1.6.0
+     * @deprecated 1.8.0 使用 {@link StateTransitionUtil#successors} 替代，2.0.0 移除
      */
+    @Deprecated(since = "1.8.0", forRemoval = true)
     default Set<E> successors() {
         List<E> states = allStates();
         Set<E> result = new HashSet<>();
