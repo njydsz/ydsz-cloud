@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +93,7 @@ public class DagDslParser {
             }
         }
 
-        AgentDag dag = new AgentDag(UUID.randomUUID().toString(), name, nodes, edges);
+        AgentDag dag = new AgentDag(String.valueOf(snowflakeIdGenerator.nextId()), name, nodes, edges);
         log.info("[DagDslParser] 解析完成: name={}, nodes={}", name, nodes.size());
         return dag;
     }

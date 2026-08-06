@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -34,6 +33,7 @@ import org.apache.commons.io.IOUtils;
 import com.remisoft.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 /**
  * 本地磁盘存储实现
  * <p>继承 {@link AbstractFileStorage}，
@@ -228,7 +228,7 @@ public class LocalStorage extends AbstractFileStorage {
 
     @Override
     protected ChunkedUploadResult doInitiateMultipartUpload(String bucketName, String objectName) {
-        String uploadId = UUID.randomUUID().toString().replace("-", "");
+        String uploadId = IdGenerator.nextIdStr();
         return new ChunkedUploadResult(objectName, bucketName, uploadId, 0, 0);
     }
 

@@ -7,9 +7,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationEvent;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 领域事件基类 — 模块间事件契约的基础。
@@ -269,7 +269,7 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
             if (eventType == null || eventType.isEmpty()) {
                 throw new EventBuildException("eventType must not be null or empty");
             }
-            String eid = eventId != null ? eventId : UUID.randomUUID().toString();
+            String eid = eventId != null ? eventId : IdGenerator.nextIdStr();
             LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now(clock);
             return new DomainEvent(eid, occurred, eventType, aggregateId, aggregateType, metadata);
         }

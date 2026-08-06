@@ -3,12 +3,12 @@ package com.remisoft.common.notify.event;
 import java.io.Serial;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.UUID;
 
 import com.remisoft.common.event.api.DomainEvent;
 import com.remisoft.common.event.api.ModuleEventTypes;
 
 import lombok.Getter;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 统一告警事件 — 全局告警事件总线的标准事件载体。
@@ -84,7 +84,7 @@ public class UnifiedAlertEvent extends DomainEvent {
                              String title, String content, String targetRole,
                              String targetUserIds, String pushChannels,
                              LocalDateTime triggeredAt, boolean recovery) {
-        super(UUID.randomUUID().toString(), LocalDateTime.now(), ModuleEventTypes.UNIFIED_ALERT,
+        super(IdGenerator.nextIdStr(), LocalDateTime.now(), ModuleEventTypes.UNIFIED_ALERT,
               sourceId, sourceModule,
               Collections.emptyMap());
         this.alertCode = alertCode;

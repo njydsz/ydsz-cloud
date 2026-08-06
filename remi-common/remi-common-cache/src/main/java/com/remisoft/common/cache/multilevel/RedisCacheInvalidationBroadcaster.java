@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -17,6 +16,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.json.RemiJson;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 基于 Redis Pub/Sub 的缓存失效广播器
@@ -67,7 +67,7 @@ public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroad
     this.redisTemplate = redisTemplate;
     this.channelPrefix =
         channelPrefix != null ? channelPrefix : DEFAULT_CHANNEL_PREFIX;
-    this.nodeId = UUID.randomUUID().toString();
+    this.nodeId = IdGenerator.nextIdStr();
 
     // 注册 Redis 消息监听器
     redisMessageListenerContainer.addMessageListener(

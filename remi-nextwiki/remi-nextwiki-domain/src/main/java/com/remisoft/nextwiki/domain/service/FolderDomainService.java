@@ -2,12 +2,12 @@ package com.remisoft.nextwiki.domain.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.nextwiki.domain.entity.FileNode;
 import com.remisoft.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -38,6 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class FolderDomainService {
 
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final FileNodeRepository fileNodeRepository;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -60,7 +63,7 @@ public class FolderDomainService {
         int level = parent.getLevel() + 1;
 
         FileNode folder = FileNode.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .parentId(parent.getId())
                 .name(name)
                 .nodeType(FileNode.TYPE_FOLDER)

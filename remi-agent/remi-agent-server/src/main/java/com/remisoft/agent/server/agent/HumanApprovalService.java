@@ -3,7 +3,6 @@ package com.remisoft.agent.server.agent;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -55,7 +54,7 @@ public class HumanApprovalService {
         if (pendingApprovals.size() >= MAX_PENDING) {
             evictExpired();
         }
-        String approvalId = UUID.randomUUID().toString();
+        String approvalId = String.valueOf(snowflakeIdGenerator.nextId());
         ApprovalRequest request = new ApprovalRequest(
                 approvalId, conversationId, traceId, stepDescription, context);
         pendingApprovals.put(approvalId, request);
@@ -160,6 +159,9 @@ public class HumanApprovalService {
         private final Map<String, Object> context;
         /** 请求创建时间，用于过期淘汰判断（超过 1 小时未处理即 EXPIRED） */
         private final LocalDateTime createdAt;
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
         /** 当前审批状态；volatile 保证多线程可见（审批线程与查询线程并发访问） */
         private volatile ApprovalStatus status;
         /** 审批人标识；volatile 保证多线程可见 */
@@ -170,7 +172,8 @@ public class HumanApprovalService {
         private volatile LocalDateTime resolvedAt;
 
         public ApprovalRequest(String id, String conversationId, String traceId,
-                               String stepDescription, Map<String, Object> context) {
+                               String stepDescription, Map<String, Object> context,
+            SnowflakeIdGenerator snowflakeIdGenerator) {
             this.id = id;
             this.conversationId = conversationId;
             this.traceId = traceId;
@@ -178,6 +181,7 @@ public class HumanApprovalService {
             this.context = context;
             this.createdAt = LocalDateTime.now();
             this.status = ApprovalStatus.PENDING;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
         }
 
         public String getId() { return id; }

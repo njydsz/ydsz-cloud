@@ -58,6 +58,8 @@
         <error-prone-annotations.version>2.49.0</error-prone-annotations.version>
         <fastjson2.version>2.0.62</fastjson2.version>
         <asm.version>9.7.1</asm.version>
+        <!-- ArchUnit 架构测试（P3-2: 编译期 enforce 禁止反模式） -->
+        <archunit.version>1.4.2</archunit.version>
     </properties>
 
     <modules>
@@ -654,6 +656,13 @@
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-orgjson</artifactId>
                 <version>${jjwt.version}</version>
+            </dependency>
+
+            <!-- ArchUnit 架构测试（P3-2: 编译期 enforce 禁止反模式，archunit-junit5 聚合 junit5-api + engine） -->
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit.version}</version>
             </dependency>
 
         </dependencies>

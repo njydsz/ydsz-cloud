@@ -2,7 +2,6 @@ package com.remisoft.common.notify.core;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -10,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.remisoft.common.notify.enums.NotifyChannel;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 内存死信队列实现（P0-2）
@@ -42,7 +42,7 @@ public class InMemoryDeadLetterHandler implements DeadLetterHandler {
     @Override
     public void moveToDeadLetter(NotifyChannel channel, String receiver, String title,
                                  String content, int failedAttempts, String lastError) {
-        String messageId = UUID.randomUUID().toString().replace("-", "");
+        String messageId = IdGenerator.nextIdStr();
         DeadLetterEntry entry = new DeadLetterEntry(
                 messageId, channel, receiver, title, content,
                 failedAttempts, lastError, System.currentTimeMillis());

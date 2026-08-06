@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.domain.query.PageResult;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.event.model.StandardEventTypes;
@@ -64,6 +64,9 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class FileApplicationService {
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final FolderDomainService folderDomainService;
     private final FileVersionDomainService versionDomainService;
@@ -483,7 +486,7 @@ public class FileApplicationService {
         }
 
         FileNode copyNode = FileNode.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .parentId(resolvedParentId)
                 .name(newName)
                 .nodeType(source.getNodeType())
@@ -729,7 +732,7 @@ public class FileApplicationService {
                                      String fileHash, String path, int level,
                                      String userId) {
         FileNode node = FileNode.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .parentId(parentId)
                 .name(name)
                 .nodeType(FileNode.TYPE_FILE)
@@ -764,7 +767,7 @@ public class FileApplicationService {
                                             FileNode existing, String fileHash,
                                             String path, int level, String userId) {
         FileNode node = FileNode.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .parentId(parentId)
                 .name(name)
                 .nodeType(FileNode.TYPE_FILE)
@@ -819,7 +822,7 @@ public class FileApplicationService {
 
     private String generateStorageKey(String userId, String originalFilename) {
         String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
-        String uuid = UUID.randomUUID().toString().replace("-", "");
+        String uuid = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
         String suffix = extractSuffix(originalFilename);
         return "wiki/" + userId + "/" + datePath + "/" + uuid + (suffix.isEmpty() ? "" : "." + suffix);
     }

@@ -3,11 +3,11 @@ package com.remisoft.workflow.server.engine;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
-import java.util.UUID;
 
 import com.remisoft.common.event.api.DomainEvent;
 
 import lombok.Getter;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 工作流事件（领域事件封装）。
@@ -48,7 +48,7 @@ public class FlowWorkflowEvent extends DomainEvent {
      */
     public FlowWorkflowEvent(String eventType, String instanceId,
                              String taskId, Map<String, Object> data) {
-        super(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
+        super(IdGenerator.nextIdStr(), LocalDateTime.now(), eventType,
               instanceId, "FlowInstance",
               Collections.emptyMap());
         this.taskId = taskId;

@@ -187,18 +187,18 @@ public class JsonAutoConfiguration {
             // 自动清空 BeanSerializerCache 中已烘焙的字段名缓存，使配置热更新真正生效。
             // 背景：README 注意事项第 7 点明确指出"命名策略在字段元数据加载时缓存，后续切换对已缓存类无效"，
             // 本修复通过 ConfigChangeListener 机制消除该隐性陷阱。
-            JsonConfig.addChangeListener((oldConfig, newConfig, newVersion) -> {
+            JsonConfig.addChangeListener((oldConfig, nextConfig, newVersion) -> {
                 if (oldConfig == null) {
                     return;
                 }
                 boolean needClear = false;
-                if (oldConfig.getNamingStrategy() != newConfig.getNamingStrategy()) {
+                if (oldConfig.getNamingStrategy() != nextConfig.getNamingStrategy()) {
                     needClear = true;
                 }
-                if (!java.util.Objects.equals(oldConfig.getDateFormat(), newConfig.getDateFormat())) {
+                if (!java.util.Objects.equals(oldConfig.getDateFormat(), nextConfig.getDateFormat())) {
                     needClear = true;
                 }
-                if (oldConfig.isSerializeEnumUsingOrdinal() != newConfig.isSerializeEnumUsingOrdinal()) {
+                if (oldConfig.isSerializeEnumUsingOrdinal() != nextConfig.isSerializeEnumUsingOrdinal()) {
                     needClear = true;
                 }
                 if (needClear) {

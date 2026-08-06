@@ -2,12 +2,12 @@ package com.remisoft.nextwiki.domain.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.core.constant.SystemConstants;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.nextwiki.domain.entity.FileNode;
@@ -35,6 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TrashDomainService {
 
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final TrashItemRepository trashItemRepository;
     private final FileNodeRepository fileNodeRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -47,7 +50,7 @@ public class TrashDomainService {
     public TrashItem moveToTrash(FileNode fileNode, String userId) {
         LocalDateTime now = LocalDateTime.now();
         TrashItem trashItem = TrashItem.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .fileNodeId(fileNode.getId())
                 .originalName(fileNode.getName())
                 .originalPath(fileNode.getPath())

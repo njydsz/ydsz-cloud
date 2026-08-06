@@ -1,6 +1,5 @@
 package com.remisoft.common.auth.security;
 
-import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.remisoft.common.util.string.StringUtils;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * CSRF Token 验证器（双重提交 Cookie 模式）。
@@ -53,7 +53,7 @@ public class CsrfTokenValidator {
      * @return UUID 格式的 CSRF Token
      */
     public String generateToken() {
-        return UUID.randomUUID().toString().replace("-", "");
+        return IdGenerator.nextIdStr();
     }
 
     /**

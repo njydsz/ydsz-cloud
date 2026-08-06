@@ -8,12 +8,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 import org.springframework.web.multipart.MultipartFile;
 
 import com.remisoft.common.file.storage.IFileStorage;
 import com.remisoft.common.file.storage.IFileStorageProvider;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * NextWiki 文件工具类 — 跨 Service 共享的文件操作工具方法集合
@@ -128,7 +128,7 @@ public final class NextwikiFileUtils {
      */
     public static String generateStorageKey(String userId, String originalFilename) {
         String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
-        String uuid = UUID.randomUUID().toString().replace("-", "");
+        String uuid = IdGenerator.nextIdStr();
         String suffix = extractSuffix(originalFilename);
         return "wiki/" + userId + "/" + datePath + "/" + uuid
                 + (suffix.isEmpty() ? "" : "." + suffix);

@@ -2,7 +2,6 @@ package com.remisoft.userinfo.web.controller;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.auth.model.UserInfo;
 import com.remisoft.common.auth.token.TokenService;
 import com.remisoft.common.core.response.BaseResponse;
@@ -64,6 +64,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Tag(name = "OAuth2", description = "OAuth2 授权码模式")
 public class OAuth2Controller {
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final RedisStringOps redisStringOps;
     private final TokenService tokenService;
@@ -127,7 +130,7 @@ public class OAuth2Controller {
         }
 
         // 4. 使用 RemiJson 序列化授权码上下文（含 tenantId），Redis 存储 5 分钟
-        String code = UUID.randomUUID().toString().replace("-", "");
+        String code = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
         Map<String, String> contextMap = new HashMap<>();
         contextMap.put("clientId", clientId);
         contextMap.put("userId", userInfo.getUserId());

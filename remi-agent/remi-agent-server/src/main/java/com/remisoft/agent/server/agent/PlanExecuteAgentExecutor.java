@@ -2,7 +2,6 @@ package com.remisoft.agent.server.agent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +23,7 @@ import com.remisoft.agent.domain.trace.TraceRecorder;
 import com.remisoft.agent.server.analytics.CostAnalysisService;
 import com.remisoft.agent.server.config.AgentProperties;
 import com.remisoft.agent.server.metrics.AgentMetrics;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * Plan-and-Execute Agent 执行器
@@ -70,7 +70,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "PLAN_EXECUTE");
         log.info("[Plan-Execute] 开始: convId={}, traceId={}", convId, traceId);
 
@@ -292,7 +292,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
         if (steps.isEmpty()) {
             steps.add(new ExecutionPlan.PlanStep(0, "直接回答用户问题", "回答"));
         }
-        return new ExecutionPlan(UUID.randomUUID().toString(), goal, steps);
+        return new ExecutionPlan(IdGenerator.nextIdStr(), goal, steps);
     }
 
     private ChatResponse synthesize(ExecutionPlan plan, List<String> stepResults, String convId) {

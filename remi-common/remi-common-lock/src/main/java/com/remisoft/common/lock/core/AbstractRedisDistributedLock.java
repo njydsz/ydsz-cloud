@@ -1,7 +1,6 @@
 package com.remisoft.common.lock.core;
 
 import java.util.Collections;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -15,6 +14,7 @@ import com.remisoft.common.lock.metrics.LockMetrics;
 import com.remisoft.common.lock.scheduler.LockWatchDog;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 抽象 Redis 分布式锁基类
@@ -199,7 +199,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         }
 
         String fieldKey = buildRegistryField(lockKey);
-        String newClientId = UUID.randomUUID().toString() + ":" + Thread.currentThread().threadId();
+        String newClientId = IdGenerator.nextIdStr() + ":" + Thread.currentThread().threadId();
         long ttlMs = 3600000L;
 
         try {

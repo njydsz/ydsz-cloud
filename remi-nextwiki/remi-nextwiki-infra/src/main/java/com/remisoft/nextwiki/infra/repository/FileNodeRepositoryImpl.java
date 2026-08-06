@@ -2,13 +2,13 @@ package com.remisoft.nextwiki.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.domain.query.PageResult;
 import com.remisoft.nextwiki.domain.entity.FileNode;
 import com.remisoft.nextwiki.domain.repository.FileNodeRepository;
@@ -27,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 @RequiredArgsConstructor
 public class FileNodeRepositoryImpl implements FileNodeRepository {
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final FileNodeMapper fileNodeMapper;
 
@@ -76,7 +79,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     @Override
     public FileNode save(FileNode node) {
         if (node.getId() == null || node.getId().isEmpty()) {
-            node.setId(UUID.randomUUID().toString().replace("-", ""));
+            node.setId(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""));
         }
         fileNodeMapper.insert(node);
         return node;
@@ -163,7 +166,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
         }
 
         root = FileNode.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .parentId("0")
                 .name("root")
                 .nodeType(FileNode.TYPE_FOLDER)

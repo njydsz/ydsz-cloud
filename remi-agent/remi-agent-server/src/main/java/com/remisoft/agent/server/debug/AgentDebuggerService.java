@@ -1,7 +1,6 @@
 package com.remisoft.agent.server.debug;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +36,15 @@ public class AgentDebuggerService {
 
     private final TraceRecorder traceRecorder;
     private final AgentFactory agentFactory;
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-    public AgentDebuggerService(TraceRecorder traceRecorder, AgentFactory agentFactory) {
+
+    public AgentDebuggerService(TraceRecorder traceRecorder, AgentFactory agentFactory,
+            SnowflakeIdGenerator snowflakeIdGenerator) {
         this.traceRecorder = traceRecorder;
         this.agentFactory = agentFactory;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     /**
@@ -68,7 +72,7 @@ public class AgentDebuggerService {
         log.info("[Debugger] 重放: convId={}, agentType={}", conversationId, agentType);
 
         AgentDefinition def = new AgentDefinition(
-                UUID.randomUUID().toString(),
+                String.valueOf(snowflakeIdGenerator.nextId()),
                 "replay-" + conversationId,
                 "Replay Agent",
                 AgentDefinition.Type.valueOf(agentType.toUpperCase()),

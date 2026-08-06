@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -90,7 +90,8 @@ public class ChunkUploadApplicationService {
                                           FileVersionDomainService versionDomainService,
                                           FolderDomainService folderDomainService,
                                           ApplicationEventPublisher eventPublisher,
-                                          NextwikiProperties properties) {
+                                          NextwikiProperties properties,
+            SnowflakeIdGenerator snowflakeIdGenerator) {
         this.redisService = redisService;
         this.fileNodeRepository = fileNodeRepository;
         this.quotaDomainService = quotaDomainService;
@@ -98,6 +99,7 @@ public class ChunkUploadApplicationService {
         this.folderDomainService = folderDomainService;
         this.eventPublisher = eventPublisher;
         this.properties = properties;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     /**
@@ -125,7 +127,7 @@ public class ChunkUploadApplicationService {
         // 配额校验
         quotaDomainService.checkQuota("user", userId, fileSize);
 
-        String uploadId = UUID.randomUUID().toString().replace("-", "");
+        String uploadId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
 
         ChunkUploadSession session = new ChunkUploadSession();
         session.setUploadId(uploadId);
@@ -271,7 +273,7 @@ public class ChunkUploadApplicationService {
             int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
             FileNode fileNode = FileNode.builder()
-                    .id(UUID.randomUUID().toString().replace("-", ""))
+                    .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                     .parentId(parent.getId())
                     .name(session.getFileName())
                     .nodeType(FileNode.TYPE_FILE)
@@ -434,7 +436,7 @@ public class ChunkUploadApplicationService {
 
     private String generateStorageKey(String userId, String originalFilename) {
         String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
-        String uuid = UUID.randomUUID().toString().replace("-", "");
+        String uuid = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
         String suffix = extractSuffix(originalFilename);
         return "wiki/" + userId + "/" + datePath + "/" + uuid + (suffix.isEmpty() ? "" : "." + suffix);
     }
@@ -478,7 +480,7 @@ public class ChunkUploadApplicationService {
         int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
         FileNode node = FileNode.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .parentId(parent.getId())
                 .name(session.getFileName())
                 .nodeType(FileNode.TYPE_FILE)
@@ -534,6 +536,9 @@ public class ChunkUploadApplicationService {
         private final String name;
         private final String contentType;
         private final long size;
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
 
         SimplePathMultipartFile(Path filePath, String name, String contentType) throws IOException {
             this.filePath = filePath;

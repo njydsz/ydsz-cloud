@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import java.util.UUID;
+import com.remisoft.common.util.id.IdGenerator;
 /**
  * 对话消息值对象（对标 OpenAI Chat Completions message）
  *
@@ -59,7 +59,7 @@ public final class ChatMessage implements Serializable {
      * @return 系统消息实例（自动生成消息 ID 与时间戳）
      */
     public static ChatMessage system(String content) {
-        return new ChatMessage(UUID.randomUUID().toString(),
+        return new ChatMessage(IdGenerator.nextIdStr(),
                 MessageRole.SYSTEM, content, null, LocalDateTime.now(), null, null, null);
     }
 
@@ -71,7 +71,7 @@ public final class ChatMessage implements Serializable {
      * @return 用户消息实例（自动生成消息 ID 与时间戳）
      */
     public static ChatMessage user(String content, String conversationId) {
-        return new ChatMessage(UUID.randomUUID().toString(),
+        return new ChatMessage(IdGenerator.nextIdStr(),
                 MessageRole.USER, content, conversationId, LocalDateTime.now(), null, null, null);
     }
 
@@ -84,7 +84,7 @@ public final class ChatMessage implements Serializable {
      * @return 助手消息实例（自动生成消息 ID 与时间戳）
      */
     public static ChatMessage assistant(String content, String conversationId, TokenUsage usage) {
-        return new ChatMessage(UUID.randomUUID().toString(),
+        return new ChatMessage(IdGenerator.nextIdStr(),
                 MessageRole.ASSISTANT, content, conversationId, LocalDateTime.now(), null, null, usage);
     }
 
@@ -102,7 +102,7 @@ public final class ChatMessage implements Serializable {
      */
     public static ChatMessage assistantWithTools(String content, String conversationId,
                                                   List<ToolCall> toolCalls, TokenUsage usage) {
-        return new ChatMessage(UUID.randomUUID().toString(),
+        return new ChatMessage(IdGenerator.nextIdStr(),
                 MessageRole.ASSISTANT, content, conversationId, LocalDateTime.now(),
                 toolCalls, null, usage);
     }
@@ -116,7 +116,7 @@ public final class ChatMessage implements Serializable {
      * @return 工具消息实例
      */
     public static ChatMessage tool(String toolCallId, String content, String conversationId) {
-        return new ChatMessage(UUID.randomUUID().toString(),
+        return new ChatMessage(IdGenerator.nextIdStr(),
                 MessageRole.TOOL, content, conversationId, LocalDateTime.now(), null, toolCallId, null);
     }
 

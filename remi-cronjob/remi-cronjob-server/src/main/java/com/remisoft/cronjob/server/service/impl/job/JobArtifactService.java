@@ -33,6 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class JobArtifactService {
 
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final JobArtifactMapper artifactMapper;
     /** P3-3.3: 制品存储配置统一从 CronjobProperties 读取 */
     private final CronjobProperties cronjobProperties;

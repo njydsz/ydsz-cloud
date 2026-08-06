@@ -1,7 +1,6 @@
 package com.remisoft.nextwiki.infra.repository;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
@@ -21,6 +20,9 @@ import lombok.RequiredArgsConstructor;
 @Repository
 @RequiredArgsConstructor
 public class TagRepositoryImpl implements TagRepository {
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final TagMapper tagMapper;
 
@@ -89,7 +91,7 @@ public class TagRepositoryImpl implements TagRepository {
     @Override
     public void bindTag(String fileNodeId, String tagId) {
         FileTag fileTag = FileTag.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .fileNodeId(fileNodeId)
                 .tagId(tagId)
                 .revision(0)

@@ -2,7 +2,6 @@ package com.remisoft.agent.server.agent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -26,6 +25,7 @@ import com.remisoft.agent.server.analytics.CostAnalysisService;
 import com.remisoft.agent.server.config.AgentProperties;
 import com.remisoft.agent.server.metrics.AgentMetrics;
 import com.remisoft.agent.server.rag.RagService;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * RAG 增强 Agent 执行器
@@ -86,7 +86,7 @@ public class RagAgentExecutor implements AgentExecutor {
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "RAG");
         log.info("[RAG-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
@@ -95,7 +95,7 @@ public class RagAgentExecutor implements AgentExecutor {
             agentMetrics.recordGuardrailRejection("input-guardrail", "input");
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             ChatMessage msg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
-            return new ChatResponse(UUID.randomUUID().toString(), "guardrail",
+            return new ChatResponse(IdGenerator.nextIdStr(), "guardrail",
                     msg, TokenUsage.zero(), "guardrail_rejected", List.of());
         }
 
@@ -171,7 +171,7 @@ public class RagAgentExecutor implements AgentExecutor {
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "RAG_STREAM");
         log.info("[RAG-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
 

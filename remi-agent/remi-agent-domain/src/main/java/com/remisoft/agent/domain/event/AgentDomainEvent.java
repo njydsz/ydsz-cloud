@@ -3,12 +3,12 @@ package com.remisoft.agent.domain.event;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
-import java.util.UUID;
 
 import com.remisoft.common.event.api.DomainEvent;
 import com.remisoft.common.event.api.ModuleEventTypes;
 
 import lombok.Getter;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * Agent 域领域事件。
@@ -48,7 +48,7 @@ public class AgentDomainEvent extends DomainEvent {
      */
     public AgentDomainEvent(String eventType, String executionId, String aggregateType,
                             Map<String, Object> metadata) {
-        super(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
+        super(IdGenerator.nextIdStr(), LocalDateTime.now(), eventType,
                 executionId, aggregateType,
                 metadata != null ? metadata : Collections.emptyMap());
     }

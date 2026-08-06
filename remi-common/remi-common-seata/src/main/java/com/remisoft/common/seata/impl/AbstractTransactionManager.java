@@ -1,6 +1,5 @@
 package com.remisoft.common.seata.impl;
 
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +9,7 @@ import com.remisoft.common.seata.audit.TransactionAuditLogger;
 import com.remisoft.common.seata.metrics.SeataMetrics;
 
 import org.springframework.beans.factory.ObjectProvider;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 分布式事务管理器抽象基类。
@@ -146,7 +146,7 @@ public abstract class AbstractTransactionManager implements DistributedTransacti
      * @return UUID 格式的 XID
      */
     protected String generateXid() {
-        return UUID.randomUUID().toString();
+        return IdGenerator.nextIdStr();
     }
 
     /**
@@ -155,7 +155,7 @@ public abstract class AbstractTransactionManager implements DistributedTransacti
      * @return UUID 格式的分支 ID
      */
     protected String generateBranchId() {
-        return UUID.randomUUID().toString();
+        return IdGenerator.nextIdStr();
     }
 
     /**

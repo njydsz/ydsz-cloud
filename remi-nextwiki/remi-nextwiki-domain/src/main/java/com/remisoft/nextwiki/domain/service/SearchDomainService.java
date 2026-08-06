@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.domain.query.PageResult;
 import com.remisoft.nextwiki.domain.entity.FileNode;
 import com.remisoft.nextwiki.domain.entity.SearchIndex;
@@ -42,6 +42,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class SearchDomainService {
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final FileNodeRepository fileNodeRepository;
     private final TagRepository tagRepository;
@@ -141,7 +144,7 @@ public class SearchDomainService {
         }
 
         SearchIndex index = SearchIndex.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .fileNodeId(fileNodeId)
                 .name(node.getName())
                 .path(node.getPath())

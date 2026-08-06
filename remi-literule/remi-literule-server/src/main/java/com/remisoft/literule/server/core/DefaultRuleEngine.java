@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -36,6 +35,7 @@ import com.remisoft.literule.server.spi.RuleActionDispatcher;
 import com.remisoft.literule.server.spi.TraceRecorder;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 默认规则引擎实现
@@ -706,7 +706,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             return traceId;
         }
         String mdcTraceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-        return mdcTraceId != null ? mdcTraceId : UUID.randomUUID().toString().replace("-", "");
+        return mdcTraceId != null ? mdcTraceId : IdGenerator.nextIdStr();
     }
 
     /**

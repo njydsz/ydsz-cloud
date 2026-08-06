@@ -1,10 +1,10 @@
 package com.remisoft.workflow.server.engine;
 
-import java.util.UUID;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.redis.service.ops.RedisPubSubOps;
 
 import jakarta.annotation.PostConstruct;
@@ -37,16 +37,21 @@ public class FlowDefinitionCacheBroadcaster {
     private static final String CHANNEL = "flow:definition:cache:invalidate";
 
     /** 本节点唯一标识，用于忽略自身发出的广播 */
-    private final String sourceNodeId = UUID.randomUUID().toString();
+    private final String sourceNodeId = String.valueOf(snowflakeIdGenerator.nextId());
 
     private final RedisPubSubOps redisPubSubOps;
     /** @Lazy 避免 FlowDefinitionCacheService ↔ Broadcaster 循环依赖 */
     private final FlowDefinitionCacheService cacheService;
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
 
     public FlowDefinitionCacheBroadcaster(RedisPubSubOps redisPubSubOps,
-                                           @Lazy FlowDefinitionCacheService cacheService) {
+                                           @Lazy FlowDefinitionCacheService cacheService,
+            SnowflakeIdGenerator snowflakeIdGenerator) {
         this.redisPubSubOps = redisPubSubOps;
         this.cacheService = cacheService;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     /**

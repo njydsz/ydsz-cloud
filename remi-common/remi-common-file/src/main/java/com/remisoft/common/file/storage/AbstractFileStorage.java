@@ -15,7 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.net.URLEncoder;
@@ -47,6 +46,7 @@ import com.remisoft.common.util.string.StringUtils;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 文件存储抽象基类
@@ -1131,7 +1131,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         long partSize = fileProperties.getPartSize() != null ? fileProperties.getPartSize() : 5242880L;
 
         UploadCheckpoint checkpoint = new UploadCheckpoint();
-        checkpoint.setTaskId(UUID.randomUUID().toString().replace("-", ""));
+        checkpoint.setTaskId(IdGenerator.nextIdStr());
         checkpoint.setBucketName(resolvedBucket);
         checkpoint.setObjectName(resolvedObjectName);
         checkpoint.setUploadId(chunkResult.getUploadId());

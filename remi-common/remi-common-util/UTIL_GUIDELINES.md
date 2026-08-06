@@ -150,11 +150,13 @@ remi-common-util 是 Remi Cloud 项目的通用工具能力中心，提供跨业
 
 ### 2.1.0（当前）
 
-- 统一脱敏入口至 `SensitiveUtils`
-- 统一 HTTP IP 解析至 `ClientIpResolver`
-- 网关 CIDR 匹配复用 `CidrUtils`
+- 统一脱敏入口至 `SensitiveUtils`（StringUtils.maskXxx 系列废弃）
+- 统一 HTTP IP 解析至 `ClientIpResolver`（IpAddrUtils.getIpAddr 废弃）
+- 网关 CIDR 匹配复用 `CidrUtils.isInRange`（GatewayIpUtils.isInCidr 移除）
 - 移除零引用死代码（CookieUtils、UrlUtils、ClassLoaderUtils、RandomUtils）
-- 新增 `IpAddrUtils` 废弃标记和迁移指引
+- `HttpTokenUtils.AUTHORIZATION_HEADER` 改为引用 `TokenConstants.AUTHENTICATION`，消除常量重复
+- `IpAddrUtils` 类 Javadoc 增添迁移指引表
+- 新增本规范文档 `UTIL_GUIDELINES.md`
 
 ### 2.0.0
 

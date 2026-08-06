@@ -2,7 +2,6 @@ package com.remisoft.message.server.channel.push;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.feign.MessageRequest;
 import com.remisoft.common.feign.MessageResult;
 import com.remisoft.common.json.RemiJson;
@@ -44,6 +44,9 @@ public class GetuiPushProvider implements PushProvider {
 
     private final MessageProperties.GetuiPushConfig config;
     private final RestTemplate restTemplate;
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
 
     /** 鉴权 token 缓存（个推 token 默认 24h，提前 1h 失效） */
     private volatile String cachedToken;
@@ -54,12 +57,14 @@ public class GetuiPushProvider implements PushProvider {
      *
      * @param messageProperties 消息配置
      */
-    public GetuiPushProvider(MessageProperties messageProperties) {
+    public GetuiPushProvider(MessageProperties messageProperties,
+            SnowflakeIdGenerator snowflakeIdGenerator) {
         this.config = messageProperties.getPush().getGetui();
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(config.getConnectTimeout());
         factory.setReadTimeout(config.getReadTimeout());
         this.restTemplate = new RestTemplate(factory);
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     /**
@@ -95,7 +100,7 @@ public class GetuiPushProvider implements PushProvider {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("token", token);
             Map<String, Object> body = new HashMap<>();
-            body.put("request_id", UUID.randomUUID().toString());
+            body.put("request_id", String.valueOf(snowflakeIdGenerator.nextId()));
             body.put("audience", Map.of("cid", new String[]{cid}));
             String title = StringUtils.hasText(request.getSubject()) ? request.getSubject() : "通知";
             body.put("push_message", Map.of("notification", Map.of(

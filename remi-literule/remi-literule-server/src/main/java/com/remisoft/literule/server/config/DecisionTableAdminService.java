@@ -3,7 +3,6 @@ package com.remisoft.literule.server.config;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +19,7 @@ import com.remisoft.literule.server.spi.DecisionTableConfigProvider;
 import com.remisoft.literule.server.spi.RuleConfigBroadcaster;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 决策表管理服务
@@ -48,7 +48,7 @@ public class DecisionTableAdminService {
         this.ruleEngine = ruleEngine;
         this.configProvider = configProvider;
         this.eventPublisher = eventPublisher;
-        this.nodeId = UUID.randomUUID().toString().substring(0, 8);
+        this.nodeId = IdGenerator.nextIdStr().substring(0, 8);
     }
 
     public void setBroadcaster(RuleConfigBroadcaster broadcaster) {

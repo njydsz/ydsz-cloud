@@ -3,7 +3,6 @@ package com.remisoft.common.socket.push;
 import java.util.List;
 import java.util.Map;
 import com.remisoft.common.json.RemiJson;
-import java.util.UUID;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
@@ -26,6 +25,7 @@ import com.remisoft.common.socket.session.OnlineUserService;
 import com.remisoft.common.socket.trace.WebSocketTraceContext;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 默认实时推送模板实现（STOMP + Redis Pub/Sub 集群广播 + 降级 + 离线补偿 + 全链路增强）。
@@ -527,6 +527,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      * @return 去除连字符的 UUID 字符串（32 位十六进制）
      */
     private String generateMessageId() {
-        return UUID.randomUUID().toString().replace("-", "");
+        return IdGenerator.nextIdStr();
     }
 }

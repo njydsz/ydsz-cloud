@@ -5,10 +5,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.remisoft.common.core.constant.SystemConstants;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 规则评估上下文
@@ -143,7 +143,7 @@ public final class RuleContext implements Serializable {
      * @return RuleContext 实例
      */
     public static RuleContext of(Map<String, Object> facts, String scenario, String source) {
-        return of(facts, scenario, source, UUID.randomUUID().toString(), DEFAULT_TENANT_ID, DEFAULT_ENVIRONMENT);
+        return of(facts, scenario, source, IdGenerator.nextIdStr(), DEFAULT_TENANT_ID, DEFAULT_ENVIRONMENT);
     }
 
     /**
@@ -153,7 +153,7 @@ public final class RuleContext implements Serializable {
      * @return RuleContext 实例
      */
     public static RuleContext of(Map<String, Object> facts) {
-        return of(facts, "DEFAULT", "UNKNOWN", UUID.randomUUID().toString(), DEFAULT_TENANT_ID, DEFAULT_ENVIRONMENT);
+        return of(facts, "DEFAULT", "UNKNOWN", IdGenerator.nextIdStr(), DEFAULT_TENANT_ID, DEFAULT_ENVIRONMENT);
     }
 
     /**

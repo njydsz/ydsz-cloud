@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 import com.remisoft.nextwiki.domain.event.FileOperatedEvent;
 import com.remisoft.nextwiki.domain.service.SearchDomainService;
 
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.notify.core.NotifyService;
 import com.remisoft.common.notify.enums.NotifyChannel;
 import com.remisoft.nextwiki.domain.entity.AuditLog;
@@ -41,6 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class FileOperatedEventListener {
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final SearchDomainService searchDomainService;
     private final ContentExtractionApplicationService contentExtractionService;
@@ -100,7 +103,7 @@ public class FileOperatedEventListener {
             try {
                 AuditLog auditLog =
                         AuditLog.builder()
-                                .id(UUID.randomUUID().toString().replace("-", ""))
+                                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                                 .operation(event.getOperation())
                                 .fileNodeId(event.getFileNodeId())
                                 .fileName(event.getFileName())

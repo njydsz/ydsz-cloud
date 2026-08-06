@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +24,7 @@ import com.remisoft.literule.server.spi.RuleVersion;
 import com.remisoft.literule.server.spi.RuleVersionRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 规则管理服务
@@ -88,7 +88,7 @@ public class RuleAdminService {
         this.configProvider = configProvider;
         this.versionRepository = versionRepository;
         this.eventPublisher = eventPublisher;
-        this.nodeId = UUID.randomUUID().toString().substring(0, 8);
+        this.nodeId = IdGenerator.nextIdStr().substring(0, 8);
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.remisoft.agent.server.agent;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -18,6 +17,7 @@ import com.remisoft.agent.domain.model.ChatResponse;
 import com.remisoft.agent.domain.trace.TraceRecorder;
 import com.remisoft.agent.server.config.AgentProperties;
 import com.remisoft.agent.server.metrics.AgentMetrics;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * Router Agent 执行器
@@ -62,7 +62,7 @@ public class RouterAgentExecutor implements AgentExecutor {
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "ROUTER");
         log.info("[Router] 分析意图: convId={}, traceId={}", convId, traceId);
 
@@ -77,7 +77,7 @@ public class RouterAgentExecutor implements AgentExecutor {
 
         AgentExecutor executor = agentFactory.getExecutor(
                 new AgentDefinition(
-                        UUID.randomUUID().toString(), "router-dispatched", "Router",
+                        IdGenerator.nextIdStr(), "router-dispatched", "Router",
                         AgentDefinition.Type.valueOf(agentType),
                         request.getSystemPrompt(), List.of(),
                         properties.getLlm().getTemperature(),
@@ -98,7 +98,7 @@ public class RouterAgentExecutor implements AgentExecutor {
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "ROUTER_STREAM");
         log.info("[Router-Stream] 分析意图: convId={}, traceId={}", convId, traceId);
 
@@ -113,7 +113,7 @@ public class RouterAgentExecutor implements AgentExecutor {
 
         AgentExecutor executor = agentFactory.getExecutor(
                 new AgentDefinition(
-                        UUID.randomUUID().toString(), "router-dispatched", "Router",
+                        IdGenerator.nextIdStr(), "router-dispatched", "Router",
                         AgentDefinition.Type.valueOf(agentType),
                         request.getSystemPrompt(), List.of(),
                         properties.getLlm().getTemperature(),

@@ -3,7 +3,6 @@ package com.remisoft.common.redis.service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
-import java.util.UUID;
 
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,6 +14,7 @@ import com.remisoft.common.redis.config.RedisProperties;
 import com.remisoft.common.redis.metrics.RedisMetricsCollector;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 分布式延时队列（基于 Redis ZSET）
@@ -106,7 +106,7 @@ public class RedisDelayedQueue {
         if (queueName == null || payload == null || delay == null) {
             throw new IllegalArgumentException("队列名、任务内容、延时时长不能为空");
         }
-        String taskId = UUID.randomUUID().toString();
+        String taskId = IdGenerator.nextIdStr();
         long score = Instant.now().plus(delay).toEpochMilli();
         DelayedTask task = new DelayedTask(taskId, queueName, payload, score, retryCount);
         try {

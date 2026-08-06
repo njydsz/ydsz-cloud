@@ -55,38 +55,10 @@ public final class JcaCipherPool {
      * <p>使用嵌套 ThreadLocal 结构：外层 key 为算法字符串，内层保存每个线程的 Cipher 实例。
      * 通过 volatile + DCL 确保每个算法对应的 ThreadLocal 仅创建一次。
      */
-    private static volatile ThreadLocal<Cipher> cipherPoolAesGcm;
     private static volatile ThreadLocal<Cipher> cipherPoolSm2Encrypt;
     private static volatile ThreadLocal<Signature> signaturePoolSm2;
     private static volatile ThreadLocal<Cipher> cipherPoolSm4;
     private static volatile ThreadLocal<Cipher> cipherPoolChaCha20;
-
-    /**
-     * 获取 AES/GCM/NoPadding Cipher 实例。
-     *
-     * <p>委托 AesGcmCrypto 原有的池化逻辑，后续在此统一维护。
-     *
-     * @return 本线程的 AES-GCM Cipher 实例
-     * @deprecated 直接委托至 {@code AesGcmCrypto.acquireCipher()}，
-     *             后续版本将迁移至统一缓存管理
-     */
-    @Deprecated(since = "2.0.0", forRemoval = false)
-    static Cipher acquireAesGcmCipher() {
-        if (cipherPoolAesGcm == null) {
-            synchronized (JcaCipherPool.class) {
-                if (cipherPoolAesGcm == null) {
-                    cipherPoolAesGcm = ThreadLocal.withInitial(() -> {
-                        try {
-                            return Cipher.getInstance("AES/GCM/NoPadding");
-                        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-                            throw new IllegalStateException("Failed to initialize AES-GCM Cipher", e);
-                        }
-                    });
-                }
-            }
-        }
-        return cipherPoolAesGcm.get();
-    }
 
     /**
      * 获取 SM2 加密 Cipher 实例（委托 Sm2Utils 池化）。

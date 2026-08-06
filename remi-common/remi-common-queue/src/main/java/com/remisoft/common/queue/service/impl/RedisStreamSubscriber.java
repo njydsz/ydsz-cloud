@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -30,6 +29,7 @@ import com.remisoft.common.queue.service.IMessageSubscriber;
 import com.remisoft.common.queue.trace.MessageTracer;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 基于 Redis Stream 的消息订阅者。
@@ -494,6 +494,6 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
      * @return 8 位十六进制字符串
      */
     private String generateShortId() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        return IdGenerator.nextIdStr().substring(0, 8);
     }
 }

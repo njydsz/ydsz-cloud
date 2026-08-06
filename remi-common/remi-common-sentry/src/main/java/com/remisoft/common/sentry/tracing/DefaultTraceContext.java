@@ -1,12 +1,12 @@
 package com.remisoft.common.sentry.tracing;
 
-import java.util.UUID;
 
 import org.slf4j.MDC;
 
 import com.remisoft.common.sentry.spi.TraceContext;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 默认追踪上下文（降级方案）
@@ -96,14 +96,14 @@ public class DefaultTraceContext implements TraceContext {
      * 生成 TraceId
      */
     public static String generateTraceId() {
-        return UUID.randomUUID().toString().replace("-", "");
+        return IdGenerator.nextIdStr();
     }
 
     /**
      * 生成 SpanId
      */
     public static String generateSpanId() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        return IdGenerator.nextIdStr().substring(0, 16);
     }
 
     /**

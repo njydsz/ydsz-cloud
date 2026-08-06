@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -15,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.auth.model.UserInfo;
 import com.remisoft.common.auth.service.TokenBlacklistService;
 
@@ -75,6 +75,9 @@ public class JwtTokenService implements TokenService {
     private final TokenProperties tokenProperties;
     private final SecretKey secretKey;
     private final TokenBlacklistService tokenBlacklistService;
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
 
     public JwtTokenService(TokenProperties tokenProperties,
                            @Autowired(required = false) TokenBlacklistService tokenBlacklistService) {
@@ -186,7 +189,7 @@ public class JwtTokenService implements TokenService {
         var builder = Jwts.builder()
                 .claims(claims)
                 // P1: jti — 每个 token 唯一 ID，便于精确黑名单和审计关联
-                .id(UUID.randomUUID().toString())
+                .id(String.valueOf(snowflakeIdGenerator.nextId()))
                 .issuer(tokenProperties.getIssuer())
                 .subject(tokenProperties.getSubject())
                 .issuedAt(now)

@@ -3,7 +3,6 @@ package com.remisoft.agent.server.chat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -28,6 +27,7 @@ import com.remisoft.agent.server.metrics.AgentMetrics;
 import com.remisoft.agent.server.metrics.AgentRuntimeMetrics;
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.json.RemiJson;
 
 /**
@@ -76,6 +76,8 @@ public class ChatService {
     private final TraceRecorder traceRecorder;
     /** Outbox 事件服务（可选依赖） */
     private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     public ChatService(LlmClient llmClient, ConversationMemory memory, AgentProperties properties,
                        List<InputGuardrail> inputGuardrails,
@@ -84,7 +86,8 @@ public class ChatService {
                        AgentRuntimeMetrics runtimeMetrics,
                        CostAnalysisService costAnalysisService,
                        TraceRecorder traceRecorder,
-                       ObjectProvider<OutboxService> outboxServiceProvider) {
+                       ObjectProvider<OutboxService> outboxServiceProvider,
+                       SnowflakeIdGenerator snowflakeIdGenerator) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
@@ -99,6 +102,7 @@ public class ChatService {
         this.costAnalysisService = costAnalysisService;
         this.traceRecorder = traceRecorder;
         this.outboxServiceProvider = outboxServiceProvider;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     /**
@@ -119,7 +123,7 @@ public class ChatService {
      * @return 助手回复
      */
     public ChatResponse chat(String conversationId, String userMessage, String systemPrompt) {
-        String convId = conversationId != null ? conversationId : UUID.randomUUID().toString();
+        String convId = conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
         String traceId = traceRecorder.startTrace(convId, "CHAT");
         log.info("[Chat] 同步对话: convId={}, traceId={}, messageLen={}", convId, traceId, userMessage.length());
 
@@ -136,7 +140,7 @@ public class ChatService {
             memory.save(convId, rejectedMsg);
             runtimeMetrics.recordMessage("assistant");
             runtimeMetrics.recordExecution("simple", false, 0);
-            return new ChatResponse(UUID.randomUUID().toString(), "guardrail",
+            return new ChatResponse(String.valueOf(snowflakeIdGenerator.nextId()), "guardrail",
                     rejectedMsg, TokenUsage.zero(), "guardrail_rejected", List.of());
         }
 
@@ -206,7 +210,7 @@ public class ChatService {
      */
     public void stream(String conversationId, String userMessage, String systemPrompt,
                        Consumer<ChatChunk> chunkConsumer) {
-        String convId = conversationId != null ? conversationId : UUID.randomUUID().toString();
+        String convId = conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
         String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
         log.info("[Chat-Stream] 流式对话: convId={}, traceId={}, messageLen={}", convId, traceId, userMessage.length());
 

@@ -40,7 +40,16 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface JsonClass {
-    
+
+    /**
+     * 类的描述信息（文档用途，标记类可安全反序列化等）。
+     *
+     * <p>仅作为元信息存储，不参与序列化/反序列化逻辑。</p>
+     *
+     * @return 描述字符串，默认空
+     */
+    String description() default "";
+
     /**
      * 字段排序（指定字段的输出顺序）
      * 

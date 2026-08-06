@@ -2,7 +2,6 @@ package com.remisoft.agent.infra.rag;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +10,7 @@ import com.remisoft.agent.domain.rag.TextChunk;
 import com.remisoft.agent.domain.rag.TextChunker;
 
 import java.util.Map;
+import com.remisoft.common.util.id.IdGenerator;
 /**
  * 固定大小分块器（带重叠）
  *
@@ -88,7 +88,7 @@ public class SimpleTextChunker implements TextChunker {
     private TextChunk createChunk(String content, String documentId, String documentTitle,
                                    String source, int chunkIndex) {
         return new TextChunk(
-                UUID.randomUUID().toString(),
+                IdGenerator.nextIdStr(),
                 content,
                 documentId,
                 documentTitle,

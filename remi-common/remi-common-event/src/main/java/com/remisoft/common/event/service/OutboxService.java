@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.event.api.DomainEvent;
 import com.remisoft.common.event.config.EventProperties;
@@ -77,6 +77,9 @@ public class OutboxService {
 
     /** 同步投递网关（可选，仅 enableSyncPublish=true 时注入） */
     private final EventPublishGateway syncPublishGateway;
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
 
     /**
      * @param outboxRepository   Outbox 仓储
@@ -85,10 +88,12 @@ public class OutboxService {
      */
     public OutboxService(OutboxRepository outboxRepository,
                          EventProperties properties,
-                         EventPublishGateway syncPublishGateway) {
+                         EventPublishGateway syncPublishGateway,
+            SnowflakeIdGenerator snowflakeIdGenerator) {
         this.outboxRepository = outboxRepository;
         this.properties = properties;
         this.syncPublishGateway = syncPublishGateway;
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
     /**
@@ -240,7 +245,7 @@ public class OutboxService {
         }
 
         OutboxMessage message = partialBuilder
-                .id(UUID.randomUUID().toString())
+                .id(String.valueOf(snowflakeIdGenerator.nextId()))
                 .tenantId(tenantId)
                 .traceId(traceId)
                 .deduplicationId(deduplicationId)
@@ -367,7 +372,7 @@ public class OutboxService {
             return HexFormat.of().formatHex(hash).substring(0, 32);
         } catch (NoSuchAlgorithmException e) {
             // SHA-256 应该总是可用，降级为 UUID
-            return UUID.randomUUID().toString();
+            return String.valueOf(snowflakeIdGenerator.nextId());
         }
     }
 

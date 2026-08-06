@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.remisoft.agent.domain.model.TokenUsage;
 
 import java.util.LinkedHashMap;
+import com.remisoft.common.util.id.IdGenerator;
 /**
  * Token 用量成本分析服务
  *
@@ -51,7 +51,7 @@ public class CostAnalysisService {
             return;
         }
         usageRepository.save(new TokenUsageRecord(
-                UUID.randomUUID().toString(),
+                IdGenerator.nextIdStr(),
                 conversationId,
                 modelName,
                 usage.getPromptTokens(),

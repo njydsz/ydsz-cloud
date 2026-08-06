@@ -2,7 +2,6 @@ package com.remisoft.common.notify.core;
 
 import java.util.Arrays;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -12,6 +11,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.remisoft.common.notify.enums.NotifyChannel;
 import com.remisoft.common.json.RemiJson;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 基于 Redis 的持久化重试队列实现
@@ -307,7 +307,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
 
         RetryMessage(NotifyChannel channel, String receiver, String title, String content,
                      int retryCount, String lastError, long nextRetryTime) {
-            this.id = UUID.randomUUID().toString().replace("-", "");
+            this.id = IdGenerator.nextIdStr();
             this.channel = channel;
             this.receiver = receiver;
             this.title = title;

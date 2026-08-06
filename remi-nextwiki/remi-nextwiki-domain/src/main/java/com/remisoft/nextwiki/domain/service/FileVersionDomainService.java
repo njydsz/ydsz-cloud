@@ -2,12 +2,12 @@ package com.remisoft.nextwiki.domain.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.nextwiki.domain.entity.FileNode;
 import com.remisoft.nextwiki.domain.entity.FileVersion;
@@ -37,6 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class FileVersionDomainService {
+
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final FileVersionRepository versionRepository;
     private final FileNodeRepository fileNodeRepository;
@@ -70,7 +73,7 @@ public class FileVersionDomainService {
         }
 
         FileVersion version = FileVersion.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .fileNodeId(fileNodeId)
                 .versionNumber(nextVersion)
                 .storageKey(storageKey)
@@ -131,7 +134,7 @@ public class FileVersionDomainService {
                 .orElse(0) + 1;
 
         FileVersion rollbackVersion = FileVersion.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .fileNodeId(fileNodeId)
                 .versionNumber(nextVersion)
                 .storageKey(target.getStorageKey())

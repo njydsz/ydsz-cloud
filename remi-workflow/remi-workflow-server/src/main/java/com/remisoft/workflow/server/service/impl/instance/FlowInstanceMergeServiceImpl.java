@@ -3,6 +3,7 @@ package com.remisoft.workflow.server.service.impl.instance;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,6 +97,9 @@ import lombok.extern.slf4j.Slf4j;
 public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
 
     /** 流程实例 Mapper */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final FlowInstanceMapper instanceMapper;
     /** 运行时任务 Mapper */
     private final FlowRunTaskMapper taskMapper;
@@ -142,7 +146,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         }
 
         // 生成合并组 ID
-        String mergeGroupId = UUID.randomUUID().toString().replace("-", "");
+        String mergeGroupId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
 
         // 存储合并组关系
         String groupKey = MERGE_GROUP_KEY + mergeGroupId;

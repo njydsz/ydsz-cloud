@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * LiteExpr 内置函数库
@@ -341,7 +341,7 @@ public final class BuiltinFunctions {
      * @param r 函数注册表
      */
     private static void registerUtility(FunctionRegistry r) {
-        r.register("uuid", args -> UUID.randomUUID().toString(), "uuid()", "生成 UUID");
+        r.register("uuid", args -> IdGenerator.nextIdStr(), "uuid()", "生成 UUID");
         r.register("if", args -> {
             boolean cond = toBool(args[0]);
             return cond ? args[1] : args[2];

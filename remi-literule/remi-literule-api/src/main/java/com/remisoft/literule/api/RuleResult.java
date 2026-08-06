@@ -5,12 +5,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 规则评估结果
@@ -41,7 +41,7 @@ public class RuleResult implements Serializable {
 
     /** 结果 ID */
     @Builder.Default
-    private String resultId = UUID.randomUUID().toString();
+    private String resultId = IdGenerator.nextIdStr();
 
     /** 规则编码 */
     private String ruleCode;

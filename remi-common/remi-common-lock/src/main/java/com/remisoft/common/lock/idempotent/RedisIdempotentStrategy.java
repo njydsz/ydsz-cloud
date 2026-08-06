@@ -1,13 +1,13 @@
 package com.remisoft.common.lock.idempotent;
 
 import java.util.Collections;
-import java.util.UUID;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 基于 Redis SET NX EX 的幂等策略默认实现
@@ -53,10 +53,10 @@ public class RedisIdempotentStrategy implements IdempotentStrategy {
     public String acquire(String key, long expireMillis) {
         if (expireMillis <= 0) {
             log.warn("[RedisIdempotentStrategy] expireMillis={} 非法，降级放行 key={}", expireMillis, key);
-            return UUID.randomUUID().toString().replace("-", "");
+            return IdGenerator.nextIdStr();
         }
         long expireSeconds = Math.max(1, expireMillis / 1000);
-        String token = UUID.randomUUID().toString().replace("-", "");
+        String token = IdGenerator.nextIdStr();
         try {
             Long ok = redisTemplate.execute(
                     ACQUIRE_SCRIPT,

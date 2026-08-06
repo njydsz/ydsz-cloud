@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -15,6 +14,7 @@ import com.remisoft.literule.api.RuleStatus;
 import com.remisoft.literule.server.spi.RuleConfigProvider;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 规则审批流服务（P1-3 多级审批流）
@@ -818,7 +818,7 @@ public class RuleApprovalService {
      * 生成审批记录 ID
      */
     private String generateRecordId() {
-        return "AR-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return "AR-" + IdGenerator.nextIdStr().substring(0, 8).toUpperCase();
     }
 
     /**

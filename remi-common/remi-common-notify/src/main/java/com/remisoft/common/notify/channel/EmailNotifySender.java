@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
@@ -27,6 +26,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.notify.config.NotifyProperties;
 import com.remisoft.common.notify.core.NotifySendResult;
 import com.remisoft.common.notify.dedup.NotifyDedupService;
@@ -463,7 +463,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	 * @return UUID 格式的消息 ID
 	 */
 	private String generateMessageId() {
-		return UUID.randomUUID().toString().replace("-", "");
+		return String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
 	}
 
 	// ==================== 内部方法 ====================

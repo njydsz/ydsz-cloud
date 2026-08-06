@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
@@ -35,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 
 import io.minio.MinioClient;
+import com.remisoft.common.util.id.IdGenerator;
 /**
  * MinIO 对象存储实现。
  *
@@ -237,7 +237,7 @@ public class MinioStorage extends AbstractFileStorage {
 
     @Override
     protected ChunkedUploadResult doInitiateMultipartUpload(String bucketName, String objectName) {
-        String uploadId = UUID.randomUUID().toString().replace("-", "");
+        String uploadId = IdGenerator.nextIdStr();
         return new ChunkedUploadResult(objectName, bucketName, uploadId, 0, 0);
     }
 

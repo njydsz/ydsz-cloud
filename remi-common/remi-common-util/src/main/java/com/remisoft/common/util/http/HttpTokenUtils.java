@@ -3,6 +3,7 @@ package com.remisoft.common.util.http;
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.constant.TokenConstants;
 import com.remisoft.common.util.string.StringUtils;
 
 /**
@@ -26,8 +27,8 @@ import com.remisoft.common.util.string.StringUtils;
  */
 public final class HttpTokenUtils {
 
-    /** 标准 HTTP 授权头名称 */
-    public static final String AUTHORIZATION_HEADER = "Authorization";
+    /** 标准 HTTP 授权头名称（引用 core TokenConstants，避免重复定义） */
+    public static final String AUTHORIZATION_HEADER = TokenConstants.AUTHENTICATION;
 
     /** Remi 访问令牌自定义头常量引用 */
     public static final String X_ACCESS_TOKEN_HEADER = HeaderConstants.X_ACCESS_TOKEN;

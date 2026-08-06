@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +25,7 @@ import com.remisoft.agent.domain.model.ChatRequest;
 import com.remisoft.agent.domain.model.ChatResponse;
 import com.remisoft.agent.domain.model.TokenUsage;
 import com.remisoft.agent.server.config.AgentProperties;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * DAG 编排执行器
@@ -80,7 +80,7 @@ public class DagOrchestrationExecutor {
      * @return 各节点执行结果
      */
     public DagExecutionResult execute(AgentDag dag, String userInput) {
-        String executionId = UUID.randomUUID().toString();
+        String executionId = IdGenerator.nextIdStr();
         log.info("[DAG] 开始编排: id={}, name={}, nodes={}",
                 executionId, dag.getName(), dag.getNodes().size());
 

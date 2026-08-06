@@ -5,13 +5,13 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 复杂事件（CEP）原子事件
@@ -41,7 +41,7 @@ public class CEPEvent implements Serializable {
 
     /** 事件唯一 ID */
     @Builder.Default
-    private String id = UUID.randomUUID().toString();
+    private String id = IdGenerator.nextIdStr();
 
     /** 事件类型（用于模式匹配） */
     private String type;

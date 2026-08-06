@@ -2,7 +2,6 @@ package com.remisoft.agent.server.agent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -24,6 +23,7 @@ import com.remisoft.agent.domain.trace.TraceRecorder;
 import com.remisoft.agent.server.analytics.CostAnalysisService;
 import com.remisoft.agent.server.config.AgentProperties;
 import com.remisoft.agent.server.metrics.AgentMetrics;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 简单 Agent 执行器（单轮 LLM 调用，无工具）
@@ -82,7 +82,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "CHAT");
         log.info("[Simple-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
@@ -91,7 +91,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
             agentMetrics.recordGuardrailRejection("input-guardrail", "input");
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             ChatMessage msg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
-            return new ChatResponse(UUID.randomUUID().toString(), "guardrail",
+            return new ChatResponse(IdGenerator.nextIdStr(), "guardrail",
                     msg, TokenUsage.zero(), "guardrail_rejected", List.of());
         }
 
@@ -163,11 +163,11 @@ public class SimpleAgentExecutor implements AgentExecutor {
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
         log.info("[Simple-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
 
-        String responseId = UUID.randomUUID().toString();
+        String responseId = IdGenerator.nextIdStr();
         String model = properties.getLlm().getDefaultModel();
 
         String userInput = applyInputGuardrails(request.getUserInput(), traceId);

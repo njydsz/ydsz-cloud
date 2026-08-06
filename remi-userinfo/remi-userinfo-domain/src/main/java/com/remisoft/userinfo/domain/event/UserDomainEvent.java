@@ -3,12 +3,12 @@ package com.remisoft.userinfo.domain.event;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
-import java.util.UUID;
 
 import com.remisoft.common.event.api.DomainEvent;
 import com.remisoft.common.event.api.ModuleEventTypes;
 
 import lombok.Getter;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 用户域领域事件。
@@ -47,7 +47,7 @@ public class UserDomainEvent extends DomainEvent {
      */
     public UserDomainEvent(String eventType, String userId, String aggregateType,
                            Map<String, Object> metadata) {
-        super(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
+        super(IdGenerator.nextIdStr(), LocalDateTime.now(), eventType,
                 userId, aggregateType,
                 metadata != null ? metadata : Collections.emptyMap());
     }

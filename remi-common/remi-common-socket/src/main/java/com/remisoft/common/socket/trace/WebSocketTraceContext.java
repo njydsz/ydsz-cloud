@@ -1,9 +1,9 @@
 package com.remisoft.common.socket.trace;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.slf4j.MDC;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * WebSocket 链路追踪辅助工具（P1-1）。
@@ -52,7 +52,7 @@ public final class WebSocketTraceContext {
      * @return 8 字符短 traceId
      */
     public static String generateTraceId() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        return IdGenerator.nextIdStr().substring(0, 16);
     }
 
     /**

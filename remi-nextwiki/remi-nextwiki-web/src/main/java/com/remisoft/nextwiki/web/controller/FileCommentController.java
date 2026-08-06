@@ -2,7 +2,6 @@ package com.remisoft.nextwiki.web.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.permission.PermissionCodes;
@@ -85,6 +85,9 @@ import com.remisoft.common.lock.annotation.Idempotent;
 public class FileCommentController {
 
     /** 文件评论仓储（封装评论的 CRUD + 解决标记） */
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final FileCommentRepository commentRepository;
 
     /**
@@ -126,7 +129,7 @@ public class FileCommentController {
             @RequestHeader("X-User-Id") String userId) {
 
         FileComment comment = FileComment.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .fileNodeId(request.getFileNodeId())
                 .content(request.getContent())
                 .parentCommentId(request.getParentCommentId())

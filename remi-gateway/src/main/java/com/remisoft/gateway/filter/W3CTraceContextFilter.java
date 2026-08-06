@@ -1,6 +1,5 @@
 package com.remisoft.gateway.filter;
 
-import java.util.UUID;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -150,7 +149,7 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
      * @return 32 位 hex 字符串
      */
     private String generateTraceId() {
-        return UUID.randomUUID().toString().replace("-", "");
+        return String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
     }
 
     /**
@@ -159,7 +158,7 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
      * @return 16 位 hex 字符串
      */
     private String generateSpanId() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        return String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "").substring(0, 16);
     }
 
     /**

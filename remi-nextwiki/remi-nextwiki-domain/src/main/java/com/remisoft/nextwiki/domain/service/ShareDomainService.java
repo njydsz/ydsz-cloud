@@ -3,10 +3,10 @@ package com.remisoft.nextwiki.domain.service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.redis.service.RedisService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,6 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ShareDomainService {
 
+    /** 分布式 ID 生成器 */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     private final ShareLinkRepository shareLinkRepository;
     private final FileAclRepository fileAclRepository;
     private final FileNodeRepository fileNodeRepository;
@@ -66,11 +69,11 @@ public class ShareDomainService {
         }
 
         // 生成分享码和提取码
-        String shareCode = UUID.randomUUID().toString().replace("-", "");
+        String shareCode = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
         String extractCode = generateExtractCode();
 
         ShareLink shareLink = ShareLink.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .fileNodeId(fileNodeId)
                 .shareCode(shareCode)
                 .extractCode(extractCode)
@@ -201,7 +204,7 @@ public class ShareDomainService {
     public FileAcl grantPermission(String fileNodeId, String granteeType, String granteeId,
                                     int permissionMask, String userId) {
         FileAcl acl = FileAcl.builder()
-                .id(UUID.randomUUID().toString().replace("-", ""))
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
                 .fileNodeId(fileNodeId)
                 .granteeType(granteeType)
                 .granteeId(granteeId)

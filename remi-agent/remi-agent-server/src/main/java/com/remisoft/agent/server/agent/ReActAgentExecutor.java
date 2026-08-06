@@ -2,7 +2,6 @@ package com.remisoft.agent.server.agent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -27,6 +26,7 @@ import com.remisoft.agent.domain.trace.TraceRecorder;
 import com.remisoft.agent.server.analytics.CostAnalysisService;
 import com.remisoft.agent.server.config.AgentProperties;
 import com.remisoft.agent.server.metrics.AgentMetrics;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * ReAct Agent 执行器
@@ -90,7 +90,7 @@ public class ReActAgentExecutor implements AgentExecutor {
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "REACT");
         log.info("[ReAct] 开始执行: convId={}, traceId={}, maxIterations={}",
                 convId, traceId, request.getMaxIterations());
@@ -194,11 +194,11 @@ public class ReActAgentExecutor implements AgentExecutor {
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
         String convId = request.getConversationId() != null
-                ? request.getConversationId() : UUID.randomUUID().toString();
+                ? request.getConversationId() : IdGenerator.nextIdStr();
         String traceId = traceRecorder.startTrace(convId, "REACT_STREAM");
         log.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
 
-        String responseId = UUID.randomUUID().toString();
+        String responseId = IdGenerator.nextIdStr();
         String model = properties.getLlm().getDefaultModel();
         TokenUsage totalUsage = TokenUsage.zero();
 
@@ -367,7 +367,7 @@ public class ReActAgentExecutor implements AgentExecutor {
 
     private ChatResponse buildRejectedResponse(String reason) {
         ChatMessage msg = ChatMessage.assistant("抱歉，" + reason + "。", null, TokenUsage.zero());
-        return new ChatResponse(UUID.randomUUID().toString(), "guardrail",
+        return new ChatResponse(IdGenerator.nextIdStr(), "guardrail",
                 msg, TokenUsage.zero(), "guardrail_rejected", List.of());
     }
 
@@ -375,7 +375,7 @@ public class ReActAgentExecutor implements AgentExecutor {
         ChatMessage msg = ChatMessage.assistant(
                 "抱歉，我已达到最大推理次数限制，无法完成此任务。请尝试简化您的问题。",
                 convId, usage);
-        return new ChatResponse(UUID.randomUUID().toString(),
+        return new ChatResponse(IdGenerator.nextIdStr(),
                 properties.getLlm().getDefaultModel(), msg, usage, "max_iterations", List.of());
     }
 }

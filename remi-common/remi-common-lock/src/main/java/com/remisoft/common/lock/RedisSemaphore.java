@@ -2,7 +2,6 @@ package com.remisoft.common.lock;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +13,7 @@ import com.remisoft.common.lock.core.DistributedLocker;
 import com.remisoft.common.redis.service.RedisService;
 
 import lombok.extern.slf4j.Slf4j;
+import com.remisoft.common.util.id.IdGenerator;
 
 /**
  * 基于 Redis + Lua 脚本的分布式信号量
@@ -265,7 +265,7 @@ public class RedisSemaphore implements DistributedLocker {
      */
     public String acquireWithTimeout(long timeout, TimeUnit unit) {
         if (tryAcquire(0, TimeUnit.MILLISECONDS)) {
-            String acquireId = UUID.randomUUID().toString();
+            String acquireId = IdGenerator.nextIdStr();
             long timeoutMillis = unit.toMillis(timeout);
             ScheduledFuture<?> future = timeoutScheduler.schedule(() -> {
                 timeoutTasks.remove(acquireId);
@@ -290,7 +290,7 @@ public class RedisSemaphore implements DistributedLocker {
     public String acquireWithTimeout(long waitTimeout, TimeUnit waitUnit,
                                      long autoReleaseTimeout, TimeUnit releaseUnit) {
         if (tryAcquire(waitTimeout, waitUnit)) {
-            String acquireId = UUID.randomUUID().toString();
+            String acquireId = IdGenerator.nextIdStr();
             long timeoutMillis = releaseUnit.toMillis(autoReleaseTimeout);
             ScheduledFuture<?> future = timeoutScheduler.schedule(() -> {
                 timeoutTasks.remove(acquireId);
@@ -352,7 +352,7 @@ public class RedisSemaphore implements DistributedLocker {
     @Override
     public String tryLock(String lockKey, long leaseTime, TimeUnit timeUnit) {
         if (tryAcquire()) {
-            String acquireId = UUID.randomUUID().toString();
+            String acquireId = IdGenerator.nextIdStr();
             long timeoutMillis = timeUnit.toMillis(leaseTime);
             if (timeoutMillis > 0 && timeoutScheduler != null) {
                 ScheduledFuture<?> future = timeoutScheduler.schedule(() -> {
@@ -370,7 +370,7 @@ public class RedisSemaphore implements DistributedLocker {
     @Override
     public String tryLock(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit) throws InterruptedException {
         if (tryAcquire(waitTime, timeUnit)) {
-            String acquireId = UUID.randomUUID().toString();
+            String acquireId = IdGenerator.nextIdStr();
             long timeoutMillis = timeUnit.toMillis(leaseTime);
             if (timeoutMillis > 0 && timeoutScheduler != null) {
                 ScheduledFuture<?> future = timeoutScheduler.schedule(() -> {
