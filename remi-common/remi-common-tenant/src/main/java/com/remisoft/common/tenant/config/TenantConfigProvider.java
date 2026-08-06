@@ -3,7 +3,7 @@ package com.remisoft.common.tenant.config;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.remisoft.common.tenant.TenantContextHolder;
+import com.remisoft.common.core.context.RequestContext;
 
 /**
  * 租户级配置隔离。
@@ -48,7 +48,7 @@ public class TenantConfigProvider {
      * @return 配置值
      */
     public String get(String key, String defaultValue) {
-        String tenantId = TenantContextHolder.getTenantId();
+        String tenantId = RequestContext.getTenantId();
         if (tenantId != null) {
             Map<String, String> tenantOverrides = overridesCache.get(tenantId);
             if (tenantOverrides != null && tenantOverrides.containsKey(key)) {

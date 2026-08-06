@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.notify.core.NotifySendResult;
@@ -56,7 +55,7 @@ public class NotifyAuditService {
                       NotifySendResult result, long durationMs, String templateCode) {
         Map<String, Object> auditEntry = new LinkedHashMap<>();
         auditEntry.put("timestamp", Instant.now().toString());
-        auditEntry.put("traceId", MDC.get(NotifyTraceContext.TRACE_ID_KEY));
+        auditEntry.put("traceId", NotifyTraceContext.getTraceId());
         auditEntry.put("channel", channel != null ? channel.getName() : "unknown");
         auditEntry.put("receiver_mask", maskReceiver(receiver));
         auditEntry.put("status", result.isSuccess() ? "success" : "failure");

@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.workflow.server.service.FlowCustomButtonService;
@@ -130,7 +130,7 @@ public class FlowCustomButtonController {
             @RequestParam String buttonCode,
             @RequestParam(required = false) String comment,
             @RequestBody(required = false) Map<String, Object> variables) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(customButtonService.executeButton(taskId, buttonCode, userId, comment, variables));
     }
 }

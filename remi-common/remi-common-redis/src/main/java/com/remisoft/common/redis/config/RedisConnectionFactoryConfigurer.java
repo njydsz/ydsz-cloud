@@ -101,8 +101,9 @@ public class RedisConnectionFactoryConfigurer {
      */
     private void validateClientUniqueness() {
         if (CLIENT_VALIDATED.compareAndSet(false, true)) {
-            boolean lettucePresent = ClassUtils.isPresent(LETTUCE_CLIENT_CLASS);
-            boolean jedisPresent = ClassUtils.isPresent(JEDIS_CLIENT_CLASS);
+            ClassLoader classLoader = RedisConnectionFactoryConfigurer.class.getClassLoader();
+            boolean lettucePresent = ClassUtils.isPresent(LETTUCE_CLIENT_CLASS, classLoader);
+            boolean jedisPresent = ClassUtils.isPresent(JEDIS_CLIENT_CLASS, classLoader);
 
             if (lettucePresent && jedisPresent) {
                 throw new IllegalStateException(

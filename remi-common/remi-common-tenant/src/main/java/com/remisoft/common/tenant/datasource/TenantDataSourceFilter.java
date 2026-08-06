@@ -2,7 +2,7 @@ package com.remisoft.common.tenant.datasource;
 
 import java.io.IOException;
 
-import com.remisoft.common.tenant.TenantContextHolder;
+import com.remisoft.common.core.context.RequestContext;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -34,7 +34,7 @@ public class TenantDataSourceFilter implements Filter {
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
         if (router.isIsolateDbMode()) {
-            String tenantId = TenantContextHolder.getTenantId();
+            String tenantId = RequestContext.getTenantId();
             try {
                 router.routeToTenantDataSource(tenantId);
                 chain.doFilter(req, res);

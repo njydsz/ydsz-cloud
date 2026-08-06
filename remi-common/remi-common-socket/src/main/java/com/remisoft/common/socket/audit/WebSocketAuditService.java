@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.socket.trace.WebSocketTraceContext;
@@ -51,7 +50,7 @@ public class WebSocketAuditService {
     public void auditConnect(String userId, String sessionId, String remoteIp) {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("timestamp", Instant.now().toString());
-        entry.put("traceId", MDC.get(WebSocketTraceContext.TRACE_ID_KEY));
+        entry.put("traceId", WebSocketTraceContext.getTraceId());
         entry.put("event", "CONNECT");
         entry.put("userId_mask", maskUserId(userId));
         entry.put("sessionId", sessionId);
@@ -69,7 +68,7 @@ public class WebSocketAuditService {
     public void auditDisconnect(String userId, String sessionId, long durationMs) {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("timestamp", Instant.now().toString());
-        entry.put("traceId", MDC.get(WebSocketTraceContext.TRACE_ID_KEY));
+        entry.put("traceId", WebSocketTraceContext.getTraceId());
         entry.put("event", "DISCONNECT");
         entry.put("userId_mask", maskUserId(userId));
         entry.put("sessionId", sessionId);
@@ -91,7 +90,7 @@ public class WebSocketAuditService {
                           boolean success, long durationMs, String error) {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("timestamp", Instant.now().toString());
-        entry.put("traceId", MDC.get(WebSocketTraceContext.TRACE_ID_KEY));
+        entry.put("traceId", WebSocketTraceContext.getTraceId());
         entry.put("event", "PUSH");
         entry.put("pushType", pushType);
         if (userId != null) {

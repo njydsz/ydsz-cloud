@@ -12,7 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -142,7 +142,7 @@ public class FlowDesignerController {
     @Operation(summary = "加锁流程定义（设计器协同编辑）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Boolean> lockDefinition(@PathVariable String id) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(definitionService.lockDefinition(id, userId));
     }
 
@@ -161,7 +161,7 @@ public class FlowDesignerController {
     @Operation(summary = "解锁流程定义（设计器协同编辑）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Boolean> unlockDefinition(@PathVariable String id) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(definitionService.unlockDefinition(id, userId));
     }
 

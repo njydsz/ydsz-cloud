@@ -13,9 +13,9 @@ import com.remisoft.common.auth.filter.BaseAuthFilter;
 import com.remisoft.common.auth.handler.AuthHandler;
 import com.remisoft.common.auth.model.AuthenticationProvider;
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.domain.enums.ServiceType;
 import com.remisoft.common.util.auth.AuthInfo;
-import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.id.TracerUtils;
 import com.remisoft.common.util.string.StringUtils;
 import com.remisoft.common.web.auth.AuthHandlerFactory;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>核心职责：
  * <ul>
  *   <li>解析请求头中的认证信息（Token、用户ID、租户ID、数据权限维度等）</li>
- *   <li>将认证上下文写入 {@link RequestHolder}，供下游链路使用</li>
+ *   <li>将认证上下文写入 {@link RequestContext}，供下游链路使用</li>
  *   <li>支持请求路径白名单过滤，无需认证即可访问</li>
  *   <li>认证成功/失败埋点到 {@link WebMetrics}（可选依赖）</li>
  * </ul>
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author remi-team
  * @see AuthHandlerFactory
  * @see AuthenticationProvider
- * @see RequestHolder
+ * @see RequestContext
  * @see WebMetrics
  * @since 1.0.0
  */

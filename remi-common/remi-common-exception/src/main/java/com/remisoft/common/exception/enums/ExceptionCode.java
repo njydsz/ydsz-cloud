@@ -128,10 +128,15 @@ public interface ExceptionCode extends com.remisoft.common.core.code.ResultCode 
     /**
      * 获取错误码分类
      *
-     * <p>从主错误码首字母推断分类（A/B/C/D/E）。
-     * 默认返回 {@link ExceptionCategory#BUSINESS}。
+     * <p>默认从主错误码首字母推断分类：
+     * <ul>
+     *     <li>{@code A} - 业务级错误（HTTP 4xx，业务参数、认证、权限、数据）</li>
+     *     <li>{@code B} - 系统级错误（HTTP 5xx，基础设施故障）</li>
+     *     <li>{@code C} - 安全级错误（HTTP 401/403）</li>
+     * </ul>
+     * 实现类可通过覆写此方法提供更精确的细分类别（如 rate-limit、external）。
      *
-     * @return 错误码分类枚举
+     * @return 错误码分类枚举；默认返回 {@link ExceptionCategory#BUSINESS}
      */
     default ExceptionCategory getCategory() {
         String code = getCode();
@@ -140,35 +145,12 @@ public interface ExceptionCode extends com.remisoft.common.core.code.ResultCode 
         }
         char prefix = Character.toUpperCase(code.charAt(0));
         switch (prefix) {
-            case 'A':
-                return ExceptionCategory.BUSINESS;
             case 'B':
                 return ExceptionCategory.SYSTEM;
             case 'C':
                 return ExceptionCategory.SECURITY;
-            case 'D':
-                return ExceptionCategory.RATE_LIMIT;
-            case 'E':
-                return ExceptionCategory.EXTERNAL;
-            case 'S':
-                return ExceptionCategory.SYSTEM;
-            case 'K':
-                return ExceptionCategory.SECURITY;
-            case 'V':
-                return ExceptionCategory.VALIDATION;
-            case 'I':
-                return ExceptionCategory.INFRASTRUCTURE;
-            case 'T':
-                return ExceptionCategory.TIMEOUT;
-            case 'R':
-                return ExceptionCategory.RATE_LIMIT;
-            case 'F':
-                return ExceptionCategory.INFRASTRUCTURE;
-            case 'G':
-            case 'H':
-            case 'W':
-                return ExceptionCategory.BUSINESS;
             default:
+                // A / D / E 等暂归业务级，需要更细分类时由实现类覆写
                 return ExceptionCategory.BUSINESS;
         }
     }

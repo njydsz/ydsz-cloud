@@ -13,9 +13,9 @@ import com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.jdbc.interceptor.JSqlParserHelper;
 import com.remisoft.common.tenant.TenantContext;
-import com.remisoft.common.tenant.TenantContextHolder;
 import com.remisoft.common.tenant.config.TenantProperties;
 import com.remisoft.common.tenant.config.TenantProperties.TenantField;
 import com.remisoft.common.jdbc.exception.TenantIsolationException;
@@ -65,7 +65,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
  * @author remi-team
  * @since 1.0.0
  * @see TenantProperties
- * @see TenantContextHolder
+ * @see RequestContext
  * @see TenantInterceptorProvider
  */
 @Slf4j
@@ -285,14 +285,14 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     /**
      * 解析当前请求的租户字段值列表（fail-closed）。
      *
-     * <p>从 {@link TenantContextHolder} 获取租户上下文，根据配置的
+     * <p>从 {@link RequestContext} 获取租户上下文，根据配置的
      * {@link TenantField} 列表逐字段取值。任意字段缺失则抛异常。
      *
      * @return 租户字段值列表（非空）
      * @throws TenantIsolationException 任一字段值缺失时抛出
      */
     private List<TenantFieldValue> resolveTenantValues() {
-        TenantContext context = TenantContextHolder.get();
+        TenantContext context = (TenantContext) RequestContext.getTenantContext();
 
         // 跳过隔离（匿名 URL）
         if (context != null && context.isSkipIsolation()) {

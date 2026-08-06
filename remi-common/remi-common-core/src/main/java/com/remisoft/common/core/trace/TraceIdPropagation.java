@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.MDC;
 
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 
 /**
  * TraceId 传播工具类（纯 JDK 实现，无框架依赖）。
@@ -33,14 +34,19 @@ import com.remisoft.common.core.constant.HeaderConstants;
  *
  * <p><b>获取优先级：</b>
  * <ol>
- *   <li>当前线程 MDC 中的 traceId（由 {@code TraceFilter} 等入口过滤器写入）</li>
+ *   <li>当前线程 {@link RequestContext} 中的 traceId（由 {@code TraceFilter} 等入口过滤器写入，统一上下文）</li>
+ *   <li>当前线程 MDC 中的 traceId（兼容旧逻辑 / 非 Web 场景桥接）</li>
  *   <li>无则返回空 Map（由上层决定是否调用 {@link TraceIdGenerator#generateTraceId()} 兜底）</li>
  * </ol>
+ *
+ * <p><b>写入双通道：</b>traceId 创建/写入时同时写 {@link RequestContext} 与 MDC，
+ * 保证统一上下文与日志链路一致（MDC 条目由入口 Filter 的 {@code MDC.clear()} 统一清理）。</p>
  *
  * @author remi-team
  * @since 1.1.0
  * @see HeaderConstants
  * @see TraceIdGenerator
+ * @see RequestContext
  */
 public final class TraceIdPropagation {
 
@@ -90,14 +96,21 @@ public final class TraceIdPropagation {
     /**
      * 获取当前线程的 traceId。
      *
-     * @return 当前 MDC 中的 traceId；不存在时返回 null
+     * <p>优先从 {@link RequestContext} 读取（统一上下文主源），
+     * 未命中时回退读取 MDC（兼容非 Web / 旧逻辑场景）。</p>
+     *
+     * @return 当前 traceId；不存在时返回 null
      */
     public static String currentTraceId() {
+        String traceId = RequestContext.getTraceId();
+        if (traceId != null && !traceId.isBlank()) {
+            return traceId;
+        }
         return MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
     }
 
     /**
-     * 获取当前线程的 traceId（缺失时自动生成并写入 MDC）。
+     * 获取当前线程的 traceId（缺失时自动生成并写入 RequestContext 与 MDC）。
      *
      * @return 当前 traceId（保证非空）
      */
@@ -105,6 +118,7 @@ public final class TraceIdPropagation {
         String traceId = currentTraceId();
         if (traceId == null || traceId.isBlank()) {
             traceId = TraceIdGenerator.generateTraceId();
+            RequestContext.setTraceId(traceId);
             MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, traceId);
         }
         return traceId;

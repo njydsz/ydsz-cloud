@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.workflow.domain.entity.FlowDefinition;
@@ -205,7 +205,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
         // 1) 失效同 flowCode 的其他已发布版本
         String tenantId = def.getTenantId() != null
-                ? def.getTenantId() : AuthContext.getTenantIdOrDefault("1");
+                ? def.getTenantId() : AuthContextUtils.getTenantIdOrDefault("1");
         definitionMapper.deactivateByFlowCode(def.getFlowCode(), definitionId, tenantId);
 
         // 2) 当前定义晋升为稳定版（isPublish=1, canaryPercent=100, canaryStatus=PROMOTED）
@@ -266,7 +266,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
      *
      * @param flowCode    流程编码
      * @param version     版本号（默认 {@code "1.0"}）
-     * @param tenantId    租户 ID（默认从 {@link AuthContext} 取）
+     * @param tenantId    租户 ID（默认从 {@link AuthContextUtils} 取）
      * @param initiatorId 发起人 ID（用于 USER_HASH 切流）
      * @return 实际应走的流程定义（无稳定版时返回 null）
      */
@@ -278,7 +278,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         FlowDefinition stable = definitionMapper.selectPublished(
                 flowCode,
                 StringUtils.hasText(version) ? version : "1.0",
-                tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1"));
+                tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1"));
         if (stable == null) {
             return null;
         }
@@ -286,7 +286,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         // 2) 查同 flowCode + tenant 的所有 CANARYING 灰度版（按 version desc 取最新）
         List<FlowDefinition> canaries = definitionMapper.selectCanaryingByCode(
                 flowCode,
-                tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1"));
+                tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1"));
         if (canaries == null || canaries.isEmpty()) {
             return stable;
         }
@@ -312,7 +312,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
      * 反序列化为「操作人 / 比例变更 / 时间 / 备注」列表，按操作时间正序返回。
      *
      * @param flowCode 流程编码
-     * @param tenantId 租户 ID（默认从 {@link AuthContext} 取）
+     * @param tenantId 租户 ID（默认从 {@link AuthContextUtils} 取）
      * @return 灰度操作日志列表，{@code flowCode} 为空或无数据时返回空列表
      */
     @Override
@@ -321,7 +321,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         if (!StringUtils.hasText(flowCode)) {
             return Collections.emptyList();
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         List<FlowDefinition> defs = definitionMapper.selectByFlowCode(flowCode, tid);
         if (defs == null || defs.isEmpty()) {
             return Collections.emptyList();

@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.json.RemiJson;
@@ -156,7 +156,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         if (!StringUtils.hasText(messageName)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "messageName 不能为空");
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
 
         List<FlowEventSubscription> subscriptions =
                 subscriptionMapper.selectWaitingByEvent(tid, "MESSAGE", messageName);
@@ -188,7 +188,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         if (!StringUtils.hasText(errorCode)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "errorCode 不能为空");
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
 
         List<FlowEventSubscription> subscriptions =
                 subscriptionMapper.selectWaitingByEvent(tid, "ERROR", errorCode);

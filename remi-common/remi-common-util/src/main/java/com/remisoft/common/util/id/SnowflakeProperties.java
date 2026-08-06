@@ -46,7 +46,7 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "remi.util.snowflake")
 public class SnowflakeProperties {
 
-    /** WorkerId 环境变量名（与 SnowflakeUtils 保持一致） */
+    /** WorkerId 环境变量名 */
     public static final String WORKER_ID_ENV_VAR = "REMI_SNOWFLAKE_WORKER_ID";
 
     /**

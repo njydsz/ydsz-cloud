@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.util.collection.MapUtils;
@@ -173,7 +173,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
      *   <li>递增 {@code use_count}（模板市场热度）</li>
      * </ol>
      *
-     * <p>租户隔离：默认从 {@link AuthContext} 获取当前租户，回退到 {@code "1"}。
+     * <p>租户隔离：默认从 {@link AuthContextUtils} 获取当前租户，回退到 {@code "1"}。
      *
      * @param templateCode 模板编码
      * @param flowName     自定义流程名称（可空，为空时使用模板名称）
@@ -205,7 +205,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             dto.setVersion("1.0");
             dto.setFormPath(template.getFormPath());
             dto.setBpmnXml(template.getBpmnXml());
-            dto.setTenantId(AuthContext.getTenantIdOrDefault("1"));
+            dto.setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
 
             // 部署为草稿
             String definitionId = definitionService.deploy(dto);

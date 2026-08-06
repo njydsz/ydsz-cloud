@@ -6,9 +6,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
+import com.remisoft.common.core.context.RequestContext;
+import com.remisoft.common.util.http.RequestContextUtils;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.lock.annotation.RepeatSubmit;
 import com.remisoft.common.lock.idempotent.RepeatSubmitTokenService;
@@ -91,11 +90,15 @@ public class RepeatSubmitAspect {
     /**
      * 获取当前 HTTP 请求
      *
+     * <p>优先通过 {@link RequestContextUtils} 获取，兜底从 {@link RequestContext} 读取。
+     *
      * @return HttpServletRequest，非 Web 环境返回 null
      */
     private HttpServletRequest getCurrentRequest() {
-        ServletRequestAttributes attributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        return attributes != null ? attributes.getRequest() : null;
+        HttpServletRequest request = RequestContextUtils.getRequest();
+        if (request == null) {
+            request = (HttpServletRequest) RequestContext.getHttpRequest();
+        }
+        return request;
     }
 }

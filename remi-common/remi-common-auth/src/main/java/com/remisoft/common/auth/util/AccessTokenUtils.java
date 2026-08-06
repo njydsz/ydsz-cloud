@@ -4,12 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.util.auth.AuthInfoUtils;
+import com.remisoft.common.util.http.RequestContextUtils;
 import com.remisoft.common.util.string.StringUtils;
 
 /**
@@ -18,7 +16,7 @@ import com.remisoft.common.util.string.StringUtils;
  * <p>优先级：
  * <ol>
  *   <li>{@link AuthInfoUtils#getAccessToken()} 从上下文中获取</li>
- *   <li>Spring RequestContextHolder 当前请求的 Header</li>
+ *   <li>{@link RequestContextUtils#getRequest()} HTTP 请求头</li>
  * </ol>
  *
  * <p>提供 Token 格式校验能力，支持 JWT 和 Bearer Token 格式验证。
@@ -39,7 +37,7 @@ public class AccessTokenUtils {
     /**
      * 解析当前请求 AccessToken。
      *
-     * <p>增加类型校验，确保 RequestAttributes 为 ServletRequestAttributes 类型。
+     * <p>优先从 {@link AuthInfoUtils} 上下文获取，兜底从 HTTP 请求头解析。
      *
      * @return AccessToken（可能为空）
      */
@@ -49,20 +47,12 @@ public class AccessTokenUtils {
             return accessToken;
         }
 
-        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        if (requestAttributes == null) {
-            log.debug("RequestAttributes 为空，无法获取 Token");
+        HttpServletRequest request = RequestContextUtils.getRequest();
+        if (request == null) {
+            log.debug("HttpServletRequest 为空，无法获取 Token");
             return null;
         }
 
-        if (!(requestAttributes instanceof ServletRequestAttributes)) {
-            log.warn("RequestAttributes 类型不匹配: {}, 期望 ServletRequestAttributes",
-                    requestAttributes.getClass().getName());
-            return null;
-        }
-
-        ServletRequestAttributes sra = (ServletRequestAttributes) requestAttributes;
-        HttpServletRequest request = sra.getRequest();
         accessToken = request.getHeader(HeaderConstants.X_ACCESS_TOKEN);
         if (StringUtils.isNotBlank(accessToken)) {
             return accessToken;

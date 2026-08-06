@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.workflow.domain.dto.InstanceMigrationDTO;
@@ -143,7 +143,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         if (definitionId == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "definitionId 不能为空");
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         LambdaQueryWrapper<FlowInstance> w = new LambdaQueryWrapper<>();
         w.eq(FlowInstance::getDefinitionId, definitionId)
                 .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name())
@@ -219,7 +219,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         String targetDefId = dto.getTargetDefinitionId();
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
-                : AuthContext.getTenantIdOrDefault("1");
+                : AuthContextUtils.getTenantIdOrDefault("1");
         Map<String, String> nodeMapping = dto.getNodeMapping() != null
                 ? dto.getNodeMapping()
                 : Collections.emptyMap();

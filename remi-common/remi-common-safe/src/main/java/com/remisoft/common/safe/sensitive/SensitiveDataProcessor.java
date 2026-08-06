@@ -18,8 +18,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+import com.remisoft.common.util.http.RequestContextUtils;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -479,12 +478,11 @@ public final class SensitiveDataProcessor {
      */
     private static String getCurrentUserRoles() {
         try {
-            ServletRequestAttributes attrs =
-                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attrs == null) {
+            jakarta.servlet.http.HttpServletRequest request = RequestContextUtils.getRequest();
+            if (request == null) {
                 return null;
             }
-            return attrs.getRequest().getHeader("X-User-Role");
+            return request.getHeader("X-User-Role");
         } catch (Exception e) {
             return null;
         }

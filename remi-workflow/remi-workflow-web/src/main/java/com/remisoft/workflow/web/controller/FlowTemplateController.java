@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.lock.annotation.IdempotentExempt;
@@ -284,8 +284,8 @@ public class FlowTemplateController {
     @GetMapping("/recommend")
     public BaseResponse<List<Map<String, Object>>> recommend(
             @RequestParam(defaultValue = "5") int topN) {
-        String userId = AuthContext.getUserId();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(recommendService.recommendTemplates(userId, tenantId, topN));
     }
 
@@ -301,8 +301,8 @@ public class FlowTemplateController {
     public BaseResponse<List<Map<String, Object>>> recommendByBusinessType(
             @RequestParam String businessType,
             @RequestParam(defaultValue = "5") int topN) {
-        String userId = AuthContext.getUserId();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(recommendService.recommendByBusinessType(userId, tenantId, businessType, topN));
     }
 }

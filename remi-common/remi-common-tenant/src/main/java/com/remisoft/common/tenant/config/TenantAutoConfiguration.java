@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.remisoft.common.redis.service.RedisRateLimiter;
 import com.remisoft.common.redis.tenant.TenantRedisKeyPrefixer;
-import com.remisoft.common.tenant.TenantContextHolder;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.tenant.ratelimit.TenantRateLimiter;
 import io.micrometer.core.instrument.MeterRegistry;
 /**
@@ -142,7 +142,7 @@ public class TenantAutoConfiguration {
     public TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
         log.info("多租户 Redis Key 隔离已启用");
         return new TenantRedisKeyPrefixer(
-                TenantContextHolder::getTenantId, true);
+                RequestContext::getTenantId, true);
     }
 
     /**

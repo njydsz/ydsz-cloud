@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.lock.annotation.Idempotent;
@@ -99,7 +99,7 @@ public class FlowEmbeddedApprovalController {
                                                      @RequestParam(required = false) String userId) {
         String uid = userId;
         if (uid == null) {
-            LoginUser u = AuthContext.getCurrentOrNull();
+            LoginUser u = AuthContextUtils.getCurrentOrNull();
             if (u != null) {
                 uid = u.getUserId();
             }
@@ -129,7 +129,7 @@ public class FlowEmbeddedApprovalController {
     @PostMapping("/action")
     @Audit(module = "嵌入式审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'quickAction'")
     public BaseResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
-        LoginUser u = AuthContext.getCurrentOrNull();
+        LoginUser u = AuthContextUtils.getCurrentOrNull();
         if (dto.getUserId() == null && u != null) {
             dto.setUserId(u.getUserId());
         }
@@ -160,7 +160,7 @@ public class FlowEmbeddedApprovalController {
                                           @RequestBody @Valid EmbeddedApprovalActionDTO dto) {
         dto.setBusinessType(businessType);
         dto.setBusinessId(businessId);
-        LoginUser u = AuthContext.getCurrentOrNull();
+        LoginUser u = AuthContextUtils.getCurrentOrNull();
         if (dto.getUserId() == null && u != null) {
             dto.setUserId(u.getUserId());
         }

@@ -166,6 +166,24 @@ public class RemiJson {
         return defaultMapper.toObject(json, typeRef.getType());
     }
 
+    /**
+     * JSON 字符串转对象（支持 {@link Type}，如泛型 {@code List<User>}）。
+     *
+     * <p>供持有 {@code java.lang.reflect.Type} 的框架适配场景使用（如 Feign Decoder 传入的
+     * 泛型反序列化目标类型），避免调用方自行将 Type 包装为 {@link JsonType}。
+     *
+     * @param json JSON 字符串
+     * @param type 目标类型（可为泛型，如 {@code List<User>}）
+     * @return 反序列化后的对象
+     */
+    public static Object fromJson(String json, Type type) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        return defaultMapper.toObject(json, type);
+    }
+
     // ==================== 自定义序列化器注册 ====================
 
     // 注意：历史版本提供 RemiJson.register(Class, JsonSerializer/JsonDeserializer) 静态注册方法，

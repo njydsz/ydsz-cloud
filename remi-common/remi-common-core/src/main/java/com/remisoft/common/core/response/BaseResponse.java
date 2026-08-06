@@ -3,6 +3,7 @@ package com.remisoft.common.core.response;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.core.code.ResultCode;
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.json.annotation.JsonInclude;
 import com.remisoft.common.json.annotation.JsonPropertyOrder;
@@ -151,7 +152,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public BaseResponse() {
         this.timestamp = System.currentTimeMillis();
-        this.traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+        this.traceId = resolveTraceId();
     }
 
     /**
@@ -166,7 +167,20 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.msg = msg;
         this.data = data;
         this.timestamp = System.currentTimeMillis();
-        this.traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+        this.traceId = resolveTraceId();
+    }
+
+    /**
+     * 解析当前链路 traceId：优先从 {@link RequestContext}（统一上下文主源），回退 MDC。
+     *
+     * @return 当前 traceId；均不存在时返回 null
+     */
+    private static String resolveTraceId() {
+        String traceId = RequestContext.getTraceId();
+        if (traceId != null && !traceId.isBlank()) {
+            return traceId;
+        }
+        return MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
     }
 
     /**

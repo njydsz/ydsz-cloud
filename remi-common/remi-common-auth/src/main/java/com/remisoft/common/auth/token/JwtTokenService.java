@@ -80,9 +80,15 @@ public class JwtTokenService implements TokenService {
 
 
     public JwtTokenService(TokenProperties tokenProperties,
-                           @Autowired(required = false) TokenBlacklistService tokenBlacklistService) {
+                           @Autowired(required = false) TokenBlacklistService tokenBlacklistService,
+                           SnowflakeIdGenerator snowflakeIdGenerator) {
         this.tokenProperties = tokenProperties;
         this.tokenBlacklistService = tokenBlacklistService;
+        if (snowflakeIdGenerator == null) {
+            throw new IllegalStateException(
+                    "SnowflakeIdGenerator Bean 缺失：JWT jti 依赖分布式 ID 生成器，请启用 remi.util.snowflake 或提供替代实现");
+        }
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
         // 校验密钥非空，避免 NPE 或签名失败
         String secretKeyRaw = tokenProperties.getSecretKey();
         if (secretKeyRaw == null || secretKeyRaw.isBlank()) {

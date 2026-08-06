@@ -14,7 +14,6 @@ import java.util.Map;
  *   <li>前缀匹配：startsWithIgnoreCase（忽略大小写）</li>
  *   <li>命名转换：toCamelCase / toUnderScoreCase</li>
  *   <li>格式化：format（使用 {} 占位符，类似 SLF4J 风格）</li>
- *   <li>数据脱敏：maskSensitive / maskMobile / maskIdCard / maskEmail</li>
  * </ul>
  *
  * <p><b>不提供的能力（直接使用 JDK）：</b>
@@ -285,92 +284,4 @@ public class StringUtils {
         }
         return result.toString();
     }
-
-    // ==================== 数据脱敏方法 ====================
-
-    /**
-     * 脱敏处理（保留前后缀）。
-     *
-     * <p>当 {@code keepPrefix + keepSuffix >= len} 时，全部字符脱敏为 {@code *}，
-     * 避免因保留长度之和大于等于原文长度导致敏感信息全部保留。
-     *
-     * @param str        原始字符串
-     * @param keepPrefix 保留前缀字符数
-     * @param keepSuffix 保留后缀字符数
-     * @return 脱敏后的字符串
-     * @deprecated 自 2.1.0 起，脱敏能力已统一收口至
-     *             {@link com.remisoft.common.safe.desensitize.SensitiveUtils#mask(String, int, int)}。
-     *             新代码请使用 {@code SensitiveUtils.mask(value, prefixKeep, suffixKeep)} 替代。
-     *             标记废弃不代表立即移除，但未来版本会迁移调用方后清理。
-     */
-    @Deprecated(since = "2.1.0", forRemoval = true)
-    public static String maskSensitive(String str, int keepPrefix, int keepSuffix) {
-        if (str == null || str.isEmpty()) {
-            return str;
-        }
-        int len = str.length();
-        if (len <= keepPrefix + keepSuffix) {
-            return "*".repeat(len);
-        }
-        return str.substring(0, keepPrefix) + "*".repeat(len - keepPrefix - keepSuffix) + str.substring(len - keepSuffix);
-    }
-
-    /**
-     * 手机号脱敏（保留前 3 位和后 4 位）
-     *
-     * @deprecated 自 2.1.0 起，脱敏能力已统一收口至
-     *             {@link com.remisoft.common.safe.desensitize.SensitiveUtils}。
-     *             新代码请使用 {@code SensitiveUtils.mask(mobile, SensitiveType.MOBILE)} 替代。
-     *             此方法内部已委托给 SensitiveUtils 实现，行为保持一致。
-     */
-    @Deprecated(since = "2.1.0", forRemoval = true)
-    public static String maskMobile(String mobile) {
-        if (mobile == null || mobile.length() != 11) {
-            return mobile;
-        }
-        return mobile.substring(0, 3) + "****" + mobile.substring(7);
-    }
-
-    /**
-     * 身份证号脱敏（保留前 6 位和后 4 位）
-     *
-     * @deprecated 自 2.1.0 起，脱敏能力已统一收口至
-     *             {@link com.remisoft.common.safe.desensitize.SensitiveUtils}。
-     *             新代码请使用 {@code SensitiveUtils.mask(idCard, SensitiveType.ID_CARD)} 替代。
-     *             此方法内部已委托给 SensitiveUtils 实现，行为保持一致。
-     */
-    @Deprecated(since = "2.1.0", forRemoval = true)
-    public static String maskIdCard(String idCard) {
-        if (idCard == null || idCard.length() < 18) {
-            return idCard;
-        }
-        return idCard.substring(0, 6) + "*".repeat(8) + idCard.substring(14);
-    }
-
-    /**
-     * 邮箱脱敏（保留前 2 位和域名）
-     *
-     * <p>内联简单正则校验邮箱格式（原 isEmail 已移除，脱敏场景无需完整 RFC 校验）。
-     *
-     * @deprecated 自 2.1.0 起，脱敏能力已统一收口至
-     *             {@link com.remisoft.common.safe.desensitize.SensitiveUtils}。
-     *             新代码请使用 {@code SensitiveUtils.mask(email, SensitiveType.EMAIL)} 替代。
-     *             注意：SensitiveUtils.maskEmail 的规则略有不同（保留首字母+末字母+域名），
-     *             迁移时请确认是否符合业务预期。
-     */
-    @Deprecated(since = "2.1.0", forRemoval = true)
-    public static String maskEmail(String email) {
-        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
-            return email;
-        }
-        int atIndex = email.indexOf("@");
-        if (atIndex <= 2) {
-            return email;
-        }
-        return email.substring(0, 2) + "*".repeat(atIndex - 2) + email.substring(atIndex);
-    }
-
-    /** 邮箱格式简单校验正则（脱敏用） */
-    private static final java.util.regex.Pattern EMAIL_PATTERN =
-            java.util.regex.Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 }

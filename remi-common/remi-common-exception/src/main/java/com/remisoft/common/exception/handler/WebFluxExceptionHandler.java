@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
+import org.springframework.core.env.Environment;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.config.ExceptionProperties;
@@ -61,12 +63,14 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
      * @param exceptionMetrics  异常指标统计器（可选）
      * @param properties       异常模块配置属性（可选）
      */
-    public WebFluxExceptionHandler(MessageSource messageSource,
+    public WebFluxExceptionHandler(Environment environment,
+                                   MessageSource messageSource,
                                    ExceptionMetrics exceptionMetrics,
                                    ExceptionProperties properties) {
+        super(environment);
         this.messageSource = messageSource;
-        setExceptionMetrics(exceptionMetrics);
-        setExceptionProperties(properties);
+        setExceptionMetrics(environment, exceptionMetrics);
+        setExceptionProperties(environment, properties);
     }
 
     @Override
@@ -75,13 +79,16 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 从 ServerWebExchange 提取 traceId
+     * 从 ServerWebExchange / RequestContext 提取 traceId
      *
-     * <p>优先级：MDC > Request Header（X-Trace-Id > X-Request-Id）
+     * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）
      */
     private String extractTraceId(ServerWebExchange exchange) {
-        String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-        if (traceId == null && exchange != null) {
+        String traceId = RequestContext.getTraceId();
+        if (traceId == null || traceId.isBlank()) {
+            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+        }
+        if ((traceId == null || traceId.isBlank()) && exchange != null) {
             traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.TRACE_ID_HEADER);
             if (traceId == null) {
                 traceId = exchange.getRequest().getHeaders().getFirst("X-Request-Id");

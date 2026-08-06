@@ -70,13 +70,12 @@ public abstract class AbstractRemiException extends RuntimeException implements 
     protected String code;
     protected String key;
     protected transient Object[] params;
-    /** 懒加载消息缓存，首次调用 getMessage() 时解析 */
-    protected volatile String message;
+    /** 懒加载消息缓存，使用 AtomicReference 实现无锁并发，避免 getMessage() 高频调用时锁竞争 */
+    protected final AtomicReference<String> messageRef = new AtomicReference<>();
     /** 懒加载解析的消息键 */
     protected String messageKey;
     /** 懒加载解析的消息参数 */
     protected transient Object[] messageParams;
-    protected transient volatile boolean messageResolved;
     /** HTTP 状态码 */
     protected int httpStatus;
     protected ExceptionLevel level;
@@ -154,7 +153,7 @@ public abstract class AbstractRemiException extends RuntimeException implements 
         this.code = code;
         this.key = key;
         this.params = normalizeParams(params);
-        this.message = null;
+        this.messageRef.set(null);
         this.messageKey = key;
         this.messageParams = this.params;
     }
@@ -316,29 +315,36 @@ public abstract class AbstractRemiException extends RuntimeException implements 
     }
 
     /**
-     * 获取异常消息（懒加载解析）
+     * 获取异常消息（懒加载解析 - 无锁 CAS 实现）
      *
      * <p>首次调用时通过 messageKey 和 messageParams 解析国际化消息，
-     * 解析结果会被缓存，后续调用直接返回缓存值。
-     * 使用双重检查锁（DCL）保证线程安全。</p>
+     * 解析结果通过 {@link AtomicReference#compareAndSet} 原子缓存，
+     * 后续调用直接返回缓存值。
+     *
+     * <p>相比原 DCL synchronized 实现：
+     * <ul>
+     *     <li>无锁设计，高并发 {@code getMessage()} 调用时不会产生锁竞争</li>
+     *     <li>CAS 失败时简单的重试即可，无需 system call</li>
+     *     <li>对异常链打印、日志输出、JSON 序列化等多消费方友好</li>
+     * </ul>
      *
      * @return 解析后的异常消息
      */
     @Override
     public String getMessage() {
-        if (!messageResolved) {
-            synchronized (this) {
-                if (!messageResolved) {
-                    if (messageKey != null) {
-                        message = resolveMessage(messageKey, messageParams);
-                    } else if (message == null) {
-                        message = super.getMessage();
-                    }
-                    messageResolved = true;
-                }
-            }
+        String msg = messageRef.get();
+        if (msg != null) {
+            return msg;
         }
-        return message;
+        // 懒加载解析：通过 CAS 原子写入，避免重复解析及锁等待
+        String resolved;
+        if (messageKey != null) {
+            resolved = resolveMessage(messageKey, messageParams);
+        } else {
+            resolved = super.getMessage();
+        }
+        messageRef.compareAndSet(null, resolved);
+        return messageRef.get();
     }
 
     /**
@@ -347,8 +353,7 @@ public abstract class AbstractRemiException extends RuntimeException implements 
      * @param message 异常消息
      */
     public void setMessage(String message) {
-        this.message = message;
-        this.messageResolved = true;
+        messageRef.set(message);
     }
 
     public int getHttpStatus() {

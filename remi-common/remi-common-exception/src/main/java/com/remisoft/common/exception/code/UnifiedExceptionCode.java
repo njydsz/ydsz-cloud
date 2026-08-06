@@ -212,15 +212,11 @@ public enum UnifiedExceptionCode implements ExceptionCode {
     // 静态注册 & 便捷查找
     // ============================================================
 
-    /** 局部缓存，供 resolve() 快速查找 */
-    private static final Map<String, UnifiedExceptionCode> CODE_MAP = new HashMap<>();
-
     static {
-        // 本模块自动注册到全局注册中心
+        // 本模块自动注册到全局注册中心，供 ExceptionCodeRegistry.lookup() 统一反查
         Map<String, ExceptionCode> registryMap = new HashMap<>();
         for (UnifiedExceptionCode code : values()) {
             registryMap.put(code.getCode(), code);
-            CODE_MAP.put(code.getCode(), code);
         }
         ExceptionCodeRegistry.register(registryMap);
     }
@@ -228,20 +224,17 @@ public enum UnifiedExceptionCode implements ExceptionCode {
     /**
      * 便捷查找方法：按 code 字符串查找本模块的统一异常码枚举
      *
-     * <p>与 {@link ExceptionCode#fromCode(String)} 的区别在于：
-     * <ul>
-     *   <li>此方法仅在 UnifiedExceptionCode 自身范围内查找</li>
-     *   <li>返回类型为 UnifiedExceptionCode，无需强转</li>
-     *   <li>未找到时返回 null，而非抛出异常</li>
-     * </ul>
+     * <p>内部委托全局注册中心 {@link ExceptionCodeRegistry#lookup(String)}，
+     * 避免维护双层缓存（静态度 + 注册表查找）造成空间浪费与数据不一致风险。
+     *
+     * <p>与其他业务模块 {@link ExceptionCode} 实现相比，此方法额外约束返回类型，
+     * 调用方无需强转即可安全使用。
      *
      * @param code 异常码字符串
-     * @return 对应的 UnifiedExceptionCode 枚举实例；未找到返回 null
+     * @return 对应的 UnifiedExceptionCode 枚举实例；未找到或非 UnifiedExceptionCode 返回 null
      */
     public static UnifiedExceptionCode resolve(String code) {
-        if (code == null) {
-            return null;
-        }
-        return CODE_MAP.get(code);
+        ExceptionCode ec = ExceptionCodeRegistry.lookup(code);
+        return ec instanceof UnifiedExceptionCode unified ? unified : null;
     }
 }

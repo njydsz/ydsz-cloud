@@ -27,10 +27,7 @@ public class TenantIsolationException extends BusinessException {
      * @param message 异常详细信息
      */
     public TenantIsolationException(String message) {
-        super(UnifiedExceptionCode.ACCESS_DENIED);
-        // 保留原始 message 便于日志排查
-        this.message = message;
-        this.messageKey = UnifiedExceptionCode.ACCESS_DENIED.getKey();
-        this.messageParams = new Object[0];
+        // 复用带消息构造器：设置 ACCESS_DENIED 的 code/key，并保留原始 message 便于日志排查
+        super(UnifiedExceptionCode.ACCESS_DENIED, message);
     }
 }

@@ -44,6 +44,7 @@ import com.remisoft.common.auth.service.TokenBlacklistService;
 import com.remisoft.common.auth.warmup.PermissionWarmUpInitializer;
 import com.remisoft.common.auth.service.impl.RedisRbacUserInfoService;
 import com.remisoft.common.auth.service.impl.RedisRoleColumnPermissionResolver;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.remisoft.common.auth.service.impl.RedisRolePermissionLoader;
 import com.remisoft.common.auth.strategy.CacheKeyStrategy;
@@ -357,6 +358,7 @@ public class AuthConfiguration {
      *
      * @param tokenProperties           Token 配置属性
      * @param tokenBlacklistServiceProvider Token 黑名单服务（可选）
+     * @param snowflakeIdGeneratorProvider 分布式 ID 生成器（用于 jti；缺失时构造器会给出明确报错）
      * @return Token 服务实例
      */
     @Bean
@@ -364,8 +366,10 @@ public class AuthConfiguration {
     @ConditionalOnProperty(prefix = "remi.auth.token", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(TokenService.class)
     public TokenService jwtTokenService(TokenProperties tokenProperties,
-                                         ObjectProvider<TokenBlacklistService> tokenBlacklistServiceProvider) {
-        return new JwtTokenService(tokenProperties, tokenBlacklistServiceProvider.getIfAvailable());
+                                         ObjectProvider<TokenBlacklistService> tokenBlacklistServiceProvider,
+                                         ObjectProvider<SnowflakeIdGenerator> snowflakeIdGeneratorProvider) {
+        return new JwtTokenService(tokenProperties, tokenBlacklistServiceProvider.getIfAvailable(),
+                snowflakeIdGeneratorProvider.getIfAvailable());
     }
 
     /**

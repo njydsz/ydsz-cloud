@@ -36,7 +36,7 @@ public class FlowProperties {
     /** 是否启用健康检查 */
     private boolean healthEnabled = true;
 
-    /** 默认租户 ID（用于无 AuthContext 时的回退值） */
+    /** 默认租户 ID（用于无 AuthContextUtils 时的回退值） */
     private String defaultTenantId = "1";
 
     /** 发布流程时是否阻断 HIGH 风险（在途实例卡在已删除节点）。true=阻断（推荐）；false=仅警告 */

@@ -22,9 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.remisoft.common.auth.annotation.DataScope;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.core.code.BaseResultCode;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.event.model.StandardEventTypes;
 import com.remisoft.common.event.service.OutboxService;
 import com.remisoft.common.exception.custom.SysException;
@@ -241,7 +242,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
-                : AuthContext.getTenantIdOrDefault("1");
+                : AuthContextUtils.getTenantIdOrDefault("1");
         FlowInstance existing = instanceMapper.selectByBusiness(
                 tenantId, dto.getBusinessType(), dto.getBusinessId());
         if (existing != null) {
@@ -371,7 +372,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(readOnly = true)
     public FlowInstance getByBusiness(String businessType, String businessId) {
         // P1-2: 增加 tenantId 过滤，防止跨租户串号；仅返回活跃实例（RUNNING/SUSPENDED）
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return instanceMapper.selectByBusiness(tenantId, businessType, businessId);
     }
 
@@ -782,7 +783,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 && instance.getInitiatorId().equals(operatorId);
         boolean isAdmin = false;
         LoginUser user =
-                AuthContext.getCurrentOrNull();
+                AuthContextUtils.getCurrentOrNull();
         if (user != null) {
             isAdmin = user.isSuperAdmin() || user.hasPermission(PERM_INSTANCE_ROLLBACK);
         }
@@ -1203,7 +1204,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_ebccbe46");
         }
         // 解析租户
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         // 查询已发布流程定义
         FlowDefinition def = definitionService.getPublished(flowCode, version, tid);
         if (def == null) {
@@ -1496,11 +1497,14 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (instance != null) {
             ctx.setTenantId(instance.getTenantId() == null
                     ? null : String.valueOf(instance.getTenantId()));
-            // P1-5: 优先使用实例的 providerTraceId，回退到 MDC 分布式追踪 ID
+            // P1-5: 优先使用实例的 providerTraceId，回退 RequestContext / MDC 分布式追踪 ID
             String traceId = instance.getProviderTraceId();
             if (traceId == null || traceId.isBlank()) {
-                traceId = MDC.get("traceId");
-                if (traceId == null) traceId = MDC.get("tid");
+                traceId = RequestContext.getTraceId();
+                if (traceId == null || traceId.isBlank()) {
+                    traceId = MDC.get("traceId");
+                    if (traceId == null) traceId = MDC.get("tid");
+                }
             }
             ctx.setTraceId(traceId);
         }

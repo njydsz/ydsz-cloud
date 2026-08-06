@@ -11,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -129,7 +129,7 @@ public class FlowDelegateController {
         FlowDelegateAuth auth = WorkflowConverter.INSTANT.postDtoToEntity(dto);
         // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
-            auth.setOwnerUserId(AuthContext.getUserId());
+            auth.setOwnerUserId(AuthContextUtils.getUserId());
         }
         String id = delegateAuthService.create(auth);
         return BaseResponse.success(id);
@@ -147,7 +147,7 @@ public class FlowDelegateController {
     @Audit(module = "流程委派", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'revokeDelegateAuth'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<Void> revokeDelegateAuth(@PathVariable String id) {
-        String ownerId = AuthContext.getUserId();
+        String ownerId = AuthContextUtils.getUserId();
         delegateAuthService.revoke(id, ownerId);
         return BaseResponse.success();
     }
@@ -166,7 +166,7 @@ public class FlowDelegateController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<Void> updateDelegateAuthStatus(@PathVariable String id,
                                                  @RequestParam String status) {
-        String operatorId = AuthContext.getUserId();
+        String operatorId = AuthContextUtils.getUserId();
         delegateAuthService.updateStatus(id, status, operatorId);
         return BaseResponse.success();
     }
@@ -180,8 +180,8 @@ public class FlowDelegateController {
     @GetMapping("/delegateAuth/mine")
     public BaseResponse<List<FlowDelegateAuthVO>> listMyDelegateAuths(
             @RequestParam(required = false) String status) {
-        String ownerId = AuthContext.getUserId();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String ownerId = AuthContextUtils.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(WorkflowConverter.INSTANT.flowDelegateAuthListToVO(delegateAuthService.listMine(ownerId, tenantId, status)));
     }
 
@@ -194,8 +194,8 @@ public class FlowDelegateController {
     @GetMapping("/delegateAuth/asDelegate")
     public BaseResponse<List<FlowDelegateAuthVO>> listAsDelegate(
             @RequestParam(required = false) String status) {
-        String delegateUserId = AuthContext.getUserId();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String delegateUserId = AuthContextUtils.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(WorkflowConverter.INSTANT.flowDelegateAuthListToVO(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status)));
     }
 
@@ -210,7 +210,7 @@ public class FlowDelegateController {
     public BaseResponse<?> myDelegateLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        String delegateUserId = AuthContext.getUserId();
+        String delegateUserId = AuthContextUtils.getUserId();
         return delegateAuthService.listDelegateLog(delegateUserId, page, size);
     }
 
@@ -225,7 +225,7 @@ public class FlowDelegateController {
     public BaseResponse<?> myOwnerLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        String ownerUserId = AuthContext.getUserId();
+        String ownerUserId = AuthContextUtils.getUserId();
         return delegateAuthService.listOwnerLog(ownerUserId, page, size);
     }
 }

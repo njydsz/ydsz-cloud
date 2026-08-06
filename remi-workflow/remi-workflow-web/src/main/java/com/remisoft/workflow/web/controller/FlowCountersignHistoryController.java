@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.domain.entity.FlowAuditLog;
 import com.remisoft.workflow.infra.mapper.FlowAuditLogMapper;
@@ -140,7 +140,7 @@ public class FlowCountersignHistoryController {
     public BaseResponse<List<Map<String, Object>>> myInitiated(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        String currentUserId = AuthContext.getUserId();
+        String currentUserId = AuthContextUtils.getUserId();
         if (currentUserId == null) {
             return BaseResponse.emptyPage((long) pageNo, (long) pageSize);
         }
@@ -169,7 +169,7 @@ public class FlowCountersignHistoryController {
     public BaseResponse<List<Map<String, Object>>> myReceived(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        String currentUserId = AuthContext.getUserId();
+        String currentUserId = AuthContextUtils.getUserId();
         if (currentUserId == null) {
             return BaseResponse.emptyPage((long) pageNo, (long) pageSize);
         }

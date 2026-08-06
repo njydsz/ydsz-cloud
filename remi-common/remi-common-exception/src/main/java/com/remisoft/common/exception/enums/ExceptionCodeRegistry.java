@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * 异常码注册中心
@@ -16,10 +17,12 @@ import org.slf4j.LoggerFactory;
  *
  * <p><b>设计要点：</b>
  * <ul>
+ *   <li>作为 Spring {@link Component} 暴露，方便单元测试时通过 {@code @MockBean} 替换</li>
  *   <li>内部使用 {@link ConcurrentHashMap} 保证并发安全</li>
  *   <li>register() 支持增量注册，同一 code 重复注册将被忽略（首次注册生效）</li>
  *   <li>registerStrict() / register(map, true) 在重复注册时 fail-fast 抛出异常</li>
  *   <li>lookup() 未找到时返回 null，调用方可按需抛出异常</li>
+ *   <li>{@link #clear()} 仅用于测试环境重置状态，生产环境禁止使用</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
@@ -49,15 +52,22 @@ import org.slf4j.LoggerFactory;
  * @author remi-team
  * @since 1.0.0
  */
-public final class ExceptionCodeRegistry {
+@Component
+public class ExceptionCodeRegistry {
 
     private static final Logger log = LoggerFactory.getLogger(ExceptionCodeRegistry.class);
 
     /** 存储 code → ExceptionCode 映射的全局注册表 */
     private static final Map<String, ExceptionCode> REGISTRY = new ConcurrentHashMap<>();
 
-    private ExceptionCodeRegistry() {
-        // 工具类禁止实例化
+    /**
+     * 获取内部注册表引用（仅用于测试）
+     *
+     * @return 内部注册表
+     * @since 1.0.0
+     */
+    public Map<String, ExceptionCode> getRegistry() {
+        return Collections.unmodifiableMap(REGISTRY);
     }
 
     /**
@@ -170,5 +180,16 @@ public final class ExceptionCodeRegistry {
      */
     public static Map<String, ExceptionCode> allRegistered() {
         return Collections.unmodifiableMap(REGISTRY);
+    }
+
+    /**
+     * 清空注册表 — <b>仅用于测试</b>
+     *
+     * <p>生产环境禁止调用该方法，可能会导致注册状态与启动时不一致。
+     * 建议配合 {@code @Before} / @After 在单元测试中重置。
+     */
+    public static void clear() {
+        REGISTRY.clear();
+        log.info("[ExceptionCodeRegistry] 注册表已清空（测试专用）");
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.server.service.FlowEfficiencyService;
 
@@ -68,7 +68,7 @@ public class FlowEfficiencyController {
     public BaseResponse<Map<String, Object>> efficiencyStats(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(efficiencyService.efficiencyStats(tenantId, startTime, endTime));
     }
 
@@ -83,7 +83,7 @@ public class FlowEfficiencyController {
     public BaseResponse<List<Map<String, Object>>> bottleneckRanking(
             @RequestParam(required = false) String flowCode,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(efficiencyService.bottleneckRanking(tenantId, flowCode, limit));
     }
 
@@ -100,7 +100,7 @@ public class FlowEfficiencyController {
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(efficiencyService.approverRanking(tenantId, startTime, endTime, limit));
     }
 
@@ -117,7 +117,7 @@ public class FlowEfficiencyController {
             @RequestParam(defaultValue = "DAY") String interval,
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(efficiencyService.approvalTrend(tenantId, interval, startTime, endTime));
     }
 
@@ -135,7 +135,7 @@ public class FlowEfficiencyController {
     public BaseResponse<Map<String, Object>> healthScore(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(efficiencyService.healthScore(tenantId, startTime, endTime));
     }
 }

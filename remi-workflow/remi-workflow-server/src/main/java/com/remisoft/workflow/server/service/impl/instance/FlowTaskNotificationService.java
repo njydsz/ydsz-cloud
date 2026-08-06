@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.workflow.server.engine.FlowEventContext;
 
 import lombok.RequiredArgsConstructor;
@@ -48,9 +49,12 @@ public class FlowTaskNotificationService {
         ctx.setTaskId(taskId);
         ctx.setAction(action);
         ctx.setOperatedAt(LocalDateTime.now());
-        // P1-5: 从 MDC 获取分布式追踪 ID（兼容 SkyWalking/Zipkin/Sleuth）
-        String mdcTraceId = MDC.get("traceId");
-        if (mdcTraceId == null) mdcTraceId = MDC.get("tid");
+        // P1-5: 优先从 RequestContext 获取分布式追踪 ID，回退 MDC（兼容 SkyWalking/Zipkin/Sleuth）
+        String mdcTraceId = RequestContext.getTraceId();
+        if (mdcTraceId == null || mdcTraceId.isBlank()) {
+            mdcTraceId = MDC.get("traceId");
+            if (mdcTraceId == null) mdcTraceId = MDC.get("tid");
+        }
         ctx.setTraceId(mdcTraceId);
         support.fireEvent(l -> l.onTaskCompleted(taskId, ctx), taskId);
         // P2-35: 发布 Spring 异步事件

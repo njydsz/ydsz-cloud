@@ -34,7 +34,7 @@ import lombok.Data;
 @Data
 public class DataPermissionContext {
     /**
-     * 行级权限维度（从请求头或 RequestHolder 解析）。
+     * 行级权限维度（从请求头或 RequestContext 解析）。
      */
     private DataScopeType dataScope;
     /** 用户ID */

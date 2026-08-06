@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -82,7 +82,7 @@ public class FlowTaskBatchController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
                                   @RequestParam(required = false) String comment) {
-        workflowFacade.batchPassTasks(taskIds, AuthContext.getUserId(), comment);
+        workflowFacade.batchPassTasks(taskIds, AuthContextUtils.getUserId(), comment);
         return BaseResponse.success();
     }
 
@@ -101,7 +101,7 @@ public class FlowTaskBatchController {
     public BaseResponse<Void> batchReject(@RequestParam List<String> taskIds,
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false) String targetNodeCode) {
-        taskService.batchReject(taskIds, AuthContext.getUserId(), comment, targetNodeCode);
+        taskService.batchReject(taskIds, AuthContextUtils.getUserId(), comment, targetNodeCode);
         return BaseResponse.success();
     }
 
@@ -122,7 +122,7 @@ public class FlowTaskBatchController {
                                       @RequestParam(required = false) String comment,
                                       @RequestParam String targetUserId,
                                       @RequestParam(required = false) String targetUserName) {
-        taskService.batchTransfer(taskIds, AuthContext.getUserId(), comment,
+        taskService.batchTransfer(taskIds, AuthContextUtils.getUserId(), comment,
                 targetUserId, targetUserName);
         return BaseResponse.success();
     }
@@ -140,7 +140,7 @@ public class FlowTaskBatchController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> batchUrge(@RequestParam List<String> instanceIds,
                                      @RequestParam(required = false) String comment) {
-        return BaseResponse.success(taskService.batchUrge(instanceIds, AuthContext.getUserId(), comment));
+        return BaseResponse.success(taskService.batchUrge(instanceIds, AuthContextUtils.getUserId(), comment));
     }
 
     /**
@@ -156,6 +156,6 @@ public class FlowTaskBatchController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'passAll'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> passAll(@RequestParam(required = false) String comment) {
-        return BaseResponse.success(workflowFacade.passAllTodoTasks(AuthContext.getUserId(), comment));
+        return BaseResponse.success(workflowFacade.passAllTodoTasks(AuthContextUtils.getUserId(), comment));
     }
 }

@@ -1,7 +1,7 @@
 package com.remisoft.common.tenant.cache;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.tenant.TenantContext;
-import com.remisoft.common.tenant.TenantContextHolder;
 
 /**
  * 租户缓存隔离策略枚举。
@@ -57,7 +57,7 @@ public enum CacheIsolationStrategy {
             return originalKey;
         }
         if (strategy == KEY_PREFIX) {
-            TenantContext context = TenantContextHolder.get();
+            TenantContext context = (TenantContext) RequestContext.getTenantContext();
             if (context == null || context.isSkipIsolation()
                     || context.isSuperAdmin() || context.getTenantId() == null) {
                 return originalKey;

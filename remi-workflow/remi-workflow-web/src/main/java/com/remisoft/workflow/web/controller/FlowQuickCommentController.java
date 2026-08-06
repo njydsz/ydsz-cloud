@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.security.TenantContext;
@@ -79,7 +79,7 @@ public class FlowQuickCommentController {
     @GetMapping
     @Operation(summary = "查询当前用户的常用语列表")
     public BaseResponse<List<FlowQuickCommentVO>> list() {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         String tenantId = TenantContext.getTenantId();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowQuickCommentListToVO(quickCommentService.listByUser(userId, tenantId)));
     }
@@ -96,7 +96,7 @@ public class FlowQuickCommentController {
     @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @Operation(summary = "新增常用语")
     public BaseResponse<String> create(@Valid @RequestBody FlowQuickCommentDTO dto) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         String tenantId = TenantContext.getTenantId();
         return BaseResponse.success(quickCommentService.create(dto, userId, tenantId));
     }
@@ -113,7 +113,7 @@ public class FlowQuickCommentController {
     @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @Operation(summary = "编辑常用语")
     public BaseResponse<Void> update(@Valid @RequestBody FlowQuickCommentDTO dto) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         quickCommentService.update(dto, userId);
         return BaseResponse.success();
     }
@@ -130,7 +130,7 @@ public class FlowQuickCommentController {
     @Audit(module = "流程评论", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     @Operation(summary = "删除常用语")
     public BaseResponse<Void> delete(@PathVariable String id) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         quickCommentService.delete(id, userId);
         return BaseResponse.success();
     }

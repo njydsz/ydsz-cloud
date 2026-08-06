@@ -25,6 +25,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.config.AuditProperties;
@@ -36,6 +37,7 @@ import com.remisoft.common.audit.event.AuditEvent;
 import com.remisoft.common.audit.mask.SensitiveFieldMask;
 import com.remisoft.common.audit.template.AuditTemplateProcessor;
 import com.remisoft.common.util.id.SnowflakeIdGenerator;
+import com.remisoft.common.util.http.RequestContextUtils;
 import com.remisoft.common.safe.util.ClientIpResolver;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.util.string.StringUtils;
@@ -228,16 +230,12 @@ public class AuditAspect {
         AuditContextData context = new AuditContextData();
         context.setStartTime(System.currentTimeMillis());
 
-        ServletRequestAttributes attributes = null;
-        try {
-            attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        } catch (Exception e) {
-            // 非 Web 环境或请求上下文不可用时忽略
-            log.debug("【审计切面】无法获取请求上下文，可能处于非 Web 环境");
+        HttpServletRequest request = RequestContextUtils.getRequest();
+        if (request == null) {
+            request = (HttpServletRequest) RequestContext.getHttpRequest();
         }
 
-        if (attributes != null) {
-            HttpServletRequest request = attributes.getRequest();
+        if (request != null) {
             context.setUrl(request.getRequestURL() != null ? request.getRequestURL().toString() : "");
             context.setUri(request.getRequestURI());
             context.setHttpMethod(request.getMethod());

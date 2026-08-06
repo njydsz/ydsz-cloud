@@ -7,7 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -48,7 +48,7 @@ import com.remisoft.common.audit.enums.AuditType;
  * <p><b>安全特性：</b>
  * <ul>
  *   <li>所有接口启用 {@link Idempotent} 防重（5s）</li>
- *   <li>操作人 ID/姓名从 {@link AuthContext} SecurityContext 获取，不暴露为 URL 参数</li>
+ *   <li>操作人 ID/姓名从 {@link AuthContextUtils} SecurityContext 获取，不暴露为 URL 参数</li>
  *   <li>灰度回滚会自动生成审计日志，便于追溯</li>
  * </ul>
  *
@@ -91,7 +91,7 @@ public class FlowCanaryController {
             @RequestParam(defaultValue = "USER_HASH") String strategy,
             @RequestParam(required = false) String note) {
         canaryService.publishCanary(definitionId, initialPercent, strategy,
-                AuthContext.getUserId(), AuthContext.getUsername(), note);
+                AuthContextUtils.getUserId(), AuthContextUtils.getUsername(), note);
         return BaseResponse.success();
     }
 
@@ -115,7 +115,7 @@ public class FlowCanaryController {
             @RequestParam int newPercent,
             @RequestParam(required = false) String note) {
         canaryService.adjustCanaryPercent(definitionId, newPercent,
-                AuthContext.getUserId(), AuthContext.getUsername(), note);
+                AuthContextUtils.getUserId(), AuthContextUtils.getUsername(), note);
         return BaseResponse.success();
     }
 
@@ -138,7 +138,7 @@ public class FlowCanaryController {
             @PathVariable String definitionId,
             @RequestParam(required = false) String note) {
         canaryService.promoteCanary(definitionId,
-                AuthContext.getUserId(), AuthContext.getUsername(), note);
+                AuthContextUtils.getUserId(), AuthContextUtils.getUsername(), note);
         return BaseResponse.success();
     }
 
@@ -161,7 +161,7 @@ public class FlowCanaryController {
             @PathVariable String definitionId,
             @RequestParam(required = false) String note) {
         canaryService.rollbackCanary(definitionId,
-                AuthContext.getUserId(), AuthContext.getUsername(), note);
+                AuthContextUtils.getUserId(), AuthContextUtils.getUsername(), note);
         return BaseResponse.success();
     }
 
@@ -179,7 +179,7 @@ public class FlowCanaryController {
     public BaseResponse<List<Map<String, Object>>> rolloutLog(
             @PathVariable String flowCode,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(canaryService.listCanaryRolloutLog(flowCode, tid));
     }
 }

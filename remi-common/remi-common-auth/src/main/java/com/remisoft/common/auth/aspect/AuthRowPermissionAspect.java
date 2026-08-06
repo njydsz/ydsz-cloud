@@ -23,9 +23,9 @@ import com.remisoft.common.auth.model.DataScopeAware;
 import com.remisoft.common.auth.model.DataScopeInfo;
 import com.remisoft.common.auth.service.DataPermissionResolver;
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.util.auth.AuthInfoUtils;
-import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.string.StringUtils;
 
 /**
@@ -103,7 +103,7 @@ public class AuthRowPermissionAspect {
      */
     @Around("rowPermissionPointCut()")
     public Object doAround(ProceedingJoinPoint joinPoint) throws Throwable {
-        Map<String, String> snapshot = RequestHolder.snapshotExtraHeaders();
+        Map<String, String> snapshot = new java.util.HashMap<>(RequestContext.getExtraHeaders());
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
 
@@ -133,7 +133,7 @@ public class AuthRowPermissionAspect {
 
             return joinPoint.proceed();
         } finally {
-            RequestHolder.restoreExtraHeaders(snapshot);
+            restoreExtraHeaders(snapshot);
         }
     }
 
@@ -289,7 +289,7 @@ public class AuthRowPermissionAspect {
         if (value == null) {
             return;
         }
-        RequestHolder.putExtraHeader(headerName, value);
+        RequestContext.putExtraHeader(headerName, value);
     }
 
     private String joinIds(Set<String> ids) {
@@ -320,6 +320,20 @@ public class AuthRowPermissionAspect {
         if (mapObj instanceof Map<?, ?> map) {
             Map<String, Object> typedMap = (Map<String, Object>) map;
             typedMap.put(key, value);
+        }
+    }
+
+    /**
+     * 恢复 extra headers 快照（对应原 RequestHolder.restoreExtraHeaders 语义）。
+     *
+     * <p>先移除当前全部 extra headers，再逐条写回快照内容，避免上下文残留。
+     *
+     * @param snapshot extra headers 快照（可为空）
+     */
+    private static void restoreExtraHeaders(Map<String, String> snapshot) {
+        RequestContext.remove(RequestContext.KEY_EXTRA_HEADERS);
+        if (snapshot != null) {
+            snapshot.forEach(RequestContext::putExtraHeader);
         }
     }
 }

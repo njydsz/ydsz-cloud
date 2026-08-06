@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.tenant.TenantContext;
-import com.remisoft.common.tenant.TenantContextHolder;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -34,7 +34,7 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate template) {
-        TenantContext context = TenantContextHolder.get();
+        TenantContext context = (TenantContext) RequestContext.getTenantContext();
         if (context == null || context.isSkipIsolation() || context.getTenantId() == null) {
             return;
         }

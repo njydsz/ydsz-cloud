@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -98,8 +98,8 @@ public class FlowTaskAuxController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'countersignRemove'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         taskService.countersignRemove(dto);
         return BaseResponse.success();
     }
@@ -115,7 +115,7 @@ public class FlowTaskAuxController {
     @PostMapping("/task/{taskId}/read")
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'markRead'")
     public BaseResponse<Void> markRead(@PathVariable String taskId) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         taskService.markRead(taskId, userId);
         return BaseResponse.success();
     }
@@ -132,8 +132,8 @@ public class FlowTaskAuxController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'communicate'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         taskService.communicate(dto);
         return BaseResponse.success();
     }
@@ -150,8 +150,8 @@ public class FlowTaskAuxController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveDraft'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.saveDraft(dto);
         return BaseResponse.success();
     }
@@ -168,8 +168,8 @@ public class FlowTaskAuxController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'addApprover'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.addApprover(dto);
         return BaseResponse.success();
     }
@@ -189,7 +189,7 @@ public class FlowTaskAuxController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<String> retract(@PathVariable String hisTaskId,
                                   @RequestParam(required = false) String comment) {
-        return BaseResponse.success(taskService.retract(hisTaskId, AuthContext.getUserId(), comment));
+        return BaseResponse.success(taskService.retract(hisTaskId, AuthContextUtils.getUserId(), comment));
     }
 
     /**
@@ -208,7 +208,7 @@ public class FlowTaskAuxController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> suspendTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
-        workflowFacade.suspendTask(taskId, AuthContext.getUserId(), reason);
+        workflowFacade.suspendTask(taskId, AuthContextUtils.getUserId(), reason);
         return BaseResponse.success();
     }
 
@@ -224,7 +224,7 @@ public class FlowTaskAuxController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.ENABLE, content = "'activateTask'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> activateTask(@PathVariable String taskId) {
-        workflowFacade.activateTask(taskId, AuthContext.getUserId());
+        workflowFacade.activateTask(taskId, AuthContextUtils.getUserId());
         return BaseResponse.success();
     }
 
@@ -237,11 +237,11 @@ public class FlowTaskAuxController {
      */
     @GetMapping("/todo/count")
     public BaseResponse<Map<String, Object>> myTodoCount() {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         if (userId == null) {
             return BaseResponse.success(Map.of("userId", 0, "todoCount", 0));
         }
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         // P0-1 修复：移除 countOverdue 死代码（结果被覆盖），直接用 listTodoByUser 计算待办数
         var tasks = taskService.listTodoByUser(userId, null, null, tenantId);
         long count = tasks == null ? 0 : tasks.size();
@@ -262,7 +262,7 @@ public class FlowTaskAuxController {
     @PostMapping("/todo/pushMine")
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pushMyTodoCount'")
     public BaseResponse<Boolean> pushMyTodoCount() {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         if (userId == null) {
             return BaseResponse.success(false);
         }

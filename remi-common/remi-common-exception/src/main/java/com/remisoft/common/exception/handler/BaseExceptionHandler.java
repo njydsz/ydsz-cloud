@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -39,8 +39,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class BaseExceptionHandler {
 
-    @Value("${spring.profiles.active:prod}")
-    private String activeProfile;
+    private final Environment environment;
+
+    /**
+     * 构造基类异常处理器（通过 Spring 注入 {@link Environment}）
+     *
+     * @param environment Spring 环境对象
+     */
+    protected BaseExceptionHandler(Environment environment) {
+        this.environment = environment;
+    }
 
     private ExceptionProperties properties;
     private ExceptionMetrics exceptionMetrics;
@@ -55,14 +63,14 @@ public abstract class BaseExceptionHandler {
     /**
      * 设置异常模块配置属性（由 AutoConfiguration 注入）
      */
-    protected void setExceptionProperties(ExceptionProperties properties) {
+    protected void setExceptionProperties(Environment env, ExceptionProperties properties) {
         this.properties = properties;
     }
 
     /**
      * 设置异常指标统计器（由 AutoConfiguration 注入）
      */
-    protected void setExceptionMetrics(ExceptionMetrics exceptionMetrics) {
+    protected void setExceptionMetrics(Environment env, ExceptionMetrics exceptionMetrics) {
         this.exceptionMetrics = exceptionMetrics;
     }
 
@@ -98,6 +106,32 @@ public abstract class BaseExceptionHandler {
     }
 
     /**
+     * 获取当前激活的 profile 名称
+     *
+     * @return 当前激活的 profile；无 profile 时返回 null
+     */
+    protected String[] getActiveProfiles() {
+        return environment != null ? environment.getActiveProfiles() : new String[0];
+    }
+
+    /**
+     * 判断是否为开发/测试环境
+     *
+     * @return 如果当前 profile 为 dev/test 返回 true，否则 false
+     */
+    protected boolean isDevOrTestProfile() {
+        if (environment == null) {
+            return false;
+        }
+        for (String profile : environment.getActiveProfiles()) {
+            if ("dev".equalsIgnoreCase(profile) || "test".equalsIgnoreCase(profile)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 是否需要包含 ExceptionInfo 详细信息
      *
      * <p>开发/测试环境返回 true，生产环境返回 false。
@@ -107,9 +141,7 @@ public abstract class BaseExceptionHandler {
      */
     protected boolean includeExceptionInfo() {
         boolean configFlag = properties != null && properties.isIncludeStackTrace();
-        return configFlag
-                || "dev".equalsIgnoreCase(activeProfile)
-                || "test".equalsIgnoreCase(activeProfile);
+        return configFlag || isDevOrTestProfile();
     }
 
     /**
@@ -190,10 +222,18 @@ public abstract class BaseExceptionHandler {
     /**
      * 判断是否为生产环境
      *
-     * @return true-生产环境，false-非生产环境
+     * @return true-生产环境，false-非生产环境；无法判断时返回 false
      */
     protected boolean isProductionEnvironment() {
-        return "prod".equalsIgnoreCase(activeProfile) || "production".equalsIgnoreCase(activeProfile);
+        if (environment == null) {
+            return false;
+        }
+        for (String profile : environment.getActiveProfiles()) {
+            if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

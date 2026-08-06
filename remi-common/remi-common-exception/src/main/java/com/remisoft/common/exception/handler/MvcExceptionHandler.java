@@ -22,15 +22,17 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
-import com.remisoft.common.exception.config.ExceptionProperties;
 import com.remisoft.common.exception.core.ExceptionInfo;
 import com.remisoft.common.exception.custom.AbstractRemiException;
 import com.remisoft.common.exception.custom.BusinessException;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.common.exception.metrics.ExceptionMetrics;
+import com.remisoft.common.exception.config.ExceptionProperties;
 
+import org.springframework.core.env.Environment;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -68,16 +70,19 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     /**
      * 构造 MVC 全局异常处理器
      *
+     * @param environment      Spring 环境对象
      * @param messageSource    国际化消息源
      * @param exceptionMetrics 异常指标统计器
-     * @param properties       异常模块配置属性
+     * @param properties       异常模块配置属性（可为 null）
      */
-    public MvcExceptionHandler(MessageSource messageSource,
+    public MvcExceptionHandler(Environment environment,
+                               MessageSource messageSource,
                                ExceptionMetrics exceptionMetrics,
                                ExceptionProperties properties) {
+        super(environment);
         this.messageSource = messageSource;
-        setExceptionMetrics(exceptionMetrics);
-        setExceptionProperties(properties);
+        setExceptionMetrics(environment, exceptionMetrics);
+        setExceptionProperties(environment, properties);
     }
 
     @Override
@@ -86,13 +91,16 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 从 HttpServletRequest / MDC 提取 traceId
+     * 从 RequestContext / HttpServletRequest / MDC 提取 traceId
      *
-     * <p>优先级：MDC > Request Header
+     * <p>优先级：RequestContext > MDC > Request Header
      */
     private String extractTraceId(HttpServletRequest request) {
-        String traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-        if (traceId == null && request != null) {
+        String traceId = RequestContext.getTraceId();
+        if (traceId == null || traceId.isBlank()) {
+            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+        }
+        if ((traceId == null || traceId.isBlank()) && request != null) {
             traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
         }
         return traceId;

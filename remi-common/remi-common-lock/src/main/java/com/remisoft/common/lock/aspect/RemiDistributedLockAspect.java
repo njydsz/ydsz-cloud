@@ -16,6 +16,7 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.lock.annotation.LockType;
 import com.remisoft.common.lock.annotation.RemiDistributedLock;
 import com.remisoft.common.lock.core.DistributedLocker;
@@ -143,7 +144,7 @@ public class RemiDistributedLockAspect {
             if (lockAnn.throwException()) {
                 throw new DistributedLockException(lockAnn.message());
             } else {
-                log.warn("【分布式锁】获取锁失败，跳过方法执行 | lockKey={} | traceId={}", lockKey, MDC.get("tid"));
+                log.warn("【分布式锁】获取锁失败，跳过方法执行 | lockKey={} | traceId={}", lockKey, resolveTraceId());
                 return null;
             }
         }
@@ -168,11 +169,24 @@ public class RemiDistributedLockAspect {
                 if (lockMetrics != null) {
                     lockMetrics.recordRelease(holdTimeMillis, lockType.name().toLowerCase());
                 }
-                log.debug("【分布式锁】释放锁成功 | lockKey={} | traceId={}", lockKey, MDC.get("tid"));
+                log.debug("【分布式锁】释放锁成功 | lockKey={} | traceId={}", lockKey, resolveTraceId());
             } else {
-                log.error("【分布式锁】释放锁失败 | lockKey={} | traceId={}", lockKey, MDC.get("tid"));
+                log.error("【分布式锁】释放锁失败 | lockKey={} | traceId={}", lockKey, resolveTraceId());
             }
         }
+    }
+
+    /**
+     * 解析当前链路 traceId：优先 {@link RequestContext}，回退 MDC（兼容 SkyWalking "tid"）。
+     *
+     * @return 当前 traceId；均不存在时返回 null
+     */
+    private String resolveTraceId() {
+        String traceId = RequestContext.getTraceId();
+        if (traceId != null && !traceId.isBlank()) {
+            return traceId;
+        }
+        return MDC.get("tid");
     }
 
     /**

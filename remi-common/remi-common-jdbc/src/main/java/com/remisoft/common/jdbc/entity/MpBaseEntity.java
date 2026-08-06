@@ -87,7 +87,7 @@ public class MpBaseEntity<T extends Serializable> extends MpBaseAuditEntity<T> {
      * 租户 ID
      *
      * <p>多租户隔离字段，由 SQL 拦截器自动注入 WHERE 条件和 INSERT 填充。
-     * <p>单租户模式下默认值 "1"，多租户模式由 TenantContextHolder 注入。
+     * <p>单租户模式下默认值 "1"，多租户模式由 RequestContext 注入。
      * <p>业务 DO 无需再单独声明此字段。
      * <p>对外 API 不暴露租户 ID。
      *

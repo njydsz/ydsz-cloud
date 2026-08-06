@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -125,7 +125,7 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'claim'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> claim(@RequestParam String taskId) {
-        workflowFacade.claimTask(taskId, AuthContext.getUserId());
+        workflowFacade.claimTask(taskId, AuthContextUtils.getUserId());
         return BaseResponse.success();
     }
 
@@ -141,8 +141,8 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'pass'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.completeTask(dto);
         return BaseResponse.success();
     }
@@ -159,8 +159,8 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.REJECT, content = "'reject'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.rejectTask(dto);
         return BaseResponse.success();
     }
@@ -195,8 +195,8 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'transfer'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.transferTask(dto);
         return BaseResponse.success();
     }
@@ -213,8 +213,8 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.GRANT, content = "'delegate'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.delegateTask(dto);
         return BaseResponse.success();
     }
@@ -231,8 +231,8 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'countersignBefore'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.countersignBeforeTask(dto);
         return BaseResponse.success();
     }
@@ -249,8 +249,8 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'countersignAfter'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.countersignAfterTask(dto);
         return BaseResponse.success();
     }
@@ -268,8 +268,8 @@ public class FlowTaskController {
     @Operation(summary = "并加签（与原审批人并行审批）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignParallel(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.countersignParallelTask(dto);
         return BaseResponse.success();
     }
@@ -286,8 +286,8 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'jump'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         workflowFacade.jumpTask(dto);
         return BaseResponse.success();
     }
@@ -311,8 +311,8 @@ public class FlowTaskController {
     @Audit(module = "流程任务", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'freeJump'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
     public BaseResponse<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(AuthContext.getUserId());
-        dto.setUserName(AuthContext.getUsername());
+        dto.setUserId(AuthContextUtils.getUserId());
+        dto.setUserName(AuthContextUtils.getUsername());
         dto.setAction("JUMP");
         workflowFacade.jumpTask(dto);
         return BaseResponse.success();

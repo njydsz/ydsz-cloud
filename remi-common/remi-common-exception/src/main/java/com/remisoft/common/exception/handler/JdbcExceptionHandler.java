@@ -4,20 +4,20 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.exception.code.UnifiedExceptionCode;
 import com.remisoft.common.exception.config.ExceptionProperties;
 import com.remisoft.common.exception.core.ExceptionInfo;
 import com.remisoft.common.exception.metrics.ExceptionMetrics;
 
+import org.springframework.core.env.Environment;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,20 +33,19 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")
 public class JdbcExceptionHandler extends BaseExceptionHandler {
 
-    private final MessageSource messageSource;
-
     /**
      * 构造 JDBC 异常处理器
      *
-     * @param messageSource    国际化消息源
+     * @param environment       Spring 环境对象
      * @param exceptionMetrics  异常指标统计器
-     * @param properties       异常模块配置属性
+     * @param properties       异常模块配置属性（可为 null）
      */
-    public JdbcExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics,
+    public JdbcExceptionHandler(Environment environment,
+                               ExceptionMetrics exceptionMetrics,
                                ExceptionProperties properties) {
-        this.messageSource = messageSource;
-        setExceptionMetrics(exceptionMetrics);
-        setExceptionProperties(properties);
+        super(environment);
+        setExceptionMetrics(environment, exceptionMetrics);
+        setExceptionProperties(environment, properties);
     }
 
     @Override
@@ -68,11 +67,12 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
         recordMetrics(e);
         log.error("{}数据访问异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
+        // 直接使用 DATABASE_ERROR key 作为客户端返回消息，
+        // 实际 i18n 文案按 key 从 messages*.properties 加载，保持一致
+        String message = UnifiedExceptionCode.DATABASE_ERROR.getKey();
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
         info.setCode(UnifiedExceptionCode.DATABASE_ERROR.getCode());
-        String message = messageSource.getMessage(UnifiedExceptionCode.DATABASE_ERROR.getKey(), null,
-                UnifiedExceptionCode.DATABASE_ERROR.getKey(), LocaleContextHolder.getLocale());
-        info.setMessage(message != null ? message : UnifiedExceptionCode.DATABASE_ERROR.getKey());
+        info.setMessage(message);
 
         return errorResponse(
                 UnifiedExceptionCode.DATABASE_ERROR.getCode(),
@@ -82,17 +82,20 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 从 MDC / Request Header 提取 traceId
+     * 从 RequestContext / MDC / Request Header 提取 traceId
      *
-     * <p>优先级：MDC > Request Header（X-Trace-Id > X-Request-Id）
+     * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）
      */
     private String extractTraceId(HttpServletRequest request) {
-        String traceId = MDC.get("traceId");
-        if (traceId == null) {
+        String traceId = RequestContext.getTraceId();
+        if (traceId == null || traceId.isBlank()) {
+            traceId = MDC.get("traceId");
+        }
+        if (traceId == null && request != null) {
             traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
         }
-        if (traceId == null) {
-            traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
+        if (traceId == null && request != null) {
+            traceId = request.getHeader("X-Request-Id");
         }
         return traceId;
     }

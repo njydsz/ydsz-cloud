@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.workflow.domain.entity.FlowDmnDecision;
 import com.remisoft.workflow.domain.entity.FlowDmnRule;
@@ -46,7 +46,7 @@ import com.remisoft.common.audit.enums.AuditType;
  *
  * <p><b>状态机：</b>{@code DRAFT}（可编辑）→ {@code PUBLISHED}（运行中，不可改规则）→ {@code DEPRECATED}（已停用，新评估失败但历史引用保留）。
  *
- * <p><b>多租户隔离：</b>所有读写按 {@link AuthContext#getTenantIdOrDefault} 隔离；
+ * <p><b>多租户隔离：</b>所有读写按 {@link AuthContextUtils#getTenantIdOrDefault} 隔离；
  * 跨租户决策表不可见，确保 SaaS 化部署数据安全。
  *
  * <p><b>安全特性：</b>
@@ -91,7 +91,7 @@ public class FlowDmnDecisionController {
     @Audit(module = "DMN决策", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createDecision'")
     @Operation(summary = "创建决策表")
     public BaseResponse<String> createDecision(@RequestBody CreateDecisionRequest request) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         request.getDecision().setTenantId(tenantId);
         String id = dmnDecisionService.createDecision(request.getDecision(), request.getRules());
         return BaseResponse.success(id);
@@ -115,7 +115,7 @@ public class FlowDmnDecisionController {
     @Operation(summary = "更新决策表（仅草稿状态）")
     public BaseResponse<Void> updateDecision(@PathVariable String decisionId,
                                         @RequestBody CreateDecisionRequest request) {
-        request.getDecision().setTenantId(AuthContext.getTenantIdOrDefault("1"));
+        request.getDecision().setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
         dmnDecisionService.updateDecision(decisionId, request.getDecision(), request.getRules());
         return BaseResponse.success();
     }
@@ -188,7 +188,7 @@ public class FlowDmnDecisionController {
     @Operation(summary = "分页查询决策表列表")
     public BaseResponse<List<FlowDmnDecisionVO>> listDecisions(
             @RequestParam(required = false) String decisionCode) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(WorkflowConverter.INSTANT.flowDmnDecisionListToVO(dmnDecisionService.listDecisions(decisionCode, tenantId)));
     }
 
@@ -205,7 +205,7 @@ public class FlowDmnDecisionController {
     @PostMapping("/evaluate")
     @Operation(summary = "评估决策表")
     public BaseResponse<Map<String, Object>> evaluate(@RequestBody EvaluateRequest request) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(dmnDecisionService.evaluate(
                 request.getDecisionCode(), request.getVariables(), tenantId));
     }
@@ -223,7 +223,7 @@ public class FlowDmnDecisionController {
     @PostMapping("/evaluateByNode")
     @Operation(summary = "根据流程+节点评估绑定的决策表")
     public BaseResponse<Map<String, Object>> evaluateByNode(@RequestBody EvaluateByNodeRequest request) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(dmnDecisionService.evaluateByNode(
                 request.getFlowCode(), request.getNodeCode(),
                 request.getVariables(), tenantId));

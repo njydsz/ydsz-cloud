@@ -59,12 +59,21 @@ public interface IdempotentOperation {
     /**
      * 获取幂等键过期时间（秒）。
      *
-     * <p>超过过期时间后，幂等键可被清理。默认 86400 秒（24 小时），
-     * 参考 Stripe 的 24 小时幂等窗口设计。</p>
+     * <p>超过过期时间后，幂等键可被清理。默认值参考 {@link
+     * com.remisoft.common.domain.config.DomainProperties.IdempotentProperties#DEFAULT_EXPIRE_SECONDS}
+     *（86400 秒 = 24 小时）。业务方可通过覆盖此方法或修改全局配置
+     * {@code remi.domain.idempotent.default-expire-seconds} 调整。</p>
+     *
+     * <p>业界参考（均为 24 小时设计）：
+     * <ul>
+     *   <li>Stripe API — Idempotency-Key 24h 幂等窗口</li>
+     *   <li>支付宝 — 幂等请求 24h 内保证不重复扣款</li>
+     *   <li>微信支付 — 幂等请求 24h 内保证不重复扣款</li>
+     * </ul>
      *
      * @return 过期时间（秒）
      */
     default long getExpireSeconds() {
-        return 86400;
+        return com.remisoft.common.domain.config.DomainProperties.IdempotentProperties.DEFAULT_EXPIRE_SECONDS;
     }
 }

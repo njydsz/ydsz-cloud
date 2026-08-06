@@ -25,6 +25,7 @@ import com.remisoft.common.event.processor.OutboxProcessor;
 import com.remisoft.common.event.repository.OutboxRepository;
 import com.remisoft.common.event.service.OutboxEventStore;
 import com.remisoft.common.event.service.OutboxService;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -87,15 +88,17 @@ public class EventAutoConfiguration {
      * @param outboxRepository Outbox 仓储
      * @param properties       事件配置属性
      * @param gatewayProvider  投递网关提供者（用于同步投递模式）
+     * @param snowflakeIdGenerator 分布式 ID 生成器
      * @return Outbox 写入服务实例
      */
     @Bean
     @ConditionalOnMissingBean
     public OutboxService outboxService(OutboxRepository outboxRepository,
                                        EventProperties properties,
-                                       ObjectProvider<EventPublishGateway> gatewayProvider) {
+                                       ObjectProvider<EventPublishGateway> gatewayProvider,
+                                       SnowflakeIdGenerator snowflakeIdGenerator) {
         EventPublishGateway syncGateway = properties.isEnableSyncPublish() ? gatewayProvider.getIfAvailable() : null;
-        return new OutboxService(outboxRepository, properties, syncGateway);
+        return new OutboxService(outboxRepository, properties, syncGateway, snowflakeIdGenerator);
     }
 
     /**

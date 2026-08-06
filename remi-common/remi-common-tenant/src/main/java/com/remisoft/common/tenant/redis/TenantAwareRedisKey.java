@@ -1,7 +1,7 @@
 package com.remisoft.common.tenant.redis;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.tenant.TenantContext;
-import com.remisoft.common.tenant.TenantContextHolder;
 
 /**
  * 租户感知的 Redis Key 构建器。
@@ -43,7 +43,7 @@ public final class TenantAwareRedisKey {
         if (key == null || key.isEmpty()) {
             return key;
         }
-        TenantContext context = TenantContextHolder.get();
+        TenantContext context = (TenantContext) RequestContext.getTenantContext();
         if (context == null || context.isSkipIsolation()
                 || context.isSuperAdmin() || context.getTenantId() == null) {
             return key;

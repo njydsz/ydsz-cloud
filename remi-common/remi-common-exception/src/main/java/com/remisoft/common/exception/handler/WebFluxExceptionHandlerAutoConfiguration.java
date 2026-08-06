@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.Environment;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 import com.remisoft.common.exception.config.ExceptionProperties;
@@ -35,16 +36,18 @@ public class WebFluxExceptionHandlerAutoConfiguration {
     /**
      * 创建 WebFlux 全局异常处理器 Bean
      *
+     * @param environment       Spring 环境对象
      * @param messageSource    国际化消息源
      * @param exceptionMetrics  异常指标统计器（可选）
      * @param properties       异常模块配置属性（可选）
      * @return WebFlux 全局异常处理器实例
      */
     @Bean
-    public WebFluxExceptionHandler webFluxExceptionHandler(MessageSource messageSource,
+    public WebFluxExceptionHandler webFluxExceptionHandler(Environment environment,
+                                                           MessageSource messageSource,
                                                            ObjectProvider<ExceptionMetrics> exceptionMetrics,
                                                            ObjectProvider<ExceptionProperties> properties) {
-        return new WebFluxExceptionHandler(messageSource,
+        return new WebFluxExceptionHandler(environment, messageSource,
                 exceptionMetrics.getIfAvailable(),
                 properties.getIfAvailable());
     }

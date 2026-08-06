@@ -1,11 +1,11 @@
 package com.remisoft.common.security;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 
 /**
  * 数据权限 SQL 片段构造器。
  *
- * <p>从 {@link LoginUser} 上下文（ThreadLocal，由 {@link AuthContext} 管理）提取当前用户的数据权限范围，
+ * <p>从 {@link LoginUser} 上下文（ThreadLocal，由 {@link AuthContextUtils} 管理）提取当前用户的数据权限范围，
  * 构造可拼接到业务 SQL 的 WHERE 片段，实现行级数据权限过滤。
  *
  * <p><b>工作流程：</b>
@@ -55,7 +55,7 @@ public final class DataScopeHelper {
      */
     public static String buildSqlFragment(String tableAlias, String deptAlias,
                                           String deptColumn, String userColumn) {
-        LoginUser loginUser = AuthContext.getCurrentOrNull();
+        LoginUser loginUser = AuthContextUtils.getCurrentOrNull();
         if (loginUser == null) {
             return "";
         }

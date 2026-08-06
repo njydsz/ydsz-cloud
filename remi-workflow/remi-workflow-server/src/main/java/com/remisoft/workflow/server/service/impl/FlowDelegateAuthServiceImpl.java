@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
@@ -180,7 +180,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
         // 默认值
         if (auth.getTenantId() == null) {
-            auth.setTenantId(AuthContext.getTenantIdOrDefault("1"));
+            auth.setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
         }
         if (auth.getAuthStatus() == null) {
             auth.setAuthStatus("ENABLED");
@@ -275,7 +275,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
      * 查询「我作为授权人」的授权列表
      *
      * @param ownerUserId 授权人 ID
-     * @param tenantId    租户 ID（默认从 {@link AuthContext} 取）
+     * @param tenantId    租户 ID（默认从 {@link AuthContextUtils} 取）
      * @param status      状态过滤（{@code ENABLED/DISABLED/REVOKED/EXPIRED}，可为 null）
      * @return 授权列表
      */
@@ -285,7 +285,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         if (ownerUserId == null) {
             return List.of();
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return authMapper.selectByOwner(tid, ownerUserId, status);
     }
 
@@ -303,7 +303,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         if (delegateUserId == null) {
             return List.of();
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return authMapper.selectByDelegate(tid, delegateUserId, status);
     }
 

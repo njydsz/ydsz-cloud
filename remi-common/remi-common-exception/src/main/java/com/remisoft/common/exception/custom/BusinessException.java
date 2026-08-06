@@ -100,8 +100,7 @@ public class BusinessException extends AbstractRemiException {
         super(message);
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
         initFields(exceptionCode.getCode(), exceptionCode.getKey(), new Object[]{});
-        this.message = message;
-        this.messageResolved = true;
+        setMessage(message);
     }
 
     /**
@@ -137,8 +136,7 @@ public class BusinessException extends AbstractRemiException {
         int httpStatus = resolveHttpStatus(resultCode);
         initDefaults(httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
         initFields(resultCode.getCode(), resultCode.getMsg(), new Object[]{});
-        this.message = message;
-        this.messageResolved = true;
+        setMessage(message);
     }
 
     /**

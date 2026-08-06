@@ -29,7 +29,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.cache.constant.CacheConstants;
 import com.remisoft.common.core.code.BaseResultCode;
 import com.remisoft.common.exception.custom.SysException;
@@ -208,7 +208,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取，最后兜底 1L
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
-                : AuthContext.getTenantIdOrDefault("1");
+                : AuthContextUtils.getTenantIdOrDefault("1");
 
         // 1. 检查重名：同 flowCode + version + tenant 只能有一条
         FlowDefinition existing = definitionMapper.selectPublished(
@@ -560,7 +560,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             version = "1.0";
         }
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return definitionMapper.selectPublished(flowCode, version, tid);
     }
 
@@ -581,7 +581,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             key = "#flowCode + ':' + #tenantId", unless = "#result == null")
     public FlowDefinition getLatestByCode(String flowCode, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return definitionMapper.selectLatestByCode(flowCode, tid);
     }
 
@@ -678,7 +678,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                     "flowCode 不匹配: 期望=" + flowCode + " 实际=" + def.getFlowCode());
         }
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         // 失效同 flowCode 的其他已发布版本
         definitionMapper.deactivateByFlowCode(flowCode, definitionId, tid);
         // 激活目标版本
@@ -1530,7 +1530,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (zipBytes == null || zipBytes.length == 0) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "zip 文件内容为空");
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
 
         int successCount = 0;
         List<Map<String, String>> failedItems = new ArrayList<>();
@@ -1993,7 +1993,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (!StringUtils.hasText(flowCode)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "flowCode 不能为空");
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
 
         // 1. 查询当前激活版本
         FlowDefinition currentDef = definitionMapper.selectPublished(flowCode, null, tid);

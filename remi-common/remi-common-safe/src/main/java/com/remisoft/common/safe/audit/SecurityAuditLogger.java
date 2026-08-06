@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.json.RemiJson;
 import com.remisoft.common.safe.alert.SecurityEvent;
 
@@ -16,6 +17,9 @@ import java.util.HashMap;
  *
  * <p>将安全事件以结构化 JSON 格式输出到独立的审计日志，
  * 支持 traceId 关联，可与 Loki/Sentry 集成。
+ *
+ * <p>traceId 优先从 {@link RequestContext}（统一上下文主源）读取，
+ * 回退 MDC（兼容 Brave / 旧逻辑写入的 B3 traceId）。
  *
  * <p><b>日志格式：</b>
  * <pre>{@code
@@ -40,6 +44,23 @@ public class SecurityAuditLogger {
     private static final Logger auditLog = LoggerFactory.getLogger("SECURITY_AUDIT");
 
     /**
+     * 解析当前链路 traceId：优先 {@link RequestContext}，回退 MDC 的 traceId / X-B3-TraceId。
+     *
+     * @return 当前 traceId；均不存在时返回 null
+     */
+    private static String resolveTraceId() {
+        String traceId = RequestContext.getTraceId();
+        if (traceId != null && !traceId.isEmpty()) {
+            return traceId;
+        }
+        traceId = MDC.get("traceId");
+        if (traceId == null || traceId.isEmpty()) {
+            traceId = MDC.get("X-B3-TraceId");
+        }
+        return traceId;
+    }
+
+    /**
      * 记录安全事件审计日志
      *
      * @param event 安全事件
@@ -49,10 +70,7 @@ public class SecurityAuditLogger {
             return;
         }
 
-        String traceId = MDC.get("traceId");
-        if (traceId == null || traceId.isEmpty()) {
-            traceId = MDC.get("X-B3-TraceId");
-        }
+        String traceId = resolveTraceId();
 
         Map<String, Object> logEntry = Map.of(
                 "timestamp", event.getTimestamp() != null ? event.getTimestamp().toString() : Instant.now().toString(),
@@ -77,7 +95,7 @@ public class SecurityAuditLogger {
      * @param details   详细信息
      */
     public void log(String action, String sourceIp, String userId, Map<String, Object> details) {
-        String traceId = MDC.get("traceId");
+        String traceId = resolveTraceId();
 
         Map<String, Object> logEntry = new HashMap<>();
         logEntry.put("timestamp", Instant.now().toString());

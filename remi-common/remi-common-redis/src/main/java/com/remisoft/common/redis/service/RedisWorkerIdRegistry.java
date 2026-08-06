@@ -18,7 +18,6 @@ import com.remisoft.common.util.id.WorkerIdRegistry;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.remisoft.common.util.id.SnowflakeAutoConfiguration;
 /**
  * 基于 Redis 的 WorkerId 注册中心实现
  *
@@ -36,8 +35,8 @@ import com.remisoft.common.util.id.SnowflakeAutoConfiguration;
  * <p><b>自动心跳：</b>acquire 成功后，启动守护线程定期（默认 30s）对持有的 workerId 续约，
  * 续约 TTL 默认 90s。应用关闭时通过 {@link PreDestroy} 释放所有 workerId。
  *
- * <p><b>容错：</b>Redis 不可用时抛出 {@link IllegalStateException}，由上层 {@code SnowflakeAutoConfiguration}
- * 捕获后回退到本地分配策略。
+ * <p><b>容错：</b>Redis 不可用时抛出 {@link IllegalStateException}，由上层
+ * {@link com.remisoft.common.util.id.SnowflakeIdGenerator} 捕获后回退到本地分配策略。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -50,7 +49,6 @@ import com.remisoft.common.util.id.SnowflakeAutoConfiguration;
  * @author remi-team
  * @since 1.0.0
  * @see WorkerIdRegistry
- * @see SnowflakeAutoConfiguration
  */
 @Slf4j
 public class RedisWorkerIdRegistry implements WorkerIdRegistry {
@@ -120,7 +118,31 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
                 HEARTBEAT_INTERVAL_SECONDS);
     }
 
+    /**
+     * 实现 {@link WorkerIdRegistry} 接口方法：获取一个可用的 WorkerId。
+     *
+     * <p>租约时长使用默认值 {@link #DEFAULT_LEASE_MILLIS}。
+     *
+     * @param nodeId 节点标识（通常为 Pod 名、IP 或主机名）
+     * @return WorkerId（0-31）
+     * @throws IllegalStateException 当 WorkerId 资源耗尽或 Redis 不可用时
+     */
     @Override
+    public long acquire(String nodeId) {
+        return acquire(nodeId, DEFAULT_LEASE_MILLIS);
+    }
+
+    /**
+     * 扩展方法（非接口方法）：获取 WorkerId 并指定租约时长。
+     *
+     * <p>自 2.0.0 起 {@link WorkerIdRegistry} 接口仅保留单参数 {@link #acquire(String)}，
+     * 本重载作为 Redis 实现的增强能力保留，供需要自定义 TTL 的调用方使用。
+     *
+     * @param nodeIp      节点标识（通常为 Pod 名、IP 或主机名）
+     * @param leaseMillis 租约时长（毫秒），<=0 时使用默认值
+     * @return WorkerId（0-31）
+     * @throws IllegalStateException 当 WorkerId 资源耗尽或 Redis 不可用时
+     */
     public long acquire(String nodeIp, long leaseMillis) {
         long lease = leaseMillis > 0 ? leaseMillis : DEFAULT_LEASE_MILLIS;
         Duration leaseDuration = Duration.ofMillis(lease);
@@ -147,7 +169,16 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
                 "WorkerId exhausted: all slots [0, " + MAX_WORKER_ID + "] are occupied");
     }
 
-    @Override
+    /**
+     * 心跳续约（Redis 实现扩展能力，非接口方法）。
+     *
+     * <p>自 2.0.0 起 {@link WorkerIdRegistry} 接口已移除 heartbeat/release，
+     * 本方法由自动心跳任务 {@link #renewAllHeld()} 内部使用。
+     *
+     * @param workerId 已持有的 WorkerId
+     * @param nodeIp   节点标识
+     * @return 续约成功返回 true
+     */
     public boolean heartbeat(long workerId, String nodeIp) {
         if (!isValidWorkerId(workerId)) {
             log.warn("【Snowflake-Registry】heartbeat skipped: invalid workerId={}", workerId);
@@ -172,7 +203,15 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
         }
     }
 
-    @Override
+    /**
+     * 释放 WorkerId（Redis 实现扩展能力，非接口方法）。
+     *
+     * <p>自 2.0.0 起 {@link WorkerIdRegistry} 接口已移除 heartbeat/release，
+     * 本方法供优雅停机 {@link #releaseAll()} 使用。
+     *
+     * @param workerId 已持有的 WorkerId
+     * @param nodeIp   节点标识
+     */
     public void release(long workerId, String nodeIp) {
         if (!isValidWorkerId(workerId)) {
             log.warn("【Snowflake-Registry】release skipped: invalid workerId={}", workerId);

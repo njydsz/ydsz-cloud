@@ -1,8 +1,8 @@
 # remi-common-domain
 
-> REMI DDD 领域模型基类库（L3 基础服务层）— 查询模型、状态机契约、领域事件、树形结构
+> REMI DDD 领域模型基类库（L3 基础服务层）— 分页查询、游标分页、状态机契约、树构建器、聚合根接口、幂等契约
 
-为业务模块提供 DDD 领域驱动设计的基础设施：分页查询模型（PageQuery/PageResult）、状态枚举契约（BaseStatusEnum）、领域事件基类与跨模块事件类型注册表、O(n) 树构建器。所有业务模块的查询对象、状态枚举、领域事件均以本模块为统一基座。
+为业务模块提供 DDD 领域驱动设计的基础设施：分页查询模型（含 offset 分页 + 可选的游标/seek 分页）、状态枚举契约（BaseStatusEnum）、O(n) 树构建器、CQRS 契约接口（Command/DTO/VO/Query）、幂等操作契约（IdempotentOperation）。
 
 > **重要说明（v1.4.0）**：本模块已完成过度设计治理，移除了以下组件——
 > 8 个零引用注解（@DomainService/@SoftDelete/@Version/@TenantId/@CreatedBy/@CreateAt/@UpdatedBy/@UpdateAt）、
@@ -18,8 +18,8 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 分页查询模型、状态机契约、领域事件、树形结构 |
 | **依赖** | common-core、common-json；Jakarta Validation、MyBatis-Plus Annotation、Spring TX、Spring Context |
-| **版本** | 1.4.0 |
-| **源文件数** | 15 |
+| **版本** | 1.5.0 |
+| **源文件数** | 18 |
 
 ## 核心能力
 
@@ -43,31 +43,28 @@
 
 业务状态枚举实现示例见「使用示例」章节。
 
-### 3. 领域事件（event 包）
-
-| 类 | 说明 |
-|---|---|
-| `DomainEvent` | 领域事件基类，继承 Spring `ApplicationEvent`，可直接通过 `ApplicationEventPublisher` 发布并由 `@EventListener` 消费；Builder 模式 + `Clock` 注入（便于测试）；不可变设计（`metadata` 为不可变 Map）；字段精简为 eventId/occurredAt/eventType/aggregateId/aggregateType/metadata（上下文由 RequestContext/MDC 传透，不再冗余存储） |
-| `ModuleEventTypes` | 跨模块事件类型常量注册表（单一来源），包含 WORKFLOW_INSTANCE_STARTED/COMPLETED/REJECTED、WORKFLOW_TASK_CREATED/COMPLETED/URGED/TRANSFERRED、UNIFIED_ALERT、CRONJOB_EXECUTION_FAILED/TIMEOUT、PERMISSION_CHANGED、CONFIG_CHANGED、OPERATION_LOG、DATA_EXPORT_AUDIT |
-| `EventStore` | 领域事件追加存储接口（append-only）。默认实现由 `remi-common-event` 的 OutboxEventStore 提供。**注意**：本接口仅承诺写入能力，不承诺事件回放（Outbox 为 forward-only）；如需事件溯源请扩展本接口 |
-
-事件发布直接使用 Spring 内置机制，不引入额外 `EventPublisher` 抽象：
-
-```java
-// 同步发布
-applicationEventPublisher.publishEvent(new OrderCreatedEvent(orderId));
-
-// 事务提交后发布（推荐，避免事件消费者读到未提交数据）
-@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-public void onOrderCreated(OrderCreatedEvent event) { ... }
-```
-
-### 4. 树形结构（tree 包）
+### 3. 树形结构（tree 包）
 
 | 类 | 说明 |
 |---|---|
 | `TreeNode<T, ID>` | 树节点基类（递归泛型 `TreeNode<T extends TreeNode<T, ID>, ID>`），含 id/parentId/children/sort/level/path/leaf 字段；提供 `addChild/addChildren`（链式）、`isRootNode/isLeaf/getChildCount/containsChild/findById`（迭代避免栈溢出） |
-| `TreeBuilder<T, ID>` | 树构建器（O(n) 时间复杂度，HashMap 索引；无缓存、无锁，每次调用独立构建）；`build()` 自动层级计算 + 多根容错 + 排序；`findById/getDescendants/getAncestors/flatten` 查询能力；`buildSimple` 静态方法支持不实现 `TreeNode` 接口的 VO 类 |
+| `TreeBuilder<T, ID>` | 树构建器（O(n) 时间复杂度，HashMap + HashSet 索引；无缓存、无锁，每次调用独立构建）；`build()` 自动层级计算 + 多根容错 + 排序；`findById/getDescendants/getAncestors/flatten` 查询能力；`buildSimple` 静态方法支持不实现 `TreeNode` 接口的 VO 类 |
+
+### 4. CQRS 契约接口（contract 包）
+
+| 类 | 说明 |
+|---|---|
+| `Command` | 写操作入参标记接口；携带元数据方法 `commandId()`（UUID 默认）/`issuedAt()`（Instant.now 默认），用于幂等判重、日志追踪 |
+| `Query` | 读操作入参标记接口；携带元数据方法 `queryId()`/`submittedAt()`，用于链路关联 |
+| `DTO` | 数据传输对象标记接口（层间传递） |
+| `VO` | 视图对象标记接口（API 响应封装） |
+| `IdempotentOperation` | 幂等操作契约，`getIdempotencyKey()` + `getExpireSeconds()`（默认 24h，参考 Stripe/支付宝/微信支付） |
+
+### 5. 聚合根与值对象（entity 包）
+
+| 类 | 说明 |
+|---|---|
+| `BaseEntity<ID>` | 领域实体基类（纯 POJO，不含持久化基类职责—持久化基类请继承 common-jdbc 的 MpBaseEntity）；含 id/createdBy/updatedBy/createdTime/updatedTime/revision/deleted/status，JSON 序列化友好 |
 
 ## 接入方式
 
@@ -105,11 +102,24 @@ public class SysConfig extends MpBaseEntity {
 
 ## 配置项
 
+```yaml
+remi:
+  domain:
+    enabled: true                              # 是否启用（默认 true）
+    page:
+      max-search-key-length: 200              # 搜索关键字最长长度
+    tree:
+      max-depth: 10                           # 树构建最大深度限制
+    idempotent:
+      default-expire-seconds: 86400           # 幂等键默认过期（秒）
+```
+
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `remi.domain.enabled` | true | 是否启用 domain 模块自动配置 |
-
-> SpEL 评估器及其缓存配置（`remi.domain.spel.*`）已随 DAG 引擎迁移至 `remi-cronjob` 模块。
+| `remi.domain.page.max-search-key-length` | 200 | 搜索关键字最大长度（1~500） |
+| `remi.domain.tree.max-depth` | 10 | 树构建最大深度限制（1~100） |
+| `remi.domain.idempotent.default-expire-seconds` | 86400 | 幂等键过期时间（秒，参考 Stripe/支付宝） |
 
 ## 使用示例
 
@@ -168,35 +178,7 @@ OrderStatus.PENDING.requireTransitTo(OrderStatus.PAID);  // 合法，无异常
 OrderStatus.DELIVERED.requireTransitTo(OrderStatus.PAID);  // 非法，抛 IllegalStateException
 ```
 
-### 3. 领域事件
-
-```java
-// 自定义领域事件（子类继承，业务字段自持）
-public class OrderCreatedEvent extends DomainEvent {
-    private final Long orderId;
-    private final String totalAmount;
-
-    public OrderCreatedEvent(Long orderId, String totalAmount) {
-        super(UUID.randomUUID().toString(), LocalDateTime.now(),
-              "OrderCreated",
-              String.valueOf(orderId), "Order",
-              Collections.emptyMap());
-        this.orderId = orderId;
-        this.totalAmount = totalAmount;
-    }
-}
-
-// 发布事件
-applicationEventPublisher.publishEvent(new OrderCreatedEvent(orderId, amount));
-
-// 事务提交后消费（推荐）
-@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-public void onOrderCreated(OrderCreatedEvent event) {
-    notificationService.notify(event.getOrderId());
-}
-```
-
-### 4. 树形结构构建
+### 3. 树形结构构建
 
 ```java
 import com.remisoft.common.domain.tree.TreeNode;
@@ -224,37 +206,74 @@ List<MenuVO> treeVo = TreeBuilder.buildSimple(
         MenuVO::getSort);
 ```
 
+### 4. 游标分页（无限滚动场景）
+
+```java
+import com.remisoft.common.domain.query.PageQuery;
+import com.remisoft.common.domain.query.CursorPage;
+
+// Controller
+@GetMapping("/feeds")
+public CursorPage<FeedVO> listFeeds(PageQuery query) {
+    // cursor 非空时走 seek 模式
+    if (query.isCursorBased()) {
+        return feedService.cursorPage(query);
+    }
+    return feedService.offsetPage(query);
+}
+
+// Service
+public CursorPage<Feed> cursorPage(PageQuery query) {
+    List<Feed> feeds = feedMapper.selectAfterCursor(
+            query.getCursor(), query.getPageSize() + 1);
+    boolean hasNext = feeds.size() > query.getPageSize();
+    if (hasNext) {
+        feeds = feeds.subList(0, query.getPageSize()); // 去掉多查的 1 条
+    }
+    String nextCursor = hasNext ? encodeCursor(feeds.get(feeds.size() - 1)) : null;
+    return CursorPage.of(feeds, nextCursor, hasNext);
+}
+```
+
 ## SPI 扩展点
 
 | 扩展点 | 用途 | 实现方 |
 |---|---|---|
-| `DomainEvent` | 跨模块领域事件基类，子类继承后通过 `ApplicationEventPublisher` 发布 | 业务模块（如 workflow、notify、project 等） |
-| `ModuleEventTypes` | 跨模块事件类型常量注册表，新增模块事件时在此添加常量 | 业务模块新增事件类型时修改本类 |
-| `EventStore` | 领域事件追加存储契约（append-only） | `remi-common-event` 的 OutboxEventStore（默认） |
 | `BaseStatusEnum<E>` | 状态枚举契约，业务模块的状态枚举实现此接口获得状态流转校验 | 业务模块（订单状态、流程状态、任务状态等） |
 | `TypeEnum<T>` | 通用枚举契约（code + desc），配合 `buildCodeMap/codeOf` 快速反查 | 业务模块的码值枚举 |
 | `TreeNode<T, ID>` | 树节点基类，业务实体继承后获得树能力 | 业务模块（菜单、组织架构、区域等树形数据） |
 | `TreeBuilder.buildSimple(...)` | 静态便捷方法，支持不继承 `TreeNode` 的 VO 类构建树 | 业务模块（已有 VO 结构不便修改的场景） |
 | `PageQuery.allowedOrderByFields()` | 排序字段白名单钩子，业务子类覆写返回允许排序的字段集合 | 业务模块的查询对象子类 |
+| `Command` | 写操作入参标记接口，业务方可覆盖默认元数据方法（commandId/issuedAt） | 业务模块的 Command 对象 |
+| `Query` | 读操作入参标记接口，业务方可覆盖默认元数据方法（queryId/submittedAt） | 业务模块的 Query 对象 |
+| `IdempotentOperation` | 幂等操作契约，业务 Command 实现后获得幂等框架统一支持 | 业务模块的幂等写操作 |
+| `CursorPage<T>` | 游标分页结果封装，适用于无限滚动等无 offset 场景 | 业务模块的高并发列表接口 |
 
 ## 注意事项
 
-1. **与 `common-jdbc` `MpBaseEntity` 的关系**：业务模块的数据库实体应直接继承 `common-jdbc` 的 `MpBaseEntity`（含 `@TableId` 雪花算法、`tenant_id` 字段、与 MyBatis-Plus 注解对齐）。本模块不再提供实体基类。
-2. **领域事件发布时机**：推荐使用 `@TransactionalEventListener(phase = AFTER_COMMIT)` 在事务提交后消费事件，避免事件消费者读到未提交数据或事务回滚后事件已发出的语义错误。
-3. **`EventStore` 为 append-only**：Outbox 模式只支持追加投递，不支持事件回放/事件溯源；`findByAggregate` 等查询方法在 v1.4.0 已移除。
-4. **`PageQuery` SQL 注入防护**：排序字段经过 `SAFE_COLUMN_PATTERN`（`^[a-zA-Z_][a-zA-Z0-9_.]*$`）正则校验 + `allowedOrderByFields()` 白名单双重过滤；`searchKey` 自动转义 LIKE 通配符（`%`/`_`/`\`）并截断到 200 字符。子类务必覆写 `allowedOrderByFields()` 启用白名单。
-5. **`DomainEvent` 不可变性**：`metadata` 字段在构造时包装为 `Collections.unmodifiableMap`，Builder 的 `metadata(key, value)` 在 `build()` 时拷贝到不可变 Map。子类不应提供可变字段 setter。
-6. **`TreeNode` 递归泛型模式限制**：`TreeNode<T extends TreeNode<T, ID>, ID>` 内部存在 `(T) this` 未经检查强转，由于类型擦除不会立即抛 `ClassCastException`，而是在返回值被使用时触发。子类必须确保泛型参数 `T` 与自身类型一致（如 `class Menu extends TreeNode<Menu, Long>`），否则运行时抛 `ClassCastException`。
-7. **DAG/Job 归属**：DAG 工作流引擎（SpELConditionEvaluator、DagInstanceStatus、DagNodeStatus）与 Job 分布式处理框架（JobHandler、MapReduceProcessor 等）已迁移至 `remi-cronjob` 模块，请勿在本模块引用。
+1. **与 `common-jdbc` `MpBaseEntity` 的关系**：业务模块的数据库实体应直接继承 `common-jdbc` 的 `MpBaseEntity`（含 `@TableId` 雪花算法、`tenant_id` 字段、与 MyBatis-Plus 注解对齐）。本模块的 `BaseEntity` 只包含 id 等字段，不含持久化职责。
+2. **`PageQuery` SQL 注入防护**：排序字段经过 `SAFE_COLUMN_PATTERN`（`^[a-zA-Z_][a-zA-Z0-9_.]*$`）正则校验 + `allowedOrderByFields()` 白名单双重过滤；`searchKey` 自动转义 LIKE 通配符（`%`/`_`/`\`）并截断到 200 字符。子类务必覆写 `allowedOrderByFields()` 启用白名单。
+3. **`TreeNode` 递归泛型模式限制**：`TreeNode<T extends TreeNode<T, ID>, ID>` 内部存在 `(T) this` 未经检查强转，由于类型擦除不会立即抛 `ClassCastException`，而是在返回值被使用时触发。子类必须确保泛型参数 `T` 与自身类型一致（如 `class Menu extends TreeNode<Menu, Long>`），否则运行时抛 `ClassCastException`。
+4. **DAG/Job 归属**：DAG 工作流引擎与 Job 分布式处理框架已迁移至 `remi-cronjob` 模块，请勿在本模块引用。
+5. **领域事件**：v1.4.0 已移除 DomainEvent/EventStore/ModuleEventTypes，如需领域事件请直接使用 Spring `ApplicationEventPublisher` 或引入 `remi-common-event` 模块。
+6. **游标分页**：`CursorPage` 为无状态设计，不涉及 offset 总量计算。适用于大数据量列表接口，建议与 `PageQuery.cursor` 配合使用。
+7. **`IdempotentOperation` 默认过期 24h**：与 Stripe / 支付宝 / 微信支付业界惯例对齐，可通过 `remi.domain.idempotent.default-expire-seconds` 全局配置。
 
 ## 变更记录
 
+- **v1.5.0**（2026-08-06）：DomainProperties 扩展 + 游标分页 + 契约元数据升级——
+  - **P0-1**：`TreeBuilder.containsId` O(n) 全表遍历改为 O(1) HashSet 查询，修复 build() 的 O(n²) 性能退化
+  - **P0-2**：新增 4 个核心测试类（PageQuery/TreeBuilder/PageResult/OrderItem），覆盖 SQL 注入防护、LIKE 转义、树构建正确性等安全逻辑
+  - **P1-3**：PageQuery 增加 `cursor` / `cursorDirection` 字段支持游标分页（向后兼容，不影响现有 offset 语义）；新增 `CursorPage<T>` 结果包装类
+  - **P1-4**：Command/Query 接口增加 `commandId/issuedAt/queryId/submittedAt` 元数据约定（default 实现，向后兼容）
+  - **P1-5**：DomainProperties 扩展为嵌套分组（page/tree/idempotent），对齐 Spring Boot 配置命名风格，引入 additional-spring-configuration-metadata.json
+  - README：移除 event 包历史描述、更新版本号与能力清单、精简注意事项
 - **v1.4.0**（2026-08-04）：过度设计治理完成——
   - 移除 8 个零引用注解（@DomainService/@SoftDelete/@Version/@TenantId/@CreatedBy/@CreateAt/@UpdatedBy/@UpdateAt）
   - 移除 BaseDTO（8 个跨切面字段与 RequestContext 重复，6 个继承方改为普通 DTO）
   - 移除 TokenConstants/FilterIgnoreConstant（与 common-core 同名类重复）
   - 精简 EventStore 为 append-only（删除 4 个未实现的事件溯源查询方法）
-  - 精简 DomainEvent（删除 version/tenantId/userId/traceId，Outbox 写入方自行解析上下文）
+  - 精简 DomainEvent（删除 version/tenantId/userId/traceId）
   - PageQuery 排序项重构为结构化 `OrderItem`（替代字符串拼接 + 重复解析）
   - TreeBuilder 从 700 行精简至 ~280 行（移除缓存/DCL/链式配置/统计 API）
   - TreeNode 精简（移除 traverseDFS/BFS/copy/cloneSubTree/moveTo 等未使用 API）

@@ -32,16 +32,8 @@ public class DistributedLockException extends BusinessException {
      * @param message 异常消息
      */
     public DistributedLockException(String message) {
-        super();
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.key = DEFAULT_CODE;
-        this.params = new Object[]{};
-        this.message = message;
-        this.messageKey = DEFAULT_CODE;
-        this.messageParams = this.params;
+        super(DEFAULT_CODE, DEFAULT_CODE);
+        setMessage(message);
     }
 
     /**
@@ -51,16 +43,8 @@ public class DistributedLockException extends BusinessException {
      * @param cause   原始异常
      */
     public DistributedLockException(String message, Throwable cause) {
-        super(cause);
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.key = DEFAULT_CODE;
-        this.params = new Object[]{};
-        this.message = message;
-        this.messageKey = DEFAULT_CODE;
-        this.messageParams = this.params;
+        super(DEFAULT_CODE, DEFAULT_CODE, cause);
+        setMessage(message);
     }
 
     /**
@@ -69,15 +53,7 @@ public class DistributedLockException extends BusinessException {
      * @param cause 原始异常
      */
     public DistributedLockException(Throwable cause) {
-        super(cause);
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.key = DEFAULT_CODE;
-        this.params = new Object[]{};
-        this.message = cause.getMessage();
-        this.messageKey = DEFAULT_CODE;
-        this.messageParams = this.params;
+        super(DEFAULT_CODE, DEFAULT_CODE, cause);
+        setMessage(cause != null ? cause.getMessage() : null);
     }
 }

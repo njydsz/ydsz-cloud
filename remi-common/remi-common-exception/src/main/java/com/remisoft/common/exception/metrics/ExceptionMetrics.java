@@ -1,6 +1,7 @@
 package com.remisoft.common.exception.metrics;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,12 +71,10 @@ public class ExceptionMetrics {
      */
     public static final String TAG_CODE = "code";
 
-    /** 去重记录最大容量，防止无界增长 */
-    private static final int MAX_DEDUP_ENTRIES = 10000;
-
     private final MeterRegistry meterRegistry;
 
-    private volatile boolean enabled = true;
+    /** 是否启用指标统计，使用 AtomicBoolean 保证多线程可见性和 CAS 操作安全 */
+    private final AtomicBoolean enabled = new AtomicBoolean(true);
 
     /**
      * 是否在指标中包含高基数 code tag
@@ -101,7 +100,7 @@ public class ExceptionMetrics {
      * @return 启用返回 true
      */
     public boolean isEnabled() {
-        return enabled;
+        return enabled.get();
     }
 
     /**
@@ -110,7 +109,19 @@ public class ExceptionMetrics {
      * @param enabled 是否启用
      */
     public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        this.enabled.set(enabled);
+    }
+
+    /**
+     * CAS 原子切换启用状态
+     *
+     * @param expected 期望的当前值
+     * @param update   新值
+     * @return 切换成功返回 true
+     * @since 1.0.0
+     */
+    public boolean compareAndSetEnabled(boolean expected, boolean update) {
+        return enabled.compareAndSet(expected, update);
     }
 
     /**
@@ -119,7 +130,7 @@ public class ExceptionMetrics {
      * @param throwable 异常对象
      */
     public void recordException(Throwable throwable) {
-        if (!enabled || meterRegistry == null) {
+        if (!enabled.get() || meterRegistry == null) {
             return;
         }
         try {
@@ -161,7 +172,7 @@ public class ExceptionMetrics {
      * @param throwable  异常对象
      */
     public void recordHandlerDuration(long durationMs, Throwable throwable) {
-        if (!enabled || meterRegistry == null) {
+        if (!enabled.get() || meterRegistry == null) {
             return;
         }
         try {
@@ -182,7 +193,7 @@ public class ExceptionMetrics {
      * @param extraTags  额外标签（key, value 交替出现）
      */
     public void recordExceptionWithTags(Throwable throwable, String... extraTags) {
-        if (!enabled || meterRegistry == null) {
+        if (!enabled.get() || meterRegistry == null) {
             return;
         }
         try {

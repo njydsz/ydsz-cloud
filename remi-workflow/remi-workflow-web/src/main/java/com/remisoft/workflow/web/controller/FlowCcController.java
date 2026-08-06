@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.lock.annotation.IdempotentExempt;
@@ -81,8 +81,8 @@ public class FlowCcController {
     @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pageCc'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
     public BaseResponse<List<FlowCc>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
-        String userId = AuthContext.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
         int pageNo = query.getPageNum();
         int pageSize = query.getPageSize();
         return ccService.listCcByUser(userId, query.getReadStatus(),
@@ -96,8 +96,8 @@ public class FlowCcController {
      */
     @GetMapping("/cc/unreadCount")
     public BaseResponse<Long> ccUnreadCount() {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
-        String userId = AuthContext.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(ccService.countUnread(userId, tenantId));
     }
 
@@ -112,8 +112,8 @@ public class FlowCcController {
     @PostMapping("/cc/{id}/read")
     @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'ccMarkRead'")
     public BaseResponse<Boolean> ccMarkRead(@PathVariable String id) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
-        String userId = AuthContext.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
         ccService.markRead(tenantId, userId, id);
         return BaseResponse.success(Boolean.TRUE);
     }
@@ -128,8 +128,8 @@ public class FlowCcController {
     @PostMapping("/cc/readAll")
     @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'ccMarkAllRead'")
     public BaseResponse<Integer> ccMarkAllRead() {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
-        String userId = AuthContext.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(ccService.markAllRead(tenantId, userId));
     }
 }

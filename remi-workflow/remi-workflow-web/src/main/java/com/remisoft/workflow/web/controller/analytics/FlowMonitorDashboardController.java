@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.permission.PermissionCodes;
 import com.remisoft.workflow.domain.entity.FlowInstance;
@@ -113,7 +113,7 @@ public class FlowMonitorDashboardController {
     @GetMapping("/monitor/overview")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public BaseResponse<Map<String, Object>> monitorOverview() {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(buildOverview(tenantId));
     }
 
@@ -136,7 +136,7 @@ public class FlowMonitorDashboardController {
             @RequestParam(required = false) String warnLevel,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int pageSize) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
 
         // 拉取全量异常（detectAnomalies 默认 limit=100，足够覆盖监控场景）
         List<Map<String, Object>> all = new ArrayList<>();
@@ -187,7 +187,7 @@ public class FlowMonitorDashboardController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public BaseResponse<List<Map<String, Object>>> monitorInstanceTrend(
             @RequestParam(defaultValue = "7") int days) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(buildInstanceTrend(tenantId, days));
     }
 
@@ -209,7 +209,7 @@ public class FlowMonitorDashboardController {
             @RequestParam(defaultValue = "10") int topN,
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         LocalDateTime startDt = parseDateTime(startTime);
         LocalDateTime endDt = parseDateTime(endTime);
         List<Map<String, Object>> rows = hisTaskMapper.selectApproverEfficiency(tenantId, startDt, endDt, topN);
@@ -249,7 +249,7 @@ public class FlowMonitorDashboardController {
     public BaseResponse<List<Map<String, Object>>> monitorFlowTypeDistribution(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         LocalDateTime startDt = parseDateTime(startTime);
         LocalDateTime endDt = parseDateTime(endTime);
         List<Map<String, Object>> rows = instanceMapper.selectFlowTypeDistribution(tenantId, startDt, endDt);
@@ -300,7 +300,7 @@ public class FlowMonitorDashboardController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     @Operation(summary = "监控仪表盘聚合数据（首屏一次加载）")
     public BaseResponse<Map<String, Object>> monitorDashboard() {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         Map<String, Object> dashboard = new LinkedHashMap<>();
 
         // 1. overview
@@ -372,7 +372,7 @@ public class FlowMonitorDashboardController {
     @Operation(summary = "超期任务 Top N 排行（按超期时长降序）")
     public BaseResponse<List<Map<String, Object>>> monitorOverdueTasks(
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         List<Map<String, Object>> rows = runTaskMapper.selectOverdueTopN(tenantId, limit);
         return BaseResponse.success(rows != null ? rows : new ArrayList<>());
     }
@@ -391,7 +391,7 @@ public class FlowMonitorDashboardController {
     @Operation(summary = "审批人负载分布（当前待办数量）")
     public BaseResponse<List<Map<String, Object>>> monitorApproverWorkload(
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         List<Map<String, Object>> rows = runTaskMapper.selectWorkloadByAssignee(tenantId, limit);
         return BaseResponse.success(rows != null ? rows : new ArrayList<>());
     }
@@ -418,7 +418,7 @@ public class FlowMonitorDashboardController {
     public BaseResponse<List<Map<String, Object>>> monitorFlowEfficiencyComparison(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         LocalDateTime startDt = parseDateTime(startTime);
         LocalDateTime endDt = parseDateTime(endTime);
         List<Map<String, Object>> rows = hisTaskMapper.selectFlowEfficiencyComparison(tenantId, startDt, endDt);

@@ -126,6 +126,46 @@ public class PageQuery extends BaseQuery {
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    // ======================== 游标/Seek 分页扩展（可选，向后兼容） ========================
+
+    /**
+     * 游标分页游标值（可选）。
+     *
+     * <p>当非空时启用 seek 模式分页，返回游标之后（或之前）的 pageSize 条记录。
+     * 与传统的 offset 分页互斥，两者同时设置时以 cursor 优先。
+     *
+     * <p>典型实现语义（参考 GitHub/Twitter Cursor API）：
+     * <ul>
+     *   <li>基于主键递增：cursor 即上一页最后一条记录的 ID</li>
+     *   <li>基于时间分页：cursor 即上一页最后一条记录的排序字段值</li>
+     * </ul>
+     *
+     * <p>业务方需在 Service 层根据此值拼接 {@code WHERE id > cursor ORDER BY id ASC LIMIT pageSize}
+     * 语义的查询条件。
+     */
+    private String cursor;
+
+    /**
+     * 游标方向（默认 NEXT）。
+     *
+     * <ul>
+     *   <li>NEXT：请求游标之后的记录（翻页向下）</li>
+     *   <li>PREV：请求游标之前的记录（翻页向上）</li>
+     * </ul>
+     */
+    @Builder.Default
+    private CursorDirection cursorDirection = CursorDirection.NEXT;
+
+    /**
+     * 游标方向枚举。
+     */
+    public enum CursorDirection {
+        /** 游标之后 */
+        NEXT,
+        /** 游标之前 */
+        PREV
+    }
+
     /**
      * 允许排序的字段白名单
      *
@@ -475,12 +515,24 @@ public class PageQuery extends BaseQuery {
         }
     }
 
+    /**
+     * 判断是否启用游标分页模式。
+     *
+     * @return cursor 非空时返回 true
+     */
+    @JsonIgnore
+    public boolean isCursorBased() {
+        return cursor != null && !cursor.isBlank();
+    }
+
     @Override
     public String toString() {
         return "PageQuery{" +
                 "pageNum=" + pageNum +
                 ", pageSize=" + pageSize +
                 ", orderItems=" + orderItems +
+                ", cursor='" + cursor + '\'' +
+                ", cursorDirection=" + cursorDirection +
                 ", searchKey='" + getSearchKey() + '\'' +
                 ", ascending=" + getAscending() +
                 '}';

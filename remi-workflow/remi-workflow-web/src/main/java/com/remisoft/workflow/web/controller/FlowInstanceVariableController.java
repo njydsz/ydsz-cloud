@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -122,7 +122,7 @@ public class FlowInstanceVariableController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public BaseResponse<List<String>> urge(@PathVariable String id,
                                  @RequestParam(required = false) String comment) {
-        return BaseResponse.success(workflowFacade.urgeTask(id, AuthContext.getUserId(), comment));
+        return BaseResponse.success(workflowFacade.urgeTask(id, AuthContextUtils.getUserId(), comment));
     }
 
     /**
@@ -137,7 +137,7 @@ public class FlowInstanceVariableController {
     public BaseResponse<List<String>> urgeByNode(@PathVariable String id,
                                            @RequestParam(required = false) String nodeCode,
                                            @RequestParam(required = false) String comment) {
-        return BaseResponse.success(workflowFacade.urgeNodeTask(id, nodeCode, AuthContext.getUserId(), comment));
+        return BaseResponse.success(workflowFacade.urgeNodeTask(id, nodeCode, AuthContextUtils.getUserId(), comment));
     }
 
     /**

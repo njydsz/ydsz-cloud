@@ -19,7 +19,7 @@ import java.lang.annotation.*;
  * <p><b>实现原理：</b>
  * <ol>
  *   <li>AOP 拦截带 {@code @DataScope} 的方法</li>
- *   <li>从当前线程上下文（{@code AuthContext}）获取用户的数据权限范围</li>
+ *   <li>从当前线程上下文（{@code AuthContextUtils}）获取用户的数据权限范围</li>
  *   <li>动态拼接 {@code WHERE dept_id IN (...) } / {@code WHERE user_id = ?} 条件</li>
  *   <li>合并到原始 SQL 尾部，由 MyBatis 执行</li>
  * </ol>

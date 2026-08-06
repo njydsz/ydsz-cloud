@@ -41,12 +41,11 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>> 5ms：抛出 {@link ClockBackwardException} 强制报错</li>
  * </ul>
  *
- * <p>本类替代原 {@link SnowflakeUtils} 静态单例模式，遵循 Spring IoC 容器生命周期管理，
+ * <p>本类为 Spring Bean 封装，遵循 Spring IoC 容器生命周期管理，
  * 支持多租户、多实例场景下的 Bean 隔离。
  *
  * @author remi-team
  * @since 2.0.0
- * @see SnowflakeUtils 原静态工具类（已废弃，保留过渡层）
  */
 @Slf4j
 @Component
@@ -330,7 +329,7 @@ public class SnowflakeIdGenerator {
         return extractTimestamp(currentState) + EPOCH;
     }
 
-    // ==================== 静态常量暴露（兼容原 SnowflakeUtils） ====================
+    // ==================== 静态常量暴露 ====================
 
     public static long getMaxWorkerId() {
         return MAX_WORKER_ID;
@@ -340,7 +339,7 @@ public class SnowflakeIdGenerator {
         return MAX_DATACENTER_ID;
     }
 
-    // ==================== ID 反解析（兼容原 SnowflakeUtils） ====================
+    // ==================== ID 反解析 ====================
 
     public static long parseTimestamp(long id) {
         return (id >> TIMESTAMP_LEFT_SHIFT) + EPOCH;

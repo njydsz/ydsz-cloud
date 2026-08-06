@@ -12,7 +12,7 @@ import com.remisoft.common.audit.annotation.Audit;
 import com.remisoft.common.audit.enums.AuditAction;
 import com.remisoft.common.audit.enums.AuditType;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -201,7 +201,7 @@ public class FlowInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<Boolean> recall(@PathVariable String id,
                                   @RequestParam(required = false) String targetNodeCode) {
-        return BaseResponse.success(instanceService.recall(id, AuthContext.getUserId(), targetNodeCode));
+        return BaseResponse.success(instanceService.recall(id, AuthContextUtils.getUserId(), targetNodeCode));
     }
 
     /**
@@ -215,7 +215,7 @@ public class FlowInstanceController {
     @GetMapping("/instance/{id}/recallableNodes")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
-        return BaseResponse.success(instanceService.listRecallableNodes(id, AuthContext.getUserId()));
+        return BaseResponse.success(instanceService.listRecallableNodes(id, AuthContextUtils.getUserId()));
     }
 
     /**
@@ -238,7 +238,7 @@ public class FlowInstanceController {
     public BaseResponse<Boolean> rollback(@PathVariable String id,
                                     @RequestParam String reason,
                                     @RequestParam(required = false, defaultValue = "7") int maxRollbackDays) {
-        return BaseResponse.success(instanceService.rollback(id, AuthContext.getUserId(), reason, maxRollbackDays));
+        return BaseResponse.success(instanceService.rollback(id, AuthContextUtils.getUserId(), reason, maxRollbackDays));
     }
 
     /**
@@ -261,7 +261,7 @@ public class FlowInstanceController {
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false, defaultValue = "RESTART") String redoMode,
                                     @RequestBody(required = false) Map<String, Object> variables) {
-        return BaseResponse.success(workflowFacade.resubmitProcess(id, AuthContext.getUserId(),
+        return BaseResponse.success(workflowFacade.resubmitProcess(id, AuthContextUtils.getUserId(),
                 variables, comment, redoMode));
     }
 }

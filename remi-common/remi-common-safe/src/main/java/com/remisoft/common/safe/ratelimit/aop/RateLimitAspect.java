@@ -22,9 +22,9 @@ import com.remisoft.common.safe.util.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.remisoft.common.core.context.RequestContext;
+import com.remisoft.common.util.http.RequestContextUtils;
 
 /**
  * 限流 AOP 切面
@@ -177,13 +177,16 @@ public class RateLimitAspect {
         }
     }
 
+    /**
+     * 获取当前 HTTP 请求（优先 RequestContextUtils，兜底 RequestContext）
+     */
     private static HttpServletRequest currentRequest() {
         try {
-            RequestAttributes attrs =
-                    RequestContextHolder.getRequestAttributes();
-            if (attrs instanceof ServletRequestAttributes sra) {
-                return sra.getRequest();
+            HttpServletRequest request = RequestContextUtils.getRequest();
+            if (request == null) {
+                request = (HttpServletRequest) RequestContext.getHttpRequest();
             }
+            return request;
         } catch (Exception ignored) {
             log.debug("Caught exception (ignored): {}", ignored.getMessage());
         }

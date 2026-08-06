@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.remisoft.cronjob.domain.dag.DagInstanceStatus;
 import com.remisoft.common.core.code.BaseResultCode;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.exception.custom.SysException;
 import com.remisoft.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.remisoft.cronjob.domain.entity.dag.JobDag;
@@ -286,7 +287,11 @@ public class JobDagServiceImpl implements JobDagService {
         instance.setStatus(DagInstanceStatus.PENDING.name());
         instance.setTriggerType("MANUAL");
         instance.setTriggerBy(triggerBy);
-        instance.setTriggerTraceId(MDC.get("traceId"));
+        String triggerTraceId = RequestContext.getTraceId();
+        if (triggerTraceId == null || triggerTraceId.isBlank()) {
+            triggerTraceId = MDC.get("traceId");
+        }
+        instance.setTriggerTraceId(triggerTraceId);
         jobDagInstanceMapper.insert(instance);
         log.info("[JobDag] 触发 DAG: dagId={} dagKey={} instanceId={} triggerBy={}",
                 dag.getId(), dag.getDagKey(), instance.getId(), triggerBy);

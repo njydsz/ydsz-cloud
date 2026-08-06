@@ -6,14 +6,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.remisoft.common.core.context.RequestContext;
 
 /**
- * 审计上下文（基于 ThreadLocal）
+ * 审计上下文（基于 RequestContext 统一存储）
  * <p>
  * 管理审计日志的上下文信息（IP、URL、Token、BusinessNo 等），确保线程隔离。
- * 采用 {@link InheritableThreadLocal} 便于子线程继承父线程的审计上下文。
+ * 自 v2.0.0 起数据体统一存入 {@link RequestContext#KEY_AUDIT_DATA}，
+ * 由 {@link RequestContext} 的 TransmittableThreadLocal 承载，配合 TTL 线程池
+ * 可自动跨线程传播，替代原独立 {@code ThreadLocal}（原 {@code InheritableThreadLocal}
+ * 仅在创建线程时继承，无法覆盖线程池复用场景）。
  * </p>
  *
- * <p><b>线程安全：</b>静态方法+ThreadLocal 实现，无共享状态。<br>
- * <b>内存泄漏防护：</b>必须在请求结束（{@link #clear()}）时清理 ThreadLocal，
+ * <p><b>线程安全：</b>静态方法 + RequestContext 实现，无共享状态。<br>
+ * <b>内存泄漏防护：</b>必须在请求结束（{@link #clear()}）时清理上下文，
  * 切面已在 finally 块统一清理，业务方无需手动调用。</p>
  *
  * <p>通用字段（如 operatorId/operatorName）已从 {@link RequestContext} 获取，
@@ -25,10 +28,14 @@ import com.remisoft.common.core.context.RequestContext;
 public class AuditContext {
 
     /**
-     * 当前线程的审计上下文（使用 ThreadLocal，避免线程池场景下的上下文泄漏）
-     * <p>异步线程上下文传递请使用 {@link #wrap(Runnable)} 方法显式包装。
+     * 获取当前线程的审计上下文
+     * <p>从 {@link RequestContext#KEY_AUDIT_DATA} 读取，异步线程上下文传递
+     * 由 {@link RequestContext} 的 TTL 机制自动完成；显式包装请使用 {@link #wrap(Runnable)}。</p>
      */
-    private static final ThreadLocal<AuditContextData> CONTEXT_THREAD_LOCAL = new ThreadLocal<>();
+    private static AuditContextData current() {
+        Object data = RequestContext.get(RequestContext.KEY_AUDIT_DATA);
+        return data instanceof AuditContextData ? (AuditContextData) data : null;
+    }
 
     /**
      * 将 Runnable 包装为携带当前审计上下文的任务
@@ -63,8 +70,7 @@ public class AuditContext {
      * @param data 审计上下文数据
      */
     public static void set(AuditContextData data) {
-        CONTEXT_THREAD_LOCAL.remove();
-        CONTEXT_THREAD_LOCAL.set(data);
+        RequestContext.put(RequestContext.KEY_AUDIT_DATA, data);
     }
 
     /**
@@ -73,7 +79,7 @@ public class AuditContext {
      * @return 审计上下文数据；不存在时返回 null
      */
     public static AuditContextData get() {
-        return CONTEXT_THREAD_LOCAL.get();
+        return current();
     }
 
     /**
@@ -81,7 +87,7 @@ public class AuditContext {
      * <p>防止内存泄漏，务必在请求结束或异步任务结束时调用。
      */
     public static void clear() {
-        CONTEXT_THREAD_LOCAL.remove();
+        RequestContext.remove(RequestContext.KEY_AUDIT_DATA);
     }
 
     /**
@@ -101,8 +107,8 @@ public class AuditContext {
 
     /**
      * 审计上下文数据载体
-     * <p>线程局部存储的审计上下文数据对象。通用字段（如 operatorId/operatorName）
-     * 已从 {@link RequestContext} 获取，避免重复存储。
+     * <p>存储于 {@link RequestContext#KEY_AUDIT_DATA} 的审计上下文数据对象。
+     * 通用字段（如 operatorId/operatorName）已从 {@link RequestContext} 获取。
      */
     public static class AuditContextData {
 
@@ -178,7 +184,7 @@ public class AuditContext {
          * <p>remi-common-core 精简后 {@link RequestContext} 不再支持自定义字段透传
          * （原通过 {@code RequestContext.put("username", ...)} 写入、此处读取），
          * 返回 {@code null}，避免引入对认证模块的强依赖。
-         * 如需操作人姓名，可通过认证模块的 {@code AuthContext.getUsername()} 获取。
+         * 如需操作人姓名，可通过认证模块的 {@code AuthContextUtils.getUsername()} 获取。
          *
          * @return 操作人姓名；无法获取时返回 null
          */

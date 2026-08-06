@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.domain.enums.DataScopeType;
 import com.remisoft.common.util.auth.AuthInfoUtils;
-import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.http.RequestContextUtils;
 import com.remisoft.common.util.string.StringUtils;
 
@@ -36,14 +36,14 @@ import com.remisoft.common.util.string.StringUtils;
  * </ul>
  *
  * <p><b>注意：</b>租户ID（X-Tenant-Id）已由独立的 {@code common-tenant} 模块
- * 通过 {@code TenantContextHolder} + {@code TenantIsolationInterceptor} 处理，
+ * 通过 {@code TenantContextWebFilter} + {@code TenantIsolationInterceptor} 处理，
  * 本解析器不再负责租户上下文。
  *
  * <h2>读取优先级（安全增强）</h2>
  * <ol>
  *   <li>认证上下文 {@link AuthInfoUtils}（JWT 解析，可信）— 用于 userId</li>
  *   <li>真实 HttpServletRequest Header（常规 Web 请求 / Feign 透传）— 用于 ID 集合、列权限</li>
- *   <li>{@link RequestHolder} extra headers（{@code @AuthRowPermission}/{@code @AuthColPermission} 写入的虚拟请求头）</li>
+ *   <li>{@link RequestContext} extra headers（{@code @AuthRowPermission}/{@code @AuthColPermission} 写入的虚拟请求头）</li>
  * </ol>
  *
  * <p><b>安全说明：</b> userId 优先从 JWT 认证上下文获取（不可伪造），
@@ -82,7 +82,7 @@ public class DataPermissionContextResolver {
      *
      * <p>执行顺序：
      * <ol>
-     *   <li>获取当前请求（优先从 ServletUtils，兜底从 RequestHolder）</li>
+     *   <li>获取当前请求（优先从 ServletUtils，兜底从 RequestContext）</li>
      *   <li>读取并解析所有数据权限相关 header</li>
      *   <li>调用 {@link #expandIdsIfNecessary(DataPermissionContext)} 扩展子级 ID</li>
      *   <li>返回完整的 DataPermissionContext</li>
@@ -93,7 +93,7 @@ public class DataPermissionContextResolver {
     public DataPermissionContext resolve() {
         HttpServletRequest request = RequestContextUtils.getRequest();
         if (request == null) {
-            request = RequestHolder.getCurrentRequest();
+            request = (HttpServletRequest) RequestContext.getHttpRequest();
         }
         DataPermissionContext context = new DataPermissionContext();
         context.setDataScope(resolveDataScope(resolveHeader(request, HeaderConstants.X_DATA_SCOPE)));
@@ -170,7 +170,7 @@ public class DataPermissionContextResolver {
     }
 
     /**
-     * 读取请求头，优先从 HttpServletRequest，兜底从 RequestHolder extra headers。
+     * 读取请求头，优先从 HttpServletRequest，兜底从 RequestContext extra headers。
      *
      * @param request HttpServletRequest（可为 null）
      * @param name    header 名称
@@ -186,7 +186,7 @@ public class DataPermissionContextResolver {
                 return value;
             }
         }
-        return RequestHolder.getExtraHeader(name);
+        return RequestContext.getExtraHeader(name);
     }
 
     /**

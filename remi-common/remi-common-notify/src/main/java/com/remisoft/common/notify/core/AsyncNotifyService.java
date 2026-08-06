@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.notify.enums.NotifyChannel;
 
 /**
@@ -66,7 +67,7 @@ public class AsyncNotifyService {
 	 */
     public CompletableFuture<NotifySendResult> sendAsync(NotifyChannel channel, String receiver,
                                                           String title, String content) {
-        String traceId = MDC.get(NotifyTraceContext.TRACE_ID_KEY);
+        String traceId = resolveTraceId();
         return CompletableFuture.supplyAsync(
                 () -> NotifyTraceContext.runWithTraceResult(traceId,
                         () -> doSend(channel, receiver, title, content)),
@@ -89,7 +90,7 @@ public class AsyncNotifyService {
             return CompletableFuture.completedFuture(NotifySendResult.failure("通知请求为空", "unknown"));
         }
         String traceId = request.getTraceId() != null ? request.getTraceId()
-                : MDC.get(NotifyTraceContext.TRACE_ID_KEY);
+                : resolveTraceId();
         return CompletableFuture.supplyAsync(
                 () -> NotifyTraceContext.runWithTraceResult(traceId, () -> doSendRequest(request)),
                 executor)
@@ -111,7 +112,7 @@ public class AsyncNotifyService {
 	 */
     public CompletableFuture<NotifySendResult> batchSendAsync(NotifyChannel channel,
                                                                List<String> receivers, String title, String content) {
-        String traceId = MDC.get(NotifyTraceContext.TRACE_ID_KEY);
+        String traceId = resolveTraceId();
         return CompletableFuture.supplyAsync(
                 () -> NotifyTraceContext.runWithTraceResult(traceId, () -> {
                     int successCount = 0;
@@ -178,6 +179,19 @@ public class AsyncNotifyService {
             }
             return NotifySendResult.failure("发送异常: " + e.getMessage(), request.getChannel().getName());
         }
+    }
+
+    /**
+     * 解析当前链路 traceId：优先 {@link RequestContext}（统一上下文主源），回退 MDC。
+     *
+     * @return 当前 traceId；均不存在时返回 null
+     */
+    private String resolveTraceId() {
+        String traceId = RequestContext.getTraceId();
+        if (traceId != null && !traceId.isEmpty()) {
+            return traceId;
+        }
+        return MDC.get(NotifyTraceContext.TRACE_ID_KEY);
     }
 
     /**

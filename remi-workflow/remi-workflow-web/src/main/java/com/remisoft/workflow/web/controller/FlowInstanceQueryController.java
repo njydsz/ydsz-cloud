@@ -11,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.permission.PermissionCodes;
 import com.remisoft.workflow.WorkflowFacade;
@@ -140,7 +140,7 @@ public class FlowInstanceQueryController {
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         BaseResponse<FlowInstance> pageResult = instanceService.page(businessType, initiatorId, flowStatus,
                 startTime, endTime, tid, pageNo, pageSize);
         List<FlowInstance> instances = pageResult.getData();
@@ -176,8 +176,8 @@ public class FlowInstanceQueryController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        BaseResponse<FlowInstance> pageResult = instanceService.page(null, AuthContext.getUserId(), status,
-                startTime, endTime, AuthContext.getTenantIdOrDefault("1"),
+        BaseResponse<FlowInstance> pageResult = instanceService.page(null, AuthContextUtils.getUserId(), status,
+                startTime, endTime, AuthContextUtils.getTenantIdOrDefault("1"),
                 pageNum, pageSize);
         List<FlowInstance> instances = pageResult.getData();
         List<FlowInstanceVO> vos = WorkflowConverter.INSTANT.flowInstanceListToVO(instances);

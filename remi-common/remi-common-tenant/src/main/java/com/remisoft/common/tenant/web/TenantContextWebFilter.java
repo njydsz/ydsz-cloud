@@ -9,8 +9,8 @@ import java.util.Set;
 
 import org.slf4j.MDC;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.tenant.TenantContext;
-import com.remisoft.common.tenant.TenantContextHolder;
 import com.remisoft.common.tenant.config.TenantProperties;
 import com.remisoft.common.tenant.config.TenantProperties.TenantField;
 import com.remisoft.common.util.auth.AuthInfoUtils;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * 租户上下文 Web 过滤器。
  *
  * <p>在请求入口从 JWT 认证信息和 HTTP Header 解析全部配置的租户字段，
- * 设置到 {@link TenantContextHolder} 和 MDC 日志上下文。
+ * 设置到 {@link RequestContext} 和 MDC 日志上下文。
  *
  * <p><b>解析逻辑（逐字段）：</b>
  * <ol>
@@ -66,7 +66,7 @@ public class TenantContextWebFilter implements Filter {
 
             // 1. 匿名 URL → 跳过隔离
             if (isAnonUrl(requestUri)) {
-                TenantContextHolder.set(TenantContext.skip());
+                setTenantContext(TenantContext.skip());
                 chain.doFilter(req, res);
                 return;
             }
@@ -105,16 +105,36 @@ public class TenantContextWebFilter implements Filter {
                         builder.fieldValues(entry.getKey(), strList);
                     }
                 }
-                TenantContextHolder.set(builder.build());
+                setTenantContext(builder.build());
                 MDC.put(MDC_TENANT_ID, tenantId);
             }
             // 无认证无跳过 → 不设置上下文，SQL 拦截器 fail-closed
 
             chain.doFilter(req, res);
         } finally {
-            TenantContextHolder.clear();
+            clearTenantContext();
             MDC.remove(MDC_TENANT_ID);
         }
+    }
+
+    /**
+     * 设置租户上下文到 RequestContext（含 tenantId 同步）。
+     *
+     * @param context 租户上下文
+     */
+    private static void setTenantContext(TenantContext context) {
+        RequestContext.setTenantContext(context);
+        if (context != null && context.getTenantId() != null) {
+            RequestContext.setTenantId(context.getTenantId());
+        }
+    }
+
+    /**
+     * 清除租户上下文（对应原 TenantContextHolder.clear 语义）。
+     */
+    private static void clearTenantContext() {
+        RequestContext.remove(RequestContext.KEY_TENANT_CONTEXT);
+        RequestContext.remove(RequestContext.KEY_TENANT_ID);
     }
 
     /**

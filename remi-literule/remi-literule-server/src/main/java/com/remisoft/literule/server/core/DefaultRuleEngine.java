@@ -18,6 +18,7 @@ import jakarta.annotation.PreDestroy;
 
 import org.slf4j.MDC;
 import com.remisoft.common.core.constant.HeaderConstants;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.literule.api.Rule;
 import com.remisoft.literule.api.RuleContext;
 import com.remisoft.literule.api.RuleDefinition;
@@ -675,9 +676,10 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @since 1.0.0
      */
     /**
-     * 在 MDC 中设置 traceId 执行_supplier，执行完毕后恢复原有 MDC 状态。
+     * 在 MDC 与 {@link RequestContext} 中设置 traceId 执行_supplier，执行完毕后恢复原有上下文状态。
      *
      * <p>替代已删除的 {@code TraceContext.withContext()} 方法。
+     * traceId 双写 {@link RequestContext} 与 MDC，保证统一上下文与日志链路一致。
      *
      * @param traceId  要设置的 traceId（null 时不设置，仅执行 supplier）
      * @param supplier 要执行的操作
@@ -686,9 +688,11 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     private <T> T withMdcTraceId(String traceId, Supplier<T> supplier) {
         String previous = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+        String previousContext = RequestContext.getTraceId();
         try {
             if (traceId != null) {
                 MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, traceId);
+                RequestContext.setTraceId(traceId);
             }
             return supplier.get();
         } finally {
@@ -697,6 +701,11 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             } else {
                 MDC.remove(HeaderConstants.MDC_TRACE_ID_KEY);
             }
+            if (previousContext != null) {
+                RequestContext.setTraceId(previousContext);
+            } else {
+                RequestContext.remove(RequestContext.KEY_TRACE_ID);
+            }
         }
     }
 
@@ -704,6 +713,10 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         String traceId = context.getTraceId();
         if (traceId != null && !traceId.isBlank()) {
             return traceId;
+        }
+        String contextTraceId = RequestContext.getTraceId();
+        if (contextTraceId != null && !contextTraceId.isBlank()) {
+            return contextTraceId;
         }
         String mdcTraceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         return mdcTraceId != null ? mdcTraceId : IdGenerator.nextIdStr();

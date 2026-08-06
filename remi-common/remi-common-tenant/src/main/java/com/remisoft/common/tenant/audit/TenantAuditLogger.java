@@ -1,6 +1,6 @@
 package com.remisoft.common.tenant.audit;
 
-import com.remisoft.common.tenant.TenantContextHolder;
+import com.remisoft.common.core.context.RequestContext;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -34,7 +34,7 @@ public final class TenantAuditLogger {
      * @param message 日志消息
      */
     public static void log(String action, String message) {
-        String tenantId = TenantContextHolder.getTenantId();
+        String tenantId = RequestContext.getTenantId();
         MDC.put("tenantId", tenantId != null ? tenantId : "SYSTEM");
         MDC.put("auditAction", action);
         try {
@@ -54,7 +54,7 @@ public final class TenantAuditLogger {
      * @param resourceId 资源 ID
      */
     public static void log(String action, String message, Object resourceId) {
-        String tenantId = TenantContextHolder.getTenantId();
+        String tenantId = RequestContext.getTenantId();
         MDC.put("tenantId", tenantId != null ? tenantId : "SYSTEM");
         MDC.put("auditAction", action);
         MDC.put("resourceId", String.valueOf(resourceId));

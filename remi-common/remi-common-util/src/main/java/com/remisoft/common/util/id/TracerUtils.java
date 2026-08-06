@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.core.trace.TraceIdGenerator;
 import com.remisoft.common.util.string.StringUtils;
 
@@ -24,8 +25,12 @@ import com.remisoft.common.util.string.StringUtils;
  *   <li>支持线程间链路追踪上下文传递</li>
  * </ul>
  *
+ * <p><b>统一上下文：</b>自 v2.0.0 起，traceId 读写统一收口至 {@link RequestContext}
+ * （{@code TransmittableThreadLocal}，支持线程池自动传播），MDC 仅作为日志桥接双写，
+ * 保证业务代码读取 {@link RequestContext#getTraceId()} 与日志输出保持一致。
+ *
  * <p><b>线程安全性：</b>所有方法均为静态无状态，线程安全。
- * 实际状态存储于 SLF4J {@link MDC}，由调用方保证清理。
+ * 实际状态存储于 SLF4J {@link MDC} 与 {@link RequestContext}，由调用方保证清理。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -43,6 +48,7 @@ import com.remisoft.common.util.string.StringUtils;
  *
  * @author remi-team
  * @since 1.0.0
+ * @see RequestContext
  */
 public final class TracerUtils {
 
@@ -107,8 +113,9 @@ public final class TracerUtils {
     /**
      * 获取链路追踪编号。
      * 1. 首先尝试获取 SkyWalking 的 TraceId（反射调用，无硬依赖）。
-     * 2. 如果不存在，则尝试从 MDC 中获取。
-     * 3. 如果都不存在，则返回空字符串。
+     * 2. 如果不存在，则尝试从 {@link RequestContext} 中获取（统一上下文主源）。
+     * 3. 如果都不存在，则尝试从 MDC 中获取（兼容非 Web / 旧逻辑场景）。
+     * 4. 如果都不存在，则返回空字符串。
      *
      * @return 链路追踪编号
      */
@@ -117,7 +124,12 @@ public final class TracerUtils {
         if (StringUtils.isNotEmpty(traceId) && !"Ignored_Trace".equalsIgnoreCase(traceId)) {
             return traceId;
         }
-        
+
+        traceId = RequestContext.getTraceId();
+        if (StringUtils.isNotEmpty(traceId)) {
+            return traceId;
+        }
+
         traceId = MDC.get(TRACE_ID_NAME);
         return traceId == null ? "" : traceId;
     }
@@ -150,13 +162,14 @@ public final class TracerUtils {
     }
 
     /**
-     * 将 Trace ID 注入到 MDC
+     * 将 Trace ID 注入到 MDC 与 {@link RequestContext}（双写，保证统一上下文一致）
      *
      * @param traceId Trace ID
      */
     public static void setTraceId(String traceId) {
         if (StringUtils.isNotEmpty(traceId)) {
             MDC.put(TRACE_ID_NAME, traceId);
+            RequestContext.setTraceId(traceId);
         }
     }
 
@@ -256,19 +269,23 @@ public final class TracerUtils {
     }
 
     /**
-     * 清理 MDC 中的 Trace ID
+     * 清理 MDC 与 {@link RequestContext} 中的 Trace ID
      */
     public static void clear() {
         MDC.remove(TRACE_ID_NAME);
+        RequestContext.remove(RequestContext.KEY_TRACE_ID);
     }
 
     /**
      * 清理所有追踪上下文（Trace ID、Span ID、Parent Span ID）
+     * <p>Trace ID 同时清理 {@link RequestContext}，Span ID / Parent Span ID 仅清理 MDC
+     * （Span 属日志级诊断信息，不进入统一请求上下文）。</p>
      */
     public static void clearAll() {
         MDC.remove(TRACE_ID_NAME);
         MDC.remove(SPAN_ID_NAME);
         MDC.remove(PARENT_SPAN_ID_NAME);
+        RequestContext.remove(RequestContext.KEY_TRACE_ID);
     }
 
     /**
@@ -303,6 +320,7 @@ public final class TracerUtils {
                 setTraceId(originalTraceId);
             } else {
                 MDC.remove(TRACE_ID_NAME);
+                RequestContext.remove(RequestContext.KEY_TRACE_ID);
             }
             if (StringUtils.isNotEmpty(originalSpanId)) {
                 MDC.put(SPAN_ID_NAME, originalSpanId);

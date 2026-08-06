@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.feign.dto.RealtimePushDTO;
 import com.remisoft.common.lock.annotation.Idempotent;
@@ -121,7 +121,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
     public BaseResponse<Page<MsgNotificationVO>> inbox(NotificationQueryDTO query) {
-        Page<MsgNotification> page = notificationService.inbox(AuthContext.getUserId(), query);
+        Page<MsgNotification> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
         Page<MsgNotificationVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         voPage.setRecords(MessageConverter.INSTANT.notificationListToVO(page.getRecords()));
         return BaseResponse.success(voPage);
@@ -136,7 +136,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/unreadCount")
     public BaseResponse<Long> countUnread() {
-        return BaseResponse.success(notificationService.countUnread(AuthContext.getUserId()));
+        return BaseResponse.success(notificationService.countUnread(AuthContextUtils.getUserId()));
     }
 
     /**
@@ -152,7 +152,7 @@ public class NotificationController {
     @RateLimit(resource = "message.notification.markRead", threshold = 50)
     @PostMapping("/{id}/read")
     public BaseResponse<Boolean> markRead(@PathVariable String id) {
-        return BaseResponse.success(notificationService.markRead(AuthContext.getUserId(), id));
+        return BaseResponse.success(notificationService.markRead(AuthContextUtils.getUserId(), id));
     }
 
     /**
@@ -167,7 +167,7 @@ public class NotificationController {
     @RateLimit(resource = "message.notification.markAllRead", threshold = 50)
     @PostMapping("/readAll")
     public BaseResponse<Integer> markAllRead() {
-        return BaseResponse.success(notificationService.markAllRead(AuthContext.getUserId()));
+        return BaseResponse.success(notificationService.markAllRead(AuthContextUtils.getUserId()));
     }
 
     /**
@@ -183,7 +183,7 @@ public class NotificationController {
     @RateLimit(resource = "message.notification.delete", threshold = 50)
     @DeleteMapping
     public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
-        notificationService.delete(AuthContext.getUserId(), ids);
+        notificationService.delete(AuthContextUtils.getUserId(), ids);
         return BaseResponse.success();
     }
 
@@ -200,7 +200,7 @@ public class NotificationController {
     @RateLimit(resource = "message.notification.recall", threshold = 50)
     @PostMapping("/{id}/recall")
     public BaseResponse<Boolean> recall(@PathVariable String id) {
-        return BaseResponse.success(recallService.recallNotification(AuthContext.getUserId(), id));
+        return BaseResponse.success(recallService.recallNotification(AuthContextUtils.getUserId(), id));
     }
 
     /**

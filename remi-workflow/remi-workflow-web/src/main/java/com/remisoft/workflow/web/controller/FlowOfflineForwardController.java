@@ -3,7 +3,7 @@ package com.remisoft.workflow.web.controller.delegate;
 import org.springframework.web.bind.annotation.*;
 
 import com.remisoft.common.safe.ratelimit.annotation.RateLimit;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.workflow.server.service.FlowOfflineAutoForwardService;
@@ -111,7 +111,7 @@ public class FlowOfflineForwardController {
     public BaseResponse<Integer> manualForward(
             @RequestParam String userId,
             @RequestParam String delegateUserId) {
-        String operatorId = AuthContext.getUserId();
+        String operatorId = AuthContextUtils.getUserId();
         return BaseResponse.success(offlineAutoForwardService.manualForward(userId, delegateUserId, operatorId));
     }
 }

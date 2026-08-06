@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.lock.annotation.IdempotentExempt;
@@ -155,7 +155,7 @@ public class FlowDefinitionDesignController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
     public BaseResponse<String> importDefinition(@RequestBody String json,
                                          @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(definitionService.importDefinition(json, tid));
     }
 
@@ -172,7 +172,7 @@ public class FlowDefinitionDesignController {
     @Operation(summary = "流程模拟运行")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public BaseResponse<List<Map<String, Object>>> simulate(@Valid @RequestBody FlowDefinitionSimulateDTO dto) {
-        String tid = AuthContext.getTenantIdOrDefault("1");
+        String tid = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(instanceService.simulate(dto.getFlowCode(),
                 String.valueOf(dto.getVersion()), dto.getVariables(), tid));
     }

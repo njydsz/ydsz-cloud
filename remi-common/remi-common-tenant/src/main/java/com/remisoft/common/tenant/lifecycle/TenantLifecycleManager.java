@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.remisoft.common.jdbc.exception.TenantIsolationException;
-import com.remisoft.common.tenant.TenantContextHolder;
+import com.remisoft.common.core.context.RequestContext;
 
 /**
  * 租户生命周期管理器。
@@ -66,7 +66,7 @@ public final class TenantLifecycleManager {
      * @throws TenantIsolationException 租户已暂停/下线时抛出
      */
     public static boolean checkCurrentTenantActive() {
-        String tenantId = TenantContextHolder.getTenantId();
+        String tenantId = RequestContext.getTenantId();
         if (tenantId == null) {
             return true; // 无租户上下文，由 SQL 拦截器 fail-closed 处理
         }

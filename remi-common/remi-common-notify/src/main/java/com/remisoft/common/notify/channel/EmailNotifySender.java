@@ -95,6 +95,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	/** 可选：去重服务（P3-13） */
 	private final ObjectProvider<NotifyDedupService> dedupServiceProvider;
 
+	/** 分布式 ID 生成器（用于邮件消息 ID；缺失时回退 UUID） */
+	private final SnowflakeIdGenerator snowflakeIdGenerator;
+
 	/**
 	 * 构造邮件通知发送器
 	 *
@@ -107,6 +110,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	 * @param trackingServiceProvider 邮件追踪服务（可选）
 	 * @param dkimSignerProvider    DKIM 签名器（可选）
 	 * @param dedupServiceProvider  去重服务（可选）
+	 * @param snowflakeIdGeneratorProvider 分布式 ID 生成器（可选）
 	 */
 	public EmailNotifySender(
 			JavaMailSender mailSender,
@@ -117,7 +121,8 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 			ObjectProvider<EmailSmtpHealthChecker> healthCheckerProvider,
 			ObjectProvider<EmailTrackingService> trackingServiceProvider,
 			ObjectProvider<DkimSigner> dkimSignerProvider,
-			ObjectProvider<NotifyDedupService> dedupServiceProvider) {
+			ObjectProvider<NotifyDedupService> dedupServiceProvider,
+			ObjectProvider<SnowflakeIdGenerator> snowflakeIdGeneratorProvider) {
 		this.mailSender = mailSender;
 		this.notifyProperties = notifyProperties;
 		this.templateEngine = templateEngineProvider.getIfAvailable();
@@ -127,6 +132,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 		this.trackingServiceProvider = trackingServiceProvider;
 		this.dkimSignerProvider = dkimSignerProvider;
 		this.dedupServiceProvider = dedupServiceProvider;
+		this.snowflakeIdGenerator = snowflakeIdGeneratorProvider.getIfAvailable();
 	}
 
 	/**
@@ -460,10 +466,13 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	/**
 	 * 生成邮件消息 ID
 	 *
-	 * @return UUID 格式的消息 ID
+	 * @return 消息 ID（优先雪花 ID，缺失时回退 UUID）
 	 */
 	private String generateMessageId() {
-		return String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+		if (snowflakeIdGenerator != null) {
+			return String.valueOf(snowflakeIdGenerator.nextId());
+		}
+		return java.util.UUID.randomUUID().toString().replace("-", "");
 	}
 
 	// ==================== 内部方法 ====================

@@ -38,6 +38,7 @@ import com.remisoft.common.audit.sharding.YearlyShardingStrategy;
 import com.remisoft.common.audit.storage.DefaultAuditStorage;
 import com.remisoft.common.audit.storage.JdbcAuditStorage;
 import com.remisoft.common.audit.template.AuditTemplateProcessor;
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -146,14 +147,16 @@ public class AuditAutoConfiguration {
      * @param eventPublisher 事件发布器
      * @param properties 审计配置属性
      * @param templateProcessor SpEL 模板处理器
+     * @param snowflakeIdGenerator 分布式 ID 生成器
      * @return 审计日志切面
      */
     @Bean
     @ConditionalOnMissingBean(AuditAspect.class)
     @ConditionalOnClass(name = "com.remisoft.common.json.RemiJson")
-    public AuditAspect auditAspect(ApplicationEventPublisher eventPublisher, AuditProperties properties, AuditTemplateProcessor templateProcessor) {
+    public AuditAspect auditAspect(ApplicationEventPublisher eventPublisher, AuditProperties properties, AuditTemplateProcessor templateProcessor,
+                                   SnowflakeIdGenerator snowflakeIdGenerator) {
         log.info("初始化审计日志切面: AuditAspect, 存储策略={}", properties.getStorageType());
-        return new AuditAspect(eventPublisher, properties, templateProcessor);
+        return new AuditAspect(eventPublisher, properties, templateProcessor, snowflakeIdGenerator);
     }
 
     /**

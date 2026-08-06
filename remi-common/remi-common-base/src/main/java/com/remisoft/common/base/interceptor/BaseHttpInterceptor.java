@@ -15,7 +15,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
  *
  * <p><b>职责说明：</b>
  * <ul>
- *   <li>{@link RequestHolder#remove()} 等 ThreadLocal 清理由
+ *   <li>{@link com.remisoft.common.core.context.RequestContext#clear()} 等 ThreadLocal 清理由
  *       {@code BaseAuthFilter.doFilterInternal()} 的 finally 块统一负责</li>
  *   <li>此类仅作为占位拦截器，可由业务方通过覆盖
  *       {@link #afterCompletion(HttpServletRequest, HttpServletResponse, Object, Exception)}
@@ -42,6 +42,6 @@ public class BaseHttpInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                 @NonNull Object handler, @Nullable Exception ex) {
-        // RequestHolder.remove() 由 BaseAuthFilter.doFilterInternal() 的 finally 块负责清理，此处不再重复调用
+        // RequestContext.clear() 由 BaseAuthFilter.doFilterInternal() 的 finally 块负责清理，此处不再重复调用
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
+import com.remisoft.common.util.id.SnowflakeIdGenerator;
 import com.remisoft.gateway.config.GatewayConstants;
 
 import reactor.core.publisher.Mono;
@@ -49,6 +50,18 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
 
     /** traceparent 请求头名 */
     private static final String HEADER_TRACEPARENT = "traceparent";
+
+    /** 分布式 ID 生成器（traceId/spanId 生成） */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
+    /**
+     * 构造 W3C 追踪上下文过滤器。
+     *
+     * @param snowflakeIdGenerator 分布式 ID 生成器
+     */
+    public W3CTraceContextFilter(SnowflakeIdGenerator snowflakeIdGenerator) {
+        this.snowflakeIdGenerator = snowflakeIdGenerator;
+    }
 
     /**
      * 注入 W3C Trace Context，建立全链路追踪上下文。

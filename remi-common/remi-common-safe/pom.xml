@@ -24,6 +24,11 @@
             <groupId>com.remisoft</groupId>
             <artifactId>remi-common-redis</artifactId>
         </dependency>
+        <!--remi-common-core（RequestContext 统一上下文管理）-->
+        <dependency>
+            <groupId>com.remisoft</groupId>
+            <artifactId>remi-common-core</artifactId>
+        </dependency>
         <!--remi-common-util-->
         <dependency>
             <groupId>com.remisoft</groupId>

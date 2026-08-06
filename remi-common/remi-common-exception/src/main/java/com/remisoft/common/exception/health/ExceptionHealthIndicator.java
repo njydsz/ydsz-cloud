@@ -64,7 +64,7 @@ public class ExceptionHealthIndicator implements HealthIndicator {
         if (registry != null) {
             details.put("registeredModules", registry.getModules().size());
             int totalCodes = registry.getAllErrorCodes().values().stream()
-                    .mapToInt(Set::size)
+                    .mapToInt(Map::size)
                     .sum();
             details.put("registeredErrorCodes", totalCodes);
         } else {

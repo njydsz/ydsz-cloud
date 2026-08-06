@@ -2,6 +2,7 @@ package com.remisoft.common.app.exception;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.remisoft.common.app.annotation.AppApi;
@@ -52,6 +53,15 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice(annotations = AppApi.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class AppExceptionHandler extends BaseExceptionHandler {
+
+    /**
+     * 构造 App 端异常处理器。
+     *
+     * @param environment Spring 环境对象
+     */
+    public AppExceptionHandler(Environment environment) {
+        super(environment);
+    }
 
     /**
      * 返回 App 端异常日志前缀

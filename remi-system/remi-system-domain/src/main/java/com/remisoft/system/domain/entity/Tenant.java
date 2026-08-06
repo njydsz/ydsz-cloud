@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
  * <p><b>多租户隔离策略：</b>
  * <ul>
  *   <li><b>SHARED_DB（默认）</b>：共享数据库，通过 {@code tenant_id} 字段在 WHERE 条件中过滤
- *       （参见 {@link com.remisoft.common.tenant.TenantContextHolder}）</li>
+ *       （参见 {@link com.remisoft.common.core.context.RequestContext}）</li>
  *   <li><b>ISOLATE_DB：</b>独立数据库，通过 {@link #datasourceKey} 字段路由到独立 DataSource，
  *       适用于金融/医疗等高隔离要求的客户</li>
  * </ul>
@@ -34,7 +34,7 @@ import java.time.LocalDateTime;
  * @since 1.0.0
  *
  * @see TenantPlan 租户套餐
- * @see com.remisoft.common.tenant.TenantContextHolder 租户上下文
+ * @see com.remisoft.common.core.context.RequestContext 请求上下文
  */
 @Data
 @SuperBuilder

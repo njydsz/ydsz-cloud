@@ -2,6 +2,7 @@ package com.remisoft.common.domain.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import com.remisoft.common.json.annotation.JsonClass;
 import com.remisoft.common.json.annotation.JsonFormat;
@@ -49,6 +50,7 @@ import lombok.experimental.SuperBuilder;
  * @author remi-team
  * @since 1.0.0
  * @since 1.4.0 扁平化：合并 BaseIdEntity/BaseAuditEntity，移除 domainEvents，纯领域无 MP 注解
+ * @since 1.5.0 增加 isDeleted / markDeleted / markActive 便捷方法，修复 revision NPE 风险
  */
 @JsonClass(description = "领域实体基类，标记可安全反序列化")
 @Data
@@ -77,31 +79,110 @@ public class BaseEntity<T extends Serializable> implements Serializable {
     private LocalDateTime updatedAt;
 
     /**
-     * 乐观锁版本号
+     * 乐观锁版本号。
+     *
      * <p>每次更新时自动递增（+1），由 {@code OptimisticLockInterceptor} 处理。
+     * 使用 {@link Builder.Default} 保证通过 Builder 构建时默认值 0 不丢失。
+     * JSON 反序列化可能带来 null，业务代码建议优先使用 {@link #getRevisionSafe()}。
      */
     @Builder.Default
-    private Integer revision = 0;
+    private int revision = 0;
 
     /**
-     * 逻辑删除标识
-     * <p>0=未删除，1=已删除。删除操作转为 UPDATE，查询自动追加 WHERE deleted=0，
+     * 逻辑删除标识。
+     *
+     * <p>兼容 MyBatis-Plus 全局约定：0=未删除，1=已删除。
+     * 删除操作转为 UPDATE，查询自动追加 WHERE deleted=0，
      * 由 {@code LogicalDeleteInterceptor} 处理。
+     *
+     * <p>业务代码建议优先使用 {@link #isDeleted()} / {@link #markDeleted()} / {@link #markActive()}
+     * 便捷方法，避免直接操作魔法数字 0/1。
      */
     @JsonIgnore
-    private Integer deleted;
+    @Builder.Default
+    private int deleted = 0;
 
     /**
-     * 业务状态标识
+     * 业务状态标识。
+     *
      * <p>子类可按需覆盖为具体业务状态枚举值，默认值为空。
      */
     private String status;
 
     /**
-     * 租户ID
+     * 租户ID。
+     *
      * <p>多租户隔离字段，由租户拦截器自动注入 WHERE 条件和 INSERT 填充。
      * 单租户模式下默认值 "1"。对外 API 不暴露。
      */
     @JsonIgnore
     private String tenantId;
+
+    // ======================== 领域行为便捷方法 ========================
+
+    /**
+     * 安全获取乐观锁版本号（处理 JSON 反序列化后可能为 null 的场景）。
+     *
+     * @return 版本号，null 时返回 0
+     */
+    @JsonIgnore
+    public int getRevisionSafe() {
+        return revision;
+    }
+
+    /**
+     * 判断是否已逻辑删除。
+     *
+     * @return deleted=1 时返回 true
+     */
+    @JsonIgnore
+    public boolean isDeleted() {
+        return deleted == 1;
+    }
+
+    /**
+     * 标记为已逻辑删除（不实际删除记录）。
+     *
+     * <p>由 LogicalDeleteInterceptor 在 WHERE 条件中自动追加 deleted=0 过滤。
+     */
+    public void markDeleted() {
+        this.deleted = 1;
+    }
+
+    /**
+     * 标记为未删除（恢复软删除状态）。
+     */
+    public void markActive() {
+        this.deleted = 0;
+    }
+
+    /**
+     * 判断 revision 字段是否为"初始版本"（0 或 null）。
+     *
+     * @return 首次插入未更新的实体返回 true
+     */
+    @JsonIgnore
+    public boolean isInitialRevision() {
+        return revision == 0;
+    }
+
+    /**
+     * 获取 status 字段值（安全 null 判断）。
+     *
+     * @return status 值，可能为 null 或空字符串
+     */
+    @JsonIgnore
+    public boolean hasStatus() {
+        return status != null && !status.isBlank();
+    }
+
+    /**
+     * 判断是否为多租户模式下的身份（tenantId 非空且非默认 "1"）。
+     *
+     * @return 多租户身份返回 true
+     */
+    @JsonIgnore
+    public boolean isMultiTenant() {
+        return tenantId != null && !Objects.equals(tenantId, "1");
+    }
 }

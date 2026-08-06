@@ -2,7 +2,7 @@ package com.remisoft.common.tenant.ratelimit;
 
 import java.time.Duration;
 
-import com.remisoft.common.tenant.TenantContextHolder;
+import com.remisoft.common.core.context.RequestContext;
 
 import com.remisoft.common.redis.service.RedisRateLimiter;
 
@@ -45,7 +45,7 @@ public class TenantRateLimiter {
      * @return true=获取成功，false=被限流
      */
     public boolean tryAcquireTokenBucket(String ruleName, int rate, int capacity) {
-        String tenantId = TenantContextHolder.getTenantId();
+        String tenantId = RequestContext.getTenantId();
         String key = tenantId != null
                 ? "tenant:" + tenantId + ":" + ruleName
                 : ruleName;
@@ -62,7 +62,7 @@ public class TenantRateLimiter {
      * @return true=获取成功，false=被限流
      */
     public boolean tryAcquireTokenBucket(String ruleName, int rate, int capacity, Duration period) {
-        String tenantId = TenantContextHolder.getTenantId();
+        String tenantId = RequestContext.getTenantId();
         String key = tenantId != null
                 ? "tenant:" + tenantId + ":" + ruleName
                 : ruleName;
@@ -78,7 +78,7 @@ public class TenantRateLimiter {
      * @return true=允许，false=被限流
      */
     public boolean tryAcquireFixedWindow(String ruleName, int limit, Duration window) {
-        String tenantId = TenantContextHolder.getTenantId();
+        String tenantId = RequestContext.getTenantId();
         String key = tenantId != null
                 ? "tenant:" + tenantId + ":" + ruleName
                 : ruleName;

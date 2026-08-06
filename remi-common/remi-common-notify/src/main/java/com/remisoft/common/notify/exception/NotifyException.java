@@ -27,7 +27,7 @@ public class NotifyException extends BusinessException {
         this.level = ExceptionLevel.ERROR;
         this.category = ExceptionCategory.BUSINESS;
         this.code = DEFAULT_CODE;
-        this.message = message;
+        setMessage(message);
         this.params = new Object[]{};
     }
 
@@ -43,7 +43,7 @@ public class NotifyException extends BusinessException {
         this.level = ExceptionLevel.ERROR;
         this.category = ExceptionCategory.BUSINESS;
         this.code = DEFAULT_CODE;
-        this.message = message;
+        setMessage(message);
         this.params = new Object[]{};
     }
 }

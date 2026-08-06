@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.workflow.WorkflowFacade;
@@ -85,7 +85,7 @@ public class FlowEventController {
             @RequestParam(required = false) String correlationKey,
             @RequestBody(required = false) String payload,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(eventSubscriptionService.correlateMessage(tid, messageName, correlationKey, payload));
     }
 
@@ -109,7 +109,7 @@ public class FlowEventController {
             @RequestParam(required = false) String instanceId,
             @RequestBody(required = false) String payload,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(eventSubscriptionService.throwError(tid, instanceId, errorCode, payload));
     }
 

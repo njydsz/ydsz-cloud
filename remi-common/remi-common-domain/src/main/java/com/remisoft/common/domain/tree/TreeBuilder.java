@@ -107,6 +107,8 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
 
         // 2. 构建父子关系 + 自动层级计算
+        // 同时收集所有已知的 nodeId 到 Set，isRootNode 使用 O(1) 查找替代 O(n) 遍历
+        java.util.Set<ID> knownIds = new java.util.HashSet<>(nodeMap.keySet());
         for (T node : nodeList) {
             ID parentId = node.getParentId();
             if (parentId == null) {
@@ -123,54 +125,48 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             if (children == null) {
                 children = new ArrayList<>();
                 parent.setChildren(children);
-                parent.setLeaf(false);
             }
             if (!children.contains(node)) {
                 children.add(node);
+                // 一旦挂上子节点即为非叶子（children 字段默认为空 ArrayList，非 null，
+                // 因此不能依赖 children == null 判断，需在真正添加子节点时置位）
+                parent.setLeaf(false);
             }
             Integer parentLevel = parent.getLevel();
             node.setLevel(parentLevel != null ? parentLevel + 1 : TreeNode.ROOT_LEVEL + 1);
         }
 
-        // 3. 筛选根节点并排序
+        // 3. 筛选根节点并排序（isRootNode 使用 O(1) knownIds 查询）
+        //    注意：必须收集到可变 ArrayList——Stream.toList() 返回不可变列表，
+        //    后续 sortSubTree 对其 sort() 会抛 UnsupportedOperationException。
         List<T> roots = nodeList.stream()
-                .filter(this::isRootNode)
-                .toList();
+                .filter(node -> node.getId() != null && isRootNode(node, knownIds))
+                .collect(Collectors.toCollection(ArrayList::new));
         sortSubTree(roots);
         return new ArrayList<>(roots);
     }
 
     /**
-     * 判断节点是否为根节点
+     * 判断节点是否为根节点（O(1) 复杂度，基于预构建的 knownIds 集合）。
      *
-     * @param node 待判断节点
+     * <p>根判定规则（与 {@link #build()} 步骤2 的多根容错语义一致）：
+     * <ul>
+     *   <li>{@code parentId == null}：天然根</li>
+     *   <li>指定了 {@link #rootId} 且 {@code parentId == rootId}：虚拟根下的根</li>
+     *   <li>父节点 ID 不在已知节点集合中（孤儿节点）：视为根，避免节点被静默丢弃</li>
+     * </ul>
+     *
+     * @param node      待判断节点
+     * @param knownIds  所有已知节点 ID 集合（用于 O(1) 父节点存在性判断）
      * @return 是根节点返回 true
      */
-    private boolean isRootNode(T node) {
+    private boolean isRootNode(T node, java.util.Set<ID> knownIds) {
         ID parentId = node.getParentId();
         if (rootId == null) {
-            return parentId == null;
+            return parentId == null || !knownIds.contains(parentId);
         }
         return parentId == null || Objects.equals(rootId, parentId)
-                || !containsId(parentId);
-    }
-
-    /**
-     * 判断列表中是否存在指定 ID 的节点
-     *
-     * @param id 目标 ID
-     * @return 存在返回 true
-     */
-    private boolean containsId(ID id) {
-        if (id == null) {
-            return false;
-        }
-        for (T node : nodeList) {
-            if (Objects.equals(node.getId(), id)) {
-                return true;
-            }
-        }
-        return false;
+                || !knownIds.contains(parentId);
     }
 
     /**

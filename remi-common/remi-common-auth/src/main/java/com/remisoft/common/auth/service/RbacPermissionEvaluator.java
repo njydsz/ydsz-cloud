@@ -15,7 +15,7 @@ import com.remisoft.common.auth.annotation.AuthApiPermission;
 import com.remisoft.common.auth.annotation.PermissionMode;
 import com.remisoft.common.auth.annotation.AuthMenuPermission;
 import com.remisoft.common.auth.config.AuthProperties;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.auth.exception.PermissionDeniedException;
 import com.remisoft.common.auth.exception.PermissionDeniedException.PermissionType;
 import com.remisoft.common.auth.metrics.AuthMetricsCollector;
@@ -27,7 +27,6 @@ import com.remisoft.common.cache.RemiCache;
 import com.remisoft.common.cache.api.Cache;
 import com.remisoft.common.cache.builder.CacheType;
 import com.remisoft.common.exception.custom.BusinessException;
-import com.remisoft.common.util.auth.RequestHolder;
 import com.remisoft.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -134,12 +133,12 @@ public class RbacPermissionEvaluator {
      * @return 用户信息 Map
      */
     public Map<String, Object> loadCurrentUserInfo() {
-        Map<String, Object> cached = AuthContext.getCachedUserInfoMap();
+        Map<String, Object> cached = RequestContext.getCachedUserInfoMap();
         if (cached != null && !cached.isEmpty()) {
             return cached;
         }
         Map<String, Object> userInfo = loadUserInfo(userInfoService.loadCurrentToken());
-        AuthContext.setCachedUserInfoMap(userInfo);
+        RequestContext.put(RequestContext.KEY_CACHED_USER_INFO_MAP, userInfo);
         return userInfo;
     }
 
@@ -426,7 +425,7 @@ public class RbacPermissionEvaluator {
 
     private String resolveTenantId() {
         // 优先从 ThreadLocal 缓存获取，避免同一次请求内多次 Redis 查询
-        String cached = AuthContext.getTenantId();
+        String cached = RequestContext.getTenantId();
         if (cached != null) {
             return cached;
         }
@@ -437,7 +436,7 @@ public class RbacPermissionEvaluator {
                 Object tenantId = userInfo.get("tenantId");
                 if (tenantId != null) {
                     String tid = String.valueOf(tenantId);
-                    AuthContext.setTenantId(tid);
+                    RequestContext.setTenantId(tid);
                     return tid;
                 }
             }
@@ -607,7 +606,7 @@ public class RbacPermissionEvaluator {
 
     private String resolveCurrentResource() {
         try {
-            Object request = RequestHolder.getCurrentRequest();
+            Object request = RequestContext.getHttpRequest();
             if (request instanceof HttpServletRequest) {
                 return ((HttpServletRequest) request).getRequestURI();
             }

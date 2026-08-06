@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.permission.PermissionCodes;
 import com.remisoft.message.domain.converter.MessageConverter;
@@ -110,7 +110,7 @@ public class UserChannelBindingController {
     /**
      * 查询当前登录用户的全部通道绑定（用于「我的通知设置」页面）。
      *
-     * <p>按 {@link AuthContext#getUserId()} 当前用户寻址，结果已转为脱敏 VO。
+     * <p>按 {@link AuthContextUtils#getUserId()} 当前用户寻址，结果已转为脱敏 VO。
      * 需 {@code NOTIF_MESSAGE_LIST} 权限。
      *
      * @return 当前用户的绑定 VO 列表（无绑定时为空列表，非 null）
@@ -119,7 +119,7 @@ public class UserChannelBindingController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/mine")
     public BaseResponse<List<MsgUserChannelVO>> listMine() {
-        return BaseResponse.success(MessageConverter.INSTANT.userChannelListToVO(userChannelBindingService.listByUser(AuthContext.getUserId())));
+        return BaseResponse.success(MessageConverter.INSTANT.userChannelListToVO(userChannelBindingService.listByUser(AuthContextUtils.getUserId())));
     }
 
     /**

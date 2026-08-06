@@ -8,7 +8,7 @@ import java.util.Map;
 import org.springframework.web.bind.annotation.*;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -96,7 +96,7 @@ public class FlowAdvancedController {
     @GetMapping("/report/weekly")
     @Operation(summary = "P2-4: 获取周报数据")
     public BaseResponse<Map<String, Object>> weeklyReport() {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(reportService.generateWeeklyReport(tenantId));
     }
 
@@ -111,7 +111,7 @@ public class FlowAdvancedController {
     @GetMapping("/report/monthly")
     @Operation(summary = "P2-4: 获取月报数据")
     public BaseResponse<Map<String, Object>> monthlyReport() {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(reportService.generateMonthlyReport(tenantId));
     }
 
@@ -132,7 +132,7 @@ public class FlowAdvancedController {
     @Operation(summary = "P2-4: 推送周报")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendWeekly() {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(reportService.sendWeeklyReport(tenantId));
     }
 
@@ -152,7 +152,7 @@ public class FlowAdvancedController {
     @Operation(summary = "P2-4: 推送月报")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendMonthly() {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(reportService.sendMonthlyReport(tenantId));
     }
 
@@ -176,8 +176,8 @@ public class FlowAdvancedController {
     @Operation(summary = "P2-5: 合并多个流程实例")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<StringVO> merge(@RequestParam List<String> instanceIds) {
-        String userId = AuthContext.getUserId();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(mergeService.mergeInstances(instanceIds, userId, tenantId)));
     }
 
@@ -213,7 +213,7 @@ public class FlowAdvancedController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> mergePass(@PathVariable String mergeGroupId,
                                        @RequestParam(required = false) String comment) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(mergeService.batchPassMerged(mergeGroupId, userId, comment));
     }
 
@@ -235,7 +235,7 @@ public class FlowAdvancedController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> mergeReject(@PathVariable String mergeGroupId,
                                           @RequestParam(required = false) String comment) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(mergeService.batchRejectMerged(mergeGroupId, userId, comment));
     }
 
@@ -251,8 +251,8 @@ public class FlowAdvancedController {
     @GetMapping("/mergeable")
     @Operation(summary = "P2-5: 查询可合并的实例列表")
     public BaseResponse<List<Map<String, Object>>> mergeable() {
-        String userId = AuthContext.getUserId();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(mergeService.listMergeable(userId, tenantId));
     }
 
@@ -278,7 +278,7 @@ public class FlowAdvancedController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> updateVotePassRate(@PathVariable String taskId,
                                              @RequestParam BigDecimal votePassRate) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         countersignDynamicService.updateCompletionCondition(taskId, votePassRate, userId);
         return BaseResponse.success();
     }
@@ -303,7 +303,7 @@ public class FlowAdvancedController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> updateApproveCount(@PathVariable String taskId,
                                              @RequestParam Integer approveCount) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         countersignDynamicService.updateApproveCount(taskId, approveCount, userId);
         return BaseResponse.success();
     }
@@ -355,7 +355,7 @@ public class FlowAdvancedController {
     @GetMapping("/urge/cooldown/{instanceId}")
     @Operation(summary = "P2-8: 查询催办剩余冷却时间")
     public BaseResponse<Map<String, Object>> urgeCooldown(@PathVariable String instanceId) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         long cooldownSeconds = FlowUrgeLimiter.DEFAULT_COOLDOWN_SECONDS;
         long remaining = 0;
         try {

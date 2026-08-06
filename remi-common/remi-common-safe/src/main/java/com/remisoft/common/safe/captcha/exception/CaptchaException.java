@@ -23,58 +23,26 @@ public class CaptchaException extends BusinessException {
     private final String captchaId;
 
     public CaptchaException(String message) {
-        super();
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = "111111";
-        this.key = "111111";
-        this.params = new Object[]{};
-        this.message = message;
-        this.messageKey = "111111";
-        this.messageParams = this.params;
+        super("111111", "111111");
+        setMessage(message);
         this.captchaId = null;
     }
 
     public CaptchaException(String message, String captchaId) {
-        super();
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = "111111";
-        this.key = "111111";
-        this.params = new Object[]{};
-        this.message = message;
-        this.messageKey = "111111";
-        this.messageParams = this.params;
+        super("111111", "111111");
+        setMessage(message);
         this.captchaId = captchaId;
     }
 
     public CaptchaException(String message, Throwable cause) {
-        super(cause);
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = message;
-        this.key = message;
-        this.params = new Object[]{};
-        this.message = null;
-        this.messageKey = message;
-        this.messageParams = this.params;
+        super("111111", "111111", cause);
+        setMessage(message);
         this.captchaId = null;
     }
 
     public CaptchaException(String message, String captchaId, Throwable cause) {
-        super(cause);
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = message;
-        this.key = message;
-        this.params = new Object[]{};
-        this.message = null;
-        this.messageKey = message;
-        this.messageParams = this.params;
+        super("111111", "111111", cause);
+        setMessage(message);
         this.captchaId = captchaId;
     }
 

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.workflow.WorkflowFacade;
@@ -85,7 +85,7 @@ public class FlowTaskQueryController {
     @GetMapping("/task/todo")
     public BaseResponse<List<Map<String, Object>>> todo(@RequestParam(defaultValue = "1") @Min(1) int page,
                                               @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.success(workflowFacade.listTodoTasks(AuthContext.getUserId(), page, size));
+        return BaseResponse.success(workflowFacade.listTodoTasks(AuthContextUtils.getUserId(), page, size));
     }
 
     /**
@@ -100,7 +100,7 @@ public class FlowTaskQueryController {
     @GetMapping("/task/done")
     public BaseResponse<List<Map<String, Object>>> done(@RequestParam(defaultValue = "1") @Min(1) int page,
                                               @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.success(workflowFacade.listDoneTasks(AuthContext.getUserId(), page, size));
+        return BaseResponse.success(workflowFacade.listDoneTasks(AuthContextUtils.getUserId(), page, size));
     }
 
     /**
@@ -113,7 +113,7 @@ public class FlowTaskQueryController {
     @GetMapping("/task/overdue")
     public BaseResponse<List<FlowRunTaskVO>> overdue(@RequestParam(required = false) String assigneeId,
                                          @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(taskService.listOverdue(assigneeId, tid)));
     }
 
@@ -156,7 +156,7 @@ public class FlowTaskQueryController {
             @RequestParam(required = false) String tenantId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         BaseResponse<FlowRunTask> pageResult = taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize);
         List<FlowRunTask> tasks = pageResult.getData();
@@ -177,7 +177,7 @@ public class FlowTaskQueryController {
     public BaseResponse<List<Map<String, Object>>> nodeDurationStats(
             @RequestParam String flowCode,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(taskService.nodeDurationStats(flowCode, tid));
     }
 
@@ -190,7 +190,7 @@ public class FlowTaskQueryController {
     @GetMapping("/stats/overdue")
     public BaseResponse<List<FlowRunTaskVO>> statsOverdue(
             @RequestParam(required = false) String assigneeId) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(taskService.listOverdue(assigneeId, tenantId)));
     }
 }

@@ -6,13 +6,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.notify.enums.NotifyChannel;
 
 /**
  * 通知链路追踪辅助工具（P1-1）
  *
  * <p>提供 traceId 在通知发送全链路中的传递能力。
- * 从 MDC 中获取当前 traceId，注入到通知请求中，便于跨服务问题排查。
+ * 从 {@link RequestContext} / MDC 中获取当前 traceId，注入到通知请求中，便于跨服务问题排查。
+ *
+ * <p><b>统一上下文：</b>traceId 读写统一收口至 {@link RequestContext}（统一上下文主源），
+ * MDC 仅作为日志桥接双写，保证业务代码与日志链路一致。
  *
  * @author remi-team
  * @since 1.0.0
@@ -31,11 +35,17 @@ public final class NotifyTraceContext {
     }
 
     /**
-     * 获取当前 MDC 中的 traceId
+     * 获取当前 traceId
+     *
+     * <p>优先从 {@link RequestContext} 读取，未命中回退 MDC（兼容旧逻辑）。</p>
      *
      * @return traceId，不存在时返回 null
      */
     public static String getTraceId() {
+        String traceId = RequestContext.getTraceId();
+        if (traceId != null && !traceId.isEmpty()) {
+            return traceId;
+        }
         return MDC.get(TRACE_ID_KEY);
     }
 
@@ -49,20 +59,22 @@ public final class NotifyTraceContext {
     }
 
     /**
-     * 设置 traceId 到 MDC
+     * 设置 traceId 到 {@link RequestContext} 与 MDC（双写）
      *
      * @param traceId 链路追踪ID
      */
     public static void setTraceId(String traceId) {
         if (traceId != null && !traceId.isEmpty()) {
+            RequestContext.setTraceId(traceId);
             MDC.put(TRACE_ID_KEY, traceId);
         }
     }
 
     /**
-     * 从 MDC 中移除 traceId
+     * 从 {@link RequestContext} 与 MDC 中移除 traceId
      */
     public static void clearTraceId() {
+        RequestContext.remove(RequestContext.KEY_TRACE_ID);
         MDC.remove(TRACE_ID_KEY);
     }
 
@@ -89,13 +101,13 @@ public final class NotifyTraceContext {
      * @param runnable 要执行的操作
      */
     public static void runWithTrace(String traceId, Runnable runnable) {
-        String previousTraceId = MDC.get(TRACE_ID_KEY);
+        String previousTraceId = getTraceId();
         try {
             setTraceId(traceId);
             runnable.run();
         } finally {
             if (previousTraceId != null) {
-                MDC.put(TRACE_ID_KEY, previousTraceId);
+                setTraceId(previousTraceId);
             } else {
                 clearTraceId();
             }
@@ -113,13 +125,13 @@ public final class NotifyTraceContext {
      * @return 操作返回值
      */
     public static <T> T runWithTraceResult(String traceId, Supplier<T> supplier) {
-        String previousTraceId = MDC.get(TRACE_ID_KEY);
+        String previousTraceId = getTraceId();
         try {
             setTraceId(traceId);
             return supplier.get();
         } finally {
             if (previousTraceId != null) {
-                MDC.put(TRACE_ID_KEY, previousTraceId);
+                setTraceId(previousTraceId);
             } else {
                 clearTraceId();
             }

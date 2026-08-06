@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.slf4j.MDC;
 
+import com.remisoft.common.core.context.RequestContext;
 import com.remisoft.common.feign.NotificationClient;
 import com.remisoft.common.feign.dto.RealtimePushDTO;
 import com.remisoft.workflow.domain.entity.FlowInstance;
@@ -398,8 +399,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         ? null : String.valueOf(instance.getTenantId()));
                 String traceId = instance.getProviderTraceId();
                 if (traceId == null || traceId.isBlank()) {
-                    traceId = MDC.get("traceId");
-                    if (traceId == null) traceId = MDC.get("tid");
+                    traceId = RequestContext.getTraceId();
+                    if (traceId == null || traceId.isBlank()) {
+                        traceId = MDC.get("traceId");
+                        if (traceId == null) traceId = MDC.get("tid");
+                    }
                 }
                 if (traceId != null) {
                     data.put("traceId", traceId);

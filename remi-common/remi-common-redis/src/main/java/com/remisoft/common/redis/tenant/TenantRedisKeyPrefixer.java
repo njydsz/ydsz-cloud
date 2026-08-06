@@ -39,7 +39,7 @@ public class TenantRedisKeyPrefixer {
     /**
      * 构造租户级 Redis Key 前缀器。
      *
-     * @param tenantIdSupplier 租户 ID 提供者（通常为 () -> TenantContextHolder.getTenantId()）
+     * @param tenantIdSupplier 租户 ID 提供者（通常为 () -> RequestContext.getTenantId()）
      * @param enabled           是否启用前缀
      */
     public TenantRedisKeyPrefixer(Supplier<String> tenantIdSupplier, boolean enabled) {

@@ -2,6 +2,8 @@ package com.remisoft.common.tenant;
 
 import java.util.concurrent.Callable;
 
+import com.remisoft.common.core.context.RequestContext;
+
 /**
  * 系统租户上下文执行器。
  *
@@ -13,7 +15,7 @@ import java.util.concurrent.Callable;
  * @Scheduled(cron = "0 0 2 * * ?")
  * public void scanJobs() {
  *     SystemTenantContextRunner.run(() -> {
- *         // 此处 TenantContextHolder.getTenantId() = systemTenantId
+ *         // 此处 RequestContext.getTenantId() = systemTenantId
  *         jobScanner.scan();
  *     });
  * }
@@ -51,12 +53,28 @@ public final class SystemTenantContextRunner {
      * @param runnable 待执行逻辑
      */
     public static void run(Runnable runnable) {
-        TenantContextHolder.set(TenantContext.system(systemTenantId));
+        applySystemTenant();
         try {
             runnable.run();
         } finally {
-            TenantContextHolder.clear();
+            clearTenant();
         }
+    }
+
+    /**
+     * 写入系统租户上下文（含 tenantId 同步）。
+     */
+    private static void applySystemTenant() {
+        RequestContext.setTenantContext(TenantContext.system(systemTenantId));
+        RequestContext.setTenantId(systemTenantId);
+    }
+
+    /**
+     * 清除租户上下文（对应原 TenantContextHolder.clear 语义）。
+     */
+    private static void clearTenant() {
+        RequestContext.remove(RequestContext.KEY_TENANT_CONTEXT);
+        RequestContext.remove(RequestContext.KEY_TENANT_ID);
     }
 
     /**
@@ -68,13 +86,13 @@ public final class SystemTenantContextRunner {
      * @throws RuntimeException 包装后的异常
      */
     public static <T> T call(Callable<T> callable) {
-        TenantContextHolder.set(TenantContext.system(systemTenantId));
+        applySystemTenant();
         try {
             return callable.call();
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            TenantContextHolder.clear();
+            clearTenant();
         }
     }
 }

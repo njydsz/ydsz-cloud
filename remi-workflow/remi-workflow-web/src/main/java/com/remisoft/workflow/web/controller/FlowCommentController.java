@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.remisoft.common.auth.annotation.AuthApiPermission;
-import com.remisoft.common.auth.context.AuthContext;
+import com.remisoft.common.auth.context.AuthContextUtils;
 import com.remisoft.common.core.response.BaseResponse;
 import com.remisoft.common.lock.annotation.Idempotent;
 import com.remisoft.common.permission.PermissionCodes;
@@ -94,9 +94,9 @@ public class FlowCommentController {
     @Operation(summary = "发表评论/回复")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
-        String userId = AuthContext.getUserId();
-        String userName = AuthContext.getUsername();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContextUtils.getUserId();
+        String userName = AuthContextUtils.getUsername();
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(commentService.addComment(dto, userId, userName, tenantId));
     }
 
@@ -109,7 +109,7 @@ public class FlowCommentController {
     @GetMapping("/instance/{instanceId}")
     @Operation(summary = "查询实例全部评论（树结构）")
     public BaseResponse<List<FlowCommentVO>> listByInstance(@PathVariable String instanceId) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listByInstance(tenantId, instanceId)));
     }
 
@@ -122,7 +122,7 @@ public class FlowCommentController {
     @GetMapping("/root/{instanceId}")
     @Operation(summary = "查询实例一级评论")
     public BaseResponse<List<FlowCommentVO>> listRootComments(@PathVariable String instanceId) {
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listRootComments(tenantId, instanceId)));
     }
 
@@ -151,7 +151,7 @@ public class FlowCommentController {
     @Operation(summary = "删除评论（仅本人）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Boolean> deleteComment(@PathVariable String commentId) {
-        String userId = AuthContext.getUserId();
+        String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(commentService.deleteComment(commentId, userId));
     }
 }
