@@ -29,9 +29,9 @@ import com.remisoft.common.exception.config.ExceptionProperties;
 import com.remisoft.common.exception.core.ExceptionInfo;
 import com.remisoft.common.exception.metrics.ExceptionMetrics;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Validation 相关异常处理器
@@ -50,11 +50,12 @@ import lombok.extern.slf4j.Slf4j;
  * @see MvcExceptionHandler
  * @see RemiExceptionHandlerAutoConfiguration
  */
-@Slf4j
 @ConditionalOnClass(ConstraintViolationException.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 @RestControllerAdvice
 public class ValidationExceptionHandler extends BaseExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ValidationExceptionHandler.class);
 
     private final MessageSource messageSource;
 

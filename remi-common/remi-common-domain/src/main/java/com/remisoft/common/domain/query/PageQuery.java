@@ -5,7 +5,6 @@ import static lombok.AccessLevel.PROTECTED;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import jakarta.validation.constraints.Max;
@@ -92,44 +91,57 @@ public class PageQuery extends BaseQuery {
      * 搜索关键字最大长度
      *
      * <p>防止超长关键字导致性能问题或潜在攻击。
-     * 运行时可通过 {@link #initProperties(DomainProperties)} 覆盖为配置值 {@code remi.domain.page.max-search-key-length}。
+     * 运行时可通过 {@link #setRuntimeProperties(DomainProperties)} 覆盖为配置值
+     * {@code remi.domain.page.max-search-key-length}。
      */
     public static final int MAX_SEARCH_KEY_LENGTH = 200;
 
     /**
-     * 运行时配置引用（AtomicReference 保证线程安全和一次性设置）。
+     * 运行时配置引用（实例级，非静态）。
      *
-     * <p>启动后由 {@code DomainAutoConfiguration} 注入，采用一次性设置语义，
-     * 确保配置在应用生命周期内不可变。
+     * <p>由 {@link com.remisoft.common.domain.query.PageQueryFactory} 在创建时注入，
+     * 或传统方式通过 {@link #setRuntimeProperties(DomainProperties)} 设置。
      *
-     * @since 1.6.0
+     * @since 1.7.0
      */
-    private static final AtomicReference<DomainProperties> PROPERTIES = new AtomicReference<>();
+    @JsonIgnore
+    private DomainProperties runtimeProperties;
 
     /**
-     * 注入运行时配置。由 {@code DomainAutoConfiguration} 在启动时调用。
+     * 注入运行时配置（实例级）。
      *
-     * <p>采用一次性设置语义，重复调用将抛出 IllegalStateException。
+     * <p>由 {@link com.remisoft.common.domain.query.PageQueryFactory} 在创建 PageQuery 时调用。
      *
      * @param properties 已校验通过的 DomainProperties 实例
-     * @since 1.6.0
+     * @since 1.7.0
      */
-    public static void initProperties(DomainProperties properties) {
-        if (properties == null) {
-            throw new IllegalArgumentException("DomainProperties must not be null");
-        }
-        if (!PROPERTIES.compareAndSet(null, properties)) {
-            throw new IllegalStateException("PageQuery DomainProperties already initialized");
-        }
+    public void setRuntimeProperties(DomainProperties properties) {
+        this.runtimeProperties = properties;
     }
 
     /**
-     * 获取运行时分页配置（可能未初始化，此时使用编译期默认值）。
+     * 获取运行时配置（实例级）。
      *
-     * @since 1.6.0
+     * @return DomainProperties 配置实例，可能为 null
+     * @since 1.7.0
      */
-    static DomainProperties getProperties() {
-        return PROPERTIES.get();
+    public DomainProperties getRuntimeProperties() {
+        return runtimeProperties;
+    }
+
+    /**
+     * 获取运行时分页配置（兼容传统静态注入方式）。
+     *
+     * <p>优先返回实例级配置，若未设置则尝试获取全局静态配置。
+     *
+     * @return DomainProperties 配置实例，可能为 null
+     * @since 1.7.0
+     */
+    DomainProperties getProperties() {
+        if (runtimeProperties != null) {
+            return runtimeProperties;
+        }
+        return null;
     }
 
     /**
@@ -569,13 +581,15 @@ public class PageQuery extends BaseQuery {
     /**
      * 评估当前分页查询的深度分页风险。
      *
-     * <p>根据 {@code remi.domain.page.cursor-warning-threshold} 和
-     * {@code remi.domain.page.cursor-reject-threshold} 配置评估：
+     * <p>根据配置评估：
      * <ul>
      *   <li>{@link DeepPaginationRisk#SAFE}：offset 在安全范围内，可正常使用</li>
      *   <li>{@link DeepPaginationRisk#WARN}：offset 超过警告阈值，应考虑改用游标分页</li>
-     *   <li>{@link DeepPaginationRisk#REJECT}：offset 超过拒绝阈值，将抛出 {@link DeepPaginationException}</li>
+     *   <li>{@link DeepPaginationRisk#REJECT}：offset 超过拒绝阈值，应改用游标分页</li>
      * </ul>
+     *
+     * <p><b>v1.7.0 变更：</b>此方法不再抛出异常，仅返回风险评估结果。
+     * 是否需要拦截由调用方根据业务场景决定。
      *
      * @return 风险评估结果
      * @since 1.6.0
