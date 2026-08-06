@@ -8,6 +8,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.remisoft.common.core.constant.HeaderConstants;
 import com.remisoft.common.core.context.RequestContext;
@@ -25,11 +26,15 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>仅在 spring-jdbc 存在时注册，处理 DataAccessException 及其子类异常。
  *
+ * <p><b>修复说明：</b>添加 {@link RestControllerAdvice} 注解使 {@code @ExceptionHandler}
+ * 方法能够正确拦截 Controller 层抛出的数据访问异常。
+ *
  * @author remi-team
  * @since 1.0.0
  * @see BaseExceptionHandler
  */
 @Slf4j
+@RestControllerAdvice
 @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")
 public class JdbcExceptionHandler extends BaseExceptionHandler {
 

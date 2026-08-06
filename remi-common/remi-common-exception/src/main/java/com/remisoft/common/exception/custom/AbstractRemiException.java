@@ -1,6 +1,9 @@
 package com.remisoft.common.exception.custom;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
@@ -84,6 +87,8 @@ public abstract class AbstractRemiException extends RuntimeException implements 
     protected String path;
     /** 附加数据（通过 BusinessException.data() 设置） */
     protected transient Object extData;
+    /** 异常链上下文快照（透写入 details，供排查定位） */
+    protected transient Map<String, String> snapshot;
 
     /**
      * 默认构造函数
@@ -195,8 +200,9 @@ public abstract class AbstractRemiException extends RuntimeException implements 
      * 因此本方法必须在请求线程（LocaleContextHolder 已就绪）内调用，
      * 若在异步线程中调用将按默认 Locale 解析。
      *
-     * <p>仅投影通用字段（code / key / message / httpStatus / path / timestamp），
-     * {@code traceId} 与 {@code details} 由子类或调用方补充。
+     * <p>投影字段包括：code / key / message / httpStatus / path / timestamp，
+     * 以及 {@link #snapshot}（如有，透写入 details 供排查定位）。
+     * {@code traceId} 与 {@code details}（非 snapshot）由子类或调用方补充。
      *
      * @return 新建的异常信息对象，永不为 {@code null}；各字段可能为 {@code null}（取决于异常构造时是否赋值）
      */
@@ -208,6 +214,11 @@ public abstract class AbstractRemiException extends RuntimeException implements 
         info.setHttpStatus(this.httpStatus);
         info.setPath(this.path);
         info.setTimestamp(this.timestamp);
+        // 快照透写入 details（details 可枚举，方便前端 / 日志展示）
+        if (this.snapshot != null && !this.snapshot.isEmpty()) {
+            Map<String, Object> details = new LinkedHashMap<>(this.snapshot);
+            info.setDetails(details);
+        }
         return info;
     }
 
@@ -402,5 +413,85 @@ public abstract class AbstractRemiException extends RuntimeException implements 
 
     public void setExtData(Object extData) {
         this.extData = extData;
+    }
+
+    /**
+     * 获取异常上下文快照（不可变视图）。
+     *
+     * <p>快照通常用于记录异常抛出时的关键业务字段（如 orderId、userId 等），
+     * 在全局异常处理器中透写入日志和响应 details，便于运维排查。
+     *
+     * @return 不可变快照 Map；未设置时返回 {@code null}
+     */
+    public Map<String, String> getSnapshot() {
+        return snapshot == null ? null : Collections.unmodifiableMap(snapshot);
+    }
+
+    /**
+     * 设置快照 Map（覆盖式）。
+     *
+     * <p>内部拷贝传入 Map 为 {@link LinkedHashMap}，保留插入顺序，便于排查时按设置顺序回溯。
+     *
+     * @param snapshot 快照 Map，可为 {@code null}
+     */
+    public void setSnapshot(Map<String, String> snapshot) {
+        if (snapshot == null) {
+            this.snapshot = null;
+        } else {
+            this.snapshot = new LinkedHashMap<>(snapshot);
+        }
+    }
+
+    /**
+     * 向上下文快照追加单个键值对（链式调用）。
+     *
+     * <p>惰性初始化内部 {@link LinkedHashMap}，首次调用时创建快照容器。
+     * 适合在 throw 前逐条追加关键业务信息：
+     * <pre>{@code
+     * throw BusinessException.builder()
+     *     .key("order.create.failed")
+     *     .snapshot("orderId", orderId)
+     *     .snapshot("userId", userId)
+     *     .build();
+     * }</pre>
+     *
+     * @param key   快照键，不可为 {@code null}
+     * @param value 快照值（自动 {@code String.valueOf(value)} 转换），可为 {@code null}
+     * @return 当前异常对象，便于链式调用
+     */
+    public AbstractRemiException snapshot(String key, Object value) {
+        if (this.snapshot == null) {
+            this.snapshot = new LinkedHashMap<>();
+        }
+        this.snapshot.put(key, value == null ? null : value.toString());
+        return this;
+    }
+
+    /**
+     * 向上下文快照追加多个条目（链式调用）。
+     *
+     * <p>等价于多次调用 {@link #snapshot(String, Object)}，
+     * 适合批量传入已有 Map：
+     * <pre>{@code
+     * Map<String, Object> context = Map.of("orderId", orderId, "skuId", skuId);
+     * throw BusinessException.of(ORDER_CREATE_FAILED)
+     *     .snapshots(context);
+     * }</pre>
+     *
+     * @param entries 待追加的键值对，可为 {@code null}，值为 {@code null} 时将写入 {@code null}
+     * @return 当前异常对象，便于链式调用
+     */
+    public AbstractRemiException snapshots(Map<String, ?> entries) {
+        if (entries == null || entries.isEmpty()) {
+            return this;
+        }
+        if (this.snapshot == null) {
+            this.snapshot = new LinkedHashMap<>(entries.size());
+        }
+        for (Map.Entry<String, ?> e : entries.entrySet()) {
+            Object val = e.getValue();
+            this.snapshot.put(e.getKey(), val == null ? null : val.toString());
+        }
+        return this;
     }
 }

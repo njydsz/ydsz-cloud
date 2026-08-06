@@ -18,12 +18,23 @@ import lombok.ToString;
  * <p>用于封装基础设施故障类异常，如数据库连接失败、缓存服务异常、消息队列故障等。
  * 默认 HTTP 状态码为 500，异常分类为 SYSTEM。
  *
+ * <p><b>精简设计（v2.0）：</b>仅保留 3 个核心构造函数，
+ * 其他参数化构造通过 {@link #builder()} 链式 Builder 完成，消除 20+ 构造函数爆炸问题。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * throw new SysException(UnifiedExceptionCode.DATABASE_ERROR);
- * throw new SysException("database.error");
+ * // 简单抛出
+ * throw SysException.of(UnifiedExceptionCode.DATABASE_ERROR);
+ *
+ * // 包装底层异常
  * throw new SysException(UnifiedExceptionCode.CACHE_ERROR, cause);
- * throw SysException.of(UnifiedExceptionCode.INTERNAL_ERROR).cause(cause).build();
+ *
+ * // 完整参数链式构建
+ * throw SysException.builder()
+ *     .code("MQ_PUBLISH_FAILED")
+ *     .key("mq.publish.failed")
+ *     .level(ExceptionLevel.FATAL)
+ *     .build();
  * }</pre>
  *
  * @author remi-team
@@ -36,22 +47,24 @@ public class SysException extends AbstractRemiException {
 
     private static final long serialVersionUID = 1L;
 
+    /** 默认 HTTP 状态码 */
+    private static final int DEFAULT_HTTP_STATUS = HttpStatus.INTERNAL_SERVER_ERROR.value();
+    /** 默认异常级别 */
+    private static final ExceptionLevel DEFAULT_LEVEL = ExceptionLevel.ERROR;
+    /** 默认异常分类 */
+    private static final ExceptionCategory DEFAULT_CATEGORY = ExceptionCategory.SYSTEM;
+    /** 默认错误码 */
+    private static final String DEFAULT_CODE = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
+
+    // ==================== 核心构造函数（仅限 3 个） ====================
+
     /**
      * 默认构造函数，初始化为 500 Internal Server Error / ERROR / SYSTEM
      */
     public SysException() {
         super();
-        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用国际化消息键构造系统异常
-     *
-     * @param key 国际化消息键
-     */
-    public SysException(String key) {
-        super();
-        init(UnifiedExceptionCode.INTERNAL_ERROR.getCode(), key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
+        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        this.code = DEFAULT_CODE;
     }
 
     /**
@@ -61,75 +74,7 @@ public class SysException extends AbstractRemiException {
      */
     public SysException(ExceptionCode exceptionCode) {
         super();
-        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用国际化消息键和参数构造系统异常
-     *
-     * @param key    国际化消息键
-     * @param params 消息参数
-     */
-    public SysException(String key, Object[] params) {
-        super();
-        init(UnifiedExceptionCode.INTERNAL_ERROR.getCode(), key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用异常码枚举和参数构造系统异常
-     *
-     * @param exceptionCode 异常码枚举
-     * @param params        消息参数
-     */
-    public SysException(ExceptionCode exceptionCode, Object[] params) {
-        super();
-        init(exceptionCode, params, ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用自定义错误码和消息键构造系统异常
-     *
-     * @param code 错误码字符串
-     * @param key  国际化消息键
-     */
-    public SysException(String code, String key) {
-        super();
-        init(code, key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用自定义错误码、消息键和参数构造系统异常
-     *
-     * @param code   错误码字符串
-     * @param key    国际化消息键
-     * @param params 消息参数
-     */
-    public SysException(String code, String key, Object[] params) {
-        super();
-        init(code, key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用原始异常构造系统异常
-     *
-     * @param cause 原始异常
-     */
-    public SysException(Throwable cause) {
-        super(cause);
-        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-        this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
-    }
-
-    /**
-     * 使用自定义错误码和原始异常构造系统异常
-     *
-     * @param code  错误码字符串
-     * @param cause 原始异常
-     */
-    public SysException(String code, Throwable cause) {
-        super(cause);
-        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-        this.code = code;
+        init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
     /**
@@ -140,119 +85,10 @@ public class SysException extends AbstractRemiException {
      */
     public SysException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
+        init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
-    /**
-     * 使用自定义错误码、消息键和原始异常构造系统异常
-     *
-     * @param code  错误码字符串
-     * @param key   国际化消息键
-     * @param cause 原始异常
-     */
-    public SysException(String code, String key, Throwable cause) {
-        super(null, cause);
-        init(code, key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用自定义错误码、消息键、参数和原始异常构造系统异常
-     *
-     * @param code   错误码字符串
-     * @param key    国际化消息键
-     * @param params 消息参数
-     * @param cause  原始异常
-     */
-    public SysException(String code, String key, Object[] params, Throwable cause) {
-        super(null, cause);
-        init(code, key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用 ResultCode 构造系统异常。
-     *
-     * <p>兼容业务模块中以 StandardResultCode 作为错误码的调用方式。
-     *
-     * @param resultCode 结果码
-     */
-    public SysException(ResultCode resultCode) {
-        super();
-        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
-             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用 ResultCode 和自定义消息构造系统异常。
-     *
-     * <p>兼容业务模块中以 StandardResultCode 作为错误码的调用方式。
-     *
-     * @param resultCode 结果码
-     * @param message    自定义消息
-     */
-    public SysException(ResultCode resultCode, String message) {
-        super(message);
-        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
-             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-        setMessage(message);
-    }
-
-    // ==================== BaseResultCode 重载（remi-common-core 精简适配） ====================
-
-    /**
-     * 使用 {@link BaseResultCode} 构造系统异常。
-     *
-     * <p>remi-common-core 精简后 {@code BaseResultCode} 不再实现 {@link ResultCode} 接口，
-     * 此重载用于兼容业务模块中以 BaseResultCode 作为错误码的调用方式。
-     *
-     * @param resultCode 基础结果码
-     */
-    public SysException(BaseResultCode resultCode) {
-        super();
-        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
-             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用 {@link BaseResultCode} 和自定义消息构造系统异常。
-     *
-     * @param resultCode 基础结果码
-     * @param message    自定义消息
-     */
-    public SysException(BaseResultCode resultCode, String message) {
-        super(message);
-        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
-             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-        setMessage(message);
-    }
-
-    /**
-     * 使用 {@link BaseResultCode}、消息 key 和可变参数构造系统异常。
-     *
-     * @param resultCode 基础结果码
-     * @param key        国际化消息 key
-     * @param params     消息参数（可变参数）
-     */
-    public SysException(BaseResultCode resultCode, String key, Object... params) {
-        super();
-        init(resultCode.getCode(), key, params,
-             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
-
-    /**
-     * 使用 ResultCode、消息 key 和可变参数构造系统异常。
-     *
-     * <p>兼容业务模块中以 StandardResultCode 作为错误码、
-     * 使用国际化消息 key 和参数的调用方式。
-     *
-     * @param resultCode 结果码
-     * @param key        国际化消息 key
-     * @param params     消息参数（可变参数）
-     */
-    public SysException(ResultCode resultCode, String key, Object... params) {
-        super();
-        init(resultCode.getCode(), key, params,
-             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
-    }
+    // ==================== 业务方法 ====================
 
     /**
      * 转换为可序列化的异常响应体，供全局异常处理器写回 HTTP 响应。
@@ -283,7 +119,10 @@ public class SysException extends AbstractRemiException {
      * @return SysException 实例
      */
     public static SysException of(String key) {
-        return new SysException(key);
+        SysException exception = new SysException();
+        exception.setKey(key);
+        exception.initFields(DEFAULT_CODE, key, new Object[]{});
+        return exception;
     }
 
     /**
@@ -304,8 +143,12 @@ public class SysException extends AbstractRemiException {
      * @return SysException 实例
      */
     public static SysException of(String code, String key) {
-        return new SysException(code, key);
+        SysException exception = new SysException();
+        exception.initFields(code, key, new Object[]{});
+        return exception;
     }
+
+    // ==================== Builder ====================
 
     /**
      * 系统异常构建器，预置默认的错误码、HTTP状态码、级别和分类
@@ -319,21 +162,50 @@ public class SysException extends AbstractRemiException {
 
         public SysExceptionBuilder() {
             super();
-            this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
-            this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-            this.level = ExceptionLevel.ERROR;
-            this.category = ExceptionCategory.SYSTEM;
+            this.code = DEFAULT_CODE;
+            this.httpStatus = DEFAULT_HTTP_STATUS;
+            this.level = DEFAULT_LEVEL;
+            this.category = DEFAULT_CATEGORY;
+        }
+
+        /**
+         * 便捷方法：设置 {@link ResultCode} 作为错误码
+         */
+        public SysExceptionBuilder resultCode(ResultCode resultCode) {
+            if (resultCode != null) {
+                this.code = resultCode.getCode();
+                this.key = resultCode.getMessageKey();
+                this.httpStatus = resultCode.getHttpStatusCode() > 0
+                        ? resultCode.getHttpStatusCode() : DEFAULT_HTTP_STATUS;
+            }
+            return self();
+        }
+
+        /**
+         * 便捷方法：设置 {@link BaseResultCode} 作为错误码
+         */
+        public SysExceptionBuilder resultCode(BaseResultCode resultCode) {
+            if (resultCode != null) {
+                this.code = resultCode.getCode();
+                this.key = resultCode.getMessageKey();
+                this.httpStatus = resultCode.getHttpStatusCode() > 0
+                        ? resultCode.getHttpStatusCode() : DEFAULT_HTTP_STATUS;
+            }
+            return self();
         }
 
         @Override
-        protected SysException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
+        protected SysException doBuild(String code, String key, Object[] params, int httpStatus,
                                        ExceptionLevel level, ExceptionCategory category,
                                        Throwable cause, String path, Object extData, String message) {
             SysException exception;
             if (cause != null) {
-                exception = new SysException(code, key, params, cause);
+                exception = new SysException();
+                exception.initFields(code, key, params);
+                exception.initCause(cause);
             } else {
-                exception = new SysException(code, key, params);
+                exception = new SysException();
+                exception.initFields(code, key, params);
             }
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);

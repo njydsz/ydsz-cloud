@@ -65,6 +65,12 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.springframework.context.MessageSource")
 public class I18nConfiguration {
 
+    /**
+     * 最低缓存秒数保障：即使开发环境设为 0 秒无缓存，
+     * 也会强制使用此最低值避免压测场景下 IO 频繁导致性能劣化
+     */
+    private static final int MIN_CACHE_SECONDS = 2;
+
     private final I18nProperties properties;
     private final Environment environment;
     private final ObjectProvider<MessageSource> messageSourceProvider;
@@ -122,6 +128,8 @@ public class I18nConfiguration {
     public MessageSource messageSource() {
         boolean isProd = isProdEnvironment();
         int cacheSeconds = isProd ? properties.getProdCacheSeconds() : properties.getDevCacheSeconds();
+        // 保障最低缓存，避免 IO 劣化
+        cacheSeconds = Math.max(cacheSeconds, MIN_CACHE_SECONDS);
         MessageSource messageSource = createMessageSource(cacheSeconds);
         // fail-fast：启动时校验所有已注册 ExceptionCode 的 i18n key 都能被 MessageSource 解析
         boolean validateEnabled = environment == null

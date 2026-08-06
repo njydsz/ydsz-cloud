@@ -27,15 +27,27 @@ import lombok.ToString;
  *   <li>异常分类：BUSINESS</li>
  * </ul>
  *
+ * <p><b>精简设计（v2.0）：</b>仅保留 3 个核心构造函数，
+ * 其他参数化构造通过 {@link #builder()} 链式 Builder 完成，消除 15+ 构造函数爆炸问题。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * throw new BusinessException(UnifiedExceptionCode.NOT_FOUND);
- * throw new BusinessException(UnifiedExceptionCode.NOT_FOUND).data("userId", 123);
+ * // 简单抛出
+ * throw BusinessException.of(UnifiedExceptionCode.NOT_FOUND);
+ *
+ * // 带原始异常
+ * throw new BusinessException(UnifiedExceptionCode.DATABASE_ERROR, cause);
+ *
+ * // 完整参数链式构建
  * throw BusinessException.builder()
  *     .code("USER_NOT_FOUND")
  *     .key("user.not.found")
  *     .httpStatus(404)
  *     .build();
+ *
+ * // 携带业务数据
+ * throw BusinessException.of(UnifiedExceptionCode.PARAM_ERROR)
+ *     .data("field", "username");
  * }</pre>
  *
  * @author remi-team
@@ -59,7 +71,7 @@ public class BusinessException extends AbstractRemiException {
 
     private transient ConcurrentHashMap<String, Object> dataMap;
 
-    // ==================== 构造函数 ====================
+    // ==================== 核心构造函数（仅限 3 个） ====================
 
     /**
      * 默认构造函数，初始化为 400 Bad Request / ERROR / BUSINESS
@@ -80,166 +92,6 @@ public class BusinessException extends AbstractRemiException {
     }
 
     /**
-     * 使用异常码枚举和参数构造业务异常
-     *
-     * @param exceptionCode 异常码枚举
-     * @param params        消息参数
-     */
-    public BusinessException(ExceptionCode exceptionCode, Object[] params) {
-        super();
-        init(exceptionCode, params, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用异常码枚举和自定义消息构造业务异常
-     *
-     * @param exceptionCode 异常码枚举
-     * @param message       自定义异常消息
-     */
-    public BusinessException(ExceptionCode exceptionCode, String message) {
-        super(message);
-        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        initFields(exceptionCode.getCode(), exceptionCode.getKey(), new Object[]{});
-        setMessage(message);
-    }
-
-    /**
-     * 使用统一结果码构造业务异常（兼容 {@link ResultCode} 体系）
-     *
-     * <p>用于业务模块尚未迁移到 {@link ExceptionCode}，但已实现 {@link ResultCode} 的场景。
-     * 从 v1.1.0 起，当传入的 ResultCode 同时实现 ExceptionCode 时，会优先走
-     * {@link #BusinessException(ExceptionCode)} 构造函数以获得完整的 i18n 支持。
-     * 消息回退为 {@link ResultCode#getMsg()}，避免缺少国际化消息时出现纯 key。
-     *
-     * <p><b>行为变更（v1.1.0）：</b>HTTP 状态码不再硬编码为 400，
-     * 而是尊重 ResultCode 声明的 {@link ResultCode#getHttpStatusCode()} 值。
-     *
-     * @param resultCode 统一结果码
-     */
-    public BusinessException(ResultCode resultCode) {
-        super();
-        int httpStatus = resolveHttpStatus(resultCode);
-        init(resultCode.getCode(), resultCode.getMsg(), new Object[]{}, httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用统一结果码和自定义消息构造业务异常
-     *
-     * <p><b>行为变更（v1.1.0）：</b>HTTP 状态码不再硬编码为 400，
-     * 而是尊重 ResultCode 声明的 {@link ResultCode#getHttpStatusCode()} 值。
-     *
-     * @param resultCode 统一结果码
-     * @param message    自定义异常消息
-     */
-    public BusinessException(ResultCode resultCode, String message) {
-        super(message);
-        int httpStatus = resolveHttpStatus(resultCode);
-        initDefaults(httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        initFields(resultCode.getCode(), resultCode.getMsg(), new Object[]{});
-        setMessage(message);
-    }
-
-    /**
-     * 使用 {@link BaseResultCode} 构造业务异常。
-     *
-     * <p>remi-common-core 精简后 {@code BaseResultCode} 不再实现 {@link ResultCode} 接口，
-     * 此重载用于兼容业务模块中以 BaseResultCode 作为错误码的调用方式。
-     *
-     * @param resultCode 基础结果码
-     */
-    public BusinessException(BaseResultCode resultCode) {
-        super();
-        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
-             resultCode.getHttpStatusCode(), DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 从 ResultCode 中解析 HTTP 状态码，优先使用显式声明的值，
-     * 回退到默认 400。
-     *
-     * @param resultCode 结果码
-     * @return HTTP 状态码
-     */
-    private static int resolveHttpStatus(ResultCode resultCode) {
-        try {
-            int status = resultCode.getHttpStatusCode();
-            if (status > 0) {
-                return status;
-            }
-        } catch (Exception ignored) {
-            // 防御性编程：任何异常都回退到默认值
-        }
-        return DEFAULT_HTTP_STATUS;
-    }
-
-    /**
-     * 使用国际化消息键构造业务异常
-     *
-     * @param key 国际化消息键
-     */
-    public BusinessException(String key) {
-        super();
-        init(DEFAULT_CODE, key, new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用国际化消息键和参数构造业务异常
-     *
-     * @param key    国际化消息键
-     * @param params 消息参数
-     */
-    public BusinessException(String key, Object[] params) {
-        super();
-        init(DEFAULT_CODE, key, params, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用自定义错误码和消息键构造业务异常
-     *
-     * @param code 错误码字符串
-     * @param key  国际化消息键
-     */
-    public BusinessException(String code, String key) {
-        super();
-        init(code, key, new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用自定义错误码、消息键和参数构造业务异常
-     *
-     * @param code   错误码字符串
-     * @param key    国际化消息键
-     * @param params 消息参数
-     */
-    public BusinessException(String code, String key, Object[] params) {
-        super();
-        init(code, key, params, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用原始异常构造业务异常
-     *
-     * @param cause 原始异常
-     */
-    public BusinessException(Throwable cause) {
-        super(cause);
-        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        this.code = DEFAULT_CODE;
-    }
-
-    /**
-     * 使用自定义错误码和原始异常构造业务异常
-     *
-     * @param code  错误码字符串
-     * @param cause 原始异常
-     */
-    public BusinessException(String code, Throwable cause) {
-        super(cause);
-        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        this.code = code;
-    }
-
-    /**
      * 使用异常码枚举和原始异常构造业务异常
      *
      * @param exceptionCode 异常码枚举
@@ -248,31 +100,6 @@ public class BusinessException extends AbstractRemiException {
     public BusinessException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用自定义错误码、消息键和原始异常构造业务异常
-     *
-     * @param code  错误码字符串
-     * @param key   国际化消息键
-     * @param cause 原始异常
-     */
-    public BusinessException(String code, String key, Throwable cause) {
-        super(null, cause);
-        init(code, key, new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用自定义错误码、消息键、参数和原始异常构造业务异常
-     *
-     * @param code   错误码字符串
-     * @param key    国际化消息键
-     * @param params 消息参数
-     * @param cause  原始异常
-     */
-    public BusinessException(String code, String key, Object[] params, Throwable cause) {
-        super(null, cause);
-        init(code, key, params, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
     // ==================== 业务方法 ====================
@@ -345,8 +172,40 @@ public class BusinessException extends AbstractRemiException {
             this.category = DEFAULT_CATEGORY;
         }
 
+        /**
+         * 便捷方法：设置 {@link ResultCode} 作为错误码
+         */
+        public BusinessExceptionBuilder resultCode(ResultCode resultCode) {
+            if (resultCode != null) {
+                this.code = resultCode.getCode();
+                this.key = resultCode.getMessageKey();
+                this.httpStatus = resultCode.getHttpStatusCode();
+            }
+            return self();
+        }
+
+        /**
+         * 便捷方法：设置 {@link BaseResultCode} 作为错误码
+         */
+        public BusinessExceptionBuilder resultCode(BaseResultCode resultCode) {
+            if (resultCode != null) {
+                this.code = resultCode.getCode();
+                this.key = resultCode.getMessageKey();
+                this.httpStatus = resultCode.getHttpStatusCode();
+            }
+            return self();
+        }
+
+        /**
+         * 便捷方法：设置国际化消息参数
+         */
+        public BusinessExceptionBuilder params(Object... params) {
+            this.params = params;
+            return self();
+        }
+
         @Override
-        protected BusinessException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
+        protected BusinessException doBuild(String code, String key, Object[] params, int httpStatus,
                                             ExceptionLevel level, ExceptionCategory category,
                                             Throwable cause, String path, Object extData, String message) {
             BusinessException exception = new BusinessException();

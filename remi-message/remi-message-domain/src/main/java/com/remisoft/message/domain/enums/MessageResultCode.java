@@ -3,7 +3,7 @@ package com.remisoft.message.domain.enums;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.remisoft.common.exception.annotation.RemiResultCode;
+import com.remisoft.common.exception.registry.RemiResultCode;
 import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 

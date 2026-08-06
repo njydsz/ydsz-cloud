@@ -1,5 +1,7 @@
 package com.remisoft.common.exception.metrics;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -10,7 +12,9 @@ import com.remisoft.common.exception.custom.AbstractRemiException;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Tags;
 
 /**
  * 异常指标统计器
@@ -33,6 +37,9 @@ import io.micrometer.core.instrument.Timer;
  *
  * <p><b>高基数标签治理：</b>{@code code} tag 默认不包含，
  * 通过 {@code remi.exception.metrics-include-code-tag=true} 显式开启。
+ *
+ * <p><b>性能优化（v2.0）：</b>预缓存常用 Tags 对象，减少高频调用场景下的
+ * Counter.Builder 对象创建与 Tags 数组分配开销。
  *
  * @author remi-team
  * @since 1.0.0
@@ -81,6 +88,13 @@ public class ExceptionMetrics {
      */
     private volatile boolean includeCodeTag = false;
 
+    /**
+     * Tags 缓存：type|level|category → 预构建的 Tags 对象
+     *
+     * <p>缓存常用维度的 Tags 组合，避免每次记录异常时重新构造 Tag 数组。
+     */
+    private final Map<String, Tags> tagsCache = new ConcurrentHashMap<>();
+
     public ExceptionMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }
@@ -92,6 +106,8 @@ public class ExceptionMetrics {
      */
     public void setIncludeCodeTag(boolean includeCodeTag) {
         this.includeCodeTag = includeCodeTag;
+        // 切换时清空缓存，避免残留
+        tagsCache.clear();
     }
 
     /**
@@ -110,6 +126,10 @@ public class ExceptionMetrics {
      */
     public void setEnabled(boolean enabled) {
         this.enabled.set(enabled);
+        // 禁用时清空缓存
+        if (!enabled) {
+            tagsCache.clear();
+        }
     }
 
     /**
@@ -130,39 +150,7 @@ public class ExceptionMetrics {
      * @param throwable 异常对象
      */
     public void recordException(Throwable throwable) {
-        if (!enabled.get() || meterRegistry == null) {
-            return;
-        }
-        try {
-            String exceptionType = throwable.getClass().getSimpleName();
-            String level = "UNKNOWN";
-            String category = "UNKNOWN";
-            String code = "N/A";
-
-            if (throwable instanceof AbstractRemiException) {
-                AbstractRemiException ex = (AbstractRemiException) throwable;
-                if (ex.getLevel() != null) {
-                    level = ex.getLevel().name();
-                }
-                if (ex.getCategory() != null) {
-                    category = ex.getCategory().name();
-                }
-                if (ex.getCode() != null) {
-                    code = ex.getCode();
-                }
-            }
-
-            Counter.Builder counterBuilder = Counter.builder(METRIC_EXCEPTION_COUNT)
-                    .tag(TAG_TYPE, exceptionType)
-                    .tag(TAG_LEVEL, level)
-                    .tag(TAG_CATEGORY, category);
-            if (includeCodeTag) {
-                counterBuilder.tag(TAG_CODE, code);
-            }
-            counterBuilder.register(meterRegistry).increment();
-        } catch (Exception e) {
-            log.warn("记录异常指标失败: {}", e.getMessage());
-        }
+        recordExceptionWithTags(throwable);
     }
 
     /**
@@ -197,40 +185,68 @@ public class ExceptionMetrics {
             return;
         }
         try {
-            String exceptionType = throwable.getClass().getSimpleName();
-            String level = "UNKNOWN";
-            String category = "UNKNOWN";
-            String code = "N/A";
+            Counter.Builder builder = Counter.builder(METRIC_EXCEPTION_COUNT);
 
-            if (throwable instanceof AbstractRemiException) {
-                AbstractRemiException ex = (AbstractRemiException) throwable;
-                if (ex.getLevel() != null) {
-                    level = ex.getLevel().name();
-                }
-                if (ex.getCategory() != null) {
-                    category = ex.getCategory().name();
-                }
-                if (ex.getCode() != null) {
+            // 使用预缓存的 Tags 或构建新 Tags
+            Tags tags = buildTags(throwable, extraTags);
+            builder.tags(tags);
+
+            if (includeCodeTag) {
+                String code = "N/A";
+                if (throwable instanceof AbstractRemiException ex && ex.getCode() != null) {
                     code = ex.getCode();
                 }
-            }
-
-            Counter.Builder builder = Counter.builder(METRIC_EXCEPTION_COUNT)
-                    .tag(TAG_TYPE, exceptionType)
-                    .tag(TAG_LEVEL, level)
-                    .tag(TAG_CATEGORY, category);
-            if (includeCodeTag) {
                 builder.tag(TAG_CODE, code);
-            }
-
-            // 添加额外标签
-            for (int i = 0; i + 1 < extraTags.length; i += 2) {
-                builder.tag(extraTags[i], extraTags[i + 1]);
             }
 
             builder.register(meterRegistry).increment();
         } catch (Exception e) {
             log.warn("记录异常指标失败: {}", e.getMessage());
         }
+    }
+
+    /**
+     * 构建或从缓存获取 Tags 对象
+     *
+     * <p>缓存键格式：type|level|category
+     * 不含 code tag（高基数维度单独处理）
+     */
+    private Tags buildTags(Throwable throwable, String... extraTags) {
+        String exceptionType = throwable.getClass().getSimpleName();
+        String level = "UNKNOWN";
+        String category = "UNKNOWN";
+
+        if (throwable instanceof AbstractRemiException ex) {
+            if (ex.getLevel() != null) {
+                level = ex.getLevel().name();
+            }
+            if (ex.getCategory() != null) {
+                category = ex.getCategory().name();
+            }
+        }
+
+        // 无额外标签时使用缓存
+        if (extraTags == null || extraTags.length == 0) {
+            String cacheKey = exceptionType + "|" + level + "|" + category;
+            return tagsCache.computeIfAbsent(cacheKey, k ->
+                    Tags.of(
+                            Tag.of(TAG_TYPE, exceptionType),
+                            Tag.of(TAG_LEVEL, level),
+                            Tag.of(TAG_CATEGORY, category)
+                    )
+            );
+        }
+
+        // 有额外标签时不缓存，直接构建
+        Tags tags = Tags.of(
+                Tag.of(TAG_TYPE, exceptionType),
+                Tag.of(TAG_LEVEL, level),
+                Tag.of(TAG_CATEGORY, category)
+        );
+        // 追加额外标签
+        for (int i = 0; i + 1 < extraTags.length; i += 2) {
+            tags = tags.and(Tag.of(extraTags[i], extraTags[i + 1]));
+        }
+        return tags;
     }
 }

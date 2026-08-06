@@ -1,5 +1,8 @@
 package com.remisoft.common.exception.custom;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.remisoft.common.exception.enums.ExceptionCategory;
 import com.remisoft.common.exception.enums.ExceptionLevel;
 
@@ -25,6 +28,8 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
     protected String path;
     protected Object extData;
     protected String message;
+    /** 构建阶段暂存的快照键值对，build() 后写入异常实例 */
+    protected transient Map<String, String> snapshotMap;
 
     /**
      * 返回构建器自身的具体类型实例，用于支撑 CRTP 泛型自引用。
@@ -41,7 +46,6 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * 构建异常实例（由子类实现）
      *
      * @param code      错误码
-     * @param subCode   子错误码（保留参数兼容性，实际不再使用）
      * @param key       国际化消息键
      * @param params    消息参数
      * @param httpStatus HTTP 状态码
@@ -53,7 +57,7 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
      * @param message   自定义消息
      * @return 异常实例
      */
-    protected abstract E doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
+    protected abstract E doBuild(String code, String key, Object[] params, int httpStatus,
                                   ExceptionLevel level, ExceptionCategory category,
                                   Throwable cause, String path, Object extData, String message);
 
@@ -197,14 +201,70 @@ public abstract class RemiExceptionBuilder<E extends AbstractRemiException, B ex
     }
 
     /**
+     * 向构建器追加单条上下文快照。
+     *
+     * <p>快照在 {@link #build()} 时一次性写入异常实例，
+     * 位于异常抛出位置附近记录关键上下文信息（如 orderId、userId），
+     * 可由全局异常处理器透写入日志与响应 details，用于排查定位。
+     *
+     * <p>使用示例：
+     * <pre>{@code
+     * throw BusinessException.builder()
+     *     .key("order.create.failed")
+     *     .snapshot("orderId", cmd.getOrderId())
+     *     .snapshot("skuId", cmd.getSkuId())
+     *     .build();
+     * }</pre>
+     *
+     * @param key   快照键，不可为 {@code null}
+     * @param value 快照值（自动 {@code String.valueOf(value)} 转换），可为 {@code null}
+     * @return 当前构建器，便于链式调用
+     */
+    public B snapshot(String key, Object value) {
+        if (this.snapshotMap == null) {
+            this.snapshotMap = new LinkedHashMap<>();
+        }
+        this.snapshotMap.put(key, value == null ? null : value.toString());
+        return self();
+    }
+
+    /**
+     * 向构建器批量追加上下文快照。
+     *
+     * <p>等价于多次调用 {@link #snapshot(String, Object)}。
+     *
+     * @param entries 待追加的键值对，可为 {@code null}
+     * @return 当前构建器，便于链式调用
+     * @since 1.8.0
+     */
+    public B snapshots(Map<String, ?> entries) {
+        if (entries == null || entries.isEmpty()) {
+            return self();
+        }
+        if (this.snapshotMap == null) {
+            this.snapshotMap = new LinkedHashMap<>(entries.size());
+        }
+        for (Map.Entry<String, ?> e : entries.entrySet()) {
+            Object val = e.getValue();
+            this.snapshotMap.put(e.getKey(), val == null ? null : val.toString());
+        }
+        return self();
+    }
+
+    /**
      * 构建异常实例
      *
      * @return 异常实例
      */
     public E build() {
-        return doBuild(
-                code, null, key, params, httpStatus, level, category,
+        E exception = doBuild(
+                code, key, params, httpStatus, level, category,
                 cause, path, extData, message
         );
+        // 暂存快照一次性写入异常实例
+        if (this.snapshotMap != null && !this.snapshotMap.isEmpty()) {
+            exception.setSnapshot(new LinkedHashMap<>(this.snapshotMap));
+        }
+        return exception;
     }
 }

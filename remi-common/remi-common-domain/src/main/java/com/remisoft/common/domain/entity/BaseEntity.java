@@ -2,6 +2,8 @@ package com.remisoft.common.domain.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import com.remisoft.common.json.annotation.JsonClass;
@@ -12,7 +14,9 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -51,6 +55,7 @@ import lombok.experimental.SuperBuilder;
  * @since 1.0.0
  * @since 1.4.0 扁平化：合并 BaseIdEntity/BaseAuditEntity，移除 domainEvents，纯领域无 MP 注解
  * @since 1.5.0 增加 isDeleted / markDeleted / markActive 便捷方法，修复 revision NPE 风险
+ * @since 1.6.0 恢复领域事件暂存能力（transient + @JsonIgnore，纯领域不影响持久化）
  */
 @JsonClass(description = "领域实体基类，标记可安全反序列化")
 @Data
@@ -118,7 +123,99 @@ public class BaseEntity<T extends Serializable> implements Serializable {
     @JsonIgnore
     private String tenantId;
 
+    // ======================== 领域事件（transient，不参与序列化） ========================
+
+    /**
+     * 领域事件暂存列表。
+     *
+     * <p>用于 DDD 聚合根在状态变更时注册事件，由 Repository 在持久化后统一分派。
+     * 设计参考：
+     * <ul>
+     *   <li>Spring Data 的 {@code @DomainEvents} / {@code @AfterDomainEventPublication} 回调</li>
+     *   <li>Axon Framework 的 {@code AbstractAggregateRoot.registerEvent()}</li>
+     * </ul>
+     *
+     * <p><b>注意：</b>使用 {@code transient} 避免参与 Java 序列化，
+     * 配合 {@code @JsonIgnore} 排除在 JSON 序列化之外，保持领域纯净。
+     *
+     * @since 1.6.0
+     */
+    @JsonIgnore
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @Builder.Default
+    private transient List<Object> domainEvents = new ArrayList<>();
+
     // ======================== 领域行为便捷方法 ========================
+
+    /**
+     * 注册领域事件。
+     *
+     * <p>由聚合根在状态变更时调用。事件暂存在实体中，由 Repository 在
+     * 持久化后统一分派（调用 {@link #pullDomainEvents()}）。
+     *
+     * <p>使用示例：
+     * <pre>{@code
+     * public class Order extends BaseEntity<Long> {
+     *     public void pay() {
+     *         // 业务逻辑...
+     *         this.status = OrderStatus.PAID.name();
+     *         registerEvent(new OrderPaidEvent(this.id, this.updatedAt));
+     *     }
+     * }
+     * }</pre>
+     *
+     * @param event 领域事件对象，非 null
+     * @since 1.6.0
+     */
+    protected void registerEvent(Object event) {
+        if (event == null) {
+            throw new IllegalArgumentException("Domain event must not be null");
+        }
+        if (domainEvents == null) {
+            domainEvents = new ArrayList<>();
+        }
+        domainEvents.add(event);
+    }
+
+    /**
+     * 获取并清空已暂存的领域事件。
+     *
+     * <p>由 Repository 在持久化聚合根之后调用（"读出并清空"语义），
+     * 获取后实体内不再保留事件，防止事件被重复分派。
+     *
+     * <p>典型分派模式（在 Repository 实现中）：
+     * <pre>{@code
+     * public Order save(Order order) {
+     *     Order saved = orderMapper.insert(order);
+     *     List<Object> events = order.pullDomainEvents();
+     *     events.forEach(eventPublisher::publishEvent);
+     *     return saved;
+     * }
+     * }</pre>
+     *
+     * @return 已暂存的领域事件列表（非 null，可能为空列表）
+     * @since 1.6.0
+     */
+    public List<Object> pullDomainEvents() {
+        if (domainEvents == null || domainEvents.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Object> events = new ArrayList<>(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+
+    /**
+     * 判断是否有暂存的领域事件。
+     *
+     * @return 有领域事件返回 true
+     * @since 1.6.0
+     */
+    @JsonIgnore
+    public boolean hasDomainEvents() {
+        return domainEvents != null && !domainEvents.isEmpty();
+    }
 
     /**
      * 安全获取乐观锁版本号（处理 JSON 反序列化后可能为 null 的场景）。

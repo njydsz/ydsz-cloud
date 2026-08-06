@@ -4,6 +4,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
@@ -14,9 +15,12 @@ import com.remisoft.common.exception.registry.ResultCodeScanner;
 /**
  * 异常码文档端点配置。
  *
- * <p>暴露 {@code /remi/error-codes} 端点，输出全量异常码与文档说明（HTTP code + 业务码 + 描述）。
+ * <p>暴露 {@code /actuator/exception-codes} 端点，输出全量异常码与文档说明（HTTP code + 业务码 + 描述）。
  *
  * <p>便于前端/测试同学检索错误码、运维同学做异常字典管理。
+ *
+ * <p><b>安全加固：</b>支持通过 {@code remi.exception.doc-endpoint.filter-modules} 配置模块白名单，
+ * 仅暴露指定模块的错误码，避免内部模块信息泄露。
  *
  * @author remi-team
  * @since 1.0.0
@@ -24,6 +28,7 @@ import com.remisoft.common.exception.registry.ResultCodeScanner;
 
 @AutoConfiguration
 @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+@EnableConfigurationProperties(ExceptionProperties.class)
 @ConditionalOnProperty(prefix = "remi.exception", name = "doc-endpoint-enabled", havingValue = "true", matchIfMissing = true)
 public class ExceptionCodeDocEndpointAutoConfiguration {
 
@@ -31,12 +36,13 @@ public class ExceptionCodeDocEndpointAutoConfiguration {
      * 创建错误码文档端点 Bean
      *
      * @param messageSource 国际化消息源
+     * @param properties 异常模块配置属性（不可为 null）
      * @return 错误码文档端点实例
      */
     @Bean
     @ConditionalOnMissingBean(ExceptionCodeDocEndpoint.class)
-    public ExceptionCodeDocEndpoint exceptionCodeDocEndpoint(MessageSource messageSource) {
-        return new ExceptionCodeDocEndpoint(messageSource);
+    public ExceptionCodeDocEndpoint exceptionCodeDocEndpoint(MessageSource messageSource, ExceptionProperties properties) {
+        return new ExceptionCodeDocEndpoint(messageSource, properties);
     }
 
     /**

@@ -69,6 +69,81 @@ public interface IdempotentOperation {
         return DEFAULT_EXPIRE_SECONDS;
     }
 
-    /** 默认幂等键过期时间：86400 秒（24 小时） */
+    /**
+     * 默认幂等键过期时间：86400 秒（24 小时）
+     *
+     * <p>运行时默认值由 {@code remi.domain.idempotent.default-expire-seconds} 配置覆盖。
+     */
     long DEFAULT_EXPIRE_SECONDS = 86400L;
+
+    /**
+     * 幂等作用域。
+     *
+     * <p>默认按幂等键去重，业务方可以提供更细粒度作用域（如 key + 用户ID、key + 租户ID）。
+     *
+     * <p>使用示例：
+     * <pre>{@code
+     * default String getScope() {
+     *     return "USER_" + RequestContext.getCurrentUserId();
+     * }
+     * }</pre>
+     *
+     * @return 作用域字符串（默认 "DEFAULT"）
+     * @since 1.6.0
+     */
+    default String getScope() {
+        return "DEFAULT";
+    }
+
+    /**
+     * 获取幂等冲突处理策略。
+     *
+     * <p>当检测到同一幂等键已被处理（重复请求）时的处理方式。
+     * 默认返回上一次处理结果（Stripe 模式）。
+     *
+     * @return 冲突处理策略
+     * @since 1.6.0
+     */
+    default IdempotentConflictPolicy getConflictPolicy() {
+        return IdempotentConflictPolicy.RETURN_PREVIOUS_RESULT;
+    }
+
+    /**
+     * 幂等冲突处理策略。
+     *
+     * <p>参考业界主流 API 设计：
+     * <ul>
+     *   <li>Stripe：返回上次处理结果，保证客户端重试语义</li>
+     *   <li>支付宝：幂等键重复时返回原交易状态</li>
+     *   <li>微信支付：幂等键重复时直接抛业务异常</li>
+     * </ul>
+     *
+     * @since 1.6.0
+     */
+    enum IdempotentConflictPolicy {
+        /**
+         * 返回上次处理结果。
+         *
+         * <p>默认策略，对标 Stripe 设计。适用于客户端 SDK 自动重试场景，
+         * 重复请求不会产生副作用，返回上一次的业务响应。
+         */
+        RETURN_PREVIOUS_RESULT,
+
+        /**
+         * 拒绝重复请求。
+         *
+         * <p>抛出幂等冲突异常（如 IdempotentConflictException），
+         * 由上层决定重试或报错。适用于不允许重复提交的业务场景。
+         */
+        REJECT,
+
+        /**
+         * 强制重放（幂等语义由业务保证）。
+         *
+         * <p>即使幂等键重复，仍然执行实际业务逻辑。
+         * 适用于业务本身就天然幂等的场景（如查询、删除已删除的资源）。
+         * 谨慎使用。
+         */
+        FORCE_REPLAY
+    }
 }

@@ -1,5 +1,8 @@
 package com.remisoft.common.exception.config;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -23,6 +26,10 @@ import lombok.Setter;
  *     include-stack-trace: false       # 是否在响应中包含堆栈信息
  *     problem-detail-type-base-url: https://api.example.com/errors
  *     metrics-include-code-tag: false  # 是否在 Micrometer 指标中包含高基数 code tag
+ *     doc-endpoint:
+ *       enabled: true
+ *       filter-modules: []             # 白名单模块，空表示全部
+ *       auth-required: false           # 是否需要鉴权
  * }</pre>
  *
  * @author remi-team
@@ -65,6 +72,11 @@ public class ExceptionProperties {
     private boolean docEndpointEnabled = true;
 
     /**
+     * 错误码文档端点安全配置
+     */
+    private DocEndpointSecurity docEndpoint = new DocEndpointSecurity();
+
+    /**
      * ProblemDetail type URI 基础 URL（RFC 7807）
      *
      * <p>用于构建 {@code problem.type} 字段，指向错误码文档。
@@ -89,5 +101,33 @@ public class ExceptionProperties {
         BASE_RESPONSE,
         /** RFC 7807 ProblemDetail 格式 */
         PROBLEM_DETAIL
+    }
+
+    /**
+     * 错误码文档端点安全配置
+     */
+    @Getter
+    @Setter
+    public static class DocEndpointSecurity {
+        /**
+         * 端点模块白名单（仅允许查看指定模块的错误码）
+         * 空列表表示允许所有模块
+         */
+        private List<String> filterModules = Collections.emptyList();
+
+        /**
+         * 是否需要访问鉴权（开启后需结合 Spring Security）
+         */
+        private boolean authRequired = false;
+
+        /**
+         * 鉴权头名称（当 authRequired=true 时校验）
+         */
+        private String authHeaderName = "X-Actuator-Auth";
+
+        /**
+         * 鉴权 Token（简单 token 鉴权，生产建议使用 Spring Security）
+         */
+        private String authToken = "";
     }
 }

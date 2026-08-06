@@ -22,7 +22,7 @@ import com.remisoft.workflow.server.config.FlowProperties;
 import com.remisoft.workflow.server.service.FlowEmbeddedApprovalService;
 import com.remisoft.workflow.server.service.FlowThirdPartyAccountService;
 import com.remisoft.workflow.server.service.FlowThirdPartyLogService;
-import com.remisoft.workflow.server.thirdparty.DingTalkSignatureUtil;
+import com.remisoft.common.notify.signature.DingTalkSignatureUtil;
 import com.remisoft.common.notify.signature.FeishuSignatureUtil;
 import com.remisoft.workflow.server.thirdparty.ThirdPartyApprovalActionResolver;
 import com.remisoft.common.notify.signature.WeComSignatureUtil;

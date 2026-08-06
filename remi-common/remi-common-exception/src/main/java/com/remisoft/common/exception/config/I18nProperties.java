@@ -51,10 +51,13 @@ public class I18nProperties {
     /**
      * 开发环境缓存刷新间隔（秒）
      *
-     * <p>0 表示不缓存，修改 messages.properties 后立即生效。
+     * <p>默认 5 秒短缓存：修改 messages.properties 后数秒内生效，
+     * 同时避免压测场景下高频 IO 导致性能劣化。
      * 仅在 dev/test profile 下生效。
+     *
+     * <p>如需立即生效（单次调试），可临时设为 0。
      */
-    private int devCacheSeconds = 0;
+    private int devCacheSeconds = 5;
 
     /**
      * 生产环境缓存刷新间隔（秒）

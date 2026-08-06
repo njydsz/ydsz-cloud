@@ -70,12 +70,16 @@ public class GetuiPushProvider implements PushProvider {
     /**
      * 测试构造：注入自定义 config 与 RestTemplate（便于 mock）。
      *
+     * <p>ID 生成器使用默认实例（workerId/datacenterId 自动计算），
+     * 保证 {@code send()} 中生成 request_id 不依赖外部配置。</p>
+     *
      * @param config       个推配置
      * @param restTemplate RestTemplate（测试可 mock）
      */
     GetuiPushProvider(MessageProperties.GetuiPushConfig config, RestTemplate restTemplate) {
         this.config = config;
         this.restTemplate = restTemplate;
+        this.snowflakeIdGenerator = new SnowflakeIdGenerator(null, null);
     }
 
     @Override

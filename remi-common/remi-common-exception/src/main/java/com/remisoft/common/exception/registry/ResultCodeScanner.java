@@ -1,13 +1,21 @@
 package com.remisoft.common.exception.registry;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
 
 import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
@@ -17,13 +25,20 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 错误码自动扫描注册器。
  *
- * <p>启动时扫描 classpath 中所有标注 {@link RemiResultCode} 注解的枚举类，
+ * <p>启动时扫描所有标注 {@link RemiResultCode} 注解的枚举类，
  * 将其注册到 {@link ResultCodeRegistry} 全局注册表。
  *
- * <p>扫描范围见 {@value #SCAN_PATTERN}，覆盖所有业务模块。
+ * <p><b>性能优化（v2.0）：</b>优先读取编译时生成的索引文件 META-INF/spring/remi-result-codes.idx，
+ * 仅在索引不存在时回退到 ASM 字节码扫描，减少启动开销。
  *
- * <p><b>改进：</b>{@link MetadataReaderFactory} 采用懒加载自构造方式，
- * 避免直接依赖 Spring Context 启动早的 Bean 注入时序问题。
+ * <p><b>使用方式：</b>业务模块可在 src/main/resources/META-INF/spring/remi-result-codes.idx
+ * 中列出所有错误码枚举类全限定名（每行一个），格式：
+ * <pre>
+ * com.example.module.ErrorCode
+ * com.example.module.OtherErrorCode
+ * </pre>
+ *
+ * <p>Gradle/Maven 插件可在编译时自动生成此文件，避免运行时 ASM 扫描开销。
  *
  * @author remi-team
  * @since 1.0.0
@@ -31,40 +46,107 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ResultCodeScanner {
 
+    private static final String INDEX_LOCATION = "META-INF/spring/remi-result-codes.idx";
     private static final String SCAN_PATTERN = "classpath*:com/remisoft/**/*.class";
+    private static final String INDEX_PATTERN = "classpath*:" + INDEX_LOCATION;
 
     private final ResultCodeRegistry registry;
     private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(RemiResultCode.class);
     private final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
 
     /**
-     * {@link MetadataReaderFactory} 懒加载构造：
-     * <ul>
-     *     <li>首次扫描时通过 {@link SimpleMetadataReaderFactory} 自构造，不依赖 Spring 容器</li>
-     * </ul>
+     * {@link MetadataReaderFactory} 懒加载构造
      */
     private volatile MetadataReaderFactory metadataReaderFactory;
 
-    /**
-     * 构造扫描器。
-     *
-     * @param registry 全局错误码注册表
-     */
     public ResultCodeScanner(ResultCodeRegistry registry) {
         this.registry = registry;
     }
 
     /**
      * 应用就绪后执行扫描注册。
+     *
+     * <p>优先使用编译时索引，回退到 ASM 字节码扫描。
      */
     @EventListener(ApplicationReadyEvent.class)
     public void scanAndRegister() {
+        // 1. 优先尝试从索引文件加载
+        boolean indexed = scanFromIndex();
+
+        // 2. 索引不存在或加载失败时，回退到 ASM 扫描
+        if (!indexed) {
+            log.info("[ResultCodeScanner] 未检测到编译时索引（{}），回退到 ASM 字节码扫描", INDEX_LOCATION);
+            scanWithAsm();
+        }
+    }
+
+    /**
+     * 从编译时生成的索引文件加载错误码枚举类
+     *
+     * @return true-成功从索引加载；false-索引不存在或加载失败
+     */
+    private boolean scanFromIndex() {
+        try {
+            Resource[] resources = resourceResolver.getResources(INDEX_PATTERN);
+            if (resources.length == 0) {
+                return false;
+            }
+
+            int registeredCount = 0;
+            for (Resource resource : resources) {
+                if (!resource.isReadable()) {
+                    continue;
+                }
+                try (InputStream is = resource.getInputStream();
+                     BufferedReader reader = new BufferedReader(
+                             new InputStreamReader(is, StandardCharsets.UTF_8))) {
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        line = line.trim();
+                        // 跳过空行和注释
+                        if (line.isEmpty() || line.startsWith("#")) {
+                            continue;
+                        }
+                        registerByIndex(line);
+                        registeredCount++;
+                    }
+                }
+            }
+
+            log.info("[ResultCodeScanner] 从索引文件加载完成，注册 {} 个错误码枚举 | 索引来源: {}",
+                    registeredCount, resources.length);
+            return true;
+        } catch (Exception e) {
+            log.warn("[ResultCodeScanner] 索引文件加载失败: {}，将回退到 ASM 扫描", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 按索引行内容加载并注册枚举类
+     */
+    private void registerByIndex(String className) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            registerClass(clazz);
+        } catch (ClassNotFoundException e) {
+            log.warn("[ResultCodeScanner] 索引中列出的类不存在: {}", className);
+        } catch (Exception e) {
+            log.debug("[ResultCodeScanner] 加载类失败: {} | error={}", className, e.getMessage());
+        }
+    }
+
+    /**
+     * ASM 字节码扫描（兜底策略）
+     */
+    private void scanWithAsm() {
         try {
             MetadataReaderFactory readerFactory = getOrCreateReaderFactory();
-            var resources = resourceResolver.getResources(SCAN_PATTERN);
+            Resource[] resources = resourceResolver.getResources(SCAN_PATTERN);
             int registeredCount = 0;
 
-            for (var resource : resources) {
+            for (Resource resource : resources) {
                 if (!resource.isReadable()) {
                     continue;
                 }
@@ -87,17 +169,14 @@ public class ResultCodeScanner {
                             resource.getFilename(), e.getMessage());
                 }
             }
-            log.info("[ResultCodeScanner] 扫描完成，注册 {} 个模块的错误码", registeredCount);
+            log.info("[ResultCodeScanner] ASM 扫描完成，注册 {} 个模块的错误码", registeredCount);
         } catch (Exception e) {
             log.warn("[ResultCodeScanner] 扫描失败: {}", e.getMessage(), e);
         }
     }
 
     /**
-     * 获取或创建 {@link MetadataReaderFactory}。
-     *
-     * <p>线程安全的双重检查锁：
-     * 首次调用时自构造 {@link SimpleMetadataReaderFactory}。
+     * 获取或创建 {@link MetadataReaderFactory}
      */
     private MetadataReaderFactory getOrCreateReaderFactory() {
         if (metadataReaderFactory == null) {
@@ -111,18 +190,33 @@ public class ResultCodeScanner {
     }
 
     /**
-     * 加载枚举类并注册所有错误码。
-     *
+     * 注册枚举类到注册表
+     */
+    private void registerClass(Class<?> clazz) {
+        if (!clazz.isEnum() || !java.lang.reflect.Modifier.isPublic(clazz.getModifiers())
+                || !ExceptionCode.class.isAssignableFrom(clazz)) {
+            return;
+        }
+        // 提取注解信息
+        RemiResultCode annotation = clazz.getAnnotation(RemiResultCode.class);
+        if (annotation == null) {
+            log.debug("[ResultCodeScanner] 类 {} 未标注 @RemiResultCode，跳过", clazz.getName());
+            return;
+        }
+        registerEnum(annotation.module(), annotation.description(), clazz.getName());
+    }
+
+    /**
+     * 加载枚举类并注册所有错误码。     *
      * <p>注册到两个注册中心：
      * <ul>
      *   <li>{@link ResultCodeRegistry} — 供文档端点按模块分组展示</li>
-     *   <li>{@link ExceptionCodeRegistry} — 供 {@link ExceptionCode#fromCode(String)} 反查</li>
+     *   <li>{@link ExceptionCodeRegistry} — 供 {@code lookup} 反查</li>
      * </ul>
      */
     private void registerEnum(String module, String description, String className) {
         try {
             Class<?> clazz = Class.forName(className);
-            // 必须为 public 枚举（non-public 反射 getEnumConstants 会失败）
             if (!clazz.isEnum() || !java.lang.reflect.Modifier.isPublic(clazz.getModifiers())
                     || !ExceptionCode.class.isAssignableFrom(clazz)) {
                 return;

@@ -49,13 +49,14 @@ import java.util.stream.Collectors;
  */
 public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
-    /** 排序比较器：sort 字段升序，null 值排在最后 */
-    private static final Comparator<TreeNode<?, ?>> SORT_COMPARATOR = Comparator.comparing(
+    /** 排序比较器：默认 sort 字段升序，null 值排在最后（作为默认值使用） */
+    private static final Comparator<TreeNode<?, ?>> DEFAULT_SORT_COMPARATOR = Comparator.comparing(
             TreeNode::getSort,
             Comparator.nullsLast(Integer::compareTo));
 
-    private static <T extends TreeNode<T, ?>> Comparator<T> getSortComparator() {
-        return (Comparator<T>) SORT_COMPARATOR;
+    @SuppressWarnings("unchecked")
+    private static <T extends TreeNode<T, ?>> Comparator<T> defaultSortComparator() {
+        return (Comparator<T>) DEFAULT_SORT_COMPARATOR;
     }
 
     /** 虚拟根节点 ID（父 ID 等于该值的节点视为根） */
@@ -64,24 +65,54 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     /** 扁平节点列表 */
     private final List<T> nodeList;
 
+    /** 排序比较器（可选）；未设置时使用默认的 sort 字段升序 + nullsLast */
+    private final Comparator<T> sortComparator;
+
     /**
-     * 构造树构建器
+     * 构造树构建器（使用默认排序比较器 sort 字段升序 + nullsLast）。
      *
      * @param rootId   虚拟根节点 ID；为 null 时以 {@code parentId == null} 判定根节点
      * @param nodeList 扁平节点列表，非空
      */
     public TreeBuilder(ID rootId, List<T> nodeList) {
-        this.rootId = rootId;
-        this.nodeList = Objects.requireNonNull(nodeList, "nodeList不能为null");
+        this(rootId, nodeList, null);
     }
 
     /**
-     * 构造树构建器（单根模式：以 {@code parentId == null} 判定根节点）
+     * 构造树构建器（自定义排序比较器）。
+     *
+     * <p>允许调用方指定自定义排序逻辑（如按 orderNum 排序、按 name 排序等），
+     * 不局限于 {@link TreeNode#getSort()} 字段。
+     *
+     * @param rootId   虚拟根节点 ID；为 null 时以 {@code parentId == null} 判定根节点
+     * @param nodeList 扁平节点列表，非空
+     * @param sortComparator 排序比较器（可为 null，则使用默认 sort 字段升序 + nullsLast）
+     * @since 1.6.0
+     */
+    public TreeBuilder(ID rootId, List<T> nodeList, Comparator<T> sortComparator) {
+        this.rootId = rootId;
+        this.nodeList = Objects.requireNonNull(nodeList, "nodeList不能为null");
+        this.sortComparator = sortComparator;
+    }
+
+    /**
+     * 构造树构建器（单根模式：以 {@code parentId == null} 判定根节点，使用默认排序比较器）
      *
      * @param nodeList 扁平节点列表，非空
      */
     public TreeBuilder(List<T> nodeList) {
-        this(null, nodeList);
+        this(null, nodeList, null);
+    }
+
+    /**
+     * 构造树构建器（单根模式 + 自定义排序比较器）。
+     *
+     * @param nodeList 扁平节点列表，非空
+     * @param sortComparator 排序比较器（可为 null，则使用默认 sort 字段升序 + nullsLast）
+     * @since 1.6.0
+     */
+    public TreeBuilder(List<T> nodeList, Comparator<T> sortComparator) {
+        this(null, nodeList, sortComparator);
     }
 
     /**
@@ -279,16 +310,20 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     /**
      * 迭代排序子树（避免递归栈溢出）
+     *
+     * @param nodes 待排序的节点列表
      */
-    private static <T extends TreeNode<T, ?>> void sortSubTree(List<T> nodes) {
+    private void sortSubTree(List<T> nodes) {
         if (nodes == null || nodes.isEmpty()) {
             return;
         }
+        // 使用自定义比较器（如果有），否则使用默认比较器
+        Comparator<T> comparator = sortComparator != null ? sortComparator : defaultSortComparator();
         java.util.Deque<List<T>> stack = new java.util.ArrayDeque<>();
         stack.push(nodes);
         while (!stack.isEmpty()) {
             List<T> current = stack.pop();
-            current.sort(getSortComparator());
+            current.sort(comparator);
             for (T node : current) {
                 List<T> children = node.getChildren();
                 if (children != null && !children.isEmpty()) {

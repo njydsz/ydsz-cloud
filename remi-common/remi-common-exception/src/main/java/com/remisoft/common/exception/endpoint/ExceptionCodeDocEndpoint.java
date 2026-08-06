@@ -5,11 +5,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.context.MessageSource;
 
+import com.remisoft.common.exception.config.ExceptionProperties;
 import com.remisoft.common.exception.enums.ExceptionCode;
 import com.remisoft.common.exception.enums.ExceptionCodeRegistry;
 
@@ -23,6 +26,10 @@ import lombok.ToString;
  *
  * <p>返回所有通过 {@link ExceptionCodeRegistry} 注册的异常码及其 i18n 消息，
  * 方便前端/客户端查阅可用错误码列表，也可用于生成 API 文档。
+ *
+ * <p><b>安全加固：</b>支持模块白名单过滤和鉴权配置。
+ * 开启 {@code remi.exception.doc-endpoint.auth-required} 后，
+ * 建议结合 Spring Security 对 {@code /actuator/exception-codes} 路径进行防护。
  *
  * <p><b>返回示例：</b>
  * <pre>{@code
@@ -49,18 +56,21 @@ import lombok.ToString;
 public class ExceptionCodeDocEndpoint {
 
     private final MessageSource messageSource;
+    private final ExceptionProperties properties;
 
     /**
      * 构造异常错误码文档端点
      *
      * @param messageSource 国际化消息源
+     * @param properties 异常模块配置属性（不可为 null）
      */
-    public ExceptionCodeDocEndpoint(MessageSource messageSource) {
+    public ExceptionCodeDocEndpoint(MessageSource messageSource, ExceptionProperties properties) {
         this.messageSource = messageSource;
+        this.properties = properties;
     }
 
     /**
-     * 返回所有已注册的异常错误码文档
+     * 返回所有已注册的异常错误码文档（经过安全过滤）
      *
      * @return 错误码文档响应
      */
@@ -69,21 +79,48 @@ public class ExceptionCodeDocEndpoint {
         Map<String, ExceptionCode> all = ExceptionCodeRegistry.allRegistered();
         List<ExceptionCodeDoc> docs = new ArrayList<>(all.size());
 
+        // 获取模块白名单过滤配置
+        Set<String> filterModules = getFilterModules();
+
         for (Map.Entry<String, ExceptionCode> entry : all.entrySet()) {
             ExceptionCode code = entry.getValue();
+            String sourceName = code.getClass().getSimpleName();
+
+            // 按模块白名单过滤
+            if (!filterModules.isEmpty() && !filterModules.contains(sourceName)) {
+                continue;
+            }
+
             String message = resolveMessage(code);
             docs.add(new ExceptionCodeDoc(
                     code.getCode(),
                     code.getKey(),
                     code.getHttpStatus(),
                     message,
-                    code.getClass().getSimpleName()
+                    sourceName
             ));
         }
 
         docs.sort(Comparator.comparing(ExceptionCodeDoc::getCode));
 
         return new ExceptionCodeDocResponse(docs.size(), docs);
+    }
+
+    /**
+     * 获取模块过滤配置集合
+     */
+    private Set<String> getFilterModules() {
+        if (properties == null || properties.getDocEndpoint() == null) {
+            return Set.of();
+        }
+        List<String> filterModules = properties.getDocEndpoint().getFilterModules();
+        if (filterModules == null || filterModules.isEmpty()) {
+            return Set.of();
+        }
+        return filterModules.stream()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     /**

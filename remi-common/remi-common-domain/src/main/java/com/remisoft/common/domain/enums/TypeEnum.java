@@ -3,6 +3,7 @@ package com.remisoft.common.domain.enums;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
  *
  * @author remi-team
  * @since 1.0.0
+ * @since 1.6.0 增加 {@link #codeOfOptional(Map, T)} / {@link #codeOfOrDefault(Map, T, E)} 工厂方法
  */
 public interface TypeEnum<T> {
 
@@ -65,5 +67,37 @@ public interface TypeEnum<T> {
             throw new IllegalArgumentException("No enum constant with code: " + code);
         }
         return value;
+    }
+
+    /**
+     * 根据码查找枚举实例（Optional 包装版本）
+     *
+     * <p>调用方无需 try-catch，直接使用 {@link Optional#ifPresent} / {@link Optional#orElse}。
+     *
+     * @param codeMap 码映射
+     * @param code 码值
+     * @param <T> 码类型
+     * @param <E> 枚举类型
+     * @return Optional 包装的枚举实例，码不存在时返回 {@link Optional#empty()}
+     * @since 1.6.0
+     */
+    static <T, E extends Enum<E> & TypeEnum<T>> Optional<E> codeOfOptional(Map<T, E> codeMap, T code) {
+        return Optional.ofNullable(codeMap.get(code));
+    }
+
+    /**
+     * 根据码查找枚举实例（带默认值）
+     *
+     * @param codeMap 码映射
+     * @param code 码值
+     * @param defaultValue 默认值（code 不存在时返回）
+     * @param <T> 码类型
+     * @param <E> 枚举类型
+     * @return 枚举实例；不存在返回 {@code defaultValue}
+     * @since 1.6.0
+     */
+    static <T, E extends Enum<E> & TypeEnum<T>> E codeOfOrDefault(
+            Map<T, E> codeMap, T code, E defaultValue) {
+        return codeMap.getOrDefault(code, defaultValue);
     }
 }
