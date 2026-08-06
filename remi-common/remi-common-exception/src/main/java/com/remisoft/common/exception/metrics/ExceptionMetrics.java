@@ -227,18 +227,21 @@ public class ExceptionMetrics {
 
         // 无额外标签时使用缓存
         if (extraTags == null || extraTags.length == 0) {
-            // lambda 需引用 effectively final 变量，复制局部副本
-            String cacheKey = exceptionType + "|" + level + "|" + category;
+            final String cacheKey = exceptionType + "|" + level + "|" + category;
             final String type = exceptionType;
             final String lvl = level;
             final String cat = category;
-            return tagsCache.computeIfAbsent(cacheKey, k ->
-                    Tags.of(
-                            Tag.of(TAG_TYPE, type),
-                            Tag.of(TAG_LEVEL, lvl),
-                            Tag.of(TAG_CATEGORY, cat)
-                    )
+            Tags cached = tagsCache.get(cacheKey);
+            if (cached != null) {
+                return cached;
+            }
+            Tags fresh = Tags.of(
+                    Tag.of(TAG_TYPE, type),
+                    Tag.of(TAG_LEVEL, lvl),
+                    Tag.of(TAG_CATEGORY, cat)
             );
+            tagsCache.put(cacheKey, fresh);
+            return fresh;
         }
 
         // 有额外标签时不缓存，直接构建

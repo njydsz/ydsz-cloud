@@ -13,7 +13,6 @@ import lombok.Data;
  * <pre>{@code
  * remi:
  *   domain:
- *     enabled: true                              # 启用 domain 模块自动配置（默认 true）
  *     page:
  *       max-search-key-length: 200              # 搜索关键字最长长度（1~500，默认 200）
  *       cursor-warning-threshold: 10000         # 触发游标警告的 offset 阈值（默认 10000）
@@ -24,20 +23,17 @@ import lombok.Data;
  *       default-expire-seconds: 86400           # 幂等键默认过期（秒，默认 86400=24h）
  * }</pre>
  *
+ * <p><b>v1.7.0</b>：移除虚假的 `enabled` 开关，配置通过 {@code PageQueryFactory} 实例级注入。
  * <p><b>v1.4.0</b>：SpEL 评估器缓存配置（spel.cache-*）随 DAG 引擎迁移至 remi-cronjob 模块。
  *
  * @author remi-team
  * @since 1.3.0
  * @since 1.6.0 扩展为嵌套分组（page/tree/idempotent），对齐 Spring Boot 配置命名风格
+ * @since 1.7.0 移除 enabled 虚假开关，改为实例级注入
  */
 @Data
 @ConfigurationProperties(prefix = "remi.domain")
 public class DomainProperties {
-
-    /**
-     * 是否启用 domain 模块自动配置
-     */
-    private boolean enabled = true;
 
     /**
      * 分页查询配置
