@@ -86,7 +86,7 @@ public class VariableController {
             @Parameter(description = "变量键模糊搜索") @RequestParam(required = false) String variableKey,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         IPage<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
-        return BaseResponse.successPage(page.getTotal(), pageNum, pageSize, page.getRecords());
+        return BaseResponse.successPage(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
     }
 
     /**

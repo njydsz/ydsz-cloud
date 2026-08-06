@@ -76,8 +76,8 @@ public class ConfigController {
         PageResult<ConfigVO> result = configService.page(query);
         return BaseResponse.successPage(
                 result.getTotal(),
-                result.getPageNum(),
-                result.getPageSize(),
+                (long) result.getPageNum(),
+                (long) result.getPageSize(),
                 result.getRecords());
     }
 

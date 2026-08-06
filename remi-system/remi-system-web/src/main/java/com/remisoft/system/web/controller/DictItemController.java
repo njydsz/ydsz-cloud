@@ -90,7 +90,7 @@ public class DictItemController {
             @Parameter(description = "字典项编码模糊搜索") @RequestParam(required = false) String itemCode,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         IPage<DictItemVO> page = service.page(pageNum, pageSize, typeCode, itemCode, status);
-        return BaseResponse.successPage(page.getTotal(), pageNum, pageSize, page.getRecords());
+        return BaseResponse.successPage(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
     }
 
     /**

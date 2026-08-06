@@ -89,8 +89,8 @@ public class LanguageController {
         PageResult<LanguageVO> result = service.page(query);
         return BaseResponse.successPage(
                 result.getTotal(),
-                result.getPageNum(),
-                result.getPageSize(),
+                (long) result.getPageNum(),
+                (long) result.getPageSize(),
                 result.getRecords());
     }
 

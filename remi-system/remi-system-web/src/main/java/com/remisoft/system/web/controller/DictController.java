@@ -76,8 +76,8 @@ public class DictController {
         PageResult<DictTypeVO> result = dictService.page(query);
         return BaseResponse.successPage(
                 result.getTotal(),
-                result.getPageNum(),
-                result.getPageSize(),
+                (long) result.getPageNum(),
+                (long) result.getPageSize(),
                 result.getRecords());
     }
 
