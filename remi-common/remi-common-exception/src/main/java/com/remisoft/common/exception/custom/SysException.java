@@ -88,6 +88,32 @@ public class SysException extends AbstractRemiException {
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用自定义消息构造系统异常（兼容构造器，v2.0 精简后由 Builder 替代）。
+     *
+     * <p>大量存量调用方仍使用消息字符串形式，保留此构造器避免批量迁移；
+     * 新代码请优先使用 {@link #builder()} 或 {@link #SysException(ExceptionCode)}。</p>
+     *
+     * @param message 异常详细信息
+     */
+    public SysException(String message) {
+        super(message);
+        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        this.code = DEFAULT_CODE;
+    }
+
+    /**
+     * 使用自定义消息和原始异常构造系统异常（兼容构造器，v2.0 精简后由 Builder 替代）。
+     *
+     * @param message 异常详细信息
+     * @param cause   原始异常
+     */
+    public SysException(String message, Throwable cause) {
+        super(message, cause);
+        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        this.code = DEFAULT_CODE;
+    }
+
     // ==================== 业务方法 ====================
 
     /**

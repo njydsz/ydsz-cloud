@@ -102,6 +102,21 @@ public class BusinessException extends AbstractRemiException {
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用异常码枚举和自定义消息构造业务异常（兼容构造器）。
+     *
+     * <p>保留给 {@code super(exceptionCode, message)} 形式的存量调用方
+     * （如 {@code TenantIsolationException}），新代码请优先使用
+     * {@link #BusinessException(ExceptionCode)} 或 {@link #builder()}。</p>
+     *
+     * @param exceptionCode 异常码枚举
+     * @param message       自定义异常消息
+     */
+    public BusinessException(ExceptionCode exceptionCode, String message) {
+        super(message);
+        init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
     // ==================== 业务方法 ====================
 
     /**
