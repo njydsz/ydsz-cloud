@@ -31,12 +31,17 @@
     "allPublicConstructors": true
   },
   {
-    "name": "com.remisoft.common.exception.config.ExceptionMetricsAutoConfiguration",
+    "name": "com.remisoft.common.exception.config.RemiExceptionCoreAutoConfiguration",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true
   },
   {
-    "name": "com.remisoft.common.exception.config.ExceptionCodeDocEndpointAutoConfiguration",
+    "name": "com.remisoft.common.exception.handler.RemiExceptionHandlerAutoConfiguration",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.remisoft.common.exception.config.RemiExceptionActuatorAutoConfiguration",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true
   },

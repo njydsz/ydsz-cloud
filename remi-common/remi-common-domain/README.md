@@ -18,8 +18,8 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 分页查询模型、状态机契约、领域事件、树形结构 |
 | **依赖** | common-core、common-json；Jakarta Validation、MyBatis-Plus Annotation、Spring TX、Spring Context |
-| **版本** | 1.5.0 |
-| **源文件数** | 18 |
+| **版本** | 1.6.0 |
+| **源文件数** | 21 |
 
 ## 核心能力
 
@@ -30,7 +30,7 @@
 | `BaseQuery` | 查询基类，含 searchKey/status/startDateTime/endDateTime/tenantId/ascending；提供 `hasTimeRange/isValidTimeRange/validateTimeRange/hasSearchKey/hasStatus/statusEnum` 方法；时间范围合法性校验（startDateTime 不晚于 endDateTime） |
 | `PageQuery` | 分页查询（继承 `BaseQuery`），含 pageNum/pageSize/orderItems；`@NotNull/@Min/@Max` 校验；排序字段采用结构化 `OrderItem`（列名 + 方向），SQL 注入防护（`SAFE_COLUMN_PATTERN` 正则 + `allowedOrderByFields()` 白名单钩子）；LIKE 通配符转义（`%`/`_`/`\`）；超长 searchKey 截断（200 字符）；`getOffsetLong()` 支持 long 类型避免超大分页溢出 |
 | `OrderItem` | 排序项 record（column + ASC/DESC），提供 `of/asc/desc` 静态工厂与 `toSql()`；替代旧版字符串拼接排序 |
-| `PageResult<T>` | 分页结果封装，含 records/total/pageNum/pageSize/totalPages/hasPrevious/hasNext/startRow/endRow；`of()` 静态工厂；`empty()` 空结果；`convert(Function)` 类型转换（DO → VO）；`isEmpty()` 判空 |
+| `PageResult<T>` | 分页结果封装，含 records/total/pageNum/pageSize/totalPages/hasPrevious/hasNext/startRow/endRow；`of()` 静态工厂；`empty()` 空结果；`convert(Function)` 类型转换（DO → VO，复用元数据减少计算）；`isEmpty()` 判空 |
 
 **与 `common-core` `PageRequest` 的关系**：`PageRequest` 位于 core 模块，用于 HTTP API 层，分页字段为 `Long` 类型，与 MyBatis-Plus `Page<T>` 对齐；`PageQuery` 位于 domain 模块，用于 Service/Repository 层，分页字段为 `Integer` 类型，并集成搜索/过滤/排序白名单等业务能力。两者共用 `PageConstants` 中的默认值与上限，避免出现不一致的分页约束。
 
@@ -38,8 +38,8 @@
 
 | 类 | 说明 |
 |---|---|
-| `BaseStatusEnum<E>` | 状态枚举接口，定义 `canTransitTo(E)` 状态流转校验契约；`isTerminal()` 终态判断（默认 false）；`requireTransitTo(E)` 校验非法时抛 `IllegalStateException` |
-| `TypeEnum<T>` | 通用枚举接口（code + desc），提供 `buildCodeMap/codeOf` 静态工具消除重复 CODE_MAP 初始化代码 |
+| `BaseStatusEnum<E>` | 状态枚举接口，定义 `canTransitTo(E)` 状态流转校验契约；`isTerminal()` 终态判断（默认 false）；`requireTransitTo(E)` 校验非法时抛 `IllegalStateException`；`allStates()` / `pathTo(E)`（BFS 最短路径推导）/ `successors()` 合法下一跳集合 |
+| `TypeEnum<T>` | 通用枚举接口（code + desc），提供 `buildCodeMap/codeOf` 静态工具消除重复 CODE_MAP 初始化代码；新增 `codeOfOptional()` / `codeOfOrDefault()` Optional 安全查找 |
 
 业务状态枚举实现示例见「使用示例」章节。
 
@@ -58,13 +58,13 @@
 | `Query` | 读操作入参标记接口；携带元数据方法 `queryId()`/`submittedAt()`，用于链路关联 |
 | `DTO` | 数据传输对象标记接口（层间传递） |
 | `VO` | 视图对象标记接口（API 响应封装） |
-| `IdempotentOperation` | 幂等操作契约，`getIdempotencyKey()` + `getExpireSeconds()`（默认 24h，参考 Stripe/支付宝/微信支付） |
+| `IdempotentOperation` | 幂等操作契约，`getIdempotencyKey()` + `getExpireSeconds()`（默认 24h，参考 Stripe/支付宝/微信支付）；新增 `getScope()` 作用域隔离 + `getConflictPolicy()` 冲突策略（RETURN_PREVIOUS_RESULT / REJECT / FORCE_REPLAY） |
 
 ### 5. 聚合根与值对象（entity 包）
 
 | 类 | 说明 |
 |---|---|
-| `BaseEntity<ID>` | 领域实体基类（纯 POJO，不含持久化基类职责—持久化基类请继承 common-jdbc 的 MpBaseEntity）；含 id/createdBy/updatedBy/createdTime/updatedTime/revision/deleted/status，JSON 序列化友好 |
+| `BaseEntity<ID>` | 领域实体基类（纯 POJO，不含持久化基类职责—持久化基类请继承 common-jdbc 的 MpBaseEntity）；含 id/createdBy/updatedBy/createdTime/updatedTime/revision/deleted/status；领域事件支持（`registerEvent/pullDomainEvents/hasDomainEvents`，transient 不参与持久化），DDD 聚合根事件寄存器语义 |
 
 ## 接入方式
 
@@ -107,17 +107,21 @@ remi:
   domain:
     enabled: true                              # 是否启用（默认 true）
     page:
-      max-search-key-length: 200              # 搜索关键字最长长度
+      max-search-key-length: 200              # 搜索关键字最长长度（1~500，默认 200）
+      cursor-warning-threshold: 10000         # 深度分页警告阈值（offset ≥ 此值时打 WARN，默认 10000）
+      cursor-reject-threshold: 50000          # 深度分页拒绝阈值（offset ≥ 此值时抛异常，默认 50000）
     tree:
-      max-depth: 10                           # 树构建最大深度限制
+      max-depth: 10                           # 树构建最大深度限制（1~100，默认 10）
     idempotent:
-      default-expire-seconds: 86400           # 幂等键默认过期（秒）
+      default-expire-seconds: 86400           # 幂等键默认过期（秒，默认 86400 = 24h）
 ```
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `remi.domain.enabled` | true | 是否启用 domain 模块自动配置 |
 | `remi.domain.page.max-search-key-length` | 200 | 搜索关键字最大长度（1~500） |
+| `remi.domain.page.cursor-warning-threshold` | 10000 | 触发深度分页警告的 offset 阈值（参考阿里规范） |
+| `remi.domain.page.cursor-reject-threshold` | 50000 | 强制拒绝深度分页的 offset 阈值（必须改用游标分页） |
 | `remi.domain.tree.max-depth` | 10 | 树构建最大深度限制（1~100） |
 | `remi.domain.idempotent.default-expire-seconds` | 86400 | 幂等键过期时间（秒，参考 Stripe/支付宝） |
 
@@ -261,6 +265,17 @@ public CursorPage<Feed> cursorPage(PageQuery query) {
 
 ## 变更记录
 
+- **v1.6.0**（2026-08-06）：深度分页保护 + 领域事件恢复 + 业务研发体验增强——
+  - **P0-2**：深度分页保护机制——`assessPaginationRisk()` 三态评估（SAFE/WARN/REJECT），`DeepPaginationException` + `DeepPaginationRisk` 枚举
+  - **P1-1.2**：`BaseEntity` 恢复领域事件暂存能力（transient + @JsonIgnore，不影响持久化），参考 Spring Data @DomainEvents / Axon AbstractAggregateRoot
+  - **P1-2.1**：新增 `PageSlice<T>` 轻量分页结果（无 total），适用于无限滚动/流式加载，省略 count SQL
+  - **P1-2.2**：`BaseStatusEnum` 新增 `pathTo(E)`（BFS 最短路径）/ `successors()`（合法下一跳集合），流程画布/审批路径演示场景
+  - **P1-3.2**：`PageResult.convert()` 复用元数据（totalPages/hasPrevious/hasNext），新增 `ofWithMetadata` 私有工厂
+  - **P1-4.2**：新增 `ValidationGroups` 分组校验接口（Create/Update/PageQuery/Export/Delete），Jakarta Validation Groups 统一规范
+  - **P2-1.3**：`TreeBuilder` 支持自定义 `Comparator<T>` 排序（不再局限于 sort 字段，按业务字段排序）
+  - **P2-2.3**：`IdempotentOperation` 新增 `getScope()` 作用域隔离 + `IdempotentConflictPolicy` 冲突策略枚举
+  - **P2-2.4**：`TypeEnum` 新增 `codeOfOptional()` / `codeOfOrDefault()` Optional 安全查找
+  - README 更新为 v1.6.0，新增配置项文档与深度分页治理说明
 - **v1.5.0**（2026-08-06）：DomainProperties 扩展 + 游标分页 + 契约元数据升级——
   - **P0-1**：`TreeBuilder.containsId` O(n) 全表遍历改为 O(1) HashSet 查询，修复 build() 的 O(n²) 性能退化
   - **P0-2**：新增 4 个核心测试类（PageQuery/TreeBuilder/PageResult/OrderItem），覆盖 SQL 注入防护、LIKE 转义、树构建正确性等安全逻辑

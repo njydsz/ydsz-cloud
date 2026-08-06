@@ -31,6 +31,8 @@ import com.remisoft.common.exception.metrics.ExceptionMetrics;
 
 import org.slf4j.MDC;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Validation 相关异常处理器
  *
@@ -41,13 +43,14 @@ import org.slf4j.MDC;
  * 响应构建、指标记录），消除约 40 行重复代码。
  *
  * <p><b>装配：</b>本类已不再直接标注 {@code @AutoConfiguration}，
- * 改由 {@link ValidationExceptionHandlerAutoConfiguration} 负责条件装配与 Bean 注入。
+ * 改由 {@link RemiExceptionHandlerAutoConfiguration} 负责条件装配与 Bean 注入。
  *
  * @author remi-team
  * @since 1.0.0
  * @see MvcExceptionHandler
- * @see ValidationExceptionHandlerAutoConfiguration
+ * @see RemiExceptionHandlerAutoConfiguration
  */
+@Slf4j
 @ConditionalOnClass(ConstraintViolationException.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 @RestControllerAdvice

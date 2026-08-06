@@ -1,9 +1,3 @@
-com.remisoft.common.exception.config.I18nConfiguration
-com.remisoft.common.exception.config.WebI18nConfiguration
-com.remisoft.common.exception.config.ExceptionMetricsAutoConfiguration
-com.remisoft.common.exception.config.ExceptionCodeDocEndpointAutoConfiguration
-com.remisoft.common.exception.config.ExceptionHealthAutoConfiguration
-com.remisoft.common.exception.config.JdbcExceptionHandlerAutoConfiguration
-com.remisoft.common.exception.handler.MvcExceptionHandlerAutoConfiguration
-com.remisoft.common.exception.handler.ValidationExceptionHandlerAutoConfiguration
-com.remisoft.common.exception.handler.WebFluxExceptionHandlerAutoConfiguration
+com.remisoft.common.exception.config.RemiExceptionCoreAutoConfiguration
+com.remisoft.common.exception.handler.RemiExceptionHandlerAutoConfiguration
+com.remisoft.common.exception.config.RemiExceptionActuatorAutoConfiguration

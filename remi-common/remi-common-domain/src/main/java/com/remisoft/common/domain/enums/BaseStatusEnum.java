@@ -128,7 +128,8 @@ public interface BaseStatusEnum<E extends Enum<E>> {
             }
 
             for (E next : states) {
-                if (!visited.contains(next) && current.canTransitTo(next)) {
+                // E extends Enum<E> 不含接口方法，需显式转换为 BaseStatusEnum
+                if (!visited.contains(next) && ((BaseStatusEnum<E>) current).canTransitTo(next)) {
                     visited.add(next);
                     parentMap.put(next, current);
                     queue.add(next);

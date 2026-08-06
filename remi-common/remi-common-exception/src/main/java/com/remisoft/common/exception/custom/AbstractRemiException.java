@@ -30,7 +30,7 @@ import com.remisoft.common.exception.enums.ExceptionLevel;
  *   <li><b>链路追踪</b>：自动写入 path、timestamp，便于分布式追踪</li>
  * </ul>
  *
- * <p><b>消息解析器注入：</b>由 {@code I18nConfiguration} 通过
+ * <p><b>消息解析器注入：</b>由 {@code RemiExceptionCoreAutoConfiguration} 通过
  * {@link #setMessageResolver(BiFunction)} 注入国际化函数，避免硬依赖 Spring MessageSource。
  * 使用 {@link AtomicReference} 而非 volatile，提供更优的并发性能。
  *
@@ -47,7 +47,7 @@ public abstract class AbstractRemiException extends RuntimeException implements 
     private static final Logger log = LoggerFactory.getLogger(AbstractRemiException.class);
 
     /**
-     * 由 I18nConfiguration 注入，用于异常消息国际化解析
+     * 由 RemiExceptionCoreAutoConfiguration 注入，用于异常消息国际化解析
      */
     private static final AtomicReference<BiFunction<String, Object[], String>> MESSAGE_RESOLVER_HOLDER =
         new AtomicReference<>();

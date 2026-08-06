@@ -57,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  * @see BaseExceptionHandler
  * @see ValidationExceptionHandler
- * @see MvcExceptionHandlerAutoConfiguration
+ * @see RemiExceptionHandlerAutoConfiguration
  */
 @Slf4j
 @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestControllerAdvice")
