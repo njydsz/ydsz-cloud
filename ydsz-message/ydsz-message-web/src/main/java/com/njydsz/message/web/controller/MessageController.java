@@ -151,7 +151,7 @@ public class MessageController {
     @Operation(summary = "发送日志分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
-    public PageResult<MsgLogVO> pageLog(MessageLogQueryDTO query) {
+    public PageResult<List<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
         Page<MsgLog> page = messageService.pageLog(query);
         return PageResult.success(
                 page.getTotal(),
@@ -211,7 +211,7 @@ public class MessageController {
     @Operation(summary = "查询批次发送进度")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/batch/{batchId}/progress")
-    public PageResult<MsgLogVO> batchProgress(@PathVariable String batchId,
+    public PageResult<List<MsgLogVO>> batchProgress(@PathVariable String batchId,
                                                 @RequestParam(defaultValue = "1") long page,
                                                 @RequestParam(defaultValue = "20") long size) {
         MessageLogQueryDTO query = new MessageLogQueryDTO();

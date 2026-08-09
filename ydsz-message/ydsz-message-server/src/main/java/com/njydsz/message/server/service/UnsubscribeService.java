@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.config;
 
 import java.util.List;
 
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.server.token.UnsubscribeTokenPayload;
@@ -53,7 +53,7 @@ public interface UnsubscribeService {
      * @param query 查询参数
      * @return 分页结果，仅包含 status=UNSUBSCRIBED 的记录
      */
-    BaseResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query);
+    PageResult<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query);
 
     /**
      * 恢复订阅（管理后台 / 用户自助）。

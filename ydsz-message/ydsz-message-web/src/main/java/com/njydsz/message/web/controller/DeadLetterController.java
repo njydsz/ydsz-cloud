@@ -98,7 +98,7 @@ public class DeadLetterController {
     @Operation(summary = "分页查询死信列表")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
     @GetMapping("/page")
-    public PageResult<MsgLogVO> page(MessageLogQueryDTO query) {
+    public PageResult<List<MsgLogVO>> page(MessageLogQueryDTO query) {
         if (query == null) {
             query = new MessageLogQueryDTO();
         }

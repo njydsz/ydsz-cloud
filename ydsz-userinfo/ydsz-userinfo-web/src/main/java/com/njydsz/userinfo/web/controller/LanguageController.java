@@ -86,7 +86,7 @@ public class LanguageController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询")
-    public PageResult<LanguageVO> page(LanguagePageQuery query) {
+    public PageResult<List<LanguageVO>> page(LanguagePageQuery query) {
         PageResult<LanguageVO> result = service.page(query);
         return PageResult.success(
                 result.getTotal(),

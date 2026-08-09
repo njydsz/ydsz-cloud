@@ -121,7 +121,7 @@ public class NotificationController {
     @Operation(summary = "收件箱分页")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
-    public PageResult<MsgNotificationVO> inbox(NotificationQueryDTO query) {
+    public PageResult<List<MsgNotificationVO>> inbox(NotificationQueryDTO query) {
         Page<MsgNotification> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
         return PageResult.success(
                 page.getTotal(),

@@ -359,7 +359,7 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
-    public PageResult<JobVO> page(
+    public PageResult<List<JobVO>> page(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String keyword,
@@ -387,7 +387,7 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
-    public PageResult<JobLogVO> pageLog(
+    public PageResult<List<JobLogVO>> pageLog(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String jobKey,

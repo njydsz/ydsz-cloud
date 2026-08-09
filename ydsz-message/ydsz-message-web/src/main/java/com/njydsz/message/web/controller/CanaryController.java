@@ -131,7 +131,7 @@ public class CanaryController {
     @Operation(summary = "灰度桶分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
-    public PageResult<MsgCanaryVO> page(PageQuery query) {
+    public PageResult<List<MsgCanaryVO>> page(PageQuery query) {
         Page<MsgCanary> page = canaryService.page(query);
         return PageResult.success(
                 page.getTotal(),

@@ -90,7 +90,7 @@ public class AggregateController {
     @Operation(summary = "聚合批次分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
     @GetMapping("/page")
-    public PageResult<MsgAggregateVO> page(PageQuery query) {
+    public PageResult<List<MsgAggregateVO>> page(PageQuery query) {
         Page<MsgAggregate> page = aggregateService.page(query);
         return PageResult.success(
                 page.getTotal(),

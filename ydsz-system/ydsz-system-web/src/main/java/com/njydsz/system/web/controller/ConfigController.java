@@ -73,7 +73,7 @@ public class ConfigController {
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public PageResult<ConfigVO> page(ConfigPageQuery query) {
+    public PageResult<List<ConfigVO>> page(ConfigPageQuery query) {
         PageResult<ConfigVO> result = configService.page(query);
         return PageResult.success(
                 result.getTotal(),

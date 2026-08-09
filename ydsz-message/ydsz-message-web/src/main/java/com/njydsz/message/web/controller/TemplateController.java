@@ -155,7 +155,7 @@ public class TemplateController {
     @Operation(summary = "模板分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
     @GetMapping("/page")
-    public PageResult<MsgTemplateVO> page(TemplateQueryDTO query) {
+    public PageResult<List<MsgTemplateVO>> page(TemplateQueryDTO query) {
         Page<MsgTemplate> page = templateService.page(query);
         return PageResult.success(
                 page.getTotal(),

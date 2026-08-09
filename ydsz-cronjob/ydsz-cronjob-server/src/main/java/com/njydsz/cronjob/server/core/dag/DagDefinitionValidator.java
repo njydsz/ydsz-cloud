@@ -234,7 +234,7 @@ public class DagDefinitionValidator {
                     if (outEdgeCount != node.parallelBranches()) {
                         throw SysException.builder()
                             .resultCode(BaseResultCode.BAD_REQUEST)
-                            .key("error.cronjob.msg_dag_parallel_edge_mismatch").params(node.jobKey(), node.parallelBranches(), outEdgeCount))
+                            .key("error.cronjob.msg_dag_parallel_edge_mismatch").params(node.jobKey(), node.parallelBranches(), outEdgeCount)
                             .build();
                     }
                 }

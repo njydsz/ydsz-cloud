@@ -77,7 +77,7 @@ public class AppInfoController {
      */
     @Operation(summary = "分页查询应用列表（支持搜索过滤）")
     @GetMapping("/page")
-    public PageResult<AppInfoVO> page(
+    public PageResult<List<AppInfoVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "应用名称模糊搜索") @RequestParam(required = false) String appName,

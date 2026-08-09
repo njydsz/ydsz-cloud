@@ -96,7 +96,7 @@ public class UserAccountController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询用户列表")
-    public PageResult<UserAccountVO> page(@Valid UserAccountPageQueryDTO query) {
+    public PageResult<List<UserAccountVO>> page(@Valid UserAccountPageQueryDTO query) {
         Page<UserAccountVO> page = service.page(query);
         return PageResult.success(
                 page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());

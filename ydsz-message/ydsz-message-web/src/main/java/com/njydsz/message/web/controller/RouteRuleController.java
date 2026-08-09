@@ -153,7 +153,7 @@ public class RouteRuleController {
     @Operation(summary = "路由规则分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
-    public PageResult<MsgRouteRuleVO> page(PageQuery query) {
+    public PageResult<List<MsgRouteRuleVO>> page(PageQuery query) {
         Page<MsgRouteRule> page = routeRuleService.page(query);
         return PageResult.success(
                 page.getTotal(),

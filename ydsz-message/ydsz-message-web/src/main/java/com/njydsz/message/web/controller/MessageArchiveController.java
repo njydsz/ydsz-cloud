@@ -102,7 +102,7 @@ public class MessageArchiveController {
     @Operation(summary = "全文搜索消息日志")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping
-    public PageResult<MsgLogVO> search(
+    public PageResult<List<MsgLogVO>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String status,

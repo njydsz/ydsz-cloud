@@ -88,7 +88,7 @@ public class RoleController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询角色列表")
-    public PageResult<RoleVO> page(@Valid RolePageQueryDTO query) {
+    public PageResult<List<RoleVO>> page(@Valid RolePageQueryDTO query) {
         Page<RoleVO> page = service.page(query);
         return PageResult.success(
                 page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());

@@ -130,7 +130,7 @@ public class MessageFeedbackController {
     @Operation(summary = "分页查询反馈记录")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/page")
-    public PageResult<MsgFeedbackVO> pageFeedback(@RequestParam(defaultValue = "1") int page,
+    public PageResult<List<MsgFeedbackVO>> pageFeedback(@RequestParam(defaultValue = "1") int page,
                                                       @RequestParam(defaultValue = "20") int size,
                                                       @RequestParam(required = false) String channel,
                                                       @RequestParam(required = false) String userId) {

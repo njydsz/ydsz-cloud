@@ -82,7 +82,7 @@ public class JobTaskController {
      */
     @Operation(summary = "分页查询子任务")
     @GetMapping("/page")
-    public PageResult<JobTaskVO> page(
+    public PageResult<List<JobTaskVO>> page(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size) {

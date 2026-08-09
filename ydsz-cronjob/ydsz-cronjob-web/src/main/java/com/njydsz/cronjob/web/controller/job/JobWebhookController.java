@@ -140,7 +140,7 @@ public class JobWebhookController {
      */
     @Operation(summary = "分页查询 WebHook 订阅")
     @GetMapping("/page")
-    public PageResult<JobWebhookVO> page(
+    public PageResult<List<JobWebhookVO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String eventType,

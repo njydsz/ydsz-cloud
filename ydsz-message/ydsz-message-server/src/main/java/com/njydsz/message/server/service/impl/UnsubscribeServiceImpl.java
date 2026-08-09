@@ -106,7 +106,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
      * @return 分页结果
      */
     @Override
-    public BaseResponse<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query) {
+    public PageResult<List<MsgSubscription>> pageUnsubscribed(UnsubscribeQueryDTO query) {
         if (query == null) {
             query = new UnsubscribeQueryDTO();
         }
