@@ -16,12 +16,12 @@ mkdir -p "$OUT"
   | grep -v "/spring/" \
   | grep -v "/autotype/" \
   | while read -r f; do
-      echo "$f" | sed -E 's|^/([a-z])/|\1:\\|; s|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
+      echo "$f" | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
     done
 echo "$STUB_POSIX/com/njydsz/common/json/autotype/AutoTypeChecker.java" \
-  | sed -E 's|^/([a-z])/|\1:\\|; s|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
+  | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
 echo "$SCRIPT_DIR/JsonHardeningCheck.java" \
-  | sed -E 's|^/([a-z])/|\1:\\|; s|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
+  | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
 
 echo "===== 源文件数 ====="
 wc -l < "$SCRIPT_DIR/sources-win.txt"

@@ -2,6 +2,7 @@ package com.njydsz.common.core.trace;
 
 import java.util.HexFormat;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * TraceId 生成器（基于 ThreadLocalRandom + HexFormat）。
@@ -61,12 +62,24 @@ public final class TraceIdGenerator {
     }
 
     /**
+     * 同一毫秒内的单调序号上限（16 bit），超过则自旋等待毫秒进位。
+     */
+    private static final int MAX_SEQ_PER_MS = 0xFFFF;
+
+    /**
+     * 打包 (毫秒时间戳 << 16 | 同毫秒单调序号) 的原子计数器，
+     * 保证单线程内严格递增、多线程下高概率有序且不重复。
+     */
+    private static final AtomicLong LAST_TS_SEQ = new AtomicLong(0L);
+
+    /**
      * 生成按时间有序（可排序）的 32 位十六进制 TraceId（UUIDv7 风格）。
      *
      * <p>布局（16 bytes / 32 hex）：</p>
      * <ul>
-     *   <li>bytes[0..5]（48 bit）：大端毫秒时间戳，保证同一毫秒内生成的 id 字典序递增</li>
-     *   <li>bytes[6..15]（80 bit）：随机数，保证同一毫秒内的唯一性</li>
+     *   <li>bytes[0..5]（48 bit）：大端毫秒时间戳</li>
+     *   <li>bytes[6..7]（16 bit）：同一毫秒内的单调序号，保证同毫秒内字典序严格递增</li>
+     *   <li>bytes[8..15]（64 bit）：随机数，保证唯一性与分布均匀性</li>
      * </ul>
      *
      * <p>相比 {@link #generateTraceId()} 的纯随机实现，本方法生成的 id 可直接用于
@@ -79,17 +92,48 @@ public final class TraceIdGenerator {
     public static String generateSortableTraceId() {
         byte[] bytes = new byte[TRACE_ID_BYTES];
         long timeMillis = System.currentTimeMillis();
+        long packed;
+        long cur;
+        // CAS 自旋：同毫秒内序号 +1；毫秒进位时序号归零
+        while (true) {
+            cur = LAST_TS_SEQ.get();
+            long ts = cur >>> 16;
+            long seq = cur & MAX_SEQ_PER_MS;
+            long nextTs;
+            long nextSeq;
+            if (timeMillis > ts) {
+                nextTs = timeMillis;
+                nextSeq = 0L;
+            } else {
+                // 同一毫秒：序号自增；达到上限则等待毫秒进位
+                if (seq >= MAX_SEQ_PER_MS) {
+                    timeMillis = System.currentTimeMillis();
+                    continue;
+                }
+                nextTs = ts;
+                nextSeq = seq + 1;
+            }
+            packed = (nextTs << 16) | nextSeq;
+            if (LAST_TS_SEQ.compareAndSet(cur, packed)) {
+                break;
+            }
+        }
+        long ts = packed >>> 16;
+        int seq = (int) (packed & MAX_SEQ_PER_MS);
         // 48-bit 大端时间戳
-        bytes[0] = (byte) (timeMillis >>> 40);
-        bytes[1] = (byte) (timeMillis >>> 32);
-        bytes[2] = (byte) (timeMillis >>> 24);
-        bytes[3] = (byte) (timeMillis >>> 16);
-        bytes[4] = (byte) (timeMillis >>> 8);
-        bytes[5] = (byte) timeMillis;
-        // 剩余 80-bit 随机数
-        byte[] rand = new byte[TRACE_ID_BYTES - 6];
+        bytes[0] = (byte) (ts >>> 40);
+        bytes[1] = (byte) (ts >>> 32);
+        bytes[2] = (byte) (ts >>> 24);
+        bytes[3] = (byte) (ts >>> 16);
+        bytes[4] = (byte) (ts >>> 8);
+        bytes[5] = (byte) ts;
+        // 16-bit 单调序号（大端）
+        bytes[6] = (byte) (seq >>> 8);
+        bytes[7] = (byte) seq;
+        // 剩余 64-bit 随机数
+        byte[] rand = new byte[TRACE_ID_BYTES - 8];
         ThreadLocalRandom.current().nextBytes(rand);
-        System.arraycopy(rand, 0, bytes, 6, rand.length);
+        System.arraycopy(rand, 0, bytes, 8, rand.length);
         return HEX_FORMAT.formatHex(bytes);
     }
 

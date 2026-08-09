@@ -52,6 +52,8 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * <p><b>已废弃：</b>自 v2.0 起推荐由 Handler 层直接使用 {@link org.springframework.context.MessageSource}
      * 在构建响应时解析 i18n，异常对象仅存储 key 不解析状态。
      * 本方法保留用于向后兼容，新代码不应再调用。
+     *
+     * <p><b>v2.1 起计划移除。</b>
      */
     @Deprecated
     private static final AtomicReference<BiFunction<String, Object[], String>> MESSAGE_RESOLVER_HOLDER =
@@ -61,9 +63,10 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * 设置消息解析器（由异常模块配置类注入）
      *
      * @param resolver 消息解析函数 (key, params) -> resolved message
-     * @deprecated 自 v2.0 起废弃，推荐 Handler 层直接使用 MessageSource 解析
+     * @deprecated 自 v2.0 起废弃，推荐 Handler 层直接使用 MessageSource 解析。
+     *             <b>v2.1 起计划移除，请勿再调用。</b>
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static void setMessageResolver(BiFunction<String, Object[], String> resolver) {
         MESSAGE_RESOLVER_HOLDER.set(resolver);
     }
@@ -72,9 +75,9 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * 获取当前消息解析器（用于测试验证）
      *
      * @return 当前消息解析函数
-     * @deprecated 自 v2.0 起废弃
+     * @deprecated 自 v2.0 起废弃。<b>v2.1 起计划移除。</b>
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static BiFunction<String, Object[], String> getMessageResolver() {
         return MESSAGE_RESOLVER_HOLDER.get();
     }
@@ -275,9 +278,10 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
      *
      * @param code 异常码字符串
-     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.njydsz.common.exception.code.UnifiedExceptionCode} 枚举初始化
+     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.njydsz.common.exception.code.UnifiedExceptionCode} 枚举初始化。
+     *             <b>v2.1 起计划移除。</b>
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public void setCode(String code) {
         this.code = code;
     }
@@ -294,9 +298,10 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
      *
      * @param key 国际化消息键
-     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.njydsz.common.exception.code.UnifiedExceptionCode} 枚举初始化
+     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.njydsz.common.exception.code.UnifiedExceptionCode} 枚举初始化。
+     *             <b>v2.1 起计划移除。</b>
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public void setKey(String key) {
         this.key = key;
     }
@@ -308,21 +313,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      */
     public Object[] getParams() {
         return params != null ? params.clone() : null;
-    }
-
-    /**
-     * 设置国际化消息参数。
-     *
-     * <p><b>谨慎使用：</b>在 {@link #getMessage()} 懒加载解析后调用本方法，
-     * 会导致 {@code params} 字段与已缓存的 message 不一致。
-     * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
-     *
-     * @param params 消息格式化参数
-     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.njydsz.common.exception.code.UnifiedExceptionCode} 枚举初始化
-     */
-    @Deprecated
-    public void setParams(Object[] params) {
-        this.params = params;
     }
 
     /**

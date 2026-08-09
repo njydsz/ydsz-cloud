@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.bean.BeanUpdateUtil;
+import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
@@ -112,6 +113,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final UserPasswordHistoryService passwordHistoryService;
     /** 用户中心配置属性 */
     private final UserInfoProperties properties;
+    /** Redis 服务（工作流缓存） */
+    private final RedisService redisService;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
     /**
@@ -348,6 +351,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     /**
      * {@inheritDoc}
      * <p>先删除旧的用户-角色关联，再批量插入新关联（全量覆盖模式）。
+     * <p>分配成功后清理相关的工作流审批人缓存。
      *
      * @throws BusinessException 当用户不存在时抛出
      */
@@ -377,7 +381,22 @@ public class UserAccountServiceImpl implements UserAccountService {
             userRoleMapper.batchInsert(list);
         }
         log.info("Roles assigned to user {}: {}", userId, roleIds);
+
+        // 清理工作流审批人缓存（角色分配变更会影响 role:xxx 和 leader:xxx 查询）
+        evictWorkflowCacheForUser(userId);
+
         return true;
+    }
+
+    /**
+     * 清理指定用户的工作流审批人缓存
+     */
+    private void evictWorkflowCacheForUser(String userId) {
+        try {
+            redisService.del("userinfo:workflow:leader:" + userId);
+        } catch (Exception e) {
+            log.warn("Failed to evict workflow cache for user: {}", userId);
+        }
     }
 
     /**

@@ -131,9 +131,9 @@ public class InternalApiController {
      * @return 该角色下的用户 ID 列表；角色不存在时返回空列表
      */
     @GetMapping("/user/list-by-role")
-    @Operation(summary = "按角色编码查询用户 ID 列表（工作流 role:xxx 展开）")
+    @Operation(summary = "按角色编码查询用户 ID 列表（工作流 role:xxx 展开，带缓存）")
     public BaseResponse<List<String>> listUserIdsByRole(@RequestParam String roleCode) {
-        return BaseResponse.success(userAccountService.listUserIdsByRoleCode(roleCode));
+        return BaseResponse.success(workflowCacheService.listUserIdsByRoleCode(roleCode));
     }
 
     /**
@@ -175,9 +175,9 @@ public class InternalApiController {
      * @return 直属上级用户 ID；无上级时返回 null
      */
     @GetMapping("/user/leader")
-    @Operation(summary = "查询用户直属上级 ID（工作流 leader:xxx 展开）")
+    @Operation(summary = "查询用户直属上级 ID（工作流 leader:xxx 展开，带缓存）")
     public BaseResponse<String> getLeaderByUserId(@RequestParam String userId) {
-        return BaseResponse.success(userAccountService.getLeaderByUserId(userId));
+        return BaseResponse.success(workflowCacheService.getLeaderByUserId(userId));
     }
 
     /**
@@ -190,9 +190,9 @@ public class InternalApiController {
      * @return 该岗位下的用户 ID 列表；岗位不存在时返回空列表
      */
     @GetMapping("/user/list-by-position")
-    @Operation(summary = "按岗位编码查询用户 ID 列表（工作流 position:xxx 展开）")
+    @Operation(summary = "按岗位编码查询用户 ID 列表（工作流 position:xxx 展开，带缓存）")
     public BaseResponse<List<String>> listUserIdsByPosition(@RequestParam String positionCode) {
-        return BaseResponse.success(userAccountService.listUserIdsByPositionCode(positionCode));
+        return BaseResponse.success(workflowCacheService.listUserIdsByPositionCode(positionCode));
     }
 
     /**
@@ -205,9 +205,9 @@ public class InternalApiController {
      * @return 部门负责人用户 ID；部门不存在或无负责人时返回 null
      */
     @GetMapping("/dept/leader-by-id")
-    @Operation(summary = "按部门 ID 查询部门负责人（工作流 dept:数字 展开）")
+    @Operation(summary = "按部门 ID 查询部门负责人（工作流 dept:数字 展开，带缓存）")
     public BaseResponse<String> getDeptLeaderByDeptId(@RequestParam String deptId) {
-        return BaseResponse.success(departmentService.getDeptLeaderByDeptId(deptId));
+        return BaseResponse.success(workflowCacheService.getDeptLeaderByDeptId(deptId));
     }
 
     /**
@@ -220,9 +220,9 @@ public class InternalApiController {
      * @return 部门负责人用户 ID；部门不存在或无负责人时返回 null
      */
     @GetMapping("/dept/leader-by-code")
-    @Operation(summary = "按部门编码查询部门负责人（工作流 dept:非数字 展开）")
+    @Operation(summary = "按部门编码查询部门负责人（工作流 dept:非数字 展开，带缓存）")
     public BaseResponse<String> getDeptLeaderByDeptCode(@RequestParam String deptCode) {
-        return BaseResponse.success(departmentService.getDeptLeaderByDeptCode(deptCode));
+        return BaseResponse.success(workflowCacheService.getDeptLeaderByDeptCode(deptCode));
     }
 
     // ==================== NameAssembler 批量名称富化接口 ====================

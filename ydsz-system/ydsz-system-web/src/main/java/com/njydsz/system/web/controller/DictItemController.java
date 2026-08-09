@@ -5,6 +5,7 @@ import java.util.List;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +17,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResult;
+import com.njydsz.system.domain.dto.DictItemBatchDTO;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.DictItemService;
+import com.njydsz.system.server.service.DictItemBatchService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -57,13 +63,14 @@ import lombok.RequiredArgsConstructor;
  * @see DictController 字典类型 Controller（字典两级体系上层）
  * @see DictVersionController 字典版本 Controller（变更历史与回滚）
  */
-@Tag(name = "字典项", description = "字典项 CRUD + 按类型查询 + 树形查询")
+@Tag(name = "字典项", description = "字典项 CRUD + 批量操作 + 按类型查询 + 树形查询")
 @RestController
 @RequestMapping("/api/v1/dict/item")
 @RequiredArgsConstructor
 public class DictItemController {
 
     private final DictItemService service;
+    private final DictItemBatchService batchService;
 
     /**
      * 分页查询字典项
