@@ -19,7 +19,6 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * 错误码自动扫描注册器。
  *
  * <p>启动时扫描所有标注 {@link YdszResultCode} 注解的枚举类，
- * 将其注册到 {@link ResultCodeRegistry} 全局注册表。
+ * 将其注册到统一错误码表 {@link ErrorCodeTable}（单一注册中心）。
  *
  * <p><b>性能优化（v2.0）：</b>优先读取编译时生成的索引文件 META-INF/spring/ydsz-result-codes.idx，
  * 仅在索引不存在时回退到 ASM 字节码扫描，减少启动开销。
@@ -51,7 +50,6 @@ public class ResultCodeScanner {
     private static final String SCAN_PATTERN = "classpath*:com/njydsz/**/*.class";
     private static final String INDEX_PATTERN = "classpath*:" + INDEX_LOCATION;
 
-    private final ResultCodeRegistry registry;
     private final ErrorCodeTable errorCodeTable;
     private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(YdszResultCode.class);
     private final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
@@ -61,18 +59,13 @@ public class ResultCodeScanner {
      */
     private volatile MetadataReaderFactory metadataReaderFactory;
 
-    public ResultCodeScanner(ResultCodeRegistry registry, ErrorCodeTable errorCodeTable) {
-        this.registry = registry;
-        this.errorCodeTable = errorCodeTable;
-    }
-
     /**
-     * 兼容构造函数：不启用 ErrorCodeTable 桥接（ErrorCodeTable 不可用时回退）。
+     * 构造扫描注册器。
      *
-     * @param registry ResultCodeRegistry 实例
+     * @param errorCodeTable 统一错误码表（可为 null，为 null 时跳过注册）
      */
-    public ResultCodeScanner(ResultCodeRegistry registry) {
-        this(registry, null);
+    public ResultCodeScanner(ErrorCodeTable errorCodeTable) {
+        this.errorCodeTable = errorCodeTable;
     }
 
     /**
@@ -219,12 +212,12 @@ public class ResultCodeScanner {
     }
 
     /**
-     * 加载枚举类并注册所有错误码。     *
-     * <p>注册到三个目的地（确保平滑迁移）：
+     * 加载枚举类并注册所有错误码到统一错误码表 {@link ErrorCodeTable}。
+     *
+     * <p>注册内容：
      * <ul>
-     *   <li>{@link ErrorCodeTable} — 新的统一注册中心，供运行时反查和文档端点使用</li>
-     *   <li>{@link ResultCodeRegistry} — 历史模块注册表，兼容旧端点</li>
-     *   <li>{@link ExceptionCodeRegistry} — 兼容门面，委托 ErrorCodeTable</li>
+     *   <li>按模块维护 code 明细（moduleIndex），供运维端点与统计使用</li>
+     *   <li>填充全局 code → ExceptionCode 反查索引（codeIndex），供运行时 resolve 使用</li>
      * </ul>
      */
     private void registerEnum(String module, String description, String className) {
@@ -234,19 +227,19 @@ public class ResultCodeScanner {
                     || !ExceptionCode.class.isAssignableFrom(clazz)) {
                 return;
             }
-            registry.registerModule(module, description);
             java.util.Map<String, ExceptionCode> codeMap = new java.util.HashMap<>();
             for (Object constant : clazz.getEnumConstants()) {
                 ExceptionCode code = (ExceptionCode) constant;
-                registry.registerCode(module, code.getCode(), code.getKey(), ((Enum<?>) constant).name());
                 if (errorCodeTable != null) {
                     errorCodeTable.registerModule(module, description);
                     errorCodeTable.registerCode(module, code.getCode(), code.getKey(), ((Enum<?>) constant).name());
                 }
                 codeMap.put(code.getCode(), code);
             }
-            // 同步注册到 ExceptionCodeRegistry（兼容门面，内部委托 ErrorCodeTable）
-            ExceptionCodeRegistry.register(codeMap);
+            // 填充统一错误码表（ErrorCodeTable）的全局 code→ExceptionCode 反查索引
+            if (errorCodeTable != null) {
+                errorCodeTable.registerAll(codeMap);
+            }
             log.debug("[ResultCodeScanner] 注册模块错误码: module={} codes={}", module, codeMap.size());
         } catch (Exception e) {
             log.debug("[ResultCodeScanner] 加载枚举失败: {} err={}", className, e.getMessage());

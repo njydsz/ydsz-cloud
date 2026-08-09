@@ -288,13 +288,15 @@ public class YdszExceptionCoreAutoConfiguration {
             collectMissingKey(messageSource, code, missingKeys);
         }
 
-        // 2. 从 ErrorCodeTable 获取非 UnifiedExceptionCode 的已注册 code
+        // 2. 从 ErrorCodeTable（统一注册表）获取非 UnifiedExceptionCode 的已注册 code
         ErrorCodeTable errorCodeTable = applicationContext != null
                 ? applicationContext.getBeanProvider(ErrorCodeTable.class).getIfAvailable()
                 : null;
-        Map<String, ExceptionCode> registered = errorCodeTable != null
-                ? errorCodeTable.allCodes()
-                : ExceptionCodeRegistry.allRegistered();
+        if (errorCodeTable == null) {
+            log.warn("ErrorCodeTable 尚未就绪，跳过 i18n key 启动校验");
+            return;
+        }
+        Map<String, ExceptionCode> registered = errorCodeTable.allCodes();
 
         for (Map.Entry<String, ExceptionCode> entry : registered.entrySet()) {
             ExceptionCode code = entry.getValue();

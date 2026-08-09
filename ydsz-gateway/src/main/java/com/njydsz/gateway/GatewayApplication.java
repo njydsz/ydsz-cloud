@@ -31,7 +31,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
  * <ol>
  *   <li><b>路由转发</b>：基于 Nacos 动态路由 + Java 兜底路由（{@link RouteConfig}）</li>
  *   <li><b>统一鉴权</b>：JWT 校验 + 内部头签名（HMAC-SHA256 + nonce 防重放）</li>
- *   <li><b>多维限流</b>：IP/用户/租户三维令牌桶 + Sentinel API 分组限流</li>
+ *   <li><b>多维限流</b>：IP/用户/租户三维令牌桶（自建 RateLimitFilter）</li>
  *   <li><b>安全防护</b>：IP 黑/白名单 + WebSocket 认证 + Payload 校验 + 安全响应头</li>
  *   <li><b>链路追踪</b>：W3C Trace Context（traceparent）+ X-Trace-Id 兼容</li>
  *   <li><b>灰度发布</b>：基于 Nacos metadata 的灰度路由 + 加权轮询</li>

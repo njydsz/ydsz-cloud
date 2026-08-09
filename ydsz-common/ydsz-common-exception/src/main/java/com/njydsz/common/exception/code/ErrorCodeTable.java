@@ -13,8 +13,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * 统一错误码注册表。
  *
  * <p>取代了历史上 {@link com.njydsz.common.exception.enums.ExceptionCodeRegistry}（静态工具类）
- * 与 {@link com.njydsz.common.exception.registry.ResultCodeRegistry}（Spring Bean）的双轨设计，
- * 作为唯一的全局错误码来源。
+ * 与旧版模块注册表的双轨设计，作为唯一的全局错误码来源。
  *
  * <p>职责分离：
  * <ul>
@@ -90,7 +89,7 @@ public class ErrorCodeTable {
     }
 
     /**
-     * 按 code 跨模块反查（兼容 {@code ResultCodeRegistry.lookupByCode}）。
+     * 按 code 跨模块反查（兼容 {@code ErrorCodeTable.lookupByCode}）。
      *
      * @param code 错误码字符串
      * @return 对应的 CodeEntry，未找到返回 null

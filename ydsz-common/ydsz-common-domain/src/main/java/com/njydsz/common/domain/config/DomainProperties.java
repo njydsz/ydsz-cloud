@@ -39,16 +39,6 @@ public class DomainProperties {
     private Page page = new Page();
 
     /**
-     * 树形结构配置
-     */
-    private Tree tree = new Tree();
-
-    /**
-     * 幂等操作配置
-     */
-    private Idempotent idempotent = new Idempotent();
-
-    /**
      * 分页查询配置
      */
     @Data
@@ -74,32 +64,5 @@ public class DomainProperties {
          * <p>消费方：{@code com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor}
          */
         private long cursorRejectThreshold = 50000L;
-    }
-
-    /**
-     * 树形结构配置
-     */
-    @Data
-    public static class Tree {
-        /**
-         * 树构建最大深度限制（1~100，默认 10）
-         *
-         * <p>超过此深度的树构建将抛出 TreeDepthExceededException，防止递归过深导致栈溢出。
-         */
-        private int maxDepth = 10;
-    }
-
-    /**
-     * 幂等操作配置
-     */
-    @Data
-    public static class Idempotent {
-        /**
-         * 幂等键默认过期时间（秒，默认 86400 = 24 小时）
-         *
-         * <p>与 Stripe / 支付宝 / 微信支付业界惯例对齐。业务方可通过
-         * {@link com.njydsz.common.domain.contract.IdempotentOperation#getExpireSeconds()} 覆盖单个操作的过期时间。
-         */
-        private long defaultExpireSeconds = 86400L;
     }
 }

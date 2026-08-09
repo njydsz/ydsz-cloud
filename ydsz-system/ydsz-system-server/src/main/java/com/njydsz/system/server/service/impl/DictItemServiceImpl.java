@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.entity.DictItem;
@@ -257,7 +258,7 @@ public class DictItemServiceImpl implements DictItemService {
      * @return 分页结果（含总条数）
      */
     @Override
-    public IPage<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status) {
+    public PageResult<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status) {
         QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
         if (typeCode != null && !typeCode.isBlank()) {
             wrapper.eq("type_code", typeCode);
@@ -271,9 +272,7 @@ public class DictItemServiceImpl implements DictItemService {
         wrapper.orderByDesc("created_at");
         IPage<DictItem> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<DictItemVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
-        Page<DictItemVO> result = new Page<>(pageNum, pageSize, page.getTotal());
-        result.setRecords(vos);
-        return result;
+        return PageResult.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.njydsz.gateway.filter;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -8,6 +9,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
+import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.loadbalancer.GrayLoadBalancer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +25,12 @@ import reactor.core.publisher.Mono;
  *   <li>请求头 {@code X-Gray-Tag}(值: {@code gray} / {@code stable})</li>
  *   <li>查询参数 {@code gray=true}(命中则灰度,{@code gray=false} 则稳定)</li>
  *   <li>路径模式 {@code /canary/**}(自动走灰度)</li>
+ *   <li>P1-3: 比例灰度 — 当用户身份信息存在时，按 {@code gray-ratio-percent} 自动计算灰度归属</li>
  * </ol>
+ *
+ * <h3>用户粘性（一致性哈希）</h3>
+ * <p>P1-3: 比例灰度模式下，基于 userId（认证用户）或 traceId（未认证）计算哈希，
+ * 确保同一用户始终路由到灰度或稳定实例组，避免用户在不同刷新间"跳跃"。
  *
  * <h3>标识写入位置</h3>
  * <ul>
@@ -53,6 +60,16 @@ public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
 
     /** 灰度路径前缀:匹配此路径自动走灰度 */
     private static final String CANARY_PATH_PREFIX = "/canary/";
+
+    /**
+     * P1-3: 比例灰度阈值（百分比）。
+     *
+     * <p>默认 0（禁用比例灰度，仅通过 X-Gray-Tag 显式灰度）。
+     * 配置为 10 表示 10% 的流量按比例自动路由到灰度实例。
+     * 基于 userId（已认证）或 traceId（未认证）的一致性哈希，保证用户粘性。
+     */
+    @Value("${ydsz.gateway.gray.ratio-percent:0}")
+    private int grayRatioPercent;
 
     /**
      * 过滤逻辑:解析灰度标识 → 写入 exchange attribute 与请求头 → 转发
@@ -120,6 +137,55 @@ public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
         String path = request.getURI().getPath();
         if (path != null && path.startsWith(CANARY_PATH_PREFIX)) {
             return GRAY_TAG_GRAY;
+        }
+
+        // 4. P1-3: 比例灰度 — 基于 userId 或 traceId 的一致性哈希，保证用户粘性
+        if (grayRatioPercent > 0) {
+            return resolveRatioGrayTag(request);
+        }
+
+        return null;
+    }
+
+    /**
+     * P1-3: 基于比例的用户粘性灰度路由。
+     *
+     * <p>使用 userId（已认证用户）或 traceId（未认证请求）对 100 取模，
+     * 若结果小于 grayRatioPercent 则路由到灰度实例。同一用户/traceId 的哈希值稳定，
+     * 保证用户不会在多次请求间在灰度和稳定实例组之间"跳跃"。
+     *
+     * <p>灰色地带：未被灰度命中的用户始终走稳定实例，
+     * 灰度实例故障时灰度命中的用户也会受影响（通过 GrayLoadBalancer 降级兜底）。
+     *
+     * @param request HTTP 请求
+     * @return 灰度标识
+     */
+    private String resolveRatioGrayTag(ServerHttpRequest request) {
+        // 优先使用已认证的用户 ID（最稳定的标识）
+        String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
+        if (userId != null && !userId.isEmpty()) {
+            int hash = Math.abs(userId.hashCode()) % 100;
+            if (hash < grayRatioPercent) {
+                if (log.isDebugEnabled()) {
+                    log.debug("[GrayFilter] 比例灰度命中(用户) userId={} hash={} ratio={}%",
+                            userId, hash, grayRatioPercent);
+                }
+                return GRAY_TAG_GRAY;
+            }
+            return GRAY_TAG_STABLE;
+        }
+
+        // 回退到 traceId（未认证请求的用户粘性）
+        String traceId = request.getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+        if (traceId != null && !traceId.isEmpty()) {
+            int hash = Math.abs(traceId.hashCode()) % 100;
+            if (hash < grayRatioPercent) {
+                if (log.isDebugEnabled()) {
+                    log.debug("[GrayFilter] 比例灰度命中(trace) traceId={} hash={} ratio={}%",
+                            traceId, hash, grayRatioPercent);
+                }
+                return GRAY_TAG_GRAY;
+            }
         }
 
         return null;

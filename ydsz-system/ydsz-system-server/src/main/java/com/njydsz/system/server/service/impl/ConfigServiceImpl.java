@@ -15,16 +15,17 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.DataScope;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
-import com.njydsz.system.domain.query.ConfigPageQuery;
+import com.njydsz.system.domain.enums.SystemResultCode;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.config.SystemProperties;
@@ -334,8 +335,9 @@ public class ConfigServiceImpl implements ConfigService {
         checkWrapper.eq("config_group", entity.getConfigGroup())
                 .eq("config_key", entity.getConfigKey());
         if (configRepository.getConfigMapper().selectCount(checkWrapper) > 0) {
-            throw new IllegalArgumentException(
-                    "配置键已存在: " + entity.getConfigGroup() + "/" + entity.getConfigKey());
+            throw BusinessException.of(SystemResultCode.CONFIG_KEY_DUPLICATE)
+                    .data("configGroup", entity.getConfigGroup())
+                    .data("configKey", entity.getConfigKey());
         }
     }
 

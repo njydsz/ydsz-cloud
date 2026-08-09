@@ -12,9 +12,9 @@ import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.context.MessageSource;
 
+import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
 import lombok.ToString;
@@ -24,7 +24,7 @@ import lombok.ToString;
  *
  * <p>访问路径：{@code /actuator/exception-codes}
  *
- * <p>返回所有通过 {@link ExceptionCodeRegistry} 注册的异常码及其 i18n 消息，
+ * <p>返回所有通过统一错误码表 {@link ErrorCodeTable} 注册的异常码及其 i18n 消息，
  * 方便前端/客户端查阅可用错误码列表，也可用于生成 API 文档。
  *
  * <p><b>安全加固：</b>支持模块白名单过滤和鉴权配置。
@@ -50,23 +50,27 @@ import lombok.ToString;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see ExceptionCodeRegistry
+ * @see ErrorCodeTable
  */
 @Endpoint(id = "exception-codes")
 public class ExceptionCodeDocEndpoint {
 
     private final MessageSource messageSource;
     private final ExceptionProperties properties;
+    private final ErrorCodeTable errorCodeTable;
 
     /**
      * 构造异常错误码文档端点
      *
      * @param messageSource 国际化消息源
      * @param properties 异常模块配置属性（不可为 null）
+     * @param errorCodeTable 统一错误码表（不可为 null）
      */
-    public ExceptionCodeDocEndpoint(MessageSource messageSource, ExceptionProperties properties) {
+    public ExceptionCodeDocEndpoint(MessageSource messageSource, ExceptionProperties properties,
+                                     ErrorCodeTable errorCodeTable) {
         this.messageSource = messageSource;
         this.properties = properties;
+        this.errorCodeTable = errorCodeTable;
     }
 
     /**
@@ -76,7 +80,7 @@ public class ExceptionCodeDocEndpoint {
      */
     @ReadOperation
     public ExceptionCodeDocResponse exceptionCodes() {
-        Map<String, ExceptionCode> all = ExceptionCodeRegistry.allRegistered();
+        Map<String, ExceptionCode> all = errorCodeTable.allCodes();
         List<ExceptionCodeDoc> docs = new ArrayList<>(all.size());
 
         // 获取模块白名单过滤配置

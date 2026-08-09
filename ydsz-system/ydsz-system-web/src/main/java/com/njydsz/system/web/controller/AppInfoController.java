@@ -16,11 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.server.service.AppInfoService;
@@ -85,8 +82,8 @@ public class AppInfoController {
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "应用名称模糊搜索") @RequestParam(required = false) String appName,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
-        IPage<AppInfoVO> page = service.page(pageNum, pageSize, appName, status);
-        return BaseResponse.successPage(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
+        PageResult<AppInfoVO> page = service.page(pageNum, pageSize, appName, status);
+        return BaseResponse.successPage(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
     }
 
     /**

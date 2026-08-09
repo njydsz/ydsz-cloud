@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>字符串/字节数组摘要：{@link #digest(String)} / {@link #digest(byte[])}</li>
  *   <li>流式摘要：{@link #digest(InputStream)}（大文件场景，内存友好）</li>
- *   <li>HMAC-SM3 消息认证码</li>
  *   <li>Hex/Base64 两种输出编码</li>
  * </ul>
  *

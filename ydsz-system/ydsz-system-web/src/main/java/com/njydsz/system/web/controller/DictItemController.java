@@ -16,11 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.DictItemService;
@@ -89,8 +86,8 @@ public class DictItemController {
             @Parameter(description = "字典类型编码过滤") @RequestParam(required = false) String typeCode,
             @Parameter(description = "字典项编码模糊搜索") @RequestParam(required = false) String itemCode,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
-        IPage<DictItemVO> page = service.page(pageNum, pageSize, typeCode, itemCode, status);
-        return BaseResponse.successPage(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
+        PageResult<DictItemVO> page = service.page(pageNum, pageSize, typeCode, itemCode, status);
+        return BaseResponse.successPage(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
     }
 
     /**

@@ -226,21 +226,50 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * {@inheritDoc}
-     * <p>通过 refreshToken 换取新的 accessToken，refreshToken 本身不变。
+     * <p>通过 refreshToken 换取新的 accessToken 和 refreshToken（token 轮换），
+     * 旧 refreshToken 立即加入黑名单（一次性使用），防止 token 泄露后的长期滥用。
      *
      * @param refreshToken 刷新令牌
-     * @return 新的登录响应（含新 accessToken）
+     * @return 新的登录响应（含新 accessToken 和新 refreshToken）
      * @throws BusinessException 当 refreshToken 无效或过期时抛出
      */
     @Override
     public LoginVO refresh(String refreshToken) {
-        String newAccessToken = tokenService.refreshAccessToken(refreshToken);
-        if (newAccessToken == null) {
+        // 1. 校验 refresh_token 有效性
+        if (!tokenService.validateRefreshToken(refreshToken)) {
+            log.warn("Refresh token validation failed, possible token reuse attack");
             throw new BusinessException(BaseResultCode.UNAUTHORIZED);
         }
+
+        // 2. 解析用户信息
+        UserInfo userInfo = tokenService.parseRefreshToken(refreshToken);
+        if (userInfo == null) {
+            log.warn("Failed to parse user info from refresh token");
+            throw new BusinessException(BaseResultCode.UNAUTHORIZED);
+        }
+
+        // 3. 签发新的 access_token 和 refresh_token（token 轮换）
+        String newAccessToken = tokenService.issueAccessToken(userInfo);
+        String newRefreshToken = tokenService.issueRefreshToken(userInfo);
+
+        // 4. 将旧 refresh_token 加入黑名单（一次性使用，防止重放攻击）
+        tokenBlacklistService.addToBlacklist(refreshToken);
+
+        // 5. 更新 Redis 会话（使用新 access_token）
+        Map<String, Object> sessionInfo = new HashMap<>();
+        sessionInfo.put("userId", userInfo.getUserId());
+        sessionInfo.put("username", userInfo.getUsername());
+        sessionInfo.put("roleCode", userInfo.getRoleCode());
+        sessionInfo.put("roleName", userInfo.getRoleName());
+        sessionInfo.put("tenantId", userInfo.getTenantId());
+        redisHashOps.hMSet(newAccessToken, sessionInfo);
+        redisService.expire(newAccessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+
+        log.info("Token refreshed successfully for user: {}", userInfo.getUsername());
+
         LoginVO result = new LoginVO();
         result.setAccessToken(newAccessToken);
-        result.setRefreshToken(refreshToken);
+        result.setRefreshToken(newRefreshToken);
         result.setTokenType("Bearer");
         result.setExpiresIn(properties.getTokenTtlSeconds());
         result.setScope("read write");

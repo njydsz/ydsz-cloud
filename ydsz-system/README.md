@@ -166,7 +166,7 @@ ydsz-system/
 
 ### 分页搜索
 - 所有分页接口支持搜索过滤（configGroup/configKey/status 等）
-- Service `page()` 方法返回 `IPage<VO>`，Controller 无需重复 toVO 转换
+- Service `page()` 方法返回 `PageResult<VO>`（继承自 `BaseResponse<T>`），自带 `getPageNum()`/`getPageSize()`/`getPages()` 便捷方法，Controller 无需重复 toVO 转换
 
 ## 配置
 

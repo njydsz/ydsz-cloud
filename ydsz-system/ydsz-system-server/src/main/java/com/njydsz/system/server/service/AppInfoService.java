@@ -2,7 +2,7 @@ package com.njydsz.system.server.service;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.vo.AppInfoVO;
 
@@ -69,9 +69,9 @@ public interface AppInfoService {
      * @param pageSize 每页记录数
      * @param appName  应用名称模糊搜索（可选）
      * @param status   状态过滤（可选）
-     * @return 分页结果（VO）
+     * @return 分页结果（VO），统一使用 {@link PageResult}
      */
-    IPage<AppInfoVO> page(int pageNum, int pageSize, String appName, String status);
+    PageResult<AppInfoVO> page(int pageNum, int pageSize, String appName, String status);
 
     /**
      * 查询全部应用（仅内部使用）

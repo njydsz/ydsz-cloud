@@ -15,6 +15,7 @@ import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.vo.AppInfoVO;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.AppInfoService;
@@ -179,7 +180,7 @@ public class AppInfoServiceImpl implements AppInfoService {
      */
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-    public IPage<AppInfoVO> page(int pageNum, int pageSize, String appName, String status) {
+    public PageResult<AppInfoVO> page(int pageNum, int pageSize, String appName, String status) {
         QueryWrapper<AppInfo> wrapper = new QueryWrapper<>();
         if (appName != null && !appName.isBlank()) {
             wrapper.like("app_name", appName);
@@ -192,9 +193,7 @@ public class AppInfoServiceImpl implements AppInfoService {
         List<AppInfoVO> vos = page.getRecords().stream()
                 .map(SystemConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
-        Page<AppInfoVO> result = new Page<>(pageNum, pageSize, page.getTotal());
-        result.setRecords(vos);
-        return result;
+        return PageResult.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
     }
 
     /**

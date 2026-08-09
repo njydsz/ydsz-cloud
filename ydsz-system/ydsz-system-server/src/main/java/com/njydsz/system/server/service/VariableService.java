@@ -2,7 +2,7 @@ package com.njydsz.system.server.service;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.vo.VariableVO;
 
@@ -70,9 +70,9 @@ public interface VariableService {
      * @param pageSize    每页记录数
      * @param variableKey 变量键模糊搜索（可选）
      * @param status      状态过滤（可选）
-     * @return 分页结果（VO）
+     * @return 分页结果（VO），统一使用 {@link PageResult}
      */
-    IPage<VariableVO> page(int pageNum, int pageSize, String variableKey, String status);
+    PageResult<VariableVO> page(int pageNum, int pageSize, String variableKey, String status);
 
     /**
      * 查询全部系统变量（仅内部使用）

@@ -83,42 +83,10 @@ spring:
         response-timeout: 30s
         websocket:
           max-frame-payload-length: 65536
-    sentinel:
-      transport:
-        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
-        port: ${SENTINEL_TRANSPORT_PORT:8719}
-      eager: true
-      filter:
-        enabled: true
-      scg:
-        fallback:
-          mode: response
-          response-status: 429
-          response-body: '{"code":429,"message":"error.RATE_LIMIT"}'
-      # P0-阶段二-4: 生产环境启用 Nacos 规则动态推送
-      datasource:
-        ds1:
-          nacos:
-            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-            namespace: ${NACOS_NAMESPACE:ydsz}
-            groupId: ${NACOS_GROUP:prod}
-            dataId: ydsz-gateway-sentinel-flow.json
-            ruleType: flow
-        ds2:
-          nacos:
-            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-            namespace: ${NACOS_NAMESPACE:ydsz}
-            groupId: ${NACOS_GROUP:prod}
-            dataId: ydsz-gateway-sentinel-degrade.json
-            ruleType: degrade
     loadbalancer:
       configurations: gray
       nacos:
         enabled: true
-
-feign:
-  sentinel:
-    enabled: true
 
 # =====================================================================
 # YDSZ · Gateway · P0 安全配置（P0-2 / P0-4 / P0-6）
@@ -130,12 +98,6 @@ ydsz:
     # P0-4: WebSocket Origin 白名单（生产环境必须配置）
     websocket:
       allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://ydsz.example.com,https://*.ydsz.example.com}
-    # P0-阶段二-2/3/4: Sentinel 规则配置
-    sentinel:
-      nacos-datasource-enabled: true
-      degrade-rule-data-id: ydsz-gateway-sentinel-degrade.json
-      system-rule-data-id: ydsz-gateway-sentinel-system.json
-      rule-group: prod
     # P0-阶段二-6: HttpClient 连接池配置
     httpclient:
       pool:

@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.bean.BeanUpdateUtil;
+import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.json.YdszJson;
 
 import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
 import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
@@ -67,10 +70,17 @@ import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
+    /** 部门树缓存 Redis key */
+    private static final String CACHE_KEY_DEPT_TREE = "userinfo:dept:tree";
+    /** 部门树缓存过期时间（秒）：10 分钟 */
+    private static final long CACHE_TTL_DEPT_TREE = 600;
+
     /** 部门 Mapper */
     private final DepartmentMapper departmentMapper;
     /** 用户-部门关联 Mapper（用于删除前检查是否有人员关联） */
     private final UserDeptMapper userDeptMapper;
+    /** Redis 服务 */
+    private final RedisService redisService;
 
     /**
      * {@inheritDoc}
@@ -103,6 +113,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     /**
      * {@inheritDoc}
      * <p>执行 deptCode 唯一性校验后插入，status 默认 ENABLED，parentId 为空时默认 "0"（根节点）。
+     * <p>创建成功后主动失效部门树缓存。
      *
      * @throws BusinessException 当 deptCode 已存在时抛出
      */
@@ -124,12 +135,17 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
         departmentMapper.insert(entity);
         log.info("Department created: code={}, id={}", entity.getDeptCode(), entity.getId());
+
+        // 部门变更后失效缓存
+        evictDeptTreeCache();
+
         return entity.getId();
     }
 
     /**
      * {@inheritDoc}
      * <p>使用 MapStruct 转换（更新操作暂保留 BeanUtils）
+     * <p>更新成功后主动失效部门树缓存。
      *
      * @throws BusinessException 当部门不存在或已删除时抛出
      */
@@ -141,12 +157,20 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id");
-        return departmentMapper.updateById(entity) > 0;
+        boolean result = departmentMapper.updateById(entity) > 0;
+
+        if (result) {
+            // 部门变更后失效缓存
+            evictDeptTreeCache();
+        }
+
+        return result;
     }
 
     /**
      * {@inheritDoc}
      * <p>删除前检查：有子部门不可删除、有人员关联不可删除。
+     * <p>删除成功后主动失效部门树缓存。
      *
      * @throws BusinessException 当部门不存在、有子部门、或仍有人员关联时抛出
      */
@@ -170,17 +194,40 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_HAS_USERS);
         }
 
-        return departmentMapper.deleteById(id) > 0;
+        boolean result = departmentMapper.deleteById(id) > 0;
+
+        if (result) {
+            // 部门变更后失效缓存
+            evictDeptTreeCache();
+        }
+
+        return result;
     }
 
     /**
      * {@inheritDoc}
-     * <p>查询全部未删除部门，通过 {@link TreeBuilder#buildSimple} 构建树形结构。
+     * <p>优先从 Redis 缓存读取部门树，缓存未命中时从数据库查询并构建树，然后写入缓存。
+     * <p>缓存 TTL 为 {@value #CACHE_TTL_DEPT_TREE} 秒。
      *
      * @return 部门树形结构列表，空数据返回空列表
      */
     @Override
     public List<DepartmentTreeVO> tree() {
+        // 1. 尝试从缓存获取
+        try {
+            String cachedJson = redisService.get(CACHE_KEY_DEPT_TREE, String.class);
+            if (cachedJson != null && !cachedJson.isBlank()) {
+                List<DepartmentTreeVO> cached = YdszJson.fromJsonList(cachedJson, DepartmentTreeVO.class);
+                if (cached != null) {
+                    log.debug("Department tree loaded from cache");
+                    return cached;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load department tree from cache, fallback to DB: {}", e.getMessage());
+        }
+
+        // 2. 缓存未命中，查询数据库
         List<Department> all = departmentMapper.selectList(
                 new LambdaQueryWrapper<Department>()
                         .eq(Department::getDeleted, 0));
@@ -189,12 +236,35 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
 
         List<DepartmentTreeVO> voList = UserInfoConverter.INSTANT.departmentTreeListToVO(all);
-
-        return TreeBuilder.buildSimple(voList,
+        List<DepartmentTreeVO> tree = TreeBuilder.buildSimple(voList,
                 DepartmentTreeVO::getId,
                 DepartmentTreeVO::getParentId,
                 DepartmentTreeVO::setChildren,
                 DepartmentTreeVO::getSortOrder);
+
+        // 3. 写入缓存（异步异常不影响业务）
+        try {
+            String json = YdszJson.toJson(tree);
+            redisService.set(CACHE_KEY_DEPT_TREE, json, Duration.ofSeconds(CACHE_TTL_DEPT_TREE));
+        } catch (Exception e) {
+            log.warn("Failed to cache department tree: {}", e.getMessage());
+        }
+
+        return tree;
+    }
+
+    /**
+     * 失效部门树缓存
+     *
+     * <p>部门创建/更新/删除时调用，确保缓存数据与数据库一致。
+     */
+    private void evictDeptTreeCache() {
+        try {
+            redisService.del(CACHE_KEY_DEPT_TREE);
+            log.debug("Department tree cache evicted");
+        } catch (Exception e) {
+            log.warn("Failed to evict department tree cache: {}", e.getMessage());
+        }
     }
 
     /**

@@ -16,11 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.service.VariableService;
@@ -85,8 +82,8 @@ public class VariableController {
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "变量键模糊搜索") @RequestParam(required = false) String variableKey,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
-        IPage<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
-        return BaseResponse.successPage(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
+        PageResult<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
+        return BaseResponse.successPage(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
     }
 
     /**

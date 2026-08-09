@@ -13,7 +13,6 @@ import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
 import com.njydsz.common.exception.health.ExceptionHealthIndicator;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.registry.ResultCodeRegistry;
 import com.njydsz.common.exception.registry.ResultCodeScanner;
 
 /**
@@ -53,30 +52,21 @@ public class YdszExceptionActuatorAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(ExceptionCodeDocEndpoint.class)
     @ConditionalOnProperty(prefix = "ydsz.exception", name = "doc-endpoint-enabled", havingValue = "true", matchIfMissing = true)
-    public ExceptionCodeDocEndpoint exceptionCodeDocEndpoint(MessageSource messageSource, ExceptionProperties properties) {
-        return new ExceptionCodeDocEndpoint(messageSource, properties);
-    }
-
-    /**
-     * 创建全局错误码注册表 Bean
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public ResultCodeRegistry resultCodeRegistry() {
-        return new ResultCodeRegistry();
+    public ExceptionCodeDocEndpoint exceptionCodeDocEndpoint(MessageSource messageSource,
+                                                              ExceptionProperties properties,
+                                                              ErrorCodeTable errorCodeTable) {
+        return new ExceptionCodeDocEndpoint(messageSource, properties, errorCodeTable);
     }
 
     /**
      * 创建错误码自动扫描注册器 Bean
      *
-     * <p>注入 ErrorCodeTable 以同时注册到统一注册表。
+     * <p>注入统一错误码表 ErrorCodeTable，扫描结果仅注册到该单一注册中心。
      */
     @Bean
     @ConditionalOnMissingBean
-    public ResultCodeScanner resultCodeScanner(ResultCodeRegistry registry,
-                                               ObjectProvider<ErrorCodeTable> errorCodeTableProvider) {
-        ErrorCodeTable table = errorCodeTableProvider.getIfAvailable();
-        return new ResultCodeScanner(registry, table);
+    public ResultCodeScanner resultCodeScanner(ObjectProvider<ErrorCodeTable> errorCodeTableProvider) {
+        return new ResultCodeScanner(errorCodeTableProvider.getIfAvailable());
     }
 
     // ==================== 健康检查 ====================
@@ -92,8 +82,8 @@ public class YdszExceptionActuatorAutoConfiguration {
     public ExceptionHealthIndicator exceptionHealthIndicator(
             ExceptionProperties properties,
             ObjectProvider<ExceptionMetrics> metricsProvider,
-            ObjectProvider<ResultCodeRegistry> resultCodeRegistryProvider) {
+            ObjectProvider<ErrorCodeTable> errorCodeTableProvider) {
         return new ExceptionHealthIndicator(properties, metricsProvider,
-                resultCodeRegistryProvider);
+                errorCodeTableProvider);
     }
 }

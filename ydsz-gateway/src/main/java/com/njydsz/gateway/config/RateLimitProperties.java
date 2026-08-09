@@ -14,7 +14,7 @@ import lombok.Data;
  *
  * <p>支持多维度限流策略：
  * <ul>
- *   <li>API 级限流（已有 SentinelApiLimitConfig 基础）</li>
+ *   <li>API 级限流（按 path pattern 独立限流）</li>
  *   <li>用户级限流（按 userId 独立限流）</li>
  *   <li>IP 级限流（防止单 IP 暴力请求）</li>
  *   <li>租户级限流（多租户场景隔离）</li>

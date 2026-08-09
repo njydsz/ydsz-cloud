@@ -10,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.entity.DictType;
+import com.njydsz.system.domain.enums.SystemResultCode;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.infra.repository.DictRepository;
@@ -280,7 +282,8 @@ public class DictServiceImpl implements DictService {
             checkWrapper.ne("id", entity.getId());
         }
         if (dictRepository.getDictTypeMapper().selectCount(checkWrapper) > 0) {
-            throw new IllegalArgumentException("字典类型编码已存在: " + entity.getTypeCode());
+            throw BusinessException.of(SystemResultCode.DICT_TYPE_CODE_DUPLICATE)
+                    .data("typeCode", entity.getTypeCode());
         }
     }
 }

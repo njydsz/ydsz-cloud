@@ -10,7 +10,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.registry.ResultCodeRegistry;
+import com.njydsz.common.exception.code.ErrorCodeTable;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,14 +33,14 @@ public class ExceptionHealthIndicator implements HealthIndicator {
 
     private final ExceptionProperties properties;
     private final ObjectProvider<ExceptionMetrics> metricsProvider;
-    private final ObjectProvider<ResultCodeRegistry> resultCodeRegistryProvider;
+    private final ObjectProvider<ErrorCodeTable> errorCodeTableProvider;
 
     public ExceptionHealthIndicator(ExceptionProperties properties,
                                     ObjectProvider<ExceptionMetrics> metricsProvider,
-                                    ObjectProvider<ResultCodeRegistry> resultCodeRegistryProvider) {
+                                    ObjectProvider<ErrorCodeTable> errorCodeTableProvider) {
         this.properties = properties;
         this.metricsProvider = metricsProvider;
-        this.resultCodeRegistryProvider = resultCodeRegistryProvider;
+        this.errorCodeTableProvider = errorCodeTableProvider;
     }
 
     @Override
@@ -60,13 +60,10 @@ public class ExceptionHealthIndicator implements HealthIndicator {
             details.put("metricsIncludeCodeTag", properties.isMetricsIncludeCodeTag());
         }
 
-        ResultCodeRegistry registry = resultCodeRegistryProvider.getIfAvailable();
-        if (registry != null) {
-            details.put("registeredModules", registry.getModules().size());
-            int totalCodes = registry.getAllErrorCodes().values().stream()
-                    .mapToInt(Map::size)
-                    .sum();
-            details.put("registeredErrorCodes", totalCodes);
+        ErrorCodeTable table = errorCodeTableProvider.getIfAvailable();
+        if (table != null) {
+            details.put("registeredModules", table.getModules().size());
+            details.put("registeredErrorCodes", table.allCodes().size());
         } else {
             details.put("registeredModules", 0);
             details.put("registeredErrorCodes", 0);

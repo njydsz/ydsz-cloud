@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>必须包含大小写字母、数字、特殊字符中的至少 N 种（可配置）</li>
  *   <li>不允许连续重复字符（如 aaa、111）</li>
  *   <li>不允许与用户名相同或包含用户名</li>
+ *   <li>不允许与最近 N 条历史密码重复（需配合 {@link UserPasswordHistoryService}）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -39,13 +40,30 @@ public class PasswordPolicyValidator {
     private static final Pattern REPEAT_3 = Pattern.compile("(.)\\1{2,}");
 
     /**
-     * 校验密码强度。
+     * 校验密码强度（不检查历史密码，用于创建用户等无需检查历史的场景）。
      *
      * @param password 待校验密码
      * @param username 用户名（用于检查密码是否包含用户名）
      * @throws BusinessException 密码不符合策略时抛出
      */
     public void validate(String password, String username) {
+        validate(password, username, null, null);
+    }
+
+    /**
+     * 校验密码强度（含历史密码检查，用于修改密码场景）。
+     *
+     * <p>当 {@code passwordHistoryService} 和 {@code userId} 均不为 null 时，
+     * 额外校验新密码是否与用户最近 {@code historyCount} 条历史密码重复。
+     *
+     * @param password 待校验密码
+     * @param username 用户名（用于检查密码是否包含用户名）
+     * @param userId 用户 ID（用于查询历史密码，为 null 时跳过历史检查）
+     * @param passwordHistoryService 密码历史服务，为 null 时跳过历史检查
+     * @throws BusinessException 密码不符合策略或与历史密码重复时抛出
+     */
+    public void validate(String password, String username, String userId,
+                         UserPasswordHistoryService passwordHistoryService) {
         int minLength = properties.getPasswordMinLength();
         int maxLength = properties.getPasswordMaxLength();
         int minCategoryCount = properties.getPasswordMinCategoryCount();
@@ -79,6 +97,16 @@ public class PasswordPolicyValidator {
             if (password.toLowerCase().contains(username.toLowerCase())) {
                 throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
                         "密码不能包含用户名");
+            }
+        }
+
+        // 历史密码校验（仅在提供 userId 和 passwordHistoryService 时执行）
+        if (userId != null && passwordHistoryService != null) {
+            int historyCount = properties.getPasswordHistoryCount();
+            if (historyCount > 0
+                    && passwordHistoryService.isPasswordReused(userId, password, historyCount)) {
+                throw new BusinessException(UserInfoResultCode.PASSWORD_REUSED,
+                        "不能使用最近 " + historyCount + " 次使用过的密码");
             }
         }
     }

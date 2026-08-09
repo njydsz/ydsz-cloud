@@ -66,26 +66,10 @@ spring:
         response-timeout: 30s
         websocket:
           max-frame-payload-length: 65536
-    sentinel:
-      transport:
-        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
-        port: ${SENTINEL_TRANSPORT_PORT:8719}
-      eager: true
-      filter:
-        enabled: true
-      scg:
-        fallback:
-          mode: response
-          response-status: 429
-          response-body: '{"code":429,"message":"error.RATE_LIMIT"}'
     loadbalancer:
       configurations: gray
       nacos:
         enabled: true
-
-feign:
-  sentinel:
-    enabled: true
 
 # =====================================================================
 # YDSZ · Gateway · P0 安全配置（P0-2 / P0-4 / P0-6）
@@ -98,12 +82,6 @@ ydsz:
     # P0-4: WebSocket Origin 白名单
     websocket:
       allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://sit.example.com,https://*.sit.example.com}
-    # P0-阶段二-2/3/4: Sentinel 规则配置
-    sentinel:
-      nacos-datasource-enabled: false
-      degrade-rule-data-id: ydsz-gateway-sentinel-degrade.json
-      system-rule-data-id: ydsz-gateway-sentinel-system.json
-      rule-group: sit
     # P0-阶段二-6: HttpClient 连接池配置
     httpclient:
       pool:

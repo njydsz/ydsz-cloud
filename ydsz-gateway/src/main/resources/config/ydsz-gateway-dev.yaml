@@ -68,26 +68,10 @@ spring:
         response-timeout: 30s
         websocket:
           max-frame-payload-length: 65536
-    sentinel:
-      transport:
-        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
-        port: ${SENTINEL_TRANSPORT_PORT:8719}
-      eager: true
-      filter:
-        enabled: true
-      scg:
-        fallback:
-          mode: response
-          response-status: 429
-          response-body: '{"code":429,"message":"error.RATE_LIMIT"}'
     loadbalancer:
       configurations: gray
       nacos:
         enabled: true
-
-feign:
-  sentinel:
-    enabled: true
 
 # =====================================================================
 # YDSZ · Gateway · P0 安全配置（P0-2 / P0-4 / P0-6）
@@ -104,7 +88,6 @@ ydsz:
     warmup-classes:
       - com.njydsz.common.core.response.BaseResponse
       - org.springframework.cloud.gateway.route.RouteDefinition
-      - com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule
   gateway:
     # P0-2: 内部头签名密钥（与 JWT 密钥分离，避免单密钥泄漏导致整体信任链破裂）
     # ⚠️ 生产环境必须通过 YDSZ_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入强随机密钥（≥32 字节）
@@ -115,12 +98,6 @@ ydsz:
     # dev 环境为空表示不校验 Origin；prod 环境必须配置可信域
     websocket:
       allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:}
-    # P0-阶段二-2/3/4: Sentinel 规则配置
-    sentinel:
-      nacos-datasource-enabled: false
-      degrade-rule-data-id: ydsz-gateway-sentinel-degrade.json
-      system-rule-data-id: ydsz-gateway-sentinel-system.json
-      rule-group: dev
     # P0-阶段二-6: HttpClient 连接池配置
     httpclient:
       pool:

@@ -208,6 +208,59 @@ public class AuthProperties {
     private TokenBlacklistProperties blacklist = new TokenBlacklistProperties();
 
     /**
+     * 多端会话控制配置。
+     *
+     * <p>管理用户并发登录会话，支持互踢策略：</p>
+     * <ul>
+     *   <li>max-sessions-per-user：单用户最大并发会话数</li>
+     *   <li>eviction-strategy：超出限制时的淘汰策略（LRU / FIFO）</li>
+     * </ul>
+     */
+    private SessionProperties session = new SessionProperties();
+
+    /**
+     * 多端会话控制配置属性。
+     */
+    @Data
+    public static class SessionProperties {
+        /**
+         * 启用会话控制，默认 false。
+         *
+         * <p>启用后会在 Redis 中维护用户的会话列表，超出 max-sessions-per-user 时淘汰会话。</p>
+         */
+        private boolean enabled = false;
+
+        /**
+         * 单用户最大并发会话数，默认 5。
+         *
+         * <p>超出此数量时按 eviction-strategy 淘汰。</p>
+         */
+        @Min(1)
+        private int maxSessionsPerUser = 5;
+
+        /**
+         * 超出限制时的会话淘汰策略。
+         *
+         * <p>支持的值：</p>
+         * <ul>
+         *   <li>FIFO（默认）：淘汰最早注册的会话</li>
+         *   <li>LRU：淘汰最近最少使用的会话（依赖会话访问时间戳）</li>
+         * </ul>
+         */
+        private EvictionStrategy evictionStrategy = EvictionStrategy.FIFO;
+    }
+
+    /**
+     * 会话淘汰策略枚举。
+     */
+    public enum EvictionStrategy {
+        /** 先进先出（淘汰最早注册的会话） */
+        FIFO,
+        /** 最近最少使用（淘汰最久未被访问的会话） */
+        LRU
+    }
+
+    /**
      * 获取降级策略枚举值。
      *
      * @return 降级策略

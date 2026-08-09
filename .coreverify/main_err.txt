@@ -1,0 +1,435 @@
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:3: 错误: 程序包org.springframework.beans.factory不存在
+import org.springframework.beans.factory.SmartInitializingSingleton;
+                                        ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:4: 错误: 程序包org.springframework.boot.autoconfigure不存在
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+                                             ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:5: 错误: 程序包org.springframework.boot.autoconfigure.condition不存在
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+                                                       ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:6: 错误: 程序包org.springframework.boot.autoconfigure.condition不存在
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+                                                       ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:7: 错误: 程序包org.springframework.boot.context.properties不存在
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+                                                  ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:8: 错误: 程序包org.springframework.context不存在
+import org.springframework.context.MessageSource;
+                                  ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:9: 错误: 程序包org.springframework.context.annotation不存在
+import org.springframework.context.annotation.Bean;
+                                             ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:28: 错误: 找不到符号
+@AutoConfiguration
+ ^
+  符号: 类 AutoConfiguration
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:29: 错误: 找不到符号
+@ConditionalOnProperty(prefix = "ydsz.core", name = "enabled", havingValue = "true", matchIfMissing = true)
+ ^
+  符号: 类 ConditionalOnProperty
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:30: 错误: 找不到符号
+@EnableConfigurationProperties(CoreProperties.class)
+ ^
+  符号: 类 EnableConfigurationProperties
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:45: 错误: 找不到符号
+    public SpringMessageResolver springMessageResolver(MessageSource messageSource) {
+                                                       ^
+  符号:   类 MessageSource
+  位置: 类 CoreAutoConfiguration
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\SpringMessageResolver.java:4: 错误: 程序包org.springframework.context不存在
+import org.springframework.context.MessageSource;
+                                  ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\SpringMessageResolver.java:5: 错误: 程序包org.springframework.context不存在
+import org.springframework.context.NoSuchMessageException;
+                                  ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\SpringMessageResolver.java:6: 错误: 程序包org.springframework.context.i18n不存在
+import org.springframework.context.i18n.LocaleContextHolder;
+                                       ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:7: 错误: 程序包com.njydsz.common.json.annotation不存在
+import com.njydsz.common.json.annotation.JsonClass;
+                                        ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:8: 错误: 程序包com.njydsz.common.json.annotation不存在
+import com.njydsz.common.json.annotation.JsonInclude;
+                                        ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:9: 错误: 程序包com.njydsz.common.json.annotation不存在
+import com.njydsz.common.json.annotation.JsonPropertyOrder;
+                                        ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:10: 错误: 程序包lombok不存在
+import lombok.Data;
+             ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:11: 错误: 程序包lombok不存在
+import lombok.EqualsAndHashCode;
+             ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:12: 错误: 程序包lombok.experimental不存在
+import lombok.experimental.SuperBuilder;
+                          ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:13: 错误: 程序包org.slf4j不存在
+import org.slf4j.MDC;
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:50: 错误: 找不到符号
+@Data
+ ^
+  符号: 类 Data
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:51: 错误: 找不到符号
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+ ^
+  符号: 类 EqualsAndHashCode
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:52: 错误: 找不到符号
+@SuperBuilder
+ ^
+  符号: 类 SuperBuilder
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:53: 错误: 找不到符号
+@JsonInclude(JsonInclude.Include.NON_NULL)
+ ^
+  符号: 类 JsonInclude
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:54: 错误: 找不到符号
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "total", "pageNum", "pageSize", "extensions"})
+ ^
+  符号: 类 JsonPropertyOrder
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:55: 错误: 找不到符号
+@JsonClass(description = "统一API响应基类，标记可安全反序列化")
+ ^
+  符号: 类 JsonClass
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:3: 错误: 程序包jakarta.validation.constraints不存在
+import jakarta.validation.constraints.AssertTrue;
+                                     ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:4: 错误: 程序包jakarta.validation.constraints不存在
+import jakarta.validation.constraints.Max;
+                                     ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:5: 错误: 程序包jakarta.validation.constraints不存在
+import jakarta.validation.constraints.Min;
+                                     ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:7: 错误: 程序包org.springframework.boot.context.properties不存在
+import org.springframework.boot.context.properties.ConfigurationProperties;
+                                                  ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:8: 错误: 程序包org.springframework.core不存在
+import org.springframework.core.Ordered;
+                               ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:9: 错误: 程序包org.springframework.validation.annotation不存在
+import org.springframework.validation.annotation.Validated;
+                                                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:11: 错误: 程序包lombok不存在
+import lombok.Data;
+             ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:33: 错误: 找不到符号
+@Data
+ ^
+  符号: 类 Data
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:34: 错误: 找不到符号
+@ConfigurationProperties(prefix = "ydsz.core")
+ ^
+  符号: 类 ConfigurationProperties
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:35: 错误: 找不到符号
+@Validated
+ ^
+  符号: 类 Validated
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:59: 错误: 找不到符号
+    static class PageConstantsInitializer implements SmartInitializingSingleton {
+                                                     ^
+  符号:   类 SmartInitializingSingleton
+  位置: 类 CoreAutoConfiguration
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\SpringMessageResolver.java:40: 错误: 找不到符号
+    private final MessageSource messageSource;
+                  ^
+  符号:   类 MessageSource
+  位置: 类 SpringMessageResolver
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\SpringMessageResolver.java:47: 错误: 找不到符号
+    public SpringMessageResolver(MessageSource messageSource) {
+                                 ^
+  符号:   类 MessageSource
+  位置: 类 SpringMessageResolver
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\constant\PageConstants.java:5: 错误: 程序包org.slf4j不存在
+import org.slf4j.Logger;
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\constant\PageConstants.java:6: 错误: 程序包org.slf4j不存在
+import org.slf4j.LoggerFactory;
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\constant\PageConstants.java:39: 错误: 找不到符号
+    private static final Logger log = LoggerFactory.getLogger(PageConstants.class);
+                         ^
+  符号:   类 Logger
+  位置: 类 PageConstants
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:8: 错误: 程序包org.slf4j不存在
+import org.slf4j.MDC;
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:10: 错误: 程序包com.alibaba.ttl不存在
+import com.alibaba.ttl.TransmittableThreadLocal;
+                      ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:124: 错误: 找不到符号
+    private static final TransmittableThreadLocal<Map<String, Object>> CONTEXT_HOLDER =
+                         ^
+  符号:   类 TransmittableThreadLocal
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:148: 错误: 找不到符号
+    private static final TransmittableThreadLocal<Map<String, Object>> CACHE_HOLDER =
+                         ^
+  符号:   类 TransmittableThreadLocal
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\trace\TraceIdPropagation.java:7: 错误: 程序包org.slf4j不存在
+import org.slf4j.MDC;
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:53: 错误: 程序包JsonInclude不存在
+@JsonInclude(JsonInclude.Include.NON_NULL)
+                        ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:43: 错误: 找不到符号
+    @Bean
+     ^
+  符号:   类 Bean
+  位置: 类 CoreAutoConfiguration
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:44: 错误: 找不到符号
+    @ConditionalOnBean(MessageSource.class)
+     ^
+  符号:   类 ConditionalOnBean
+  位置: 类 CoreAutoConfiguration
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:44: 错误: 找不到符号
+    @ConditionalOnBean(MessageSource.class)
+                       ^
+  符号:   类 MessageSource
+  位置: 类 CoreAutoConfiguration
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:54: 错误: 找不到符号
+    @Bean
+     ^
+  符号:   类 Bean
+  位置: 类 CoreAutoConfiguration
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:52: 错误: 找不到符号
+    @Min(1)
+     ^
+  符号:   类 Min
+  位置: 类 CoreProperties
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:53: 错误: 找不到符号
+    @Max(5000)
+     ^
+  符号:   类 Max
+  位置: 类 CoreProperties
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:62: 错误: 找不到符号
+    @Min(1)
+     ^
+  符号:   类 Min
+  位置: 类 CoreProperties
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:63: 错误: 找不到符号
+    @Max(5000)
+     ^
+  符号:   类 Max
+  位置: 类 CoreProperties
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:80: 错误: 找不到符号
+    @AssertTrue(message = "ydsz.core.default-page-size must be <= ydsz.core.max-page-size")
+     ^
+  符号:   类 AssertTrue
+  位置: 类 CoreProperties
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:88: 错误: 程序包EqualsAndHashCode不存在
+    @EqualsAndHashCode.Include
+                      ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreAutoConfiguration.java:67: 错误: 方法不会覆盖或实现超类型的方法
+        @Override
+        ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\SpringMessageResolver.java:56: 错误: 找不到符号
+        Locale locale = LocaleContextHolder.getLocale();
+                        ^
+  符号:   变量 LocaleContextHolder
+  位置: 类 SpringMessageResolver
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\SpringMessageResolver.java:60: 错误: 找不到符号
+        } catch (NoSuchMessageException e) {
+                 ^
+  符号:   类 NoSuchMessageException
+  位置: 类 SpringMessageResolver
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:56: 错误: BaseResponse不是抽象的, 并且未覆盖IResponse中的抽象方法getData()
+public class BaseResponse<T> implements IResponse<T>, Serializable {
+       ^
+  其中, T是类型变量:
+    T扩展已在类 BaseResponse中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:184: 错误: 找不到符号
+        return MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+               ^
+  符号:   变量 MDC
+  位置: 类 BaseResponse<T>
+  其中, T是类型变量:
+    T扩展已在类 BaseResponse中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:327: 错误: 程序包org.slf4j不存在
+            org.slf4j.LoggerFactory.getLogger(BaseResponse.class)
+                     ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:431: 错误: 找不到符号
+        response.setTotal(total);
+                ^
+  符号:   方法 setTotal(Long)
+  位置: 类型为BaseResponse<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>successPage(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:432: 错误: 找不到符号
+        response.setPageNum(pageNum);
+                ^
+  符号:   方法 setPageNum(Long)
+  位置: 类型为BaseResponse<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>successPage(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java:433: 错误: 找不到符号
+        response.setPageSize(pageSize);
+                ^
+  符号:   方法 setPageSize(Long)
+  位置: 类型为BaseResponse<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>successPage(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\config\CoreProperties.java:72: 错误: 找不到符号
+    private int tenantMdcFilterOrder = Ordered.HIGHEST_PRECEDENCE + 100;
+                                       ^
+  符号:   变量 Ordered
+  位置: 类 CoreProperties
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\constant\PageConstants.java:39: 错误: 找不到符号
+    private static final Logger log = LoggerFactory.getLogger(PageConstants.class);
+                                      ^
+  符号:   变量 LoggerFactory
+  位置: 类 PageConstants
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\constant\PageConstants.java:93: 错误: 找不到符号
+        return p != null ? p.getDefaultPageSize() : DEFAULT_PAGE_SIZE;
+                            ^
+  符号:   方法 getDefaultPageSize()
+  位置: 类型为CoreProperties的变量 p
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\constant\PageConstants.java:103: 错误: 找不到符号
+        return p != null ? p.getMaxPageSize() : 1000;
+                            ^
+  符号:   方法 getMaxPageSize()
+  位置: 类型为CoreProperties的变量 p
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:125: 错误: 找不到符号
+            new TransmittableThreadLocal<Map<String, Object>>() {
+                ^
+  符号:   类 TransmittableThreadLocal
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:126: 错误: 方法不会覆盖或实现超类型的方法
+                @Override
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:135: 错误: 方法不会覆盖或实现超类型的方法
+                @Override
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:149: 错误: 找不到符号
+            new TransmittableThreadLocal<Map<String, Object>>() {
+                ^
+  符号:   类 TransmittableThreadLocal
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:150: 错误: 方法不会覆盖或实现超类型的方法
+                @Override
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:155: 错误: 方法不会覆盖或实现超类型的方法
+                @Override
+                ^
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:783: 错误: 找不到符号
+            MDC.put(KEY_TENANT_ID, tenantId);
+            ^
+  符号:   变量 MDC
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:787: 错误: 找不到符号
+            MDC.put(KEY_USER_ID, userId);
+            ^
+  符号:   变量 MDC
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:791: 错误: 找不到符号
+            MDC.put(KEY_TRACE_ID, traceId);
+            ^
+  符号:   变量 MDC
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:795: 错误: 找不到符号
+            MDC.put(KEY_REQUEST_ID, requestId);
+            ^
+  符号:   变量 MDC
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:806: 错误: 找不到符号
+        MDC.remove(KEY_TENANT_ID);
+        ^
+  符号:   变量 MDC
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:807: 错误: 找不到符号
+        MDC.remove(KEY_USER_ID);
+        ^
+  符号:   变量 MDC
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:808: 错误: 找不到符号
+        MDC.remove(KEY_TRACE_ID);
+        ^
+  符号:   变量 MDC
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java:809: 错误: 找不到符号
+        MDC.remove(KEY_REQUEST_ID);
+        ^
+  符号:   变量 MDC
+  位置: 类 RequestContext
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:43: 错误: 找不到符号
+        response.setCode(BaseResultCode.SUCCESS.getCode());
+                ^
+  符号:   方法 setCode(String)
+  位置: 类型为PageResult<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>success(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:44: 错误: 找不到符号
+        response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
+                ^
+  符号:   方法 setMsg(String)
+  位置: 类型为PageResult<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>success(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:45: 错误: 找不到符号
+        response.setData(data);
+                ^
+  符号:   方法 setData(T)
+  位置: 类型为PageResult<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>success(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:46: 错误: 找不到符号
+        response.setTotal(total);
+                ^
+  符号:   方法 setTotal(Long)
+  位置: 类型为PageResult<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>success(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:47: 错误: 找不到符号
+        response.setPageNum(pageNum);
+                ^
+  符号:   方法 setPageNum(Long)
+  位置: 类型为PageResult<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>success(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:48: 错误: 找不到符号
+        response.setPageSize(pageSize);
+                ^
+  符号:   方法 setPageSize(Long)
+  位置: 类型为PageResult<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>success(Long,Long,Long,T)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:73: 错误: 找不到符号
+        response.setCode(resultCode.getCode());
+                ^
+  符号:   方法 setCode(String)
+  位置: 类型为PageResult<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>error(ResultCode)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:74: 错误: 找不到符号
+        response.setMsg(resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()));
+                ^
+  符号:   方法 setMsg(String)
+  位置: 类型为PageResult<T>的变量 response
+  其中, T是类型变量:
+    T扩展已在方法 <T>error(ResultCode)中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:84: 错误: 找不到符号
+        Long total = getTotal();
+                     ^
+  符号:   方法 getTotal()
+  位置: 类 PageResult<T>
+  其中, T是类型变量:
+    T扩展已在类 PageResult中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\PageResult.java:85: 错误: 找不到符号
+        Long size = getPageSize();
+                    ^
+  符号:   方法 getPageSize()
+  位置: 类 PageResult<T>
+  其中, T是类型变量:
+    T扩展已在类 PageResult中声明的Object
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\trace\TraceIdPropagation.java:109: 错误: 找不到符号
+        return MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+               ^
+  符号:   变量 MDC
+  位置: 类 TraceIdPropagation
+D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\trace\TraceIdPropagation.java:122: 错误: 找不到符号
+            MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, traceId);
+            ^
+  符号:   变量 MDC
+  位置: 类 TraceIdPropagation
+注: D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\context\RequestContext.java使用了未经检查或不安全的操作。
+注: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+98 个错误

@@ -32,6 +32,8 @@ import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
+import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -106,6 +108,10 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final PasswordEncoder passwordEncoder;
     /** 密码策略校验器 */
     private final PasswordPolicyValidator passwordPolicyValidator;
+    /** 密码历史服务（用于防止密码重复使用） */
+    private final UserPasswordHistoryService passwordHistoryService;
+    /** 用户中心配置属性 */
+    private final UserInfoProperties properties;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
     /**
@@ -187,6 +193,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * {@inheritDoc}
      * <p>执行 username 唯一性校验 + 密码策略校验，BCrypt 加密存储密码，
      * status 默认 "1"（启用），tenantId 为空时默认 "1"。
+     * <p>创建成功后记录初始密码到密码历史表。
      *
      * @throws BusinessException 当 username 已存在或密码不符合策略时抛出
      */
@@ -203,7 +210,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
 
         UserAccount entity = UserInfoConverter.INSTANT.createDtoToEntity(dto);
-        entity.setPassword(passwordEncoder.encode(dto.getPassword()));
+        String passwordHash = passwordEncoder.encode(dto.getPassword());
+        entity.setPassword(passwordHash);
         entity.setStatus("1");
         entity.setLoginFailCount(0);
         if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
@@ -211,6 +219,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         userAccountMapper.insert(entity);
         log.info("User created: username={}, id={}", entity.getUsername(), entity.getId());
+
+        // 记录初始密码到密码历史
+        passwordHistoryService.recordPasswordHistory(
+                entity.getId(), passwordHash, properties.getPasswordHistoryCount());
+
         indexUpsert(entity);
         return entity.getId();
     }
@@ -256,15 +269,18 @@ public class UserAccountServiceImpl implements UserAccountService {
         boolean result = userAccountMapper.deleteById(id) > 0;
         if (result) {
             indexDelete(id);
+            // 清理密码历史记录（避免敏感数据残留）
+            passwordHistoryService.clearHistoryByUserId(id);
         }
         return result;
     }
 
     /**
      * {@inheritDoc}
-     * <p>校验旧密码 → 新旧密码不能相同 → 密码策略校验 → BCrypt 加密存储。
+     * <p>校验旧密码 → 新旧密码不能相同 → 密码策略校验（含历史密码校验）→ BCrypt 加密存储。
+     * <p>修改成功后将新密码记录到历史表。
      *
-     * @throws BusinessException 当用户不存在、旧密码错误、新旧密码相同或密码不符合策略时抛出
+     * @throws BusinessException 当用户不存在、旧密码错误、新旧密码相同、密码不符合策略或与历史密码重复时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -280,18 +296,28 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new BusinessException(UserInfoResultCode.PASSWORD_SAME_AS_OLD);
         }
 
-        // 密码策略校验
-        passwordPolicyValidator.validate(dto.getNewPassword(), entity.getUsername());
+        // 密码策略校验（含历史密码校验）
+        passwordPolicyValidator.validate(
+                dto.getNewPassword(), entity.getUsername(), dto.getUserId(), passwordHistoryService);
 
-        entity.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        return userAccountMapper.updateById(entity) > 0;
+        String newPasswordHash = passwordEncoder.encode(dto.getNewPassword());
+        entity.setPassword(newPasswordHash);
+
+        boolean result = userAccountMapper.updateById(entity) > 0;
+        if (result) {
+            // 记录新密码到历史
+            passwordHistoryService.recordPasswordHistory(
+                    dto.getUserId(), newPasswordHash, properties.getPasswordHistoryCount());
+        }
+        return result;
     }
 
     /**
      * {@inheritDoc}
      * <p>密码策略校验 → BCrypt 加密存储 → 重置失败计数和锁定状态。
+     * <p>重置成功后将新密码记录到历史表。
      *
-     * @throws BusinessException 当用户不存在或密码不符合策略时抛出
+     * @throws BusinessException 当用户不存在、密码不符合策略或与历史密码重复时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -301,13 +327,22 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
 
-        // 密码策略校验
-        passwordPolicyValidator.validate(dto.getNewPassword(), entity.getUsername());
+        // 密码策略校验（含历史密码校验）
+        passwordPolicyValidator.validate(
+                dto.getNewPassword(), entity.getUsername(), dto.getUserId(), passwordHistoryService);
 
-        entity.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        String newPasswordHash = passwordEncoder.encode(dto.getNewPassword());
+        entity.setPassword(newPasswordHash);
         entity.setLoginFailCount(0);
         entity.setLockedUntil(null);
-        return userAccountMapper.updateById(entity) > 0;
+
+        boolean result = userAccountMapper.updateById(entity) > 0;
+        if (result) {
+            // 记录新密码到历史
+            passwordHistoryService.recordPasswordHistory(
+                    dto.getUserId(), newPasswordHash, properties.getPasswordHistoryCount());
+        }
+        return result;
     }
 
     /**

@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * 标注模块错误码枚举类。
  *
  * <p>P2-4: 错误码注册中心 — 启动时扫描所有标注此注解的枚举类，
- * 注册到 {@link ResultCodeRegistry} 全局注册表，供前端和运维查询。
+ * 注册到统一错误码表 {@link com.njydsz.common.exception.code.ErrorCodeTable}，供前端和运维查询。
  *
  * <h3>使用示例</h3>
  * <pre>{@code

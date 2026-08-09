@@ -86,6 +86,9 @@ public class UserInfoProperties {
     /** OAuth2 客户端注册表（clientId → 客户端配置），用于第三方应用接入 */
     private Map<String, OAuth2Client> oauth2Clients = new HashMap<>();
 
+    /** 密码历史记录保留条数，默认 5 条；设置为 0 则关闭历史密码校验 */
+    private int passwordHistoryCount = 5;
+
     /**
      * OAuth2 客户端配置
      *

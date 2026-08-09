@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>IP 黑名单缓存大小</li>
  *   <li>动态路由是否启用</li>
  *   <li>灰度负载均衡是否启用</li>
- *   <li>Sentinel 是否已加载规则</li>
  * </ul>
  *
  * @since 1.0.0
