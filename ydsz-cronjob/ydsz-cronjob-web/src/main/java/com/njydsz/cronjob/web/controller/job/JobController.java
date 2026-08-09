@@ -360,12 +360,12 @@ public class JobController {
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
     public PageResponse<List<JobVO>> page(
-            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int pageNum,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
-        Page<Job> page = jobService.page(page, size, keyword, status, group);
+        Page<Job> page = jobService.page(pageNum, size, keyword, status, group);
         return PageResponse.success(
                 page.getTotal(),
                 page.getCurrent(),
@@ -388,11 +388,11 @@ public class JobController {
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
     public PageResponse<List<JobLogVO>> pageLog(
-            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int pageNum,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
-        Page<JobLog> page = jobService.pageLog(page, size, jobKey, status);
+        Page<JobLog> page = jobService.pageLog(pageNum, size, jobKey, status);
         return PageResponse.success(
                 page.getTotal(),
                 page.getCurrent(),

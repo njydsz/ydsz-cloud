@@ -301,7 +301,7 @@ public class RoleServiceImpl implements RoleService {
         try {
             String cachedJson = redisService.get(cacheKey, String.class);
             if (cachedJson != null && !cachedJson.isBlank()) {
-                List<String> cached = YdszJson.fromJsonList(cachedJson, String.class);
+                List<String> cached = YdszJson.fromJson(cachedJson, java.util.List.class, String.class);
                 if (cached != null) {
                     log.debug("Role permissions loaded from cache: roleId={}", roleId);
                     return cached;

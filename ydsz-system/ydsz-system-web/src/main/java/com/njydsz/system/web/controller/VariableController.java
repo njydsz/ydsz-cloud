@@ -2,6 +2,9 @@ package com.njydsz.system.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
@@ -82,8 +85,8 @@ public class VariableController {
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "变量键模糊搜索") @RequestParam(required = false) String variableKey,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
-        PageResponse<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
-        return PageResponse.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
+        PageResponse<List<VariableVO>> page = service.page(pageNum, pageSize, variableKey, status);
+        return PageResponse.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getData());
     }
 
     /**

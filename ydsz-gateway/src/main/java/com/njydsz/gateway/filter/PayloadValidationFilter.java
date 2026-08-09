@@ -141,7 +141,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
 
         String traceId = TraceIdGenerator.generateTraceId();
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.BAD_REQUEST, message);
-        body.setTraceId(traceId);
+        body.assignTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
         byte[] bytes = YdszJson.toJsonBytes(body);

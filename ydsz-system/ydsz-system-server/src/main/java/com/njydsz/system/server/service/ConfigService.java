@@ -2,7 +2,7 @@ package com.njydsz.system.server.service;
 
 import java.util.List;
 
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
@@ -48,7 +48,7 @@ public interface ConfigService {
      * @param query 分页查询参数
      * @return 分页结果
      */
-    PageResponse<ConfigVO> page(ConfigPageQuery query);
+    PageResponse<List<ConfigVO>> page(ConfigPageQuery query);
 
     /**
      * 按 ID 查询配置

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileTag;
 import com.njydsz.nextwiki.domain.entity.Tag;
 import com.njydsz.nextwiki.domain.repository.TagRepository;

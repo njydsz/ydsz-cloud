@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.domain.entity.TrashItem;
@@ -101,7 +102,7 @@ public class TrashController {
     @GetMapping("/list")
     @Operation(summary = "查询回收站列表")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_LIST)
-    public BaseResponse<List<TrashItem>> list(@RequestHeader("X-User-Id") String userId) {
+    public BaseResponse<List<TrashItem>> list(@RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         return BaseResponse.success(trashApplicationService.listTrash(userId));
     }
 
@@ -122,7 +123,7 @@ public class TrashController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
     public BaseResponse<Void> restore(
             @PathVariable String trashItemId,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         trashApplicationService.restore(trashItemId, userId);
         return BaseResponse.success();
     }
@@ -143,7 +144,7 @@ public class TrashController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
     public BaseResponse<Void> batchRestore(
             @RequestBody List<String> trashItemIds,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         trashApplicationService.batchRestore(trashItemIds, userId);
         return BaseResponse.success();
     }
@@ -165,7 +166,7 @@ public class TrashController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_PURGE)
     public BaseResponse<Void> purge(
             @PathVariable String trashItemId,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         trashApplicationService.purge(trashItemId, userId);
         return BaseResponse.success();
     }
@@ -183,7 +184,7 @@ public class TrashController {
     @DeleteMapping("/empty")
     @Operation(summary = "清空回收站")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_EMPTY)
-    public BaseResponse<Void> emptyTrash(@RequestHeader("X-User-Id") String userId) {
+    public BaseResponse<Void> emptyTrash(@RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         trashApplicationService.emptyTrash(userId);
         return BaseResponse.success();
     }

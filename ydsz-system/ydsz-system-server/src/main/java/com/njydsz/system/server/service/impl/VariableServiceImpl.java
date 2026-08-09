@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.entity.Variable;
@@ -23,7 +24,6 @@ import com.njydsz.system.server.service.VariableService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.auth.annotation.DataScope;
-import com.njydsz.common.core.exception.BizException;
 import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
@@ -196,7 +196,7 @@ public class VariableServiceImpl implements VariableService {
      */
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-    public BaseResponse<List<VariableVO>> page(int pageNum, int pageSize, String variableKey, String status) {
+    public PageResponse<List<VariableVO>> page(int pageNum, int pageSize, String variableKey, String status) {
         QueryWrapper<Variable> wrapper = new QueryWrapper<>();
         if (variableKey != null && !variableKey.isBlank()) {
             wrapper.like("variable_key", variableKey);
@@ -207,7 +207,7 @@ public class VariableServiceImpl implements VariableService {
         wrapper.orderByDesc("created_at");
         IPage<Variable> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<VariableVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
-        return PageResponse.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, vos);
     }
 
     /**

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -102,7 +103,7 @@ public class TagController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
     public BaseResponse<Tag> createTag(
             @RequestBody NextwikiDTOs.CreateTagRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         Tag tag = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
         return BaseResponse.success(tag);
     }
@@ -137,7 +138,7 @@ public class TagController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_BIND)
     public BaseResponse<Void> bindTag(
             @RequestBody NextwikiDTOs.BindTagRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         tagApplicationService.batchBindTags(request.getFileNodeId(), request.getTagIds(), userId);
         return BaseResponse.success();
     }

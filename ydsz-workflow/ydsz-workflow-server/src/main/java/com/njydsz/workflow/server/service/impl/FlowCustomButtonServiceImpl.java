@@ -167,9 +167,9 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 .filter(b -> buttonCode.equals(String.valueOf(b.get("code"))))
                 .findFirst()
                 .orElseThrow(() -> SysException.builder()
-                .orElseThrow(() ->     .resultCode(BaseResultCode.BAD_REQUEST)
-                .orElseThrow(() ->     .key("error.workflow.msg_button_not_found").params(buttonCode)
-                .orElseThrow(() ->     .build());
+                        .resultCode(BaseResultCode.BAD_REQUEST)
+                        .key("error.workflow.msg_button_not_found").params(buttonCode)
+                        .build());
 
         String action = String.valueOf(button.getOrDefault("action", "CUSTOM")).toUpperCase();
         String targetNodeCode = button.get("targetNodeCode") != null
@@ -246,9 +246,9 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                         taskId, buttonCode, button.get("callbackUrl"));
             }
             default -> throw SysException.builder()
-            default -> throw .resultCode(BaseResultCode.BAD_REQUEST)
-            default -> throw .key("error.workflow.msg_unknown_button_action").params(action)
-            default -> throw .build();
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_unknown_button_action").params(action)
+                    .build();
         }
 
         log.info("[CustomButton] 执行按钮操作: taskId={} buttonCode={} action={} userId={}",

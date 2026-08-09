@@ -36,14 +36,14 @@ public class FlowDefinitionCacheBroadcaster {
     /** Redis Pub/Sub 频道 */
     private static final String CHANNEL = "flow:definition:cache:invalidate";
 
-    /** 本节点唯一标识，用于忽略自身发出的广播 */
-    private final String sourceNodeId = String.valueOf(snowflakeIdGenerator.nextId());
-
     private final RedisPubSubOps redisPubSubOps;
     /** @Lazy 避免 FlowDefinitionCacheService ↔ Broadcaster 循环依赖 */
     private final FlowDefinitionCacheService cacheService;
     /** 分布式 ID 生成器 */
     private final SnowflakeIdGenerator snowflakeIdGenerator;
+
+    /** 本节点唯一标识，用于忽略自身发出的广播 */
+    private final String sourceNodeId;
 
 
     public FlowDefinitionCacheBroadcaster(RedisPubSubOps redisPubSubOps,
@@ -52,6 +52,7 @@ public class FlowDefinitionCacheBroadcaster {
         this.redisPubSubOps = redisPubSubOps;
         this.cacheService = cacheService;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
+        this.sourceNodeId = String.valueOf(snowflakeIdGenerator.nextId());
     }
 
     /**

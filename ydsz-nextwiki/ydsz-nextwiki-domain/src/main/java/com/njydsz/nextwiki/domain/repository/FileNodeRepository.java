@@ -2,7 +2,7 @@ package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
 
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -42,7 +42,7 @@ public interface FileNodeRepository {
      * @param pageSize 每页大小
      * @return 分页结果
      */
-    PageResponse<FileNode> findPageChildren(String parentId, String nodeType,
+    PageResponse<List<FileNode>> findPageChildren(String parentId, String nodeType,
                                            String sortBy, String sortDir,
                                            int page, int pageSize);
 

@@ -205,9 +205,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
             }
             case "ALL" -> { /* no-op */ }
             default -> throw SysException.builder()
-            default -> throw .resultCode(BaseResultCode.BAD_REQUEST)
-            default -> throw .message("error.workflow.msg_b0022eba", auth.getScopeType())
-            default -> throw .build();
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_b0022eba").params(auth.getScopeType())
+                    .build();
         }
 
         // 默认值

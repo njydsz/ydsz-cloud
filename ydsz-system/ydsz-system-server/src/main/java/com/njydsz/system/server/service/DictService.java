@@ -2,7 +2,7 @@ package com.njydsz.system.server.service;
 
 import java.util.List;
 
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
@@ -36,9 +36,9 @@ public interface DictService {
      * 租户过滤由 MyBatis 拦截器自动注入。
      *
      * @param query 分页查询参数
-     * @return 分页结果（{@link com.njydsz.common.domain.query.PageResponse}）
+     * @return 分页结果（{@link com.njydsz.common.core.response.PageResponse}）
      */
-    PageResponse<DictTypeVO> page(DictPageQuery query);
+    PageResponse<List<DictTypeVO>> page(DictPageQuery query);
 
     /**
      * 按 ID 查询字典类型

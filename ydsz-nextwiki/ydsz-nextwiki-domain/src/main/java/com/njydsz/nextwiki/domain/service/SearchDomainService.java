@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.entity.Tag;
@@ -71,11 +71,11 @@ public class SearchDomainService {
                 keyword, userId, scope, page, pageSize);
 
         // 数据库分页查询搜索索引，避免全量加载后内存 subList 分页
-        PageResponse<SearchIndex> PageResponse = searchIndexRepository.searchPage(
+        PageResponse<List<SearchIndex>> pageResult = searchIndexRepository.searchPage(
                 keyword, userId, scope, page, pageSize);
 
         List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
-        for (SearchIndex index : PageResponse.getRecords()) {
+        for (SearchIndex index : pageResult.getData()) {
             float score = calculateScore(index, keyword);
             hits.add(SearchResultVO.SearchHitVO.builder()
                     .fileNodeId(index.getFileNodeId())
@@ -97,7 +97,7 @@ public class SearchDomainService {
 
         return SearchResultVO.builder()
                 .hits(hits)
-                .total(PageResponse.getTotal())
+                .total(pageResult.getTotal())
                 .page(page)
                 .pageSize(pageSize)
                 .tookMs(tookMs)

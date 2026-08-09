@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -101,7 +102,7 @@ public class OAuth2Controller {
     @GetMapping("/authorize")
     @Operation(summary = "获取授权码", description = "需携带已登录的 access_token，生成 OAuth2 授权码，5 分钟有效")
     public BaseResponse<String> authorize(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization,
             @RequestParam String clientId,
             @RequestParam String redirectUri,
             @RequestParam(required = false) String state) {

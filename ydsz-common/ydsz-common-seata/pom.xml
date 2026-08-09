@@ -35,6 +35,11 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
         </dependency>
+        <!-- spring-jdbc (JdbcTemplate / RowMapper in DbTccTransactionLogStore) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+        </dependency>
         <!-- spring-aop (for @Transactional aspect) -->
         <dependency>
             <groupId>org.springframework</groupId>

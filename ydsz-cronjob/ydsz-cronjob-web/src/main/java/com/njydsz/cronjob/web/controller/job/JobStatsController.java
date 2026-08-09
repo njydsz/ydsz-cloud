@@ -213,11 +213,12 @@ public class JobStatsController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/recent-failures")
     public BaseResponse<List<JobLogVO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
-        return BaseResponse.success(jobLogMapper.selectList(
+        List<JobLog> logs = jobLogMapper.selectList(
                 new LambdaQueryWrapper<JobLog>()
                         .eq(JobLog::getStatus, "FAILED")
                         .orderByDesc(JobLog::getStartTime)
-                        .last("LIMIT " + Math.min(limit, 100))));
+                        .last("LIMIT " + Math.min(limit, 100)));
+        return BaseResponse.success(CronjobConverter.INSTANT.jobLogListToVO(logs));
     }
 
     /**

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -138,10 +139,10 @@ public interface WorkflowFacade {
      * @param size         每页大小
      * @return 分页实例 Map 列表
      */
-    BaseResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
-                                                     LocalDateTime startTime,
-                                                     LocalDateTime endTime,
-                                                     int page, int size);
+    PageResponse<List<Map<String, Object>>> listAllInstances(String businessType, String flowStatus,
+                                                           LocalDateTime startTime,
+                                                           LocalDateTime endTime,
+                                                           int page, int size);
 
     /**
      * 前加签 — 在当前审批人之前插入额外审批人

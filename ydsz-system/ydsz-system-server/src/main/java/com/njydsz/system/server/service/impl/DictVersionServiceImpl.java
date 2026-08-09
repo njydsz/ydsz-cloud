@@ -209,7 +209,7 @@ public class DictVersionServiceImpl implements DictVersionService {
         String snapshotJson = targetVersionEntity.getSnapshotJson();
         if (StringUtils.isNotBlank(snapshotJson)) {
             try {
-                List<DictItemDTO> snapshotItems = YdszJson.fromJsonList(snapshotJson, DictItemDTO.class);
+                List<DictItemDTO> snapshotItems = YdszJson.fromJson(snapshotJson, java.util.List.class, DictItemDTO.class);
                 if (snapshotItems != null && !snapshotItems.isEmpty()) {
                     for (DictItemDTO dto : snapshotItems) {
                         DictItem entity = new DictItem();

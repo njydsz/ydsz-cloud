@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
@@ -33,12 +35,14 @@ import org.springframework.stereotype.Service;
  * @since 1.0.0
  */
 @Service
+@RequiredArgsConstructor
 public class HumanApprovalService {
 
     private static final Logger log = LoggerFactory.getLogger(HumanApprovalService.class);
     private static final int MAX_PENDING = 500;
 
     private final ConcurrentMap<String, ApprovalRequest> pendingApprovals = new ConcurrentHashMap<>();
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     /**
      * 创建审批请求
@@ -159,8 +163,6 @@ public class HumanApprovalService {
         private final Map<String, Object> context;
         /** 请求创建时间，用于过期淘汰判断（超过 1 小时未处理即 EXPIRED） */
         private final LocalDateTime createdAt;
-    /** 分布式 ID 生成器 */
-    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
         /** 当前审批状态；volatile 保证多线程可见（审批线程与查询线程并发访问） */
         private volatile ApprovalStatus status;
@@ -172,8 +174,7 @@ public class HumanApprovalService {
         private volatile LocalDateTime resolvedAt;
 
         public ApprovalRequest(String id, String conversationId, String traceId,
-                               String stepDescription, Map<String, Object> context,
-            SnowflakeIdGenerator snowflakeIdGenerator) {
+                               String stepDescription, Map<String, Object> context) {
             this.id = id;
             this.conversationId = conversationId;
             this.traceId = traceId;
@@ -181,7 +182,6 @@ public class HumanApprovalService {
             this.context = context;
             this.createdAt = LocalDateTime.now();
             this.status = ApprovalStatus.PENDING;
-        this.snowflakeIdGenerator = snowflakeIdGenerator;
         }
 
         public String getId() { return id; }

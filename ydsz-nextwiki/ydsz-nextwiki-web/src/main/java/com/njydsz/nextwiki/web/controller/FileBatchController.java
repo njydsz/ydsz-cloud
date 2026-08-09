@@ -18,6 +18,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -101,7 +102,7 @@ public class FileBatchController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
     public BaseResponse<FileApplicationService.BatchResult> batchDelete(
             @RequestBody List<String> nodeIds,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         FileApplicationService.BatchResult result = fileApplicationService.batchDelete(nodeIds, userId);
         return BaseResponse.success(result);
@@ -123,7 +124,7 @@ public class FileBatchController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
     public BaseResponse<FileApplicationService.BatchResult> batchMove(
             @Valid @RequestBody NextwikiDTOs.BatchMoveRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         FileApplicationService.BatchResult result = fileApplicationService.batchMove(
                 request.getNodeIds(), request.getTargetParentId(), userId);
@@ -165,7 +166,7 @@ public class FileBatchController {
     public BaseResponse<FileNodeVO> rollbackVersion(
             @PathVariable String nodeId,
             @PathVariable Integer version,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         FileNodeVO result = fileApplicationService.rollbackVersion(nodeId, version, userId);
         return BaseResponse.success(result);
@@ -187,7 +188,7 @@ public class FileBatchController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_STAR)
     public BaseResponse<Void> toggleStar(
             @PathVariable String nodeId,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         fileApplicationService.toggleStar(nodeId, userId);
         return BaseResponse.success();

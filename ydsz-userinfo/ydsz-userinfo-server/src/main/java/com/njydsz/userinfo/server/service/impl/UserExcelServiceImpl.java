@@ -8,6 +8,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.context.AnalysisContext;
+import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
@@ -141,7 +143,20 @@ public class UserExcelServiceImpl implements UserExcelService {
             // 使用 common-excel 的 ExcelFacade 读取
             ExcelFacade.read(inputStream, UserImportDTO.class)
                     .sheet()
-                    .doRead(data -> result.add(data));
+                    .doRead(new ReadListener<UserImportDTO>() {
+                        @Override
+                        public void onStart(AnalysisContext context) {
+                        }
+
+                        @Override
+                        public void onData(AnalysisContext context, UserImportDTO data) {
+                            result.add(data);
+                        }
+
+                        @Override
+                        public void onEnd(AnalysisContext context) {
+                        }
+                    });
             return result;
         } catch (Exception e) {
             log.error("读取 Excel 失败: filename={}, error={}", originalFilename, e.getMessage(), e);

@@ -71,7 +71,7 @@ public interface AppInfoService {
      * @param status   状态过滤（可选）
      * @return 分页结果（VO），统一使用 {@link PageResponse}
      */
-    PageResponse<AppInfoVO> page(int pageNum, int pageSize, String appName, String status);
+    PageResponse<List<AppInfoVO>> page(int pageNum, int pageSize, String appName, String status);
 
     /**
      * 查询全部应用（仅内部使用）

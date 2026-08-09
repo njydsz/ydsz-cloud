@@ -53,16 +53,16 @@ public class ChainAsRule implements Rule {
         // 嵌套子链评估时不需要 ExpressionEvaluator（THEN/WHEN/FOR/WHILE 不需要）
         // 仅 IF/ELIF/SWITCH 需要 evaluator，此处使用 null 降级
         List<RuleResult> results = chain.evaluate(context, null);
-        if (results == null || Response.isEmpty()) {
+        if (results == null || results.isEmpty()) {
             return RuleResult.builder()
                     .ruleCode(getCode())
                     .ruleName(getName())
                     .triggered(false)
                     .build();
         }
-        RuleResult main = Response.get(0);
-        if (Response.size() > 1) {
-            main.setCollectedResults(Response.subList(1, Response.size()));
+        RuleResult main = results.get(0);
+        if (results.size() > 1) {
+            main.setCollectedResults(results.subList(1, results.size()));
         }
         return main;
     }

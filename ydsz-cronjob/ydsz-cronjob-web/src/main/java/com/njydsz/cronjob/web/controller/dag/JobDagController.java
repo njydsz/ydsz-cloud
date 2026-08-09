@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
@@ -300,7 +301,8 @@ public class JobDagController {
     @PostMapping("/{dagId}/rollback")
     public BaseResponse<JobDagVO> rollbackDag(@PathVariable String dagId,
                                                 @RequestParam Integer version) {
-        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagService.rollbackDag(dagId, version)));
+        jobDagService.rollbackDagVersion(dagId, version, AuthContextUtils.getUserId());
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagService.getDagById(dagId)));
     }
     /**
      * 将 PostDTO 转换为 SaveDTO。

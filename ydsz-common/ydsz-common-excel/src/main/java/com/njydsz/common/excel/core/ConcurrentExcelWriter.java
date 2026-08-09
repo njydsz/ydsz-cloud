@@ -206,10 +206,10 @@ public class ConcurrentExcelWriter {
 
             List<ChunkResult> results = new ArrayList<>(chunkCount);
             for (CompletableFuture<ChunkResult> future : futures) {
-                Response.add(future.join());
+                results.add(future.join());
             }
 
-            Response.sort(Comparator.comparingInt(ChunkResult::getChunkIndex));
+            results.sort(Comparator.comparingInt(ChunkResult::getChunkIndex));
             writeMergedFile(results);
             log.info("并发写入完成: 输出文件={}", filePath);
         } finally {

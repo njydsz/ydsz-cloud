@@ -2,7 +2,7 @@ package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
 
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.entity.AuditLog;
 
 /**

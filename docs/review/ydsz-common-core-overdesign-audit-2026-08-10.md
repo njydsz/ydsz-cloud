@@ -85,9 +85,9 @@ ydsz-common-core 经过 Phase 1-3 优化后，骨架设计已处于同类企业�
 
 | 动作 | 时限 | 工作量 |
 |---|---|---|
-| 新增 ArchUnit 测试 `CoreArchTest`：禁止 `BaseResponse.success` 静态方法直接调用，强制走 `Response.ok()` | v1.11 | 2h |
+| 新增 ArchUnit 测试 `CoreArchTest`：禁止 `BaseResponse.success` 静态方法直接调用，强制走 `BaseResponse.success()` | v1.11 | 2h |
 | 存量 70+ 处调用渐进式迁移（每次 PR 迁移一个 Controller，避免大批量风险） | 持续 | 0.5h/次 |
-| IDE Live Template 提供 `rok` → `Response.ok($END$)`、`rof` → `Response.fail($END$)` 模板 | v1.11 | 0.5h |
+| IDE Live Template 提供 `rok` → `BaseResponse.success($END$)`、`rof` → `BaseResponse.error($END$)` 模板 | v1.11 | 0.5h |
 
 ---
 

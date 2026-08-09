@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -169,7 +170,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public BaseResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
+    public PageResponse<List<FlowRunTask>> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
     }
@@ -181,7 +182,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public BaseResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
+    public PageResponse<List<FlowRunTask>> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
     }
@@ -323,7 +324,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public BaseResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    public PageResponse<List<FlowRunTask>> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, String tenantId,
                                                                int page, int size) {

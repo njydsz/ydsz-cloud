@@ -161,7 +161,7 @@ public class RedisAdvancedOps {
         }
         try {
             List<Object> results = redisTemplate.executePipelined(action);
-            return Response.stream().map(clazz::cast).collect(Collectors.toList());
+            return results.stream().map(clazz::cast).collect(Collectors.toList());
         } catch (Exception e) {
             log.error("【Redis】Pipeline 执行失败 | error={}", e);
             return Collections.emptyList();

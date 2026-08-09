@@ -112,7 +112,7 @@ public class RuleStressTestService {
                             try {
                                 List<RuleResult> results = ruleAdminService.dryRun(ruleCode, facts);
                                 // 触发结果消费，避免 JIT 死码消除
-                                if (results != null && !Response.isEmpty()) {
+                                if (results != null && !results.isEmpty()) {
                                     // no-op
                                 }
                             } catch (Exception e) {

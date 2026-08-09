@@ -10,6 +10,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Map;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -109,7 +110,7 @@ public class PluginManager {
 
         return Flux.fromIterable(plugins.values())
                 .filter(p -> p.getType() == type && p.isEnabled())
-                .sorted((a, b) -> Integer.compare(a.getOrder(), b.getOrder()))
+                .sort(Comparator.comparingInt(GatewayPlugin::getOrder))
                 .concatMap(plugin -> plugin.execute(exchange, null)
                         .onErrorResume(e -> {
                             log.warn("[PluginManager] 插件 {} 执行异常: {}",

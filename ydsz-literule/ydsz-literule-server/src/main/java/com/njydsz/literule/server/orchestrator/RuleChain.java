@@ -537,7 +537,7 @@ public class RuleChain {
             return results;
         }
         for (RuleNode node : nodes) {
-            Response.addAll(evaluateNode(node, context, evaluator, statsRecorder));
+            results.addAll(evaluateNode(node, context, evaluator, statsRecorder));
         }
         return results;
     }
@@ -586,7 +586,7 @@ public class RuleChain {
         for (CompletableFuture<List<RuleResult>> future : futures) {
             if (future.isDone() && !future.isCompletedExceptionally()) {
                 try {
-                    Response.addAll(future.join());
+                    results.addAll(future.join());
                 } catch (Exception ignored) {
                     // 跳过异常结果
                 }
@@ -615,7 +615,7 @@ public class RuleChain {
         }
         if (nodes != null) {
             for (RuleNode node : nodes) {
-                Response.addAll(evaluateNode(node, context, evaluator, statsRecorder));
+                results.addAll(evaluateNode(node, context, evaluator, statsRecorder));
             }
         }
         return results;
@@ -640,7 +640,7 @@ public class RuleChain {
             log.warn("[LiteRule-Chain] SWITCH 分支 key '{}' 在上下文中不存在", branchKey);
             // key 不存在时走默认分支
             if (defaultBranch != null) {
-                Response.addAll(evaluateNode(defaultBranch, context, evaluator, statsRecorder));
+                results.addAll(evaluateNode(defaultBranch, context, evaluator, statsRecorder));
             }
             return results;
         }
@@ -649,11 +649,11 @@ public class RuleChain {
             log.warn("[LiteRule-Chain] SWITCH 未匹配到分支: key='{}', 执行默认分支", key);
             // 未匹配到分支时走默认分支
             if (defaultBranch != null) {
-                Response.addAll(evaluateNode(defaultBranch, context, evaluator, statsRecorder));
+                results.addAll(evaluateNode(defaultBranch, context, evaluator, statsRecorder));
             }
             return results;
         }
-        Response.addAll(evaluateNode(branch, context, evaluator, statsRecorder));
+        results.addAll(evaluateNode(branch, context, evaluator, statsRecorder));
         return results;
     }
 
@@ -671,7 +671,7 @@ public class RuleChain {
                 try {
                     boolean matched = evaluator.evalBoolean(branch.getKey(), context);
                     if (matched) {
-                        Response.addAll(evaluateNode(branch.getValue(), context, evaluator, statsRecorder));
+                        results.addAll(evaluateNode(branch.getValue(), context, evaluator, statsRecorder));
                         return results;
                     }
                 } catch (Exception e) {
@@ -681,7 +681,7 @@ public class RuleChain {
         }
         // 所有条件都不匹配，执行 else 分支
         if (elseNode != null) {
-            Response.addAll(evaluateNode(elseNode, context, evaluator, statsRecorder));
+            results.addAll(evaluateNode(elseNode, context, evaluator, statsRecorder));
         }
         return results;
     }
@@ -722,7 +722,7 @@ public class RuleChain {
                             return results;
                         }
                     }
-                    Response.addAll(nodeResults);
+                    results.addAll(nodeResults);
                 }
             }
             count++;
@@ -760,7 +760,7 @@ public class RuleChain {
                             return results;
                         }
                     }
-                    Response.addAll(nodeResults);
+                    results.addAll(nodeResults);
                 }
             }
             iteration++;
@@ -806,14 +806,14 @@ public class RuleChain {
             return results;
         }
         try {
-            Response.addAll(evaluateNode(primaryNode, context, evaluator, statsRecorder));
+            results.addAll(evaluateNode(primaryNode, context, evaluator, statsRecorder));
             log.debug("[LiteRule-Chain] CATCH 主节点执行成功");
         } catch (Exception e) {
             log.warn("[LiteRule-Chain] CATCH 主节点执行异常: {}，触发补偿", e.getMessage());
             if (catchNode != null) {
                 try {
                     List<RuleResult> catchResults = evaluateNode(catchNode, context, evaluator, statsRecorder);
-                    Response.addAll(catchResults);
+                    results.addAll(catchResults);
                     log.info("[LiteRule-Chain] CATCH 补偿节点执行完成, 结果数={}", catchResults.size());
                 } catch (Exception ce) {
                     log.error("[LiteRule-Chain] CATCH 补偿节点也执行异常: {}", ce.getMessage());
@@ -844,7 +844,7 @@ public class RuleChain {
         Exception lastException = null;
         for (int attempt = 1; attempt <= totalAttempts; attempt++) {
             try {
-                Response.addAll(evaluateNode(primaryNode, context, evaluator, statsRecorder));
+                results.addAll(evaluateNode(primaryNode, context, evaluator, statsRecorder));
                 if (attempt > 1) {
                     log.info("[LiteRule-Chain] RETRY 第 {} 次尝试成功 (共 {} 次)", attempt, totalAttempts);
                 } else {
@@ -878,7 +878,7 @@ public class RuleChain {
             log.info("[LiteRule-Chain] RETRY 重试耗尽，执行回滚补偿节点");
             try {
                 List<RuleResult> rollbackResults = evaluateNode(catchNode, context, evaluator, statsRecorder);
-                Response.addAll(rollbackResults);
+                results.addAll(rollbackResults);
             } catch (Exception ce) {
                 log.error("[LiteRule-Chain] RETRY 回滚补偿节点也执行异常: {}", ce.getMessage());
             }
@@ -972,19 +972,19 @@ public class RuleChain {
                                 result != null && result.isTriggered(), error, elapsed);
                     }
                     if (result != null && result.isTriggered()) {
-                        Response.add(result);
+                        results.add(result);
                     }
                 }
                 case CHAIN -> {
                     RuleChain sub = node.getChain();
                     if (sub != null) {
-                        Response.addAll(sub.evaluate(context, evaluator, statsRecorder));
+                        results.addAll(sub.evaluate(context, evaluator, statsRecorder));
                     }
                 }
                 case GROUP -> {
                     if (node.getChildren() != null) {
                         for (RuleNode child : node.getChildren()) {
-                            Response.addAll(evaluateNode(child, context, evaluator, statsRecorder));
+                            results.addAll(evaluateNode(child, context, evaluator, statsRecorder));
                         }
                     }
                 }

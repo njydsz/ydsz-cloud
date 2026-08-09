@@ -165,7 +165,7 @@ public class RuleTestCaseController {
             List<RuleResult> results = ruleAdminService.dryRun(null, tc.getFactsData());
 
             // 获取实际触发的规则编码集合
-            Set<String> actualTriggered = Response.stream()
+            Set<String> actualTriggered = results.stream()
                 .map(RuleResult::getRuleCode)
                 .collect(Collectors.toSet());
 

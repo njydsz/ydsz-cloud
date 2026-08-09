@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.codec.digest.DigestUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,7 @@ public class ChunkUploadApplicationService {
     private final FolderDomainService folderDomainService;
     private final ApplicationEventPublisher eventPublisher;
     private final NextwikiProperties properties;
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -536,9 +538,6 @@ public class ChunkUploadApplicationService {
         private final String name;
         private final String contentType;
         private final long size;
-    /** 分布式 ID 生成器 */
-    private final SnowflakeIdGenerator snowflakeIdGenerator;
-
 
         SimplePathMultipartFile(Path filePath, String name, String contentType) throws IOException {
             this.filePath = filePath;

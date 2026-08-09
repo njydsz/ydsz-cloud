@@ -437,9 +437,9 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
                     .findFirst()
                     .map(this::toDetailMap)
                     .orElseThrow(() -> SysException.builder()
-                    .orElseThrow(() ->     .resultCode(BaseResultCode.NOT_FOUND)
-                    .orElseThrow(() ->     .key("error.workflow.msg_f4a5b6c8").params(templateCode, version)
-                    .orElseThrow(() ->     .build());
+                        .resultCode(BaseResultCode.NOT_FOUND)
+                        .key("error.workflow.msg_f4a5b6c8").params(templateCode, version)
+                        .build());
         } catch (SysException e) {
             throw e;
         } catch (Exception e) {
@@ -718,7 +718,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             if (!"INHERIT".equals(child.getInheritType())) {
                 throw SysException.builder()
                     .resultCode(BaseResultCode.BAD_REQUEST)
-                    .message("error.workflow.msg_d5e6f7a9", childTemplateCode,
+                    .key("error.workflow.msg_d5e6f7a9").params(childTemplateCode,
                         child.getInheritType() != null ? child.getInheritType() : "null")
                     .build();
             }

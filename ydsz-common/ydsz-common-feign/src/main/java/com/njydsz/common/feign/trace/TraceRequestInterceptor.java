@@ -1,6 +1,7 @@
 package com.njydsz.common.feign.trace;
 
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.trace.TraceIdPropagation;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -27,10 +28,17 @@ import feign.RequestTemplate;
  *   <li>降级为 TracerUtils 生成自定义 traceId/spanId</li>
  * </ol>
  *
+ * <p><b>与 {@link TraceIdPropagation} 的协作：</b></p>
+ * <ul>
+ *   <li>标准场景由 {@link TraceIdPropagation#currentTraceIdOrCreate()} 统一解析/创建 traceId</li>
+ *   <li>本拦截器补充分支 spanId/parentSpanId 透传和 W3C traceparent 封装</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  * @see FeignTraceHandler
- * @see SkyWalkingTraceHandler
+ * @see TraceIdPropagation
+ * @see com.njydsz.common.core.trace.TraceIdGenerator
  */
 public class TraceRequestInterceptor implements RequestInterceptor {
 
@@ -207,7 +215,8 @@ public class TraceRequestInterceptor implements RequestInterceptor {
 
         @Override
         public String getCurrentTraceId() {
-            return TracerUtils.getTraceId();
+            // 统一使用 TraceIdPropagation 作为 traceId 源，与框架标准入口对齐
+            return TraceIdPropagation.currentTraceId();
         }
 
         @Override

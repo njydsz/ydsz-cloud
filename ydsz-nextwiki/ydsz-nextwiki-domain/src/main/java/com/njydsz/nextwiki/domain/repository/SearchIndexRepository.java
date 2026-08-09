@@ -2,7 +2,7 @@ package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
 
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 
 /**
@@ -52,6 +52,6 @@ public interface SearchIndexRepository {
      * @param pageSize  每页大小
      * @return 分页搜索结果
      */
-    PageResponse<SearchIndex> searchPage(String keyword, String createdBy, String scope,
+    PageResponse<List<SearchIndex>> searchPage(String keyword, String createdBy, String scope,
                                         int page, int pageSize);
 }

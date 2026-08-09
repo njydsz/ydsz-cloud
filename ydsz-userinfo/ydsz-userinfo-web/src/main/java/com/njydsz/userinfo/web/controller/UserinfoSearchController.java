@@ -97,9 +97,9 @@ public class UserinfoSearchController {
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize,
-            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = HeaderConstants.X_USER_ID, required = false) String userId,
             @RequestHeader(value = HeaderConstants.X_TENANT_ID, required = false) String tenantId,
-            @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader,
+            @RequestHeader(value = HeaderConstants.X_USER_ROLES, required = false) String rolesHeader,
             @RequestHeader(value = "X-User-Dept", required = false) String deptId,
             @RequestHeader(value = "X-User-Admin", required = false) String adminHeader) {
 
@@ -139,7 +139,7 @@ public class UserinfoSearchController {
     @Operation(summary = "重建用户索引")
     @Audit(action = AuditAction.UPDATE, module = "USERINFO", content = "重建用户搜索索引")
     public BaseResponse<Void> rebuildIndex(
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            @RequestHeader(value = HeaderConstants.X_USER_ID, required = false) String userId) {
 
         unifiedSearchService.clearCache();
         log.info("[UserinfoSearch] 索引缓存已清除, userId={}", userId);

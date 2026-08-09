@@ -43,6 +43,7 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.redis.service.RedisService;
 

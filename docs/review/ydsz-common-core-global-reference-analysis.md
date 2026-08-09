@@ -238,9 +238,9 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 
 **现状**：已开发 `Response` 但零采用
 **建议**：
-- 在团队周会/分享中正式推介 `Response.ok(data)` / `Response.fail(BaseResultCode.X)` 用法
+- 在团队周会/分享中正式推介 `BaseResponse.success(data)` / `BaseResponse.error(BaseResultCode.X)` 用法
 - 在编码规范文档中明确"新代码应使用 Response 门面"
-- 提供 IDE 代码模板（Live Template）：`res` → `Response.ok($END$)`
+- 提供 IDE 代码模板（Live Template）：`res` → `BaseResponse.success($END$)`
 - 存量代码通过 `grep 'BaseResponse.success\('` 定位，渐进式迁移
 
 #### S2【P1】推动业务模块实现 `ResultCode` 接口

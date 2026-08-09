@@ -98,7 +98,7 @@ public class GatewayErrorConfig {
             }
 
             BaseResponse<Void> body = BaseResponse.error(String.valueOf(bizCode), message);
-            body.setTraceId(traceId);
+            body.assignTraceId(traceId);
 
             // P0-3: 添加错误文档链接（Link 头 + extensions），帮助前端定位帮助文档
             GatewayErrorCode errorCode = GatewayErrorCode.fromCode(bizCode);

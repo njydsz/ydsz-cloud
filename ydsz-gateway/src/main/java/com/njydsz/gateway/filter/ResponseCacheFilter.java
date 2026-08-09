@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -218,7 +219,7 @@ public class ResponseCacheFilter implements GlobalFilter, Ordered {
      * @return true 如果可缓存
      */
     private boolean canCacheResponse(ServerHttpResponse response) {
-        HttpStatus statusCode = response.getStatusCode();
+        HttpStatusCode statusCode = response.getStatusCode();
         if (statusCode == null || !statusCode.is2xxSuccessful()) {
             return false;
         }

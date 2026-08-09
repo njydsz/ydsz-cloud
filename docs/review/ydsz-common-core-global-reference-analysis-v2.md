@@ -183,8 +183,8 @@ PageConstants 运行时归一化（normalizePageSize、calcOffset 等）**未直
 
 **行动**：
 - 创建编码规范文档，明确：
-  - 新代码应使用 `Response.ok(data)` 而非 `BaseResponse.success(data)`
-  - 新代码应使用 `Response.page(total, num, size, records)` 走分页信封
+  - 新代码应使用 `BaseResponse.success(data)` 而非 `BaseResponse.success(data)`
+  - 新代码应使用 `PageResponse.success(total, num, size, records)` 走分页信封
   - 业务异常码必须实现 `ExceptionCode`（→ `ResultCode`）
 - 提供 IDE Live Template 模板
 - 存量代码渐进式迁移

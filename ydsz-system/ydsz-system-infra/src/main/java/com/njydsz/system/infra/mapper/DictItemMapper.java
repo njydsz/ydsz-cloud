@@ -79,15 +79,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
     /**
      * 批量插入字典项（用于回滚重建）
      *
-     * <p>继承 {@link com.baomidou.mybatisplus.core.mapper.BaseMapper#insert}，
+     * <p>直接继承 {@link com.baomidou.mybatisplus.core.mapper.BaseMapper#insert}，
      * 循环单条插入即可（回滚场景数据量一般 < 1000 条）。
-     *
-     * @param item 字典项实体
-     * @return 插入的记录数
      */
-    @Override
-    default int insert(com.njydsz.system.domain.entity.DictItem item) {
-        // 由 MyBatis-Plus 基类提供默认实现
-        return BaseMapper.super.insert(item);
-    }
 }

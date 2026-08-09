@@ -7,7 +7,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.ConfigDTO;
@@ -74,12 +74,12 @@ public class ConfigController {
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
-        PageResponse<ConfigVO> result = configService.page(query);
+        PageResponse<List<ConfigVO>> result = configService.page(query);
         return PageResponse.success(
                 result.getTotal(),
                 (long) result.getPageNum(),
                 (long) result.getPageSize(),
-                result.getRecords());
+                result.getData());
     }
 
     /**

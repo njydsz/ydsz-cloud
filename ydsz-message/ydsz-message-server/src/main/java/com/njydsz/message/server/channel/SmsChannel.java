@@ -86,7 +86,7 @@ public class SmsChannel implements MessageChannel {
         List<MessageResult> results = provider.batchSend(requests, template);
         log.info("[SmsChannel] 批量发送: provider={} count={} success={}",
                 provider.providerType(), requests.size(),
-                Response.stream().filter(MessageResult::isSuccess).count());
+                results.stream().filter(MessageResult::isSuccess).count());
         return results;
     }
 

@@ -704,10 +704,10 @@ public class RuleLifecycleService {
         for (String code : ruleCodes) {
             try {
                 retireRule(code, operator, reason);
-                Response.put(code, "SUCCESS");
+                results.put(code, "SUCCESS");
                 success++;
             } catch (Exception e) {
-                Response.put(code, "FAILED: " + e.getMessage());
+                results.put(code, "FAILED: " + e.getMessage());
                 failed++;
                 log.warn("[Lifecycle] 批量退役失败: code={}, error={}", code, e.getMessage());
             }

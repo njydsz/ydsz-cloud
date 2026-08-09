@@ -106,13 +106,23 @@ public final class PageConstants {
     }
 
     /**
+     * 获取运行时默认页码。
+     *
+     * @return 运行时配置的默认页码（目前与 {@link #DEFAULT_PAGE_NUM} 一致，预留 CoreProperties 扩展点）
+     * @since 1.11.0
+     */
+    public static int getDefaultPageNum() {
+        return DEFAULT_PAGE_NUM;
+    }
+
+    /**
      * 获取运行时最大每页记录数。
      *
-     * @return 运行时配置的最大每页记录数；未初始化时回退到 1000
+     * @return 运行时配置的最大每页记录数；未初始化时回退到 {@link #MAX_PAGE_SIZE} 编译期上限
      */
     public static int getMaxPageSize() {
         CoreProperties p = PROPERTIES.get();
-        return p != null ? p.getMaxPageSize() : 1000;
+        return p != null ? p.getMaxPageSize() : MAX_PAGE_SIZE;
     }
 
     // ======================== 归一化工具方法 ========================

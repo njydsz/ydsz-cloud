@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.config;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 import com.njydsz.common.domain.query.PageQuery;
 
 import lombok.Data;
@@ -19,14 +21,18 @@ import lombok.EqualsAndHashCode;
 public class UnsubscribeQueryDTO extends PageQuery {
 
     /** 用户 ID（精确匹配） */
+    @Xss
     private String userId;
 
     /** 主题编码（精确匹配） */
+    @Xss
     private String topicCode;
 
     /** 通道（精确匹配） */
+    @Xss
     private String channel;
 
     /** 租户 ID（精确匹配） */
+    @Xss
     private String tenantId;
 }

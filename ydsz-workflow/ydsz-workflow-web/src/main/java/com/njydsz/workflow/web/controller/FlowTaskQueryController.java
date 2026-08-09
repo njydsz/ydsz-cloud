@@ -21,6 +21,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -148,7 +149,7 @@ public class FlowTaskQueryController {
      * @return 统一响应结果，包含分页已办列表
      */
     @GetMapping("/task/done/search")
-    public PageResponse<FlowRunTaskVO> doneSearch(
+    public PageResponse<List<FlowRunTaskVO>> doneSearch(
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowCode,
@@ -158,11 +159,11 @@ public class FlowTaskQueryController {
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
         String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
-        BaseResponse<FlowRunTask> PageResponse = taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
+        PageResponse<List<FlowRunTask>> pageResult = taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize);
-        List<FlowRunTask> tasks = PageResponse.getData();
+        List<FlowRunTask> tasks = pageResult.getData();
         List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(tasks);
-        return PageResponse.success(PageResponse.getTotal(), PageResponse.getPageNum(), PageResponse.getPageSize(), vos);
+        return PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
     }
 
     // ============== P2-31/32/33: 审计运营统计 ==============

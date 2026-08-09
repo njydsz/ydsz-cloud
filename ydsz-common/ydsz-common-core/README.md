@@ -351,36 +351,18 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `requestSource` | `String` | 请求来源（INTERNAL / OPEN_API / WEB_HOOK 等） |
 | `apiVersion` | `String` | API 版本号（用于灰度分流 / API 生命周期管理） |
 
-### 类型安全的 ContextKey 模式
+### 自定义上下文项（字符串键）
+
+对于内置键之外的扩展上下文，请使用字符串键直接读写：
 
 ```java
-import com.njydsz.common.core.context.ContextKey;
+import static com.njydsz.common.core.context.BizContextKeys.KEY_AUTH_INFO;
 
-// 声明类型安全键
-ContextKey<Integer> CUSTOM_FIELD = ContextKey.of("customField", Integer.class);
+// 写入（键名使用 BizContextKeys 常量保证来源统一）
+RequestContext.put(KEY_AUTH_INFO, authInfo);
 
-// 写入
-RequestContext.put(CUSTOM_FIELD, 42);
-
-// 读取（编译期安全，无需强转）
-Integer value = RequestContext.get(CUSTOM_FIELD);
-
-// 带默认值
-Integer safe = RequestContext.getOrDefault(CUSTOM_FIELD, 0);
-```
-
-### Builder 模式（批量设置）
-
-```java
-try (RequestContext.CleanupGuard guard = RequestContext.builder()
-        .userId("user-123")
-        .tenantId("tenant-001")
-        .traceId(TraceIdGenerator.generateTraceId())
-        .language("zh-CN")
-        .set("appId", "my-app")       // 自定义扩展属性
-        .apply()) {
-    // ... 业务逻辑
-} // 自动清理
+// 读取（显式强转）
+AuthInfo info = (AuthInfo) RequestContext.get(KEY_AUTH_INFO);
 ```
 
 ### 防御性清理（推荐）

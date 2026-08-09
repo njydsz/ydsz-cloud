@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -92,7 +93,7 @@ public class SearchController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
     public BaseResponse<SearchResultVO> search(
             @Valid @RequestBody NextwikiDTOs.SearchRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         int page = request.getPage() != null ? request.getPage() : 1;
         int pageSize = request.getPageSize() != null ? request.getPageSize() : 20;
@@ -120,7 +121,7 @@ public class SearchController {
     @PostMapping("/rebuild")
     @Operation(summary = "重建全量索引")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH_REBUILD)
-    public BaseResponse<Void> rebuildIndices(@RequestHeader("X-User-Id") String userId) {
+    public BaseResponse<Void> rebuildIndices(@RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         searchApplicationService.rebuildAllIndices();
         return BaseResponse.success();
     }

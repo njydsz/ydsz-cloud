@@ -72,7 +72,7 @@ public class WorkflowApproverCacheService {
         try {
             String cached = redisService.get(cacheKey, String.class);
             if (cached != null) {
-                List<String> result = YdszJson.fromJsonList(cached, String.class);
+                List<String> result = YdszJson.fromJson(cached, java.util.List.class, String.class);
                 if (result != null) {
                     return result;
                 }
@@ -110,7 +110,7 @@ public class WorkflowApproverCacheService {
         try {
             String cached = redisService.get(cacheKey, String.class);
             if (cached != null) {
-                List<String> result = YdszJson.fromJsonList(cached, String.class);
+                List<String> result = YdszJson.fromJson(cached, java.util.List.class, String.class);
                 if (result != null) {
                     return result;
                 }

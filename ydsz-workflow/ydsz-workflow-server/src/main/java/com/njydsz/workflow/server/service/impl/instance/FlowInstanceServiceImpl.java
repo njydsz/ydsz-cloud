@@ -907,9 +907,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Override
     @Transactional(readOnly = true)
     @DataScope(deptAlias = "", userAlias = "", userColumn = "initiator_id")
-    public BaseResponse<FlowInstance> page(String businessType, String initiatorId, String flowStatus,
-                                           LocalDateTime startTime, LocalDateTime endTime,
-                                           String tenantId, int pageNo, int pageSize) {
+    public PageResponse<List<FlowInstance>> page(String businessType, String initiatorId, String flowStatus,
+                                                LocalDateTime startTime, LocalDateTime endTime,
+                                                String tenantId, int pageNo, int pageSize) {
         // P2-23: 真分页（SQL LIMIT/OFFSET），支持多维度过滤
         int safePage = Math.max(1, pageNo);
         int safeSize = pageSize > 0 ? pageSize : 20;

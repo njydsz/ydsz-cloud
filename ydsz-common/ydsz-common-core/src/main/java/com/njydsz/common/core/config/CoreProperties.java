@@ -73,6 +73,16 @@ public class CoreProperties {
     private int defaultPageSize = 20;
 
     /**
+     * 默认语言环境。
+     *
+     * <p>用于 i18n 消息解析、{@link com.njydsz.common.core.context.RequestContext#setLanguage(String)} 兜底等。
+     * 支持任意 JDK {@link java.util.Locale} 格式（如 {@code zh-CN}、{@code en-US}）。
+     *
+     * @since 1.11.0
+     */
+    private String defaultLocale = "zh-CN";
+
+    /**
      * 租户 MDC 过滤器执行顺序。
      *
      * <p>默认 {@code HIGHEST_PRECEDENCE + 100}，高于业务过滤器。

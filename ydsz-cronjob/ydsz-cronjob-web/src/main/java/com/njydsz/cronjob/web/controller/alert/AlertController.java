@@ -79,7 +79,7 @@ public class AlertController {
     @RateLimit(resource = "cronjob.alert.createRule", threshold = 50)
     @PostMapping("/rule")
     public BaseResponse<String> createRule(@Valid @RequestBody AlertRulePostDTO dto) {
-        return BaseResponse.success(alertService.create(toSaveDTO(dto)));
+        return BaseResponse.success(alertService.createRule(toSaveDTO(dto)));
     }
 
     /**

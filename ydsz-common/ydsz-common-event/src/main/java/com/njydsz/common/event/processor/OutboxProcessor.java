@@ -297,9 +297,9 @@ public class OutboxProcessor {
             List<Boolean> results = publishGateway.publishBatch(messages);
             long durationNanos = System.nanoTime() - startNanos;
 
-            for (int i = 0; i < messages.size() && i < Response.size(); i++) {
+            for (int i = 0; i < messages.size() && i < results.size(); i++) {
                 OutboxMessage message = messages.get(i);
-                if (Response.get(i)) {
+                if (Boolean.TRUE.equals(results.get(i))) {
                     outboxRepository.markAsSent(message.getId());
                     incrementCounter(publishSuccessCounter);
                     log.debug("Outbox message sent: id={}, type={}", message.getId(), message.getEventType());

@@ -176,11 +176,11 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
         }
         try {
             List<Map<String, Object>> results = decisionTableEvalProvider.evaluate(tableCode, variables);
-            if (results == null || Response.isEmpty()) {
+            if (results == null || results.isEmpty()) {
                 log.warn("[FlowRoute] DMN 路由无匹配结果: tableCode={}", tableCode);
                 return null;
             }
-            Map<String, Object> first = Response.get(0);
+            Map<String, Object> first = results.get(0);
             if (first == null || first.isEmpty()) {
                 return null;
             }

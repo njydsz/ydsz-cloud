@@ -92,7 +92,7 @@ public interface DictItemService {
      * @param status   状态过滤（可选）
      * @return 分页结果（VO），统一使用 {@link PageResponse}
      */
-    PageResponse<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status);
+    PageResponse<List<DictItemVO>> page(int pageNum, int pageSize, String typeCode, String itemCode, String status);
 
     /**
      * 查询全部字典项（仅内部使用）

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -112,7 +113,7 @@ public class QuotaController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_SET)
     public BaseResponse<StorageQuota> setQuota(
             @Valid @RequestBody NextwikiDTOs.SetQuotaRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         StorageQuota quota = quotaApplicationService.setQuota(
                 request.getScopeType(),
                 request.getScopeId(),

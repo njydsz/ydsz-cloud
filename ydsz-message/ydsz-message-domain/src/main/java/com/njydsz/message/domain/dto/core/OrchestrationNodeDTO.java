@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.core;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 import java.util.List;
 import java.util.Map;
 
@@ -18,18 +20,23 @@ import lombok.Data;
 public class OrchestrationNodeDTO {
 
     /** 节点 ID（流程内唯一） */
+    @Xss
     private String nodeId;
 
     /** 节点名称 */
+    @Xss
     private String nodeName;
 
     /** 发送通道 */
+    @Xss
     private String channel;
 
     /** 模板编码 */
+    @Xss
     private String templateCode;
 
     /** 接收人（固定值或 SpEL 表达式，如 {@code #{parent.receiver}}） */
+    @Xss
     private String receiver;
 
     /** 模板参数（固定值或 SpEL 表达式） */
@@ -39,6 +46,7 @@ public class OrchestrationNodeDTO {
     private List<String> dependsOn;
 
     /** 执行条件（SpEL 表达式，为空时无条件执行） */
+    @Xss
     private String condition;
 
     /** 节点超时时间（秒，超时自动跳过） */

@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.template;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 
 import lombok.Data;
 
@@ -13,11 +15,14 @@ import lombok.Data;
 public class TemplateAuditDTO {
 
     /** 模板 ID */
+    @Xss
     private String id;
 
     /** 审核状态: DRAFT/AUDITING/APPROVED/REJECTED */
+    @Xss
     private String auditStatus;
 
     /** 审核备注 */
+    @Xss
     private String auditRemark;
 }

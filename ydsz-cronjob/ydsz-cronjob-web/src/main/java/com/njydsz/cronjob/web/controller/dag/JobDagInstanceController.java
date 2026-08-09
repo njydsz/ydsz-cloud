@@ -135,7 +135,7 @@ public class JobDagInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/visualization")
     public BaseResponse<DagInstanceVisualizationVO> getVisualization(@PathVariable String instanceId) {
-        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagInstanceService.getVisualization(instanceId)));
+        return BaseResponse.success(jobDagInstanceService.getVisualization(instanceId));
     }
 
     /**

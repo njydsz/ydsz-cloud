@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowNode;
@@ -165,8 +166,8 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    BaseResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
-                                                   int page, int size);
+    PageResponse<List<FlowRunTask>> listTodoByAssigneePage(String assigneeId, String tenantId,
+                                                        int page, int size);
 
     /**
      * 查用户的已办（不分页）
@@ -186,8 +187,8 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    BaseResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
-                                                   int page, int size);
+    PageResponse<List<FlowRunTask>> listDoneByAssigneePage(String assigneeId, String tenantId,
+                                                        int page, int size);
 
     /**
      * 查用户的待办（多维度匹配：直接分配 + ROLE/DEPT 展开 + ydsz_flow_user 关联）
@@ -389,10 +390,10 @@ public interface FlowTaskService {
      * @param size         每页大小
      * @return 分页结果
      */
-    BaseResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
-                                                       String flowCode, LocalDateTime startTime,
-                                                       LocalDateTime endTime, String tenantId,
-                                                       int page, int size);
+    PageResponse<List<FlowRunTask>> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+                                                            String flowCode, LocalDateTime startTime,
+                                                            LocalDateTime endTime, String tenantId,
+                                                            int page, int size);
 
     /**
      * P2-36: 标记任务超时

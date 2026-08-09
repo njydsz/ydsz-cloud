@@ -116,9 +116,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     @Override
     public List<Map<String, Object>> listTodoTasks(String userId, int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        BaseResponse<FlowRunTask> PageResponse = taskService.listTodoByAssigneePage(
+        PageResponse<List<FlowRunTask>> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), AuthContextUtils.getTenantIdOrDefault("1"), page, size);
-        List<FlowRunTask> list = MapUtils.safeCastList(PageResponse.getData(), FlowRunTask.class);
+        List<FlowRunTask> list = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         return list.stream().map(this::toMap).toList();
     }
 
@@ -126,9 +126,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     public List<Map<String, Object>> listDoneTasks(String userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        BaseResponse<FlowRunTask> PageResponse = taskService.listDoneByAssigneePage(
+        PageResponse<List<FlowRunTask>> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), AuthContextUtils.getTenantIdOrDefault("1"), page, size);
-        List<FlowRunTask> list = MapUtils.safeCastList(PageResponse.getData(), FlowRunTask.class);
+        List<FlowRunTask> list = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         return list.stream().map(this::toMap).toList();
     }
 
@@ -143,15 +143,15 @@ public class YdszWorkflowFacade implements WorkflowFacade {
      * <p>P0-2 修复：返回 {@link PageResponse}，保留 total / page / size，避免前端假分页。
      */
     @Override
-    public BaseResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
-                                                            LocalDateTime startTime, LocalDateTime endTime,
-                                                            int page, int size) {
-        BaseResponse<FlowInstance> PageResponse = instanceService.page(
+    public PageResponse<List<Map<String, Object>>> listAllInstances(String businessType, String flowStatus,
+                                                                 LocalDateTime startTime, LocalDateTime endTime,
+                                                                 int page, int size) {
+        PageResponse<List<FlowInstance>> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContextUtils.getTenantIdOrDefault("1"), page, size);
-        List<FlowInstance> dataList = MapUtils.safeCastList(PageResponse.getData(), FlowInstance.class);
+        List<FlowInstance> dataList = MapUtils.safeCastList(pageResult.getData(), FlowInstance.class);
         List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
-        return PageResponse.success(PageResponse.getTotal(), PageResponse.getPageNum(), PageResponse.getPageSize(), list);
+        return PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
 
     @Override
@@ -226,9 +226,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     @Override
     public int passAllTodoTasks(String userId, String comment) {
         String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
-        BaseResponse<FlowRunTask> PageResponse = taskService.listTodoByAssigneePage(
+        PageResponse<List<FlowRunTask>> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
-        List<FlowRunTask> todos = MapUtils.safeCastList(PageResponse.getData(), FlowRunTask.class);
+        List<FlowRunTask> todos = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         if (todos.isEmpty()) {
             return 0;
         }

@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.core;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 import java.util.List;
 
 import lombok.Data;
@@ -17,18 +19,23 @@ import lombok.Data;
 public class OrchestrationFlowDTO {
 
     /** 流程 ID */
+    @Xss
     private String flowId;
 
     /** 流程名称 */
+    @Xss
     private String flowName;
 
     /** 业务类型 */
+    @Xss
     private String bizType;
 
     /** 业务单据 ID */
+    @Xss
     private String bizId;
 
     /** 触发用户 ID */
+    @Xss
     private String senderId;
 
     /** 节点列表 */

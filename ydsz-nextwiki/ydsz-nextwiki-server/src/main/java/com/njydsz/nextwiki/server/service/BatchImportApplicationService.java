@@ -110,11 +110,11 @@ public class BatchImportApplicationService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        int failed = files.length - Response.size();
+        int failed = files.length - results.size();
         log.info("[BatchImportApplicationService] 批量上传完成: total={}, success={}, failed={}",
-                files.length, Response.size(), failed);
+                files.length, results.size(), failed);
 
-        return BatchImportResult.success(results, files.length, Response.size(), failed);
+        return BatchImportResult.success(results, files.length, results.size(), failed);
     }
 
     /**

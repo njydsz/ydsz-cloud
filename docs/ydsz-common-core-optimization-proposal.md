@@ -141,7 +141,7 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 **落地建议**：在 core README 用一节固化约定——`response.*` 仅用于通用成功/失败文案，`error.<枚举名>` 用于错误码文案；删除永不会被错误路径命中的 `error.SUCCESS`。
 
 ### E3【P2】统一响应门面（facade）
-散落的 `BaseResponse.success/error/error(ResultCode)/successPage` 可收口为一个 `Response` 静态门面，降低记忆成本：`Response.ok(data)`、`Response.fail(BaseResultCode.BIZ_ERROR)`。
+散落的 `BaseResponse.success/error/error(ResultCode)/successPage` 可收口为一个 `Response` 静态门面，降低记忆成本：`BaseResponse.success(data)`、`BaseResponse.error(BaseResultCode.BIZ_ERROR)`。
 
 ### E4【P2】补全单元测试与架构守护
 模块仅引入 `spring-boot-starter-test`，但未见测试类落地情况。建议最低补齐：

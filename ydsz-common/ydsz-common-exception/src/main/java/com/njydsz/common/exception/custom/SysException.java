@@ -228,6 +228,24 @@ public class SysException extends AbstractYdszException {
             return this;
         }
 
+        /**
+         * 覆盖业务错误码（保持链式返回子类类型，便于后续继续调用变长 {@link #params(Object...)}）。
+         */
+        @Override
+        public SysExceptionBuilder code(String code) {
+            this.code = code;
+            return this;
+        }
+
+        /**
+         * 设置国际化消息键（保持链式返回子类类型）。
+         */
+        @Override
+        public SysExceptionBuilder key(String key) {
+            this.key = key;
+            return this;
+        }
+
         @Override
         protected SysException doBuild(String code, String key, Object[] params, int httpStatus,
                                        ExceptionLevel level, ExceptionCategory category,

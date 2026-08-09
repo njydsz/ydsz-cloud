@@ -10,6 +10,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
@@ -101,7 +102,7 @@ public class AuthController {
             content = "'用户登出'")
     @PostMapping("/logout")
     @Operation(summary = "用户登出", description = "将 access_token 加入黑名单")
-    public BaseResponse<Void> logout(@RequestHeader("Authorization") String token) {
+    public BaseResponse<Void> logout(@RequestHeader(HeaderConstants.AUTHORIZATION) String token) {
         String accessToken = token != null && token.startsWith("Bearer ")
                 ? token.substring(7) : token;
         authService.logout(accessToken);
@@ -143,7 +144,7 @@ public class AuthController {
         if (request == null) {
             return null;
         }
-        String ip = request.getHeader("X-Forwarded-For");
+        String ip = request.getHeader(HeaderConstants.X_FORWARDED_FOR);
         if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
             // 多级代理场景：取第一个非 unknown 的 IP
             int idx = ip.indexOf(',');

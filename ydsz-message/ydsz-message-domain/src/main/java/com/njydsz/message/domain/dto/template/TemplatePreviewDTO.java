@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.template;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 
 import java.util.Map;
 
@@ -21,12 +23,14 @@ import lombok.Data;
 public class TemplatePreviewDTO {
 
     /** 模板编码（二选一：templateCode 或 content） */
+    @Xss
     private String templateCode;
 
     /** 模板内容（草稿预览时直接传入，不走模板查询） */
     private String content;
 
     /** 语言区域 */
+    @Xss
     private String locale;
 
     /** 渲染参数 */

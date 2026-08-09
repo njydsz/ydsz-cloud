@@ -74,11 +74,11 @@ public class GlueCodeController {
     @RateLimit(resource = "cronjob.gluecode.save", threshold = 50)
     @PostMapping("/save")
     public BaseResponse<GlueCodeVO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
-        return BaseResponse.success(glueCodeService.save(
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(glueCodeService.save(
                 request.getJobId(),
                 request.getSourceCode(),
                 request.getLanguage(),
-                request.getRemark()));
+                request.getRemark())));
     }
 
     /**

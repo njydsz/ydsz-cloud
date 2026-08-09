@@ -1295,7 +1295,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             metrics.recordEvaluatedRules(candidateRules.size());
         }
         // P1-1 规则与消息通知联动：评估完成后分发动作
-        if (actionDispatcher != null && !Response.isEmpty()) {
+        if (actionDispatcher != null && !results.isEmpty()) {
             actionDispatcher.dispatchActions(results, context);
         }
         return results;

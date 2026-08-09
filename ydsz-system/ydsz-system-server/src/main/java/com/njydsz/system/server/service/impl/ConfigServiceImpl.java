@@ -23,6 +23,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.system.domain.dto.ConfigDTO;
+import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemResultCode;
@@ -119,7 +120,7 @@ public class ConfigServiceImpl implements ConfigService {
     // ============================== CRUD ==============================
 
     @Override
-    public BaseResponse<List<ConfigVO>> page(ConfigPageQuery query) {
+    public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
         QueryWrapper<Config> wrapper = buildQueryWrapper(query);
         Page<Config> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<Config> result = configRepository.getConfigMapper().selectPage(mpPage, wrapper);
@@ -127,7 +128,7 @@ public class ConfigServiceImpl implements ConfigService {
                 .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        return PageResponse.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
+        return PageResponse.success(result.getTotal(), result.getCurrent(), result.getSize(), vos);
     }
 
     @Override
@@ -383,7 +384,7 @@ public class ConfigServiceImpl implements ConfigService {
             return switch (type) {
                 case STRING -> configValue.length() > MAX_STRING_LENGTH
                         ? "字符串长度超过限制 " + MAX_STRING_LENGTH : null;
-                case INTEGER, NUMBER -> {
+                case NUMBER -> {
                     double v = Double.parseDouble(configValue.trim());
                     if (v < MIN_NUMBER || v > MAX_NUMBER) {
                         yield "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
@@ -400,10 +401,10 @@ public class ConfigServiceImpl implements ConfigService {
                     yield null;
                 }
             };
-        } catch (IllegalArgumentException e) {
-            return "未知的值类型: " + valueType;
         } catch (NumberFormatException e) {
             return "数值格式非法";
+        } catch (IllegalArgumentException e) {
+            return "未知的值类型: " + valueType;
         } catch (Exception e) {
             return e.getMessage() != null ? e.getMessage() : "校验异常";
         }

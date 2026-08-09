@@ -110,7 +110,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
     public List<Boolean> publishBatch(List<OutboxMessage> messages) {
         List<Boolean> results = new ArrayList<>(messages.size());
         for (OutboxMessage message : messages) {
-            Response.add(publish(message));
+            results.add(publish(message));
         }
         return results;
     }

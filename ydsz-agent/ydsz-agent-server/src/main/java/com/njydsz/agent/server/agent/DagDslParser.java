@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -39,10 +41,12 @@ import com.njydsz.agent.domain.agent.AgentDag;
  * @since 1.0.0
  */
 @Component
+@RequiredArgsConstructor
 public class DagDslParser {
 
     private static final Logger log = LoggerFactory.getLogger(DagDslParser.class);
     private final Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     /**
      * 解析 YAML DSL

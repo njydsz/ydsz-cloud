@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.domain.entity.FileNode;
@@ -100,7 +101,7 @@ public class AnalysisController {
     @Operation(summary = "获取存储概览")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<StorageAnalysisApplicationService.StorageOverview> getOverview(
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         return BaseResponse.success(storageAnalysisService.getUserOverview(userId));
     }
 
@@ -117,7 +118,7 @@ public class AnalysisController {
     @Operation(summary = "按文件类型统计")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<Map<String, StorageAnalysisApplicationService.TypeStats>> statsByType(
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
         return BaseResponse.success(storageAnalysisService.statsByType(userId));
     }
 
@@ -134,7 +135,7 @@ public class AnalysisController {
     @Operation(summary = "大文件 Top-N")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<List<FileNode>> topLargeFiles(
-            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId,
             @RequestParam(defaultValue = "10") int limit) {
         return BaseResponse.success(storageAnalysisService.topLargeFiles(userId, limit));
     }

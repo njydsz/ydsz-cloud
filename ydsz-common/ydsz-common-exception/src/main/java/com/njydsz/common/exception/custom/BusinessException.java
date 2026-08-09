@@ -83,6 +83,21 @@ public class BusinessException extends AbstractYdszException {
     }
 
     /**
+     * 使用自定义消息构造业务异常（兼容构造器）。
+     *
+     * <p>保留给 {@code new BusinessException("...")} 形式的存量调用方，
+     * 新代码请优先使用 {@link #builder()}。</p>
+     *
+     * @param message 自定义异常消息
+     */
+    public BusinessException(String message) {
+        super(message);
+        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        this.key = DEFAULT_CODE;
+        this.messageKey = DEFAULT_CODE;
+    }
+
+    /**
      * 使用异常码枚举构造业务异常
      *
      * @param exceptionCode 异常码枚举
@@ -116,6 +131,41 @@ public class BusinessException extends AbstractYdszException {
     public BusinessException(ExceptionCode exceptionCode, String message) {
         super(message);
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
+    /**
+     * 使用异常码枚举与消息参数构造业务异常（兼容构造器）。
+     *
+     * <p>保留给 {@code new BusinessException(resultCode, new Object[]{...})} 形式的存量调用方，
+     * 新代码请优先使用 {@link #builder()}。</p>
+     *
+     * @param exceptionCode 异常码枚举
+     * @param params        国际化消息参数
+     */
+    public BusinessException(ExceptionCode exceptionCode, Object[] params) {
+        super();
+        init(exceptionCode, params == null ? new Object[]{} : params, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
+    /**
+     * 使用统一结果码构造业务异常（兼容构造器）。
+     *
+     * <p>保留给 {@code new BusinessException(BaseResultCode.X)} 形式的存量调用方
+     * （{@code ResultCode} 体系），新代码请优先使用 {@link #builder()}。</p>
+     *
+     * @param resultCode 统一结果码
+     */
+    public BusinessException(ResultCode resultCode) {
+        super();
+        if (resultCode != null) {
+            int httpStatus = resultCode.getHttpStatusCode() > 0
+                    ? resultCode.getHttpStatusCode() : DEFAULT_HTTP_STATUS;
+            init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
+                    httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        } else {
+            initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+            initFields(DEFAULT_CODE, DEFAULT_CODE, new Object[]{});
+        }
     }
 
     // ==================== 业务方法 ====================
@@ -214,6 +264,24 @@ public class BusinessException extends AbstractYdszException {
         @Override
         public BusinessExceptionBuilder params(Object... params) {
             this.params = params;
+            return this;
+        }
+
+        /**
+         * 覆盖业务错误码（保持链式返回子类类型，便于后续继续调用变长 {@link #params(Object...)}）。
+         */
+        @Override
+        public BusinessExceptionBuilder code(String code) {
+            this.code = code;
+            return this;
+        }
+
+        /**
+         * 设置国际化消息键（保持链式返回子类类型）。
+         */
+        @Override
+        public BusinessExceptionBuilder key(String key) {
+            this.key = key;
             return this;
         }
 

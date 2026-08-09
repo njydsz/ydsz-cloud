@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.core;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 
 import java.util.Map;
 
@@ -25,12 +27,15 @@ import lombok.Data;
 public class MessageSendDTO {
 
     /** 通道 */
+    @Xss
     private String channel;
 
     /** 模板编码 */
+    @Xss
     private String templateCode;
 
     /** 接收人 */
+    @Xss
     private String receiver;
 
     /** 模板参数(用于占位符渲染) */
@@ -40,26 +45,34 @@ public class MessageSendDTO {
     private String content;
 
     /** 邮件主题(仅 EMAIL) */
+    @Xss
     private String subject;
 
     /** 业务类型 */
+    @Xss
     private String bizType;
 
     /** 业务单据 ID */
+    @Xss
     private String bizId;
 
     /** 发送优先级 */
+    @Xss
     private String priority;
 
     /** 消息唯一标识(用于幂等去重) */
+    @Xss
     private String messageId;
 
     /** 触发发送的用户 ID */
+    @Xss
     private String senderId;
 
     /** 聚合组 */
+    @Xss
     private String messageGroup;
 
     /** 语言区域 */
+    @Xss
     private String locale;
 }

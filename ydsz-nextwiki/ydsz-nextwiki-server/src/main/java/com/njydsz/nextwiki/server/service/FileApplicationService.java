@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
@@ -289,7 +291,7 @@ public class FileApplicationService {
      * @complexity O(query)（一次数据库分页查询 + 结果映射）
      * @note 只读、无事务边界；分页由 DB 完成，不存在内存爆量风险
      */
-    public BaseResponse<List<FileNodeVO>> listFiles(String parentId, String userId,
+    public PageResponse<List<FileNodeVO>> listFiles(String parentId, String userId,
                                               String sortBy, String sortDir,
                                               String type, int page, int pageSize) {
         // 解析父目录ID（与原 listChildren 保持一致：根目录自动解析）
@@ -297,12 +299,15 @@ public class FileApplicationService {
         String resolvedParentId = parent.getId();
 
         // 数据库分页查询（含类型过滤与排序）
-        PageResponse<FileNode> PageResponse = fileNodeRepository.findPageChildren(
+        PageResponse<List<FileNode>> pageResult = fileNodeRepository.findPageChildren(
                 resolvedParentId, type, normalizeSortBy(sortBy), normalizeSortDir(sortDir),
                 page, pageSize);
 
         // DO → VO 转换
-        return PageResponse.convert(node -> NextwikiConverter.INSTANT.entityToVO(node));
+        List<FileNodeVO> vos = pageResult.getData().stream()
+                .map(NextwikiConverter.INSTANT::entityToVO)
+                .collect(Collectors.toList());
+        return PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
     }
 
     /**

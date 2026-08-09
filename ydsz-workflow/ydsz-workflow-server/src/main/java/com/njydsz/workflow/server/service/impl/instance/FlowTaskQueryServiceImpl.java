@@ -176,7 +176,7 @@ public class FlowTaskQueryServiceImpl {
     /**
      * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET）
      */
-    public BaseResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
+    public PageResponse<List<FlowRunTask>> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
@@ -191,7 +191,7 @@ public class FlowTaskQueryServiceImpl {
     /**
      * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET）
      */
-    public BaseResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
+    public PageResponse<List<FlowRunTask>> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET） — 走历史表
         String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
@@ -210,7 +210,7 @@ public class FlowTaskQueryServiceImpl {
     /**
      * P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET）
      */
-    public BaseResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    public PageResponse<List<FlowRunTask>> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, String tenantId,
                                                                int page, int size) {

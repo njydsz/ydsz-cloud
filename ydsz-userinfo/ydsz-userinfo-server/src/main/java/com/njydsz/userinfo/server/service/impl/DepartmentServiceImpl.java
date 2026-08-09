@@ -226,7 +226,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         try {
             String cachedJson = redisService.get(CACHE_KEY_DEPT_TREE, String.class);
             if (cachedJson != null && !cachedJson.isBlank()) {
-                List<DepartmentTreeVO> cached = YdszJson.fromJsonList(cachedJson, DepartmentTreeVO.class);
+                List<DepartmentTreeVO> cached = YdszJson.fromJson(cachedJson, java.util.List.class, DepartmentTreeVO.class);
                 if (cached != null) {
                     log.debug("Department tree loaded from cache");
                     return cached;

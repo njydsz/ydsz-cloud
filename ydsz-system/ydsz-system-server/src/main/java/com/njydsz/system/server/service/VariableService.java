@@ -72,7 +72,7 @@ public interface VariableService {
      * @param status      状态过滤（可选）
      * @return 分页结果（VO），统一使用 {@link PageResponse}
      */
-    PageResponse<VariableVO> page(int pageNum, int pageSize, String variableKey, String status);
+    PageResponse<List<VariableVO>> page(int pageNum, int pageSize, String variableKey, String status);
 
     /**
      * 查询全部系统变量（仅内部使用）

@@ -141,7 +141,7 @@ public class JobWebhookController {
     @Operation(summary = "分页查询 WebHook 订阅")
     @GetMapping("/page")
     public PageResponse<List<JobWebhookVO>> page(
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String eventType,
             @RequestParam(required = false) String jobKey) {
@@ -152,7 +152,7 @@ public class JobWebhookController {
                 .eq(jobKey != null && !jobKey.isBlank(),
                         w -> w.getJobKey(), jobKey)
                 .orderByDesc(w -> w.getCreatedAt());
-        Page<JobWebhook> page = webhookMapper.selectPage(new Page<>(page, size), wrapper);
+        Page<JobWebhook> page = webhookMapper.selectPage(new Page<>(pageNum, size), wrapper);
         return PageResponse.success(
                 page.getTotal(),
                 page.getCurrent(),

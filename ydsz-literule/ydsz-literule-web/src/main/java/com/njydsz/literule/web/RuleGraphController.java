@@ -188,7 +188,7 @@ public class RuleGraphController {
                                                  @RequestBody Map<String, Object> facts) {
         try {
             List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
-            return BaseResponse.success(Response.stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
+            return BaseResponse.success(results.stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
         } catch (IllegalArgumentException e) {
             log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
             return BaseResponse.error(e.getMessage());

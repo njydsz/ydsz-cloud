@@ -304,7 +304,7 @@ public class PermissionPreChecker {
         }
         List<PermissionCheckResult> results = new ArrayList<>();
         for (PermissionCheckItem check : checks) {
-            Response.add(checkPermissions(check.type, check.permissions, check.mode));
+            results.add(checkPermissions(check.type, check.permissions, check.mode));
         }
         return results;
     }

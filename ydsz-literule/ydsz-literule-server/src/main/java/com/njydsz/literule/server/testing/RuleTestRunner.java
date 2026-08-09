@@ -92,7 +92,7 @@ public class RuleTestRunner {
             long elapsed = System.currentTimeMillis() - start;
 
             // 获取实际触发的规则编码集合
-            Set<String> actualTriggered = Response.stream()
+            Set<String> actualTriggered = results.stream()
                     .filter(RuleResult::isTriggered)
                     .map(RuleResult::getRuleCode)
                     .collect(Collectors.toSet());
@@ -161,24 +161,24 @@ public class RuleTestRunner {
 
         for (RuleTestCase tc : testCases) {
             RuleTestResult result = run(tc);
-            Response.add(result);
+            results.add(result);
         }
 
         long totalElapsed = System.currentTimeMillis() - suiteStart;
-        int passed = (int) Response.stream().filter(RuleTestResult::isPassed).count();
-        int failed = Response.size() - passed;
+        int passed = (int) results.stream().filter(RuleTestResult::isPassed).count();
+        int failed = results.size() - passed;
 
-        List<RuleTestResult> failedResults = Response.stream()
+        List<RuleTestResult> failedResults = results.stream()
                 .filter(r -> !r.isPassed())
                 .collect(Collectors.toList());
 
         return RuleTestReport.builder()
                 .suiteName(suiteName != null ? suiteName : "default")
-                .total(Response.size())
+                .total(results.size())
                 .passed(passed)
                 .failed(failed)
                 .skipped(0)
-                .passRate(RuleTestReport.calculatePassRate(passed, Response.size()))
+                .passRate(RuleTestReport.calculatePassRate(passed, results.size()))
                 .totalElapsedMs(totalElapsed)
                 .results(results)
                 .failedResults(failedResults)

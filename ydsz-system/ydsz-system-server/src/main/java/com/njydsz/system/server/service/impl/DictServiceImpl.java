@@ -105,7 +105,7 @@ public class DictServiceImpl implements DictService {
      * @return 分页结果（含 {@code records / total}）
      */
     @Override
-    public BaseResponse<List<DictTypeVO>> page(DictPageQuery query) {
+    public PageResponse<List<DictTypeVO>> page(DictPageQuery query) {
         QueryWrapper<DictType> wrapper = buildQueryWrapper(query);
         Page<DictType> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<DictType> result = dictRepository.getDictTypeMapper().selectPage(mpPage, wrapper);
@@ -113,7 +113,7 @@ public class DictServiceImpl implements DictService {
                 .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        return PageResponse.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
+        return PageResponse.success(result.getTotal(), result.getCurrent(), result.getSize(), vos);
     }
 
     /**

@@ -338,11 +338,11 @@ public class MapTaskExecutor {
         List<ProcessResult> results = new ArrayList<>(futures.size());
         for (CompletableFuture<ProcessResult> f : futures) {
             try {
-                Response.add(f.get());
+                results.add(f.get());
             } catch (Exception e) {
                 log.error("[MapTaskExecutor] 获取子任务结果异常: key={} logId={} reason={}",
                         jobKey, logId, e.getMessage(), e);
-                Response.add(ProcessResult.failed("获取子任务结果异常: " + e.getMessage()));
+                results.add(ProcessResult.failed("获取子任务结果异常: " + e.getMessage()));
             }
         }
         return results;
@@ -375,7 +375,7 @@ public class MapTaskExecutor {
             subContext.setTaskParams(subTask.getTaskParams());
             subContext.setRoot(false);
             ProcessResult subResult = executeTask(processor, subContext, subTaskDO, jobKey, logId);
-            Response.add(subResult);
+            results.add(subResult);
         }
         return results;
     }

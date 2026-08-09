@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.core;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 import java.util.List;
 
 import lombok.Data;
@@ -17,24 +19,29 @@ import lombok.Data;
 public class CardMessageDTO {
 
     /** 卡片标题 */
+    @Xss
     private String title;
 
     /** 卡片内容（支持 Markdown） */
     private String content;
 
     /** 卡片图标标识 */
+    @Xss
     private String icon;
 
     /** 按钮列表 */
     private List<CardButton> buttons;
 
     /** 跳转 URL（单按钮时直接跳转） */
+    @Xss
     private String actionUrl;
 
     /** 跳转按钮文案 */
+    @Xss
     private String actionText;
 
     /** 通知级别 */
+    @Xss
     private String level;
 
     /**
@@ -43,10 +50,13 @@ public class CardMessageDTO {
     @Data
     public static class CardButton {
         /** 按钮文案 */
+        @Xss
         private String text;
         /** 按钮跳转 URL */
+        @Xss
         private String url;
         /** 按钮样式: primary / default / danger / warning */
+        @Xss
         private String style;
     }
 }

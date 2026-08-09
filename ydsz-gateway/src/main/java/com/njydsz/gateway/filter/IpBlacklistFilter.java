@@ -166,7 +166,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, "error.IP_BLACKLISTED");
-        body.setTraceId(traceId);
+        body.assignTraceId(traceId);
         byte[] bytes = YdszJson.toJsonBytes(body);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));

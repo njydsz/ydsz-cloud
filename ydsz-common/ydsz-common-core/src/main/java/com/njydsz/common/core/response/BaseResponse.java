@@ -7,7 +7,8 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.slf4j.MDC;
 
@@ -47,7 +48,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * @see IResponse
  * @see Response
  */
-@Data
+@Getter
+@Setter
 @SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"code", "msg", "data", "traceId", "requestId", "spanId", "timestamp", "extensions"})
@@ -84,11 +86,13 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 返回编码
      */
+    @Setter
     private String code;
 
     /**
      * 返回信息
      */
+    @Setter
     private String msg;
 
     /**
@@ -97,6 +101,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * <p>泛型类型 T 无法限定为 Serializable（API 响应可携带任意类型数据），
      * Java 序列化非主要序列化方式（项目使用 Jackson JSON），此处抑制编译器警告。
      */
+    @Setter
     private T data;
 
     /**
@@ -110,20 +115,21 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 请求 ID（用于客户端/前端精准排障，单个请求唯一）。
      *
-     * <p>为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 控制）。</p>
+     * <p>volatile + 懒加载：为 {@code null} 时首次访问从 {@link RequestContext#getRequestId()} 解析并缓存。</p>
      *
      * @since 1.10.0
      */
-    private String requestId;
+    private transient volatile String requestId;
 
     /**
      * 当前服务调用的 Span ID（W3C Trace Context span ID）。
      *
-     * <p>为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 控制）。</p>
+     * <p>volatile + 懒加载：traceId 被解析后若 spanId 为空，
+     * 自动调用 {@link com.njydsz.common.core.trace.TraceIdGenerator#generateSpanId()} 生成。</p>
      *
      * @since 1.10.0
      */
-    private String spanId;
+    private transient volatile String spanId;
 
     /**
      * 时间戳
@@ -446,6 +452,59 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
             traceId = tid;
         }
         return tid;
+    }
+
+    /**
+     * 显式分配 traceId（覆盖懒解析值）。
+     *
+     * <p>供网关/过滤器在入口处强制设置 traceId 使用，替代旧版 {@code setTraceId}。
+     * 仅应在明确需要覆盖懒解析值时使用（如网关统一写入 traceId 到响应体）。</p>
+     *
+     * @param traceId 要设置的 traceId
+     * @since 1.11.0
+     */
+    public void assignTraceId(String traceId) {
+        this.traceId = traceId;
+    }
+
+    /**
+     * 获取请求 ID（懒加载）。
+     *
+     * <p>首次调用时从 {@link RequestContext#getRequestId()} 解析并缓存结果，
+     * 后续调用直接返回缓存值。</p>
+     *
+     * @return 当前 requestId；上下文未设置时返回 null
+     */
+    public String getRequestId() {
+        String rid = requestId;
+        if (rid == null) {
+            rid = RequestContext.getRequestId();
+            if (rid != null) {
+                requestId = rid;
+            }
+        }
+        return rid;
+    }
+
+    /**
+     * 获取 Span ID（懒加载）。
+     *
+     * <p>traceId 被解析后若 spanId 为空，自动生成 16 字符 spanId 并缓存。
+     * 仅当 traceId 非 null 时才会生成 spanId。</p>
+     *
+     * @return spanId；traceId 未设置时不生成，返回 null
+     */
+    public String getSpanId() {
+        String sid = spanId;
+        if (sid == null) {
+            // ensure traceId resolved first so we know if it's present
+            String tid = getTraceId();
+            if (tid != null) {
+                sid = com.njydsz.common.core.trace.TraceIdGenerator.generateSpanId();
+                spanId = sid;
+            }
+        }
+        return sid;
     }
 
     // ======================== 扩展字段操作 ========================

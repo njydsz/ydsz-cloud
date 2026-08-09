@@ -19,8 +19,11 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.constant.HeaderConstants;
+import java.util.List;
+
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -125,7 +128,7 @@ public class FileController {
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestParam(value = "rename", required = false) String rename,
             @RequestParam(value = "versionRemark", required = false) String versionRemark,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         FileNodeVO result = fileApplicationService.upload(file, parentId, rename, versionRemark, userId);
         healthIndicator.recordUpload();
@@ -148,7 +151,7 @@ public class FileController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FOLDER_CREATE)
     public BaseResponse<FileNodeVO> createFolder(
             @Valid @RequestBody NextwikiDTOs.CreateFolderRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         FileNodeVO result = fileApplicationService.createFolder(
                 request.getParentId(), request.getName(), userId);
@@ -173,18 +176,17 @@ public class FileController {
     @GetMapping("/list")
     @Operation(summary = "列出目录内容", description = "支持排序、过滤、分页（数据库分页）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_LIST)
-    public BaseResponse<PageResponse<FileNodeVO>> listFiles(
+    public PageResponse<List<FileNodeVO>> listFiles(
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "sortDir", required = false) String sortDir,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "pageSize", defaultValue = "50") int pageSize,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
-        PageResponse<FileNodeVO> result = fileApplicationService.listFiles(
+        return fileApplicationService.listFiles(
                 parentId, userId, sortBy, sortDir, type, page, pageSize);
-        return BaseResponse.success(result);
     }
 
     /**
@@ -205,7 +207,7 @@ public class FileController {
     public BaseResponse<FileNodeVO> move(
             @PathVariable String nodeId,
             @Valid @RequestBody NextwikiDTOs.MoveRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         FileNodeVO result = fileApplicationService.move(nodeId, request.getTargetParentId(), userId);
         return BaseResponse.success(result);
@@ -229,7 +231,7 @@ public class FileController {
     public BaseResponse<FileNodeVO> rename(
             @PathVariable String nodeId,
             @Valid @RequestBody NextwikiDTOs.RenameRequest request,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         FileNodeVO result = fileApplicationService.rename(nodeId, request.getNewName(), userId);
         return BaseResponse.success(result);
@@ -252,7 +254,7 @@ public class FileController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
     public BaseResponse<Void> delete(
             @PathVariable String nodeId,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         fileApplicationService.delete(nodeId, userId);
         healthIndicator.recordDelete();
@@ -279,7 +281,7 @@ public class FileController {
     public BaseResponse<FileNodeVO> copy(
             @PathVariable String nodeId,
             @RequestParam("targetParentId") String targetParentId,
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
 
         FileNodeVO result = fileApplicationService.copy(nodeId, targetParentId, userId);
         return BaseResponse.success(result);

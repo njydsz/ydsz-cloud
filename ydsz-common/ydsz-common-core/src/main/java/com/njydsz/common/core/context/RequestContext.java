@@ -345,18 +345,18 @@ public final class RequestContext {
     }
 
     /**
-     * 设置属性
+     * 设置属性（字符串键）。
      *
      * <p>首次调用时创建上下文 Map（懒初始化）。
      * 传入 {@code null} 值等同于 {@link #remove(String)}。</p>
      *
+     * <p>键名建议使用 {@code BizContextKeys.KEY_*} 常量（如 {@code BizContextKeys.KEY_AUTH_INFO}），
+     * 保证整个项目的键名来源统一、避免散落的字符串字面量。</p>
+     *
      * @param key   属性键
      * @param value 属性值
-     * @deprecated 请使用类型安全的 {@link #put(ContextKey, Object)} 替代，编译期保证类型安全，
-     *             避免运行时的 ClassCastException。本方法将在 2.0 移除。
      * @since 1.0.0
      */
-    @Deprecated(since = "1.10", forRemoval = true)
     public static void put(String key, Object value) {
         if (key == null) {
             throw new NullPointerException("key cannot be null");
@@ -374,55 +374,20 @@ public final class RequestContext {
     }
 
     /**
-     * 使用类型安全的 {@link ContextKey} 设置属性（推荐）。
-     *
-     * <p>编译期保证类型安全，避免运行时的 ClassCastException。</p>
-     *
-     * @param <T>   值类型
-     * @param key   上下文键
-     * @param value 属性值
-     * @since 1.5.0
-     * @deprecated 直接调用 {@link #put(String, Object)} 并传入 {@link ContextKey#key()} 更简单。
-     *             例如：{@code put(KEY_AUTH_INFO, value)}。
-     * @see ContextKey
-     */
-    @Deprecated(since = "1.9.3", forRemoval = true)
-    public static <T> void put(ContextKey<T> key, T value) {
-        put(key.key(), value);
-    }
-
-    /**
-     * 获取属性
+     * 获取属性（字符串键）。
      *
      * <p>上下文未初始化时返回 null，不触发 Map 创建。</p>
      *
+     * <p>键名建议使用 {@code BizContextKeys.KEY_*} 常量（如 {@code BizContextKeys.KEY_AUTH_INFO}），
+     * 并通过显式强制类型转换获取值：{@code (AuthInfo) get(BizContextKeys.KEY_AUTH_INFO)}。</p>
+     *
      * @param key 属性键
      * @return 属性值，如果不存在返回 null
-     * @deprecated 请使用类型安全的 {@link #get(ContextKey)} 替代，避免手动强转。本方法将在 2.0 移除。
+     * @since 1.0.0
      */
-    @Deprecated(since = "1.10", forRemoval = true)
     public static Object get(String key) {
         Map<String, Object> holder = CONTEXT_HOLDER.get();
         return holder != null ? holder.get(key) : null;
-    }
-
-    /**
-     * 使用类型安全的 {@link ContextKey} 获取属性（推荐）。
-     *
-     * <p>返回值已是目标类型，无需手动转型。</p>
-     *
-     * @param <T> 值类型
-     * @param key 上下文键
-     * @return 属性值；不存在则返回 null
-     * @since 1.5.0
-     * @deprecated 直接调用 {@link #get(String)} 并传入 {@link ContextKey#key()} 更简单。
-     *             例如：{@code (String) get(KEY_AUTH_INFO)}。
-     * @see ContextKey
-     */
-    @Deprecated(since = "1.9.3", forRemoval = true)
-    public static <T> T get(ContextKey<T> key) {
-        Object value = get(key.key());
-        return key.cast(value);
     }
 
     /**
@@ -452,26 +417,6 @@ public final class RequestContext {
     }
 
     /**
-     * 使用类型安全的 {@link ContextKey} 获取属性，不存在时返回默认值（推荐）。
-     *
-     * <p>对标 {@link Map#getOrDefault(Object, Object)} 语义，
-     * 避免调用方手动判空。</p>
-     *
-     * @param <T>          值类型
-     * @param key          上下文键
-     * @param defaultValue 不存在时返回的默认值
-     * @return 属性值；不存在则返回 defaultValue
-     * @since 1.7.0
-     * @deprecated 直接调用 {@link #get(String)} 并手动判空更简单。
-     * @see ContextKey
-     */
-    @Deprecated(since = "1.9.3", forRemoval = true)
-    public static <T> T getOrDefault(ContextKey<T> key, T defaultValue) {
-        T value = get(key);
-        return value != null ? value : defaultValue;
-    }
-
-    /**
      * 移除属性
      *
      * @param key 属性键
@@ -481,19 +426,6 @@ public final class RequestContext {
         if (holder != null) {
             holder.remove(key);
         }
-    }
-
-    /**
-     * 使用类型安全的 {@link ContextKey} 移除属性（推荐）。
-     *
-     * @param key 上下文键
-     * @since 1.5.0
-     * @deprecated 直接调用 {@link #remove(String)} 并传入 {@link ContextKey#key()} 更简单。
-     *             例如：{@code remove(KEY_AUTH_INFO)}。
-     */
-    @Deprecated(since = "1.9.3", forRemoval = true)
-    public static void remove(ContextKey<?> key) {
-        remove(key.key());
     }
 
     /**
@@ -532,7 +464,10 @@ public final class RequestContext {
      *
      * @return 认证信息（通常实现为 AuthInfo），不存在返回 null
      * @since 1.9.0
+     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_AUTH_INFO)} 并手动强转，
+     *             或后续版本引入类型安全的 {@link ContextKey} 模式。
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static Object getAuthInfo() {
         return get(BizContextKeys.KEY_AUTH_INFO);
     }
@@ -544,7 +479,9 @@ public final class RequestContext {
      * @param <T> 类型参数
      * @return 认证信息，不存在或类型不匹配返回 null
      * @since 1.9.0
+     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_AUTH_INFO)} 并手动强转。
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     @SuppressWarnings("unchecked")
     public static <T> T getAuthInfo(Class<T> type) {
         Object authInfo = get(BizContextKeys.KEY_AUTH_INFO);
@@ -556,7 +493,9 @@ public final class RequestContext {
      *
      * @param loginUser 登录用户信息
      * @since 1.9.0
+     * @deprecated 请使用 {@link #put(String, Object) put(BizContextKeys.KEY_LOGIN_USER, loginUser)}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static void setLoginUser(Object loginUser) {
         if (loginUser == null) {
             remove(BizContextKeys.KEY_LOGIN_USER);
@@ -570,7 +509,9 @@ public final class RequestContext {
      *
      * @return 登录用户，不存在返回 null
      * @since 1.9.0
+     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_LOGIN_USER)}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static Object getLoginUser() {
         return get(BizContextKeys.KEY_LOGIN_USER);
     }
@@ -582,7 +523,9 @@ public final class RequestContext {
      * @param <T> 类型参数
      * @return 登录用户，不存在或类型不匹配返回 null
      * @since 1.9.0
+     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_LOGIN_USER)} 并手动强转。
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     @SuppressWarnings("unchecked")
     public static <T> T getLoginUser(Class<T> type) {
         Object loginUser = get(BizContextKeys.KEY_LOGIN_USER);
@@ -596,7 +539,9 @@ public final class RequestContext {
      *
      * @param tenantContext 租户上下文，null 等同于移除
      * @since 1.9.0
+     * @deprecated 请使用 {@link #put(String, Object) put(BizContextKeys.KEY_TENANT_CONTEXT, tenantContext)}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static void setTenantContext(Object tenantContext) {
         if (tenantContext == null) {
             remove(BizContextKeys.KEY_TENANT_CONTEXT);
@@ -610,7 +555,9 @@ public final class RequestContext {
      *
      * @return 租户上下文，不存在返回 null
      * @since 1.9.0
+     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_TENANT_CONTEXT)}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static Object getTenantContext() {
         return get(BizContextKeys.KEY_TENANT_CONTEXT);
     }
@@ -620,7 +567,9 @@ public final class RequestContext {
      *
      * @param columnPermission 列权限信息
      * @since 1.9.0
+     * @deprecated 请使用 {@link #put(String, Object) put(BizContextKeys.KEY_COLUMN_PERMISSION, columnPermission)}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static void setColumnPermission(Object columnPermission) {
         if (columnPermission == null) {
             remove(BizContextKeys.KEY_COLUMN_PERMISSION);
@@ -634,7 +583,9 @@ public final class RequestContext {
      *
      * @return 列权限信息，不存在返回 null
      * @since 1.9.0
+     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_COLUMN_PERMISSION)}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static Object getColumnPermission() {
         return get(BizContextKeys.KEY_COLUMN_PERMISSION);
     }
@@ -1034,209 +985,6 @@ public final class RequestContext {
      */
     public static CleanupGuard newCleanupGuard() {
         return new CleanupGuard();
-    }
-
-    /**
-     * 创建请求上下文 Builder，用于一次性批量设置多个属性。
-     *
-     * <p>调用 {@link Builder#apply()} 将全部属性写入当前线程上下文。</p>
-     *
-     * <p><b>使用示例：</b></p>
-     * <pre>{@code
-     * RequestContext.builder()
-     *         .userId("user123")
-     *         .tenantId("tenant456")
-     *         .traceId(TraceIdGenerator.generateTraceId())
-     *         .language("zh-CN")
-     *         .apply();
-     * }</pre>
-     *
-     * @return Builder 实例
-     * @since 1.2.0
-     * @deprecated 1.9.3 直接调用静态 setter 更简洁，无需 Builder 中间态。例如：
-     *             <pre>{@code
-     * RequestContext.setUserId("user123");
-     * RequestContext.setTenantId("tenant456");
-     * RequestContext.setTraceId(TraceIdGenerator.generateTraceId());
-     * }</pre>
-     */
-    @Deprecated(since = "1.9.3", forRemoval = true)
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    /**
-     * 请求上下文 Builder。
-     *
-     * <p>提供类型化的 setter 链式调用，{@link #apply()} 一次性提交到当前线程上下文。</p>
-     *
-     * @since 1.2.0
-     * @deprecated 直接调用静态 setter 替代。
-     */
-    @Deprecated(since = "1.9.3", forRemoval = true)
-    public static final class Builder {
-
-        private String userId;
-        private String tenantId;
-        private String traceId;
-        private String requestId;
-        private String language;
-        private Boolean tenantIsolationSkipped;
-
-        /** 自定义扩展属性存储，供开放式扩展使用。 */
-        private Map<String, Object> extensions;
-
-        private Builder() {
-            // 私有构造，仅允许通过 RequestContext.builder() 创建
-        }
-
-        /**
-         * 设置用户 ID。
-         *
-         * @param userId 用户 ID
-         * @return this
-         */
-        public Builder userId(String userId) {
-            this.userId = userId;
-            return this;
-        }
-
-        /**
-         * 设置租户 ID。
-         *
-         * @param tenantId 租户 ID
-         * @return this
-         */
-        public Builder tenantId(String tenantId) {
-            this.tenantId = tenantId;
-            return this;
-        }
-
-        /**
-         * 设置链路追踪 ID。
-         *
-         * @param traceId 追踪 ID
-         * @return this
-         */
-        public Builder traceId(String traceId) {
-            this.traceId = traceId;
-            return this;
-        }
-
-        /**
-         * 设置请求 ID。
-         *
-         * @param requestId 请求 ID
-         * @return this
-         */
-        public Builder requestId(String requestId) {
-            this.requestId = requestId;
-            return this;
-        }
-
-        /**
-         * 设置语言区域。
-         *
-         * @param language 语言区域（如 zh-CN、en-US）
-         * @return this
-         */
-        public Builder language(String language) {
-            this.language = language;
-            return this;
-        }
-
-        /**
-         * 设置租户隔离跳过标记。
-         *
-         * @param skipped true=跳过租户隔离
-         * @return this
-         */
-        public Builder tenantIsolationSkipped(boolean skipped) {
-            this.tenantIsolationSkipped = skipped;
-            return this;
-        }
-
-        /**
-         * 设置自定义上下文属性（开放式扩展）。
-         *
-         * <p>用于内置键之外的自定义属性扩展，如 {@code appId}、{@code businessLine} 等。
-         * 避免频繁修改 Builder 类即可支持新的上下文维度。</p>
-         *
-         * <p><b>注意：</b>key 不可为 null 或空字符串。</p>
-         *
-         * @param key   属性键（不可为 null 或空）
-         * @param value 属性值（null 等同于移除该键）
-         * @return this
-         * @since 1.7.0
-         */
-        public Builder set(String key, Object value) {
-            if (key == null || key.isEmpty()) {
-                throw new IllegalArgumentException("Context key must not be null or empty");
-            }
-            if (value == null) {
-                if (extensions != null) {
-                    extensions.remove(key);
-                }
-                return this;
-            }
-            if (extensions == null) {
-                extensions = new LinkedHashMap<>(4);
-            }
-            extensions.put(key, value);
-            return this;
-        }
-
-        /**
-         * 批量设置自定义上下文属性（开放式扩展）。
-         *
-         * @param attrs 属性 Map（可为 null 或空）
-         * @return this
-         * @since 1.7.0
-         */
-        public Builder setAll(Map<String, Object> attrs) {
-            if (attrs != null && !attrs.isEmpty()) {
-                if (extensions == null) {
-                    extensions = new LinkedHashMap<>(attrs.size());
-                }
-                extensions.putAll(attrs);
-            }
-            return this;
-        }
-
-        /**
-         * 将 Builder 中的属性一次性写入当前线程上下文。
-         *
-         * <p>仅写入非 null 属性；null 属性不覆盖已有上下文值。</p>
-         *
-         * @return CleanupGuard 实例，供 try-with-resources 使用
-         */
-        public CleanupGuard apply() {
-            if (userId != null) {
-                setUserId(userId);
-            }
-            if (tenantId != null) {
-                setTenantId(tenantId);
-            }
-            if (traceId != null) {
-                setTraceId(traceId);
-            }
-            if (requestId != null) {
-                setRequestId(requestId);
-            }
-            if (language != null) {
-                setLanguage(language);
-            }
-            if (tenantIsolationSkipped != null) {
-                setTenantIsolationSkipped(tenantIsolationSkipped);
-            }
-            // 写入自定义扩展属性
-            if (extensions != null) {
-                for (Map.Entry<String, Object> entry : extensions.entrySet()) {
-                    put(entry.getKey(), entry.getValue());
-                }
-            }
-            return new CleanupGuard();
-        }
     }
 
     /**

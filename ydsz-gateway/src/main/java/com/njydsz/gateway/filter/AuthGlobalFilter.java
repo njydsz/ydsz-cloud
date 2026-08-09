@@ -362,7 +362,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         // traceId 已在 filter 开头统一写入响应头，此处无需重复设置
 
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.UNAUTHORIZED, msg);
-        body.setTraceId(traceId);
+        body.assignTraceId(traceId);
         byte[] bytes = YdszJson.toJsonBytes(body);
 
         DataBuffer buffer = response.bufferFactory().wrap(bytes);

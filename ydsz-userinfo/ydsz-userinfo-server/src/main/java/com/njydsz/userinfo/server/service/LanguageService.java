@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
 import com.njydsz.userinfo.domain.dto.put.LanguagePutDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
@@ -24,7 +24,7 @@ public interface LanguageService {
      * @param query 分页查询参数
      * @return 分页结果
      */
-    PageResponse<LanguageVO> page(LanguagePageQuery query);
+    PageResponse<List<LanguageVO>> page(LanguagePageQuery query);
 
     /**
      * 按 ID 查询语言详情。

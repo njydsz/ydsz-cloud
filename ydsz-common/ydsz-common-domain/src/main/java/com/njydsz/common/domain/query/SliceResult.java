@@ -223,4 +223,18 @@ public class SliceResult<T> implements Serializable {
     public boolean isLast() {
         return !hasNext;
     }
+
+    /**
+     * 是否有下一页（别名，兼容 {@code hasNext()} 调用约定）。
+     */
+    public boolean hasNext() {
+        return hasNext;
+    }
+
+    /**
+     * 是否有上一页（别名，兼容 {@code hasPrevious()} 调用约定）。
+     */
+    public boolean hasPrevious() {
+        return hasPrevious;
+    }
 }

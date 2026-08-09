@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.config;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 
 import lombok.Data;
 
@@ -13,12 +15,15 @@ import lombok.Data;
 public class PreferenceUpsertDTO {
 
     /** 用户 ID */
+    @Xss
     private String userId;
 
     /** 通道 */
+    @Xss
     private String channel;
 
     /** 业务类型 */
+    @Xss
     private String bizType;
 
     /** 是否启用该通道: 0 关闭 / 1 开启 */
@@ -28,9 +33,11 @@ public class PreferenceUpsertDTO {
     private Integer dndEnabled;
 
     /** 免打扰开始时间 HH:mm */
+    @Xss
     private String dndStart;
 
     /** 免打扰结束时间 HH:mm */
+    @Xss
     private String dndEnd;
 
     /** 每日发送上限 */
@@ -43,11 +50,14 @@ public class PreferenceUpsertDTO {
     private Integer digestEnabled;
 
     /** 聚合频率: HOURLY/DAILY/WEEKLY */
+    @Xss
     private String digestFrequency;
 
     /** 偏好语言 */
+    @Xss
     private String locale;
 
     /** 扩展字段 JSON */
+    @Xss
     private String extra;
 }

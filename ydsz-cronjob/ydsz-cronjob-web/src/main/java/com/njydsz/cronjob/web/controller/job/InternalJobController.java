@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.job.MapContext;
 import com.njydsz.cronjob.domain.job.MapProcessor;
 import com.njydsz.cronjob.domain.job.ProcessResult;
@@ -179,13 +180,17 @@ public class InternalJobController {
             } catch (Exception e) {
                 log.error("[InternalJob] 获取 MapProcessor Bean 失败: handler={} reason={}",
                         request.getHandler(), e.getMessage());
-                return BaseResponse.success(CronjobConverter.INSTANT.toProcessResultVO(
-                        ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage())));
+                return BaseResponse.success(
+                        ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
             }
             // 构造子任务上下文并执行
-            MapContext context = new MapContext(
-                    request.getJobId(), request.getLogId(), request.getJobKey(),
-                    request.getTaskName(), request.getTaskParams(), false);
+            MapContext context = new MapContext();
+            context.setJobId(request.getJobId());
+            context.setLogId(request.getLogId());
+            context.setJobKey(request.getJobKey());
+            context.setTaskName(request.getTaskName());
+            context.setTaskParams(request.getTaskParams());
+            context.setRoot(false);
             ProcessResult result;
             try {
                 result = processor.process(context);
@@ -197,7 +202,7 @@ public class InternalJobController {
                         request.getJobKey(), request.getTaskName(), e.getMessage(), e);
                 result = ProcessResult.failed(e.getClass().getSimpleName() + ": " + e.getMessage());
             }
-            return BaseResponse.success(CronjobConverter.INSTANT.toProcessResultVO(result));
+            return BaseResponse.success(result);
         } finally {
             TracerUtils.clear();
         }

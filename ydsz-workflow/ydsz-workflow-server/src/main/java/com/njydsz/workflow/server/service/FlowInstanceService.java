@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.entity.FlowInstance;
@@ -264,9 +265,9 @@ public interface FlowInstanceService {
      * @param pageSize     每页大小
      * @return 分页结果
      */
-    BaseResponse<FlowInstance> page(String businessType, String initiatorId, String flowStatus,
-                                    LocalDateTime startTime, LocalDateTime endTime,
-                                    String tenantId, int pageNo, int pageSize);
+    PageResponse<List<FlowInstance>> page(String businessType, String initiatorId, String flowStatus,
+                                         LocalDateTime startTime, LocalDateTime endTime,
+                                         String tenantId, int pageNo, int pageSize);
 
     /**
      * P2-24: 读取实例流程变量

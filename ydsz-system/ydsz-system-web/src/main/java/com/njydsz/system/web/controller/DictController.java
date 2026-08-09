@@ -7,7 +7,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -74,12 +74,12 @@ public class DictController {
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public PageResponse<List<DictTypeVO>> page(DictPageQuery query) {
-        PageResponse<DictTypeVO> result = dictService.page(query);
+        PageResponse<List<DictTypeVO>> result = dictService.page(query);
         return PageResponse.success(
                 result.getTotal(),
                 (long) result.getPageNum(),
                 (long) result.getPageSize(),
-                result.getRecords());
+                result.getData());
     }
 
     /**

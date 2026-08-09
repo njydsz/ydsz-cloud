@@ -124,9 +124,9 @@ public class CEPController {
                     }
                     RuleContext ctx = RuleContext.of(facts, "CEP", "CEP_ENGINE", null);
                     List<RuleResult> results = ruleEngine.evaluate(ctx);
-                    if (!Response.isEmpty()) {
+                    if (!results.isEmpty()) {
                         log.info("[CEPController] CEP 命中触发规则评估: patternId={}, ruleCode={}, triggered={}",
-                                hit.getPatternId(), hit.getRuleCode(), Response.size());
+                                hit.getPatternId(), hit.getRuleCode(), results.size());
                     }
                 } catch (Exception e) {
                     log.warn("[CEPController] CEP 命中触发规则评估异常: {}", e.getMessage());

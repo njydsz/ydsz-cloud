@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
@@ -108,7 +109,7 @@ public class WopiController {
     @Operation(summary = "WOPI CheckFileInfo", description = "返回文件元信息供在线编辑器使用")
     public WopiCheckFileInfoResponse checkFileInfo(
             @PathVariable String fileId,
-            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = HeaderConstants.X_USER_ID, required = false) String userId,
             @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken) {
 
         // P1-R5: WOPI Token 验证
@@ -173,7 +174,7 @@ public class WopiController {
     @Operation(summary = "WOPI PutFile", description = "接收编辑器保存的文件内容")
     public WopiPutFileResponse putFileContents(
             @PathVariable String fileId,
-            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = HeaderConstants.X_USER_ID, required = false) String userId,
             @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken,
             @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
             @RequestBody byte[] content) {
@@ -227,7 +228,7 @@ public class WopiController {
     public WopiPutFileResponse lockFile(
             @PathVariable String fileId,
             @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
-            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = HeaderConstants.X_USER_ID, required = false) String userId,
             @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken) {
 
         validateWopiToken(authToken);

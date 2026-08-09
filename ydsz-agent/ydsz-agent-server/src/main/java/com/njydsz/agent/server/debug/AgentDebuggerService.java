@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;

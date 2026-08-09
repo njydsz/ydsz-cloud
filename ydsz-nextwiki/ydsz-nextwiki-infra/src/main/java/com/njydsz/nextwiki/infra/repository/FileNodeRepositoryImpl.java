@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.domain.query.PageResponse;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
@@ -49,14 +49,14 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     }
 
     @Override
-    public BaseResponse<List<FileNode>> findPageChildren(String parentId, String nodeType,
+    public PageResponse<List<FileNode>> findPageChildren(String parentId, String nodeType,
                                                   String sortBy, String sortDir,
                                                   int page, int pageSize) {
         Page<FileNode> pageParam = new Page<>(page, pageSize);
         IPage<FileNode> result = fileNodeMapper.selectPageByParentId(
                 pageParam, parentId, nodeType, sortBy, sortDir);
-        return PageResponse.of(result.getRecords(), result.getTotal(),
-                (int) result.getCurrent(), (int) result.getSize());
+        return PageResponse.success(result.getTotal(), (long) result.getCurrent(), (long) result.getSize(),
+                result.getRecords());
     }
 
     @Override

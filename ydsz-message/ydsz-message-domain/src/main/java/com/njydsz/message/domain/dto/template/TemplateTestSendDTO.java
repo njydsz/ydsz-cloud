@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.template;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 
 import java.util.Map;
 
@@ -17,17 +19,21 @@ import lombok.Data;
 public class TemplateTestSendDTO {
 
     /** 模板编码 */
+    @Xss
     private String templateCode;
 
     /** 语言区域 */
+    @Xss
     private String locale;
 
     /** 渲染参数 */
     private Map<String, Object> params;
 
     /** 测试接收人（手机号 / 邮箱 / userId） */
+    @Xss
     private String testReceiver;
 
     /** 测试通道（为空时使用模板绑定的通道） */
+    @Xss
     private String testChannel;
 }

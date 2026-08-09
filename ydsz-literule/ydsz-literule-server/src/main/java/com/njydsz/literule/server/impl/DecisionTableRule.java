@@ -360,7 +360,7 @@ public class DecisionTableRule implements Rule {
     private List<RuleResult> buildCollectedResults(List<DecisionTableDefinition.Row> matchedRows, long startNano) {
         List<RuleResult> results = new ArrayList<>(matchedRows.size());
         for (DecisionTableDefinition.Row row : matchedRows) {
-            Response.add(buildResultFromActions(row.getActions(), startNano));
+            results.add(buildResultFromActions(row.getActions(), startNano));
         }
         return results;
     }

@@ -1,5 +1,7 @@
 package com.njydsz.message.domain.dto.batch;
 
+import com.njydsz.common.safe.annotation.Xss;
+
 
 import java.util.List;
 import java.util.Map;
@@ -24,18 +26,23 @@ import lombok.Data;
 public class BatchSendRequestDTO {
 
     /** 批次 ID（业务侧生成；为空时引擎自动生成雪花 ID） */
+    @Xss
     private String batchId;
 
     /** 批次名称 */
+    @Xss
     private String batchName;
 
     /** 发送通道（receiverList 模式下必填） */
+    @Xss
     private String channel;
 
     /** 模板编码（receiverList 模式下必填） */
+    @Xss
     private String templateCode;
 
     /** 业务类型 */
+    @Xss
     private String bizType;
 
     /** 统一模板参数（receiverList 模式下使用，所有接收人共用） */
@@ -48,5 +55,6 @@ public class BatchSendRequestDTO {
     private Boolean async = true;
 
     /** 触发发送的用户 ID */
+    @Xss
     private String senderId;
 }

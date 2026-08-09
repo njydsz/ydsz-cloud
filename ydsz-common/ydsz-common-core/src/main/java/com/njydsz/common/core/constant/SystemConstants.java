@@ -23,6 +23,12 @@ public final class SystemConstants {
     /** 默认租户 ID */
     public static final String DEFAULT_TENANT_ID = "0";
 
-    /** 默认语言（zh-CN） */
+    /**
+     * 默认语言（zh-CN）。
+     *
+     * @deprecated 1.11.0 运行时默认语言改由 {@code ydsz.core.default-locale} 配置（{@link com.njydsz.common.core.config.CoreProperties#getDefaultLocale()}）控制；
+     *             此常量仅作编译期兜底。
+     */
+    @Deprecated(since = "1.11.0", forRemoval = false)
     public static final String DEFAULT_LOCALE = "zh-CN";
 }
