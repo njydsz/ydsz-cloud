@@ -233,7 +233,7 @@ public class FlowCcServiceImpl implements FlowCcService {
      */
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FlowCc> listCcByUser(String userId, String readStatus, String flowCode,
+    public BaseResponse<List<FlowCc>> listCcByUser(String userId, String readStatus, String flowCode,
                                                    String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
