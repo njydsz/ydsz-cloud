@@ -25,6 +25,7 @@ import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
+import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.common.domain.tree.TreeBuilder;
 
@@ -81,6 +82,8 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final UserDeptMapper userDeptMapper;
     /** Redis 服务 */
     private final RedisService redisService;
+    /** 领域事件发布器 */
+    private final UserDomainEventPublisher eventPublisher;
 
     /**
      * {@inheritDoc}
@@ -138,6 +141,8 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         // 部门变更后失效缓存
         evictDeptTreeCache();
+        // 发布部门创建领域事件
+        eventPublisher.publishDepartmentChanged(entity, "CREATED");
 
         return entity.getId();
     }
@@ -162,6 +167,8 @@ public class DepartmentServiceImpl implements DepartmentService {
         if (result) {
             // 部门变更后失效缓存
             evictDeptTreeCache();
+            // 发布部门更新领域事件
+            eventPublisher.publishDepartmentChanged(entity, "UPDATED");
         }
 
         return result;
@@ -199,6 +206,8 @@ public class DepartmentServiceImpl implements DepartmentService {
         if (result) {
             // 部门变更后失效缓存
             evictDeptTreeCache();
+            // 发布部门删除领域事件
+            eventPublisher.publishDepartmentChanged(entity, "DELETED");
         }
 
         return result;

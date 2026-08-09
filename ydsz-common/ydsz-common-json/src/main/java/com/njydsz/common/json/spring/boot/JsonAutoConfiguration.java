@@ -16,6 +16,8 @@ import org.springframework.core.convert.converter.Converter;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.autotype.AutoTypeWhitelistScanner;
 import com.njydsz.common.json.cache.BeanSerializerCache;
+import com.njydsz.common.json.health.JsonHealthIndicator;
+import com.njydsz.common.json.internal.DualJsonDetector;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.module.JsonModule;
 import com.njydsz.common.json.spring.JsonHttpMessageConverter;
@@ -112,6 +114,23 @@ public class JsonAutoConfiguration {
                 }
             };
         };
+    }
+
+    /**
+     * JSON 模块健康检查指示器。
+     *
+     * <p>当 Spring Boot Actuator Health 在类路径时注册，暴露 {@code /actuator/health/json} 端点，
+     * 报告 Ydsz JSON 引擎的配置状态（命名策略、安全模式、严格模式、Jackson 排除状态等）。
+     *
+     * @param properties JSON 配置属性
+     * @return JSON 健康检查指示器
+     * @since 1.2.0
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    @ConditionalOnMissingBean(JsonHealthIndicator.class)
+    public JsonHealthIndicator jsonHealthIndicator(JsonProperties properties) {
+        return new JsonHealthIndicator(properties, JsonConfig.getInstance());
     }
 
     /**

@@ -29,6 +29,7 @@ import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
+import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.RoleService;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
@@ -92,6 +93,8 @@ public class RoleServiceImpl implements RoleService {
     private final UserRoleMapper userRoleMapper;
     /** Redis 服务 */
     private final RedisService redisService;
+    /** 领域事件发布器 */
+    private final UserDomainEventPublisher eventPublisher;
 
     /**
      * {@inheritDoc}
@@ -175,6 +178,7 @@ public class RoleServiceImpl implements RoleService {
         }
         roleMapper.insert(entity);
         log.info("Role created: code={}, id={}", entity.getRoleCode(), entity.getId());
+        eventPublisher.publishRoleEntityChanged(entity, "CREATED");
         return entity.getId();
     }
 
@@ -196,6 +200,7 @@ public class RoleServiceImpl implements RoleService {
         if (result) {
             // 角色变更后失效其权限缓存
             evictRolePermissionCache(dto.getId());
+            eventPublisher.publishRoleEntityChanged(entity, "UPDATED");
         }
 
         return result;
@@ -235,6 +240,7 @@ public class RoleServiceImpl implements RoleService {
         if (result) {
             // 角色删除后失效缓存
             evictRolePermissionCache(id);
+            eventPublisher.publishRoleEntityChanged(entity, "DELETED");
         }
 
         return result;

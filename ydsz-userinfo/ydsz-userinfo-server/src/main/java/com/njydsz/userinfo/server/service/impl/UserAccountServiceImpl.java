@@ -27,6 +27,7 @@ import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
@@ -116,6 +117,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     /** Redis 服务（工作流缓存） */
     private final RedisService redisService;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
+    /** 领域事件发布器（Outbox 模式） */
+    private final UserDomainEventPublisher eventPublisher;
 
     /**
      * {@inheritDoc}
@@ -228,6 +231,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                 entity.getId(), passwordHash, properties.getPasswordHistoryCount());
 
         indexUpsert(entity);
+        eventPublisher.publishUserCreated(entity);
         return entity.getId();
     }
 
@@ -253,6 +257,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         boolean result = userAccountMapper.updateById(entity) > 0;
         if (result) {
             indexUpsert(entity);
+            eventPublisher.publishUserUpdated(entity);
         }
         return result;
     }
@@ -274,6 +279,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             indexDelete(id);
             // 清理密码历史记录（避免敏感数据残留）
             passwordHistoryService.clearHistoryByUserId(id);
+            eventPublisher.publishUserDeleted(id, entity.getUsername());
         }
         return result;
     }
@@ -384,6 +390,9 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         // 清理工作流审批人缓存（角色分配变更会影响 role:xxx 和 leader:xxx 查询）
         evictWorkflowCacheForUser(userId);
+
+        // 发布角色变更领域事件（通知 Gateway 刷新权限缓存）
+        eventPublisher.publishRoleChanged(userId, roleIds.size());
 
         return true;
     }
