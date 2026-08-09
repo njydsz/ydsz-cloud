@@ -515,7 +515,10 @@ public final class RequestContext {
      *
      * @param authInfo 认证信息（可为 null，等同于移除）
      * @since 1.9.0
+     * @deprecated 请使用 {@link #put(String, Object) put(BizContextKeys.KEY_AUTH_INFO, authInfo)}
+     *             保证键名来源统一；后续版本将进一步要求使用类型安全的 {@link ContextKey}。
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static void setAuthInfo(Object authInfo) {
         if (authInfo == null) {
             remove(BizContextKeys.KEY_AUTH_INFO);
