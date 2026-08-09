@@ -1,5 +1,6 @@
 package com.njydsz.system.domain.dto;
 
+import com.njydsz.common.safe.annotation.Xss;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -46,16 +47,19 @@ public class AppInfoDTO {
 
     @NotBlank(message = "应用编码不能为空")
     @Size(max = 64, message = "应用编码长度不能超过64")
+    @Xss(message = "应用编码包含非法内容")
     @Schema(description = "应用编码")
     private String appCode;
 
     @NotBlank(message = "应用名称不能为空")
     @Size(max = 128, message = "应用名称长度不能超过128")
+    @Xss(message = "应用名称包含非法内容")
     @Schema(description = "应用名称")
     private String appName;
 
     @NotBlank(message = "应用 Key 不能为空")
     @Size(max = 128, message = "应用 Key 长度不能超过128")
+    @Xss(message = "应用 Key 包含非法内容")
     @Schema(description = "应用 Key（client_id）")
     private String appKey;
 
@@ -64,9 +68,11 @@ public class AppInfoDTO {
     private String appSecret;
 
     @Size(max = 512, message = "回调地址长度不能超过512")
+    @Xss(message = "回调地址包含非法内容")
     @Schema(description = "授权回调地址")
     private String redirectUrl;
 
+    @Xss(message = "应用描述包含非法内容")
     @Schema(description = "应用描述")
     private String description;
 

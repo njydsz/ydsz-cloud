@@ -1122,6 +1122,30 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>3.6.0</version>
+                    <dependencies>
+                        <!-- 锁定 Checkstyle 引擎版本（本地仓库离线可用版本，支持 Java 18+ 语法） -->
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>9.3</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <configLocation>${session.executionRootDirectory}/checkstyle/checkstyle.xml</configLocation>
+                        <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                        <consoleOutput>true</consoleOutput>
+                        <failOnViolation>true</failOnViolation>
+                        <failOnError>true</failOnError>
+                        <violationSeverity>error</violationSeverity>
+                        <sourceDirectories>
+                            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                        </sourceDirectories>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
                         <source>${java.version}</source>
@@ -1163,6 +1187,22 @@
             <configuration>
                 <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
             </configuration>
+        </plugin>
+        <!-- Checkstyle 源码检查：JSON 生态红线——业务代码禁止 import 第三方 JSON 库（Jackson/Fastjson/Gson）
+             规则文件：checkstyle/checkstyle.xml；只扫 src/main，不扫 src/test（不影响 benchmark 基准库）
+             验证：./mvnw-local.sh checkstyle:check 或 validate -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>check-json-ecosystem</id>
+                    <phase>validate</phase>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                </execution>
+            </executions>
         </plugin>
         <!-- Maven Enforcer：构建期依赖治理——禁止新增 Jackson / 旧 FastJSON 直接依赖 -->
         <plugin>

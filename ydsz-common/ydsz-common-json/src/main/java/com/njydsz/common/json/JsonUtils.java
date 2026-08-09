@@ -66,6 +66,14 @@ import com.njydsz.common.json.tree.ObjectNode;
  */
 public final class JsonUtils {
 
+    /**
+     * 字段过滤专用 Mapper（writeNulls=false，无状态线程安全）。
+     *
+     * <p>供 {@link #toJsonWithFields} / {@link #toJsonWithoutFields} 复用，
+     * 避免每次调用重建 JsonMapper 实例（1.2.1 优化）。</p>
+     */
+    private static final JsonMapper FIELD_FILTER_MAPPER = JsonMapper.builder().writeNulls(false).build();
+
     private JsonUtils() {
         throw new UnsupportedOperationException("JsonUtils is a utility class and cannot be instantiated");
     }
@@ -609,8 +617,7 @@ public final class JsonUtils {
         if (visibleFields == null || visibleFields.isEmpty()) {
             return YdszJson.toJson(obj);
         }
-        JsonMapper mapper = JsonMapper.builder().writeNulls(false).build();
-        return mapper.toJsonExcludeFields(obj, invertFields(obj, visibleFields));
+        return FIELD_FILTER_MAPPER.toJsonExcludeFields(obj, invertFields(obj, visibleFields));
     }
 
     /**
@@ -637,8 +644,7 @@ public final class JsonUtils {
         if (excludedFields == null || excludedFields.isEmpty()) {
             return YdszJson.toJson(obj);
         }
-        JsonMapper mapper = JsonMapper.builder().writeNulls(false).build();
-        return mapper.toJsonExcludeFields(obj, excludedFields);
+        return FIELD_FILTER_MAPPER.toJsonExcludeFields(obj, excludedFields);
     }
 
     /**

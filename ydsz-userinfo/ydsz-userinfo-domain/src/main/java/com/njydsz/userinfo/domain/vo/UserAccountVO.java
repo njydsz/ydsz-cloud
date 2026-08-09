@@ -2,6 +2,8 @@ package com.njydsz.userinfo.domain.vo;
 
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import lombok.Data;
 
@@ -22,10 +24,13 @@ public class UserAccountVO {
     /** 登录用户名 */
     private String username;
     /** 真实姓名 */
+    @SensitiveData(SensitiveType.CHINESE_NAME)
     private String realName;
     /** 手机号码 */
+    @SensitiveData(SensitiveType.PHONE)
     private String phone;
     /** 邮箱地址 */
+    @SensitiveData(SensitiveType.EMAIL)
     private String email;
     /** 头像 URL */
     private String avatar;

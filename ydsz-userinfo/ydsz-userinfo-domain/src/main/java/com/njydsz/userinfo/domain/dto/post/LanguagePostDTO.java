@@ -6,6 +6,8 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.io.Serial;
+import com.njydsz.common.safe.annotation.Xss;
+
 /**
  * 语言新增请求 DTO。
  *
@@ -24,11 +26,15 @@ public class LanguagePostDTO implements Serializable {
     /** 语言编码（ISO 639-1 + ISO 3166-1，如 {@code zh-CN} / {@code en-US}） */
     @NotBlank(message = "语言编码不能为空")
     @Size(max = 20, message = "语言编码长度不能超过 20 个字符")
+    @Xss(message = "languageCode包含非法内容")
+
     private String languageCode;
 
     /** 语言名称（前端展示，如「简体中文」/「English」） */
     @NotBlank(message = "语言名称不能为空")
     @Size(max = 64, message = "语言名称长度不能超过 64 个字符")
+    @Xss(message = "languageName包含非法内容")
+
     private String languageName;
 
     /** 是否默认语言（{@code 1=是}，全局仅允许一个默认语言） */
@@ -38,6 +44,8 @@ public class LanguagePostDTO implements Serializable {
     private Integer sortOrder;
 
     /** 启用状态（{@code "ENABLED"} / {@code "DISABLED"}） */
+    @Xss(message = "status包含非法内容")
+
     private String status;
 
 }

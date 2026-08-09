@@ -58,8 +58,8 @@ public final class BeanReader<T> {
     /** 字段名哈希缓存*/
     public final int[] fieldNameHashes;
 
-    /** 默认构造函数*/
-    public final Constructor<T> defaultConstructor;
+    /** 默认构造函数（@JsonCreator 模式下为 null）*/
+    public Constructor<T> defaultConstructor;
 
     /** @JsonAnySetter 方法（null 表示无）*/
     public final Method anySetterMethod;
@@ -175,11 +175,6 @@ public final class BeanReader<T> {
             throw new JsonDeserializationException(
                 "JSON nesting depth exceeds limit: " + depth, reader.pos);
         }
-        reader.skipTo('{');
-        if (reader.pos >= reader.len) {
-            throw new RuntimeException("Unexpected end of JSON");
-        }
-        reader.pos++;
 
         T obj;
         // @JsonCreator 路径：先解析全部字段到临时 Map，读完再调用构造函数

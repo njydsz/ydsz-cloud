@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.domain.vo;
 
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 
 /**
@@ -40,6 +42,7 @@ public class LoginVO {
         /** 登录用户名 */
         private String username;
         /** 用户真实姓名 */
+        @SensitiveData(SensitiveType.CHINESE_NAME)
         private String realName;
         /** 主角色编码，用于前端权限路由判断 */
         private String roleCode;

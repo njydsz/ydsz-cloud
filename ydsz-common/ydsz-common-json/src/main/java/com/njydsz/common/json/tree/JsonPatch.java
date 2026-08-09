@@ -426,11 +426,11 @@ public final class JsonPatch {
     private static Object getValueAt(PathResolution resolution, String lastSegment) {
         if (resolution.parent instanceof ObjectNode objNode) {
             JsonNode child = objNode.get(lastSegment);
-            return child != null && !child.isNull() ? child : null;
+            return child != null && !child.isNull() ? child.asValue() : null;
         } else if (resolution.parent instanceof ArrayNode arrNode) {
             int idx = parseIndex(lastSegment, arrNode.size());
             JsonNode child = arrNode.get(idx);
-            return child != null && !child.isNull() ? child : null;
+            return child != null && !child.isNull() ? child.asValue() : null;
         }
         return null;
     }

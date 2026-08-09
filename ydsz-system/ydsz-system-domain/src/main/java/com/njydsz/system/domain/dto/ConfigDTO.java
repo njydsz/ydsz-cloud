@@ -1,5 +1,6 @@
 package com.njydsz.system.domain.dto;
 
+import com.njydsz.common.safe.annotation.Xss;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -46,14 +47,17 @@ public class ConfigDTO {
 
     @NotBlank(message = "配置分组不能为空")
     @Size(max = 64, message = "配置分组长度不能超过64")
+    @Xss(message = "配置分组包含非法内容")
     @Schema(description = "配置分组")
     private String configGroup;
 
     @NotBlank(message = "配置键不能为空")
     @Size(max = 128, message = "配置键长度不能超过128")
+    @Xss(message = "配置键包含非法内容")
     @Schema(description = "配置键")
     private String configKey;
 
+    @Xss(message = "配置值包含非法内容")
     @Schema(description = "配置值")
     private String configValue;
 
@@ -61,9 +65,11 @@ public class ConfigDTO {
     @Schema(description = "值类型: STRING/NUMBER/BOOLEAN/JSON")
     private String valueType;
 
+    @Xss(message = "默认值包含非法内容")
     @Schema(description = "默认值")
     private String defaultValue;
 
+    @Xss(message = "配置项说明包含非法内容")
     @Schema(description = "配置项说明")
     private String description;
 
