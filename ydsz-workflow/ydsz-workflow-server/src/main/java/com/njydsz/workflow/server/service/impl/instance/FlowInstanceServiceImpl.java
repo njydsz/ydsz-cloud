@@ -1692,7 +1692,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (status != FlowInstanceStatus.REJECTED) {
             throw SysException.builder()
                 .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.workflow.msg_7f4098fb").params("仅被驳回实例可重审，当前状态=" + instance.getFlowStatus()))
+                .key("error.workflow.msg_7f4098fb").params("仅被驳回实例可重审，当前状态=" + instance.getFlowStatus())
                 .build();
         }
         // 2. 发起人校验
@@ -1700,7 +1700,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
             throw SysException.builder()
                 .resultCode(BaseResultCode.FORBIDDEN)
-                .key("error.workflow.msg_d65b2814").params("仅发起人可重审"))
+                .key("error.workflow.msg_d65b2814").params("仅发起人可重审")
                 .build();
         }
         // 3. 合并变量（保留历史变量，覆盖新增）
@@ -1773,7 +1773,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (status == FlowInstanceStatus.RUNNING || status == FlowInstanceStatus.SUSPENDED) {
             throw SysException.builder()
                 .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.workflow.msg_c9d0e1f2").params("运行中/挂起的实例不可重做，当前状态=" + instance.getFlowStatus()))
+                .key("error.workflow.msg_c9d0e1f2").params("运行中/挂起的实例不可重做，当前状态=" + instance.getFlowStatus())
                 .build();
         }
         // 2. 发起人校验
@@ -1781,7 +1781,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
             throw SysException.builder()
                 .resultCode(BaseResultCode.FORBIDDEN)
-                .key("error.workflow.msg_d65b2814").params("仅发起人可重做"))
+                .key("error.workflow.msg_d65b2814").params("仅发起人可重做")
                 .build();
         }
         // 3. 合并变量（保留原实例变量，覆盖新增）
@@ -1851,7 +1851,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (dtos.size() > BATCH_START_MAX_SIZE) {
             throw SysException.builder()
                 .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.workflow.msg_f5a6b7c8").params(dtos.size(), BATCH_START_MAX_SIZE))
+                .key("error.workflow.msg_f5a6b7c8").params(dtos.size(), BATCH_START_MAX_SIZE)
                 .build();
         }
 

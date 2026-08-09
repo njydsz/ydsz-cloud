@@ -152,13 +152,13 @@ public class AlertServiceImpl implements AlertService {
         if (alertType.requiresThreshold() && dto.getThreshold() == null) {
             throw SysException.builder()
                 .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.cronjob.msg_alert_threshold_required").params(dto.getAlertType()))
+                .key("error.cronjob.msg_alert_threshold_required").params(dto.getAlertType())
                 .build();
         }
         if (alertType.requiresTimeWindow() && dto.getTimeWindowMinutes() == null) {
             throw SysException.builder()
                 .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.cronjob.msg_alert_window_required").params(dto.getAlertType()))
+                .key("error.cronjob.msg_alert_window_required").params(dto.getAlertType())
                 .build();
         }
     }
