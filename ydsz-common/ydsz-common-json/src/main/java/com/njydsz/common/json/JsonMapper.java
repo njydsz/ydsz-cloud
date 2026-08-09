@@ -178,8 +178,9 @@ public class JsonMapper {
         ThreadLocalSnapshot snapshot = new ThreadLocalSnapshot();
         // 1. 预计算配置快速填充当前线程的 SerializationContext
         applyRuntimeConfig();
-        // 2. 传播到全局组件（JSONReader maxDepth、SerializationProvider 静态状态等）
-        config.apply();
+        // 2. 全局组件（JSONReader maxDepth 等）由 JsonConfig.install() 在配置变更时统一传播。
+        //    此处不再调用 config.apply()，避免每次序列化/反序列化都用全局默认值覆盖
+        //    运行时临时调整（如测试中 JSONReader.setMaxDepth(5) 的临时深度限制）。
         return snapshot;
     }
 

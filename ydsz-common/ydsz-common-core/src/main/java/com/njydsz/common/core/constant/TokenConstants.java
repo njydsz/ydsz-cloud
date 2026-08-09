@@ -1,17 +1,12 @@
 package com.njydsz.common.core.constant;
 
-import com.njydsz.common.core.constant.HeaderConstants;
-
 /**
- * Token相关常量类
+ * Token 相关常量类。
  *
- * <p>定义JWT/OAuth2 Token的键名、过期时间等常量配置。
+ * <p>定义 JWT/OAuth2 Token 的键名常量，供 auth / util 等模块引用。</p>
  *
- * <p><b>主要常量分类：</b>
- * <ul>
- *   <li>令牌标识：Authentication、补充令牌标识</li>
- *   <li>令牌前缀：如 "ydsz" 用于标识系统</li>
- * </ul>
+ * <p>标准 HTTP 头常量已统一收口于 {@link HeaderConstants}，
+ * 本模块仅保留 Token 特有的业务常量。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -22,16 +17,9 @@ public final class TokenConstants {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    // ==================== 令牌标识常量 ====================
-
-    /** 令牌自定义标识键名 */
+    /** 令牌自定义标识键名（标准 HTTP Authorization 头）。 */
     public static final String AUTHENTICATION = "Authorization";
 
-    /** 补充令牌自定义标识键名 */
+    /** 补充令牌自定义标识键名（引用 {@link HeaderConstants#X_ACCESS_TOKEN}，与之一致）。 */
     public static final String SUPPLY_AUTHORIZATION = HeaderConstants.X_ACCESS_TOKEN;
-
-    // ==================== 令牌前缀常量 ====================
-
-    /** 令牌前缀 */
-    public static final String PREFIX = "ydsz";
 }

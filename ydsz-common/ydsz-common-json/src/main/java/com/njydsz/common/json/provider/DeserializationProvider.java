@@ -6,6 +6,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -353,6 +355,8 @@ public final class DeserializationProvider {
         if (type == Double.class || type == double.class) return TypeConverter.parseDoubleValue(json);
         if (type == Float.class || type == float.class) return TypeConverter.parseFloatValue(json);
         if (type == Boolean.class || type == boolean.class) return TypeConverter.parseBooleanValue(json);
+        if (type == BigDecimal.class) return parseBigDecimal(json);
+        if (type == BigInteger.class) return parseBigInteger(json);
         if (type == Object.class) return parseValue(json);
         if (type == Map.class) return JsonParserUtil.parseObject(json);
         if (type == List.class) return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
@@ -362,6 +366,38 @@ public final class DeserializationProvider {
         // 注：原 STRATEGY_CACHE 已删除——所有非简单类型统一走 BEAN 路径，
         // if-else 链已覆盖所有简单类型，缓存无策略分派价值，synchronizedMap 反而是性能瓶颈。
         return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
+    }
+
+    /**
+     * 从 JSON 片段解析 BigDecimal（保留任意精度）。
+     */
+    private static BigDecimal parseBigDecimal(String json) {
+        if (json == null || json.isBlank() || "null".equals(json.trim())) {
+            return null;
+        }
+        try {
+            return new BigDecimal(json.trim());
+        } catch (NumberFormatException e) {
+            throw new JsonDeserializationException(
+                JsonDeserializationException.PARSE_ERROR,
+                "Failed to parse BigDecimal from: " + json, 0, json);
+        }
+    }
+
+    /**
+     * 从 JSON 片段解析 BigInteger。
+     */
+    private static BigInteger parseBigInteger(String json) {
+        if (json == null || json.isBlank() || "null".equals(json.trim())) {
+            return null;
+        }
+        try {
+            return new BigInteger(json.trim());
+        } catch (NumberFormatException e) {
+            throw new JsonDeserializationException(
+                JsonDeserializationException.PARSE_ERROR,
+                "Failed to parse BigInteger from: " + json, 0, json);
+        }
     }
 
     /**

@@ -341,7 +341,11 @@ public final class RequestContext {
      *
      * @param key   属性键
      * @param value 属性值
+     * @deprecated 请使用类型安全的 {@link #put(ContextKey, Object)} 替代，编译期保证类型安全，
+     *             避免运行时的 ClassCastException。本方法将在 2.0 移除。
+     * @since 1.0.0
      */
+    @Deprecated(since = "1.10", forRemoval = true)
     public static void put(String key, Object value) {
         if (key == null) {
             throw new NullPointerException("key cannot be null");
@@ -383,7 +387,9 @@ public final class RequestContext {
      *
      * @param key 属性键
      * @return 属性值，如果不存在返回 null
+     * @deprecated 请使用类型安全的 {@link #get(ContextKey)} 替代，避免手动强转。本方法将在 2.0 移除。
      */
+    @Deprecated(since = "1.10", forRemoval = true)
     public static Object get(String key) {
         Map<String, Object> holder = CONTEXT_HOLDER.get();
         return holder != null ? holder.get(key) : null;
@@ -406,6 +412,32 @@ public final class RequestContext {
     public static <T> T get(ContextKey<T> key) {
         Object value = get(key.key());
         return key.cast(value);
+    }
+
+    /**
+     * 检查属性是否存在。
+     *
+     * <p>对标 {@link java.util.Map#containsKey(Object)} 语义，避免调用方
+     * 通过 {@link #get(String)} 取 null 后再做 null 判断（null 哨兵有歧义）。</p>
+     *
+     * @param key 属性键
+     * @return 存在返回 true，不存在或上下文未初始化返回 false
+     * @since 1.10.0
+     */
+    public static boolean has(String key) {
+        Map<String, Object> holder = CONTEXT_HOLDER.get();
+        return holder != null && holder.containsKey(key);
+    }
+
+    /**
+     * 检查属性是否存在（类型安全版本）。
+     *
+     * @param key 类型安全上下文键
+     * @return 存在返回 true
+     * @since 1.10.0
+     */
+    public static boolean has(ContextKey<?> key) {
+        return has(key.key());
     }
 
     /**
@@ -859,6 +891,99 @@ public final class RequestContext {
         } finally {
             clearMdc();
         }
+    }
+
+    // ======================== 异步传播 API ========================
+
+    /**
+     * 将任务包装为可安全跨线程传播上下文的 Runnable。
+     *
+     * <p>适用于 {@code CompletableFuture.runAsync()}、{@code ExecutorService.submit()}、
+     * {@code Thread.start()} 等异步场景。内部完成：</p>
+     * <ol>
+     *   <li>捕获当前线程的 TTL 上下文快照</li>
+     *   <li>桥接 MDC 到子线程</li>
+     *   <li>执行 {@code task}</li>
+     *   <li>最终清理子线程的上下文与 MDC（防止复用线程污染）</li>
+     * </ol>
+     *
+     * <p><b>使用示例：</b></p>
+     * <pre>{@code
+     * executor.submit(RequestContext.async(() -> process(data)));
+     * }</pre>
+     *
+     * @param task 待执行的任务
+     * @return 包装后的 Runnable，可提交给任意 Executor
+     * @since 1.10.0
+     */
+    public static Runnable async(Runnable task) {
+        if (task == null) {
+            return null;
+        }
+        Map<String, Object> snapshot = snapshot();
+        return () -> {
+            try (CleanupGuard guard = newCleanupGuard()) {
+                restore(snapshot);
+                bridgeToMdc();
+                task.run();
+            } finally {
+                clearMdc();
+            }
+        };
+    }
+
+    /**
+     * 将任务包装为可安全跨线程传播上下文的 Supplier。
+     *
+     * <p>适用于 {@code CompletableFuture.supplyAsync()}、{@code ExecutorService.submit(Callable)} 等返回值场景。</p>
+     *
+     * <p><b>使用示例：</b></p>
+     * <pre>{@code
+     * CompletableFuture<Result> future = CompletableFuture.supplyAsync(
+     *     RequestContext.async(() -> service.process(data)));
+     * }</pre>
+     *
+     * @param <T>  返回值类型
+     * @param supplier 待执行的有返回值任务
+     * @return 包装后的 Supplier
+     * @since 1.10.0
+     */
+    public static <T> java.util.function.Supplier<T> async(java.util.function.Supplier<T> supplier) {
+        if (supplier == null) {
+            return null;
+        }
+        Map<String, Object> snapshot = snapshot();
+        return () -> {
+            try (CleanupGuard guard = newCleanupGuard()) {
+                restore(snapshot);
+                bridgeToMdc();
+                return supplier.get();
+            } finally {
+                clearMdc();
+            }
+        };
+    }
+
+    /**
+     * 包装 Executor，使其提交的任务自动获得当前线程上下文传播。
+     *
+     * <p>内部委托每一步给 {@link #async(Runnable)}，无需再对每个 task 手动包装。</p>
+     *
+     * <p><b>使用示例：</b></p>
+     * <pre>{@code
+     * Executor wrapped = RequestContext.executor(executorService);
+     * wrapped.execute(() -> process(data)); // 自动传播 TTL + MDC
+     * }</pre>
+     *
+     * @param delegate 被包装的 Executor 实例
+     * @return 包装后的 Executor，所有 submit/execute 调用自动传播上下文
+     * @since 1.10.0
+     */
+    public static java.util.concurrent.Executor executor(java.util.concurrent.Executor delegate) {
+        if (delegate == null) {
+            throw new NullPointerException("delegate executor cannot be null");
+        }
+        return command -> delegate.execute(async(command));
     }
 
     /**

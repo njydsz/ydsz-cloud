@@ -1,5 +1,7 @@
 package com.njydsz.common.json.tree;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -294,6 +296,88 @@ public abstract class JsonNode {
      */
     public Object asValue() {
         return null;
+    }
+
+    // ==================== 共享节点转换工具（ObjectNode/ArrayNode 复用，1.2.1） ====================
+
+    /**
+     * 将节点转换为 Boolean。
+     *
+     * <p>支持布尔节点与字符串 "true"/"false"/"1"/"0"（忽略大小写）；
+     * null/缺失节点或其他不可解析值返回 null。</p>
+     *
+     * @param node 源节点
+     * @return 转换结果或 null
+     */
+    protected static Boolean nodeToBoolean(JsonNode node) {
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node.isBoolean()) {
+            return node.asBoolean();
+        }
+        String str = node.asText();
+        if ("true".equalsIgnoreCase(str) || "1".equals(str)) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(str) || "0".equals(str)) {
+            return false;
+        }
+        return null;
+    }
+
+    /**
+     * 将节点转换为 BigDecimal（支持 NumberNode 与数字文本）。
+     *
+     * @param node 源节点
+     * @return 转换结果或 null
+     */
+    protected static BigDecimal nodeToBigDecimal(JsonNode node) {
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node instanceof NumberNode numNode) {
+            Number num = numNode.numberValue();
+            if (num instanceof BigDecimal bd) {
+                return bd;
+            }
+            if (num instanceof BigInteger bi) {
+                return new BigDecimal(bi);
+            }
+            return new BigDecimal(num.toString());
+        }
+        try {
+            return new BigDecimal(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 将节点转换为 BigInteger（支持 NumberNode 与数字文本）。
+     *
+     * @param node 源节点
+     * @return 转换结果或 null
+     */
+    protected static BigInteger nodeToBigInteger(JsonNode node) {
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node instanceof NumberNode numNode) {
+            Number num = numNode.numberValue();
+            if (num instanceof BigInteger bi) {
+                return bi;
+            }
+            if (num instanceof BigDecimal bd) {
+                return bd.toBigInteger();
+            }
+            return BigInteger.valueOf(num.longValue());
+        }
+        try {
+            return new BigInteger(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @Override

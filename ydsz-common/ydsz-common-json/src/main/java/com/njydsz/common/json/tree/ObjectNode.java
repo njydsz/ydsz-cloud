@@ -406,21 +406,7 @@ public final class ObjectNode extends JsonNode {
      * @return 布尔值
      */
     public Boolean getBoolean(String name) {
-        JsonNode node = fields.get(name);
-        if (node == null || node.isNull() || node.isMissing()) {
-            return null;
-        }
-        if (node.isBoolean()) {
-            return node.asBoolean();
-        }
-        String str = node.asText();
-        if ("true".equalsIgnoreCase(str) || "1".equals(str)) {
-            return true;
-        }
-        if ("false".equalsIgnoreCase(str) || "0".equals(str)) {
-            return false;
-        }
-        return null;
+        return nodeToBoolean(fields.get(name));
     }
 
     /**
@@ -441,25 +427,7 @@ public final class ObjectNode extends JsonNode {
      * @return BigDecimal 值
      */
     public BigDecimal getBigDecimal(String name) {
-        JsonNode node = fields.get(name);
-        if (node == null || node.isNull() || node.isMissing()) {
-            return null;
-        }
-        if (node instanceof NumberNode numNode) {
-            Number num = numNode.numberValue();
-            if (num instanceof BigDecimal bd) {
-                return bd;
-            }
-            if (num instanceof BigInteger bi) {
-                return new BigDecimal(bi);
-            }
-            return new BigDecimal(num.toString());
-        }
-        try {
-            return new BigDecimal(node.asText());
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return nodeToBigDecimal(fields.get(name));
     }
 
     /**
@@ -469,25 +437,7 @@ public final class ObjectNode extends JsonNode {
      * @return BigInteger 值
      */
     public BigInteger getBigInteger(String name) {
-        JsonNode node = fields.get(name);
-        if (node == null || node.isNull() || node.isMissing()) {
-            return null;
-        }
-        if (node instanceof NumberNode numNode) {
-            Number num = numNode.numberValue();
-            if (num instanceof BigInteger bi) {
-                return bi;
-            }
-            if (num instanceof BigDecimal bd) {
-                return bd.toBigInteger();
-            }
-            return BigInteger.valueOf(num.longValue());
-        }
-        try {
-            return new BigInteger(node.asText());
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return nodeToBigInteger(fields.get(name));
     }
 
     /**

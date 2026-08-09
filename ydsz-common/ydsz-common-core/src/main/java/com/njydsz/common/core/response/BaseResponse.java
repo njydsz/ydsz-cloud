@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @since 1.0.0
  *
  * @see IResponse
+ * @see Results
  */
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -145,7 +146,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * <p>分页查询时返回符合条件的总记录数，非分页场景为 {@code null} 不序列化。</p>
      *
      * @since 1.9.0
+     * @deprecated 1.9.3 分页响应请使用 {@link PageResult}，本类不再承担分页职责。
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     private Long total;
 
     /**
@@ -154,7 +157,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * <p>分页查询时返回当前页码（从 1 开始），非分页场景为 {@code null} 不序列化。</p>
      *
      * @since 1.9.0
+     * @deprecated 1.9.3 分页响应请使用 {@link PageResult}，本类不再承担分页职责。
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     private Long pageNum;
 
     /**
@@ -163,7 +168,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * <p>分页查询时返回每页大小，非分页场景为 {@code null} 不序列化。</p>
      *
      * @since 1.9.0
+     * @deprecated 1.9.3 分页响应请使用 {@link PageResult}，本类不再承担分页职责。
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     private Long pageSize;
 
     /**
@@ -486,7 +493,10 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T>      数据类型
      * @return 分页成功响应
      * @since 1.9.0
+     * @deprecated 1.9.3 推荐使用 {@link PageResult#success(Long, Long, Long, Object)}，
+     *             返回类型更明确且拥有 {@link PageResult#getPages()} 便捷方法。
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static <T> BaseResponse<T> successPage(Long total, Long pageNum, Long pageSize, T data) {
         BaseResponse<T> response = success(data);
         response.setTotal(total);
@@ -505,7 +515,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T>      数据类型
      * @return 空分页响应
      * @since 1.9.0
+     * @deprecated 1.9.3 推荐使用 {@link PageResult#empty(Long, Long)}。
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static <T> BaseResponse<T> emptyPage(Long pageNum, Long pageSize) {
         return successPage(0L, pageNum, pageSize, null);
     }

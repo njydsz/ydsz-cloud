@@ -10,6 +10,10 @@ import org.springframework.validation.annotation.Validated;
 
 import lombok.Data;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Core 模块运行时配置属性。
  *
@@ -23,6 +27,11 @@ import lombok.Data;
  *     enabled: true
  *     max-page-size: 1000
  *     default-page-size: 20
+ *     api-version:
+ *       default: "v1"
+ *       header: "X-Api-Version"
+ *       routes:
+ *         v2: ["/api/v2/**"]
  * }</pre>
  *
  * @author ydsz-team
@@ -72,6 +81,16 @@ public class CoreProperties {
     private int tenantMdcFilterOrder = Ordered.HIGHEST_PRECEDENCE + 100;
 
     /**
+     * API 版本路由配置。
+     *
+     * <p>供 web 模块消费以建立版本号→路由映射与默认版本策略。
+     * 业务模块需要版本灰度分流时可按此配置实现 {@code HandlerMapping} 路由。</p>
+     *
+     * @since 1.10.0
+     */
+    private ApiVersionConfig apiVersion = new ApiVersionConfig();
+
+    /**
      * 校验分页范围合法性：defaultPageSize 不应大于 maxPageSize。
      *
      * <p>该校验在应用启动时执行（@Validated + @AssertTrue），
@@ -80,5 +99,32 @@ public class CoreProperties {
     @AssertTrue(message = "ydsz.core.default-page-size must be <= ydsz.core.max-page-size")
     public boolean isPaginationRangeValid() {
         return defaultPageSize <= maxPageSize;
+    }
+
+    /**
+     * API 版本配置属性（嵌套配置对象）。
+     *
+     * <p>绑定到 {@code ydsz.core.api-version.*}。</p>
+     *
+     * @since 1.10.0
+     */
+    @Data
+    public static class ApiVersionConfig {
+
+        /** 默认 API 版本号。 */
+        private String defaultVersion = "v1";
+
+        /** 客户端声明版本的 HTTP 请求头名称。 */
+        private String header = "X-Api-Version";
+
+        /**
+         * 版本号 → URL 路径模式的路由规则。
+         *
+         * <p>Map key 为版本号（如 "v2"），value 为该版本匹配的 URL Ant 路径模式列表。
+         * web 模块可根据此映射做版本路由分发。不配置时使用 header 兜底。</p>
+         *
+         * <p>示例：{@code {"v2": ["/api/v2/**"]}}</p>
+         */
+        private Map<String, List<String>> routes = Collections.emptyMap();
     }
 }

@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.captcha.core.CaptchaGenerator;
 import com.njydsz.common.safe.captcha.core.CaptchaResult;
@@ -266,7 +267,11 @@ public class ImageCaptchaGenerator implements CaptchaGenerator {
             byte[] bytes = baos.toByteArray();
             return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
         } catch (Exception e) {
-            throw new BusinessException("图片转换失败", e);
+            throw BusinessException.builder()
+                    .code(UnifiedExceptionCode.FAIL.getCode())
+                    .message("图片转换失败")
+                    .cause(e)
+                    .build();
         }
     }
 }

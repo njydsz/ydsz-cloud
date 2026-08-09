@@ -365,6 +365,9 @@ public final class JSONReader {
             throw new IllegalArgumentException("maxDepth must be > 0, got: " + depth);
         }
         JSONReader.maxDepth = depth;
+        // 同步通用解析路径（JsonParserUtil）的深度限制，确保 fromJson(Object.class)
+        // 等走通用解析器的入口也生效（两套深度系统统一）
+        com.njydsz.common.json.parser.JsonParserUtil.setMaxParseDepth(depth);
     }
 
     /**

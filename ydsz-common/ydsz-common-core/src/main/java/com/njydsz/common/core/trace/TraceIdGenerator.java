@@ -2,7 +2,6 @@ package com.njydsz.common.core.trace;
 
 import java.util.HexFormat;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * TraceId 生成器（基于 ThreadLocalRandom + HexFormat）。
@@ -14,10 +13,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * 在现代 JVM（ZGC/Shenandoah）下，16 字节的 TLAB 分配几乎零成本，
  * 无需 ThreadLocal 缓冲区增加的复杂度和生命周期管理负担。</p>
  *
- * <h3>性能对比（JDK 21）</h3>
+ * <h3>性能说明</h3>
  * <ul>
- *   <li>UUID.randomUUID() — SecureRandom 每次获取熵，高并发瓶颈</li>
- *   <li>{@link ThreadLocalRandom} — 线程本地无锁，约 2.5x 于 UUID，零依赖</li>
+ *   <li>默认 {@link #generateTraceId()} 无锁、线程本地，适合绝大多数场景</li>
+ *   <li>{@link #generateSortableTraceId()} 按时间排序，使用 ThreadLocal 序列号
+ *       避免全局 CAS 争用；同毫秒内不同线程的序号彼此独立但均保序，整体趋势有序</li>
  * </ul>
  *
  * <h3>安全性说明</h3>
@@ -43,6 +43,20 @@ public final class TraceIdGenerator {
      */
     private static final HexFormat HEX_FORMAT = HexFormat.of();
 
+    /**
+     * 同一毫秒内的序号上限（14 bit，0~16383），允许单线程每毫秒最多 16384 次调用。
+     * 超出后进入下一毫秒重新计数。
+     */
+    private static final int MAX_SEQ_PER_MS = 0x3FFF;
+
+    /**
+     * 线程本地的时间戳+序列号状态，避免全局 CAS 争用。
+     *
+     * <p>每个线程独立维护最后使用的时间戳和同毫秒内的递增序号。
+     * 多线程之间不存在锁竞争，整体生成吞吐量更高。</p>
+     */
+    private static final ThreadLocal<SortableState> SORTABLE_STATE = ThreadLocal.withInitial(SortableState::new);
+
     private TraceIdGenerator() {
         throw new UnsupportedOperationException("Utility class");
     }
@@ -62,75 +76,43 @@ public final class TraceIdGenerator {
     }
 
     /**
-     * 同一毫秒内的单调序号上限（16 bit），超过则自旋等待毫秒进位。
-     */
-    private static final int MAX_SEQ_PER_MS = 0xFFFF;
-
-    /**
-     * 打包 (毫秒时间戳 << 16 | 同毫秒单调序号) 的原子计数器，
-     * 保证单线程内严格递增、多线程下高概率有序且不重复。
-     */
-    private static final AtomicLong LAST_TS_SEQ = new AtomicLong(0L);
-
-    /**
      * 生成按时间有序（可排序）的 32 位十六进制 TraceId（UUIDv7 风格）。
      *
      * <p>布局（16 bytes / 32 hex）：</p>
      * <ul>
      *   <li>bytes[0..5]（48 bit）：大端毫秒时间戳</li>
-     *   <li>bytes[6..7]（16 bit）：同一毫秒内的单调序号，保证同毫秒内字典序严格递增</li>
-     *   <li>bytes[8..15]（64 bit）：随机数，保证唯一性与分布均匀性</li>
+     *   <li>bytes[6..7]（14 bit）：同一毫秒内的单调序号，保证同毫秒内字典序严格递增</li>
+     *   <li>bytes[8..15]（66 bit）：随机数，保证唯一性与分布均匀性</li>
      * </ul>
      *
      * <p>相比 {@link #generateTraceId()} 的纯随机实现，本方法生成的 id 可直接用于
      * 日志 / 链路存储的按时间排序与范围检索，便于问题排查。两者输出格式相同（32 位小写 hex），
      * 可共存；默认 {@link #generateTraceId()} 仍保持随机以最大化分布均匀性。</p>
      *
+     * <p>本方法使用 ThreadLocal 维护时间戳+序号状态，无全局 CAS 争用，
+     * 适合高并发场景下生成有序 traceId。</p>
+     *
      * @return 32 位小写十六进制字符串（时间有序）
      * @since 1.9.1
      */
     public static String generateSortableTraceId() {
         byte[] bytes = new byte[TRACE_ID_BYTES];
+        SortableState state = SORTABLE_STATE.get();
         long timeMillis = System.currentTimeMillis();
-        long packed;
-        long cur;
-        // CAS 自旋：同毫秒内序号 +1；毫秒进位时序号归零
-        while (true) {
-            cur = LAST_TS_SEQ.get();
-            long ts = cur >>> 16;
-            long seq = cur & MAX_SEQ_PER_MS;
-            long nextTs;
-            long nextSeq;
-            if (timeMillis > ts) {
-                nextTs = timeMillis;
-                nextSeq = 0L;
-            } else {
-                // 同一毫秒：序号自增；达到上限则等待毫秒进位
-                if (seq >= MAX_SEQ_PER_MS) {
-                    timeMillis = System.currentTimeMillis();
-                    continue;
-                }
-                nextTs = ts;
-                nextSeq = seq + 1;
-            }
-            packed = (nextTs << 16) | nextSeq;
-            if (LAST_TS_SEQ.compareAndSet(cur, packed)) {
-                break;
-            }
-        }
-        long ts = packed >>> 16;
-        int seq = (int) (packed & MAX_SEQ_PER_MS);
+        long seq = state.nextSeq(timeMillis);
+
         // 48-bit 大端时间戳
-        bytes[0] = (byte) (ts >>> 40);
-        bytes[1] = (byte) (ts >>> 32);
-        bytes[2] = (byte) (ts >>> 24);
-        bytes[3] = (byte) (ts >>> 16);
-        bytes[4] = (byte) (ts >>> 8);
-        bytes[5] = (byte) ts;
-        // 16-bit 单调序号（大端）
-        bytes[6] = (byte) (seq >>> 8);
-        bytes[7] = (byte) seq;
-        // 剩余 64-bit 随机数
+        bytes[0] = (byte) (timeMillis >>> 40);
+        bytes[1] = (byte) (timeMillis >>> 32);
+        bytes[2] = (byte) (timeMillis >>> 24);
+        bytes[3] = (byte) (timeMillis >>> 16);
+        bytes[4] = (byte) (timeMillis >>> 8);
+        bytes[5] = (byte) timeMillis;
+        // 14-bit 序号（大端），高位留 2 bit 作为 00 前缀，填充到一个 short（2 bytes）
+        // 布局：bytes[6] = 00 + seq高6bit; bytes[7] = seq低8bit
+        bytes[6] = (byte) ((seq & 0x3F00) >>> 8);
+        bytes[7] = (byte) (seq & 0xFF);
+        // 剩余 64-bit 随机数（8 bytes）
         byte[] rand = new byte[TRACE_ID_BYTES - 8];
         ThreadLocalRandom.current().nextBytes(rand);
         System.arraycopy(rand, 0, bytes, 8, rand.length);
@@ -184,5 +166,42 @@ public final class TraceIdGenerator {
      */
     public static String traceparentHeader(String traceId, String spanId) {
         return "00-" + traceId + "-" + spanId + "-01";
+    }
+
+    /**
+     * 可排序 TraceId 的线程本地状态：跟踪上次使用的时间戳和同毫秒内的序号。
+     *
+     * <p>无需原子操作/锁：每个线程独立维护自己的时间戳和序号，自然线程安全。
+     * 同毫秒内单线程严格递增，不同线程间序号独立但整体时间趋势有序。</p>
+     */
+    private static final class SortableState {
+        private long lastMillis;
+        private long seq;
+
+        /**
+         * 获取下一个序号。
+         *
+         * <p>时间戳进位时序号归零；时间戳未进步时序号 +1，到上限后自旋等待下一毫秒。</p>
+         *
+         * @param nowMillis 当前毫秒时间戳
+         * @return 当前使用的序号
+         */
+        synchronized long nextSeq(long nowMillis) {
+            if (nowMillis != lastMillis) {
+                lastMillis = nowMillis;
+                seq = 0;
+            } else {
+                seq++;
+                if (seq > MAX_SEQ_PER_MS) {
+                    // 单线程同毫秒调用频次超限，自旋等待下一毫秒
+                    while (nowMillis == lastMillis) {
+                        nowMillis = System.currentTimeMillis();
+                    }
+                    lastMillis = nowMillis;
+                    seq = 0;
+                }
+            }
+            return seq;
+        }
     }
 }

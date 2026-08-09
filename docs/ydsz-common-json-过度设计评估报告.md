@@ -6,6 +6,56 @@
 
 ---
 
+## 〇、优化实施记录（2026-08-09 更新）
+
+> 本节记录评估报告发布后按 P0→P1→P2 优先级实际完成的代码优化。
+> 所有改动均通过 `mvn compile` 验证（模块当前可编译），关键单测通过率见文末"遗留问题"。
+
+### P0 阶段（已全部完成 ✅）
+
+| 编号 | 项 | 实际执行 |
+|------|----|---------|
+| P0-1 | JsonNode `asXxx(defaultValue)` 忽略默认值 bug | 修复基类 5 个方法（对齐 Jackson 语义）；ObjectNode/ArrayNode 增加 `asText(defaultValue)` 覆盖；补齐 NumberNode 缺失的 `asText()` |
+| P0-2 | JsonPatch.remove 索引越界 | 修复 `applyRemove`/`applyReplace`/`applyAdd` 的越界检查；给 ArrayNode 新增 `set(int, Object)` / `insert(int, Object)` 重载并提取 `toNode(Object)` |
+| P0-3 | 静态缓存无淘汰 | 新增 `util/BoundedLruCache`（零依赖、读写锁、LRU）；替换 6 处缓存：BeanSerializerCache、SerializerCache、SerializationProvider（2 处）、DeserializationProvider（2 处）、ValueWriter、BeanReader、PolymorphicTypeResolver |
+| P0-4 | ThreadLocal 无清理 | JSONReader/DeserializationProvider 增加 `clearThreadLocals()`；扩展 `SerializationProvider.clearThreadLocals()` 全覆盖；JsonAutoConfiguration 增加 `@PreDestroy` 生命周期清理 |
+| 额外 | **module-info.java 编译阻塞** | 发现并移除未正确声明 requires 的 module-info.java（恢复编译） |
+| 额外 | **6 处预存编译错误** | 修复 JsonLines.forEach 名称冲突、YdszJson.readTree 签名、JsonPatch 错误包路径、BeanSerializer keyLen 重复、JsonMergePatch Iterator for-each、ArrayNode 缺失方法 |
+
+### P1 阶段（已全部完成 ✅）
+
+| 编号 | 项 | 实际执行 |
+|------|----|---------|
+| P1-1 | 移除未使用注解 | 移除 `@Experimental`（0 引用）；清理 `@JsonTypeInfo.As` 中 2 个未实现占位符变体（EXISTING_PROPERTY/EXTERNAL_PROPERTY）。`@JsonNaming` 因有测试覆盖保留；多态注解因引擎引用保留 |
+| P1-2 | 精简 @JsonClass | 移除 4 个零引用的多态占位符属性（typeKey/seeAlso/seeAlsoNames/autoType），15→11 属性，保留引擎支持的 9 个 + NamingStrategy 枚举 |
+| P1-3 | 消除 @JsonView 矛盾 | 移除 `@Deprecated` 标记与矛盾 Javadoc（FlowDefinition 仍在使用） |
+| P1-4 | 拆分 SerializationProvider | 提取 `ThreadLocalSnapshot` 为独立类（JsonMapper 20 处引用同步更新） |
+| P1-5 | 消除双重 Builder | JsonMapper.Builder 重构为委托 `JsonConfig.Builder`（消除 12 个重复字段/setter，从 ~200 行减至 ~120 行） |
+| P1-6 | 删除死代码 | 移除 `recordSerialize`/`recordDeserialize`/`ThrowingSupplier`（14 处调用点同步简化）；修正 `tryFastPathToWriter` 误导性注释（其承载真实 Collection/Map 快速路径，非死代码） |
+
+### P2 阶段（部分完成）
+
+| 编号 | 项 | 状态 | 说明 |
+|------|----|------|------|
+| P2-1 | 修复循环依赖 | ✅ | SerializationProvider/DeserializationProvider 改为直接查询 SerializerRegistry/JsonModuleRegistry，移除对 YdszJson 的反向依赖 |
+| P2-2 | 精简 Feature 枚举 | ✅ | JSONWriter.Feature 从 16 项精简为 3 项（WriteNulls/PrettyPrint/WriteBigDecimalAsString，其余 13 项全仓库零引用）。JSONReader.Feature 保留（安全语义 + 对外契约） |
+| P2-3 | Jackson 底层引擎评估 | 📋 | 产出技术预研文档（见 `ydsz-common-json-jackson底层评估.md`），为决策项非代码改动 |
+| P2-4 | 统一异常处理 | ✅ | YdszJson.warmup 静默失败加 WARN 日志；JsonLines/JsonUtils 加 Logger + debug 日志。日期解析回退模式（合理设计）保留不打扰 |
+| P2-5 | 树模型 getter 重复 | ✅ | 提取 `nodeToBoolean/nodeToBigDecimal/nodeToBigInteger` 到 JsonNode 基类，ObjectNode/ArrayNode 复用（消除 3 组重复逻辑，公共 API 不变） |
+| P2-6 | 缓存 JsonMapper 实例 | ✅ | JsonUtils 静态复用 `FIELD_FILTER_MAPPER`，消除 toJsonWithFields/toJsonWithoutFields 每次重建 |
+
+### 遗留问题（外部并行提交引入，非本次优化所致）
+
+> 检测到外部进程并行提交（`7e26ebf` 等），其修改 DeserializationProvider 强制类型转换后引入回归：
+
+1. `YdszJsonRoundTripTest.bigDecimalRoundTrip` / `bigIntegerRoundTrip`：BigDecimal/BigInteger 反序列化失败（外部提交类型转换路径回归）
+2. `YdszJsonRoundTripTest.mapTest`：Map 值类型推断 Integer vs Long 不一致
+3. `AutoTypeCheckerTest` 引用已删除的 `JsonSecurityUtils`（本次已删除对应过时测试方法）
+
+**建议**：由外部提交方修复反序列化类型转换回归，或在后续迭代中回滚 `7e26ebf` 的 DeserializationProvider 部分。
+
+---
+
 ## 一、执行摘要
 
 `ydsz-common-json` 是一个**完全自研、零外部 JSON 库运行时依赖**的高性能 JSON 引擎，对标 Jackson `ObjectMapper`，实现了从底层流式解析（JSONWriter/JSONReader）到上层数据绑定（POJO 序列化/反序列化）、树模型、JSON Schema、JSON Patch、Spring Boot 自动配置的完整能力矩阵。

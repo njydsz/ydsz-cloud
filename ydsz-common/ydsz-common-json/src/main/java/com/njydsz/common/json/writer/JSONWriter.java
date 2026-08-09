@@ -50,74 +50,9 @@ public final class JSONWriter {
         PrettyPrint(false),
 
         /**
-         * 使用 ISO-8601 日期格式
-         */
-        UseISO8601DateFormat(false),
-
-        /**
-         * 转义非 ASCII 字符
-         */
-        EscapeNonAscii(false),
-
-        /**
-         * 禁止循环引用检测（提升性能，但可能导致无限递归）
-         */
-        DisableCircularReferenceDetect(false),
-
-        /**
-         * 输出 Map 类型信息（用于反序列化时恢复类型）
-         */
-        WriteMapTypeName(false),
-
-        /**
-         * 使用单引号代替双引号
-         */
-        UseSingleQuotes(false),
-
-        /**
-         * 排序 Map Key
-         */
-        SortMapKeys(false),
-
-        /**
-         * 写入类名（用于多态支持）
-         */
-        WriteClassName(false),
-
-        /**
          * 将 BigDecimal 作为字符串写入（避免精度丢失，输出如 "1.23" 而非 1.23）
          */
-        WriteBigDecimalAsString(false),
-
-        /**
-         * 将布尔值作为数字写入（true 写为 1，false 写为 0）
-         */
-        WriteBooleanAsNumber(false),
-
-        /**
-         * 输出 Map 中值为 null 的字段（默认不输出 null 值字段）
-         */
-        WriteMapNullValue(false),
-
-        /**
-         * 将 null 字符串字段写为空字符串 ""（需配合 WriteMapNullValue 使用）
-         */
-        WriteNullStringAsEmpty(false),
-
-        /**
-         * 将 null 列表字段写为空数组 []（需配合 WriteMapNullValue 使用）
-         */
-        WriteNullListAsEmpty(false),
-
-        /**
-         * 将 null 数字字段写为 0（需配合 WriteMapNullValue 使用）
-         */
-        WriteNullNumberAsZero(false),
-
-        /**
-         * 将 null 布尔字段写为 false（需配合 WriteMapNullValue 使用）
-         */
-        WriteNullBooleanAsFalse(false);
+        WriteBigDecimalAsString(false);
 
         private final boolean enabledByDefault;
 

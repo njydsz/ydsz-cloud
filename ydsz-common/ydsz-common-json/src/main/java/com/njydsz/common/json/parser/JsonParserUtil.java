@@ -498,7 +498,12 @@ public final class JsonParserUtil {
             return Double.valueOf(value);
         } else {
             endPos[0] = pos;
-            return negative ? -intValue : intValue;
+            // 行业惯例（Jackson/Fastjson2）：int 范围内返回 Integer，超出返回 Long
+            long result = negative ? -intValue : intValue;
+            if (result >= Integer.MIN_VALUE && result <= Integer.MAX_VALUE) {
+                return (int) result;
+            }
+            return result;
         }
     }
 

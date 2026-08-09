@@ -74,8 +74,8 @@ public class SafeQueryAutoConfiguration {
         JdbcProperties jdbc = jdbcProperties.getIfAvailable();
         if (jdbc != null && jdbc.getSafeQuery() != null) {
             JdbcProperties.SafeQuery safeQuery = jdbc.getSafeQuery();
-            interceptor.setEnabled(Boolean.TRUE.equals(safeQuery.getEnabled()));
-            interceptor.setStrictMode(Boolean.TRUE.equals(safeQuery.getStrictMode()));
+            interceptor.setEnabled(safeQuery.isEnabled());
+            interceptor.setStrictMode(safeQuery.isStrictMode());
             if (safeQuery.getOrderByWhitelist() != null) {
                 interceptor.setOrderByWhitelist(safeQuery.getOrderByWhitelist());
             }

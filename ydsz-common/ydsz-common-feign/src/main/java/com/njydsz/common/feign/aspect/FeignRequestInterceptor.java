@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.trace.TraceIdPropagation;
 import com.njydsz.common.domain.enums.DataScopeType;
 import com.njydsz.common.domain.enums.IdentityType;
 import com.njydsz.common.feign.config.FeignProperties;
@@ -104,10 +105,41 @@ public class FeignRequestInterceptor implements RequestInterceptor {
         // 非Web环境自动生成请求 ID，保证可追溯性
         ensureRequestId(requestTemplate, httpServletRequest);
 
+        // 传播 W3C Trace Context 标准请求头（X-Trace-Id + traceparent），
+        // 实现跨服务链路追踪的标准化（兼容 SkyWalking / Jaeger 等）
+        propagateTraceHeaders(requestTemplate);
+
         propagateIdentityHeaders(requestTemplate, httpServletRequest, headersToPropagate);
         propagateDataPermissionHeaders(requestTemplate, headersToPropagate);
         propagateColumnPermissionHeaders(requestTemplate, headersToPropagate);
         propagateNetworkHeaders(requestTemplate, httpServletRequest, headersToPropagate);
+    }
+
+    /**
+     * 传播 W3C Trace Context 标准请求头。
+     *
+     * <p>通过 {@link TraceIdPropagation#traceHeadersOrCreate()} 注入：
+     * <ul>
+     *   <li>{@code X-Trace-Id} — 32位十六进制，与现有体系兼容</li>
+     *   <li>{@code traceparent} — W3C Trace Context 标准，格式 {@code 00-{traceId}-{spanId}-01}</li>
+     * </ul>
+     * 仅当请求头不存在时才写入（setHeaderIfAbsent），避免覆盖上游已明确设置的追踪上下文。
+     *
+     * @param requestTemplate Feign 请求模板
+     * @since 1.2.0
+     */
+    private void propagateTraceHeaders(RequestTemplate requestTemplate) {
+        try {
+            java.util.Map<String, String> traceHeaders = TraceIdPropagation.traceHeadersOrCreate();
+            if (traceHeaders != null && !traceHeaders.isEmpty()) {
+                traceHeaders.forEach((key, value) ->
+                    setHeaderIfAbsent(requestTemplate, key, value)
+                );
+            }
+        } catch (Exception e) {
+            // 链路追踪传播不应阻断业务请求，静默降级
+            log.debug("Trace header propagation failed: {}", e.getMessage());
+        }
     }
 
     /**

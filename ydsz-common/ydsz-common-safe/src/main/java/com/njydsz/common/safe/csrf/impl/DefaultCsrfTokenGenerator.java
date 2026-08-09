@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.csrf.CsrfToken;
 import com.njydsz.common.safe.csrf.CsrfTokenGenerator;
@@ -68,7 +69,11 @@ public class DefaultCsrfTokenGenerator implements CsrfTokenGenerator {
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new BusinessException("SHA-256 algorithm not available", e);
+            throw BusinessException.builder()
+                    .code(UnifiedExceptionCode.FAIL.getCode())
+                    .message("SHA-256 algorithm not available")
+                    .cause(e)
+                    .build();
         }
     }
 

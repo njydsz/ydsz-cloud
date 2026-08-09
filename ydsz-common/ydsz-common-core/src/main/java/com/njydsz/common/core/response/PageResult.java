@@ -14,8 +14,8 @@ import com.njydsz.common.core.code.ResultCode;
  * 后者是领域 / 数据层分页对象，本类是 API 响应信封。两者可组合使用，例如
  * {@code PageResult.success(total, pageNum, pageSize, domainPage.getRecords())}。</p>
  *
- * <p>{@link BaseResponse#successPage(Long, Long, Long, Object)} 仍保留以兼容既有调用，
- * 新代码建议返回 {@code PageResult<T>} 以获更强的类型表达与 {@link #getPages()} 等便捷方法。</p>
+ * <p>{@link BaseResponse#successPage(Long, Long, Long, Object)} 已标记 {@code @Deprecated}，
+ * 新代码请直接返回 {@code PageResult<T>} 以获更强的类型表达与 {@link #getPages()} 等便捷方法。</p>
  *
  * @param <T> 数据元素的类型
  * @author ydsz-team
