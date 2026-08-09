@@ -69,6 +69,20 @@ public final class ValueWriter {
     /** 类型代码缓存（Class -> 类型代码） */
     static final ConcurrentHashMap<Class<?>, Byte> TYPE_CODE_CACHE = new ConcurrentHashMap<>(256);
 
+    /** 十六进制字符表（用于 \\uXXXX 转义） */
+    private static final char[] HEX = "0123456789abcdef".toCharArray();
+
+    /**
+     * 追加 \\uXXXX 四位数十六进制转义（用于 U+2028/U+2029 等非 BMP 内特殊字符）。
+     */
+    private static void appendHex4(StringBuilder sb, char c) {
+        sb.append("\\u");
+        sb.append(HEX[(c >> 12) & 0xf]);
+        sb.append(HEX[(c >> 8) & 0xf]);
+        sb.append(HEX[(c >> 4) & 0xf]);
+        sb.append(HEX[c & 0xf]);
+    }
+
     static {
         for (int i = 0; i < 10000; i++) {
             SMALL_INTS[i] = String.valueOf(i);
@@ -223,7 +237,8 @@ public final class ValueWriter {
         int firstSpecial = -1;
         for (int i = 0; i < len; i++) {
             char c = str.charAt(i);
-            if (c < ' ' || c == '"' || c == '\\') {
+            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'
+                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {
                 firstSpecial = i;
                 break;
             }
@@ -255,6 +270,21 @@ public final class ValueWriter {
                         char l = (char)(c & 0xf);
                         sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));
                         sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));
+                    } else if (c == '\u2028' || c == '\u2029') {
+                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义
+                        appendHex4(sb, c);
+                    } else if (Character.isHighSurrogate(c)) {
+                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
+                            sb.append(c);
+                            sb.append(str.charAt(i + 1));
+                            i++;
+                        } else {
+                            // 孤立高位代理：替换为 U+FFFD
+                            sb.append('\uFFFD');
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        // 孤立低位代理：替换为 U+FFFD
+                        sb.append('\uFFFD');
                     } else {
                         sb.append(c);
                     }
@@ -273,7 +303,8 @@ public final class ValueWriter {
         boolean needsEscape = false;
         for (int i = 0; i < len; i++) {
             char c = str.charAt(i);
-            if (c < ' ' || c == '"' || c == '\\') {
+            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'
+                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {
                 needsEscape = true;
                 break;
             }
@@ -308,6 +339,21 @@ public final class ValueWriter {
                         char l = (char)(c & 0xf);
                         sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));
                         sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));
+                    } else if (c == '\u2028' || c == '\u2029') {
+                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义
+                        appendHex4(sb, c);
+                    } else if (Character.isHighSurrogate(c)) {
+                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
+                            sb.append(c);
+                            sb.append(str.charAt(i + 1));
+                            i++;
+                        } else {
+                            // 孤立高位代理：替换为 U+FFFD
+                            sb.append('\uFFFD');
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        // 孤立低位代理：替换为 U+FFFD
+                        sb.append('\uFFFD');
                     } else {
                         sb.append(c);
                     }

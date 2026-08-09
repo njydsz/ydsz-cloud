@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp", "total", "pageNum", "pageSize", "extensions"})
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "requestId", "spanId", "timestamp", "total", "pageNum", "pageSize", "extensions"})
 @JsonClass(description = "统一API响应基类，标记可安全反序列化")
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
@@ -102,19 +102,37 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     private T data;
 
     /**
-     * 时间戳
-     */
-    private Long timestamp;
-
-    /**
      * 链路追踪 ID
      */
     private String traceId;
 
     /**
+     * 请求 ID（用于客户端/前端精准排障，单个请求唯一）。
+     *
+     * <p>为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 控制）。</p>
+     *
+     * @since 1.10.0
+     */
+    private String requestId;
+
+    /**
+     * 当前服务调用的 Span ID（W3C Trace Context span ID）。
+     *
+     * <p>为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 控制）。</p>
+     *
+     * @since 1.10.0
+     */
+    private String spanId;
+
+    /**
+     * 时间戳
+     */
+    private Long timestamp;
+
+    /**
      * 扩展字段（可选）。
      *
-     * <p>用于携带额外的上下文信息，如 requestId、debugInfo、cost 等。
+     * <p>用于携带额外的上下文信息，如 debugInfo、cost 等。
      * 为 {@code null} 时不序列化（通过 {@code @JsonInclude(NON_NULL)} 控制）。</p>
      *
      * @since 1.6.0
@@ -149,15 +167,18 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     private Long pageSize;
 
     /**
-     * 默认构造函数
+     * 默认构造函数。
+     *
+     * <p>自动从 {@link RequestContext} 解析 traceId、requestId、spanId
+     * （均为空时不设置）。
      */
     public BaseResponse() {
         this.timestamp = System.currentTimeMillis();
-        this.traceId = resolveTraceId();
+        resolveObservability();
     }
 
     /**
-     * 全参数构造函数
+     * 全参数构造函数。
      *
      * @param code 响应码
      * @param msg 响应消息
@@ -168,7 +189,47 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.msg = msg;
         this.data = data;
         this.timestamp = System.currentTimeMillis();
+        resolveObservability();
+    }
+
+    /**
+     * 全参数构造函数（含可观测性字段）。
+     *
+     * @param code      响应码
+     * @param msg       响应消息
+     * @param data      响应数据
+     * @param requestId 请求 ID
+     * @param spanId    Span ID
+     * @since 1.10.0
+     */
+    public BaseResponse(String code, String msg, T data, String requestId, String spanId) {
+        this.code = code;
+        this.msg = msg;
+        this.data = data;
+        this.requestId = requestId;
+        this.spanId = spanId;
+        this.timestamp = System.currentTimeMillis();
         this.traceId = resolveTraceId();
+    }
+
+    /**
+     * 解析当前可观测性信息（traceId、requestId、spanId），
+     * 优先从 {@link RequestContext} 读取，回退 MDC。
+     *
+     * <p>注意：调用方若使用 {@link #BaseResponse(String, String, T, String, String)} 构造函数，
+     * 本方法不会覆盖已显式设置的 observability 字段。
+     */
+    private void resolveObservability() {
+        this.traceId = resolveTraceId();
+        // requestId / spanId: 仅在 RequestContext 中存在时填充，避免无条件生成噪声
+        String ctxRequestId = RequestContext.getRequestId();
+        if (ctxRequestId != null && !ctxRequestId.isBlank()) {
+            this.requestId = ctxRequestId;
+        }
+        // spanId 按需生成（仅在有 traceId 的场景下），避免纯随机生成带来的误导
+        if (this.traceId != null && !this.traceId.isBlank()) {
+            this.spanId = com.njydsz.common.core.trace.TraceIdGenerator.generateSpanId();
+        }
     }
 
     /**

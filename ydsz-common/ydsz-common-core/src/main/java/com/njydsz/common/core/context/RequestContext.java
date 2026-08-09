@@ -77,41 +77,31 @@ public final class RequestContext {
     /** 上下文键名：API 版本 */
     public static final String KEY_API_VERSION = "apiVersion";
 
-    // ==================== v1.9 业务级上下文键（已下沉至 BizContextKeys） ====================
-    // 以下常量仅为向后兼容保留，已 @Deprecated 并桥接至 {@link BizContextKeys}。
-    // 新代码请直接引用 {@link BizContextKeys}，或在各自模块内声明类型安全的 {@link ContextKey}。
+    // ==================== 业务级上下文键（内联定义，避免额外类） ====================
 
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_AUTH_INFO} */
-    @Deprecated(since = "1.9.0", forRemoval = false)
-    public static final String KEY_AUTH_INFO = BizContextKeys.KEY_AUTH_INFO;
+    /** 认证信息键。 */
+    public static final String KEY_AUTH_INFO = "authInfo";
 
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_LOGIN_USER} */
-    @Deprecated(since = "1.9.0", forRemoval = false)
-    public static final String KEY_LOGIN_USER = BizContextKeys.KEY_LOGIN_USER;
+    /** 登录用户键。 */
+    public static final String KEY_LOGIN_USER = "loginUser";
 
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_TENANT_CONTEXT} */
-    @Deprecated(since = "1.9.0", forRemoval = false)
-    public static final String KEY_TENANT_CONTEXT = BizContextKeys.KEY_TENANT_CONTEXT;
+    /** 租户上下文键（tenantId / 系统租户标识 / isSkipIsolation）。 */
+    public static final String KEY_TENANT_CONTEXT = "tenantContext";
 
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_COLUMN_PERMISSION} */
-    @Deprecated(since = "1.9.0", forRemoval = false)
-    public static final String KEY_COLUMN_PERMISSION = BizContextKeys.KEY_COLUMN_PERMISSION;
+    /** 列权限信息键。 */
+    public static final String KEY_COLUMN_PERMISSION = "columnPermission";
 
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_AUDIT_DATA} */
-    @Deprecated(since = "1.9.0", forRemoval = false)
-    public static final String KEY_AUDIT_DATA = BizContextKeys.KEY_AUDIT_DATA;
+    /** 审计上下文数据键。 */
+    public static final String KEY_AUDIT_DATA = "auditData";
 
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_HTTP_REQUEST}；建议改用 {@link #setRequestSnapshot(RequestSnapshot)} 的不可变快照 */
-    @Deprecated(since = "1.9.0", forRemoval = false)
-    public static final String KEY_HTTP_REQUEST = BizContextKeys.KEY_HTTP_REQUEST;
+    /** HTTP 请求对象键（建议使用 {@link #setRequestSnapshot(RequestSnapshot)} 的不可变快照）。 */
+    public static final String KEY_HTTP_REQUEST = "httpRequest";
 
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_EXTRA_HEADERS} */
-    @Deprecated(since = "1.9.0", forRemoval = false)
-    public static final String KEY_EXTRA_HEADERS = BizContextKeys.KEY_EXTRA_HEADERS;
+    /** 数据权限虚拟请求头键（{@code Map<String, String>}）。 */
+    public static final String KEY_EXTRA_HEADERS = "extraHeaders";
 
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_CACHED_USER_INFO_MAP} */
-    @Deprecated(since = "1.9.0", forRemoval = false)
-    public static final String KEY_CACHED_USER_INFO_MAP = BizContextKeys.KEY_CACHED_USER_INFO_MAP;
+    /** 请求级用户信息缓存键。 */
+    public static final String KEY_CACHED_USER_INFO_MAP = "cachedUserInfoMap";
 
     /**
      * 请求上下文存储（懒初始化）。
@@ -377,8 +367,11 @@ public final class RequestContext {
      * @param key   上下文键
      * @param value 属性值
      * @since 1.5.0
+     * @deprecated 直接调用 {@link #put(String, Object)} 并传入 {@link ContextKey#key()} 更简单。
+     *             例如：{@code put(KEY_AUTH_INFO, value)}。
      * @see ContextKey
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static <T> void put(ContextKey<T> key, T value) {
         put(key.key(), value);
     }
@@ -405,8 +398,11 @@ public final class RequestContext {
      * @param key 上下文键
      * @return 属性值；不存在则返回 null
      * @since 1.5.0
+     * @deprecated 直接调用 {@link #get(String)} 并传入 {@link ContextKey#key()} 更简单。
+     *             例如：{@code (String) get(KEY_AUTH_INFO)}。
      * @see ContextKey
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static <T> T get(ContextKey<T> key) {
         Object value = get(key.key());
         return key.cast(value);
@@ -423,8 +419,10 @@ public final class RequestContext {
      * @param defaultValue 不存在时返回的默认值
      * @return 属性值；不存在则返回 defaultValue
      * @since 1.7.0
+     * @deprecated 直接调用 {@link #get(String)} 并手动判空更简单。
      * @see ContextKey
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static <T> T getOrDefault(ContextKey<T> key, T defaultValue) {
         T value = get(key);
         return value != null ? value : defaultValue;
@@ -447,7 +445,10 @@ public final class RequestContext {
      *
      * @param key 上下文键
      * @since 1.5.0
+     * @deprecated 直接调用 {@link #remove(String)} 并传入 {@link ContextKey#key()} 更简单。
+     *             例如：{@code remove(KEY_AUTH_INFO)}。
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static void remove(ContextKey<?> key) {
         remove(key.key());
     }
@@ -913,7 +914,14 @@ public final class RequestContext {
      *
      * @return Builder 实例
      * @since 1.2.0
+     * @deprecated 1.9.3 直接调用静态 setter 更简洁，无需 Builder 中间态。例如：
+     *             <pre>{@code
+     * RequestContext.setUserId("user123");
+     * RequestContext.setTenantId("tenant456");
+     * RequestContext.setTraceId(TraceIdGenerator.generateTraceId());
+     * }</pre>
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static Builder builder() {
         return new Builder();
     }
@@ -924,7 +932,9 @@ public final class RequestContext {
      * <p>提供类型化的 setter 链式调用，{@link #apply()} 一次性提交到当前线程上下文。</p>
      *
      * @since 1.2.0
+     * @deprecated 直接调用静态 setter 替代。
      */
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static final class Builder {
 
         private String userId;

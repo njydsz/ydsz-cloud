@@ -179,7 +179,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `response` | `BaseResponse<T>` | 统一 API 响应封装（code/msg/data/timestamp/traceId/extensions），使用 `@JsonInclude(NON_NULL)` 控制空值序列化 |
 | `response` | ~~`PageResponse<T>`~~ | （已弃用）分页响应，推荐使用 `BaseResponse` 并将分页元数据放入 extensions |
 | `response` | `IResponse<T>` | 统一响应接口，定义 code/msg/data/success/traceId/timestamp 标准契约 |
-| `code` | `BaseResultCode` | 系统通用结果码枚举（45 个），携带 code/msg/httpStatus 三元组 |
+| `code` | `BaseResultCode` | 系统通用结果码枚举，携带 code/msg/httpStatus 三元组 |
 | `code` | `ResultCode` | 结果码接口，业务模块自定义错误码应实现此接口 |
 | `context` | `RequestContext` | 请求级上下文（基于 TransmittableThreadLocal，线程池安全）；提供 typed accessor、防御性清理、快照/恢复、MDC 桥接 |
 | `context` | `ContextKey<T>` | 类型安全上下文键工厂，编译期保证类型安全 |
@@ -187,8 +187,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `trace` | `TraceIdPropagation` | TraceId 传播工具类，基于 MDC 读取当前 traceId，生成 X-Trace-Id 和 traceparent header |
 | `constant` | `PageConstants` | 分页常量 + 运行时值覆盖 + 归一化工具方法 |
 | `constant` | `SystemConstants` | 系统级常量（系统用户 ID、默认租户、默认语言等） |
-| `constant` | `FilterIgnoreConstant` | 过滤器忽略 URL 集合 + 服务名集合 |
-| `constant` | `TokenConstants` | 令牌相关常量（Authorization、supply、前缀） |
+| `constant` | `TokenConstants` | 令牌相关常量（Authorization 等，由 auth/util 模块消费） |
 | `constant` | `HeaderConstants` | 统一 HTTP 请求头常量（认证/身份、数据权限、列级权限、链路追踪、网络信息） |
 | `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，注册 springMessageResolver、pageConstantsInitializer |
 | `config` | `CoreProperties` | 配置属性绑定（`@ConfigurationProperties("ydsz.core")`） |
@@ -638,6 +637,10 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 | `PageConstants` | 分页常量类 |
 | `BaseResultCode` | 结果码枚举（全部字段、方法） |
 | `ContextKey` | 类型安全上下文键 |
+| `RequestSnapshot` | 不可变请求快照 |
+| `PageResult` | 分页响应信封 |
+| `Results` | 统一响应门面 |
+| `ProblemDetail` | RFC 9457 错误详情 |
 
 ### 资源模式
 
@@ -745,4 +748,3 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 - **RFC 9457 ProblemDetail**：新增 ProblemDetail 类，提供符合 RFC 9457 标准的错误响应格式（type/title/status/detail/instance 等）。保留 i18n 素材先行的做法，后续同步实现类。
 - **SpanContext 完整版**：新增基于 record 的 immutable Span 上下文四元组，提供 W3C/B3/SkyWalking 协议互转能力。当前仅有 TraceIdGenerator 提供 traceId/spanId 生成与 traceparent 构建。
 - **IPageResult 桥接**（规划中，随 `PageResponse` 弃用而优先级降低）：新增 `IPageResult` 接口，让 domain 层 `PageResult` 可实现该接口，配合 BaseResponse 分页元数据简化分页桥接。
-- **filter/MDC 自动桥接配置**：通过 `ydsz.core.filter-ignore.*` 暴露过滤器忽略 URL 的白名单配置，取代当前硬编码在 `FilterIgnoreConstant` 中的默认值（后续优化方向）。

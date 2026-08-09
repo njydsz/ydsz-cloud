@@ -20,9 +20,10 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonDeserialize;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.module.JsonModuleRegistry;
+import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.reader.JSONReader;
@@ -282,8 +283,10 @@ public final class DeserializationProvider {
             // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
             Object customDeserializer = getCustomDeserializer(clazz);
             if (customDeserializer == null) {
-                // 模块注册 / 全局注册 快速路径：JsonModule.SpringFactory 或 YdszJson.register(...) 注册的反序列化器
-                customDeserializer = YdszJson.getRegisteredDeserializer(clazz);
+                // 模块注册 / 全局注册 快速路径：直接查询 SerializerRegistry / JsonModuleRegistry，
+                // 避免反向依赖 YdszJson（打破 YdszJson <-> DeserializationProvider 循环依赖，1.2.1）
+                JsonDeserializer<?> registered = SerializerRegistry.getInstance().getDeserializer(clazz);
+                customDeserializer = registered != null ? registered : JsonModuleRegistry.getInstance().getDeserializer(clazz);
             }
             if (customDeserializer != null) {
                 Object result = invokeCustomDeserializer(customDeserializer, json, clazz);
@@ -296,7 +299,7 @@ public final class DeserializationProvider {
             // 超阈值即抛 JsonDeserializationException，无需在此预扫描（原实现存在 O(n) 双重扫描
             // 且不区分字符串字面量中的 { } 的逻辑缺陷）
             Object result = deserializeValue(json, actualType);
-            return result != null ? clazz.cast(result) : null;
+            return result != null ? castResult(result, clazz) : null;
         } catch (JsonDeserializationException e) {
             // 已有上下文信息的异常直接抛出
             if (e.getContextSnippet() != null) {
@@ -310,6 +313,36 @@ public final class DeserializationProvider {
                 "Failed to deserialize JSON to " + clazz.getName() + ": " + e.getMessage(),
                 0, json);
         }
+    }
+
+    /**
+     * 将反序列化结果安全转换为目标类型。
+     *
+     * <p>与 {@code clazz.cast(result)} 的区别：基本类型（int/long/double/float/boolean/char/byte/short）
+     * 的 {@code Class.cast} 无法接收装箱值（如 Integer），这里对基本类型做显式拆箱转换，
+     * 对引用类型仍走 {@code clazz.cast}。</p>
+     *
+     * @param result 反序列化结果（装箱对象）
+     * @param clazz  目标类型
+     * @param <T>    目标类型参数
+     * @return 转换后的目标类型值
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T castResult(Object result, Class<?> clazz) {
+        if (result == null) {
+            return null;
+        }
+        // 基本类型：显式拆箱（避免 Class.cast 对 primitive 抛 ClassCastException）
+        if (clazz == int.class) return (T) Integer.valueOf(((Number) result).intValue());
+        if (clazz == long.class) return (T) Long.valueOf(((Number) result).longValue());
+        if (clazz == double.class) return (T) Double.valueOf(((Number) result).doubleValue());
+        if (clazz == float.class) return (T) Float.valueOf(((Number) result).floatValue());
+        if (clazz == short.class) return (T) Short.valueOf(((Number) result).shortValue());
+        if (clazz == byte.class) return (T) Byte.valueOf(((Number) result).byteValue());
+        if (clazz == char.class) return (T) Character.valueOf(result.toString().charAt(0));
+        if (clazz == boolean.class) return (T) Boolean.valueOf((Boolean) result);
+        // 引用类型：标准 cast
+        return (T) clazz.cast(result);
     }
 
     private static Object deserializeValue(String json, Class<?> type) {
