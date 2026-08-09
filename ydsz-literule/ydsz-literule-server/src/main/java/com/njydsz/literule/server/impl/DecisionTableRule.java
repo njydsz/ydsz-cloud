@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.impl;
+﻿package com.njydsz.literule.server.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -360,7 +360,7 @@ public class DecisionTableRule implements Rule {
     private List<RuleResult> buildCollectedResults(List<DecisionTableDefinition.Row> matchedRows, long startNano) {
         List<RuleResult> results = new ArrayList<>(matchedRows.size());
         for (DecisionTableDefinition.Row row : matchedRows) {
-            results.add(buildResultFromActions(row.getActions(), startNano));
+            Response.add(buildResultFromActions(row.getActions(), startNano));
         }
         return results;
     }

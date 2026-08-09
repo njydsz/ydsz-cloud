@@ -639,7 +639,7 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 | `ContextKey` | 类型安全上下文键 |
 | `RequestSnapshot` | 不可变请求快照 |
 | `PageResponse` | 分页响应信封 |
-| `Results` | 统一响应门面 |
+| `Response` | 统一响应门面 |
 | `ProblemDetail` | RFC 9457 错误详情 |
 
 ### 资源模式

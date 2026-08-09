@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YDSZ Common Core — 平台基石模块（L1 基础设施层）。
  *
  * <p>本模块提供统一 API 响应封装、业务结果码定义、请求级上下文传播、多协议链路追踪、
@@ -27,9 +27,10 @@
  * <ul>
  *   <li>上下文写入推荐使用 {@code ContextKey<T>} 替代字符串键
  *       （{@code RequestContext.put(String, Object)} 已标记 {@code @Deprecated}）</li>
- *   <li>结果码扩展：业务模块自定义错误码应实现 {@code ResultCode} 接口，不在 core 模块中直接修改</li>
+ *   <li>结果码扩展：业务模块自定义错误码应实现 {@code com.njydsz.common.exception.enums.ExceptionCode} 接口
+ *       并使用 {@code @YdszResultCode} 注解注册（{@code ResultCode} 已废弃）</li>
  *   <li>响应构建：通用场景使用 {@code BaseResponse.success(data)}；分页场景使用 {@code PageResponse}；
- *       带可观测字段使用 {@code Results.okWithObservability(data, requestId, spanId)}</li>
+ *       带可观测字段使用 {@code Response.okWithObservability(data, requestId, spanId)}</li>
  * </ul>
  *
  * @since 1.0.0

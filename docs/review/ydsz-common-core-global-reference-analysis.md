@@ -57,7 +57,7 @@
 | `ContextKey<T>` | **约 10** | **3** | 🔴 低 | 未被广泛认知 |
 | `PageConstants` | **4** | **3** | 🔴 低 | **几乎未使用** |
 | `TraceIdPropagation` | **约 5** | **2** | 🔴 低 | 调用方极少 |
-| `Results` 门面 | **0** | **0** | 🔴 零 | **已开发无调用** |
+| `Response` 门面 | **0** | **0** | 🔴 零 | **已开发无调用** |
 | 自定义 `ResultCode` 实现 | **0** | **0** | 🔴 零 | **机制空置** |
 
 ### 2.2 关键发现
@@ -91,10 +91,10 @@
 
 #### 🔴 低利用/空置能力（优化机会大）
 
-**`Results` 门面** — 已开发但零调用
-- 位置：`com.njydsz.common.core.response.Results`
+**`Response` 门面** — 已开发但零调用
+- 位置：`com.njydsz.common.core.response.Response`
 - 提供 `ok()` / `fail()` / `page()` 等静态入口
-- 全仓库 grep `import com.njydsz.common.core.response.Results` **无命中**
+- 全仓库 grep `import com.njydsz.common.core.response.Response` **无命中**
 - **所有 controller 仍在直接使用 `BaseResponse.success/error`**
 
 **自定义 `ResultCode` 实现机制**（各模块应实现但未实现）
@@ -124,7 +124,7 @@
 ### 3.1 贯通度矩阵
 
 ```
-              BaseResponse  RequestContext  ResultCode  PageResponse  Results  TraceIdProp  HeaderConstants
+              BaseResponse  RequestContext  ResultCode  PageResponse  Response  TraceIdProp  HeaderConstants
 workflow-web      ✅             ✅            ⚠️          ✅         ❌         ❌          ❌
 message-web       ✅             ✅            ⚠️          ✅         ❌         ❌          ❌
 system-web        ✅             ✅            ⚠️          ✅         ❌         ❌          ❌
@@ -144,11 +144,11 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 
 ### 3.2 架构贯通的核心问题
 
-#### 问题一：API 响应构造散落，Results 门面空置
+#### 问题一：API 响应构造散落，Response 门面空置
 
 **现象**：
 - 所有 controller 直接使用：`return BaseResponse.success(data)` / `return BaseResponse.error(BaseResultCode.XXX)`
-- 已开发统一的 `Results` 门面（1.9.1 引入），但零采用
+- 已开发统一的 `Response` 门面（1.9.1 引入），但零采用
 
 **影响**：
 - API 构造方式不统一，新员工不清楚该用哪个
@@ -204,7 +204,7 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 ### 4.1 能力认知不足
 
 很多模块的开发者不了解 core 提供的完整能力列表，导致：
-- 直接使用 `BaseResponse` 而非 `Results` 门面
+- 直接使用 `BaseResponse` 而非 `Response` 门面
 - 自行实现分页参数处理而非使用 `PageConstants`
 - 不知道 `TraceIdPropagation` 的存在
 
@@ -212,7 +212,7 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 
 ### 4.2 迁移成本高
 
-`Results` 门面是新引入的能力（1.9.1），修改所有 controller 的迁移工作量大，且收益不明显。
+`Response` 门面是新引入的能力（1.9.1），修改所有 controller 的迁移工作量大，且收益不明显。
 
 **根因**：缺乏自动化迁移脚本或 IDE 模板引导。
 
@@ -234,13 +234,13 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 
 ### 5.1 短期收敛（1-2 周可落地）
 
-#### S1【P1】推广 `Results` 门面，收敛响应构造入口
+#### S1【P1】推广 `Response` 门面，收敛响应构造入口
 
-**现状**：已开发 `Results` 但零采用
+**现状**：已开发 `Response` 但零采用
 **建议**：
-- 在团队周会/分享中正式推介 `Results.ok(data)` / `Results.fail(BaseResultCode.X)` 用法
-- 在编码规范文档中明确"新代码应使用 Results 门面"
-- 提供 IDE 代码模板（Live Template）：`res` → `Results.ok($END$)`
+- 在团队周会/分享中正式推介 `Response.ok(data)` / `Response.fail(BaseResultCode.X)` 用法
+- 在编码规范文档中明确"新代码应使用 Response 门面"
+- 提供 IDE 代码模板（Live Template）：`res` → `Response.ok($END$)`
 - 存量代码通过 `grep 'BaseResponse.success\('` 定位，渐进式迁移
 
 #### S2【P1】推动业务模块实现 `ResultCode` 接口
@@ -316,14 +316,14 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 #### L1【P1】ArchUnit 架构守护
 
 防止公共能力被绕过或滥用：
-- 测试类：`@ArchTest` 验证 controller 层 import 必须使用 `Results`
+- 测试类：`@ArchTest` 验证 controller 层 import 必须使用 `Response`
 - 测试类：`@ArchTest` 验证所有结果码枚举必须实现 `ResultCode`
 - 测试类：`@ArchTest` 验证禁止 `BaseResponse` 直接 `new` 使用
 
 #### L2【P1】能力利用率自动监控
 
 - 脚本定期统计各 core 类的 import 频次
-- 低利用能力（PageConstants、Results、ContextKey）定期 review
+- 低利用能力（PageConstants、Response、ContextKey）定期 review
 - 发现新业务模块未使用 BaseResponse 自动告警
 
 #### L3【P2】对接监控与可观测
@@ -338,7 +338,7 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 
 | 优先级 | 建议项 | 投入 | 收益 | 状态 |
 |---|---|---|---|---|
-| P0 | S1: 推广 Results 门面 | 低 | 高 | 待启动 |
+| P0 | S1: 推广 Response 门面 | 低 | 高 | 待启动 |
 | P0 | S2: ResultCode 接口实现 | 中 | 高 | 待核实现状 |
 | P0 | M1: ResultCode-异常全链路 | 中 | 高 | 待启动 |
 | P1 | S3: PageParam 对象封装 | 中 | 中 | 待启动 |
@@ -402,14 +402,14 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 ### 核心结论
 
 1. **基础覆盖充分**：`ydsz-common-core` 的依赖覆盖率达 100%，BaseResponse 和 RequestContext 已成为全平台事实标准
-2. **能力利用不均**：精细能力（Results、PageConstants、ContextKey、TraceIdPropagation）利用率显著低于基础能力
+2. **能力利用不均**：精细能力（Response、PageConstants、ContextKey、TraceIdPropagation）利用率显著低于基础能力
 3. **架构贯通不足**：各模块对 core 的使用停留在"能用"层面，未形成"规范驱动"的格局
 4. **机制空置**：自定义 ResultCode 接口、深度分页保护等高级特性未被激活
 
 ### 后续行动项（建议）
 
 1. **本周**：核实各模块自定义 ResultCode 是否已实现接口（grep `implements ResultCode`）
-2. **本周**：制定编码规范文档，明确"新代码使用 Results 门面"
+2. **本周**：制定编码规范文档，明确"新代码使用 Response 门面"
 3. **下周**：实现 `PageParam` 对象封装，在 system/web 中试点
 4. **下周**：提供 Live Template 和迁移 Checklist
 5. **本月**：推动 workflow / message 两大核心模块落实 ResultCode 接口
@@ -421,5 +421,5 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 
 - 核心类数量：16 个（core 模块）
 - 引用 core 的总文件数：**150+**
-- 自定义扩展点（ContextKey、Results）利用率：< 5%
+- 自定义扩展点（ContextKey、Response）利用率：< 5%
 - 跨模块标准遵守率（BaseResponse 作为响应）：> 90%

@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -229,13 +229,13 @@ public class RuleDslController {
                     r.put("severity", result.getSeverity() != null ? result.getSeverity().name() : null);
                     r.put("title", result.getTitle());
                     r.put("description", result.getDescription());
-                    results.add(r);
+                    Response.add(r);
                 } catch (Exception e) {
                     Map<String, Object> r = new LinkedHashMap<>();
                     r.put("ruleCode", rule.getCode());
                     r.put("triggered", false);
                     r.put("error", e.getMessage());
-                    results.add(r);
+                    Response.add(r);
                 }
             }
 

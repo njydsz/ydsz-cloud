@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.testing;
+﻿package com.njydsz.literule.server.testing;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -92,7 +92,7 @@ public class RuleTestRunner {
             long elapsed = System.currentTimeMillis() - start;
 
             // 获取实际触发的规则编码集合
-            Set<String> actualTriggered = results.stream()
+            Set<String> actualTriggered = Response.stream()
                     .filter(RuleResult::isTriggered)
                     .map(RuleResult::getRuleCode)
                     .collect(Collectors.toSet());
@@ -161,24 +161,24 @@ public class RuleTestRunner {
 
         for (RuleTestCase tc : testCases) {
             RuleTestResult result = run(tc);
-            results.add(result);
+            Response.add(result);
         }
 
         long totalElapsed = System.currentTimeMillis() - suiteStart;
-        int passed = (int) results.stream().filter(RuleTestResult::isPassed).count();
-        int failed = results.size() - passed;
+        int passed = (int) Response.stream().filter(RuleTestResult::isPassed).count();
+        int failed = Response.size() - passed;
 
-        List<RuleTestResult> failedResults = results.stream()
+        List<RuleTestResult> failedResults = Response.stream()
                 .filter(r -> !r.isPassed())
                 .collect(Collectors.toList());
 
         return RuleTestReport.builder()
                 .suiteName(suiteName != null ? suiteName : "default")
-                .total(results.size())
+                .total(Response.size())
                 .passed(passed)
                 .failed(failed)
                 .skipped(0)
-                .passRate(RuleTestReport.calculatePassRate(passed, results.size()))
+                .passRate(RuleTestReport.calculatePassRate(passed, Response.size()))
                 .totalElapsedMs(totalElapsed)
                 .results(results)
                 .failedResults(failedResults)

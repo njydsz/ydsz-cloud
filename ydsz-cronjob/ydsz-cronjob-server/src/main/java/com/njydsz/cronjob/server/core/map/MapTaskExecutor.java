@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.server.core.map;
+﻿package com.njydsz.cronjob.server.core.map;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -338,11 +338,11 @@ public class MapTaskExecutor {
         List<ProcessResult> results = new ArrayList<>(futures.size());
         for (CompletableFuture<ProcessResult> f : futures) {
             try {
-                results.add(f.get());
+                Response.add(f.get());
             } catch (Exception e) {
                 log.error("[MapTaskExecutor] 获取子任务结果异常: key={} logId={} reason={}",
                         jobKey, logId, e.getMessage(), e);
-                results.add(ProcessResult.failed("获取子任务结果异常: " + e.getMessage()));
+                Response.add(ProcessResult.failed("获取子任务结果异常: " + e.getMessage()));
             }
         }
         return results;
@@ -375,7 +375,7 @@ public class MapTaskExecutor {
             subContext.setTaskParams(subTask.getTaskParams());
             subContext.setRoot(false);
             ProcessResult subResult = executeTask(processor, subContext, subTaskDO, jobKey, logId);
-            results.add(subResult);
+            Response.add(subResult);
         }
         return results;
     }

@@ -3,7 +3,6 @@ package com.njydsz.common.util.http;
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.constant.TokenConstants;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -27,8 +26,8 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public final class HttpTokenUtils {
 
-    /** 标准 HTTP 授权头名称（引用 core TokenConstants，避免重复定义） */
-    public static final String AUTHORIZATION_HEADER = TokenConstants.AUTHENTICATION;
+    /** 标准 HTTP 授权头名称（引用 core HeaderConstants，避免重复定义） */
+    public static final String AUTHORIZATION_HEADER = HeaderConstants.AUTHORIZATION;
 
     /** Ydsz 访问令牌自定义头常量引用 */
     public static final String X_ACCESS_TOKEN_HEADER = HeaderConstants.X_ACCESS_TOKEN;

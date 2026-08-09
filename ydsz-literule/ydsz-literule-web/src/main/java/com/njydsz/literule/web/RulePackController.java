@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -307,11 +307,11 @@ public class RulePackController {
         List<InstallResult> results = new ArrayList<>();
         for (String packCode : packCodes) {
             try {
-                results.add(rulePackProvider.install(packCode, null, operator));
+                Response.add(rulePackProvider.install(packCode, null, operator));
             } catch (Exception e) {
                 log.warn("[RuleAdmin] 批量更新知识包失败: packCode={}, err={}", packCode, e.getMessage());
             }
         }
-        return BaseResponse.success(results.stream().map(LiteruleWebConverter.INSTANT::entityToVO).toList());
+        return BaseResponse.success(Response.stream().map(LiteruleWebConverter.INSTANT::entityToVO).toList());
     }
 }

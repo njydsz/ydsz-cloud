@@ -1,4 +1,4 @@
-package com.njydsz.common.event.processor;
+﻿package com.njydsz.common.event.processor;
 
 import java.time.Instant;
 import java.util.List;
@@ -297,9 +297,9 @@ public class OutboxProcessor {
             List<Boolean> results = publishGateway.publishBatch(messages);
             long durationNanos = System.nanoTime() - startNanos;
 
-            for (int i = 0; i < messages.size() && i < results.size(); i++) {
+            for (int i = 0; i < messages.size() && i < Response.size(); i++) {
                 OutboxMessage message = messages.get(i);
-                if (results.get(i)) {
+                if (Response.get(i)) {
                     outboxRepository.markAsSent(message.getId());
                     incrementCounter(publishSuccessCounter);
                     log.debug("Outbox message sent: id={}, type={}", message.getId(), message.getEventType());

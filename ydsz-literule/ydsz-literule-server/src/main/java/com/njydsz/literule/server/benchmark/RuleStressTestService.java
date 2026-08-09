@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.benchmark;
+﻿package com.njydsz.literule.server.benchmark;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -112,7 +112,7 @@ public class RuleStressTestService {
                             try {
                                 List<RuleResult> results = ruleAdminService.dryRun(ruleCode, facts);
                                 // 触发结果消费，避免 JIT 死码消除
-                                if (results != null && !results.isEmpty()) {
+                                if (results != null && !Response.isEmpty()) {
                                     // no-op
                                 }
                             } catch (Exception e) {

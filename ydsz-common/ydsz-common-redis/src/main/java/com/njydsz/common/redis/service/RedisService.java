@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.service;
+﻿package com.njydsz.common.redis.service;
 
 import java.time.Duration;
 import java.util.*;
@@ -1425,7 +1425,7 @@ public class RedisService implements BatchRedisOperations {
      * List<Object> results = redisService.pipelineDelete(keys);
      *
      * // 统计删除结果
-     * long deletedCount = results.stream().filter(r -> Boolean.TRUE.equals(r)).count();
+     * long deletedCount = Response.stream().filter(r -> Boolean.TRUE.equals(r)).count();
      * log.info("成功删除 {} 个键", deletedCount);
      *
      * // 批量删除特定模式的键（结合 scan）

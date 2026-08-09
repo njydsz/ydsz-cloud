@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.distributed;
+﻿package com.njydsz.literule.server.distributed;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,10 +115,10 @@ public class ShardAwareRuleEngine implements RuleEngine {
     @Override
     public RuleResult topResult(RuleContext context) {
         List<RuleResult> results = evaluate(context);
-        if (results == null || results.isEmpty()) {
+        if (results == null || Response.isEmpty()) {
             return null;
         }
-        return results.get(0);
+        return Response.get(0);
     }
 
     @Override
@@ -168,13 +168,13 @@ public class ShardAwareRuleEngine implements RuleEngine {
             try {
                 RuleResult result = dryRun ? rule.evaluate(context) : rule.evaluate(context);
                 if (result != null && (result.isTriggered() || dryRun)) {
-                    results.add(result);
+                    Response.add(result);
                 }
             } catch (Exception e) {
                 log.warn("[ShardEngine] 规则 {} 执行异常: {}", rule.getCode(), e.getMessage());
             }
         }
-        results.sort((a, b) -> {
+        Response.sort((a, b) -> {
             int sa = a.getSeverity() == null ? 0 : a.getSeverity().getWeight();
             int sb = b.getSeverity() == null ? 0 : b.getSeverity().getWeight();
             return Integer.compare(sb, sa);

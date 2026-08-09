@@ -79,7 +79,40 @@ public final class RequestContext {
     public static final String KEY_API_VERSION = "apiVersion";
 
     // ==================== 业务级上下文键 ====================
-    // 业务级常量已下沉至 {@link BizContextKeys}，此处仅引用，避免双写。
+    // 业务级常量已下沉至 {@link BizContextKeys}，此处仅桥接引用，避免双写。
+    // v1.9.3 前调用方仍可能引用 RequestContext.KEY_*，保留兼容常量。
+
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_AUTH_INFO} */
+    @Deprecated(since = "1.9.3", forRemoval = false)
+    public static final String KEY_AUTH_INFO = BizContextKeys.KEY_AUTH_INFO;
+
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_LOGIN_USER} */
+    @Deprecated(since = "1.9.3", forRemoval = false)
+    public static final String KEY_LOGIN_USER = BizContextKeys.KEY_LOGIN_USER;
+
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_TENANT_CONTEXT} */
+    @Deprecated(since = "1.9.3", forRemoval = false)
+    public static final String KEY_TENANT_CONTEXT = BizContextKeys.KEY_TENANT_CONTEXT;
+
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_COLUMN_PERMISSION} */
+    @Deprecated(since = "1.9.3", forRemoval = false)
+    public static final String KEY_COLUMN_PERMISSION = BizContextKeys.KEY_COLUMN_PERMISSION;
+
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_AUDIT_DATA} */
+    @Deprecated(since = "1.9.3", forRemoval = false)
+    public static final String KEY_AUDIT_DATA = BizContextKeys.KEY_AUDIT_DATA;
+
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_HTTP_REQUEST} */
+    @Deprecated(since = "1.9.3", forRemoval = false)
+    public static final String KEY_HTTP_REQUEST = BizContextKeys.KEY_HTTP_REQUEST;
+
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_EXTRA_HEADERS} */
+    @Deprecated(since = "1.9.3", forRemoval = false)
+    public static final String KEY_EXTRA_HEADERS = BizContextKeys.KEY_EXTRA_HEADERS;
+
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_CACHED_USER_INFO_MAP} */
+    @Deprecated(since = "1.9.3", forRemoval = false)
+    public static final String KEY_CACHED_USER_INFO_MAP = BizContextKeys.KEY_CACHED_USER_INFO_MAP;
 
     /**
      * 请求上下文存储（懒初始化）。

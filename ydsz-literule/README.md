@@ -1,4 +1,4 @@
-# ydsz-literule
+﻿# ydsz-literule
 
 > 独立规则引擎微服务 — 基于 DDD 分层的自研规则引擎，对标 Drools + LiteFlow + 滴滴 Newton
 
@@ -175,8 +175,8 @@ public void evaluate(Map<String, Object> facts) {
             .tenantId("1")
             .traceId(UUID.randomUUID().toString())
             .build();
-    List<RuleResult> results = ruleEngine.evaluate(context);
-    // results 按严重度倒序
+    List<RuleResult> Response = ruleEngine.evaluate(context);
+    // Response 按严重度倒序
     RuleResult top = ruleEngine.topResult(context);
 }
 ```

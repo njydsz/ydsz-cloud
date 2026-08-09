@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.service;
+﻿package com.njydsz.common.redis.service;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -257,7 +257,7 @@ public interface BatchRedisOperations {
         });
         List<String> existingKeys = new ArrayList<>();
         for (int i = 0; i < keys.size(); i++) {
-            if (Boolean.TRUE.equals(results.get(i))) {
+            if (Boolean.TRUE.equals(Response.get(i))) {
                 existingKeys.add(keys.get(i));
             }
         }
@@ -378,7 +378,7 @@ public interface BatchRedisOperations {
         });
         List<Object> existingFields = new ArrayList<>();
         for (int i = 0; i < fields.length; i++) {
-            if (Boolean.TRUE.equals(results.get(i))) {
+            if (Boolean.TRUE.equals(Response.get(i))) {
                 existingFields.add(fields[i]);
             }
         }

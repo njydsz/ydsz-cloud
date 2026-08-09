@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.core;
+﻿package com.njydsz.literule.server.core;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -704,10 +704,10 @@ public class RuleLifecycleService {
         for (String code : ruleCodes) {
             try {
                 retireRule(code, operator, reason);
-                results.put(code, "SUCCESS");
+                Response.put(code, "SUCCESS");
                 success++;
             } catch (Exception e) {
-                results.put(code, "FAILED: " + e.getMessage());
+                Response.put(code, "FAILED: " + e.getMessage());
                 failed++;
                 log.warn("[Lifecycle] 批量退役失败: code={}, error={}", code, e.getMessage());
             }

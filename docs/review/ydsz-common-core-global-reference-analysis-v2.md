@@ -85,7 +85,7 @@ query.getEffectivePageNum() / getEffectivePageSize()  ← service 层分页处�
 | `TraceIdGenerator` | **14** | **4** | 🟢 高 | gateway/TraceFilter 广泛使用 |
 | `HeaderConstants` | **35+** | **10+** | 🟡 中 | common 内部为主 |
 | `PageConstants` (编译期) | **通过 PageQuery** | **全量** | 🟢 高 | JSR-303 注解生效 |
-| `Results` 门面 | **0** | **0** | 🔴 零 | **已开发无调用** |
+| `Response` 门面 | **0** | **0** | 🔴 零 | **已开发无调用** |
 | `TraceIdPropagation` (产品代码) | **0** | **0** | 🔴 零 | W3C 标准待落地 |
 | `ContextKey<T>` | **约 10** | **3** | 🔴 低 | 仅少量使用 |
 
@@ -114,10 +114,10 @@ query.getEffectivePageNum() / getEffectivePageSize()  ← service 层分页处�
 
 #### 🔴 空置能力
 
-**Results 门面** — 已开发但零采用
-- 位置：`com.njydsz.common.core.response.Results`
+**Response 门面** — 已开发但零采用
+- 位置：`com.njydsz.common.core.response.Response`
 - 提供 `ok()` / `fail()` / `page()` 等静态入口
-- 全仓库 grep `import com.njydsz.common.core.response.Results` **无命中**
+- 全仓库 grep `import com.njydsz.common.core.response.Response` **无命中**
 - **所有 controller 仍在直接使用 `BaseResponse.success/error`**
 
 ---
@@ -127,7 +127,7 @@ query.getEffectivePageNum() / getEffectivePageSize()  ← service 层分页处�
 ### 3.1 贯通度矩阵
 
 ```
-              BaseResponse  RequestContext  ExceptionCode  PageResponse  Results  TraceId(新)  HeaderConstants
+              BaseResponse  RequestContext  ExceptionCode  PageResponse  Response  TraceId(新)  HeaderConstants
 workflow-web      ✅             ✅            ✅            ✅         ❌         ❌          ❌
 message-web       ✅             ✅            ✅            ✅         ❌         ❌          ❌
 system-web        ✅             ✅            ✅            ✅         ❌         ❌          ❌
@@ -147,9 +147,9 @@ common-base       ✅             ✅            ❌            ❌         ❌ 
 
 ### 3.2 修正后的核心问题
 
-#### 问题一（修正）：Results 门面空置 — 真实问题
+#### 问题一（修正）：Response 门面空置 — 真实问题
 
-**现象**：所有 controller 直接使用 `BaseResponse.success/error`，`Results` 零采用。
+**现象**：所有 controller 直接使用 `BaseResponse.success/error`，`Response` 零采用。
 **影响**：构造方式不统一，后续难以统一增强。
 
 #### 问题二（更正）：ResultCode 接口 — 已正确实现
@@ -179,12 +179,12 @@ PageConstants 运行时归一化（normalizePageSize、calcOffset 等）**未直
 
 ### 4.1 短期收敛（1-2 周）
 
-#### S1【高优先级】创建编码规范文档 + 推广 Results 门面
+#### S1【高优先级】创建编码规范文档 + 推广 Response 门面
 
 **行动**：
 - 创建编码规范文档，明确：
-  - 新代码应使用 `Results.ok(data)` 而非 `BaseResponse.success(data)`
-  - 新代码应使用 `Results.page(total, num, size, records)` 走分页信封
+  - 新代码应使用 `Response.ok(data)` 而非 `BaseResponse.success(data)`
+  - 新代码应使用 `Response.page(total, num, size, records)` 走分页信封
   - 业务异常码必须实现 `ExceptionCode`（→ `ResultCode`）
 - 提供 IDE Live Template 模板
 - 存量代码渐进式迁移
@@ -231,13 +231,13 @@ PageConstants 运行时归一化（normalizePageSize、calcOffset 等）**未直
 
 #### L1【中优先级】ArchUnit 架构守护
 
-- 禁止直接使用 `new BaseResponse<>()`，强制通过 Results 工厂
+- 禁止直接使用 `new BaseResponse<>()`，强制通过 Response 工厂
 - 分页查询必须使用 `PageQuery` 或其子类
 - 新增 trace 相关代码优先使用 `TraceIdPropagation`（新标准）或 `TracerUtils`（兼容）
 
 #### L2【中优先级】利用率自动监控
 
-- 脚本定期统计 Results、PageConstants（运行时）、TraceIdPropagation 引用数
+- 脚本定期统计 Response、PageConstants（运行时）、TraceIdPropagation 引用数
 - 低利用能力定期 review
 - 新业务模块合入时检测 BaseResponse 使用方式
 
@@ -247,7 +247,7 @@ PageConstants 运行时归一化（normalizePageSize、calcOffset 等）**未直
 
 | 优先级 | 建议 | 投入 | 收益 | 状态 |
 |---|---|---|---|---|
-| **高** | 创建编码规范 + 推广 Results 门面 | 低 | 高 | 待启动 |
+| **高** | 创建编码规范 + 推广 Response 门面 | 低 | 高 | 待启动 |
 | **高** | PageQuery 委托 PageConstants 归一化 | 低 | 中 | 待启动 |
 | **中** | 统一 TraceId 传播标准（新 + 旧兼容） | 中 | 中 | 待启动 |
 | **中** | 深度分页风险全局生效 | 低 | 中 | 待启动 |
@@ -264,7 +264,7 @@ PageConstants 运行时归一化（normalizePageSize、calcOffset 等）**未直
 | ResultCode 实现 | "机制空置" | ✅ 已正确桥接 | 全模块 ExceptionCode → ResultCode |
 | PageConstants | "利用率低" | 🟡 编译期利用充分 | PageQuery 使用 JSR-303 注解 |
 | TraceId 传播 | "断链风险" | ✅ 旧标准工作正常 | TracerUtils + X-Request-Id 正常运行 |
-| Results 门面 | "零使用" | 确认空置 | grep 实证 |
+| Response 门面 | "零使用" | 确认空置 | grep 实证 |
 | HeaderConstants | "利用有限" | 🟡 维持判断 | 仍有模块使用硬编码 |
 
 ---
@@ -276,19 +276,19 @@ PageConstants 运行时归一化（normalizePageSize、calcOffset 等）**未直
 1. **基础覆盖充分**：ydsz-common-core 依赖覆盖率 100%，核心抽象（BaseResponse、RequestContext、ResultCode/ExceptionCode）已成为全平台技术规范
 2. **接口桥接健康**：ResultCode 通过 ExceptionCode 桥接正确落地，无需架构变更
 3. **主要改进空间**：
-   - `Results` 门面空置（编码规范问题）
+   - `Response` 门面空置（编码规范问题）
    - `PageConstants` 运行时归一化未对接 PageQuery（代码复用问题）
    - W3C Traceparent 新标准待启用（标准化演进）
 4. **机制已激活**：自定义 ResultCode、深度分页校验、TraceId 传播等核心机制已在运行，需做的是"规范化推广"而非"从零建设"
 
 ### 后续行动项
 
-1. **本周**：创建《公共模块使用编码规范》文档（含 Results 门面 + ExceptionCode 实现）
+1. **本周**：创建《公共模块使用编码规范》文档（含 Response 门面 + ExceptionCode 实现）
 2. **本周**：修改 PageQuery.getEffective*() 委托 PageConstants 归一化
 3. **下周**：FeignRequestInterceptor 增加 TraceIdPropagation 双协议头传播（兼容增强）
 4. **下周**：PageQuery 增加深度分页 WARN 日志
 5. **本月**：提供 ArchUnit 测试防止 BaseResponse 直接 new
-6. **持续**：新代码 review 时检查 Results 门面和 ExceptionCode 采用情况
+6. **持续**：新代码 review 时检查 Response 门面和 ExceptionCode 采用情况
 
 ---
 
@@ -296,7 +296,7 @@ PageConstants 运行时归一化（normalizePageSize、calcOffset 等）**未直
 
 | 能力 | 类路径 | 使用入口 |
 |---|---|---|
-| 响应构造 | `core.response.BaseResponse` / `core.response.Results` | Controller 层 |
+| 响应构造 | `core.response.BaseResponse` / `core.response.Response` | Controller 层 |
 | 异常码 | `exception.enums.ExceptionCode` → `XxxResultCode` | Service/Controller 层 |
 | 链路追踪 | `core.trace.TraceFilter` + `core.trace.TraceIdFilter` | 网关/服务入口 |
 | 分页参数 | `domain.query.PageQuery` ← `core.constant.PageConstants` | Controller 层 |

@@ -1,4 +1,4 @@
-package com.njydsz.common.event.gateway;
+﻿package com.njydsz.common.event.gateway;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,7 +110,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
     public List<Boolean> publishBatch(List<OutboxMessage> messages) {
         List<Boolean> results = new ArrayList<>(messages.size());
         for (OutboxMessage message : messages) {
-            results.add(publish(message));
+            Response.add(publish(message));
         }
         return results;
     }

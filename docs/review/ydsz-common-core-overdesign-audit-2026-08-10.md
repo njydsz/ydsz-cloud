@@ -12,8 +12,8 @@
 
 ydsz-common-core 经过 Phase 1-3 优化后，骨架设计已处于同类企业自研框架的 **中上水平**：
 
-- **做对的**：TTL 线程池安全传递、类型安全 `ContextKey<T>`、数据驱动错误码（无 switch）、W3C traceparent 支持、启动期 `@Validated` 配置校验、深度分页告警、`Results` 统一门面、不可变 `RequestSnapshot`、双 Holder 缓存隔离（`CONTEXT_HOLDER` + `CACHE_HOLDER`）
-- **遗留问题**：上轮优化部分解决了"业务泄漏"与"API 蔓延"的表层症状，但 **根因未完全消除**——`BizContextKeys` 常量仍然完整地复制了一份在 `RequestContext` 内部，形成"声明已下沉、实际双写"的冗余；**`Results` 空置**表明编码规范推广仍停留在文档层，缺乏 ArchUnit 类强制约束；**TraceId 传播三套共存**增加了维护者认知成本
+- **做对的**：TTL 线程池安全传递、类型安全 `ContextKey<T>`、数据驱动错误码（无 switch）、W3C traceparent 支持、启动期 `@Validated` 配置校验、深度分页告警、`Response` 统一门面、不可变 `RequestSnapshot`、双 Holder 缓存隔离（`CONTEXT_HOLDER` + `CACHE_HOLDER`）
+- **遗留问题**：上轮优化部分解决了"业务泄漏"与"API 蔓延"的表层症状，但 **根因未完全消除**——`BizContextKeys` 常量仍然完整地复制了一份在 `RequestContext` 内部，形成"声明已下沉、实际双写"的冗余；**`Response` 空置**表明编码规范推广仍停留在文档层，缺乏 ArchUnit 类强制约束；**TraceId 传播三套共存**增加了维护者认知成本
 
 **本轮审计核心结论**：模块整体**不存在重大架构级过度设计**，但存在 **7 处轻至中度优化点**，主要集中在"已完成的形式重构、未跟进的彻底收敛"。全部建议可在 **2-3 人日**内落地，无需破坏性变更。
 
@@ -24,9 +24,9 @@ ydsz-common-core 经过 Phase 1-3 优化后，骨架设计已处于同类企业�
 | 维度 | 现状 | 评价 |
 |---|---|---|
 | 总代码量 | 18 个主文件，约 3100 行 | 体量适当 |
-| 核心能力 | `BaseResponse` / `Results` / `PageResponse`（响应）、`RequestContext` / `ContextKey` / `BizContextKeys` / `RequestSnapshot`（上下文）、`BaseResultCode` / `ResultCode`（错误码）、`TraceIdGenerator` / `TraceIdPropagation`（链路追踪）、`PageConstants`（分页）、`CoreProperties` / `CoreAutoConfiguration`（配置） | 覆盖完备 |
+| 核心能力 | `BaseResponse` / `Response` / `PageResponse`（响应）、`RequestContext` / `ContextKey` / `BizContextKeys` / `RequestSnapshot`（上下文）、`BaseResultCode` / `ResultCode`（错误码）、`TraceIdGenerator` / `TraceIdPropagation`（链路追踪）、`PageConstants`（分页）、`CoreProperties` / `CoreAutoConfiguration`（配置） | 覆盖完备 |
 | 依赖 | 6 项（Lombok / SLF4J / ydsz-common-json / TTL / Spring Boot / Jakarta Validation） | 轻度依赖 |
-| 引用热度 | `BaseResponse` 70+ 引用、`RequestContext` 60+ 引用、`Results` 零引用 | 头部能力利用充分，新增门面待推广 |
+| 引用热度 | `BaseResponse` 70+ 引用、`RequestContext` 60+ 引用、`Response` 零引用 | 头部能力利用充分，新增门面待推广 |
 
 ---
 
@@ -69,9 +69,9 @@ ydsz-common-core 经过 Phase 1-3 优化后，骨架设计已处于同类企业�
 
 ---
 
-### 3.2 【零采用】`Results` 门面空置
+### 3.2 【零采用】`Response` 门面空置
 
-**现象**：`Results.java` 已提供 `ok / okWithObservability / page / fail` 全量入口，但全仓库 grep `Results\.` 仅在 `Results.java` 自身、`公共模块使用编码规范.md` 和 `ydsz-common-core-global-reference-analysis.md` 三处命中，**业务 Controller 全部仍直接使用 `BaseResponse.success/error`**。
+**现象**：`Response.java` 已提供 `ok / okWithObservability / page / fail` 全量入口，但全仓库 grep `Response\.` 仅在 `Response.java` 自身、`公共模块使用编码规范.md` 和 `ydsz-common-core-global-reference-analysis.md` 三处命中，**业务 Controller 全部仍直接使用 `BaseResponse.success/error`**。
 
 **问题**：
 - "提供但未用"等同于 **死代码**；后续对响应的增强（如统一注入 `cost` / `debugInfo`）必须改两处
@@ -85,9 +85,9 @@ ydsz-common-core 经过 Phase 1-3 优化后，骨架设计已处于同类企业�
 
 | 动作 | 时限 | 工作量 |
 |---|---|---|
-| 新增 ArchUnit 测试 `CoreArchTest`：禁止 `BaseResponse.success` 静态方法直接调用，强制走 `Results.ok()` | v1.11 | 2h |
+| 新增 ArchUnit 测试 `CoreArchTest`：禁止 `BaseResponse.success` 静态方法直接调用，强制走 `Response.ok()` | v1.11 | 2h |
 | 存量 70+ 处调用渐进式迁移（每次 PR 迁移一个 Controller，避免大批量风险） | 持续 | 0.5h/次 |
-| IDE Live Template 提供 `rok` → `Results.ok($END$)`、`rof` → `Results.fail($END$)` 模板 | v1.11 | 0.5h |
+| IDE Live Template 提供 `rok` → `Response.ok($END$)`、`rof` → `Response.fail($END$)` 模板 | v1.11 | 0.5h |
 
 ---
 
@@ -230,7 +230,7 @@ Controller → PageQuery（common-domain）.getEffectivePageSize() → Mapper
 | 上下文传递 | TTL + MDC 桥接 | ThreadLocal 无传播 | TTL + MDC | MTrace Context |
 | 深度分页告警 | 编译期+运行时双层 ✅ | 无 ❌ | 无 ❌ | 有 ✅ |
 | W3C traceparent | 已开发待启用 | 无 | 无 | 网关层 ✅ |
-| 响应门面 | `Results`（零采用） | `R<T>`（强制） | `R<T>`（强制） | 统一 Result |
+| 响应门面 | `Response`（零采用） | `R<T>`（强制） | `R<T>`（强制） | 统一 Result |
 | 配置启动校验 | `@Validated`/`@AssertTrue` ✅ | 无 | ✅ | ✅ |
 | 链路追踪 | 三代并存（待收敛） | 单轨 | 单轨 | 单轨 ✅ |
 
@@ -245,9 +245,9 @@ Controller → PageQuery（common-domain）.getEffectivePageSize() → Mapper
 | **P1（本周）** | `RequestContext` 重复常量收缩 + 注释修正 | 1h | DRY ✅ / 认知负担 ↓ |
 | **P1（本周）** | 深度分页告警接通 `PageQuery` | 1h | 生产安全 ↑ |
 | **P1（本周）** | `generateTraceId()` `forRemoval = true` + `TraceIdPropagation` 启用到 Feign | 2h | W3C 就绪 + 死代码消除 |
-| **P2（下周）** | `Results` ArchUnit 强制约束 + IDE Live Template | 3h | 构建期约束 ✓ |
+| **P2（下周）** | `Response` ArchUnit 强制约束 + IDE Live Template | 3h | 构建期约束 ✓ |
 | **P2（下周）** | `HeaderConstants` 拆分为 core 专属 + 各业务模块专属（`@Deprecated` 兼容） | 2h | 职责边界清晰 |
-| **P3（持续）** | 存量 70+ 处 `BaseResponse.success` 渐进迁移到 `Results.ok` | 0.5h/次 | API 统一 |
+| **P3（持续）** | 存量 70+ 处 `BaseResponse.success` 渐进迁移到 `Response.ok` | 0.5h/次 | API 统一 |
 | **P3（持续）** | `ApiVersionConfig.defaultVersion` 绑定运行时配置 | 0.5h | 版本漂移 ↓ |
 
 **总工时估算**：P1 约 4h + P2 约 5h + P3 持续投入 = **可在 1 个工作日内完成 P1+P2**
@@ -256,9 +256,9 @@ Controller → PageQuery（common-domain）.getEffectivePageSize() → Mapper
 
 ## 7. 架构决策记录建议
 
-### ADR-010：`Results` 门面的强制策略
+### ADR-010：`Response` 门面的强制策略
 
-**背景**：`Results` 已提供但零采用  
+**背景**：`Response` 已提供但零采用  
 **决策**：允许 3 个月存量兼容期，2026-Q4 起通过 ArchUnit 禁止直接调用 `BaseResponse.success/error` 工厂  
 **后果**：迁移期间需容忍新旧并存，但 CI 未通过则禁止合入
 
@@ -300,7 +300,7 @@ ydsz-common-core **不存在**以下典型过度设计模式：
 | AI-2026-01 | `RequestContext` 重复常量清理 + 类注释修正 | core 模块 owner | grep `KEY_AUTH_INFO` 仅匹配 `BizContextKeys` |
 | AI-2026-02 | `PageQuery` 委托 `PageConstants` 归一化 | common-domain owner | 仅一份归一化逻辑 |
 | AI-2026-03 | `TraceIdPropagation` 接入 Feign + `generateTraceId` 标 `forRemoval=true` | 网关 / 通信 owner | Feign 拦截器同时发送 `X-Trace-Id` 与 `traceparent` |
-| AI-2026-04 | ArchUnit `Results` 强制约束 | QA / DevOps | CI 报红：直接调用 BaseResponse.success |
+| AI-2026-04 | ArchUnit `Response` 强制约束 | QA / DevOps | CI 报红：直接调用 BaseResponse.success |
 | AI-2026-05 | `HeaderConstants` 拆分下沉 | 全体模块 owner | Core 仅 ≤10 个常量 |
 | AI-2026-06 | 存量渐进迁移 + Live Template | 全体开发者 | PR review 检查 |
 

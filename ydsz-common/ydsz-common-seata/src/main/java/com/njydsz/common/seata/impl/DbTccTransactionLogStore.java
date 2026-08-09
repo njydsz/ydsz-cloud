@@ -1,4 +1,4 @@
-package com.njydsz.common.seata.impl;
+﻿package com.njydsz.common.seata.impl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -180,7 +180,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
     public Optional<TccTransactionLog> findByXidAndBranchId(String xid, String branchId) {
         String sql = String.format(SQL_FIND_BY_XID_BRANCH, tableName);
         List<TccTransactionLog> results = jdbcTemplate.query(sql, rowMapper, xid, branchId);
-        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        return Response.isEmpty() ? Optional.empty() : Optional.of(Response.get(0));
     }
 
     /**

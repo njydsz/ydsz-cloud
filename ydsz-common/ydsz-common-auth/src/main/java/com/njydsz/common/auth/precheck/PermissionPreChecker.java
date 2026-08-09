@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.precheck;
+﻿package com.njydsz.common.auth.precheck;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -304,7 +304,7 @@ public class PermissionPreChecker {
         }
         List<PermissionCheckResult> results = new ArrayList<>();
         for (PermissionCheckItem check : checks) {
-            results.add(checkPermissions(check.type, check.permissions, check.mode));
+            Response.add(checkPermissions(check.type, check.permissions, check.mode));
         }
         return results;
     }

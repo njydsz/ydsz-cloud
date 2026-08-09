@@ -1,4 +1,4 @@
-package com.njydsz.agent.server.agent;
+﻿package com.njydsz.agent.server.agent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -172,7 +172,7 @@ public class DagOrchestrationExecutor {
                     .build();
 
             ChatResponse response = llmClient.chat(request);
-            results.put(node.getId(), response.getContent());
+            Response.put(node.getId(), response.getContent());
             if (response.getUsage() != null) {
                 usages.put(node.getId(), response.getUsage());
             }
@@ -206,11 +206,11 @@ public class DagOrchestrationExecutor {
         boolean conditionResult = evaluateCondition(condition, results);
         String branchNodeId = conditionResult ? trueBranch : falseBranch;
 
-        results.put(node.getId(), String.valueOf(conditionResult));
+        Response.put(node.getId(), String.valueOf(conditionResult));
         completed.add(node.getId());
 
         if (branchNodeId != null) {
-            results.put("__BRANCH__" + node.getId(), branchNodeId);
+            Response.put("__BRANCH__" + node.getId(), branchNodeId);
             log.info("[DAG] 条件路由: node={}, result={}, branch={}",
                     node.getId(), conditionResult, branchNodeId);
         }
@@ -256,7 +256,7 @@ public class DagOrchestrationExecutor {
             iteration++;
         }
 
-        results.put(node.getId(), "loop_completed_" + iteration + "_iterations");
+        Response.put(node.getId(), "loop_completed_" + iteration + "_iterations");
         completed.add(node.getId());
         log.info("[DAG] 循环完成: node={}, iterations={}", node.getId(), iteration);
     }
@@ -301,9 +301,9 @@ public class DagOrchestrationExecutor {
     private String resolveVariable(String varExpr, Map<String, String> results) {
         if (varExpr.startsWith("results['") || varExpr.startsWith("results[\"")) {
             String nodeId = varExpr.substring(9, varExpr.length() - 2);
-            return results.getOrDefault(nodeId, "");
+            return Response.getOrDefault(nodeId, "");
         }
-        return results.getOrDefault(varExpr, varExpr);
+        return Response.getOrDefault(varExpr, varExpr);
     }
 
     /**
@@ -346,7 +346,7 @@ public class DagOrchestrationExecutor {
             String[] sources = node.getInputFrom().split(",");
             for (String source : sources) {
                 String trimmed = source.trim();
-                String upstreamResult = results.get(trimmed);
+                String upstreamResult = Response.get(trimmed);
                 if (upstreamResult != null) {
                     sb.append("\n\n来自节点 [").append(trimmed).append("] 的结果:\n").append(upstreamResult);
                 }

@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -165,7 +165,7 @@ public class RuleTestCaseController {
             List<RuleResult> results = ruleAdminService.dryRun(null, tc.getFactsData());
 
             // 获取实际触发的规则编码集合
-            Set<String> actualTriggered = results.stream()
+            Set<String> actualTriggered = Response.stream()
                 .map(RuleResult::getRuleCode)
                 .collect(Collectors.toSet());
 

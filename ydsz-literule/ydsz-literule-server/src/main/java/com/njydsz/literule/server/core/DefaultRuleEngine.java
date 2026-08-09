@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.core;
+﻿package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -1295,7 +1295,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             metrics.recordEvaluatedRules(candidateRules.size());
         }
         // P1-1 规则与消息通知联动：评估完成后分发动作
-        if (actionDispatcher != null && !results.isEmpty()) {
+        if (actionDispatcher != null && !Response.isEmpty()) {
             actionDispatcher.dispatchActions(results, context);
         }
         return results;

@@ -141,7 +141,7 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 **落地建议**：在 core README 用一节固化约定——`response.*` 仅用于通用成功/失败文案，`error.<枚举名>` 用于错误码文案；删除永不会被错误路径命中的 `error.SUCCESS`。
 
 ### E3【P2】统一响应门面（facade）
-散落的 `BaseResponse.success/error/error(ResultCode)/successPage` 可收口为一个 `Results` 静态门面，降低记忆成本：`Results.ok(data)`、`Results.fail(BaseResultCode.BIZ_ERROR)`。
+散落的 `BaseResponse.success/error/error(ResultCode)/successPage` 可收口为一个 `Response` 静态门面，降低记忆成本：`Response.ok(data)`、`Response.fail(BaseResultCode.BIZ_ERROR)`。
 
 ### E4【P2】补全单元测试与架构守护
 模块仅引入 `spring-boot-starter-test`，但未见测试类落地情况。建议最低补齐：
@@ -200,7 +200,7 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 |---|---|---|---|
 | **Phase 1（止血）** | 修一致性 & 死代码 | O1 删死代码、A5 删冗余 HealthIndicator+修 README、O3 封装 getExtensions、O6 修正 getMessageKey、O7 修 successMsg | ✅ **已完成** |
 | **Phase 2（减负）** | 收敛 API 与上下文 | A1 业务键下沉 `BizContextKeys`、A2 `RequestSnapshot` 替代 HttpServletRequest、E1 统一 ContextKey 入口、O2 用户缓存移出通用上下文 | ✅ **已完成** |
-| **Phase 3（演进）** | 结构升级 | A3 抽出响应层 `PageResponse<T>`、F1 深度分页告警生效、F3 可排序 traceId、E3 `Results` 门面、E4 单测（10 例全绿） | ✅ **已完成** |
+| **Phase 3（演进）** | 结构升级 | A3 抽出响应层 `PageResponse<T>`、F1 深度分页告警生效、F3 可排序 traceId、E3 `Response` 门面、E4 单测（10 例全绿） | ✅ **已完成** |
 | **持续** | 质量守护 | E4 单测扩展、架构测试（禁止 core 反向依赖业务模块）、依赖收敛审计 | 🔄 建议持续推进 |
 
 > 全部 P0 / P1 项与多数 P2 项已落地，详见 §8 实施记录。A4（`ydsz-common-json` 自定义注解）经核实为**有意为之的硬依赖**（自研 JSON 引擎识别这些注解），风险下调，仅在 README 明确"必须配合 ydsz-common-json"约束即可，未做破坏性改动。
@@ -237,7 +237,7 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 | F1 | `PageConstants.calcOffset` 接入 `isOffsetSafe()`：超 `MAX_SAFE_OFFSET` 时打 WARN 提示改游标分页，空置能力生效 | `PageConstants.java` |
 | F3 | 新增 `generateSortableTraceId()`：**UUIDv7 风格（48-bit 毫秒时间戳 + 16-bit 同毫秒单调序号 + 64-bit 随机）**，严格时间有序且格式兼容（32 位 hex）；线程安全（CAS） | `TraceIdGenerator.java` |
 | F4 | 核实：`traceHeaders()` 已有 `traceHeadersOrCreate()` 兜底变体，断链风险已规避，无需改动 | `TraceIdPropagation.java`(未改) |
-| E1/E3 | 新增统一门面 `Results`（`ok/fail/fail(ResultCode)/page` 等），收敛散落的工厂方法；文档引导以 `ContextKey<T>` 为类型安全首选入口 | `Results.java`(新) |
+| E1/E3 | 新增统一门面 `Response`（`ok/fail/fail(ResultCode)/page` 等），收敛散落的工厂方法；文档引导以 `ContextKey<T>` 为类型安全首选入口 | `Response.java`(新) |
 | E4 | 新增 `CoreOptimizationTest`（10 例）：扩展字段不可变、非枚举 `getMessageKey`、分页信封、缓存与上下文分离、可排序 traceId、快照独立性等 | `CoreOptimizationTest.java`(新) |
 
 ### 8.4 对原报告的几处勘误（重要）

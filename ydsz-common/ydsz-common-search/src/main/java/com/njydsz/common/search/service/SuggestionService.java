@@ -1,4 +1,4 @@
-package com.njydsz.common.search.service;
+﻿package com.njydsz.common.search.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,22 +60,22 @@ public class SuggestionService {
                     if (s != null && !s.isBlank()) {
                         String lower = s.toLowerCase();
                         if (lower.startsWith(normalizedPrefix) || lower.contains(normalizedPrefix)) {
-                            results.add(s);
+                            Response.add(s);
                         }
                     }
                 }
             }
-            if (results.size() < properties.getSuggestLimit()) {
+            if (Response.size() < properties.getSuggestLimit()) {
                 if (suggestion != null && suggestion.getSuggestions() != null) {
                     for (String s : suggestion.getSuggestions()) {
-                        if (s != null && !s.isBlank() && !results.contains(s)) {
-                            results.add(s);
+                        if (s != null && !s.isBlank() && !Response.contains(s)) {
+                            Response.add(s);
                         }
-                        if (results.size() >= properties.getSuggestLimit()) break;
+                        if (Response.size() >= properties.getSuggestLimit()) break;
                     }
                 }
             }
-            return results.stream().limit(properties.getSuggestLimit()).collect(Collectors.toList());
+            return Response.stream().limit(properties.getSuggestLimit()).collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("[SuggestionService] 自动补全失败: prefix={}", prefix, e);
             return Collections.emptyList();

@@ -32,6 +32,16 @@ public final class HeaderConstants {
         throw new UnsupportedOperationException("Utility class");
     }
 
+    /**
+     * HTTP 标准授权头（RFC 7235 / RFC 6750）。
+     *
+     * <p>值 {@code Authorization}，用于承载 OAuth2 Bearer Token、Basic 等标准授权凭证。
+     * 统一项目中 Authorization 头的引用，消除 {@code TokenConstants} 与 {@code HeaderConstants} 双源重复定义。</p>
+     *
+     * @since 1.11.0
+     */
+    public static final String AUTHORIZATION = "Authorization";
+
     // ============================== 认证 / 身份 ==============================
     // v1.11 迁移至 ydsz-common-auth AuthHeaderConstants；此处保留 @Deprecated 桥接
 
@@ -83,8 +93,9 @@ public final class HeaderConstants {
      *
      * <p>用于区分公司用户、访客用户、ydsz用户等身份类型。
      *
-
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_IDENTITY_TYPE}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_IDENTITY_TYPE = "X-Identity-Type";
 
     /**
@@ -93,7 +104,9 @@ public final class HeaderConstants {
      * <p>由网关在认证后写入，标识当前登录用户的显示名。
      *
      * @since 1.2.0
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_USERNAME}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_USERNAME = "X-Username";
 
     /**
@@ -102,7 +115,9 @@ public final class HeaderConstants {
      * <p>逗号分隔的角色编码列表，用于下游 RBAC 权限判断。
      *
      * @since 1.2.0
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_USER_ROLES}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_USER_ROLES = "X-User-Roles";
 
     /**

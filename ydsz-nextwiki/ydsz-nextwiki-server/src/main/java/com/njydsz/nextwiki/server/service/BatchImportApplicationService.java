@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.service;
+﻿package com.njydsz.nextwiki.server.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -110,11 +110,11 @@ public class BatchImportApplicationService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        int failed = files.length - results.size();
+        int failed = files.length - Response.size();
         log.info("[BatchImportApplicationService] 批量上传完成: total={}, success={}, failed={}",
-                files.length, results.size(), failed);
+                files.length, Response.size(), failed);
 
-        return BatchImportResult.success(results, files.length, results.size(), failed);
+        return BatchImportResult.success(results, files.length, Response.size(), failed);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.common.excel.core;
+﻿package com.njydsz.common.excel.core;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -206,10 +206,10 @@ public class ConcurrentExcelWriter {
 
             List<ChunkResult> results = new ArrayList<>(chunkCount);
             for (CompletableFuture<ChunkResult> future : futures) {
-                results.add(future.join());
+                Response.add(future.join());
             }
 
-            results.sort(Comparator.comparingInt(ChunkResult::getChunkIndex));
+            Response.sort(Comparator.comparingInt(ChunkResult::getChunkIndex));
             writeMergedFile(results);
             log.info("并发写入完成: 输出文件={}", filePath);
         } finally {

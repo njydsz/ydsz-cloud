@@ -1,4 +1,4 @@
-package com.njydsz.common.redis.service;
+﻿package com.njydsz.common.redis.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -340,8 +340,8 @@ public class RedisBloomFilter implements BloomFilterService {
 
             // 解析结果（Pipeline 返回顺序与提交顺序一致）
             List<String> result = new ArrayList<>();
-            for (int i = 0; i < validValues.size() && i < results.size(); i++) {
-                Object r = results.get(i);
+            for (int i = 0; i < validValues.size() && i < Response.size(); i++) {
+                Object r = Response.get(i);
                 boolean exists = (r instanceof Boolean && (Boolean) r)
                         || (r instanceof Long && ((Long) r) == 1L);
                 if (exists) {

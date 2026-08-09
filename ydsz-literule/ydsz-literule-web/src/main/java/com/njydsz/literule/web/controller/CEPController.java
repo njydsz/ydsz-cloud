@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -124,9 +124,9 @@ public class CEPController {
                     }
                     RuleContext ctx = RuleContext.of(facts, "CEP", "CEP_ENGINE", null);
                     List<RuleResult> results = ruleEngine.evaluate(ctx);
-                    if (!results.isEmpty()) {
+                    if (!Response.isEmpty()) {
                         log.info("[CEPController] CEP 命中触发规则评估: patternId={}, ruleCode={}, triggered={}",
-                                hit.getPatternId(), hit.getRuleCode(), results.size());
+                                hit.getPatternId(), hit.getRuleCode(), Response.size());
                     }
                 } catch (Exception e) {
                     log.warn("[CEPController] CEP 命中触发规则评估异常: {}", e.getMessage());

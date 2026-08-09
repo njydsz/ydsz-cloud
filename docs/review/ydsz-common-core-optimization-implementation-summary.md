@@ -17,7 +17,7 @@
 | P1 | HeaderConstants 统一（消除硬编码） | ✅ 完成 | 新增常量 + 模块委托 |
 | P1 | 异常处理器硬编码消除 | ✅ 完成 | 3 个文件修改 |
 | P2 | 深度分页风险闭环验证 | ✅ 已确认 | SafeQueryInnerInterceptor |
-| P2 | Results 门面推广 | 📋 编码规范已定 | 待团队采纳推广 |
+| P2 | Response 门面推广 | 📋 编码规范已定 | 待团队采纳推广 |
 | P2 | ArchUnit 架构守护 | ⏸ 待环境 | 需要 ArchUnit 依赖 |
 
 ---
@@ -121,7 +121,7 @@ public static void reset() {
 | TraceId 生成与传播 | 5 个用例 | 唯一性（1000 无碰撞）、协议头格式 |
 | BaseResponse 响应模型 | 2 个用例 | code/data/扩展字段不可变 |
 | PageResponse 分页响应 | 2 个用例 | 元数据/错误信封 |
-| Results 统一门面 | 4 个用例 | ok/fail/page 各类重载 |
+| Response 统一门面 | 4 个用例 | ok/fail/page 各类重载 |
 
 ### 2.2 CoreAutoConfigurationTest
 
@@ -183,19 +183,19 @@ exception.getHeader(HeaderConstants.X_REQUEST_ID)     // 使用权威
 ### 4.1 团队推广（建议 1 周内完成）
 
 - [ ] 向团队分发《公共模块使用编码规范》文档
-- [ ] 在技术分享会上演示 `Results` 门面和 `ExceptionCode` 最佳实践
+- [ ] 在技术分享会上演示 `Response` 门面和 `ExceptionCode` 最佳实践
 - [ ] 配置 IDE Live Template 模板
 - [ ] 在 CI 流水线中添加 ArchUnit 测试（待评估引入成本）
 
 ### 4.2 渐进式代码迁移（建议 1 月内完成）
 
-- [ ] 新代码必须使用 `Results` 门面（代码 review checklist）
+- [ ] 新代码必须使用 `Response` 门面（代码 review checklist）
 - [ ] 存量 `@RequestHeader("X-User-Id")` 逐步替换为 `HeaderConstants.X_USER_ID`
 - [ ] 业务模块结果码确认已实现 `ExceptionCode` 接口（已证实）
 
 ### 4.3 监控指标（建议持续）
 
-- [ ] `Results` 门面采用率（目标：新代码 100%）
+- [ ] `Response` 门面采用率（目标：新代码 100%）
 - [ ] HeaderConstants 覆盖率（目标：新增硬编码为 0）
 - [ ] 深度分页 WARN 日志监控（通过 `cursor-warning-threshold` 调优）
 
