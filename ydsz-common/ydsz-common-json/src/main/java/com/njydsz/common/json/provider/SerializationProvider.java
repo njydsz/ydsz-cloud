@@ -8,13 +8,14 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonSerialize;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.internal.JsonRuntimeConfig;
+import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.serializer.JsonSerializer;
+import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
@@ -593,8 +594,10 @@ public final class SerializationProvider {
         // @JsonSerialize 快速路径：如果类有 @JsonSerialize 注解，使用自定义序列化器
         Object customSerializer = getCustomSerializer(obj.getClass());
         if (customSerializer == null) {
-            // 模块注册 / 全局注册 快速路径：JsonModule.SpringFactory 或 YdszJson.register(...) 注册的序列化器
-            customSerializer = YdszJson.getRegisteredSerializer(obj.getClass());
+            // 模块注册 / 全局注册 快速路径：直接查询 SerializerRegistry / JsonModuleRegistry，
+            // 避免反向依赖 YdszJson（打破 YdszJson <-> SerializationProvider 循环依赖，1.2.1）
+            JsonSerializer<?> registered = SerializerRegistry.getInstance().get(obj.getClass());
+            customSerializer = registered != null ? registered : JsonModuleRegistry.getInstance().getSerializer(obj.getClass());
         }
         if (customSerializer != null) {
             return invokeCustomSerializer(customSerializer, obj);

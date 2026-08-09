@@ -1137,7 +1137,6 @@
                         <includeTestSourceDirectory>false</includeTestSourceDirectory>
                         <consoleOutput>true</consoleOutput>
                         <failOnViolation>true</failOnViolation>
-                        <failOnError>true</failOnError>
                         <violationSeverity>error</violationSeverity>
                         <sourceDirectories>
                             <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
