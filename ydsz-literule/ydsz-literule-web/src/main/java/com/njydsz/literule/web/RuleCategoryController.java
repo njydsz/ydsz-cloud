@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则目录树 Controller
@@ -93,6 +94,7 @@ public class RuleCategoryController {
      */
     @Idempotent(key = "ruleAdmin:setOwner", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'setOwner'")
+    @RateLimit(resource = "literule.rule_category.setOwner", threshold = 50)
     @PutMapping("/{ruleCode}/owner")
     public BaseResponse<Void> setOwner(
             @PathVariable String ruleCode,
@@ -107,6 +109,7 @@ public class RuleCategoryController {
      */
     @Idempotent(key = "ruleAdmin:setCategoryPath", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'setCategoryPath'")
+    @RateLimit(resource = "literule.rule_category.setCategoryPath", threshold = 50)
     @PutMapping("/{ruleCode}/categoryPath")
     public BaseResponse<Void> setCategoryPath(
             @PathVariable String ruleCode,

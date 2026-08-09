@@ -87,7 +87,7 @@ public final class JsonPatch {
         }
 
         List<Map<String, Object>> ops = YdszJson.fromJson(patchJson,
-                new com.njydsz.common.json.JsonType<List<Map<String, Object>>>() {});
+                new com.njydsz.common.json.type.JsonType<List<Map<String, Object>>>() {});
 
         if (ops == null || ops.isEmpty()) {
             throw new JsonException("Patch JSON must be a non-empty array");
@@ -143,7 +143,7 @@ public final class JsonPatch {
 
         ObjectNode tree = (ObjectNode) YdszJson.valueToTree(target);
         Map<String, Object> patchMap = YdszJson.fromJson(mergeJson,
-                new com.njydsz.common.json.JsonType<Map<String, Object>>() {});
+                new com.njydsz.common.json.type.JsonType<Map<String, Object>>() {});
 
         if (patchMap == null) {
             return target;
@@ -216,7 +216,7 @@ public final class JsonPatch {
                 if (idx > arrNode.size()) {
                     throw new JsonException("Array index out of bounds: " + lastSegment);
                 }
-                arrNode.add(idx, value);
+                arrNode.insert(idx, value);
             }
         } else {
             throw new JsonException("Cannot add to type: " + resolution.parent.getClass().getSimpleName());

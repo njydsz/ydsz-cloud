@@ -23,6 +23,7 @@ import com.njydsz.common.json.annotation.JsonDeserialize;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.reader.JSONReader;
 
@@ -176,9 +177,10 @@ public final class DeserializationProvider {
 
     /**
      * @JsonDeserialize 自定义反序列化器缓存（Class -> JsonDeserializer 实例）。
+     * 有界 LRU（容量 1024），防止无界增长。
      */
-    private static final ConcurrentHashMap<Class<?>, JsonDeserializer<?>> CUSTOM_DESERIALIZER_CACHE =
-        new ConcurrentHashMap<>();
+    private static final BoundedLruCache<Class<?>, JsonDeserializer<?>> CUSTOM_DESERIALIZER_CACHE =
+        new BoundedLruCache<>(1024);
 
     /**
      * 自定义反序列化器 deserialize 方法缓存（Class -> Method）。
@@ -188,9 +190,11 @@ public final class DeserializationProvider {
      * 使用 {@link Method#invoke(Object, Object...)} 进行反射调用，
      * 避免 unchecked cast。{@code Method.invoke} 返回 {@code Object}，
      * 调用方通过 {@code clazz.cast()} 执行 checked cast。</p>
+     *
+     * <p>有界 LRU（容量 1024），防止无界增长。</p>
      */
-    private static final ConcurrentHashMap<Class<?>, Method> DESERIALIZE_METHOD_CACHE =
-        new ConcurrentHashMap<>();
+    private static final BoundedLruCache<Class<?>, Method> DESERIALIZE_METHOD_CACHE =
+        new BoundedLruCache<>(1024);
 
     /**
      * 检查类是否有 @JsonDeserialize 注解并获取自定义反序列化器。
@@ -203,14 +207,19 @@ public final class DeserializationProvider {
         if (annotation == null || annotation.using() == Void.class) {
             return null;
         }
-        JsonDeserializer<?> cached = CUSTOM_DESERIALIZER_CACHE.get(clazz);
-        if (cached != null) {
-            return cached;
-        }
         try {
-            JsonDeserializer<?> instance = (JsonDeserializer<?>) annotation.using().getDeclaredConstructor().newInstance();
-            CUSTOM_DESERIALIZER_CACHE.putIfAbsent(clazz, instance);
-            return instance;
+            return CUSTOM_DESERIALIZER_CACHE.computeIfAbsent(clazz, c -> {
+                try {
+                    return (JsonDeserializer<?>) annotation.using().getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    throw new JsonDeserializationException(
+                        "Failed to instantiate custom deserializer: " + annotation.using().getName(),
+                        e
+                    );
+                }
+            });
+        } catch (JsonDeserializationException e) {
+            throw e;
         } catch (Exception e) {
             throw new JsonDeserializationException(
                 "Failed to instantiate custom deserializer: " + annotation.using().getName(),
@@ -584,5 +593,17 @@ public final class DeserializationProvider {
             return new LinkedHashMap<>();
         }
         return new HashMap<>();
+    }
+
+    /**
+     * 清理当前线程的 ThreadLocal 对象。
+     *
+     * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法，
+     * 防止 {@link #DESERIALIZE_DEPTH} 等 ThreadLocal 值在线程池中残留。</p>
+     *
+     * @since 1.2.1
+     */
+    public static void clearThreadLocals() {
+        DESERIALIZE_DEPTH.remove();
     }
 }

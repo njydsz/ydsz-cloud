@@ -258,6 +258,18 @@ public final class JSONReader {
     private static final ThreadLocal<JSONReader> READER_POOL = new ThreadLocal<>();
 
     /**
+     * 清理当前线程的 ThreadLocal 读取器池。
+     *
+     * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法，
+     * 释放池化的 JSONReader 实例及其 char[] 缓冲区，防止内存泄漏。</p>
+     *
+     * @since 1.2.1
+     */
+    public static void clearThreadLocals() {
+        READER_POOL.remove();
+    }
+
+    /**
      * 构造函数
      *
      * <p><b>性能提示：</b>此构造函数会调用 {@code String.toCharArray()} 创建防御性拷贝。

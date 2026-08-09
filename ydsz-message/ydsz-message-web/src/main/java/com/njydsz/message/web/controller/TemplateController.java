@@ -1,5 +1,7 @@
 package com.njydsz.message.web.controller.template;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -152,11 +154,13 @@ public class TemplateController {
     @Operation(summary = "模板分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgTemplateVO>> page(TemplateQueryDTO query) {
+    public BaseResponse<List<MsgTemplateVO>> page(TemplateQueryDTO query) {
         Page<MsgTemplate> page = templateService.page(query);
-        Page<MsgTemplateVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.templateListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                MessageConverter.INSTANT.templateListToVO(page.getRecords()));
     }
 
     /**

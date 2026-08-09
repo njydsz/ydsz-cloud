@@ -28,6 +28,7 @@ import com.njydsz.literule.server.spi.RuleDependencyProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则依赖 Controller
@@ -64,6 +65,7 @@ public class RuleDependencyController {
      */
     @Idempotent(key = "ruleAdmin:addDependency", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'addDependency'")
+    @RateLimit(resource = "literule.rule_dependency.addDependency", threshold = 50)
     @PostMapping("/{ruleCode}/dependencies")
     public BaseResponse<RuleDependencyVO> addDependency(
             @PathVariable String ruleCode,
@@ -81,6 +83,7 @@ public class RuleDependencyController {
      */
     @Idempotent(key = "ruleAdmin:removeDependency", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'removeDependency'")
+    @RateLimit(resource = "literule.rule_dependency.removeDependency", threshold = 50)
     @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
     public BaseResponse<Void> removeDependency(
             @PathVariable String ruleCode,

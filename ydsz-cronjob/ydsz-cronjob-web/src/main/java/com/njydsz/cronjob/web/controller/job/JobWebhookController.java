@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.web.controller.job;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.*;
@@ -138,7 +139,7 @@ public class JobWebhookController {
      */
     @Operation(summary = "分页查询 WebHook 订阅")
     @GetMapping("/page")
-    public BaseResponse<Page<JobWebhookVO>> page(
+    public BaseResponse<List<JobWebhookVO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String eventType,
@@ -151,9 +152,11 @@ public class JobWebhookController {
                         w -> w.getJobKey(), jobKey)
                 .orderByDesc(w -> w.getCreatedAt());
         Page<JobWebhook> page = webhookMapper.selectPage(new Page<>(page, size), wrapper);
-        Page<JobWebhookVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(CronjobConverter.INSTANT.jobWebhookListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                CronjobConverter.INSTANT.jobWebhookListToVO(page.getRecords()));
     }
 
     /**

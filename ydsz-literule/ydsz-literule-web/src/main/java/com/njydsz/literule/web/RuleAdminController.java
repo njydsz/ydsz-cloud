@@ -48,6 +48,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则管理核心 Controller
@@ -128,6 +129,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
+    @RateLimit(resource = "literule.rule_admin.save", threshold = 50)
     @PostMapping
     @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<RuleDefinitionVO> save(@RequestBody RuleDefinition definition,
@@ -146,6 +148,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'toggle'")
+    @RateLimit(resource = "literule.rule_admin.toggle", threshold = 50)
     @PutMapping("/{ruleCode}/toggle")
     @AuthApiPermission(apiCodes = "execution:rule:toggle")
     public BaseResponse<Void> toggle(@PathVariable String ruleCode,
@@ -211,6 +214,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rollback'")
+    @RateLimit(resource = "literule.rule_admin.rollback", threshold = 50)
     @PostMapping("/{ruleCode}/rollback")
     public BaseResponse<RuleDefinitionVO> rollback(@PathVariable String ruleCode,
                                             @RequestParam int version,
@@ -227,6 +231,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:dryRun", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'dryRun'")
+    @RateLimit(resource = "literule.rule_admin.dryRun", threshold = 50)
     @PostMapping("/dryRun")
     public BaseResponse<List<RuleResultVO>> dryRun(@RequestParam(required = false) String ruleCode,
                                             @RequestBody Map<String, Object> facts) {
@@ -264,6 +269,7 @@ public class RuleAdminController {
      * @since 1.0.0
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'traceExpression'")
+    @RateLimit(resource = "literule.rule_admin.traceExpression", threshold = 50)
     @PostMapping("/exprTrace")
     public BaseResponse<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
         String expression = (String) request.get("expression");
@@ -286,6 +292,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:validateExpression", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'validateExpression'")
+    @RateLimit(resource = "literule.rule_admin.validateExpression", threshold = 50)
     @PostMapping("/validateExpression")
     public BaseResponse<ExpressionValidationResultVO> validateExpression(@Valid @RequestBody ExpressionValidateDTO dto) {
         String expression = dto.getExpression();
@@ -314,6 +321,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:validateBatch", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_admin.validateBatch", threshold = 50)
     @PostMapping("/validateBatch")
     public BaseResponse<Map<String, ExpressionValidationResult>> validateBatch(@RequestBody Map<String, String> request) {
         return BaseResponse.success(expressionValidationService.validateBatch(request));
@@ -330,6 +338,7 @@ public class RuleAdminController {
      * @return A/B 测试报告
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'abTest'")
+    @RateLimit(resource = "literule.rule_admin.abTest", threshold = 50)
     @PostMapping("/{ruleCode}/abTest")
     public BaseResponse<ABTestService.ABTestReport> abTest(@PathVariable String ruleCode,
                                                       @Valid @RequestBody RuleABTestDTO dto) {

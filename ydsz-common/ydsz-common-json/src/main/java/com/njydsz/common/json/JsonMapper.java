@@ -19,6 +19,7 @@ import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider.SerializationContext;
+import com.njydsz.common.json.provider.ThreadLocalSnapshot;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.NullNode;
 import com.njydsz.common.json.tree.TreeConverter;
@@ -136,7 +137,7 @@ public class JsonMapper {
      *
      * <p>历史上此方法用于重置 {@code configApplied} 优化标志。该优化因在共享 Mapper
      * 场景下跨线程误共享 ThreadLocal 状态而被移除——现在每次序列化都会通过
-     * {@link SerializationProvider.ThreadLocalSnapshot} 显式保存/恢复配置，保证
+     * {@link ThreadLocalSnapshot} 显式保存/恢复配置，保证
      * 多线程共享同一 {@code JsonMapper} 实例时配置正确隔离。</p>
      *
      * @since 1.0.0
@@ -173,8 +174,8 @@ public class JsonMapper {
      *
      * @return ThreadLocalSnapshot（不为 null，需在 finally 中 restore）
      */
-    private SerializationProvider.ThreadLocalSnapshot applyConfigIfNeeded() {
-        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
+    private ThreadLocalSnapshot applyConfigIfNeeded() {
+        ThreadLocalSnapshot snapshot = new ThreadLocalSnapshot();
         // 1. 预计算配置快速填充当前线程的 SerializationContext
         applyRuntimeConfig();
         // 2. 传播到全局组件（JSONReader maxDepth、SerializationProvider 静态状态等）
@@ -218,7 +219,7 @@ public class JsonMapper {
     /**
      * 恢复配置快照（ThreadLocal 序列化参数）。
      */
-    private void restoreConfig(SerializationProvider.ThreadLocalSnapshot snapshot) {
+    private void restoreConfig(ThreadLocalSnapshot snapshot) {
         if (snapshot != null) {
             snapshot.restore();
         }
@@ -234,9 +235,9 @@ public class JsonMapper {
         if (obj == null) {
             return "null";
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordSerialize(() -> SerializationProvider.serialize(obj));
+            return SerializationProvider.serialize(obj);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -254,9 +255,9 @@ public class JsonMapper {
             return "null";
         }
         if (pretty) {
-            SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+            ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
             try {
-                return recordSerialize(() -> SerializationProvider.format(obj));
+                return SerializationProvider.format(obj);
             } finally {
                 if (snapshot != null) restoreConfig(snapshot);
             }
@@ -278,9 +279,9 @@ public class JsonMapper {
         if (obj == null) {
             return "null";
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordSerialize(() -> SerializationProvider.serializeWithView(obj, viewClass));
+            return SerializationProvider.serializeWithView(obj, viewClass);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -296,9 +297,9 @@ public class JsonMapper {
         if (obj == null) {
             return new byte[]{'n', 'u', 'l', 'l'};
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordSerialize(() -> SerializationProvider.serializeToBytes(obj));
+            return SerializationProvider.serializeToBytes(obj);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -349,9 +350,9 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordDeserialize(() -> DeserializationProvider.deserialize(json, clazz));
+            return DeserializationProvider.deserialize(json, clazz);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -370,9 +371,9 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordDeserialize(() -> DeserializationProvider.deserialize(json, type));
+            return DeserializationProvider.deserialize(json, type);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -391,9 +392,9 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordDeserialize(() -> DeserializationProvider.deserialize(json, typeRef.getType()));
+            return DeserializationProvider.deserialize(json, typeRef.getType());
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -413,9 +414,9 @@ public class JsonMapper {
             return null;
         }
         validateJsonSizeBytes(bytes.length);
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, clazz));
+            return DeserializationProvider.deserialize(bytes, clazz);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -436,9 +437,9 @@ public class JsonMapper {
             return null;
         }
         validateJsonSizeBytes(bytes.length);
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordDeserialize(() -> (T) DeserializationProvider.deserializeToObject(bytes, type));
+            return (T) DeserializationProvider.deserializeToObject(bytes, type);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -488,9 +489,9 @@ public class JsonMapper {
             throw new JsonException(
                 "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, clazz));
+            return DeserializationProvider.deserialize(bytes, clazz);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -542,9 +543,9 @@ public class JsonMapper {
                 throw new JsonException(
                     "JSON size exceeds limit: " + bytes.length + " > " + maxSize);
             }
-            SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+            ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
             try {
-                return recordDeserialize(() -> DeserializationProvider.deserialize(bytes, typeRef.getType()));
+                return DeserializationProvider.deserialize(bytes, typeRef.getType());
             } finally {
                 if (snapshot != null) restoreConfig(snapshot);
             }
@@ -565,19 +566,17 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordDeserialize(() -> {
-                Object result = DeserializationProvider.deserialize(json, Map.class);
-                if (result instanceof Map<?, ?> map) {
-                    Map<String, Object> typedMap = new LinkedHashMap<>(map.size());
-                    for (Map.Entry<?, ?> entry : map.entrySet()) {
-                        typedMap.put((String) entry.getKey(), entry.getValue());
-                    }
-                    return typedMap;
+            Object result = DeserializationProvider.deserialize(json, Map.class);
+            if (result instanceof Map<?, ?> map) {
+                Map<String, Object> typedMap = new LinkedHashMap<>(map.size());
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    typedMap.put((String) entry.getKey(), entry.getValue());
                 }
-                return new LinkedHashMap<String, Object>();
-            });
+                return typedMap;
+            }
+            return new LinkedHashMap<String, Object>();
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -596,7 +595,7 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
             // 复用 TypeFactory 缓存的参数化类型，避免每次调用新建匿名 ParameterizedType
             Object result = DeserializationProvider.deserialize(json,
@@ -778,9 +777,9 @@ public class JsonMapper {
             return null;
         }
         validateJsonSize(json);
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
-            return recordDeserialize(() -> DeserializationProvider.deserialize(json, type));
+            return DeserializationProvider.deserialize(json, type);
         } finally {
             if (snapshot != null) restoreConfig(snapshot);
         }
@@ -810,12 +809,12 @@ public class JsonMapper {
         if (obj == null) {
             return "null";
         }
-        SerializationProvider.ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
+        ThreadLocalSnapshot snapshot = applyConfigIfNeeded();
         try {
             Set<String> previous = SerializationProvider.getExcludedFields();
             SerializationProvider.setExcludedFields(excludedFieldNames);
             try {
-                return recordSerialize(() -> SerializationProvider.serialize(obj));
+                return SerializationProvider.serialize(obj);
             } finally {
                 SerializationProvider.setExcludedFields(previous);
             }
@@ -845,30 +844,6 @@ public class JsonMapper {
             throw new JsonException(
                 "JSON size exceeds limit: " + byteLength + " > " + maxSize);
         }
-    }
-
-    // ==================== 操作包装 ====================
-
-    /**
-     * 执行序列化操作（原指标监控包装，指标模块已移除，直接执行）。
-     */
-    private static <T> T recordSerialize(ThrowingSupplier<T> supplier) {
-        return supplier.get();
-    }
-
-    /**
-     * 执行反序列化操作（原指标监控包装，指标模块已移除，直接执行）。
-     */
-    private static <T> T recordDeserialize(ThrowingSupplier<T> supplier) {
-        return supplier.get();
-    }
-
-    /**
-     * 允许延迟执行的函数式接口（原指标监控包装的参数类型）。
-     */
-    @FunctionalInterface
-    private interface ThrowingSupplier<T> {
-        T get();
     }
 
     /**
@@ -909,18 +884,8 @@ public class JsonMapper {
      */
     public static final class Builder {
 
-        private PropertyNamingStrategy namingStrategy = JsonConfig.getInstance().getNamingStrategy();
-        private JsonConfig.CircularReferenceStrategy circularReferenceStrategy = JsonConfig.getInstance().getCircularReferenceStrategy();
-        private boolean writeNulls = JsonConfig.getInstance().isWriteNulls();
-        private String dateFormat = JsonConfig.getInstance().getDateFormat();
-        private boolean serializeEnumUsingOrdinal = JsonConfig.getInstance().isSerializeEnumUsingOrdinal();
-        private boolean prettyPrint = JsonConfig.getInstance().isPrettyPrint();
-        private boolean failOnError = JsonConfig.getInstance().isFailOnError();
-        private boolean useBigDecimal = JsonConfig.getInstance().isUseBigDecimal();
-        private boolean wrapRootValue = JsonConfig.getInstance().isWrapRootValue();
-        private long maxJsonSize = JsonConfig.getInstance().getMaxJsonSize();
-        private int maxDepth = JsonConfig.getInstance().getMaxDepth();
-        private int maxGenericDepth = JsonConfig.getInstance().getMaxGenericDepth();
+        /** 内部委托给 JsonConfig.Builder，消除双重 Builder 字段重复（1.2.1） */
+        private final JsonConfig.Builder configBuilder = JsonConfig.builder();
 
         private Builder() {
         }
@@ -947,19 +912,7 @@ public class JsonMapper {
             if (mapper == null) {
                 throw new IllegalArgumentException("Builder.from: mapper must not be null");
             }
-            JsonConfig cfg = mapper.getConfig();
-            this.namingStrategy = cfg.getNamingStrategy();
-            this.circularReferenceStrategy = cfg.getCircularReferenceStrategy();
-            this.writeNulls = cfg.isWriteNulls();
-            this.dateFormat = cfg.getDateFormat();
-            this.serializeEnumUsingOrdinal = cfg.isSerializeEnumUsingOrdinal();
-            this.prettyPrint = cfg.isPrettyPrint();
-            this.failOnError = cfg.isFailOnError();
-            this.useBigDecimal = cfg.isUseBigDecimal();
-            this.wrapRootValue = cfg.isWrapRootValue();
-            this.maxJsonSize = cfg.getMaxJsonSize();
-            this.maxDepth = cfg.getMaxDepth();
-            this.maxGenericDepth = cfg.getMaxGenericDepth();
+            configBuilder.from(mapper.getConfig());
             return this;
         }
 
@@ -969,7 +922,7 @@ public class JsonMapper {
          * @param strategy 命名策略（如 SNAKE_CASE / LOWER_CAMEL_CASE），不可为 {@code null}
          */
         public Builder namingStrategy(PropertyNamingStrategy strategy) {
-            this.namingStrategy = strategy;
+            configBuilder.namingStrategy(strategy);
             return this;
         }
 
@@ -979,7 +932,7 @@ public class JsonMapper {
          * @param dateFormat SimpleDateFormat 模式串；空串或 {@code null} 表示使用默认格式
          */
         public Builder dateFormat(String dateFormat) {
-            this.dateFormat = dateFormat;
+            configBuilder.dateFormat(dateFormat);
             return this;
         }
 
@@ -989,7 +942,7 @@ public class JsonMapper {
          * @param writeNulls {@code true} 保留 null 字段，{@code false} 跳过 null 字段
          */
         public Builder writeNulls(boolean writeNulls) {
-            this.writeNulls = writeNulls;
+            configBuilder.writeNulls(writeNulls);
             return this;
         }
 
@@ -999,7 +952,7 @@ public class JsonMapper {
          * @param prettyPrint {@code true} 启用美化输出
          */
         public Builder prettyPrint(boolean prettyPrint) {
-            this.prettyPrint = prettyPrint;
+            configBuilder.prettyPrint(prettyPrint);
             return this;
         }
 
@@ -1009,7 +962,7 @@ public class JsonMapper {
          * @param strategy {@code REF} 输出引用路径 / {@code IGNORE} 忽略 / {@code ERROR} 抛异常
          */
         public Builder circularReferenceStrategy(JsonConfig.CircularReferenceStrategy strategy) {
-            this.circularReferenceStrategy = strategy;
+            configBuilder.circularReferenceStrategy(strategy);
             return this;
         }
 
@@ -1019,7 +972,7 @@ public class JsonMapper {
          * @param ordinal {@code true} 用枚举 ordinal 序号，{@code false} 用 name 名称
          */
         public Builder serializeEnumUsingOrdinal(boolean ordinal) {
-            this.serializeEnumUsingOrdinal = ordinal;
+            configBuilder.serializeEnumUsingOrdinal(ordinal);
             return this;
         }
 
@@ -1029,7 +982,7 @@ public class JsonMapper {
          * @param useBigDecimal {@code true} 启用（金融等高精度场景推荐）
          */
         public Builder useBigDecimal(boolean useBigDecimal) {
-            this.useBigDecimal = useBigDecimal;
+            configBuilder.useBigDecimal(useBigDecimal);
             return this;
         }
 
@@ -1039,7 +992,7 @@ public class JsonMapper {
          * @param wrapRootValue {@code true} 启用（配合 {@code @JsonRootName} 注解）
          */
         public Builder wrapRootValue(boolean wrapRootValue) {
-            this.wrapRootValue = wrapRootValue;
+            configBuilder.wrapRootValue(wrapRootValue);
             return this;
         }
 
@@ -1049,7 +1002,7 @@ public class JsonMapper {
          * @param failOnError {@code true} 抛异常，{@code false} 降级为容错输出
          */
         public Builder failOnError(boolean failOnError) {
-            this.failOnError = failOnError;
+            configBuilder.failOnError(failOnError);
             return this;
         }
 
@@ -1059,7 +1012,7 @@ public class JsonMapper {
          * @param maxJsonSize 上限（字节），超过将抛出 {@link JsonException}
          */
         public Builder maxJsonSize(long maxJsonSize) {
-            this.maxJsonSize = maxJsonSize;
+            configBuilder.maxJsonSize(maxJsonSize);
             return this;
         }
 
@@ -1069,7 +1022,7 @@ public class JsonMapper {
          * @param maxDepth 最大深度，防止过深结构导致栈溢出
          */
         public Builder maxDepth(int maxDepth) {
-            this.maxDepth = maxDepth;
+            configBuilder.maxDepth(maxDepth);
             return this;
         }
 
@@ -1079,7 +1032,7 @@ public class JsonMapper {
          * @param maxGenericDepth 最大深度，防止嵌套泛型参数递归过深导致栈溢出，默认 64
          */
         public Builder maxGenericDepth(int maxGenericDepth) {
-            this.maxGenericDepth = maxGenericDepth;
+            configBuilder.maxGenericDepth(maxGenericDepth);
             return this;
         }
 
@@ -1093,23 +1046,10 @@ public class JsonMapper {
          * @return 已应用全部构建配置的 JsonMapper 实例
          */
         public JsonMapper build() {
-            JsonConfig config = JsonConfig.builder()
-                .namingStrategy(namingStrategy)
-                .circularReferenceStrategy(circularReferenceStrategy)
-                .writeNulls(writeNulls)
-                .dateFormat(dateFormat)
-                .serializeEnumUsingOrdinal(serializeEnumUsingOrdinal)
-                .prettyPrint(prettyPrint)
-                .failOnError(failOnError)
-                .useBigDecimal(useBigDecimal)
-                .wrapRootValue(wrapRootValue)
-                .maxJsonSize(maxJsonSize)
-                .maxDepth(maxDepth)
-                .maxGenericDepth(maxGenericDepth)
-                .build();
-            JsonMapper mapper = new JsonMapper(config);
+            JsonMapper mapper = new JsonMapper(configBuilder.build());
             mapper.configChanged();
             return mapper;
         }
     }
+
 }

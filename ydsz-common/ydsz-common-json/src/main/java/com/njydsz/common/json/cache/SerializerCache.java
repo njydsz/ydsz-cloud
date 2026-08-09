@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.util.BoundedLruCache;
 
 /**
  * 序列化器缓存（按类 + 命名策略双层隔离 + 版本感知自动失效）
@@ -28,9 +29,10 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  */
 public final class SerializerCache {
 
-    /** 字段元数据缓存（双层：外层 Class -> 内层 命名策略 -> FieldMeta[]） */
-    private static final ConcurrentMap<Class<?>, ConcurrentMap<PropertyNamingStrategy, FieldMeta[]>> FIELD_META_CACHE =
-        new ConcurrentHashMap<>(1024);
+    /** 字段元数据缓存（双层：外层 Class -> 内层 命名策略 -> FieldMeta[]），
+     *  外层有界 LRU（容量 1024），防止动态类加载场景下无界增长。 */
+    private static final BoundedLruCache<Class<?>, ConcurrentMap<PropertyNamingStrategy, FieldMeta[]>> FIELD_META_CACHE =
+        new BoundedLruCache<>(1024);
 
     /** 上次清理时的配置版本号（用于检测配置变更） */
     private static final AtomicLong LAST_CONFIG_VERSION = new AtomicLong(0);

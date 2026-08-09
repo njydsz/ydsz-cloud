@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则 DSL 导入导出 Controller（P3-6 DSL 语言支持）
@@ -82,6 +83,7 @@ public class RuleDslImportExportController {
      * @return 导入结果（成功 / 失败计数 + 详细信息）
      */
     @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'importDsl'")
+    @RateLimit(resource = "literule.rule_dsl_import_export.importDsl", threshold = 50)
     @PostMapping("/import")
     @Operation(summary = "导入DSL规则", description = "将 YAML/JSON DSL 导入到规则引擎（upsert 语义，单条失败不影响整体）")
     public BaseResponse<Map<String, Object>> importDsl(@RequestBody Map<String, Object> request) {

@@ -1,5 +1,7 @@
 package com.njydsz.message.web.controller.batch;
 
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -87,11 +89,13 @@ public class AggregateController {
     @Operation(summary = "聚合批次分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgAggregateVO>> page(PageQuery query) {
+    public BaseResponse<List<MsgAggregateVO>> page(PageQuery query) {
         Page<MsgAggregate> page = aggregateService.page(query);
-        Page<MsgAggregateVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.aggregateListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                MessageConverter.INSTANT.aggregateListToVO(page.getRecords()));
     }
 
     /**

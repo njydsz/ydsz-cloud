@@ -135,7 +135,7 @@ public class YdszJson {
             return json;
         }
         try {
-            JsonNode tree = defaultMapper.readTree(json, JsonNode.class);
+            JsonNode tree = defaultMapper.readTree(json);
             return defaultMapper.toJson(tree, true);
         } catch (Exception e) {
             // 格式化失败（非法 JSON 等）时降级返回原始输入，避免二次异常

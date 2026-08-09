@@ -69,7 +69,9 @@ public final class JsonMergePatch {
      * @return 修改后的 target
      */
     private static ObjectNode mergeInto(ObjectNode target, ObjectNode patch) {
-        for (String fieldName : patch.fieldNames()) {
+        java.util.Iterator<String> fieldNameIterator = patch.fieldNames();
+        while (fieldNameIterator.hasNext()) {
+            String fieldName = fieldNameIterator.next();
             JsonNode patchValue = patch.get(fieldName);
             if (patchValue.isNull()) {
                 // RFC 7396: null 表示删除

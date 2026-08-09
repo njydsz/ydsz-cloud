@@ -24,6 +24,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则断点调试 Controller（P0-3 落地）
@@ -74,6 +75,7 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:addBreakpoint", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "断点管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'addBreakpoint'")
+    @RateLimit(resource = "literule.breakpoint.addBreakpoint", threshold = 50)
     @PostMapping("/{ruleCode}")
     public BaseResponse<Void> addBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -93,6 +95,7 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:removeBreakpoint", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "断点管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'removeBreakpoint'")
+    @RateLimit(resource = "literule.breakpoint.removeBreakpoint", threshold = 50)
     @DeleteMapping("/{ruleCode}")
     public BaseResponse<Void> removeBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -111,6 +114,7 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:clearBreakpoints", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "断点管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'clearBreakpoints'")
+    @RateLimit(resource = "literule.breakpoint.clearBreakpoints", threshold = 50)
     @DeleteMapping
     public BaseResponse<Void> clearBreakpoints() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -130,6 +134,7 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:resume", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "断点管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resume'")
+    @RateLimit(resource = "literule.breakpoint.resume", threshold = 50)
     @PostMapping("/{ruleCode}/resume")
     public BaseResponse<Boolean> resume(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -148,6 +153,7 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:stepOver", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "断点管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'stepOver'")
+    @RateLimit(resource = "literule.breakpoint.stepOver", threshold = 50)
     @PostMapping("/{ruleCode}/stepOver")
     public BaseResponse<Boolean> stepOver(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -193,6 +199,7 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:clearSnapshots", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "断点管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'clearSnapshots'")
+    @RateLimit(resource = "literule.breakpoint.clearSnapshots", threshold = 50)
     @DeleteMapping("/snapshots")
     public BaseResponse<Void> clearSnapshots() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();

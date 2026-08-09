@@ -30,6 +30,7 @@ import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * AB Test 自动回滚 Controller
@@ -77,6 +78,7 @@ public class RuleABPolicyController {
      */
     @Idempotent(key = "ruleAdmin:updateAbpolicy", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateABPolicy'")
+    @RateLimit(resource = "literule.rule_a_b_policy.updateABPolicy", threshold = 50)
     @PutMapping("/{ruleCode}/abPolicy")
     public BaseResponse<Void> updateABPolicy(
             @PathVariable String ruleCode,
@@ -101,6 +103,7 @@ public class RuleABPolicyController {
      */
     @Idempotent(key = "ruleAdmin:evaluateAb", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'evaluateAB'")
+    @RateLimit(resource = "literule.rule_a_b_policy.evaluateAB", threshold = 50)
     @PostMapping("/{ruleCode}/abEvaluate")
     public BaseResponse<Boolean> evaluateAB(@PathVariable String ruleCode) {
         return BaseResponse.success(abTestAutoRollbackProvider.evaluateOne(ruleCode));
@@ -113,6 +116,7 @@ public class RuleABPolicyController {
      */
     @Idempotent(key = "ruleAdmin:manualRollback", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'manualRollback'")
+    @RateLimit(resource = "literule.rule_a_b_policy.manualRollback", threshold = 50)
     @PostMapping("/{ruleCode}/abRollback")
     public BaseResponse<RuleABRollbackVO> manualRollback(
             @PathVariable String ruleCode,

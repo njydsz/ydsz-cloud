@@ -44,6 +44,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 决策表管理 Controller
@@ -103,6 +104,7 @@ public class RuleDecisionTableController {
      */
     @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveDecisionTable'")
+    @RateLimit(resource = "literule.rule_decision_table.saveDecisionTable", threshold = 50)
     @PostMapping("/decisionTables")
     public BaseResponse<DecisionTableVO> saveDecisionTable(@RequestBody DecisionTablePostDTO dto) {
         DecisionTable decisionTable = LiteruleConverter.INSTANT.postDtoToEntity(dto);
@@ -119,6 +121,7 @@ public class RuleDecisionTableController {
      */
     @Idempotent(key = "ruleAdmin:deleteDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteDecisionTable'")
+    @RateLimit(resource = "literule.rule_decision_table.deleteDecisionTable", threshold = 50)
     @DeleteMapping("/decisionTables/{id}")
     public BaseResponse<Void> deleteDecisionTable(@PathVariable String id) {
         decisionTableMapper.deleteById(id);
@@ -137,6 +140,7 @@ public class RuleDecisionTableController {
      */
     @Idempotent(key = "ruleAdmin:evaluateDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_decision_table.evaluateDecisionTable", threshold = 50)
     @PostMapping("/decisionTables/{tableCode}/evaluate")
     public BaseResponse<List<Map<String, Object>>> evaluateDecisionTable(@PathVariable String tableCode,
                                                                    @RequestBody Map<String, Object> facts) {
@@ -182,6 +186,7 @@ public class RuleDecisionTableController {
      * @return 保存后的决策表定义
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'importDecisionTableExcel'")
+    @RateLimit(resource = "literule.rule_decision_table.importDecisionTableExcel", threshold = 50)
     @PostMapping(value = "/decisionTables/importExcel", consumes = "multipart/form-data")
     @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<DecisionTableDefinitionVO> importDecisionTableExcel(

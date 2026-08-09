@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * CEP 模式测试 Controller（P2-7）
@@ -95,6 +96,7 @@ public class CEPTestController {
      */
     @Idempotent(key = "cep:testPattern", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'testPattern'")
+    @RateLimit(resource = "literule.c_e_p_test.testPattern", threshold = 50)
     @PostMapping("/patterns/test")
     @Operation(summary = "测试 CEP 模式",
             description = "注册临时模式 → 投递测试事件 → 收集命中 → 自动注销临时模式")

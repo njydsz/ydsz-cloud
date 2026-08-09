@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.vo.RuleDslVO;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则 DSL 校验 / 解析 / 预览 Controller（P3-6 DSL 语言支持）
@@ -90,6 +91,7 @@ public class RuleDslController {
      * @return 校验结果（valid + errors + ruleCount）
      */
     @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'validate'")
+    @RateLimit(resource = "literule.rule_dsl.validate", threshold = 50)
     @PostMapping("/validate")
     @Operation(summary = "校验DSL", description = "校验 YAML/JSON 格式的 DSL 内容合法性")
     public BaseResponse<Map<String, Object>> validate(@RequestBody Map<String, Object> request) {
@@ -153,6 +155,7 @@ public class RuleDslController {
      * @return DSL 模型（rules + chains + meta）
      */
     @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'parse'")
+    @RateLimit(resource = "literule.rule_dsl.parse", threshold = 50)
     @PostMapping("/parse")
     @Operation(summary = "解析DSL", description = "将 YAML/JSON DSL 文本解析为结构化模型")
     public BaseResponse<RuleDslVO> parse(@RequestBody Map<String, Object> request) {
@@ -184,6 +187,7 @@ public class RuleDslController {
      * @return 评估结果列表
      */
     @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'preview'")
+    @RateLimit(resource = "literule.rule_dsl.preview", threshold = 50)
     @PostMapping("/preview")
     @Operation(summary = "预览DSL评估", description = "解析 DSL 并用提供的事实数据试运行，不持久化")
     public BaseResponse<List<Map<String, Object>>> preview(@RequestBody Map<String, Object> request) {

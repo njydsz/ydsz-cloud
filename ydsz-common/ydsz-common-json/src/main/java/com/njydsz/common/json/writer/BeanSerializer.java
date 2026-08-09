@@ -373,9 +373,9 @@ public final class BeanSerializer {
                     }
                     first = false;
 
-                    int keyLen = field.jsonKeyLen;
-                    field.jsonKey.getChars(0, keyLen, buf, pos);
-                    pos += keyLen;
+                    int defaultKeyLen = field.jsonKeyLen;
+                    field.jsonKey.getChars(0, defaultKeyLen, buf, pos);
+                    pos += defaultKeyLen;
 
                     writer.pos = pos;
                     // 字段路径追踪：writeValueInline 可能递归进入子 Bean

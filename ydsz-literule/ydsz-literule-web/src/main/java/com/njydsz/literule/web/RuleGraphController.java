@@ -39,6 +39,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则链画布 Controller
@@ -104,6 +105,7 @@ public class RuleGraphController {
      */
     @Idempotent(key = "ruleAdmin:saveChainGraph", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_graph.saveChainGraph", threshold = 50)
     @PostMapping("/{ruleCode}/graph")
     public BaseResponse<Map<String, Object>> saveChainGraph(@PathVariable String ruleCode,
                                                        @Valid @RequestBody RuleChainGraph graph,
@@ -131,6 +133,7 @@ public class RuleGraphController {
      */
     @Idempotent(key = "ruleAdmin:deleteChainGraph", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteChainGraph'")
+    @RateLimit(resource = "literule.rule_graph.deleteChainGraph", threshold = 50)
     @DeleteMapping("/{ruleCode}/graph")
     public BaseResponse<Void> deleteChainGraph(@PathVariable String ruleCode) {
         ruleChainGraphProvider.delete(ruleCode);
@@ -143,6 +146,7 @@ public class RuleGraphController {
      * <p>供前端"实时校验"按钮调用，返回 ERROR/WARN 两级问题。
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'validateChainGraph'")
+    @RateLimit(resource = "literule.rule_graph.validateChainGraph", threshold = 50)
     @PostMapping("/{ruleCode}/graph/validate")
     public BaseResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@RequestBody RuleChainGraph graph) {
         return BaseResponse.success(RuleGraphValidator.validate(graph));
@@ -158,6 +162,7 @@ public class RuleGraphController {
      * @return 求值结果（含 value / type / error）
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'previewExpression'")
+    @RateLimit(resource = "literule.rule_graph.previewExpression", threshold = 50)
     @PostMapping("/expressionPreview")
     public BaseResponse<ExpressionPreviewResultVO> previewExpression(
             @RequestParam String expression,
@@ -177,6 +182,7 @@ public class RuleGraphController {
      */
     @Idempotent(key = "ruleAdmin:dryRunGraph", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'dryRunGraph'")
+    @RateLimit(resource = "literule.rule_graph.dryRunGraph", threshold = 50)
     @PostMapping("/{ruleCode}/graph/dryRun")
     public BaseResponse<List<RuleResultVO>> dryRunGraph(@PathVariable String ruleCode,
                                                  @RequestBody Map<String, Object> facts) {

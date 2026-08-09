@@ -81,7 +81,7 @@ public class JobTaskController {
      */
     @Operation(summary = "分页查询子任务")
     @GetMapping("/page")
-    public BaseResponse<Page<JobTaskVO>> page(
+    public BaseResponse<List<JobTaskVO>> page(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size) {
@@ -91,10 +91,12 @@ public class JobTaskController {
         wrapper.eq(JobTask::getLogId, logId)
                 .eq(JobTask::getDeleted, 0)
                 .orderByAsc(JobTask::getCreatedAt);
-        Page<JobTask> page = jobTaskMapper.selectPage(pageObj, wrapper);
-        Page<JobTaskVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(CronjobConverter.INSTANT.jobTaskListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        Page<JobTask> result = jobTaskMapper.selectPage(pageObj, wrapper);
+        return BaseResponse.successPage(
+                result.getTotal(),
+                result.getCurrent(),
+                result.getSize(),
+                CronjobConverter.INSTANT.jobTaskListToVO(result.getRecords()));
     }
 
     /**

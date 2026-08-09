@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.writer.BeanSerializer;
 
 /**
@@ -17,10 +18,13 @@ import com.njydsz.common.json.writer.BeanSerializer;
  * 导致字段名输出与当前命名策略不一致。修复后内层以 PropertyNamingStrategy 引用为 Key，
  * 不同策略独立缓存各自的 BeanSerializer。</p>
  *
+ * <p><b>缓存治理（1.2.1）：</b></p>
+ * <p>外层采用 {@link BoundedLruCache}（容量 1024），超限按 LRU 淘汰，
+ * 防止热部署/动态类加载场景下缓存无界增长导致 OOM。</p>
+ *
  * <ul>
- *   <li>ConcurrentHashMap - 线程安全的并发缓存</li>
- *   <li>初始容量 1024 - 预分配空间减少扩容</li>
  *   <li>双层 Key：外层 Class -> 内层 命名策略 -> BeanSerializer</li>
+ *   <li>外层有界 LRU（1024），内层 ConcurrentHashMap</li>
  *   <li>BeanSerializer 为 Value - 预计算的序列化器</li>
  * </ul>
  *
@@ -29,9 +33,9 @@ import com.njydsz.common.json.writer.BeanSerializer;
  */
 public final class BeanSerializerCache {
 
-    /** Bean 序列化器双层缓存（外层 Class -> 内层 命名策略 -> BeanSerializer） */
-    private static final ConcurrentMap<Class<?>, ConcurrentMap<PropertyNamingStrategy, BeanSerializer>> CACHE =
-        new ConcurrentHashMap<>(1024);
+    /** 外层有界 LRU：Class -> 内层命名策略映射（容量 1024） */
+    private static final BoundedLruCache<Class<?>, ConcurrentMap<PropertyNamingStrategy, BeanSerializer>> CACHE =
+        new BoundedLruCache<>(1024);
 
     private BeanSerializerCache() {
         throw new UnsupportedOperationException();

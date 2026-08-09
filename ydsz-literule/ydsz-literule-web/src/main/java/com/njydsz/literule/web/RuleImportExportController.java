@@ -29,6 +29,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则导入导出 Controller
@@ -158,6 +159,7 @@ public class RuleImportExportController {
      */
     @Idempotent(key = "ruleAdmin:importRules", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_import_export.importRules", threshold = 50)
     @PostMapping("/import")
     public BaseResponse<Map<String, Object>> importRules(@Valid @RequestBody RuleImportDTO dto,
                                                     @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {

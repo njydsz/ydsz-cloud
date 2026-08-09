@@ -39,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则集市场 Controller
@@ -121,6 +122,7 @@ public class RulePackController {
      * 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rollbackPack'")
+    @RateLimit(resource = "literule.rule_pack.rollbackPack", threshold = 50)
     @PostMapping("/packs/{packCode}/rollback")
     public BaseResponse<InstallResultVO> rollbackPack(
             @PathVariable String packCode,
@@ -145,6 +147,7 @@ public class RulePackController {
      */
     @Idempotent(key = "ruleAdmin:publishPack", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'publishPack'")
+    @RateLimit(resource = "literule.rule_pack.publishPack", threshold = 50)
     @PostMapping("/packs")
     public BaseResponse<RulePackVO> publishPack(
             @Valid @RequestBody RulePack pack,
@@ -156,6 +159,7 @@ public class RulePackController {
      * 安装规则集（一键导入）
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'installPack'")
+    @RateLimit(resource = "literule.rule_pack.installPack", threshold = 50)
     @PostMapping("/packs/{packCode}/install")
     public BaseResponse<InstallResultVO> installPack(
             @PathVariable String packCode,
@@ -169,6 +173,7 @@ public class RulePackController {
      */
     @Idempotent(key = "ruleAdmin:deletePack", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deletePack'")
+    @RateLimit(resource = "literule.rule_pack.deletePack", threshold = 50)
     @DeleteMapping("/packs/{id}")
     public BaseResponse<Void> deletePack(@PathVariable String id) {
         rulePackProvider.delete(id);
@@ -180,6 +185,7 @@ public class RulePackController {
      */
     @Idempotent(key = "ruleAdmin:markOfficialPack", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'markOfficialPack'")
+    @RateLimit(resource = "literule.rule_pack.markOfficialPack", threshold = 50)
     @PutMapping("/packs/{id}/official")
     public BaseResponse<Void> markOfficialPack(
             @PathVariable String id,
@@ -193,6 +199,7 @@ public class RulePackController {
      */
     @Idempotent(key = "ruleAdmin:ratePack", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'ratePack'")
+    @RateLimit(resource = "literule.rule_pack.ratePack", threshold = 50)
     @PutMapping("/packs/{id}/rate")
     public BaseResponse<Void> ratePack(
             @PathVariable String id,
@@ -223,6 +230,7 @@ public class RulePackController {
      * @return 压测结果（含 QPS、分位数耗时、错误率、直方图）
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'stressTest'")
+    @RateLimit(resource = "literule.rule_pack.stressTest", threshold = 50)
     @PostMapping("/stressTest")
     @Operation(summary = "规则压测", description = "使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率")
     public BaseResponse<RuleStressTestService.StressTestResult> stressTest(
@@ -287,6 +295,7 @@ public class RulePackController {
      * @return 每个包的更新结果
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchUpdatePacks'")
+    @RateLimit(resource = "literule.rule_pack.batchUpdatePacks", threshold = 50)
     @PostMapping("/packs/batchUpdate")
     @Operation(summary = "批量更新知识包", description = "将指定知识包列表更新到最新版本")
     public BaseResponse<List<InstallResultVO>> batchUpdatePacks(

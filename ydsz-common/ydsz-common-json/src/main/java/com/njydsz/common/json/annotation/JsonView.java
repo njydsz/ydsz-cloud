@@ -56,9 +56,7 @@ import java.lang.annotation.Target;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @deprecated REST API 场景中较少使用，如需不同视图建议定义独立的 DTO 或使用 Map 手动裁剪字段
  */
-@Deprecated
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
 public @interface JsonView {

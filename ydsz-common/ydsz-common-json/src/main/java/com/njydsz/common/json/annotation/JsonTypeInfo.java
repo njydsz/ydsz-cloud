@@ -106,26 +106,17 @@ public @interface JsonTypeInfo {
 
     /**
      * 类型标识包含结构枚举（与 Jackson JsonTypeInfo.As 一致）。
+     *
+     * <p>注：仅 {@link #PROPERTY} 已在引擎中完整实现；WRAPPER_ARRAY / WRAPPER_OBJECT
+     * 为预留变体（当前引擎以 PROPERTY 方式解析）。EXISTING_PROPERTY / EXTERNAL_PROPERTY
+     * 两个未实现的占位符变体已在 1.2.1 移除，避免虚假 API 表面积。</p>
      */
     enum As {
         /** 作为对象属性 */
         PROPERTY,
-        /** 包装为数组 {@code ["type",{...}]} */
+        /** 包装为数组 {@code ["type",{...}]}（预留，当前引擎按 PROPERTY 解析） */
         WRAPPER_ARRAY,
-        /** 包装为对象 {@code {"type":{...}}} */
-        WRAPPER_OBJECT,
-        /**
-         * 类型 ID 是对象的一个真实属性（非元数据字段）。
-         * <p>例如 {@code {"vehicleType":"car", "make":"Toyota"}} 中 vehicleType 既是属性又是类型标识。
-         * 当前版本仅支持注解上的枚举定义，反序列化逻辑需后续版本实现。</p>
-         * @since 1.1.0
-         */
-        EXISTING_PROPERTY,
-        /**
-         * 类型 ID 来自父/包含对象的属性，而非当前对象本身。
-         * <p>当前版本仅支持注解上的枚举定义，反序列化逻辑需后续版本实现。</p>
-         * @since 1.1.0
-         */
-        EXTERNAL_PROPERTY
+        /** 包装为对象 {@code {"type":{...}}}（预留，当前引擎按 PROPERTY 解析） */
+        WRAPPER_OBJECT
     }
 }

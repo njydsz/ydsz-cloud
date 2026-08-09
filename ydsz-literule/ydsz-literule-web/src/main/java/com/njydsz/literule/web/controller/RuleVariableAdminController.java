@@ -21,6 +21,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.literule.domain.vo.VariableDefinitionVO;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则变量管理 Controller
@@ -85,6 +86,7 @@ public class RuleVariableAdminController {
      */
     @Idempotent(key = "ruleVariableAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "变量管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
+    @RateLimit(resource = "literule.rule_variable_admin.save", threshold = 50)
     @PostMapping
     public BaseResponse<VariableDefinitionVO> save(@RequestBody VariableDefinition definition) {
         if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
@@ -102,6 +104,7 @@ public class RuleVariableAdminController {
      */
     @Idempotent(key = "ruleVariableAdmin:delete", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "变量管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
+    @RateLimit(resource = "literule.rule_variable_admin.delete", threshold = 50)
     @DeleteMapping("/{varName}")
     public BaseResponse<Void> delete(@PathVariable String varName) {
         variableRegistry.unregister(varName);
@@ -115,6 +118,7 @@ public class RuleVariableAdminController {
      */
     @Idempotent(key = "ruleVariableAdmin:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "变量管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'refresh'")
+    @RateLimit(resource = "literule.rule_variable_admin.refresh", threshold = 50)
     @PostMapping("/refresh")
     public BaseResponse<Void> refresh() {
         variableRegistry.refresh();

@@ -1,5 +1,7 @@
 package com.njydsz.message.web.controller.config;
 
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -95,15 +97,17 @@ public class DeadLetterController {
     @Operation(summary = "分页查询死信列表")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgLogVO>> page(MessageLogQueryDTO query) {
+    public BaseResponse<List<MsgLogVO>> page(MessageLogQueryDTO query) {
         if (query == null) {
             query = new MessageLogQueryDTO();
         }
         query.setStatus(MessageStatusEnum.DEAD.name());
         Page<MsgLog> page = messageLogService.page(query);
-        Page<MsgLogVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.logListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                MessageConverter.INSTANT.logListToVO(page.getRecords()));
     }
 
     /**

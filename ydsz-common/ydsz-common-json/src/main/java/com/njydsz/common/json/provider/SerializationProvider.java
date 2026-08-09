@@ -20,6 +20,7 @@ import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.exception.JsonSerializationException;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.writer.BeanSerializer;
 import com.njydsz.common.json.writer.JSONWriter;
 
@@ -221,9 +222,10 @@ public final class SerializationProvider {
         return sb.toString();
     }
 
-    /** Bean 序列化信息双层缓存（Class -> 命名策略 -> BeanSerializerInfo，v4.0.0 添加策略维度修复并发隔离） */
-    private static final ConcurrentMap<Class<?>, ConcurrentMap<PropertyNamingStrategy, BeanSerializerInfo>> BEAN_SERIALIZER_INFO_CACHE =
-        new ConcurrentHashMap<>(1024);
+    /** Bean 序列化信息双层缓存（Class -> 命名策略 -> BeanSerializerInfo），
+     *  外层使用有界 LRU 缓存（容量 1024），防止热部署/动态类加载场景下无限增长。 */
+    private static final BoundedLruCache<Class<?>, ConcurrentMap<PropertyNamingStrategy, BeanSerializerInfo>> BEAN_SERIALIZER_INFO_CACHE =
+        new BoundedLruCache<>(1024);
 
     private SerializationProvider() {
         throw new UnsupportedOperationException();
@@ -376,13 +378,16 @@ public final class SerializationProvider {
      *
      * <p>注：11 个原 ThreadLocal 已合并到 {@link SerializationContext#CONTEXT}，
      * 调用 {@link SerializationContext#clear()} 一次即可全部清理。
-     * {@code FieldMetadataLoader.NAMING_STRATEGY} 和 {@code JsonParserUtil#useBigDecimal}
-     * 属于另外两个独立 ThreadLocal，仍需单独清理。</p>
+     * {@code FieldMetadataLoader.NAMING_STRATEGY}、{@code JsonParserUtil#useBigDecimal}、
+     * {@code JSONReader.READER_POOL}、{@code DeserializationProvider.DESERIALIZE_DEPTH}
+     * 属于独立 ThreadLocal，需一并清理。</p>
      */
     public static void clearThreadLocals() {
         SerializationContext.clear();
         FieldMetadataLoader.NAMING_STRATEGY.remove();
         JsonParserUtil.clearThreadLocals();
+        com.njydsz.common.json.reader.JSONReader.clearThreadLocals();
+        com.njydsz.common.json.provider.DeserializationProvider.clearThreadLocals();
     }
 
     /**
@@ -577,6 +582,12 @@ public final class SerializationProvider {
     public static String serialize(Object obj) {
         if (obj == null) {
             return "null";
+        }
+
+        // JsonNode 树模型快速路径：ObjectNode/ArrayNode 等直接走树模型 toString()，
+        // 避免被当作普通 Bean 反射序列化导致输出损坏（如 {"value":30}）
+        if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+            return obj.toString();
         }
 
         // @JsonSerialize 快速路径：如果类有 @JsonSerialize 注解，使用自定义序列化器
@@ -943,11 +954,12 @@ public final class SerializationProvider {
     }
 
     /**
-     * 统一快速路径：尝试将对象序列化到 JSONWriter（Bean/Collection/Map 三条路径）。
+     * 集合/Map 快速路径：尝试将 Collection/Map 直接序列化到 JSONWriter。
      *
-     * <p>提取自 {@link #serialize} 和 {@link #serializeToBytes} 的公共快速路径逻辑，
-     * 消除约 80 行重复代码。调用方根据返回值决定使用 {@code writer.toString()} 还是
-     * {@code writer.toUtf8Bytes()} 获取结果。</p>
+     * <p>注意：此方法<b>仅对 Collection / Map 提供快速路径</b>；Bean 类型与数组
+     * 统一返回 null 回退到 StringBuilder 路径（{@code tryBeanSerialize}）。
+     * Bean 分支中的 FieldMeta 加载仅作为元数据预热副作用（保证命名策略维度缓存被填充），
+     * 并非快速路径实现。</p>
      *
      * @param obj 要序列化的对象（非 null）
      * @param ctx 当前线程的序列化上下文
@@ -956,18 +968,23 @@ public final class SerializationProvider {
     private static JSONWriter tryFastPathToWriter(Object obj, SerializationContext ctx) {
         Class<?> clazz = obj.getClass();
 
+        // JsonNode 树模型：由 serialize() 入口直接 toString() 处理，这里不拦截
+        if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+            return null;
+        }
+
         // 简单类型（Number/CharSequence/Boolean/Character/Enum）跳过 Bean 路径，
         // 由 ValueWriter.writeValue 统一处理
         if (isSimpleType(obj)) {
             return null;
         }
 
-        // 快速路径 1：Bean 类型
+        // 快速路径 1：Collection / Map 之外的 Bean 类型
         if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
             // 获取当前线程的命名策略
             PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
 
-            // 确保 SerializerCache 被填充（无论是否使用快速路径），
+            // 仅作元数据预热：确保 SerializerCache 被填充（无论是否使用快速路径），
             // 这样不同命名策略可以按 strategy 维度隔离缓存 FieldMeta[]
             FieldMeta[] fields = SerializerCache.getFieldMeta(clazz, strategy);
             if (fields == null) {
@@ -975,7 +992,7 @@ public final class SerializationProvider {
                 SerializerCache.putFieldMeta(clazz, strategy, fields);
             }
 
-            return null; // Bean 类型需回退到 StringBuilder 路径（tryBeanSerialize）
+            return null; // Bean 类型统一回退到 StringBuilder 路径（tryBeanSerialize）
         }
 
         // 快速路径 2：Collection 类型直接使用 JSONWriter
@@ -1136,9 +1153,10 @@ public final class SerializationProvider {
 
     /**
      * @JsonSerialize 自定义序列化器缓存（Class -> JsonSerializer 实例）。
+     * 有界 LRU（容量 1024），防止无界增长。
      */
-    private static final ConcurrentHashMap<Class<?>, JsonSerializer<?>> CUSTOM_SERIALIZER_CACHE =
-        new ConcurrentHashMap<>();
+    private static final BoundedLruCache<Class<?>, JsonSerializer<?>> CUSTOM_SERIALIZER_CACHE =
+        new BoundedLruCache<>(1024);
 
     /**
      * 检查类是否有 @JsonSerialize 注解并获取自定义序列化器。
@@ -1151,21 +1169,26 @@ public final class SerializationProvider {
         if (annotation == null || annotation.using() == Void.class) {
             return null;
         }
-        JsonSerializer<?> cached = CUSTOM_SERIALIZER_CACHE.get(clazz);
-        if (cached != null) {
-            return cached;
-        }
         try {
-            JsonSerializer<?> instance = (JsonSerializer<?>) annotation.using().getDeclaredConstructor().newInstance();
-            CUSTOM_SERIALIZER_CACHE.putIfAbsent(clazz, instance);
-            return instance;
+            return CUSTOM_SERIALIZER_CACHE.computeIfAbsent(clazz, c -> {
+                try {
+                    return (JsonSerializer<?>) annotation.using().getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    throw new JsonSerializationException(
+                        JsonSerializationException.SERIALIZATION_ERROR,
+                        "Failed to instantiate custom serializer: " + annotation.using().getName(),
+                        e
+                    ).setFieldPath(getCurrentFieldPath());
+                }
+            });
+        } catch (JsonSerializationException e) {
+            throw e;
         } catch (Exception e) {
             throw new JsonSerializationException(
                 JsonSerializationException.SERIALIZATION_ERROR,
                 "Failed to instantiate custom serializer: " + annotation.using().getName(),
                 e
-            )
-                .setFieldPath(getCurrentFieldPath());
+            ).setFieldPath(getCurrentFieldPath());
         }
     }
 
@@ -1277,73 +1300,5 @@ public final class SerializationProvider {
             wrapped.setFieldPath(path);
         }
         return wrapped;
-    }
-
-    /**
-     * ThreadLocal 快照（用于单次配置序列化的线程安全保存/恢复）。
-     *
-     * <p>使用 {@link SerializationContext} 合并多个 ThreadLocal 为单一实例，
-     * 构造时捕获当前线程的 SerializationContext 配置字段快照，
-     * 调用 {@link #restore()} 恢复原始值。避免修改全局单例。</p>
-     *
-     * <p>注意：仅保存/恢复配置类字段（writeNulls、prettyPrint、circularRefStrategy、
-     * serializeEnumUsingOrdinal、excludedFields、dateFormat、failOnError、namingStrategy），
-     * 不保存运行时状态字段（sbPool、fastWriterPool、serializingObjects、currentViewClass），
-     * 因为运行时状态仅在单次序列化调用内有意义。</p>
-     *
-     * <p><b>namingStrategy 说明：</b>命名策略存放在 {@link FieldMetadataLoader#NAMING_STRATEGY}
-     * 这个独立 ThreadLocal 中（不在 SerializationContext 内）。此前快照未保存它，
-     * 导致 {@code YdszJson.toJson(obj, config)} 用不同命名策略序列化后未回滚，
-     * 后续默认调用仍使用旧命名策略（配置泄漏）。现已补全。</p>
-     *
-     * <p><b>useBigDecimal 说明（P0-2 并发安全修复，2026-08-04）：</b>useBigDecimal
-     * 从全局 volatile static 改为 ThreadLocal，快照中保存/恢复其值，
-     * 确保不同配置的 Mapper 在使用后相互隔离，避免某 Mapper 开启 BigDecimal
-     * 后永久影响所有线程、所有 Mapper 的解析行为。</p>
-     *
-     * @since 1.0.0
-     */
-    public static final class ThreadLocalSnapshot {
-        private final boolean savedWriteNulls;
-        private final boolean savedPrettyPrint;
-        private final String savedCircularRefStrategy;
-        private final boolean savedSerializeEnumUsingOrdinal;
-        private final Set<String> savedExcludedFields;
-        private final String savedDateFormat;
-        private final boolean savedFailOnError;
-        private final com.njydsz.common.json.naming.PropertyNamingStrategy savedNamingStrategy;
-        private final boolean savedUseBigDecimal;
-
-        /**
-         * 捕获当前线程的 ThreadLocal 序列化参数快照。
-         */
-        public ThreadLocalSnapshot() {
-            SerializationContext ctx = SerializationContext.CONTEXT.get();
-            this.savedWriteNulls = ctx.writeNulls;
-            this.savedPrettyPrint = ctx.prettyPrint;
-            this.savedCircularRefStrategy = ctx.circularRefStrategy;
-            this.savedSerializeEnumUsingOrdinal = ctx.serializeEnumUsingOrdinal;
-            this.savedExcludedFields = ctx.excludedFields;
-            this.savedDateFormat = ctx.dateFormat;
-            this.savedFailOnError = ctx.failOnError;
-            this.savedNamingStrategy = FieldMetadataLoader.NAMING_STRATEGY.get();
-            this.savedUseBigDecimal = JsonParserUtil.isUseBigDecimal();
-        }
-
-        /**
-         * 恢复快照中保存的 ThreadLocal 序列化参数。
-         */
-        public void restore() {
-            SerializationContext ctx = SerializationContext.CONTEXT.get();
-            ctx.writeNulls = savedWriteNulls;
-            ctx.prettyPrint = savedPrettyPrint;
-            ctx.circularRefStrategy = savedCircularRefStrategy;
-            ctx.serializeEnumUsingOrdinal = savedSerializeEnumUsingOrdinal;
-            ctx.excludedFields = savedExcludedFields;
-            ctx.dateFormat = savedDateFormat;
-            ctx.failOnError = savedFailOnError;
-            FieldMetadataLoader.NAMING_STRATEGY.set(savedNamingStrategy);
-            JsonParserUtil.setUseBigDecimal(savedUseBigDecimal);
-        }
     }
 }

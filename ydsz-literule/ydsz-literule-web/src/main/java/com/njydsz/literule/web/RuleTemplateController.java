@@ -23,6 +23,7 @@ import com.njydsz.literule.server.spi.RuleTemplateProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则模板市场 Controller
@@ -95,6 +96,7 @@ public class RuleTemplateController {
      */
     @Idempotent(key = "ruleAdmin:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'importTemplate'")
+    @RateLimit(resource = "literule.rule_template.importTemplate", threshold = 50)
     @PostMapping("/templates/{templateCode}/import")
     public BaseResponse<RuleDefinitionVO> importTemplate(@PathVariable String templateCode,
                                                   @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {

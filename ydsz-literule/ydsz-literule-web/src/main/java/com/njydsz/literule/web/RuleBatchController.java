@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则批量操作 Controller
@@ -83,6 +84,7 @@ public class RuleBatchController {
      */
     @Idempotent(key = "ruleAdmin:deleteRule", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteRule'")
+    @RateLimit(resource = "literule.rule_batch.deleteRule", threshold = 50)
     @DeleteMapping("/{ruleCode}")
     @AuthApiPermission(apiCodes = "execution:rule:delete")
     public BaseResponse<Void> deleteRule(@PathVariable String ruleCode,
@@ -127,6 +129,7 @@ public class RuleBatchController {
      */
     @Idempotent(key = "ruleAdmin:batchToggle", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_batch.batchToggle", threshold = 50)
     @PostMapping("/batchToggle")
     @AuthApiPermission(apiCodes = "execution:rule:toggle")
     public BaseResponse<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
@@ -169,6 +172,7 @@ public class RuleBatchController {
      */
     @Idempotent(key = "ruleAdmin:batchPriority", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_batch.batchPriority", threshold = 50)
     @PostMapping("/batchPriority")
     public BaseResponse<Map<String, Object>> batchPriority(@Valid @RequestBody RuleBatchPriorityDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -212,6 +216,7 @@ public class RuleBatchController {
      */
     @Idempotent(key = "ruleAdmin:batchCategory", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_batch.batchCategory", threshold = 50)
     @PostMapping("/batchCategory")
     public BaseResponse<Map<String, Object>> batchCategory(@Valid @RequestBody RuleBatchCategoryDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {

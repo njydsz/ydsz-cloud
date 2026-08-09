@@ -42,6 +42,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则生命周期 Controller
@@ -87,6 +88,7 @@ public class RuleLifecycleController {
      */
     @Idempotent(key = "ruleAdmin:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'changeStatus'")
+    @RateLimit(resource = "literule.rule_lifecycle.changeStatus", threshold = 50)
     @PutMapping("/{ruleCode}/status")
     @AuthApiPermission(apiCodes = "execution:rule:status")
     public BaseResponse<RuleDefinitionVO> changeStatus(@PathVariable String ruleCode,
@@ -122,6 +124,7 @@ public class RuleLifecycleController {
      */
     @Idempotent(key = "ruleAdmin:approve", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'approve'")
+    @RateLimit(resource = "literule.rule_lifecycle.approve", threshold = 50)
     @PostMapping("/{ruleCode}/approve")
     @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<RuleDefinitionVO> approve(@PathVariable String ruleCode,
@@ -165,6 +168,7 @@ public class RuleLifecycleController {
      */
     @Idempotent(key = "ruleAdmin:reject", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'reject'")
+    @RateLimit(resource = "literule.rule_lifecycle.reject", threshold = 50)
     @PostMapping("/{ruleCode}/reject")
     @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<RuleDefinitionVO> reject(@PathVariable String ruleCode,
@@ -218,6 +222,7 @@ public class RuleLifecycleController {
      */
     @Idempotent(key = "ruleAdmin:submitReview", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'submitReview'")
+    @RateLimit(resource = "literule.rule_lifecycle.submitReview", threshold = 50)
     @PostMapping("/{ruleCode}/submitReview")
     @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<ApprovalRecordVO> submitReview(@PathVariable String ruleCode,
@@ -244,6 +249,7 @@ public class RuleLifecycleController {
      */
     @Idempotent(key = "ruleAdmin:approveLevel", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'approveLevel'")
+    @RateLimit(resource = "literule.rule_lifecycle.approveLevel", threshold = 50)
     @PostMapping("/{ruleCode}/approveLevel")
     @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<ApprovalRecordVO> approveLevel(@PathVariable String ruleCode,
@@ -269,6 +275,7 @@ public class RuleLifecycleController {
      */
     @Idempotent(key = "ruleAdmin:rejectLevel", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rejectLevel'")
+    @RateLimit(resource = "literule.rule_lifecycle.rejectLevel", threshold = 50)
     @PostMapping("/{ruleCode}/rejectLevel")
     @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<ApprovalRecordVO> rejectLevel(@PathVariable String ruleCode,
@@ -293,6 +300,7 @@ public class RuleLifecycleController {
      */
     @Idempotent(key = "ruleAdmin:delegate", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'delegate'")
+    @RateLimit(resource = "literule.rule_lifecycle.delegate", threshold = 50)
     @PostMapping("/{ruleCode}/delegate")
     @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<ApprovalRecordVO> delegate(@PathVariable String ruleCode,
@@ -347,6 +355,7 @@ public class RuleLifecycleController {
      */
     @Idempotent(key = "ruleAdmin:cancelReview", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'cancelReview'")
+    @RateLimit(resource = "literule.rule_lifecycle.cancelReview", threshold = 50)
     @PostMapping("/{ruleCode}/cancelReview")
     @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<ApprovalRecordVO> cancelReview(@PathVariable String ruleCode,

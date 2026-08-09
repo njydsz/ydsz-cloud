@@ -358,16 +358,18 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
-    public BaseResponse<Page<JobVO>> page(
+    public BaseResponse<List<JobVO>> page(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
         Page<Job> page = jobService.page(page, size, keyword, status, group);
-        Page<JobVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(CronjobConverter.INSTANT.jobListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                CronjobConverter.INSTANT.jobListToVO(page.getRecords()));
     }
 
     /**
@@ -384,15 +386,17 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
-    public BaseResponse<Page<JobLogVO>> pageLog(
+    public BaseResponse<List<JobLogVO>> pageLog(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
         Page<JobLog> page = jobService.pageLog(page, size, jobKey, status);
-        Page<JobLogVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(CronjobConverter.INSTANT.jobLogListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                CronjobConverter.INSTANT.jobLogListToVO(page.getRecords()));
     }
 
     /**
@@ -410,6 +414,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_RELOAD)
     @Idempotent(key = "ydsz:cronjob:JobController:reload:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "cronjob.job.reload", threshold = 50)
     @PostMapping("/reload")
     public BaseResponse<Map<String, Object>> reload() {
         jobService.loadOnStartup();

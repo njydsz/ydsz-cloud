@@ -106,7 +106,7 @@ public class JobGroupController {
     @Operation(summary = "按分组分页查询任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
     @GetMapping("/{jobGroup}/page")
-    public BaseResponse<Page<JobVO>> pageByGroup(
+    public BaseResponse<List<JobVO>> pageByGroup(
             @PathVariable String jobGroup,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -120,9 +120,11 @@ public class JobGroupController {
         // 3. 执行分页查询
         Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
         // 4. 转换为 VO（Entity → VO 含审计字段脱敏等）
-        Page<JobVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-        voPage.setRecords(CronjobConverter.INSTANT.jobListToVO(result.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                result.getTotal(),
+                result.getCurrent(),
+                result.getSize(),
+                CronjobConverter.INSTANT.jobListToVO(result.getRecords()));
     }
 
     /**

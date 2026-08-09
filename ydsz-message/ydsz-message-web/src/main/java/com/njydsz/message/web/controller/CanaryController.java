@@ -1,5 +1,7 @@
 package com.njydsz.message.web.controller.canary;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -128,11 +130,13 @@ public class CanaryController {
     @Operation(summary = "灰度桶分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgCanaryVO>> page(PageQuery query) {
+    public BaseResponse<List<MsgCanaryVO>> page(PageQuery query) {
         Page<MsgCanary> page = canaryService.page(query);
-        Page<MsgCanaryVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.canaryListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                MessageConverter.INSTANT.canaryListToVO(page.getRecords()));
     }
 
     /**

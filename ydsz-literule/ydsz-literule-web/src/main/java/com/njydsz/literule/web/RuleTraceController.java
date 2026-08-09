@@ -41,6 +41,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则执行追踪 Controller
@@ -111,6 +112,7 @@ public class RuleTraceController {
      */
     @Idempotent(key = "ruleAdmin:replayTrace", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_trace.replayTrace", threshold = 50)
     @PostMapping("/traces/{traceId}/replay")
     public BaseResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
         List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
@@ -195,6 +197,7 @@ public class RuleTraceController {
      */
     @Idempotent(key = "ruleAdmin:batchReplayTraces", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_trace.batchReplayTraces", threshold = 50)
     @PostMapping("/traces/batchReplay")
     public BaseResponse<Map<String, Object>> batchReplayTraces(@RequestBody Map<String, Object> request) {
         // 解析请求参数
@@ -310,6 +313,7 @@ public class RuleTraceController {
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_trace.impactPreview", threshold = 50)
     @PostMapping("/{ruleCode}/impactPreview")
     public BaseResponse<Map<String, Object>> impactPreview(@PathVariable String ruleCode,
                                                       @RequestBody Map<String, Object> request) {

@@ -150,11 +150,13 @@ public class MessageController {
     @Operation(summary = "发送日志分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
-    public BaseResponse<Page<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
+    public BaseResponse<List<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
         Page<MsgLog> page = messageService.pageLog(query);
-        Page<MsgLogVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.logListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                MessageConverter.INSTANT.logListToVO(page.getRecords()));
     }
 
     /**
@@ -208,7 +210,7 @@ public class MessageController {
     @Operation(summary = "查询批次发送进度")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/batch/{batchId}/progress")
-    public BaseResponse<Page<MsgLogVO>> batchProgress(@PathVariable String batchId,
+    public BaseResponse<List<MsgLogVO>> batchProgress(@PathVariable String batchId,
                                                 @RequestParam(defaultValue = "1") long page,
                                                 @RequestParam(defaultValue = "20") long size) {
         MessageLogQueryDTO query = new MessageLogQueryDTO();
@@ -216,8 +218,10 @@ public class MessageController {
         query.setPageNum((int) page);
         query.setPageSize((int) size);
         Page<MsgLog> result = messageService.pageLog(query);
-        Page<MsgLogVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.logListToVO(result.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                result.getTotal(),
+                result.getCurrent(),
+                result.getSize(),
+                MessageConverter.INSTANT.logListToVO(result.getRecords()));
     }
 }

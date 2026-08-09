@@ -120,11 +120,13 @@ public class NotificationController {
     @Operation(summary = "收件箱分页")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
-    public BaseResponse<Page<MsgNotificationVO>> inbox(NotificationQueryDTO query) {
+    public BaseResponse<List<MsgNotificationVO>> inbox(NotificationQueryDTO query) {
         Page<MsgNotification> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
-        Page<MsgNotificationVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.notificationListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                MessageConverter.INSTANT.notificationListToVO(page.getRecords()));
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.archive;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -100,7 +101,7 @@ public class MessageArchiveController {
     @Operation(summary = "全文搜索消息日志")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping
-    public BaseResponse<Page<MsgLogVO>> search(
+    public BaseResponse<List<MsgLogVO>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String status,
@@ -111,8 +112,10 @@ public class MessageArchiveController {
             @RequestParam(defaultValue = "20") int pageSize) {
         Page<MsgLog> result = messageArchiveService.search(keyword, channel, status, bizType,
                 startTime, endTime, TenantContext.getTenantId(), pageNum, pageSize);
-        Page<MsgLogVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.logListToVO(result.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                result.getTotal(),
+                result.getCurrent(),
+                result.getSize(),
+                MessageConverter.INSTANT.logListToVO(result.getRecords()));
     }
 }

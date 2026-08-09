@@ -152,11 +152,13 @@ public class RouteRuleController {
     @Operation(summary = "路由规则分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgRouteRuleVO>> page(PageQuery query) {
+    public BaseResponse<List<MsgRouteRuleVO>> page(PageQuery query) {
         Page<MsgRouteRule> page = routeRuleService.page(query);
-        Page<MsgRouteRuleVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.routeRuleListToVO(page.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                page.getTotal(),
+                page.getCurrent(),
+                page.getSize(),
+                MessageConverter.INSTANT.routeRuleListToVO(page.getRecords()));
     }
 
     /**

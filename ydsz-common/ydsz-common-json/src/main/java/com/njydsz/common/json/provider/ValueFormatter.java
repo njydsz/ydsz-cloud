@@ -35,6 +35,12 @@ public final class ValueFormatter {
             return;
         }
 
+        // JsonNode 树模型：直接走树模型 toString()，避免反射序列化损坏
+        if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+            sb.append(obj.toString());
+            return;
+        }
+
         Class<?> clazz = obj.getClass();
 
         if (clazz == String.class) {

@@ -13,8 +13,8 @@ import java.lang.annotation.*;
  *   <li>忽略特定字段</li>
  *   <li>指定包含字段</li>
  *   <li>指定命名策略</li>
- *   <li>支持多态类型（seeAlso）</li>
- *   <li>自动类型识别（autoType）</li>
+ *   <li>类级日期格式 / null 输出 / 枚举序列化方式</li>
+ *   <li>AutoType 白名单标记（description）</li>
  * </ul>
  *
  * <p><b>使用示例：</b></p>
@@ -22,8 +22,7 @@ import java.lang.annotation.*;
  * {@literal @}JsonClass(
  *     ordering = {"id", "name", "email"},
  *     ignores = {"password", "secretKey"},
- *     typeKey = "@type",
- *     seeAlso = {UserAdmin.class, UserGuest.class}
+ *     description = "用户实体"
  * )
  * public class User {
  *     private Long id;
@@ -111,50 +110,6 @@ public @interface JsonClass {
      * @return 是否使用 ordinal 序列化枚举，默认 false
      */
     boolean serializeEnumUsingOrdinal() default false;
-
-    // ==================== 多态类型支持（参考@JSONType） ====================
-
-    /**
-     * 类型标识字段名称
-     *
-     * <p>用于多态反序列化时标识实际类型。</p>
-     *
-     * <p>默认使用 "@type" 作为类型键。</p>
-     *
-     * @return 类型标识字段名称
-     */
-    String typeKey() default "@type";
-
-    /**
-     * 可见的子类型
-     *
-     * <p>指定反序列化时可以识别的子类型。</p>
-     *
-     * <p>用于多态反序列化，类似 Jackson 的 {@code @JsonSubTypes}。</p>
-     *
-     * @return 子类型数组
-     */
-    Class<?>[] seeAlso() default {};
-
-    /**
-     * 子类型的类型名称
-     *
-     * <p>与 {@link #seeAlso()} 配合使用，指定每个子类型的类型名称。</p>
-     *
-     * @return 类型名称数组
-     */
-    String[] seeAlsoNames() default {};
-
-    /**
-     * 是否启用 autoType
-     *
-     * <p>如果为 true，则允许反序列化时自动识别类型。</p>
-     *
-     * <p><b>注意：</b>启用 autoType 可能存在安全风险，请谨慎使用。</p>
-     *
-     * @return 是否启用 autoType
-     */
-    boolean autoType() default false;
 
     /**
      * 命名策略枚举

@@ -16,9 +16,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonAlias;
+import com.njydsz.common.json.annotation.JsonCreator;
+import com.njydsz.common.json.annotation.JsonIgnore;
+import com.njydsz.common.json.annotation.JsonIgnoreProperties;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.provider.FieldMetadataLoader;
+import com.njydsz.common.json.util.BoundedLruCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +64,12 @@ public final class BeanReader<T> {
     /** @JsonAnySetter 方法（null 表示无）*/
     public final Method anySetterMethod;
 
+    /** @JsonCreator 标注的构造函数（null 表示使用默认构造函数） */
+    private final Constructor<?> creatorConstructor;
+
+    /** @JsonCreator 构造函数参数名映射（对应 JSON 字段名，null 表示未解析） */
+    private final String[] creatorParameterNames;
+
     /**
      * 构造函数
      */
@@ -69,20 +79,52 @@ public final class BeanReader<T> {
         // 检测 @JsonAnySetter 方法
         this.anySetterMethod = FieldMetadataLoader.findAnySetterMethod(beanType);
 
-        // 缓存默认构造函数
+        // 解析构造函数：优先默认无参构造；否则查找 @JsonCreator 标注的构造
+        Constructor<?> creator = null;
+        String[] paramNames = null;
         try {
             this.defaultConstructor = beanType.getDeclaredConstructor();
             this.defaultConstructor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            // 无默认构造：尝试 @JsonCreator
+            Constructor<?>[] ctors = beanType.getDeclaredConstructors();
+            for (Constructor<?> ctor : ctors) {
+                if (ctor.getAnnotation(JsonCreator.class) != null) {
+                    creator = ctor;
+                    creator.setAccessible(true);
+                    // 解析参数名：优先 @JsonCreator(parameterNames=...)，否则参数上的 @JsonProperty
+                    JsonCreator ann = ctor.getAnnotation(JsonCreator.class);
+                    if (ann.parameterNames().length == ctor.getParameterCount()) {
+                        paramNames = ann.parameterNames();
+                    } else {
+                        java.lang.reflect.Parameter[] params = ctor.getParameters();
+                        paramNames = new String[params.length];
+                        for (int i = 0; i < params.length; i++) {
+                            JsonProperty jp = params[i].getAnnotation(JsonProperty.class);
+                            paramNames[i] = (jp != null && !jp.value().isEmpty()) ? jp.value() : params[i].getName();
+                        }
+                    }
+                    break;
+                }
+            }
+            if (creator == null) {
+                // 既无默认构造也无 @JsonCreator：抛出明确异常
+                throw new RuntimeException("No default constructor or @JsonCreator for " + beanType.getName(), e);
+            }
+        } catch (RuntimeException re) {
+            throw re;
         } catch (Exception e) {
             throw new RuntimeException("No default constructor for " + beanType.getName(), e);
         }
+        this.creatorConstructor = creator;
+        this.creatorParameterNames = paramNames;
 
         // 预计算字段读取器：遍历自身及所有父类字段（修复继承字段静默丢失，P0-②）
         List<Field> fields = FieldMetadataLoader.collectDeclaredAndInheritedFields(beanType);
         int count = 0;
         for (Field field : fields) {
             int mods = field.getModifiers();
-            if (!Modifier.isStatic(mods) && !Modifier.isTransient(mods)) {
+            if (!Modifier.isStatic(mods) && !Modifier.isTransient(mods) && !isIgnoredField(field)) {
                 count++;
             }
         }
@@ -92,7 +134,7 @@ public final class BeanReader<T> {
         int idx = 0;
         for (Field field : fields) {
             int mods = field.getModifiers();
-            if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
+            if (Modifier.isStatic(mods) || Modifier.isTransient(mods) || isIgnoredField(field)) {
                 continue;
             }
             try {
@@ -140,11 +182,69 @@ public final class BeanReader<T> {
         reader.pos++;
 
         T obj;
+        // @JsonCreator 路径：先解析全部字段到临时 Map，读完再调用构造函数
+        if (creatorConstructor != null) {
+            Map<String, Object> pending = new HashMap<>();
+            Object parsed = readObjectFields(reader, depth, pending);
+            if (parsed != null) {
+                // 已通过默认构造 + 字段赋值完成（参数名未解析成功时降级）
+                return (T) parsed;
+            }
+            try {
+                Object[] args = new Object[creatorParameterNames.length];
+                for (int i = 0; i < creatorParameterNames.length; i++) {
+                    args[i] = pending.get(creatorParameterNames[i]);
+                }
+                return (T) creatorConstructor.newInstance(args);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create via @JsonCreator for " + beanType.getName(), e);
+            }
+        }
         try {
             obj = defaultConstructor.newInstance();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create " + beanType.getName(), e);
         }
+
+        readObjectFieldsInto(reader, depth, obj, null);
+        return obj;
+    }
+
+    /**
+     * 通用字段扫描循环：将 JSON 字段写入目标对象，或（creator 模式）收集到 pending Map。
+     *
+     * @return creator 模式下：若参数名解析失败并降级为默认构造赋值则返回实例，否则 null
+     */
+    @SuppressWarnings("unchecked")
+    private T readObjectFields(JSONReader reader, int depth, Map<String, Object> pending) {
+        // 尝试用默认构造 + 字段赋值（若类实际存在默认构造则走此路径）
+        try {
+            T inst = (T) beanType.getDeclaredConstructor().newInstance();
+            readObjectFieldsInto(reader, depth, inst, pending);
+            return inst;
+        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException e) {
+            // 无默认构造：仅收集字段到 pending，不创建实例
+            readObjectFieldsInto(reader, depth, null, pending);
+            return null;
+        } catch (Exception e) {
+            // 其他异常（如无默认构造）→ 仅收集
+            readObjectFieldsInto(reader, depth, null, pending);
+            return null;
+        }
+    }
+
+    /**
+     * 逐字段读取 JSON 对象内容。
+     *
+     * @param target  字段写入目标（null 时仅解析值放入 pending）
+     * @param pending 收集的字段值（JSON 字段名 → 解析值），可为 null
+     */
+    private void readObjectFieldsInto(JSONReader reader, int depth, T target, Map<String, Object> pending) {
+        reader.skipTo('{');
+        if (reader.pos >= reader.len) {
+            throw new RuntimeException("Unexpected end of JSON");
+        }
+        reader.pos++;
 
         char[] buf = reader.buf;
         int len = reader.len;
@@ -153,13 +253,13 @@ public final class BeanReader<T> {
             char ch = buf[reader.pos];
             while (ch <= ' ') {
                 reader.pos++;
-                if (reader.pos >= len) return obj;
+                if (reader.pos >= len) return;
                 ch = buf[reader.pos];
             }
 
             if (ch == '}') {
                 reader.pos++;
-                return obj;
+                return;
             }
 
             if (ch == ',') {
@@ -173,7 +273,7 @@ public final class BeanReader<T> {
             }
 
             String fieldName = reader.readString();
-            if (fieldName == null) return obj;
+            if (fieldName == null) return;
 
             reader.skipTo(':');
             if (reader.pos < len) reader.pos++;
@@ -184,13 +284,21 @@ public final class BeanReader<T> {
                 FieldReader fr = fieldReaders[i];
                 // 主匹配：jsonName（@JsonProperty 值或字段名）
                 if (fieldNameHashes[i] == hash && fr.jsonName.equals(fieldName)) {
-                    fr.readValue(reader, obj, depth);
+                    if (target != null) {
+                        fr.readValue(reader, target, depth);
+                    } else {
+                        pending.put(fr.fieldName, fr.readRawValue(reader));
+                    }
                     matched = true;
                     break;
                 }
                 // 回退匹配：原始 Java 字段名（当 @JsonProperty 设置但 JSON 仍用字段名时）
                 if (!matched && fr.fieldName.equals(fieldName)) {
-                    fr.readValue(reader, obj, depth);
+                    if (target != null) {
+                        fr.readValue(reader, target, depth);
+                    } else {
+                        pending.put(fr.fieldName, fr.readRawValue(reader));
+                    }
                     matched = true;
                     break;
                 }
@@ -198,7 +306,11 @@ public final class BeanReader<T> {
                 if (!matched && fr.aliasHashes.length > 0) {
                     for (int j = 0; j < fr.aliasHashes.length; j++) {
                         if (fr.aliasHashes[j] == hash && fr.aliases[j].equals(fieldName)) {
-                            fr.readValue(reader, obj, depth);
+                            if (target != null) {
+                                fr.readValue(reader, target, depth);
+                            } else {
+                                pending.put(fr.fieldName, fr.readRawValue(reader));
+                            }
                             matched = true;
                             break;
                         }
@@ -213,7 +325,11 @@ public final class BeanReader<T> {
                     String rawValue = reader.readRawValue().trim();
                     try {
                         Object parsedValue = parseValue(rawValue);
-                        anySetterMethod.invoke(obj, fieldName, parsedValue);
+                        if (target != null) {
+                            anySetterMethod.invoke(target, fieldName, parsedValue);
+                        } else {
+                            pending.put(fieldName, parsedValue);
+                        }
                     } catch (Exception e) {
                         // 调用失败时跳过该字段
                     }
@@ -222,8 +338,6 @@ public final class BeanReader<T> {
                 }
             }
         }
-
-        return obj;
     }
 
     /**
@@ -284,12 +398,21 @@ public final class BeanReader<T> {
         /** 别名哈希缓存 */
         public final int[] aliasHashes;
 
+        /** @JsonFormat(pattern=...) 指定的日期格式（null 表示使用默认格式列表） */
+        public final String datePattern;
+
         public FieldReader(Field field) {
             this.field = field;
             this.fieldName = field.getName();
             this.fieldType = field.getType();
             this.field.setAccessible(true);
             this.typeCode = getTypeCode(fieldType);
+
+            // 加载 @JsonFormat：日期格式模式（序列化/反序列化共用）
+            com.njydsz.common.json.annotation.JsonFormat jsonFormat =
+                    field.getAnnotation(com.njydsz.common.json.annotation.JsonFormat.class);
+            this.datePattern = (jsonFormat != null && !jsonFormat.pattern().isEmpty())
+                    ? jsonFormat.pattern() : null;
 
             // 加载 @JsonProperty：如果标注了且 value 非空，用 value 作为 JSON 匹配名
             JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
@@ -459,13 +582,13 @@ public final class BeanReader<T> {
                             field.set(obj, reader.readObjectMap());
                         } else if (fieldType == LocalDateTime.class) {
                             String s = reader.readString();
-                            field.set(obj, parseLocalDateTime(s));
+                            field.set(obj, parseLocalDateTime(s, datePattern));
                         } else if (fieldType == LocalDate.class) {
                             String s = reader.readString();
-                            field.set(obj, parseLocalDate(s));
+                            field.set(obj, parseLocalDate(s, datePattern));
                         } else if (fieldType == Date.class) {
                             String s = reader.readString();
-                            field.set(obj, parseDate(s));
+                            field.set(obj, parseDate(s, datePattern));
                         } else if (fieldType.isEnum()) {
                             String s = reader.readString();
                             field.set(obj, parseEnum(fieldType, s));
@@ -492,10 +615,49 @@ public final class BeanReader<T> {
             if (type == char.class || type == Character.class) return 9;
             return 10;
         }
+
+        /**
+         * 读取当前值并转换为适合 @JsonCreator 参数的类型。
+         *
+         * <p>不写入目标对象，仅按字段类型解析并返回原始值（字符串/数字/布尔），
+         * 供 {@link #readObjectFieldsInto} 的 creator 模式收集参数使用。</p>
+         *
+         * @param reader 已定位到值起始的 JSONReader
+         * @return 解析后的值
+         */
+        public Object readRawValue(JSONReader reader) {
+            try {
+                switch (typeCode) {
+                    case 1: // String
+                        return reader.isNull() ? null : reader.readString();
+                    case 2: // int
+                        return reader.isNull() ? null : reader.readInt();
+                    case 3: // long
+                        return reader.isNull() ? null : reader.readLong();
+                    case 4: // double
+                        return reader.isNull() ? null : reader.readDouble();
+                    case 5: // float
+                        return reader.isNull() ? null : reader.readFloat();
+                    case 6: // boolean
+                        return reader.isNull() ? null : reader.readBoolean();
+                    case 7: // short
+                        return reader.isNull() ? null : (short) reader.readInt();
+                    case 8: // byte
+                        return reader.isNull() ? null : (byte) reader.readInt();
+                    case 9: // char
+                        return reader.isNull() ? null : reader.readString();
+                    default:
+                        // 复杂类型：读取原始字符串，由 CreatorResolver/TypeConverter 转换
+                        return reader.isNull() ? null : reader.readRawValue().trim();
+                }
+            } catch (Exception e) {
+                return null;
+            }
+        }
     }
 
-    /** BeanReader 缓存 */
-    private static final ConcurrentHashMap<Class<?>, BeanReader<?>> CACHE = new ConcurrentHashMap<>(1024);
+    /** BeanReader 缓存（有界 LRU，容量 1024，防止动态类加载场景下无界增长） */
+    private static final BoundedLruCache<Class<?>, BeanReader<?>> CACHE = new BoundedLruCache<>(1024);
 
 
     /**
@@ -539,6 +701,34 @@ public final class BeanReader<T> {
 
     // ==================== 日期/枚举解析辅助方法 ====================
 
+    /**
+     * 判断字段是否应在反序列化时被忽略。
+     *
+     * <p>规则（与序列化侧 {@code FieldMetadataLoader.loadFields} 对齐）：</p>
+     * <ol>
+     *   <li>字段级 {@code @JsonIgnore} → 忽略</li>
+     *   <li>类级 {@code @JsonIgnoreProperties} 中列出的字段名 → 忽略</li>
+     * </ol>
+     *
+     * @param field 目标字段
+     * @return true 表示忽略
+     */
+    private static boolean isIgnoredField(Field field) {
+        if (field.getAnnotation(JsonIgnore.class) != null) {
+            return true;
+        }
+        // 类级 @JsonIgnoreProperties：忽略列表中包含字段名（含别名匹配）
+        JsonIgnoreProperties ignoreProps = field.getDeclaringClass().getAnnotation(JsonIgnoreProperties.class);
+        if (ignoreProps != null && ignoreProps.value().length > 0) {
+            for (String name : ignoreProps.value()) {
+                if (name.equals(field.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private static final DateTimeFormatter[] DATE_TIME_FORMATS = {
         DateTimeFormatter.ISO_LOCAL_DATE_TIME,
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
@@ -553,7 +743,19 @@ public final class BeanReader<T> {
 
     @SuppressWarnings("deprecation")
     private static LocalDateTime parseLocalDateTime(String s) {
+        return parseLocalDateTime(s, null);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static LocalDateTime parseLocalDateTime(String s, String pattern) {
         if (s == null || s.isEmpty()) return null;
+        // @JsonFormat 指定格式优先
+        if (pattern != null) {
+            try {
+                return LocalDateTime.parse(s, DateTimeFormatter.ofPattern(pattern));
+            } catch (Exception ignored) {
+            }
+        }
         for (DateTimeFormatter fmt : DATE_TIME_FORMATS) {
             try {
                 return LocalDateTime.parse(s, fmt);
@@ -565,7 +767,18 @@ public final class BeanReader<T> {
 
     @SuppressWarnings("deprecation")
     private static LocalDate parseLocalDate(String s) {
+        return parseLocalDate(s, null);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static LocalDate parseLocalDate(String s, String pattern) {
         if (s == null || s.isEmpty()) return null;
+        if (pattern != null) {
+            try {
+                return LocalDate.parse(s, DateTimeFormatter.ofPattern(pattern));
+            } catch (Exception ignored) {
+            }
+        }
         for (DateTimeFormatter fmt : DATE_FORMATS) {
             try {
                 return LocalDate.parse(s, fmt);
@@ -577,10 +790,21 @@ public final class BeanReader<T> {
 
     @SuppressWarnings("deprecation")
     private static Date parseDate(String s) {
+        return parseDate(s, null);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Date parseDate(String s, String pattern) {
         if (s == null || s.isEmpty()) return null;
         try {
             return new Date(Long.parseLong(s));
         } catch (NumberFormatException ignored) {
+        }
+        if (pattern != null) {
+            try {
+                return new java.text.SimpleDateFormat(pattern).parse(s);
+            } catch (Exception ignored) {
+            }
         }
         try {
             return new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(s);

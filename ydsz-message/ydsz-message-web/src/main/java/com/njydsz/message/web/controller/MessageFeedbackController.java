@@ -1,5 +1,6 @@
 package com.njydsz.message.web.controller.core;
 
+import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -128,14 +129,16 @@ public class MessageFeedbackController {
     @Operation(summary = "分页查询反馈记录")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgFeedbackVO>> pageFeedback(@RequestParam(defaultValue = "1") int page,
+    public BaseResponse<List<MsgFeedbackVO>> pageFeedback(@RequestParam(defaultValue = "1") int page,
                                                       @RequestParam(defaultValue = "20") int size,
                                                       @RequestParam(required = false) String channel,
                                                       @RequestParam(required = false) String userId) {
         Page<MsgFeedback> result = messageFeedbackService.pageFeedback(page, size, channel, userId);
-        Page<MsgFeedbackVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-        voPage.setRecords(MessageConverter.INSTANT.feedbackListToVO(result.getRecords()));
-        return BaseResponse.success(voPage);
+        return BaseResponse.successPage(
+                result.getTotal(),
+                result.getCurrent(),
+                result.getSize(),
+                MessageConverter.INSTANT.feedbackListToVO(result.getRecords()));
     }
 
     /**

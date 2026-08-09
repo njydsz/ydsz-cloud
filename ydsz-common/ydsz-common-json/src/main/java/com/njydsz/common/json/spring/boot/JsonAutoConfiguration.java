@@ -3,6 +3,7 @@ package com.njydsz.common.json.spring.boot;
 import java.util.List;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -191,6 +192,23 @@ public class JsonAutoConfiguration {
                     BeanSerializerCache.clear();
                 }
             });
+        }
+
+        /**
+         * 容器关闭时清理全局静态缓存与当前线程的 ThreadLocal。
+         *
+         * <p>防止 Spring 容器重启（如热部署、测试多次启动）时，
+         * 全局静态缓存中的旧元数据与 ThreadLocal 残留影响新容器实例。</p>
+         *
+         * @since 1.2.1
+         */
+        @PreDestroy
+        public void destroy() {
+            BeanSerializerCache.clear();
+            com.njydsz.common.json.cache.SerializerCache.clear();
+            com.njydsz.common.json.reader.BeanReader.clearCache();
+            com.njydsz.common.json.provider.PolymorphicTypeResolver.clearCache();
+            com.njydsz.common.json.provider.SerializationProvider.clearThreadLocals();
         }
     }
 }

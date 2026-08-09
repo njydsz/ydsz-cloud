@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * CEP 复杂事件处理 Controller（P0-2）— 模式管理 / 事件投递 / 命中查询 / 引擎状态
@@ -158,6 +159,7 @@ public class CEPController {
      */
     @Idempotent(key = "cep:registerPattern", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'registerPattern'")
+    @RateLimit(resource = "literule.c_e_p.registerPattern", threshold = 50)
     @PostMapping("/patterns")
     @Operation(summary = "注册 CEP 模式")
     public BaseResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
@@ -181,6 +183,7 @@ public class CEPController {
      */
     @Idempotent(key = "cep:unregisterPattern", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'unregisterPattern'")
+    @RateLimit(resource = "literule.c_e_p.unregisterPattern", threshold = 50)
     @DeleteMapping("/patterns/{patternId}")
     @Operation(summary = "注销 CEP 模式")
     public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
@@ -210,6 +213,7 @@ public class CEPController {
      */
     @Idempotent(key = "cep:feedEvent", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'feedEvent'")
+    @RateLimit(resource = "literule.c_e_p.feedEvent", threshold = 50)
     @PostMapping("/events")
     @Operation(summary = "投递单条事件", description = "投递单条事件到 CEP 引擎，返回触发的命中数")
     public BaseResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
@@ -235,6 +239,7 @@ public class CEPController {
      */
     @Idempotent(key = "cep:feedEvents", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'feedEvents'")
+    @RateLimit(resource = "literule.c_e_p.feedEvents", threshold = 50)
     @PostMapping("/events/batch")
     @Operation(summary = "批量投递事件", description = "批量投递事件到 CEP 引擎，返回触发的命中数")
     public BaseResponse<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {

@@ -143,6 +143,12 @@ public final class ValueWriter {
             return;
         }
 
+        // JsonNode 树模型快速路径：直接走树模型 toString()，避免反射序列化损坏
+        if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+            sb.append(obj.toString());
+            return;
+        }
+
         byte typeCode = getTypeCode(obj);
         switch (typeCode) {
             case TYPE_CODE_STRING:
@@ -833,10 +839,10 @@ public final class ValueWriter {
     }
 
     /**
-     * 日期格式化器缓存（ConcurrentHashMap，支持多 @JsonFormat pattern 并发缓存）
+     * 日期格式化器缓存（有界 LRU 容量 128，防止动态 pattern 场景下无界增长）
      */
-    private static final java.util.concurrent.ConcurrentHashMap<String, DateTimeFormatter> FORMATTER_CACHE =
-        new java.util.concurrent.ConcurrentHashMap<>();
+    private static final com.njydsz.common.json.util.BoundedLruCache<String, DateTimeFormatter> FORMATTER_CACHE =
+        new com.njydsz.common.json.util.BoundedLruCache<>(128);
 
     /**
      * 格式化日期/时间值为字符串（统一入口，支持全局日期格式配置）。
@@ -891,14 +897,8 @@ public final class ValueWriter {
      * 获取缓存的 DateTimeFormatter（避免重复 ofPattern 调用）
      */
     private static DateTimeFormatter getCachedFormatter(String pattern) {
-        DateTimeFormatter cached = FORMATTER_CACHE.get(pattern);
-        if (cached != null) {
-            return cached;
-        }
         try {
-            DateTimeFormatter newFormatter = DateTimeFormatter.ofPattern(pattern);
-            DateTimeFormatter existing = FORMATTER_CACHE.putIfAbsent(pattern, newFormatter);
-            return existing != null ? existing : newFormatter;
+            return FORMATTER_CACHE.computeIfAbsent(pattern, DateTimeFormatter::ofPattern);
         } catch (Exception e) {
             return null;
         }

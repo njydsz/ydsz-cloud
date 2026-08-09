@@ -146,10 +146,13 @@ public final class JsonLines {
         /**
          * 逐行处理 JSON 对象。
          *
+         * <p>此方法与 {@link Iterable#forEach} 存在同名冲突（泛型擦除后签名重叠），
+         * 故命名为 {@code forEachLine}。语义与 for-each 迭代一致，均跳过空行。</p>
+         *
          * @param consumer 处理每一行的消费者
          * @throws JsonException 如果解析失败
          */
-        public void forEach(Consumer<T> consumer) {
+        public void forEachLine(Consumer<T> consumer) {
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -181,7 +184,7 @@ public final class JsonLines {
          */
         public List<T> readAll() {
             List<T> result = new ArrayList<>();
-            forEach(result::add);
+            forEachLine(result::add);
             return result;
         }
 

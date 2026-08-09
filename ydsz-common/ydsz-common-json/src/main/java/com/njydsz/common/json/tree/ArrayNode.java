@@ -136,6 +136,19 @@ public final class ArrayNode extends JsonNode {
     }
 
     /**
+     * 替换指定索引位置的元素（自动转换为 JsonNode）。
+     *
+     * @param index 元素索引（从 0 开始）
+     * @param value 新的元素值，null 转换为 NullNode
+     * @return 当前数组节点（支持链式调用）
+     * @throws IndexOutOfBoundsException 如果索引超出范围
+     */
+    public ArrayNode set(int index, Object value) {
+        elements.set(index, toNode(value));
+        return this;
+    }
+
+    /**
      * 移除指定索引位置的元素
      *
      * @param index 要移除的元素索引（从 0 开始）
@@ -163,6 +176,25 @@ public final class ArrayNode extends JsonNode {
                     "Insert index out of bounds: index=" + index + ", size=" + elements.size());
         }
         elements.add(index, node != null ? node : NullNode.getInstance());
+        return this;
+    }
+
+    /**
+     * 在指定索引位置插入任意值（自动转换为 JsonNode），原有元素向右顺移。
+     *
+     * <p>若 {@code index == size()}，等效于 {@link #add(Object)} 追加到末尾。</p>
+     *
+     * @param index 插入位置索引（从 0 开始，允许等于当前 size）
+     * @param value 元素值，null 转换为 NullNode
+     * @return 当前数组节点（支持链式调用）
+     * @throws IndexOutOfBoundsException 如果 index &lt; 0 或 index &gt; size()
+     */
+    public ArrayNode insert(int index, Object value) {
+        if (index < 0 || index > elements.size()) {
+            throw new IndexOutOfBoundsException(
+                    "Insert index out of bounds: index=" + index + ", size=" + elements.size());
+        }
+        elements.add(index, toNode(value));
         return this;
     }
 
@@ -557,24 +589,34 @@ public final class ArrayNode extends JsonNode {
      * @return 当前数组节点（支持链式调用）
      */
     public ArrayNode add(Object value) {
-        if (value == null) {
-            elements.add(NullNode.getInstance());
-        } else if (value instanceof JsonNode node) {
-            elements.add(node);
-        } else if (value instanceof String str) {
-            elements.add(new TextNode(str));
-        } else if (value instanceof Boolean bool) {
-            elements.add(BooleanNode.of(bool));
-        } else if (value instanceof Number num) {
-            elements.add(new NumberNode(num));
-        } else if (value instanceof Map<?, ?> map) {
-            elements.add(ObjectNode.fromMap(map));
-        } else if (value instanceof List<?> list) {
-            elements.add(ArrayNode.fromList(list));
-        } else {
-            elements.add(TreeConverter.convertToJsonNode(value));
-        }
+        elements.add(toNode(value));
         return this;
+    }
+
+    /**
+     * 将任意值转换为 JsonNode（null → NullNode；Map → ObjectNode；List → ArrayNode）。
+     *
+     * @param value 任意值
+     * @return 转换后的 JsonNode
+     */
+    private static JsonNode toNode(Object value) {
+        if (value == null) {
+            return NullNode.getInstance();
+        } else if (value instanceof JsonNode node) {
+            return node;
+        } else if (value instanceof String str) {
+            return new TextNode(str);
+        } else if (value instanceof Boolean bool) {
+            return BooleanNode.of(bool);
+        } else if (value instanceof Number num) {
+            return new NumberNode(num);
+        } else if (value instanceof Map<?, ?> map) {
+            return ObjectNode.fromMap(map);
+        } else if (value instanceof List<?> list) {
+            return ArrayNode.fromList(list);
+        } else {
+            return TreeConverter.convertToJsonNode(value);
+        }
     }
 
     // ==================== 转换 ====================

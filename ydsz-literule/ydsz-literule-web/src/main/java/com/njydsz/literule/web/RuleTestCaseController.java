@@ -40,6 +40,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * 规则测试用例 Controller
@@ -97,6 +98,7 @@ public class RuleTestCaseController {
      */
     @Idempotent(key = "ruleAdmin:saveTestCase", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveTestCase'")
+    @RateLimit(resource = "literule.rule_test_case.saveTestCase", threshold = 50)
     @PostMapping("/testCases")
     public BaseResponse<RuleTestCaseVO> saveTestCase(@RequestBody RuleTestCasePostDTO dto) {
         RuleTestCaseDO testCase = LiteruleConverter.INSTANT.postDtoToEntity(dto);
@@ -116,6 +118,7 @@ public class RuleTestCaseController {
      */
     @Idempotent(key = "ruleAdmin:deleteTestCase", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteTestCase'")
+    @RateLimit(resource = "literule.rule_test_case.deleteTestCase", threshold = 50)
     @DeleteMapping("/testCases/{id}")
     public BaseResponse<Void> deleteTestCase(@PathVariable String id) {
         ruleTestCaseMapper.deleteById(id);
@@ -134,6 +137,7 @@ public class RuleTestCaseController {
      */
     @Idempotent(key = "ruleAdmin:batchRunTestCases", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @RateLimit(resource = "literule.rule_test_case.batchRunTestCases", threshold = 50)
     @PostMapping("/testCases/batchRun")
     public BaseResponse<Map<String, Object>> batchRunTestCases(@Valid @RequestBody TestCaseBatchRunDTO dto) {
         List<Long> ids = dto.getIds();
