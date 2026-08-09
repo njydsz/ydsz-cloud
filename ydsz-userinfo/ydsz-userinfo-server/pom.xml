@@ -63,10 +63,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-auth</artifactId>
         </dependency>
         <dependency>

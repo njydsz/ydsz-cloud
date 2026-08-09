@@ -311,15 +311,15 @@ public final class JsonLines {
      * 将对象列表序列化为 JSON Lines 字符串。
      *
      * @param items 对象列表
-     * @param <T>   对象类型
+     * @param <T>   元素类型
      * @return JSON Lines 格式的字符串
      */
-    public static <String> java.lang.String toJsonLines(List<?> items) {
+    public static <T> String toJsonLines(List<T> items) {
         if (items == null || items.isEmpty()) {
             return "";
         }
         StringBuilder sb = new StringBuilder(items.size() * 128);
-        for (Object item : items) {
+        for (T item : items) {
             sb.append(YdszJson.toJson(item)).append('\n');
         }
         return sb.toString();

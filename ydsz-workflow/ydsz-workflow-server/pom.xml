@@ -134,10 +134,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-            <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!-- P0-1: 统一监控告警（Sentry SPI：ELK/Loki 日志推送 + 告警收敛 + SLA） -->
         <dependency>
             <groupId>com.njydsz</groupId>

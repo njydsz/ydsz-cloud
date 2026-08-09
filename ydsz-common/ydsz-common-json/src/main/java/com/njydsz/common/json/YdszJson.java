@@ -143,6 +143,70 @@ public class YdszJson {
         }
     }
 
+    // ==================== JSON Patch (RFC 6902 / RFC 7396) ====================
+
+    /**
+     * 应用 JSON Patch（RFC 6902）到目标 JSON 字符串。
+     *
+     * <p>JSON Patch 是一个操作序列，支持 add/remove/replace/move/copy/test 六种操作，
+     * 用于对 JSON 文档做局部更新。</p>
+     *
+     * <p><b>示例：</b></p>
+     * <pre>{@code
+     * String result = YdszJson.patch(
+     *     "{\"name\":\"old\",\"age\":25}",
+     *     "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"new\"}]"
+     * );
+     * // result: {"name":"new","age":25}
+     * }</pre>
+     *
+     * @param targetJson 目标 JSON 字符串
+     * @param patchJson  Patch JSON 数组字符串
+     * @return 应用 Patch 后的 JSON 字符串
+     * @throws com.njydsz.common.json.exception.JsonException 当 Patch 操作失败时（如路径不存在、TEST 失败等）
+     * @since 1.2.0
+     */
+    public static String patch(String targetJson, String patchJson) {
+        JsonNode target = readTree(targetJson);
+        List<JsonPatch.PatchOp> ops = JsonPatch.parse(patchJson);
+        if (target instanceof ObjectNode objTarget) {
+            for (JsonPatch.PatchOp op : ops) {
+                JsonPatch.applyOp(objTarget, op);
+            }
+            return toJson(objTarget);
+        }
+        throw new JsonException("JSON Patch 操作要求目标为 JSON 对象，实际类型为: "
+                + (target == null ? "null" : target.getClass().getSimpleName()));
+    }
+
+    /**
+     * 应用 JSON Merge Patch（RFC 7396）到目标 JSON 字符串。
+     *
+     * <p>JSON Merge Patch 是一种简化的 patch 格式：直接用 patch 中的字段覆盖目标中的同名字段，
+     * null 值表示删除字段。</p>
+     *
+     * <p><b>示例：</b></p>
+     * <pre>{@code
+     * String result = YdszJson.mergePatch(
+     *     "{\"a\":1,\"b\":{\"c\":2}}",
+     *     "{\"b\":{\"c\":null,\"d\":3}}"
+     * );
+     * // result: {"a":1,"b":{"d":3}}
+     * }</pre>
+     *
+     * @param targetJson 目标 JSON 字符串
+     * @param patchJson  Merge Patch JSON 字符串
+     * @return 应用 Patch 后的 JSON 字符串
+     * @throws JsonException 如果 patch 操作失败
+     * @since 1.2.0
+     */
+    public static String mergePatch(String targetJson, String patchJson) {
+        JsonNode target = readTree(targetJson);
+        JsonNode patch = readTree(patchJson);
+        JsonNode result = JsonMergePatch.apply(target, patch);
+        return toJson(result);
+    }
+
     /**
      * 对象转 JSON 字节数组（UTF-8 编码）
      *
