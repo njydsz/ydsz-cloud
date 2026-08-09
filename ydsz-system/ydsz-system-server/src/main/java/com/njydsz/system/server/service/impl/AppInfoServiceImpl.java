@@ -183,7 +183,7 @@ public class AppInfoServiceImpl implements AppInfoService {
      */
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-    public PageResult<AppInfoVO> page(int pageNum, int pageSize, String appName, String status) {
+    public BaseResponse<List<AppInfoVO>> page(int pageNum, int pageSize, String appName, String status) {
         QueryWrapper<AppInfo> wrapper = new QueryWrapper<>();
         if (appName != null && !appName.isBlank()) {
             wrapper.like("app_name", appName);

@@ -196,7 +196,7 @@ public class VariableServiceImpl implements VariableService {
      */
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-    public PageResult<VariableVO> page(int pageNum, int pageSize, String variableKey, String status) {
+    public BaseResponse<List<VariableVO>> page(int pageNum, int pageSize, String variableKey, String status) {
         QueryWrapper<Variable> wrapper = new QueryWrapper<>();
         if (variableKey != null && !variableKey.isBlank()) {
             wrapper.like("variable_key", variableKey);

@@ -260,7 +260,7 @@ public class DictItemServiceImpl implements DictItemService {
      * @return 分页结果（含总条数）
      */
     @Override
-    public PageResult<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status) {
+    public BaseResponse<List<DictItemVO>> page(int pageNum, int pageSize, String typeCode, String itemCode, String status) {
         QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
         if (typeCode != null && !typeCode.isBlank()) {
             wrapper.eq("type_code", typeCode);

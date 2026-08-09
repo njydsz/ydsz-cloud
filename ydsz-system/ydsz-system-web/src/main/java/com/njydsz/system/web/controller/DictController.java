@@ -6,6 +6,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.system.domain.query.DictPageQuery;
@@ -72,9 +73,9 @@ public class DictController {
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public BaseResponse<List<DictTypeVO>> page(DictPageQuery query) {
+    public PageResult<DictTypeVO> page(DictPageQuery query) {
         PageResult<DictTypeVO> result = dictService.page(query);
-        return BaseResponse.successPage(
+        return PageResult.success(
                 result.getTotal(),
                 (long) result.getPageNum(),
                 (long) result.getPageSize(),

@@ -17,6 +17,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AssignRolesDTO;
@@ -95,9 +96,9 @@ public class UserAccountController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询用户列表")
-    public BaseResponse<List<UserAccountVO>> page(@Valid UserAccountPageQueryDTO query) {
+    public PageResult<UserAccountVO> page(@Valid UserAccountPageQueryDTO query) {
         Page<UserAccountVO> page = service.page(query);
-        return BaseResponse.successPage(
+        return PageResult.success(
                 page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());
     }
 

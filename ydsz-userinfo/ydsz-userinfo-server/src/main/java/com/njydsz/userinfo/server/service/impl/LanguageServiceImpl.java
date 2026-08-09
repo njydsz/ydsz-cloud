@@ -43,7 +43,7 @@ public class LanguageServiceImpl implements LanguageService {
     private final LanguageMapper mapper;
 
     @Override
-    public PageResult<LanguageVO> page(LanguagePageQuery query) {
+    public BaseResponse<List<LanguageVO>> page(LanguagePageQuery query) {
         QueryWrapper<Language> wrapper = buildQueryWrapper(query);
         Page<Language> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<Language> result = mapper.selectPage(mpPage, wrapper);

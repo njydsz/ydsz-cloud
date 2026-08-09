@@ -52,7 +52,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"code", "msg", "data", "traceId", "requestId", "spanId", "timestamp", "total", "pageNum", "pageSize", "extensions"})
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "requestId", "spanId", "timestamp", "extensions"})
 @JsonClass(description = "统一API响应基类，标记可安全反序列化")
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
@@ -140,25 +140,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     private Map<String, Object> extensions;
 
-    // ======================== 分页字段 ========================
-
-    /**
-     * 总记录数（分页响应时填充，非分页响应为 null）。
-     *
-     * <p>由 {@link #successPage(Long, Long, Long, Object)} 与 {@link PageResult#success(Long, Long, Long, Object)}
-     * 填充，配合 {@code pageNum}/{@code pageSize} 构成完整分页元信息。
-     */
-    private Long total;
-
-    /**
-     * 当前页码（从 1 开始，分页响应时填充）。
-     */
-    private Long pageNum;
-
-    /**
-     * 每页记录数（分页响应时填充）。
-     */
-    private Long pageSize;
+    // 分页字段已迁移至 {@link PageResult}（v1.9.3）。分页接口请直接返回 {@code PageResult<T>}。
 
     /**
      * 默认构造函数。

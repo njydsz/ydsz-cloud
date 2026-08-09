@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -154,9 +155,9 @@ public class TemplateController {
     @Operation(summary = "模板分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
     @GetMapping("/page")
-    public BaseResponse<List<MsgTemplateVO>> page(TemplateQueryDTO query) {
+    public PageResult<MsgTemplateVO> page(TemplateQueryDTO query) {
         Page<MsgTemplate> page = templateService.page(query);
-        return BaseResponse.successPage(
+        return PageResult.success(
                 page.getTotal(),
                 page.getCurrent(),
                 page.getSize(),

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.workflow.domain.entity.FlowAuditLog;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 
@@ -98,7 +99,7 @@ public class FlowCountersignHistoryController {
         int fromIndex = Math.min((pageNo - 1) * pageSize, total);
         int toIndex = Math.min(fromIndex + pageSize, total);
         List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-        return BaseResponse.successPage((long) total, (long) pageNo, (long) pageSize, pageData);
+        return PageResult.success((long) total, (long) pageNo, (long) pageSize, pageData);
     }
 
     /**
@@ -125,7 +126,7 @@ public class FlowCountersignHistoryController {
         int fromIndex = Math.min((pageNo - 1) * pageSize, total);
         int toIndex = Math.min(fromIndex + pageSize, total);
         List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-        return BaseResponse.successPage((long) total, (long) pageNo, (long) pageSize, pageData);
+        return PageResult.success((long) total, (long) pageNo, (long) pageSize, pageData);
     }
 
     /**
@@ -142,7 +143,7 @@ public class FlowCountersignHistoryController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
         String currentUserId = AuthContextUtils.getUserId();
         if (currentUserId == null) {
-            return BaseResponse.emptyPage((long) pageNo, (long) pageSize);
+            return PageResult.empty((long) pageNo, (long) pageSize);
         }
         List<FlowAuditLog> logs = auditLogMapper.selectByOperatorId(currentUserId);
         List<Map<String, Object>> filtered = logs == null ? List.of() :
@@ -154,7 +155,7 @@ public class FlowCountersignHistoryController {
         int fromIndex = Math.min((pageNo - 1) * pageSize, total);
         int toIndex = Math.min(fromIndex + pageSize, total);
         List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-        return BaseResponse.successPage((long) total, (long) pageNo, (long) pageSize, pageData);
+        return PageResult.success((long) total, (long) pageNo, (long) pageSize, pageData);
     }
 
     /**
@@ -171,7 +172,7 @@ public class FlowCountersignHistoryController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
         String currentUserId = AuthContextUtils.getUserId();
         if (currentUserId == null) {
-            return BaseResponse.emptyPage((long) pageNo, (long) pageSize);
+            return PageResult.empty((long) pageNo, (long) pageSize);
         }
         List<FlowAuditLog> logs = auditLogMapper.selectByTargetId(currentUserId);
         List<Map<String, Object>> filtered = logs == null ? List.of() :
@@ -183,7 +184,7 @@ public class FlowCountersignHistoryController {
         int fromIndex = Math.min((pageNo - 1) * pageSize, total);
         int toIndex = Math.min(fromIndex + pageSize, total);
         List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-        return BaseResponse.successPage((long) total, (long) pageNo, (long) pageSize, pageData);
+        return PageResult.success((long) total, (long) pageNo, (long) pageSize, pageData);
     }
 
     // ==================== 内部辅助方法 ====================

@@ -88,14 +88,14 @@ public class DictItemController {
      */
     @Operation(summary = "分页查询字典项（支持搜索过滤）")
     @GetMapping("/page")
-    public BaseResponse<List<DictItemVO>> page(
+    public PageResult<DictItemVO> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "字典类型编码过滤") @RequestParam(required = false) String typeCode,
             @Parameter(description = "字典项编码模糊搜索") @RequestParam(required = false) String itemCode,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         PageResult<DictItemVO> page = service.page(pageNum, pageSize, typeCode, itemCode, status);
-        return BaseResponse.successPage(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
+        return PageResult.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
     }
 
     /**

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
@@ -131,7 +132,7 @@ public class FlowInstanceQueryController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/page")
-    public BaseResponse<List<FlowInstanceVO>> instancePage(
+    public PageResult<FlowInstanceVO> instancePage(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
@@ -145,7 +146,7 @@ public class FlowInstanceQueryController {
                 startTime, endTime, tid, pageNo, pageSize);
         List<FlowInstance> instances = pageResult.getData();
         List<FlowInstanceVO> vos = WorkflowConverter.INSTANT.flowInstanceListToVO(instances);
-        return BaseResponse.successPage(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+        return PageResult.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
     }
 
     /**
@@ -168,7 +169,7 @@ public class FlowInstanceQueryController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/my")
-    public BaseResponse<List<FlowInstanceVO>> instanceMy(
+    public PageResult<FlowInstanceVO> instanceMy(
             @RequestParam(required = false) String flowCode,
             @RequestParam(required = false) String flowName,
             @RequestParam(required = false) String status,
@@ -181,7 +182,7 @@ public class FlowInstanceQueryController {
                 pageNum, pageSize);
         List<FlowInstance> instances = pageResult.getData();
         List<FlowInstanceVO> vos = WorkflowConverter.INSTANT.flowInstanceListToVO(instances);
-        return BaseResponse.successPage(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+        return PageResult.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
     }
 
     /**

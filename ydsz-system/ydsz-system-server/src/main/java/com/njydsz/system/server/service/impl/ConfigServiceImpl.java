@@ -119,7 +119,7 @@ public class ConfigServiceImpl implements ConfigService {
     // ============================== CRUD ==============================
 
     @Override
-    public PageResult<ConfigVO> page(ConfigPageQuery query) {
+    public BaseResponse<List<ConfigVO>> page(ConfigPageQuery query) {
         QueryWrapper<Config> wrapper = buildQueryWrapper(query);
         Page<Config> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<Config> result = configRepository.getConfigMapper().selectPage(mpPage, wrapper);

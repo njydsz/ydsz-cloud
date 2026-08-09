@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.util.id.TracerUtils;
@@ -441,7 +442,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(readOnly = true)
     public BaseResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
         if (delegateUserId == null) {
-            return BaseResponse.successPage(0L, 0L, 0L, null);
+            return PageResult.success(0L, 0L, 0L, null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
@@ -451,7 +452,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                 .orderByDesc(FlowAuditLog::getCreatedAt)
                 .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLog> list = auditLogMapper.selectList(wrapper);
-        return BaseResponse.successPage((long) list.size(), (long) safePage, (long) safeSize, list);
+        return PageResult.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
     /**
@@ -469,7 +470,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(readOnly = true)
     public BaseResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
         if (ownerUserId == null) {
-            return BaseResponse.successPage(0L, 0L, 0L, null);
+            return PageResult.success(0L, 0L, 0L, null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
@@ -479,7 +480,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                 .orderByDesc(FlowAuditLog::getCreatedAt)
                 .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLog> list = auditLogMapper.selectList(wrapper);
-        return BaseResponse.successPage((long) list.size(), (long) safePage, (long) safeSize, list);
+        return PageResult.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
     // ==================== P1-7: 链式解析代理人 ====================

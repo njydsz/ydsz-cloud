@@ -89,7 +89,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
      * @return 统一分页结果，含命中的索引实体列表与总数
      */
     @Override
-    public PageResult<SearchIndex> searchPage(String keyword, String createdBy, String scope,
+    public BaseResponse<List<SearchIndex>> searchPage(String keyword, String createdBy, String scope,
                                                int page, int pageSize) {
         Page<SearchIndex> pageParam = new Page<>(page, pageSize);
         IPage<SearchIndex> result = searchIndexMapper.searchPage(

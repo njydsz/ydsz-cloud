@@ -105,7 +105,7 @@ public class DictServiceImpl implements DictService {
      * @return 分页结果（含 {@code records / total}）
      */
     @Override
-    public PageResult<DictTypeVO> page(DictPageQuery query) {
+    public BaseResponse<List<DictTypeVO>> page(DictPageQuery query) {
         QueryWrapper<DictType> wrapper = buildQueryWrapper(query);
         Page<DictType> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<DictType> result = dictRepository.getDictTypeMapper().selectPage(mpPage, wrapper);

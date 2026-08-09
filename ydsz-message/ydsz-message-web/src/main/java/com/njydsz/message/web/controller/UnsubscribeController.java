@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -135,10 +136,10 @@ public class UnsubscribeController {
     @Operation(summary = "分页查询已退订记录")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
     @GetMapping("/page")
-    public BaseResponse<List<MsgSubscriptionVO>> page(UnsubscribeQueryDTO query) {
+    public PageResult<MsgSubscriptionVO> page(UnsubscribeQueryDTO query) {
         BaseResponse<List<MsgSubscription>> page = unsubscribeService.pageUnsubscribed(query);
         List<MsgSubscriptionVO> voList = MessageConverter.INSTANT.subscriptionListToVO(page.getData());
-        return BaseResponse.successPage(page.getTotal(), page.getPageNum(), page.getPageSize(), voList);
+        return PageResult.success(page.getTotal(), page.getPageNum(), page.getPageSize(), voList);
     }
 
     /**

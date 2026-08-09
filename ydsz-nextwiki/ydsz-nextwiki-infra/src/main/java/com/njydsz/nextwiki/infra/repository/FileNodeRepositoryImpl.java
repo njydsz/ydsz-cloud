@@ -49,7 +49,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     }
 
     @Override
-    public PageResult<FileNode> findPageChildren(String parentId, String nodeType,
+    public BaseResponse<List<FileNode>> findPageChildren(String parentId, String nodeType,
                                                   String sortBy, String sortDir,
                                                   int page, int pageSize) {
         Page<FileNode> pageParam = new Page<>(page, pageSize);

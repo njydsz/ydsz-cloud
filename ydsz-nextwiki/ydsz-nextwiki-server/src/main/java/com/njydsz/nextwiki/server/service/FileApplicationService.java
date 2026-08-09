@@ -289,7 +289,7 @@ public class FileApplicationService {
      * @complexity O(query)（一次数据库分页查询 + 结果映射）
      * @note 只读、无事务边界；分页由 DB 完成，不存在内存爆量风险
      */
-    public PageResult<FileNodeVO> listFiles(String parentId, String userId,
+    public BaseResponse<List<FileNodeVO>> listFiles(String parentId, String userId,
                                               String sortBy, String sortDir,
                                               String type, int page, int pageSize) {
         // 解析父目录ID（与原 listChildren 保持一致：根目录自动解析）

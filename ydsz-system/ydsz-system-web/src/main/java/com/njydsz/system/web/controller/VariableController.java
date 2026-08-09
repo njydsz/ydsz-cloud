@@ -77,13 +77,13 @@ public class VariableController {
      */
     @Operation(summary = "分页查询系统变量（支持搜索过滤）")
     @GetMapping("/page")
-    public BaseResponse<List<VariableVO>> page(
+    public PageResult<VariableVO> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "变量键模糊搜索") @RequestParam(required = false) String variableKey,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         PageResult<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
-        return BaseResponse.successPage(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
+        return PageResult.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
     }
 
     /**

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
@@ -150,7 +151,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
                 AuthContextUtils.getTenantIdOrDefault("1"), page, size);
         List<FlowInstance> dataList = MapUtils.safeCastList(pageResult.getData(), FlowInstance.class);
         List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
-        return BaseResponse.successPage(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
+        return PageResult.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
 
     @Override

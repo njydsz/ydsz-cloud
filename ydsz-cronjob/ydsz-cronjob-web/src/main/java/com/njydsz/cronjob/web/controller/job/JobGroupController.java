@@ -18,6 +18,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -106,7 +107,7 @@ public class JobGroupController {
     @Operation(summary = "按分组分页查询任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
     @GetMapping("/{jobGroup}/page")
-    public BaseResponse<List<JobVO>> pageByGroup(
+    public PageResult<JobVO> pageByGroup(
             @PathVariable String jobGroup,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -120,7 +121,7 @@ public class JobGroupController {
         // 3. 执行分页查询
         Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
         // 4. 转换为 VO（Entity → VO 含审计字段脱敏等）
-        return BaseResponse.successPage(
+        return PageResult.success(
                 result.getTotal(),
                 result.getCurrent(),
                 result.getSize(),

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
@@ -147,7 +148,7 @@ public class FlowTaskQueryController {
      * @return 统一响应结果，包含分页已办列表
      */
     @GetMapping("/task/done/search")
-    public BaseResponse<List<FlowRunTaskVO>> doneSearch(
+    public PageResult<FlowRunTaskVO> doneSearch(
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowCode,
@@ -161,7 +162,7 @@ public class FlowTaskQueryController {
                 flowCode, startTime, endTime, tid, pageNo, pageSize);
         List<FlowRunTask> tasks = pageResult.getData();
         List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(tasks);
-        return BaseResponse.successPage(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+        return PageResult.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
     }
 
     // ============== P2-31/32/33: 审计运营统计 ==============

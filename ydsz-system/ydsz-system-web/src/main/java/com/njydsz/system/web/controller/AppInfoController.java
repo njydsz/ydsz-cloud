@@ -77,13 +77,13 @@ public class AppInfoController {
      */
     @Operation(summary = "分页查询应用列表（支持搜索过滤）")
     @GetMapping("/page")
-    public BaseResponse<List<AppInfoVO>> page(
+    public PageResult<AppInfoVO> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "应用名称模糊搜索") @RequestParam(required = false) String appName,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         PageResult<AppInfoVO> page = service.page(pageNum, pageSize, appName, status);
-        return BaseResponse.successPage(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
+        return PageResult.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
     }
 
     /**

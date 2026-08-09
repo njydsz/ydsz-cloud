@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -97,13 +98,13 @@ public class DeadLetterController {
     @Operation(summary = "分页查询死信列表")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
     @GetMapping("/page")
-    public BaseResponse<List<MsgLogVO>> page(MessageLogQueryDTO query) {
+    public PageResult<MsgLogVO> page(MessageLogQueryDTO query) {
         if (query == null) {
             query = new MessageLogQueryDTO();
         }
         query.setStatus(MessageStatusEnum.DEAD.name());
         Page<MsgLog> page = messageLogService.page(query);
-        return BaseResponse.successPage(
+        return PageResult.success(
                 page.getTotal(),
                 page.getCurrent(),
                 page.getSize(),
