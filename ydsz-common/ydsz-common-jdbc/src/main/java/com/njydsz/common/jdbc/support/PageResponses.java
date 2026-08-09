@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.jdbc.support;
+package com.njydsz.common.jdbc.support;
 
 import java.util.Collections;
 import java.util.List;

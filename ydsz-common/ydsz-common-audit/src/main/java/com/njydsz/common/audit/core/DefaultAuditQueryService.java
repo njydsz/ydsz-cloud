@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.audit.core;
+package com.njydsz.common.audit.core;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

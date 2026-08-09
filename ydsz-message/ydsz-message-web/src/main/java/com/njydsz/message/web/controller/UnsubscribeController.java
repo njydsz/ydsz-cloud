@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.web.controller.config;
+package com.njydsz.message.web.controller.config;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;

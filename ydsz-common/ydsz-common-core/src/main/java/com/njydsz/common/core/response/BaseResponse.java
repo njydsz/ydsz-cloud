@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.response;
+package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -429,6 +429,23 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public boolean isFailed() {
         return !isSuccess();
+    }
+
+    /**
+     * 获取链路追踪 ID（懒加载）。
+     *
+     * <p>首次调用时从 {@link RequestContext} / MDC 解析并缓存结果，
+     * 后续调用直接返回缓存值，避免每次读取都访问 MDC。</p>
+     *
+     * @return 当前 traceId；均不存在时返回 null
+     */
+    public String getTraceId() {
+        String tid = traceId;
+        if (tid == null) {
+            tid = resolveTraceId();
+            traceId = tid;
+        }
+        return tid;
     }
 
     // ======================== 扩展字段操作 ========================

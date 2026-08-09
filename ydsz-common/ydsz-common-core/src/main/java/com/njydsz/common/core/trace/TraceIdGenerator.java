@@ -175,8 +175,8 @@ public final class TraceIdGenerator {
     /**
      * 可排序 TraceId 的线程本地状态：跟踪上次使用的时间戳和同毫秒内的序号。
      *
-     * <p>无需原子操作/锁：每个线程独立维护自己的时间戳和序号，自然线程安全。
-     * 同毫秒内单线程严格递增，不同线程间序号独立但整体时间趋势有序。</p>
+     * <p>无需原子操作/锁：每个线程独立维护自己的时间戳和序号（ThreadLocal 语义），
+     * 自然线程安全。同毫秒内单线程严格递增，不同线程间序号独立但整体时间趋势有序。</p>
      */
     private static final class SortableState {
         private long lastMillis;
@@ -190,7 +190,7 @@ public final class TraceIdGenerator {
          * @param nowMillis 当前毫秒时间戳
          * @return 当前使用的序号
          */
-        synchronized long nextSeq(long nowMillis) {
+        long nextSeq(long nowMillis) {
             if (nowMillis != lastMillis) {
                 lastMillis = nowMillis;
                 seq = 0;

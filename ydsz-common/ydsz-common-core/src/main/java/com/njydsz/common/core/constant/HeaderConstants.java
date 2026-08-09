@@ -1,9 +1,9 @@
 package com.njydsz.common.core.constant;
 
 /**
- * 全局 HTTP 请求头常量定义。
+ * 公共模块 HTTP 请求头常量定义（核心层保留通用协议常量）。
  *
- * <p>仅定义项目自定义的请求头名称，标准 HTTP 头（如 {@code Content-Type}、{@code Authorization}）
+ * <p>仅定义项目通用的请求头名称（链路追踪、网络信息），标准 HTTP 头（如 {@code Content-Type}、{@code Authorization}）
  * 直接在代码中使用字符串字面量即可，无需在此定义常量。
  *
  * <p>约定：
@@ -13,13 +13,15 @@ package com.njydsz.common.core.constant;
  *   <li>表级列规则使用分号分隔不同表（如 {@code table:col1,col2;table2:col3}）</li>
  * </ul>
  *
- * <p>与各模块对应关系：
+ * <p><b>v1.11 组织调整：</b>业务域请求头已下沉到各自模块中维护：
  * <ul>
- *   <li>ydsz-common-web：解析请求头，构建 ydszAuthInfo</li>
- *   <li>ydsz-common-auth：{@code @RbacDataScope} 切面写入 extra headers</li>
- *   <li>ydsz-common-feign：透传请求头到下游服务</li>
- *   <li>ydsz-common-jdbc：SQL 拦截器读取并改写 SQL</li>
+ *   <li><b>认证/身份头</b>：迁移至 {@code ydsz-common-auth} — {@code AuthHeaderConstants}</li>
+ *   <li><b>数据权限头</b>：迁移至 {@code ydsz-common-tenant/jdbc} — {@code DataPermissionHeaderConstants}</li>
+ *   <li><b>网关内部签名头</b>：迁移至 {@code ydsz-gateway} — {@code InternalSignatureHeaderConstants}</li>
  * </ul>
+ *
+ * <p>本模块保留以下<b>协议级/通用</b>常量：链踪（TRACE_ID/W3C_TRACEPARENT）、网络（X-Forwarded-For/X-Request-Id）、幂等键。
+ * 业务域常量仅作 {@code @Deprecated} 桥接，@since 标记标注迁移版本。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -31,12 +33,16 @@ public final class HeaderConstants {
     }
 
     // ============================== 认证 / 身份 ==============================
+    // v1.11 迁移至 ydsz-common-auth AuthHeaderConstants；此处保留 @Deprecated 桥接
 
     /**
      * 登录访问令牌。
      *
      * <p>用户登录后颁发的 AccessToken，用于身份认证与用户信息加载。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_ACCESS_TOKEN}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_ACCESS_TOKEN = "X-Access-Token";
 
     /**
@@ -47,21 +53,29 @@ public final class HeaderConstants {
      * 仅在需要从原生 HTTP 请求直接读取时使用此常量。
      *
      * @since 1.2.0
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_USER_ID}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_USER_ID = "X-User-Id";
 
     /**
      * 用户系统语言。
      *
      * <p>格式示例：{@code zh-CN}、{@code en-US}。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_USER_LANGUAGE}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_USER_LANGUAGE = "X-User-Language";
 
     /**
      * 用户设备唯一标识。
      *
      * <p>用于设备追踪与多端识别。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_DISTINCT_ID}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_DISTINCT_ID = "X-Distinct-Id";
 
     /**

@@ -232,11 +232,13 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取实际页码。
+     * 获取实际页码（委托 {@link PageConstants#normalizePageNum} 统一归一化）。
+     *
+     * <p>归一化规则：null 或小于 1 → 返回 1（{@link PageConstants#DEFAULT_PAGE_NUM}）。</p>
      */
     @JsonIgnore
     public int getEffectivePageNum() {
-        return Math.max(this.pageNum != null ? this.pageNum : 1, 1);
+        return PageConstants.normalizePageNum(this.pageNum);
     }
 
     /**

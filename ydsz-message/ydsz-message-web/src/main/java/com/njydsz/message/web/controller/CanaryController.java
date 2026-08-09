@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.web.controller.canary;
+package com.njydsz.message.web.controller.canary;
 
 import java.util.List;
 

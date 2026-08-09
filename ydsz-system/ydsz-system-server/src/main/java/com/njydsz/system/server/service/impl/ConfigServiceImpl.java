@@ -1,4 +1,4 @@
-﻿package com.njydsz.system.server.service.impl;
+package com.njydsz.system.server.service.impl;
 
 import java.time.Duration;
 import java.util.HashMap;
