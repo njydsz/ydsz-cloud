@@ -151,6 +151,9 @@ public class DigestUtils {
                 digest.update(buffer, 0, bytesRead);
             }
 
+            // 与 sha256Hex(InputStream) 保持一致：使用后立即清零缓冲区，避免同线程后续
+            // 复用 ThreadLocal 缓冲区时残留上一文件尾部数据（即使仅内存残留也应消除）
+            Arrays.fill(buffer, (byte) 0);
             return digest.digest();
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("Algorithm not available: " + algorithm, e);

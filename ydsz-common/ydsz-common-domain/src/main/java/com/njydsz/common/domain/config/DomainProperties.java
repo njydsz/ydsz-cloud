@@ -17,18 +17,16 @@ import lombok.Data;
  *       max-search-key-length: 200              # 搜索关键字最长长度（1~500，默认 200）
  *       cursor-warning-threshold: 10000         # 触发游标警告的 offset 阈值（默认 10000）
  *       cursor-reject-threshold: 50000          # 强制拒绝的 offset 阈值（默认 50000）
- *     tree:
- *       max-depth: 10                           # 树构建最大深度限制（1~100，默认 10）
- *     idempotent:
- *       default-expire-seconds: 86400           # 幂等键默认过期（秒，默认 86400=24h）
  * }</pre>
  *
  * <p><b>v1.8.0</b>：移除失效的 PageQueryFactory 运行时注入，阈值由消费方通过 {@link DomainProperties} 直接读取。
+ * <p><b>v1.8.0</b>：移除从不被消费的 tree / idempotent 配置分组（TreeDepthExceededException、
+ * IdempotentOperation 等对应能力未落地，相关幽灵引用一并清理）。
  * <p><b>v1.4.0</b>：SpEL 评估器缓存配置（spel.cache-*）随 DAG 引擎迁移至 ydsz-cronjob 模块。
  *
  * @author ydsz-team
  * @since 1.3.0
- * @since 1.6.0 扩展为嵌套分组（page/tree/idempotent），对齐 Spring Boot 配置命名风格
+ * @since 1.6.0 扩展为嵌套分组（page），对齐 Spring Boot 配置命名风格
  * @since 1.7.0 移除 enabled 虚假开关，改为实例级注入
  */
 @Data

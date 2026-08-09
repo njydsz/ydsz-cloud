@@ -343,9 +343,11 @@ public class MapUtils {
      * Setter 方法缓存，按 Class 维度索引，避免重复反射扫描。
      *
      * <p>缓存结构：Class → (字段名 → Method)。
+     * 使用 {@link Class} 对象本身作为 key，避免不同 ClassLoader 下同名类串缓存；
      * 使用 ConcurrentHashMap 保证并发安全，computeIfAbsent 保证单线程初始化。
+     * （Spring Boot 应用无类热卸载场景，以 Class 为 key 不会造成类泄露。）
      */
-    private static final ConcurrentHashMap<String, Map<String, Method>> SETTER_CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<?>, Map<String, Method>> SETTER_CACHE = new ConcurrentHashMap<>();
 
     /**
      * {@code java.time.*} 包类名前缀集合，用于 toBean 时区分日期类型。
@@ -446,8 +448,7 @@ public class MapUtils {
      * @return 字段名 → setter Method 映射（字段名采用原始 setter 名去除 set + 首字母小写）
      */
     private static Map<String, Method> getCachedSetters(Class<?> clazz) {
-        String key = clazz.getName();
-        return SETTER_CACHE.computeIfAbsent(key, k -> scanSetters(clazz));
+        return SETTER_CACHE.computeIfAbsent(clazz, k -> scanSetters(clazz));
     }
 
     /**

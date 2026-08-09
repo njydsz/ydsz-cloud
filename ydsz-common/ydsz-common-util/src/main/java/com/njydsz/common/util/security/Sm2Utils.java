@@ -93,6 +93,7 @@ public final class Sm2Utils {
      */
     private static final ThreadLocal<Cipher> ENCRYPT_CIPHER = ThreadLocal.withInitial(() -> {
         try {
+            BcProvider.ensure();
             return Cipher.getInstance("SM2", BouncyCastleProvider.PROVIDER_NAME);
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(
@@ -105,6 +106,7 @@ public final class Sm2Utils {
      */
     private static final ThreadLocal<Signature> SIGNATURE = ThreadLocal.withInitial(() -> {
         try {
+            BcProvider.ensure();
             return Signature.getInstance("SM3withSM2", BouncyCastleProvider.PROVIDER_NAME);
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(

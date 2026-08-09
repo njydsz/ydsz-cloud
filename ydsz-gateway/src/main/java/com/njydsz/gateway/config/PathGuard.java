@@ -82,6 +82,12 @@ public final class PathGuard {
             return rawPath;
         }
 
+        // P2-5 快速失败：路径不含 '.' 和 '%' 时不可能存在穿越/编码攻击，直接放行
+        // 覆盖 >99% 的正常请求，避免不必要的 URL 解码 + 多模式匹配开销
+        if (rawPath.indexOf('.') < 0 && rawPath.indexOf('%') < 0 && rawPath.indexOf('\\') < 0) {
+            return rawPath;
+        }
+
         // P2-12: 递归 URL 解码（最多 3 次），防范 Double-Encoding 攻击
         String decodedPath = recursiveDecode(rawPath);
 

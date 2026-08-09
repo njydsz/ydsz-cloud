@@ -89,12 +89,16 @@ public class SecurityHeadersProperties {
         private String policy = "same-origin";
     }
 
-    /** COEP 配置 */
+    /** COEP 配置
+     *
+     * <p>P2-6: 默认策略改为 unsafe-none，避免阻止跨域静态资源（CDN 图片、字体、第三方脚本）导致页面白屏。
+     * 金融/等高安全场景可在 Nacos 覆盖为 require-corp。
+     */
     @Data
     public static class CoepConfig {
         private boolean enabled = true;
-        /** COEP 策略 */
-        private String policy = "require-corp";
+        /** COEP 策略：unsafe-none（默认，兼容性好）| require-corp（严格，需配合 CORP 使用） */
+        private String policy = "unsafe-none";
     }
 
     /** CORP 配置 */

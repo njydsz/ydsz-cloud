@@ -91,6 +91,7 @@ public final class Sm4Utils {
     /** GCM Cipher ThreadLocal 池化 */
     private static final ThreadLocal<Cipher> GCM_CIPHER = ThreadLocal.withInitial(() -> {
         try {
+            BcProvider.ensure();
             return Cipher.getInstance(TRANSFORM_GCM, BouncyCastleProvider.PROVIDER_NAME);
         } catch (Exception e) {
             throw new IllegalStateException("SM4/GCM not available, ensure bcprov-jdk18on is on classpath", e);
@@ -100,6 +101,7 @@ public final class Sm4Utils {
     /** CBC Cipher ThreadLocal 池化 */
     private static final ThreadLocal<Cipher> CBC_CIPHER = ThreadLocal.withInitial(() -> {
         try {
+            BcProvider.ensure();
             return Cipher.getInstance(TRANSFORM_CBC, BouncyCastleProvider.PROVIDER_NAME);
         } catch (Exception e) {
             throw new IllegalStateException("SM4/CBC not available, ensure bcprov-jdk18on is on classpath", e);

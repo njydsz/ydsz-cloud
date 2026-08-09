@@ -54,6 +54,7 @@ public final class Sm3Utils {
     /** BouncyCastle 摘要实例 ThreadLocal 池化（MessageDigest 本身线程安全但每次 getInstance 有 Provider 查找开销） */
     private static final ThreadLocal<MessageDigest> DIGEST_CACHE = ThreadLocal.withInitial(() -> {
         try {
+            BcProvider.ensure();
             return MessageDigest.getInstance(SM3_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw new IllegalStateException(

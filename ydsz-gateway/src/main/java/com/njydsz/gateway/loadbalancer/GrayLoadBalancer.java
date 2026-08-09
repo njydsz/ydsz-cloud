@@ -1,8 +1,10 @@
 package com.njydsz.gateway.loadbalancer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -84,6 +86,15 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
 
     /** 轮询位置计数器(AtomicInteger 保证线程安全) */
     private final AtomicInteger position;
+
+    /**
+     * P2-7: 按服务 ID 缓存预计算的 Alias Method 表。
+     *
+     * <p>当候选实例列表不变时（同一 filtered 大小 + 同一实例集合），
+     * 复用预计算的 Alias 表，将加权随机选择从 O(n) 降至 O(1)。
+     * 实例列表变化时（Nacos 推送刷新）自动失效，下一次请求重新构建。
+     */
+    private final ConcurrentHashMap<String, AliasTable> aliasTableCache = new ConcurrentHashMap<>();
 
     /**
      * 构造灰度负载均衡器
@@ -249,40 +260,165 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
     /**
      * P3-5: 加权轮询选择
      *
-     * <p>读取每个实例的 Nacos metadata {@code weight} 字段（默认 1），
-     * 按权重比例随机选择实例。权重越高的实例被选中概率越大。
-     * <p>当所有实例权重相同时退化为随机轮询。
+     * <p>P2-7: 使用 Alias Method 优化为 O(1) 选择（实例列表不变时复用预计算表）。
+     * 首次构建表为 O(n)，后续每次选择为 O(1)。
      *
      * @param instances 候选实例列表
      * @return 选中的实例
      */
     private ServiceInstance selectByWeight(List<ServiceInstance> instances) {
-        // 计算总权重
-        int totalWeight = 0;
-        int[] weights = new int[instances.size()];
-        for (int i = 0; i < instances.size(); i++) {
-            int w = getInstanceWeight(instances.get(i));
-            weights[i] = w;
-            totalWeight += w;
+        if (instances.size() == 1) {
+            return instances.get(0);
         }
 
-        // 总权重为 0 或所有权重相同，使用随机选择
-        if (totalWeight <= 0) {
+        // 所有实例等权重时，使用轮询避免构建 Alias 表
+        if (allSameWeight(instances)) {
             int idx = Math.abs(position.incrementAndGet()) % instances.size();
             return instances.get(idx);
         }
 
-        // 加权随机选择
-        int random = RandomUtils.randomInt(totalWeight);
-        int cumulative = 0;
-        for (int i = 0; i < instances.size(); i++) {
-            cumulative += weights[i];
-            if (random < cumulative) {
-                return instances.get(i);
+        // P2-7: 构建或复用 Alias 表，O(1) 选择
+        AliasTable table = getOrCreateAliasTable(instances);
+        int col = RandomUtils.randomInt(table.prob.length);
+        // 以 prob[col] 概率选 col，否则选 alias[col]
+        int idx = (RandomUtils.randomInt(1000) < table.prob[col]) ? col : table.alias[col];
+        return instances.get(idx);
+    }
+
+    /**
+     * P2-7: 检查所有实例是否权重相同（等权重场景无需构建 Alias 表）
+     */
+    private boolean allSameWeight(List<ServiceInstance> instances) {
+        if (instances.size() <= 1) return true;
+        int first = getInstanceWeight(instances.get(0));
+        for (int i = 1; i < instances.size(); i++) {
+            if (getInstanceWeight(instances.get(i)) != first) return false;
+        }
+        return true;
+    }
+
+    /**
+     * P2-7: 获取或创建 Alias 表（基于实例列表大小和 ID 哈希作为缓存键）
+     */
+    private AliasTable getOrCreateAliasTable(List<ServiceInstance> instances) {
+        String cacheKey = buildCacheKey(instances);
+        AliasTable table = aliasTableCache.get(cacheKey);
+        if (table != null) {
+            return table;
+        }
+        table = buildAliasTable(instances);
+        aliasTableCache.put(cacheKey, table);
+        // 仅保留最近 10 个服务的缓存表（防止实例 ID/Nacos key 变化导致泄漏）
+        if (aliasTableCache.size() > 10) {
+            aliasTableCache.keySet().iterator().remove();
+        }
+        return table;
+    }
+
+    /**
+     * P2-7: 基于实例 ID 和列表大小构建缓存键
+     */
+    private String buildCacheKey(List<ServiceInstance> instances) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(instances.size()).append(':');
+        for (ServiceInstance inst : instances) {
+            sb.append(inst.getInstanceId().hashCode()).append(',');
+        }
+        return sb.toString();
+    }
+
+    /**
+     * P2-7: 使用 Vose's Alias Method 构建 O(1) 加权选择表。
+     *
+     * <p>算法流程：
+     * <ol>
+     *   <li>归一化权重到 [0, n) 范围</li>
+     *   <li>用小堆/大堆分别收集 underfull 和 overfull 的列</li>
+     *   <li>配对填充 alias 表，直到所有列都恰好"满"</li>
+     * </ol>
+     *
+     * @param instances 候选实例列表
+     * @return 预计算的 Alias 表
+     */
+    private AliasTable buildAliasTable(List<ServiceInstance> instances) {
+        int n = instances.size();
+        int[] weights = new int[n];
+        for (int i = 0; i < n; i++) {
+            weights[i] = getInstanceWeight(instances.get(i));
+        }
+
+        int totalWeight = 0;
+        for (int w : weights) {
+            totalWeight += w;
+        }
+        if (totalWeight <= 0) {
+            // 所有权重为 0，等概率随机
+            return new AliasTable(new int[n], new int[n]);
+        }
+
+        // prob[i] = 第 i 列选中自己的概率（单位：千分比 0-1000）
+        int[] prob = new int[n];
+        int[] alias = new int[n];
+        Arrays.fill(alias, -1);
+
+        // 归一化：prob[i] = weights[i] * n / totalWeight * 1000
+        double[] scaled = new double[n];
+        for (int i = 0; i < n; i++) {
+            scaled[i] = (double) weights[i] * n / totalWeight;
+        }
+
+        // 使用小堆/大堆配对
+        int[] small = new int[n];
+        int[] large = new int[n];
+        int ns = 0, nl = 0;
+
+        for (int i = 0; i < n; i++) {
+            if (scaled[i] < 1.0) {
+                small[ns++] = i;
+            } else {
+                large[nl++] = i;
             }
         }
-        // 兜底：返回最后一个
-        return instances.get(instances.size() - 1);
+
+        while (ns > 0 && nl > 0) {
+            int s = small[--ns];
+            int l = large[--nl];
+            prob[s] = (int) (scaled[s] * 1000);
+            alias[s] = l;
+            scaled[l] = scaled[l] + scaled[s] - 1.0;
+            if (scaled[l] < 1.0) {
+                small[ns++] = l;
+            } else {
+                large[nl++] = l;
+            }
+        }
+
+        // 剩余列（精度误差处理）
+        while (nl > 0) {
+            prob[large[--nl]] = 1000;
+        }
+        while (ns > 0) {
+            prob[small[--ns]] = 1000;
+        }
+
+        return new AliasTable(prob, alias);
+    }
+
+    /**
+     * P2-7: Alias Method 预计算表（prob 和 alias 数组）。
+     *
+     * <p>prob[i] 表示以千分比表示的选中自己的概率（0-1000）。
+     * alias[i] 表示当不选自己时，回退到哪个列。
+     * 选择算法：随机选列 i，以 prob[i]/1000 概率返回 i，否则返回 alias[i]。
+     */
+    private static class AliasTable {
+        final int[] prob;
+        final int[] alias;
+
+        AliasTable(int[] prob, int[] alias) {
+            this.prob = prob;
+            this.alias = alias;
+        }
     }
 
     /**

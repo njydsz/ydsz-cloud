@@ -94,7 +94,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     private String extractTraceId(HttpServletRequest request) {
         String traceId = RequestContext.getTraceId();
         if (traceId == null || traceId.isBlank()) {
-            traceId = MDC.get("traceId");
+            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         }
         if (traceId == null && request != null) {
             traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);

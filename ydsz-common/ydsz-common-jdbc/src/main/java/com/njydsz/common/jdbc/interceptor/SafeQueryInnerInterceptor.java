@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.domain.config.DomainProperties;
 import com.njydsz.common.domain.query.DeepPaginationException;
 import com.njydsz.common.domain.query.DeepPaginationRisk;
+import com.njydsz.common.exception.custom.SysException;
 
 import lombok.extern.slf4j.Slf4j;
 

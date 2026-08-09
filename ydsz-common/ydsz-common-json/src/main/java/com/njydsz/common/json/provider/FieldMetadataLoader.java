@@ -21,6 +21,8 @@ import com.njydsz.common.json.annotation.JsonValue;
 import com.njydsz.common.json.annotation.JsonVisibility;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 字段元数据加载器和注解处理器
@@ -40,6 +42,8 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  */
 @SuppressWarnings("deprecation")
 public final class FieldMetadataLoader {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FieldMetadataLoader.class);
 
     /** 当前使用的命名策略 */
     static final ThreadLocal<PropertyNamingStrategy> NAMING_STRATEGY =
@@ -159,7 +163,7 @@ public final class FieldMetadataLoader {
             try {
                 classNaming = jsonNaming.value().getDeclaredConstructor().newInstance();
             } catch (Exception e) {
-                // 命名策略实例化失败，回退到当前策略
+                LOGGER.warn("FieldMetadataLoader @JsonNaming 实例化失败，回退默认命名策略: {}", e.toString());
             }
         }
 
@@ -235,7 +239,9 @@ public final class FieldMetadataLoader {
                 field.setAccessible(true);
                 fieldList.add(new FieldMeta(field, jsonName, ordinal));
             } catch (Exception e) {
-                // 反射操作失败，忽略此路径，回退到默认行为
+                // 反射操作失败：告警而非静默丢弃，避免字段悄悄丢失（P1-⑦）
+                LOGGER.warn("FieldMetadataLoader 跳过字段 {}.{}: {}",
+                    clazz.getName(), field.getName(), e.toString());
             }
         }
 
@@ -323,7 +329,8 @@ public final class FieldMetadataLoader {
             FieldMeta replaced = new FieldMeta(original.field, newJsonName, original.ordinal);
             return replaced;
         } catch (Exception e) {
-            // 创建失败，保持原始 FieldMeta
+            LOGGER.warn("FieldMetadataLoader 重建 FieldMeta 失败，保留原实例 {}: {}",
+                original.field.getName(), e.toString());
             return null;
         }
     }

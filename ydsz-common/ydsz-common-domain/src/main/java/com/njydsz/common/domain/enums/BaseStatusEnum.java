@@ -13,8 +13,7 @@ import java.util.Set;
  * 状态枚举统一抽象。
  *
  * <p>所有业务状态枚举应实现此接口，复用 {@link #canTransitTo(Enum)} 状态流转校验，
- * 避免各模块重复定义状态机逻辑。配合 {@code StatusTransitionAspect} 或业务层
- * 显式调用 {@code requireTransitTo} 实现状态变迁前置校验。
+ * 避免各模块重复定义状态机逻辑。业务层可显式调用 {@code requireTransitTo} 实现状态变迁前置校验。
  *
  * <p>实现约定：
  * <ul>
