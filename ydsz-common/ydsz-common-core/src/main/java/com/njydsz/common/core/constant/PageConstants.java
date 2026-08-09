@@ -84,6 +84,18 @@ public final class PageConstants {
     }
 
     /**
+     * 重置运行时配置（仅用于单元测试）。
+     *
+     * <p><b>警告：</b>此方法仅应在测试环境的 {@code @BeforeEach} 或 {@code @AfterEach} 中调用，
+     * 生产代码严禁调用。重启后生效的"一次性设置"语义是设计约束，非缺陷。</p>
+     *
+     * @since 1.2.0
+     */
+    public static void reset() {
+        PROPERTIES.set(null);
+    }
+
+    /**
      * 获取运行时默认每页记录数。
      *
      * @return 运行时配置的默认每页记录数；未初始化时回退到 {@link #DEFAULT_PAGE_SIZE}

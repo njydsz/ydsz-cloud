@@ -2,26 +2,42 @@ package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 分页响应信封（{@link BaseResponse} 的子类型）。
  *
  * <p>将分页元信息（total / pageNum / pageSize）收口到专用的分页响应类型中，
- * 使通用 {@link BaseResponse} 不再承担分页职责，同时提供类型明确的返回对象，
+ * 使 {@link BaseResponse} 不再承担分页职责，同时提供类型明确的返回对象，
  * 便于 Controller 声明 {@code PageResult<UserVO>} 或 {@code BaseResponse<PageResult<UserVO>>}。</p>
  *
- * <p>本类与 {@code com.njydsz.common.domain.query.PageResult}（领域层分页结果载体）职责不同：
- * 后者是领域 / 数据层分页对象，本类是 API 响应信封。两者可组合使用，例如
+ * <p>领域层分页结果载体请使用 {@code com.njydsz.common.domain.query.PageResult}，
+ * 本类是 API 响应信封。两者可组合使用，例如：
  * {@code PageResult.success(total, pageNum, pageSize, domainPage.getRecords())}。</p>
  *
- * <p>{@link BaseResponse#successPage(Long, Long, Long, Object)} 已标记 {@code @Deprecated}，
- * 新代码请直接返回 {@code PageResult<T>} 以获更强的类型表达与 {@link #getPages()} 等便捷方法。</p>
+ * <p><b>迁移提示：</b>{@link BaseResponse} 上的分页字段与 {@code successPage()/emptyPage()}
+ * 方法已于 v1.9.3 移除。新代码请直接返回 {@code PageResult<T>}。</p>
  *
  * @param <T> 数据元素的类型
  * @author ydsz-team
  * @since 1.9.1
  */
+@EqualsAndHashCode(callSuper = true)
 public class PageResult<T> extends BaseResponse<T> {
+
+    /** 总记录数。 */
+    @Getter @Setter
+    private Long total;
+
+    /** 当前页码（从 1 开始）。 */
+    @Getter @Setter
+    private Long pageNum;
+
+    /** 每页记录数。 */
+    @Getter @Setter
+    private Long pageSize;
 
     /** 由工厂方法构造。 */
     public PageResult() {
