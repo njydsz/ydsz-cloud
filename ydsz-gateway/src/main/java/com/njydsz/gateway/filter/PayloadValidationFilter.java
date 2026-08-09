@@ -4,6 +4,7 @@ package com.njydsz.gateway.filter;
 import com.njydsz.common.json.YdszJson;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -52,6 +53,7 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "ydsz.gateway.filter", name = "payload-validation", havingValue = "true", matchIfMissing = true)
 public class PayloadValidationFilter implements GlobalFilter, Ordered {
 
     @Value("${ydsz.gateway.payload-validation.enabled:true}")

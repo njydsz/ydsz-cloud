@@ -11,7 +11,6 @@ import jakarta.validation.constraints.NotNull;
 
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.domain.config.DomainProperties;
 
 import lombok.Builder;
 import lombok.Data;
@@ -36,20 +35,24 @@ import lombok.experimental.SuperBuilder;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 通过 Factory 创建（推荐）
- * @Autowired
- * private PageQueryFactory pageQueryFactory;
- * PageQuery query = pageQueryFactory.create(1, 10);
+ * // 直接构造（推荐，交由 MyBatis 参数绑定 / 子类继承）
+ * PageQuery query = PageQuery.builder()
+ *         .pageNum(1).pageSize(10)
+ *         .build();
  *
- * // 添加排序（正则校验由拦截器统一处理）
+ * // 添加排序（安全校验由 SafeQueryInnerInterceptor 统一处理）
  * query.addOrder("created_at", true);
  * query.addDescOrder("updated_at");
+ *
+ * // 深度分页风险评估（阈值来自 DomainProperties，默认 10000 / 50000）
+ * DeepPaginationRisk risk = query.assessPaginationRisk();
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
  * @since 1.7.0 职责精简：移除 SQL 安全处理逻辑，下沉至拦截器层
- * @see PageQueryFactory
+ * @since 1.8.0 移除失效的 PageQueryFactory 运行时注入，深度分页评估改为 assessPaginationRisk()
+ * @see DeepPaginationRisk
  */
 @Data
 @SuperBuilder
@@ -65,44 +68,6 @@ public class PageQuery extends BaseQuery {
      * <p>v1.7.0 变更：移除 LIKE 转义逻辑，转义由业务层或 MyBatis ResultMapper 处理。
      */
     public static final int MAX_SEARCH_KEY_LENGTH = 200;
-
-    /**
-     * 运行时配置引用（实例级，由 PageQueryFactory 注入）。
-     *
-     * @since 1.7.0
-     */
-    @JsonIgnore
-    private DomainProperties runtimeProperties;
-
-    /**
-     * 注入运行时配置（实例级）。
-     *
-     * @param properties 领域配置实例
-     * @since 1.7.0
-     */
-    public void setRuntimeProperties(DomainProperties properties) {
-        this.runtimeProperties = properties;
-    }
-
-    /**
-     * 获取运行时配置。
-     *
-     * @return DomainProperties 配置实例，可能为 null
-     * @since 1.7.0
-     */
-    public DomainProperties getRuntimeProperties() {
-        return runtimeProperties;
-    }
-
-    /**
-     * 获取运行时分页配置（供拦截器使用）。
-     *
-     * @return DomainProperties 配置实例，可能为 null
-     * @since 1.7.0
-     */
-    DomainProperties getProperties() {
-        return runtimeProperties;
-    }
 
     /**
      * 当前页码（从1开始）。
@@ -300,6 +265,40 @@ public class PageQuery extends BaseQuery {
      */
     public boolean hasNext(long total) {
         return (long) getOffset() + getEffectivePageSize() < total;
+    }
+
+    // ======================== 深度分页风险评估 ========================
+
+    /**
+     * 评估当前分页查询的深度分页风险（使用默认阈值 10000 / 50000）。
+     *
+     * <p>基于 {@link #getOffsetLong()} 计算 offset，再委托 {@link DeepPaginationRisk#assess(long)} 判定。
+     * 业务层 / 拦截层可据此发出告警或拒绝执行，防止慢查询拖垮数据库。
+     *
+     * @return 风险等级（SAFE / WARN / REJECT）
+     * @since 1.8.0
+     */
+    public DeepPaginationRisk assessPaginationRisk() {
+        return DeepPaginationRisk.assess(getOffsetLong());
+    }
+
+    /**
+     * 评估当前分页查询的深度分页风险（使用指定阈值）。
+     *
+     * <p>阈值约定：{@code rejectThreshold >= warnThreshold >= 0}。典型调用：
+     * <pre>{@code
+     * DomainProperties.Page page = domainProperties.getPage();
+     * DeepPaginationRisk risk = query.assessPaginationRisk(
+     *         page.getCursorWarningThreshold(), page.getCursorRejectThreshold());
+     * }</pre>
+     *
+     * @param warnThreshold   警告阈值
+     * @param rejectThreshold 拒绝阈值
+     * @return 风险等级（SAFE / WARN / REJECT）
+     * @since 1.8.0
+     */
+    public DeepPaginationRisk assessPaginationRisk(long warnThreshold, long rejectThreshold) {
+        return DeepPaginationRisk.assess(getOffsetLong(), warnThreshold, rejectThreshold);
     }
 
     /**

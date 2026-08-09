@@ -3,6 +3,7 @@ package com.njydsz.common.util.security;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * AES 加密工具类（轻量静态工具）
@@ -50,8 +51,27 @@ public final class AesUtils {
     /** 共享的线程安全 SecureRandom 实例 */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+    /**
+     * 按 Hex 密钥缓存 {@link AesGcmCrypto} 实例。
+     *
+     * <p>AesGcmCrypto 内部持有不可变的 {@code SecretKeySpec}，按密钥复用可避免
+     * 每次调用都新建实例与重复解析 Hex 密钥，同时复用其 ThreadLocal Cipher 池。
+     * 业务使用的密钥数量极少，ConcurrentHashMap 无界在此场景可接受。
+     */
+    private static final ConcurrentHashMap<String, AesGcmCrypto> CRYPTO_CACHE = new ConcurrentHashMap<>();
+
     private AesUtils() {
         throw new UnsupportedOperationException("AesUtils is a utility class");
+    }
+
+    /**
+     * 获取（或创建并缓存）指定 Hex 密钥对应的加密器。
+     *
+     * @param hexAesKey Hex 格式 AES 密钥
+     * @return 复用型的 AesGcmCrypto 实例
+     */
+    private static AesGcmCrypto crypto(String hexAesKey) {
+        return CRYPTO_CACHE.computeIfAbsent(hexAesKey, k -> new AesGcmCrypto(hexToBytes(k)));
     }
 
     // ==================== 加解密 ====================
@@ -69,7 +89,7 @@ public final class AesUtils {
      * @throws IllegalStateException    加密失败
      */
     public static String encrypt(String content, String hexAesKey) {
-        return new AesGcmCrypto(hexToBytes(hexAesKey)).encrypt(content);
+        return crypto(hexAesKey).encrypt(content);
     }
 
     /**
@@ -85,7 +105,7 @@ public final class AesUtils {
      * @throws IllegalStateException    解密失败或密文被篡改
      */
     public static String decrypt(String encryptedBase64, String hexAesKey) {
-        return new AesGcmCrypto(hexToBytes(hexAesKey)).decrypt(encryptedBase64);
+        return crypto(hexAesKey).decrypt(encryptedBase64);
     }
 
     // ==================== 密钥生成 ====================

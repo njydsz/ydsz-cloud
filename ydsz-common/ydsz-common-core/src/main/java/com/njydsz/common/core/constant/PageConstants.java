@@ -2,6 +2,9 @@ package com.njydsz.common.core.constant;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.core.config.CoreProperties;
 
 /**
@@ -32,6 +35,8 @@ public final class PageConstants {
     private PageConstants() {
         throw new UnsupportedOperationException("Utility class");
     }
+
+    private static final Logger log = LoggerFactory.getLogger(PageConstants.class);
 
     // ======================== 编译期常量（仅用于注解等场景） ========================
 
@@ -230,7 +235,13 @@ public final class PageConstants {
     public static long calcOffset(Integer pageNum, Integer pageSize) {
         int normalizedPageNum = normalizePageNum(pageNum);
         int normalizedPageSize = normalizePageSize(pageSize);
-        return (long) (normalizedPageNum - 1) * normalizedPageSize;
+        long offset = (long) (normalizedPageNum - 1) * normalizedPageSize;
+        // 深度分页预警：触发时打 WARN，提示改用游标分页，避免 DB 全表扫描性能骤降
+        if (!isOffsetSafe(offset)) {
+            log.warn("Deep pagination detected: offset={} exceeds MAX_SAFE_OFFSET={}, performance may degrade; "
+                    + "consider cursor-based (WHERE id > lastId) pagination instead.", offset, MAX_SAFE_OFFSET);
+        }
+        return offset;
     }
 
     /**

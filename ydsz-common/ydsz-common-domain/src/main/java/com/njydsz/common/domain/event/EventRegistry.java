@@ -51,8 +51,6 @@ import java.util.List;
  *
  * @author ydsz-team
  * @since 1.8.0
- * @see DomainEvent
- * @see DomainEventAspect
  * @see com.njydsz.common.domain.entity.BaseEntity BaseEntity 的默认实现
  */
 public interface EventRegistry {

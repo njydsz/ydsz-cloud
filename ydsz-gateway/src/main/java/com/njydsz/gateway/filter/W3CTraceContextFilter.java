@@ -1,6 +1,7 @@
 package com.njydsz.gateway.filter;
 
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -40,6 +41,7 @@ import reactor.core.publisher.Mono;
  * @author ydsz-team
  */
 @Component
+@ConditionalOnProperty(prefix = "ydsz.gateway.filter", name = "w3c-trace", havingValue = "true", matchIfMissing = true)
 public class W3CTraceContextFilter implements GlobalFilter, Ordered {
 
     /** W3C Trace Context 版本 */

@@ -86,24 +86,48 @@ public final class Sm2Utils {
     private static final String ENCRYPT_ALGORITHM = "SM2";
 
     /**
-     * 加密 Cipher ThreadLocal 池化（委托 {@link JcaCipherPool} 统一管理）。
+     * SM2 加密 Cipher 的 ThreadLocal 池。
      *
-     * <p>统一池化管理后，消除与 AesGcmCrypto、ChaCha20Utils 等类的重复代码。
+     * <p>Cipher 实例非线程安全，按线程独享并复用，避免每次调用都执行
+     * {@code Cipher.getInstance("SM2", "BC")} 的 Provider 查找开销。</p>
+     */
+    private static final ThreadLocal<Cipher> ENCRYPT_CIPHER = ThreadLocal.withInitial(() -> {
+        try {
+            return Cipher.getInstance("SM2", BouncyCastleProvider.PROVIDER_NAME);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(
+                    "Failed to initialize SM2 Cipher (ensure bcprov-jdk18on is on classpath)", e);
+        }
+    });
+
+    /**
+     * SM3withSM2 签名 Signature 的 ThreadLocal 池。
+     */
+    private static final ThreadLocal<Signature> SIGNATURE = ThreadLocal.withInitial(() -> {
+        try {
+            return Signature.getInstance("SM3withSM2", BouncyCastleProvider.PROVIDER_NAME);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(
+                    "Failed to initialize SM3withSM2 Signature (ensure bcprov-jdk18on is on classpath)", e);
+        }
+    });
+
+    /**
+     * 获取本线程的 SM2 加密 Cipher 实例。
      *
-     * @since 2.0.0 迁移至 JcaCipherPool
+     * @return 本线程的 SM2 Cipher 实例
      */
     private static Cipher acquireEncryptCipher() {
-        return JcaCipherPool.acquireSm2EncryptCipher();
+        return ENCRYPT_CIPHER.get();
     }
 
     /**
-     * 签名 Signature ThreadLocal 池化（委托 {@link JcaCipherPool} 统一管理）。
+     * 获取本线程的 SM3withSM2 签名 Signature 实例。
      *
      * @return 本线程的 SM3withSM2 Signature 实例
-     * @since 2.0.0 迁移至 JcaCipherPool
      */
     private static Signature acquireSignature() {
-        return JcaCipherPool.acquireSm2Signature();
+        return SIGNATURE.get();
     }
 
     /** 共享的 SecureRandom */

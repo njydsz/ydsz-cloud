@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import com.njydsz.common.json.YdszJson;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -67,6 +68,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @lombok.RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "ydsz.gateway.filter", name = "auth", havingValue = "true", matchIfMissing = true)
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     /**

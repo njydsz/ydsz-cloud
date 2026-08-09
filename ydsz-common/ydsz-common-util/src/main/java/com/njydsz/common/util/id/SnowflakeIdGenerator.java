@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -95,18 +95,36 @@ public class SnowflakeIdGenerator {
     private final AtomicLong state = new AtomicLong(-1L);
 
     /**
-     * 构造 Spring Bean，通过配置属性注入 workerId 和 datacenterId。
+     * 构造 Spring Bean，按以下优先级解析 workerId / datacenterId：
+     * <ol>
+     *   <li>若容器中存在 {@link WorkerIdRegistry} Bean，则由其分配 workerId（注册中心优先，适配 Redis/ZK/ETCD 等）；</li>
+     *   <li>否则若 {@code workerIdSource=CONFIG} 且显式配置了 {@code worker-id}，则使用配置值；</li>
+     *   <li>否则基于容器 hostname / 环境变量（INSTANCE_INDEX、POD_INDEX、YDSZ_SNOWFLAKE_WORKER_ID）/ 本机 IP 自动计算。</li>
+     * </ol>
      *
-     * <p>未配置时基于容器 hostname/IP 自动计算，兼容容器化部署场景。
+     * <p>datacenterId 优先级：显式配置 > 自动计算（注册中心仅负责 workerId）。
      *
-     * @param workerId     工作节点 ID（0-31），null 则自动计算
-     * @param datacenterId 数据中心 ID（0-31），null 则自动计算
+     * @param properties               Snowflake 配置属性
+     * @param workerIdRegistryProvider 可选的 WorkerId 注册中心（未提供时为 null）
      */
-    public SnowflakeIdGenerator(
-            @Value("${ydsz.util.snowflake.worker-id:#{null}}") Long workerId,
-            @Value("${ydsz.util.snowflake.datacenter-id:#{null}}") Long datacenterId) {
-        this.workerId = workerId != null ? workerId : computeWorkerId();
-        this.datacenterId = datacenterId != null ? datacenterId : computeDatacenterId();
+    public SnowflakeIdGenerator(SnowflakeProperties properties,
+                                ObjectProvider<WorkerIdRegistry> workerIdRegistryProvider) {
+        WorkerIdRegistry registry = workerIdRegistryProvider != null
+                ? workerIdRegistryProvider.getIfAvailable() : null;
+        String nodeId = resolveNodeId();
+
+        if (registry != null) {
+            this.workerId = registry.acquire(nodeId);
+        } else if (properties.getWorkerIdSource() == SnowflakeProperties.WorkerIdSource.CONFIG
+                && properties.getWorkerId() != null) {
+            this.workerId = properties.getWorkerId();
+        } else {
+            this.workerId = computeWorkerId();
+        }
+
+        this.datacenterId = properties.getDatacenterId() != null
+                ? properties.getDatacenterId()
+                : computeDatacenterId();
 
         if (this.workerId > MAX_WORKER_ID || this.workerId < 0) {
             throw new IllegalArgumentException(
@@ -116,7 +134,41 @@ public class SnowflakeIdGenerator {
             throw new IllegalArgumentException(
                     String.format("datacenter Id can't be greater than %d or less than 0", MAX_DATACENTER_ID));
         }
-        log.info("SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}", this.workerId, this.datacenterId);
+        log.info("SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}, registry: {}",
+                this.workerId, this.datacenterId, registry != null ? registry.type() : "none");
+    }
+
+    /**
+     * 便捷构造器：使用默认配置（workerIdSource=ENVIRONMENT_VARIABLE，workerId/datacenterId 自动计算），
+     * 不接入注册中心。适用于非 Spring 托管场景（如单元测试、独立工具）。
+     */
+    public SnowflakeIdGenerator() {
+        this(new SnowflakeProperties(), null);
+    }
+
+    /**
+     * 解析节点标识（用于注册中心分配 workerId）。
+     *
+     * <p>优先级：环境变量 HOSTNAME > INSTANCE_INDEX > POD_INDEX > 本机主机名。
+     *
+     * @return 节点标识字符串
+     */
+    private static String resolveNodeId() {
+        String nodeId = System.getenv("HOSTNAME");
+        if (nodeId == null || nodeId.isEmpty()) {
+            nodeId = System.getenv("INSTANCE_INDEX");
+        }
+        if (nodeId == null || nodeId.isEmpty()) {
+            nodeId = System.getenv("POD_INDEX");
+        }
+        if (nodeId == null || nodeId.isEmpty()) {
+            try {
+                nodeId = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                nodeId = "unknown-node";
+            }
+        }
+        return nodeId;
     }
 
     /**
@@ -157,7 +209,7 @@ public class SnowflakeIdGenerator {
      * 等待下一毫秒。
      */
     private long tilNextMillis(long lastTimestamp) {
-        long timestamp = timeGen();
+        long timestamp = currentTimeRelative();
         long totalWaited = 0L;
         while (timestamp <= lastTimestamp) {
             long offset = lastTimestamp - timestamp;
@@ -174,7 +226,7 @@ public class SnowflakeIdGenerator {
             long parkMillis = Math.max(offset, 1L);
             LockSupport.parkNanos(parkMillis * 1_000_000);
             totalWaited += parkMillis;
-            timestamp = timeGen();
+            timestamp = currentTimeRelative();
         }
         return timestamp;
     }
@@ -184,25 +236,38 @@ public class SnowflakeIdGenerator {
     }
 
     /**
+     * 当前时间相对 {@link #EPOCH} 的毫秒数（41 位时间字段存储的就是相对毫秒）。
+     *
+     * <p>ID 内只存相对毫秒，配合 {@link #EPOCH} 偏移量即可反解出绝对时间。
+     * 这样 41 位时间戳字段寿命从 1970 年起算延长至约 2090 年，
+     * 也保证 {@link #getLastTimestamp()} / {@link #parseTimestamp(long)} 的反解语义正确。
+     */
+    private long currentTimeRelative() {
+        return timeGen() - EPOCH;
+    }
+
+    /**
      * 处理时间戳解析（含时钟回拨容忍）。
+     *
+     * <p>所有时间戳均处于相对 {@link #EPOCH} 的毫秒域内（见 {@link #currentTimeRelative()}）。
      */
     private long resolveTimestamp(long lastTimestamp) {
-        long timestamp = timeGen();
+        long timestamp = currentTimeRelative();
         if (timestamp < lastTimestamp) {
             long offset = lastTimestamp - timestamp;
             if (offset <= CLOCK_BACKWARD_TOLERANCE_MILLIS) {
                 log.warn("Clock moved backwards by {} ms, waiting to recover", offset);
                 long deadlineNano = System.nanoTime() + 100_000_000L;
-                while (System.currentTimeMillis() < lastTimestamp) {
+                while (currentTimeRelative() < lastTimestamp) {
                     if (System.nanoTime() > deadlineNano) {
-                        long remainingOffset = lastTimestamp - timeGen();
+                        long remainingOffset = lastTimestamp - currentTimeRelative();
                         log.error("Clock still moved backwards after waiting 100ms, remaining offset: {} ms",
                                 remainingOffset);
                         throw new ClockBackwardException(remainingOffset, lastTimestamp, timeGen());
                     }
                     LockSupport.parkNanos(500_000L);
                 }
-                timestamp = timeGen();
+                timestamp = currentTimeRelative();
             } else {
                 log.error("Clock moved backwards by {} ms, exceeds tolerance {} ms",
                         offset, CLOCK_BACKWARD_TOLERANCE_MILLIS);

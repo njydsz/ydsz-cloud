@@ -23,7 +23,7 @@ import lombok.Data;
  *       default-expire-seconds: 86400           # 幂等键默认过期（秒，默认 86400=24h）
  * }</pre>
  *
- * <p><b>v1.7.0</b>：移除虚假的 `enabled` 开关，配置通过 {@code PageQueryFactory} 实例级注入。
+ * <p><b>v1.8.0</b>：移除失效的 PageQueryFactory 运行时注入，阈值由消费方通过 {@link DomainProperties} 直接读取。
  * <p><b>v1.4.0</b>：SpEL 评估器缓存配置（spel.cache-*）随 DAG 引擎迁移至 ydsz-cronjob 模块。
  *
  * @author ydsz-team

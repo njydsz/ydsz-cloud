@@ -6,10 +6,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 /**
  * Domain 模块自动配置
  *
- * <p>激活领域模型层的配置属性绑定。配置通过 {@link com.njydsz.common.domain.query.PageQueryFactory}
- * 工厂类在创建 PageQuery 时实例级注入，不再使用静态全局注入。
+ * <p>激活领域模型层的配置属性绑定（{@link DomainProperties}）。
  *
- * <p><b>v1.7.0</b>：移除 PageQuery.initProperties() 静态注入，改为 PageQueryFactory 工厂模式。
+ * <p><b>v1.8.0</b>：移除失效的 PageQueryFactory 运行时注入，PageQuery 改为无状态承载对象，
+ * 深度分页阈值通过 {@link DomainProperties} 直接注入消费方（如 SafeQueryInnerInterceptor）。
  * <p><b>v1.4.0</b>：SpEL 条件评估器（DAG）与健康指标（DomainHealthIndicator）
  * 已随 DAG 引擎迁移至 ydsz-cronjob 模块，本配置不再注册相关 Bean。
  *
@@ -20,5 +20,4 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties(DomainProperties.class)
 public class DomainAutoConfiguration {
     // 配置绑定由 @EnableConfigurationProperties 激活
-    // 运行时注入由 PageQueryFactory 完成
 }

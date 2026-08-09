@@ -77,38 +77,41 @@ public final class RequestContext {
     /** 上下文键名：API 版本 */
     public static final String KEY_API_VERSION = "apiVersion";
 
-    // ==================== v1.9 扩展：统一上下文键（供 common 子模块共享） ====================
+    // ==================== v1.9 业务级上下文键（已下沉至 BizContextKeys） ====================
+    // 以下常量仅为向后兼容保留，已 @Deprecated 并桥接至 {@link BizContextKeys}。
+    // 新代码请直接引用 {@link BizContextKeys}，或在各自模块内声明类型安全的 {@link ContextKey}。
 
-    /** 上下文键名：认证信息（{@link AuthInfo} 实现）。由认证模块写入。 @since 1.9.0 */
-    public static final String KEY_AUTH_INFO = "authInfo";
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_AUTH_INFO} */
+    @Deprecated(since = "1.9.0", forRemoval = false)
+    public static final String KEY_AUTH_INFO = BizContextKeys.KEY_AUTH_INFO;
 
-    /** 上下文键名：登录用户（{@link LoginUser}）。由认证模块写入。 @since 1.9.0 */
-    public static final String KEY_LOGIN_USER = "loginUser";
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_LOGIN_USER} */
+    @Deprecated(since = "1.9.0", forRemoval = false)
+    public static final String KEY_LOGIN_USER = BizContextKeys.KEY_LOGIN_USER;
 
-    /** 上下文键名：租户上下文（{@link TenantContext}）：租户ID/系统租户标识/isSkipIsolation。 @since 1.9.0 */
-    public static final String KEY_TENANT_CONTEXT = "tenantContext";
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_TENANT_CONTEXT} */
+    @Deprecated(since = "1.9.0", forRemoval = false)
+    public static final String KEY_TENANT_CONTEXT = BizContextKeys.KEY_TENANT_CONTEXT;
 
-    /** 上下文键名：列权限信息（{@link ColumnPermissionInfo}）。由列权限切面写入。 @since 1.9.0 */
-    public static final String KEY_COLUMN_PERMISSION = "columnPermission";
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_COLUMN_PERMISSION} */
+    @Deprecated(since = "1.9.0", forRemoval = false)
+    public static final String KEY_COLUMN_PERMISSION = BizContextKeys.KEY_COLUMN_PERMISSION;
 
-    /**
-     * 上下文键名：审计上下文数据（AuditContextData）。
-     *
-     * <p>由审计切面写入，记录请求耗时、URL、业务流水号等审计信息。
-     * 类型：{@code AuditContextData}。</p>
-     *
-     * @since 1.9.0
-     */
-    public static final String KEY_AUDIT_DATA = "auditData";
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_AUDIT_DATA} */
+    @Deprecated(since = "1.9.0", forRemoval = false)
+    public static final String KEY_AUDIT_DATA = BizContextKeys.KEY_AUDIT_DATA;
 
-    /** 上下文键名：HTTP 请求对象（{@link jakarta.servlet.http.HttpServletRequest}）。由认证 Filter 写入。 @since 1.9.0 */
-    public static final String KEY_HTTP_REQUEST = "httpRequest";
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_HTTP_REQUEST}；建议改用 {@link #setRequestSnapshot(RequestSnapshot)} 的不可变快照 */
+    @Deprecated(since = "1.9.0", forRemoval = false)
+    public static final String KEY_HTTP_REQUEST = BizContextKeys.KEY_HTTP_REQUEST;
 
-    /** 上下文键名：额外请求头（{@code Map<String, String>}）。用于数据权限场景。 @since 1.9.0 */
-    public static final String KEY_EXTRA_HEADERS = "extraHeaders";
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_EXTRA_HEADERS} */
+    @Deprecated(since = "1.9.0", forRemoval = false)
+    public static final String KEY_EXTRA_HEADERS = BizContextKeys.KEY_EXTRA_HEADERS;
 
-    /** 上下文键名：请求级缓存的用户信息 Map。避免同一请求反复 Redis 调用。 @since 1.9.0 */
-    public static final String KEY_CACHED_USER_INFO_MAP = "cachedUserInfoMap";
+    /** @deprecated 请使用 {@link BizContextKeys#KEY_CACHED_USER_INFO_MAP} */
+    @Deprecated(since = "1.9.0", forRemoval = false)
+    public static final String KEY_CACHED_USER_INFO_MAP = BizContextKeys.KEY_CACHED_USER_INFO_MAP;
 
     /**
      * 请求上下文存储（懒初始化）。
@@ -126,12 +129,33 @@ public final class RequestContext {
                 }
 
                 /**
-                 * 传播上下文到子线程时创建防御性拷贝，
+                 * 传播上下文到子线程时创建防御性拷贝（浅拷贝，值以引用传递），
                  * 避免父线程与子线程共享同一 HashMap 导致并发修改异常。
                  */
                 @Override
                 public Map<String, Object> copy(Map<String, Object> parentValue) {
                     return parentValue == null ? null : new HashMap<>(parentValue);
+                }
+            };
+
+    /**
+     * 请求级用户信息缓存的存储（与通用上下文分离）。
+     *
+     * <p>该缓存仅为性能优化（避免同一请求内反复访问远程缓存），
+     * 不随 TTL 跨线程传播：子线程各自懒重建，避免共享可变 Map 的并发风险，
+     * 也避免大对象被无谓克隆放大拷贝成本。</p>
+     */
+    private static final TransmittableThreadLocal<Map<String, Object>> CACHE_HOLDER =
+            new TransmittableThreadLocal<Map<String, Object>>() {
+                @Override
+                protected Map<String, Object> initialValue() {
+                    return null;
+                }
+
+                @Override
+                public Map<String, Object> copy(Map<String, Object> parentValue) {
+                    // 不跨线程传播：返回 null，子线程按需重建本地缓存
+                    return null;
                 }
             };
 
@@ -435,6 +459,7 @@ public final class RequestContext {
      */
     public static void clear() {
         CONTEXT_HOLDER.remove();
+        CACHE_HOLDER.remove();
     }
 
     // ======================== v1.9 业务层便捷方法 ========================
@@ -568,23 +593,56 @@ public final class RequestContext {
     }
 
     /**
-     * 写入 HTTP 请求对象引用。
+     * 写入 HTTP 请求不可变快照（推荐）。
      *
-     * <p>仅 Filter 层写入，供非 Controller 层（Service、Interceptor）读取请求信息。</p>
+     * <p>相比 {@link #setHttpRequest(Object)} 直接持有活的 {@code HttpServletRequest}，
+     * 快照在入口处一次性拷贝所需元数据，与 Servlet API 解耦，
+     * 可在异步 / 线程池 / 序列化边界安全传递。</p>
      *
+     * @param snapshot 请求快照（可为 null，等同于移除）
+     * @since 1.9.1
+     * @see RequestSnapshot
+     */
+    public static void setRequestSnapshot(RequestSnapshot snapshot) {
+        if (snapshot == null) {
+            remove(KEY_HTTP_REQUEST);
+        } else {
+            put(KEY_HTTP_REQUEST, snapshot);
+        }
+    }
+
+    /**
+     * 获取 HTTP 请求不可变快照（类型安全）。
+     *
+     * @return 请求快照；不存在或存入的是原生 {@code HttpServletRequest} 时返回 null
+     * @since 1.9.1
+     */
+    public static RequestSnapshot getRequestSnapshot() {
+        Object obj = get(KEY_HTTP_REQUEST);
+        return obj instanceof RequestSnapshot ? (RequestSnapshot) obj : null;
+    }
+
+    /**
+     * 写入 HTTP 请求对象引用（已废弃，仅向后兼容）。
+     *
+     * @deprecated 新代码请使用 {@link #setRequestSnapshot(RequestSnapshot)} 的不可变快照，
+     *             避免持有活的 {@code HttpServletRequest}（不可序列化、异步边界易泄漏、绑死 Servlet API）
      * @param request HTTP 请求对象
      * @since 1.9.0
      */
+    @Deprecated(since = "1.9.1", forRemoval = false)
     public static void setHttpRequest(Object request) {
         put(KEY_HTTP_REQUEST, request);
     }
 
     /**
-     * 获取当前 HTTP 请求对象引用。
+     * 获取当前 HTTP 请求对象引用（已废弃，仅向后兼容）。
      *
+     * @deprecated 请使用 {@link #getRequestSnapshot()}
      * @return HTTP 请求对象，不存在返回 null
      * @since 1.9.0
      */
+    @Deprecated(since = "1.9.1", forRemoval = false)
     public static Object getHttpRequest() {
         return get(KEY_HTTP_REQUEST);
     }
@@ -649,20 +707,21 @@ public final class RequestContext {
     @SuppressWarnings("unchecked")
     public static Map<String, Object> createCachedUserInfoMap() {
         Map<String, Object> map = new java.util.LinkedHashMap<>(8);
-        put(KEY_CACHED_USER_INFO_MAP, map);
+        CACHE_HOLDER.set(map);
         return map;
     }
 
     /**
      * 获取请求级用户信息缓存 Map。
      *
+     * <p>该缓存存储于与通用上下文分离的 {@code CACHE_HOLDER}，不随 TTL 跨线程传播。</p>
+     *
      * @return 缓存 Map（可变），未创建返回 null
      * @since 1.9.0
      */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> getCachedUserInfoMap() {
-        Object obj = get(KEY_CACHED_USER_INFO_MAP);
-        return (obj instanceof Map) ? (Map<String, Object>) obj : null;
+        return CACHE_HOLDER.get();
     }
 
     /**

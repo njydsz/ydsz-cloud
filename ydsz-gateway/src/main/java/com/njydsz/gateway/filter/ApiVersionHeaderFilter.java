@@ -3,6 +3,7 @@ package com.njydsz.gateway.filter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -34,6 +35,7 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "ydsz.gateway.filter", name = "api-version-header", havingValue = "true", matchIfMissing = true)
 public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
 
     /** 匹配路径版本段：/api/v1/... 或 /v1/... */

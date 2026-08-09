@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.json.YdszJson;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -75,6 +76,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "ydsz.gateway.filter", name = "rate-limit", havingValue = "true", matchIfMissing = true)
 public class RateLimitFilter implements GlobalFilter, Ordered {
 
     private final RateLimitProperties properties;

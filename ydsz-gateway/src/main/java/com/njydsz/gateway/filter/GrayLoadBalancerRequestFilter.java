@@ -1,5 +1,6 @@
 package com.njydsz.gateway.filter;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -39,6 +40,7 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "ydsz.gateway.filter", name = "gray-loadbalancer", havingValue = "true", matchIfMissing = true)
 public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
 
     /** 灰度标识值:灰度 */

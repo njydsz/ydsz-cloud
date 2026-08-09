@@ -13,6 +13,7 @@ import lombok.experimental.SuperBuilder;
 import org.slf4j.MDC;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -225,10 +226,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 成功消息
      */
     public static <T> BaseResponse<T> successMsg(String msg) {
-        BaseResponse<T> response = new BaseResponse<>();
-        response.code = SUCCESS;
-        response.msg = msg;
-        return response;
+        return of(SUCCESS, msg, null);
     }
 
     /**
@@ -384,19 +382,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 通过异常提取 ResultCode（仅在异常本身实现 {@link ResultCode} 接口时支持）。
-     *
-     * <p>异常模块（ydsz-common-exception）应通过其他方式提取，
-     * 避免在此核心类中引入反射和跨模块耦合。</p>
-     *
-     * @param throwable 异常对象
-     * @return 若异常本身是 ResultCode，返回该 ResultCode；否则返回 null
-     */
-    private static ResultCode extractResultCode(Throwable throwable) {
-        return (throwable instanceof ResultCode) ? (ResultCode) throwable : null;
-    }
-
-    /**
      * 获取响应时间戳
      *
      * @return 响应时间戳（毫秒）
@@ -509,6 +494,8 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @since 1.8.0
      */
     public Map<String, Object> getExtensions() {
-        return this.extensions;
+        return this.extensions != null
+                ? Collections.unmodifiableMap(this.extensions)
+                : Collections.emptyMap();
     }
 }

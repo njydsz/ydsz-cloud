@@ -79,6 +79,22 @@ public final class JsonParserUtil {
     /** 是否使用 BigDecimal 解析浮点数（避免精度丢失），默认 false（按线程隔离，避免跨线程泄漏） */
     private static final ThreadLocal<Boolean> useBigDecimal = ThreadLocal.withInitial(() -> false);
 
+    /** 递归解析最大嵌套深度（防止栈溢出攻击），与 JSONReader.DEFAULT_MAX_DEPTH 对齐，默认 256 */
+    private static volatile int maxParseDepth = 256;
+
+    /** 设置全局递归解析最大嵌套深度（默认 256，与 JSONReader 对齐） */
+    public static void setMaxParseDepth(int depth) {
+        if (depth <= 0) {
+            throw new IllegalArgumentException("maxParseDepth must be > 0, got: " + depth);
+        }
+        maxParseDepth = depth;
+    }
+
+    /** 获取当前递归解析最大嵌套深度 */
+    public static int getMaxParseDepth() {
+        return maxParseDepth;
+    }
+
     private JsonParserUtil() {
         throw new UnsupportedOperationException("JsonParserUtil is a utility class");
     }
@@ -145,7 +161,7 @@ public final class JsonParserUtil {
         }
 
         // 委托给 parseObjectRecursiveImpl 统一实现（参数化初始容量 64）
-        Object result = parseObjectRecursiveImpl(chars, startPos, 64);
+        Object result = parseObjectRecursiveImpl(chars, startPos, 64, 1);
         @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>) result;
         return map;
@@ -172,7 +188,7 @@ public final class JsonParserUtil {
         char[] chars = getCharBuffer(json);
         // 委托给 parseArrayRecursiveImpl 统一实现，消除重复代码
         @SuppressWarnings("unchecked")
-        List<Object> result = (List<Object>) parseArrayRecursiveImpl(chars, 0);
+        List<Object> result = (List<Object>) parseArrayRecursiveImpl(chars, 0, 1);
         return result;
     }
 
@@ -185,7 +201,7 @@ public final class JsonParserUtil {
      * @param pos 起始位置
      * @param endPos [out] 解析结束位置（值的下一个字符位置）
      */
-    private static final Object parseValueWithPos(char[] chars, int pos, int[] endPos) {
+    private static final Object parseValueWithPos(char[] chars, int pos, int[] endPos, int depth) {
         // 快速路径：跳过空白（内联）
         pos = skipWhitespace(chars, pos);
 
@@ -200,9 +216,9 @@ public final class JsonParserUtil {
             case '"':
                 return parseStringFastWithPos(chars, pos, endPos);
             case '{':
-                return parseObjectRecursiveWithPos(chars, pos, endPos);
+                return parseObjectRecursiveWithPos(chars, pos, endPos, depth + 1);
             case '[':
-                return parseArrayRecursiveWithPos(chars, pos, endPos);
+                return parseArrayRecursiveWithPos(chars, pos, endPos, depth + 1);
             case 't':
                 if (pos + 3 < chars.length && chars[pos + 1] == 'r'
                         && chars[pos + 2] == 'u' && chars[pos + 3] == 'e') {
@@ -237,7 +253,7 @@ public final class JsonParserUtil {
     /** 兼容旧调用方（委托给 withPos 版本） */
     private static final Object parseValue(char[] chars, int pos) {
         int[] endPos = new int[1];
-        return parseValueWithPos(chars, pos, endPos);
+        return parseValueWithPos(chars, pos, endPos, 1);
     }
 
     /**
@@ -470,7 +486,13 @@ public final class JsonParserUtil {
                 value = -value;
             }
             if (exp != 0) {
-                value = expNegative ? value / POW10[exp] : value * POW10[exp];
+                if (exp < POW10.length) {
+                    value = expNegative ? value / POW10[exp] : value * POW10[exp];
+                } else {
+                    // 指数超出查表范围，回退字符串解析，避免 POW10 数组越界并保证正确性
+                    String numStr = new String(chars, startPos, pos - startPos);
+                    return Double.parseDouble(numStr);
+                }
             }
             endPos[0] = pos;
             return Double.valueOf(value);
@@ -480,8 +502,8 @@ public final class JsonParserUtil {
         }
     }
 
-    private static Object parseObjectRecursiveWithPos(char[] chars, int start, int[] endPos) {
-        Object result = parseObjectRecursiveImpl(chars, start, 64);
+    private static Object parseObjectRecursiveWithPos(char[] chars, int start, int[] endPos, int depth) {
+        Object result = parseObjectRecursiveImpl(chars, start, 64, depth + 1);
         endPos[0] = getValueEndPosition(chars, start); // 对象/数组仍需一次扫描定位 `}`
         return result;
     }
@@ -490,13 +512,16 @@ public final class JsonParserUtil {
         return parseArrayRecursiveImpl(chars, start);
     }
 
-    private static Object parseArrayRecursiveWithPos(char[] chars, int start, int[] endPos) {
-        Object result = parseArrayRecursiveImpl(chars, start);
+    private static Object parseArrayRecursiveWithPos(char[] chars, int start, int[] endPos, int depth) {
+        Object result = parseArrayRecursiveImpl(chars, start, depth + 1);
         endPos[0] = getValueEndPosition(chars, start);
         return result;
     }
 
-    private static Object parseObjectRecursiveImpl(char[] chars, int start, int initialCapacity) {
+    private static Object parseObjectRecursiveImpl(char[] chars, int start, int initialCapacity, int depth) {
+        if (depth > maxParseDepth) {
+            throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, start);
+        }
         int len = chars.length;
         Map<String, Object> result = new LinkedHashMap<>(initialCapacity);
         int pos = start + 1;
@@ -582,7 +607,10 @@ public final class JsonParserUtil {
     /**
      * 递归解析数组（从 char 数组的指定位置开始）
      */
-    private static Object parseArrayRecursiveImpl(char[] chars, int start) {
+    private static Object parseArrayRecursiveImpl(char[] chars, int start, int depth) {
+        if (depth > maxParseDepth) {
+            throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, start);
+        }
         int len = chars.length;
         int estimatedSize = estimateArraySize(chars, start + 1);
         List<Object> result = new ArrayList<>(Math.max(estimatedSize, 4));

@@ -14,6 +14,8 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * 网关自定义 Prometheus 指标。
  *
@@ -149,5 +151,39 @@ public class GatewayMetrics extends AbstractModuleMetrics {
             return holder;
         });
         ref.set(state);
+    }
+
+    /**
+     * P0-3: 注册 JWT 缓存命中/未命中计数器到 Prometheus。
+     *
+     * <p>指标名：
+     * <ul>
+     *   <li>{@code ydsz_gateway_jwt_cache_hit_total} — 缓存命中次数</li>
+     *   <li>{@code ydsz_gateway_jwt_cache_miss_total} — 缓存未命中次数</li>
+     * </ul>
+     * 命中率 = hit / (hit + miss)，Grafana 可通过 {@code rate()} 计算实时命中率。
+     *
+     * @param hitCounter  命中计数器引用
+     * @param missCounter 未命中计数器引用
+     */
+    public void registerJwtCacheCounters(AtomicLong hitCounter, AtomicLong missCounter) {
+        gaugeRef("jwt_cache_hit_rate", hitCounter, AtomicLong::doubleValue);
+        gaugeRef("jwt_cache_miss_total", missCounter, AtomicLong::doubleValue);
+        log.info("[GatewayMetrics] JWT 缓存命中/未命中 Prometheus 指标已注册");
+    }
+
+    /**
+     * 获取 JWT 缓存命中率（需要在 CachedJwtValidator 已初始化后调用）。
+     *
+     * <p>该方法由 CachedJwtValidator 通过回调获取，不直接暴露 Counter。
+     *
+     * @param hitCounter  命中计数器引用
+     * @param missCounter 未命中计数器引用
+     * @return 缓存命中率（0.0 ~ 1.0），无请求时返回 -1.0
+     */
+    public static double calculateJwtCacheHitRate(AtomicLong hitCounter, AtomicLong missCounter) {
+        long hits = hitCounter.get();
+        long total = hits + missCounter.get();
+        return total > 0 ? (double) hits / total : -1.0;
     }
 }

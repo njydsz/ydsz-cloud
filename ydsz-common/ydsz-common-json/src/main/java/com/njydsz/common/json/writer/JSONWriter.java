@@ -561,7 +561,9 @@ public final class JSONWriter {
             boolean needsEscape = false;
             for (int i = 0; i < len; i++) {
                 char c = str.charAt(i);
-                if (c < ' ' || c == '"' || c == '\\') {
+                if (c < ' ' || c == '"' || c == '\\'
+                        || c == '\u2028' || c == '\u2029'
+                        || (c >= '\uD800' && c <= '\uDFFF')) {
                     needsEscape = true;
                     break;
                 }
@@ -698,6 +700,22 @@ public final class JSONWriter {
                     if (c < ' ') {
                         externalSb.append("\\u");
                         externalSb.append(String.format("%04x", (int) c));
+                    } else if (c == '\u2028' || c == '\u2029') {
+                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义
+                        externalSb.append("\\u");
+                        externalSb.append(String.format("%04x", (int) c));
+                    } else if (Character.isHighSurrogate(c)) {
+                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
+                            externalSb.append(c);
+                            externalSb.append(str.charAt(i + 1));
+                            i++;
+                        } else {
+                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON
+                            externalSb.append('\uFFFD');
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        // 孤立低位代理：替换为 U+FFFD
+                        externalSb.append('\uFFFD');
                     } else {
                         externalSb.append(c);
                     }
@@ -745,14 +763,22 @@ public final class JSONWriter {
                     break;
                 default:
                     if (c < ' ') {
-                        buf[pos++] = '\\';
-                        buf[pos++] = 'u';
-                        buf[pos++] = '0';
-                        buf[pos++] = '0';
-                        char h = (char) (c >> 4);
-                        char l = (char) (c & 0xf);
-                        buf[pos++] = (char) (h < 10 ? h + '0' : h - 10 + 'a');
-                        buf[pos++] = (char) (l < 10 ? l + '0' : l - 10 + 'a');
+                        writeHex4(c);
+                    } else if (c == '\u2028' || c == '\u2029') {
+                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义
+                        writeHex4(c);
+                    } else if (Character.isHighSurrogate(c)) {
+                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
+                            buf[pos++] = c;
+                            buf[pos++] = str.charAt(i + 1);
+                            i++;
+                        } else {
+                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON
+                            buf[pos++] = '\uFFFD';
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        // 孤立低位代理：替换为 U+FFFD
+                        buf[pos++] = '\uFFFD';
                     } else {
                         buf[pos++] = c;
                     }
@@ -761,6 +787,21 @@ public final class JSONWriter {
         }
 
         buf[pos++] = '"';
+    }
+
+    /** 十六进制字符表（小写，符合 JSON 规范常见风格）*/
+    private static final char[] HEX = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    };
+
+    /** 写入字符的 4 位十六进制 {@code \\uXXXX} 转义（调用方需保证 code 为合法 16 位无符号码元）*/
+    private void writeHex4(int code) {
+        buf[pos++] = '\\';
+        buf[pos++] = 'u';
+        buf[pos++] = HEX[(code >> 12) & 0xf];
+        buf[pos++] = HEX[(code >> 8) & 0xf];
+        buf[pos++] = HEX[(code >> 4) & 0xf];
+        buf[pos++] = HEX[code & 0xf];
     }
 
     /**
@@ -1011,26 +1052,35 @@ public final class JSONWriter {
             char c5 = str.charAt(i + 5);
             char c6 = str.charAt(i + 6);
             char c7 = str.charAt(i + 7);
-            if ((c0 < ' ' || c0 == '"' || c0 == '\\') ||
-                (c1 < ' ' || c1 == '"' || c1 == '\\') ||
-                (c2 < ' ' || c2 == '"' || c2 == '\\') ||
-                (c3 < ' ' || c3 == '"' || c3 == '\\') ||
-                (c4 < ' ' || c4 == '"' || c4 == '\\') ||
-                (c5 < ' ' || c5 == '"' || c5 == '\\') ||
-                (c6 < ' ' || c6 == '"' || c6 == '\\') ||
-                (c7 < ' ' || c7 == '"' || c7 == '\\')) {
+            if (needsCharEscape(c0) || needsCharEscape(c1) || needsCharEscape(c2) || needsCharEscape(c3)
+                || needsCharEscape(c4) || needsCharEscape(c5) || needsCharEscape(c6) || needsCharEscape(c7)) {
                 return true;
             }
             i += 8;
         }
         // 处理剩余字符
         for (; i < len; i++) {
-            char c = str.charAt(i);
-            if (c < ' ' || c == '"' || c == '\\') {
+            if (needsCharEscape(str.charAt(i))) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * 判断单个字符是否需要 JSON 转义（与 {@code writeString*} 系列转义规则保持一致）。
+     *
+     * <p>除控制字符、引号、反斜杠外，还需转义 U+2028/U+2029（裸置于
+     * {@code <script>} 中会导致 JS 语法错误）以及代理码元（D800-DFFF，需经
+     * {@code writeStringWithEscape} 校验是否为合法代理对）。</p>
+     *
+     * @param c 待判断字符
+     * @return true 表示该字符需要转义
+     */
+    private static boolean needsCharEscape(char c) {
+        return c < ' ' || c == '"' || c == '\\'
+            || c == '\u2028' || c == '\u2029'
+            || (c >= '\uD800' && c <= '\uDFFF');
     }
 
     /**

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.server.ResponseStatusException;
@@ -99,6 +100,10 @@ public class GatewayErrorConfig {
             BaseResponse<Void> body = BaseResponse.error(String.valueOf(bizCode), message);
             body.setTraceId(traceId);
 
+            // P0-3: 添加错误文档链接（Link 头 + extensions），帮助前端定位帮助文档
+            GatewayErrorCode errorCode = GatewayErrorCode.fromCode(bizCode);
+            body.putExtension("help", errorCode.getHelpUrl());
+
             log.warn("[GatewayError] status={} bizCode={} traceId={} path={} error={}",
                     httpStatus.value(), bizCode, traceId, exchange.getRequest().getURI().getPath(),
                     ex.getClass().getSimpleName() + ": " + ex.getMessage());
@@ -106,6 +111,9 @@ public class GatewayErrorConfig {
             exchange.getResponse().setStatusCode(httpStatus);
             exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
             exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
+            // RFC 5988 Link 头指向错误文档
+            exchange.getResponse().getHeaders().add(HttpHeaders.LINK,
+                    "<" + errorCode.getHelpUrl() + ">; rel=\"help\"");
 
             byte[] bytes = YdszJson.toJsonBytes(body);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
@@ -136,33 +144,38 @@ public class GatewayErrorConfig {
         }
 
         /**
-         * 根据 HTTP 状态码映射业务错误码
+         * 根据 HTTP 状态码映射业务错误码。
+         *
+         * <p>P0-3: 与 {@link GatewayErrorCode} 对齐，确保网关层错误码标准化。
          */
         private int resolveBizCode(HttpStatus httpStatus) {
             return switch (httpStatus) {
-                case NOT_FOUND -> 40400;
-                case BAD_GATEWAY -> 50200;
-                case SERVICE_UNAVAILABLE -> 50300;
-                case GATEWAY_TIMEOUT -> 50400;
-                case REQUEST_TIMEOUT -> 40800;
-                case TOO_MANY_REQUESTS -> 42900;
+                case NOT_FOUND -> GatewayErrorCode.ROUTE_NOT_FOUND.getCode();
+                case BAD_GATEWAY -> GatewayErrorCode.BAD_GATEWAY.getCode();
+                case SERVICE_UNAVAILABLE -> GatewayErrorCode.SERVICE_UNAVAILABLE.getCode();
+                case GATEWAY_TIMEOUT -> GatewayErrorCode.GATEWAY_TIMEOUT.getCode();
+                case REQUEST_TIMEOUT -> GatewayErrorCode.REQUEST_TIMEOUT.getCode();
+                case TOO_MANY_REQUESTS -> GatewayErrorCode.RATE_LIMITED.getCode();
                 default -> httpStatus.value() * 100;
             };
         }
 
         /**
-         * 解析用户友好的错误消息
+         * 解析用户友好的 i18n 错误消息键。
+         *
+         * <p>P0-3: 使用 {@link GatewayErrorCode#getMessageKey()} 确保 i18n key 与错误码一一对应，
+         * 前端根据此键翻译为对应语言。
          */
         private String resolveMessage(Throwable ex, HttpStatus httpStatus) {
             return switch (httpStatus) {
-                case NOT_FOUND -> "error.NOT_FOUND";
-                case BAD_GATEWAY -> "error.SERVICE_UNAVAILABLE";
-                case SERVICE_UNAVAILABLE -> "error.SERVICE_UNAVAILABLE";
-                case GATEWAY_TIMEOUT -> "error.GATEWAY_TIMEOUT";
-                case REQUEST_TIMEOUT -> "error.REQUEST_TIMEOUT";
-                case TOO_MANY_REQUESTS -> "error.RATE_LIMIT";
-                case INTERNAL_SERVER_ERROR -> "error.INTERNAL_ERROR";
-                default -> ex.getMessage() != null ? ex.getMessage() : "error.UNKNOWN";
+                case NOT_FOUND -> GatewayErrorCode.ROUTE_NOT_FOUND.getMessageKey();
+                case BAD_GATEWAY -> GatewayErrorCode.BAD_GATEWAY.getMessageKey();
+                case SERVICE_UNAVAILABLE -> GatewayErrorCode.SERVICE_UNAVAILABLE.getMessageKey();
+                case GATEWAY_TIMEOUT -> GatewayErrorCode.GATEWAY_TIMEOUT.getMessageKey();
+                case REQUEST_TIMEOUT -> GatewayErrorCode.REQUEST_TIMEOUT.getMessageKey();
+                case TOO_MANY_REQUESTS -> GatewayErrorCode.RATE_LIMITED.getMessageKey();
+                case INTERNAL_SERVER_ERROR -> GatewayErrorCode.INTERNAL_ERROR.getMessageKey();
+                default -> ex.getMessage() != null ? ex.getMessage() : GatewayErrorCode.INTERNAL_ERROR.getMessageKey();
             };
         }
     }

@@ -34,20 +34,10 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
-        <!--spring-context（ApplicationEventPublisher / DomainEvent 继承 ApplicationEvent）-->
+        <!--spring-context（@ConfigurationProperties / @EnableConfigurationProperties 配置绑定）-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-        </dependency>
-        <!--spring-aop（@DomainEventAspect 切面支持）-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-aop</artifactId>
-        </dependency>
-        <!--aspectj（@Aspect 注解）-->
-        <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjrt</artifactId>
         </dependency>
         <!--test-->
         <dependency>

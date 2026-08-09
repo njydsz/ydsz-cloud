@@ -61,6 +61,39 @@ public final class TraceIdGenerator {
     }
 
     /**
+     * 生成按时间有序（可排序）的 32 位十六进制 TraceId（UUIDv7 风格）。
+     *
+     * <p>布局（16 bytes / 32 hex）：</p>
+     * <ul>
+     *   <li>bytes[0..5]（48 bit）：大端毫秒时间戳，保证同一毫秒内生成的 id 字典序递增</li>
+     *   <li>bytes[6..15]（80 bit）：随机数，保证同一毫秒内的唯一性</li>
+     * </ul>
+     *
+     * <p>相比 {@link #generateTraceId()} 的纯随机实现，本方法生成的 id 可直接用于
+     * 日志 / 链路存储的按时间排序与范围检索，便于问题排查。两者输出格式相同（32 位小写 hex），
+     * 可共存；默认 {@link #generateTraceId()} 仍保持随机以最大化分布均匀性。</p>
+     *
+     * @return 32 位小写十六进制字符串（时间有序）
+     * @since 1.9.1
+     */
+    public static String generateSortableTraceId() {
+        byte[] bytes = new byte[TRACE_ID_BYTES];
+        long timeMillis = System.currentTimeMillis();
+        // 48-bit 大端时间戳
+        bytes[0] = (byte) (timeMillis >>> 40);
+        bytes[1] = (byte) (timeMillis >>> 32);
+        bytes[2] = (byte) (timeMillis >>> 24);
+        bytes[3] = (byte) (timeMillis >>> 16);
+        bytes[4] = (byte) (timeMillis >>> 8);
+        bytes[5] = (byte) timeMillis;
+        // 剩余 80-bit 随机数
+        byte[] rand = new byte[TRACE_ID_BYTES - 6];
+        ThreadLocalRandom.current().nextBytes(rand);
+        System.arraycopy(rand, 0, bytes, 6, rand.length);
+        return HEX_FORMAT.formatHex(bytes);
+    }
+
+    /**
      * 生成 16 位十六进制 SpanId（8 bytes 随机数）。
      *
      * <p>SpanId 用于标识一次分布式调用中的单个操作，符合 W3C Trace Context 规范。</p>

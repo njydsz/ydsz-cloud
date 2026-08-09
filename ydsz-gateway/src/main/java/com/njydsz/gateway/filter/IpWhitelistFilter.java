@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.njydsz.common.json.YdszJson;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -51,6 +52,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(prefix = "ydsz.gateway.filter", name = "ip-whitelist", havingValue = "true", matchIfMissing = true)
 public class IpWhitelistFilter implements GlobalFilter, Ordered {
 
     /** 配置项分隔符：白名单字符串中多个条目以逗号或换行分隔 */

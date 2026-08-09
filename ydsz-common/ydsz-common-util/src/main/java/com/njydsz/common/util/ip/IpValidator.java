@@ -90,7 +90,7 @@ public final class IpValidator {
             return false;
         }
         try {
-            InetAddress inetAddress = InetAddress.getByName(ip);
+            InetAddress inetAddress = toInetAddress(ip);
             return inetAddress.isSiteLocalAddress() || inetAddress.isLoopbackAddress();
         } catch (UnknownHostException e) {
             return false;
@@ -142,10 +142,33 @@ public final class IpValidator {
             return ipv6.trim().toLowerCase();
         }
         try {
-            return InetAddress.getByName(ipv6).getHostAddress();
+            return toInetAddress(ipv6).getHostAddress();
         } catch (UnknownHostException e) {
             return ipv6.trim().toLowerCase();
         }
+    }
+
+    /**
+     * 将 IP 字面量转为 {@link InetAddress}，全程不产生任何网络 IO。
+     *
+     * <p>IPv4 字面量直接解析为 4 字节后通过 {@link InetAddress#getByAddress(byte[])} 构造，
+     * 彻底规避 DNS 解析与反向查询；IPv6 字面量经 {@link InetAddress#getByName(String)} 时，
+     * JDK 会先尝试按字面量解析，仅对主机名才触发 DNS，故合法 IPv6 字面量同样不会发起网络请求。
+     *
+     * @param ip 已通过 {@link #validIpv4} / {@link #validIpv6} 校验的 IP 字面量
+     * @return 对应的 InetAddress
+     * @throws UnknownHostException 字面量无法解析时（理论上不应发生于已校验输入）
+     */
+    private static InetAddress toInetAddress(String ip) throws UnknownHostException {
+        if (validIpv4(ip)) {
+            String[] parts = ip.split("\\.");
+            byte[] addr = new byte[4];
+            for (int i = 0; i < 4; i++) {
+                addr[i] = (byte) Integer.parseInt(parts[i]);
+            }
+            return InetAddress.getByAddress(addr);
+        }
+        return InetAddress.getByName(ip);
     }
 
     /**

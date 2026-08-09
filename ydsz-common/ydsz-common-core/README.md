@@ -73,22 +73,24 @@ if (response.isSuccess()) { ... }
 
 ```java
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResult;
 
-// 标准分页构造（将分页元数据放入 data 或 extensions）
-BaseResponse<List<User>> resp = BaseResponse.success("查询成功", users);
-resp.getExtensions().put("total", total);
-resp.getExtensions().put("pageNum", pageNum);
-resp.getExtensions().put("pageSize", pageSize);
+// 标准分页响应（推荐：使用专用分页信封 PageResult<T>）
+PageResult<List<User>> resp = PageResult.success(total, pageNum, pageSize, users);
 
-// 无数据成功响应
-BaseResponse<List<User>> empty = BaseResponse.success();
+// 等价地，也可使用 BaseResponse.successPage(...) 工厂（返回 BaseResponse<T>）
+BaseResponse<List<User>> resp2 = BaseResponse.successPage(total, pageNum, pageSize, users);
+
+// 无数据分页响应
+PageResult<List<User>> empty = PageResult.empty(pageNum, pageSize);
 
 // 判断请求是否成功
-if (response.isSuccess()) { ... }
+if (resp.isSuccess()) { ... }
 ```
 
-> **注意**：如需专用分页响应类型，可使用 {@link com.njydsz.common.core.response.PageResponse}（已标记为
-> `@Deprecated`，推荐直接构造 BaseResponse 并将分页元数据放入 extensions）。
+> **提示**：`PageResult<T>` 是 `BaseResponse<T>` 的子类型，额外提供 `getPages()` 等便捷方法；
+> 分页元信息（total / pageNum / pageSize）收口于该类型，`BaseResponse` 仍保留兼容字段。
+> `getExtensions()` 返回<b>不可变视图</b>，如需写入扩展字段请使用 `putExtension(key, value)`。
 
 ### 4. 请求上下文
 
@@ -188,10 +190,9 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `constant` | `FilterIgnoreConstant` | 过滤器忽略 URL 集合 + 服务名集合 |
 | `constant` | `TokenConstants` | 令牌相关常量（Authorization、supply、前缀） |
 | `constant` | `HeaderConstants` | 统一 HTTP 请求头常量（认证/身份、数据权限、列级权限、链路追踪、网络信息） |
-| `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，注册 springMessageResolver、pageConstantsInitializer、coreHealthIndicator |
+| `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，注册 springMessageResolver、pageConstantsInitializer |
 | `config` | `CoreProperties` | 配置属性绑定（`@ConfigurationProperties("ydsz.core")`） |
 | `config` | `SpringMessageResolver` | Spring MessageSource 适配器，将 i18n 解析绑定到 BaseResponse |
-| `config` | `CoreHealthIndicator` | 健康检查指示器，检查 i18n resolver 注册状态、分页配置同步状态 |
 
 ---
 
@@ -269,7 +270,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 |---|---|---|
 | `getCode()` | `String` | 结果码字符串 |
 | `getMsg()` | `String` | 结果消息描述 |
-| `getMessageKey()` | `String` | i18n 消息 key（default: `error.{枚举名}`） |
+| `getMessageKey()` | `String` | i18n 消息 key（default: 枚举实现为 `error.{枚举名}`，普通类实现为 `error.{SimpleClassName}`，均安全） |
 | `getHttpStatusCode()` | `int` | 对应的 HTTP 状态码 |
 
 ### BaseResultCode
@@ -588,7 +589,8 @@ com.njydsz.common.core.config.CoreAutoConfiguration
 |---|---|---|
 | `springMessageResolver` | `SpringMessageResolver` | Spring i18n 解析器，绑定到 `BaseResponse`。需 classpath 含 `MessageSource` Bean 时生效 |
 | `pageConstantsInitializer` | `SmartInitializingSingleton` | 启动时将 `CoreProperties` 注入 `PageConstants` |
-| `coreHealthIndicator` | `CoreHealthIndicator` | 健康检查指示器，检查 i18n resolver 注册状态、分页配置同步状态 |
+
+> **健康检查**：core 模块不内置健康指示器，统一由 `ydsz-common-base` 的 `CoreHealthIndicator`（`@ConditionalOnMissingBean` 注册，版本号从构建 MANIFEST 读取）提供，避免重复定义。
 
 ### 可配置属性（`ydsz.core.*`）
 
@@ -682,12 +684,6 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
         <groupId>com.alibaba</groupId>
         <artifactId>transmittable-thread-local</artifactId>
     </dependency>
-    <!-- Spring Boot Actuator（optional — 用于 CoreHealthIndicator）-->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-actuator</artifactId>
-        <optional>true</optional>
-    </dependency>
     <!-- Test -->
     <dependency>
         <groupId>org.springframework.boot</groupId>
@@ -705,7 +701,7 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 | `slf4j-api` | compile | 日志门面（MDC、LoggerFactory） |
 | `ydsz-common-json` | compile | 提供 `@JsonInclude`、`@JsonPropertyOrder` 注解 |
 | `transmittable-thread-local` | compile | 阿里 TTL，实现线程池上下文自动传播 |
-| `spring-boot-actuator` | optional | `CoreHealthIndicator` 使用 Health/HealthIndicator；运行时由接入方 starter 提供 |
+| `spring-boot-actuator` | optional | 接入方如需暴露健康端点（由 `ydsz-common-base` 提供）可引入，core 本身不依赖 |
 | `spring-boot-starter-test` | test | 单元测试框架 |
 
 ---

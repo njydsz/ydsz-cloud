@@ -11,7 +11,8 @@ import org.apache.ibatis.mapping.SqlCommandType;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.domain.config.DomainProperties;
-import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.domain.query.DeepPaginationException;
+import com.njydsz.common.domain.query.DeepPaginationRisk;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -240,20 +241,19 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
     /**
      * 评估深度分页风险。
      *
+     * <p>复用领域层 {@link DeepPaginationRisk#assess(long, long, long)} 的统一判定，
+     * 命中拒绝阈值时抛出领域异常 {@link DeepPaginationException}（替代原先的通用 SysException），
+     * 使异常类型与领域语义一致，便于上游按类型捕获与处理。
+     *
      * @param offset 偏移量
      */
     private void evaluateDeepPagination(long offset) {
-        if (offset >= cursorRejectThreshold) {
-            String message = String.format(
-                "深度分页拒绝：offset=%d 超过拒绝阈值=%d，请使用游标分页（CursorPage）",
-                offset, cursorRejectThreshold
-            );
-            log.error(message);
-            throw new SysException(message);
+        DeepPaginationRisk risk = DeepPaginationRisk.assess(offset, cursorWarningThreshold, cursorRejectThreshold);
+        if (risk == DeepPaginationRisk.REJECT) {
+            throw new DeepPaginationException(offset, -1, -1, cursorRejectThreshold);
         }
-
-        if (offset >= cursorWarningThreshold) {
-            log.warn("深度分页警告：offset={} 超过警告阈值={}，建议改用游标分页",
+        if (risk == DeepPaginationRisk.WARN) {
+            log.warn("深度分页警告：offset={} 超过警告阈值={}，建议改用游标分页（SliceQuery / SliceResult）",
                 offset, cursorWarningThreshold);
         }
     }

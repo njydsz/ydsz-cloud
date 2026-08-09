@@ -85,6 +85,32 @@ public final class FieldMetadataLoader {
     /**
      * 加载字段元数据
      */
+    /**
+     * 收集类自身及其所有父类（不含 {@code Object}）的 declared 字段，子类字段在前。
+     *
+     * <p>修复仅使用 {@code getDeclaredFields()} 导致继承字段（如 MyBatis-Plus 基类
+     * {@code MpBaseEntity} 的 id / createTime 等）被静默丢弃的问题。同名子类字段优先，
+     * 父类同名被遮蔽字段跳过，避免重复 JSON key。</p>
+     *
+     * @param clazz 目标类
+     * @return 合并后的字段列表（子类在前）
+     * @since 1.1.0
+     */
+    public static List<Field> collectDeclaredAndInheritedFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            for (Field f : current.getDeclaredFields()) {
+                if (seen.add(f.getName())) {
+                    fields.add(f);
+                }
+            }
+            current = current.getSuperclass();
+        }
+        return fields;
+    }
+
     public static FieldMeta[] loadFields(Class<?> clazz) {
         JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
 
@@ -151,8 +177,8 @@ public final class FieldMetadataLoader {
             fieldVisibility = visibilityAnnotation.fields();
         }
 
-        Field[] declaredFields = clazz.getDeclaredFields();
-        List<FieldMeta> fieldList = new ArrayList<>(declaredFields.length);
+        List<Field> declaredFields = collectDeclaredAndInheritedFields(clazz);
+        List<FieldMeta> fieldList = new ArrayList<>(declaredFields.size());
 
         for (Field field : declaredFields) {
             int mods = field.getModifiers();

@@ -104,7 +104,9 @@ public final class HttpResponseUtils {
      * @param message   错误消息
      */
     public static void renderError(HttpServletResponse response, HttpStatus httpStatus, String message) {
-        render(response, "{\"error\":\"" + message + "\"}", httpStatus.value(), DEFAULT_CONTENT_TYPE, DEFAULT_CHARSET);
+        // 使用统一 JSON 序列化器，避免手工拼接导致的特殊字符（引号/反斜杠/换行）破坏 JSON 结构或注入额外字段
+        String body = YdszJson.toJson(java.util.Map.of("error", message == null ? "" : message));
+        render(response, body, httpStatus.value(), DEFAULT_CONTENT_TYPE, DEFAULT_CHARSET);
     }
 
     /**

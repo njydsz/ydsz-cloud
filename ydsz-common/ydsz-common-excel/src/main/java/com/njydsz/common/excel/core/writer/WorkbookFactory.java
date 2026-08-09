@@ -156,9 +156,10 @@ public class WorkbookFactory {
                 workbook = new XSSFWorkbook();
                 log.debug("数据量较小 ({} < {}),使用 XSSFWorkbook", dataSize, cacheSize);
             } else {
-                workbook = new SXSSFWorkbook(100);
+                int windowSize = ExcelConfig.getInstance().getWriteCacheSize();
+                workbook = new SXSSFWorkbook(windowSize);
                 ((SXSSFWorkbook) workbook).setCompressTempFiles(true);
-                log.debug("使用 SXSSFWorkbook 流式写入，窗口大小：100行");
+                log.debug("使用 SXSSFWorkbook 流式写入，窗口大小：{}行", windowSize);
             }
         } else {
             workbook = new HSSFWorkbook();

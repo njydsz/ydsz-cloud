@@ -17,7 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonProperty;
+import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.provider.FieldMetadataLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bean 反序列化读取器（FastJSON2 BeanDeserializer 移植版）
@@ -39,6 +42,8 @@ import com.njydsz.common.json.provider.FieldMetadataLoader;
  */
 @SuppressWarnings("deprecation")
 public final class BeanReader<T> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BeanReader.class);
 
     /** Bean 类型 */
     public final Class<T> beanType;
@@ -72,8 +77,8 @@ public final class BeanReader<T> {
             throw new RuntimeException("No default constructor for " + beanType.getName(), e);
         }
 
-        // 预计算字段读取器
-        Field[] fields = beanType.getDeclaredFields();
+        // 预计算字段读取器：遍历自身及所有父类字段（修复继承字段静默丢失，P0-②）
+        List<Field> fields = FieldMetadataLoader.collectDeclaredAndInheritedFields(beanType);
         int count = 0;
         for (Field field : fields) {
             int mods = field.getModifiers();
@@ -97,7 +102,8 @@ public final class BeanReader<T> {
                 this.fieldNameHashes[idx] = fr.jsonNameHash;
                 idx++;
             } catch (Exception e) {
-                // skip
+                // 反射操作失败：记录告警而非静默丢弃，避免字段悄悄丢失（P1-⑦）
+                LOGGER.warn("BeanReader 跳过字段 {}.{}: {}", beanType.getName(), field.getName(), e.toString());
             }
         }
     }
@@ -119,6 +125,14 @@ public final class BeanReader<T> {
      * @throws RuntimeException 当 JSON 意外终止、目标类缺少默认构造函数或字段赋值失败
      */
     public T readObject(JSONReader reader) {
+        return readObject(reader, 0);
+    }
+
+    private T readObject(JSONReader reader, int depth) {
+        if (depth > JSONReader.DEFAULT_MAX_DEPTH) {
+            throw new JsonDeserializationException(
+                "JSON nesting depth exceeds limit: " + depth, reader.pos);
+        }
         reader.skipTo('{');
         if (reader.pos >= reader.len) {
             throw new RuntimeException("Unexpected end of JSON");
@@ -170,13 +184,13 @@ public final class BeanReader<T> {
                 FieldReader fr = fieldReaders[i];
                 // 主匹配：jsonName（@JsonProperty 值或字段名）
                 if (fieldNameHashes[i] == hash && fr.jsonName.equals(fieldName)) {
-                    fr.readValue(reader, obj);
+                    fr.readValue(reader, obj, depth);
                     matched = true;
                     break;
                 }
                 // 回退匹配：原始 Java 字段名（当 @JsonProperty 设置但 JSON 仍用字段名时）
                 if (!matched && fr.fieldName.equals(fieldName)) {
-                    fr.readValue(reader, obj);
+                    fr.readValue(reader, obj, depth);
                     matched = true;
                     break;
                 }
@@ -184,7 +198,7 @@ public final class BeanReader<T> {
                 if (!matched && fr.aliasHashes.length > 0) {
                     for (int j = 0; j < fr.aliasHashes.length; j++) {
                         if (fr.aliasHashes[j] == hash && fr.aliases[j].equals(fieldName)) {
-                            fr.readValue(reader, obj);
+                            fr.readValue(reader, obj, depth);
                             matched = true;
                             break;
                         }
@@ -311,6 +325,11 @@ public final class BeanReader<T> {
          */
         @SuppressWarnings("deprecation")
         public void readValue(JSONReader reader, Object obj) {
+            readValue(reader, obj, 0);
+        }
+
+        @SuppressWarnings("deprecation")
+        public void readValue(JSONReader reader, Object obj, int depth) {
             try {
                 switch (typeCode) {
                     case 1: // String
@@ -422,7 +441,7 @@ public final class BeanReader<T> {
                             field.set(obj, parseEnum(fieldType, s));
                         } else {
                             BeanReader<?> nestedReader = getOrCreateForType(fieldType);
-                            field.set(obj, nestedReader.readObject(reader));
+                            field.set(obj, nestedReader.readObject(reader, depth + 1));
                         }
                         break;
                 }

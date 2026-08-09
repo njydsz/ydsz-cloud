@@ -79,7 +79,7 @@ public class GetuiPushProvider implements PushProvider {
     GetuiPushProvider(MessageProperties.GetuiPushConfig config, RestTemplate restTemplate) {
         this.config = config;
         this.restTemplate = restTemplate;
-        this.snowflakeIdGenerator = new SnowflakeIdGenerator(null, null);
+        this.snowflakeIdGenerator = new SnowflakeIdGenerator();
     }
 
     @Override

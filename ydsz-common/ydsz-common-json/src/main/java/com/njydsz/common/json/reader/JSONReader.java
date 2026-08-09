@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.njydsz.common.json.exception.JsonDeserializationException;
+
 /**
  * 高性能 JSON 读取器
  *
@@ -1100,6 +1102,13 @@ public final class JSONReader {
      * @throws RuntimeException 当起始非 {@code '['}
      */
     public List<Object> readArray(Class<?> elementType) {
+        return readArray(elementType, 0);
+    }
+
+    private List<Object> readArray(Class<?> elementType, int depth) {
+        if (depth > resolveMaxDepth()) {
+            throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
+        }
         skipWhitespace();
         if (pos >= len || buf[pos] != '[') throw new RuntimeException("Expected [ at position " + pos);
         pos++;
@@ -1109,7 +1118,7 @@ public final class JSONReader {
             if (pos >= len) break;
             if (buf[pos] == ']') { pos++; return result; }
             if (buf[pos] == ',') { pos++; continue; }
-            Object element = readArrayElement(elementType);
+            Object element = readArrayElement(elementType, depth + 1);
             result.add(element);
         }
         return result;
@@ -1117,23 +1126,31 @@ public final class JSONReader {
 
 
     private Object readArrayElement(Class<?> elementType) {
-        if (elementType == null || elementType == Object.class) return readAnyValue();
+        return readArrayElement(elementType, 0);
+    }
+
+    private Object readArrayElement(Class<?> elementType, int depth) {
+        if (elementType == null || elementType == Object.class) return readAnyValue(depth);
         if (elementType == String.class) return readString();
         if (elementType == int.class || elementType == Integer.class) return Integer.valueOf(readInt());
         if (elementType == long.class || elementType == Long.class) return Long.valueOf(readLong());
         if (elementType == double.class || elementType == Double.class) return Double.valueOf(readDouble());
         if (elementType == float.class || elementType == Float.class) return Float.valueOf(readFloat());
         if (elementType == boolean.class || elementType == Boolean.class) return Boolean.valueOf(readBoolean());
-        return readAnyValue();
+        return readAnyValue(depth);
     }
 
     private Object readAnyValue() {
+        return readAnyValue(0);
+    }
+
+    private Object readAnyValue(int depth) {
         skipWhitespace();
         if (pos >= len) return null;
         char ch = buf[pos];
         if (ch == '"') return readString();
-        if (ch == '{') return readObjectMap();
-        if (ch == '[') return readArray(Object.class);
+        if (ch == '{') return readObjectMap(depth + 1);
+        if (ch == '[') return readArray(Object.class, depth + 1);
         if (ch == 't') { pos += 4; return true; }
         if (ch == 'f') { pos += 5; return false; }
         if (ch == 'n') { pos += 4; return null; }
@@ -1151,6 +1168,13 @@ public final class JSONReader {
      * @throws RuntimeException 当起始非 {@code '{'}
      */
     public Map<String, Object> readObjectMap() {
+        return readObjectMap(0);
+    }
+
+    private Map<String, Object> readObjectMap(int depth) {
+        if (depth > resolveMaxDepth()) {
+            throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
+        }
         skipWhitespace();
         if (pos >= len || buf[pos] != '{') throw new RuntimeException("Expected { at position " + pos);
         pos++;
@@ -1164,7 +1188,7 @@ public final class JSONReader {
             if (key == null) break;
             skipTo(':');
             if (pos < len) pos++;
-            Object value = readAnyValue();
+            Object value = readAnyValue(depth + 1);
             result.put(key, value);
         }
         return result;

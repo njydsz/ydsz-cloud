@@ -58,7 +58,11 @@ public class ErrorCodeTable {
     public void registerCode(String module, String code, String key, String enumName) {
         ModuleEntry entry = moduleIndex.computeIfAbsent(module, k -> new ModuleEntry(module, module));
         entry.codes().put(code, new CodeEntry(code, key, enumName));
-        codeIndex.putIfAbsent(code, lookupByEnumName(enumName));
+        // 注意：全局 code→ExceptionCode 反查索引（codeIndex）由 registerAll(codeMap) 统一填充，
+        // 此处仅维护按模块的 CodeEntry 明细（供 groupByModule / getCodes / lookupByCode 使用）。
+        // 早期版本曾在此处调用 lookupByEnumName(enumName) 直接写入 codeIndex，但该辅助方法只能拿到
+        // 枚举常量名而无法解析出真实的 ExceptionCode 实例，且 ConcurrentHashMap 禁止 null 值，
+        // 会在扫描注册首条常量时抛出 NullPointerException，故移除。
     }
 
     /**
@@ -158,32 +162,35 @@ public class ErrorCodeTable {
         return codeIndex.size();
     }
 
-    /**
-     * 查找注册信息对应的全局 ExceptionCode 实例（通过枚举类名反查注册表）。
-     *
-     * <p>这是一个便捷方法：当 scanner 扫描到枚举类名但尚未加载类时，
-     * 优先从 globals 查找（需要提前注册）；否则返回 null。
-     *
-     * @param enumName 枚举常量名（如 "BUSINESS_ERROR"）
-     * @return 对应的 ExceptionCode 或 null
-     */
-    private static ExceptionCode lookupByEnumName(String enumName) {
-        // 延迟绑定：异常枚举在 static{} 块中已注册自身到 ExceptionCodeRegistry
-        // 新版本注册流程在 ResultCodeScanner.registerEnum 中处理
-        return null;
-    }
-
     // ==================== 内部记录 ====================
 
     /**
      * 模块元信息。
      *
-     * @param name        模块名
-     * @param description 模块描述
+     * <p>使用普通类而非 record：模块下挂载一个可变的错误码集合（{@link ConcurrentHashMap}），
+     * record 不允许声明实例字段（仅允许 record 组件或 static 字段），故此处用常规类承载可变状态。
+     *
+     * <p>该对象仅作为 {@link #moduleIndex} 的值按模块名（key）检索，不直接参与相等性比较，
+     * 因此沿用默认 {@link Object} 的 identity 语义即可。
      */
-    public record ModuleEntry(String name, String description) {
-        /** 该模块的错误码集合 */
+    public static final class ModuleEntry {
+        private final String name;
+        private final String description;
+        /** 该模块的错误码集合（可变，启动期填充） */
         private final ConcurrentHashMap<String, CodeEntry> codes = new ConcurrentHashMap<>();
+
+        public ModuleEntry(String name, String description) {
+            this.name = name;
+            this.description = description;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public String description() {
+            return description;
+        }
 
         public Map<String, CodeEntry> codes() {
             return codes;

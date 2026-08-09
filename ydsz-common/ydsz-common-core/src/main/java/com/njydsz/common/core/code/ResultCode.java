@@ -70,7 +70,11 @@ public interface ResultCode {
      * @return 形如 "error.BAD_REQUEST" 的国际化 key
      */
     default String getMessageKey() {
-        return "error." + ((Enum<?>) this).name();
+        if (this instanceof Enum<?>) {
+            return "error." + ((Enum<?>) this).name();
+        }
+        // 非枚举实现（如实现了 ResultCode 的普通类）同样安全，避免 ClassCastException
+        return "error." + getClass().getSimpleName();
     }
 
     /**

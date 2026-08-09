@@ -1,0 +1,84 @@
+package com.njydsz.common.core.response;
+
+import com.njydsz.common.core.code.ResultCode;
+
+/**
+ * 统一响应结果门面（Results facade）。
+ *
+ * <p>对 {@link BaseResponse} / {@link PageResult} 的常用工厂方法做一层语义化收敛，
+ * 提供简短、类型明确的入口，减少 Controller 直接散用内部静态方法造成的 API 发散。
+ * 本类仅为<b>委托（delegate）</b>，不引入新行为、不新增依赖。</p>
+ *
+ * <h3>设计取舍（避免过度设计）</h3>
+ * <ul>
+ *   <li>异常 → 响应的转换<b>不在此处实现</b>：核心 {@code BaseResponse.error(ResultCode)} 已是规范入口，
+ *       全局 {@code @ControllerAdvice}（异常模块）应直接调用它，避免 core 反向耦合异常类型；
+ *       故不重新引入 {@code extractResultCode(Throwable)} 这类死代码。</li>
+ *   <li>仅暴露高频入口（ok / page / fail），不穷举所有重载，避免与 {@link BaseResponse} 重复膨胀。</li>
+ * </ul>
+ *
+ * <p><b>典型用法：</b></p>
+ * <pre>{@code
+ * return Results.ok(data);
+ * return Results.ok("操作成功", data);
+ * return Results.page(total, pageNum, pageSize, records);
+ * return Results.fail(BaseResultCode.NOT_FOUND);
+ * }</pre>
+ *
+ * @author ydsz-team
+ * @since 1.9.1
+ *
+ * @see BaseResponse
+ * @see PageResult
+ */
+public final class Results {
+
+    private Results() {
+        throw new UnsupportedOperationException("Facade class");
+    }
+
+    /** 成功（无数据）。 */
+    public static <T> BaseResponse<T> ok() {
+        return BaseResponse.success();
+    }
+
+    /** 成功（带数据）。 */
+    public static <T> BaseResponse<T> ok(T data) {
+        return BaseResponse.success(data);
+    }
+
+    /** 成功（自定义消息 + 数据）。 */
+    public static <T> BaseResponse<T> ok(String msg, T data) {
+        return BaseResponse.success(msg, data);
+    }
+
+    /** 分页成功响应（强类型信封 {@link PageResult}）。 */
+    public static <T> PageResult<T> page(Long total, Long pageNum, Long pageSize, T data) {
+        return PageResult.success(total, pageNum, pageSize, data);
+    }
+
+    /** 分页失败响应（强类型信封 {@link PageResult}）。 */
+    public static <T> PageResult<T> pageFail(ResultCode resultCode) {
+        return PageResult.error(resultCode);
+    }
+
+    /** 失败（未知错误）。 */
+    public static <T> BaseResponse<T> fail() {
+        return BaseResponse.error();
+    }
+
+    /** 失败（自定义消息）。 */
+    public static <T> BaseResponse<T> fail(String msg) {
+        return BaseResponse.error(msg);
+    }
+
+    /** 失败（错误码 + i18n 消息）。 */
+    public static <T> BaseResponse<T> fail(ResultCode resultCode) {
+        return BaseResponse.error(resultCode);
+    }
+
+    /** 失败（错误码 + 自定义消息）。 */
+    public static <T> BaseResponse<T> fail(ResultCode resultCode, String msg) {
+        return BaseResponse.error(resultCode, msg);
+    }
+}
