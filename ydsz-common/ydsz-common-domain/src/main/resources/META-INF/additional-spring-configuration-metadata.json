@@ -1,0 +1,53 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.domain.page.max-search-key-length",
+      "type": "java.lang.Integer",
+      "description": "搜索关键字最长长度（1~500，默认 200）。超长的 searchKey 将被截断到此长度。"
+    },
+    {
+      "name": "ydsz.domain.page.cursor-warning-threshold",
+      "type": "java.lang.Long",
+      "description": "触发深度分页警告的 offset 阈值（默认 10000）。超过此值的 offset 分页将在日志中发出 WARN，提醒改用游标分页。"
+    },
+    {
+      "name": "ydsz.domain.page.cursor-reject-threshold",
+      "type": "java.lang.Long",
+      "description": "强制拒绝深度分页的 offset 阈值（默认 50000）。超过此值的 offset 分页将被拦截器拒绝，必须改用游标分页。"
+    },
+    {
+      "name": "ydsz.domain.tree.max-depth",
+      "type": "java.lang.Integer",
+      "description": "树构建最大深度限制（1~100，默认 10）。超过此深度的树构建将抛出异常防止栈溢出。"
+    },
+    {
+      "name": "ydsz.domain.idempotent.default-expire-seconds",
+      "type": "java.lang.Long",
+      "description": "幂等键默认过期时间（秒，默认 86400 = 24 小时）。与 Stripe / 支付宝 / 微信支付业界惯例对齐。"
+    }
+  ],
+  "hints": [
+    {
+      "name": "ydsz.domain.page.max-search-key-length",
+      "values": [
+        { "value": 200, "description": "默认值" },
+        { "value": 100, "description": "短关键字模式（如编码、状态）" },
+        { "value": 500, "description": "长关键字模式（如名称、描述）" }
+      ]
+    },
+    {
+      "name": "ydsz.domain.tree.max-depth",
+      "values": [
+        { "value": 10, "description": "默认值（适合大多数树形结构）" },
+        { "value": 20, "description": "深层树（如组织架构、行政区域）" }
+      ]
+    }
+  ],
+  "deprecated": [
+    {
+      "name": "ydsz.domain.enabled",
+      "type": "java.lang.Boolean",
+      "reason": "v1.7.0 已移除。Domain 模块不再提供 enabled 开关，改为通过 Spring Boot 自动装配机制控制。"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+com.njydsz.common.socket.config.WebSocketAutoConfiguration
+com.njydsz.common.socket.config.WebSocketClusterAutoConfiguration

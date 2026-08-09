@@ -1,6 +1,6 @@
-# remi-common-exception 过度设计审计报告
+# ydsz-common-exception 过度设计审计报告
 
-**审计范围**: `remi-common-exception` 模块（v2.0，Spring Boot 4.1.0 / JDK 21）
+**审计范围**: `ydsz-common-exception` 模块（v2.0，Spring Boot 4.1.0 / JDK 21）
 **审计维度**: 职责边界、API 复杂度、注册机制、配置表面、运行时开销、业务贴合度
 **对标基线**: 阿里 Java 开发手册（泰山版）、美团内部异常规范、Spring 6/7 官方实践、Apache Dubbo / Sentinel 开源实现、RuoYi-Cloud / Pig / SpringBlade 竞品
 
@@ -14,7 +14,7 @@
 |------|------|
 | 源文件数 | 31 个 Java 文件（含测试类 3 个） |
 | 包层级 | `custom / handler / code / enums / registry / config / core / endpoint / health / metrics` 10 个子包 |
-| 异常基类 | 1 个抽象类 `AbstractRemiException` + 2 个具体类 `BusinessException` / `SysException` |
+| 异常基类 | 1 个抽象类 `AbstractYdszException` + 2 个具体类 `BusinessException` / `SysException` |
 | 错误码枚举 | 公共 4 个（含 1 个废弃）+ 8 个业务模块独立枚举 |
 | 全局 Handler | 4 个（MVC / WebFlux / Validation / JDBC）+ 1 个网关 `GatewayErrorHandler` + 1 个 App 端 |
 | 配置项 | `ExceptionProperties` 8 项 + `I18nProperties` 6 项 |
@@ -27,20 +27,20 @@
 
 ```
 RuntimeException
-└── AbstractRemiException (抽象基类)
+└── AbstractYdszException (抽象基类)
     ├── BusinessException (业务 400/ERROR/BUSINESS, code=A01051)
     └── SysException (系统 500/ERROR/SYSTEM, code=B01051)
         ├── LlmException (agent-domain, 含 ErrorType 枚举)
         └── ModelInvocationException (literule-domain)
 ```
 
-脱离体系独立异常（继承 RuntimeException 而非 AbstractRemiException）：
-- `OpenFeignException`（remi-common-feign）
-- `DeepPaginationException`（remi-common-domain）
-- `JsonException`（remi-common-json）
-- `DocumentException`（remi-common-docs）
-- `TenantIsolationException`（remi-common-jdbc）
-- `ClockBackwardException`（remi-common-util）
+脱离体系独立异常（继承 RuntimeException 而非 AbstractYdszException）：
+- `OpenFeignException`（ydsz-common-feign）
+- `DeepPaginationException`（ydsz-common-domain）
+- `JsonException`（ydsz-common-json）
+- `DocumentException`（ydsz-common-docs）
+- `TenantIsolationException`（ydsz-common-jdbc）
+- `ClockBackwardException`（ydsz-common-util）
 - workflow/agent 大量 `IllegalArgumentException` 直接抛出
 
 ---
@@ -49,7 +49,7 @@ RuntimeException
 
 ### 2.1 【P0-1】三套注册表并存 + 启动期三写（复杂度与性能的无效开销）
 
-**现状**：`ResultCodeScanner` 在 `@EventListener(ApplicationReadyEvent.class)` 触发后，将每个 `@RemiResultCode` 标注的枚举同时写入：
+**现状**：`ResultCodeScanner` 在 `@EventListener(ApplicationReadyEvent.class)` 触发后，将每个 `@YdszResultCode` 标注的枚举同时写入：
 1. `ErrorCodeTable`（ConcurrentHashMap 双索引 + ModuleEntry Record）
 2. `ExceptionCodeRegistry`（过渡门面，内部另有 ConcurrentHashMap 兜底）
 3. `ResultCodeRegistry`（旧端点兼容 Map）
@@ -79,7 +79,7 @@ RuntimeException
 **问题分析**：
 - **"半迁移"状态比不迁移更危险**：新开发者看到 `UnifiedExceptionCode` 的 @Deprecated 可能误以为是安全的过渡期；部分历史错误码（如 A00000、B01xxx、C01xxx 前缀的子码）仍在使用中
 - **错误码命名空间混乱**：`CoreExceptionCode.A00000_OK` 与 `UnifiedExceptionCode.A00000` 并存，语义重叠但分属两套枚举
-- **启动 fail-fast 无法兜底**：`RemiExceptionCoreAutoConfiguration.validateExceptionCodeKeys()` 启动时校验所有已注册码的 i18n 可解析性，但已废弃码仍被注册进全局表，增加无谓校验成本
+- **启动 fail-fast 无法兜底**：`YdszExceptionCoreAutoConfiguration.validateExceptionCodeKeys()` 启动时校验所有已注册码的 i18n 可解析性，但已废弃码仍被注册进全局表，增加无谓校验成本
 
 **对标**：
 - 阿里开发手册：废弃 API 必须明确迁移路径与 deadline，禁止无限期并行
@@ -93,7 +93,7 @@ RuntimeException
 | 移除 `UnifiedExceptionCode` 的 `static {}` 块全局注册（改为按需显式引用） | v2.1 第 3 周 | 启动速度提升 |
 | 删除 `UnifiedExceptionCode` 类并更新 CHANGELOG | v2.2 大版本 | 彻底治理 |
 
-### 2.3 【P0-3】`AbstractRemiException` 承载了过多职责（上帝类倾向）
+### 2.3 【P0-3】`AbstractYdszException` 承载了过多职责（上帝类倾向）
 
 **现状**：抽象基类同时扮演以下角色：
 1. **异常本身**：持有 code/key/params/httpStatus/level/category 等元数据
@@ -106,7 +106,7 @@ RuntimeException
 **问题分析**：
 - **违反 SRP 单一职责原则**：异常的职责应该是"传递错误信号"，但当前同时承担了国际化、视图桥接、上下文收集、元数据容器
 - **CAS 无锁的过度工程**：异常对象的 `getMessage()` 在实际业务中通常只被调用 1-2 次（日志 + 响应序列化），DCL synchronized 或纯懒加载（双重检查）完全满足，AtomicReference + CAS 增加了字节码复杂度和 JIT 优化障碍
-- **与 Builder 模式的冲突**：`AbstractRemiException` 的 `snapshot` 与 `RemiExceptionBuilder` 的快照暂存区职责重叠，异常自身在构建完成后仍可变（违反不可变对象最佳实践）
+- **与 Builder 模式的冲突**：`AbstractYdszException` 的 `snapshot` 与 `YdszExceptionBuilder` 的快照暂存区职责重叠，异常自身在构建完成后仍可变（违反不可变对象最佳实践）
 - **桥接方法引入匿名内部类**：每次调用 `resultCode()` 都创建新匿名类实例，在高频异常路径（如限流场景）带来不必要的堆分配
 
 **对标**：
@@ -120,7 +120,7 @@ RuntimeException
 |--------|---------|---------|--------|
 | `resultCode()` 桥接方法 | 移出异常主体，改为 `BaseResponse.error(Throwable)` 内部通过 `instanceof` 判断 + 静态工具方法提取 `code` | handler、所有调用方 ResultCode 视图 | 高 |
 | `snapshot` 能力下沉 | 独立的 `ExceptionContextSnapshot` 静态工具，在 `BaseExceptionHandler` 内按需调取，异常自身不持有 | handler、异常基类 | 高 |
-| `messageRef` CAS → 纯懒加载 | 改为 `volatile String message` + synchronized 或更简单的 `lateinit`（原子性由 JVM 保证） | `AbstractRemiException` 内部 | 中 |
+| `messageRef` CAS → 纯懒加载 | 改为 `volatile String message` + synchronized 或更简单的 `lateinit`（原子性由 JVM 保证） | `AbstractYdszException` 内部 | 中 |
 | 严格不可变约束 | 移除 `setCode/setKey/setParams` 等可变方法（已 @Deprecated），构造后快照注入改为不可变 Map copy | 子类构造协议 | 中 |
 | `extData` 可选化 | 仅在显式调用 `data()` 时初始化，默认不创建 ConcurrentHashMap 节省内存 | 异常基类 | 低 |
 
@@ -143,7 +143,7 @@ RuntimeException
 - **日志聚合困难**：ELK/Loki 日志中同一语义的错误码因不同编码无法 GROUP BY 聚合，影响 Sentry 异常率统计
 - **跨模块排障成本高**：`W01001` 与 `B01051` 的关系需人工查表，增加 MTTR
 - **团队扩张瓶颈**：新成员无法通过错误码前缀快速判断所属模块，需记忆 3 套命名规则
-- **文档自动生成受阻**：`/actuator/exception-codes` 无法按统一规则分组，当前只能依赖 `@RemiResultCode(module=...)` 手动标注
+- **文档自动生成受阻**：`/actuator/exception-codes` 无法按统一规则分组，当前只能依赖 `@YdszResultCode(module=...)` 手动标注
 
 **对标**：
 - 美团内部规范：全局错误码中心统一分配，模块注册需通过审批平台，冲突即拒绝
@@ -155,9 +155,9 @@ RuntimeException
 | 阶段 | 动作 | 实施细节 |
 |------|------|---------|
 | 立即 | 启用启动期严格校验 | `ErrorCodeTable.register()` 冲突时抛 `IllegalStateException` 阻止启动（匹配现有 i18n fail-fast 机制） |
-| v2.1 | 制定编码强制规范 | 发布《REMI 错误码分配规范》：前缀（A/B/C/D/E）+ 模块号（2 位）+ 序号（3 位），公共枚举约束在 `Core/Security/RateLimit`，业务枚举预留号段（B30-B99 不允许占用公共区间） |
+| v2.1 | 制定编码强制规范 | 发布《YDSZ 错误码分配规范》：前缀（A/B/C/D/E）+ 模块号（2 位）+ 序号（3 位），公共枚举约束在 `Core/Security/RateLimit`，业务枚举预留号段（B30-B99 不允许占用公共区间） |
 | v2.1 | 逐模块号段回收 | Nextwiki `W` 前缀迁移至 `B` 段（如 W01001→B31001），UserInfo `A20xxx` 迁移至 `B30xxx` |
-| v2.2 | 建立错误码注册平台 | 提供 `remi-cli generate-code --module=xxx` 命令自动分配号段并占位 |
+| v2.2 | 建立错误码注册平台 | 提供 `ydsz-cli generate-code --module=xxx` 命令自动分配号段并占位 |
 | 持续 | 代码评审必检 | PR 中新增 `ExceptionCode` 实现需附号段分配截图 |
 
 ---
@@ -168,14 +168,14 @@ RuntimeException
 
 **现状**：
 ```java
-RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
-    └── BusinessExceptionBuilder extends RemiExceptionBuilder<BusinessException>  // 子类固化 T
-    └── SysExceptionBuilder extends RemiExceptionBuilder<SysException>
+YdszExceptionBuilder<T extends AbstractYdszException>   // 基类泛型 T
+    └── BusinessExceptionBuilder extends YdszExceptionBuilder<BusinessException>  // 子类固化 T
+    └── SysExceptionBuilder extends YdszExceptionBuilder<SysException>
 ```
 
 问题：
-- **基类 setter 返回类型降级**：`code() / key() / params()` 返回 `RemiExceptionBuilder<T>` 而非子类自身类型，链式调用中途若需调用子类特有方法（如 `BusinessExceptionBuilder.data()`）必须强转
-- **快照暂存异常膨胀**：`build()` 阶段的快照 Map 与 `AbstractRemiException` 自身 snapshot 重复
+- **基类 setter 返回类型降级**：`code() / key() / params()` 返回 `YdszExceptionBuilder<T>` 而非子类自身类型，链式调用中途若需调用子类特有方法（如 `BusinessExceptionBuilder.data()`）必须强转
+- **快照暂存异常膨胀**：`build()` 阶段的快照 Map 与 `AbstractYdszException` 自身 snapshot 重复
 - **实际使用率低**：8 个业务模块中，7 个模块直接使用 `new BusinessException(ExceptionCode.XXX)` 构造，仅 workflow 使用 builder 构建复杂上下文
 
 **对标**：
@@ -184,14 +184,14 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 
 **优化建议**：
 - 公共异常场景（占 90%+）提供静态工厂：`BusinessException.of(ExceptionCode)` / `SysException.of(key)`
-- 复杂场景保留 Builder 但简化：移除泛型参数 T，改为返回 `AbstractRemiException`；上下文快照改用 `@ExtensionMethod`（Lombok）或外部 `ExceptionContextCollector`
+- 复杂场景保留 Builder 但简化：移除泛型参数 T，改为返回 `AbstractYdszException`；上下文快照改用 `@ExtensionMethod`（Lombok）或外部 `ExceptionContextCollector`
 
 ### 3.2 【P1-2】MVC + WebFlux 双 Handler 并行维护，条件装配边界模糊
 
 **现状**：
 - `MvcExceptionHandler`（SERVLET）与 `WebFluxExceptionHandler`（REACTIVE）代码重复度约 85%
-- `GatewayErrorHandler` 在 remi-gateway 内独立的 `@Order(-2)` 处理 WebFlux 特定异常（ConnectException→502、TimeoutException→504）
-- 项目实际仅 remi-gateway 使用 WebFlux，其他 8 个业务模块全部 SERVLET
+- `GatewayErrorHandler` 在 ydsz-gateway 内独立的 `@Order(-2)` 处理 WebFlux 特定异常（ConnectException→502、TimeoutException→504）
+- 项目实际仅 ydsz-gateway 使用 WebFlux，其他 8 个业务模块全部 SERVLET
 
 **问题**:
 - **维护成本翻倍**：新增 Handler 逻辑需同时修改两处，容易遗漏
@@ -213,9 +213,9 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 - 引入契约层：`BusinessException` 提供 `BusinessException.combine(ResultCode, Object...)` 静态方法替代裸字符串
 - 抽样检查：CI 流程增加 ArchUnit 规则 `noClasses().should().throwIllegalArgumentExceptionsUnlessWrappedInBusinessException()`
 
-### 3.4 【P1-4】`@RemiResultCode` 扫描器回退到 ASM 字节码扫描的性能与兼容性风险
+### 3.4 【P1-4】`@YdszResultCode` 扫描器回退到 ASM 字节码扫描的性能与兼容性风险
 
-**现状**：`ResultCodeScanner` 优先读取编译期索引 `META-INF/spring/remi-result-codes.idx`，缺失时回退至 `classpath*:com/remisoft/**/*.class` 全量 ASM 扫描。
+**现状**：`ResultCodeScanner` 优先读取编译期索引 `META-INF/spring/ydsz-result-codes.idx`，缺失时回退至 `classpath*:com/njydsz/**/*.class` 全量 ASM 扫描。
 
 **问题**：
 - **启动性能抖动**：ASM 扫描在大型 JAR 包（如 Spring Cloud Alibaba）存在时耗时可达 200ms+
@@ -223,7 +223,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 - **编译期索引生成可靠性**：需额外 Maven Plugin 保证；开发者忘记 clean 时索引过期静默失效
 
 **优化建议**：
-- 完全移除 ASM 回退，改为编译期注解处理器（Annotation Processor）在javac阶段生成`META-INF/remi-result-codes.idx`
+- 完全移除 ASM 回退，改为编译期注解处理器（Annotation Processor）在javac阶段生成`META-INF/ydsz-result-codes.idx`
 - 开启 `-Werror` 严格校验：索引缺失直接编译失败
 
 ---
@@ -244,7 +244,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 
 ### 4.2 【P2-2】`ExceptionProperties.responseFormat` 运行时切换 BASE_RESPONSE / PROBLEM_DETAIL 的合理性
 
-**现状**：支持 `remi.exception.responseFormat=PROBLEM_DETAIL` 配置，运行时切换全局响应格式。
+**现状**：支持 `ydsz.exception.responseFormat=PROBLEM_DETAIL` 配置，运行时切换全局响应格式。
 
 **问题**：
 - **违反 API 契约稳定性**：同一服务的响应格式频繁切换，客户端难以兼容
@@ -256,7 +256,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 
 ### 4.3 【P2-3】i18n 启动校验 fail-fast 与 Spring 懒加载哲学冲突
 
-**现状**：`RemiExceptionCoreAutoConfiguration.validateExceptionCodeKeys()` 启动时主动遍历所有已注册错误码并调用 `MessageSource.getMessage()` 校验，缺失即抛 `IllegalStateException` 阻止启动。
+**现状**：`YdszExceptionCoreAutoConfiguration.validateExceptionCodeKeys()` 启动时主动遍历所有已注册错误码并调用 `MessageSource.getMessage()` 校验，缺失即抛 `IllegalStateException` 阻止启动。
 
 **问题**：
 - 项目模块数 × 错误码数 × 4 语种 = ~200×4 = 800 次 MessageSource 调用在启动关键路径上
@@ -264,17 +264,17 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 
 **优化建议**：
 - 改为 `@EventListener(ContextRefreshedEvent.class)` 异步校验 + 仅 warn（不阻止启动）或
-- 提供 `remi.exception.i18n.fail-fast=true|false` 开关，生产环境默认关闭
+- 提供 `ydsz.exception.i18n.fail-fast=true|false` 开关，生产环境默认关闭
 
 ### 4.4 【P2-4】异常快照 `snapshot` 能力使用率低且与 MDC 职责重叠
 
-**现状**：`AbstractRemiException.snapshot(key, value)` / `snapshots(Map)` 用于业务上下文透传；workflow/agent/cronjob 实际采样中均未使用，仅 Nextwiki 有少量调用。
+**现状**：`AbstractYdszException.snapshot(key, value)` / `snapshots(Map)` 用于业务上下文透传；workflow/agent/cronjob 实际采样中均未使用，仅 Nextwiki 有少量调用。
 
 **对标**：
 - 美团内部：使用 MDC（Mapped Diagnostic Context）+ 自定义 `DiagnosticContextFilter` 实现全链路业务上下文，不依赖异常对象携带
 
 **优化建议**：
-- 移除 `AbstractRemiException.snapshot` 链式 API，改为 `MDCUtils.put(key, value)` 工具类
+- 移除 `AbstractYdszException.snapshot` 链式 API，改为 `MDCUtils.put(key, value)` 工具类
 - 若确需异常内携带，独立为 `ExceptionContextHolder.set(snapshot)` 静态方法
 
 ---
@@ -302,7 +302,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 |--------|------|---------|---------|
 | **P0** | 三套注册表合并 → 单 `ErrorCodeTable` | 2 人日 | 启动速度 ↑15ms / 维护成本 ↓30% |
 | **P0** | `UnifiedExceptionCode` 完全下线 | 3 人日 | 消除迁移隐患 |
-| **P0** | `AbstractRemiException` 单一职责重构 | 5 人日 | 认知负担 ↓50% |
+| **P0** | `AbstractYdszException` 单一职责重构 | 5 人日 | 认知负担 ↓50% |
 | **P0** | 错误码编码规范三系归一 + 启动强约束 | 2 人日 | 日志聚合 ↑ / 排障速度 ↑ |
 | **P1** | Builder 模式简化（移除 CRTP + 快照重叠） | 1 人日 | API 易用性 ↑ |
 | **P1** | MVC / WebFlux Handler 共用逻辑提升至 95% | 2 人日 | 维护成本 ↓ |
@@ -319,7 +319,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 
 ### ADR-001：异常元数据字段数量控制
 
-**背景**：`AbstractRemiException` 承载 8 个元数据字段 + snapshot + extData
+**背景**：`AbstractYdszException` 承载 8 个元数据字段 + snapshot + extData
 
 **决策**：
 - 保留核心 5 个字段：`code`、`key`、`params`、`httpStatus`、`level`
@@ -354,13 +354,13 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 **决策**：
 - HTTP API：统一 `BaseResponse<T>`（业务响应）
 - Actuator 端点：自动走 Spring Boot `ProblemDetail`（原生支持）
-- 移除全局 `remi.exception.responseFormat` 配置
+- 移除全局 `ydsz.exception.responseFormat` 配置
 
 ---
 
 ## 八、对标竞品设计对照
 
-| 维度 | Remi-Cloud 现状 | RuoYi-Cloud | Pig | SpringBlade | 美团内部规范 |
+| 维度 | Ydsz Cloud 现状 | RuoYi-Cloud | Pig | SpringBlade | 美团内部规范 |
 |------|----------------|-------------|-----|------------|------------|
 | 异常类分层 | 3 级（Abstract + Biz + Sys） | 2 级（BusinessException + 子类） | 2 级 | 2 级 | 3 级（Biz + Sys + Infra） |
 | 错误码注册 | 3 套注册表（过度） | 1 套枚举 | 1 套注解驱动 | 1 套全局常量 | 1 套注册中心 |
@@ -369,7 +369,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 | 国际化深度 | 4 语种 + i18n | 无 | 单点扩展 | 无 | 全链路 |
 | 监控指标 | Micrometer + 自定义 | 基础指标 | Prometheus 集成 | Sentinel 指标 | 全维度 |
 
-**结论**：Remi-Cloud 在**国际化深度**和**监控丰富度**上领先竞品，但在**注册机制简洁性**和**编码规范统一性**上存在明显过度设计。将 P0 动作落地后，整体复杂度将与 SpringBlade / Pig 持平，在可观测性上保持优势。
+**结论**：Ydsz Cloud 在**国际化深度**和**监控丰富度**上领先竞品，但在**注册机制简洁性**和**编码规范统一性**上存在明显过度设计。将 P0 动作落地后，整体复杂度将与 SpringBlade / Pig 持平，在可观测性上保持优势。
 
 ---
 
@@ -377,11 +377,11 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 
 ### 9.1 评估定论
 
-`remi-common-exception` 是一个 **设计意图正确但执行层面存在过度工程化** 的异常基础设施模块。其核心问题不是"功能不足"，而是"为了灵活性牺牲了简洁性"：
+`ydsz-common-exception` 是一个 **设计意图正确但执行层面存在过度工程化** 的异常基础设施模块。其核心问题不是"功能不足"，而是"为了灵活性牺牲了简洁性"：
 
 - **三套注册表**是为了迁移期兼容，但迁移已完成后未及时清理
 - **Builder 模式 + CRTP**是为了 API 优雅性，但实际使用率 <10%
-- **AbstractRemiException 上帝类**是为了"一站式解决"，但违反了单一职责
+- **AbstractYdszException 上帝类**是为了"一站式解决"，但违反了单一职责
 - **三套编码规范并存**是为了"模块自治"，但缺乏强制收敛机制
 
 ### 9.2 不应为了"简洁"而砍掉的能力
@@ -391,7 +391,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 1. **i18n 国际化**：多语种是出海业务的硬需求
 2. **Micrometer 指标采集**：可观测性是微服务架构基石
 3. **RFC 7807 ProblemDetail 适配**：虽然当前使用率不高，但对未来云原生集成（服务网格、网关层）有价值
-4. **`@RemiResultCode` 编译期索引**：ASM 回退需移除，但索引机制本身是生产优化亮点
+4. **`@YdszResultCode` 编译期索引**：ASM 回退需移除，但索引机制本身是生产优化亮点
 5. **`ErrorCodeTable` 双索引**：分别服务运行时反查与文档生成，职责清晰
 
 ### 9.3 后续行动清单（Action Items）
@@ -400,7 +400,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 |------|------|---------|---------|---------|
 | AI-001 | 合并三套注册表为核心 `ErrorCodeTable` | 核心架构师 | v2.1 M1 | 单元测试全绿 + 启动耗时下降 |
 | AI-002 | `UnifiedExceptionCode` 完全下线 | 异常模块 Owner | v2.1 M2 | Grep 0 引用 |
-| AI-003 | `AbstractRemiException` 元数据字段压缩至 5 个 | 异常模块 Owner | v2.1 M2 | ArchUnit 规则生效 |
+| AI-003 | `AbstractYdszException` 元数据字段压缩至 5 个 | 异常模块 Owner | v2.1 M2 | ArchUnit 规则生效 |
 | AI-004 | 错误码强制规范发布 + 存量迁移 | 全体模块 Owner | v2.1 M3 | CI 新增编码规则校验 |
 | AI-005 | Builder 模式简化 + snapshot 下沉 | 异常模块 Owner | v2.1 M2 | 调用方代码无 CRPE 强转 |
 | AI-006 | ASM 移除 + 注解处理器迁移 | 构建工程师 | v2.2 M1 | GraalVM 原生镜像兼容 |
@@ -424,7 +424,7 @@ RemiExceptionBuilder<T extends AbstractRemiException>   // 基类泛型 T
 | 配置表面 | 默认值覆盖 90% 场景 | 每个细节都可配置 |
 | 模式密度 | 按需引入 | CRTP + Builder + CAS + Bridge + Template Method 全上 |
 
-Remi-Cloud 当前在"注册表数量"和"模式密度"两个维度踩线，其余维度控制得当。
+Ydsz Cloud 当前在"注册表数量"和"模式密度"两个维度踩线，其余维度控制得当。
 
 ### B. 推荐的设计哲学
 

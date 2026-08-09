@@ -1,0 +1,193 @@
+# =====================================================================
+#  YDSZ · Gateway · DEV 环境配置（Nacos DataId）
+#  --------------------------------------------------------------------
+#  DataId:    ydsz-gateway-dev.yaml
+#  Group:     dev
+#  Profile:   dev
+#  端口:      9000
+#  说明:      Nacos 配置中心加载此文件后等价于 application.yml，
+#             配合 bootstrap.yml 完成启动。
+# =====================================================================
+
+server:
+  port: 9000
+  max-http-request-header-size: 16KB
+  # P1-10: 响应压缩（节省 60-80% 带宽）
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain,text/css,application/javascript
+    min-response-size: 1024
+  # P0-阶段二-8: 优雅停机（等待进行中的请求完成）
+  shutdown: graceful
+  # P1: 隐藏 Server 响应头，避免暴露 Reactor Netty 技术栈指纹
+  netty:
+    response:
+      server-header: ""
+
+spring:
+  profiles: dev
+  # P0-阶段二-8: 优雅停机超时（30s 内未完成则强制关闭）
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:*}
+            allowedMethods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+            allowedHeaders: "Authorization,Content-Type,X-Requested-With,X-Access-Token,X-Trace-Id,X-Gray-Tag"
+            exposedHeaders:
+              - Authorization
+              - X-Trace-Id
+              - Content-Disposition
+            allowCredentials: true
+            maxAge: 3600
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        # P0-4: 请求体大小限制 10MB（防 DoS）
+        - RequestSize=10485760
+        # P0-阶段二-5: 网关层重试（仅对 GET 幂等请求重试，避免非幂等请求重复执行）
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE
+            methods: GET,OPTIONS
+            backoff:
+              firstBackoff: 100ms
+              maxBackoff: 500ms
+              factor: 2
+              basedOnPreviousValue: true
+      # P0-3: 连接超时 + 响应超时（防雪崩）
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 30s
+        websocket:
+          max-frame-payload-length: 65536
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
+      eager: true
+      filter:
+        enabled: true
+      scg:
+        fallback:
+          mode: response
+          response-status: 429
+          response-body: '{"code":429,"message":"error.RATE_LIMIT"}'
+    loadbalancer:
+      configurations: gray
+      nacos:
+        enabled: true
+
+feign:
+  sentinel:
+    enabled: true
+
+# =====================================================================
+# YDSZ · Gateway · P0 安全配置（P0-2 / P0-4 / P0-6）
+# =====================================================================
+ydsz:
+  # JSON 引擎配置（ydsz-common-json）
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    streaming-enabled: true
+    warmup-classes:
+      - com.njydsz.common.core.response.BaseResponse
+      - org.springframework.cloud.gateway.route.RouteDefinition
+      - com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule
+  gateway:
+    # P0-2: 内部头签名密钥（与 JWT 密钥分离，避免单密钥泄漏导致整体信任链破裂）
+    # ⚠️ 生产环境必须通过 REMI_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入强随机密钥（≥32 字节）
+    # 开发环境如未配置，自动回退到 ydsz.jwt.secret（仅用于本地调试）
+    internal-sign-secret: ${REMI_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
+    # P0-4: WebSocket Origin 白名单（防跨域 WebSocket 劫持）
+    # 逗号分隔，支持通配符（如 https://*.ydsz.example.com）
+    # dev 环境为空表示不校验 Origin；prod 环境必须配置可信域
+    websocket:
+      allowed-origins: ${REMI_GATEWAY_WS_ALLOWED_ORIGINS:}
+    # P0-阶段二-2/3/4: Sentinel 规则配置
+    sentinel:
+      nacos-datasource-enabled: false
+      degrade-rule-data-id: ydsz-gateway-sentinel-degrade.json
+      system-rule-data-id: ydsz-gateway-sentinel-system.json
+      rule-group: dev
+    # P0-阶段二-6: HttpClient 连接池配置
+    httpclient:
+      pool:
+        max-connections: 500
+        pending-acquire-timeout-ms: 45000
+        max-idle-time-seconds: 30
+        max-life-time-seconds: 60
+        eviction-interval-seconds: 60
+    # P0-阶段二-7: K8s health probe 路径放行
+    health-probe:
+      paths:
+        - /actuator/health
+        - /actuator/health/liveness
+        - /actuator/health/readiness
+        - /actuator/info
+    # P1-3: API Key 认证配置（外部系统接入）
+    api-key:
+      enabled: ${REMI_GATEWAY_API_KEY_ENABLED:false}
+      keys: ${REMI_GATEWAY_API_KEYS:}
+      protected-paths: /api/project/**,/api/workflow/**
+    # P1-8: 请求体安全校验配置
+    payload-validation:
+      enabled: true
+      max-body-size-mb: 10
+      max-json-depth: 50
+      strict-content-type: true
+
+# 日志级别（dev 环境开 DEBUG）
+logging:
+  level:
+    root: INFO
+    "[com.njydsz]": DEBUG
+    "[org.springframework.cloud.gateway]": INFO
+
+# SpringDoc / Knife4j dev 环境开启
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+knife4j:
+  production: false
+
+# Actuator 暴露端点
+management:
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: when-authorized
+      # P0-阶段二-7: K8s 探针分组（liveness / readiness）
+      group:
+        liveness:
+          include:
+            - livenessState
+        readiness:
+          include:
+            - readinessState
+            - ping
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

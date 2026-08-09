@@ -1,0 +1,499 @@
+package com.njydsz.common.cache.internal.tinylfu;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.cache.internal.AbstractCache;
+import com.njydsz.common.cache.internal.lfu.FrequencySketch;
+import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.cache.stats.CacheStats;
+
+/**
+ * Window-TinyLFU 缓存实现（Caffeine 架构）。
+ *
+ * <p>采用三段式 LRU 队列（Window / Probation / Protected）配合 {@link FrequencySketch}
+ * 频率草图，在淘汰时优先保留高频访问条目，兼顾 recency 和 frequency。
+ *
+ * <p>新条目进入 Window 队列；再次访问从 Probation 提升到 Protected；
+ * 淘汰时从 Window 尾部开始，若 Probation 队列非空则比较频率决定淘汰对象。
+ * 频率草图周期性衰减（{@code shiftThreshold} 次访问后重置），实现滑动窗口效果。
+ *
+ * <p>线程安全：读操作无锁并发，写操作（put/remove/evict/promote）使用 {@link ReentrantReadWriteLock} 写锁。
+ * Protected 队列提升使用 {@code safeMoveToProtected} 在写锁内重新校验节点有效性，避免并发淘汰导致野指针。
+ *
+ * @param <K> 缓存键类型
+ * @param <V> 缓存值类型
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
+
+  private static final Logger log = LoggerFactory.getLogger(WindowTinyLFUCache.class);
+
+  private final int maxSize;
+  private final ConcurrentHashMap<K, Node<K, V>> data;
+  private final Node<K, V> windowHead;
+  private Node<K, V> windowTail;
+  private final Node<K, V> probationHead;
+  private Node<K, V> probationTail;
+  private final Node<K, V> protectedHead;
+  private Node<K, V> protectedTail;
+  private final FrequencySketch frequencySketch;
+  private final AtomicLong sizeCounter;
+  private final AtomicLong protectedSize;
+  private final ReentrantReadWriteLock rwLock;
+  private final ReentrantReadWriteLock.WriteLock writeLock;
+  private final int shiftThreshold;
+  private volatile long totalCount;
+
+  public WindowTinyLFUCache(int maxCapacity) {
+    this(maxCapacity, 1);
+  }
+
+  public WindowTinyLFUCache(int maxCapacity, int stripes) {
+    this.maxSize = maxCapacity;
+    this.data = new ConcurrentHashMap<>(Math.max(16, maxCapacity / 2));
+    this.windowHead = new Node<>(null, null, 0);
+    this.windowTail = this.windowHead;
+    this.probationHead = new Node<>(null, null, 1);
+    this.probationTail = this.probationHead;
+    this.protectedHead = new Node<>(null, null, 2);
+    this.protectedTail = this.protectedHead;
+    this.frequencySketch = new FrequencySketch();
+    this.frequencySketch.ensureCapacity(maxCapacity);
+    this.sizeCounter = new AtomicLong(0);
+    this.protectedSize = new AtomicLong(0);
+    this.rwLock = new ReentrantReadWriteLock(false);
+    this.writeLock = rwLock.writeLock();
+    this.totalCount = 0;
+    this.shiftThreshold = Math.max(maxCapacity, 1000);
+    log.info(
+        "Window-TinyLFU 缓存已创建（Caffeine 架构，并发安全增强，周期性衰减机制），maxCapacity={}, shiftThreshold={}",
+        maxCapacity,
+        shiftThreshold);
+  }
+
+  /**
+   * 获取缓存值（不触发加载），并更新访问热度。
+   *
+   * <p>命中时向频率草图登记访问（用于淘汰决策）； 处于 Probation 队列的条目会尝试提升到 Protected 队列
+   * （提升在写锁内重新校验有效性，避免并发淘汰下的野指针）。 null 键直接返回 null 并计入 miss。
+   *
+   * @param key 缓存键，为 null 时返回 {@code null}
+   * @return 缓存值；未命中时返回 {@code null}
+   */
+  @Override
+  public V getIfPresent(K key) {
+    if (key == null) {
+      return null;
+    }
+    Node<K, V> node = data.get(key);
+    if (node == null) {
+      missCount.increment();
+      return null;
+    }
+    frequencySketch.increment(key);
+    if (node.queue == 1) {
+      // 安全提升：在 writeLock 内重新校验 node 是否仍在 data 中且 queue 未变，
+      // 避免并发 put 淘汰导致 node 已从链表移除后仍操作野指针
+      safeMoveToProtected(node, key);
+    }
+    hitCount.increment();
+    return node.value;
+  }
+
+  /**
+   * 写入键值对；容量满时按 W-TinyLFU 频率策略淘汰候选条目。
+   *
+   * <p>整个流程持有写锁，保证容量检查、淘汰与写入原子化。新条目进入 Window 队列；
+   * 键已存在时仅覆盖值并登记访问。每累计 {@code shiftThreshold} 次访问对频率草图做一次
+   * 减半衰减，维持滑动窗口热度语义。null 键或 null 值被静默忽略。
+   *
+   * @param key   缓存键，为 null 时忽略
+   * @param value 缓存值，为 null 时忽略
+   */
+  @Override
+  public void put(K key, V value) {
+    if (key == null || value == null) {
+      return;
+    }
+    // 整个 put 流程均在 writeLock 内执行，避免：
+    // 1) 与 evictOnce() 中 data.remove + notifyRemoval(victim.value) 的数据竞争
+    // 2) existing.value = value 与 frequencySketch.increment(key) 的非原子组合
+    // 3) LFU 容量超限（无锁 size 检查与 put 不原子）
+    writeLock.lock();
+    try {
+      Node<K, V> existing = data.get(key);
+      if (existing != null) {
+        existing.value = value;
+        frequencySketch.increment(key);
+        return;
+      }
+      long currentTotal = totalCount;
+      if (currentTotal >= shiftThreshold) {
+        frequencySketch.reset();
+        totalCount = 0;
+      }
+      totalCount++;
+      while (sizeCounter.get() >= maxSize) {
+        if (!evictOnce()) {
+          break;
+        }
+      }
+      Node<K, V> newNode = new Node<>(key, value, 0);
+      data.put(key, newNode);
+      addFirst(windowHead, newNode);
+      sizeCounter.incrementAndGet();
+      frequencySketch.increment(key);
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  private boolean evictOnce() {
+    Node<K, V> victim = removeLast(windowHead);
+    if (victim != null) {
+      data.remove(victim.key);
+      sizeCounter.decrementAndGet();
+      notifyRemoval(victim.key, victim.value, RemovalCause.SIZE);
+      return true;
+    }
+    victim = removeLast(probationHead);
+    if (victim != null) {
+      if (!isEmpty(protectedHead)) {
+        Node<K, V> protectedFirst = removeFirst(protectedHead);
+        if (protectedFirst != null) {
+          protectedSize.decrementAndGet();
+          if (frequencySketch.frequency(victim.key)
+              < frequencySketch.frequency(protectedFirst.key)) {
+            protectedFirst.queue = 1;
+            addFirst(probationHead, protectedFirst);
+            data.remove(victim.key);
+            sizeCounter.decrementAndGet();
+            notifyRemoval(victim.key, victim.value, RemovalCause.SIZE);
+            return true;
+          } else {
+            data.remove(protectedFirst.key);
+            sizeCounter.decrementAndGet();
+            notifyRemoval(protectedFirst.key, protectedFirst.value, RemovalCause.SIZE);
+            addFirst(probationHead, victim);
+            return true;
+          }
+        }
+      }
+      data.remove(victim.key);
+      sizeCounter.decrementAndGet();
+      notifyRemoval(victim.key, victim.value, RemovalCause.SIZE);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 安全提升到 Protected 队列 — 在 writeLock 内重新校验 node 有效性
+   *
+   * <p>防止并发淘汰场景下操作已从链表移除的 Node（野指针）。
+   *
+   * @param node 待提升的节点
+   * @param key 缓存键（用于重新校验 data 中是否仍存在）
+   */
+  private void safeMoveToProtected(Node<K, V> node, K key) {
+    writeLock.lock();
+    try {
+      // 重新校验：node 仍在 data 中且仍为 probation 队列
+      Node<K, V> current = data.get(key);
+      if (current != node || current.queue != 1) {
+        // node 已被并发淘汰或队列已变更，跳过提升
+        return;
+      }
+      doMoveToProtected(node);
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  private void moveToProtected(Node<K, V> node) {
+    writeLock.lock();
+    try {
+      if (node.queue != 1) {
+        return;
+      }
+      doMoveToProtected(node);
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  private void doMoveToProtected(Node<K, V> node) {
+    remove(node);
+    node.queue = 2;
+    addFirst(protectedHead, node);
+    long pSize = protectedSize.incrementAndGet();
+    if (pSize > maxSize * 0.80) {
+      Node<K, V> demoted = removeLast(protectedHead);
+      if (demoted != null) {
+        demoted.queue = 1;
+        addFirst(probationHead, demoted);
+        protectedSize.decrementAndGet();
+      }
+    }
+  }
+
+  /**
+   * 移除指定键并返回被移除的值。
+   *
+   * <p>写锁内同时从数据表与所在链表移除节点，并向监听器发送 {@link RemovalCause#EXPLICIT} 通知。
+   *
+   * @param key 缓存键，为 null 时返回 {@code null}
+   * @return 被移除的值；键不存在时返回 {@code null}
+   */
+  @Override
+  public V remove(K key) {
+    if (key == null) {
+      return null;
+    }
+    writeLock.lock();
+    try {
+      Node<K, V> node = data.remove(key);
+      if (node != null) {
+        remove(node);
+        sizeCounter.decrementAndGet();
+        notifyRemoval(node.key, node.value, RemovalCause.EXPLICIT);
+        return node.value;
+      }
+      return null;
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  /**
+   * 清空缓存，重置三段 LRU 队列与尺寸计数。
+   *
+   * <p>写锁内对全部条目发送 {@link RemovalCause#EXPLICIT} 通知后清空；
+   * 频率草图不重置（其统计生命周期长于单次清空操作）。
+   *
+   */
+  @Override
+  public void clear() {
+    writeLock.lock();
+    try {
+      for (Node<K, V> node : data.values()) {
+        notifyRemoval(node.key, node.value, RemovalCause.EXPLICIT);
+      }
+      data.clear();
+      clearAll(windowHead);
+      clearAll(probationHead);
+      clearAll(protectedHead);
+      sizeCounter.set(0);
+      protectedSize.set(0);
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  private void addFirst(Node<K, V> head, Node<K, V> node) {
+    node.prev = head;
+    node.next = head.next;
+    if (head.next != null) {
+      head.next.prev = node;
+    } else {
+      // 列表之前为空，更新 tail
+      updateTail(head, null, node);
+    }
+    head.next = node;
+  }
+
+  /** 更新指定头节点对应的 tail 指针 */
+  private void updateTail(Node<K, V> head, Node<K, V> expectedTail, Node<K, V> newTail) {
+    if (head == windowHead) {
+      windowTail = newTail;
+    } else if (head == probationHead) {
+      probationTail = newTail;
+    } else if (head == protectedHead) {
+      protectedTail = newTail;
+    }
+  }
+
+  private void remove(Node<K, V> node) {
+    if (node.prev != null) {
+      node.prev.next = node.next;
+    }
+    if (node.next != null) {
+      node.next.prev = node.prev;
+    }
+    // 更新 tail 指针（如果删除的是尾节点）
+    if (node == windowTail && node.prev != windowHead) {
+      windowTail = node.prev;
+    } else if (node == windowTail && node.prev == windowHead) {
+      windowTail = windowHead;
+    }
+    if (node == probationTail && node.prev != probationHead) {
+      probationTail = node.prev;
+    } else if (node == probationTail && node.prev == probationHead) {
+      probationTail = probationHead;
+    }
+    if (node == protectedTail && node.prev != protectedHead) {
+      protectedTail = node.prev;
+    } else if (node == protectedTail && node.prev == protectedHead) {
+      protectedTail = protectedHead;
+    }
+    node.prev = null;
+    node.next = null;
+  }
+
+  private Node<K, V> removeFirst(Node<K, V> head) {
+    Node<K, V> first = head.next;
+    if (first != null) {
+      head.next = first.next;
+      if (first.next != null) {
+        first.next.prev = head;
+      } else {
+        // 列表变空，重置 tail
+        updateTail(head, null, head);
+      }
+      first.prev = null;
+      first.next = null;
+    }
+    return first;
+  }
+
+  /** O(1) 尾删除（使用 tail 指针） */
+  private Node<K, V> removeLast(Node<K, V> head) {
+    Node<K, V> tail = getTail(head);
+    if (tail == head || tail == null) {
+      return null;
+    }
+    // 从链表中移除尾节点
+    tail.prev.next = null;
+    Node<K, V> newTail = (tail.prev == head) ? head : tail.prev;
+    updateTail(head, tail, newTail);
+    tail.prev = null;
+    tail.next = null;
+    return tail;
+  }
+
+  /** 获取指定头节点对应的 tail 指针 */
+  private Node<K, V> getTail(Node<K, V> head) {
+    if (head == windowHead) return windowTail;
+    if (head == probationHead) return probationTail;
+    if (head == protectedHead) return protectedTail;
+    return null;
+  }
+
+  private boolean isEmpty(Node<K, V> head) {
+    return head.next == null;
+  }
+
+  private void clearAll(Node<K, V> head) {
+    head.next = null;
+    updateTail(head, null, head);
+  }
+
+  /**
+   * 返回缓存条目数（原子计数器，精确的近似值）。
+   *
+   * @return 当前缓存条目数
+   */
+  @Override
+  public long estimatedSize() {
+    return sizeCounter.get();
+  }
+
+  /**
+   * 判断缓存中是否存在指定键。
+   *
+   * @param key 缓存键，为 null 时返回 {@code false}
+   * @return 键存在时返回 {@code true}
+   */
+  @Override
+  public boolean containsKey(K key) {
+    if (key == null) {
+      return false;
+    }
+    return data.containsKey(key);
+  }
+
+  /**
+   * 返回缓存键集合。
+   *
+   * <p>复制为新的 {@link HashSet}，返回一次性快照，不含弱一致视图语义。
+   *
+   * @return 当前缓存键的快照集合
+   */
+  @Override
+  public Set<K> keySet() {
+    return new HashSet<>(data.keySet());
+  }
+
+  /**
+   * 返回缓存值集合。
+   *
+   * <p>复制为一次性快照，值为节点中的实际数据。
+   *
+   * @return 当前缓存值的快照集合
+   */
+  @Override
+  public Collection<V> values() {
+    List<V> values = new ArrayList<>(data.size());
+    for (Node<K, V> node : data.values()) {
+      values.add(node.value);
+    }
+    return values;
+  }
+
+  /**
+   * 获取缓存命中率。
+   *
+   * @return 命中率，范围 [0.0, 1.0]
+   */
+  @Override
+  public double getHitRate() {
+    long total = hitCount.sum() + missCount.sum();
+    return total == 0 ? 0.0 : (double) hitCount.sum() / total;
+  }
+
+  /**
+   * 获取缓存统计快照。
+   *
+   * @return 包含命中数与未命中数的统计对象
+   */
+  @Override
+  public CacheStats getStats() {
+    return new CacheStats(hitCount.sum(), missCount.sum());
+  }
+
+  /**
+   * W-TinyLFU 链表节点：同时服务于 Window / Probation / Protected 三段队列。
+   *
+   * <p>{@code queue} 标记当前所在队列（0=Window，1=Probation，2=Protected），
+   * 提升与降级即修改该字段并在目标队列头尾插入；
+   * {@code prev}/{@code next} 构成双向链表，由各队列的头节点（哨兵）组织。
+   * 除 key 外的字段均为 volatile，保证并发读写下的可见性。
+   *
+   * @author ydsz-team
+   * @since 1.0.0
+   */
+  private static final class Node<K, V> {
+    final K key;
+    volatile V value;
+    volatile int queue;
+    volatile Node<K, V> prev;
+    volatile Node<K, V> next;
+
+    Node(K key, V value, int queue) {
+      this.key = key;
+      this.value = value;
+      this.queue = queue;
+    }
+  }
+}

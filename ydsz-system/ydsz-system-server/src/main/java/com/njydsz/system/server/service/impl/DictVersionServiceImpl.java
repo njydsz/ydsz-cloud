@@ -1,0 +1,146 @@
+package com.njydsz.system.server.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.system.domain.entity.DictVersion;
+import com.njydsz.system.domain.vo.DictVersionVO;
+import com.njydsz.system.infra.mapper.DictVersionMapper;
+import com.njydsz.system.server.service.DictVersionService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import com.njydsz.system.domain.converter.SystemConverter;
+
+/**
+ * 字典版本 Service 实现
+ *
+ * <p>对 {@link DictVersionService} 接口的完整实现，是「字典中心」版本管理子系统的核心业务逻辑层。
+ * 维护字典变更历史快照（schema + 全量字典项 JSON），对标大厂「配置中心 / 字典中心」版本管理能力，
+ * 支持版本回滚、变更审计、配置复盘等场景。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>版本查询</b>：{@link #listByTypeCode} — 按 {@code typeCode} 查询某字典类型的所有历史版本，
+ *       按 {@code effective_date} 倒序返回（最新版本在前）</li>
+ *   <li><b>版本创建</b>：{@link #createVersion} — 由 {@link DictItemServiceImpl} 在写操作成功后调用，
+ *       记录变更前的<b>全量字典项 JSON 快照</b>，写入 {@code ydsz_dict_version} 表</li>
+ *   <li><b>版本回滚</b>：未来扩展 — 通过 {@code snapshotJson} 重建字典项（{@code restoreVersion}），
+ *       当前仅保留快照数据，回滚由管理后台基于快照二次开发</li>
+ * </ul>
+ *
+ * <p><b>事务边界：</b>
+ * <ul>
+ *   <li>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}</li>
+ *   <li>读方法不开启事务，依赖 MyBatis 自动提交</li>
+ *   <li>{@link #createVersion} 通常由 {@link DictItemServiceImpl#save} /
+ *       {@link DictItemServiceImpl#updateById} / {@link DictItemServiceImpl#removeById} 触发，
+ *       <b>必须在同一事务边界内</b>调用，确保字典项变更与版本快照原子性</li>
+ * </ul>
+ *
+ * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离，
+ * 租户过滤由 MyBatis 拦截器注入。
+ *
+ * <p><b>设计要点：</b>
+ * <ul>
+ *   <li><b>不可变记录</b>：版本记录<b>仅新增</b>，不修改 / 不删除（保留完整审计链）</li>
+ *   <li><b>版本号生成</b>：调用方传入（典型格式 {@code "v" + System.currentTimeMillis()}），
+ *       内部不做格式校验</li>
+ *   <li><b>快照大小</b>：典型字典快照 < 1MB，无需压缩；
+ *       极端字典（如行政区划 70w+ 项）由调用方在写入前自行压缩</li>
+ *   <li><b>软删除</b>：{@code ydsz_dict_version} 表采用 <b>逻辑删除</b>（{@code deleted} 字段），
+ *       与物理删除不同</li>
+ * </ul>
+ *
+ * <p><b>典型使用：</b>
+ * <pre>{@code
+ * // 字典变更时自动创建版本（由 DictItemServiceImpl 内部调用）
+ * String versionId = dictVersionService.createVersion(
+ *     "user_status",
+ *     "v" + System.currentTimeMillis(),
+ *     "新增【离职】状态",
+ *     YdszJson.toJson(snapshotBeforeChange)
+ * );
+ *
+ * // 查询某字典的所有历史版本
+ * List<DictVersionVO> versions = dictVersionService.listByTypeCode("user_status");
+ * }</pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ *
+ * @see DictVersionService 字典版本 Service 接口
+ * @see DictItemServiceImpl 字典项 Service（写操作触发版本快照）
+ * @see com.njydsz.system.domain.entity.DictVersion 字典版本实体
+ * @see com.njydsz.system.domain.vo.DictVersionVO 字典版本 VO
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class DictVersionServiceImpl implements DictVersionService {
+
+    /** 字典版本 Mapper（继承 {@code ydsz_dict_version} 表 CRUD） */
+    private final DictVersionMapper mapper;
+
+    /**
+     * 按字典类型编码查询所有历史版本（按生效时间倒序）
+     *
+     * <p>典型调用方：管理后台「字典历史版本」列表页，运营 / 审计人员查看某字典的完整变更链路。
+     *
+     * <p><b>性能说明：</b>
+     * <ul>
+     *   <li>索引：{@code (type_code, deleted, effective_date DESC)}</li>
+     *   <li>单字典类型历史版本一般 < 100 条，单次查询 < 10ms</li>
+     *   <li>若某字典频繁变更（> 1000 版本），建议按时间区间分页查询（{@code listByTypeCode} 未来扩展）</li>
+     * </ul>
+     *
+     * @param typeCode 字典类型编码（{@code ydsz_dict_type.type_code}）
+     * @return 历史版本列表（最新生效时间在前），无版本时返回<b>空列表</b>（不是 null）
+     */
+    @Override
+    public List<DictVersionVO> listByTypeCode(String typeCode) {
+        return mapper.listByTypeCode(typeCode).stream()
+                .map(SystemConverter.INSTANT::entityToVO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 创建字典版本快照
+     *
+     * <p>由 {@link DictItemServiceImpl} 在字典项变更（增 / 删 / 改）后调用，
+     * 记录变更前的<b>全量字典项 JSON 快照</b>，用于版本回滚和变更审计。
+     *
+     * <p><b>关键设计：</b>
+     * <ul>
+     *   <li><b>事务一致性</b>：调用方需在<b>字典项变更事务</b>内调用本方法，
+     *       通过 Spring 事务传播保证原子性（{@code PROPAGATION_REQUIRED}）</li>
+     *   <li><b>快照时机</b>：必须在<b>变更前</b>查询并快照原字典项，
+     *       而非变更后（否则快照反映的是变更后的状态，无法回滚）</li>
+     *   <li><b>版本号语义</b>：{@code version} 字段由调用方决定格式（典型：{@code "v" + 时间戳}），
+     *       本方法不做格式校验</li>
+     *   <li><b>生效时间</b>：{@code effectiveDate} 自动取当前时间</li>
+     * </ul>
+     *
+     * @param typeCode      字典类型编码
+     * @param version       版本号（由调用方决定格式）
+     * @param changeLog     变更说明（如「新增【离职】状态」），用于审计展示
+     * @param snapshotJson  变更前的<b>全量字典项 JSON 快照</b>，由调用方序列化
+     * @return 新创建的版本 ID
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String createVersion(String typeCode, String version, String changeLog, String snapshotJson) {
+        DictVersion entity = new DictVersion();
+        entity.setTypeCode(typeCode);
+        entity.setVersion(version);
+        entity.setChangeLog(changeLog);
+        entity.setSnapshotJson(snapshotJson);
+        entity.setEffectiveDate(LocalDateTime.now());
+        mapper.insert(entity);
+        return entity.getId();
+    }
+}

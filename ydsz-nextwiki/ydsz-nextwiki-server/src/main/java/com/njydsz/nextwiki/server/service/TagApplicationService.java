@@ -1,0 +1,99 @@
+package com.njydsz.nextwiki.server.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.nextwiki.domain.entity.Tag;
+import com.njydsz.nextwiki.domain.service.TagDomainService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 标签应用服务。
+ * <p>标签管理、打标、查询。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TagApplicationService {
+
+    /** 标签领域服务 */
+    private final TagDomainService tagDomainService;
+
+    /**
+     * 创建标签（名称 + 颜色）。
+     *
+     * @param name   标签名称（同用户下建议唯一）
+     * @param color  标签展示颜色（如 "#RRGGBB"，用于前端标识）
+     * @param userId 创建者 ID
+     * @return 新建标签实体 {@link Tag}
+     * @throws 由 {@link TagDomainService} 在名称非法或重复时抛出的业务异常
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}
+     * @complexity O(1)（一次标签写入）
+     * @note 委托 {@link TagDomainService} 实现
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Tag createTag(String name, String color, String userId) {
+        return tagDomainService.createTag(name, color, userId);
+    }
+
+    /**
+     * 查询全部标签列表（通常按创建者或全局作用域）。
+     *
+     * @return 标签列表 {@link Tag}（可能为空，非 {@code null}）
+     * @complexity O(1)（一次查询）
+     * @note 只读，无事务边界
+     */
+    public List<Tag> getAllTags() {
+        return tagDomainService.getAllTags();
+    }
+
+    /**
+     * 批量绑定标签到文件节点（建立文件→标签多对多关系）。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @param tagIds     标签 ID 列表（可空；为空表示解绑全部）
+     * @param userId     操作者 ID
+     * @return 无返回值
+     * @throws 由 {@link TagDomainService} 在节点不存在/无权限时抛出的业务异常
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}
+     * @complexity O(tagIds.size())（逐条建立关系）
+     * @note 委托 {@link TagDomainService} 实现；绑定后影响搜索标签聚合
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void batchBindTags(String fileNodeId, List<String> tagIds, String userId) {
+        tagDomainService.batchBindTags(fileNodeId, tagIds, userId);
+    }
+
+    /**
+     * 查询某文件节点已绑定的标签列表。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @return 标签列表 {@link Tag}（可能为空，非 {@code null}）
+     * @complexity O(1)（一次按节点查询）
+     * @note 只读，无事务边界
+     */
+    public List<Tag> getFileTags(String fileNodeId) {
+        return tagDomainService.getFileTags(fileNodeId);
+    }
+
+    /**
+     * 基于文件内容推荐标签（如按关键词/分类匹配已有标签）。
+     *
+     * @param fileNodeId 文件节点 ID
+     * @return 推荐标签列表 {@link Tag}（可能为空，非 {@code null}）
+     * @complexity 取决于推荐策略（可能为内容提取 + 匹配）
+     * @note 只读推荐，不自动绑定；委托 {@link TagDomainService} 实现
+     */
+    public List<Tag> recommendTags(String fileNodeId) {
+        return tagDomainService.recommendTags(fileNodeId);
+    }
+}

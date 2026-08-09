@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.util.snowflake.worker-id",
+      "type": "java.lang.Long",
+      "description": "工作节点ID（范围 0-31，仅 workerIdSource 为 CONFIG 时生效）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.datacenter-id",
+      "type": "java.lang.Long",
+      "description": "数据中心ID（范围 0-31）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.worker-id-source",
+      "type": "java.lang.String",
+      "description": "workerId 来源策略（ENVIRONMENT_VARIABLE、CONFIG）。默认 ENVIRONMENT_VARIABLE。"
+    },
+    {
+      "name": "ydsz.util.snowflake.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Snowflake 自动配置（默认 true）。"
+    }
+  ]
+}

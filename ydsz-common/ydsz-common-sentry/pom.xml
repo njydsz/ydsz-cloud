@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ydsz-common-sentry</artifactId>
+    <name>ydsz-common-sentry</name>
+    <description>YDSZ Common Sentry - 统一系统指标监控服务（双方案上报 ELK+Logstash / Loki+Alloy + Micrometer 指标 + SLA 框架 + 链路追踪增强 + 告警收敛降噪 + 降级保护）</description>
+
+    <dependencies>
+        <!--common-core-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!--common-util（传递引入 Jackson、SLF4J 等）-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
+        <!--common-exception-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+        <!--common-json（统一 JSON 引擎）-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <!--common-notify（告警通知渠道，可选）-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-notify</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Spring Context -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Spring AOP（SLA 注解切面） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- AspectJ Weaver（@Aspect / @Around 注解支持） -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- Spring Web（LogEvent HTTP 上报，可选） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- Spring Boot Autoconfigure -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Spring Boot Configuration Processor -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Spring Boot Actuator（HealthIndicator，可选） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- Spring Boot Health（Spring Boot 4.x: health classes moved from actuator to health module） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- Micrometer 可观测性（可选） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- Logback（结构化日志 Layout，可选） -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- SkyWalking Trace（可选） -->
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-trace</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- OpenTelemetry API（可选，未来追踪标准） -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- OpenTelemetry SDK Trace（可选，提供 SpanProcessor / ReadableSpan / ReadWriteSpan） -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-trace</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- OpenTelemetry SDK（可选，提供 OpenTelemetrySdk） -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- OpenTelemetry Semantic Conventions（可选，提供 ResourceAttributes） -->
+        <dependency>
+            <groupId>io.opentelemetry.semconv</groupId>
+            <artifactId>opentelemetry-semconv</artifactId>
+            <version>1.30.0-rc.1</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!--lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

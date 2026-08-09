@@ -1,0 +1,15 @@
+# Ydsz Result Codes Index File
+# ===========================
+#
+# 此文件为编译时错误码枚举类索引，由 ResultCodeScanner 在启动时优先加载。
+#
+# 每行一个标注了 @YdszResultCode 注解的枚举类全限定名。
+# 以 # 开头的行为注释。
+#
+# 配置示例：
+# com.example.module.UserExceptionCode
+# com.example.module.OrderResultCode
+#
+# 构建工具插件（Gradle/Maven）可在编译时自动生成此文件内容。
+# 如果此文件为空或不存在，ResultCodeScanner 将回退到 ASM 字节码扫描。
+#

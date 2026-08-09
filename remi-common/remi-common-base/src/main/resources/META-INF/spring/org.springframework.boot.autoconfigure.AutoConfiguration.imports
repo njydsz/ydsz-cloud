@@ -1,6 +1,0 @@
-com.remisoft.common.base.config.BaseAutoConfiguration
-com.remisoft.common.base.config.DocAutoConfiguration
-com.remisoft.common.base.config.DocSecurityConfiguration
-com.remisoft.common.base.config.OpenApiAutoConfiguration
-com.remisoft.common.base.config.Knife4jAutoConfiguration
-com.remisoft.common.base.i18n.I18nAutoConfiguration

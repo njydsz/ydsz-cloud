@@ -1,3 +1,0 @@
-com.remisoft.common.exception.config.RemiExceptionCoreAutoConfiguration
-com.remisoft.common.exception.handler.RemiExceptionHandlerAutoConfiguration
-com.remisoft.common.exception.config.RemiExceptionActuatorAutoConfiguration

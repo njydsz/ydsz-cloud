@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.nextwiki.infra.mapper.FileNodeMapper">
+
+    <resultMap id="FileNodeResult" type="com.njydsz.nextwiki.domain.entity.FileNode">
+        <id column="id" property="id"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="name" property="name"/>
+        <result column="node_type" property="nodeType"/>
+        <result column="suffix" property="suffix"/>
+        <result column="size" property="size"/>
+        <result column="storage_key" property="storageKey"/>
+        <result column="bucket_name" property="bucketName"/>
+        <result column="mime_type" property="mimeType"/>
+        <result column="path" property="path"/>
+        <result column="level" property="level"/>
+        <result column="sort" property="sort"/>
+        <result column="current_version" property="currentVersion"/>
+        <result column="file_hash" property="fileHash"/>
+        <result column="thumbnail_key" property="thumbnailKey"/>
+        <result column="preview_ready" property="previewReady"/>
+        <result column="starred" property="starred"/>
+        <result column="share_status" property="shareStatus"/>
+        <result column="deleted_time" property="deletedTime"/>
+        <result column="original_path" property="originalPath"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="revision" property="revision"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectChildren" resultMap="FileNodeResult">
+        SELECT * FROM nw_file_node
+        WHERE parent_id = #{parentId} AND deleted = 0
+        ORDER BY node_type DESC, sort ASC, name ASC
+    </select>
+
+    <update id="updateWithRevision">
+        UPDATE nw_file_node
+        SET
+            parent_id = #{node.parentId},
+            name = #{node.name},
+            node_type = #{node.nodeType},
+            suffix = #{node.suffix},
+            size = #{node.size},
+            storage_key = #{node.storageKey},
+            bucket_name = #{node.bucketName},
+            mime_type = #{node.mimeType},
+            path = #{node.path},
+            level = #{node.level},
+            sort = #{node.sort},
+            current_version = #{node.currentVersion},
+            file_hash = #{node.fileHash},
+            thumbnail_key = #{node.thumbnailKey},
+            preview_ready = #{node.previewReady},
+            starred = #{node.starred},
+            share_status = #{node.shareStatus},
+            status = #{node.status},
+            updated_by = #{node.updatedBy},
+            updated_at = #{node.updatedAt},
+            revision = revision + 1
+        WHERE id = #{node.id}
+          AND deleted = 0
+          AND revision = #{node.revision}
+    </update>
+
+    <select id="selectPageByParentId" resultMap="FileNodeResult">
+        SELECT * FROM nw_file_node
+        WHERE parent_id = #{parentId} AND deleted = 0
+        <if test="nodeType != null and nodeType != '' and nodeType != 'all'">
+            AND node_type = #{nodeType}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'name'">
+                name
+            </when>
+            <when test="sortBy == 'size'">
+                size
+            </when>
+            <otherwise>
+                updated_at
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="sortDir == 'asc'">
+                ASC
+            </when>
+            <otherwise>
+                DESC
+            </otherwise>
+        </choose>
+        , node_type DESC, sort ASC
+    </select>
+
+    <select id="selectByPathPrefix" resultMap="FileNodeResult">
+        SELECT * FROM nw_file_node
+        WHERE path LIKE CONCAT(#{pathPrefix}, '%') AND deleted = 0
+        ORDER BY level ASC, sort ASC
+    </select>
+
+    <select id="searchByName" resultMap="FileNodeResult">
+        SELECT * FROM nw_file_node
+        WHERE deleted = 0 AND node_type = 'file'
+        AND name ILIKE CONCAT('%', #{keyword}, '%')
+        AND created_by = #{createdBy}
+        ORDER BY updated_at DESC
+        LIMIT 50
+    </select>
+
+    <select id="selectRootByUser" resultMap="FileNodeResult">
+        SELECT * FROM nw_file_node
+        WHERE deleted = 0 AND node_type = 'folder' AND parent_id = '0'
+        AND created_by = #{createdBy}
+        LIMIT 1
+    </select>
+
+</mapper>

@@ -1,4 +1,0 @@
-com.remisoft.common.app.config.AppMvcConfiguration
-com.remisoft.common.app.config.AppTimezoneConfiguration
-com.remisoft.common.app.config.AppI18nConfiguration
-com.remisoft.common.app.config.AppOpenApiConfiguration

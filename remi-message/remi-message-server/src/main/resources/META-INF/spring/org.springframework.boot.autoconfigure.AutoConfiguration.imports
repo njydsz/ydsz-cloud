@@ -1,5 +1,0 @@
-com.remisoft.message.server.config.MessageAutoConfiguration
-com.remisoft.message.server.config.MessageServiceAutoConfiguration
-com.remisoft.message.server.config.NotifyChannelBridgeConfiguration
-com.remisoft.message.server.config.ChannelBulkheadConfiguration
-com.remisoft.message.server.config.BatchExecutorConfig

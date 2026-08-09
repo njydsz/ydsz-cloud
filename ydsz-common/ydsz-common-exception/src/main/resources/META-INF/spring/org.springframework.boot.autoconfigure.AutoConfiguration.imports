@@ -1,0 +1,3 @@
+com.njydsz.common.exception.config.YdszExceptionCoreAutoConfiguration
+com.njydsz.common.exception.handler.YdszExceptionHandlerAutoConfiguration
+com.njydsz.common.exception.config.YdszExceptionActuatorAutoConfiguration

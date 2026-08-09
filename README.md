@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">Remi Cloud</h1>
+  <h1 align="center">Ydsz Cloud</h1>
   <p align="center">
     基于 Spring Boot 4 &amp; Spring Cloud 的企业级微服务开发平台
   </p>
@@ -18,7 +18,7 @@
 
 ## 项目简介
 
-**Remi-Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 五层分层架构，内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎等企业级全业务场景。
+**Ydsz Cloud** 是一套面向企业级应用的微服务快速开发平台，基于 **Spring Boot 4.1.0**、**Spring Cloud 2025.1.2** 和 **Spring Cloud Alibaba 2025.1.0.0** 构建。平台采用 **DDD（领域驱动设计）** 五层分层架构，内置 **10 大核心模块**（1 网关 + 8 微服务 + 1 公共依赖库），覆盖用户认证、系统管理、流程引擎、消息引擎、任务引擎、规则引擎、网盘引擎、智能引擎等企业级全业务场景。
 
 平台对标 **若依（RuoYi）**、**Pig**、**maku-boot**、**SpringBlade**、**JeecgBoot** 等主流开源快速开发平台，在架构设计、代码质量、工程规范与安全治理方面对齐 **阿里巴巴 Java 开发手册**、**Google Java Style Guide** 等行业标准。
 
@@ -43,7 +43,7 @@ graph TB
     end
 
     subgraph "网关层"
-        Gateway["Remi-Gateway :9000<br/>Spring Cloud Gateway + WebFlux<br/>路由 · 鉴权 · 限流 · 灰度"]
+        Gateway["Ydsz-Gateway :9000<br/>Spring Cloud Gateway + WebFlux<br/>路由 · 鉴权 · 限流 · 灰度"]
     end
 
     subgraph "注册中心 & 配置中心"
@@ -51,14 +51,14 @@ graph TB
     end
 
     subgraph "业务服务层"
-        UserInfo["Remi-UserInfo :9001<br/>用户认证 / RBAC / OAuth2"]
-        System["Remi-System :9002<br/>系统参数 / 字典 / 多租户"]
-        NextWiki["Remi-NextWiki :9003<br/>网盘 / 知识库 / Office 预览"]
-        Message["Remi-Message :9004<br/>消息通知 / 12 渠道 / DAG 编排"]
-        Workflow["Remi-Workflow :9005<br/>BPMN 2.0 / 审批流 / 决策表"]
-        CronJob["Remi-CronJob :9006<br/>分布式调度 / 分片 / DAG"]
-        LiteRule["Remi-LiteRule :9007<br/>规则引擎 / DSL / 热加载"]
-        Agent["Remi-Agent :9008<br/>AI 智能体 / RAG / Tool Calling"]
+        UserInfo["Ydsz-UserInfo :9001<br/>用户认证 / RBAC / OAuth2"]
+        System["Ydsz-System :9002<br/>系统参数 / 字典 / 多租户"]
+        NextWiki["Ydsz-NextWiki :9003<br/>网盘 / 知识库 / Office 预览"]
+        Message["Ydsz-Message :9004<br/>消息通知 / 12 渠道 / DAG 编排"]
+        Workflow["Ydsz-Workflow :9005<br/>BPMN 2.0 / 审批流 / 决策表"]
+        CronJob["Ydsz-CronJob :9006<br/>分布式调度 / 分片 / DAG"]
+        LiteRule["Ydsz-LiteRule :9007<br/>规则引擎 / DSL / 热加载"]
+        Agent["Ydsz-Agent :9008<br/>AI 智能体 / RAG / Tool Calling"]
     end
 
     subgraph "中间件"
@@ -69,7 +69,7 @@ graph TB
     end
 
     subgraph "公共能力底座"
-        Common["Remi-Common（30 子模块）<br/>Core · Util · Auth · Safe · Feign · Lock · Cache · Excel · Docs · ..."]
+        Common["Ydsz-Common（30 子模块）<br/>Core · Util · Auth · Safe · Feign · Lock · Cache · Excel · Docs · ..."]
     end
 
     subgraph "可观测性"
@@ -114,7 +114,7 @@ graph TB
 | **认证鉴权** | jjwt | 0.12.6 | JWT Token |
 | **文档 & API** | SpringDoc + Knife4j | 3.0.3 / 4.5.0 | OpenAPI 3.0 文档 |
 | **对象映射** | MapStruct | 1.6.3 | 编译期代码生成 |
-| **JSON** | remi-common-json<br/>（RemiJson） | 自研 | 零外部依赖 · ASM 字节码 · SIMD 向量化 |
+| **JSON** | ydsz-common-json<br/>（YdszJson） | 自研 | 零外部依赖 · ASM 字节码 · SIMD 向量化 |
 | **监控** | Micrometer + Prometheus + Sentry | — | 指标采集 / 异常追踪 |
 | **日志** | Logback + Logstash Encoder | 7.4 | JSON 格式日志输出 |
 
@@ -123,69 +123,69 @@ graph TB
 ## 模块说明
 
 ```
-remi-cloud/
-├── remi-common/              # 🧱 公共能力底座（30 子模块，不独立部署）
-│   ├── remi-common-core      # L1：统一响应 / TraceId / 特性开关
-│   ├── remi-common-util      # L2：99 工具类（加密 / IP / 雪花ID）
-│   ├── remi-common-json      # L2：高性能 JSON 引擎（ASM / SIMD）
-│   ├── remi-common-domain    # L3：DDD 基类 / 领域事件
-│   ├── remi-common-exception # L3：统一异常 / RFC 7807 ProblemDetail
-│   ├── remi-common-jdbc      # L4：MyBatis-Plus 增强 / 行权限
-│   ├── remi-common-redis     # L4：Redis 操作封装（15 种 ops）
-│   ├── remi-common-lock      # L4：分布式锁（4 种实现）/ 幂等
-│   ├── remi-common-cache     # L4：多策略本地缓存（W-TinyLFU）
-│   ├── remi-common-thread    # L4：共享线程池
-│   ├── remi-common-tenant    # L4：多租户隔离
-│   ├── remi-common-auth      # L5：JWT / RBAC / TOTP 2FA
-│   ├── remi-common-safe      # L5：脱敏 / XSS / 限流 / CSRF
-│   ├── remi-common-feign     # L5：OpenFeign + Resilience4j
-│   ├── remi-common-audit     # L5：操作日志 / Disruptor 批写
-│   ├── remi-common-file      # L5：7 种存储平台 / 分片 / 秒传
-│   ├── remi-common-notify    # L5：5 种通知渠道抽象
-│   ├── remi-common-queue     # L5：5 种 MQ 抽象
-│   ├── remi-common-docs      # L5：8 种文档解析 / OCR
-│   ├── remi-common-excel     # L5：高性能 Excel 读写
-│   ├── remi-common-netty     # L5：TCP 通信
-│   ├── remi-common-socket    # L5：WebSocket 集群广播
-│   ├── remi-common-search    # L5：统一搜索（PG / ES）
-│   ├── remi-common-event     # L5：事务性 Outbox
-│   ├── remi-common-config    # L5：敏感配置加密
-│   ├── remi-common-seata     # L5：Seata 分布式事务
-│   ├── remi-common-sentry    # L5：统一监控告警
-│   ├── remi-common-base      # L6：HTTP 公共基座
-│   ├── remi-common-web       # L6：PC Web 基座（Spring Security）
-│   └── remi-common-app       # L6：移动端 App 基座（API 签名）
+ydsz-cloud/
+├── ydsz-common/              # 🧱 公共能力底座（30 子模块，不独立部署）
+│   ├── ydsz-common-core      # L1：统一响应 / TraceId / 特性开关
+│   ├── ydsz-common-util      # L2：99 工具类（加密 / IP / 雪花ID）
+│   ├── ydsz-common-json      # L2：高性能 JSON 引擎（ASM / SIMD）
+│   ├── ydsz-common-domain    # L3：DDD 基类 / 领域事件
+│   ├── ydsz-common-exception # L3：统一异常 / RFC 7807 ProblemDetail
+│   ├── ydsz-common-jdbc      # L4：MyBatis-Plus 增强 / 行权限
+│   ├── ydsz-common-redis     # L4：Redis 操作封装（15 种 ops）
+│   ├── ydsz-common-lock      # L4：分布式锁（4 种实现）/ 幂等
+│   ├── ydsz-common-cache     # L4：多策略本地缓存（W-TinyLFU）
+│   ├── ydsz-common-thread    # L4：共享线程池
+│   ├── ydsz-common-tenant    # L4：多租户隔离
+│   ├── ydsz-common-auth      # L5：JWT / RBAC / TOTP 2FA
+│   ├── ydsz-common-safe      # L5：脱敏 / XSS / 限流 / CSRF
+│   ├── ydsz-common-feign     # L5：OpenFeign + Resilience4j
+│   ├── ydsz-common-audit     # L5：操作日志 / Disruptor 批写
+│   ├── ydsz-common-file      # L5：7 种存储平台 / 分片 / 秒传
+│   ├── ydsz-common-notify    # L5：5 种通知渠道抽象
+│   ├── ydsz-common-queue     # L5：5 种 MQ 抽象
+│   ├── ydsz-common-docs      # L5：8 种文档解析 / OCR
+│   ├── ydsz-common-excel     # L5：高性能 Excel 读写
+│   ├── ydsz-common-netty     # L5：TCP 通信
+│   ├── ydsz-common-socket    # L5：WebSocket 集群广播
+│   ├── ydsz-common-search    # L5：统一搜索（PG / ES）
+│   ├── ydsz-common-event     # L5：事务性 Outbox
+│   ├── ydsz-common-config    # L5：敏感配置加密
+│   ├── ydsz-common-seata     # L5：Seata 分布式事务
+│   ├── ydsz-common-sentry    # L5：统一监控告警
+│   ├── ydsz-common-base      # L6：HTTP 公共基座
+│   ├── ydsz-common-web       # L6：PC Web 基座（Spring Security）
+│   └── ydsz-common-app       # L6：移动端 App 基座（API 签名）
 │
-├── remi-gateway/             # 🚪 API 网关 :9000（WebFlux 反应式）
-├── remi-userinfo/            # 👤 用户信息中心 :9001（登录 / RBAC / 组织架构 / OAuth2）
-├── remi-system/              # ⚙️ 系统基础服务 :9002（参数 / 字典 / 多租户）
-├── remi-nextwiki/            # 📁 网盘知识库 :9003（文件管理 / Office 预览 / WOPI）
-├── remi-message/             # 📨 消息通知引擎 :9004（12 渠道 / DAG 编排 / 灰度）
-├── remi-workflow/            # 🔀 工作流引擎 :9005（BPMN 2.0 / DMN 决策表）
-├── remi-cronjob/             # ⏰ 分布式调度 :9006（Leader 选举 / 分片广播）
-├── remi-literule/            # 📏 规则引擎 :9007（DSL / 热加载 / A/B 测试）
-└── remi-agent/               # 🤖 AI 智能体 :9008（ReAct / RAG / Tool Calling）
+├── ydsz-gateway/             # 🚪 API 网关 :9000（WebFlux 反应式）
+├── ydsz-userinfo/            # 👤 用户信息中心 :9001（登录 / RBAC / 组织架构 / OAuth2）
+├── ydsz-system/              # ⚙️ 系统基础服务 :9002（参数 / 字典 / 多租户）
+├── ydsz-nextwiki/            # 📁 网盘知识库 :9003（文件管理 / Office 预览 / WOPI）
+├── ydsz-message/             # 📨 消息通知引擎 :9004（12 渠道 / DAG 编排 / 灰度）
+├── ydsz-workflow/            # 🔀 工作流引擎 :9005（BPMN 2.0 / DMN 决策表）
+├── ydsz-cronjob/             # ⏰ 分布式调度 :9006（Leader 选举 / 分片广播）
+├── ydsz-literule/            # 📏 规则引擎 :9007（DSL / 热加载 / A/B 测试）
+└── ydsz-agent/               # 🤖 AI 智能体 :9008（ReAct / RAG / Tool Calling）
 ```
 
 ### 各模块能力详述
 
 | 模块 | 核心能力 |
 |------|----------|
-| **remi-gateway** | 路由分发 · JWT 鉴权 · CORS · IP 黑白名单 · 灰度路由（加权轮询） · Sentinel 限流熔断 · WebSocket 转发 · W3C 链路追踪 |
-| **remi-userinfo** | 登录认证（密码 + 验证码 + LDAP/ADFS） · JWT Token · RBAC 6 要素 · 部门树 · OAuth2 授权码 · 登录锁定（5 次/30 min） · 国际化 |
-| **remi-system** | 系统参数（Redis 缓存 + 穿透防护） · 数据字典（树形 + 版本快照） · OAuth2 应用注册 · 多租户（租户 + 套餐 + 权限） · 全局搜索 |
-| **remi-nextwiki** | 文件秒传（SHA-256） · 版本控制（20 版本） · 分享 + ACL · 全文搜索 · Office 预览（LibreOffice → PDF） · WOPI（OnlyOffice/Collabora） · ClamAV 病毒扫描 · OCR · AI 摘要 |
-| **remi-message** | 12 大通知渠道 · 模板（i18n + 版本） · 用户偏好 · 条件路由 + 通道降级链 · DAG 编排 · 灰度 · 敏感词过滤（DFA） · RocketMQ 死信 |
-| **remi-workflow** | REMI-Flow v2 + BPMN 2.0 · 8 种节点 · 定时器 · SLA · 灰度发布 · bpmn-js 设计器 · DMN 决策表 · 50 步模拟运行 |
-| **remi-cronjob** | Leader 选举 · 多分区调度 · Cron + 固定频率 + 精准（时间轮） · 分片广播 · 故障转移 · DAG 编排 · 胶水代码编辑 · 自愈系统 |
-| **remi-literule** | 7 种规则类型 · 自研 LiteExpr 引擎（AST + 沙箱） · Caffeine L1 + Redis L2 缓存 · 热加载 · 版本 Diff + 回滚 · Dry-Run 仿真 · A/B 测试 · 规则市场 |
-| **remi-agent** | 5 种 Agent 执行器 · LLM Provider 抽象（OpenAI 兼容） · 同步/流式对话（SSE） · RAG · DAG 编排 · Tool Calling · 安全护栏（PII + Prompt 注入检测） |
+| **ydsz-gateway** | 路由分发 · JWT 鉴权 · CORS · IP 黑白名单 · 灰度路由（加权轮询） · Sentinel 限流熔断 · WebSocket 转发 · W3C 链路追踪 |
+| **ydsz-userinfo** | 登录认证（密码 + 验证码 + LDAP/ADFS） · JWT Token · RBAC 6 要素 · 部门树 · OAuth2 授权码 · 登录锁定（5 次/30 min） · 国际化 |
+| **ydsz-system** | 系统参数（Redis 缓存 + 穿透防护） · 数据字典（树形 + 版本快照） · OAuth2 应用注册 · 多租户（租户 + 套餐 + 权限） · 全局搜索 |
+| **ydsz-nextwiki** | 文件秒传（SHA-256） · 版本控制（20 版本） · 分享 + ACL · 全文搜索 · Office 预览（LibreOffice → PDF） · WOPI（OnlyOffice/Collabora） · ClamAV 病毒扫描 · OCR · AI 摘要 |
+| **ydsz-message** | 12 大通知渠道 · 模板（i18n + 版本） · 用户偏好 · 条件路由 + 通道降级链 · DAG 编排 · 灰度 · 敏感词过滤（DFA） · RocketMQ 死信 |
+| **ydsz-workflow** | YDSZ-Flow v2 + BPMN 2.0 · 8 种节点 · 定时器 · SLA · 灰度发布 · bpmn-js 设计器 · DMN 决策表 · 50 步模拟运行 |
+| **ydsz-cronjob** | Leader 选举 · 多分区调度 · Cron + 固定频率 + 精准（时间轮） · 分片广播 · 故障转移 · DAG 编排 · 胶水代码编辑 · 自愈系统 |
+| **ydsz-literule** | 7 种规则类型 · 自研 LiteExpr 引擎（AST + 沙箱） · Caffeine L1 + Redis L2 缓存 · 热加载 · 版本 Diff + 回滚 · Dry-Run 仿真 · A/B 测试 · 规则市场 |
+| **ydsz-agent** | 5 种 Agent 执行器 · LLM Provider 抽象（OpenAI 兼容） · 同步/流式对话（SSE） · RAG · DAG 编排 · Tool Calling · 安全护栏（PII + Prompt 注入检测） |
 
 ---
 
 ## 对标竞品
 
-为明确 **Remi-Cloud** 在开源快速开发平台生态中的定位与差异化优势，确立以下 5 个主流项目作为长期对标竞品，用于持续跟踪其架构演进、功能特性与社区活跃度：
+为明确 **Ydsz Cloud** 在开源快速开发平台生态中的定位与差异化优势，确立以下 5 个主流项目作为长期对标竞品，用于持续跟踪其架构演进、功能特性与社区活跃度：
 
 | 竞品 | 一句话定位 | 架构形态 | 核心技术栈 | 开源协议 | 仓库地址 |
 |------|-----------|----------|------------|----------|----------|
@@ -195,7 +195,7 @@ remi-cloud/
 | **SpringBlade** | 商业级微服务架构，面向 SaaS 多租户 | 微服务 | Spring Boot 4.1 + Spring Cloud 2025 + Java 21 + Nacos + Sentinel（遵循阿里编码规范） | Apache 2.0 | https://gitee.com/smallc/SpringBlade |
 | **JeecgBoot** | 企业级 AI 低代码平台（低代码 + 零代码 + BPM + AI） | 单体 / 微服务 | Spring Boot 4.1 + MyBatis-Plus + Shiro/JWT + Vue3 + Flowable + AI 应用平台 | Apache 2.0 | https://gitee.com/jeecg/JeecgBoot |
 
-**Remi-Cloud 的差异化优势**：
+**Ydsz Cloud 的差异化优势**：
 
 - **DDD 五层分层架构**：严格的 `api / domain / infra / server / web` 依赖方向单向收敛，竞品多为传统三层或 MVC 结构。
 - **四大自研引擎**：规则引擎（对标 Drools + LiteFlow）、分布式调度（对标 XXL-Job + PowerJob）、BPMN 2.0 工作流、AI Agent 框架，全部自研、开箱即用。
@@ -224,8 +224,8 @@ remi-cloud/
 
 ```bash
 # 克隆仓库
-git clone http://192.168.31.88:6080/remiopen/remi-cloud.git
-cd remi-cloud
+git clone http://192.168.31.88:6080/ydszopen/ydsz-cloud.git
+cd ydsz-cloud
 
 # 编译全量模块（含单元测试）
 mvn clean verify
@@ -240,11 +240,11 @@ mvn clean package -DskipTests
 
 ```bash
 # 1. 创建数据库
-psql -U postgres -c "CREATE DATABASE remi_cloud;"
+psql -U postgres -c "CREATE DATABASE ydsz_cloud;"
 
 # 2. 按模块导入初始化脚本（示例）
-psql -U postgres -d remi_cloud -f remi-userinfo/remi-userinfo-web/src/main/resources/sql/init.sql
-psql -U postgres -d remi_cloud -f remi-system/remi-system-web/src/main/resources/sql/init.sql
+psql -U postgres -d ydsz_cloud -f ydsz-userinfo/ydsz-userinfo-web/src/main/resources/sql/init.sql
+psql -U postgres -d ydsz_cloud -f ydsz-system/ydsz-system-web/src/main/resources/sql/init.sql
 # ...依此类推
 ```
 
@@ -254,18 +254,18 @@ psql -U postgres -d remi_cloud -f remi-system/remi-system-web/src/main/resources
 
 ```bash
 # 启动 Gateway（必须先启动）
-cd remi-gateway
+cd ydsz-gateway
 mvn spring-boot:run
 
 # 启动各业务服务
-cd ../remi-userinfo/remi-userinfo-web && mvn spring-boot:run
-cd ../../remi-system/remi-system-web && mvn spring-boot:run
-cd ../../remi-nextwiki/remi-nextwiki-web && mvn spring-boot:run
-cd ../../remi-message/remi-message-web && mvn spring-boot:run
-cd ../../remi-workflow/remi-workflow-web && mvn spring-boot:run
-cd ../../remi-cronjob/remi-cronjob-web && mvn spring-boot:run
-cd ../../remi-literule/remi-literule-web && mvn spring-boot:run
-cd ../../remi-agent/remi-agent-web && mvn spring-boot:run
+cd ../ydsz-userinfo/ydsz-userinfo-web && mvn spring-boot:run
+cd ../../ydsz-system/ydsz-system-web && mvn spring-boot:run
+cd ../../ydsz-nextwiki/ydsz-nextwiki-web && mvn spring-boot:run
+cd ../../ydsz-message/ydsz-message-web && mvn spring-boot:run
+cd ../../ydsz-workflow/ydsz-workflow-web && mvn spring-boot:run
+cd ../../ydsz-cronjob/ydsz-cronjob-web && mvn spring-boot:run
+cd ../../ydsz-literule/ydsz-literule-web && mvn spring-boot:run
+cd ../../ydsz-agent/ydsz-agent-web && mvn spring-boot:run
 ```
 
 启动完成后，访问 API 文档：
@@ -281,13 +281,13 @@ cd ../../remi-agent/remi-agent-web && mvn spring-boot:run
 每个可部署的业务模块遵循标准 DDD 五层结构：
 
 ```
-remi-{module}/
+ydsz-{module}/
 ├── pom.xml                          # 父 POM
-├── remi-{module}-api/               # API 层：Feign Client + DTO
-├── remi-{module}-domain/            # 领域层：Entity + VO + Repository 接口
-├── remi-{module}-infra/             # 基础设施层：Repository 实现 + 外部集成
-├── remi-{module}-server/            # 应用服务层：Service + 事务编排
-└── remi-{module}-web/               # Web 层：Controller + 启动类 + 配置
+├── ydsz-{module}-api/               # API 层：Feign Client + DTO
+├── ydsz-{module}-domain/            # 领域层：Entity + VO + Repository 接口
+├── ydsz-{module}-infra/             # 基础设施层：Repository 实现 + 外部集成
+├── ydsz-{module}-server/            # 应用服务层：Service + 事务编排
+└── ydsz-{module}-web/               # Web 层：Controller + 启动类 + 配置
 ```
 
 **依赖方向**：`web → server → domain ← infra`，`api` 层独立对外。
@@ -350,7 +350,7 @@ docs: 更新 API 接口文档
 | 项目 README | `./README.md` | 本文档 |
 | MIT 开源协议 | `./LICENSE` | 开源许可协议 |
 | Effective POM | `./effective-pom.xml` | 解析后的完整 POM |
-| 模块 README | `remi-*/README.md` | 各模块详细说明文档 |
+| 模块 README | `ydsz-*/README.md` | 各模块详细说明文档 |
 | 编码规范 | *(内部 Wiki)* | 团队开发规范 |
 | API 文档 | Knife4j 聚合 | 启动后访问 `:9000/doc.html` |
 
@@ -400,5 +400,5 @@ docs: 更新 API 接口文档
 ---
 
 <p align="center">
-  <sub>Made with ❤️ by RemiSoft Team</sub>
+  <sub>Made with ❤️ by YdszSoft Team</sub>
 </p>
