@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.core;
+﻿package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -19,7 +19,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -121,9 +121,9 @@ public class NotificationController {
     @Operation(summary = "收件箱分页")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
-    public PageResult<List<MsgNotificationVO>> inbox(NotificationQueryDTO query) {
+    public PageResponse<List<MsgNotificationVO>> inbox(NotificationQueryDTO query) {
         Page<MsgNotification> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
-        return PageResult.success(
+        return PageResponse.success(
                 page.getTotal(),
                 page.getCurrent(),
                 page.getSize(),

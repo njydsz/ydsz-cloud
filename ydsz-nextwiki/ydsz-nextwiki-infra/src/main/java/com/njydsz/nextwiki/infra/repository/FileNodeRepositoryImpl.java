@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.infra.repository;
+﻿package com.njydsz.nextwiki.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.domain.query.PageResponse;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
@@ -55,7 +55,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
         Page<FileNode> pageParam = new Page<>(page, pageSize);
         IPage<FileNode> result = fileNodeMapper.selectPageByParentId(
                 pageParam, parentId, nodeType, sortBy, sortDir);
-        return PageResult.of(result.getRecords(), result.getTotal(),
+        return PageResponse.of(result.getRecords(), result.getTotal(),
                 (int) result.getCurrent(), (int) result.getSize());
     }
 

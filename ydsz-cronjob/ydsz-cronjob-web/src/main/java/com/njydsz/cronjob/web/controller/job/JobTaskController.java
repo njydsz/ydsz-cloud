@@ -1,4 +1,4 @@
-package com.njydsz.cronjob.web.controller.job;
+﻿package com.njydsz.cronjob.web.controller.job;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
 
@@ -82,7 +82,7 @@ public class JobTaskController {
      */
     @Operation(summary = "分页查询子任务")
     @GetMapping("/page")
-    public PageResult<List<JobTaskVO>> page(
+    public PageResponse<List<JobTaskVO>> page(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size) {
@@ -93,7 +93,7 @@ public class JobTaskController {
                 .eq(JobTask::getDeleted, 0)
                 .orderByAsc(JobTask::getCreatedAt);
         Page<JobTask> result = jobTaskMapper.selectPage(pageObj, wrapper);
-        return PageResult.success(
+        return PageResponse.success(
                 result.getTotal(),
                 result.getCurrent(),
                 result.getSize(),

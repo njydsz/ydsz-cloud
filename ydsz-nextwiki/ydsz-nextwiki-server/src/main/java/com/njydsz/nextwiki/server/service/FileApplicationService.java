@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.service;
+﻿package com.njydsz.nextwiki.server.service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.domain.query.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
@@ -284,7 +284,7 @@ public class FileApplicationService {
      * @param type     过滤类型：all / file / folder（默认 all）
      * @param page     页码（从 1 开始）
      * @param pageSize 每页大小
-     * @return 分页结果 {@link PageResult}，元素为 {@link FileNodeVO}
+     * @return 分页结果 {@link PageResponse}，元素为 {@link FileNodeVO}
      * @throws BusinessException 父目录不存在/非目录时抛出
      * @complexity O(query)（一次数据库分页查询 + 结果映射）
      * @note 只读、无事务边界；分页由 DB 完成，不存在内存爆量风险
@@ -297,12 +297,12 @@ public class FileApplicationService {
         String resolvedParentId = parent.getId();
 
         // 数据库分页查询（含类型过滤与排序）
-        PageResult<FileNode> pageResult = fileNodeRepository.findPageChildren(
+        PageResponse<FileNode> PageResponse = fileNodeRepository.findPageChildren(
                 resolvedParentId, type, normalizeSortBy(sortBy), normalizeSortDir(sortDir),
                 page, pageSize);
 
         // DO → VO 转换
-        return pageResult.convert(node -> NextwikiConverter.INSTANT.entityToVO(node));
+        return PageResponse.convert(node -> NextwikiConverter.INSTANT.entityToVO(node));
     }
 
     /**

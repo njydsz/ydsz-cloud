@@ -1,4 +1,4 @@
-package com.njydsz.system.web.controller;
+﻿package com.njydsz.system.web.controller;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.service.VariableService;
@@ -77,13 +77,13 @@ public class VariableController {
      */
     @Operation(summary = "分页查询系统变量（支持搜索过滤）")
     @GetMapping("/page")
-    public PageResult<List<VariableVO>> page(
+    public PageResponse<List<VariableVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "变量键模糊搜索") @RequestParam(required = false) String variableKey,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
-        PageResult<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
-        return PageResult.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
+        PageResponse<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
+        return PageResponse.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
     }
 
     /**

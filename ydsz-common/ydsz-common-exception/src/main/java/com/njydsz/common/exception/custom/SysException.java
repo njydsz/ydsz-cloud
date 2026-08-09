@@ -216,6 +216,18 @@ public class SysException extends AbstractYdszException {
             return this;
         }
 
+        /**
+         * 便捷方法：设置国际化消息参数（变长参数版）。
+         *
+         * <p>覆盖基类的 {@code params(Object[])} 以提供变长参数调用方式，
+         * 与 {@link com.njydsz.common.exception.custom.BusinessException.BusinessExceptionBuilder#params(Object...)} 对齐。
+         */
+        @Override
+        public SysExceptionBuilder params(Object... params) {
+            this.params = params;
+            return this;
+        }
+
         @Override
         protected SysException doBuild(String code, String key, Object[] params, int httpStatus,
                                        ExceptionLevel level, ExceptionCategory category,

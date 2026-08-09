@@ -1,7 +1,7 @@
-import os, re, glob
+﻿import os, re, glob
 
-# 精确修复：方法体内调用 PageResult.success/empty 的方法，
-# 返回类型应为 PageResult<T>（而非 BaseResponse<List<T>> 或 BaseResponse<PageResult<T>>）
+# 精确修复：方法体内调用 PageResponse.success/empty 的方法，
+# 返回类型应为 PageResponse<T>（而非 BaseResponse<List<T>> 或 BaseResponse<PageResponse<T>>）
 
 ROOTS = [
     r"D:/Code/open/ydsz-cloud/ydsz-message",
@@ -17,7 +17,7 @@ ROOTS = [
 ]
 
 # 匹配返回类型（含 @ 注解之间的 public 声明）
-RET_PAT = re.compile(r'public\s+(BaseResponse<List<([\w.]+)>>|BaseResponse<PageResult<([\w.]+)>>)\s+(\w+)\s*\(')
+RET_PAT = re.compile(r'public\s+(BaseResponse<List<([\w.]+)>>|BaseResponse<PageResponse<([\w.]+)>>)\s+(\w+)\s*\(')
 
 def find_body(lines, i):
     for j in range(i, min(i + 15, len(lines))):
@@ -50,10 +50,10 @@ for base in ROOTS:
                 body_range = find_body(lines, i)
                 if body_range:
                     body = ''.join(lines[body_range[0]:body_range[1] + 1])
-                    if 'PageResult.success' in body or 'PageResult.empty' in body:
-                        # 改为 PageResult<T>
-                        fixed = re.sub(r'public\s+BaseResponse<(List<[\w.]+>|PageResult<[\w.]+>)>\s+(\w+)\s*\(',
-                                       rf'public PageResult<{inner}> \2(', ln)
+                    if 'PageResponse.success' in body or 'PageResponse.empty' in body:
+                        # 改为 PageResponse<T>
+                        fixed = re.sub(r'public\s+BaseResponse<(List<[\w.]+>|PageResponse<[\w.]+>)>\s+(\w+)\s*\(',
+                                       rf'public PageResponse<{inner}> \2(', ln)
                         new_lines.append(fixed)
                         changed = True
                         i += 1

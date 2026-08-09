@@ -1,8 +1,8 @@
-import os, re, glob
+﻿import os, re, glob
 
 # 修正误改的返回类型：
-# - 方法体内调用 PageResult.success/empty -> 保持 PageResult<T>
-# - 方法体内未调用 PageResult -> 恢复为 BaseResponse<List<T>>
+# - 方法体内调用 PageResponse.success/empty -> 保持 PageResponse<T>
+# - 方法体内未调用 PageResponse -> 恢复为 BaseResponse<List<T>>
 
 ROOTS = [
     r"D:/Code/open/ydsz-cloud/ydsz-message",
@@ -17,7 +17,7 @@ ROOTS = [
     r"D:/Code/open/ydsz-cloud/ydsz-common",
 ]
 
-ret_pat = re.compile(r'public\s+PageResult<([\w.]+)>\s+(\w+)\s*\(')
+ret_pat = re.compile(r'public\s+PageResponse<([\w.]+)>\s+(\w+)\s*\(')
 
 def find_body(lines, i):
     body_start = None
@@ -53,10 +53,10 @@ for base in ROOTS:
                 body_range = find_body(lines, i)
                 if body_range:
                     body = ''.join(lines[body_range[0]:body_range[1] + 1])
-                    uses_pageresult = 'PageResult.success' in body or 'PageResult.empty' in body
+                    uses_pageresult = 'PageResponse.success' in body or 'PageResponse.empty' in body
                     if not uses_pageresult:
                         # 误改：恢复为 BaseResponse<List<T>>
-                        fixed = ln.replace(f'PageResult<{inner}>', f'BaseResponse<List<{inner}>>', 1)
+                        fixed = ln.replace(f'PageResponse<{inner}>', f'BaseResponse<List<{inner}>>', 1)
                         new_lines.append(fixed)
                         changed = True
                         i += 1

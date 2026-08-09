@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.config;
+﻿package com.njydsz.message.web.controller.config;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -136,10 +136,10 @@ public class UnsubscribeController {
     @Operation(summary = "分页查询已退订记录")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
     @GetMapping("/page")
-    public PageResult<List<MsgSubscriptionVO>> page(UnsubscribeQueryDTO query) {
-        PageResult<List<MsgSubscription>> page = unsubscribeService.pageUnsubscribed(query);
+    public PageResponse<List<MsgSubscriptionVO>> page(UnsubscribeQueryDTO query) {
+        PageResponse<List<MsgSubscription>> page = unsubscribeService.pageUnsubscribed(query);
         List<MsgSubscriptionVO> voList = MessageConverter.INSTANT.subscriptionListToVO(page.getData());
-        return PageResult.success(page.getTotal(), page.getPageNum(), page.getPageSize(), voList);
+        return PageResponse.success(page.getTotal(), page.getPageNum(), page.getPageSize(), voList);
     }
 
     /**

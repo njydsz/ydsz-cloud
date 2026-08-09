@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.core;
+﻿package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -151,9 +151,9 @@ public class MessageController {
     @Operation(summary = "发送日志分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
-    public PageResult<List<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
+    public PageResponse<List<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
         Page<MsgLog> page = messageService.pageLog(query);
-        return PageResult.success(
+        return PageResponse.success(
                 page.getTotal(),
                 page.getCurrent(),
                 page.getSize(),
@@ -211,7 +211,7 @@ public class MessageController {
     @Operation(summary = "查询批次发送进度")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/batch/{batchId}/progress")
-    public PageResult<List<MsgLogVO>> batchProgress(@PathVariable String batchId,
+    public PageResponse<List<MsgLogVO>> batchProgress(@PathVariable String batchId,
                                                 @RequestParam(defaultValue = "1") long page,
                                                 @RequestParam(defaultValue = "20") long size) {
         MessageLogQueryDTO query = new MessageLogQueryDTO();
@@ -219,7 +219,7 @@ public class MessageController {
         query.setPageNum((int) page);
         query.setPageSize((int) size);
         Page<MsgLog> result = messageService.pageLog(query);
-        return PageResult.success(
+        return PageResponse.success(
                 result.getTotal(),
                 result.getCurrent(),
                 result.getSize(),

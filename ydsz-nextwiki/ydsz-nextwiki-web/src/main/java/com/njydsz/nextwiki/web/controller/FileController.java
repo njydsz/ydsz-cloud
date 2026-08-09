@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.web.controller;
+﻿package com.njydsz.nextwiki.web.controller;
 
 import jakarta.validation.Valid;
 
@@ -20,7 +20,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.domain.query.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -168,12 +168,12 @@ public class FileController {
      * @param page     页码（从 1 开始）
      * @param pageSize 每页大小
      * @param userId   当前用户 ID（用于权限过滤）
-     * @return 统一响应结果，data 为分页结果 {@link PageResult}，含 {@link FileNodeVO} 列表
+     * @return 统一响应结果，data 为分页结果 {@link PageResponse}，含 {@link FileNodeVO} 列表
      */
     @GetMapping("/list")
     @Operation(summary = "列出目录内容", description = "支持排序、过滤、分页（数据库分页）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_LIST)
-    public BaseResponse<PageResult<FileNodeVO>> listFiles(
+    public BaseResponse<PageResponse<FileNodeVO>> listFiles(
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "sortDir", required = false) String sortDir,
@@ -182,7 +182,7 @@ public class FileController {
             @RequestParam(value = "pageSize", defaultValue = "50") int pageSize,
             @RequestHeader("X-User-Id") String userId) {
 
-        PageResult<FileNodeVO> result = fileApplicationService.listFiles(
+        PageResponse<FileNodeVO> result = fileApplicationService.listFiles(
                 parentId, userId, sortBy, sortDir, type, page, pageSize);
         return BaseResponse.success(result);
     }

@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.server.service.impl;
+﻿package com.njydsz.userinfo.server.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.domain.query.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
@@ -50,7 +50,7 @@ public class LanguageServiceImpl implements LanguageService {
         List<LanguageVO> vos = result.getRecords().stream()
                 .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
-        return PageResult.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
+        return PageResponse.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.njydsz.system.server.service.impl;
+﻿package com.njydsz.system.server.service.impl;
 
 import java.util.List;
 import java.util.Objects;
@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.entity.DictType;
@@ -113,7 +113,7 @@ public class DictServiceImpl implements DictService {
                 .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        return PageResult.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
+        return PageResponse.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
     }
 
     /**

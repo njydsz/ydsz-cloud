@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.controller;
+﻿package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AssignRolesDTO;
@@ -96,9 +96,9 @@ public class UserAccountController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询用户列表")
-    public PageResult<List<UserAccountVO>> page(@Valid UserAccountPageQueryDTO query) {
+    public PageResponse<List<UserAccountVO>> page(@Valid UserAccountPageQueryDTO query) {
         Page<UserAccountVO> page = service.page(query);
-        return PageResult.success(
+        return PageResponse.success(
                 page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());
     }
 

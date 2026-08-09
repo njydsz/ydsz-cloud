@@ -1,8 +1,8 @@
-package com.njydsz.system.server.service;
+﻿package com.njydsz.system.server.service;
 
 import java.util.List;
 
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.vo.VariableVO;
 
@@ -70,9 +70,9 @@ public interface VariableService {
      * @param pageSize    每页记录数
      * @param variableKey 变量键模糊搜索（可选）
      * @param status      状态过滤（可选）
-     * @return 分页结果（VO），统一使用 {@link PageResult}
+     * @return 分页结果（VO），统一使用 {@link PageResponse}
      */
-    PageResult<VariableVO> page(int pageNum, int pageSize, String variableKey, String status);
+    PageResponse<VariableVO> page(int pageNum, int pageSize, String variableKey, String status);
 
     /**
      * 查询全部系统变量（仅内部使用）

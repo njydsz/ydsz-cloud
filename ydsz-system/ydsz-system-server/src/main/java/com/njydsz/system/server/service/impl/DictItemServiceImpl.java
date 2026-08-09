@@ -1,4 +1,4 @@
-package com.njydsz.system.server.service.impl;
+﻿package com.njydsz.system.server.service.impl;
 
 import java.time.Duration;
 import java.util.HashSet;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
@@ -274,7 +274,7 @@ public class DictItemServiceImpl implements DictItemService {
         wrapper.orderByDesc("created_at");
         IPage<DictItem> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<DictItemVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
-        return PageResult.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+        return PageResponse.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
     }
 
     /**

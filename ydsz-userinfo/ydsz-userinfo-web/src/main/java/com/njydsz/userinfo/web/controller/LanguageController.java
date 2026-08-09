@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.web.controller;
+﻿package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
@@ -6,8 +6,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
@@ -86,9 +86,9 @@ public class LanguageController {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询")
-    public PageResult<List<LanguageVO>> page(LanguagePageQuery query) {
-        PageResult<LanguageVO> result = service.page(query);
-        return PageResult.success(
+    public PageResponse<List<LanguageVO>> page(LanguagePageQuery query) {
+        PageResponse<LanguageVO> result = service.page(query);
+        return PageResponse.success(
                 result.getTotal(),
                 (long) result.getPageNum(),
                 (long) result.getPageSize(),

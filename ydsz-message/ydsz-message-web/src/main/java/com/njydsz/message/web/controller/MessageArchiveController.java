@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.archive;
+﻿package com.njydsz.message.web.controller.archive;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -102,7 +102,7 @@ public class MessageArchiveController {
     @Operation(summary = "全文搜索消息日志")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping
-    public PageResult<List<MsgLogVO>> search(
+    public PageResponse<List<MsgLogVO>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String status,
@@ -113,7 +113,7 @@ public class MessageArchiveController {
             @RequestParam(defaultValue = "20") int pageSize) {
         Page<MsgLog> result = messageArchiveService.search(keyword, channel, status, bizType,
                 startTime, endTime, TenantContext.getTenantId(), pageNum, pageSize);
-        return PageResult.success(
+        return PageResponse.success(
                 result.getTotal(),
                 result.getCurrent(),
                 result.getSize(),

@@ -1,4 +1,4 @@
-package com.njydsz.common.core.response;
+﻿package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -140,7 +140,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     private Map<String, Object> extensions;
 
-    // 分页字段已迁移至 {@link PageResult}（v1.9.3）。分页接口请直接返回 {@code PageResult<T>}。
+    // 分页字段已迁移至 {@link PageResponse}（v1.9.3）。分页接口请直接返回 {@code PageResponse<T>}。
 
     /**
      * 默认构造函数。

@@ -1,4 +1,4 @@
-# ydsz-common-domain 模块优化与完善建议
+﻿# ydsz-common-domain 模块优化与完善建议
 
 > 对标行业主流竞品与互联网大厂研发规范，基于 `ydsz-common-domain` 最新代码（33 个类 / 约 4360 行）的实测分析。
 > 分析维度：架构优化、功能增强、性能提升、体验改善、过度设计（精简）。
@@ -13,13 +13,13 @@
 | 单元测试 | **零**（`src/test` 不存在，但 `pom.xml` 声明了 test 依赖，形同虚设） |
 | 编译状态 | **当前源码无法编译**（2 处阻断，已提交入库） |
 | 外部采用率 | 33 类中仅约 9 个被业务模块真实 `import` 引用，其余为 0 引用或仅模块内部自引用 |
-| 分页 API 代际 | 三代并存：旧 `PageQuery/PageResult`、弃 `Slice/CursorPage/PageSlice`、新 `SliceQuery/SliceResult` |
+| 分页 API 代际 | 三代并存：旧 `PageQuery/PageResponse`、弃 `Slice/CursorPage/PageSlice`、新 `SliceQuery/SliceResult` |
 
 **外部采用率实测表（按 import 精确统计，已排除模块自身与 target）**
 
 | 采用情况 | 类 |
 | --- | --- |
-| 重度使用 | `PageQuery`(23)、`PageResult`(17)、`DataScopeType`(11)、`BaseStatusEnum`(11)、`ServiceType`(5)、`IdentityType`(4)、`TreeBuilder`(2)、`OrderItem`(1) |
+| 重度使用 | `PageQuery`(23)、`PageResponse`(17)、`DataScopeType`(11)、`BaseStatusEnum`(11)、`ServiceType`(5)、`IdentityType`(4)、`TreeBuilder`(2)、`OrderItem`(1) |
 | 0 引用（死代码/未落地） | `Slice`、`PageSlice`、`CursorPage`、`PageQueryFactory`、`DomainEvent`、`IdempotentOperation`、`ValidationGroups`、`StateTransitionUtil`、`SliceQuery`、`SliceResult`、`DeepPaginationRisk`、`DeepPaginationException`、`CursorDirection`、`Command`、`DTO`、`VO`、`TreeNode` |
 
 ---
@@ -55,7 +55,7 @@ PageQuery query = PageQuery.of(pageNum, pageSize);   // PageQuery 根本没有 o
 ## 2. 维度一：架构优化
 
 ### 2.1 分页 API 三代同堂，亟需收敛
-- **旧**：`PageQuery` / `PageResult`（重度使用 23 / 17 处）
+- **旧**：`PageQuery` / `PageResponse`（重度使用 23 / 17 处）
 - **弃**：`Slice` / `CursorPage` / `PageSlice`（已 `@Deprecated(forRemoval=true)`，0 引用；且 `Slice` 还编译不过）
 - **新**：`SliceQuery` / `SliceResult`（1.8.0 引入，0 引用，**未落地**）
 
@@ -134,7 +134,7 @@ PageQuery query = PageQuery.of(pageNum, pageSize);   // PageQuery 根本没有 o
 
 应在 2.0.0 做一次清理（删除前用 `jdeprscan` + 引用扫描确认 0 引用）：
 
-1. **收敛分页 API**：`Slice` / `CursorPage` / `PageSlice` 三选一或直接统一到一套（推荐保留 `PageQuery/PageResult`）。
+1. **收敛分页 API**：`Slice` / `CursorPage` / `PageSlice` 三选一或直接统一到一套（推荐保留 `PageQuery/PageResponse`）。
 2. **删除 0 引用且 deprecated**：`PageQueryFactory`、`DomainEvent` 注解 + `DomainEventAspect`、`IdempotentOperation`（含引用缺失的 `IdempotentUtil`）、`Command/DTO/VO` 标记接口。
 3. **删除孤儿童枚举**：`DeepPaginationRisk` / `DeepPaginationException`（无调用方；若按 3.1 落地则保留并实现闭环）。
 4. **清理无消费配置**：`tree.maxDepth`、`idempotent.defaultExpireSeconds`、`maxSearchKeyLength` 等 `DomainProperties` 字段若无消费方应删除。

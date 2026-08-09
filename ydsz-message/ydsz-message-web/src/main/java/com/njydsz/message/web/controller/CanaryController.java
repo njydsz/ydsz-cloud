@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.canary;
+﻿package com.njydsz.message.web.controller.canary;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -131,9 +131,9 @@ public class CanaryController {
     @Operation(summary = "灰度桶分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
-    public PageResult<List<MsgCanaryVO>> page(PageQuery query) {
+    public PageResponse<List<MsgCanaryVO>> page(PageQuery query) {
         Page<MsgCanary> page = canaryService.page(query);
-        return PageResult.success(
+        return PageResponse.success(
                 page.getTotal(),
                 page.getCurrent(),
                 page.getSize(),

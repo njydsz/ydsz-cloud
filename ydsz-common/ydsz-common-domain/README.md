@@ -1,4 +1,4 @@
-# ydsz-common-domain
+﻿# ydsz-common-domain
 
 > YDSZ DDD 领域模型基类库（L3 基础服务层）— 分页查询、统一 Slice 分页、状态机契约、树构建器、聚合根接口、领域事件、幂等契约
 >
@@ -68,7 +68,7 @@ public void handleRequest(Integer pageNum, Integer pageSize) {
 | `BaseQuery` | 查询基类，含 searchKey/status/startDateTime/endDateTime/tenantId/ascending；提供时间范围校验方法 |
 | `PageQuery` | 分页查询（v1.7.0 职责精简）：仅承载分页参数 + 排序项，SQL 安全由拦截器统一处理 |
 | `OrderItem` | 排序项 record（column + ASC/DESC），提供 `of/asc/desc` 静态工厂与 `toSql()` |
-| `PageResult<T>` | 分页结果封装（含 total），提供 `convert()` 类型转换 |
+| `PageResponse<T>` | 分页结果封装（含 total），提供 `convert()` 类型转换 |
 | `Slice<T>` | **统一分页结果**（v1.7.0 新增），融合 offset 分页 + cursor 分页语义，对齐 Spring Data |
 
 ### 3. 状态机契约（enums 包）
@@ -185,10 +185,10 @@ ydsz:
 @Autowired
 private PageQueryFactory pageQueryFactory;
 
-public PageResult<UserVO> page(UserQueryRequest request) {
+public PageResponse<UserVO> page(UserQueryRequest request) {
     PageQuery query = pageQueryFactory.create(request.getPageNum(), request.getPageSize());
     query.addDescOrder("created_at");
-    PageResult<UserDO> doPage = userService.page(query);
+    PageResponse<UserDO> doPage = userService.page(query);
     return doPage.convert(UserVO::new);
 }
 ```

@@ -1,8 +1,8 @@
-package com.njydsz.system.server.service;
+﻿package com.njydsz.system.server.service;
 
 import java.util.List;
 
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.vo.DictItemVO;
 
@@ -90,9 +90,9 @@ public interface DictItemService {
      * @param typeCode 字典类型编码过滤（可选）
      * @param itemCode 字典项编码模糊搜索（可选）
      * @param status   状态过滤（可选）
-     * @return 分页结果（VO），统一使用 {@link PageResult}
+     * @return 分页结果（VO），统一使用 {@link PageResponse}
      */
-    PageResult<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status);
+    PageResponse<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status);
 
     /**
      * 查询全部字典项（仅内部使用）

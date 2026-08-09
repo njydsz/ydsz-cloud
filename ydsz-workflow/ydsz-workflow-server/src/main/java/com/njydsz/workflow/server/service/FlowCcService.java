@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service;
+﻿package com.njydsz.workflow.server.service;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,7 @@ import com.njydsz.workflow.domain.entity.FlowNode;
  * <ul>
  *   <li>新增 {@link #handleCcNode} — 统一入口，展开 {@code role:/dept:} 权限标识为具体用户列表</li>
  *   <li>新增 {@link #listByInstance} — 查实例维度的抄送记录</li>
- *   <li>分页查询返回 {@code PageResult}，统一分页响应结构</li>
+ *   <li>分页查询返回 {@code PageResponse}，统一分页响应结构</li>
  * </ul>
  *
  * <p><b>与待办的区别：</b>抄送不阻塞流程推进，仅作通知；本 Service 独立于 {@link FlowTaskService}，由 {@code FlowCcRuleResolver} 解析规则后批量写入。

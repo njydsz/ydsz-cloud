@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.config;
+﻿package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -153,9 +153,9 @@ public class RouteRuleController {
     @Operation(summary = "路由规则分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
-    public PageResult<List<MsgRouteRuleVO>> page(PageQuery query) {
+    public PageResponse<List<MsgRouteRuleVO>> page(PageQuery query) {
         Page<MsgRouteRule> page = routeRuleService.page(query);
-        return PageResult.success(
+        return PageResponse.success(
                 page.getTotal(),
                 page.getCurrent(),
                 page.getSize(),

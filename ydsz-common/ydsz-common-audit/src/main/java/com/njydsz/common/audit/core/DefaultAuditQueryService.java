@@ -1,4 +1,4 @@
-package com.njydsz.common.audit.core;
+﻿package com.njydsz.common.audit.core;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.sharding.TableShardingStrategy;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 
 /**
  * 基于 JDBC 的默认审计查询服务实现
@@ -323,7 +323,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
                     params.add(offset);
                     List<AuditLog> records = jdbcTemplate.query(sql,
                             BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-                    return PageResult.success(total, (long) page, (long) size, records);
+                    return PageResponse.success(total, (long) page, (long) size, records);
                 }
                 // 多分表：使用子查询合并后分页
                 List<Object> params = new ArrayList<>();
@@ -331,7 +331,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 String unionSql = buildUnionAllWithLimit(tables, whereClause, size, offset);
                 List<AuditLog> records = jdbcTemplate.query(unionSql,
                         BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-                return PageResult.success(total, (long) page, (long) size, records);
+                return PageResponse.success(total, (long) page, (long) size, records);
             }
 
             List<Object> params = new ArrayList<>();
@@ -344,7 +344,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
             List<AuditLog> records = jdbcTemplate.query(sql.toString(),
                     BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            return PageResult.success(total, (long) page, (long) size, records);
+            return PageResponse.success(total, (long) page, (long) size, records);
         } catch (Exception e) {
             log.warn("按时间范围分页查询审计日志失败", e);
             return emptyPageResult(page, size);
@@ -371,7 +371,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
             List<AuditLog> records = jdbcTemplate.query(sql,
                     BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            return PageResult.success(total, (long) page, (long) size, records);
+            return PageResponse.success(total, (long) page, (long) size, records);
         } catch (Exception e) {
             log.warn("按操作人分页查询审计日志失败, operatorId={}", operatorId, e);
             return emptyPageResult(page, size);
@@ -398,7 +398,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
             List<AuditLog> records = jdbcTemplate.query(sql,
                     BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            return PageResult.success(total, (long) page, (long) size, records);
+            return PageResponse.success(total, (long) page, (long) size, records);
         } catch (Exception e) {
             log.warn("按操作类型分页查询审计日志失败, action={}", action, e);
             return emptyPageResult(page, size);
@@ -425,7 +425,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
             List<AuditLog> records = jdbcTemplate.query(sql,
                     BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            return PageResult.success(total, (long) page, (long) size, records);
+            return PageResponse.success(total, (long) page, (long) size, records);
         } catch (Exception e) {
             log.warn("按实体类型分页查询审计日志失败, entityType={}", entityType, e);
             return emptyPageResult(page, size);
@@ -640,7 +640,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * @return 无记录的空分页结果
      */
     private BaseResponse<List<AuditLog>> emptyPageResult(int page, int size) {
-        return PageResult.empty((long) page, (long) size);
+        return PageResponse.empty((long) page, (long) size);
     }
 
     /**

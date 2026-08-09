@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.infra.repository;
+﻿package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.domain.query.PageResponse;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
@@ -78,7 +78,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
     }
 
     /**
-     * 分页搜索索引：将 MyBatis-Plus 的分页结果封装为统一的 {@link PageResult}。
+     * 分页搜索索引：将 MyBatis-Plus 的分页结果封装为统一的 {@link PageResponse}。
      * keyword 为空时退化为按权限（createdBy）列示，scope 控制检索维度（all/filename/content/tag）。
      *
      * @param keyword   搜索关键词
@@ -94,7 +94,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
         Page<SearchIndex> pageParam = new Page<>(page, pageSize);
         IPage<SearchIndex> result = searchIndexMapper.searchPage(
                 pageParam, keyword, createdBy, scope);
-        return PageResult.of(result.getRecords(), result.getTotal(),
+        return PageResponse.of(result.getRecords(), result.getTotal(),
                 (int) result.getCurrent(), (int) result.getSize());
     }
 }

@@ -1,4 +1,4 @@
-# ydsz-common-core 模块全局引用分析报告
+﻿# ydsz-common-core 模块全局引用分析报告
 
 > 基于对 `D:\Code\open\ydsz-cloud` 全仓库的 POM 依赖追踪 + 源码 import 引用分析。
 > 分析时间：2026-08-09
@@ -48,7 +48,7 @@
 | `BaseResponse<T>` | **70+** | **15+** | 🟢 高 | 成为全平台 API 响应的事实标准 |
 | `RequestContext` | **60+** | **12+** | 🟢 高 | 上下文载体广泛使用 |
 | `BaseResultCode` | **40+** | **10+** | 🟡 中 | 主要在 web/exception 层使用 |
-| `PageResult<T>` (response) | **40+** | **8+** | 🟡 中 | 分页响应逐步推广 |
+| `PageResponse<T>` (response) | **40+** | **8+** | 🟡 中 | 分页响应逐步推广 |
 | `TraceIdGenerator` | **14** | **4** | 🟡 中 | gateway 使用多 |
 | `HeaderConstants` | **35+** | **10+** | 🟡 中 | common 内部为主 |
 | `BizContextKeys` | **较多** | **多个** | 🟡 中 | 下沉后业务键有效归类 |
@@ -85,9 +85,9 @@
 - 业务模块（workflow, message, system, nextwiki）倾向于使用**自定义业务结果码**（如 `SystemResultCode`、`MessageResultCode`）
 - gateway 在限流、鉴权场景大量使用
 
-**PageResult<T>** — 分页响应信封
+**PageResponse<T>** — 分页响应信封
 - workflow-server、message-server、literule-web、system-server 业务 service 层使用
-- domain 层有同名 `PageResult`（领域层分页载体），二者职责不同、可组合
+- domain 层有同名 `PageResponse`（领域层分页载体），二者职责不同、可组合
 
 #### 🔴 低利用/空置能力（优化机会大）
 
@@ -124,7 +124,7 @@
 ### 3.1 贯通度矩阵
 
 ```
-              BaseResponse  RequestContext  ResultCode  PageResult  Results  TraceIdProp  HeaderConstants
+              BaseResponse  RequestContext  ResultCode  PageResponse  Results  TraceIdProp  HeaderConstants
 workflow-web      ✅             ✅            ⚠️          ✅         ❌         ❌          ❌
 message-web       ✅             ✅            ⚠️          ✅         ❌         ❌          ❌
 system-web        ✅             ✅            ⚠️          ✅         ❌         ❌          ❌
@@ -264,7 +264,7 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
       // 通过 PageConstants 归一化
   }
   ```
-- Controller 方法签名：`public BaseResponse<PageResult<User>> list(PageParam page)`
+- Controller 方法签名：`public BaseResponse<PageResponse<User>> list(PageParam page)`
 - Spring 自动绑定 request parameter，并走 PageConstants 归一化约束
 
 #### S4【P1】TraceId 传播规范
@@ -355,7 +355,7 @@ common-jdbc       ✅             ✅            ⚠️          ❌         ❌
 
 ### 7.1 ydsz-workflow
 
-**优势**：利用率高（BaseResponse + PageResult + RequestContext）
+**优势**：利用率高（BaseResponse + PageResponse + RequestContext）
 **建议**：
 - 定义 `WorkflowResultCode` 枚举实现 `ResultCode` 接口
 - 流程操作异常统一使用 `BizException.of(WorkflowResultCode.XXX)`

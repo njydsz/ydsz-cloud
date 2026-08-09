@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.instance;
+﻿package com.njydsz.workflow.web.controller.instance;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
@@ -148,7 +148,7 @@ public class FlowTaskQueryController {
      * @return 统一响应结果，包含分页已办列表
      */
     @GetMapping("/task/done/search")
-    public PageResult<FlowRunTaskVO> doneSearch(
+    public PageResponse<FlowRunTaskVO> doneSearch(
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowCode,
@@ -158,11 +158,11 @@ public class FlowTaskQueryController {
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
         String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
-        BaseResponse<FlowRunTask> pageResult = taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
+        BaseResponse<FlowRunTask> PageResponse = taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize);
-        List<FlowRunTask> tasks = pageResult.getData();
+        List<FlowRunTask> tasks = PageResponse.getData();
         List<FlowRunTaskVO> vos = WorkflowConverter.INSTANT.flowRunTaskListToVO(tasks);
-        return PageResult.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+        return PageResponse.success(PageResponse.getTotal(), PageResponse.getPageNum(), PageResponse.getPageSize(), vos);
     }
 
     // ============== P2-31/32/33: 审计运营统计 ==============

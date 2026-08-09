@@ -1,4 +1,4 @@
-# ydsz-common-core 优化完善实施总结
+﻿# ydsz-common-core 优化完善实施总结
 
 > 实施时间：2026-08-09 ~ 2026-08-10
 > 基于：`ydsz-common-core-global-reference-analysis-v2.md` 分析报告
@@ -120,7 +120,7 @@ public static void reset() {
 | 分页参数归一化 | 6 个用例 | null/越界/正常值归一化 |
 | TraceId 生成与传播 | 5 个用例 | 唯一性（1000 无碰撞）、协议头格式 |
 | BaseResponse 响应模型 | 2 个用例 | code/data/扩展字段不可变 |
-| PageResult 分页响应 | 2 个用例 | 元数据/错误信封 |
+| PageResponse 分页响应 | 2 个用例 | 元数据/错误信封 |
 | Results 统一门面 | 4 个用例 | ok/fail/page 各类重载 |
 
 ### 2.2 CoreAutoConfigurationTest

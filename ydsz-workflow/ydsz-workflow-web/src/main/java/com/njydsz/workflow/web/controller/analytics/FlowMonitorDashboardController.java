@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.analytics;
+﻿package com.njydsz.workflow.web.controller.analytics;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
@@ -172,7 +172,7 @@ public class FlowMonitorDashboardController {
         int to = Math.min(from + pageSize, total);
         List<Map<String, Object>> page = from < to ? all.subList(from, to) : new ArrayList<>();
 
-        return PageResult.success((long) total, (long) pageNum, (long) pageSize, page);
+        return PageResponse.success((long) total, (long) pageNum, (long) pageSize, page);
     }
 
     /**

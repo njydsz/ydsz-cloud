@@ -1,4 +1,4 @@
-# ydsz-common-core 模块优化完善建议
+﻿# ydsz-common-core 模块优化完善建议
 
 > 基于 `ydsz-common/ydsz-common-core` 当前源码（16 个类、约 3153 行）的逐文件审查。
 > 对标参考：阿里巴巴《Java 开发手册》错误码规范、Spring Boot 4.x 自动配置/Health 规范、
@@ -50,8 +50,8 @@
 `BaseResponse` 自 1.9.0 起新增 `total`/`pageNum`/`pageSize` 三个字段，使"通用响应信封"承担了"分页结果"职责。
 大厂通行做法是将分页封装为独立值对象 `Page<T>` / `PagedResult<T>`，响应只包一层 `data`。
 
-**落地建议**：新增 `PageResult<T>`（`List<T> rows` + `long total` + `int pageNum` + `int pageSize` + `long totalPages`），
-`BaseResponse.successPage(...)` 返回 `BaseResponse<PageResult<T>>`；后续版本标记 `BaseResponse` 上的分页字段为 `@Deprecated` 并迁移。
+**落地建议**：新增 `PageResponse<T>`（`List<T> rows` + `long total` + `int pageNum` + `int pageSize` + `long totalPages`），
+`BaseResponse.successPage(...)` 返回 `BaseResponse<PageResponse<T>>`；后续版本标记 `BaseResponse` 上的分页字段为 `@Deprecated` 并迁移。
 
 ### A4【P1】`ydsz-common-json` 硬依赖与自定义注解的序列化耦合（需核实）
 `BaseResponse` 使用 `com.njydsz.common.json.annotation.@JsonClass/@JsonInclude/@JsonPropertyOrder`（**自定义包**，非 Jackson）。
@@ -79,7 +79,7 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 ### F1【P1】分页"深度分页风险"目前只有查询方法、无生效点
 `PageConstants.isOffsetSafe()` / `MAX_SAFE_OFFSET=10000` 提供了判断，但**没有任何调用方**，等于空置。
 
-**落地建议**：在分页归一化出口（如 Web 模块 Resolver 或 `PageConstants.calcOffset`）中，当 `!isOffsetSafe` 时打 WARN 日志/返回 400 提示改用游标分页；或提供 `PageResult.cursorBased(...)` 工厂。
+**落地建议**：在分页归一化出口（如 Web 模块 Resolver 或 `PageConstants.calcOffset`）中，当 `!isOffsetSafe` 时打 WARN 日志/返回 400 提示改用游标分页；或提供 `PageResponse.cursorBased(...)` 工厂。
 
 ### F2【P1】缺少统一的异常→响应转换入口
 `BaseResponse` 留了私有的 `extractResultCode(Throwable)`（**当前无任何调用**，见过度设计节），但对外没有"业务异常→标准响应"的便捷通道。
@@ -200,7 +200,7 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 |---|---|---|---|
 | **Phase 1（止血）** | 修一致性 & 死代码 | O1 删死代码、A5 删冗余 HealthIndicator+修 README、O3 封装 getExtensions、O6 修正 getMessageKey、O7 修 successMsg | ✅ **已完成** |
 | **Phase 2（减负）** | 收敛 API 与上下文 | A1 业务键下沉 `BizContextKeys`、A2 `RequestSnapshot` 替代 HttpServletRequest、E1 统一 ContextKey 入口、O2 用户缓存移出通用上下文 | ✅ **已完成** |
-| **Phase 3（演进）** | 结构升级 | A3 抽出响应层 `PageResult<T>`、F1 深度分页告警生效、F3 可排序 traceId、E3 `Results` 门面、E4 单测（10 例全绿） | ✅ **已完成** |
+| **Phase 3（演进）** | 结构升级 | A3 抽出响应层 `PageResponse<T>`、F1 深度分页告警生效、F3 可排序 traceId、E3 `Results` 门面、E4 单测（10 例全绿） | ✅ **已完成** |
 | **持续** | 质量守护 | E4 单测扩展、架构测试（禁止 core 反向依赖业务模块）、依赖收敛审计 | 🔄 建议持续推进 |
 
 > 全部 P0 / P1 项与多数 P2 项已落地，详见 §8 实施记录。A4（`ydsz-common-json` 自定义注解）经核实为**有意为之的硬依赖**（自研 JSON 引擎识别这些注解），风险下调，仅在 README 明确"必须配合 ydsz-common-json"约束即可，未做破坏性改动。
@@ -233,7 +233,7 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 ### 8.3 结构升级与体验（P1）
 | 项 | 改动 | 文件 |
 |---|---|---|
-| A3 | 新增响应层 `PageResult<T> extends BaseResponse<T>`（含 `getPages()` 便捷方法），与领域层 `com.njydsz.common.domain.query.PageResult` **职责不同、互不冲突**；保留 `BaseResponse.successPage` 兼容 | `PageResult.java`(新) |
+| A3 | 新增响应层 `PageResponse<T> extends BaseResponse<T>`（含 `getPages()` 便捷方法），与领域层 `com.njydsz.common.domain.query.PageResponse` **职责不同、互不冲突**；保留 `BaseResponse.successPage` 兼容 | `PageResponse.java`(新) |
 | F1 | `PageConstants.calcOffset` 接入 `isOffsetSafe()`：超 `MAX_SAFE_OFFSET` 时打 WARN 提示改游标分页，空置能力生效 | `PageConstants.java` |
 | F3 | 新增 `generateSortableTraceId()`：**UUIDv7 风格（48-bit 毫秒时间戳 + 16-bit 同毫秒单调序号 + 64-bit 随机）**，严格时间有序且格式兼容（32 位 hex）；线程安全（CAS） | `TraceIdGenerator.java` |
 | F4 | 核实：`traceHeaders()` 已有 `traceHeadersOrCreate()` 兜底变体，断链风险已规避，无需改动 | `TraceIdPropagation.java`(未改) |
@@ -244,7 +244,7 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 - **A5 结论修正**：原判断"缺失功能缺口"不成立——健康端点由 `ydsz-common-base` 提供并注册；core 副本系冗余，处置为**删除**而非注册。
 - **O4/O5 原判断修正**：`HeaderConstants.X_FORWARDED_FOR` 实际被 6 个模块使用（非应删项，保留）；`TokenConstants.PREFIX` 是否删除需视其它模块，本次未动。
 - **A4 风险下调**：`ydsz-common-json` 为自研 JSON 引擎，其注解由该引擎识别，硬依赖属刻意设计，非风险；仅建议在 README 固化"必须配合 ydsz-common-json"约束。
-- **`PageResult` 不重复**：领域层已有分页载体，本次新增的是**响应层**信封，二者职责分离、可组合（如 `PageResult.success(total, pageNum, pageSize, domainPage.getRecords())`）。
+- **`PageResponse` 不重复**：领域层已有分页载体，本次新增的是**响应层**信封，二者职责分离、可组合（如 `PageResponse.success(total, pageNum, pageSize, domainPage.getRecords())`）。
 
 ---
 

@@ -1,11 +1,11 @@
-package com.njydsz.common.core.response;
+﻿package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.ResultCode;
 
 /**
  * 统一响应结果门面（Results facade）。
  *
- * <p>对 {@link BaseResponse} / {@link PageResult} 的常用工厂方法做一层语义化收敛，
+ * <p>对 {@link BaseResponse} / {@link PageResponse} 的常用工厂方法做一层语义化收敛，
  * 提供简短、类型明确的入口，减少 Controller 直接散用内部静态方法造成的 API 发散。
  * 本类仅为<b>委托（delegate）</b>，不引入新行为、不新增依赖。</p>
  *
@@ -29,7 +29,7 @@ import com.njydsz.common.core.code.ResultCode;
  * @since 1.9.1
  *
  * @see BaseResponse
- * @see PageResult
+ * @see PageResponse
  */
 public final class Results {
 
@@ -69,14 +69,14 @@ public final class Results {
         return new BaseResponse<>(BaseResponse.SUCCESS, resolveSuccessMsg(), data, requestId, spanId);
     }
 
-    /** 分页成功响应（强类型信封 {@link PageResult}）。 */
-    public static <T> PageResult<T> page(Long total, Long pageNum, Long pageSize, T data) {
-        return PageResult.success(total, pageNum, pageSize, data);
+    /** 分页成功响应（强类型信封 {@link PageResponse}）。 */
+    public static <T> PageResponse<T> page(Long total, Long pageNum, Long pageSize, T data) {
+        return PageResponse.success(total, pageNum, pageSize, data);
     }
 
-    /** 分页失败响应（强类型信封 {@link PageResult}）。 */
-    public static <T> PageResult<T> pageFail(ResultCode resultCode) {
-        return PageResult.error(resultCode);
+    /** 分页失败响应（强类型信封 {@link PageResponse}）。 */
+    public static <T> PageResponse<T> pageFail(ResultCode resultCode) {
+        return PageResponse.error(resultCode);
     }
 
     /** 失败（未知错误）。 */

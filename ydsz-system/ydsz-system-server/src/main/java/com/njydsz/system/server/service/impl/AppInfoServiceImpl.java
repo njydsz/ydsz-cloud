@@ -1,4 +1,4 @@
-package com.njydsz.system.server.service.impl;
+﻿package com.njydsz.system.server.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.core.exception.BizException;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
@@ -196,7 +196,7 @@ public class AppInfoServiceImpl implements AppInfoService {
         List<AppInfoVO> vos = page.getRecords().stream()
                 .map(SystemConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
-        return PageResult.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+        return PageResponse.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.common.core.response;
+﻿package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -11,21 +11,21 @@ import lombok.Setter;
  *
  * <p>将分页元信息（total / pageNum / pageSize）收口到专用的分页响应类型中，
  * 使 {@link BaseResponse} 不再承担分页职责，同时提供类型明确的返回对象，
- * 便于 Controller 声明 {@code PageResult<UserVO>} 或 {@code BaseResponse<PageResult<UserVO>>}。</p>
+ * 便于 Controller 声明 {@code PageResponse<UserVO>} 或 {@code BaseResponse<PageResponse<UserVO>>}。</p>
  *
- * <p>领域层分页结果载体请使用 {@code com.njydsz.common.domain.query.PageResult}，
+ * <p>领域层分页结果载体请使用 {@code com.njydsz.common.domain.query.PageResponse}，
  * 本类是 API 响应信封。两者可组合使用，例如：
- * {@code PageResult.success(total, pageNum, pageSize, domainPage.getRecords())}。</p>
+ * {@code PageResponse.success(total, pageNum, pageSize, domainPage.getRecords())}。</p>
  *
  * <p><b>迁移提示：</b>{@link BaseResponse} 上的分页字段与 {@code successPage()/emptyPage()}
- * 方法已于 v1.9.3 移除。新代码请直接返回 {@code PageResult<T>}。</p>
+ * 方法已于 v1.9.3 移除。新代码请直接返回 {@code PageResponse<T>}。</p>
  *
  * @param <T> 数据元素的类型
  * @author ydsz-team
  * @since 1.9.1
  */
 @EqualsAndHashCode(callSuper = true)
-public class PageResult<T> extends BaseResponse<T> {
+public class PageResponse<T> extends BaseResponse<T> {
 
     /** 总记录数。 */
     @Getter @Setter
@@ -40,7 +40,7 @@ public class PageResult<T> extends BaseResponse<T> {
     private Long pageSize;
 
     /** 由工厂方法构造。 */
-    public PageResult() {
+    public PageResponse() {
         super();
     }
 
@@ -54,8 +54,8 @@ public class PageResult<T> extends BaseResponse<T> {
      * @param <T>      数据类型
      * @return 分页成功响应
      */
-    public static <T> PageResult<T> success(Long total, Long pageNum, Long pageSize, T data) {
-        PageResult<T> response = new PageResult<>();
+    public static <T> PageResponse<T> success(Long total, Long pageNum, Long pageSize, T data) {
+        PageResponse<T> response = new PageResponse<>();
         response.setCode(BaseResultCode.SUCCESS.getCode());
         response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
         response.setData(data);
@@ -73,7 +73,7 @@ public class PageResult<T> extends BaseResponse<T> {
      * @param <T>      数据类型
      * @return 空分页响应
      */
-    public static <T> PageResult<T> empty(Long pageNum, Long pageSize) {
+    public static <T> PageResponse<T> empty(Long pageNum, Long pageSize) {
         return success(0L, pageNum, pageSize, null);
     }
 
@@ -84,8 +84,8 @@ public class PageResult<T> extends BaseResponse<T> {
      * @param <T>        数据类型
      * @return 分页失败响应
      */
-    public static <T> PageResult<T> error(ResultCode resultCode) {
-        PageResult<T> response = new PageResult<>();
+    public static <T> PageResponse<T> error(ResultCode resultCode) {
+        PageResponse<T> response = new PageResponse<>();
         response.setCode(resultCode.getCode());
         response.setMsg(resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()));
         return response;

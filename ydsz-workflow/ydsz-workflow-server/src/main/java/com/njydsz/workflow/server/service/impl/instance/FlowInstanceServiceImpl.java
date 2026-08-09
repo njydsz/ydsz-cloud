@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -24,7 +24,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.event.model.StandardEventTypes;
@@ -927,7 +927,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 dataScopeFilter, offset, safeSize);
         long total = instanceMapper.countPage(
                 businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
-        return PageResult.success(total, (long) safePage, (long) safeSize, list);
+        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     // ============================== P2-24: 流程变量读写 ==============================

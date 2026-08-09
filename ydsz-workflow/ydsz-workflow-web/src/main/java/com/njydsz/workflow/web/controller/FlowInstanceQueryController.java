@@ -1,4 +1,4 @@
-package com.njydsz.workflow.web.controller.instance;
+﻿package com.njydsz.workflow.web.controller.instance;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
@@ -132,7 +132,7 @@ public class FlowInstanceQueryController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/page")
-    public PageResult<FlowInstanceVO> instancePage(
+    public PageResponse<FlowInstanceVO> instancePage(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
@@ -142,11 +142,11 @@ public class FlowInstanceQueryController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
-        BaseResponse<FlowInstance> pageResult = instanceService.page(businessType, initiatorId, flowStatus,
+        BaseResponse<FlowInstance> PageResponse = instanceService.page(businessType, initiatorId, flowStatus,
                 startTime, endTime, tid, pageNo, pageSize);
-        List<FlowInstance> instances = pageResult.getData();
+        List<FlowInstance> instances = PageResponse.getData();
         List<FlowInstanceVO> vos = WorkflowConverter.INSTANT.flowInstanceListToVO(instances);
-        return PageResult.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+        return PageResponse.success(PageResponse.getTotal(), PageResponse.getPageNum(), PageResponse.getPageSize(), vos);
     }
 
     /**
@@ -169,7 +169,7 @@ public class FlowInstanceQueryController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/my")
-    public PageResult<FlowInstanceVO> instanceMy(
+    public PageResponse<FlowInstanceVO> instanceMy(
             @RequestParam(required = false) String flowCode,
             @RequestParam(required = false) String flowName,
             @RequestParam(required = false) String status,
@@ -177,12 +177,12 @@ public class FlowInstanceQueryController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        BaseResponse<FlowInstance> pageResult = instanceService.page(null, AuthContextUtils.getUserId(), status,
+        BaseResponse<FlowInstance> PageResponse = instanceService.page(null, AuthContextUtils.getUserId(), status,
                 startTime, endTime, AuthContextUtils.getTenantIdOrDefault("1"),
                 pageNum, pageSize);
-        List<FlowInstance> instances = pageResult.getData();
+        List<FlowInstance> instances = PageResponse.getData();
         List<FlowInstanceVO> vos = WorkflowConverter.INSTANT.flowInstanceListToVO(instances);
-        return PageResult.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), vos);
+        return PageResponse.success(PageResponse.getTotal(), PageResponse.getPageNum(), PageResponse.getPageSize(), vos);
     }
 
     /**

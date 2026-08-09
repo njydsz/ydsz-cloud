@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -148,7 +148,7 @@
   <tr><td>common-domain: PageQuery</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-full">✅</td><td class="cell-none">—</td><td class="cell-none">—</td></tr>
   <tr><td>common-domain: SliceQuery</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td></tr>
   <tr><td>common-domain: TreeBuilder</td><td class="cell-none">—</td><td class="cell-full">✅</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td></tr>
-  <tr><td>common-domain: PageResult</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-none">❌</td><td class="cell-none">❌</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td></tr>
+  <tr><td>common-domain: PageResponse</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-none">❌</td><td class="cell-none">❌</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td></tr>
   <tr><td>common-docs: 文档解析</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-na">—</td><td class="cell-full">✅</td><td class="cell-full">✅</td></tr>
   <tr><td>common-excel: 双引擎</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-full">✅</td><td class="cell-none">—</td><td class="cell-none">—</td><td class="cell-none">—</td></tr>
   <tr><td>common-event: Outbox</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td><td class="cell-full">✅</td></tr>
@@ -190,14 +190,14 @@
 
 <div class="finding-card p0">
   <span class="priority-tag tag-p0">P0-关键</span>
-  <div class="finding-title">2. ydsz-message / ydsz-cronjob 分页返回未使用统一的 PageResult 信封</div>
+  <div class="finding-title">2. ydsz-message / ydsz-cronjob 分页返回未使用统一的 PageResponse 信封</div>
   <div class="finding-desc">
-    两个模块的 Web Controller 层直接使用 <code>BaseResponse&lt;Page&lt;VO&gt;&gt;</code>（MyBatis-Plus 原生 Page），而非项目统一的 <code>PageResult&lt;VO&gt;</code>。共涉及 message 9 个 Controller、cronjob 4 个 Controller。<br>
+    两个模块的 Web Controller 层直接使用 <code>BaseResponse&lt;Page&lt;VO&gt;&gt;</code>（MyBatis-Plus 原生 Page），而非项目统一的 <code>PageResponse&lt;VO&gt;</code>。共涉及 message 9 个 Controller、cronjob 4 个 Controller。<br>
     <strong>影响范围：</strong>message/MessageController, TemplateController, RouteRuleController, NotificationController, AggregateController, CanaryController, DeadLetterController, MessageArchiveController, MessageFeedbackController；cronjob/JobController, JobGroupController, JobTaskController, JobWebhookController。
   </div>
   <div class="finding-action">
     <strong>建议操作：</strong>
-    <span class="tag tag-fix">修复</span> 将以上 13 个 Controller 的分页返回类型从 <code>BaseResponse&lt;Page&lt;T&gt;&gt;</code> 统一改为 <code>PageResult&lt;T&gt;</code>，与 system/workflow/nextwiki 保持一致。建议在 server 层进行转换。
+    <span class="tag tag-fix">修复</span> 将以上 13 个 Controller 的分页返回类型从 <code>BaseResponse&lt;Page&lt;T&gt;&gt;</code> 统一改为 <code>PageResponse&lt;T&gt;</code>，与 system/workflow/nextwiki 保持一致。建议在 server 层进行转换。
   </div>
 </div>
 
@@ -286,7 +286,7 @@
   <tr><td>JSON 引擎统一性</td><td class="cell-full">🟢 95%</td><td>全仓零 FastJSON/Jackson 误用，Jackson 自动配置被正确排除</td></tr>
   <tr><td>JSON 高级特性利用</td><td class="cell-partial">🟡 35%</td><td>80% 模块仅用基础 API，流式解析 0%，树模型仅 2 模块，SPI 仅 3 模块</td></tr>
   <tr><td>DDD 分层规范遵从</td><td class="cell-full">🟢 90%</td><td>8 个 DDD 模块均遵守 api/domain/infra/server/web 五层架构</td></tr>
-  <tr><td>Response 模型一致性</td><td class="cell-partial">🟡 75%</td><td>2 个模块未使用 PageResult，直接套 MyBatis-Plus Page</td></tr>
+  <tr><td>Response 模型一致性</td><td class="cell-partial">🟡 75%</td><td>2 个模块未使用 PageResponse，直接套 MyBatis-Plus Page</td></tr>
   <tr><td>安全特性覆盖</td><td class="cell-partial">🟡 60%</td><td>@Xss 仅 2 DTO 使用，@SensitiveData 仅 1 模块，2 模块缺 @RateLimit</td></tr>
   <tr><td>公共缓存利用</td><td class="cell-none">🔴 5%</td><td>common-cache 高级特性全仓零采用</td></tr>
   <tr><td>公共锁利用</td><td class="cell-partial">🟡 25%</td><td>仅 1 模块使用分布式锁注解</td></tr>
@@ -306,9 +306,9 @@
       <p style="font-size:12px;color:var(--text-secondary)">涉及：ydsz-system-domain/pom.xml, ydsz-userinfo-domain/pom.xml。在 domain 层显式声明 &lt;dependency&gt; ydsz-common-json，注释"为下游 server/web 模块提供传递依赖"。</p>
     </li>
     <li>
-      <strong>1.2 统一 message / cronjob 的 PageResult 分页响应</strong>
+      <strong>1.2 统一 message / cronjob 的 PageResponse 分页响应</strong>
       <span class="tag tag-fix">修复</span>
-      <p style="font-size:12px;color:var(--text-secondary)">涉及 13 个 Controller：将 BaseResponse&lt;Page&lt;T&gt;&gt; 替换为 PageResult&lt;T&gt;，在 server 层进行数据转换。</p>
+      <p style="font-size:12px;color:var(--text-secondary)">涉及 13 个 Controller：将 BaseResponse&lt;Page&lt;T&gt;&gt; 替换为 PageResponse&lt;T&gt;，在 server 层进行数据转换。</p>
     </li>
     <li>
       <strong>1.3 补齐 cronjob / literule 的 @RateLimit 防护</strong>
@@ -365,7 +365,7 @@
     <li>
       <strong>3.4 补充 ArchUnit 编译期架构测试</strong>
       <span class="tag tag-new">新建</span>
-      <p style="font-size:12px;color:var(--text-secondary)">添加 ArchUnit 规则强制禁止 Jackson/FastJSON import、强制 domain 层显式声明 common-json、强制 Controller 分页返回 PageResult。</p>
+      <p style="font-size:12px;color:var(--text-secondary)">添加 ArchUnit 规则强制禁止 Jackson/FastJSON import、强制 domain 层显式声明 common-json、强制 Controller 分页返回 PageResponse。</p>
     </li>
     <li>
       <strong>3.5 探索多租户物理隔离方向</strong>
@@ -377,7 +377,7 @@
 
 <h2>八、总结</h2>
 <p style="margin-top:16px;line-height:1.8;">
-  本项目在 <strong>JSON 引擎统一性</strong> 方面达到了国内一流水平——自研 YdszJson 完全替代了 Jackson/FastJSON，且通过根 pom.xml 的 Maven Enforcer 规则从编译期杜绝了竞争库的使用。但 <strong>公共能力的深层利用</strong> 方面存在显著短板：ydsz-common-json 的高级特性（流式解析、树模型、SPI 扩展、Builder 独立配置）仅 2-3 个模块使用；ydsz-common-cache 的高级缓存框架在 9 个业务模块中零采用；安全特性（@Xss / @SensitiveData）和分页规范（PageResult / SliceQuery）覆盖率严重不足。
+  本项目在 <strong>JSON 引擎统一性</strong> 方面达到了国内一流水平——自研 YdszJson 完全替代了 Jackson/FastJSON，且通过根 pom.xml 的 Maven Enforcer 规则从编译期杜绝了竞争库的使用。但 <strong>公共能力的深层利用</strong> 方面存在显著短板：ydsz-common-json 的高级特性（流式解析、树模型、SPI 扩展、Builder 独立配置）仅 2-3 个模块使用；ydsz-common-cache 的高级缓存框架在 9 个业务模块中零采用；安全特性（@Xss / @SensitiveData）和分页规范（PageResponse / SliceQuery）覆盖率严重不足。
 </p>
 <p style="margin-top:12px;line-height:1.8;">
   上述 8 项发现与 3 阶段 13 条优化建议已按 P0→P1→P2 排列，每项均具备明确的涉及文件路径和改动方案。建议按 <strong>S1（2 周）→ S2（1 月）→ S3（3 月）</strong> 的节奏分批落地，每阶段完成后回归验证全仓编译通过即可闭环。

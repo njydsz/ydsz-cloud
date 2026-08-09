@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.instance;
+﻿package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.entity.FlowHisTask;
@@ -185,7 +185,7 @@ public class FlowTaskQueryServiceImpl {
         int offset = (safePage - 1) * safeSize;
         List<FlowRunTask> list = taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
         long total = taskMapper.countTodoByAssignee(assigneeId, tid);
-        return PageResult.success(total, (long) safePage, (long) safeSize, list);
+        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     /**
@@ -204,7 +204,7 @@ public class FlowTaskQueryServiceImpl {
             list.add(hisToTask(his));
         }
         long total = hisTaskMapper.countDoneByAssignee(assigneeId, tid);
-        return PageResult.success(total, (long) safePage, (long) safeSize, list);
+        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     /**
@@ -226,7 +226,7 @@ public class FlowTaskQueryServiceImpl {
         }
         long total = hisTaskMapper.countDone(assigneeId, businessType, flowCode,
                 startTime, endTime, tid);
-        return PageResult.success(total, (long) safePage, (long) safeSize, list);
+        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     // ============================== 统计查询 ==============================

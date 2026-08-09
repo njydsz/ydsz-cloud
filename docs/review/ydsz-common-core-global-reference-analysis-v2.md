@@ -1,4 +1,4 @@
-# ydsz-common-core 模块全局引用分析报告 v2.0（修正版）
+﻿# ydsz-common-core 模块全局引用分析报告 v2.0（修正版）
 
 > 基于对 `D:\Code\open\ydsz-cloud` 全仓库的 POM 依赖追踪 + 源码 import 引用分析 + 架构关系核实。
 > 分析时间：2026-08-09
@@ -81,7 +81,7 @@ query.getEffectivePageNum() / getEffectivePageSize()  ← service 层分页处�
 | `BaseResponse<T>` | **70+** | **15+** | 🟢 高 | 全平台 API 响应事实标准 |
 | `RequestContext` | **60+** | **12+** | 🟢 高 | 上下文载体广泛使用 |
 | `BaseResultCode` | **40+** | **10+** | 🟢 高 | 通过 ExceptionCode 桥接，全业务模块正确使用 |
-| `PageResult<T>` (response) | **40+** | **8+** | 🟡 中 | 分页响应逐步推广 |
+| `PageResponse<T>` (response) | **40+** | **8+** | 🟡 中 | 分页响应逐步推广 |
 | `TraceIdGenerator` | **14** | **4** | 🟢 高 | gateway/TraceFilter 广泛使用 |
 | `HeaderConstants` | **35+** | **10+** | 🟡 中 | common 内部为主 |
 | `PageConstants` (编译期) | **通过 PageQuery** | **全量** | 🟢 高 | JSR-303 注解生效 |
@@ -127,7 +127,7 @@ query.getEffectivePageNum() / getEffectivePageSize()  ← service 层分页处�
 ### 3.1 贯通度矩阵
 
 ```
-              BaseResponse  RequestContext  ExceptionCode  PageResult  Results  TraceId(新)  HeaderConstants
+              BaseResponse  RequestContext  ExceptionCode  PageResponse  Results  TraceId(新)  HeaderConstants
 workflow-web      ✅             ✅            ✅            ✅         ❌         ❌          ❌
 message-web       ✅             ✅            ✅            ✅         ❌         ❌          ❌
 system-web        ✅             ✅            ✅            ✅         ❌         ❌          ❌

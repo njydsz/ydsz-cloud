@@ -1,4 +1,4 @@
-package com.njydsz.system.web.controller;
+﻿package com.njydsz.system.web.controller;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.DictItemBatchDTO;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -88,14 +88,14 @@ public class DictItemController {
      */
     @Operation(summary = "分页查询字典项（支持搜索过滤）")
     @GetMapping("/page")
-    public PageResult<List<DictItemVO>> page(
+    public PageResponse<List<DictItemVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "字典类型编码过滤") @RequestParam(required = false) String typeCode,
             @Parameter(description = "字典项编码模糊搜索") @RequestParam(required = false) String itemCode,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
-        PageResult<DictItemVO> page = service.page(pageNum, pageSize, typeCode, itemCode, status);
-        return PageResult.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
+        PageResponse<DictItemVO> page = service.page(pageNum, pageSize, typeCode, itemCode, status);
+        return PageResponse.success(page.getTotal(), page.getPageNum(), page.getPageSize(), page.getRecords());
     }
 
     /**

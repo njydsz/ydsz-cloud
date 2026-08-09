@@ -1,7 +1,7 @@
-import os, re, glob
+﻿import os, re, glob
 
-# 将 Controller 方法返回类型 BaseResponse<List<X>> 改为 PageResult<X>
-# 仅当方法体内使用 PageResult.success/empty 时
+# 将 Controller 方法返回类型 BaseResponse<List<X>> 改为 PageResponse<X>
+# 仅当方法体内使用 PageResponse.success/empty 时
 
 ROOTS = [
     r"D:/Code/open/ydsz-cloud/ydsz-message",
@@ -27,7 +27,7 @@ for base in ROOTS:
         with open(path, "r", encoding="utf-8") as fh:
             content = fh.read()
         orig = content
-        content, n = RET.subn(r'public PageResult<\1> \2(', content)
+        content, n = RET.subn(r'public PageResponse<\1> \2(', content)
         if content != orig:
             total += n
             with open(path, "w", encoding="utf-8") as fh:

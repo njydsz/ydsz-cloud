@@ -1,4 +1,4 @@
-# ydsz-common-core
+﻿# ydsz-common-core
 
 > YDSZ 公共底座核心模块（L1 基础设施层）— 统一响应模型、结果码、请求上下文、链路追踪、分页协议、国际化、Spring Boot 自动配置
 
@@ -73,22 +73,22 @@ if (response.isSuccess()) { ... }
 
 ```java
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 
-// 标准分页响应（推荐：使用专用分页信封 PageResult<T>）
-PageResult<List<User>> resp = PageResult.success(total, pageNum, pageSize, users);
+// 标准分页响应（推荐：使用专用分页信封 PageResponse<T>）
+PageResponse<List<User>> resp = PageResponse.success(total, pageNum, pageSize, users);
 
 // 等价地，也可使用 BaseResponse.successPage(...) 工厂（返回 BaseResponse<T>）
 BaseResponse<List<User>> resp2 = BaseResponse.successPage(total, pageNum, pageSize, users);
 
 // 无数据分页响应
-PageResult<List<User>> empty = PageResult.empty(pageNum, pageSize);
+PageResponse<List<User>> empty = PageResponse.empty(pageNum, pageSize);
 
 // 判断请求是否成功
 if (resp.isSuccess()) { ... }
 ```
 
-> **提示**：`PageResult<T>` 是 `BaseResponse<T>` 的子类型，额外提供 `getPages()` 等便捷方法；
+> **提示**：`PageResponse<T>` 是 `BaseResponse<T>` 的子类型，额外提供 `getPages()` 等便捷方法；
 > 分页元信息（total / pageNum / pageSize）收口于该类型，`BaseResponse` 仍保留兼容字段。
 > `getExtensions()` 返回<b>不可变视图</b>，如需写入扩展字段请使用 `putExtension(key, value)`。
 
@@ -638,7 +638,7 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 | `BaseResultCode` | 结果码枚举（全部字段、方法） |
 | `ContextKey` | 类型安全上下文键 |
 | `RequestSnapshot` | 不可变请求快照 |
-| `PageResult` | 分页响应信封 |
+| `PageResponse` | 分页响应信封 |
 | `Results` | 统一响应门面 |
 | `ProblemDetail` | RFC 9457 错误详情 |
 
@@ -747,4 +747,4 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 
 - **RFC 9457 ProblemDetail**：新增 ProblemDetail 类，提供符合 RFC 9457 标准的错误响应格式（type/title/status/detail/instance 等）。保留 i18n 素材先行的做法，后续同步实现类。
 - **SpanContext 完整版**：新增基于 record 的 immutable Span 上下文四元组，提供 W3C/B3/SkyWalking 协议互转能力。当前仅有 TraceIdGenerator 提供 traceId/spanId 生成与 traceparent 构建。
-- **IPageResult 桥接**（规划中，随 `PageResponse` 弃用而优先级降低）：新增 `IPageResult` 接口，让 domain 层 `PageResult` 可实现该接口，配合 BaseResponse 分页元数据简化分页桥接。
+- **IPageResult 桥接**（规划中，随 `PageResponse` 弃用而优先级降低）：新增 `IPageResult` 接口，让 domain 层 `PageResponse` 可实现该接口，配合 BaseResponse 分页元数据简化分页桥接。

@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.annotation;
+﻿package com.njydsz.common.auth.annotation;
 
 import java.lang.annotation.*;
 
@@ -37,21 +37,21 @@ import com.njydsz.common.domain.enums.DataScopeType;
  * <pre>
  * // 方式一：自动注入到实现 DataScopeAware 接口的参数
  * &#64;AuthRowPermission
- * public PageResult&lt;UserVO&gt; queryUsers(UserQuery query) {
+ * public PageResponse&lt;UserVO&gt; queryUsers(UserQuery query) {
  *     // query 对象已自动注入 DataScopeInfo
  *     return userService.queryWithScope(query);
  * }
  *
  * // 方式二：注入到 Map 类型参数
  * &#64;AuthRowPermission(mapKey = "rowPermission")
- * public PageResult&lt;UserVO&gt; queryUsers(Map&lt;String, Object&gt; params) {
+ * public PageResponse&lt;UserVO&gt; queryUsers(Map&lt;String, Object&gt; params) {
  *     // params["rowPermission"] 已注入 DataScopeInfo
  *     return userService.queryWithScope(params);
  * }
  *
  * // 方式三：精确指定注入目标参数
  * &#64;AuthRowPermission(targetParamName = "query")
- * public PageResult&lt;UserVO&gt; queryUsers(UserQuery query, OtherDTO other) {
+ * public PageResponse&lt;UserVO&gt; queryUsers(UserQuery query, OtherDTO other) {
  *     // 仅注入到 query 参数
  *     return userService.queryWithScope(query);
  * }

@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.service.impl.notification;
+﻿package com.njydsz.workflow.server.service.impl.notification;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.workflow.domain.dto.FlowCcQueryDTO;
 import com.njydsz.workflow.domain.entity.FlowCc;
@@ -237,7 +237,7 @@ public class FlowCcServiceImpl implements FlowCcService {
                                                    String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
-                return PageResult.success(0L, 0L, 0L, Collections.emptyList());
+                return PageResponse.success(0L, 0L, 0L, Collections.emptyList());
             }
             int page = Math.max(pageNo, 1);
             int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
@@ -246,10 +246,10 @@ public class FlowCcServiceImpl implements FlowCcService {
             List<FlowCc> list = ccMapper.selectCcByUserPage(tenantId, userId,
                     readStatus, flowCode, offset, size);
             long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
-            return PageResult.success(total, (long) page, (long) size, list);
+            return PageResponse.success(total, (long) page, (long) size, list);
         } catch (Exception e) {
             log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
-            return PageResult.success(0L, 0L, 0L, Collections.emptyList());
+            return PageResponse.success(0L, 0L, 0L, Collections.emptyList());
         }
     }
 

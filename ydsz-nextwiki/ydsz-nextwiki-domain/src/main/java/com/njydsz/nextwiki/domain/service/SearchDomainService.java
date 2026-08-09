@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.domain.service;
+﻿package com.njydsz.nextwiki.domain.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.domain.query.PageResponse;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.entity.Tag;
@@ -71,11 +71,11 @@ public class SearchDomainService {
                 keyword, userId, scope, page, pageSize);
 
         // 数据库分页查询搜索索引，避免全量加载后内存 subList 分页
-        PageResult<SearchIndex> pageResult = searchIndexRepository.searchPage(
+        PageResponse<SearchIndex> PageResponse = searchIndexRepository.searchPage(
                 keyword, userId, scope, page, pageSize);
 
         List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
-        for (SearchIndex index : pageResult.getRecords()) {
+        for (SearchIndex index : PageResponse.getRecords()) {
             float score = calculateScore(index, keyword);
             hits.add(SearchResultVO.SearchHitVO.builder()
                     .fileNodeId(index.getFileNodeId())
@@ -97,7 +97,7 @@ public class SearchDomainService {
 
         return SearchResultVO.builder()
                 .hits(hits)
-                .total(pageResult.getTotal())
+                .total(PageResponse.getTotal())
                 .page(page)
                 .pageSize(pageSize)
                 .tookMs(tookMs)

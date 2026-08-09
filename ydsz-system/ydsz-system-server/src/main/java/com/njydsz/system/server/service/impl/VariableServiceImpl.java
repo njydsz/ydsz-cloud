@@ -1,4 +1,4 @@
-package com.njydsz.system.server.service.impl;
+﻿package com.njydsz.system.server.service.impl;
 
 import java.time.Duration;
 import java.util.List;
@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.vo.VariableVO;
@@ -207,7 +207,7 @@ public class VariableServiceImpl implements VariableService {
         wrapper.orderByDesc("created_at");
         IPage<Variable> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<VariableVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
-        return PageResult.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+        return PageResponse.of(page.getTotal(), (long) pageNum, (long) pageSize, vos);
     }
 
     /**

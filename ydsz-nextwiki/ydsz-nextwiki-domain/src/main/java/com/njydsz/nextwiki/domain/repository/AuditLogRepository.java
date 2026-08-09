@@ -1,8 +1,8 @@
-package com.njydsz.nextwiki.domain.repository;
+﻿package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
 
-import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.domain.query.PageResponse;
 import com.njydsz.nextwiki.domain.entity.AuditLog;
 
 /**
@@ -45,5 +45,5 @@ public interface AuditLogRepository {
      * @param pageSize 每页大小
      * @return 分页审计日志结果
      */
-    PageResult<AuditLog> findPage(String userId, int page, int pageSize);
+    PageResponse<AuditLog> findPage(String userId, int page, int pageSize);
 }
