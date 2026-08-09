@@ -70,8 +70,11 @@ public final class TraceIdGenerator {
      * @since 1.5.0
      * @deprecated 1.9.3 推荐直接使用 {@link #generateSortableTraceId()}，时间有序，便于日志排查和范围检索。
      *             当前实现已委托 {@link #generateSortableTraceId()}，行为等价。
+     *             v1.11 起标记 {@code forRemoval = true}，计划 v2.0 移除。请迁移至
+     *             {@code TraceIdGenerator.generateSortableTraceId()} 或
+     *             {@code TraceIdPropagation.traceHeadersOrCreate()}。
      */
-    @Deprecated(since = "1.9.3", forRemoval = false)
+    @Deprecated(since = "1.9.3", forRemoval = true)
     public static String generateTraceId() {
         return generateSortableTraceId();
     }

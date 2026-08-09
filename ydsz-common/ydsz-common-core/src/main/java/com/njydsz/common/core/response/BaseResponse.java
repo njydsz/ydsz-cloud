@@ -8,7 +8,6 @@ import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 import org.slf4j.MDC;
 
@@ -49,7 +48,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @see Results
  */
 @Data
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"code", "msg", "data", "traceId", "requestId", "spanId", "timestamp", "extensions"})
@@ -86,7 +84,6 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 返回编码
      */
-    @EqualsAndHashCode.Include
     private String code;
 
     /**
@@ -103,9 +100,12 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     private T data;
 
     /**
-     * 链路追踪 ID
+     * 链路追踪 ID。
+     *
+     * <p>首次调用 {@link #getTraceId()} 时从 RequestContext/MDC 懒解析，
+     * 避免批量/流式场景下每次构造响应对象都产生 MDC 读取开销。</p>
      */
-    private String traceId;
+    private transient volatile String traceId;
 
     /**
      * 请求 ID（用于客户端/前端精准排障，单个请求唯一）。
@@ -145,12 +145,12 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 默认构造函数。
      *
-     * <p>自动从 {@link RequestContext} 解析 traceId、requestId、spanId
-     * （均为空时不设置）。
+     * <p>traceId 采用懒加载：首次调用 {@link #getTraceId()} 时从 RequestContext/MDC 解析，
+     * 避免批量/流式场景下每次构造都产生 MDC 读取开销。</p>
      */
     public BaseResponse() {
         this.timestamp = System.currentTimeMillis();
-        resolveObservability();
+        // traceId / requestId / spanId 懒初始化（getter 触发）
     }
 
     /**
@@ -165,11 +165,13 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.msg = msg;
         this.data = data;
         this.timestamp = System.currentTimeMillis();
-        resolveObservability();
+        // traceId / requestId / spanId 懒初始化（getter 触发）
     }
 
     /**
-     * 全参数构造函数（含可观测性字段）。
+     * 全参数构造函数（含显式可观测性字段）。
+     *
+     * <p>显式传入的 traceId / requestId / spanId 直接写入，跳过懒解析路径。</p>
      *
      * @param code      响应码
      * @param msg       响应消息
@@ -185,31 +187,13 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.requestId = requestId;
         this.spanId = spanId;
         this.timestamp = System.currentTimeMillis();
-        this.traceId = resolveTraceId();
+        // traceId 仍走懒加载（未显式传值时）
     }
 
     /**
-     * 解析当前可观测性信息（traceId、requestId、spanId），
-     * 优先从 {@link RequestContext} 读取，回退 MDC。
+     * 懒解析当前链路 traceId：优先从 {@link RequestContext}（统一上下文主源），回退 MDC。
      *
-     * <p>注意：调用方若使用 {@link #BaseResponse(String, String, T, String, String)} 构造函数，
-     * 本方法不会覆盖已显式设置的 observability 字段。
-     */
-    private void resolveObservability() {
-        this.traceId = resolveTraceId();
-        // requestId / spanId: 仅在 RequestContext 中存在时填充，避免无条件生成噪声
-        String ctxRequestId = RequestContext.getRequestId();
-        if (ctxRequestId != null && !ctxRequestId.isBlank()) {
-            this.requestId = ctxRequestId;
-        }
-        // spanId 按需生成（仅在有 traceId 的场景下），避免纯随机生成带来的误导
-        if (this.traceId != null && !this.traceId.isBlank()) {
-            this.spanId = com.njydsz.common.core.trace.TraceIdGenerator.generateSpanId();
-        }
-    }
-
-    /**
-     * 解析当前链路 traceId：优先从 {@link RequestContext}（统一上下文主源），回退 MDC。
+     * <p>仅在首次调用 {@link #getTraceId()} 时执行一次，之后结果缓存到 traceId 字段。</p>
      *
      * @return 当前 traceId；均不存在时返回 null
      */

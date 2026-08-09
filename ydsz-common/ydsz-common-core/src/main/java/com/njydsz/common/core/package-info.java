@@ -15,7 +15,7 @@
  * <p>本模块依赖以下外部组件，接入方需确保 classpath 存在：</p>
  * <ul>
  *   <li><b>ydsz-common-json</b>（核心硬依赖）：{@code BaseResponse} / {@code IResponse} /
- *       {@code PageResult} 上使用的 {@code @JsonInclude}、{@code @JsonPropertyOrder}、
+ *       {@code PageResponse} 上使用的 {@code @JsonInclude}、{@code @JsonPropertyOrder}、
  *       {@code @JsonClass} 注解由 ydsz-common-json 引擎解析。若未引入该模块，
  *       序列化输出将不带字段白名单与空值控制。</li>
  *   <li><b>transmittable-thread-local</b>（TTL）：线程池场景的上下文传递</li>
@@ -28,7 +28,7 @@
  *   <li>上下文写入推荐使用 {@code ContextKey<T>} 替代字符串键
  *       （{@code RequestContext.put(String, Object)} 已标记 {@code @Deprecated}）</li>
  *   <li>结果码扩展：业务模块自定义错误码应实现 {@code ResultCode} 接口，不在 core 模块中直接修改</li>
- *   <li>响应构建：通用场景使用 {@code BaseResponse.success(data)}；分页场景使用 {@code PageResult}；
+ *   <li>响应构建：通用场景使用 {@code BaseResponse.success(data)}；分页场景使用 {@code PageResponse}；
  *       带可观测字段使用 {@code Results.okWithObservability(data, requestId, spanId)}</li>
  * </ul>
  *

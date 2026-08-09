@@ -9,6 +9,7 @@ import org.slf4j.MDC;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.common.core.constant.HeaderConstants;
+import static com.njydsz.common.core.context.BizContextKeys.*;
 
 /**
  * 请求上下文持有者
@@ -77,31 +78,8 @@ public final class RequestContext {
     /** 上下文键名：API 版本 */
     public static final String KEY_API_VERSION = "apiVersion";
 
-    // ==================== 业务级上下文键（内联定义，避免额外类） ====================
-
-    /** 认证信息键。 */
-    public static final String KEY_AUTH_INFO = "authInfo";
-
-    /** 登录用户键。 */
-    public static final String KEY_LOGIN_USER = "loginUser";
-
-    /** 租户上下文键（tenantId / 系统租户标识 / isSkipIsolation）。 */
-    public static final String KEY_TENANT_CONTEXT = "tenantContext";
-
-    /** 列权限信息键。 */
-    public static final String KEY_COLUMN_PERMISSION = "columnPermission";
-
-    /** 审计上下文数据键。 */
-    public static final String KEY_AUDIT_DATA = "auditData";
-
-    /** HTTP 请求对象键（建议使用 {@link #setRequestSnapshot(RequestSnapshot)} 的不可变快照）。 */
-    public static final String KEY_HTTP_REQUEST = "httpRequest";
-
-    /** 数据权限虚拟请求头键（{@code Map<String, String>}）。 */
-    public static final String KEY_EXTRA_HEADERS = "extraHeaders";
-
-    /** 请求级用户信息缓存键。 */
-    public static final String KEY_CACHED_USER_INFO_MAP = "cachedUserInfoMap";
+    // ==================== 业务级上下文键 ====================
+    // 业务级常量已下沉至 {@link BizContextKeys}，此处仅引用，避免双写。
 
     /**
      * 请求上下文存储（懒初始化）。
@@ -507,9 +485,9 @@ public final class RequestContext {
      */
     public static void setAuthInfo(Object authInfo) {
         if (authInfo == null) {
-            remove(KEY_AUTH_INFO);
+            remove(BizContextKeys.KEY_AUTH_INFO);
         } else {
-            put(KEY_AUTH_INFO, authInfo);
+            put(BizContextKeys.KEY_AUTH_INFO, authInfo);
         }
     }
 
@@ -520,7 +498,7 @@ public final class RequestContext {
      * @since 1.9.0
      */
     public static Object getAuthInfo() {
-        return get(KEY_AUTH_INFO);
+        return get(BizContextKeys.KEY_AUTH_INFO);
     }
 
     /**
@@ -533,7 +511,7 @@ public final class RequestContext {
      */
     @SuppressWarnings("unchecked")
     public static <T> T getAuthInfo(Class<T> type) {
-        Object authInfo = get(KEY_AUTH_INFO);
+        Object authInfo = get(BizContextKeys.KEY_AUTH_INFO);
         return type.isInstance(authInfo) ? (T) authInfo : null;
     }
 
@@ -545,9 +523,9 @@ public final class RequestContext {
      */
     public static void setLoginUser(Object loginUser) {
         if (loginUser == null) {
-            remove(KEY_LOGIN_USER);
+            remove(BizContextKeys.KEY_LOGIN_USER);
         } else {
-            put(KEY_LOGIN_USER, loginUser);
+            put(BizContextKeys.KEY_LOGIN_USER, loginUser);
         }
     }
 
@@ -558,7 +536,7 @@ public final class RequestContext {
      * @since 1.9.0
      */
     public static Object getLoginUser() {
-        return get(KEY_LOGIN_USER);
+        return get(BizContextKeys.KEY_LOGIN_USER);
     }
 
     /**
@@ -571,7 +549,7 @@ public final class RequestContext {
      */
     @SuppressWarnings("unchecked")
     public static <T> T getLoginUser(Class<T> type) {
-        Object loginUser = get(KEY_LOGIN_USER);
+        Object loginUser = get(BizContextKeys.KEY_LOGIN_USER);
         return type.isInstance(loginUser) ? (T) loginUser : null;
     }
 
@@ -585,9 +563,9 @@ public final class RequestContext {
      */
     public static void setTenantContext(Object tenantContext) {
         if (tenantContext == null) {
-            remove(KEY_TENANT_CONTEXT);
+            remove(BizContextKeys.KEY_TENANT_CONTEXT);
         } else {
-            put(KEY_TENANT_CONTEXT, tenantContext);
+            put(BizContextKeys.KEY_TENANT_CONTEXT, tenantContext);
         }
     }
 
@@ -598,7 +576,7 @@ public final class RequestContext {
      * @since 1.9.0
      */
     public static Object getTenantContext() {
-        return get(KEY_TENANT_CONTEXT);
+        return get(BizContextKeys.KEY_TENANT_CONTEXT);
     }
 
     /**
@@ -609,9 +587,9 @@ public final class RequestContext {
      */
     public static void setColumnPermission(Object columnPermission) {
         if (columnPermission == null) {
-            remove(KEY_COLUMN_PERMISSION);
+            remove(BizContextKeys.KEY_COLUMN_PERMISSION);
         } else {
-            put(KEY_COLUMN_PERMISSION, columnPermission);
+            put(BizContextKeys.KEY_COLUMN_PERMISSION, columnPermission);
         }
     }
 
@@ -622,7 +600,7 @@ public final class RequestContext {
      * @since 1.9.0
      */
     public static Object getColumnPermission() {
-        return get(KEY_COLUMN_PERMISSION);
+        return get(BizContextKeys.KEY_COLUMN_PERMISSION);
     }
 
     /**
@@ -638,9 +616,9 @@ public final class RequestContext {
      */
     public static void setRequestSnapshot(RequestSnapshot snapshot) {
         if (snapshot == null) {
-            remove(KEY_HTTP_REQUEST);
+            remove(BizContextKeys.KEY_HTTP_REQUEST);
         } else {
-            put(KEY_HTTP_REQUEST, snapshot);
+            put(BizContextKeys.KEY_HTTP_REQUEST, snapshot);
         }
     }
 
@@ -651,7 +629,7 @@ public final class RequestContext {
      * @since 1.9.1
      */
     public static RequestSnapshot getRequestSnapshot() {
-        Object obj = get(KEY_HTTP_REQUEST);
+        Object obj = get(BizContextKeys.KEY_HTTP_REQUEST);
         return obj instanceof RequestSnapshot ? (RequestSnapshot) obj : null;
     }
 
@@ -665,7 +643,7 @@ public final class RequestContext {
      */
     @Deprecated(since = "1.9.1", forRemoval = false)
     public static void setHttpRequest(Object request) {
-        put(KEY_HTTP_REQUEST, request);
+        put(BizContextKeys.KEY_HTTP_REQUEST, request);
     }
 
     /**
@@ -677,7 +655,7 @@ public final class RequestContext {
      */
     @Deprecated(since = "1.9.1", forRemoval = false)
     public static Object getHttpRequest() {
-        return get(KEY_HTTP_REQUEST);
+        return get(BizContextKeys.KEY_HTTP_REQUEST);
     }
 
     /**
@@ -690,10 +668,10 @@ public final class RequestContext {
      * @since 1.9.0
      */
     public static void putExtraHeader(String key, String value) {
-        Map<String, String> headers = (Map<String, String>) get(KEY_EXTRA_HEADERS);
+        Map<String, String> headers = (Map<String, String>) get(BizContextKeys.KEY_EXTRA_HEADERS);
         if (headers == null) {
             headers = new java.util.LinkedHashMap<>(4);
-            put(KEY_EXTRA_HEADERS, headers);
+            put(BizContextKeys.KEY_EXTRA_HEADERS, headers);
         }
         headers.put(key, value);
     }
@@ -706,7 +684,7 @@ public final class RequestContext {
      * @since 1.9.0
      */
     public static String getExtraHeader(String key) {
-        Object obj = get(KEY_EXTRA_HEADERS);
+        Object obj = get(BizContextKeys.KEY_EXTRA_HEADERS);
         if (obj instanceof Map) {
             return ((Map<String, String>) obj).get(key);
         }
@@ -721,7 +699,7 @@ public final class RequestContext {
      */
     @SuppressWarnings("unchecked")
     public static Map<String, String> getExtraHeaders() {
-        Object obj = get(KEY_EXTRA_HEADERS);
+        Object obj = get(BizContextKeys.KEY_EXTRA_HEADERS);
         if (obj instanceof Map) {
             return java.util.Collections.unmodifiableMap((Map<String, String>) obj);
         }
