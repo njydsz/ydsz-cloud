@@ -157,7 +157,7 @@ ydsz:
 ```bash
 curl -X POST http://localhost:9008/agent/chat \
   -H "Content-Type: application/json" \
-  -d '{"message": "你好，请介绍一下REMI系统"}'
+  -d '{"message": "你好，请介绍一下YDSZ系统"}'
 ```
 
 ### 3. 流式对话（SSE）

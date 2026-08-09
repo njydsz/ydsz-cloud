@@ -67,47 +67,47 @@ ydsz:
     global-daily-limit: 0
     global-hourly-limit: 0
     sms:
-      provider: ${REMI_SMS_PROVIDER:mock}
+      provider: ${YDSZ_SMS_PROVIDER:mock}
       aliyun:
-        access-key-id: ${REMI_SMS_ALIYUN_AK:}
-        access-key-secret: ${REMI_SMS_ALIYUN_SK:}
-        sign-name: ${REMI_SMS_ALIYUN_SIGN:}
+        access-key-id: ${YDSZ_SMS_ALIYUN_AK:}
+        access-key-secret: ${YDSZ_SMS_ALIYUN_SK:}
+        sign-name: ${YDSZ_SMS_ALIYUN_SIGN:}
         endpoint: dysmsapi.aliyuncs.com
         connect-timeout: 5000
         read-timeout: 10000
     push:
-      provider: ${REMI_PUSH_PROVIDER:mock}
+      provider: ${YDSZ_PUSH_PROVIDER:mock}
       getui:
-        app-id: ${REMI_PUSH_GETUI_APPID:}
-        app-key: ${REMI_PUSH_GETUI_APPKEY:}
-        master-secret: ${REMI_PUSH_GETUI_MASTER:}
+        app-id: ${YDSZ_PUSH_GETUI_APPID:}
+        app-key: ${YDSZ_PUSH_GETUI_APPKEY:}
+        master-secret: ${YDSZ_PUSH_GETUI_MASTER:}
         base-url: https://restapi.getui.com
         connect-timeout: 5000
         read-timeout: 10000
   webhook:
-    default-url: ${REMI_WEBHOOK_DEFAULT_URL:}
+    default-url: ${YDSZ_WEBHOOK_DEFAULT_URL:}
     connect-timeout: 5000
     read-timeout: 10000
   channel:
     dingtalk:
-      default-token: ${REMI_DINGTALK_TOKEN:}
-      secret: ${REMI_DINGTALK_SECRET:}
+      default-token: ${YDSZ_DINGTALK_TOKEN:}
+      secret: ${YDSZ_DINGTALK_SECRET:}
       connect-timeout: 5000
       read-timeout: 10000
     wechat-work:
-      default-key: ${REMI_WECOM_KEY:}
+      default-key: ${YDSZ_WECOM_KEY:}
       connect-timeout: 5000
       read-timeout: 10000
     feishu:
-      default-hook: ${REMI_FEISHU_HOOK:}
-      secret: ${REMI_FEISHU_SECRET:}
+      default-hook: ${YDSZ_FEISHU_HOOK:}
+      secret: ${YDSZ_FEISHU_SECRET:}
       connect-timeout: 5000
       read-timeout: 10000
     wecom-app:
-      enabled: ${REMI_WECOM_APP_ENABLED:false}
-      corp-id: ${REMI_WECOM_APP_CORPID:}
-      corp-secret: ${REMI_WECOM_APP_CORPSECRET:}
-      agent-id: ${REMI_WECOM_APP_AGENTID:0}
+      enabled: ${YDSZ_WECOM_APP_ENABLED:false}
+      corp-id: ${YDSZ_WECOM_APP_CORPID:}
+      corp-secret: ${YDSZ_WECOM_APP_CORPSECRET:}
+      agent-id: ${YDSZ_WECOM_APP_AGENTID:0}
       base-url: https://qyapi.weixin.qq.com
       connect-timeout: 5000
       read-timeout: 10000

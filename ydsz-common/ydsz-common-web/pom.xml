@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-web</artifactId>
     <name>ydsz-common-web</name>
-    <description>ydsz-common-web 是REMI公共依赖中的 PC Web 端基座模块</description>
+    <description>ydsz-common-web 是YDSZ公共依赖中的 PC Web 端基座模块</description>
 
     <parent>
         <groupId>com.njydsz</groupId>
