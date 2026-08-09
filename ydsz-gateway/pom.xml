@@ -95,15 +95,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
         </dependency>
-                <!-- P1-7: 本地缓存（JWT 校验结果缓存，替代 Caffeine） -->
+        <!-- P1-7: 本地缓存（JWT 校验结果缓存，替代 Caffeine） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
         </dependency>
 
-        <!-- Fastjson2（JSON 序列化，gateway 各 filter/config 使用） -->
-
-        <!-- 健康检。-->
+        <!-- Actuator 健康检查 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -136,6 +134,22 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-notify</artifactId>
+        </dependency>
+        <!-- P2-3: 集成测试 + 混沌测试 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
 </dependencies>
 

@@ -2,6 +2,7 @@ package com.njydsz.userinfo.domain.vo;
 
 import java.time.LocalDateTime;
 
+import com.njydsz.userinfo.domain.entity.UserAccount;
 import lombok.Data;
 
 /**
@@ -44,4 +45,33 @@ public class UserAccountVO {
     private LocalDateTime createdAt;
     /** 更新时间 */
     private LocalDateTime updatedAt;
+
+    /**
+     * 从实体转换为 VO（用于导出等需手动转换的场景）
+     *
+     * @param entity 用户账号实体
+     * @return 用户 VO
+     */
+    public static UserAccountVO fromEntity(UserAccount entity) {
+        if (entity == null) {
+            return null;
+        }
+        UserAccountVO vo = new UserAccountVO();
+        vo.setId(entity.getId());
+        vo.setUsername(entity.getUsername());
+        vo.setRealName(entity.getRealName());
+        vo.setPhone(entity.getPhone());
+        vo.setEmail(entity.getEmail());
+        vo.setAvatar(entity.getAvatar());
+        // status 字段：DB 为字符串 "0"/"1"，VO 为 Integer
+        vo.setStatus(entity.getStatus() != null ? Integer.parseInt(entity.getStatus()) : null);
+        vo.setUserType(entity.getUserType());
+        vo.setCompanyId(entity.getCompanyId());
+        vo.setTenantId(entity.getTenantId());
+        vo.setLastLoginAt(entity.getLastLoginAt());
+        vo.setLastLoginIp(entity.getLastLoginIp());
+        vo.setCreatedAt(entity.getCreatedAt());
+        vo.setUpdatedAt(entity.getUpdatedAt());
+        return vo;
+    }
 }

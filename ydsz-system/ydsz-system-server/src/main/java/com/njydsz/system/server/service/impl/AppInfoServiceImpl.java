@@ -11,11 +11,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.common.core.exception.BizException;
+import com.njydsz.common.core.response.PageResult;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.entity.AppInfo;
+import com.njydsz.system.domain.enums.SystemResultCode;
 import com.njydsz.system.domain.vo.AppInfoVO;
-import com.njydsz.common.core.response.PageResult;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.AppInfoService;
@@ -241,7 +244,8 @@ public class AppInfoServiceImpl implements AppInfoService {
         QueryWrapper<AppInfo> checkWrapper = new QueryWrapper<>();
         checkWrapper.eq("app_key", dto.getAppKey());
         if (mapper.selectCount(checkWrapper) > 0) {
-            throw new IllegalArgumentException("应用 Key 已存在: " + dto.getAppKey());
+            throw BusinessException.of(SystemResultCode.APP_KEY_DUPLICATE)
+                    .data("appKey", dto.getAppKey());
         }
         AppInfo entity = toEntity(dto);
         if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {

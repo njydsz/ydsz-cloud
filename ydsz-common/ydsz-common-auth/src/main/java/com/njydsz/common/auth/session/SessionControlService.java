@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.config.AuthProperties;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import lombok.Builder;
@@ -24,7 +25,7 @@ import lombok.ToString;
  * <p>基于 Redis Hash 管理用户登录会话，支持以下策略：</p>
  * <ul>
  *   <li><b>并发会话限制</b>：通过 {@code max-sessions-per-user} 控制单用户最大并发会话数</li>
- *   <li><b>互踢策略</b>：超出限制时，按照 LRU 或 FIFO 策略淘汰最早会话</li>
+ *   <li><b>互踢策略</b>：超出限制时，按照 FIFO 策略淘汰最早会话</li>
  *   <li><b>主动登出</b>：用户主动登出时会话立即失效</li>
  * </ul>
  *
@@ -40,19 +41,22 @@ import lombok.ToString;
  * @since 1.2.0
  */
 @Service
-@ConditionalOnBean(RedisStringOps.class)
+@ConditionalOnBean(RedisHashOps.class)
 public class SessionControlService {
 
     private static final Logger log = LoggerFactory.getLogger(SessionControlService.class);
     private static final String SESSION_KEY_PREFIX = "auth:session:";
 
+    private final RedisHashOps redisHashOps;
     private final RedisStringOps redisStringOps;
     private final AuthProperties authProperties;
     private final SessionControlListener listener;
 
-    public SessionControlService(RedisStringOps redisStringOps,
+    public SessionControlService(RedisHashOps redisHashOps,
+                                  RedisStringOps redisStringOps,
                                   AuthProperties authProperties,
                                   SessionControlListener listener) {
+        this.redisHashOps = redisHashOps;
         this.redisStringOps = redisStringOps;
         this.authProperties = authProperties;
         this.listener = listener;
@@ -75,10 +79,10 @@ public class SessionControlService {
         String field = tokenId;
         String value = serializeDeviceInfo(deviceInfo);
 
-        redisStringOps.hset(sessionKey, field, value);
+        redisHashOps.hSet(sessionKey, field, value);
         redisStringOps.expire(sessionKey, Duration.ofSeconds(authProperties.getBlacklist().getExpireSeconds()));
 
-        long activeSessions = redisStringOps.hlen(sessionKey);
+        long activeSessions = redisHashOps.hSize(sessionKey);
         int maxAllowed = authProperties.getSession().getMaxSessionsPerUser();
 
         if (activeSessions > maxAllowed) {
@@ -97,7 +101,7 @@ public class SessionControlService {
             return;
         }
         String sessionKey = buildSessionKey(userId);
-        redisStringOps.hdel(sessionKey, tokenId);
+        redisHashOps.hDel(sessionKey, tokenId);
     }
 
     /**
@@ -112,7 +116,7 @@ public class SessionControlService {
             return true;
         }
         String sessionKey = buildSessionKey(userId);
-        return redisStringOps.hasKey(sessionKey, tokenId);
+        return redisHashOps.hHasKey(sessionKey, tokenId);
     }
 
     /**
@@ -137,7 +141,7 @@ public class SessionControlService {
             return Collections.emptyList();
         }
         String sessionKey = buildSessionKey(userId);
-        var entries = redisStringOps.hgetAll(sessionKey);
+        var entries = redisHashOps.hGetAll(sessionKey, String.class);
         List<SessionInfo> sessions = new ArrayList<>(entries.size());
         entries.forEach((tokenId, deviceJson) ->
             sessions.add(SessionInfo.builder()
@@ -153,17 +157,22 @@ public class SessionControlService {
         if (count <= 0) return;
 
         String sessionKey = buildSessionKey(userId);
-        Set<String> tokenIds = redisStringOps.hkeys(sessionKey);
+        Set<Object> tokenIds = redisHashOps.hKeys(sessionKey);
 
-        List<String> evictionCandidates = new ArrayList<>(tokenIds);
+        List<Object> evictionCandidates = new ArrayList<>(tokenIds);
+        // FIFO: 淘汰最早的（这里按 Redis 返回的 key 顺序）
         int toRemove = (int) Math.min(count, evictionCandidates.size());
 
         for (int i = 0; i < toRemove; i++) {
-            String evictedTokenId = evictionCandidates.get(i);
-            redisStringOps.hdel(sessionKey, evictedTokenId);
+            String evictedTokenId = (String) evictionCandidates.get(i);
+            redisHashOps.hDel(sessionKey, evictedTokenId);
 
             if (listener != null) {
-                listener.onSessionEvicted(userId, evictedTokenId);
+                try {
+                    listener.onSessionEvicted(userId, evictedTokenId);
+                } catch (Exception e) {
+                    log.warn("Session eviction listener threw exception", e);
+                }
             }
             log.info("Session evicted due to max-sessions limit: userId={}, tokenId={}",
                 userId, evictedTokenId);

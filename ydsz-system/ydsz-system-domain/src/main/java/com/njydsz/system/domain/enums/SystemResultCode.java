@@ -40,6 +40,7 @@ public enum SystemResultCode implements ExceptionCode {
     DICT_ITEM_NOT_FOUND("B91003", "system.dict.item.not.found", 404), // 字典项不存在（资源未找到，HTTP 404）
     DICT_ITEM_CODE_DUPLICATE("B91004", "system.dict.item.code.duplicate"), // 字典项编码在同类型内重复，违反唯一约束
     DICT_VERSION_NOT_FOUND("B91005", "system.dict.version.not.found", 404), // 字典版本不存在（资源未找到，HTTP 404）
+    SNAPSHOT_PARSE_ERROR("B91006", "system.dict.snapshot.parse.error", 500), // 字典版本快照解析失败
 
     // ==================== B92001-B92099 系统变量 ====================
     VARIABLE_NOT_FOUND("B92001", "system.variable.not.found", 404), // 系统变量不存在（资源未找到，HTTP 404）

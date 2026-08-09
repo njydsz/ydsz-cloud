@@ -29,6 +29,7 @@ import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.idempotent.RedisIdempotentStrategy;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 import com.njydsz.common.lock.metrics.LockMetrics;
+import com.njydsz.common.lock.renewal.LockRenewalService;
 import com.njydsz.common.lock.scheduler.LockLeakDetector;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.lock.strategy.DefaultLockStrategy;
@@ -71,17 +72,45 @@ public class DistributedLockAutoConfiguration {
     }
 
     /**
-     * 创建看门狗 Bean
+     * 创建统一的锁续期服务 Bean。
      *
-     * @param stringRedisTemplate Redis 模板
-     * @param lockProperties 锁配置属性
-     * @param lockMetrics 锁指标收集器
+     * <p>v1.2.0 引入，将散落在各锁实现中的续期 Lua 脚本统一收口，消除双锁冗余。
+     * 业务方可覆盖此 Bean 以注入自定义 {@link LockRenewalService.LockRenewalStrategy}。
+     *
+     * @return LockRenewalService 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public LockRenewalService lockRenewalService() {
+        return new LockRenewalService();
+    }
+
+    /**
+     * 创建看门狗 Bean。
+     *
+     * <p>v1.2.0 变更：通过 {@link LockRenewalService} 统一执行续期，
+     * 不再在本地维护续期 Lua 脚本。
+     *
+     * @param lockWatchDogScheduler 看门狗调度线程池
+     * @param stringRedisTemplate   Redis 模板
+     * @param lockProperties        锁配置属性
+     * @param lockMetrics           锁指标收集器
+     * @param renewalService        统一的锁续期服务
      * @return LockWatchDog 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public LockWatchDog lockWatchDog(@Qualifier("lockWatchDogScheduler") TaskScheduler lockWatchDogScheduler, StringRedisTemplate stringRedisTemplate, LockProperties lockProperties, LockMetrics lockMetrics) {
-        LockWatchDog lockWatchDog = new LockWatchDog(lockWatchDogScheduler, stringRedisTemplate, lockProperties.getMaxRenewTimes());
+    public LockWatchDog lockWatchDog(@Qualifier("lockWatchDogScheduler") TaskScheduler lockWatchDogScheduler,
+                                     StringRedisTemplate stringRedisTemplate,
+                                     LockProperties lockProperties,
+                                     LockMetrics lockMetrics,
+                                     LockRenewalService renewalService) {
+        LockWatchDog lockWatchDog = new LockWatchDog(
+                renewalService,
+                lockWatchDogScheduler,
+                stringRedisTemplate,
+                lockProperties.getMaxRenewTimes()
+        );
         lockWatchDog.setLockMetrics(lockMetrics);
         return lockWatchDog;
     }

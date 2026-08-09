@@ -98,6 +98,20 @@ ydsz:
     # dev 环境为空表示不校验 Origin；prod 环境必须配置可信域
     websocket:
       allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:}
+    # P2-2: 响应缓存 + 审计日志
+    filter:
+      response-cache: true    # GET 响应缓存（Redis，默认 TTL 60s）
+      audit-log: true         # 安全审计日志
+      rate-limit: true        # 令牌桶限流
+      gray-loadbalancer: true # 灰度路由
+      w3c-trace: true         # W3C Trace Context
+      ip-blacklist: true      # IP 黑名单
+      ip-whitelist: false     # IP 白名单
+      auth: true              # JWT 鉴权
+      api-key: false          # API Key 认证
+      websocket-auth: true    # WebSocket 鉴权
+      payload-validation: true # 请求体校验
+      api-version: true       # API 版本头
     # P0-阶段二-6: HttpClient 连接池配置
     httpclient:
       pool:

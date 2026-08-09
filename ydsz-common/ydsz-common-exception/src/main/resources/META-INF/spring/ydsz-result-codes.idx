@@ -13,3 +13,10 @@
 # 构建工具插件（Gradle/Maven）可在编译时自动生成此文件内容。
 # 如果此文件为空或不存在，ResultCodeScanner 将回退到 ASM 字节码扫描。
 #
+# ===========================
+# 已注册的模块错误码枚举类（按模块分组）
+# ===========================
+com.njydsz.common.exception.code.CoreExceptionCode
+com.njydsz.common.exception.code.SecurityExceptionCode
+com.njydsz.common.exception.code.RateLimitExceptionCode
+

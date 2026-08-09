@@ -49,6 +49,9 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
  *   HIGHEST_PRECEDENCE + 10  AuthGlobalFilter          (主鉴权 + 内部头注入)
  *   HIGHEST_PRECEDENCE + 15  ApiKeyAuthFilter          (API Key 备选认证)
  *   HIGHEST_PRECEDENCE + 20  GrayLoadBalancerRequestFilter (灰度标识注入)
+ *   HIGHEST_PRECEDENCE + 25  ResponseCacheFilter       (响应缓存，P2-2)
+ *   HIGHEST_PRECEDENCE + 30  RateLimitFilter           (令牌桶限流)
+ *   HIGHEST_PRECEDENCE + 35  AuditLogFilter            (审计日志，P2-2)
  *   HIGHEST_PRECEDENCE + 100 ReactiveLoadBalancerClientFilter (Spring Cloud LB)
  * </pre>
  *

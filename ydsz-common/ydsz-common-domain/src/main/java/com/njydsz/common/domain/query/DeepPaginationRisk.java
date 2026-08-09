@@ -19,18 +19,6 @@ package com.njydsz.common.domain.query;
 public enum DeepPaginationRisk {
 
     /**
-     * 默认警告阈值：offset 超过此值触发 WARN。
-     *
-     * <p>对齐阿里巴巴 Java 开发手册（嵩山版）深度分页治理建议：超过 10w 条记录的表，禁止 offset > 10000。
-     */
-    public static final long DEFAULT_WARN_THRESHOLD = 10000L;
-
-    /**
-     * 默认拒绝阈值：offset 超过此值触发 REJECT（抛出 {@link DeepPaginationException}）。
-     */
-    public static final long DEFAULT_REJECT_THRESHOLD = 50000L;
-
-    /**
      * 安全：offset 在安全范围内，可正常使用 offset 分页。
      */
     SAFE,
@@ -48,6 +36,18 @@ public enum DeepPaginationRisk {
      * <p>强制调用方改用游标分页（SliceQuery / SliceResult 游标模式），防止慢查询拖垮数据库。
      */
     REJECT;
+
+    /**
+     * 默认警告阈值：offset 超过此值触发 WARN。
+     *
+     * <p>对齐阿里巴巴 Java 开发手册（嵩山版）深度分页治理建议：超过 10w 条记录的表，禁止 offset > 10000。
+     */
+    public static final long DEFAULT_WARN_THRESHOLD = 10000L;
+
+    /**
+     * 默认拒绝阈值：offset 超过此值触发 REJECT（抛出 {@link DeepPaginationException}）。
+     */
+    public static final long DEFAULT_REJECT_THRESHOLD = 50000L;
 
     /**
      * 评估深度分页风险（使用默认阈值）。

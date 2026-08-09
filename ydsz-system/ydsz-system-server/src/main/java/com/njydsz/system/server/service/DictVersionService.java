@@ -56,4 +56,32 @@ public interface DictVersionService {
      * @return 新建版本记录主键 ID
      */
     String createVersion(String typeCode, String version, String changeLog, String snapshotJson);
+
+    /**
+     * 回滚字典到指定版本
+     *
+     * <p>执行链路：
+     * <ol>
+     *   <li>校验目标版本是否存在且未删除</li>
+     *   <li>查询当前字典项作为回滚前快照（用于审计）</li>
+     *   <li>物理删除当前字典项（按 typeCode）</li>
+     *   <li>从 {@code snapshotJson} 反序列化并批量插入历史字典项</li>
+     *   <li>创建新版本记录（标记回滚来源，保持完整审计链）</li>
+     *   <li>失效该 typeCode 下所有缓存</li>
+     * </ol>
+     *
+     * <p><b>审计设计：</b>回滚操作创建一个<b>新版本</b>而非覆盖历史，
+     * 新版本 {@code changeLog} 标注「回滚自 {sourceVersion}」，
+     * 旧版本永远不变（不可变记录原则）。
+     *
+     * <p><b>快照兼容性：</b>若 {@code snapshotJson} 为空或解析失败，
+     * 将清空当前字典项但不再重建（行为等同「重置为空字典」）。
+     *
+     * @param typeCode      字典类型编码
+     * @param targetVersion 目标版本号（如 {@code v1734567890123}）
+     * @param operatorId    操作人 ID（审计用途）
+     * @return 新创建的回滚版本 ID
+     * @throws com.njydsz.common.exception.custom.BusinessException 版本不存在时抛出 DICT_VERSION_NOT_FOUND
+     */
+    String rollbackTo(String typeCode, String targetVersion, String operatorId);
 }

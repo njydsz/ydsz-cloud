@@ -1,9 +1,19 @@
 package com.njydsz.system.server.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.dto.DictItemDTO;
+import com.njydsz.system.domain.entity.DictItem;
+import com.njydsz.system.domain.enums.SystemResultCode;
+import com.njydsz.system.infra.mapper.DictItemMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +95,13 @@ public class DictVersionServiceImpl implements DictVersionService {
 
     /** 字典版本 Mapper（继承 {@code ydsz_dict_version} 表 CRUD） */
     private final DictVersionMapper mapper;
+    /** 字典项 Mapper（用于回滚时删除/重建字典项） */
+    private final DictItemMapper dictItemMapper;
+    /** Redis 缓存服务（用于失效缓存） */
+    private final RedisService redisService;
+
+    /** 字典项缓存键前缀 */
+    private static final String DICT_CACHE_PREFIX = "ydsz:dict:item:";
 
     /**
      * 按字典类型编码查询所有历史版本（按生效时间倒序）
@@ -142,5 +159,113 @@ public class DictVersionServiceImpl implements DictVersionService {
         entity.setEffectiveDate(LocalDateTime.now());
         mapper.insert(entity);
         return entity.getId();
+    }
+
+    /**
+     * 回滚字典到指定版本
+     *
+     * <p>事务边界内执行「查询快照 → 物理删除 → 批量插入 → 创建新版本 → 失效缓存」全链路。
+     * 若中间步骤失败，整个事务回滚，字典数据保持原状。
+     *
+     * <p><b>审计设计：</b>回滚创建新版本（而非覆盖历史），
+     * 新版本 changeLog = 「回滚自 {sourceVersion} by {operatorId}」，
+     * 保持完整审计链（旧版本永不可变）。
+     *
+     * @param typeCode      字典类型编码
+     * @param targetVersion 目标版本号
+     * @param operatorId    操作人 ID
+     * @return 新创建的回滚版本 ID
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String rollbackTo(String typeCode, String targetVersion, String operatorId) {
+        // 1. 查询目标版本
+        DictVersion targetVersionEntity = mapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<DictVersion>()
+                        .eq("type_code", typeCode)
+                        .eq("version", targetVersion)
+                        .eq("deleted", 0)
+        );
+        if (targetVersionEntity == null) {
+            throw BusinessException.of(SystemResultCode.DICT_VERSION_NOT_FOUND)
+                    .data("typeCode", typeCode)
+                    .data("version", targetVersion);
+        }
+
+        // 2. 查询当前字典项作为回滚前快照（用于审计回溯）
+        List<DictItem> currentItems = dictItemMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<DictItem>()
+                        .eq("type_code", typeCode)
+                        .eq("deleted", 0)
+        );
+        String rollbackSnapshot = YdszJson.toJson(SystemConverter.INSTANT.dictItemListToVO(currentItems));
+
+        // 3. 物理删除当前字典项
+        int deletedCount = dictItemMapper.physicalDeleteByTypeCode(typeCode);
+        log.info("[DictVersion] 回滚准备: typeCode={}, 删除 {} 条现有字典项", typeCode, deletedCount);
+
+        // 4. 反序列化目标快照并重建字典项
+        int insertedCount = 0;
+        String snapshotJson = targetVersionEntity.getSnapshotJson();
+        if (StringUtils.isNotBlank(snapshotJson)) {
+            try {
+                List<DictItemDTO> snapshotItems = YdszJson.fromJsonList(snapshotJson, DictItemDTO.class);
+                if (snapshotItems != null && !snapshotItems.isEmpty()) {
+                    for (DictItemDTO dto : snapshotItems) {
+                        DictItem entity = new DictItem();
+                        entity.setTypeCode(dto.getTypeCode());
+                        entity.setItemCode(dto.getItemCode());
+                        entity.setItemValue(dto.getItemValue());
+                        entity.setSortOrder(dto.getSortOrder());
+                        entity.setParentId(dto.getParentId());
+                        entity.setDescription(dto.getDescription());
+                        entity.setExtJson(dto.getExtJson());
+                        entity.setStatus(dto.getStatus());
+                        dictItemMapper.insert(entity);
+                        insertedCount++;
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[DictVersion] 快照解析失败: typeCode={}, version={}, error={}",
+                        typeCode, targetVersion, e.getMessage());
+                throw BusinessException.of(SystemResultCode.SNAPSHOT_PARSE_ERROR)
+                        .data("reason", e.getMessage());
+            }
+        }
+
+        // 5. 创建新版本（标记回滚来源）
+        String newVersion = "v" + System.currentTimeMillis();
+        String changeLog = String.format("回滚自 %s by %s (恢复 %d 条, 删除 %d 条)",
+                targetVersion, operatorId, insertedCount, deletedCount);
+        DictVersion newVersionEntity = new DictVersion();
+        newVersionEntity.setTypeCode(typeCode);
+        newVersionEntity.setVersion(newVersion);
+        newVersionEntity.setChangeLog(changeLog);
+        newVersionEntity.setSnapshotJson(rollbackSnapshot);
+        newVersionEntity.setEffectiveDate(LocalDateTime.now());
+        mapper.insert(newVersionEntity);
+
+        // 6. 失效缓存
+        evictCache(typeCode);
+
+        log.info("[DictVersion] 回滚完成: typeCode={}, targetVersion={}, newVersion={}, 恢复 {} 条字典项",
+                typeCode, targetVersion, newVersion, insertedCount);
+        return newVersionEntity.getId();
+    }
+
+    /**
+     * 失效指定 typeCode 下所有缓存（私有）
+     *
+     * @param typeCode 字典类型编码
+     */
+    private void evictCache(String typeCode) {
+        // 删除列表缓存
+        redisService.delete(DICT_CACHE_PREFIX + typeCode);
+        // 删除 lookup 模式的缓存（ydsz:dict:item:{typeCode}:{itemCode}）
+        try {
+            redisService.advancedOps().deleteByPattern(DICT_CACHE_PREFIX + typeCode + ":*");
+        } catch (Exception e) {
+            log.warn("[DictVersion] 缓存模式删除失败（非关键路径）: typeCode={}, error={}", typeCode, e.getMessage());
+        }
     }
 }

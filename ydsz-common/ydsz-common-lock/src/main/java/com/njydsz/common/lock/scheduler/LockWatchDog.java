@@ -14,11 +14,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import jakarta.annotation.PreDestroy;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.TaskScheduler;
 
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.metrics.LockMetrics;
+import com.njydsz.common.lock.renewal.LockRenewalService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,56 +43,13 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>批量续期减少 Redis 网络往返次数</li>
  * </ul>
  *
- * <p><b>优化说明：</b>
- * <ul>
- *   <li>按锁分组批量续期（Pipeline 批量执行 EXPIRE）</li>
- *   <li>增加 ShutdownHook 确保定时任务优雅退出</li>
- *   <li>续期失败重试机制（最多 3 次）</li>
- * </ul>
+ * <p><b>v1.2.0 变更：</b>续期脚本统一委托给 {@link LockRenewalService}，消除双锁冗余。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 public class LockWatchDog {
-
-    /**
-     * 续期 Lua 脚本
-     * <p>只有当锁的持有者是当前客户端时才续期（适用于 RedisReentrantLock：clientId 是 Hash field）
-     */
-    private static final String RENEW_LOCK_LUA_SCRIPT =
-            "if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 1 then " +
-            "    redis.call('PEXPIRE', KEYS[1], ARGV[2]) " +
-            "    return 1 " +
-            "else " +
-            "    return 0 " +
-            "end";
-
-    /**
-     * 续期 Lua 脚本（公平锁专用）
-     * <p>只有当 owner 字段的值等于当前客户端时才续期（适用于 RedisFairLock：field 是 "owner"，value 是 clientId）
-     */
-    private static final String RENEW_LOCK_OWNER_LUA_SCRIPT =
-            "if redis.call('HGET', KEYS[1], 'owner') == ARGV[1] then " +
-            "    redis.call('PEXPIRE', KEYS[1], ARGV[2]) " +
-            "    return 1 " +
-            "else " +
-            "    return 0 " +
-            "end";
-
-    /**
-     * 批量续期 Lua 脚本
-     * <p>对多个锁进行续期，返回成功续期的数量
-     */
-    private static final String BATCH_RENEW_LOCK_LUA_SCRIPT =
-            "local count = 0 " +
-            "for i = 1, #KEYS do " +
-            "    if redis.call('HEXISTS', KEYS[i], ARGV[i]) == 1 then " +
-            "        redis.call('PEXPIRE', KEYS[i], ARGV[#ARGV]) " +
-            "        count = count + 1 " +
-            "    end " +
-            "end " +
-            "return count";
 
     /**
      * 最大重试次数
@@ -105,19 +62,9 @@ public class LockWatchDog {
     private static final int DEFAULT_MAX_RENEW_TIMES = 100;
 
     /**
-     * 续期 Lua 脚本封装（适用于 RedisReentrantLock）
+     * 统一的续期脚本服务（v1.2.0 引入，替代散落在各处的重复脚本）
      */
-    private final DefaultRedisScript<Long> renewScript;
-
-    /**
-     * 续期 Lua 脚本封装（适用于 RedisFairLock）
-     */
-    private final DefaultRedisScript<Long> renewOwnerScript;
-
-    /**
-     * 批量续期 Lua 脚本封装
-     */
-    private final DefaultRedisScript<Long> batchRenewScript;
+    private final LockRenewalService renewalService;
 
     /**
      * Redis 模板
@@ -206,27 +153,32 @@ public class LockWatchDog {
     /**
      * 构造器注入（使用默认最大续期次数）
      *
-     * @param scheduler 调度线程池（由 Spring 管理）
+     * @param renewalService      统一的锁续期服务
+     * @param scheduler           调度线程池（由 Spring 管理）
      * @param stringRedisTemplate Redis 模板
      */
-    public LockWatchDog(TaskScheduler scheduler, StringRedisTemplate stringRedisTemplate) {
-        this(scheduler, stringRedisTemplate, DEFAULT_MAX_RENEW_TIMES);
+    public LockWatchDog(LockRenewalService renewalService,
+                        TaskScheduler scheduler,
+                        StringRedisTemplate stringRedisTemplate) {
+        this(renewalService, scheduler, stringRedisTemplate, DEFAULT_MAX_RENEW_TIMES);
     }
 
     /**
      * 构造器注入
      *
-     * @param scheduler 调度线程池（由 Spring 管理）
+     * @param renewalService      统一的锁续期服务（v1.2.0 引入）
+     * @param scheduler           调度线程池（由 Spring 管理）
      * @param stringRedisTemplate Redis 模板
      * @param maxRenewTimes       最大续期次数，超过后停止续期，锁自动过期
      */
-    public LockWatchDog(TaskScheduler scheduler, StringRedisTemplate stringRedisTemplate, int maxRenewTimes) {
+    public LockWatchDog(LockRenewalService renewalService,
+                        TaskScheduler scheduler,
+                        StringRedisTemplate stringRedisTemplate,
+                        int maxRenewTimes) {
+        this.renewalService = renewalService;
         this.scheduler = scheduler;
         this.stringRedisTemplate = stringRedisTemplate;
         this.maxRenewTimes = maxRenewTimes;
-        this.renewScript = new DefaultRedisScript<>(RENEW_LOCK_LUA_SCRIPT, Long.class);
-        this.renewOwnerScript = new DefaultRedisScript<>(RENEW_LOCK_OWNER_LUA_SCRIPT, Long.class);
-        this.batchRenewScript = new DefaultRedisScript<>(BATCH_RENEW_LOCK_LUA_SCRIPT, Long.class);
     }
 
     /**
@@ -238,13 +190,6 @@ public class LockWatchDog {
         this.lockMetrics = lockMetrics;
     }
 
-    /**
-     * 启动续期任务
-     *
-     * @param lockKey   锁的键
-     * @param clientId  客户端标识
-     * @param leaseTime 锁的过期时间（毫秒）
-     */
     /**
      * 启动续期任务
      *
@@ -328,12 +273,6 @@ public class LockWatchDog {
     }
 
     /**
-     * 检查续期任务是否运行中
-     *
-     * @param lockKey 锁的键
-     * @return true-续期任务运行中
-     */
-    /**
      * 获取活跃续期任务快照（用于锁泄漏检测）
      *
      * @return 活跃续期任务的不可变快照
@@ -395,14 +334,9 @@ public class LockWatchDog {
     }
 
     /**
-     * 带重试机制的续期
-     *
-     * @param lockKey   锁的键
-     * @param clientId  客户端标识
-     * @param leaseTime 锁的过期时间（毫秒）
-     */
-    /**
      * 带重试机制的续期（根据锁类型选择对应脚本）
+     *
+     * <p>v1.2.0 变更：统一使用 {@link LockRenewalService} 执行续期，消除本地脚本冗余。
      *
      * @param lockKey   锁的键
      * @param clientId  客户端标识
@@ -417,17 +351,16 @@ public class LockWatchDog {
             return;
         }
 
-        DefaultRedisScript<Long> script = (lockType == LockType.FAIR) ? renewOwnerScript : renewScript;
-
         for (int retry = 0; retry < MAX_RETRY_COUNT; retry++) {
             try {
-                Long result = stringRedisTemplate.execute(
-                        script,
-                        Collections.singletonList(lockKey),
+                boolean success = renewalService.renew(
+                        stringRedisTemplate,
+                        lockKey,
                         clientId,
-                        String.valueOf(leaseTime)
+                        leaseTime,
+                        lockType
                 );
-                if (Long.valueOf(1L).equals(result)) {
+                if (success) {
                     log.debug("【看门狗】锁续期成功 | lockKey={} | lockType={}", lockKey, lockType);
                     WatchTask task = activeTasks.get(lockKey);
                     if (task != null) {
@@ -455,58 +388,39 @@ public class LockWatchDog {
     /**
      * 批量续期多个锁（基于 Pipeline 优化）
      *
-     * <p>适用于锁数量大的场景，减少 Redis 网络往返次数
+     * <p>适用于锁数量大的场景，减少 Redis 网络往返次数。
+     * v1.2.0 变更：使用 {@link LockRenewalService.RenewEntry} 替代本地 LockEntry。
      *
      * @param lockEntries 锁条目列表（lockKey + clientId + leaseTime）
      * @return 成功续期的数量
+     *
+     * @deprecated 自 v1.2.0 起，推荐直接调用 {@link LockRenewalService#renewBatch}。
+     *             此方法保留以兼容旧代码，未来版本可能移除。
      */
     public int batchRenewLocks(List<LockEntry> lockEntries) {
         if (lockEntries == null || lockEntries.isEmpty()) {
             return 0;
         }
 
-        List<String> keys = new ArrayList<>(lockEntries.size());
-        List<String> args = new ArrayList<>(lockEntries.size() + 1);
-
+        List<LockRenewalService.RenewEntry> entries = new ArrayList<>(lockEntries.size());
         for (LockEntry entry : lockEntries) {
-            keys.add(entry.lockKey);
-            args.add(entry.clientId);
+            entries.add(LockRenewalService.RenewEntry.of(
+                    entry.getLockKey(),
+                    entry.getClientId(),
+                    entry.getLeaseTime()
+            ));
         }
-        // 最后一个参数是统一的 leaseTime
-        if (!lockEntries.isEmpty()) {
-            args.add(String.valueOf(lockEntries.get(0).leaseTime));
-        }
-
-        try {
-            Long result = stringRedisTemplate.execute(
-                    batchRenewScript,
-                    keys,
-                    (Object[]) args.toArray(new String[0])
-            );
-            int successCount = result != null ? result.intValue() : 0;
-            log.debug("【看门狗】批量续期完成 | 总数={} | 成功={}", lockEntries.size(), successCount);
-            return successCount;
-        } catch (Exception e) {
-            log.error("【看门狗】批量续期异常 | count={} | error={}", lockEntries.size(), e.getMessage(), e);
-            return 0;
-        }
+        return renewalService.renewBatch(stringRedisTemplate, entries);
     }
 
     /**
      * 锁续期条目
+     *
+     * @deprecated 自 v1.2.0 起，使用 {@link LockRenewalService.RenewEntry} 替代。
      */
     public static class LockEntry {
-        /**
-         * 锁的键
-         */
         private final String lockKey;
-        /**
-         * 客户端标识
-         */
         private final String clientId;
-        /**
-         * 租约时间（毫秒）
-         */
         private final long leaseTime;
 
         public LockEntry(String lockKey, String clientId, long leaseTime) {
@@ -515,29 +429,14 @@ public class LockWatchDog {
             this.leaseTime = leaseTime;
         }
 
-        /**
-         * 获取锁的键
-         *
-         * @return 锁的键
-         */
         public String getLockKey() {
             return lockKey;
         }
 
-        /**
-         * 获取客户端标识
-         *
-         * @return 客户端标识
-         */
         public String getClientId() {
             return clientId;
         }
 
-        /**
-         * 获取租约时间
-         *
-         * @return 租约时间（毫秒）
-         */
         public long getLeaseTime() {
             return leaseTime;
         }

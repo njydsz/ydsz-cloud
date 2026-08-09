@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.bean.BeanUpdateUtil;
+import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.auth.annotation.DataScope;
 
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.post.RolePostDTO;
@@ -26,14 +30,13 @@ import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.service.RoleService;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.auth.annotation.DataScope;
-import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
  * 角色 Service 实现
@@ -73,6 +76,11 @@ import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
+    /** 角色权限缓存 Redis key 前缀 */
+    private static final String CACHE_KEY_ROLE_PERMISSIONS_PREFIX = "userinfo:role:permissions:";
+    /** 角色权限缓存过期时间（秒）：10 分钟 */
+    private static final long CACHE_TTL_ROLE_PERMISSIONS = 600;
+
     /** 角色 Mapper */
     /** 分布式 ID 生成器 */
     private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -82,6 +90,8 @@ public class RoleServiceImpl implements RoleService {
     private final RolePermissionMapper rolePermissionMapper;
     /** 用户-角色关联 Mapper（用于删除前检查是否有用户关联） */
     private final UserRoleMapper userRoleMapper;
+    /** Redis 服务 */
+    private final RedisService redisService;
 
     /**
      * {@inheritDoc}
@@ -143,6 +153,7 @@ public class RoleServiceImpl implements RoleService {
     /**
      * {@inheritDoc}
      * <p>执行 roleCode 唯一性校验后插入，status 默认 ENABLED，builtIn 默认 false。
+     * <p>创建后无需失效角色-权限缓存（新角色无权限分配）。
      *
      * @throws BusinessException 当 roleCode 已存在时抛出
      */
@@ -170,7 +181,6 @@ public class RoleServiceImpl implements RoleService {
     /**
      * {@inheritDoc}
      * <p>使用 MapStruct 转换（更新操作暂保留 BeanUtils）
-     *
      * @throws BusinessException 当角色不存在或已删除时抛出
      */
     @Override
@@ -181,13 +191,21 @@ public class RoleServiceImpl implements RoleService {
             throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id", "builtIn");
-        return roleMapper.updateById(entity) > 0;
+        boolean result = roleMapper.updateById(entity) > 0;
+
+        if (result) {
+            // 角色变更后失效其权限缓存
+            evictRolePermissionCache(dto.getId());
+        }
+
+        return result;
     }
 
     /**
      * {@inheritDoc}
      * <p>删除前检查：内置角色不可删除、有用户关联的角色不可删除。
      * 删除时同时清除角色-权限关联记录。
+     * <p>删除成功后主动失效角色权限缓存。
      *
      * @throws BusinessException 当角色不存在、为内置角色、或仍有用户关联时抛出
      */
@@ -212,12 +230,20 @@ public class RoleServiceImpl implements RoleService {
         rpWrapper.eq(RolePermission::getRoleId, id);
         rolePermissionMapper.delete(rpWrapper);
 
-        return roleMapper.deleteById(id) > 0;
+        boolean result = roleMapper.deleteById(id) > 0;
+
+        if (result) {
+            // 角色删除后失效缓存
+            evictRolePermissionCache(id);
+        }
+
+        return result;
     }
 
     /**
      * {@inheritDoc}
      * <p>先删除旧的角色-权限关联，再批量插入新关联（全量覆盖模式）。
+     * <p>分配成功后主动失效角色权限缓存。
      *
      * @throws BusinessException 当角色不存在时抛出
      */
@@ -247,22 +273,73 @@ public class RoleServiceImpl implements RoleService {
             rolePermissionMapper.batchInsert(list);
         }
         log.info("Permissions assigned to role {}: {}", roleId, permissionIds.size());
+
+        // 权限分配后失效缓存
+        evictRolePermissionCache(roleId);
+
         return true;
     }
 
     /**
      * {@inheritDoc}
+     * <p>优先从 Redis 缓存读取角色权限列表，缓存未命中时查询数据库并写入缓存。
      *
      * @param roleId 角色 ID
      * @return 权限 ID 列表
      */
     @Override
     public List<String> getRolePermissionIds(String roleId) {
+        String cacheKey = CACHE_KEY_ROLE_PERMISSIONS_PREFIX + roleId;
+
+        // 1. 尝试从缓存获取
+        try {
+            String cachedJson = redisService.get(cacheKey, String.class);
+            if (cachedJson != null && !cachedJson.isBlank()) {
+                List<String> cached = YdszJson.fromJsonList(cachedJson, String.class);
+                if (cached != null) {
+                    log.debug("Role permissions loaded from cache: roleId={}", roleId);
+                    return cached;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load role permissions from cache, fallback to DB: {}", e.getMessage());
+        }
+
+        // 2. 缓存未命中，查询数据库
         LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RolePermission::getRoleId, roleId);
-        return rolePermissionMapper.selectList(wrapper).stream()
+        List<String> permissionIds = rolePermissionMapper.selectList(wrapper).stream()
                 .map(RolePermission::getPermissionId)
                 .collect(Collectors.toList());
+
+        // 3. 写入缓存（异步异常不影响业务）
+        try {
+            String json = YdszJson.toJson(permissionIds);
+            redisService.set(cacheKey, json, Duration.ofSeconds(CACHE_TTL_ROLE_PERMISSIONS));
+        } catch (Exception e) {
+            log.warn("Failed to cache role permissions: {}", e.getMessage());
+        }
+
+        return permissionIds;
+    }
+
+    /**
+     * 失效角色权限缓存
+     *
+     * <p>角色删除/更新/权限分配时调用，确保缓存数据与数据库一致。
+     *
+     * @param roleId 角色 ID
+     */
+    private void evictRolePermissionCache(String roleId) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            redisService.del(CACHE_KEY_ROLE_PERMISSIONS_PREFIX + roleId);
+            log.debug("Role permission cache evicted: roleId={}", roleId);
+        } catch (Exception e) {
+            log.warn("Failed to evict role permission cache: {}", e.getMessage());
+        }
     }
 
     /**

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -23,12 +24,15 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.service.UserAccountService;
+import com.njydsz.userinfo.server.service.UserExcelService;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -72,6 +76,7 @@ import lombok.RequiredArgsConstructor;
 public class UserAccountController {
 
     private final UserAccountService service;
+    private final UserExcelService userExcelService;
 
     /**
      * 分页查询用户列表
@@ -246,5 +251,80 @@ public class UserAccountController {
     @Operation(summary = "查询用户角色 ID 列表")
     public BaseResponse<List<String>> getUserRoles(@PathVariable String userId) {
         return BaseResponse.success(service.getUserRoleIds(userId));
+    }
+
+    /**
+     * 批量导入用户（Excel）
+     *
+     * <p>上传 .xlsx 文件批量导入用户，单次上限 1000 行。
+     * <p>文件格式：第一行为表头（用户名/真实姓名/初始密码/手机号/邮箱/部门编码/岗位编码/上级用户名）。
+     * <p>先调用 {@code /import-template} 下载模板，按模板填写后上传。
+     *
+     * @param file Excel 文件（.xlsx 格式）
+     * @return 导入结果（总数/成功数/失败数/失败明细）
+     */
+    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'批量导入用户'")
+    @RateLimit(resource = "userinfo.useraccount.import", threshold = 10)
+    @PostMapping("/import")
+    @Operation(summary = "批量导入用户（Excel）")
+    public BaseResponse<UserImportResultDTO> importUsers(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return BaseResponse.error("请选择要导入的文件");
+        }
+        try {
+            UserImportResultDTO result = userExcelService.importUsers(
+                    file.getInputStream(), file.getOriginalFilename());
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error("导入失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 下载用户导入模板
+     *
+     * <p>返回带表头和一行示例数据的 Excel 模板文件，供业务方批量导入时使用。
+     *
+     * @param response HTTP 响应
+     */
+    @GetMapping("/import-template")
+    @Operation(summary = "下载用户导入模板")
+    public void downloadImportTemplate(HttpServletResponse response) {
+        try {
+            byte[] templateBytes = userExcelService.getImportTemplate();
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=用户导入模板.xlsx");
+            response.getOutputStream().write(templateBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * 导出用户列表（Excel）
+     *
+     * <p>导出全部用户数据为 Excel 文件。
+     * <p><b>注意：</b>数据量较大时建议异步导出，当前实现为同步导出。
+     *
+     * @param response HTTP 响应
+     */
+    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'导出用户列表'")
+    @GetMapping("/export")
+    @Operation(summary = "导出用户列表（Excel）")
+    public void exportUsers(HttpServletResponse response) {
+        try {
+            byte[] excelBytes = userExcelService.exportUsers();
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=用户列表.xlsx");
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 }

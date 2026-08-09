@@ -19,6 +19,7 @@ import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.userinfo.server.service.PostService;
 import com.njydsz.userinfo.server.service.RoleService;
 import com.njydsz.userinfo.server.service.UserAccountService;
+import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -76,6 +77,7 @@ public class InternalApiController {
     private final RoleService roleService;
     private final PostService postService;
     private final CompanyService companyService;
+    private final WorkflowApproverCacheService workflowCacheService;
 
     /**
      * 根据 userId 查询用户信息

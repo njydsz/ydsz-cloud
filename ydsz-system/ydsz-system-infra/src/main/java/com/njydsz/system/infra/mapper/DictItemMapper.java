@@ -2,6 +2,7 @@ package com.njydsz.system.infra.mapper;
 
 import java.util.List;
 
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -62,4 +63,31 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
     @Select("SELECT * FROM ydsz_dict_item WHERE type_code = #{typeCode} AND deleted = 0 AND status = 'ENABLED' "
             + "ORDER BY sort_order ASC")
     List<DictItem> listEnabledByTypeCode(@Param("typeCode") String typeCode);
+
+    /**
+     * 物理删除指定类型编码下的所有字典项（含逻辑删除标记的记录）
+     *
+     * <p><b>慎用：</b>本方法绕过 MyBatis-Plus 逻辑删除机制，直接执行物理 DELETE。
+     * 仅在「字典回滚」场景使用，实现「清空当前字典 + 从快照重建」的原子操作。
+     *
+     * @param typeCode 字典类型编码
+     * @return 删除的记录数
+     */
+    @Delete("DELETE FROM ydsz_dict_item WHERE type_code = #{typeCode}")
+    int physicalDeleteByTypeCode(@Param("typeCode") String typeCode);
+
+    /**
+     * 批量插入字典项（用于回滚重建）
+     *
+     * <p>继承 {@link com.baomidou.mybatisplus.core.mapper.BaseMapper#insert}，
+     * 循环单条插入即可（回滚场景数据量一般 < 1000 条）。
+     *
+     * @param item 字典项实体
+     * @return 插入的记录数
+     */
+    @Override
+    default int insert(com.njydsz.system.domain.entity.DictItem item) {
+        // 由 MyBatis-Plus 基类提供默认实现
+        return BaseMapper.super.insert(item);
+    }
 }

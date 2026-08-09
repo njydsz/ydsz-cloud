@@ -509,7 +509,7 @@ public final class JsonParserUtil {
     }
 
     private static Object parseArrayRecursive(char[] chars, int start) {
-        return parseArrayRecursiveImpl(chars, start);
+        return parseArrayRecursiveImpl(chars, start, 1);
     }
 
     private static Object parseArrayRecursiveWithPos(char[] chars, int start, int[] endPos, int depth) {
@@ -581,7 +581,7 @@ public final class JsonParserUtil {
 
             // 解析值（返回解析终点，消除 getValueEndFast 二次扫描）
             int[] endPos = new int[1];
-            Object value = parseValueWithPos(chars, pos, endPos);
+            Object value = parseValueWithPos(chars, pos, endPos, depth + 1);
             result.put(fieldName, value);
             pos = endPos[0];
         }
@@ -639,7 +639,7 @@ public final class JsonParserUtil {
 
             // 解析值（返回解析终点，消除 getValueEndFast 二次扫描）
             int[] endPos = new int[1];
-            Object value = parseValueWithPos(chars, pos, endPos);
+            Object value = parseValueWithPos(chars, pos, endPos, depth + 1);
             result.add(value);
             pos = endPos[0];
         }
