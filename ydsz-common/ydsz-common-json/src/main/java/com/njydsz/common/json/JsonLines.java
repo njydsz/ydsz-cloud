@@ -10,6 +10,9 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * JSON Lines (NDJSON) 流式读写支持。
  *
@@ -44,6 +47,8 @@ import java.util.stream.StreamSupport;
  * @see <a href="https://jsonlines.org/">JSON Lines 规范</a>
  */
 public final class JsonLines {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonLines.class);
 
     private JsonLines() {
         throw new UnsupportedOperationException("JsonLines is a utility class");
@@ -305,7 +310,9 @@ public final class JsonLines {
         ).onClose(() -> {
             try {
                 reader.close();
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                // 关闭失败不影响流消费，记录 debug 便于排查资源问题
+                LOGGER.debug("JsonLines stream close failed", e);
             }
         });
     }

@@ -1,7 +1,5 @@
 package com.njydsz.common.json;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,6 +11,9 @@ import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.MissingNode;
 import com.njydsz.common.json.tree.NullNode;
 import com.njydsz.common.json.tree.ObjectNode;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JSON 高频操作工具类（静态入口）
@@ -65,6 +66,8 @@ import com.njydsz.common.json.tree.ObjectNode;
  * @since 1.2.0
  */
 public final class JsonUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonUtils.class);
 
     /**
      * 字段过滤专用 Mapper（writeNulls=false，无状态线程安全）。
@@ -662,8 +665,10 @@ public final class JsonUtils {
                 allFields.removeAll(visibleFields);
                 return allFields;
             }
-        } catch (Exception ignored) {
-            // 忽略异常，返回空集合（此时 toJsonExcludeFields 不排除任何字段）
+        } catch (Exception e) {
+            // 字段全集计算失败：记录 debug 并返回空集合（此时 toJsonExcludeFields 不排除任何字段，
+            // 白名单过滤退化为全量输出——调用方需评估是否接受该降级语义）
+            LOGGER.debug("JsonUtils.invertFields failed, field filter degraded to no-op", e);
         }
         return java.util.Collections.emptySet();
     }

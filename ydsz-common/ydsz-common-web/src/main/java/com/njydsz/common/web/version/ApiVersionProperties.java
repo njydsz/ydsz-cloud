@@ -85,3 +85,4 @@ public class ApiVersionProperties {
      * @since 1.2.0
      */
     private boolean validate = true;
+}

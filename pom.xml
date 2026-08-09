@@ -1142,6 +1142,8 @@
                         <sourceDirectories>
                             <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
                         </sourceDirectories>
+                        <!-- Checkstyle 9.3 不解析 JPMS module-info.java，排除避免误报 -->
+                        <excludes>**/module-info.java</excludes>
                     </configuration>
                 </plugin>
                 <plugin>

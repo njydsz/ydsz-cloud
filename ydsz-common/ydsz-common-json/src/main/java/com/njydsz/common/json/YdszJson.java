@@ -22,6 +22,9 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * YdszJson - 超高性能 JSON 工具类（深度优化版）
  *
@@ -56,6 +59,8 @@ import java.util.*;
  * @since 1.0.0
  */
 public class YdszJson {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(YdszJson.class);
 
     private YdszJson() {
         throw new UnsupportedOperationException("YdszJson is a utility class and cannot be instantiated");
@@ -752,14 +757,16 @@ public class YdszJson {
                 if (instance != null) {
                     defaultMapper.toJson(instance);
                 }
-            } catch (Exception ignored) {
-                // 预热失败不影响启动
+            } catch (Exception e) {
+                // 预热失败不影响启动，但记录 WARN 便于诊断（如缺无参构造的类）
+                LOGGER.warn("YdszJson warmup serialize failed for class: {}", clazz.getName(), e);
             }
             try {
                 // 触发反序列化侧缓存构建（BeanReader / Creator 解析）
                 defaultMapper.toObject("{}", clazz);
-            } catch (Exception ignored) {
-                // 预热失败不影响启动
+            } catch (Exception e) {
+                // 预热失败不影响启动，但记录 WARN 便于诊断
+                LOGGER.warn("YdszJson warmup deserialize failed for class: {}", clazz.getName(), e);
             }
         }
     }

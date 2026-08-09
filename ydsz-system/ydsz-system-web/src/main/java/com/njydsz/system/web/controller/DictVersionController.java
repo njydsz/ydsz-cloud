@@ -102,7 +102,7 @@ public class DictVersionController {
             content = "'回滚字典: ' + #typeCode + ' → ' + #targetVersion")
     @Operation(summary = "回滚字典到指定版本", description = "将字典回滚到历史版本，操作不可撤销")
     @RateLimit(resource = "system.dict.rollback", threshold = 10)
-    @Idempotent(key = "ydsz:system:DictVersionController:rollback:" + "#typeCode + ':' + "#targetVersion",
+    @Idempotent(key = "'ydsz:system:DictVersionController:rollback:' + #typeCode + ':' + #targetVersion",
             ttlSeconds = 30)
     @PostMapping("/{typeCode}/rollback")
     public BaseResponse<String> rollback(
