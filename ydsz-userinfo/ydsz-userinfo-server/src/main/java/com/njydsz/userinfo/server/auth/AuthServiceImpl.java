@@ -33,6 +33,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
+import com.njydsz.userinfo.server.service.LoginHistoryService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -88,6 +89,8 @@ public class AuthServiceImpl implements AuthService {
     private final ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider;
     /** Outbox 事件服务（可选依赖，用于发布用户登录/登出领域事件） */
     private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 登录历史服务（记录登录尝试，IP 封禁检查） */
+    private final LoginHistoryService loginHistoryService;
 
     /**
      * {@inheritDoc}
@@ -102,6 +105,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginVO login(LoginDTO loginDTO) {
         Timer.Sample sample = userInfoMetrics.startTimer();
+
+        // P1-3: IP 封禁检查（在真实校验前拦截被禁 IP，避免被禁 IP 继续密码探测）
+        String loginIp = loginDTO.getLoginIp();
+        String userAgent = loginDTO.getUserAgent();
+        if (loginIp != null && !loginIp.isBlank() && loginHistoryService.isIpBlocked(loginIp)) {
+            log.warn("Login attempt from blocked IP: {}, username: {}", loginIp, loginDTO.getUsername());
+            loginHistoryService.recordLoginAttempt(null, loginDTO.getUsername(), loginIp,
+                    "FAILED", "IP_BLOCKED", userAgent);
+            userInfoMetrics.recordLoginFail();
+            userInfoMetrics.stopTimer(sample);
+            throw new BusinessException(UserInfoResultCode.IP_BLOCKED,
+                    "当前 IP 登录失败次数过多，请稍后再试");
+        }
 
         // 验证码校验（可配置开关）
         if (properties.isCaptchaEnabled()) {
@@ -121,6 +137,7 @@ public class AuthServiceImpl implements AuthService {
         UserAccount user = userAccountMapper.selectOne(wrapper);
 
         if (user == null) {
+            loginHistoryService.recordLoginAttempt(null, username, loginIp, "FAILED", "USER_NOT_FOUND", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
@@ -128,6 +145,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 账号状态检查（status 为 String: "0"=禁用, "1"=启用）
         if ("0".equals(user.getStatus())) {
+            loginHistoryService.recordLoginAttempt(user.getId(), username, loginIp,
+                    "FAILED", "USER_DISABLED", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
             throw new BusinessException(UserInfoResultCode.USER_DISABLED);
@@ -135,6 +154,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 账号锁定检查
         if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
+            loginHistoryService.recordLoginAttempt(user.getId(), username, loginIp,
+                    "FAILED", "ACCOUNT_LOCKED", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
             throw new BusinessException(UserInfoResultCode.ACCOUNT_LOCKED);
@@ -154,6 +175,8 @@ public class AuthServiceImpl implements AuthService {
 
         if (!passwordMatched) {
             recordLoginFailure(user);
+            loginHistoryService.recordLoginAttempt(user.getId(), username, loginIp,
+                    "FAILED", "PASSWORD_INCORRECT", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
             throw new BusinessException(UserInfoResultCode.PASSWORD_INCORRECT);
@@ -185,6 +208,10 @@ public class AuthServiceImpl implements AuthService {
         redisService.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
         updateLoginSuccess(user);
+
+        // P1-3: 记录成功登录
+        loginHistoryService.recordLoginAttempt(user.getId(), username, loginIp,
+                "SUCCESS", null, userAgent);
 
         userInfoMetrics.recordLoginSuccess();
         userInfoMetrics.stopTimer(sample);

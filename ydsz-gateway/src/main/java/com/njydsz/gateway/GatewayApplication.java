@@ -52,6 +52,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
  *   HIGHEST_PRECEDENCE + 25  ResponseCacheFilter       (响应缓存，P2-2)
  *   HIGHEST_PRECEDENCE + 30  RateLimitFilter           (令牌桶限流)
  *   HIGHEST_PRECEDENCE + 35  AuditLogFilter            (审计日志，P2-2)
+ *   HIGHEST_PRECEDENCE + 40  PluginGlobalFilter       (插件执行，P2-1)
  *   HIGHEST_PRECEDENCE + 100 ReactiveLoadBalancerClientFilter (Spring Cloud LB)
  * </pre>
  *

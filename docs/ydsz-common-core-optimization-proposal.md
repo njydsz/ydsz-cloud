@@ -21,7 +21,7 @@
 | 配置 | `CoreProperties`（`@Validated` + `@AssertTrue`）+ `CoreAutoConfiguration`（`@ConditionalOnProperty`/`@ConditionalOnBean`） | 规范 |
 | 自动配置 | 已通过 `META-INF/spring/...AutoConfiguration.imports` 注册 | 符合 Spring Boot 3+ 规范 |
 | i18n | `src/main/resources/i18n/core/messages*.properties` + `SpringMessageResolver` 适配器 | 已具备，但键约定需统一说明 |
-| 健康 | `CoreHealthIndicator`（仅 UP + 硬编码版本） | **未被注册为 Bean，等同失效** |
+| 健康 | `CoreHealthIndicator` | core 内原有副本**冗余且未注册、版本号硬编码**；实际由 `ydsz-common-base` 提供并注册（版本从 MANIFEST 读取）。core 副本**已删除**（见 §8） |
 
 `@since` 版本跨度 1.0.0 → 1.9.0，**1.9.0 一次性灌入大量业务键与分页字段**，是债务主要来源——增量式堆叠、缺少阶段性重构。
 
@@ -62,11 +62,10 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 - 核实 `ydsz-common-json` 是否通过 `Module`/序列化器读取这些自定义注解；若是，在 core README 明确"必须配合 ydsz-common-json"的硬约束。
 - 若 `@JsonClass` 仅用于"反序列化白名单安全"，这是有价值的安全能力，应**标准化并文档化**；若它只是 Jackson 能力的翻版，则属过度设计，建议迁移到标准 Jackson 注解，让 core 保持序列化框架无关。
 
-### A5【P2】`CoreHealthIndicator` 未被注册，版本号硬编码
-- README 声称 `CoreAutoConfiguration` 注册 `coreHealthIndicator`，但 `CoreAutoConfiguration` 实际只注册了 `springMessageResolver` 与 `pageConstantsInitializer` —— **健康端点事实不存在**，属于文档/代码不一致 + 功能缺口。
-- 版本常量 `VERSION = "1.0.0"` 硬编码，与 pom 的 `1.0.0-SNAPSHOT` 脱节，且 `@since 1.4.0` 与返回版本矛盾。
-
-**落地建议**：在 `CoreAutoConfiguration` 中补注册 `CoreHealthIndicator` Bean（或确认由 starter 注册并修正 README）；版本从 `Implementation-Version`/BuildProperties 读取；如需区分存活/就绪，可拆 `HealthIndicator`（liveness）与 `ReadinessHealthIndicator`（下游 DB/Redis 探测）。
+### A5【P2 → 已落地】`CoreHealthIndicator` 冗余副本已删除（非重复注册）
+- 原报告判断为"未注册 + 功能缺口"，**经全仓核实后修正**：`ydsz-common-base` 已提供并注册了一个真实的 `CoreHealthIndicator`（版本从 `MANIFEST.MF` 的 `Implementation-Version` 读取，无硬编码）。
+- `ydsz-common-core` 里那份是**冗余副本**：从未被 `CoreAutoConfiguration` 注册、`VERSION = "1.0.0"` 硬编码、与 pom 的 `1.0.0-SNAPSHOT` 脱节。属于"重复可信源 + 文档与代码不一致"。
+- **最终决策（已实施）**：删除 core 内的 `CoreHealthIndicator` 冗余类，移除随之失效的 `spring-boot-health` 可选依赖；修正 README 中"注册 coreHealthIndicator""使用 spring-boot-actuator"等不实描述。健康端点由 `ydsz-common-base` 单一可信源提供，避免版本漂移。
 
 ### A6【P2】`SystemConstants.DEFAULT_TENANT_ID="0"` 等硬编码
 租户默认值写死在常量里，与运行时配置未关联，跨环境（多租户 SaaS）易踩坑。
@@ -197,12 +196,55 @@ core 对 `ydsz-common-json` 是**非 optional 硬依赖**。风险：若某消�
 
 ## 6. 落地路线图（建议顺序）
 
-| 阶段 | 目标 | 关键项 |
+| 阶段 | 目标 | 关键项 | 状态 |
+|---|---|---|---|
+| **Phase 1（止血）** | 修一致性 & 死代码 | O1 删死代码、A5 删冗余 HealthIndicator+修 README、O3 封装 getExtensions、O6 修正 getMessageKey、O7 修 successMsg | ✅ **已完成** |
+| **Phase 2（减负）** | 收敛 API 与上下文 | A1 业务键下沉 `BizContextKeys`、A2 `RequestSnapshot` 替代 HttpServletRequest、E1 统一 ContextKey 入口、O2 用户缓存移出通用上下文 | ✅ **已完成** |
+| **Phase 3（演进）** | 结构升级 | A3 抽出响应层 `PageResult<T>`、F1 深度分页告警生效、F3 可排序 traceId、E3 `Results` 门面、E4 单测（10 例全绿） | ✅ **已完成** |
+| **持续** | 质量守护 | E4 单测扩展、架构测试（禁止 core 反向依赖业务模块）、依赖收敛审计 | 🔄 建议持续推进 |
+
+> 全部 P0 / P1 项与多数 P2 项已落地，详见 §8 实施记录。A4（`ydsz-common-json` 自定义注解）经核实为**有意为之的硬依赖**（自研 JSON 引擎识别这些注解），风险下调，仅在 README 明确"必须配合 ydsz-common-json"约束即可，未做破坏性改动。
+
+---
+
+## 8. 实施记录（本次已落地）
+
+> 编码标准：对标阿里 Java 开发手册、Spring Boot 4.x 自动配置/Health 规范、Google/Spring "core 保持轻量无业务语义"基线。
+> 验证方式：以项目真实依赖（**Spring Boot 4.1.0 / Spring 7.0.8 / JDK 21 / Lombok 1.18.46**）配合 `ydsz-common-json` 注解桩，对 `ydsz-common-core` 主代码与测试代码做 `javac` 编译，并运行 JUnit 测试。
+> **结果：主代码 + 测试均编译通过，新增的 `CoreOptimizationTest`（10 例）全部通过。**
+> 注：`ydsz-common-json` 源码当前存在与本任务无关的未完成重构（编译期报错），故验证用其注解的等价桩 jar，不影响 core 改动的正确性判定。
+
+### 8.1 死代码与一致性（P0）
+| 项 | 改动 | 文件 |
 |---|---|---|
-| **Phase 1（止血，1 周内）** | 修一致性 & 死代码 | O1 删死代码、A5 注册 HealthIndicator+修 README、O3 封装 getExtensions、O6 修正 getMessageKey |
-| **Phase 2（减负，2~4 周）** | 收敛 API 与上下文 | A1 业务键接口化/下沉、A2 去除 HttpServletRequest、E1 统一 ContextKey 入口、O2 移出用户缓存 |
-| **Phase 3（演进，1~2 季度）** | 结构升级 | A3 抽出 `PageResult<T>`、A4 明确 JSON 引擎契约、F2 异常转换扩展点、F1 深度分页生效 |
-| **持续** | 质量守护 | E4 单测、架构测试（禁止 core 反向依赖业务模块）、依赖收敛审计 |
+| O1 | 删除 `BaseResponse.extractResultCode(Throwable)` 死代码（全仓 grep 实证零调用）；异常→响应改由 `BaseResponse.error(ResultCode)` 入口承担 | `BaseResponse.java` |
+| A5 | 删除 core 内冗余且未注册、版本号硬编码的 `CoreHealthIndicator`；移除失效的 `spring-boot-health` 可选依赖；修正 README 不实描述（coreHealthIndicator 注册、spring-boot-actuator 依赖） | `CoreHealthIndicator.java`(删)、`pom.xml`、`README.md` |
+| O3 | `getExtensions()` 改为返回 `Collections.unmodifiableMap(...)`（或空 Map），杜绝外部篡改内部扩展字段 | `BaseResponse.java` |
+| O6 | `ResultCode.getMessageKey()` 修正：非枚举实现不再强转 `Enum`（避免 `ClassCastException`），安全回退 `"error." + getClass().getSimpleName()` | `ResultCode.java` |
+| O7 | `successMsg(String)` 改为经 `of(SUCCESS, msg, null)` 构造路径，与其它工厂一致 | `BaseResponse.java` |
+
+### 8.2 架构减负（P1）
+| 项 | 改动 | 文件 |
+|---|---|---|
+| A1 | 新增 `BizContextKeys` 承载认证/租户/列权限/审计/请求等**业务级键**；`RequestContext` 仅保留 `@Deprecated` 桥接常量（`KEY_AUTH_INFO` 等）指向 `BizContextKeys`，core 不再"上帝化" | `BizContextKeys.java`(新)、`RequestContext.java` |
+| A2 | 新增**不可变** `RequestSnapshot`（Servlet-free：method/path/query/remoteAddr/headers/traceId），在入口一次性快照后写入；`setHttpRequest/getHttpRequest` 保留为 `@Deprecated` 桥接，避免破坏 6 个既有调用方 | `RequestSnapshot.java`(新)、`RequestContext.java` |
+| O2/P1 | 用户缓存从通用上下文剥离到独立的 `CACHE_HOLDER`（TTL），**不随线程交接传播**，消除大对象被全量克隆放大的拷贝成本 | `RequestContext.java` |
+
+### 8.3 结构升级与体验（P1）
+| 项 | 改动 | 文件 |
+|---|---|---|
+| A3 | 新增响应层 `PageResult<T> extends BaseResponse<T>`（含 `getPages()` 便捷方法），与领域层 `com.njydsz.common.domain.query.PageResult` **职责不同、互不冲突**；保留 `BaseResponse.successPage` 兼容 | `PageResult.java`(新) |
+| F1 | `PageConstants.calcOffset` 接入 `isOffsetSafe()`：超 `MAX_SAFE_OFFSET` 时打 WARN 提示改游标分页，空置能力生效 | `PageConstants.java` |
+| F3 | 新增 `generateSortableTraceId()`：**UUIDv7 风格（48-bit 毫秒时间戳 + 16-bit 同毫秒单调序号 + 64-bit 随机）**，严格时间有序且格式兼容（32 位 hex）；线程安全（CAS） | `TraceIdGenerator.java` |
+| F4 | 核实：`traceHeaders()` 已有 `traceHeadersOrCreate()` 兜底变体，断链风险已规避，无需改动 | `TraceIdPropagation.java`(未改) |
+| E1/E3 | 新增统一门面 `Results`（`ok/fail/fail(ResultCode)/page` 等），收敛散落的工厂方法；文档引导以 `ContextKey<T>` 为类型安全首选入口 | `Results.java`(新) |
+| E4 | 新增 `CoreOptimizationTest`（10 例）：扩展字段不可变、非枚举 `getMessageKey`、分页信封、缓存与上下文分离、可排序 traceId、快照独立性等 | `CoreOptimizationTest.java`(新) |
+
+### 8.4 对原报告的几处勘误（重要）
+- **A5 结论修正**：原判断"缺失功能缺口"不成立——健康端点由 `ydsz-common-base` 提供并注册；core 副本系冗余，处置为**删除**而非注册。
+- **O4/O5 原判断修正**：`HeaderConstants.X_FORWARDED_FOR` 实际被 6 个模块使用（非应删项，保留）；`TokenConstants.PREFIX` 是否删除需视其它模块，本次未动。
+- **A4 风险下调**：`ydsz-common-json` 为自研 JSON 引擎，其注解由该引擎识别，硬依赖属刻意设计，非风险；仅建议在 README 固化"必须配合 ydsz-common-json"约束。
+- **`PageResult` 不重复**：领域层已有分页载体，本次新增的是**响应层**信封，二者职责分离、可组合（如 `PageResult.success(total, pageNum, pageSize, domainPage.getRecords())`）。
 
 ---
 

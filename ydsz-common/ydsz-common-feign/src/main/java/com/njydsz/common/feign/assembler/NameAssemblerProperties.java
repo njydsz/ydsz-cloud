@@ -52,4 +52,20 @@ public class NameAssemblerProperties {
      * {@code false}：保持 name 字段原值（可能为 null）。
      */
     private boolean fallbackToId = true;
+
+    /**
+     * P2-1: 是否启用 Redis L2 分布式缓存。
+     *
+     * <p>=false（默认）：仅使用本地 Caffeine L1 缓存。
+     * <p>=true：优先 L1 → L2（Redis）→ Feign，适用于多实例共享缓存场景，
+     * 可显著降低 Feign 调用频次，需要在 classpath 中存在 common-redis 模块。
+     */
+    private boolean redisCacheEnabled = false;
+
+    /**
+     * P2-1: Redis L2 缓存存活时间（TTL）。
+     *
+     * <p>默认 10 分钟，应大于本地 L1 TTL 以保证 L2 兜底新鲜度。
+     */
+    private Duration redisCacheTtl = Duration.ofMinutes(10);
 }

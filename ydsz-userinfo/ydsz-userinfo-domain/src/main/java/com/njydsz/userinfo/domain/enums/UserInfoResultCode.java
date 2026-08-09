@@ -71,6 +71,8 @@ public enum UserInfoResultCode implements ExceptionCode {
     PASSWORD_TOO_WEAK("B30012", "userinfo.password.too.weak"),
     /** 不能使用最近使用过的密码 */
     PASSWORD_REUSED("B30013", "userinfo.password.reused"),
+    /** IP 登录失败次数过多被临时封禁 */
+    IP_BLOCKED("B30019", "userinfo.login.ip.blocked", 403),
     /** 会话已过期 */
     SESSION_EXPIRED("B30014", "userinfo.session.expired", 401),
     /** 会话不存在 */

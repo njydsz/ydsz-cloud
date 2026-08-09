@@ -164,6 +164,7 @@ public class JsonAutoConfiguration {
                     .useBigDecimal(properties.isUseBigDecimal())
                     .wrapRootValue(properties.isWrapRootValue())
                     .failOnError(properties.isFailOnError())
+                    .strictMode(properties.isStrictMode())
                     .build();
             // 安装为全局不可变配置实例，后续修改必须走 install(newConfig)
             JsonConfig.install(newConfig);
@@ -205,6 +206,15 @@ public class JsonAutoConfiguration {
                     BeanSerializerCache.clear();
                 }
             });
+            // 严格模式检测（JSON 双体系一致性校验）
+            // 在 disableJacksonAutoConfiguration=true 时，若 strict-mode 启用，检测是否存在
+            // Jackson 注解混用，发现冲突则抛出 DualJsonConflictException 阻止启动
+            if (properties.isDisableJacksonAutoConfiguration() && properties.isStrictMode()) {
+                DualJsonDetector.scanAndReport(properties.getWhitelistPackages(), true);
+            } else if (properties.isStrictMode()) {
+                // Jackson 自动配置未禁用 + strict-mode 启用 = 松弛模式（仅输出告警）
+                DualJsonDetector.scanAndReport(properties.getWhitelistPackages(), false);
+            }
         }
     }
 }

@@ -20,6 +20,7 @@ import com.njydsz.common.seata.api.TccTransactionLogStore;
 import com.njydsz.common.seata.api.XidPropagator;
 import com.njydsz.common.seata.impl.DefaultXidPropagator;
 import com.njydsz.common.seata.impl.InMemoryTccTransactionLogStore;
+import com.njydsz.common.seata.impl.DbTccTransactionLogStore;
 import com.njydsz.common.seata.impl.LocalTransactionManager;
 import com.njydsz.common.seata.impl.RedisTccTransactionLogStore;
 import com.njydsz.common.seata.impl.SagaOrchestrator;
@@ -36,6 +37,7 @@ import com.njydsz.common.seata.metrics.SeataMetrics;
 import io.micrometer.core.instrument.MeterRegistry;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import org.springframework.context.annotation.Configuration;
 /**
@@ -106,6 +108,22 @@ public class SeataAutoConfiguration {
                 redisTemplate,
                 properties.getTccLogRedisKeyPrefix(),
                 retention);
+    }
+
+    /**
+     * TCC 事务日志存储（DB 版，生产环境强持久化）
+     *
+     * <p>当 {@code ydsz.seata.tcc-log-store=db} 且类路径存在 {@code JdbcTemplate} 时注册，
+     * 支持跨服务事务状态共享，无需 Redis。适用于不使用 Redis 但需要持久化事务日志的生产环境。
+     */
+    @Bean
+    @ConditionalOnMissingBean(TccTransactionLogStore.class)
+    @ConditionalOnClass(name = "org.springframework.jdbc.core.JdbcTemplate")
+    @ConditionalOnProperty(prefix = "ydsz.seata", name = "tcc-log-store", havingValue = "db")
+    public TccTransactionLogStore dbTccTransactionLogStore(
+            JdbcTemplate jdbcTemplate,
+            SeataProperties properties) {
+        return new DbTccTransactionLogStore(jdbcTemplate, properties.getTccLogDbTable());
     }
 
     /**

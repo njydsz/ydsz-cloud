@@ -56,8 +56,16 @@ spring:
             group: ${spring.profiles.active}
             refresh: true
 
+# P2-3: API 版本管理机制
+  web:
+    api-version:
+      enabled: true
+      default-version: "1"
+      strategy: HEADER
+      header-name: X-API-Version
+      sunset-headers: true
+
 # JSON 引擎配置（ydsz-common-json）
-ydsz:
   json:
     enabled: true
     date-format: yyyy-MM-dd HH:mm:ss

@@ -123,6 +123,24 @@ public class JsonProperties {
      */
     private boolean disableJacksonAutoConfiguration = true;
 
+    /**
+     * 是否启用严格模式（双体系一致性校验）。
+     *
+     * <p>启用后，启动时 {@link com.njydsz.common.json.internal.DualJsonDetector}
+     * 扫描所有 @JsonClass 注解的类，检测是否存在 Jackson 注解（com.fasterxml.jackson.*）
+     * 或 Jackson 依赖。发现混用时：
+     * <ul>
+     *   <li>若 {@link #disableJacksonAutoConfiguration}=true，抛出异常阻止启动</li>
+     *   <li>仅输出警告日志（松弛模式，待人工排查）</li>
+     * </ul>
+     *
+     * <p>默认 false（不检测），避免影响已有项目。
+     * 推荐新项目设置为 true 以确保 JSON 体系一致性。
+     *
+     * @since 1.2.0
+     */
+    private boolean strictMode = false;
+
     // --- enabled ---
 
     public boolean isEnabled() {
@@ -321,5 +339,15 @@ public class JsonProperties {
 
     public void setDisableJacksonAutoConfiguration(boolean disableJacksonAutoConfiguration) {
         this.disableJacksonAutoConfiguration = disableJacksonAutoConfiguration;
+    }
+
+    // --- strictMode ---
+
+    public boolean isStrictMode() {
+        return strictMode;
+    }
+
+    public void setStrictMode(boolean strictMode) {
+        this.strictMode = strictMode;
     }
 }

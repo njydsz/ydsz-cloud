@@ -44,4 +44,10 @@ public class LoginDTO implements Serializable {
 
     /** 租户 ID（多租户场景下指定登录归属租户，单租户模式可不传） */
     private String tenantId;
+
+    /** 客户端 IP（由 Controller 从 HttpServletRequest 提取并填充，用于登录历史记录与 IP 封禁） */
+    private String loginIp;
+
+    /** User-Agent（由 Controller 从请求头提取，用于登录历史审计） */
+    private String userAgent;
 }

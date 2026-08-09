@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
@@ -18,6 +21,7 @@ import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -53,6 +57,7 @@ import com.njydsz.common.audit.enums.AuditType;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")
+@ApiVersion("1")
 public class AuthController {
 
     private final AuthService authService;
@@ -74,7 +79,10 @@ public class AuthController {
     @Idempotent(key = "ydsz:userinfo:AuthController:login:lock", ttlSeconds = 5)
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "账号密码登录，返回 access_token 和 refresh_token")
-    public BaseResponse<LoginVO> login(@Valid @RequestBody LoginDTO request) {
+    public BaseResponse<LoginVO> login(@Valid @RequestBody LoginDTO request, HttpServletRequest servletRequest) {
+        // P1-3: 提取客户端 IP 和 User-Agent 传入 LoginDTO
+        request.setLoginIp(extractClientIp(servletRequest));
+        request.setUserAgent(servletRequest.getHeader("User-Agent"));
         LoginVO result = authService.login(request);
         return BaseResponse.success(result);
     }
@@ -120,6 +128,40 @@ public class AuthController {
     public BaseResponse<LoginVO> refresh(@RequestBody RefreshRequest request) {
         LoginVO result = authService.refresh(request.getRefreshToken());
         return BaseResponse.success(result);
+    }
+
+    /**
+     * 从 HttpServletRequest 中提取客户端真实 IP
+     *
+     * <p>优先读取 X-Forwarded-For、X-Real-IP、Proxy-Client-IP 等代理头，
+     * 兜底使用 getRemoteAddr()。
+     *
+     * @param request HTTP 请求
+     * @return 客户端真实 IP；无 IP 时为 null
+     */
+    private String extractClientIp(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            // 多级代理场景：取第一个非 unknown 的 IP
+            int idx = ip.indexOf(',');
+            return (idx > 0) ? ip.substring(0, idx).trim() : ip.trim();
+        }
+        ip = request.getHeader("X-Real-IP");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            return ip.trim();
+        }
+        ip = request.getHeader("Proxy-Client-IP");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            return ip.trim();
+        }
+        ip = request.getHeader("WL-Proxy-Client-IP");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            return ip.trim();
+        }
+        return request.getRemoteAddr();
     }
 
     /**

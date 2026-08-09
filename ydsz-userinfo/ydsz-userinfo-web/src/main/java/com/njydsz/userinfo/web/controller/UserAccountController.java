@@ -18,6 +18,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AssignRolesDTO;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
@@ -25,7 +26,9 @@ import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
+import com.njydsz.userinfo.domain.entity.UserLoginHistory;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.server.service.LoginHistoryService;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.UserExcelService;
 
@@ -73,10 +76,12 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
 @Tag(name = "用户管理", description = "用户账号 CRUD、密码管理、角色分配")
+@ApiVersion("1")
 public class UserAccountController {
 
     private final UserAccountService service;
     private final UserExcelService userExcelService;
+    private final LoginHistoryService loginHistoryService;
 
     /**
      * 分页查询用户列表
@@ -326,5 +331,23 @@ public class UserAccountController {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * P1-3: 查询用户最近登录历史
+     *
+     * <p>返回用户最近 N 条登录记录（默认 20 条），包含 IP、时间、结果等信息。
+     * <p>用于安全审计、异常登录排查。
+     *
+     * @param userId 用户 ID
+     * @param limit 返回记录数（默认 20，最大 100）
+     * @return 登录历史列表
+     */
+    @GetMapping("/{userId}/login-history")
+    @Operation(summary = "查询用户最近登录历史（安全审计）")
+    public BaseResponse<List<UserLoginHistory>> getLoginHistory(
+            @PathVariable String userId,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int limit) {
+        return BaseResponse.success(loginHistoryService.getRecentLogins(userId, limit));
     }
 }

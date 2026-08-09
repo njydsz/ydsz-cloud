@@ -67,8 +67,10 @@ public class SeataProperties {
      * <ul>
      *   <li>{@code memory} - 内存实现（默认，单机/测试）</li>
      *   <li>{@code redis} - Redis 实现（生产环境，跨服务共享）</li>
+     *   <li>{@code db} - 数据库实现（生产环境，强持久化，无需 Redis）</li>
      * </ul>
      * 仅当选择 {@code redis} 且类路径存在 {@code RedisTemplate} 时才注册 Redis 实现；
+     * 仅当选择 {@code db} 且类路径存在 {@code JdbcTemplate} 时才注册 DB 实现；
      * 否则回退到 {@code memory}。
      */
     private TccLogStoreType tccLogStore = TccLogStoreType.MEMORY;
@@ -79,17 +81,25 @@ public class SeataProperties {
     /** TCC 日志 Redis 保留时长（小时，仅当 tcc-log-store=redis 时生效） */
     private int tccLogRedisRetentionHours = 24;
 
+    /** TCC 日志 DB 存储时使用的表名 */
+    private String tccLogDbTable = "tcc_transaction_log";
+
+    /** TCC 日志 DB 存储时的架构名（可选，null 使用默认） */
+    private String tccLogDbSchema = null;
+
     /**
      * TCC 事务日志存储类型。
      *
      * <p>决定 TCC 一阶段确认信息持久化在哪里，直接影响分布式事务的恢复能力：
-     * 生产环境跨服务共享时必须选择 {@link #REDIS}，否则事务恢复扫描无法跨实例工作。
+     * 生产环境跨服务共享时必须选择 {@link #REDIS} 或 {@link #DB}，否则事务恢复扫描无法跨实例工作。
      */
     public enum TccLogStoreType {
         /** 内存实现（单机/测试） */
         MEMORY,
         /** Redis 实现（生产环境，跨服务共享） */
-        REDIS
+        REDIS,
+        /** 数据库实现（生产环境，强持久化，无需 Redis） */
+        DB
     }
 
     // ============= SAGA 配置 =============

@@ -1,6 +1,7 @@
 package com.njydsz.system.web.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -217,5 +218,32 @@ public class DictItemController {
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
+    }
+
+    /**
+     * 批量新增字典项
+     *
+     * <p>用于运营初始化场景，单次最多 500 条。
+     * <p>执行链路：
+     * <ol>
+     *   <li>批量唯一性校验（不重复校验）</li>
+     *   <li>逐条校验并插入</li>
+     *   <li>创建版本快照（整个批量作为一个变更单元）</li>
+     * </ol>
+     *
+     * <p><b>幂等保护：</b>基于 items 哈希值，30 秒内相同请求不重复处理。
+     *
+     * @param batchDTO 批量新增请求（含字典项列表）
+     * @return 批量操作结果（成功数、失败数）
+     */
+    @Audit(module = "字典管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'批量新增字典项: ' + #batchDTO.items.size() + ' 条'")
+    @Operation(summary = "批量新增字典项", description = "运营初始化场景，单次最多 500 条")
+    @RateLimit(resource = "system.dictitem.batch", threshold = 10)
+    @Idempotent(key = "ydsz:system:DictItemController:batch:" + "#batchDTO.items.hashCode()",
+            ttlSeconds = 30)
+    @PostMapping("/batch")
+    public BaseResponse<Map<String, Object>> batchSave(@Valid @RequestBody DictItemBatchDTO batchDTO) {
+        return BaseResponse.success(batchService.batchSave(batchDTO.getItems()));
     }
 }

@@ -340,39 +340,69 @@ public final class BeanReader<T> {
                             field.set(obj, reader.readString());
                         }
                         break;
-                    case 2: // int
+                    case 2: // int / Integer
                         if (reader.isNull()) {
                             reader.readNull();
+                            if (fieldType == Integer.class) field.set(obj, null);
                         } else {
-                            field.setInt(obj, reader.readInt());
+                            int val = reader.readInt();
+                            if (fieldType == int.class) {
+                                field.setInt(obj, val);
+                            } else {
+                                field.set(obj, Integer.valueOf(val));
+                            }
                         }
                         break;
-                    case 3: // long
+                    case 3: // long / Long
                         if (reader.isNull()) {
                             reader.readNull();
+                            if (fieldType == Long.class) field.set(obj, null);
                         } else {
-                            field.setLong(obj, reader.readLong());
+                            long val = reader.readLong();
+                            if (fieldType == long.class) {
+                                field.setLong(obj, val);
+                            } else {
+                                field.set(obj, Long.valueOf(val));
+                            }
                         }
                         break;
-                    case 4: // double
+                    case 4: // double / Double
                         if (reader.isNull()) {
                             reader.readNull();
+                            if (fieldType == Double.class) field.set(obj, null);
                         } else {
-                            field.setDouble(obj, reader.readDouble());
+                            double val = reader.readDouble();
+                            if (fieldType == double.class) {
+                                field.setDouble(obj, val);
+                            } else {
+                                field.set(obj, Double.valueOf(val));
+                            }
                         }
                         break;
-                    case 5: // float
+                    case 5: // float / Float
                         if (reader.isNull()) {
                             reader.readNull();
+                            if (fieldType == Float.class) field.set(obj, null);
                         } else {
-                            field.setFloat(obj, reader.readFloat());
+                            float val = reader.readFloat();
+                            if (fieldType == float.class) {
+                                field.setFloat(obj, val);
+                            } else {
+                                field.set(obj, Float.valueOf(val));
+                            }
                         }
                         break;
-                    case 6: // boolean
+                    case 6: // boolean / Boolean
                         if (reader.isNull()) {
                             reader.readNull();
+                            if (fieldType == Boolean.class) field.set(obj, null);
                         } else {
-                            field.setBoolean(obj, reader.readBoolean());
+                            boolean val = reader.readBoolean();
+                            if (fieldType == boolean.class) {
+                                field.setBoolean(obj, val);
+                            } else {
+                                field.set(obj, Boolean.valueOf(val));
+                            }
                         }
                         break;
                     case 7: // short

@@ -112,6 +112,11 @@ ydsz:
       websocket-auth: true    # WebSocket 鉴权
       payload-validation: true # 请求体校验
       api-version: true       # API 版本头
+    # P2-1: 插件系统（Groovy 热脚本）
+    plugin:
+      enabled: false           # 默认关闭，需手动启用
+      watch-path: ./plugins    # 插件目录
+      reload-interval: 5000    # 扫描间隔（毫秒）
     # P0-阶段二-6: HttpClient 连接池配置
     httpclient:
       pool:

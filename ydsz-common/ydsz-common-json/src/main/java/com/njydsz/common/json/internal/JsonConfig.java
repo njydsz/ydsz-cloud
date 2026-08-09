@@ -87,8 +87,10 @@ public final class JsonConfig implements Serializable {
 
     private final boolean useBigDecimal;
 
-    /** 是否启用根名称包裹（配合 @JsonRootName 注解使用） */
     private final boolean wrapRootValue;
+
+    /** 是否启用严格模式（双体系一致性校验），true 时 DualJsonDetector 在启动阶段执行检测 */
+    private final boolean strictMode;
 
     /**
      * 全参数构造函数（包可见，仅供 Builder 内部使用）。
@@ -109,7 +111,8 @@ public final class JsonConfig implements Serializable {
             int maxDepth,
             int maxGenericDepth,
             boolean useBigDecimal,
-            boolean wrapRootValue
+            boolean wrapRootValue,
+            boolean strictMode
     ) {
         this.namingStrategy = namingStrategy;
         this.circularReferenceStrategy = circularReferenceStrategy;
@@ -124,6 +127,7 @@ public final class JsonConfig implements Serializable {
         this.maxGenericDepth = maxGenericDepth;
         this.useBigDecimal = useBigDecimal;
         this.wrapRootValue = wrapRootValue;
+        this.strictMode = strictMode;
     }
 
     /**
@@ -353,6 +357,26 @@ public final class JsonConfig implements Serializable {
     }
 
     /**
+     * 是否启用严格模式（双体系一致性校验）。
+     *
+     * <p>启用后，{@link com.njydsz.common.json.internal.DualJsonDetector} 在启动阶段扫描所有
+     * {@code @JsonClass} 注解的类，检测是否存在 Jackson 注解（{@code com.fasterxml.jackson.*}）
+     * 或 Jackson 依赖。发现混用时：
+     * <ul>
+     *   <li>若全局配置禁用了 Jackson 自动配置，抛出 {@link DualJsonConflictException} 阻止启动</li>
+     *   <li>若 Jackson 自动配置开启，仅输出 WARN 日志</li>
+     * </ul>
+     *
+     * <p>默认 false（不检测），避免影响已有项目。
+     *
+     * @see DualJsonDetector
+     * @since 1.2.0
+     */
+    public boolean isStrictMode() {
+        return strictMode;
+    }
+
+    /**
      * 是否启用根名称包裹。
      *
      * <p>启用后，带有 {@link com.njydsz.common.json.annotation.JsonRootName} 注解的类
@@ -401,6 +425,7 @@ public final class JsonConfig implements Serializable {
                 ", maxGenericDepth=" + maxGenericDepth +
                 ", useBigDecimal=" + useBigDecimal +
                 ", wrapRootValue=" + wrapRootValue +
+                ", strictMode=" + strictMode +
                 '}';
     }
 
@@ -451,6 +476,7 @@ public final class JsonConfig implements Serializable {
         private int maxGenericDepth = 64;
         private boolean useBigDecimal = false;
         private boolean wrapRootValue = false;
+        private boolean strictMode = false;
 
         private Builder() {
         }
@@ -586,6 +612,20 @@ public final class JsonConfig implements Serializable {
         }
 
         /**
+         * 设置是否启用严格模式（双体系一致性校验）。
+         *
+         * <p>启用后，{@link com.njydsz.common.json.internal.DualJsonDetector} 在启动阶段检测
+         * 是否存在 Jackson 注解或 Jackson 依赖，混用时阻止启动或输出警告。
+         *
+         * @param strictMode {@code true} 启用严格模式
+         * @since 1.2.0
+         */
+        public Builder strictMode(boolean strictMode) {
+            this.strictMode = strictMode;
+            return this;
+        }
+
+        /**
          * 从现有配置创建 Builder（用于修改已有配置）。
          *
          * <p>通过 getter 读取源配置值，而非直接访问字段，
@@ -609,6 +649,7 @@ public final class JsonConfig implements Serializable {
                 this.maxGenericDepth = config.getMaxGenericDepth();
                 this.useBigDecimal = config.isUseBigDecimal();
                 this.wrapRootValue = config.isWrapRootValue();
+                this.strictMode = config.isStrictMode();
             }
             return this;
         }
@@ -635,7 +676,8 @@ public final class JsonConfig implements Serializable {
                     this.maxDepth,
                     this.maxGenericDepth,
                     this.useBigDecimal,
-                    this.wrapRootValue
+                    this.wrapRootValue,
+                    this.strictMode
             );
         }
     }
