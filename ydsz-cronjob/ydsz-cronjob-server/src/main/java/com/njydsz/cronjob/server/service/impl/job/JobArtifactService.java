@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.cronjob.domain.entity.job.JobArtifact;
 import com.njydsz.cronjob.infra.mapper.job.JobArtifactMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;

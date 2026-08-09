@@ -52,8 +52,10 @@ public class FlowTaskClaimService {
     public void claim(String taskId, String userId) {
         FlowRunTask task = support.getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_5873f2ae", task.getTaskStatus());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_5873f2ae").params(task.getTaskStatus())
+                .build();
         }
         applyClaim(task, userId);
         taskMapper.updateById(task);

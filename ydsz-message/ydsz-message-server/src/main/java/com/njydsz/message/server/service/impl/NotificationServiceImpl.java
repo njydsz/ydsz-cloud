@@ -67,7 +67,10 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(rollbackFor = Exception.class)
     public int send(NotificationSendDTO dto) {
         if (dto == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "通知参数不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("通知参数不能为空")
+                .build();
         }
         List<String> receiverIds = resolveReceiverIds(dto);
         // P3-6: 先构建全部实体（预生成 ID），再批量 insert，避免逐条 INSERT 的数据库往返开销
@@ -99,7 +102,10 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Page<MsgNotification> inbox(String userId, NotificationQueryDTO query) {
         if (!StringUtils.hasText(userId)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("用户 ID 不能为空")
+                .build();
         }
         Page<MsgNotification> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
@@ -237,7 +243,10 @@ public class NotificationServiceImpl implements NotificationService {
             receiverIds = List.of(dto.getReceiverId());
         }
         if (CollectionUtils.isEmpty(receiverIds)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "接收人不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("接收人不能为空")
+                .build();
         }
         return receiverIds;
     }

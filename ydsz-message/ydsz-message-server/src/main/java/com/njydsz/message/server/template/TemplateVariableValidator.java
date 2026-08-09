@@ -104,8 +104,10 @@ public class TemplateVariableValidator {
         }
 
         if (!errors.isEmpty()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "模板变量校验失败[" + templateCode + "]: " + String.join("; ", errors));
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板变量校验失败[" + templateCode + "]: " + String.join("; ", errors))
+                .build();
         }
     }
 

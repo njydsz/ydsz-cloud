@@ -50,7 +50,10 @@ public class FlowTaskUrgeService {
     public List<String> urge(String instanceId, String operatorId, String comment) {
         if (operatorId != null && instanceId != null
                 && !urgeLimiter.tryAcquire(operatorId, Long.parseLong(instanceId), "INSTANCE")) {
-            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS, "error.workflow.msg_75474a57");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+                .message("error.workflow.msg_75474a57")
+                .build();
         }
         List<FlowRunTask> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         List<String> urged = new ArrayList<>();
@@ -76,7 +79,10 @@ public class FlowTaskUrgeService {
         if (operatorId != null && instanceId != null) {
             String nodeTarget = instanceId + ":" + nodeCode;
             if (!urgeLimiter.tryAcquire(operatorId, nodeTarget.hashCode() & Long.MAX_VALUE, "NODE")) {
-                throw new SysException(BaseResultCode.TOO_MANY_REQUESTS, "error.workflow.msg_75474a57");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+                .message("error.workflow.msg_75474a57")
+                .build();
             }
         }
         List<FlowRunTask> pendingTasks = taskMapper.selectPendingByNode(instanceId, nodeCode);

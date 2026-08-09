@@ -100,7 +100,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
             traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
         }
         if (traceId == null && request != null) {
-            traceId = request.getHeader("X-Request-Id");
+            traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
         }
         return traceId;
     }

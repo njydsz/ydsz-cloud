@@ -118,15 +118,24 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     @Transactional(rollbackFor = Exception.class)
     public String scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
         if (instanceId == null || nodeCode == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "instanceId/nodeCode 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("instanceId/nodeCode 不能为空")
+                .build();
         }
         FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("流程实例不存在: " + instanceId)
+                .build();
         }
         FlowNode node = nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode);
         if (node == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "节点不存在: " + nodeCode);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("节点不存在: " + nodeCode)
+                .build();
         }
         FlowTimer timer = new FlowTimer();
         timer.setTenantId(instance.getTenantId());
@@ -149,11 +158,17 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     @Transactional(rollbackFor = Exception.class)
     public String scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay) {
         if (taskId == null || instanceId == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "taskId/instanceId 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("taskId/instanceId 不能为空")
+                .build();
         }
         FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("流程实例不存在: " + instanceId)
+                .build();
         }
         FlowNode node = nodeCode != null
                 ? nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode) : null;

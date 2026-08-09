@@ -74,7 +74,10 @@ public class AggregateServiceImpl implements AggregateService {
     @Override
     public MsgAggregate appendOrStart(String group, String receiver, String channel, String tenantId) {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("聚合组与接收人不能为空")
+                .build();
         }
         String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
         String lockKey = MessageConstants.AGGREGATE_LOCK_PREFIX + group + ":" + receiver;
@@ -82,7 +85,10 @@ public class AggregateServiceImpl implements AggregateService {
         try {
             lockValue = distributedLocker.tryLock(lockKey, 3, 10, TimeUnit.SECONDS);
             if (lockValue == null) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "获取聚合锁失败: " + group);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .message("获取聚合锁失败: " + group)
+                    .build();
             }
             // 查 PENDING 批次
             MsgAggregate batch = msgAggregateMapper.selectOne(new LambdaQueryWrapper<MsgAggregate>()
@@ -113,7 +119,10 @@ public class AggregateServiceImpl implements AggregateService {
             return entity;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new SysException(BaseResultCode.BAD_REQUEST, "聚合锁等待中断");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("聚合锁等待中断")
+                .build();
         } finally {
             if (lockValue != null) {
                 distributedLocker.unlock(lockKey, lockValue);
@@ -142,7 +151,10 @@ public class AggregateServiceImpl implements AggregateService {
     @Override
     public int flushByGroup(String group, String receiver) {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("聚合组与接收人不能为空")
+                .build();
         }
         // 先把 PENDING 批次流转为 READY,统一由 sendBatch 的 CAS 占有发送
         msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregate>()

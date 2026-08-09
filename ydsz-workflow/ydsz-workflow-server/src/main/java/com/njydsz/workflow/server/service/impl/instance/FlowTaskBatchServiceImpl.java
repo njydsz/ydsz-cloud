@@ -43,7 +43,10 @@ public class FlowTaskBatchServiceImpl {
     @Transactional(rollbackFor = Exception.class)
     public void batchPass(List<String> taskIds, String userId, String comment) {
         if (taskIds == null || taskIds.isEmpty()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_a02f7864")
+                .build();
         }
         for (String taskId : taskIds) {
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -71,7 +74,10 @@ public class FlowTaskBatchServiceImpl {
     public void batchReject(List<String> taskIds, String userId, String comment,
                             String targetNodeCode) {
         if (taskIds == null || taskIds.isEmpty()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_a02f7864")
+                .build();
         }
         for (String taskId : taskIds) {
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -101,7 +107,10 @@ public class FlowTaskBatchServiceImpl {
     public void batchTransfer(List<String> taskIds, String userId, String comment,
                               String targetUserId, String targetUserName) {
         if (taskIds == null || taskIds.isEmpty()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_a02f7864")
+                .build();
         }
         for (String taskId : taskIds) {
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -130,7 +139,10 @@ public class FlowTaskBatchServiceImpl {
      */
     public int batchUrge(List<String> instanceIds, String operatorId, String comment) {
         if (instanceIds == null || instanceIds.isEmpty()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_a02f7864")
+                .build();
         }
         int success = 0;
         for (String instanceId : instanceIds) {

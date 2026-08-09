@@ -47,7 +47,10 @@ public class CanaryServiceImpl implements CanaryService {
     @Override
     public MsgCanary upsert(CanaryUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getCanaryKey())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "灰度键不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("灰度键不能为空")
+                .build();
         }
         int total = dto.getBucketTotal() == null || dto.getBucketTotal() <= 0 ? DEFAULT_BUCKET_TOTAL : dto.getBucketTotal();
         int percentage = dto.getPercentage() == null ? 0 : Math.max(0, Math.min(100, dto.getPercentage()));

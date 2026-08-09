@@ -62,17 +62,18 @@ public final class TraceIdGenerator {
     }
 
     /**
-     * 生成 32 位十六进制 TraceId（16 bytes 随机数）。
+     * 生成 32 位十六进制 TraceId。
      *
      * <p>输出格式与旧版兼容（32 位小写十六进制字符串）。</p>
      *
      * @return 32 位十六进制字符串
      * @since 1.5.0
+     * @deprecated 1.9.3 推荐直接使用 {@link #generateSortableTraceId()}，时间有序，便于日志排查和范围检索。
+     *             当前实现已委托 {@link #generateSortableTraceId()}，行为等价。
      */
+    @Deprecated(since = "1.9.3", forRemoval = false)
     public static String generateTraceId() {
-        byte[] bytes = new byte[TRACE_ID_BYTES];
-        ThreadLocalRandom.current().nextBytes(bytes);
-        return HEX_FORMAT.formatHex(bytes);
+        return generateSortableTraceId();
     }
 
     /**

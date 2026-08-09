@@ -82,9 +82,10 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentCount = countJobsByTenant(tenantId);
         if (currentCount >= maxJobs) {
-            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS,
-                    "error.cronjob.msg_quota_jobs_exceeded",
-                    tenantId, currentCount, maxJobs);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+                .key("error.cronjob.msg_quota_jobs_exceeded").params(tenantId, currentCount, maxJobs))
+                .build();
         }
         log.debug("[Quota] 任务数配额检查通过: tenant={} current={} max={}",
                 tenantId, currentCount, maxJobs);
@@ -104,9 +105,10 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentConcurrent = getConcurrentCount(tenantId);
         if (currentConcurrent >= maxConcurrent) {
-            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS,
-                    "error.cronjob.msg_quota_concurrent_exceeded",
-                    tenantId, currentConcurrent, maxConcurrent);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+                .key("error.cronjob.msg_quota_concurrent_exceeded").params(tenantId, currentConcurrent, maxConcurrent))
+                .build();
         }
         log.debug("[Quota] 并发配额检查通过: tenant={} current={} max={}",
                 tenantId, currentConcurrent, maxConcurrent);
@@ -126,9 +128,10 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentDaily = getDailyCount(tenantId);
         if (currentDaily >= maxDaily) {
-            throw new SysException(BaseResultCode.TOO_MANY_REQUESTS,
-                    "error.cronjob.msg_quota_daily_exceeded",
-                    tenantId, currentDaily, maxDaily);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
+                .key("error.cronjob.msg_quota_daily_exceeded").params(tenantId, currentDaily, maxDaily))
+                .build();
         }
         log.debug("[Quota] 日执行量配额检查通过: tenant={} current={} max={}",
                 tenantId, currentDaily, maxDaily);

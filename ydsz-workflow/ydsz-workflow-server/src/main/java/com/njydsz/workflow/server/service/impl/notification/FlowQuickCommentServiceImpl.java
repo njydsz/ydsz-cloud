@@ -137,7 +137,10 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     @Transactional(rollbackFor = Exception.class)
     public String create(FlowQuickCommentDTO dto, String userId, String tenantId) {
         if (!StringUtils.hasText(userId)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_user_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_user_required")
+                .build();
         }
         FlowQuickComment comment = new FlowQuickComment();
         comment.setUserId(userId);
@@ -167,14 +170,23 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     @Transactional(rollbackFor = Exception.class)
     public void update(FlowQuickCommentDTO dto, String userId) {
         if (!StringUtils.hasText(dto.getId())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_id_required")
+                .build();
         }
         FlowQuickComment existing = quickCommentMapper.selectById(dto.getId());
         if (existing == null || existing.getDeleted() == 1) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", dto.getId());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_6541ab08").params(dto.getId())
+                .build();
         }
         if (!userId.equals(existing.getUserId())) {
-            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_no_permission");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.FORBIDDEN)
+                .message("error.workflow.msg_no_permission")
+                .build();
         }
         existing.setContent(dto.getContent());
         if (dto.getCommentType() != null) {
@@ -208,10 +220,16 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         }
         // 系统预设不可删除
         if (existing.getIsSystem() != null && existing.getIsSystem() == 1) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_system_comment_cannot_delete");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_system_comment_cannot_delete")
+                .build();
         }
         if (!userId.equals(existing.getUserId())) {
-            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_no_permission");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.FORBIDDEN)
+                .message("error.workflow.msg_no_permission")
+                .build();
         }
         existing.setDeleted(1);
         quickCommentMapper.updateById(existing);

@@ -120,11 +120,17 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         validatePercent(initialPercent);
         FlowDefinition def = mustGetDef(definitionId);
         if (def.getIsPublish() == null || def.getIsPublish() != 1) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5bdc1fe3");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_5bdc1fe3")
+                .build();
         }
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_9ff06760");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_9ff06760")
+                .build();
         }
 
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
@@ -163,8 +169,10 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         FlowDefinition def = mustGetDef(definitionId);
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (!CanaryStatus.CANARYING.name().equals(curStatus)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_f5374e71", curStatus);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_f5374e71").params(curStatus)
+                .build();
         }
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
         if (oldPercent == newPercent) {
@@ -368,8 +376,10 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     /** 校验 percent 取值 */
     private void validatePercent(int percent) {
         if (percent < 0 || percent > 100) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_a9bb9120", percent);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_a9bb9120").params(percent)
+                .build();
         }
     }
 
@@ -381,11 +391,17 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
      */
     private FlowDefinition mustGetDef(String definitionId) {
         if (definitionId == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_375a4677");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_375a4677")
+                .build();
         }
         FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_690c83d8").params(definitionId)
+                .build();
         }
         return def;
     }

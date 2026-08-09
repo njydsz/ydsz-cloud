@@ -220,7 +220,10 @@ public class FlowExportServiceImpl implements FlowExportService {
     private FlowInstance loadInstance(String instanceId) {
         FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("流程实例不存在: " + instanceId)
+                .build();
         }
         return instance;
     }

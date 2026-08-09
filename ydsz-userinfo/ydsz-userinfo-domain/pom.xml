@@ -41,6 +41,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-jdbc</artifactId>
         </dependency>
+        <!-- ydsz-common-excel（UserImportDTO 等使用 @ExcelProperty 注解） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-annotation</artifactId>

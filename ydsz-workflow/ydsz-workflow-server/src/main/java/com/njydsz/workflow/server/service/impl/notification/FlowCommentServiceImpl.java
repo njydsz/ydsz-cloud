@@ -111,18 +111,25 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     @Transactional(rollbackFor = Exception.class)
     public String addComment(FlowCommentCreateDTO dto, String userId, String userName, String tenantId) {
         if (!StringUtils.hasText(userId)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a7b8c9d0");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_a7b8c9d0")
+                .build();
         }
         // 回复场景：校验父评论存在且属于同一实例
         if (StringUtils.hasText(dto.getParentCommentId())) {
             FlowComment parent = commentMapper.selectById(dto.getParentCommentId());
             if (parent == null || parent.getDeleted() == 1) {
-                throw new SysException(BaseResultCode.NOT_FOUND,
-                        "error.workflow.msg_f2a3b4c5", dto.getParentCommentId());
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_f2a3b4c5").params(dto.getParentCommentId())
+                    .build();
             }
             if (!parent.getInstanceId().equals(dto.getInstanceId())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.workflow.msg_a3b4c5d6");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_a3b4c5d6")
+                .build();
             }
         }
 
@@ -212,7 +219,10 @@ public class FlowCommentServiceImpl implements FlowCommentService {
         }
         // 仅评论人本人可删除自己的评论
         if (!comment.getUserId().equals(userId)) {
-            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_b4c5d6e7");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.FORBIDDEN)
+                .message("error.workflow.msg_b4c5d6e7")
+                .build();
         }
         comment.setDeleted(1);
         commentMapper.updateById(comment);

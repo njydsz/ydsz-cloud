@@ -125,7 +125,10 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     @Transactional(rollbackFor = Exception.class)
     public String mergeInstances(List<String> instanceIds, String operatorId, String tenantId) {
         if (instanceIds == null || instanceIds.size() < 2) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5a6b7c8d");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_5a6b7c8d")
+                .build();
         }
         String tid = tenantId != null ? tenantId : "1";
 
@@ -134,15 +137,24 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         for (String instanceId : instanceIds) {
             FlowInstance instance = instanceMapper.selectById(instanceId);
             if (instance == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_9e8f0a1b", instanceId);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_9e8f0a1b").params(instanceId)
+                    .build();
             }
             if (!"RUNNING".equals(instance.getFlowStatus())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2b3c4d5e");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_2b3c4d5e")
+                .build();
             }
             flowCodes.add(instance.getFlowCode());
         }
         if (flowCodes.size() > 1) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_6c7d8e9f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_6c7d8e9f")
+                .build();
         }
 
         // 生成合并组 ID

@@ -111,11 +111,17 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     public String createSubscription(String instanceId, FlowNode node,
                                     Map<String, Object> variables, String boundaryTaskId) {
         if (instanceId == null || node == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "instanceId/node 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("instanceId/node 不能为空")
+                .build();
         }
         FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("流程实例不存在: " + instanceId)
+                .build();
         }
 
         Map<String, Object> ext = parseExt(node);
@@ -154,7 +160,10 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     public int correlateMessage(String tenantId, String messageName,
                                  String correlationKey, String payload) {
         if (!StringUtils.hasText(messageName)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "messageName 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("messageName 不能为空")
+                .build();
         }
         String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
 
@@ -186,7 +195,10 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     @Transactional(rollbackFor = Exception.class)
     public int throwError(String tenantId, String instanceId, String errorCode, String payload) {
         if (!StringUtils.hasText(errorCode)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "errorCode 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("errorCode 不能为空")
+                .build();
         }
         String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
 

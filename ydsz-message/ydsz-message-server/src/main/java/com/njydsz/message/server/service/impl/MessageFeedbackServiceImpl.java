@@ -51,16 +51,28 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     @Override
     public String submitFeedback(MessageFeedbackDTO dto) {
         if (dto == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "反馈内容不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("反馈内容不能为空")
+                .build();
         }
         if (!StringUtils.hasText(dto.getMsgId()) && !StringUtils.hasText(dto.getNotificationId())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "消息 ID 或通知 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("消息 ID 或通知 ID 不能为空")
+                .build();
         }
         if (!StringUtils.hasText(dto.getUserId())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("用户 ID 不能为空")
+                .build();
         }
         if (dto.getRating() == null || dto.getRating() < 1 || dto.getRating() > 5) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "评分必须在 1-5 之间");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("评分必须在 1-5 之间")
+                .build();
         }
 
         MsgFeedback feedback = new MsgFeedback();

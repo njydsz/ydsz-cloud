@@ -53,7 +53,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public MsgSubscription upsert(SubscriptionUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId())
                 || !StringUtils.hasText(dto.getTopicCode()) || !StringUtils.hasText(dto.getChannel())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("用户 ID、主题编码与通道不能为空")
+                .build();
         }
         MsgSubscription existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getUserId, dto.getUserId())
@@ -182,7 +185,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public MsgSubscription unsubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("用户 ID、主题编码与通道不能为空")
+                .build();
         }
         MsgSubscription existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getUserId, userId)

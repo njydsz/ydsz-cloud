@@ -45,9 +45,10 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             // 乐观锁冲突，抛异常由调用方处理
-            throw new SysException(
-                    BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_199e8ba1", task.getId());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_199e8ba1").params(task.getId())
+                .build();
         }
         archiveService.completeAndArchive(task, dto.getComment());
     }

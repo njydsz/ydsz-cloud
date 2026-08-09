@@ -64,10 +64,16 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public MsgTemplate create(TemplateCreateDTO dto) {
         if (dto == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板参数不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板参数不能为空")
+                .build();
         }
         if (!StringUtils.hasText(dto.getTemplateCode()) || !StringUtils.hasText(dto.getChannel())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码与通道不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板编码与通道不能为空")
+                .build();
         }
         String tenantId = TenantContext.getTenantId();
         String locale = StringUtils.hasText(dto.getLocale()) ? dto.getLocale() : MessageConstants.DEFAULT_LOCALE;
@@ -79,7 +85,10 @@ public class TemplateServiceImpl implements TemplateService {
                 .eq(MsgTemplate::getTenantId, tenantId)
                 .last("LIMIT 1"));
         if (existing != null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板已存在: " + dto.getTemplateCode() + "/" + locale);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板已存在: " + dto.getTemplateCode() + "/" + locale)
+                .build();
         }
         MsgTemplate entity = new MsgTemplate();
         entity.setTemplateCode(dto.getTemplateCode());
@@ -116,11 +125,17 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public MsgTemplate update(String id, TemplateCreateDTO dto) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板 ID 不能为空")
+                .build();
         }
         MsgTemplate entity = getById(id);
         if (dto == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板参数不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板参数不能为空")
+                .build();
         }
         if (StringUtils.hasText(dto.getLocale())) {
             entity.setLocale(dto.getLocale());
@@ -165,7 +180,10 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板 ID 不能为空")
+                .build();
         }
         msgTemplateMapper.deleteById(id);
     }
@@ -180,11 +198,17 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public MsgTemplate getById(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板 ID 不能为空")
+                .build();
         }
         MsgTemplate entity = msgTemplateMapper.selectById(id);
         if (entity == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + id);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("模板不存在: " + id)
+                .build();
         }
         return entity;
     }
@@ -232,7 +256,10 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public MsgTemplate loadByCodeAndChannel(String templateCode, String channel, String locale, String tenantId) {
         if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码与通道不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板编码与通道不能为空")
+                .build();
         }
         String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
         String loc = StringUtils.hasText(locale) ? locale : MessageConstants.DEFAULT_LOCALE;
@@ -272,14 +299,19 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public void audit(String id, TemplateAuditDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getAuditStatus())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "审核状态不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("审核状态不能为空")
+                .build();
         }
         MsgTemplate entity = getById(id);
         TemplateAuditStatusEnum current = parseAuditStatus(entity.getAuditStatus());
         TemplateAuditStatusEnum target = parseAuditStatus(dto.getAuditStatus());
         if (!canTransitAudit(current, target)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "非法审核状态流转: " + current + " -> " + target);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("非法审核状态流转: " + current + " -> " + target)
+                .build();
         }
         entity.setAuditStatus(target.name());
         entity.setAuditRemark(dto.getAuditRemark());
@@ -310,11 +342,17 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public String preview(String templateCode, String channel, Map<String, Object> params, String locale, String tenantId) {
         if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码与通道不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板编码与通道不能为空")
+                .build();
         }
         MsgTemplate template = loadByCodeAndChannel(templateCode, channel, locale, tenantId);
         if (template == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + templateCode + "/" + channel);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("模板不存在: " + templateCode + "/" + channel)
+                .build();
         }
         return templateEngine.render(template.getContent(), params);
     }
@@ -342,7 +380,10 @@ public class TemplateServiceImpl implements TemplateService {
         try {
             return TemplateAuditStatusEnum.valueOf(value);
         } catch (Exception e) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "非法审核状态: " + value);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("非法审核状态: " + value)
+                .build();
         }
     }
 }

@@ -46,7 +46,10 @@ public class CanaryReportServiceImpl implements CanaryReportService {
     @Override
     public CanaryReportVO getReport(String canaryKey, LocalDateTime start, LocalDateTime end) {
         if (!StringUtils.hasText(canaryKey)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "灰度键不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("灰度键不能为空")
+                .build();
         }
         LocalDateTime[] range = normalizeRange(start, end);
         LocalDateTime actualStart = range[0];

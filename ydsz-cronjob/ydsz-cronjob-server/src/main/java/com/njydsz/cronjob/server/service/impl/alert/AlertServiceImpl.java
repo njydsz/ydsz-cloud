@@ -60,7 +60,10 @@ public class AlertServiceImpl implements AlertService {
     public void updateRule(String id, AlertRuleSaveDTO dto) {
         JobAlertRule exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_alert_not_found")
+                .build();
         }
         validateRuleConstraints(dto);
         applyDtoToEntity(dto, exists);
@@ -73,7 +76,10 @@ public class AlertServiceImpl implements AlertService {
     public void deleteRule(String id) {
         JobAlertRule exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_alert_not_found")
+                .build();
         }
         jobAlertRuleMapper.deleteById(id);
         log.info("[Alert] 删除告警规则: ruleId={} ruleName={}", id, exists.getRuleName());
@@ -83,7 +89,10 @@ public class AlertServiceImpl implements AlertService {
     public JobAlertRule getRuleById(String id) {
         JobAlertRule rule = jobAlertRuleMapper.selectById(id);
         if (rule == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_alert_not_found")
+                .build();
         }
         return rule;
     }
@@ -97,11 +106,17 @@ public class AlertServiceImpl implements AlertService {
     @Transactional(rollbackFor = Exception.class)
     public void toggleRule(String id, Integer enabled) {
         if (enabled == null || (enabled != 0 && enabled != 1)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_invalid_enabled");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_alert_invalid_enabled")
+                .build();
         }
         JobAlertRule exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_alert_not_found")
+                .build();
         }
         exists.setEnabled(enabled);
         jobAlertRuleMapper.updateById(exists);
@@ -129,15 +144,22 @@ public class AlertServiceImpl implements AlertService {
     private void validateRuleConstraints(AlertRuleSaveDTO dto) {
         AlertType alertType = AlertType.parse(dto.getAlertType());
         if (alertType == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_invalid_type");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_alert_invalid_type")
+                .build();
         }
         if (alertType.requiresThreshold() && dto.getThreshold() == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_threshold_required",
-                    dto.getAlertType());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.cronjob.msg_alert_threshold_required").params(dto.getAlertType()))
+                .build();
         }
         if (alertType.requiresTimeWindow() && dto.getTimeWindowMinutes() == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_window_required",
-                    dto.getAlertType());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.cronjob.msg_alert_window_required").params(dto.getAlertType()))
+                .build();
         }
     }
 

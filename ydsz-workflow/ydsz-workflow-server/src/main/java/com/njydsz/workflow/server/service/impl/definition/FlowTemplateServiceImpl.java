@@ -147,18 +147,27 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public Map<String, Object> getTemplate(String templateCode) {
         try {
             if (!StringUtils.hasText(templateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_f68a3fa3")
+                .build();
             }
             FlowTemplate template = templateMapper.selectByTemplateCode(templateCode);
             if (template == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_c16cb047").params(templateCode)
+                    .build();
             }
             return toDetailMap(template);
         } catch (SysException e) {
             throw e;
         } catch (Exception e) {
             log.error("[FlowTemplate] 获取模板详情异常: templateCode={} err={}", templateCode, e.getMessage(), e);
-            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .key("error.workflow.msg_c2642700").params(e.getMessage())
+                .build();
         }
     }
 
@@ -186,14 +195,23 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public String importTemplate(String templateCode, String flowName) {
         try {
             if (!StringUtils.hasText(templateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_f68a3fa3")
+                .build();
             }
             FlowTemplate template = templateMapper.selectByTemplateCode(templateCode);
             if (template == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_c16cb047").params(templateCode)
+                    .build();
             }
             if (!StringUtils.hasText(template.getBpmnXml())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f407e561", templateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_f407e561").params(templateCode)
+                    .build();
             }
 
             // 构建部署 DTO，使用 BPMN XML 模式
@@ -220,8 +238,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             throw e;
         } catch (Exception e) {
             log.error("[FlowTemplate] 模板导入异常: templateCode={} err={}", templateCode, e.getMessage(), e);
-            throw new SysException(BaseResultCode.INTERNAL_ERROR,
-                    "error.workflow.msg_ecc1169b", templateCode, e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .key("error.workflow.msg_ecc1169b").params(templateCode, e.getMessage())
+                .build();
         }
     }
 
@@ -248,21 +268,33 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public void exportAsTemplate(String definitionId, String templateName, String category) {
         try {
             if (definitionId == null) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_375a4677");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_375a4677")
+                .build();
             }
             if (!StringUtils.hasText(templateName)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_bbbf759d");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_bbbf759d")
+                .build();
             }
 
             // 获取流程定义详情
             Map<String, Object> detail = definitionService.getDetail(definitionId);
             if (detail == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_690c83d8").params(definitionId)
+                    .build();
             }
 
             FlowDefinition definition = (FlowDefinition) detail.get("definition");
             if (definition == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_690c83d8").params(definitionId)
+                    .build();
             }
 
             // 生成模板编码
@@ -321,7 +353,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             throw e;
         } catch (Exception e) {
             log.error("[FlowTemplate] 导出模板异常: definitionId={} err={}", definitionId, e.getMessage(), e);
-            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_d119b2ed", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .key("error.workflow.msg_d119b2ed").params(e.getMessage())
+                .build();
         }
     }
 
@@ -339,7 +374,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public List<Map<String, Object>> listTemplateVersions(String templateCode) {
         try {
             if (!StringUtils.hasText(templateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_f68a3fa3")
+                .build();
             }
             List<FlowTemplate> versions = templateMapper.selectVersionsByTemplateCode(templateCode);
             return versions.stream().map(this::toSummaryMap).collect(Collectors.toList());
@@ -364,36 +402,53 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public Map<String, Object> getTemplateVersion(String templateCode, Integer version) {
         try {
             if (!StringUtils.hasText(templateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_f68a3fa3")
+                .build();
             }
             // version 为空 → 返回最新版本（保持与 getTemplate 一致的语义）
             if (version == null) {
                 FlowTemplate latest = templateMapper.selectByTemplateCode(templateCode);
                 if (latest == null) {
-                    throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
+                    throw SysException.builder()
+                        .resultCode(BaseResultCode.NOT_FOUND)
+                        .key("error.workflow.msg_c16cb047").params(templateCode)
+                        .build();
                 }
                 return toDetailMap(latest);
             }
             if (version < 1) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a9b0c1d3", version);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_a9b0c1d3").params(version)
+                    .build();
             }
             // 在所有版本中筛选指定版本
             List<FlowTemplate> versions = templateMapper.selectVersionsByTemplateCode(templateCode);
             if (versions.isEmpty()) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_c16cb047").params(templateCode)
+                    .build();
             }
             return versions.stream()
                     .filter(v -> version.equals(v.getVersion()))
                     .findFirst()
                     .map(this::toDetailMap)
-                    .orElseThrow(() -> new SysException(BaseResultCode.NOT_FOUND,
-                            "error.workflow.msg_f4a5b6c8", templateCode, version));
+                    .orElseThrow(() -> SysException.builder()
+                    .orElseThrow(() ->     .resultCode(BaseResultCode.NOT_FOUND)
+                    .orElseThrow(() ->     .key("error.workflow.msg_f4a5b6c8").params(templateCode, version)
+                    .orElseThrow(() ->     .build());
         } catch (SysException e) {
             throw e;
         } catch (Exception e) {
             log.error("[FlowTemplate] 获取模板版本异常: templateCode={} version={} err={}",
                     templateCode, version, e.getMessage(), e);
-            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .key("error.workflow.msg_c2642700").params(e.getMessage())
+                .build();
         }
     }
 
@@ -415,15 +470,24 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public Integer createNewVersion(String templateCode, String versionLabel) {
         try {
             if (!StringUtils.hasText(templateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_f68a3fa3")
+                .build();
             }
             // 读取当前最新版本作为复制源
             FlowTemplate source = templateMapper.selectByTemplateCode(templateCode);
             if (source == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_c16cb047").params(templateCode)
+                    .build();
             }
             if (!StringUtils.hasText(source.getBpmnXml())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f407e561", templateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_f407e561").params(templateCode)
+                    .build();
             }
             // 旧版本统一降级
             templateMapper.markAsNotLatest(templateCode);
@@ -456,7 +520,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         } catch (Exception e) {
             log.error("[FlowTemplate] 创建新版本异常: templateCode={} err={}",
                     templateCode, e.getMessage(), e);
-            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .key("error.workflow.msg_c2642700").params(e.getMessage())
+                .build();
         }
     }
 
@@ -513,25 +580,38 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
                                     String newTemplateName, String newCategory, String inheritType) {
         try {
             if (!StringUtils.hasText(sourceTemplateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_f68a3fa3")
+                .build();
             }
             if (!StringUtils.hasText(newTemplateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d2e3f4a6");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_d2e3f4a6")
+                .build();
             }
             if (!StringUtils.hasText(newTemplateName)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_b6c7d8e0");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_b6c7d8e0")
+                .build();
             }
             // 读取源模板最新版本
             FlowTemplate source = templateMapper.selectByTemplateCode(sourceTemplateCode);
             if (source == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND,
-                        "error.workflow.msg_e3f4a5b7", sourceTemplateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_e3f4a5b7").params(sourceTemplateCode)
+                    .build();
             }
             // 校验新编码未占用
             FlowTemplate existing = templateMapper.selectByTemplateCode(newTemplateCode);
             if (existing != null) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.workflow.msg_c1d2e3f5", newTemplateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_c1d2e3f5").params(newTemplateCode)
+                    .build();
             }
             // 复制为新模板（version=1, is_latest=1, inherit_type=CLONE/INHERIT, parent_template_id=源模板 id）
             FlowTemplate newTemplate = new FlowTemplate();
@@ -561,7 +641,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         } catch (Exception e) {
             log.error("[FlowTemplate] 复制模板异常: source={} newCode={} inheritType={} err={}",
                     sourceTemplateCode, newTemplateCode, inheritType, e.getMessage(), e);
-            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .key("error.workflow.msg_c2642700").params(e.getMessage())
+                .build();
         }
     }
 
@@ -577,13 +660,18 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public List<Map<String, Object>> listInheritedTemplates(String parentTemplateCode) {
         try {
             if (!StringUtils.hasText(parentTemplateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_f68a3fa3")
+                .build();
             }
             // 先查出父模板主键 ID
             FlowTemplate parent = templateMapper.selectByTemplateCode(parentTemplateCode);
             if (parent == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND,
-                        "error.workflow.msg_b0c1d2e4", parentTemplateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_b0c1d2e4").params(parentTemplateCode)
+                    .build();
             }
             List<FlowTemplate> children = templateMapper.selectByParentTemplateId(parent.getId());
             return children.stream().map(this::toSummaryMap).collect(Collectors.toList());
@@ -613,33 +701,47 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public Integer syncFromParent(String childTemplateCode) {
         try {
             if (!StringUtils.hasText(childTemplateCode)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_f68a3fa3")
+                .build();
             }
             // 读取子模板最新版本
             FlowTemplate child = templateMapper.selectByTemplateCode(childTemplateCode);
             if (child == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c16cb047", childTemplateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_c16cb047").params(childTemplateCode)
+                    .build();
             }
             // 仅 INHERIT 类型可同步
             if (!"INHERIT".equals(child.getInheritType())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.workflow.msg_d5e6f7a9", childTemplateCode,
-                        child.getInheritType() != null ? child.getInheritType() : "null");
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .message("error.workflow.msg_d5e6f7a9", childTemplateCode,
+                        child.getInheritType() != null ? child.getInheritType() : "null")
+                    .build();
             }
             // 读取父模板
             String parentId = child.getParentTemplateId();
             if (!StringUtils.hasText(parentId)) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.workflow.msg_e6f7a8b0", childTemplateCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_e6f7a8b0").params(childTemplateCode)
+                    .build();
             }
             FlowTemplate parent = templateMapper.selectById(parentId);
             if (parent == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND,
-                        "error.workflow.msg_f7a8b9c1", parentId);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_f7a8b9c1").params(parentId)
+                    .build();
             }
             if (!StringUtils.hasText(parent.getBpmnXml())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.workflow.msg_f407e561", parent.getTemplateCode());
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_f407e561").params(parent.getTemplateCode())
+                    .build();
             }
             // 旧版本降级
             templateMapper.markAsNotLatest(childTemplateCode);
@@ -673,7 +775,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         } catch (Exception e) {
             log.error("[FlowTemplate] 同步父模板异常: childCode={} err={}",
                     childTemplateCode, e.getMessage(), e);
-            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .key("error.workflow.msg_c2642700").params(e.getMessage())
+                .build();
         }
     }
 
@@ -751,7 +856,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     private String generateBpmnXml(Map<String, Object> detail) {
         Object defObj = detail.get("definition");
         if (!(defObj instanceof FlowDefinition definition)) {
-            throw new SysException(BaseResultCode.INTERNAL_ERROR, "流程定义详情缺少 definition");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .message("流程定义详情缺少 definition")
+                .build();
         }
         List<FlowNode> nodes = MapUtils.safeCastList(detail.get("nodes"), FlowNode.class);
         List<FlowSkip> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkip.class);

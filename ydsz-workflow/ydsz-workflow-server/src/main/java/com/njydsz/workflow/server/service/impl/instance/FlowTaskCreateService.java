@@ -284,7 +284,10 @@ public class FlowTaskCreateService {
     private FlowInstance lookupInstance(String instanceId) {
         FlowInstance instance = instanceService.getById(instanceId);
         if (instance == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_fc4b1c16").params(instanceId)
+                .build();
         }
         return instance;
     }
@@ -848,7 +851,10 @@ public class FlowTaskCreateService {
         int depth = AUTO_PASS_DEPTH.get();
         if (depth >= MAX_AUTO_PASS_DEPTH) {
             log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
-            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_fcd55e62");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .message("error.workflow.msg_fcd55e62")
+                .build();
         }
         AUTO_PASS_DEPTH.set(depth + 1);
         try {

@@ -150,7 +150,10 @@ public class FlowTaskSupport {
     public FlowRunTask getTaskOrThrow(String id) {
         FlowRunTask task = taskMapper.selectById(id);
         if (task == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_6541ab08").params(id)
+                .build();
         }
         return task;
     }

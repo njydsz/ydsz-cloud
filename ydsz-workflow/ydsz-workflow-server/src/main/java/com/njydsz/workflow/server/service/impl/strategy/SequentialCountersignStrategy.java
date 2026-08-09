@@ -67,8 +67,10 @@ public class SequentialCountersignStrategy implements CountersignStrategy {
         task.setApproveFinished(finished);
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_199e8ba1", task.getId());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_199e8ba1").params(task.getId())
+                .build();
         }
         if (finished < required) {
             // 切换下一个未处理的人

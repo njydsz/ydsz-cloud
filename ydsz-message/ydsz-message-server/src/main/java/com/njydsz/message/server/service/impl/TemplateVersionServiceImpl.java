@@ -60,7 +60,10 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public List<MsgTemplateVersion> listVersions(String templateCode) {
         if (!StringUtils.hasText(templateCode)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板编码不能为空")
+                .build();
         }
         return versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersion>()
                 .eq(MsgTemplateVersion::getTemplateCode, templateCode)
@@ -123,13 +126,19 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                 .eq(MsgTemplateVersion::getVersion, version)
                 .last("LIMIT 1"));
         if (versionDO == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "版本不存在: " + version);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("版本不存在: " + version)
+                .build();
         }
         MsgTemplate template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
                 .eq(MsgTemplate::getTemplateCode, templateCode)
                 .last("LIMIT 1"));
         if (template == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + templateCode);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("模板不存在: " + templateCode)
+                .build();
         }
         template.setContent(versionDO.getContent());
         templateMapper.updateById(template);
@@ -149,19 +158,28 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public String preview(TemplatePreviewDTO dto) {
         if (dto == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "预览参数不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("预览参数不能为空")
+                .build();
         }
         String content = dto.getContent();
         if (!StringUtils.hasText(content)) {
             // 从模板加载
             if (!StringUtils.hasText(dto.getTemplateCode())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "templateCode 和 content 不能同时为空");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("templateCode 和 content 不能同时为空")
+                .build();
             }
             MsgTemplate template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
                     .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                     .last("LIMIT 1"));
             if (template == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + dto.getTemplateCode());
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .message("模板不存在: " + dto.getTemplateCode())
+                    .build();
             }
             content = template.getContent();
         }
@@ -178,10 +196,16 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public MessageResult testSend(TemplateTestSendDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getTemplateCode())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("模板编码不能为空")
+                .build();
         }
         if (!StringUtils.hasText(dto.getTestReceiver())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "测试接收人不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("测试接收人不能为空")
+                .build();
         }
         MessageRequest request = new MessageRequest();
         request.setTemplateCode(dto.getTemplateCode());

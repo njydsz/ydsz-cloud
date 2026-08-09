@@ -18,9 +18,8 @@ import com.njydsz.common.core.constant.HeaderConstants;
  *       签名校验通过</li>
  * </ul>
  *
- * <p><b>P2-5 常量治理：</b>{@code HEADER_TRACE_ID} 和 {@code HEADER_TENANT_ID}
- * 已改为委托 {@link HeaderConstants} 中的权威定义，
- * 消除跨模块重复声明。
+ * <p><b>常量治理（v1.2.0）：</b>所有原来硬编码的请求头字符串已改为委托 {@link HeaderConstants} 中的权威定义，
+ * 消除跨模块重复声明，确保请求头键名全局唯一可控。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -34,33 +33,36 @@ public final class GatewayConstants {
     /** 链路追踪 ID 请求头（委托 {@link HeaderConstants#TRACE_ID_HEADER}） */
     public static final String HEADER_TRACE_ID = HeaderConstants.TRACE_ID_HEADER;
 
-    /** 用户 ID 请求头 */
-    public static final String HEADER_USER_ID = "X-User-Id";
+    /** 用户 ID 请求头（委托 {@link HeaderConstants#X_USER_ID}） */
+    public static final String HEADER_USER_ID = HeaderConstants.X_USER_ID;
 
-    /** 用户名请求头 */
-    public static final String HEADER_USERNAME = "X-Username";
+    /** 用户名请求头（委托 {@link HeaderConstants#X_USERNAME}） */
+    public static final String HEADER_USERNAME = HeaderConstants.X_USERNAME;
 
-    /** 用户角色请求头（CSV） */
-    public static final String HEADER_USER_ROLES = "X-User-Roles";
+    /** 用户角色请求头（CSV）（委托 {@link HeaderConstants#X_USER_ROLES}） */
+    public static final String HEADER_USER_ROLES = HeaderConstants.X_USER_ROLES;
 
-    /** 用户权限请求头（CSV） */
-    public static final String HEADER_USER_PERMISSIONS = "X-User-Permissions";
+    /** 用户权限请求头（CSV）（委托 {@link HeaderConstants#X_USER_PERMISSIONS}） */
+    public static final String HEADER_USER_PERMISSIONS = HeaderConstants.X_USER_PERMISSIONS;
 
-    /** 内部头签名请求头 */
-    public static final String HEADER_INTERNAL_SIG = "X-Internal-Sig";
+    /** 内部头签名请求头（委托 {@link HeaderConstants#X_INTERNAL_SIG}） */
+    public static final String HEADER_INTERNAL_SIG = HeaderConstants.X_INTERNAL_SIG;
 
-    /** 内部头签名时间戳请求头 */
-    public static final String HEADER_INTERNAL_TS = "X-Internal-Ts";
+    /** 内部头签名时间戳请求头（委托 {@link HeaderConstants#X_INTERNAL_TS}） */
+    public static final String HEADER_INTERNAL_TS = HeaderConstants.X_INTERNAL_TS;
 
     /**
-     * 内部头签名 nonce 请求头（P0-6 防重放）。
+     * 内部头签名 nonce 请求头（P0-6 防重放）（委托 {@link HeaderConstants#X_INTERNAL_NONCE}）。
      *
      * <p>网关为每个请求生成唯一 nonce，纳入 HMAC 签名 payload 后透传给下游。
      * 下游服务使用 {@code NonceCache.verifyAndConsume(nonce)} 校验是否重复，
      * 配合时间戳窗口形成"一次性签名"机制。
      */
-    public static final String HEADER_INTERNAL_NONCE = "X-Internal-Nonce";
+    public static final String HEADER_INTERNAL_NONCE = HeaderConstants.X_INTERNAL_NONCE;
 
     /** 租户 ID 请求头（委托 {@link HeaderConstants#X_TENANT_ID}） */
     public static final String HEADER_TENANT_ID = HeaderConstants.X_TENANT_ID;
+
+    /** 请求唯一标识请求头（委托 {@link HeaderConstants#X_REQUEST_ID}） */
+    public static final String HEADER_REQUEST_ID = HeaderConstants.X_REQUEST_ID;
 }

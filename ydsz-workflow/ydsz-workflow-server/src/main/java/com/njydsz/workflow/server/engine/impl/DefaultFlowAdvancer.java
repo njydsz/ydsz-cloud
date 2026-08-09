@@ -123,12 +123,17 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     public FlowInstanceViewDTO start(String instanceId) {
         FlowInstance instance = instanceService.getById(instanceId);
         if (instance == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_67a10717").params(instanceId)
+                .build();
         }
         FlowNode startNode = flowDefinitionCacheService.getStartNode(instance.getDefinitionId());
         if (startNode == null) {
-            throw new SysException(BaseResultCode.INTERNAL_ERROR,
-                    "error.workflow.msg_560bf118", instance.getDefinitionId());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .key("error.workflow.msg_560bf118").params(instance.getDefinitionId())
+                .build();
         }
         List<FlowNode> nextNodes = advance(instance, startNode.getNodeCode(),
                 "PASS", null, parseVariable(instance.getVariable()));
@@ -206,8 +211,10 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         FlowNode currentNode = flowDefinitionCacheService.getNodeByCode(
                 currentInstance.getDefinitionId(), currentNodeCode);
         if (currentNode == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND,
-                    "error.workflow.msg_d84d389b", currentNodeCode);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_d84d389b").params(currentNodeCode)
+                .build();
         }
 
         // REJECT 退回
@@ -216,12 +223,18 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                     ? targetNodeCode
                     : resolveRejectTarget(currentInstance.getDefinitionId(), currentNodeCode);
             if (rejectTarget == null) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_241f4a79")
+                .build();
             }
             FlowNode target = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), rejectTarget);
             if (target == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6e66716d", rejectTarget);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .key("error.workflow.msg_6e66716d").params(rejectTarget)
+                    .build();
             }
             return List.of(target);
         }
@@ -341,8 +354,10 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             FlowNode target = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), nodeCode);
             if (target == null) {
-                throw new SysException(BaseResultCode.NOT_FOUND,
-                        "error.workflow.msg_6e66716d" + nodeCode);
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.NOT_FOUND)
+                    .message("error.workflow.msg_6e66716d" + nodeCode)
+                    .build();
             }
             // 避免重复
             if (targets.stream().noneMatch(t -> t.getNodeCode().equals(nodeCode))) {
@@ -350,7 +365,10 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             }
         }
         if (targets.isEmpty()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_241f4a79")
+                .build();
         }
         return targets;
     }

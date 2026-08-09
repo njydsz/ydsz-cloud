@@ -253,7 +253,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
         validate(job);
         if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_7e5ef640", job.getJobKey());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.cronjob.msg_7e5ef640").params(job.getJobKey())
+                .build();
         }
         if (job.getStatus() == null) {
             job.setStatus("NORMAL");
@@ -307,11 +310,17 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Transactional(rollbackFor = Exception.class)
     public void update(Job job) {
         if (job.getId() == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_ce91ca69");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_ce91ca69")
+                .build();
         }
         Job exists = jobMapper.selectById(job.getId());
         if (exists == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_c0d8369f")
+                .build();
         }
         // P1-6: 保存历史版本（在更新之前保存当前快照）
         JobHistoryService historyService = jobHistoryServiceProvider.getIfAvailable();
@@ -339,15 +348,19 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             }
         } else if (type == ScheduleType.FIXED_RATE) {
             if (exists.getFixedRateMs() == null || exists.getFixedRateMs() <= 0) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.cronjob.msg_5d0044ca", "fixedRateMs 必须为正数");
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.cronjob.msg_5d0044ca").params("fixedRateMs 必须为正数")
+                    .build();
             }
             // FIXED_RATE 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
             exists.setNextFireTime(null);
         } else if (type == ScheduleType.FIXED_DELAY) {
             if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.cronjob.msg_5d0044ca", "fixedDelayMs 必须为正数");
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.cronjob.msg_5d0044ca").params("fixedDelayMs 必须为正数")
+                    .build();
             }
             // FIXED_DELAY 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
             exists.setNextFireTime(null);
@@ -399,7 +412,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public void delete(String id) {
         Job j = jobMapper.selectById(id);
         if (j == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_c0d8369f")
+                .build();
         }
         unregister(j.getJobKey());
         // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
@@ -424,8 +440,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public void pause(String id) {
         Job j = getById(id);
         if (!"NORMAL".equals(j.getStatus())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.cronjob.msg_job_status_invalid", j.getStatus());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.cronjob.msg_job_status_invalid").params(j.getStatus())
+                .build();
         }
         unregister(j.getJobKey());
         // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
@@ -453,8 +471,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             jobMapper.updateById(j);
             register(j);
         } else {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.cronjob.msg_job_status_invalid", j.getStatus());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.cronjob.msg_job_status_invalid").params(j.getStatus())
+                .build();
         }
         log.info("[Cronjob] 恢复任务: key={}", j.getJobKey());
     }
@@ -782,7 +802,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public Job getById(String id) {
         Job j = jobMapper.selectById(id);
         if (j == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_c0d8369f")
+                .build();
         }
         return j;
     }
@@ -959,18 +982,26 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     private void validate(Job job) {
         if (!StringUtils.hasText(job.getJobKey())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_884214e7");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_884214e7")
+                .build();
         }
         if (!StringUtils.hasText(job.getHandler())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_04ebee77");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_04ebee77")
+                .build();
         }
         // P2-8: 校验任务级时区（非空时必须为有效时区 ID）
         if (StringUtils.hasText(job.getTimezone())) {
             try {
                 ZoneId.of(job.getTimezone());
             } catch (Exception e) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.cronjob.msg_5d0044ca", "无效的时区 ID: " + job.getTimezone());
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.cronjob.msg_5d0044ca").params("无效的时区 ID: " + job.getTimezone())
+                    .build();
             }
         }
         ScheduleType type = ScheduleType.parse(job.getScheduleType());
@@ -980,14 +1011,18 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
                 break;
             case FIXED_RATE:
                 if (job.getFixedRateMs() == null || job.getFixedRateMs() <= 0) {
-                    throw new SysException(BaseResultCode.BAD_REQUEST,
-                            "error.cronjob.msg_5d0044ca", "fixedRateMs 必须为正数");
+                    throw SysException.builder()
+                        .resultCode(BaseResultCode.BAD_REQUEST)
+                        .key("error.cronjob.msg_5d0044ca").params("fixedRateMs 必须为正数")
+                        .build();
                 }
                 break;
             case FIXED_DELAY:
                 if (job.getFixedDelayMs() == null || job.getFixedDelayMs() <= 0) {
-                    throw new SysException(BaseResultCode.BAD_REQUEST,
-                            "error.cronjob.msg_5d0044ca", "fixedDelayMs 必须为正数");
+                    throw SysException.builder()
+                        .resultCode(BaseResultCode.BAD_REQUEST)
+                        .key("error.cronjob.msg_5d0044ca").params("fixedDelayMs 必须为正数")
+                        .build();
                 }
                 break;
             case API:
@@ -1007,12 +1042,18 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     private void validateCron(String cron) {
         if (!StringUtils.hasText(cron)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_35ac148f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_35ac148f")
+                .build();
         }
         try {
             new CronTrigger(cron);
         } catch (Exception e) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.cronjob.msg_5d0044ca").params(e.getMessage())
+                .build();
         }
     }
 

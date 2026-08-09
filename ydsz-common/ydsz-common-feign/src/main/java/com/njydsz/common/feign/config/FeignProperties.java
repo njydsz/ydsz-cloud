@@ -74,21 +74,21 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "ydsz.feign")
 public class FeignProperties {
 
-    private static final String X_SERVICE_TYPE = "X-Service-Type";
-    private static final String X_USER_LANGUAGE = "X-User-Language";
-    private static final String X_DISTINCT_ID = "X-Distinct-Id";
-    private static final String X_IDENTITY_TYPE = "X-Identity-Type";
+    private static final String X_SERVICE_TYPE = HeaderConstants.X_SERVICE_TYPE;
+    private static final String X_USER_LANGUAGE = HeaderConstants.X_USER_LANGUAGE;
+    private static final String X_DISTINCT_ID = HeaderConstants.X_DISTINCT_ID;
+    private static final String X_IDENTITY_TYPE = HeaderConstants.X_IDENTITY_TYPE;
     private static final String X_ACCESS_TOKEN = HeaderConstants.X_ACCESS_TOKEN;
-    private static final String X_DATA_SCOPE = "X-Data-Scope";
-    private static final String X_COMPANY_IDS = "X-Company-Ids";
-    private static final String X_DEPT_IDS = "X-Dept-Ids";
+    private static final String X_DATA_SCOPE = HeaderConstants.X_DATA_SCOPE;
+    private static final String X_COMPANY_IDS = HeaderConstants.X_COMPANY_IDS;
+    private static final String X_DEPT_IDS = HeaderConstants.X_DEPT_IDS;
     private static final String X_UNIQUE_ID = HeaderConstants.X_UNIQUE_ID;
     private static final String X_TENANT_ID = HeaderConstants.X_TENANT_ID;
-    private static final String X_PROJECT_IDS = "X-Project-Ids";
-    private static final String X_REGION_IDS = "X-Region-Ids";
-    private static final String X_VISIBLE_COLUMNS = "X-Visible-Columns";
-    private static final String X_EDITABLE_COLUMNS = "X-Editable-Columns";
-    private static final String X_REQUEST_SOURCE = "X-Request-Source";
+    private static final String X_PROJECT_IDS = HeaderConstants.X_PROJECT_IDS;
+    private static final String X_REGION_IDS = HeaderConstants.X_REGION_IDS;
+    private static final String X_VISIBLE_COLUMNS = HeaderConstants.X_VISIBLE_COLUMNS;
+    private static final String X_EDITABLE_COLUMNS = HeaderConstants.X_EDITABLE_COLUMNS;
+    private static final String X_REQUEST_SOURCE = HeaderConstants.X_REQUEST_SOURCE;
     private static final String X_FORWARDED_FOR = HeaderConstants.X_FORWARDED_FOR;
 
     /**

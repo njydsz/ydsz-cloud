@@ -129,28 +129,36 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
                                 FlowNode callActivityNode,
                                 Map<String, Object> variables) {
         if (parentInstance == null || callActivityNode == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "父实例/callActivity 节点不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("父实例/callActivity 节点不能为空")
+                .build();
         }
         // 1. 从节点 ext JSON 提取子流程编码
         String subFlowCode = extractSubFlowCode(callActivityNode);
         if (subFlowCode == null || subFlowCode.isBlank()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "callActivity 节点未配置子流程编码: nodeCode=" + callActivityNode.getNodeCode());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("callActivity 节点未配置子流程编码: nodeCode=" + callActivityNode.getNodeCode())
+                .build();
         }
         // 2. 校验子流程定义存在且已发布
         FlowDefinition subDef = definitionService.getPublished(subFlowCode, null,
                 parentInstance.getTenantId());
         if (subDef == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND,
-                    "子流程定义未发布或不存在: flowCode=" + subFlowCode);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("子流程定义未发布或不存在: flowCode=" + subFlowCode)
+                .build();
         }
         // 3. 检查嵌套深度（P2-8: 可配置，默认 3 层）
         int maxNestingDepth = flowProperties.getSubProcess().getMaxNestingDepth();
         int nestingDepth = getNestingDepth(parentInstance.getId());
         if (nestingDepth >= maxNestingDepth) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_14aff96e",
-                    maxNestingDepth, nestingDepth, parentInstance.getId());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_14aff96e").params(maxNestingDepth, nestingDepth, parentInstance.getId()))
+                .build();
         }
         log.info("[SubProcess] 嵌套深度检查: parentInstance={} depth={} max={}",
                 parentInstance.getId(), nestingDepth, maxNestingDepth);

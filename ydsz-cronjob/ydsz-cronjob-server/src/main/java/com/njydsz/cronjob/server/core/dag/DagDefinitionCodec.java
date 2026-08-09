@@ -57,29 +57,44 @@ public class DagDefinitionCodec {
      */
     public DagDefinition fromJson(String json) {
         if (json == null || json.isBlank()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_dag_definition_empty")
+                .build();
         }
         ObjectNode root;
         try {
             root = YdszJson.parseObject(json);
         } catch (Exception e) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_invalid");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_dag_definition_invalid")
+                .build();
         }
         if (root == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_dag_definition_empty")
+                .build();
         }
 
         // 解析 nodes
         List<DagNode> nodes = new ArrayList<>();
         ArrayNode nodesArr = root.getArrayNode("nodes");
         if (nodesArr == null || nodesArr.isEmpty()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_dag_no_nodes")
+                .build();
         }
         for (int i = 0; i < nodesArr.size(); i++) {
             ObjectNode n = nodesArr.getObjectNode(i);
             String jobKey = n.getString("jobKey");
             if (jobKey == null || jobKey.isBlank()) {
-                throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_dag_node_key_missing")
+                .build();
             }
             nodes.add(new DagNode(
                     jobKey,
@@ -102,7 +117,10 @@ public class DagDefinitionCodec {
         // 校验节点 jobKey 唯一
         long distinctCount = nodes.stream().map(DagNode::jobKey).distinct().count();
         if (distinctCount != nodes.size()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_duplicate");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_dag_node_key_duplicate")
+                .build();
         }
 
         // 解析 edges（可为空）
@@ -114,7 +132,10 @@ public class DagDefinitionCodec {
                 String from = e.getString("from");
                 String to = e.getString("to");
                 if (from == null || to == null) {
-                    throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_edge_invalid");
+                    throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_dag_edge_invalid")
+                .build();
                 }
                 edges.add(new DagEdge(from, to,
                         e.getString("failStrategy"),
@@ -129,12 +150,16 @@ public class DagDefinitionCodec {
         }
         for (DagEdge edge : edges) {
             if (!nodeKeys.contains(edge.from())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.cronjob.msg_dag_edge_node_not_found", edge.from());
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.cronjob.msg_dag_edge_node_not_found").params(edge.from())
+                    .build();
             }
             if (!nodeKeys.contains(edge.to())) {
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.cronjob.msg_dag_edge_node_not_found", edge.to());
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.cronjob.msg_dag_edge_node_not_found").params(edge.to())
+                    .build();
             }
         }
 

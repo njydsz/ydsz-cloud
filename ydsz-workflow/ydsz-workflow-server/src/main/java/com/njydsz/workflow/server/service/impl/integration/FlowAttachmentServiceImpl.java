@@ -186,7 +186,10 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     public FlowAttachmentPreviewVO previewAttachment(String attachmentId) {
         FlowAttachment attachment = attachmentMapper.selectById(attachmentId);
         if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c5d6e7f8", attachmentId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_c5d6e7f8").params(attachmentId)
+                .build();
         }
 
         String ext = attachment.getFileExt() == null ? "" : attachment.getFileExt().toLowerCase();

@@ -87,7 +87,10 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     @Override
     public MsgSubscription unsubscribeByToken(String token) {
         if (!messageProperties.getUnsubscribe().isEnabled()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "退订中心已关闭");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("退订中心已关闭")
+                .build();
         }
         UnsubscribeTokenPayload payload = unsubscribeTokenUtil.parseAndVerify(token);
         log.info("[Unsubscribe] token 退订: user={} topic={} channel={}",
@@ -134,7 +137,10 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     @Override
     public void resubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("用户 ID、主题编码与通道不能为空")
+                .build();
         }
         MsgSubscription existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getUserId, userId)

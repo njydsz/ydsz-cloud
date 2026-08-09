@@ -58,10 +58,16 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     @Transactional(rollbackFor = Exception.class)
     public GlueCode save(String jobId, String sourceCode, String language, String remark) {
         if (!StringUtils.hasText(jobId)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_glue_job_id_required")
+                .build();
         }
         if (sourceCode == null || sourceCode.isBlank()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_source_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_glue_source_required")
+                .build();
         }
         // 计算新版本号
         GlueCode latest = glueCodeMapper.selectLatestByJobId(jobId);
@@ -124,10 +130,16 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     @Transactional(rollbackFor = Exception.class)
     public GlueCode rollback(String jobId, Integer version) {
         if (!StringUtils.hasText(jobId)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_glue_job_id_required")
+                .build();
         }
         if (version == null || version < 1) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_version_invalid");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_glue_version_invalid")
+                .build();
         }
         // 查询目标版本
         LambdaQueryWrapper<GlueCode> wrapper = new LambdaQueryWrapper<>();
@@ -135,7 +147,10 @@ public class GlueCodeServiceImpl implements GlueCodeService {
                 .eq(GlueCode::getVersion, version);
         GlueCode target = glueCodeMapper.selectOne(wrapper);
         if (target == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_glue_version_not_found")
+                .build();
         }
         // 创建新版本（内容为目标版本代码）
         GlueCode latest = glueCodeMapper.selectLatestByJobId(jobId);
@@ -283,13 +298,19 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     public Map<String, Object> diffVersions(String jobId, Integer versionA, Integer versionB) {
         Map<String, Object> result = new HashMap<>();
         if (!StringUtils.hasText(jobId) || versionA == null || versionB == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_diff_params_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_glue_diff_params_required")
+                .build();
         }
         // 查询两个版本
         GlueCode codeA = getVersion(jobId, versionA);
         GlueCode codeB = getVersion(jobId, versionB);
         if (codeA == null || codeB == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_glue_version_not_found")
+                .build();
         }
         result.put("versionA", Map.of(
                 "version", versionA,

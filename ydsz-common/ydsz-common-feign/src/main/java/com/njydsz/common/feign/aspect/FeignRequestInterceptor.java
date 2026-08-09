@@ -330,17 +330,17 @@ public class FeignRequestInterceptor implements RequestInterceptor {
      * @param request         HttpServletRequest（可为 null）
      */
     private void ensureRequestId(RequestTemplate requestTemplate, HttpServletRequest request) {
-        if (hasHeader(requestTemplate, "X-Request-Id")) {
+        if (hasHeader(requestTemplate, HeaderConstants.X_REQUEST_ID)) {
             return;
         }
-        String requestId = resolveHeader(request, "X-Request-Id");
+        String requestId = resolveHeader(request, HeaderConstants.X_REQUEST_ID);
         if (StringUtils.isEmpty(requestId)) {
             requestId = TracerUtils.getTraceId();
             if (StringUtils.isEmpty(requestId)) {
                 requestId = TracerUtils.generateTraceId();
             }
         }
-        setHeaderIfAbsent(requestTemplate, "X-Request-Id", requestId);
+        setHeaderIfAbsent(requestTemplate, HeaderConstants.X_REQUEST_ID, requestId);
     }
 
     /**

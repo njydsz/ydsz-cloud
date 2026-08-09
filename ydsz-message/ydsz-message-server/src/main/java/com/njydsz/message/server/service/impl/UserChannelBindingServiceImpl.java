@@ -48,7 +48,10 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
     @Override
     public MsgUserChannel upsert(UserChannelBindingDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannelType())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "用户ID和通道类型不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("用户ID和通道类型不能为空")
+                .build();
         }
         String tenantId = TenantContext.getTenantId();
         String channelType = dto.getChannelType().trim().toUpperCase();

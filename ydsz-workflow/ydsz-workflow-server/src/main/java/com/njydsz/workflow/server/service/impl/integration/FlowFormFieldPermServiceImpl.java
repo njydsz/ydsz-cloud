@@ -140,8 +140,10 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                 case PERM_HIDDEN:
                     // HIDDEN 字段不允许提交
                     if (submitted.containsKey(fieldKey)) {
-                        throw new SysException(BaseResultCode.BAD_REQUEST,
-                                "error.workflow.msg_form_field_hidden", fieldKey);
+                        throw SysException.builder()
+                            .resultCode(BaseResultCode.BAD_REQUEST)
+                            .key("error.workflow.msg_form_field_hidden").params(fieldKey)
+                            .build();
                     }
                     break;
 
@@ -150,8 +152,10 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                     if (submitted.containsKey(fieldKey)) {
                         Object existingVal = existing.get(fieldKey);
                         if (!Objects.equals(existingVal, submittedVal)) {
-                            throw new SysException(BaseResultCode.BAD_REQUEST,
-                                    "error.workflow.msg_form_field_readonly", fieldKey);
+                            throw SysException.builder()
+                                .resultCode(BaseResultCode.BAD_REQUEST)
+                                .key("error.workflow.msg_form_field_readonly").params(fieldKey)
+                                .build();
                         }
                     }
                     break;
@@ -159,8 +163,10 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                 case PERM_REQUIRED:
                     // REQUIRED 字段不能为空
                     if (submittedVal == null || (submittedVal instanceof String s && s.isBlank())) {
-                        throw new SysException(BaseResultCode.BAD_REQUEST,
-                                "error.workflow.msg_form_field_required", fieldKey);
+                        throw SysException.builder()
+                            .resultCode(BaseResultCode.BAD_REQUEST)
+                            .key("error.workflow.msg_form_field_required").params(fieldKey)
+                            .build();
                     }
                     break;
 

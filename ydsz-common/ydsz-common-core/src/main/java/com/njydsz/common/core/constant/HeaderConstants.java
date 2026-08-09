@@ -40,6 +40,17 @@ public final class HeaderConstants {
     public static final String X_ACCESS_TOKEN = "X-Access-Token";
 
     /**
+     * 当前登录用户ID。
+     *
+     * <p>由网关/认证服务在请求入口写入，贯穿全链路用于身份标识、审计、数据权限过滤。
+     * 业务代码优先通过 {@link com.njydsz.common.core.context.RequestContext#getUserId()} 获取，
+     * 仅在需要从原生 HTTP 请求直接读取时使用此常量。
+     *
+     * @since 1.2.0
+     */
+    public static final String X_USER_ID = "X-User-Id";
+
+    /**
      * 用户系统语言。
      *
      * <p>格式示例：{@code zh-CN}、{@code en-US}。
@@ -61,6 +72,33 @@ public final class HeaderConstants {
 
      */
     public static final String X_IDENTITY_TYPE = "X-Identity-Type";
+
+    /**
+     * 用户名 HTTP 头。
+     *
+     * <p>由网关在认证后写入，标识当前登录用户的显示名。
+     *
+     * @since 1.2.0
+     */
+    public static final String X_USERNAME = "X-Username";
+
+    /**
+     * 用户角色集合 HTTP 头（CSV）。
+     *
+     * <p>逗号分隔的角色编码列表，用于下游 RBAC 权限判断。
+     *
+     * @since 1.2.0
+     */
+    public static final String X_USER_ROLES = "X-User-Roles";
+
+    /**
+     * 用户权限集合 HTTP 头（CSV）。
+     *
+     * <p>逗号分隔的权限编码列表，用于下游细粒度权限判断。
+     *
+     * @since 1.2.0
+     */
+    public static final String X_USER_PERMISSIONS = "X-User-Permissions";
 
     /**
      * 服务类型。
@@ -225,6 +263,18 @@ public final class HeaderConstants {
     // ============================== 链路追踪 ==============================
 
     /**
+     * 请求唯一标识 HTTP 头。
+     *
+     * <p>值为 {@code "X-Request-Id"}，由网关在请求入口自动生成并写入，
+     * 用于请求在全生命周期中的唯一标识与故障排查。
+     * 与 {@link #TRACE_ID_HEADER} 的区别：X-Request-Id 由本系统产生，
+     * X-Trace-Id 兼容 SkyWalking / Jaeger 等外部链路追踪系统。
+     *
+     * @since 1.2.0
+     */
+    public static final String X_REQUEST_ID = "X-Request-Id";
+
+    /**
      * 请求追踪 ID HTTP 头。
      *
      * <p>值为 {@code "X-Trace-Id"}，用于全链路请求追踪，
@@ -259,6 +309,39 @@ public final class HeaderConstants {
      * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
      */
     public static final String W3C_TRACESTATE = "tracestate";
+
+    // ============================== 网关内部签名 ==============================
+
+    /**
+     * 网关内部签名 HTTP 头。
+     *
+     * <p>网关使用 HMAC-SHA256 对请求头签名后写入此头，下游服务通过
+     * {@code InternalHeaderSigner.verify()} 校验签名合法性，
+     * 防止客户端伪造身份头。
+     *
+     * @since 1.2.0
+     */
+    public static final String X_INTERNAL_SIG = "X-Internal-Sig";
+
+    /**
+     * 网关内部签名时间戳 HTTP 头。
+     *
+     * <p>签名的时间戳（毫秒），与 {@link #X_INTERNAL_SIG} 配套使用，
+     * 用于防重放窗口校验。
+     *
+     * @since 1.2.0
+     */
+    public static final String X_INTERNAL_TS = "X-Internal-Ts";
+
+    /**
+     * 网关内部签名 nonce HTTP 头（防重放）。
+     *
+     * <p>网关为每个请求生成的唯一随机数，纳入 HMAC 签名 payload。
+     * 下游服务使用 NonceCache 校验是否已消费过，配合时间戳窗口形成"一次性签名"机制。
+     *
+     * @since 1.2.0
+     */
+    public static final String X_INTERNAL_NONCE = "X-Internal-Nonce";
 
     // ============================== 网络信息 ==============================
 

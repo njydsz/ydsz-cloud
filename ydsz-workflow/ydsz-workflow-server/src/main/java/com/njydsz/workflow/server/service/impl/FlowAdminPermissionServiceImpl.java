@@ -167,7 +167,10 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     @Transactional(rollbackFor = Exception.class)
     public void grantRole(String userId, String roleCode, String tenantId) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(roleCode)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 和角色编码不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("用户 ID 和角色编码不能为空")
+                .build();
         }
         // 检查是否已存在
         FlowAdminRole existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);

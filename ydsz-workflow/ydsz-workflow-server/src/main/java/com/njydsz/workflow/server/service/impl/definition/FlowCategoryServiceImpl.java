@@ -141,8 +141,10 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                         .eq(FlowCategory::getDeleted, 0)
         );
         if (count != null && count > 0) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_category_code_exists", dto.getCategoryCode());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_category_code_exists").params(dto.getCategoryCode())
+                .build();
         }
 
         FlowCategory category = new FlowCategory();
@@ -172,12 +174,17 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     @Transactional(rollbackFor = Exception.class)
     public void update(FlowCategoryDTO dto) {
         if (!StringUtils.hasText(dto.getId())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_id_required")
+                .build();
         }
         FlowCategory existing = categoryMapper.selectById(dto.getId());
         if (existing == null || existing.getDeleted() == 1) {
-            throw new SysException(BaseResultCode.NOT_FOUND,
-                    "error.workflow.msg_6541ab08", dto.getId());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_6541ab08").params(dto.getId())
+                .build();
         }
         existing.setCategoryName(dto.getCategoryName());
         if (dto.getParentId() != null) {
@@ -224,8 +231,10 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                         .eq(FlowCategory::getDeleted, 0)
         );
         if (childCount != null && childCount > 0) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_category_has_children");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_category_has_children")
+                .build();
         }
         // 校验是否有关联的流程定义
         Long defCount = definitionMapper.selectCount(
@@ -234,8 +243,10 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                         .eq(FlowDefinition::getDeleted, 0)
         );
         if (defCount != null && defCount > 0) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_category_has_definitions");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_category_has_definitions")
+                .build();
         }
         existing.setDeleted(1);
         categoryMapper.updateById(existing);

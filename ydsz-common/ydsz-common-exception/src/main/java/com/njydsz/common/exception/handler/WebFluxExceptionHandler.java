@@ -91,7 +91,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         if ((traceId == null || traceId.isBlank()) && exchange != null) {
             traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.TRACE_ID_HEADER);
             if (traceId == null) {
-                traceId = exchange.getRequest().getHeaders().getFirst("X-Request-Id");
+                traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.X_REQUEST_ID);
             }
         }
         return traceId;

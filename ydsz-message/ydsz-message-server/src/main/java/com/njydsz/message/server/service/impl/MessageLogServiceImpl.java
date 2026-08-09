@@ -63,11 +63,17 @@ public class MessageLogServiceImpl implements MessageLogService {
     @Override
     public MsgLog getById(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "日志 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("日志 ID 不能为空")
+                .build();
         }
         MsgLog entity = msgLogMapper.selectById(id);
         if (entity == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "日志不存在: " + id);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("日志不存在: " + id)
+                .build();
         }
         return entity;
     }
@@ -97,8 +103,10 @@ public class MessageLogServiceImpl implements MessageLogService {
         MsgLog entity = getById(id);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.RETRY)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "非法状态流转: " + current + " -> RETRY");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("非法状态流转: " + current + " -> RETRY")
+                .build();
         }
         entity.setStatus(MessageStatusEnum.RETRY.name());
         entity.setNextRetryAt(nextRetryAt);
@@ -113,8 +121,10 @@ public class MessageLogServiceImpl implements MessageLogService {
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.DEAD)) {
             // 仅 RETRY 可流转到 DEAD；其他状态强制记录但仍校验，非法抛异常
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "非法状态流转: " + current + " -> DEAD");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("非法状态流转: " + current + " -> DEAD")
+                .build();
         }
         entity.setStatus(MessageStatusEnum.DEAD.name());
         entity.setErrorMessage(errorMessage);
@@ -137,8 +147,10 @@ public class MessageLogServiceImpl implements MessageLogService {
         MsgLog entity = getById(id);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.RECALLED)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "非法状态流转: " + current + " -> RECALLED");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("非法状态流转: " + current + " -> RECALLED")
+                .build();
         }
         entity.setStatus(MessageStatusEnum.RECALLED.name());
         entity.setRecallStatus(RecallStatusEnum.RECALLED.name());
@@ -158,8 +170,10 @@ public class MessageLogServiceImpl implements MessageLogService {
         MsgLog entity = getById(logId);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (current != MessageStatusEnum.DEAD) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "仅死信可手动重发,当前状态: " + current);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("仅死信可手动重发,当前状态: " + current)
+                .build();
         }
         try (MessageTraceContext ctx = MessageTraceContext.enter(entity.getTraceId())) {
             // 重置重试上下文
@@ -245,7 +259,10 @@ public class MessageLogServiceImpl implements MessageLogService {
         try {
             return MessageStatusEnum.valueOf(value);
         } catch (Exception e) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "非法消息状态: " + value);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("非法消息状态: " + value)
+                .build();
         }
     }
 }

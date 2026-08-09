@@ -130,7 +130,7 @@ public class ApiVersionChecker {
 
         // 校验 3: deprecatedAt 必须大于 since
         if (StringUtils.hasText(annotation.since()) && StringUtils.hasText(annotation.deprecatedAt())) {
-            if (!compareVersions(annotation.deprecatedAt(), annotation.since()) > 0) {
+            if (!(compareVersions(annotation.deprecatedAt(), annotation.since()) > 0)) {
                 violations.add(String.format("[%s] @ApiVersion.deprecatedAt='%s' 需大于 since='%s'（不允许未来版本在过去废弃）",
                         methodSignature, annotation.deprecatedAt(), annotation.since()));
             }

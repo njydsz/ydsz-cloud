@@ -100,22 +100,34 @@ public class FlowCountersignDynamicService {
     @Transactional(rollbackFor = Exception.class)
     public void updateCompletionCondition(String taskId, BigDecimal votePassRate, String operatorId) {
         if (!StringUtils.hasText(taskId)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a7b8c9d0");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_a7b8c9d0")
+                .build();
         }
         if (votePassRate == null || votePassRate.compareTo(BigDecimal.ZERO) < 0
                 || votePassRate.compareTo(BigDecimal.ONE) > 0) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_b8c9d0e1");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_b8c9d0e1")
+                .build();
         }
 
         FlowRunTask task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_c9d0e1f2").params(taskId)
+                .build();
         }
 
         // 仅 VOTE / WEIGHTED_VOTE 模式允许动态修改
         String performType = task.getPerformType();
         if (!"VOTE".equals(performType) && !"WEIGHTED_VOTE".equals(performType)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d0e1f2a3");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_d0e1f2a3")
+                .build();
         }
 
         BigDecimal oldRate = task.getVotePassRate();
@@ -143,12 +155,18 @@ public class FlowCountersignDynamicService {
     @Transactional(rollbackFor = Exception.class)
     public void updateApproveCount(String taskId, Integer approveCount, String operatorId) {
         if (!StringUtils.hasText(taskId) || approveCount == null || approveCount < 1) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_e1f2a3b4");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_e1f2a3b4")
+                .build();
         }
 
         FlowRunTask task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_c9d0e1f2").params(taskId)
+                .build();
         }
 
         Integer oldCount = task.getApproveCount();

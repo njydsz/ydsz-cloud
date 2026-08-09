@@ -49,7 +49,10 @@ public class FlowTaskTimeoutService {
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
                 && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_ecc09732", status);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_ecc09732").params(status)
+                .build();
         }
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = task.getCreatedAt() == null
@@ -84,8 +87,10 @@ public class FlowTaskTimeoutService {
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
                 && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_d0e1f2a3", status);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_d0e1f2a3").params(status)
+                .build();
         }
         task.setTaskStatus(FlowTaskStatus.SUSPENDED.name());
         task.setComment(reason);
@@ -104,8 +109,10 @@ public class FlowTaskTimeoutService {
         FlowRunTask task = support.getTaskOrThrow(taskId);
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.SUSPENDED.name().equals(status)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_e1f2a3b4", status);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_e1f2a3b4").params(status)
+                .build();
         }
         task.setTaskStatus(FlowTaskStatus.PENDING.name());
         task.setAssigneeId(null);

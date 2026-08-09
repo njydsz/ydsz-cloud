@@ -47,7 +47,10 @@ public class PreferenceServiceImpl implements PreferenceService {
     @Override
     public MsgPreference upsert(PreferenceUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannel())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 与通道不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("用户 ID 与通道不能为空")
+                .build();
         }
         String bizType = StringUtils.hasText(dto.getBizType()) ? dto.getBizType() : MessageConstants.DEFAULT_BIZ_TYPE;
         MsgPreference existing = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreference>()
@@ -148,7 +151,10 @@ public class PreferenceServiceImpl implements PreferenceService {
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "偏好 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("偏好 ID 不能为空")
+                .build();
         }
         msgPreferenceMapper.deleteById(id);
     }

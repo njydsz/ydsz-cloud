@@ -106,11 +106,17 @@ public class ChannelRouter {
      */
     public MessageChannel route(String channel) {
         if (channel == null || channel.isBlank()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "消息通道不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("消息通道不能为空")
+                .build();
         }
         MessageChannel target = channelCache.get(channel.trim().toUpperCase());
         if (target == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "不支持的消息通道: " + channel);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("不支持的消息通道: " + channel)
+                .build();
         }
         return target;
     }
@@ -205,7 +211,10 @@ public class ChannelRouter {
      */
     public String dispatch(MsgLog logDO) {
         if (logDO == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "消息日志为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("消息日志为空")
+                .build();
         }
         MessageRequest request = new MessageRequest();
         request.setChannel(logDO.getChannel());

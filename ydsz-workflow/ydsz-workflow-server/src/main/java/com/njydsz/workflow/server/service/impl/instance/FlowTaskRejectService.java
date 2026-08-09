@@ -96,7 +96,10 @@ public class FlowTaskRejectService {
     public void reject(FlowTaskOperateDTO dto) {
         FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_b35e6ea3");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_b35e6ea3")
+                .build();
         }
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = task.getCreatedAt() == null

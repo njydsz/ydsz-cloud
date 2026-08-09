@@ -120,8 +120,10 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, String userId) {
         if (businessType == null || businessType.isBlank()
                 || businessId == null || businessId.isBlank()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "businessType / businessId 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("businessType / businessId 不能为空")
+                .build();
         }
 
         // 1. 查流程实例
@@ -195,15 +197,24 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     @Override
     public void quickAction(EmbeddedApprovalActionDTO dto) {
         if (dto == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_afb63fa5");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_afb63fa5")
+                .build();
         }
         String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
         FlowInstance instance = instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
         if (instance == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_b72e8598");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.workflow.msg_b72e8598")
+                .build();
         }
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_8243ec9a");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_8243ec9a")
+                .build();
         }
 
         switch (action) {
@@ -213,8 +224,10 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             case "DELEGATE": {
                 FlowRunTask mine = findMyTask(instance.getId(), dto.getUserId());
                 if (mine == null) {
-                    throw new SysException(BaseResultCode.FORBIDDEN,
-                            "error.workflow.msg_1440b2f2");
+                    throw SysException.builder()
+                .resultCode(BaseResultCode.FORBIDDEN)
+                .message("error.workflow.msg_1440b2f2")
+                .build();
                 }
                 FlowTaskOperateDTO op = new FlowTaskOperateDTO();
                 op.setTaskId(mine.getId());
@@ -232,14 +245,18 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                     taskService.reject(op);
                 } else if ("TRANSFER".equals(action)) {
                     if (dto.getTargetUserId() == null) {
-                        throw new SysException(BaseResultCode.BAD_REQUEST,
-                                "error.workflow.msg_df306e2b");
+                        throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_df306e2b")
+                .build();
                     }
                     taskService.transfer(op);
                 } else { // DELEGATE
                     if (dto.getTargetUserId() == null) {
-                        throw new SysException(BaseResultCode.BAD_REQUEST,
-                                "委派操作必须指定 targetUserId");
+                        throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("委派操作必须指定 targetUserId")
+                .build();
                     }
                     taskService.delegate(op);
                 }
@@ -254,14 +271,18 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             case "WITHDRAW": {
                 boolean ok = instanceService.recall(instance.getId(), dto.getUserId());
                 if (!ok) {
-                    throw new SysException(BaseResultCode.BAD_REQUEST,
-                            "error.workflow.msg_ad7c50c2");
+                    throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_ad7c50c2")
+                .build();
                 }
                 break;
             }
             default:
-                throw new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.workflow.msg_3adf9016", dto.getAction());
+                throw SysException.builder()
+                    .resultCode(BaseResultCode.BAD_REQUEST)
+                    .key("error.workflow.msg_3adf9016").params(dto.getAction())
+                    .build();
         }
     }
 

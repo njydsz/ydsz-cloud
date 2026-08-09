@@ -126,7 +126,10 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     public void saveCustomButtons(String definitionId, String nodeCode, List<Map<String, Object>> buttons) {
         FlowNode node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeCode);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_node_not_found").params(nodeCode)
+                .build();
         }
         // 读取现有 ext JSON
         Map<String, Object> extJson = StringUtils.hasText(node.getExt())
@@ -152,7 +155,10 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                                               Map<String, Object> variables) {
         FlowRunTask task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_6541ab08").params(taskId)
+                .build();
         }
 
         // 获取节点自定义按钮
@@ -160,8 +166,10 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         Map<String, Object> button = buttons.stream()
                 .filter(b -> buttonCode.equals(String.valueOf(b.get("code"))))
                 .findFirst()
-                .orElseThrow(() -> new SysException(BaseResultCode.BAD_REQUEST,
-                        "error.workflow.msg_button_not_found", buttonCode));
+                .orElseThrow(() -> SysException.builder()
+                .orElseThrow(() ->     .resultCode(BaseResultCode.BAD_REQUEST)
+                .orElseThrow(() ->     .key("error.workflow.msg_button_not_found").params(buttonCode)
+                .orElseThrow(() ->     .build());
 
         String action = String.valueOf(button.getOrDefault("action", "CUSTOM")).toUpperCase();
         String targetNodeCode = button.get("targetNodeCode") != null
@@ -206,7 +214,10 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     taskService.transfer(transferDto);
                     result.put("result", "TRANSFERRED");
                 } else {
-                    throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
+                    throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_transfer_target_required")
+                .build();
                 }
             }
             case "DELEGATE" -> {
@@ -221,7 +232,10 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     taskService.delegate(delegateDto);
                     result.put("result", "DELEGATED");
                 } else {
-                    throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");
+                    throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_delegate_target_required")
+                .build();
                 }
             }
             case "CUSTOM" -> {
@@ -231,8 +245,10 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 log.info("[CustomButton] 自定义按钮操作: taskId={} buttonCode={} callbackUrl={}",
                         taskId, buttonCode, button.get("callbackUrl"));
             }
-            default -> throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_unknown_button_action", action);
+            default -> throw SysException.builder()
+            default -> throw .resultCode(BaseResultCode.BAD_REQUEST)
+            default -> throw .key("error.workflow.msg_unknown_button_action").params(action)
+            default -> throw .build();
         }
 
         log.info("[CustomButton] 执行按钮操作: taskId={} buttonCode={} action={} userId={}",

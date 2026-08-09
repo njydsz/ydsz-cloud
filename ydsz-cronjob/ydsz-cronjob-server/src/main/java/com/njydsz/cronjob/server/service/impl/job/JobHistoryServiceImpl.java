@@ -64,7 +64,10 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     @Transactional(rollbackFor = Exception.class)
     public JobHistory saveHistory(Job job, String changedBy) {
         if (job == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_job_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_history_job_required")
+                .build();
         }
         JobHistory history = new JobHistory();
         history.setJobId(job.getId());
@@ -142,22 +145,34 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     @Transactional(rollbackFor = Exception.class)
     public Job rollback(String jobId, Integer version) {
         if (!StringUtils.hasText(jobId)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_job_id_required");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_history_job_id_required")
+                .build();
         }
         if (version == null || version < 1) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_version_invalid");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.cronjob.msg_history_version_invalid")
+                .build();
         }
         // 查询目标历史版本
         JobHistory targetHistory = jobHistoryMapper.selectByVersion(jobId, version);
         if (targetHistory == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_history_version_not_found");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_history_version_not_found")
+                .build();
         }
         // 反序列化快照为 Job
         Job snapshotJob = YdszJson.fromJson(targetHistory.getSnapshot(), Job.class);
         // 查询当前任务（用于保留统计字段等）
         Job currentJob = jobMapper.selectById(jobId);
         if (currentJob == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("error.cronjob.msg_c0d8369f")
+                .build();
         }
         // 保留 id/jobKey/tenantId/统计字段/createdAt（这些字段不应被回滚覆盖）
         snapshotJob.setId(jobId);

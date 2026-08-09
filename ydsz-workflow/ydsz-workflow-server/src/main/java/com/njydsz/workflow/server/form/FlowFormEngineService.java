@@ -90,8 +90,10 @@ public class FlowFormEngineService {
                 String fieldKey = entry.getKey();
                 String perm = entry.getValue();
                 if ("HIDDEN".equals(perm) && formData.containsKey(fieldKey)) {
-                    throw new SysException(BaseResultCode.VALIDATION_FAILED,
-                            "字段 " + fieldKey + " 不允许提交");
+                    throw SysException.builder()
+                        .resultCode(BaseResultCode.VALIDATION_FAILED)
+                        .message("字段 " + fieldKey + " 不允许提交")
+                        .build();
                 }
             }
         }
@@ -106,8 +108,10 @@ public class FlowFormEngineService {
         List<FlowFormValidationError> errors = formValidator.validate(schema, formData);
         if (!errors.isEmpty()) {
             FlowFormValidationError first = errors.get(0);
-            throw new SysException(BaseResultCode.VALIDATION_FAILED,
-                    "表单校验失败: " + first);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.VALIDATION_FAILED)
+                .message("表单校验失败: " + first)
+                .build();
         }
     }
 

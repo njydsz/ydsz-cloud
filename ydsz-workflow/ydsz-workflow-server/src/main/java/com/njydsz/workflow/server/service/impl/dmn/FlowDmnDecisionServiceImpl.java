@@ -191,11 +191,16 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public void updateDecision(String decisionId, FlowDmnDecision decision, List<FlowDmnRule> rules) {
         FlowDmnDecision existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("决策表不存在: " + decisionId)
+                .build();
         }
         if (!"DRAFT".equals(existing.getStatus())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "仅草稿状态可编辑，当前状态: " + existing.getStatus());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("仅草稿状态可编辑，当前状态: " + existing.getStatus())
+                .build();
         }
         decision.setId(decisionId);
         decision.setStatus("DRAFT");
@@ -237,11 +242,16 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public void publish(String decisionId) {
         FlowDmnDecision existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("决策表不存在: " + decisionId)
+                .build();
         }
         if (!"DRAFT".equals(existing.getStatus()) && !"DEPRECATED".equals(existing.getStatus())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "决策表状态不允许发布，当前状态: " + existing.getStatus());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("决策表状态不允许发布，当前状态: " + existing.getStatus())
+                .build();
         }
         existing.setStatus("PUBLISHED");
         existing.setDecisionVersion(
@@ -266,11 +276,16 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public void deprecate(String decisionId) {
         FlowDmnDecision existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("决策表不存在: " + decisionId)
+                .build();
         }
         if (!"PUBLISHED".equals(existing.getStatus())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "决策表状态不允许停用，当前状态: " + existing.getStatus());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("决策表状态不允许停用，当前状态: " + existing.getStatus())
+                .build();
         }
         existing.setStatus("DEPRECATED");
         decisionMapper.updateById(existing);
@@ -291,7 +306,10 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public Map<String, Object> getDetail(String decisionId) {
         FlowDmnDecision decision = decisionMapper.selectById(decisionId);
         if (decision == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("决策表不存在: " + decisionId)
+                .build();
         }
         List<FlowDmnRule> rules = ruleMapper.selectEnabledByDecisionId(decisionId);
         Map<String, Object> result = new LinkedHashMap<>();
@@ -342,8 +360,10 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         String tid = tenantId != null ? tenantId : "1";
         FlowDmnDecision decision = decisionMapper.selectPublishedByCode(decisionCode, tid);
         if (decision == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND,
-                    "已发布决策表不存在: " + decisionCode);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("已发布决策表不存在: " + decisionCode)
+                .build();
         }
         return doEvaluate(decision, variables);
     }
@@ -415,8 +435,10 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
                 if ("ANY".equals(hitPolicy) && matchedOutputs.size() > 1) {
                     // ANY 策略：校验所有命中规则输出一致
                     if (!Objects.equals(matchedOutputs.get(0), output)) {
-                        throw new SysException(BaseResultCode.INTERNAL_ERROR,
-                                "DMN ANY 策略校验失败: 多条命中规则输出不一致");
+                        throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .message("DMN ANY 策略校验失败: 多条命中规则输出不一致")
+                .build();
                     }
                 }
             }
@@ -574,10 +596,16 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     private void validateDecision(FlowDmnDecision decision) {
         if (!StringUtils.hasText(decision.getDecisionCode())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "决策表编码不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("决策表编码不能为空")
+                .build();
         }
         if (!StringUtils.hasText(decision.getDecisionName())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "决策表名称不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("决策表名称不能为空")
+                .build();
         }
     }
 

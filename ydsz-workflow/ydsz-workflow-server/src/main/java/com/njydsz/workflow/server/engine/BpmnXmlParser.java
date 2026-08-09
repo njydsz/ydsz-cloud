@@ -83,19 +83,27 @@ public class BpmnXmlParser {
      */
     public BpmnModel parse(String bpmnXml) {
         if (bpmnXml == null || bpmnXml.isBlank()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_30c8dc03");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_30c8dc03")
+                .build();
         }
         Document doc = parseDocument(bpmnXml);
         Element root = doc.getDocumentElement();
         if (!"definitions".equalsIgnoreCase(root.getLocalName())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_a2ed268d", root.getLocalName());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_a2ed268d").params(root.getLocalName())
+                .build();
         }
 
         // 找 <process> 节点
         Element process = findChild(root, "process");
         if (process == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d7f0848f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_d7f0848f")
+                .build();
         }
 
         BpmnModel model = new BpmnModel();
@@ -145,13 +153,19 @@ public class BpmnXmlParser {
 
         // 校验：节点编码唯一
         if (nodeByCode.size() != nodes.size()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d60cd229");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_d60cd229")
+                .build();
         }
         // 校验：必须含开始节点
         boolean hasStart = nodes.stream()
                 .anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
         if (!hasStart) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a2f0efff");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_a2f0efff")
+                .build();
         }
 
         model.setNodes(nodes);
@@ -190,7 +204,10 @@ public class BpmnXmlParser {
             throw e;
         } catch (Exception e) {
             log.error("[BpmnParser] 解析失败: {}", e.getMessage());
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_3db1015b", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.workflow.msg_3db1015b").params(e.getMessage())
+                .build();
         }
     }
 

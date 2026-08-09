@@ -105,7 +105,10 @@ public class FlowTaskSignServiceImpl {
     public void countersignBefore(FlowTaskOperateDTO dto) {
         FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_5ac7f16a")
+                .build();
         }
         // 前加签：在当前节点前插入临时审批人
         // 实现：为当前任务新增一个审批人记录到 ydsz_flow_user，approveCount+1
@@ -157,7 +160,10 @@ public class FlowTaskSignServiceImpl {
     public void countersignAfter(FlowTaskOperateDTO dto) {
         FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_5ac7f16a")
+                .build();
         }
         // P2-29: 后加签真实实现 — 当前审批人通过后，新加签人需要审批，两人都通过后才推进到下一节点
         // 实现方式：
@@ -211,10 +217,16 @@ public class FlowTaskSignServiceImpl {
     public void countersignParallel(FlowTaskOperateDTO dto) {
         FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_5ac7f16a")
+                .build();
         }
         if (dto.getTargetUserId() == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_2deb2e4f")
+                .build();
         }
         FlowUser fu = new FlowUser();
         fu.setTaskId(task.getId());
@@ -265,10 +277,16 @@ public class FlowTaskSignServiceImpl {
     public void countersignRemove(FlowTaskOperateDTO dto) {
         FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_ff1454e4");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_ff1454e4")
+                .build();
         }
         if (dto.getTargetUserId() == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_7c4a1bdf");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_7c4a1bdf")
+                .build();
         }
         // 从 ydsz_flow_user 中删除指定用户
         Map<String, Object> deleteMap = new HashMap<>();
@@ -277,8 +295,10 @@ public class FlowTaskSignServiceImpl {
         deleteMap.put("user_id", String.valueOf(dto.getTargetUserId()));
         int deleted = userMapper.deleteByMap(deleteMap);
         if (deleted == 0) {
-            throw new SysException(BaseResultCode.NOT_FOUND,
-                    "error.workflow.msg_a39adc9d", dto.getTargetUserId());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_a39adc9d").params(dto.getTargetUserId())
+                .build();
         }
         // approveCount -1，但不低于 1
         int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
@@ -346,7 +366,10 @@ public class FlowTaskSignServiceImpl {
     public void saveDraft(FlowTaskOperateDTO dto) {
         FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_8913103b");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_8913103b")
+                .build();
         }
         // 保存审批意见草稿到 comment 字段，不改变任务状态
         task.setComment(dto.getComment());
@@ -379,10 +402,16 @@ public class FlowTaskSignServiceImpl {
     public void addApprover(FlowTaskOperateDTO dto) {
         FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_511d4aaa");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_511d4aaa")
+                .build();
         }
         if (dto.getTargetUserId() == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_2deb2e4f")
+                .build();
         }
         // 向 ydsz_flow_user 插入新审批人
         FlowUser fu = new FlowUser();

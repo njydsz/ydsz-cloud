@@ -1513,7 +1513,10 @@ try {
             return next == null ? null : LocalDateTime.ofInstant(next,
                     ZoneId.systemDefault());
         } catch (IllegalArgumentException e) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .key("error.cronjob.msg_5d0044ca").params(e.getMessage())
+                .build();
         }
     }
 

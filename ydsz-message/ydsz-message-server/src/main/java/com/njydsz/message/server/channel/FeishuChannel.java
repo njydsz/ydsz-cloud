@@ -188,7 +188,10 @@ public class FeishuChannel implements MessageChannel {
         if (StringUtils.hasText(secret)) {
             Map<String, String> sign = appendSign(secret);
             if (sign == null) {
-                throw new SysException(BaseResultCode.INTERNAL_ERROR, "飞书加签失败,请检查 secret 配置");
+                throw SysException.builder()
+                .resultCode(BaseResultCode.INTERNAL_ERROR)
+                .message("飞书加签失败,请检查 secret 配置")
+                .build();
             }
             payload.put("timestamp", sign.get("timestamp"));
             payload.put("sign", sign.get("sign"));

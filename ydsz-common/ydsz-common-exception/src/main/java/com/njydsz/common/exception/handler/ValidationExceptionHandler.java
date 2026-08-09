@@ -114,7 +114,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
         if ((traceId == null || traceId.isBlank()) && request != null) {
             traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
             if (traceId == null) {
-                traceId = request.getHeader("X-Request-Id");
+                traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
             }
         }
         return traceId;

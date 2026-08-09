@@ -1,5 +1,6 @@
 package com.njydsz.common.thread.config;
 
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -66,6 +67,27 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 public class ThreadPoolAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(ThreadPoolAutoConfiguration.class);
+
+    private final org.springframework.context.ApplicationContext applicationContext;
+
+    public ThreadPoolAutoConfiguration(org.springframework.context.ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
+    /**
+     * 获取全部已注册的平台线程池（Bean 名称 → 线程池）。
+     *
+     * <p>供下游模块（如消息通道 Bulkhead 隔离）按名称查找线程池并组装为业务 Map。
+     * 通过 Spring 容器按类型查找，虚拟线程池（{@link ExecutorService}）不在此返回范围内。
+     *
+     * @return Bean 名称 → ThreadPoolTaskExecutor 的映射；无线程池时返回空 Map
+     * @since 1.2.1
+     */
+    public Map<String, ThreadPoolTaskExecutor> getExecutors() {
+        return applicationContext == null
+                ? java.util.Collections.emptyMap()
+                : applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
+    }
 
     /**
      * 注册线程池 Bean 定义注册器。

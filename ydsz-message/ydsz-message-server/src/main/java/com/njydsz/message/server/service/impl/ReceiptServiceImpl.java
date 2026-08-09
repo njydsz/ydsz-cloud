@@ -55,7 +55,10 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Override
     public void callback(ReceiptCallbackDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getLogId())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "回执关联日志 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("回执关联日志 ID 不能为空")
+                .build();
         }
         // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）
         try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {

@@ -8,6 +8,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.util.StringUtils;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.http.RequestContextUtils;
+import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.RepeatSubmit;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
@@ -70,13 +71,19 @@ public class RepeatSubmitAspect {
 
         if (!StringUtils.hasText(token)) {
             log.warn("[RepeatSubmit] 缺少防重复提交 Token | header={}", headerName);
-            throw new BusinessException("缺少防重复提交 Token，请先获取 Token");
+            throw BusinessException.builder()
+                    .code(UnifiedExceptionCode.FAIL.getCode())
+                    .message("缺少防重复提交 Token，请先获取 Token")
+                    .build();
         }
 
         boolean valid = tokenService.validateAndConsume(token);
         if (!valid) {
             log.warn("[RepeatSubmit] Token 无效或已过期 | header={}, token={}", headerName, token);
-            throw new BusinessException(repeatSubmit.message());
+            throw BusinessException.builder()
+                    .code(UnifiedExceptionCode.FAIL.getCode())
+                    .message(repeatSubmit.message())
+                    .build();
         }
 
         try {

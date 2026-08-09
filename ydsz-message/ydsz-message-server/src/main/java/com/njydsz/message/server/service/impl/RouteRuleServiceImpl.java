@@ -65,14 +65,20 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public MsgRouteRule create(RouteRuleUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getRuleCode())) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "规则编码不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("规则编码不能为空")
+                .build();
         }
         MsgRouteRule existing = msgRouteRuleMapper.selectOne(new LambdaQueryWrapper<MsgRouteRule>()
                 .eq(MsgRouteRule::getRuleCode, dto.getRuleCode())
                 .eq(MsgRouteRule::getTenantId, TenantContext.getTenantId())
                 .last("LIMIT 1"));
         if (existing != null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "规则编码已存在: " + dto.getRuleCode());
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("规则编码已存在: " + dto.getRuleCode())
+                .build();
         }
         MsgRouteRule entity = toEntity(dto);
         msgRouteRuleMapper.insert(entity);
@@ -90,7 +96,10 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public MsgRouteRule update(String id, RouteRuleUpsertDTO dto) {
         if (!StringUtils.hasText(id) || dto == null) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "规则 ID 与参数不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("规则 ID 与参数不能为空")
+                .build();
         }
         MsgRouteRule entity = getById(id);
         if (StringUtils.hasText(dto.getRuleName())) {
@@ -137,7 +146,10 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "规则 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("规则 ID 不能为空")
+                .build();
         }
         msgRouteRuleMapper.deleteById(id);
         evictCache();
@@ -151,11 +163,17 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public MsgRouteRule getById(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST, "规则 ID 不能为空");
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("规则 ID 不能为空")
+                .build();
         }
         MsgRouteRule entity = msgRouteRuleMapper.selectById(id);
         if (entity == null) {
-            throw new SysException(BaseResultCode.NOT_FOUND, "路由规则不存在: " + id);
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .message("路由规则不存在: " + id)
+                .build();
         }
         return entity;
     }
