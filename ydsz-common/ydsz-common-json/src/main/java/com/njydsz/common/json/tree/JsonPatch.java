@@ -213,6 +213,9 @@ public final class JsonPatch {
                 arrNode.add(value);
             } else {
                 int idx = parseIndex(lastSegment, arrNode.size() + 1);
+                if (idx > arrNode.size()) {
+                    throw new JsonException("Array index out of bounds: " + lastSegment);
+                }
                 arrNode.add(idx, value);
             }
         } else {
@@ -231,6 +234,9 @@ public final class JsonPatch {
             objNode.remove(lastSegment);
         } else if (resolution.parent instanceof ArrayNode arrNode) {
             int idx = parseIndex(lastSegment, arrNode.size());
+            if (idx >= arrNode.size()) {
+                throw new JsonException("Cannot remove out-of-bounds index: " + lastSegment);
+            }
             arrNode.remove(idx);
         } else {
             throw new JsonException("Cannot remove from type: " + resolution.parent.getClass().getSimpleName());
@@ -251,6 +257,9 @@ public final class JsonPatch {
             objNode.put(lastSegment, value);
         } else if (resolution.parent instanceof ArrayNode arrNode) {
             int idx = parseIndex(lastSegment, arrNode.size());
+            if (idx >= arrNode.size()) {
+                throw new JsonException("Cannot replace out-of-bounds index: " + lastSegment);
+            }
             arrNode.set(idx, value);
         } else {
             throw new JsonException("Cannot replace on type: " + resolution.parent.getClass().getSimpleName());

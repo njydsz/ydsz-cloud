@@ -108,6 +108,18 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Jackson (optional, only needed when Minio SDK is used - Minio's Result.get() throws JsonParseException/JsonMappingException) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- aws-java-sdk -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>

@@ -106,9 +106,19 @@
 
         <!-- JMH Benchmark 对比基库（test scope，不与生产代码绑定） -->
         <!--
-            注：项目完全移除 Jackson，竞品对比基准测试仅保留 Fastjson2。
-            Gson / Hutool-JSON / org.json / json-simple / Jackson 均禁止直接声明。
+            注：项目业务代码强制使用 ydsz-common-json，禁止直接声明 Jackson；
+            测试对比基准库允许引入 Jackson 和 Fastjson2，用于性能对比。
         -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>

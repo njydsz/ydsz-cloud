@@ -62,9 +62,15 @@
       "defaultValue": 256
     },
     {
+      "name": "ydsz.json.max-generic-depth",
+      "type": "java.lang.Integer",
+      "description": "泛型递归深度上限（防止嵌套泛型 List<List<...>> 导致 StackOverflow，默认 64，与 FastJSON2 对齐）。",
+      "defaultValue": 64
+    },
+    {
       "name": "ydsz.json.monitoring-enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用性能监控（通过 JsonMetricsCallback 上报 Micrometer，默认 true）。",
+      "description": "预留配置项：Micrometer 性能指标规划中（当前不生效）。",
       "defaultValue": true
     },
     {
@@ -98,10 +104,10 @@
       "defaultValue": true
     },
     {
-      "name": "ydsz.json.warmup-classes",
-      "type": "java.util.List<java.lang.String>",
-      "description": "启动时需要预热的类列表（全限定类名），提前生成 ASM 字节码避免首次请求延迟。",
-      "defaultValue": []
+      "name": "ydsz.json.warmup-enabled",
+      "type": "java.lang.Boolean",
+      "description": "预留配置项：ASM 预热 Runner 规划中。当前可用 YdszJson.warmup(Class...) 手动预热缓存。",
+      "defaultValue": false
     }
   ],
   "hints": [
