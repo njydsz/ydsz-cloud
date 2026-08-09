@@ -14,8 +14,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 
 import com.njydsz.common.json.cache.BeanSerializerCache;
-import com.njydsz.common.json.health.JsonHealthIndicator;
-import com.njydsz.common.json.internal.DualJsonDetector;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.module.JsonModule;
 import com.njydsz.common.json.spring.JsonHttpMessageConverter;
@@ -78,7 +76,6 @@ public class JsonAutoConfiguration {
     @ConditionalOnClass(name = "org.springframework.http.converter.HttpMessageConverter")
     public JsonHttpMessageConverter ydszJsonHttpMessageConverter(JsonProperties properties) {
         JsonHttpMessageConverter converter = new JsonHttpMessageConverter();
-        converter.setStreamingEnabled(properties.isStreamingEnabled());
         converter.setMaxRequestBodySize(properties.getMaxRequestBodySize());
         return converter;
     }
@@ -112,23 +109,6 @@ public class JsonAutoConfiguration {
                 }
             };
         };
-    }
-
-    /**
-     * JSON 模块健康检查指示器。
-     *
-     * <p>当 Spring Boot Actuator Health 在类路径时注册，暴露 {@code /actuator/health/json} 端点，
-     * 报告 Ydsz JSON 引擎的配置状态（命名策略、安全模式、严格模式、Jackson 排除状态等）。
-     *
-     * @param properties JSON 配置属性
-     * @return JSON 健康检查指示器
-     * @since 1.2.0
-     */
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-    @ConditionalOnMissingBean(JsonHealthIndicator.class)
-    public JsonHealthIndicator jsonHealthIndicator(JsonProperties properties) {
-        return new JsonHealthIndicator(properties, JsonConfig.getInstance());
     }
 
     /**
@@ -180,9 +160,8 @@ public class JsonAutoConfiguration {
                     .maxGenericDepth(properties.getMaxGenericDepth())
                     .useBigDecimal(properties.isUseBigDecimal())
                     .wrapRootValue(properties.isWrapRootValue())
-                    .failOnError(properties.isFailOnError())
-                    .strictMode(properties.isStrictMode())
-                    .build();
+                .failOnError(properties.isFailOnError())
+                .build();
             // 安装为全局不可变配置实例，后续修改必须走 install(newConfig)
             JsonConfig.install(newConfig);
 
@@ -212,15 +191,6 @@ public class JsonAutoConfiguration {
                     BeanSerializerCache.clear();
                 }
             });
-            // 严格模式检测（JSON 双体系一致性校验）
-            // 在 disableJacksonAutoConfiguration=true 时，若 strict-mode 启用，检测是否存在
-            // Jackson 注解混用，发现冲突则抛出 DualJsonConflictException 阻止启动
-            if (properties.isDisableJacksonAutoConfiguration() && properties.isStrictMode()) {
-                DualJsonDetector.scanAndReport(properties.getWhitelistPackages(), true);
-            } else if (properties.isStrictMode()) {
-                // Jackson 自动配置未禁用 + strict-mode 启用 = 松弛模式（仅输出告警）
-                DualJsonDetector.scanAndReport(properties.getWhitelistPackages(), false);
-            }
         }
     }
 }

@@ -14,7 +14,6 @@ mkdir -p "$OUT"
 /usr/bin/find "$SRC_POSIX" -name "*.java" \
   | grep -v "/spring/" | grep -v "/autotype/" \
   | while read -r f; do echo "$f" | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g'; done >> /tmp/srcs.txt
-echo "$STUB_POSIX/com/njydsz/common/json/autotype/AutoTypeChecker.java" | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g' >> /tmp/srcs.txt
 echo "$SCRIPT_DIR/JsonHardeningCheck.java" | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g' >> /tmp/srcs.txt
 
 # 拼成单行空格分隔

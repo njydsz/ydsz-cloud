@@ -27,7 +27,9 @@ import java.lang.annotation.*;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated REST API 场景中极少使用，如需包装返回结构建议使用统一的 Response 包装类
  */
+@Deprecated
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

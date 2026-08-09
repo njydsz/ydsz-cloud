@@ -26,7 +26,9 @@ import java.lang.annotation.Target;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated REST API 场景中极少使用，如需控制字段可见性建议使用 @JsonIgnore
  */
+@Deprecated
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
 public @interface JsonVisibility {

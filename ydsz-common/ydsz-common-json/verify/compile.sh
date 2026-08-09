@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 编译核心子集（排除 spring/ 与 autotype/ 真实类，用 stub 替代 AutoTypeChecker）
+# 编译核心子集（排除 spring/ 与 autotype/ 真实类）
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SRC_POSIX="$SCRIPT_DIR/../src/main/java"
 STUB_POSIX="$SCRIPT_DIR/stub"
@@ -18,8 +18,6 @@ mkdir -p "$OUT"
   | while read -r f; do
       echo "$f" | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
     done
-echo "$STUB_POSIX/com/njydsz/common/json/autotype/AutoTypeChecker.java" \
-  | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
 echo "$SCRIPT_DIR/JsonHardeningCheck.java" \
   | sed -e 's|^/c/|C:\\|' -e 's|^/d/|D:\\|' -e 's|/|\\|g' >> "$SCRIPT_DIR/sources-win.txt"
 

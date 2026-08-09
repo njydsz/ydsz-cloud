@@ -21,7 +21,9 @@ import java.lang.annotation.*;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated REST API 场景中极少使用，建议使用统一的 @JsonProperty 命名约定
  */
+@Deprecated
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

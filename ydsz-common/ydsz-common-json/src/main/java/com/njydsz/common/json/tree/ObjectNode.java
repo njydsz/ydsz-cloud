@@ -196,6 +196,21 @@ public final class ObjectNode extends JsonNode {
         return result;
     }
 
+    /**
+     * 深拷贝当前 ObjectNode 及其所有嵌套子节点。
+     *
+     * @return 全新的 ObjectNode 副本
+     */
+    @Override
+    public ObjectNode deepCopy() {
+        ObjectNode copy = new ObjectNode();
+        for (Map.Entry<String, JsonNode> entry : fields.entrySet()) {
+            JsonNode node = entry.getValue();
+            copy.fields.put(entry.getKey(), node != null ? node.deepCopy() : NullNode.getInstance());
+        }
+        return copy;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

@@ -146,6 +146,40 @@ public final class ArrayNode extends JsonNode {
         return elements.remove(index);
     }
 
+    /**
+     * 在指定索引位置插入元素，原有元素向右顺移。
+     *
+     * <p>若 {@code index == size()}，等效于 {@link #add(JsonNode)} 追加到末尾。</p>
+     *
+     * @param index 插入位置索引（从 0 开始，允许等于当前 size）
+     * @param node 要插入的节点，null 会被转换为 NullNode
+     * @return 当前数组节点（支持链式调用）
+     * @throws IndexOutOfBoundsException 如果 index &lt; 0 或 index &gt; size()
+     * @since 1.2.0
+     */
+    public ArrayNode insert(int index, JsonNode node) {
+        if (index < 0 || index > elements.size()) {
+            throw new IndexOutOfBoundsException(
+                    "Insert index out of bounds: index=" + index + ", size=" + elements.size());
+        }
+        elements.add(index, node != null ? node : NullNode.getInstance());
+        return this;
+    }
+
+    /**
+     * 移除指定索引位置的元素（别名方法，语义与 {@link #remove(int)} 一致）。
+     *
+     * <p>此方法主要供 JSON Patch（RFC 6902）实现中以统一命名风格调用。</p>
+     *
+     * @param index 要移除的元素索引（从 0 开始）
+     * @return 被移除的节点
+     * @throws IndexOutOfBoundsException 如果索引超出范围
+     * @since 1.2.0
+     */
+    public JsonNode removeAt(int index) {
+        return elements.remove(index);
+    }
+
     @Override
     public boolean isArray() {
         return true;
@@ -187,6 +221,20 @@ public final class ArrayNode extends JsonNode {
     @Override
     public Object asValue() {
         return elements.stream().map(node -> node != null ? node.asValue() : null).toList();
+    }
+
+    /**
+     * 深拷贝当前 ArrayNode 及其所有嵌套子节点。
+     *
+     * @return 全新的 ArrayNode 副本
+     */
+    @Override
+    public ArrayNode deepCopy() {
+        ArrayNode copy = new ArrayNode();
+        for (JsonNode element : elements) {
+            copy.elements.add(element != null ? element.deepCopy() : NullNode.getInstance());
+        }
+        return copy;
     }
 
     @Override

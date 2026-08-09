@@ -203,6 +203,32 @@ public abstract class JsonNode {
     }
 
     /**
+     * 当前节点是否为叶子节点（标量或 null）。
+     *
+     * <p>叶子节点（TextNode / NumberNode / BooleanNode / NullNode / MissingNode）不可变，
+     * 可直接安全共享引用；容器节点（ObjectNode / ArrayNode）可变，需要深拷贝。
+     *
+     * @return true 如果节点为叶子节点
+     * @since 1.2.0
+     */
+    public boolean isLeaf() {
+        return !isObject() && !isArray();
+    }
+
+    /**
+     * 创建当前节点的深拷贝。
+     *
+     * <p>叶子节点（标量/null/缺失）不可变，子类默认实现返回 {@code this}（安全共享引用）。
+     * 容器节点（ObjectNode / ArrayNode）必须重写此方法返回全新的嵌套副本。
+     *
+     * @return 当前节点的深拷贝（叶子节点返回 this）
+     * @since 1.2.0
+     */
+    public JsonNode deepCopy() {
+        return this;
+    }
+
+    /**
      * 获取子节点数量
      */
     public int size() {

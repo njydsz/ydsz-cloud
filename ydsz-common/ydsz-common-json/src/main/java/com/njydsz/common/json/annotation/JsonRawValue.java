@@ -32,7 +32,9 @@ import java.lang.annotation.*;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated REST API 场景中极少使用，如需要嵌入 JSON 字符串可手动构建后序列化
  */
+@Deprecated
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.FIELD})

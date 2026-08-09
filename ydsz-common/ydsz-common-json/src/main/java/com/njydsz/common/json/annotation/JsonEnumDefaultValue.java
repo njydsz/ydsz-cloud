@@ -24,8 +24,10 @@ import java.lang.annotation.Target;
  *
  * @author ydsz-team
  * @since 1.1.0
+ * @deprecated REST API 场景中极少使用，建议在 Controller 层手动处理未知枚举值
  * @see com.fasterxml.jackson.annotation.JsonEnumDefaultValue
  */
+@Deprecated
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface JsonEnumDefaultValue {

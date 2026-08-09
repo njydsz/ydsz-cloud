@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 编译核心子集（排除依赖 Spring 的文件，autotype 用 stub 替代），全部使用 "D:/..." 形式绝对路径
+# 编译核心子集（排除依赖 Spring 的文件），全部使用 "D:/..." 形式绝对路径
 set -u
 BASE="D:/Code/open/ydsz-cloud/ydsz-common/ydsz-common-json"
 SRC="$BASE/src/main/java"
@@ -15,10 +15,8 @@ LIST=/tmp/srcs3.txt
 # 排除：spring 包、autotype 真实实现、以及其它直接依赖 Spring 的文件
 /usr/bin/find "$SRC" -name "*.java" \
   | grep -v "/spring/" \
-  | grep -v "/autotype/" \
   | grep -v "DualJsonDetector.java" \
   > "$LIST"
-echo "$STUB/com/njydsz/common/json/autotype/AutoTypeChecker.java" >> "$LIST"
 echo "$BASE/verify/JsonHardeningCheck.java" >> "$LIST"
 
 echo "===== 源文件数: $(wc -l < "$LIST") ====="

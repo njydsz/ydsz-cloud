@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.json.autotype.AutoTypeChecker;
 
 /**
  * 缓存导出导入工具类
@@ -34,10 +33,9 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
  * <p>安全优化（P1 修复）：
  *
  * <ul>
- *   <li>反序列化白名单委托 {@link AutoTypeChecker}，与 JSON AutoType 共享单一来源白名单
+ *   <li>反序列化白名单基于标准 Java 包和 com.njydsz 包前缀匹配
  *   <li>限制反序列化深度（≤5）、引用数（≤500000）、字节数（≤256MB）
  *   <li>限制导入 Map 大小，防止 OOM 攻击
- *   <li>业务自定义类型如需反序列化，请通过 {@code AutoTypeChecker.addToWhitelist()} 显式注册
  * </ul>
  *
  * @author ydsz-team
@@ -60,8 +58,7 @@ public class CacheExportImport {
   /**
    * 创建安全的 ObjectInputStream，配置反序列化过滤器
    *
-   * <p>反序列化白名单委托 {@link AutoTypeChecker}，与 JSON AutoType
-   * 共享单一来源白名单。
+   * <p>反序列化白名单基于标准 Java 包和 com.njydsz 包前缀匹配。
    *
    * @param fis 文件输入流
    * @return 配置了安全过滤器的 ObjectInputStream
@@ -75,7 +72,7 @@ public class CacheExportImport {
   }
 
   /**
-   * 安全反序列化过滤器，委托 {@link AutoTypeChecker} 进行类型白名单校验。
+   * 安全反序列化过滤器，基于标准 Java 包和 com.njydsz 包前缀匹配。
    */
   private static ObjectInputFilter.Status safeFilter(ObjectInputFilter.FilterInfo filterInfo) {
     if (filterInfo.depth() > MAX_DEPTH) {
@@ -92,19 +89,22 @@ public class CacheExportImport {
       if (className.startsWith("[")) {
         return ObjectInputFilter.Status.UNDECIDED;
       }
-      if (AutoTypeChecker.isTypeAllowed(className)) {
+      if (isCacheDeserializationAllowed(className)) {
         return ObjectInputFilter.Status.ALLOWED;
-      }
-      int dollar = className.lastIndexOf('$');
-      if (dollar > 0) {
-        String outerClassName = className.substring(0, dollar);
-        if (AutoTypeChecker.isTypeAllowed(outerClassName)) {
-          return ObjectInputFilter.Status.ALLOWED;
-        }
       }
       return ObjectInputFilter.Status.REJECTED;
     }
     return ObjectInputFilter.Status.UNDECIDED;
+  }
+
+  /**
+   * 判断类是否允许缓存反序列化。
+   *
+   * <p>允许标准 Java 包和 com.njydsz 包下的类。</p>
+   */
+  private static boolean isCacheDeserializationAllowed(String className) {
+    return className.startsWith("java.") || className.startsWith("javax.")
+        || className.startsWith("com.njydsz.");
   }
 
   /**

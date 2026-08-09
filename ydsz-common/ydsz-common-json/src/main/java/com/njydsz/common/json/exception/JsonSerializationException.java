@@ -18,9 +18,6 @@ public class JsonSerializationException extends JsonException {
     public static final int FIELD_ACCESS_ERROR = 2004;
     public static final int SERIALIZATION_ERROR = 2005;
 
-    /** 序列化失败时的字段路径（如 "user.address.street"），可能为 null */
-    private String fieldPath;
-
     /**
      * 构造函数（仅消息）
      *
@@ -104,38 +101,10 @@ public class JsonSerializationException extends JsonException {
             "Failed to access field: " + fieldName, cause);
     }
 
-    /**
-     * 获取序列化失败时的字段路径。
-     *
-     * <p>返回根对象到失败字段的逐层字段名路径，采用点分格式。
-     * 例如 {@code "user.address.street"} 表示正在序列化 user 对象中
-     * address 字段的 street 属性时失败。</p>
-     *
-     * @return 字段路径，无路径上下文时返回 null
-     * @since 1.0.0
-     */
-    public String getFieldPath() {
-        return fieldPath;
-    }
-
-    /**
-     * 设置字段路径（用于序列化异常装箱时附加当前序列化路径）。
-     *
-     * @param fieldPath 字段路径（如 "user.address.street"）
-     * @return this（链式调用）
-     * @since 1.0.0
-     */
-    public JsonSerializationException setFieldPath(String fieldPath) {
-        this.fieldPath = fieldPath;
-        return this;
-    }
-
     @Override
     public String getMessage() {
-        String base = super.getMessage();
-        if (fieldPath != null && !fieldPath.isEmpty()) {
-            return base + " [fieldPath: " + fieldPath + "]";
-        }
-        return base;
+        // 基类 JsonException.getMessage() 已自动追加 [field: xxx]
+        // 这里无需重复处理 fieldPath
+        return super.getMessage();
     }
 }

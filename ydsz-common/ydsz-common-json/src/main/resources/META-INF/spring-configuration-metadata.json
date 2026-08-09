@@ -62,12 +62,6 @@
       "defaultValue": 256
     },
     {
-      "name": "ydsz.json.safe-mode",
-      "type": "java.lang.Boolean",
-      "description": "是否启用安全模式（AutoType 白名单检查防反序列化漏洞，默认 true）。",
-      "defaultValue": true
-    },
-    {
       "name": "ydsz.json.monitoring-enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用性能监控（通过 JsonMetricsCallback 上报 Micrometer，默认 true）。",
@@ -89,18 +83,6 @@
       "name": "ydsz.json.fail-on-error",
       "type": "java.lang.Boolean",
       "description": "反序列化失败时是否抛出异常（默认 false 降级容错）。",
-      "defaultValue": false
-    },
-    {
-      "name": "ydsz.json.whitelist-packages",
-      "type": "java.util.List<java.lang.String>",
-      "description": "启动时扫描 @JsonClass 注解类的基础包列表，注册到 AutoTypeChecker 白名单。默认 [com.njydsz]。",
-      "defaultValue": ["com.njydsz"]
-    },
-    {
-      "name": "ydsz.json.streaming-enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用流式输出（HTTP 响应使用 chunked transfer encoding，默认 false）。",
       "defaultValue": false
     },
     {

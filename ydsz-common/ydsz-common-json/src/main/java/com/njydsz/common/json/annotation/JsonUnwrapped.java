@@ -31,7 +31,9 @@ import java.lang.annotation.*;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated REST API 场景中极少使用，建议将嵌套对象直接序列化为子对象结构
  */
+@Deprecated
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})

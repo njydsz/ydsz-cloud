@@ -69,8 +69,10 @@ import java.lang.annotation.*;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 现代 Java 推荐使用 @JsonCreator + 静态工厂方法，而非 Builder 模式反序列化
  * @see JsonCreator
  */
+@Deprecated
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})

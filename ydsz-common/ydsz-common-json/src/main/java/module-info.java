@@ -30,4 +30,7 @@ module com.njydsz.common.json {
     // 序列化器接口
     exports com.njydsz.common.json.serializer;
     exports com.njydsz.common.json.deserializer;
+
+    // AutoType 安全白名单
+    exports com.njydsz.common.json.autotype;
 }

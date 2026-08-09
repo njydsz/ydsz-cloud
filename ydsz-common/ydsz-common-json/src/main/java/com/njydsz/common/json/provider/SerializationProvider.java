@@ -604,7 +604,8 @@ public final class SerializationProvider {
             throw new JsonSerializationException(
                 JsonSerializationException.SERIALIZATION_ERROR,
                 "Serialization depth exceeded maximum (" + maxDepth + "): "
-                + "object graph too deep or contains circular references");
+                + "object graph too deep or contains circular references")
+                .setFieldPath(getCurrentFieldPath());
         }
 
         // 循环引用检测（仅对 Bean 类型，不含基本类型/Collection/Map/String/Number/Boolean）
@@ -627,7 +628,8 @@ public final class SerializationProvider {
                         ctx.serializationDepth--;
                         throw new JsonSerializationException(
                             JsonSerializationException.SERIALIZATION_ERROR,
-                            "Circular reference detected: " + clazz.getName());
+                            "Circular reference detected: " + clazz.getName())
+                            .setFieldPath(getCurrentFieldPath());
                     case "IGNORE":
                     case "NULL":
                         return "null";
@@ -873,7 +875,8 @@ public final class SerializationProvider {
                 throw new JsonSerializationException(
                     JsonSerializationException.SERIALIZATION_ERROR,
                     "Failed to write null to OutputStream", e
-                );
+                )
+                    .setFieldPath(getCurrentFieldPath());
             }
             return;
         }
@@ -886,7 +889,8 @@ public final class SerializationProvider {
             throw new JsonSerializationException(
                 JsonSerializationException.SERIALIZATION_ERROR,
                 "Failed to write to OutputStream", e
-            );
+            )
+                .setFieldPath(getCurrentFieldPath());
         }
     }
 
@@ -908,7 +912,8 @@ public final class SerializationProvider {
                 throw new JsonSerializationException(
                     JsonSerializationException.SERIALIZATION_ERROR,
                     "Failed to write null to Writer", e
-                );
+                )
+                    .setFieldPath(getCurrentFieldPath());
             }
             return;
         }
@@ -920,7 +925,8 @@ public final class SerializationProvider {
             throw new JsonSerializationException(
                 JsonSerializationException.SERIALIZATION_ERROR,
                 "Failed to write to Writer", e
-            );
+            )
+                .setFieldPath(getCurrentFieldPath());
         }
     }
 
@@ -1146,7 +1152,8 @@ public final class SerializationProvider {
                 JsonSerializationException.SERIALIZATION_ERROR,
                 "Failed to instantiate custom serializer: " + annotation.using().getName(),
                 e
-            );
+            )
+                .setFieldPath(getCurrentFieldPath());
         }
     }
 
@@ -1193,7 +1200,8 @@ public final class SerializationProvider {
                 "@JsonValue method invocation failed for " + obj.getClass().getName()
                     + ": " + e.getMessage(),
                 e
-            );
+            )
+                .setFieldPath(getCurrentFieldPath());
         }
     }
 
