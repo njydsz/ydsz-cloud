@@ -8,7 +8,6 @@ import com.njydsz.common.json.annotation.JsonTypeName;
 import com.njydsz.common.json.annotation.JsonSubType;
 import com.njydsz.common.json.annotation.JsonSubTypes;
 import com.njydsz.common.json.annotation.JsonTypeInfo;
-import com.njydsz.common.json.autotype.AutoTypeChecker;
 
 /**
  * 多态类型解析器
@@ -190,7 +189,6 @@ public final class PolymorphicTypeResolver {
 
         Class<?> resolvedType = mapping.resolveType(typeName);
         if (resolvedType != null) {
-            AutoTypeChecker.checkType(resolvedType);
             return resolvedType;
         }
         return baseType;

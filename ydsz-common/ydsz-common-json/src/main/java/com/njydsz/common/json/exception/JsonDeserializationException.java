@@ -158,7 +158,26 @@ public class JsonDeserializationException extends JsonException {
     }
 
     /**
-     * 设置当前字段名（用于反序列化过程中追踪当前字段）
+     * 设置当前字段名（用于反序列化过程中追踪当前字段）。
+     *
+     * <p>与 {@link #setFieldName(String)} 功能一致，返回 {@code this} 支持链式调用。
+     * 推荐在创建异常后立即链式调用，例如：</p>
+     * <pre>
+     * throw new JsonDeserializationException(TYPE_MISMATCH, "类型不匹配")
+     *     .withFieldName(fieldName);
+     * </pre>
+     *
+     * @param fieldName 字段名
+     * @return this（链式调用）
+     * @since 1.2.0
+     */
+    public JsonDeserializationException withFieldName(String fieldName) {
+        this.fieldName = fieldName;
+        return this;
+    }
+
+    /**
+     * 设置当前字段名的旧版方法（链式调用版见 {{@link #withFieldName(String)}}）。
      *
      * @param fieldName 字段名
      */
@@ -261,6 +280,28 @@ public class JsonDeserializationException extends JsonException {
             sb.append("\n  context: ...").append(contextSnippet).append("...");
         }
         return sb.toString();
+    }
+
+    /**
+     * 获取位置引用字符串，格式为 {@code (line:X, column:Y)}。
+     *
+     * <p>如果 {@link #line} 和 {@link column} 尚未设置（值为 -1），
+     * 尝试从 {@code position}（通过 {@link #getPosition()} 获取）从 JSON 源中重新计算。
+     * 若无法计算则返回 {@code (unknown)}。</p>
+     *
+     * <p>此方法便于统一获取位置引用格式，无需关心内部是预先计算的行列号还是原始偏移量。</p>
+     *
+     * @return 格式为 {@code (line:X, column:Y)} 的位置引用字符串，无法确定时返回 {@code (unknown)}
+     * @since 1.2.0
+     * @see #getLine()
+     * @see #getColumn()
+     */
+    public String getLocationReference() {
+        if (line > 0 && column > 0) {
+            return "(line:" + line + ", column:" + column + ")";
+        }
+        // line/column 未设置时返回 unknown（无法从 position 反向推算，无 JSON 上下文字符串）
+        return "(unknown)";
     }
 
     /**

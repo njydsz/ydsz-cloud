@@ -13,8 +13,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 
-import com.njydsz.common.json.autotype.AutoTypeChecker;
-import com.njydsz.common.json.autotype.AutoTypeWhitelistScanner;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.health.JsonHealthIndicator;
 import com.njydsz.common.json.internal.DualJsonDetector;
@@ -187,17 +185,6 @@ public class JsonAutoConfiguration {
                     .build();
             // 安装为全局不可变配置实例，后续修改必须走 install(newConfig)
             JsonConfig.install(newConfig);
-
-            // 安全模式设置
-            AutoTypeChecker.setSafeMode(properties.isSafeMode());
-
-            // 启动时扫描 @JsonClass 注解类，注册到 AutoTypeChecker 白名单
-            // 替代原运行时反射加载方式，避免 Class.forName 的副作用
-            if (properties.getWhitelistPackages() != null
-                    && !properties.getWhitelistPackages().isEmpty()) {
-                AutoTypeWhitelistScanner.scanAndRegister(
-                        properties.getWhitelistPackages().toArray(new String[0]));
-            }
 
             // 注册 Spring Factory 模块
             JsonModuleRegistrar registrar = new JsonModuleRegistrar(springModules);

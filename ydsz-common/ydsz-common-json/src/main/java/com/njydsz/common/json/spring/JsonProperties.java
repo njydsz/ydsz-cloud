@@ -1,7 +1,5 @@
 package com.njydsz.common.json.spring;
 
-import java.util.Arrays;
-import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -29,10 +27,7 @@ import jakarta.validation.constraints.NotNull;
  *     max-json-size: 10485760
  *     max-depth: 256
  *     max-generic-depth: 64
- *     safe-mode: true
  *     monitoring-enabled: false
- *     whitelist-packages:
- *       - com.njydsz
  * }</pre>
  *
  * @author ydsz-team
@@ -76,9 +71,6 @@ public class JsonProperties {
     @Min(1)
     private int maxGenericDepth = 64;
 
-    /** 是否启用安全模式（AutoType 白名单检查，默认开启） */
-    private boolean safeMode = true;
-
     /** 是否启用性能监控 */
     private boolean monitoringEnabled = true;
 
@@ -91,14 +83,6 @@ public class JsonProperties {
     /** 反序列化失败时是否抛出异常 */
     private boolean failOnError = false;
 
-    /**
-     * 启动时扫描 @JsonClass 注解类的基础包列表。
-     *
-     * <p>扫描结果会注册到 {@code AutoTypeChecker} 白名单，避免运行时反射加载类的副作用。
-     * 支持通配符模式，例如 {@code com.njydsz.*.entity} 匹配所有子包下的 entity 包。
-     * 默认扫描 {@code com.njydsz} 包，覆盖所有项目业务代码。</p>
-     */
-    private List<String> whitelistPackages = Arrays.asList("com.njydsz");
 
     /** 是否启用流式输出（HTTP 响应使用 chunked transfer encoding） */
     private boolean streamingEnabled = false;
@@ -241,16 +225,6 @@ public class JsonProperties {
         this.maxGenericDepth = maxGenericDepth;
     }
 
-    // --- safeMode ---
-
-    public boolean isSafeMode() {
-        return safeMode;
-    }
-
-    public void setSafeMode(boolean safeMode) {
-        this.safeMode = safeMode;
-    }
-
     // --- monitoringEnabled ---
 
     public boolean isMonitoringEnabled() {
@@ -289,16 +263,6 @@ public class JsonProperties {
 
     public void setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
-    }
-
-    // --- whitelistPackages ---
-
-    public List<String> getWhitelistPackages() {
-        return whitelistPackages;
-    }
-
-    public void setWhitelistPackages(List<String> whitelistPackages) {
-        this.whitelistPackages = whitelistPackages;
     }
 
     // --- streamingEnabled ---

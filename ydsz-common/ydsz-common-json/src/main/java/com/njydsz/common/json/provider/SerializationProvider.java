@@ -666,7 +666,8 @@ public final class SerializationProvider {
             // 在顶层捕获 StackOverflowError 并转换为有意义的异常
             throw new JsonSerializationException(
                 JsonSerializationException.SERIALIZATION_ERROR,
-                "Stack overflow during serialization: object graph too deep or circular reference", e);
+                "Stack overflow during serialization: object graph too deep or circular reference", e)
+                .setFieldPath(getCurrentFieldPath());
         } catch (Exception e) {
             throw wrapSerializationException(obj, e);
         } finally {
@@ -709,11 +710,7 @@ public final class SerializationProvider {
         } catch (JsonSerializationException e) {
             throw e;
         } catch (Exception e) {
-            throw new JsonSerializationException(
-                JsonSerializationException.SERIALIZATION_ERROR,
-                "Serialization failed for " + obj.getClass().getName() + ": " + e.getMessage(),
-                e
-            );
+            throw wrapSerializationException(obj, e);
         } finally {
             objects.clear();
         }

@@ -19,7 +19,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.annotation.JsonDeserialize;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
@@ -46,7 +45,6 @@ import com.njydsz.common.json.reader.JSONReader;
  *
  * <p><b>反序列化流程：</b></p>
  * <ol>
- *   <li>类型安全检查 - AutoTypeChecker 白名单/黑名单校验</li>
  *   <li>快速路径分派 - 基本类型直接解析，其余走 BeanDeserializerEngine</li>
  *   <li>执行解析 - ASM/BeanReader/Creator/Builder/ZeroCopy 多级降级</li>
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
@@ -283,13 +281,7 @@ public final class DeserializationProvider {
                 return result != null ? clazz.cast(result) : null;
             }
 
-            // 统一安全门控：AutoTypeChecker 作为唯一的类型安全检查入口
-            AutoTypeChecker.checkType(clazz);
-
             Class<?> actualType = resolvePolymorphicType(json, clazz);
-            if (actualType != clazz) {
-                AutoTypeChecker.checkType(actualType);
-            }
 
             // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护，
             // 超阈值即抛 JsonDeserializationException，无需在此预扫描（原实现存在 O(n) 双重扫描
@@ -335,7 +327,6 @@ public final class DeserializationProvider {
      *
      * <p><b>注意：</b>当前版本 {@code features} 参数仅用于 JSON 长度限制检查，
      * 其他 Feature 配置尚未实现，保留参数位置以便后续扩展。
-     * 如需 AutoType 安全检查，请通过 {@link AutoTypeChecker#setSafeMode(boolean)} 全局配置。</p>
      *
      * @param json JSON 字符串
      * @param clazz 目标类型
@@ -471,7 +462,6 @@ public final class DeserializationProvider {
      */
     private static Object deserializeToObjectInternal(String json, Type type) {
         if (type instanceof Class<?> clazz) {
-            AutoTypeChecker.checkType(clazz);
             Object result = deserializeValue(json, clazz);
             return result;
         }
@@ -500,8 +490,6 @@ public final class DeserializationProvider {
             if (rawType == List.class || rawType == ArrayList.class) {
                 Type elementType = pt.getActualTypeArguments()[0];
                 if (elementType instanceof Class<?> elementClass) {
-                    // 安全检查：校验容器元素类型，防止泛型路径绕过 AutoType 白名单
-                    AutoTypeChecker.checkType(elementClass);
                     if (BeanDeserializerEngine.isSimpleType(elementClass)) {
                         return BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);
                     } else {
@@ -518,7 +506,6 @@ public final class DeserializationProvider {
                 if (parsed == null) return null;
                 // 当 value 类型为已知简单类型时，转换解析结果（如 Long → Integer）
                 if (typeArgs.length == 2 && typeArgs[1] instanceof Class<?> valueClass) {
-                    AutoTypeChecker.checkType(valueClass);
                     if (valueClass != Object.class) {
                         Map<String, Object> result = createMap(rawType);
                         for (Map.Entry<String, Object> entry : parsed.entrySet()) {
@@ -536,8 +523,6 @@ public final class DeserializationProvider {
                     || rawType == TreeSet.class) {
                 Type elementType = pt.getActualTypeArguments()[0];
                 if (elementType instanceof Class<?> elementClass) {
-                    // 安全检查：校验 Set 元素类型
-                    AutoTypeChecker.checkType(elementClass);
                     if (BeanDeserializerEngine.isSimpleType(elementClass)) {
                         List<?> list = BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);
                         if (list == null) return null;

@@ -17,7 +17,6 @@ import com.njydsz.common.json.spring.JsonProperties;
  *   <li>命名策略（camelCase / snake_case 等）</li>
  *   <li>日期格式 / 默认日期格式</li>
  *   <li>枚举序列化方式（name / ordinal）</li>
- *   <li>安全模式（AutoType 白名单检查）</li>
  *   <li>严格模式（双体系一致性校验）</li>
  *   <li>Jackson 自动配置排除状态</li>
  *   <li>当前全局配置版本号</li>
@@ -25,7 +24,6 @@ import com.njydsz.common.json.spring.JsonProperties;
  *
  * <p><b>健康判断逻辑：</b>
  * <ul>
- *   <li>启用安全模式（safeMode=true）时为健康</li>
  *   <li>strictMode 下发现异常配置（如 Jackson 自动配置关闭但 Jackson 仍在类路径）标记为 DOWN</li>
  *   <li>日期格式配置与默认日期格式不一致时不影响健康（仅为信息展示）</li>
  * </ul>
@@ -66,7 +64,6 @@ public class JsonHealthIndicator implements HealthIndicator {
         details.put("wrapRootValue", properties.isWrapRootValue());
 
         // 安全相关
-        details.put("safeMode", properties.isSafeMode());
         details.put("strictMode", properties.isStrictMode());
         details.put("disableJacksonAutoConfiguration", properties.isDisableJacksonAutoConfiguration());
 
@@ -78,14 +75,8 @@ public class JsonHealthIndicator implements HealthIndicator {
         // 当前全局配置版本号
         details.put("configVersion", JsonConfig.getConfigVersion());
 
-        // 安全模式判断
-        Health.Builder builder = Health.up();
-        if (!properties.isSafeMode()) {
-            builder.withDetail("warning", "安全模式（AutoType 白名单检查）未开启，存在潜在反序列化风险");
-            // 不标记为 DOWN，仅输出警告（部分遗留项目可能仍需要关闭安全模式）
-        }
-
         // 严格模式下的 Jackson 双体系检测（运行时状态快照）
+        Health.Builder builder = Health.up();
         if (properties.isStrictMode() && properties.isDisableJacksonAutoConfiguration()) {
             try {
                 Class.forName("com.fasterxml.jackson.databind.ObjectMapper",
