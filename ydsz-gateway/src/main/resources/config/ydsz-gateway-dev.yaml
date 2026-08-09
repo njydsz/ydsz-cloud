@@ -107,14 +107,14 @@ ydsz:
       - com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule
   gateway:
     # P0-2: 内部头签名密钥（与 JWT 密钥分离，避免单密钥泄漏导致整体信任链破裂）
-    # ⚠️ 生产环境必须通过 REMI_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入强随机密钥（≥32 字节）
+    # ⚠️ 生产环境必须通过 YDSZ_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入强随机密钥（≥32 字节）
     # 开发环境如未配置，自动回退到 ydsz.jwt.secret（仅用于本地调试）
-    internal-sign-secret: ${REMI_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
+    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
     # P0-4: WebSocket Origin 白名单（防跨域 WebSocket 劫持）
     # 逗号分隔，支持通配符（如 https://*.ydsz.example.com）
     # dev 环境为空表示不校验 Origin；prod 环境必须配置可信域
     websocket:
-      allowed-origins: ${REMI_GATEWAY_WS_ALLOWED_ORIGINS:}
+      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:}
     # P0-阶段二-2/3/4: Sentinel 规则配置
     sentinel:
       nacos-datasource-enabled: false
@@ -138,8 +138,8 @@ ydsz:
         - /actuator/info
     # P1-3: API Key 认证配置（外部系统接入）
     api-key:
-      enabled: ${REMI_GATEWAY_API_KEY_ENABLED:false}
-      keys: ${REMI_GATEWAY_API_KEYS:}
+      enabled: ${YDSZ_GATEWAY_API_KEY_ENABLED:false}
+      keys: ${YDSZ_GATEWAY_API_KEYS:}
       protected-paths: /api/project/**,/api/workflow/**
     # P1-8: 请求体安全校验配置
     payload-validation:

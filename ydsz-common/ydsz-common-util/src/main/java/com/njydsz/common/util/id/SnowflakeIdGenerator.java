@@ -234,13 +234,13 @@ public class SnowflakeIdGenerator {
     /**
      * 计算工作节点 ID。
      *
-     * <p>优先级：系统属性 > 环境变量 REMI_SNOWFLAKE_WORKER_ID > HOSTNAME 哈希 > 本地 IP 哈希
+     * <p>优先级：系统属性 > 环境变量 YDSZ_SNOWFLAKE_WORKER_ID > HOSTNAME 哈希 > 本地 IP 哈希
      *
      * @return 计算得到的节点 ID
      */
     private static long computeWorkerId() {
         String configured = System.getProperty("ydsz.snowflake.workerId",
-                System.getenv("REMI_SNOWFLAKE_WORKER_ID"));
+                System.getenv("YDSZ_SNOWFLAKE_WORKER_ID"));
         if (configured != null && !configured.isEmpty()) {
             try {
                 long id = Long.parseLong(configured);
@@ -276,13 +276,13 @@ public class SnowflakeIdGenerator {
     /**
      * 计算数据中心 ID。
      *
-     * <p>优先级：系统属性 > 环境变量 REMI_SNOWFLAKE_DATACENTER_ID > 主机名哈希
+     * <p>优先级：系统属性 > 环境变量 YDSZ_SNOWFLAKE_DATACENTER_ID > 主机名哈希
      *
      * @return 计算得到的数据中心 ID
      */
     private static long computeDatacenterId() {
         String configured = System.getProperty("ydsz.snowflake.datacenterId",
-                System.getenv("REMI_SNOWFLAKE_DATACENTER_ID"));
+                System.getenv("YDSZ_SNOWFLAKE_DATACENTER_ID"));
         if (configured != null && !configured.isEmpty()) {
             try {
                 long id = Long.parseLong(configured);

@@ -30,7 +30,7 @@ import lombok.Setter;
  *   <li>datacenterId：数据中心ID，范围 0-31</li>
  *   <li>workerIdSource：workerId 来源策略
  *     <ul>
- *       <li>ENVIRONMENT_VARIABLE：从环境变量 REMI_SNOWFLAKE_WORKER_ID 读取（默认）</li>
+ *       <li>ENVIRONMENT_VARIABLE：从环境变量 YDSZ_SNOWFLAKE_WORKER_ID 读取（默认）</li>
  *       <li>CONFIG：从配置文件读取</li>
  *     </ul>
  *   </li>
@@ -47,7 +47,7 @@ import lombok.Setter;
 public class SnowflakeProperties {
 
     /** WorkerId 环境变量名 */
-    public static final String WORKER_ID_ENV_VAR = "REMI_SNOWFLAKE_WORKER_ID";
+    public static final String WORKER_ID_ENV_VAR = "YDSZ_SNOWFLAKE_WORKER_ID";
 
     /**
      * 工作节点ID

@@ -80,5 +80,5 @@ public final class DocConstants {
     /**
      * YDSZ 文档配置属性前缀
      */
-    public static final String REMI_DOC_PREFIX = "ydsz.doc";
+    public static final String YDSZ_DOC_PREFIX = "ydsz.doc";
 }

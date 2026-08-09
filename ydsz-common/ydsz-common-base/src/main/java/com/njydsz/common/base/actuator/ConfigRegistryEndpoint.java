@@ -34,7 +34,7 @@ import java.util.TreeMap;
 @Endpoint(id = "config-registry")
 public class ConfigRegistryEndpoint {
 
-    private static final String REMI_PREFIX = "ydsz.";
+    private static final String YDSZ_PREFIX = "ydsz.";
 
     private final Environment environment;
 
@@ -56,7 +56,7 @@ public class ConfigRegistryEndpoint {
                 if (propertySource.getSource() instanceof Map<?, ?> sourceMap) {
                     for (Map.Entry<?, ?> entry : sourceMap.entrySet()) {
                         String key = String.valueOf(entry.getKey());
-                        if (key.startsWith(REMI_PREFIX)) {
+                        if (key.startsWith(YDSZ_PREFIX)) {
                             result.putIfAbsent(key, entry.getValue());
                         }
                     }
@@ -75,7 +75,7 @@ public class ConfigRegistryEndpoint {
      */
     @ReadOperation
     public Map<String, Object> readConfigByPrefix(@Selector String prefix) {
-        String fullPrefix = prefix.startsWith(REMI_PREFIX) ? prefix : REMI_PREFIX + prefix;
+        String fullPrefix = prefix.startsWith(YDSZ_PREFIX) ? prefix : YDSZ_PREFIX + prefix;
         Map<String, Object> result = new TreeMap<>();
 
         if (environment instanceof ConfigurableEnvironment configurableEnv) {

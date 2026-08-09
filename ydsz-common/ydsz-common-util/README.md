@@ -182,7 +182,7 @@ ydsz:
     snowflake:
       enabled: true                     # 启用 Snowflake 自动配置（默认启用）
       worker-id-source: ENVIRONMENT_VARIABLE   # workerId 来源策略
-      environment-variable-name: REMI_SNOWFLAKE_WORKER_ID
+      environment-variable-name: YDSZ_SNOWFLAKE_WORKER_ID
 ```
 
 > 线程池监控由 `ydsz-common-thread` 模块统一提供（配置驱动的池自动绑定 Micrometer 指标 + `ThreadHealthIndicator`）；本模块 `ExecutorUtils` 仅提供静态工厂方法，业务自行管理生命周期。
@@ -213,10 +213,10 @@ BeanCopyUtils.copyProperties(source, target);
 | `ydsz.util.snowflake.worker-id` | - | 工作节点 ID（0-31，仅 `worker-id-source=CONFIG` 时生效） |
 | `ydsz.util.snowflake.datacenter-id` | - | 数据中心 ID（0-31，未配置时基于主机名哈希自动计算） |
 | `ydsz.util.snowflake.worker-id-source` | `ENVIRONMENT_VARIABLE` | workerId 来源策略：`ENVIRONMENT_VARIABLE` / `CONFIG` / `INSTANCE_INDEX` |
-| `ydsz.util.snowflake.environment-variable-name` | `REMI_SNOWFLAKE_WORKER_ID` | 环境变量名 |
+| `ydsz.util.snowflake.environment-variable-name` | `YDSZ_SNOWFLAKE_WORKER_ID` | 环境变量名 |
 | `ydsz.util.snowflake.lease-millis` | `300000` | WorkerId 租约时间（毫秒），仅在使用 `WorkerIdRegistry` 时生效 |
 
-> workerId 解析优先级：分布式注册中心（`WorkerIdRegistry` Bean）> 配置策略（ENV/CONFIG/INSTANCE_INDEX）> 基于 IP 哈希自动计算。datacenterId 解析优先级：配置文件 > 环境变量 `REMI_SNOWFLAKE_DATACENTER_ID` > 基于主机名哈希自动计算。注册中心获取 WorkerId 后会自动启动心跳续约，应用关闭时自动释放。
+> workerId 解析优先级：分布式注册中心（`WorkerIdRegistry` Bean）> 配置策略（ENV/CONFIG/INSTANCE_INDEX）> 基于 IP 哈希自动计算。datacenterId 解析优先级：配置文件 > 环境变量 `YDSZ_SNOWFLAKE_DATACENTER_ID` > 基于主机名哈希自动计算。注册中心获取 WorkerId 后会自动启动心跳续约，应用关闭时自动释放。
 >
 > 线程池监控统一由 `ydsz-common-thread` 模块提供（Micrometer 指标前缀 `executor.*`）；本模块不重复实现线程池监控。
 

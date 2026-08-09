@@ -126,10 +126,10 @@ feign:
 ydsz:
   gateway:
     # P0-2: 内部头签名密钥（生产环境必须通过环境变量注入强随机密钥）
-    internal-sign-secret: ${REMI_GATEWAY_INTERNAL_SIGN_SECRET:}
+    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
     # P0-4: WebSocket Origin 白名单（生产环境必须配置）
     websocket:
-      allowed-origins: ${REMI_GATEWAY_WS_ALLOWED_ORIGINS:https://ydsz.example.com,https://*.ydsz.example.com}
+      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://ydsz.example.com,https://*.ydsz.example.com}
     # P0-阶段二-2/3/4: Sentinel 规则配置
     sentinel:
       nacos-datasource-enabled: true

@@ -93,11 +93,11 @@ feign:
 ydsz:
   gateway:
     # P0-2: 内部头签名密钥（与 JWT 密钥分离）
-    # UAT 环境通过 REMI_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入
-    internal-sign-secret: ${REMI_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
+    # UAT 环境通过 YDSZ_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入
+    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
     # P0-4: WebSocket Origin 白名单
     websocket:
-      allowed-origins: ${REMI_GATEWAY_WS_ALLOWED_ORIGINS:https://uat.example.com,https://*.uat.example.com}
+      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://uat.example.com,https://*.uat.example.com}
     # P0-阶段二-2/3/4: Sentinel 规则配置
     sentinel:
       nacos-datasource-enabled: false

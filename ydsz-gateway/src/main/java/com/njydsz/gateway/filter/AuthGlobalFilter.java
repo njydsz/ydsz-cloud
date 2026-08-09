@@ -140,7 +140,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      * P0-2: 内部头签名密钥（独立配置，禁止复用 JWT 密钥）。
      *
      * <p>配置项：{@code ydsz.gateway.internal-sign-secret}
-     * 环境变量：{@code REMI_GATEWAY_INTERNAL_SIGN_SECRET}
+     * 环境变量：{@code YDSZ_GATEWAY_INTERNAL_SIGN_SECRET}
      *
      * <p>历史兼容：如未配置，回退到 {@code ydsz.jwt.secret}（启动时记录 WARN 日志提醒运维分离密钥）。
      * 这种回退仅作为过渡，后续版本将强制要求独立配置。
@@ -167,8 +167,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     internalSignSecret.length(), MIN_INTERNAL_SECRET_LENGTH);
         }
         // 提示密钥来源（用于运维排查"密钥未分离"问题）
-        String source = System.getenv("REMI_GATEWAY_INTERNAL_SIGN_SECRET") != null
-                ? "REMI_GATEWAY_INTERNAL_SIGN_SECRET"
+        String source = System.getenv("YDSZ_GATEWAY_INTERNAL_SIGN_SECRET") != null
+                ? "YDSZ_GATEWAY_INTERNAL_SIGN_SECRET"
                 : (System.getenv("JWT_SECRET") != null ? "JWT_SECRET(fallback)" : "nacos-config");
         log.info("[AuthFilter] 内部头签名密钥已加载, source={}, length={}",
                 source, internalSignSecret.length());
