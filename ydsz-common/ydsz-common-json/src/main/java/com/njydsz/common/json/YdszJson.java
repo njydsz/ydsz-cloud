@@ -267,6 +267,42 @@ public class YdszJson {
         return defaultMapper.toObject(json, type);
     }
 
+    /**
+     * 反序列化 JSON 字符串为泛型集合（便捷重载，无需显式构造 {@link java.lang.reflect.Type}）。
+     *
+     * <p>内部通过 {@link com.njydsz.common.json.type.TypeFactory} 构造参数化类型，
+     * 再委托 {@link #fromJson(String, Type)} 完成反序列化。</p>
+     *
+     * <p><b>使用示例：</b></p>
+     * <pre>{@code
+     * // 反序列化为 List<User>
+     * List<User> users = YdszJson.fromJson(json, List.class, User.class);
+     *
+     * // 反序列化为 Set<String>
+     * Set<String> ids = YdszJson.fromJson(json, Set.class, String.class);
+     * }</pre>
+     *
+     * @param json           JSON 字符串
+     * @param collectionClass 集合类型（如 {@code List.class}、{@code Set.class}、{@code ArrayList.class}）
+     * @param elementClass   集合元素类型
+     * @return 反序列化后的集合对象，json 为空时返回 null
+     * @throws IllegalArgumentException 如果 collectionClass 是 Map 类型（应使用 fromJsonToMap）
+     * @since 1.2.0
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T fromJson(String json, Class<?> collectionClass, Class<?> elementClass) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        if (Map.class.isAssignableFrom(collectionClass)) {
+            throw new IllegalArgumentException(
+                "Map 类型反序列化请使用 fromJsonToMap(json, keyClass, valueClass)");
+        }
+        java.lang.reflect.Type type = com.njydsz.common.json.type.TypeFactory.getInstance()
+            .constructCollectionType(collectionClass, elementClass);
+        return (T) fromJson(json, type);
+    }
+
     // ==================== 自定义序列化器注册 ====================
 
     // 注意：历史版本提供 YdszJson.register(Class, JsonSerializer/JsonDeserializer) 静态注册方法，

@@ -30,4 +30,10 @@ module com.njydsz.common.json {
     // 序列化器接口
     exports com.njydsz.common.json.serializer;
     exports com.njydsz.common.json.deserializer;
+
+    // 安全白名单引擎
+    exports com.njydsz.common.json.autotype;
+
+    // Schema 校验（@Experimental）
+    exports com.njydsz.common.json.schema;
 }

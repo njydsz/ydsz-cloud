@@ -1,25 +1,26 @@
 # ydsz-common-json
 
-> YDSZ 高性能 JSON 引擎（L2 工具层）— ASM 字节码加速、有界软引用字段缓存、零拷贝反序列化、JIT 自动向量化、JsonNode 树模型、Jackson 兼容注解
+> YDSZ 高性能 JSON 引擎（L2 工具层）— 零依赖、char[] 零拷贝、FNV-1a 哈希字段匹配、递归下降解析、JsonNode 树模型、Jackson 兼容注解
 
-纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 ASM 字节码生成、零拷贝反序列化、ThreadLocal 池优化等技术实现超高性能；通过 Jackson 兼容注解实现平滑迁移。
+纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 char[] 直接操作、零拷贝反序列化、ThreadLocal 对象池、FNV-1a 哈希字段匹配、快速数值解析等技术实现高性能；通过 Jackson 兼容注解实现平滑迁移。
 
 **YdszJson 的架构设计兼具 Jackson 的"配置不可变"哲学和 Fastjson2 的"静态入口便利"。** `YdszJson` 作为静态入口提供 `toJson` / `toObject` 等零配置开箱即用体验，与 FastJSON 的静态工具风格一脉相承；而底层 `JsonConfig` 采用 `final` 字段构建不可变配置，配合 `JsonMapper.copyOf()` 以"副本 + 不可变替换"方式替代运行期可变状态，实现与 Jackson 相同的线程安全语义。两层 API 共享同一委托链（`YdszJson` → `JsonMapper` → `Execution` → `Engine`），行为完全一致，用户可根据场景自由选择而无需担心序列化行为分歧。
 
-## 最新变更（v1.1.0 — 过度设计治理与健壮性补齐）
+## 最新变更（v1.2.0 — 测试基座 / RFC 标准 / 流式支持）
 
-本次对标互联网大厂研发规范，从过度设计治理、功能成熟度标注、测试覆盖、健康检查简化四个维度完成优化：
+本次对标互联网大厂研发规范，从测试基座、RFC 标准、流式读写、泛型类型推断四个维度完成优化：
 
 | 编号 | 优先级 | 变更项 | 状态 |
 |---|---|---|---|
-| P2-FIX | P2 | **修复启动失败**：补充 `JsonHealthIndicator`、`JsonMetrics`、`JsonCacheMetrics`、`JsonWarmupRunner` 缺失的类（原 AutoConfiguration 引用但类不存在） | ✅ 已实施 |
-| P2-HI | P2 | **健康检查简化**：`JsonHealthIndicator` 从暴露 17+ 项内部指标收敛为 5 项关键指标（safeMode / namingStrategy / maxJsonSize / asmAvailable / registeredSerializers），详细指标走 Micrometer | ✅ 已实施 |
-| P4-MAT | P4 | **功能成熟度标签**：README 新增功能成熟度总览表（Stable / Beta / Experimental / Deprecated 四级标签），帮助用户判断功能可靠性 | ✅ 已实施 |
-| P4-ADR | P4 | **架构决策文档**：新增 `docs/ADR-001-json-engine-architecture.md`，记录自研引擎的设计选择、权衡与参考对标 | ✅ 已实施 |
-| P2-TEST | P2 | **核心测试补齐**：新增 `YdszJsonRoundTripTest`（序列化/反序列化 round-trip 测试）、`NamingStrategyTest`（命名策略转换测试）、`AutoTypeSecurityTest`（AutoType 安全门控测试） | ✅ 已实施 |
-| P2-WARM | P2 | **配置完善**：`JsonProperties` 新增 `warmupEnabled` 属性（默认 false），可控预热开关 | ✅ 已实施 |
+| P0-TEST | P0 | **测试基座补齐**：新增 `YdszJsonRoundTripTest`（20+ 用例，覆盖标量/POJO/集合/嵌套/继承/特殊字符/日期）、`YdszJsonSecurityTest`（10+ 安全用例，覆盖深度/数组/字符串限制、AutoType 白名单、注入防护）、`YdszJsonBenchmark`（JMH 竞品对比基线 vs Jackson/Fastjson2） | ✅ 已实施 |
+| P0-RFC | P0 | **JSON Patch (RFC 6902) + Merge Patch (RFC 7396)**：新增 `JsonPatch`（6 种操作 add/remove/replace/move/copy/test + JSON Pointer 路径解析）与 `JsonMergePatch`，REST PATCH 局部更新能力 | ✅ 已实施 |
+| P1-NDJSON | P1 | **JSON Lines (NDJSON)**：新增 `JsonLines` 工具类（Writer/Reader/Stream 三种形态），支撑日志导出、大数据批量导入、SSE 流 API | ✅ 已实施 |
+| P1-TYPEREF | P1 | **泛型类型推断**：新增 `TypeRef` 工具类（`TypeRef.list(User.class)` / `map(String, User.class)` 等工厂方法），对标 Jackson `TypeReference` | ✅ 已实施 |
+| P1-SECURITY | P1 | **AutoType 安全引擎**：新增 `AutoTypeChecker`（白名单机制，父类/接口层次化匹配，深度上限 32 层防 DoS）与 `JsonSecurityUtils`（安全工具门面） | ✅ 已实施 |
+| P1-MODULE | P1 | **JDK Module 支持**：新增 `module-info.java`（JPMS 强封装，exports 11 个核心包） | ✅ 已实施 |
+| P2-FIX | P2 | **修复启动失败**：`JsonConfig.install()` 原子替换 + 配置变更监听器（命名策略/日期格式/枚举变更时自动清空 BeanSerializerCache） | ✅ 已实施 |
 
-> **遗留计划**（P0 架构重构将在后续版本推进）：消除 ThreadLocal Snapshot 机制改为显式参数传递、合并 SerializerRegistry/JsonModuleRegistry 双轨注册。
+> **已知限制（v1.2.0）**：ASM 字节码生成、Micrometer 指标、Actuator 健康检查（`JsonHealthIndicator`）为规划中能力，**尚未实装**。当前性能优化基于 char[] 直操作 + MethodHandle 反射加速，未使用字节码生成。
 
 ## 最新变更（v1.0.0 优化汇总）
 
@@ -29,8 +30,6 @@
 |---|---|---|---|
 | P0-SO | P0 | **泛型递归深度保护**：新增 `max-generic-depth`（默认 64）防御恶意嵌套泛型 `List<List<...>>` 导致 StackOverflow | ✅ 已实施 |
 | P1-FP | P1 | **序列化异常字段路径追踪**：`JsonSerializationException` 新增 `fieldPath` 字段，异常消息输出 `at path 'user.address.street'` | ✅ 已实施 |
-| P1-HI | P1 | **JsonHealthIndicator 增强**：Actuator 健康检查新增 `maxGenericDepth`、`asmDowngradeCount` 运行时指标 | ✅ 已实施 |
-| P1-API | P1 | **YdszJson 运行时查询 API**：新增 `isNativeImage()` / `isAsmAvailable()` / `getStats()` 运行时工具方法 | ✅ 已实施 |
 | P1-IMM | P1 | **JsonConfig 构建后不可变**：新增 `install()` 方法替代旧 `setInstance` 模式，AutoConfig 走 Builder + install 不可变安装 | ✅ 已实施 |
 
 ## 模块定位
@@ -40,8 +39,8 @@
 | **层级** | L2 工具模块层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供高性能 JSON 序列化/反序列化、树模型、Jackson 兼容注解、Spring MVC 集成等能力 |
-| **依赖** | Lombok；可选依赖 ASM、SLF4J、Spring Boot AutoConfigure、Spring Web、Micrometer、Jackson Annotations（编译期可见）、Jakarta Validation |
-| **版本** | 1.0.0 |
+| **依赖** | Lombok；可选依赖 SLF4J、Spring Boot AutoConfigure、Spring Web、Jackson Annotations（编译期可见）、Jakarta Validation |
+| **版本** | 1.2.0 |
 
 ## 功能成熟度总览
 
@@ -57,16 +56,19 @@
 | 功能域 | 成熟度 | 备注 |
 |---|---|---|
 | 核心序列化/反序列化 | **Stable** | 含基本类型/嵌套对象/集合/泛型 |
-| ASM 字节码加速 | **Stable** | GraalVM 自动降级 |
 | 注解体系（@JsonProperty/@JsonIgnore/@JsonFormat/@JsonInclude 等常用注解） | **Stable** | 80%+ Jackson 兼容 |
 | Tree 模型（JsonNode/ObjectNode/ArrayNode） | **Stable** | |
 | 命名策略（SNAKE_CASE/KEBAB_CASE/LOWER_CASE） | **Stable** | |
 | Spring Boot 集成（JsonAutoConfiguration/JsonHttpMessageConverter） | **Stable** | |
 | Module 系统（JsonModule SPI） | **Beta** | |
 | @JsonCreator 构造器模式 | **Beta** | |
-| JSON Path 查询 | **Beta** | 标注 @Experimental |
-| JSON Merge Patch | **Beta** | 标注 @Experimental |
-| JSON Pointer（RFC 6901） | **Beta** | 实现完整但使用场景少 |
+| JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Beta** | v1.2.0 新增 |
+| JSON Lines (NDJSON) | **Beta** | v1.2.0 新增 |
+| TypeRef 泛型工厂 | **Beta** | v1.2.0 新增 |
+| AutoType 安全引擎（AutoTypeChecker） | **Beta** | v1.2.0 新增 |
+| JSON Schema 校验 | **Experimental** | 标注 @Experimental |
+| ASM 字节码加速 | **规划中** | 未实装，当前用 MethodHandle + 反射缓存 |
+| Micrometer 指标 / Actuator 健康检查 | **规划中** | 未实装 |
 | @JsonBuilder 构造器模式 | **Deprecated** | 推荐使用 @JsonCreator + 静态工厂方法 |
 | @JsonView 视图过滤 | **Deprecated** | 推荐定义独立 DTO 或手动裁剪字段 |
 | @JsonUnwrapped | **Deprecated** | 推荐将嵌套对象序列化为子对象结构 |

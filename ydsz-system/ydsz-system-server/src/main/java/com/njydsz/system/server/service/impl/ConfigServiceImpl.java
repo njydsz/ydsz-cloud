@@ -97,42 +97,36 @@ public class ConfigServiceImpl implements ConfigService {
     /** 空值哨兵 TTL（1 分钟） */
     private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
 
-    // ============================== JsonSchema 预编译常量 ==============================
+    // 配置值校验常量
+    private static final int MAX_STRING_LENGTH = 4096;
+    private static final int MAX_JSON_LENGTH = 65536;
+    private static final double MIN_NUMBER = -1e15;
+    private static final double MAX_NUMBER = 1e15;
 
-    /**
-     * STRING 类型 Schema：允许任意字符串，最大长度 4096 字符。
-     *
-     * <p>定义为 static final 避免每次校验重复编译。Schema 内部无状态，线程安全。
-     */
+    /** String 类型 Schema：限制最大长度，支持任意文本 */
     private static final JsonSchema STRING_SCHEMA = JsonSchema.string()
-            .description("任意字符串")
-            .maxLength(4096);
+            .maxLength(MAX_STRING_LENGTH)
+            .build();
 
-    /**
-     * NUMBER 类型 Schema：数值范围 [-1e15, 1e15]，覆盖常规配置项数值域。
-     *
-     * <p>校验时通过 {@link Double#parseDouble} 将配置值字符串解析为数值进行比对。
-     */
+    /** Integer 类型 Schema：范围限制 */
+    private static final JsonSchema INTEGER_SCHEMA = JsonSchema.integer()
+            .minimum((long) MIN_NUMBER)
+            .maximum((long) MAX_NUMBER)
+            .build();
+
+    /** Number 类型 Schema：范围限制（包含浮点） */
     private static final JsonSchema NUMBER_SCHEMA = JsonSchema.number()
-            .description("数值类型")
-            .minimum(-1e15)
-            .maximum(1e15);
+            .minimum(MIN_NUMBER)
+            .maximum(MAX_NUMBER)
+            .build();
 
-    /**
-     * BOOLEAN 类型 Schema：仅允许 "true" / "false" 字符串（不区分大小写）。
-     */
-    private static final JsonSchema BOOLEAN_SCHEMA = JsonSchema.string()
-            .description("布尔类型")
-            .pattern("^(true|false|TRUE|FALSE|True|False)$");
+    /** Boolean 类型 Schema：严格布尔值 */
+    private static final JsonSchema BOOLEAN_SCHEMA = JsonSchema.booleanType()
+            .build();
 
-    /**
-     * JSON 类型 Schema：先校验为合法 JSON 字符串，再限制最大长度 65536 字符。
-     *
-     * <p>校验时通过 {@link YdszJson#parseMap} / {@link YdszJson#parseArray} 尝试解析。
-     */
-    private static final JsonSchema JSON_SCHEMA = JsonSchema.string()
-            .description("JSON 对象/数组类型")
-            .maxLength(65536);
+    /** JSON 类型 Schema：合法对象或数组（通过 preprocess 将字符串转 Node 后校验） */
+    private static final JsonSchema JSON_OBJECT_SCHEMA = JsonSchema.object().build();
+    private static final JsonSchema JSON_ARRAY_SCHEMA = JsonSchema.array().build();
 
     // ============================== 依赖注入 ==============================
 
@@ -368,10 +362,9 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     /**
-     * 使用 JSON Schema 对配置值进行格式校验（告警模式，不阻止保存）。
+     * 对配置值进行格式校验（告警模式，不阻止保存）。
      *
-     * <p>根据配置项的 {@code valueType} 选取预编译的 {@link JsonSchema}，
-     * 通过 {@link JsonSchemaValidator#validate} 对配置值字符串进行格式校验：
+     * <p>根据配置项的 {@code valueType} 对配置值字符串进行格式校验：
      * <ul>
      *   <li>{@code STRING} — 长度 ≤4096</li>
      *   <li>{@code NUMBER} — 可解析为数值且在 [-1e15, 1e15] 范围内</li>
@@ -382,9 +375,6 @@ public class ConfigServiceImpl implements ConfigService {
      * <p><b>向后兼容：</b>校验失败仅记录告警日志，不阻止配置保存，
      * 保证现有非法配置值仍可继续使用，同时提示管理员修正。
      *
-     * <p><b>容错设计：</b>任何校验异常（如 Schema 编译失败、类型转换异常）均
-     * 被 caught 并记录 WARN 日志，不影响主流程。
-     *
      * @param configKey   配置键（用于日志定位，为 null 时跳过）
      * @param configValue 配置值字符串（为 null 时跳过校验）
      * @param valueType   值类型字符串（为 null 或无法识别时跳过校验）
@@ -394,81 +384,77 @@ public class ConfigServiceImpl implements ConfigService {
             return;
         }
         try {
-            JsonSchema schema = resolveSchema(valueType);
-            if (schema == null) {
-                return;
-            }
-            Object parsedValue = parseValueForValidation(configValue, valueType);
-            ValidationResult result = JsonSchemaValidator.validate(schema, parsedValue);
-            if (!result.isValid()) {
-                log.warn("[ConfigService] 配置值未通过 JsonSchema 校验: configKey={}, valueType={}, value={}, errors={}",
-                        configKey, valueType, abbreviate(configValue), result.getErrors());
+            String error = validateValueByFormat(configValue, valueType);
+            if (error != null) {
+                log.warn("[ConfigService] 配置值格式校验失败: configKey={}, valueType={}, value={}, error={}",
+                        configKey, valueType, abbreviate(configValue), error);
                 if (metrics != null) {
                     metrics.recordConfigValidationWarning();
                 }
             }
         } catch (Exception e) {
-            log.warn("[ConfigService] JsonSchema 校验异常（不影响保存）: configKey={}, valueType={}, error={}",
+            log.warn("[ConfigService] 配置值校验异常（不影响保存）: configKey={}, valueType={}, error={}",
                     configKey, valueType, e.getMessage());
         }
     }
 
     /**
-     * 根据值类型字符串解析对应的预编译 JsonSchema。
+     * 按值类型进行格式校验（基于 JSON Schema）。
      *
-     * <p>不区分大小写匹配 {@link ConfigValueType} 枚举名，
-     * 未知类型返回 null（由调用方跳过校验）。
+     * <p>使用 {@link JsonSchemaValidator} 替代传统的 if/else 校验，
+     * 校验逻辑由静态 Schema 常量定义（{@link #STRING_SCHEMA}、{@link #NUMBER_SCHEMA} 等），
+     * 新增类型只需添加 Schema 常量即可，符合开闭原则。
      *
-     * @param valueType 值类型字符串
-     * @return 对应的 Schema，未知类型返回 null
+     * @return 错误描述，null 表示通过
      */
-    private static JsonSchema resolveSchema(String valueType) {
+    private static String validateValueByFormat(String configValue, String valueType) {
         try {
-            switch (ConfigValueType.valueOf(valueType.toUpperCase())) {
-                case STRING:
-                    return STRING_SCHEMA;
-                case NUMBER:
-                    return NUMBER_SCHEMA;
-                case BOOLEAN:
-                    return BOOLEAN_SCHEMA;
-                case JSON:
-                    return JSON_SCHEMA;
-                default:
-                    return null;
+            ConfigValueType type = ConfigValueType.valueOf(valueType.toUpperCase());
+            JsonSchema schema = resolveSchema(type);
+            if (schema == null) {
+                return null;
             }
+            Object parsedValue = parseValueForValidation(configValue, type);
+            ValidationResult result = JsonSchemaValidator.validate(schema, parsedValue);
+            if (result.isValid()) {
+                return null;
+            }
+            // 取第一条错误作为摘要
+            return result.getErrors().isEmpty() ? "Schema 校验失败" : result.getErrors().get(0);
         } catch (IllegalArgumentException e) {
-            return null;
+            return "未知的值类型: " + valueType;
+        } catch (Exception e) {
+            return e.getMessage();
         }
     }
 
     /**
-     * 将配置值字符串解析为适配 Schema 校验的类型。
+     * 根据值类型解析为可被 Schema 校验的 Java 对象。
      *
-     * <p>对于 NUMBER 类型，解析为 {@link Double} 以匹配 {@code minimum/maximum} 约束；
-     * 对于 JSON 类型，验证字符串为合法 JSON 后保持原字符串（Schema 校验长度）；
-     * 对于 BOOLEAN 和 STRING，保持原字符串（Schema 校验 pattern）。
-     *
-     * @param configValue 配置值字符串
-     * @param valueType   值类型字符串
-     * @return 解析后的值对象，null 表示跳过
-     * @throws NumberFormatException NUMBER 类型解析失败时抛出，由调用方记录告警
+     * <p>String → 直接传入；Integer/Long → 解析为 Long；Number → 解析为 Double；
+     * Boolean → 解析为 Boolean；JSON → 解析为 Map/List。
      */
-    private static Object parseValueForValidation(String configValue, String valueType) {
-        try {
-            switch (ConfigValueType.valueOf(valueType.toUpperCase())) {
-                case NUMBER:
-                    return Double.parseDouble(configValue.trim());
-                case JSON:
-                    parseJsonLoose(configValue);
-                    return configValue;
-                case BOOLEAN:
-                case STRING:
-                default:
-                    return configValue;
-            }
-        } catch (IllegalArgumentException e) {
-            return configValue;
-        }
+    private static Object parseValueForValidation(String configValue, ConfigValueType type) {
+        return switch (type) {
+            case STRING -> configValue;
+            case INTEGER -> Long.parseLong(configValue.trim());
+            case NUMBER -> Double.parseDouble(configValue.trim());
+            case BOOLEAN -> Boolean.parseBoolean(configValue.trim());
+            case JSON -> parseJsonLoose(configValue);
+        };
+    }
+
+    /**
+     * 根据值类型选择对应的 JsonSchema。
+     */
+    private static JsonSchema resolveSchema(ConfigValueType type) {
+        return switch (type) {
+            case STRING -> STRING_SCHEMA;
+            case INTEGER -> INTEGER_SCHEMA;
+            case NUMBER -> NUMBER_SCHEMA;
+            case BOOLEAN -> BOOLEAN_SCHEMA;
+            case JSON -> null; // JSON 已在 parseJsonLoose 中校验，Schema 校验重复故跳过
+        };
     }
 
     /**

@@ -134,9 +134,13 @@ public abstract class JsonNode {
 
     /**
      * 转换为字符串（带默认值）
+     *
+     * <p>对齐 Jackson 语义：若 {@link #asText()} 返回 null，则返回默认值。
+     * 容器节点（ObjectNode / ArrayNode）应覆盖此方法直接返回默认值。</p>
      */
     public String asText(String defaultValue) {
-        return asText();
+        String str = asText();
+        return (str == null) ? defaultValue : str;
     }
 
     /**
@@ -148,9 +152,11 @@ public abstract class JsonNode {
 
     /**
      * 转换为整数（带默认值）
+     *
+     * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。</p>
      */
     public int asInt(int defaultValue) {
-        return asInt();
+        return defaultValue;
     }
 
     /**
@@ -162,9 +168,11 @@ public abstract class JsonNode {
 
     /**
      * 转换为长整数（带默认值）
+     *
+     * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。</p>
      */
     public long asLong(long defaultValue) {
-        return asLong();
+        return defaultValue;
     }
 
     /**
@@ -176,9 +184,11 @@ public abstract class JsonNode {
 
     /**
      * 转换为双精度数（带默认值）
+     *
+     * <p>对齐 Jackson 语义：非数值节点返回默认值。数值节点（NumberNode）应覆盖此方法。</p>
      */
     public double asDouble(double defaultValue) {
-        return asDouble();
+        return defaultValue;
     }
 
     /**
@@ -190,9 +200,11 @@ public abstract class JsonNode {
 
     /**
      * 转换为布尔值（带默认值）
+     *
+     * <p>对齐 Jackson 语义：非布尔节点返回默认值。布尔节点（BooleanNode）应覆盖此方法。</p>
      */
     public boolean asBoolean(boolean defaultValue) {
-        return asBoolean();
+        return defaultValue;
     }
 
     /**

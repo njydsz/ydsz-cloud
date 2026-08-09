@@ -167,6 +167,11 @@ public final class ObjectNode extends JsonNode {
     }
 
     @Override
+    public String asText(String defaultValue) {
+        return defaultValue;
+    }
+
+    @Override
     public int size() {
         return fields.size();
     }

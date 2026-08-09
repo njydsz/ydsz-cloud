@@ -47,6 +47,16 @@ public final class NumberNode extends JsonNode {
     }
 
     @Override
+    public String asText() {
+        return value.toString();
+    }
+
+    @Override
+    public String asText(String defaultValue) {
+        return asText();
+    }
+
+    @Override
     public int asInt() {
         return value.intValue();
     }
