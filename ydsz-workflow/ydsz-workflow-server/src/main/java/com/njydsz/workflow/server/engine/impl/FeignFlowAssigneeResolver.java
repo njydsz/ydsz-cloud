@@ -111,7 +111,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         }
         try {
             BaseResponse<List<String>> resp = orgQueryClient.listRoleCodesByUserId(userId);
-            if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
+            if (resp == null || !resp.isSuccess() || resp.getData() == null) {
                 return Collections.emptyList();
             }
             return resp.getData().stream()
@@ -141,7 +141,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         }
         try {
             BaseResponse<List<String>> resp = orgQueryClient.listDeptIdsByUserId(userId);
-            if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
+            if (resp == null || !resp.isSuccess() || resp.getData() == null) {
                 return Collections.emptyList();
             }
             return resp.getData().stream()
@@ -213,7 +213,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return Collections.emptyList();
         }
         BaseResponse<List<String>> resp = orgQueryClient.listUserIdsByRoleCode(roleCode);
-        if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
+        if (resp == null || !resp.isSuccess() || resp.getData() == null) {
             log.debug("[Flow] 角色展开返回空: roleCode={} resp={}", roleCode,
                     resp == null ? "null" : resp.getCode());
             return Collections.emptyList();
@@ -273,7 +273,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return Collections.emptyList();
         }
         BaseResponse<List<String>> resp = orgQueryClient.listUserIdsByPositionCode(positionCode);
-        if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
+        if (resp == null || !resp.isSuccess() || resp.getData() == null) {
             log.debug("[Flow] 岗位展开返回空: positionCode={} resp={}", positionCode,
                     resp == null ? "null" : resp.getCode());
             return Collections.emptyList();
@@ -355,7 +355,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      * @return Long 值，失败或为空时返回 null
      */
     private Long extractLong(BaseResponse<String> resp) {
-        if (resp == null || resp.getCode() != BaseResponse.SUCCESS) {
+        if (resp == null || !resp.isSuccess()) {
             return null;
         }
         return parseLong(resp.getData());

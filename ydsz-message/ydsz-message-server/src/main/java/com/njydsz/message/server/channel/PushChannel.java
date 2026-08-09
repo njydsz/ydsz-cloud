@@ -1,4 +1,4 @@
-package com.njydsz.message.server.channel.impl;
+﻿package com.njydsz.message.server.channel.impl;
 
 import java.util.List;
 
@@ -67,7 +67,7 @@ public class PushChannel implements MessageChannel {
         List<MessageResult> results = provider.batchSend(requests, null);
         log.info("[PushChannel] 批量推送: provider={} count={} success={}",
                 provider.providerType(), requests.size(),
-                results.stream().filter(MessageResult::isSuccess).count());
+                Response.stream().filter(MessageResult::isSuccess).count());
         return results;
     }
 

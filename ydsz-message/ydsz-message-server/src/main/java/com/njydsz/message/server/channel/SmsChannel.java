@@ -1,4 +1,4 @@
-package com.njydsz.message.server.channel.impl;
+﻿package com.njydsz.message.server.channel.impl;
 
 import java.util.List;
 import java.util.Map;
@@ -86,7 +86,7 @@ public class SmsChannel implements MessageChannel {
         List<MessageResult> results = provider.batchSend(requests, template);
         log.info("[SmsChannel] 批量发送: provider={} count={} success={}",
                 provider.providerType(), requests.size(),
-                results.stream().filter(MessageResult::isSuccess).count());
+                Response.stream().filter(MessageResult::isSuccess).count());
         return results;
     }
 

@@ -1,4 +1,4 @@
-package com.njydsz.common.core.response;
+﻿package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @since 1.0.0
  *
  * @see IResponse
- * @see Results
+ * @see Response
  */
 @Data
 @SuperBuilder

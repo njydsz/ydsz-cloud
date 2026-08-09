@@ -1,4 +1,4 @@
-package com.njydsz.message.server.channel.sms;
+﻿package com.njydsz.message.server.channel.sms;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -160,7 +160,7 @@ public class AliyunSmsProvider implements SmsProvider {
         for (int i = 0; i < requests.size(); i += BATCH_MAX_PHONES) {
             int end = Math.min(i + BATCH_MAX_PHONES, requests.size());
             List<MessageRequest> chunk = requests.subList(i, end);
-            results.addAll(doBatchSend(chunk, template));
+            Response.addAll(doBatchSend(chunk, template));
         }
         return results;
     }
@@ -176,7 +176,7 @@ public class AliyunSmsProvider implements SmsProvider {
         if (!StringUtils.hasText(config.getAccessKeyId())
                 || !StringUtils.hasText(config.getAccessKeySecret())) {
             for (int i = 0; i < requests.size(); i++) {
-                results.add(MessageResult.fail("SMS", "阿里云 SMS 凭证未配置"));
+                Response.add(MessageResult.fail("SMS", "阿里云 SMS 凭证未配置"));
             }
             return results;
         }
@@ -185,7 +185,7 @@ public class AliyunSmsProvider implements SmsProvider {
         String templateCode = template != null ? template.getProviderKey() : null;
         if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
             for (int i = 0; i < requests.size(); i++) {
-                results.add(MessageResult.fail("SMS", "短信签名或模板 Code 缺失"));
+                Response.add(MessageResult.fail("SMS", "短信签名或模板 Code 缺失"));
             }
             return results;
         }
@@ -215,18 +215,18 @@ public class AliyunSmsProvider implements SmsProvider {
                 String bizId = MapUtils.getString(json, "BizId");
                 log.info("[AliyunSms] 批量发送成功: count={} bizId={}", requests.size(), bizId);
                 for (int i = 0; i < requests.size(); i++) {
-                    results.add(MessageResult.ok("SMS", "ALIYUN-" + bizId + "-" + i));
+                    Response.add(MessageResult.ok("SMS", "ALIYUN-" + bizId + "-" + i));
                 }
             } else {
                 log.warn("[AliyunSms] 批量发送失败: code={} msg={}", code, MapUtils.getString(json, "Message"));
                 for (int i = 0; i < requests.size(); i++) {
-                    results.add(MessageResult.fail("SMS", code + ": " + MapUtils.getString(json, "Message")));
+                    Response.add(MessageResult.fail("SMS", code + ": " + MapUtils.getString(json, "Message")));
                 }
             }
         } catch (Exception e) {
             log.error("[AliyunSms] 批量发送异常: count={} err={}", requests.size(), e.getMessage(), e);
             for (int i = 0; i < requests.size(); i++) {
-                results.add(MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage()));
+                Response.add(MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage()));
             }
         }
         return results;
