@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.core.response;
+package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;

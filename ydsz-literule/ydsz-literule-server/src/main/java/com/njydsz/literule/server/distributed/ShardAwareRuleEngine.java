@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.distributed;
+package com.njydsz.literule.server.distributed;
 
 import java.util.ArrayList;
 import java.util.List;

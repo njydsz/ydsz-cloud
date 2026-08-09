@@ -126,7 +126,9 @@ public final class HeaderConstants {
      * <p>逗号分隔的权限编码列表，用于下游细粒度权限判断。
      *
      * @since 1.2.0
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_USER_PERMISSIONS}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_USER_PERMISSIONS = "X-User-Permissions";
 
     /**
@@ -134,9 +136,12 @@ public final class HeaderConstants {
      *
      * <p>用于区分请求来源服务类型（WEB_SERVICE / APP_SERVICE 等）。
      *
-
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.auth.constant.AuthHeaderConstants#X_SERVICE_TYPE}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_SERVICE_TYPE = "X-Service-Type";
+
+    // ============================== 通用协议级常量（核心层保留） ==============================
 
     /**
      * 幂等键。
@@ -149,6 +154,7 @@ public final class HeaderConstants {
     public static final String IDEMPOTENCY_KEY = "X-Idempotency-Key";
 
     // ============================== 数据权限 ==============================
+    // v1.11 迁移至 ydsz-common-jdbc DataPermissionHeaderConstants；此处保留 @Deprecated 桥接
 
     /**
      * 数据权限范围类型。
@@ -166,22 +172,29 @@ public final class HeaderConstants {
      * <p>当此 header 存在时，SQL 拦截器优先按该 scope 对应维度过滤；
      * 当不携带时，拦截器会按所有非空维度叠加（取交集）。
      *
-
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_DATA_SCOPE}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_DATA_SCOPE = "X-Data-Scope";
 
     /**
      * 租户ID。
      *
      * <p>当数据权限范围为租户类型（TENANT）时，此 header 作为行级过滤条件。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_TENANT_ID}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_TENANT_ID = "X-Tenant-Id";
 
     /**
      * 当前登录用户唯一标识。
      *
      * <p>当数据权限范围为用户类型（USER）时，此 header 作为行级过滤条件。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_UNIQUE_ID}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_UNIQUE_ID = "X-Unique-Id";
 
     /**
@@ -190,7 +203,10 @@ public final class HeaderConstants {
      * <p>当数据权限范围为集团类型（GROUP）时，此 header 包含用户可访问的所有公司ID。
      *
      * <p>格式：逗号分隔（如 {@code 1001,1002}），也允许多 header 值合并。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_COMPANY_IDS}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_COMPANY_IDS = "X-Company-Ids";
 
     /**
@@ -199,7 +215,10 @@ public final class HeaderConstants {
      * <p>当数据权限范围为公司/部门类型（COMPANY/DEPT）时，此 header 包含用户可访问的所有部门ID。
      *
      * <p>格式：逗号分隔（如 {@code 2001,2002}），也允许多 header 值合并。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_DEPT_IDS}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_DEPT_IDS = "X-Dept-Ids";
 
     /**
@@ -208,7 +227,10 @@ public final class HeaderConstants {
      * <p>当数据权限范围为项目类型（PROJECT）时，此 header 包含用户可访问的所有项目ID。
      *
      * <p>格式：逗号分隔，也允许多 header 值合并。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_PROJECT_IDS}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_PROJECT_IDS = "X-Project-Ids";
 
     /**
@@ -217,7 +239,10 @@ public final class HeaderConstants {
      * <p>当数据权限范围为区域类型（REGION）时，此 header 包含用户可访问的所有区域ID。
      *
      * <p>格式：逗号分隔，也允许多 header 值合并。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_REGION_IDS}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_REGION_IDS = "X-Region-Ids";
 
     /**
@@ -229,10 +254,14 @@ public final class HeaderConstants {
      * <p><b>安全警告：</b>此 header 仅传递标识键，不直接传递 SQL 片段。
      * SQL 条件由服务端 Provider 生成，禁止将原始 SQL 通过 HTTP 请求传入，
      * 以防止 SQL 注入攻击。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_CUSTOM_SQL_CONDITION}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_CUSTOM_SQL_CONDITION = "X-Custom-Sql-Condition";
 
     // ============================== 列级权限 ==============================
+    // v1.11 迁移至 ydsz-common-jdbc DataPermissionHeaderConstants；此处保留 @Deprecated 桥接
 
     /**
      * 列级权限：表级可见列规则。
@@ -255,7 +284,10 @@ public final class HeaderConstants {
      * </ul>
      *
      * <p>示例：{@code sys_user:id,name,email;sys_role:id,role_name}
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_VISIBLE_COLUMNS}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_VISIBLE_COLUMNS = "X-Visible-Columns";
 
     /**
@@ -273,7 +305,10 @@ public final class HeaderConstants {
      * </ul>
      *
      * <p>示例：{@code sys_user:name,email,phone;sys_role:role_name,description}
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_EDITABLE_COLUMNS}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_EDITABLE_COLUMNS = "X-Editable-Columns";
 
     /**
@@ -286,10 +321,14 @@ public final class HeaderConstants {
      *
      * <p>服务端收到请求后，会使用相同的 AppSecret 重新计算签名并与此 Header 值对比，
      * 签名不匹配时将拒绝请求并记录安全审计日志。
+     *
+     * @deprecated v1.11 迁移至 {@code com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants#X_COL_PERMISSION_SIGN}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_COL_PERMISSION_SIGN = "X-Col-Permission-Sign";
 
     // ============================== 链路追踪 ==============================
+    // 以下为核心层保留的协议级常量
 
     /**
      * 请求唯一标识 HTTP 头。
@@ -340,6 +379,7 @@ public final class HeaderConstants {
     public static final String W3C_TRACESTATE = "tracestate";
 
     // ============================== 网关内部签名 ==============================
+    // v1.11 迁移至 ydsz-gateway InternalSignatureHeaderConstants；此处保留 @Deprecated 桥接
 
     /**
      * 网关内部签名 HTTP 头。
@@ -349,7 +389,9 @@ public final class HeaderConstants {
      * 防止客户端伪造身份头。
      *
      * @since 1.2.0
+     * @deprecated v1.11 迁移至 {@code com.njydsz.gateway.constant.InternalSignatureHeaderConstants#X_INTERNAL_SIG}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_INTERNAL_SIG = "X-Internal-Sig";
 
     /**
@@ -359,7 +401,9 @@ public final class HeaderConstants {
      * 用于防重放窗口校验。
      *
      * @since 1.2.0
+     * @deprecated v1.11 迁移至 {@code com.njydsz.gateway.constant.InternalSignatureHeaderConstants#X_INTERNAL_TS}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_INTERNAL_TS = "X-Internal-Ts";
 
     /**
@@ -369,10 +413,13 @@ public final class HeaderConstants {
      * 下游服务使用 NonceCache 校验是否已消费过，配合时间戳窗口形成"一次性签名"机制。
      *
      * @since 1.2.0
+     * @deprecated v1.11 迁移至 {@code com.njydsz.gateway.constant.InternalSignatureHeaderConstants#X_INTERNAL_NONCE}
      */
+    @Deprecated(since = "1.11", forRemoval = false)
     public static final String X_INTERNAL_NONCE = "X-Internal-Nonce";
 
     // ============================== 网络信息 ==============================
+    // 以下为核心层保留的通用网络常量
 
     /**
      * 请求来源标识。

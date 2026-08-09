@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.testing;
+package com.njydsz.literule.server.testing;
 
 import java.util.ArrayList;
 import java.util.HashSet;

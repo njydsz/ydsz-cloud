@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.benchmark;
+package com.njydsz.literule.server.benchmark;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.seata.impl;
+package com.njydsz.common.seata.impl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
