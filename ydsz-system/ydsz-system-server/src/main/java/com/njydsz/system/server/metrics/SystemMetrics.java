@@ -94,6 +94,17 @@ public class SystemMetrics extends AbstractModuleMetrics {
     }
 
     /**
+     * 记录配置值 JsonSchema 校验告警
+     *
+     * <p>当配置值未通过 JSON Schema 格式校验时调用（不阻止保存，仅记录告警）。
+     * 累加 {@code config_validation_warning_total} 计数，可通过 Grafana 监控异常配置比例。
+     * <p>由 {@code ConfigServiceImpl.validateConfigValue} 校验失败时调用。
+     */
+    public void recordConfigValidationWarning() {
+        incrementCounter("config_validation_warning_total");
+    }
+
+    /**
      * 记录字典查询
      *
      * <p>同时累加 {@code dict_query_total} 计数 + 记录 {@code dict_query_duration_ms} 耗时。

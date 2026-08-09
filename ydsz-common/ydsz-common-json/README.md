@@ -1,6 +1,6 @@
 # ydsz-common-json
 
-> YDSZ 高性能 JSON 引擎（L2 工具层）— ASM 字节码加速、有界软引用字段缓存、零拷贝反序列化、JIT 自动向量化、Schema 校验、JsonPath 查询、JsonNode 树模型、Jackson 兼容注解
+> YDSZ 高性能 JSON 引擎（L2 工具层）— ASM 字节码加速、有界软引用字段缓存、零拷贝反序列化、JIT 自动向量化、JsonNode 树模型、Jackson 兼容注解
 
 纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 ASM 字节码生成、零拷贝反序列化、ThreadLocal 池优化等技术实现超高性能；通过 Jackson 兼容注解实现平滑迁移。
 
@@ -39,8 +39,8 @@
 |---|---|
 | **层级** | L2 工具模块层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供高性能 JSON 序列化/反序列化、树模型、JSONPath、Schema 校验、JSON Patch/Merge Patch、Jackson 兼容注解、Spring MVC 集成等能力 |
-| **依赖** | Lombok；可选依赖 ASM、SLF4J、Spring Boot AutoConfigure、Spring Web、Reactive Streams、Spring Boot Actuator/Health、Micrometer、Jackson Annotations（编译期可见）、Jakarta Validation |
+| **作用** | 提供高性能 JSON 序列化/反序列化、树模型、Jackson 兼容注解、Spring MVC 集成等能力 |
+| **依赖** | Lombok；可选依赖 ASM、SLF4J、Spring Boot AutoConfigure、Spring Web、Micrometer、Jackson Annotations（编译期可见）、Jakarta Validation |
 | **版本** | 1.0.0 |
 
 ## 功能成熟度总览
@@ -61,16 +61,21 @@
 | 注解体系（@JsonProperty/@JsonIgnore/@JsonFormat/@JsonInclude 等常用注解） | **Stable** | 80%+ Jackson 兼容 |
 | Tree 模型（JsonNode/ObjectNode/ArrayNode） | **Stable** | |
 | 命名策略（SNAKE_CASE/KEBAB_CASE/LOWER_CASE） | **Stable** | |
-| AutoType 安全检查 | **Stable** | |
 | Spring Boot 集成（JsonAutoConfiguration/JsonHttpMessageConverter） | **Stable** | |
 | Module 系统（JsonModule SPI） | **Beta** | |
-| @JsonCreator/@JsonBuilder 构造器模式 | **Beta** | |
-| @JsonView 视图过滤 | **Beta** | |
-| @JsonUnwrapped / @JsonRawValue / @JsonAlias | **Experimental** | 使用频率低，API 可能调整 |
-| JSON Schema 校验 | **Experimental** | 标注 @Experimental |
-| JSON Path 查询 | **Experimental** | 标注 @Experimental |
-| JSON Merge Patch | **Experimental** | 标注 @Experimental |
-| JSON Pointer（RFC 6901） | **Experimental** | 实现完整但使用场景少 |
+| @JsonCreator 构造器模式 | **Beta** | |
+| JSON Path 查询 | **Beta** | 标注 @Experimental |
+| JSON Merge Patch | **Beta** | 标注 @Experimental |
+| JSON Pointer（RFC 6901） | **Beta** | 实现完整但使用场景少 |
+| @JsonBuilder 构造器模式 | **Deprecated** | 推荐使用 @JsonCreator + 静态工厂方法 |
+| @JsonView 视图过滤 | **Deprecated** | 推荐定义独立 DTO 或手动裁剪字段 |
+| @JsonUnwrapped | **Deprecated** | 推荐将嵌套对象序列化为子对象结构 |
+| @JsonRawValue | **Deprecated** | 推荐手动构建后序列化 |
+| @JsonAlias | **Deprecated** | 推荐使用统一 @JsonProperty 命名约定 |
+| @JsonAnyGetter/@JsonAnySetter | **Deprecated** | 推荐显式定义字段提升可维护性 |
+| @JsonEnumDefaultValue | **Deprecated** | 推荐 Controller 层手动处理 |
+| @JsonVisibility | **Deprecated** | 推荐使用 @JsonIgnore |
+| @JsonRootName | **Deprecated** | 推荐使用统一 Response 包装类 |
 
 ## 核心能力
 

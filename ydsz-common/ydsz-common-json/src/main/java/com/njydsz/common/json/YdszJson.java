@@ -118,6 +118,32 @@ public class YdszJson {
     }
 
     /**
+     * 美化一个已序列化的 JSON 字符串（格式化 + 缩进）。
+     *
+     * <p>对标 Jackson 的"二次格式化"场景：输入一个紧凑 JSON 字符串，输出带缩进的格式化字符串。
+     * 内部通过 parseTree 后 toJson(pretty) 实现。</p>
+     *
+     * <p>如果输入为 null/空/非法 JSON，降级返回原始字符串（不抛异常），
+     * 避免在日志、调试等场景引发二次异常。</p>
+     *
+     * @param json 紧凑 JSON 字符串
+     * @return 格式化后的 JSON 字符串；解析失败时返回原始字符串
+     * @since 1.2.0
+     */
+    public static String format(String json) {
+        if (json == null || json.isEmpty()) {
+            return json;
+        }
+        try {
+            JsonNode tree = defaultMapper.readTree(json, JsonNode.class);
+            return defaultMapper.toJson(tree, true);
+        } catch (Exception e) {
+            // 格式化失败（非法 JSON 等）时降级返回原始输入，避免二次异常
+            return json;
+        }
+    }
+
+    /**
      * 对象转 JSON 字节数组（UTF-8 编码）
      *
      * <p>适用于网络传输、文件写入等需要字节数组的场景，避免额外的 String.getBytes() 调用。</p>
@@ -718,5 +744,58 @@ public class YdszJson {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // ==================== JSON Patch (RFC 6902) ====================
+
+    /**
+     * 解析 JSON Patch 操作列表。
+     *
+     * <p>JSON Patch 格式示例：</p>
+     * <pre>
+     * [
+     *   {"op": "replace", "path": "/name", "value": "newName"},
+     *   {"op": "remove", "path": "/age"},
+     *   {"op": "add", "path": "/email", "value": "test@example.com"}
+     * ]
+     * </pre>
+     *
+     * @param patchJson Patch JSON 数组字符串
+     * @return Patch 操作列表
+     * @since 1.2.0
+     * @see com.njydsz.common.json.tree.JsonPatch#parse(String)
+     */
+    public static List<com.njydsz.common.json.tree.JsonPatch.PatchOp> parsePatch(String patchJson) {
+        return com.njydsz.common.json.tree.JsonPatch.parse(patchJson);
+    }
+
+    /**
+     * 应用 JSON Patch (RFC 6902) 到目标对象，返回新对象。
+     *
+     * @param patchJson Patch JSON 数组字符串
+     * @param target    目标对象（不会被修改）
+     * @param clazz     目标类型
+     * @param <T>       目标类型参数
+     * @return Patch 后的新对象
+     * @since 1.2.0
+     */
+    public static <T> T applyPatch(String patchJson, T target, Class<T> clazz) {
+        return com.njydsz.common.json.tree.JsonPatch.apply(patchJson, target, clazz);
+    }
+
+    /**
+     * 应用 JSON Merge Patch (RFC 7396) 到目标对象，返回新对象。
+     *
+     * <p>Merge Patch 更简单的语义：null 值表示删除字段，其他值替换或添加。</p>
+     *
+     * @param mergeJson Merge Patch JSON 字符串，如 {"name":"new","age":null}
+     * @param target    目标对象（不会被修改）
+     * @param clazz     目标类型
+     * @param <T>       目标类型参数
+     * @return Patch 后的新对象
+     * @since 1.2.0
+     */
+    public static <T> T applyMergePatch(String mergeJson, T target, Class<T> clazz) {
+        return com.njydsz.common.json.tree.JsonPatch.applyMerge(mergeJson, target, clazz);
     }
 }

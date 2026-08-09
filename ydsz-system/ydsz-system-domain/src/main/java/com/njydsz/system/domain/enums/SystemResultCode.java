@@ -34,6 +34,7 @@ public enum SystemResultCode implements ExceptionCode {
     CONFIG_KEY_DUPLICATE("B90002", "system.config.key.duplicate"), // 配置键在分组内重复，违反唯一约束
     CONFIG_GROUP_INVALID("B90003", "system.config.group.invalid"), // 配置分组非法（如为空或不在允许白名单内）
     PARAM_ERROR("B90004", "system.param.error"), // 参数错误（通用）
+    CONFIG_VALUE_VALIDATION_WARNING("B90005", "system.config.value.validation.warning"), // 配置值未通过 JsonSchema 校验（告警，不阻止保存）
 
     // ==================== B91001-B91099 字典 ====================
     DICT_TYPE_NOT_FOUND("B91001", "system.dict.type.not.found", 404), // 字典类型不存在（资源未找到，HTTP 404）

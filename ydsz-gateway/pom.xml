@@ -111,10 +111,6 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!--
             GAP-P1-1: 接入 ydsz-common-sentry 统一监控/告警/日志上报
               - AlertConverger: 告警收敛降噪（时间窗口+去重+静默期）
