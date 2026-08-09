@@ -616,9 +616,21 @@ public final class SerializationProvider {
             && !(obj instanceof Collection) && !(obj instanceof Map)
             && !(obj instanceof Enum);
 
-        Set<Object> objects = ctx.serializingObjects;
-        // 确保 serializingObjects 使用 identity-based 比较（检测循环引用的核心）
+        // 快速路径：如果 BeanSerializer 已缓存且标记为 primitiveOnly（无嵌套对象字段），
+        // 则不可能产生循环引用，跳过 serializingObjects 的 add/remove 和 contains 检查。
+        // 纯原始类型 Bean 在大对象图中数量最多，此举可显著降低 IdentityHashMap 压力。
+        // @since 1.2.0
+        BeanSerializer primitiveSerializer = null;
         if (isBeanType) {
+            PropertyNamingStrategy strategyForLookup = FieldMetadataLoader.NAMING_STRATEGY.get();
+            primitiveSerializer = BeanSerializerCache.get(clazz, strategyForLookup);
+        }
+
+        Set<Object> objects = ctx.serializingObjects;
+        // 仅当 BeanSerializer 未缓存或不是 pure-primitive 时才进入循环引用检测
+        boolean skipCycleDetection = primitiveSerializer != null && primitiveSerializer.primitiveOnly;
+        // 确保 serializingObjects 使用 identity-based 比较（检测循环引用的核心）
+        if (isBeanType && !skipCycleDetection) {
             if (objects.contains(obj)) {
                 String strategy = ctx.circularRefStrategy;
                 if (strategy == null) strategy = "REF";
@@ -654,7 +666,7 @@ public final class SerializationProvider {
             if (!tryBeanSerialize(obj, sb)) {
                 // ValueWriter.writeValue → writeBeanWithCycleDetection 有自己的循环引用检测，
                 // 需先从 objects 中移除当前对象，避免误判为循环引用
-                if (isBeanType) {
+                if (isBeanType && !skipCycleDetection) {
                     objects.remove(obj);
                 }
                 ValueWriter.writeValue(obj, sb);
@@ -673,7 +685,7 @@ public final class SerializationProvider {
         } catch (Exception e) {
             throw wrapSerializationException(obj, e);
         } finally {
-            if (isBeanType) {
+            if (isBeanType && !skipCycleDetection) {
                 objects.remove(obj);
             }
             // 回滚深度计数

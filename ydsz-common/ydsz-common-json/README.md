@@ -208,9 +208,6 @@
 | `JsonPointer` | JSON Pointer（RFC 6901） |
 | `JsonPath` | JSONPath 查询（递归下降 `$..` / 数组索引 `[0]` / 数组过滤 `[?(@.price > 100)]` / 切片 `[0:5]` / 通配符 `[*]` / 条件表达式 `&&` / `||`；编译结果 LRU 缓存，max 512） |
 | `JsonMergePatch` | JSON Merge Patch（RFC 7396，支持 `merge` 合并 + `diff` 计算差异补丁） |
-| `JsonSchema` `@Experimental` / `JsonSchemaValidator` / `ValidationResult` | JSON Schema 校验（JSON Schema Draft 07 核心关键字：type/required/enum/default/minLength/maxLength/pattern/minimum/maximum/exclusiveMinimum/exclusiveMaximum/multipleOf/items/minItems/maxItems/properties/additionalProperties + 组合关键字 allOf/anyOf/oneOf/not/const/if-then-else；静态工厂 `string()`/`number()`/`integer()`/`booleanType()`/`array()`/`object()`/`nullType()`） |
-| `AutoTypeChecker` / `AutoTypeWhitelistScanner` | AutoType 安全检查（防反序列化漏洞，`TYPE_CHECK_CACHE` LRU 有界缓存 max 4096，支持包前缀白名单回退匹配） |
-
 ### 10. Module 系统（module 包）
 
 | 类 | 说明 |
@@ -223,7 +220,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（继承 `AbstractGenericHttpMessageConverter`，支持泛型类型 `@RequestBody List<User>`、`@JsonView`、`streamingEnabled` / `maxRequestBodySize` 配置） |
+| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（继承 `AbstractGenericHttpMessageConverter`，支持泛型类型 `@RequestBody List<User>`、`@JsonView`、`maxRequestBodySize` 配置） |
 | `JsonReactiveUtils` | WebFlux 响应式编码工具 |
 | `JsonWarmupRunner` | ASM 预热 Runner（应用启动后异步预热高频序列化 Bean 的 ASM 字节码） |
 | `JsonProperties` | 配置属性类（`ydsz.json.*`） |
@@ -463,7 +460,6 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 
 **`JsonHealthIndicator` 暴露信息**（仅 5 项关键指标，详细指标通过 Micrometer 暴露）：
 
-- `safeMode` — AutoType 安全模式是否开启（核心安全指标）
 - `namingStrategy` — 当前全局字段命名策略
 - `maxJsonSize` — 单次 JSON 处理大小限制（字节）
 - `asmAvailable` — ASM 字节码优化是否可用
@@ -471,30 +467,18 @@ public class UserModule implements JsonModule, JsonModule.SpringFactory {
 
 > **注意**：详细指标（缓存命中率、序列化/反序列化计数等）通过 Micrometer `ydsz.json.*` 暴露给 Prometheus/Grafana，不通过 Health Endpoint。
 
-**健康状态规则**：
-
-- AutoType SafeMode 关闭 → DOWN（`warning=AutoType SafeMode is disabled, RCE risk exists`）
-- SafeMode 开启 → UP
-
-## 注意事项
-
-1. **零外部 JSON 库依赖**：本模块纯 Java 实现，不引入 Jackson / FastJSON / Gson。`jackson-annotations` 仅作为 `optional` 编译期依赖（消除 Spring Boot 4.x 依赖中的 Jackson 注解警告），运行期不强制。
-2. **ASM 字节码生成与 GraalVM 兼容**：热路径生成字节码避免反射开销；`GraalVmDetector` 检测 Native Image 环境后自动降级为反射 + MethodHandle 路径，`AutoTypeWhitelistScanner` 启动时扫描 `@JsonClass` 注解类注册白名单。
-3. **AutoType 安全模式**：默认开启 `safe-mode=true`，防止反序列化漏洞。`AutoTypeChecker` 支持包前缀白名单回退匹配，`TYPE_CHECK_CACHE` 为 LRU 有界缓存（max 4096）避免内存泄漏。
-4. **BigDecimal 精度模式**：`use-big-decimal=true` 启用 BigDecimal 解析路径（金融场景精度保护），默认 `false` 走 Double 路径（性能更高）。
-5. **ASM 预热**：`warmup-classes` 配置项指定启动时预热的类列表，`JsonWarmupRunner` 在应用启动后异步预生成 ASM 字节码，避免首次请求延迟尖峰。也可通过 `YdszJson.warmup(Class...)` 手动触发。
-6. **Spring MVC 泛型类型支持**：`JsonHttpMessageConverter` 继承 `AbstractGenericHttpMessageConverter`，正确支持 `@RequestBody List<User>` 等泛型类型反序列化。
-7. **Jackson 迁移**：`@JsonProperty` / `@JsonIgnore` / `@JsonFormat` / `@JsonInclude` 等 Jackson 兼容注解无需修改即可使用。迁移步骤：`ObjectMapper` → `JsonMapper`，`readValue/readTree/writeValueAsString` → `toObject/readTree/toJson`，`ObjectReader/ObjectWriter` → `JsonReader/JsonWriter`。
+3. **ASM 预热**：`warmup-classes` 配置项指定启动时预热的类列表，`JsonWarmupRunner` 在应用启动后异步预生成 ASM 字节码，避免首次请求延迟尖峰。也可通过 `YdszJson.warmup(Class...)` 手动触发。
+4. **Spring MVC 泛型类型支持**：`JsonHttpMessageConverter` 继承 `AbstractGenericHttpMessageConverter`，正确支持 `@RequestBody List<User>` 等泛型类型反序列化。
+5. **Jackson 迁移**：`@JsonProperty` / `@JsonIgnore` / `@JsonFormat` / `@JsonInclude` 等 Jackson 兼容注解无需修改即可使用。迁移步骤：`ObjectMapper` → `JsonMapper`，`readValue/readTree/writeValueAsString` → `toObject/readTree/toJson`，`ObjectReader/ObjectWriter` → `JsonReader/JsonWriter`。
    - **迁移注意事项**：
      - `JsonMapper` 实例可安全共享（线程安全），配置通过 `ThreadLocalSnapshot` 在每次序列化时 apply/restore，与 Jackson `ObjectMapper`（配置不可变 + 显式传参）模型在 ThreadLocal 实现下的等价做法。
      - **命名策略在字段元数据加载时缓存**：`@JsonNaming` / `JsonConfig.namingStrategy` 对一个类的首次序列化生效并缓存 `jsonName`，后续切换命名策略对该已缓存类无效。如需不同命名策略，应在首次序列化前设置，或对不同命名使用不同 Bean 类型。
      - **`writeNulls` 配置生效范围**：`JsonMapper.builder().writeNulls(true)` 对带 `@JsonClass` 注解的 Bean 生效（走 ValueWriter 注解路径）；无注解的 Bean 走 `writeBeanNoAnnotationOptimized` 快速路径，null 字段始终省略。如需全局 writeNulls 对所有 Bean 生效，请在 Bean 上加 `@JsonClass`。
      - **响应式场景**：`SerializationContext` 基于 ThreadLocal，跨线程链路（WebFlux / 虚拟线程）中线程切换会丢失配置。响应式场景请使用 `JsonReactiveUtils` 或在调用线程内完成序列化。
-8. **ThreadLocal 池优化**：`SerializationContext` 合并 5+ ThreadLocal 为单一实例，降低内存碎片；`estimateThreadLocalMemory` 基于缓冲池容量动态计算，避免硬编码。
-9. **循环引用处理**：默认 `REF` 策略（自动检测并处理循环引用），可配置为 `IGNORE`（忽略）或 `ERROR`（抛出异常）。
-10. **流式输出**：`streaming-enabled=true` 启用 HTTP 响应 chunked transfer encoding，适用于大 JSON 响应场景。
-11. **配置不可变推荐**：自 v1.0.0 起 `JsonConfig.install(newConfig)` 替代旧 `setInstance` 模式。业务侧仍可通过 `JsonMapper.builder()` 创建独立配置副本（不影响全局单例）。`install()` 内部同步做 `instance = newConfig; instance.apply()`，确保可见性与一致性。
-12. **运行时诊断 API**：`YdszJson.isNativeImage()` / `isAsmAvailable()` / `getStats()` 可在启动早期或监控中快速诊断 ASM 降级、缓存命中和当前安全配置。`getStats()` 返回 `JsonStats` 记录类含 `nativeImage`、`asmAvailable`、`asmDowngradeCount`、`serializerCount`、`deserializerCount`、`asmCacheHitRate`、`maxDepth`、`maxGenericDepth`、`maxJsonSize`、`safeMode` 10 项指标。
-13. **序列化异常路径追踪**：`JsonSerializationException.getMessage()` 自动在消息末尾附加 `[fieldPath: user.address.street]`，可直接定位嵌套序列化失败根因。`getFieldPath()` 返回原始路径字符串，供日志框架归类。
-14. **ThreadLocal 模型与响应式兼容**：`SerializationContext` 基于 `ThreadLocalSnapshot` 实现，与响应式/虚拟线程框架天然不兼容。跨线程调用前需在原线程完成序列化，或使用 `JsonReactiveUtils`（Project Reactor 兼容）。中期演进方向为显式参数传递模型（与 `Object` Pooling + 配置对象层次化作用），参考 [Architectural Decision Record: ThreadLocal Migration ADR-007]。
-15. **高级功能治理观测制度**：标记为 `@Experimental` / `@Beta` API 的功能处于观测期（默认 2 个次要版本）。期内不承诺向后兼容——API 变更、移除或行为调整均不触发 major 版本递增。调用方须在升级前阅读 Release Notes，并在观测期结束前完成迁移或提出反馈。当前处于观测期的功能列表见 [Appendix: Experimental Features Catalog]
+6. **ThreadLocal 池优化**：`SerializationContext` 合并 5+ ThreadLocal 为单一实例，降低内存碎片；`estimateThreadLocalMemory` 基于缓冲池容量动态计算，避免硬编码。
+7. **循环引用处理**：默认 `REF` 策略（自动检测并处理循环引用），可配置为 `IGNORE`（忽略）或 `ERROR`（抛出异常）。
+8. **配置不可变推荐**：自 v1.0.0 起 `JsonConfig.install(newConfig)` 替代旧 `setInstance` 模式。业务侧仍可通过 `JsonMapper.builder()` 创建独立配置副本（不影响全局单例）。`install()` 内部同步做 `instance = newConfig; instance.apply()`，确保可见性与一致性。
+9. **运行时诊断 API**：`YdszJson.isNativeImage()` / `isAsmAvailable()` / `getStats()` 可在启动早期或监控中快速诊断 ASM 降级、缓存命中和当前配置。`getStats()` 返回 `JsonStats` 记录类含 `nativeImage`、`asmAvailable`、`asmDowngradeCount`、`serializerCount`、`deserializerCount`、`asmCacheHitRate`、`maxDepth`、`maxGenericDepth`、`maxJsonSize` 9 项指标。
+10. **序列化异常路径追踪**：`JsonSerializationException.getMessage()` 自动在消息末尾附加 `[fieldPath: user.address.street]`，可直接定位嵌套序列化失败根因。`getFieldPath()` 返回原始路径字符串，供日志框架归类。
+11. **ThreadLocal 模型与响应式兼容**：`SerializationContext` 基于 `ThreadLocalSnapshot` 实现，与响应式/虚拟线程框架天然不兼容。跨线程调用前需在原线程完成序列化，或使用 `JsonReactiveUtils`（Project Reactor 兼容）。中期演进方向为显式参数传递模型（与 `Object` Pooling + 配置对象层次化作用），参考 [Architectural Decision Record: ThreadLocal Migration ADR-007]。
+12. **高级功能治理观测制度**：标记为 `@Experimental` / `@Beta` API 的功能处于观测期（默认 2 个次要版本）。期内不承诺向后兼容——API 变更、移除或行为调整均不触发 major 版本递增。调用方须在升级前阅读 Release Notes，并在观测期结束前完成迁移或提出反馈。当前处于观测期的功能列表见 [Appendix: Experimental Features Catalog]

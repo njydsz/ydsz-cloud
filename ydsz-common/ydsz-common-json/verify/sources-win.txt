@@ -81,5 +81,4 @@ D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-json\verify\..\src\main\java\com
 D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-json\verify\..\src\main\java\com\njydsz\common\json\writer\BeanSerializer.java
 D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-json\verify\..\src\main\java\com\njydsz\common\json\writer\JSONWriter.java
 D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-json\verify\..\src\main\java\com\njydsz\common\json\YdszJson.java
-D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-json\verify\stub\com\njydsz\common\json\autotype\AutoTypeChecker.java
 D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-json\verify\JsonHardeningCheck.java

@@ -167,16 +167,9 @@ public class YdszJson {
      * @since 1.2.0
      */
     public static String patch(String targetJson, String patchJson) {
-        JsonNode target = readTree(targetJson);
-        List<JsonPatch.PatchOp> ops = JsonPatch.parse(patchJson);
-        if (target instanceof ObjectNode objTarget) {
-            for (JsonPatch.PatchOp op : ops) {
-                JsonPatch.applyOp(objTarget, op);
-            }
-            return toJson(objTarget);
-        }
-        throw new JsonException("JSON Patch 操作要求目标为 JSON 对象，实际类型为: "
-                + (target == null ? "null" : target.getClass().getSimpleName()));
+        Map<String, Object> target = parseMap(targetJson);
+        Map<String, Object> result = JsonPatch.apply(patchJson, target, Map.class);
+        return toJson(result);
     }
 
     /**

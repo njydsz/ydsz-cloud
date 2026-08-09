@@ -765,12 +765,6 @@
             </dependency>
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-jackson</artifactId>
-                <version>${jjwt.version}</version>
-                <scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-orgjson</artifactId>
                 <version>${jjwt.version}</version>
                 <scope>runtime</scope>
@@ -1194,14 +1188,15 @@
                                 </excludes>
                                 <message>[ydsz-banned] 禁止使用 FastJSON 1.x，存在安全漏洞。如需 JSON 请使用 ydsz-common-json，基准测试用 fastjson2（scope=test）。</message>
                             </bannedDependencies>
-                            <!-- 4. 显式声明但非 test scope 的 jackson-databind 视为违规（jjwt-jackson 传递依赖除外） -->
+                            <!-- 4. 任何直接声明的 jackson-databind 均视为违规（含 test scope） -->
                             <bannedDependencies>
                                 <excludes>
                                     <exclude>com.fasterxml.jackson.core:jackson-databind:*:*:compile</exclude>
                                     <exclude>com.fasterxml.jackson.core:jackson-databind:*:*:provided</exclude>
+                                    <exclude>com.fasterxml.jackson.core:jackson-databind:*:*:test</exclude>
                                 </excludes>
                                 <searchTransitive>false</searchTransitive>
-                                <message>[ydsz-banned] 禁止在业务代码中直接声明 jackson-databind 依赖。项目采用 ydsz-common-json 统一处理 JSON；jjwt-jackson 作为 jjwt 内部运行时依赖除外（不直接声明即可）。</message>
+                                <message>[ydsz-banned] 禁止在项目中直接声明 jackson-databind 依赖。项目采用 ydsz-common-json 统一处理 JSON，所有模块均不允许引入 Jackson。</message>
                             </bannedDependencies>
                             <!-- 5. 上界版本一致性检查：确保所有传递依赖版本一致 -->
                             <requireUpperBoundDeps>

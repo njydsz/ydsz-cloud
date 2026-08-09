@@ -220,15 +220,9 @@ if (!result.isValid()) {
 public class User extends BaseEntity<Long> { ... }
 ```
 
-### 7.3 显式注册
+### 7.3 第三方 DTO 使用
 
-```java
-// 非 com.njydsz 包下的类需显式注册
-AutoTypeChecker.addToWhitelist("com.external.SomeDto");
-
-// 包级别注册（仅限受信任的包）
-AutoTypeChecker.addWhitelistPackage("com.trusted.partner.dto");
-```
+当使用非 `com.njydsz` 包下的 DTO 时，建议通过 JSON Path 或 JsonMapper 的 bean 反序列化处理。
 
 ---
 

@@ -57,6 +57,25 @@ public final class BeanSerializerCache {
     }
 
     /**
+     * 仅查找已缓存的 BeanSerializer（不创建新实例）。
+     *
+     * <p>用于序列化热路径中快速判断 primitiveOnly 标记，避免不必要的
+     * IdentityHashSet 循环引用检测。</p>
+     *
+     * @param clazz Bean 类
+     * @param strategy 命名策略
+     * @return 已缓存的 BeanSerializer，或 null 如果尚未缓存
+     * @since 1.2.0
+     */
+    public static BeanSerializer get(Class<?> clazz, PropertyNamingStrategy strategy) {
+        ConcurrentMap<PropertyNamingStrategy, BeanSerializer> strategyMap = CACHE.get(clazz);
+        if (strategyMap == null) {
+            return null;
+        }
+        return strategyMap.get(strategy);
+    }
+
+    /**
      * 清理所有缓存
      */
     public static void clear() {

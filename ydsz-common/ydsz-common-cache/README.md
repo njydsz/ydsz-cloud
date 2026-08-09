@@ -126,7 +126,7 @@
 
 - 白名单仅允许 `java.lang.` / `java.util.` / `java.math.` / `java.time.` 包
 - 限制深度 ≤ 5、引用数 ≤ 500,000、字节数 ≤ 256MB
-- 业务自定义类型需通过 `AutoTypeChecker.addToWhitelist()` 显式注册
+- 业务自定义类型在 ydsz-common-json 包前缀白名单内即可（`java.*`、`javax.*`、`com.njydsz.*` 默认允许）
 
 ### 9. 辅助组件
 
@@ -397,7 +397,7 @@ CacheExportImport.exportCacheToText(cache, "/tmp/cache.txt");
 2. **空值占位随机过期**：`getWithProtection` 的 `minExpireMs` 与 `maxExpireMs` 必须为正数且 `maxExpireMs >= minExpireMs`，空值占位在区间内随机过期以防雪崩。
 3. **多级缓存一致性**：L1 跨节点一致性依赖 `CacheInvalidationBroadcaster`（默认 Redis Pub/Sub），未配置广播器时各节点 L1 独立，仅保证最终一致。
 4. **线程池生命周期**：`CacheThreadPoolManager` 由 Spring 管理（`YdszCacheAutoConfiguration` 注册为 Bean 并调用 `setInstance`），容器关闭时通过 `DisposableBean` 自动清理；脱离 Spring 使用时需手动调用 `CacheThreadPoolManager.getInstance().shutdown()`。
-5. **反序列化白名单**：`CacheExportImport` 反序列化白名单统一委托 `SafeObjectInputFilter`，业务自定义类型需通过 `AutoTypeChecker.addToWhitelist()` 显式注册，否则导入会抛 `InvalidClassException`。
+5. **反序列化白名单**：`CacheExportImport` 反序列化使用 `java.*`、`javax.*`、`com.njydsz.*` 包前缀白名单过滤，业务自定义类型需位于信任包内。
 6. **Resilience4j 可选**：`Resilience4jCacheDecorator` 需 classpath 中存在 `resilience4j-circuitbreaker`，未引入时直接使用底层 `Cache` 即可。
 7. **注解切面可选**：`@Cached` / `@CacheInvalidate` / `@CacheRefresh` 需 classpath 中存在 AspectJ Weaver，可通过 `ydsz.cache.annotation.enabled=false` 关闭。
 8. **Spring Cache 兼容**：`YdszCacheManager` 同时支持 Spring 标准 `@Cacheable` / `@CacheEvict` 注解与 YdszCache 自定义注解，两者可混用但同一方法不应同时标注。

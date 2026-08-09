@@ -52,6 +52,19 @@ public final class BeanSerializer {
     public final Method anyGetterMethod;
 
     /**
+     * 是否为纯原始类型 Bean（所有字段均为 String/int/long/double/float/boolean/
+     * short/byte/char/BigInteger/BigDecimal/Date/LocalDate/LocalDateTime 等，
+     * 不含嵌套 Bean/Collection/Map 引用类型）。
+     *
+     * <p>当此标志为 true 时，{@link #write(Object, JSONWriter)} 永远不会递归进入
+     * {@link SerializationProvider#serialize(Object)}，因此上层调用方可以安全地跳过
+     * {@code serializingObjects} 的 add/remove 操作，避免 IdentityHashMap 的查询开销。</p>
+     *
+     * @since 1.2.0
+     */
+    public final boolean primitiveOnly;
+
+    /**
      * 构造 Bean 序列化器
      *
      * <p>预计算字段元数据，过滤需要跳过的字段，计算预估 JSON 大小。</p>
@@ -71,12 +84,18 @@ public final class BeanSerializer {
         int estimatedSize = 2; // {}
 
         int idx = 0;
+        boolean allPrimitive = true;
         for (FieldMeta meta : fieldMetas) {
             this.fields[idx++] = new FieldWriter(meta);
             estimatedSize += meta.jsonKeyLen + 16; // 键名 + 平均字段值
+            // serializeTypeCode == 0 表示嵌套对象/引用类型（非原始类型）
+            if (allPrimitive && meta.serializeTypeCode == 0) {
+                allPrimitive = false;
+            }
         }
 
         this.estimatedSize = estimatedSize;
+        this.primitiveOnly = allPrimitive;
     }
 
     /**
@@ -232,6 +251,111 @@ public final class BeanSerializer {
 
                         pos += NumberUtils.writeLong(longVal, buf, pos);
                     }
+                    break;
+
+                case 4: // double/Double
+                    double doubleVal;
+                    try {
+                        Double val = (Double) field.getter.invoke(obj);
+                        doubleVal = val == null ? 0.0 : val;
+                    } catch (Throwable e) {
+                        doubleVal = 0.0;
+                    }
+                    if (doubleVal != 0.0 || field.type == double.class) {
+                        if (!first) {
+                            buf[pos++] = ',';
+                        }
+                        first = false;
+
+                        int keyLen = field.jsonKeyLen;
+                        field.jsonKey.getChars(0, keyLen, buf, pos);
+                        pos += keyLen;
+
+                        pos = writer.writeDoubleToBuf(doubleVal, pos);
+                    }
+                    break;
+
+                case 5: // float/Float
+                    float floatVal;
+                    try {
+                        Float val = (Float) field.getter.invoke(obj);
+                        floatVal = val == null ? 0.0f : val;
+                    } catch (Throwable e) {
+                        floatVal = 0.0f;
+                    }
+                    if (floatVal != 0.0f || field.type == float.class) {
+                        if (!first) {
+                            buf[pos++] = ',';
+                        }
+                        first = false;
+
+                        int keyLen = field.jsonKeyLen;
+                        field.jsonKey.getChars(0, keyLen, buf, pos);
+                        pos += keyLen;
+
+                        pos = writer.writeFloatToBuf(floatVal, pos);
+                    }
+                    break;
+
+                case 6: // boolean/Boolean
+                    boolean boolVal;
+                    try {
+                        Boolean val = (Boolean) field.getter.invoke(obj);
+                        boolVal = val != null && val;
+                    } catch (Throwable e) {
+                        boolVal = false;
+                    }
+                    if (boolVal || field.type == boolean.class) {
+                        if (!first) {
+                            buf[pos++] = ',';
+                        }
+                        first = false;
+
+                        int keyLen = field.jsonKeyLen;
+                        field.jsonKey.getChars(0, keyLen, buf, pos);
+                        pos += keyLen;
+
+                        if (boolVal) {
+                            buf[pos++] = 't';
+                            buf[pos++] = 'r';
+                            buf[pos++] = 'u';
+                            buf[pos++] = 'e';
+                        } else {
+                            buf[pos++] = 'f';
+                            buf[pos++] = 'a';
+                            buf[pos++] = 'l';
+                            buf[pos++] = 's';
+                            buf[pos++] = 'e';
+                        }
+                    }
+                    break;
+
+                case 13: // Date / LocalDate / LocalDateTime / LocalTime / Instant
+                case 14: // BigDecimal
+                case 15: // BigInteger
+                    Object dateOrNumVal;
+                    try {
+                        dateOrNumVal = field.getter.invoke(obj);
+                    } catch (Throwable e) {
+                        dateOrNumVal = null;
+                    }
+                    if (dateOrNumVal == null) {
+                        break;
+                    }
+                    if (!first) {
+                        buf[pos++] = ',';
+                    }
+                    first = false;
+
+                    int keyLen = field.jsonKeyLen;
+                    field.jsonKey.getChars(0, keyLen, buf, pos);
+                    pos += keyLen;
+
+                    // BigDecimal / BigInteger / Date 直接调用 JSONWriter 的写入方法，
+                    // 这些类型不涉及循环引用检测，无需递归进入 SerializationProvider
+                    writer.pos = pos;
+                    writer.writeValueInline(dateOrNumVal);
+                    pos = writer.pos;
                     break;
 
                 default:
