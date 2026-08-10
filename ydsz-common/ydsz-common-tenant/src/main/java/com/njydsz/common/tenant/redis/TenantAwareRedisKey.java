@@ -1,5 +1,6 @@
 package com.njydsz.common.tenant.redis;
 
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
 
@@ -43,7 +44,7 @@ public final class TenantAwareRedisKey {
         if (key == null || key.isEmpty()) {
             return key;
         }
-        TenantContext context = (TenantContext) RequestContext.getTenantContext();
+        TenantContext context = (TenantContext) RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
         if (context == null || context.isSkipIsolation()
                 || context.isSuperAdmin() || context.getTenantId() == null) {
             return key;

@@ -2,6 +2,7 @@ package com.njydsz.common.util.http;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -30,7 +31,7 @@ public final class HttpTokenUtils {
     public static final String AUTHORIZATION_HEADER = HeaderConstants.AUTHORIZATION;
 
     /** Ydsz 访问令牌自定义头常量引用 */
-    public static final String X_ACCESS_TOKEN_HEADER = HeaderConstants.X_ACCESS_TOKEN;
+    public static final String X_ACCESS_TOKEN_HEADER = AuthHeaderConstants.X_ACCESS_TOKEN;
 
     /** 访问令牌前缀（用于剥离 Ydsz 私有前缀） */
     private static final String TOKEN_PREFIX = "ydsz";
@@ -68,7 +69,7 @@ public final class HttpTokenUtils {
         if (request == null) {
             return null;
         }
-        String token = request.getHeader(HeaderConstants.X_ACCESS_TOKEN);
+        String token = request.getHeader(AuthHeaderConstants.X_ACCESS_TOKEN);
         if (StringUtils.isEmpty(token)) {
             token = request.getHeader(AUTHORIZATION_HEADER);
         }

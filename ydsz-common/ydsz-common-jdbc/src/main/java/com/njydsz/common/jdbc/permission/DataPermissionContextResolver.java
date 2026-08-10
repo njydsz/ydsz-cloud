@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.domain.constant.DataScopeConstants;
 import com.njydsz.common.util.auth.AuthInfoUtils;
@@ -93,7 +95,7 @@ public class DataPermissionContextResolver {
     public DataPermissionContext resolve() {
         HttpServletRequest request = RequestContextUtils.getRequest();
         if (request == null) {
-            request = (HttpServletRequest) RequestContext.getHttpRequest();
+            request = (HttpServletRequest) RequestContext.get(BizContextKeys.KEY_HTTP_REQUEST);
         }
         DataPermissionContext context = new DataPermissionContext();
         context.setDataScope(resolveDataScope(resolveHeader(request, HeaderConstants.X_DATA_SCOPE)));

@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.string.StringUtils;
@@ -53,7 +53,7 @@ public class AccessTokenUtils {
             return null;
         }
 
-        accessToken = request.getHeader(HeaderConstants.X_ACCESS_TOKEN);
+        accessToken = request.getHeader(AuthHeaderConstants.X_ACCESS_TOKEN);
         if (StringUtils.isNotBlank(accessToken)) {
             return accessToken;
         }
