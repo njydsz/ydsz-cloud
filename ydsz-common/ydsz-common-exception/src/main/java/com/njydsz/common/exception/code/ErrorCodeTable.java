@@ -67,7 +67,7 @@ public class ErrorCodeTable {
     /**
      * 向全局 code→ExceptionCode 索引注册映射。
      *
-     * <p>由 {@link com.njydsz.common.exception.registry.ResultCodeScanner} 在扫描枚举后调用。
+     * <p>由 {@link com.njydsz.common.exception.registry.ExceptionCodeScanner} 在扫描枚举后调用。
      *
      * @param codeMap code → ExceptionCode 的映射
      */

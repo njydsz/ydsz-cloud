@@ -24,6 +24,7 @@ target/
 .project
 .factorypath
 *.launch
+.meituan-catpaw/
 
 # ===== 本地/个人环境配置 =====
 *.local.*

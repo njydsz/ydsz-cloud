@@ -3,7 +3,7 @@ package com.njydsz.userinfo.domain.enums;
 import com.njydsz.common.exception.enums.ExceptionCode;
 
 import lombok.Getter;
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 用户信息中心模块异常码枚举。
@@ -31,7 +31,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "userinfo", description = "用户中心")
+@YdszExceptionCode(module = "userinfo", description = "用户中心")
 public enum UserInfoExceptionCode implements ExceptionCode {
 
     // ==================== B30xxx 用户/认证 ====================

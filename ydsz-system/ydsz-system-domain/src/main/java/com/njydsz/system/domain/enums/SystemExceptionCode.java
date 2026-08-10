@@ -3,7 +3,7 @@ package com.njydsz.system.domain.enums;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import lombok.Getter;
 
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 系统管理模块异常码枚举。
@@ -23,7 +23,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "system", description = "系统管理")
+@YdszExceptionCode(module = "system", description = "系统管理")
 public enum SystemExceptionCode implements ExceptionCode {
 
     // ==================== B90001-B90099 系统配置 ====================

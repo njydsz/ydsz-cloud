@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 import lombok.Getter;
 
@@ -24,7 +24,7 @@ import lombok.Getter;
  * @see RateLimitExceptionCode
  */
 @Getter
-@YdszResultCode(module = "core", description = "核心模块业务异常码")
+@YdszExceptionCode(module = "core", description = "核心模块业务异常码")
 public enum CoreExceptionCode implements ExceptionCode {
 
     // ==================== 成功 ====================

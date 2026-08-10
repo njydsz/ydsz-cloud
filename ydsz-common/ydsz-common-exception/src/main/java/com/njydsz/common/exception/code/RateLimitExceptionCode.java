@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 import lombok.Getter;
 
@@ -21,7 +21,7 @@ import lombok.Getter;
  * @see SecurityExceptionCode
  */
 @Getter
-@YdszResultCode(module = "ratelimit", description = "限流模块限流熔断降级异常码")
+@YdszExceptionCode(module = "ratelimit", description = "限流模块限流熔断降级异常码")
 public enum RateLimitExceptionCode implements ExceptionCode {
 
     // ==================== A04xx 请求频率相关 ====================

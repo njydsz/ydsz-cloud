@@ -3,7 +3,7 @@ package com.njydsz.cronjob.domain.enums;
 import com.njydsz.common.exception.enums.ExceptionCode;
 
 import lombok.Getter;
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 定时任务调度模块异常码枚举。
@@ -23,7 +23,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "cronjob", description = "定时任务")
+@YdszExceptionCode(module = "cronjob", description = "定时任务")
 public enum CronjobExceptionCode implements ExceptionCode {
 
     // ==================== B92001-B92099 任务 ====================

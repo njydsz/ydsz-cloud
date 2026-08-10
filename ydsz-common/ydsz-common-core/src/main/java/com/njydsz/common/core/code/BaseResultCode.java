@@ -98,7 +98,7 @@ public enum BaseResultCode implements ResultCode {
      * @return 对应的 HTTP 状态码
      */
     @Override
-    public int getHttpStatusCode() {
+    public int getHttpStatus() {
         return httpStatus;
     }
 

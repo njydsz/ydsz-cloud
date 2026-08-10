@@ -1,6 +1,6 @@
 package com.njydsz.message.domain.enums;
 
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCode;
 
 import lombok.Getter;
@@ -24,7 +24,7 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "message", description = "消息中心")
+@YdszExceptionCode(module = "message", description = "消息中心")
 public enum MessageExceptionCode implements ExceptionCode {
 
     // ==================== B91001-B91099 模板 ====================

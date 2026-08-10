@@ -3,7 +3,7 @@ package com.njydsz.agent.domain.enums;
 import com.njydsz.common.exception.enums.ExceptionCode;
 
 import lombok.Getter;
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * AI 智能体模块异常码枚举。
@@ -24,7 +24,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "agent", description = "AI Agent")
+@YdszExceptionCode(module = "agent", description = "AI Agent")
 public enum AgentExceptionCode implements ExceptionCode {
 
     // ==================== B94001-B94099 Agent 定义/执行 ====================

@@ -13,8 +13,8 @@ import java.lang.annotation.Target;
  *
  * <h3>使用示例</h3>
  * <pre>{@code
- * @YdszResultCode(module = "userinfo")
- * public enum UserInfoExceptionCode implements IResultCode {
+ * @YdszExceptionCode(module = "userinfo")
+ * public enum UserInfoExceptionCode implements ExceptionCode {
  *     USER_NOT_FOUND(2001, "用户不存在"),
  *     // ...
  * }
@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface YdszResultCode {
+public @interface YdszExceptionCode {
 
     /**
      * 模块名称（如 "userinfo"、"system"、"project"）

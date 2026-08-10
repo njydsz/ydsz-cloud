@@ -2,6 +2,7 @@ package com.njydsz.common.core.response;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
+import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.json.annotation.JsonClass;
@@ -383,21 +384,45 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 返回失败消息
+     * 返回失败消息（协议层 ResultCode）。
      *
-     * <p>自动走 i18n 链路：使用 {@link ResultCode#getMessageKey()} 作为
-     * 国际化 key 解析消息，解析失败时回退到 {@link ResultCode#getMsg()}。</p>
+     * <p><b>不走 i18n</b>：直接使用 {@link ResultCode#getMsg()} 作为响应 message。
+     * 适用于协议级错误（{@link BaseResultCode}），不涉及业务 i18n 解析。
      *
-     * @param resultCode 结果码
+     * <p><b>需要 i18n 时请使用 {@link #error(ExceptionCode)}</b>，
+     * 该方法会走完整国际化解析链路。
+     *
+     * @param resultCode 结果码（协议层）
      * @param <T> 数据类型
      * @return 失败消息
      */
     public static <T> BaseResponse<T> error(ResultCode resultCode) {
-        return of(resultCode.getCode(), resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()), null);
+        return of(resultCode.getCode(), resultCode.getMsg(), null);
     }
 
     /**
-     * 返回失败消息
+     * 返回失败消息（异常层 ExceptionCode）。
+     *
+     * <p><b>走 i18n 链路</b>：使用 {@link ExceptionCode#getMessageKey()} 作为
+     * 国际化 key 解析消息，解析失败时回退到 {@link ExceptionCode#getMsg()}。</p>
+     *
+     * <p>业务模块推荐调用此方法（传入 {@link ExceptionCode} 枚举），
+     * 前端可根据错误码和当前语言环境展示本地化文案。
+     *
+     * @param exceptionCode 异常码（业务层）
+     * @param <T> 数据类型
+     * @return 失败消息
+     */
+    public static <T> BaseResponse<T> error(ExceptionCode exceptionCode) {
+        return of(exceptionCode.getCode(),
+                  resolveMessage(exceptionCode.getMessageKey(), exceptionCode.getMsg()),
+                  null);
+    }
+
+    /**
+     * 返回失败消息（协议层 ResultCode + 自定义消息覆盖）。
+     *
+     * <p>自定义消息直接作为响应 message，不走 i18n 解析。
      *
      * @param resultCode 结果码
      * @param msg 自定义消息（覆盖 ResultCode 默认消息，不走 i18n）
@@ -406,6 +431,20 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public static <T> BaseResponse<T> error(ResultCode resultCode, String msg) {
         return of(resultCode.getCode(), msg, null);
+    }
+
+    /**
+     * 返回失败消息（异常层 ExceptionCode + 自定义消息覆盖）。
+     *
+     * <p>自定义消息直接作为响应 message，不走 i18n 解析。
+     *
+     * @param exceptionCode 异常码
+     * @param msg 自定义消息（覆盖 ExceptionCode 默认消息，不走 i18n）
+     * @param <T> 数据类型
+     * @return 失败消息
+     */
+    public static <T> BaseResponse<T> error(ExceptionCode exceptionCode, String msg) {
+        return of(exceptionCode.getCode(), msg, null);
     }
 
     /**

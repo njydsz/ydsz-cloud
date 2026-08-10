@@ -13,7 +13,7 @@ import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
 import com.njydsz.common.exception.health.ExceptionHealthIndicator;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.registry.ResultCodeScanner;
+import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 
 /**
  * 异常模块 Actuator / 观测能力自动配置
@@ -65,8 +65,8 @@ public class YdszExceptionActuatorAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public ResultCodeScanner resultCodeScanner(ObjectProvider<ErrorCodeTable> errorCodeTableProvider) {
-        return new ResultCodeScanner(errorCodeTableProvider.getIfAvailable());
+    public ExceptionCodeScanner exceptionCodeScanner(ObjectProvider<ErrorCodeTable> errorCodeTableProvider) {
+        return new ExceptionCodeScanner(errorCodeTableProvider.getIfAvailable());
     }
 
     // ==================== 健康检查 ====================

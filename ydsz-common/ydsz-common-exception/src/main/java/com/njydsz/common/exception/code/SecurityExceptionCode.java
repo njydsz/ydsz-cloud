@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 import lombok.Getter;
 
@@ -21,7 +21,7 @@ import lombok.Getter;
  * @see RateLimitExceptionCode
  */
 @Getter
-@YdszResultCode(module = "security", description = "安全模块认证授权异常码")
+@YdszExceptionCode(module = "security", description = "安全模块认证授权异常码")
 public enum SecurityExceptionCode implements ExceptionCode {
 
     // ==================== A02 认证异常 ====================

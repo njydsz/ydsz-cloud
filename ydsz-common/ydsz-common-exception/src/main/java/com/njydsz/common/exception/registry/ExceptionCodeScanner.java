@@ -28,10 +28,10 @@ import lombok.extern.slf4j.Slf4j;
  * <p>启动时扫描所有标注 {@link YdszResultCode} 注解的枚举类，
  * 将其注册到统一错误码表 {@link ErrorCodeTable}（单一注册中心）。
  *
- * <p><b>性能优化（v2.0）：</b>优先读取编译时生成的索引文件 META-INF/spring/ydsz-result-codes.idx，
+ * <p><b>性能优化（v2.0）：</b>优先读取编译时生成的索引文件 META-INF/spring/ydsz-exception-codes.idx，
  * 仅在索引不存在时回退到 ASM 字节码扫描，减少启动开销。
  *
- * <p><b>使用方式：</b>业务模块可在 src/main/resources/META-INF/spring/ydsz-result-codes.idx
+ * <p><b>使用方式：</b>业务模块可在 src/main/resources/META-INF/spring/ydsz-exception-codes.idx
  * 中列出所有错误码枚举类全限定名（每行一个），格式：
  * <pre>
  * com.example.module.ErrorCode
@@ -44,14 +44,14 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class ResultCodeScanner {
+public class ExceptionCodeScanner {
 
-    private static final String INDEX_LOCATION = "META-INF/spring/ydsz-result-codes.idx";
+    private static final String INDEX_LOCATION = "META-INF/spring/ydsz-exception-codes.idx";
     private static final String SCAN_PATTERN = "classpath*:com/njydsz/**/*.class";
     private static final String INDEX_PATTERN = "classpath*:" + INDEX_LOCATION;
 
     private final ErrorCodeTable errorCodeTable;
-    private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(YdszResultCode.class);
+    private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(YdszExceptionCode.class);
     private final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
 
     /**
@@ -64,7 +64,7 @@ public class ResultCodeScanner {
      *
      * @param errorCodeTable 统一错误码表（可为 null，为 null 时跳过注册）
      */
-    public ResultCodeScanner(ErrorCodeTable errorCodeTable) {
+    public ExceptionCodeScanner(ErrorCodeTable errorCodeTable) {
         this.errorCodeTable = errorCodeTable;
     }
 
@@ -80,7 +80,7 @@ public class ResultCodeScanner {
 
         // 2. 索引不存在或加载失败时，回退到 ASM 扫描
         if (!indexed) {
-            log.info("[ResultCodeScanner] 未检测到编译时索引（{}），回退到 ASM 字节码扫描", INDEX_LOCATION);
+            log.info("[ExceptionCodeScanner] 未检测到编译时索引（{}），回退到 ASM 字节码扫描", INDEX_LOCATION);
             scanWithAsm();
         }
     }
@@ -119,11 +119,11 @@ public class ResultCodeScanner {
                 }
             }
 
-            log.info("[ResultCodeScanner] 从索引文件加载完成，注册 {} 个错误码枚举 | 索引来源: {}",
+            log.info("[ExceptionCodeScanner] 从索引文件加载完成，注册 {} 个错误码枚举 | 索引来源: {}",
                     registeredCount, resources.length);
             return true;
         } catch (Exception e) {
-            log.warn("[ResultCodeScanner] 索引文件加载失败: {}，将回退到 ASM 扫描", e.getMessage());
+            log.warn("[ExceptionCodeScanner] 索引文件加载失败: {}，将回退到 ASM 扫描", e.getMessage());
             return false;
         }
     }
@@ -136,9 +136,9 @@ public class ResultCodeScanner {
             Class<?> clazz = Class.forName(className);
             registerClass(clazz);
         } catch (ClassNotFoundException e) {
-            log.warn("[ResultCodeScanner] 索引中列出的类不存在: {}", className);
+            log.warn("[ExceptionCodeScanner] 索引中列出的类不存在: {}", className);
         } catch (Exception e) {
-            log.debug("[ResultCodeScanner] 加载类失败: {} | error={}", className, e.getMessage());
+            log.debug("[ExceptionCodeScanner] 加载类失败: {} | error={}", className, e.getMessage());
         }
     }
 
@@ -157,11 +157,11 @@ public class ResultCodeScanner {
                 }
                 try {
                     MetadataReader reader = readerFactory.getMetadataReader(resource);
-                    if (!reader.getAnnotationMetadata().hasAnnotation(YdszResultCode.class.getName())) {
+                    if (!reader.getAnnotationMetadata().hasAnnotation(YdszExceptionCode.class.getName())) {
                         continue;
                     }
                     var annotationAttrs = reader.getAnnotationMetadata()
-                            .getAnnotationAttributes(YdszResultCode.class.getName());
+                            .getAnnotationAttributes(YdszExceptionCode.class.getName());
                     if (annotationAttrs == null) {
                         continue;
                     }
@@ -170,13 +170,13 @@ public class ResultCodeScanner {
                     registerEnum(module, description, reader.getClassMetadata().getClassName());
                     registeredCount++;
                 } catch (Throwable e) {
-                    log.debug("[ResultCodeScanner] 跳过无法加载的类: {} err={}",
+                    log.debug("[ExceptionCodeScanner] 跳过无法加载的类: {} err={}",
                             resource.getFilename(), e.getMessage());
                 }
             }
-            log.info("[ResultCodeScanner] ASM 扫描完成，注册 {} 个模块的错误码", registeredCount);
+            log.info("[ExceptionCodeScanner] ASM 扫描完成，注册 {} 个模块的错误码", registeredCount);
         } catch (Exception e) {
-            log.warn("[ResultCodeScanner] 扫描失败: {}", e.getMessage(), e);
+            log.warn("[ExceptionCodeScanner] 扫描失败: {}", e.getMessage(), e);
         }
     }
 
@@ -203,9 +203,9 @@ public class ResultCodeScanner {
             return;
         }
         // 提取注解信息
-        YdszResultCode annotation = clazz.getAnnotation(YdszResultCode.class);
+        YdszResultCode annotation = clazz.getAnnotation(YdszExceptionCode.class);
         if (annotation == null) {
-            log.debug("[ResultCodeScanner] 类 {} 未标注 @YdszResultCode，跳过", clazz.getName());
+            log.debug("[ExceptionCodeScanner] 类 {} 未标注 @YdszResultCode，跳过", clazz.getName());
             return;
         }
         registerEnum(annotation.module(), annotation.description(), clazz.getName());
@@ -240,9 +240,9 @@ public class ResultCodeScanner {
             if (errorCodeTable != null) {
                 errorCodeTable.registerAll(codeMap);
             }
-            log.debug("[ResultCodeScanner] 注册模块错误码: module={} codes={}", module, codeMap.size());
+            log.debug("[ExceptionCodeScanner] 注册模块错误码: module={} codes={}", module, codeMap.size());
         } catch (Exception e) {
-            log.debug("[ResultCodeScanner] 加载枚举失败: {} err={}", className, e.getMessage());
+            log.debug("[ExceptionCodeScanner] 加载枚举失败: {} err={}", className, e.getMessage());
         }
     }
 }

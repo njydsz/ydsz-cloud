@@ -3,7 +3,7 @@ package com.njydsz.literule.domain.enums;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import lombok.Getter;
 
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 轻量规则引擎模块异常码枚举。
@@ -23,7 +23,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  * @since 1.0.0
  */
 @Getter
-@YdszResultCode(module = "literule", description = "规则引擎")
+@YdszExceptionCode(module = "literule", description = "规则引擎")
 public enum LiteruleExceptionCode implements ExceptionCode {
 
     // ==================== B93001-B93099 规则定义 ====================
