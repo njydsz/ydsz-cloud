@@ -12,21 +12,18 @@ package com.njydsz.common.core.code;
  *   <li>C 开头：第三方服务异常</li>
  * </ul>
  *
- * <p><b>迁移说明：</b>本接口已被 {@code com.njydsz.common.exception.enums.ExceptionCode} 取代。
+ * <p><b>迁移说明：</b>本接口已被 {@code com.njydsz.common.exception.enums.ExceptionCode} 继承。
  * 新增业务模块错误码请直接实现 {@code ExceptionCode} 接口并使用 {@code @YdszResultCode} 注解注册，
  * 不要再实现此接口。{@code BaseResponse.error(ResultCode)} 工厂方法仍兼容本接口，
  * 内部 {@link BaseResultCode} 仍然实现本接口 —— 但对外扩展请使用 {@code ExceptionCode}。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @deprecated 1.10.0 使用 {@code com.njydsz.common.exception.enums.ExceptionCode} 替代。
- *             本接口保留仅供内部 {@link BaseResultCode} 和响应工厂方法使用，外部不应再实现。
  *
  * @see BaseResultCode
- * @see com.njydsz.common.core.response.BaseResponse#error(ResultCode)
+ * @see com.njydsz.common.core.code.ResultCode
  * @see com.njydsz.common.exception.enums.ExceptionCode
  */
-@Deprecated(since = "1.10.0", forRemoval = false)
 public interface ResultCode {
 
     /**

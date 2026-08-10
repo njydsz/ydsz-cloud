@@ -12,7 +12,7 @@ import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.filter.BaseAuthFilter;
 import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.model.AuthenticationProvider;
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.auth.AuthInfo;
 import com.njydsz.common.util.id.TracerUtils;
@@ -97,7 +97,7 @@ public class WebAuthFilter extends BaseAuthFilter {
         }
 
         Objects.requireNonNull(authHandlerFactory, "AuthHandlerFactory or AuthenticationProvider must be configured");
-        String serviceType = request.getHeader(HeaderConstants.X_SERVICE_TYPE);
+        String serviceType = request.getHeader(AuthHeaderConstants.X_SERVICE_TYPE);
         log.debug("X_SERVICE_TYPE: {}", serviceType);
 
         AuthHandler authHandler = authHandlerFactory.getAuthHandler(resolveServiceTypeCode(serviceType));

@@ -3,7 +3,7 @@ package com.njydsz.system.web.controller;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -109,7 +109,7 @@ public class DictVersionController {
     public BaseResponse<String> rollback(
             @Parameter(description = "字典类型编码") @PathVariable @NotBlank String typeCode,
             @Parameter(description = "目标版本号") @RequestParam @NotBlank String targetVersion,
-            @Parameter(description = "操作人 ID") @RequestHeader(value = HeaderConstants.X_USER_ID, required = false) String operatorId) {
+            @Parameter(description = "操作人 ID") @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String operatorId) {
         return BaseResponse.success(service.rollbackTo(typeCode, targetVersion, operatorId));
     }
 }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
@@ -106,7 +106,7 @@ public class ShareController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
     public BaseResponse<ShareLink> createShare(
             @RequestBody NextwikiDTOs.CreateShareRequest request,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
         ShareLink result = shareApplicationService.createShare(
                 request.getFileNodeId(),
@@ -157,7 +157,7 @@ public class ShareController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_REVOKE)
     public BaseResponse<Void> revoke(
             @PathVariable String shareId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
         shareApplicationService.revoke(shareId, userId);
         return BaseResponse.success();
@@ -174,7 +174,7 @@ public class ShareController {
     @GetMapping("/my")
     @Operation(summary = "查询我的分享列表")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
-    public BaseResponse<List<ShareLink>> myShares(@RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+    public BaseResponse<List<ShareLink>> myShares(@RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
         return BaseResponse.success(shareApplicationService.findByUserId(userId));
     }
 }

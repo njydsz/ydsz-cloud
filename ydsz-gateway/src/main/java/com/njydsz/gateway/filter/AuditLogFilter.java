@@ -12,7 +12,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.gateway.config.GatewayConstants;
 
 import lombok.extern.slf4j.Slf4j;
@@ -144,7 +144,7 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
         String traceId = request.getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
         String clientIp = extractClientIp(request);
         String userAgent = request.getHeaders().getFirst("User-Agent");
-        String tenantId = request.getHeaders().getFirst(HeaderConstants.X_TENANT_ID);
+        String tenantId = request.getHeaders().getFirst(DataPermissionHeaderConstants.X_TENANT_ID);
 
         // User-Agent 截断
         if (userAgent != null && userAgent.length() > 100) {

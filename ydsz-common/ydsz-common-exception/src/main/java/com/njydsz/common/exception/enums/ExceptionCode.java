@@ -1,5 +1,7 @@
 package com.njydsz.common.exception.enums;
 
+import com.njydsz.common.core.code.ResultCode;
+
 /**
  * 异常码接口
  *
@@ -53,7 +55,7 @@ package com.njydsz.common.exception.enums;
  * @see com.njydsz.common.exception.code.SecurityExceptionCode
  * @see com.njydsz.common.exception.code.RateLimitExceptionCode
  */
-public interface ExceptionCode extends com.njydsz.common.core.code.ResultCode {
+public interface ExceptionCode extends ResultCode {
 
     /**
      * 获取异常码

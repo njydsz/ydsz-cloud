@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.server.service.BatchImportApplicationService;
@@ -96,7 +96,7 @@ public class BatchImportController {
     public BaseResponse<BatchImportApplicationService.BatchImportResult> batchUpload(
             @RequestParam("files") MultipartFile[] files,
             @RequestParam(value = "parentId", required = false) String parentId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
         return BaseResponse.success(batchImportService.batchUpload(files, parentId, userId));
     }
 
@@ -119,7 +119,7 @@ public class BatchImportController {
     public BaseResponse<BatchImportApplicationService.BatchImportResult> importZip(
             @RequestParam("file") MultipartFile zipFile,
             @RequestParam(value = "parentId", required = false) String parentId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
         return BaseResponse.success(batchImportService.importFromZip(zipFile, parentId, userId));
     }
 }

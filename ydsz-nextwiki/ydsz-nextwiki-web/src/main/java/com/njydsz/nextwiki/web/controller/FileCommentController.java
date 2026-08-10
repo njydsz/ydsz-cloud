@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.domain.entity.FileComment;
@@ -127,7 +127,7 @@ public class FileCommentController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
     public BaseResponse<FileComment> addComment(
             @RequestBody AddCommentRequest request,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
         FileComment comment = FileComment.builder()
                 .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
@@ -168,7 +168,7 @@ public class FileCommentController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
     public BaseResponse<Void> deleteComment(
             @PathVariable String commentId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
         commentRepository.delete(commentId);
         return BaseResponse.success();
     }
@@ -190,7 +190,7 @@ public class FileCommentController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
     public BaseResponse<Void> resolveComment(
             @PathVariable String commentId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
         commentRepository.markResolved(commentId, userId);
         return BaseResponse.success();
     }

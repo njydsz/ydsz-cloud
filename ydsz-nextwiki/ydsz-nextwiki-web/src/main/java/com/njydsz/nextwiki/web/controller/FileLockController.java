@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.permission.PermissionCodes;
@@ -110,7 +110,7 @@ public class FileLockController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
     public BaseResponse<Void> lock(
             @PathVariable String nodeId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
         // P2-R2: 权限检查
         permissionService.checkWrite(nodeId, userId);
@@ -152,7 +152,7 @@ public class FileLockController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
     public BaseResponse<Void> unlock(
             @PathVariable String nodeId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
         // P2-R2: 权限检查
         permissionService.checkWrite(nodeId, userId);

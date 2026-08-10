@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.storage.IFileStorage;
@@ -121,7 +121,7 @@ public class DownloadController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
     public void downloadFolder(
             @PathVariable String folderId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId,
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
             HttpServletResponse response) {
 
         FileNode folder = fileNodeRepository.findById(folderId);
@@ -213,7 +213,7 @@ public class DownloadController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
     public void download(
             @PathVariable String nodeId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId,
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
             HttpServletRequest request,
             HttpServletResponse response) {
 
@@ -330,7 +330,7 @@ public class DownloadController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
     public BaseResponse<String> generateSignedUrl(
             @PathVariable String nodeId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId,
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
             HttpServletRequest request) {
 
         String ip = getClientIp(request);

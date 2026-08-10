@@ -17,7 +17,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -128,7 +128,7 @@ public class FileChunkController {
             @RequestParam("fileSize") long fileSize,
             @RequestParam("totalChunks") int totalChunks,
             @RequestParam(value = "parentId", required = false) String parentId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
         return BaseResponse.success(chunkUploadService.initChunkUpload(
                 fileName, fileSize, totalChunks, parentId, userId));
     }
@@ -174,7 +174,7 @@ public class FileChunkController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
     public BaseResponse<FileNodeVO> completeChunkUpload(
             @PathVariable String uploadId,
-            @RequestHeader(HeaderConstants.X_USER_ID) String userId) {
+            @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
         return BaseResponse.success(chunkUploadService.completeChunkUpload(uploadId, userId));
     }
 
