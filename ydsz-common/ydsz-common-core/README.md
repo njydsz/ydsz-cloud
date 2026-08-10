@@ -263,18 +263,19 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 ### ResultCode
 
-结果码接口，业务模块自定义错误码应实现此接口：
+结果码接口，业务模块自定义错误码应优先实现 `ExceptionCode` 接口：
 
 | 方法 | 返回值 | 说明 |
 |---|---|---|
 | `getCode()` | `String` | 结果码字符串 |
+| `getKey()` | `String` | 国际化消息 key（default: "core." + code） |
 | `getMsg()` | `String` | 结果消息描述 |
-| `getMessageKey()` | `String` | i18n 消息 key（default: 枚举实现为 `error.{枚举名}`，普通类实现为 `error.{SimpleClassName}`，均安全） |
-| `getHttpStatusCode()` | `int` | 对应的 HTTP 状态码 |
+
+> HTTP 状态码（`getHttpStatus`）等异常下沉语义定义在 `ExceptionCode` 子接口中。
 
 ### BaseResultCode
 
-系统预定义的结果码枚举，每个枚举值包含三元组 `(code, msg, httpStatus)`，共 45 个常量。
+系统预定义的结果码枚举，每个枚举值包含二元组 `(code, msg)`，共 17 个协议级常量。
 
 **码段规划**：
 - **A 开头**（A1xxxx/A2xxxx）：系统级码（参数校验、认证授权等）
@@ -329,7 +330,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `SESSION_KICKED` | A20111 | 账号已在其他设备登录 | 401 | A2-授权 |
 | `UNKNOWN` | C99999 | 未知错误 | 500 | C9-未知 |
 
-**自定义结果码**：业务模块应自行实现 `ResultCode` 接口，不应直接修改 `BaseResultCode`。
+**自定义结果码**：业务模块应实现 `ExceptionCode` 接口（继承自 `ResultCode`，新增 `getKey()` 供 i18n 查找），不应直接修改 `BaseResultCode`。
 
 ---
 
@@ -622,7 +623,6 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 | `RequestSnapshot` | 不可变请求快照 |
 | `PageResponse` | 分页响应信封 |
 | `Response` | 统一响应门面 |
-| `ProblemDetail` | RFC 9457 错误详情 |
 
 ### 资源模式
 
@@ -707,7 +707,7 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 
 1. **RequestContext 必须显式清理**：推荐使用 `RequestContext.runWithCleanup()` / `supplyWithCleanup()` / `callWithCleanup()`，它们会在 finally 中自动调用 `clear()` 和 `clearMdc()`，防止内存泄漏和上下文污染。
 
-2. **业务模块自定义结果码**：不应直接修改 `BaseResultCode`，应在各自模块定义独立枚举并实现 `ResultCode` 接口，遵循码段约定（A=系统级、B=业务级、C=第三方/未知）。
+2. **业务模块自定义结果码**：不应直接修改 `BaseResultCode`，应在各自模块定义独立枚举并实现 `ExceptionCode` 接口（或直接继承 `ResultCode` 用于非 i18n 的纯协议层），遵循码段约定（A=系统级、B=业务级、C=第三方/未知）。
 
 3. **HeaderConstants 是单一常量类**：项目中所有自定义 HTTP header 常量统一在 `HeaderConstants` 类中定义，按功能域分段注释。
 
@@ -727,6 +727,6 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 
 以下特性尚未在当前版本实现，处于规划阶段：
 
-- **RFC 9457 ProblemDetail**：新增 ProblemDetail 类，提供符合 RFC 9457 标准的错误响应格式（type/title/status/detail/instance 等）。保留 i18n 素材先行的做法，后续同步实现类。
+- **RFC 9457/9457 ProblemDetail**：已采用 Spring 标准 `org.springframework.http.ProblemDetail`（RFC 7807/9457）作为异常响应格式，ydsz-common-exception 模块提供完整支持，无需额外实现。
 - **SpanContext 完整版**：新增基于 record 的 immutable Span 上下文四元组，提供 W3C/B3/SkyWalking 协议互转能力。当前仅有 TraceIdGenerator 提供 traceId/spanId 生成与 traceparent 构建。
 - **IPageResult 桥接**（规划中，随 `PageResponse` 弃用而优先级降低）：新增 `IPageResult` 接口，让 domain 层 `PageResponse` 可实现该接口，配合 BaseResponse 分页元数据简化分页桥接。

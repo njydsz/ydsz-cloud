@@ -112,10 +112,5 @@
     "name": "com.njydsz.common.exception.code.RateLimitExceptionCode",
     "allDeclaredConstructors": true,
     "allPublicMethods": true
-  },
-  {
-    "name": "com.njydsz.common.exception.enums.ExceptionCodeRegistry",
-    "allDeclaredMethods": true,
-    "allPublicMethods": true
   }
 ]

@@ -250,19 +250,14 @@ public abstract class AbstractYdszException extends RuntimeException implements 
             }
 
             @Override
-            public String getMsg() {
-                // 触发 i18n 懒加载解析，解析结果由 AbstractYdszException.getMessage() 缓存
-                return AbstractYdszException.this.getMessage();
-            }
-
-            @Override
-            public String getMessageKey() {
+            public String getKey() {
                 return key;
             }
 
             @Override
-            public int getHttpStatus() {
-                return httpStatus > 0 ? httpStatus : 500;
+            public String getMsg() {
+                // 触发 i18n 懒加载解析，解析结果由 AbstractYdszException.getMessage() 缓存
+                return AbstractYdszException.this.getMessage();
             }
         };
     }

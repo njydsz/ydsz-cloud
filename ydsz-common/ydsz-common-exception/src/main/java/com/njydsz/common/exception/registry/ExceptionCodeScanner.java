@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 错误码自动扫描注册器。
  *
- * <p>启动时扫描所有标注 {@link YdszResultCode} 注解的枚举类，
+ * <p>启动时扫描所有标注 {@link YdszExceptionCode} 注解的枚举类，
  * 将其注册到统一错误码表 {@link ErrorCodeTable}（单一注册中心）。
  *
  * <p><b>性能优化（v2.0）：</b>优先读取编译时生成的索引文件 META-INF/spring/ydsz-exception-codes.idx，
@@ -203,9 +203,9 @@ public class ExceptionCodeScanner {
             return;
         }
         // 提取注解信息
-        YdszResultCode annotation = clazz.getAnnotation(YdszExceptionCode.class);
+        YdszExceptionCode annotation = clazz.getAnnotation(YdszExceptionCode.class);
         if (annotation == null) {
-            log.debug("[ExceptionCodeScanner] 类 {} 未标注 @YdszResultCode，跳过", clazz.getName());
+            log.debug("[ExceptionCodeScanner] 类 {} 未标注 @YdszExceptionCode，跳过", clazz.getName());
             return;
         }
         registerEnum(annotation.module(), annotation.description(), clazz.getName());

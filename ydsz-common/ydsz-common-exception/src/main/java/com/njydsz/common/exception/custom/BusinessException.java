@@ -158,11 +158,11 @@ public class BusinessException extends AbstractYdszException {
     public BusinessException(ResultCode resultCode) {
         super();
         if (resultCode != null) {
-            int httpStatus = resultCode.getHttpStatus() > 0
-                    ? resultCode.getHttpStatus() : DEFAULT_HTTP_STATUS;
+            int httpStatus = (resultCode instanceof ExceptionCode ec)
+                    ? ec.getHttpStatus() : DEFAULT_HTTP_STATUS;
             String key = (resultCode instanceof ExceptionCode ec)
                     ? ec.getKey()
-                    : "error." + resultCode.getCode();
+                    : resultCode.getKey();
             init(resultCode.getCode(), key, new Object[]{},
                     httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
         } else {
@@ -250,28 +250,30 @@ public class BusinessException extends AbstractYdszException {
         }
 
         /**
-         * 便捷方法：设置 {@link ResultCode} 作为错误码（兼容路径）。
+         * 兼容路径：从 {@link ResultCode} 提取错误码。
          *
-         * <p>resultCode 不携带 i18n key，使用 {@code "error." + code} 作为兜底 key。
-         * 推荐传入 {@link ExceptionCode} 以保留完整语义。
+         * <p>ResultCode 不包含 HTTP 状态码，使用默认值 {@code 400}。
+         * 如需精确 HTTP 语义，请使用 {@link #resultCode(ExceptionCode)} 传入异常码。
          */
         public BusinessExceptionBuilder resultCode(ResultCode resultCode) {
             if (resultCode != null) {
                 this.code = resultCode.getCode();
-                this.key = "error." + resultCode.getCode();
-                this.httpStatus = resultCode.getHttpStatus();
+                this.key = resultCode.getKey();
+                this.httpStatus = DEFAULT_HTTP_STATUS;
             }
             return this;
         }
 
         /**
          * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。
+         *
+         * <p>BaseResultCode 不包含 HTTP 状态码，SUCCESS 使用 200，其他使用默认值。
          */
         public BusinessExceptionBuilder resultCode(BaseResultCode resultCode) {
             if (resultCode != null) {
                 this.code = resultCode.getCode();
-                this.key = "error." + resultCode.getCode();
-                this.httpStatus = resultCode.getHttpStatus();
+                this.key = resultCode.getKey();
+                this.httpStatus = (resultCode == BaseResultCode.SUCCESS) ? 200 : DEFAULT_HTTP_STATUS;
             }
             return this;
         }

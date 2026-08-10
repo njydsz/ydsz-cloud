@@ -42,10 +42,11 @@ RuntimeException
 | 类 | 说明 |
 |---|---|
 | `ExceptionCode` | 异常码 SPI 接口（业务模块实现该接口定义自己的错误码枚举） |
-| `UnifiedExceptionCode` | 统一异常码枚举（A/B/C 三类编码体系，启动时自动注册到全局注册中心） |
 | `ExceptionCategory` | 异常类别枚举（BUSINESS / SYSTEM / SECURITY / RATE_LIMIT / EXTERNAL + 5 个细分场景） |
 | `ExceptionLevel` | 异常级别枚举（INFO / WARN / ERROR / FATAL） |
-| `ExceptionCodeRegistry` | 异常码全局注册表（线程安全，支持宽松 / 严格两种注册模式） |
+| `ErrorCodeTable` | 统一错误码表（运行时反查 + 分组文档输出，启动期扫描注册完毕后只读） |
+
+> **内置异常码枚举**：`CoreExceptionCode`（业务系统通用码）、`SecurityExceptionCode`（认证/权限/安全码）、`RateLimitExceptionCode`（限流码）。业务模块可参照这些枚举自定义 `@YdszExceptionCode` 标注的枚举。
 
 错误码编码规范：`[类型(1位)] + [模块(2位)] + [序号(3位)]`
 
@@ -59,11 +60,11 @@ RuntimeException
 
 | 类 | 说明 |
 |---|---|
-| `YdszResultCode` | 模块错误码注解（标记在枚举类上，声明 `module` 与 `description`） |
-| `ResultCodeScanner` | 启动时扫描 `classpath*:com/njydsz/**/*.class` 中所有 `@YdszResultCode` 标注的枚举类，注册到双注册中心 |
-| `ResultCodeRegistry` | 错误码文档注册表（按模块分组，供 Actuator 端点展示） |
+| `YdszExceptionCode` | 模块错误码注解（标记在枚举类上，声明 `module` 与 `description`） |
+| `ExceptionCodeScanner` | 启动时读取 `META-INF/spring/ydsz-exception-codes.idx` 索引（回退 ASM 扫描）注册全部 `@YdszExceptionCode` 标注的枚举到 `ErrorCodeTable` |
+| `ErrorCodeTable` | 统一错误码表（按模块分组，供 Actuator 文档端点与运行时反查） |
 
-扫描器在 `ApplicationReadyEvent` 时确定性扫描注册，同时注册到 `ResultCodeRegistry`（文档端点）与 `ExceptionCodeRegistry`（反查 API），确保所有错误码在应用就绪后被注册。
+扫描器在 `ApplicationReadyEvent` 时确定性扫描注册，所有错误码统一注册到 `ErrorCodeTable`（单一注册中心），确保应用就绪后全部错误码可用。启动时会执行 fail-fast code 唯一性校验，重复 code 将阻止启动。
 
 ### 4. 全局异常处理
 
@@ -92,7 +93,7 @@ traceId 提取优先级：`MDC.get("traceId")` → Request Header `X-Trace-Id` �
 
 | 类 | 说明 |
 |---|---|
-| `ProblemDetail` | RFC 7807 HTTP Problem Details 标准格式（type / title / status / detail / instance / traceId / errorCode / extensions） |
+| `org.springframework.http.ProblemDetail` | Spring 标准 RFC 7807/9457 ProblemDetail（type / title / status / detail / instance / traceId / errorCode / extensions） |
 
 支持两种响应格式通过配置开关切换：
 
@@ -164,9 +165,9 @@ ydsz:
 
 ```java
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 
-throw new BusinessException(UnifiedExceptionCode.NOT_FOUND)
+throw new BusinessException(CoreExceptionCode.NOT_FOUND)
     .data("userId", userId)
     .data("tenant", tenantId);
 ```
@@ -206,9 +207,9 @@ throw new BusinessException(UnifiedExceptionCode.NOT_FOUND)
 
 ```java
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 
-throw new BusinessException(UnifiedExceptionCode.NOT_FOUND)
+throw new BusinessException(CoreExceptionCode.NOT_FOUND)
     .data("userId", userId)
     .data("tenant", tenantId);
 ```
@@ -233,9 +234,9 @@ throw BusinessException.builder()
 
 ```java
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 
-throw new SysException(UnifiedExceptionCode.DATABASE_ERROR, cause)
+throw new SysException(CoreExceptionCode.DATABASE_ERROR, cause)
     .data("dataSource", "master");
 ```
 
@@ -243,9 +244,9 @@ throw new SysException(UnifiedExceptionCode.DATABASE_ERROR, cause)
 
 ```java
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.registry.YdszResultCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
-@YdszResultCode(module = "user", description = "用户中心错误码")
+@YdszExceptionCode(module = "user", description = "用户中心错误码")
 public enum UserExceptionCode implements ExceptionCode {
     USER_NOT_FOUND("U10001", "user.not.found", 404),
     USER_ALREADY_EXISTS("U10002", "user.already.exists", 409);
@@ -297,10 +298,10 @@ ydsz:
 
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
-| `ExceptionCode` | 异常码接口，业务模块实现该接口定义自己的错误码枚举 | `UnifiedExceptionCode`（内置）+ 业务模块自定义枚举 |
+| `ExceptionCode` | 异常码接口，业务模块实现该接口定义自己的错误码枚举 | `CoreExceptionCode` / `SecurityExceptionCode` / `RateLimitExceptionCode`（内置）+ 业务模块自定义枚举 |
 | `ExceptionCategory` | 异常分类 SPI，5 大主分类 + 5 个细分场景 | 框架内置枚举 |
 | `ExceptionLevel` | 异常级别 SPI，INFO / WARN / ERROR / FATAL | 框架内置枚举 |
-| `YdszResultCode` | 模块错误码注解，标记需要自动扫描注册的枚举类 | 业务模块自定义枚举 |
+| `YdszExceptionCode` | 模块错误码注解，标记需要自动扫描注册的枚举类 | 业务模块自定义枚举 |
 | `BaseExceptionHandler` | 异常处理器抽象基类，业务可继承扩展自定义异常处理逻辑 | `MvcExceptionHandler` / `WebFluxExceptionHandler` / `JdbcExceptionHandler` / `ValidationExceptionHandler` |
 
 ## 健康检查
@@ -326,11 +327,11 @@ ydsz:
 2. **i18n fail-fast 校验**：启动时会校验所有已注册 `ExceptionCode` 的 i18n key 是否可解析，缺失会阻止应用启动。可通过 `ydsz.i18n.validate-on-startup=false` 关闭（不推荐）。
 3. **高基数 code tag 治理**：`metrics-include-code-tag` 默认关闭，仅在错误码数量可控且需要按 code 维度查询时显式开启，避免 Prometheus 指标爆炸。
 4. **懒加载消息解析**：异常抛出时只存储 i18n key + params，`getMessage()` 调用时才解析。消息解析器由 `I18nConfiguration` 通过 `AbstractYdszException.setMessageResolver()` 静态注入，未注入时降级返回 key。
-5. **错误码注册模式**：`ExceptionCodeRegistry.register()` 宽松模式（重复注册保留首次值 + warn 日志）；`registerStrict()` 严格模式（重复注册 fail-fast 抛 `IllegalStateException`），跨模块冲突时建议使用严格模式。
+5. **错误码注册模式**：所有 `@YdszExceptionCode` 标注的枚举由 `ExceptionCodeScanner` 在启动时自动注册到 `ErrorCodeTable`；code 全局唯一，重复将 fail-fast 阻止启动（可通过 `ydsz.exception.codetable.allow-duplicate=false` 配置，默认即严格）。
 6. **traceId 提取降级链**：所有异常处理器统一从 SLF4J MDC 提取 traceId，降级到 Request Header `X-Trace-Id` → `X-Request-Id`，由 common-core 的 `TraceIdGenerator` 注入 MDC。
 7. **ProblemDetail type URI**：`problem-detail-type-base-url` 默认 `about:blank`，配置后会拼接 `/{category}` 作为 type URI，如 `https://api.example.com/errors/business`。
 8. **AutoConfiguration 解耦**：`@AutoConfiguration` 与 `@RestControllerAdvice` 解耦，避免在 Advice 类上叠加 Spring Boot 自动配置语义，提升可测试性。
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **v2.1.0**（2026-08-10）：错误码体系重构：移除不存在的 `UnifiedExceptionCode` / `ExceptionCodeRegistry` / `ResultCodeRegistry` 引用；`YdszResultCode` → `YdszExceptionCode`，`ResultCodeScanner` → `ExceptionCodeScanner`；示例改用 `CoreExceptionCode` 内置枚举；ProblemDetail 改为 Spring 标准。

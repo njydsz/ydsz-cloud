@@ -1,27 +1,17 @@
 package com.njydsz.common.core.code;
 
 /**
- * 标准结果码枚举（协议级错误码）
+ * 标准结果码枚举（协议级错误码标识）。
  *
- * <p>Core 模块仅保留与 HTTP 语义对齐的协议级错误码，遵循"最小核心"原则：
+ * <p>作为 {@link ResultCode} 的唯一直接实现，提供全局通用的错误码标识常量。
+ * 每个常量是两元组 {@code (code, msg)}：
  * <ul>
- *   <li>A0xxxx — 成功</li>
- *   <li>A1xxxx — 客户端参数/语义错误（4xx）</li>
- *   <li>A2xxxx — 认证授权错误（401/403）</li>
- *   <li>B1xxxx — 服务端的系统级错误（5xx）</li>
- *   <li>C9xxxx — 未知兜底</li>
+ *   <li>code — 前端/客户端识别错误的字符串标识</li>
+ *   <li>msg — 默认兜底消息（当 i18n 未配置时直接作为响应 message 返回）</li>
  * </ul>
  *
- * <p>以下类别的错误码已下沉至对应业务模块，不再在 core 中定义：
- * <ul>
- *   <li>数据库错误（DB_*）→ ydsz-common-jdbc / 业务模块</li>
- *   <li>缓存错误（CACHE_*）→ ydsz-common-redis / ydsz-common-cache</li>
- *   <li>消息队列错误（MQ_*）→ ydsz-common-queue</li>
- *   <li>细粒度认证错误（TOKEN_EXPIRED / MFA_* / PASSWORD_* 等）→ ydsz-common-auth</li>
- *   <li>第三方服务错误（THIRD_PARTY_* / CIRCUIT_BREAKER_*）→ 各业务模块</li>
- * </ul>
- *
- * <p>业务模块自定义错误码请实现 {@link ResultCode} 接口，在各模块内自行定义。
+ * <p>HTTP 状态码等异常下沉语义由 {@code ExceptionCode} 定义。
+ * 业务模块自定义错误码请实现 {@link ResultCode} 接口（通常通过 {@code ExceptionCode}）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -31,52 +21,50 @@ package com.njydsz.common.core.code;
 public enum BaseResultCode implements ResultCode {
 
     // ============================== 成功 ==============================
-    SUCCESS("A00000", "ok", 200),
+    SUCCESS("A00000", "ok"),
 
     // ============================== 客户端错误 (4xx) ==============================
     /** 请求参数错误 */
-    BAD_REQUEST("A10001", "请求参数错误", 400),
+    BAD_REQUEST("A10001", "请求参数错误"),
     /** 参数校验失败（JSR-303 校验不通过） */
-    VALIDATION_FAILED("A10002", "参数校验失败", 400),
+    VALIDATION_FAILED("A10002", "参数校验失败"),
     /** 缺少必填参数 */
-    MISSING_PARAMETER("A10003", "缺少参数", 400),
+    MISSING_PARAMETER("A10003", "缺少参数"),
     /** HTTP 方法不允许 */
-    METHOD_NOT_ALLOWED("A10004", "请求方法不允许", 405),
+    METHOD_NOT_ALLOWED("A10004", "请求方法不允许"),
     /** 不支持的媒体类型 */
-    UNSUPPORTED_MEDIA_TYPE("A10005", "不支持的媒体类型", 415),
+    UNSUPPORTED_MEDIA_TYPE("A10005", "不支持的媒体类型"),
     /** 资源不存在 */
-    NOT_FOUND("A10101", "资源不存在", 404),
+    NOT_FOUND("A10101", "资源不存在"),
     /** 资源已存在（重复创建） */
-    DUPLICATE_KEY("A10102", "资源已存在", 409),
+    DUPLICATE_KEY("A10102", "资源已存在"),
     /** 业务规则校验失败 */
-    BIZ_ERROR("A10103", "业务规则校验失败", 400),
+    BIZ_ERROR("A10103", "业务规则校验失败"),
     /** 请求超时 */
-    REQUEST_TIMEOUT("A10203", "请求超时", 408),
+    REQUEST_TIMEOUT("A10203", "请求超时"),
     /** 未登录或 Token 无效 */
-    UNAUTHORIZED("A20001", "未登录", 401),
+    UNAUTHORIZED("A20001", "未登录"),
     /** 无权限访问 */
-    FORBIDDEN("A20101", "无权限访问", 403),
+    FORBIDDEN("A20101", "无权限访问"),
     /** 请求过多（限流） */
-    TOO_MANY_REQUESTS("A10603", "请求过多", 429),
+    TOO_MANY_REQUESTS("A10603", "请求过多"),
 
     // ============================== 服务端错误 (5xx) ==============================
     /** 系统内部错误 */
-    INTERNAL_ERROR("B10201", "系统内部错误", 500),
+    INTERNAL_ERROR("B10201", "系统内部错误"),
     /** 服务暂不可用 */
-    SERVICE_UNAVAILABLE("B10202", "服务暂不可用", 503),
+    SERVICE_UNAVAILABLE("B10202", "服务暂不可用"),
 
     // ============================== 未知兜底 ==============================
     /** 未知错误（兜底） */
-    UNKNOWN("C99999", "未知错误", 500);
+    UNKNOWN("C99999", "未知错误");
 
     private final String code;
     private final String msg;
-    private final int httpStatus;
 
-    BaseResultCode(String code, String msg, int httpStatus) {
+    BaseResultCode(String code, String msg) {
         this.code = code;
         this.msg = msg;
-        this.httpStatus = httpStatus;
     }
 
     @Override
@@ -87,19 +75,6 @@ public enum BaseResultCode implements ResultCode {
     @Override
     public String getMsg() {
         return msg;
-    }
-
-    /**
-     * 返回结果码对应的 HTTP 状态码。
-     *
-     * <p>每个枚举显式声明其 HTTP 语义（数据驱动，无 switch），
-     * 遵循 REST 语义。
-     *
-     * @return 对应的 HTTP 状态码
-     */
-    @Override
-    public int getHttpStatus() {
-        return httpStatus;
     }
 
     // ======================== 静态查询 API ========================

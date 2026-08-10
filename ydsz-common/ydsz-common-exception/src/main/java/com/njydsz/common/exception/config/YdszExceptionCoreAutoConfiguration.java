@@ -91,8 +91,7 @@ public class YdszExceptionCoreAutoConfiguration {
     /**
      * 在 Bean 初始化完成后桥接 ErrorCodeTable 与兼容门面。
      *
-     * <p>将 {@link ErrorCodeTable} 注入到 {@link ExceptionCodeRegistry}，
-     * 使历史静态门面自动委托 ErrorCodeTable，实现双写兼容。
+     * <p>桥接 {@link ErrorCodeTable} 与历史兼容门面（如有），
      *
      * <p><b>注意：</b>国际化消息解析已迁移至 Handler 层直接使用 MessageSource，
      * 不再通过 {@link AbstractYdszException} 内部解析器注入。
@@ -249,7 +248,7 @@ public class YdszExceptionCoreAutoConfiguration {
     /**
      * 启动时校验所有已注册的 ExceptionCode 的 i18n key 是否能在默认 messages.properties 中解析。
      *
-     * <p>优先从 ErrorCodeTable 获取注册信息，回退到 ExceptionCodeRegistry 兼容路径。
+     * <p>优先从 {@link ErrorCodeTable} 获取注册信息，确保 fail-fast 校验覆盖全部已注册错误码。
      */
     private void validateExceptionCodeKeys(MessageSource messageSource) {
         List<String> missingKeys = new ArrayList<>();

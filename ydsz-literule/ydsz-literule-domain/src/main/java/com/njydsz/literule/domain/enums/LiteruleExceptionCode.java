@@ -8,7 +8,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
 /**
  * 轻量规则引擎模块异常码枚举。
  *
- * <p>实现 {@link ExceptionCode} 接口，通过 {@link ExceptionCodeRegistry} 全局注册，
+ * <p>实现 {@link ExceptionCode} 接口，自动注册到 {@link com.njydsz.common.exception.code.ErrorCodeTable}，
  * 支持 i18n 消息键、HTTP 状态码、异常分类。
  *
  * <p><b>编码区间</b>：

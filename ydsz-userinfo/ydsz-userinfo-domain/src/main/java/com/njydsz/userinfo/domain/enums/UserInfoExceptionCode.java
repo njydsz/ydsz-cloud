@@ -11,7 +11,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * <p>P0-6: 已从旧版 {@code ResultCode} 体系迁移到 {@code common-exception} 的
  * {@link ExceptionCode} 体系，获得以下增强能力：
  * <ul>
- *   <li>统一异常码注册：通过 {@link ExceptionCodeRegistry} 全局注册，支持反查与文档生成</li>
+ *   <li>统一异常码注册：自动注册到 {@link com.njydsz.common.exception.code.ErrorCodeTable}，支持反查与文档生成</li>
  *   <li>HTTP 状态码：每个异常码携带精确的 HTTP 状态码（404/401/403/400）</li>
  *   <li>异常分类：由 {@link ExceptionCode#getCategory()} 按首字母推断（B → SYSTEM）</li>
  *   <li>i18n 支持：{@link #getKey()} 返回国际化消息键，由 {@code I18nConfiguration} 解析</li>

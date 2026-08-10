@@ -80,14 +80,17 @@ public class PageResponse<T> extends BaseResponse<T> {
     /**
      * 返回分页失败响应。
      *
-     * @param resultCode 结果码（自动走 i18n 链路）
+     * <p>走 i18n 链路：使用 {@link ResultCode#getKey()} 作为国际化 key 解析消息，
+     * 解析失败时回退到 {@link ResultCode#getMsg()}。
+     *
+     * @param resultCode 结果码
      * @param <T>        数据类型
      * @return 分页失败响应
      */
     public static <T> PageResponse<T> error(ResultCode resultCode) {
         PageResponse<T> response = new PageResponse<>();
         response.setCode(resultCode.getCode());
-        response.setMsg(resolveMessage(resultCode.getMessageKey(), resultCode.getMsg()));
+        response.setMsg(resolveMessage(resultCode.getKey(), resultCode.getMsg()));
         return response;
     }
 

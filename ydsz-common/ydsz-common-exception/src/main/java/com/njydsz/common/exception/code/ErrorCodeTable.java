@@ -12,7 +12,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 /**
  * 统一错误码注册表。
  *
- * <p>取代了历史上 {@link com.njydsz.common.exception.enums.ExceptionCodeRegistry}（静态工具类）
+ * <p>取代了历史上 {@code com.njydsz.common.exception.enums.ExceptionCodeRegistry}（静态工具类）
  * 与旧版模块注册表的双轨设计，作为唯一的全局错误码来源。
  *
  * <p>职责分离：

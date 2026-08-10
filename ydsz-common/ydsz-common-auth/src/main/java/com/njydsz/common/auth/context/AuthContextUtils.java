@@ -71,7 +71,7 @@ public final class AuthContextUtils {
             throw SysException.builder()
                     .code(BaseResultCode.UNAUTHORIZED.getCode())
                     .key("error.common.msg_1923bd82")
-                    .httpStatus(BaseResultCode.UNAUTHORIZED.getHttpStatus())
+                    .httpStatus(401)
                     .build();
         }
         return user;
@@ -155,7 +155,7 @@ public final class AuthContextUtils {
                     .code(BaseResultCode.FORBIDDEN.getCode())
                     .key("error.common.msg_1e40057e")
                     .params(new Object[]{perm})
-                    .httpStatus(BaseResultCode.FORBIDDEN.getHttpStatus())
+                    .httpStatus(403)
                     .build();
         }
     }
@@ -176,7 +176,7 @@ public final class AuthContextUtils {
         throw SysException.builder()
                 .code(BaseResultCode.FORBIDDEN.getCode())
                 .key("error.common.msg_ad4fff48")
-                .httpStatus(BaseResultCode.FORBIDDEN.getHttpStatus())
+                .httpStatus(403)
                 .build();
     }
 

@@ -202,27 +202,29 @@ public class SysException extends AbstractYdszException {
         }
 
         /**
-         * 便捷方法：设置 {@link ResultCode} 作为错误码（兼容路径）。
+         * 兼容路径：从 {@link ResultCode} 提取错误码。
+         *
+         * <p>ResultCode 不包含 HTTP 状态码，使用 {@link #DEFAULT_HTTP_STATUS} 作为默认。
+         * 如需精确 HTTP 语义，请使用 {@link #resultCode(ExceptionCode)} 传入异常码。
          */
         public SysExceptionBuilder resultCode(ResultCode resultCode) {
             if (resultCode != null) {
                 this.code = resultCode.getCode();
-                this.key = "error." + resultCode.getCode();
-                this.httpStatus = resultCode.getHttpStatus() > 0
-                        ? resultCode.getHttpStatus() : DEFAULT_HTTP_STATUS;
+                this.key = resultCode.getKey();
+                this.httpStatus = DEFAULT_HTTP_STATUS;
             }
             return this;
         }
 
         /**
-         * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。
+         * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。n         *
+         * <p>BaseResultCode 不包含 HTTP 状态码，使用默认值。
          */
         public SysExceptionBuilder resultCode(BaseResultCode resultCode) {
             if (resultCode != null) {
                 this.code = resultCode.getCode();
-                this.key = "error." + resultCode.getCode();
-                this.httpStatus = resultCode.getHttpStatus() > 0
-                        ? resultCode.getHttpStatus() : DEFAULT_HTTP_STATUS;
+                this.key = resultCode.getKey();
+                this.httpStatus = (resultCode == BaseResultCode.SUCCESS) ? 200 : DEFAULT_HTTP_STATUS;
             }
             return this;
         }
