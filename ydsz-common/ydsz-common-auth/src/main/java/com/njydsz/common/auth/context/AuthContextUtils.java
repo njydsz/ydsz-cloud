@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.njydsz.common.auth.model.ColumnPermissionInfo;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.LoginUser;
@@ -50,7 +51,7 @@ public final class AuthContextUtils {
      */
     public static void setCurrent(LoginUser user) {
         if (user != null) {
-            RequestContext.setLoginUser(user);
+            RequestContext.put(BizContextKeys.KEY_LOGIN_USER, user);
             RequestContext.setUserId(user.getUserId());
             if (user.getTenantId() != null) {
                 RequestContext.setTenantId(user.getTenantId());
@@ -82,7 +83,7 @@ public final class AuthContextUtils {
      * @return 当前登录用户；未登录时返回 null
      */
     public static LoginUser getCurrentOrNull() {
-        return RequestContext.getLoginUser(LoginUser.class);
+        return LoginUser.class.cast(RequestContext.get(BizContextKeys.KEY_LOGIN_USER));
     }
 
     /**
@@ -187,7 +188,7 @@ public final class AuthContextUtils {
      * @return 列权限信息，未设置时返回 null
      */
     public static ColumnPermissionInfo getColumnPermission() {
-        return (ColumnPermissionInfo) RequestContext.getColumnPermission();
+        return (ColumnPermissionInfo) RequestContext.get(BizContextKeys.KEY_COLUMN_PERMISSION);
     }
 
     /**
@@ -196,7 +197,7 @@ public final class AuthContextUtils {
      * @param columnPermission 列权限信息
      */
     public static void setColumnPermission(ColumnPermissionInfo columnPermission) {
-        RequestContext.setColumnPermission(columnPermission);
+        RequestContext.put(BizContextKeys.KEY_COLUMN_PERMISSION, columnPermission);
     }
 
     /**
@@ -229,7 +230,7 @@ public final class AuthContextUtils {
      * @param userInfoMap 用户信息 Map
      */
     public static void setCachedUserInfoMap(Map<String, Object> userInfoMap) {
-        RequestContext.put(RequestContext.KEY_CACHED_USER_INFO_MAP, userInfoMap);
+        RequestContext.put(BizContextKeys.KEY_CACHED_USER_INFO_MAP, userInfoMap);
     }
 
     // ==================== 租户 ====================

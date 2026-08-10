@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.slf4j.MDC;
 
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.config.TenantProperties;
@@ -123,7 +124,7 @@ public class TenantContextWebFilter implements Filter {
      * @param context 租户上下文
      */
     private static void setTenantContext(TenantContext context) {
-        RequestContext.setTenantContext(context);
+        RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, context);
         if (context != null && context.getTenantId() != null) {
             RequestContext.setTenantId(context.getTenantId());
         }
@@ -133,7 +134,7 @@ public class TenantContextWebFilter implements Filter {
      * 清除租户上下文（对应原 TenantContextHolder.clear 语义）。
      */
     private static void clearTenantContext() {
-        RequestContext.remove(RequestContext.KEY_TENANT_CONTEXT);
+        RequestContext.remove(BizContextKeys.KEY_TENANT_CONTEXT);
         RequestContext.remove(RequestContext.KEY_TENANT_ID);
     }
 

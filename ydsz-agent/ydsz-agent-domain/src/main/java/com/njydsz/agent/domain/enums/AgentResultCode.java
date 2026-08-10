@@ -1,10 +1,6 @@
 package com.njydsz.agent.domain.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
 import com.njydsz.common.exception.registry.YdszResultCode;
@@ -75,14 +71,5 @@ public enum AgentResultCode implements ExceptionCode {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;
-    }
-
-    static {
-        Map<String, ExceptionCode> registryMap = new HashMap<>();
-        for (AgentResultCode c : values()) {
-            registryMap.put(c.getCode(), c);
-        }
-        // 类加载即完成全局注册，确保异常码在首次被抛出/翻译前已可用，避免消息键解析失败
-        ExceptionCodeRegistry.register(registryMap);
     }
 }

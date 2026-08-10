@@ -1,11 +1,8 @@
 package com.njydsz.system.domain.enums;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 import lombok.Getter;
 
-import java.util.HashMap;
-import java.util.Map;
 import com.njydsz.common.exception.registry.YdszResultCode;
 
 /**
@@ -67,13 +64,5 @@ public enum SystemResultCode implements ExceptionCode {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;
-    }
-
-    static {
-        Map<String, ExceptionCode> registryMap = new HashMap<>();
-        for (SystemResultCode c : values()) {
-            registryMap.put(c.getCode(), c);
-        }
-        ExceptionCodeRegistry.register(registryMap);
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
 
@@ -34,7 +35,7 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate template) {
-        TenantContext context = (TenantContext) RequestContext.getTenantContext();
+        TenantContext context = (TenantContext) RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
         if (context == null || context.isSkipIsolation() || context.getTenantId() == null) {
             return;
         }

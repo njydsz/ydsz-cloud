@@ -1,11 +1,8 @@
 package com.njydsz.literule.domain.enums;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 import lombok.Getter;
 
-import java.util.HashMap;
-import java.util.Map;
 import com.njydsz.common.exception.registry.YdszResultCode;
 
 /**
@@ -65,13 +62,5 @@ public enum LiteruleResultCode implements ExceptionCode {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;
-    }
-
-    static {
-        Map<String, ExceptionCode> registryMap = new HashMap<>();
-        for (LiteruleResultCode c : values()) {
-            registryMap.put(c.getCode(), c);
-        }
-        ExceptionCodeRegistry.register(registryMap);
     }
 }

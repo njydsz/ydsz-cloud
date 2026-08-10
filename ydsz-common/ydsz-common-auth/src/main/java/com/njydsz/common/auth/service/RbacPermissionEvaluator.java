@@ -15,6 +15,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.annotation.PermissionMode;
 import com.njydsz.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.common.auth.config.AuthProperties;
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.auth.exception.PermissionDeniedException;
 import com.njydsz.common.auth.exception.PermissionDeniedException.PermissionType;
@@ -138,7 +139,7 @@ public class RbacPermissionEvaluator {
             return cached;
         }
         Map<String, Object> userInfo = loadUserInfo(userInfoService.loadCurrentToken());
-        RequestContext.put(RequestContext.KEY_CACHED_USER_INFO_MAP, userInfo);
+        RequestContext.put(BizContextKeys.KEY_CACHED_USER_INFO_MAP, userInfo);
         return userInfo;
     }
 
@@ -606,7 +607,7 @@ public class RbacPermissionEvaluator {
 
     private String resolveCurrentResource() {
         try {
-            Object request = RequestContext.getHttpRequest();
+            Object request = RequestContext.get(BizContextKeys.KEY_HTTP_REQUEST);
             if (request instanceof HttpServletRequest) {
                 return ((HttpServletRequest) request).getRequestURI();
             }

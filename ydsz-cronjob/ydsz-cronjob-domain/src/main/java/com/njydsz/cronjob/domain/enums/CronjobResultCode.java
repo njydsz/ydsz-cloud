@@ -1,10 +1,6 @@
 package com.njydsz.cronjob.domain.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
 import com.njydsz.common.exception.registry.YdszResultCode;
@@ -68,13 +64,5 @@ public enum CronjobResultCode implements ExceptionCode {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;
-    }
-
-    static {
-        Map<String, ExceptionCode> registryMap = new HashMap<>();
-        for (CronjobResultCode c : values()) {
-            registryMap.put(c.getCode(), c);
-        }
-        ExceptionCodeRegistry.register(registryMap);
     }
 }

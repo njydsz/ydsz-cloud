@@ -1,5 +1,6 @@
 package com.njydsz.common.tenant.cache;
 
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
 
@@ -57,7 +58,7 @@ public enum CacheIsolationStrategy {
             return originalKey;
         }
         if (strategy == KEY_PREFIX) {
-            TenantContext context = (TenantContext) RequestContext.getTenantContext();
+            TenantContext context = (TenantContext) RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
             if (context == null || context.isSkipIsolation()
                     || context.isSuperAdmin() || context.getTenantId() == null) {
                 return originalKey;

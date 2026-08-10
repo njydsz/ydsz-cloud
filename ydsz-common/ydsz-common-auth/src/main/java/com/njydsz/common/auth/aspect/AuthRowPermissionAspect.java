@@ -23,6 +23,7 @@ import com.njydsz.common.auth.model.DataScopeAware;
 import com.njydsz.common.auth.model.DataScopeInfo;
 import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.auth.AuthInfoUtils;
@@ -331,7 +332,7 @@ public class AuthRowPermissionAspect {
      * @param snapshot extra headers 快照（可为空）
      */
     private static void restoreExtraHeaders(Map<String, String> snapshot) {
-        RequestContext.remove(RequestContext.KEY_EXTRA_HEADERS);
+        RequestContext.remove(BizContextKeys.KEY_EXTRA_HEADERS);
         if (snapshot != null) {
             snapshot.forEach(RequestContext::putExtraHeader);
         }

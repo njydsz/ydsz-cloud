@@ -1,10 +1,6 @@
 package com.njydsz.userinfo.domain.enums;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
 import lombok.Getter;
 import com.njydsz.common.exception.registry.YdszResultCode;
@@ -141,17 +137,4 @@ public enum UserInfoResultCode implements ExceptionCode {
         this.httpStatus = httpStatus;
     }
 
-    /**
-     * 静态注册块：将本枚举所有实例注册到全局 {@link ExceptionCodeRegistry}。
-     *
-     * <p>采用宽松模式（{@link ExceptionCodeRegistry#register(Map)}），
-     * 若与其它模块存在 code 冲突则保留首次注册值并输出 warn 日志。
-     */
-    static {
-        Map<String, ExceptionCode> registryMap = new HashMap<>();
-        for (UserInfoResultCode c : values()) {
-            registryMap.put(c.getCode(), c);
-        }
-        ExceptionCodeRegistry.register(registryMap);
-    }
 }

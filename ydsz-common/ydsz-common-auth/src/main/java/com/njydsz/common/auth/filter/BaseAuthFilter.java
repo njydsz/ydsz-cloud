@@ -16,6 +16,7 @@ import com.njydsz.common.auth.config.AuthFilterIgnoreProperties;
 import com.njydsz.common.auth.constant.FilterIgnoreConstants;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.auth.security.RateLimiter;
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.util.auth.AuthInfo;
@@ -91,8 +92,8 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         long startTime = System.currentTimeMillis();
         AuthInfo authInfo = resolveAuthInfo(request, response);
         log.debug("{}请求路径: {}, 认证信息已写入上下文", getLogPrefix(), servletPath);
-        RequestContext.setAuthInfo(authInfo);
-        RequestContext.setHttpRequest(request);
+        RequestContext.put(BizContextKeys.KEY_AUTH_INFO, authInfo);
+        RequestContext.put(BizContextKeys.KEY_HTTP_REQUEST, request);
         try {
             filterChain.doFilter(request, response);
         } finally {

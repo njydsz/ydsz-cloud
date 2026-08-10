@@ -1,10 +1,10 @@
 package com.njydsz.common.exception.code;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 import com.njydsz.common.exception.registry.YdszResultCode;
 
 import lombok.Getter;
@@ -85,22 +85,26 @@ public enum SecurityExceptionCode implements ExceptionCode {
     // 静态注册 & 便捷查找
     // ============================================================
 
+    /**
+     * 内部快速查找缓存。
+     */
+    private static final Map<String, SecurityExceptionCode> LOOKUP_MAP;
+
     static {
-        Map<String, ExceptionCode> registryMap = new HashMap<>();
+        Map<String, SecurityExceptionCode> map = new HashMap<>();
         for (SecurityExceptionCode code : values()) {
-            registryMap.put(code.getCode(), code);
+            map.put(code.getCode(), code);
         }
-        ExceptionCodeRegistry.register(registryMap);
+        LOOKUP_MAP = Collections.unmodifiableMap(map);
     }
 
     /**
      * 便捷查找方法：按 code 字符串查找本模块的安全异常码枚举。
      *
      * @param code 异常码字符串
-     * @return 对应的 SecurityExceptionCode 枚举实例；未找到或非 SecurityExceptionCode 返回 null
+     * @return 对应的 SecurityExceptionCode 枚举实例；未找到返回 null
      */
     public static SecurityExceptionCode resolve(String code) {
-        ExceptionCode ec = ExceptionCodeRegistry.lookup(code);
-        return ec instanceof SecurityExceptionCode security ? security : null;
+        return code != null ? LOOKUP_MAP.get(code) : null;
     }
 }

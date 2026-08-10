@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.jdbc.interceptor.JSqlParserHelper;
 import com.njydsz.common.tenant.TenantContext;
@@ -292,7 +293,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
      * @throws TenantIsolationException 任一字段值缺失时抛出
      */
     private List<TenantFieldValue> resolveTenantValues() {
-        TenantContext context = (TenantContext) RequestContext.getTenantContext();
+        TenantContext context = (TenantContext) RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
 
         // 跳过隔离（匿名 URL）
         if (context != null && context.isSkipIsolation()) {

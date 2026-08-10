@@ -78,42 +78,6 @@ public final class RequestContext {
     /** 上下文键名：API 版本 */
     public static final String KEY_API_VERSION = "apiVersion";
 
-    // ==================== 业务级上下文键 ====================
-    // 业务级常量已下沉至 {@link BizContextKeys}，此处仅桥接引用，避免双写。
-    // v1.9.3 前调用方仍可能引用 RequestContext.KEY_*，保留兼容常量。
-
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_AUTH_INFO} */
-    @Deprecated(since = "1.9.3", forRemoval = false)
-    public static final String KEY_AUTH_INFO = BizContextKeys.KEY_AUTH_INFO;
-
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_LOGIN_USER} */
-    @Deprecated(since = "1.9.3", forRemoval = false)
-    public static final String KEY_LOGIN_USER = BizContextKeys.KEY_LOGIN_USER;
-
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_TENANT_CONTEXT} */
-    @Deprecated(since = "1.9.3", forRemoval = false)
-    public static final String KEY_TENANT_CONTEXT = BizContextKeys.KEY_TENANT_CONTEXT;
-
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_COLUMN_PERMISSION} */
-    @Deprecated(since = "1.9.3", forRemoval = false)
-    public static final String KEY_COLUMN_PERMISSION = BizContextKeys.KEY_COLUMN_PERMISSION;
-
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_AUDIT_DATA} */
-    @Deprecated(since = "1.9.3", forRemoval = false)
-    public static final String KEY_AUDIT_DATA = BizContextKeys.KEY_AUDIT_DATA;
-
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_HTTP_REQUEST} */
-    @Deprecated(since = "1.9.3", forRemoval = false)
-    public static final String KEY_HTTP_REQUEST = BizContextKeys.KEY_HTTP_REQUEST;
-
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_EXTRA_HEADERS} */
-    @Deprecated(since = "1.9.3", forRemoval = false)
-    public static final String KEY_EXTRA_HEADERS = BizContextKeys.KEY_EXTRA_HEADERS;
-
-    /** @deprecated 请使用 {@link BizContextKeys#KEY_CACHED_USER_INFO_MAP} */
-    @Deprecated(since = "1.9.3", forRemoval = false)
-    public static final String KEY_CACHED_USER_INFO_MAP = BizContextKeys.KEY_CACHED_USER_INFO_MAP;
-
     /**
      * 请求上下文存储（懒初始化）。
      *
@@ -438,163 +402,10 @@ public final class RequestContext {
         CACHE_HOLDER.remove();
     }
 
-    // ======================== v1.9 业务层便捷方法 ========================
-
-    /**
-     * 写入认证信息到请求上下文。
-     *
-     * <p>由认证 Filter/Interceptor 调用，供后续 {@link #getAuthInfo()} 读取。</p>
-     *
-     * @param authInfo 认证信息（可为 null，等同于移除）
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #put(String, Object) put(BizContextKeys.KEY_AUTH_INFO, authInfo)}
-     *             保证键名来源统一；后续版本将进一步要求使用类型安全的 {@link ContextKey}。
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    public static void setAuthInfo(Object authInfo) {
-        if (authInfo == null) {
-            remove(BizContextKeys.KEY_AUTH_INFO);
-        } else {
-            put(BizContextKeys.KEY_AUTH_INFO, authInfo);
-        }
-    }
-
-    /**
-     * 获取当前请求的认证信息。
-     *
-     * @return 认证信息（通常实现为 AuthInfo），不存在返回 null
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_AUTH_INFO)} 并手动强转，
-     *             或后续版本引入类型安全的 {@link ContextKey} 模式。
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    public static Object getAuthInfo() {
-        return get(BizContextKeys.KEY_AUTH_INFO);
-    }
-
-    /**
-     * 获取当前请求的认证信息（类型安全版本）。
-     *
-     * @param type 期望类型
-     * @param <T> 类型参数
-     * @return 认证信息，不存在或类型不匹配返回 null
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_AUTH_INFO)} 并手动强转。
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    @SuppressWarnings("unchecked")
-    public static <T> T getAuthInfo(Class<T> type) {
-        Object authInfo = get(BizContextKeys.KEY_AUTH_INFO);
-        return type.isInstance(authInfo) ? (T) authInfo : null;
-    }
-
-    /**
-     * 写入登录用户信息（LoginUser）。
-     *
-     * @param loginUser 登录用户信息
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #put(String, Object) put(BizContextKeys.KEY_LOGIN_USER, loginUser)}
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    public static void setLoginUser(Object loginUser) {
-        if (loginUser == null) {
-            remove(BizContextKeys.KEY_LOGIN_USER);
-        } else {
-            put(BizContextKeys.KEY_LOGIN_USER, loginUser);
-        }
-    }
-
-    /**
-     * 获取当前登录用户（LoginUser）。
-     *
-     * @return 登录用户，不存在返回 null
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_LOGIN_USER)}
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    public static Object getLoginUser() {
-        return get(BizContextKeys.KEY_LOGIN_USER);
-    }
-
-    /**
-     * 获取当前登录用户（类型安全版本）。
-     *
-     * @param type 期望类型
-     * @param <T> 类型参数
-     * @return 登录用户，不存在或类型不匹配返回 null
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_LOGIN_USER)} 并手动强转。
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    @SuppressWarnings("unchecked")
-    public static <T> T getLoginUser(Class<T> type) {
-        Object loginUser = get(BizContextKeys.KEY_LOGIN_USER);
-        return type.isInstance(loginUser) ? (T) loginUser : null;
-    }
-
-    /**
-     * 写入租户上下文（TenantContext）。
-     *
-     * <p>写入后将同时更新 {@link #setTenantId(String)} 以确保一致性。</p>
-     *
-     * @param tenantContext 租户上下文，null 等同于移除
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #put(String, Object) put(BizContextKeys.KEY_TENANT_CONTEXT, tenantContext)}
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    public static void setTenantContext(Object tenantContext) {
-        if (tenantContext == null) {
-            remove(BizContextKeys.KEY_TENANT_CONTEXT);
-        } else {
-            put(BizContextKeys.KEY_TENANT_CONTEXT, tenantContext);
-        }
-    }
-
-    /**
-     * 获取当前租户上下文（TenantContext）。
-     *
-     * @return 租户上下文，不存在返回 null
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_TENANT_CONTEXT)}
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    public static Object getTenantContext() {
-        return get(BizContextKeys.KEY_TENANT_CONTEXT);
-    }
-
-    /**
-     * 写入列权限信息。
-     *
-     * @param columnPermission 列权限信息
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #put(String, Object) put(BizContextKeys.KEY_COLUMN_PERMISSION, columnPermission)}
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    public static void setColumnPermission(Object columnPermission) {
-        if (columnPermission == null) {
-            remove(BizContextKeys.KEY_COLUMN_PERMISSION);
-        } else {
-            put(BizContextKeys.KEY_COLUMN_PERMISSION, columnPermission);
-        }
-    }
-
-    /**
-     * 获取当前列权限信息。
-     *
-     * @return 列权限信息，不存在返回 null
-     * @since 1.9.0
-     * @deprecated 请使用 {@link #get(String) get(BizContextKeys.KEY_COLUMN_PERMISSION)}
-     */
-    @Deprecated(since = "1.11", forRemoval = false)
-    public static Object getColumnPermission() {
-        return get(BizContextKeys.KEY_COLUMN_PERMISSION);
-    }
-
     /**
      * 写入 HTTP 请求不可变快照（推荐）。
      *
-     * <p>相比 {@link #setHttpRequest(Object)} 直接持有活的 {@code HttpServletRequest}，
-     * 快照在入口处一次性拷贝所需元数据，与 Servlet API 解耦，
+     * <p>快照在入口处一次性拷贝所需元数据，与 Servlet API 解耦，
      * 可在异步 / 线程池 / 序列化边界安全传递。</p>
      *
      * @param snapshot 请求快照（可为 null，等同于移除）
@@ -618,31 +429,6 @@ public final class RequestContext {
     public static RequestSnapshot getRequestSnapshot() {
         Object obj = get(BizContextKeys.KEY_HTTP_REQUEST);
         return obj instanceof RequestSnapshot ? (RequestSnapshot) obj : null;
-    }
-
-    /**
-     * 写入 HTTP 请求对象引用（已废弃，仅向后兼容）。
-     *
-     * @deprecated 新代码请使用 {@link #setRequestSnapshot(RequestSnapshot)} 的不可变快照，
-     *             避免持有活的 {@code HttpServletRequest}（不可序列化、异步边界易泄漏、绑死 Servlet API）
-     * @param request HTTP 请求对象
-     * @since 1.9.0
-     */
-    @Deprecated(since = "1.9.1", forRemoval = false)
-    public static void setHttpRequest(Object request) {
-        put(BizContextKeys.KEY_HTTP_REQUEST, request);
-    }
-
-    /**
-     * 获取当前 HTTP 请求对象引用（已废弃，仅向后兼容）。
-     *
-     * @deprecated 请使用 {@link #getRequestSnapshot()}
-     * @return HTTP 请求对象，不存在返回 null
-     * @since 1.9.0
-     */
-    @Deprecated(since = "1.9.1", forRemoval = false)
-    public static Object getHttpRequest() {
-        return get(BizContextKeys.KEY_HTTP_REQUEST);
     }
 
     /**

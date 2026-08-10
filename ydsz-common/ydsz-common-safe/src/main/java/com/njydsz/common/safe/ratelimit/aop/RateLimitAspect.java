@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.http.RequestContextUtils;
 
@@ -184,7 +185,7 @@ public class RateLimitAspect {
         try {
             HttpServletRequest request = RequestContextUtils.getRequest();
             if (request == null) {
-                request = (HttpServletRequest) RequestContext.getHttpRequest();
+                request = (HttpServletRequest) RequestContext.get(BizContextKeys.KEY_HTTP_REQUEST);
             }
             return request;
         } catch (Exception ignored) {

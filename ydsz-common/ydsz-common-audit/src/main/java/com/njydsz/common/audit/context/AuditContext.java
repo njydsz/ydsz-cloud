@@ -3,13 +3,14 @@ package com.njydsz.common.audit.context;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 
 /**
  * 审计上下文（基于 RequestContext 统一存储）
  * <p>
  * 管理审计日志的上下文信息（IP、URL、Token、BusinessNo 等），确保线程隔离。
- * 自 v2.0.0 起数据体统一存入 {@link RequestContext#KEY_AUDIT_DATA}，
+ * 自 v2.0.0 起数据体统一存入 {@link BizContextKeys#KEY_AUDIT_DATA}，
  * 由 {@link RequestContext} 的 TransmittableThreadLocal 承载，配合 TTL 线程池
  * 可自动跨线程传播，替代原独立 {@code ThreadLocal}（原 {@code InheritableThreadLocal}
  * 仅在创建线程时继承，无法覆盖线程池复用场景）。
@@ -29,11 +30,11 @@ public class AuditContext {
 
     /**
      * 获取当前线程的审计上下文
-     * <p>从 {@link RequestContext#KEY_AUDIT_DATA} 读取，异步线程上下文传递
+     * <p>从 {@link BizContextKeys#KEY_AUDIT_DATA} 读取，异步线程上下文传递
      * 由 {@link RequestContext} 的 TTL 机制自动完成；显式包装请使用 {@link #wrap(Runnable)}。</p>
      */
     private static AuditContextData current() {
-        Object data = RequestContext.get(RequestContext.KEY_AUDIT_DATA);
+        Object data = RequestContext.get(BizContextKeys.KEY_AUDIT_DATA);
         return data instanceof AuditContextData ? (AuditContextData) data : null;
     }
 
@@ -70,7 +71,7 @@ public class AuditContext {
      * @param data 审计上下文数据
      */
     public static void set(AuditContextData data) {
-        RequestContext.put(RequestContext.KEY_AUDIT_DATA, data);
+        RequestContext.put(BizContextKeys.KEY_AUDIT_DATA, data);
     }
 
     /**
@@ -87,7 +88,7 @@ public class AuditContext {
      * <p>防止内存泄漏，务必在请求结束或异步任务结束时调用。
      */
     public static void clear() {
-        RequestContext.remove(RequestContext.KEY_AUDIT_DATA);
+        RequestContext.remove(BizContextKeys.KEY_AUDIT_DATA);
     }
 
     /**
@@ -107,7 +108,7 @@ public class AuditContext {
 
     /**
      * 审计上下文数据载体
-     * <p>存储于 {@link RequestContext#KEY_AUDIT_DATA} 的审计上下文数据对象。
+     * <p>存储于 {@link BizContextKeys#KEY_AUDIT_DATA} 的审计上下文数据对象。
      * 通用字段（如 operatorId/operatorName）已从 {@link RequestContext} 获取。
      */
     public static class AuditContextData {

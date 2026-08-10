@@ -2,6 +2,7 @@ package com.njydsz.common.tenant.async;
 
 import java.util.Map;
 
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.config.TenantProperties;
@@ -46,7 +47,7 @@ public class TenantContextTaskDecorator implements TaskDecorator {
                 RequestContext.restore(snapshot);
             } else {
                 // 无父线程上下文 → 系统租户
-                RequestContext.setTenantContext(TenantContext.system(
+                RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, TenantContext.system(
                         properties.getSystemTenantId()));
                 RequestContext.setTenantId(properties.getSystemTenantId());
             }

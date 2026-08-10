@@ -33,6 +33,7 @@ import com.njydsz.common.auth.model.ColumnScopeInfo;
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.common.auth.util.AuthColPermissionSigner;
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationExecutor;
@@ -141,7 +142,7 @@ public class AuthColPermissionAspect {
         boolean hasReturn = signature.getReturnType() != void.class;
 
         try {
-            RequestContext.setColumnPermission(bundle.permissionInfo);
+            RequestContext.put(BizContextKeys.KEY_COLUMN_PERMISSION, bundle.permissionInfo);
             injectIntoArgs(joinPoint, ann, bundle.scopeInfo);
             applyExtraHeadersIfAbsent(bundle.scopeInfo);
 
@@ -154,7 +155,7 @@ public class AuthColPermissionAspect {
 
             return returnValue;
         } finally {
-            RequestContext.remove(RequestContext.KEY_COLUMN_PERMISSION);
+            RequestContext.remove(BizContextKeys.KEY_COLUMN_PERMISSION);
             restoreExtraHeaders(snapshot);
         }
     }
@@ -465,8 +466,9 @@ public class AuthColPermissionAspect {
             return ColumnDesensitizationContext.empty();
         }
         try {
-            String accessToken = RequestContext.getAuthInfo() != null
-                    ? ((AuthInfo) RequestContext.getAuthInfo()).getAccessToken()
+            Object authInfoObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
+            String accessToken = authInfoObj != null
+                    ? ((AuthInfo) authInfoObj).getAccessToken()
                     : null;
             if (accessToken == null) {
                 return ColumnDesensitizationContext.empty();
@@ -796,7 +798,7 @@ public class AuthColPermissionAspect {
      * @param snapshot extra headers 快照（可为空）
      */
     private static void restoreExtraHeaders(Map<String, String> snapshot) {
-        RequestContext.remove(RequestContext.KEY_EXTRA_HEADERS);
+        RequestContext.remove(BizContextKeys.KEY_EXTRA_HEADERS);
         if (snapshot != null) {
             snapshot.forEach(RequestContext::putExtraHeader);
         }
