@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.annotation.JsonBuilder;
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.util.JsonTypeUtils;
@@ -23,9 +22,9 @@ import com.njydsz.common.json.reader.JSONReader;
  *
  * <h3>反序列化路径（优先级从高到低）</h3>
  * <ol>
- *   <li><b>BeanReader 路径</b>：针对简单 Bean（字段全为基本类型）的轻量级反射读取</li>
+ * <li><b>BeanReader 路径</b>：针对简单 Bean（字段全为基本类型）的轻量级反射读取</li>
  *   <li><b>@JsonCreator 路径</b>：通过注解标记的构造函数创建实例</li>
- *   <li><b>Builder 模式路径</b>：通过 {@code @JsonBuilder} 或自动检测内部 Builder</li>
+ *   <li><b>Builder 模式路径</b>：自动检测内部 Builder</li>
  *   <li><b>降级路径</b>：解析为 Map 或 List 返回</li>
  * </ol>
  *
@@ -101,18 +100,9 @@ final class BeanDeserializerEngine {
             return clazz.cast(CreatorResolver.deserializeWithCreator(json, creatorConstructor));
         }
 
-        JsonBuilder builderAnnotation = clazz.getAnnotation(JsonBuilder.class);
-        if (builderAnnotation != null && builderAnnotation.enable()) {
-            return BuilderResolver.deserializeWithBuilder(json, clazz, builderAnnotation);
-        }
-
         Class<?> innerBuilderClass = BuilderResolver.findInnerBuilderClass(clazz);
         if (innerBuilderClass != null) {
-            JsonBuilder innerAnnotation = innerBuilderClass.getAnnotation(JsonBuilder.class);
-            if (innerAnnotation == null) {
-                innerAnnotation = BuilderResolver.createDefaultBuilderAnnotation();
-            }
-            return BuilderResolver.deserializeWithInnerBuilder(json, clazz, innerBuilderClass, innerAnnotation);
+            return BuilderResolver.deserializeWithInnerBuilder(json, clazz, innerBuilderClass);
         }
 
         // 最终降级：解析为 Map / List 后转换

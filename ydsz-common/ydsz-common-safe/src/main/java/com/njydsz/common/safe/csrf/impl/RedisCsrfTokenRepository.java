@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.safe.csrf.CsrfToken;
@@ -130,7 +130,7 @@ public class RedisCsrfTokenRepository implements CsrfTokenRepository {
             return bytesToHex(hash);
         } catch (NoSuchAlgorithmException e) {
             throw BusinessException.builder()
-                    .code(UnifiedExceptionCode.FAIL.getCode())
+                    .code(CoreExceptionCode.FAIL.getCode())
                     .message("SHA-256 algorithm not available")
                     .cause(e)
                     .build();

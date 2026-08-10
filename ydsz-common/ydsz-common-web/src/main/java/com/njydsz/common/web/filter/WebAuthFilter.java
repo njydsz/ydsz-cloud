@@ -14,7 +14,6 @@ import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.model.AuthenticationProvider;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.domain.enums.ServiceType;
 import com.njydsz.common.util.auth.AuthInfo;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
@@ -101,7 +100,7 @@ public class WebAuthFilter extends BaseAuthFilter {
         String serviceType = request.getHeader(HeaderConstants.X_SERVICE_TYPE);
         log.debug("X_SERVICE_TYPE: {}", serviceType);
 
-        AuthHandler authHandler = authHandlerFactory.getAuthHandler(resolveServiceType(serviceType));
+        AuthHandler authHandler = authHandlerFactory.getAuthHandler(resolveServiceTypeCode(serviceType));
         return authHandler.getAuthInfo(request, response);
     }
 
@@ -120,14 +119,16 @@ public class WebAuthFilter extends BaseAuthFilter {
         return "【Web端】";
     }
 
-    private ServiceType resolveServiceType(String serviceType) {
+    private String resolveServiceTypeCode(String serviceType) {
         if (StringUtils.isEmpty(serviceType)) {
-            return ServiceType.WEB_SERVICE;
+            return "webService";
         }
-        try {
-            return ServiceType.codeOf(serviceType);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("不支持的 X-Service-Type: " + serviceType, e);
+        if ("appService".equals(serviceType)) {
+            return "appService";
         }
+        if ("webService".equals(serviceType)) {
+            return "webService";
+        }
+        throw new IllegalArgumentException("不支持的 X-Service-Type: " + serviceType);
     }
 }

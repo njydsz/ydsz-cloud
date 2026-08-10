@@ -1,6 +1,6 @@
 package com.njydsz.common.safe.captcha.exception;
 
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -24,25 +24,25 @@ public class CaptchaException extends BusinessException {
     private final String captchaId;
 
     public CaptchaException(String message) {
-        super(UnifiedExceptionCode.FAIL);
+        super(CoreExceptionCode.FAIL);
         setMessage(message);
         this.captchaId = null;
     }
 
     public CaptchaException(String message, String captchaId) {
-        super(UnifiedExceptionCode.FAIL);
+        super(CoreExceptionCode.FAIL);
         setMessage(message);
         this.captchaId = captchaId;
     }
 
     public CaptchaException(String message, Throwable cause) {
-        super(UnifiedExceptionCode.FAIL, cause);
+        super(CoreExceptionCode.FAIL, cause);
         setMessage(message);
         this.captchaId = null;
     }
 
     public CaptchaException(String message, String captchaId, Throwable cause) {
-        super(UnifiedExceptionCode.FAIL, cause);
+        super(CoreExceptionCode.FAIL, cause);
         setMessage(message);
         this.captchaId = captchaId;
     }

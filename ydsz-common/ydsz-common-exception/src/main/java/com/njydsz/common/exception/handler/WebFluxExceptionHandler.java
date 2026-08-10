@@ -17,7 +17,7 @@ import org.springframework.web.server.ServerWebExchange;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
@@ -165,10 +165,10 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
                 getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
-        info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
+        info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
 
         return errorResponse(
-                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                CoreExceptionCode.SYSTEM_ERROR.getCode(),
                 info.getMessage(),
                 includeExceptionInfo() ? info : null);
     }
@@ -184,10 +184,10 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
                 getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
-        info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
+        info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
 
         return errorResponse(
-                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                CoreExceptionCode.SYSTEM_ERROR.getCode(),
                 info.getMessage(),
                 includeExceptionInfo() ? info : null);
     }
@@ -205,7 +205,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
 
         return errorResponse(
-                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                CoreExceptionCode.SYSTEM_ERROR.getCode(),
                 info.getMessage(),
                 includeExceptionInfo() ? info : null);
     }

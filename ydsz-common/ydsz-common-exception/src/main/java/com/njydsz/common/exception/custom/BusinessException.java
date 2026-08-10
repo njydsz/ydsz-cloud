@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
@@ -34,10 +34,10 @@ import lombok.ToString;
  * <p><b>使用示例：</b>
  * <pre>{@code
  * // 简单抛出
- * throw BusinessException.of(UnifiedExceptionCode.NOT_FOUND);
+ * throw BusinessException.of(CoreExceptionCode.NOT_FOUND);
  *
  * // 带原始异常
- * throw new BusinessException(UnifiedExceptionCode.DATABASE_ERROR, cause);
+ * throw new BusinessException(CoreExceptionCode.DATABASE_ERROR, cause);
  *
  * // 完整参数链式构建
  * throw BusinessException.builder()
@@ -47,13 +47,13 @@ import lombok.ToString;
  *     .build();
  *
  * // 携带业务数据
- * throw BusinessException.of(UnifiedExceptionCode.PARAM_ERROR)
+ * throw BusinessException.of(CoreExceptionCode.PARAM_ERROR)
  *     .data("field", "username");
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UnifiedExceptionCode
+ * @see CoreExceptionCode
  * @see ExceptionCategory#BUSINESS
  */
 @ToString(callSuper = true)
@@ -68,7 +68,7 @@ public class BusinessException extends AbstractYdszException {
     /** 默认异常分类 */
     private static final ExceptionCategory DEFAULT_CATEGORY = ExceptionCategory.BUSINESS;
     /** 默认错误码 */
-    private static final String DEFAULT_CODE = UnifiedExceptionCode.FAIL.getCode();
+    private static final String DEFAULT_CODE = CoreExceptionCode.FAIL.getCode();
 
     private transient ConcurrentHashMap<String, Object> dataMap;
 

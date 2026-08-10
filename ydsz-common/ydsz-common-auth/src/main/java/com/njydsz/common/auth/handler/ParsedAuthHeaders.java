@@ -8,8 +8,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.domain.constant.DataScopeConstants;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -30,7 +32,7 @@ public class ParsedAuthHeaders {
     private final String language;
     private final String distinctId;
     private final String authToken;
-    private final DataScopeType dataScope;
+    private final String dataScope;
     private final Set<String> companyIds;
     private final Set<String> deptIds;
     private final String userId;
@@ -61,7 +63,7 @@ public class ParsedAuthHeaders {
      * 从 HTTP 请求头解析出全部认证相关字段。
      *
      * <p>统一读取 {@code X-*} 认证请求头并委托 {@link AbstractAuthHandler} 解析 CSV 集合类字段；
-     * 数据范围编码解析失败时返回 {@code null} 而非抛出异常，容忍非法值。结果对象字段全部不可变。
+     * 数据范围编码解析失败时返回原始字符串而非抛出异常，容忍非法值。结果对象字段全部不可变。
      *
      * @param request 当前 HTTP 请求，不可为 {@code null}
      * @param handler 认证请求头解析处理器，提供 CSV/规则串解析能力
@@ -69,34 +71,29 @@ public class ParsedAuthHeaders {
      */
     public static ParsedAuthHeaders parse(HttpServletRequest request, AbstractAuthHandler handler) {
         Builder b = new Builder();
-        b.language = request.getHeader(HeaderConstants.X_USER_LANGUAGE);
-        b.distinctId = request.getHeader(HeaderConstants.X_DISTINCT_ID);
-        b.authToken = request.getHeader(HeaderConstants.X_ACCESS_TOKEN);
-        b.companyIds = handler.parseCsvHeaderValues(request, HeaderConstants.X_COMPANY_IDS);
-        b.deptIds = handler.parseCsvHeaderValues(request, HeaderConstants.X_DEPT_IDS);
-        b.userId = request.getHeader(HeaderConstants.X_UNIQUE_ID);
-        b.tenantId = request.getHeader(HeaderConstants.X_TENANT_ID);
-        b.projectIds = handler.parseCsvHeaderValues(request, HeaderConstants.X_PROJECT_IDS);
-        b.regionIds = handler.parseCsvHeaderValues(request, HeaderConstants.X_REGION_IDS);
+        b.language = request.getHeader(AuthHeaderConstants.X_USER_LANGUAGE);
+        b.distinctId = request.getHeader(AuthHeaderConstants.X_DISTINCT_ID);
+        b.authToken = request.getHeader(AuthHeaderConstants.X_ACCESS_TOKEN);
+        b.companyIds = handler.parseCsvHeaderValues(request, DataPermissionHeaderConstants.X_COMPANY_IDS);
+        b.deptIds = handler.parseCsvHeaderValues(request, DataPermissionHeaderConstants.X_DEPT_IDS);
+        b.userId = request.getHeader(DataPermissionHeaderConstants.X_UNIQUE_ID);
+        b.tenantId = request.getHeader(DataPermissionHeaderConstants.X_TENANT_ID);
+        b.projectIds = handler.parseCsvHeaderValues(request, DataPermissionHeaderConstants.X_PROJECT_IDS);
+        b.regionIds = handler.parseCsvHeaderValues(request, DataPermissionHeaderConstants.X_REGION_IDS);
         b.requestSource = request.getHeader(HeaderConstants.X_REQUEST_SOURCE);
-        b.visibleColumns = handler.parseTableColumnsRule(request.getHeader(HeaderConstants.X_VISIBLE_COLUMNS));
-        b.editableColumns = handler.parseTableColumnsRule(request.getHeader(HeaderConstants.X_EDITABLE_COLUMNS));
+        b.visibleColumns = handler.parseTableColumnsRule(request.getHeader(DataPermissionHeaderConstants.X_VISIBLE_COLUMNS));
+        b.editableColumns = handler.parseTableColumnsRule(request.getHeader(DataPermissionHeaderConstants.X_EDITABLE_COLUMNS));
 
-        String dataScopeCode = request.getHeader(HeaderConstants.X_DATA_SCOPE);
+        String dataScopeCode = request.getHeader(DataPermissionHeaderConstants.X_DATA_SCOPE);
         b.dataScope = parseDataScope(dataScopeCode);
         return new ParsedAuthHeaders(b);
     }
 
-    private static DataScopeType parseDataScope(String dataScopeCode) {
+    private static String parseDataScope(String dataScopeCode) {
         if (StringUtils.isBlank(dataScopeCode)) {
             return null;
         }
-        try {
-            return DataScopeType.codeOf(dataScopeCode);
-        } catch (RuntimeException e) {
-            log.warn("数据权限范围类型解析失败，code={}", dataScopeCode);
-            return null;
-        }
+        return dataScopeCode.trim();
     }
 
     // --- getters ---
@@ -104,7 +101,7 @@ public class ParsedAuthHeaders {
     public String getLanguage() { return language; }
     public String getDistinctId() { return distinctId; }
     public String getAuthToken() { return authToken; }
-    public DataScopeType getDataScope() { return dataScope; }
+    public String getDataScope() { return dataScope; }
     public Set<String> getCompanyIds() { return companyIds; }
     public Set<String> getDeptIds() { return deptIds; }
     public String getUserId() { return userId; }
@@ -122,7 +119,7 @@ public class ParsedAuthHeaders {
      */
     private static class Builder {
         String language, distinctId, authToken, userId, tenantId, requestSource;
-        DataScopeType dataScope;
+        String dataScope;
         Set<String> companyIds, deptIds, projectIds, regionIds;
         Map<String, Set<String>> visibleColumns, editableColumns;
     }

@@ -592,13 +592,6 @@ public final class ValueWriter {
                     continue;
                 }
 
-                // @JsonUnwrapped：嵌套属性展开到父对象
-                if (field.unwrapped && value != null) {
-                    writeUnwrappedFields(value, field, sb, first);
-                    first = false;
-                    continue;
-                }
-
                 if (!first) sb.append(',');
                 first = false;
 

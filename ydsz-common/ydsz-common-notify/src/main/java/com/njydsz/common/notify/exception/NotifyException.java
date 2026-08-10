@@ -1,6 +1,6 @@
 package com.njydsz.common.notify.exception;
 
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -39,7 +39,7 @@ public class NotifyException extends BusinessException {
      * @param cause   原始异常
      */
     public NotifyException(String message, Throwable cause) {
-        super(UnifiedExceptionCode.FAIL, cause);
+        super(CoreExceptionCode.FAIL, cause);
         this.httpStatus = 400;
         this.level = ExceptionLevel.ERROR;
         this.category = ExceptionCategory.BUSINESS;

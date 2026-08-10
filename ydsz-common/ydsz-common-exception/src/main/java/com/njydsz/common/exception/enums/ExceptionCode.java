@@ -49,7 +49,9 @@ package com.njydsz.common.exception.enums;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.common.core.code.ResultCode
- * @see UnifiedExceptionCode
+ * @see com.njydsz.common.exception.code.CoreExceptionCode
+ * @see com.njydsz.common.exception.code.SecurityExceptionCode
+ * @see com.njydsz.common.exception.code.RateLimitExceptionCode
  */
 public interface ExceptionCode extends com.njydsz.common.core.code.ResultCode {
 

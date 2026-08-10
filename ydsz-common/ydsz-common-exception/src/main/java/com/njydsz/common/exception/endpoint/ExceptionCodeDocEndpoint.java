@@ -41,7 +41,7 @@ import lombok.ToString;
  *       "key": "success",
  *       "httpStatus": 200,
  *       "message": "Operation succeeded",
- *       "source": "UnifiedExceptionCode"
+ *       "source": "CoreExceptionCode"
  *     },
  *     ...
  *   ]

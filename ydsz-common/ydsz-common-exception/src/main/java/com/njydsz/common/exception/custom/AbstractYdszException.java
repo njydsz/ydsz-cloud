@@ -4,11 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.exception.code.IExceptionResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -44,43 +39,6 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
 public abstract class AbstractYdszException extends RuntimeException implements IExceptionResultCode {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = LoggerFactory.getLogger(AbstractYdszException.class);
-
-    /**
-     * 由 YdszExceptionCoreAutoConfiguration 注入，用于异常消息国际化解析。
-     *
-     * <p><b>已废弃：</b>自 v2.0 起推荐由 Handler 层直接使用 {@link org.springframework.context.MessageSource}
-     * 在构建响应时解析 i18n，异常对象仅存储 key 不解析状态。
-     * 本方法保留用于向后兼容，新代码不应再调用。
-     *
-     * <p><b>v2.1 起计划移除。</b>
-     */
-    @Deprecated
-    private static final AtomicReference<BiFunction<String, Object[], String>> MESSAGE_RESOLVER_HOLDER =
-        new AtomicReference<>();
-
-    /**
-     * 设置消息解析器（由异常模块配置类注入）
-     *
-     * @param resolver 消息解析函数 (key, params) -> resolved message
-     * @deprecated 自 v2.0 起废弃，推荐 Handler 层直接使用 MessageSource 解析。
-     *             <b>v2.1 起计划移除，请勿再调用。</b>
-     */
-    @Deprecated(forRemoval = true)
-    public static void setMessageResolver(BiFunction<String, Object[], String> resolver) {
-        MESSAGE_RESOLVER_HOLDER.set(resolver);
-    }
-
-    /**
-     * 获取当前消息解析器（用于测试验证）
-     *
-     * @return 当前消息解析函数
-     * @deprecated 自 v2.0 起废弃。<b>v2.1 起计划移除。</b>
-     */
-    @Deprecated(forRemoval = true)
-    public static BiFunction<String, Object[], String> getMessageResolver() {
-        return MESSAGE_RESOLVER_HOLDER.get();
-    }
 
     protected String code;
     protected String key;
@@ -233,27 +191,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     }
 
     /**
-     * 解析国际化消息（使用外部注入的 resolver）。
-     *
-     * <p><b>已废弃：</b>自 v2.0 起推荐 Handler 层直接解析。
-     * 保留本方法以兼容现有通过 resolver 解析的路径。
-     *
-     * @deprecated 自 v2.0 起废弃，由 Handler-side i18n 解析替代
-     */
-    @Deprecated
-    protected static String resolveMessage(String key, Object[] params) {
-        try {
-            BiFunction<String, Object[], String> resolver = MESSAGE_RESOLVER_HOLDER.get();
-            if (resolver != null) {
-                return resolver.apply(key, params);
-            }
-        } catch (Exception e) {
-            log.warn("【异常模块】国际化消息解析失败，回退返回原始 key | key={} | error={}", key, e.getMessage());
-        }
-        return key;
-    }
-
-    /**
      * 将 {@code null} 参数数组归一化为空数组。
      *
      * <p>目的是让 {@code params} 字段保持非 null 不变量，
@@ -277,15 +214,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * 会导致 {@code code} 字段与已缓存的 message 不一致。
      * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
      *
-     * @param code 异常码字符串
-     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.njydsz.common.exception.code.UnifiedExceptionCode} 枚举初始化。
-     *             <b>v2.1 起计划移除。</b>
-     */
-    @Deprecated(forRemoval = true)
-    public void setCode(String code) {
-        this.code = code;
-    }
-
     public String getKey() {
         return key;
     }
@@ -297,15 +225,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * 会导致 {@code key} 字段与已缓存的 message 不一致。
      * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
      *
-     * @param key 国际化消息键
-     * @deprecated 可能破坏懒加载缓存一致性，建议使用构造器或 {@link com.njydsz.common.exception.code.UnifiedExceptionCode} 枚举初始化。
-     *             <b>v2.1 起计划移除。</b>
-     */
-    @Deprecated(forRemoval = true)
-    public void setKey(String key) {
-        this.key = key;
-    }
-
     /**
      * 获取消息格式化参数（返回副本，防止外部修改内部状态）。
      *
@@ -386,7 +305,7 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         // 懒加载解析：通过 CAS 原子写入，避免重复解析及锁等待
         String resolved;
         if (messageKey != null) {
-            resolved = resolveMessage(messageKey, messageParams);
+            resolved = messageKey;
         } else {
             resolved = super.getMessage();
         }

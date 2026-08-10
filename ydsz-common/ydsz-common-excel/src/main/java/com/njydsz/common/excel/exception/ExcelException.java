@@ -1,6 +1,6 @@
 package com.njydsz.common.excel.exception;
 
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCode;
 
@@ -65,7 +65,7 @@ public class ExcelException extends BusinessException {
      * @param cause 原始异常
      */
     public ExcelException(String message, Throwable cause) {
-        super(UnifiedExceptionCode.FAIL, cause);
+        super(CoreExceptionCode.FAIL, cause);
         setMessage(message);
     }
 

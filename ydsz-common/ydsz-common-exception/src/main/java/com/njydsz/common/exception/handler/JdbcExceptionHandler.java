@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
@@ -74,13 +74,13 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
 
         // 直接使用 DATABASE_ERROR key 作为客户端返回消息，
         // 实际 i18n 文案按 key 从 messages*.properties 加载，保持一致
-        String message = UnifiedExceptionCode.DATABASE_ERROR.getKey();
+        String message = CoreExceptionCode.DATABASE_ERROR.getKey();
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        info.setCode(UnifiedExceptionCode.DATABASE_ERROR.getCode());
+        info.setCode(CoreExceptionCode.DATABASE_ERROR.getCode());
         info.setMessage(message);
 
         return errorResponse(
-                UnifiedExceptionCode.DATABASE_ERROR.getCode(),
+                CoreExceptionCode.DATABASE_ERROR.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
         );

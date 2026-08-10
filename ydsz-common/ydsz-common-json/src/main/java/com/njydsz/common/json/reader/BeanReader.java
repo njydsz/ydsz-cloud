@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonCreator;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
@@ -297,21 +296,6 @@ public final class BeanReader<T> {
                     matched = true;
                     break;
                 }
-                // @JsonAlias 别名匹配
-                if (!matched && fr.aliasHashes.length > 0) {
-                    for (int j = 0; j < fr.aliasHashes.length; j++) {
-                        if (fr.aliasHashes[j] == hash && fr.aliases[j].equals(fieldName)) {
-                            if (target != null) {
-                                fr.readValue(reader, target, depth);
-                            } else {
-                                pending.put(fr.fieldName, fr.readRawValue(reader));
-                            }
-                            matched = true;
-                            break;
-                        }
-                    }
-                    if (matched) break;
-                }
             }
 
             if (!matched) {
@@ -388,11 +372,6 @@ public final class BeanReader<T> {
         public final Field field;
         public final int typeCode;
 
-        /** 反序列化别名列表（来自 @JsonAlias 注解） */
-        public final String[] aliases;
-        /** 别名哈希缓存 */
-        public final int[] aliasHashes;
-
         /** @JsonFormat(pattern=...) 指定的日期格式（null 表示使用默认格式列表） */
         public final String datePattern;
 
@@ -418,18 +397,6 @@ public final class BeanReader<T> {
             }
             this.jsonNameHash = this.jsonName.hashCode();
 
-            // 加载 @JsonAlias 别名列表
-            JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
-            if (aliasAnnotation != null && aliasAnnotation.value().length > 0) {
-                this.aliases = aliasAnnotation.value();
-                this.aliasHashes = new int[aliases.length];
-                for (int i = 0; i < aliases.length; i++) {
-                    aliasHashes[i] = aliases[i].hashCode();
-                }
-            } else {
-                this.aliases = new String[0];
-                this.aliasHashes = new int[0];
-            }
         }
 
         /**

@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.domain.constant.DataScopeConstants;
 
 import lombok.Getter;
 
@@ -37,8 +37,8 @@ import lombok.Getter;
 @Getter
 public class DataScopeInfo {
 
-    /** 数据权限范围类型（tenant/group/company/dept/user/project/region/custom），见 {@link DataScopeType}。 */
-    private final DataScopeType scope;
+    /** 数据权限范围类型编码（tenant/group/company/dept/user/project/region/custom）。 */
+    private final String scope;
     /** 租户 ID；为 {@code null} 时沿用请求上下文中的租户。 */
     private final String tenantId;
     /** 用户 ID；用于按用户维度进一步收窄数据范围，可为 {@code null}。 */
@@ -56,29 +56,29 @@ public class DataScopeInfo {
     /** 自定义 SQL 条件模板，支持 {@code {{userId}}} 等占位符，解析时注入并做防注入清洗。 */
     private final String customSqlConditionTemplate;
 
-    public DataScopeInfo(DataScopeType scope, Set<String> companyIds, Set<String> deptIds) {
+    public DataScopeInfo(String scope, Set<String> companyIds, Set<String> deptIds) {
         this(scope, null, null, companyIds, deptIds, Collections.emptySet(), Collections.emptySet(), null, null);
     }
 
-    public DataScopeInfo(DataScopeType scope, Set<String> companyIds, Set<String> deptIds,
+    public DataScopeInfo(String scope, Set<String> companyIds, Set<String> deptIds,
                          Set<String> projectIds, Set<String> regionIds) {
         this(scope, null, null, companyIds, deptIds, projectIds, regionIds, null, null);
     }
 
-    public DataScopeInfo(DataScopeType scope, String tenantId, String userId,
+    public DataScopeInfo(String scope, String tenantId, String userId,
                          Set<String> companyIds, Set<String> deptIds,
                          Set<String> projectIds, Set<String> regionIds) {
         this(scope, tenantId, userId, companyIds, deptIds, projectIds, regionIds, null, null);
     }
 
-    public DataScopeInfo(DataScopeType scope, String tenantId, String userId,
+    public DataScopeInfo(String scope, String tenantId, String userId,
                          Set<String> companyIds, Set<String> deptIds,
                          Set<String> projectIds, Set<String> regionIds,
                          String customSqlCondition) {
         this(scope, tenantId, userId, companyIds, deptIds, projectIds, regionIds, customSqlCondition, null);
     }
 
-    public DataScopeInfo(DataScopeType scope, String tenantId, String userId,
+    public DataScopeInfo(String scope, String tenantId, String userId,
                          Set<String> companyIds, Set<String> deptIds,
                          Set<String> projectIds, Set<String> regionIds,
                          String customSqlCondition, String customSqlConditionTemplate) {
@@ -109,10 +109,10 @@ public class DataScopeInfo {
     /**
      * 判断当前是否为自定义（CUSTOM）范围类型。
      *
-     * @return 当 {@link #scope} 为 {@link DataScopeType#CUSTOM} 时返回 {@code true}
+     * @return 当 {@link #scope} 为 {@link DataScopeConstants#CUSTOM} 时返回 {@code true}
      */
     public boolean isCustom() {
-        return DataScopeType.CUSTOM.equals(scope);
+        return DataScopeConstants.CUSTOM.equals(scope);
     }
 
     /**
@@ -226,7 +226,7 @@ public class DataScopeInfo {
      * 由 {@link #build()} 交给构造器统一包装为不可变空集合。
      */
     public static class Builder {
-        private DataScopeType scope;
+        private String scope;
         private String tenantId;
         private String userId;
         private Set<String> companyIds;
@@ -237,12 +237,12 @@ public class DataScopeInfo {
         private String customSqlConditionTemplate;
 
         /**
-         * 设置数据权限范围类型，决定后续按哪一维度收窄数据。
+         * 设置数据权限范围类型编码，决定后续按哪一维度收窄数据。
          *
-         * @param scope 范围类型；为 {@code null} 时由消费方按最严策略处理
+         * @param scope 范围类型编码；为 {@code null} 时由消费方按最严策略处理
          * @return 当前 Builder，便于链式调用
          */
-        public Builder scope(DataScopeType scope) {
+        public Builder scope(String scope) {
             this.scope = scope;
             return this;
         }

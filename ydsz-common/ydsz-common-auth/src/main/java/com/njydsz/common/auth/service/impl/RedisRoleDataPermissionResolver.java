@@ -15,7 +15,6 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.domain.enums.DataScopeType;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
@@ -242,7 +241,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
     }
 
     private DataScopeInfo parseObject(ObjectNode obj) {
-        DataScopeType scope = parseScope(obj.has("scope") ? obj.get("scope").asText(null) : null);
+        String scope = parseScope(obj.has("scope") ? obj.get("scope").asText(null) : null);
         String tenantId = trimToNull(obj.has("tenantId") ? obj.get("tenantId").asText(null) : null);
         String userId = trimToNull(obj.has("userId") ? obj.get("userId").asText(null) : null);
         Set<String> companies = toStringSet(obj.get("companyIds"));
@@ -260,7 +259,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
         Set<String> depts = new HashSet<>();
         Set<String> projects = new HashSet<>();
         Set<String> regions = new HashSet<>();
-        DataScopeType maxScope = null;
+        String maxScope = null;
         String tenantId = null;
         String userId = null;
         StringBuilder customSqlConditions = new StringBuilder();
@@ -281,7 +280,8 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             if (userId == null) {
                 userId = trimToNull(o.has("userId") ? o.get("userId").asText(null) : null);
             }
-            maxScope = DataScopeType.max(maxScope, parseScope(o.has("scope") ? o.get("scope").asText(null) : null));
+            String parsedScope = parseScope(o.has("scope") ? o.get("scope").asText(null) : null);
+            maxScope = parsedScope != null ? parsedScope : maxScope;
             String customCondition = trimToNull(o.has("customSqlCondition") ? o.get("customSqlCondition").asText(null) : null);
             if (customCondition != null && !customCondition.isEmpty()) {
                 if (customSqlConditions.length() > 0) {
@@ -301,7 +301,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
         Set<String> depts = new HashSet<>();
         Set<String> projects = new HashSet<>();
         Set<String> regions = new HashSet<>();
-        DataScopeType maxScope = null;
+        String maxScope = null;
         String tenantId = null;
         String userId = null;
         StringBuilder customSqlConditions = new StringBuilder();
@@ -324,7 +324,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             if (userId == null) {
                 userId = trimToNull(info.getUserId());
             }
-            maxScope = DataScopeType.max(maxScope, info.getScope());
+            maxScope = info.getScope() != null ? info.getScope() : maxScope;
             if (info.hasCustomSqlCondition()) {
                 String condition = info.resolveCustomSqlCondition();
                 if (condition != null && !condition.isEmpty()) {
@@ -342,16 +342,11 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
                 Collections.unmodifiableSet(regions), mergedCustomCondition);
     }
 
-    private DataScopeType parseScope(String code) {
+    private String parseScope(String code) {
         if (StringUtils.isBlank(code)) {
             return null;
         }
-        try {
-            return DataScopeType.codeOf(code.trim());
-        } catch (Exception e) {
-            log.warn("未知 scope 类型：{}", code);
-            return null;
-        }
+        return code.trim();
     }
 
     private Set<String> toStringSet(JsonNode arr) {

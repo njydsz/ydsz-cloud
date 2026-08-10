@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 
 import lombok.extern.slf4j.Slf4j;
@@ -99,14 +99,14 @@ public class DataIntegrityExceptionHandler {
         log.error("数据完整性异常 | 路径: {} | 消息: {}", request.getRequestURI(), rootMessage, e);
 
         ExceptionInfo info = new ExceptionInfo(
-                UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode(),
-                UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getKey(),
+                CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode(),
+                CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getKey(),
                 message,
                 HttpStatus.CONFLICT.value()
         );
         info.setPath(request.getRequestURI());
         return BaseResponse.<ExceptionInfo>builder()
-                .code(UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode())
+                .code(CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode())
                 .msg(message)
                 .data(info)
                 .timestamp(System.currentTimeMillis())

@@ -1,6 +1,6 @@
 package com.njydsz.common.lock.exception;
 
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -33,7 +33,7 @@ public class DistributedLockException extends BusinessException {
      * @param message 异常消息
      */
     public DistributedLockException(String message) {
-        super(UnifiedExceptionCode.FAIL);
+        super(CoreExceptionCode.FAIL);
         setMessage(message);
     }
 
@@ -44,7 +44,7 @@ public class DistributedLockException extends BusinessException {
      * @param cause   原始异常
      */
     public DistributedLockException(String message, Throwable cause) {
-        super(UnifiedExceptionCode.FAIL, cause);
+        super(CoreExceptionCode.FAIL, cause);
         setMessage(message);
     }
 
@@ -54,7 +54,7 @@ public class DistributedLockException extends BusinessException {
      * @param cause 原始异常
      */
     public DistributedLockException(Throwable cause) {
-        super(UnifiedExceptionCode.FAIL, cause);
+        super(CoreExceptionCode.FAIL, cause);
         setMessage(cause != null ? cause.getMessage() : null);
     }
 }

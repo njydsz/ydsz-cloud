@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
@@ -26,10 +26,10 @@ import lombok.ToString;
  * <p><b>使用示例：</b>
  * <pre>{@code
  * // 简单抛出
- * throw SysException.of(UnifiedExceptionCode.DATABASE_ERROR);
+ * throw SysException.of(CoreExceptionCode.DATABASE_ERROR);
  *
  * // 包装底层异常
- * throw new SysException(UnifiedExceptionCode.CACHE_ERROR, cause);
+ * throw new SysException(CoreExceptionCode.CACHE_ERROR, cause);
  *
  * // 完整参数链式构建
  * throw SysException.builder()
@@ -41,7 +41,7 @@ import lombok.ToString;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see UnifiedExceptionCode
+ * @see CoreExceptionCode
  * @see ExceptionCategory#SYSTEM
  */
 @ToString(callSuper = true)
@@ -56,7 +56,7 @@ public class SysException extends AbstractYdszException {
     /** 默认异常分类 */
     private static final ExceptionCategory DEFAULT_CATEGORY = ExceptionCategory.SYSTEM;
     /** 默认错误码 */
-    private static final String DEFAULT_CODE = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
+    private static final String DEFAULT_CODE = CoreExceptionCode.INTERNAL_ERROR.getCode();
 
     // ==================== 核心构造函数（仅限 3 个） ====================
 

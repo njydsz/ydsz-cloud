@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
@@ -131,7 +131,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
         log.warn("{}参数校验异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
         String message = extractConstraintViolationMessages(e);
         ExceptionInfo info = buildValidationInfo(message, request.getRequestURI(), extractTraceId(request));
-        return errorResponse(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message,
+        return errorResponse(CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(), message,
                 includeExceptionInfo() ? info : null);
     }
 
@@ -146,7 +146,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
         log.warn("{}请求体校验异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
         String message = extractBindingResultMessages(e.getBindingResult());
         ExceptionInfo info = buildValidationInfo(message, request.getRequestURI(), extractTraceId(request));
-        return errorResponse(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message,
+        return errorResponse(CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(), message,
                 includeExceptionInfo() ? info : null);
     }
 
@@ -160,7 +160,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
         log.warn("{}表单绑定异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
         String message = extractBindingResultMessages(e.getBindingResult());
         ExceptionInfo info = buildValidationInfo(message, request.getRequestURI(), extractTraceId(request));
-        return errorResponse(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(), message,
+        return errorResponse(CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(), message,
                 includeExceptionInfo() ? info : null);
     }
 
@@ -169,8 +169,8 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
      */
     private ExceptionInfo buildValidationInfo(String message, String path, String traceId) {
         ExceptionInfo info = new ExceptionInfo();
-        info.setCode(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode());
-        info.setKey(UnifiedExceptionCode.ILLEGAL_ARGUMENT.getKey());
+        info.setCode(CoreExceptionCode.ILLEGAL_ARGUMENT.getCode());
+        info.setKey(CoreExceptionCode.ILLEGAL_ARGUMENT.getKey());
         info.setMessage(message);
         info.setHttpStatus(HttpStatus.BAD_REQUEST.value());
         info.setPath(path);

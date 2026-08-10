@@ -19,7 +19,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.validation.Validator;
@@ -29,10 +28,8 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -92,14 +89,13 @@ public class YdszExceptionCoreAutoConfiguration {
     // ==================== 国际化核心 ====================
 
     /**
-     * 在 Bean 初始化完成后注入异常消息国际化解析器并桥接 ErrorCodeTable 与兼容门面。
+     * 在 Bean 初始化完成后桥接 ErrorCodeTable 与兼容门面。
      *
-     * <p>将 Spring {@link MessageSource} 桥接到 {@link AbstractYdszException}，
-     * 使异常被抛出时只存储 i18n key + 参数，
-     * 在 {@code getMessage()} 被调用时才懒加载解析为本地化消息。
-     *
-     * <p>同时将 {@link ErrorCodeTable} 注入到 {@link ExceptionCodeRegistry}，
+     * <p>将 {@link ErrorCodeTable} 注入到 {@link ExceptionCodeRegistry}，
      * 使历史静态门面自动委托 ErrorCodeTable，实现双写兼容。
+     *
+     * <p><b>注意：</b>国际化消息解析已迁移至 Handler 层直接使用 MessageSource，
+     * 不再通过 {@link AbstractYdszException} 内部解析器注入。
      */
     @PostConstruct
     public void injectMessageResolver() {
@@ -108,10 +104,7 @@ public class YdszExceptionCoreAutoConfiguration {
             log.warn("MessageSource 未找到，异常消息将降级为返回 i18n key");
             return;
         }
-        AbstractYdszException.setMessageResolver(
-                (key, params) -> messageSource.getMessage(key, params, key, LocaleContextHolder.getLocale())
-        );
-        log.info("异常消息国际化解析器已注入 | MessageSource: {}", messageSource.getClass().getSimpleName());
+        log.info("异常模块已就绪 | MessageSource: {}（i18n 解析由 Handler 层处理）", messageSource.getClass().getSimpleName());
     }
 
     /**
@@ -178,28 +171,6 @@ public class YdszExceptionCoreAutoConfiguration {
         LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
         interceptor.setParamName(i18nProperties.getLangParamName());
         return interceptor;
-    }
-
-    // ==================== 错误码注册中心桥接 ====================
-
-    /**
-     * 将 ErrorCodeTable Bean 桥接到 ExceptionCodeRegistry 静态门面。
-     *
-     * <p>使历史代码（如 {@code UnifiedExceptionCode} 枚举的静态初始化块）
-     * 通过 ExceptionCodeRegistry 注册的错误码自动同步到 ErrorCodeTable，
-     * 平滑过渡到统一注册表架构。
-     */
-    @PostConstruct
-    public void bridgeErrorCodeTable() {
-        ErrorCodeTable table = applicationContext != null
-                ? applicationContext.getBeanProvider(ErrorCodeTable.class).getIfAvailable()
-                : null;
-        if (table != null) {
-            ExceptionCodeRegistry.setDelegate(table);
-            log.info("ErrorCodeTable 已桥接至 ExceptionCodeRegistry 兼容门面");
-        } else {
-            log.warn("ErrorCodeTable Bean 未找到，ExceptionCodeRegistry 将使用内部缓存");
-        }
     }
 
     // ==================== 异常指标 ====================
@@ -283,12 +254,7 @@ public class YdszExceptionCoreAutoConfiguration {
     private void validateExceptionCodeKeys(MessageSource messageSource) {
         List<String> missingKeys = new ArrayList<>();
 
-        // 1. 校验 UnifiedExceptionCode 枚举值
-        for (UnifiedExceptionCode code : UnifiedExceptionCode.values()) {
-            collectMissingKey(messageSource, code, missingKeys);
-        }
-
-        // 2. 从 ErrorCodeTable（统一注册表）获取非 UnifiedExceptionCode 的已注册 code
+        // 从 ErrorCodeTable（统一注册表）获取已注册 code
         ErrorCodeTable errorCodeTable = applicationContext != null
                 ? applicationContext.getBeanProvider(ErrorCodeTable.class).getIfAvailable()
                 : null;
@@ -299,11 +265,7 @@ public class YdszExceptionCoreAutoConfiguration {
         Map<String, ExceptionCode> registered = errorCodeTable.allCodes();
 
         for (Map.Entry<String, ExceptionCode> entry : registered.entrySet()) {
-            ExceptionCode code = entry.getValue();
-            if (code instanceof UnifiedExceptionCode) {
-                continue;
-            }
-            collectMissingKey(messageSource, code, missingKeys);
+            collectMissingKey(messageSource, entry.getValue(), missingKeys);
         }
 
         if (!missingKeys.isEmpty()) {

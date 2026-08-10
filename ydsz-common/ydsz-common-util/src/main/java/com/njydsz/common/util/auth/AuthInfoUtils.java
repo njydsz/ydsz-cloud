@@ -4,9 +4,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.domain.enums.DataScopeType;
-import com.njydsz.common.domain.enums.IdentityType;
+import com.njydsz.common.domain.constant.DataScopeConstants;
 
 /**
  * 认证信息快捷读取工具类。
@@ -24,7 +24,6 @@ import com.njydsz.common.domain.enums.IdentityType;
  *   <li>返回类型为 Set：返回 {@link Collections#emptySet()}</li>
  *   <li>返回类型为 Map：返回 {@link Collections#emptyMap()}</li>
  *   <li>返回类型为 String：返回 null</li>
- *   <li>返回类型为枚举：返回 null</li>
  * </ul>
  *
  * <p>典型使用场景：
@@ -53,10 +52,10 @@ public class AuthInfoUtils {
      * 获取当前线程的认证信息。
      *
      * @return AuthInfo 实例；若未写入则返回 null
-     * @see RequestContext#getAuthInfo()
+     * @see RequestContext#get(String)
       */
     public static AuthInfo getAuthInfo() {
-        return RequestContext.getAuthInfo(AuthInfo.class);
+        return AuthInfo.class.cast(RequestContext.get(BizContextKeys.KEY_AUTH_INFO));
     }
 
     /**
@@ -90,14 +89,14 @@ public class AuthInfoUtils {
     }
 
     /**
-     * 获取身份类型枚举。
+     * 获取身份类型编码。
      *
-     * @return IdentityType；无上下文时返回 null
-     * @see IdentityType
+     * @return 身份类型编码字符串；无上下文时返回 null
+     * @see com.njydsz.common.domain.constant.DataScopeConstants
       */
-    public static IdentityType getIdentityTypeEnum() {
+    public static String getIdentityType() {
         AuthInfo auth = getAuthInfo();
-        return auth != null ? auth.getIdentityTypeEnum() : null;
+        return auth != null ? auth.getIdentityType() : null;
     }
 
     /**
@@ -111,14 +110,14 @@ public class AuthInfoUtils {
     }
 
     /**
-     * 获取数据权限范围类型枚举。
+     * 获取数据权限范围类型编码。
      *
      * <p>决定行级权限按哪个维度（tenant/group/company/dept/user/project/region）生效。
      *
-     * @return DataScopeType；无上下文时返回 null
-     * @see DataScopeType
+     * @return 数据范围类型编码字符串；无上下文时返回 null
+     * @see DataScopeConstants
       */
-    public static DataScopeType getDataScopeEnum() {
+    public static String getDataScope() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getDataScope() : null;
     }
@@ -158,7 +157,7 @@ public class AuthInfoUtils {
     /**
      * 获取当前用户可访问的公司ID集合（GROUP 范围权限）。
      *
-     * <p>当 {@link #getDataScopeEnum()} 返回 {@code GROUP} 时，SQL 拦截器使用此集合过滤 company_id。
+     * <p>当 {@link #getDataScope()} 返回 {@code "group"} 时，SQL 拦截器使用此集合过滤 company_id。
      *
      * @return 公司ID集合；无上下文或未设置时返回空 Set
      * @author ydsz-team
@@ -174,7 +173,7 @@ public class AuthInfoUtils {
     /**
      * 获取当前用户可访问的部门ID集合（COMPANY/DEPT 范围权限）。
      *
-     * <p>当 {@link #getDataScopeEnum()} 返回 {@code COMPANY} 或 {@code DEPT} 时，SQL 拦截器使用此集合过滤 dept_id。
+     * <p>当 {@link #getDataScope()} 返回 {@code "company"} 或 {@code "dept"} 时，SQL 拦截器使用此集合过滤 dept_id。
      *
      * @return 部门ID集合；无上下文或未设置时返回空 Set
      * @author ydsz-team
@@ -190,7 +189,7 @@ public class AuthInfoUtils {
     /**
      * 获取当前用户可访问的项目ID集合（PROJECT 范围权限）。
      *
-     * <p>当 {@link #getDataScopeEnum()} 返回 {@code PROJECT} 时，SQL 拦截器使用此集合过滤 project_id。
+     * <p>当 {@link #getDataScope()} 返回 {@code "project"} 时，SQL 拦截器使用此集合过滤 project_id。
      *
      * @return 项目ID集合；无上下文或未设置时返回空 Set
      * @author ydsz-team
@@ -206,7 +205,7 @@ public class AuthInfoUtils {
     /**
      * 获取当前用户可访问的区域ID集合（REGION 范围权限）。
      *
-     * <p>当 {@link #getDataScopeEnum()} 返回 {@code REGION} 时，SQL 拦截器使用此集合过滤 region_id。
+     * <p>当 {@link #getDataScope()} 返回 {@code "region"} 时，SQL 拦截器使用此集合过滤 region_id。
      *
      * @return 区域ID集合；无上下文或未设置时返回空 Set
      * @author ydsz-team
@@ -231,7 +230,7 @@ public class AuthInfoUtils {
      *
      */
     public static YdszAuthInfo getYdszAuthInfo() {
-        return RequestContext.getAuthInfo(YdszAuthInfo.class);
+        return YdszAuthInfo.class.cast(RequestContext.get(BizContextKeys.KEY_AUTH_INFO));
     }
 
     /**

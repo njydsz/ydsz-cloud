@@ -4,9 +4,6 @@ package com.njydsz.common.util.auth;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.common.domain.enums.DataScopeType;
-import com.njydsz.common.domain.enums.IdentityType;
-
 /**
  * 认证信息统一接口
  *
@@ -47,15 +44,14 @@ public interface AuthInfo {
     /**
      * 获取身份类型
      *
-     * @return 身份类型枚举，如公司用户、访客用户、ydsz用户
-     * @see IdentityType
+     * @return 身份类型编码，如 "company"、"visitor"、"ydszsoft"
      */
-    IdentityType getIdentityTypeEnum();
+    String getIdentityType();
 
     /**
      * 获取服务类型编码
      *
-     * @return 服务类型码，如 WEB_SERVICE、APP_SERVICE
+     * @return 服务类型码，如 "webService"、"appService"
      */
     String getServiceTypeCode();
 
@@ -71,19 +67,19 @@ public interface AuthInfo {
      *
      * <p>决定行级权限按哪个维度生效：
      * <ul>
-     *   <li> TENANT：按租户维度过滤</li>
-     *   <li> GROUP：按集团维度过滤（使用 companyIds）</li>
-     *   <li> COMPANY：按公司维度过滤（使用 deptIds）</li>
-     *   <li> DEPT：按部门维度过滤（使用 deptIds）</li>
-     *   <li> USER：按用户维度过滤（使用 uniqueId）</li>
-     *   <li> PROJECT：按项目维度过滤（使用 projectIds）</li>
-     *   <li> REGION：按区域维度过滤（使用 regionIds）</li>
+     *   <li>tenant：按租户维度过滤</li>
+     *   <li>group：按集团维度过滤（使用 companyIds）</li>
+     *   <li>company：按公司维度过滤（使用 deptIds）</li>
+     *   <li>dept：按部门维度过滤（使用 deptIds）</li>
+     *   <li>user：按用户维度过滤（使用 uniqueId）</li>
+     *   <li>project：按项目维度过滤（使用 projectIds）</li>
+     *   <li>region：按区域维度过滤（使用 regionIds）</li>
      * </ul>
      *
-     * @return 数据范围类型枚举
-     * @see DataScopeType
+     * @return 数据范围类型编码
+     * @see com.njydsz.common.domain.constant.DataScopeConstants
      */
-    DataScopeType getDataScope();
+    String getDataScope();
 
     /**
      * 获取租户ID

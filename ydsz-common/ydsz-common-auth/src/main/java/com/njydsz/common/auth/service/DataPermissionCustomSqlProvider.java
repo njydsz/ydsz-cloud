@@ -23,7 +23,7 @@ import com.njydsz.common.auth.model.DataScopeInfo;
  *
  *     @Override
  *     public String provideCustomSql(DataScopeInfo dataScopeInfo, String tableAlias) {
- *         if (dataScopeInfo.getScope() != DataScopeType.CUSTOM) {
+ *         if (!"custom".equals(dataScopeInfo.getScope())) {
  *             return null;
  *         }
  *         return String.format(

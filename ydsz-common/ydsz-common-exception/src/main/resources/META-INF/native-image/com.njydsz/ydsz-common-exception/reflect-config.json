@@ -82,7 +82,17 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.njydsz.common.exception.code.UnifiedExceptionCode",
+    "name": "com.njydsz.common.exception.code.CoreExceptionCode",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.code.SecurityExceptionCode",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.code.RateLimitExceptionCode",
     "allPublicConstructors": true,
     "allPublicMethods": true
   },

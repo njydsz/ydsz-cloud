@@ -1,9 +1,5 @@
 package com.njydsz.common.json.provider;
 
-import java.lang.reflect.Field;
-
-import com.njydsz.common.json.annotation.JsonEnumDefaultValue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,14 +71,14 @@ final class TypeConverter {
             return String.valueOf(value);
         }
 
-        // 枚举转换：String → Enum（含 @JsonEnumDefaultValue 兜底）
+        // 枚举转换：String → Enum
         if (targetType.isEnum() && value instanceof String) {
             @SuppressWarnings({"rawtypes", "unchecked"})
             Class<? extends Enum> enumType = targetType.asSubclass(Enum.class);
             try {
                 return Enum.valueOf(enumType, (String) value);
             } catch (IllegalArgumentException e) {
-                return resolveEnumDefaultValue(enumType);
+                throw new IllegalArgumentException("Unknown enum value for " + enumType.getName());
             }
         }
 
@@ -244,21 +240,5 @@ final class TypeConverter {
         return "true".equalsIgnoreCase(json.trim());
     }
 
-    /**
-     * 查找枚举类中标记了 {@link JsonEnumDefaultValue @JsonEnumDefaultValue} 的常量作为兜底值。
-     *
-     * <p>当 {@code Enum.valueOf} 失败（未知枚举值）时调用。</p>
-     *
-     * @param enumType 枚举类型
-     * @return 标有 @JsonEnumDefaultValue 的枚举常量，无匹配时原抛 IllegalArgumentException
-     */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static Object resolveEnumDefaultValue(Class<? extends Enum> enumType) {
-        for (Field field : enumType.getDeclaredFields()) {
-            if (field.isEnumConstant() && field.isAnnotationPresent(JsonEnumDefaultValue.class)) {
-                return Enum.valueOf(enumType, field.getName());
-            }
-        }
-        throw new IllegalArgumentException("Unknown enum value for " + enumType.getName());
-    }
+
 }

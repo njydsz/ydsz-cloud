@@ -1,12 +1,9 @@
 package com.njydsz.common.util.auth;
 
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
-import com.njydsz.common.domain.enums.DataScopeType;
-import com.njydsz.common.domain.enums.IdentityType;
-import com.njydsz.common.domain.enums.ServiceType;
 
 import lombok.Data;
 
@@ -20,8 +17,8 @@ import lombok.Data;
  *
  * <p>设计说明：
  * <ul>
- *   <li>身份类型固定为 {@link IdentityType#COMPANY}（公司级），不支持继承扩展</li>
- *   <li>服务类型由子类通过 {@link #getServiceTypeCode()} 实现区分（WEB_SERVICE / APP_SERVICE）</li>
+ *   <li>身份类型固定为字符串 {@code "company"}（公司级），不支持继承扩展</li>
+ *   <li>服务类型由子类通过 {@link #getServiceTypeCode()} 实现区分（webService / appService）</li>
  *   <li>所有集合类型字段使用不可变空集合初始化，防止 NPE</li>
  *   <li>行级权限维度（companyIds / deptIds / projectIds / regionIds）支持多值 CSV 格式</li>
  *   <li>列权限（visibleColumnsByTable / editableColumnsByTable）格式为 {@code tableName:col1,col2;tableName2:col3}</li>
@@ -45,8 +42,8 @@ import lombok.Data;
  *   <tr><td>editableColumnsByTable</td><td>X-Editable-Columns</td></tr>
  * </table>
  *
- * @see {@link WebAuthInfo}
- * @see {@link AppAuthInfo}
+ * @see WebAuthInfo
+ * @see AppAuthInfo
  * @see com.njydsz.common.core.context.RequestContext
  * @see AuthInfoUtils
  *
@@ -81,11 +78,11 @@ public abstract class YdszAuthInfo implements AuthInfo {
     /**
      * 数据权限范围类型。
      *
-     * <p>用于标识当前请求的数据权限粒度（如：全部、本人、本部门等）。
+     * <p>用于标识当前请求的数据权限粒度（如：tenant、group、company、dept、user、project、region、custom）。
      *
-     * @see DataScopeType
+     * @see com.njydsz.common.domain.constant.DataScopeConstants
       */
-    private DataScopeType dataScope;
+    private String dataScope;
 
     /**
      * 有权限访问的公司 ID 集合。
@@ -164,11 +161,11 @@ public abstract class YdszAuthInfo implements AuthInfo {
     /**
      * 返回身份类型为公司用户。
      *
-     * @return {@link IdentityType#COMPANY}
+     * @return 字符串 {@code "company"}
       */
     @Override
-    public IdentityType getIdentityTypeEnum() {
-        return IdentityType.COMPANY;
+    public String getIdentityType() {
+        return "company";
     }
 
     /**
@@ -176,8 +173,8 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>用于区分请求来源终端：
      * <ul>
-     *   <li>{@link ServiceType#WEB_SERVICE} → PC Web</li>
-     *   <li>{@link ServiceType#APP_SERVICE} → 移动端 H5/App</li>
+     *   <li>{@code webService} → PC Web</li>
+     *   <li>{@code appService} → 移动端 H5/App</li>
      * </ul>
      *
      * @return 服务类型码，非空字符串

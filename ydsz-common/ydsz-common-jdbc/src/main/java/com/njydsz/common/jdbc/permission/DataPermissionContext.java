@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.common.domain.enums.DataScopeType;
 
 import lombok.Data;
 
@@ -34,9 +33,9 @@ import lombok.Data;
 @Data
 public class DataPermissionContext {
     /**
-     * 行级权限维度（从请求头或 RequestContext 解析）。
+     * 行级权限维度编码（从请求头或 RequestContext 解析）。
      */
-    private DataScopeType dataScope;
+    private String dataScope;
     /** 用户ID */
     private String userId;
     /** 公司ID集合 */

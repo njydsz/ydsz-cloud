@@ -14,7 +14,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
@@ -267,7 +267,7 @@ public abstract class BaseExceptionHandler {
                 info.setDetails(details);
             }
         } else {
-            info.setCode(UnifiedExceptionCode.INTERNAL_ERROR.getCode());
+            info.setCode(CoreExceptionCode.INTERNAL_ERROR.getCode());
             info.setMessage(getRootCauseMessage(throwable));
             info.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
             if (includeExceptionInfo()) {
@@ -311,7 +311,7 @@ public abstract class BaseExceptionHandler {
                     HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), getRootCauseMessage(throwable));
             problem.setTitle("System Error");
             problem.setType(URI.create(baseUrl + "/system"));
-            problem.setProperty("errorCode", UnifiedExceptionCode.INTERNAL_ERROR.getCode());
+            problem.setProperty("errorCode", CoreExceptionCode.INTERNAL_ERROR.getCode());
             if (path != null) {
                 problem.setInstance(URI.create(path));
             }
@@ -362,7 +362,7 @@ public abstract class BaseExceptionHandler {
                     includeExceptionInfo() ? info : null);
         }
         return errorResponse(
-                UnifiedExceptionCode.INTERNAL_ERROR.getCode(),
+                CoreExceptionCode.INTERNAL_ERROR.getCode(),
                 info.getMessage(),
                 includeExceptionInfo() ? info : null);
     }
@@ -393,7 +393,7 @@ public abstract class BaseExceptionHandler {
      * @return 统一响应格式
      */
     protected BaseResponse<?> buildValidationErrorResponse(
-            UnifiedExceptionCode errorCode, String message, int httpStatus,
+            CoreExceptionCode errorCode, String message, int httpStatus,
             String path, Throwable throwable) {
         log.error("{}校验异常 | 路径: {} | 消息: {}", getLogPrefix(), path, message, throwable);
         recordMetrics(throwable);

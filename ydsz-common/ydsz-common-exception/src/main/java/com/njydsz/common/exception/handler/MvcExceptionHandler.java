@@ -24,7 +24,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -178,14 +178,14 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 "请求格式错误", LocaleContextHolder.getLocale());
 
         ExceptionInfo info = new ExceptionInfo(
-                UnifiedExceptionCode.INVALID_REQUEST_FORMAT.getCode(),
-                UnifiedExceptionCode.INVALID_REQUEST_FORMAT.getKey(),
+                CoreExceptionCode.INVALID_REQUEST_FORMAT.getCode(),
+                CoreExceptionCode.INVALID_REQUEST_FORMAT.getKey(),
                 message,
                 HttpStatus.BAD_REQUEST.value()
         );
         info.setPath(request.getRequestURI());
         return errorResponse(
-                UnifiedExceptionCode.INVALID_REQUEST_FORMAT.getCode(),
+                CoreExceptionCode.INVALID_REQUEST_FORMAT.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
         );
@@ -202,7 +202,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         String message = messageSource.getMessage("missing.request.parameter",
                 new Object[]{e.getParameterName()}, "缺少请求参数", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
+                CoreExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
     }
 
@@ -219,7 +219,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 new Object[]{e.getName(), requiredType != null ? requiredType.getSimpleName() : "未知"},
                 "参数类型不匹配", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
+                CoreExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
     }
 
@@ -234,7 +234,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         String message = messageSource.getMessage("missing.request.header",
                 new Object[]{e.getHeaderName()}, "缺少请求头", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
+                CoreExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
     }
 
@@ -249,7 +249,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         String message = messageSource.getMessage("method.not.supported",
                 new Object[]{e.getMethod()}, "不支持的请求方法", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.METHOD_NOT_ALLOWED.value(),
+                CoreExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.METHOD_NOT_ALLOWED.value(),
                 request.getRequestURI(), e);
     }
 
@@ -266,14 +266,14 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         log.error("{}文件上传超限 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
 
         ExceptionInfo info = new ExceptionInfo(
-                UnifiedExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
-                UnifiedExceptionCode.FILE_SIZE_EXCEEDED.getKey(),
+                CoreExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
+                CoreExceptionCode.FILE_SIZE_EXCEEDED.getKey(),
                 message,
                 HttpStatus.CONTENT_TOO_LARGE.value()
         );
         info.setPath(request.getRequestURI());
         return errorResponse(
-                UnifiedExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
+                CoreExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
         );
@@ -292,14 +292,14 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         log.error("{}资源不存在 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
 
         ExceptionInfo info = new ExceptionInfo(
-                UnifiedExceptionCode.RESOURCE_NOT_FOUND.getCode(),
-                UnifiedExceptionCode.RESOURCE_NOT_FOUND.getKey(),
+                CoreExceptionCode.RESOURCE_NOT_FOUND.getCode(),
+                CoreExceptionCode.RESOURCE_NOT_FOUND.getKey(),
                 message,
                 HttpStatus.NOT_FOUND.value()
         );
         info.setPath(request.getRequestURI());
         return errorResponse(
-                UnifiedExceptionCode.RESOURCE_NOT_FOUND.getCode(),
+                CoreExceptionCode.RESOURCE_NOT_FOUND.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
         );
@@ -316,14 +316,14 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         log.error("{}非法参数异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         ExceptionInfo info = new ExceptionInfo(
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(),
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT.getKey(),
+                CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
+                CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(),
                 e.getMessage(),
                 HttpStatus.BAD_REQUEST.value()
         );
         info.setPath(request.getRequestURI());
         return errorResponse(
-                UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(),
+                CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
                 e.getMessage(),
                 includeExceptionInfo() ? info : null
         );
@@ -346,11 +346,11 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 "系统异常，请联系管理员", LocaleContextHolder.getLocale());
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
+        info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
         info.setMessage(message);
 
         return errorResponse(
-                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                CoreExceptionCode.SYSTEM_ERROR.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
         );
@@ -370,11 +370,11 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 "系统异常，请联系管理员", LocaleContextHolder.getLocale());
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
+        info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
         info.setMessage(message);
 
         return errorResponse(
-                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                CoreExceptionCode.SYSTEM_ERROR.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
         );
@@ -396,7 +396,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
 
         return errorResponse(
-                UnifiedExceptionCode.SYSTEM_ERROR.getCode(),
+                CoreExceptionCode.SYSTEM_ERROR.getCode(),
                 message,
                 includeExceptionInfo() ? info : null
         );

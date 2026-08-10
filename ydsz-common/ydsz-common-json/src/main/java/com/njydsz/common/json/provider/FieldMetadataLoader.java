@@ -6,8 +6,6 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.json.annotation.JsonAnyGetter;
-import com.njydsz.common.json.annotation.JsonAnySetter;
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonGetter;
 import com.njydsz.common.json.annotation.JsonIgnore;
@@ -18,7 +16,6 @@ import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import com.njydsz.common.json.annotation.JsonSetter;
 import com.njydsz.common.json.annotation.JsonValue;
-import com.njydsz.common.json.annotation.JsonVisibility;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import org.slf4j.Logger;
@@ -55,22 +52,6 @@ public final class FieldMetadataLoader {
      * <p>避免每次序列化都反射扫描方法列表。一个类最多只能有一个 @JsonValue 方法。</p>
      */
     private static final ConcurrentHashMap<Class<?>, Method> JSON_VALUE_METHOD_CACHE =
-        new ConcurrentHashMap<>();
-
-    /**
-     * @JsonAnyGetter 方法缓存（Class -> 标注了 @JsonAnyGetter 的 Method，null 表示无）。
-     *
-     * <p>序列化时调用该方法获取 Map，将 Map 中的键值对展开为顶层 JSON 属性。</p>
-     */
-    private static final ConcurrentHashMap<Class<?>, Method> JSON_ANY_GETTER_CACHE =
-        new ConcurrentHashMap<>();
-
-    /**
-     * @JsonAnySetter 方法缓存（Class -> 标注了 @JsonAnySetter 的 Method，null 表示无）。
-     *
-     * <p>反序列化时，未匹配到字段的属性会调用该方法写入。</p>
-     */
-    private static final ConcurrentHashMap<Class<?>, Method> JSON_ANY_SETTER_CACHE =
         new ConcurrentHashMap<>();
 
     /**
@@ -175,12 +156,6 @@ public final class FieldMetadataLoader {
             }
         }
 
-        JsonVisibility visibilityAnnotation = clazz.getAnnotation(JsonVisibility.class);
-        JsonVisibility.Visibility fieldVisibility = JsonVisibility.Visibility.ANY;
-        if (visibilityAnnotation != null) {
-            fieldVisibility = visibilityAnnotation.fields();
-        }
-
         List<Field> declaredFields = collectDeclaredAndInheritedFields(clazz);
         List<FieldMeta> fieldList = new ArrayList<>(declaredFields.size());
 
@@ -190,7 +165,7 @@ public final class FieldMetadataLoader {
                 continue;
             }
 
-            if (!isFieldVisible(mods, fieldVisibility, field)) {
+            if (!isFieldVisible(mods, field)) {
                 continue;
             }
 
@@ -438,30 +413,14 @@ public final class FieldMetadataLoader {
     /**
      * 查找类中标注了 {@code @JsonAnyGetter} 的方法。
      *
-     * <p>对标 Jackson {@code @JsonAnyGetter}：标注在返回 {@code Map<String, Object>} 的 getter 上，
-     * 序列化时将 Map 的键值对展开为顶层 JSON 属性。</p>
+     * <p><b>注意：</b> @JsonAnyGetter 注解已删除，此方法始终返回 null。
+     * 保留此方法以维持向后兼容的二进制接口。</p>
      *
      * @param clazz 要扫描的类
-     * @return 标注了 {@code @JsonAnyGetter} 的 Method，未找到返回 null
-     * @since 1.0.0
+     * @return 始终返回 null
      */
     public static Method findAnyGetterMethod(Class<?> clazz) {
-        return JSON_ANY_GETTER_CACHE.computeIfAbsent(clazz, c -> {
-            for (Method method : c.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(JsonAnyGetter.class)) {
-                    method.setAccessible(true);
-                    return method;
-                }
-            }
-            Class<?> superClass = c.getSuperclass();
-            if (superClass != null && superClass != Object.class) {
-                Method inherited = findAnyGetterMethod(superClass);
-                if (inherited != null) {
-                    return inherited;
-                }
-            }
-            return null;
-        });
+        return null;
     }
 
     /**
@@ -532,30 +491,14 @@ public final class FieldMetadataLoader {
     /**
      * 查找类中标注了 {@code @JsonAnySetter} 的方法。
      *
-     * <p>对标 Jackson {@code @JsonAnySetter}：标注在接收 {@code (String, Object)} 参数的方法上，
-     * 反序列化时将未匹配到字段的属性通过该方法写入。</p>
+     * <p><b>注意：</b> @JsonAnySetter 注解已删除，此方法始终返回 null。
+     * 保留此方法以维持向后兼容的二进制接口。</p>
      *
      * @param clazz 要扫描的类
-     * @return 标注了 {@code @JsonAnySetter} 的 Method，未找到返回 null
-     * @since 1.0.0
+     * @return 始终返回 null
      */
     public static Method findAnySetterMethod(Class<?> clazz) {
-        return JSON_ANY_SETTER_CACHE.computeIfAbsent(clazz, c -> {
-            for (Method method : c.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(JsonAnySetter.class)) {
-                    method.setAccessible(true);
-                    return method;
-                }
-            }
-            Class<?> superClass = c.getSuperclass();
-            if (superClass != null && superClass != Object.class) {
-                Method inherited = findAnySetterMethod(superClass);
-                if (inherited != null) {
-                    return inherited;
-                }
-            }
-            return null;
-        });
+        return null;
     }
 
     /**
@@ -564,8 +507,6 @@ public final class FieldMetadataLoader {
      * <p>检测以下需要特殊处理的注解/状态：</p>
      * <ul>
      *   <li>{@code @JsonFormat} 日期格式（{@link FieldMeta#isDateType()}）</li>
-     *   <li>{@code @JsonUnwrapped} 嵌套展开（{@link FieldMeta#unwrapped}）</li>
-     *   <li>{@code @JsonRawValue} 原始值（{@link FieldMeta#isRawValue}）</li>
      *   <li>{@code @JsonInclude} 非 ALWAYS 策略（{@link FieldMeta#includeStrategy}）</li>
      * </ul>
      */
@@ -573,8 +514,6 @@ public final class FieldMetadataLoader {
         if (fields == null) return false;
         for (FieldMeta field : fields) {
             if (field.isDateType()
-                || field.unwrapped
-                || field.isRawValue
                 || field.includeStrategy != JsonInclude.Include.ALWAYS) {
                 return true;
             }
@@ -583,24 +522,16 @@ public final class FieldMetadataLoader {
     }
 
     /**
-     * 判断字段是否可见（基于可见性策略）
+     * 判断字段是否可见。
+     *
+     * <p>可见性策略由 @JsonVisibility 注解控制。由于该注解已删除，
+     * 默认策略为 ANY（所有字段可见）。</p>
      *
      * @param modifiers 字段修饰符
-     * @param visibility 可见性级别
      * @param field 字段对象
-     * @return 是否可见
+     * @return 始终返回 true
      */
-    public static boolean isFieldVisible(int modifiers, JsonVisibility.Visibility visibility, Field field) {
-        switch (visibility) {
-            case NONE:
-                return false;
-            case PUBLIC_ONLY:
-                return Modifier.isPublic(modifiers);
-            case PROTECTED_AND_PUBLIC:
-                return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers);
-            case ANY:
-            default:
-                return true;
-        }
+    public static boolean isFieldVisible(int modifiers, Field field) {
+        return true;
     }
 }

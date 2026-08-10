@@ -96,7 +96,7 @@ public @interface RateLimit {
     String fallback() default "";
 
     /**
-     * 限流错误码（默认使用 UnifiedExceptionCode.RATE_LIMIT）
+     * 限流错误码（默认使用 RateLimitExceptionCode.RATE_LIMIT）
      */
     String errorCode() default "";
 

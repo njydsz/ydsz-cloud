@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.csrf.CsrfToken;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
@@ -125,7 +125,7 @@ public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {
             return bytesToHex(hash);
         } catch (NoSuchAlgorithmException e) {
             throw BusinessException.builder()
-                    .code(UnifiedExceptionCode.FAIL.getCode())
+                    .code(CoreExceptionCode.FAIL.getCode())
                     .message("SHA-256 algorithm not available")
                     .cause(e)
                     .build();

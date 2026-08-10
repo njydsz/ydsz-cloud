@@ -1,7 +1,6 @@
 package com.njydsz.common.app.auth;
 
 import com.njydsz.common.base.auth.BaseAuthInfo;
-import com.njydsz.common.domain.enums.ServiceType;
 
 /**
  * App 端认证上下文信息
@@ -9,7 +8,7 @@ import com.njydsz.common.domain.enums.ServiceType;
  * <p>存储 App 请求处理过程中所需的认证上下文数据（如用户 ID、租户 ID、Token 等），
  * 通过 {@link com.njydsz.common.core.context.RequestContext} 在请求线程内传递。
  *
- * <p><b>服务类型：</b>固定返回 {@link ServiceType#APP_SERVICE} 的编码，
+ * <p><b>服务类型：</b>固定返回字符串 {@code "appService"}，
  * 与 Web 端、管理端的认证上下文作区分。
  *
  * <p><b>线程安全性：</b>依赖于 {@link com.njydsz.common.core.context.RequestContext} 的线程局部变量，实例本身不共享。
@@ -23,10 +22,10 @@ public class AppAuthInfo extends BaseAuthInfo {
     /**
      * 获取服务类型编码
      *
-     * @return 固定返回 {@link ServiceType#APP_SERVICE} 的编码
+     * @return 固定返回 {@code "appService"}
      */
     @Override
     public String getServiceTypeCode() {
-        return ServiceType.APP_SERVICE.getCode();
+        return "appService";
     }
 }

@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.domain.constant.DataScopeConstants;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
@@ -327,7 +327,7 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
             return null;
         }
         Expression out = null;
-        DataScopeType scope = context.getDataScope();
+        String scope = context.getDataScope();
         if (scope == null) {
             out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
             out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
@@ -337,26 +337,28 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
             return out;
         }
 
-        switch (scope) {
-            case USER:
-                return equals(table, config.getUserColumn(), context.getUserId());
-            case PROJECT:
-                return in(table, config.getProjectColumn(), context.getProjectIds());
-            case REGION:
-                return in(table, config.getRegionColumn(), context.getRegionIds());
-            case GROUP:
-                return in(table, config.getCompanyColumn(), context.getCompanyIds());
-            case COMPANY:
-            case DEPT:
-                return in(table, config.getDeptColumn(), context.getDeptIds());
-            default:
-                out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
-                out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
-                out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
-                out = and(out, in(table, config.getProjectColumn(), context.getProjectIds()));
-                out = and(out, in(table, config.getRegionColumn(), context.getRegionIds()));
-                return out;
+        if (DataScopeConstants.USER.equals(scope)) {
+            return equals(table, config.getUserColumn(), context.getUserId());
         }
+        if (DataScopeConstants.PROJECT.equals(scope)) {
+            return in(table, config.getProjectColumn(), context.getProjectIds());
+        }
+        if (DataScopeConstants.REGION.equals(scope)) {
+            return in(table, config.getRegionColumn(), context.getRegionIds());
+        }
+        if (DataScopeConstants.GROUP.equals(scope)) {
+            return in(table, config.getCompanyColumn(), context.getCompanyIds());
+        }
+        if (DataScopeConstants.COMPANY.equals(scope) || DataScopeConstants.DEPT.equals(scope)) {
+            return in(table, config.getDeptColumn(), context.getDeptIds());
+        }
+        // default: apply all conditions
+        out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
+        out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
+        out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
+        out = and(out, in(table, config.getProjectColumn(), context.getProjectIds()));
+        out = and(out, in(table, config.getRegionColumn(), context.getRegionIds()));
+        return out;
     }
 
     /**

@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.domain.enums.DataScopeType;
+import com.njydsz.common.domain.constant.DataScopeConstants;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.string.StringUtils;
@@ -53,15 +53,15 @@ import com.njydsz.common.util.string.StringUtils;
  * <h2>ID 扩展</h2>
  * <p>支持可选的 {@link DataScopeIdExpander}，在已知 ID 集合基础上自动扩展下级子节点：
  * <ul>
- *   <li>GROUP scope：扩展 companyIds -> 下级公司</li>
- *   <li>COMPANY/DEPT scope：扩展 deptIds -> 下级部门</li>
- *   <li>PROJECT scope：扩展 projectIds -> 下级项目</li>
- *   <li>REGION scope：扩展 regionIds -> 下级区域</li>
+ *   <li>group scope：扩展 companyIds -> 下级公司</li>
+ *   <li>company/dept scope：扩展 deptIds -> 下级部门</li>
+ *   <li>project scope：扩展 projectIds -> 下级项目</li>
+ *   <li>region scope：扩展 regionIds -> 下级区域</li>
  * </ul>
  *
  * @see DataPermissionContext
  * @see DataPermissionInnerInterceptor
-  *
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -111,15 +111,15 @@ public class DataPermissionContextResolver {
     }
 
     /**
-     * 根据 scope 类型扩展维度ID集合（获取下级节点）。
+     * 根据 scope 类型编码扩展维度ID集合（获取下级节点）。
      *
      * <p>扩展策略：
      * <ul>
-     *   <li>GROUP：扩展 companyIds</li>
-     *   <li>COMPANY / DEPT：扩展 deptIds</li>
-     *   <li>PROJECT：扩展 projectIds</li>
-     *   <li>REGION：扩展 regionIds</li>
-     * <li>其他（USER）或 idExpander 为 null：不做扩展</li>
+     *   <li>group：扩展 companyIds</li>
+     *   <li>company / dept：扩展 deptIds</li>
+     *   <li>project：扩展 projectIds</li>
+     *   <li>region：扩展 regionIds</li>
+     * <li>其他（user）或 idExpander 为 null：不做扩展</li>
      * </ul>
      *
      * @param context 数据权限上下文（会被直接修改）
@@ -128,45 +128,40 @@ public class DataPermissionContextResolver {
         if (context == null || idExpander == null) {
             return;
         }
-        DataScopeType scope = context.getDataScope();
+        String scope = context.getDataScope();
         if (scope == null) {
             return;
         }
-        switch (scope) {
-            case GROUP:
-                context.setCompanyIds(idExpander.expandCompanyIds(context.getCompanyIds()));
-                return;
-            case COMPANY:
-            case DEPT:
-                context.setDeptIds(idExpander.expandDeptIds(context.getDeptIds()));
-                return;
-            case PROJECT:
-                context.setProjectIds(idExpander.expandProjectIds(context.getProjectIds()));
-                return;
-            case REGION:
-                context.setRegionIds(idExpander.expandRegionIds(context.getRegionIds()));
-                return;
-            default:
-                return;
+        if (DataScopeConstants.GROUP.equals(scope)) {
+            context.setCompanyIds(idExpander.expandCompanyIds(context.getCompanyIds()));
+            return;
+        }
+        if (DataScopeConstants.COMPANY.equals(scope) || DataScopeConstants.DEPT.equals(scope)) {
+            context.setDeptIds(idExpander.expandDeptIds(context.getDeptIds()));
+            return;
+        }
+        if (DataScopeConstants.PROJECT.equals(scope)) {
+            context.setProjectIds(idExpander.expandProjectIds(context.getProjectIds()));
+            return;
+        }
+        if (DataScopeConstants.REGION.equals(scope)) {
+            context.setRegionIds(idExpander.expandRegionIds(context.getRegionIds()));
+            return;
         }
     }
 
     /**
-     * 解析 dataScope 字符串为枚举。
+     * 解析 dataScope 字符串为编码字符串。
      *
-     * @param dataScopeValue scope 码值（如 "company", "dept"）
-     * @return 枚举；解析失败返回 null
+     * @param dataScopeValue scope 码值（如 "company"、"dept"）
+     * @return 编码字符串；为空返回 null
      */
-    private DataScopeType resolveDataScope(String dataScopeValue) {
+    private String resolveDataScope(String dataScopeValue) {
         String code = trimToNull(dataScopeValue);
         if (code == null) {
             return null;
         }
-        try {
-            return DataScopeType.codeOf(code);
-        } catch (RuntimeException ignored) {
-            return null;
-        }
+        return code;
     }
 
     /**

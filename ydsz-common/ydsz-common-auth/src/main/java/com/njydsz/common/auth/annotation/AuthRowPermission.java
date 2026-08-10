@@ -4,7 +4,6 @@ import java.lang.annotation.*;
 
 import com.njydsz.common.auth.model.DataScopeAware;
 import com.njydsz.common.auth.model.DataScopeInfo;
-import com.njydsz.common.domain.enums.DataScopeType;
 
 /**
  * 行级数据权限校验与注入注解。
@@ -71,7 +70,7 @@ import com.njydsz.common.domain.enums.DataScopeType;
  * @since 1.0.0
  * @see DataScopeInfo
  * @see DataScopeAware
- * @see DataScopeType
+ * @see com.njydsz.common.domain.constant.DataScopeConstants
  */
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})

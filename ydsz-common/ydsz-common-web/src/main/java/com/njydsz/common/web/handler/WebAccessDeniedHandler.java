@@ -12,7 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.common.exception.code.SecurityExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.message.MessageUtils;
@@ -48,7 +48,7 @@ public class WebAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-        ExceptionCode errorCode = UnifiedExceptionCode.ACCESS_DENIED;
+        ExceptionCode errorCode = SecurityExceptionCode.ACCESS_DENIED;
         String message = MessageUtils.getMessage(errorCode.getKey(), errorCode.getKey());
 
         BaseResponse<?> body = BaseResponse.error(errorCode.getCode(), message);
