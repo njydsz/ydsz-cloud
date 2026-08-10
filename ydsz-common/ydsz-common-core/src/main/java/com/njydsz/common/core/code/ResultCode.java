@@ -35,16 +35,33 @@ public interface ResultCode {
     String getCode();
 
     /**
+     * 获取所属模块标识（用于拼接 i18n key 前缀）。
+     *
+     * <p>默认返回 {@code "core"}；业务模块枚举可覆盖本方法返回模块名
+     * （如 {@code "workflow"}、{@code "user"}、{@code "cronjob"} 等），
+     * 使未显式覆盖 {@link #getKey()} 的枚举也能自动获得正确的 i18n key。
+     *
+     * @return 所属模块的名称标识，不可为 null
+     */
+    default String getModule() {
+        return "core";
+    }
+
+    /**
      * 获取国际化消息键（i18n key）。
      *
-     * <p>默认值为 "core." + code，各模块可提供更精确的语义化 key。
-     * 由上层 {@code BaseResponse.error(ResultCode)} i18n 链路使用，
-     * 解析失败时回退到 {@link #getMsg()} 兜底。
+     * <p>默认值为 {@code getModule() + "." + getCode()}：
+     * <ul>
+     *   <li>core 模块（{@link BaseResultCode}）：{@code "core.A00000"}</li>
+     *   <li>业务模块（覆盖 {@link #getModule()} 后）：{@code "workflow.B70001"}</li>
+     * </ul>
+     * 业务枚举也可通过显式声明 {@code key} 字段 + {@code @Getter} 覆盖此方法，
+     * 提供更精确的语义化 key（如 {@code "workflow.template.not.found"}）。
      *
      * @return 国际化消息键
      */
     default String getKey() {
-        return "core." + getCode();
+        return getModule() + "." + getCode();
     }
 
     /**

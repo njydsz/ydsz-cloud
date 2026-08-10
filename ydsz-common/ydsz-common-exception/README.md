@@ -245,7 +245,9 @@ throw new SysException(CoreExceptionCode.DATABASE_ERROR, cause)
 ```java
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
+import lombok.Getter;
 
+@Getter
 @YdszExceptionCode(module = "user", description = "用户中心错误码")
 public enum UserExceptionCode implements ExceptionCode {
     USER_NOT_FOUND("U10001", "user.not.found", 404),
@@ -254,18 +256,12 @@ public enum UserExceptionCode implements ExceptionCode {
     private final String code;
     private final String key;
     private final int httpStatus;
-
-    UserExceptionCode(String code, String key, int httpStatus) {
-        this.code = code;
-        this.key = key;
-        this.httpStatus = httpStatus;
-    }
-
-    @Override public String getCode() { return code; }
-    @Override public String getKey() { return key; }
-    @Override public int getHttpStatus() { return httpStatus; }
 }
 ```
+
+> **字段说明**：`@Getter` 自动生成 `getCode()` / `getKey()` / `getHttpStatus()`；
+> `getMsg()` 由 `ExceptionCode` 默认实现（委托 `getKey()`）；
+> 仅当 HTTP 状态码不是默认 400 时才需要显式声明 `httpStatus` 字段。
 
 ### 5. 切换 RFC 7807 ProblemDetail 响应格式
 
@@ -334,4 +330,12 @@ ydsz:
 
 ## 变更记录
 
-- **v2.1.0**（2026-08-10）：错误码体系重构：移除不存在的 `UnifiedExceptionCode` / `ExceptionCodeRegistry` / `ResultCodeRegistry` 引用；`YdszResultCode` → `YdszExceptionCode`，`ResultCodeScanner` → `ExceptionCodeScanner`；示例改用 `CoreExceptionCode` 内置枚举；ProblemDetail 改为 Spring 标准。
+- **v2.2.0**（2026-08-10）：错误码体系架构重构：
+  - 移除不存在的 `UnifiedExceptionCode` / `ExceptionCodeRegistry` / `ResultCodeRegistry` 引用
+  - `YdszResultCode` → `YdszExceptionCode`，`ResultCodeScanner` → `ExceptionCodeScanner`
+  - `ResultCode`（core）精简为协议层三要素：`getCode()` / `getModule()`（default: "core"） / `getKey()`（default: `module.code`） / `getMsg()`
+  - `BaseResultCode` 移除 `httpStatus` 字段，构造函数退化为 `(code, msg)` 二元组
+  - HTTP 状态码下沉至异常层：`ExceptionCode.getHttpStatus()`（default 400）/ `getCategory()`（从 key 前缀推断）
+  - core i18n messages 精简为 `core.success` / `core.error` 两个协议级 key，业务 key 下沉至各模块
+  - ProblemDetail 改为 Spring 标准
+  - 自定义错误码示例改用 Lombok @Getter 模式

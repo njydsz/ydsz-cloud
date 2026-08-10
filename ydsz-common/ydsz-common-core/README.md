@@ -177,7 +177,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | 包 | 类 | 职责 |
 |---|---|---|
 | `response` | `BaseResponse<T>` | 统一 API 响应封装（code/msg/data/timestamp/traceId/extensions），使用 `@JsonInclude(NON_NULL)` 控制空值序列化 |
-| `response` | ~~`PageResponse<T>`~~ | （已弃用）分页响应，推荐使用 `BaseResponse` 并将分页元数据放入 extensions |
+| `response` | `PageResponse<T>` | 分页响应，推荐使用 `BaseResponse` 并将分页元数据放入 extensions |
 | `response` | `IResponse<T>` | 统一响应接口，定义 code/msg/data/success/traceId/timestamp 标准契约 |
 | `code` | `BaseResultCode` | 系统通用结果码枚举，携带 code/msg/httpStatus 三元组 |
 | `code` | `ResultCode` | 结果码接口，业务模块自定义错误码应实现此接口 |
@@ -221,11 +221,11 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 序列化顺序：`code` → `msg` → `data` → `traceId` → `timestamp` → `extensions`（由 `@JsonPropertyOrder` 控制）。
 
-### ~~PageResponse\<T\>~~（已弃用）
+### PageResponse\<T\>
 
 > 已标记 `@Deprecated`，推荐将分页元数据放入 `BaseResponse.extensions` 中替代。
 
-~~继承 `BaseResponse`，新增分页元数据：~~
+继承 `BaseResponse`，新增分页元数据
 
 ```json
 {
@@ -268,69 +268,72 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | 方法 | 返回值 | 说明 |
 |---|---|---|
 | `getCode()` | `String` | 结果码字符串 |
-| `getKey()` | `String` | 国际化消息 key（default: "core." + code） |
+| `getModule()` | `String` | 所属模块标识（default: "core"，业务模块覆盖返回自身模块名） |
+| `getKey()` | `String` | 国际化消息 key（default: getModule() + "." + getCode()） |
 | `getMsg()` | `String` | 结果消息描述 |
 
 > HTTP 状态码（`getHttpStatus`）等异常下沉语义定义在 `ExceptionCode` 子接口中。
 
 ### BaseResultCode
 
-系统预定义的结果码枚举，每个枚举值包含二元组 `(code, msg)`，共 17 个协议级常量。
+系统预定义的结果码枚举，每个枚举值包含二元组 `(code, msg)`。
 
 **码段规划**：
 - **A 开头**（A1xxxx/A2xxxx）：系统级码（参数校验、认证授权等）
 - **B 开头**（B1xxxx/B2xxxx）：业务级码（内部错误、系统状态等）
 - **C 开头**（C1xxxx/C9xxxx）：第三方服务异常与未知/兜底错误
 
-| 枚举值 | code | msg | HTTP Status | 分类 |
-|---|---|---|---|---|
-| `SUCCESS` | A00000 | ok | 200 | 成功 |
-| `BAD_REQUEST` | A10001 | 请求参数错误 | 400 | A1-通用/参数 |
-| `VALIDATION_FAILED` | A10002 | 参数校验失败 | 400 | A1-通用/参数 |
-| `MISSING_PARAMETER` | A10003 | 缺少参数 | 400 | A1-通用/参数 |
-| `METHOD_NOT_ALLOWED` | A10004 | 请求方法不允许 | 405 | A1-通用/参数 |
-| `UNSUPPORTED_MEDIA_TYPE` | A10005 | 不支持的媒体类型 | 400 | A1-通用/参数 |
-| `NOT_FOUND` | A10101 | 资源不存在 | 404 | A1-通用/资源 |
-| `DUPLICATE_KEY` | A10102 | 资源已存在 | 409 | A1-通用/资源 |
-| `BIZ_ERROR` | A10103 | 业务规则校验失败 | 400 | A1-通用/资源 |
-| `INTERNAL_ERROR` | B10201 | 系统内部错误 | 500 | B1-系统 |
-| `SERVICE_UNAVAILABLE` | B10202 | 服务暂不可用 | 503 | B1-系统 |
-| `REQUEST_TIMEOUT` | A10203 | 请求超时 | 408 | A1-请求语义 |
-| `DB_DUPLICATE_KEY` | C10401 | 数据唯一性冲突 | 409 | C1-数据库 |
-| `DB_CONSTRAINT_VIOLATION` | C10402 | 数据约束冲突 | 400 | C1-数据库 |
-| `DB_DATA_INTEGRITY` | C10403 | 数据完整性错误 | 400 | C1-数据库 |
-| `DB_QUERY_TIMEOUT` | C10404 | 数据库查询超时 | 503 | C1-数据库 |
-| `DB_CONNECTION_FAILED` | C10405 | 数据库连接失败 | 503 | C1-数据库 |
-| `DB_LOCK_CONTENTION` | C10406 | 数据库锁冲突 | 409 | C1-数据库 |
-| `RESOURCE_LOCKED` | A10501 | 资源锁冲突 | 409 | A1-资源冲突 |
-| `RESOURCE_CONFLICT` | A10502 | 资源冲突 | 409 | A1-资源冲突 |
-| `INVALID_RANGE` | A10601 | 请求范围无效 | 400 | A1-请求语义 |
-| `PAYLOAD_TOO_LARGE` | A10602 | 请求体过大 | 400 | A1-请求语义 |
-| `TOO_MANY_REQUESTS` | A10603 | 请求过多 | 429 | A1-限流 |
-| `SYSTEM_MAINTENANCE` | B20001 | 系统维护中 | 503 | B2-系统状态 |
-| `FEATURE_DISABLED` | B20002 | 功能已禁用 | 409 | B2-系统状态 |
-| `CIRCUIT_BREAKER_OPEN` | B20003 | 熔断器已开启，请稍后重试 | 500 | B2-系统状态 |
-| `THIRD_PARTY_SERVICE_ERROR` | C10501 | 第三方服务异常 | 500 | C1-第三方 |
-| `THIRD_PARTY_TIMEOUT` | C10502 | 第三方服务调用超时 | 503 | C1-第三方 |
-| `THIRD_PARTY_RATE_LIMITED` | C10503 | 第三方服务限流 | 503 | C1-第三方 |
-| `CACHE_OPERATION_FAILED` | C10601 | 缓存操作失败 | 500 | C1-缓存 |
-| `MQ_PUBLISH_FAILED` | C10701 | 消息发送失败 | 500 | C1-消息队列 |
-| `MQ_CONSUME_FAILED` | C10702 | 消息消费失败 | 500 | C1-消息队列 |
-| `UNAUTHORIZED` | A20001 | 未登录 | 401 | A2-认证 |
-| `TOKEN_EXPIRED` | A20002 | Token 已过期 | 401 | A2-认证 |
-| `TOKEN_INVALID` | A20003 | Token 无效 | 401 | A2-认证 |
-| `FORBIDDEN` | A20101 | 无权限访问 | 403 | A2-授权 |
-| `DATA_SCOPE_FORBIDDEN` | A20102 | 数据权限不足 | 403 | A2-授权 |
-| `PASSWORD_WEAK` | A20103 | 密码强度不足 | 400 | A2-授权 |
-| `PASSWORD_EXPIRED` | A20104 | 密码已过期，请修改 | 401 | A2-授权 |
-| `PASSWORD_REUSED` | A20105 | 不能使用最近使用过的密码 | 400 | A2-授权 |
-| `MFA_REQUIRED` | A20108 | 需要双因素认证 | 401 | A2-授权 |
-| `MFA_INVALID` | A20109 | 双因素认证码无效 | 401 | A2-授权 |
-| `ACCOUNT_LOCKED` | A20110 | 账号已锁定 | 423 | A2-授权 |
-| `SESSION_KICKED` | A20111 | 账号已在其他设备登录 | 401 | A2-授权 |
-| `UNKNOWN` | C99999 | 未知错误 | 500 | C9-未知 |
+| 枚举值 | code | msg | 分类 |
+|---|---|---|---|
+| `SUCCESS` | A00000 | ok | 成功 |
+| `BAD_REQUEST` | A10001 | 请求参数错误 | A1-通用/参数 |
+| `VALIDATION_FAILED` | A10002 | 参数校验失败 | A1-通用/参数 |
+| `MISSING_PARAMETER` | A10003 | 缺少参数 | A1-通用/参数 |
+| `METHOD_NOT_ALLOWED` | A10004 | 请求方法不允许 | A1-通用/参数 |
+| `UNSUPPORTED_MEDIA_TYPE` | A10005 | 不支持的媒体类型 | A1-通用/参数 |
+| `NOT_FOUND` | A10101 | 资源不存在 | A1-通用/资源 |
+| `DUPLICATE_KEY` | A10102 | 资源已存在 | A1-通用/资源 |
+| `BIZ_ERROR` | A10103 | 业务规则校验失败 | A1-通用/资源 |
+| `INTERNAL_ERROR` | B10201 | 系统内部错误 | B1-系统 |
+| `SERVICE_UNAVAILABLE` | B10202 | 服务暂不可用 | B1-系统 |
+| `REQUEST_TIMEOUT` | A10203 | 请求超时 | A1-请求语义 |
+| `DB_DUPLICATE_KEY` | C10401 | 数据唯一性冲突 | C1-数据库 |
+| `DB_CONSTRAINT_VIOLATION` | C10402 | 数据约束冲突 | C1-数据库 |
+| `DB_DATA_INTEGRITY` | C10403 | 数据完整性错误 | C1-数据库 |
+| `DB_QUERY_TIMEOUT` | C10404 | 数据库查询超时 | C1-数据库 |
+| `DB_CONNECTION_FAILED` | C10405 | 数据库连接失败 | C1-数据库 |
+| `DB_LOCK_CONTENTION` | C10406 | 数据库锁冲突 | C1-数据库 |
+| `RESOURCE_LOCKED` | A10501 | 资源锁冲突 | A1-资源冲突 |
+| `RESOURCE_CONFLICT` | A10502 | 资源冲突 | A1-资源冲突 |
+| `INVALID_RANGE` | A10601 | 请求范围无效 | A1-请求语义 |
+| `PAYLOAD_TOO_LARGE` | A10602 | 请求体过大 | A1-请求语义 |
+| `TOO_MANY_REQUESTS` | A10603 | 请求过多 | A1-限流 |
+| `SYSTEM_MAINTENANCE` | B20001 | 系统维护中 | B2-系统状态 |
+| `FEATURE_DISABLED` | B20002 | 功能已禁用 | B2-系统状态 |
+| `CIRCUIT_BREAKER_OPEN` | B20003 | 熔断器已开启，请稍后重试 | B2-系统状态 |
+| `THIRD_PARTY_SERVICE_ERROR` | C10501 | 第三方服务异常 | C1-第三方 |
+| `THIRD_PARTY_TIMEOUT` | C10502 | 第三方服务调用超时 | C1-第三方 |
+| `THIRD_PARTY_RATE_LIMITED` | C10503 | 第三方服务限流 | C1-第三方 |
+| `CACHE_OPERATION_FAILED` | C10601 | 缓存操作失败 | C1-缓存 |
+| `MQ_PUBLISH_FAILED` | C10701 | 消息发送失败 | C1-消息队列 |
+| `MQ_CONSUME_FAILED` | C10702 | 消息消费失败 | C1-消息队列 |
+| `UNAUTHORIZED` | A20001 | 未登录 | A2-认证 |
+| `TOKEN_EXPIRED` | A20002 | Token 已过期 | A2-认证 |
+| `TOKEN_INVALID` | A20003 | Token 无效 | A2-认证 |
+| `FORBIDDEN` | A20101 | 无权限访问 | A2-授权 |
+| `DATA_SCOPE_FORBIDDEN` | A20102 | 数据权限不足 | A2-授权 |
+| `PASSWORD_WEAK` | A20103 | 密码强度不足 | A2-授权 |
+| `PASSWORD_EXPIRED` | A20104 | 密码已过期，请修改 | A2-授权 |
+| `PASSWORD_REUSED` | A20105 | 不能使用最近使用过的密码 | A2-授权 |
+| `MFA_REQUIRED` | A20108 | 需要双因素认证 | A2-授权 |
+| `MFA_INVALID` | A20109 | 双因素认证码无效 | A2-授权 |
+| `ACCOUNT_LOCKED` | A20110 | 账号已锁定 | A2-授权 |
+| `SESSION_KICKED` | A20111 | 账号已在其他设备登录 | A2-授权 |
+| `UNKNOWN` | C99999 | 未知错误 | C9-未知 |
 
-**自定义结果码**：业务模块应实现 `ExceptionCode` 接口（继承自 `ResultCode`，新增 `getKey()` 供 i18n 查找），不应直接修改 `BaseResultCode`。
+> **HTTP 状态码**：`BaseResultCode` 不再持有 `httpStatus` 字段。HTTP 状态语义属于异常层，由 `ExceptionCode.getHttpStatus()`（default 400）决定；基础设施故障（`SysException`）默认 500。
+
+**自定义结果码**：业务模块应实现 `ExceptionCode` 接口（继承自 `ResultCode`，扩展 `getHttpStatus` / `getCategory`），不应直接修改 `BaseResultCode`。
 
 ---
 
@@ -464,21 +467,31 @@ String traceId2 = TraceIdPropagation.currentTraceIdOrCreate();
 
 ## PageResponse
 
-> **已弃用**：`PageResponse` 已标记为 `@Deprecated`。推荐使用 `BaseResponse` 并将分页元数据（total、pageNum、pageSize、pages）放入 `extensions` 中。
-> 下一版本将移除 `PageResponse`，请尽快迁移至 `BaseResponse`。
+### 设计取舍
 
-（以下为兼容性保留的 API 参考，不推荐在新代码中使用。）
+`PageResponse<T>` 采用**字段继承**（`extends BaseResponse<T>` + `total/pageNum/pageSize`）而不是将分页数据放入 `extensions Map`。
+
+**选择字段继承的理由**：
+
+- **类型安全**：分页元数据有确定的类型（`Long total` / `Long pageNum` / `Long pageSize`），无需客户端强转，避免 `extensions.get("total")` 返回 `Object` 的类型不安全
+- **IDE 友好**：强类型字段自动补全、重构、搜索引用都比 Map key 字符串更可靠
+- **文档可发现**：OpenAPI CodeGen 能直接扫描到字段类型，无需额外注解即可生成准确的 Schema
+- **零歧义**：Map 中的 key 无编译期校验，字段拼写错误在编译期即可发现
+- **`getPages()` 派生**：总页数 `getPages()` 作为业务方法直接在响应对象上，客户端无需自行计算
+
+**不选择 `extensions` 的理由**：
+
+- `extensions` 属于**扩展上下文**（traceId 透传、审计字段等），不应承担领域级结构化数据
+- 分页元数据是**通用分页协议**的一部分，不是特定请求的临时扩展，不应混入通用扩展容器
 
 ### 静态工厂方法
 
 ```java
 // 标准分页
-@SuppressWarnings("deprecation")
 PageResponse<List<User>> resp = PageResponse.success(total, pageNum, pageSize, users);
 
-// 空分页（total=0, defaultPageSize, null data）
-@SuppressWarnings("deprecation")
-PageResponse<List<User>> empty = PageResponse.empty();
+// 空分页（total=0, pageNum, pageSize, null data）
+PageResponse<List<User>> empty = PageResponse.empty(pageNum, pageSize);
 ```
 
 ---
@@ -539,19 +552,21 @@ PageResponse<List<User>> empty = PageResponse.empty();
 
 ## 国际化消息
 
-`ydsz-common-core` 仅维护 core 模块**自身使用**的结果码消息资源，位于 `src/main/resources/i18n/core/`：
+`ydsz-common-core` 仅维护 core 模块**自身使用**的协议级消息资源，位于 `src/main/resources/i18n/core/`：
 
 - `i18n/core/messages.properties` — 默认（英文）消息
 - `i18n/core/messages_zh_CN.properties` — 简体中文消息
 
-### 消息 key 覆盖范围
+### 消息 key
 
-| 分类 | Key 前缀 | 说明 |
-|---|---|---|
-| 通用响应 | `response.*` | 操作成功/失败通用消息 |
-| 结果码 | `error.{ENUM_NAME}` | 与 `BaseResultCode` 枚举一一对应 |
+core 模块仅保留两个通用响应消息 key：
 
-> **设计原则**：业务模块错误码建议在各模块的 `i18n/messages.properties` 中自定义 Key，不在 core 模块维护。
+| Key | 说明 |
+|---|---|
+| `core.success` | 操作成功通用消息（`BaseResponse.success()` 默认使用） |
+| `core.error` | 操作失败通用消息（`BaseResponse.error()` 兜底使用） |
+
+> **设计原则**：`error.{ENUM_NAME}`（与 `BaseResultCode` 枚举一一对应）等具体错误码文案已于 v2.2.0 移除。各业务模块应在自己的 `i18n/messages.properties` 中维护错误码 key（格式：`{module}.{code}` 或业务自定义 key），不在 core 模块维护。`BaseResultCode` 仅提供协议级码段常量（code + msg），i18n 解析委托给各模块的消息资源。
 
 ---
 
@@ -612,7 +627,7 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 | 类 | 说明 |
 |---|---|
 | `BaseResponse` | 统一响应体（含构造函数、所有字段） |
-| ~~`PageResponse`~~ | （已弃用）分页响应体 |
+| `PageResponse` | 分页响应信封 |
 | `IResponse` | 响应接口 |
 | `CoreProperties` | 核心配置属性类 |
 | `CoreAutoConfiguration` | Spring Boot 自动配置入口 |
@@ -621,7 +636,6 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 | `BaseResultCode` | 结果码枚举（全部字段、方法） |
 | `ContextKey` | 类型安全上下文键 |
 | `RequestSnapshot` | 不可变请求快照 |
-| `PageResponse` | 分页响应信封 |
 | `Response` | 统一响应门面 |
 
 ### 资源模式
@@ -711,7 +725,7 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 
 3. **HeaderConstants 是单一常量类**：项目中所有自定义 HTTP header 常量统一在 `HeaderConstants` 类中定义，按功能域分段注释。
 
-4. **序列化注解来源**：`BaseResponse`（及已弃用的 `PageResponse`）上的 `@JsonInclude` 和 `@JsonPropertyOrder` 来自 `ydsz-common-json` 模块，非 Jackson 原生注解。引入 `ydsz-common-core` 时会自动传递依赖 `ydsz-common-json`。
+4. **序列化注解来源**：`BaseResponse` 和 `PageResponse` 上的 `@JsonInclude` 和 `@JsonPropertyOrder` 来自 `ydsz-common-json` 模块，非 Jackson 原生注解。引入 `ydsz-common-core` 时会自动传递依赖 `ydsz-common-json`。
 
 5. **native-image 兼容性**：使用 GraalVM native-image 编译时，确保 `native-image.properties` 中配置的反射白名单覆盖了所有运行时需反射访问的类。
 
@@ -723,10 +737,22 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 
 ---
 
+## 变更记录
+
+- **v2.2.0**（2026-08-10）：
+  - `ResultCode` 接口新增 `getModule()` default（返回 "core"），`getKey()` default 改为 `getModule() + "." + getCode()`，业务枚举可覆盖 `getModule()` 获得模块感知的 i18n key 前缀
+  - `BaseResultCode` 移除 `httpStatus` 字段及 getter，构造函数退化为 `(code, msg)` 二元组
+  - core i18n messages 精简为 `core.success` / `core.error` 两个通用协议级 key，移除全部 `error.{ENUM_NAME}` 错误码消息
+  - HTTP 状态码语义下沉至异常层（`ExceptionCode.getHttpStatus()`），`ResultCode` 不再持有 HTTP 状态
+  - `PageResponse` 移除弃用标记，补充字段继承 vs extensions 的设计取舍说明
+  - 修复 native-image reflect-config 中 PageResponse 重复条目及 "已弃用" 标注
+
+---
+
 ## Roadmap (Planned)
 
 以下特性尚未在当前版本实现，处于规划阶段：
 
 - **RFC 9457/9457 ProblemDetail**：已采用 Spring 标准 `org.springframework.http.ProblemDetail`（RFC 7807/9457）作为异常响应格式，ydsz-common-exception 模块提供完整支持，无需额外实现。
 - **SpanContext 完整版**：新增基于 record 的 immutable Span 上下文四元组，提供 W3C/B3/SkyWalking 协议互转能力。当前仅有 TraceIdGenerator 提供 traceId/spanId 生成与 traceparent 构建。
-- **IPageResult 桥接**（规划中，随 `PageResponse` 弃用而优先级降低）：新增 `IPageResult` 接口，让 domain 层 `PageResponse` 可实现该接口，配合 BaseResponse 分页元数据简化分页桥接。
+- **IPageResult 桥接**（规划中）：新增 `IPageResult` 接口，让 domain 层分页结果可实现该接口，配合 `PageResponse` 简化 domain→API 分页桥接。

@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @since 1.0.0
  *
  * @see IResponse
- * @see Response
  */
 @Getter
 @Setter
