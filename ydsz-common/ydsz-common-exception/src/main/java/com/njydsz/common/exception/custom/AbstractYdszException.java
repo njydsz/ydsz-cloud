@@ -228,8 +228,8 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * <ul>
      *   <li>{@link ResultCode#getCode()} → {@code code} 字段</li>
      *   <li>{@link ResultCode#getMsg()} → {@link #getMessage()}（含 i18n 懒加载解析）</li>
-     *   <li>{@link ResultCode#getMessageKey()} → {@code key} 字段（i18n 消息键，用于二次解析）</li>
-     *   <li>{@link ResultCode#getHttpStatusCode()} → {@code httpStatus} 字段（0 视为 500）</li>
+     *   <li>{@code getKey()} → {@code key} 字段（i18n 消息键，用于二次解析）</li>
+     *   <li>{@link ResultCode#getHttpStatus()} → {@code httpStatus} 字段（0 视为 500）</li>
      * </ul>
      *
      * <p>若 {@code code} 与 {@code key} 均为 {@code null}（异常未被初始化），
@@ -261,7 +261,7 @@ public abstract class AbstractYdszException extends RuntimeException implements 
             }
 
             @Override
-            public int getHttpStatusCode() {
+            public int getHttpStatus() {
                 return httpStatus > 0 ? httpStatus : 500;
             }
         };

@@ -56,9 +56,6 @@ import org.slf4j.LoggerFactory;
  *   <li>不可变配置 + 原子替换 - 线程安全的配置管理</li>
  * </ul>
  *
- * <p><b>性能说明（v1.2.0）</b>：当前性能优化基于 MethodHandle 反射加速 + 字段元数据缓存。
- * 原规划的 ASM 字节码生成已降级为反射方案，后续版本是否实装将根据实际性能数据评估。</p>
- *
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -4,7 +4,7 @@
 
 纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 char[] 直接操作、零拷贝反序列化、ThreadLocal 对象池、FNV-1a 哈希字段匹配、快速数值解析等技术实现高性能；通过 Jackson 兼容注解实现平滑迁移。
 
-**YdszJson 的架构设计兼具 Jackson 的"配置不可变"哲学和 Fastjson2 的"静态入口便利"。** `YdszJson` 作为静态入口提供 `toJson` / `toObject` 等零配置开箱即用体验，与 FastJSON 的静态工具风格一脉相承；而底层 `JsonConfig` 采用 `final` 字段构建不可变配置，配合 `JsonMapper.copyOf()` 以"副本 + 不可变替换"方式替代运行期可变状态，实现与 Jackson 相同的线程安全语义。两层 API 共享同一委托链（`YdszJson` → `JsonMapper` → `Execution` → `Engine`），行为完全一致，用户可根据场景自由选择而无需担心序列化行为分歧。
+**YdszJson 的架构设计兼具 Jackson 的"配置不可变"哲学和 Fastjson2 的"静态入口便利"。** `YdszJson` 作为静态入口提供 `toJson` / `toObject` 等零配置开箱即用体验，与 FastJSON 的静态工具风格一脉相承；而底层 `JsonConfig` 采用 `final` 字段构建不可变配置，配合 `JsonMapper.copyOf()` 以"副本 + 不可变替换"方式替代运行期可变状态，实现与 Jackson 相同的线程安全语义。两层 API 共享同一委托链（`YdszJson` → `JsonMapper` → `Engine` → `Provider` → `Parser`），行为完全一致，用户可根据场景自由选择而无需担心序列化行为分歧。
 
 ## 最新变更（v1.2.0 — JSON Patch/Merge Patch / 流式支持 / 泛型推断）
 
@@ -13,16 +13,9 @@
 | 编号 | 优先级 | 变更项 | 状态 |
 |---|---|---|---|
 | P0-RFC | P0 | **JSON Patch (RFC 6902) + Merge Patch (RFC 7396)**：新增 `JsonPatch`（6 种操作 add/remove/replace/move/copy/test + JSON Pointer 路径解析）与 `JsonMergePatch`，REST PATCH 局部更新能力 | ✅ 已实施 |
-| P1-TYPEREF | P1 | **泛型类型推断**：新增 `TypeRef` 工具类（`TypeRef.list(User.class)` / `map(String, User.class)` 等工厂方法），对标 Jackson `TypeReference` | ✅ 已实施 |
+| P1-TYPEREF | P1 | **泛型类型推断**：新增 `TypeRef` 工具类，对标 Jackson `TypeReference` | ✅ 已实施 |
 | P1-STREAM | P1 | **流式 API 增强**：新增 `YdszJson.toJson(OutputStream)` / `YdszJson.toJson(Writer)` / `YdszJson.toObject(InputStream)` 等流式读写方法 | ✅ 已实施 |
 | P2-FIX | P2 | **修复启动失败**：`JsonConfig.install()` 原子替换 + 配置变更监听器（命名策略/日期格式/枚举变更时自动清空 BeanSerializerCache） | ✅ 已实施 |
-
-> **已知限制（v1.2.0）**：
-> - **ASM 字节码生成**：~~原规划中~~ 已降级为 **MethodHandle + 反射字段元数据缓存**，当前无字节码生成能力
-> - **AutoType 安全引擎**：~~规划中~~ 当前版本未提供 `AutoTypeChecker` / `JsonSecurityUtils`，反序列化不可信数据时请自行校验
-> - **JSON Lines (NDJSON)**：~~规划中~~ 当前版本未提供 `JsonLines` 工具类
-> - **JDK Module 支持**：~~规划中~~ 当前版本未提供 `module-info.java`（JPMS 强封装）
-> - **测试覆盖**：ydsz-common-json 模块当前无独立测试文件，核心能力验证依赖上游 `ydsz-common-core` 集成测试
 
 ## 最新变更（v1.0.0 优化汇总）
 
@@ -52,7 +45,6 @@
 |---|---|---|
 | **Stable** | 生产就绪，API 稳定，向后兼容 | 放心在任何场景使用 |
 | **Beta** | 功能完整但 API 可能有调整 | 推荐使用，关注升级变更日志 |
-| **Experimental** | 实验性功能，API 可能破坏性变更 | 非关键路径使用，做好隔离层 |
 | **Deprecated** | 已废弃，将在下个主版本移除 | 停止使用，迁移到替代方案 |
 
 | 功能域 | 成熟度 | 备注 |
@@ -66,12 +58,6 @@
 | @JsonCreator 构造器模式 | **Beta** | |
 | JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Beta** | v1.2.0 新增 |
 | TypeRef 泛型工厂 | **Beta** | v1.2.0 新增 |
-| JSON Schema 校验 | **规划中** | 尚未实装 |
-| AutoType 安全引擎 | **规划中** | 尚未实装 |
-| JSON Lines (NDJSON) | **规划中** | 尚未实装 |
-| ASM 字节码加速 | **⚠️ 已降级** | 原规划能力，当前使用 MethodHandle + 反射缓存替代 |
-| Micrometer 指标 / Actuator 健康检查 | **规划中** | 尚未实装 |
-| JDK Module 支持 (module-info.java) | **规划中** | 尚未实装 |
 | @JsonBuilder 构造器模式 | **Deprecated** | 推荐使用 @JsonCreator + 静态工厂方法 |
 | @JsonView 视图过滤 | **Deprecated** | 推荐定义独立 DTO 或手动裁剪字段 |
 | @JsonUnwrapped | **Deprecated** | 推荐将嵌套对象序列化为子对象结构 |
@@ -154,7 +140,7 @@
 
 | 注解 | 说明 |
 |---|---|
-| `@JsonClass` | 类级配置（字段排序 `ordering` / 忽略字段 `ignores` / 包含字段 `includes` / 命名策略 `naming` / 输出 null `writeNulls` / 输出类名 `writeClassName` / 日期格式 `dateFormat` / 枚举序号 `serializeEnumUsingOrdinal` / 多态 `typeKey`+`seeAlso`+`seeAlsoNames`+`autoType`） |
+| `@JsonClass` | 类级配置（字段排序 `ordering` / 忽略字段 `ignores` / 包含字段 `includes` / 命名策略 `naming` / 输出 null `writeNulls` / 输出类名 `writeClassName` / 日期格式 `dateFormat` / 枚举序号 `serializeEnumUsingOrdinal`） |
 | `@JsonPropertyOrder` | 类级字段排序（指定顺序数组 `{"id","name"}` 或 `alphabetic=true` 字母序） |
 | `@JsonNaming` | 类级命名策略 |
 | `@JsonIgnoreProperties` | 类级字段忽略 |
@@ -174,19 +160,7 @@
 | `@JsonSubTypes` / `@JsonSubType` | 子类型注册（`value` 子类型类 / `name` 类型名） |
 | `@JsonTypeName` | 子类型逻辑名称（标注在子类上，优先于 `@JsonSubType.name()`） |
 
-#### 其他注解
-
-| 注解 | 说明 |
-|---|---|
-| `@Experimental` | 实验性功能标记（标注尚未稳定的 RFC 扩展功能，API 尚未稳定，不保证向后兼容） |
-
-### 7. 高级功能（merge 包）
-
-| 类 | 说明 |
-|---|---|
-| `JsonMergePatch` | JSON Merge Patch（RFC 7396，支持 `merge` 合并 + `diff` 计算差异补丁） |
-
-### 8. Module 系统（module 包）
+### 7. Module 系统（module 包）
 
 | 类 | 说明 |
 |---|---|
@@ -194,14 +168,14 @@
 | `JsonModuleRegistry` / `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块注册表 |
 | `JsonModuleRegistrar` | Spring 环境模块注册器 |
 
-### 9. Spring 集成（spring 包）
+### 8. Spring 集成（spring 包）
 
 | 类 | 说明 |
 |---|---|
 | `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（继承 `AbstractGenericHttpMessageConverter`，支持泛型类型 `@RequestBody List<User>`、`@JsonView`、`maxRequestBodySize` 配置） |
 | `JsonProperties` | 配置属性类（`ydsz.json.*`） |
 
-### 10. 异常体系（exception 包）
+### 9. 异常体系（exception 包）
 
 | 类 | 说明 |
 |---|---|
@@ -209,7 +183,7 @@
 | `JsonSerializationException` | 序列化异常（继承自 `JsonException`，含字段路径 fieldPath） |
 | `JsonDeserializationException` | 反序列化异常（继承自 `JsonException`，含行列号 / 上下文片段） |
 
-### 11. 自动配置（spring.boot 包）
+### 10. 自动配置（spring.boot 包）
 
 | 配置类 | 激活条件 | 注册的 Bean |
 |---|---|---|
@@ -244,6 +218,10 @@ ydsz:
     max-json-size: 10485760                    # JSON 最大长度（字节，默认 10MB）
     max-depth: 256                             # JSON 最大嵌套深度
     max-generic-depth: 64                      # 泛型递归深度上限
+    max-request-body-size: 10485760            # HTTP 请求体最大大小（字节，默认 10MB）
+    fail-on-error: false                       # 反序列化失败时是否抛出异常
+    serialize-enum-using-ordinal: false        # 枚举是否使用序号序列化
+    circular-reference-strategy: REF           # 循环引用处理策略：REF / IGNORE / ERROR
 ```
 
 ### 3. 基础使用
@@ -266,29 +244,6 @@ public class UserController {
     }
 }
 ```
-
-## 配置项
-
-| 配置 | 默认值 | 说明 |
-|---|---|---|
-| `ydsz.json.enabled` | true | 模块总开关 |
-| `ydsz.json.date-format` | `yyyy-MM-dd HH:mm:ss` | 全局日期格式 |
-| `ydsz.json.naming-strategy` | `LOWER_CAMEL_CASE` | 命名策略：`LOWER_CAMEL_CASE` / `UPPER_CAMEL_CASE` / `SNAKE_CASE` / `KEBAB_CASE` |
-| `ydsz.json.write-nulls` | false | 是否输出 null 值 |
-| `ydsz.json.pretty-print` | false | 是否美化输出 |
-| `ydsz.json.use-big-decimal` | false | 启用 BigDecimal 解析路径（金融场景精度保护） |
-| `ydsz.json.wrap-root-value` | false | 是否包裹根名称（配合 `@JsonRootName`） |
-| `ydsz.json.fail-on-error` | false | 反序列化失败时是否抛出异常（false 返回 null） |
-| `ydsz.json.serialize-enum-using-ordinal` | false | 枚举是否使用序号序列化 |
-| `ydsz.json.circular-reference-strategy` | `REF` | 循环引用处理策略：`REF` / `IGNORE` / `ERROR` |
-| `ydsz.json.max-json-size` | 10485760 | JSON 最大长度（字节，默认 10MB） |
-| `ydsz.json.max-depth` | 256 | JSON 最大嵌套深度（防栈溢出） |
-| `ydsz.json.max-generic-depth` | 64 | 泛型递归深度上限（防嵌套泛型 `List<List<...>>` 导致 StackOverflow，与 FastJSON2 对齐） |
-| `ydsz.json.max-request-body-size` | 10485760 | HTTP 请求体最大大小（字节，默认 10MB） |
-
-> **注意**：以下配置项在当前版本（v1.2.0）中**预留但未生效**，请勿使用：
-> - `ydsz.json.monitoring-enabled` — Micrometer 指标和 Actuator 健康检查（`JsonHealthIndicator`）尚未实装
-> - `ydsz.json.warmup-enabled` — ASM 预热 Runner 已降级为 `YdszJson.warmup(Class...)` 手动预热缓存
 
 ## 使用示例
 
@@ -371,8 +326,8 @@ User patched = YdszJson.applyPatch(patchJson, existingUser, User.class);
 String merged = YdszJson.mergePatch(
     "{\"name\":\"Bob\",\"age\":30}",
     "{\"age\":31,\"email\":\"bob@example.com\"}"
-// merged: {"name":"Bob","age":31,"email":"bob@example.com"}
 );
+// merged: {"name":"Bob","age":31,"email":"bob@example.com"}
 ```
 
 ### 5. 自定义序列化器（Module 模式）
@@ -454,9 +409,8 @@ String formatted = YdszJson.format(compactJson);
      - `JsonMapper` 实例可安全共享（线程安全），配置通过 `ThreadLocalSnapshot` 在每次序列化时 apply/restore，与 Jackson `ObjectMapper`（配置不可变 + 显式传参）模型在 ThreadLocal 实现下的等价做法。
      - **命名策略在字段元数据加载时缓存**：`@JsonNaming` / `JsonConfig.namingStrategy` 对一个类的首次序列化生效并缓存 `jsonName`，后续切换命名策略对该已缓存类无效。如需不同命名策略，应在首次序列化前设置，或对不同命名使用不同 Bean 类型。
      - **`writeNulls` 配置生效范围**：`JsonMapper.builder().writeNulls(true)` 对带 `@JsonClass` 注解的 Bean 生效（走 ValueWriter 注解路径）；无注解的 Bean 走 `writeBeanNoAnnotationOptimized` 快速路径，null 字段始终省略。如需全局 writeNulls 对所有 Bean 生效，请在 Bean 上加 `@JsonClass`。
-     - **响应式场景**：`SerializationContext` 基于 ThreadLocal，跨线程链路（WebFlux / 虚拟线程）中线程切换会丢失配置。响应式场景建议在调用线程内完成序列化（`JsonReactiveUtils` 规划中）。
 
-3. **ThreadLocal 池优化**：`SerializationContext` 合并多 ThreadLocal 为单一实例，降低内存碎片；`estimateThreadLocalMemory` 基于缓冲池容量动态计算，避免硬编码。
+3. **ThreadLocal 池优化**：`SerializationContext` 合并多 ThreadLocal 为单一实例，降低内存碎片。
 
 4. **循环引用处理**：默认 `REF` 策略（自动检测并处理循环引用），可配置为 `IGNORE`（忽略）或 `ERROR`（抛出异常）。
 
@@ -464,26 +418,21 @@ String formatted = YdszJson.format(compactJson);
 
 6. **序列化异常路径追踪**：`JsonSerializationException.getMessage()` 自动在消息末尾附加 `[fieldPath: user.address.street]`，可直接定位嵌套序列化失败根因。`getFieldPath()` 返回原始路径字符串，供日志框架归类。
 
-7. **ThreadLocal 模型与响应式兼容**：`SerializationContext` 基于 `ThreadLocalSnapshot` 实现，与响应式/虚拟线程框架天然不兼容。跨线程调用前需在原线程完成序列化（`JsonReactiveUtils` 规划中）。中期演进方向为显式参数传递模型。
+7. **高级功能治理观测制度**：标记为 `@Beta` API 的功能处于观测期（默认 2 个次要版本）。期内不承诺向后兼容——API 变更、移除或行为调整均不触发 major 版本递增。调用方须在升级前阅读 Release Notes，并在观测期结束前完成迁移或提出反馈。
 
-8. **高级功能治理观测制度**：标记为 `@Beta` API 的功能处于观测期（默认 2 个次要版本）。期内不承诺向后兼容——API 变更、移除或行为调整均不触发 major 版本递增。调用方须在升级前阅读 Release Notes，并在观测期结束前完成迁移或提出反馈。
+8. **安全建议**：`ydsz-common-json` 已内置 JSON 大小限制、嵌套深度限制、泛型递归深度保护等防护机制。业务在反序列化不可信外部数据（缓存导出/导入、MQ 消息、开放接口入参）时，建议额外做类型校验。
 
-9. **AutoType 安全（规划中能力）**：v1.2.0 **不提供** `AutoTypeChecker` / `JsonSecurityUtils` 等安全组件。业务在反序列化不可信外部数据（缓存导出/导入、MQ 消息、开放接口入参）时应自行做前置校验。如需全局安全控制，建议在统一入口处包装校验逻辑。
+## 性能优化技术
 
-10. **性能优化说明（v1.2.0）**：当前性能优化基于 char[] 直操作 + MethodHandle 反射加速 + 字段元数据缓存，**未使用 ASM 字节码生成**。原规划的 ASM 字节码加速已降级为反射方案，后续版本是否实装将根据实际性能数据评估。
-
-## 性能指标
-
-> 以下为设计目标，具体性能数据请参考上游 `ydsz-common-core` 集成测试和 JMH 基准测试：
-
-| 优化技术 | 对标 | 说明 |
-|---------|------|------|
-| char[] 直接操作 | FastJSON2 | 避免 StringBuilder 中间分配 |
-| 零拷贝反序列化 | — | 直接解析 JSON 到 Bean 字段，无需 Map 中转 |
-| FNV-1a 字段哈希 | — | O(1) 字段匹配，优于 Jackson O(n) 扫描 |
-| ThreadLocal 对象池 | — | StringBuilder / JSONWriter 复用，减少 GC |
-| ASCII 快速路径 | FastJSON2 | byte[] → char[] 跳过 UTF-8 解码 |
-| 分级 StringBuilder | — | 小/中/大 JSON 预分配合适容量 |
+| 优化技术 | 说明 |
+|---------|------|
+| char[] 直接操作 | 避免 StringBuilder 中间分配 |
+| 零拷贝反序列化 | 直接解析 JSON 到 Bean 字段，无需 Map 中转 |
+| FNV-1a 字段哈希 | O(1) 字段匹配，优于 Jackson O(n) 扫描 |
+| ThreadLocal 对象池 | StringBuilder / JSONWriter 复用，减少 GC |
+| ASCII 快速路径 | byte[] → char[] 跳过 UTF-8 解码 |
+| 分级 StringBuilder | 小/中/大 JSON 预分配合适容量 |
+| 不可变配置 + 原子替换 | 线程安全的配置管理 |
 
 ## 版本兼容性
 

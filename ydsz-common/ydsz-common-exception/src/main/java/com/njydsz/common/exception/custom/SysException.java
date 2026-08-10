@@ -190,27 +190,39 @@ public class SysException extends AbstractYdszException {
         }
 
         /**
-         * 便捷方法：设置 {@link ResultCode} 作为错误码
+         * 便捷方法：设置 {@link ExceptionCode} 作为错误码（推荐）。
          */
-        public SysExceptionBuilder resultCode(ResultCode resultCode) {
-            if (resultCode != null) {
-                this.code = resultCode.getCode();
-                this.key = resultCode.getMessageKey();
-                this.httpStatus = resultCode.getHttpStatusCode() > 0
-                        ? resultCode.getHttpStatusCode() : DEFAULT_HTTP_STATUS;
+        public SysExceptionBuilder resultCode(ExceptionCode exceptionCode) {
+            if (exceptionCode != null) {
+                this.code = exceptionCode.getCode();
+                this.key = exceptionCode.getKey();
+                this.httpStatus = exceptionCode.getHttpStatus();
             }
             return this;
         }
 
         /**
-         * 便捷方法：设置 {@link BaseResultCode} 作为错误码
+         * 便捷方法：设置 {@link ResultCode} 作为错误码（兼容路径）。
+         */
+        public SysExceptionBuilder resultCode(ResultCode resultCode) {
+            if (resultCode != null) {
+                this.code = resultCode.getCode();
+                this.key = "error." + resultCode.getCode();
+                this.httpStatus = resultCode.getHttpStatus() > 0
+                        ? resultCode.getHttpStatus() : DEFAULT_HTTP_STATUS;
+            }
+            return this;
+        }
+
+        /**
+         * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。
          */
         public SysExceptionBuilder resultCode(BaseResultCode resultCode) {
             if (resultCode != null) {
                 this.code = resultCode.getCode();
-                this.key = resultCode.getMessageKey();
-                this.httpStatus = resultCode.getHttpStatusCode() > 0
-                        ? resultCode.getHttpStatusCode() : DEFAULT_HTTP_STATUS;
+                this.key = "error." + resultCode.getCode();
+                this.httpStatus = resultCode.getHttpStatus() > 0
+                        ? resultCode.getHttpStatus() : DEFAULT_HTTP_STATUS;
             }
             return this;
         }

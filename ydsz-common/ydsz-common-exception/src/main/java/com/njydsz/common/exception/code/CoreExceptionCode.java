@@ -1,9 +1,5 @@
 package com.njydsz.common.exception.code;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
 
@@ -142,32 +138,5 @@ public enum CoreExceptionCode implements ExceptionCode {
     @Override
     public int getHttpStatus() {
         return httpStatus;
-    }
-
-    // ============================================================
-    // 静态注册 & 便捷查找
-    // ============================================================
-
-    /**
-     * 内部快速查找缓存。
-     */
-    private static final Map<String, CoreExceptionCode> LOOKUP_MAP;
-
-    static {
-        Map<String, CoreExceptionCode> map = new HashMap<>();
-        for (CoreExceptionCode code : values()) {
-            map.put(code.getCode(), code);
-        }
-        LOOKUP_MAP = Collections.unmodifiableMap(map);
-    }
-
-    /**
-     * 便捷查找方法：按 code 字符串查找本模块的核心异常码枚举。
-     *
-     * @param code 异常码字符串
-     * @return 对应的 CoreExceptionCode 枚举实例；未找到返回 null
-     */
-    public static CoreExceptionCode resolve(String code) {
-        return code != null ? LOOKUP_MAP.get(code) : null;
     }
 }

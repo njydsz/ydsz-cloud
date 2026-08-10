@@ -158,9 +158,12 @@ public class BusinessException extends AbstractYdszException {
     public BusinessException(ResultCode resultCode) {
         super();
         if (resultCode != null) {
-            int httpStatus = resultCode.getHttpStatusCode() > 0
-                    ? resultCode.getHttpStatusCode() : DEFAULT_HTTP_STATUS;
-            init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
+            int httpStatus = resultCode.getHttpStatus() > 0
+                    ? resultCode.getHttpStatus() : DEFAULT_HTTP_STATUS;
+            String key = (resultCode instanceof ExceptionCode ec)
+                    ? ec.getKey()
+                    : "error." + resultCode.getCode();
+            init(resultCode.getCode(), key, new Object[]{},
                     httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
         } else {
             initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
@@ -233,25 +236,42 @@ public class BusinessException extends AbstractYdszException {
         }
 
         /**
-         * 便捷方法：设置 {@link ResultCode} 作为错误码
+         * 便捷方法：设置 {@link ExceptionCode} 作为错误码（推荐）。
+         *
+         * <p>自动提取 code / key / httpStatus，完整保留 i18n 语义。
          */
-        public BusinessExceptionBuilder resultCode(ResultCode resultCode) {
-            if (resultCode != null) {
-                this.code = resultCode.getCode();
-                this.key = resultCode.getMessageKey();
-                this.httpStatus = resultCode.getHttpStatusCode();
+        public BusinessExceptionBuilder resultCode(ExceptionCode exceptionCode) {
+            if (exceptionCode != null) {
+                this.code = exceptionCode.getCode();
+                this.key = exceptionCode.getKey();
+                this.httpStatus = exceptionCode.getHttpStatus();
             }
             return this;
         }
 
         /**
-         * 便捷方法：设置 {@link BaseResultCode} 作为错误码
+         * 便捷方法：设置 {@link ResultCode} 作为错误码（兼容路径）。
+         *
+         * <p>resultCode 不携带 i18n key，使用 {@code "error." + code} 作为兜底 key。
+         * 推荐传入 {@link ExceptionCode} 以保留完整语义。
+         */
+        public BusinessExceptionBuilder resultCode(ResultCode resultCode) {
+            if (resultCode != null) {
+                this.code = resultCode.getCode();
+                this.key = "error." + resultCode.getCode();
+                this.httpStatus = resultCode.getHttpStatus();
+            }
+            return this;
+        }
+
+        /**
+         * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。
          */
         public BusinessExceptionBuilder resultCode(BaseResultCode resultCode) {
             if (resultCode != null) {
                 this.code = resultCode.getCode();
-                this.key = resultCode.getMessageKey();
-                this.httpStatus = resultCode.getHttpStatusCode();
+                this.key = "error." + resultCode.getCode();
+                this.httpStatus = resultCode.getHttpStatus();
             }
             return this;
         }
