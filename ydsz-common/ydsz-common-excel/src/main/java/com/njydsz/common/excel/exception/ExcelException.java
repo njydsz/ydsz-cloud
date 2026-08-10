@@ -98,7 +98,6 @@ public class ExcelException extends BusinessException {
      */
     public ExcelException(ExceptionCode exceptionCode, String message, Throwable cause) {
         super(exceptionCode, cause);
-        setCode(exceptionCode.getCode());
         this.messageKey = exceptionCode.getKey();
         setMessage(message);
     }

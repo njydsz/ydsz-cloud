@@ -29,7 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
@@ -150,7 +150,7 @@ public class CEPTestController {
             return BaseResponse.success(result);
         } catch (Exception e) {
             log.warn("[CEP] 测试模式失败: {}", e.getMessage());
-            return BaseResponse.error(LiteruleResultCode.RULE_EXPRESSION_INVALID, "测试失败: " + e.getMessage());
+            return BaseResponse.error(LiteruleExceptionCode.RULE_EXPRESSION_INVALID, "测试失败: " + e.getMessage());
         }
     }
 

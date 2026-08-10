@@ -22,7 +22,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.entity.DictItem;
-import com.njydsz.system.domain.enums.SystemResultCode;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 import com.njydsz.system.server.config.SystemProperties;
@@ -315,7 +315,7 @@ public class DictItemServiceImpl implements DictItemService {
         checkWrapper.eq("type_code", dto.getTypeCode())
                 .eq("item_code", dto.getItemCode());
         if (mapper.selectCount(checkWrapper) > 0) {
-            throw BusinessException.of(SystemResultCode.DICT_ITEM_CODE_DUPLICATE)
+            throw BusinessException.of(SystemExceptionCode.DICT_ITEM_CODE_DUPLICATE)
                     .data("typeCode", dto.getTypeCode())
                     .data("itemCode", dto.getItemCode());
         }

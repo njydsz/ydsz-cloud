@@ -23,7 +23,7 @@ import com.njydsz.userinfo.domain.dto.put.RolePutDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.RolePermission;
 import com.njydsz.userinfo.domain.entity.UserRole;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
@@ -105,7 +105,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleVO getById(String id) {
         Role entity = roleMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
         }
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
@@ -166,7 +166,7 @@ public class RoleServiceImpl implements RoleService {
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Role::getRoleCode, dto.getRoleCode());
         if (roleMapper.selectCount(wrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.ROLE_CODE_DUPLICATE);
+            throw new BusinessException(UserInfoExceptionCode.ROLE_CODE_DUPLICATE);
         }
 
         Role entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
@@ -192,7 +192,7 @@ public class RoleServiceImpl implements RoleService {
     public boolean update(RolePutDTO dto) {
         Role entity = roleMapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id", "builtIn");
         boolean result = roleMapper.updateById(entity) > 0;
@@ -219,16 +219,16 @@ public class RoleServiceImpl implements RoleService {
     public boolean removeById(String id) {
         Role entity = roleMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
         }
         if (Boolean.TRUE.equals(entity.getBuiltIn())) {
-            throw new BusinessException(UserInfoResultCode.ROLE_BUILTIN_CANNOT_DELETE);
+            throw new BusinessException(UserInfoExceptionCode.ROLE_BUILTIN_CANNOT_DELETE);
         }
 
         LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
         urWrapper.eq(UserRole::getRoleId, id);
         if (userRoleMapper.selectCount(urWrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.ROLE_HAS_USERS);
+            throw new BusinessException(UserInfoExceptionCode.ROLE_HAS_USERS);
         }
 
         LambdaQueryWrapper<RolePermission> rpWrapper = new LambdaQueryWrapper<>();
@@ -258,7 +258,7 @@ public class RoleServiceImpl implements RoleService {
     public boolean assignPermissions(String roleId, List<String> permissionIds) {
         Role role = roleMapper.selectById(roleId);
         if (role == null || role.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
         }
 
         LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();

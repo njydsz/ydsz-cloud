@@ -40,7 +40,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
@@ -121,13 +121,13 @@ public class RuleTraceController {
                 .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
 
         if (traces.isEmpty()) {
-            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "未找到 traceId=" + traceId + " 的执行记录");
+            return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "未找到 traceId=" + traceId + " 的执行记录");
         }
 
         // 取第一条 trace 的 factsSnapshot 作为回放输入
         Map<String, Object> facts = traces.get(0).getFactsSnapshot();
         if (facts == null || facts.isEmpty()) {
-            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "traceId=" + traceId + " 的事实快照为空，无法回放");
+            return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "traceId=" + traceId + " 的事实快照为空，无法回放");
         }
 
         // 用当前规则集重新评估

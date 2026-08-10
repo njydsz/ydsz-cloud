@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.vo.RuleDslVO;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
@@ -144,7 +144,7 @@ public class RuleDslController {
             return BaseResponse.success(result);
         } catch (Exception e) {
             log.warn("[DSL] 校验失败: {}", e.getMessage());
-            return BaseResponse.error(LiteruleResultCode.DSL_PARSE_ERROR, "DSL 解析失败: " + e.getMessage());
+            return BaseResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 解析失败: " + e.getMessage());
         }
     }
 
@@ -173,7 +173,7 @@ public class RuleDslController {
             return BaseResponse.success(toDslVO(dsl));
         } catch (Exception e) {
             log.warn("[DSL] 解析失败: {}", e.getMessage());
-            return BaseResponse.error(LiteruleResultCode.DSL_PARSE_ERROR, "DSL 解析失败: " + e.getMessage());
+            return BaseResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 解析失败: " + e.getMessage());
         }
     }
 
@@ -243,7 +243,7 @@ public class RuleDslController {
 
         } catch (Exception e) {
             log.warn("[DSL] 预览失败: {}", e.getMessage());
-            return BaseResponse.error(LiteruleResultCode.DSL_PARSE_ERROR, "DSL 预览失败: " + e.getMessage());
+            return BaseResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 预览失败: " + e.getMessage());
         }
     }
 

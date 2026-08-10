@@ -26,7 +26,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.audit.annotation.Audit;
@@ -242,7 +241,7 @@ public class AuditAspect {
             context.setUri(request.getRequestURI());
             context.setHttpMethod(request.getMethod());
             context.setIpAddress(ClientIpResolver.getClientIp(request));
-            context.setToken(request.getHeader(AuthHeaderConstants.X_ACCESS_TOKEN));
+            context.setToken(request.getHeader("X-Access-Token"));
             context.setBusinessNo(request.getHeader("X-Business-No"));
 
             // 启用 IP 归属地解析时，记录 IP 地址（实际解析需要外部服务）

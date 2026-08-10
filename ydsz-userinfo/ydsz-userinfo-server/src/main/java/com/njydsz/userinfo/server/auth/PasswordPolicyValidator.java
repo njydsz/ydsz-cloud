@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
@@ -69,11 +69,11 @@ public class PasswordPolicyValidator {
         int minCategoryCount = properties.getPasswordMinCategoryCount();
 
         if (password == null || password.length() < minLength) {
-            throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
+            throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK,
                     new Object[]{"密码长度不能少于 " + minLength + " 个字符"});
         }
         if (password.length() > maxLength) {
-            throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
+            throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK,
                     new Object[]{"密码长度不能超过 " + maxLength + " 个字符"});
         }
 
@@ -84,18 +84,18 @@ public class PasswordPolicyValidator {
         if (HAS_SPECIAL.matcher(password).find()) categoryCount++;
 
         if (categoryCount < minCategoryCount) {
-            throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
+            throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK,
                     "密码必须包含大写字母、小写字母、数字、特殊字符中的至少 " + minCategoryCount + " 种");
         }
 
         if (REPEAT_3.matcher(password).find()) {
-            throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
+            throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK,
                     "密码不允许连续 3 个以上重复字符");
         }
 
         if (username != null && !username.isBlank()) {
             if (password.toLowerCase().contains(username.toLowerCase())) {
-                throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
+                throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK,
                         "密码不能包含用户名");
             }
         }
@@ -105,7 +105,7 @@ public class PasswordPolicyValidator {
             int historyCount = properties.getPasswordHistoryCount();
             if (historyCount > 0
                     && passwordHistoryService.isPasswordReused(userId, password, historyCount)) {
-                throw new BusinessException(UserInfoResultCode.PASSWORD_REUSED,
+                throw new BusinessException(UserInfoExceptionCode.PASSWORD_REUSED,
                         "不能使用最近 " + historyCount + " 次使用过的密码");
             }
         }

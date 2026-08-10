@@ -28,7 +28,7 @@ import com.njydsz.agent.domain.converter.AgentConverter;
 import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
 import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
-import com.njydsz.agent.domain.enums.AgentResultCode;
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 
 /**
  * Agent 定义管理 REST API Controller。
@@ -95,7 +95,7 @@ public class AgentDefinitionController {
     public BaseResponse<AgentDefinitionVO> getById(@PathVariable String id) {
         AgentDefinitionDO entity = agentDefinitionService.getById(id);
         if (entity == null) {
-            return BaseResponse.error(AgentResultCode.AGENT_NOT_FOUND, "Agent not found: " + id);
+            return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Agent not found: " + id);
         }
         return BaseResponse.success(AgentConverter.INSTANT.entityToVO(entity));
     }
@@ -114,7 +114,7 @@ public class AgentDefinitionController {
     public BaseResponse<AgentDefinitionVO> getByCode(@PathVariable String code) {
         AgentDefinitionDO entity = agentDefinitionService.getByCode(code);
         if (entity == null) {
-            return BaseResponse.error(AgentResultCode.AGENT_NOT_FOUND, "Agent not found: " + code);
+            return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Agent not found: " + code);
         }
         return BaseResponse.success(AgentConverter.INSTANT.entityToVO(entity));
     }

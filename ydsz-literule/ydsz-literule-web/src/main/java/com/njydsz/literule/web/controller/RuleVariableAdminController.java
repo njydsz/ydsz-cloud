@@ -20,7 +20,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.literule.domain.vo.VariableDefinitionVO;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
@@ -73,7 +73,7 @@ public class RuleVariableAdminController {
     public BaseResponse<VariableDefinitionVO> get(@PathVariable String varName) {
         VariableDefinition def = variableRegistry.lookup(varName);
         if (def == null) {
-            return BaseResponse.error(LiteruleResultCode.VARIABLE_DEF_NOT_FOUND, "变量不存在: " + varName);
+            return BaseResponse.error(LiteruleExceptionCode.VARIABLE_DEF_NOT_FOUND, "变量不存在: " + varName);
         }
         return BaseResponse.success(toVariableVO(def));
     }

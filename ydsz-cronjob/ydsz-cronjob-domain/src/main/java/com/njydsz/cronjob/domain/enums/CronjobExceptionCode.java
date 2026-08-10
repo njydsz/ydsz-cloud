@@ -24,7 +24,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  */
 @Getter
 @YdszResultCode(module = "cronjob", description = "定时任务")
-public enum CronjobResultCode implements ExceptionCode {
+public enum CronjobExceptionCode implements ExceptionCode {
 
     // ==================== B92001-B92099 任务 ====================
     JOB_NOT_FOUND("B92001", "cronjob.job.not.found", 404),
@@ -56,11 +56,11 @@ public enum CronjobResultCode implements ExceptionCode {
     /** HTTP 状态码 */
     private final int httpStatus;
 
-    CronjobResultCode(String code, String key) {
+    CronjobExceptionCode(String code, String key) {
         this(code, key, 400);
     }
 
-    CronjobResultCode(String code, String key, int httpStatus) {
+    CronjobExceptionCode(String code, String key, int httpStatus) {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;

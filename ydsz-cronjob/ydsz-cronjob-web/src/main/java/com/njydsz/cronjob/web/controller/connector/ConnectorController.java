@@ -28,7 +28,7 @@ import com.njydsz.cronjob.domain.dto.post.ConnectorConfigPostDTO;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.cronjob.domain.enums.CronjobResultCode;
+import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 
 /**
  * 生态连接器 Controller（P2-3）。
@@ -93,7 +93,7 @@ public class ConnectorController {
                                            @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return BaseResponse.error(CronjobResultCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
+            return BaseResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
         }
         ConnectorConfig config = toConnectorConfig(dto);
         return BaseResponse.success(connector.testConnection(config));
@@ -117,7 +117,7 @@ public class ConnectorController {
                                                             @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return BaseResponse.error(CronjobResultCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
+            return BaseResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
         }
         ConnectorConfig config = toConnectorConfig(dto);
         return BaseResponse.success(connector.listRemoteTasks(config));
@@ -142,7 +142,7 @@ public class ConnectorController {
                                                         @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return BaseResponse.error(CronjobResultCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
+            return BaseResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
         }
         ConnectorConfig config = toConnectorConfig(dto);
         return BaseResponse.success(connector.importTasks(config));
@@ -166,7 +166,7 @@ public class ConnectorController {
     public BaseResponse<ConnectorExportResult> exportTasks(@RequestBody ExportRequest request) {
         JobConnector connector = connectorManager.getConnector(request.getType());
         if (connector == null) {
-            return BaseResponse.error(CronjobResultCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + request.getType());
+            return BaseResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + request.getType());
         }
         ConnectorConfig config = toConnectorConfig(request.getConfig());
         return BaseResponse.success(connector.exportTasks(request.getTasks(), config));

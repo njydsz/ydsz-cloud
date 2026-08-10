@@ -24,7 +24,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  */
 @Getter
 @YdszResultCode(module = "literule", description = "规则引擎")
-public enum LiteruleResultCode implements ExceptionCode {
+public enum LiteruleExceptionCode implements ExceptionCode {
 
     // ==================== B93001-B93099 规则定义 ====================
     RULE_NOT_FOUND("B93001", "literule.rule.not.found", 404),
@@ -54,11 +54,11 @@ public enum LiteruleResultCode implements ExceptionCode {
     /** HTTP 状态码 */
     private final int httpStatus;
 
-    LiteruleResultCode(String code, String key) {
+    LiteruleExceptionCode(String code, String key) {
         this(code, key, 400);
     }
 
-    LiteruleResultCode(String code, String key, int httpStatus) {
+    LiteruleExceptionCode(String code, String key, int httpStatus) {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;

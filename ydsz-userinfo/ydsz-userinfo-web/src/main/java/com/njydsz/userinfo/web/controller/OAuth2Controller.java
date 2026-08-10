@@ -17,7 +17,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
@@ -109,25 +109,25 @@ public class OAuth2Controller {
 
         // 1. 认证检查：必须携带有效的 access_token
         if (authorization == null || !authorization.startsWith("Bearer ")) {
-            throw new BusinessException(UserInfoResultCode.TOKEN_INVALID);
+            throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
         }
         String accessToken = authorization.substring(7);
         UserInfo userInfo = tokenService.parseAccessToken(accessToken);
         if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
-            throw new BusinessException(UserInfoResultCode.TOKEN_INVALID);
+            throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
         }
 
         // 2. 验证 clientId 是否已注册
         UserInfoProperties.OAuth2Client clientConfig = properties.getOauth2Clients().get(clientId);
         if (clientConfig == null) {
-            throw new BusinessException(UserInfoResultCode.OAUTH2_CLIENT_INVALID);
+            throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
         }
 
         // 3. 校验 redirect_uri 在客户端注册白名单中（RFC 6749 §3.1.2.3）
         if (clientConfig.getRedirectUris() != null
                 && !clientConfig.getRedirectUris().isEmpty()
                 && !clientConfig.getRedirectUris().contains(redirectUri)) {
-            throw new BusinessException(UserInfoResultCode.OAUTH2_REDIRECT_URI_MISMATCH);
+            throw new BusinessException(UserInfoExceptionCode.OAUTH2_REDIRECT_URI_MISMATCH);
         }
 
         // 4. 使用 YdszJson 序列化授权码上下文（含 tenantId），Redis 存储 5 分钟
@@ -173,13 +173,13 @@ public class OAuth2Controller {
 
         // 1. 强制校验 clientSecret
         if (!properties.validateOAuth2Client(clientId, clientSecret)) {
-            throw new BusinessException(UserInfoResultCode.OAUTH2_CLIENT_INVALID);
+            throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
         }
 
         // 2. 读取并解析授权码上下文
         String storedContext = redisStringOps.get(CODE_KEY_PREFIX + code, String.class);
         if (storedContext == null) {
-            throw new BusinessException(UserInfoResultCode.OAUTH2_CODE_INVALID);
+            throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
         }
 
         Map<String, Object> context;
@@ -187,7 +187,7 @@ public class OAuth2Controller {
             context = YdszJson.parseMap(storedContext);
         } catch (Exception e) {
             log.error("Failed to parse OAuth2 code context", e);
-            throw new BusinessException(UserInfoResultCode.OAUTH2_CODE_INVALID);
+            throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
         }
 
         String storedClientId = getString(context, "clientId");
@@ -197,7 +197,7 @@ public class OAuth2Controller {
 
         // 3. 校验 clientId 一致性（防跨客户端重放）
         if (!clientId.equals(storedClientId)) {
-            throw new BusinessException(UserInfoResultCode.OAUTH2_CLIENT_INVALID);
+            throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
         }
 
         // 4. 授权码一次性使用：使用后立即删除

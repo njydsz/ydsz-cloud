@@ -25,7 +25,7 @@ import lombok.Getter;
  */
 @Getter
 @YdszResultCode(module = "message", description = "消息中心")
-public enum MessageResultCode implements ExceptionCode {
+public enum MessageExceptionCode implements ExceptionCode {
 
     // ==================== B91001-B91099 模板 ====================
     TEMPLATE_NOT_FOUND("B91001", "message.template.not.found", 404),
@@ -63,11 +63,11 @@ public enum MessageResultCode implements ExceptionCode {
     /** HTTP 状态码 */
     private final int httpStatus;
 
-    MessageResultCode(String code, String key) {
+    MessageExceptionCode(String code, String key) {
         this(code, key, 400);
     }
 
-    MessageResultCode(String code, String key, int httpStatus) {
+    MessageExceptionCode(String code, String key, int httpStatus) {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;

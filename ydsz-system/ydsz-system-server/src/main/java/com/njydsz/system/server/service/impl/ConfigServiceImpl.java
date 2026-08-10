@@ -26,7 +26,7 @@ import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
-import com.njydsz.system.domain.enums.SystemResultCode;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.config.SystemProperties;
@@ -456,7 +456,7 @@ public class ConfigServiceImpl implements ConfigService {
         checkWrapper.eq("config_group", entity.getConfigGroup())
                 .eq("config_key", entity.getConfigKey());
         if (configRepository.getConfigMapper().selectCount(checkWrapper) > 0) {
-            throw BusinessException.of(SystemResultCode.CONFIG_KEY_DUPLICATE)
+            throw BusinessException.of(SystemExceptionCode.CONFIG_KEY_DUPLICATE)
                     .data("configGroup", entity.getConfigGroup())
                     .data("configKey", entity.getConfigKey());
         }

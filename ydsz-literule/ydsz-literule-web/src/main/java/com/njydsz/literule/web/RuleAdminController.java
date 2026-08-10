@@ -47,7 +47,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
@@ -190,7 +190,7 @@ public class RuleAdminController {
         RuleVersion newV = versions.stream().filter(v -> v.getVersion() == newVersion).findFirst().orElse(null);
 
         if (oldV == null || newV == null) {
-            return BaseResponse.error(LiteruleResultCode.RULE_VERSION_NOT_FOUND, "版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
+            return BaseResponse.error(LiteruleExceptionCode.RULE_VERSION_NOT_FOUND, "版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
         }
 
         try {
@@ -344,7 +344,7 @@ public class RuleAdminController {
                                                       @Valid @RequestBody RuleABTestDTO dto) {
         RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);
         if (currentDef == null) {
-            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+            return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
         }
 
         // 构建候选规则定义（基于当前规则，覆盖候选字段）

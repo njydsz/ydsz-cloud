@@ -25,7 +25,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  */
 @Getter
 @YdszResultCode(module = "agent", description = "AI Agent")
-public enum AgentResultCode implements ExceptionCode {
+public enum AgentExceptionCode implements ExceptionCode {
 
     // ==================== B94001-B94099 Agent 定义/执行 ====================
     AGENT_NOT_FOUND("B94001", "agent.not.found", 404),
@@ -63,11 +63,11 @@ public enum AgentResultCode implements ExceptionCode {
     /** HTTP 状态码 */
     private final int httpStatus;
 
-    AgentResultCode(String code, String key) {
+    AgentExceptionCode(String code, String key) {
         this(code, key, 400);
     }
 
-    AgentResultCode(String code, String key, int httpStatus) {
+    AgentExceptionCode(String code, String key, int httpStatus) {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;

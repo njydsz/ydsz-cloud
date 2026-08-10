@@ -26,7 +26,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  */
 @Getter
 @YdszResultCode(module = "workflow", description = "工作流")
-public enum WorkflowResultCode implements ExceptionCode {
+public enum WorkflowExceptionCode implements ExceptionCode {
 
     // ==================== B70001-B70099 流程模板/定义 ====================
     TEMPLATE_NOT_FOUND("B70001", "workflow.template.not.found", 404),
@@ -68,11 +68,11 @@ public enum WorkflowResultCode implements ExceptionCode {
     /** HTTP 状态码 */
     private final int httpStatus;
 
-    WorkflowResultCode(String code, String key) {
+    WorkflowExceptionCode(String code, String key) {
         this(code, key, 400);
     }
 
-    WorkflowResultCode(String code, String key, int httpStatus) {
+    WorkflowExceptionCode(String code, String key, int httpStatus) {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;

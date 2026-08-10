@@ -34,7 +34,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
@@ -91,11 +91,11 @@ public class RuleBatchController {
                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+            return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
         }
         RuleStatus current = parseStatusSafely(def.getStatus());
         if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
-            return BaseResponse.error(LiteruleResultCode.RULE_STATUS_INVALID, "当前状态 " + current.getDesc() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
+            return BaseResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, "当前状态 " + current.getDesc() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
         }
         def.setStatus(RuleStatus.ARCHIVED.name());
         def.setEnabled(false);

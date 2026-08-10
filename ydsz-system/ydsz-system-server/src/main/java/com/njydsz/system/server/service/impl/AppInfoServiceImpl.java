@@ -17,7 +17,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.entity.AppInfo;
-import com.njydsz.system.domain.enums.SystemResultCode;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
 import com.njydsz.system.server.metrics.SystemMetrics;
@@ -244,7 +244,7 @@ public class AppInfoServiceImpl implements AppInfoService {
         QueryWrapper<AppInfo> checkWrapper = new QueryWrapper<>();
         checkWrapper.eq("app_key", dto.getAppKey());
         if (mapper.selectCount(checkWrapper) > 0) {
-            throw BusinessException.of(SystemResultCode.APP_KEY_DUPLICATE)
+            throw BusinessException.of(SystemExceptionCode.APP_KEY_DUPLICATE)
                     .data("appKey", dto.getAppKey());
         }
         AppInfo entity = toEntity(dto);

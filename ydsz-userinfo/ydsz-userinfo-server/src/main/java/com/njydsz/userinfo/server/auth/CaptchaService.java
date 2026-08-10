@@ -16,7 +16,7 @@ import java.util.Base64;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
@@ -65,7 +65,7 @@ public class CaptchaService {
             return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
         } catch (IOException e) {
             log.error("Failed to generate captcha image", e);
-            throw new BusinessException(UserInfoResultCode.CAPTCHA_INVALID,
+            throw new BusinessException(UserInfoExceptionCode.CAPTCHA_INVALID,
                     "验证码生成失败");
         }
     }
@@ -80,18 +80,18 @@ public class CaptchaService {
      */
     public boolean validate(String captchaKey, String userInput) {
         if (captchaKey == null || userInput == null || userInput.isBlank()) {
-            throw new BusinessException(UserInfoResultCode.CAPTCHA_REQUIRED);
+            throw new BusinessException(UserInfoExceptionCode.CAPTCHA_REQUIRED);
         }
 
         String storedCode = redisStringOps.get(CAPTCHA_KEY_PREFIX + captchaKey, String.class);
         if (storedCode == null) {
-            throw new BusinessException(UserInfoResultCode.CAPTCHA_INVALID, new Object[]{"验证码已过期"});
+            throw new BusinessException(UserInfoExceptionCode.CAPTCHA_INVALID, new Object[]{"验证码已过期"});
         }
 
         redisStringOps.del(CAPTCHA_KEY_PREFIX + captchaKey);
 
         if (!storedCode.equalsIgnoreCase(userInput)) {
-            throw new BusinessException(UserInfoResultCode.CAPTCHA_INVALID, new Object[]{"验证码错误"});
+            throw new BusinessException(UserInfoExceptionCode.CAPTCHA_INVALID, new Object[]{"验证码错误"});
         }
 
         return true;

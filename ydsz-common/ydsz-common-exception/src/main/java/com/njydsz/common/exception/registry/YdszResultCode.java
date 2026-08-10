@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * <h3>使用示例</h3>
  * <pre>{@code
  * @YdszResultCode(module = "userinfo")
- * public enum UserInfoResultCode implements IResultCode {
+ * public enum UserInfoExceptionCode implements IResultCode {
  *     USER_NOT_FOUND(2001, "用户不存在"),
  *     // ...
  * }

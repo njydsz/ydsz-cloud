@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.DictItemDTO;
-import com.njydsz.system.domain.enums.SystemResultCode;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.DictItemService;
 import org.springframework.stereotype.Service;
@@ -50,7 +50,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> batchSave(List<DictItemDTO> items) {
         if (items == null || items.isEmpty()) {
-            throw BusinessException.of(SystemResultCode.PARAM_ERROR)
+            throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
                     .data("reason", "字典项列表不能为空");
         }
 
@@ -59,7 +59,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
         for (DictItemDTO item : items) {
             String key = item.getTypeCode() + "/" + item.getItemCode();
             if (!innerKeySet.add(key)) {
-                throw BusinessException.of(SystemResultCode.DICT_ITEM_CODE_DUPLICATE)
+                throw BusinessException.of(SystemExceptionCode.DICT_ITEM_CODE_DUPLICATE)
                         .data("reason", "批量数据中存在重复项: " + key);
             }
         }
@@ -72,7 +72,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
                 successCount++;
             } catch (BusinessException e) {
                 // 唯一性冲突，包装批量异常
-                throw BusinessException.of(SystemResultCode.DICT_ITEM_CODE_DUPLICATE)
+                throw BusinessException.of(SystemExceptionCode.DICT_ITEM_CODE_DUPLICATE)
                         .data("reason", String.format("第 %d 条插入失败: %s/%s 已存在",
                                 successCount + 1, item.getTypeCode(), item.getItemCode()));
             }

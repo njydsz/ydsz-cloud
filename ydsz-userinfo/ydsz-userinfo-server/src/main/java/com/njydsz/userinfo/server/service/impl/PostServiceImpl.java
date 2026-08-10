@@ -15,7 +15,7 @@ import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.dto.post.PostPostDTO;
 import com.njydsz.userinfo.domain.dto.put.PostPutDTO;
 import com.njydsz.userinfo.domain.entity.Post;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.infra.mapper.PostMapper;
@@ -68,7 +68,7 @@ public class PostServiceImpl implements PostService {
     public PostVO getById(String id) {
         Post entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.POST_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
         }
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
@@ -100,7 +100,7 @@ public class PostServiceImpl implements PostService {
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Post::getPostCode, dto.getPostCode());
         if (mapper.selectCount(wrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.POST_CODE_DUPLICATE);
+            throw new BusinessException(UserInfoExceptionCode.POST_CODE_DUPLICATE);
         }
 
         Post entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
@@ -123,7 +123,7 @@ public class PostServiceImpl implements PostService {
     public boolean update(PostPutDTO dto) {
         Post entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.POST_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id");
         return mapper.updateById(entity) > 0;
@@ -139,7 +139,7 @@ public class PostServiceImpl implements PostService {
     public boolean removeById(String id) {
         Post entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.POST_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
         }
         return mapper.deleteById(id) > 0;
     }

@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.cronjob.domain.enums.CronjobResultCode;
+import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 
 /**
  * DAG 工作流实例运行时控制 Controller（P1-4）。
@@ -97,7 +97,7 @@ public class DagInstanceControlController {
     public BaseResponse<Boolean> pause(@PathVariable String instanceId) {
         log.info("[DagInstanceControl] 暂停 DAG 实例: instanceId={}", instanceId);
         boolean success = dagInstanceControlService.pause(instanceId);
-        return success ? BaseResponse.success(true) : BaseResponse.error(CronjobResultCode.DAG_INSTANCE_NOT_FOUND, "暂停失败：实例不存在或非 RUNNING 状态");
+        return success ? BaseResponse.success(true) : BaseResponse.error(CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND, "暂停失败：实例不存在或非 RUNNING 状态");
     }
 
     /**
@@ -118,7 +118,7 @@ public class DagInstanceControlController {
     public BaseResponse<Boolean> resume(@PathVariable String instanceId) {
         log.info("[DagInstanceControl] 恢复 DAG 实例: instanceId={}", instanceId);
         boolean success = dagInstanceControlService.resume(instanceId);
-        return success ? BaseResponse.success(true) : BaseResponse.error(CronjobResultCode.DAG_INSTANCE_NOT_FOUND, "恢复失败：实例不存在或非 PAUSED 状态");
+        return success ? BaseResponse.success(true) : BaseResponse.error(CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND, "恢复失败：实例不存在或非 PAUSED 状态");
     }
 
     /**
@@ -140,7 +140,7 @@ public class DagInstanceControlController {
     public BaseResponse<Boolean> cancel(@PathVariable String instanceId) {
         log.info("[DagInstanceControl] 取消 DAG 实例: instanceId={}", instanceId);
         boolean success = dagInstanceControlService.cancel(instanceId);
-        return success ? BaseResponse.success(true) : BaseResponse.error(CronjobResultCode.DAG_INSTANCE_NOT_FOUND, "取消失败：实例不存在或已终态");
+        return success ? BaseResponse.success(true) : BaseResponse.error(CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND, "取消失败：实例不存在或已终态");
     }
 
     /**
@@ -163,6 +163,6 @@ public class DagInstanceControlController {
                                       @RequestParam String jobKey) {
         log.info("[DagInstanceControl] 重试节点: instanceId={} jobKey={}", instanceId, jobKey);
         boolean success = dagInstanceControlService.retryNode(instanceId, jobKey);
-        return success ? BaseResponse.success(true) : BaseResponse.error(CronjobResultCode.DAG_NODE_NOT_FOUND, "重试失败：节点不存在或非 FAILED 状态");
+        return success ? BaseResponse.success(true) : BaseResponse.error(CronjobExceptionCode.DAG_NODE_NOT_FOUND, "重试失败：节点不存在或非 FAILED 状态");
     }
 }

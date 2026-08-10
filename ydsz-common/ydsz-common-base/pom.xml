@@ -50,6 +50,18 @@
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
 
+        <!-- 公共认证模块（AuthHeaderConstants OpenAPI header 定义） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
+
+        <!-- 公共 JDBC 模块（DataPermissionHeaderConstants OpenAPI header 定义） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+
         <!-- Micrometer Core（AbstractModuleMetrics 基类需要） -->
         <dependency>
             <groupId>io.micrometer</groupId>

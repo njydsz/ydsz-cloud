@@ -14,7 +14,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.entity.DictType;
-import com.njydsz.system.domain.enums.SystemResultCode;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.infra.repository.DictRepository;
@@ -282,7 +282,7 @@ public class DictServiceImpl implements DictService {
             checkWrapper.ne("id", entity.getId());
         }
         if (dictRepository.getDictTypeMapper().selectCount(checkWrapper) > 0) {
-            throw BusinessException.of(SystemResultCode.DICT_TYPE_CODE_DUPLICATE)
+            throw BusinessException.of(SystemExceptionCode.DICT_TYPE_CODE_DUPLICATE)
                     .data("typeCode", entity.getTypeCode());
         }
     }

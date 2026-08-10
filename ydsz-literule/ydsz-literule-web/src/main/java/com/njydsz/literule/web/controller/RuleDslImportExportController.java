@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
@@ -136,7 +136,7 @@ public class RuleDslImportExportController {
 
         } catch (Exception e) {
             log.warn("[DSL] 导入失败: {}", e.getMessage());
-            return BaseResponse.error(LiteruleResultCode.DSL_PARSE_ERROR, "DSL 导入失败: " + e.getMessage());
+            return BaseResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 导入失败: " + e.getMessage());
         }
     }
 
@@ -160,7 +160,7 @@ public class RuleDslImportExportController {
         }
 
         if (allRules.isEmpty()) {
-            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "没有可导出的规则");
+            return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "没有可导出的规则");
         }
 
         String yaml = RuleDslExporter.exportYaml(allRules, "exported-rules",
@@ -184,7 +184,7 @@ public class RuleDslImportExportController {
     public BaseResponse<Map<String, Object>> exportSingle(@PathVariable String ruleCode) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return BaseResponse.error(LiteruleResultCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+            return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
         }
 
         String yaml = RuleDslExporter.exportSingleRule(def);

@@ -27,8 +27,8 @@ public final class MessageConstants {
     /** 默认租户 ID（委托 {@link SystemConstants#DEFAULT_TENANT_ID}） */
     public static final String DEFAULT_TENANT_ID = SystemConstants.DEFAULT_TENANT_ID;
 
-    /** 默认语言（委托 {@link SystemConstants#DEFAULT_LOCALE}） */
-    public static final String DEFAULT_LOCALE = SystemConstants.DEFAULT_LOCALE;
+    /** 默认语言（zh-CN，编译期兜底；运行时默认语言由 ydsz.core.default-locale 配置控制） */
+    public static final String DEFAULT_LOCALE = "zh-CN";
 
     /** 默认业务类型（偏好表占位） */
     public static final String DEFAULT_BIZ_TYPE = "__DEFAULT__";

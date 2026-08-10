@@ -22,7 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.message.domain.enums.MessageResultCode;
+import com.njydsz.message.domain.enums.MessageExceptionCode;
 
 /**
  * 模板预览（Template Preview）Controller。
@@ -96,7 +96,7 @@ public class TemplatePreviewController {
                 StringUtils.hasText(req.getLocale()) ? req.getLocale() : "zh-CN",
                 TenantContext.getTenantId());
         if (template == null) {
-            return BaseResponse.error(MessageResultCode.TEMPLATE_NOT_FOUND, "模板不存在: " + req.getTemplateCode());
+            return BaseResponse.error(MessageExceptionCode.TEMPLATE_NOT_FOUND, "模板不存在: " + req.getTemplateCode());
         }
 
         Map<String, Object> params = req.getParams() == null ? new HashMap<>() : new HashMap<>(req.getParams());

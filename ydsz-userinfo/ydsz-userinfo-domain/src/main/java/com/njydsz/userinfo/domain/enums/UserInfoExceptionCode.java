@@ -32,7 +32,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  */
 @Getter
 @YdszResultCode(module = "userinfo", description = "用户中心")
-public enum UserInfoResultCode implements ExceptionCode {
+public enum UserInfoExceptionCode implements ExceptionCode {
 
     // ==================== B30xxx 用户/认证 ====================
     /** 用户不存在 */
@@ -127,11 +127,11 @@ public enum UserInfoResultCode implements ExceptionCode {
     /** HTTP 状态码 */
     private final int httpStatus;
 
-    UserInfoResultCode(String code, String key) {
+    UserInfoExceptionCode(String code, String key) {
         this(code, key, 400);
     }
 
-    UserInfoResultCode(String code, String key, int httpStatus) {
+    UserInfoExceptionCode(String code, String key, int httpStatus) {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;

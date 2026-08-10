@@ -11,7 +11,7 @@ import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
 import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
 import com.njydsz.userinfo.domain.entity.Menu;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
@@ -74,7 +74,7 @@ public class MenuServiceImpl implements MenuService {
     public MenuVO getById(String id) {
         Menu entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND);
         }
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
@@ -123,7 +123,7 @@ public class MenuServiceImpl implements MenuService {
     public boolean update(MenuPutDTO dto) {
         Menu entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id");
         return mapper.updateById(entity) > 0;
@@ -140,13 +140,13 @@ public class MenuServiceImpl implements MenuService {
     public boolean removeById(String id) {
         Menu entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND);
         }
         // 检查子菜单
         LambdaQueryWrapper<Menu> childWrapper = new LambdaQueryWrapper<>();
         childWrapper.eq(Menu::getParentId, id);
         if (mapper.selectCount(childWrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.MENU_HAS_CHILDREN);
+            throw new BusinessException(UserInfoExceptionCode.MENU_HAS_CHILDREN);
         }
         return mapper.deleteById(id) > 0;
     }

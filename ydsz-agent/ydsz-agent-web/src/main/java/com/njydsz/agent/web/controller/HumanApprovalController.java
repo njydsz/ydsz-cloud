@@ -19,7 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.agent.domain.enums.AgentResultCode;
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 
 /**
  * Human-in-the-Loop 人工审批 REST API Controller。
@@ -90,7 +90,7 @@ public class HumanApprovalController {
     public BaseResponse<ApprovalRequest> getApproval(@PathVariable String id) {
         ApprovalRequest request = approvalService.getApproval(id);
         if (request == null) {
-            return BaseResponse.error(AgentResultCode.AGENT_NOT_FOUND, "Approval not found: " + id);
+            return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found: " + id);
         }
         return BaseResponse.success(request);
     }
@@ -115,7 +115,7 @@ public class HumanApprovalController {
         log.info("[HumanApproval] 审批通过: id={}, approver={}", id, approver);
         boolean result = approvalService.approve(id, approver, comment);
         if (!result) {
-            return BaseResponse.error(AgentResultCode.AGENT_NOT_FOUND, "Approval not found or already resolved: " + id);
+            return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found or already resolved: " + id);
         }
         return BaseResponse.success(true);
     }
@@ -140,7 +140,7 @@ public class HumanApprovalController {
         log.info("[HumanApproval] 审批拒绝: id={}, approver={}, reason={}", id, approver, comment);
         boolean result = approvalService.reject(id, approver, comment);
         if (!result) {
-            return BaseResponse.error(AgentResultCode.AGENT_NOT_FOUND, "Approval not found or already resolved: " + id);
+            return BaseResponse.error(AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found or already resolved: " + id);
         }
         return BaseResponse.success(true);
     }

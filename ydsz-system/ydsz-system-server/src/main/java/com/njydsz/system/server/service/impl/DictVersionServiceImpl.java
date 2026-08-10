@@ -11,7 +11,7 @@ import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.entity.DictItem;
-import com.njydsz.system.domain.enums.SystemResultCode;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -187,7 +187,7 @@ public class DictVersionServiceImpl implements DictVersionService {
                         .eq("deleted", 0)
         );
         if (targetVersionEntity == null) {
-            throw BusinessException.of(SystemResultCode.DICT_VERSION_NOT_FOUND)
+            throw BusinessException.of(SystemExceptionCode.DICT_VERSION_NOT_FOUND)
                     .data("typeCode", typeCode)
                     .data("version", targetVersion);
         }
@@ -228,7 +228,7 @@ public class DictVersionServiceImpl implements DictVersionService {
             } catch (Exception e) {
                 log.error("[DictVersion] 快照解析失败: typeCode={}, version={}, error={}",
                         typeCode, targetVersion, e.getMessage());
-                throw BusinessException.of(SystemResultCode.SNAPSHOT_PARSE_ERROR)
+                throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
                         .data("reason", e.getMessage());
             }
         }

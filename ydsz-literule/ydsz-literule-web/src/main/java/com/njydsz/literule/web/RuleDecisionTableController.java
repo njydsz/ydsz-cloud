@@ -43,7 +43,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleResultCode;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
@@ -208,7 +208,7 @@ public class RuleDecisionTableController {
             return BaseResponse.error(e.getMessage());
         } catch (IOException e) {
             log.warn("[DecisionTable] Excel 文件读取失败: {}", e.getMessage());
-            return BaseResponse.error(LiteruleResultCode.DSL_PARSE_ERROR, "文件读取失败: " + e.getMessage());
+            return BaseResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR, "文件读取失败: " + e.getMessage());
         }
     }
 

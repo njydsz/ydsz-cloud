@@ -24,7 +24,7 @@ import com.njydsz.common.exception.registry.YdszResultCode;
  */
 @Getter
 @YdszResultCode(module = "system", description = "系统管理")
-public enum SystemResultCode implements ExceptionCode {
+public enum SystemExceptionCode implements ExceptionCode {
 
     // ==================== B90001-B90099 系统配置 ====================
     CONFIG_NOT_FOUND("B90001", "system.config.not.found", 404), // 系统配置不存在（资源未找到，HTTP 404）
@@ -56,11 +56,11 @@ public enum SystemResultCode implements ExceptionCode {
     /** HTTP 状态码 */
     private final int httpStatus;
 
-    SystemResultCode(String code, String key) {
+    SystemExceptionCode(String code, String key) {
         this(code, key, 400);
     }
 
-    SystemResultCode(String code, String key, int httpStatus) {
+    SystemExceptionCode(String code, String key, int httpStatus) {
         this.code = code;
         this.key = key;
         this.httpStatus = httpStatus;

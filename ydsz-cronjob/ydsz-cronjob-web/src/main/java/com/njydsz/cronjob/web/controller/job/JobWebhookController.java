@@ -26,7 +26,7 @@ import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
-import com.njydsz.cronjob.domain.enums.CronjobResultCode;
+import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 
 /**
  * WebHook 事件订阅管理 Controller（P3-13）。
@@ -190,7 +190,7 @@ public class JobWebhookController {
     public BaseResponse<Void> testWebhook(@PathVariable String id) {
         JobWebhook webhook = webhookMapper.selectById(id);
         if (webhook == null) {
-            return BaseResponse.error(CronjobResultCode.WEBHOOK_NOT_FOUND, "WebHook not found");
+            return BaseResponse.error(CronjobExceptionCode.WEBHOOK_NOT_FOUND, "WebHook not found");
         }
         // 测试事件通过 WebhookEventDispatcher 发送
         // 这里仅返回成功，实际推送通过 Async 异步执行

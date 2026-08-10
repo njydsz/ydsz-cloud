@@ -55,7 +55,7 @@ public class TemplateServiceImpl implements TemplateService {
      * 创建消息模板。
      *
      * <p>按 (templateCode, channel, locale, tenantId) 唯一性校验，冲突抛 DUPLICATE_KEY；
-     * 新建模板默认状态 ENABLED、审核状态 DRAFT。locale 缺省回退 {@code DEFAULT_LOCALE}。
+     * 新建模板默认状态 ENABLED、审核状态 DRAFT。locale 缺省回退 zh-CN。
      *
      * @param dto 模板创建参数（templateCode/channel 必填）
      * @return 已创建的模板实体
@@ -243,7 +243,7 @@ public class TemplateServiceImpl implements TemplateService {
     /**
      * 按 (templateCode, channel, locale, tenantId) 加载启用模板。
      *
-     * <p>先精确 locale 匹配启用模板；未命中且非默认 locale 时回退 {@code DEFAULT_LOCALE}（zh-CN）。
+     * <p>先精确 locale 匹配启用模板；未命中且非默认 locale 时回退 zh-CN。
      * 用于发送/渲染时按渠道取模板，tenantId 缺省取当前租户。
      *
      * @param templateCode 模板编码

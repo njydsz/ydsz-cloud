@@ -22,7 +22,7 @@ import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.entity.UserRole;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
@@ -115,7 +115,7 @@ public class AuthServiceImpl implements AuthService {
                     "FAILED", "IP_BLOCKED", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
-            throw new BusinessException(UserInfoResultCode.IP_BLOCKED,
+            throw new BusinessException(UserInfoExceptionCode.IP_BLOCKED,
                     "当前 IP 登录失败次数过多，请稍后再试");
         }
 
@@ -124,7 +124,7 @@ public class AuthServiceImpl implements AuthService {
             if (loginDTO.getCaptchaKey() == null || loginDTO.getCaptcha() == null) {
                 userInfoMetrics.recordLoginFail();
                 userInfoMetrics.stopTimer(sample);
-                throw new BusinessException(UserInfoResultCode.CAPTCHA_REQUIRED);
+                throw new BusinessException(UserInfoExceptionCode.CAPTCHA_REQUIRED);
             }
             captchaService.validate(loginDTO.getCaptchaKey(), loginDTO.getCaptcha());
         }
@@ -140,7 +140,7 @@ public class AuthServiceImpl implements AuthService {
             loginHistoryService.recordLoginAttempt(null, username, loginIp, "FAILED", "USER_NOT_FOUND", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
-            throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         }
 
         // 账号状态检查（status 为 String: "0"=禁用, "1"=启用）
@@ -149,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
                     "FAILED", "USER_DISABLED", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
-            throw new BusinessException(UserInfoResultCode.USER_DISABLED);
+            throw new BusinessException(UserInfoExceptionCode.USER_DISABLED);
         }
 
         // 账号锁定检查
@@ -158,7 +158,7 @@ public class AuthServiceImpl implements AuthService {
                     "FAILED", "ACCOUNT_LOCKED", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
-            throw new BusinessException(UserInfoResultCode.ACCOUNT_LOCKED);
+            throw new BusinessException(UserInfoExceptionCode.ACCOUNT_LOCKED);
         }
 
         // 密码校验 — 先尝试本地密码，失败后尝试 LDAP
@@ -179,7 +179,7 @@ public class AuthServiceImpl implements AuthService {
                     "FAILED", "PASSWORD_INCORRECT", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
-            throw new BusinessException(UserInfoResultCode.PASSWORD_INCORRECT);
+            throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
         }
 
         List<Role> roles = loadUserRoles(user.getId());

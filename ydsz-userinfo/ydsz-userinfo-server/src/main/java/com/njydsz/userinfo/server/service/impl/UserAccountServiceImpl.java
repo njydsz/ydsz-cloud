@@ -25,7 +25,7 @@ import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.entity.UserRole;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -129,7 +129,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public UserAccountVO getById(String id) {
         UserAccount entity = userAccountMapper.selectById(id);
         if (entity == null) {
-            throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         }
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
@@ -209,7 +209,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccount::getUsername, dto.getUsername());
         if (userAccountMapper.selectCount(wrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.USERNAME_DUPLICATE);
+            throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
         }
 
         // 密码策略校验
@@ -247,7 +247,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public boolean update(UserAccountUpdateDTO dto) {
         UserAccount entity = userAccountMapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         }
         // 仅复制非 null 属性，避免覆盖已有值；额外忽略 id（主键不可变）
         BeanUpdateUtil.copyNonNull(dto, entity, "id");
@@ -272,7 +272,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public boolean removeById(String id) {
         UserAccount entity = userAccountMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         }
         boolean result = userAccountMapper.deleteById(id) > 0;
         if (result) {
@@ -296,13 +296,13 @@ public class UserAccountServiceImpl implements UserAccountService {
     public boolean changePassword(ChangePasswordDTO dto) {
         UserAccount entity = userAccountMapper.selectById(dto.getUserId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         }
         if (!passwordEncoder.matches(dto.getOldPassword(), entity.getPassword())) {
-            throw new BusinessException(UserInfoResultCode.OLD_PASSWORD_INCORRECT);
+            throw new BusinessException(UserInfoExceptionCode.OLD_PASSWORD_INCORRECT);
         }
         if (passwordEncoder.matches(dto.getNewPassword(), entity.getPassword())) {
-            throw new BusinessException(UserInfoResultCode.PASSWORD_SAME_AS_OLD);
+            throw new BusinessException(UserInfoExceptionCode.PASSWORD_SAME_AS_OLD);
         }
 
         // 密码策略校验（含历史密码校验）
@@ -333,7 +333,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public boolean resetPassword(ResetPasswordDTO dto) {
         UserAccount entity = userAccountMapper.selectById(dto.getUserId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         }
 
         // 密码策略校验（含历史密码校验）
@@ -366,7 +366,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public boolean assignRoles(String userId, List<String> roleIds) {
         UserAccount entity = userAccountMapper.selectById(userId);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         }
 
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();

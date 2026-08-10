@@ -19,7 +19,7 @@ import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
 import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.UserDept;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -94,7 +94,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public DepartmentVO getById(String id) {
         Department entity = departmentMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
         }
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
@@ -126,7 +126,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Department::getDeptCode, dto.getDeptCode());
         if (departmentMapper.selectCount(wrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.DEPARTMENT_CODE_DUPLICATE);
+            throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_CODE_DUPLICATE);
         }
 
         Department entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
@@ -159,7 +159,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public boolean update(DepartmentPutDTO dto) {
         Department entity = departmentMapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id");
         boolean result = departmentMapper.updateById(entity) > 0;
@@ -186,19 +186,19 @@ public class DepartmentServiceImpl implements DepartmentService {
     public boolean removeById(String id) {
         Department entity = departmentMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
         }
 
         LambdaQueryWrapper<Department> childWrapper = new LambdaQueryWrapper<>();
         childWrapper.eq(Department::getParentId, id);
         if (departmentMapper.selectCount(childWrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.DEPARTMENT_HAS_CHILDREN);
+            throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_HAS_CHILDREN);
         }
 
         LambdaQueryWrapper<UserDept> udWrapper = new LambdaQueryWrapper<>();
         udWrapper.eq(UserDept::getDeptId, id);
         if (userDeptMapper.selectCount(udWrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.DEPARTMENT_HAS_USERS);
+            throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_HAS_USERS);
         }
 
         boolean result = departmentMapper.deleteById(id) > 0;

@@ -7,7 +7,7 @@ import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
 import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
 import com.njydsz.userinfo.domain.entity.Company;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 import com.njydsz.userinfo.server.service.CompanyService;
@@ -51,7 +51,7 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyVO getById(String id) {
         Company entity = companyMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
         }
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
@@ -71,7 +71,7 @@ public class CompanyServiceImpl implements CompanyService {
         LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Company::getCompanyCode, dto.getCompanyCode());
         if (companyMapper.selectCount(wrapper) > 0) {
-            throw new BusinessException(UserInfoResultCode.COMPANY_CODE_DUPLICATE);
+            throw new BusinessException(UserInfoExceptionCode.COMPANY_CODE_DUPLICATE);
         }
 
         Company entity = UserInfoConverter.INSTANT.postDtoToEntity(dto);
@@ -88,7 +88,7 @@ public class CompanyServiceImpl implements CompanyService {
     public boolean update(CompanyPutDTO dto) {
         Company entity = companyMapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id");
         return companyMapper.updateById(entity) > 0;
@@ -99,7 +99,7 @@ public class CompanyServiceImpl implements CompanyService {
     public boolean removeById(String id) {
         Company entity = companyMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
         }
         return companyMapper.deleteById(id) > 0;
     }

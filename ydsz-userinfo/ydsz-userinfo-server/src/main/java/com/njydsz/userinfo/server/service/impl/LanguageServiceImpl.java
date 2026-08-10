@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
 import com.njydsz.userinfo.domain.dto.put.LanguagePutDTO;
 import com.njydsz.userinfo.domain.entity.Language;
-import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
@@ -57,7 +57,7 @@ public class LanguageServiceImpl implements LanguageService {
     public LanguageVO getById(String id) {
         Language entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
         }
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
@@ -87,7 +87,7 @@ public class LanguageServiceImpl implements LanguageService {
     public boolean update(LanguagePutDTO dto) {
         Language entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
         }
         BeanUpdateUtil.copyNonNull(dto, entity, "id");
         return mapper.updateById(entity) > 0;
@@ -98,7 +98,7 @@ public class LanguageServiceImpl implements LanguageService {
     public boolean removeById(String id) {
         Language entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
         }
         return mapper.deleteById(id) > 0;
     }
