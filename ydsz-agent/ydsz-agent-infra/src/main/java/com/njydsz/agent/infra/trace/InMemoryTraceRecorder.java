@@ -41,7 +41,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     @Override
     public String startTrace(String conversationId, String agentId) {
         evictExpiredTraces();
-        String traceId = TraceIdGenerator.generateTraceId();
+        String traceId = TraceIdGenerator.generateSortableTraceId();
         traces.put(traceId, new ArrayList<>());
         traceStatus.put(traceId, "RUNNING");
         traceMetas.put(traceId, new TraceMeta(traceId, conversationId, agentId, LocalDateTime.now()));

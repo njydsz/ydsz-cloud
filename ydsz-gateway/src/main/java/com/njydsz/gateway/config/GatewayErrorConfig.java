@@ -94,7 +94,7 @@ public class GatewayErrorConfig {
 
             String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
             if (traceId == null || traceId.isBlank()) {
-                traceId = TraceIdGenerator.generateTraceId();
+                traceId = TraceIdGenerator.generateSortableTraceId();
             }
 
             BaseResponse<Void> body = BaseResponse.error(String.valueOf(bizCode), message);

@@ -205,7 +205,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
      */
     private Mono<Void> forbidden(ServerWebExchange exchange) {
         // 复用 TracerUtils 生成链路追踪 ID，便于日志关联
-        String traceId = TraceIdGenerator.generateTraceId();
+        String traceId = TraceIdGenerator.generateSortableTraceId();
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);

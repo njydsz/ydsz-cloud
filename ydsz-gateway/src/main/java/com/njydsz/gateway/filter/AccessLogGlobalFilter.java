@@ -122,7 +122,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         long startTime = System.currentTimeMillis();
         String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
         if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdGenerator.generateTraceId();
+            traceId = TraceIdGenerator.generateSortableTraceId();
         }
 
         final String finalTraceId = traceId;
@@ -275,7 +275,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
      * @return 非 null 的 traceId
      */
     private String safeTraceId(String traceId) {
-        return traceId != null ? traceId : TraceIdGenerator.generateTraceId();
+        return traceId != null ? traceId : TraceIdGenerator.generateSortableTraceId();
     }
 
     /**

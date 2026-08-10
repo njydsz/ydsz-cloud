@@ -15,9 +15,9 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * <h3>性能说明</h3>
  * <ul>
- *   <li>默认 {@link #generateTraceId()} 无锁、线程本地，适合绝大多数场景</li>
  *   <li>{@link #generateSortableTraceId()} 按时间排序，使用 ThreadLocal 序列号
- *       避免全局 CAS 争用；同毫秒内不同线程的序号彼此独立但均保序，整体趋势有序</li>
+ *       避免全局 CAS 争用；同毫秒内不同线程的序号彼此独立但均保序，整体趋势有序；
+ *       无锁、线程本地，适合绝大多数场景</li>
  * </ul>
  *
  * <h3>安全性说明</h3>
@@ -62,24 +62,6 @@ public final class TraceIdGenerator {
     }
 
     /**
-     * 生成 32 位十六进制 TraceId。
-     *
-     * <p>输出格式与旧版兼容（32 位小写十六进制字符串）。</p>
-     *
-     * @return 32 位十六进制字符串
-     * @since 1.5.0
-     * @deprecated 1.9.3 推荐直接使用 {@link #generateSortableTraceId()}，时间有序，便于日志排查和范围检索。
-     *             当前实现已委托 {@link #generateSortableTraceId()}，行为等价。
-     *             v1.11 起标记 {@code forRemoval = true}，计划 v2.0 移除。请迁移至
-     *             {@code TraceIdGenerator.generateSortableTraceId()} 或
-     *             {@code TraceIdPropagation.traceHeadersOrCreate()}。
-     */
-    @Deprecated(since = "1.9.3", forRemoval = true)
-    public static String generateTraceId() {
-        return generateSortableTraceId();
-    }
-
-    /**
      * 生成按时间有序（可排序）的 32 位十六进制 TraceId（UUIDv7 风格）。
      *
      * <p>布局（16 bytes / 32 hex）：</p>
@@ -89,9 +71,8 @@ public final class TraceIdGenerator {
      *   <li>bytes[8..15]（66 bit）：随机数，保证唯一性与分布均匀性</li>
      * </ul>
      *
-     * <p>相比 {@link #generateTraceId()} 的纯随机实现，本方法生成的 id 可直接用于
-     * 日志 / 链路存储的按时间排序与范围检索，便于问题排查。两者输出格式相同（32 位小写 hex），
-     * 可共存；默认 {@link #generateTraceId()} 仍保持随机以最大化分布均匀性。</p>
+     * <p>本方法生成的 id 可直接用于日志 / 链路存储的按时间排序与范围检索，便于问题排查。
+     * 输出格式为 32 位小写 hex，与旧版纯随机 TraceId 格式一致，下游无需感知差异。</p>
      *
      * <p>本方法使用 ThreadLocal 维护时间戳+序号状态，无全局 CAS 争用，
      * 适合高并发场景下生成有序 traceId。</p>
@@ -155,7 +136,7 @@ public final class TraceIdGenerator {
      * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
      */
     public static String traceparentHeader() {
-        return "00-" + generateTraceId() + "-" + generateSpanId() + "-01";
+        return "00-" + generateSortableTraceId() + "-" + generateSpanId() + "-01";
     }
 
     /**

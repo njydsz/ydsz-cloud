@@ -84,7 +84,7 @@ public final class TraceIdPropagation {
     public static Map<String, String> traceHeadersOrCreate() {
         String traceId = currentTraceId();
         if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdGenerator.generateTraceId();
+            traceId = TraceIdGenerator.generateSortableTraceId();
         }
         String spanId = TraceIdGenerator.generateSpanId();
         Map<String, String> headers = new HashMap<>(2);
@@ -117,7 +117,7 @@ public final class TraceIdPropagation {
     public static String currentTraceIdOrCreate() {
         String traceId = currentTraceId();
         if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdGenerator.generateTraceId();
+            traceId = TraceIdGenerator.generateSortableTraceId();
             RequestContext.setTraceId(traceId);
             MDC.put(HeaderConstants.MDC_TRACE_ID_KEY, traceId);
         }

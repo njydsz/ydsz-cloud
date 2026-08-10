@@ -158,7 +158,7 @@ public final class TracerUtils {
      * @return 新生成的 Trace ID（32 位十六进制）
      */
     public static String generateTraceId() {
-        return TraceIdGenerator.generateTraceId();
+        return TraceIdGenerator.generateSortableTraceId();
     }
 
     /**

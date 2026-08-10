@@ -762,7 +762,7 @@ public final class RequestContext {
      * <pre>
      * try (RequestContext.CleanupGuard guard = RequestContext.newCleanupGuard()) {
      *     RequestContext.setUserId("user123");
-     *     RequestContext.setTraceId(TraceIdGenerator.generateTraceId());
+     *     RequestContext.setTraceId(TraceIdGenerator.generateSortableTraceId());
      *     // ... 业务逻辑
      * } // 自动清理上下文，防止内存泄漏
      * </pre>

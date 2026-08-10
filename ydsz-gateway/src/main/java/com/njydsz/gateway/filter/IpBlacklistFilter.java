@@ -159,7 +159,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
      * @return 完成信号 Mono
      */
     private Mono<Void> forbidden(ServerWebExchange exchange, String clientIp) {
-        String traceId = TraceIdGenerator.generateTraceId();
+        String traceId = TraceIdGenerator.generateSortableTraceId();
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);

@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("deprecation")
 public class FlowFormEngineService {
 
     private final FlowFormValidator formValidator;
@@ -126,19 +125,4 @@ public class FlowFormEngineService {
         return formValidator.validate(schema, formData);
     }
 
-    /**
-     * 使用标准 JSON Schema 校验表单数据。
-     *
-     * <p><b>已废弃：</b>JSON Schema 引擎已移除。请直接使用 {@link #validate(FlowFormSchema, Map)}。
-     *
-     * @param jsonSchema JSON Schema 对象（不再使用）
-     * @param formData   表单数据
-     * @return 始终返回空列表
-     * @deprecated JSON Schema 引擎已移除，此方法仅作占位保留
-     */
-    @Deprecated
-    public List<FlowFormValidationError> validateWithJsonSchema(Object jsonSchema,
-                                                                 Map<String, Object> formData) {
-        return List.of();
-    }
 }

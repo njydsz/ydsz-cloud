@@ -181,7 +181,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        String traceId = TraceIdGenerator.generateTraceId();
+        String traceId = TraceIdGenerator.generateSortableTraceId();
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.UNAUTHORIZED, "API Key 缺失，请提供 X-API-Key 或 api_key 参数");
         body.assignTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
@@ -201,7 +201,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        String traceId = TraceIdGenerator.generateTraceId();
+        String traceId = TraceIdGenerator.generateSortableTraceId();
         BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, "API Key 无效");
         body.assignTraceId(traceId);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
