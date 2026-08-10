@@ -11,7 +11,7 @@
 1. **唯一 JSON 数据源**：项目自有代码的 JSON 序列化 / 反序列化 / 树模型操作，**必须且仅能**使用 `ydsz-common-json`（`com.njydsz.common.json.*`，核心入口 `YdszJson` / `JsonMapper`）。
 2. **不干预三方依赖**：Spring / Feign / Redis 客户端等第三方库内部使用 Jackson 属于其实现细节，**禁止**为"消灭 Jackson"而强改传递依赖、排除依赖或替换第三方库行为。`pom.xml` 中的 `optional` / `provided` 的 `jackson-annotations` 声明仅用于编译期注解解析，**不属于违规**。
 3. **检查自动化**：本规范由构建期 Checkstyle 规则强制校验（绑定 `validate` 阶段），无需人工 review 把关。
-4. **安全优先**：反序列化默认启用 AutoType 白名单，安全实体显式声明 `@JsonClass`。
+4. **安全优先**：业务模块反序列化不可信外部数据（缓存导出/导入、MQ 消息、开放接口入参）时，应自行做类型校验。`ydsz-common-json` 已内置 JSON 大小限制、嵌套深度限制、泛型递归深度保护等防护机制。
 
 ---
 

@@ -26,34 +26,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * YdszJson - 超高性能 JSON 工具类（深度优化版）
+ * YdszJson - 高性能 JSON 工具类
  *
- * <p>提供高性能、功能丰富的 JSON 序列化和反序列化功能，纯 Java 实现，无需额外依赖。</p>
+ * <p>提供高性能、功能丰富的 JSON 序列化和反序列化功能，纯 Java 实现，零外部 JSON 库依赖。</p>
  *
  * <p><b>核心特性：</b></p>
  * <ul>
- *   <li><b>零依赖</b>：纯 Java 实现，无需任何第三方库</li>
- *   <li><b>超高性能</b>：ASM 字节码优化、递归下降解析、对象池复用</li>
+ *   <li><b>零依赖</b>：纯 Java 实现，无需 Jackson / FastJSON / Gson 等第三方库</li>
+ *   <li><b>高性能</b>：char[] 直操作、递归下降解析、ThreadLocal 对象池、MethodHandle 反射加速</li>
  *   <li><b>递归下降解析</b>：直接解析 JSON 到 Bean，无需 Map 中转</li>
- *   <li><b>ASM 反序列化</b>：100% 字节码生成，字段访问性能提升 50 倍</li>
- *   <li><b>循环引用检测</b>：自动检测并处理循环引用</li>
- *   <li><b>泛型支持</b>：完整的泛型反序列化支持</li>
- *   <li><b>Java 8+ 日期时间</b>：完美支持 LocalDateTime 等新 API</li>
- *   <li><b>JSONPath</b>：支持嵌套字段提取</li>
- *   <li><b>Builder 模式</b>：链式调用，代码更优雅</li>
- *   <li><b>注解支持</b>：支持@JsonProperty、@JsonFormat 等注解</li>
- *   <li><b>自定义序列化器</b>：支持注册自定义序列化/反序列化器</li>
- *   <li><b>命名策略</b>：支持 SNAKE_CASE、KEBAB_CASE 等多种命名策略</li>
+ *   <li><b>字段哈希匹配</b>：FNV-1a 哈希 O(1) 字段匹配，优于传统 O(n) 扫描</li>
+ *   <li><b>循环引用检测</b>：自动检测并处理循环引用（REF / IGNORE / ERROR 策略）</li>
+ *   <li><b>泛型支持</b>：完整的泛型反序列化支持（TypeRef 工厂方法）</li>
+ *   <li><b>Java 8+ 日期时间</b>：完整支持 LocalDateTime 等新 API</li>
+ *   <li><b>JSON Patch (RFC 6902)</b>：支持 add/remove/replace/move/copy/test 六种操作</li>
+ *   <li><b>JSON Merge Patch (RFC 7396)</b>：简化合并语义</li>
+ *   <li><b>注解支持</b>：80%+ Jackson 兼容注解（@JsonProperty、@JsonIgnore 等）</li>
+ *   <li><b>自定义序列化器</b>：JsonModule SPI + @JsonSerialize/@JsonDeserialize 注解</li>
+ *   <li><b>命名策略</b>：支持 SNAKE_CASE、KEBAB_CASE、LOWER_CASE 等多种策略</li>
  * </ul>
  *
  * <p><b>核心优化技术：</b></p>
  * <ul>
- *   <li>递归下降解析器 - 直接解析 JSON 到对象字段</li>
- *   <li>ASM 字节码生成 - 100% 字节码优化，避免 MethodHandle 开销</li>
- *   <li>零拷贝字符串 - 减少 String 创建</li>
- *   <li>对象池复用 - ThreadLocal 缓存</li>
- *   <li>JIT 友好设计 - 便于 JVM 内联优化</li>
+ *   <li>递归下降解析器 - 直接解析 JSON 到对象字段，零拷贝</li>
+ *   <li>FNV-1a 字段哈希 - O(1) 字段匹配，提升反序列化性能</li>
+ *   <li>ThreadLocal 对象池 - StringBuilder / JSONWriter 复用，减少 GC</li>
+ *   <li>ASCII 快速路径 - byte[] → char[] 跳过 UTF-8 解码</li>
+ *   <li>分级 StringBuilder - 根据 JSON 大小预分配合适容量</li>
+ *   <li>不可变配置 + 原子替换 - 线程安全的配置管理</li>
  * </ul>
+ *
+ * <p><b>性能说明（v1.2.0）</b>：当前性能优化基于 MethodHandle 反射加速 + 字段元数据缓存。
+ * 原规划的 ASM 字节码生成已降级为反射方案，后续版本是否实装将根据实际性能数据评估。</p>
  *
  * @author ydsz-team
  * @since 1.0.0

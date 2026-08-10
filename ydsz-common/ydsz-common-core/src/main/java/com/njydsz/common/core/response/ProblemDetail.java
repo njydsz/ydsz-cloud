@@ -100,7 +100,7 @@ public class ProblemDetail implements Serializable {
      */
     public static ProblemDetail of(ResultCode resultCode) {
         return builder()
-                .status(resultCode.getHttpStatusCode())
+                .status(resultCode.getHttpStatus())
                 .title(resultCode.getMsg())
                 .putExtension("code", resultCode.getCode())
                 .build();
@@ -115,7 +115,7 @@ public class ProblemDetail implements Serializable {
      */
     public static ProblemDetail of(ResultCode resultCode, String detail) {
         return builder()
-                .status(resultCode.getHttpStatusCode())
+                .status(resultCode.getHttpStatus())
                 .title(resultCode.getMsg())
                 .detail(detail)
                 .putExtension("code", resultCode.getCode())
