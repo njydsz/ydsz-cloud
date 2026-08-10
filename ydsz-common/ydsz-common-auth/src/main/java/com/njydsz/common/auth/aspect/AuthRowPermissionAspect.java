@@ -22,8 +22,8 @@ import com.njydsz.common.auth.annotation.AuthRowPermission;
 import com.njydsz.common.auth.model.DataScopeAware;
 import com.njydsz.common.auth.model.DataScopeInfo;
 import com.njydsz.common.auth.service.DataPermissionResolver;
-import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.auth.AuthInfoUtils;
@@ -242,14 +242,14 @@ public class AuthRowPermissionAspect {
             return;
         }
         String scopeCode = info.getScope() == null ? null : info.getScope().getCode();
-        forceSet(HeaderConstants.X_DATA_SCOPE, scopeCode);
-        forceSet(HeaderConstants.X_TENANT_ID, resolveTenantId(info));
-        forceSet(HeaderConstants.X_UNIQUE_ID, resolveUserId(info));
-        forceSet(HeaderConstants.X_COMPANY_IDS, joinIds(info.getCompanyIds()));
-        forceSet(HeaderConstants.X_DEPT_IDS, joinIds(info.getDeptIds()));
-        forceSet(HeaderConstants.X_PROJECT_IDS, joinIds(info.getProjectIds()));
-        forceSet(HeaderConstants.X_REGION_IDS, joinIds(info.getRegionIds()));
-        forceSet(HeaderConstants.X_CUSTOM_SQL_CONDITION, info.resolveCustomSqlCondition());
+        forceSet(DataPermissionHeaderConstants.X_DATA_SCOPE, scopeCode);
+        forceSet(DataPermissionHeaderConstants.X_TENANT_ID, resolveTenantId(info));
+        forceSet(DataPermissionHeaderConstants.X_UNIQUE_ID, resolveUserId(info));
+        forceSet(DataPermissionHeaderConstants.X_COMPANY_IDS, joinIds(info.getCompanyIds()));
+        forceSet(DataPermissionHeaderConstants.X_DEPT_IDS, joinIds(info.getDeptIds()));
+        forceSet(DataPermissionHeaderConstants.X_PROJECT_IDS, joinIds(info.getProjectIds()));
+        forceSet(DataPermissionHeaderConstants.X_REGION_IDS, joinIds(info.getRegionIds()));
+        forceSet(DataPermissionHeaderConstants.X_CUSTOM_SQL_CONDITION, info.resolveCustomSqlCondition());
     }
 
     private String resolveMapKey(AuthRowPermission classAnnotation, AuthRowPermission methodAnnotation) {

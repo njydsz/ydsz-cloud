@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
@@ -25,7 +24,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>从请求上下文中读取数据权限相关的 HTTP 请求头，构建 {@link DataPermissionContext}，
  * 供 {@link DataPermissionInnerInterceptor} 在 SQL 执行前改写 WHERE/JOIN 条件。
  *
- * <h2>读取的 Header 清单（与 {@link HeaderConstants} 编号对齐）</h2>
+ * <h2>读取的 Header 清单（与 {@link DataPermissionHeaderConstants} 编号对齐）</h2>
  * <ul>
  *   <li>X-Data-Scope (6) - 数据权限范围类型，决定按哪个维度过滤</li>
  *   <li>X-Company-Ids (7) - 公司ID集合（GROUP 范围）</li>
@@ -98,16 +97,16 @@ public class DataPermissionContextResolver {
             request = (HttpServletRequest) RequestContext.get(BizContextKeys.KEY_HTTP_REQUEST);
         }
         DataPermissionContext context = new DataPermissionContext();
-        context.setDataScope(resolveDataScope(resolveHeader(request, HeaderConstants.X_DATA_SCOPE)));
+        context.setDataScope(resolveDataScope(resolveHeader(request, DataPermissionHeaderConstants.X_DATA_SCOPE)));
         // 安全增强：userId 优先从认证上下文（JWT）获取，不可伪造
         String authUserId = AuthInfoUtils.getUniqueId();
-        context.setUserId(trimToNull(authUserId != null ? authUserId : resolveHeader(request, HeaderConstants.X_UNIQUE_ID)));
-        context.setCompanyIds(splitCsv(resolveHeader(request, HeaderConstants.X_COMPANY_IDS)));
-        context.setDeptIds(splitCsv(resolveHeader(request, HeaderConstants.X_DEPT_IDS)));
-        context.setProjectIds(splitCsv(resolveHeader(request, HeaderConstants.X_PROJECT_IDS)));
-        context.setRegionIds(splitCsv(resolveHeader(request, HeaderConstants.X_REGION_IDS)));
-        context.setVisibleColumnsByTable(parseTableColumnsRule(resolveHeader(request, HeaderConstants.X_VISIBLE_COLUMNS)));
-        context.setEditableColumnsByTable(parseTableColumnsRule(resolveHeader(request, HeaderConstants.X_EDITABLE_COLUMNS)));
+        context.setUserId(trimToNull(authUserId != null ? authUserId : resolveHeader(request, DataPermissionHeaderConstants.X_UNIQUE_ID)));
+        context.setCompanyIds(splitCsv(resolveHeader(request, DataPermissionHeaderConstants.X_COMPANY_IDS)));
+        context.setDeptIds(splitCsv(resolveHeader(request, DataPermissionHeaderConstants.X_DEPT_IDS)));
+        context.setProjectIds(splitCsv(resolveHeader(request, DataPermissionHeaderConstants.X_PROJECT_IDS)));
+        context.setRegionIds(splitCsv(resolveHeader(request, DataPermissionHeaderConstants.X_REGION_IDS)));
+        context.setVisibleColumnsByTable(parseTableColumnsRule(resolveHeader(request, DataPermissionHeaderConstants.X_VISIBLE_COLUMNS)));
+        context.setEditableColumnsByTable(parseTableColumnsRule(resolveHeader(request, DataPermissionHeaderConstants.X_EDITABLE_COLUMNS)));
         expandIdsIfNecessary(context);
         return context;
     }
